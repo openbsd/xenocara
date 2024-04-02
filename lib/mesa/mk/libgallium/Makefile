@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2023/11/02 04:53:31 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2024/04/02 10:42:13 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -12,6 +12,8 @@ SRCS=	cso_cache.c \
 	draw_context.c \
 	draw_fs.c \
 	draw_gs.c \
+	draw_mesh.c \
+	draw_mesh_prim.c \
 	draw_pipe_aaline.c \
 	draw_pipe_aapoint.c \
 	draw_pipe.c \
@@ -35,6 +37,7 @@ SRCS=	cso_cache.c \
 	draw_pt_fetch.c \
 	draw_pt_fetch_shade_emit.c \
 	draw_pt_fetch_shade_pipeline.c \
+	draw_pt_mesh_pipeline.c \
 	draw_pt_post_vs.c \
 	draw_pt_so_emit.c \
 	draw_pt_util.c \
@@ -54,6 +57,7 @@ SRCS=	cso_cache.c \
 	tr_dump_state.c \
 	tr_screen.c \
 	tr_texture.c \
+	tr_video.c \
 	font.c \
 	hud_context.c \
 	hud_cpu.c \
@@ -109,8 +113,10 @@ SRCS=	cso_cache.c \
 	u_blitter.c \
 	u_cache.c \
 	u_compute.c \
+	u_debug_describe.c \
 	u_debug_flush.c \
 	u_debug_image.c \
+	u_debug_refcnt.c \
 	u_draw.c \
 	u_draw_quad.c \
 	u_driconf.c \
@@ -127,6 +133,7 @@ SRCS=	cso_cache.c \
 	u_prim_restart.c \
 	u_pstipple.c \
 	u_resource.c \
+	u_sample_positions.c \
 	u_sampler.c \
 	u_screen.c \
 	u_simple_shaders.c \
@@ -175,6 +182,7 @@ SRCS+=	lp_bld_arit.c \
 	lp_bld_init.c \
 	lp_bld_intr.c \
 	lp_bld_ir_common.c \
+	lp_bld_jit_sample.c \
 	lp_bld_jit_types.c \
 	lp_bld_logic.c \
 	lp_bld_misc.cpp \
@@ -190,13 +198,11 @@ SRCS+=	lp_bld_arit.c \
 	lp_bld_struct.c \
 	lp_bld_swizzle.c \
 	lp_bld_tgsi_action.c \
-	lp_bld_tgsi_aos.c \
 	lp_bld_tgsi.c \
 	lp_bld_tgsi_info.c \
 	lp_bld_tgsi_soa.c \
 	lp_bld_type.c \
 	draw_llvm.c \
-	draw_llvm_sample.c \
 	draw_pt_fetch_shade_pipeline_llvm.c \
 	draw_vs_llvm.c \
 	tessellator.cpp \
@@ -231,6 +237,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/src/util \
 		-I${MESA_SRC}/generated/src/gallium/auxiliary \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir
 #llvm
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/auxiliary/gallivm \

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/01/28 08:56:35 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	r600
 
@@ -34,32 +34,6 @@ SRCS=	compute_memory_pool.c \
 	radeon_uvd.c \
 	radeon_vce.c \
 	radeon_video.c \
-	sb_bc_builder.cpp \
-	sb_bc_decoder.cpp \
-	sb_bc_dump.cpp \
-	sb_bc_finalize.cpp \
-	sb_bc_parser.cpp \
-	sb_context.cpp \
-	sb_core.cpp \
-	sb_dce_cleanup.cpp \
-	sb_def_use.cpp \
-	sb_dump.cpp \
-	sb_expr.cpp \
-	sb_gcm.cpp \
-	sb_gvn.cpp \
-	sb_if_conversion.cpp \
-	sb_ir.cpp \
-	sb_liveness.cpp \
-	sb_pass.cpp \
-	sb_peephole.cpp \
-	sb_psi_ops.cpp \
-	sb_ra_checker.cpp \
-	sb_ra_coalesce.cpp \
-	sb_ra_init.cpp \
-	sb_sched.cpp \
-	sb_shader.cpp \
-	sb_ssa_builder.cpp \
-	sb_valtable.cpp \
 	sfn_alu_defines.cpp \
 	sfn_alu_readport_validation.cpp \
 	sfn_assembler.cpp \
@@ -97,6 +71,7 @@ SRCS=	compute_memory_pool.c \
 	sfn_shader_gs.cpp \
 	sfn_shader_tess.cpp \
 	sfn_shader_vs.cpp \
+	sfn_split_address_loads.cpp \
 	sfn_valuefactory.cpp \
 	sfn_virtualvalues.cpp
 
@@ -113,7 +88,9 @@ CPPFLAGS+=	-DGALLIUM_R600 \
 		-I${MESA_SRC}/src/util \
 		-I${MESA_SRC}/src/amd/common \
 		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/gallium/drivers/r600 \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir
 
 install:

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2023/11/02 04:53:31 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	iris
 
@@ -7,6 +7,7 @@ NOPROFILE=
 SRCS=	i915_iris_batch.c \
 	i915_iris_bufmgr.c \
 	i915_iris_kmd_backend.c \
+	xe_iris_batch.c \
 	xe_iris_bufmgr.c \
 	xe_iris_kmd_backend.c \
 	iris_batch.c \
@@ -37,9 +38,11 @@ SRCS=	i915_iris_batch.c \
 i915_iris_batch.c:
 	ln -s ${MESA_SRC}/src/gallium/drivers/iris/i915/iris_batch.c $@
 i915_iris_bufmgr.c:
-	ln -s ${MESA_SRC}//src/gallium/drivers/iris/i915/iris_bufmgr.c $@
+	ln -s ${MESA_SRC}/src/gallium/drivers/iris/i915/iris_bufmgr.c $@
 i915_iris_kmd_backend.c:
 	ln -s ${MESA_SRC}/src/gallium/drivers/iris/i915/iris_kmd_backend.c $@
+xe_iris_batch.c:
+	ln -s ${MESA_SRC}/src/gallium/drivers/iris/xe/iris_batch.c $@
 xe_iris_bufmgr.c:
 	ln -s ${MESA_SRC}/src/gallium/drivers/iris/xe/iris_bufmgr.c $@
 xe_iris_kmd_backend.c:
@@ -59,6 +62,7 @@ CPPFLAGS+=	-DGALLIUM_IRIS \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir
 
 install:
@@ -73,5 +77,6 @@ obj: _xenocara_obj
 CLEANFILES+=	i915_iris_batch.c \
 		i915_iris_bufmgr.c \
 		i915_iris_kmd_backend.c \
+		xe_iris_batch.c \
 		xe_iris_bufmgr.c \
 		xe_iris_kmd_backend.c

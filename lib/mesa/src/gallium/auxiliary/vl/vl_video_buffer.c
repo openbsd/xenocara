@@ -73,9 +73,11 @@ vl_video_buffer_plane_order(enum pipe_format format)
 {
    switch(format) {
    case PIPE_FORMAT_YV12:
+   case PIPE_FORMAT_IYUV:
       return const_resource_plane_order_YVU;
 
    case PIPE_FORMAT_NV12:
+   case PIPE_FORMAT_NV21:
    case PIPE_FORMAT_Y8_U8_V8_444_UNORM:
    case PIPE_FORMAT_R8G8B8A8_UNORM:
    case PIPE_FORMAT_R8G8B8X8_UNORM:
@@ -218,6 +220,21 @@ vl_video_buffer_destroy(struct pipe_video_buffer *buffer)
    FREE(buffer);
 }
 
+static void
+vl_video_buffer_resources(struct pipe_video_buffer *buffer,
+                          struct pipe_resource **resources)
+{
+   struct vl_video_buffer *buf = (struct vl_video_buffer *)buffer;
+   unsigned num_planes = util_format_get_num_planes(buffer->buffer_format);
+   unsigned i;
+
+   assert(buf);
+
+   for (i = 0; i < num_planes; ++i) {
+      resources[i] = buf->resources[i];
+   }
+}
+
 static struct pipe_sampler_view **
 vl_video_buffer_sampler_view_planes(struct pipe_video_buffer *buffer)
 {
@@ -279,13 +296,19 @@ vl_video_buffer_sampler_view_components(struct pipe_video_buffer *buffer)
          nr_components = 3;
 
       for (j = 0; j < nr_components && component < VL_NUM_COMPONENTS; ++j, ++component) {
+         unsigned pipe_swizzle;
+
          if (buf->sampler_view_components[component])
             continue;
 
          memset(&sv_templ, 0, sizeof(sv_templ));
          u_sampler_view_default_template(&sv_templ, res, sampler_format[plane_order[i]]);
-         sv_templ.swizzle_r = sv_templ.swizzle_g = sv_templ.swizzle_b = PIPE_SWIZZLE_X + j;
+         pipe_swizzle = (buf->base.buffer_format == PIPE_FORMAT_YUYV || buf->base.buffer_format == PIPE_FORMAT_UYVY) ?
+                        (PIPE_SWIZZLE_X + j + 1) % 3 :
+                        (PIPE_SWIZZLE_X + j);
+         sv_templ.swizzle_r = sv_templ.swizzle_g = sv_templ.swizzle_b = pipe_swizzle;
          sv_templ.swizzle_a = PIPE_SWIZZLE_1;
+
          buf->sampler_view_components[component] = pipe->create_sampler_view(pipe, res, &sv_templ);
          if (!buf->sampler_view_components[component])
             goto error;
@@ -453,6 +476,7 @@ vl_video_buffer_create_ex2(struct pipe_context *pipe,
    buffer->base = *tmpl;
    buffer->base.context = pipe;
    buffer->base.destroy = vl_video_buffer_destroy;
+   buffer->base.get_resources = vl_video_buffer_resources;
    buffer->base.get_sampler_view_planes = vl_video_buffer_sampler_view_planes;
    buffer->base.get_sampler_view_components = vl_video_buffer_sampler_view_components;
    buffer->base.get_surfaces = vl_video_buffer_surfaces;

@@ -25,7 +25,6 @@
 
 #include "r600_pipe.h"
 #include "r600_isa.h"
-#include "tgsi/tgsi_exec.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -216,6 +215,7 @@ struct r600_bytecode_cf {
 	unsigned isa[2];
 	unsigned nlds_read;
 	unsigned nqueue_read;
+	unsigned clause_local_written;
 };
 
 #define FC_NONE				0
@@ -279,18 +279,17 @@ struct r600_bytecode {
 	unsigned        r6xx_nop_after_rel_dst;
 	bool            index_loaded[2];
 	unsigned        index_reg[2]; /* indexing register CF_INDEX_[01] */
-	unsigned        index_reg_chan[2]; /* indexing register chanel CF_INDEX_[01] */
+	unsigned        index_reg_chan[2]; /* indexing register channel CF_INDEX_[01] */
 	unsigned        debug_id;
 	struct r600_isa* isa;
 	struct r600_bytecode_output pending_outputs[5];
 	int n_pending_outputs;
-	boolean			need_wait_ack; /* emit a pending WAIT_ACK prior to control flow */
-	boolean			precise;
+	bool			need_wait_ack; /* emit a pending WAIT_ACK prior to control flow */
+	bool			precise;
 };
 
 /* eg_asm.c */
 int eg_bytecode_cf_build(struct r600_bytecode *bc, struct r600_bytecode_cf *cf);
-int egcm_load_index_reg(struct r600_bytecode *bc, unsigned id, bool inside_alu_clause);
 int eg_bytecode_gds_build(struct r600_bytecode *bc, struct r600_bytecode_gds *gds, unsigned id);
 int eg_bytecode_alu_build(struct r600_bytecode *bc,
 			  struct r600_bytecode_alu *alu, unsigned id);

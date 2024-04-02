@@ -57,6 +57,7 @@ static const struct u_tracepoint __tp_surface = {
     ALIGN_POT(sizeof(struct trace_surface), 8),   /* keep size 64b aligned */
     "surface",
     false,
+    0,
     __print_surface,
     __print_json_surface,
 };
@@ -108,6 +109,7 @@ static const struct u_tracepoint __tp_framebuffer = {
     ALIGN_POT(sizeof(struct trace_framebuffer), 8),   /* keep size 64b aligned */
     "framebuffer",
     false,
+    1,
     __print_framebuffer,
     __print_json_framebuffer,
 };
@@ -164,6 +166,7 @@ static const struct u_tracepoint __tp_grid_info = {
     ALIGN_POT(sizeof(struct trace_grid_info), 8),   /* keep size 64b aligned */
     "grid_info",
     false,
+    2,
     __print_grid_info,
     __print_json_grid_info,
 };

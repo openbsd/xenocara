@@ -1,10 +1,9 @@
-#	$OpenBSD: Makefile,v 1.5 2023/11/02 04:53:31 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	glapi
 
 SRCS=	entry.c \
 	u_current.c \
-	u_execmem.c \
 	glapi.c \
 	stub.c \
 	table.c

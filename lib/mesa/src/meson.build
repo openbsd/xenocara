@@ -18,6 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+subdir('gtest')
+subdir('c11/impl')
+subdir('android_stub')
+subdir('util')
+
 inc_mesa = include_directories('mesa')
 inc_mapi = include_directories('mapi')
 inc_src = include_directories('.')
@@ -29,6 +34,8 @@ inc_virtio_gpu = include_directories('virtio/virtio-gpu')
 inc_frontends = include_directories('gallium/frontends')
 pps_datasources = []
 pps_includes = []
+
+inc_llvmpipe = include_directories('gallium/drivers/llvmpipe')
 
 if with_llvm
   inc_amd_common_llvm = include_directories('amd/llvm')
@@ -51,15 +58,11 @@ sha1_h = custom_target(
   build_always_stale : true, # commit sha1 can change without having touched these files
 )
 
-subdir('gtest')
 if cc.get_argument_syntax() == 'msvc'
   subdir('getopt')
 else
   idep_getopt = null_dep
 endif
-subdir('android_stub')
-subdir('c11/impl')
-subdir('util')
 if with_gallium
   subdir('mapi')
 endif
@@ -103,7 +106,7 @@ endif
 if with_microsoft_clc or with_gallium_d3d12 or with_spirv_to_dxil or with_microsoft_vk
   subdir('microsoft')
 endif
-if with_gallium_nouveau
+if with_any_nouveau
   subdir('nouveau')
 endif
 if with_gallium_asahi or with_tools.contains('asahi')

@@ -58,7 +58,6 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_BindBufferRange(table, _mesa_BindBufferRange);
       SET_BindFragDataLocation(table, _mesa_BindFragDataLocation);
       SET_BindFragDataLocationIndexed(table, _mesa_BindFragDataLocationIndexed);
-      SET_BindSampler(table, _mesa_BindSampler);
       SET_BindTransformFeedback(table, _mesa_BindTransformFeedback);
       SET_BlendEquationSeparateiARB(table, _mesa_BlendEquationSeparateiARB);
       SET_BlendEquationiARB(table, _mesa_BlendEquationiARB);
@@ -69,15 +68,10 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_ClearBufferfv(table, _mesa_ClearBufferfv);
       SET_ClearBufferiv(table, _mesa_ClearBufferiv);
       SET_ClearBufferuiv(table, _mesa_ClearBufferuiv);
-      SET_ClientWaitSync(table, _mesa_ClientWaitSync);
       SET_CopyBufferSubData(table, _mesa_CopyBufferSubData);
       SET_CopyImageSubData(table, _mesa_CopyImageSubData);
-      SET_DeleteSamplers(table, _mesa_DeleteSamplers);
-      SET_DeleteSync(table, _mesa_DeleteSync);
       SET_EndTransformFeedback(table, _mesa_EndTransformFeedback);
-      SET_FenceSync(table, _mesa_FenceSync);
       SET_FramebufferTextureLayer(table, _mesa_FramebufferTextureLayer);
-      SET_GenSamplers(table, _mesa_GenSamplers);
       SET_InvalidateFramebuffer(table, _mesa_InvalidateFramebuffer);
       SET_InvalidateSubFramebuffer(table, _mesa_InvalidateSubFramebuffer);
       SET_MinSampleShading(table, _mesa_MinSampleShading);
@@ -88,7 +82,6 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_TransformFeedbackVaryings(table, _mesa_TransformFeedbackVaryings);
       SET_UniformBlockBinding(table, _mesa_UniformBlockBinding);
       SET_VertexAttribIPointer(table, _mesa_VertexAttribIPointer);
-      SET_WaitSync(table, _mesa_WaitSync);
    }
    if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 31))) {
       SET_BindImageTexture(table, _mesa_BindImageTexture);
@@ -121,6 +114,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_BufferSubData(table, _mesa_BufferSubData);
       SET_CheckFramebufferStatus(table, _mesa_CheckFramebufferStatus);
       SET_Clear(table, _mesa_Clear);
+      SET_ClientWaitSync(table, _mesa_ClientWaitSync);
       SET_CompressedTexImage2D(table, _mesa_CompressedTexImage2D);
       SET_CompressedTexSubImage2D(table, _mesa_CompressedTexSubImage2D);
       SET_ConservativeRasterParameterfNV(table, _mesa_ConservativeRasterParameterfNV);
@@ -129,8 +123,10 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_CopyTexSubImage2D(table, _mesa_CopyTexSubImage2D);
       SET_CullFace(table, _mesa_CullFace);
       SET_DeleteBuffers(table, _mesa_DeleteBuffers);
+      SET_DeleteSync(table, _mesa_DeleteSync);
       SET_DeleteTextures(table, _mesa_DeleteTextures);
       SET_DepthFunc(table, _mesa_DepthFunc);
+      SET_FenceSync(table, _mesa_FenceSync);
       SET_FlushMappedBufferRange(table, _mesa_FlushMappedBufferRange);
       SET_FramebufferRenderbuffer(table, _mesa_FramebufferRenderbuffer);
       SET_FramebufferTexture2D(table, _mesa_FramebufferTexture2D);
@@ -152,6 +148,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_TexSubImage2D(table, _mesa_TexSubImage2D);
       SET_UnmapBuffer(table, _mesa_UnmapBuffer);
       SET_Viewport(table, _mesa_Viewport);
+      SET_WaitSync(table, _mesa_WaitSync);
    }
    if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || _mesa_is_gles1(ctx))) {
       SET_LogicOp(table, _mesa_LogicOp);
@@ -163,12 +160,14 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_BeginConditionalRender(table, _mesa_BeginConditionalRender);
       SET_BindAttribLocation(table, _mesa_BindAttribLocation);
       SET_BindProgramPipeline(table, _mesa_BindProgramPipeline);
+      SET_BindSampler(table, _mesa_BindSampler);
       SET_BindVertexArray(table, _mesa_BindVertexArray);
       SET_ClipControl(table, _mesa_ClipControl);
       SET_CompressedTexImage3D(table, _mesa_CompressedTexImage3D);
       SET_CompressedTexSubImage3D(table, _mesa_CompressedTexSubImage3D);
       SET_CopyTexSubImage3D(table, _mesa_CopyTexSubImage3D);
       SET_CreateShader(table, _mesa_CreateShader);
+      SET_DeleteSamplers(table, _mesa_DeleteSamplers);
       SET_DeleteVertexArrays(table, _mesa_DeleteVertexArrays);
       SET_DetachShader(table, _mesa_DetachShader);
       SET_DisableVertexAttribArray(table, _mesa_DisableVertexAttribArray);
@@ -177,6 +176,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_EndConditionalRender(table, _mesa_EndConditionalRender);
       SET_FramebufferTexture3D(table, _mesa_FramebufferTexture3D);
       SET_GenProgramPipelines(table, _mesa_GenProgramPipelines);
+      SET_GenSamplers(table, _mesa_GenSamplers);
       SET_GenVertexArrays(table, _mesa_GenVertexArrays);
       SET_GetUniformLocation(table, _mesa_GetUniformLocation);
       SET_LinkProgram(table, _mesa_LinkProgram);
@@ -536,7 +536,6 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_TexImage3DMultisample(table, _mesa_TexImage3DMultisample);
       SET_TexPageCommitmentARB(table, _mesa_TexPageCommitmentARB);
       SET_TexStorageMem1DEXT(table, _mesa_TexStorageMem1DEXT);
-      SET_TextureBarrierNV(table, _mesa_TextureBarrierNV);
       SET_TextureBufferEXT(table, _mesa_TextureBufferEXT);
       SET_TextureBufferRangeEXT(table, _mesa_TextureBufferRangeEXT);
       SET_TextureImage1DEXT(table, _mesa_TextureImage1DEXT);
@@ -613,10 +612,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_GetInternalformativ(table, _mesa_GetInternalformativ);
       SET_GetSamplerParameterIiv(table, _mesa_GetSamplerParameterIiv);
       SET_GetSamplerParameterIuiv(table, _mesa_GetSamplerParameterIuiv);
-      SET_GetSamplerParameterfv(table, _mesa_GetSamplerParameterfv);
-      SET_GetSamplerParameteriv(table, _mesa_GetSamplerParameteriv);
       SET_GetStringi(table, _mesa_GetStringi);
-      SET_GetSynciv(table, _mesa_GetSynciv);
       SET_GetTexParameterIiv(table, _mesa_GetTexParameterIiv);
       SET_GetTexParameterIuiv(table, _mesa_GetTexParameterIuiv);
       SET_GetTransformFeedbackVarying(table, _mesa_GetTransformFeedbackVarying);
@@ -627,8 +623,6 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_GetVertexAttribIuiv(table, _mesa_GetVertexAttribIuiv);
       SET_InternalInvalidateFramebufferAncillaryMESA(table, _mesa_InternalInvalidateFramebufferAncillaryMESA);
       SET_IsEnabledi(table, _mesa_IsEnabledi);
-      SET_IsSampler(table, _mesa_IsSampler);
-      SET_IsSync(table, _mesa_IsSync);
       SET_IsTransformFeedback(table, _mesa_IsTransformFeedback);
       SET_NamedRenderbufferStorageMultisampleAdvancedAMD(table, _mesa_NamedRenderbufferStorageMultisampleAdvancedAMD);
       SET_ProgramUniform1ui(table, _mesa_ProgramUniform1ui);
@@ -642,10 +636,6 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_RenderbufferStorageMultisampleAdvancedAMD(table, _mesa_RenderbufferStorageMultisampleAdvancedAMD);
       SET_SamplerParameterIiv(table, _mesa_SamplerParameterIiv);
       SET_SamplerParameterIuiv(table, _mesa_SamplerParameterIuiv);
-      SET_SamplerParameterf(table, _mesa_SamplerParameterf);
-      SET_SamplerParameterfv(table, _mesa_SamplerParameterfv);
-      SET_SamplerParameteri(table, _mesa_SamplerParameteri);
-      SET_SamplerParameteriv(table, _mesa_SamplerParameteriv);
       SET_TexParameterIiv(table, _mesa_TexParameterIiv);
       SET_TexParameterIuiv(table, _mesa_TexParameterIuiv);
       SET_Uniform1ui(table, _mesa_Uniform1ui);
@@ -762,6 +752,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_GetError(table, _mesa_GetError);
       SET_GetFloatv(table, _mesa_GetFloatv);
       SET_GetFramebufferAttachmentParameteriv(table, _mesa_GetFramebufferAttachmentParameteriv);
+      SET_GetInteger64v(table, _mesa_GetInteger64v);
       SET_GetIntegerv(table, _mesa_GetIntegerv);
       SET_GetObjectLabel(table, _mesa_GetObjectLabel);
       SET_GetObjectLabelEXT(table, _mesa_GetObjectLabelEXT);
@@ -769,6 +760,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_GetPointerv(table, _mesa_GetPointerv);
       SET_GetRenderbufferParameteriv(table, _mesa_GetRenderbufferParameteriv);
       SET_GetString(table, _mesa_GetString);
+      SET_GetSynciv(table, _mesa_GetSynciv);
       SET_GetTexParameterfv(table, _mesa_GetTexParameterfv);
       SET_GetTexParameteriv(table, _mesa_GetTexParameteriv);
       SET_Hint(table, _mesa_Hint);
@@ -777,6 +769,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_IsEnabled(table, _mesa_IsEnabled);
       SET_IsFramebuffer(table, _mesa_IsFramebuffer);
       SET_IsRenderbuffer(table, _mesa_IsRenderbuffer);
+      SET_IsSync(table, _mesa_IsSync);
       SET_IsTexture(table, _mesa_IsTexture);
       SET_LabelObjectEXT(table, _mesa_LabelObjectEXT);
       SET_MultiDrawArrays(table, _mesa_MultiDrawArrays);
@@ -830,7 +823,6 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_GetAttribLocation(table, _mesa_GetAttribLocation);
       SET_GetFirstPerfQueryIdINTEL(table, _mesa_GetFirstPerfQueryIdINTEL);
       SET_GetGraphicsResetStatusARB(table, _mesa_GetGraphicsResetStatusARB);
-      SET_GetInteger64v(table, _mesa_GetInteger64v);
       SET_GetNextPerfQueryIdINTEL(table, _mesa_GetNextPerfQueryIdINTEL);
       SET_GetPerfCounterInfoINTEL(table, _mesa_GetPerfCounterInfoINTEL);
       SET_GetPerfMonitorCounterDataAMD(table, _mesa_GetPerfMonitorCounterDataAMD);
@@ -852,6 +844,8 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_GetQueryObjectui64v(table, _mesa_GetQueryObjectui64v);
       SET_GetQueryObjectuiv(table, _mesa_GetQueryObjectuiv);
       SET_GetQueryiv(table, _mesa_GetQueryiv);
+      SET_GetSamplerParameterfv(table, _mesa_GetSamplerParameterfv);
+      SET_GetSamplerParameteriv(table, _mesa_GetSamplerParameteriv);
       SET_GetShaderInfoLog(table, _mesa_GetShaderInfoLog);
       SET_GetShaderPrecisionFormat(table, _mesa_GetShaderPrecisionFormat);
       SET_GetShaderSource(table, _mesa_GetShaderSource);
@@ -868,6 +862,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_IsProgram(table, _mesa_IsProgram);
       SET_IsProgramPipeline(table, _mesa_IsProgramPipeline);
       SET_IsQuery(table, _mesa_IsQuery);
+      SET_IsSampler(table, _mesa_IsSampler);
       SET_IsShader(table, _mesa_IsShader);
       SET_IsVertexArray(table, _mesa_IsVertexArray);
       SET_MaxShaderCompilerThreadsKHR(table, _mesa_MaxShaderCompilerThreadsKHR);
@@ -900,8 +895,13 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_QueryCounter(table, _mesa_QueryCounter);
       SET_ReleaseShaderCompiler(table, _mesa_ReleaseShaderCompiler);
       SET_RenderbufferStorageMultisample(table, _mesa_RenderbufferStorageMultisample);
+      SET_SamplerParameterf(table, _mesa_SamplerParameterf);
+      SET_SamplerParameterfv(table, _mesa_SamplerParameterfv);
+      SET_SamplerParameteri(table, _mesa_SamplerParameteri);
+      SET_SamplerParameteriv(table, _mesa_SamplerParameteriv);
       SET_SelectPerfMonitorCountersAMD(table, _mesa_SelectPerfMonitorCountersAMD);
       SET_ShaderBinary(table, _mesa_ShaderBinary);
+      SET_TextureBarrierNV(table, _mesa_TextureBarrierNV);
       SET_Uniform1f(table, _mesa_Uniform1f);
       SET_Uniform1fv(table, _mesa_Uniform1fv);
       SET_Uniform1i(table, _mesa_Uniform1i);
@@ -1344,7 +1344,6 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_BindBufferRange(table, _mesa_BindBufferRange_no_error);
       SET_BindFragDataLocation(table, _mesa_BindFragDataLocation_no_error);
       SET_BindFragDataLocationIndexed(table, _mesa_BindFragDataLocationIndexed_no_error);
-      SET_BindSampler(table, _mesa_BindSampler_no_error);
       SET_BindTransformFeedback(table, _mesa_BindTransformFeedback_no_error);
       SET_BlendEquationSeparateiARB(table, _mesa_BlendEquationSeparateiARB_no_error);
       SET_BlendEquationiARB(table, _mesa_BlendEquationiARB_no_error);
@@ -1355,15 +1354,10 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_ClearBufferfv(table, _mesa_ClearBufferfv_no_error);
       SET_ClearBufferiv(table, _mesa_ClearBufferiv_no_error);
       SET_ClearBufferuiv(table, _mesa_ClearBufferuiv_no_error);
-      SET_ClientWaitSync(table, _mesa_ClientWaitSync_no_error);
       SET_CopyBufferSubData(table, _mesa_CopyBufferSubData_no_error);
       SET_CopyImageSubData(table, _mesa_CopyImageSubData_no_error);
-      SET_DeleteSamplers(table, _mesa_DeleteSamplers_no_error);
-      SET_DeleteSync(table, _mesa_DeleteSync_no_error);
       SET_EndTransformFeedback(table, _mesa_EndTransformFeedback_no_error);
-      SET_FenceSync(table, _mesa_FenceSync_no_error);
       SET_FramebufferTextureLayer(table, _mesa_FramebufferTextureLayer_no_error);
-      SET_GenSamplers(table, _mesa_GenSamplers_no_error);
       SET_InvalidateFramebuffer(table, _mesa_InvalidateFramebuffer_no_error);
       SET_InvalidateSubFramebuffer(table, _mesa_InvalidateSubFramebuffer_no_error);
       SET_MinSampleShading(table, _mesa_MinSampleShading_no_error);
@@ -1374,7 +1368,6 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_TransformFeedbackVaryings(table, _mesa_TransformFeedbackVaryings_no_error);
       SET_UniformBlockBinding(table, _mesa_UniformBlockBinding_no_error);
       SET_VertexAttribIPointer(table, _mesa_VertexAttribIPointer_no_error);
-      SET_WaitSync(table, _mesa_WaitSync_no_error);
    }
    if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 31))) {
       SET_BindImageTexture(table, _mesa_BindImageTexture_no_error);
@@ -1407,6 +1400,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_BufferSubData(table, _mesa_BufferSubData_no_error);
       SET_CheckFramebufferStatus(table, _mesa_CheckFramebufferStatus_no_error);
       SET_Clear(table, _mesa_Clear_no_error);
+      SET_ClientWaitSync(table, _mesa_ClientWaitSync_no_error);
       SET_CompressedTexImage2D(table, _mesa_CompressedTexImage2D_no_error);
       SET_CompressedTexSubImage2D(table, _mesa_CompressedTexSubImage2D_no_error);
       SET_ConservativeRasterParameterfNV(table, _mesa_ConservativeRasterParameterfNV_no_error);
@@ -1415,8 +1409,10 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_CopyTexSubImage2D(table, _mesa_CopyTexSubImage2D_no_error);
       SET_CullFace(table, _mesa_CullFace_no_error);
       SET_DeleteBuffers(table, _mesa_DeleteBuffers_no_error);
+      SET_DeleteSync(table, _mesa_DeleteSync_no_error);
       SET_DeleteTextures(table, _mesa_DeleteTextures_no_error);
       SET_DepthFunc(table, _mesa_DepthFunc_no_error);
+      SET_FenceSync(table, _mesa_FenceSync_no_error);
       SET_FlushMappedBufferRange(table, _mesa_FlushMappedBufferRange_no_error);
       SET_FramebufferRenderbuffer(table, _mesa_FramebufferRenderbuffer_no_error);
       SET_FramebufferTexture2D(table, _mesa_FramebufferTexture2D_no_error);
@@ -1438,6 +1434,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_TexSubImage2D(table, _mesa_TexSubImage2D_no_error);
       SET_UnmapBuffer(table, _mesa_UnmapBuffer_no_error);
       SET_Viewport(table, _mesa_Viewport_no_error);
+      SET_WaitSync(table, _mesa_WaitSync_no_error);
    }
    if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || _mesa_is_gles1(ctx))) {
       SET_LogicOp(table, _mesa_LogicOp_no_error);
@@ -1449,12 +1446,14 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_BeginConditionalRender(table, _mesa_BeginConditionalRender_no_error);
       SET_BindAttribLocation(table, _mesa_BindAttribLocation_no_error);
       SET_BindProgramPipeline(table, _mesa_BindProgramPipeline_no_error);
+      SET_BindSampler(table, _mesa_BindSampler_no_error);
       SET_BindVertexArray(table, _mesa_BindVertexArray_no_error);
       SET_ClipControl(table, _mesa_ClipControl_no_error);
       SET_CompressedTexImage3D(table, _mesa_CompressedTexImage3D_no_error);
       SET_CompressedTexSubImage3D(table, _mesa_CompressedTexSubImage3D_no_error);
       SET_CopyTexSubImage3D(table, _mesa_CopyTexSubImage3D_no_error);
       SET_CreateShader(table, _mesa_CreateShader_no_error);
+      SET_DeleteSamplers(table, _mesa_DeleteSamplers_no_error);
       SET_DeleteVertexArrays(table, _mesa_DeleteVertexArrays_no_error);
       SET_DetachShader(table, _mesa_DetachShader_no_error);
       SET_DisableVertexAttribArray(table, _mesa_DisableVertexAttribArray_no_error);
@@ -1463,6 +1462,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_EndConditionalRender(table, _mesa_EndConditionalRender_no_error);
       SET_FramebufferTexture3D(table, _mesa_FramebufferTexture3D_no_error);
       SET_GenProgramPipelines(table, _mesa_GenProgramPipelines_no_error);
+      SET_GenSamplers(table, _mesa_GenSamplers_no_error);
       SET_GenVertexArrays(table, _mesa_GenVertexArrays_no_error);
       SET_GetUniformLocation(table, _mesa_GetUniformLocation_no_error);
       SET_LinkProgram(table, _mesa_LinkProgram_no_error);

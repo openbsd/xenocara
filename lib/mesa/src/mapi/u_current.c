@@ -50,6 +50,7 @@
 
 #include "c11/threads.h"
 #include "util/u_thread.h"
+#include "util/simple_mtx.h"
 #include "u_current.h"
 
 #ifndef MAPI_MODE_UTIL
@@ -90,7 +91,7 @@ extern void (*__glapi_noop_table[])(void);
  * thread, perhaps running on a different processor, is clearing it.  Because
  * of that, \c ThreadSafe, which can only ever be changed to \c GL_TRUE, is
  * used to determine whether or not the application is multithreaded.
- * 
+ *
  * In the TLS case, the variables \c _glapi_Dispatch and \c _glapi_Context are
  * hardcoded to \c NULL.  Instead the TLS variables \c _glapi_tls_Dispatch and
  * \c _glapi_tls_Context are used.  Having \c _glapi_Dispatch and
@@ -141,7 +142,7 @@ u_current_init_tsd(void)
 /**
  * Mutex for multithread check.
  */
-static mtx_t ThreadCheckMutex = _MTX_INITIALIZER_NP;
+static simple_mtx_t ThreadCheckMutex = SIMPLE_MTX_INITIALIZER;
 
 static thrd_t knownID;
 
@@ -157,7 +158,7 @@ u_current_init(void)
    if (ThreadSafe)
       return;
 
-   mtx_lock(&ThreadCheckMutex);
+   simple_mtx_lock(&ThreadCheckMutex);
    if (firstCall) {
       u_current_init_tsd();
 
@@ -169,7 +170,7 @@ u_current_init(void)
       u_current_set_table(NULL);
       u_current_set_context(NULL);
    }
-   mtx_unlock(&ThreadCheckMutex);
+   simple_mtx_unlock(&ThreadCheckMutex);
 }
 
 #else

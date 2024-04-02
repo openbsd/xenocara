@@ -115,12 +115,14 @@ static int parse_reg(const char *str)
 "(neg)"                           return TOKEN(T_NEG);
 "(abs)"                           return TOKEN(T_ABS);
 "(r)"                             return TOKEN(T_R);
+"(last)"                          return TOKEN(T_LAST);
 "(ul)"                            return TOKEN(T_UL);
 "(even)"                          return TOKEN(T_EVEN);
 "(pos_infinity)"                  return TOKEN(T_POS_INFINITY);
 "(neg_infinity)"                  return TOKEN(T_NEG_INFINITY);
 "(ei)"                            return TOKEN(T_EI);
 "(jp)"                            return TOKEN(T_JP);
+"(eq)"                            return TOKEN(T_EQ_FLAG);
 "(sat)"                           return TOKEN(T_SAT);
 "(rpt"[0-7]")"                    ir3_yylval.num = strtol(yytext+4, NULL, 10); return T_RPT;
 "(nop"[0-7]")"                    ir3_yylval.num = strtol(yytext+4, NULL, 10); return T_NOP;
@@ -378,6 +380,9 @@ static int parse_reg(const char *str)
 "getwid"                          return TOKEN(T_OP_GETWID);
 "getfiberid"                      return TOKEN(T_OP_GETFIBERID);
 "stc"                             return TOKEN(T_OP_STC);
+"stsc"                            return TOKEN(T_OP_STSC);
+
+("b16"|"b32"){1} ir3_yylval.str = yytext; return T_INSTR_TYPE;
 
                                   /* category 7: */
 "bar"                             return TOKEN(T_OP_BAR);
@@ -387,6 +392,12 @@ static int parse_reg(const char *str)
 "dccln.all"                       return TOKEN(T_OP_DCCLN);
 "dcinv.all"                       return TOKEN(T_OP_DCINV);
 "dcflu.all"                       return TOKEN(T_OP_DCFLU);
+"ccinv"                           return TOKEN(T_OP_CCINV);
+"lock"                            return TOKEN(T_OP_LOCK);
+"unlock"                          return TOKEN(T_OP_UNLOCK);
+"alias"                           return TOKEN(T_OP_ALIAS);
+
+"print"                           return TOKEN(T_OP_PRINT);
 
 "f16"                             return TOKEN(T_TYPE_F16);
 "f32"                             return TOKEN(T_TYPE_F32);
@@ -428,6 +439,10 @@ static int parse_reg(const char *str)
 "uniform"                         return T_UNIFORM;
 "nonuniform"                      return T_NONUNIFORM;
 "imm"                             return T_IMM;
+
+"tex"                             return T_MOD_TEX;
+"mem"                             return T_MOD_MEM;
+"rt"                              return T_MOD_RT;
 
 "h"                               return 'h';
 "="                               return '=';

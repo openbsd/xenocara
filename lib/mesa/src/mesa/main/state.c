@@ -256,12 +256,10 @@ update_program(struct gl_context *ctx)
                               NULL);
    } else {
       /* Use fragment program generated from fixed-function state */
-      struct gl_shader_program *f = _mesa_get_fixed_func_fragment_program(ctx);
-
       _mesa_reference_program(ctx, &ctx->FragmentProgram._Current,
-			      f->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program);
+                              _mesa_get_fixed_func_fragment_program(ctx));
       _mesa_reference_program(ctx, &ctx->FragmentProgram._TexEnvProgram,
-			      f->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program);
+                              ctx->FragmentProgram._Current);
    }
 
    /* Examine vertex program after fragment program as
@@ -689,6 +687,9 @@ set_vertex_processing_mode(struct gl_context *ctx, gl_vertex_processing_mode m)
    default:
       assert(0);
    }
+
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
 }
 
 

@@ -24,15 +24,15 @@
 #ifndef _NIR_SEARCH_
 #define _NIR_SEARCH_
 
+#include "util/u_dynarray.h"
 #include "nir.h"
 #include "nir_worklist.h"
-#include "util/u_dynarray.h"
 
 #define NIR_SEARCH_MAX_VARIABLES 16
 
 struct nir_builder;
 
-typedef enum PACKED {
+typedef enum ENUM_PACKED {
    nir_search_value_expression,
    nir_search_value_variable,
    nir_search_value_constant,
@@ -173,7 +173,7 @@ struct per_op_table {
 };
 
 struct transform {
-   uint16_t search; /* Index in table->values[] for the search expression. */
+   uint16_t search;  /* Index in table->values[] for the search expression. */
    uint16_t replace; /* Index in table->values[] for the replace value. */
    unsigned condition_offset;
 };

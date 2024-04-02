@@ -49,12 +49,24 @@ static const uint8_t isl_encode_tiling[] = {
    [ISL_TILING_64]      = TILE64,
 #else
    [ISL_TILING_Y0]      = YMAJOR,
-   [ISL_TILING_Yf]      = YMAJOR,
-   [ISL_TILING_Ys]      = YMAJOR,
-#endif
+   [ISL_TILING_ICL_Yf]  = YMAJOR,
+   [ISL_TILING_ICL_Ys]  = YMAJOR,
+   [ISL_TILING_SKL_Yf]  = YMAJOR,
+   [ISL_TILING_SKL_Ys]  = YMAJOR,
+#endif /* GFX_VERx10 < 125 */
 #if GFX_VER <= 11
    [ISL_TILING_W]       = WMAJOR,
 #endif
+};
+#endif
+
+#if GFX_VER >= 9 && GFX_VERx10 <= 120
+static const uint8_t isl_tiling_encode_trmode[] = {
+   [ISL_TILING_Y0]         = NONE,
+   [ISL_TILING_SKL_Yf]     = TILEYF,
+   [ISL_TILING_SKL_Ys]     = TILEYS,
+   [ISL_TILING_ICL_Yf]     = TILEYF,
+   [ISL_TILING_ICL_Ys]     = TILEYS,
 };
 #endif
 
@@ -71,7 +83,7 @@ static const uint32_t isl_encode_aux_mode[] = {
    [ISL_AUX_USAGE_NONE] = AUX_NONE,
    [ISL_AUX_USAGE_MC] = AUX_NONE,
    [ISL_AUX_USAGE_MCS] = AUX_CCS_E,
-   [ISL_AUX_USAGE_GFX12_CCS_E] = AUX_CCS_E,
+   [ISL_AUX_USAGE_FCV_CCS_E] = AUX_CCS_E,
    [ISL_AUX_USAGE_CCS_E] = AUX_CCS_E,
    [ISL_AUX_USAGE_HIZ_CCS_WT] = AUX_CCS_E,
    [ISL_AUX_USAGE_MCS_CCS] = AUX_MCS_LCE,
@@ -336,32 +348,12 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
          s.RenderTargetViewExtent = s.Depth;
       break;
    case SURFTYPE_3D:
-      assert(info->view->base_array_layer + info->view->array_len <=
-             isl_minify(info->surf->logical_level0_px.depth,
-                        info->view->base_level));
-
       /* From the Broadwell PRM >> RENDER_SURFACE_STATE::Depth:
        *
        *    If the volume texture is MIP-mapped, this field specifies the
        *    depth of the base MIP level.
        */
-      if (GFX_VER >= 9 && info->view->usage & ISL_SURF_USAGE_STORAGE_BIT) {
-         /* From the Kaby Lake docs for the RESINFO message:
-          *
-          *    "Surface Type | ... | Blue
-          *    --------------+-----+----------------
-          *     SURFTYPE_3D  | ... | (Depth+1)»LOD"
-          *
-          * which isn't actually what the Vulkan or D3D specs want for storage
-          * images.  We want the requested array size.  The good news is that,
-          * thanks to Skylake and later using the same image layout for 3D
-          * images as 2D array images, we should be able to adjust the depth
-          * without affecting the layout.
-          */
-         s.Depth = (info->view->array_len << info->view->base_level) - 1;
-      } else {
-         s.Depth = info->surf->logical_level0_px.depth - 1;
-      }
+      s.Depth = info->surf->logical_level0_px.depth - 1;
 
       /* From the Broadwell PRM >> RENDER_SURFACE_STATE::RenderTargetViewExtent:
        *
@@ -388,19 +380,21 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
       unreachable("bad SurfaceType");
    }
 
-#if GFX_VER >= 12
-   /* Wa_1806565034:
-    *
-    *    "Only set SurfaceArray if arrayed surface is > 1."
-    *
-    * Since this is a performance workaround, we only enable it when robust
-    * image access is disabled. Otherwise layered robust access is not
-    * specification compliant.
-    */
-   s.SurfaceArray = info->surf->dim != ISL_SURF_DIM_3D &&
-      (info->robust_image_access || info->view->array_len > 1);
-#elif GFX_VER >= 7
-   s.SurfaceArray = info->surf->dim != ISL_SURF_DIM_3D;
+#if GFX_VER >= 7
+   if (INTEL_NEEDS_WA_1806565034) {
+      /* Wa_1806565034:
+       *
+       *    "Only set SurfaceArray if arrayed surface is > 1."
+       *
+       * Since this is a performance workaround, we only enable it when robust
+       * image access is disabled. Otherwise layered robust access is not
+       * specification compliant.
+       */
+      s.SurfaceArray = info->surf->dim != ISL_SURF_DIM_3D &&
+         (info->robust_image_access || info->view->array_len > 1);
+   } else {
+      s.SurfaceArray = info->surf->dim != ISL_SURF_DIM_3D;
+   }
 #endif
 
    if (info->view->usage & ISL_SURF_USAGE_RENDER_TARGET_BIT) {
@@ -422,11 +416,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
    }
 
 #if GFX_VER >= 9
-   /* We don't use miptails yet.  The PRM recommends that you set "Mip Tail
-    * Start LOD" to 15 to prevent the hardware from trying to use them.
-    */
-   s.TiledResourceMode = NONE;
-   s.MipTailStartLOD = 15;
+   s.MipTailStartLOD = info->surf->miptail_start_level;
 #endif
 
 #if GFX_VERx10 >= 125
@@ -457,7 +447,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
                            ISL_ARRAY_PITCH_SPAN_COMPACT;
 #endif
 
-#if GFX_VER >= 8
+#if GFX_VER >= 9 && GFX_VERx10 <= 120
    assert(GFX_VER < 12 || info->surf->tiling != ISL_TILING_W);
 
    /* From the SKL+ PRMs, RENDER_SURFACE_STATE:TileMode,
@@ -465,8 +455,14 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
     *    If Surface Format is ASTC*, this field must be TILEMODE_YMAJOR.
     */
    if (isl_format_get_layout(info->view->format)->txc == ISL_TXC_ASTC)
-      assert(info->surf->tiling == ISL_TILING_Y0);
+      assert(isl_tiling_is_any_y(info->surf->tiling));
 
+   s.TileMode = isl_encode_tiling[info->surf->tiling];
+   if (isl_tiling_is_std_y(info->surf->tiling))
+      s.TiledResourceMode = isl_tiling_encode_trmode[info->surf->tiling];
+#elif GFX_VER >= 8
+   assert(isl_format_get_layout(info->view->format)->txc != ISL_TXC_ASTC);
+   assert(!isl_tiling_is_std_y(info->surf->tiling));
    s.TileMode = isl_encode_tiling[info->surf->tiling];
 #else
    s.TiledSurface = info->surf->tiling != ISL_TILING_LINEAR,
@@ -480,7 +476,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
    s.RenderCacheReadWriteMode = 0;
 #endif
 
-#if GFX_VER >= 11
+#if GFX_VER >= 11 && GFX_VERx10 < 125
    /* We've seen dEQP failures when enabling this bit with UINT formats,
     * which particularly affects blorp_copy() operations.  It shouldn't
     * have any effect on UINT textures anyway, so disable it for them.
@@ -585,7 +581,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
       if (GFX_VER >= 12) {
          assert(info->aux_usage == ISL_AUX_USAGE_MCS ||
                 info->aux_usage == ISL_AUX_USAGE_CCS_E ||
-                info->aux_usage == ISL_AUX_USAGE_GFX12_CCS_E ||
+                info->aux_usage == ISL_AUX_USAGE_FCV_CCS_E ||
                 info->aux_usage == ISL_AUX_USAGE_MC ||
                 info->aux_usage == ISL_AUX_USAGE_HIZ_CCS_WT ||
                 info->aux_usage == ISL_AUX_USAGE_MCS_CCS ||
@@ -695,8 +691,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
        *
        * If CCS_E is in use, the format must support it.
        */
-      if (info->aux_usage == ISL_AUX_USAGE_CCS_E ||
-          info->aux_usage == ISL_AUX_USAGE_GFX12_CCS_E)
+      if (isl_aux_usage_has_ccs_e(info->aux_usage))
          assert(isl_format_supports_ccs_e(dev->info, info->view->format));
 
       /* It also says:
@@ -948,25 +943,6 @@ isl_genX(buffer_fill_state_s)(const struct isl_device *dev, void *state,
    s.Depth = ((num_elements - 1) >> 20) & 0x7f;
 #endif
 
-   if (GFX_VER == 12 && dev->info->revision == 0) {
-      /* TGL-LP A0 has a HW bug (fixed in later HW) which causes buffer
-       * textures with very close base addresses (delta < 64B) to corrupt each
-       * other.  We can sort-of work around this by making small buffer
-       * textures 1D textures instead.  This doesn't fix the problem for large
-       * buffer textures but the liklihood of large, overlapping, and very
-       * close buffer textures is fairly low and the point is to hack around
-       * the bug so we can run apps and tests.
-       */
-       if (info->format != ISL_FORMAT_RAW &&
-           info->stride_B == isl_format_get_layout(info->format)->bpb / 8 &&
-           num_elements <= (1 << 14)) {
-         s.SurfaceType = SURFTYPE_1D;
-         s.Width = num_elements - 1;
-         s.Height = 0;
-         s.Depth = 0;
-      }
-   }
-
 #if GFX_VER >= 6
    s.NumberofMultisamples = MULTISAMPLECOUNT_1;
 #endif
@@ -986,6 +962,17 @@ isl_genX(buffer_fill_state_s)(const struct isl_device *dev, void *state,
    s.SurfaceBaseAddress = info->address;
 #if GFX_VER >= 6
    s.MOCS = info->mocs;
+#endif
+
+#if GFX_VER >= 9
+   /* Store the buffer size in the upper dword of the AUX surface base
+    * address. Only enabled on Gfx9+ since Gfx8 has an Atom version with only
+    * 32bits of address space.
+    */
+   if (dev->buffer_length_in_aux_addr)
+      s.AuxiliarySurfaceBaseAddress = info->size_B << 32;
+#else
+   assert(!dev->buffer_length_in_aux_addr);
 #endif
 
 #if GFX_VERx10 >= 125

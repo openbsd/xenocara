@@ -42,6 +42,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "drm-uapi/drm_fourcc.h"
 #include "util/compiler.h"
 #include "util/macros.h"
 #include "util/format/u_format.h"
@@ -414,7 +415,7 @@ enum isl_format {
 /**
  * Numerical base type for channels of isl_format.
  */
-enum PACKED isl_base_type {
+enum ENUM_PACKED isl_base_type {
    /** Data which takes up space but is ignored */
    ISL_VOID,
 
@@ -575,8 +576,10 @@ enum isl_tiling {
    ISL_TILING_W, /**< W tiling */
    ISL_TILING_X, /**< X tiling */
    ISL_TILING_Y0, /**< Legacy Y tiling */
-   ISL_TILING_Yf, /**< Standard 4K tiling. The 'f' means "four". */
-   ISL_TILING_Ys, /**< Standard 64K tiling. The 's' means "sixty-four". */
+   ISL_TILING_SKL_Yf, /**< Standard 4K tiling. The 'f' means "four". */
+   ISL_TILING_SKL_Ys, /**< Standard 64K tiling. The 's' means "sixty-four". */
+   ISL_TILING_ICL_Yf, /**< Standard 4K tiling. The 'f' means "four". */
+   ISL_TILING_ICL_Ys, /**< Standard 64K tiling. The 's' means "sixty-four". */
    ISL_TILING_4,  /**< 4K tiling. */
    ISL_TILING_64,  /**< 64K tiling.*/
    ISL_TILING_HIZ, /**< Tiling format for HiZ surfaces */
@@ -593,8 +596,10 @@ typedef uint32_t isl_tiling_flags_t;
 #define ISL_TILING_W_BIT                  (1u << ISL_TILING_W)
 #define ISL_TILING_X_BIT                  (1u << ISL_TILING_X)
 #define ISL_TILING_Y0_BIT                 (1u << ISL_TILING_Y0)
-#define ISL_TILING_Yf_BIT                 (1u << ISL_TILING_Yf)
-#define ISL_TILING_Ys_BIT                 (1u << ISL_TILING_Ys)
+#define ISL_TILING_SKL_Yf_BIT             (1u << ISL_TILING_SKL_Yf)
+#define ISL_TILING_SKL_Ys_BIT             (1u << ISL_TILING_SKL_Ys)
+#define ISL_TILING_ICL_Yf_BIT             (1u << ISL_TILING_ICL_Yf)
+#define ISL_TILING_ICL_Ys_BIT             (1u << ISL_TILING_ICL_Ys)
 #define ISL_TILING_4_BIT                  (1u << ISL_TILING_4)
 #define ISL_TILING_64_BIT                 (1u << ISL_TILING_64)
 #define ISL_TILING_HIZ_BIT                (1u << ISL_TILING_HIZ)
@@ -605,12 +610,16 @@ typedef uint32_t isl_tiling_flags_t;
 
 /** Any Y tiling, including legacy Y tiling. */
 #define ISL_TILING_ANY_Y_MASK             (ISL_TILING_Y0_BIT | \
-                                           ISL_TILING_Yf_BIT | \
-                                           ISL_TILING_Ys_BIT)
+                                           ISL_TILING_SKL_Yf_BIT | \
+                                           ISL_TILING_SKL_Ys_BIT | \
+                                           ISL_TILING_ICL_Yf_BIT | \
+                                           ISL_TILING_ICL_Ys_BIT)
 
 /** The Skylake BSpec refers to Yf and Ys as "standard tiling formats". */
-#define ISL_TILING_STD_Y_MASK             (ISL_TILING_Yf_BIT | \
-                                           ISL_TILING_Ys_BIT)
+#define ISL_TILING_STD_Y_MASK             (ISL_TILING_SKL_Yf_BIT | \
+                                           ISL_TILING_SKL_Ys_BIT | \
+                                           ISL_TILING_ICL_Yf_BIT | \
+                                           ISL_TILING_ICL_Ys_BIT)
 /** @} */
 
 /**
@@ -638,8 +647,6 @@ enum isl_dim_layout {
     *
     *    One-dimensional surfaces are identical to 2D surfaces with height of
     *    one.
-    *
-    * @invariant isl_surf::phys_level0_sa::depth == 1
     */
    ISL_DIM_LAYOUT_GFX4_2D,
 
@@ -779,16 +786,18 @@ enum isl_aux_usage {
     */
    ISL_AUX_USAGE_CCS_E,
 
-   /** Single-sample lossless color compression on Tigerlake
+   /** Single-sample lossless color compression with fast clear optimization
     *
-    * This is identical to ISL_AUX_USAGE_CCS_E except it also encodes the
-    * Tigerlake quirk about regular render writes possibly fast-clearing
-    * blocks in the surface.
+    * Introduced on Tigerlake, this is identical to ISL_AUX_USAGE_CCS_E except
+    * it also encodes a feature about regular render writes possibly
+    * fast-clearing blocks in the surface. In the Alchemist docs, the name of
+    * the feature is easier to find. In the 3DSTATE_3D_MODE packet, it is
+    * referred to as "Fast Clear Optimization (FCV)".
     *
     * @invariant The surface is a color surface
     * @invariant isl_surf::samples == 1
     */
-   ISL_AUX_USAGE_GFX12_CCS_E,
+   ISL_AUX_USAGE_FCV_CCS_E,
 
    /** Media color compression
     *
@@ -1116,6 +1125,10 @@ typedef uint64_t isl_surf_usage_flags_t;
 #define ISL_SURF_USAGE_STAGING_BIT             (1u << 14)
 #define ISL_SURF_USAGE_CPB_BIT                 (1u << 15)
 #define ISL_SURF_USAGE_PROTECTED_BIT           (1u << 16)
+#define ISL_SURF_USAGE_VIDEO_DECODE_BIT        (1u << 17)
+#define ISL_SURF_USAGE_STREAM_OUT_BIT          (1u << 18)
+#define ISL_SURF_USAGE_2D_3D_COMPATIBLE_BIT    (1u << 19)
+#define ISL_SURF_USAGE_SPARSE_BIT              (1u << 20)
 /** @} */
 
 /**
@@ -1136,7 +1149,7 @@ typedef uint8_t isl_channel_mask_t;
 /**
  * @brief A channel select (also known as texture swizzle) value
  */
-enum PACKED isl_channel_select {
+enum ENUM_PACKED isl_channel_select {
    ISL_CHANNEL_SELECT_ZERO = 0,
    ISL_CHANNEL_SELECT_ONE = 1,
    ISL_CHANNEL_SELECT_RED = 4,
@@ -1288,12 +1301,25 @@ struct isl_device {
    struct {
       uint32_t internal;
       uint32_t external;
+      uint32_t uncached;
       uint32_t l1_hdc_l3_llc;
       uint32_t blitter_src;
       uint32_t blitter_dst;
       /* Protected is an additional bit on top of the existing entry index. */
       uint32_t protected_mask;
    } mocs;
+
+   /* Options to configure by the driver: */
+
+   /**
+    * Write buffer length in the upper dword of the
+    * RENDER_SURFACE_STATE::AuxilliarySurfaceBaseAddress field.
+    *
+    * This field is unused for buffer surfaces so we can reuse it store the
+    * buffer length. This is useful when you want to load a vec4 with (main
+    * address, size).
+    */
+   bool buffer_length_in_aux_addr;
 
    void (*surf_fill_state_s)(const struct isl_device *dev, void *state,
                              const struct isl_surf_fill_state_info *restrict info);
@@ -1411,6 +1437,14 @@ struct isl_tile_info {
    struct isl_extent4d logical_extent_el;
 
    /**
+    * The maximum number of miplevels that will fit in the miptail.
+    *
+    * This does not guarantee that the given number of miplevels will fit in
+    * the miptail as that is also dependent on the size of the miplevels.
+    */
+   uint32_t max_miptail_levels;
+
+   /**
     * The physical size of the tile in bytes and rows of bytes
     *
     * This field determines how the tiles of a surface are physically laid
@@ -1436,8 +1470,9 @@ struct isl_drm_modifier_info {
    /** ISL tiling implied by this modifier */
    enum isl_tiling tiling;
 
-   /** ISL aux usage implied by this modifier */
-   enum isl_aux_usage aux_usage;
+   /** Compression types supported by this modifier */
+   bool supports_render_compression;
+   bool supports_media_compression;
 
    /** Whether or not this modifier supports clear color */
    bool supports_clear_color;
@@ -1470,6 +1505,9 @@ struct isl_surf_init_info {
 
    /** Lower bound for isl_surf::alignment, in bytes. */
    uint32_t min_alignment_B;
+
+   /** Lower bound for where to start the miptail */
+   uint32_t min_miptail_start_level;
 
    /**
     * Exact value for isl_surf::row_pitch. Ignored if zero.  isl_surf_init()
@@ -1570,6 +1608,14 @@ struct isl_surf {
    uint32_t array_pitch_el_rows;
 
    enum isl_array_pitch_span array_pitch_span;
+
+   /**
+    * Level at which the miptail starts.
+    *
+    * This value is inclusive in the sense that the miptail contains this
+    * level.
+    */
+   uint32_t miptail_start_level;
 
    /** Copy of isl_surf_init_info::usage. */
    isl_surf_usage_flags_t usage;
@@ -2201,12 +2247,19 @@ isl_aux_usage_has_ccs(enum isl_aux_usage usage)
 {
    return usage == ISL_AUX_USAGE_CCS_D ||
           usage == ISL_AUX_USAGE_CCS_E ||
-          usage == ISL_AUX_USAGE_GFX12_CCS_E ||
+          usage == ISL_AUX_USAGE_FCV_CCS_E ||
           usage == ISL_AUX_USAGE_MC ||
           usage == ISL_AUX_USAGE_HIZ_CCS_WT ||
           usage == ISL_AUX_USAGE_HIZ_CCS ||
           usage == ISL_AUX_USAGE_MCS_CCS ||
           usage == ISL_AUX_USAGE_STC_CCS;
+}
+
+static inline bool
+isl_aux_usage_has_ccs_e(enum isl_aux_usage usage)
+{
+   return usage == ISL_AUX_USAGE_CCS_E ||
+          usage == ISL_AUX_USAGE_FCV_CCS_E;
 }
 
 static inline bool
@@ -2236,7 +2289,11 @@ isl_drm_modifier_get_info(uint64_t modifier);
 static inline bool
 isl_drm_modifier_has_aux(uint64_t modifier)
 {
-   return isl_drm_modifier_get_info(modifier)->aux_usage != ISL_AUX_USAGE_NONE;
+   if (modifier == DRM_FORMAT_MOD_INVALID)
+      return false;
+
+   return isl_drm_modifier_get_info(modifier)->supports_render_compression ||
+          isl_drm_modifier_get_info(modifier)->supports_media_compression;
 }
 
 /** Returns the default isl_aux_state for the given modifier.
@@ -2267,12 +2324,11 @@ isl_drm_modifier_get_default_aux_state(uint64_t modifier)
    const struct isl_drm_modifier_info *mod_info =
       isl_drm_modifier_get_info(modifier);
 
-   if (!mod_info || mod_info->aux_usage == ISL_AUX_USAGE_NONE)
+   if (!mod_info || !isl_drm_modifier_has_aux(modifier))
       return ISL_AUX_STATE_AUX_INVALID;
 
-   assert(mod_info->aux_usage == ISL_AUX_USAGE_CCS_E ||
-          mod_info->aux_usage == ISL_AUX_USAGE_GFX12_CCS_E ||
-          mod_info->aux_usage == ISL_AUX_USAGE_MC);
+   assert(mod_info->supports_render_compression !=
+          mod_info->supports_media_compression);
    return mod_info->supports_clear_color ? ISL_AUX_STATE_COMPRESSED_CLEAR :
                                            ISL_AUX_STATE_COMPRESSED_NO_CLEAR;
 }
@@ -2288,6 +2344,12 @@ isl_drm_modifier_get_default_aux_state(uint64_t modifier)
 uint32_t
 isl_drm_modifier_get_score(const struct intel_device_info *devinfo,
                            uint64_t modifier);
+
+/* Return the number of planes used by an image with the given parameters. */
+uint32_t
+isl_drm_modifier_get_plane_count(const struct intel_device_info *devinfo,
+                                 uint64_t modifier,
+                                 uint32_t fmt_planes);
 
 struct isl_extent2d ATTRIBUTE_CONST
 isl_get_interleaved_msaa_px_size_sa(uint32_t samples);
@@ -2995,6 +3057,9 @@ isl_get_tile_masks(enum isl_tiling tiling, uint32_t cpp,
 
 const char *
 isl_aux_op_to_name(enum isl_aux_op op);
+
+const char *
+isl_tiling_to_name(enum isl_tiling tiling);
 
 #ifdef __cplusplus
 }

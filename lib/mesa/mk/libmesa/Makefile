@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2023/11/02 04:53:32 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	mesa
 
@@ -40,7 +40,7 @@ SRCS=	accum.c \
 	externalobjects.c \
 	fbobject.c \
 	feedback.c \
-	ff_fragment_shader.cpp \
+	ff_fragment_shader.c \
 	ffvertex_prog.c \
 	fog.c \
 	format_utils.c \
@@ -101,8 +101,6 @@ SRCS=	accum.c \
 	syncobj.c \
 	texcompress.c \
 	texcompress_astc.cpp \
-	texcompress_astc_luts.cpp \
-	texcompress_astc_luts_wrap.cpp \
 	texcompress_bptc.c \
 	texcompress_cpal.c \
 	texcompress_etc.c \
@@ -131,7 +129,6 @@ SRCS=	accum.c \
 	m_eval.c \
 	m_matrix.c \
 	arbprogparse.c \
-	link_program.cpp \
 	prog_cache.c \
 	prog_instruction.c \
 	prog_parameter.c \
@@ -141,7 +138,6 @@ SRCS=	accum.c \
 	prog_to_nir.c \
 	program.c \
 	program_parse_extra.c \
-	programopt.c \
 	symbol_table.c \
 	st_atifs_to_nir.c \
 	st_atom_array.cpp \
@@ -183,12 +179,13 @@ SRCS=	accum.c \
 	st_extensions.c \
 	st_format.c \
 	st_gen_mipmap.c \
-	st_glsl_to_ir.cpp \
 	st_glsl_to_nir.cpp \
 	st_interop.c \
 	st_manager.c \
 	st_nir_builtins.c \
 	st_nir_lower_builtin.c \
+	st_nir_lower_fog.c \
+	st_nir_lower_position_invariant.c \
 	st_nir_lower_tex_src_plane.c \
 	st_pbo.c \
 	st_pbo_compute.c \

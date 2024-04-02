@@ -26,6 +26,7 @@
 #include "evergreend.h"
 
 #include "pipe/p_shader_tokens.h"
+#include "util/u_endian.h"
 #include "util/u_pack_color.h"
 #include "util/u_memory.h"
 #include "util/u_framebuffer.h"
@@ -225,13 +226,13 @@ static uint32_t r600_translate_dbformat(enum pipe_format format)
 static bool r600_is_sampler_format_supported(struct pipe_screen *screen, enum pipe_format format)
 {
 	return r600_translate_texformat(screen, format, NULL, NULL, NULL,
-                                   FALSE) != ~0U;
+                                   false) != ~0U;
 }
 
 static bool r600_is_colorbuffer_format_supported(enum amd_gfx_level chip, enum pipe_format format)
 {
-	return r600_translate_colorformat(chip, format, FALSE) != ~0U &&
-		r600_translate_colorswap(format, FALSE) != ~0U;
+	return r600_translate_colorformat(chip, format, false) != ~0U &&
+		r600_translate_colorswap(format, false) != ~0U;
 }
 
 static bool r600_is_zs_format_supported(enum pipe_format format)
@@ -671,9 +672,9 @@ static void evergreen_fill_buffer_resource_words(struct r600_context *rctx,
 	desc = util_format_description(params->pipe_format);
 
 	if (params->force_swizzle)
-		swizzle_res = r600_get_swizzle_combined(params->swizzle, NULL, TRUE);
+		swizzle_res = r600_get_swizzle_combined(params->swizzle, NULL, true);
 	else
-		swizzle_res = r600_get_swizzle_combined(desc->swizzle, params->swizzle, TRUE);
+		swizzle_res = r600_get_swizzle_combined(desc->swizzle, params->swizzle, true);
 
 	va = tmp->resource.gpu_address + params->offset;
 	*skip_mip_address_reloc = true;
@@ -755,7 +756,7 @@ static int evergreen_fill_tex_resource_words(struct r600_context *rctx,
 	unsigned base_level, first_level, last_level;
 	unsigned dim, last_layer;
 	uint64_t va;
-	bool do_endian_swap = FALSE;
+	bool do_endian_swap = false;
 
 	tile_split = tmp->surface.u.legacy.tile_split;
 	surflevel = tmp->surface.u.legacy.level;
@@ -784,7 +785,7 @@ static int evergreen_fill_tex_resource_words(struct r600_context *rctx,
 		}
 	}
 
-	if (R600_BIG_ENDIAN)
+	if (UTIL_ARCH_BIG_ENDIAN)
 		do_endian_swap = !tmp->db_compatible;
 
 	format = r600_translate_texformat(rctx->b.b.screen, params->pipe_format,
@@ -1059,7 +1060,7 @@ struct r600_tex_color_info {
 	unsigned fmask;
 	unsigned fmask_slice;
 	uint64_t offset;
-	boolean export_16bpc;
+	bool export_16bpc;
 };
 
 static void evergreen_set_color_surface_buffer(struct r600_context *rctx,
@@ -1080,10 +1081,10 @@ static void evergreen_set_color_surface_buffer(struct r600_context *rctx,
 
 	width_elements = last_element - first_element + 1;
 
-	format = r600_translate_colorformat(rctx->b.gfx_level, pformat, FALSE);
-	swap = r600_translate_colorswap(pformat, FALSE);
+	format = r600_translate_colorformat(rctx->b.gfx_level, pformat, false);
+	swap = r600_translate_colorswap(pformat, false);
 
-	endian = r600_colorformat_endian_swap(format, FALSE);
+	endian = r600_colorformat_endian_swap(format, false);
 
 	desc = util_format_description(pformat);
 	i = util_format_get_first_non_void_channel(pformat);
@@ -1139,7 +1140,7 @@ static void evergreen_set_color_surface_common(struct r600_context *rctx,
 	unsigned non_disp_tiling, macro_aspect, tile_split, bankh, bankw, fmask_bankh, nbanks;
 	unsigned format, swap, ntype, endian;
 	const struct util_format_description *desc;
-	bool blend_clamp = 0, blend_bypass = 0, do_endian_swap = FALSE;
+	bool blend_clamp = 0, blend_bypass = 0, do_endian_swap = false;
 	int i;
 
 	color->offset = (uint64_t)rtex->surface.u.legacy.level[level].offset_256B * 256;
@@ -1229,7 +1230,7 @@ static void evergreen_set_color_surface_common(struct r600_context *rctx,
 		ntype = V_028C70_NUMBER_FLOAT;
 	}
 
-	if (R600_BIG_ENDIAN)
+	if (UTIL_ARCH_BIG_ENDIAN)
 		do_endian_swap = !rtex->db_compatible;
 
 	format = r600_translate_colorformat(rctx->b.gfx_level, pformat, do_endian_swap);
@@ -2132,13 +2133,16 @@ static void evergreen_emit_vertex_buffers(struct r600_context *rctx,
 					  unsigned pkt_flags)
 {
 	struct radeon_cmdbuf *cs = &rctx->b.gfx.cs;
-	uint32_t dirty_mask = state->dirty_mask;
+	struct r600_fetch_shader *shader = (struct r600_fetch_shader*)rctx->vertex_fetch_shader.cso;
+	uint32_t dirty_mask = state->dirty_mask & shader->buffer_mask;
 
 	while (dirty_mask) {
 		struct pipe_vertex_buffer *vb;
 		struct r600_resource *rbuffer;
 		uint64_t va;
 		unsigned buffer_index = u_bit_scan(&dirty_mask);
+		unsigned stride = pkt_flags == RADEON_CP_PACKET3_COMPUTE_MODE ?
+				  1 : shader->strides[buffer_index];
 
 		vb = &state->vb[buffer_index];
 		rbuffer = (struct r600_resource*)vb->buffer.resource;
@@ -2153,7 +2157,7 @@ static void evergreen_emit_vertex_buffers(struct r600_context *rctx,
 		radeon_emit(cs, rbuffer->b.b.width0 - vb->buffer_offset - 1); /* RESOURCEi_WORD1 */
 		radeon_emit(cs, /* RESOURCEi_WORD2 */
 				 S_030008_ENDIAN_SWAP(r600_endian_swap(32)) |
-				 S_030008_STRIDE(vb->stride) |
+				 S_030008_STRIDE(stride) |
 				 S_030008_BASE_ADDRESS_HI(va >> 32UL));
 		radeon_emit(cs, /* RESOURCEi_WORD3 */
 				 S_03000C_DST_SEL_X(V_03000C_SQ_SEL_X) |
@@ -2169,7 +2173,7 @@ static void evergreen_emit_vertex_buffers(struct r600_context *rctx,
 		radeon_emit(cs, radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx, rbuffer,
 						      RADEON_USAGE_READ | RADEON_PRIO_VERTEX_BUFFER));
 	}
-	state->dirty_mask = 0;
+	state->dirty_mask &= ~shader->buffer_mask;
 }
 
 static void evergreen_fs_emit_vertex_buffers(struct r600_context *rctx, struct r600_atom * atom)
@@ -2686,13 +2690,13 @@ static void evergreen_emit_shader_stages(struct r600_context *rctx, struct r600_
 		bool tes_vertex_order_cw = info->properties[TGSI_PROPERTY_TES_VERTEX_ORDER_CW];
 		bool tes_point_mode = info->properties[TGSI_PROPERTY_TES_POINT_MODE];
 		switch (tes_prim_mode) {
-		case PIPE_PRIM_LINES:
+		case MESA_PRIM_LINES:
 			type = V_028B6C_TESS_ISOLINE;
 			break;
-		case PIPE_PRIM_TRIANGLES:
+		case MESA_PRIM_TRIANGLES:
 			type = V_028B6C_TESS_TRIANGLE;
 			break;
-		case PIPE_PRIM_QUADS:
+		case MESA_PRIM_QUADS:
 			type = V_028B6C_TESS_QUAD;
 			break;
 		default:
@@ -2717,7 +2721,7 @@ static void evergreen_emit_shader_stages(struct r600_context *rctx, struct r600_
 
 		if (tes_point_mode)
 			topology = V_028B6C_OUTPUT_POINT;
-		else if (tes_prim_mode == PIPE_PRIM_LINES)
+		else if (tes_prim_mode == MESA_PRIM_LINES)
 			topology = V_028B6C_OUTPUT_LINE;
 		else if (tes_vertex_order_cw)
 			/* XXX follow radeonsi and invert */
@@ -3402,7 +3406,7 @@ void evergreen_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader
 	unsigned i, exports_ps, num_cout, spi_ps_in_control_0, spi_input_z, spi_ps_in_control_1, db_shader_control = 0;
 	int pos_index = -1, face_index = -1, fixed_pt_position_index = -1;
 	int ninterp = 0;
-	boolean have_perspective = FALSE, have_linear = FALSE;
+	bool have_perspective = false, have_linear = false;
 	static const unsigned spi_baryc_enable_bit[6] = {
 		S_0286E0_PERSP_SAMPLE_ENA(1),
 		S_0286E0_PERSP_CENTER_ENA(1),
@@ -3515,13 +3519,13 @@ void evergreen_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader
 
 	switch (rshader->ps_conservative_z) {
 	default: /* fall through */
-	case TGSI_FS_DEPTH_LAYOUT_ANY:
+	case FRAG_DEPTH_LAYOUT_ANY:
 		db_shader_control |= S_02880C_CONSERVATIVE_Z_EXPORT(V_02880C_EXPORT_ANY_Z);
 		break;
-	case TGSI_FS_DEPTH_LAYOUT_GREATER:
+	case FRAG_DEPTH_LAYOUT_GREATER:
 		db_shader_control |= S_02880C_CONSERVATIVE_Z_EXPORT(V_02880C_EXPORT_GREATER_THAN_Z);
 		break;
-	case TGSI_FS_DEPTH_LAYOUT_LESS:
+	case FRAG_DEPTH_LAYOUT_LESS:
 		db_shader_control |= S_02880C_CONSERVATIVE_Z_EXPORT(V_02880C_EXPORT_LESS_THAN_Z);
 		break;
 	}
@@ -3545,13 +3549,13 @@ void evergreen_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader
 	shader->ps_color_export_mask = rshader->ps_color_export_mask;
 	if (ninterp == 0) {
 		ninterp = 1;
-		have_perspective = TRUE;
+		have_perspective = true;
 	}
 	if (!spi_baryc_cntl)
 		spi_baryc_cntl |= spi_baryc_enable_bit[0];
 
 	if (!have_perspective && !have_linear)
-		have_perspective = TRUE;
+		have_perspective = true;
 
 	spi_ps_in_control_0 = S_0286CC_NUM_INTERP(ninterp) |
 		              S_0286CC_PERSP_GRADIENT_ENA(have_perspective) |
@@ -3888,7 +3892,7 @@ static void evergreen_dma_copy_tile(struct r600_context *rctx,
 		slice_tile_max = (rsrc->surface.u.legacy.level[src_level].nblk_x * rsrc->surface.u.legacy.level[src_level].nblk_y) / (8*8);
 		slice_tile_max = slice_tile_max ? slice_tile_max - 1 : 0;
 		/* linear height must be the same as the slice tile max height, it's ok even
-		 * if the linear destination/source have smaller heigh as the size of the
+		 * if the linear destination/source have smaller height as the size of the
 		 * dma packet will be using the copy_height which is always smaller or equal
 		 * to the linear height
 		 */
@@ -3913,7 +3917,7 @@ static void evergreen_dma_copy_tile(struct r600_context *rctx,
 		slice_tile_max = (rdst->surface.u.legacy.level[dst_level].nblk_x * rdst->surface.u.legacy.level[dst_level].nblk_y) / (8*8);
 		slice_tile_max = slice_tile_max ? slice_tile_max - 1 : 0;
 		/* linear height must be the same as the slice tile max height, it's ok even
-		 * if the linear destination/source have smaller heigh as the size of the
+		 * if the linear destination/source have smaller height as the size of the
 		 * dma packet will be using the copy_height which is always smaller or equal
 		 * to the linear height
 		 */
@@ -4412,7 +4416,7 @@ static void evergreen_set_shader_images(struct pipe_context *ctx,
 	}
 
 	istate->atom.num_dw = util_bitcount(istate->enabled_mask) * 46;
-	istate->dirty_buffer_constants = TRUE;
+	istate->dirty_buffer_constants = true;
 	rctx->b.flags |= R600_CONTEXT_WAIT_3D_IDLE | R600_CONTEXT_FLUSH_AND_INV;
 	rctx->b.flags |= R600_CONTEXT_FLUSH_AND_INV_CB |
 		R600_CONTEXT_FLUSH_AND_INV_CB_META;

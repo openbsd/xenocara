@@ -104,7 +104,6 @@ __asm__(".text\n"
 #ifndef MAPI_MODE_BRIDGE
 
 #include <string.h>
-#include "u_execmem.h"
 
 void
 entry_patch_public(void)
@@ -179,32 +178,5 @@ static const uint32_t code_templ[] = {
 static const uint64_t TEMPLATE_OFFSET_CURRENT_TABLE = sizeof(code_templ) - 3*8;
 static const uint64_t TEMPLATE_OFFSET_CURRENT_TABLE_GET = sizeof(code_templ) - 2*8;
 static const uint64_t TEMPLATE_OFFSET_SLOT = sizeof(code_templ) - 1*8;
-
-void
-entry_patch(mapi_func entry, int slot)
-{
-   char *code = (char *) entry;
-   *((uint64_t *) (code + TEMPLATE_OFFSET_CURRENT_TABLE)) = (uint64_t) ENTRY_CURRENT_TABLE;
-   *((uint64_t *) (code + TEMPLATE_OFFSET_CURRENT_TABLE_GET)) = (uint64_t) ENTRY_CURRENT_TABLE_GET;
-   *((uint64_t *) (code + TEMPLATE_OFFSET_SLOT)) = slot * sizeof(mapi_func);
-}
-
-mapi_func
-entry_generate(int slot)
-{
-   char *code;
-   mapi_func entry;
-
-   code = u_execmem_alloc(sizeof(code_templ));
-   if (!code)
-      return NULL;
-
-   memcpy(code, code_templ, sizeof(code_templ));
-
-   entry = (mapi_func) code;
-   entry_patch(entry, slot);
-
-   return entry;
-}
 
 #endif /* MAPI_MODE_BRIDGE */

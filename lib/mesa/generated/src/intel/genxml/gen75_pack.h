@@ -705,6 +705,10 @@ GFX75_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *da
 struct GFX75_MEMORY_OBJECT_CONTROL_STATE {
    uint32_t                             L3CacheabilityControlL3CC;
    uint32_t                             LLCeLLCCacheabilityControlLLCCC;
+#define UsePTEvalues                             0
+#define UCuncacheable                            1
+#define LLCeLLCWBcacheable                       2
+#define eLLCWBcacheableUCinLLC                   3
 };
 
 static inline __attribute__((always_inline)) void

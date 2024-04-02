@@ -106,10 +106,19 @@ _mesa_get_readpixels_transfer_ops(const struct gl_context *ctx,
       return 0;
    }
 
+   /* If on OpenGL ES with GL_EXT_render_snorm, negative values should
+    * not be clamped.
+    */
+   bool gles_snorm =
+      _mesa_has_EXT_render_snorm(ctx) &&
+      _mesa_get_format_datatype(texFormat) == GL_SIGNED_NORMALIZED;
+
    if (uses_blit) {
       /* For blit-based ReadPixels packing, the clamping is done automatically
-       * unless the type is float. */
+       * unless the type is float. Disable clamping when on ES using snorm.
+       */
       if (_mesa_get_clamp_read_color(ctx, ctx->ReadBuffer) &&
+          !gles_snorm &&
           (type == GL_FLOAT || type == GL_HALF_FLOAT ||
            type == GL_UNSIGNED_INT_10F_11F_11F_REV)) {
          transferOps |= IMAGE_CLAMP_BIT;
@@ -117,15 +126,19 @@ _mesa_get_readpixels_transfer_ops(const struct gl_context *ctx,
    }
    else {
       /* For CPU-based ReadPixels packing, the clamping must always be done
-       * for non-float types, */
-      if (_mesa_get_clamp_read_color(ctx, ctx->ReadBuffer) ||
-          (type != GL_FLOAT && type != GL_HALF_FLOAT &&
-           type != GL_UNSIGNED_INT_10F_11F_11F_REV)) {
+       * for non-float types, except on ES when using snorm types.
+       */
+      if ((_mesa_get_clamp_read_color(ctx, ctx->ReadBuffer) ||
+           (type != GL_FLOAT && type != GL_HALF_FLOAT &&
+            type != GL_UNSIGNED_INT_10F_11F_11F_REV)) && !gles_snorm) {
          transferOps |= IMAGE_CLAMP_BIT;
       }
 
-      /* For SNORM formats we only clamp if `type` is signed and clamp is `true` */
+      /* For SNORM formats we only clamp if `type` is signed and clamp is `true`
+       * and when not on ES using snorm types.
+       */
       if (!_mesa_get_clamp_read_color(ctx, ctx->ReadBuffer) &&
+          !gles_snorm &&
           _mesa_get_format_datatype(texFormat) == GL_SIGNED_NORMALIZED &&
           (type == GL_BYTE || type == GL_SHORT || type == GL_INT)) {
          transferOps &= ~IMAGE_CLAMP_BIT;
@@ -960,15 +973,6 @@ read_pixels_es3_error_check(struct gl_context *ctx, GLenum format, GLenum type,
          }
       }
       if (type == GL_BYTE) {
-         switch (internalFormat) {
-         case GL_R8_SNORM:
-         case GL_RG8_SNORM:
-         case GL_RGBA8_SNORM:
-            if (_mesa_has_EXT_render_snorm(ctx))
-               return GL_NO_ERROR;
-         }
-      }
-      if (type == GL_UNSIGNED_BYTE) {
          switch (internalFormat) {
          case GL_R8_SNORM:
          case GL_RG8_SNORM:

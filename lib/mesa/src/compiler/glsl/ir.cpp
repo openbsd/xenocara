@@ -2043,7 +2043,6 @@ ir_variable::ir_variable(const struct glsl_type *type, const char *name,
    this->data.depth_layout = ir_depth_layout_none;
    this->data.used = false;
    this->data.assigned = false;
-   this->data.always_active_io = false;
    this->data.read_only = false;
    this->data.centroid = false;
    this->data.sample = false;
@@ -2083,21 +2082,6 @@ ir_variable::ir_variable(const struct glsl_type *type, const char *name,
       else if (type->without_array()->is_interface())
          this->init_interface_type(type->without_array());
    }
-}
-
-
-const char *
-interpolation_string(unsigned interpolation)
-{
-   switch (interpolation) {
-   case INTERP_MODE_NONE:          return "no";
-   case INTERP_MODE_SMOOTH:        return "smooth";
-   case INTERP_MODE_FLAT:          return "flat";
-   case INTERP_MODE_NOPERSPECTIVE: return "noperspective";
-   }
-
-   assert(!"Should not get here.");
-   return "";
 }
 
 const char *const ir_variable::warn_extension_table[] = {

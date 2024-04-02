@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2023/11/02 04:53:32 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2024/04/02 10:42:14 jsg Exp $
 
 LIB=	vulkan_intel
 
@@ -63,6 +63,7 @@ SLIBS=	libintel_compiler \
 	libisl_gfx110 \
 	libisl_gfx120 \
 	libisl_gfx125 \
+	libisl_gfx200 \
 	libisl_tiled_memcpy \
 	libisl_tiled_memcpy_sse41 \
 	libblorp \
@@ -71,21 +72,24 @@ SLIBS=	libintel_compiler \
 	libmesa_util \
 	libmesa_format \
 	libmesa_util_sse41 \
+	libblake3 \
 	libmesa_util_c11 \
 	libintel_perf \
 	libintel_common \
 	libnir \
 	libcompiler \
-	libintel-driver-ds
+	libvulkan_util \
+	libintel-driver-ds \
+	libvtn
 
 LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
 
 LDADD+=		-Wl,--whole-archive
 LDADD+=		${.CURDIR}/../libanv_common/${__objdir}/libanv_common.a
-.for gen in 70 75 80 90 110 120 125
+.for gen in 90 110 120 125 200
 LDADD+=		${.CURDIR}/../libanv_gen${gen}/${__objdir}/libanv_gen${gen}.a
 .endfor
-LDADD+=		${.CURDIR}/../libvulkan_util/${__objdir}/libvulkan_util.a
+LDADD+=		${.CURDIR}/../libvulkan_wsi/${__objdir}/libvulkan_wsi.a
 LDADD+=		${.CURDIR}/../libvulkan_runtime/${__objdir}/libvulkan_runtime.a
 LDADD+=		-Wl,--no-whole-archive
 
@@ -97,7 +101,7 @@ LDADD+=		-lpthread -lm -lz -lexpat
 LDADD+=		-L${X11BASE}/lib -ldrm \
 		-lxcb-dri3 -lxcb-randr -lXrandr -lxcb -lX11-xcb \
 		-lX11 -lxcb-dri2 -lxcb-present -lxcb-xfixes -lxcb-sync \
-		-lxcb-randr -lxcb-shm -lxshmfence
+		-lxcb-randr -lxcb-shm -lxshmfence -lxcb-keysyms
 
 LDADD+=		${BUILD_ID_SHA1} -Wl,-Bsymbolic -Wl,--gc-sections \
 		-Wl,--version-script ${MESA_SRC}/src/vulkan/vulkan.sym \

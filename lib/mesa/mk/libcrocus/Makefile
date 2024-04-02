@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2023/01/28 08:56:34 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	crocus
 
@@ -38,6 +38,7 @@ CPPFLAGS+=	-DGALLIUM_CROCUS \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir
 
 install:

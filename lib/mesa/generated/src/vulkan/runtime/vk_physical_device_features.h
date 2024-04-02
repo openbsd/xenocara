@@ -21,7 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-/* This file generated from vk_physical_device_features.py, don't edit directly. */
+/* This file generated from vk_physical_device_features_gen.py, don't edit directly. */
 #ifndef VK_FEATURES_H
 #define VK_FEATURES_H
 
@@ -86,6 +86,9 @@ struct vk_features {
    bool variableMultisampleRate;
    bool inheritedQueries;
    bool deviceGeneratedCommands;
+   bool deviceGeneratedCompute;
+   bool deviceGeneratedComputePipelines;
+   bool deviceGeneratedComputeCaptureReplay;
    bool privateData;
    bool variablePointersStorageBuffer;
    bool variablePointers;
@@ -106,6 +109,7 @@ struct vk_features {
    bool inlineUniformBlock;
    bool descriptorBindingInlineUniformBlockUpdateAfterBind;
    bool maintenance4;
+   bool maintenance5;
    bool shaderDrawParameters;
    bool shaderFloat16;
    bool shaderInt8;
@@ -220,8 +224,8 @@ struct vk_features {
    bool bufferDeviceAddressCaptureReplayEXT;
    bool imagelessFramebuffer;
    bool textureCompressionASTC_HDR;
-   bool cooperativeMatrix;
-   bool cooperativeMatrixRobustBufferAccess;
+   bool cooperativeMatrixNV;
+   bool cooperativeMatrixRobustBufferAccessNV;
    bool ycbcrImageArrays;
    bool presentBarrier;
    bool performanceCounterQueryPools;
@@ -328,11 +332,13 @@ struct vk_features {
    bool image2DViewOf3D;
    bool sampler2DViewOf3D;
    bool imageSlicedViewOf3D;
+   bool attachmentFeedbackLoopDynamicState;
    bool mutableDescriptorType;
    bool depthClipControl;
    bool vertexInputDynamicState;
    bool externalMemoryRDMA;
    bool colorWriteEnable;
+   bool hostImageCopy;
    bool primitivesGeneratedQuery;
    bool primitivesGeneratedQueryWithRasterizerDiscard;
    bool primitivesGeneratedQueryWithNonZeroStreams;
@@ -358,6 +364,9 @@ struct vk_features {
    bool linearColorAttachment;
    bool graphicsPipelineLibrary;
    bool descriptorSetHostMapping;
+   bool nestedCommandBuffer;
+   bool nestedCommandBufferRendering;
+   bool nestedCommandBufferSimultaneousUse;
    bool shaderModuleIdentifier;
    bool imageCompressionControl;
    bool imageCompressionControlSwapchain;
@@ -382,27 +391,38 @@ struct vk_features {
    bool deviceFaultVendorBinary;
    bool pipelineLibraryGroupHandles;
    bool shaderCoreBuiltins;
+   bool frameBoundary;
+   bool dynamicRenderingUnusedAttachments;
    bool swapchainMaintenance1;
+   bool depthBiasControl;
+   bool leastRepresentableValueForceUnormRepresentation;
+   bool floatRepresentation;
+   bool depthBiasExact;
    bool rayTracingInvocationReorder;
+   bool extendedSparseAddressSpace;
    bool multiviewPerViewViewports;
+   bool rayTracingPositionFetch;
    bool multiviewPerViewRenderAreas;
    bool shaderObject;
    bool shaderTileImageColorReadAccess;
    bool shaderTileImageDepthReadAccess;
    bool shaderTileImageStencilReadAccess;
+   bool cooperativeMatrix;
+   bool cooperativeMatrixRobustBufferAccess;
+   bool cubicRangeClamp;
+   bool ycbcrDegamma;
+   bool selectableCubicWeights;
+   bool textureBlockMatch2;
+   bool descriptorPoolOverallocation;
 };
-
-void
-vk_set_physical_device_features_1_0(struct vk_features *all_features,
-                                    const VkPhysicalDeviceFeatures *pFeatures);
 
 void
 vk_set_physical_device_features(struct vk_features *all_features,
                                 const VkPhysicalDeviceFeatures2 *pFeatures);
 
 void
-vk_get_physical_device_features(VkPhysicalDeviceFeatures2 *pFeatures,
-                                const struct vk_features *all_features);
+vk_set_physical_device_features_1_0(struct vk_features *all_features,
+                                    const VkPhysicalDeviceFeatures *pFeatures);
 
 #ifdef __cplusplus
 }

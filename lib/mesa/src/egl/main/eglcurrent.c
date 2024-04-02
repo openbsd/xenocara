@@ -25,23 +25,23 @@
  *
  **************************************************************************/
 
-
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 
 #include "c11/threads.h"
-#include "util/u_thread.h"
 #include "util/u_string.h"
+#include "util/u_thread.h"
+#include "util/simple_mtx.h"
 
-#include "egllog.h"
 #include "eglcurrent.h"
 #include "eglglobals.h"
+#include "egllog.h"
 
 /* a fallback thread info to guarantee that every thread always has one */
 static _EGLThreadInfo dummy_thread;
-static mtx_t _egl_TSDMutex = _MTX_INITIALIZER_NP;
+static simple_mtx_t _egl_TSDMutex = SIMPLE_MTX_INITIALIZER;
 static EGLBoolean _egl_TSDInitialized;
 static tss_t _egl_TSD;
 static void _eglDestroyThreadInfo(_EGLThreadInfo *t);
@@ -69,7 +69,7 @@ static inline _EGLThreadInfo *_eglGetTSD(void)
 
 static inline void _eglFiniTSD(void)
 {
-   mtx_lock(&_egl_TSDMutex);
+   simple_mtx_lock(&_egl_TSDMutex);
    if (_egl_TSDInitialized) {
       _EGLThreadInfo *t = _eglGetTSD();
 
@@ -77,25 +77,25 @@ static inline void _eglFiniTSD(void)
       _eglDestroyThreadInfo(t);
       tss_delete(_egl_TSD);
    }
-   mtx_unlock(&_egl_TSDMutex);
+   simple_mtx_unlock(&_egl_TSDMutex);
 }
 
 static inline EGLBoolean _eglInitTSD()
 {
    if (!_egl_TSDInitialized) {
-      mtx_lock(&_egl_TSDMutex);
+      simple_mtx_lock(&_egl_TSDMutex);
 
       /* check again after acquiring lock */
       if (!_egl_TSDInitialized) {
          if (tss_create(&_egl_TSD, (void (*)(void *)) _eglDestroyThreadInfo) != thrd_success) {
-            mtx_unlock(&_egl_TSDMutex);
+            simple_mtx_unlock(&_egl_TSDMutex);
             return EGL_FALSE;
          }
          _eglAddAtExitCall(_eglFiniTSD);
          _egl_TSDInitialized = EGL_TRUE;
       }
 
-      mtx_unlock(&_egl_TSDMutex);
+      simple_mtx_unlock(&_egl_TSDMutex);
    }
 
    return EGL_TRUE;
@@ -108,7 +108,6 @@ _eglInitThreadInfo(_EGLThreadInfo *t)
    /* default, per EGL spec */
    t->CurrentAPI = EGL_OPENGL_ES_API;
 }
-
 
 /**
  * Allocate and init a new _EGLThreadInfo object.
@@ -159,10 +158,8 @@ _eglCheckedGetTSD(void)
 
 /**
  * Return the calling thread's thread info.
- * If the calling thread nevers calls this function before, or if its thread
- * info was destroyed, a new one is created.  This function never returns NULL.
- * In the case allocation fails, a dummy one is returned.  See also
- * _eglIsCurrentThreadDummy.
+ * If the calling thread never calls this function before, or if its thread
+ * info was destroyed, reinitialize it.  This function never returns NULL.
  */
 _EGLThreadInfo *
 _eglGetCurrentThread(void)
@@ -175,7 +172,6 @@ _eglGetCurrentThread(void)
 
    return t;
 }
-
 
 /**
  * Destroy the calling thread's thread info.
@@ -204,7 +200,6 @@ _eglIsCurrentThreadDummy(void)
    return (!t || t == &dummy_thread);
 }
 
-
 /**
  * Return the currently bound context of the current API, or NULL.
  */
@@ -214,7 +209,6 @@ _eglGetCurrentContext(void)
    _EGLThreadInfo *t = _eglGetCurrentThread();
    return t->CurrentContext;
 }
-
 
 /**
  * Record EGL error code and return EGL_FALSE.
@@ -299,8 +293,8 @@ _eglError(EGLint errCode, const char *msg)
 }
 
 void
-_eglDebugReport(EGLenum error, const char *funcName,
-      EGLint type, const char *message, ...)
+_eglDebugReport(EGLenum error, const char *funcName, EGLint type,
+                const char *message, ...)
 {
    _EGLThreadInfo *thr = _eglGetCurrentThread();
    EGLDEBUGPROCKHR callback = NULL;

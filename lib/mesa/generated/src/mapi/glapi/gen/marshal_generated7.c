@@ -1323,75 +1323,23 @@ _mesa_marshal_VDPAUSurfaceAccessNV(GLintptr surface, GLenum access)
 }
 
 
-/* VDPAUMapSurfacesNV: marshalled asynchronously */
-struct marshal_cmd_VDPAUMapSurfacesNV
-{
-   struct marshal_cmd_base cmd_base;
-   GLsizei numSurfaces;
-   /* Next safe_mul(numSurfaces, 1 * sizeof(GLintptr)) bytes are GLintptr surfaces[numSurfaces] */
-};
-uint32_t
-_mesa_unmarshal_VDPAUMapSurfacesNV(struct gl_context *ctx, const struct marshal_cmd_VDPAUMapSurfacesNV *restrict cmd)
-{
-   GLsizei numSurfaces = cmd->numSurfaces;
-   GLintptr *surfaces;
-   const char *variable_data = (const char *) (cmd + 1);
-   surfaces = (GLintptr *) variable_data;
-   CALL_VDPAUMapSurfacesNV(ctx->Dispatch.Current, (numSurfaces, surfaces));
-   return cmd->cmd_base.cmd_size;
-}
+/* VDPAUMapSurfacesNV: marshalled synchronously */
 static void GLAPIENTRY
 _mesa_marshal_VDPAUMapSurfacesNV(GLsizei numSurfaces, const GLintptr *surfaces)
 {
    GET_CURRENT_CONTEXT(ctx);
-   int surfaces_size = safe_mul(numSurfaces, 1 * sizeof(GLintptr));
-   int cmd_size = sizeof(struct marshal_cmd_VDPAUMapSurfacesNV) + surfaces_size;
-   struct marshal_cmd_VDPAUMapSurfacesNV *cmd;
-   if (unlikely(surfaces_size < 0 || (surfaces_size > 0 && !surfaces) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
-      _mesa_glthread_finish_before(ctx, "VDPAUMapSurfacesNV");
-      CALL_VDPAUMapSurfacesNV(ctx->Dispatch.Current, (numSurfaces, surfaces));
-      return;
-   }
-   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_VDPAUMapSurfacesNV, cmd_size);
-   cmd->numSurfaces = numSurfaces;
-   char *variable_data = (char *) (cmd + 1);
-   memcpy(variable_data, surfaces, surfaces_size);
+   _mesa_glthread_finish_before(ctx, "VDPAUMapSurfacesNV");
+   CALL_VDPAUMapSurfacesNV(ctx->Dispatch.Current, (numSurfaces, surfaces));
 }
 
 
-/* VDPAUUnmapSurfacesNV: marshalled asynchronously */
-struct marshal_cmd_VDPAUUnmapSurfacesNV
-{
-   struct marshal_cmd_base cmd_base;
-   GLsizei numSurfaces;
-   /* Next safe_mul(numSurfaces, 1 * sizeof(GLintptr)) bytes are GLintptr surfaces[numSurfaces] */
-};
-uint32_t
-_mesa_unmarshal_VDPAUUnmapSurfacesNV(struct gl_context *ctx, const struct marshal_cmd_VDPAUUnmapSurfacesNV *restrict cmd)
-{
-   GLsizei numSurfaces = cmd->numSurfaces;
-   GLintptr *surfaces;
-   const char *variable_data = (const char *) (cmd + 1);
-   surfaces = (GLintptr *) variable_data;
-   CALL_VDPAUUnmapSurfacesNV(ctx->Dispatch.Current, (numSurfaces, surfaces));
-   return cmd->cmd_base.cmd_size;
-}
+/* VDPAUUnmapSurfacesNV: marshalled synchronously */
 static void GLAPIENTRY
 _mesa_marshal_VDPAUUnmapSurfacesNV(GLsizei numSurfaces, const GLintptr *surfaces)
 {
    GET_CURRENT_CONTEXT(ctx);
-   int surfaces_size = safe_mul(numSurfaces, 1 * sizeof(GLintptr));
-   int cmd_size = sizeof(struct marshal_cmd_VDPAUUnmapSurfacesNV) + surfaces_size;
-   struct marshal_cmd_VDPAUUnmapSurfacesNV *cmd;
-   if (unlikely(surfaces_size < 0 || (surfaces_size > 0 && !surfaces) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
-      _mesa_glthread_finish_before(ctx, "VDPAUUnmapSurfacesNV");
-      CALL_VDPAUUnmapSurfacesNV(ctx->Dispatch.Current, (numSurfaces, surfaces));
-      return;
-   }
-   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_VDPAUUnmapSurfacesNV, cmd_size);
-   cmd->numSurfaces = numSurfaces;
-   char *variable_data = (char *) (cmd + 1);
-   memcpy(variable_data, surfaces, surfaces_size);
+   _mesa_glthread_finish_before(ctx, "VDPAUUnmapSurfacesNV");
+   CALL_VDPAUUnmapSurfacesNV(ctx->Dispatch.Current, (numSurfaces, surfaces));
 }
 
 

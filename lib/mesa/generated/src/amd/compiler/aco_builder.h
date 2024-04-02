@@ -99,8 +99,8 @@ aco_ptr<Instruction> create_s_mov(Definition dst, Operand src);
 
 enum sendmsg {
    sendmsg_none = 0,
-   _sendmsg_gs = 2, /* gfx6 to gfx10.3 */
-   _sendmsg_gs_done = 3, /* gfx6 to gfx10.3 */
+   sendmsg_gs = 2, /* gfx6 to gfx10.3 */
+   sendmsg_gs_done = 3, /* gfx6 to gfx10.3 */
    sendmsg_hs_tessfactor = 2, /* gfx11+ */
    sendmsg_dealloc_vgprs = 3, /* gfx11+ */
    sendmsg_save_wave = 4, /* gfx8 to gfx10.3 */
@@ -125,20 +125,6 @@ enum sendmsg_rtn {
    sendmsg_rtn_mask = 0xff,
 };
 
-inline sendmsg
-sendmsg_gs(bool cut, bool emit, unsigned stream)
-{
-    assert(stream < 4);
-    return (sendmsg)((unsigned)_sendmsg_gs | (cut << 4) | (emit << 5) | (stream << 8));
-}
-
-inline sendmsg
-sendmsg_gs_done(bool cut, bool emit, unsigned stream)
-{
-    assert(stream < 4);
-    return (sendmsg)((unsigned)_sendmsg_gs_done | (cut << 4) | (emit << 5) | (stream << 8));
-}
-
 enum bperm_swiz {
    bperm_b1_sign = 8,
    bperm_b3_sign = 9,
@@ -146,6 +132,21 @@ enum bperm_swiz {
    bperm_b7_sign = 11,
    bperm_0 = 12,
    bperm_255 = 13,
+};
+
+enum class alu_delay_wait {
+   NO_DEP = 0,
+   VALU_DEP_1 = 1,
+   VALU_DEP_2 = 2,
+   VALU_DEP_3 = 3,
+   VALU_DEP_4 = 4,
+   TRANS32_DEP_1 = 5,
+   TRANS32_DEP_2 = 6,
+   TRANS32_DEP_3 = 7,
+   FMA_ACCUM_CYCLE_1 = 8,
+   SALU_CYCLE_1 = 9,
+   SALU_CYCLE_2 = 10,
+   SALU_CYCLE_3 = 11,
 };
 
 class Builder {
@@ -1644,6 +1645,23 @@ public:
    }
 
         
+   Result smem(aco_opcode opcode, Definition def0, Op op0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool dlc=false, bool nv=false)
+   {
+      SMEM_instruction *instr = create_instruction<SMEM_instruction>(opcode, (Format)((int)Format::SMEM), 1, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+      instr->sync = sync;
+      instr->glc = glc;
+      instr->dlc = dlc;
+      instr->nv = nv;
+            
+       
+      return insert(instr);
+   }
+
+        
    Result smem(aco_opcode opcode, memory_sync_info sync=memory_sync_info(), bool glc=false, bool dlc=false, bool nv=false)
    {
       SMEM_instruction *instr = create_instruction<SMEM_instruction>(opcode, (Format)((int)Format::SMEM), 0, 0);
@@ -2627,7 +2645,7 @@ public:
    }
 
         
-   Result vop1_dpp(aco_opcode opcode, Definition def0, Op op0, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
+   Result vop1_dpp(aco_opcode opcode, Definition def0, Op op0, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
    {
       DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP1|(int)Format::DPP16), 1, 1);
             instr->definitions[0] = def0;
@@ -2639,13 +2657,15 @@ public:
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vop2_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
+   Result vop2_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
    {
       DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP16), 2, 1);
             instr->definitions[0] = def0;
@@ -2658,13 +2678,15 @@ public:
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vop2_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
+   Result vop2_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
    {
       DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP16), 3, 1);
             instr->definitions[0] = def0;
@@ -2678,13 +2700,15 @@ public:
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vop2_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
+   Result vop2_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
    {
       DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP16), 2, 2);
             instr->definitions[0] = def0;
@@ -2700,13 +2724,15 @@ public:
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vop2_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, Op op2, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
+   Result vop2_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, Op op2, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
    {
       DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP16), 3, 2);
             instr->definitions[0] = def0;
@@ -2723,13 +2749,15 @@ public:
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vopc_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
+   Result vopc_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
    {
       DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::DPP16), 2, 1);
             instr->definitions[0] = def0;
@@ -2742,13 +2770,15 @@ public:
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vopc_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
+   Result vopc_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
    {
       DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::DPP16), 2, 2);
             instr->definitions[0] = def0;
@@ -2764,13 +2794,149 @@ public:
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vop1_dpp8(aco_opcode opcode, Definition def0, Op op0)
+   Result vop3_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP3|(int)Format::DPP16), 3, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP3|(int)Format::DPP16), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3_dpp(aco_opcode opcode, Definition def0, Op op0, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP3|(int)Format::DPP16), 1, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP3|(int)Format::DPP16), 2, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3p_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, uint8_t opsel_lo, uint8_t opsel_hi, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP3P|(int)Format::DPP16), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+      instr->opsel_lo = opsel_lo;
+      instr->opsel_hi = opsel_hi;
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3p_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint8_t opsel_lo, uint8_t opsel_hi, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP3P|(int)Format::DPP16), 3, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+      instr->opsel_lo = opsel_lo;
+      instr->opsel_hi = opsel_hi;
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop1_dpp8(aco_opcode opcode, Definition def0, Op op0, uint32_t lane_sel=0, bool fetch_inactive=true)
    {
       DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP1|(int)Format::DPP8), 1, 1);
             instr->definitions[0] = def0;
@@ -2778,13 +2944,16 @@ public:
             instr->definitions[0].setNUW(is_nuw);
             instr->operands[0] = op0.op;
             
-            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vop2_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1)
+   Result vop2_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, uint32_t lane_sel=0, bool fetch_inactive=true)
    {
       DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP8), 2, 1);
             instr->definitions[0] = def0;
@@ -2793,13 +2962,16 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             
-            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vop2_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2)
+   Result vop2_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint32_t lane_sel=0, bool fetch_inactive=true)
    {
       DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP8), 3, 1);
             instr->definitions[0] = def0;
@@ -2809,13 +2981,16 @@ public:
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
             
-            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vop2_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1)
+   Result vop2_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint32_t lane_sel=0, bool fetch_inactive=true)
    {
       DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP8), 2, 2);
             instr->definitions[0] = def0;
@@ -2827,13 +3002,16 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             
-            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vop2_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, Op op2)
+   Result vop2_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, Op op2, uint32_t lane_sel=0, bool fetch_inactive=true)
    {
       DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP8), 3, 2);
             instr->definitions[0] = def0;
@@ -2846,13 +3024,16 @@ public:
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
             
-            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vopc_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1)
+   Result vopc_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, uint32_t lane_sel=0, bool fetch_inactive=true)
    {
       DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::DPP8), 2, 1);
             instr->definitions[0] = def0;
@@ -2861,13 +3042,16 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             
-            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
 
         
-   Result vopc_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1)
+   Result vopc_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint32_t lane_sel=0, bool fetch_inactive=true)
    {
       DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::DPP8), 2, 2);
             instr->definitions[0] = def0;
@@ -2879,7 +3063,126 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP3|(int)Format::DPP8), 3, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
             
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP3|(int)Format::DPP8), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3_dpp8(aco_opcode opcode, Definition def0, Op op0, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP3|(int)Format::DPP8), 1, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP3|(int)Format::DPP8), 2, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3p_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, uint8_t opsel_lo, uint8_t opsel_hi, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP3P|(int)Format::DPP8), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+      instr->opsel_lo = opsel_lo;
+      instr->opsel_hi = opsel_hi;
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop3p_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint8_t opsel_lo, uint8_t opsel_hi, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP3P|(int)Format::DPP8), 3, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+      instr->opsel_lo = opsel_lo;
+      instr->opsel_hi = opsel_hi;
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }
@@ -2995,6 +3298,313 @@ public:
             instr->operands[1] = op1.op;
             
             
+       
+      return insert(instr);
+   }
+
+        
+   Result vop1_e64_dpp(aco_opcode opcode, Definition def0, Op op0, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP1|(int)Format::VOP3|(int)Format::DPP16), 1, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_e64_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::VOP3|(int)Format::DPP16), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_e64_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::VOP3|(int)Format::DPP16), 3, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+            
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_e64_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::VOP3|(int)Format::DPP16), 2, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_e64_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, Op op2, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::VOP3|(int)Format::DPP16), 3, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+            
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vopc_e64_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::VOP3|(int)Format::DPP16), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vopc_e64_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true, bool fetch_inactive=true)
+   {
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::VOP3|(int)Format::DPP16), 2, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+      instr->dpp_ctrl = dpp_ctrl;
+      instr->row_mask = row_mask;
+      instr->bank_mask = bank_mask;
+      instr->bound_ctrl = bound_ctrl;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop1_e64_dpp8(aco_opcode opcode, Definition def0, Op op0, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP1|(int)Format::VOP3|(int)Format::DPP8), 1, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_e64_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::VOP3|(int)Format::DPP8), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_e64_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::VOP3|(int)Format::DPP8), 3, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+            
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_e64_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::VOP3|(int)Format::DPP8), 2, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_e64_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, Op op2, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::VOP3|(int)Format::DPP8), 3, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+            
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vopc_e64_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::VOP3|(int)Format::DPP8), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vopc_e64_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint32_t lane_sel=0, bool fetch_inactive=true)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::VOP3|(int)Format::DPP8), 2, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+      instr->lane_sel = lane_sel;
+      instr->fetch_inactive = fetch_inactive;
+            instr->fetch_inactive &= program->gfx_level >= GFX10;
+
        
       return insert(instr);
    }

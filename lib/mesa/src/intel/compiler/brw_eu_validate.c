@@ -385,13 +385,14 @@ send_restrictions(const struct brw_isa_info *isa,
          unsigned mlen = 1;
          if (!brw_inst_send_sel_reg32_desc(devinfo, inst)) {
             const uint32_t desc = brw_inst_send_desc(devinfo, inst);
-            mlen = brw_message_desc_mlen(devinfo, desc);
+            mlen = brw_message_desc_mlen(devinfo, desc) / reg_unit(devinfo);
          }
 
          unsigned ex_mlen = 1;
          if (!brw_inst_send_sel_reg32_ex_desc(devinfo, inst)) {
             const uint32_t ex_desc = brw_inst_sends_ex_desc(devinfo, inst);
-            ex_mlen = brw_message_ex_desc_ex_mlen(devinfo, ex_desc);
+            ex_mlen = brw_message_ex_desc_ex_mlen(devinfo, ex_desc) /
+                      reg_unit(devinfo);
          }
          const unsigned src0_reg_nr = brw_inst_src0_da_reg_nr(devinfo, inst);
          const unsigned src1_reg_nr = brw_inst_send_src1_reg_nr(devinfo, inst);
@@ -1464,7 +1465,7 @@ region_alignment_rules(const struct brw_isa_info *isa,
       unsigned hstride_elements = (num_hstride - 1) * hstride;
       unsigned offset = (vstride_elements + hstride_elements) * element_size +
                         subreg;
-      ERROR_IF(offset >= 64,
+      ERROR_IF(offset >= 64 * reg_unit(devinfo),
                "A source cannot span more than 2 adjacent GRF registers");
    }
 
@@ -1476,7 +1477,7 @@ region_alignment_rules(const struct brw_isa_info *isa,
    unsigned element_size = brw_reg_type_to_size(dst_type);
    unsigned subreg = brw_inst_dst_da1_subreg_nr(devinfo, inst);
    unsigned offset = ((exec_size - 1) * stride * element_size) + subreg;
-   ERROR_IF(offset >= 64,
+   ERROR_IF(offset >= 64 * reg_unit(devinfo),
             "A destination cannot span more than 2 adjacent GRF registers");
 
    if (error_msg.str)
@@ -1677,6 +1678,16 @@ region_alignment_rules(const struct brw_isa_info *isa,
     *
     * Additionally the simulator source code indicates that the real condition
     * is that the size of the destination type is 4 bytes.
+    *
+    * HSW PRMs also add a note to the second exception:
+    *  "When lower 8 channels are disabled, the sub register of source1
+    *   operand is not incremented. If the lower 8 channels are expected
+    *   to be disabled, say by predication, the instruction must be split
+    *   into pair of simd8 operations."
+    *
+    * We can't reliably know if the channels won't be disabled due to,
+    * for example, IMASK. So, play it safe and disallow packed-word exception
+    * for src1.
     */
    if (devinfo->ver <= 7 && dst_regs == 2) {
       enum brw_reg_type dst_type = inst_dst_type(isa, inst);
@@ -1691,7 +1702,7 @@ region_alignment_rules(const struct brw_isa_info *isa,
          width = WIDTH(brw_inst_src ## n ## _width(devinfo, inst));                \
          hstride = STRIDE(brw_inst_src ## n ## _hstride(devinfo, inst));           \
          bool src ## n ## _is_packed_word =                                        \
-            is_packed(vstride, width, hstride) &&                                  \
+            n != 1 && is_packed(vstride, width, hstride) &&                        \
             (brw_inst_src ## n ## _type(devinfo, inst) == BRW_REGISTER_TYPE_W ||   \
              brw_inst_src ## n ## _type(devinfo, inst) == BRW_REGISTER_TYPE_UW);   \
                                                                                    \
@@ -1700,7 +1711,7 @@ region_alignment_rules(const struct brw_isa_info *isa,
                   !(dst_is_packed_dword && src ## n ## _is_packed_word),           \
                   "When the destination spans two registers, the source must "     \
                   "span two registers\n" ERROR_INDENT "(exceptions for scalar "    \
-                  "source and packed-word to packed-dword expansion)")
+                  "sources, and packed-word to packed-dword expansion for src0)")
 
          if (i == 0) {
             DO_SRC(0);
@@ -2279,6 +2290,47 @@ instruction_restrictions(const struct brw_isa_info *isa,
 
    }
 
+   if (brw_inst_opcode(isa, inst) == BRW_OPCODE_ADD3) {
+      const enum brw_reg_type dst_type = inst_dst_type(isa, inst);
+
+      ERROR_IF(dst_type != BRW_REGISTER_TYPE_D &&
+               dst_type != BRW_REGISTER_TYPE_UD &&
+               dst_type != BRW_REGISTER_TYPE_W &&
+               dst_type != BRW_REGISTER_TYPE_UW,
+               "Destination must be integer D, UD, W, or UW type.");
+
+      for (unsigned i = 0; i < 3; i++) {
+         enum brw_reg_type src_type;
+
+         switch (i) {
+         case 0: src_type = brw_inst_3src_a1_src0_type(devinfo, inst); break;
+         case 1: src_type = brw_inst_3src_a1_src1_type(devinfo, inst); break;
+         case 2: src_type = brw_inst_3src_a1_src2_type(devinfo, inst); break;
+         default: unreachable("invalid src");
+         }
+
+         ERROR_IF(src_type != BRW_REGISTER_TYPE_D &&
+                  src_type != BRW_REGISTER_TYPE_UD &&
+                  src_type != BRW_REGISTER_TYPE_W &&
+                  src_type != BRW_REGISTER_TYPE_UW,
+                  "Source must be integer D, UD, W, or UW type.");
+
+         if (i == 0) {
+            if (brw_inst_3src_a1_src0_is_imm(devinfo, inst)) {
+               ERROR_IF(src_type != BRW_REGISTER_TYPE_W &&
+                        src_type != BRW_REGISTER_TYPE_UW,
+                        "Immediate source must be integer W or UW type.");
+            }
+         } else if (i == 2) {
+            if (brw_inst_3src_a1_src2_is_imm(devinfo, inst)) {
+               ERROR_IF(src_type != BRW_REGISTER_TYPE_W &&
+                        src_type != BRW_REGISTER_TYPE_UW,
+                        "Immediate source must be integer W or UW type.");
+            }
+         }
+      }
+   }
+
    if (brw_inst_opcode(isa, inst) == BRW_OPCODE_OR ||
        brw_inst_opcode(isa, inst) == BRW_OPCODE_AND ||
        brw_inst_opcode(isa, inst) == BRW_OPCODE_XOR ||
@@ -2443,6 +2495,10 @@ send_descriptor_restrictions(const struct brw_isa_info *isa,
    const uint32_t desc = brw_inst_send_desc(devinfo, inst);
 
    switch (brw_inst_sfid(devinfo, inst)) {
+   case BRW_SFID_URB:
+      if (devinfo->ver < 20)
+         break;
+      FALLTHROUGH;
    case GFX12_SFID_TGM:
    case GFX12_SFID_SLM:
    case GFX12_SFID_UGM:
@@ -2458,7 +2514,7 @@ send_descriptor_restrictions(const struct brw_isa_info *isa,
       break;
    }
 
-   if (brw_inst_sfid(devinfo, inst) == BRW_SFID_URB) {
+   if (brw_inst_sfid(devinfo, inst) == BRW_SFID_URB && devinfo->ver < 20) {
       /* Gfx4 doesn't have a "header present" bit in the SEND message. */
       ERROR_IF(devinfo->ver > 4 && !brw_inst_header_present(devinfo, inst),
                "Header must be present for all URB messages.");

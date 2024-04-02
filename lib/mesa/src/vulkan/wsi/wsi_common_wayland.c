@@ -42,6 +42,8 @@
 #include "wsi_common_entrypoints.h"
 #include "wsi_common_private.h"
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
+#include "presentation-time-client-protocol.h"
+#include "tearing-control-v1-client-protocol.h"
 
 #include <util/compiler.h>
 #include <util/hash_table.h>
@@ -50,6 +52,7 @@
 #include <util/u_vector.h>
 #include <util/u_dynarray.h>
 #include <util/anon_file.h>
+#include <util/os_time.h>
 
 #ifdef MAJOR_IN_MKDEV
 #include <sys/mkdev.h>
@@ -98,8 +101,12 @@ struct wsi_wl_display {
    struct wl_shm *wl_shm;
    struct zwp_linux_dmabuf_v1 *wl_dmabuf;
    struct zwp_linux_dmabuf_feedback_v1 *wl_dmabuf_feedback;
+   struct wp_tearing_control_manager_v1 *tearing_control_manager;
 
    struct dmabuf_feedback_format_table format_table;
+
+   /* users want per-chain wsi_wl_swapchain->present_ids.wp_presentation */
+   struct wp_presentation *wp_presentation_notwrapped;
 
    struct wsi_wayland *wsi_wl;
 
@@ -151,6 +158,7 @@ struct wsi_wl_swapchain {
    struct wsi_swapchain base;
 
    struct wsi_wl_surface *wsi_wl_surface;
+   struct wp_tearing_control_v1 *tearing_control;
 
    struct wl_callback *frame;
 
@@ -167,6 +175,16 @@ struct wsi_wl_swapchain {
 
    VkPresentModeKHR present_mode;
    bool fifo_ready;
+
+   struct {
+      pthread_mutex_t lock; /* protects all members */
+      uint64_t max_completed;
+      struct wl_list outstanding_list;
+      pthread_cond_t list_advanced;
+      struct wl_event_queue *queue;
+      struct wp_presentation *wp_presentation;
+      bool dispatch_in_progress;
+   } present_ids;
 
    struct wsi_wl_image images[0];
 };
@@ -375,6 +393,31 @@ wsi_wl_display_add_drm_format_modifier(struct wsi_wl_display *display,
                                             VK_FORMAT_A2B10G10R10_UNORM_PACK32,
                                             WSI_WL_FMT_OPAQUE, modifier);
       break;
+
+   /* Vulkan 16-bits-per-channel formats have an inverted channel order
+    * compared to DRM formats, just like the 8-bits-per-channel ones.
+    * On little endian systems the memory representation of each channel
+    * matches the DRM formats'. */
+   case DRM_FORMAT_ABGR16161616:
+      wsi_wl_display_add_vk_format_modifier(display, formats,
+                                            VK_FORMAT_R16G16B16A16_UNORM,
+                                            WSI_WL_FMT_ALPHA, modifier);
+      break;
+   case DRM_FORMAT_XBGR16161616:
+      wsi_wl_display_add_vk_format_modifier(display, formats,
+                                            VK_FORMAT_R16G16B16A16_UNORM,
+                                            WSI_WL_FMT_OPAQUE, modifier);
+      break;
+   case DRM_FORMAT_ABGR16161616F:
+      wsi_wl_display_add_vk_format_modifier(display, formats,
+                                            VK_FORMAT_R16G16B16A16_SFLOAT,
+                                            WSI_WL_FMT_ALPHA, modifier);
+      break;
+   case DRM_FORMAT_XBGR16161616F:
+      wsi_wl_display_add_vk_format_modifier(display, formats,
+                                            VK_FORMAT_R16G16B16A16_SFLOAT,
+                                            WSI_WL_FMT_OPAQUE, modifier);
+      break;
 #endif
 
    /* Non-packed 8-bit formats have an inverted channel order compared to the
@@ -492,6 +535,10 @@ wl_drm_format_for_vk_format(VkFormat vk_format, bool alpha)
       return alpha ? DRM_FORMAT_ARGB2101010 : DRM_FORMAT_XRGB2101010;
    case VK_FORMAT_A2B10G10R10_UNORM_PACK32:
       return alpha ? DRM_FORMAT_ABGR2101010 : DRM_FORMAT_XBGR2101010;
+   case VK_FORMAT_R16G16B16A16_UNORM:
+      return alpha ? DRM_FORMAT_ABGR16161616 : DRM_FORMAT_XBGR16161616;
+   case VK_FORMAT_R16G16B16A16_SFLOAT:
+      return alpha ? DRM_FORMAT_ABGR16161616F : DRM_FORMAT_XBGR16161616F;
 #endif
    case VK_FORMAT_R8G8B8_UNORM:
    case VK_FORMAT_R8G8B8_SRGB:
@@ -747,6 +794,14 @@ registry_handle_global(void *data, struct wl_registry *registry,
                                           &dmabuf_listener, display);
       }
    }
+
+   if (strcmp(interface, wp_presentation_interface.name) == 0) {
+      display->wp_presentation_notwrapped =
+         wl_registry_bind(registry, name, &wp_presentation_interface, 1);
+   } else if (strcmp(interface, wp_tearing_control_manager_v1_interface.name) == 0) {
+      display->tearing_control_manager =
+         wl_registry_bind(registry, name, &wp_tearing_control_manager_v1_interface, 1);
+   }
 }
 
 static void
@@ -770,6 +825,10 @@ wsi_wl_display_finish(struct wsi_wl_display *display)
       wl_shm_destroy(display->wl_shm);
    if (display->wl_dmabuf)
       zwp_linux_dmabuf_v1_destroy(display->wl_dmabuf);
+   if (display->wp_presentation_notwrapped)
+      wp_presentation_destroy(display->wp_presentation_notwrapped);
+   if (display->tearing_control_manager)
+      wp_tearing_control_manager_v1_destroy(display->tearing_control_manager);
    if (display->wl_display_wrapper)
       wl_proxy_wrapper_destroy(display->wl_display_wrapper);
    if (display->queue)
@@ -957,11 +1016,6 @@ wsi_wl_surface_get_support(VkIcdSurfaceBase *surface,
    return VK_SUCCESS;
 }
 
-static const VkPresentModeKHR present_modes[] = {
-   VK_PRESENT_MODE_MAILBOX_KHR,
-   VK_PRESENT_MODE_FIFO_KHR,
-};
-
 static uint32_t
 wsi_wl_surface_get_min_image_count(const VkSurfacePresentModeEXT *present_mode)
 {
@@ -1088,15 +1142,37 @@ wsi_wl_surface_get_capabilities2(VkIcdSurfaceBase *surface,
             vk_outarray_append_typed(VkPresentModeKHR, &modes, mode) {
                *mode = present_mode->presentMode;
             }
-            for (unsigned i = 0; i < ARRAY_SIZE(present_modes); i++) {
-               if (present_modes[i] != present_mode->presentMode) {
-                  vk_outarray_append_typed(VkPresentModeKHR, &modes, mode) {
-                     *mode = present_modes[i];
-                  }
+            switch (present_mode->presentMode) {
+            case VK_PRESENT_MODE_MAILBOX_KHR:
+               vk_outarray_append_typed(VkPresentModeKHR, &modes, mode) {
+                  *mode = VK_PRESENT_MODE_FIFO_KHR;
                }
+               break;
+            case VK_PRESENT_MODE_FIFO_KHR:
+               vk_outarray_append_typed(VkPresentModeKHR, &modes, mode) {
+                  *mode = VK_PRESENT_MODE_MAILBOX_KHR;
+               }
+               break;
+            default:
+               break;
             }
          } else {
-            compat->presentModeCount = ARRAY_SIZE(present_modes);
+            if (!present_mode) {
+               wsi_common_vk_warn_once("Use of VkSurfacePresentModeCompatibilityEXT "
+                                       "without a VkSurfacePresentModeEXT set. This is an "
+                                       "application bug.\n");
+               compat->presentModeCount = 1;
+            } else {
+               switch (present_mode->presentMode) {
+               case VK_PRESENT_MODE_MAILBOX_KHR:
+               case VK_PRESENT_MODE_FIFO_KHR:
+                  compat->presentModeCount = 2;
+                  break;
+               default:
+                  compat->presentModeCount = 1;
+                  break;
+               }
+            }
          }
          break;
       }
@@ -1188,20 +1264,42 @@ wsi_wl_surface_get_formats2(VkIcdSurfaceBase *icd_surface,
 }
 
 static VkResult
-wsi_wl_surface_get_present_modes(VkIcdSurfaceBase *surface,
+wsi_wl_surface_get_present_modes(VkIcdSurfaceBase *icd_surface,
                                  struct wsi_device *wsi_device,
                                  uint32_t* pPresentModeCount,
                                  VkPresentModeKHR* pPresentModes)
 {
+   VkIcdSurfaceWayland *surface = (VkIcdSurfaceWayland *)icd_surface;
+   struct wsi_wayland *wsi =
+      (struct wsi_wayland *)wsi_device->wsi[VK_ICD_WSI_PLATFORM_WAYLAND];
+
+   struct wsi_wl_display display;
+   if (wsi_wl_display_init(wsi, &display, surface->display, true,
+                           wsi_device->sw))
+      return VK_ERROR_SURFACE_LOST_KHR;
+
+   VkPresentModeKHR present_modes[3];
+   uint32_t present_modes_count = 0;
+
+   /* The following two modes are always supported */
+   present_modes[present_modes_count++] = VK_PRESENT_MODE_MAILBOX_KHR;
+   present_modes[present_modes_count++] = VK_PRESENT_MODE_FIFO_KHR;
+
+   if (display.tearing_control_manager)
+      present_modes[present_modes_count++] = VK_PRESENT_MODE_IMMEDIATE_KHR;
+
+   assert(present_modes_count <= ARRAY_SIZE(present_modes));
+   wsi_wl_display_finish(&display);
+
    if (pPresentModes == NULL) {
-      *pPresentModeCount = ARRAY_SIZE(present_modes);
+      *pPresentModeCount = present_modes_count;
       return VK_SUCCESS;
    }
 
-   *pPresentModeCount = MIN2(*pPresentModeCount, ARRAY_SIZE(present_modes));
+   *pPresentModeCount = MIN2(*pPresentModeCount, present_modes_count);
    typed_memcpy(pPresentModes, present_modes, *pPresentModeCount);
 
-   if (*pPresentModeCount < ARRAY_SIZE(present_modes))
+   if (*pPresentModeCount < present_modes_count)
       return VK_INCOMPLETE;
    else
       return VK_SUCCESS;
@@ -1534,6 +1632,14 @@ wsi_CreateWaylandSurfaceKHR(VkInstance _instance,
    return VK_SUCCESS;
 }
 
+struct wsi_wl_present_id {
+   struct wp_presentation_feedback *feedback;
+   uint64_t present_id;
+   const VkAllocationCallbacks *alloc;
+   struct wsi_wl_swapchain *chain;
+   struct wl_list link;
+};
+
 static struct wsi_image *
 wsi_wl_swapchain_get_wsi_image(struct wsi_swapchain *wsi_chain,
                                uint32_t image_index)
@@ -1561,6 +1667,177 @@ wsi_wl_swapchain_set_present_mode(struct wsi_swapchain *wsi_chain,
 {
    struct wsi_wl_swapchain *chain = (struct wsi_wl_swapchain *)wsi_chain;
    chain->base.present_mode = mode;
+}
+
+static VkResult
+wsi_wl_swapchain_wait_for_present(struct wsi_swapchain *wsi_chain,
+                                  uint64_t present_id,
+                                  uint64_t timeout)
+{
+   struct wsi_wl_swapchain *chain = (struct wsi_wl_swapchain *)wsi_chain;
+   struct wl_display *wl_display = chain->wsi_wl_surface->display->wl_display;
+   struct timespec end_time;
+   int wl_fd = wl_display_get_fd(wl_display);
+   VkResult ret;
+   int err;
+
+   uint64_t atimeout;
+   if (timeout == 0 || timeout == UINT64_MAX)
+      atimeout = timeout;
+   else
+      atimeout = os_time_get_absolute_timeout(timeout);
+
+   timespec_from_nsec(&end_time, atimeout);
+
+   /* Need to observe that the swapchain semaphore has been unsignalled,
+    * as this is guaranteed when a present is complete. */
+   VkResult result = wsi_swapchain_wait_for_present_semaphore(
+         &chain->base, present_id, timeout);
+   if (result != VK_SUCCESS)
+      return result;
+
+   if (!chain->present_ids.wp_presentation) {
+      /* If we're enabling present wait despite the protocol not being supported,
+       * use best effort not to crash, even if result will not be correct.
+       * For correctness, we must at least wait for the timeline semaphore to complete. */
+      return VK_SUCCESS;
+   }
+
+   /* PresentWait can be called concurrently.
+    * If there is contention on this mutex, it means there is currently a dispatcher in flight holding the lock.
+    * The lock is only held while there is forward progress processing events from Wayland,
+    * so there should be no problem locking without timeout.
+    * We would like to be able to support timeout = 0 to query the current max_completed count.
+    * A timedlock with no timeout can be problematic in that scenario. */
+   err = pthread_mutex_lock(&chain->present_ids.lock);
+   if (err != 0)
+      return VK_ERROR_OUT_OF_DATE_KHR;
+
+   if (chain->present_ids.max_completed >= present_id) {
+      pthread_mutex_unlock(&chain->present_ids.lock);
+      return VK_SUCCESS;
+   }
+
+   /* Someone else is dispatching events; wait for them to update the chain
+    * status and wake us up. */
+   while (chain->present_ids.dispatch_in_progress) {
+      /* We only own the lock when the wait succeeds. */
+      err = pthread_cond_timedwait(&chain->present_ids.list_advanced,
+                                   &chain->present_ids.lock, &end_time);
+
+      if (err == ETIMEDOUT) {
+         pthread_mutex_unlock(&chain->present_ids.lock);
+         return VK_TIMEOUT;
+      } else if (err != 0) {
+         pthread_mutex_unlock(&chain->present_ids.lock);
+         return VK_ERROR_OUT_OF_DATE_KHR;
+      }
+
+      if (chain->present_ids.max_completed >= present_id) {
+         pthread_mutex_unlock(&chain->present_ids.lock);
+         return VK_SUCCESS;
+      }
+
+      /* Whoever was previously dispatching the events isn't anymore, so we
+       * will take over and fall through below. */
+      if (!chain->present_ids.dispatch_in_progress)
+         break;
+   }
+
+   assert(!chain->present_ids.dispatch_in_progress);
+   chain->present_ids.dispatch_in_progress = true;
+
+   /* Whether or not we were dispatching the events before, we are now: pull
+    * all the new events from our event queue, post them, and wake up everyone
+    * else who might be waiting. */
+   while (1) {
+      ret = wl_display_dispatch_queue_pending(wl_display, chain->present_ids.queue);
+      if (ret < 0) {
+         ret = VK_ERROR_OUT_OF_DATE_KHR;
+         goto relinquish_dispatch;
+      }
+
+      /* Some events dispatched: check the new completions. */
+      if (ret > 0) {
+         /* Completed our own present; stop our own dispatching and let
+          * someone else pick it up. */
+         if (chain->present_ids.max_completed >= present_id) {
+            ret = VK_SUCCESS;
+            goto relinquish_dispatch;
+         }
+
+         /* Wake up other waiters who may have been unblocked by the events
+          * we just read. */
+         pthread_cond_broadcast(&chain->present_ids.list_advanced);
+      }
+
+      /* Check for timeout, and relinquish the dispatch to another thread
+       * if we're over our budget. */
+      uint64_t current_time_nsec = os_time_get_nano();
+      if (current_time_nsec > atimeout) {
+         ret = VK_TIMEOUT;
+         goto relinquish_dispatch;
+      }
+
+      /* To poll and read from WL fd safely, we must be cooperative.
+       * See wl_display_prepare_read_queue in https://wayland.freedesktop.org/docs/html/apb.html */
+
+      /* Try to read events from the server. */
+      ret = wl_display_prepare_read_queue(wl_display, chain->present_ids.queue);
+      if (ret < 0) {
+         /* Another thread might have read events for our queue already. Go
+          * back to dispatch them.
+          */
+         if (errno == EAGAIN)
+            continue;
+         ret = VK_ERROR_OUT_OF_DATE_KHR;
+         goto relinquish_dispatch;
+      }
+
+      /* Drop the lock around poll, so people can wait whilst we sleep. */
+      pthread_mutex_unlock(&chain->present_ids.lock);
+
+      struct pollfd pollfd = {
+         .fd = wl_fd,
+         .events = POLLIN
+      };
+      struct timespec current_time, rel_timeout;
+      timespec_from_nsec(&current_time, current_time_nsec);
+      timespec_sub(&rel_timeout, &end_time, &current_time);
+      ret = ppoll(&pollfd, 1, &rel_timeout, NULL);
+
+      /* Re-lock after poll; either we're dispatching events under the lock or
+       * bouncing out from an error also under the lock. We can't use timedlock
+       * here because we need to acquire to clear dispatch_in_progress. */
+      pthread_mutex_lock(&chain->present_ids.lock);
+
+      if (ret <= 0) {
+         int lerrno = errno;
+         wl_display_cancel_read(wl_display);
+         if (ret < 0) {
+            /* If ppoll() was interrupted, try again. */
+            if (lerrno == EINTR || lerrno == EAGAIN)
+               continue;
+            ret = VK_ERROR_OUT_OF_DATE_KHR;
+            goto relinquish_dispatch;
+         }
+         assert(ret == 0);
+         continue;
+      }
+
+      ret = wl_display_read_events(wl_display);
+      if (ret < 0) {
+         ret = VK_ERROR_OUT_OF_DATE_KHR;
+         goto relinquish_dispatch;
+      }
+   }
+
+relinquish_dispatch:
+   assert(chain->present_ids.dispatch_in_progress);
+   chain->present_ids.dispatch_in_progress = false;
+   pthread_cond_broadcast(&chain->present_ids.list_advanced);
+   pthread_mutex_unlock(&chain->present_ids.lock);
+   return ret;
 }
 
 static VkResult
@@ -1640,6 +1917,54 @@ wsi_wl_swapchain_acquire_next_image(struct wsi_swapchain *wsi_chain,
 }
 
 static void
+presentation_handle_sync_output(void *data,
+                                struct wp_presentation_feedback *feedback,
+                                struct wl_output *output)
+{
+}
+
+static void
+presentation_handle_presented(void *data,
+                              struct wp_presentation_feedback *feedback,
+                              uint32_t tv_sec_hi, uint32_t tv_sec_lo,
+                              uint32_t tv_nsec, uint32_t refresh,
+                              uint32_t seq_hi, uint32_t seq_lo,
+                              uint32_t flags)
+{
+   struct wsi_wl_present_id *id = data;
+
+   /* present_ids.lock already held around dispatch */
+   if (id->present_id > id->chain->present_ids.max_completed)
+      id->chain->present_ids.max_completed = id->present_id;
+
+   wp_presentation_feedback_destroy(feedback);
+   wl_list_remove(&id->link);
+   vk_free(id->alloc, id);
+}
+
+static void
+presentation_handle_discarded(void *data,
+                              struct wp_presentation_feedback *feedback)
+{
+   struct wsi_wl_present_id *id = data;
+
+   /* present_ids.lock already held around dispatch */
+   if (id->present_id > id->chain->present_ids.max_completed)
+      id->chain->present_ids.max_completed = id->present_id;
+
+   wp_presentation_feedback_destroy(feedback);
+   wl_list_remove(&id->link);
+   vk_free(id->alloc, id);
+}
+
+static const struct wp_presentation_feedback_listener
+      pres_feedback_listener = {
+   presentation_handle_sync_output,
+   presentation_handle_presented,
+   presentation_handle_discarded,
+};
+
+static void
 frame_handle_done(void *data, struct wl_callback *callback, uint32_t serial)
 {
    struct wsi_wl_swapchain *chain = data;
@@ -1701,6 +2026,24 @@ wsi_wl_swapchain_queue_present(struct wsi_swapchain *wsi_chain,
    } else {
       /* If we present MAILBOX, any subsequent presentation in FIFO can replace this image. */
       chain->fifo_ready = true;
+   }
+
+   if (present_id > 0 && chain->present_ids.wp_presentation) {
+      struct wsi_wl_present_id *id =
+         vk_zalloc(chain->wsi_wl_surface->display->wsi_wl->alloc, sizeof(*id), sizeof(uintptr_t),
+                   VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      id->chain = chain;
+      id->present_id = present_id;
+      id->alloc = chain->wsi_wl_surface->display->wsi_wl->alloc;
+
+      pthread_mutex_lock(&chain->present_ids.lock);
+      id->feedback = wp_presentation_feedback(chain->present_ids.wp_presentation,
+                                              chain->wsi_wl_surface->surface);
+      wp_presentation_feedback_add_listener(id->feedback,
+                                            &pres_feedback_listener,
+                                            id);
+      wl_list_insert(&chain->present_ids.outstanding_list, &id->link);
+      pthread_mutex_unlock(&chain->present_ids.lock);
    }
 
    chain->images[image_index].busy = true;
@@ -1849,12 +2192,32 @@ wsi_wl_swapchain_chain_free(struct wsi_wl_swapchain *chain,
 {
    if (chain->frame)
       wl_callback_destroy(chain->frame);
+   if (chain->tearing_control)
+      wp_tearing_control_v1_destroy(chain->tearing_control);
    if (chain->wsi_wl_surface)
       chain->wsi_wl_surface->chain = NULL;
 
-   wsi_swapchain_finish(&chain->base);
+   if (chain->present_ids.wp_presentation) {
+      assert(!chain->present_ids.dispatch_in_progress);
 
-   vk_free(pAllocator, chain);
+      /* In VK_EXT_swapchain_maintenance1 there is no requirement to wait for all present IDs to be complete.
+       * Waiting for the swapchain fence is enough.
+       * Just clean up anything user did not wait for. */
+      struct wsi_wl_present_id *id, *tmp;
+      wl_list_for_each_safe(id, tmp, &chain->present_ids.outstanding_list, link) {
+         wp_presentation_feedback_destroy(id->feedback);
+         wl_list_remove(&id->link);
+         vk_free(id->alloc, id);
+      }
+
+      wl_proxy_wrapper_destroy(chain->present_ids.wp_presentation);
+      pthread_cond_destroy(&chain->present_ids.list_advanced);
+      pthread_mutex_destroy(&chain->present_ids.lock);
+   }
+
+   vk_free(pAllocator, (void *)chain->drm_modifiers);
+
+   wsi_swapchain_finish(&chain->base);
 }
 
 static VkResult
@@ -1865,6 +2228,8 @@ wsi_wl_swapchain_destroy(struct wsi_swapchain *wsi_chain,
 
    wsi_wl_swapchain_images_free(chain);
    wsi_wl_swapchain_chain_free(chain, pAllocator);
+
+   vk_free(pAllocator, chain);
 
    return VK_SUCCESS;
 }
@@ -1897,11 +2262,16 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
     */
    if (wsi_wl_surface->chain &&
        wsi_swapchain_to_handle(&wsi_wl_surface->chain->base) != pCreateInfo->oldSwapchain) {
-      return VK_ERROR_NATIVE_WINDOW_IN_USE_KHR;
+      result = VK_ERROR_NATIVE_WINDOW_IN_USE_KHR;
+      goto fail;
    }
    if (pCreateInfo->oldSwapchain) {
       VK_FROM_HANDLE(wsi_wl_swapchain, old_chain, pCreateInfo->oldSwapchain);
       old_chain->wsi_wl_surface = NULL;
+      if (old_chain->tearing_control) {
+         wp_tearing_control_v1_destroy(old_chain->tearing_control);
+         old_chain->tearing_control = NULL;
+      }
    }
 
    /* Take ownership of the wsi_wl_surface */
@@ -1911,6 +2281,19 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    result = wsi_wl_surface_init(wsi_wl_surface, wsi_device);
    if (result != VK_SUCCESS)
       goto fail;
+
+   VkPresentModeKHR present_mode = wsi_swapchain_get_present_mode(wsi_device, pCreateInfo);
+   if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+      chain->tearing_control =
+         wp_tearing_control_manager_v1_get_tearing_control(wsi_wl_surface->display->tearing_control_manager,
+                                                           wsi_wl_surface->surface);
+      if (!chain->tearing_control) {
+         result = VK_ERROR_OUT_OF_HOST_MEMORY;
+         goto fail;
+      }
+      wp_tearing_control_v1_set_presentation_hint(chain->tearing_control,
+                                                          WP_TEARING_CONTROL_V1_PRESENTATION_HINT_ASYNC);
+   }
 
    enum wsi_wl_buffer_type buffer_type;
    struct wsi_base_image_params *image_params = NULL;
@@ -1978,7 +2361,8 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    chain->base.queue_present = wsi_wl_swapchain_queue_present;
    chain->base.release_images = wsi_wl_swapchain_release_images;
    chain->base.set_present_mode = wsi_wl_swapchain_set_present_mode;
-   chain->base.present_mode = wsi_swapchain_get_present_mode(wsi_device, pCreateInfo);
+   chain->base.wait_for_present = wsi_wl_swapchain_wait_for_present;
+   chain->base.present_mode = present_mode;
    chain->base.image_count = num_images;
    chain->extent = pCreateInfo->imageExtent;
    chain->vk_format = pCreateInfo->imageFormat;
@@ -1989,14 +2373,42 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
       chain->shm_format = wl_shm_format_for_vk_format(chain->vk_format, alpha);
    }
    chain->num_drm_modifiers = num_drm_modifiers;
-   chain->drm_modifiers = drm_modifiers;
+   if (num_drm_modifiers) {
+      uint64_t *drm_modifiers_copy =
+         vk_alloc(pAllocator, sizeof(*drm_modifiers) * num_drm_modifiers, 8,
+                  VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (!drm_modifiers_copy) {
+         result = VK_ERROR_OUT_OF_HOST_MEMORY;
+         goto fail_free_wl_chain;
+      }
+
+      typed_memcpy(drm_modifiers_copy, drm_modifiers, num_drm_modifiers);
+      chain->drm_modifiers = drm_modifiers_copy;
+   }
+
+   if (chain->wsi_wl_surface->display->wp_presentation_notwrapped) {
+      if (!wsi_init_pthread_cond_monotonic(&chain->present_ids.list_advanced)) {
+         result = VK_ERROR_OUT_OF_HOST_MEMORY;
+         goto fail_free_wl_chain;
+      }
+      pthread_mutex_init(&chain->present_ids.lock, NULL);
+
+      wl_list_init(&chain->present_ids.outstanding_list);
+      chain->present_ids.queue =
+            wl_display_create_queue(chain->wsi_wl_surface->display->wl_display);
+      chain->present_ids.wp_presentation =
+            wl_proxy_create_wrapper(chain->wsi_wl_surface->display->wp_presentation_notwrapped);
+      wl_proxy_set_queue((struct wl_proxy *) chain->present_ids.wp_presentation,
+                         chain->present_ids.queue);
+   }
+
    chain->fifo_ready = true;
 
    for (uint32_t i = 0; i < chain->base.image_count; i++) {
       result = wsi_wl_image_init(chain, &chain->images[i],
                                  pCreateInfo, pAllocator);
       if (result != VK_SUCCESS)
-         goto fail_image_init;
+         goto fail_free_wl_images;
       chain->images[i].busy = false;
    }
 
@@ -2004,14 +2416,15 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
 
    return VK_SUCCESS;
 
-fail_image_init:
+fail_free_wl_images:
    wsi_wl_swapchain_images_free(chain);
-
+fail_free_wl_chain:
    wsi_wl_swapchain_chain_free(chain, pAllocator);
 fail:
    vk_free(pAllocator, chain);
    wsi_wl_surface->chain = NULL;
 
+   assert(result != VK_SUCCESS);
    return result;
 }
 

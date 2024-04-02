@@ -28,6 +28,9 @@
 
 #define VK_PROTOTYPES
 #include <vulkan/vulkan_core.h>
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+#include <vulkan/vulkan_beta.h>
+#endif
 
 #include "vk_alloc.h"
 #include "vk_cmd_enqueue_entrypoints.h"
@@ -37,6 +40,7 @@
 
 const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_BIND_PIPELINE",
+   "VK_CMD_SET_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT",
    "VK_CMD_SET_VIEWPORT",
    "VK_CMD_SET_SCISSOR",
    "VK_CMD_SET_LINE_WIDTH",
@@ -60,6 +64,7 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_SUBPASS_SHADING_HUAWEI",
    "VK_CMD_DRAW_CLUSTER_HUAWEI",
    "VK_CMD_DRAW_CLUSTER_INDIRECT_HUAWEI",
+   "VK_CMD_UPDATE_PIPELINE_INDIRECT_BUFFER_NV",
    "VK_CMD_COPY_BUFFER",
    "VK_CMD_COPY_IMAGE",
    "VK_CMD_BLIT_IMAGE",
@@ -155,6 +160,7 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_SET_PRIMITIVE_TOPOLOGY",
    "VK_CMD_SET_VIEWPORT_WITH_COUNT",
    "VK_CMD_SET_SCISSOR_WITH_COUNT",
+   "VK_CMD_BIND_INDEX_BUFFER2_KHR",
    "VK_CMD_BIND_VERTEX_BUFFERS2",
    "VK_CMD_SET_DEPTH_TEST_ENABLE",
    "VK_CMD_SET_DEPTH_WRITE_ENABLE",
@@ -232,7 +238,407 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_COPY_MEMORY_TO_MICROMAP_EXT",
    "VK_CMD_WRITE_MICROMAPS_PROPERTIES_EXT",
    "VK_CMD_OPTICAL_FLOW_EXECUTE_NV",
+   "VK_CMD_SET_DEPTH_BIAS2_EXT",
    "VK_CMD_BIND_SHADERS_EXT",
+};
+
+size_t vk_cmd_queue_type_sizes[] = {
+   sizeof(struct vk_cmd_bind_pipeline) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_attachment_feedback_loop_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_viewport) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_scissor) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_line_width) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_bias) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_blend_constants) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_bounds) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_stencil_compare_mask) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_stencil_write_mask) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_stencil_reference) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_descriptor_sets) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_index_buffer) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_vertex_buffers) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_indexed) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_multi_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_multi_indexed_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_indirect) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_indexed_indirect) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_dispatch) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_dispatch_indirect) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_cluster_huawei) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_cluster_indirect_huawei) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_update_pipeline_indirect_buffer_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_buffer) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_image) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_blit_image) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_buffer_to_image) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_image_to_buffer) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_memory_indirect_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_memory_to_image_indirect_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_update_buffer) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_fill_buffer) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_clear_color_image) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_clear_depth_stencil_image) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_clear_attachments) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_resolve_image) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_event) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_reset_event) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_wait_events) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_pipeline_barrier) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_begin_query) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_end_query) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_begin_conditional_rendering_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_reset_query_pool) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_write_timestamp) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_query_pool_results) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_push_constants) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_begin_render_pass) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_next_subpass) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_execute_commands) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_debug_marker_begin_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_debug_marker_insert_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_execute_generated_commands_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_preprocess_generated_commands_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_pipeline_shader_group_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_push_descriptor_set_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_device_mask) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_dispatch_base) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_push_descriptor_set_with_template_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_viewport_wscaling_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_discard_rectangle_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_discard_rectangle_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_discard_rectangle_mode_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_sample_locations_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_begin_debug_utils_label_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_insert_debug_utils_label_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_write_buffer_marker_amd) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_begin_render_pass2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_next_subpass2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_end_render_pass2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_indirect_count) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_indexed_indirect_count) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_checkpoint_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_transform_feedback_buffers_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_begin_transform_feedback_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_end_transform_feedback_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_begin_query_indexed_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_end_query_indexed_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_indirect_byte_count_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_exclusive_scissor_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_exclusive_scissor_enable_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_shading_rate_image_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_viewport_shading_rate_palette_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_coarse_sample_order_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_mesh_tasks_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_mesh_tasks_indirect_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_mesh_tasks_indirect_count_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_mesh_tasks_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_mesh_tasks_indirect_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_draw_mesh_tasks_indirect_count_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_invocation_mask_huawei) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_acceleration_structure_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_acceleration_structure_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_acceleration_structure_to_memory_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_memory_to_acceleration_structure_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_write_acceleration_structures_properties_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_write_acceleration_structures_properties_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_build_acceleration_structure_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_trace_rays_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_trace_rays_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_trace_rays_indirect_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_trace_rays_indirect2_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_ray_tracing_pipeline_stack_size_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_performance_marker_intel) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_performance_stream_marker_intel) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_performance_override_intel) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_line_stipple_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_build_acceleration_structures_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_build_acceleration_structures_indirect_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_cull_mode) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_front_face) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_primitive_topology) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_viewport_with_count) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_scissor_with_count) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_index_buffer2_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_vertex_buffers2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_test_enable) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_write_enable) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_compare_op) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_bounds_test_enable) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_stencil_test_enable) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_stencil_op) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_patch_control_points_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_rasterizer_discard_enable) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_bias_enable) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_logic_op_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_primitive_restart_enable) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_tessellation_domain_origin_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_clamp_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_polygon_mode_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_rasterization_samples_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_sample_mask_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_alpha_to_coverage_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_alpha_to_one_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_logic_op_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_color_blend_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_color_blend_equation_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_color_write_mask_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_rasterization_stream_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_conservative_rasterization_mode_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_extra_primitive_overestimation_size_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_clip_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_sample_locations_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_color_blend_advanced_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_provoking_vertex_mode_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_line_rasterization_mode_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_line_stipple_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_clip_negative_one_to_one_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_viewport_wscaling_enable_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_viewport_swizzle_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_coverage_to_color_enable_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_coverage_to_color_location_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_coverage_modulation_mode_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_coverage_modulation_table_enable_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_coverage_modulation_table_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_shading_rate_image_enable_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_coverage_reduction_mode_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_representative_fragment_test_enable_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_buffer2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_image2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_blit_image2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_buffer_to_image2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_image_to_buffer2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_resolve_image2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_fragment_shading_rate_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_fragment_shading_rate_enum_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_vertex_input_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_color_write_enable_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_event2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_reset_event2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_wait_events2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_pipeline_barrier2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_write_timestamp2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_write_buffer_marker2_amd) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_decode_video_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_begin_video_coding_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_control_video_coding_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_end_video_coding_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_decompress_memory_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_decompress_memory_indirect_count_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_cu_launch_kernel_nvx) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_descriptor_buffers_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_descriptor_buffer_offsets_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_descriptor_buffer_embedded_samplers_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_begin_rendering) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_build_micromaps_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_micromap_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_micromap_to_memory_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_copy_memory_to_micromap_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_write_micromaps_properties_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_optical_flow_execute_nv) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_bias2_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_shaders_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
 };
 
 static void
@@ -251,8 +657,7 @@ VkResult vk_enqueue_cmd_bind_pipeline(struct vk_cmd_queue *queue
 , VkPipeline pipeline
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_PIPELINE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -260,6 +665,34 @@ VkResult vk_enqueue_cmd_bind_pipeline(struct vk_cmd_queue *queue
       
    cmd->u.bind_pipeline.pipeline_bind_point = pipelineBindPoint;
    cmd->u.bind_pipeline.pipeline = pipeline;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_attachment_feedback_loop_enable_ext(struct vk_cmd_queue *queue,
+                                                    struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_attachment_feedback_loop_enable_ext(struct vk_cmd_queue *queue
+, VkImageAspectFlags aspectMask
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT;
+      
+   cmd->u.set_attachment_feedback_loop_enable_ext.aspect_mask = aspectMask;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
    return VK_SUCCESS;
@@ -284,8 +717,7 @@ VkResult vk_enqueue_cmd_set_viewport(struct vk_cmd_queue *queue
 , const VkViewport* pViewports
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_VIEWPORT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -327,8 +759,7 @@ VkResult vk_enqueue_cmd_set_scissor(struct vk_cmd_queue *queue
 , const VkRect2D* pScissors
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_SCISSOR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -367,8 +798,7 @@ VkResult vk_enqueue_cmd_set_line_width(struct vk_cmd_queue *queue
 , float lineWidth
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_LINE_WIDTH], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -398,8 +828,7 @@ VkResult vk_enqueue_cmd_set_depth_bias(struct vk_cmd_queue *queue
 , float depthBiasSlopeFactor
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_BIAS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -429,8 +858,7 @@ VkResult vk_enqueue_cmd_set_blend_constants(struct vk_cmd_queue *queue
 , const float blendConstants[4]
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_BLEND_CONSTANTS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -460,8 +888,7 @@ VkResult vk_enqueue_cmd_set_depth_bounds(struct vk_cmd_queue *queue
 , float maxDepthBounds
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_BOUNDS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -491,8 +918,7 @@ VkResult vk_enqueue_cmd_set_stencil_compare_mask(struct vk_cmd_queue *queue
 , uint32_t compareMask
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_STENCIL_COMPARE_MASK], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -522,8 +948,7 @@ VkResult vk_enqueue_cmd_set_stencil_write_mask(struct vk_cmd_queue *queue
 , uint32_t writeMask
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_STENCIL_WRITE_MASK], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -553,8 +978,7 @@ VkResult vk_enqueue_cmd_set_stencil_reference(struct vk_cmd_queue *queue
 , uint32_t reference
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_STENCIL_REFERENCE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -599,8 +1023,7 @@ VkResult vk_enqueue_cmd_bind_index_buffer(struct vk_cmd_queue *queue
 , VkIndexType indexType
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_INDEX_BUFFER], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -635,8 +1058,7 @@ VkResult vk_enqueue_cmd_bind_vertex_buffers(struct vk_cmd_queue *queue
 , const VkDeviceSize* pOffsets
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_VERTEX_BUFFERS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -684,8 +1106,7 @@ VkResult vk_enqueue_cmd_draw(struct vk_cmd_queue *queue
 , uint32_t firstInstance
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -720,8 +1141,7 @@ VkResult vk_enqueue_cmd_draw_indexed(struct vk_cmd_queue *queue
 , uint32_t firstInstance
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_INDEXED], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -784,8 +1204,7 @@ VkResult vk_enqueue_cmd_draw_indirect(struct vk_cmd_queue *queue
 , uint32_t stride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_INDIRECT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -819,8 +1238,7 @@ VkResult vk_enqueue_cmd_draw_indexed_indirect(struct vk_cmd_queue *queue
 , uint32_t stride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_INDEXED_INDIRECT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -853,8 +1271,7 @@ VkResult vk_enqueue_cmd_dispatch(struct vk_cmd_queue *queue
 , uint32_t groupCountZ
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DISPATCH], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -885,8 +1302,7 @@ VkResult vk_enqueue_cmd_dispatch_indirect(struct vk_cmd_queue *queue
 , VkDeviceSize offset
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DISPATCH_INDIRECT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -914,8 +1330,7 @@ vk_free_cmd_subpass_shading_huawei(struct vk_cmd_queue *queue,
 VkResult vk_enqueue_cmd_subpass_shading_huawei(struct vk_cmd_queue *queue
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SUBPASS_SHADING_HUAWEI], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -944,8 +1359,7 @@ VkResult vk_enqueue_cmd_draw_cluster_huawei(struct vk_cmd_queue *queue
 , uint32_t groupCountZ
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_CLUSTER_HUAWEI], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -976,8 +1390,7 @@ VkResult vk_enqueue_cmd_draw_cluster_indirect_huawei(struct vk_cmd_queue *queue
 , VkDeviceSize offset
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_CLUSTER_INDIRECT_HUAWEI], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -985,6 +1398,36 @@ VkResult vk_enqueue_cmd_draw_cluster_indirect_huawei(struct vk_cmd_queue *queue
       
    cmd->u.draw_cluster_indirect_huawei.buffer = buffer;
    cmd->u.draw_cluster_indirect_huawei.offset = offset;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_update_pipeline_indirect_buffer_nv(struct vk_cmd_queue *queue,
+                                               struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_update_pipeline_indirect_buffer_nv(struct vk_cmd_queue *queue
+, VkPipelineBindPoint           pipelineBindPoint
+, VkPipeline                    pipeline
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_UPDATE_PIPELINE_INDIRECT_BUFFER_NV], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_UPDATE_PIPELINE_INDIRECT_BUFFER_NV;
+      
+   cmd->u.update_pipeline_indirect_buffer_nv.pipeline_bind_point = pipelineBindPoint;
+   cmd->u.update_pipeline_indirect_buffer_nv.pipeline = pipeline;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
    return VK_SUCCESS;
@@ -1010,8 +1453,7 @@ VkResult vk_enqueue_cmd_copy_buffer(struct vk_cmd_queue *queue
 , const VkBufferCopy* pRegions
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_BUFFER], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1057,8 +1499,7 @@ VkResult vk_enqueue_cmd_copy_image(struct vk_cmd_queue *queue
 , const VkImageCopy* pRegions
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_IMAGE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1107,8 +1548,7 @@ VkResult vk_enqueue_cmd_blit_image(struct vk_cmd_queue *queue
 , VkFilter filter
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BLIT_IMAGE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1156,8 +1596,7 @@ VkResult vk_enqueue_cmd_copy_buffer_to_image(struct vk_cmd_queue *queue
 , const VkBufferImageCopy* pRegions
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_BUFFER_TO_IMAGE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1203,8 +1642,7 @@ VkResult vk_enqueue_cmd_copy_image_to_buffer(struct vk_cmd_queue *queue
 , const VkBufferImageCopy* pRegions
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_IMAGE_TO_BUFFER], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1247,8 +1685,7 @@ VkResult vk_enqueue_cmd_copy_memory_indirect_nv(struct vk_cmd_queue *queue
 , uint32_t stride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_MEMORY_INDIRECT_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1284,8 +1721,7 @@ VkResult vk_enqueue_cmd_copy_memory_to_image_indirect_nv(struct vk_cmd_queue *qu
 , const VkImageSubresourceLayers* pImageSubresources
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_MEMORY_TO_IMAGE_INDIRECT_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1331,8 +1767,7 @@ VkResult vk_enqueue_cmd_update_buffer(struct vk_cmd_queue *queue
 , const void* pData
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_UPDATE_BUFFER], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1375,8 +1810,7 @@ VkResult vk_enqueue_cmd_fill_buffer(struct vk_cmd_queue *queue
 , uint32_t data
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_FILL_BUFFER], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1414,8 +1848,7 @@ VkResult vk_enqueue_cmd_clear_color_image(struct vk_cmd_queue *queue
 , const VkImageSubresourceRange* pRanges
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_CLEAR_COLOR_IMAGE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1472,8 +1905,7 @@ VkResult vk_enqueue_cmd_clear_depth_stencil_image(struct vk_cmd_queue *queue
 , const VkImageSubresourceRange* pRanges
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_CLEAR_DEPTH_STENCIL_IMAGE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1528,8 +1960,7 @@ VkResult vk_enqueue_cmd_clear_attachments(struct vk_cmd_queue *queue
 , const VkClearRect* pRects
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_CLEAR_ATTACHMENTS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1580,8 +2011,7 @@ VkResult vk_enqueue_cmd_resolve_image(struct vk_cmd_queue *queue
 , const VkImageResolve* pRegions
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_RESOLVE_IMAGE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1624,8 +2054,7 @@ VkResult vk_enqueue_cmd_set_event(struct vk_cmd_queue *queue
 , VkPipelineStageFlags stageMask
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_EVENT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1655,8 +2084,7 @@ VkResult vk_enqueue_cmd_reset_event(struct vk_cmd_queue *queue
 , VkPipelineStageFlags stageMask
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_RESET_EVENT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1698,8 +2126,7 @@ VkResult vk_enqueue_cmd_wait_events(struct vk_cmd_queue *queue
 , const VkImageMemoryBarrier* pImageMemoryBarriers
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_WAIT_EVENTS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1771,8 +2198,7 @@ VkResult vk_enqueue_cmd_pipeline_barrier(struct vk_cmd_queue *queue
 , const VkImageMemoryBarrier* pImageMemoryBarriers
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_PIPELINE_BARRIER], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1829,8 +2255,7 @@ VkResult vk_enqueue_cmd_begin_query(struct vk_cmd_queue *queue
 , VkQueryControlFlags flags
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BEGIN_QUERY], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1861,8 +2286,7 @@ VkResult vk_enqueue_cmd_end_query(struct vk_cmd_queue *queue
 , uint32_t query
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_END_QUERY], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1893,8 +2317,7 @@ VkResult vk_enqueue_cmd_begin_conditional_rendering_ext(struct vk_cmd_queue *que
 , const VkConditionalRenderingBeginInfoEXT* pConditionalRenderingBegin
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BEGIN_CONDITIONAL_RENDERING_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1934,8 +2357,7 @@ vk_free_cmd_end_conditional_rendering_ext(struct vk_cmd_queue *queue,
 VkResult vk_enqueue_cmd_end_conditional_rendering_ext(struct vk_cmd_queue *queue
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_END_CONDITIONAL_RENDERING_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1964,8 +2386,7 @@ VkResult vk_enqueue_cmd_reset_query_pool(struct vk_cmd_queue *queue
 , uint32_t queryCount
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_RESET_QUERY_POOL], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -1997,8 +2418,7 @@ VkResult vk_enqueue_cmd_write_timestamp(struct vk_cmd_queue *queue
 , uint32_t query
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_WRITE_TIMESTAMP], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2034,8 +2454,7 @@ VkResult vk_enqueue_cmd_copy_query_pool_results(struct vk_cmd_queue *queue
 , VkQueryResultFlags flags
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_QUERY_POOL_RESULTS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2074,8 +2493,7 @@ VkResult vk_enqueue_cmd_push_constants(struct vk_cmd_queue *queue
 , const void* pValues
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_PUSH_CONSTANTS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2120,8 +2538,7 @@ VkResult vk_enqueue_cmd_begin_render_pass(struct vk_cmd_queue *queue
 , VkSubpassContents contents
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BEGIN_RENDER_PASS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2281,8 +2698,7 @@ VkResult vk_enqueue_cmd_next_subpass(struct vk_cmd_queue *queue
 , VkSubpassContents contents
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_NEXT_SUBPASS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2309,8 +2725,7 @@ vk_free_cmd_end_render_pass(struct vk_cmd_queue *queue,
 VkResult vk_enqueue_cmd_end_render_pass(struct vk_cmd_queue *queue
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_END_RENDER_PASS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2339,8 +2754,7 @@ VkResult vk_enqueue_cmd_execute_commands(struct vk_cmd_queue *queue
 , const VkCommandBuffer* pCommandBuffers
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_EXECUTE_COMMANDS], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2380,8 +2794,7 @@ VkResult vk_enqueue_cmd_debug_marker_begin_ext(struct vk_cmd_queue *queue
 , const VkDebugMarkerMarkerInfoEXT* pMarkerInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DEBUG_MARKER_BEGIN_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2421,8 +2834,7 @@ vk_free_cmd_debug_marker_end_ext(struct vk_cmd_queue *queue,
 VkResult vk_enqueue_cmd_debug_marker_end_ext(struct vk_cmd_queue *queue
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DEBUG_MARKER_END_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2451,8 +2863,7 @@ VkResult vk_enqueue_cmd_debug_marker_insert_ext(struct vk_cmd_queue *queue
 , const VkDebugMarkerMarkerInfoEXT* pMarkerInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DEBUG_MARKER_INSERT_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2497,8 +2908,7 @@ VkResult vk_enqueue_cmd_execute_generated_commands_nv(struct vk_cmd_queue *queue
 , const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_EXECUTE_GENERATED_COMMANDS_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2549,8 +2959,7 @@ VkResult vk_enqueue_cmd_preprocess_generated_commands_nv(struct vk_cmd_queue *qu
 , const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_PREPROCESS_GENERATED_COMMANDS_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2599,8 +3008,7 @@ VkResult vk_enqueue_cmd_bind_pipeline_shader_group_nv(struct vk_cmd_queue *queue
 , uint32_t groupIndex
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_PIPELINE_SHADER_GROUP_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2643,8 +3051,7 @@ VkResult vk_enqueue_cmd_set_device_mask(struct vk_cmd_queue *queue
 , uint32_t deviceMask
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEVICE_MASK], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2677,8 +3084,7 @@ VkResult vk_enqueue_cmd_dispatch_base(struct vk_cmd_queue *queue
 , uint32_t groupCountZ
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DISPATCH_BASE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2728,8 +3134,7 @@ VkResult vk_enqueue_cmd_set_viewport_wscaling_nv(struct vk_cmd_queue *queue
 , const VkViewportWScalingNV* pViewportWScalings
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_VIEWPORT_WSCALING_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2771,8 +3176,7 @@ VkResult vk_enqueue_cmd_set_discard_rectangle_ext(struct vk_cmd_queue *queue
 , const VkRect2D* pDiscardRectangles
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DISCARD_RECTANGLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2811,8 +3215,7 @@ VkResult vk_enqueue_cmd_set_discard_rectangle_enable_ext(struct vk_cmd_queue *qu
 , VkBool32 discardRectangleEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DISCARD_RECTANGLE_ENABLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2840,8 +3243,7 @@ VkResult vk_enqueue_cmd_set_discard_rectangle_mode_ext(struct vk_cmd_queue *queu
 , VkDiscardRectangleModeEXT discardRectangleMode
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DISCARD_RECTANGLE_MODE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2872,8 +3274,7 @@ VkResult vk_enqueue_cmd_set_sample_locations_ext(struct vk_cmd_queue *queue
 , const VkSampleLocationsInfoEXT* pSampleLocationsInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_SAMPLE_LOCATIONS_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2922,8 +3323,7 @@ VkResult vk_enqueue_cmd_begin_debug_utils_label_ext(struct vk_cmd_queue *queue
 , const VkDebugUtilsLabelEXT* pLabelInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BEGIN_DEBUG_UTILS_LABEL_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2963,8 +3363,7 @@ vk_free_cmd_end_debug_utils_label_ext(struct vk_cmd_queue *queue,
 VkResult vk_enqueue_cmd_end_debug_utils_label_ext(struct vk_cmd_queue *queue
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_END_DEBUG_UTILS_LABEL_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -2993,8 +3392,7 @@ VkResult vk_enqueue_cmd_insert_debug_utils_label_ext(struct vk_cmd_queue *queue
 , const VkDebugUtilsLabelEXT* pLabelInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_INSERT_DEBUG_UTILS_LABEL_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3038,8 +3436,7 @@ VkResult vk_enqueue_cmd_write_buffer_marker_amd(struct vk_cmd_queue *queue
 , uint32_t marker
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_WRITE_BUFFER_MARKER_AMD], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3076,8 +3473,7 @@ VkResult vk_enqueue_cmd_begin_render_pass2(struct vk_cmd_queue *queue
 , const VkSubpassBeginInfo*      pSubpassBeginInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BEGIN_RENDER_PASS2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3251,8 +3647,7 @@ VkResult vk_enqueue_cmd_next_subpass2(struct vk_cmd_queue *queue
 , const VkSubpassEndInfo*        pSubpassEndInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_NEXT_SUBPASS2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3333,8 +3728,7 @@ VkResult vk_enqueue_cmd_end_render_pass2(struct vk_cmd_queue *queue
 , const VkSubpassEndInfo*        pSubpassEndInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_END_RENDER_PASS2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3408,8 +3802,7 @@ VkResult vk_enqueue_cmd_draw_indirect_count(struct vk_cmd_queue *queue
 , uint32_t stride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_INDIRECT_COUNT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3447,8 +3840,7 @@ VkResult vk_enqueue_cmd_draw_indexed_indirect_count(struct vk_cmd_queue *queue
 , uint32_t stride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_INDEXED_INDIRECT_COUNT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3483,8 +3875,7 @@ VkResult vk_enqueue_cmd_set_checkpoint_nv(struct vk_cmd_queue *queue
 , const void* pCheckpointMarker
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_CHECKPOINT_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3519,8 +3910,7 @@ VkResult vk_enqueue_cmd_bind_transform_feedback_buffers_ext(struct vk_cmd_queue 
 , const VkDeviceSize* pSizes
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_TRANSFORM_FEEDBACK_BUFFERS_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3576,8 +3966,7 @@ VkResult vk_enqueue_cmd_begin_transform_feedback_ext(struct vk_cmd_queue *queue
 , const VkDeviceSize* pCounterBufferOffsets
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BEGIN_TRANSFORM_FEEDBACK_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3627,8 +4016,7 @@ VkResult vk_enqueue_cmd_end_transform_feedback_ext(struct vk_cmd_queue *queue
 , const VkDeviceSize* pCounterBufferOffsets
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_END_TRANSFORM_FEEDBACK_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3676,8 +4064,7 @@ VkResult vk_enqueue_cmd_begin_query_indexed_ext(struct vk_cmd_queue *queue
 , uint32_t index
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BEGIN_QUERY_INDEXED_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3710,8 +4097,7 @@ VkResult vk_enqueue_cmd_end_query_indexed_ext(struct vk_cmd_queue *queue
 , uint32_t index
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_END_QUERY_INDEXED_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3746,8 +4132,7 @@ VkResult vk_enqueue_cmd_draw_indirect_byte_count_ext(struct vk_cmd_queue *queue
 , uint32_t vertexStride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_INDIRECT_BYTE_COUNT_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3783,8 +4168,7 @@ VkResult vk_enqueue_cmd_set_exclusive_scissor_nv(struct vk_cmd_queue *queue
 , const VkRect2D* pExclusiveScissors
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_EXCLUSIVE_SCISSOR_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3826,8 +4210,7 @@ VkResult vk_enqueue_cmd_set_exclusive_scissor_enable_nv(struct vk_cmd_queue *que
 , const VkBool32* pExclusiveScissorEnables
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_EXCLUSIVE_SCISSOR_ENABLE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3867,8 +4250,7 @@ VkResult vk_enqueue_cmd_bind_shading_rate_image_nv(struct vk_cmd_queue *queue
 , VkImageLayout imageLayout
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_SHADING_RATE_IMAGE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3900,8 +4282,7 @@ VkResult vk_enqueue_cmd_set_viewport_shading_rate_palette_nv(struct vk_cmd_queue
 , const VkShadingRatePaletteNV* pShadingRatePalettes
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_VIEWPORT_SHADING_RATE_PALETTE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3943,8 +4324,7 @@ VkResult vk_enqueue_cmd_set_coarse_sample_order_nv(struct vk_cmd_queue *queue
 , const VkCoarseSampleOrderCustomNV* pCustomSampleOrders
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COARSE_SAMPLE_ORDER_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -3984,8 +4364,7 @@ VkResult vk_enqueue_cmd_draw_mesh_tasks_nv(struct vk_cmd_queue *queue
 , uint32_t firstTask
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_MESH_TASKS_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4017,8 +4396,7 @@ VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_nv(struct vk_cmd_queue *queue
 , uint32_t stride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_MESH_TASKS_INDIRECT_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4054,8 +4432,7 @@ VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_count_nv(struct vk_cmd_queue *q
 , uint32_t stride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4090,8 +4467,7 @@ VkResult vk_enqueue_cmd_draw_mesh_tasks_ext(struct vk_cmd_queue *queue
 , uint32_t groupCountZ
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_MESH_TASKS_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4124,8 +4500,7 @@ VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_ext(struct vk_cmd_queue *queue
 , uint32_t stride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_MESH_TASKS_INDIRECT_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4161,8 +4536,7 @@ VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_count_ext(struct vk_cmd_queue *
 , uint32_t stride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4196,8 +4570,7 @@ VkResult vk_enqueue_cmd_bind_invocation_mask_huawei(struct vk_cmd_queue *queue
 , VkImageLayout imageLayout
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_INVOCATION_MASK_HUAWEI], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4228,8 +4601,7 @@ VkResult vk_enqueue_cmd_copy_acceleration_structure_nv(struct vk_cmd_queue *queu
 , VkCopyAccelerationStructureModeKHR mode
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_ACCELERATION_STRUCTURE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4261,8 +4633,7 @@ VkResult vk_enqueue_cmd_copy_acceleration_structure_khr(struct vk_cmd_queue *que
 , const VkCopyAccelerationStructureInfoKHR* pInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_ACCELERATION_STRUCTURE_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4305,8 +4676,7 @@ VkResult vk_enqueue_cmd_copy_acceleration_structure_to_memory_khr(struct vk_cmd_
 , const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_ACCELERATION_STRUCTURE_TO_MEMORY_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4349,8 +4719,7 @@ VkResult vk_enqueue_cmd_copy_memory_to_acceleration_structure_khr(struct vk_cmd_
 , const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_MEMORY_TO_ACCELERATION_STRUCTURE_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4396,8 +4765,7 @@ VkResult vk_enqueue_cmd_write_acceleration_structures_properties_khr(struct vk_c
 , uint32_t firstQuery
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_WRITE_ACCELERATION_STRUCTURES_PROPERTIES_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4443,8 +4811,7 @@ VkResult vk_enqueue_cmd_write_acceleration_structures_properties_nv(struct vk_cm
 , uint32_t firstQuery
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_WRITE_ACCELERATION_STRUCTURES_PROPERTIES_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4495,8 +4862,7 @@ VkResult vk_enqueue_cmd_build_acceleration_structure_nv(struct vk_cmd_queue *que
 , VkDeviceSize scratchOffset
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BUILD_ACCELERATION_STRUCTURE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4564,8 +4930,7 @@ VkResult vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
 , uint32_t depth
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_TRACE_RAYS_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4652,8 +5017,7 @@ VkResult vk_enqueue_cmd_trace_rays_nv(struct vk_cmd_queue *queue
 , uint32_t depth
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_TRACE_RAYS_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4706,8 +5070,7 @@ VkResult vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
 , VkDeviceAddress indirectDeviceAddress
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_TRACE_RAYS_INDIRECT_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4779,8 +5142,7 @@ VkResult vk_enqueue_cmd_trace_rays_indirect2_khr(struct vk_cmd_queue *queue
 , VkDeviceAddress indirectDeviceAddress
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_TRACE_RAYS_INDIRECT2_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4808,8 +5170,7 @@ VkResult vk_enqueue_cmd_set_ray_tracing_pipeline_stack_size_khr(struct vk_cmd_qu
 , uint32_t pipelineStackSize
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_RAY_TRACING_PIPELINE_STACK_SIZE_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4880,8 +5241,7 @@ VkResult vk_enqueue_cmd_set_line_stipple_ext(struct vk_cmd_queue *queue
 , uint16_t lineStipplePattern
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_LINE_STIPPLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4914,8 +5274,7 @@ VkResult vk_enqueue_cmd_build_acceleration_structures_khr(struct vk_cmd_queue *q
 , const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BUILD_ACCELERATION_STRUCTURES_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -4967,8 +5326,7 @@ VkResult vk_enqueue_cmd_build_acceleration_structures_indirect_khr(struct vk_cmd
 , const uint32_t* const*             ppMaxPrimitiveCounts
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BUILD_ACCELERATION_STRUCTURES_INDIRECT_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5024,8 +5382,7 @@ VkResult vk_enqueue_cmd_set_cull_mode(struct vk_cmd_queue *queue
 , VkCullModeFlags cullMode
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_CULL_MODE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5053,8 +5410,7 @@ VkResult vk_enqueue_cmd_set_front_face(struct vk_cmd_queue *queue
 , VkFrontFace frontFace
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_FRONT_FACE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5082,8 +5438,7 @@ VkResult vk_enqueue_cmd_set_primitive_topology(struct vk_cmd_queue *queue
 , VkPrimitiveTopology primitiveTopology
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_PRIMITIVE_TOPOLOGY], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5113,8 +5468,7 @@ VkResult vk_enqueue_cmd_set_viewport_with_count(struct vk_cmd_queue *queue
 , const VkViewport* pViewports
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_VIEWPORT_WITH_COUNT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5154,8 +5508,7 @@ VkResult vk_enqueue_cmd_set_scissor_with_count(struct vk_cmd_queue *queue
 , const VkRect2D* pScissors
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_SCISSOR_WITH_COUNT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5176,6 +5529,40 @@ err:
    if (cmd)
       vk_free_cmd_set_scissor_with_count(queue, cmd);
    return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_bind_index_buffer2_khr(struct vk_cmd_queue *queue,
+                                   struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_bind_index_buffer2_khr(struct vk_cmd_queue *queue
+, VkBuffer buffer
+, VkDeviceSize offset
+, VkDeviceSize size
+, VkIndexType indexType
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_INDEX_BUFFER2_KHR], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_BIND_INDEX_BUFFER2_KHR;
+      
+   cmd->u.bind_index_buffer2_khr.buffer = buffer;
+   cmd->u.bind_index_buffer2_khr.offset = offset;
+   cmd->u.bind_index_buffer2_khr.size = size;
+   cmd->u.bind_index_buffer2_khr.index_type = indexType;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
 }
 
 static void
@@ -5202,8 +5589,7 @@ VkResult vk_enqueue_cmd_bind_vertex_buffers2(struct vk_cmd_queue *queue
 , const VkDeviceSize* pStrides
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_VERTEX_BUFFERS2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5260,8 +5646,7 @@ VkResult vk_enqueue_cmd_set_depth_test_enable(struct vk_cmd_queue *queue
 , VkBool32 depthTestEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_TEST_ENABLE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5289,8 +5674,7 @@ VkResult vk_enqueue_cmd_set_depth_write_enable(struct vk_cmd_queue *queue
 , VkBool32 depthWriteEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_WRITE_ENABLE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5318,8 +5702,7 @@ VkResult vk_enqueue_cmd_set_depth_compare_op(struct vk_cmd_queue *queue
 , VkCompareOp depthCompareOp
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_COMPARE_OP], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5347,8 +5730,7 @@ VkResult vk_enqueue_cmd_set_depth_bounds_test_enable(struct vk_cmd_queue *queue
 , VkBool32 depthBoundsTestEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_BOUNDS_TEST_ENABLE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5376,8 +5758,7 @@ VkResult vk_enqueue_cmd_set_stencil_test_enable(struct vk_cmd_queue *queue
 , VkBool32 stencilTestEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_STENCIL_TEST_ENABLE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5409,8 +5790,7 @@ VkResult vk_enqueue_cmd_set_stencil_op(struct vk_cmd_queue *queue
 , VkCompareOp compareOp
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_STENCIL_OP], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5442,8 +5822,7 @@ VkResult vk_enqueue_cmd_set_patch_control_points_ext(struct vk_cmd_queue *queue
 , uint32_t patchControlPoints
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_PATCH_CONTROL_POINTS_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5471,8 +5850,7 @@ VkResult vk_enqueue_cmd_set_rasterizer_discard_enable(struct vk_cmd_queue *queue
 , VkBool32 rasterizerDiscardEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_RASTERIZER_DISCARD_ENABLE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5500,8 +5878,7 @@ VkResult vk_enqueue_cmd_set_depth_bias_enable(struct vk_cmd_queue *queue
 , VkBool32 depthBiasEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_BIAS_ENABLE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5529,8 +5906,7 @@ VkResult vk_enqueue_cmd_set_logic_op_ext(struct vk_cmd_queue *queue
 , VkLogicOp logicOp
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_LOGIC_OP_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5558,8 +5934,7 @@ VkResult vk_enqueue_cmd_set_primitive_restart_enable(struct vk_cmd_queue *queue
 , VkBool32 primitiveRestartEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_PRIMITIVE_RESTART_ENABLE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5587,8 +5962,7 @@ VkResult vk_enqueue_cmd_set_tessellation_domain_origin_ext(struct vk_cmd_queue *
 , VkTessellationDomainOrigin domainOrigin
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_TESSELLATION_DOMAIN_ORIGIN_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5616,8 +5990,7 @@ VkResult vk_enqueue_cmd_set_depth_clamp_enable_ext(struct vk_cmd_queue *queue
 , VkBool32 depthClampEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_CLAMP_ENABLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5645,8 +6018,7 @@ VkResult vk_enqueue_cmd_set_polygon_mode_ext(struct vk_cmd_queue *queue
 , VkPolygonMode polygonMode
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_POLYGON_MODE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5674,8 +6046,7 @@ VkResult vk_enqueue_cmd_set_rasterization_samples_ext(struct vk_cmd_queue *queue
 , VkSampleCountFlagBits  rasterizationSamples
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_RASTERIZATION_SAMPLES_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5705,8 +6076,7 @@ VkResult vk_enqueue_cmd_set_sample_mask_ext(struct vk_cmd_queue *queue
 , const VkSampleMask*    pSampleMask
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_SAMPLE_MASK_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5744,8 +6114,7 @@ VkResult vk_enqueue_cmd_set_alpha_to_coverage_enable_ext(struct vk_cmd_queue *qu
 , VkBool32 alphaToCoverageEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_ALPHA_TO_COVERAGE_ENABLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5773,8 +6142,7 @@ VkResult vk_enqueue_cmd_set_alpha_to_one_enable_ext(struct vk_cmd_queue *queue
 , VkBool32 alphaToOneEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_ALPHA_TO_ONE_ENABLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5802,8 +6170,7 @@ VkResult vk_enqueue_cmd_set_logic_op_enable_ext(struct vk_cmd_queue *queue
 , VkBool32 logicOpEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_LOGIC_OP_ENABLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5834,8 +6201,7 @@ VkResult vk_enqueue_cmd_set_color_blend_enable_ext(struct vk_cmd_queue *queue
 , const VkBool32* pColorBlendEnables
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COLOR_BLEND_ENABLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5877,8 +6243,7 @@ VkResult vk_enqueue_cmd_set_color_blend_equation_ext(struct vk_cmd_queue *queue
 , const VkColorBlendEquationEXT* pColorBlendEquations
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COLOR_BLEND_EQUATION_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5920,8 +6285,7 @@ VkResult vk_enqueue_cmd_set_color_write_mask_ext(struct vk_cmd_queue *queue
 , const VkColorComponentFlags* pColorWriteMasks
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COLOR_WRITE_MASK_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5960,8 +6324,7 @@ VkResult vk_enqueue_cmd_set_rasterization_stream_ext(struct vk_cmd_queue *queue
 , uint32_t rasterizationStream
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_RASTERIZATION_STREAM_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -5989,8 +6352,7 @@ VkResult vk_enqueue_cmd_set_conservative_rasterization_mode_ext(struct vk_cmd_qu
 , VkConservativeRasterizationModeEXT conservativeRasterizationMode
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_CONSERVATIVE_RASTERIZATION_MODE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6018,8 +6380,7 @@ VkResult vk_enqueue_cmd_set_extra_primitive_overestimation_size_ext(struct vk_cm
 , float extraPrimitiveOverestimationSize
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6047,8 +6408,7 @@ VkResult vk_enqueue_cmd_set_depth_clip_enable_ext(struct vk_cmd_queue *queue
 , VkBool32 depthClipEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_CLIP_ENABLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6076,8 +6436,7 @@ VkResult vk_enqueue_cmd_set_sample_locations_enable_ext(struct vk_cmd_queue *que
 , VkBool32 sampleLocationsEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_SAMPLE_LOCATIONS_ENABLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6108,8 +6467,7 @@ VkResult vk_enqueue_cmd_set_color_blend_advanced_ext(struct vk_cmd_queue *queue
 , const VkColorBlendAdvancedEXT* pColorBlendAdvanced
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COLOR_BLEND_ADVANCED_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6148,8 +6506,7 @@ VkResult vk_enqueue_cmd_set_provoking_vertex_mode_ext(struct vk_cmd_queue *queue
 , VkProvokingVertexModeEXT provokingVertexMode
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_PROVOKING_VERTEX_MODE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6177,8 +6534,7 @@ VkResult vk_enqueue_cmd_set_line_rasterization_mode_ext(struct vk_cmd_queue *que
 , VkLineRasterizationModeEXT lineRasterizationMode
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_LINE_RASTERIZATION_MODE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6206,8 +6562,7 @@ VkResult vk_enqueue_cmd_set_line_stipple_enable_ext(struct vk_cmd_queue *queue
 , VkBool32 stippledLineEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_LINE_STIPPLE_ENABLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6235,8 +6590,7 @@ VkResult vk_enqueue_cmd_set_depth_clip_negative_one_to_one_ext(struct vk_cmd_que
 , VkBool32 negativeOneToOne
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_CLIP_NEGATIVE_ONE_TO_ONE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6264,8 +6618,7 @@ VkResult vk_enqueue_cmd_set_viewport_wscaling_enable_nv(struct vk_cmd_queue *que
 , VkBool32 viewportWScalingEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_VIEWPORT_WSCALING_ENABLE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6296,8 +6649,7 @@ VkResult vk_enqueue_cmd_set_viewport_swizzle_nv(struct vk_cmd_queue *queue
 , const VkViewportSwizzleNV* pViewportSwizzles
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_VIEWPORT_SWIZZLE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6336,8 +6688,7 @@ VkResult vk_enqueue_cmd_set_coverage_to_color_enable_nv(struct vk_cmd_queue *que
 , VkBool32 coverageToColorEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COVERAGE_TO_COLOR_ENABLE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6365,8 +6716,7 @@ VkResult vk_enqueue_cmd_set_coverage_to_color_location_nv(struct vk_cmd_queue *q
 , uint32_t coverageToColorLocation
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COVERAGE_TO_COLOR_LOCATION_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6394,8 +6744,7 @@ VkResult vk_enqueue_cmd_set_coverage_modulation_mode_nv(struct vk_cmd_queue *que
 , VkCoverageModulationModeNV coverageModulationMode
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COVERAGE_MODULATION_MODE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6423,8 +6772,7 @@ VkResult vk_enqueue_cmd_set_coverage_modulation_table_enable_nv(struct vk_cmd_qu
 , VkBool32 coverageModulationTableEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COVERAGE_MODULATION_TABLE_ENABLE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6454,8 +6802,7 @@ VkResult vk_enqueue_cmd_set_coverage_modulation_table_nv(struct vk_cmd_queue *qu
 , const float* pCoverageModulationTable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COVERAGE_MODULATION_TABLE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6493,8 +6840,7 @@ VkResult vk_enqueue_cmd_set_shading_rate_image_enable_nv(struct vk_cmd_queue *qu
 , VkBool32 shadingRateImageEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_SHADING_RATE_IMAGE_ENABLE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6522,8 +6868,7 @@ VkResult vk_enqueue_cmd_set_coverage_reduction_mode_nv(struct vk_cmd_queue *queu
 , VkCoverageReductionModeNV coverageReductionMode
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COVERAGE_REDUCTION_MODE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6551,8 +6896,7 @@ VkResult vk_enqueue_cmd_set_representative_fragment_test_enable_nv(struct vk_cmd
 , VkBool32 representativeFragmentTestEnable
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6583,8 +6927,7 @@ VkResult vk_enqueue_cmd_copy_buffer2(struct vk_cmd_queue *queue
 , const VkCopyBufferInfo2* pCopyBufferInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_BUFFER2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6634,8 +6977,7 @@ VkResult vk_enqueue_cmd_copy_image2(struct vk_cmd_queue *queue
 , const VkCopyImageInfo2* pCopyImageInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_IMAGE2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6685,8 +7027,7 @@ VkResult vk_enqueue_cmd_blit_image2(struct vk_cmd_queue *queue
 , const VkBlitImageInfo2* pBlitImageInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BLIT_IMAGE2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6699,7 +7040,29 @@ VkResult vk_enqueue_cmd_blit_image2(struct vk_cmd_queue *queue
       memcpy((void*)cmd->u.blit_image2.blit_image_info, pBlitImageInfo, sizeof(VkBlitImageInfo2));
    VkBlitImageInfo2 *tmp_dst1 = (void *) cmd->u.blit_image2.blit_image_info; (void) tmp_dst1;
    VkBlitImageInfo2 *tmp_src1 = (void *) pBlitImageInfo; (void) tmp_src1;   
-   if (tmp_src1->pRegions) {
+   
+      const VkBaseInStructure *pnext = tmp_dst1->pNext;
+      if (pnext) {
+         switch ((int32_t)pnext->sType) {
+         
+
+      case VK_STRUCTURE_TYPE_BLIT_IMAGE_CUBIC_WEIGHTS_INFO_QCOM:
+         if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkBlitImageCubicWeightsInfoQCOM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkBlitImageCubicWeightsInfoQCOM));
+   VkBlitImageCubicWeightsInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+   VkBlitImageCubicWeightsInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      } else {
+      tmp_dst1->pNext = NULL;
+   }
+         break;
+
+      
+         }
+      }
+      if (tmp_src1->pRegions) {
    tmp_dst1->pRegions = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pRegions == NULL) goto err;
 
@@ -6736,8 +7099,7 @@ VkResult vk_enqueue_cmd_copy_buffer_to_image2(struct vk_cmd_queue *queue
 , const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_BUFFER_TO_IMAGE2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6787,8 +7149,7 @@ VkResult vk_enqueue_cmd_copy_image_to_buffer2(struct vk_cmd_queue *queue
 , const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_IMAGE_TO_BUFFER2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6838,8 +7199,7 @@ VkResult vk_enqueue_cmd_resolve_image2(struct vk_cmd_queue *queue
 , const VkResolveImageInfo2* pResolveImageInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_RESOLVE_IMAGE2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6889,8 +7249,7 @@ VkResult vk_enqueue_cmd_set_fragment_shading_rate_khr(struct vk_cmd_queue *queue
 , const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_FRAGMENT_SHADING_RATE_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6934,8 +7293,7 @@ VkResult vk_enqueue_cmd_set_fragment_shading_rate_enum_nv(struct vk_cmd_queue *q
 , const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_FRAGMENT_SHADING_RATE_ENUM_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -6970,8 +7328,7 @@ VkResult vk_enqueue_cmd_set_vertex_input_ext(struct vk_cmd_queue *queue
 , const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_VERTEX_INPUT_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7018,8 +7375,7 @@ VkResult vk_enqueue_cmd_set_color_write_enable_ext(struct vk_cmd_queue *queue
 , const VkBool32*   pColorWriteEnables
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_COLOR_WRITE_ENABLE_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7063,8 +7419,7 @@ VkResult vk_enqueue_cmd_set_event2(struct vk_cmd_queue *queue
 , const VkDependencyInfo*                             pDependencyInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_EVENT2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7125,8 +7480,7 @@ VkResult vk_enqueue_cmd_reset_event2(struct vk_cmd_queue *queue
 , VkPipelineStageFlags2               stageMask
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_RESET_EVENT2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7159,8 +7513,7 @@ VkResult vk_enqueue_cmd_wait_events2(struct vk_cmd_queue *queue
 , const VkDependencyInfo*            pDependencyInfos
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_WAIT_EVENTS2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7209,8 +7562,7 @@ VkResult vk_enqueue_cmd_pipeline_barrier2(struct vk_cmd_queue *queue
 , const VkDependencyInfo*                             pDependencyInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_PIPELINE_BARRIER2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7271,8 +7623,7 @@ VkResult vk_enqueue_cmd_write_timestamp2(struct vk_cmd_queue *queue
 , uint32_t                                            query
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_WRITE_TIMESTAMP2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7305,8 +7656,7 @@ VkResult vk_enqueue_cmd_write_buffer_marker2_amd(struct vk_cmd_queue *queue
 , uint32_t                                            marker
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_WRITE_BUFFER_MARKER2_AMD], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7341,8 +7691,7 @@ VkResult vk_enqueue_cmd_decode_video_khr(struct vk_cmd_queue *queue
 , const VkVideoDecodeInfoKHR* pDecodeInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DECODE_VIDEO_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7400,13 +7749,13 @@ if (tmp_src2->pSliceOffsets) {
    tmp_dst2->pStdPictureInfo = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStdPictureInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pStdPictureInfo == NULL) goto err;
 
-   memcpy((StdVideoDecodeH265PictureInfo*     )tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
+   memcpy(( StdVideoDecodeH265PictureInfo*       )tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
 }
 if (tmp_src2->pSliceSegmentOffsets) {
    tmp_dst2->pSliceSegmentOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pSliceSegmentOffsets) * tmp_dst2->sliceSegmentCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pSliceSegmentOffsets == NULL) goto err;
 
-   memcpy(( uint32_t*   )tmp_dst2->pSliceSegmentOffsets, tmp_src2->pSliceSegmentOffsets, sizeof(*tmp_dst2->pSliceSegmentOffsets) * tmp_dst2->sliceSegmentCount);
+   memcpy(( uint32_t*    )tmp_dst2->pSliceSegmentOffsets, tmp_src2->pSliceSegmentOffsets, sizeof(*tmp_dst2->pSliceSegmentOffsets) * tmp_dst2->sliceSegmentCount);
 }
    } else {
       tmp_dst1->pNext = NULL;
@@ -7459,8 +7808,7 @@ VkResult vk_enqueue_cmd_begin_video_coding_khr(struct vk_cmd_queue *queue
 , const VkVideoBeginCodingInfoKHR* pBeginInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BEGIN_VIDEO_CODING_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7509,8 +7857,7 @@ VkResult vk_enqueue_cmd_control_video_coding_khr(struct vk_cmd_queue *queue
 , const VkVideoCodingControlInfoKHR* pCodingControlInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_CONTROL_VIDEO_CODING_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7553,8 +7900,7 @@ VkResult vk_enqueue_cmd_end_video_coding_khr(struct vk_cmd_queue *queue
 , const VkVideoEndCodingInfoKHR* pEndCodingInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_END_VIDEO_CODING_KHR], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7597,8 +7943,7 @@ VkResult vk_enqueue_cmd_decompress_memory_nv(struct vk_cmd_queue *queue
 , const VkDecompressMemoryRegionNV* pDecompressMemoryRegions
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DECOMPRESS_MEMORY_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7638,8 +7983,7 @@ VkResult vk_enqueue_cmd_decompress_memory_indirect_count_nv(struct vk_cmd_queue 
 , uint32_t stride
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_DECOMPRESS_MEMORY_INDIRECT_COUNT_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7673,8 +8017,7 @@ VkResult vk_enqueue_cmd_cu_launch_kernel_nvx(struct vk_cmd_queue *queue
 , const VkCuLaunchInfoNVX* pLaunchInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_CU_LAUNCH_KERNEL_NVX], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7729,8 +8072,7 @@ VkResult vk_enqueue_cmd_bind_descriptor_buffers_ext(struct vk_cmd_queue *queue
 , const VkDescriptorBufferBindingInfoEXT* pBindingInfos
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_DESCRIPTOR_BUFFERS_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7775,8 +8117,7 @@ VkResult vk_enqueue_cmd_set_descriptor_buffer_offsets_ext(struct vk_cmd_queue *q
 , const VkDeviceSize* pOffsets
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DESCRIPTOR_BUFFER_OFFSETS_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7825,8 +8166,7 @@ VkResult vk_enqueue_cmd_bind_descriptor_buffer_embedded_samplers_ext(struct vk_c
 , uint32_t set
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_DESCRIPTOR_BUFFER_EMBEDDED_SAMPLERS_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -7861,8 +8201,7 @@ VkResult vk_enqueue_cmd_begin_rendering(struct vk_cmd_queue *queue
 , const VkRenderingInfo*                              pRenderingInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BEGIN_RENDERING], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -8029,8 +8368,7 @@ vk_free_cmd_end_rendering(struct vk_cmd_queue *queue,
 VkResult vk_enqueue_cmd_end_rendering(struct vk_cmd_queue *queue
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_END_RENDERING], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -8059,8 +8397,7 @@ VkResult vk_enqueue_cmd_build_micromaps_ext(struct vk_cmd_queue *queue
 , const VkMicromapBuildInfoEXT* pInfos
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BUILD_MICROMAPS_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -8100,8 +8437,7 @@ VkResult vk_enqueue_cmd_copy_micromap_ext(struct vk_cmd_queue *queue
 , const VkCopyMicromapInfoEXT* pInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_MICROMAP_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -8144,8 +8480,7 @@ VkResult vk_enqueue_cmd_copy_micromap_to_memory_ext(struct vk_cmd_queue *queue
 , const VkCopyMicromapToMemoryInfoEXT* pInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_MICROMAP_TO_MEMORY_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -8188,8 +8523,7 @@ VkResult vk_enqueue_cmd_copy_memory_to_micromap_ext(struct vk_cmd_queue *queue
 , const VkCopyMemoryToMicromapInfoEXT* pInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_COPY_MEMORY_TO_MICROMAP_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -8235,8 +8569,7 @@ VkResult vk_enqueue_cmd_write_micromaps_properties_ext(struct vk_cmd_queue *queu
 , uint32_t firstQuery
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_WRITE_MICROMAPS_PROPERTIES_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -8281,8 +8614,7 @@ VkResult vk_enqueue_cmd_optical_flow_execute_nv(struct vk_cmd_queue *queue
 , const VkOpticalFlowExecuteInfoNV* pExecuteInfo
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_OPTICAL_FLOW_EXECUTE_NV], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -8316,6 +8648,71 @@ err:
 }
 
 static void
+vk_free_cmd_set_depth_bias2_ext(struct vk_cmd_queue *queue,
+                                struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+         vk_free(queue->alloc, ( VkDepthBiasInfoEXT*         )cmd->u.set_depth_bias2_ext.depth_bias_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_depth_bias2_ext(struct vk_cmd_queue *queue
+, const VkDepthBiasInfoEXT*         pDepthBiasInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_BIAS2_EXT], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_DEPTH_BIAS2_EXT;
+      
+   if (pDepthBiasInfo) {
+      cmd->u.set_depth_bias2_ext.depth_bias_info = vk_zalloc(queue->alloc, sizeof(VkDepthBiasInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.set_depth_bias2_ext.depth_bias_info == NULL) goto err;
+
+      memcpy((void*)cmd->u.set_depth_bias2_ext.depth_bias_info, pDepthBiasInfo, sizeof(VkDepthBiasInfoEXT));
+   VkDepthBiasInfoEXT *tmp_dst1 = (void *) cmd->u.set_depth_bias2_ext.depth_bias_info; (void) tmp_dst1;
+   VkDepthBiasInfoEXT *tmp_src1 = (void *) pDepthBiasInfo; (void) tmp_src1;   
+   
+      const VkBaseInStructure *pnext = tmp_dst1->pNext;
+      if (pnext) {
+         switch ((int32_t)pnext->sType) {
+         
+
+      case VK_STRUCTURE_TYPE_DEPTH_BIAS_REPRESENTATION_INFO_EXT:
+         if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkDepthBiasRepresentationInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkDepthBiasRepresentationInfoEXT));
+   VkDepthBiasRepresentationInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+   VkDepthBiasRepresentationInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      } else {
+      tmp_dst1->pNext = NULL;
+   }
+         break;
+
+      
+         }
+      }
+         } else {
+      cmd->u.set_depth_bias2_ext.depth_bias_info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_depth_bias2_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
 vk_free_cmd_bind_shaders_ext(struct vk_cmd_queue *queue,
                              struct vk_cmd_queue_entry *cmd)
 {
@@ -8334,8 +8731,7 @@ VkResult vk_enqueue_cmd_bind_shaders_ext(struct vk_cmd_queue *queue
 , const VkShaderEXT* pShaders
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
-                                              sizeof(*cmd), 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_SHADERS_EXT], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
@@ -8373,6 +8769,9 @@ vk_free_queue(struct vk_cmd_queue *queue)
       switch(cmd->type) {
       case VK_CMD_BIND_PIPELINE:
          vk_free_cmd_bind_pipeline(queue, cmd);
+         break;
+      case VK_CMD_SET_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT:
+         vk_free_cmd_set_attachment_feedback_loop_enable_ext(queue, cmd);
          break;
       case VK_CMD_SET_VIEWPORT:
          vk_free_cmd_set_viewport(queue, cmd);
@@ -8442,6 +8841,9 @@ vk_free_queue(struct vk_cmd_queue *queue)
          break;
       case VK_CMD_DRAW_CLUSTER_INDIRECT_HUAWEI:
          vk_free_cmd_draw_cluster_indirect_huawei(queue, cmd);
+         break;
+      case VK_CMD_UPDATE_PIPELINE_INDIRECT_BUFFER_NV:
+         vk_free_cmd_update_pipeline_indirect_buffer_nv(queue, cmd);
          break;
       case VK_CMD_COPY_BUFFER:
          vk_free_cmd_copy_buffer(queue, cmd);
@@ -8728,6 +9130,9 @@ vk_free_queue(struct vk_cmd_queue *queue)
       case VK_CMD_SET_SCISSOR_WITH_COUNT:
          vk_free_cmd_set_scissor_with_count(queue, cmd);
          break;
+      case VK_CMD_BIND_INDEX_BUFFER2_KHR:
+         vk_free_cmd_bind_index_buffer2_khr(queue, cmd);
+         break;
       case VK_CMD_BIND_VERTEX_BUFFERS2:
          vk_free_cmd_bind_vertex_buffers2(queue, cmd);
          break;
@@ -8959,6 +9364,9 @@ vk_free_queue(struct vk_cmd_queue *queue)
       case VK_CMD_OPTICAL_FLOW_EXECUTE_NV:
          vk_free_cmd_optical_flow_execute_nv(queue, cmd);
          break;
+      case VK_CMD_SET_DEPTH_BIAS2_EXT:
+         vk_free_cmd_set_depth_bias2_ext(queue, cmd);
+         break;
       case VK_CMD_BIND_SHADERS_EXT:
          vk_free_cmd_bind_shaders_ext(queue, cmd);
          break;
@@ -8976,6 +9384,10 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
       case VK_CMD_BIND_PIPELINE:
           disp->CmdBindPipeline(commandBuffer
              , cmd->u.bind_pipeline.pipeline_bind_point             , cmd->u.bind_pipeline.pipeline          );
+          break;
+      case VK_CMD_SET_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT:
+          disp->CmdSetAttachmentFeedbackLoopEnableEXT(commandBuffer
+             , cmd->u.set_attachment_feedback_loop_enable_ext.aspect_mask          );
           break;
       case VK_CMD_SET_VIEWPORT:
           disp->CmdSetViewport(commandBuffer
@@ -9068,6 +9480,10 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
       case VK_CMD_DRAW_CLUSTER_INDIRECT_HUAWEI:
           disp->CmdDrawClusterIndirectHUAWEI(commandBuffer
              , cmd->u.draw_cluster_indirect_huawei.buffer             , cmd->u.draw_cluster_indirect_huawei.offset          );
+          break;
+      case VK_CMD_UPDATE_PIPELINE_INDIRECT_BUFFER_NV:
+          disp->CmdUpdatePipelineIndirectBufferNV(commandBuffer
+             , cmd->u.update_pipeline_indirect_buffer_nv.pipeline_bind_point             , cmd->u.update_pipeline_indirect_buffer_nv.pipeline          );
           break;
       case VK_CMD_COPY_BUFFER:
           disp->CmdCopyBuffer(commandBuffer
@@ -9449,6 +9865,10 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
           disp->CmdSetScissorWithCount(commandBuffer
              , cmd->u.set_scissor_with_count.scissor_count             , cmd->u.set_scissor_with_count.scissors          );
           break;
+      case VK_CMD_BIND_INDEX_BUFFER2_KHR:
+          disp->CmdBindIndexBuffer2KHR(commandBuffer
+             , cmd->u.bind_index_buffer2_khr.buffer             , cmd->u.bind_index_buffer2_khr.offset             , cmd->u.bind_index_buffer2_khr.size             , cmd->u.bind_index_buffer2_khr.index_type          );
+          break;
       case VK_CMD_BIND_VERTEX_BUFFERS2:
           disp->CmdBindVertexBuffers2(commandBuffer
              , cmd->u.bind_vertex_buffers2.first_binding             , cmd->u.bind_vertex_buffers2.binding_count             , cmd->u.bind_vertex_buffers2.buffers             , cmd->u.bind_vertex_buffers2.offsets             , cmd->u.bind_vertex_buffers2.sizes             , cmd->u.bind_vertex_buffers2.strides          );
@@ -9757,6 +10177,10 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
           disp->CmdOpticalFlowExecuteNV(commandBuffer
              , cmd->u.optical_flow_execute_nv.session             , cmd->u.optical_flow_execute_nv.execute_info          );
           break;
+      case VK_CMD_SET_DEPTH_BIAS2_EXT:
+          disp->CmdSetDepthBias2EXT(commandBuffer
+             , cmd->u.set_depth_bias2_ext.depth_bias_info          );
+          break;
       case VK_CMD_BIND_SHADERS_EXT:
           disp->CmdBindShadersEXT(commandBuffer
              , cmd->u.bind_shaders_ext.stage_count             , cmd->u.bind_shaders_ext.stages             , cmd->u.bind_shaders_ext.shaders          );
@@ -9794,6 +10218,36 @@ vk_cmd_enqueue_unless_primary_CmdBindPipeline(VkCommandBuffer commandBuffer, VkP
       disp->CmdBindPipeline(commandBuffer, pipelineBindPoint, pipeline);
    } else {
       vk_cmd_enqueue_CmdBindPipeline(commandBuffer, pipelineBindPoint, pipeline);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_attachment_feedback_loop_enable_ext(&cmd_buffer->cmd_queue,
+                                       aspectMask);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetAttachmentFeedbackLoopEnableEXT(commandBuffer, aspectMask);
+   } else {
+      vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT(commandBuffer, aspectMask);
    }
 }
 
@@ -10450,6 +10904,36 @@ vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer comma
       disp->CmdDrawClusterIndirectHUAWEI(commandBuffer, buffer, offset);
    } else {
       vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI(commandBuffer, buffer, offset);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_update_pipeline_indirect_buffer_nv(&cmd_buffer->cmd_queue,
+                                       pipelineBindPoint, pipeline);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdUpdatePipelineIndirectBufferNV(commandBuffer, pipelineBindPoint, pipeline);
+   } else {
+      vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV(commandBuffer, pipelineBindPoint, pipeline);
    }
 }
 
@@ -13175,6 +13659,36 @@ vk_cmd_enqueue_unless_primary_CmdSetScissorWithCount(VkCommandBuffer commandBuff
 
 
 VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_index_buffer2_khr(&cmd_buffer->cmd_queue,
+                                       buffer, offset, size, indexType);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdBindIndexBuffer2KHR(commandBuffer, buffer, offset, size, indexType);
+   } else {
+      vk_cmd_enqueue_CmdBindIndexBuffer2KHR(commandBuffer, buffer, offset, size, indexType);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
 vk_cmd_enqueue_CmdBindVertexBuffers2(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
@@ -15478,6 +15992,36 @@ vk_cmd_enqueue_unless_primary_CmdOpticalFlowExecuteNV(VkCommandBuffer commandBuf
       disp->CmdOpticalFlowExecuteNV(commandBuffer, session, pExecuteInfo);
    } else {
       vk_cmd_enqueue_CmdOpticalFlowExecuteNV(commandBuffer, session, pExecuteInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_bias2_ext(&cmd_buffer->cmd_queue,
+                                       pDepthBiasInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetDepthBias2EXT(commandBuffer, pDepthBiasInfo);
+   } else {
+      vk_cmd_enqueue_CmdSetDepthBias2EXT(commandBuffer, pDepthBiasInfo);
    }
 }
 

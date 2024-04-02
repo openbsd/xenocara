@@ -23,7 +23,11 @@
 # util is self contained.
 inc_util = [inc_include, include_directories('..')]
 
-subdir('format')
+if with_platform_android
+subdir('u_gralloc')
+endif
+
+subdir('blake3')
 
 files_mesa_util = files(
   'anon_file.h',
@@ -32,6 +36,7 @@ files_mesa_util = files(
   'bitscan.c',
   'bitscan.h',
   'bitset.h',
+  'blend.h',
   'blob.c',
   'blob.h',
   'build_id.c',
@@ -64,6 +69,7 @@ files_mesa_util = files(
   'half_float.h',
   'hash_table.c',
   'hash_table.h',
+  'hex.h',
   'u_idalloc.c',
   'u_idalloc.h',
   'list.h',
@@ -73,6 +79,8 @@ files_mesa_util = files(
   'memstream.h',
   'mesa-sha1.c',
   'mesa-sha1.h',
+  'mesa-blake3.c',
+  'mesa-blake3.h',
   'os_time.c',
   'os_time.h',
   'os_file.c',
@@ -119,18 +127,18 @@ files_mesa_util = files(
   'strndup.h',
   'strtod.c',
   'strtod.h',
-  'texcompress_rgtc_tmp.h',
+  'texcompress_astc_luts.cpp',
+  'texcompress_astc_luts.h',
+  'texcompress_astc_luts_wrap.cpp',
+  'texcompress_astc_luts_wrap.h',
   'timespec.h',
   'u_atomic.c',
   'u_atomic.h',
   'u_call_once.c',
   'u_call_once.h',
-  'u_debug_describe.c',
-  'u_debug_describe.h',
-  'u_debug_refcnt.c',
-  'u_debug_refcnt.h',
   'u_dl.c',
   'u_dl.h',
+  'u_dynarray.c',
   'u_dynarray.h',
   'u_endian.h',
   'u_hash_table.c',
@@ -148,6 +156,7 @@ files_mesa_util = files(
   'u_memset.h',
   'u_mm.c',
   'u_mm.h',
+  'u_pack_color.h',
   'u_debug.c',
   'u_debug.h',
   'u_debug_memory.c',
@@ -159,6 +168,8 @@ files_mesa_util = files(
   'u_worklist.h',
   'vl_vlc.h',
   'vl_rbsp.h',
+  'vl_zscan_data.h',
+  'vl_zscan_data.c',
   'vma.c',
   'vma.h',
   'xxhash.h',
@@ -219,14 +230,16 @@ deps_for_libmesa_util = [
   dep_dl,
   dep_unwind,
   dep_futex,
+  idep_blake3,
   idep_mesautilc11
 ]
 
 if with_platform_android
   deps_for_libmesa_util += dep_android
   files_debug_stack = files('u_debug_stack_android.cpp')
- else
+else
   files_debug_stack = files(
+    'dbghelp.h',
     'u_debug_stack.c',
     'u_debug_symbol.c',
     'u_debug_symbol.h',
@@ -245,22 +258,34 @@ if with_perfetto
   deps_for_libmesa_util += dep_perfetto
 endif
 
+if with_gpuvis
+  files_mesa_util += files(
+    'perf/u_gpuvis.c',
+    'perf/u_gpuvis.h',
+    'perf/gpuvis_trace_utils.h',
+  )
+endif
+
 u_trace_py = files('perf/u_trace.py')
 
 libmesa_util_sse41 = static_library(
   'mesa_util_sse41',
   files('streaming-load-memcpy.c'),
   c_args : [c_msvc_compat_args, sse41_args],
-  include_directories : [inc_include, inc_src, inc_mesa],
+  include_directories : [inc_util],
   gnu_symbol_visibility : 'hidden',
 )
+
+# subdir format provide files_mesa_format
+subdir('format')
+files_mesa_util += files_mesa_format
 
 _libmesa_util = static_library(
   'mesa_util',
   [files_mesa_util, files_debug_stack, format_srgb],
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+  include_directories : [inc_util, include_directories('format')],
   dependencies : deps_for_libmesa_util,
-  link_with: [libmesa_format, libmesa_util_sse41],
+  link_with: [libmesa_util_sse41],
   c_args : [c_msvc_compat_args],
   gnu_symbol_visibility : 'hidden',
   build_by_default : false
@@ -268,13 +293,13 @@ _libmesa_util = static_library(
 
 idep_mesautil = declare_dependency(
   link_with : _libmesa_util,
-  include_directories : [inc_util, inc_gallium],
+  include_directories : [inc_util],
   dependencies : deps_for_libmesa_util,
 )
 
 # Only install the drirc file if we build with support for parsing drirc files
 if use_xmlconfig
-   install_data(files_drirc, install_dir : join_paths(get_option('datadir'), 'drirc.d'))
+   install_data(files_drirc, install_dir : join_paths(get_option('datadir'), 'drirc.d'), install_tag : 'runtime')
 endif
 
 xmlconfig_deps = []
@@ -288,7 +313,6 @@ c_xmlconfig_arg = '-DWITH_XMLCONFIG=@0@'.format(use_xmlconfig.to_int())
 _libxmlconfig = static_library(
   'xmlconfig',
   files_xmlconfig,
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
   dependencies : [idep_mesautil, dep_m, xmlconfig_deps],
   c_args : [
     c_msvc_compat_args,
@@ -312,6 +336,8 @@ idep_xmlconfig = declare_dependency(
 files_xxd = files('xxd.py')
 glsl2spirv = files('glsl2spirv.py')
 
+devenv.set('DRIRC_CONFIGDIR', meson.current_source_dir())
+
 if with_tests
   # DRI_CONF macros use designated initializers (required for union
   # initializaiton), so we need c++2a since gtest forces us to use c++
@@ -319,7 +345,6 @@ if with_tests
     test('xmlconfig',
       executable('xmlconfig_test',
         files('tests/xmlconfig.cpp'),
-        include_directories : [inc_include, inc_src],
         dependencies : [idep_mesautil, idep_xmlconfig, idep_gtest],
         override_options : ['cpp_std=c++2a'],
         cpp_args: ['-Wno-write-strings', c_xmlconfig_arg]
@@ -339,8 +364,10 @@ if with_tests
     'tests/dag_test.cpp',
     'tests/fast_idiv_by_const_test.cpp',
     'tests/fast_urem_by_const_test.cpp',
+    'tests/gc_alloc_tests.cpp',
     'tests/half_float_test.cpp',
     'tests/int_min_max.cpp',
+    'tests/linear_test.cpp',
     'tests/mesa-sha1_test.cpp',
     'tests/os_mman_test.cpp',
     'tests/perf/u_trace_test.cpp',
@@ -377,7 +404,6 @@ if with_tests
     executable(
       'util_tests',
       files_util_tests,
-      include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
       dependencies : [idep_mesautil, idep_gtest],
     ),
     suite : ['util'],
@@ -388,7 +414,6 @@ if with_tests
   process_test_exe = executable(
     'process_test',
     files('tests/process_test.c'),
-    include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
     dependencies : idep_mesautil,
     c_args : [c_msvc_compat_args],
   )

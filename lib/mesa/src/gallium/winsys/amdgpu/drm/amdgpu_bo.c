@@ -1,28 +1,8 @@
 /*
  * Copyright © 2011 Marek Olšák <maraeo@gmail.com>
  * Copyright © 2015 Advanced Micro Devices, Inc.
- * All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sub license, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS, AUTHORS
- * AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * The above copyright notice and this permission notice (including the
- * next paragraph) shall be included in all copies or substantial portions
- * of the Software.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <sys/ioctl.h>
@@ -174,11 +154,30 @@ void amdgpu_bo_destroy(struct amdgpu_winsys *ws, struct pb_buffer *_buf)
 
    assert(bo->bo && "must not be called for slab entries");
 
+   simple_mtx_lock(&ws->bo_export_table_lock);
+
+   /* amdgpu_bo_from_handle might have revived the bo */
+   if (p_atomic_read(&bo->base.reference.count)) {
+      simple_mtx_unlock(&ws->bo_export_table_lock);
+      return;
+   }
+
+   _mesa_hash_table_remove_key(ws->bo_export_table, bo->bo);
+
+   if (bo->base.placement & RADEON_DOMAIN_VRAM_GTT) {
+      amdgpu_bo_va_op(bo->bo, 0, bo->base.size, bo->va, 0, AMDGPU_VA_OP_UNMAP);
+      amdgpu_va_range_free(bo->u.real.va_handle);
+   }
+
+   simple_mtx_unlock(&ws->bo_export_table_lock);
+
    if (!bo->u.real.is_user_ptr && bo->u.real.cpu_ptr) {
       bo->u.real.cpu_ptr = NULL;
       amdgpu_bo_unmap(&ws->dummy_ws.base, &bo->base);
    }
    assert(bo->u.real.is_user_ptr || bo->u.real.map_count == 0);
+
+   amdgpu_bo_free(bo->bo);
 
 #if DEBUG
    if (ws->debug_all_bos) {
@@ -206,16 +205,6 @@ void amdgpu_bo_destroy(struct amdgpu_winsys *ws, struct pb_buffer *_buf)
       }
    }
    simple_mtx_unlock(&ws->sws_list_lock);
-
-   simple_mtx_lock(&ws->bo_export_table_lock);
-   _mesa_hash_table_remove_key(ws->bo_export_table, bo->bo);
-   simple_mtx_unlock(&ws->bo_export_table_lock);
-
-   if (bo->base.placement & RADEON_DOMAIN_VRAM_GTT) {
-      amdgpu_bo_va_op(bo->bo, 0, bo->base.size, bo->va, 0, AMDGPU_VA_OP_UNMAP);
-      amdgpu_va_range_free(bo->u.real.va_handle);
-   }
-   amdgpu_bo_free(bo->bo);
 
    amdgpu_bo_remove_fences(bo);
 
@@ -344,7 +333,7 @@ void *amdgpu_bo_map(struct radeon_winsys *rws,
                }
             }
 
-            amdgpu_bo_wait(rws, (struct pb_buffer*)bo, PIPE_TIMEOUT_INFINITE,
+            amdgpu_bo_wait(rws, (struct pb_buffer*)bo, OS_TIMEOUT_INFINITE,
                            RADEON_USAGE_WRITE);
          } else {
             /* Mapping for write. */
@@ -359,7 +348,7 @@ void *amdgpu_bo_map(struct radeon_winsys *rws,
                }
             }
 
-            amdgpu_bo_wait(rws, (struct pb_buffer*)bo, PIPE_TIMEOUT_INFINITE,
+            amdgpu_bo_wait(rws, (struct pb_buffer*)bo, OS_TIMEOUT_INFINITE,
                            RADEON_USAGE_READWRITE);
          }
 
@@ -583,10 +572,6 @@ static struct amdgpu_winsys_bo *amdgpu_create_bo(struct amdgpu_winsys *ws,
 
       if (flags & RADEON_FLAG_GL2_BYPASS)
          vm_flags |= AMDGPU_VM_MTYPE_UC;
-
-      if (flags & RADEON_FLAG_MALL_NOALLOC &&
-          ws->info.drm_minor >= 47)
-         vm_flags |= AMDGPU_VM_PAGE_NOALLOC;
 
       r = amdgpu_bo_va_op_raw(ws->dev, buf_handle, 0, size, va, vm_flags,
 			   AMDGPU_VA_OP_MAP);
@@ -1296,6 +1281,60 @@ out:
    return ok;
 }
 
+static unsigned
+amdgpu_bo_find_next_committed_memory(struct pb_buffer *buf,
+                        uint64_t range_offset, unsigned *range_size)
+{
+   struct amdgpu_winsys_bo *bo = amdgpu_winsys_bo(buf);
+   struct amdgpu_sparse_commitment *comm;
+   uint32_t va_page, end_va_page;
+   uint32_t span_va_page, start_va_page;
+   unsigned uncommitted_range_prev, uncommitted_range_next;
+
+   if (*range_size == 0)
+      return 0;
+
+   assert(*range_size + range_offset <= bo->base.size);
+
+   uncommitted_range_prev = uncommitted_range_next = 0;
+   comm = bo->u.sparse.commitments;
+   start_va_page = va_page = range_offset / RADEON_SPARSE_PAGE_SIZE;
+   end_va_page = (*range_size + range_offset) / RADEON_SPARSE_PAGE_SIZE;
+
+   simple_mtx_lock(&bo->lock);
+   /* Lookup the first committed page with backing physical storage */
+   while (va_page < end_va_page && !comm[va_page].backing)
+      va_page++;
+
+   /* Fisrt committed page lookup failed, return early. */
+   if (va_page == end_va_page && !comm[va_page].backing) {
+      uncommitted_range_prev = *range_size;
+      *range_size = 0;
+      simple_mtx_unlock(&bo->lock);
+      return uncommitted_range_prev;
+   }
+
+   /* Lookup the first uncommitted page without backing physical storage */
+   span_va_page = va_page;
+   while (va_page < end_va_page && comm[va_page].backing)
+      va_page++;
+   simple_mtx_unlock(&bo->lock);
+
+   /* Calc byte count that need to skip before committed range */
+   if (span_va_page != start_va_page)
+      uncommitted_range_prev = span_va_page * RADEON_SPARSE_PAGE_SIZE - range_offset;
+
+   /* Calc byte count that need to skip after committed range */
+   if (va_page != end_va_page || !comm[va_page].backing) {
+      uncommitted_range_next = *range_size + range_offset - va_page * RADEON_SPARSE_PAGE_SIZE;
+   }
+
+   /* Calc size of first committed part */
+   *range_size = *range_size - uncommitted_range_next - uncommitted_range_prev;
+   return *range_size ? uncommitted_range_prev
+	   : uncommitted_range_prev + uncommitted_range_next;
+}
+
 static void amdgpu_buffer_get_metadata(struct radeon_winsys *rws,
                                        struct pb_buffer *_buf,
                                        struct radeon_bo_metadata *md,
@@ -1770,6 +1809,7 @@ void amdgpu_bo_init_functions(struct amdgpu_screen_winsys *ws)
    ws->base.buffer_is_suballocated = amdgpu_bo_is_suballocated;
    ws->base.buffer_get_handle = amdgpu_bo_get_handle;
    ws->base.buffer_commit = amdgpu_bo_sparse_commit;
+   ws->base.buffer_find_next_committed_memory = amdgpu_bo_find_next_committed_memory;
    ws->base.buffer_get_virtual_address = amdgpu_bo_get_va;
    ws->base.buffer_get_initial_domain = amdgpu_bo_get_initial_domain;
    ws->base.buffer_get_flags = amdgpu_bo_get_flags;

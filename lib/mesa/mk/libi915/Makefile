@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2022/09/02 05:46:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	i915
 
@@ -39,7 +39,9 @@ CPPFLAGS+=	-DGALLIUM_I915 \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/gallium/drivers \
 		-I${MESA_SRC}/src/mesa \
+		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir
 
 install:

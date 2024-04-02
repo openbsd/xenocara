@@ -83,8 +83,8 @@ FLOAT_TO_BOOLEAN(GLfloat X)
 static inline GLint
 FLOAT_TO_FIXED(GLfloat F)
 {
-   return ( ((F) * 65536.0f > INT_MAX) ? INT_MAX :
-            ((F) * 65536.0f < INT_MIN) ? INT_MIN :
+   return ( ((F) * 65536.0f > (float)INT32_MAX) ? INT32_MAX :
+            ((F) * 65536.0f < (float)INT32_MIN) ? INT32_MIN :
             (GLint) ((F) * 65536.0f) );
 }
 
@@ -1333,11 +1333,7 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    /* GL_EXT_disjoint_timer_query */
    case GL_GPU_DISJOINT_EXT:
       {
-         simple_mtx_lock(&ctx->Shared->Mutex);
-         v->value_int = ctx->Shared->DisjointOperation;
-         /* Reset state as expected by the spec. */
-         ctx->Shared->DisjointOperation = false;
-         simple_mtx_unlock(&ctx->Shared->Mutex);
+         v->value_int = 0;
       }
       break;
    /* GL_ARB_sample_locations */

@@ -35,12 +35,10 @@
 #ifndef U_STRING_H_
 #define U_STRING_H_
 
-#if !defined(XF86_LIBC_H)
-#include <stdio.h>
-#endif
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 #include <limits.h>
 
@@ -102,6 +100,7 @@ util_vasprintf(char **ret, const char *format, va_list ap)
 
 #define asprintf util_asprintf
 static inline int
+   PRINTFLIKE(2, 3)
 util_asprintf(char **str, const char *fmt, ...)
 {
    int ret;
@@ -118,11 +117,11 @@ util_asprintf(char **str, const char *fmt, ...)
 
 #define strdup _strdup
 
-#if defined(_WIN32) && !defined(HAVE_STRTOK_R)
+#if !defined(HAVE_STRTOK_R)
 #define strtok_r strtok_s
 #endif
 
-#endif
+#endif /* _WIN32 */
 
 
 #ifdef __cplusplus

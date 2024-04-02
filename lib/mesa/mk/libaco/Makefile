@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/11/02 04:53:30 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2024/04/02 10:42:12 jsg Exp $
 
 LIB=	aco
 
@@ -55,6 +55,8 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/generated/src/amd \
 		-I${MESA_SRC}/generated/src/amd/common \
 		-I${MESA_SRC}/generated/src/amd/compiler \
+		-I${MESA_SRC}/generated/src \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir
 
 install:

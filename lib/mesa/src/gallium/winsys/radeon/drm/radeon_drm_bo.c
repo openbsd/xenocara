@@ -1,27 +1,7 @@
 /*
  * Copyright © 2011 Marek Olšák <maraeo@gmail.com>
- * All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sub license, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS, AUTHORS
- * AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * The above copyright notice and this permission notice (including the
- * next paragraph) shall be included in all copies or substantial portions
- * of the Software.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "radeon_drm_cs.h"
@@ -146,7 +126,7 @@ static bool radeon_bo_wait(struct radeon_winsys *rws,
       return false;
 
    /* Infinite timeout. */
-   if (abs_timeout == PIPE_TIMEOUT_INFINITE) {
+   if (abs_timeout == OS_TIMEOUT_INFINITE) {
       radeon_bo_wait_idle(bo);
       return true;
    }
@@ -358,6 +338,11 @@ void radeon_bo_destroy(void *winsys, struct pb_buffer *_buf)
    memset(&args, 0, sizeof(args));
 
    mtx_lock(&rws->bo_handles_mutex);
+   /* radeon_winsys_bo_from_handle might have revived the bo */
+   if (pipe_is_referenced(&bo->base.reference)) {
+      mtx_unlock(&rws->bo_handles_mutex);
+      return;
+   }
    _mesa_hash_table_remove_key(rws->bo_handles, (void*)(uintptr_t)bo->handle);
    if (bo->flink_name) {
       _mesa_hash_table_remove_key(rws->bo_names,
@@ -550,7 +535,7 @@ static void *radeon_bo_map(struct radeon_winsys *rws,
                cs->flush_cs(cs->flush_data,
                             RADEON_FLUSH_START_NEXT_GFX_IB_NOW, NULL);
             }
-            radeon_bo_wait(rws, (struct pb_buffer*)bo, PIPE_TIMEOUT_INFINITE,
+            radeon_bo_wait(rws, (struct pb_buffer*)bo, OS_TIMEOUT_INFINITE,
                            RADEON_USAGE_WRITE);
          } else {
             /* Mapping for write. */
@@ -565,7 +550,7 @@ static void *radeon_bo_map(struct radeon_winsys *rws,
                }
             }
 
-            radeon_bo_wait(rws, (struct pb_buffer*)bo, PIPE_TIMEOUT_INFINITE,
+            radeon_bo_wait(rws, (struct pb_buffer*)bo, OS_TIMEOUT_INFINITE,
                            RADEON_USAGE_READWRITE);
          }
 
@@ -940,7 +925,7 @@ static void radeon_bo_set_metadata(struct radeon_winsys *rws,
 
    memset(&args, 0, sizeof(args));
 
-   os_wait_until_zero(&bo->num_active_ioctls, PIPE_TIMEOUT_INFINITE);
+   os_wait_until_zero(&bo->num_active_ioctls, OS_TIMEOUT_INFINITE);
 
    if (surf) {
       if (surf->u.legacy.level[0].mode >= RADEON_SURF_MODE_1D)
@@ -1211,8 +1196,7 @@ static struct pb_buffer *radeon_winsys_bo_from_handle(struct radeon_winsys *rws,
 
    if (bo) {
       /* Increase the refcount. */
-      struct pb_buffer *b = NULL;
-      pb_reference(&b, &bo->base);
+      p_atomic_inc(&bo->base.reference.count);
       goto done;
    }
 

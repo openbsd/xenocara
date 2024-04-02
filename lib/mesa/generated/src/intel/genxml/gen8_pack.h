@@ -763,6 +763,30 @@ GFX8_MEMORY_OBJECT_CONTROL_STATE_pack(__attribute__((unused)) __gen_user_data *d
       util_bitpack_uint(values->MemoryTypeLLCeLLCCacheabilityControl, 5, 6);
 }
 
+#define GFX8_MEMORY_OBJECT_CONTROL_STATE_CHV_length      1
+struct GFX8_MEMORY_OBJECT_CONTROL_STATE_CHV {
+   uint32_t                             TargetCache;
+#define NoCaching                                0
+#define NoCaching1                               1
+#define NoCaching2                               2
+#define L3CacheAllowed                           3
+   uint32_t                             MemoryType;
+#define UC                                       0
+#define WB                                       3
+};
+
+static inline __attribute__((always_inline)) void
+GFX8_MEMORY_OBJECT_CONTROL_STATE_CHV_pack(__attribute__((unused)) __gen_user_data *data,
+                                          __attribute__((unused)) void * restrict dst,
+                                          __attribute__((unused)) const struct GFX8_MEMORY_OBJECT_CONTROL_STATE_CHV * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TargetCache, 3, 4) |
+      util_bitpack_uint(values->MemoryType, 5, 6);
+}
+
 #define GFX8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION_length      2
 struct GFX8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION {
    uint32_t                             FirstMBBitOffset;
@@ -3515,7 +3539,8 @@ GFX8_3DSTATE_MONOFILTER_SIZE_pack(__attribute__((unused)) __gen_user_data *data,
    ._3DCommandSubOpcode                 =     13,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
-   .CommandType                         =      3
+   .CommandType                         =      3,  \
+   .PixelPositionOffsetEnable           =      0
 
 struct GFX8_3DSTATE_MULTISAMPLE {
    uint32_t                             DWordLength;

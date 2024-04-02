@@ -59,7 +59,7 @@ lower_const_initializer(struct nir_builder *b, struct exec_list *var_list,
 {
    bool progress = false;
 
-   b->cursor = nir_before_cf_list(&b->impl->body);
+   b->cursor = nir_before_impl(b->impl);
 
    nir_foreach_variable_in_list(var, var_list) {
       if (!(var->data.mode & modes))
@@ -76,12 +76,11 @@ lower_const_initializer(struct nir_builder *b, struct exec_list *var_list,
          nir_deref_instr *dst_deref = nir_build_deref_var(b, var);
 
          /* Note that this stores a pointer to src into dst */
-         nir_store_deref(b, dst_deref, &src_deref->dest.ssa, ~0);
+         nir_store_deref(b, dst_deref, &src_deref->def, ~0);
 
          progress = true;
          var->pointer_initializer = NULL;
       }
-
    }
 
    return progress;
@@ -102,16 +101,11 @@ nir_lower_variable_initializers(nir_shader *shader, nir_variable_mode modes)
             nir_var_function_temp |
             nir_var_system_value;
 
-   nir_foreach_function(function, shader) {
-      if (!function->impl)
-	 continue;
-
+   nir_foreach_function_with_impl(func, impl, shader) {
       bool impl_progress = false;
+      nir_builder builder = nir_builder_create(impl);
 
-      nir_builder builder;
-      nir_builder_init(&builder, function->impl);
-
-      if ((modes & ~nir_var_function_temp) && function->is_entrypoint) {
+      if ((modes & ~nir_var_function_temp) && func->is_entrypoint) {
          impl_progress |= lower_const_initializer(&builder,
                                                   &shader->variables,
                                                   modes);
@@ -119,17 +113,17 @@ nir_lower_variable_initializers(nir_shader *shader, nir_variable_mode modes)
 
       if (modes & nir_var_function_temp) {
          impl_progress |= lower_const_initializer(&builder,
-                                                  &function->impl->locals,
+                                                  &impl->locals,
                                                   nir_var_function_temp);
       }
 
       if (impl_progress) {
          progress = true;
-         nir_metadata_preserve(function->impl, nir_metadata_block_index |
-                                               nir_metadata_dominance |
-                                               nir_metadata_live_ssa_defs);
+         nir_metadata_preserve(impl, nir_metadata_block_index |
+                                        nir_metadata_dominance |
+                                        nir_metadata_live_defs);
       } else {
-         nir_metadata_preserve(function->impl, nir_metadata_all);
+         nir_metadata_preserve(impl, nir_metadata_all);
       }
    }
 
@@ -150,9 +144,8 @@ nir_zero_initialize_shared_memory(nir_shader *shader,
    assert(chunk_size > 0);
    assert(chunk_size % 4 == 0);
 
-   nir_builder b;
-   nir_builder_init(&b, nir_shader_get_entrypoint(shader));
-   b.cursor = nir_before_cf_list(&b.impl->body);
+   nir_function_impl *impl = nir_shader_get_entrypoint(shader);
+   nir_builder b = nir_builder_at(nir_before_impl(impl));
 
    assert(!shader->info.workgroup_size_variable);
    const unsigned local_count = shader->info.workgroup_size[0] *
@@ -168,35 +161,31 @@ nir_zero_initialize_shared_memory(nir_shader *shader,
 
    nir_variable *it = nir_local_variable_create(b.impl, glsl_uint_type(),
                                                 "zero_init_iterator");
-   nir_ssa_def *local_index = nir_load_local_invocation_index(&b);
-   nir_ssa_def *first_offset = nir_imul_imm(&b, local_index, chunk_size);
+   nir_def *local_index = nir_load_local_invocation_index(&b);
+   nir_def *first_offset = nir_imul_imm(&b, local_index, chunk_size);
    nir_store_var(&b, it, first_offset, 0x1);
 
    nir_loop *loop = nir_push_loop(&b);
    {
-      nir_ssa_def *offset = nir_load_var(&b, it);
+      nir_def *offset = nir_load_var(&b, it);
 
-      nir_push_if(&b, nir_uge(&b, offset, nir_imm_int(&b, shared_size)));
+      nir_push_if(&b, nir_uge_imm(&b, offset, shared_size));
       {
          nir_jump(&b, nir_jump_break);
       }
       nir_pop_if(&b, NULL);
 
       nir_store_shared(&b, nir_imm_zero(&b, chunk_comps, 32), offset,
-                       .align_mul=chunk_size,
-                       .write_mask=((1 << chunk_comps) - 1));
+                       .align_mul = chunk_size,
+                       .write_mask = ((1 << chunk_comps) - 1));
 
-      nir_ssa_def *new_offset = nir_iadd_imm(&b, offset, chunk_size * local_count);
+      nir_def *new_offset = nir_iadd_imm(&b, offset, chunk_size * local_count);
       nir_store_var(&b, it, new_offset, 0x1);
    }
    nir_pop_loop(&b, loop);
 
-   if (shader->options->use_scoped_barrier) {
-      nir_scoped_barrier(&b, NIR_SCOPE_WORKGROUP, NIR_SCOPE_WORKGROUP,
-                         NIR_MEMORY_ACQ_REL, nir_var_mem_shared);
-   } else {
-      nir_memory_barrier_shared(&b);
-   }
+   nir_barrier(&b, SCOPE_WORKGROUP, SCOPE_WORKGROUP, NIR_MEMORY_ACQ_REL,
+               nir_var_mem_shared);
 
    nir_metadata_preserve(nir_shader_get_entrypoint(shader), nir_metadata_none);
 

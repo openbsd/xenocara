@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2023/01/28 08:56:34 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2024/04/02 10:42:12 jsg Exp $
 
 GEN=	120
 LIB=	anv_gen${GEN}
@@ -7,12 +7,13 @@ NOPROFILE=
 
 SRCS=	genX_blorp_exec.c \
 	genX_cmd_buffer.c \
+	genX_gfx_state.c \
 	genX_gpu_memcpy.c \
+	genX_init_state.c \
 	genX_pipeline.c \
 	genX_query.c \
-	genX_state.c \
-
-SRCS+=	gfx8_cmd_buffer.c
+	genX_simple_shader.c \
+	genX_video.c
 
 .include "../Makefile.inc"
 
@@ -34,6 +35,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/generated/src/util \
 		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-DVK_USE_PLATFORM_XCB_KHR \
 		-DVK_USE_PLATFORM_XLIB_KHR \

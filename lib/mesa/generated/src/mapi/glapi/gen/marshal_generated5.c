@@ -6207,7 +6207,6 @@ _mesa_glthread_init_dispatch5(struct gl_context *ctx, struct _glapi_table *table
       SET_ProvokingVertex(table, _mesa_marshal_ProvokingVertex);
       SET_SpecializeShaderARB(table, _mesa_marshal_SpecializeShaderARB);
       SET_StringMarkerGREMEDY(table, _mesa_marshal_StringMarkerGREMEDY);
-      SET_TextureBarrierNV(table, _mesa_marshal_TextureBarrierNV);
    }
    if (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 30)) {
       SET_ColorMaski(table, _mesa_marshal_ColorMaski);
@@ -6238,6 +6237,7 @@ _mesa_glthread_init_dispatch5(struct gl_context *ctx, struct _glapi_table *table
       SET_GetPerfMonitorGroupsAMD(table, _mesa_marshal_GetPerfMonitorGroupsAMD);
       SET_MaxShaderCompilerThreadsKHR(table, _mesa_marshal_MaxShaderCompilerThreadsKHR);
       SET_SelectPerfMonitorCountersAMD(table, _mesa_marshal_SelectPerfMonitorCountersAMD);
+      SET_TextureBarrierNV(table, _mesa_marshal_TextureBarrierNV);
    }
    if (_mesa_is_desktop_gl_compat(ctx)) {
       SET_ActiveStencilFaceEXT(table, _mesa_marshal_ActiveStencilFaceEXT);

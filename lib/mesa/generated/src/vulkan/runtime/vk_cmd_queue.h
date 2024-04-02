@@ -29,6 +29,9 @@
 
 #define VK_PROTOTYPES
 #include <vulkan/vulkan_core.h>
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+#include <vulkan/vulkan_beta.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +46,7 @@ struct vk_cmd_queue {
 
 enum vk_cmd_type {
    VK_CMD_BIND_PIPELINE,
+   VK_CMD_SET_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT,
    VK_CMD_SET_VIEWPORT,
    VK_CMD_SET_SCISSOR,
    VK_CMD_SET_LINE_WIDTH,
@@ -66,6 +70,7 @@ enum vk_cmd_type {
    VK_CMD_SUBPASS_SHADING_HUAWEI,
    VK_CMD_DRAW_CLUSTER_HUAWEI,
    VK_CMD_DRAW_CLUSTER_INDIRECT_HUAWEI,
+   VK_CMD_UPDATE_PIPELINE_INDIRECT_BUFFER_NV,
    VK_CMD_COPY_BUFFER,
    VK_CMD_COPY_IMAGE,
    VK_CMD_BLIT_IMAGE,
@@ -161,6 +166,7 @@ enum vk_cmd_type {
    VK_CMD_SET_PRIMITIVE_TOPOLOGY,
    VK_CMD_SET_VIEWPORT_WITH_COUNT,
    VK_CMD_SET_SCISSOR_WITH_COUNT,
+   VK_CMD_BIND_INDEX_BUFFER2_KHR,
    VK_CMD_BIND_VERTEX_BUFFERS2,
    VK_CMD_SET_DEPTH_TEST_ENABLE,
    VK_CMD_SET_DEPTH_WRITE_ENABLE,
@@ -238,14 +244,19 @@ enum vk_cmd_type {
    VK_CMD_COPY_MEMORY_TO_MICROMAP_EXT,
    VK_CMD_WRITE_MICROMAPS_PROPERTIES_EXT,
    VK_CMD_OPTICAL_FLOW_EXECUTE_NV,
+   VK_CMD_SET_DEPTH_BIAS2_EXT,
    VK_CMD_BIND_SHADERS_EXT,
 };
 
 extern const char *vk_cmd_queue_type_names[];
+extern size_t vk_cmd_queue_type_sizes[];
 
 struct vk_cmd_bind_pipeline {
    VkPipelineBindPoint pipeline_bind_point;
    VkPipeline pipeline;
+};
+struct vk_cmd_set_attachment_feedback_loop_enable_ext {
+   VkImageAspectFlags aspect_mask;
 };
 struct vk_cmd_set_viewport {
    uint32_t first_viewport;
@@ -361,6 +372,10 @@ struct vk_cmd_draw_cluster_huawei {
 struct vk_cmd_draw_cluster_indirect_huawei {
    VkBuffer buffer;
    VkDeviceSize offset;
+};
+struct vk_cmd_update_pipeline_indirect_buffer_nv {
+   VkPipelineBindPoint           pipeline_bind_point;
+   VkPipeline                    pipeline;
 };
 struct vk_cmd_copy_buffer {
    VkBuffer src_buffer;
@@ -856,6 +871,12 @@ struct vk_cmd_set_scissor_with_count {
    uint32_t scissor_count;
    VkRect2D* scissors;
 };
+struct vk_cmd_bind_index_buffer2_khr {
+   VkBuffer buffer;
+   VkDeviceSize offset;
+   VkDeviceSize size;
+   VkIndexType index_type;
+};
 struct vk_cmd_bind_vertex_buffers2 {
    uint32_t first_binding;
    uint32_t binding_count;
@@ -1137,17 +1158,36 @@ struct vk_cmd_optical_flow_execute_nv {
    VkOpticalFlowSessionNV session;
    VkOpticalFlowExecuteInfoNV* execute_info;
 };
+struct vk_cmd_set_depth_bias2_ext {
+   VkDepthBiasInfoEXT*         depth_bias_info;
+};
 struct vk_cmd_bind_shaders_ext {
    uint32_t stage_count;
    VkShaderStageFlagBits* stages;
    VkShaderEXT* shaders;
 };
 
+struct vk_cmd_queue_entry;
+
+/* this ordering must match vk_cmd_queue_entry */
+struct vk_cmd_queue_entry_base {
+   struct list_head cmd_link;
+   enum vk_cmd_type type;
+   void *driver_data;
+   void (*driver_free_cb)(struct vk_cmd_queue *queue,
+                          struct vk_cmd_queue_entry *cmd);
+};
+
+/* this ordering must match vk_cmd_queue_entry_base */
 struct vk_cmd_queue_entry {
    struct list_head cmd_link;
    enum vk_cmd_type type;
+   void *driver_data;
+   void (*driver_free_cb)(struct vk_cmd_queue *queue,
+                          struct vk_cmd_queue_entry *cmd);
    union {
       struct vk_cmd_bind_pipeline bind_pipeline;
+      struct vk_cmd_set_attachment_feedback_loop_enable_ext set_attachment_feedback_loop_enable_ext;
       struct vk_cmd_set_viewport set_viewport;
       struct vk_cmd_set_scissor set_scissor;
       struct vk_cmd_set_line_width set_line_width;
@@ -1170,6 +1210,7 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_dispatch_indirect dispatch_indirect;
       struct vk_cmd_draw_cluster_huawei draw_cluster_huawei;
       struct vk_cmd_draw_cluster_indirect_huawei draw_cluster_indirect_huawei;
+      struct vk_cmd_update_pipeline_indirect_buffer_nv update_pipeline_indirect_buffer_nv;
       struct vk_cmd_copy_buffer copy_buffer;
       struct vk_cmd_copy_image copy_image;
       struct vk_cmd_blit_image blit_image;
@@ -1261,6 +1302,7 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_set_primitive_topology set_primitive_topology;
       struct vk_cmd_set_viewport_with_count set_viewport_with_count;
       struct vk_cmd_set_scissor_with_count set_scissor_with_count;
+      struct vk_cmd_bind_index_buffer2_khr bind_index_buffer2_khr;
       struct vk_cmd_bind_vertex_buffers2 bind_vertex_buffers2;
       struct vk_cmd_set_depth_test_enable set_depth_test_enable;
       struct vk_cmd_set_depth_write_enable set_depth_write_enable;
@@ -1337,16 +1379,18 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_copy_memory_to_micromap_ext copy_memory_to_micromap_ext;
       struct vk_cmd_write_micromaps_properties_ext write_micromaps_properties_ext;
       struct vk_cmd_optical_flow_execute_nv optical_flow_execute_nv;
+      struct vk_cmd_set_depth_bias2_ext set_depth_bias2_ext;
       struct vk_cmd_bind_shaders_ext bind_shaders_ext;
    } u;
-   void *driver_data;
-   void (*driver_free_cb)(struct vk_cmd_queue *queue,
-                          struct vk_cmd_queue_entry *cmd);
 };
 
   VkResult vk_enqueue_cmd_bind_pipeline(struct vk_cmd_queue *queue
    , VkPipelineBindPoint pipelineBindPoint
    , VkPipeline pipeline
+  );
+
+  VkResult vk_enqueue_cmd_set_attachment_feedback_loop_enable_ext(struct vk_cmd_queue *queue
+   , VkImageAspectFlags aspectMask
   );
 
   VkResult vk_enqueue_cmd_set_viewport(struct vk_cmd_queue *queue
@@ -1460,6 +1504,11 @@ struct vk_cmd_queue_entry {
   VkResult vk_enqueue_cmd_draw_cluster_indirect_huawei(struct vk_cmd_queue *queue
    , VkBuffer buffer
    , VkDeviceSize offset
+  );
+
+  VkResult vk_enqueue_cmd_update_pipeline_indirect_buffer_nv(struct vk_cmd_queue *queue
+   , VkPipelineBindPoint           pipelineBindPoint
+   , VkPipeline                    pipeline
   );
 
   VkResult vk_enqueue_cmd_copy_buffer(struct vk_cmd_queue *queue
@@ -2032,6 +2081,13 @@ struct vk_cmd_queue_entry {
    , const VkRect2D* pScissors
   );
 
+  VkResult vk_enqueue_cmd_bind_index_buffer2_khr(struct vk_cmd_queue *queue
+   , VkBuffer buffer
+   , VkDeviceSize offset
+   , VkDeviceSize size
+   , VkIndexType indexType
+  );
+
   VkResult vk_enqueue_cmd_bind_vertex_buffers2(struct vk_cmd_queue *queue
    , uint32_t firstBinding
    , uint32_t bindingCount
@@ -2390,6 +2446,10 @@ struct vk_cmd_queue_entry {
   VkResult vk_enqueue_cmd_optical_flow_execute_nv(struct vk_cmd_queue *queue
    , VkOpticalFlowSessionNV session
    , const VkOpticalFlowExecuteInfoNV* pExecuteInfo
+  );
+
+  VkResult vk_enqueue_cmd_set_depth_bias2_ext(struct vk_cmd_queue *queue
+   , const VkDepthBiasInfoEXT*         pDepthBiasInfo
   );
 
   VkResult vk_enqueue_cmd_bind_shaders_ext(struct vk_cmd_queue *queue

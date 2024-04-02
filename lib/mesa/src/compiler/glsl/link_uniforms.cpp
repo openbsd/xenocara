@@ -32,6 +32,7 @@
 #include "main/shader_types.h"
 #include "main/consts_exts.h"
 #include "util/strndup.h"
+#include "util/u_math.h"
 
 /**
  * \file link_uniforms.cpp
@@ -93,7 +94,7 @@ program_resource_visitor::process(ir_variable *var, const glsl_type *var_type,
                 false, record_array_count, NULL);
       ralloc_free(name);
    } else if (t_without_array->is_interface()) {
-      char *name = ralloc_strdup(NULL, t_without_array->name);
+      char *name = ralloc_strdup(NULL, glsl_get_type_name(t_without_array));
       const glsl_struct_field *ifc_member = var->data.from_named_ifc_block ?
          &t_without_array->
             fields.structure[t_without_array->field_index(var->name)] : NULL;
@@ -278,6 +279,6 @@ link_calculate_matrix_stride(const glsl_type *matrix, bool row_major,
     *    vec4.
     */
    return packing == GLSL_INTERFACE_PACKING_STD430
-      ? (items < 3 ? items * N : glsl_align(items * N, 16))
-      : glsl_align(items * N, 16);
+      ? (items < 3 ? items * N : align(items * N, 16))
+      : align(items * N, 16);
 }

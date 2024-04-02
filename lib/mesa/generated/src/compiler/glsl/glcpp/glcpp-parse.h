@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.7.6.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
@@ -117,6 +117,8 @@ struct YYLTYPE
 
 
 
+
 int glcpp_parser_parse (glcpp_parser_t *parser);
+
 
 #endif /* !YY_GLCPP_PARSER_SRC_COMPILER_GLSL_GLCPP_GLCPP_PARSE_H_INCLUDED  */

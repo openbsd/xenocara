@@ -101,13 +101,19 @@ const struct gfx10_format gfx10_format_table[PIPE_FORMAT_COUNT] = {
   [PIPE_FORMAT_X32_S8X24_UINT] = FMT(X24_8_32_UINT),
   [PIPE_FORMAT_Z24_UNORM_S8_UINT_AS_R8G8B8A8] = FMT(8_8_8_8_UNORM),
 /* PIPE_FORMAT_UYVY is not supported */
+/* PIPE_FORMAT_VYUY is not supported */
 /* PIPE_FORMAT_YUYV is not supported */
+/* PIPE_FORMAT_YVYU is not supported */
 /* PIPE_FORMAT_AYUV is not supported */
 /* PIPE_FORMAT_XYUV is not supported */
   [PIPE_FORMAT_R8G8_B8G8_UNORM] = FMT(GB_GR_UNORM),
   [PIPE_FORMAT_G8R8_G8B8_UNORM] = FMT(BG_RG_UNORM),
   [PIPE_FORMAT_G8R8_B8R8_UNORM] = FMT(GB_GR_UNORM),
   [PIPE_FORMAT_R8G8_R8B8_UNORM] = FMT(BG_RG_UNORM),
+/* PIPE_FORMAT_B8R8_G8R8_UNORM is not supported */
+/* PIPE_FORMAT_R8B8_R8G8_UNORM is not supported */
+/* PIPE_FORMAT_G8B8_G8R8_UNORM is not supported */
+/* PIPE_FORMAT_B8G8_R8G8_UNORM is not supported */
   [PIPE_FORMAT_R11G11B10_FLOAT] = FMT(10_11_11_FLOAT),
   [PIPE_FORMAT_R9G9B9E5_FLOAT] = FMT(5_9_9_9_FLOAT),
 /* PIPE_FORMAT_R1_UNORM is not supported */
@@ -279,8 +285,12 @@ const struct gfx10_format gfx10_format_table[PIPE_FORMAT_COUNT] = {
 /* PIPE_FORMAT_NV21 is not supported */
 /* PIPE_FORMAT_Y8_400_UNORM is not supported */
 /* PIPE_FORMAT_R8_G8B8_420_UNORM is not supported */
+/* PIPE_FORMAT_R8_B8G8_420_UNORM is not supported */
 /* PIPE_FORMAT_G8_B8R8_420_UNORM is not supported */
+/* PIPE_FORMAT_R8_G8_B8_420_UNORM is not supported */
+/* PIPE_FORMAT_R8_B8_G8_420_UNORM is not supported */
 /* PIPE_FORMAT_G8_B8_R8_420_UNORM is not supported */
+/* PIPE_FORMAT_R8_G8_B8_UNORM is not supported */
 /* PIPE_FORMAT_Y8_UNORM is not supported */
 /* PIPE_FORMAT_Y8_U8_V8_422_UNORM is not supported */
 /* PIPE_FORMAT_Y8_U8V8_422_UNORM is not supported */
@@ -529,13 +539,19 @@ const struct gfx10_format gfx11_format_table[PIPE_FORMAT_COUNT] = {
   [PIPE_FORMAT_X32_S8X24_UINT] = FMT(X24_8_32_UINT),
   [PIPE_FORMAT_Z24_UNORM_S8_UINT_AS_R8G8B8A8] = FMT(8_8_8_8_UNORM),
 /* PIPE_FORMAT_UYVY is not supported */
+/* PIPE_FORMAT_VYUY is not supported */
 /* PIPE_FORMAT_YUYV is not supported */
+/* PIPE_FORMAT_YVYU is not supported */
 /* PIPE_FORMAT_AYUV is not supported */
 /* PIPE_FORMAT_XYUV is not supported */
   [PIPE_FORMAT_R8G8_B8G8_UNORM] = FMT(GB_GR_UNORM),
   [PIPE_FORMAT_G8R8_G8B8_UNORM] = FMT(BG_RG_UNORM),
   [PIPE_FORMAT_G8R8_B8R8_UNORM] = FMT(GB_GR_UNORM),
   [PIPE_FORMAT_R8G8_R8B8_UNORM] = FMT(BG_RG_UNORM),
+/* PIPE_FORMAT_B8R8_G8R8_UNORM is not supported */
+/* PIPE_FORMAT_R8B8_R8G8_UNORM is not supported */
+/* PIPE_FORMAT_G8B8_G8R8_UNORM is not supported */
+/* PIPE_FORMAT_B8G8_R8G8_UNORM is not supported */
   [PIPE_FORMAT_R11G11B10_FLOAT] = FMT(10_11_11_FLOAT),
   [PIPE_FORMAT_R9G9B9E5_FLOAT] = FMT(5_9_9_9_FLOAT),
 /* PIPE_FORMAT_R1_UNORM is not supported */
@@ -707,8 +723,12 @@ const struct gfx10_format gfx11_format_table[PIPE_FORMAT_COUNT] = {
 /* PIPE_FORMAT_NV21 is not supported */
 /* PIPE_FORMAT_Y8_400_UNORM is not supported */
 /* PIPE_FORMAT_R8_G8B8_420_UNORM is not supported */
+/* PIPE_FORMAT_R8_B8G8_420_UNORM is not supported */
 /* PIPE_FORMAT_G8_B8R8_420_UNORM is not supported */
+/* PIPE_FORMAT_R8_G8_B8_420_UNORM is not supported */
+/* PIPE_FORMAT_R8_B8_G8_420_UNORM is not supported */
 /* PIPE_FORMAT_G8_B8_R8_420_UNORM is not supported */
+/* PIPE_FORMAT_R8_G8_B8_UNORM is not supported */
 /* PIPE_FORMAT_Y8_UNORM is not supported */
 /* PIPE_FORMAT_Y8_U8_V8_422_UNORM is not supported */
 /* PIPE_FORMAT_Y8_U8V8_422_UNORM is not supported */

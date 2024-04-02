@@ -588,6 +588,15 @@ static const struct vk_format_info ext0_format_infos[] = {
    },
 };
 
+static const struct vk_format_info ext471_format_infos[] = {
+   [0] = {
+      .class = MESA_VK_FORMAT_CLASS_16_BIT,
+   },
+   [1] = {
+      .class = MESA_VK_FORMAT_CLASS_8_BIT_ALPHA,
+   },
+};
+
 static const struct vk_format_info ext157_format_infos[] = {
    [0] = {
       .class = MESA_VK_FORMAT_CLASS_32_BIT_G8B8G8R8,
@@ -806,6 +815,9 @@ vk_format_get_info(VkFormat format)
    case 0:
       assert(offset < ARRAY_SIZE(ext0_format_infos));
       return &ext0_format_infos[offset];
+   case 471:
+      assert(offset < ARRAY_SIZE(ext471_format_infos));
+      return &ext471_format_infos[offset];
    case 157:
       assert(offset < ARRAY_SIZE(ext157_format_infos));
       return &ext157_format_infos[offset];
@@ -848,6 +860,7 @@ static const VkFormat mesa_vk_format_class_16_bit_formats[] = {
    VK_FORMAT_R5G5B5A1_UNORM_PACK16,
    VK_FORMAT_B5G5R5A1_UNORM_PACK16,
    VK_FORMAT_A1R5G5B5_UNORM_PACK16,
+   VK_FORMAT_A1B5G5R5_UNORM_PACK16_KHR,
    VK_FORMAT_R8G8_UNORM,
    VK_FORMAT_R8G8_SNORM,
    VK_FORMAT_R8G8_USCALED,
@@ -866,6 +879,10 @@ static const VkFormat mesa_vk_format_class_16_bit_formats[] = {
    VK_FORMAT_R12X4_UNORM_PACK16,
    VK_FORMAT_A4R4G4B4_UNORM_PACK16,
    VK_FORMAT_A4B4G4R4_UNORM_PACK16,
+};
+
+static const VkFormat mesa_vk_format_class_8_bit_alpha_formats[] = {
+   VK_FORMAT_A8_UNORM_KHR,
 };
 
 static const VkFormat mesa_vk_format_class_24_bit_formats[] = {
@@ -1330,6 +1347,10 @@ static const struct vk_format_class_info class_infos[] = {
    [MESA_VK_FORMAT_CLASS_16_BIT] = {
       .formats = mesa_vk_format_class_16_bit_formats,
       .format_count = ARRAY_SIZE(mesa_vk_format_class_16_bit_formats),
+   },
+   [MESA_VK_FORMAT_CLASS_8_BIT_ALPHA] = {
+      .formats = mesa_vk_format_class_8_bit_alpha_formats,
+      .format_count = ARRAY_SIZE(mesa_vk_format_class_8_bit_alpha_formats),
    },
    [MESA_VK_FORMAT_CLASS_24_BIT] = {
       .formats = mesa_vk_format_class_24_bit_formats,

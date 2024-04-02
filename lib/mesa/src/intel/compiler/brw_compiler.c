@@ -26,21 +26,23 @@
 #include "brw_eu.h"
 #include "dev/intel_debug.h"
 #include "compiler/nir/nir.h"
-#include "main/errors.h"
 #include "util/u_debug.h"
 
 #define COMMON_OPTIONS                                                        \
+   .has_uclz = true,                                                          \
    .lower_fdiv = true,                                                        \
    .lower_scmp = true,                                                        \
    .lower_flrp16 = true,                                                      \
    .lower_fmod = true,                                                        \
-   .lower_ufind_msb_to_uclz = true,                                           \
+   .lower_ufind_msb = true,                                                   \
    .lower_uadd_carry = true,                                                  \
    .lower_usub_borrow = true,                                                 \
    .lower_flrp64 = true,                                                      \
    .lower_fisnormal = true,                                                   \
    .lower_isign = true,                                                       \
    .lower_ldexp = true,                                                       \
+   .lower_bitfield_extract = true,                                            \
+   .lower_bitfield_insert = true,                                             \
    .lower_device_index_to_zero = true,                                        \
    .vectorize_io = true,                                                      \
    .vectorize_tess_levels = true,                                             \
@@ -49,10 +51,8 @@
    .lower_insert_word = true,                                                 \
    .vertex_id_zero_based = true,                                              \
    .lower_base_vertex = true,                                                 \
-   .use_scoped_barrier = true,                                                \
    .support_16bit_alu = true,                                                 \
-   .lower_uniforms_to_ubo = true,                                             \
-   .has_txs = true
+   .lower_uniforms_to_ubo = true
 
 #define COMMON_SCALAR_OPTIONS                                                 \
    .lower_to_scalar = true,                                                   \
@@ -185,15 +185,15 @@ brw_compiler_create(void *mem_ctx, const struct intel_device_info *devinfo)
       nir_options->lower_flrp32 = devinfo->ver < 6 || devinfo->ver >= 11;
       nir_options->lower_fpow = devinfo->ver >= 12;
 
-      nir_options->lower_bitfield_extract = devinfo->ver >= 7;
-      nir_options->lower_bitfield_extract_to_shifts = devinfo->ver < 7;
-      nir_options->lower_bitfield_insert = devinfo->ver >= 7;
-      nir_options->lower_bitfield_insert_to_shifts = devinfo->ver < 7;
+      nir_options->has_bfe = devinfo->ver >= 7;
+      nir_options->has_bfm = devinfo->ver >= 7;
+      nir_options->has_bfi = devinfo->ver >= 7;
 
-      nir_options->lower_rotate = devinfo->ver < 11;
+      nir_options->has_rotate16 = devinfo->ver >= 11;
+      nir_options->has_rotate32 = devinfo->ver >= 11;
       nir_options->lower_bitfield_reverse = devinfo->ver < 7;
       nir_options->lower_find_lsb = devinfo->ver < 7;
-      nir_options->lower_ifind_msb_to_uclz = devinfo->ver < 7;
+      nir_options->lower_ifind_msb = devinfo->ver < 7;
       nir_options->has_iadd3 = devinfo->verx10 >= 125;
 
       nir_options->has_sdot_4x8 = devinfo->ver >= 12;
@@ -218,6 +218,11 @@ brw_compiler_create(void *mem_ctx, const struct intel_device_info *devinfo)
       compiler->nir_options[i] = nir_options;
    }
 
+   compiler->mesh.mue_header_packing =
+         (unsigned)debug_get_num_option("INTEL_MESH_HEADER_PACKING", 3);
+   compiler->mesh.mue_compaction =
+         debug_get_bool_option("INTEL_MESH_COMPACTION", true);
+
    return compiler;
 }
 
@@ -236,6 +241,9 @@ brw_get_compiler_config_value(const struct brw_compiler *compiler)
    insert_u64_bit(&config, compiler->precise_trig);
    bits++;
 
+   insert_u64_bit(&config, compiler->mesh.mue_compaction);
+   bits++;
+
    uint64_t mask = DEBUG_DISK_CACHE_MASK;
    bits += util_bitcount64(mask);
    while (mask != 0) {
@@ -251,6 +259,12 @@ brw_get_compiler_config_value(const struct brw_compiler *compiler)
       insert_u64_bit(&config, (intel_simd & bit) != 0);
       mask &= ~bit;
    }
+
+   mask = 3;
+   bits += util_bitcount64(mask);
+
+   u_foreach_bit64(bit, mask)
+      insert_u64_bit(&config, (compiler->mesh.mue_header_packing & (1ULL << bit)) != 0);
 
    assert(bits <= util_bitcount64(UINT64_MAX));
 

@@ -6,6 +6,7 @@
 
 
 #include "pipe/p_defines.h"
+#include "pipe/p_video_enums.h"
 
 
 #ifdef __cplusplus
@@ -19,11 +20,23 @@ tr_util_pipe_shader_cap_name(enum pipe_shader_cap value);
 const char *
 tr_util_pipe_shader_ir_name(enum pipe_shader_ir value);
 const char *
+tr_util_pipe_map_flags_name(enum pipe_map_flags value);
+const char *
 tr_util_pipe_cap_name(enum pipe_cap value);
 const char *
 tr_util_pipe_capf_name(enum pipe_capf value);
 const char *
 tr_util_pipe_compute_cap_name(enum pipe_compute_cap value);
+const char *
+tr_util_pipe_video_cap_name(enum pipe_video_cap value);
+const char *
+tr_util_pipe_video_profile_name(enum pipe_video_profile value);
+const char *
+tr_util_pipe_video_entrypoint_name(enum pipe_video_entrypoint value);
+const char *
+tr_util_pipe_video_vpp_orientation_name(enum pipe_video_vpp_orientation value);
+const char *
+tr_util_pipe_video_vpp_blend_mode_name(enum pipe_video_vpp_blend_mode value);
 const char *
 tr_util_pipe_resource_param_name(enum pipe_resource_param value);
 const char *

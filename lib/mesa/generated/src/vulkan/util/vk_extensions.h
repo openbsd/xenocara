@@ -125,7 +125,7 @@ struct vk_instance_extension_table {
 };
 
 
-#define VK_DEVICE_EXTENSION_COUNT 287
+#define VK_DEVICE_EXTENSION_COUNT 309
 
 extern const VkExtensionProperties vk_device_extensions[];
 
@@ -138,6 +138,7 @@ struct vk_device_extension_table {
          bool KHR_acceleration_structure;
          bool KHR_bind_memory2;
          bool KHR_buffer_device_address;
+         bool KHR_cooperative_matrix;
          bool KHR_copy_commands2;
          bool KHR_create_renderpass2;
          bool KHR_dedicated_allocation;
@@ -170,6 +171,7 @@ struct vk_device_extension_table {
          bool KHR_maintenance2;
          bool KHR_maintenance3;
          bool KHR_maintenance4;
+         bool KHR_maintenance5;
          bool KHR_map_memory2;
          bool KHR_multiview;
          bool KHR_performance_query;
@@ -182,6 +184,7 @@ struct vk_device_extension_table {
          bool KHR_ray_query;
          bool KHR_ray_tracing_maintenance1;
          bool KHR_ray_tracing_pipeline;
+         bool KHR_ray_tracing_position_fetch;
          bool KHR_relaxed_block_layout;
          bool KHR_sampler_mirror_clamp_to_edge;
          bool KHR_sampler_ycbcr_conversion;
@@ -216,6 +219,7 @@ struct vk_device_extension_table {
          bool KHR_zero_initialize_workgroup_memory;
          bool EXT_4444_formats;
          bool EXT_astc_decode_mode;
+         bool EXT_attachment_feedback_loop_dynamic_state;
          bool EXT_attachment_feedback_loop_layout;
          bool EXT_blend_operation_advanced;
          bool EXT_border_color_swizzle;
@@ -226,6 +230,7 @@ struct vk_device_extension_table {
          bool EXT_conservative_rasterization;
          bool EXT_custom_border_color;
          bool EXT_debug_marker;
+         bool EXT_depth_bias_control;
          bool EXT_depth_clamp_zero_one;
          bool EXT_depth_clip_control;
          bool EXT_depth_clip_enable;
@@ -237,20 +242,24 @@ struct vk_device_extension_table {
          bool EXT_device_memory_report;
          bool EXT_discard_rectangles;
          bool EXT_display_control;
+         bool EXT_dynamic_rendering_unused_attachments;
          bool EXT_extended_dynamic_state;
          bool EXT_extended_dynamic_state2;
          bool EXT_extended_dynamic_state3;
+         bool EXT_external_memory_acquire_unmodified;
          bool EXT_external_memory_dma_buf;
          bool EXT_external_memory_host;
          bool EXT_filter_cubic;
          bool EXT_fragment_density_map;
          bool EXT_fragment_density_map2;
          bool EXT_fragment_shader_interlock;
+         bool EXT_frame_boundary;
          bool EXT_full_screen_exclusive;
          bool EXT_global_priority;
          bool EXT_global_priority_query;
          bool EXT_graphics_pipeline_library;
          bool EXT_hdr_metadata;
+         bool EXT_host_image_copy;
          bool EXT_host_query_reset;
          bool EXT_image_2d_view_of_3d;
          bool EXT_image_compression_control;
@@ -271,6 +280,7 @@ struct vk_device_extension_table {
          bool EXT_multi_draw;
          bool EXT_multisampled_render_to_single_sampled;
          bool EXT_mutable_descriptor_type;
+         bool EXT_nested_command_buffer;
          bool EXT_non_seamless_cube_map;
          bool EXT_opacity_micromap;
          bool EXT_pageable_device_local_memory;
@@ -320,6 +330,7 @@ struct vk_device_extension_table {
          bool EXT_video_encode_h265;
          bool EXT_ycbcr_2plane_444_formats;
          bool EXT_ycbcr_image_arrays;
+         bool AMDX_shader_enqueue;
          bool AMD_buffer_marker;
          bool AMD_device_coherent_memory;
          bool AMD_display_native_hdr;
@@ -342,6 +353,7 @@ struct vk_device_extension_table {
          bool AMD_shader_info;
          bool AMD_shader_trinary_minmax;
          bool AMD_texture_gather_bias_lod;
+         bool ANDROID_external_format_resolve;
          bool ANDROID_external_memory_android_hardware_buffer;
          bool ANDROID_native_buffer;
          bool ARM_rasterization_order_attachment_access;
@@ -362,6 +374,7 @@ struct vk_device_extension_table {
          bool IMG_format_pvrtc;
          bool INTEL_performance_query;
          bool INTEL_shader_integer_functions2;
+         bool MSFT_layered_driver;
          bool NVX_binary_import;
          bool NVX_image_view_handle;
          bool NVX_multiview_per_view_attributes;
@@ -374,10 +387,13 @@ struct vk_device_extension_table {
          bool NV_coverage_reduction_mode;
          bool NV_dedicated_allocation;
          bool NV_dedicated_allocation_image_aliasing;
+         bool NV_descriptor_pool_overallocation;
          bool NV_device_diagnostic_checkpoints;
          bool NV_device_diagnostics_config;
          bool NV_device_generated_commands;
+         bool NV_device_generated_commands_compute;
          bool NV_displacement_micromap;
+         bool NV_extended_sparse_address_space;
          bool NV_external_memory;
          bool NV_external_memory_rdma;
          bool NV_external_memory_win32;
@@ -391,6 +407,7 @@ struct vk_device_extension_table {
          bool NV_inherited_viewport_scissor;
          bool NV_linear_color_attachment;
          bool NV_low_latency;
+         bool NV_low_latency2;
          bool NV_memory_decompression;
          bool NV_mesh_shader;
          bool NV_optical_flow;
@@ -408,8 +425,11 @@ struct vk_device_extension_table {
          bool NV_viewport_array2;
          bool NV_viewport_swizzle;
          bool NV_win32_keyed_mutex;
+         bool QCOM_filter_cubic_clamp;
+         bool QCOM_filter_cubic_weights;
          bool QCOM_fragment_density_map_offset;
          bool QCOM_image_processing;
+         bool QCOM_image_processing2;
          bool QCOM_multiview_per_view_render_areas;
          bool QCOM_multiview_per_view_viewports;
          bool QCOM_render_pass_shader_resolve;
@@ -417,6 +437,8 @@ struct vk_device_extension_table {
          bool QCOM_render_pass_transform;
          bool QCOM_rotated_copy_commands;
          bool QCOM_tile_properties;
+         bool QCOM_ycbcr_degamma;
+         bool QNX_external_memory_screen_buffer;
          bool SEC_amigo_profiling;
          bool VALVE_descriptor_set_host_mapping;
          bool VALVE_mutable_descriptor_type;
@@ -429,6 +451,7 @@ struct vk_device_extension_table {
          bool KHR_acceleration_structure;
          bool KHR_bind_memory2;
          bool KHR_buffer_device_address;
+         bool KHR_cooperative_matrix;
          bool KHR_copy_commands2;
          bool KHR_create_renderpass2;
          bool KHR_dedicated_allocation;
@@ -461,6 +484,7 @@ struct vk_device_extension_table {
          bool KHR_maintenance2;
          bool KHR_maintenance3;
          bool KHR_maintenance4;
+         bool KHR_maintenance5;
          bool KHR_map_memory2;
          bool KHR_multiview;
          bool KHR_performance_query;
@@ -473,6 +497,7 @@ struct vk_device_extension_table {
          bool KHR_ray_query;
          bool KHR_ray_tracing_maintenance1;
          bool KHR_ray_tracing_pipeline;
+         bool KHR_ray_tracing_position_fetch;
          bool KHR_relaxed_block_layout;
          bool KHR_sampler_mirror_clamp_to_edge;
          bool KHR_sampler_ycbcr_conversion;
@@ -507,6 +532,7 @@ struct vk_device_extension_table {
          bool KHR_zero_initialize_workgroup_memory;
          bool EXT_4444_formats;
          bool EXT_astc_decode_mode;
+         bool EXT_attachment_feedback_loop_dynamic_state;
          bool EXT_attachment_feedback_loop_layout;
          bool EXT_blend_operation_advanced;
          bool EXT_border_color_swizzle;
@@ -517,6 +543,7 @@ struct vk_device_extension_table {
          bool EXT_conservative_rasterization;
          bool EXT_custom_border_color;
          bool EXT_debug_marker;
+         bool EXT_depth_bias_control;
          bool EXT_depth_clamp_zero_one;
          bool EXT_depth_clip_control;
          bool EXT_depth_clip_enable;
@@ -528,20 +555,24 @@ struct vk_device_extension_table {
          bool EXT_device_memory_report;
          bool EXT_discard_rectangles;
          bool EXT_display_control;
+         bool EXT_dynamic_rendering_unused_attachments;
          bool EXT_extended_dynamic_state;
          bool EXT_extended_dynamic_state2;
          bool EXT_extended_dynamic_state3;
+         bool EXT_external_memory_acquire_unmodified;
          bool EXT_external_memory_dma_buf;
          bool EXT_external_memory_host;
          bool EXT_filter_cubic;
          bool EXT_fragment_density_map;
          bool EXT_fragment_density_map2;
          bool EXT_fragment_shader_interlock;
+         bool EXT_frame_boundary;
          bool EXT_full_screen_exclusive;
          bool EXT_global_priority;
          bool EXT_global_priority_query;
          bool EXT_graphics_pipeline_library;
          bool EXT_hdr_metadata;
+         bool EXT_host_image_copy;
          bool EXT_host_query_reset;
          bool EXT_image_2d_view_of_3d;
          bool EXT_image_compression_control;
@@ -562,6 +593,7 @@ struct vk_device_extension_table {
          bool EXT_multi_draw;
          bool EXT_multisampled_render_to_single_sampled;
          bool EXT_mutable_descriptor_type;
+         bool EXT_nested_command_buffer;
          bool EXT_non_seamless_cube_map;
          bool EXT_opacity_micromap;
          bool EXT_pageable_device_local_memory;
@@ -611,6 +643,7 @@ struct vk_device_extension_table {
          bool EXT_video_encode_h265;
          bool EXT_ycbcr_2plane_444_formats;
          bool EXT_ycbcr_image_arrays;
+         bool AMDX_shader_enqueue;
          bool AMD_buffer_marker;
          bool AMD_device_coherent_memory;
          bool AMD_display_native_hdr;
@@ -633,6 +666,7 @@ struct vk_device_extension_table {
          bool AMD_shader_info;
          bool AMD_shader_trinary_minmax;
          bool AMD_texture_gather_bias_lod;
+         bool ANDROID_external_format_resolve;
          bool ANDROID_external_memory_android_hardware_buffer;
          bool ANDROID_native_buffer;
          bool ARM_rasterization_order_attachment_access;
@@ -653,6 +687,7 @@ struct vk_device_extension_table {
          bool IMG_format_pvrtc;
          bool INTEL_performance_query;
          bool INTEL_shader_integer_functions2;
+         bool MSFT_layered_driver;
          bool NVX_binary_import;
          bool NVX_image_view_handle;
          bool NVX_multiview_per_view_attributes;
@@ -665,10 +700,13 @@ struct vk_device_extension_table {
          bool NV_coverage_reduction_mode;
          bool NV_dedicated_allocation;
          bool NV_dedicated_allocation_image_aliasing;
+         bool NV_descriptor_pool_overallocation;
          bool NV_device_diagnostic_checkpoints;
          bool NV_device_diagnostics_config;
          bool NV_device_generated_commands;
+         bool NV_device_generated_commands_compute;
          bool NV_displacement_micromap;
+         bool NV_extended_sparse_address_space;
          bool NV_external_memory;
          bool NV_external_memory_rdma;
          bool NV_external_memory_win32;
@@ -682,6 +720,7 @@ struct vk_device_extension_table {
          bool NV_inherited_viewport_scissor;
          bool NV_linear_color_attachment;
          bool NV_low_latency;
+         bool NV_low_latency2;
          bool NV_memory_decompression;
          bool NV_mesh_shader;
          bool NV_optical_flow;
@@ -699,8 +738,11 @@ struct vk_device_extension_table {
          bool NV_viewport_array2;
          bool NV_viewport_swizzle;
          bool NV_win32_keyed_mutex;
+         bool QCOM_filter_cubic_clamp;
+         bool QCOM_filter_cubic_weights;
          bool QCOM_fragment_density_map_offset;
          bool QCOM_image_processing;
+         bool QCOM_image_processing2;
          bool QCOM_multiview_per_view_render_areas;
          bool QCOM_multiview_per_view_viewports;
          bool QCOM_render_pass_shader_resolve;
@@ -708,6 +750,8 @@ struct vk_device_extension_table {
          bool QCOM_render_pass_transform;
          bool QCOM_rotated_copy_commands;
          bool QCOM_tile_properties;
+         bool QCOM_ycbcr_degamma;
+         bool QNX_external_memory_screen_buffer;
          bool SEC_amigo_profiling;
          bool VALVE_descriptor_set_host_mapping;
          bool VALVE_mutable_descriptor_type;

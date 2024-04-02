@@ -71,7 +71,7 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *_ctx,
    this->translation_unit.make_empty();
    this->symbols = new(mem_ctx) glsl_symbol_table;
 
-   this->linalloc = linear_alloc_parent(this, 0);
+   this->linalloc = linear_context(this);
 
    this->info_log = ralloc_strdup(mem_ctx, "");
    this->error = false;
@@ -317,6 +317,10 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *_ctx,
           sizeof(this->atomic_counter_offsets));
    this->allow_extension_directive_midshader =
       ctx->Const.AllowGLSLExtensionDirectiveMidShader;
+   this->alias_shader_extension =
+      ctx->Const.AliasShaderExtension;
+   this->allow_vertex_texture_bias =
+      ctx->Const.AllowVertexTextureBias;
    this->allow_glsl_120_subset_in_110 =
       ctx->Const.AllowGLSL120SubsetIn110;
    this->allow_builtin_variable_redeclaration =
@@ -815,16 +819,50 @@ void _mesa_glsl_extension::set_flags(_mesa_glsl_parse_state *state,
 }
 
 /**
+ * Check alias_shader_extension for any aliased shader extensions
+ */
+static const char *find_extension_alias(_mesa_glsl_parse_state *state, const char *name)
+{
+   char *exts, *field, *ext_alias = NULL;
+
+   /* Copy alias_shader_extension because strtok() is destructive. */
+   exts = strdup(state->alias_shader_extension);
+   if (exts) {
+      for (field = strtok(exts, ","); field != NULL; field = strtok(NULL, ",")) {
+         if(strncmp(name, field, strlen(name)) == 0) {
+            field = strstr(field, ":");
+            if(field) {
+               ext_alias = strdup(field + 1);
+            }
+            break;
+         }
+      }
+      
+      free(exts);
+   }
+   return ext_alias;
+}
+
+/**
  * Find an extension by name in _mesa_glsl_supported_extensions.  If
  * the name is not found, return NULL.
  */
-static const _mesa_glsl_extension *find_extension(const char *name)
+static const _mesa_glsl_extension *find_extension(_mesa_glsl_parse_state *state, const char *name)
 {
+   const char *ext_alias = NULL;
+   if (state->alias_shader_extension) {
+      ext_alias = find_extension_alias(state, name);
+      name = ext_alias ? ext_alias : name;
+   }
+   
    for (unsigned i = 0; i < ARRAY_SIZE(_mesa_glsl_supported_extensions); ++i) {
       if (strcmp(name, _mesa_glsl_supported_extensions[i].name) == 0) {
+         free((void *)ext_alias);
          return &_mesa_glsl_supported_extensions[i];
       }
    }
+
+   free((void *)ext_alias);
    return NULL;
 }
 
@@ -879,7 +917,7 @@ _mesa_glsl_process_extension(const char *name, YYLTYPE *name_locp,
          }
       }
    } else {
-      const _mesa_glsl_extension *extension = find_extension(name);
+      const _mesa_glsl_extension *extension = find_extension(state, name);
       if (extension &&
           (extension->compatible_with_state(state, api, gl_version) ||
            (state->consts->AllowGLSLCompatShaders &&
@@ -918,6 +956,56 @@ _mesa_glsl_process_extension(const char *name, YYLTYPE *name_locp,
    return true;
 }
 
+bool
+_mesa_glsl_can_implicitly_convert(const glsl_type *from, const glsl_type *desired,
+                                  _mesa_glsl_parse_state *state)
+{
+   if (from == desired)
+      return true;
+
+   /* GLSL 1.10 and ESSL do not allow implicit conversions. If there is no
+    * state, we're doing intra-stage function linking where these checks have
+    * already been done.
+    */
+   if (state && !state->has_implicit_conversions())
+      return false;
+
+   /* There is no conversion among matrix types. */
+   if (from->matrix_columns > 1 || desired->matrix_columns > 1)
+      return false;
+
+   /* Vector size must match. */
+   if (from->vector_elements != desired->vector_elements)
+      return false;
+
+   /* int and uint can be converted to float. */
+   if (desired->is_float() && from->is_integer_32())
+      return true;
+
+   /* With GLSL 4.0, ARB_gpu_shader5, or MESA_shader_integer_functions, int
+    * can be converted to uint.  Note that state may be NULL here, when
+    * resolving function calls in the linker. By this time, all the
+    * state-dependent checks have already happened though, so allow anything
+    * that's allowed in any shader version.
+    */
+   if ((!state || state->has_implicit_int_to_uint_conversion()) &&
+         desired->base_type == GLSL_TYPE_UINT && from->base_type == GLSL_TYPE_INT)
+      return true;
+
+   /* No implicit conversions from double. */
+   if ((!state || state->has_double()) && from->is_double())
+      return false;
+
+   /* Conversions from different types to double. */
+   if ((!state || state->has_double()) && desired->is_double()) {
+      if (from->is_float())
+         return true;
+      if (from->is_integer_32())
+         return true;
+   }
+
+   return false;
+}
 
 /**
  * Recurses through <type> and <expr> if <expr> is an aggregate initializer
@@ -1882,15 +1970,15 @@ set_shader_inout_layout(struct gl_shader *shader,
       }
 
       if (state->gs_input_prim_type_specified) {
-         shader->info.Geom.InputType = (enum shader_prim)state->in_qualifier->prim_type;
+         shader->info.Geom.InputType = (enum mesa_prim)state->in_qualifier->prim_type;
       } else {
-         shader->info.Geom.InputType = SHADER_PRIM_UNKNOWN;
+         shader->info.Geom.InputType = MESA_PRIM_UNKNOWN;
       }
 
       if (state->out_qualifier->flags.q.prim_type) {
-         shader->info.Geom.OutputType = (enum shader_prim)state->out_qualifier->prim_type;
+         shader->info.Geom.OutputType = (enum mesa_prim)state->out_qualifier->prim_type;
       } else {
-         shader->info.Geom.OutputType = SHADER_PRIM_UNKNOWN;
+         shader->info.Geom.OutputType = MESA_PRIM_UNKNOWN;
       }
 
       shader->info.Geom.Invocations = 0;
@@ -2020,11 +2108,11 @@ _mesa_glsl_copy_symbols_from_table(struct exec_list *shader_ir,
       const glsl_type *iface =
          src->get_interface("gl_PerVertex", ir_var_shader_in);
       if (iface)
-         dest->add_interface(iface->name, iface, ir_var_shader_in);
+         dest->add_interface(glsl_get_type_name(iface), iface, ir_var_shader_in);
 
       iface = src->get_interface("gl_PerVertex", ir_var_shader_out);
       if (iface)
-         dest->add_interface(iface->name, iface, ir_var_shader_out);
+         dest->add_interface(glsl_get_type_name(iface), iface, ir_var_shader_out);
    }
 }
 
@@ -2393,10 +2481,7 @@ do_common_optimization(exec_list *ir, bool linked,
    if (options->OptimizeForAOS && !linked)
       OPT(opt_flip_matrices, ir);
 
-   if (linked)
-      OPT(do_dead_code, ir);
-   else
-      OPT(do_dead_code_unlinked, ir);
+   OPT(do_dead_code_unlinked, ir);
    OPT(do_dead_code_local, ir);
    OPT(do_tree_grafting, ir);
    OPT(do_minmax_prune, ir);

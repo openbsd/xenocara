@@ -661,15 +661,32 @@ GFX9_GATHER_CONSTANT_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->ConstantBufferOffset, 8, 15);
 }
 
-#define GFX9_MEMORYADDRESSATTRIBUTES_length      1
-struct GFX9_MEMORYADDRESSATTRIBUTES {
-   uint32_t                             MOCS;
-   uint32_t                             ArbitrationPriorityControl;
+#define GFX9_HEVC_ARBITRATION_PRIORITY_length      1
+struct GFX9_HEVC_ARBITRATION_PRIORITY {
+   uint32_t                             Priority;
 #define Highestpriority                          0
 #define Secondhighestpriority                    1
 #define Thirdhighestpriority                     2
 #define Lowestpriority                           3
+};
+
+static inline __attribute__((always_inline)) void
+GFX9_HEVC_ARBITRATION_PRIORITY_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX9_HEVC_ARBITRATION_PRIORITY * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->Priority, 0, 1);
+}
+
+#define GFX9_MEMORYADDRESSATTRIBUTES_length      1
+struct GFX9_MEMORYADDRESSATTRIBUTES {
+   uint32_t                             MOCS;
+   struct GFX9_HEVC_ARBITRATION_PRIORITY ArbitrationPriorityControl;
    bool                                 MemoryCompressionEnable;
+   uint32_t                             MemoryCompressionMode;
    uint32_t                             RowStoreScratchBufferCacheSelect;
 #define LLC                                      0
 #define InternalMediaStorage                     1
@@ -686,10 +703,14 @@ GFX9_MEMORYADDRESSATTRIBUTES_pack(__attribute__((unused)) __gen_user_data *data,
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
+   uint32_t v0_0;
+   GFX9_HEVC_ARBITRATION_PRIORITY_pack(data, &v0_0, &values->ArbitrationPriorityControl);
+
    dw[0] =
-      util_bitpack_uint_nonzero(values->MOCS, 1, 6) |
-      util_bitpack_uint(values->ArbitrationPriorityControl, 7, 8) |
+      util_bitpack_uint_nonzero(values->MOCS, 0, 6) |
+      util_bitpack_uint(v0_0, 7, 8) |
       util_bitpack_uint(values->MemoryCompressionEnable, 9, 9) |
+      util_bitpack_uint(values->MemoryCompressionMode, 10, 10) |
       util_bitpack_uint(values->RowStoreScratchBufferCacheSelect, 12, 12) |
       util_bitpack_uint(values->TiledResourceMode, 13, 14);
 }
@@ -775,9 +796,9 @@ GFX9_HCP_TILE_POSITION_IN_CTB_pack(__attribute__((unused)) __gen_user_data *data
 
 #define GFX9_HCP_WEIGHTOFFSET_CHROMA_ENTRY_length      1
 struct GFX9_HCP_WEIGHTOFFSET_CHROMA_ENTRY {
-   int32_t                              DeltaChromaWeightLX0;
+   uint32_t                             DeltaChromaWeightLX0;
    uint32_t                             ChromaOffsetLX0;
-   int32_t                              DeltaChromaWeightLX1;
+   uint32_t                             DeltaChromaWeightLX1;
    uint32_t                             ChromaOffsetLX1;
 };
 
@@ -789,15 +810,15 @@ GFX9_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(__attribute__((unused)) __gen_user_data 
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      util_bitpack_sint(values->DeltaChromaWeightLX0, 0, 7) |
+      util_bitpack_uint(values->DeltaChromaWeightLX0, 0, 7) |
       util_bitpack_uint(values->ChromaOffsetLX0, 8, 15) |
-      util_bitpack_sint(values->DeltaChromaWeightLX1, 16, 23) |
+      util_bitpack_uint(values->DeltaChromaWeightLX1, 16, 23) |
       util_bitpack_uint(values->ChromaOffsetLX1, 24, 31);
 }
 
 #define GFX9_HCP_WEIGHTOFFSET_LUMA_ENTRY_length      1
 struct GFX9_HCP_WEIGHTOFFSET_LUMA_ENTRY {
-   int32_t                              DeltaLumaWeightLX;
+   uint32_t                             DeltaLumaWeightLX;
    uint32_t                             LumaOffsetLX;
 };
 
@@ -809,28 +830,8 @@ GFX9_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(__attribute__((unused)) __gen_user_data *d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      util_bitpack_sint(values->DeltaLumaWeightLX, 0, 7) |
+      util_bitpack_uint(values->DeltaLumaWeightLX, 0, 7) |
       util_bitpack_uint(values->LumaOffsetLX, 8, 15);
-}
-
-#define GFX9_HEVC_ARBITRATION_PRIORITY_length      1
-struct GFX9_HEVC_ARBITRATION_PRIORITY {
-   uint32_t                             Priority;
-#define Highestpriority                          0
-#define Secondhighestpriority                    1
-#define Thirdhighestpriority                     2
-#define Lowestpriority                           3
-};
-
-static inline __attribute__((always_inline)) void
-GFX9_HEVC_ARBITRATION_PRIORITY_pack(__attribute__((unused)) __gen_user_data *data,
-                                    __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GFX9_HEVC_ARBITRATION_PRIORITY * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      util_bitpack_uint(values->Priority, 0, 1);
 }
 
 #define GFX9_HEVC_VP9_RDOQ_LAMBDA_FIELDS_length      1
@@ -2502,7 +2503,7 @@ GFX9_VDENC_SURFACE_CONTROL_BITS_pack(__attribute__((unused)) __gen_user_data *da
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      util_bitpack_uint_nonzero(values->MOCS, 1, 6) |
+      util_bitpack_uint_nonzero(values->MOCS, 0, 6) |
       util_bitpack_uint(values->ArbitrationPriorityControl, 7, 8) |
       util_bitpack_uint(values->MemoryCompressionEnable, 9, 9) |
       util_bitpack_uint(values->MemoryCompressionMode, 10, 10) |
@@ -4660,7 +4661,8 @@ GFX9_3DSTATE_MONOFILTER_SIZE_pack(__attribute__((unused)) __gen_user_data *data,
    ._3DCommandSubOpcode                 =     13,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
-   .CommandType                         =      3
+   .CommandType                         =      3,  \
+   .PixelPositionOffsetEnable           =      0
 
 struct GFX9_3DSTATE_MULTISAMPLE {
    uint32_t                             DWordLength;
@@ -7730,6 +7732,7 @@ GFX9_GPGPU_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
 #define GFX9_HCP_BSD_OBJECT_length             3
 #define GFX9_HCP_BSD_OBJECT_length_bias        2
 #define GFX9_HCP_BSD_OBJECT_header              \
+   .DWordLength                         =      1,  \
    .SubOpcode                           =     32,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -7948,6 +7951,7 @@ GFX9_HCP_FQM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
 #define GFX9_HCP_IND_OBJ_BASE_ADDR_STATE_length     14
 #define GFX9_HCP_IND_OBJ_BASE_ADDR_STATE_length_bias      2
 #define GFX9_HCP_IND_OBJ_BASE_ADDR_STATE_header \
+   .DWordLength                         =     12,  \
    .SubOpcode                           =      3,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -8120,9 +8124,10 @@ GFX9_HCP_PAK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->LastLCUofSlice, 31, 31);
 }
 
-#define GFX9_HCP_PIC_STATE_length              2
+#define GFX9_HCP_PIC_STATE_length             32
 #define GFX9_HCP_PIC_STATE_length_bias         2
 #define GFX9_HCP_PIC_STATE_header               \
+   .DWordLength                         =     30,  \
    .SubOpcode                           =     16,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -8248,11 +8253,115 @@ GFX9_HCP_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->FrameWidthInMinimumCodingBlockSize, 0, 9) |
       util_bitpack_uint(values->PAKTransformSkipEnable, 15, 15) |
       util_bitpack_uint(values->FrameHeightInMinimumCodingBlockSize, 16, 25);
+
+   dw[2] =
+      util_bitpack_uint(values->MinCUSize, 0, 1) |
+      util_bitpack_uint(values->LCUSize, 2, 3) |
+      util_bitpack_uint(values->MinTUSize, 4, 5) |
+      util_bitpack_uint(values->MaxTUSize, 6, 7) |
+      util_bitpack_uint(values->MinPCMSize, 8, 9) |
+      util_bitpack_uint(values->MaxPCMSize, 10, 11);
+
+   dw[3] =
+      util_bitpack_uint(values->CollocatedPictureIsISlice, 0, 0) |
+      util_bitpack_uint(values->CurrentPictureIsISlice, 1, 1) |
+      util_bitpack_uint(values->CABACZeroWordInsertionTestEnable, 2, 2);
+
+   dw[4] =
+      util_bitpack_uint(values->SampleAdaptiveOffsetEnable, 3, 3) |
+      util_bitpack_uint(values->PCMEnable, 4, 4) |
+      util_bitpack_uint(values->CUQPDeltaEnable, 5, 5) |
+      util_bitpack_uint(values->MaxDQPDepth, 6, 7) |
+      util_bitpack_uint(values->PCMLoopFilterDisable, 8, 8) |
+      util_bitpack_uint(values->ConstrainedIntraPrediction, 9, 9) |
+      util_bitpack_uint(values->Log2ParallelMergeLevel, 10, 12) |
+      util_bitpack_uint(values->SignDataHiding, 13, 13) |
+      util_bitpack_uint(values->LoopFilterEnable, 15, 15) |
+      util_bitpack_uint(values->EntropyCodingSyncEnable, 16, 16) |
+      util_bitpack_uint(values->TilingEnable, 17, 17) |
+      util_bitpack_uint(values->WeightedBiPredicationEnable, 18, 18) |
+      util_bitpack_uint(values->WeightedPredicationEnable, 19, 19) |
+      util_bitpack_uint(values->FieldPic, 20, 20) |
+      util_bitpack_uint(values->TopField, 21, 21) |
+      util_bitpack_uint(values->TransformSkipEnable, 22, 22) |
+      util_bitpack_uint(values->AMPEnable, 23, 23) |
+      util_bitpack_uint(values->TransquantBypassEnable, 25, 25) |
+      util_bitpack_uint(values->StrongIntraSmoothingEnable, 26, 26) |
+      util_bitpack_uint(values->CUPacketStructure, 27, 27);
+
+   dw[5] =
+      util_bitpack_sint(values->PictureCbQPOffset, 0, 4) |
+      util_bitpack_sint(values->PictureCrQPOffset, 5, 9) |
+      util_bitpack_uint(values->IntraMaxTransformHierarchyDepth, 10, 12) |
+      util_bitpack_uint(values->InterMaxTransformHierarchyDepth, 13, 15) |
+      util_bitpack_uint(values->ChromaPCMSampleBitDepth, 16, 19) |
+      util_bitpack_uint(values->LumaPCMSampleBitDepth, 20, 23) |
+      util_bitpack_uint(values->ChromaBitDepth, 24, 26) |
+      util_bitpack_uint(values->LumaBitDepth, 27, 29);
+
+   dw[6] =
+      util_bitpack_uint(values->LCUMaxBitSizeAllowed, 0, 15) |
+      util_bitpack_uint(values->NonFirstPass, 16, 16) |
+      util_bitpack_uint(values->LCUMaxSizeReport, 24, 24) |
+      util_bitpack_uint(values->FrameBitrateMaxReport, 25, 25) |
+      util_bitpack_uint(values->FrameBitrateMinReport, 26, 26) |
+      util_bitpack_uint(values->LoadBitstreamPointerPerSlice, 29, 29);
+
+   dw[7] =
+      util_bitpack_uint(values->FrameBitrateMax, 0, 13) |
+      util_bitpack_uint(values->FrameBitrateMaxUnit, 31, 31);
+
+   dw[8] =
+      util_bitpack_uint(values->FrameBitrateMin, 0, 13) |
+      util_bitpack_uint(values->FrameBitrateMinUnit, 31, 31);
+
+   dw[9] =
+      util_bitpack_uint(values->FrameBitrateMinDelta, 0, 14) |
+      util_bitpack_uint(values->FrameBitrateMaxDelta, 16, 30);
+
+   GFX9_FRAMEDELTAQP_pack(data, &dw[10], &values->FrameDeltaQPMax);
+
+   GFX9_FRAMEDELTAQP_pack(data, &dw[12], &values->FrameDeltaQPMin);
+
+   GFX9_FRAMEDELTAQPRANGE_pack(data, &dw[14], &values->FrameDeltaQPMaxRange);
+
+   GFX9_FRAMEDELTAQPRANGE_pack(data, &dw[16], &values->FrameDeltaQPMinRange);
+
+   dw[18] =
+      util_bitpack_uint(values->MinimumFrameSize, 0, 15) |
+      util_bitpack_uint(values->MinimumFrameSizeUnits, 30, 31);
+
+   dw[19] = 0;
+
+   dw[20] = 0;
+
+   dw[21] = 0;
+
+   dw[22] = 0;
+
+   dw[23] = 0;
+
+   dw[24] = 0;
+
+   dw[25] = 0;
+
+   dw[26] = 0;
+
+   dw[27] = 0;
+
+   dw[28] = 0;
+
+   dw[29] = 0;
+
+   dw[30] = 0;
+
+   dw[31] = 0;
 }
 
-#define GFX9_HCP_PIPE_BUF_ADDR_STATE_length     95
+#define GFX9_HCP_PIPE_BUF_ADDR_STATE_length    104
 #define GFX9_HCP_PIPE_BUF_ADDR_STATE_length_bias      2
 #define GFX9_HCP_PIPE_BUF_ADDR_STATE_header     \
+   .DWordLength                         =    102,  \
    .SubOpcode                           =      2,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -8302,10 +8411,10 @@ struct GFX9_HCP_PIPE_BUF_ADDR_STATE {
    struct GFX9_MEMORYADDRESSATTRIBUTES  VP9ProbabilityBufferMemoryAddressAttributes;
    uint64_t                             VP9SegmentIDBufferAddress;
    struct GFX9_MEMORYADDRESSATTRIBUTES  VP9SegmentIDBufferMemoryAddressAttributes;
-   __gen_address_type                   VP9HVDLineRowstoreBufferAddress;
-   struct GFX9_MEMORYADDRESSATTRIBUTES  VP9HVDLineRowstoreBufferMemoryAddressAttributes;
-   __gen_address_type                   VP9HVDTileRowstoreBufferAddress;
-   struct GFX9_MEMORYADDRESSATTRIBUTES  VP9HVDTileRowstoreBufferMemoryAddressAttributes;
+   __gen_address_type                   VP9HVDLineRowStoreBufferAddress;
+   struct GFX9_MEMORYADDRESSATTRIBUTES  VP9HVDLineRowStoreBufferMemoryAddressAttributes;
+   __gen_address_type                   VP9HVDTileRowStoreBufferAddress;
+   struct GFX9_MEMORYADDRESSATTRIBUTES  VP9HVDTileRowStoreBufferMemoryAddressAttributes;
 };
 
 static inline __attribute__((always_inline)) void
@@ -8532,23 +8641,42 @@ GFX9_HCP_PIPE_BUF_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX9_MEMORYADDRESSATTRIBUTES_pack(data, &dw[88], &values->VP9SegmentIDBufferMemoryAddressAttributes);
 
    const uint64_t v89_address =
-      __gen_address(data, &dw[89], values->VP9HVDLineRowstoreBufferAddress, 0, 0, 63);
+      __gen_address(data, &dw[89], values->VP9HVDLineRowStoreBufferAddress, 0, 0, 63);
    dw[89] = v89_address;
    dw[90] = v89_address >> 32;
 
-   GFX9_MEMORYADDRESSATTRIBUTES_pack(data, &dw[91], &values->VP9HVDLineRowstoreBufferMemoryAddressAttributes);
+   GFX9_MEMORYADDRESSATTRIBUTES_pack(data, &dw[91], &values->VP9HVDLineRowStoreBufferMemoryAddressAttributes);
 
    const uint64_t v92_address =
-      __gen_address(data, &dw[92], values->VP9HVDTileRowstoreBufferAddress, 0, 0, 63);
+      __gen_address(data, &dw[92], values->VP9HVDTileRowStoreBufferAddress, 0, 0, 63);
    dw[92] = v92_address;
    dw[93] = v92_address >> 32;
 
-   GFX9_MEMORYADDRESSATTRIBUTES_pack(data, &dw[94], &values->VP9HVDTileRowstoreBufferMemoryAddressAttributes);
+   GFX9_MEMORYADDRESSATTRIBUTES_pack(data, &dw[94], &values->VP9HVDTileRowStoreBufferMemoryAddressAttributes);
+
+   dw[95] = 0;
+
+   dw[96] = 0;
+
+   dw[97] = 0;
+
+   dw[98] = 0;
+
+   dw[99] = 0;
+
+   dw[100] = 0;
+
+   dw[101] = 0;
+
+   dw[102] = 0;
+
+   dw[103] = 0;
 }
 
-#define GFX9_HCP_PIPE_MODE_SELECT_length       4
+#define GFX9_HCP_PIPE_MODE_SELECT_length       6
 #define GFX9_HCP_PIPE_MODE_SELECT_length_bias      2
 #define GFX9_HCP_PIPE_MODE_SELECT_header        \
+   .DWordLength                         =      4,  \
    .SubOpcode                           =      0,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -8573,6 +8701,7 @@ struct GFX9_HCP_PIPE_MODE_SELECT {
    bool                                 PAKFrameLevelStreamOutEnable;
    uint32_t                             MediaSoftResetCounter;
    uint32_t                             PicStatusErrorReportID;
+   bool                                 HprVp9ModeSwitchEcoDisable;
 };
 
 static inline __attribute__((always_inline)) void
@@ -8603,11 +8732,17 @@ GFX9_HCP_PIPE_MODE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[3] =
       util_bitpack_uint(values->PicStatusErrorReportID, 0, 31);
+
+   dw[4] =
+      util_bitpack_uint(values->HprVp9ModeSwitchEcoDisable, 6, 6);
+
+   dw[5] = 0;
 }
 
-#define GFX9_HCP_QM_STATE_length              34
+#define GFX9_HCP_QM_STATE_length              18
 #define GFX9_HCP_QM_STATE_length_bias          2
 #define GFX9_HCP_QM_STATE_header                \
+   .DWordLength                         =     16,  \
    .SubOpcode                           =      4,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -8750,43 +8885,12 @@ GFX9_HCP_QM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->QuantizerMatrix8x8[61], 8, 15) |
       util_bitpack_uint(values->QuantizerMatrix8x8[62], 16, 23) |
       util_bitpack_uint(values->QuantizerMatrix8x8[63], 24, 31);
-
-   dw[18] = 0;
-
-   dw[19] = 0;
-
-   dw[20] = 0;
-
-   dw[21] = 0;
-
-   dw[22] = 0;
-
-   dw[23] = 0;
-
-   dw[24] = 0;
-
-   dw[25] = 0;
-
-   dw[26] = 0;
-
-   dw[27] = 0;
-
-   dw[28] = 0;
-
-   dw[29] = 0;
-
-   dw[30] = 0;
-
-   dw[31] = 0;
-
-   dw[32] = 0;
-
-   dw[33] = 0;
 }
 
 #define GFX9_HCP_REF_IDX_STATE_length         18
 #define GFX9_HCP_REF_IDX_STATE_length_bias      2
 #define GFX9_HCP_REF_IDX_STATE_header           \
+   .DWordLength                         =     16,  \
    .SubOpcode                           =     18,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -8854,9 +8958,10 @@ GFX9_HCP_REF_IDX_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX9_HCP_REF_LIST_ENTRY_pack(data, &dw[17], &values->ReferenceListEntry[15]);
 }
 
-#define GFX9_HCP_SLICE_STATE_length            2
+#define GFX9_HCP_SLICE_STATE_length           11
 #define GFX9_HCP_SLICE_STATE_length_bias       2
 #define GFX9_HCP_SLICE_STATE_header             \
+   .DWordLength                         =      9,  \
    .SubOpcode                           =     20,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -8907,7 +9012,6 @@ struct GFX9_HCP_SLICE_STATE {
 #define _3                                       29
 #define _2                                       30
 #define _1                                       31
-   bool                                 LastSliceofTile;
    bool                                 SliceHeaderDisableDeblockingFilter;
    int32_t                              SliceTCOffsetDiv2;
    int32_t                              SliceBetaOffsetDiv2;
@@ -8987,11 +9091,68 @@ GFX9_HCP_SLICE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] =
       util_bitpack_uint(values->SliceHorizontalPosition, 0, 8) |
       util_bitpack_uint(values->SliceVerticalPosition, 16, 24);
+
+   dw[2] =
+      util_bitpack_uint(values->NextSliceHorizontalPosition, 0, 8) |
+      util_bitpack_uint(values->NextSliceVerticalPosition, 16, 24);
+
+   dw[3] =
+      util_bitpack_uint(values->SliceType, 0, 1) |
+      util_bitpack_uint(values->LastSlice, 2, 2) |
+      util_bitpack_uint(values->SliceQPSign, 3, 3) |
+      util_bitpack_uint(values->DependentSlice, 4, 4) |
+      util_bitpack_uint(values->SliceTemporalMVPEnable, 5, 5) |
+      util_bitpack_uint(values->SliceQP, 6, 11) |
+      util_bitpack_sint(values->SliceCbQPOffset, 12, 16) |
+      util_bitpack_sint(values->SliceCrQPOffset, 17, 21);
+
+   dw[4] =
+      util_bitpack_uint(values->SliceHeaderDisableDeblockingFilter, 0, 0) |
+      util_bitpack_sint(values->SliceTCOffsetDiv2, 1, 4) |
+      util_bitpack_sint(values->SliceBetaOffsetDiv2, 5, 8) |
+      util_bitpack_uint(values->SliceLoopFilterEnable, 10, 10) |
+      util_bitpack_uint(values->SliceSAOChroma, 11, 11) |
+      util_bitpack_uint(values->SliceSAOLuma, 12, 12) |
+      util_bitpack_uint(values->MVDL1Zero, 13, 13) |
+      util_bitpack_uint(values->LowDelay, 14, 14) |
+      util_bitpack_uint(values->CollocatedFromL0, 15, 15) |
+      util_bitpack_uint(values->Log2WeightDenominatorChroma, 16, 18) |
+      util_bitpack_uint(values->Log2WeightDenominatorLuma, 19, 21) |
+      util_bitpack_uint(values->CABACInit, 22, 22) |
+      util_bitpack_uint(values->MaxMergeIndex, 23, 25) |
+      util_bitpack_uint(values->CollocatedMVTemporalBufferIndex, 26, 28);
+
+   dw[5] =
+      util_bitpack_uint(values->SliceHeaderLength, 0, 15);
+
+   dw[6] =
+      util_bitpack_uint(values->RoundIntra, 20, 23) |
+      util_bitpack_uint(values->RoundInter, 26, 29);
+
+   dw[7] =
+      util_bitpack_uint(values->CABACZeroWordInsertionEnable, 1, 1) |
+      util_bitpack_uint(values->EmulationByteSliceInsertEnable, 2, 2) |
+      util_bitpack_uint(values->TailInsertionPresent, 8, 8) |
+      util_bitpack_uint(values->SliceDataInsertionPresent, 9, 9) |
+      util_bitpack_uint(values->HeaderInsertionPresent, 10, 10);
+
+   dw[8] =
+      __gen_offset(values->IndirectPAKBSEDataStartOffset, 6, 28);
+
+   dw[9] =
+      util_bitpack_uint(values->TransformSkipLambda, 0, 15);
+
+   dw[10] =
+      util_bitpack_uint(values->TransformSkipNumberofZeroCoeffsFactor0, 0, 7) |
+      util_bitpack_uint(values->TransformSkipNumberofNonZeroCoeffsFactor0, 8, 15) |
+      util_bitpack_uint(values->TransformSkipNumberofZeroCoeffsFactor1, 16, 23) |
+      util_bitpack_uint(values->TransformSkipNumberofNonZeroCoeffsFactor1, 24, 31);
 }
 
 #define GFX9_HCP_SURFACE_STATE_length          3
 #define GFX9_HCP_SURFACE_STATE_length_bias      2
 #define GFX9_HCP_SURFACE_STATE_header           \
+   .DWordLength                         =      1,  \
    .SubOpcode                           =      1,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -9074,6 +9235,7 @@ GFX9_HCP_TILE_CODING_pack(__attribute__((unused)) __gen_user_data *data,
 #define GFX9_HCP_TILE_STATE_length            13
 #define GFX9_HCP_TILE_STATE_length_bias        2
 #define GFX9_HCP_TILE_STATE_header              \
+   .DWordLength                         =     11,  \
    .MediaInstructionCommand             =     17,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -9330,6 +9492,7 @@ GFX9_HCP_VP9_SEGMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
 #define GFX9_HCP_WEIGHTOFFSET_STATE_length     34
 #define GFX9_HCP_WEIGHTOFFSET_STATE_length_bias      2
 #define GFX9_HCP_WEIGHTOFFSET_STATE_header      \
+   .DWordLength                         =     32,  \
    .SubOpcode                           =     19,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -13236,7 +13399,7 @@ GFX9_MFX_DBK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[2] = v1_address >> 32;
 
    dw[3] =
-      util_bitpack_uint_nonzero(values->PreDeblockingSourceMOCS, 1, 6) |
+      util_bitpack_uint_nonzero(values->PreDeblockingSourceMOCS, 0, 6) |
       util_bitpack_uint(values->PreDeblockingSourceArbitrationPriorityControl, 7, 8) |
       util_bitpack_uint(values->PreDeblockingSourceMemoryCompressionEnable, 9, 9) |
       util_bitpack_uint(values->PreDeblockingSourceMemoryCompressionMode, 10, 10) |
@@ -13248,7 +13411,7 @@ GFX9_MFX_DBK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[5] = v4_address >> 32;
 
    dw[6] =
-      util_bitpack_uint_nonzero(values->DeblockingControlMOCS, 1, 6) |
+      util_bitpack_uint_nonzero(values->DeblockingControlMOCS, 0, 6) |
       util_bitpack_uint(values->DeblockingControlArbitrationPriorityControl, 7, 8) |
       util_bitpack_uint(values->DeblockingControlMemoryCompressionEnable, 9, 9) |
       util_bitpack_uint(values->DeblockingControlMemoryCompressionMode, 10, 10) |
@@ -13260,7 +13423,7 @@ GFX9_MFX_DBK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[8] = v7_address >> 32;
 
    dw[9] =
-      util_bitpack_uint_nonzero(values->DeblockingDestinationMOCS, 1, 6) |
+      util_bitpack_uint_nonzero(values->DeblockingDestinationMOCS, 0, 6) |
       util_bitpack_uint(values->DeblockingDestinationArbitrationPriorityControl, 7, 8) |
       util_bitpack_uint(values->DeblockingDestinationMemoryCompressionEnable, 9, 9) |
       util_bitpack_uint(values->DeblockingDestinationMemoryCompressionMode, 10, 10) |
@@ -13272,7 +13435,7 @@ GFX9_MFX_DBK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[11] = v10_address >> 32;
 
    dw[12] =
-      util_bitpack_uint_nonzero(values->CoeffProbabilityStreamInMOCS, 1, 6) |
+      util_bitpack_uint_nonzero(values->CoeffProbabilityStreamInMOCS, 0, 6) |
       util_bitpack_uint(values->DeblockRowStoreArbitrationPriorityControl, 7, 8) |
       util_bitpack_uint(values->DeblockRowStoreMemoryCompressionEnable, 9, 9) |
       util_bitpack_uint(values->DeblockRowStoreMemoryCompressionMode, 10, 10) |
@@ -19089,7 +19252,7 @@ GFX9_SFC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX9_HEVC_ARBITRATION_PRIORITY_pack(data, &v19_0, &values->OutputFrameArbitrationPriorityControl);
 
    dw[19] =
-      util_bitpack_uint_nonzero(values->OutputFrameMOCS, 1, 6) |
+      util_bitpack_uint_nonzero(values->OutputFrameMOCS, 0, 6) |
       util_bitpack_uint(v19_0, 7, 8) |
       util_bitpack_uint(values->OutputFrameMemoryCompressionEnable, 9, 9) |
       util_bitpack_uint(values->OutputFrameMemoryCompressionMode, 10, 10) |
@@ -19105,7 +19268,7 @@ GFX9_SFC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX9_HEVC_ARBITRATION_PRIORITY_pack(data, &v22_0, &values->AVSLineBufferArbitrationPriorityControl);
 
    dw[22] =
-      util_bitpack_uint_nonzero(values->AVSLineBufferMOCS, 1, 6) |
+      util_bitpack_uint_nonzero(values->AVSLineBufferMOCS, 0, 6) |
       util_bitpack_uint(v22_0, 7, 8) |
       util_bitpack_uint(values->AVSLineBufferMemoryCompressionEnable, 9, 9) |
       util_bitpack_uint(values->AVSLineBufferMemoryCompressionMode, 10, 10) |
@@ -19121,7 +19284,7 @@ GFX9_SFC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX9_HEVC_ARBITRATION_PRIORITY_pack(data, &v25_0, &values->IEFLineBufferArbitrationPriorityControl);
 
    dw[25] =
-      util_bitpack_uint_nonzero(values->IEFLineBufferMOCS, 1, 6) |
+      util_bitpack_uint_nonzero(values->IEFLineBufferMOCS, 0, 6) |
       util_bitpack_uint(v25_0, 7, 8) |
       util_bitpack_uint(values->IEFLineBufferMemoryCompressionEnable, 9, 9) |
       util_bitpack_uint(values->IEFLineBufferMemoryCompressionMode, 10, 10) |

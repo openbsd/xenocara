@@ -6015,31 +6015,20 @@ _mesa_glthread_init_dispatch3(struct gl_context *ctx, struct _glapi_table *table
    }
    if (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 30)) {
       SET_BindFragDataLocationIndexed(table, _mesa_marshal_BindFragDataLocationIndexed);
-      SET_BindSampler(table, _mesa_marshal_BindSampler);
       SET_BlendEquationSeparateiARB(table, _mesa_marshal_BlendEquationSeparateiARB);
       SET_BlendEquationiARB(table, _mesa_marshal_BlendEquationiARB);
       SET_BlendFuncSeparateiARB(table, _mesa_marshal_BlendFuncSeparateiARB);
       SET_BlendFunciARB(table, _mesa_marshal_BlendFunciARB);
       SET_BlitFramebuffer(table, _mesa_marshal_BlitFramebuffer);
-      SET_ClientWaitSync(table, _mesa_marshal_ClientWaitSync);
       SET_CopyBufferSubData(table, _mesa_marshal_CopyBufferSubData);
-      SET_DeleteSamplers(table, _mesa_marshal_DeleteSamplers);
-      SET_DeleteSync(table, _mesa_marshal_DeleteSync);
-      SET_FenceSync(table, _mesa_marshal_FenceSync);
-      SET_GenSamplers(table, _mesa_marshal_GenSamplers);
       SET_GetActiveUniformBlockName(table, _mesa_marshal_GetActiveUniformBlockName);
       SET_GetActiveUniformBlockiv(table, _mesa_marshal_GetActiveUniformBlockiv);
       SET_GetActiveUniformsiv(table, _mesa_marshal_GetActiveUniformsiv);
       SET_GetFragDataIndex(table, _mesa_marshal_GetFragDataIndex);
       SET_GetSamplerParameterIiv(table, _mesa_marshal_GetSamplerParameterIiv);
       SET_GetSamplerParameterIuiv(table, _mesa_marshal_GetSamplerParameterIuiv);
-      SET_GetSamplerParameterfv(table, _mesa_marshal_GetSamplerParameterfv);
-      SET_GetSamplerParameteriv(table, _mesa_marshal_GetSamplerParameteriv);
-      SET_GetSynciv(table, _mesa_marshal_GetSynciv);
       SET_GetUniformBlockIndex(table, _mesa_marshal_GetUniformBlockIndex);
       SET_GetUniformIndices(table, _mesa_marshal_GetUniformIndices);
-      SET_IsSampler(table, _mesa_marshal_IsSampler);
-      SET_IsSync(table, _mesa_marshal_IsSync);
       SET_MinSampleShading(table, _mesa_marshal_MinSampleShading);
       SET_ProgramUniform1ui(table, _mesa_marshal_ProgramUniform1ui);
       SET_ProgramUniform1uiv(table, _mesa_marshal_ProgramUniform1uiv);
@@ -6051,12 +6040,7 @@ _mesa_glthread_init_dispatch3(struct gl_context *ctx, struct _glapi_table *table
       SET_ProgramUniform4uiv(table, _mesa_marshal_ProgramUniform4uiv);
       SET_SamplerParameterIiv(table, _mesa_marshal_SamplerParameterIiv);
       SET_SamplerParameterIuiv(table, _mesa_marshal_SamplerParameterIuiv);
-      SET_SamplerParameterf(table, _mesa_marshal_SamplerParameterf);
-      SET_SamplerParameterfv(table, _mesa_marshal_SamplerParameterfv);
-      SET_SamplerParameteri(table, _mesa_marshal_SamplerParameteri);
-      SET_SamplerParameteriv(table, _mesa_marshal_SamplerParameteriv);
       SET_UniformBlockBinding(table, _mesa_marshal_UniformBlockBinding);
-      SET_WaitSync(table, _mesa_marshal_WaitSync);
    }
    if (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 31)) {
       SET_GetMultisamplefv(table, _mesa_marshal_GetMultisamplefv);
@@ -6064,27 +6048,39 @@ _mesa_glthread_init_dispatch3(struct gl_context *ctx, struct _glapi_table *table
       SET_SampleMaski(table, _mesa_marshal_SampleMaski);
    }
    if (_mesa_is_desktop_gl(ctx) || _mesa_is_gles1(ctx) || _mesa_is_gles2(ctx)) {
+      SET_ClientWaitSync(table, _mesa_marshal_ClientWaitSync);
+      SET_DeleteSync(table, _mesa_marshal_DeleteSync);
+      SET_FenceSync(table, _mesa_marshal_FenceSync);
       SET_FlushMappedBufferRange(table, _mesa_marshal_FlushMappedBufferRange);
       SET_FramebufferRenderbuffer(table, _mesa_marshal_FramebufferRenderbuffer);
       SET_GenerateMipmap(table, _mesa_marshal_GenerateMipmap);
       SET_GetFramebufferAttachmentParameteriv(table, _mesa_marshal_GetFramebufferAttachmentParameteriv);
+      SET_GetInteger64v(table, _mesa_marshal_GetInteger64v);
+      SET_GetSynciv(table, _mesa_marshal_GetSynciv);
+      SET_IsSync(table, _mesa_marshal_IsSync);
       SET_MapBufferRange(table, _mesa_marshal_MapBufferRange);
+      SET_WaitSync(table, _mesa_marshal_WaitSync);
    }
    if (_mesa_is_desktop_gl(ctx) || _mesa_is_gles2(ctx)) {
       SET_ActiveShaderProgram(table, _mesa_marshal_ActiveShaderProgram);
       SET_BindProgramPipeline(table, _mesa_marshal_BindProgramPipeline);
+      SET_BindSampler(table, _mesa_marshal_BindSampler);
       SET_BindVertexArray(table, _mesa_marshal_BindVertexArray);
       SET_CreateShaderProgramv(table, _mesa_marshal_CreateShaderProgramv);
       SET_DeleteProgramPipelines(table, _mesa_marshal_DeleteProgramPipelines);
+      SET_DeleteSamplers(table, _mesa_marshal_DeleteSamplers);
       SET_DeleteVertexArrays(table, _mesa_marshal_DeleteVertexArrays);
       SET_GenProgramPipelines(table, _mesa_marshal_GenProgramPipelines);
+      SET_GenSamplers(table, _mesa_marshal_GenSamplers);
       SET_GenVertexArrays(table, _mesa_marshal_GenVertexArrays);
-      SET_GetInteger64v(table, _mesa_marshal_GetInteger64v);
       SET_GetProgramPipelineInfoLog(table, _mesa_marshal_GetProgramPipelineInfoLog);
       SET_GetProgramPipelineiv(table, _mesa_marshal_GetProgramPipelineiv);
       SET_GetQueryObjecti64v(table, _mesa_marshal_GetQueryObjecti64v);
       SET_GetQueryObjectui64v(table, _mesa_marshal_GetQueryObjectui64v);
+      SET_GetSamplerParameterfv(table, _mesa_marshal_GetSamplerParameterfv);
+      SET_GetSamplerParameteriv(table, _mesa_marshal_GetSamplerParameteriv);
       SET_IsProgramPipeline(table, _mesa_marshal_IsProgramPipeline);
+      SET_IsSampler(table, _mesa_marshal_IsSampler);
       SET_IsVertexArray(table, _mesa_marshal_IsVertexArray);
       SET_ProgramUniform1f(table, _mesa_marshal_ProgramUniform1f);
       SET_ProgramUniform1fv(table, _mesa_marshal_ProgramUniform1fv);
@@ -6112,6 +6108,10 @@ _mesa_glthread_init_dispatch3(struct gl_context *ctx, struct _glapi_table *table
       SET_ProgramUniformMatrix4x2fv(table, _mesa_marshal_ProgramUniformMatrix4x2fv);
       SET_ProgramUniformMatrix4x3fv(table, _mesa_marshal_ProgramUniformMatrix4x3fv);
       SET_QueryCounter(table, _mesa_marshal_QueryCounter);
+      SET_SamplerParameterf(table, _mesa_marshal_SamplerParameterf);
+      SET_SamplerParameterfv(table, _mesa_marshal_SamplerParameterfv);
+      SET_SamplerParameteri(table, _mesa_marshal_SamplerParameteri);
+      SET_SamplerParameteriv(table, _mesa_marshal_SamplerParameteriv);
       SET_UseProgramStages(table, _mesa_marshal_UseProgramStages);
       SET_ValidateProgramPipeline(table, _mesa_marshal_ValidateProgramPipeline);
       SET_VertexAttribDivisor(table, _mesa_marshal_VertexAttribDivisor);

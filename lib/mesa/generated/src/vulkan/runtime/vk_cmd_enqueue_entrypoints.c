@@ -5877,6 +5877,59 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 
 #endif
 
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesKHR* pProperties) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesKHR* pProperties) __attribute__ ((weak));
+
+#endif
+
 
 const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_physical_device_entrypoints = {
     .GetPhysicalDeviceProperties = vk_cmd_enqueue_GetPhysicalDeviceProperties,
@@ -5998,6 +6051,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_physical_device_
     .AcquireDrmDisplayEXT = vk_cmd_enqueue_AcquireDrmDisplayEXT,
     .GetDrmDisplayEXT = vk_cmd_enqueue_GetDrmDisplayEXT,
     .GetPhysicalDeviceOpticalFlowImageFormatsNV = vk_cmd_enqueue_GetPhysicalDeviceOpticalFlowImageFormatsNV,
+    .GetPhysicalDeviceCooperativeMatrixPropertiesKHR = vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesKHR,
 };
 const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_physical_device_entrypoints = {
     .GetPhysicalDeviceProperties = vk_cmd_enqueue_unless_primary_GetPhysicalDeviceProperties,
@@ -6119,6 +6173,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
     .AcquireDrmDisplayEXT = vk_cmd_enqueue_unless_primary_AcquireDrmDisplayEXT,
     .GetDrmDisplayEXT = vk_cmd_enqueue_unless_primary_GetDrmDisplayEXT,
     .GetPhysicalDeviceOpticalFlowImageFormatsNV = vk_cmd_enqueue_unless_primary_GetPhysicalDeviceOpticalFlowImageFormatsNV,
+    .GetPhysicalDeviceCooperativeMatrixPropertiesKHR = vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesKHR,
 };
 
 
@@ -9941,6 +9996,59 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderingAreaGranularityKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetRenderingAreaGranularityKHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetRenderingAreaGranularityKHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateCommandPool@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateCommandPool@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateCommandPool@12=_vk_entrypoint_stub@0")
@@ -10413,6 +10521,59 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) __attribute__ ((weak));
 
 #endif
 
@@ -11632,6 +11793,59 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) __attribute__ ((weak));
 
 #endif
 
@@ -24927,6 +25141,112 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCullMode@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCullMode@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCullMode@12=_vk_entrypoint_stub@0")
@@ -25452,6 +25772,59 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdBindIndexBuffer2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdBindIndexBuffer2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) __attribute__ ((weak));
 
 #endif
 
@@ -30333,6 +30706,218 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToImageEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CopyMemoryToImageEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CopyMemoryToImageEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToMemoryEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CopyImageToMemoryEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CopyImageToMemoryEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyImageToImageEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CopyImageToImageEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CopyImageToImageEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CopyImageToImageEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CopyImageToImageEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CopyImageToImageEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TransitionImageLayoutEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_TransitionImageLayoutEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_TransitionImageLayoutEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateVideoSessionKHR@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateVideoSessionKHR@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateVideoSessionKHR@12=_vk_entrypoint_stub@0")
@@ -33417,6 +34002,59 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetImageSubresourceLayout2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetImageSubresourceLayout2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2EXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2EXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2EXT@12=_vk_entrypoint_stub@0")
@@ -33438,7 +34076,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) __attribute__ ((weak));
 
 #endif
 #ifdef _MSC_VER
@@ -33464,7 +34102,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) __attribute__ ((weak));
 
 #endif
 
@@ -33949,6 +34587,59 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias2EXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdSetDepthBias2EXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdSetDepthBias2EXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@12=_vk_entrypoint_stub@0")
@@ -33997,6 +34688,59 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) __attribute__ ((weak));
 
 #endif
 
@@ -34318,6 +35062,326 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 
 #endif
 
+#ifdef VK_USE_PLATFORM_SCREEN_QNX
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetScreenBufferPropertiesQNX@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetScreenBufferPropertiesQNX=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetScreenBufferPropertiesQNX=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) __attribute__ ((weak));
+
+#endif
+
+#endif // VK_USE_PLATFORM_SCREEN_QNX
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencySleepModeNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_SetLatencySleepModeNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_SetLatencySleepModeNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_LatencySleepNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_LatencySleepNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_LatencySleepNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_LatencySleepNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_LatencySleepNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_LatencySleepNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLatencyMarkerNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_SetLatencyMarkerNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_SetLatencyMarkerNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetLatencyTimingsNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetLatencyTimingsNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetLatencyTimingsNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueNotifyOutOfBandNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_QueueNotifyOutOfBandNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_QueueNotifyOutOfBandNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) __attribute__ ((weak));
+
+#endif
+
 
 const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .GetDeviceProcAddr = vk_cmd_enqueue_GetDeviceProcAddr,
@@ -34392,6 +35456,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .CreateRenderPass = vk_cmd_enqueue_CreateRenderPass,
     .DestroyRenderPass = vk_cmd_enqueue_DestroyRenderPass,
     .GetRenderAreaGranularity = vk_cmd_enqueue_GetRenderAreaGranularity,
+    .GetRenderingAreaGranularityKHR = vk_cmd_enqueue_GetRenderingAreaGranularityKHR,
     .CreateCommandPool = vk_cmd_enqueue_CreateCommandPool,
     .DestroyCommandPool = vk_cmd_enqueue_DestroyCommandPool,
     .ResetCommandPool = vk_cmd_enqueue_ResetCommandPool,
@@ -34401,6 +35466,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .EndCommandBuffer = vk_cmd_enqueue_EndCommandBuffer,
     .ResetCommandBuffer = vk_cmd_enqueue_ResetCommandBuffer,
     .CmdBindPipeline = vk_cmd_enqueue_CmdBindPipeline,
+    .CmdSetAttachmentFeedbackLoopEnableEXT = vk_cmd_enqueue_CmdSetAttachmentFeedbackLoopEnableEXT,
     .CmdSetViewport = vk_cmd_enqueue_CmdSetViewport,
     .CmdSetScissor = vk_cmd_enqueue_CmdSetScissor,
     .CmdSetLineWidth = vk_cmd_enqueue_CmdSetLineWidth,
@@ -34424,6 +35490,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .CmdSubpassShadingHUAWEI = vk_cmd_enqueue_CmdSubpassShadingHUAWEI,
     .CmdDrawClusterHUAWEI = vk_cmd_enqueue_CmdDrawClusterHUAWEI,
     .CmdDrawClusterIndirectHUAWEI = vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI,
+    .CmdUpdatePipelineIndirectBufferNV = vk_cmd_enqueue_CmdUpdatePipelineIndirectBufferNV,
     .CmdCopyBuffer = vk_cmd_enqueue_CmdCopyBuffer,
     .CmdCopyImage = vk_cmd_enqueue_CmdCopyImage,
     .CmdBlitImage = vk_cmd_enqueue_CmdBlitImage,
@@ -34754,6 +35821,8 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .GetDeferredOperationMaxConcurrencyKHR = vk_cmd_enqueue_GetDeferredOperationMaxConcurrencyKHR,
     .GetDeferredOperationResultKHR = vk_cmd_enqueue_GetDeferredOperationResultKHR,
     .DeferredOperationJoinKHR = vk_cmd_enqueue_DeferredOperationJoinKHR,
+    .GetPipelineIndirectMemoryRequirementsNV = vk_cmd_enqueue_GetPipelineIndirectMemoryRequirementsNV,
+    .GetPipelineIndirectDeviceAddressNV = vk_cmd_enqueue_GetPipelineIndirectDeviceAddressNV,
     .CmdSetCullMode = vk_cmd_enqueue_CmdSetCullMode,
     .CmdSetCullModeEXT = vk_cmd_enqueue_CmdSetCullModeEXT,
     .CmdSetFrontFace = vk_cmd_enqueue_CmdSetFrontFace,
@@ -34764,6 +35833,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .CmdSetViewportWithCountEXT = vk_cmd_enqueue_CmdSetViewportWithCountEXT,
     .CmdSetScissorWithCount = vk_cmd_enqueue_CmdSetScissorWithCount,
     .CmdSetScissorWithCountEXT = vk_cmd_enqueue_CmdSetScissorWithCountEXT,
+    .CmdBindIndexBuffer2KHR = vk_cmd_enqueue_CmdBindIndexBuffer2KHR,
     .CmdBindVertexBuffers2 = vk_cmd_enqueue_CmdBindVertexBuffers2,
     .CmdBindVertexBuffers2EXT = vk_cmd_enqueue_CmdBindVertexBuffers2EXT,
     .CmdSetDepthTestEnable = vk_cmd_enqueue_CmdSetDepthTestEnable,
@@ -34856,6 +35926,10 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .CmdWriteTimestamp2KHR = vk_cmd_enqueue_CmdWriteTimestamp2KHR,
     .CmdWriteBufferMarker2AMD = vk_cmd_enqueue_CmdWriteBufferMarker2AMD,
     .GetQueueCheckpointData2NV = vk_cmd_enqueue_GetQueueCheckpointData2NV,
+    .CopyMemoryToImageEXT = vk_cmd_enqueue_CopyMemoryToImageEXT,
+    .CopyImageToMemoryEXT = vk_cmd_enqueue_CopyImageToMemoryEXT,
+    .CopyImageToImageEXT = vk_cmd_enqueue_CopyImageToImageEXT,
+    .TransitionImageLayoutEXT = vk_cmd_enqueue_TransitionImageLayoutEXT,
     .CreateVideoSessionKHR = vk_cmd_enqueue_CreateVideoSessionKHR,
     .DestroyVideoSessionKHR = vk_cmd_enqueue_DestroyVideoSessionKHR,
     .CreateVideoSessionParametersKHR = vk_cmd_enqueue_CreateVideoSessionParametersKHR,
@@ -34934,6 +36008,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .GetMicromapBuildSizesEXT = vk_cmd_enqueue_GetMicromapBuildSizesEXT,
     .GetShaderModuleIdentifierEXT = vk_cmd_enqueue_GetShaderModuleIdentifierEXT,
     .GetShaderModuleCreateInfoIdentifierEXT = vk_cmd_enqueue_GetShaderModuleCreateInfoIdentifierEXT,
+    .GetImageSubresourceLayout2KHR = vk_cmd_enqueue_GetImageSubresourceLayout2KHR,
     .GetImageSubresourceLayout2EXT = vk_cmd_enqueue_GetImageSubresourceLayout2EXT,
     .GetPipelinePropertiesEXT = vk_cmd_enqueue_GetPipelinePropertiesEXT,
 #ifdef VK_USE_PLATFORM_METAL_EXT
@@ -34948,13 +36023,25 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .BindOpticalFlowSessionImageNV = vk_cmd_enqueue_BindOpticalFlowSessionImageNV,
     .CmdOpticalFlowExecuteNV = vk_cmd_enqueue_CmdOpticalFlowExecuteNV,
     .GetDeviceFaultInfoEXT = vk_cmd_enqueue_GetDeviceFaultInfoEXT,
+    .CmdSetDepthBias2EXT = vk_cmd_enqueue_CmdSetDepthBias2EXT,
     .ReleaseSwapchainImagesEXT = vk_cmd_enqueue_ReleaseSwapchainImagesEXT,
+    .GetDeviceImageSubresourceLayoutKHR = vk_cmd_enqueue_GetDeviceImageSubresourceLayoutKHR,
     .MapMemory2KHR = vk_cmd_enqueue_MapMemory2KHR,
     .UnmapMemory2KHR = vk_cmd_enqueue_UnmapMemory2KHR,
     .CreateShadersEXT = vk_cmd_enqueue_CreateShadersEXT,
     .DestroyShaderEXT = vk_cmd_enqueue_DestroyShaderEXT,
     .GetShaderBinaryDataEXT = vk_cmd_enqueue_GetShaderBinaryDataEXT,
     .CmdBindShadersEXT = vk_cmd_enqueue_CmdBindShadersEXT,
+#ifdef VK_USE_PLATFORM_SCREEN_QNX
+    .GetScreenBufferPropertiesQNX = vk_cmd_enqueue_GetScreenBufferPropertiesQNX,
+#elif defined(_MSC_VER)
+    .GetScreenBufferPropertiesQNX = (PFN_vkVoidFunction)vk_entrypoint_stub,
+#endif // VK_USE_PLATFORM_SCREEN_QNX
+    .SetLatencySleepModeNV = vk_cmd_enqueue_SetLatencySleepModeNV,
+    .LatencySleepNV = vk_cmd_enqueue_LatencySleepNV,
+    .SetLatencyMarkerNV = vk_cmd_enqueue_SetLatencyMarkerNV,
+    .GetLatencyTimingsNV = vk_cmd_enqueue_GetLatencyTimingsNV,
+    .QueueNotifyOutOfBandNV = vk_cmd_enqueue_QueueNotifyOutOfBandNV,
 };
 const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_entrypoints = {
     .GetDeviceProcAddr = vk_cmd_enqueue_unless_primary_GetDeviceProcAddr,
@@ -35029,6 +36116,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .CreateRenderPass = vk_cmd_enqueue_unless_primary_CreateRenderPass,
     .DestroyRenderPass = vk_cmd_enqueue_unless_primary_DestroyRenderPass,
     .GetRenderAreaGranularity = vk_cmd_enqueue_unless_primary_GetRenderAreaGranularity,
+    .GetRenderingAreaGranularityKHR = vk_cmd_enqueue_unless_primary_GetRenderingAreaGranularityKHR,
     .CreateCommandPool = vk_cmd_enqueue_unless_primary_CreateCommandPool,
     .DestroyCommandPool = vk_cmd_enqueue_unless_primary_DestroyCommandPool,
     .ResetCommandPool = vk_cmd_enqueue_unless_primary_ResetCommandPool,
@@ -35038,6 +36126,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .EndCommandBuffer = vk_cmd_enqueue_unless_primary_EndCommandBuffer,
     .ResetCommandBuffer = vk_cmd_enqueue_unless_primary_ResetCommandBuffer,
     .CmdBindPipeline = vk_cmd_enqueue_unless_primary_CmdBindPipeline,
+    .CmdSetAttachmentFeedbackLoopEnableEXT = vk_cmd_enqueue_unless_primary_CmdSetAttachmentFeedbackLoopEnableEXT,
     .CmdSetViewport = vk_cmd_enqueue_unless_primary_CmdSetViewport,
     .CmdSetScissor = vk_cmd_enqueue_unless_primary_CmdSetScissor,
     .CmdSetLineWidth = vk_cmd_enqueue_unless_primary_CmdSetLineWidth,
@@ -35061,6 +36150,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .CmdSubpassShadingHUAWEI = vk_cmd_enqueue_unless_primary_CmdSubpassShadingHUAWEI,
     .CmdDrawClusterHUAWEI = vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI,
     .CmdDrawClusterIndirectHUAWEI = vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI,
+    .CmdUpdatePipelineIndirectBufferNV = vk_cmd_enqueue_unless_primary_CmdUpdatePipelineIndirectBufferNV,
     .CmdCopyBuffer = vk_cmd_enqueue_unless_primary_CmdCopyBuffer,
     .CmdCopyImage = vk_cmd_enqueue_unless_primary_CmdCopyImage,
     .CmdBlitImage = vk_cmd_enqueue_unless_primary_CmdBlitImage,
@@ -35391,6 +36481,8 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .GetDeferredOperationMaxConcurrencyKHR = vk_cmd_enqueue_unless_primary_GetDeferredOperationMaxConcurrencyKHR,
     .GetDeferredOperationResultKHR = vk_cmd_enqueue_unless_primary_GetDeferredOperationResultKHR,
     .DeferredOperationJoinKHR = vk_cmd_enqueue_unless_primary_DeferredOperationJoinKHR,
+    .GetPipelineIndirectMemoryRequirementsNV = vk_cmd_enqueue_unless_primary_GetPipelineIndirectMemoryRequirementsNV,
+    .GetPipelineIndirectDeviceAddressNV = vk_cmd_enqueue_unless_primary_GetPipelineIndirectDeviceAddressNV,
     .CmdSetCullMode = vk_cmd_enqueue_unless_primary_CmdSetCullMode,
     .CmdSetCullModeEXT = vk_cmd_enqueue_unless_primary_CmdSetCullModeEXT,
     .CmdSetFrontFace = vk_cmd_enqueue_unless_primary_CmdSetFrontFace,
@@ -35401,6 +36493,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .CmdSetViewportWithCountEXT = vk_cmd_enqueue_unless_primary_CmdSetViewportWithCountEXT,
     .CmdSetScissorWithCount = vk_cmd_enqueue_unless_primary_CmdSetScissorWithCount,
     .CmdSetScissorWithCountEXT = vk_cmd_enqueue_unless_primary_CmdSetScissorWithCountEXT,
+    .CmdBindIndexBuffer2KHR = vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR,
     .CmdBindVertexBuffers2 = vk_cmd_enqueue_unless_primary_CmdBindVertexBuffers2,
     .CmdBindVertexBuffers2EXT = vk_cmd_enqueue_unless_primary_CmdBindVertexBuffers2EXT,
     .CmdSetDepthTestEnable = vk_cmd_enqueue_unless_primary_CmdSetDepthTestEnable,
@@ -35493,6 +36586,10 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .CmdWriteTimestamp2KHR = vk_cmd_enqueue_unless_primary_CmdWriteTimestamp2KHR,
     .CmdWriteBufferMarker2AMD = vk_cmd_enqueue_unless_primary_CmdWriteBufferMarker2AMD,
     .GetQueueCheckpointData2NV = vk_cmd_enqueue_unless_primary_GetQueueCheckpointData2NV,
+    .CopyMemoryToImageEXT = vk_cmd_enqueue_unless_primary_CopyMemoryToImageEXT,
+    .CopyImageToMemoryEXT = vk_cmd_enqueue_unless_primary_CopyImageToMemoryEXT,
+    .CopyImageToImageEXT = vk_cmd_enqueue_unless_primary_CopyImageToImageEXT,
+    .TransitionImageLayoutEXT = vk_cmd_enqueue_unless_primary_TransitionImageLayoutEXT,
     .CreateVideoSessionKHR = vk_cmd_enqueue_unless_primary_CreateVideoSessionKHR,
     .DestroyVideoSessionKHR = vk_cmd_enqueue_unless_primary_DestroyVideoSessionKHR,
     .CreateVideoSessionParametersKHR = vk_cmd_enqueue_unless_primary_CreateVideoSessionParametersKHR,
@@ -35571,6 +36668,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .GetMicromapBuildSizesEXT = vk_cmd_enqueue_unless_primary_GetMicromapBuildSizesEXT,
     .GetShaderModuleIdentifierEXT = vk_cmd_enqueue_unless_primary_GetShaderModuleIdentifierEXT,
     .GetShaderModuleCreateInfoIdentifierEXT = vk_cmd_enqueue_unless_primary_GetShaderModuleCreateInfoIdentifierEXT,
+    .GetImageSubresourceLayout2KHR = vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2KHR,
     .GetImageSubresourceLayout2EXT = vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2EXT,
     .GetPipelinePropertiesEXT = vk_cmd_enqueue_unless_primary_GetPipelinePropertiesEXT,
 #ifdef VK_USE_PLATFORM_METAL_EXT
@@ -35585,13 +36683,25 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .BindOpticalFlowSessionImageNV = vk_cmd_enqueue_unless_primary_BindOpticalFlowSessionImageNV,
     .CmdOpticalFlowExecuteNV = vk_cmd_enqueue_unless_primary_CmdOpticalFlowExecuteNV,
     .GetDeviceFaultInfoEXT = vk_cmd_enqueue_unless_primary_GetDeviceFaultInfoEXT,
+    .CmdSetDepthBias2EXT = vk_cmd_enqueue_unless_primary_CmdSetDepthBias2EXT,
     .ReleaseSwapchainImagesEXT = vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT,
+    .GetDeviceImageSubresourceLayoutKHR = vk_cmd_enqueue_unless_primary_GetDeviceImageSubresourceLayoutKHR,
     .MapMemory2KHR = vk_cmd_enqueue_unless_primary_MapMemory2KHR,
     .UnmapMemory2KHR = vk_cmd_enqueue_unless_primary_UnmapMemory2KHR,
     .CreateShadersEXT = vk_cmd_enqueue_unless_primary_CreateShadersEXT,
     .DestroyShaderEXT = vk_cmd_enqueue_unless_primary_DestroyShaderEXT,
     .GetShaderBinaryDataEXT = vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT,
     .CmdBindShadersEXT = vk_cmd_enqueue_unless_primary_CmdBindShadersEXT,
+#ifdef VK_USE_PLATFORM_SCREEN_QNX
+    .GetScreenBufferPropertiesQNX = vk_cmd_enqueue_unless_primary_GetScreenBufferPropertiesQNX,
+#elif defined(_MSC_VER)
+    .GetScreenBufferPropertiesQNX = (PFN_vkVoidFunction)vk_entrypoint_stub,
+#endif // VK_USE_PLATFORM_SCREEN_QNX
+    .SetLatencySleepModeNV = vk_cmd_enqueue_unless_primary_SetLatencySleepModeNV,
+    .LatencySleepNV = vk_cmd_enqueue_unless_primary_LatencySleepNV,
+    .SetLatencyMarkerNV = vk_cmd_enqueue_unless_primary_SetLatencyMarkerNV,
+    .GetLatencyTimingsNV = vk_cmd_enqueue_unless_primary_GetLatencyTimingsNV,
+    .QueueNotifyOutOfBandNV = vk_cmd_enqueue_unless_primary_QueueNotifyOutOfBandNV,
 };
 
 

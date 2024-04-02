@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2023/11/02 04:53:32 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	nir
 
@@ -9,19 +9,19 @@ SRCS=	nir.c \
 	nir_builtin_builder.c \
 	nir_clone.c \
 	nir_control_flow.c \
-	nir_convert_ycbcr.c \
 	nir_deref.c \
 	nir_divergence_analysis.c \
 	nir_dominance.c \
 	nir_from_ssa.c \
+	nir_functions.c \
 	nir_gather_info.c \
-	nir_gather_ssa_types.c \
+	nir_gather_types.c \
 	nir_gather_xfb_info.c \
 	nir_group_loads.c \
 	nir_gs_count_vertices.c \
-	nir_inline_functions.c \
 	nir_inline_uniforms.c \
 	nir_instr_set.c \
+	nir_legacy.c \
 	nir_linking_helpers.c \
 	nir_liveness.c \
 	nir_loop_analyze.c \
@@ -55,6 +55,7 @@ SRCS=	nir.c \
 	nir_lower_flrp.c \
 	nir_lower_fp16_conv.c \
 	nir_lower_fragcoord_wtrans.c \
+	nir_lower_frag_coord_to_pixel_coord.c \
 	nir_lower_fragcolor.c \
 	nir_lower_frexp.c \
 	nir_lower_global_vars_to_local.c \
@@ -65,6 +66,7 @@ SRCS=	nir.c \
 	nir_lower_locals_to_regs.c \
 	nir_lower_idiv.c \
 	nir_lower_image.c \
+	nir_lower_image_atomics_to_global.c \
 	nir_lower_indirect_derefs.c \
 	nir_lower_input_attachments.c \
 	nir_lower_int64.c \
@@ -92,9 +94,10 @@ SRCS=	nir.c \
 	nir_lower_point_smooth.c \
 	nir_lower_poly_line_smooth.c \
 	nir_lower_printf.c \
-	nir_lower_regs_to_ssa.c \
+	nir_lower_reg_intrinsics_to_ssa.c \
 	nir_lower_readonly_images_to_tex.c \
 	nir_lower_returns.c \
+	nir_lower_robust_access.c \
 	nir_lower_samplers.c \
 	nir_lower_scratch.c \
 	nir_lower_shader_calls.c \
@@ -103,16 +106,16 @@ SRCS=	nir.c \
 	nir_lower_subgroups.c \
 	nir_lower_system_values.c \
 	nir_lower_task_shader.c \
+	nir_lower_tess_coord_z.c \
 	nir_lower_tex_shadow.c \
 	nir_lower_tex.c \
 	nir_lower_texcoord_replace.c \
 	nir_lower_texcoord_replace_late.c \
-	nir_lower_to_source_mods.c \
 	nir_lower_two_sided_color.c \
 	nir_lower_undef_to_zero.c \
 	nir_lower_vars_to_ssa.c \
 	nir_lower_var_copies.c \
-	nir_lower_vec_to_movs.c \
+	nir_lower_vec_to_regs.c \
 	nir_lower_vec3_to_vec4.c \
 	nir_lower_viewport_transform.c \
 	nir_lower_wpos_center.c \
@@ -156,8 +159,10 @@ SRCS=	nir.c \
 	nir_opt_phi_precision.c \
 	nir_opt_preamble.c \
 	nir_opt_ray_queries.c \
+	nir_opt_reassociate_bfi.c \
 	nir_opt_rematerialize_compares.c \
 	nir_opt_remove_phis.c \
+	nir_opt_reuse_constants.c \
 	nir_opt_shrink_stores.c \
 	nir_opt_shrink_vectors.c \
 	nir_opt_sink.c \
@@ -172,6 +177,7 @@ SRCS=	nir.c \
 	nir_propagate_invariant.c \
 	nir_range_analysis.c \
 	nir_remove_dead_variables.c \
+	nir_remove_tex_shadow.c \
 	nir_repair_ssa.c \
 	nir_scale_fdiv.c \
 	nir_schedule.c \
@@ -183,19 +189,9 @@ SRCS=	nir.c \
 	nir_split_vars.c \
 	nir_sweep.c \
 	nir_to_lcssa.c \
+	nir_trivialize_registers.c \
 	nir_validate.c \
-	nir_worklist.c \
-	gl_spirv.c \
-	nir_load_libclc.c \
-	nir_lower_libclc.c \
-	spirv_to_nir.c \
-	vtn_alu.c \
-	vtn_amd.c \
-	vtn_cfg.c \
-	vtn_glsl450.c \
-	vtn_opencl.c \
-	vtn_subgroup.c \
-	vtn_variables.c
+	nir_worklist.c
 
 SRCS+=	spirv_info.c \
 	nir_opt_algebraic.c \
@@ -211,7 +207,9 @@ CPPFLAGS+=	-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/src/compiler/spirv \
 		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/mesa \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-I${MESA_SRC}/generated/src/compiler/spirv
 

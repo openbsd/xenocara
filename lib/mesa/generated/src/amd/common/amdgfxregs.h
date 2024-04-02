@@ -4,25 +4,7 @@
 /*
  * Copyright 2015-2019 Advanced Micro Devices, Inc.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
+ * SPDX-License-Identifier: MIT
  */
 
 #ifndef AMDGFXREGS_H
@@ -411,7 +393,7 @@
 #define   G_000074_MISC_CNT(x)                                        (((x) >> 25) & 0x7F)
 #define   C_000074_MISC_CNT                                           0x01FFFFFF
 #define R_000078_SQ_WAVE_FLUSH_IB                                       0x000078 /* gfx9, gfx940 */
-#define R_370_CONTROL                                                   0x370
+#define R_370_CONTROL                                                   0x370 /* <= gfx11 */
 #define   S_370_DST_SEL(x)                                            (((unsigned)(x) & 0xF) << 8)
 #define   G_370_DST_SEL(x)                                            (((x) >> 8) & 0xF)
 #define   C_370_DST_SEL                                               0xFFFFF0FF
@@ -420,7 +402,7 @@
 #define     V_370_TC_L2                                             2
 #define     V_370_GDS                                               3
 #define     V_370_RESERVED                                          4
-#define     V_370_MEM                                               5 /* >= gfx7 */
+#define     V_370_MEM                                               5 /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10, gfx103, gfx11 */
 #define   S_370_WR_ONE_ADDR(x)                                        (((unsigned)(x) & 0x1) << 16)
 #define   G_370_WR_ONE_ADDR(x)                                        (((x) >> 16) & 0x1)
 #define   C_370_WR_ONE_ADDR                                           0xFFFEFFFF
@@ -434,11 +416,11 @@
 #define     V_370_PFP                                               1
 #define     V_370_CE                                                2
 #define     V_370_DE                                                3
-#define R_371_DST_ADDR_LO                                               0x371
-#define R_372_DST_ADDR_HI                                               0x372
-#define R_3F0_IB_BASE_LO                                                0x3F0
-#define R_3F1_IB_BASE_HI                                                0x3F1
-#define R_3F2_IB_CONTROL                                                0x3F2
+#define R_371_DST_ADDR_LO                                               0x371 /* <= gfx11 */
+#define R_372_DST_ADDR_HI                                               0x372 /* <= gfx11 */
+#define R_3F0_IB_BASE_LO                                                0x3F0 /* <= gfx11 */
+#define R_3F1_IB_BASE_HI                                                0x3F1 /* <= gfx11 */
+#define R_3F2_IB_CONTROL                                                0x3F2 /* <= gfx11 */
 #define   S_3F2_IB_SIZE(x)                                            (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_3F2_IB_SIZE(x)                                            (((x) >> 0) & 0xFFFFF)
 #define   C_3F2_IB_SIZE                                               0xFFF00000
@@ -634,7 +616,7 @@
 #define   S_00040C_DP_RATE(x)                                         (((unsigned)(x) & 0x7) << 29) /* gfx10, gfx103 */
 #define   G_00040C_DP_RATE(x)                                         (((x) >> 29) & 0x7)
 #define   C_00040C_DP_RATE                                            0x1FFFFFFF
-#define R_410_CP_DMA_WORD0                                              0x410
+#define R_410_CP_DMA_WORD0                                              0x410 /* <= gfx11 */
 #define   S_410_SRC_ADDR_LO(x)                                        (((unsigned)(x) & 0xFFFFFFFF) << 0)
 #define   G_410_SRC_ADDR_LO(x)                                        (((x) >> 0) & 0xFFFFFFFF)
 #define   C_410_SRC_ADDR_LO                                           0x00000000
@@ -675,7 +657,7 @@
 #define   S_000410_ME_ID(x)                                           (((unsigned)(x) & 0x3) << 30)
 #define   G_000410_ME_ID(x)                                           (((x) >> 30) & 0x3)
 #define   C_000410_ME_ID                                              0x3FFFFFFF
-#define R_411_CP_DMA_WORD1                                              0x411
+#define R_411_CP_DMA_WORD1                                              0x411 /* <= gfx11 */
 #define   S_411_SRC_ADDR_HI(x)                                        (((unsigned)(x) & 0xFFFF) << 0)
 #define   G_411_SRC_ADDR_HI(x)                                        (((x) >> 0) & 0xFFFF)
 #define   C_411_SRC_ADDR_HI                                           0xFFFF0000
@@ -684,8 +666,8 @@
 #define   C_411_DST_SEL                                               0xFFCFFFFF
 #define     V_411_DST_ADDR                                          0
 #define     V_411_GDS                                               1
-#define     V_411_NOWHERE                                           2 /* >= gfx9 */
-#define     V_411_DST_ADDR_TC_L2                                    3 /* >= gfx7 */
+#define     V_411_NOWHERE                                           2 /* gfx9, gfx940, gfx10, gfx103, gfx11 */
+#define     V_411_DST_ADDR_TC_L2                                    3 /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10, gfx103, gfx11 */
 #define   S_411_ENGINE(x)                                             (((unsigned)(x) & 0x1) << 27)
 #define   G_411_ENGINE(x)                                             (((x) >> 27) & 0x1)
 #define   C_411_ENGINE                                                0xF7FFFFFF
@@ -696,15 +678,15 @@
 #define   C_411_SRC_SEL                                               0x9FFFFFFF
 #define     V_411_SRC_ADDR                                          0
 #define     V_411_DATA                                              2
-#define     V_411_SRC_ADDR_TC_L2                                    3 /* >= gfx7 */
+#define     V_411_SRC_ADDR_TC_L2                                    3 /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10, gfx103, gfx11 */
 #define   S_411_CP_SYNC(x)                                            (((unsigned)(x) & 0x1) << 31)
 #define   G_411_CP_SYNC(x)                                            (((x) >> 31) & 0x1)
 #define   C_411_CP_SYNC                                               0x7FFFFFFF
-#define R_412_CP_DMA_WORD2                                              0x412
+#define R_412_CP_DMA_WORD2                                              0x412 /* <= gfx11 */
 #define   S_412_DST_ADDR_LO(x)                                        (((unsigned)(x) & 0xFFFFFFFF) << 0)
 #define   G_412_DST_ADDR_LO(x)                                        (((x) >> 0) & 0xFFFFFFFF)
 #define   C_412_DST_ADDR_LO                                           0x00000000
-#define R_413_CP_DMA_WORD3                                              0x413
+#define R_413_CP_DMA_WORD3                                              0x413 /* <= gfx11 */
 #define   S_413_DST_ADDR_HI(x)                                        (((unsigned)(x) & 0xFFFF) << 0)
 #define   G_413_DST_ADDR_HI(x)                                        (((x) >> 0) & 0xFFFF)
 #define   C_413_DST_ADDR_HI                                           0xFFFF0000
@@ -727,11 +709,11 @@
 #define   S_000414_SGPR_SIZE(x)                                       (((unsigned)(x) & 0xF) << 24) /* gfx10, gfx103 */
 #define   G_000414_SGPR_SIZE(x)                                       (((x) >> 24) & 0xF)
 #define   C_000414_SGPR_SIZE                                          0xF0FFFFFF
-#define R_415_COMMAND                                                   0x415
+#define R_415_COMMAND                                                   0x415 /* <= gfx11 */
 #define   S_415_BYTE_COUNT_GFX6(x)                                    (((unsigned)(x) & 0x1FFFFF) << 0) /* <= gfx81 */
 #define   G_415_BYTE_COUNT_GFX6(x)                                    (((x) >> 0) & 0x1FFFFF)
 #define   C_415_BYTE_COUNT_GFX6                                       0xFFE00000
-#define   S_415_BYTE_COUNT_GFX9(x)                                    (((unsigned)(x) & 0x3FFFFFF) << 0) /* >= gfx9 */
+#define   S_415_BYTE_COUNT_GFX9(x)                                    (((unsigned)(x) & 0x3FFFFFF) << 0) /* gfx9, gfx940, gfx10, gfx103, gfx11 */
 #define   G_415_BYTE_COUNT_GFX9(x)                                    (((x) >> 0) & 0x3FFFFFF)
 #define   C_415_BYTE_COUNT_GFX9                                       0xFC000000
 #define   S_415_DISABLE_WR_CONFIRM_GFX6(x)                            (((unsigned)(x) & 0x1) << 21) /* <= gfx81 */
@@ -766,7 +748,7 @@
 #define   S_415_RAW_WAIT(x)                                           (((unsigned)(x) & 0x1) << 30)
 #define   G_415_RAW_WAIT(x)                                           (((x) >> 30) & 0x1)
 #define   C_415_RAW_WAIT                                              0xBFFFFFFF
-#define   S_415_DISABLE_WR_CONFIRM_GFX9(x)                            (((unsigned)(x) & 0x1) << 31) /* >= gfx9 */
+#define   S_415_DISABLE_WR_CONFIRM_GFX9(x)                            (((unsigned)(x) & 0x1) << 31) /* gfx9, gfx940, gfx10, gfx103, gfx11 */
 #define   G_415_DISABLE_WR_CONFIRM_GFX9(x)                            (((x) >> 31) & 0x1)
 #define   C_415_DISABLE_WR_CONFIRM_GFX9                               0x7FFFFFFF
 #define R_000418_SQ_WAVE_LDS_ALLOC                                      0x000418 /* >= gfx10 */
@@ -950,75 +932,75 @@
 #define   S_000474_CYCLES(x)                                          (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_000474_CYCLES(x)                                          (((x) >> 0) & 0xFFFFF)
 #define   C_000474_CYCLES                                             0xFFF00000
-#define R_490_RELEASE_MEM_OP                                            0x490 /* >= gfx10 */
+#define R_490_RELEASE_MEM_OP                                            0x490 /* gfx10, gfx103, gfx11 */
 #define   S_490_EVENT_TYPE(x)                                         (((unsigned)(x) & 0x3F) << 0)
 #define   G_490_EVENT_TYPE(x)                                         (((x) >> 0) & 0x3F)
 #define   C_490_EVENT_TYPE                                            0xFFFFFFC0
-#define     V_490_Reserved_0x00                                     0 /* >= gfx11 */
-#define     V_490_SAMPLE_STREAMOUTSTATS1                            1 /* >= gfx11 */
-#define     V_490_SAMPLE_STREAMOUTSTATS2                            2 /* >= gfx11 */
-#define     V_490_SAMPLE_STREAMOUTSTATS3                            3 /* >= gfx11 */
-#define     V_490_CACHE_FLUSH_TS                                    4 /* >= gfx11 */
-#define     V_490_CONTEXT_DONE                                      5 /* >= gfx11 */
-#define     V_490_CACHE_FLUSH                                       6 /* >= gfx11 */
-#define     V_490_CS_PARTIAL_FLUSH                                  7 /* >= gfx11 */
-#define     V_490_VGT_STREAMOUT_SYNC                                8 /* >= gfx11 */
-#define     V_490_Reserved_0x09                                     9 /* >= gfx11 */
-#define     V_490_VGT_STREAMOUT_RESET                               10 /* >= gfx11 */
-#define     V_490_END_OF_PIPE_INCR_DE                               11 /* >= gfx11 */
-#define     V_490_END_OF_PIPE_IB_END                                12 /* >= gfx11 */
-#define     V_490_RST_PIX_CNT                                       13 /* >= gfx11 */
-#define     V_490_BREAK_BATCH                                       14 /* >= gfx11 */
-#define     V_490_VS_PARTIAL_FLUSH                                  15 /* >= gfx11 */
-#define     V_490_PS_PARTIAL_FLUSH                                  16 /* >= gfx11 */
-#define     V_490_FLUSH_HS_OUTPUT                                   17 /* >= gfx11 */
-#define     V_490_FLUSH_DFSM                                        18 /* >= gfx11 */
-#define     V_490_RESET_TO_LOWEST_VGT                               19 /* >= gfx11 */
-#define     V_490_CACHE_FLUSH_AND_INV_TS_EVENT                      20 /* >= gfx11 */
-#define     V_490_WAIT_SYNC                                         21 /* >= gfx11 */
-#define     V_490_CACHE_FLUSH_AND_INV_EVENT                         22 /* >= gfx11 */
-#define     V_490_PERFCOUNTER_START                                 23 /* >= gfx11 */
-#define     V_490_PERFCOUNTER_STOP                                  24 /* >= gfx11 */
-#define     V_490_PIPELINESTAT_START                                25 /* >= gfx11 */
-#define     V_490_PIPELINESTAT_STOP                                 26 /* >= gfx11 */
-#define     V_490_PERFCOUNTER_SAMPLE                                27 /* >= gfx11 */
-#define     V_490_FLUSH_ES_OUTPUT                                   28 /* >= gfx11 */
-#define     V_490_BIN_CONF_OVERRIDE_CHECK                           29 /* >= gfx11 */
-#define     V_490_SAMPLE_PIPELINESTAT                               30 /* >= gfx11 */
-#define     V_490_SO_VGTSTREAMOUT_FLUSH                             31 /* >= gfx11 */
-#define     V_490_SAMPLE_STREAMOUTSTATS                             32 /* >= gfx11 */
-#define     V_490_RESET_VTX_CNT                                     33 /* >= gfx11 */
-#define     V_490_BLOCK_CONTEXT_DONE                                34 /* >= gfx11 */
-#define     V_490_CS_CONTEXT_DONE                                   35 /* >= gfx11 */
-#define     V_490_VGT_FLUSH                                         36 /* >= gfx11 */
-#define     V_490_TGID_ROLLOVER                                     37 /* >= gfx11 */
-#define     V_490_SQ_NON_EVENT                                      38 /* >= gfx11 */
-#define     V_490_SC_SEND_DB_VPZ                                    39 /* >= gfx11 */
-#define     V_490_BOTTOM_OF_PIPE_TS                                 40 /* >= gfx11 */
-#define     V_490_FLUSH_SX_TS                                       41 /* >= gfx11 */
-#define     V_490_DB_CACHE_FLUSH_AND_INV                            42 /* >= gfx11 */
-#define     V_490_FLUSH_AND_INV_DB_DATA_TS                          43 /* >= gfx11 */
-#define     V_490_FLUSH_AND_INV_DB_META                             44 /* >= gfx11 */
-#define     V_490_FLUSH_AND_INV_CB_DATA_TS                          45 /* >= gfx11 */
-#define     V_490_FLUSH_AND_INV_CB_META                             46 /* >= gfx11 */
-#define     V_490_CS_DONE                                           47 /* >= gfx11 */
-#define     V_490_PS_DONE                                           48 /* >= gfx11 */
-#define     V_490_FLUSH_AND_INV_CB_PIXEL_DATA                       49 /* >= gfx11 */
-#define     V_490_SX_CB_RAT_ACK_REQUEST                             50 /* >= gfx11 */
-#define     V_490_THREAD_TRACE_START                                51 /* >= gfx11 */
-#define     V_490_THREAD_TRACE_STOP                                 52 /* >= gfx11 */
-#define     V_490_THREAD_TRACE_MARKER                               53 /* >= gfx11 */
-#define     V_490_THREAD_TRACE_DRAW                                 54 /* >= gfx11 */
-#define     V_490_THREAD_TRACE_FINISH                               55 /* >= gfx11 */
-#define     V_490_PIXEL_PIPE_STAT_CONTROL                           56 /* >= gfx11 */
-#define     V_490_PIXEL_PIPE_STAT_DUMP                              57 /* >= gfx11 */
-#define     V_490_PIXEL_PIPE_STAT_RESET                             58 /* >= gfx11 */
-#define     V_490_CONTEXT_SUSPEND                                   59 /* >= gfx11 */
-#define     V_490_OFFCHIP_HS_DEALLOC                                60 /* >= gfx11 */
-#define     V_490_ENABLE_NGG_PIPELINE                               61 /* >= gfx11 */
-#define     V_490_ENABLE_LEGACY_PIPELINE                            62 /* >= gfx11 */
-#define     V_490_DRAW_DONE                                         63 /* >= gfx11 */
-#define   S_490_WAIT_SYNC(x)                                          (((unsigned)(x) & 0x1) << 7) /* >= gfx11 */
+#define     V_490_Reserved_0x00                                     0 /* gfx11 */
+#define     V_490_SAMPLE_STREAMOUTSTATS1                            1 /* gfx11 */
+#define     V_490_SAMPLE_STREAMOUTSTATS2                            2 /* gfx11 */
+#define     V_490_SAMPLE_STREAMOUTSTATS3                            3 /* gfx11 */
+#define     V_490_CACHE_FLUSH_TS                                    4 /* gfx11 */
+#define     V_490_CONTEXT_DONE                                      5 /* gfx11 */
+#define     V_490_CACHE_FLUSH                                       6 /* gfx11 */
+#define     V_490_CS_PARTIAL_FLUSH                                  7 /* gfx11 */
+#define     V_490_VGT_STREAMOUT_SYNC                                8 /* gfx11 */
+#define     V_490_Reserved_0x09                                     9 /* gfx11 */
+#define     V_490_VGT_STREAMOUT_RESET                               10 /* gfx11 */
+#define     V_490_END_OF_PIPE_INCR_DE                               11 /* gfx11 */
+#define     V_490_END_OF_PIPE_IB_END                                12 /* gfx11 */
+#define     V_490_RST_PIX_CNT                                       13 /* gfx11 */
+#define     V_490_BREAK_BATCH                                       14 /* gfx11 */
+#define     V_490_VS_PARTIAL_FLUSH                                  15 /* gfx11 */
+#define     V_490_PS_PARTIAL_FLUSH                                  16 /* gfx11 */
+#define     V_490_FLUSH_HS_OUTPUT                                   17 /* gfx11 */
+#define     V_490_FLUSH_DFSM                                        18 /* gfx11 */
+#define     V_490_RESET_TO_LOWEST_VGT                               19 /* gfx11 */
+#define     V_490_CACHE_FLUSH_AND_INV_TS_EVENT                      20 /* gfx11 */
+#define     V_490_WAIT_SYNC                                         21 /* gfx11 */
+#define     V_490_CACHE_FLUSH_AND_INV_EVENT                         22 /* gfx11 */
+#define     V_490_PERFCOUNTER_START                                 23 /* gfx11 */
+#define     V_490_PERFCOUNTER_STOP                                  24 /* gfx11 */
+#define     V_490_PIPELINESTAT_START                                25 /* gfx11 */
+#define     V_490_PIPELINESTAT_STOP                                 26 /* gfx11 */
+#define     V_490_PERFCOUNTER_SAMPLE                                27 /* gfx11 */
+#define     V_490_FLUSH_ES_OUTPUT                                   28 /* gfx11 */
+#define     V_490_BIN_CONF_OVERRIDE_CHECK                           29 /* gfx11 */
+#define     V_490_SAMPLE_PIPELINESTAT                               30 /* gfx11 */
+#define     V_490_SO_VGTSTREAMOUT_FLUSH                             31 /* gfx11 */
+#define     V_490_SAMPLE_STREAMOUTSTATS                             32 /* gfx11 */
+#define     V_490_RESET_VTX_CNT                                     33 /* gfx11 */
+#define     V_490_BLOCK_CONTEXT_DONE                                34 /* gfx11 */
+#define     V_490_CS_CONTEXT_DONE                                   35 /* gfx11 */
+#define     V_490_VGT_FLUSH                                         36 /* gfx11 */
+#define     V_490_TGID_ROLLOVER                                     37 /* gfx11 */
+#define     V_490_SQ_NON_EVENT                                      38 /* gfx11 */
+#define     V_490_SC_SEND_DB_VPZ                                    39 /* gfx11 */
+#define     V_490_BOTTOM_OF_PIPE_TS                                 40 /* gfx11 */
+#define     V_490_FLUSH_SX_TS                                       41 /* gfx11 */
+#define     V_490_DB_CACHE_FLUSH_AND_INV                            42 /* gfx11 */
+#define     V_490_FLUSH_AND_INV_DB_DATA_TS                          43 /* gfx11 */
+#define     V_490_FLUSH_AND_INV_DB_META                             44 /* gfx11 */
+#define     V_490_FLUSH_AND_INV_CB_DATA_TS                          45 /* gfx11 */
+#define     V_490_FLUSH_AND_INV_CB_META                             46 /* gfx11 */
+#define     V_490_CS_DONE                                           47 /* gfx11 */
+#define     V_490_PS_DONE                                           48 /* gfx11 */
+#define     V_490_FLUSH_AND_INV_CB_PIXEL_DATA                       49 /* gfx11 */
+#define     V_490_SX_CB_RAT_ACK_REQUEST                             50 /* gfx11 */
+#define     V_490_THREAD_TRACE_START                                51 /* gfx11 */
+#define     V_490_THREAD_TRACE_STOP                                 52 /* gfx11 */
+#define     V_490_THREAD_TRACE_MARKER                               53 /* gfx11 */
+#define     V_490_THREAD_TRACE_DRAW                                 54 /* gfx11 */
+#define     V_490_THREAD_TRACE_FINISH                               55 /* gfx11 */
+#define     V_490_PIXEL_PIPE_STAT_CONTROL                           56 /* gfx11 */
+#define     V_490_PIXEL_PIPE_STAT_DUMP                              57 /* gfx11 */
+#define     V_490_PIXEL_PIPE_STAT_RESET                             58 /* gfx11 */
+#define     V_490_CONTEXT_SUSPEND                                   59 /* gfx11 */
+#define     V_490_OFFCHIP_HS_DEALLOC                                60 /* gfx11 */
+#define     V_490_ENABLE_NGG_PIPELINE                               61 /* gfx11 */
+#define     V_490_ENABLE_LEGACY_PIPELINE                            62 /* gfx11 */
+#define     V_490_DRAW_DONE                                         63 /* gfx11 */
+#define   S_490_WAIT_SYNC(x)                                          (((unsigned)(x) & 0x1) << 7) /* gfx11 */
 #define   G_490_WAIT_SYNC(x)                                          (((x) >> 7) & 0x1)
 #define   C_490_WAIT_SYNC                                             0xFFFFFF7F
 #define   S_490_EVENT_INDEX(x)                                        (((unsigned)(x) & 0xF) << 8)
@@ -1061,54 +1043,54 @@
 #define     V_490_SEQ_PARALLEL                                      0
 #define     V_490_SEQ_FORWARD                                       1
 #define     V_490_SEQ_REVERSE                                       2
-#define   S_490_GLK_WB(x)                                             (((unsigned)(x) & 0x1) << 24) /* >= gfx11 */
+#define   S_490_GLK_WB(x)                                             (((unsigned)(x) & 0x1) << 24) /* gfx11 */
 #define   G_490_GLK_WB(x)                                             (((x) >> 24) & 0x1)
 #define   C_490_GLK_WB                                                0xFEFFFFFF
-#define   S_490_CACHE_POLICY(x)                                       (((unsigned)(x) & 0x3) << 25) /* >= gfx11 */
+#define   S_490_CACHE_POLICY(x)                                       (((unsigned)(x) & 0x3) << 25) /* gfx11 */
 #define   G_490_CACHE_POLICY(x)                                       (((x) >> 25) & 0x3)
 #define   C_490_CACHE_POLICY                                          0xF9FFFFFF
-#define   S_490_EXECUTE(x)                                            (((unsigned)(x) & 0x3) << 28) /* >= gfx11 */
+#define   S_490_EXECUTE(x)                                            (((unsigned)(x) & 0x3) << 28) /* gfx11 */
 #define   G_490_EXECUTE(x)                                            (((x) >> 28) & 0x3)
 #define   C_490_EXECUTE                                               0xCFFFFFFF
-#define   S_490_GLK_INV(x)                                            (((unsigned)(x) & 0x1) << 30) /* >= gfx11 */
+#define   S_490_GLK_INV(x)                                            (((unsigned)(x) & 0x1) << 30) /* gfx11 */
 #define   G_490_GLK_INV(x)                                            (((x) >> 30) & 0x1)
 #define   C_490_GLK_INV                                               0xBFFFFFFF
-#define   S_490_PWS_ENABLE(x)                                         (((unsigned)(x) & 0x1) << 31) /* >= gfx11 */
+#define   S_490_PWS_ENABLE(x)                                         (((unsigned)(x) & 0x1) << 31) /* gfx11 */
 #define   G_490_PWS_ENABLE(x)                                         (((x) >> 31) & 0x1)
 #define   C_490_PWS_ENABLE                                            0x7FFFFFFF
-#define R_500_DMA_DATA_WORD0                                            0x500
-#define   S_500_ENGINE(x)                                             (((unsigned)(x) & 0x1) << 0)
-#define   G_500_ENGINE(x)                                             (((x) >> 0) & 0x1)
-#define   C_500_ENGINE                                                0xFFFFFFFE
-#define     V_500_ME                                                0
-#define     V_500_PFP                                               1
-#define   S_500_SRC_CACHE_POLICY(x)                                   (((unsigned)(x) & 0x3) << 13) /* >= gfx7 */
-#define   G_500_SRC_CACHE_POLICY(x)                                   (((x) >> 13) & 0x3)
-#define   C_500_SRC_CACHE_POLICY                                      0xFFFF9FFF
-#define   S_500_DST_SEL(x)                                            (((unsigned)(x) & 0x3) << 20)
-#define   G_500_DST_SEL(x)                                            (((x) >> 20) & 0x3)
-#define   C_500_DST_SEL                                               0xFFCFFFFF
-#define     V_500_DST_ADDR                                          0
-#define     V_500_GDS                                               1
-#define     V_500_NOWHERE                                           2 /* >= gfx9 */
-#define     V_500_DST_ADDR_TC_L2                                    3 /* >= gfx7 */
-#define   S_500_DST_CACHE_POLICY(x)                                   (((unsigned)(x) & 0x3) << 25) /* >= gfx7 */
-#define   G_500_DST_CACHE_POLICY(x)                                   (((x) >> 25) & 0x3)
-#define   C_500_DST_CACHE_POLICY                                      0xF9FFFFFF
-#define   S_500_SRC_SEL(x)                                            (((unsigned)(x) & 0x3) << 29)
-#define   G_500_SRC_SEL(x)                                            (((x) >> 29) & 0x3)
-#define   C_500_SRC_SEL                                               0x9FFFFFFF
-#define     V_500_SRC_ADDR                                          0
-#define     V_500_DATA                                              2
-#define     V_500_SRC_ADDR_TC_L2                                    3 /* >= gfx7 */
-#define   S_500_CP_SYNC(x)                                            (((unsigned)(x) & 0x1) << 31)
-#define   G_500_CP_SYNC(x)                                            (((x) >> 31) & 0x1)
-#define   C_500_CP_SYNC                                               0x7FFFFFFF
-#define R_501_SRC_ADDR_LO                                               0x501
-#define R_502_SRC_ADDR_HI                                               0x502
-#define R_503_DST_ADDR_LO                                               0x503
-#define R_504_DST_ADDR_HI                                               0x504
-#define R_580_ACQUIRE_MEM_PWS_2                                         0x580 /* >= gfx11 */
+#define R_501_DMA_DATA_WORD0                                            0x501 /* <= gfx11 */
+#define   S_501_ENGINE(x)                                             (((unsigned)(x) & 0x1) << 0)
+#define   G_501_ENGINE(x)                                             (((x) >> 0) & 0x1)
+#define   C_501_ENGINE                                                0xFFFFFFFE
+#define     V_501_ME                                                0
+#define     V_501_PFP                                               1
+#define   S_501_SRC_CACHE_POLICY(x)                                   (((unsigned)(x) & 0x3) << 13) /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10, gfx103, gfx11 */
+#define   G_501_SRC_CACHE_POLICY(x)                                   (((x) >> 13) & 0x3)
+#define   C_501_SRC_CACHE_POLICY                                      0xFFFF9FFF
+#define   S_501_DST_SEL(x)                                            (((unsigned)(x) & 0x3) << 20)
+#define   G_501_DST_SEL(x)                                            (((x) >> 20) & 0x3)
+#define   C_501_DST_SEL                                               0xFFCFFFFF
+#define     V_501_DST_ADDR                                          0
+#define     V_501_GDS                                               1
+#define     V_501_NOWHERE                                           2 /* gfx9, gfx940, gfx10, gfx103, gfx11 */
+#define     V_501_DST_ADDR_TC_L2                                    3 /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10, gfx103, gfx11 */
+#define   S_501_DST_CACHE_POLICY(x)                                   (((unsigned)(x) & 0x3) << 25) /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10, gfx103, gfx11 */
+#define   G_501_DST_CACHE_POLICY(x)                                   (((x) >> 25) & 0x3)
+#define   C_501_DST_CACHE_POLICY                                      0xF9FFFFFF
+#define   S_501_SRC_SEL(x)                                            (((unsigned)(x) & 0x3) << 29)
+#define   G_501_SRC_SEL(x)                                            (((x) >> 29) & 0x3)
+#define   C_501_SRC_SEL                                               0x9FFFFFFF
+#define     V_501_SRC_ADDR                                          0
+#define     V_501_DATA                                              2
+#define     V_501_SRC_ADDR_TC_L2                                    3 /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10, gfx103, gfx11 */
+#define   S_501_CP_SYNC(x)                                            (((unsigned)(x) & 0x1) << 31)
+#define   G_501_CP_SYNC(x)                                            (((x) >> 31) & 0x1)
+#define   C_501_CP_SYNC                                               0x7FFFFFFF
+#define R_502_SRC_ADDR_LO                                               0x502 /* <= gfx11 */
+#define R_503_SRC_ADDR_HI                                               0x503 /* <= gfx11 */
+#define R_505_DST_ADDR_LO                                               0x505 /* <= gfx11 */
+#define R_506_DST_ADDR_HI                                               0x506 /* <= gfx11 */
+#define R_580_ACQUIRE_MEM_PWS_2                                         0x580 /* gfx11 */
 #define   S_580_PWS_STAGE_SEL(x)                                      (((unsigned)(x) & 0x7) << 11)
 #define   G_580_PWS_STAGE_SEL(x)                                      (((x) >> 11) & 0x7)
 #define   C_580_PWS_STAGE_SEL                                         0xFFFFC7FF
@@ -1130,11 +1112,11 @@
 #define   S_580_PWS_COUNT(x)                                          (((unsigned)(x) & 0x3F) << 18)
 #define   G_580_PWS_COUNT(x)                                          (((x) >> 18) & 0x3F)
 #define   C_580_PWS_COUNT                                             0xFF03FFFF
-#define R_585_ACQUIRE_MEM_PWS_7                                         0x585 /* >= gfx11 */
+#define R_585_ACQUIRE_MEM_PWS_7                                         0x585 /* gfx11 */
 #define   S_585_PWS_ENA(x)                                            (((unsigned)(x) & 0x1) << 31)
 #define   G_585_PWS_ENA(x)                                            (((x) >> 31) & 0x1)
 #define   C_585_PWS_ENA                                               0x7FFFFFFF
-#define R_586_GCR_CNTL                                                  0x586 /* >= gfx10 */
+#define R_586_GCR_CNTL                                                  0x586 /* gfx10, gfx103, gfx11 */
 #define   S_586_GLI_INV(x)                                            (((unsigned)(x) & 0x3) << 0)
 #define   G_586_GLI_INV(x)                                            (((x) >> 0) & 0x3)
 #define   C_586_GLI_INV                                               0xFFFFFFFC
@@ -1202,7 +1184,7 @@
 #define   C_0009B4_ADDR_HI                                            0xFFFFFF00
 #define R_0009B4_SQ_WAVE_TTMP1                                          0x0009B4 /* >= gfx9 */
 #define R_0009B8_SQ_WAVE_TMA_LO                                         0x0009B8 /* <= gfx81 */
-#define R_0009B8_SQ_WAVE_TTMP2                                          0x0009B8 /* gfx9, gfx940, gfx10, gfx103 */
+#define R_0009B8_SQ_WAVE_TTMP2                                          0x0009B8 /* gfx9, gfx940, gfx10, gfx103, >= gfx115 */
 #define R_0009BC_SQ_WAVE_TMA_HI                                         0x0009BC /* <= gfx81 */
 #define   S_0009BC_ADDR_HI(x)                                         (((unsigned)(x) & 0xFF) << 0)
 #define   G_0009BC_ADDR_HI(x)                                         (((x) >> 0) & 0xFF)
@@ -1503,7 +1485,7 @@
 #define   S_008008_SDMA0_RQ_PENDING(x)                                (((unsigned)(x) & 0x1) << 22) /* >= gfx10 */
 #define   G_008008_SDMA0_RQ_PENDING(x)                                (((x) >> 22) & 0x1)
 #define   C_008008_SDMA0_RQ_PENDING                                   0xFFBFFFFF
-#define   S_008008_SDMA1_RQ_PENDING(x)                                (((unsigned)(x) & 0x1) << 23) /* >= gfx10 */
+#define   S_008008_SDMA1_RQ_PENDING(x)                                (((unsigned)(x) & 0x1) << 23) /* gfx10, gfx103, gfx11 */
 #define   G_008008_SDMA1_RQ_PENDING(x)                                (((x) >> 23) & 0x1)
 #define   C_008008_SDMA1_RQ_PENDING                                   0xFF7FFFFF
 #define   S_008008_RLC_BUSY_GFX7(x)                                   (((unsigned)(x) & 0x1) << 24) /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10 */
@@ -1539,7 +1521,7 @@
 #define   S_008008_CPG_BUSY(x)                                        (((unsigned)(x) & 0x1) << 30)
 #define   G_008008_CPG_BUSY(x)                                        (((x) >> 30) & 0x1)
 #define   C_008008_CPG_BUSY                                           0xBFFFFFFF
-#define   S_008008_CPAXI_BUSY(x)                                      (((unsigned)(x) & 0x1) << 31) /* gfx9, gfx940, gfx10, gfx103 */
+#define   S_008008_CPAXI_BUSY(x)                                      (((unsigned)(x) & 0x1) << 31) /* gfx9, gfx940, gfx10, gfx103, >= gfx115 */
 #define   G_008008_CPAXI_BUSY(x)                                      (((x) >> 31) & 0x1)
 #define   C_008008_CPAXI_BUSY                                         0x7FFFFFFF
 #define R_00800C_GRBM_PWR_CNTL                                          0x00800C /* <= gfx6 */
@@ -1659,7 +1641,7 @@
 #define   S_008014_PC_BUSY(x)                                         (((unsigned)(x) & 0x1) << 7) /* >= gfx11 */
 #define   G_008014_PC_BUSY(x)                                         (((x) >> 7) & 0x1)
 #define   C_008014_PC_BUSY                                            0xFFFFFF7F
-#define   S_008014_SEDC_BUSY(x)                                       (((unsigned)(x) & 0x1) << 8) /* >= gfx11 */
+#define   S_008014_SEDC_BUSY(x)                                       (((unsigned)(x) & 0x1) << 8) /* gfx11 */
 #define   G_008014_SEDC_BUSY(x)                                       (((x) >> 8) & 0x1)
 #define   C_008014_SEDC_BUSY                                          0xFFFFFEFF
 #define   S_008014_RMI_BUSY(x)                                        (((unsigned)(x) & 0x1) << 21) /* >= gfx9 */
@@ -1692,7 +1674,7 @@
 #define   S_008014_CB_BUSY(x)                                         (((unsigned)(x) & 0x1) << 31)
 #define   G_008014_CB_BUSY(x)                                         (((x) >> 31) & 0x1)
 #define   C_008014_CB_BUSY                                            0x7FFFFFFF
-#define R_008018_GRBM_STATUS_SE1                                        0x008018
+#define R_008018_GRBM_STATUS_SE1                                        0x008018 /* <= gfx11 */
 #define R_00801C_GRBM_STATUS3                                           0x00801C /* >= gfx10 */
 #define   S_00801C_GRBM_RLC_INTR_CREDIT_PENDING(x)                    (((unsigned)(x) & 0x1) << 5)
 #define   G_00801C_GRBM_RLC_INTR_CREDIT_PENDING(x)                    (((x) >> 5) & 0x1)
@@ -1727,7 +1709,7 @@
 #define   S_00801C_GL1CC_BUSY(x)                                      (((unsigned)(x) & 0x1) << 16)
 #define   G_00801C_GL1CC_BUSY(x)                                      (((x) >> 16) & 0x1)
 #define   C_00801C_GL1CC_BUSY                                         0xFFFEFFFF
-#define   S_00801C_SEDC_BUSY(x)                                       (((unsigned)(x) & 0x1) << 25) /* >= gfx11 */
+#define   S_00801C_SEDC_BUSY(x)                                       (((unsigned)(x) & 0x1) << 25) /* gfx11 */
 #define   G_00801C_SEDC_BUSY(x)                                       (((x) >> 25) & 0x1)
 #define   C_00801C_SEDC_BUSY                                          0xFDFFFFFF
 #define   S_00801C_PC_BUSY(x)                                         (((unsigned)(x) & 0x1) << 26) /* >= gfx11 */
@@ -1802,10 +1784,10 @@
 #define   S_008034_WAIT_IDLE_CLOCKS(x)                                (((unsigned)(x) & 0xFF) << 0)
 #define   G_008034_WAIT_IDLE_CLOCKS(x)                                (((x) >> 0) & 0xFF)
 #define   C_008034_WAIT_IDLE_CLOCKS                                   0xFFFFFF00
-#define R_008038_GRBM_STATUS_SE2                                        0x008038 /* >= gfx7 */
-#define R_00803C_GRBM_STATUS_SE3                                        0x00803C /* >= gfx7 */
-#define R_008040_GRBM_STATUS_SE4                                        0x008040 /* >= gfx11 */
-#define R_008044_GRBM_STATUS_SE5                                        0x008044 /* >= gfx11 */
+#define R_008038_GRBM_STATUS_SE2                                        0x008038 /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10, gfx103, gfx11 */
+#define R_00803C_GRBM_STATUS_SE3                                        0x00803C /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10, gfx103, gfx11 */
+#define R_008040_GRBM_STATUS_SE4                                        0x008040 /* gfx11 */
+#define R_008044_GRBM_STATUS_SE5                                        0x008044 /* gfx11 */
 #define R_008050_GRBM_DEBUG                                             0x008050 /* <= gfx6 */
 #define   S_008050_IGNORE_RDY(x)                                      (((unsigned)(x) & 0x1) << 1)
 #define   G_008050_IGNORE_RDY(x)                                      (((x) >> 1) & 0x1)
@@ -2583,8 +2565,8 @@
 #define   S_00822C_FREE_COUNT(x)                                      (((unsigned)(x) & 0x3F) << 0)
 #define   G_00822C_FREE_COUNT(x)                                      (((x) >> 0) & 0x3F)
 #define   C_00822C_FREE_COUNT                                         0xFFFFFFC0
-#define R_008230_CP_CPC_PRIV_VIOLATION_ADDR                             0x008230 /* gfx940, >= gfx103 */
-#define   S_008230_PRIV_VIOLATION_ADDR_GFX103(x)                      (((unsigned)(x) & 0x3FFFF) << 0) /* >= gfx103 */
+#define R_008230_CP_CPC_PRIV_VIOLATION_ADDR                             0x008230 /* gfx940, gfx103, gfx11 */
+#define   S_008230_PRIV_VIOLATION_ADDR_GFX103(x)                      (((unsigned)(x) & 0x3FFFF) << 0) /* gfx103, gfx11 */
 #define   G_008230_PRIV_VIOLATION_ADDR_GFX103(x)                      (((x) >> 0) & 0x3FFFF)
 #define   C_008230_PRIV_VIOLATION_ADDR_GFX103                         0xFFFC0000
 #define   S_008230_PRIV_VIOLATION_STATUS(x)                           (((unsigned)(x) & 0x1) << 0) /* gfx940 */
@@ -5341,8 +5323,8 @@
 #define   S_008E8C_VM_ID(x)                                           (((unsigned)(x) & 0xF) << 9)
 #define   G_008E8C_VM_ID(x)                                           (((x) >> 9) & 0xF)
 #define   C_008E8C_VM_ID                                              0xFFFFE1FF
-#define R_008F00_SQ_BUF_RSRC_WORD0                                      0x008F00
-#define R_008F04_SQ_BUF_RSRC_WORD1                                      0x008F04
+#define R_008F00_SQ_BUF_RSRC_WORD0                                      0x008F00 /* <= gfx11 */
+#define R_008F04_SQ_BUF_RSRC_WORD1                                      0x008F04 /* <= gfx11 */
 #define   S_008F04_BASE_ADDRESS_HI(x)                                 (((unsigned)(x) & 0xFFFF) << 0)
 #define   G_008F04_BASE_ADDRESS_HI(x)                                 (((x) >> 0) & 0xFFFF)
 #define   C_008F04_BASE_ADDRESS_HI                                    0xFFFF0000
@@ -5352,14 +5334,14 @@
 #define   S_008F04_CACHE_SWIZZLE(x)                                   (((unsigned)(x) & 0x1) << 30) /* <= gfx103 */
 #define   G_008F04_CACHE_SWIZZLE(x)                                   (((x) >> 30) & 0x1)
 #define   C_008F04_CACHE_SWIZZLE                                      0xBFFFFFFF
-#define   S_008F04_SWIZZLE_ENABLE_GFX11(x)                            (((unsigned)(x) & 0x3) << 30) /* >= gfx11 */
+#define   S_008F04_SWIZZLE_ENABLE_GFX11(x)                            (((unsigned)(x) & 0x3) << 30) /* gfx11 */
 #define   G_008F04_SWIZZLE_ENABLE_GFX11(x)                            (((x) >> 30) & 0x3)
 #define   C_008F04_SWIZZLE_ENABLE_GFX11                               0x3FFFFFFF
 #define   S_008F04_SWIZZLE_ENABLE_GFX6(x)                             (((unsigned)(x) & 0x1) << 31) /* <= gfx103 */
 #define   G_008F04_SWIZZLE_ENABLE_GFX6(x)                             (((x) >> 31) & 0x1)
 #define   C_008F04_SWIZZLE_ENABLE_GFX6                                0x7FFFFFFF
-#define R_008F08_SQ_BUF_RSRC_WORD2                                      0x008F08
-#define R_008F0C_SQ_BUF_RSRC_WORD3                                      0x008F0C
+#define R_008F08_SQ_BUF_RSRC_WORD2                                      0x008F08 /* <= gfx11 */
+#define R_008F0C_SQ_BUF_RSRC_WORD3                                      0x008F0C /* <= gfx11 */
 #define   S_008F0C_DST_SEL_X(x)                                       (((unsigned)(x) & 0x7) << 0)
 #define   G_008F0C_DST_SEL_X(x)                                       (((x) >> 0) & 0x7)
 #define   C_008F0C_DST_SEL_X                                          0xFFFFFFF8
@@ -5380,197 +5362,197 @@
 #define   S_008F0C_DST_SEL_W(x)                                       (((unsigned)(x) & 0x7) << 9)
 #define   G_008F0C_DST_SEL_W(x)                                       (((x) >> 9) & 0x7)
 #define   C_008F0C_DST_SEL_W                                          0xFFFFF1FF
-#define   S_008F0C_FORMAT(x)                                          (((unsigned)(x) & 0x7F) << 12) /* >= gfx10 */
+#define   S_008F0C_FORMAT(x)                                          (((unsigned)(x) & 0x7F) << 12) /* gfx10, gfx103, gfx11 */
 #define   G_008F0C_FORMAT(x)                                          (((x) >> 12) & 0x7F)
 #define   C_008F0C_FORMAT                                             0xFFF80FFF
 #define     V_008F0C_GFX10_FORMAT_INVALID                           0 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_INVALID                           0 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_INVALID                           0 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_UNORM                           1 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_UNORM                           1 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_UNORM                           1 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_SNORM                           2 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_SNORM                           2 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_SNORM                           2 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_USCALED                         3 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_USCALED                         3 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_USCALED                         3 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_SSCALED                         4 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_SSCALED                         4 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_SSCALED                         4 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_UINT                            5 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_UINT                            5 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_UINT                            5 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_SINT                            6 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_SINT                            6 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_SINT                            6 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_UNORM                          7 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_UNORM                          7 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_UNORM                          7 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_SNORM                          8 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_SNORM                          8 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_SNORM                          8 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_USCALED                        9 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_USCALED                        9 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_USCALED                        9 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_SSCALED                        10 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_SSCALED                        10 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_SSCALED                        10 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_UINT                           11 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_UINT                           11 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_UINT                           11 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_SINT                           12 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_SINT                           12 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_SINT                           12 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_FLOAT                          13 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_FLOAT                          13 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_FLOAT                          13 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_UNORM                         14 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_UNORM                         14 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_UNORM                         14 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_SNORM                         15 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_SNORM                         15 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_SNORM                         15 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_USCALED                       16 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_USCALED                       16 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_USCALED                       16 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_SSCALED                       17 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_SSCALED                       17 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_SSCALED                       17 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_UINT                          18 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_UINT                          18 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_UINT                          18 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_SINT                          19 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_SINT                          19 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_SINT                          19 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_UINT                           20 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_UINT                           20 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_UINT                           20 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_SINT                           21 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_SINT                           21 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_SINT                           21 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_FLOAT                          22 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_FLOAT                          22 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_FLOAT                          22 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_UNORM                       23 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_UNORM                       23 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_UNORM                       23 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_SNORM                       24 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_SNORM                       24 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_SNORM                       24 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_USCALED                     25 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_USCALED                     25 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_USCALED                     25 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_SSCALED                     26 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_SSCALED                     26 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_SSCALED                     26 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_UINT                        27 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_UINT                        27 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_UINT                        27 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_SINT                        28 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_SINT                        28 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_SINT                        28 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_FLOAT                       29 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_FLOAT                       29 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_FLOAT                       29 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_11_11_UNORM                    30 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_10_11_11_FLOAT                    30 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_10_11_11_FLOAT                    30 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_11_11_SNORM                    31 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_11_11_10_FLOAT                    31 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_11_11_10_FLOAT                    31 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_11_11_USCALED                  32 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_10_10_10_2_UNORM                  32 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_10_10_10_2_UNORM                  32 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_11_11_SSCALED                  33 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_10_10_10_2_SNORM                  33 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_10_10_10_2_SNORM                  33 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_11_11_UINT                     34 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_10_10_10_2_UINT                   34 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_10_10_10_2_UINT                   34 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_11_11_SINT                     35 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_10_10_10_2_SINT                   35 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_10_10_10_2_SINT                   35 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_11_11_FLOAT                    36 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_2_10_10_10_UNORM                  36 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_2_10_10_10_UNORM                  36 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_11_11_10_UNORM                    37 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_2_10_10_10_SNORM                  37 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_2_10_10_10_SNORM                  37 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_11_11_10_SNORM                    38 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_2_10_10_10_USCALED                38 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_2_10_10_10_USCALED                38 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_11_11_10_USCALED                  39 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_2_10_10_10_SSCALED                39 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_2_10_10_10_SSCALED                39 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_11_11_10_SSCALED                  40 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_2_10_10_10_UINT                   40 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_2_10_10_10_UINT                   40 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_11_11_10_UINT                     41 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_2_10_10_10_SINT                   41 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_2_10_10_10_SINT                   41 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_11_11_10_SINT                     42 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_8_8_UNORM                     42 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_8_8_UNORM                     42 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_11_11_10_FLOAT                    43 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_8_8_SNORM                     43 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_8_8_SNORM                     43 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_10_10_2_UNORM                  44 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_8_8_USCALED                   44 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_8_8_USCALED                   44 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_10_10_2_SNORM                  45 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_8_8_SSCALED                   45 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_8_8_SSCALED                   45 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_10_10_2_USCALED                46 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_8_8_UINT                      46 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_8_8_UINT                      46 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_10_10_2_SSCALED                47 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_8_8_SINT                      47 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_8_8_SINT                      47 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_10_10_2_UINT                   48 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_32_UINT                        48 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_32_UINT                        48 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_10_10_10_2_SINT                   49 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_32_SINT                        49 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_32_SINT                        49 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_2_10_10_10_UNORM                  50 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_32_FLOAT                       50 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_32_FLOAT                       50 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_2_10_10_10_SNORM                  51 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_16_16_UNORM                 51 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_16_16_UNORM                 51 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_2_10_10_10_USCALED                52 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_16_16_SNORM                 52 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_16_16_SNORM                 52 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_2_10_10_10_SSCALED                53 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_16_16_USCALED               53 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_16_16_USCALED               53 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_2_10_10_10_UINT                   54 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_16_16_SSCALED               54 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_16_16_SSCALED               54 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_2_10_10_10_SINT                   55 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_16_16_UINT                  55 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_16_16_UINT                  55 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_8_8_UNORM                     56 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_16_16_SINT                  56 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_16_16_SINT                  56 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_8_8_SNORM                     57 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_16_16_16_16_FLOAT                 57 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_16_16_16_16_FLOAT                 57 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_8_8_USCALED                   58 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_32_32_UINT                     58 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_32_32_UINT                     58 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_8_8_SSCALED                   59 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_32_32_SINT                     59 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_32_32_SINT                     59 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_8_8_UINT                      60 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_32_32_FLOAT                    60 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_32_32_FLOAT                    60 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_8_8_8_SINT                      61 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_32_32_32_UINT                  61 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_32_32_32_UINT                  61 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_32_UINT                        62 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_32_32_32_SINT                  62 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_32_32_32_SINT                  62 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_32_SINT                        63 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_32_32_32_FLOAT                 63 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_32_32_32_FLOAT                 63 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_32_FLOAT                       64 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_SRGB                            64 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_SRGB                            64 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_16_16_UNORM                 65 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_SRGB                          65 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_SRGB                          65 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_16_16_SNORM                 66 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_8_8_8_SRGB                      66 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_8_8_8_SRGB                      66 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_16_16_USCALED               67 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_5_9_9_9_FLOAT                     67 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_5_9_9_9_FLOAT                     67 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_16_16_SSCALED               68 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_5_6_5_UNORM                       68 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_5_6_5_UNORM                       68 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_16_16_UINT                  69 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_1_5_5_5_UNORM                     69 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_1_5_5_5_UNORM                     69 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_16_16_SINT                  70 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_5_5_5_1_UNORM                     70 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_5_5_5_1_UNORM                     70 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_16_16_16_16_FLOAT                 71 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_4_4_4_4_UNORM                     71 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_4_4_4_4_UNORM                     71 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_32_32_UINT                     72 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_4_4_UNORM                         72 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_4_4_UNORM                         72 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_32_32_SINT                     73 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_1_UNORM                           73 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_1_UNORM                           73 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_32_32_FLOAT                    74 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_1_REVERSED_UNORM                  74 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_1_REVERSED_UNORM                  74 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_32_32_32_UINT                  75 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_32_FLOAT_CLAMP                    75 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_32_FLOAT_CLAMP                    75 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_32_32_32_SINT                  76 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_24_UNORM                        76 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_24_UNORM                        76 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_32_32_32_32_FLOAT                 77 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_8_24_UINT                         77 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_24_8_UNORM                        78 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_24_8_UINT                         79 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_X24_8_32_UINT                     80 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_X24_8_32_FLOAT                    81 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_GB_GR_UNORM                       82 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_GB_GR_SNORM                       83 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_GB_GR_UINT                        84 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_GB_GR_SRGB                        85 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BG_RG_UNORM                       86 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BG_RG_SNORM                       87 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BG_RG_UINT                        88 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BG_RG_SRGB                        89 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_UNORM                 90 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_UINT                  91 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_16_UNORM              92 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_16_UINT               93 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_16_16_16_UNORM        94 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_16_16_16_UINT         95 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC1_UNORM                         109 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC1_SRGB                          110 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC2_UNORM                         111 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC2_SRGB                          112 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC3_UNORM                         113 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC3_SRGB                          114 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC4_UNORM                         115 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC4_SNORM                         116 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC5_UNORM                         117 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC5_SNORM                         118 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC6_UFLOAT                        119 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC6_SFLOAT                        120 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC7_UNORM                         121 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_BC7_SRGB                          122 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_8_24_UINT                         77 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_24_8_UNORM                        78 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_24_8_UINT                         79 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_X24_8_32_UINT                     80 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_X24_8_32_FLOAT                    81 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_GB_GR_UNORM                       82 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_GB_GR_SNORM                       83 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_GB_GR_UINT                        84 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_GB_GR_SRGB                        85 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BG_RG_UNORM                       86 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BG_RG_SNORM                       87 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BG_RG_UINT                        88 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BG_RG_SRGB                        89 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_UNORM                 90 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_UINT                  91 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_16_UNORM              92 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_16_UINT               93 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_16_16_16_UNORM        94 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_10_IN_16_16_16_16_UINT         95 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC1_UNORM                         109 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC1_SRGB                          110 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC2_UNORM                         111 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC2_SRGB                          112 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC3_UNORM                         113 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC3_SRGB                          114 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC4_UNORM                         115 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC4_SNORM                         116 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC5_UNORM                         117 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC5_SNORM                         118 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC6_UFLOAT                        119 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC6_SFLOAT                        120 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC7_UNORM                         121 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_BC7_SRGB                          122 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_8_SRGB                            128 /* gfx10, gfx103 */
 #define     V_008F0C_GFX10_FORMAT_8_8_SRGB                          129 /* gfx10, gfx103 */
 #define     V_008F0C_GFX10_FORMAT_8_8_8_8_SRGB                      130 /* gfx10, gfx103 */
@@ -5625,30 +5607,30 @@
 #define     V_008F0C_GFX10_FORMAT_BC6_SFLOAT                        180 /* gfx10, gfx103 */
 #define     V_008F0C_GFX10_FORMAT_BC7_UNORM                         181 /* gfx10, gfx103 */
 #define     V_008F0C_GFX10_FORMAT_BC7_SRGB                          182 /* gfx10, gfx103 */
-#define     V_008F0C_GFX11_FORMAT_YCBCR_UNORM                       205 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_YCBCR_SRGB                        206 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_8_UNORM                        207 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_8_UINT                         208 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_8_8_UNORM                      209 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_8_8_UINT                       210 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_8_8_8_8_UNORM                  211 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_8_8_8_8_UINT                   212 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_VYUY8_UNORM                    213 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_VYUY8_UINT                     214 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_10_11_11_UNORM                 215 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_10_11_11_UINT                  216 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_2_10_10_10_UNORM               217 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_2_10_10_10_UINT                218 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_16_16_16_16_UNORM              219 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_16_16_16_16_UINT               220 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_UNORM                 221 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_UINT                  222 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_16_UNORM              223 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_16_UINT               224 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_16_16_16_UNORM        225 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_16_16_16_UINT         226 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_6E4_FLOAT                         227 /* >= gfx11 */
-#define     V_008F0C_GFX11_FORMAT_7E3_FLOAT                         228 /* >= gfx11 */
+#define     V_008F0C_GFX11_FORMAT_YCBCR_UNORM                       205 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_YCBCR_SRGB                        206 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_8_UNORM                        207 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_8_UINT                         208 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_8_8_UNORM                      209 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_8_8_UINT                       210 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_8_8_8_8_UNORM                  211 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_8_8_8_8_UINT                   212 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_VYUY8_UNORM                    213 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_VYUY8_UINT                     214 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_10_11_11_UNORM                 215 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_10_11_11_UINT                  216 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_2_10_10_10_UNORM               217 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_2_10_10_10_UINT                218 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_16_16_16_16_UNORM              219 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_16_16_16_16_UINT               220 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_UNORM                 221 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_UINT                  222 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_16_UNORM              223 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_16_UINT               224 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_16_16_16_UNORM        225 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_MM_12_IN_16_16_16_16_UINT         226 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_6E4_FLOAT                         227 /* gfx11 */
+#define     V_008F0C_GFX11_FORMAT_7E3_FLOAT                         228 /* gfx11 */
 #define     V_008F0C_GFX10_FORMAT_MM_8_UNORM                        265 /* gfx10, gfx103 */
 #define     V_008F0C_GFX10_FORMAT_MM_8_UINT                         266 /* gfx10, gfx103 */
 #define     V_008F0C_GFX10_FORMAT_MM_8_8_UNORM                      267 /* gfx10, gfx103 */
@@ -5736,7 +5718,7 @@
 #define   S_008F0C_HEAP(x)                                            (((unsigned)(x) & 0x1) << 26) /* <= gfx81 */
 #define   G_008F0C_HEAP(x)                                            (((x) >> 26) & 0x1)
 #define   C_008F0C_HEAP                                               0xFBFFFFFF
-#define   S_008F0C_LLC_NOALLOC(x)                                     (((unsigned)(x) & 0x3) << 26) /* >= gfx103 */
+#define   S_008F0C_LLC_NOALLOC(x)                                     (((unsigned)(x) & 0x3) << 26) /* gfx103, gfx11 */
 #define   G_008F0C_LLC_NOALLOC(x)                                     (((x) >> 26) & 0x3)
 #define   C_008F0C_LLC_NOALLOC                                        0xF3FFFFFF
 #define   S_008F0C_MTYPE(x)                                           (((unsigned)(x) & 0x7) << 27) /* <= gfx81 */
@@ -5745,7 +5727,7 @@
 #define   S_008F0C_NV(x)                                              (((unsigned)(x) & 0x1) << 27) /* gfx9, gfx940 */
 #define   G_008F0C_NV(x)                                              (((x) >> 27) & 0x1)
 #define   C_008F0C_NV                                                 0xF7FFFFFF
-#define   S_008F0C_OOB_SELECT(x)                                      (((unsigned)(x) & 0x3) << 28) /* >= gfx10 */
+#define   S_008F0C_OOB_SELECT(x)                                      (((unsigned)(x) & 0x3) << 28) /* gfx10, gfx103, gfx11 */
 #define   G_008F0C_OOB_SELECT(x)                                      (((x) >> 28) & 0x3)
 #define   C_008F0C_OOB_SELECT                                         0xCFFFFFFF
 #define     V_008F0C_OOB_SELECT_STRUCTURED_WITH_OFFSET              0
@@ -6065,7 +6047,7 @@
 #define   G_008F28_LOST_COLOR_BITS(x)                                 (((x) >> 28) & 0xF)
 #define   C_008F28_LOST_COLOR_BITS                                    0x0FFFFFFF
 #define R_008F2C_SQ_IMG_RSRC_WORD7                                      0x008F2C /* <= gfx940 */
-#define R_008F30_SQ_IMG_SAMP_WORD0                                      0x008F30
+#define R_008F30_SQ_IMG_SAMP_WORD0                                      0x008F30 /* <= gfx11 */
 #define   S_008F30_CLAMP_X(x)                                         (((unsigned)(x) & 0x7) << 0)
 #define   G_008F30_CLAMP_X(x)                                         (((x) >> 0) & 0x7)
 #define   C_008F30_CLAMP_X                                            0xFFFFFFF8
@@ -6127,10 +6109,10 @@
 #define   S_008F30_COMPAT_MODE(x)                                     (((unsigned)(x) & 0x1) << 31) /* gfx8, gfx81, gfx9, gfx940 */
 #define   G_008F30_COMPAT_MODE(x)                                     (((x) >> 31) & 0x1)
 #define   C_008F30_COMPAT_MODE                                        0x7FFFFFFF
-#define   S_008F30_SKIP_DEGAMMA(x)                                    (((unsigned)(x) & 0x1) << 31) /* >= gfx10 */
+#define   S_008F30_SKIP_DEGAMMA(x)                                    (((unsigned)(x) & 0x1) << 31) /* gfx10, gfx103, gfx11 */
 #define   G_008F30_SKIP_DEGAMMA(x)                                    (((x) >> 31) & 0x1)
 #define   C_008F30_SKIP_DEGAMMA                                       0x7FFFFFFF
-#define R_008F34_SQ_IMG_SAMP_WORD1                                      0x008F34
+#define R_008F34_SQ_IMG_SAMP_WORD1                                      0x008F34 /* <= gfx11 */
 #define   S_008F34_MIN_LOD(x)                                         (((unsigned)(x) & 0xFFF) << 0)
 #define   G_008F34_MIN_LOD(x)                                         (((x) >> 0) & 0xFFF)
 #define   C_008F34_MIN_LOD                                            0xFFFFF000
@@ -6143,7 +6125,7 @@
 #define   S_008F34_PERF_Z(x)                                          (((unsigned)(x) & 0xF) << 28)
 #define   G_008F34_PERF_Z(x)                                          (((x) >> 28) & 0xF)
 #define   C_008F34_PERF_Z                                             0x0FFFFFFF
-#define R_008F38_SQ_IMG_SAMP_WORD2                                      0x008F38
+#define R_008F38_SQ_IMG_SAMP_WORD2                                      0x008F38 /* <= gfx11 */
 #define   S_008F38_LOD_BIAS(x)                                        (((unsigned)(x) & 0x3FFF) << 0)
 #define   G_008F38_LOD_BIAS(x)                                        (((x) >> 0) & 0x3FFF)
 #define   C_008F38_LOD_BIAS                                           0xFFFFC000
@@ -6176,7 +6158,7 @@
 #define   S_008F38_MIP_POINT_PRECLAMP(x)                              (((unsigned)(x) & 0x1) << 28) /* <= gfx103 */
 #define   G_008F38_MIP_POINT_PRECLAMP(x)                              (((x) >> 28) & 0x1)
 #define   C_008F38_MIP_POINT_PRECLAMP                                 0xEFFFFFFF
-#define   S_008F38_ANISO_OVERRIDE_GFX10(x)                            (((unsigned)(x) & 0x1) << 29) /* >= gfx10 */
+#define   S_008F38_ANISO_OVERRIDE_GFX10(x)                            (((unsigned)(x) & 0x1) << 29) /* gfx10, gfx103, gfx11 */
 #define   G_008F38_ANISO_OVERRIDE_GFX10(x)                            (((x) >> 29) & 0x1)
 #define   C_008F38_ANISO_OVERRIDE_GFX10                               0xDFFFFFFF
 #define   S_008F38_BLEND_ZERO_PRT_GFX9(x)                             (((unsigned)(x) & 0x1) << 29) /* gfx9, gfx940 */
@@ -6185,7 +6167,7 @@
 #define   S_008F38_DISABLE_LSB_CEIL(x)                                (((unsigned)(x) & 0x1) << 29) /* <= gfx81 */
 #define   G_008F38_DISABLE_LSB_CEIL(x)                                (((x) >> 29) & 0x1)
 #define   C_008F38_DISABLE_LSB_CEIL                                   0xDFFFFFFF
-#define   S_008F38_BLEND_PRT(x)                                       (((unsigned)(x) & 0x1) << 30) /* >= gfx11 */
+#define   S_008F38_BLEND_PRT(x)                                       (((unsigned)(x) & 0x1) << 30) /* gfx11 */
 #define   G_008F38_BLEND_PRT(x)                                       (((x) >> 30) & 0x1)
 #define   C_008F38_BLEND_PRT                                          0xBFFFFFFF
 #define   S_008F38_BLEND_ZERO_PRT_GFX10(x)                            (((unsigned)(x) & 0x1) << 30) /* gfx10, gfx103 */
@@ -6197,14 +6179,14 @@
 #define   S_008F38_ANISO_OVERRIDE_GFX8(x)                             (((unsigned)(x) & 0x1) << 31) /* gfx8, gfx81, gfx9, gfx940 */
 #define   G_008F38_ANISO_OVERRIDE_GFX8(x)                             (((x) >> 31) & 0x1)
 #define   C_008F38_ANISO_OVERRIDE_GFX8                                0x7FFFFFFF
-#define R_008F3C_SQ_IMG_SAMP_WORD3                                      0x008F3C
+#define R_008F3C_SQ_IMG_SAMP_WORD3                                      0x008F3C /* <= gfx11 */
 #define   S_008F3C_BORDER_COLOR_PTR_GFX6(x)                           (((unsigned)(x) & 0xFFF) << 0) /* <= gfx103 */
 #define   G_008F3C_BORDER_COLOR_PTR_GFX6(x)                           (((x) >> 0) & 0xFFF)
 #define   C_008F3C_BORDER_COLOR_PTR_GFX6                              0xFFFFF000
 #define   S_008F3C_SKIP_DEGAMMA(x)                                    (((unsigned)(x) & 0x1) << 12) /* gfx9, gfx940 */
 #define   G_008F3C_SKIP_DEGAMMA(x)                                    (((x) >> 12) & 0x1)
 #define   C_008F3C_SKIP_DEGAMMA                                       0xFFFFEFFF
-#define   S_008F3C_BORDER_COLOR_PTR_GFX11(x)                          (((unsigned)(x) & 0xFFF) << 18) /* >= gfx11 */
+#define   S_008F3C_BORDER_COLOR_PTR_GFX11(x)                          (((unsigned)(x) & 0xFFF) << 18) /* gfx11 */
 #define   G_008F3C_BORDER_COLOR_PTR_GFX11(x)                          (((x) >> 18) & 0xFFF)
 #define   C_008F3C_BORDER_COLOR_PTR_GFX11                             0xC003FFFF
 #define   S_008F3C_UPGRADED_DEPTH(x)                                  (((unsigned)(x) & 0x1) << 29) /* <= gfx81 */
@@ -6472,214 +6454,214 @@
 #define R_0099C4_GB_MACROTILE_MODE13                                    0x0099C4 /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10 */
 #define R_0099C8_GB_MACROTILE_MODE14                                    0x0099C8 /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10 */
 #define R_0099CC_GB_MACROTILE_MODE15                                    0x0099CC /* gfx7, gfx8, gfx81, gfx9, gfx940, gfx10 */
-#define R_00A000_SQ_IMG_RSRC_WORD0                                      0x00A000 /* >= gfx10 */
-#define R_00A004_SQ_IMG_RSRC_WORD1                                      0x00A004 /* >= gfx10 */
+#define R_00A000_SQ_IMG_RSRC_WORD0                                      0x00A000 /* gfx10, gfx103, gfx11 */
+#define R_00A004_SQ_IMG_RSRC_WORD1                                      0x00A004 /* gfx10, gfx103, gfx11 */
 #define   S_00A004_BASE_ADDRESS_HI(x)                                 (((unsigned)(x) & 0xFF) << 0)
 #define   G_00A004_BASE_ADDRESS_HI(x)                                 (((x) >> 0) & 0xFF)
 #define   C_00A004_BASE_ADDRESS_HI                                    0xFFFFFF00
 #define   S_00A004_MIN_LOD(x)                                         (((unsigned)(x) & 0xFFF) << 8) /* gfx10, gfx103 */
 #define   G_00A004_MIN_LOD(x)                                         (((x) >> 8) & 0xFFF)
 #define   C_00A004_MIN_LOD                                            0xFFF000FF
-#define   S_00A004_LLC_NOALLOC(x)                                     (((unsigned)(x) & 0x3) << 13) /* >= gfx11 */
+#define   S_00A004_LLC_NOALLOC(x)                                     (((unsigned)(x) & 0x3) << 13) /* gfx11 */
 #define   G_00A004_LLC_NOALLOC(x)                                     (((x) >> 13) & 0x3)
 #define   C_00A004_LLC_NOALLOC                                        0xFFFF9FFF
-#define   S_00A004_BIG_PAGE(x)                                        (((unsigned)(x) & 0x1) << 15) /* >= gfx11 */
+#define   S_00A004_BIG_PAGE(x)                                        (((unsigned)(x) & 0x1) << 15) /* gfx11 */
 #define   G_00A004_BIG_PAGE(x)                                        (((x) >> 15) & 0x1)
 #define   C_00A004_BIG_PAGE                                           0xFFFF7FFF
-#define   S_00A004_MAX_MIP(x)                                         (((unsigned)(x) & 0xF) << 16) /* >= gfx11 */
+#define   S_00A004_MAX_MIP(x)                                         (((unsigned)(x) & 0xF) << 16) /* gfx11 */
 #define   G_00A004_MAX_MIP(x)                                         (((x) >> 16) & 0xF)
 #define   C_00A004_MAX_MIP                                            0xFFF0FFFF
 #define   S_00A004_FORMAT(x)                                          (((unsigned)(x) & 0x1FF) << 20)
 #define   G_00A004_FORMAT(x)                                          (((x) >> 20) & 0x1FF)
 #define   C_00A004_FORMAT                                             0xE00FFFFF
 #define     V_00A004_GFX10_FORMAT_INVALID                           0 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_INVALID                           0 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_INVALID                           0 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_UNORM                           1 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_UNORM                           1 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_UNORM                           1 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_SNORM                           2 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_SNORM                           2 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_SNORM                           2 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_USCALED                         3 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_USCALED                         3 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_USCALED                         3 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_SSCALED                         4 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_SSCALED                         4 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_SSCALED                         4 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_UINT                            5 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_UINT                            5 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_UINT                            5 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_SINT                            6 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_SINT                            6 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_SINT                            6 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_UNORM                          7 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_UNORM                          7 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_UNORM                          7 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_SNORM                          8 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_SNORM                          8 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_SNORM                          8 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_USCALED                        9 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_USCALED                        9 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_USCALED                        9 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_SSCALED                        10 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_SSCALED                        10 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_SSCALED                        10 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_UINT                           11 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_UINT                           11 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_UINT                           11 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_SINT                           12 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_SINT                           12 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_SINT                           12 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_FLOAT                          13 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_FLOAT                          13 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_FLOAT                          13 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_UNORM                         14 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_UNORM                         14 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_UNORM                         14 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_SNORM                         15 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_SNORM                         15 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_SNORM                         15 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_USCALED                       16 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_USCALED                       16 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_USCALED                       16 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_SSCALED                       17 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_SSCALED                       17 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_SSCALED                       17 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_UINT                          18 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_UINT                          18 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_UINT                          18 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_SINT                          19 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_SINT                          19 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_SINT                          19 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_UINT                           20 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_UINT                           20 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_UINT                           20 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_SINT                           21 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_SINT                           21 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_SINT                           21 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_FLOAT                          22 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_FLOAT                          22 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_FLOAT                          22 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_UNORM                       23 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_UNORM                       23 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_UNORM                       23 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_SNORM                       24 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_SNORM                       24 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_SNORM                       24 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_USCALED                     25 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_USCALED                     25 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_USCALED                     25 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_SSCALED                     26 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_SSCALED                     26 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_SSCALED                     26 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_UINT                        27 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_UINT                        27 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_UINT                        27 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_SINT                        28 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_SINT                        28 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_SINT                        28 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_FLOAT                       29 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_FLOAT                       29 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_FLOAT                       29 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_11_11_UNORM                    30 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_10_11_11_FLOAT                    30 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_10_11_11_FLOAT                    30 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_11_11_SNORM                    31 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_11_11_10_FLOAT                    31 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_11_11_10_FLOAT                    31 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_11_11_USCALED                  32 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_10_10_10_2_UNORM                  32 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_10_10_10_2_UNORM                  32 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_11_11_SSCALED                  33 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_10_10_10_2_SNORM                  33 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_10_10_10_2_SNORM                  33 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_11_11_UINT                     34 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_10_10_10_2_UINT                   34 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_10_10_10_2_UINT                   34 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_11_11_SINT                     35 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_10_10_10_2_SINT                   35 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_10_10_10_2_SINT                   35 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_11_11_FLOAT                    36 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_2_10_10_10_UNORM                  36 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_2_10_10_10_UNORM                  36 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_11_11_10_UNORM                    37 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_2_10_10_10_SNORM                  37 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_2_10_10_10_SNORM                  37 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_11_11_10_SNORM                    38 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_2_10_10_10_USCALED                38 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_2_10_10_10_USCALED                38 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_11_11_10_USCALED                  39 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_2_10_10_10_SSCALED                39 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_2_10_10_10_SSCALED                39 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_11_11_10_SSCALED                  40 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_2_10_10_10_UINT                   40 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_2_10_10_10_UINT                   40 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_11_11_10_UINT                     41 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_2_10_10_10_SINT                   41 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_2_10_10_10_SINT                   41 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_11_11_10_SINT                     42 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_8_8_UNORM                     42 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_8_8_UNORM                     42 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_11_11_10_FLOAT                    43 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_8_8_SNORM                     43 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_8_8_SNORM                     43 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_10_10_2_UNORM                  44 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_8_8_USCALED                   44 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_8_8_USCALED                   44 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_10_10_2_SNORM                  45 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_8_8_SSCALED                   45 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_8_8_SSCALED                   45 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_10_10_2_USCALED                46 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_8_8_UINT                      46 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_8_8_UINT                      46 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_10_10_2_SSCALED                47 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_8_8_SINT                      47 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_8_8_SINT                      47 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_10_10_2_UINT                   48 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_32_UINT                        48 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_32_UINT                        48 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_10_10_10_2_SINT                   49 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_32_SINT                        49 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_32_SINT                        49 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_2_10_10_10_UNORM                  50 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_32_FLOAT                       50 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_32_FLOAT                       50 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_2_10_10_10_SNORM                  51 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_16_16_UNORM                 51 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_16_16_UNORM                 51 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_2_10_10_10_USCALED                52 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_16_16_SNORM                 52 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_16_16_SNORM                 52 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_2_10_10_10_SSCALED                53 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_16_16_USCALED               53 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_16_16_USCALED               53 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_2_10_10_10_UINT                   54 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_16_16_SSCALED               54 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_16_16_SSCALED               54 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_2_10_10_10_SINT                   55 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_16_16_UINT                  55 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_16_16_UINT                  55 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_8_8_UNORM                     56 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_16_16_SINT                  56 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_16_16_SINT                  56 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_8_8_SNORM                     57 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_16_16_16_16_FLOAT                 57 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_16_16_16_16_FLOAT                 57 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_8_8_USCALED                   58 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_32_32_UINT                     58 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_32_32_UINT                     58 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_8_8_SSCALED                   59 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_32_32_SINT                     59 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_32_32_SINT                     59 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_8_8_UINT                      60 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_32_32_FLOAT                    60 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_32_32_FLOAT                    60 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_8_8_8_SINT                      61 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_32_32_32_UINT                  61 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_32_32_32_UINT                  61 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_32_UINT                        62 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_32_32_32_SINT                  62 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_32_32_32_SINT                  62 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_32_SINT                        63 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_32_32_32_FLOAT                 63 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_32_32_32_FLOAT                 63 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_32_FLOAT                       64 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_SRGB                            64 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_SRGB                            64 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_16_16_UNORM                 65 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_SRGB                          65 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_SRGB                          65 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_16_16_SNORM                 66 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_8_8_8_SRGB                      66 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_8_8_8_SRGB                      66 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_16_16_USCALED               67 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_5_9_9_9_FLOAT                     67 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_5_9_9_9_FLOAT                     67 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_16_16_SSCALED               68 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_5_6_5_UNORM                       68 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_5_6_5_UNORM                       68 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_16_16_UINT                  69 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_1_5_5_5_UNORM                     69 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_1_5_5_5_UNORM                     69 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_16_16_SINT                  70 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_5_5_5_1_UNORM                     70 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_5_5_5_1_UNORM                     70 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_16_16_16_16_FLOAT                 71 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_4_4_4_4_UNORM                     71 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_4_4_4_4_UNORM                     71 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_32_32_UINT                     72 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_4_4_UNORM                         72 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_4_4_UNORM                         72 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_32_32_SINT                     73 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_1_UNORM                           73 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_1_UNORM                           73 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_32_32_FLOAT                    74 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_1_REVERSED_UNORM                  74 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_1_REVERSED_UNORM                  74 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_32_32_32_UINT                  75 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_32_FLOAT_CLAMP                    75 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_32_FLOAT_CLAMP                    75 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_32_32_32_SINT                  76 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_24_UNORM                        76 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_24_UNORM                        76 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_32_32_32_32_FLOAT                 77 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_8_24_UINT                         77 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_24_8_UNORM                        78 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_24_8_UINT                         79 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_X24_8_32_UINT                     80 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_X24_8_32_FLOAT                    81 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_GB_GR_UNORM                       82 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_GB_GR_SNORM                       83 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_GB_GR_UINT                        84 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_GB_GR_SRGB                        85 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BG_RG_UNORM                       86 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BG_RG_SNORM                       87 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BG_RG_UINT                        88 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BG_RG_SRGB                        89 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_UNORM                 90 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_UINT                  91 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_16_UNORM              92 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_16_UINT               93 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_16_16_16_UNORM        94 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_16_16_16_UINT         95 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC1_UNORM                         109 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC1_SRGB                          110 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC2_UNORM                         111 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC2_SRGB                          112 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC3_UNORM                         113 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC3_SRGB                          114 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC4_UNORM                         115 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC4_SNORM                         116 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC5_UNORM                         117 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC5_SNORM                         118 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC6_UFLOAT                        119 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC6_SFLOAT                        120 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC7_UNORM                         121 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_BC7_SRGB                          122 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_8_24_UINT                         77 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_24_8_UNORM                        78 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_24_8_UINT                         79 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_X24_8_32_UINT                     80 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_X24_8_32_FLOAT                    81 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_GB_GR_UNORM                       82 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_GB_GR_SNORM                       83 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_GB_GR_UINT                        84 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_GB_GR_SRGB                        85 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BG_RG_UNORM                       86 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BG_RG_SNORM                       87 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BG_RG_UINT                        88 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BG_RG_SRGB                        89 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_UNORM                 90 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_UINT                  91 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_16_UNORM              92 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_16_UINT               93 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_16_16_16_UNORM        94 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_10_IN_16_16_16_16_UINT         95 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC1_UNORM                         109 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC1_SRGB                          110 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC2_UNORM                         111 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC2_SRGB                          112 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC3_UNORM                         113 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC3_SRGB                          114 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC4_UNORM                         115 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC4_SNORM                         116 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC5_UNORM                         117 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC5_SNORM                         118 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC6_UFLOAT                        119 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC6_SFLOAT                        120 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC7_UNORM                         121 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_BC7_SRGB                          122 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_8_SRGB                            128 /* gfx10, gfx103 */
 #define     V_00A004_GFX10_FORMAT_8_8_SRGB                          129 /* gfx10, gfx103 */
 #define     V_00A004_GFX10_FORMAT_8_8_8_8_SRGB                      130 /* gfx10, gfx103 */
@@ -6734,30 +6716,30 @@
 #define     V_00A004_GFX10_FORMAT_BC6_SFLOAT                        180 /* gfx10, gfx103 */
 #define     V_00A004_GFX10_FORMAT_BC7_UNORM                         181 /* gfx10, gfx103 */
 #define     V_00A004_GFX10_FORMAT_BC7_SRGB                          182 /* gfx10, gfx103 */
-#define     V_00A004_GFX11_FORMAT_YCBCR_UNORM                       205 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_YCBCR_SRGB                        206 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_8_UNORM                        207 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_8_UINT                         208 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_8_8_UNORM                      209 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_8_8_UINT                       210 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_8_8_8_8_UNORM                  211 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_8_8_8_8_UINT                   212 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_VYUY8_UNORM                    213 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_VYUY8_UINT                     214 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_10_11_11_UNORM                 215 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_10_11_11_UINT                  216 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_2_10_10_10_UNORM               217 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_2_10_10_10_UINT                218 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_16_16_16_16_UNORM              219 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_16_16_16_16_UINT               220 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_UNORM                 221 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_UINT                  222 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_16_UNORM              223 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_16_UINT               224 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_16_16_16_UNORM        225 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_16_16_16_UINT         226 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_6E4_FLOAT                         227 /* >= gfx11 */
-#define     V_00A004_GFX11_FORMAT_7E3_FLOAT                         228 /* >= gfx11 */
+#define     V_00A004_GFX11_FORMAT_YCBCR_UNORM                       205 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_YCBCR_SRGB                        206 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_8_UNORM                        207 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_8_UINT                         208 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_8_8_UNORM                      209 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_8_8_UINT                       210 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_8_8_8_8_UNORM                  211 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_8_8_8_8_UINT                   212 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_VYUY8_UNORM                    213 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_VYUY8_UINT                     214 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_10_11_11_UNORM                 215 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_10_11_11_UINT                  216 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_2_10_10_10_UNORM               217 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_2_10_10_10_UINT                218 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_16_16_16_16_UNORM              219 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_16_16_16_16_UINT               220 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_UNORM                 221 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_UINT                  222 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_16_UNORM              223 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_16_UINT               224 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_16_16_16_UNORM        225 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_MM_12_IN_16_16_16_16_UINT         226 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_6E4_FLOAT                         227 /* gfx11 */
+#define     V_00A004_GFX11_FORMAT_7E3_FLOAT                         228 /* gfx11 */
 #define     V_00A004_GFX10_FORMAT_MM_8_UNORM                        265 /* gfx10, gfx103 */
 #define     V_00A004_GFX10_FORMAT_MM_8_UINT                         266 /* gfx10, gfx103 */
 #define     V_00A004_GFX10_FORMAT_MM_8_8_UNORM                      267 /* gfx10, gfx103 */
@@ -6789,7 +6771,7 @@
 #define   S_00A004_WIDTH_LO(x)                                        (((unsigned)(x) & 0x3) << 30)
 #define   G_00A004_WIDTH_LO(x)                                        (((x) >> 30) & 0x3)
 #define   C_00A004_WIDTH_LO                                           0x3FFFFFFF
-#define R_00A008_SQ_IMG_RSRC_WORD2                                      0x00A008 /* >= gfx10 */
+#define R_00A008_SQ_IMG_RSRC_WORD2                                      0x00A008 /* gfx10, gfx103, gfx11 */
 #define   S_00A008_WIDTH_HI(x)                                        (((unsigned)(x) & 0xFFF) << 0)
 #define   G_00A008_WIDTH_HI(x)                                        (((x) >> 0) & 0xFFF)
 #define   C_00A008_WIDTH_HI                                           0xFFFFF000
@@ -6799,7 +6781,7 @@
 #define   S_00A008_RESOURCE_LEVEL(x)                                  (((unsigned)(x) & 0x1) << 31) /* gfx10, gfx103 */
 #define   G_00A008_RESOURCE_LEVEL(x)                                  (((x) >> 31) & 0x1)
 #define   C_00A008_RESOURCE_LEVEL                                     0x7FFFFFFF
-#define R_00A00C_SQ_IMG_RSRC_WORD3                                      0x00A00C /* >= gfx10 */
+#define R_00A00C_SQ_IMG_RSRC_WORD3                                      0x00A00C /* gfx10, gfx103, gfx11 */
 #define   S_00A00C_DST_SEL_X(x)                                       (((unsigned)(x) & 0x7) << 0)
 #define   G_00A00C_DST_SEL_X(x)                                       (((x) >> 0) & 0x7)
 #define   C_00A00C_DST_SEL_X                                          0xFFFFFFF8
@@ -6833,17 +6815,17 @@
 #define   S_00A00C_TYPE(x)                                            (((unsigned)(x) & 0xF) << 28)
 #define   G_00A00C_TYPE(x)                                            (((x) >> 28) & 0xF)
 #define   C_00A00C_TYPE                                               0x0FFFFFFF
-#define R_00A010_SQ_IMG_RSRC_WORD4                                      0x00A010 /* >= gfx10 */
+#define R_00A010_SQ_IMG_RSRC_WORD4                                      0x00A010 /* gfx10, gfx103, gfx11 */
 #define   S_00A010_DEPTH(x)                                           (((unsigned)(x) & 0x1FFF) << 0)
 #define   G_00A010_DEPTH(x)                                           (((x) >> 0) & 0x1FFF)
 #define   C_00A010_DEPTH                                              0xFFFFE000
-#define   S_00A010_PITCH(x)                                           (((unsigned)(x) & 0x3FFF) << 0) /* gfx103 */
-#define   G_00A010_PITCH(x)                                           (((x) >> 0) & 0x3FFF)
-#define   C_00A010_PITCH                                              0xFFFFC000
+#define   S_00A010_PITCH_MSB(x)                                       (((unsigned)(x) & 0x1) << 13) /* gfx103, gfx11 */
+#define   G_00A010_PITCH_MSB(x)                                       (((x) >> 13) & 0x1)
+#define   C_00A010_PITCH_MSB                                          0xFFFFDFFF
 #define   S_00A010_BASE_ARRAY(x)                                      (((unsigned)(x) & 0x1FFF) << 16)
 #define   G_00A010_BASE_ARRAY(x)                                      (((x) >> 16) & 0x1FFF)
 #define   C_00A010_BASE_ARRAY                                         0xE000FFFF
-#define R_00A014_SQ_IMG_RSRC_WORD5                                      0x00A014 /* >= gfx10 */
+#define R_00A014_SQ_IMG_RSRC_WORD5                                      0x00A014 /* gfx10, gfx103, gfx11 */
 #define   S_00A014_ARRAY_PITCH(x)                                     (((unsigned)(x) & 0xF) << 0)
 #define   G_00A014_ARRAY_PITCH(x)                                     (((x) >> 0) & 0xF)
 #define   C_00A014_ARRAY_PITCH                                        0xFFFFFFF0
@@ -6865,17 +6847,17 @@
 #define   S_00A014_PRT_DEFAULT(x)                                     (((unsigned)(x) & 0x1) << 26)
 #define   G_00A014_PRT_DEFAULT(x)                                     (((x) >> 26) & 0x1)
 #define   C_00A014_PRT_DEFAULT                                        0xFBFFFFFF
-#define   S_00A014_MIN_LOD_LO(x)                                      (((unsigned)(x) & 0x1F) << 27) /* >= gfx11 */
+#define   S_00A014_MIN_LOD_LO(x)                                      (((unsigned)(x) & 0x1F) << 27) /* gfx11 */
 #define   G_00A014_MIN_LOD_LO(x)                                      (((x) >> 27) & 0x1F)
 #define   C_00A014_MIN_LOD_LO                                         0x07FFFFFF
 #define   S_00A014_BIG_PAGE(x)                                        (((unsigned)(x) & 0x1) << 31) /* gfx103 */
 #define   G_00A014_BIG_PAGE(x)                                        (((x) >> 31) & 0x1)
 #define   C_00A014_BIG_PAGE                                           0x7FFFFFFF
-#define R_00A018_SQ_IMG_RSRC_WORD6                                      0x00A018 /* >= gfx10 */
+#define R_00A018_SQ_IMG_RSRC_WORD6                                      0x00A018 /* gfx10, gfx103, gfx11 */
 #define   S_00A018_COUNTER_BANK_ID(x)                                 (((unsigned)(x) & 0xFF) << 0) /* gfx10, gfx103 */
 #define   G_00A018_COUNTER_BANK_ID(x)                                 (((x) >> 0) & 0xFF)
 #define   C_00A018_COUNTER_BANK_ID                                    0xFFFFFF00
-#define   S_00A018_MIN_LOD_HI(x)                                      (((unsigned)(x) & 0x7F) << 0) /* >= gfx11 */
+#define   S_00A018_MIN_LOD_HI(x)                                      (((unsigned)(x) & 0x7F) << 0) /* gfx11 */
 #define   G_00A018_MIN_LOD_HI(x)                                      (((x) >> 0) & 0x7F)
 #define   C_00A018_MIN_LOD_HI                                         0xFFFFFF80
 #define   S_00A018_LLC_NOALLOC(x)                                     (((unsigned)(x) & 0x3) << 8) /* gfx103 */
@@ -6884,7 +6866,7 @@
 #define   S_00A018_ITERATE_256(x)                                     (((unsigned)(x) & 0x1) << 10)
 #define   G_00A018_ITERATE_256(x)                                     (((x) >> 10) & 0x1)
 #define   C_00A018_ITERATE_256                                        0xFFFFFBFF
-#define   S_00A018_SAMPLE_PATTERN_OFFSET(x)                           (((unsigned)(x) & 0xF) << 11) /* >= gfx11 */
+#define   S_00A018_SAMPLE_PATTERN_OFFSET(x)                           (((unsigned)(x) & 0xF) << 11) /* gfx11 */
 #define   G_00A018_SAMPLE_PATTERN_OFFSET(x)                           (((x) >> 11) & 0xF)
 #define   C_00A018_SAMPLE_PATTERN_OFFSET                              0xFFFF87FF
 #define   S_00A018_MAX_UNCOMPRESSED_BLOCK_SIZE(x)                     (((unsigned)(x) & 0x3) << 15)
@@ -6911,7 +6893,7 @@
 #define   S_00A018_META_DATA_ADDRESS_LO(x)                            (((unsigned)(x) & 0xFF) << 24)
 #define   G_00A018_META_DATA_ADDRESS_LO(x)                            (((x) >> 24) & 0xFF)
 #define   C_00A018_META_DATA_ADDRESS_LO                               0x00FFFFFF
-#define R_00A01C_SQ_IMG_RSRC_WORD7                                      0x00A01C /* >= gfx10 */
+#define R_00A01C_SQ_IMG_RSRC_WORD7                                      0x00A01C /* gfx10, gfx103, gfx11 */
 #define R_00B000_SPI_SHADER_TBA_LO_PS                                   0x00B000 /* <= gfx81 */
 #define R_00B004_SPI_SHADER_PGM_RSRC4_PS                                0x00B004 /* >= gfx10 */
 #define   S_00B004_CU_EN(x)                                           (((unsigned)(x) & 0xFFFF) << 0)
@@ -9566,6 +9548,31 @@
 #define   S_028060_DISALLOW_OVERFLOW(x)                               (((unsigned)(x) & 0x1) << 3)
 #define   G_028060_DISALLOW_OVERFLOW(x)                               (((x) >> 3) & 0x1)
 #define   C_028060_DISALLOW_OVERFLOW                                  0xFFFFFFF7
+#define R_028060_DB_SPI_VRS_CENTER_LOCATION                             0x028060 /* >= gfx115 */
+#define   S_028060_CENTER_X_OFFSET_1X1(x)                             (((unsigned)(x) & 0xF) << 0)
+#define   G_028060_CENTER_X_OFFSET_1X1(x)                             (((x) >> 0) & 0xF)
+#define   C_028060_CENTER_X_OFFSET_1X1                                0xFFFFFFF0
+#define   S_028060_CENTER_Y_OFFSET_1X1(x)                             (((unsigned)(x) & 0xF) << 4)
+#define   G_028060_CENTER_Y_OFFSET_1X1(x)                             (((x) >> 4) & 0xF)
+#define   C_028060_CENTER_Y_OFFSET_1X1                                0xFFFFFF0F
+#define   S_028060_CENTER_X_OFFSET_2X1(x)                             (((unsigned)(x) & 0xF) << 8)
+#define   G_028060_CENTER_X_OFFSET_2X1(x)                             (((x) >> 8) & 0xF)
+#define   C_028060_CENTER_X_OFFSET_2X1                                0xFFFFF0FF
+#define   S_028060_CENTER_Y_OFFSET_2X1(x)                             (((unsigned)(x) & 0xF) << 12)
+#define   G_028060_CENTER_Y_OFFSET_2X1(x)                             (((x) >> 12) & 0xF)
+#define   C_028060_CENTER_Y_OFFSET_2X1                                0xFFFF0FFF
+#define   S_028060_CENTER_X_OFFSET_1X2(x)                             (((unsigned)(x) & 0xF) << 16)
+#define   G_028060_CENTER_X_OFFSET_1X2(x)                             (((x) >> 16) & 0xF)
+#define   C_028060_CENTER_X_OFFSET_1X2                                0xFFF0FFFF
+#define   S_028060_CENTER_Y_OFFSET_1X2(x)                             (((unsigned)(x) & 0xF) << 20)
+#define   G_028060_CENTER_Y_OFFSET_1X2(x)                             (((x) >> 20) & 0xF)
+#define   C_028060_CENTER_Y_OFFSET_1X2                                0xFF0FFFFF
+#define   S_028060_CENTER_X_OFFSET_2X2(x)                             (((unsigned)(x) & 0xF) << 24)
+#define   G_028060_CENTER_X_OFFSET_2X2(x)                             (((x) >> 24) & 0xF)
+#define   C_028060_CENTER_X_OFFSET_2X2                                0xF0FFFFFF
+#define   S_028060_CENTER_Y_OFFSET_2X2(x)                             (((unsigned)(x) & 0xF) << 28)
+#define   G_028060_CENTER_Y_OFFSET_2X2(x)                             (((x) >> 28) & 0xF)
+#define   C_028060_CENTER_Y_OFFSET_2X2                                0x0FFFFFFF
 #define R_028064_DB_VRS_OVERRIDE_CNTL                                   0x028064 /* gfx103 */
 #define   S_028064_VRS_OVERRIDE_RATE_COMBINER_MODE(x)                 (((unsigned)(x) & 0x7) << 0)
 #define   G_028064_VRS_OVERRIDE_RATE_COMBINER_MODE(x)                 (((x) >> 0) & 0x7)
@@ -10809,6 +10816,13 @@
 #define   S_0286D8_PS_W32_EN(x)                                       (((unsigned)(x) & 0x1) << 15) /* >= gfx10 */
 #define   G_0286D8_PS_W32_EN(x)                                       (((x) >> 15) & 0x1)
 #define   C_0286D8_PS_W32_EN                                          0xFFFF7FFF
+#define R_0286DC_SPI_BARYC_SSAA_CNTL                                    0x0286DC /* >= gfx115 */
+#define   S_0286DC_CENTER_SSAA_MODE(x)                                (((unsigned)(x) & 0x1) << 0)
+#define   G_0286DC_CENTER_SSAA_MODE(x)                                (((x) >> 0) & 0x1)
+#define   C_0286DC_CENTER_SSAA_MODE                                   0xFFFFFFFE
+#define   S_0286DC_CENTROID_SSAA_MODE(x)                              (((unsigned)(x) & 0x1) << 1)
+#define   G_0286DC_CENTROID_SSAA_MODE(x)                              (((x) >> 1) & 0x1)
+#define   C_0286DC_CENTROID_SSAA_MODE                                 0xFFFFFFFD
 #define R_0286E0_SPI_BARYC_CNTL                                         0x0286E0 /* <= gfx9, >= gfx10 */
 #define   S_0286E0_PERSP_CENTER_CNTL(x)                               (((unsigned)(x) & 0x1) << 0)
 #define   G_0286E0_PERSP_CENTER_CNTL(x)                               (((x) >> 0) & 0x1)
@@ -11814,7 +11828,7 @@
 #define   S_028830_SRBSL_ENABLE(x)                                    (((unsigned)(x) & 0x1) << 5) /* gfx10 */
 #define   G_028830_SRBSL_ENABLE(x)                                    (((x) >> 5) & 0x1)
 #define   C_028830_SRBSL_ENABLE                                       0xFFFFFFDF
-#define   S_028830_SC_1XMSAA_COMPATIBLE_DISABLE(x)                    (((unsigned)(x) & 0x1) << 6) /* gfx9, gfx10 */
+#define   S_028830_SC_1XMSAA_COMPATIBLE_DISABLE(x)                    (((unsigned)(x) & 0x1) << 6) /* gfx9, gfx10, >= gfx115 */
 #define   G_028830_SC_1XMSAA_COMPATIBLE_DISABLE(x)                    (((x) >> 6) & 0x1)
 #define   C_028830_SC_1XMSAA_COMPATIBLE_DISABLE                       0xFFFFFFBF
 #define R_028834_PA_CL_OBJPRIM_ID_CNTL                                  0x028834 /* gfx9, gfx10 */
@@ -12762,7 +12776,7 @@
 #define     V_028B6C_OUTPUT_LINE                                    1
 #define     V_028B6C_OUTPUT_TRIANGLE_CW                             2
 #define     V_028B6C_OUTPUT_TRIANGLE_CCW                            3
-#define   S_028B6C_RESERVED_REDUC_AXIS(x)                             (((unsigned)(x) & 0x1) << 8) /* <= gfx9, gfx10, gfx103 */
+#define   S_028B6C_RESERVED_REDUC_AXIS(x)                             (((unsigned)(x) & 0x1) << 8) /* <= gfx9, gfx10, gfx103, >= gfx115 */
 #define   G_028B6C_RESERVED_REDUC_AXIS(x)                             (((x) >> 8) & 0x1)
 #define   C_028B6C_RESERVED_REDUC_AXIS                                0xFFFFFEFF
 #define   S_028B6C_DEPRECATED(x)                                      (((unsigned)(x) & 0x1) << 9) /* <= gfx9, gfx10, gfx103 */
@@ -13387,9 +13401,12 @@
 #define   S_028C54_DUAL_LIGHT_SHAFT_IN_DRAW(x)                        (((unsigned)(x) & 0x1) << 3)
 #define   G_028C54_DUAL_LIGHT_SHAFT_IN_DRAW(x)                        (((x) >> 3) & 0x1)
 #define   C_028C54_DUAL_LIGHT_SHAFT_IN_DRAW                           0xFFFFFFF7
-#define   S_028C54_LIGHT_SHAFT_DRAW_CALL_LIMIT(x)                     (((unsigned)(x) & 0x7) << 4)
-#define   G_028C54_LIGHT_SHAFT_DRAW_CALL_LIMIT(x)                     (((x) >> 4) & 0x7)
-#define   C_028C54_LIGHT_SHAFT_DRAW_CALL_LIMIT                        0xFFFFFF8F
+#define   S_028C54_LIGHT_SHAFT_DRAW_CALL_LIMIT_GFX11(x)               (((unsigned)(x) & 0x7) << 4) /* gfx11 */
+#define   G_028C54_LIGHT_SHAFT_DRAW_CALL_LIMIT_GFX11(x)               (((x) >> 4) & 0x7)
+#define   C_028C54_LIGHT_SHAFT_DRAW_CALL_LIMIT_GFX11                  0xFFFFFF8F
+#define   S_028C54_RESERVED_LIGHT_SHAFT_DRAW_CALL_LIMIT(x)            (((unsigned)(x) & 0x7) << 4) /* >= gfx115 */
+#define   G_028C54_RESERVED_LIGHT_SHAFT_DRAW_CALL_LIMIT(x)            (((x) >> 4) & 0x7)
+#define   C_028C54_RESERVED_LIGHT_SHAFT_DRAW_CALL_LIMIT               0xFFFFFF8F
 #define   S_028C54_CONTEXT_DONE_EVENTS_PER_BIN(x)                     (((unsigned)(x) & 0xF) << 7)
 #define   G_028C54_CONTEXT_DONE_EVENTS_PER_BIN(x)                     (((x) >> 7) & 0xF)
 #define   C_028C54_CONTEXT_DONE_EVENTS_PER_BIN                        0xFFFFF87F
@@ -13405,6 +13422,22 @@
 #define   S_028C54_DISABLE_NOPCEXPORT_BREAKBATCH_CONDITION(x)         (((unsigned)(x) & 0x1) << 21)
 #define   G_028C54_DISABLE_NOPCEXPORT_BREAKBATCH_CONDITION(x)         (((x) >> 21) & 0x1)
 #define   C_028C54_DISABLE_NOPCEXPORT_BREAKBATCH_CONDITION            0xFFDFFFFF
+#define   S_028C54_SBB_ENABLE(x)                                      (((unsigned)(x) & 0x1) << 22) /* >= gfx115 */
+#define   G_028C54_SBB_ENABLE(x)                                      (((x) >> 22) & 0x1)
+#define   C_028C54_SBB_ENABLE                                         0xFFBFFFFF
+#define   S_028C54_ENABLE_PING_PONG_BIN_ORDER(x)                      (((unsigned)(x) & 0x1) << 23) /* >= gfx115 */
+#define   G_028C54_ENABLE_PING_PONG_BIN_ORDER(x)                      (((x) >> 23) & 0x1)
+#define   C_028C54_ENABLE_PING_PONG_BIN_ORDER                         0xFF7FFFFF
+#define   S_028C54_PING_PONG_BIN_ORDER_FLIP(x)                        (((unsigned)(x) & 0x3) << 24) /* >= gfx115 */
+#define   G_028C54_PING_PONG_BIN_ORDER_FLIP(x)                        (((x) >> 24) & 0x3)
+#define   C_028C54_PING_PONG_BIN_ORDER_FLIP                           0xFCFFFFFF
+#define   S_028C54_LIGHT_SHAFT_DRAW_CALL_LIMIT_GFX115(x)              (((unsigned)(x) & 0x1F) << 26) /* >= gfx115 */
+#define   G_028C54_LIGHT_SHAFT_DRAW_CALL_LIMIT_GFX115(x)              (((x) >> 26) & 0x1F)
+#define   C_028C54_LIGHT_SHAFT_DRAW_CALL_LIMIT_GFX115                 0x83FFFFFF
+#define R_028C58_PA_SC_BINNER_OUTPUT_TIMEOUT_CNTL                       0x028C58 /* >= gfx115 */
+#define   S_028C58_THRESHOLD(x)                                       (((unsigned)(x) & 0xFFFF) << 0)
+#define   G_028C58_THRESHOLD(x)                                       (((x) >> 0) & 0xFFFF)
+#define   C_028C58_THRESHOLD                                          0xFFFF0000
 #define R_028C58_VGT_VERTEX_REUSE_BLOCK_CNTL                            0x028C58 /* <= gfx9, gfx10, gfx103 */
 #define   S_028C58_VTX_REUSE_DEPTH(x)                                 (((unsigned)(x) & 0xFF) << 0)
 #define   G_028C58_VTX_REUSE_DEPTH(x)                                 (((x) >> 0) & 0xFF)
@@ -14652,7 +14685,7 @@
 #define   S_030244_RB_OFFSET(x)                                       (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_030244_RB_OFFSET(x)                                       (((x) >> 0) & 0xFFFFF)
 #define   C_030244_RB_OFFSET                                          0xFFF00000
-#define R_030248_CP_IB1_OFFSET                                          0x030248 /* gfx7, gfx8, gfx81, gfx9, gfx10 */
+#define R_030248_CP_IB1_OFFSET                                          0x030248 /* gfx7, gfx8, gfx81, gfx9, gfx10, >= gfx115 */
 #define   S_030248_IB1_OFFSET(x)                                      (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_030248_IB1_OFFSET(x)                                      (((x) >> 0) & 0xFFFFF)
 #define   C_030248_IB1_OFFSET                                         0xFFF00000
@@ -14660,11 +14693,11 @@
 #define   S_03024C_IB2_OFFSET(x)                                      (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_03024C_IB2_OFFSET(x)                                      (((x) >> 0) & 0xFFFFF)
 #define   C_03024C_IB2_OFFSET                                         0xFFF00000
-#define R_030250_CP_IB1_PREAMBLE_BEGIN                                  0x030250 /* gfx7, gfx8, gfx81, gfx9, gfx10 */
+#define R_030250_CP_IB1_PREAMBLE_BEGIN                                  0x030250 /* gfx7, gfx8, gfx81, gfx9, gfx10, >= gfx115 */
 #define   S_030250_IB1_PREAMBLE_BEGIN(x)                              (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_030250_IB1_PREAMBLE_BEGIN(x)                              (((x) >> 0) & 0xFFFFF)
 #define   C_030250_IB1_PREAMBLE_BEGIN                                 0xFFF00000
-#define R_030254_CP_IB1_PREAMBLE_END                                    0x030254 /* gfx7, gfx8, gfx81, gfx9, gfx10 */
+#define R_030254_CP_IB1_PREAMBLE_END                                    0x030254 /* gfx7, gfx8, gfx81, gfx9, gfx10, >= gfx115 */
 #define   S_030254_IB1_PREAMBLE_END(x)                                (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_030254_IB1_PREAMBLE_END(x)                                (((x) >> 0) & 0xFFFFF)
 #define   C_030254_IB1_PREAMBLE_END                                   0xFFF00000
@@ -14755,7 +14788,7 @@
 #define   S_0302FC_IB2_CMD_REQSZ(x)                                   (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_0302FC_IB2_CMD_REQSZ(x)                                   (((x) >> 0) & 0xFFFFF)
 #define   C_0302FC_IB2_CMD_REQSZ                                      0xFFF00000
-#define R_030300_CP_IB1_CMD_BUFSZ                                       0x030300 /* gfx9, gfx10 */
+#define R_030300_CP_IB1_CMD_BUFSZ                                       0x030300 /* gfx9, gfx10, >= gfx115 */
 #define   S_030300_IB1_CMD_REQSZ(x)                                   (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_030300_IB1_CMD_REQSZ(x)                                   (((x) >> 0) & 0xFFFFF)
 #define   C_030300_IB1_CMD_REQSZ                                      0xFFF00000
@@ -14803,15 +14836,15 @@
 #define   S_03032C_IB2_BUFSZ(x)                                       (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_03032C_IB2_BUFSZ(x)                                       (((x) >> 0) & 0xFFFFF)
 #define   C_03032C_IB2_BUFSZ                                          0xFFF00000
-#define R_030330_CP_IB1_BASE_LO                                         0x030330 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103 */
+#define R_030330_CP_IB1_BASE_LO                                         0x030330 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103, >= gfx115 */
 #define   S_030330_IB1_BASE_LO(x)                                     (((unsigned)(x) & 0x3FFFFFFF) << 2)
 #define   G_030330_IB1_BASE_LO(x)                                     (((x) >> 2) & 0x3FFFFFFF)
 #define   C_030330_IB1_BASE_LO                                        0x00000003
-#define R_030334_CP_IB1_BASE_HI                                         0x030334 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103 */
+#define R_030334_CP_IB1_BASE_HI                                         0x030334 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103, >= gfx115 */
 #define   S_030334_IB1_BASE_HI(x)                                     (((unsigned)(x) & 0xFFFF) << 0)
 #define   G_030334_IB1_BASE_HI(x)                                     (((x) >> 0) & 0xFFFF)
 #define   C_030334_IB1_BASE_HI                                        0xFFFF0000
-#define R_030338_CP_IB1_BUFSZ                                           0x030338 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103 */
+#define R_030338_CP_IB1_BUFSZ                                           0x030338 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103, >= gfx115 */
 #define   S_030338_IB1_BUFSZ(x)                                       (((unsigned)(x) & 0xFFFFF) << 0)
 #define   G_030338_IB1_BUFSZ(x)                                       (((x) >> 0) & 0xFFFFF)
 #define   C_030338_IB1_BUFSZ                                          0xFFF00000
@@ -16103,16 +16136,16 @@
 #define R_034118_GRBM_SE0_PERFCOUNTER_HI                                0x034118 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
 #define R_03411C_GRBM_SE1_PERFCOUNTER_LO                                0x03411C /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
 #define R_034120_GRBM_SE1_PERFCOUNTER_HI                                0x034120 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
-#define R_034124_GRBM_SE2_PERFCOUNTER_LO                                0x034124 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
-#define R_034128_GRBM_SE2_PERFCOUNTER_HI                                0x034128 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
-#define R_03412C_GRBM_SE3_PERFCOUNTER_LO                                0x03412C /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
-#define R_034130_GRBM_SE3_PERFCOUNTER_HI                                0x034130 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
-#define R_034134_GRBM_SE4_PERFCOUNTER_LO                                0x034134 /* >= gfx11 */
-#define R_034138_GRBM_SE4_PERFCOUNTER_HI                                0x034138 /* >= gfx11 */
-#define R_03413C_GRBM_SE5_PERFCOUNTER_LO                                0x03413C /* >= gfx11 */
-#define R_034140_GRBM_SE5_PERFCOUNTER_HI                                0x034140 /* >= gfx11 */
-#define R_034144_GRBM_SE6_PERFCOUNTER_LO                                0x034144 /* >= gfx11 */
-#define R_034148_GRBM_SE6_PERFCOUNTER_HI                                0x034148 /* >= gfx11 */
+#define R_034124_GRBM_SE2_PERFCOUNTER_LO                                0x034124 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103, gfx11 */
+#define R_034128_GRBM_SE2_PERFCOUNTER_HI                                0x034128 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103, gfx11 */
+#define R_03412C_GRBM_SE3_PERFCOUNTER_LO                                0x03412C /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103, gfx11 */
+#define R_034130_GRBM_SE3_PERFCOUNTER_HI                                0x034130 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103, gfx11 */
+#define R_034134_GRBM_SE4_PERFCOUNTER_LO                                0x034134 /* gfx11 */
+#define R_034138_GRBM_SE4_PERFCOUNTER_HI                                0x034138 /* gfx11 */
+#define R_03413C_GRBM_SE5_PERFCOUNTER_LO                                0x03413C /* gfx11 */
+#define R_034140_GRBM_SE5_PERFCOUNTER_HI                                0x034140 /* gfx11 */
+#define R_034144_GRBM_SE6_PERFCOUNTER_LO                                0x034144 /* gfx11 */
+#define R_034148_GRBM_SE6_PERFCOUNTER_HI                                0x034148 /* gfx11 */
 #define R_034200_GE_PERFCOUNTER0_LO                                     0x034200 /* gfx10 */
 #define R_034200_WD_PERFCOUNTER0_LO                                     0x034200 /* gfx7, gfx8, gfx81, gfx9 */
 #define R_034204_GE_PERFCOUNTER0_HI                                     0x034204 /* gfx10 */
@@ -16459,14 +16492,14 @@
 #define R_034F14_CHC_PERFCOUNTER2_HI                                    0x034F14 /* >= gfx10 */
 #define R_034F18_CHC_PERFCOUNTER3_LO                                    0x034F18 /* >= gfx10 */
 #define R_034F1C_CHC_PERFCOUNTER3_HI                                    0x034F1C /* >= gfx10 */
-#define R_034F20_CHCG_PERFCOUNTER0_LO                                   0x034F20 /* >= gfx10 */
-#define R_034F24_CHCG_PERFCOUNTER0_HI                                   0x034F24 /* >= gfx10 */
-#define R_034F28_CHCG_PERFCOUNTER1_LO                                   0x034F28 /* >= gfx10 */
-#define R_034F2C_CHCG_PERFCOUNTER1_HI                                   0x034F2C /* >= gfx10 */
-#define R_034F30_CHCG_PERFCOUNTER2_LO                                   0x034F30 /* >= gfx10 */
-#define R_034F34_CHCG_PERFCOUNTER2_HI                                   0x034F34 /* >= gfx10 */
-#define R_034F38_CHCG_PERFCOUNTER3_LO                                   0x034F38 /* >= gfx10 */
-#define R_034F3C_CHCG_PERFCOUNTER3_HI                                   0x034F3C /* >= gfx10 */
+#define R_034F20_CHCG_PERFCOUNTER0_LO                                   0x034F20 /* gfx10, gfx103, gfx11 */
+#define R_034F24_CHCG_PERFCOUNTER0_HI                                   0x034F24 /* gfx10, gfx103, gfx11 */
+#define R_034F28_CHCG_PERFCOUNTER1_LO                                   0x034F28 /* gfx10, gfx103, gfx11 */
+#define R_034F2C_CHCG_PERFCOUNTER1_HI                                   0x034F2C /* gfx10, gfx103, gfx11 */
+#define R_034F30_CHCG_PERFCOUNTER2_LO                                   0x034F30 /* gfx10, gfx103, gfx11 */
+#define R_034F34_CHCG_PERFCOUNTER2_HI                                   0x034F34 /* gfx10, gfx103, gfx11 */
+#define R_034F38_CHCG_PERFCOUNTER3_LO                                   0x034F38 /* gfx10, gfx103, gfx11 */
+#define R_034F3C_CHCG_PERFCOUNTER3_HI                                   0x034F3C /* gfx10, gfx103, gfx11 */
 #define R_035018_CB_PERFCOUNTER0_LO                                     0x035018 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
 #define R_03501C_CB_PERFCOUNTER0_HI                                     0x03501C /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
 #define R_035020_CB_PERFCOUNTER1_LO                                     0x035020 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
@@ -16539,9 +16572,27 @@
 #define   S_0353AC_COMPARE_VALUE(x)                                   (((unsigned)(x) & 0xFFFF) << 16)
 #define   G_0353AC_COMPARE_VALUE(x)                                   (((x) >> 16) & 0xFFFF)
 #define   C_0353AC_COMPARE_VALUE                                      0x0000FFFF
+#define R_0353D0_GC_ATC_L2_PERFCOUNTER2_LO                              0x0353D0 /* >= gfx115 */
+#define R_0353D4_GC_ATC_L2_PERFCOUNTER2_HI                              0x0353D4 /* >= gfx115 */
 #define R_0353E0_GCVML2_PERFCOUNTER2_0_LO                               0x0353E0 /* gfx10, gfx103 */
+#define R_0353E0_GC_ATC_L2_PERFCOUNTER_LO                               0x0353E0 /* >= gfx115 */
 #define R_0353E4_GCVML2_PERFCOUNTER2_1_LO                               0x0353E4 /* gfx10, gfx103 */
+#define R_0353E4_GC_ATC_L2_PERFCOUNTER_HI                               0x0353E4 /* >= gfx115 */
+#define   S_0353E4_COUNTER_HI(x)                                      (((unsigned)(x) & 0xFFFF) << 0)
+#define   G_0353E4_COUNTER_HI(x)                                      (((x) >> 0) & 0xFFFF)
+#define   C_0353E4_COUNTER_HI                                         0xFFFF0000
+#define   S_0353E4_COMPARE_VALUE(x)                                   (((unsigned)(x) & 0xFFFF) << 16)
+#define   G_0353E4_COMPARE_VALUE(x)                                   (((x) >> 16) & 0xFFFF)
+#define   C_0353E4_COMPARE_VALUE                                      0x0000FFFF
+#define R_0353E8_GCL2TLB_PERFCOUNTER_LO                                 0x0353E8 /* >= gfx115 */
 #define R_0353E8_GCVML2_PERFCOUNTER2_0_HI                               0x0353E8 /* gfx10, gfx103 */
+#define R_0353EC_GCL2TLB_PERFCOUNTER_HI                                 0x0353EC /* >= gfx115 */
+#define   S_0353EC_COUNTER_HI(x)                                      (((unsigned)(x) & 0xFFFF) << 0)
+#define   G_0353EC_COUNTER_HI(x)                                      (((x) >> 0) & 0xFFFF)
+#define   C_0353EC_COUNTER_HI                                         0xFFFF0000
+#define   S_0353EC_COMPARE_VALUE(x)                                   (((unsigned)(x) & 0xFFFF) << 16)
+#define   G_0353EC_COMPARE_VALUE(x)                                   (((x) >> 16) & 0xFFFF)
+#define   C_0353EC_COMPARE_VALUE                                      0x0000FFFF
 #define R_0353EC_GCVML2_PERFCOUNTER2_1_HI                               0x0353EC /* gfx10, gfx103 */
 #define R_0353F0_GC_ATC_L2_PERFCOUNTER2_LO                              0x0353F0 /* gfx10 */
 #define R_0353F4_GC_ATC_L2_PERFCOUNTER2_HI                              0x0353F4 /* gfx10 */
@@ -16617,10 +16668,10 @@
 #define R_035814_CHA_PERFCOUNTER2_HI                                    0x035814 /* >= gfx10 */
 #define R_035818_CHA_PERFCOUNTER3_LO                                    0x035818 /* >= gfx10 */
 #define R_03581C_CHA_PERFCOUNTER3_HI                                    0x03581C /* >= gfx10 */
-#define R_035900_GUS_PERFCOUNTER2_LO                                    0x035900 /* >= gfx10 */
-#define R_035904_GUS_PERFCOUNTER2_HI                                    0x035904 /* >= gfx10 */
-#define R_035908_GUS_PERFCOUNTER_LO                                     0x035908 /* >= gfx103 */
-#define R_03590C_GUS_PERFCOUNTER_HI                                     0x03590C /* >= gfx103 */
+#define R_035900_GUS_PERFCOUNTER2_LO                                    0x035900 /* gfx10, gfx103, gfx11 */
+#define R_035904_GUS_PERFCOUNTER2_HI                                    0x035904 /* gfx10, gfx103, gfx11 */
+#define R_035908_GUS_PERFCOUNTER_LO                                     0x035908 /* gfx103, gfx11 */
+#define R_03590C_GUS_PERFCOUNTER_HI                                     0x03590C /* gfx103, gfx11 */
 #define   S_03590C_COUNTER_HI(x)                                      (((unsigned)(x) & 0xFFFF) << 0)
 #define   G_03590C_COUNTER_HI(x)                                      (((x) >> 0) & 0xFFFF)
 #define   C_03590C_COUNTER_HI                                         0xFFFF0000
@@ -16639,12 +16690,12 @@
 #define R_03598C_SDMA0_PERFCOUNTER0_HI                                  0x03598C /* >= gfx103 */
 #define R_035990_SDMA0_PERFCOUNTER1_LO                                  0x035990 /* >= gfx103 */
 #define R_035994_SDMA0_PERFCOUNTER1_HI                                  0x035994 /* >= gfx103 */
-#define R_0359B0_SDMA1_PERFCNT_PERFCOUNTER_LO                           0x0359B0 /* >= gfx103 */
-#define R_0359B4_SDMA1_PERFCNT_PERFCOUNTER_HI                           0x0359B4 /* >= gfx103 */
-#define R_0359B8_SDMA1_PERFCOUNTER0_LO                                  0x0359B8 /* >= gfx103 */
-#define R_0359BC_SDMA1_PERFCOUNTER0_HI                                  0x0359BC /* >= gfx103 */
-#define R_0359C0_SDMA1_PERFCOUNTER1_LO                                  0x0359C0 /* >= gfx103 */
-#define R_0359C4_SDMA1_PERFCOUNTER1_HI                                  0x0359C4 /* >= gfx103 */
+#define R_0359B0_SDMA1_PERFCNT_PERFCOUNTER_LO                           0x0359B0 /* gfx103, gfx11 */
+#define R_0359B4_SDMA1_PERFCNT_PERFCOUNTER_HI                           0x0359B4 /* gfx103, gfx11 */
+#define R_0359B8_SDMA1_PERFCOUNTER0_LO                                  0x0359B8 /* gfx103, gfx11 */
+#define R_0359BC_SDMA1_PERFCOUNTER0_HI                                  0x0359BC /* gfx103, gfx11 */
+#define R_0359C0_SDMA1_PERFCOUNTER1_LO                                  0x0359C0 /* gfx103, gfx11 */
+#define R_0359C4_SDMA1_PERFCOUNTER1_HI                                  0x0359C4 /* gfx103, gfx11 */
 #define R_0359E0_SDMA2_PERFCNT_PERFCOUNTER_LO                           0x0359E0 /* gfx103 */
 #define R_0359E4_SDMA2_PERFCNT_PERFCOUNTER_HI                           0x0359E4 /* gfx103 */
 #define R_0359E8_SDMA2_PERFCOUNTER0_LO                                  0x0359E8 /* gfx103 */
@@ -17064,15 +17115,15 @@
 #define   S_036108_PC_BUSY_USER_DEFINED_MASK(x)                       (((unsigned)(x) & 0x1) << 27) /* >= gfx11 */
 #define   G_036108_PC_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 27) & 0x1)
 #define   C_036108_PC_BUSY_USER_DEFINED_MASK                          0xF7FFFFFF
-#define   S_036108_SEDC_BUSY_USER_DEFINED_MASK(x)                     (((unsigned)(x) & 0x1) << 28) /* >= gfx11 */
+#define   S_036108_SEDC_BUSY_USER_DEFINED_MASK(x)                     (((unsigned)(x) & 0x1) << 28) /* gfx11 */
 #define   G_036108_SEDC_BUSY_USER_DEFINED_MASK(x)                     (((x) >> 28) & 0x1)
 #define   C_036108_SEDC_BUSY_USER_DEFINED_MASK                        0xEFFFFFFF
 #define R_03610C_GRBM_SE1_PERFCOUNTER_SELECT                            0x03610C /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
-#define R_036110_GRBM_SE2_PERFCOUNTER_SELECT                            0x036110 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
-#define R_036114_GRBM_SE3_PERFCOUNTER_SELECT                            0x036114 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
-#define R_036118_GRBM_SE4_PERFCOUNTER_SELECT                            0x036118 /* >= gfx11 */
-#define R_03611C_GRBM_SE5_PERFCOUNTER_SELECT                            0x03611C /* >= gfx11 */
-#define R_036120_GRBM_SE6_PERFCOUNTER_SELECT                            0x036120 /* >= gfx11 */
+#define R_036110_GRBM_SE2_PERFCOUNTER_SELECT                            0x036110 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103, gfx11 */
+#define R_036114_GRBM_SE3_PERFCOUNTER_SELECT                            0x036114 /* gfx7, gfx8, gfx81, gfx9, gfx10, gfx103, gfx11 */
+#define R_036118_GRBM_SE4_PERFCOUNTER_SELECT                            0x036118 /* gfx11 */
+#define R_03611C_GRBM_SE5_PERFCOUNTER_SELECT                            0x03611C /* gfx11 */
+#define R_036120_GRBM_SE6_PERFCOUNTER_SELECT                            0x036120 /* gfx11 */
 #define R_036134_GRBM_PERFCOUNTER0_SELECT_HI                            0x036134 /* >= gfx10 */
 #define   S_036134_UTCL1_BUSY_USER_DEFINED_MASK(x)                    (((unsigned)(x) & 0x1) << 1)
 #define   G_036134_UTCL1_BUSY_USER_DEFINED_MASK(x)                    (((x) >> 1) & 0x1)
@@ -17985,10 +18036,10 @@
 #define   S_036814_PERF_COUNTER_SELECT(x)                             (((unsigned)(x) & 0xF) << 0)
 #define   G_036814_PERF_COUNTER_SELECT(x)                             (((x) >> 0) & 0xF)
 #define   C_036814_PERF_COUNTER_SELECT                                0xFFFFFFF0
-#define   S_036814_START_TRIGGER(x)                                   (((unsigned)(x) & 0xFF) << 8)
+#define   S_036814_START_TRIGGER(x)                                   (((unsigned)(x) & 0xFF) << 8) /* gfx103, gfx11 */
 #define   G_036814_START_TRIGGER(x)                                   (((x) >> 8) & 0xFF)
 #define   C_036814_START_TRIGGER                                      0xFFFF00FF
-#define   S_036814_STOP_TRIGGER(x)                                    (((unsigned)(x) & 0xFF) << 16)
+#define   S_036814_STOP_TRIGGER(x)                                    (((unsigned)(x) & 0xFF) << 16) /* gfx103, gfx11 */
 #define   G_036814_STOP_TRIGGER(x)                                    (((x) >> 16) & 0xFF)
 #define   C_036814_STOP_TRIGGER                                       0xFF00FFFF
 #define   S_036814_ENABLE_ANY(x)                                      (((unsigned)(x) & 0x1) << 24)
@@ -18404,7 +18455,7 @@
 #define   C_036F08_PERF_MODE                                          0x0FFFFFFF
 #define R_036F0C_CHC_PERFCOUNTER2_SELECT                                0x036F0C /* >= gfx10 */
 #define R_036F10_CHC_PERFCOUNTER3_SELECT                                0x036F10 /* >= gfx10 */
-#define R_036F18_CHCG_PERFCOUNTER0_SELECT                               0x036F18 /* >= gfx10 */
+#define R_036F18_CHCG_PERFCOUNTER0_SELECT                               0x036F18 /* gfx10, gfx103, gfx11 */
 #define   S_036F18_PERF_SEL(x)                                        (((unsigned)(x) & 0x3FF) << 0)
 #define   G_036F18_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
 #define   C_036F18_PERF_SEL                                           0xFFFFFC00
@@ -18420,7 +18471,7 @@
 #define   S_036F18_PERF_MODE(x)                                       (((unsigned)(x) & 0xF) << 28)
 #define   G_036F18_PERF_MODE(x)                                       (((x) >> 28) & 0xF)
 #define   C_036F18_PERF_MODE                                          0x0FFFFFFF
-#define R_036F1C_CHCG_PERFCOUNTER0_SELECT1                              0x036F1C /* >= gfx10 */
+#define R_036F1C_CHCG_PERFCOUNTER0_SELECT1                              0x036F1C /* gfx10, gfx103, gfx11 */
 #define   S_036F1C_PERF_SEL2(x)                                       (((unsigned)(x) & 0x3FF) << 0)
 #define   G_036F1C_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
 #define   C_036F1C_PERF_SEL2                                          0xFFFFFC00
@@ -18433,7 +18484,7 @@
 #define   S_036F1C_PERF_MODE3(x)                                      (((unsigned)(x) & 0xF) << 28)
 #define   G_036F1C_PERF_MODE3(x)                                      (((x) >> 28) & 0xF)
 #define   C_036F1C_PERF_MODE3                                         0x0FFFFFFF
-#define R_036F20_CHCG_PERFCOUNTER1_SELECT                               0x036F20 /* >= gfx10 */
+#define R_036F20_CHCG_PERFCOUNTER1_SELECT                               0x036F20 /* gfx10, gfx103, gfx11 */
 #define   S_036F20_PERF_SEL(x)                                        (((unsigned)(x) & 0x3FF) << 0)
 #define   G_036F20_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
 #define   C_036F20_PERF_SEL                                           0xFFFFFC00
@@ -18443,8 +18494,8 @@
 #define   S_036F20_PERF_MODE(x)                                       (((unsigned)(x) & 0xF) << 28)
 #define   G_036F20_PERF_MODE(x)                                       (((x) >> 28) & 0xF)
 #define   C_036F20_PERF_MODE                                          0x0FFFFFFF
-#define R_036F24_CHCG_PERFCOUNTER2_SELECT                               0x036F24 /* >= gfx10 */
-#define R_036F28_CHCG_PERFCOUNTER3_SELECT                               0x036F28 /* >= gfx10 */
+#define R_036F24_CHCG_PERFCOUNTER2_SELECT                               0x036F24 /* gfx10, gfx103, gfx11 */
+#define R_036F28_CHCG_PERFCOUNTER3_SELECT                               0x036F28 /* gfx10, gfx103, gfx11 */
 #define R_037000_CB_PERFCOUNTER_FILTER                                  0x037000 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
 #define   S_037000_OP_FILTER_ENABLE(x)                                (((unsigned)(x) & 0x1) << 0)
 #define   G_037000_OP_FILTER_ENABLE(x)                                (((x) >> 0) & 0x1)
@@ -18757,9 +18808,12 @@
 #define   G_037254_PERFMON_SAMPLE_DELAY(x)                            (((x) >> 0) & 0xFF)
 #define   C_037254_PERFMON_SAMPLE_DELAY                               0xFFFFFF00
 #define R_037258_RLC_SPM_ACCUM_CTRLRAM_ADDR                             0x037258 /* >= gfx11 */
-#define   S_037258_addr(x)                                            (((unsigned)(x) & 0x7FF) << 0)
-#define   G_037258_addr(x)                                            (((x) >> 0) & 0x7FF)
-#define   C_037258_addr                                               0xFFFFF800
+#define   S_037258_addr_GFX11(x)                                      (((unsigned)(x) & 0x7FF) << 0) /* gfx11 */
+#define   G_037258_addr_GFX11(x)                                      (((x) >> 0) & 0x7FF)
+#define   C_037258_addr_GFX11                                         0xFFFFF800
+#define   S_037258_addr_GFX115(x)                                     (((unsigned)(x) & 0x1FF) << 0) /* >= gfx115 */
+#define   G_037258_addr_GFX115(x)                                     (((x) >> 0) & 0x1FF)
+#define   C_037258_addr_GFX115                                        0xFFFFFE00
 #define R_037258_RLC_SPM_ACCUM_DATARAM_DATA                             0x037258 /* gfx10, gfx103 */
 #define R_037258_RLC_SPM_VGT_PERFMON_SAMPLE_DELAY                       0x037258 /* gfx7, gfx8, gfx81, gfx9 */
 #define   S_037258_PERFMON_SAMPLE_DELAY(x)                            (((unsigned)(x) & 0xFF) << 0)
@@ -18953,34 +19007,34 @@
 #define   S_03726C_SE0_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 12) /* >= gfx103 */
 #define   G_03726C_SE0_SwaLoadOverride(x)                             (((x) >> 12) & 0x1)
 #define   C_03726C_SE0_SwaLoadOverride                                0xFFFFEFFF
-#define   S_03726C_SE1_LoadOverride_GFX103(x)                         (((unsigned)(x) & 0x1) << 13) /* >= gfx103 */
+#define   S_03726C_SE1_LoadOverride_GFX103(x)                         (((unsigned)(x) & 0x1) << 13) /* gfx103, gfx11 */
 #define   G_03726C_SE1_LoadOverride_GFX103(x)                         (((x) >> 13) & 0x1)
 #define   C_03726C_SE1_LoadOverride_GFX103                            0xFFFFDFFF
-#define   S_03726C_SE1_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 14) /* >= gfx103 */
+#define   S_03726C_SE1_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 14) /* gfx103, gfx11 */
 #define   G_03726C_SE1_SwaLoadOverride(x)                             (((x) >> 14) & 0x1)
 #define   C_03726C_SE1_SwaLoadOverride                                0xFFFFBFFF
-#define   S_03726C_SE2_LoadOverride(x)                                (((unsigned)(x) & 0x1) << 15) /* >= gfx103 */
+#define   S_03726C_SE2_LoadOverride(x)                                (((unsigned)(x) & 0x1) << 15) /* gfx103, gfx11 */
 #define   G_03726C_SE2_LoadOverride(x)                                (((x) >> 15) & 0x1)
 #define   C_03726C_SE2_LoadOverride                                   0xFFFF7FFF
-#define   S_03726C_SE2_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 16) /* >= gfx103 */
+#define   S_03726C_SE2_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 16) /* gfx103, gfx11 */
 #define   G_03726C_SE2_SwaLoadOverride(x)                             (((x) >> 16) & 0x1)
 #define   C_03726C_SE2_SwaLoadOverride                                0xFFFEFFFF
-#define   S_03726C_SE3_LoadOverride(x)                                (((unsigned)(x) & 0x1) << 17) /* >= gfx103 */
+#define   S_03726C_SE3_LoadOverride(x)                                (((unsigned)(x) & 0x1) << 17) /* gfx103, gfx11 */
 #define   G_03726C_SE3_LoadOverride(x)                                (((x) >> 17) & 0x1)
 #define   C_03726C_SE3_LoadOverride                                   0xFFFDFFFF
-#define   S_03726C_SE3_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 18) /* >= gfx103 */
+#define   S_03726C_SE3_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 18) /* gfx103, gfx11 */
 #define   G_03726C_SE3_SwaLoadOverride(x)                             (((x) >> 18) & 0x1)
 #define   C_03726C_SE3_SwaLoadOverride                                0xFFFBFFFF
-#define   S_03726C_SE4_LoadOverride(x)                                (((unsigned)(x) & 0x1) << 19) /* >= gfx11 */
+#define   S_03726C_SE4_LoadOverride(x)                                (((unsigned)(x) & 0x1) << 19) /* gfx11 */
 #define   G_03726C_SE4_LoadOverride(x)                                (((x) >> 19) & 0x1)
 #define   C_03726C_SE4_LoadOverride                                   0xFFF7FFFF
-#define   S_03726C_SE4_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 20) /* >= gfx11 */
+#define   S_03726C_SE4_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 20) /* gfx11 */
 #define   G_03726C_SE4_SwaLoadOverride(x)                             (((x) >> 20) & 0x1)
 #define   C_03726C_SE4_SwaLoadOverride                                0xFFEFFFFF
-#define   S_03726C_SE5_LoadOverride(x)                                (((unsigned)(x) & 0x1) << 21) /* >= gfx11 */
+#define   S_03726C_SE5_LoadOverride(x)                                (((unsigned)(x) & 0x1) << 21) /* gfx11 */
 #define   G_03726C_SE5_LoadOverride(x)                                (((x) >> 21) & 0x1)
 #define   C_03726C_SE5_LoadOverride                                   0xFFDFFFFF
-#define   S_03726C_SE5_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 22) /* >= gfx11 */
+#define   S_03726C_SE5_SwaLoadOverride(x)                             (((unsigned)(x) & 0x1) << 22) /* gfx11 */
 #define   G_03726C_SE5_SwaLoadOverride(x)                             (((x) >> 22) & 0x1)
 #define   C_03726C_SE5_SwaLoadOverride                                0xFFBFFFFF
 #define R_03726C_RLC_SPM_GLOBAL_MUXSEL_ADDR                             0x03726C /* gfx7, gfx8, gfx81, gfx9 */
@@ -19260,7 +19314,7 @@
 #define   G_037304_PERFCOUNTER_SELECT(x)                              (((x) >> 0) & 0xFF)
 #define   C_037304_PERFCOUNTER_SELECT                                 0xFFFFFF00
 #define R_037308_RLC_PERFCOUNTER1_SELECT                                0x037308 /* gfx7, gfx8, gfx81, gfx9, >= gfx10 */
-#define R_03730C_RLC_GPU_IOV_PERF_CNT_CNTL                              0x03730C /* gfx9, >= gfx10 */
+#define R_03730C_RLC_GPU_IOV_PERF_CNT_CNTL                              0x03730C /* gfx9, gfx10, gfx103, gfx11 */
 #define   S_03730C_ENABLE(x)                                          (((unsigned)(x) & 0x1) << 0)
 #define   G_03730C_ENABLE(x)                                          (((x) >> 0) & 0x1)
 #define   C_03730C_ENABLE                                             0xFFFFFFFE
@@ -19270,25 +19324,25 @@
 #define   S_03730C_RESET(x)                                           (((unsigned)(x) & 0x1) << 2)
 #define   G_03730C_RESET(x)                                           (((x) >> 2) & 0x1)
 #define   C_03730C_RESET                                              0xFFFFFFFB
-#define R_037310_RLC_GPU_IOV_PERF_CNT_WR_ADDR                           0x037310 /* gfx9, >= gfx10 */
+#define R_037310_RLC_GPU_IOV_PERF_CNT_WR_ADDR                           0x037310 /* gfx9, gfx10, gfx103, gfx11 */
 #define   S_037310_VFID(x)                                            (((unsigned)(x) & 0xF) << 0)
 #define   G_037310_VFID(x)                                            (((x) >> 0) & 0xF)
 #define   C_037310_VFID                                               0xFFFFFFF0
 #define   S_037310_CNT_ID(x)                                          (((unsigned)(x) & 0x3) << 4)
 #define   G_037310_CNT_ID(x)                                          (((x) >> 4) & 0x3)
 #define   C_037310_CNT_ID                                             0xFFFFFFCF
-#define R_037314_RLC_GPU_IOV_PERF_CNT_WR_DATA                           0x037314 /* gfx9, >= gfx10 */
+#define R_037314_RLC_GPU_IOV_PERF_CNT_WR_DATA                           0x037314 /* gfx9, gfx10, gfx103, gfx11 */
 #define   S_037314_DATA(x)                                            (((unsigned)(x) & 0xF) << 0)
 #define   G_037314_DATA(x)                                            (((x) >> 0) & 0xF)
 #define   C_037314_DATA                                               0xFFFFFFF0
-#define R_037318_RLC_GPU_IOV_PERF_CNT_RD_ADDR                           0x037318 /* gfx9, >= gfx10 */
+#define R_037318_RLC_GPU_IOV_PERF_CNT_RD_ADDR                           0x037318 /* gfx9, gfx10, gfx103, gfx11 */
 #define   S_037318_VFID(x)                                            (((unsigned)(x) & 0xF) << 0)
 #define   G_037318_VFID(x)                                            (((x) >> 0) & 0xF)
 #define   C_037318_VFID                                               0xFFFFFFF0
 #define   S_037318_CNT_ID(x)                                          (((unsigned)(x) & 0x3) << 4)
 #define   G_037318_CNT_ID(x)                                          (((x) >> 4) & 0x3)
 #define   C_037318_CNT_ID                                             0xFFFFFFCF
-#define R_03731C_RLC_GPU_IOV_PERF_CNT_RD_DATA                           0x03731C /* gfx9, >= gfx10 */
+#define R_03731C_RLC_GPU_IOV_PERF_CNT_RD_DATA                           0x03731C /* gfx9, gfx10, gfx103, gfx11 */
 #define   S_03731C_DATA(x)                                            (((unsigned)(x) & 0xF) << 0)
 #define   G_03731C_DATA(x)                                            (((x) >> 0) & 0xF)
 #define   C_03731C_DATA                                               0xFFFFFFF0
@@ -19550,10 +19604,10 @@
 #define   S_0374E0_PERF_COUNTER_SELECT(x)                             (((unsigned)(x) & 0xF) << 0)
 #define   G_0374E0_PERF_COUNTER_SELECT(x)                             (((x) >> 0) & 0xF)
 #define   C_0374E0_PERF_COUNTER_SELECT                                0xFFFFFFF0
-#define   S_0374E0_START_TRIGGER(x)                                   (((unsigned)(x) & 0xFF) << 8)
+#define   S_0374E0_START_TRIGGER(x)                                   (((unsigned)(x) & 0xFF) << 8) /* gfx11 */
 #define   G_0374E0_START_TRIGGER(x)                                   (((x) >> 8) & 0xFF)
 #define   C_0374E0_START_TRIGGER                                      0xFFFF00FF
-#define   S_0374E0_STOP_TRIGGER(x)                                    (((unsigned)(x) & 0xFF) << 16)
+#define   S_0374E0_STOP_TRIGGER(x)                                    (((unsigned)(x) & 0xFF) << 16) /* gfx11 */
 #define   G_0374E0_STOP_TRIGGER(x)                                    (((x) >> 16) & 0xFF)
 #define   C_0374E0_STOP_TRIGGER                                       0xFF00FFFF
 #define   S_0374E0_ENABLE_ANY(x)                                      (((unsigned)(x) & 0x1) << 24)
@@ -19624,10 +19678,10 @@
 #define   S_0374F4_PERF_COUNTER_SELECT(x)                             (((unsigned)(x) & 0xF) << 0)
 #define   G_0374F4_PERF_COUNTER_SELECT(x)                             (((x) >> 0) & 0xF)
 #define   C_0374F4_PERF_COUNTER_SELECT                                0xFFFFFFF0
-#define   S_0374F4_START_TRIGGER(x)                                   (((unsigned)(x) & 0xFF) << 8)
+#define   S_0374F4_START_TRIGGER(x)                                   (((unsigned)(x) & 0xFF) << 8) /* gfx11 */
 #define   G_0374F4_START_TRIGGER(x)                                   (((x) >> 8) & 0xFF)
 #define   C_0374F4_START_TRIGGER                                      0xFFFF00FF
-#define   S_0374F4_STOP_TRIGGER(x)                                    (((unsigned)(x) & 0xFF) << 16)
+#define   S_0374F4_STOP_TRIGGER(x)                                    (((unsigned)(x) & 0xFF) << 16) /* gfx11 */
 #define   G_0374F4_STOP_TRIGGER(x)                                    (((x) >> 16) & 0xFF)
 #define   C_0374F4_STOP_TRIGGER                                       0xFF00FFFF
 #define   S_0374F4_ENABLE_ANY(x)                                      (((unsigned)(x) & 0x1) << 24)
@@ -19695,8 +19749,37 @@
 #define   S_037500_COMPARE_VALUE3(x)                                  (((unsigned)(x) & 0xF) << 20)
 #define   G_037500_COMPARE_VALUE3(x)                                  (((x) >> 20) & 0xF)
 #define   C_037500_COMPARE_VALUE3                                     0xFF0FFFFF
+#define R_037500_GC_ATC_L2_PERFCOUNTER2_SELECT                          0x037500 /* >= gfx115 */
+#define   S_037500_PERF_SEL0(x)                                       (((unsigned)(x) & 0x3FF) << 0)
+#define   G_037500_PERF_SEL0(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_037500_PERF_SEL0                                          0xFFFFFC00
+#define   S_037500_PERF_SEL1(x)                                       (((unsigned)(x) & 0x3FF) << 10)
+#define   G_037500_PERF_SEL1(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_037500_PERF_SEL1                                          0xFFF003FF
+#define   S_037500_CNTR_MODE(x)                                       (((unsigned)(x) & 0xF) << 20)
+#define   G_037500_CNTR_MODE(x)                                       (((x) >> 20) & 0xF)
+#define   C_037500_CNTR_MODE                                          0xFF0FFFFF
+#define   S_037500_PERF_MODE1(x)                                      (((unsigned)(x) & 0xF) << 24)
+#define   G_037500_PERF_MODE1(x)                                      (((x) >> 24) & 0xF)
+#define   C_037500_PERF_MODE1                                         0xF0FFFFFF
+#define   S_037500_PERF_MODE0(x)                                      (((unsigned)(x) & 0xF) << 28)
+#define   G_037500_PERF_MODE0(x)                                      (((x) >> 28) & 0xF)
+#define   C_037500_PERF_MODE0                                         0x0FFFFFFF
 #define R_037504_ATC_L2_PERFCOUNTER1_CFG                                0x037504 /* gfx9 */
 #define R_037504_GCVML2_PERFCOUNTER2_1_MODE                             0x037504 /* gfx10, gfx103 */
+#define R_037504_GC_ATC_L2_PERFCOUNTER2_SELECT1                         0x037504 /* >= gfx115 */
+#define   S_037504_PERF_SEL2(x)                                       (((unsigned)(x) & 0x3FF) << 0)
+#define   G_037504_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_037504_PERF_SEL2                                          0xFFFFFC00
+#define   S_037504_PERF_SEL3(x)                                       (((unsigned)(x) & 0x3FF) << 10)
+#define   G_037504_PERF_SEL3(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_037504_PERF_SEL3                                          0xFFF003FF
+#define   S_037504_PERF_MODE3(x)                                      (((unsigned)(x) & 0xF) << 24)
+#define   G_037504_PERF_MODE3(x)                                      (((x) >> 24) & 0xF)
+#define   C_037504_PERF_MODE3                                         0xF0FFFFFF
+#define   S_037504_PERF_MODE2(x)                                      (((unsigned)(x) & 0xF) << 28)
+#define   G_037504_PERF_MODE2(x)                                      (((x) >> 28) & 0xF)
+#define   C_037504_PERF_MODE2                                         0x0FFFFFFF
 #define R_037508_ATC_L2_PERFCOUNTER_RSLT_CNTL                           0x037508 /* gfx9 */
 #define   S_037508_PERF_COUNTER_SELECT(x)                             (((unsigned)(x) & 0xF) << 0)
 #define   G_037508_PERF_COUNTER_SELECT(x)                             (((x) >> 0) & 0xF)
@@ -19716,6 +19799,94 @@
 #define   S_037508_STOP_ALL_ON_SATURATE(x)                            (((unsigned)(x) & 0x1) << 26)
 #define   G_037508_STOP_ALL_ON_SATURATE(x)                            (((x) >> 26) & 0x1)
 #define   C_037508_STOP_ALL_ON_SATURATE                               0xFBFFFFFF
+#define R_037508_GC_ATC_L2_PERFCOUNTER2_MODE                            0x037508 /* >= gfx115 */
+#define   S_037508_COMPARE_MODE0(x)                                   (((unsigned)(x) & 0x3) << 0)
+#define   G_037508_COMPARE_MODE0(x)                                   (((x) >> 0) & 0x3)
+#define   C_037508_COMPARE_MODE0                                      0xFFFFFFFC
+#define   S_037508_COMPARE_MODE1(x)                                   (((unsigned)(x) & 0x3) << 2)
+#define   G_037508_COMPARE_MODE1(x)                                   (((x) >> 2) & 0x3)
+#define   C_037508_COMPARE_MODE1                                      0xFFFFFFF3
+#define   S_037508_COMPARE_MODE2(x)                                   (((unsigned)(x) & 0x3) << 4)
+#define   G_037508_COMPARE_MODE2(x)                                   (((x) >> 4) & 0x3)
+#define   C_037508_COMPARE_MODE2                                      0xFFFFFFCF
+#define   S_037508_COMPARE_MODE3(x)                                   (((unsigned)(x) & 0x3) << 6)
+#define   G_037508_COMPARE_MODE3(x)                                   (((x) >> 6) & 0x3)
+#define   C_037508_COMPARE_MODE3                                      0xFFFFFF3F
+#define   S_037508_COMPARE_VALUE0(x)                                  (((unsigned)(x) & 0xF) << 8)
+#define   G_037508_COMPARE_VALUE0(x)                                  (((x) >> 8) & 0xF)
+#define   C_037508_COMPARE_VALUE0                                     0xFFFFF0FF
+#define   S_037508_COMPARE_VALUE1(x)                                  (((unsigned)(x) & 0xF) << 12)
+#define   G_037508_COMPARE_VALUE1(x)                                  (((x) >> 12) & 0xF)
+#define   C_037508_COMPARE_VALUE1                                     0xFFFF0FFF
+#define   S_037508_COMPARE_VALUE2(x)                                  (((unsigned)(x) & 0xF) << 16)
+#define   G_037508_COMPARE_VALUE2(x)                                  (((x) >> 16) & 0xF)
+#define   C_037508_COMPARE_VALUE2                                     0xFFF0FFFF
+#define   S_037508_COMPARE_VALUE3(x)                                  (((unsigned)(x) & 0xF) << 20)
+#define   G_037508_COMPARE_VALUE3(x)                                  (((x) >> 20) & 0xF)
+#define   C_037508_COMPARE_VALUE3                                     0xFF0FFFFF
+#define R_037510_GC_ATC_L2_PERFCOUNTER0_CFG                             0x037510 /* >= gfx115 */
+#define   S_037510_PERF_SEL(x)                                        (((unsigned)(x) & 0xFF) << 0)
+#define   G_037510_PERF_SEL(x)                                        (((x) >> 0) & 0xFF)
+#define   C_037510_PERF_SEL                                           0xFFFFFF00
+#define   S_037510_PERF_SEL_END(x)                                    (((unsigned)(x) & 0xFF) << 8)
+#define   G_037510_PERF_SEL_END(x)                                    (((x) >> 8) & 0xFF)
+#define   C_037510_PERF_SEL_END                                       0xFFFF00FF
+#define   S_037510_PERF_MODE(x)                                       (((unsigned)(x) & 0xF) << 24)
+#define   G_037510_PERF_MODE(x)                                       (((x) >> 24) & 0xF)
+#define   C_037510_PERF_MODE                                          0xF0FFFFFF
+#define   S_037510_ENABLE(x)                                          (((unsigned)(x) & 0x1) << 28)
+#define   G_037510_ENABLE(x)                                          (((x) >> 28) & 0x1)
+#define   C_037510_ENABLE                                             0xEFFFFFFF
+#define   S_037510_CLEAR(x)                                           (((unsigned)(x) & 0x1) << 29)
+#define   G_037510_CLEAR(x)                                           (((x) >> 29) & 0x1)
+#define   C_037510_CLEAR                                              0xDFFFFFFF
+#define R_037514_GC_ATC_L2_PERFCOUNTER1_CFG                             0x037514 /* >= gfx115 */
+#define R_037518_GC_ATC_L2_PERFCOUNTER_RSLT_CNTL                        0x037518 /* >= gfx115 */
+#define   S_037518_PERF_COUNTER_SELECT(x)                             (((unsigned)(x) & 0xF) << 0)
+#define   G_037518_PERF_COUNTER_SELECT(x)                             (((x) >> 0) & 0xF)
+#define   C_037518_PERF_COUNTER_SELECT                                0xFFFFFFF0
+#define   S_037518_ENABLE_ANY(x)                                      (((unsigned)(x) & 0x1) << 24)
+#define   G_037518_ENABLE_ANY(x)                                      (((x) >> 24) & 0x1)
+#define   C_037518_ENABLE_ANY                                         0xFEFFFFFF
+#define   S_037518_CLEAR_ALL(x)                                       (((unsigned)(x) & 0x1) << 25)
+#define   G_037518_CLEAR_ALL(x)                                       (((x) >> 25) & 0x1)
+#define   C_037518_CLEAR_ALL                                          0xFDFFFFFF
+#define   S_037518_STOP_ALL_ON_SATURATE(x)                            (((unsigned)(x) & 0x1) << 26)
+#define   G_037518_STOP_ALL_ON_SATURATE(x)                            (((x) >> 26) & 0x1)
+#define   C_037518_STOP_ALL_ON_SATURATE                               0xFBFFFFFF
+#define R_037528_GCL2TLB_PERFCOUNTER0_CFG                               0x037528 /* >= gfx115 */
+#define   S_037528_PERF_SEL(x)                                        (((unsigned)(x) & 0xFF) << 0)
+#define   G_037528_PERF_SEL(x)                                        (((x) >> 0) & 0xFF)
+#define   C_037528_PERF_SEL                                           0xFFFFFF00
+#define   S_037528_PERF_SEL_END(x)                                    (((unsigned)(x) & 0xFF) << 8)
+#define   G_037528_PERF_SEL_END(x)                                    (((x) >> 8) & 0xFF)
+#define   C_037528_PERF_SEL_END                                       0xFFFF00FF
+#define   S_037528_PERF_MODE(x)                                       (((unsigned)(x) & 0xF) << 24)
+#define   G_037528_PERF_MODE(x)                                       (((x) >> 24) & 0xF)
+#define   C_037528_PERF_MODE                                          0xF0FFFFFF
+#define   S_037528_ENABLE(x)                                          (((unsigned)(x) & 0x1) << 28)
+#define   G_037528_ENABLE(x)                                          (((x) >> 28) & 0x1)
+#define   C_037528_ENABLE                                             0xEFFFFFFF
+#define   S_037528_CLEAR(x)                                           (((unsigned)(x) & 0x1) << 29)
+#define   G_037528_CLEAR(x)                                           (((x) >> 29) & 0x1)
+#define   C_037528_CLEAR                                              0xDFFFFFFF
+#define R_03752C_GCL2TLB_PERFCOUNTER1_CFG                               0x03752C /* >= gfx115 */
+#define R_037530_GCL2TLB_PERFCOUNTER2_CFG                               0x037530 /* >= gfx115 */
+#define   S_037530_PERF_SEL_GFX9(x)                                   (((unsigned)(x) & 0xFF) << 0) /* gfx9 */
+#define   G_037530_PERF_SEL_GFX9(x)                                   (((x) >> 0) & 0xFF)
+#define   C_037530_PERF_SEL_GFX9                                      0xFFFFFF00
+#define   S_037530_PERF_SEL_END(x)                                    (((unsigned)(x) & 0xFF) << 8) /* gfx9 */
+#define   G_037530_PERF_SEL_END(x)                                    (((x) >> 8) & 0xFF)
+#define   C_037530_PERF_SEL_END                                       0xFFFF00FF
+#define   S_037530_PERF_MODE_GFX9(x)                                  (((unsigned)(x) & 0xF) << 24) /* gfx9 */
+#define   G_037530_PERF_MODE_GFX9(x)                                  (((x) >> 24) & 0xF)
+#define   C_037530_PERF_MODE_GFX9                                     0xF0FFFFFF
+#define   S_037530_ENABLE(x)                                          (((unsigned)(x) & 0x1) << 28) /* gfx9 */
+#define   G_037530_ENABLE(x)                                          (((x) >> 28) & 0x1)
+#define   C_037530_ENABLE                                             0xEFFFFFFF
+#define   S_037530_CLEAR(x)                                           (((unsigned)(x) & 0x1) << 29) /* gfx9 */
+#define   G_037530_CLEAR(x)                                           (((x) >> 29) & 0x1)
+#define   C_037530_CLEAR                                              0xDFFFFFFF
 #define R_037530_GC_ATC_L2_PERFCOUNTER2_SELECT                          0x037530 /* gfx10 */
 #define   S_037530_PERF_SEL_GFX10(x)                                  (((unsigned)(x) & 0x3FF) << 0)
 #define   G_037530_PERF_SEL_GFX10(x)                                  (((x) >> 0) & 0x3FF)
@@ -19733,21 +19904,7 @@
 #define   G_037530_PERF_MODE_GFX10(x)                                 (((x) >> 28) & 0xF)
 #define   C_037530_PERF_MODE_GFX10                                    0x0FFFFFFF
 #define R_037530_MC_VM_L2_PERFCOUNTER0_CFG                              0x037530 /* gfx9 */
-#define   S_037530_PERF_SEL_GFX9(x)                                   (((unsigned)(x) & 0xFF) << 0)
-#define   G_037530_PERF_SEL_GFX9(x)                                   (((x) >> 0) & 0xFF)
-#define   C_037530_PERF_SEL_GFX9                                      0xFFFFFF00
-#define   S_037530_PERF_SEL_END(x)                                    (((unsigned)(x) & 0xFF) << 8)
-#define   G_037530_PERF_SEL_END(x)                                    (((x) >> 8) & 0xFF)
-#define   C_037530_PERF_SEL_END                                       0xFFFF00FF
-#define   S_037530_PERF_MODE_GFX9(x)                                  (((unsigned)(x) & 0xF) << 24)
-#define   G_037530_PERF_MODE_GFX9(x)                                  (((x) >> 24) & 0xF)
-#define   C_037530_PERF_MODE_GFX9                                     0xF0FFFFFF
-#define   S_037530_ENABLE(x)                                          (((unsigned)(x) & 0x1) << 28)
-#define   G_037530_ENABLE(x)                                          (((x) >> 28) & 0x1)
-#define   C_037530_ENABLE                                             0xEFFFFFFF
-#define   S_037530_CLEAR(x)                                           (((unsigned)(x) & 0x1) << 29)
-#define   G_037530_CLEAR(x)                                           (((x) >> 29) & 0x1)
-#define   C_037530_CLEAR                                              0xDFFFFFFF
+#define R_037534_GCL2TLB_PERFCOUNTER3_CFG                               0x037534 /* >= gfx115 */
 #define R_037534_GC_ATC_L2_PERFCOUNTER2_SELECT1                         0x037534 /* gfx10 */
 #define   S_037534_PERF_SEL2(x)                                       (((unsigned)(x) & 0x3FF) << 0)
 #define   G_037534_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
@@ -19762,6 +19919,19 @@
 #define   G_037534_PERF_MODE2(x)                                      (((x) >> 28) & 0xF)
 #define   C_037534_PERF_MODE2                                         0x0FFFFFFF
 #define R_037534_MC_VM_L2_PERFCOUNTER1_CFG                              0x037534 /* gfx9 */
+#define R_037538_GCL2TLB_PERFCOUNTER_RSLT_CNTL                          0x037538 /* >= gfx115 */
+#define   S_037538_PERF_COUNTER_SELECT(x)                             (((unsigned)(x) & 0xF) << 0)
+#define   G_037538_PERF_COUNTER_SELECT(x)                             (((x) >> 0) & 0xF)
+#define   C_037538_PERF_COUNTER_SELECT                                0xFFFFFFF0
+#define   S_037538_ENABLE_ANY(x)                                      (((unsigned)(x) & 0x1) << 24)
+#define   G_037538_ENABLE_ANY(x)                                      (((x) >> 24) & 0x1)
+#define   C_037538_ENABLE_ANY                                         0xFEFFFFFF
+#define   S_037538_CLEAR_ALL(x)                                       (((unsigned)(x) & 0x1) << 25)
+#define   G_037538_CLEAR_ALL(x)                                       (((x) >> 25) & 0x1)
+#define   C_037538_CLEAR_ALL                                          0xFDFFFFFF
+#define   S_037538_STOP_ALL_ON_SATURATE(x)                            (((unsigned)(x) & 0x1) << 26)
+#define   G_037538_STOP_ALL_ON_SATURATE(x)                            (((x) >> 26) & 0x1)
+#define   C_037538_STOP_ALL_ON_SATURATE                               0xFBFFFFFF
 #define R_037538_GC_ATC_L2_PERFCOUNTER2_MODE                            0x037538 /* gfx10 */
 #define   S_037538_COMPARE_MODE0(x)                                   (((unsigned)(x) & 0x3) << 0)
 #define   G_037538_COMPARE_MODE0(x)                                   (((x) >> 0) & 0x3)
@@ -20004,7 +20174,7 @@
 #define   C_037788_PERF_MODE                                          0x0FFFFFFF
 #define R_03778C_CHA_PERFCOUNTER2_SELECT                                0x03778C /* >= gfx10 */
 #define R_037790_CHA_PERFCOUNTER3_SELECT                                0x037790 /* >= gfx10 */
-#define R_037800_GUS_PERFCOUNTER2_SELECT                                0x037800 /* >= gfx10 */
+#define R_037800_GUS_PERFCOUNTER2_SELECT                                0x037800 /* gfx10, gfx103, gfx11 */
 #define   S_037800_PERF_SEL(x)                                        (((unsigned)(x) & 0x3FF) << 0)
 #define   G_037800_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
 #define   C_037800_PERF_SEL                                           0xFFFFFC00
@@ -20020,7 +20190,7 @@
 #define   S_037800_PERF_MODE(x)                                       (((unsigned)(x) & 0xF) << 28)
 #define   G_037800_PERF_MODE(x)                                       (((x) >> 28) & 0xF)
 #define   C_037800_PERF_MODE                                          0x0FFFFFFF
-#define R_037804_GUS_PERFCOUNTER2_SELECT1                               0x037804 /* >= gfx10 */
+#define R_037804_GUS_PERFCOUNTER2_SELECT1                               0x037804 /* gfx10, gfx103, gfx11 */
 #define   S_037804_PERF_SEL2(x)                                       (((unsigned)(x) & 0x3FF) << 0)
 #define   G_037804_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
 #define   C_037804_PERF_SEL2                                          0xFFFFFC00
@@ -20033,7 +20203,7 @@
 #define   S_037804_PERF_MODE2(x)                                      (((unsigned)(x) & 0xF) << 28)
 #define   G_037804_PERF_MODE2(x)                                      (((x) >> 28) & 0xF)
 #define   C_037804_PERF_MODE2                                         0x0FFFFFFF
-#define R_037808_GUS_PERFCOUNTER2_MODE                                  0x037808 /* >= gfx10 */
+#define R_037808_GUS_PERFCOUNTER2_MODE                                  0x037808 /* gfx10, gfx103, gfx11 */
 #define   S_037808_COMPARE_MODE0(x)                                   (((unsigned)(x) & 0x3) << 0)
 #define   G_037808_COMPARE_MODE0(x)                                   (((x) >> 0) & 0x3)
 #define   C_037808_COMPARE_MODE0                                      0xFFFFFFFC
@@ -20058,7 +20228,7 @@
 #define   S_037808_COMPARE_VALUE3(x)                                  (((unsigned)(x) & 0xF) << 20)
 #define   G_037808_COMPARE_VALUE3(x)                                  (((x) >> 20) & 0xF)
 #define   C_037808_COMPARE_VALUE3                                     0xFF0FFFFF
-#define R_03780C_GUS_PERFCOUNTER0_CFG                                   0x03780C /* >= gfx103 */
+#define R_03780C_GUS_PERFCOUNTER0_CFG                                   0x03780C /* gfx103, gfx11 */
 #define   S_03780C_PERF_SEL(x)                                        (((unsigned)(x) & 0xFF) << 0)
 #define   G_03780C_PERF_SEL(x)                                        (((x) >> 0) & 0xFF)
 #define   C_03780C_PERF_SEL                                           0xFFFFFF00
@@ -20074,8 +20244,8 @@
 #define   S_03780C_CLEAR(x)                                           (((unsigned)(x) & 0x1) << 29)
 #define   G_03780C_CLEAR(x)                                           (((x) >> 29) & 0x1)
 #define   C_03780C_CLEAR                                              0xDFFFFFFF
-#define R_037810_GUS_PERFCOUNTER1_CFG                                   0x037810 /* >= gfx103 */
-#define R_037814_GUS_PERFCOUNTER_RSLT_CNTL                              0x037814 /* >= gfx103 */
+#define R_037810_GUS_PERFCOUNTER1_CFG                                   0x037810 /* gfx103, gfx11 */
+#define R_037814_GUS_PERFCOUNTER_RSLT_CNTL                              0x037814 /* gfx103, gfx11 */
 #define   S_037814_PERF_COUNTER_SELECT(x)                             (((unsigned)(x) & 0xF) << 0)
 #define   G_037814_PERF_COUNTER_SELECT(x)                             (((x) >> 0) & 0xF)
 #define   C_037814_PERF_COUNTER_SELECT                                0xFFFFFFF0
@@ -20115,10 +20285,10 @@
 #define   S_037888_PERF_COUNTER_SELECT(x)                             (((unsigned)(x) & 0xF) << 0)
 #define   G_037888_PERF_COUNTER_SELECT(x)                             (((x) >> 0) & 0xF)
 #define   C_037888_PERF_COUNTER_SELECT                                0xFFFFFFF0
-#define   S_037888_START_TRIGGER(x)                                   (((unsigned)(x) & 0xFF) << 8)
+#define   S_037888_START_TRIGGER(x)                                   (((unsigned)(x) & 0xFF) << 8) /* gfx103, gfx11 */
 #define   G_037888_START_TRIGGER(x)                                   (((x) >> 8) & 0xFF)
 #define   C_037888_START_TRIGGER                                      0xFFFF00FF
-#define   S_037888_STOP_TRIGGER(x)                                    (((unsigned)(x) & 0xFF) << 16)
+#define   S_037888_STOP_TRIGGER(x)                                    (((unsigned)(x) & 0xFF) << 16) /* gfx103, gfx11 */
 #define   G_037888_STOP_TRIGGER(x)                                    (((x) >> 16) & 0xFF)
 #define   C_037888_STOP_TRIGGER                                       0xFF00FFFF
 #define   S_037888_ENABLE_ANY(x)                                      (((unsigned)(x) & 0x1) << 24)
@@ -20165,14 +20335,14 @@
 #define   C_037894_PERF_MODE2                                         0x0FFFFFFF
 #define R_037898_SDMA0_PERFCOUNTER1_SELECT                              0x037898 /* >= gfx103 */
 #define R_03789C_SDMA0_PERFCOUNTER1_SELECT1                             0x03789C /* >= gfx103 */
-#define R_0378B0_SDMA1_PERFCNT_PERFCOUNTER0_CFG                         0x0378B0 /* >= gfx103 */
-#define R_0378B4_SDMA1_PERFCNT_PERFCOUNTER1_CFG                         0x0378B4 /* >= gfx103 */
-#define R_0378B8_SDMA1_PERFCNT_PERFCOUNTER_RSLT_CNTL                    0x0378B8 /* >= gfx103 */
-#define R_0378BC_SDMA1_PERFCNT_MISC_CNTL                                0x0378BC /* >= gfx103 */
-#define R_0378C0_SDMA1_PERFCOUNTER0_SELECT                              0x0378C0 /* >= gfx103 */
-#define R_0378C4_SDMA1_PERFCOUNTER0_SELECT1                             0x0378C4 /* >= gfx103 */
-#define R_0378C8_SDMA1_PERFCOUNTER1_SELECT                              0x0378C8 /* >= gfx103 */
-#define R_0378CC_SDMA1_PERFCOUNTER1_SELECT1                             0x0378CC /* >= gfx103 */
+#define R_0378B0_SDMA1_PERFCNT_PERFCOUNTER0_CFG                         0x0378B0 /* gfx103, gfx11 */
+#define R_0378B4_SDMA1_PERFCNT_PERFCOUNTER1_CFG                         0x0378B4 /* gfx103, gfx11 */
+#define R_0378B8_SDMA1_PERFCNT_PERFCOUNTER_RSLT_CNTL                    0x0378B8 /* gfx103, gfx11 */
+#define R_0378BC_SDMA1_PERFCNT_MISC_CNTL                                0x0378BC /* gfx103, gfx11 */
+#define R_0378C0_SDMA1_PERFCOUNTER0_SELECT                              0x0378C0 /* gfx103, gfx11 */
+#define R_0378C4_SDMA1_PERFCOUNTER0_SELECT1                             0x0378C4 /* gfx103, gfx11 */
+#define R_0378C8_SDMA1_PERFCOUNTER1_SELECT                              0x0378C8 /* gfx103, gfx11 */
+#define R_0378CC_SDMA1_PERFCOUNTER1_SELECT1                             0x0378CC /* gfx103, gfx11 */
 #define R_0378E0_SDMA2_PERFCNT_PERFCOUNTER0_CFG                         0x0378E0 /* gfx103 */
 #define R_0378E4_SDMA2_PERFCNT_PERFCOUNTER1_CFG                         0x0378E4 /* gfx103 */
 #define R_0378E8_SDMA2_PERFCNT_PERFCOUNTER_RSLT_CNTL                    0x0378E8 /* gfx103 */

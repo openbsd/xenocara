@@ -120,7 +120,7 @@ struct i915_fragment_shader {
     * slot of the user's constant buffer. (set by pipe->set_constant_buffer())
     * Else, the bitmask indicates which components are occupied by immediates.
     */
-   ubyte constant_flags[I915_MAX_CONSTANT];
+   uint8_t constant_flags[I915_MAX_CONSTANT];
 
    /**
     * The mapping between TGSI inputs and hw texture coords.
@@ -132,6 +132,12 @@ struct i915_fragment_shader {
    } texcoords[I915_TEX_UNITS];
 
    bool reads_pntc;
+
+   /* Set if the shader is an internal (blit, etc.) shader that shouldn't debug
+    * log by default. */
+   bool internal;
+
+   char *error; /* Any error message from compiling this shader (or NULL) */
 };
 
 struct i915_cache_context;
@@ -155,7 +161,10 @@ struct i915_state {
    unsigned texbuffer[I915_TEX_UNITS][3];
 
    /** Describes the current hardware vertex layout */
-   struct vertex_info vertex_info;
+   struct i915_vertex_info {
+      struct vertex_info draw; /** vertex_info from draw_module */
+      uint32_t hwfmt[4];       /** Hardware format info */
+   } vertex_info;
 
    /* static state (dst/depth buffer state) */
    struct i915_winsys_buffer *cbuf_bo;

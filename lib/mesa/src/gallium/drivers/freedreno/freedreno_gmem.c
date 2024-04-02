@@ -25,15 +25,16 @@
  */
 
 #include "pipe/p_state.h"
-#include "util/u_debug.h"
 #include "util/format/u_format.h"
 #include "util/hash_table.h"
+#include "util/macros.h"
+#include "util/u_debug.h"
 #include "util/u_dump.h"
 #include "util/u_inlines.h"
 #include "util/u_memory.h"
 #include "util/u_string.h"
-#include "u_tracepoints.h"
 #include "util/u_trace_gallium.h"
+#include "u_tracepoints.h"
 
 #include "freedreno_context.h"
 #include "freedreno_fence.h"
@@ -315,7 +316,6 @@ gmem_stateobj_init(struct fd_screen *screen, struct gmem_key *key)
     * performance.
     */
 
-#define div_round_up(v, a) (((v) + (a)-1) / (a))
    /* figure out number of tiles per pipe: */
    if (is_a20x(screen)) {
       /* for a20x we want to minimize the number of "pipes"
@@ -326,10 +326,10 @@ gmem_stateobj_init(struct fd_screen *screen, struct gmem_key *key)
       tpp_y = 6;
    } else {
       tpp_x = tpp_y = 1;
-      while (div_round_up(gmem->nbins_y, tpp_y) > npipes)
+      while (DIV_ROUND_UP(gmem->nbins_y, tpp_y) > npipes)
          tpp_y += 2;
-      while ((div_round_up(gmem->nbins_y, tpp_y) *
-              div_round_up(gmem->nbins_x, tpp_x)) > npipes)
+      while ((DIV_ROUND_UP(gmem->nbins_y, tpp_y) *
+              DIV_ROUND_UP(gmem->nbins_x, tpp_x)) > npipes)
          tpp_x += 1;
    }
 
@@ -399,7 +399,7 @@ gmem_stateobj_init(struct fd_screen *screen, struct gmem_key *key)
          uint32_t p;
 
          /* pipe number: */
-         p = ((i / tpp_y) * div_round_up(gmem->nbins_x, tpp_x)) + (j / tpp_x);
+         p = ((i / tpp_y) * DIV_ROUND_UP(gmem->nbins_x, tpp_x)) + (j / tpp_x);
          assert(p < gmem->num_vsc_pipes);
 
          /* clip bin width: */
@@ -480,9 +480,9 @@ gmem_key_init(struct fd_batch *batch, bool assume_zs, bool no_scis_opt)
 
    if (has_zs || assume_zs) {
       struct fd_resource *rsc = fd_resource(pfb->zsbuf->texture);
-      key->zsbuf_cpp[0] = rsc->layout.cpp;
+      key->zsbuf_cpp[0] = rsc->layout.cpp * pfb->samples;
       if (rsc->stencil)
-         key->zsbuf_cpp[1] = rsc->stencil->layout.cpp;
+         key->zsbuf_cpp[1] = rsc->stencil->layout.cpp * pfb->samples;
 
       /* If we clear z or s but not both, and we are using z24s8 (ie.
        * !separate_stencil) then we need to restore the other, even if
@@ -493,7 +493,7 @@ gmem_key_init(struct fd_batch *batch, bool assume_zs, bool no_scis_opt)
        * u_blitter will show up as a normal draw with depth and/or
        * stencil enabled.
        */
-      unsigned zsclear = batch->fast_cleared & (FD_BUFFER_DEPTH | FD_BUFFER_STENCIL);
+      unsigned zsclear = batch->cleared & (FD_BUFFER_DEPTH | FD_BUFFER_STENCIL);
       if (zsclear) {
          const struct util_format_description *desc =
                util_format_description(pfb->zsbuf->format);
@@ -672,7 +672,11 @@ render_sysmem(struct fd_batch *batch) assert_dt
       trace_start_draw_ib(&batch->trace, batch->gmem);
    }
    /* emit IB to drawcmds: */
-   ctx->screen->emit_ib(batch->gmem, batch->draw);
+   if (ctx->emit_sysmem) {
+      ctx->emit_sysmem(batch);
+   } else {
+      ctx->screen->emit_ib(batch->gmem, batch->draw);
+   }
 
    if (!batch->nondraw) {
       trace_end_draw_ib(&batch->trace, batch->gmem);
@@ -719,7 +723,7 @@ fd_gmem_render_tiles(struct fd_batch *batch)
    /* Sometimes we need to flush a batch just to get a fence, with no
     * clears or draws.. in this case promote to nondraw:
     */
-   if (!(batch->fast_cleared || batch->num_draws))
+   if (!(batch->cleared || batch->num_draws))
       sysmem = true;
 
    if (!batch->nondraw) {

@@ -6606,16 +6606,40 @@ KEYWORD1 GLenum KEYWORD2 NAME(ClientWaitSync)(GLsync sync, GLbitfield flags, GLu
    RETURN_DISPATCH(ClientWaitSync, (sync, flags, timeout), (F, "glClientWaitSync(%d, %d, %d);\n", sync, flags, timeout));
 }
 
+KEYWORD1_ALT GLenum KEYWORD2 NAME(_dispatch_stub_695)(GLsync sync, GLbitfield flags, GLuint64 timeout);
+
+KEYWORD1_ALT GLenum KEYWORD2 NAME(_dispatch_stub_695)(GLsync sync, GLbitfield flags, GLuint64 timeout)
+{
+    (void) sync; (void) flags; (void) timeout;
+   RETURN_DISPATCH(ClientWaitSync, (sync, flags, timeout), (F, "glClientWaitSyncAPPLE(%d, %d, %d);\n", sync, flags, timeout));
+}
+
 KEYWORD1 void KEYWORD2 NAME(DeleteSync)(GLsync sync)
 {
     (void) sync;
    DISPATCH(DeleteSync, (sync), (F, "glDeleteSync(%d);\n", sync));
 }
 
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_696)(GLsync sync);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_696)(GLsync sync)
+{
+    (void) sync;
+   DISPATCH(DeleteSync, (sync), (F, "glDeleteSyncAPPLE(%d);\n", sync));
+}
+
 KEYWORD1 GLsync KEYWORD2 NAME(FenceSync)(GLenum condition, GLbitfield flags)
 {
     (void) condition; (void) flags;
    RETURN_DISPATCH(FenceSync, (condition, flags), (F, "glFenceSync(0x%x, %d);\n", condition, flags));
+}
+
+KEYWORD1_ALT GLsync KEYWORD2 NAME(_dispatch_stub_697)(GLenum condition, GLbitfield flags);
+
+KEYWORD1_ALT GLsync KEYWORD2 NAME(_dispatch_stub_697)(GLenum condition, GLbitfield flags)
+{
+    (void) condition; (void) flags;
+   RETURN_DISPATCH(FenceSync, (condition, flags), (F, "glFenceSyncAPPLE(0x%x, %d);\n", condition, flags));
 }
 
 KEYWORD1 void KEYWORD2 NAME(GetInteger64v)(GLenum pname, GLint64 *params)
@@ -6629,7 +6653,7 @@ KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_698)(GLenum pname, GLint64 *param
 KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_698)(GLenum pname, GLint64 *params)
 {
     (void) pname; (void) params;
-   DISPATCH(GetInteger64v, (pname, params), (F, "glGetInteger64vEXT(0x%x, %p);\n", pname, (const void *) params));
+   DISPATCH(GetInteger64v, (pname, params), (F, "glGetInteger64vAPPLE(0x%x, %p);\n", pname, (const void *) params));
 }
 
 KEYWORD1 void KEYWORD2 NAME(GetSynciv)(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
@@ -6638,16 +6662,40 @@ KEYWORD1 void KEYWORD2 NAME(GetSynciv)(GLsync sync, GLenum pname, GLsizei bufSiz
    DISPATCH(GetSynciv, (sync, pname, bufSize, length, values), (F, "glGetSynciv(%d, 0x%x, %d, %p, %p);\n", sync, pname, bufSize, (const void *) length, (const void *) values));
 }
 
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_699)(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_699)(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
+{
+    (void) sync; (void) pname; (void) bufSize; (void) length; (void) values;
+   DISPATCH(GetSynciv, (sync, pname, bufSize, length, values), (F, "glGetSyncivAPPLE(%d, 0x%x, %d, %p, %p);\n", sync, pname, bufSize, (const void *) length, (const void *) values));
+}
+
 KEYWORD1 GLboolean KEYWORD2 NAME(IsSync)(GLsync sync)
 {
     (void) sync;
    RETURN_DISPATCH(IsSync, (sync), (F, "glIsSync(%d);\n", sync));
 }
 
+KEYWORD1_ALT GLboolean KEYWORD2 NAME(_dispatch_stub_700)(GLsync sync);
+
+KEYWORD1_ALT GLboolean KEYWORD2 NAME(_dispatch_stub_700)(GLsync sync)
+{
+    (void) sync;
+   RETURN_DISPATCH(IsSync, (sync), (F, "glIsSyncAPPLE(%d);\n", sync));
+}
+
 KEYWORD1 void KEYWORD2 NAME(WaitSync)(GLsync sync, GLbitfield flags, GLuint64 timeout)
 {
     (void) sync; (void) flags; (void) timeout;
    DISPATCH(WaitSync, (sync, flags, timeout), (F, "glWaitSync(%d, %d, %d);\n", sync, flags, timeout));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_701)(GLsync sync, GLbitfield flags, GLuint64 timeout);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_701)(GLsync sync, GLbitfield flags, GLuint64 timeout)
+{
+    (void) sync; (void) flags; (void) timeout;
+   DISPATCH(WaitSync, (sync, flags, timeout), (F, "glWaitSyncAPPLE(%d, %d, %d);\n", sync, flags, timeout));
 }
 
 KEYWORD1 void KEYWORD2 NAME(DrawElementsBaseVertex)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
@@ -15127,7 +15175,7 @@ KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1670)(void)
 #endif /* _GLAPI_SKIP_NORMAL_ENTRY_POINTS */
 
 /* these entry points might require different protocols */
-#ifndef _GLAPI_SKIP_PROTO_ENTRY_POINTS
+#if GLAPI_EXPORT_PROTO_ENTRY_POINTS
 
 KEYWORD1 GLboolean KEYWORD2 NAME(AreTexturesResidentEXT)(GLsizei n, const GLuint *textures, GLboolean *residences)
 {
@@ -15154,7 +15202,7 @@ KEYWORD1 GLboolean KEYWORD2 NAME(IsTextureEXT)(GLuint texture)
 }
 
 
-#endif /* _GLAPI_SKIP_PROTO_ENTRY_POINTS */
+#endif /* GLAPI_EXPORT_PROTO_ENTRY_POINTS */
 
 
 #endif /* defined( NAME ) */
@@ -17317,7 +17365,13 @@ _glapi_proc UNUSED_TABLE_NAME[] = {
    TABLE_ENTRY(_dispatch_stub_684),
    TABLE_ENTRY(_dispatch_stub_685),
    TABLE_ENTRY(_dispatch_stub_686),
+   TABLE_ENTRY(_dispatch_stub_695),
+   TABLE_ENTRY(_dispatch_stub_696),
+   TABLE_ENTRY(_dispatch_stub_697),
    TABLE_ENTRY(_dispatch_stub_698),
+   TABLE_ENTRY(_dispatch_stub_699),
+   TABLE_ENTRY(_dispatch_stub_700),
+   TABLE_ENTRY(_dispatch_stub_701),
    TABLE_ENTRY(_dispatch_stub_702),
    TABLE_ENTRY(_dispatch_stub_703),
    TABLE_ENTRY(_dispatch_stub_704),
@@ -17517,12 +17571,12 @@ _glapi_proc UNUSED_TABLE_NAME[] = {
    TABLE_ENTRY(_dispatch_stub_1480),
    TABLE_ENTRY(_dispatch_stub_1481),
 #endif /* _GLAPI_SKIP_NORMAL_ENTRY_POINTS */
-#ifndef _GLAPI_SKIP_PROTO_ENTRY_POINTS
+#if GLAPI_EXPORT_PROTO_ENTRY_POINTS
    TABLE_ENTRY(AreTexturesResidentEXT),
    TABLE_ENTRY(DeleteTexturesEXT),
    TABLE_ENTRY(GenTexturesEXT),
    TABLE_ENTRY(IsTextureEXT),
-#endif /* _GLAPI_SKIP_PROTO_ENTRY_POINTS */
+#endif /* GLAPI_EXPORT_PROTO_ENTRY_POINTS */
 };
 #endif /*UNUSED_TABLE_NAME*/
 

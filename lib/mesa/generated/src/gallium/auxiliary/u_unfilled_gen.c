@@ -32,7 +32,7 @@
 
 #include "indices/u_indices.h"
 #include "indices/u_indices_priv.h"
-#include "pipe/p_compiler.h"
+#include "util/compiler.h"
 #include "util/u_debug.h"
 #include "pipe/p_defines.h"
 #include "util/u_memory.h"
@@ -40,281 +40,281 @@
 static u_generate_func generate_line[OUT_COUNT][PRIM_COUNT];
 static u_translate_func translate_line[IN_COUNT][OUT_COUNT][PRIM_COUNT];
 
-static void generate_tris_ushort(
+static void generate_tris_uint16(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  ushort *out = (ushort*)_out;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=3) {
-      (out+j)[0] = (ushort)(i);
-      (out+j)[1] = (ushort)(i+1);
-      (out+j+2)[0] = (ushort)(i+1);
-      (out+j+2)[1] = (ushort)(i+2);
-      (out+j+4)[0] = (ushort)(i+2);
-      (out+j+4)[1] = (ushort)(i);
+      (out+j)[0] = (uint16_t)(i);
+      (out+j)[1] = (uint16_t)(i+1);
+      (out+j+2)[0] = (uint16_t)(i+1);
+      (out+j+2)[1] = (uint16_t)(i+2);
+      (out+j+4)[0] = (uint16_t)(i+2);
+      (out+j+4)[1] = (uint16_t)(i);
    }
 }
-static void generate_tristrip_ushort(
+static void generate_tristrip_uint16(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  ushort *out = (ushort*)_out;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (ushort)(i);
-      (out+j)[1] = (ushort)(i+1/*+(i&1)*/);
-      (out+j+2)[0] = (ushort)(i+1/*+(i&1)*/);
-      (out+j+2)[1] = (ushort)(i+2/*-(i&1)*/);
-      (out+j+4)[0] = (ushort)(i+2/*-(i&1)*/);
-      (out+j+4)[1] = (ushort)(i);
+      (out+j)[0] = (uint16_t)(i);
+      (out+j)[1] = (uint16_t)(i+1/*+(i&1)*/);
+      (out+j+2)[0] = (uint16_t)(i+1/*+(i&1)*/);
+      (out+j+2)[1] = (uint16_t)(i+2/*-(i&1)*/);
+      (out+j+4)[0] = (uint16_t)(i+2/*-(i&1)*/);
+      (out+j+4)[1] = (uint16_t)(i);
    }
 }
-static void generate_trifan_ushort(
+static void generate_trifan_uint16(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  ushort *out = (ushort*)_out;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (ushort)(0);
-      (out+j)[1] = (ushort)(i+1);
-      (out+j+2)[0] = (ushort)(i+1);
-      (out+j+2)[1] = (ushort)(i+2);
-      (out+j+4)[0] = (ushort)(i+2);
-      (out+j+4)[1] = (ushort)(0);
+      (out+j)[0] = (uint16_t)(0);
+      (out+j)[1] = (uint16_t)(i+1);
+      (out+j+2)[0] = (uint16_t)(i+1);
+      (out+j+2)[1] = (uint16_t)(i+2);
+      (out+j+4)[0] = (uint16_t)(i+2);
+      (out+j+4)[1] = (uint16_t)(0);
    }
 }
-static void generate_quads_ushort(
+static void generate_quads_uint16(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  ushort *out = (ushort*)_out;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=4) {
-      (out+j)[0] = (ushort)(i+0);
-      (out+j)[1] = (ushort)(i+1);
-      (out+j+2)[0] = (ushort)(i+1);
-      (out+j+2)[1] = (ushort)(i+2);
-      (out+j+4)[0] = (ushort)(i+2);
-      (out+j+4)[1] = (ushort)(i+3);
-      (out+j+6)[0] = (ushort)(i+3);
-      (out+j+6)[1] = (ushort)(i+0);
+      (out+j)[0] = (uint16_t)(i+0);
+      (out+j)[1] = (uint16_t)(i+1);
+      (out+j+2)[0] = (uint16_t)(i+1);
+      (out+j+2)[1] = (uint16_t)(i+2);
+      (out+j+4)[0] = (uint16_t)(i+2);
+      (out+j+4)[1] = (uint16_t)(i+3);
+      (out+j+6)[0] = (uint16_t)(i+3);
+      (out+j+6)[1] = (uint16_t)(i+0);
    }
 }
-static void generate_quadstrip_ushort(
+static void generate_quadstrip_uint16(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  ushort *out = (ushort*)_out;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=2) {
-      (out+j)[0] = (ushort)(i+2);
-      (out+j)[1] = (ushort)(i+0);
-      (out+j+2)[0] = (ushort)(i+0);
-      (out+j+2)[1] = (ushort)(i+1);
-      (out+j+4)[0] = (ushort)(i+1);
-      (out+j+4)[1] = (ushort)(i+3);
-      (out+j+6)[0] = (ushort)(i+3);
-      (out+j+6)[1] = (ushort)(i+2);
+      (out+j)[0] = (uint16_t)(i+2);
+      (out+j)[1] = (uint16_t)(i+0);
+      (out+j+2)[0] = (uint16_t)(i+0);
+      (out+j+2)[1] = (uint16_t)(i+1);
+      (out+j+4)[0] = (uint16_t)(i+1);
+      (out+j+4)[1] = (uint16_t)(i+3);
+      (out+j+6)[0] = (uint16_t)(i+3);
+      (out+j+6)[1] = (uint16_t)(i+2);
    }
 }
-static void generate_polygon_ushort(
+static void generate_polygon_uint16(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  ushort *out = (ushort*)_out;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) {
-      (out+j)[0] = (ushort)(i);
-      (out+j)[1] = (ushort)((i+1)%(out_nr/2)
+      (out+j)[0] = (uint16_t)(i);
+      (out+j)[1] = (uint16_t)((i+1)%(out_nr/2)
 );
    }
 }
-static void generate_trisadj_ushort(
+static void generate_trisadj_uint16(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  ushort *out = (ushort*)_out;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) {
-      (out+j)[0] = (ushort)(i);
-      (out+j)[1] = (ushort)(i+2);
-      (out+j+2)[0] = (ushort)(i+2);
-      (out+j+2)[1] = (ushort)(i+4);
-      (out+j+4)[0] = (ushort)(i+4);
-      (out+j+4)[1] = (ushort)(i);
+      (out+j)[0] = (uint16_t)(i);
+      (out+j)[1] = (uint16_t)(i+2);
+      (out+j+2)[0] = (uint16_t)(i+2);
+      (out+j+2)[1] = (uint16_t)(i+4);
+      (out+j+4)[0] = (uint16_t)(i+4);
+      (out+j+4)[1] = (uint16_t)(i);
    }
 }
-static void generate_tristripadj_ushort(
+static void generate_tristripadj_uint16(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  ushort *out = (ushort*)_out;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) {
-      (out+j)[0] = (ushort)(i);
-      (out+j)[1] = (ushort)(i+2);
-      (out+j+2)[0] = (ushort)(i+2);
-      (out+j+2)[1] = (ushort)(i+4);
-      (out+j+4)[0] = (ushort)(i+4);
-      (out+j+4)[1] = (ushort)(i);
+      (out+j)[0] = (uint16_t)(i);
+      (out+j)[1] = (uint16_t)(i+2);
+      (out+j+2)[0] = (uint16_t)(i+2);
+      (out+j+2)[1] = (uint16_t)(i+4);
+      (out+j+4)[0] = (uint16_t)(i+4);
+      (out+j+4)[1] = (uint16_t)(i);
    }
 }
-static void generate_tris_uint(
+static void generate_tris_uint32(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  uint *out = (uint*)_out;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=3) {
-      (out+j)[0] = (uint)(i);
-      (out+j)[1] = (uint)(i+1);
-      (out+j+2)[0] = (uint)(i+1);
-      (out+j+2)[1] = (uint)(i+2);
-      (out+j+4)[0] = (uint)(i+2);
-      (out+j+4)[1] = (uint)(i);
+      (out+j)[0] = (uint32_t)(i);
+      (out+j)[1] = (uint32_t)(i+1);
+      (out+j+2)[0] = (uint32_t)(i+1);
+      (out+j+2)[1] = (uint32_t)(i+2);
+      (out+j+4)[0] = (uint32_t)(i+2);
+      (out+j+4)[1] = (uint32_t)(i);
    }
 }
-static void generate_tristrip_uint(
+static void generate_tristrip_uint32(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  uint *out = (uint*)_out;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (uint)(i);
-      (out+j)[1] = (uint)(i+1/*+(i&1)*/);
-      (out+j+2)[0] = (uint)(i+1/*+(i&1)*/);
-      (out+j+2)[1] = (uint)(i+2/*-(i&1)*/);
-      (out+j+4)[0] = (uint)(i+2/*-(i&1)*/);
-      (out+j+4)[1] = (uint)(i);
+      (out+j)[0] = (uint32_t)(i);
+      (out+j)[1] = (uint32_t)(i+1/*+(i&1)*/);
+      (out+j+2)[0] = (uint32_t)(i+1/*+(i&1)*/);
+      (out+j+2)[1] = (uint32_t)(i+2/*-(i&1)*/);
+      (out+j+4)[0] = (uint32_t)(i+2/*-(i&1)*/);
+      (out+j+4)[1] = (uint32_t)(i);
    }
 }
-static void generate_trifan_uint(
+static void generate_trifan_uint32(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  uint *out = (uint*)_out;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (uint)(0);
-      (out+j)[1] = (uint)(i+1);
-      (out+j+2)[0] = (uint)(i+1);
-      (out+j+2)[1] = (uint)(i+2);
-      (out+j+4)[0] = (uint)(i+2);
-      (out+j+4)[1] = (uint)(0);
+      (out+j)[0] = (uint32_t)(0);
+      (out+j)[1] = (uint32_t)(i+1);
+      (out+j+2)[0] = (uint32_t)(i+1);
+      (out+j+2)[1] = (uint32_t)(i+2);
+      (out+j+4)[0] = (uint32_t)(i+2);
+      (out+j+4)[1] = (uint32_t)(0);
    }
 }
-static void generate_quads_uint(
+static void generate_quads_uint32(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  uint *out = (uint*)_out;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=4) {
-      (out+j)[0] = (uint)(i+0);
-      (out+j)[1] = (uint)(i+1);
-      (out+j+2)[0] = (uint)(i+1);
-      (out+j+2)[1] = (uint)(i+2);
-      (out+j+4)[0] = (uint)(i+2);
-      (out+j+4)[1] = (uint)(i+3);
-      (out+j+6)[0] = (uint)(i+3);
-      (out+j+6)[1] = (uint)(i+0);
+      (out+j)[0] = (uint32_t)(i+0);
+      (out+j)[1] = (uint32_t)(i+1);
+      (out+j+2)[0] = (uint32_t)(i+1);
+      (out+j+2)[1] = (uint32_t)(i+2);
+      (out+j+4)[0] = (uint32_t)(i+2);
+      (out+j+4)[1] = (uint32_t)(i+3);
+      (out+j+6)[0] = (uint32_t)(i+3);
+      (out+j+6)[1] = (uint32_t)(i+0);
    }
 }
-static void generate_quadstrip_uint(
+static void generate_quadstrip_uint32(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  uint *out = (uint*)_out;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=2) {
-      (out+j)[0] = (uint)(i+2);
-      (out+j)[1] = (uint)(i+0);
-      (out+j+2)[0] = (uint)(i+0);
-      (out+j+2)[1] = (uint)(i+1);
-      (out+j+4)[0] = (uint)(i+1);
-      (out+j+4)[1] = (uint)(i+3);
-      (out+j+6)[0] = (uint)(i+3);
-      (out+j+6)[1] = (uint)(i+2);
+      (out+j)[0] = (uint32_t)(i+2);
+      (out+j)[1] = (uint32_t)(i+0);
+      (out+j+2)[0] = (uint32_t)(i+0);
+      (out+j+2)[1] = (uint32_t)(i+1);
+      (out+j+4)[0] = (uint32_t)(i+1);
+      (out+j+4)[1] = (uint32_t)(i+3);
+      (out+j+6)[0] = (uint32_t)(i+3);
+      (out+j+6)[1] = (uint32_t)(i+2);
    }
 }
-static void generate_polygon_uint(
+static void generate_polygon_uint32(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  uint *out = (uint*)_out;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) {
-      (out+j)[0] = (uint)(i);
-      (out+j)[1] = (uint)((i+1)%(out_nr/2)
+      (out+j)[0] = (uint32_t)(i);
+      (out+j)[1] = (uint32_t)((i+1)%(out_nr/2)
 );
    }
 }
-static void generate_trisadj_uint(
+static void generate_trisadj_uint32(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  uint *out = (uint*)_out;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) {
-      (out+j)[0] = (uint)(i);
-      (out+j)[1] = (uint)(i+2);
-      (out+j+2)[0] = (uint)(i+2);
-      (out+j+2)[1] = (uint)(i+4);
-      (out+j+4)[0] = (uint)(i+4);
-      (out+j+4)[1] = (uint)(i);
+      (out+j)[0] = (uint32_t)(i);
+      (out+j)[1] = (uint32_t)(i+2);
+      (out+j+2)[0] = (uint32_t)(i+2);
+      (out+j+2)[1] = (uint32_t)(i+4);
+      (out+j+4)[0] = (uint32_t)(i+4);
+      (out+j+4)[1] = (uint32_t)(i);
    }
 }
-static void generate_tristripadj_uint(
+static void generate_tristripadj_uint32(
     unsigned start,
     unsigned out_nr,
     void *_out )
 {
-  uint *out = (uint*)_out;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) {
-      (out+j)[0] = (uint)(i);
-      (out+j)[1] = (uint)(i+2);
-      (out+j+2)[0] = (uint)(i+2);
-      (out+j+2)[1] = (uint)(i+4);
-      (out+j+4)[0] = (uint)(i+4);
-      (out+j+4)[1] = (uint)(i);
+      (out+j)[0] = (uint32_t)(i);
+      (out+j)[1] = (uint32_t)(i+2);
+      (out+j+2)[0] = (uint32_t)(i+2);
+      (out+j+2)[1] = (uint32_t)(i+4);
+      (out+j+4)[0] = (uint32_t)(i+4);
+      (out+j+4)[1] = (uint32_t)(i);
    }
 }
-static void translate_tris_ubyte2ushort(
+static void translate_tris_uint82uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -322,20 +322,20 @@ static void translate_tris_ubyte2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=3) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+1];
+      (out+j+2)[0] = (uint16_t)in[i+1];
+      (out+j+2)[1] = (uint16_t)in[i+2];
+      (out+j+4)[0] = (uint16_t)in[i+2];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_tristrip_ubyte2ushort(
+static void translate_tristrip_uint82uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -343,20 +343,20 @@ static void translate_tristrip_ubyte2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+1/*+(i&1)*/];
-      (out+j+2)[0] = (ushort)in[i+1/*+(i&1)*/];
-      (out+j+2)[1] = (ushort)in[i+2/*-(i&1)*/];
-      (out+j+4)[0] = (ushort)in[i+2/*-(i&1)*/];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[0] = (uint16_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[1] = (uint16_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[0] = (uint16_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_trifan_ubyte2ushort(
+static void translate_trifan_uint82uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -364,20 +364,20 @@ static void translate_trifan_ubyte2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (ushort)in[0];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[0];
+      (out+j)[0] = (uint16_t)in[0];
+      (out+j)[1] = (uint16_t)in[i+1];
+      (out+j+2)[0] = (uint16_t)in[i+1];
+      (out+j+2)[1] = (uint16_t)in[i+2];
+      (out+j+4)[0] = (uint16_t)in[i+2];
+      (out+j+4)[1] = (uint16_t)in[0];
    }
 }
-static void translate_quads_ubyte2ushort(
+static void translate_quads_uint82uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -385,22 +385,22 @@ static void translate_quads_ubyte2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=4) {
-      (out+j)[0] = (ushort)in[i+0];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[i+3];
-      (out+j+6)[0] = (ushort)in[i+3];
-      (out+j+6)[1] = (ushort)in[i+0];
+      (out+j)[0] = (uint16_t)in[i+0];
+      (out+j)[1] = (uint16_t)in[i+1];
+      (out+j+2)[0] = (uint16_t)in[i+1];
+      (out+j+2)[1] = (uint16_t)in[i+2];
+      (out+j+4)[0] = (uint16_t)in[i+2];
+      (out+j+4)[1] = (uint16_t)in[i+3];
+      (out+j+6)[0] = (uint16_t)in[i+3];
+      (out+j+6)[1] = (uint16_t)in[i+0];
    }
 }
-static void translate_quadstrip_ubyte2ushort(
+static void translate_quadstrip_uint82uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -408,22 +408,22 @@ static void translate_quadstrip_ubyte2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=2) {
-      (out+j)[0] = (ushort)in[i+2];
-      (out+j)[1] = (ushort)in[i+0];
-      (out+j+2)[0] = (ushort)in[i+0];
-      (out+j+2)[1] = (ushort)in[i+1];
-      (out+j+4)[0] = (ushort)in[i+1];
-      (out+j+4)[1] = (ushort)in[i+3];
-      (out+j+6)[0] = (ushort)in[i+3];
-      (out+j+6)[1] = (ushort)in[i+2];
+      (out+j)[0] = (uint16_t)in[i+2];
+      (out+j)[1] = (uint16_t)in[i+0];
+      (out+j+2)[0] = (uint16_t)in[i+0];
+      (out+j+2)[1] = (uint16_t)in[i+1];
+      (out+j+4)[0] = (uint16_t)in[i+1];
+      (out+j+4)[1] = (uint16_t)in[i+3];
+      (out+j+6)[0] = (uint16_t)in[i+3];
+      (out+j+6)[1] = (uint16_t)in[i+2];
    }
 }
-static void translate_polygon_ubyte2ushort(
+static void translate_polygon_uint82uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -431,17 +431,17 @@ static void translate_polygon_ubyte2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[(i+1)%(out_nr/2)
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[(i+1)%(out_nr/2)
 ];
    }
 }
-static void translate_trisadj_ubyte2ushort(
+static void translate_trisadj_uint82uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -449,20 +449,20 @@ static void translate_trisadj_ubyte2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j+2)[0] = (ushort)in[i+2];
-      (out+j+2)[1] = (ushort)in[i+4];
-      (out+j+4)[0] = (ushort)in[i+4];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+2];
+      (out+j+2)[0] = (uint16_t)in[i+2];
+      (out+j+2)[1] = (uint16_t)in[i+4];
+      (out+j+4)[0] = (uint16_t)in[i+4];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_tristripadj_ubyte2ushort(
+static void translate_tristripadj_uint82uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -470,20 +470,20 @@ static void translate_tristripadj_ubyte2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j+2)[0] = (ushort)in[i+2];
-      (out+j+2)[1] = (ushort)in[i+4];
-      (out+j+4)[0] = (ushort)in[i+4];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+2];
+      (out+j+2)[0] = (uint16_t)in[i+2];
+      (out+j+2)[1] = (uint16_t)in[i+4];
+      (out+j+4)[0] = (uint16_t)in[i+4];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_tris_ubyte2uint(
+static void translate_tris_uint82uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -491,20 +491,20 @@ static void translate_tris_ubyte2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=3) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+1];
+      (out+j+2)[0] = (uint32_t)in[i+1];
+      (out+j+2)[1] = (uint32_t)in[i+2];
+      (out+j+4)[0] = (uint32_t)in[i+2];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_tristrip_ubyte2uint(
+static void translate_tristrip_uint82uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -512,20 +512,20 @@ static void translate_tristrip_ubyte2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+1/*+(i&1)*/];
-      (out+j+2)[0] = (uint)in[i+1/*+(i&1)*/];
-      (out+j+2)[1] = (uint)in[i+2/*-(i&1)*/];
-      (out+j+4)[0] = (uint)in[i+2/*-(i&1)*/];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[0] = (uint32_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[1] = (uint32_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[0] = (uint32_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_trifan_ubyte2uint(
+static void translate_trifan_uint82uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -533,20 +533,20 @@ static void translate_trifan_ubyte2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (uint)in[0];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[0];
+      (out+j)[0] = (uint32_t)in[0];
+      (out+j)[1] = (uint32_t)in[i+1];
+      (out+j+2)[0] = (uint32_t)in[i+1];
+      (out+j+2)[1] = (uint32_t)in[i+2];
+      (out+j+4)[0] = (uint32_t)in[i+2];
+      (out+j+4)[1] = (uint32_t)in[0];
    }
 }
-static void translate_quads_ubyte2uint(
+static void translate_quads_uint82uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -554,22 +554,22 @@ static void translate_quads_ubyte2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=4) {
-      (out+j)[0] = (uint)in[i+0];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[i+3];
-      (out+j+6)[0] = (uint)in[i+3];
-      (out+j+6)[1] = (uint)in[i+0];
+      (out+j)[0] = (uint32_t)in[i+0];
+      (out+j)[1] = (uint32_t)in[i+1];
+      (out+j+2)[0] = (uint32_t)in[i+1];
+      (out+j+2)[1] = (uint32_t)in[i+2];
+      (out+j+4)[0] = (uint32_t)in[i+2];
+      (out+j+4)[1] = (uint32_t)in[i+3];
+      (out+j+6)[0] = (uint32_t)in[i+3];
+      (out+j+6)[1] = (uint32_t)in[i+0];
    }
 }
-static void translate_quadstrip_ubyte2uint(
+static void translate_quadstrip_uint82uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -577,22 +577,22 @@ static void translate_quadstrip_ubyte2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=2) {
-      (out+j)[0] = (uint)in[i+2];
-      (out+j)[1] = (uint)in[i+0];
-      (out+j+2)[0] = (uint)in[i+0];
-      (out+j+2)[1] = (uint)in[i+1];
-      (out+j+4)[0] = (uint)in[i+1];
-      (out+j+4)[1] = (uint)in[i+3];
-      (out+j+6)[0] = (uint)in[i+3];
-      (out+j+6)[1] = (uint)in[i+2];
+      (out+j)[0] = (uint32_t)in[i+2];
+      (out+j)[1] = (uint32_t)in[i+0];
+      (out+j+2)[0] = (uint32_t)in[i+0];
+      (out+j+2)[1] = (uint32_t)in[i+1];
+      (out+j+4)[0] = (uint32_t)in[i+1];
+      (out+j+4)[1] = (uint32_t)in[i+3];
+      (out+j+6)[0] = (uint32_t)in[i+3];
+      (out+j+6)[1] = (uint32_t)in[i+2];
    }
 }
-static void translate_polygon_ubyte2uint(
+static void translate_polygon_uint82uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -600,17 +600,17 @@ static void translate_polygon_ubyte2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[(i+1)%(out_nr/2)
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[(i+1)%(out_nr/2)
 ];
    }
 }
-static void translate_trisadj_ubyte2uint(
+static void translate_trisadj_uint82uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -618,20 +618,20 @@ static void translate_trisadj_ubyte2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j+2)[0] = (uint)in[i+2];
-      (out+j+2)[1] = (uint)in[i+4];
-      (out+j+4)[0] = (uint)in[i+4];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+2];
+      (out+j+2)[0] = (uint32_t)in[i+2];
+      (out+j+2)[1] = (uint32_t)in[i+4];
+      (out+j+4)[0] = (uint32_t)in[i+4];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_tristripadj_ubyte2uint(
+static void translate_tristripadj_uint82uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -639,20 +639,20 @@ static void translate_tristripadj_ubyte2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const uint8_t *in = (const uint8_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j+2)[0] = (uint)in[i+2];
-      (out+j+2)[1] = (uint)in[i+4];
-      (out+j+4)[0] = (uint)in[i+4];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+2];
+      (out+j+2)[0] = (uint32_t)in[i+2];
+      (out+j+2)[1] = (uint32_t)in[i+4];
+      (out+j+4)[0] = (uint32_t)in[i+4];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_tris_ushort2ushort(
+static void translate_tris_uint162uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -660,20 +660,20 @@ static void translate_tris_ushort2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=3) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+1];
+      (out+j+2)[0] = (uint16_t)in[i+1];
+      (out+j+2)[1] = (uint16_t)in[i+2];
+      (out+j+4)[0] = (uint16_t)in[i+2];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_tristrip_ushort2ushort(
+static void translate_tristrip_uint162uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -681,20 +681,20 @@ static void translate_tristrip_ushort2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+1/*+(i&1)*/];
-      (out+j+2)[0] = (ushort)in[i+1/*+(i&1)*/];
-      (out+j+2)[1] = (ushort)in[i+2/*-(i&1)*/];
-      (out+j+4)[0] = (ushort)in[i+2/*-(i&1)*/];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[0] = (uint16_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[1] = (uint16_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[0] = (uint16_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_trifan_ushort2ushort(
+static void translate_trifan_uint162uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -702,20 +702,20 @@ static void translate_trifan_ushort2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (ushort)in[0];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[0];
+      (out+j)[0] = (uint16_t)in[0];
+      (out+j)[1] = (uint16_t)in[i+1];
+      (out+j+2)[0] = (uint16_t)in[i+1];
+      (out+j+2)[1] = (uint16_t)in[i+2];
+      (out+j+4)[0] = (uint16_t)in[i+2];
+      (out+j+4)[1] = (uint16_t)in[0];
    }
 }
-static void translate_quads_ushort2ushort(
+static void translate_quads_uint162uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -723,22 +723,22 @@ static void translate_quads_ushort2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=4) {
-      (out+j)[0] = (ushort)in[i+0];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[i+3];
-      (out+j+6)[0] = (ushort)in[i+3];
-      (out+j+6)[1] = (ushort)in[i+0];
+      (out+j)[0] = (uint16_t)in[i+0];
+      (out+j)[1] = (uint16_t)in[i+1];
+      (out+j+2)[0] = (uint16_t)in[i+1];
+      (out+j+2)[1] = (uint16_t)in[i+2];
+      (out+j+4)[0] = (uint16_t)in[i+2];
+      (out+j+4)[1] = (uint16_t)in[i+3];
+      (out+j+6)[0] = (uint16_t)in[i+3];
+      (out+j+6)[1] = (uint16_t)in[i+0];
    }
 }
-static void translate_quadstrip_ushort2ushort(
+static void translate_quadstrip_uint162uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -746,22 +746,22 @@ static void translate_quadstrip_ushort2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=2) {
-      (out+j)[0] = (ushort)in[i+2];
-      (out+j)[1] = (ushort)in[i+0];
-      (out+j+2)[0] = (ushort)in[i+0];
-      (out+j+2)[1] = (ushort)in[i+1];
-      (out+j+4)[0] = (ushort)in[i+1];
-      (out+j+4)[1] = (ushort)in[i+3];
-      (out+j+6)[0] = (ushort)in[i+3];
-      (out+j+6)[1] = (ushort)in[i+2];
+      (out+j)[0] = (uint16_t)in[i+2];
+      (out+j)[1] = (uint16_t)in[i+0];
+      (out+j+2)[0] = (uint16_t)in[i+0];
+      (out+j+2)[1] = (uint16_t)in[i+1];
+      (out+j+4)[0] = (uint16_t)in[i+1];
+      (out+j+4)[1] = (uint16_t)in[i+3];
+      (out+j+6)[0] = (uint16_t)in[i+3];
+      (out+j+6)[1] = (uint16_t)in[i+2];
    }
 }
-static void translate_polygon_ushort2ushort(
+static void translate_polygon_uint162uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -769,17 +769,17 @@ static void translate_polygon_ushort2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[(i+1)%(out_nr/2)
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[(i+1)%(out_nr/2)
 ];
    }
 }
-static void translate_trisadj_ushort2ushort(
+static void translate_trisadj_uint162uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -787,20 +787,20 @@ static void translate_trisadj_ushort2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j+2)[0] = (ushort)in[i+2];
-      (out+j+2)[1] = (ushort)in[i+4];
-      (out+j+4)[0] = (ushort)in[i+4];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+2];
+      (out+j+2)[0] = (uint16_t)in[i+2];
+      (out+j+2)[1] = (uint16_t)in[i+4];
+      (out+j+4)[0] = (uint16_t)in[i+4];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_tristripadj_ushort2ushort(
+static void translate_tristripadj_uint162uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -808,20 +808,20 @@ static void translate_tristripadj_ushort2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j+2)[0] = (ushort)in[i+2];
-      (out+j+2)[1] = (ushort)in[i+4];
-      (out+j+4)[0] = (ushort)in[i+4];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+2];
+      (out+j+2)[0] = (uint16_t)in[i+2];
+      (out+j+2)[1] = (uint16_t)in[i+4];
+      (out+j+4)[0] = (uint16_t)in[i+4];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_tris_ushort2uint(
+static void translate_tris_uint162uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -829,20 +829,20 @@ static void translate_tris_ushort2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=3) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+1];
+      (out+j+2)[0] = (uint32_t)in[i+1];
+      (out+j+2)[1] = (uint32_t)in[i+2];
+      (out+j+4)[0] = (uint32_t)in[i+2];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_tristrip_ushort2uint(
+static void translate_tristrip_uint162uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -850,20 +850,20 @@ static void translate_tristrip_ushort2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+1/*+(i&1)*/];
-      (out+j+2)[0] = (uint)in[i+1/*+(i&1)*/];
-      (out+j+2)[1] = (uint)in[i+2/*-(i&1)*/];
-      (out+j+4)[0] = (uint)in[i+2/*-(i&1)*/];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[0] = (uint32_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[1] = (uint32_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[0] = (uint32_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_trifan_ushort2uint(
+static void translate_trifan_uint162uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -871,20 +871,20 @@ static void translate_trifan_ushort2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (uint)in[0];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[0];
+      (out+j)[0] = (uint32_t)in[0];
+      (out+j)[1] = (uint32_t)in[i+1];
+      (out+j+2)[0] = (uint32_t)in[i+1];
+      (out+j+2)[1] = (uint32_t)in[i+2];
+      (out+j+4)[0] = (uint32_t)in[i+2];
+      (out+j+4)[1] = (uint32_t)in[0];
    }
 }
-static void translate_quads_ushort2uint(
+static void translate_quads_uint162uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -892,22 +892,22 @@ static void translate_quads_ushort2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=4) {
-      (out+j)[0] = (uint)in[i+0];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[i+3];
-      (out+j+6)[0] = (uint)in[i+3];
-      (out+j+6)[1] = (uint)in[i+0];
+      (out+j)[0] = (uint32_t)in[i+0];
+      (out+j)[1] = (uint32_t)in[i+1];
+      (out+j+2)[0] = (uint32_t)in[i+1];
+      (out+j+2)[1] = (uint32_t)in[i+2];
+      (out+j+4)[0] = (uint32_t)in[i+2];
+      (out+j+4)[1] = (uint32_t)in[i+3];
+      (out+j+6)[0] = (uint32_t)in[i+3];
+      (out+j+6)[1] = (uint32_t)in[i+0];
    }
 }
-static void translate_quadstrip_ushort2uint(
+static void translate_quadstrip_uint162uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -915,22 +915,22 @@ static void translate_quadstrip_ushort2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=2) {
-      (out+j)[0] = (uint)in[i+2];
-      (out+j)[1] = (uint)in[i+0];
-      (out+j+2)[0] = (uint)in[i+0];
-      (out+j+2)[1] = (uint)in[i+1];
-      (out+j+4)[0] = (uint)in[i+1];
-      (out+j+4)[1] = (uint)in[i+3];
-      (out+j+6)[0] = (uint)in[i+3];
-      (out+j+6)[1] = (uint)in[i+2];
+      (out+j)[0] = (uint32_t)in[i+2];
+      (out+j)[1] = (uint32_t)in[i+0];
+      (out+j+2)[0] = (uint32_t)in[i+0];
+      (out+j+2)[1] = (uint32_t)in[i+1];
+      (out+j+4)[0] = (uint32_t)in[i+1];
+      (out+j+4)[1] = (uint32_t)in[i+3];
+      (out+j+6)[0] = (uint32_t)in[i+3];
+      (out+j+6)[1] = (uint32_t)in[i+2];
    }
 }
-static void translate_polygon_ushort2uint(
+static void translate_polygon_uint162uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -938,17 +938,17 @@ static void translate_polygon_ushort2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[(i+1)%(out_nr/2)
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[(i+1)%(out_nr/2)
 ];
    }
 }
-static void translate_trisadj_ushort2uint(
+static void translate_trisadj_uint162uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -956,20 +956,20 @@ static void translate_trisadj_ushort2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j+2)[0] = (uint)in[i+2];
-      (out+j+2)[1] = (uint)in[i+4];
-      (out+j+4)[0] = (uint)in[i+4];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+2];
+      (out+j+2)[0] = (uint32_t)in[i+2];
+      (out+j+2)[1] = (uint32_t)in[i+4];
+      (out+j+4)[0] = (uint32_t)in[i+4];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_tristripadj_ushort2uint(
+static void translate_tristripadj_uint162uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -977,20 +977,20 @@ static void translate_tristripadj_ushort2uint(
     unsigned restart_index,
     void *_out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const uint16_t *in = (const uint16_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j+2)[0] = (uint)in[i+2];
-      (out+j+2)[1] = (uint)in[i+4];
-      (out+j+4)[0] = (uint)in[i+4];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+2];
+      (out+j+2)[0] = (uint32_t)in[i+2];
+      (out+j+2)[1] = (uint32_t)in[i+4];
+      (out+j+4)[0] = (uint32_t)in[i+4];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_tris_uint2ushort(
+static void translate_tris_uint322uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -998,20 +998,20 @@ static void translate_tris_uint2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=3) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+1];
+      (out+j+2)[0] = (uint16_t)in[i+1];
+      (out+j+2)[1] = (uint16_t)in[i+2];
+      (out+j+4)[0] = (uint16_t)in[i+2];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_tristrip_uint2ushort(
+static void translate_tristrip_uint322uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1019,20 +1019,20 @@ static void translate_tristrip_uint2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+1/*+(i&1)*/];
-      (out+j+2)[0] = (ushort)in[i+1/*+(i&1)*/];
-      (out+j+2)[1] = (ushort)in[i+2/*-(i&1)*/];
-      (out+j+4)[0] = (ushort)in[i+2/*-(i&1)*/];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[0] = (uint16_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[1] = (uint16_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[0] = (uint16_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_trifan_uint2ushort(
+static void translate_trifan_uint322uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1040,20 +1040,20 @@ static void translate_trifan_uint2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (ushort)in[0];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[0];
+      (out+j)[0] = (uint16_t)in[0];
+      (out+j)[1] = (uint16_t)in[i+1];
+      (out+j+2)[0] = (uint16_t)in[i+1];
+      (out+j+2)[1] = (uint16_t)in[i+2];
+      (out+j+4)[0] = (uint16_t)in[i+2];
+      (out+j+4)[1] = (uint16_t)in[0];
    }
 }
-static void translate_quads_uint2ushort(
+static void translate_quads_uint322uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1061,22 +1061,22 @@ static void translate_quads_uint2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=4) {
-      (out+j)[0] = (ushort)in[i+0];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[i+3];
-      (out+j+6)[0] = (ushort)in[i+3];
-      (out+j+6)[1] = (ushort)in[i+0];
+      (out+j)[0] = (uint16_t)in[i+0];
+      (out+j)[1] = (uint16_t)in[i+1];
+      (out+j+2)[0] = (uint16_t)in[i+1];
+      (out+j+2)[1] = (uint16_t)in[i+2];
+      (out+j+4)[0] = (uint16_t)in[i+2];
+      (out+j+4)[1] = (uint16_t)in[i+3];
+      (out+j+6)[0] = (uint16_t)in[i+3];
+      (out+j+6)[1] = (uint16_t)in[i+0];
    }
 }
-static void translate_quadstrip_uint2ushort(
+static void translate_quadstrip_uint322uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1084,22 +1084,22 @@ static void translate_quadstrip_uint2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=2) {
-      (out+j)[0] = (ushort)in[i+2];
-      (out+j)[1] = (ushort)in[i+0];
-      (out+j+2)[0] = (ushort)in[i+0];
-      (out+j+2)[1] = (ushort)in[i+1];
-      (out+j+4)[0] = (ushort)in[i+1];
-      (out+j+4)[1] = (ushort)in[i+3];
-      (out+j+6)[0] = (ushort)in[i+3];
-      (out+j+6)[1] = (ushort)in[i+2];
+      (out+j)[0] = (uint16_t)in[i+2];
+      (out+j)[1] = (uint16_t)in[i+0];
+      (out+j+2)[0] = (uint16_t)in[i+0];
+      (out+j+2)[1] = (uint16_t)in[i+1];
+      (out+j+4)[0] = (uint16_t)in[i+1];
+      (out+j+4)[1] = (uint16_t)in[i+3];
+      (out+j+6)[0] = (uint16_t)in[i+3];
+      (out+j+6)[1] = (uint16_t)in[i+2];
    }
 }
-static void translate_polygon_uint2ushort(
+static void translate_polygon_uint322uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1107,17 +1107,17 @@ static void translate_polygon_uint2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[(i+1)%(out_nr/2)
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[(i+1)%(out_nr/2)
 ];
    }
 }
-static void translate_trisadj_uint2ushort(
+static void translate_trisadj_uint322uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1125,20 +1125,20 @@ static void translate_trisadj_uint2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j+2)[0] = (ushort)in[i+2];
-      (out+j+2)[1] = (ushort)in[i+4];
-      (out+j+4)[0] = (ushort)in[i+4];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+2];
+      (out+j+2)[0] = (uint16_t)in[i+2];
+      (out+j+2)[1] = (uint16_t)in[i+4];
+      (out+j+4)[0] = (uint16_t)in[i+4];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_tristripadj_uint2ushort(
+static void translate_tristripadj_uint322uint16(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1146,20 +1146,20 @@ static void translate_tristripadj_uint2ushort(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint16_t *out = (uint16_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) {
-      (out+j)[0] = (ushort)in[i];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j+2)[0] = (ushort)in[i+2];
-      (out+j+2)[1] = (ushort)in[i+4];
-      (out+j+4)[0] = (ushort)in[i+4];
-      (out+j+4)[1] = (ushort)in[i];
+      (out+j)[0] = (uint16_t)in[i];
+      (out+j)[1] = (uint16_t)in[i+2];
+      (out+j+2)[0] = (uint16_t)in[i+2];
+      (out+j+2)[1] = (uint16_t)in[i+4];
+      (out+j+4)[0] = (uint16_t)in[i+4];
+      (out+j+4)[1] = (uint16_t)in[i];
    }
 }
-static void translate_tris_uint2uint(
+static void translate_tris_uint322uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1167,20 +1167,20 @@ static void translate_tris_uint2uint(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=3) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+1];
+      (out+j+2)[0] = (uint32_t)in[i+1];
+      (out+j+2)[1] = (uint32_t)in[i+2];
+      (out+j+4)[0] = (uint32_t)in[i+2];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_tristrip_uint2uint(
+static void translate_tristrip_uint322uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1188,20 +1188,20 @@ static void translate_tristrip_uint2uint(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+1/*+(i&1)*/];
-      (out+j+2)[0] = (uint)in[i+1/*+(i&1)*/];
-      (out+j+2)[1] = (uint)in[i+2/*-(i&1)*/];
-      (out+j+4)[0] = (uint)in[i+2/*-(i&1)*/];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[0] = (uint32_t)in[i+1/*+(i&1)*/];
+      (out+j+2)[1] = (uint32_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[0] = (uint32_t)in[i+2/*-(i&1)*/];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_trifan_uint2uint(
+static void translate_trifan_uint322uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1209,20 +1209,20 @@ static void translate_trifan_uint2uint(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i++) {
-      (out+j)[0] = (uint)in[0];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[0];
+      (out+j)[0] = (uint32_t)in[0];
+      (out+j)[1] = (uint32_t)in[i+1];
+      (out+j+2)[0] = (uint32_t)in[i+1];
+      (out+j+2)[1] = (uint32_t)in[i+2];
+      (out+j+4)[0] = (uint32_t)in[i+2];
+      (out+j+4)[1] = (uint32_t)in[0];
    }
 }
-static void translate_quads_uint2uint(
+static void translate_quads_uint322uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1230,22 +1230,22 @@ static void translate_quads_uint2uint(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=4) {
-      (out+j)[0] = (uint)in[i+0];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[i+3];
-      (out+j+6)[0] = (uint)in[i+3];
-      (out+j+6)[1] = (uint)in[i+0];
+      (out+j)[0] = (uint32_t)in[i+0];
+      (out+j)[1] = (uint32_t)in[i+1];
+      (out+j+2)[0] = (uint32_t)in[i+1];
+      (out+j+2)[1] = (uint32_t)in[i+2];
+      (out+j+4)[0] = (uint32_t)in[i+2];
+      (out+j+4)[1] = (uint32_t)in[i+3];
+      (out+j+6)[0] = (uint32_t)in[i+3];
+      (out+j+6)[1] = (uint32_t)in[i+0];
    }
 }
-static void translate_quadstrip_uint2uint(
+static void translate_quadstrip_uint322uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1253,22 +1253,22 @@ static void translate_quadstrip_uint2uint(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=8, i+=2) {
-      (out+j)[0] = (uint)in[i+2];
-      (out+j)[1] = (uint)in[i+0];
-      (out+j+2)[0] = (uint)in[i+0];
-      (out+j+2)[1] = (uint)in[i+1];
-      (out+j+4)[0] = (uint)in[i+1];
-      (out+j+4)[1] = (uint)in[i+3];
-      (out+j+6)[0] = (uint)in[i+3];
-      (out+j+6)[1] = (uint)in[i+2];
+      (out+j)[0] = (uint32_t)in[i+2];
+      (out+j)[1] = (uint32_t)in[i+0];
+      (out+j+2)[0] = (uint32_t)in[i+0];
+      (out+j+2)[1] = (uint32_t)in[i+1];
+      (out+j+4)[0] = (uint32_t)in[i+1];
+      (out+j+4)[1] = (uint32_t)in[i+3];
+      (out+j+6)[0] = (uint32_t)in[i+3];
+      (out+j+6)[1] = (uint32_t)in[i+2];
    }
 }
-static void translate_polygon_uint2uint(
+static void translate_polygon_uint322uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1276,17 +1276,17 @@ static void translate_polygon_uint2uint(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[(i+1)%(out_nr/2)
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[(i+1)%(out_nr/2)
 ];
    }
 }
-static void translate_trisadj_uint2uint(
+static void translate_trisadj_uint322uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1294,20 +1294,20 @@ static void translate_trisadj_uint2uint(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j+2)[0] = (uint)in[i+2];
-      (out+j+2)[1] = (uint)in[i+4];
-      (out+j+4)[0] = (uint)in[i+4];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+2];
+      (out+j+2)[0] = (uint32_t)in[i+2];
+      (out+j+2)[1] = (uint32_t)in[i+4];
+      (out+j+4)[0] = (uint32_t)in[i+4];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
-static void translate_tristripadj_uint2uint(
+static void translate_tristripadj_uint322uint32(
     const void * _in,
     unsigned start,
     unsigned in_nr,
@@ -1315,17 +1315,17 @@ static void translate_tristripadj_uint2uint(
     unsigned restart_index,
     void *_out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint32_t *in = (const uint32_t*)_in;
+  uint32_t *out = (uint32_t*)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) {
-      (out+j)[0] = (uint)in[i];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j+2)[0] = (uint)in[i+2];
-      (out+j+2)[1] = (uint)in[i+4];
-      (out+j+4)[0] = (uint)in[i+4];
-      (out+j+4)[1] = (uint)in[i];
+      (out+j)[0] = (uint32_t)in[i];
+      (out+j)[1] = (uint32_t)in[i+2];
+      (out+j+2)[0] = (uint32_t)in[i+2];
+      (out+j+2)[1] = (uint32_t)in[i+4];
+      (out+j+4)[0] = (uint32_t)in[i+4];
+      (out+j+4)[1] = (uint32_t)in[i];
    }
 }
 void u_unfilled_init( void )
@@ -1333,69 +1333,69 @@ void u_unfilled_init( void )
   static int firsttime = 1;
   if (!firsttime) return;
   firsttime = 0;
-generate_line[OUT_USHORT][PIPE_PRIM_TRIANGLES] = generate_tris_ushort;
-generate_line[OUT_USHORT][PIPE_PRIM_TRIANGLE_FAN] = generate_trifan_ushort;
-generate_line[OUT_USHORT][PIPE_PRIM_TRIANGLE_STRIP] = generate_tristrip_ushort;
-generate_line[OUT_USHORT][PIPE_PRIM_QUADS] = generate_quads_ushort;
-generate_line[OUT_USHORT][PIPE_PRIM_QUAD_STRIP] = generate_quadstrip_ushort;
-generate_line[OUT_USHORT][PIPE_PRIM_POLYGON] = generate_polygon_ushort;
-generate_line[OUT_USHORT][PIPE_PRIM_TRIANGLES_ADJACENCY] = generate_trisadj_ushort;
-generate_line[OUT_USHORT][PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY] = generate_tristripadj_ushort;
-generate_line[OUT_UINT][PIPE_PRIM_TRIANGLES] = generate_tris_uint;
-generate_line[OUT_UINT][PIPE_PRIM_TRIANGLE_FAN] = generate_trifan_uint;
-generate_line[OUT_UINT][PIPE_PRIM_TRIANGLE_STRIP] = generate_tristrip_uint;
-generate_line[OUT_UINT][PIPE_PRIM_QUADS] = generate_quads_uint;
-generate_line[OUT_UINT][PIPE_PRIM_QUAD_STRIP] = generate_quadstrip_uint;
-generate_line[OUT_UINT][PIPE_PRIM_POLYGON] = generate_polygon_uint;
-generate_line[OUT_UINT][PIPE_PRIM_TRIANGLES_ADJACENCY] = generate_trisadj_uint;
-generate_line[OUT_UINT][PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY] = generate_tristripadj_uint;
-translate_line[IN_UBYTE][OUT_USHORT][PIPE_PRIM_TRIANGLES] = translate_tris_ubyte2ushort;
-translate_line[IN_UBYTE][OUT_USHORT][PIPE_PRIM_TRIANGLE_FAN] = translate_trifan_ubyte2ushort;
-translate_line[IN_UBYTE][OUT_USHORT][PIPE_PRIM_TRIANGLE_STRIP] = translate_tristrip_ubyte2ushort;
-translate_line[IN_UBYTE][OUT_USHORT][PIPE_PRIM_QUADS] = translate_quads_ubyte2ushort;
-translate_line[IN_UBYTE][OUT_USHORT][PIPE_PRIM_QUAD_STRIP] = translate_quadstrip_ubyte2ushort;
-translate_line[IN_UBYTE][OUT_USHORT][PIPE_PRIM_POLYGON] = translate_polygon_ubyte2ushort;
-translate_line[IN_UBYTE][OUT_USHORT][PIPE_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_ubyte2ushort;
-translate_line[IN_UBYTE][OUT_USHORT][PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_ubyte2ushort;
-translate_line[IN_UBYTE][OUT_UINT][PIPE_PRIM_TRIANGLES] = translate_tris_ubyte2uint;
-translate_line[IN_UBYTE][OUT_UINT][PIPE_PRIM_TRIANGLE_FAN] = translate_trifan_ubyte2uint;
-translate_line[IN_UBYTE][OUT_UINT][PIPE_PRIM_TRIANGLE_STRIP] = translate_tristrip_ubyte2uint;
-translate_line[IN_UBYTE][OUT_UINT][PIPE_PRIM_QUADS] = translate_quads_ubyte2uint;
-translate_line[IN_UBYTE][OUT_UINT][PIPE_PRIM_QUAD_STRIP] = translate_quadstrip_ubyte2uint;
-translate_line[IN_UBYTE][OUT_UINT][PIPE_PRIM_POLYGON] = translate_polygon_ubyte2uint;
-translate_line[IN_UBYTE][OUT_UINT][PIPE_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_ubyte2uint;
-translate_line[IN_UBYTE][OUT_UINT][PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_ubyte2uint;
-translate_line[IN_USHORT][OUT_USHORT][PIPE_PRIM_TRIANGLES] = translate_tris_ushort2ushort;
-translate_line[IN_USHORT][OUT_USHORT][PIPE_PRIM_TRIANGLE_FAN] = translate_trifan_ushort2ushort;
-translate_line[IN_USHORT][OUT_USHORT][PIPE_PRIM_TRIANGLE_STRIP] = translate_tristrip_ushort2ushort;
-translate_line[IN_USHORT][OUT_USHORT][PIPE_PRIM_QUADS] = translate_quads_ushort2ushort;
-translate_line[IN_USHORT][OUT_USHORT][PIPE_PRIM_QUAD_STRIP] = translate_quadstrip_ushort2ushort;
-translate_line[IN_USHORT][OUT_USHORT][PIPE_PRIM_POLYGON] = translate_polygon_ushort2ushort;
-translate_line[IN_USHORT][OUT_USHORT][PIPE_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_ushort2ushort;
-translate_line[IN_USHORT][OUT_USHORT][PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_ushort2ushort;
-translate_line[IN_USHORT][OUT_UINT][PIPE_PRIM_TRIANGLES] = translate_tris_ushort2uint;
-translate_line[IN_USHORT][OUT_UINT][PIPE_PRIM_TRIANGLE_FAN] = translate_trifan_ushort2uint;
-translate_line[IN_USHORT][OUT_UINT][PIPE_PRIM_TRIANGLE_STRIP] = translate_tristrip_ushort2uint;
-translate_line[IN_USHORT][OUT_UINT][PIPE_PRIM_QUADS] = translate_quads_ushort2uint;
-translate_line[IN_USHORT][OUT_UINT][PIPE_PRIM_QUAD_STRIP] = translate_quadstrip_ushort2uint;
-translate_line[IN_USHORT][OUT_UINT][PIPE_PRIM_POLYGON] = translate_polygon_ushort2uint;
-translate_line[IN_USHORT][OUT_UINT][PIPE_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_ushort2uint;
-translate_line[IN_USHORT][OUT_UINT][PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_ushort2uint;
-translate_line[IN_UINT][OUT_USHORT][PIPE_PRIM_TRIANGLES] = translate_tris_uint2ushort;
-translate_line[IN_UINT][OUT_USHORT][PIPE_PRIM_TRIANGLE_FAN] = translate_trifan_uint2ushort;
-translate_line[IN_UINT][OUT_USHORT][PIPE_PRIM_TRIANGLE_STRIP] = translate_tristrip_uint2ushort;
-translate_line[IN_UINT][OUT_USHORT][PIPE_PRIM_QUADS] = translate_quads_uint2ushort;
-translate_line[IN_UINT][OUT_USHORT][PIPE_PRIM_QUAD_STRIP] = translate_quadstrip_uint2ushort;
-translate_line[IN_UINT][OUT_USHORT][PIPE_PRIM_POLYGON] = translate_polygon_uint2ushort;
-translate_line[IN_UINT][OUT_USHORT][PIPE_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_uint2ushort;
-translate_line[IN_UINT][OUT_USHORT][PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_uint2ushort;
-translate_line[IN_UINT][OUT_UINT][PIPE_PRIM_TRIANGLES] = translate_tris_uint2uint;
-translate_line[IN_UINT][OUT_UINT][PIPE_PRIM_TRIANGLE_FAN] = translate_trifan_uint2uint;
-translate_line[IN_UINT][OUT_UINT][PIPE_PRIM_TRIANGLE_STRIP] = translate_tristrip_uint2uint;
-translate_line[IN_UINT][OUT_UINT][PIPE_PRIM_QUADS] = translate_quads_uint2uint;
-translate_line[IN_UINT][OUT_UINT][PIPE_PRIM_QUAD_STRIP] = translate_quadstrip_uint2uint;
-translate_line[IN_UINT][OUT_UINT][PIPE_PRIM_POLYGON] = translate_polygon_uint2uint;
-translate_line[IN_UINT][OUT_UINT][PIPE_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_uint2uint;
-translate_line[IN_UINT][OUT_UINT][PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_uint2uint;
+generate_line[OUT_UINT16][MESA_PRIM_TRIANGLES] = generate_tris_uint16;
+generate_line[OUT_UINT16][MESA_PRIM_TRIANGLE_FAN] = generate_trifan_uint16;
+generate_line[OUT_UINT16][MESA_PRIM_TRIANGLE_STRIP] = generate_tristrip_uint16;
+generate_line[OUT_UINT16][MESA_PRIM_QUADS] = generate_quads_uint16;
+generate_line[OUT_UINT16][MESA_PRIM_QUAD_STRIP] = generate_quadstrip_uint16;
+generate_line[OUT_UINT16][MESA_PRIM_POLYGON] = generate_polygon_uint16;
+generate_line[OUT_UINT16][MESA_PRIM_TRIANGLES_ADJACENCY] = generate_trisadj_uint16;
+generate_line[OUT_UINT16][MESA_PRIM_TRIANGLE_STRIP_ADJACENCY] = generate_tristripadj_uint16;
+generate_line[OUT_UINT32][MESA_PRIM_TRIANGLES] = generate_tris_uint32;
+generate_line[OUT_UINT32][MESA_PRIM_TRIANGLE_FAN] = generate_trifan_uint32;
+generate_line[OUT_UINT32][MESA_PRIM_TRIANGLE_STRIP] = generate_tristrip_uint32;
+generate_line[OUT_UINT32][MESA_PRIM_QUADS] = generate_quads_uint32;
+generate_line[OUT_UINT32][MESA_PRIM_QUAD_STRIP] = generate_quadstrip_uint32;
+generate_line[OUT_UINT32][MESA_PRIM_POLYGON] = generate_polygon_uint32;
+generate_line[OUT_UINT32][MESA_PRIM_TRIANGLES_ADJACENCY] = generate_trisadj_uint32;
+generate_line[OUT_UINT32][MESA_PRIM_TRIANGLE_STRIP_ADJACENCY] = generate_tristripadj_uint32;
+translate_line[IN_UINT8][OUT_UINT16][MESA_PRIM_TRIANGLES] = translate_tris_uint82uint16;
+translate_line[IN_UINT8][OUT_UINT16][MESA_PRIM_TRIANGLE_FAN] = translate_trifan_uint82uint16;
+translate_line[IN_UINT8][OUT_UINT16][MESA_PRIM_TRIANGLE_STRIP] = translate_tristrip_uint82uint16;
+translate_line[IN_UINT8][OUT_UINT16][MESA_PRIM_QUADS] = translate_quads_uint82uint16;
+translate_line[IN_UINT8][OUT_UINT16][MESA_PRIM_QUAD_STRIP] = translate_quadstrip_uint82uint16;
+translate_line[IN_UINT8][OUT_UINT16][MESA_PRIM_POLYGON] = translate_polygon_uint82uint16;
+translate_line[IN_UINT8][OUT_UINT16][MESA_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_uint82uint16;
+translate_line[IN_UINT8][OUT_UINT16][MESA_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_uint82uint16;
+translate_line[IN_UINT8][OUT_UINT32][MESA_PRIM_TRIANGLES] = translate_tris_uint82uint32;
+translate_line[IN_UINT8][OUT_UINT32][MESA_PRIM_TRIANGLE_FAN] = translate_trifan_uint82uint32;
+translate_line[IN_UINT8][OUT_UINT32][MESA_PRIM_TRIANGLE_STRIP] = translate_tristrip_uint82uint32;
+translate_line[IN_UINT8][OUT_UINT32][MESA_PRIM_QUADS] = translate_quads_uint82uint32;
+translate_line[IN_UINT8][OUT_UINT32][MESA_PRIM_QUAD_STRIP] = translate_quadstrip_uint82uint32;
+translate_line[IN_UINT8][OUT_UINT32][MESA_PRIM_POLYGON] = translate_polygon_uint82uint32;
+translate_line[IN_UINT8][OUT_UINT32][MESA_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_uint82uint32;
+translate_line[IN_UINT8][OUT_UINT32][MESA_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_uint82uint32;
+translate_line[IN_UINT16][OUT_UINT16][MESA_PRIM_TRIANGLES] = translate_tris_uint162uint16;
+translate_line[IN_UINT16][OUT_UINT16][MESA_PRIM_TRIANGLE_FAN] = translate_trifan_uint162uint16;
+translate_line[IN_UINT16][OUT_UINT16][MESA_PRIM_TRIANGLE_STRIP] = translate_tristrip_uint162uint16;
+translate_line[IN_UINT16][OUT_UINT16][MESA_PRIM_QUADS] = translate_quads_uint162uint16;
+translate_line[IN_UINT16][OUT_UINT16][MESA_PRIM_QUAD_STRIP] = translate_quadstrip_uint162uint16;
+translate_line[IN_UINT16][OUT_UINT16][MESA_PRIM_POLYGON] = translate_polygon_uint162uint16;
+translate_line[IN_UINT16][OUT_UINT16][MESA_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_uint162uint16;
+translate_line[IN_UINT16][OUT_UINT16][MESA_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_uint162uint16;
+translate_line[IN_UINT16][OUT_UINT32][MESA_PRIM_TRIANGLES] = translate_tris_uint162uint32;
+translate_line[IN_UINT16][OUT_UINT32][MESA_PRIM_TRIANGLE_FAN] = translate_trifan_uint162uint32;
+translate_line[IN_UINT16][OUT_UINT32][MESA_PRIM_TRIANGLE_STRIP] = translate_tristrip_uint162uint32;
+translate_line[IN_UINT16][OUT_UINT32][MESA_PRIM_QUADS] = translate_quads_uint162uint32;
+translate_line[IN_UINT16][OUT_UINT32][MESA_PRIM_QUAD_STRIP] = translate_quadstrip_uint162uint32;
+translate_line[IN_UINT16][OUT_UINT32][MESA_PRIM_POLYGON] = translate_polygon_uint162uint32;
+translate_line[IN_UINT16][OUT_UINT32][MESA_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_uint162uint32;
+translate_line[IN_UINT16][OUT_UINT32][MESA_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_uint162uint32;
+translate_line[IN_UINT32][OUT_UINT16][MESA_PRIM_TRIANGLES] = translate_tris_uint322uint16;
+translate_line[IN_UINT32][OUT_UINT16][MESA_PRIM_TRIANGLE_FAN] = translate_trifan_uint322uint16;
+translate_line[IN_UINT32][OUT_UINT16][MESA_PRIM_TRIANGLE_STRIP] = translate_tristrip_uint322uint16;
+translate_line[IN_UINT32][OUT_UINT16][MESA_PRIM_QUADS] = translate_quads_uint322uint16;
+translate_line[IN_UINT32][OUT_UINT16][MESA_PRIM_QUAD_STRIP] = translate_quadstrip_uint322uint16;
+translate_line[IN_UINT32][OUT_UINT16][MESA_PRIM_POLYGON] = translate_polygon_uint322uint16;
+translate_line[IN_UINT32][OUT_UINT16][MESA_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_uint322uint16;
+translate_line[IN_UINT32][OUT_UINT16][MESA_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_uint322uint16;
+translate_line[IN_UINT32][OUT_UINT32][MESA_PRIM_TRIANGLES] = translate_tris_uint322uint32;
+translate_line[IN_UINT32][OUT_UINT32][MESA_PRIM_TRIANGLE_FAN] = translate_trifan_uint322uint32;
+translate_line[IN_UINT32][OUT_UINT32][MESA_PRIM_TRIANGLE_STRIP] = translate_tristrip_uint322uint32;
+translate_line[IN_UINT32][OUT_UINT32][MESA_PRIM_QUADS] = translate_quads_uint322uint32;
+translate_line[IN_UINT32][OUT_UINT32][MESA_PRIM_QUAD_STRIP] = translate_quadstrip_uint322uint32;
+translate_line[IN_UINT32][OUT_UINT32][MESA_PRIM_POLYGON] = translate_polygon_uint322uint32;
+translate_line[IN_UINT32][OUT_UINT32][MESA_PRIM_TRIANGLES_ADJACENCY] = translate_trisadj_uint322uint32;
+translate_line[IN_UINT32][OUT_UINT32][MESA_PRIM_TRIANGLE_STRIP_ADJACENCY] = translate_tristripadj_uint322uint32;
 }
 #include "indices/u_unfilled_indices.c"

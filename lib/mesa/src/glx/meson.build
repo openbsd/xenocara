@@ -135,7 +135,7 @@ endif
 libglx = static_library(
   'glx',
   [files_libglx, glx_generated],
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_glapi, inc_loader],
+  include_directories : [inc_include, inc_src, inc_glapi, inc_loader],
   c_args : [
     gl_lib_define,
   ],

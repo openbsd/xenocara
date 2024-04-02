@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/11/02 04:53:30 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2024/04/02 10:42:12 jsg Exp $
 
 LIB=	amd_common
 
@@ -25,6 +25,7 @@ SRCS=	ac_binary.c \
 	ac_nir_lower_subdword_loads.c \
 	ac_nir_lower_taskmesh_io_to_mem.c \
 	ac_nir_lower_tess_io_to_mem.c \
+	ac_nir_lower_tex.c \
 	ac_nir_lower_ngg.c \
 	ac_nir_lower_ps.c \
 	amd_family.c \
@@ -48,6 +49,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/src/util \
 		-I${MESA_SRC}/generated/src/amd/common \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir
 
 install:

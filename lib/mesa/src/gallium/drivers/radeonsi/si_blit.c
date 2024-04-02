@@ -1,33 +1,15 @@
 /*
  * Copyright 2010 Jerome Glisse <glisse@freedesktop.org>
  * Copyright 2015 Advanced Micro Devices, Inc.
- * All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
-#include "si_compute.h"
 #include "si_pipe.h"
 #include "util/format/u_format.h"
 #include "util/u_log.h"
 #include "util/u_surface.h"
+#include "util/hash_table.h"
 
 enum
 {
@@ -117,7 +99,7 @@ void si_blitter_end(struct si_context *sctx)
       si_mark_atom_dirty(sctx, &sctx->atoms.s.ngg_cull_state);
 
    sctx->vertex_buffers_dirty = sctx->num_vertex_elements > 0;
-   si_mark_atom_dirty(sctx, &sctx->atoms.s.shader_pointers);
+   si_mark_atom_dirty(sctx, &sctx->atoms.s.gfx_shader_pointers);
 
    /* We force-disabled fbfetch for u_blitter, so recompute the state. */
    si_update_ps_colorbuf0_slot(sctx);
@@ -136,6 +118,8 @@ static unsigned si_blit_dbcb_copy(struct si_context *sctx, struct si_texture *sr
    struct pipe_surface surf_tmpl = {{0}};
    unsigned layer, sample, checked_last_layer, max_layer;
    unsigned fully_copied_levels = 0;
+
+   assert(sctx->gfx_level < GFX11);
 
    if (planes & PIPE_MASK_Z)
       sctx->dbcb_depth_copy_enabled = true;
@@ -512,18 +496,22 @@ static void si_blit_decompress_color(struct si_context *sctx, struct si_texture 
 
          /* Required before and after FMASK and DCC_DECOMPRESS. */
          if (custom_blend == sctx->custom_blend_fmask_decompress ||
-             custom_blend == sctx->custom_blend_dcc_decompress)
+             custom_blend == sctx->custom_blend_dcc_decompress) {
             sctx->flags |= SI_CONTEXT_FLUSH_AND_INV_CB;
+            si_mark_atom_dirty(sctx, &sctx->atoms.s.cache_flush);
+         }
 
          si_blitter_begin(sctx, SI_DECOMPRESS);
          util_blitter_custom_color(sctx->blitter, cbsurf, custom_blend);
          si_blitter_end(sctx);
 
          if (custom_blend == sctx->custom_blend_fmask_decompress ||
-             custom_blend == sctx->custom_blend_dcc_decompress)
+             custom_blend == sctx->custom_blend_dcc_decompress) {
             sctx->flags |= SI_CONTEXT_FLUSH_AND_INV_CB;
+            si_mark_atom_dirty(sctx, &sctx->atoms.s.cache_flush);
+         }
 
-         /* When running FMASK decompresion with DCC, we need to run the "eliminate fast clear" pass
+         /* When running FMASK decompression with DCC, we need to run the "eliminate fast clear" pass
           * separately because FMASK decompression doesn't eliminate DCC fast clear. This makes
           * render->texture transitions more expensive. It can be disabled by
           * allow_dcc_msaa_clear_to_reg_for_bpp.
@@ -571,6 +559,8 @@ static void si_decompress_color_texture(struct si_context *sctx, struct si_textu
                                         unsigned first_level, unsigned last_level,
                                         bool need_fmask_expand)
 {
+   assert(sctx->gfx_level < GFX11);
+
    /* CMASK or DCC can be discarded and we can still end up here. */
    if (!tex->cmask_buffer && !tex->surface.fmask_size &&
        !vi_dcc_enabled(tex, first_level))
@@ -586,6 +576,8 @@ static void si_decompress_sampler_color_textures(struct si_context *sctx,
 {
    unsigned i;
    unsigned mask = textures->needs_color_decompress_mask;
+
+   assert(sctx->gfx_level < GFX11);
 
    while (mask) {
       struct pipe_sampler_view *view;
@@ -607,6 +599,8 @@ static void si_decompress_image_color_textures(struct si_context *sctx, struct s
 {
    unsigned i;
    unsigned mask = images->needs_color_decompress_mask;
+
+   assert(sctx->gfx_level < GFX11);
 
    while (mask) {
       const struct pipe_image_view *view;
@@ -759,8 +753,10 @@ static void si_check_render_feedback(struct si_context *sctx)
    sctx->need_check_render_feedback = false;
 }
 
-static void si_decompress_resident_textures(struct si_context *sctx)
+static void si_decompress_resident_color_textures(struct si_context *sctx)
 {
+   assert(sctx->gfx_level < GFX11);
+
    util_dynarray_foreach (&sctx->resident_tex_needs_color_decompress, struct si_texture_handle *,
                           tex_handle) {
       struct pipe_sampler_view *view = (*tex_handle)->view;
@@ -769,7 +765,10 @@ static void si_decompress_resident_textures(struct si_context *sctx)
       si_decompress_color_texture(sctx, tex, view->u.tex.first_level, view->u.tex.last_level,
                                   false);
    }
+}
 
+static void si_decompress_resident_depth_textures(struct si_context *sctx)
+{
    util_dynarray_foreach (&sctx->resident_tex_needs_depth_decompress, struct si_texture_handle *,
                           tex_handle) {
       struct pipe_sampler_view *view = (*tex_handle)->view;
@@ -784,6 +783,8 @@ static void si_decompress_resident_textures(struct si_context *sctx)
 
 static void si_decompress_resident_images(struct si_context *sctx)
 {
+   assert(sctx->gfx_level < GFX11);
+
    util_dynarray_foreach (&sctx->resident_img_needs_color_decompress, struct si_image_handle *,
                           img_handle) {
       struct pipe_image_view *view = &(*img_handle)->view;
@@ -794,7 +795,7 @@ static void si_decompress_resident_images(struct si_context *sctx)
    }
 }
 
-void si_decompress_textures(struct si_context *sctx, unsigned shader_mask)
+void gfx6_decompress_textures(struct si_context *sctx, unsigned shader_mask)
 {
    unsigned compressed_colortex_counter, mask;
    bool need_flush = false;
@@ -836,8 +837,10 @@ void si_decompress_textures(struct si_context *sctx, unsigned shader_mask)
    }
 
    if (shader_mask & u_bit_consecutive(0, SI_NUM_GRAPHICS_SHADERS)) {
-      if (sctx->uses_bindless_samplers)
-         si_decompress_resident_textures(sctx);
+      if (sctx->uses_bindless_samplers) {
+         si_decompress_resident_color_textures(sctx);
+         si_decompress_resident_depth_textures(sctx);
+      }
       if (sctx->uses_bindless_images)
          si_decompress_resident_images(sctx);
 
@@ -849,10 +852,36 @@ void si_decompress_textures(struct si_context *sctx, unsigned shader_mask)
 
       si_check_render_feedback(sctx);
    } else if (shader_mask & (1 << PIPE_SHADER_COMPUTE)) {
-      if (sctx->cs_shader_state.program->sel.info.uses_bindless_samplers)
-         si_decompress_resident_textures(sctx);
+      if (sctx->cs_shader_state.program->sel.info.uses_bindless_samplers) {
+         si_decompress_resident_color_textures(sctx);
+         si_decompress_resident_depth_textures(sctx);
+      }
       if (sctx->cs_shader_state.program->sel.info.uses_bindless_images)
          si_decompress_resident_images(sctx);
+   }
+}
+
+void gfx11_decompress_textures(struct si_context *sctx, unsigned shader_mask)
+{
+   if (sctx->blitter_running)
+      return;
+
+   /* Decompress depth textures if needed. */
+   unsigned mask = sctx->shader_needs_decompress_mask & shader_mask;
+   u_foreach_bit(i, mask) {
+      assert(sctx->samplers[i].needs_depth_decompress_mask);
+      si_decompress_sampler_depth_textures(sctx, &sctx->samplers[i]);
+   }
+
+   /* Decompress bindless depth textures and disable DCC for render feedback. */
+   if (shader_mask & u_bit_consecutive(0, SI_NUM_GRAPHICS_SHADERS)) {
+      if (sctx->uses_bindless_samplers)
+         si_decompress_resident_depth_textures(sctx);
+
+      si_check_render_feedback(sctx);
+   } else if (shader_mask & (1 << PIPE_SHADER_COMPUTE)) {
+      if (sctx->cs_shader_state.program->sel.info.uses_bindless_samplers)
+         si_decompress_resident_depth_textures(sctx);
    }
 }
 
@@ -1011,6 +1040,7 @@ static void si_do_CB_resolve(struct si_context *sctx, const struct pipe_blit_inf
 {
    /* Required before and after CB_RESOLVE. */
    sctx->flags |= SI_CONTEXT_FLUSH_AND_INV_CB;
+   si_mark_atom_dirty(sctx, &sctx->atoms.s.cache_flush);
 
    si_blitter_begin(
       sctx, SI_COLOR_RESOLVE | (info->render_condition_enable ? 0 : SI_DISABLE_RENDER_COND));
@@ -1214,13 +1244,13 @@ static void si_blit(struct pipe_context *ctx, const struct pipe_blit_info *info)
       simple_mtx_unlock(&sscreen->async_compute_context_lock);
    }
 
-   if (unlikely(sctx->thread_trace_enabled))
+   if (unlikely(sctx->sqtt_enabled))
       sctx->sqtt_next_event = EventCmdResolveImage;
 
    if (si_msaa_resolve_blit_via_CB(ctx, info))
       return;
 
-   if (unlikely(sctx->thread_trace_enabled))
+   if (unlikely(sctx->sqtt_enabled))
       sctx->sqtt_next_event = EventCmdCopyImage;
 
    /* Using compute for copying to a linear texture in GTT is much faster than
@@ -1255,7 +1285,7 @@ void si_gfx_blit(struct pipe_context *ctx, const struct pipe_blit_info *info)
                              info->src.box.z, info->src.box.z + info->src.box.depth - 1,
                              false);
 
-   if (unlikely(sctx->thread_trace_enabled))
+   if (unlikely(sctx->sqtt_enabled))
       sctx->sqtt_next_event = EventCmdBlitImage;
 
    si_blitter_begin(sctx, SI_BLIT | (info->render_condition_enable ? 0 : SI_DISABLE_RENDER_COND));

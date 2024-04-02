@@ -386,41 +386,8 @@ void pan_block_add_successor(pan_block *block, pan_block *successor);
 /* IR indexing */
 #define PAN_IS_REG (1)
 
-static inline unsigned
-pan_ssa_index(nir_ssa_def *ssa)
-{
-   /* Off-by-one ensures BIR_NO_ARG is skipped */
-   return ((ssa->index + 1) << 1) | 0;
-}
-
-static inline unsigned
-pan_src_index(nir_src *src)
-{
-   if (src->is_ssa)
-      return pan_ssa_index(src->ssa);
-   else {
-      assert(!src->reg.indirect);
-      return (src->reg.reg->index << 1) | PAN_IS_REG;
-   }
-}
-
-static inline unsigned
-pan_dest_index(nir_dest *dst)
-{
-   if (dst->is_ssa)
-      return pan_ssa_index(&dst->ssa);
-   else {
-      assert(!dst->reg.indirect);
-      return (dst->reg.reg->index << 1) | PAN_IS_REG;
-   }
-}
-
 /* IR printing helpers */
 void pan_print_alu_type(nir_alu_type t, FILE *fp);
-
-/* Until it can be upstreamed.. */
-bool pan_has_source_mod(nir_alu_src *src, nir_op op);
-bool pan_has_dest_mod(nir_dest **dest, nir_op op);
 
 /* NIR passes to do some backend-specific lowering */
 

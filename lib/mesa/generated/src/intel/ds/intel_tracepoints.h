@@ -44,21 +44,28 @@ enum intel_gpu_tracepoint {
    INTEL_GPU_TRACEPOINT_RENDER_PASS = 1ull << 6,
    INTEL_GPU_TRACEPOINT_BLORP = 1ull << 7,
    INTEL_GPU_TRACEPOINT_GENERATE_DRAWS = 1ull << 8,
-   INTEL_GPU_TRACEPOINT_DRAW = 1ull << 9,
-   INTEL_GPU_TRACEPOINT_DRAW_MULTI = 1ull << 10,
-   INTEL_GPU_TRACEPOINT_DRAW_INDEXED = 1ull << 11,
-   INTEL_GPU_TRACEPOINT_DRAW_INDEXED_MULTI = 1ull << 12,
-   INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_BYTE_COUNT = 1ull << 13,
-   INTEL_GPU_TRACEPOINT_DRAW_INDIRECT = 1ull << 14,
-   INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT = 1ull << 15,
-   INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_COUNT = 1ull << 16,
-   INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT_COUNT = 1ull << 17,
-   INTEL_GPU_TRACEPOINT_DRAW_MESH = 1ull << 18,
-   INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT = 1ull << 19,
-   INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT_COUNT = 1ull << 20,
-   INTEL_GPU_TRACEPOINT_COMPUTE = 1ull << 21,
-   INTEL_GPU_TRACEPOINT_TRACE_COPY = 1ull << 22,
-   INTEL_GPU_TRACEPOINT_STALL = 1ull << 23,
+   INTEL_GPU_TRACEPOINT_QUERY_CLEAR_BLORP = 1ull << 9,
+   INTEL_GPU_TRACEPOINT_QUERY_CLEAR_CS = 1ull << 10,
+   INTEL_GPU_TRACEPOINT_QUERY_COPY_CS = 1ull << 11,
+   INTEL_GPU_TRACEPOINT_QUERY_COPY_SHADER = 1ull << 12,
+   INTEL_GPU_TRACEPOINT_DRAW = 1ull << 13,
+   INTEL_GPU_TRACEPOINT_DRAW_MULTI = 1ull << 14,
+   INTEL_GPU_TRACEPOINT_DRAW_INDEXED = 1ull << 15,
+   INTEL_GPU_TRACEPOINT_DRAW_INDEXED_MULTI = 1ull << 16,
+   INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_BYTE_COUNT = 1ull << 17,
+   INTEL_GPU_TRACEPOINT_DRAW_INDIRECT = 1ull << 18,
+   INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT = 1ull << 19,
+   INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_COUNT = 1ull << 20,
+   INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT_COUNT = 1ull << 21,
+   INTEL_GPU_TRACEPOINT_DRAW_MESH = 1ull << 22,
+   INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT = 1ull << 23,
+   INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT_COUNT = 1ull << 24,
+   INTEL_GPU_TRACEPOINT_COMPUTE = 1ull << 25,
+   INTEL_GPU_TRACEPOINT_TRACE_COPY = 1ull << 26,
+   INTEL_GPU_TRACEPOINT_TRACE_COPY_CB = 1ull << 27,
+   INTEL_GPU_TRACEPOINT_AS_BUILD = 1ull << 28,
+   INTEL_GPU_TRACEPOINT_RAYS = 1ull << 29,
+   INTEL_GPU_TRACEPOINT_STALL = 1ull << 30,
 };
 
 extern uint64_t intel_gpu_tracepoint;
@@ -84,6 +91,7 @@ struct trace_intel_begin_frame {
 void intel_ds_begin_frame(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_frame *payload);
 #endif
@@ -117,6 +125,7 @@ struct trace_intel_end_frame {
 void intel_ds_end_frame(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_frame *payload);
 #endif
@@ -161,6 +170,7 @@ struct trace_intel_begin_queue_annotation {
 void intel_ds_begin_queue_annotation(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_queue_annotation *payload);
 #endif
@@ -195,6 +205,7 @@ struct trace_intel_end_queue_annotation {
 void intel_ds_end_queue_annotation(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_queue_annotation *payload);
 #endif
@@ -242,6 +253,7 @@ struct trace_intel_begin_batch {
 void intel_ds_begin_batch(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_batch *payload);
 #endif
@@ -272,6 +284,7 @@ struct trace_intel_end_batch {
 void intel_ds_end_batch(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_batch *payload);
 #endif
@@ -313,6 +326,7 @@ struct trace_intel_begin_cmd_buffer {
 void intel_ds_begin_cmd_buffer(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_cmd_buffer *payload);
 #endif
@@ -343,6 +357,7 @@ struct trace_intel_end_cmd_buffer {
 void intel_ds_end_cmd_buffer(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_cmd_buffer *payload);
 #endif
@@ -384,6 +399,7 @@ struct trace_intel_begin_cmd_buffer_annotation {
 void intel_ds_begin_cmd_buffer_annotation(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_cmd_buffer_annotation *payload);
 #endif
@@ -415,6 +431,7 @@ struct trace_intel_end_cmd_buffer_annotation {
 void intel_ds_end_cmd_buffer_annotation(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_cmd_buffer_annotation *payload);
 #endif
@@ -459,6 +476,7 @@ struct trace_intel_begin_xfb {
 void intel_ds_begin_xfb(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_xfb *payload);
 #endif
@@ -497,6 +515,7 @@ struct trace_intel_end_xfb {
 void intel_ds_end_xfb(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_xfb *payload);
 #endif
@@ -535,6 +554,7 @@ struct trace_intel_begin_render_pass {
 void intel_ds_begin_render_pass(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_render_pass *payload);
 #endif
@@ -568,6 +588,7 @@ struct trace_intel_end_render_pass {
 void intel_ds_end_render_pass(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_render_pass *payload);
 #endif
@@ -618,6 +639,7 @@ struct trace_intel_begin_blorp {
 void intel_ds_begin_blorp(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_blorp *payload);
 #endif
@@ -654,6 +676,7 @@ struct trace_intel_end_blorp {
 void intel_ds_end_blorp(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_blorp *payload);
 #endif
@@ -713,6 +736,7 @@ struct trace_intel_begin_generate_draws {
 void intel_ds_begin_generate_draws(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_generate_draws *payload);
 #endif
@@ -751,6 +775,7 @@ struct trace_intel_end_generate_draws {
 void intel_ds_end_generate_draws(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_generate_draws *payload);
 #endif
@@ -772,6 +797,298 @@ static ALWAYS_INLINE void trace_intel_end_generate_draws(
 }
 
 /*
+ * intel_begin_query_clear_blorp
+ */
+struct trace_intel_begin_query_clear_blorp {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_query_clear_blorp) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_query_clear_blorp(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_begin_query_clear_blorp *payload);
+#endif
+void __trace_intel_begin_query_clear_blorp(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_begin_query_clear_blorp(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_QUERY_CLEAR_BLORP)))
+      return;
+   __trace_intel_begin_query_clear_blorp(
+        ut
+      , enabled_traces
+   );
+}
+
+/*
+ * intel_end_query_clear_blorp
+ */
+struct trace_intel_end_query_clear_blorp {
+   uint32_t count;
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_query_clear_blorp(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_end_query_clear_blorp *payload);
+#endif
+void __trace_intel_end_query_clear_blorp(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , uint32_t count
+);
+static ALWAYS_INLINE void trace_intel_end_query_clear_blorp(
+     struct u_trace *ut
+   , uint32_t count
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_QUERY_CLEAR_BLORP)))
+      return;
+   __trace_intel_end_query_clear_blorp(
+        ut
+      , enabled_traces
+      , count
+   );
+}
+
+/*
+ * intel_begin_query_clear_cs
+ */
+struct trace_intel_begin_query_clear_cs {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_query_clear_cs) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_query_clear_cs(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_begin_query_clear_cs *payload);
+#endif
+void __trace_intel_begin_query_clear_cs(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_begin_query_clear_cs(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_QUERY_CLEAR_CS)))
+      return;
+   __trace_intel_begin_query_clear_cs(
+        ut
+      , enabled_traces
+   );
+}
+
+/*
+ * intel_end_query_clear_cs
+ */
+struct trace_intel_end_query_clear_cs {
+   uint32_t count;
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_query_clear_cs(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_end_query_clear_cs *payload);
+#endif
+void __trace_intel_end_query_clear_cs(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , uint32_t count
+);
+static ALWAYS_INLINE void trace_intel_end_query_clear_cs(
+     struct u_trace *ut
+   , uint32_t count
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_QUERY_CLEAR_CS)))
+      return;
+   __trace_intel_end_query_clear_cs(
+        ut
+      , enabled_traces
+      , count
+   );
+}
+
+/*
+ * intel_begin_query_copy_cs
+ */
+struct trace_intel_begin_query_copy_cs {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_query_copy_cs) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_query_copy_cs(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_begin_query_copy_cs *payload);
+#endif
+void __trace_intel_begin_query_copy_cs(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_begin_query_copy_cs(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_QUERY_COPY_CS)))
+      return;
+   __trace_intel_begin_query_copy_cs(
+        ut
+      , enabled_traces
+   );
+}
+
+/*
+ * intel_end_query_copy_cs
+ */
+struct trace_intel_end_query_copy_cs {
+   uint32_t count;
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_query_copy_cs(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_end_query_copy_cs *payload);
+#endif
+void __trace_intel_end_query_copy_cs(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , uint32_t count
+);
+static ALWAYS_INLINE void trace_intel_end_query_copy_cs(
+     struct u_trace *ut
+   , uint32_t count
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_QUERY_COPY_CS)))
+      return;
+   __trace_intel_end_query_copy_cs(
+        ut
+      , enabled_traces
+      , count
+   );
+}
+
+/*
+ * intel_begin_query_copy_shader
+ */
+struct trace_intel_begin_query_copy_shader {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_query_copy_shader) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_query_copy_shader(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_begin_query_copy_shader *payload);
+#endif
+void __trace_intel_begin_query_copy_shader(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_begin_query_copy_shader(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_QUERY_COPY_SHADER)))
+      return;
+   __trace_intel_begin_query_copy_shader(
+        ut
+      , enabled_traces
+   );
+}
+
+/*
+ * intel_end_query_copy_shader
+ */
+struct trace_intel_end_query_copy_shader {
+   uint32_t count;
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_query_copy_shader(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_end_query_copy_shader *payload);
+#endif
+void __trace_intel_end_query_copy_shader(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , uint32_t count
+);
+static ALWAYS_INLINE void trace_intel_end_query_copy_shader(
+     struct u_trace *ut
+   , uint32_t count
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_QUERY_COPY_SHADER)))
+      return;
+   __trace_intel_end_query_copy_shader(
+        ut
+      , enabled_traces
+      , count
+   );
+}
+
+/*
  * intel_begin_draw
  */
 struct trace_intel_begin_draw {
@@ -789,6 +1106,7 @@ struct trace_intel_begin_draw {
 void intel_ds_begin_draw(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw *payload);
 #endif
@@ -819,6 +1137,7 @@ struct trace_intel_end_draw {
 void intel_ds_end_draw(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw *payload);
 #endif
@@ -860,6 +1179,7 @@ struct trace_intel_begin_draw_multi {
 void intel_ds_begin_draw_multi(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_multi *payload);
 #endif
@@ -890,6 +1210,7 @@ struct trace_intel_end_draw_multi {
 void intel_ds_end_draw_multi(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_multi *payload);
 #endif
@@ -931,6 +1252,7 @@ struct trace_intel_begin_draw_indexed {
 void intel_ds_begin_draw_indexed(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_indexed *payload);
 #endif
@@ -961,6 +1283,7 @@ struct trace_intel_end_draw_indexed {
 void intel_ds_end_draw_indexed(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_indexed *payload);
 #endif
@@ -1002,6 +1325,7 @@ struct trace_intel_begin_draw_indexed_multi {
 void intel_ds_begin_draw_indexed_multi(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_indexed_multi *payload);
 #endif
@@ -1032,6 +1356,7 @@ struct trace_intel_end_draw_indexed_multi {
 void intel_ds_end_draw_indexed_multi(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_indexed_multi *payload);
 #endif
@@ -1073,6 +1398,7 @@ struct trace_intel_begin_draw_indirect_byte_count {
 void intel_ds_begin_draw_indirect_byte_count(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_indirect_byte_count *payload);
 #endif
@@ -1103,6 +1429,7 @@ struct trace_intel_end_draw_indirect_byte_count {
 void intel_ds_end_draw_indirect_byte_count(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_indirect_byte_count *payload);
 #endif
@@ -1144,6 +1471,7 @@ struct trace_intel_begin_draw_indirect {
 void intel_ds_begin_draw_indirect(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_indirect *payload);
 #endif
@@ -1174,6 +1502,7 @@ struct trace_intel_end_draw_indirect {
 void intel_ds_end_draw_indirect(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_indirect *payload);
 #endif
@@ -1215,6 +1544,7 @@ struct trace_intel_begin_draw_indexed_indirect {
 void intel_ds_begin_draw_indexed_indirect(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_indexed_indirect *payload);
 #endif
@@ -1245,6 +1575,7 @@ struct trace_intel_end_draw_indexed_indirect {
 void intel_ds_end_draw_indexed_indirect(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_indexed_indirect *payload);
 #endif
@@ -1286,6 +1617,7 @@ struct trace_intel_begin_draw_indirect_count {
 void intel_ds_begin_draw_indirect_count(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_indirect_count *payload);
 #endif
@@ -1316,6 +1648,7 @@ struct trace_intel_end_draw_indirect_count {
 void intel_ds_end_draw_indirect_count(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_indirect_count *payload);
 #endif
@@ -1357,6 +1690,7 @@ struct trace_intel_begin_draw_indexed_indirect_count {
 void intel_ds_begin_draw_indexed_indirect_count(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_indexed_indirect_count *payload);
 #endif
@@ -1387,6 +1721,7 @@ struct trace_intel_end_draw_indexed_indirect_count {
 void intel_ds_end_draw_indexed_indirect_count(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_indexed_indirect_count *payload);
 #endif
@@ -1428,6 +1763,7 @@ struct trace_intel_begin_draw_mesh {
 void intel_ds_begin_draw_mesh(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_mesh *payload);
 #endif
@@ -1460,6 +1796,7 @@ struct trace_intel_end_draw_mesh {
 void intel_ds_end_draw_mesh(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_mesh *payload);
 #endif
@@ -1507,6 +1844,7 @@ struct trace_intel_begin_draw_mesh_indirect {
 void intel_ds_begin_draw_mesh_indirect(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_mesh_indirect *payload);
 #endif
@@ -1537,6 +1875,7 @@ struct trace_intel_end_draw_mesh_indirect {
 void intel_ds_end_draw_mesh_indirect(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_mesh_indirect *payload);
 #endif
@@ -1578,6 +1917,7 @@ struct trace_intel_begin_draw_mesh_indirect_count {
 void intel_ds_begin_draw_mesh_indirect_count(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_draw_mesh_indirect_count *payload);
 #endif
@@ -1608,6 +1948,7 @@ struct trace_intel_end_draw_mesh_indirect_count {
 void intel_ds_end_draw_mesh_indirect_count(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_draw_mesh_indirect_count *payload);
 #endif
@@ -1649,6 +1990,7 @@ struct trace_intel_begin_compute {
 void intel_ds_begin_compute(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_compute *payload);
 #endif
@@ -1681,6 +2023,7 @@ struct trace_intel_end_compute {
 void intel_ds_end_compute(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_compute *payload);
 #endif
@@ -1728,6 +2071,7 @@ struct trace_intel_begin_trace_copy {
 void intel_ds_begin_trace_copy(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_trace_copy *payload);
 #endif
@@ -1752,29 +2096,24 @@ static ALWAYS_INLINE void trace_intel_begin_trace_copy(
  * intel_end_trace_copy
  */
 struct trace_intel_end_trace_copy {
-#ifdef __cplusplus
-   /* avoid warnings about empty struct size mis-match in C vs C++..
-    * the size mis-match is harmless because (a) nothing will deref
-    * the empty struct, and (b) the code that cares about allocating
-    * sizeof(struct trace_intel_end_trace_copy) (and wants this to be zero
-    * if there is no payload) is C
-    */
-   uint8_t dummy;
-#endif
+   uint32_t count;
 };
 #ifdef HAVE_PERFETTO
 void intel_ds_end_trace_copy(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_trace_copy *payload);
 #endif
 void __trace_intel_end_trace_copy(
        struct u_trace *ut
      , enum u_trace_type enabled_traces
+     , uint32_t count
 );
 static ALWAYS_INLINE void trace_intel_end_trace_copy(
      struct u_trace *ut
+   , uint32_t count
 ) {
    enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
    if (!unlikely(enabled_traces != 0 &&
@@ -1783,6 +2122,245 @@ static ALWAYS_INLINE void trace_intel_end_trace_copy(
    __trace_intel_end_trace_copy(
         ut
       , enabled_traces
+      , count
+   );
+}
+
+/*
+ * intel_begin_trace_copy_cb
+ */
+struct trace_intel_begin_trace_copy_cb {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_trace_copy_cb) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_trace_copy_cb(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_begin_trace_copy_cb *payload);
+#endif
+void __trace_intel_begin_trace_copy_cb(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , void *cs
+);
+static ALWAYS_INLINE void trace_intel_begin_trace_copy_cb(
+     struct u_trace *ut
+   , void *cs
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_TRACE_COPY_CB)))
+      return;
+   __trace_intel_begin_trace_copy_cb(
+        ut
+      , enabled_traces
+      , cs
+   );
+}
+
+/*
+ * intel_end_trace_copy_cb
+ */
+struct trace_intel_end_trace_copy_cb {
+   uint32_t count;
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_trace_copy_cb(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_end_trace_copy_cb *payload);
+#endif
+void __trace_intel_end_trace_copy_cb(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , void *cs
+     , uint32_t count
+);
+static ALWAYS_INLINE void trace_intel_end_trace_copy_cb(
+     struct u_trace *ut
+   , void *cs
+   , uint32_t count
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_TRACE_COPY_CB)))
+      return;
+   __trace_intel_end_trace_copy_cb(
+        ut
+      , enabled_traces
+      , cs
+      , count
+   );
+}
+
+/*
+ * intel_begin_as_build
+ */
+struct trace_intel_begin_as_build {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_as_build) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_as_build(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_begin_as_build *payload);
+#endif
+void __trace_intel_begin_as_build(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_begin_as_build(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_AS_BUILD)))
+      return;
+   __trace_intel_begin_as_build(
+        ut
+      , enabled_traces
+   );
+}
+
+/*
+ * intel_end_as_build
+ */
+struct trace_intel_end_as_build {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_end_as_build) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_as_build(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_end_as_build *payload);
+#endif
+void __trace_intel_end_as_build(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_end_as_build(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_AS_BUILD)))
+      return;
+   __trace_intel_end_as_build(
+        ut
+      , enabled_traces
+   );
+}
+
+/*
+ * intel_begin_rays
+ */
+struct trace_intel_begin_rays {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_rays) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_rays(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_begin_rays *payload);
+#endif
+void __trace_intel_begin_rays(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_begin_rays(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_RAYS)))
+      return;
+   __trace_intel_begin_rays(
+        ut
+      , enabled_traces
+   );
+}
+
+/*
+ * intel_end_rays
+ */
+struct trace_intel_end_rays {
+   uint32_t group_x;
+   uint32_t group_y;
+   uint32_t group_z;
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_rays(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   uint16_t tp_idx,
+   const void *flush_data,
+   const struct trace_intel_end_rays *payload);
+#endif
+void __trace_intel_end_rays(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , uint32_t group_x
+     , uint32_t group_y
+     , uint32_t group_z
+);
+static ALWAYS_INLINE void trace_intel_end_rays(
+     struct u_trace *ut
+   , uint32_t group_x
+   , uint32_t group_y
+   , uint32_t group_z
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_RAYS)))
+      return;
+   __trace_intel_end_rays(
+        ut
+      , enabled_traces
+      , group_x
+      , group_y
+      , group_z
    );
 }
 
@@ -1804,6 +2382,7 @@ struct trace_intel_begin_stall {
 void intel_ds_begin_stall(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_begin_stall *payload);
 #endif
@@ -1835,6 +2414,7 @@ struct trace_intel_end_stall {
 void intel_ds_end_stall(
    struct intel_ds_device *dev,
    uint64_t ts_ns,
+   uint16_t tp_idx,
    const void *flush_data,
    const struct trace_intel_end_stall *payload);
 #endif

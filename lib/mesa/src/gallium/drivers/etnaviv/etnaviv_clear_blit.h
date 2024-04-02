@@ -44,11 +44,11 @@ etna_copy_resource(struct pipe_context *pctx, struct pipe_resource *dst,
 
 void
 etna_copy_resource_box(struct pipe_context *pctx, struct pipe_resource *dst,
-                       struct pipe_resource *src, int level,
+                       struct pipe_resource *src, int dst_level, int src_level,
                        struct pipe_box *box);
 
 void
-etna_blit_save_state(struct etna_context *ctx);
+etna_blit_save_state(struct etna_context *ctx, bool render_cond);
 
 uint64_t
 etna_clear_blit_pack_rgba(enum pipe_format format, const union pipe_color_union *color);

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/11/02 04:53:30 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2024/04/02 10:42:12 jsg Exp $
 
 LIB=	anv_common
 
@@ -6,7 +6,10 @@ NOPROFILE=
 
 SRCS=	i915_anv_batch_chain.c \
 	i915_anv_device.c \
+	i915_anv_queue.c \
+	i915_anv_gem.c \
 	i915_anv_kmd_backend.c \
+	anv_queue.c \
 	anv_doom64.c \
 	anv_hitman3.c \
 	anv_android_layer.c \
@@ -22,22 +25,27 @@ SRCS=	i915_anv_batch_chain.c \
 	anv_descriptor_set.c \
 	anv_device.c \
 	anv_formats.c \
-	anv_generated_indirect_draws.c \
 	anv_image.c \
+	anv_internal_kernels.c \
 	anv_kmd_backend.c \
 	anv_measure.c \
 	anv_mesh_perprim_wa.c \
 	anv_nir_apply_pipeline_layout.c \
 	anv_nir_compute_push_layout.c \
 	anv_nir_lower_multiview.c \
+	anv_nir_lower_load_patch_vertices_in.c \
 	anv_nir_lower_ubo_loads.c \
+	anv_nir_lower_resource_intel.c \
 	anv_nir_push_descriptor_analysis.c \
 	anv_perf.c \
 	anv_pipeline.c \
 	anv_pipeline_cache.c \
 	anv_queue.c \
+	anv_sparse.c \
+	anv_astc_emu.c \
 	anv_util.c \
 	anv_utrace.c \
+	anv_va.c \
 	anv_video.c \
 	anv_wsi.c
 
@@ -49,6 +57,10 @@ i915_anv_batch_chain.c:
 	ln -s ${MESA_SRC}/src/intel/vulkan/i915/anv_batch_chain.c $@
 i915_anv_device.c:
 	ln -s ${MESA_SRC}/src/intel/vulkan/i915/anv_device.c $@
+i915_anv_queue.c:
+	ln -s ${MESA_SRC}/src/intel/vulkan/i915/anv_queue.c $@
+i915_anv_gem.c:
+	ln -s ${MESA_SRC}/src/intel/vulkan/i915/anv_gem.c $@
 i915_anv_kmd_backend.c:
 	ln -s ${MESA_SRC}/src/intel/vulkan/i915/anv_kmd_backend.c $@
 xe_anv_batch_chain.c:
@@ -79,6 +91,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/generated/src/util \
 		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-DVK_USE_PLATFORM_XCB_KHR \
 		-DVK_USE_PLATFORM_XLIB_KHR \
@@ -99,6 +112,7 @@ obj: _xenocara_obj
 
 CLEANFILES+=	i915_anv_batch_chain.c \
 		i915_anv_device.c \
+		i915_anv_queue.c \
 		i915_anv_kmd_backend.c \
 		xe_anv_batch_chain.c \
 		xe_anv_kmd_backend.c \

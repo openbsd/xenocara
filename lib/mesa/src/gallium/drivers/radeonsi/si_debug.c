@@ -1,31 +1,12 @@
 /*
  * Copyright 2015 Advanced Micro Devices, Inc.
- * All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "ac_debug.h"
 #include "ac_rtld.h"
 #include "driver_ddebug/dd_util.h"
-#include "si_compute.h"
 #include "si_pipe.h"
 #include "sid.h"
 #include "sid_tables.h"
@@ -33,6 +14,7 @@
 #include "util/u_dump.h"
 #include "util/u_log.h"
 #include "util/u_memory.h"
+#include "util/u_process.h"
 #include "util/u_string.h"
 
 static void si_dump_bo_list(struct si_context *sctx, const struct radeon_saved_cs *saved, FILE *f);
@@ -255,20 +237,21 @@ bool si_replace_shader(unsigned num, struct si_shader_binary *binary)
    if (fseek(f, 0, SEEK_SET) != 0)
       goto file_error;
 
-   binary->elf_buffer = MALLOC(filesize);
-   if (!binary->elf_buffer) {
+   binary->code_buffer = MALLOC(filesize);
+   if (!binary->code_buffer) {
       fprintf(stderr, "out of memory\n");
       goto out_close;
    }
 
-   nread = fread((void *)binary->elf_buffer, 1, filesize, f);
+   nread = fread((void *)binary->code_buffer, 1, filesize, f);
    if (nread != filesize) {
-      FREE((void *)binary->elf_buffer);
-      binary->elf_buffer = NULL;
+      FREE((void *)binary->code_buffer);
+      binary->code_buffer = NULL;
       goto file_error;
    }
 
-   binary->elf_size = nread;
+   binary->type = SI_SHADER_BINARY_ELF;
+   binary->code_size = nread;
    replaced = true;
 
 out_close:
@@ -365,7 +348,7 @@ static void si_parse_current_ib(FILE *f, struct radeon_cmdbuf *cs, unsigned begi
 
       if (begin < chunk->cdw) {
          ac_parse_ib_chunk(f, chunk->buf + begin, MIN2(end, chunk->cdw) - begin, last_trace_id,
-                           trace_id_count, gfx_level, family, NULL, NULL);
+                           trace_id_count, gfx_level, family, AMD_IP_GFX, NULL, NULL);
       }
 
       if (end <= chunk->cdw)
@@ -381,7 +364,7 @@ static void si_parse_current_ib(FILE *f, struct radeon_cmdbuf *cs, unsigned begi
    assert(end <= cs->current.cdw);
 
    ac_parse_ib_chunk(f, cs->current.buf + begin, end - begin, last_trace_id, trace_id_count,
-                     gfx_level, family, NULL, NULL);
+                     gfx_level, family, AMD_IP_GFX, NULL, NULL);
 
    fprintf(f, "------------------- %s end (dw = %u) -------------------\n\n", name, orig_end);
 }
@@ -412,12 +395,12 @@ static void si_log_chunk_type_cs_print(void *data, FILE *f)
       if (chunk->gfx_begin == 0) {
          if (ctx->cs_preamble_state)
             ac_parse_ib(f, ctx->cs_preamble_state->pm4, ctx->cs_preamble_state->ndw, NULL, 0,
-                        "IB2: Init config", ctx->gfx_level, ctx->family, NULL, NULL);
+                        "IB2: Init config", ctx->gfx_level, ctx->family, AMD_IP_GFX, NULL, NULL);
       }
 
       if (scs->flushed) {
          ac_parse_ib(f, scs->gfx.ib + chunk->gfx_begin, chunk->gfx_end - chunk->gfx_begin,
-                     &last_trace_id, map ? 1 : 0, "IB", ctx->gfx_level, ctx->family, NULL, NULL);
+                     &last_trace_id, map ? 1 : 0, "IB", ctx->gfx_level, ctx->family, AMD_IP_GFX, NULL, NULL);
       } else {
          si_parse_current_ib(f, &ctx->gfx_cs, chunk->gfx_begin, chunk->gfx_end, &last_trace_id,
                              map ? 1 : 0, "IB", ctx->gfx_level, ctx->family);
@@ -473,7 +456,7 @@ void si_log_hw_flush(struct si_context *sctx)
 
    si_log_cs(sctx, sctx->log, true);
 
-   if (&sctx->b == sctx->screen->aux_context) {
+   if (sctx->context_flags & SI_CONTEXT_FLAG_AUX) {
       /* The aux context isn't captured by the ddebug wrapper,
        * so we dump it on a flush-by-flush basis here.
        */
@@ -536,7 +519,7 @@ static void si_dump_bo_list(struct si_context *sctx, const struct radeon_saved_c
    if (!saved->bo_list)
       return;
 
-   /* Sort the list according to VM adddresses first. */
+   /* Sort the list according to VM addresses first. */
    qsort(saved->bo_list, saved->bo_count, sizeof(saved->bo_list[0]), (void *)bo_list_compare_va);
 
    fprintf(f, "Buffer list (in units of pages = 4kB):\n" COLOR_YELLOW
@@ -834,8 +817,8 @@ static void si_add_split_disasm(struct si_screen *screen, struct ac_rtld_binary 
                                      .shader_type = stage,
                                      .wave_size = wave_size,
                                      .num_parts = 1,
-                                     .elf_ptrs = &binary->elf_buffer,
-                                     .elf_sizes = &binary->elf_size}))
+                                     .elf_ptrs = &binary->code_buffer,
+                                     .elf_sizes = &binary->code_size}))
       return;
 
    const char *disasm;
@@ -1059,7 +1042,7 @@ void si_check_vm_faults(struct si_context *sctx, struct radeon_saved_cs *saved, 
    uint64_t addr;
    char cmd_line[4096];
 
-   if (!ac_vm_fault_occured(sctx->gfx_level, &sctx->dmesg_timestamp, &addr))
+   if (!ac_vm_fault_occurred(sctx->gfx_level, &sctx->dmesg_timestamp, &addr))
       return;
 
    f = dd_get_debug_file(false);
@@ -1109,5 +1092,5 @@ void si_init_debug_functions(struct si_context *sctx)
     * only new messages will be checked for VM faults.
     */
    if (sctx->screen->debug_flags & DBG(CHECK_VM))
-      ac_vm_fault_occured(sctx->gfx_level, &sctx->dmesg_timestamp, NULL);
+      ac_vm_fault_occurred(sctx->gfx_level, &sctx->dmesg_timestamp, NULL);
 }

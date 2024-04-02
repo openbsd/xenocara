@@ -32,6 +32,7 @@
 #include "util/compiler.h"
 
 #include "ac_binary.h"
+#include "ac_hw_stage.h"
 #include "amd_family.h"
 #include <algorithm>
 #include <bitset>
@@ -98,8 +99,8 @@ enum class Format : std::uint16_t {
    PSEUDO_REDUCTION = 19,
 
    /* Vector ALU Formats */
-   VOP3P = 20,
    VINTERP_INREG = 21,
+   VOP3P = 1 << 7,
    VOP1 = 1 << 8,
    VOP2 = 1 << 9,
    VOPC = 1 << 10,
@@ -132,6 +133,7 @@ enum class instr_class : uint8_t {
    vmem = 17,
    waitcnt = 18,
    other = 19,
+   wmma = 20,
    count,
 };
 
@@ -140,9 +142,9 @@ enum storage_class : uint8_t {
    storage_buffer = 0x1, /* SSBOs and global memory */
    storage_gds = 0x2,
    storage_image = 0x4,
-   storage_shared = 0x8,       /* or TCS output */
-   storage_vmem_output = 0x10, /* GS or TCS output stores using VMEM */
-   storage_task_payload = 0x20,/* Task-Mesh payload */
+   storage_shared = 0x8,        /* or TCS output */
+   storage_vmem_output = 0x10,  /* GS or TCS output stores using VMEM */
+   storage_task_payload = 0x20, /* Task-Mesh payload */
    storage_scratch = 0x40,
    storage_vgpr_spill = 0x80,
    storage_count = 8, /* not counting storage_none */
@@ -152,11 +154,11 @@ enum memory_semantics : uint8_t {
    semantic_none = 0x0,
    /* for loads: don't move any access after this load to before this load (even other loads)
     * for barriers: don't move any access after the barrier to before any
-    * atomics/control_barriers/sendmsg_gs_done before the barrier */
+    * atomics/control_barriers/sendmsg_gs_done/position-primitive-export before the barrier */
    semantic_acquire = 0x1,
    /* for stores: don't move any access before this store to after this store
     * for barriers: don't move any access before the barrier to after any
-    * atomics/control_barriers/sendmsg_gs_done after the barrier */
+    * atomics/control_barriers/sendmsg_gs_done/position-primitive-export after the barrier */
    semantic_release = 0x2,
 
    /* the rest are for load/stores/atomics only */
@@ -282,6 +284,18 @@ struct wait_imm {
    bool combine(const wait_imm& other);
 
    bool empty() const;
+
+   void print(FILE* output) const;
+};
+
+/* s_wait_event immediate bits. */
+enum wait_event_imm : uint16_t {
+   /* If this bit is 0, await that the export buffer space has been allocated.
+    * In Primitive Ordered Pixel Shading, export ready means that the overlapped waves have exited
+    * their ordered sections (by performing the `done` export), and that the current wave may enter
+    * its ordered section.
+    */
+   wait_event_imm_dont_wait_export_ready = 0x1,
 };
 
 constexpr Format
@@ -303,11 +317,15 @@ withoutDPP(Format format)
    return (Format)((uint32_t)format & ~((uint32_t)Format::DPP16 | (uint32_t)Format::DPP8));
 }
 
+constexpr Format
+withoutVOP3(Format format)
+{
+   return (Format)((uint32_t)format & ~((uint32_t)Format::VOP3));
+}
+
 enum class RegType {
-   none = 0,
    sgpr,
    vgpr,
-   linear_vgpr,
 };
 
 struct RegClass {
@@ -478,6 +496,7 @@ static constexpr PhysReg sgpr_null{125}; /* GFX10+ */
 static constexpr PhysReg exec{126};
 static constexpr PhysReg exec_lo{126};
 static constexpr PhysReg exec_hi{127};
+static constexpr PhysReg pops_exiting_wave_id{239}; /* GFX9-GFX10.3 */
 static constexpr PhysReg vccz{251};
 static constexpr PhysReg execz{252};
 static constexpr PhysReg scc{253};
@@ -744,7 +763,7 @@ public:
 
    constexpr uint32_t tempId() const noexcept { return data_.temp.id(); }
 
-   constexpr bool hasRegClass() const noexcept { return isTemp() || isUndefined(); }
+   constexpr bool hasRegClass() const noexcept { return !isConstant(); }
 
    constexpr RegClass regClass() const noexcept { return data_.temp.regClass(); }
 
@@ -819,7 +838,8 @@ public:
       assert(bytes() == 2 || bytes() == 4);
       if (opsel) {
          if (bytes() == 2 && int16_t(data_.i) >= -16 && int16_t(data_.i) <= 64 && !isLiteral())
-            return int16_t(data_.i) >> 16; /* 16-bit inline integers are sign-extended, even with fp16 instrs */
+            return int16_t(data_.i) >>
+                   16; /* 16-bit inline integers are sign-extended, even with fp16 instrs */
          else
             return data_.i >> 16;
       }
@@ -1033,7 +1053,16 @@ struct Instruction {
    constexpr bool reads_exec() const noexcept
    {
       for (const Operand& op : operands) {
-         if (op.isFixed() && op.physReg() == exec)
+         if (op.isFixed() && (op.physReg() == exec_lo || op.physReg() == exec_hi))
+            return true;
+      }
+      return false;
+   }
+
+   constexpr bool writes_exec() const noexcept
+   {
+      for (const Definition& def : definitions) {
+         if (def.isFixed() && (def.physReg() == exec_lo || def.physReg() == exec_hi))
             return true;
       }
       return false;
@@ -1248,7 +1277,7 @@ struct Instruction {
       return *(Pseudo_reduction_instruction*)this;
    }
    constexpr bool isReduction() const noexcept { return format == Format::PSEUDO_REDUCTION; }
-   constexpr bool isVOP3P() const noexcept { return format == Format::VOP3P; }
+   constexpr bool isVOP3P() const noexcept { return (uint16_t)format & (uint16_t)Format::VOP3P; }
    VINTERP_inreg_instruction& vinterp_inreg() noexcept
    {
       assert(isVINTERP_INREG());
@@ -1402,6 +1431,8 @@ struct VALU_instruction : public Instruction {
       bitfield_array8<uint32_t, 15, 3> opsel_hi; /* VOP3P */
       bitfield_bool<uint32_t, 18> clamp;         /* VOP3, VOP3P, SDWA, VINTERP_inreg */
    };
+
+   void swapOperands(unsigned idx0, unsigned idx1);
 };
 static_assert(sizeof(VALU_instruction) == sizeof(Instruction) + 4, "Unexpected padding");
 
@@ -1412,7 +1443,8 @@ struct VINTERP_inreg_instruction : public VALU_instruction {
    uint8_t padding5;
    uint8_t padding6;
 };
-static_assert(sizeof(VINTERP_inreg_instruction) == sizeof(VALU_instruction) + 4, "Unexpected padding");
+static_assert(sizeof(VINTERP_inreg_instruction) == sizeof(VALU_instruction) + 4,
+              "Unexpected padding");
 
 /**
  * Data Parallel Primitives Format:
@@ -1425,14 +1457,17 @@ struct DPP16_instruction : public VALU_instruction {
    uint8_t row_mask : 4;
    uint8_t bank_mask : 4;
    bool bound_ctrl : 1;
-   uint8_t padding3 : 7;
+   uint8_t fetch_inactive : 1;
+   uint8_t padding3 : 6;
 };
 static_assert(sizeof(DPP16_instruction) == sizeof(VALU_instruction) + 4, "Unexpected padding");
 
 struct DPP8_instruction : public VALU_instruction {
-   uint8_t lane_sel[8];
+   uint32_t lane_sel : 24;
+   uint32_t fetch_inactive : 1;
+   uint32_t padding : 7;
 };
-static_assert(sizeof(DPP8_instruction) == sizeof(VALU_instruction) + 8, "Unexpected padding");
+static_assert(sizeof(DPP8_instruction) == sizeof(VALU_instruction) + 4, "Unexpected padding");
 
 struct SubdwordSel {
    enum sdwa_sel : uint8_t {
@@ -1613,7 +1648,8 @@ struct MIMG_instruction : public Instruction {
    bool a16 : 1;         /* VEGA, NAVI: Address components are 16-bits */
    bool d16 : 1;         /* Convert 32-bit data to 16-bit data */
    bool disable_wqm : 1; /* Require an exec mask without helper invocations */
-   uint8_t padding0 : 2;
+   bool strict_wqm : 1;  /* VADDR is a linear VGPR and additional VGPRs may be copied into it */
+   uint8_t padding0 : 1;
    uint8_t padding1;
    uint8_t padding2;
 };
@@ -1718,6 +1754,22 @@ struct Pseudo_reduction_instruction : public Instruction {
 static_assert(sizeof(Pseudo_reduction_instruction) == sizeof(Instruction) + 4,
               "Unexpected padding");
 
+inline void
+VALU_instruction::swapOperands(unsigned idx0, unsigned idx1)
+{
+   if (this->isSDWA() && idx0 != idx1) {
+      assert(idx0 < 2 && idx1 < 2);
+      std::swap(this->sdwa().sel[0], this->sdwa().sel[1]);
+   }
+   assert(idx0 < 3 && idx1 < 3);
+   std::swap(this->operands[idx0], this->operands[idx1]);
+   this->neg[idx0].swap(this->neg[idx1]);
+   this->abs[idx0].swap(this->abs[idx1]);
+   this->opsel[idx0].swap(this->opsel[idx1]);
+   this->opsel_lo[idx0].swap(this->opsel_lo[idx1]);
+   this->opsel_hi[idx0].swap(this->opsel_hi[idx1]);
+}
+
 extern thread_local aco::monotonic_buffer_resource* instruction_buffer;
 
 struct instr_deleter_functor {
@@ -1786,8 +1838,7 @@ memory_sync_info get_sync_info(const Instruction* instr);
 inline bool
 is_dead(const std::vector<uint16_t>& uses, const Instruction* instr)
 {
-   if (instr->definitions.empty() || instr->isBranch() ||
-       instr->opcode == aco_opcode::p_startpgm ||
+   if (instr->definitions.empty() || instr->isBranch() || instr->opcode == aco_opcode::p_startpgm ||
        instr->opcode == aco_opcode::p_init_scratch ||
        instr->opcode == aco_opcode::p_dual_src_export_gfx11)
       return false;
@@ -1799,14 +1850,17 @@ is_dead(const std::vector<uint16_t>& uses, const Instruction* instr)
    return !(get_sync_info(instr).semantics & (semantic_volatile | semantic_acqrel));
 }
 
+bool can_use_input_modifiers(amd_gfx_level gfx_level, aco_opcode op, int idx);
 bool can_use_opsel(amd_gfx_level gfx_level, aco_opcode op, int idx);
 bool instr_is_16bit(amd_gfx_level gfx_level, aco_opcode op);
 uint8_t get_gfx11_true16_mask(aco_opcode op);
 bool can_use_SDWA(amd_gfx_level gfx_level, const aco_ptr<Instruction>& instr, bool pre_ra);
-bool can_use_DPP(const aco_ptr<Instruction>& instr, bool pre_ra, bool dpp8);
+bool can_use_DPP(amd_gfx_level gfx_level, const aco_ptr<Instruction>& instr, bool dpp8);
+bool can_write_m0(const aco_ptr<Instruction>& instr);
 /* updates "instr" and returns the old instruction (or NULL if no update was needed) */
 aco_ptr<Instruction> convert_to_SDWA(amd_gfx_level gfx_level, aco_ptr<Instruction>& instr);
-aco_ptr<Instruction> convert_to_DPP(aco_ptr<Instruction>& instr, bool dpp8);
+aco_ptr<Instruction> convert_to_DPP(amd_gfx_level gfx_level, aco_ptr<Instruction>& instr,
+                                    bool dpp8);
 bool needs_exec_mask(const Instruction* instr);
 
 aco_opcode get_ordered(aco_opcode op);
@@ -1819,11 +1873,14 @@ unsigned get_cmp_bitsize(aco_opcode op);
 bool is_fp_cmp(aco_opcode op);
 bool is_cmpx(aco_opcode op);
 
-bool can_swap_operands(aco_ptr<Instruction>& instr, aco_opcode* new_op);
+bool can_swap_operands(aco_ptr<Instruction>& instr, aco_opcode* new_op, unsigned idx0 = 0,
+                       unsigned idx1 = 1);
 
 uint32_t get_reduction_identity(ReduceOp op, unsigned idx);
 
 unsigned get_mimg_nsa_dwords(const Instruction* instr);
+
+unsigned get_operand_size(aco_ptr<Instruction>& instr, unsigned index);
 
 bool should_form_clause(const Instruction* a, const Instruction* b);
 
@@ -1843,8 +1900,9 @@ enum block_kind {
    block_kind_invert = 1 << 10,
    block_kind_discard_early_exit = 1 << 11,
    block_kind_uses_discard = 1 << 12,
-   block_kind_needs_lowering = 1 << 13,
-   block_kind_export_end = 1 << 15,
+   block_kind_resume = 1 << 13,
+   block_kind_export_end = 1 << 14,
+   block_kind_end_with_regs = 1 << 15,
 };
 
 struct RegisterDemand {
@@ -1931,12 +1989,12 @@ struct Block {
    std::vector<unsigned> logical_succs;
    std::vector<unsigned> linear_succs;
    RegisterDemand register_demand = RegisterDemand();
+   uint32_t kind = 0;
+   int32_t logical_idom = -1;
+   int32_t linear_idom = -1;
    uint16_t loop_nest_depth = 0;
    uint16_t divergent_if_logical_depth = 0;
    uint16_t uniform_if_depth = 0;
-   uint16_t kind = 0;
-   int logical_idom = -1;
-   int linear_idom = -1;
 
    /* this information is needed for predecessors to blocks with phis when
     * moving out of ssa */
@@ -1973,31 +2031,13 @@ operator|(SWStage a, SWStage b)
 }
 
 /*
- * Shader stages as running on the AMD GPU.
- *
- * The relation between HWStages and SWStages is not a one-to-one mapping:
- * Some SWStages are merged by ACO to run on a single HWStage.
- * See README.md for details.
- */
-enum class HWStage : uint8_t {
-   VS,
-   ES, /* Export shader: pre-GS (VS or TES) on GFX6-8. Combined into GS on GFX9 (and GFX10/legacy). */
-   GS,  /* Geometry shader on GFX10/legacy and GFX6-9. */
-   NGG, /* Primitive shader, used to implement VS, TES, GS. */
-   LS,  /* Local shader: pre-TCS (VS) on GFX6-8. Combined into HS on GFX9 (and GFX10/legacy). */
-   HS,  /* Hull shader: TCS on GFX6-8. Merged VS and TCS on GFX9-10. */
-   FS,
-   CS,
-};
-
-/*
  * Set of SWStages to be merged into a single shader paired with the
  * HWStage it will run on.
  */
 struct Stage {
    constexpr Stage() = default;
 
-   explicit constexpr Stage(HWStage hw_, SWStage sw_) : sw(sw_), hw(hw_) {}
+   explicit constexpr Stage(ac_hw_stage hw_, SWStage sw_) : sw(sw_), hw(hw_) {}
 
    /* Check if the given SWStage is included */
    constexpr bool has(SWStage stage) const
@@ -2015,35 +2055,36 @@ struct Stage {
    SWStage sw = SWStage::None;
 
    /* Active hardware stage */
-   HWStage hw{};
+   ac_hw_stage hw{};
 };
 
 /* possible settings of Program::stage */
-static constexpr Stage vertex_vs(HWStage::VS, SWStage::VS);
-static constexpr Stage fragment_fs(HWStage::FS, SWStage::FS);
-static constexpr Stage compute_cs(HWStage::CS, SWStage::CS);
-static constexpr Stage tess_eval_vs(HWStage::VS, SWStage::TES);
+static constexpr Stage vertex_vs(AC_HW_VERTEX_SHADER, SWStage::VS);
+static constexpr Stage fragment_fs(AC_HW_PIXEL_SHADER, SWStage::FS);
+static constexpr Stage compute_cs(AC_HW_COMPUTE_SHADER, SWStage::CS);
+static constexpr Stage tess_eval_vs(AC_HW_VERTEX_SHADER, SWStage::TES);
 /* Mesh shading pipeline */
-static constexpr Stage task_cs(HWStage::CS, SWStage::TS);
-static constexpr Stage mesh_ngg(HWStage::NGG, SWStage::MS);
+static constexpr Stage task_cs(AC_HW_COMPUTE_SHADER, SWStage::TS);
+static constexpr Stage mesh_ngg(AC_HW_NEXT_GEN_GEOMETRY_SHADER, SWStage::MS);
 /* GFX10/NGG */
-static constexpr Stage vertex_ngg(HWStage::NGG, SWStage::VS);
-static constexpr Stage vertex_geometry_ngg(HWStage::NGG, SWStage::VS_GS);
-static constexpr Stage tess_eval_ngg(HWStage::NGG, SWStage::TES);
-static constexpr Stage tess_eval_geometry_ngg(HWStage::NGG, SWStage::TES_GS);
+static constexpr Stage vertex_ngg(AC_HW_NEXT_GEN_GEOMETRY_SHADER, SWStage::VS);
+static constexpr Stage vertex_geometry_ngg(AC_HW_NEXT_GEN_GEOMETRY_SHADER, SWStage::VS_GS);
+static constexpr Stage tess_eval_ngg(AC_HW_NEXT_GEN_GEOMETRY_SHADER, SWStage::TES);
+static constexpr Stage tess_eval_geometry_ngg(AC_HW_NEXT_GEN_GEOMETRY_SHADER, SWStage::TES_GS);
 /* GFX9 (and GFX10 if NGG isn't used) */
-static constexpr Stage vertex_geometry_gs(HWStage::GS, SWStage::VS_GS);
-static constexpr Stage vertex_tess_control_hs(HWStage::HS, SWStage::VS_TCS);
-static constexpr Stage tess_eval_geometry_gs(HWStage::GS, SWStage::TES_GS);
+static constexpr Stage vertex_geometry_gs(AC_HW_LEGACY_GEOMETRY_SHADER, SWStage::VS_GS);
+static constexpr Stage vertex_tess_control_hs(AC_HW_HULL_SHADER, SWStage::VS_TCS);
+static constexpr Stage tess_eval_geometry_gs(AC_HW_LEGACY_GEOMETRY_SHADER, SWStage::TES_GS);
 /* pre-GFX9 */
-static constexpr Stage vertex_ls(HWStage::LS, SWStage::VS); /* vertex before tesselation control */
-static constexpr Stage vertex_es(HWStage::ES, SWStage::VS); /* vertex before geometry */
-static constexpr Stage tess_control_hs(HWStage::HS, SWStage::TCS);
-static constexpr Stage tess_eval_es(HWStage::ES,
-                                    SWStage::TES); /* tesselation evaluation before geometry */
-static constexpr Stage geometry_gs(HWStage::GS, SWStage::GS);
+static constexpr Stage vertex_ls(AC_HW_LOCAL_SHADER,
+                                 SWStage::VS); /* vertex before tessellation control */
+static constexpr Stage vertex_es(AC_HW_EXPORT_SHADER, SWStage::VS); /* vertex before geometry */
+static constexpr Stage tess_control_hs(AC_HW_HULL_SHADER, SWStage::TCS);
+static constexpr Stage tess_eval_es(AC_HW_EXPORT_SHADER,
+                                    SWStage::TES); /* tessellation evaluation before geometry */
+static constexpr Stage geometry_gs(AC_HW_LEGACY_GEOMETRY_SHADER, SWStage::GS);
 /* Raytracing */
-static constexpr Stage raytracing_cs(HWStage::CS, SWStage::RT);
+static constexpr Stage raytracing_cs(AC_HW_COMPUTE_SHADER, SWStage::RT);
 
 struct DeviceInfo {
    uint16_t lds_encoding_granule;
@@ -2067,6 +2108,7 @@ struct DeviceInfo {
 
    int16_t scratch_global_offset_min;
    int16_t scratch_global_offset_max;
+   unsigned max_nsa_vgprs;
 };
 
 enum class CompilationProgress {
@@ -2091,7 +2133,10 @@ public:
    Stage stage;
    bool needs_exact = false; /* there exists an instruction with disable_wqm = true */
    bool needs_wqm = false;   /* there exists a p_wqm instruction */
+   bool has_smem_buffer_or_global_loads = false;
+   bool has_pops_overlapped_waves_wait = false;
    bool has_color_exports = false;
+   bool is_prolog = false;
 
    std::vector<uint8_t> constant_data;
    Temp private_segment_buffer;
@@ -2115,6 +2160,9 @@ public:
    unsigned next_uniform_if_depth = 0;
 
    std::vector<Definition> args_pending_vmem;
+
+   /* For shader part with previous shader part that has lds access. */
+   bool pending_lds_access = false;
 
    struct {
       FILE* output = stderr;
@@ -2185,8 +2233,7 @@ void init_program(Program* program, Stage stage, const struct aco_shader_info* i
 
 void select_program(Program* program, unsigned shader_count, struct nir_shader* const* shaders,
                     ac_shader_config* config, const struct aco_compiler_options* options,
-                    const struct aco_shader_info* info,
-                    const struct ac_shader_args* args);
+                    const struct aco_shader_info* info, const struct ac_shader_args* args);
 void select_trap_handler_shader(Program* program, struct nir_shader* shader,
                                 ac_shader_config* config,
                                 const struct aco_compiler_options* options,
@@ -2200,8 +2247,20 @@ void select_vs_prolog(Program* program, const struct aco_vs_prolog_info* pinfo,
                       ac_shader_config* config, const struct aco_compiler_options* options,
                       const struct aco_shader_info* info, const struct ac_shader_args* args);
 
-void select_ps_epilog(Program* program, const struct aco_ps_epilog_info* epilog_info,
-                      ac_shader_config* config, const struct aco_compiler_options* options,
+void select_ps_epilog(Program* program, void* pinfo, ac_shader_config* config,
+                      const struct aco_compiler_options* options,
+                      const struct aco_shader_info* info, const struct ac_shader_args* args);
+
+void select_tcs_epilog(Program* program, void* pinfo, ac_shader_config* config,
+                       const struct aco_compiler_options* options,
+                       const struct aco_shader_info* info, const struct ac_shader_args* args);
+
+void select_gl_vs_prolog(Program* program, void* pinfo, ac_shader_config* config,
+                         const struct aco_compiler_options* options,
+                         const struct aco_shader_info* info, const struct ac_shader_args* args);
+
+void select_ps_prolog(Program* program, void* pinfo, ac_shader_config* config,
+                      const struct aco_compiler_options* options,
                       const struct aco_shader_info* info, const struct ac_shader_args* args);
 
 void lower_phis(Program* program);
@@ -2226,7 +2285,8 @@ void insert_wait_states(Program* program);
 bool dealloc_vgprs(Program* program);
 void insert_NOPs(Program* program);
 void form_hard_clauses(Program* program);
-unsigned emit_program(Program* program, std::vector<uint32_t>& code);
+unsigned emit_program(Program* program, std::vector<uint32_t>& code,
+                      std::vector<struct aco_symbol>* symbols = NULL, bool append_endpgm = true);
 /**
  * Returns true if print_asm can disassemble the given program for the current build/runtime
  * configuration
@@ -2234,6 +2294,7 @@ unsigned emit_program(Program* program, std::vector<uint32_t>& code);
 bool check_print_asm_support(Program* program);
 bool print_asm(Program* program, std::vector<uint32_t>& binary, unsigned exec_size, FILE* output);
 bool validate_ir(Program* program);
+bool validate_cfg(Program* program);
 bool validate_ra(Program* program);
 #ifndef NDEBUG
 void perfwarn(Program* program, bool cond, const char* msg, Instruction* instr = NULL);
@@ -2277,6 +2338,8 @@ void _aco_err(Program* program, const char* file, unsigned line, const char* fmt
 
 #define aco_perfwarn(program, ...) _aco_perfwarn(program, __FILE__, __LINE__, __VA_ARGS__)
 #define aco_err(program, ...)      _aco_err(program, __FILE__, __LINE__, __VA_ARGS__)
+
+int get_op_fixed_to_def(Instruction* instr);
 
 /* utilities for dealing with register demand */
 RegisterDemand get_live_changes(aco_ptr<Instruction>& instr);

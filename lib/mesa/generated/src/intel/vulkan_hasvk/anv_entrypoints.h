@@ -205,6 +205,7 @@ extern const struct vk_device_entrypoint_table doom64_device_entrypoints;
   VKAPI_ATTR VkResult VKAPI_CALL anv_AcquireDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, VkDisplayKHR display);
   VKAPI_ATTR VkResult VKAPI_CALL anv_GetDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, uint32_t connectorId, VkDisplayKHR* display);
   VKAPI_ATTR VkResult VKAPI_CALL anv_GetPhysicalDeviceOpticalFlowImageFormatsNV(VkPhysicalDevice physicalDevice, const VkOpticalFlowImageFormatInfoNV* pOpticalFlowImageFormatInfo, uint32_t* pFormatCount, VkOpticalFlowImageFormatPropertiesNV* pImageFormatProperties);
+  VKAPI_ATTR VkResult VKAPI_CALL anv_GetPhysicalDeviceCooperativeMatrixPropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesKHR* pProperties);
 
   VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL anv_GetDeviceProcAddr(VkDevice device, const char* pName) ATTR_WEAK;
   VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL gfx7_GetDeviceProcAddr(VkDevice device, const char* pName) ATTR_WEAK;
@@ -710,6 +711,13 @@ extern const struct vk_device_entrypoint_table doom64_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL doom64_GetRenderAreaGranularity(VkDevice device, VkRenderPass renderPass, VkExtent2D* pGranularity) ATTR_WEAK;
 
 
+  VKAPI_ATTR void VKAPI_CALL anv_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+
+
   VKAPI_ATTR VkResult VKAPI_CALL anv_CreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL gfx7_CreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL gfx75_CreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool) ATTR_WEAK;
@@ -771,6 +779,13 @@ extern const struct vk_device_entrypoint_table doom64_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL gfx75_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL gfx8_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL doom64_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL anv_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
 
 
   VKAPI_ATTR void VKAPI_CALL anv_CmdSetViewport(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewport* pViewports) ATTR_WEAK;
@@ -932,6 +947,13 @@ extern const struct vk_device_entrypoint_table doom64_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL gfx75_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL gfx8_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL doom64_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL anv_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
 
 
   VKAPI_ATTR void VKAPI_CALL anv_CmdCopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions) ATTR_WEAK;
@@ -2724,6 +2746,20 @@ extern const struct vk_device_entrypoint_table doom64_device_entrypoints;
   VKAPI_ATTR VkResult VKAPI_CALL doom64_DeferredOperationJoinKHR(VkDevice device, VkDeferredOperationKHR operation) ATTR_WEAK;
 
 
+  VKAPI_ATTR void VKAPI_CALL anv_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+
+
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL anv_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL gfx7_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL gfx75_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL gfx8_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL doom64_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+
+
   VKAPI_ATTR void VKAPI_CALL anv_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL gfx7_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL gfx75_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) ATTR_WEAK;
@@ -2792,6 +2828,13 @@ extern const struct vk_device_entrypoint_table doom64_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL gfx75_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL gfx8_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL doom64_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL anv_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
 
 
   VKAPI_ATTR void VKAPI_CALL anv_CmdBindVertexBuffers2(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) ATTR_WEAK;
@@ -3438,6 +3481,34 @@ extern const struct vk_device_entrypoint_table doom64_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL doom64_GetQueueCheckpointData2NV(VkQueue queue, uint32_t* pCheckpointDataCount, VkCheckpointData2NV* pCheckpointData) ATTR_WEAK;
 
 
+  VKAPI_ATTR VkResult VKAPI_CALL anv_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx7_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx75_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx8_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL doom64_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR VkResult VKAPI_CALL anv_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx7_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx75_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx8_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL doom64_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR VkResult VKAPI_CALL anv_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx7_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx75_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx8_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL doom64_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR VkResult VKAPI_CALL anv_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx7_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx75_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx8_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL doom64_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+
+
   VKAPI_ATTR VkResult VKAPI_CALL anv_CreateVideoSessionKHR(VkDevice device, const VkVideoSessionCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionKHR* pVideoSession) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL gfx7_CreateVideoSessionKHR(VkDevice device, const VkVideoSessionCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionKHR* pVideoSession) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL gfx75_CreateVideoSessionKHR(VkDevice device, const VkVideoSessionCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionKHR* pVideoSession) ATTR_WEAK;
@@ -3854,11 +3925,18 @@ extern const struct vk_device_entrypoint_table doom64_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL doom64_GetShaderModuleCreateInfoIdentifierEXT(VkDevice device, const VkShaderModuleCreateInfo* pCreateInfo, VkShaderModuleIdentifierEXT* pIdentifier) ATTR_WEAK;
 
 
-  VKAPI_ATTR void VKAPI_CALL anv_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
-  VKAPI_ATTR void VKAPI_CALL gfx7_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
-  VKAPI_ATTR void VKAPI_CALL gfx75_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
-  VKAPI_ATTR void VKAPI_CALL gfx8_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
-  VKAPI_ATTR void VKAPI_CALL doom64_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL anv_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL anv_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
 
 
   VKAPI_ATTR VkResult VKAPI_CALL anv_GetPipelinePropertiesEXT(VkDevice device, const VkPipelineInfoEXT* pPipelineInfo, VkBaseOutStructure* pPipelineProperties) ATTR_WEAK;
@@ -3926,11 +4004,25 @@ extern const struct vk_device_entrypoint_table doom64_device_entrypoints;
   VKAPI_ATTR VkResult VKAPI_CALL doom64_GetDeviceFaultInfoEXT(VkDevice device, VkDeviceFaultCountsEXT* pFaultCounts, VkDeviceFaultInfoEXT* pFaultInfo) ATTR_WEAK;
 
 
+  VKAPI_ATTR void VKAPI_CALL anv_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+
+
   VKAPI_ATTR VkResult VKAPI_CALL anv_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL gfx7_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL gfx75_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL gfx8_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL doom64_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL anv_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
 
 
   VKAPI_ATTR VkResult VKAPI_CALL anv_MapMemory2KHR(VkDevice device, const VkMemoryMapInfoKHR* pMemoryMapInfo, void** ppData) ATTR_WEAK;
@@ -3973,6 +4065,50 @@ extern const struct vk_device_entrypoint_table doom64_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL gfx75_CmdBindShadersEXT(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderStageFlagBits* pStages, const VkShaderEXT* pShaders) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL gfx8_CmdBindShadersEXT(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderStageFlagBits* pStages, const VkShaderEXT* pShaders) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL doom64_CmdBindShadersEXT(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderStageFlagBits* pStages, const VkShaderEXT* pShaders) ATTR_WEAK;
+
+
+#ifdef VK_USE_PLATFORM_SCREEN_QNX
+  VKAPI_ATTR VkResult VKAPI_CALL anv_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx7_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx75_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx8_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL doom64_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+
+
+#endif // VK_USE_PLATFORM_SCREEN_QNX
+  VKAPI_ATTR VkResult VKAPI_CALL anv_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx7_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx75_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx8_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL doom64_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR VkResult VKAPI_CALL anv_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx7_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx75_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL gfx8_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL doom64_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL anv_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL anv_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL anv_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx7_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx75_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL gfx8_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL doom64_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
 
 
 

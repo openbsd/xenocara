@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2023/11/02 04:53:31 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	intel_compiler
 
@@ -45,7 +45,6 @@ SRCS=	brw_cfg.cpp \
 	brw_fs_visitor.cpp \
 	brw_interpolation_map.c \
 	brw_ir_performance.cpp \
-	brw_kernel.c \
 	brw_lower_logical_sends.cpp \
 	brw_mesh.cpp \
 	brw_nir.c \
@@ -58,10 +57,13 @@ SRCS=	brw_cfg.cpp \
 	brw_nir_lower_cs_intrinsics.c \
 	brw_nir_lower_alpha_to_coverage.c \
 	brw_nir_lower_intersection_shader.c \
+	brw_nir_lower_non_uniform_resource_intel.c \
+	brw_nir_lower_non_uniform_barycentric_at_sample.c \
 	brw_nir_lower_ray_queries.c \
 	brw_nir_lower_rt_intrinsics.c \
 	brw_nir_lower_shader_calls.c \
 	brw_nir_lower_shading_rate_output.c \
+	brw_nir_lower_sparse.c \
 	brw_nir_lower_storage_image.c \
 	brw_nir_opt_peephole_ffma.c \
 	brw_nir_opt_peephole_imul32x16.c \
@@ -104,6 +106,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \

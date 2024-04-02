@@ -147,7 +147,7 @@ GLAPI void GLAPIENTRY glGetInteger64i_v(GLenum target, GLuint index, GLint64 *da
 GLAPI void GLAPIENTRY glGetInteger64v(GLenum pname, GLint64 *data);
 GLAPI void GLAPIENTRY glGetIntegeri_v(GLenum target, GLuint index, GLint *data);
 GLAPI void GLAPIENTRY glGetIntegerv(GLenum pname, GLint *data);
-GLAPI void GLAPIENTRY glGetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params);
+GLAPI void GLAPIENTRY glGetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei count, GLint *params);
 GLAPI void GLAPIENTRY glGetMultisamplefv(GLenum pname, GLuint index, GLfloat *val);
 GLAPI void GLAPIENTRY glGetObjectLabel(GLenum identifier, GLuint name, GLsizei bufSize, GLsizei *length, GLchar *label);
 GLAPI void GLAPIENTRY glGetObjectPtrLabel(const void *ptr, GLsizei bufSize, GLsizei *length, GLchar *label);
@@ -160,7 +160,7 @@ GLAPI void GLAPIENTRY glGetProgramPipelineiv(GLuint pipeline, GLenum pname, GLin
 GLAPI GLuint GLAPIENTRY glGetProgramResourceIndex(GLuint program, GLenum programInterface, const GLchar *name);
 GLAPI GLint GLAPIENTRY glGetProgramResourceLocation(GLuint program, GLenum programInterface, const GLchar *name);
 GLAPI void GLAPIENTRY glGetProgramResourceName(GLuint program, GLenum programInterface, GLuint index, GLsizei bufSize, GLsizei *length, GLchar *name);
-GLAPI void GLAPIENTRY glGetProgramResourceiv(GLuint program, GLenum programInterface, GLuint index, GLsizei propCount, const GLenum *props, GLsizei bufSize, GLsizei *length, GLint *params);
+GLAPI void GLAPIENTRY glGetProgramResourceiv(GLuint program, GLenum programInterface, GLuint index, GLsizei propCount, const GLenum *props, GLsizei count, GLsizei *length, GLint *params);
 GLAPI void GLAPIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint *params);
 GLAPI void GLAPIENTRY glGetQueryObjectuiv(GLuint id, GLenum pname, GLuint *params);
 GLAPI void GLAPIENTRY glGetQueryiv(GLenum target, GLenum pname, GLint *params);
@@ -175,7 +175,7 @@ GLAPI void GLAPIENTRY glGetShaderSource(GLuint shader, GLsizei bufSize, GLsizei 
 GLAPI void GLAPIENTRY glGetShaderiv(GLuint shader, GLenum pname, GLint *params);
 GLAPI const GLubyte * GLAPIENTRY glGetString(GLenum name);
 GLAPI const GLubyte * GLAPIENTRY glGetStringi(GLenum name, GLuint index);
-GLAPI void GLAPIENTRY glGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values);
+GLAPI void GLAPIENTRY glGetSynciv(GLsync sync, GLenum pname, GLsizei count, GLsizei *length, GLint *values);
 GLAPI void GLAPIENTRY glGetTexLevelParameterfv(GLenum target, GLint level, GLenum pname, GLfloat *params);
 GLAPI void GLAPIENTRY glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params);
 GLAPI void GLAPIENTRY glGetTexParameterIiv(GLenum target, GLenum pname, GLint *params);
@@ -280,7 +280,7 @@ GLAPI void GLAPIENTRY glSamplerParameterfv(GLuint sampler, GLenum pname, const G
 GLAPI void GLAPIENTRY glSamplerParameteri(GLuint sampler, GLenum pname, GLint param);
 GLAPI void GLAPIENTRY glSamplerParameteriv(GLuint sampler, GLenum pname, const GLint *param);
 GLAPI void GLAPIENTRY glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
-GLAPI void GLAPIENTRY glShaderBinary(GLsizei count, const GLuint *shaders, GLenum binaryformat, const void *binary, GLsizei length);
+GLAPI void GLAPIENTRY glShaderBinary(GLsizei count, const GLuint *shaders, GLenum binaryFormat, const void *binary, GLsizei length);
 GLAPI void GLAPIENTRY glShaderSource(GLuint shader, GLsizei count, const GLchar *const *string, const GLint *length);
 GLAPI void GLAPIENTRY glStencilFunc(GLenum func, GLint ref, GLuint mask);
 GLAPI void GLAPIENTRY glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
@@ -1349,11 +1349,11 @@ GLAPI void GLAPIENTRY glGetIntegerv(GLenum pname, GLint *data)
    ((void (GLAPIENTRY *)(GLenum pname, GLint *data)) _func)(pname, data);
 }
 
-GLAPI void GLAPIENTRY glGetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params)
+GLAPI void GLAPIENTRY glGetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei count, GLint *params)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[866];
-   ((void (GLAPIENTRY *)(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params)) _func)(target, internalformat, pname, bufSize, params);
+   ((void (GLAPIENTRY *)(GLenum target, GLenum internalformat, GLenum pname, GLsizei count, GLint *params)) _func)(target, internalformat, pname, count, params);
 }
 
 GLAPI void GLAPIENTRY glGetMultisamplefv(GLenum pname, GLuint index, GLfloat *val)
@@ -1440,11 +1440,11 @@ GLAPI void GLAPIENTRY glGetProgramResourceName(GLuint program, GLenum programInt
    ((void (GLAPIENTRY *)(GLuint program, GLenum programInterface, GLuint index, GLsizei bufSize, GLsizei *length, GLchar *name)) _func)(program, programInterface, index, bufSize, length, name);
 }
 
-GLAPI void GLAPIENTRY glGetProgramResourceiv(GLuint program, GLenum programInterface, GLuint index, GLsizei propCount, const GLenum *props, GLsizei bufSize, GLsizei *length, GLint *params)
+GLAPI void GLAPIENTRY glGetProgramResourceiv(GLuint program, GLenum programInterface, GLuint index, GLsizei propCount, const GLenum *props, GLsizei count, GLsizei *length, GLint *params)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[898];
-   ((void (GLAPIENTRY *)(GLuint program, GLenum programInterface, GLuint index, GLsizei propCount, const GLenum *props, GLsizei bufSize, GLsizei *length, GLint *params)) _func)(program, programInterface, index, propCount, props, bufSize, length, params);
+   ((void (GLAPIENTRY *)(GLuint program, GLenum programInterface, GLuint index, GLsizei propCount, const GLenum *props, GLsizei count, GLsizei *length, GLint *params)) _func)(program, programInterface, index, propCount, props, count, length, params);
 }
 
 GLAPI void GLAPIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint *params)
@@ -1545,11 +1545,11 @@ GLAPI const GLubyte * GLAPIENTRY glGetStringi(GLenum name, GLuint index)
    return ((const GLubyte * (GLAPIENTRY *)(GLenum name, GLuint index)) _func)(name, index);
 }
 
-GLAPI void GLAPIENTRY glGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
+GLAPI void GLAPIENTRY glGetSynciv(GLsync sync, GLenum pname, GLsizei count, GLsizei *length, GLint *values)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[699];
-   ((void (GLAPIENTRY *)(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)) _func)(sync, pname, bufSize, length, values);
+   ((void (GLAPIENTRY *)(GLsync sync, GLenum pname, GLsizei count, GLsizei *length, GLint *values)) _func)(sync, pname, count, length, values);
 }
 
 GLAPI void GLAPIENTRY glGetTexLevelParameterfv(GLenum target, GLint level, GLenum pname, GLfloat *params)
@@ -2280,11 +2280,11 @@ GLAPI void GLAPIENTRY glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
    ((void (GLAPIENTRY *)(GLint x, GLint y, GLsizei width, GLsizei height)) _func)(x, y, width, height);
 }
 
-GLAPI void GLAPIENTRY glShaderBinary(GLsizei count, const GLuint *shaders, GLenum binaryformat, const void *binary, GLsizei length)
+GLAPI void GLAPIENTRY glShaderBinary(GLsizei count, const GLuint *shaders, GLenum binaryFormat, const void *binary, GLsizei length)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[817];
-   ((void (GLAPIENTRY *)(GLsizei count, const GLuint *shaders, GLenum binaryformat, const void *binary, GLsizei length)) _func)(count, shaders, binaryformat, binary, length);
+   ((void (GLAPIENTRY *)(GLsizei count, const GLuint *shaders, GLenum binaryFormat, const void *binary, GLsizei length)) _func)(count, shaders, binaryFormat, binary, length);
 }
 
 GLAPI void GLAPIENTRY glShaderSource(GLuint shader, GLsizei count, const GLchar *const *string, const GLint *length)

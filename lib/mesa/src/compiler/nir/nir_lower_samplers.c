@@ -30,7 +30,7 @@ static void
 lower_tex_src_to_offset(nir_builder *b,
                         nir_tex_instr *instr, unsigned src_idx)
 {
-   nir_ssa_def *index = NULL;
+   nir_def *index = NULL;
    unsigned base_index = 0;
    unsigned array_elements = 1;
    nir_tex_src *src = &instr->src[src_idx];
@@ -39,7 +39,6 @@ lower_tex_src_to_offset(nir_builder *b,
    /* We compute first the offsets */
    nir_deref_instr *deref = nir_instr_as_deref(src->src.ssa->parent_instr);
    while (deref->deref_type != nir_deref_type_var) {
-      assert(deref->parent.is_ssa);
       nir_deref_instr *parent =
          nir_instr_as_deref(deref->parent.ssa->parent_instr);
 
@@ -76,8 +75,9 @@ lower_tex_src_to_offset(nir_builder *b,
          }
 
          index = nir_iadd(b, index,
-                          nir_imul(b, nir_imm_int(b, array_elements),
-                                   nir_ssa_for_src(b, deref->arr.index, 1)));
+                          nir_imul_imm(b,
+                                       deref->arr.index.ssa,
+                                       array_elements));
       }
 
       array_elements *= glsl_get_length(parent->type);
@@ -97,12 +97,9 @@ lower_tex_src_to_offset(nir_builder *b,
     * instr if needed
     */
    if (index) {
-      nir_instr_rewrite_src(&instr->instr, &src->src,
-                            nir_src_for_ssa(index));
+      nir_src_rewrite(&src->src, index);
 
-      src->src_type = is_sampler ?
-         nir_tex_src_sampler_offset :
-         nir_tex_src_texture_offset;
+      src->src_type = is_sampler ? nir_tex_src_sampler_offset : nir_tex_src_texture_offset;
    } else {
       nir_tex_instr_remove_src(instr, src_idx);
    }
@@ -149,6 +146,6 @@ nir_lower_samplers(nir_shader *shader)
 {
    return nir_shader_instructions_pass(shader, lower_sampler,
                                        nir_metadata_block_index |
-                                       nir_metadata_dominance,
+                                          nir_metadata_dominance,
                                        NULL);
 }

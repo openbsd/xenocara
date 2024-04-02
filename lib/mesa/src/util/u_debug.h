@@ -400,13 +400,15 @@ __normal_user(void)
 #if defined(_WIN32)
    return true;
 #else
-   return geteuid() == getuid() && getegid() == getgid();
+   return issetugid() == 0 && geteuid() == getuid() && getegid() == getgid();
 #endif
 }
 
 #ifndef HAVE_SECURE_GETENV
 static inline char *secure_getenv(const char *name)
 {
+   if (issetugid())
+      return NULL;
    return getenv(name);
 }
 #endif

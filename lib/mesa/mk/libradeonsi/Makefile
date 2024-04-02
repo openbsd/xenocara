@@ -1,11 +1,11 @@
-#	$OpenBSD: Makefile,v 1.6 2023/11/02 04:53:32 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	radeonsi
 
 NOPROFILE=
 
-SRCS=	gfx10_query.c \
-	gfx10_shader_ngg.c \
+SRCS=	gfx10_shader_ngg.c \
+	gfx11_query.c \
 	si_blit.c \
 	si_buffer.c \
 	si_clear.c \
@@ -29,6 +29,7 @@ SRCS=	gfx10_query.c \
 	si_nir_optim.c \
 	si_sdma_copy_image.c \
 	si_shader.c \
+	si_shader_aco.c \
 	si_shader_info.c \
 	si_shader_llvm.c \
 	si_shader_llvm_gs.c \
@@ -48,6 +49,7 @@ SRCS=	gfx10_query.c \
 	si_test_image_copy_region.c \
 	si_test_dma_perf.c \
 	si_texture.c \
+	si_utrace.c \
 	si_uvd.c \
 	radeon_uvd.c \
 	radeon_uvd_enc.c \
@@ -64,7 +66,10 @@ SRCS=	gfx10_query.c \
 	radeon_vcn_enc_2_0.c \
 	radeon_vcn_enc_3_0.c \
 	radeon_vcn_enc_4_0.c \
-	radeon_video.c \
+	radeon_video.c
+
+SRCS+=	si_perfetto.cpp \
+	si_tracepoints.c
 
 .include "../Makefile.inc"
 
@@ -78,8 +83,12 @@ CPPFLAGS+=	-DGALLIUM_RADEONSI \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/util \
 		-I${MESA_SRC}/src/amd/common \
+		-I${MESA_SRC}/src/amd/compiler \
 		-I${MESA_SRC}/src/amd/llvm \
+		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/generated/src \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-I${MESA_SRC}/generated/src/amd/common \
 		-I${MESA_SRC}/generated/src/gallium/drivers/radeonsi
@@ -93,3 +102,4 @@ obj: _xenocara_obj
 
 .PATH: ${MESA_SRC}/src/gallium/drivers/radeonsi
 .PATH: ${MESA_SRC}/src/gallium/drivers/radeon
+.PATH: ${MESA_SRC}/generated/src/gallium/drivers/radeonsi

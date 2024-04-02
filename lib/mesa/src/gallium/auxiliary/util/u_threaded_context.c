@@ -642,7 +642,7 @@ _tc_sync(struct threaded_context *tc, UNUSED const char *info, UNUSED const char
    struct tc_batch *next = &tc->batch_slots[tc->next];
    bool synced = false;
 
-   MESA_TRACE_BEGIN(func);
+   MESA_TRACE_SCOPE(func);
 
    tc_debug_check(tc);
 
@@ -708,8 +708,6 @@ _tc_sync(struct threaded_context *tc, UNUSED const char *info, UNUSED const char
       tc->seen_fb_state = false;
       tc->query_ended = false;
    }
-
-   MESA_TRACE_END();
 }
 
 #define tc_sync(tc) _tc_sync(tc, "", __func__)
@@ -1385,7 +1383,7 @@ tc_create_vertex_elements_state(struct pipe_context *_pipe, unsigned count,
 
 struct tc_sampler_states {
    struct tc_call_base base;
-   ubyte shader, start, count;
+   uint8_t shader, start, count;
    void *slot[0]; /* more will be allocated if needed */
 };
 
@@ -1545,7 +1543,7 @@ tc_set_tess_state(struct pipe_context *_pipe,
 
 struct tc_patch_vertices {
    struct tc_call_base base;
-   ubyte patch_vertices;
+   uint8_t patch_vertices;
 };
 
 static uint16_t
@@ -1568,7 +1566,7 @@ tc_set_patch_vertices(struct pipe_context *_pipe, uint8_t patch_vertices)
 
 struct tc_constant_buffer_base {
    struct tc_call_base base;
-   ubyte shader, index;
+   uint8_t shader, index;
    bool is_null;
 };
 
@@ -1651,8 +1649,8 @@ tc_set_constant_buffer(struct pipe_context *_pipe,
 
 struct tc_inlinable_constants {
    struct tc_call_base base;
-   ubyte shader;
-   ubyte num_values;
+   uint8_t shader;
+   uint8_t num_values;
    uint32_t values[MAX_INLINABLE_UNIFORMS];
 };
 
@@ -1708,7 +1706,7 @@ tc_set_sample_locations(struct pipe_context *_pipe, size_t size, const uint8_t *
 
 struct tc_scissors {
    struct tc_call_base base;
-   ubyte start, count;
+   uint8_t start, count;
    struct pipe_scissor_state slot[0]; /* more will be allocated if needed */
 };
 
@@ -1737,7 +1735,7 @@ tc_set_scissor_states(struct pipe_context *_pipe,
 
 struct tc_viewports {
    struct tc_call_base base;
-   ubyte start, count;
+   uint8_t start, count;
    struct pipe_viewport_state slot[0]; /* more will be allocated if needed */
 };
 
@@ -1770,7 +1768,7 @@ tc_set_viewport_states(struct pipe_context *_pipe,
 struct tc_window_rects {
    struct tc_call_base base;
    bool include;
-   ubyte count;
+   uint8_t count;
    struct pipe_scissor_state slot[0]; /* more will be allocated if needed */
 };
 
@@ -1799,7 +1797,7 @@ tc_set_window_rectangles(struct pipe_context *_pipe, bool include,
 
 struct tc_sampler_views {
    struct tc_call_base base;
-   ubyte shader, start, count, unbind_num_trailing_slots;
+   uint8_t shader, start, count, unbind_num_trailing_slots;
    struct pipe_sampler_view *slot[0]; /* more will be allocated if needed */
 };
 
@@ -1876,8 +1874,8 @@ tc_set_sampler_views(struct pipe_context *_pipe,
 
 struct tc_shader_images {
    struct tc_call_base base;
-   ubyte shader, start, count;
-   ubyte unbind_num_trailing_slots;
+   uint8_t shader, start, count;
+   uint8_t unbind_num_trailing_slots;
    struct pipe_image_view slot[0]; /* more will be allocated if needed */
 };
 
@@ -1967,7 +1965,7 @@ tc_set_shader_images(struct pipe_context *_pipe,
 
 struct tc_shader_buffers {
    struct tc_call_base base;
-   ubyte shader, start, count;
+   uint8_t shader, start, count;
    bool unbind;
    unsigned writable_bitmask;
    struct pipe_shader_buffer slot[0]; /* more will be allocated if needed */
@@ -2051,8 +2049,8 @@ tc_set_shader_buffers(struct pipe_context *_pipe,
 
 struct tc_vertex_buffers {
    struct tc_call_base base;
-   ubyte start, count;
-   ubyte unbind_num_trailing_slots;
+   uint8_t count;
+   uint8_t unbind_num_trailing_slots;
    struct pipe_vertex_buffer slot[0]; /* more will be allocated if needed */
 };
 
@@ -2063,22 +2061,20 @@ tc_call_set_vertex_buffers(struct pipe_context *pipe, void *call, uint64_t *last
    unsigned count = p->count;
 
    if (!count) {
-      pipe->set_vertex_buffers(pipe, p->start, 0,
-                               p->unbind_num_trailing_slots, false, NULL);
+      pipe->set_vertex_buffers(pipe, 0, p->unbind_num_trailing_slots, false, NULL);
       return call_size(tc_vertex_buffers);
    }
 
    for (unsigned i = 0; i < count; i++)
       tc_assert(!p->slot[i].is_user_buffer);
 
-   pipe->set_vertex_buffers(pipe, p->start, count,
-                            p->unbind_num_trailing_slots, true, p->slot);
+   pipe->set_vertex_buffers(pipe, count, p->unbind_num_trailing_slots, true, p->slot);
    return p->base.num_slots;
 }
 
 static void
 tc_set_vertex_buffers(struct pipe_context *_pipe,
-                      unsigned start, unsigned count,
+                      unsigned count,
                       unsigned unbind_num_trailing_slots,
                       bool take_ownership,
                       const struct pipe_vertex_buffer *buffers)
@@ -2091,7 +2087,6 @@ tc_set_vertex_buffers(struct pipe_context *_pipe,
    if (count && buffers) {
       struct tc_vertex_buffers *p =
          tc_add_slot_based_call(tc, TC_CALL_set_vertex_buffers, tc_vertex_buffers, count);
-      p->start = start;
       p->count = count;
       p->unbind_num_trailing_slots = unbind_num_trailing_slots;
 
@@ -2104,9 +2099,9 @@ tc_set_vertex_buffers(struct pipe_context *_pipe,
             struct pipe_resource *buf = buffers[i].buffer.resource;
 
             if (buf) {
-               tc_bind_buffer(tc, &tc->vertex_buffers[start + i], next, buf);
+               tc_bind_buffer(tc, &tc->vertex_buffers[i], next, buf);
             } else {
-               tc_unbind_buffer(&tc->vertex_buffers[start + i]);
+               tc_unbind_buffer(&tc->vertex_buffers[i]);
             }
          }
       } else {
@@ -2116,29 +2111,27 @@ tc_set_vertex_buffers(struct pipe_context *_pipe,
             struct pipe_resource *buf = src->buffer.resource;
 
             tc_assert(!src->is_user_buffer);
-            dst->stride = src->stride;
             dst->is_user_buffer = false;
             tc_set_resource_reference(&dst->buffer.resource, buf);
             dst->buffer_offset = src->buffer_offset;
 
             if (buf) {
-               tc_bind_buffer(tc, &tc->vertex_buffers[start + i], next, buf);
+               tc_bind_buffer(tc, &tc->vertex_buffers[i], next, buf);
             } else {
-               tc_unbind_buffer(&tc->vertex_buffers[start + i]);
+               tc_unbind_buffer(&tc->vertex_buffers[i]);
             }
          }
       }
 
-      tc_unbind_buffers(&tc->vertex_buffers[start + count],
+      tc_unbind_buffers(&tc->vertex_buffers[count],
                         unbind_num_trailing_slots);
    } else {
       struct tc_vertex_buffers *p =
          tc_add_slot_based_call(tc, TC_CALL_set_vertex_buffers, tc_vertex_buffers, 0);
-      p->start = start;
       p->count = 0;
       p->unbind_num_trailing_slots = count + unbind_num_trailing_slots;
 
-      tc_unbind_buffers(&tc->vertex_buffers[start],
+      tc_unbind_buffers(&tc->vertex_buffers[0],
                         count + unbind_num_trailing_slots);
    }
 }
@@ -3105,9 +3098,10 @@ tc_buffer_subdata(struct pipe_context *_pipe,
 
 struct tc_texture_subdata {
    struct tc_call_base base;
-   unsigned level, usage, stride, layer_stride;
+   unsigned level, usage, stride;
    struct pipe_box box;
    struct pipe_resource *resource;
+   uintptr_t layer_stride;
    char slot[0]; /* more will be allocated if needed */
 };
 
@@ -3128,16 +3122,16 @@ tc_texture_subdata(struct pipe_context *_pipe,
                    unsigned level, unsigned usage,
                    const struct pipe_box *box,
                    const void *data, unsigned stride,
-                   unsigned layer_stride)
+                   uintptr_t layer_stride)
 {
    struct threaded_context *tc = threaded_context(_pipe);
-   unsigned size;
+   uint64_t size;
 
    assert(box->height >= 1);
    assert(box->depth >= 1);
 
    size = (box->depth - 1) * layer_stride +
-          (box->height - 1) * stride +
+          (box->height - 1) * (uint64_t)stride +
           box->width * util_format_get_blocksize(resource->format);
    if (!size)
       return;
@@ -3164,8 +3158,10 @@ tc_texture_subdata(struct pipe_context *_pipe,
             format = util_format_get_depth_only(format);
          else if (usage & PIPE_MAP_STENCIL_ONLY)
             format = PIPE_FORMAT_S8_UINT;
+
          unsigned fmt_stride = util_format_get_stride(format, box->width);
-         unsigned fmt_layer_stride = util_format_get_2d_size(format, stride, box->height);
+         uint64_t fmt_layer_stride = util_format_get_2d_size(format, stride, box->height);
+         assert(fmt_layer_stride * box->depth <= UINT32_MAX);
 
          struct pipe_resource *pres = pipe_buffer_create(pipe->screen, 0, PIPE_USAGE_STREAM, layer_stride * box->depth);
          pipe->buffer_subdata(pipe, pres, PIPE_MAP_WRITE | TC_TRANSFER_MAP_THREADED_UNSYNC, 0, layer_stride * box->depth, data);

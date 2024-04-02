@@ -88,6 +88,7 @@ struct fd_vertexbuf_stateobj {
 
 struct fd_vertex_stateobj {
    struct pipe_vertex_element pipe[PIPE_MAX_ATTRIBS];
+   unsigned strides[PIPE_MAX_ATTRIBS];
    unsigned num_elements;
 };
 
@@ -165,9 +166,10 @@ enum fd_dirty_3d_state {
    FD_DIRTY_IMAGE = BIT(18),
    FD_DIRTY_SSBO = BIT(19),
    FD_DIRTY_QUERY = BIT(20),
+   FD_DIRTY_SAMPLE_LOCATIONS = BIT(21),
 
    /* only used by a2xx.. possibly can be removed.. */
-   FD_DIRTY_TEXSTATE = BIT(21),
+   FD_DIRTY_TEXSTATE = BIT(22),
 
    /* fine grained state changes, for cases where state is not orthogonal
     * from hw perspective:
@@ -178,6 +180,69 @@ enum fd_dirty_3d_state {
    FD_DIRTY_BLEND_COHERENT = BIT(27),
 #define NUM_DIRTY_BITS 28
 };
+
+static inline void
+fd_print_dirty_state(BITMASK_ENUM(fd_dirty_3d_state) dirty)
+{
+#ifdef DEBUG
+   if (!FD_DBG(MSGS))
+      return;
+
+   struct {
+      enum fd_dirty_3d_state state;
+      const char *name;
+   } tbl[] = {
+#define STATE(n) { FD_DIRTY_ ## n, #n }
+         STATE(BLEND),
+         STATE(RASTERIZER),
+         STATE(ZSA),
+         STATE(BLEND_COLOR),
+         STATE(STENCIL_REF),
+         STATE(SAMPLE_MASK),
+         STATE(FRAMEBUFFER),
+         STATE(STIPPLE),
+         STATE(VIEWPORT),
+         STATE(VTXSTATE),
+         STATE(VTXBUF),
+         STATE(MIN_SAMPLES),
+         STATE(SCISSOR),
+         STATE(STREAMOUT),
+         STATE(UCP),
+         STATE(PROG),
+         STATE(CONST),
+         STATE(TEX),
+         STATE(IMAGE),
+         STATE(SSBO),
+         STATE(QUERY),
+         STATE(TEXSTATE),
+         STATE(RASTERIZER_DISCARD),
+         STATE(RASTERIZER_CLIP_PLANE_ENABLE),
+         STATE(BLEND_DUAL),
+         STATE(BLEND_COHERENT),
+#undef STATE
+   };
+
+   struct log_stream *s = mesa_log_streami();
+
+   mesa_log_stream_printf(s, "dirty:");
+
+   if ((uint32_t)dirty == ~0) {
+      mesa_log_stream_printf(s, " ALL");
+      dirty = 0;
+   }
+
+   for (unsigned i = 0; i < ARRAY_SIZE(tbl); i++) {
+      if (dirty & tbl[i].state) {
+         mesa_log_stream_printf(s, " %s", tbl[i].name);
+         dirty &= ~tbl[i].state;
+      }
+   }
+
+   assert(!dirty);
+
+   mesa_log_stream_destroy(s);
+#endif
+}
 
 /* per shader-stage dirty state: */
 enum fd_dirty_shader_state {
@@ -195,9 +260,14 @@ enum fd_buffer_mask {
    FD_BUFFER_DEPTH = PIPE_CLEAR_DEPTH,
    FD_BUFFER_STENCIL = PIPE_CLEAR_STENCIL,
    FD_BUFFER_ALL = FD_BUFFER_COLOR | FD_BUFFER_DEPTH | FD_BUFFER_STENCIL,
+
+   /* A special internal buffer bit to signify that the LRZ buffer needs
+    * clearing
+    */
+   FD_BUFFER_LRZ = BIT(15),
 };
 
-#define MAX_HW_SAMPLE_PROVIDERS 7
+#define MAX_HW_SAMPLE_PROVIDERS 10
 struct fd_hw_sample_provider;
 struct fd_hw_sample;
 
@@ -377,6 +447,14 @@ struct fd_context {
    /* Per vsc pipe bo's (a2xx-a5xx): */
    struct fd_bo *vsc_pipe_bo[32] dt;
 
+   /* Table of bo's attached to all batches up-front (because they
+    * are commonly used, and that is easier than attaching on-use).
+    * In particular, these are driver internal buffers which do not
+    * participate in batch resource tracking.
+    */
+   struct fd_bo *private_bos[3];
+   unsigned num_private_bos;
+
    /* Maps generic gallium oriented fd_dirty_3d_state bits to generation
     * specific bitmask of state "groups".
     */
@@ -418,6 +496,10 @@ struct fd_context {
    unsigned sample_mask dt;
    unsigned min_samples dt;
 
+   /* 1x1 grid, max 4x MSAA: */
+   uint8_t sample_locations[4] dt;
+   bool sample_locations_enabled dt;
+
    /* local context fb state, for when ctx->batch is null: */
    struct pipe_framebuffer_state framebuffer dt;
    uint32_t all_mrt_channel_mask dt;
@@ -458,6 +540,7 @@ struct fd_context {
    struct {
       struct fd_bo *bo;
       uint32_t per_fiber_size;
+      uint32_t per_sp_size;
    } pvtmem[2] dt;
 
    /* maps per-shader-stage state plus variant key to hw
@@ -496,6 +579,7 @@ struct fd_context {
 
    /* optional, for GMEM bypass: */
    void (*emit_sysmem_prep)(struct fd_batch *batch) dt;
+   void (*emit_sysmem)(struct fd_batch *batch) dt;
    void (*emit_sysmem_fini)(struct fd_batch *batch) dt;
 
    /* draw: */
@@ -508,6 +592,9 @@ struct fd_context {
    bool (*clear)(struct fd_context *ctx, enum fd_buffer_mask buffers,
                  const union pipe_color_union *color, double depth,
                  unsigned stencil) dt;
+
+   /* called to update draw_vbo func after bound shader stages change, etc: */
+   void (*update_draw)(struct fd_context *ctx);
 
    /* compute: */
    void (*launch_grid)(struct fd_context *ctx,
@@ -591,6 +678,8 @@ fd_stream_output_target(struct pipe_stream_output_target *target)
 {
    return (struct fd_stream_output_target *)target;
 }
+
+void fd_context_add_private_bo(struct fd_context *ctx, struct fd_bo *bo);
 
 /* Mark specified non-shader-stage related state as dirty: */
 static inline void

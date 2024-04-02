@@ -206,6 +206,7 @@ extern const struct vk_device_entrypoint_table rage2_device_entrypoints;
   VKAPI_ATTR VkResult VKAPI_CALL radv_AcquireDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, VkDisplayKHR display);
   VKAPI_ATTR VkResult VKAPI_CALL radv_GetDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, uint32_t connectorId, VkDisplayKHR* display);
   VKAPI_ATTR VkResult VKAPI_CALL radv_GetPhysicalDeviceOpticalFlowImageFormatsNV(VkPhysicalDevice physicalDevice, const VkOpticalFlowImageFormatInfoNV* pOpticalFlowImageFormatInfo, uint32_t* pFormatCount, VkOpticalFlowImageFormatPropertiesNV* pImageFormatProperties);
+  VKAPI_ATTR VkResult VKAPI_CALL radv_GetPhysicalDeviceCooperativeMatrixPropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesKHR* pProperties);
 
   VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL radv_GetDeviceProcAddr(VkDevice device, const char* pName) ATTR_WEAK;
   VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL sqtt_GetDeviceProcAddr(VkDevice device, const char* pName) ATTR_WEAK;
@@ -783,6 +784,14 @@ extern const struct vk_device_entrypoint_table rage2_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL rage2_GetRenderAreaGranularity(VkDevice device, VkRenderPass renderPass, VkExtent2D* pGranularity) ATTR_WEAK;
 
 
+  VKAPI_ATTR void VKAPI_CALL radv_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) ATTR_WEAK;
+
+
   VKAPI_ATTR VkResult VKAPI_CALL radv_CreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL sqtt_CreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL rra_CreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool) ATTR_WEAK;
@@ -853,6 +862,14 @@ extern const struct vk_device_entrypoint_table rage2_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL rmv_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL rage2_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL radv_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) ATTR_WEAK;
 
 
   VKAPI_ATTR void VKAPI_CALL radv_CmdSetViewport(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewport* pViewports) ATTR_WEAK;
@@ -1037,6 +1054,14 @@ extern const struct vk_device_entrypoint_table rage2_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL rmv_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL rage2_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL radv_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) ATTR_WEAK;
 
 
   VKAPI_ATTR void VKAPI_CALL radv_CmdCopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions) ATTR_WEAK;
@@ -3079,6 +3104,22 @@ extern const struct vk_device_entrypoint_table rage2_device_entrypoints;
   VKAPI_ATTR VkResult VKAPI_CALL rage2_DeferredOperationJoinKHR(VkDevice device, VkDeferredOperationKHR operation) ATTR_WEAK;
 
 
+  VKAPI_ATTR void VKAPI_CALL radv_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) ATTR_WEAK;
+
+
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL radv_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL sqtt_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL rra_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL rmv_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL metro_exodus_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+  VKAPI_ATTR VkDeviceAddress VKAPI_CALL rage2_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) ATTR_WEAK;
+
+
   VKAPI_ATTR void VKAPI_CALL radv_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL rra_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) ATTR_WEAK;
@@ -3157,6 +3198,14 @@ extern const struct vk_device_entrypoint_table rage2_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL rmv_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL rage2_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL radv_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) ATTR_WEAK;
 
 
   VKAPI_ATTR void VKAPI_CALL radv_CmdBindVertexBuffers2(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) ATTR_WEAK;
@@ -3895,6 +3944,38 @@ extern const struct vk_device_entrypoint_table rage2_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL rage2_GetQueueCheckpointData2NV(VkQueue queue, uint32_t* pCheckpointDataCount, VkCheckpointData2NV* pCheckpointData) ATTR_WEAK;
 
 
+  VKAPI_ATTR VkResult VKAPI_CALL radv_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL sqtt_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rra_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rmv_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rage2_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR VkResult VKAPI_CALL radv_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL sqtt_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rra_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rmv_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rage2_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR VkResult VKAPI_CALL radv_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL sqtt_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rra_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rmv_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rage2_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR VkResult VKAPI_CALL radv_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL sqtt_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rra_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rmv_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rage2_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) ATTR_WEAK;
+
+
   VKAPI_ATTR VkResult VKAPI_CALL radv_CreateVideoSessionKHR(VkDevice device, const VkVideoSessionCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionKHR* pVideoSession) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL sqtt_CreateVideoSessionKHR(VkDevice device, const VkVideoSessionCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionKHR* pVideoSession) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL rra_CreateVideoSessionKHR(VkDevice device, const VkVideoSessionCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionKHR* pVideoSession) ATTR_WEAK;
@@ -4369,12 +4450,20 @@ extern const struct vk_device_entrypoint_table rage2_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL rage2_GetShaderModuleCreateInfoIdentifierEXT(VkDevice device, const VkShaderModuleCreateInfo* pCreateInfo, VkShaderModuleIdentifierEXT* pIdentifier) ATTR_WEAK;
 
 
-  VKAPI_ATTR void VKAPI_CALL radv_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
-  VKAPI_ATTR void VKAPI_CALL sqtt_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
-  VKAPI_ATTR void VKAPI_CALL rra_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
-  VKAPI_ATTR void VKAPI_CALL rmv_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
-  VKAPI_ATTR void VKAPI_CALL metro_exodus_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
-  VKAPI_ATTR void VKAPI_CALL rage2_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL radv_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL radv_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
 
 
   VKAPI_ATTR VkResult VKAPI_CALL radv_GetPipelinePropertiesEXT(VkDevice device, const VkPipelineInfoEXT* pPipelineInfo, VkBaseOutStructure* pPipelineProperties) ATTR_WEAK;
@@ -4451,12 +4540,28 @@ extern const struct vk_device_entrypoint_table rage2_device_entrypoints;
   VKAPI_ATTR VkResult VKAPI_CALL rage2_GetDeviceFaultInfoEXT(VkDevice device, VkDeviceFaultCountsEXT* pFaultCounts, VkDeviceFaultInfoEXT* pFaultInfo) ATTR_WEAK;
 
 
+  VKAPI_ATTR void VKAPI_CALL radv_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) ATTR_WEAK;
+
+
   VKAPI_ATTR VkResult VKAPI_CALL radv_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL sqtt_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL rra_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL rmv_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
   VKAPI_ATTR VkResult VKAPI_CALL rage2_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL radv_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) ATTR_WEAK;
 
 
   VKAPI_ATTR VkResult VKAPI_CALL radv_MapMemory2KHR(VkDevice device, const VkMemoryMapInfoKHR* pMemoryMapInfo, void** ppData) ATTR_WEAK;
@@ -4505,6 +4610,56 @@ extern const struct vk_device_entrypoint_table rage2_device_entrypoints;
   VKAPI_ATTR void VKAPI_CALL rmv_CmdBindShadersEXT(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderStageFlagBits* pStages, const VkShaderEXT* pShaders) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdBindShadersEXT(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderStageFlagBits* pStages, const VkShaderEXT* pShaders) ATTR_WEAK;
   VKAPI_ATTR void VKAPI_CALL rage2_CmdBindShadersEXT(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderStageFlagBits* pStages, const VkShaderEXT* pShaders) ATTR_WEAK;
+
+
+#ifdef VK_USE_PLATFORM_SCREEN_QNX
+  VKAPI_ATTR VkResult VKAPI_CALL radv_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL sqtt_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rra_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rmv_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rage2_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) ATTR_WEAK;
+
+
+#endif // VK_USE_PLATFORM_SCREEN_QNX
+  VKAPI_ATTR VkResult VKAPI_CALL radv_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL sqtt_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rra_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rmv_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rage2_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR VkResult VKAPI_CALL radv_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL sqtt_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rra_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rmv_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+  VKAPI_ATTR VkResult VKAPI_CALL rage2_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL radv_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL radv_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) ATTR_WEAK;
+
+
+  VKAPI_ATTR void VKAPI_CALL radv_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL sqtt_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rra_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rmv_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL metro_exodus_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
+  VKAPI_ATTR void VKAPI_CALL rage2_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) ATTR_WEAK;
 
 
 

@@ -2,28 +2,8 @@
  * Copyright © 2008 Jérôme Glisse
  * Copyright © 2010 Marek Olšák <maraeo@gmail.com>
  * Copyright © 2015 Advanced Micro Devices, Inc.
- * All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sub license, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS, AUTHORS
- * AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * The above copyright notice and this permission notice (including the
- * next paragraph) shall be included in all copies or substantial portions
- * of the Software.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "amdgpu_cs.h"
@@ -291,7 +271,8 @@ radeon_to_amdgpu_priority(enum radeon_ctx_priority radeon_priority)
 }
 
 static struct radeon_winsys_ctx *amdgpu_ctx_create(struct radeon_winsys *ws,
-                                                   enum radeon_ctx_priority priority)
+                                                   enum radeon_ctx_priority priority,
+                                                   bool allow_context_lost)
 {
    struct amdgpu_ctx *ctx = CALLOC_STRUCT(amdgpu_ctx);
    int r;
@@ -304,7 +285,7 @@ static struct radeon_winsys_ctx *amdgpu_ctx_create(struct radeon_winsys *ws,
 
    ctx->ws = amdgpu_winsys(ws);
    ctx->refcount = 1;
-   ctx->initial_num_total_rejected_cs = ctx->ws->num_total_rejected_cs;
+   ctx->allow_context_lost = allow_context_lost;
 
    r = amdgpu_cs_ctx_create2(ctx->ws->dev, amdgpu_priority, &ctx->ctx);
    if (r) {
@@ -347,22 +328,158 @@ static void amdgpu_ctx_destroy(struct radeon_winsys_ctx *rwctx)
    amdgpu_ctx_unref((struct amdgpu_ctx*)rwctx);
 }
 
+static void amdgpu_pad_gfx_compute_ib(struct amdgpu_winsys *ws, enum amd_ip_type ip_type,
+                                      uint32_t *ib, uint32_t *num_dw, unsigned leave_dw_space)
+{
+   unsigned pad_dw_mask = ws->info.ip[ip_type].ib_pad_dw_mask;
+   unsigned unaligned_dw = (*num_dw + leave_dw_space) & pad_dw_mask;
+
+   if (unaligned_dw) {
+      int remaining = pad_dw_mask + 1 - unaligned_dw;
+
+      /* Only pad by 1 dword with the type-2 NOP if necessary. */
+      if (remaining == 1 && ws->info.gfx_ib_pad_with_type2) {
+         ib[(*num_dw)++] = PKT2_NOP_PAD;
+      } else {
+         /* Pad with a single NOP packet to minimize CP overhead because NOP is a variable-sized
+          * packet. The size of the packet body after the header is always count + 1.
+          * If count == -1, there is no packet body. NOP is the only packet that can have
+          * count == -1, which is the definition of PKT3_NOP_PAD (count == 0x3fff means -1).
+          */
+         ib[(*num_dw)++] = PKT3(PKT3_NOP, remaining - 2, 0);
+         *num_dw += remaining - 1;
+      }
+   }
+   assert(((*num_dw + leave_dw_space) & pad_dw_mask) == 0);
+}
+
+static int amdgpu_submit_gfx_nop(struct amdgpu_ctx *ctx)
+{
+   struct amdgpu_bo_alloc_request request = {0};
+   struct drm_amdgpu_bo_list_in bo_list_in;
+   struct drm_amdgpu_cs_chunk_ib ib_in = {0};
+   amdgpu_bo_handle buf_handle;
+   amdgpu_va_handle va_handle = NULL;
+   struct drm_amdgpu_cs_chunk chunks[2];
+   void *cpu = NULL;
+   uint64_t seq_no;
+   uint64_t va;
+   int r;
+
+   /* Older amdgpu doesn't report if the reset is complete or not. Detect
+    * it by submitting a no-op job. If it reports an error, then assume
+    * that the reset is not complete.
+    */
+   amdgpu_context_handle temp_ctx;
+   r = amdgpu_cs_ctx_create2(ctx->ws->dev, AMDGPU_CTX_PRIORITY_NORMAL, &temp_ctx);
+   if (r)
+      return r;
+
+   request.preferred_heap = AMDGPU_GEM_DOMAIN_VRAM;
+   request.alloc_size = 4096;
+   request.phys_alignment = 4096;
+   r = amdgpu_bo_alloc(ctx->ws->dev, &request, &buf_handle);
+   if (r)
+      goto destroy_ctx;
+
+   r = amdgpu_va_range_alloc(ctx->ws->dev, amdgpu_gpu_va_range_general,
+                 request.alloc_size, request.phys_alignment,
+                 0, &va, &va_handle,
+                 AMDGPU_VA_RANGE_32_BIT | AMDGPU_VA_RANGE_HIGH);
+   if (r)
+      goto destroy_bo;
+   r = amdgpu_bo_va_op_raw(ctx->ws->dev, buf_handle, 0, request.alloc_size, va,
+                           AMDGPU_VM_PAGE_READABLE | AMDGPU_VM_PAGE_WRITEABLE | AMDGPU_VM_PAGE_EXECUTABLE,
+                           AMDGPU_VA_OP_MAP);
+   if (r)
+      goto destroy_bo;
+
+   r = amdgpu_bo_cpu_map(buf_handle, &cpu);
+   if (r)
+      goto destroy_bo;
+
+   unsigned noop_dw_size = ctx->ws->info.ip[AMD_IP_GFX].ib_pad_dw_mask + 1;
+   ((uint32_t*)cpu)[0] = PKT3(PKT3_NOP, noop_dw_size - 2, 0);
+
+   amdgpu_bo_cpu_unmap(buf_handle);
+
+   struct drm_amdgpu_bo_list_entry list;
+   amdgpu_bo_export(buf_handle, amdgpu_bo_handle_type_kms, &list.bo_handle);
+   list.bo_priority = 0;
+
+   bo_list_in.list_handle = ~0;
+   bo_list_in.bo_number = 1;
+   bo_list_in.bo_info_size = sizeof(struct drm_amdgpu_bo_list_entry);
+   bo_list_in.bo_info_ptr = (uint64_t)(uintptr_t)&list;
+
+   ib_in.ip_type = AMD_IP_GFX;
+   ib_in.ib_bytes = noop_dw_size * 4;
+   ib_in.va_start = va;
+
+   chunks[0].chunk_id = AMDGPU_CHUNK_ID_BO_HANDLES;
+   chunks[0].length_dw = sizeof(struct drm_amdgpu_bo_list_in) / 4;
+   chunks[0].chunk_data = (uintptr_t)&bo_list_in;
+
+   chunks[1].chunk_id = AMDGPU_CHUNK_ID_IB;
+   chunks[1].length_dw = sizeof(struct drm_amdgpu_cs_chunk_ib) / 4;
+   chunks[1].chunk_data = (uintptr_t)&ib_in;
+
+   r = amdgpu_cs_submit_raw2(ctx->ws->dev, temp_ctx, 0, 2, chunks, &seq_no);
+
+destroy_bo:
+   if (va_handle)
+      amdgpu_va_range_free(va_handle);
+   amdgpu_bo_free(buf_handle);
+destroy_ctx:
+   amdgpu_cs_ctx_free(temp_ctx);
+
+   return r;
+}
+
+static void
+amdgpu_ctx_set_sw_reset_status(struct radeon_winsys_ctx *rwctx, enum pipe_reset_status status,
+                               const char *format, ...)
+{
+   struct amdgpu_ctx *ctx = (struct amdgpu_ctx*)rwctx;
+
+   /* Don't overwrite the last reset status. */
+   if (ctx->sw_status != PIPE_NO_RESET)
+      return;
+
+   ctx->sw_status = status;
+
+   if (!ctx->allow_context_lost) {
+      va_list args;
+
+      va_start(args, format);
+      vfprintf(stderr, format, args);
+      va_end(args);
+
+      /* Non-robust contexts are allowed to terminate the process. The only alternative is
+       * to skip command submission, which would look like a freeze because nothing is drawn,
+       * which looks like a hang without any reset.
+       */
+      abort();
+   }
+}
+
 static enum pipe_reset_status
 amdgpu_ctx_query_reset_status(struct radeon_winsys_ctx *rwctx, bool full_reset_only,
-                              bool *needs_reset)
+                              bool *needs_reset, bool *reset_completed)
 {
    struct amdgpu_ctx *ctx = (struct amdgpu_ctx*)rwctx;
    int r;
 
    if (needs_reset)
       *needs_reset = false;
+   if (reset_completed)
+      *reset_completed = false;
 
    /* Return a failure due to a GPU hang. */
    if (ctx->ws->info.drm_minor >= 24) {
       uint64_t flags;
 
-      if (full_reset_only &&
-          ctx->initial_num_total_rejected_cs == ctx->ws->num_total_rejected_cs) {
+      if (full_reset_only && ctx->sw_status == PIPE_NO_RESET) {
          /* If the caller is only interested in full reset (= wants to ignore soft
           * recoveries), we can use the rejected cs count as a quick first check.
           */
@@ -376,6 +493,25 @@ amdgpu_ctx_query_reset_status(struct radeon_winsys_ctx *rwctx, bool full_reset_o
       }
 
       if (flags & AMDGPU_CTX_QUERY2_FLAGS_RESET) {
+         if (reset_completed) {
+            /* The ARB_robustness spec says:
+             *
+             *    If a reset status other than NO_ERROR is returned and subsequent
+             *    calls return NO_ERROR, the context reset was encountered and
+             *    completed. If a reset status is repeatedly returned, the context may
+             *    be in the process of resetting.
+             *
+             * Starting with drm_minor >= 54 amdgpu reports if the reset is complete,
+             * so don't do anything special. On older kernels, submit a no-op cs. If it
+             * succeeds then assume the reset is complete.
+             */
+            if (!(flags & AMDGPU_CTX_QUERY2_FLAGS_RESET_IN_PROGRESS))
+               *reset_completed = true;
+
+            if (ctx->ws->info.drm_minor < 54 && ctx->ws->info.has_graphics)
+               *reset_completed = amdgpu_submit_gfx_nop(ctx) == 0;
+         }
+
          if (needs_reset)
                *needs_reset = flags & AMDGPU_CTX_QUERY2_FLAGS_VRAMLOST;
          if (flags & AMDGPU_CTX_QUERY2_FLAGS_GUILTY)
@@ -404,12 +540,11 @@ amdgpu_ctx_query_reset_status(struct radeon_winsys_ctx *rwctx, bool full_reset_o
       }
    }
 
-   /* Return a failure due to a rejected command submission. */
-   if (ctx->ws->num_total_rejected_cs > ctx->initial_num_total_rejected_cs) {
+   /* Return a failure due to SW issues. */
+   if (ctx->sw_status != PIPE_NO_RESET) {
       if (needs_reset)
          *needs_reset = true;
-      return ctx->rejected_any_cs ? PIPE_GUILTY_CONTEXT_RESET :
-                                    PIPE_INNOCENT_CONTEXT_RESET;
+      return ctx->sw_status;
    }
    if (needs_reset)
       *needs_reset = false;
@@ -841,11 +976,11 @@ static void amdgpu_set_ib_size(struct radeon_cmdbuf *rcs, struct amdgpu_ib *ib)
 }
 
 static void amdgpu_ib_finalize(struct amdgpu_winsys *ws, struct radeon_cmdbuf *rcs,
-                               struct amdgpu_ib *ib)
+                               struct amdgpu_ib *ib, enum amd_ip_type ip_type)
 {
    amdgpu_set_ib_size(rcs, ib);
    ib->used_ib_space += rcs->current.cdw * 4;
-   ib->used_ib_space = align(ib->used_ib_space, ws->info.ib_alignment);
+   ib->used_ib_space = align(ib->used_ib_space, ws->info.ip[ip_type].ib_alignment);
    ib->max_ib_size = MAX2(ib->max_ib_size, rcs->prev_dw + rcs->current.cdw);
 }
 
@@ -961,8 +1096,7 @@ amdgpu_cs_create(struct radeon_cmdbuf *rcs,
                  enum amd_ip_type ip_type,
                  void (*flush)(void *ctx, unsigned flags,
                                struct pipe_fence_handle **fence),
-                 void *flush_ctx,
-                 bool allow_context_lost)
+                 void *flush_ctx)
 {
    struct amdgpu_ctx *ctx = (struct amdgpu_ctx*)rwctx;
    struct amdgpu_cs *cs;
@@ -979,7 +1113,6 @@ amdgpu_cs_create(struct radeon_cmdbuf *rcs,
    cs->flush_cs = flush;
    cs->flush_data = flush_ctx;
    cs->ip_type = ip_type;
-   cs->allow_context_lost = allow_context_lost;
    cs->noop = ctx->ws->noop_cs;
    cs->has_chaining = ctx->ws->info.gfx_level >= GFX7 &&
                       (ip_type == AMD_IP_GFX || ip_type == AMD_IP_COMPUTE);
@@ -1030,13 +1163,6 @@ amdgpu_cs_create(struct radeon_cmdbuf *rcs,
    return true;
 }
 
-static void amdgpu_cs_set_preamble(struct radeon_cmdbuf *cs, const uint32_t *preamble_ib,
-                                   unsigned preamble_num_dw, bool preamble_changed)
-{
-   /* TODO: implement this properly */
-   radeon_emit_array(cs, preamble_ib, preamble_num_dw);
-}
-
 static bool
 amdgpu_cs_setup_preemption(struct radeon_cmdbuf *rcs, const uint32_t *preamble_ib,
                            unsigned preamble_num_dw)
@@ -1044,12 +1170,12 @@ amdgpu_cs_setup_preemption(struct radeon_cmdbuf *rcs, const uint32_t *preamble_i
    struct amdgpu_cs *cs = amdgpu_cs(rcs);
    struct amdgpu_winsys *ws = cs->ws;
    struct amdgpu_cs_context *csc[2] = {&cs->csc1, &cs->csc2};
-   unsigned size = align(preamble_num_dw * 4, ws->info.ib_alignment);
+   unsigned size = align(preamble_num_dw * 4, ws->info.ip[AMD_IP_GFX].ib_alignment);
    struct pb_buffer *preamble_bo;
    uint32_t *map;
 
    /* Create the preamble IB buffer. */
-   preamble_bo = amdgpu_bo_create(ws, size, ws->info.ib_alignment,
+   preamble_bo = amdgpu_bo_create(ws, size, ws->info.ip[AMD_IP_GFX].ib_alignment,
                                   RADEON_DOMAIN_VRAM,
                                   RADEON_FLAG_NO_INTERPROCESS_SHARING |
                                   RADEON_FLAG_GTT_WC |
@@ -1068,9 +1194,7 @@ amdgpu_cs_setup_preemption(struct radeon_cmdbuf *rcs, const uint32_t *preamble_i
    memcpy(map, preamble_ib, preamble_num_dw * 4);
 
    /* Pad the IB. */
-   uint32_t ib_pad_dw_mask = ws->info.ib_pad_dw_mask[cs->ip_type];
-   while (preamble_num_dw & ib_pad_dw_mask)
-      map[preamble_num_dw++] = PKT3_NOP_PAD;
+   amdgpu_pad_gfx_compute_ib(ws, cs->ip_type, map, &preamble_num_dw, 0);
    amdgpu_bo_unmap(&ws->dummy_ws.base, preamble_bo);
 
    for (unsigned i = 0; i < 2; i++) {
@@ -1144,17 +1268,14 @@ static bool amdgpu_cs_check_space(struct radeon_cmdbuf *rcs, unsigned dw)
    rcs->current.max_dw += cs_epilog_dw;
 
    /* Pad with NOPs but leave 4 dwords for INDIRECT_BUFFER. */
-   uint32_t ib_pad_dw_mask = cs->ws->info.ib_pad_dw_mask[cs->ip_type];
-   while ((rcs->current.cdw & ib_pad_dw_mask) != ib_pad_dw_mask - 3)
-      radeon_emit(rcs, PKT3_NOP_PAD);
+   amdgpu_pad_gfx_compute_ib(cs->ws, cs->ip_type, rcs->current.buf, &rcs->current.cdw, 4);
 
-   radeon_emit(rcs, PKT3(PKT3_INDIRECT_BUFFER_CIK, 2, 0));
+   radeon_emit(rcs, PKT3(PKT3_INDIRECT_BUFFER, 2, 0));
    radeon_emit(rcs, va);
    radeon_emit(rcs, va >> 32);
    uint32_t *new_ptr_ib_size = &rcs->current.buf[rcs->current.cdw++];
-   assert((rcs->current.cdw & ib_pad_dw_mask) == 0);
 
-   assert((rcs->current.cdw & 7) == 0);
+   assert((rcs->current.cdw & cs->ws->info.ip[cs->ip_type].ib_pad_dw_mask) == 0);
    assert(rcs->current.cdw <= rcs->current.max_dw);
 
    amdgpu_set_ib_size(rcs, ib);
@@ -1490,7 +1611,7 @@ static void amdgpu_cs_submit_ib(void *job, void *gdata, int thread_index)
    if (acs->ip_type == AMD_IP_GFX)
       ws->gfx_bo_list_counter += cs->num_real_buffers;
 
-   struct drm_amdgpu_cs_chunk chunks[7];
+   struct drm_amdgpu_cs_chunk chunks[8];
    unsigned num_chunks = 0;
 
    /* BO list */
@@ -1565,6 +1686,13 @@ static void amdgpu_cs_submit_ib(void *job, void *gdata, int thread_index)
       num_chunks++;
    }
 
+   if (ws->info.has_fw_based_shadowing && acs->mcbp_fw_shadow_chunk.shadow_va) {
+      chunks[num_chunks].chunk_id = AMDGPU_CHUNK_ID_CP_GFX_SHADOW;
+      chunks[num_chunks].length_dw = sizeof(struct drm_amdgpu_cs_chunk_cp_gfx_shadow) / 4;
+      chunks[num_chunks].chunk_data = (uintptr_t)&acs->mcbp_fw_shadow_chunk;
+      num_chunks++;
+   }
+
    /* Fence */
    if (has_user_fence) {
       chunks[num_chunks].chunk_id = AMDGPU_CHUNK_ID_FENCE;
@@ -1600,16 +1728,17 @@ static void amdgpu_cs_submit_ib(void *job, void *gdata, int thread_index)
 
    if (noop && acs->ip_type == AMD_IP_GFX) {
       /* Reduce the IB size and fill it with NOP to make it like an empty IB. */
-      unsigned noop_size = MIN2(cs->ib[IB_MAIN].ib_bytes, ws->info.ib_alignment);
+      unsigned noop_dw_size = ws->info.ip[AMD_IP_GFX].ib_pad_dw_mask + 1;
+      assert(cs->ib[IB_MAIN].ib_bytes / 4 >= noop_dw_size);
 
-      cs->ib_main_addr[0] = PKT3(PKT3_NOP, noop_size / 4 - 2, 0);
-      cs->ib[IB_MAIN].ib_bytes = noop_size;
+      cs->ib_main_addr[0] = PKT3(PKT3_NOP, noop_dw_size - 2, 0);
+      cs->ib[IB_MAIN].ib_bytes = noop_dw_size * 4;
       noop = false;
    }
 
    assert(num_chunks <= ARRAY_SIZE(chunks));
 
-   if (unlikely(acs->ctx->rejected_any_cs)) {
+   if (unlikely(acs->ctx->sw_status != PIPE_NO_RESET)) {
       r = -ECANCELED;
    } else if (unlikely(noop)) {
       r = 0;
@@ -1653,26 +1782,18 @@ static void amdgpu_cs_submit_ib(void *job, void *gdata, int thread_index)
 
 cleanup:
    if (unlikely(r)) {
-      if (!acs->allow_context_lost) {
-         /* Non-robust contexts are allowed to terminate the process. The only alternative is
-          * to skip command submission, which would look like a freeze because nothing is drawn,
-          * which is not a useful state to be in under any circumstances.
-          */
-         fprintf(stderr, "amdgpu: The CS has been rejected (%i), but the context isn't robust.\n", r);
-         fprintf(stderr, "amdgpu: The process will be terminated.\n");
-         exit(1);
-      }
-
-      fprintf(stderr, "amdgpu: The CS has been rejected (%i). Recreate the context.\n", r);
-      if (!acs->ctx->rejected_any_cs)
-         ws->num_total_rejected_cs++;
-      acs->ctx->rejected_any_cs = true;
+      amdgpu_ctx_set_sw_reset_status((struct radeon_winsys_ctx*)acs->ctx,
+                                     PIPE_GUILTY_CONTEXT_RESET,
+                                     "amdgpu: The CS has been rejected (%i).\n", r);
    }
 
    /* If there was an error, signal the fence, because it won't be signalled
     * by the hardware. */
    if (r || noop)
       amdgpu_fence_signalled(cs->fence);
+
+   if (unlikely(ws->info.has_fw_based_shadowing && acs->mcbp_fw_shadow_chunk.flags && r == 0))
+      acs->mcbp_fw_shadow_chunk.flags = 0;
 
    cs->error_code = r;
 
@@ -1703,7 +1824,7 @@ static int amdgpu_cs_flush(struct radeon_cmdbuf *rcs,
    struct amdgpu_cs *cs = amdgpu_cs(rcs);
    struct amdgpu_winsys *ws = cs->ws;
    int error_code = 0;
-   uint32_t ib_pad_dw_mask = ws->info.ib_pad_dw_mask[cs->ip_type];
+   uint32_t ib_pad_dw_mask = ws->info.ip[cs->ip_type].ib_pad_dw_mask;
 
    rcs->current.max_dw += amdgpu_cs_epilog_dws(cs);
 
@@ -1720,13 +1841,7 @@ static int amdgpu_cs_flush(struct radeon_cmdbuf *rcs,
       break;
    case AMD_IP_GFX:
    case AMD_IP_COMPUTE:
-      if (ws->info.gfx_ib_pad_with_type2) {
-         while (rcs->current.cdw & ib_pad_dw_mask)
-            radeon_emit(rcs, PKT2_NOP_PAD);
-      } else {
-         while (rcs->current.cdw & ib_pad_dw_mask)
-            radeon_emit(rcs, PKT3_NOP_PAD);
-      }
+      amdgpu_pad_gfx_compute_ib(ws, cs->ip_type, rcs->current.buf, &rcs->current.cdw, 0);
       if (cs->ip_type == AMD_IP_GFX)
          ws->gfx_ib_size_counter += (rcs->prev_dw + rcs->current.cdw) * 4;
       break;
@@ -1762,7 +1877,7 @@ static int amdgpu_cs_flush(struct radeon_cmdbuf *rcs,
       struct amdgpu_cs_context *cur = cs->csc;
 
       /* Set IB sizes. */
-      amdgpu_ib_finalize(ws, rcs, &cs->main);
+      amdgpu_ib_finalize(ws, rcs, &cs->main, cs->ip_type);
 
       /* Create a fence. */
       amdgpu_fence_reference(&cur->fence, NULL);
@@ -1855,13 +1970,23 @@ static bool amdgpu_bo_is_referenced(struct radeon_cmdbuf *rcs,
    return amdgpu_bo_is_referenced_by_cs_with_usage(cs, bo, usage);
 }
 
+static void amdgpu_cs_set_mcbp_reg_shadowing_va(struct radeon_cmdbuf *rcs,uint64_t regs_va,
+                                                                   uint64_t csa_va)
+{
+   struct amdgpu_cs *cs = amdgpu_cs(rcs);
+   cs->mcbp_fw_shadow_chunk.shadow_va = regs_va;
+   cs->mcbp_fw_shadow_chunk.csa_va = csa_va;
+   cs->mcbp_fw_shadow_chunk.gds_va = 0;
+   cs->mcbp_fw_shadow_chunk.flags = AMDGPU_CS_CHUNK_CP_GFX_SHADOW_FLAGS_INIT_SHADOW;
+}
+
 void amdgpu_cs_init_functions(struct amdgpu_screen_winsys *ws)
 {
    ws->base.ctx_create = amdgpu_ctx_create;
    ws->base.ctx_destroy = amdgpu_ctx_destroy;
+   ws->base.ctx_set_sw_reset_status = amdgpu_ctx_set_sw_reset_status;
    ws->base.ctx_query_reset_status = amdgpu_ctx_query_reset_status;
    ws->base.cs_create = amdgpu_cs_create;
-   ws->base.cs_set_preamble = amdgpu_cs_set_preamble;
    ws->base.cs_setup_preemption = amdgpu_cs_setup_preemption;
    ws->base.cs_destroy = amdgpu_cs_destroy;
    ws->base.cs_add_buffer = amdgpu_cs_add_buffer;
@@ -1880,4 +2005,7 @@ void amdgpu_cs_init_functions(struct amdgpu_screen_winsys *ws)
    ws->base.fence_import_sync_file = amdgpu_fence_import_sync_file;
    ws->base.fence_export_sync_file = amdgpu_fence_export_sync_file;
    ws->base.export_signalled_sync_file = amdgpu_export_signalled_sync_file;
+
+   if (ws->aws->info.has_fw_based_shadowing)
+      ws->base.cs_set_mcbp_reg_shadowing_va = amdgpu_cs_set_mcbp_reg_shadowing_va;
 }

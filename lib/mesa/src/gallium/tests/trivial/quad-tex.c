@@ -93,7 +93,7 @@ static void init_prog(struct program *p)
 	ASSERTED int ret;
 
 	/* find a hardware device */
-	ret = pipe_loader_probe(&p->dev, 1);
+	ret = pipe_loader_probe(&p->dev, 1, false);
 	assert(ret);
 
 	/* init a pipe screen */
@@ -264,18 +264,20 @@ static void init_prog(struct program *p)
 	p->velem.velems[0].instance_divisor = 0;
 	p->velem.velems[0].vertex_buffer_index = 0;
 	p->velem.velems[0].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
+   p->velem.velems[0].src_stride = 2 * 4 * sizeof(float);
 
 	p->velem.velems[1].src_offset = 1 * 4 * sizeof(float); /* offset 16, second element */
 	p->velem.velems[1].instance_divisor = 0;
 	p->velem.velems[1].vertex_buffer_index = 0;
 	p->velem.velems[1].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
+   p->velem.velems[1].src_stride = 2 * 4 * sizeof(float);
 
 	/* vertex shader */
 	{
 		const enum tgsi_semantic semantic_names[] =
                    { TGSI_SEMANTIC_POSITION, TGSI_SEMANTIC_GENERIC };
 		const uint semantic_indexes[] = { 0, 0 };
-		p->vs = util_make_vertex_passthrough_shader(p->pipe, 2, semantic_names, semantic_indexes, FALSE);
+		p->vs = util_make_vertex_passthrough_shader(p->pipe, 2, semantic_names, semantic_indexes, false);
 	}
 
 	/* fragment shader */
@@ -335,8 +337,8 @@ static void draw(struct program *p)
 	cso_set_vertex_elements(p->cso, &p->velem);
 
 	util_draw_vertex_buffer(p->pipe, p->cso,
-	                        p->vbuf, 0, 0,
-	                        PIPE_PRIM_QUADS,
+	                        p->vbuf, 0,
+	                        MESA_PRIM_QUADS,
 	                        4,  /* verts */
 	                        2); /* attribs/vert */
 

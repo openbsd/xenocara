@@ -28,6 +28,71 @@
 #include <perfetto.h>
 
 
+UNUSED static const char *intel_tracepoint_names[] = {
+   "intel_begin_frame",
+   "intel_end_frame",
+   "intel_begin_queue_annotation",
+   "intel_end_queue_annotation",
+   "intel_begin_batch",
+   "intel_end_batch",
+   "intel_begin_cmd_buffer",
+   "intel_end_cmd_buffer",
+   "intel_begin_cmd_buffer_annotation",
+   "intel_end_cmd_buffer_annotation",
+   "intel_begin_xfb",
+   "intel_end_xfb",
+   "intel_begin_render_pass",
+   "intel_end_render_pass",
+   "intel_begin_blorp",
+   "intel_end_blorp",
+   "intel_begin_generate_draws",
+   "intel_end_generate_draws",
+   "intel_begin_query_clear_blorp",
+   "intel_end_query_clear_blorp",
+   "intel_begin_query_clear_cs",
+   "intel_end_query_clear_cs",
+   "intel_begin_query_copy_cs",
+   "intel_end_query_copy_cs",
+   "intel_begin_query_copy_shader",
+   "intel_end_query_copy_shader",
+   "intel_begin_draw",
+   "intel_end_draw",
+   "intel_begin_draw_multi",
+   "intel_end_draw_multi",
+   "intel_begin_draw_indexed",
+   "intel_end_draw_indexed",
+   "intel_begin_draw_indexed_multi",
+   "intel_end_draw_indexed_multi",
+   "intel_begin_draw_indirect_byte_count",
+   "intel_end_draw_indirect_byte_count",
+   "intel_begin_draw_indirect",
+   "intel_end_draw_indirect",
+   "intel_begin_draw_indexed_indirect",
+   "intel_end_draw_indexed_indirect",
+   "intel_begin_draw_indirect_count",
+   "intel_end_draw_indirect_count",
+   "intel_begin_draw_indexed_indirect_count",
+   "intel_end_draw_indexed_indirect_count",
+   "intel_begin_draw_mesh",
+   "intel_end_draw_mesh",
+   "intel_begin_draw_mesh_indirect",
+   "intel_end_draw_mesh_indirect",
+   "intel_begin_draw_mesh_indirect_count",
+   "intel_end_draw_mesh_indirect_count",
+   "intel_begin_compute",
+   "intel_end_compute",
+   "intel_begin_trace_copy",
+   "intel_end_trace_copy",
+   "intel_begin_trace_copy_cb",
+   "intel_end_trace_copy_cb",
+   "intel_begin_as_build",
+   "intel_end_as_build",
+   "intel_begin_rays",
+   "intel_end_rays",
+   "intel_begin_stall",
+   "intel_end_stall",
+};
+
 static void UNUSED
 trace_payload_as_extra_intel_begin_frame(perfetto::protos::pbzero::GpuRenderStageEvent *event,
                                      const struct trace_intel_begin_frame *payload)
@@ -282,6 +347,90 @@ static void UNUSED
 trace_payload_as_extra_intel_end_generate_draws(perfetto::protos::pbzero::GpuRenderStageEvent *event,
                                      const struct trace_intel_end_generate_draws *payload)
 {
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_query_clear_blorp(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_query_clear_blorp *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_query_clear_blorp(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_query_clear_blorp *payload)
+{
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("count");
+
+      sprintf(buf, "%u", payload->count);
+
+      data->set_value(buf);
+   }
+
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_query_clear_cs(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_query_clear_cs *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_query_clear_cs(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_query_clear_cs *payload)
+{
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("count");
+
+      sprintf(buf, "%u", payload->count);
+
+      data->set_value(buf);
+   }
+
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_query_copy_cs(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_query_copy_cs *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_query_copy_cs(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_query_copy_cs *payload)
+{
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("count");
+
+      sprintf(buf, "%u", payload->count);
+
+      data->set_value(buf);
+   }
+
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_query_copy_shader(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_query_copy_shader *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_query_copy_shader(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_query_copy_shader *payload)
+{
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("count");
+
+      sprintf(buf, "%u", payload->count);
+
+      data->set_value(buf);
+   }
+
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw(perfetto::protos::pbzero::GpuRenderStageEvent *event,
@@ -597,6 +746,85 @@ static void UNUSED
 trace_payload_as_extra_intel_end_trace_copy(perfetto::protos::pbzero::GpuRenderStageEvent *event,
                                      const struct trace_intel_end_trace_copy *payload)
 {
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("count");
+
+      sprintf(buf, "%u", payload->count);
+
+      data->set_value(buf);
+   }
+
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_trace_copy_cb(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_trace_copy_cb *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_trace_copy_cb(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_trace_copy_cb *payload)
+{
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("count");
+
+      sprintf(buf, "%u", payload->count);
+
+      data->set_value(buf);
+   }
+
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_as_build(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_as_build *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_as_build(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_as_build *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_rays(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_rays *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_rays(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_rays *payload)
+{
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("group_x");
+
+      sprintf(buf, "%u", payload->group_x);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("group_y");
+
+      sprintf(buf, "%u", payload->group_y);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("group_z");
+
+      sprintf(buf, "%u", payload->group_z);
+
+      data->set_value(buf);
+   }
+
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_stall(perfetto::protos::pbzero::GpuRenderStageEvent *event,

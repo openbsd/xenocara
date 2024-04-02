@@ -36,7 +36,7 @@
 #include "lp_setup.h"
 #include "lp_state.h"
 
-
+#include "tgsi/tgsi_from_mesa.h"
 
 /**
  * The vertex info describes how to convert the post-transformed vertices
@@ -48,7 +48,6 @@
 static void
 compute_vertex_info(struct llvmpipe_context *llvmpipe)
 {
-   const struct tgsi_shader_info *fsInfo = &llvmpipe->fs->info.base;
    struct vertex_info *vinfo = &llvmpipe->vertex_info;
 
    draw_prepare_shader_outputs(llvmpipe->draw);
@@ -80,45 +79,57 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
 
    draw_emit_vertex_attr(vinfo, EMIT_4F, vs_index);
 
-   for (unsigned i = 0; i < fsInfo->num_inputs; i++) {
-      /*
-       * Search for each input in current vs output:
-       */
-      vs_index = draw_find_shader_output(llvmpipe->draw,
-                                         fsInfo->input_semantic_name[i],
-                                         fsInfo->input_semantic_index[i]);
+   struct nir_shader *nir = llvmpipe->fs->base.ir.nir;
+   uint64_t slot_emitted = 0;
+   nir_foreach_shader_in_variable(var, nir) {
+      unsigned tgsi_semantic_name, tgsi_semantic_index;
+      unsigned slots = nir_variable_count_slots(var, var->type);
+      tgsi_get_gl_varying_semantic(var->data.location,
+                                   true,
+                                   &tgsi_semantic_name,
+                                   &tgsi_semantic_index);
 
-      if (fsInfo->input_semantic_name[i] == TGSI_SEMANTIC_COLOR &&
-          fsInfo->input_semantic_index[i] < 2) {
-         int idx = fsInfo->input_semantic_index[i];
-         llvmpipe->color_slot[idx] = (int)vinfo->num_attribs;
-      }
+      for (unsigned i = 0; i < slots; i++) {
+         vs_index = draw_find_shader_output(llvmpipe->draw,
+                                            tgsi_semantic_name,
+                                            tgsi_semantic_index);
+         if (slot_emitted & BITFIELD64_BIT(vs_index)) {
+            tgsi_semantic_index++;
+            continue;
+         }
 
-      if (fsInfo->input_semantic_name[i] == TGSI_SEMANTIC_FACE) {
-         llvmpipe->face_slot = (int)vinfo->num_attribs;
-         draw_emit_vertex_attr(vinfo, EMIT_4F, vs_index);
-      /*
-       * For vp index and layer, if the fs requires them but the vs doesn't
-       * provide them, draw (vbuf) will give us the required 0 (slot -1).
-       * (This means in this case we'll also use those slots in setup, which
-       * isn't necessary but they'll contain the correct (0) value.)
-       */
-      } else if (fsInfo->input_semantic_name[i] ==
-                 TGSI_SEMANTIC_VIEWPORT_INDEX) {
-         llvmpipe->viewport_index_slot = (int)vinfo->num_attribs;
-         draw_emit_vertex_attr(vinfo, EMIT_4F, vs_index);
-      } else if (fsInfo->input_semantic_name[i] == TGSI_SEMANTIC_LAYER) {
-         llvmpipe->layer_slot = (int)vinfo->num_attribs;
-         draw_emit_vertex_attr(vinfo, EMIT_4F, vs_index);
-      } else {
-         /*
-          * Note that we'd actually want to skip position (as we won't use
-          * the attribute in the fs) but can't. The reason is that we don't
-          * actually have an input/output map for setup (even though it looks
-          * like we do...). Could adjust for this though even without a map
-          * (in llvmpipe_create_fs_state()).
-          */
-         draw_emit_vertex_attr(vinfo, EMIT_4F, vs_index);
+         if (tgsi_semantic_name == TGSI_SEMANTIC_COLOR &&
+             tgsi_semantic_index < 2) {
+            int idx = tgsi_semantic_index;
+            llvmpipe->color_slot[idx] = (int)vinfo->num_attribs;
+         }
+         if (tgsi_semantic_name == TGSI_SEMANTIC_FACE) {
+            llvmpipe->face_slot = (int)vinfo->num_attribs;
+            draw_emit_vertex_attr(vinfo, EMIT_4F, vs_index);
+            /*
+             * For vp index and layer, if the fs requires them but the vs doesn't
+             * provide them, draw (vbuf) will give us the required 0 (slot -1).
+             * (This means in this case we'll also use those slots in setup, which
+             * isn't necessary but they'll contain the correct (0) value.)
+             */
+         } else if (tgsi_semantic_name == TGSI_SEMANTIC_VIEWPORT_INDEX) {
+            llvmpipe->viewport_index_slot = (int)vinfo->num_attribs;
+            draw_emit_vertex_attr(vinfo, EMIT_4F, vs_index);
+         } else if (tgsi_semantic_name == TGSI_SEMANTIC_LAYER) {
+            llvmpipe->layer_slot = (int)vinfo->num_attribs;
+            draw_emit_vertex_attr(vinfo, EMIT_4F, vs_index);
+         } else {
+            /*
+             * Note that we'd actually want to skip position (as we won't use
+             * the attribute in the fs) but can't. The reason is that we don't
+             * actually have an input/output map for setup (even though it looks
+             * like we do...). Could adjust for this though even without a map
+             * (in llvmpipe_create_fs_state()).
+             */
+            draw_emit_vertex_attr(vinfo, EMIT_4F, vs_index);
+         }
+         slot_emitted |= BITFIELD64_BIT(vs_index);
+         tgsi_semantic_index++;
       }
    }
 
@@ -127,7 +138,8 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
     * ordinary fs register above. But we still need to assign a vs output
     * location so draw can inject face info for unfilled tris.
     */
-   if (llvmpipe->face_slot < 0 && fsInfo->uses_frontface) {
+   if (llvmpipe->face_slot < 0 &&
+       BITSET_TEST(nir->info.system_values_read, SYSTEM_VALUE_FRONT_FACE)) {
       vs_index = draw_find_shader_output(llvmpipe->draw,
                                          TGSI_SEMANTIC_FACE, 0);
       llvmpipe->face_slot = (int)vinfo->num_attribs;
@@ -186,18 +198,20 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
 static void
 check_linear_rasterizer(struct llvmpipe_context *lp)
 {
-   const bool bgr8 =
+   const bool valid_cb_format =
       (lp->framebuffer.nr_cbufs == 1 && lp->framebuffer.cbufs[0] &&
        util_res_sample_count(lp->framebuffer.cbufs[0]->texture) == 1 &&
        lp->framebuffer.cbufs[0]->texture->target == PIPE_TEXTURE_2D &&
        (lp->framebuffer.cbufs[0]->format == PIPE_FORMAT_B8G8R8A8_UNORM ||
-        lp->framebuffer.cbufs[0]->format == PIPE_FORMAT_B8G8R8X8_UNORM));
+        lp->framebuffer.cbufs[0]->format == PIPE_FORMAT_B8G8R8X8_UNORM ||
+        lp->framebuffer.cbufs[0]->format == PIPE_FORMAT_R8G8B8A8_UNORM ||
+        lp->framebuffer.cbufs[0]->format == PIPE_FORMAT_R8G8B8X8_UNORM));
 
    /* permit_linear means guardband, hence fake scissor, which we can only
     * handle if there's just one vp. */
    const bool single_vp = lp->viewport_index_slot < 0;
    const bool permit_linear = (!lp->framebuffer.zsbuf &&
-                               bgr8 &&
+                               valid_cb_format &&
                                single_vp);
 
    /* Tell draw that we're happy doing our own x/y clipping.
@@ -206,12 +220,12 @@ check_linear_rasterizer(struct llvmpipe_context *lp)
    if (lp->permit_linear_rasterizer != permit_linear) {
       lp->permit_linear_rasterizer = permit_linear;
       lp_setup_set_linear_mode(lp->setup, permit_linear);
-      clipping_changed = TRUE;
+      clipping_changed = true;
    }
 
    if (lp->single_vp != single_vp) {
       lp->single_vp = single_vp;
-      clipping_changed = TRUE;
+      clipping_changed = true;
    }
 
    /* Disable xy clipping in linear mode.
@@ -228,8 +242,8 @@ check_linear_rasterizer(struct llvmpipe_context *lp)
     */
    if (clipping_changed) {
       draw_set_driver_clipping(lp->draw,
-                               FALSE, // bypass_clip_xy
-                               FALSE, //bypass_clip_z
+                               false, // bypass_clip_xy
+                               false, //bypass_clip_z
                                permit_linear, // guard_band_xy,
                                single_vp); // bypass_clip_points)
    }
@@ -268,12 +282,19 @@ llvmpipe_update_derived(struct llvmpipe_context *llvmpipe)
       llvmpipe->dirty |= LP_NEW_SAMPLER_VIEW;
    }
 
+   if (llvmpipe->dirty & (LP_NEW_TASK))
+      llvmpipe_update_task_shader(llvmpipe);
+
+   if (llvmpipe->dirty & (LP_NEW_MESH))
+      llvmpipe_update_mesh_shader(llvmpipe);
+
    /* This needs LP_NEW_RASTERIZER because of draw_prepare_shader_outputs(). */
    if (llvmpipe->dirty & (LP_NEW_RASTERIZER |
                           LP_NEW_FS |
                           LP_NEW_GS |
                           LP_NEW_TCS |
                           LP_NEW_TES |
+                          LP_NEW_MESH |
                           LP_NEW_VS))
       compute_vertex_info(llvmpipe);
 
@@ -293,8 +314,8 @@ llvmpipe_update_derived(struct llvmpipe_context *llvmpipe)
                           LP_NEW_RASTERIZER |
                           LP_NEW_SAMPLE_MASK |
                           LP_NEW_DEPTH_STENCIL_ALPHA)) {
-      boolean discard =
-         llvmpipe->rasterizer ? llvmpipe->rasterizer->rasterizer_discard : FALSE;
+      bool discard =
+         llvmpipe->rasterizer ? llvmpipe->rasterizer->rasterizer_discard : false;
       lp_setup_set_rasterizer_discard(llvmpipe->setup, discard);
    }
 
@@ -357,8 +378,10 @@ llvmpipe_update_derived(struct llvmpipe_context *llvmpipe)
                              llvmpipe->viewports);
    }
 
+   llvmpipe_task_update_derived(llvmpipe);
+   llvmpipe_mesh_update_derived(llvmpipe);
+
    llvmpipe_update_derived_clear(llvmpipe);
 
    llvmpipe->dirty = 0;
 }
-

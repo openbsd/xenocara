@@ -303,9 +303,7 @@ void
 _mesa_update_texture_object_swizzle(struct gl_context *ctx,
                                     struct gl_texture_object *texObj)
 {
-   if (texObj->Attrib.BaseLevel >= MAX_TEXTURE_LEVELS)
-      return;
-   const struct gl_texture_image *img = texObj->Image[0][texObj->Attrib.BaseLevel];
+   const struct gl_texture_image *img = _mesa_base_tex_image(texObj);
    if (!img)
       return;
 
@@ -819,7 +817,8 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
             return;
          }
          if (t->Image[face][baseLevel]->InternalFormat !=
-             baseImage->InternalFormat) {
+             baseImage->InternalFormat ||
+             t->Image[face][baseLevel]->TexFormat != baseImage->TexFormat) {
             incomplete(t, BASE, "Cube face format mismatch");
             return;
          }
@@ -878,7 +877,8 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
                   incomplete(t, MIPMAP, "TexImage[%d] is missing", i);
                   return;
                }
-               if (img->InternalFormat != baseImage->InternalFormat) {
+               if (img->InternalFormat != baseImage->InternalFormat ||
+                   img->TexFormat != baseImage->TexFormat) {
                   incomplete(t, MIPMAP, "Format[i] != Format[baseLevel]");
                   return;
                }
@@ -1084,12 +1084,27 @@ _mesa_get_fallback_texture(struct gl_context *ctx, gl_texture_index tex, bool is
          /* initialize level[0] texture image */
          texImage = _mesa_get_tex_image(ctx, texObj, faceTarget, 0);
 
-         _mesa_init_teximage_fields(ctx, texImage,
-                                    width,
-                                    (dims > 1) ? height : 1,
-                                    (dims > 2) ? depth : 1,
-                                    0, /* border */
-                                    is_depth ? GL_DEPTH_COMPONENT : GL_RGBA, texFormat);
+         GLenum internalFormat = is_depth ? GL_DEPTH_COMPONENT : GL_RGBA;
+         if (tex == TEXTURE_2D_MULTISAMPLE_INDEX ||
+             tex == TEXTURE_2D_MULTISAMPLE_ARRAY_INDEX) {
+            int samples[16];
+            st_QueryInternalFormat(ctx, 0, internalFormat, GL_SAMPLES, samples);
+            _mesa_init_teximage_fields_ms(ctx, texImage,
+                                          width,
+                                          (dims > 1) ? height : 1,
+                                          (dims > 2) ? depth : 1,
+                                          0, /* border */
+                                          internalFormat, texFormat,
+                                          samples[0],
+                                          GL_TRUE);
+         } else {
+            _mesa_init_teximage_fields(ctx, texImage,
+                                       width,
+                                       (dims > 1) ? height : 1,
+                                       (dims > 2) ? depth : 1,
+                                       0, /* border */
+                                       internalFormat, texFormat);
+         }
          _mesa_update_texture_object_swizzle(ctx, texObj);
          if (ctx->st->can_null_texture && is_depth) {
             texObj->NullTexture = GL_TRUE;

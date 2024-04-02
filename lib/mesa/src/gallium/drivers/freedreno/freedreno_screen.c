@@ -125,6 +125,14 @@ fd_screen_get_device_vendor(struct pipe_screen *pscreen)
    return "Qualcomm";
 }
 
+static void
+fd_get_sample_pixel_grid(struct pipe_screen *pscreen, unsigned sample_count,
+                         unsigned *out_width, unsigned *out_height)
+{
+   *out_width = 1;
+   *out_height = 1;
+}
+
 static uint64_t
 fd_screen_get_timestamp(struct pipe_screen *pscreen)
 {
@@ -133,8 +141,7 @@ fd_screen_get_timestamp(struct pipe_screen *pscreen)
    if (screen->has_timestamp) {
       uint64_t n;
       fd_pipe_get_param(screen->pipe, FD_TIMESTAMP, &n);
-      assert(screen->max_freq > 0);
-      return n * 1000000000 / screen->max_freq;
+      return ticks_to_ns(n);
    } else {
       int64_t cpu_time = os_time_get_nano();
       return cpu_time + screen->cpu_gpu_time_delta;
@@ -181,6 +188,36 @@ fd_screen_destroy(struct pipe_screen *pscreen)
    free(screen);
 }
 
+static uint64_t
+get_memory_size(struct fd_screen *screen)
+{
+   uint64_t system_memory;
+
+   if (!os_get_total_physical_memory(&system_memory))
+      return 0;
+   if (fd_device_version(screen->dev) >= FD_VERSION_VA_SIZE) {
+      uint64_t va_size;
+      if (!fd_pipe_get_param(screen->pipe, FD_VA_SIZE, &va_size)) {
+         system_memory = MIN2(system_memory, va_size);
+      }
+   }
+
+   return system_memory;
+}
+
+static void
+fd_query_memory_info(struct pipe_screen *pscreen,
+                     struct pipe_memory_info *info)
+{
+   unsigned mem = get_memory_size(fd_screen(pscreen)) >> 10;
+
+   memset(info, 0, sizeof(*info));
+
+   info->total_device_memory = mem;
+   info->avail_device_memory = mem;
+}
+
+
 /*
 TODO either move caps to a2xx/a3xx specific code, or maybe have some
 tables for things that differ if the delta is not too much..
@@ -206,16 +243,19 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_MIXED_COLOR_DEPTH_BITS:
    case PIPE_CAP_TEXTURE_BARRIER:
    case PIPE_CAP_INVALIDATE_BUFFER:
-   case PIPE_CAP_RGB_OVERRIDE_DST_ALPHA_BLEND:
    case PIPE_CAP_GLSL_TESS_LEVELS_AS_INPUTS:
    case PIPE_CAP_NIR_COMPACT_ARRAYS:
    case PIPE_CAP_TEXTURE_MIRROR_CLAMP_TO_EDGE:
    case PIPE_CAP_GL_SPIRV:
    case PIPE_CAP_FBFETCH_COHERENT:
+   case PIPE_CAP_HAS_CONST_BW:
       return 1;
 
    case PIPE_CAP_COPY_BETWEEN_COMPRESSED_AND_PLAIN_FORMATS:
-   case PIPE_CAP_CLEAR_TEXTURE:
+   case PIPE_CAP_MULTI_DRAW_INDIRECT:
+   case PIPE_CAP_DRAW_PARAMETERS:
+   case PIPE_CAP_MULTI_DRAW_INDIRECT_PARAMS:
+   case PIPE_CAP_DEPTH_BOUNDS_TEST:
       return is_a6xx(screen);
 
    case PIPE_CAP_VERTEX_BUFFER_OFFSET_4BYTE_ALIGNED_ONLY:
@@ -271,6 +311,7 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 
    case PIPE_CAP_TEXTURE_MULTISAMPLE:
    case PIPE_CAP_IMAGE_STORE_FORMATTED:
+   case PIPE_CAP_IMAGE_LOAD_FORMATTED:
       return is_a5xx(screen) || is_a6xx(screen);
 
    case PIPE_CAP_SURFACE_SAMPLE_COUNT:
@@ -279,8 +320,17 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_DEPTH_CLIP_DISABLE:
       return is_a3xx(screen) || is_a4xx(screen) || is_a6xx(screen);
 
+   case PIPE_CAP_POST_DEPTH_COVERAGE:
    case PIPE_CAP_DEPTH_CLIP_DISABLE_SEPARATE:
+   case PIPE_CAP_DEMOTE_TO_HELPER_INVOCATION:
       return is_a6xx(screen);
+
+   case PIPE_CAP_SAMPLER_REDUCTION_MINMAX:
+   case PIPE_CAP_SAMPLER_REDUCTION_MINMAX_ARB:
+      return is_a6xx(screen) && screen->info->a6xx.has_sampler_minmax;
+
+   case PIPE_CAP_PROGRAMMABLE_SAMPLE_LOCATIONS:
+      return is_a6xx(screen) && screen->info->a6xx.has_sample_locations;
 
    case PIPE_CAP_POLYGON_OFFSET_CLAMP:
       return is_a4xx(screen) || is_a5xx(screen) || is_a6xx(screen);
@@ -331,14 +381,13 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
       return 64;
 
    case PIPE_CAP_INT64:
-   case PIPE_CAP_INT64_DIVMOD:
    case PIPE_CAP_DOUBLES:
       return is_ir3(screen);
 
    case PIPE_CAP_GLSL_FEATURE_LEVEL:
    case PIPE_CAP_GLSL_FEATURE_LEVEL_COMPATIBILITY:
       if (is_a6xx(screen))
-         return 450;
+         return 460;
       else if (is_ir3(screen))
          return 140;
       else
@@ -403,6 +452,7 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
       return 0;
 
    case PIPE_CAP_VS_LAYER_VIEWPORT:
+   case PIPE_CAP_TES_LAYER_VIEWPORT:
       return is_a6xx(screen);
 
    case PIPE_CAP_MAX_VIEWPORTS:
@@ -470,6 +520,10 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
       return !is_a5xx(screen);
 
    /* Stream output. */
+   case PIPE_CAP_MAX_VERTEX_STREAMS:
+      if (is_a6xx(screen))  /* has SO + GS */
+         return PIPE_MAX_SO_BUFFERS;
+      return 0;
    case PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS:
       if (is_ir3(screen))
          return PIPE_MAX_SO_BUFFERS;
@@ -535,7 +589,11 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
       /* only a4xx, requires new enough kernel so we know max_freq: */
       return (screen->max_freq > 0) &&
              (is_a4xx(screen) || is_a5xx(screen) || is_a6xx(screen));
+   case PIPE_CAP_TIMER_RESOLUTION:
+      return ticks_to_ns(1);
    case PIPE_CAP_QUERY_BUFFER_OBJECT:
+   case PIPE_CAP_QUERY_SO_OVERFLOW:
+   case PIPE_CAP_QUERY_PIPELINE_STATISTICS_SINGLE:
       return is_a6xx(screen);
 
    case PIPE_CAP_VENDOR_ID:
@@ -545,22 +603,11 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_ACCELERATED:
       return 1;
 
-   case PIPE_CAP_VIDEO_MEMORY: {
-      uint64_t system_memory;
+   case PIPE_CAP_VIDEO_MEMORY:
+      return (int)(get_memory_size(screen) >> 20);
 
-      if (!os_get_total_physical_memory(&system_memory))
-         return 0;
-
-      if (fd_device_version(screen->dev) >= FD_VERSION_VA_SIZE) {
-         uint64_t va_size;
-
-         if (!fd_pipe_get_param(screen->pipe, FD_VA_SIZE, &va_size)) {
-            system_memory = MIN2(system_memory, va_size);
-         }
-      }
-
-      return (int)(system_memory >> 20);
-   }
+   case PIPE_CAP_QUERY_MEMORY_INFO: /* Enables GL_ATI_meminfo */
+      return get_memory_size(screen) != 0;
 
    case PIPE_CAP_UMA:
       return 1;
@@ -644,6 +691,9 @@ fd_screen_get_shader_param(struct pipe_screen *pscreen,
       if (has_compute(screen))
          break;
       return 0;
+   case PIPE_SHADER_TASK:
+   case PIPE_SHADER_MESH:
+      return 0;
    default:
       mesa_loge("unknown shader type %d", shader);
       return 0;
@@ -661,7 +711,8 @@ fd_screen_get_shader_param(struct pipe_screen *pscreen,
    case PIPE_SHADER_CAP_MAX_INPUTS:
       if (shader == PIPE_SHADER_GEOMETRY && is_a6xx(screen))
          return 16;
-      return is_a6xx(screen) ? 32 : 16;
+      return is_a6xx(screen) ?
+         (screen->info->a6xx.vs_max_inputs_count) : 16;
    case PIPE_SHADER_CAP_MAX_OUTPUTS:
       return is_a6xx(screen) ? 32 : 16;
    case PIPE_SHADER_CAP_MAX_TEMPS:
@@ -687,7 +738,6 @@ fd_screen_get_shader_param(struct pipe_screen *pscreen,
       /* a2xx compiler doesn't handle indirect: */
       return is_ir3(screen) ? 1 : 0;
    case PIPE_SHADER_CAP_SUBROUTINES:
-   case PIPE_SHADER_CAP_DROUND_SUPPORTED:
    case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
    case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTERS:
    case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTER_BUFFERS:
@@ -710,8 +760,6 @@ fd_screen_get_shader_param(struct pipe_screen *pscreen,
    case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
    case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
       return 16;
-   case PIPE_SHADER_CAP_PREFERRED_IR:
-      return PIPE_SHADER_IR_NIR;
    case PIPE_SHADER_CAP_SUPPORTED_IRS:
       return (1 << PIPE_SHADER_IR_NIR) |
              COND(has_compute(screen) && (shader == PIPE_SHADER_COMPUTE),
@@ -815,7 +863,7 @@ fd_get_compute_param(struct pipe_screen *pscreen, enum pipe_shader_ir ir_type,
       RET((uint64_t[]){screen->ram_size});
 
    case PIPE_COMPUTE_CAP_MAX_LOCAL_SIZE:
-      RET((uint64_t[]){32768});
+      RET((uint64_t[]){screen->info->cs_shared_mem_size});
 
    case PIPE_COMPUTE_CAP_MAX_PRIVATE_SIZE:
    case PIPE_COMPUTE_CAP_MAX_INPUT_SIZE:
@@ -833,8 +881,11 @@ fd_get_compute_param(struct pipe_screen *pscreen, enum pipe_shader_ir ir_type,
    case PIPE_COMPUTE_CAP_IMAGES_SUPPORTED:
       RET((uint32_t[]){1});
 
-   case PIPE_COMPUTE_CAP_SUBGROUP_SIZE:
+   case PIPE_COMPUTE_CAP_SUBGROUP_SIZES:
       RET((uint32_t[]){32}); // TODO
+
+   case PIPE_COMPUTE_CAP_MAX_SUBGROUPS:
+      RET((uint32_t[]){0}); // TODO
 
    case PIPE_COMPUTE_CAP_MAX_VARIABLE_THREADS_PER_BLOCK:
       RET((uint64_t[]){ compiler->max_variable_workgroup_size });
@@ -900,29 +951,42 @@ fd_screen_bo_get_handle(struct pipe_screen *pscreen, struct fd_bo *bo,
    }
 }
 
+static bool
+is_format_supported(struct pipe_screen *pscreen,
+                    enum pipe_format format,
+                    uint64_t modifier)
+{
+   struct fd_screen *screen = fd_screen(pscreen);
+   if (screen->is_format_supported)
+      return screen->is_format_supported(pscreen, format, modifier);
+   return modifier == DRM_FORMAT_MOD_LINEAR;
+}
+
 static void
 fd_screen_query_dmabuf_modifiers(struct pipe_screen *pscreen,
                                  enum pipe_format format, int max,
                                  uint64_t *modifiers,
                                  unsigned int *external_only, int *count)
 {
-   struct fd_screen *screen = fd_screen(pscreen);
-   int i, num = 0;
+   const uint64_t all_modifiers[] = {
+      DRM_FORMAT_MOD_LINEAR,
+      DRM_FORMAT_MOD_QCOM_COMPRESSED,
+      DRM_FORMAT_MOD_QCOM_TILED3,
+   };
 
-   max = MIN2(max, screen->num_supported_modifiers);
+   int num = 0;
 
-   if (!max) {
-      max = screen->num_supported_modifiers;
-      external_only = NULL;
-      modifiers = NULL;
-   }
+   for (int i = 0; i < ARRAY_SIZE(all_modifiers); i++) {
+      if (!is_format_supported(pscreen, format, all_modifiers[i]))
+         continue;
 
-   for (i = 0; i < max; i++) {
-      if (modifiers)
-         modifiers[num] = screen->supported_modifiers[i];
+      if (num < max) {
+         if (modifiers)
+            modifiers[num] = all_modifiers[i];
 
-      if (external_only)
-         external_only[num] = 0;
+         if (external_only)
+            external_only[num] = false;
+      }
 
       num++;
    }
@@ -936,19 +1000,7 @@ fd_screen_is_dmabuf_modifier_supported(struct pipe_screen *pscreen,
                                        enum pipe_format format,
                                        bool *external_only)
 {
-   struct fd_screen *screen = fd_screen(pscreen);
-   int i;
-
-   for (i = 0; i < screen->num_supported_modifiers; i++) {
-      if (modifier == screen->supported_modifiers[i]) {
-         if (external_only)
-            *external_only = false;
-
-         return true;
-      }
-   }
-
-   return false;
+   return is_format_supported(pscreen, format, modifier);
 }
 
 struct fd_bo *
@@ -1030,6 +1082,8 @@ fd_screen_create(int fd,
    fd_perfetto_init();
 #endif
 
+   util_gpuvis_init();
+
    pscreen = &screen->base;
 
    screen->dev = dev;
@@ -1060,9 +1114,10 @@ fd_screen_create(int fd,
       screen->max_freq = 0;
    } else {
       screen->max_freq = val;
-      if (fd_pipe_get_param(screen->pipe, FD_TIMESTAMP, &val) == 0)
-         screen->has_timestamp = true;
    }
+
+   if (fd_pipe_get_param(screen->pipe, FD_TIMESTAMP, &val) == 0)
+      screen->has_timestamp = true;
 
    screen->dev_id = fd_pipe_dev_id(screen->pipe);
 
@@ -1174,7 +1229,7 @@ fd_screen_create(int fd,
    /* fdN_screen_init() should set this: */
    assert(screen->primtypes);
    screen->primtypes_mask = 0;
-   for (unsigned i = 0; i <= PIPE_PRIM_MAX; i++)
+   for (unsigned i = 0; i <= MESA_PRIM_COUNT; i++)
       if (screen->primtypes[i])
          screen->primtypes_mask |= (1 << i);
 
@@ -1200,6 +1255,7 @@ fd_screen_create(int fd,
 
    pscreen->destroy = fd_screen_destroy;
    pscreen->get_screen_fd = fd_screen_get_fd;
+   pscreen->query_memory_info = fd_query_memory_info;
    pscreen->get_param = fd_screen_get_param;
    pscreen->get_paramf = fd_screen_get_paramf;
    pscreen->get_shader_param = fd_screen_get_shader_param;
@@ -1214,6 +1270,8 @@ fd_screen_create(int fd,
    pscreen->get_name = fd_screen_get_name;
    pscreen->get_vendor = fd_screen_get_vendor;
    pscreen->get_device_vendor = fd_screen_get_device_vendor;
+
+   pscreen->get_sample_pixel_grid = fd_get_sample_pixel_grid;
 
    pscreen->get_timestamp = fd_screen_get_timestamp;
 

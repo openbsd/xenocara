@@ -2424,7 +2424,8 @@ copytexture_error_check( struct gl_context *ctx, GLuint dimensions,
          return GL_TRUE;
       }
 
-      if (ctx->ReadBuffer->Visual.samples > 0) {
+      if (!ctx->st_opts->allow_multisampled_copyteximage &&
+          ctx->ReadBuffer->Visual.samples > 0) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glCopyTexImage%dD(multisample FBO)", dimensions);
          return GL_TRUE;
@@ -2709,7 +2710,8 @@ copytexsubimage_error_check(struct gl_context *ctx, GLuint dimensions,
        * StorageMultisampleEXT or textures attached via FramebufferTexture2D-
        * MultisampleEXT.
        */
-      if (ctx->ReadBuffer->Visual.samples > 0 &&
+      if (!ctx->st_opts->allow_multisampled_copyteximage &&
+          ctx->ReadBuffer->Visual.samples > 0 &&
           !_mesa_has_rtt_samples(ctx->ReadBuffer)) {
          _mesa_error(ctx, GL_INVALID_OPERATION, "%s(multisample FBO)",
                      caller);
@@ -3903,7 +3905,7 @@ texturesubimage(struct gl_context *ctx, GLuint dims,
 
    /* Must handle special case GL_TEXTURE_CUBE_MAP. */
    if (texObj->Target == GL_TEXTURE_CUBE_MAP) {
-      GLint imageStride;
+      intptr_t imageStride;
 
       /*
        * What do we do if the user created a texture with the following code
@@ -7093,14 +7095,14 @@ texture_image_multisample(struct gl_context *ctx, GLuint dims,
             if (!st_SetTextureStorageForMemoryObject(ctx, texObj,
                                                      memObj, 1, width,
                                                      height, depth,
-                                                     offset)) {
+                                                     offset, func)) {
 
                _mesa_init_teximage_fields(ctx, texImage, 0, 0, 0, 0,
                                           internalformat, texFormat);
             }
          } else {
             if (!st_AllocTextureStorage(ctx, texObj, 1,
-                                        width, height, depth)) {
+                                        width, height, depth, func)) {
                /* tidy up the texture image state. strictly speaking,
                 * we're allowed to just leave this in whatever state we
                 * like, but being tidy is good.

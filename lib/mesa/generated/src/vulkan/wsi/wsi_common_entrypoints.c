@@ -3036,6 +3036,33 @@ const struct vk_instance_entrypoint_table wsi_instance_entrypoints = {
 
 #endif
 
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesKHR* pProperties) __attribute__ ((weak));
+
+#endif
+
 
 const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints = {
     .GetPhysicalDeviceProperties = wsi_GetPhysicalDeviceProperties,
@@ -3157,6 +3184,7 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
     .AcquireDrmDisplayEXT = wsi_AcquireDrmDisplayEXT,
     .GetDrmDisplayEXT = wsi_GetDrmDisplayEXT,
     .GetPhysicalDeviceOpticalFlowImageFormatsNV = wsi_GetPhysicalDeviceOpticalFlowImageFormatsNV,
+    .GetPhysicalDeviceCooperativeMatrixPropertiesKHR = wsi_GetPhysicalDeviceCooperativeMatrixPropertiesKHR,
 };
 
 
@@ -5107,6 +5135,33 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetRenderingAreaGranularityKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_GetRenderingAreaGranularityKHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_GetRenderingAreaGranularityKHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_GetRenderingAreaGranularityKHR(VkDevice device, const VkRenderingAreaInfoKHR* pRenderingAreaInfo, VkExtent2D* pGranularity) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_wsi_CreateCommandPool@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_wsi_CreateCommandPool@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_wsi_CreateCommandPool@12=_vk_entrypoint_stub@0")
@@ -5345,6 +5400,33 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL wsi_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetAttachmentFeedbackLoopEnableEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_CmdSetAttachmentFeedbackLoopEnableEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_CmdSetAttachmentFeedbackLoopEnableEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_CmdSetAttachmentFeedbackLoopEnableEXT(VkCommandBuffer commandBuffer, VkImageAspectFlags aspectMask) __attribute__ ((weak));
 
 #endif
 
@@ -5966,6 +6048,33 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL wsi_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdUpdatePipelineIndirectBufferNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_CmdUpdatePipelineIndirectBufferNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_CmdUpdatePipelineIndirectBufferNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_CmdUpdatePipelineIndirectBufferNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint           pipelineBindPoint, VkPipeline                    pipeline) __attribute__ ((weak));
 
 #endif
 
@@ -12761,6 +12870,60 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectMemoryRequirementsNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_GetPipelineIndirectMemoryRequirementsNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_GetPipelineIndirectMemoryRequirementsNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_GetPipelineIndirectMemoryRequirementsNV(VkDevice device, const VkComputePipelineCreateInfo* pCreateInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetPipelineIndirectDeviceAddressNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_GetPipelineIndirectDeviceAddressNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_GetPipelineIndirectDeviceAddressNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkDeviceAddress VKAPI_CALL wsi_GetPipelineIndirectDeviceAddressNV(VkDevice device, const VkPipelineIndirectDeviceAddressInfoNV* pInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_wsi_CmdSetCullMode@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_wsi_CmdSetCullMode@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_wsi_CmdSetCullMode@12=_vk_entrypoint_stub@0")
@@ -13026,6 +13189,33 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL wsi_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdBindIndexBuffer2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_CmdBindIndexBuffer2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_CmdBindIndexBuffer2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType) __attribute__ ((weak));
 
 #endif
 
@@ -15515,6 +15705,114 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyMemoryToImageEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_CopyMemoryToImageEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_CopyMemoryToImageEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL wsi_CopyMemoryToImageEXT(VkDevice device, const VkCopyMemoryToImageInfoEXT* pCopyMemoryToImageInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToMemoryEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_CopyImageToMemoryEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_CopyImageToMemoryEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL wsi_CopyImageToMemoryEXT(VkDevice device, const VkCopyImageToMemoryInfoEXT* pCopyImageToMemoryInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CopyImageToImageEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_CopyImageToImageEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_CopyImageToImageEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL wsi_CopyImageToImageEXT(VkDevice device, const VkCopyImageToImageInfoEXT* pCopyImageToImageInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_TransitionImageLayoutEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_TransitionImageLayoutEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_TransitionImageLayoutEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL wsi_TransitionImageLayoutEXT(VkDevice device, uint32_t transitionCount, const VkHostImageLayoutTransitionInfoEXT* pTransitions) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_wsi_CreateVideoSessionKHR@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_wsi_CreateVideoSessionKHR@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_wsi_CreateVideoSessionKHR@12=_vk_entrypoint_stub@0")
@@ -17091,6 +17389,33 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_GetImageSubresourceLayout2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_GetImageSubresourceLayout2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_GetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2EXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2EXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_wsi_GetImageSubresourceLayout2EXT@12=_vk_entrypoint_stub@0")
@@ -17112,7 +17437,7 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 #endif
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL wsi_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL wsi_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout) __attribute__ ((weak));
 
 #endif
 
@@ -17363,6 +17688,33 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_CmdSetDepthBias2EXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_CmdSetDepthBias2EXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_CmdSetDepthBias2EXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_CmdSetDepthBias2EXT(VkCommandBuffer commandBuffer, const VkDepthBiasInfoEXT*         pDepthBiasInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_wsi_ReleaseSwapchainImagesEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_wsi_ReleaseSwapchainImagesEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_wsi_ReleaseSwapchainImagesEXT@12=_vk_entrypoint_stub@0")
@@ -17385,6 +17737,33 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL wsi_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetDeviceImageSubresourceLayoutKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_GetDeviceImageSubresourceLayoutKHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_GetDeviceImageSubresourceLayoutKHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_GetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout) __attribute__ ((weak));
 
 #endif
 
@@ -17550,6 +17929,170 @@ const struct vk_physical_device_entrypoint_table wsi_physical_device_entrypoints
 
 #endif
 
+#ifdef VK_USE_PLATFORM_SCREEN_QNX
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetScreenBufferPropertiesQNX@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_GetScreenBufferPropertiesQNX=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_GetScreenBufferPropertiesQNX=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL wsi_GetScreenBufferPropertiesQNX(VkDevice device, const struct _screen_buffer* buffer, VkScreenBufferPropertiesQNX* pProperties) __attribute__ ((weak));
+
+#endif
+
+#endif // VK_USE_PLATFORM_SCREEN_QNX
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencySleepModeNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_SetLatencySleepModeNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_SetLatencySleepModeNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL wsi_SetLatencySleepModeNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepModeInfoNV* pSleepModeInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_LatencySleepNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_LatencySleepNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_LatencySleepNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL wsi_LatencySleepNV(VkDevice device, VkSwapchainKHR swapchain, const VkLatencySleepInfoNV* pSleepInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_SetLatencyMarkerNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_SetLatencyMarkerNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_SetLatencyMarkerNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_SetLatencyMarkerNV(VkDevice device, VkSwapchainKHR swapchain, const VkSetLatencyMarkerInfoNV* pLatencyMarkerInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_GetLatencyTimingsNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_GetLatencyTimingsNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_GetLatencyTimingsNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_GetLatencyTimingsNV(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pTimingCount, VkGetLatencyMarkerInfoNV* pLatencyMarkerInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_wsi_QueueNotifyOutOfBandNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:wsi_QueueNotifyOutOfBandNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#wsi_QueueNotifyOutOfBandNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL wsi_QueueNotifyOutOfBandNV(VkQueue queue, const VkOutOfBandQueueTypeInfoNV* pQueueTypeInfo) __attribute__ ((weak));
+
+#endif
+
 
 const struct vk_device_entrypoint_table wsi_device_entrypoints = {
     .GetDeviceProcAddr = wsi_GetDeviceProcAddr,
@@ -17624,6 +18167,7 @@ const struct vk_device_entrypoint_table wsi_device_entrypoints = {
     .CreateRenderPass = wsi_CreateRenderPass,
     .DestroyRenderPass = wsi_DestroyRenderPass,
     .GetRenderAreaGranularity = wsi_GetRenderAreaGranularity,
+    .GetRenderingAreaGranularityKHR = wsi_GetRenderingAreaGranularityKHR,
     .CreateCommandPool = wsi_CreateCommandPool,
     .DestroyCommandPool = wsi_DestroyCommandPool,
     .ResetCommandPool = wsi_ResetCommandPool,
@@ -17633,6 +18177,7 @@ const struct vk_device_entrypoint_table wsi_device_entrypoints = {
     .EndCommandBuffer = wsi_EndCommandBuffer,
     .ResetCommandBuffer = wsi_ResetCommandBuffer,
     .CmdBindPipeline = wsi_CmdBindPipeline,
+    .CmdSetAttachmentFeedbackLoopEnableEXT = wsi_CmdSetAttachmentFeedbackLoopEnableEXT,
     .CmdSetViewport = wsi_CmdSetViewport,
     .CmdSetScissor = wsi_CmdSetScissor,
     .CmdSetLineWidth = wsi_CmdSetLineWidth,
@@ -17656,6 +18201,7 @@ const struct vk_device_entrypoint_table wsi_device_entrypoints = {
     .CmdSubpassShadingHUAWEI = wsi_CmdSubpassShadingHUAWEI,
     .CmdDrawClusterHUAWEI = wsi_CmdDrawClusterHUAWEI,
     .CmdDrawClusterIndirectHUAWEI = wsi_CmdDrawClusterIndirectHUAWEI,
+    .CmdUpdatePipelineIndirectBufferNV = wsi_CmdUpdatePipelineIndirectBufferNV,
     .CmdCopyBuffer = wsi_CmdCopyBuffer,
     .CmdCopyImage = wsi_CmdCopyImage,
     .CmdBlitImage = wsi_CmdBlitImage,
@@ -17986,6 +18532,8 @@ const struct vk_device_entrypoint_table wsi_device_entrypoints = {
     .GetDeferredOperationMaxConcurrencyKHR = wsi_GetDeferredOperationMaxConcurrencyKHR,
     .GetDeferredOperationResultKHR = wsi_GetDeferredOperationResultKHR,
     .DeferredOperationJoinKHR = wsi_DeferredOperationJoinKHR,
+    .GetPipelineIndirectMemoryRequirementsNV = wsi_GetPipelineIndirectMemoryRequirementsNV,
+    .GetPipelineIndirectDeviceAddressNV = wsi_GetPipelineIndirectDeviceAddressNV,
     .CmdSetCullMode = wsi_CmdSetCullMode,
     .CmdSetCullModeEXT = wsi_CmdSetCullModeEXT,
     .CmdSetFrontFace = wsi_CmdSetFrontFace,
@@ -17996,6 +18544,7 @@ const struct vk_device_entrypoint_table wsi_device_entrypoints = {
     .CmdSetViewportWithCountEXT = wsi_CmdSetViewportWithCountEXT,
     .CmdSetScissorWithCount = wsi_CmdSetScissorWithCount,
     .CmdSetScissorWithCountEXT = wsi_CmdSetScissorWithCountEXT,
+    .CmdBindIndexBuffer2KHR = wsi_CmdBindIndexBuffer2KHR,
     .CmdBindVertexBuffers2 = wsi_CmdBindVertexBuffers2,
     .CmdBindVertexBuffers2EXT = wsi_CmdBindVertexBuffers2EXT,
     .CmdSetDepthTestEnable = wsi_CmdSetDepthTestEnable,
@@ -18088,6 +18637,10 @@ const struct vk_device_entrypoint_table wsi_device_entrypoints = {
     .CmdWriteTimestamp2KHR = wsi_CmdWriteTimestamp2KHR,
     .CmdWriteBufferMarker2AMD = wsi_CmdWriteBufferMarker2AMD,
     .GetQueueCheckpointData2NV = wsi_GetQueueCheckpointData2NV,
+    .CopyMemoryToImageEXT = wsi_CopyMemoryToImageEXT,
+    .CopyImageToMemoryEXT = wsi_CopyImageToMemoryEXT,
+    .CopyImageToImageEXT = wsi_CopyImageToImageEXT,
+    .TransitionImageLayoutEXT = wsi_TransitionImageLayoutEXT,
     .CreateVideoSessionKHR = wsi_CreateVideoSessionKHR,
     .DestroyVideoSessionKHR = wsi_DestroyVideoSessionKHR,
     .CreateVideoSessionParametersKHR = wsi_CreateVideoSessionParametersKHR,
@@ -18166,6 +18719,7 @@ const struct vk_device_entrypoint_table wsi_device_entrypoints = {
     .GetMicromapBuildSizesEXT = wsi_GetMicromapBuildSizesEXT,
     .GetShaderModuleIdentifierEXT = wsi_GetShaderModuleIdentifierEXT,
     .GetShaderModuleCreateInfoIdentifierEXT = wsi_GetShaderModuleCreateInfoIdentifierEXT,
+    .GetImageSubresourceLayout2KHR = wsi_GetImageSubresourceLayout2KHR,
     .GetImageSubresourceLayout2EXT = wsi_GetImageSubresourceLayout2EXT,
     .GetPipelinePropertiesEXT = wsi_GetPipelinePropertiesEXT,
 #ifdef VK_USE_PLATFORM_METAL_EXT
@@ -18180,13 +18734,25 @@ const struct vk_device_entrypoint_table wsi_device_entrypoints = {
     .BindOpticalFlowSessionImageNV = wsi_BindOpticalFlowSessionImageNV,
     .CmdOpticalFlowExecuteNV = wsi_CmdOpticalFlowExecuteNV,
     .GetDeviceFaultInfoEXT = wsi_GetDeviceFaultInfoEXT,
+    .CmdSetDepthBias2EXT = wsi_CmdSetDepthBias2EXT,
     .ReleaseSwapchainImagesEXT = wsi_ReleaseSwapchainImagesEXT,
+    .GetDeviceImageSubresourceLayoutKHR = wsi_GetDeviceImageSubresourceLayoutKHR,
     .MapMemory2KHR = wsi_MapMemory2KHR,
     .UnmapMemory2KHR = wsi_UnmapMemory2KHR,
     .CreateShadersEXT = wsi_CreateShadersEXT,
     .DestroyShaderEXT = wsi_DestroyShaderEXT,
     .GetShaderBinaryDataEXT = wsi_GetShaderBinaryDataEXT,
     .CmdBindShadersEXT = wsi_CmdBindShadersEXT,
+#ifdef VK_USE_PLATFORM_SCREEN_QNX
+    .GetScreenBufferPropertiesQNX = wsi_GetScreenBufferPropertiesQNX,
+#elif defined(_MSC_VER)
+    .GetScreenBufferPropertiesQNX = (PFN_vkVoidFunction)vk_entrypoint_stub,
+#endif // VK_USE_PLATFORM_SCREEN_QNX
+    .SetLatencySleepModeNV = wsi_SetLatencySleepModeNV,
+    .LatencySleepNV = wsi_LatencySleepNV,
+    .SetLatencyMarkerNV = wsi_SetLatencyMarkerNV,
+    .GetLatencyTimingsNV = wsi_GetLatencyTimingsNV,
+    .QueueNotifyOutOfBandNV = wsi_QueueNotifyOutOfBandNV,
 };
 
 

@@ -3,28 +3,8 @@
  * Copyright © 2009 Joakim Sindholt <opensource@zhasha.com>
  * Copyright © 2011 Marek Olšák <maraeo@gmail.com>
  * Copyright © 2015 Advanced Micro Devices, Inc.
- * All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sub license, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS, AUTHORS
- * AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * The above copyright notice and this permission notice (including the
- * next paragraph) shall be included in all copies or substantial portions
- * of the Software.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "amdgpu_cs.h"
@@ -50,61 +30,17 @@ static simple_mtx_t dev_tab_mutex = SIMPLE_MTX_INITIALIZER;
 DEBUG_GET_ONCE_BOOL_OPTION(all_bos, "RADEON_ALL_BOS", false)
 #endif
 
-static void handle_env_var_force_family(struct amdgpu_winsys *ws)
-{
-      const char *family = debug_get_option("SI_FORCE_FAMILY", NULL);
-      unsigned i;
-
-      if (!family)
-               return;
-
-      for (i = CHIP_TAHITI; i < CHIP_LAST; i++) {
-         if (!strcmp(family, ac_get_llvm_processor_name(i))) {
-            /* Override family and gfx_level. */
-            ws->info.family = i;
-            ws->info.name = "NOOP";
-            strcpy(ws->info.lowercase_name , "noop");
-
-            if (i >= CHIP_GFX1100)
-               ws->info.gfx_level = GFX11;
-            else if (i >= CHIP_NAVI21)
-               ws->info.gfx_level = GFX10_3;
-            else if (i >= CHIP_NAVI10)
-               ws->info.gfx_level = GFX10;
-            else if (i >= CHIP_VEGA10)
-               ws->info.gfx_level = GFX9;
-            else if (i >= CHIP_TONGA)
-               ws->info.gfx_level = GFX8;
-            else if (i >= CHIP_BONAIRE)
-               ws->info.gfx_level = GFX7;
-            else
-               ws->info.gfx_level = GFX6;
-
-            /* Don't submit any IBs. */
-            setenv("RADEON_NOOP", "1", 1);
-            return;
-         }
-      }
-
-      fprintf(stderr, "radeonsi: Unknown family: %s\n", family);
-      exit(1);
-}
-
 /* Helper function to do the ioctls needed for setup and init. */
 static bool do_winsys_init(struct amdgpu_winsys *ws,
                            const struct pipe_screen_config *config,
                            int fd)
 {
-   if (!ac_query_gpu_info(fd, ws->dev, &ws->info))
+   if (!ac_query_gpu_info(fd, ws->dev, &ws->info, false))
       goto fail;
-
-   ac_query_pci_bus_info(fd, &ws->info);
 
    /* TODO: Enable this once the kernel handles it efficiently. */
    if (ws->info.has_dedicated_vram)
       ws->info.has_local_buffers = false;
-
-   handle_env_var_force_family(ws);
 
    ws->addrlib = ac_addrlib_create(&ws->info, &ws->info.max_alignment);
    if (!ws->addrlib) {
@@ -114,7 +50,7 @@ static bool do_winsys_init(struct amdgpu_winsys *ws,
 
    ws->check_vm = strstr(debug_get_option("R600_DEBUG", ""), "check_vm") != NULL ||
                   strstr(debug_get_option("AMD_DEBUG", ""), "check_vm") != NULL;
-   ws->noop_cs = debug_get_bool_option("RADEON_NOOP", false);
+   ws->noop_cs = ws->info.family_overridden || debug_get_bool_option("RADEON_NOOP", false);
 #if DEBUG
    ws->debug_all_bos = debug_get_option_all_bos();
 #endif

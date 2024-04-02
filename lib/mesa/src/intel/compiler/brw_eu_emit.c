@@ -2739,6 +2739,7 @@ brw_send_indirect_split_message(struct brw_codegen *p,
                                 struct brw_reg ex_desc,
                                 unsigned ex_desc_imm,
                                 bool ex_desc_scratch,
+                                bool ex_bso,
                                 bool eot)
 {
    const struct intel_device_info *devinfo = p->devinfo;
@@ -2777,6 +2778,12 @@ brw_send_indirect_split_message(struct brw_codegen *p,
        !ex_desc_scratch &&
        (devinfo->ver >= 12 ||
         ((ex_desc.ud | ex_desc_imm) & INTEL_MASK(15, 12)) == 0)) {
+      /* ATS-M PRMs, Volume 2d: Command Reference: Structures,
+       * EU_INSTRUCTION_SEND instruction
+       *
+       *    "ExBSO: Exists If: ([ExDesc.IsReg]==true)"
+       */
+      assert(!ex_bso);
       ex_desc.ud |= ex_desc_imm;
    } else {
       const struct tgl_swsb swsb = brw_get_default_swsb(p);
@@ -2799,7 +2806,7 @@ brw_send_indirect_split_message(struct brw_codegen *p,
        * descriptor which comes from the address register.  If we don't OR
        * those two bits in, the external unit may get confused and hang.
        */
-      unsigned imm_part = ex_desc_imm | sfid | eot << 5;
+      unsigned imm_part = ex_bso ? 0 : (ex_desc_imm | sfid | eot << 5);
 
       if (ex_desc_scratch) {
          /* Or the scratch surface offset together with the immediate part of
@@ -2852,6 +2859,10 @@ brw_send_indirect_split_message(struct brw_codegen *p,
       brw_inst_set_send_ex_desc_ia_subreg_nr(devinfo, send, ex_desc.subnr >> 2);
    }
 
+   if (ex_bso) {
+      brw_inst_set_send_ex_bso(devinfo, send, true);
+      brw_inst_set_send_src1_len(devinfo, send, GET_BITS(ex_desc_imm, 10, 6));
+   }
    brw_inst_set_sfid(devinfo, send, sfid);
    brw_inst_set_eot(devinfo, send, eot);
 }
@@ -3263,13 +3274,13 @@ gfx12_set_memory_fence_message(struct brw_codegen *p,
                                enum brw_message_target sfid,
                                uint32_t desc)
 {
-   const unsigned mlen = 1; /* g0 header */
+   const unsigned mlen = 1 * reg_unit(p->devinfo); /* g0 header */
     /* Completion signaled by write to register. No data returned. */
-   const unsigned rlen = 1;
+   const unsigned rlen = 1 * reg_unit(p->devinfo);
 
    brw_inst_set_sfid(p->devinfo, insn, sfid);
 
-   if (sfid == BRW_SFID_URB) {
+   if (sfid == BRW_SFID_URB && p->devinfo->ver < 20) {
       brw_set_desc(p, insn, brw_urb_fence_desc(p->devinfo) |
                             brw_message_desc(p->devinfo, mlen, rlen, true));
    } else {
@@ -3579,7 +3590,8 @@ brw_barrier(struct brw_codegen *p, struct brw_reg src)
    brw_set_dest(p, inst, retype(brw_null_reg(), BRW_REGISTER_TYPE_UW));
    brw_set_src0(p, inst, src);
    brw_set_src1(p, inst, brw_null_reg());
-   brw_set_desc(p, inst, brw_message_desc(devinfo, 1, 0, false));
+   brw_set_desc(p, inst, brw_message_desc(devinfo,
+                                          1 * reg_unit(devinfo), 0, false));
 
    brw_inst_set_sfid(devinfo, inst, BRW_SFID_MESSAGE_GATEWAY);
    brw_inst_set_gateway_subfuncid(devinfo, inst,

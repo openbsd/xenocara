@@ -30,6 +30,7 @@
 #include "util/set.h"
 #include "util/u_drm.h"
 #include "util/u_inlines.h"
+#include "util/u_sample_positions.h"
 #include "util/u_string.h"
 #include "util/u_surface.h"
 #include "util/u_transfer.h"
@@ -51,14 +52,6 @@
 
 /* XXX this should go away, needed for 'struct winsys_handle' */
 #include "frontend/drm_driver.h"
-
-/* A private modifier for now, so we have a way to request tiled but not
- * compressed.  It would perhaps be good to get real modifiers for the
- * tiled formats, but would probably need to do some work to figure out
- * the layout(s) of the tiled modes, and whether they are the same
- * across generations.
- */
-#define FD_FORMAT_MOD_QCOM_TILED fourcc_mod_code(QCOM, 0xffffffff)
 
 /**
  * Go through the entire state and see if the resource is bound
@@ -573,7 +566,7 @@ fd_resource_uncompress(struct fd_context *ctx, struct fd_resource *rsc, bool lin
 {
    tc_assert_driver_thread(ctx->tc);
 
-   uint64_t modifier = linear ? DRM_FORMAT_MOD_LINEAR : FD_FORMAT_MOD_QCOM_TILED;
+   uint64_t modifier = linear ? DRM_FORMAT_MOD_LINEAR : DRM_FORMAT_MOD_QCOM_TILED3;
 
    ASSERTED bool success = fd_try_shadow_resource(ctx, rsc, 0, NULL, modifier);
 
@@ -1290,6 +1283,11 @@ get_best_layout(struct fd_screen *screen,
    if (tmpl->bind & PIPE_BIND_USE_FRONT_RENDERING)
       ubwc_ok = false;
 
+   /* Disallow UBWC when asked not to use data dependent bandwidth compression:
+    */
+   if (tmpl->bind & PIPE_BIND_CONST_BW)
+      ubwc_ok = false;
+
    if (ubwc_ok && !can_implicit &&
        !drm_find_modifier(DRM_FORMAT_MOD_QCOM_COMPRESSED, modifiers, count)) {
       perf_debug("%" PRSC_FMT
@@ -1301,15 +1299,8 @@ get_best_layout(struct fd_screen *screen,
    if (ubwc_ok)
       return UBWC;
 
-   /* We can't use tiled with explicit modifiers, as there is no modifier token
-    * defined for it. But we might internally force tiled allocation using a
-    * private modifier token.
-    *
-    * TODO we should probably also limit TILED in a similar way to UBWC above,
-    * once we have a public modifier token defined.
-    */
    if (can_implicit ||
-       drm_find_modifier(FD_FORMAT_MOD_QCOM_TILED, modifiers, count))
+       drm_find_modifier(DRM_FORMAT_MOD_QCOM_TILED3, modifiers, count))
       return TILED;
 
    if (!drm_find_modifier(DRM_FORMAT_MOD_LINEAR, modifiers, count)) {
@@ -1643,10 +1634,6 @@ static const struct u_transfer_vtbl transfer_vtbl = {
    .get_stencil = fd_resource_get_stencil,
 };
 
-static const uint64_t supported_modifiers[] = {
-   DRM_FORMAT_MOD_LINEAR,
-};
-
 static int
 fd_layout_resource_for_modifier(struct fd_resource *rsc, uint64_t modifier)
 {
@@ -1760,56 +1747,11 @@ fd_resource_screen_init(struct pipe_screen *pscreen)
 
    if (!screen->layout_resource_for_modifier)
       screen->layout_resource_for_modifier = fd_layout_resource_for_modifier;
-   if (!screen->supported_modifiers) {
-      screen->supported_modifiers = supported_modifiers;
-      screen->num_supported_modifiers = ARRAY_SIZE(supported_modifiers);
-   }
 
    /* GL_EXT_memory_object */
    pscreen->memobj_create_from_handle = fd_memobj_create_from_handle;
    pscreen->memobj_destroy = fd_memobj_destroy;
    pscreen->resource_from_memobj = fd_resource_from_memobj;
-}
-
-static void
-fd_get_sample_position(struct pipe_context *context, unsigned sample_count,
-                       unsigned sample_index, float *pos_out)
-{
-   /* The following is copied from nouveau/nv50 except for position
-    * values, which are taken from blob driver */
-   static const uint8_t pos1[1][2] = {{0x8, 0x8}};
-   static const uint8_t pos2[2][2] = {{0xc, 0xc}, {0x4, 0x4}};
-   static const uint8_t pos4[4][2] = {{0x6, 0x2},
-                                      {0xe, 0x6},
-                                      {0x2, 0xa},
-                                      {0xa, 0xe}};
-   /* TODO needs to be verified on supported hw */
-   static const uint8_t pos8[8][2] = {{0x9, 0x5}, {0x7, 0xb}, {0xd, 0x9},
-                                      {0x5, 0x3}, {0x3, 0xd}, {0x1, 0x7},
-                                      {0xb, 0xf}, {0xf, 0x1}};
-
-   const uint8_t(*ptr)[2];
-
-   switch (sample_count) {
-   case 1:
-      ptr = pos1;
-      break;
-   case 2:
-      ptr = pos2;
-      break;
-   case 4:
-      ptr = pos4;
-      break;
-   case 8:
-      ptr = pos8;
-      break;
-   default:
-      assert(0);
-      return;
-   }
-
-   pos_out[0] = ptr[sample_index][0] / 16.0f;
-   pos_out[1] = ptr[sample_index][1] / 16.0f;
 }
 
 static void
@@ -1836,5 +1778,5 @@ fd_resource_context_init(struct pipe_context *pctx)
    pctx->blit = fd_blit_pipe;
    pctx->flush_resource = fd_flush_resource;
    pctx->invalidate_resource = fd_invalidate_resource;
-   pctx->get_sample_position = fd_get_sample_position;
+   pctx->get_sample_position = u_default_get_sample_position;
 }

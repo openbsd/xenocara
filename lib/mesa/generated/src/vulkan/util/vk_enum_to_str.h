@@ -42,6 +42,7 @@
     const char * vk_BlendFactor_to_str(VkBlendFactor input);
     const char * vk_BlendOp_to_str(VkBlendOp input);
     const char * vk_BlendOverlapEXT_to_str(VkBlendOverlapEXT input);
+    const char * vk_BlockMatchWindowCompareModeQCOM_to_str(VkBlockMatchWindowCompareModeQCOM input);
     const char * vk_BorderColor_to_str(VkBorderColor input);
     const char * vk_BuildAccelerationStructureModeKHR_to_str(VkBuildAccelerationStructureModeKHR input);
     const char * vk_BuildMicromapModeEXT_to_str(VkBuildMicromapModeEXT input);
@@ -51,13 +52,15 @@
     const char * vk_CommandBufferLevel_to_str(VkCommandBufferLevel input);
     const char * vk_CompareOp_to_str(VkCompareOp input);
     const char * vk_ComponentSwizzle_to_str(VkComponentSwizzle input);
-    const char * vk_ComponentTypeNV_to_str(VkComponentTypeNV input);
+    const char * vk_ComponentTypeKHR_to_str(VkComponentTypeKHR input);
     const char * vk_ConservativeRasterizationModeEXT_to_str(VkConservativeRasterizationModeEXT input);
     const char * vk_CopyAccelerationStructureModeKHR_to_str(VkCopyAccelerationStructureModeKHR input);
     const char * vk_CopyMicromapModeEXT_to_str(VkCopyMicromapModeEXT input);
     const char * vk_CoverageModulationModeNV_to_str(VkCoverageModulationModeNV input);
     const char * vk_CoverageReductionModeNV_to_str(VkCoverageReductionModeNV input);
+    const char * vk_CubicFilterWeightsQCOM_to_str(VkCubicFilterWeightsQCOM input);
     const char * vk_DebugReportObjectTypeEXT_to_str(VkDebugReportObjectTypeEXT input);
+    const char * vk_DepthBiasRepresentationEXT_to_str(VkDepthBiasRepresentationEXT input);
     const char * vk_DescriptorType_to_str(VkDescriptorType input);
     const char * vk_DescriptorUpdateTemplateType_to_str(VkDescriptorUpdateTemplateType input);
     const char * vk_DeviceAddressBindingTypeEXT_to_str(VkDeviceAddressBindingTypeEXT input);
@@ -88,6 +91,8 @@
     const char * vk_IndexType_to_str(VkIndexType input);
     const char * vk_IndirectCommandsTokenTypeNV_to_str(VkIndirectCommandsTokenTypeNV input);
     const char * vk_InternalAllocationType_to_str(VkInternalAllocationType input);
+    const char * vk_LatencyMarkerNV_to_str(VkLatencyMarkerNV input);
+    const char * vk_LayeredDriverUnderlyingApiMSFT_to_str(VkLayeredDriverUnderlyingApiMSFT input);
     const char * vk_LineRasterizationModeEXT_to_str(VkLineRasterizationModeEXT input);
     const char * vk_LogicOp_to_str(VkLogicOp input);
     const char * vk_MemoryOverallocationBehaviorAMD_to_str(VkMemoryOverallocationBehaviorAMD input);
@@ -97,6 +102,7 @@
     const char * vk_OpacityMicromapSpecialIndexEXT_to_str(VkOpacityMicromapSpecialIndexEXT input);
     const char * vk_OpticalFlowPerformanceLevelNV_to_str(VkOpticalFlowPerformanceLevelNV input);
     const char * vk_OpticalFlowSessionBindingPointNV_to_str(VkOpticalFlowSessionBindingPointNV input);
+    const char * vk_OutOfBandQueueTypeNV_to_str(VkOutOfBandQueueTypeNV input);
     const char * vk_PerformanceConfigurationTypeINTEL_to_str(VkPerformanceConfigurationTypeINTEL input);
     const char * vk_PerformanceCounterScopeKHR_to_str(VkPerformanceCounterScopeKHR input);
     const char * vk_PerformanceCounterStorageKHR_to_str(VkPerformanceCounterStorageKHR input);
@@ -128,7 +134,7 @@
     const char * vk_SamplerReductionMode_to_str(VkSamplerReductionMode input);
     const char * vk_SamplerYcbcrModelConversion_to_str(VkSamplerYcbcrModelConversion input);
     const char * vk_SamplerYcbcrRange_to_str(VkSamplerYcbcrRange input);
-    const char * vk_ScopeNV_to_str(VkScopeNV input);
+    const char * vk_ScopeKHR_to_str(VkScopeKHR input);
     const char * vk_SemaphoreType_to_str(VkSemaphoreType input);
     const char * vk_ShaderCodeTypeEXT_to_str(VkShaderCodeTypeEXT input);
     const char * vk_ShaderFloatControlsIndependence_to_str(VkShaderFloatControlsIndependence input);
@@ -158,6 +164,7 @@
     const char * vk_AttachmentDescriptionFlagBits_to_str(VkAttachmentDescriptionFlagBits input);
     const char * vk_BufferCreateFlagBits_to_str(VkBufferCreateFlagBits input);
     const char * vk_BufferUsageFlagBits_to_str(VkBufferUsageFlagBits input);
+    const char * vk_BufferUsageFlagBits2KHR_to_str(VkBufferUsageFlagBits2KHR input);
     const char * vk_BuildAccelerationStructureFlagBitsKHR_to_str(VkBuildAccelerationStructureFlagBitsKHR input);
     const char * vk_BuildMicromapFlagBitsEXT_to_str(VkBuildMicromapFlagBitsEXT input);
     const char * vk_ColorComponentFlagBits_to_str(VkColorComponentFlagBits input);
@@ -196,10 +203,12 @@
     const char * vk_FenceImportFlagBits_to_str(VkFenceImportFlagBits input);
     const char * vk_FormatFeatureFlagBits_to_str(VkFormatFeatureFlagBits input);
     const char * vk_FormatFeatureFlagBits2_to_str(VkFormatFeatureFlagBits2 input);
+    const char * vk_FrameBoundaryFlagBitsEXT_to_str(VkFrameBoundaryFlagBitsEXT input);
     const char * vk_FramebufferCreateFlagBits_to_str(VkFramebufferCreateFlagBits input);
     const char * vk_GeometryFlagBitsKHR_to_str(VkGeometryFlagBitsKHR input);
     const char * vk_GeometryInstanceFlagBitsKHR_to_str(VkGeometryInstanceFlagBitsKHR input);
     const char * vk_GraphicsPipelineLibraryFlagBitsEXT_to_str(VkGraphicsPipelineLibraryFlagBitsEXT input);
+    const char * vk_HostImageCopyFlagBitsEXT_to_str(VkHostImageCopyFlagBitsEXT input);
     const char * vk_ImageAspectFlagBits_to_str(VkImageAspectFlagBits input);
     const char * vk_ImageCompressionFixedRateFlagBitsEXT_to_str(VkImageCompressionFixedRateFlagBitsEXT input);
     const char * vk_ImageCompressionFlagBitsEXT_to_str(VkImageCompressionFlagBitsEXT input);
@@ -227,6 +236,7 @@
     const char * vk_PipelineColorBlendStateCreateFlagBits_to_str(VkPipelineColorBlendStateCreateFlagBits input);
     const char * vk_PipelineCompilerControlFlagBitsAMD_to_str(VkPipelineCompilerControlFlagBitsAMD input);
     const char * vk_PipelineCreateFlagBits_to_str(VkPipelineCreateFlagBits input);
+    const char * vk_PipelineCreateFlagBits2KHR_to_str(VkPipelineCreateFlagBits2KHR input);
     const char * vk_PipelineCreationFeedbackFlagBits_to_str(VkPipelineCreationFeedbackFlagBits input);
     const char * vk_PipelineDepthStencilStateCreateFlagBits_to_str(VkPipelineDepthStencilStateCreateFlagBits input);
     const char * vk_PipelineLayoutCreateFlagBits_to_str(VkPipelineLayoutCreateFlagBits input);

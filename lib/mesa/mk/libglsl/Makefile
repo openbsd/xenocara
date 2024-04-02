@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2023/11/02 04:53:31 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2024/04/02 10:42:13 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -15,9 +15,9 @@ SRCS=	ast_array_index.cpp \
 	builtin_functions.cpp \
 	builtin_types.cpp \
 	builtin_variables.cpp \
-	generate_ir.cpp \
 	gl_nir_lower_atomics.c \
 	gl_nir_lower_images.c \
+	gl_nir_lower_blend_equation_advanced.c \
 	gl_nir_lower_buffers.c \
 	gl_nir_lower_packed_varyings.c \
 	gl_nir_lower_samplers.c \
@@ -60,14 +60,10 @@ SRCS=	ast_array_index.cpp \
 	link_uniforms.cpp \
 	link_uniform_block_active_visitor.cpp \
 	link_uniform_blocks.cpp \
-	link_varyings.cpp \
-	lower_blend_equation_advanced.cpp \
 	lower_builtins.cpp \
-	lower_discard.cpp \
 	lower_discard_flow.cpp \
 	lower_distance.cpp \
 	lower_instructions.cpp \
-	lower_int64.cpp \
 	lower_jumps.cpp \
 	lower_mat_op_to_vec.cpp \
 	lower_named_interface_blocks.cpp \
@@ -108,6 +104,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/mapi \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/glsl \
 		-I${MESA_SRC}/generated/src/compiler/nir

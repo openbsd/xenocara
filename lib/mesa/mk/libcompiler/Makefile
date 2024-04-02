@@ -1,12 +1,13 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	compiler
 
 NOPROFILE=
 
-SRCS=	glsl_types.cpp \
-	nir_types.cpp \
+SRCS=	glsl_types.c \
 	shader_enums.c
+
+SRCS+=	builtin_types.c
 
 .include "../Makefile.inc"
 
@@ -25,3 +26,4 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH:	${MESA_SRC}/src/compiler
+.PATH:	${MESA_SRC}/generated/src/compiler

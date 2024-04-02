@@ -202,7 +202,7 @@ enum GFX5_3D_Vertex_Component_Control {
    VFCOMP_STORE_PID                     =      7,
 };
 
-enum GFX5_Texture_Coordinate_Mode {
+enum GFX5_TextureCoordinateMode {
    TCM_WRAP                             =      0,
    TCM_MIRROR                           =      1,
    TCM_CLAMP                            =      2,
@@ -807,9 +807,9 @@ struct GFX5_SAMPLER_STATE {
    float                                BaseMipLevel;
    bool                                 LODPreClampEnable;
    bool                                 SamplerDisable;
-   enum GFX5_Texture_Coordinate_Mode    TCZAddressControlMode;
-   enum GFX5_Texture_Coordinate_Mode    TCYAddressControlMode;
-   enum GFX5_Texture_Coordinate_Mode    TCXAddressControlMode;
+   enum GFX5_TextureCoordinateMode      TCZAddressControlMode;
+   enum GFX5_TextureCoordinateMode      TCYAddressControlMode;
+   enum GFX5_TextureCoordinateMode      TCXAddressControlMode;
    uint32_t                             CubeSurfaceControlMode;
 #define CUBECTRLMODE_PROGRAMMED                  0
 #define CUBECTRLMODE_OVERRIDE                    1

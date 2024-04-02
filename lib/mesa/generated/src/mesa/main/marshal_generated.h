@@ -1194,8 +1194,6 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_VDPAUFiniNV,
    DISPATCH_CMD_VDPAUUnregisterSurfaceNV,
    DISPATCH_CMD_VDPAUSurfaceAccessNV,
-   DISPATCH_CMD_VDPAUMapSurfacesNV,
-   DISPATCH_CMD_VDPAUUnmapSurfacesNV,
    DISPATCH_CMD_DeleteMemoryObjectsEXT,
    DISPATCH_CMD_MemoryObjectParameterivEXT,
    DISPATCH_CMD_TexStorageMem2DEXT,
@@ -4004,10 +4002,6 @@ struct marshal_cmd_VDPAUUnregisterSurfaceNV;
 uint32_t _mesa_unmarshal_VDPAUUnregisterSurfaceNV(struct gl_context *ctx, const struct marshal_cmd_VDPAUUnregisterSurfaceNV *restrict cmd);
 struct marshal_cmd_VDPAUSurfaceAccessNV;
 uint32_t _mesa_unmarshal_VDPAUSurfaceAccessNV(struct gl_context *ctx, const struct marshal_cmd_VDPAUSurfaceAccessNV *restrict cmd);
-struct marshal_cmd_VDPAUMapSurfacesNV;
-uint32_t _mesa_unmarshal_VDPAUMapSurfacesNV(struct gl_context *ctx, const struct marshal_cmd_VDPAUMapSurfacesNV *restrict cmd);
-struct marshal_cmd_VDPAUUnmapSurfacesNV;
-uint32_t _mesa_unmarshal_VDPAUUnmapSurfacesNV(struct gl_context *ctx, const struct marshal_cmd_VDPAUUnmapSurfacesNV *restrict cmd);
 struct marshal_cmd_DeleteMemoryObjectsEXT;
 uint32_t _mesa_unmarshal_DeleteMemoryObjectsEXT(struct gl_context *ctx, const struct marshal_cmd_DeleteMemoryObjectsEXT *restrict cmd);
 struct marshal_cmd_MemoryObjectParameterivEXT;

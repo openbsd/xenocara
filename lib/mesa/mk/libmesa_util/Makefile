@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2023/11/02 04:53:32 jsg Exp $
+#	$OpenBSD: Makefile,v 1.10 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	mesa_util
 
@@ -23,6 +23,7 @@ SRCS=	anon_file.c \
 	log.c \
 	memstream.c \
 	mesa-sha1.c \
+	mesa-blake3.c \
 	os_file.c \
 	os_memory_fd.c \
 	os_misc.c \
@@ -42,11 +43,12 @@ SRCS=	anon_file.c \
 	sparse_array.c \
 	string_buffer.c \
 	strtod.c \
+	texcompress_astc_luts.cpp \
+	texcompress_astc_luts_wrap.cpp \
 	u_atomic.c \
 	u_call_once.c \
-	u_debug_describe.c \
-	u_debug_refcnt.c \
 	u_dl.c \
+	u_dynarray.c \
 	u_cpu_detect.c \
 	u_printf.c \
 	u_worklist.c \
@@ -61,6 +63,7 @@ SRCS=	anon_file.c \
 	u_queue.c \
 	u_thread.c \
 	u_vector.c \
+	vl_zscan_data.c \
 	vma.c \
 	mesa_cache_db.c \
 	mesa_cache_db_multipart.c

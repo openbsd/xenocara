@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2023/11/02 04:53:30 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2024/04/02 10:42:13 jsg Exp $
 
 LIB=	blorp
 
@@ -18,6 +18,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \
+		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir
 
 install:

@@ -45,6 +45,7 @@ enum blorp_op {
    BLORP_OP_HIZ_AMBIGUATE,
    BLORP_OP_HIZ_CLEAR,
    BLORP_OP_HIZ_RESOLVE,
+   BLORP_OP_MCS_AMBIGUATE,
    BLORP_OP_MCS_COLOR_CLEAR,
    BLORP_OP_MCS_PARTIAL_RESOLVE,
    BLORP_OP_SLOW_COLOR_CLEAR,
@@ -108,6 +109,9 @@ enum blorp_batch_flags {
 
    /** Use the hardware blitter to perform any operations in this batch */
    BLORP_BATCH_USE_BLITTER = (1 << 4),
+
+   /** Need a PSS Stall Sync, Wa_18019816803. */
+   BLORP_BATCH_NEED_PSS_STALL_SYNC = (1 << 5),
 };
 
 struct blorp_batch {
@@ -187,6 +191,13 @@ blorp_blit(struct blorp_batch *batch,
            float dst_x1, float dst_y1,
            enum blorp_filter filter,
            bool mirror_x, bool mirror_y);
+
+void
+blorp_copy_get_formats(const struct isl_device *isl_dev,
+                       const struct isl_surf *src_surf,
+                       const struct isl_surf *dst_surf,
+                       enum isl_format *src_view_format,
+                       enum isl_format *dst_view_format);
 
 void
 blorp_copy(struct blorp_batch *batch,
@@ -311,6 +322,11 @@ blorp_mcs_partial_resolve(struct blorp_batch *batch,
                           struct blorp_surf *surf,
                           enum isl_format format,
                           uint32_t start_layer, uint32_t num_layers);
+
+void
+blorp_mcs_ambiguate(struct blorp_batch *batch,
+                    struct blorp_surf *surf,
+                    uint32_t start_layer, uint32_t num_layers);
 
 void
 blorp_hiz_op(struct blorp_batch *batch, struct blorp_surf *surf,

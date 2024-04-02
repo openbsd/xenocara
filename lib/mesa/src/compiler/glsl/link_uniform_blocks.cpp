@@ -26,6 +26,7 @@
 #include "ir_uniform.h"
 #include "link_uniform_block_active_visitor.h"
 #include "util/hash_table.h"
+#include "util/u_math.h"
 #include "program.h"
 #include "main/errors.h"
 #include "main/shader_types.h"
@@ -71,10 +72,10 @@ private:
    {
       assert(type->is_struct());
       if (packing == GLSL_INTERFACE_PACKING_STD430)
-         this->offset = glsl_align(
+         this->offset = align(
             this->offset, type->std430_base_alignment(row_major));
       else
-         this->offset = glsl_align(
+         this->offset = align(
             this->offset, type->std140_base_alignment(row_major));
    }
 
@@ -92,10 +93,10 @@ private:
        *    multiple of the base alignment of the structure.
        */
       if (packing == GLSL_INTERFACE_PACKING_STD430)
-         this->offset = glsl_align(
+         this->offset = align(
             this->offset, type->std430_base_alignment(row_major));
       else
-         this->offset = glsl_align(
+         this->offset = align(
             this->offset, type->std140_base_alignment(row_major));
    }
 
@@ -169,7 +170,7 @@ private:
          size = type_for_size->std140_size(v->RowMajor);
       }
 
-      this->offset = glsl_align(this->offset, alignment);
+      this->offset = align(this->offset, alignment);
       v->Offset = this->offset;
 
       this->offset += size;
@@ -184,7 +185,7 @@ private:
        *    rounding up to the next multiple of the base alignment required
        *    for a vec4.
        */
-      this->buffer_size = glsl_align(this->offset, 16);
+      this->buffer_size = align(this->offset, 16);
    }
 
    bool use_std430_as_default;
@@ -305,7 +306,7 @@ process_block_array_leaf(const char *name,
        parcel->buffer_size > consts->MaxShaderStorageBlockSize) {
       linker_error(prog, "shader storage block `%s' has size %d, "
                    "which is larger than the maximum allowed (%d)",
-                   b->type->name,
+                   glsl_get_type_name(b->type),
                    parcel->buffer_size,
                    consts->MaxShaderStorageBlockSize);
    }
@@ -377,7 +378,7 @@ create_buffer_blocks(void *mem_ctx, const struct gl_constants *consts,
 
          if (b->array != NULL) {
             char *name = ralloc_strdup(NULL,
-                                       block_type->without_array()->name);
+                                       glsl_get_type_name(block_type->without_array()));
             size_t name_length = strlen(name);
 
             assert(b->has_instance_name);
@@ -386,7 +387,7 @@ create_buffer_blocks(void *mem_ctx, const struct gl_constants *consts,
                                 i);
             ralloc_free(name);
          } else {
-            process_block_array_leaf(block_type->name, blocks, &parcel,
+            process_block_array_leaf(glsl_get_type_name(block_type), blocks, &parcel,
                                      variables, b, &i, 0,
                                      0, consts, prog);
          }

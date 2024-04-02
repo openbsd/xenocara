@@ -340,7 +340,7 @@ st_framebuffer_update_attachments(struct gl_framebuffer *stfb)
  * renderbuffer).  The window system code determines the format.
  */
 static struct gl_renderbuffer *
-st_new_renderbuffer_fb(enum pipe_format format, unsigned samples, boolean sw)
+st_new_renderbuffer_fb(enum pipe_format format, unsigned samples, bool sw)
 {
    struct gl_renderbuffer *rb;
 
@@ -823,7 +823,7 @@ st_context_flush(struct st_context *st, unsigned flags,
 
    if ((flags & ST_FLUSH_WAIT) && fence && *fence) {
       st->screen->fence_finish(st->screen, NULL, *fence,
-                                     PIPE_TIMEOUT_INFINITE);
+                                     OS_TIMEOUT_INFINITE);
       st->screen->fence_reference(st->screen, fence, NULL);
    }
 
@@ -978,8 +978,15 @@ st_api_create_context(struct pipe_frontend_screen *fscreen,
    if (attribs->flags & ST_CONTEXT_FLAG_NO_ERROR)
       no_error = true;
 
+   /* OpenGL ES 2.0+ does not support sampler state LOD bias. If we are creating
+    * a GLES context, communicate that to the the driver to allow optimization.
+    */
+   bool is_gles = attribs->profile == API_OPENGLES2;
+   unsigned lod_bias_flag = is_gles ? PIPE_CONTEXT_NO_LOD_BIAS : 0;
+
    pipe = fscreen->screen->context_create(fscreen->screen, NULL,
                                           PIPE_CONTEXT_PREFER_THREADED |
+                                          lod_bias_flag |
                                           attribs->context_flags);
    if (!pipe) {
       *error = ST_CONTEXT_ERROR_NO_MEMORY;
