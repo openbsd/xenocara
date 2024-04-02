@@ -90,6 +90,10 @@ struct tu_render_pass_attachment
    bool cond_store_allowed;
 
    int32_t gmem_offset_stencil[TU_GMEM_LAYOUT_COUNT];
+
+   /* The subpass id in which the attachment will be used first/last. */
+   uint32_t first_subpass_idx;
+   uint32_t last_subpass_idx;
 };
 
 struct tu_render_pass
@@ -107,10 +111,15 @@ struct tu_render_pass
    uint32_t gmem_bandwidth_per_pixel;
    uint32_t sysmem_bandwidth_per_pixel;
 
+   unsigned num_views;
+
+   struct tu_subpass_attachment fragment_density_map;
+
    struct tu_subpass_attachment *subpass_attachments;
 
    struct tu_render_pass_attachment *attachments;
    bool has_cond_load_store;
+   bool has_fdm;
 
    struct tu_subpass_barrier end_barrier;
    struct tu_subpass subpasses[0];

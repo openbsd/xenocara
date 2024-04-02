@@ -96,6 +96,14 @@
 
 #define INTEL_AUX_MAP_FORMAT_BITS_MASK   0xfff0000000000000ull
 
+/* Mask with the firt 48bits set */
+#define VALID_ADDRESS_MASK ((1ull << 48) - 1)
+
+#define L3_ENTRY_L2_ADDR_MASK 0xffffffff8000ull
+
+#define L3_L2_BITS_PER_LEVEL 12
+#define L3_L2_SUB_TABLE_LEN (sizeof(uint64_t) * (1ull << L3_L2_BITS_PER_LEVEL))
+
 static const bool aux_map_debug = false;
 
 /**
@@ -175,14 +183,33 @@ struct aux_map_buffer {
    struct intel_buffer *buffer;
 };
 
+struct intel_aux_level {
+   /* GPU address of the  current level */
+   uint64_t address;
+
+   /* Pointer to the GPU entries of this level */
+   uint64_t *entries;
+
+   union {
+      /* Host tracking of a parent level to its children (only use on L3/L2
+       * levels which have 4096 entries)
+       */
+      struct intel_aux_level *children[4096];
+
+      /* Refcount of AUX pages at the L1 level (MTL has only 16 entries in L1,
+       * which Gfx12 has 256 entries)
+       */
+      uint32_t ref_counts[256];
+   };
+};
+
 struct intel_aux_map_context {
    void *driver_ctx;
    pthread_mutex_t mutex;
+   struct intel_aux_level *l3_level;
    struct intel_mapped_pinned_buffer_alloc *buffer_alloc;
    uint32_t num_buffers;
    struct list_head buffers;
-   uint64_t level3_base_addr;
-   uint64_t *level3_map;
    uint32_t tail_offset, tail_remaining;
    uint32_t state_num;
    const struct aux_format_info *format;
@@ -210,7 +237,7 @@ get_index(const uint64_t main_address,
 uint64_t
 intel_aux_get_meta_address_mask(struct intel_aux_map_context *ctx)
 {
-   return ~get_page_mask(get_meta_page_size(ctx->format)) << 16 >> 16;
+   return (~get_page_mask(get_meta_page_size(ctx->format))) & VALID_ADDRESS_MASK;
 }
 
 uint64_t
@@ -242,7 +269,7 @@ select_format(const struct intel_device_info *devinfo)
 static bool
 add_buffer(struct intel_aux_map_context *ctx)
 {
-   struct aux_map_buffer *buf = ralloc(ctx, struct aux_map_buffer);
+   struct aux_map_buffer *buf = rzalloc(ctx, struct aux_map_buffer);
    if (!buf)
       return false;
 
@@ -304,20 +331,31 @@ get_current_pos(struct intel_aux_map_context *ctx, uint64_t *gpu, uint64_t **map
       *map = (uint64_t*)((uint8_t*)tail->buffer->map + ctx->tail_offset);
 }
 
-static bool
-add_sub_table(struct intel_aux_map_context *ctx, uint32_t size,
-              uint32_t align, uint64_t *gpu, uint64_t **map)
+static struct intel_aux_level *
+add_sub_table(struct intel_aux_map_context *ctx,
+              struct intel_aux_level *parent,
+              uint32_t parent_index,
+              uint32_t size, uint32_t align)
 {
    if (!align_and_verify_space(ctx, size, align)) {
       if (!add_buffer(ctx))
-         return false;
+         return NULL;
       UNUSED bool aligned = align_and_verify_space(ctx, size, align);
       assert(aligned);
    }
-   get_current_pos(ctx, gpu, map);
-   memset(*map, 0, size);
+
+   struct intel_aux_level *level = rzalloc(ctx, struct intel_aux_level);
+
+   get_current_pos(ctx, &level->address, &level->entries);
+   memset(level->entries, 0, size);
    advance_current_pos(ctx, size);
-   return true;
+
+   if (parent != NULL) {
+      assert(parent->children[parent_index] == NULL);
+      parent->children[parent_index] = level;
+   }
+
+   return level;
 }
 
 uint32_t
@@ -353,11 +391,12 @@ intel_aux_map_init(void *driver_ctx,
    ctx->tail_remaining = 0;
    ctx->state_num = 0;
 
-   if (add_sub_table(ctx, 32 * 1024, 32 * 1024, &ctx->level3_base_addr,
-                     &ctx->level3_map)) {
+   ctx->l3_level = add_sub_table(ctx, NULL, 0,
+                                 L3_L2_SUB_TABLE_LEN, L3_L2_SUB_TABLE_LEN);
+   if (ctx->l3_level != NULL) {
       if (aux_map_debug)
          fprintf(stderr, "AUX-MAP L3: 0x%"PRIx64", map=%p\n",
-                 ctx->level3_base_addr, ctx->level3_map);
+                 ctx->l3_level->address, ctx->l3_level->entries);
       p_atomic_inc(&ctx->state_num);
       return ctx;
    } else {
@@ -383,6 +422,12 @@ intel_aux_map_finish(struct intel_aux_map_context *ctx)
    ralloc_free(ctx);
 }
 
+uint32_t
+intel_aux_map_get_alignment(struct intel_aux_map_context *ctx)
+{
+   return ctx->format->main_page_size;
+}
+
 uint64_t
 intel_aux_map_get_base(struct intel_aux_map_context *ctx)
 {
@@ -390,27 +435,7 @@ intel_aux_map_get_base(struct intel_aux_map_context *ctx)
     * This get initialized in intel_aux_map_init, and never changes, so there is
     * no need to lock the mutex.
     */
-   return ctx->level3_base_addr;
-}
-
-static struct aux_map_buffer *
-find_buffer(struct intel_aux_map_context *ctx, uint64_t addr)
-{
-   list_for_each_entry(struct aux_map_buffer, buf, &ctx->buffers, link) {
-      if (buf->buffer->gpu <= addr && buf->buffer->gpu_end > addr) {
-         return buf;
-      }
-   }
-   return NULL;
-}
-
-static uint64_t *
-get_u64_entry_ptr(struct intel_aux_map_context *ctx, uint64_t addr)
-{
-   struct aux_map_buffer *buf = find_buffer(ctx, addr);
-   assert(buf);
-   uintptr_t map_offset = addr - buf->buffer->gpu;
-   return (uint64_t*)((uint8_t*)buf->buffer->map + map_offset);
+   return ctx->l3_level->address;
 }
 
 static uint8_t
@@ -442,7 +467,8 @@ get_bpp_encoding(enum isl_format format)
    }
 }
 
-#define INTEL_AUX_MAP_ENTRY_Y_TILED_BIT  (0x1ull << 52)
+#define INTEL_AUX_MAP_ENTRY_Ys_TILED_BIT  (0x0ull << 52)
+#define INTEL_AUX_MAP_ENTRY_Y_TILED_BIT   (0x1ull << 52)
 
 uint64_t
 intel_aux_map_format_bits(enum isl_tiling tiling, enum isl_format format,
@@ -460,11 +486,19 @@ intel_aux_map_format_bits(enum isl_tiling tiling, enum isl_format format,
               isl_format_get_name(format),
               isl_format_get_aux_map_encoding(format));
 
+   assert(tiling == ISL_TILING_ICL_Ys ||
+          tiling == ISL_TILING_ICL_Yf ||
+          tiling == ISL_TILING_Y0);
+
    uint64_t format_bits =
       ((uint64_t)isl_format_get_aux_map_encoding(format) << 58) |
       ((uint64_t)(plane > 0) << 57) |
       ((uint64_t)get_bpp_encoding(format) << 54) |
-      INTEL_AUX_MAP_ENTRY_Y_TILED_BIT;
+      /* TODO: We assume that Yf is not Tiled-Ys, but waiting on
+       *       clarification
+       */
+      (tiling == ISL_TILING_ICL_Ys ? INTEL_AUX_MAP_ENTRY_Ys_TILED_BIT :
+                                     INTEL_AUX_MAP_ENTRY_Y_TILED_BIT);
 
    assert((format_bits & INTEL_AUX_MAP_FORMAT_BITS_MASK) == format_bits);
 
@@ -478,69 +512,82 @@ intel_aux_map_format_bits_for_isl_surf(const struct isl_surf *isl_surf)
    return intel_aux_map_format_bits(isl_surf->tiling, isl_surf->format, 0);
 }
 
-static void
-get_aux_entry(struct intel_aux_map_context *ctx, uint64_t address,
-              uint32_t *l1_index_out, uint64_t *l1_entry_addr_out,
-              uint64_t **l1_entry_map_out)
+static uint64_t
+get_l1_addr_mask(struct intel_aux_map_context *ctx)
 {
-   uint32_t l3_index = (address >> 36) & 0xfff;
-   uint64_t *l3_entry = &ctx->level3_map[l3_index];
-
-   uint64_t *l2_map;
-   if ((*l3_entry & INTEL_AUX_MAP_ENTRY_VALID_BIT) == 0) {
-      uint64_t l2_gpu;
-      if (add_sub_table(ctx, 32 * 1024, 32 * 1024, &l2_gpu, &l2_map)) {
-         if (aux_map_debug)
-            fprintf(stderr, "AUX-MAP L3[0x%x]: 0x%"PRIx64", map=%p\n",
-                    l3_index, l2_gpu, l2_map);
-      } else {
-         unreachable("Failed to add L2 Aux-Map Page Table!");
-      }
-      *l3_entry = (l2_gpu & 0xffffffff8000ULL) | 1;
-   } else {
-      uint64_t l2_addr = intel_canonical_address(*l3_entry & ~0x7fffULL);
-      l2_map = get_u64_entry_ptr(ctx, l2_addr);
-   }
-   uint32_t l2_index = (address >> 24) & 0xfff;
-   uint64_t *l2_entry = &l2_map[l2_index];
-   uint64_t l1_page_size = ctx->format->l1_page_size;
-   uint64_t l1_addr, *l1_map;
-   if ((*l2_entry & INTEL_AUX_MAP_ENTRY_VALID_BIT) == 0) {
-      if (add_sub_table(ctx, l1_page_size, l1_page_size, &l1_addr, &l1_map)) {
-         if (aux_map_debug)
-            fprintf(stderr, "AUX-MAP L2[0x%x]: 0x%"PRIx64", map=%p\n",
-                    l2_index, l1_addr, l1_map);
-      } else {
-         unreachable("Failed to add L1 Aux-Map Page Table!");
-      }
-      *l2_entry = (l1_addr & ~get_page_mask(l1_page_size)) | 1;
-   } else {
-      l1_addr = intel_canonical_address(
-            *l2_entry & ~get_page_mask(l1_page_size));
-      l1_map = get_u64_entry_ptr(ctx, l1_addr);
-   }
-   uint32_t l1_index = get_index(address, ctx->format->l1_index_mask,
-         ctx->format->l1_index_offset);
-   if (l1_index_out)
-      *l1_index_out = l1_index;
-   if (l1_entry_addr_out)
-      *l1_entry_addr_out = l1_addr + l1_index * sizeof(*l1_map);
-   if (l1_entry_map_out)
-      *l1_entry_map_out = &l1_map[l1_index];
+   uint64_t l1_addr = ~get_page_mask(ctx->format->l1_page_size);
+   return l1_addr & VALID_ADDRESS_MASK;
 }
 
 static void
-add_mapping(struct intel_aux_map_context *ctx, uint64_t address,
+get_aux_entry(struct intel_aux_map_context *ctx, uint64_t main_address,
+              uint32_t *l1_index_out, uint64_t *l1_entry_addr_out,
+              uint64_t **l1_entry_map_out,
+              struct intel_aux_level **l1_aux_level_out)
+{
+   struct intel_aux_level *l3_level = ctx->l3_level;
+   struct intel_aux_level *l2_level;
+   struct intel_aux_level *l1_level;
+
+   uint32_t l3_index = (main_address >> 36) & 0xfff;
+
+   if (l3_level->children[l3_index] == NULL) {
+      l2_level =
+         add_sub_table(ctx, ctx->l3_level, l3_index,
+                       L3_L2_SUB_TABLE_LEN, L3_L2_SUB_TABLE_LEN);
+      if (l2_level != NULL) {
+         if (aux_map_debug)
+            fprintf(stderr, "AUX-MAP L3[0x%x]: 0x%"PRIx64", map=%p\n",
+                    l3_index, l2_level->address, l2_level->entries);
+      } else {
+         unreachable("Failed to add L2 Aux-Map Page Table!");
+      }
+      l3_level->entries[l3_index] = (l2_level->address & L3_ENTRY_L2_ADDR_MASK) |
+                                    INTEL_AUX_MAP_ENTRY_VALID_BIT;
+   } else {
+      l2_level = l3_level->children[l3_index];
+   }
+   uint32_t l2_index = (main_address >> 24) & 0xfff;
+   uint64_t l1_page_size = ctx->format->l1_page_size;
+   if (l2_level->children[l2_index] == NULL) {
+      l1_level = add_sub_table(ctx, l2_level, l2_index, l1_page_size, l1_page_size);
+      if (l1_level != NULL) {
+         if (aux_map_debug)
+            fprintf(stderr, "AUX-MAP L2[0x%x]: 0x%"PRIx64", map=%p\n",
+                    l2_index, l1_level->address, l1_level->entries);
+      } else {
+         unreachable("Failed to add L1 Aux-Map Page Table!");
+      }
+      l2_level->entries[l2_index] = (l1_level->address & get_l1_addr_mask(ctx)) |
+                                    INTEL_AUX_MAP_ENTRY_VALID_BIT;
+   } else {
+      l1_level = l2_level->children[l2_index];
+   }
+   uint32_t l1_index = get_index(main_address, ctx->format->l1_index_mask,
+                                 ctx->format->l1_index_offset);
+   if (l1_index_out)
+      *l1_index_out = l1_index;
+   if (l1_entry_addr_out)
+      *l1_entry_addr_out = intel_canonical_address(l1_level->address + l1_index * sizeof(uint64_t));
+   if (l1_entry_map_out)
+      *l1_entry_map_out = &l1_level->entries[l1_index];
+   if (l1_aux_level_out)
+      *l1_aux_level_out = l1_level;
+}
+
+static bool
+add_mapping(struct intel_aux_map_context *ctx, uint64_t main_address,
             uint64_t aux_address, uint64_t format_bits,
             bool *state_changed)
 {
    if (aux_map_debug)
-      fprintf(stderr, "AUX-MAP 0x%"PRIx64" => 0x%"PRIx64"\n", address,
+      fprintf(stderr, "AUX-MAP 0x%"PRIx64" => 0x%"PRIx64"\n", main_address,
               aux_address);
 
    uint32_t l1_index;
    uint64_t *l1_entry;
-   get_aux_entry(ctx, address, &l1_index, NULL, &l1_entry);
+   struct intel_aux_level *l1_aux_level;
+   get_aux_entry(ctx, main_address, &l1_index, NULL, &l1_entry, &l1_aux_level);
 
    const uint64_t l1_data =
       (aux_address & intel_aux_get_meta_address_mask(ctx)) |
@@ -549,6 +596,7 @@ add_mapping(struct intel_aux_map_context *ctx, uint64_t address,
 
    const uint64_t current_l1_data = *l1_entry;
    if ((current_l1_data & INTEL_AUX_MAP_ENTRY_VALID_BIT) == 0) {
+      assert(l1_aux_level->ref_counts[l1_index] == 0);
       assert((aux_address & 0xffULL) == 0);
       if (aux_map_debug)
          fprintf(stderr, "AUX-MAP L1[0x%x] 0x%"PRIx64" -> 0x%"PRIx64"\n",
@@ -567,44 +615,33 @@ add_mapping(struct intel_aux_map_context *ctx, uint64_t address,
       if (aux_map_debug)
          fprintf(stderr, "AUX-MAP L1[0x%x] is already marked valid!\n",
                  l1_index);
-      assert(*l1_entry == l1_data);
+
+      if (*l1_entry != l1_data) {
+         if (aux_map_debug)
+            fprintf(stderr,
+                    "AUX-MAP L1[0x%x] overwrite 0x%"PRIx64" != 0x%"PRIx64"\n",
+                    l1_index, current_l1_data, l1_data);
+
+         return false;
+      }
    }
+
+   l1_aux_level->ref_counts[l1_index]++;
+
+   return true;
 }
 
 uint64_t *
 intel_aux_map_get_entry(struct intel_aux_map_context *ctx,
-                        uint64_t address,
-                        uint64_t *entry_address)
+                        uint64_t main_address,
+                        uint64_t *aux_entry_address)
 {
    pthread_mutex_lock(&ctx->mutex);
    uint64_t *l1_entry_map;
-   get_aux_entry(ctx, address, NULL, entry_address, &l1_entry_map);
+   get_aux_entry(ctx, main_address, NULL, aux_entry_address, &l1_entry_map, NULL);
    pthread_mutex_unlock(&ctx->mutex);
 
    return l1_entry_map;
-}
-
-void
-intel_aux_map_add_mapping(struct intel_aux_map_context *ctx, uint64_t address,
-                          uint64_t aux_address, uint64_t main_size_B,
-                          uint64_t format_bits)
-{
-   bool state_changed = false;
-   pthread_mutex_lock(&ctx->mutex);
-   uint64_t map_addr = address;
-   uint64_t dest_aux_addr = aux_address;
-   uint64_t main_page_size = ctx->format->main_page_size;
-   assert((address & get_page_mask(main_page_size)) == 0);
-   uint64_t aux_page_size = get_meta_page_size(ctx->format);
-   assert((aux_address & get_page_mask(aux_page_size)) == 0);
-   while (map_addr - address < main_size_B) {
-      add_mapping(ctx, map_addr, dest_aux_addr, format_bits, &state_changed);
-      map_addr += main_page_size;
-      dest_aux_addr += aux_page_size;
-   }
-   pthread_mutex_unlock(&ctx->mutex);
-   if (state_changed)
-      p_atomic_inc(&ctx->state_num);
 }
 
 /**
@@ -614,71 +651,115 @@ intel_aux_map_add_mapping(struct intel_aux_map_context *ctx, uint64_t address,
  * tables.
  */
 static void
-remove_mapping(struct intel_aux_map_context *ctx, uint64_t address,
-               bool *state_changed)
+remove_l1_mapping_locked(struct intel_aux_map_context *ctx, uint64_t main_address,
+                         bool reset_refcount, bool *state_changed)
 {
-   uint32_t l3_index = (address >> 36) & 0xfff;
-   uint64_t *l3_entry = &ctx->level3_map[l3_index];
-
-   uint64_t *l2_map;
-   if ((*l3_entry & INTEL_AUX_MAP_ENTRY_VALID_BIT) == 0) {
-      return;
-   } else {
-      uint64_t l2_addr = intel_canonical_address(*l3_entry & ~0x7fffULL);
-      l2_map = get_u64_entry_ptr(ctx, l2_addr);
-   }
-   uint32_t l2_index = (address >> 24) & 0xfff;
-   uint64_t *l2_entry = &l2_map[l2_index];
-
-   uint64_t *l1_map;
-   if ((*l2_entry & INTEL_AUX_MAP_ENTRY_VALID_BIT) == 0) {
-      return;
-   } else {
-      uint64_t l1_addr = intel_canonical_address(
-            *l2_entry & ~get_page_mask(ctx->format->l1_page_size));
-      l1_map = get_u64_entry_ptr(ctx, l1_addr);
-   }
-   uint32_t l1_index = get_index(address, ctx->format->l1_index_mask,
-         ctx->format->l1_index_offset);
-   uint64_t *l1_entry = &l1_map[l1_index];
+   uint32_t l1_index;
+   uint64_t *l1_entry;
+   struct intel_aux_level *l1_aux_level;
+   get_aux_entry(ctx, main_address, &l1_index, NULL, &l1_entry, &l1_aux_level);
 
    const uint64_t current_l1_data = *l1_entry;
-   const uint64_t l1_data = current_l1_data & ~1ull;
+   const uint64_t l1_data = current_l1_data & ~INTEL_AUX_MAP_ENTRY_VALID_BIT;
 
    if ((current_l1_data & INTEL_AUX_MAP_ENTRY_VALID_BIT) == 0) {
+      assert(l1_aux_level->ref_counts[l1_index] == 0);
       return;
-   } else {
-      if (aux_map_debug)
-         fprintf(stderr, "AUX-MAP [0x%x][0x%x][0x%x] L1 entry removed!\n",
-                 l3_index, l2_index, l1_index);
-      /**
-       * We use non-zero bits in 63:1 to indicate the entry had been filled
-       * previously. In the unlikely event that these are all zero, we force a
-       * flush of the aux-map tables.
-       */
+   } else if (reset_refcount) {
+      l1_aux_level->ref_counts[l1_index] = 0;
       if (unlikely(l1_data == 0))
          *state_changed = true;
       *l1_entry = l1_data;
+   } else {
+      assert(l1_aux_level->ref_counts[l1_index] > 0);
+      if (--l1_aux_level->ref_counts[l1_index] == 0) {
+         /**
+          * We use non-zero bits in 63:1 to indicate the entry had been filled
+          * previously. In the unlikely event that these are all zero, we
+          * force a flush of the aux-map tables.
+          */
+         if (unlikely(l1_data == 0))
+            *state_changed = true;
+         *l1_entry = l1_data;
+      }
    }
 }
 
+static void
+remove_mapping_locked(struct intel_aux_map_context *ctx, uint64_t main_address,
+                      uint64_t size, bool reset_refcount, bool *state_changed)
+{
+   if (aux_map_debug)
+      fprintf(stderr, "AUX-MAP remove 0x%"PRIx64"-0x%"PRIx64"\n", main_address,
+              main_address + size);
+
+   uint64_t main_inc_addr = main_address;
+   uint64_t main_page_size = ctx->format->main_page_size;
+   assert((main_address & get_page_mask(main_page_size)) == 0);
+   while (main_inc_addr - main_address < size) {
+      remove_l1_mapping_locked(ctx, main_inc_addr, reset_refcount,
+                               state_changed);
+      main_inc_addr += main_page_size;
+   }
+}
+
+bool
+intel_aux_map_add_mapping(struct intel_aux_map_context *ctx, uint64_t main_address,
+                          uint64_t aux_address, uint64_t main_size_B,
+                          uint64_t format_bits)
+{
+   bool state_changed = false;
+   pthread_mutex_lock(&ctx->mutex);
+   uint64_t main_inc_addr = main_address;
+   uint64_t aux_inc_addr = aux_address;
+   const uint64_t main_page_size = ctx->format->main_page_size;
+   assert((main_address & get_page_mask(main_page_size)) == 0);
+   const uint64_t aux_page_size = get_meta_page_size(ctx->format);
+   assert((aux_address & get_page_mask(aux_page_size)) == 0);
+   while (main_inc_addr - main_address < main_size_B) {
+      if (!add_mapping(ctx, main_inc_addr, aux_inc_addr, format_bits,
+                       &state_changed)) {
+         break;
+      }
+      main_inc_addr = main_inc_addr + main_page_size;
+      aux_inc_addr = aux_inc_addr + aux_page_size;
+   }
+   bool success = main_inc_addr - main_address >= main_size_B;
+   if (!success && (main_inc_addr - main_address) > 0) {
+      /* If the mapping failed, remove the mapped portion. */
+      remove_mapping_locked(ctx, main_address,
+                            main_size_B - (main_inc_addr - main_address),
+                            false /* reset_refcount */, &state_changed);
+   }
+   pthread_mutex_unlock(&ctx->mutex);
+   if (state_changed)
+      p_atomic_inc(&ctx->state_num);
+
+
+   return success;
+}
+
 void
-intel_aux_map_unmap_range(struct intel_aux_map_context *ctx, uint64_t address,
+intel_aux_map_del_mapping(struct intel_aux_map_context *ctx, uint64_t main_address,
                           uint64_t size)
 {
    bool state_changed = false;
    pthread_mutex_lock(&ctx->mutex);
-   if (aux_map_debug)
-      fprintf(stderr, "AUX-MAP remove 0x%"PRIx64"-0x%"PRIx64"\n", address,
-              address + size);
+   remove_mapping_locked(ctx, main_address, size, false /* reset_refcount */,
+                         &state_changed);
+   pthread_mutex_unlock(&ctx->mutex);
+   if (state_changed)
+      p_atomic_inc(&ctx->state_num);
+}
 
-   uint64_t map_addr = address;
-   uint64_t main_page_size = ctx->format->main_page_size;
-   assert((address & get_page_mask(main_page_size)) == 0);
-   while (map_addr - address < size) {
-      remove_mapping(ctx, map_addr, &state_changed);
-      map_addr += main_page_size;
-   }
+void
+intel_aux_map_unmap_range(struct intel_aux_map_context *ctx, uint64_t main_address,
+                          uint64_t size)
+{
+   bool state_changed = false;
+   pthread_mutex_lock(&ctx->mutex);
+   remove_mapping_locked(ctx, main_address, size, true /* reset_refcount */,
+                         &state_changed);
    pthread_mutex_unlock(&ctx->mutex);
    if (state_changed)
       p_atomic_inc(&ctx->state_num);

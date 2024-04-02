@@ -97,10 +97,12 @@ VkResult anv_QueuePresentKHR(
 
    if (device->debug_frame_desc) {
       device->debug_frame_desc->frame_id++;
-      if (device->physical->memory.need_clflush) {
-         intel_clflush_range(device->debug_frame_desc,
+#ifdef SUPPORT_INTEL_INTEGRATED_GPUS
+      if (device->physical->memory.need_flush) {
+         intel_flush_range(device->debug_frame_desc,
                            sizeof(*device->debug_frame_desc));
       }
+#endif
    }
 
    result = vk_queue_wait_before_present(&queue->vk, pPresentInfo);
@@ -112,7 +114,7 @@ VkResult anv_QueuePresentKHR(
                                      _queue, 0,
                                      pPresentInfo);
 
-   u_trace_context_process(&device->ds.trace_context, true);
+   intel_ds_device_process(&device->ds, true);
 
    return result;
 }

@@ -42,6 +42,7 @@
 #include "pvr_static_shaders.h"
 #include "pvr_tex_state.h"
 #include "pvr_types.h"
+#include "pvr_uscgen.h"
 #include "util/bitscan.h"
 #include "util/macros.h"
 #include "util/simple_mtx.h"
@@ -110,7 +111,8 @@ pvr_spm_scratch_buffer_calc_required_size(const struct pvr_render_pass *pass,
 
    buffer_size = ALIGN_POT((uint64_t)framebuffer_width,
                            PVRX(CR_PBE_WORD0_MRT0_LINESTRIDE_ALIGNMENT));
-   buffer_size *= (uint64_t)framebuffer_height * dwords_per_pixel * 4;
+   buffer_size *=
+      (uint64_t)framebuffer_height * PVR_DW_TO_BYTES(dwords_per_pixel);
 
    return buffer_size;
 }
@@ -259,8 +261,8 @@ VkResult pvr_device_init_spm_load_state(struct pvr_device *device)
    uint32_t usc_aligned_offsets[PVR_SPM_LOAD_PROGRAM_COUNT];
    uint32_t pds_allocation_size = 0;
    uint32_t usc_allocation_size = 0;
-   struct pvr_bo *pds_bo;
-   struct pvr_bo *usc_bo;
+   struct pvr_suballoc_bo *pds_bo;
+   struct pvr_suballoc_bo *usc_bo;
    uint8_t *mem_ptr;
    VkResult result;
 
@@ -281,24 +283,21 @@ VkResult pvr_device_init_spm_load_state(struct pvr_device *device)
       usc_allocation_size += ALIGN_POT(spm_load_collection[i].size, 4);
    }
 
-   result = pvr_bo_alloc(device,
-                         device->heaps.usc_heap,
-                         usc_allocation_size,
-                         4,
-                         PVR_BO_ALLOC_FLAG_CPU_MAPPED,
-                         &usc_bo);
+   result = pvr_bo_suballoc(&device->suballoc_usc,
+                            usc_allocation_size,
+                            4,
+                            false,
+                            &usc_bo);
    if (result != VK_SUCCESS)
       return result;
 
-   mem_ptr = (uint8_t *)usc_bo->bo->map;
+   mem_ptr = (uint8_t *)pvr_bo_suballoc_get_map_addr(usc_bo);
 
    for (uint32_t i = 0; i < ARRAY_SIZE(spm_load_collection); i++) {
       memcpy(mem_ptr + usc_aligned_offsets[i],
              spm_load_collection[i].code,
              spm_load_collection[i].size);
    }
-
-   pvr_bo_cpu_unmap(device, usc_bo);
 
    /* Upload PDS programs. */
 
@@ -325,30 +324,31 @@ VkResult pvr_device_init_spm_load_state(struct pvr_device *device)
 
       pds_texture_aligned_offsets[i] = pds_allocation_size;
       /* FIXME: Figure out the define for alignment of 16. */
-      pds_allocation_size += ALIGN_POT(pds_texture_program.code_size * 4, 16);
+      pds_allocation_size +=
+         ALIGN_POT(PVR_DW_TO_BYTES(pds_texture_program.code_size), 16);
 
       pvr_pds_set_sizes_pixel_shader(&pds_kick_program);
 
       pds_kick_aligned_offsets[i] = pds_allocation_size;
       /* FIXME: Figure out the define for alignment of 16. */
-      pds_allocation_size += ALIGN_POT(
-         (pds_kick_program.code_size + pds_kick_program.data_size) * 4,
-         16);
+      pds_allocation_size +=
+         ALIGN_POT(PVR_DW_TO_BYTES(pds_kick_program.code_size +
+                                   pds_kick_program.data_size),
+                   16);
    }
 
    /* FIXME: Figure out the define for alignment of 16. */
-   result = pvr_bo_alloc(device,
-                         device->heaps.pds_heap,
-                         pds_allocation_size,
-                         16,
-                         PVR_BO_ALLOC_FLAG_CPU_MAPPED,
-                         &pds_bo);
+   result = pvr_bo_suballoc(&device->suballoc_pds,
+                            pds_allocation_size,
+                            16,
+                            false,
+                            &pds_bo);
    if (result != VK_SUCCESS) {
-      pvr_bo_free(device, usc_bo);
+      pvr_bo_suballoc_free(usc_bo);
       return result;
    }
 
-   mem_ptr = (uint8_t *)pds_bo->bo->map;
+   mem_ptr = (uint8_t *)pvr_bo_suballoc_get_map_addr(pds_bo);
 
    for (uint32_t i = 0; i < ARRAY_SIZE(spm_load_collection); i++) {
       struct pvr_pds_pixel_shader_sa_program pds_texture_program = {
@@ -356,17 +356,23 @@ VkResult pvr_device_init_spm_load_state(struct pvr_device *device)
          .num_texture_dma_kicks = 1,
       };
       const pvr_dev_addr_t usc_program_dev_addr =
-         PVR_DEV_ADDR_OFFSET(usc_bo->vma->dev_addr, usc_aligned_offsets[i]);
+         PVR_DEV_ADDR_OFFSET(usc_bo->dev_addr, usc_aligned_offsets[i]);
       struct pvr_pds_kickusc_program pds_kick_program = { 0 };
+      enum PVRX(PDSINST_DOUTU_SAMPLE_RATE) sample_rate;
 
       pvr_pds_generate_pixel_shader_sa_code_segment(
          &pds_texture_program,
          (uint32_t *)(mem_ptr + pds_texture_aligned_offsets[i]));
 
+      if (spm_load_collection[i].info->msaa_sample_count > 1)
+         sample_rate = PVRX(PDSINST_DOUTU_SAMPLE_RATE_FULL);
+      else
+         sample_rate = PVRX(PDSINST_DOUTU_SAMPLE_RATE_INSTANCE);
+
       pvr_pds_setup_doutu(&pds_kick_program.usc_task_control,
                           usc_program_dev_addr.addr,
                           spm_load_collection[i].info->temps_required,
-                          PVRX(PDSINST_DOUTU_SAMPLE_RATE_INSTANCE),
+                          sample_rate,
                           false);
 
       /* Generated both code and data. */
@@ -375,11 +381,9 @@ VkResult pvr_device_init_spm_load_state(struct pvr_device *device)
          (uint32_t *)(mem_ptr + pds_kick_aligned_offsets[i]));
 
       device->spm_load_state.load_program[i].pds_pixel_program_offset =
-         PVR_DEV_ADDR_OFFSET(pds_bo->vma->dev_addr,
-                             pds_kick_aligned_offsets[i]);
+         PVR_DEV_ADDR_OFFSET(pds_bo->dev_addr, pds_kick_aligned_offsets[i]);
       device->spm_load_state.load_program[i].pds_uniform_program_offset =
-         PVR_DEV_ADDR_OFFSET(pds_bo->vma->dev_addr,
-                             pds_texture_aligned_offsets[i]);
+         PVR_DEV_ADDR_OFFSET(pds_bo->dev_addr, pds_texture_aligned_offsets[i]);
 
       /* TODO: From looking at the pvr_pds_generate_...() functions, it seems
        * like temps_used is always 1. Should we remove this and hard code it
@@ -389,8 +393,6 @@ VkResult pvr_device_init_spm_load_state(struct pvr_device *device)
          pds_texture_program.temps_used;
    }
 
-   pvr_bo_cpu_unmap(device, pds_bo);
-
    device->spm_load_state.usc_programs = usc_bo;
    device->spm_load_state.pds_programs = pds_bo;
 
@@ -399,8 +401,8 @@ VkResult pvr_device_init_spm_load_state(struct pvr_device *device)
 
 void pvr_device_finish_spm_load_state(struct pvr_device *device)
 {
-   pvr_bo_free(device, device->spm_load_state.pds_programs);
-   pvr_bo_free(device, device->spm_load_state.usc_programs);
+   pvr_bo_suballoc_free(device->spm_load_state.pds_programs);
+   pvr_bo_suballoc_free(device->spm_load_state.usc_programs);
 }
 
 static inline enum PVRX(PBESTATE_PACKMODE)
@@ -470,7 +472,7 @@ static uint64_t pvr_spm_setup_pbe_state(
                       pbe_reg_words_out);
 
    return (uint64_t)stride * framebuffer_size->height * sample_count *
-          dword_count * sizeof(uint32_t);
+          PVR_DW_TO_BYTES(dword_count);
 }
 
 static inline void pvr_set_pbe_all_valid_mask(struct usc_mrt_desc *desc)
@@ -508,7 +510,6 @@ static uint64_t pvr_spm_setup_pbe_eight_dword_write(
    uint32_t pbe_state_word_1_out[static const ROGUE_NUM_PBESTATE_STATE_WORDS],
    uint64_t pbe_reg_word_0_out[static const ROGUE_NUM_PBESTATE_REG_WORDS],
    uint64_t pbe_reg_word_1_out[static const ROGUE_NUM_PBESTATE_REG_WORDS],
-   struct usc_mrt_resource mrt_resources[static const 2],
    uint32_t *render_target_used_out)
 {
    const uint32_t max_pbe_write_size_dw = 4;
@@ -534,19 +535,6 @@ static uint64_t pvr_spm_setup_pbe_eight_dword_write(
 
    PVR_DEV_ADDR_ADVANCE(scratch_buffer_addr, mem_stored);
 
-   mrt_resources[render_target_used] = (struct usc_mrt_resource){
-      .mrt_desc = {
-         .intermediate_size = max_pbe_write_size_dw * sizeof(uint32_t),
-      },
-      .type = source_type,
-      .intermediate_size = max_pbe_write_size_dw * sizeof(uint32_t),
-   };
-
-   if (source_type == USC_MRT_RESOURCE_TYPE_MEMORY)
-      mrt_resources[render_target_used].mem.tile_buffer = tile_buffer_idx;
-
-   pvr_set_pbe_all_valid_mask(&mrt_resources[render_target_used].mrt_desc);
-
    render_target_used++;
 
    mem_stored += pvr_spm_setup_pbe_state(dev_info,
@@ -559,24 +547,6 @@ static uint64_t pvr_spm_setup_pbe_eight_dword_write(
                                          pbe_reg_word_1_out);
 
    PVR_DEV_ADDR_ADVANCE(scratch_buffer_addr, mem_stored);
-
-   mrt_resources[render_target_used] = (struct usc_mrt_resource){
-      .mrt_desc = {
-         .intermediate_size = max_pbe_write_size_dw * sizeof(uint32_t),
-      },
-      .type = source_type,
-      .intermediate_size = max_pbe_write_size_dw * sizeof(uint32_t),
-   };
-
-   if (source_type == USC_MRT_RESOURCE_TYPE_OUTPUT_REG) {
-      /* Start from o4. */
-      mrt_resources[render_target_used].reg.output_reg = max_pbe_write_size_dw;
-   } else {
-      mrt_resources[render_target_used].mem.tile_buffer = tile_buffer_idx;
-      mrt_resources[render_target_used].mem.offset_dw = max_pbe_write_size_dw;
-   }
-
-   pvr_set_pbe_all_valid_mask(&mrt_resources[render_target_used].mrt_desc);
 
    render_target_used++;
    *render_target_used_out = render_target_used;
@@ -594,7 +564,7 @@ static uint64_t pvr_spm_setup_pbe_eight_dword_write(
  */
 static VkResult pvr_pds_pixel_event_program_create_and_upload(
    struct pvr_device *device,
-   const struct pvr_bo *usc_eot_program,
+   const struct pvr_suballoc_bo *usc_eot_program,
    uint32_t usc_temp_count,
    struct pvr_pds_upload *const pds_upload_out)
 {
@@ -604,14 +574,14 @@ static VkResult pvr_pds_pixel_event_program_create_and_upload(
    VkResult result;
 
    pvr_pds_setup_doutu(&program.task_control,
-                       usc_eot_program->vma->dev_addr.addr,
+                       usc_eot_program->dev_addr.addr,
                        usc_temp_count,
                        PVRX(PDSINST_DOUTU_SAMPLE_RATE_INSTANCE),
                        false);
 
    staging_buffer =
       vk_alloc(&device->vk.alloc,
-               device->pixel_event_data_size_in_dwords * sizeof(uint32_t),
+               PVR_DW_TO_BYTES(device->pixel_event_data_size_in_dwords),
                8,
                VK_SYSTEM_ALLOCATION_SCOPE_COMMAND);
    if (!staging_buffer)
@@ -647,31 +617,22 @@ pvr_spm_init_eot_state(struct pvr_device *device,
                        const struct pvr_renderpass_hwsetup_render *hw_render,
                        uint32_t *emit_count_out)
 {
-   const struct pvr_device_info *dev_info = &device->pdevice->dev_info;
-   struct pvr_pds_upload pds_eot_program;
-   uint64_t mem_stored;
-   VkResult result;
-
    const VkExtent2D framebuffer_size = {
       .width = framebuffer->width,
       .height = framebuffer->height,
    };
+   uint32_t pbe_state_words[PVR_MAX_COLOR_ATTACHMENTS]
+                           [ROGUE_NUM_PBESTATE_STATE_WORDS];
+   const struct pvr_device_info *dev_info = &device->pdevice->dev_info;
+   uint32_t total_render_target_used = 0;
+   struct pvr_pds_upload pds_eot_program;
+   struct util_dynarray usc_shader_binary;
+   uint32_t usc_temp_count;
+   VkResult result;
+
    pvr_dev_addr_t next_scratch_buffer_addr =
       framebuffer->scratch_buffer->bo->vma->dev_addr;
-
-   /* TODO: These are only setup but not used for now. They will be used by the
-    * compiler once it's hooked up to generate the eot shader.
-    */
-   struct usc_mrt_resource mrt_resources[PVR_MAX_COLOR_ATTACHMENTS];
-   struct usc_mrt_setup mrt_setup = {
-      .num_output_regs = hw_render->output_regs_count,
-      .tile_buffer_size = pvr_get_tile_buffer_size(device),
-      .mrt_resources = mrt_resources,
-   };
-
-   /* FIXME: Remove this hard coding. */
-   uint32_t empty_eot_program[8] = { 0 };
-   uint32_t usc_temp_count = 0;
+   uint64_t mem_stored;
 
    /* TODO: See if instead of having a separate path for devices with 8 output
     * regs we can instead do this in a loop and dedup some stuff.
@@ -690,21 +651,23 @@ pvr_spm_init_eot_state(struct pvr_device *device,
          USC_MRT_RESOURCE_TYPE_OUTPUT_REG,
          0,
          next_scratch_buffer_addr,
-         spm_eot_state->pbe_cs_words[mrt_setup.num_render_targets],
-         spm_eot_state->pbe_cs_words[mrt_setup.num_render_targets + 1],
-         spm_eot_state->pbe_reg_words[mrt_setup.num_render_targets],
-         spm_eot_state->pbe_reg_words[mrt_setup.num_render_targets + 1],
-         &mrt_resources[mrt_setup.num_render_targets],
+         pbe_state_words[total_render_target_used],
+         pbe_state_words[total_render_target_used + 1],
+         spm_eot_state->pbe_reg_words[total_render_target_used],
+         spm_eot_state->pbe_reg_words[total_render_target_used + 1],
          &render_targets_used);
 
       PVR_DEV_ADDR_ADVANCE(next_scratch_buffer_addr, mem_stored);
-      mrt_setup.num_render_targets += render_targets_used;
+      total_render_target_used += render_targets_used;
 
       /* Store off-chip tile data (i.e. tile buffers). */
 
       for (uint32_t i = 0; i < hw_render->tile_buffers_count; i++) {
+         assert(!"Add support for tile buffers in EOT");
+         pvr_finishme("Add support for tile buffers in EOT");
+
          /* `+ 1` since we have 2 emits per tile buffer. */
-         assert(mrt_setup.num_render_targets + 1 < PVR_MAX_COLOR_ATTACHMENTS);
+         assert(total_render_target_used + 1 < PVR_MAX_COLOR_ATTACHMENTS);
 
          mem_stored = pvr_spm_setup_pbe_eight_dword_write(
             dev_info,
@@ -713,15 +676,14 @@ pvr_spm_init_eot_state(struct pvr_device *device,
             USC_MRT_RESOURCE_TYPE_MEMORY,
             i,
             next_scratch_buffer_addr,
-            spm_eot_state->pbe_cs_words[mrt_setup.num_render_targets],
-            spm_eot_state->pbe_cs_words[mrt_setup.num_render_targets + 1],
-            spm_eot_state->pbe_reg_words[mrt_setup.num_render_targets],
-            spm_eot_state->pbe_reg_words[mrt_setup.num_render_targets + 1],
-            &mrt_resources[mrt_setup.num_render_targets],
+            pbe_state_words[total_render_target_used],
+            pbe_state_words[total_render_target_used + 1],
+            spm_eot_state->pbe_reg_words[total_render_target_used],
+            spm_eot_state->pbe_reg_words[total_render_target_used + 1],
             &render_targets_used);
 
          PVR_DEV_ADDR_ADVANCE(next_scratch_buffer_addr, mem_stored);
-         mrt_setup.num_render_targets += render_targets_used;
+         total_render_target_used += render_targets_used;
       }
    } else {
       /* Store on-chip tile data (i.e. output regs). */
@@ -733,28 +695,20 @@ pvr_spm_init_eot_state(struct pvr_device *device,
          PVR_PBE_STARTPOS_BIT0,
          hw_render->sample_count,
          next_scratch_buffer_addr,
-         spm_eot_state->pbe_cs_words[mrt_setup.num_render_targets],
-         spm_eot_state->pbe_reg_words[mrt_setup.num_render_targets]);
+         pbe_state_words[total_render_target_used],
+         spm_eot_state->pbe_reg_words[total_render_target_used]);
 
       PVR_DEV_ADDR_ADVANCE(next_scratch_buffer_addr, mem_stored);
 
-      mrt_resources[mrt_setup.num_render_targets] = (struct usc_mrt_resource){
-         .mrt_desc = {
-            .intermediate_size = hw_render->output_regs_count * sizeof(uint32_t),
-         },
-         .type = USC_MRT_RESOURCE_TYPE_OUTPUT_REG,
-         .intermediate_size = hw_render->output_regs_count * sizeof(uint32_t),
-      };
-
-      pvr_set_pbe_all_valid_mask(
-         &mrt_resources[mrt_setup.num_render_targets].mrt_desc);
-
-      mrt_setup.num_render_targets++;
+      total_render_target_used++;
 
       /* Store off-chip tile data (i.e. tile buffers). */
 
       for (uint32_t i = 0; i < hw_render->tile_buffers_count; i++) {
-         assert(mrt_setup.num_render_targets < PVR_MAX_COLOR_ATTACHMENTS);
+         assert(!"Add support for tile buffers in EOT");
+         pvr_finishme("Add support for tile buffers in EOT");
+
+         assert(total_render_target_used < PVR_MAX_COLOR_ATTACHMENTS);
 
          mem_stored = pvr_spm_setup_pbe_state(
             dev_info,
@@ -763,40 +717,30 @@ pvr_spm_init_eot_state(struct pvr_device *device,
             PVR_PBE_STARTPOS_BIT0,
             hw_render->sample_count,
             next_scratch_buffer_addr,
-            spm_eot_state->pbe_cs_words[mrt_setup.num_render_targets],
-            spm_eot_state->pbe_reg_words[mrt_setup.num_render_targets]);
+            pbe_state_words[total_render_target_used],
+            spm_eot_state->pbe_reg_words[total_render_target_used]);
 
          PVR_DEV_ADDR_ADVANCE(next_scratch_buffer_addr, mem_stored);
 
-         mrt_resources[mrt_setup.num_render_targets] = (struct usc_mrt_resource){
-            .mrt_desc = {
-               .intermediate_size =
-                  hw_render->output_regs_count * sizeof(uint32_t),
-            },
-            .type = USC_MRT_RESOURCE_TYPE_MEMORY,
-            .intermediate_size = hw_render->output_regs_count * sizeof(uint32_t),
-            .mem = { .tile_buffer = i, },
-         };
-
-         pvr_set_pbe_all_valid_mask(
-            &mrt_resources[mrt_setup.num_render_targets].mrt_desc);
-
-         mrt_setup.num_render_targets++;
+         total_render_target_used++;
       }
    }
 
-   /* TODO: The PBE state words likely only get used by the compiler to be
-    * embedded into the shader so we should probably remove it from
-    * spm_eot_state.
-    */
-   /* FIXME: Compile the EOT shader based on the mrt_setup configured above. */
+   pvr_uscgen_eot("SPM EOT",
+                  total_render_target_used,
+                  pbe_state_words[0],
+                  &usc_temp_count,
+                  &usc_shader_binary);
 
    /* TODO: Create a #define in the compiler code to replace the 16. */
    result = pvr_gpu_upload_usc(device,
-                               empty_eot_program,
-                               sizeof(empty_eot_program),
+                               usc_shader_binary.data,
+                               usc_shader_binary.size,
                                16,
                                &spm_eot_state->usc_eot_program);
+
+   util_dynarray_fini(&usc_shader_binary);
+
    if (result != VK_SUCCESS)
       return result;
 
@@ -806,14 +750,14 @@ pvr_spm_init_eot_state(struct pvr_device *device,
       usc_temp_count,
       &pds_eot_program);
    if (result != VK_SUCCESS) {
-      pvr_bo_free(device, spm_eot_state->usc_eot_program);
+      pvr_bo_suballoc_free(spm_eot_state->usc_eot_program);
       return result;
    }
 
    spm_eot_state->pixel_event_program_data_upload = pds_eot_program.pvr_bo;
    spm_eot_state->pixel_event_program_data_offset = pds_eot_program.data_offset;
 
-   *emit_count_out = mrt_setup.num_render_targets;
+   *emit_count_out = total_render_target_used;
 
    return VK_SUCCESS;
 }
@@ -821,8 +765,8 @@ pvr_spm_init_eot_state(struct pvr_device *device,
 void pvr_spm_finish_eot_state(struct pvr_device *device,
                               struct pvr_spm_eot_state *spm_eot_state)
 {
-   pvr_bo_free(device, spm_eot_state->pixel_event_program_data_upload);
-   pvr_bo_free(device, spm_eot_state->usc_eot_program);
+   pvr_bo_suballoc_free(spm_eot_state->pixel_event_program_data_upload);
+   pvr_bo_suballoc_free(spm_eot_state->usc_eot_program);
 }
 
 static VkFormat pvr_get_format_from_dword_count(uint32_t dword_count)
@@ -883,7 +827,7 @@ static VkResult pvr_spm_setup_texture_state_words(
    if (result != VK_SUCCESS)
       return result;
 
-   *mem_used_out = fb_area * dword_count * sizeof(uint32_t) * sample_count;
+   *mem_used_out = fb_area * PVR_DW_TO_BYTES(dword_count) * sample_count;
 
    return VK_SUCCESS;
 }
@@ -922,7 +866,7 @@ static VkResult pvr_pds_bgnd_program_create_and_upload(
    assert(texture_program_data_size_in_dwords == texture_program.data_size);
 #endif
 
-   staging_buffer_size = texture_program_data_size_in_dwords * sizeof(uint32_t);
+   staging_buffer_size = PVR_DW_TO_BYTES(texture_program_data_size_in_dwords);
 
    staging_buffer = vk_alloc(&device->vk.alloc,
                              staging_buffer_size,
@@ -984,7 +928,7 @@ pvr_spm_init_bgobj_state(struct pvr_device *device,
    assert(spm_load_program_idx < ARRAY_SIZE(spm_load_collection));
    info = spm_load_collection[spm_load_program_idx].info;
 
-   consts_buffer_size = info->const_shared_regs * sizeof(uint32_t);
+   consts_buffer_size = PVR_DW_TO_BYTES(info->const_shared_regs);
 
    /* TODO: Remove this check, along with the pvr_finishme(), once the zeroed
     * shaders are replaced by the real shaders.
@@ -1138,7 +1082,7 @@ err_free_consts_buffer:
 void pvr_spm_finish_bgobj_state(struct pvr_device *device,
                                 struct pvr_spm_bgobj_state *spm_bgobj_state)
 {
-   pvr_bo_free(device, spm_bgobj_state->pds_texture_data_upload);
+   pvr_bo_suballoc_free(spm_bgobj_state->pds_texture_data_upload);
    pvr_bo_free(device, spm_bgobj_state->consts_buffer);
 }
 

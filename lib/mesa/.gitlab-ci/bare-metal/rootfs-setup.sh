@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# shellcheck disable=SC2086 # we want word splitting
 
 rootfs_dst=$1
 
@@ -18,15 +19,14 @@ date +'%F %T'
 
 cp $CI_COMMON/capture-devcoredump.sh $rootfs_dst/
 cp $CI_COMMON/intel-gpu-freq.sh $rootfs_dst/
+cp $CI_COMMON/kdl.sh $rootfs_dst/
 cp "$SCRIPTS_DIR/setup-test-env.sh" "$rootfs_dst/"
 
 set +x
 
 # Pass through relevant env vars from the gitlab job to the baremetal init script
-"$CI_COMMON"/generate-env.sh > $rootfs_dst/set-job-env-vars.sh
-chmod +x $rootfs_dst/set-job-env-vars.sh
 echo "Variables passed through:"
-cat $rootfs_dst/set-job-env-vars.sh
+"$CI_COMMON"/generate-env.sh | tee $rootfs_dst/set-job-env-vars.sh
 
 set -x
 

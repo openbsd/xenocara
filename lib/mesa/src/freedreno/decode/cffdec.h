@@ -27,6 +27,7 @@
 #include <stdbool.h>
 
 #include "freedreno_pm4.h"
+#include "freedreno_dev_info.h"
 
 enum query_mode {
    /* default mode, dump all queried regs on each draw: */
@@ -44,7 +45,8 @@ enum query_mode {
 };
 
 struct cffdec_options {
-   unsigned gpu_id;
+   struct fd_dev_id dev_id;
+   const struct fd_dev_info *info;
    int draw_filter;
    int color;
    int dump_shaders;

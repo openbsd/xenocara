@@ -1,4 +1,8 @@
 #!/bin/bash
+# shellcheck disable=SC1091
+# shellcheck disable=SC2034
+# shellcheck disable=SC2059
+# shellcheck disable=SC2086 # we want word splitting
 
 . "$SCRIPTS_DIR"/setup-test-env.sh
 
@@ -66,11 +70,6 @@ if [ -z "$BM_CMDLINE" ]; then
   exit 1
 fi
 
-if [ -z "$BM_BOOTCONFIG" ]; then
-  echo "Must set BM_BOOTCONFIG to your board's required boot configuration arguments"
-  exit 1
-fi
-
 set -ex
 
 date +'%F %T'
@@ -87,7 +86,6 @@ date +'%F %T'
 
 # If BM_BOOTFS is an URL, download it
 if echo $BM_BOOTFS | grep -q http; then
-  apt-get install -y curl
   curl -L --retry 4 -f --retry-all-errors --retry-delay 60 \
     "${FDO_HTTP_CACHE_URI:-}$BM_BOOTFS" -o /tmp/bootfs.tar
   BM_BOOTFS=/tmp/bootfs.tar
@@ -151,11 +149,13 @@ date +'%F %T'
 
 echo "$BM_CMDLINE" > /tftp/cmdline.txt
 
-# Add some required options in config.txt
-printf "$BM_BOOTCONFIG" >> /tftp/config.txt
+# Add some options in config.txt, if defined
+if [ -n "$BM_BOOTCONFIG" ]; then
+  printf "$BM_BOOTCONFIG" >> /tftp/config.txt
+fi
 
 set +e
-ATTEMPTS=10
+ATTEMPTS=3
 while [ $((ATTEMPTS--)) -gt 0 ]; do
   python3 $BM/poe_run.py \
           --dev="$BM_SERIAL" \

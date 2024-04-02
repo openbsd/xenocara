@@ -21,6 +21,7 @@
 radv_entrypoints_gen_command = [
   prog_python, '@INPUT0@', '--xml', '@INPUT1@', '--proto', '--weak',
   '--out-h', '@OUTPUT0@', '--out-c', '@OUTPUT1@',
+  '--beta', with_vulkan_beta.to_string()
 ]
 
 radv_entrypoints_gen_command += [
@@ -54,6 +55,7 @@ libradv_files = files(
   'layers/radv_sqtt_layer.c',
   'meta/radv_meta.c',
   'meta/radv_meta.h',
+  'meta/radv_meta_astc_decode.c',
   'meta/radv_meta_blit.c',
   'meta/radv_meta_blit2d.c',
   'meta/radv_meta_buffer.c',
@@ -74,9 +76,12 @@ libradv_files = files(
   'nir/radv_nir_apply_pipeline_layout.c',
   'nir/radv_nir_export_multiview.c',
   'nir/radv_nir_lower_abi.c',
+  'nir/radv_nir_lower_cooperative_matrix.c',
+  'nir/radv_nir_lower_fs_barycentric.c',
   'nir/radv_nir_lower_fs_intrinsics.c',
   'nir/radv_nir_lower_intrinsics_early.c',
   'nir/radv_nir_lower_io.c',
+  'nir/radv_nir_lower_poly_line_smooth.c',
   'nir/radv_nir_lower_primitive_shading_rate.c',
   'nir/radv_nir_lower_ray_queries.c',
   'nir/radv_nir_lower_view_index.c',
@@ -120,7 +125,7 @@ libradv_files = files(
   'radv_rt_common.c',
   'radv_rt_shader.c',
   'radv_sampler.c',
-  'radv_sdma_copy_image.c',
+  'radv_sdma.c',
   'radv_shader.c',
   'radv_shader.h',
   'radv_shader_args.c',
@@ -191,7 +196,7 @@ libvulkan_radeon = shared_library(
   [libradv_files, radv_entrypoints, sha1_h, radix_sort_spv, bvh_spv],
   vs_module_defs : vulkan_api_def,
   include_directories : [
-    inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_amd, inc_amd_common, inc_amd_common_llvm, inc_compiler, inc_util,
+    inc_include, inc_src, inc_amd, inc_amd_common, inc_amd_common_llvm, inc_util,
   ],
   link_with : [
     libamd_common, libamd_common_llvm, libamdgpu_addrlib,
@@ -252,6 +257,7 @@ radeon_icd = custom_target(
   command : icd_command,
   build_by_default : true,
   install_dir : with_vulkan_icd_dir,
+  install_tag : 'runtime',
   install : true,
 )
 

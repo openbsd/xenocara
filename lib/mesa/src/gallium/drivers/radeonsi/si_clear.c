@@ -1,25 +1,7 @@
 /*
  * Copyright 2017 Advanced Micro Devices, Inc.
- * All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "si_pipe.h"
@@ -73,6 +55,8 @@ void si_execute_clears(struct si_context *sctx, struct si_clear_info *info,
    if (sctx->gfx_level <= GFX8)
       sctx->flags |= SI_CONTEXT_INV_L2;
 
+   si_mark_atom_dirty(sctx, &sctx->atoms.s.cache_flush);
+
    /* Execute clears. */
    for (unsigned i = 0; i < num_clears; i++) {
       if (info[i].is_dcc_msaa) {
@@ -101,6 +85,8 @@ void si_execute_clears(struct si_context *sctx, struct si_clear_info *info,
    /* GFX6-8: CB and DB don't use L2. */
    if (sctx->gfx_level <= GFX8)
       sctx->flags |= SI_CONTEXT_WB_L2;
+
+   si_mark_atom_dirty(sctx, &sctx->atoms.s.cache_flush);
 }
 
 static bool si_alloc_separate_cmask(struct si_screen *sscreen, struct si_texture *tex)
@@ -722,7 +708,7 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
        *
        * This helps on both dGPUs and APUs, even small APUs like Mullins.
        */
-      bool fb_too_small = num_pixels * num_layers <= 512 * 512;
+      bool fb_too_small = (uint64_t)num_pixels * num_layers <= 512 * 512;
       bool too_small = tex->buffer.b.b.nr_samples <= 1 && fb_too_small;
       bool eliminate_needed = false;
       bool fmask_decompress_needed = false;
@@ -886,7 +872,6 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
           !(tex->dirty_level_mask & (1 << level))) {
          assert(sctx->gfx_level < GFX11); /* no decompression needed on GFX11 */
          tex->dirty_level_mask |= 1 << level;
-         si_set_sampler_depth_decompress_mask(sctx, tex);
          p_atomic_inc(&sctx->screen->compressed_colortex_counter);
       }
 
@@ -1190,11 +1175,13 @@ static void si_clear(struct pipe_context *ctx, unsigned buffers,
          si_mark_atom_dirty(sctx, &sctx->atoms.s.db_render_state);
       }
 
-      if (needs_db_flush)
+      if (needs_db_flush) {
          sctx->flags |= SI_CONTEXT_FLUSH_AND_INV_DB;
+         si_mark_atom_dirty(sctx, &sctx->atoms.s.cache_flush);
+      }
    }
 
-   if (unlikely(sctx->thread_trace_enabled)) {
+   if (unlikely(sctx->sqtt_enabled)) {
       if (buffers & PIPE_CLEAR_COLOR)
          sctx->sqtt_next_event = EventCmdClearColorImage;
       else if (buffers & PIPE_CLEAR_DEPTHSTENCIL)
@@ -1310,58 +1297,10 @@ static void si_clear_depth_stencil(struct pipe_context *ctx, struct pipe_surface
    si_blitter_end(sctx);
 }
 
-static void si_clear_texture(struct pipe_context *pipe, struct pipe_resource *tex, unsigned level,
-                             const struct pipe_box *box, const void *data)
-{
-   struct pipe_screen *screen = pipe->screen;
-   struct si_texture *stex = (struct si_texture *)tex;
-   struct pipe_surface tmpl = {{0}};
-   struct pipe_surface *sf;
-
-   tmpl.format = tex->format;
-   tmpl.u.tex.first_layer = box->z;
-   tmpl.u.tex.last_layer = box->z + box->depth - 1;
-   tmpl.u.tex.level = level;
-   sf = pipe->create_surface(pipe, tex, &tmpl);
-   if (!sf)
-      return;
-
-   if (stex->is_depth) {
-      unsigned clear;
-      float depth;
-      uint8_t stencil = 0;
-
-      /* Depth is always present. */
-      clear = PIPE_CLEAR_DEPTH;
-      util_format_unpack_z_float(tex->format, &depth, data, 1);
-
-      if (stex->surface.has_stencil) {
-         clear |= PIPE_CLEAR_STENCIL;
-         util_format_unpack_s_8uint(tex->format, &stencil, data, 1);
-      }
-
-      si_clear_depth_stencil(pipe, sf, clear, depth, stencil, box->x, box->y, box->width,
-                             box->height, false);
-   } else {
-      union pipe_color_union color;
-
-      util_format_unpack_rgba(tex->format, color.ui, data, 1);
-
-      if (screen->is_format_supported(screen, tex->format, tex->target, 0, 0,
-                                      PIPE_BIND_RENDER_TARGET)) {
-         si_clear_render_target(pipe, sf, &color, box->x, box->y, box->width, box->height, false);
-      } else {
-         /* Software fallback - just for R9G9B9E5_FLOAT */
-         util_clear_render_target(pipe, sf, &color, box->x, box->y, box->width, box->height);
-      }
-   }
-   pipe_surface_reference(&sf, NULL);
-}
-
 void si_init_clear_functions(struct si_context *sctx)
 {
    sctx->b.clear_render_target = si_clear_render_target;
-   sctx->b.clear_texture = si_clear_texture;
+   sctx->b.clear_texture = u_default_clear_texture;
 
    if (sctx->has_graphics) {
       sctx->b.clear = si_clear;

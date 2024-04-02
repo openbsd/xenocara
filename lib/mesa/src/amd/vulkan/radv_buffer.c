@@ -31,8 +31,7 @@
 #include "vk_common_entrypoints.h"
 
 void
-radv_buffer_init(struct radv_buffer *buffer, struct radv_device *device,
-                 struct radeon_winsys_bo *bo, uint64_t size,
+radv_buffer_init(struct radv_buffer *buffer, struct radv_device *device, struct radeon_winsys_bo *bo, uint64_t size,
                  uint64_t offset)
 {
    VkBufferCreateInfo createInfo = {
@@ -53,8 +52,7 @@ radv_buffer_finish(struct radv_buffer *buffer)
 }
 
 static void
-radv_destroy_buffer(struct radv_device *device, const VkAllocationCallbacks *pAllocator,
-                    struct radv_buffer *buffer)
+radv_destroy_buffer(struct radv_device *device, const VkAllocationCallbacks *pAllocator, struct radv_buffer *buffer)
 {
    if ((buffer->vk.create_flags & VK_BUFFER_CREATE_SPARSE_BINDING_BIT) && buffer->bo)
       device->ws->buffer_destroy(device->ws, buffer->bo);
@@ -80,8 +78,7 @@ radv_create_buffer(struct radv_device *device, const VkBufferCreateInfo *pCreate
       return vk_error(device, VK_ERROR_OUT_OF_DEVICE_MEMORY);
 #endif
 
-   buffer = vk_alloc2(&device->vk.alloc, pAllocator, sizeof(*buffer), 8,
-                      VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   buffer = vk_alloc2(&device->vk.alloc, pAllocator, sizeof(*buffer), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (buffer == NULL)
       return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
@@ -93,6 +90,8 @@ radv_create_buffer(struct radv_device *device, const VkBufferCreateInfo *pCreate
       enum radeon_bo_flag flags = RADEON_FLAG_VIRTUAL;
       if (pCreateInfo->flags & VK_BUFFER_CREATE_DEVICE_ADDRESS_CAPTURE_REPLAY_BIT)
          flags |= RADEON_FLAG_REPLAYABLE;
+      if (pCreateInfo->usage & VK_BUFFER_USAGE_2_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT)
+         flags |= RADEON_FLAG_32BIT;
 
       uint64_t replay_address = 0;
       const VkBufferOpaqueCaptureAddressCreateInfo *replay_info =
@@ -100,9 +99,8 @@ radv_create_buffer(struct radv_device *device, const VkBufferCreateInfo *pCreate
       if (replay_info && replay_info->opaqueCaptureAddress)
          replay_address = replay_info->opaqueCaptureAddress;
 
-      VkResult result =
-         device->ws->buffer_create(device->ws, align64(buffer->vk.size, 4096), 4096, 0, flags,
-                                   RADV_BO_PRIORITY_VIRTUAL, replay_address, &buffer->bo);
+      VkResult result = device->ws->buffer_create(device->ws, align64(buffer->vk.size, 4096), 4096, 0, flags,
+                                                  RADV_BO_PRIORITY_VIRTUAL, replay_address, &buffer->bo);
       if (result != VK_SUCCESS) {
          radv_destroy_buffer(device, pAllocator, buffer);
          return vk_error(device, result);
@@ -118,8 +116,8 @@ radv_create_buffer(struct radv_device *device, const VkBufferCreateInfo *pCreate
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL
-radv_CreateBuffer(VkDevice _device, const VkBufferCreateInfo *pCreateInfo,
-                  const VkAllocationCallbacks *pAllocator, VkBuffer *pBuffer)
+radv_CreateBuffer(VkDevice _device, const VkBufferCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator,
+                  VkBuffer *pBuffer)
 {
    RADV_FROM_HANDLE(radv_device, device, _device);
    return radv_create_buffer(device, pCreateInfo, pAllocator, pBuffer, false);
@@ -138,8 +136,7 @@ radv_DestroyBuffer(VkDevice _device, VkBuffer _buffer, const VkAllocationCallbac
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL
-radv_BindBufferMemory2(VkDevice _device, uint32_t bindInfoCount,
-                       const VkBindBufferMemoryInfo *pBindInfos)
+radv_BindBufferMemory2(VkDevice _device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo *pBindInfos)
 {
    RADV_FROM_HANDLE(radv_device, device, _device);
 
@@ -159,8 +156,7 @@ radv_BindBufferMemory2(VkDevice _device, uint32_t bindInfoCount,
          vk_common_GetBufferMemoryRequirements2(_device, &info, &reqs);
 
          if (pBindInfos[i].memoryOffset + reqs.memoryRequirements.size > mem->alloc_size) {
-            return vk_errorf(device, VK_ERROR_UNKNOWN,
-                             "Device memory object too small for the buffer.\n");
+            return vk_errorf(device, VK_ERROR_UNKNOWN, "Device memory object too small for the buffer.\n");
          }
       }
 
@@ -172,9 +168,8 @@ radv_BindBufferMemory2(VkDevice _device, uint32_t bindInfoCount,
 }
 
 static void
-radv_get_buffer_memory_requirements(struct radv_device *device, VkDeviceSize size,
-                                    VkBufferCreateFlags flags, VkBufferCreateFlags usage,
-                                    VkMemoryRequirements2 *pMemoryRequirements)
+radv_get_buffer_memory_requirements(struct radv_device *device, VkDeviceSize size, VkBufferCreateFlags flags,
+                                    VkBufferUsageFlags2KHR usage, VkMemoryRequirements2 *pMemoryRequirements)
 {
    pMemoryRequirements->memoryRequirements.memoryTypeBits =
       ((1u << device->physical_device->memory_properties.memoryTypeCount) - 1u) &
@@ -189,17 +184,15 @@ radv_get_buffer_memory_requirements(struct radv_device *device, VkDeviceSize siz
     * vkGetGeneratedCommandsMemoryRequirementsNV. (we have to make sure their
     * intersection is non-zero at least)
     */
-   if ((usage & VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) && device->uses_device_generated_commands)
-      pMemoryRequirements->memoryRequirements.memoryTypeBits |=
-         device->physical_device->memory_types_32bit;
+   if ((usage & VK_BUFFER_USAGE_2_INDIRECT_BUFFER_BIT_KHR) && device->uses_device_generated_commands)
+      pMemoryRequirements->memoryRequirements.memoryTypeBits |= device->physical_device->memory_types_32bit;
 
    /* Force 32-bit address-space for descriptor buffers usage because they are passed to shaders
     * through 32-bit pointers.
     */
-   if (usage & (VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT |
-                VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT))
-      pMemoryRequirements->memoryRequirements.memoryTypeBits =
-         device->physical_device->memory_types_32bit;
+   if (usage &
+       (VK_BUFFER_USAGE_2_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT | VK_BUFFER_USAGE_2_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT))
+      pMemoryRequirements->memoryRequirements.memoryTypeBits = device->physical_device->memory_types_32bit;
 
    if (flags & VK_BUFFER_CREATE_SPARSE_BINDING_BIT)
       pMemoryRequirements->memoryRequirements.alignment = 4096;
@@ -210,15 +203,12 @@ radv_get_buffer_memory_requirements(struct radv_device *device, VkDeviceSize siz
     * the root ids of instances. The hardware also needs bvh nodes to
     * be 64 byte aligned.
     */
-   if (usage & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR)
-      pMemoryRequirements->memoryRequirements.alignment =
-         MAX2(pMemoryRequirements->memoryRequirements.alignment, 64);
+   if (usage & VK_BUFFER_USAGE_2_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR)
+      pMemoryRequirements->memoryRequirements.alignment = MAX2(pMemoryRequirements->memoryRequirements.alignment, 64);
 
-   pMemoryRequirements->memoryRequirements.size =
-      align64(size, pMemoryRequirements->memoryRequirements.alignment);
+   pMemoryRequirements->memoryRequirements.size = align64(size, pMemoryRequirements->memoryRequirements.alignment);
 
-   vk_foreach_struct(ext, pMemoryRequirements->pNext)
-   {
+   vk_foreach_struct (ext, pMemoryRequirements->pNext) {
       switch (ext->sType) {
       case VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS: {
          VkMemoryDedicatedRequirements *req = (VkMemoryDedicatedRequirements *)ext;
@@ -232,15 +222,23 @@ radv_get_buffer_memory_requirements(struct radv_device *device, VkDeviceSize siz
    }
 }
 
+static const VkBufferUsageFlagBits2KHR
+radv_get_buffer_usage_flags(const VkBufferCreateInfo *pCreateInfo)
+{
+   const VkBufferUsageFlags2CreateInfoKHR *flags2 =
+      vk_find_struct_const(pCreateInfo->pNext, BUFFER_USAGE_FLAGS_2_CREATE_INFO_KHR);
+   return flags2 ? flags2->usage : pCreateInfo->usage;
+}
+
 VKAPI_ATTR void VKAPI_CALL
-radv_GetDeviceBufferMemoryRequirements(VkDevice _device,
-                                       const VkDeviceBufferMemoryRequirements *pInfo,
+radv_GetDeviceBufferMemoryRequirements(VkDevice _device, const VkDeviceBufferMemoryRequirements *pInfo,
                                        VkMemoryRequirements2 *pMemoryRequirements)
 {
    RADV_FROM_HANDLE(radv_device, device, _device);
+   const VkBufferUsageFlagBits2KHR usage_flags = radv_get_buffer_usage_flags(pInfo->pCreateInfo);
 
-   radv_get_buffer_memory_requirements(device, pInfo->pCreateInfo->size, pInfo->pCreateInfo->flags,
-                                       pInfo->pCreateInfo->usage, pMemoryRequirements);
+   radv_get_buffer_memory_requirements(device, pInfo->pCreateInfo->size, pInfo->pCreateInfo->flags, usage_flags,
+                                       pMemoryRequirements);
 }
 
 VKAPI_ATTR VkDeviceAddress VKAPI_CALL

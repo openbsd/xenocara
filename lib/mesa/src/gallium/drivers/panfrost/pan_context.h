@@ -28,6 +28,7 @@
 #define _LARGEFILE64_SOURCE 1
 #include <assert.h>
 #include <sys/mman.h>
+#include "pan_afbc_cso.h"
 #include "pan_blend_cso.h"
 #include "pan_earlyzs.h"
 #include "pan_encoder.h"
@@ -35,11 +36,11 @@
 #include "pan_resource.h"
 #include "pan_texture.h"
 
-#include "pipe/p_compiler.h"
 #include "pipe/p_context.h"
 #include "pipe/p_defines.h"
 #include "pipe/p_screen.h"
 #include "pipe/p_state.h"
+#include "util/compiler.h"
 #include "util/detect.h"
 #include "util/format/u_formats.h"
 #include "util/hash_table.h"
@@ -168,7 +169,7 @@ struct panfrost_context {
    unsigned offset_start;
    unsigned base_vertex;
    unsigned base_instance;
-   enum pipe_prim_type active_prim;
+   enum mesa_prim active_prim;
 
    /* If instancing is enabled, vertex count padded for instance; if
     * it is disabled, just equal to plain vertex count */
@@ -199,6 +200,8 @@ struct panfrost_context {
    unsigned sampler_view_count[PIPE_SHADER_TYPES];
 
    struct blitter_context *blitter;
+
+   struct pan_afbc_shaders afbc_shaders;
 
    struct panfrost_blend_state *blend;
 

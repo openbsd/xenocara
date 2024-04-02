@@ -30,13 +30,18 @@ gen_xml_files = [
   'gen11.xml',
   'gen12.xml',
   'gen125.xml',
+  'gen20.xml',
 ]
 
 gen_xml_rt_files = [
   'gen125_rt.xml',
+  'gen20_rt.xml',
 ]
 
-gen_pack_header_deps = files('util.py')
+gen_pack_header_deps = files('intel_genxml.py', 'util.py')
+foreach f : gen_xml_files + gen_xml_rt_files
+  gen_pack_header_deps += files(f)
+endforeach
 
 genX_xml_h = custom_target(
   'genX_xml.h',
@@ -74,6 +79,11 @@ genX_bits_included_symbols = [
   'RENDER_SURFACE_STATE::Green Clear Color',
   'RENDER_SURFACE_STATE::Blue Clear Color',
   'RENDER_SURFACE_STATE::Alpha Clear Color',
+  'RENDER_SURFACE_STATE::Width',
+  'RENDER_SURFACE_STATE::Height',
+  'RENDER_SURFACE_STATE::Depth',
+  'RENDER_SURFACE_STATE::Surface Type',
+  'RENDER_SURFACE_STATE::Render Target View Extent',
   'CLEAR_COLOR',
   'VERTEX_BUFFER_STATE::Buffer Starting Address',
   'CPS_STATE',

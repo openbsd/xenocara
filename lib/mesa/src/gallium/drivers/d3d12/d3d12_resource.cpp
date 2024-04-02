@@ -120,7 +120,7 @@ d3d12_resource_wait_idle(struct d3d12_context *ctx,
    } else {
       d3d12_foreach_submitted_batch(ctx, batch) {
          if (d3d12_batch_has_references(batch, res->bo, want_to_write))
-            d3d12_reset_batch(ctx, batch, PIPE_TIMEOUT_INFINITE);
+            d3d12_reset_batch(ctx, batch, OS_TIMEOUT_INFINITE);
       }
    }
 }
@@ -1716,7 +1716,7 @@ d3d12_transfer_map(struct pipe_context *pctx,
                return NULL;
             }
          }
-
+         ptrans->box = original_box;
          d3d12_flush_cmdlist_and_wait(ctx);
       }
 
@@ -1868,6 +1868,7 @@ d3d12_transfer_unmap(struct pipe_context *pctx,
 
                transfer_buf_to_image(ctx, d3d12_resource(planes[plane_slice]), staging_res, trans, 0);
             }
+            ptrans->box = original_box;
          }
 
          pipe_resource_reference(&trans->staging_res, NULL);

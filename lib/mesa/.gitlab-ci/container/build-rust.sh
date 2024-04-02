@@ -11,11 +11,11 @@ set -ex
 mkdir -p "$HOME"/.cargo
 ln -s /usr/local/bin "$HOME"/.cargo/bin
 
-# Rusticl requires at least Rust 1.60.0
+# Rusticl requires at least Rust 1.66.0
 #
 # Also, pick a specific snapshot from rustup so the compiler doesn't drift on
 # us.
-RUST_VERSION=1.60.0-2022-04-07
+RUST_VERSION=1.66.1-2023-01-10
 
 # For rust in Mesa, we use rustup to install.  This lets us pick an arbitrary
 # version of the compiler, rather than whatever the container's Debian comes
@@ -26,7 +26,7 @@ curl -L --retry 4 -f --retry-all-errors --retry-delay 60 \
       --profile minimal \
       -y
 
-rustup component add rustfmt
+rustup component add clippy rustfmt
 
 # Set up a config script for cross compiling -- cargo needs your system cc for
 # linking in cross builds, but doesn't know what you want to use for system cc.

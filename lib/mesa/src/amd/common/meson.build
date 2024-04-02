@@ -29,6 +29,7 @@ amd_json_files = [
   '../registers/gfx10.json',
   '../registers/gfx103.json',
   '../registers/gfx11.json',
+  '../registers/gfx115.json',
 
   # Manually written:
   '../registers/pkt3.json',
@@ -99,11 +100,13 @@ amd_common_files = files(
   'ac_nir_lower_subdword_loads.c',
   'ac_nir_lower_taskmesh_io_to_mem.c',
   'ac_nir_lower_tess_io_to_mem.c',
+  'ac_nir_lower_tex.c',
   'ac_nir_lower_ngg.c',
   'ac_nir_lower_ps.c',
   'amd_family.c',
   'ac_perfcounter.c',
   'ac_perfcounter.h',
+  'ac_vcn_av1_default.h',
 )
 
 if dep_elf.found()
@@ -118,7 +121,7 @@ libamd_common = static_library(
   'amd_common',
   [amd_common_files, sid_tables_h, amdgfxregs_h, gfx10_format_table_c],
   include_directories : [
-    inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_compiler, inc_mapi, inc_amd,
+    inc_include, inc_src, inc_amd,
   ],
   dependencies : [
     dep_thread, dep_elf, dep_libdrm_amdgpu, dep_valgrind,
@@ -130,6 +133,15 @@ libamd_common = static_library(
 
 idep_amdgfxregs_h = declare_dependency(sources : [amdgfxregs_h])
 
+executable(
+  'ac_parse_ib',
+  ['ac_parse_ib.c'],
+  link_with: [libamd_common],
+  include_directories : [
+    inc_amd, inc_include, inc_src,
+  ],
+  dependencies : [idep_amdgfxregs_h, idep_mesautil, idep_nir_headers],
+)
 
 if with_tests and not with_platform_windows
   test(
@@ -139,7 +151,7 @@ if with_tests and not with_platform_windows
       ['ac_surface_modifier_test.c'],
       link_with: [libamd_common, libamdgpu_addrlib],
       include_directories : [
-        inc_amd, inc_gallium, inc_include, inc_src,
+        inc_amd, inc_include, inc_src,
       ],
       dependencies: [idep_amdgfxregs_h, dep_libdrm_amdgpu, idep_mesautil],
     ),
@@ -155,7 +167,7 @@ if with_tests and not with_platform_windows
         ['ac_surface_meta_address_test.c'],
         link_with: [libamd_common, libamdgpu_addrlib],
         include_directories : [
-          inc_amd, inc_gallium, inc_include, inc_src,
+          inc_amd, inc_include, inc_src,
         ],
         dependencies: [idep_amdgfxregs_h, dep_libdrm_amdgpu, idep_mesautil, dep_openmp],
       ),

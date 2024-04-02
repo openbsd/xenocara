@@ -1,5 +1,5 @@
 /**********************************************************
- * Copyright 2009-2015 VMware, Inc.  All rights reserved.
+ * Copyright 2009-2023 VMware, Inc.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -28,7 +28,7 @@
 #define VMW_BUFFER_H_
 
 #include <assert.h>
-#include "pipe/p_compiler.h"
+#include "util/compiler.h"
 #include "pipebuffer/pb_bufmgr.h"
 #include "util/u_debug_flush.h"
 
@@ -88,10 +88,10 @@ vmw_svga_winsys_buffer_unmap(struct svga_winsys_screen *sws,
                              struct svga_winsys_buffer *buf);
 
 struct pb_manager *
-vmw_gmr_bufmgr_create(struct vmw_winsys_screen *vws);
+vmw_dma_bufmgr_create(struct vmw_winsys_screen *vws);
 
-boolean
-vmw_gmr_bufmgr_region_ptr(struct pb_buffer *buf, 
+bool
+vmw_dma_bufmgr_region_ptr(struct pb_buffer *buf,
                           struct SVGAGuestPtr *ptr);
 
 

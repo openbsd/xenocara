@@ -22,9 +22,10 @@ should_lower(enum agx_opcode op, agx_index uniform, unsigned src_index)
    bool high = uniform.value >= 256;
 
    switch (op) {
+   case AGX_OPCODE_IMAGE_LOAD:
    case AGX_OPCODE_TEXTURE_LOAD:
    case AGX_OPCODE_TEXTURE_SAMPLE:
-      return src_index != 1;
+      return src_index != 1 && src_index != 2;
    case AGX_OPCODE_DEVICE_LOAD:
       return src_index != 0 || high;
    case AGX_OPCODE_DEVICE_STORE:
@@ -34,6 +35,8 @@ should_lower(enum agx_opcode op, agx_index uniform, unsigned src_index)
       return src_index != 0;
    case AGX_OPCODE_LOCAL_STORE:
       return src_index != 1;
+   case AGX_OPCODE_IMAGE_WRITE:
+      return src_index != 3;
    case AGX_OPCODE_ZS_EMIT:
    case AGX_OPCODE_ST_TILE:
    case AGX_OPCODE_LD_TILE:
@@ -41,6 +44,9 @@ should_lower(enum agx_opcode op, agx_index uniform, unsigned src_index)
    case AGX_OPCODE_UNIFORM_STORE:
    case AGX_OPCODE_ST_VARY:
    case AGX_OPCODE_LOCAL_ATOMIC:
+   case AGX_OPCODE_SAMPLE_MASK:
+   case AGX_OPCODE_ITER:
+   case AGX_OPCODE_ITERPROJ:
       return true;
    default:
       return false;

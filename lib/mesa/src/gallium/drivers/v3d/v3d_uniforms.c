@@ -72,7 +72,12 @@ get_texture_size(struct v3d_texture_stateobj *texstate,
                                 texture->u.tex.first_level);
         case QUNIFORM_TEXTURE_ARRAY_SIZE:
                 assert(texture->target != PIPE_BUFFER);
-                return texture->texture->array_size;
+                if (texture->target != PIPE_TEXTURE_CUBE_ARRAY) {
+                        return texture->texture->array_size;
+                } else {
+                        assert(texture->texture->array_size % 6 == 0);
+                        return texture->texture->array_size / 6;
+                }
         case QUNIFORM_TEXTURE_LEVELS:
                 assert(texture->target != PIPE_BUFFER);
                 return (texture->u.tex.last_level -
@@ -108,7 +113,12 @@ get_image_size(struct v3d_shaderimg_stateobj *shaderimg,
                                 image->base.u.tex.level);
         case QUNIFORM_IMAGE_ARRAY_SIZE:
                 assert(image->base.resource->target != PIPE_BUFFER);
-                return image->base.resource->array_size;
+                if (image->base.resource->target != PIPE_TEXTURE_CUBE_ARRAY) {
+                        return image->base.resource->array_size;
+                } else {
+                        assert(image->base.resource->array_size % 6 == 0);
+                        return image->base.resource->array_size / 6;
+                }
         default:
                 unreachable("Bad texture size field");
         }
@@ -251,6 +261,7 @@ v3d_write_uniforms(struct v3d_context *v3d, struct v3d_job *job,
                    struct v3d_compiled_shader *shader,
                    enum pipe_shader_type stage)
 {
+        struct v3d_device_info *devinfo = &v3d->screen->devinfo;
         struct v3d_constbuf_stateobj *cb = &v3d->constbuf[stage];
         struct v3d_texture_stateobj *texstate = &v3d->tex[stage];
         struct v3d_uniform_list *uinfo = &shader->prog_data.base->uniforms;
@@ -282,13 +293,16 @@ v3d_write_uniforms(struct v3d_context *v3d, struct v3d_job *job,
                 case QUNIFORM_UNIFORM:
                         cl_aligned_u32(&uniforms, gallium_uniforms[data]);
                         break;
-                case QUNIFORM_VIEWPORT_X_SCALE:
-                        cl_aligned_f(&uniforms, v3d->viewport.scale[0] * 256.0f);
+                case QUNIFORM_VIEWPORT_X_SCALE: {
+                        float clipper_xy_granularity = V3DV_X(devinfo, CLIPPER_XY_GRANULARITY);
+                        cl_aligned_f(&uniforms, v3d->viewport.scale[0] * clipper_xy_granularity);
                         break;
-                case QUNIFORM_VIEWPORT_Y_SCALE:
-                        cl_aligned_f(&uniforms, v3d->viewport.scale[1] * 256.0f);
+                }
+                case QUNIFORM_VIEWPORT_Y_SCALE: {
+                        float clipper_xy_granularity = V3DV_X(devinfo, CLIPPER_XY_GRANULARITY);
+                        cl_aligned_f(&uniforms, v3d->viewport.scale[1] * clipper_xy_granularity);
                         break;
-
+                }
                 case QUNIFORM_VIEWPORT_Z_OFFSET:
                         cl_aligned_f(&uniforms, v3d->viewport.translate[2]);
                         break;

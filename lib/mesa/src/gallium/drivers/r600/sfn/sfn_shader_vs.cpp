@@ -29,7 +29,6 @@
 #include "sfn_debug.h"
 #include "sfn_instr_alugroup.h"
 #include "sfn_instr_export.h"
-#include "tgsi/tgsi_from_mesa.h"
 
 namespace r600 {
 
@@ -436,8 +435,8 @@ VertexShader::do_scan_instruction(nir_instr *instr)
    switch (intr->intrinsic) {
    case nir_intrinsic_load_input: {
       int vtx_register = nir_intrinsic_base(intr) + 1;
-      if (m_last_vertex_atribute_register < vtx_register)
-         m_last_vertex_atribute_register = vtx_register;
+      if (m_last_vertex_attribute_register < vtx_register)
+         m_last_vertex_attribute_register = vtx_register;
       return true;
    }
    case nir_intrinsic_store_output: {
@@ -503,16 +502,10 @@ VertexShader::load_input(nir_intrinsic_instr *intr)
 
    AluInstr *ir = nullptr;
    if (location < VERT_ATTRIB_MAX) {
-      for (unsigned i = 0; i < nir_dest_num_components(intr->dest); ++i) {
+      for (unsigned i = 0; i < intr->def.num_components; ++i) {
          auto src = vf.allocate_pinned_register(driver_location + 1, i);
          src->set_flag(Register::ssa);
-         if (intr->dest.is_ssa)
-            vf.inject_value(intr->dest, i, src);
-         else {
-            ir =
-               new AluInstr(op1_mov, vf.dest(intr->dest, i, pin_none), src, {alu_write});
-            emit_instruction(ir);
-         }
+         vf.inject_value(intr->def, i, src);
       }
       if (ir)
          ir->set_alu_flag(alu_last_instr);
@@ -546,7 +539,7 @@ VertexShader::do_allocate_reserved_registers()
       m_rel_vertex_id = value_factory().allocate_pinned_register(0, 1);
    }
 
-   return m_last_vertex_atribute_register + 1;
+   return m_last_vertex_attribute_register + 1;
 }
 
 bool
@@ -560,13 +553,13 @@ VertexShader::process_stage_intrinsic(nir_intrinsic_instr *intr)
 {
    switch (intr->intrinsic) {
    case nir_intrinsic_load_vertex_id:
-      return emit_simple_mov(intr->dest, 0, m_vertex_id);
+      return emit_simple_mov(intr->def, 0, m_vertex_id);
    case nir_intrinsic_load_instance_id:
-      return emit_simple_mov(intr->dest, 0, m_instance_id);
+      return emit_simple_mov(intr->def, 0, m_instance_id);
    case nir_intrinsic_load_primitive_id:
-      return emit_simple_mov(intr->dest, 0, primitive_id());
+      return emit_simple_mov(intr->def, 0, primitive_id());
    case nir_intrinsic_load_tcs_rel_patch_id_r600:
-      return emit_simple_mov(intr->dest, 0, m_rel_vertex_id);
+      return emit_simple_mov(intr->def, 0, m_rel_vertex_id);
    default:
       return false;
    }
@@ -626,7 +619,8 @@ VertexExportForGS::do_store_output(const store_loc& store_info,
    }
 
    if (ring_offset == -1) {
-      sfn_log << SfnLog::err << "VS defines output at " << store_info.driver_location
+      sfn_log << SfnLog::warn << "VS defines output at "
+              << store_info.driver_location
               << "name=" << out_io.name() << " sid=" << out_io.sid()
               << " that is not consumed as GS input\n";
       return true;

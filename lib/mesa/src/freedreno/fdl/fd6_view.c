@@ -109,11 +109,11 @@ fdl6_format_swiz(enum pipe_format format, bool has_z24uint_s8uint,
       break;
 
    default:
-      /* Our I, L, A, and LA formats use R or RG HW formats. These aren't
-       * supported in Vulkan, and freedreno uses a hack to get the border
-       * colors correct by undoing these swizzles.
+      /* Our I, L, A, and LA formats use R or RG HW formats except for
+       * A8_UNORM. These aren't supported in Vulkan, and freedreno uses a hack
+       * to get the border colors correct by undoing these swizzles.
        */
-      if (util_format_is_alpha(format)) {
+      if (util_format_is_alpha(format) && format != PIPE_FORMAT_A8_UNORM) {
          format_swiz[0] = PIPE_SWIZZLE_0;
          format_swiz[1] = PIPE_SWIZZLE_0;
          format_swiz[2] = PIPE_SWIZZLE_0;
@@ -200,8 +200,8 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
       depth /= 6;
    }
 
-   uint64_t base_addr = args->iova +
-      fdl_surface_offset(layout, args->base_miplevel, args->base_array_layer);
+   view->offset = fdl_surface_offset(layout, args->base_miplevel, args->base_array_layer);
+   uint64_t base_addr = args->iova + view->offset;
    uint64_t ubwc_addr = args->iova +
       fdl_ubwc_offset(layout, args->base_miplevel, args->base_array_layer);
 
@@ -329,6 +329,8 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
       !util_format_is_pure_integer(args->format) &&
       !util_format_is_depth_or_stencil(args->format);
 
+   view->pitch = pitch;
+
    view->SP_PS_2D_SRC_INFO =
       A6XX_SP_PS_2D_SRC_INFO_COLOR_FORMAT(storage_format) |
       A6XX_SP_PS_2D_SRC_INFO_TILE_MODE(tile_mode) |
@@ -345,7 +347,6 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
       A6XX_SP_PS_2D_SRC_SIZE_HEIGHT(height);
 
    /* note: these have same encoding for MRT and 2D (except 2D PITCH src) */
-   view->PITCH = A6XX_RB_DEPTH_BUFFER_PITCH(pitch);
    view->FLAG_BUFFER_PITCH =
       A6XX_RB_DEPTH_FLAG_BUFFER_PITCH_PITCH(ubwc_pitch) |
       A6XX_RB_DEPTH_FLAG_BUFFER_PITCH_ARRAY_PITCH(layout->ubwc_layer_size >> 2);
@@ -418,6 +419,7 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
    view->RB_MRT_BUF_INFO =
       A6XX_RB_MRT_BUF_INFO_COLOR_TILE_MODE(tile_mode) |
       A6XX_RB_MRT_BUF_INFO_COLOR_FORMAT(color_format) |
+      COND(args->chip >= A7XX && ubwc_enabled, A7XX_RB_MRT_BUF_INFO_LOSSLESSCOMPEN) |
       A6XX_RB_MRT_BUF_INFO_COLOR_SWAP(color_swap);
 
    view->SP_FS_MRT_REG =

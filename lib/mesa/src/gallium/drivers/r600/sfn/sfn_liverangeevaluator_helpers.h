@@ -94,14 +94,16 @@ public:
    RegisterCompAccess();
    RegisterCompAccess(LiveRange range);
 
-   void record_read(int line, ProgramScope *scope, LiveRangeEntry::EUse use);
-   void record_write(int line, ProgramScope *scope);
+   void record_read(int block,int line, ProgramScope *scope, LiveRangeEntry::EUse use);
+   void record_write(int block, int line, ProgramScope *scope);
 
    void update_required_live_range();
 
    const auto& range() { return m_range; }
 
    const auto& use_type() { return m_use_type; }
+
+   auto alu_clause_local() { return alu_block_id > block_id_uninitalized;}
 
 private:
    void propagate_live_range_to_dominant_write_scope();
@@ -120,15 +122,17 @@ private:
    int last_write;
    int first_read;
 
-   /* This member variable tracks the current resolution of conditional
-    * writing to this temporary in IF/ELSE clauses.
+   int alu_block_id{block_id_uninitalized};
+
+   /* This member variable tracks the current resolution of conditional writing
+    * to this temporary in IF/ELSE clauses.
     *
     * The initial value "conditionality_untouched" indicates that this
     * temporary has not yet been written to within an if clause.
     *
     * A positive (other than "conditionality_untouched") number refers to the
     * last loop id for which the write was resolved as unconditional. With
-    * each new loop this value will be overwitten by
+    * each new loop this value will be overwritten by
     * "conditionality_unresolved" on entering the first IF clause writing this
     * temporary.
     *
@@ -148,6 +152,8 @@ private:
    static const int conditionality_unresolved = 0;
    static const int conditionality_untouched;
    static const int write_is_unconditional;
+   static const int block_id_not_unique = -1;
+   static const int block_id_uninitalized = 0;
 
    /* A bit field tracking the nexting levels of if-else clauses where the
     * temporary has (so far) been written to in the if branch, but not in the

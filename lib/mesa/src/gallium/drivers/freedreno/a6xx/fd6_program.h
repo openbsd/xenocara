@@ -38,12 +38,12 @@ struct fd6_emit;
 
 struct fd6_program_state {
    struct ir3_program_state base;
-   struct ir3_shader_variant *bs; /* binning pass vs */
-   struct ir3_shader_variant *vs;
-   struct ir3_shader_variant *hs;
-   struct ir3_shader_variant *ds;
-   struct ir3_shader_variant *gs;
-   struct ir3_shader_variant *fs;
+   const struct ir3_shader_variant *bs; /* binning pass vs */
+   const struct ir3_shader_variant *vs;
+   const struct ir3_shader_variant *hs;
+   const struct ir3_shader_variant *ds;
+   const struct ir3_shader_variant *gs;
+   const struct ir3_shader_variant *fs;
    struct fd_ringbuffer *config_stateobj;
    struct fd_ringbuffer *interp_stateobj;
    struct fd_ringbuffer *binning_stateobj;
@@ -99,15 +99,12 @@ fd6_last_shader(const struct fd6_program_state *state)
       return state->vs;
 }
 
-BEGINC;
-
 void fd6_emit_shader(struct fd_context *ctx, struct fd_ringbuffer *ring,
                      const struct ir3_shader_variant *so) assert_dt;
 
 struct fd_ringbuffer *fd6_program_interp_state(struct fd6_emit *emit) assert_dt;
 
+template <chip CHIP>
 void fd6_prog_init(struct pipe_context *pctx);
-
-ENDC;
 
 #endif /* FD6_PROGRAM_H_ */

@@ -118,6 +118,7 @@ enum {
 #define IRIS_DIRTY_RENDER_MISC_BUFFER_FLUSHES     (1ull << 33)
 #define IRIS_DIRTY_COMPUTE_MISC_BUFFER_FLUSHES    (1ull << 34)
 #define IRIS_DIRTY_VFG                            (1ull << 35)
+#define IRIS_DIRTY_DS_WRITE_ENABLE                (1ull << 36)
 
 #define IRIS_ALL_DIRTY_FOR_COMPUTE (IRIS_DIRTY_COMPUTE_RESOLVES_AND_FLUSHES | \
                                     IRIS_DIRTY_COMPUTE_MISC_BUFFER_FLUSHES)
@@ -358,6 +359,7 @@ enum pipe_control_flags
    PIPE_CONTROL_PSS_STALL_SYNC                  = (1 << 27),
    PIPE_CONTROL_L3_READ_ONLY_CACHE_INVALIDATE   = (1 << 28),
    PIPE_CONTROL_UNTYPED_DATAPORT_CACHE_FLUSH    = (1 << 29),
+   PIPE_CONTROL_CCS_CACHE_FLUSH                 = (1 << 30),
 };
 
 #define PIPE_CONTROL_CACHE_FLUSH_BITS \
@@ -432,6 +434,9 @@ struct iris_uncompiled_shader {
 
    /* A SHA1 of the serialized NIR for the disk cache. */
    unsigned char nir_sha1[20];
+
+   /* Hash value based on shader source program */
+   unsigned source_hash;
 
    unsigned program_id;
 
@@ -633,6 +638,9 @@ struct iris_context {
    /** Whether the context protected (through EGL_EXT_protected_content) */
    bool protected;
 
+   /** Whether a banned context was already signalled */
+   bool context_reset_signaled;
+
    /** A device reset status callback for notifying that the GPU is hosed. */
    struct pipe_device_reset_callback reset;
 
@@ -649,7 +657,7 @@ struct iris_context {
 
    struct iris_batch batches[IRIS_BATCH_COUNT];
    enum iris_context_priority priority;
-   bool has_engines_context;
+   bool has_engines_context; /* i915 specific */
 
    struct u_upload_mgr *query_buffer_uploader;
 
@@ -738,11 +746,18 @@ struct iris_context {
    struct intel_perf_context *perf_ctx;
 
    /** Frame number for u_trace */
-   uint32_t tracing_begin_frame;
-   uint32_t tracing_end_frame;
+   struct {
+      uint32_t begin_frame;
+      uint32_t end_frame;
+      uint64_t last_full_timestamp;
+      void    *last_compute_walker;
+   } utrace;
 
    /** Frame number for debug prints */
    uint32_t frame;
+
+   /** Track draw call count for adding GPU breakpoint on 3DPRIMITIVE */
+   uint32_t draw_call_count;
 
    struct {
       uint64_t dirty;
@@ -772,7 +787,7 @@ struct iris_context {
       uint8_t patch_vertices;
       bool primitive_restart;
       unsigned cut_index;
-      enum pipe_prim_type prim_mode:8;
+      enum mesa_prim prim_mode:8;
       bool prim_is_points_or_lines;
       uint8_t vertices_per_patch;
 
@@ -806,6 +821,13 @@ struct iris_context {
 
       /** Are stencil writes enabled?  (Stencil buffer may or may not exist.) */
       bool stencil_writes_enabled;
+
+      /** Current/upcoming ds_write_state for Wa_18019816803. */
+      bool ds_write_state;
+
+      /** State tracking for Wa_14018912822. */
+      bool color_blend_zero;
+      bool alpha_blend_zero;
 
       /** Do we have integer RT in current framebuffer state? */
       bool has_integer_rt;
@@ -1126,8 +1148,6 @@ void gfx9_toggle_preemption(struct iris_context *ice,
                             struct iris_batch *batch,
                             const struct pipe_draw_info *draw);
 
-
-
 #ifdef genX
 #  include "iris_genx_protos.h"
 #else
@@ -1159,6 +1179,9 @@ void gfx9_toggle_preemption(struct iris_context *ice,
 #  include "iris_genx_protos.h"
 #  undef genX
 #  define genX(x) gfx125_##x
+#  include "iris_genx_protos.h"
+#  undef genX
+#  define genX(x) gfx20_##x
 #  include "iris_genx_protos.h"
 #  undef genX
 #endif

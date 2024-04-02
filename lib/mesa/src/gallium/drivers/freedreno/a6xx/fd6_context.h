@@ -38,20 +38,19 @@
 
 #include "a6xx.xml.h"
 
-BEGINC;
-
 struct fd6_lrz_state {
    union {
       struct {
          bool enable : 1;
          bool write : 1;
          bool test : 1;
+         bool z_bounds_enable : 1;
          enum fd_lrz_direction direction : 2;
 
          /* this comes from the fs program state, rather than zsa: */
          enum a6xx_ztest_mode z_mode : 2;
       };
-      uint32_t val : 7;
+      uint32_t val : 8;
    };
 };
 
@@ -105,8 +104,11 @@ struct fd6_context {
    struct fd_bo *control_mem;
    uint32_t seqno;
 
-   /* pre-backed stateobj for stream-out disable: */
+   /* pre-baked stateobj for stream-out disable: */
    struct fd_ringbuffer *streamout_disable_stateobj;
+
+   /* pre-baked stateobj for sample-locations disable: */
+   struct fd_ringbuffer *sample_locations_disable_stateobj;
 
    /* storage for ctx->last.key: */
    struct ir3_shader_key last_key;
@@ -154,6 +156,7 @@ fd6_context(struct fd_context *ctx)
    return (struct fd6_context *)ctx;
 }
 
+template <chip CHIP>
 struct pipe_context *fd6_context_create(struct pipe_screen *pscreen, void *priv,
                                         unsigned flags);
 
@@ -196,7 +199,5 @@ fd6_vertex_stateobj(void *p)
 {
    return (struct fd6_vertex_stateobj *)p;
 }
-
-ENDC;
 
 #endif /* FD6_CONTEXT_H_ */

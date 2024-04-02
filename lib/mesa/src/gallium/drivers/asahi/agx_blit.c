@@ -27,7 +27,8 @@ agx_blitter_save(struct agx_context *ctx, struct blitter_context *blitter,
    util_blitter_save_blend(blitter, ctx->blend);
    util_blitter_save_depth_stencil_alpha(blitter, ctx->zs);
    util_blitter_save_stencil_ref(blitter, &ctx->stencil_ref);
-   util_blitter_save_so_targets(blitter, 0, NULL);
+   util_blitter_save_so_targets(blitter, ctx->streamout.num_targets,
+                                ctx->streamout.targets);
    util_blitter_save_sample_mask(blitter, ctx->sample_mask, 0);
 
    util_blitter_save_framebuffer(blitter, &ctx->framebuffer);
@@ -61,6 +62,15 @@ agx_blit(struct pipe_context *pipe, const struct pipe_blit_info *info)
       fprintf(stderr, "\n\n");
       unreachable("Unsupported blit");
    }
+
+   /* Legalize compression /before/ calling into u_blitter to avoid recursion.
+    * u_blitter bans recursive usage.
+    */
+   agx_legalize_compression(ctx, agx_resource(info->dst.resource),
+                            info->dst.format);
+
+   agx_legalize_compression(ctx, agx_resource(info->src.resource),
+                            info->src.format);
 
    agx_blitter_save(ctx, ctx->blitter, info->render_condition_enable);
    util_blitter_blit(ctx->blitter, info);

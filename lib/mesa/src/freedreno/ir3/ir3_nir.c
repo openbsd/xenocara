@@ -89,6 +89,8 @@ ir3_nir_should_vectorize_mem(unsigned align_mul, unsigned align_offset,
 void
 ir3_optimize_loop(struct ir3_compiler *compiler, nir_shader *s)
 {
+   MESA_TRACE_FUNC();
+
    bool progress;
    unsigned lower_flrp = (s->options->lower_flrp16 ? 16 : 0) |
                          (s->options->lower_flrp32 ? 32 : 0) |
@@ -218,12 +220,12 @@ ir3_nir_lower_ssbo_size_filter(const nir_instr *instr, const void *data)
              nir_intrinsic_get_ssbo_size;
 }
 
-static nir_ssa_def *
+static nir_def *
 ir3_nir_lower_ssbo_size_instr(nir_builder *b, nir_instr *instr, void *data)
 {
    uint8_t ssbo_size_to_bytes_shift = *(uint8_t *) data;
    nir_intrinsic_instr *intr = nir_instr_as_intrinsic(instr);
-   return nir_ishl(b, &intr->dest.ssa, nir_imm_int(b, ssbo_size_to_bytes_shift));
+   return nir_ishl_imm(b, &intr->def, ssbo_size_to_bytes_shift);
 }
 
 static bool
@@ -307,13 +309,13 @@ ir3_nir_lower_array_sampler_cb(struct nir_builder *b, nir_instr *instr, void *_d
    b->cursor = nir_before_instr(&tex->instr);
 
    unsigned ncomp = tex->coord_components;
-   nir_ssa_def *src = nir_ssa_for_src(b, tex->src[coord_idx].src, ncomp);
+   nir_def *src = tex->src[coord_idx].src.ssa;
 
    assume(ncomp >= 1);
-   nir_ssa_def *ai = nir_channel(b, src, ncomp - 1);
-   ai = nir_fadd(b, ai, nir_imm_floatN_t(b, 0.5, src->bit_size));
-   nir_instr_rewrite_src(&tex->instr, &tex->src[coord_idx].src,
-                         nir_src_for_ssa(nir_vector_insert_imm(b, src, ai, ncomp - 1)));
+   nir_def *ai = nir_channel(b, src, ncomp - 1);
+   ai = nir_fadd_imm(b, ai, 0.5);
+   nir_src_rewrite(&tex->src[coord_idx].src,
+                   nir_vector_insert_imm(b, src, ai, ncomp - 1));
    return true;
 }
 
@@ -328,6 +330,8 @@ ir3_nir_lower_array_sampler(nir_shader *shader)
 void
 ir3_finalize_nir(struct ir3_compiler *compiler, nir_shader *s)
 {
+   MESA_TRACE_FUNC();
+
    struct nir_lower_tex_options tex_options = {
       .lower_rect = 0,
       .lower_tg4_offsets = true,
@@ -355,7 +359,6 @@ ir3_finalize_nir(struct ir3_compiler *compiler, nir_shader *s)
    NIR_PASS_V(s, nir_lower_frexp);
    NIR_PASS_V(s, nir_lower_amul, ir3_glsl_type_size);
 
-   OPT_V(s, nir_lower_regs_to_ssa);
    OPT_V(s, nir_lower_wrmasks, should_split_wrmask, s);
 
    OPT_V(s, nir_lower_tex, &tex_options);
@@ -363,6 +366,8 @@ ir3_finalize_nir(struct ir3_compiler *compiler, nir_shader *s)
 
    if (compiler->array_index_add_half)
       OPT_V(s, ir3_nir_lower_array_sampler);
+
+   OPT_V(s, nir_lower_is_helper_invocation);
 
    ir3_optimize_loop(compiler, s);
 
@@ -418,7 +423,7 @@ lower_subgroup_id_filter(const nir_instr *instr, const void *unused)
           intr->intrinsic == nir_intrinsic_load_num_subgroups;
 }
 
-static nir_ssa_def *
+static nir_def *
 lower_subgroup_id(nir_builder *b, nir_instr *instr, void *unused)
 {
    (void)unused;
@@ -427,7 +432,7 @@ lower_subgroup_id(nir_builder *b, nir_instr *instr, void *unused)
    if (intr->intrinsic == nir_intrinsic_load_subgroup_invocation) {
       return nir_iand(
          b, nir_load_local_invocation_index(b),
-         nir_isub(b, nir_load_subgroup_size(b), nir_imm_int(b, 1)));
+         nir_iadd_imm(b, nir_load_subgroup_size(b), -1));
    } else if (intr->intrinsic == nir_intrinsic_load_subgroup_id) {
       return nir_ishr(b, nir_load_local_invocation_index(b),
                       nir_load_subgroup_id_shift_ir3(b));
@@ -437,12 +442,12 @@ lower_subgroup_id(nir_builder *b, nir_instr *instr, void *unused)
        * nir_lower_compute_system_values() will replace local_size with a
        * constant so this can mostly be constant folded away.
        */
-      nir_ssa_def *local_size = nir_load_workgroup_size(b);
-      nir_ssa_def *size =
+      nir_def *local_size = nir_load_workgroup_size(b);
+      nir_def *size =
          nir_imul24(b, nir_channel(b, local_size, 0),
                     nir_imul24(b, nir_channel(b, local_size, 1),
                                nir_channel(b, local_size, 2)));
-      nir_ssa_def *one = nir_imm_int(b, 1);
+      nir_def *one = nir_imm_int(b, 1);
       return nir_iadd(b, one,
                       nir_ishr(b, nir_isub(b, size, one),
                                nir_load_subgroup_id_shift_ir3(b)));
@@ -464,6 +469,8 @@ ir3_nir_post_finalize(struct ir3_shader *shader)
 {
    struct nir_shader *s = shader->nir;
    struct ir3_compiler *compiler = shader->compiler;
+
+   MESA_TRACE_FUNC();
 
    NIR_PASS_V(s, nir_lower_io, nir_var_shader_in | nir_var_shader_out,
               ir3_glsl_type_size, nir_lower_io_lower_64bit_to_32);
@@ -524,7 +531,7 @@ ir3_nir_post_finalize(struct ir3_shader *shader)
        * the "real" subgroup size.
        */
       unsigned subgroup_size = 0, max_subgroup_size = 0;
-      switch (shader->api_wavesize) {
+      switch (shader->options.api_wavesize) {
       case IR3_SINGLE_ONLY:
          subgroup_size = max_subgroup_size = compiler->threadsize_base;
          break;
@@ -557,6 +564,7 @@ ir3_nir_post_finalize(struct ir3_shader *shader)
             .lower_read_invocation_to_cond = true,
             .lower_shuffle = true,
             .lower_relative_shuffle = true,
+            .lower_inverse_ballot = true,
       };
 
       if (!((s->info.stage == MESA_SHADER_COMPUTE) ||
@@ -635,6 +643,8 @@ lower_ucp_vs(struct ir3_shader_variant *so)
 void
 ir3_nir_lower_variant(struct ir3_shader_variant *so, nir_shader *s)
 {
+   MESA_TRACE_FUNC();
+
    if (ir3_shader_debug & IR3_DBG_DISASM) {
       mesa_logi("----------------------");
       nir_log_shaderi(s);
@@ -643,7 +653,7 @@ ir3_nir_lower_variant(struct ir3_shader_variant *so, nir_shader *s)
 
    bool progress = false;
 
-   NIR_PASS_V(s, nir_lower_io_to_scalar, nir_var_mem_ssbo);
+   NIR_PASS_V(s, nir_lower_io_to_scalar, nir_var_mem_ssbo, NULL, NULL);
 
    if (so->key.has_gs || so->key.tessellation) {
       switch (so->type) {
@@ -654,7 +664,7 @@ ir3_nir_lower_variant(struct ir3_shader_variant *so, nir_shader *s)
          break;
       case MESA_SHADER_TESS_CTRL:
          NIR_PASS_V(s, nir_lower_io_to_scalar,
-                     nir_var_shader_in | nir_var_shader_out);
+                     nir_var_shader_in | nir_var_shader_out, NULL, NULL);
          NIR_PASS_V(s, ir3_nir_lower_tess_ctrl, so, so->key.tessellation);
          NIR_PASS_V(s, ir3_nir_lower_to_explicit_input, so);
          progress = true;
@@ -736,6 +746,9 @@ ir3_nir_lower_variant(struct ir3_shader_variant *so, nir_shader *s)
       OPT_V(s, ir3_nir_analyze_ubo_ranges, so);
 
    progress |= OPT(s, ir3_nir_lower_ubo_loads, so);
+
+   if (so->shader_options.push_consts_type == IR3_PUSH_CONSTS_SHARED_PREAMBLE)
+      progress |= OPT(s, ir3_nir_lower_push_consts_to_preamble, so);
 
    progress |= OPT(s, ir3_nir_lower_preamble, so);
 
@@ -837,16 +850,8 @@ ir3_nir_scan_driver_consts(struct ir3_compiler *compiler, nir_shader *shader, st
             unsigned idx;
 
             switch (intr->intrinsic) {
-            case nir_intrinsic_image_atomic_add:
-            case nir_intrinsic_image_atomic_imin:
-            case nir_intrinsic_image_atomic_umin:
-            case nir_intrinsic_image_atomic_imax:
-            case nir_intrinsic_image_atomic_umax:
-            case nir_intrinsic_image_atomic_and:
-            case nir_intrinsic_image_atomic_or:
-            case nir_intrinsic_image_atomic_xor:
-            case nir_intrinsic_image_atomic_exchange:
-            case nir_intrinsic_image_atomic_comp_swap:
+            case nir_intrinsic_image_atomic:
+            case nir_intrinsic_image_atomic_swap:
             case nir_intrinsic_image_load:
             case nir_intrinsic_image_store:
             case nir_intrinsic_image_size:
@@ -866,6 +871,10 @@ ir3_nir_scan_driver_consts(struct ir3_compiler *compiler, nir_shader *shader, st
             case nir_intrinsic_load_first_vertex:
                layout->num_driver_params =
                   MAX2(layout->num_driver_params, IR3_DP_VTXID_BASE + 1);
+               break;
+            case nir_intrinsic_load_is_indexed_draw:
+               layout->num_driver_params =
+                  MAX2(layout->num_driver_params, IR3_DP_IS_INDEXED_DRAW + 1);
                break;
             case nir_intrinsic_load_base_instance:
                layout->num_driver_params =
@@ -919,6 +928,20 @@ ir3_nir_scan_driver_consts(struct ir3_compiler *compiler, nir_shader *shader, st
                layout->num_driver_params = MAX2(layout->num_driver_params,
                                                 IR3_DP_HS_DEFAULT_INNER_LEVEL_Y + 1);
                break;
+            case nir_intrinsic_load_frag_size_ir3:
+               layout->num_driver_params = MAX2(layout->num_driver_params,
+                                                IR3_DP_FS_FRAG_SIZE + 2 +
+                                                (nir_intrinsic_range(intr) - 1) * 4);
+               break;
+            case nir_intrinsic_load_frag_offset_ir3:
+               layout->num_driver_params = MAX2(layout->num_driver_params,
+                                                IR3_DP_FS_FRAG_OFFSET + 2 +
+                                                (nir_intrinsic_range(intr) - 1) * 4);
+               break;
+            case nir_intrinsic_load_frag_invocation_count:
+               layout->num_driver_params = MAX2(layout->num_driver_params,
+                                                IR3_DP_FS_FRAG_INVOCATION_COUNT + 1);
+               break;
             default:
                break;
             }
@@ -961,7 +984,7 @@ ir3_setup_const_state(nir_shader *nir, struct ir3_shader_variant *v,
    const_state->num_ubos = nir->info.num_ubos;
 
    assert((const_state->ubo_state.size % 16) == 0);
-   unsigned constoff = v->num_reserved_user_consts +
+   unsigned constoff = v->shader_options.num_reserved_user_consts +
       const_state->ubo_state.size / 16 +
       const_state->preamble_size;
    unsigned ptrsz = ir3_pointer_size(compiler);

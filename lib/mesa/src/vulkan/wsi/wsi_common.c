@@ -72,7 +72,7 @@ wsi_device_init(struct wsi_device *wsi,
 
    WSI_DEBUG = parse_debug_string(getenv("MESA_VK_WSI_DEBUG"), debug_control);
 
-   util_perfetto_init();
+   util_cpu_trace_init();
 
    memset(wsi, 0, sizeof(*wsi));
 
@@ -1236,6 +1236,43 @@ static VkResult wsi_signal_present_id_timeline(struct wsi_swapchain *swapchain,
    return swapchain->wsi->QueueSubmit(queue, submit_count, &submit_info, present_fence);
 }
 
+static VkResult
+handle_trace(VkQueue queue, struct vk_device *device)
+{
+   struct vk_instance *instance = device->physical->instance;
+   if (!instance->trace_mode)
+      return VK_SUCCESS;
+
+   simple_mtx_lock(&device->trace_mtx);
+
+   bool frame_trigger = device->current_frame == instance->trace_frame;
+   if (device->current_frame <= instance->trace_frame)
+      device->current_frame++;
+
+   bool file_trigger = false;
+#ifndef _WIN32
+   if (instance->trace_trigger_file && access(instance->trace_trigger_file, W_OK) == 0) {
+      if (unlink(instance->trace_trigger_file) == 0) {
+         file_trigger = true;
+      } else {
+         /* Do not enable tracing if we cannot remove the file,
+          * because by then we'll trace every frame ... */
+         fprintf(stderr, "Could not remove trace trigger file, ignoring\n");
+      }
+   }
+#endif
+
+   VkResult result = VK_SUCCESS;
+   if (frame_trigger || file_trigger || device->trace_hotkey_trigger)
+      result = device->capture_trace(queue);
+
+   device->trace_hotkey_trigger = false;
+
+   simple_mtx_unlock(&device->trace_mtx);
+
+   return result;
+}
+
 VkResult
 wsi_common_queue_present(const struct wsi_device *wsi,
                          VkDevice device,
@@ -1243,7 +1280,7 @@ wsi_common_queue_present(const struct wsi_device *wsi,
                          int queue_family_index,
                          const VkPresentInfoKHR *pPresentInfo)
 {
-   VkResult final_result = VK_SUCCESS;
+   VkResult final_result = handle_trace(queue, vk_device_from_handle(device));
 
    STACK_ARRAY(VkPipelineStageFlags, stage_flags,
                MAX2(1, pPresentInfo->waitSemaphoreCount));
@@ -1910,17 +1947,18 @@ wsi_configure_buffer_image(UNUSED const struct wsi_swapchain *chain,
 
    const uint32_t cpp = vk_format_get_blocksize(pCreateInfo->imageFormat);
    info->linear_stride = pCreateInfo->imageExtent.width * cpp;
-   info->linear_stride = ALIGN_POT(info->linear_stride, stride_align);
+   info->linear_stride = align(info->linear_stride, stride_align);
 
    /* Since we can pick the stride to be whatever we want, also align to the
     * device's optimalBufferCopyRowPitchAlignment so we get efficient copies.
     */
    assert(wsi->optimalBufferCopyRowPitchAlignment > 0);
-   info->linear_stride = ALIGN_POT(info->linear_stride,
-                                   wsi->optimalBufferCopyRowPitchAlignment);
+   info->linear_stride = align(info->linear_stride,
+                               wsi->optimalBufferCopyRowPitchAlignment);
 
-   info->linear_size = info->linear_stride * pCreateInfo->imageExtent.height;
-   info->linear_size = ALIGN_POT(info->linear_size, size_align);
+   info->linear_size = (uint64_t)info->linear_stride *
+                       pCreateInfo->imageExtent.height;
+   info->linear_size = align64(info->linear_size, size_align);
 
    info->finish_create = wsi_finish_create_blit_context;
 }

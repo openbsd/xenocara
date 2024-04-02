@@ -207,6 +207,7 @@ spec@ext_framebuffer_object@fbo-maxsize,Fail
 spec@ext_framebuffer_object@fbo-readpixels-depth-formats,Fail
 spec@ext_framebuffer_object@fbo-readpixels-depth-formats@GL_DEPTH_COMPONENT/GL_FLOAT,Fail
 spec@ext_framebuffer_object@fbo-readpixels-depth-formats@GL_DEPTH_COMPONENT/GL_UNSIGNED_INT,Fail
+spec@ext_framebuffer_object@fbo-scissor-bitmap,Fail
 spec@ext_framebuffer_object@fbo-stencil-gl_stencil_index16-blit,Fail
 spec@ext_framebuffer_object@fbo-stencil-gl_stencil_index16-copypixels,Fail
 spec@ext_framebuffer_object@fbo-stencil-gl_stencil_index16-drawpixels,Fail
@@ -541,13 +542,12 @@ spec@glsl-1.20@execution@variable-indexing@vs-varying-mat4-col-row-wr,Fail
 spec@glsl-1.20@execution@variable-indexing@vs-varying-mat4-col-wr,Fail
 spec@glsl-1.20@execution@variable-indexing@vs-varying-mat4-row-wr,Fail
 spec@glsl-1.20@execution@variable-indexing@vs-varying-mat4-wr,Fail
-spec@glsl-es-1.00@linker@glsl-pcoord-invariant,Fail
-spec@glsl-es-1.00@linker@glsl-pcoord-invariant-pass,Fail
 spec@intel_performance_query@intel_performance_query-issue_2235,Fail
 spec@khr_texture_compression_astc@basic-gles,Fail
 spec@khr_texture_compression_astc@miptree-gles srgb,Fail
 spec@khr_texture_compression_astc@miptree-gles srgb-fp,Fail
 spec@oes_point_sprite@arb_point_sprite-checkerboard_gles1,Fail
+spec@!opengl 1.0@gl-1.0-dlist-bitmap,Fail
 spec@!opengl 1.0@gl-1.0-dlist-materials,Fail
 spec@!opengl 1.0@gl-1.0-dlist-shademodel,Fail
 spec@!opengl 1.0@gl-1.0-drawbuffer-modes,Fail
@@ -572,7 +572,7 @@ spec@!opengl 1.0@gl-1.0-logicop@GL_XOR,Fail
 spec@!opengl 1.0@gl-1.0-no-op-paths,Fail
 spec@!opengl 1.0@gl-1.0-ortho-pos,Fail
 spec@!opengl 1.0@gl-1.0-rastercolor,Fail
-spec@!opengl 1.0@gl-1.0-spot-light,Fail
+spec@!opengl 1.0@gl-1.0-scissor-bitmap,Fail
 spec@!opengl 1.0@gl-1.0-swapbuffers-behavior,Fail
 spec@!opengl 1.0@gl-1.0-user-clip-all-planes,Fail
 spec@!opengl 1.1@gl-1.1-xor-copypixels,Fail
@@ -643,6 +643,7 @@ spec@!opengl 2.0@vertex-program-two-side enabled front back back2@vs and fs,Fail
 spec@!opengl 2.0@vertex-program-two-side enabled front front2 back2,Fail
 spec@!opengl 2.0@vertex-program-two-side enabled front front2 back2@vs and fs,Fail
 spec@!opengl 2.1@pbo,Fail
+spec@!opengl 2.1@pbo@test_bitmap,Fail
 spec@!opengl 2.1@pbo@test_polygon_stip,Fail
 spec@!opengl 2.1@polygon-stipple-fs,Fail
 spec@!opengl es 2.0@glsl-fs-pointcoord,Fail
@@ -658,4 +659,24 @@ spec@ext_texture_compression_s3tc@compressedteximage gl_compressed_srgb_alpha_s3
 spec@ext_texture_compression_s3tc@compressedteximage gl_compressed_srgb_alpha_s3tc_dxt5_ext,Fail
 spec@ext_texture_compression_s3tc@compressedteximage gl_compressed_srgb_s3tc_dxt1_ext,Fail
 
+# Expects that some format/internal_format combinations should be supported when they currently aren't.
+spec@arb_clear_texture@arb_clear_texture-supported-formats,Fail
+
+# Expects DEPTH_COMPONENT_32F, which is given by ARB_depth_buffer_float and isn't supported by Lima.
+spec@arb_clear_texture@arb_clear_texture-depth,Fail
+
+# Precision issue when lowering GL_RGB16 and GL_RGBA16
+spec@arb_clear_texture@arb_clear_texture-sized-formats,Fail
+
 spec@!opengl 1.1@line-smooth-stipple,Fail
+
+# bookworm update
+spec@ext_framebuffer_multisample@renderbufferstorage-samples,Fail
+
+# New CTS failures in 1.3.6.3
+wayland-dEQP-EGL.functional.fence_sync.valid.egl_fence_persistent_buffer,Crash
+x11-dEQP-EGL.functional.fence_sync.valid.egl_fence_persistent_buffer,Crash
+
+# remove this after https://gitlab.freedesktop.org/mesa/piglit/-/merge_requests/843
+# is merged and piglit is updated
+spec@glsl-1.10@execution@glsl-1.10-built-in-uniform-state,Fail

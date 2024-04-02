@@ -53,8 +53,7 @@
    .prefix.limit_trig_input_range = screen->driconf.limit_trig_input_range
 #define BRW_KEY_INIT(gen, prog_id, limit_trig_input)       \
    .base.program_string_id = prog_id,                      \
-   .base.limit_trig_input_range = limit_trig_input,        \
-   .base.tex.swizzles[0 ... BRW_MAX_SAMPLERS - 1] = 0x688
+   .base.limit_trig_input_range = limit_trig_input
 
 struct iris_threaded_compile_job {
    struct iris_screen *screen;
@@ -225,22 +224,22 @@ iris_upload_ubo_ssbo_surf_state(struct iris_context *ice,
                          .mocs = iris_mocs(res->bo, &screen->isl_dev, usage));
 }
 
-static nir_ssa_def *
+static nir_def *
 get_aoa_deref_offset(nir_builder *b,
                      nir_deref_instr *deref,
                      unsigned elem_size)
 {
    unsigned array_size = elem_size;
-   nir_ssa_def *offset = nir_imm_int(b, 0);
+   nir_def *offset = nir_imm_int(b, 0);
 
    while (deref->deref_type != nir_deref_type_var) {
       assert(deref->deref_type == nir_deref_type_array);
 
       /* This level's element size is the previous level's array size */
-      nir_ssa_def *index = nir_ssa_for_src(b, deref->arr.index, 1);
+      nir_def *index = deref->arr.index.ssa;
       assert(deref->arr.index.ssa);
       offset = nir_iadd(b, offset,
-                           nir_imul(b, index, nir_imm_int(b, array_size)));
+                           nir_imul_imm(b, index, array_size));
 
       deref = nir_deref_instr_parent(deref);
       assert(glsl_type_is_array(deref->type));
@@ -262,8 +261,7 @@ iris_lower_storage_image_derefs(nir_shader *nir)
 {
    nir_function_impl *impl = nir_shader_get_entrypoint(nir);
 
-   nir_builder b;
-   nir_builder_init(&b, impl);
+   nir_builder b = nir_builder_create(impl);
 
    nir_foreach_block(block, impl) {
       nir_foreach_instr_safe(instr, block) {
@@ -274,16 +272,8 @@ iris_lower_storage_image_derefs(nir_shader *nir)
          switch (intrin->intrinsic) {
          case nir_intrinsic_image_deref_load:
          case nir_intrinsic_image_deref_store:
-         case nir_intrinsic_image_deref_atomic_add:
-         case nir_intrinsic_image_deref_atomic_imin:
-         case nir_intrinsic_image_deref_atomic_umin:
-         case nir_intrinsic_image_deref_atomic_imax:
-         case nir_intrinsic_image_deref_atomic_umax:
-         case nir_intrinsic_image_deref_atomic_and:
-         case nir_intrinsic_image_deref_atomic_or:
-         case nir_intrinsic_image_deref_atomic_xor:
-         case nir_intrinsic_image_deref_atomic_exchange:
-         case nir_intrinsic_image_deref_atomic_comp_swap:
+         case nir_intrinsic_image_deref_atomic:
+         case nir_intrinsic_image_deref_atomic_swap:
          case nir_intrinsic_image_deref_size:
          case nir_intrinsic_image_deref_samples:
          case nir_intrinsic_image_deref_load_raw_intel:
@@ -292,9 +282,9 @@ iris_lower_storage_image_derefs(nir_shader *nir)
             nir_variable *var = nir_deref_instr_get_variable(deref);
 
             b.cursor = nir_before_instr(&intrin->instr);
-            nir_ssa_def *index =
-               nir_iadd(&b, nir_imm_int(&b, var->data.driver_location),
-                            get_aoa_deref_offset(&b, deref, 1));
+            nir_def *index =
+               nir_iadd_imm(&b, get_aoa_deref_offset(&b, deref, 1),
+                                var->data.driver_location);
             nir_rewrite_image_intrinsic(intrin, index, false);
             break;
          }
@@ -309,40 +299,21 @@ iris_lower_storage_image_derefs(nir_shader *nir)
 static bool
 iris_uses_image_atomic(const nir_shader *shader)
 {
-   nir_foreach_function(function, shader) {
-      if (function->impl == NULL)
-         continue;
-
-      nir_foreach_block(block, function->impl) {
+   nir_foreach_function_impl(impl, shader) {
+      nir_foreach_block(block, impl) {
          nir_foreach_instr(instr, block) {
             if (instr->type != nir_instr_type_intrinsic)
                continue;
 
             nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
             switch (intrin->intrinsic) {
-            case nir_intrinsic_image_deref_atomic_add:
-            case nir_intrinsic_image_deref_atomic_imin:
-            case nir_intrinsic_image_deref_atomic_umin:
-            case nir_intrinsic_image_deref_atomic_imax:
-            case nir_intrinsic_image_deref_atomic_umax:
-            case nir_intrinsic_image_deref_atomic_and:
-            case nir_intrinsic_image_deref_atomic_or:
-            case nir_intrinsic_image_deref_atomic_xor:
-            case nir_intrinsic_image_deref_atomic_exchange:
-            case nir_intrinsic_image_deref_atomic_comp_swap:
+            case nir_intrinsic_image_deref_atomic:
+            case nir_intrinsic_image_deref_atomic_swap:
                unreachable("Should have been lowered in "
                            "iris_lower_storage_image_derefs");
 
-            case nir_intrinsic_image_atomic_add:
-            case nir_intrinsic_image_atomic_imin:
-            case nir_intrinsic_image_atomic_umin:
-            case nir_intrinsic_image_atomic_imax:
-            case nir_intrinsic_image_atomic_umax:
-            case nir_intrinsic_image_atomic_and:
-            case nir_intrinsic_image_atomic_or:
-            case nir_intrinsic_image_atomic_xor:
-            case nir_intrinsic_image_atomic_exchange:
-            case nir_intrinsic_image_atomic_comp_swap:
+            case nir_intrinsic_image_atomic:
+            case nir_intrinsic_image_atomic_swap:
                return true;
 
             default:
@@ -378,13 +349,11 @@ iris_fix_edge_flags(nir_shader *nir)
    nir->info.inputs_read &= ~VERT_BIT_EDGEFLAG;
    nir_fixup_deref_modes(nir);
 
-   nir_foreach_function(f, nir) {
-      if (f->impl) {
-         nir_metadata_preserve(f->impl, nir_metadata_block_index |
-                                        nir_metadata_dominance |
-                                        nir_metadata_live_ssa_defs |
-                                        nir_metadata_loop_analysis);
-      }
+   nir_foreach_function_impl(impl, nir) {
+      nir_metadata_preserve(impl, nir_metadata_block_index |
+                                  nir_metadata_dominance |
+                                  nir_metadata_live_defs |
+                                  nir_metadata_loop_analysis);
    }
 
    return true;
@@ -493,11 +462,9 @@ iris_setup_uniforms(ASSERTED const struct intel_device_info *devinfo,
 
    nir_function_impl *impl = nir_shader_get_entrypoint(nir);
 
-   nir_builder b;
-   nir_builder_init(&b, impl);
+   nir_builder b = nir_builder_at(nir_before_impl(impl));
 
-   b.cursor = nir_before_block(nir_start_block(impl));
-   nir_ssa_def *temp_ubo_name = nir_ssa_undef(&b, 1, 32);
+   nir_def *temp_ubo_name = nir_undef(&b, 1, 32);
 
    /* Turn system value intrinsics into uniforms */
    nir_foreach_block(block, impl) {
@@ -506,28 +473,28 @@ iris_setup_uniforms(ASSERTED const struct intel_device_info *devinfo,
             continue;
 
          nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
-         nir_ssa_def *offset;
+         nir_def *offset;
 
          switch (intrin->intrinsic) {
          case nir_intrinsic_load_base_workgroup_id: {
             /* GL doesn't have a concept of base workgroup */
             b.cursor = nir_instr_remove(&intrin->instr);
-            nir_ssa_def_rewrite_uses(&intrin->dest.ssa,
+            nir_def_rewrite_uses(&intrin->def,
                                      nir_imm_zero(&b, 3, 32));
             continue;
          }
          case nir_intrinsic_load_constant: {
-            unsigned load_size = intrin->dest.ssa.num_components *
-                                 intrin->dest.ssa.bit_size / 8;
-            unsigned load_align = intrin->dest.ssa.bit_size / 8;
+            unsigned load_size = intrin->def.num_components *
+                                 intrin->def.bit_size / 8;
+            unsigned load_align = intrin->def.bit_size / 8;
 
             /* This one is special because it reads from the shader constant
              * data and not cbuf0 which gallium uploads for us.
              */
             b.cursor = nir_instr_remove(&intrin->instr);
 
-            nir_ssa_def *offset =
-               nir_iadd_imm(&b, nir_ssa_for_src(&b, intrin->src[0], 1),
+            nir_def *offset =
+               nir_iadd_imm(&b, intrin->src[0].ssa,
                                 nir_intrinsic_base(intrin));
 
             assert(load_size < b.shader->constant_data_size);
@@ -541,16 +508,16 @@ iris_setup_uniforms(ASSERTED const struct intel_device_info *devinfo,
              */
             assert(IRIS_MEMZONE_SHADER_START >> 32 == 0ull);
 
-            nir_ssa_def *const_data_addr =
+            nir_def *const_data_addr =
                nir_iadd(&b, nir_load_reloc_const_intel(&b, BRW_SHADER_RELOC_CONST_DATA_ADDR_LOW), offset);
 
-            nir_ssa_def *data =
+            nir_def *data =
                nir_load_global_constant(&b, nir_u2u64(&b, const_data_addr),
                                         load_align,
-                                        intrin->dest.ssa.num_components,
-                                        intrin->dest.ssa.bit_size);
+                                        intrin->def.num_components,
+                                        intrin->def.bit_size);
 
-            nir_ssa_def_rewrite_uses(&intrin->dest.ssa,
+            nir_def_rewrite_uses(&intrin->def,
                                      data);
             continue;
          }
@@ -650,11 +617,11 @@ iris_setup_uniforms(ASSERTED const struct intel_device_info *devinfo,
             }
 
             b.cursor = nir_before_instr(instr);
-            offset = nir_iadd(&b,
+            offset = nir_iadd_imm(&b,
                get_aoa_deref_offset(&b, deref, BRW_IMAGE_PARAM_SIZE * 4),
-               nir_imm_int(&b, system_values_start +
-                               img_idx[var->data.binding] * 4 +
-                               nir_intrinsic_base(intrin) * 16));
+               system_values_start +
+               img_idx[var->data.binding] * 4 +
+               nir_intrinsic_base(intrin) * 16);
             break;
          }
          case nir_intrinsic_load_workgroup_size: {
@@ -695,15 +662,15 @@ iris_setup_uniforms(ASSERTED const struct intel_device_info *devinfo,
             continue;
          }
 
-         nir_ssa_def *load =
-            nir_load_ubo(&b, intrin->dest.ssa.num_components, intrin->dest.ssa.bit_size,
+         nir_def *load =
+            nir_load_ubo(&b, intrin->def.num_components, intrin->def.bit_size,
                          temp_ubo_name, offset,
                          .align_mul = 4,
                          .align_offset = 0,
                          .range_base = 0,
                          .range = ~0);
 
-         nir_ssa_def_rewrite_uses(&intrin->dest.ssa,
+         nir_def_rewrite_uses(&intrin->def,
                                   load);
          nir_instr_remove(instr);
       }
@@ -739,12 +706,9 @@ iris_setup_uniforms(ASSERTED const struct intel_device_info *devinfo,
 
             b.cursor = nir_before_instr(instr);
 
-            assert(load->src[0].is_ssa);
-
             if (load->src[0].ssa == temp_ubo_name) {
-               nir_ssa_def *imm = nir_imm_int(&b, sysval_cbuf_index);
-               nir_instr_rewrite_src(instr, &load->src[0],
-                                     nir_src_for_ssa(imm));
+               nir_def *imm = nir_imm_int(&b, sysval_cbuf_index);
+               nir_src_rewrite(&load->src[0], imm);
             }
          }
       }
@@ -877,7 +841,7 @@ rewrite_src_with_bti(nir_builder *b, struct iris_binding_table *bt,
    assert(bt->sizes[group] > 0);
 
    b->cursor = nir_before_instr(instr);
-   nir_ssa_def *bti;
+   nir_def *bti;
    if (nir_src_is_const(*src)) {
       uint32_t index = nir_src_as_uint(*src);
       bti = nir_imm_intN_t(b, iris_group_index_to_bti(bt, group, index),
@@ -889,7 +853,7 @@ rewrite_src_with_bti(nir_builder *b, struct iris_binding_table *bt,
       assert(bt->used_mask[group] == BITFIELD64_MASK(bt->sizes[group]));
       bti = nir_iadd_imm(b, src->ssa, bt->offsets[group]);
    }
-   nir_instr_rewrite_src(instr, src, nir_src_for_ssa(bti));
+   nir_src_rewrite(src, bti);
 }
 
 static void
@@ -1005,16 +969,8 @@ iris_setup_binding_table(const struct intel_device_info *devinfo,
          case nir_intrinsic_image_size:
          case nir_intrinsic_image_load:
          case nir_intrinsic_image_store:
-         case nir_intrinsic_image_atomic_add:
-         case nir_intrinsic_image_atomic_imin:
-         case nir_intrinsic_image_atomic_umin:
-         case nir_intrinsic_image_atomic_imax:
-         case nir_intrinsic_image_atomic_umax:
-         case nir_intrinsic_image_atomic_and:
-         case nir_intrinsic_image_atomic_or:
-         case nir_intrinsic_image_atomic_xor:
-         case nir_intrinsic_image_atomic_exchange:
-         case nir_intrinsic_image_atomic_comp_swap:
+         case nir_intrinsic_image_atomic:
+         case nir_intrinsic_image_atomic_swap:
          case nir_intrinsic_image_load_raw_intel:
          case nir_intrinsic_image_store_raw_intel:
             mark_used_with_src(bt, &intrin->src[0], IRIS_SURFACE_GROUP_IMAGE);
@@ -1029,19 +985,8 @@ iris_setup_binding_table(const struct intel_device_info *devinfo,
             break;
 
          case nir_intrinsic_get_ssbo_size:
-         case nir_intrinsic_ssbo_atomic_add:
-         case nir_intrinsic_ssbo_atomic_imin:
-         case nir_intrinsic_ssbo_atomic_umin:
-         case nir_intrinsic_ssbo_atomic_imax:
-         case nir_intrinsic_ssbo_atomic_umax:
-         case nir_intrinsic_ssbo_atomic_and:
-         case nir_intrinsic_ssbo_atomic_or:
-         case nir_intrinsic_ssbo_atomic_xor:
-         case nir_intrinsic_ssbo_atomic_exchange:
-         case nir_intrinsic_ssbo_atomic_comp_swap:
-         case nir_intrinsic_ssbo_atomic_fmin:
-         case nir_intrinsic_ssbo_atomic_fmax:
-         case nir_intrinsic_ssbo_atomic_fcomp_swap:
+         case nir_intrinsic_ssbo_atomic:
+         case nir_intrinsic_ssbo_atomic_swap:
          case nir_intrinsic_load_ssbo:
             mark_used_with_src(bt, &intrin->src[0], IRIS_SURFACE_GROUP_SSBO);
             break;
@@ -1079,8 +1024,7 @@ iris_setup_binding_table(const struct intel_device_info *devinfo,
     * to change those, as we haven't set any of the *_start entries in brw
     * binding_table.
     */
-   nir_builder b;
-   nir_builder_init(&b, impl);
+   nir_builder b = nir_builder_create(impl);
 
    nir_foreach_block (block, impl) {
       nir_foreach_instr (instr, block) {
@@ -1106,16 +1050,8 @@ iris_setup_binding_table(const struct intel_device_info *devinfo,
          case nir_intrinsic_image_size:
          case nir_intrinsic_image_load:
          case nir_intrinsic_image_store:
-         case nir_intrinsic_image_atomic_add:
-         case nir_intrinsic_image_atomic_imin:
-         case nir_intrinsic_image_atomic_umin:
-         case nir_intrinsic_image_atomic_imax:
-         case nir_intrinsic_image_atomic_umax:
-         case nir_intrinsic_image_atomic_and:
-         case nir_intrinsic_image_atomic_or:
-         case nir_intrinsic_image_atomic_xor:
-         case nir_intrinsic_image_atomic_exchange:
-         case nir_intrinsic_image_atomic_comp_swap:
+         case nir_intrinsic_image_atomic:
+         case nir_intrinsic_image_atomic_swap:
          case nir_intrinsic_image_load_raw_intel:
          case nir_intrinsic_image_store_raw_intel:
             rewrite_src_with_bti(&b, bt, instr, &intrin->src[0],
@@ -1140,19 +1076,8 @@ iris_setup_binding_table(const struct intel_device_info *devinfo,
             break;
 
          case nir_intrinsic_get_ssbo_size:
-         case nir_intrinsic_ssbo_atomic_add:
-         case nir_intrinsic_ssbo_atomic_imin:
-         case nir_intrinsic_ssbo_atomic_umin:
-         case nir_intrinsic_ssbo_atomic_imax:
-         case nir_intrinsic_ssbo_atomic_umax:
-         case nir_intrinsic_ssbo_atomic_and:
-         case nir_intrinsic_ssbo_atomic_or:
-         case nir_intrinsic_ssbo_atomic_xor:
-         case nir_intrinsic_ssbo_atomic_exchange:
-         case nir_intrinsic_ssbo_atomic_comp_swap:
-         case nir_intrinsic_ssbo_atomic_fmin:
-         case nir_intrinsic_ssbo_atomic_fmax:
-         case nir_intrinsic_ssbo_atomic_fcomp_swap:
+         case nir_intrinsic_ssbo_atomic:
+         case nir_intrinsic_ssbo_atomic_swap:
          case nir_intrinsic_load_ssbo:
             rewrite_src_with_bti(&b, bt, instr, &intrin->src[0],
                                  IRIS_SURFACE_GROUP_SSBO);
@@ -1406,15 +1331,19 @@ iris_compile_vs(struct iris_screen *screen,
    struct brw_vs_prog_key brw_key = iris_to_brw_vs_key(screen, key);
 
    struct brw_compile_vs_params params = {
-      .nir = nir,
+      .base = {
+         .mem_ctx = mem_ctx,
+         .nir = nir,
+         .log_data = dbg,
+         .source_hash = ish->source_hash,
+      },
       .key = &brw_key,
       .prog_data = vs_prog_data,
-      .log_data = dbg,
    };
 
-   const unsigned *program = brw_compile_vs(compiler, mem_ctx, &params);
+   const unsigned *program = brw_compile_vs(compiler, &params);
    if (program == NULL) {
-      dbg_printf("Failed to compile vertex shader: %s\n", params.error_str);
+      dbg_printf("Failed to compile vertex shader: %s\n", params.base.error_str);
       ralloc_free(mem_ctx);
 
       shader->compilation_failed = true;
@@ -1561,11 +1490,14 @@ iris_compile_tcs(struct iris_screen *screen,
 
    const struct iris_tcs_prog_key *const key = &shader->key.tcs;
    struct brw_tcs_prog_key brw_key = iris_to_brw_tcs_key(screen, key);
+   uint32_t source_hash;
 
    if (ish) {
       nir = nir_shader_clone(mem_ctx, ish->nir);
+      source_hash = ish->source_hash;
    } else {
       nir = brw_nir_create_passthrough_tcs(mem_ctx, compiler, &brw_key);
+      source_hash = *(uint32_t*)nir->info.source_sha1;
    }
 
    iris_setup_uniforms(devinfo, mem_ctx, nir, prog_data, 0, &system_values,
@@ -1575,15 +1507,19 @@ iris_compile_tcs(struct iris_screen *screen,
    brw_nir_analyze_ubo_ranges(compiler, nir, NULL, prog_data->ubo_ranges);
 
    struct brw_compile_tcs_params params = {
-      .nir = nir,
+      .base = {
+         .mem_ctx = mem_ctx,
+         .nir = nir,
+         .log_data = dbg,
+         .source_hash = source_hash,
+      },
       .key = &brw_key,
       .prog_data = tcs_prog_data,
-      .log_data = dbg,
    };
 
-   const unsigned *program = brw_compile_tcs(compiler, mem_ctx, &params);
+   const unsigned *program = brw_compile_tcs(compiler, &params);
    if (program == NULL) {
-      dbg_printf("Failed to compile control shader: %s\n", params.error_str);
+      dbg_printf("Failed to compile control shader: %s\n", params.base.error_str);
       ralloc_free(mem_ctx);
 
       shader->compilation_failed = true;
@@ -1737,16 +1673,20 @@ iris_compile_tes(struct iris_screen *screen,
    struct brw_tes_prog_key brw_key = iris_to_brw_tes_key(screen, key);
 
    struct brw_compile_tes_params params = {
-      .nir = nir,
+      .base = {
+         .mem_ctx = mem_ctx,
+         .nir = nir,
+         .log_data = dbg,
+         .source_hash = ish->source_hash,
+      },
       .key = &brw_key,
       .prog_data = tes_prog_data,
       .input_vue_map = &input_vue_map,
-      .log_data = dbg,
    };
 
-   const unsigned *program = brw_compile_tes(compiler, mem_ctx, &params);
+   const unsigned *program = brw_compile_tes(compiler, &params);
    if (program == NULL) {
-      dbg_printf("Failed to compile evaluation shader: %s\n", params.error_str);
+      dbg_printf("Failed to compile evaluation shader: %s\n", params.base.error_str);
       ralloc_free(mem_ctx);
 
       shader->compilation_failed = true;
@@ -1876,15 +1816,19 @@ iris_compile_gs(struct iris_screen *screen,
    struct brw_gs_prog_key brw_key = iris_to_brw_gs_key(screen, key);
 
    struct brw_compile_gs_params params = {
-      .nir = nir,
+      .base = {
+         .mem_ctx = mem_ctx,
+         .nir = nir,
+         .log_data = dbg,
+         .source_hash = ish->source_hash,
+      },
       .key = &brw_key,
       .prog_data = gs_prog_data,
-      .log_data = dbg,
    };
 
-   const unsigned *program = brw_compile_gs(compiler, mem_ctx, &params);
+   const unsigned *program = brw_compile_gs(compiler, &params);
    if (program == NULL) {
-      dbg_printf("Failed to compile geometry shader: %s\n", params.error_str);
+      dbg_printf("Failed to compile geometry shader: %s\n", params.base.error_str);
       ralloc_free(mem_ctx);
 
       shader->compilation_failed = true;
@@ -2012,19 +1956,22 @@ iris_compile_fs(struct iris_screen *screen,
    struct brw_wm_prog_key brw_key = iris_to_brw_fs_key(screen, key);
 
    struct brw_compile_fs_params params = {
-      .nir = nir,
+      .base = {
+         .mem_ctx = mem_ctx,
+         .nir = nir,
+         .log_data = dbg,
+         .source_hash = ish->source_hash,
+      },
       .key = &brw_key,
       .prog_data = fs_prog_data,
 
       .allow_spilling = true,
       .vue_map = vue_map,
-
-      .log_data = dbg,
    };
 
-   const unsigned *program = brw_compile_fs(compiler, mem_ctx, &params);
+   const unsigned *program = brw_compile_fs(compiler, &params);
    if (program == NULL) {
-      dbg_printf("Failed to compile fragment shader: %s\n", params.error_str);
+      dbg_printf("Failed to compile fragment shader: %s\n", params.base.error_str);
       ralloc_free(mem_ctx);
 
       shader->compilation_failed = true;
@@ -2289,15 +2236,19 @@ iris_compile_cs(struct iris_screen *screen,
    struct brw_cs_prog_key brw_key = iris_to_brw_cs_key(screen, key);
 
    struct brw_compile_cs_params params = {
-      .nir = nir,
+      .base = {
+         .mem_ctx = mem_ctx,
+         .nir = nir,
+         .log_data = dbg,
+         .source_hash = ish->source_hash,
+      },
       .key = &brw_key,
       .prog_data = cs_prog_data,
-      .log_data = dbg,
    };
 
-   const unsigned *program = brw_compile_cs(compiler, mem_ctx, &params);
+   const unsigned *program = brw_compile_cs(compiler, &params);
    if (program == NULL) {
-      dbg_printf("Failed to compile compute shader: %s\n", params.error_str);
+      dbg_printf("Failed to compile compute shader: %s\n", params.base.error_str);
 
       shader->compilation_failed = true;
       util_queue_fence_signal(&shader->ready);
@@ -2485,6 +2436,9 @@ iris_create_uncompiled_shader(struct iris_screen *screen,
       update_so_info(&ish->stream_output, nir->info.outputs_written);
    }
 
+   /* Use lowest dword of source shader sha1 for shader hash. */
+   ish->source_hash = *(uint32_t*)nir->info.source_sha1;
+
    if (screen->disk_cache) {
       /* Serialize the NIR to a binary blob that we can hash for the disk
        * cache.  Drop unnecessary information (like variable names)
@@ -2573,12 +2527,41 @@ iris_get_compute_state_info(struct pipe_context *ctx, void *state,
    info->max_threads = MIN2(1024, 32 * screen->devinfo->max_cs_workgroup_threads);
    info->private_memory = 0;
    info->preferred_simd_size = 32;
+   info->simd_sizes = 8 | 16 | 32;
 
    list_for_each_entry_safe(struct iris_compiled_shader, shader,
                             &ish->variants, link) {
       info->private_memory = MAX2(info->private_memory,
                                   shader->prog_data->total_scratch);
    }
+}
+
+static uint32_t
+iris_get_compute_state_subgroup_size(struct pipe_context *ctx, void *state,
+                                     const uint32_t block[3])
+{
+   struct iris_context *ice = (void *) ctx;
+   struct iris_screen *screen = (void *) ctx->screen;
+   struct u_upload_mgr *uploader = ice->shaders.uploader_driver;
+   const struct intel_device_info *devinfo = screen->devinfo;
+   struct iris_uncompiled_shader *ish = state;
+
+   struct iris_cs_prog_key key = { KEY_INIT(base) };
+   screen->vtbl.populate_cs_key(ice, &key);
+
+   bool added;
+   struct iris_compiled_shader *shader =
+      find_or_add_variant(screen, ish, IRIS_CACHE_CS, &key,
+                          sizeof(key), &added);
+
+   if (added && !iris_disk_cache_retrieve(screen, uploader, ish, shader,
+                                          &key, sizeof(key))) {
+      iris_compile_cs(screen, uploader, &ice->dbg, ish, shader);
+   }
+
+   struct brw_cs_prog_data *cs_prog_data = (void *) shader->prog_data;
+
+   return brw_cs_get_dispatch_info(devinfo, cs_prog_data, block).simd_size;
 }
 
 static void
@@ -2966,7 +2949,14 @@ iris_finalize_nir(struct pipe_screen *_screen, void *nirptr)
    struct brw_nir_compiler_opts opts = {};
    brw_preprocess_nir(screen->compiler, nir, &opts);
 
-   NIR_PASS_V(nir, brw_nir_lower_storage_image, devinfo);
+   NIR_PASS_V(nir, brw_nir_lower_storage_image,
+              &(struct brw_nir_lower_storage_image_opts) {
+                 .devinfo = devinfo,
+                 .lower_loads = true,
+                 .lower_stores = true,
+                 .lower_atomics = true,
+                 .lower_get_size = true,
+              });
    NIR_PASS_V(nir, iris_lower_storage_image_derefs);
 
    nir_sweep(nir);
@@ -3042,4 +3032,5 @@ iris_init_program_functions(struct pipe_context *ctx)
    ctx->bind_compute_state = iris_bind_cs_state;
 
    ctx->get_compute_state_info = iris_get_compute_state_info;
+   ctx->get_compute_state_subgroup_size = iris_get_compute_state_subgroup_size;
 }

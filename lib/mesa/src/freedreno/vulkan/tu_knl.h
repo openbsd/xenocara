@@ -40,6 +40,14 @@ enum tu_timeline_sync_state {
 
 struct tu_bo {
    uint32_t gem_handle;
+#ifdef TU_HAS_VIRTIO
+   /* Between the guest UMD and host native-ctx shim/proxy, guest kernel
+    * assigned res_id is used instead of host gem handle.  This allows
+    * the guest to run ahead of the host without having to wait for
+    * response from the host when buffers are allocated.
+    */
+   uint32_t res_id;
+#endif
    uint64_t size;
    uint64_t iova;
    void *map;
@@ -54,11 +62,13 @@ struct tu_bo {
 struct tu_knl {
    const char *name;
 
+   VkResult (*device_init)(struct tu_device *dev);
+   void (*device_finish)(struct tu_device *dev);
    int (*device_get_gpu_timestamp)(struct tu_device *dev, uint64_t *ts);
    int (*device_get_suspend_count)(struct tu_device *dev, uint64_t *suspend_count);
    VkResult (*device_check_status)(struct tu_device *dev);
-   int (*submitqueue_new)(const struct tu_device *dev, int priority, uint32_t *queue_id);
-   void (*submitqueue_close)(const struct tu_device *dev, uint32_t queue_id);
+   int (*submitqueue_new)(struct tu_device *dev, int priority, uint32_t *queue_id);
+   void (*submitqueue_close)(struct tu_device *dev, uint32_t queue_id);
    VkResult (*bo_init)(struct tu_device *dev, struct tu_bo **out_bo, uint64_t size,
                        uint64_t client_iova, VkMemoryPropertyFlags mem_property,
                        enum tu_bo_alloc_flags flags, const char *name);
@@ -74,6 +84,16 @@ struct tu_knl {
                             struct vk_queue_submit *submit);
 
    const struct vk_device_entrypoint_table *device_entrypoints;
+};
+
+struct tu_zombie_vma {
+   int fence;
+   uint32_t gem_handle;
+#ifdef TU_HAS_VIRTIO
+   uint32_t res_id;
+#endif
+   uint64_t iova;
+   uint64_t size;
 };
 
 struct tu_timeline_sync {
@@ -96,6 +116,8 @@ static inline VkResult
 tu_bo_init_new(struct tu_device *dev, struct tu_bo **out_bo, uint64_t size,
                enum tu_bo_alloc_flags flags, const char *name)
 {
+   // TODO don't mark everything with HOST_VISIBLE !!! Anything that
+   // never gets CPU access should not have this bit set
    return tu_bo_init_new_explicit_iova(
       dev, out_bo, size, 0,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
@@ -134,6 +156,9 @@ struct _drmVersion;
 VkResult tu_knl_drm_msm_load(struct tu_instance *instance,
                              int fd, struct _drmVersion *version,
                              struct tu_physical_device **out);
+VkResult tu_knl_drm_virtio_load(struct tu_instance *instance,
+                                int fd, struct _drmVersion *version,
+                                struct tu_physical_device **out);
 
 VkResult
 tu_enumerate_devices(struct vk_instance *vk_instance);
@@ -141,6 +166,12 @@ VkResult
 tu_physical_device_try_create(struct vk_instance *vk_instance,
                               struct _drmDevice *drm_device,
                               struct vk_physical_device **out);
+
+VkResult
+tu_drm_device_init(struct tu_device *dev);
+
+void
+tu_drm_device_finish(struct tu_device *dev);
 
 int
 tu_device_get_gpu_timestamp(struct tu_device *dev,
@@ -157,12 +188,12 @@ VkResult
 tu_device_check_status(struct vk_device *vk_device);
 
 int
-tu_drm_submitqueue_new(const struct tu_device *dev,
+tu_drm_submitqueue_new(struct tu_device *dev,
                        int priority,
                        uint32_t *queue_id);
 
 void
-tu_drm_submitqueue_close(const struct tu_device *dev, uint32_t queue_id);
+tu_drm_submitqueue_close(struct tu_device *dev, uint32_t queue_id);
 
 VkResult
 tu_queue_submit(struct vk_queue *vk_queue, struct vk_queue_submit *submit);

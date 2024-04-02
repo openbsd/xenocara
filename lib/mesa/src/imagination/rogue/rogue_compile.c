@@ -67,12 +67,9 @@ static rogue_ref nir_ssa_reg_alu_src(rogue_shader *shader,
 {
    unsigned index = alu->src[src_num].src.ssa->index;
    unsigned num_components = alu->src[src_num].src.ssa->num_components;
+   unsigned component = alu->src[src_num].swizzle[0];
 
-   unsigned write_mask = alu->dest.write_mask;
-   unsigned bit_pos = ffs(write_mask) - 1;
-   assert(util_is_power_of_two_nonzero(write_mask));
-
-   unsigned component = alu->src[src_num].swizzle[bit_pos];
+   assert(num_components == 1);
 
    return vec ? nir_ssa_regarray(shader, index, num_components, component)
               : nir_ssa_reg(shader, index, num_components, component);
@@ -81,15 +78,13 @@ static rogue_ref nir_ssa_reg_alu_src(rogue_shader *shader,
 static rogue_ref
 nir_ssa_reg_alu_dst(rogue_shader *shader, const nir_alu_instr *alu, bool vec)
 {
-   unsigned num_components = alu->dest.dest.ssa.num_components;
-   unsigned index = alu->dest.dest.ssa.index;
+   unsigned num_components = alu->def.num_components;
+   unsigned index = alu->def.index;
 
-   unsigned write_mask = alu->dest.write_mask;
-   unsigned component = ffs(write_mask) - 1;
-   assert(util_is_power_of_two_nonzero(write_mask));
+   assert(num_components == 1);
 
-   return vec ? nir_ssa_regarray(shader, index, num_components, component)
-              : nir_ssa_reg(shader, index, num_components, component);
+   return vec ? nir_ssa_regarray(shader, index, num_components, 0)
+              : nir_ssa_reg(shader, index, num_components, 0);
 }
 
 static void trans_nir_jump_return(rogue_builder *b, nir_jump_instr *jump)
@@ -149,10 +144,10 @@ static void trans_nir_intrinsic_load_input_fs(rogue_builder *b,
 {
    struct rogue_fs_build_data *fs_data = &b->shader->ctx->stage_data.fs;
 
-   unsigned load_size = nir_dest_num_components(intr->dest);
+   unsigned load_size = intr->def.num_components;
    assert(load_size == 1); /* TODO: We can support larger load sizes. */
 
-   rogue_reg *dst = rogue_ssa_reg(b->shader, intr->dest.ssa.index);
+   rogue_reg *dst = rogue_ssa_reg(b->shader, intr->def.index);
 
    struct nir_io_semantics io_semantics = nir_intrinsic_io_semantics(intr);
    unsigned component = nir_intrinsic_component(intr);
@@ -180,16 +175,57 @@ static void trans_nir_intrinsic_load_input_fs(rogue_builder *b,
 static void trans_nir_intrinsic_load_input_vs(rogue_builder *b,
                                               nir_intrinsic_instr *intr)
 {
-   ASSERTED unsigned load_size = nir_dest_num_components(intr->dest);
+   struct pvr_pipeline_layout *pipeline_layout =
+      b->shader->ctx->pipeline_layout;
+
+   ASSERTED unsigned load_size = intr->def.num_components;
    assert(load_size == 1); /* TODO: We can support larger load sizes. */
 
-   rogue_reg *dst = rogue_ssa_reg(b->shader, intr->dest.ssa.index);
+   rogue_reg *dst = rogue_ssa_reg(b->shader, intr->def.index);
 
    struct nir_io_semantics io_semantics = nir_intrinsic_io_semantics(intr);
+   unsigned input = io_semantics.location - VERT_ATTRIB_GENERIC0;
    unsigned component = nir_intrinsic_component(intr);
-   /* TODO: Get these properly with the intrinsic index (ssa argument) */
-   unsigned vtxin_index =
-      ((io_semantics.location - VERT_ATTRIB_GENERIC0) * 3) + component;
+   unsigned vtxin_index = ~0U;
+
+   if (pipeline_layout) {
+      rogue_vertex_inputs *vs_inputs = &b->shader->ctx->stage_data.vs.inputs;
+      assert(input < vs_inputs->num_input_vars);
+      assert(component < vs_inputs->components[input]);
+
+      vtxin_index = vs_inputs->base[input] + component;
+   } else {
+      /* Dummy defaults for offline compiler. */
+      /* TODO: Load these from an offline description
+       * if using the offline compiler.
+       */
+
+      nir_shader *nir = b->shader->ctx->nir[MESA_SHADER_VERTEX];
+      vtxin_index = 0;
+
+      /* Process inputs. */
+      nir_foreach_shader_in_variable (var, nir) {
+         unsigned input_components = glsl_get_components(var->type);
+         unsigned bit_size =
+            glsl_base_type_bit_size(glsl_get_base_type(var->type));
+         assert(bit_size >= 32); /* TODO: Support smaller bit sizes. */
+         unsigned reg_count = bit_size / 32;
+
+         /* Check input location. */
+         assert(var->data.location >= VERT_ATTRIB_GENERIC0 &&
+                var->data.location <= VERT_ATTRIB_GENERIC15);
+
+         if (var->data.location == io_semantics.location) {
+            assert(component < input_components);
+            vtxin_index += reg_count * component;
+            break;
+         }
+
+         vtxin_index += reg_count * input_components;
+      }
+   }
+
+   assert(vtxin_index != ~0U);
 
    rogue_reg *src = rogue_vtxin_reg(b->shader, vtxin_index);
    rogue_instr *instr =
@@ -484,7 +520,7 @@ trans_nir_intrinsic_load_vulkan_descriptor(rogue_builder *b,
                rogue_ref_reg(desc_addr_offset_val_hi),
                rogue_ref_io(ROGUE_IO_NONE));
 
-   unsigned desc_addr_idx = intr->dest.ssa.index;
+   unsigned desc_addr_idx = intr->def.index;
    rogue_regarray *desc_addr_64 =
       rogue_ssa_vec_regarray(b->shader, 2, desc_addr_idx, 0);
    instr = &rogue_LD(b,
@@ -504,7 +540,7 @@ static void trans_nir_intrinsic_load_global_constant(rogue_builder *b,
    rogue_regarray *src = rogue_ssa_vec_regarray(b->shader, 2, src_index, 0);
 
    /*** TODO NEXT: this could be either a reg or regarray. ***/
-   rogue_reg *dst = rogue_ssa_reg(b->shader, intr->dest.ssa.index);
+   rogue_reg *dst = rogue_ssa_reg(b->shader, intr->def.index);
 
    /* TODO NEXT: src[1] should be depending on ssa vec size for burst loads */
    rogue_instr *instr = &rogue_LD(b,
@@ -569,7 +605,7 @@ static void trans_nir_alu_ffma(rogue_builder *b, nir_alu_instr *alu)
 
 static void trans_nir_alu_vecN(rogue_builder *b, nir_alu_instr *alu, unsigned n)
 {
-   unsigned dst_index = alu->dest.dest.ssa.index;
+   unsigned dst_index = alu->def.index;
    rogue_regarray *dst;
    rogue_reg *src;
 
@@ -582,7 +618,7 @@ static void trans_nir_alu_vecN(rogue_builder *b, nir_alu_instr *alu, unsigned n)
 
 static void trans_nir_alu_iadd64(rogue_builder *b, nir_alu_instr *alu)
 {
-   unsigned dst_index = alu->dest.dest.ssa.index;
+   unsigned dst_index = alu->def.index;
    rogue_regarray *dst[2] = {
       rogue_ssa_vec_regarray(b->shader, 1, dst_index, 0),
       rogue_ssa_vec_regarray(b->shader, 1, dst_index, 1),
@@ -614,7 +650,7 @@ static void trans_nir_alu_iadd64(rogue_builder *b, nir_alu_instr *alu)
 
 static void trans_nir_alu_iadd(rogue_builder *b, nir_alu_instr *alu)
 {
-   unsigned bit_size = alu->dest.dest.ssa.bit_size;
+   unsigned bit_size = alu->def.bit_size;
 
    switch (bit_size) {
       /* TODO: case 32: */
@@ -682,14 +718,12 @@ static inline void rogue_feedback_used_regs(rogue_build_ctx *ctx,
 {
    /* TODO NEXT: Use this counting method elsewhere as well. */
    ctx->common_data[shader->stage].temps =
-      __bitset_count(shader->regs_used[ROGUE_REG_CLASS_TEMP],
-                     BITSET_WORDS(rogue_reg_infos[ROGUE_REG_CLASS_TEMP].num));
-   ctx->common_data[shader->stage].internals = __bitset_count(
-      shader->regs_used[ROGUE_REG_CLASS_INTERNAL],
-      BITSET_WORDS(rogue_reg_infos[ROGUE_REG_CLASS_INTERNAL].num));
+      rogue_count_used_regs(shader, ROGUE_REG_CLASS_TEMP);
+   ctx->common_data[shader->stage].internals =
+      rogue_count_used_regs(shader, ROGUE_REG_CLASS_INTERNAL);
 }
 
-static bool ssa_def_cb(nir_ssa_def *ssa, void *state)
+static bool ssa_def_cb(nir_def *ssa, void *state)
 {
    rogue_shader *shader = (rogue_shader *)state;
 
@@ -743,7 +777,7 @@ rogue_shader *rogue_nir_to_rogue(rogue_build_ctx *ctx, const nir_shader *nir)
             if (load_const->def.num_components > 1)
                continue;
          }
-         nir_foreach_ssa_def(instr, ssa_def_cb, shader);
+         nir_foreach_def(instr, ssa_def_cb, shader);
       }
    }
    ++shader->ctx->next_ssa_idx;

@@ -2,24 +2,7 @@
 #
 # Copyright 2021 Advanced Micro Devices, Inc.
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# on the rights to use, copy, modify, merge, publish, distribute, sub
-# license, and/or sell copies of the Software, and to permit persons to whom
-# the Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice (including the next
-# paragraph) shall be included in all copies or substantial portions of the
-# Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
-# THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-# USE OR OTHER DEALINGS IN THE SOFTWARE.
+# SPDX-License-Identifier: MIT
 #
 
 import os
@@ -70,6 +53,7 @@ path_above_mesa = os.path.realpath(os.path.join(os.path.dirname(__file__), *['..
 
 parser.add_argument("--piglit-path", type=str, help="Path to piglit source folder.")
 parser.add_argument("--glcts-path", type=str, help="Path to GLCTS source folder.")
+parser.add_argument("--escts-path", type=str, help="Path to GLES CTS source folder.")
 parser.add_argument("--deqp-path", type=str, help="Path to dEQP source folder.")
 parser.add_argument(
     "--parent-path",
@@ -97,6 +81,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "--no-glcts", dest="glcts", help="Disable GLCTS tests", action="store_false"
+)
+parser.add_argument(
+    "--no-escts", dest="escts", help="Disable GLES CTS tests", action="store_false"
 )
 parser.add_argument(
     "--no-deqp", dest="deqp", help="Disable dEQP tests", action="store_false"
@@ -130,6 +117,7 @@ parser.add_argument(
 )
 parser.set_defaults(piglit=True)
 parser.set_defaults(glcts=True)
+parser.set_defaults(escts=True)
 parser.set_defaults(deqp=True)
 parser.set_defaults(deqp_egl=True)
 parser.set_defaults(deqp_gles2=True)
@@ -173,6 +161,7 @@ parser.add_argument(
 args = parser.parse_args(sys.argv[1:])
 piglit_path = args.piglit_path
 glcts_path = args.glcts_path
+escts_path = args.escts_path
 deqp_path = args.deqp_path
 
 if args.parent_path:
@@ -181,9 +170,10 @@ if args.parent_path:
         sys.exit(0)
     piglit_path = os.path.join(args.parent_path, "piglit")
     glcts_path = os.path.join(args.parent_path, "glcts")
+    escts_path = os.path.join(args.parent_path, "escts")
     deqp_path = os.path.join(args.parent_path, "deqp")
 else:
-    if not args.piglit_path or not args.glcts_path or not args.deqp_path:
+    if not args.piglit_path or not args.glcts_path or not args.escts_path or not args.deqp_path:
         parser.print_help()
         sys.exit(0)
 
@@ -432,14 +422,66 @@ if args.glcts:
         "--tests-per-group",
         "100",
         "--deqp",
-        "{}/external/openglcts/modules/glcts".format(glcts_path),
+        "{}/build/external/openglcts/modules/glcts".format(glcts_path),
         "--caselist",
-        "{}/external/openglcts/modules/gl_cts/data/mustpass/gl/khronos_mustpass/4.6.1.x/gl46-master.txt".format(
+        "{}/build/external/openglcts/modules/gl_cts/data/mustpass/gl/khronos_mustpass/4.6.1.x/gl46-master.txt".format(
             glcts_path
         ),
         "--caselist",
-        "{}/external/openglcts/modules/gl_cts/data/mustpass/gl/khronos_mustpass_single/4.6.1.x/gl46-khr-single.txt".format(
+        "{}/build/external/openglcts/modules/gl_cts/data/mustpass/gl/khronos_mustpass_single/4.6.1.x/gl46-khr-single.txt".format(
             glcts_path
+        ),
+        "--caselist",
+        "{}/build/external/openglcts/modules/gl_cts/data/mustpass/gl/khronos_mustpass/4.6.1.x/gl46-gtf-master.txt".format(
+            glcts_path
+        ),
+        "--output",
+        out,
+        "--skips",
+        skips,
+        "--jobs",
+        str(args.jobs),
+        "--timeout",
+        "1000"
+    ] + filters_args + flakes_args
+
+    if os.path.exists(baseline):
+        cmd += ["--baseline", baseline]
+    cmd += deqp_args
+
+    run_cmd(cmd, args.verbose)
+
+    if not verify_results(os.path.join(out, "failures.csv")):
+        success = False
+
+# escts test
+if args.escts:
+    out = os.path.join(output_folder, "escts")
+    print_yellow("Running  ESCTS tests", args.verbose > 0)
+    os.mkdir(out)
+
+    cmd = [
+        "deqp-runner",
+        "run",
+        "--tests-per-group",
+        "100",
+        "--deqp",
+        "{}/build/external/openglcts/modules/glcts".format(escts_path),
+        "--caselist",
+        "{}/build/external/openglcts/modules/gl_cts/data/mustpass/gles/khronos_mustpass/3.2.6.x/gles2-khr-master.txt".format(
+            escts_path
+        ),
+        "--caselist",
+        "{}/build/external/openglcts/modules/gl_cts/data/mustpass/gles/khronos_mustpass/3.2.6.x/gles3-khr-master.txt".format(
+            escts_path
+        ),
+        "--caselist",
+        "{}/build/external/openglcts/modules/gl_cts/data/mustpass/gles/khronos_mustpass/3.2.6.x/gles31-khr-master.txt".format(
+            escts_path
+        ),
+        "--caselist",
+        "{}/build/external/openglcts/modules/gl_cts/data/mustpass/gles/khronos_mustpass/3.2.6.x/gles32-khr-master.txt".format(
+            escts_path
         ),
         "--output",
         out,
@@ -483,12 +525,12 @@ if args.deqp:
         suite.write("[[deqp]]\n")
         suite.write(
             'deqp = "{}"\n'.format(
-                "{}/modules/{subtest}/deqp-{subtest}".format(deqp_path, subtest=k)
+                "{}/build/modules/{subtest}/deqp-{subtest}".format(deqp_path, subtest=k)
             )
         )
         suite.write(
             'caselists = ["{}"]\n'.format(
-                "{}/android/cts/master/{}-master.txt".format(deqp_path, k)
+                "{}/android/cts/main/{}-master.txt".format(deqp_path, k)
             )
         )
         if os.path.exists(baseline):

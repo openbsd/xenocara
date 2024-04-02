@@ -93,16 +93,17 @@ static void
 panfrost_bo_free(struct panfrost_bo *bo)
 {
    struct drm_gem_close gem_close = {.handle = bo->gem_handle};
+   int fd = bo->dev->fd;
    int ret;
 
-   ret = drmIoctl(bo->dev->fd, DRM_IOCTL_GEM_CLOSE, &gem_close);
+   /* BO will be freed with the sparse array, but zero to indicate free */
+   memset(bo, 0, sizeof(*bo));
+
+   ret = drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &gem_close);
    if (ret) {
       fprintf(stderr, "DRM_IOCTL_GEM_CLOSE failed: %m\n");
       assert(0);
    }
-
-   /* BO will be freed with the sparse array, but zero to indicate free */
-   memset(bo, 0, sizeof(*bo));
 }
 
 /* Returns true if the BO is ready, false otherwise.
@@ -404,9 +405,11 @@ panfrost_bo_create(struct panfrost_device *dev, size_t size, uint32_t flags,
 
    if (dev->debug & (PAN_DBG_TRACE | PAN_DBG_SYNC)) {
       if (flags & PAN_BO_INVISIBLE)
-         pandecode_inject_mmap(bo->ptr.gpu, NULL, bo->size, NULL);
+         pandecode_inject_mmap(dev->decode_ctx, bo->ptr.gpu, NULL, bo->size,
+                               NULL);
       else if (!(flags & PAN_BO_DELAY_MMAP))
-         pandecode_inject_mmap(bo->ptr.gpu, bo->ptr.cpu, bo->size, NULL);
+         pandecode_inject_mmap(dev->decode_ctx, bo->ptr.gpu, bo->ptr.cpu,
+                               bo->size, NULL);
    }
 
    return bo;
@@ -443,7 +446,7 @@ panfrost_bo_unreference(struct panfrost_bo *bo)
       panfrost_bo_munmap(bo);
 
       if (dev->debug & (PAN_DBG_TRACE | PAN_DBG_SYNC))
-         pandecode_inject_free(bo->ptr.gpu, bo->size);
+         pandecode_inject_free(dev->decode_ctx, bo->ptr.gpu, bo->size);
 
       /* Rather than freeing the BO now, we'll cache the BO for later
        * allocations if we're allowed to.

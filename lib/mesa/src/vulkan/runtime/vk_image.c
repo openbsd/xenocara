@@ -100,18 +100,16 @@ vk_image_init(struct vk_device *device,
 #endif
 
 #ifdef ANDROID
-   image->ahardware_buffer_format = 0;
-
    const VkExternalFormatANDROID *ext_format =
       vk_find_struct_const(pCreateInfo->pNext, EXTERNAL_FORMAT_ANDROID);
    if (ext_format && ext_format->externalFormat != 0) {
       assert(image->format == VK_FORMAT_UNDEFINED);
       assert(image->external_handle_types &
              VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID);
-      image->android_external_format = ext_format->externalFormat;
-   } else {
-      image->android_external_format = 0;
+      vk_image_set_format(image, (VkFormat)ext_format->externalFormat);
    }
+
+   image->ahb_format = vk_image_format_to_ahb_format(image->format);
 #endif
 }
 
@@ -163,6 +161,28 @@ vk_common_GetImageDrmFormatModifierPropertiesEXT(UNUSED VkDevice device,
    return VK_SUCCESS;
 }
 #endif
+
+VKAPI_ATTR void VKAPI_CALL
+vk_common_GetImageSubresourceLayout(VkDevice _device, VkImage _image,
+                                    const VkImageSubresource *pSubresource,
+                                    VkSubresourceLayout *pLayout)
+{
+   VK_FROM_HANDLE(vk_device, device, _device);
+
+   const VkImageSubresource2KHR subresource = {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_SUBRESOURCE_2_KHR,
+      .imageSubresource = *pSubresource,
+   };
+
+   VkSubresourceLayout2KHR layout = {
+      .sType = VK_STRUCTURE_TYPE_SUBRESOURCE_LAYOUT_2_KHR
+   };
+
+   device->dispatch_table.GetImageSubresourceLayout2KHR(_device, _image,
+                                                        &subresource, &layout);
+
+   *pLayout = layout.subresourceLayout;
+}
 
 void
 vk_image_set_format(struct vk_image *image, VkFormat format)
@@ -305,6 +325,36 @@ vk_image_buffer_copy_layout(const struct vk_image *image,
    };
 }
 
+struct vk_image_buffer_layout
+vk_memory_to_image_copy_layout(const struct vk_image *image,
+                               const VkMemoryToImageCopyEXT* region)
+{
+   const VkBufferImageCopy2 bic = {
+      .bufferOffset = 0,
+      .bufferRowLength = region->memoryRowLength,
+      .bufferImageHeight = region->memoryImageHeight,
+      .imageSubresource = region->imageSubresource,
+      .imageOffset = region->imageOffset,
+      .imageExtent = region->imageExtent,
+   };
+   return vk_image_buffer_copy_layout(image, &bic);
+}
+
+struct vk_image_buffer_layout
+vk_image_to_memory_copy_layout(const struct vk_image *image,
+                               const VkImageToMemoryCopyEXT* region)
+{
+   const VkBufferImageCopy2 bic = {
+      .bufferOffset = 0,
+      .bufferRowLength = region->memoryRowLength,
+      .bufferImageHeight = region->memoryImageHeight,
+      .imageSubresource = region->imageSubresource,
+      .imageOffset = region->imageOffset,
+      .imageExtent = region->imageExtent,
+   };
+   return vk_image_buffer_copy_layout(image, &bic);
+}
+
 static VkComponentSwizzle
 remap_swizzle(VkComponentSwizzle swizzle, VkComponentSwizzle component)
 {
@@ -325,7 +375,10 @@ vk_image_view_init(struct vk_device *device,
    image_view->create_flags = pCreateInfo->flags;
    image_view->image = image;
    image_view->view_type = pCreateInfo->viewType;
+
    image_view->format = pCreateInfo->format;
+   if (image_view->format == VK_FORMAT_UNDEFINED)
+      image_view->format = image->format;
 
    if (!driver_internal) {
       switch (image_view->view_type) {
@@ -358,7 +411,7 @@ vk_image_view_init(struct vk_device *device,
 
    if (driver_internal) {
       image_view->aspects = range->aspectMask;
-      image_view->view_format = pCreateInfo->format;
+      image_view->view_format = image_view->format;
    } else {
       image_view->aspects =
          vk_image_expand_aspect_mask(image, range->aspectMask);
@@ -384,7 +437,7 @@ vk_image_view_init(struct vk_device *device,
        */
       if ((image->aspects & VK_IMAGE_ASPECT_PLANE_1_BIT) &&
           (range->aspectMask == VK_IMAGE_ASPECT_COLOR_BIT))
-         assert(pCreateInfo->format == image->format);
+         assert(image_view->format == image->format);
 
       /* From the Vulkan 1.2.184 spec:
        *
@@ -392,10 +445,10 @@ vk_image_view_init(struct vk_device *device,
        */
       if (image_view->aspects & (VK_IMAGE_ASPECT_DEPTH_BIT |
                                  VK_IMAGE_ASPECT_STENCIL_BIT))
-         assert(pCreateInfo->format == image->format);
+         assert(image_view->format == image->format);
 
       if (!(image->create_flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT))
-         assert(pCreateInfo->format == image->format);
+         assert(image_view->format == image->format);
 
       /* Restrict the format to only the planes chosen.
        *
@@ -418,11 +471,11 @@ vk_image_view_init(struct vk_device *device,
        *    enable sampler Y′CBCR conversion."
        */
       if (image_view->aspects == VK_IMAGE_ASPECT_STENCIL_BIT) {
-         image_view->view_format = vk_format_stencil_only(pCreateInfo->format);
+         image_view->view_format = vk_format_stencil_only(image_view->format);
       } else if (image_view->aspects == VK_IMAGE_ASPECT_DEPTH_BIT) {
-         image_view->view_format = vk_format_depth_only(pCreateInfo->format);
+         image_view->view_format = vk_format_depth_only(image_view->format);
       } else {
-         image_view->view_format = pCreateInfo->format;
+         image_view->view_format = image_view->format;
       }
    }
 

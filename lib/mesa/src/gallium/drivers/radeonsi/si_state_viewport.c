@@ -1,25 +1,7 @@
 /*
  * Copyright 2012 Advanced Micro Devices, Inc.
- * All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "si_build_pm4.h"
@@ -51,8 +33,14 @@ static void si_get_small_prim_cull_info(struct si_context *sctx, struct si_small
       line_width = roundf(line_width);
    line_width = MAX2(line_width, 1);
 
-   info.clip_half_line_width[0] = line_width * 0.5 / fabs(info.scale[0]);
-   info.clip_half_line_width[1] = line_width * 0.5 / fabs(info.scale[1]);
+   float half_line_width = line_width * 0.5;
+   if (info.scale[0] == 0 || info.scale[1] == 0) {
+     info.clip_half_line_width[0] = 0;
+     info.clip_half_line_width[1] = 0;
+   } else {
+     info.clip_half_line_width[0] = half_line_width / fabs(info.scale[0]);
+     info.clip_half_line_width[1] = half_line_width / fabs(info.scale[1]);
+   }
 
    /* If the Y axis is inverted (OpenGL default framebuffer), reverse it.
     * This is because the viewport transformation inverts the clip space
@@ -86,7 +74,7 @@ static void si_get_small_prim_cull_info(struct si_context *sctx, struct si_small
    *out = info;
 }
 
-static void si_emit_cull_state(struct si_context *sctx)
+static void si_emit_cull_state(struct si_context *sctx, unsigned index)
 {
    assert(sctx->screen->use_ngg_culling);
 
@@ -108,10 +96,17 @@ static void si_emit_cull_state(struct si_context *sctx)
    /* This will end up in SGPR6 as (value << 8), shifted by the hw. */
    radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, sctx->small_prim_cull_info_buf,
                              RADEON_USAGE_READ | RADEON_PRIO_CONST_BUFFER);
-   radeon_begin(&sctx->gfx_cs);
-   radeon_set_sh_reg(R_00B230_SPI_SHADER_USER_DATA_GS_0 + GFX9_SGPR_SMALL_PRIM_CULL_INFO * 4,
-                     sctx->small_prim_cull_info_address);
-   radeon_end();
+
+   if (sctx->screen->info.has_set_pairs_packets) {
+      radeon_push_gfx_sh_reg(R_00B230_SPI_SHADER_USER_DATA_GS_0 +
+                             GFX9_SGPR_SMALL_PRIM_CULL_INFO * 4,
+                             sctx->small_prim_cull_info_address);
+   } else {
+      radeon_begin(&sctx->gfx_cs);
+      radeon_set_sh_reg(R_00B230_SPI_SHADER_USER_DATA_GS_0 + GFX9_SGPR_SMALL_PRIM_CULL_INFO * 4,
+                        sctx->small_prim_cull_info_address);
+      radeon_end();
+   }
 
    /* Better subpixel precision increases the efficiency of small
     * primitive culling. (more precision means a tighter bounding box
@@ -259,7 +254,7 @@ static void si_emit_one_scissor(struct si_context *ctx, struct radeon_cmdbuf *cs
 
 #define MAX_PA_SU_HARDWARE_SCREEN_OFFSET 8176
 
-static void si_emit_guardband(struct si_context *ctx)
+static void si_emit_guardband(struct si_context *ctx, unsigned index)
 {
    const struct si_state_rasterizer *rs = ctx->queued.named.rasterizer;
    struct si_signed_scissor vp_as_scissor;
@@ -362,7 +357,7 @@ static void si_emit_guardband(struct si_context *ctx)
        * conservative about when to discard them entirely. */
       float pixels;
 
-      if (ctx->current_rast_prim == PIPE_PRIM_POINTS)
+      if (ctx->current_rast_prim == MESA_PRIM_POINTS)
          pixels = rs->max_point_size;
       else
          pixels = rs->line_width;
@@ -396,7 +391,7 @@ static void si_emit_guardband(struct si_context *ctx)
    radeon_end_update_context_roll(ctx);
 }
 
-static void si_emit_scissors(struct si_context *ctx)
+static void si_emit_scissors(struct si_context *ctx, unsigned index)
 {
    struct radeon_cmdbuf *cs = &ctx->gfx_cs;
    struct pipe_scissor_state *states = ctx->scissors;
@@ -576,7 +571,7 @@ static void si_emit_depth_ranges(struct si_context *ctx)
    radeon_end();
 }
 
-static void si_emit_viewport_states(struct si_context *ctx)
+static void si_emit_viewport_states(struct si_context *ctx, unsigned index)
 {
    si_emit_viewports(ctx);
    si_emit_depth_ranges(ctx);
@@ -627,7 +622,7 @@ void si_update_vs_viewport_state(struct si_context *ctx)
    }
 }
 
-static void si_emit_window_rectangles(struct si_context *sctx)
+static void si_emit_window_rectangles(struct si_context *sctx, unsigned index)
 {
    /* There are four clipping rectangles. Their corner coordinates are inclusive.
     * Every pixel is assigned a number from 0 and 15 by setting bits 0-3 depending

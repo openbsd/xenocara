@@ -246,7 +246,7 @@ st_interop_export_object(struct st_context *st,
    struct pipe_resource *res = NULL;
    struct winsys_handle whandle;
    unsigned usage;
-   boolean success;
+   bool success;
    bool need_export_dmabuf = true;
 
    /* There is no version 0, thus we do not support it */
@@ -287,8 +287,9 @@ st_interop_export_object(struct st_context *st,
                                                                    &need_export_dmabuf);
    }
 
+   memset(&whandle, 0, sizeof(whandle));
+   
    if (need_export_dmabuf) {
-      memset(&whandle, 0, sizeof(whandle));
       whandle.type = WINSYS_HANDLE_TYPE_FD;
 
       success = screen->resource_get_handle(screen, st->pipe, res, &whandle,

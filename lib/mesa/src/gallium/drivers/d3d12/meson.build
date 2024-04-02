@@ -70,6 +70,15 @@ if with_gallium_d3d12_video
     'd3d12_video_dec_av1.cpp',
     'd3d12_video_dec_vp9.cpp',
   ]
+
+  if (dep_dxheaders.version().version_compare('>= 1.611.0') and dep_dxheaders.version().version_compare('< 1.700.0')) or dep_dxheaders.version().version_compare('>= 1.712.0')
+  files_libd3d12 += [
+    'd3d12_video_enc_av1.cpp',
+    'd3d12_video_encoder_references_manager_av1.cpp',
+    'd3d12_video_encoder_bitstream_builder_av1.cpp',
+  ]
+  endif
+
 endif
 
 is_xbox = target_machine.system().startswith('Gaming.Xbox')

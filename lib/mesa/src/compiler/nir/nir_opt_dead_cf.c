@@ -99,23 +99,17 @@ opt_constant_if(nir_if *if_stmt, bool condition)
        * correct source.
        */
       nir_block *after = nir_cf_node_as_block(nir_cf_node_next(&if_stmt->cf_node));
-      nir_foreach_instr_safe(instr, after) {
-         if (instr->type != nir_instr_type_phi)
-            break;
-
-         nir_phi_instr *phi = nir_instr_as_phi(instr);
-         nir_ssa_def *def = NULL;
+      nir_foreach_phi_safe(phi, after) {
+         nir_def *def = NULL;
          nir_foreach_phi_src(phi_src, phi) {
             if (phi_src->pred != last_block)
                continue;
 
-            assert(phi_src->src.is_ssa);
             def = phi_src->src.ssa;
          }
 
          assert(def);
-         assert(phi->dest.is_ssa);
-         nir_ssa_def_rewrite_uses(&phi->dest.ssa, def);
+         nir_def_rewrite_uses(&phi->def, def);
          nir_instr_remove(&phi->instr);
       }
    }
@@ -131,7 +125,7 @@ opt_constant_if(nir_if *if_stmt, bool condition)
 }
 
 static bool
-def_only_used_in_cf_node(nir_ssa_def *def, void *_node)
+def_only_used_in_cf_node(nir_def *def, void *_node)
 {
    nir_cf_node *node = _node;
    assert(node->type == nir_cf_node_loop || node->type == nir_cf_node_if);
@@ -142,10 +136,10 @@ def_only_used_in_cf_node(nir_ssa_def *def, void *_node)
    nir_foreach_use_including_if(use, def) {
       nir_block *block;
 
-      if (use->is_if)
-         block = nir_cf_node_as_block(nir_cf_node_prev(&use->parent_if->cf_node));
+      if (nir_src_is_if(use))
+         block = nir_cf_node_as_block(nir_cf_node_prev(&nir_src_parent_if(use)->cf_node));
       else
-         block = use->parent_instr->block;
+         block = nir_src_parent_instr(use)->block;
 
       /* Because NIR is structured, we can easily determine whether or not a
        * value escapes a CF node by looking at the block indices of its uses
@@ -228,7 +222,7 @@ node_is_dead(nir_cf_node *node)
          if (instr->type == nir_instr_type_intrinsic) {
             nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
             if (!(nir_intrinsic_infos[intrin->intrinsic].flags &
-                NIR_INTRINSIC_CAN_ELIMINATE))
+                  NIR_INTRINSIC_CAN_ELIMINATE))
                return false;
 
             switch (intrin->intrinsic) {
@@ -246,9 +240,9 @@ node_is_dead(nir_cf_node *node)
                if (intrin->intrinsic == nir_intrinsic_load_deref) {
                   nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
                   if (!nir_deref_mode_may_be(deref, nir_var_mem_ssbo |
-                                                    nir_var_mem_shared |
-                                                    nir_var_mem_global |
-                                                    nir_var_shader_out))
+                                                       nir_var_mem_shared |
+                                                       nir_var_mem_global |
+                                                       nir_var_shader_out))
                      break;
                }
                if (nir_intrinsic_access(intrin) & ACCESS_CAN_REORDER)
@@ -268,7 +262,7 @@ node_is_dead(nir_cf_node *node)
             }
          }
 
-         if (!nir_foreach_ssa_def(instr, def_only_used_in_cf_node, node))
+         if (!nir_foreach_def(instr, def_only_used_in_cf_node, node))
             return false;
       }
    }
@@ -290,6 +284,9 @@ dead_cf_block(nir_block *block)
    if (following_if) {
       if (nir_src_is_const(following_if->condition)) {
          opt_constant_if(following_if, nir_src_as_bool(following_if->condition));
+         return true;
+      } else if (nir_src_is_undef(following_if->condition)) {
+         opt_constant_if(following_if, false);
          return true;
       }
 
@@ -322,11 +319,12 @@ dead_cf_list(struct exec_list *list, bool *list_ends_in_jump)
       switch (cur->type) {
       case nir_cf_node_block: {
          nir_block *block = nir_cf_node_as_block(cur);
-         if (dead_cf_block(block)) {
-            /* We just deleted the if or loop after this block, so we may have
-             * deleted the block before or after it -- which one is an
-             * implementation detail. Therefore, to recover the place we were
-             * at, we have to use the previous cf_node.
+         while (dead_cf_block(block)) {
+            /* We just deleted the if or loop after this block.
+             * nir_cf_node_remove may have deleted the block before
+             * or after it -- which one is an implementation detail.
+             * Therefore, to recover the place we were at, we have
+             * to use the previous cf_node.
              */
 
             if (prev) {
@@ -377,7 +375,7 @@ dead_cf_list(struct exec_list *list, bool *list_ends_in_jump)
          nir_block *next = nir_cf_node_as_block(nir_cf_node_next(cur));
          if (next->predecessors->entries == 0 &&
              (!exec_list_is_empty(&next->instr_list) ||
-             !exec_node_is_tail_sentinel(next->cf_node.node.next))) {
+              !exec_node_is_tail_sentinel(next->cf_node.node.next))) {
             remove_after_cf_node(cur);
             return true;
          }
@@ -402,6 +400,7 @@ opt_dead_cf_impl(nir_function_impl *impl)
 
    if (progress) {
       nir_metadata_preserve(impl, nir_metadata_none);
+      nir_rematerialize_derefs_in_use_blocks_impl(impl);
 
       /* The CF manipulation code called by this pass is smart enough to keep
        * from breaking any SSA use/def chains by replacing any uses of removed
@@ -425,9 +424,8 @@ nir_opt_dead_cf(nir_shader *shader)
 {
    bool progress = false;
 
-   nir_foreach_function(function, shader)
-      if (function->impl)
-         progress |= opt_dead_cf_impl(function->impl);
+   nir_foreach_function_impl(impl, shader)
+      progress |= opt_dead_cf_impl(impl);
 
    return progress;
 }

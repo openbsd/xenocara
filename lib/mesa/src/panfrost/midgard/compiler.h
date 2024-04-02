@@ -288,9 +288,6 @@ typedef struct compiler_context {
    int temp_count;
    int max_hash;
 
-   /* Set of NIR indices that were already emitted as outmods */
-   BITSET_WORD *already_emitted;
-
    /* Count of instructions emitted from NIR overall, across all blocks */
    int instruction_count;
 
@@ -459,35 +456,57 @@ make_compiler_temp(compiler_context *ctx)
 static inline unsigned
 make_compiler_temp_reg(compiler_context *ctx)
 {
-   return ((ctx->func->impl->reg_alloc + ctx->temp_alloc++) << 1) | PAN_IS_REG;
+   return ((ctx->func->impl->ssa_alloc + ctx->temp_alloc++) << 1) | PAN_IS_REG;
+}
+
+static inline bool
+mir_is_ssa(unsigned index)
+{
+   return (index < SSA_FIXED_MINIMUM) && !(index & PAN_IS_REG);
 }
 
 static inline unsigned
-nir_ssa_index(nir_ssa_def *ssa)
+nir_ssa_index(nir_def *ssa)
 {
    return (ssa->index << 1) | 0;
 }
 
 static inline unsigned
+nir_reg_index(nir_def *handle)
+{
+   return (handle->index << 1) | PAN_IS_REG;
+}
+
+static inline unsigned
 nir_src_index(compiler_context *ctx, nir_src *src)
 {
-   if (src->is_ssa)
+   nir_intrinsic_instr *load = nir_load_reg_for_def(src->ssa);
+
+   if (load)
+      return nir_reg_index(load->src[0].ssa);
+   else
       return nir_ssa_index(src->ssa);
-   else {
-      assert(!src->reg.indirect);
-      return (src->reg.reg->index << 1) | PAN_IS_REG;
+}
+
+static inline unsigned
+nir_def_index_with_mask(nir_def *def, uint16_t *write_mask)
+{
+   nir_intrinsic_instr *store = nir_store_reg_for_def(def);
+
+   if (store) {
+      *write_mask = nir_intrinsic_write_mask(store);
+      return nir_reg_index(store->src[1].ssa);
+   } else {
+      *write_mask = (uint16_t)BITFIELD_MASK(def->num_components);
+      return nir_ssa_index(def);
    }
 }
 
 static inline unsigned
-nir_dest_index(nir_dest *dst)
+nir_def_index(nir_def *def)
 {
-   if (dst->is_ssa)
-      return (dst->ssa.index << 1) | 0;
-   else {
-      assert(!dst->reg.indirect);
-      return (dst->reg.reg->index << 1) | PAN_IS_REG;
-   }
+   uint16_t write_mask = 0;
+   return nir_def_index_with_mask(def, &write_mask);
 }
 
 /* MIR manipulation */
@@ -677,6 +696,7 @@ unsigned midgard_get_first_tag_from_block(compiler_context *ctx,
 /* Optimizations */
 
 bool midgard_opt_copy_prop(compiler_context *ctx, midgard_block *block);
+bool midgard_opt_prop(compiler_context *ctx);
 bool midgard_opt_combine_projection(compiler_context *ctx,
                                     midgard_block *block);
 bool midgard_opt_varying_projection(compiler_context *ctx,

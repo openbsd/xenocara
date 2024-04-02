@@ -1,5 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # shellcheck disable=SC2086 # we want word splitting
+
+# When changing this file, you need to bump the following
+# .gitlab-ci/image-tags.yml tags:
+# DEBIAN_X86_64_TEST_ANDROID_TAG
+# DEBIAN_X86_64_TEST_GL_TAG
+# DEBIAN_X86_64_TEST_VK_TAG
+# KERNEL_ROOTFS_TAG
 
 set -ex
 
@@ -7,25 +14,39 @@ git config --global user.email "mesa@example.com"
 git config --global user.name "Mesa CI"
 git clone \
     https://github.com/KhronosGroup/VK-GL-CTS.git \
-    -b vulkan-cts-1.3.5.0 \
+    -b vulkan-cts-1.3.7.0 \
     --depth 1 \
     /VK-GL-CTS
 pushd /VK-GL-CTS
 
-cts_commits_to_backport=()
+# Patches to VulkanCTS may come from commits in their repo (listed in
+# cts_commits_to_backport) or patch files stored in our repo (in the patch
+# directory `$OLDPWD/.gitlab-ci/container/patches/` listed in cts_patch_files).
+# Both list variables would have comments explaining the reasons behind the
+# patches.
+
+cts_commits_to_backport=(
+)
 
 for commit in "${cts_commits_to_backport[@]}"
 do
-  curl -L --retry 4 -f --retry-all-errors --retry-delay 60 \
-    "https://github.com/KhronosGroup/VK-GL-CTS/commit/$commit.patch" | git am -
+  PATCH_URL="https://github.com/KhronosGroup/VK-GL-CTS/commit/$commit.patch"
+  echo "Apply patch to VK-GL-CTS from $PATCH_URL"
+  curl -L --retry 4 -f --retry-all-errors --retry-delay 60 $PATCH_URL | \
+    git am -
 done
 
-# Fix surfaceless build.
-git am < $OLDPWD/.gitlab-ci/container/0001-Fix-build-for-the-surfaceless-and-null-WS-target-pla.patch
+cts_patch_files=(
+  # Android specific patches.
+  build-deqp_Allow-running-on-Android-from-the-command-line.patch
+  build-deqp_Android-prints-to-stdout-instead-of-logcat.patch
+)
 
-# Android specific patches.
-git am < $OLDPWD/.gitlab-ci/container/0001-Allow-running-on-Android-from-the-command-line.patch
-git am < $OLDPWD/.gitlab-ci/container/0002-Android-prints-to-stdout-instead-of-logcat.patch
+for patch in "${cts_patch_files[@]}"
+do
+  echo "Apply patch to VK-GL-CTS from $patch"
+  git am < $OLDPWD/.gitlab-ci/container/patches/$patch
+done
 
 # --insecure is due to SSL cert failures hitting sourceforge for zlib and
 # libpng (sigh).  The archives get their checksums checked anyway, and git
@@ -48,25 +69,27 @@ if [ "${DEQP_TARGET}" != 'android' ]; then
         -DCMAKE_BUILD_TYPE=Release \
         $EXTRA_CMAKE_ARGS
     ninja modules/egl/deqp-egl
-    cp /deqp/modules/egl/deqp-egl /deqp/modules/egl/deqp-egl-x11
+    mv /deqp/modules/egl/deqp-egl /deqp/modules/egl/deqp-egl-x11
 
     cmake -S /VK-GL-CTS -B . -G Ninja \
         -DDEQP_TARGET=wayland \
         -DCMAKE_BUILD_TYPE=Release \
         $EXTRA_CMAKE_ARGS
     ninja modules/egl/deqp-egl
-    cp /deqp/modules/egl/deqp-egl /deqp/modules/egl/deqp-egl-wayland
+    mv /deqp/modules/egl/deqp-egl /deqp/modules/egl/deqp-egl-wayland
 fi
 
 cmake -S /VK-GL-CTS -B . -G Ninja \
       -DDEQP_TARGET=${DEQP_TARGET:-x11_glx} \
       -DCMAKE_BUILD_TYPE=Release \
       $EXTRA_CMAKE_ARGS
-ninja
+mold --run ninja
 
-if [ "${DEQP_TARGET}" != 'android' ]; then
-    mv /deqp/modules/egl/deqp-egl-x11 /deqp/modules/egl/deqp-egl
+if [ "${DEQP_TARGET}" = 'android' ]; then
+    mv /deqp/modules/egl/deqp-egl /deqp/modules/egl/deqp-egl-android
 fi
+
+git -C /VK-GL-CTS describe --long > /deqp/version
 
 # Copy out the mustpass lists we want.
 mkdir /deqp/mustpass

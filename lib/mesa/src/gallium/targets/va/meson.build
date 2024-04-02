@@ -30,6 +30,10 @@ if with_ld_version_script
   va_link_args += ['-Wl,--version-script', join_paths(meson.current_source_dir(), 'va.sym')]
   va_link_depends += files('va.sym')
 endif
+if with_ld_dynamic_list
+  va_link_args += ['-Wl,--dynamic-list', join_paths(meson.current_source_dir(), '../dri.dyn')]
+  va_link_depends += files('../dri.dyn')
+endif
 
 link_with_libva_gallium = [
   libgalliumvlwinsys, libgalliumvl, libgallium,
@@ -73,6 +77,7 @@ if host_machine.system() == 'windows'
     link_depends : va_link_depends,
     install : true,
     name_suffix : 'dll',
+    name_prefix : '',  # otherwise mingw will create libvaon12_drv_video.dll
   )
 else
   libva_gallium = shared_library(
@@ -111,5 +116,6 @@ else
     libva_gallium.full_path(),
     va_drivers_path,
     va_drivers,
+    install_tag : 'runtime',
   )
 endif

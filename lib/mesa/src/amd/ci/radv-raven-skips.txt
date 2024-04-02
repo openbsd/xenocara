@@ -1,2 +1,2 @@
 # timeout
-dEQP-VK.memory.pipeline_barrier.transfer_src_transfer_dst.1048576
+dEQP-VK.memory.mapping.dedicated_alloc.image.full.variable.implicit_unmap

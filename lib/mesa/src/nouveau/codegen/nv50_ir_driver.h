@@ -23,10 +23,12 @@
 #ifndef __NV50_IR_DRIVER_H__
 #define __NV50_IR_DRIVER_H__
 
+#include "compiler/shader_enums.h"
 #include "util/macros.h"
 #include "util/blob.h"
 
 #define NV50_CODEGEN_MAX_VARYINGS 80
+struct nir_shader;
 struct nir_shader_compiler_options;
 
 /*
@@ -52,6 +54,12 @@ struct nv50_ir_varying
    uint8_t id; /* TGSI register index */
    uint8_t sn; /* TGSI semantic name */
    uint8_t si; /* TGSI semantic index */
+};
+
+struct nv50_ir_sysval
+{
+   gl_system_value sn;
+   uint8_t slot[4]; /* for nv50: native slots for xyzw (addresses in 32-bit words) */
 };
 
 #ifndef NDEBUG
@@ -87,14 +95,14 @@ struct nv50_ir_prog_info
 
    uint8_t type; /* PIPE_SHADER */
 
-   uint8_t optLevel; /* optimization level (0 to 3) */
+   uint8_t optLevel; /* optimization level (0 to 4). Level 4 enables MemoryOpt
+                      * which does not work well with NVK */
    uint8_t dbgFlags;
    bool omitLineNum; /* only used for printing the prog when dbgFlags is set */
 
    struct {
       uint32_t smemSize;  /* required shared memory per block */
-      uint8_t sourceRep;  /* PIPE_SHADER_IR_* */
-      const void *source;
+      struct nir_shader *nir;
    } bin;
 
    union {
@@ -150,7 +158,7 @@ struct nv50_ir_prog_info_out
       void *fixupData;
    } bin;
 
-   struct nv50_ir_varying sv[NV50_CODEGEN_MAX_VARYINGS];
+   struct nv50_ir_sysval sv[NV50_CODEGEN_MAX_VARYINGS];
    struct nv50_ir_varying in[NV50_CODEGEN_MAX_VARYINGS];
    struct nv50_ir_varying out[NV50_CODEGEN_MAX_VARYINGS];
    uint8_t numInputs;
@@ -167,8 +175,8 @@ struct nv50_ir_prog_info_out
          uint8_t outputPatchSize;
          uint8_t partitioning;    /* PIPE_TESS_PART */
          int8_t winding;          /* +1 (clockwise) / -1 (counter-clockwise) */
-         uint8_t domain;          /* PIPE_PRIM_{QUADS,TRIANGLES,LINES} */
-         uint8_t outputPrim;      /* PIPE_PRIM_{TRIANGLES,LINES,POINTS} */
+         uint8_t domain;          /* MESA_PRIM_{QUADS,TRIANGLES,LINES} */
+         uint8_t outputPrim;      /* MESA_PRIM_{TRIANGLES,LINES,POINTS} */
       } tp;
       struct {
          uint8_t outputPrim;
@@ -220,7 +228,7 @@ extern "C" {
 #endif
 
 const struct nir_shader_compiler_options *
-nv50_ir_nir_shader_compiler_options(int chipset, uint8_t shader_type, bool prefer_nir);
+nv50_ir_nir_shader_compiler_options(int chipset, uint8_t shader_type);
 
 extern int nv50_ir_generate_code(struct nv50_ir_prog_info *,
                                  struct nv50_ir_prog_info_out *);

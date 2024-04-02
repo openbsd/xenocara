@@ -265,6 +265,13 @@ stage_end(struct pipe_context *pctx, uint64_t ts_ns, enum fd_stage_id stage)
             data->set_name("num_groups_z");
             data->set_value(std::to_string(p->num_groups_z));
          }
+
+         {
+            auto data = event->add_extra_data();
+
+            data->set_name("shader_id");
+            data->set_value(std::to_string(p->shader_id));
+         }
       }
    });
 }
@@ -349,7 +356,7 @@ fd_perfetto_submit(struct fd_context *ctx)
 
 void
 fd_start_render_pass(struct pipe_context *pctx, uint64_t ts_ns,
-                     const void *flush_data,
+                     uint16_t tp_idx, const void *flush_data,
                      const struct trace_start_render_pass *payload)
 {
    stage_start(pctx, ts_ns, SURFACE_STAGE_ID);
@@ -370,7 +377,7 @@ fd_start_render_pass(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_end_render_pass(struct pipe_context *pctx, uint64_t ts_ns,
-                   const void *flush_data,
+                   uint16_t tp_idx, const void *flush_data,
                    const struct trace_end_render_pass *payload)
 {
    stage_end(pctx, ts_ns, SURFACE_STAGE_ID);
@@ -378,7 +385,7 @@ fd_end_render_pass(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_start_binning_ib(struct pipe_context *pctx, uint64_t ts_ns,
-                    const void *flush_data,
+                    uint16_t tp_idx, const void *flush_data,
                     const struct trace_start_binning_ib *payload)
 {
    stage_start(pctx, ts_ns, BINNING_STAGE_ID);
@@ -386,7 +393,7 @@ fd_start_binning_ib(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_end_binning_ib(struct pipe_context *pctx, uint64_t ts_ns,
-                  const void *flush_data,
+                  uint16_t tp_idx, const void *flush_data,
                   const struct trace_end_binning_ib *payload)
 {
    stage_end(pctx, ts_ns, BINNING_STAGE_ID);
@@ -394,7 +401,7 @@ fd_end_binning_ib(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_start_draw_ib(struct pipe_context *pctx, uint64_t ts_ns,
-                 const void *flush_data,
+                 uint16_t tp_idx, const void *flush_data,
                  const struct trace_start_draw_ib *payload)
 {
    stage_start(
@@ -404,7 +411,7 @@ fd_start_draw_ib(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_end_draw_ib(struct pipe_context *pctx, uint64_t ts_ns,
-               const void *flush_data,
+               uint16_t tp_idx, const void *flush_data,
                const struct trace_end_draw_ib *payload)
 {
    stage_end(
@@ -414,7 +421,7 @@ fd_end_draw_ib(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_start_blit(struct pipe_context *pctx, uint64_t ts_ns,
-              const void *flush_data,
+              uint16_t tp_idx, const void *flush_data,
               const struct trace_start_blit *payload)
 {
    stage_start(pctx, ts_ns, BLIT_STAGE_ID);
@@ -422,7 +429,7 @@ fd_start_blit(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_end_blit(struct pipe_context *pctx, uint64_t ts_ns,
-            const void *flush_data,
+            uint16_t tp_idx, const void *flush_data,
             const struct trace_end_blit *payload)
 {
    stage_end(pctx, ts_ns, BLIT_STAGE_ID);
@@ -430,7 +437,7 @@ fd_end_blit(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_start_compute(struct pipe_context *pctx, uint64_t ts_ns,
-                 const void *flush_data,
+                 uint16_t tp_idx, const void *flush_data,
                  const struct trace_start_compute *payload)
 {
    stage_start(pctx, ts_ns, COMPUTE_STAGE_ID);
@@ -445,51 +452,68 @@ fd_start_compute(struct pipe_context *pctx, uint64_t ts_ns,
    p->num_groups_x = payload->num_groups_x;
    p->num_groups_y = payload->num_groups_y;
    p->num_groups_z = payload->num_groups_z;
+   p->shader_id    = payload->shader_id;
 }
 
 void
 fd_end_compute(struct pipe_context *pctx, uint64_t ts_ns,
-               const void *flush_data,
+               uint16_t tp_idx, const void *flush_data,
                const struct trace_end_compute *payload)
 {
    stage_end(pctx, ts_ns, COMPUTE_STAGE_ID);
 }
 
 void
-fd_start_clear_restore(struct pipe_context *pctx, uint64_t ts_ns,
-                       const void *flush_data,
-                       const struct trace_start_clear_restore *payload)
+fd_start_clears(struct pipe_context *pctx, uint64_t ts_ns,
+                uint16_t tp_idx, const void *flush_data,
+                const struct trace_start_clears *payload)
 {
-   stage_start(pctx, ts_ns, CLEAR_RESTORE_STAGE_ID);
+   stage_start(pctx, ts_ns, CLEAR_STAGE_ID);
 }
 
 void
-fd_end_clear_restore(struct pipe_context *pctx, uint64_t ts_ns,
-                     const void *flush_data,
-                     const struct trace_end_clear_restore *payload)
+fd_end_clears(struct pipe_context *pctx, uint64_t ts_ns,
+              uint16_t tp_idx, const void *flush_data,
+              const struct trace_end_clears *payload)
 {
-   stage_end(pctx, ts_ns, CLEAR_RESTORE_STAGE_ID);
+   stage_end(pctx, ts_ns, CLEAR_STAGE_ID);
 }
 
 void
-fd_start_resolve(struct pipe_context *pctx, uint64_t ts_ns,
-                 const void *flush_data,
-                 const struct trace_start_resolve *payload)
+fd_start_tile_loads(struct pipe_context *pctx, uint64_t ts_ns,
+                    uint16_t tp_idx, const void *flush_data,
+                    const struct trace_start_tile_loads *payload)
 {
-   stage_start(pctx, ts_ns, RESOLVE_STAGE_ID);
+   stage_start(pctx, ts_ns, TILE_LOAD_STAGE_ID);
 }
 
 void
-fd_end_resolve(struct pipe_context *pctx, uint64_t ts_ns,
-               const void *flush_data,
-               const struct trace_end_resolve *payload)
+fd_end_tile_loads(struct pipe_context *pctx, uint64_t ts_ns,
+                  uint16_t tp_idx, const void *flush_data,
+                  const struct trace_end_tile_loads *payload)
 {
-   stage_end(pctx, ts_ns, RESOLVE_STAGE_ID);
+   stage_end(pctx, ts_ns, TILE_LOAD_STAGE_ID);
+}
+
+void
+fd_start_tile_stores(struct pipe_context *pctx, uint64_t ts_ns,
+                     uint16_t tp_idx, const void *flush_data,
+                     const struct trace_start_tile_stores *payload)
+{
+   stage_start(pctx, ts_ns, TILE_STORE_STAGE_ID);
+}
+
+void
+fd_end_tile_stores(struct pipe_context *pctx, uint64_t ts_ns,
+                   uint16_t tp_idx, const void *flush_data,
+                   const struct trace_end_tile_stores *payload)
+{
+   stage_end(pctx, ts_ns, TILE_STORE_STAGE_ID);
 }
 
 void
 fd_start_state_restore(struct pipe_context *pctx, uint64_t ts_ns,
-                       const void *flush_data,
+                       uint16_t tp_idx, const void *flush_data,
                        const struct trace_start_state_restore *payload)
 {
    stage_start(pctx, ts_ns, STATE_RESTORE_STAGE_ID);
@@ -497,7 +521,7 @@ fd_start_state_restore(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_end_state_restore(struct pipe_context *pctx, uint64_t ts_ns,
-                     const void *flush_data,
+                     uint16_t tp_idx, const void *flush_data,
                      const struct trace_end_state_restore *payload)
 {
    stage_end(pctx, ts_ns, STATE_RESTORE_STAGE_ID);
@@ -505,7 +529,7 @@ fd_end_state_restore(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_start_vsc_overflow_test(struct pipe_context *pctx, uint64_t ts_ns,
-                           const void *flush_data,
+                           uint16_t tp_idx, const void *flush_data,
                            const struct trace_start_vsc_overflow_test *payload)
 {
    stage_start(pctx, ts_ns, VSC_OVERFLOW_STAGE_ID);
@@ -513,7 +537,7 @@ fd_start_vsc_overflow_test(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_end_vsc_overflow_test(struct pipe_context *pctx, uint64_t ts_ns,
-                         const void *flush_data,
+                         uint16_t tp_idx, const void *flush_data,
                          const struct trace_end_vsc_overflow_test *payload)
 {
    stage_end(pctx, ts_ns, VSC_OVERFLOW_STAGE_ID);
@@ -521,7 +545,7 @@ fd_end_vsc_overflow_test(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_start_prologue(struct pipe_context *pctx, uint64_t ts_ns,
-                  const void *flush_data,
+                  uint16_t tp_idx, const void *flush_data,
                   const struct trace_start_prologue *payload)
 {
    stage_start(pctx, ts_ns, PROLOGUE_STAGE_ID);
@@ -529,7 +553,7 @@ fd_start_prologue(struct pipe_context *pctx, uint64_t ts_ns,
 
 void
 fd_end_prologue(struct pipe_context *pctx, uint64_t ts_ns,
-                const void *flush_data,
+                uint16_t tp_idx, const void *flush_data,
                 const struct trace_end_prologue *payload)
 {
    stage_end(pctx, ts_ns, PROLOGUE_STAGE_ID);

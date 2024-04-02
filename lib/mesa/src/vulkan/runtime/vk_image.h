@@ -36,7 +36,13 @@ struct vk_image {
 
    VkImageCreateFlags create_flags;
    VkImageType image_type;
+
+   /* format is from VkImageCreateInfo::format or
+    * VkExternalFormatANDROID::externalFormat.  This works because only one of
+    * them can be defined and the runtime uses VkFormat for external formats.
+    */
    VkFormat format;
+
    VkExtent3D extent;
    uint32_t mip_levels;
    uint32_t array_layers;
@@ -75,10 +81,7 @@ struct vk_image {
     * A default is provided by the Vulkan runtime code based on the VkFormat
     * but it may be overridden by the driver as needed.
     */
-   unsigned ahardware_buffer_format;
-
-   /* VK_ANDROID_external_memory_android_hardware_buffer */
-   uint64_t android_external_format;
+   uint32_t ahb_format;
 #endif
 };
 VK_DEFINE_NONDISP_HANDLE_CASTS(vk_image, base, VkImage,
@@ -209,6 +212,14 @@ struct vk_image_buffer_layout
 vk_image_buffer_copy_layout(const struct vk_image *image,
                             const VkBufferImageCopy2* region);
 
+struct vk_image_buffer_layout
+vk_memory_to_image_copy_layout(const struct vk_image *image,
+                               const VkMemoryToImageCopyEXT* region);
+
+struct vk_image_buffer_layout
+vk_image_to_memory_copy_layout(const struct vk_image *image,
+                               const VkImageToMemoryCopyEXT* region);
+
 struct vk_image_view {
    struct vk_object_base base;
 
@@ -216,7 +227,7 @@ struct vk_image_view {
    struct vk_image *image;
    VkImageViewType view_type;
 
-   /** VkImageViewCreateInfo::format */
+   /** VkImageViewCreateInfo::format or vk_image::format */
    VkFormat format;
 
    /** Image view format, relative to the selected aspects
@@ -232,7 +243,8 @@ struct vk_image_view {
     * For color images, we have three cases:
     *
     *  1. It's a single-plane image in which case this is the unmodified
-    *     format provided to VkImageViewCreateInfo::format.
+    *     format provided to VkImageViewCreateInfo::format or
+    *     vk_image::format.
     *
     *  2. It's a YCbCr view of a multi-plane image in which case the
     *     client will have asked for VK_IMAGE_ASPECT_COLOR_BIT and the

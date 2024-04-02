@@ -52,7 +52,9 @@ ComputeShader::do_allocate_reserved_registers()
 
    for (int i = 0; i < 3; ++i) {
       m_local_invocation_id[i] = vf.allocate_pinned_register(thread_id_sel, i);
+      m_local_invocation_id[i]->set_flag(Register::pin_end);
       m_workgroup_id[i] = vf.allocate_pinned_register(wg_id_sel, i);
+      m_workgroup_id[i]->set_flag(Register::pin_end);
    }
    return 2;
 }
@@ -102,7 +104,7 @@ ComputeShader::emit_load_from_info_buffer(nir_intrinsic_instr *instr, int offset
                                     AluInstr::last_write));
    }
 
-   auto dest = value_factory().dest_vec4(instr->dest, pin_group);
+   auto dest = value_factory().dest_vec4(instr->def, pin_group);
 
    auto ir = new LoadFromBuffer(dest,
                                 {0, 1, 2, 7},
@@ -126,7 +128,7 @@ ComputeShader::emit_load_3vec(nir_intrinsic_instr *instr,
    auto& vf = value_factory();
 
    for (int i = 0; i < 3; ++i) {
-      auto dest = vf.dest(instr->dest, i, pin_none);
+      auto dest = vf.dest(instr->def, i, pin_none);
       emit_instruction(new AluInstr(
          op1_mov, dest, src[i], i == 2 ? AluInstr::last_write : AluInstr::write));
    }

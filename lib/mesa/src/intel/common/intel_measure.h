@@ -44,6 +44,7 @@ enum intel_measure_snapshot_type {
    INTEL_SNAPSHOT_HIZ_AMBIGUATE,
    INTEL_SNAPSHOT_HIZ_CLEAR,
    INTEL_SNAPSHOT_HIZ_RESOLVE,
+   INTEL_SNAPSHOT_MCS_AMBIGUATE,
    INTEL_SNAPSHOT_MCS_COLOR_CLEAR,
    INTEL_SNAPSHOT_MCS_PARTIAL_RESOLVE,
    INTEL_SNAPSHOT_SLOW_COLOR_CLEAR,
@@ -100,6 +101,9 @@ struct intel_measure_config {
 
    /* true when snapshots are currently being collected */
    bool                       enabled;
+
+   /* Measure CPU timing, not GPU timing */
+   bool                       cpu_measure;
 };
 
 struct intel_measure_batch;
@@ -108,15 +112,17 @@ struct intel_measure_snapshot {
    enum intel_measure_snapshot_type type;
    unsigned count, event_count;
    const char* event_name;
-   uintptr_t framebuffer, vs, tcs, tes, gs, fs, cs, ms, ts;
+   uint32_t renderpass;
+   uint32_t vs, tcs, tes, gs, fs, cs, ms, ts;
    /* for vulkan secondary command buffers */
    struct intel_measure_batch *secondary;
 };
 
 struct intel_measure_buffered_result {
    struct intel_measure_snapshot snapshot;
-   uint64_t start_ts, end_ts, idle_duration;
-   unsigned frame, batch_count, event_index;
+   uint64_t start_ts, end_ts, idle_duration, batch_size;
+   unsigned frame, batch_count, event_index, primary_renderpass;
+;
 };
 
 struct intel_measure_ringbuffer {
@@ -130,6 +136,7 @@ typedef void (*intel_measure_release_batch_cb)(struct intel_measure_batch *base)
 struct intel_measure_device {
    struct intel_measure_config *config;
    unsigned frame;
+   unsigned render_pass_count;
    intel_measure_release_batch_cb release_batch;
 
    /* Holds the list of (iris/anv)_measure_batch snapshots that have been
@@ -148,7 +155,8 @@ struct intel_measure_batch {
    struct list_head link;
    unsigned index;
    unsigned frame, batch_count, event_count;
-   uintptr_t framebuffer;
+   uint64_t batch_size;
+   uint32_t renderpass, primary_renderpass;
    uint64_t *timestamps;
    struct intel_measure_snapshot snapshots[0];
 };
@@ -156,14 +164,21 @@ struct intel_measure_batch {
 void intel_measure_init(struct intel_measure_device *device);
 const char * intel_measure_snapshot_string(enum intel_measure_snapshot_type type);
 bool intel_measure_state_changed(const struct intel_measure_batch *batch,
-                                 uintptr_t vs, uintptr_t tcs, uintptr_t tes,
-                                 uintptr_t gs, uintptr_t fs, uintptr_t cs,
-                                 uintptr_t ms, uintptr_t ts);
+                                 uint32_t vs, uint32_t tcs, uint32_t tes,
+                                 uint32_t gs, uint32_t fs, uint32_t cs,
+                                 uint32_t ms, uint32_t ts);
 void intel_measure_frame_transition(unsigned frame);
 
 bool intel_measure_ready(struct intel_measure_batch *batch);
 
 struct intel_device_info;
+void intel_measure_print_cpu_result(unsigned int frame,
+                                    unsigned int batch_count,
+                                    uint64_t batch_size,
+                                    unsigned int event_index,
+                                    unsigned int event_count,
+                                    unsigned int count,
+                                    const char* event_name);
 void intel_measure_gather(struct intel_measure_device *device,
                           const struct intel_device_info *info);
 

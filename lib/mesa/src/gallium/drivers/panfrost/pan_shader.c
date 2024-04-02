@@ -218,7 +218,7 @@ panfrost_build_key(struct panfrost_context *ctx,
    }
 
    /* Point sprite lowering needed on Bifrost and newer */
-   if (dev->arch >= 6 && rast && ctx->active_prim == PIPE_PRIM_POINTS) {
+   if (dev->arch >= 6 && rast && ctx->active_prim == MESA_PRIM_POINTS) {
       key->fs.sprite_coord_enable = rast->sprite_coord_enable;
    }
 
@@ -369,7 +369,8 @@ panfrost_create_shader_state(struct pipe_context *pctx,
    if (nir->info.stage == MESA_SHADER_FRAGMENT &&
        nir->info.outputs_written & BITFIELD_BIT(FRAG_RESULT_COLOR)) {
 
-      NIR_PASS_V(nir, nir_lower_fragcolor, 8);
+      NIR_PASS_V(nir, nir_lower_fragcolor,
+                 nir->info.fs.color_is_dual_source ? 1 : 8);
       so->fragcolor_lowered = true;
    }
 
@@ -470,6 +471,7 @@ panfrost_create_compute_state(struct pipe_context *pctx,
    /* The NIR becomes invalid after this. For compute kernels, we never
     * need to access it again. Don't keep a dangling pointer around.
     */
+   ralloc_free((void *)so->nir);
    so->nir = NULL;
 
    return so;
@@ -499,7 +501,8 @@ panfrost_get_compute_state_info(struct pipe_context *pipe, void *cso,
    info->max_threads =
       panfrost_max_thread_count(dev->arch, cs->info.work_reg_count);
    info->private_memory = cs->info.tls_size;
-   info->preferred_simd_size = pan_subgroup_size(dev->arch);
+   info->simd_sizes = pan_subgroup_size(dev->arch);
+   info->preferred_simd_size = info->simd_sizes;
 }
 
 void

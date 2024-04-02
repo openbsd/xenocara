@@ -1,37 +1,18 @@
 /*
  * Copyright © 2021 Valve Corporation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
+ * SPDX-License-Identifier: MIT
  */
 
 
 #ifndef AC_NIR_H
 #define AC_NIR_H
 
-#include "nir.h"
-#include "nir_builder.h"
+#include "ac_hw_stage.h"
 #include "ac_shader_args.h"
 #include "ac_shader_util.h"
-#include "amd_family.h"
-#include "pipe/p_state.h"
+#include "nir.h"
+#include "nir_builder.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,28 +47,35 @@ typedef struct nir_builder nir_builder;
 /* Executed by ac_nir_cull when the current primitive is accepted. */
 typedef void (*ac_nir_cull_accepted)(nir_builder *b, void *state);
 
-nir_ssa_def *
+nir_def *
 ac_nir_load_arg_at_offset(nir_builder *b, const struct ac_shader_args *ac_args,
                           struct ac_arg arg, unsigned relative_index);
 
-static inline nir_ssa_def *
+static inline nir_def *
 ac_nir_load_arg(nir_builder *b, const struct ac_shader_args *ac_args, struct ac_arg arg)
 {
    return ac_nir_load_arg_at_offset(b, ac_args, arg, 0);
 }
 
-nir_ssa_def *
+void ac_nir_store_arg(nir_builder *b, const struct ac_shader_args *ac_args, struct ac_arg arg,
+                      nir_def *val);
+
+nir_def *
 ac_nir_unpack_arg(nir_builder *b, const struct ac_shader_args *ac_args, struct ac_arg arg,
                   unsigned rshift, unsigned bitwidth);
 
 bool ac_nir_lower_sin_cos(nir_shader *shader);
 
+bool ac_nir_lower_intrinsics_to_args(nir_shader *shader, const enum amd_gfx_level gfx_level,
+                                     const enum ac_hw_stage hw_stage,
+                                     const struct ac_shader_args *ac_args);
+
 void
-ac_nir_store_var_components(nir_builder *b, nir_variable *var, nir_ssa_def *value,
+ac_nir_store_var_components(nir_builder *b, nir_variable *var, nir_def *value,
                             unsigned component, unsigned writemask);
 
 void
-ac_nir_export_primitive(nir_builder *b, nir_ssa_def *prim);
+ac_nir_export_primitive(nir_builder *b, nir_def *prim, nir_def *row);
 
 void
 ac_nir_export_position(nir_builder *b,
@@ -97,21 +85,22 @@ ac_nir_export_position(nir_builder *b,
                        bool force_vrs,
                        bool done,
                        uint64_t outputs_written,
-                       nir_ssa_def *(*outputs)[4]);
+                       nir_def *(*outputs)[4],
+                       nir_def *row);
 
 void
 ac_nir_export_parameters(nir_builder *b,
                          const uint8_t *param_offsets,
                          uint64_t outputs_written,
                          uint16_t outputs_written_16bit,
-                         nir_ssa_def *(*outputs)[4],
-                         nir_ssa_def *(*outputs_16bit_lo)[4],
-                         nir_ssa_def *(*outputs_16bit_hi)[4]);
+                         nir_def *(*outputs)[4],
+                         nir_def *(*outputs_16bit_lo)[4],
+                         nir_def *(*outputs_16bit_hi)[4]);
 
-nir_ssa_def *
+nir_def *
 ac_nir_calc_io_offset(nir_builder *b,
                       nir_intrinsic_instr *intrin,
-                      nir_ssa_def *base_stride,
+                      nir_def *base_stride,
                       unsigned component_stride,
                       ac_nir_map_io_driver_location map_io);
 
@@ -207,22 +196,26 @@ ac_nir_lower_ngg_ms(nir_shader *shader,
                     bool has_param_exports,
                     bool *out_needs_scratch_ring,
                     unsigned wave_size,
-                    bool multiview);
+                    unsigned workgroup_size,
+                    bool multiview,
+                    bool has_query,
+                    bool fast_launch_2);
 
 void
 ac_nir_lower_task_outputs_to_mem(nir_shader *shader,
                                  unsigned task_payload_entry_bytes,
-                                 unsigned task_num_entries);
+                                 unsigned task_num_entries,
+                                 bool has_query);
 
 void
 ac_nir_lower_mesh_inputs_to_mem(nir_shader *shader,
                                 unsigned task_payload_entry_bytes,
                                 unsigned task_num_entries);
 
-nir_ssa_def *
+nir_def *
 ac_nir_cull_primitive(nir_builder *b,
-                      nir_ssa_def *initially_accepted,
-                      nir_ssa_def *pos[3][4],
+                      nir_def *initially_accepted,
+                      nir_def *pos[3][4],
                       unsigned num_vertices,
                       ac_nir_cull_accepted accept_func,
                       void *state);
@@ -275,8 +268,8 @@ ac_nir_gs_shader_query(nir_builder *b,
                        bool has_pipeline_stats_query,
                        unsigned num_vertices_per_primitive,
                        unsigned wave_size,
-                       nir_ssa_def *vertex_count[4],
-                       nir_ssa_def *primitive_count[4]);
+                       nir_def *vertex_count[4],
+                       nir_def *primitive_count[4]);
 
 void
 ac_nir_lower_legacy_gs(nir_shader *nir,
@@ -298,6 +291,7 @@ typedef struct {
    enum radeon_family family;
    enum amd_gfx_level gfx_level;
 
+   bool use_aco;
    bool uses_discard;
    bool alpha_to_coverage_via_mrtz;
    bool dual_src_blend_swizzle;
@@ -305,18 +299,51 @@ typedef struct {
    unsigned color_is_int8;
    unsigned color_is_int10;
 
+   bool bc_optimize_for_persp;
+   bool bc_optimize_for_linear;
+   bool force_persp_sample_interp;
+   bool force_linear_sample_interp;
+   bool force_persp_center_interp;
+   bool force_linear_center_interp;
+   unsigned ps_iter_samples;
+
    /* OpenGL only */
    bool clamp_color;
    bool alpha_to_one;
-   enum pipe_compare_func alpha_func;
+   bool kill_samplemask;
+   enum compare_func alpha_func;
    unsigned broadcast_last_cbuf;
 
    /* Vulkan only */
    unsigned enable_mrt_output_nan_fixup;
+   bool no_color_export;
 } ac_nir_lower_ps_options;
 
 void
 ac_nir_lower_ps(nir_shader *nir, const ac_nir_lower_ps_options *options);
+
+typedef struct {
+   enum amd_gfx_level gfx_level;
+
+   /* If true, round the layer component of the coordinates source to the nearest
+    * integer for all array ops. This is always done for cube array ops.
+    */
+   bool lower_array_layer_round_even;
+
+   /* Fix derivatives of constants and FS inputs in control flow.
+    *
+    * Ignores interpolateAtSample()/interpolateAtOffset(), dynamically indexed input loads,
+    * pervertexEXT input loads, textureGather() with implicit LOD and 16-bit derivatives and
+    * texture samples with nir_tex_src_min_lod.
+    *
+    * The layer must also be a constant or FS input.
+    */
+   bool fix_derivs_in_divergent_cf;
+   unsigned max_wqm_vgprs;
+} ac_nir_lower_tex_options;
+
+bool
+ac_nir_lower_tex(nir_shader *nir, const ac_nir_lower_tex_options *options);
 
 #ifdef __cplusplus
 }

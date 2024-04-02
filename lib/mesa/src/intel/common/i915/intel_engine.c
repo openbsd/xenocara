@@ -25,7 +25,7 @@
 
 #include <stdlib.h>
 
-#include "intel_gem.h"
+#include "i915/intel_gem.h"
 
 static enum intel_engine_class
 i915_engine_class_to_intel(enum drm_i915_gem_engine_class i915)
@@ -88,6 +88,7 @@ i915_engine_get_info(int fd)
 
       intel_engine->engine_class = i915_engine_class_to_intel(i915_engine->engine.engine_class);
       intel_engine->engine_instance = i915_engine->engine.engine_instance;
+      intel_engine->gt_id = 0;
    }
 
    intel_engines_info->num_engines = i915_engines_info->num_engines;

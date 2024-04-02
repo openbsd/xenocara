@@ -162,11 +162,13 @@ emit_store_var(struct lp_build_nir_context *bld_base,
 static LLVMValueRef
 emit_load_reg(struct lp_build_nir_context *bld_base,
               struct lp_build_context *reg_bld,
-              const nir_reg_src *reg,
+              const nir_intrinsic_instr *decl,
+              unsigned base,
               LLVMValueRef indir_src,
               LLVMValueRef reg_storage)
 {
    struct gallivm_state *gallivm = bld_base->base.gallivm;
+   assert(indir_src == NULL && "no indirects with linear path");
    return LLVMBuildLoad2(gallivm->builder, reg_bld->vec_type, reg_storage, "");
 }
 
@@ -205,14 +207,16 @@ swizzle_writemask(struct lp_build_nir_aos_context *bld,
 static void
 emit_store_reg(struct lp_build_nir_context *bld_base,
                struct lp_build_context *reg_bld,
-               const nir_reg_dest *reg,
+               const nir_intrinsic_instr *decl,
                unsigned writemask,
+               unsigned base,
                LLVMValueRef indir_src,
                LLVMValueRef reg_storage,
                LLVMValueRef vals[NIR_MAX_VEC_COMPONENTS])
 {
    struct lp_build_nir_aos_context *bld = lp_nir_aos_context(bld_base);
    struct gallivm_state *gallivm = bld_base->base.gallivm;
+   assert(indir_src == NULL && "no indirects with linear path");
 
    if (writemask == 0xf) {
       LLVMBuildStore(gallivm->builder, vals[0], reg_storage);
@@ -359,8 +363,7 @@ lp_build_nir_aos(struct gallivm_state *gallivm,
                  LLVMValueRef consts_ptr,
                  const LLVMValueRef *inputs,
                  LLVMValueRef *outputs,
-                 const struct lp_build_sampler_aos *sampler,
-                 const struct tgsi_shader_info *info)
+                 const struct lp_build_sampler_aos *sampler)
 {
    struct lp_build_nir_aos_context bld;
 
@@ -391,5 +394,9 @@ lp_build_nir_aos(struct gallivm_state *gallivm,
    bld.bld_base.tex = emit_tex;
    bld.bld_base.emit_var_decl = emit_var_decl;
 
-   lp_build_nir_llvm(&bld.bld_base, shader);
+   lp_build_nir_prepasses(shader);
+   NIR_PASS_V(shader, nir_move_vec_src_uses_to_dest, false);
+   NIR_PASS_V(shader, nir_lower_vec_to_regs, NULL, NULL);
+   lp_build_nir_llvm(&bld.bld_base, shader,
+                     nir_shader_get_entrypoint(shader));
 }

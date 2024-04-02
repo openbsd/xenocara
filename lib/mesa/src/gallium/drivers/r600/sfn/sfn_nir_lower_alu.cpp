@@ -33,7 +33,7 @@ namespace r600 {
 class Lower2x16 : public NirLowerInstruction {
 private:
    bool filter(const nir_instr *instr) const override;
-   nir_ssa_def *lower(nir_instr *instr) override;
+   nir_def *lower(nir_instr *instr) override;
 };
 
 bool
@@ -51,20 +51,20 @@ Lower2x16::filter(const nir_instr *instr) const
    }
 }
 
-nir_ssa_def *
+nir_def *
 Lower2x16::lower(nir_instr *instr)
 {
    nir_alu_instr *alu = nir_instr_as_alu(instr);
 
    switch (alu->op) {
    case nir_op_unpack_half_2x16: {
-      nir_ssa_def *packed = nir_ssa_for_alu_src(b, alu, 0);
+      nir_def *packed = nir_ssa_for_alu_src(b, alu, 0);
       return nir_vec2(b,
                       nir_unpack_half_2x16_split_x(b, packed),
                       nir_unpack_half_2x16_split_y(b, packed));
    }
    case nir_op_pack_half_2x16: {
-      nir_ssa_def *src_vec2 = nir_ssa_for_alu_src(b, alu, 0);
+      nir_def *src_vec2 = nir_ssa_for_alu_src(b, alu, 0);
       return nir_pack_half_2x16_split(b,
                                       nir_channel(b, src_vec2, 0),
                                       nir_channel(b, src_vec2, 1));
@@ -83,7 +83,7 @@ public:
 
 private:
    bool filter(const nir_instr *instr) const override;
-   nir_ssa_def *lower(nir_instr *instr) override;
+   nir_def *lower(nir_instr *instr) override;
    amd_gfx_level m_gxf_level;
 };
 
@@ -103,7 +103,7 @@ LowerSinCos::filter(const nir_instr *instr) const
    }
 }
 
-nir_ssa_def *
+nir_def *
 LowerSinCos::lower(nir_instr *instr)
 {
    auto alu = nir_instr_as_alu(instr);
@@ -111,15 +111,15 @@ LowerSinCos::lower(nir_instr *instr)
    assert(alu->op == nir_op_fsin || alu->op == nir_op_fcos);
 
    auto fract = nir_ffract(b,
-                           nir_ffma(b,
-                                    nir_ssa_for_alu_src(b, alu, 0),
-                                    nir_imm_float(b, 0.15915494),
-                                    nir_imm_float(b, 0.5)));
+                           nir_ffma_imm12(b,
+                                          nir_ssa_for_alu_src(b, alu, 0),
+                                          0.15915494,
+                                          0.5));
 
    auto normalized =
       m_gxf_level != R600
-         ? nir_fadd(b, fract, nir_imm_float(b, -0.5))
-         : nir_ffma(b, fract, nir_imm_float(b, 2.0f * M_PI), nir_imm_float(b, -M_PI));
+         ? nir_fadd_imm(b, fract, -0.5)
+         : nir_ffma_imm12(b, fract, 2.0f * M_PI, -M_PI);
 
    if (alu->op == nir_op_fsin)
       return nir_fsin_amd(b, normalized);

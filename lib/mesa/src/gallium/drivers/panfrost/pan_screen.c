@@ -54,6 +54,8 @@
 
 #include "pan_context.h"
 
+#define DEFAULT_MAX_AFBC_PACKING_RATIO 90
+
 /* clang-format off */
 static const struct debug_named_value panfrost_debug_options[] = {
    {"perf",       PAN_DBG_PERF,     "Enable performance warnings"},
@@ -71,6 +73,8 @@ static const struct debug_named_value panfrost_debug_options[] = {
 #ifdef PAN_DBG_OVERFLOW
    {"overflow",   PAN_DBG_OVERFLOW, "Check for buffer overflows in pool uploads"},
 #endif
+   {"yuv",        PAN_DBG_YUV,      "Tint YUV textures with blue for 1-plane and green for 2-plane"},
+   {"forcepack",  PAN_DBG_FORCE_PACK,  "Force packing of AFBC textures on upload"},
    DEBUG_NAMED_VALUE_END
 };
 /* clang-format on */
@@ -122,6 +126,7 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_FRAMEBUFFER_NO_ATTACHMENT:
    case PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION:
    case PIPE_CAP_SHADER_PACK_HALF_FLOAT:
+   case PIPE_CAP_HAS_CONST_BW:
       return 1;
 
    case PIPE_CAP_MAX_RENDER_TARGETS:
@@ -154,6 +159,7 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
 
    case PIPE_CAP_SAMPLER_VIEW_TARGET:
    case PIPE_CAP_CLIP_HALFZ:
+   case PIPE_CAP_POLYGON_OFFSET_CLAMP:
    case PIPE_CAP_TEXTURE_SWIZZLE:
    case PIPE_CAP_TEXTURE_MIRROR_CLAMP_TO_EDGE:
    case PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR:
@@ -339,11 +345,11 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_SUPPORTED_PRIM_MODES_WITH_RESTART: {
       /* Mali supports GLES and QUADS. Midgard and v6 Bifrost
        * support more */
-      uint32_t modes = BITFIELD_MASK(PIPE_PRIM_QUADS + 1);
+      uint32_t modes = BITFIELD_MASK(MESA_PRIM_QUADS + 1);
 
       if (dev->arch <= 6) {
-         modes |= BITFIELD_BIT(PIPE_PRIM_QUAD_STRIP);
-         modes |= BITFIELD_BIT(PIPE_PRIM_POLYGON);
+         modes |= BITFIELD_BIT(MESA_PRIM_QUAD_STRIP);
+         modes |= BITFIELD_BIT(MESA_PRIM_POLYGON);
       }
 
       if (dev->arch >= 9) {
@@ -351,7 +357,7 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
           * don't seem to work correctly. Disable to fix
           * arb-provoking-vertex-render.
           */
-         modes &= ~BITFIELD_BIT(PIPE_PRIM_QUADS);
+         modes &= ~BITFIELD_BIT(MESA_PRIM_QUADS);
       }
 
       return modes;
@@ -456,7 +462,6 @@ panfrost_get_shader_param(struct pipe_screen *screen,
       return false;
 
    case PIPE_SHADER_CAP_INT64_ATOMICS:
-   case PIPE_SHADER_CAP_DROUND_SUPPORTED:
    case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
       return 0;
 
@@ -467,9 +472,6 @@ panfrost_get_shader_param(struct pipe_screen *screen,
    case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
       STATIC_ASSERT(PIPE_MAX_SHADER_SAMPLER_VIEWS < 0x10000);
       return PIPE_MAX_SHADER_SAMPLER_VIEWS;
-
-   case PIPE_SHADER_CAP_PREFERRED_IR:
-      return PIPE_SHADER_IR_NIR;
 
    case PIPE_SHADER_CAP_SUPPORTED_IRS:
       return (1 << PIPE_SHADER_IR_NIR);
@@ -528,6 +530,18 @@ panfrost_get_paramf(struct pipe_screen *screen, enum pipe_capf param)
    }
 }
 
+static uint32_t
+pipe_to_pan_bind_flags(uint32_t pipe_bind_flags)
+{
+   static_assert(PIPE_BIND_DEPTH_STENCIL == PAN_BIND_DEPTH_STENCIL, "");
+   static_assert(PIPE_BIND_RENDER_TARGET == PAN_BIND_RENDER_TARGET, "");
+   static_assert(PIPE_BIND_SAMPLER_VIEW == PAN_BIND_SAMPLER_VIEW, "");
+   static_assert(PIPE_BIND_VERTEX_BUFFER == PAN_BIND_VERTEX_BUFFER, "");
+
+   return pipe_bind_flags & (PAN_BIND_DEPTH_STENCIL | PAN_BIND_RENDER_TARGET |
+                             PAN_BIND_VERTEX_BUFFER | PAN_BIND_SAMPLER_VIEW);
+}
+
 /**
  * Query format support for creating a texture, drawing surface, etc.
  * \param format  the format to test
@@ -575,9 +589,7 @@ panfrost_is_format_supported(struct pipe_screen *screen,
 
    /* Check we support the format with the given bind */
 
-   unsigned relevant_bind =
-      bind & (PIPE_BIND_DEPTH_STENCIL | PIPE_BIND_RENDER_TARGET |
-              PIPE_BIND_VERTEX_BUFFER | PIPE_BIND_SAMPLER_VIEW);
+   unsigned pan_bind_flags = pipe_to_pan_bind_flags(bind);
 
    struct panfrost_format fmt = dev->formats[format];
 
@@ -591,7 +603,7 @@ panfrost_is_format_supported(struct pipe_screen *screen,
    if (!supported)
       return false;
 
-   return MALI_EXTRACT_INDEX(fmt.hw) && ((relevant_bind & ~fmt.bind) == 0);
+   return MALI_EXTRACT_INDEX(fmt.hw) && ((pan_bind_flags & ~fmt.bind) == 0);
 }
 
 /* We always support linear and tiled operations, both external and internal.
@@ -743,8 +755,11 @@ panfrost_get_compute_param(struct pipe_screen *pscreen,
    case PIPE_COMPUTE_CAP_IMAGES_SUPPORTED:
       RET((uint32_t[]){1});
 
-   case PIPE_COMPUTE_CAP_SUBGROUP_SIZE:
+   case PIPE_COMPUTE_CAP_SUBGROUP_SIZES:
       RET((uint32_t[]){pan_subgroup_size(dev->arch)});
+
+   case PIPE_COMPUTE_CAP_MAX_SUBGROUPS:
+      RET((uint32_t[]){0 /* TODO */});
 
    case PIPE_COMPUTE_CAP_MAX_VARIABLE_THREADS_PER_BLOCK:
       RET((uint64_t[]){1024}); // TODO
@@ -827,6 +842,8 @@ panfrost_create_screen(int fd, const struct pipe_screen_config *config,
    /* Debug must be set first for pandecode to work correctly */
    dev->debug =
       debug_get_flags_option("PAN_MESA_DEBUG", panfrost_debug_options, 0);
+   screen->max_afbc_packing_ratio = debug_get_num_option(
+      "PAN_MAX_AFBC_PACKING_RATIO", DEFAULT_MAX_AFBC_PACKING_RATIO);
    panfrost_open_device(screen, fd, dev);
 
    if (dev->debug & PAN_DBG_NO_AFBC)

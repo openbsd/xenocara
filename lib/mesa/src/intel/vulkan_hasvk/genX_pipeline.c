@@ -346,9 +346,6 @@ emit_3dstate_sbe(struct anv_graphics_pipeline *pipeline)
 
    struct GENX(3DSTATE_SBE) sbe = {
       GENX(3DSTATE_SBE_header),
-      /* TODO(mesh): Figure out cases where we need attribute swizzling.  See also
-       * calculate_urb_setup() and related functions.
-       */
       .AttributeSwizzleEnable = anv_pipeline_is_primitive(pipeline),
       .PointSpriteTextureCoordinateOrigin = UPPERLEFT,
       .NumberofSFOutputAttributes = wm_prog_data->num_varying_inputs,
@@ -1465,7 +1462,8 @@ emit_3dstate_hs_te_ds(struct anv_graphics_pipeline *pipeline,
 }
 
 static void
-emit_3dstate_gs(struct anv_graphics_pipeline *pipeline)
+emit_3dstate_gs(struct anv_graphics_pipeline *pipeline,
+                const struct vk_rasterization_state *rs)
 {
    const struct intel_device_info *devinfo = pipeline->base.device->info;
    const struct anv_shader_bin *gs_bin =
@@ -1503,7 +1501,19 @@ emit_3dstate_gs(struct anv_graphics_pipeline *pipeline)
       gs.ControlDataFormat       = gs_prog_data->control_data_format;
       gs.ControlDataHeaderSize   = gs_prog_data->control_data_header_size_hwords;
       gs.InstanceControl         = MAX2(gs_prog_data->invocations, 1) - 1;
-      gs.ReorderMode             = TRAILING;
+
+      switch (rs->provoking_vertex) {
+      case VK_PROVOKING_VERTEX_MODE_FIRST_VERTEX_EXT:
+         gs.ReorderMode = LEADING;
+         break;
+
+      case VK_PROVOKING_VERTEX_MODE_LAST_VERTEX_EXT:
+         gs.ReorderMode = TRAILING;
+         break;
+
+      default:
+         unreachable("Invalid provoking vertex mode");
+      }
 
 #if GFX_VER >= 8
       gs.ExpectedVertexCount     = gs_prog_data->vertices_in;
@@ -1695,10 +1705,8 @@ emit_3dstate_ps(struct anv_graphics_pipeline *pipeline,
       ps.BindingTableEntryCount     = fs_bin->bind_map.surface_count;
       ps.PushConstantEnable         = wm_prog_data->base.nr_params > 0 ||
                                       wm_prog_data->base.ubo_ranges[0].length;
-      ps.PositionXYOffsetSelect     =
-         brw_wm_prog_data_uses_position_xy_offset(wm_prog_data,
-                                                  0 /* msaa_flags */) ?
-         POSOFFSET_SAMPLE : POSOFFSET_NONE;
+      ps.PositionXYOffsetSelect     = wm_prog_data->uses_pos_offset ?
+                                      POSOFFSET_SAMPLE: POSOFFSET_NONE;
 #if GFX_VER < 8
       ps.AttributeEnable            = wm_prog_data->num_varying_inputs > 0;
       ps.oMaskPresenttoRenderTarget = wm_prog_data->uses_omask;
@@ -1849,7 +1857,7 @@ genX(graphics_pipeline_emit)(struct anv_graphics_pipeline *pipeline,
 
    emit_3dstate_vs(pipeline);
    emit_3dstate_hs_te_ds(pipeline, state->ts);
-   emit_3dstate_gs(pipeline);
+   emit_3dstate_gs(pipeline, state->rs);
 
    emit_3dstate_vf_statistics(pipeline);
 

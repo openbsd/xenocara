@@ -48,7 +48,7 @@ FetchInstr::FetchInstr(EVFetchInstr opcode,
                        EVFetchEndianSwap endian_swap,
                        uint32_t resource_id,
                        PRegister resource_offset):
-    InstrWithVectorResult(dst, dest_swizzle, resource_id, resource_offset),
+    InstrWithVectorResult(dst, dest_swizzle, resource_id, resource_offset),   
     m_opcode(opcode),
     m_src(src),
     m_src_offset(src_offset),
@@ -78,7 +78,7 @@ FetchInstr::FetchInstr(EVFetchInstr opcode,
       m_opname = "READ_SCRATCH";
       break;
    default:
-      unreachable("Unknwon fetch instruction");
+      unreachable("Unknown fetch instruction");
    }
 
    if (m_src)
@@ -126,7 +126,7 @@ FetchInstr::is_equal_to(const FetchInstr& rhs) const
           m_num_format == rhs.m_num_format && m_endian_swap == rhs.m_endian_swap &&
           m_mega_fetch_count == rhs.m_mega_fetch_count &&
           m_array_base == rhs.m_array_base && m_array_size == rhs.m_array_size &&
-          m_elm_size == rhs.m_elm_size && resource_base() == rhs.resource_base();
+          m_elm_size == rhs.m_elm_size && resource_id() == rhs.resource_id();
 }
 
 bool
@@ -188,7 +188,7 @@ FetchInstr::do_print(std::ostream& os) const
    }
 
    if (m_opcode != vc_read_scratch)
-      os << " RID:" << resource_base();
+      os << " RID:" << resource_id();
 
    print_resource_offset(os);
 
@@ -204,7 +204,7 @@ FetchInstr::do_print(std::ostream& os) const
          os << " NO_IDX_OFFSET";
          break;
       default:
-         unreachable("Unknwon fetch instruction type");
+         unreachable("Unknown fetch instruction type");
       }
    }
 
@@ -214,7 +214,7 @@ FetchInstr::do_print(std::ostream& os) const
       if (fmt != s_data_format_map.end())
          os << fmt->second << ",";
       else
-         unreachable("unknwon data format");
+         unreachable("unknown data format");
 
       if (m_tex_flags.test(format_comp_signed))
          os << "S";
@@ -232,7 +232,7 @@ FetchInstr::do_print(std::ostream& os) const
          os << "SCALED";
          break;
       default:
-         unreachable("Unknwon number format");
+         unreachable("Unknown number format");
       }
 
       os << ")";
@@ -680,7 +680,7 @@ public:
       if (value.sel() == ALU_SRC_1_INT)
          m_lfs->set_array_base(1);
       else if (value.sel() != ALU_SRC_0)
-         unreachable("Scratch array base is an inpossible inline constant");
+         unreachable("Scratch array base is an impossible inline constant");
 
       m_lfs->set_src(new Register(0, 7, pin_none));
    }

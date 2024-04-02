@@ -111,7 +111,7 @@ emit_const_ptrs(struct fd_ringbuffer *ring, const struct ir3_shader_variant *v,
 }
 
 static void
-emit_stage_tess_consts(struct fd_ringbuffer *ring, struct ir3_shader_variant *v,
+emit_stage_tess_consts(struct fd_ringbuffer *ring, const struct ir3_shader_variant *v,
                        uint32_t *params, int num_params)
 {
    const struct ir3_const_state *const_state = ir3_const_state(v);
@@ -166,7 +166,7 @@ fd6_build_tess_consts(struct fd6_emit *emit)
    }
 
    if (emit->gs) {
-      struct ir3_shader_variant *prev;
+      const struct ir3_shader_variant *prev;
       if (emit->ds)
          prev = emit->ds;
       else
@@ -229,7 +229,7 @@ fd6_emit_ubos(const struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
 }
 
 unsigned
-fd6_user_consts_cmdstream_size(struct ir3_shader_variant *v)
+fd6_user_consts_cmdstream_size(const struct ir3_shader_variant *v)
 {
    if (!v)
       return 0;
@@ -258,6 +258,7 @@ emit_user_consts(const struct ir3_shader_variant *v,
    fd6_emit_ubos(v, ring, constbuf);
 }
 
+template <fd6_pipeline_type PIPELINE>
 struct fd_ringbuffer *
 fd6_build_user_consts(struct fd6_emit *emit)
 {
@@ -267,21 +268,25 @@ fd6_build_user_consts(struct fd6_emit *emit)
    struct fd_ringbuffer *constobj =
       fd_submit_new_ringbuffer(ctx->batch->submit, sz, FD_RINGBUFFER_STREAMING);
 
-   /* TODO would be nice to templatize the variants (ie. HAS_GS and HAS_TESS) */
-
    emit_user_consts(emit->vs, constobj, &ctx->constbuf[PIPE_SHADER_VERTEX]);
-   if (emit->hs) {
-      emit_user_consts(emit->hs, constobj, &ctx->constbuf[PIPE_SHADER_TESS_CTRL]);
-      emit_user_consts(emit->ds, constobj, &ctx->constbuf[PIPE_SHADER_TESS_EVAL]);
-   }
-   if (emit->gs) {
-      emit_user_consts(emit->gs, constobj, &ctx->constbuf[PIPE_SHADER_GEOMETRY]);
+   if (PIPELINE == HAS_TESS_GS) {
+      if (emit->hs) {
+         emit_user_consts(emit->hs, constobj, &ctx->constbuf[PIPE_SHADER_TESS_CTRL]);
+         emit_user_consts(emit->ds, constobj, &ctx->constbuf[PIPE_SHADER_TESS_EVAL]);
+      }
+      if (emit->gs) {
+         emit_user_consts(emit->gs, constobj, &ctx->constbuf[PIPE_SHADER_GEOMETRY]);
+      }
    }
    emit_user_consts(emit->fs, constobj, &ctx->constbuf[PIPE_SHADER_FRAGMENT]);
 
    return constobj;
 }
 
+template struct fd_ringbuffer * fd6_build_user_consts<HAS_TESS_GS>(struct fd6_emit *emit);
+template struct fd_ringbuffer * fd6_build_user_consts<NO_TESS_GS>(struct fd6_emit *emit);
+
+template <fd6_pipeline_type PIPELINE>
 struct fd_ringbuffer *
 fd6_build_driver_params(struct fd6_emit *emit)
 {
@@ -300,27 +305,32 @@ fd6_build_driver_params(struct fd6_emit *emit)
 
    if (emit->vs->need_driver_params) {
       ir3_emit_driver_params(emit->vs, dpconstobj, ctx, emit->info,
-                             emit->indirect, emit->draw);
+                             emit->indirect, emit->draw, emit->draw_id);
    }
 
-   if (emit->gs && emit->gs->need_driver_params) {
-      ir3_emit_driver_params(emit->gs, dpconstobj, ctx, emit->info,
-                             emit->indirect, emit->draw);
-   }
+   if (PIPELINE == HAS_TESS_GS) {
+      if (emit->gs && emit->gs->need_driver_params) {
+         ir3_emit_driver_params(emit->gs, dpconstobj, ctx, emit->info,
+                                emit->indirect, emit->draw, 0);
+      }
 
-   if (emit->hs && emit->hs->need_driver_params) {
-      ir3_emit_hs_driver_params(emit->hs, dpconstobj, ctx);
-   }
+      if (emit->hs && emit->hs->need_driver_params) {
+         ir3_emit_hs_driver_params(emit->hs, dpconstobj, ctx);
+      }
 
-   if (emit->ds && emit->ds->need_driver_params) {
-      ir3_emit_driver_params(emit->ds, dpconstobj, ctx, emit->info,
-                             emit->indirect, emit->draw);
+      if (emit->ds && emit->ds->need_driver_params) {
+         ir3_emit_driver_params(emit->ds, dpconstobj, ctx, emit->info,
+                                emit->indirect, emit->draw, 0);
+      }
    }
 
    fd6_ctx->has_dp_state = true;
 
    return dpconstobj;
 }
+
+template struct fd_ringbuffer * fd6_build_driver_params<HAS_TESS_GS>(struct fd6_emit *emit);
+template struct fd_ringbuffer * fd6_build_driver_params<NO_TESS_GS>(struct fd6_emit *emit);
 
 void
 fd6_emit_cs_driver_params(struct fd_context *ctx,
@@ -340,18 +350,16 @@ fd6_emit_cs_user_consts(struct fd_context *ctx,
 }
 
 void
-fd6_emit_immediates(struct fd_screen *screen,
-                    const struct ir3_shader_variant *v,
+fd6_emit_immediates(const struct ir3_shader_variant *v,
                     struct fd_ringbuffer *ring)
 {
-   ir3_emit_immediates(screen, v, ring);
+   ir3_emit_immediates(v, ring);
 }
 
 void
-fd6_emit_link_map(struct fd_screen *screen,
-                  const struct ir3_shader_variant *producer,
-                  const struct ir3_shader_variant *v,
+fd6_emit_link_map(const struct ir3_shader_variant *producer,
+                  const struct ir3_shader_variant *consumer,
                   struct fd_ringbuffer *ring)
 {
-   ir3_emit_link_map(screen, producer, v, ring);
+   ir3_emit_link_map(producer, consumer, ring);
 }

@@ -237,6 +237,7 @@ struct rogue_regarray_cache_key {
          uint32_t start_index;
          enum rogue_reg_class class;
          uint16_t size;
+         uint8_t __pad;
       } PACKED;
 
       uint64_t val;
@@ -794,6 +795,11 @@ static inline bool rogue_ref_is_val(const rogue_ref *ref)
 static inline bool rogue_ref_is_reg(const rogue_ref *ref)
 {
    return ref->type == ROGUE_REF_TYPE_REG;
+}
+
+static inline bool rogue_ref_is_special_reg(const rogue_ref *ref)
+{
+   return rogue_ref_is_reg(ref) && ref->reg->class == ROGUE_REG_CLASS_SPECIAL;
 }
 
 static inline bool rogue_ref_is_regarray(const rogue_ref *ref)
@@ -1882,6 +1888,8 @@ rogue_reg *rogue_const_reg(rogue_shader *shader, unsigned index);
 
 rogue_reg *rogue_pixout_reg(rogue_shader *shader, unsigned index);
 
+rogue_reg *rogue_special_reg(rogue_shader *shader, unsigned index);
+
 rogue_reg *rogue_vtxin_reg(rogue_shader *shader, unsigned index);
 
 rogue_reg *rogue_vtxout_reg(rogue_shader *shader, unsigned index);
@@ -1899,6 +1907,10 @@ rogue_temp_regarray(rogue_shader *shader, unsigned size, unsigned start_index);
 
 rogue_regarray *
 rogue_coeff_regarray(rogue_shader *shader, unsigned size, unsigned start_index);
+
+rogue_regarray *rogue_shared_regarray(rogue_shader *shader,
+                                      unsigned size,
+                                      unsigned start_index);
 
 rogue_regarray *rogue_ssa_vec_regarray(rogue_shader *shader,
                                        unsigned size,
@@ -2868,6 +2880,9 @@ typedef struct rogue_build_data {
       bool phas; /* Indicates the presence of PHAS instruction. */
    } fs;
    struct rogue_vs_build_data {
+      /* TODO: Should these be removed since the driver allocates the vertex
+       * inputs?
+       */
       rogue_vertex_inputs inputs;
       unsigned num_vertex_input_regs; /* Final number of inputs. */
 

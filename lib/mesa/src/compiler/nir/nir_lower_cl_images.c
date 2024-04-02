@@ -85,7 +85,7 @@ nir_dedup_inline_samplers(nir_shader *nir)
 
    nir_shader_instructions_pass(nir, nir_dedup_inline_samplers_instr,
                                 nir_metadata_block_index |
-                                nir_metadata_dominance,
+                                   nir_metadata_dominance,
                                 &inline_samplers);
 
    /* If we found any inline samplers in the instructions pass, they'll now be
@@ -114,6 +114,9 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
 
    ASSERTED int last_loc = -1;
    int num_rd_images = 0, num_wr_images = 0;
+
+   BITSET_ZERO(shader->info.image_buffers);
+   BITSET_ZERO(shader->info.msaa_images);
    nir_foreach_variable_with_modes(var, shader, nir_var_image | nir_var_uniform) {
       if (!glsl_type_is_image(var->type) && !glsl_type_is_texture(var->type))
          continue;
@@ -128,6 +131,17 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
       else
          var->data.driver_location = num_wr_images++;
       var->data.binding = var->data.driver_location;
+
+      switch (glsl_get_sampler_dim(var->type)) {
+      case GLSL_SAMPLER_DIM_BUF:
+         BITSET_SET(shader->info.image_buffers, var->data.binding);
+         break;
+      case GLSL_SAMPLER_DIM_MS:
+         BITSET_SET(shader->info.msaa_images, var->data.binding);
+         break;
+      default:
+         break;
+      }
    }
    shader->info.num_textures = num_rd_images;
    BITSET_ZERO(shader->info.textures_used);
@@ -156,8 +170,7 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
    if (num_samplers)
       BITSET_SET_RANGE(shader->info.samplers_used, 0, num_samplers - 1);
 
-   nir_builder b;
-   nir_builder_init(&b, impl);
+   nir_builder b = nir_builder_create(impl);
 
    /* don't need any lowering if we can keep the derefs */
    if (!lower_image_derefs && !lower_sampler_derefs) {
@@ -187,10 +200,10 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
                break;
 
             b.cursor = nir_instr_remove(&deref->instr);
-            nir_ssa_def *loc =
+            nir_def *loc =
                nir_imm_intN_t(&b, deref->var->data.driver_location,
-                                  deref->dest.ssa.bit_size);
-            nir_ssa_def_rewrite_uses(&deref->dest.ssa, loc);
+                              deref->def.bit_size);
+            nir_def_rewrite_uses(&deref->def, loc);
             progress = true;
             break;
          }
@@ -212,20 +225,17 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
                      else
                         tex->sampler_index = deref->var->data.driver_location;
                      /* This source gets discarded */
-                     nir_instr_rewrite_src(&tex->instr, &tex->src[i].src,
-                                           NIR_SRC_INIT);
+                     nir_instr_clear_src(&tex->instr, &tex->src[i].src);
                      continue;
                   } else {
-                     assert(tex->src[i].src.is_ssa);
                      b.cursor = nir_before_instr(&tex->instr);
                      /* Back-ends expect a 32-bit thing, not 64-bit */
-                     nir_ssa_def *offset = nir_u2u32(&b, tex->src[i].src.ssa);
+                     nir_def *offset = nir_u2u32(&b, tex->src[i].src.ssa);
                      if (tex->src[i].src_type == nir_tex_src_texture_deref)
                         tex->src[count].src_type = nir_tex_src_texture_offset;
                      else
                         tex->src[count].src_type = nir_tex_src_sampler_offset;
-                     nir_instr_rewrite_src(&tex->instr, &tex->src[count].src,
-                                           nir_src_for_ssa(offset));
+                     nir_src_rewrite(&tex->src[count].src, offset);
                   }
                } else {
                   /* If we've removed a source, move this one down */
@@ -248,28 +258,16 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
             switch (intrin->intrinsic) {
             case nir_intrinsic_image_deref_load:
             case nir_intrinsic_image_deref_store:
-            case nir_intrinsic_image_deref_atomic_add:
-            case nir_intrinsic_image_deref_atomic_imin:
-            case nir_intrinsic_image_deref_atomic_umin:
-            case nir_intrinsic_image_deref_atomic_imax:
-            case nir_intrinsic_image_deref_atomic_umax:
-            case nir_intrinsic_image_deref_atomic_and:
-            case nir_intrinsic_image_deref_atomic_or:
-            case nir_intrinsic_image_deref_atomic_xor:
-            case nir_intrinsic_image_deref_atomic_exchange:
-            case nir_intrinsic_image_deref_atomic_comp_swap:
-            case nir_intrinsic_image_deref_atomic_fadd:
-            case nir_intrinsic_image_deref_atomic_inc_wrap:
-            case nir_intrinsic_image_deref_atomic_dec_wrap:
+            case nir_intrinsic_image_deref_atomic:
+            case nir_intrinsic_image_deref_atomic_swap:
             case nir_intrinsic_image_deref_size:
             case nir_intrinsic_image_deref_samples: {
                if (!lower_image_derefs)
                   break;
 
-               assert(intrin->src[0].is_ssa);
                b.cursor = nir_before_instr(&intrin->instr);
                /* Back-ends expect a 32-bit thing, not 64-bit */
-               nir_ssa_def *offset = nir_u2u32(&b, intrin->src[0].ssa);
+               nir_def *offset = nir_u2u32(&b, intrin->src[0].ssa);
                nir_rewrite_image_intrinsic(intrin, offset, false);
                progress = true;
                break;
@@ -289,7 +287,7 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
 
    if (progress) {
       nir_metadata_preserve(impl, nir_metadata_block_index |
-                                  nir_metadata_dominance);
+                                     nir_metadata_dominance);
    } else {
       nir_metadata_preserve(impl, nir_metadata_all);
    }

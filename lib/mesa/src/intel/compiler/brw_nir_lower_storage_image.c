@@ -27,13 +27,13 @@
 #include "compiler/nir/nir_builder.h"
 #include "compiler/nir/nir_format_convert.h"
 
-static nir_ssa_def *
+static nir_def *
 _load_image_param(nir_builder *b, nir_deref_instr *deref, unsigned offset)
 {
    nir_intrinsic_instr *load =
       nir_intrinsic_instr_create(b->shader,
                                  nir_intrinsic_image_deref_load_param_intel);
-   load->src[0] = nir_src_for_ssa(&deref->dest.ssa);
+   load->src[0] = nir_src_for_ssa(&deref->def);
    nir_intrinsic_set_base(load, offset / 4);
 
    switch (offset) {
@@ -51,25 +51,24 @@ _load_image_param(nir_builder *b, nir_deref_instr *deref, unsigned offset)
    default:
       unreachable("Invalid param offset");
    }
-   nir_ssa_dest_init(&load->instr, &load->dest,
-                     load->num_components, 32, NULL);
+   nir_def_init(&load->instr, &load->def, load->num_components, 32);
 
    nir_builder_instr_insert(b, &load->instr);
-   return &load->dest.ssa;
+   return &load->def;
 }
 
 #define load_image_param(b, d, o) \
    _load_image_param(b, d, BRW_IMAGE_PARAM_##o##_OFFSET)
 
-static nir_ssa_def *
+static nir_def *
 image_coord_is_in_bounds(nir_builder *b, nir_deref_instr *deref,
-                         nir_ssa_def *coord)
+                         nir_def *coord)
 {
-   nir_ssa_def *size = load_image_param(b, deref, SIZE);
-   nir_ssa_def *cmp = nir_ilt(b, coord, size);
+   nir_def *size = load_image_param(b, deref, SIZE);
+   nir_def *cmp = nir_ilt(b, coord, size);
 
    unsigned coord_comps = glsl_get_sampler_coordinate_components(deref->type);
-   nir_ssa_def *in_bounds = nir_imm_true(b);
+   nir_def *in_bounds = nir_imm_true(b);
    for (unsigned i = 0; i < coord_comps; i++)
       in_bounds = nir_iand(b, in_bounds, nir_channel(b, cmp, i));
 
@@ -88,9 +87,9 @@ image_coord_is_in_bounds(nir_builder *b, nir_deref_instr *deref,
  * "Address Tiling Function" of the IVB PRM for an in-depth explanation of
  * the hardware tiling format.
  */
-static nir_ssa_def *
+static nir_def *
 image_address(nir_builder *b, const struct intel_device_info *devinfo,
-              nir_deref_instr *deref, nir_ssa_def *coord)
+              nir_deref_instr *deref, nir_def *coord)
 {
    if (glsl_get_sampler_dim(deref->type) == GLSL_SAMPLER_DIM_1D &&
        glsl_sampler_type_is_array(deref->type)) {
@@ -103,9 +102,9 @@ image_address(nir_builder *b, const struct intel_device_info *devinfo,
       coord = nir_trim_vector(b, coord, dims);
    }
 
-   nir_ssa_def *offset = load_image_param(b, deref, OFFSET);
-   nir_ssa_def *tiling = load_image_param(b, deref, TILING);
-   nir_ssa_def *stride = load_image_param(b, deref, STRIDE);
+   nir_def *offset = load_image_param(b, deref, OFFSET);
+   nir_def *tiling = load_image_param(b, deref, TILING);
+   nir_def *stride = load_image_param(b, deref, STRIDE);
 
    /* Shift the coordinates by the fixed surface offset.  It may be non-zero
     * if the image is a single slice of a higher-dimensional surface, or if a
@@ -115,9 +114,9 @@ image_address(nir_builder *b, const struct intel_device_info *devinfo,
     * the surface base address wouldn't give a well-formed tiled surface in
     * the general case.
     */
-   nir_ssa_def *xypos = (coord->num_components == 1) ?
+   nir_def *xypos = (coord->num_components == 1) ?
                         nir_vec2(b, coord, nir_imm_int(b, 0)) :
-                        nir_channels(b, coord, 0x3);
+                        nir_trim_vector(b, coord, 2);
    xypos = nir_iadd(b, xypos, offset);
 
    /* The layout of 3-D textures in memory is sort-of like a tiling
@@ -145,10 +144,10 @@ image_address(nir_builder *b, const struct intel_device_info *devinfo,
       /* Decompose z into a major (tmp.y) and a minor (tmp.x)
        * index.
        */
-      nir_ssa_def *z = nir_channel(b, coord, 2);
-      nir_ssa_def *z_x = nir_ubfe(b, z, nir_imm_int(b, 0),
+      nir_def *z = nir_channel(b, coord, 2);
+      nir_def *z_x = nir_ubfe(b, z, nir_imm_int(b, 0),
                                   nir_channel(b, tiling, 2));
-      nir_ssa_def *z_y = nir_ushr(b, z, nir_channel(b, tiling, 2));
+      nir_def *z_y = nir_ushr(b, z, nir_channel(b, tiling, 2));
 
       /* Take into account the horizontal (tmp.x) and vertical (tmp.y)
        * slice offset.
@@ -157,7 +156,7 @@ image_address(nir_builder *b, const struct intel_device_info *devinfo,
                                              nir_channels(b, stride, 0xc)));
    }
 
-   nir_ssa_def *addr;
+   nir_def *addr;
    if (coord->num_components > 1) {
       /* Calculate the major/minor x and y indices.  In order to
        * accommodate both X and Y tiling, the Y-major tiling format is
@@ -174,9 +173,9 @@ image_address(nir_builder *b, const struct intel_device_info *devinfo,
        */
 
       /* Calculate the minor x and y indices. */
-      nir_ssa_def *minor = nir_ubfe(b, xypos, nir_imm_int(b, 0),
-                                       nir_channels(b, tiling, 0x3));
-      nir_ssa_def *major = nir_ushr(b, xypos, nir_channels(b, tiling, 0x3));
+      nir_def *minor = nir_ubfe(b, xypos, nir_imm_int(b, 0),
+                                       nir_trim_vector(b, tiling, 2));
+      nir_def *major = nir_ushr(b, xypos, nir_trim_vector(b, tiling, 2));
 
       /* Calculate the texel index from the start of the tile row and the
        * vertical coordinate of the row.
@@ -185,7 +184,7 @@ image_address(nir_builder *b, const struct intel_device_info *devinfo,
        *           (minor.y << tile.x) + minor.x
        *   tmp.y = major.y << tile.y
        */
-      nir_ssa_def *idx_x, *idx_y;
+      nir_def *idx_x, *idx_y;
       idx_x = nir_ishl(b, nir_channel(b, major, 0), nir_channel(b, tiling, 1));
       idx_x = nir_iadd(b, idx_x, nir_channel(b, minor, 1));
       idx_x = nir_ishl(b, idx_x, nir_channel(b, tiling, 0));
@@ -193,7 +192,7 @@ image_address(nir_builder *b, const struct intel_device_info *devinfo,
       idx_y = nir_ishl(b, nir_channel(b, major, 1), nir_channel(b, tiling, 1));
 
       /* Add it to the start of the tile row. */
-      nir_ssa_def *idx;
+      nir_def *idx;
       idx = nir_imul(b, idx_y, nir_channel(b, stride, 1));
       idx = nir_iadd(b, idx, idx_x);
 
@@ -211,12 +210,12 @@ image_address(nir_builder *b, const struct intel_device_info *devinfo,
           * be 0xff causing the relevant bits of both tmp.x and .y to be zero,
           * what effectively disables swizzling.
           */
-         nir_ssa_def *swizzle = load_image_param(b, deref, SWIZZLING);
-         nir_ssa_def *shift0 = nir_ushr(b, addr, nir_channel(b, swizzle, 0));
-         nir_ssa_def *shift1 = nir_ushr(b, addr, nir_channel(b, swizzle, 1));
+         nir_def *swizzle = load_image_param(b, deref, SWIZZLING);
+         nir_def *shift0 = nir_ushr(b, addr, nir_channel(b, swizzle, 0));
+         nir_def *shift1 = nir_ushr(b, addr, nir_channel(b, swizzle, 1));
 
          /* XOR tmp.x and tmp.y with bit 6 of the memory address. */
-         nir_ssa_def *bit = nir_iand(b, nir_ixor(b, shift0, shift1),
+         nir_def *bit = nir_iand(b, nir_ixor(b, shift0, shift1),
                                         nir_imm_int(b, 1 << 6));
          addr = nir_ixor(b, addr, bit);
       }
@@ -226,7 +225,7 @@ image_address(nir_builder *b, const struct intel_device_info *devinfo,
        * offset may have been applied above to select a non-zero slice or
        * level of a higher-dimensional texture.
        */
-      nir_ssa_def *idx;
+      nir_def *idx;
       idx = nir_imul(b, nir_channel(b, xypos, 1), nir_channel(b, stride, 1));
       idx = nir_iadd(b, nir_channel(b, xypos, 0), idx);
       addr = nir_imul(b, idx, nir_channel(b, stride, 0));
@@ -258,9 +257,9 @@ get_format_info(enum isl_format fmt)
    };
 }
 
-static nir_ssa_def *
+static nir_def *
 convert_color_for_load(nir_builder *b, const struct intel_device_info *devinfo,
-                       nir_ssa_def *color,
+                       nir_def *color,
                        enum isl_format image_fmt, enum isl_format lower_fmt,
                        unsigned dest_components)
 {
@@ -343,7 +342,7 @@ expand_vec:
    if (color->num_components == dest_components)
       return color;
 
-   nir_ssa_def *comps[4];
+   nir_def *comps[4];
    for (unsigned i = 0; i < color->num_components; i++)
       comps[i] = nir_channel(b, color, i);
 
@@ -363,7 +362,8 @@ expand_vec:
 static bool
 lower_image_load_instr(nir_builder *b,
                        const struct intel_device_info *devinfo,
-                       nir_intrinsic_instr *intrin)
+                       nir_intrinsic_instr *intrin,
+                       bool sparse)
 {
    nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
    nir_variable *var = nir_deref_instr_get_variable(deref);
@@ -377,27 +377,49 @@ lower_image_load_instr(nir_builder *b,
    if (isl_has_matching_typed_storage_image_format(devinfo, image_fmt)) {
       const enum isl_format lower_fmt =
          isl_lower_storage_image_format(devinfo, image_fmt);
-      const unsigned dest_components = intrin->num_components;
+      const unsigned dest_components =
+         sparse ? (intrin->num_components - 1) : intrin->num_components;
 
       /* Use an undef to hold the uses of the load while we do the color
        * conversion.
        */
-      nir_ssa_def *placeholder = nir_ssa_undef(b, 4, 32);
-      nir_ssa_def_rewrite_uses(&intrin->dest.ssa, placeholder);
+      nir_def *placeholder = nir_undef(b, 4, 32);
+      nir_def_rewrite_uses(&intrin->def, placeholder);
 
       intrin->num_components = isl_format_get_num_channels(lower_fmt);
-      intrin->dest.ssa.num_components = intrin->num_components;
+      intrin->def.num_components = intrin->num_components;
 
       b->cursor = nir_after_instr(&intrin->instr);
 
-      nir_ssa_def *color = convert_color_for_load(b, devinfo,
-                                                  &intrin->dest.ssa,
+      nir_def *color = convert_color_for_load(b, devinfo,
+                                                  &intrin->def,
                                                   image_fmt, lower_fmt,
                                                   dest_components);
 
-      nir_ssa_def_rewrite_uses(placeholder, color);
+      if (sparse) {
+         /* Put the sparse component back on the original instruction */
+         intrin->num_components++;
+         intrin->def.num_components = intrin->num_components;
+
+         /* Carry over the sparse component without modifying it with the
+          * converted color.
+          */
+         nir_def *sparse_color[NIR_MAX_VEC_COMPONENTS];
+         for (unsigned i = 0; i < dest_components; i++)
+            sparse_color[i] = nir_channel(b, color, i);
+         sparse_color[dest_components] =
+            nir_channel(b, &intrin->def, intrin->num_components - 1);
+         color = nir_vec(b, sparse_color, dest_components + 1);
+      }
+
+      nir_def_rewrite_uses(placeholder, color);
       nir_instr_remove(placeholder->parent_instr);
    } else {
+      /* This code part is only useful prior to Gfx9, we do not have plans to
+       * enable sparse there.
+       */
+      assert(!sparse);
+
       const struct isl_format_layout *image_fmtl =
          isl_format_get_layout(image_fmt);
       /* We have a matching typed format for everything 32b and below */
@@ -409,9 +431,9 @@ lower_image_load_instr(nir_builder *b,
 
       b->cursor = nir_instr_remove(&intrin->instr);
 
-      nir_ssa_def *coord = intrin->src[1].ssa;
+      nir_def *coord = intrin->src[1].ssa;
 
-      nir_ssa_def *do_load = image_coord_is_in_bounds(b, deref, coord);
+      nir_def *do_load = image_coord_is_in_bounds(b, deref, coord);
       if (devinfo->verx10 == 70) {
          /* Check whether the first stride component (i.e. the Bpp value)
           * is greater than four, what on Gfx7 indicates that a surface of
@@ -419,39 +441,39 @@ lower_image_load_instr(nir_builder *b,
           * to a surface of type other than RAW using untyped surface
           * messages causes a hang on IVB and VLV.
           */
-         nir_ssa_def *stride = load_image_param(b, deref, STRIDE);
-         nir_ssa_def *is_raw =
-            nir_ilt(b, nir_imm_int(b, 4), nir_channel(b, stride, 0));
+         nir_def *stride = load_image_param(b, deref, STRIDE);
+         nir_def *is_raw =
+            nir_igt_imm(b, nir_channel(b, stride, 0), 4);
          do_load = nir_iand(b, do_load, is_raw);
       }
       nir_push_if(b, do_load);
 
-      nir_ssa_def *addr = image_address(b, devinfo, deref, coord);
-      nir_ssa_def *load =
+      nir_def *addr = image_address(b, devinfo, deref, coord);
+      nir_def *load =
          nir_image_deref_load_raw_intel(b, image_fmtl->bpb / 32, 32,
-                                        &deref->dest.ssa, addr);
+                                        &deref->def, addr);
 
       nir_push_else(b, NULL);
 
-      nir_ssa_def *zero = nir_imm_zero(b, load->num_components, 32);
+      nir_def *zero = nir_imm_zero(b, load->num_components, 32);
 
       nir_pop_if(b, NULL);
 
-      nir_ssa_def *value = nir_if_phi(b, load, zero);
+      nir_def *value = nir_if_phi(b, load, zero);
 
-      nir_ssa_def *color = convert_color_for_load(b, devinfo, value,
+      nir_def *color = convert_color_for_load(b, devinfo, value,
                                                   image_fmt, raw_fmt,
                                                   dest_components);
 
-      nir_ssa_def_rewrite_uses(&intrin->dest.ssa, color);
+      nir_def_rewrite_uses(&intrin->def, color);
    }
 
    return true;
 }
 
-static nir_ssa_def *
+static nir_def *
 convert_color_for_store(nir_builder *b, const struct intel_device_info *devinfo,
-                        nir_ssa_def *color,
+                        nir_def *color,
                         enum isl_format image_fmt, enum isl_format lower_fmt)
 {
    struct format_info image = get_format_info(image_fmt);
@@ -543,12 +565,11 @@ lower_image_store_instr(nir_builder *b,
       /* Color conversion goes before the store */
       b->cursor = nir_before_instr(&intrin->instr);
 
-      nir_ssa_def *color = convert_color_for_store(b, devinfo,
+      nir_def *color = convert_color_for_store(b, devinfo,
                                                    intrin->src[3].ssa,
                                                    image_fmt, lower_fmt);
       intrin->num_components = isl_format_get_num_channels(lower_fmt);
-      nir_instr_rewrite_src(&intrin->instr, &intrin->src[3],
-                            nir_src_for_ssa(color));
+      nir_src_rewrite(&intrin->src[3], color);
    } else {
       const struct isl_format_layout *image_fmtl =
          isl_format_get_layout(image_fmt);
@@ -560,9 +581,9 @@ lower_image_store_instr(nir_builder *b,
 
       b->cursor = nir_instr_remove(&intrin->instr);
 
-      nir_ssa_def *coord = intrin->src[1].ssa;
+      nir_def *coord = intrin->src[1].ssa;
 
-      nir_ssa_def *do_store = image_coord_is_in_bounds(b, deref, coord);
+      nir_def *do_store = image_coord_is_in_bounds(b, deref, coord);
       if (devinfo->verx10 == 70) {
          /* Check whether the first stride component (i.e. the Bpp value)
           * is greater than four, what on Gfx7 indicates that a surface of
@@ -570,22 +591,22 @@ lower_image_store_instr(nir_builder *b,
           * to a surface of type other than RAW using untyped surface
           * messages causes a hang on IVB and VLV.
           */
-         nir_ssa_def *stride = load_image_param(b, deref, STRIDE);
-         nir_ssa_def *is_raw =
-            nir_ilt(b, nir_imm_int(b, 4), nir_channel(b, stride, 0));
+         nir_def *stride = load_image_param(b, deref, STRIDE);
+         nir_def *is_raw =
+            nir_igt_imm(b, nir_channel(b, stride, 0), 4);
          do_store = nir_iand(b, do_store, is_raw);
       }
       nir_push_if(b, do_store);
 
-      nir_ssa_def *addr = image_address(b, devinfo, deref, coord);
-      nir_ssa_def *color = convert_color_for_store(b, devinfo,
+      nir_def *addr = image_address(b, devinfo, deref, coord);
+      nir_def *color = convert_color_for_store(b, devinfo,
                                                    intrin->src[3].ssa,
                                                    image_fmt, raw_fmt);
 
       nir_intrinsic_instr *store =
          nir_intrinsic_instr_create(b->shader,
                                     nir_intrinsic_image_deref_store_raw_intel);
-      store->src[0] = nir_src_for_ssa(&deref->dest.ssa);
+      store->src[0] = nir_src_for_ssa(&deref->def);
       store->src[1] = nir_src_for_ssa(addr);
       store->src[2] = nir_src_for_ssa(color);
       store->num_components = image_fmtl->bpb / 32;
@@ -610,24 +631,24 @@ lower_image_atomic_instr(nir_builder *b,
    b->cursor = nir_instr_remove(&intrin->instr);
 
    /* Use an undef to hold the uses of the load conversion. */
-   nir_ssa_def *placeholder = nir_ssa_undef(b, 4, 32);
-   nir_ssa_def_rewrite_uses(&intrin->dest.ssa, placeholder);
+   nir_def *placeholder = nir_undef(b, 4, 32);
+   nir_def_rewrite_uses(&intrin->def, placeholder);
 
    /* Check the first component of the size field to find out if the
     * image is bound.  Necessary on IVB for typed atomics because
     * they don't seem to respect null surfaces and will happily
     * corrupt or read random memory when no image is bound.
     */
-   nir_ssa_def *size = load_image_param(b, deref, SIZE);
-   nir_ssa_def *zero = nir_imm_int(b, 0);
+   nir_def *size = load_image_param(b, deref, SIZE);
+   nir_def *zero = nir_imm_int(b, 0);
    nir_push_if(b, nir_ine(b, nir_channel(b, size, 0), zero));
 
    nir_builder_instr_insert(b, &intrin->instr);
 
    nir_pop_if(b, NULL);
 
-   nir_ssa_def *result = nir_if_phi(b, &intrin->dest.ssa, zero);
-   nir_ssa_def_rewrite_uses(placeholder, result);
+   nir_def *result = nir_if_phi(b, &intrin->def, zero);
+   nir_def_rewrite_uses(placeholder, result);
 
    return true;
 }
@@ -661,20 +682,20 @@ lower_image_size_instr(nir_builder *b,
 
    b->cursor = nir_instr_remove(&intrin->instr);
 
-   nir_ssa_def *size = load_image_param(b, deref, SIZE);
+   nir_def *size = load_image_param(b, deref, SIZE);
 
-   nir_ssa_def *comps[4] = { NULL, NULL, NULL, NULL };
+   nir_def *comps[4] = { NULL, NULL, NULL, NULL };
 
    assert(nir_intrinsic_image_dim(intrin) != GLSL_SAMPLER_DIM_CUBE);
    unsigned coord_comps = glsl_get_sampler_coordinate_components(deref->type);
    for (unsigned c = 0; c < coord_comps; c++)
       comps[c] = nir_channel(b, size, c);
 
-   for (unsigned c = coord_comps; c < intrin->dest.ssa.num_components; ++c)
+   for (unsigned c = coord_comps; c < intrin->def.num_components; ++c)
       comps[c] = nir_imm_int(b, 1);
 
-   nir_ssa_def *vec = nir_vec(b, comps, intrin->dest.ssa.num_components);
-   nir_ssa_def_rewrite_uses(&intrin->dest.ssa, vec);
+   nir_def *vec = nir_vec(b, comps, intrin->def.num_components);
+   nir_def_rewrite_uses(&intrin->def, vec);
 
    return true;
 }
@@ -686,30 +707,35 @@ brw_nir_lower_storage_image_instr(nir_builder *b,
 {
    if (instr->type != nir_instr_type_intrinsic)
       return false;
-   const struct intel_device_info *devinfo = cb_data;
+   const struct brw_nir_lower_storage_image_opts *opts = cb_data;
 
    nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
    switch (intrin->intrinsic) {
    case nir_intrinsic_image_deref_load:
-      return lower_image_load_instr(b, devinfo, intrin);
+      if (opts->lower_loads)
+         return lower_image_load_instr(b, opts->devinfo, intrin, false);
+      return false;
+
+   case nir_intrinsic_image_deref_sparse_load:
+      if (opts->lower_loads)
+         return lower_image_load_instr(b, opts->devinfo, intrin, true);
+      return false;
 
    case nir_intrinsic_image_deref_store:
-      return lower_image_store_instr(b, devinfo, intrin);
+      if (opts->lower_stores)
+         return lower_image_store_instr(b, opts->devinfo, intrin);
+      return false;
 
-   case nir_intrinsic_image_deref_atomic_add:
-   case nir_intrinsic_image_deref_atomic_imin:
-   case nir_intrinsic_image_deref_atomic_umin:
-   case nir_intrinsic_image_deref_atomic_imax:
-   case nir_intrinsic_image_deref_atomic_umax:
-   case nir_intrinsic_image_deref_atomic_and:
-   case nir_intrinsic_image_deref_atomic_or:
-   case nir_intrinsic_image_deref_atomic_xor:
-   case nir_intrinsic_image_deref_atomic_exchange:
-   case nir_intrinsic_image_deref_atomic_comp_swap:
-      return lower_image_atomic_instr(b, devinfo, intrin);
+   case nir_intrinsic_image_deref_atomic:
+   case nir_intrinsic_image_deref_atomic_swap:
+      if (opts->lower_atomics)
+         return lower_image_atomic_instr(b, opts->devinfo, intrin);
+      return false;
 
    case nir_intrinsic_image_deref_size:
-      return lower_image_size_instr(b, devinfo, intrin);
+      if (opts->lower_get_size)
+         return lower_image_size_instr(b, opts->devinfo, intrin);
+      return false;
 
    default:
       /* Nothing to do */
@@ -719,7 +745,7 @@ brw_nir_lower_storage_image_instr(nir_builder *b,
 
 bool
 brw_nir_lower_storage_image(nir_shader *shader,
-                            const struct intel_device_info *devinfo)
+                            const struct brw_nir_lower_storage_image_opts *opts)
 {
    bool progress = false;
 
@@ -733,7 +759,7 @@ brw_nir_lower_storage_image(nir_shader *shader,
    progress |= nir_shader_instructions_pass(shader,
                                             brw_nir_lower_storage_image_instr,
                                             nir_metadata_none,
-                                            (void *)devinfo);
+                                            (void *)opts);
 
    return progress;
 }

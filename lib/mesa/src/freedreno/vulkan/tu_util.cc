@@ -31,11 +31,16 @@ static const struct debug_control tu_debug_options[] = {
    { "perfc", TU_DEBUG_PERFC },
    { "flushall", TU_DEBUG_FLUSHALL },
    { "syncdraw", TU_DEBUG_SYNCDRAW },
+   { "push_consts_per_stage", TU_DEBUG_PUSH_CONSTS_PER_STAGE },
    { "rast_order", TU_DEBUG_RAST_ORDER },
    { "unaligned_store", TU_DEBUG_UNALIGNED_STORE },
    { "log_skip_gmem_ops", TU_DEBUG_LOG_SKIP_GMEM_OPS },
    { "dynamic", TU_DEBUG_DYNAMIC },
    { "bos", TU_DEBUG_BOS },
+   { "3d_load", TU_DEBUG_3D_LOAD },
+   { "fdm", TU_DEBUG_FDM },
+   { "noconform", TU_DEBUG_NOCONFORM },
+   { "rd", TU_DEBUG_RD },
    { NULL, 0 }
 };
 
@@ -121,13 +126,7 @@ tu_tiling_config_update_tile_layout(struct tu_framebuffer *fb,
     *   used.
     */
 
-   uint32_t layers = fb->layers;
-   if (pass->subpasses[0].multiview_mask) {
-      uint32_t view_mask = 0;
-      for (unsigned i = 0; i < pass->subpass_count; i++)
-         view_mask |= pass->subpasses[i].multiview_mask;
-      layers = util_logbase2(view_mask) + 1;
-   }
+   uint32_t layers = MAX2(fb->layers, pass->num_views);
 
    /* If there is more than one layer, we need to make sure that the layer
     * stride is expressible as an offset in RB_BLIT_BASE_GMEM which ignores
@@ -226,7 +225,8 @@ static void
 tu_tiling_config_update_pipe_layout(struct tu_tiling_config *tiling,
                                     const struct tu_device *dev)
 {
-   const uint32_t max_pipe_count = 32; /* A6xx */
+   const uint32_t max_pipe_count =
+      dev->physical_device->info->num_vsc_pipes;
 
    /* start from 1 tile per pipe */
    tiling->pipe0 = (VkExtent2D) {
@@ -252,7 +252,8 @@ static void
 tu_tiling_config_update_pipes(struct tu_tiling_config *tiling,
                               const struct tu_device *dev)
 {
-   const uint32_t max_pipe_count = 32; /* A6xx */
+   const uint32_t max_pipe_count =
+      dev->physical_device->info->num_vsc_pipes;
    const uint32_t used_pipe_count =
       tiling->pipe_count.width * tiling->pipe_count.height;
    const VkExtent2D last_pipe = {

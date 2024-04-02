@@ -63,6 +63,9 @@ if with_platform_x11
   ]
   vulkan_wsi_list += '-DVK_USE_PLATFORM_XCB_KHR'
   vulkan_wsi_list += '-DVK_USE_PLATFORM_XLIB_KHR'
+  if with_xcb_keysyms
+    vulkan_wsi_deps += dep_xcb_keysyms
+  endif
 endif
 if with_platform_wayland
   vulkan_wsi_deps += dep_wayland_client
@@ -89,6 +92,7 @@ endif
 
 idep_vulkan_wsi_defines = declare_dependency(
   compile_args : vulkan_wsi_list,
+  dependencies : vulkan_wsi_deps,
 )
 vulkan_wsi_deps += idep_vulkan_wsi_defines
 

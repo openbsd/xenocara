@@ -88,7 +88,7 @@ the steps above :
    # Configure Mesa with perfetto
    mesa $ meson . build -Dperfetto=true -Dvulkan-drivers=intel,broadcom -Dgallium-drivers=
    # Build mesa
-   mesa $ ninja -C build
+   mesa $ meson compile -C build
 
    # Within the Mesa repo, build perfetto
    mesa $ cd subprojects/perfetto
@@ -147,7 +147,7 @@ Intel
 ^^^^^
 
 The Intel PPS driver needs root access to read system-wide
-`RenderBasic <https://www.intel.com/content/www/us/en/develop/documentation/vtune-help/top/reference/gpu-metrics-reference.html>`__
+`RenderBasic <https://www.intel.com/content/www/us/en/docs/vtune-profiler/user-guide/2023-0/gpu-metrics-reference.html>`__
 performance counters, so you can simply run it with sudo:
 
 .. code-block:: console

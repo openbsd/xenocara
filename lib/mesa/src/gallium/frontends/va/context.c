@@ -31,6 +31,7 @@
 #include "util/u_memory.h"
 #include "util/u_handle_table.h"
 #include "util/u_video.h"
+#include "util/set.h"
 #include "vl/vl_deint_filter.h"
 #include "vl/vl_winsys.h"
 
@@ -104,6 +105,10 @@ static struct VADriverVTable vtable =
 #if VA_CHECK_VERSION(1, 15, 0)
    NULL, /* vaSyncSurface2 */
    &vlVaSyncBuffer,
+#endif
+#if VA_CHECK_VERSION(1, 21, 0)
+   NULL, /* vaCopy */
+   &vlVaMapBuffer2,
 #endif
 };
 
@@ -241,7 +246,8 @@ vlVaCreateContext(VADriverContextP ctx, VAConfigID config_id, int picture_width,
    vlVaContext *context;
    vlVaConfig *config;
    int is_vpp;
-   int max_supported_width,max_supported_height;
+   int min_supported_width, min_supported_height;
+   int max_supported_width, max_supported_height;
 
    if (!ctx)
       return VA_STATUS_ERROR_INVALID_CONTEXT;
@@ -271,6 +277,12 @@ vlVaCreateContext(VADriverContextP ctx, VAConfigID config_id, int picture_width,
       context->decoder = NULL;
    } else {
       if (config->entrypoint != PIPE_VIDEO_ENTRYPOINT_PROCESSING) {
+         min_supported_width = drv->vscreen->pscreen->get_video_param(drv->vscreen->pscreen,
+                        config->profile, config->entrypoint,
+                        PIPE_VIDEO_CAP_MIN_WIDTH);
+         min_supported_height = drv->vscreen->pscreen->get_video_param(drv->vscreen->pscreen,
+                        config->profile, config->entrypoint,
+                        PIPE_VIDEO_CAP_MIN_HEIGHT);
          max_supported_width = drv->vscreen->pscreen->get_video_param(drv->vscreen->pscreen,
                         config->profile, config->entrypoint,
                         PIPE_VIDEO_CAP_MAX_WIDTH);
@@ -278,7 +290,8 @@ vlVaCreateContext(VADriverContextP ctx, VAConfigID config_id, int picture_width,
                         config->profile, config->entrypoint,
                         PIPE_VIDEO_CAP_MAX_HEIGHT);
 
-         if (picture_width > max_supported_width || picture_height > max_supported_height) {
+         if (picture_width < min_supported_width || picture_height < min_supported_height ||
+             picture_width > max_supported_width || picture_height > max_supported_height) {
             FREE(context);
             return VA_STATUS_ERROR_RESOLUTION_NOT_SUPPORTED;
          }
@@ -350,10 +363,15 @@ vlVaCreateContext(VADriverContextP ctx, VAConfigID config_id, int picture_width,
          context->desc.h265enc.rc.rate_ctrl_method = config->rc;
          context->desc.h265enc.frame_idx = util_hash_table_create_ptr_keys();
          break;
+      case PIPE_VIDEO_FORMAT_AV1:
+         context->desc.av1enc.rc[0].rate_ctrl_method = config->rc;
+         break;
       default:
          break;
       }
    }
+
+   context->surfaces = _mesa_set_create(NULL, _mesa_hash_pointer, _mesa_key_pointer_equal);
 
    mtx_lock(&drv->mutex);
    *context_id = handle_table_add(drv->htab, context);
@@ -371,6 +389,9 @@ vlVaDestroyContext(VADriverContextP ctx, VAContextID context_id)
    if (!ctx)
       return VA_STATUS_ERROR_INVALID_CONTEXT;
 
+   if (context_id == 0)
+      return VA_STATUS_ERROR_INVALID_CONTEXT;
+
    drv = VL_VA_DRIVER(ctx);
    mtx_lock(&drv->mutex);
    context = handle_table_get(drv->htab, context_id);
@@ -378,6 +399,17 @@ vlVaDestroyContext(VADriverContextP ctx, VAContextID context_id)
       mtx_unlock(&drv->mutex);
       return VA_STATUS_ERROR_INVALID_CONTEXT;
    }
+
+   set_foreach(context->surfaces, entry) {
+      vlVaSurface *surf = (vlVaSurface *)entry->key;
+      assert(surf->ctx == context);
+      surf->ctx = NULL;
+      if (surf->fence && context->decoder && context->decoder->destroy_fence) {
+         context->decoder->destroy_fence(context->decoder, surf->fence);
+         surf->fence = NULL;
+      }
+   }
+   _mesa_set_destroy(context->surfaces, NULL);
 
    if (context->decoder) {
       if (context->desc.base.entry_point == PIPE_VIDEO_ENTRYPOINT_ENCODE) {

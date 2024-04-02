@@ -24,8 +24,8 @@ DRI drivers for X.org.
 
 -  See the `DRI website <https://dri.freedesktop.org/>`__ for more
    information.
--  See `01.org <https://01.org/linuxgraphics>`__ for more information
-   about Intel drivers.
+-  See `01.org <https://www.intel.com/content/www/us/en/developer/topic-technology/open/overview.html>`__
+   for more information about Intel drivers.
 -  See `nouveau.freedesktop.org <https://nouveau.freedesktop.org>`__ for
    more information about Nouveau drivers.
 -  See
@@ -191,7 +191,7 @@ example, if the ``find`` command listed ``/usr/lib64/dri``, then set
 After determining the correct values for the install location, configure
 Mesa with
 ``meson configure --prefix=/usr --libdir=xxx -D dri-drivers-path=xxx``
-and then install with ``sudo ninja install``.
+and then install with ``sudo meson install``.
 
 3. Runtime / Rendering Problems
 -------------------------------

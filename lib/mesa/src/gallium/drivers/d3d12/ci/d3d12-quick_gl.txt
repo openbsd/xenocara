@@ -1,8 +1,17 @@
+# from https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/25931
+spec@arb_internalformat_query2@image_format_compatibility_type pname checks,Fail
+spec@arb_internalformat_query2@image_format_compatibility_type pname checks@GL_IMAGE_FORMAT_COMPATIBILITY_TYPE,Fail
+spec@arb_internalformat_query2@max dimensions related pname checks,Fail
+spec@arb_internalformat_query2@max dimensions related pname checks@GL_MAX_COMBINED_DIMENSIONS,Fail
+spec@arb_internalformat_query2@max dimensions related pname checks@GL_MAX_DEPTH,Fail
+spec@arb_internalformat_query2@max dimensions related pname checks@GL_MAX_HEIGHT,Fail
+spec@arb_internalformat_query2@max dimensions related pname checks@GL_MAX_LAYERS,Fail
+spec@arb_internalformat_query2@max dimensions related pname checks@GL_MAX_WIDTH,Fail
+
 spec@!opengl 1.0@gl-1.0-beginend-coverage,Fail
 spec@!opengl 1.0@gl-1.0-beginend-coverage@glFlush,Fail
 spec@!opengl 1.0@gl-1.0-blend-func,Fail
 spec@!opengl 1.0@gl-1.0-no-op-paths,Fail
-spec@!opengl 1.0@gl-1.0-spot-light,Fail
 spec@!opengl 1.0@rasterpos,Fail
 spec@!opengl 1.0@rasterpos@glsl_vs_gs_linked,Fail
 spec@!opengl 1.0@rasterpos@glsl_vs_tes_linked,Fail
@@ -22,7 +31,6 @@ spec@!opengl 1.1@polygon-mode-offset@config 4: Expected white pixel on top edge,
 spec@!opengl 1.1@polygon-offset,Fail
 spec@!opengl 1.1@vertex-fallbacks,Crash
 spec@!opengl 1.1@windowoverlap,Missing
-spec@!opengl 2.0@gl-2.0-two-sided-stencil,Fail
 spec@!opengl 3.0@sampler-cube-shadow,Fail
 spec@!opengl 3.1@default-vao,Fail
 spec@!opengl 3.1@genned-names,Fail
@@ -34,6 +42,7 @@ spec@!opengl 3.2@gl-3.2-adj-prims line cull-back pv-last,Fail
 spec@!opengl 3.2@gl-3.2-adj-prims line cull-front pv-last,Fail
 spec@!opengl 3.2@gl-3.2-adj-prims pv-last,Fail
 spec@arb_draw_indirect@arb_draw_indirect-api-errors,Crash
+spec@arb_clear_texture@arb_clear_texture-integer,Fail
 spec@arb_explicit_attrib_location@overlapping-locations-input-attribs api,Crash
 spec@arb_explicit_attrib_location@overlapping-locations-input-attribs shader,Crash
 spec@arb_framebuffer_object@fbo-blit-scaled-linear,Fail
@@ -47,8 +56,6 @@ spec@arb_seamless_cube_map@arb_seamless_cubemap,Fail
 spec@arb_shader_atomic_counters@semantics,Fail
 spec@arb_shader_atomic_counters@semantics@Tessellation control shader atomic built-in semantics,Fail
 spec@arb_texture_cube_map_array@arb_texture_cube_map_array-sampler-cube-array-shadow,Fail
-spec@arb_texture_multisample@arb_texture_multisample-dsa-texelfetch,Fail
-spec@arb_texture_multisample@arb_texture_multisample-dsa-texelfetch@Texture type: GL_RGB9_E5,Fail
 spec@arb_texture_rg@texwrap formats-int,Fail
 spec@arb_texture_rg@texwrap formats-int offset,Fail
 spec@arb_texture_rg@texwrap formats-int offset@GL_R16I,Fail
@@ -411,3 +418,7 @@ spec@nv_copy_depth_to_color@nv_copy_depth_to_color 1 0x223344ff,Fail
 spec@nv_copy_depth_to_color@nv_copy_depth_to_color 1 0x76356278,Fail
 spec@nv_copy_image@nv_copy_image-formats,Crash
 wgl@wgl-multi-context-single-window,Fail
+
+# remove this after https://gitlab.freedesktop.org/mesa/piglit/-/merge_requests/843
+# is merged and piglit is updated
+spec@arb_vertex_program@arb_vertex_program-property-bindings,Fail

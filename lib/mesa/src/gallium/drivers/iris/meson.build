@@ -24,6 +24,8 @@ files_libiris = files(
   'i915/iris_bufmgr.c',
   'i915/iris_bufmgr.h',
   'i915/iris_kmd_backend.c',
+  'xe/iris_batch.c',
+  'xe/iris_batch.h',
   'xe/iris_bufmgr.c',
   'xe/iris_bufmgr.h',
   'xe/iris_kmd_backend.c',
@@ -69,7 +71,7 @@ files_libiris = files(
 )
 
 iris_per_hw_ver_libs = []
-foreach v : ['80', '90', '110', '120', '125']
+foreach v : ['80', '90', '110', '120', '125', '200']
   iris_per_hw_ver_libs += static_library(
     'iris_per_hw_ver@0@'.format(v),
     ['iris_blorp.c', 'iris_query.c', 'iris_state.c', gen_xml_pack],

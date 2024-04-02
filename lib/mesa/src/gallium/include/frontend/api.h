@@ -171,6 +171,8 @@ struct st_config_options
    bool disable_glsl_line_continuations;
    bool disable_arb_gpu_shader5;
    bool disable_uniform_array_resize;
+   char *alias_shader_extension;
+   bool allow_vertex_texture_bias;
    bool force_compat_shaders;
    bool force_glsl_extensions_warn;
    unsigned force_glsl_version;
@@ -201,6 +203,8 @@ struct st_config_options
    char *force_gl_vendor;
    char *force_gl_renderer;
    char *mesa_extension_override;
+   bool allow_multisampled_copyteximage;
+
    unsigned char config_options_sha1[20];
 };
 

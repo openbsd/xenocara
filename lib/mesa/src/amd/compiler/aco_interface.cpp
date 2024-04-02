@@ -80,30 +80,29 @@ validate(aco::Program* program)
 }
 
 static std::string
-get_disasm_string(aco::Program* program, std::vector<uint32_t>& code,
-                  unsigned exec_size)
+get_disasm_string(aco::Program* program, std::vector<uint32_t>& code, unsigned exec_size)
 {
    std::string disasm;
 
-   if (check_print_asm_support(program)) {
-      char* data = NULL;
-      size_t disasm_size = 0;
-      struct u_memstream mem;
-      if (u_memstream_open(&mem, &data, &disasm_size)) {
-         FILE* const memf = u_memstream_get(&mem);
+   char* data = NULL;
+   size_t disasm_size = 0;
+   struct u_memstream mem;
+   if (u_memstream_open(&mem, &data, &disasm_size)) {
+      FILE* const memf = u_memstream_get(&mem);
+      if (check_print_asm_support(program)) {
          aco::print_asm(program, code, exec_size / 4u, memf);
-         fputc(0, memf);
-         u_memstream_close(&mem);
+      } else {
+         fprintf(memf, "Shader disassembly is not supported in the current configuration"
+#ifndef LLVM_AVAILABLE
+                       " (LLVM not available)"
+#endif
+                       ", falling back to print_program.\n\n");
+         aco::aco_print_program(program, memf);
       }
-
+      fputc(0, memf);
+      u_memstream_close(&mem);
       disasm = std::string(data, data + disasm_size);
       free(data);
-   } else {
-      disasm = "Shader disassembly is not supported in the current configuration"
-#ifndef LLVM_AVAILABLE
-               " (LLVM not available)"
-#endif
-               ".\n";
    }
 
    return disasm;
@@ -111,13 +110,15 @@ get_disasm_string(aco::Program* program, std::vector<uint32_t>& code,
 
 static std::string
 aco_postprocess_shader(const struct aco_compiler_options* options,
-                       const struct aco_shader_info *info,
-                       std::unique_ptr<aco::Program>& program)
+                       const struct aco_shader_info* info, std::unique_ptr<aco::Program>& program)
 {
    std::string llvm_ir;
 
    if (options->dump_preoptir)
       aco_print_program(program.get(), stderr);
+
+   ASSERTED bool is_valid = aco::validate_cfg(program.get());
+   assert(is_valid);
 
    aco::live live_vars;
    if (!info->is_trap_handler_shader) {
@@ -192,6 +193,7 @@ aco_postprocess_shader(const struct aco_compiler_options* options,
 
    /* Lower to HW Instructions */
    aco::lower_to_hw_instr(program.get());
+   validate(program.get());
 
    /* Insert Waitcnt */
    aco::insert_wait_states(program.get());
@@ -207,12 +209,9 @@ aco_postprocess_shader(const struct aco_compiler_options* options,
 }
 
 void
-aco_compile_shader(const struct aco_compiler_options* options,
-                   const struct aco_shader_info* info,
+aco_compile_shader(const struct aco_compiler_options* options, const struct aco_shader_info* info,
                    unsigned shader_count, struct nir_shader* const* shaders,
-                   const struct ac_shader_args *args,
-                   aco_callback *build_binary,
-                   void **binary)
+                   const struct ac_shader_args* args, aco_callback* build_binary, void** binary)
 {
    aco::init();
 
@@ -236,7 +235,12 @@ aco_compile_shader(const struct aco_compiler_options* options,
 
    /* assembly */
    std::vector<uint32_t> code;
-   unsigned exec_size = aco::emit_program(program.get(), code);
+   std::vector<struct aco_symbol> symbols;
+   /* OpenGL combine multi shader parts into one continous code block,
+    * so only last part need the s_endpgm instruction.
+    */
+   bool append_endpgm = !(options->is_opengl && info->has_epilog);
+   unsigned exec_size = aco::emit_program(program.get(), code, &symbols, append_endpgm);
 
    if (program->collect_statistics)
       aco::collect_postasm_stats(program.get(), code);
@@ -252,7 +256,8 @@ aco_compile_shader(const struct aco_compiler_options* options,
       stats_size = aco_num_statistics * sizeof(uint32_t);
 
    (*build_binary)(binary, &config, llvm_ir.c_str(), llvm_ir.size(), disasm.c_str(), disasm.size(),
-                   program->statistics, stats_size, exec_size, code.data(), code.size());
+                   program->statistics, stats_size, exec_size, code.data(), code.size(),
+                   symbols.data(), symbols.size());
 }
 
 void
@@ -271,6 +276,7 @@ aco_compile_rt_prolog(const struct aco_compiler_options* options,
    program->debug.private_data = NULL;
 
    aco::select_rt_prolog(program.get(), &config, options, info, in_args, out_args);
+   validate(program.get());
    aco::insert_wait_states(program.get());
    aco::insert_NOPs(program.get());
    if (program->gfx_level >= GFX10)
@@ -291,7 +297,7 @@ aco_compile_rt_prolog(const struct aco_compiler_options* options,
       disasm = get_disasm_string(program.get(), code, exec_size);
 
    (*build_prolog)(binary, &config, NULL, 0, disasm.c_str(), disasm.size(), program->statistics, 0,
-                   exec_size, code.data(), code.size());
+                   exec_size, code.data(), code.size(), NULL, 0);
 }
 
 void
@@ -311,6 +317,7 @@ aco_compile_vs_prolog(const struct aco_compiler_options* options,
 
    /* create IR */
    aco::select_vs_prolog(program.get(), pinfo, &config, options, info, args);
+   validate(program.get());
    aco::insert_NOPs(program.get());
 
    if (options->dump_shader)
@@ -327,20 +334,22 @@ aco_compile_vs_prolog(const struct aco_compiler_options* options,
    if (get_disasm)
       disasm = get_disasm_string(program.get(), code, exec_size);
 
-   (*build_prolog)(binary,
-                   config.num_sgprs,
-                   config.num_vgprs,
-                   code.data(),
-                   code.size(),
-                   disasm.data(),
-                   disasm.size());
+   (*build_prolog)(binary, config.num_sgprs, config.num_vgprs, code.data(), code.size(),
+                   disasm.data(), disasm.size());
 }
 
-void
-aco_compile_ps_epilog(const struct aco_compiler_options* options,
-                      const struct aco_shader_info* info, const struct aco_ps_epilog_info* pinfo,
-                      const struct ac_shader_args* args, aco_shader_part_callback* build_epilog,
-                      void** binary)
+typedef void(select_shader_part_callback)(aco::Program* program, void* pinfo,
+                                          ac_shader_config* config,
+                                          const struct aco_compiler_options* options,
+                                          const struct aco_shader_info* info,
+                                          const struct ac_shader_args* args);
+
+static void
+aco_compile_shader_part(const struct aco_compiler_options* options,
+                        const struct aco_shader_info* info, const struct ac_shader_args* args,
+                        select_shader_part_callback select_shader_part, void* pinfo,
+                        aco_shader_part_callback* build_binary, void** binary,
+                        bool is_prolog = false)
 {
    aco::init();
 
@@ -354,14 +363,17 @@ aco_compile_ps_epilog(const struct aco_compiler_options* options,
    program->debug.func = options->debug.func;
    program->debug.private_data = options->debug.private_data;
 
+   program->is_prolog = is_prolog;
+
    /* Instruction selection */
-   aco::select_ps_epilog(program.get(), pinfo, &config, options, info, args);
+   select_shader_part(program.get(), pinfo, &config, options, info, args);
 
    aco_postprocess_shader(options, info, program);
 
    /* assembly */
    std::vector<uint32_t> code;
-   unsigned exec_size = aco::emit_program(program.get(), code);
+   bool append_endpgm = !(options->is_opengl && is_prolog);
+   unsigned exec_size = aco::emit_program(program.get(), code, NULL, append_endpgm);
 
    bool get_disasm = options->dump_shader || options->record_ir;
 
@@ -369,11 +381,47 @@ aco_compile_ps_epilog(const struct aco_compiler_options* options,
    if (get_disasm)
       disasm = get_disasm_string(program.get(), code, exec_size);
 
-   (*build_epilog)(binary,
-                   config.num_sgprs,
-                   config.num_vgprs,
-                   code.data(),
-                   code.size(),
-                   disasm.data(),
-                   disasm.size());
+   (*build_binary)(binary, config.num_sgprs, config.num_vgprs, code.data(), code.size(),
+                   disasm.data(), disasm.size());
+}
+
+void
+aco_compile_ps_epilog(const struct aco_compiler_options* options,
+                      const struct aco_shader_info* info, const struct aco_ps_epilog_info* pinfo,
+                      const struct ac_shader_args* args, aco_shader_part_callback* build_epilog,
+                      void** binary)
+{
+   aco_compile_shader_part(options, info, args, aco::select_ps_epilog, (void*)pinfo, build_epilog,
+                           binary);
+}
+
+void
+aco_compile_tcs_epilog(const struct aco_compiler_options* options,
+                       const struct aco_shader_info* info, const struct aco_tcs_epilog_info* pinfo,
+                       const struct ac_shader_args* args, aco_shader_part_callback* build_epilog,
+                       void** binary)
+{
+   aco_compile_shader_part(options, info, args, aco::select_tcs_epilog, (void*)pinfo, build_epilog,
+                           binary);
+}
+
+void
+aco_compile_gl_vs_prolog(const struct aco_compiler_options* options,
+                         const struct aco_shader_info* info,
+                         const struct aco_gl_vs_prolog_info* pinfo,
+                         const struct ac_shader_args* args, aco_shader_part_callback* build_prolog,
+                         void** binary)
+{
+   aco_compile_shader_part(options, info, args, aco::select_gl_vs_prolog, (void*)pinfo,
+                           build_prolog, binary, true);
+}
+
+void
+aco_compile_ps_prolog(const struct aco_compiler_options* options,
+                      const struct aco_shader_info* info, const struct aco_ps_prolog_info* pinfo,
+                      const struct ac_shader_args* args, aco_shader_part_callback* build_prolog,
+                      void** binary)
+{
+   aco_compile_shader_part(options, info, args, aco::select_ps_prolog, (void*)pinfo, build_prolog,
+                           binary, true);
 }

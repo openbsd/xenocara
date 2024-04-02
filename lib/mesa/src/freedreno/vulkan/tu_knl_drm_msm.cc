@@ -17,13 +17,13 @@
 #include "drm-uapi/msm_drm.h"
 #include "util/u_debug.h"
 #include "util/hash_table.h"
-#include "util/timespec.h"
-#include "util/os_time.h"
 
 #include "tu_cmd_buffer.h"
 #include "tu_cs.h"
 #include "tu_device.h"
 #include "tu_dynamic_rendering.h"
+#include "tu_knl_drm.h"
+#include "redump.h"
 
 struct tu_queue_submit
 {
@@ -51,9 +51,7 @@ struct tu_u_trace_syncobj
 };
 
 static int
-tu_drm_get_param(const struct tu_physical_device *dev,
-                 uint32_t param,
-                 uint64_t *value)
+tu_drm_get_param(int fd, uint32_t param, uint64_t *value)
 {
    /* Technically this requires a pipe, but the kernel only supports one pipe
     * anyway at the time of writing and most of these are clearly pipe
@@ -63,8 +61,7 @@ tu_drm_get_param(const struct tu_physical_device *dev,
       .param = param,
    };
 
-   int ret = drmCommandWriteRead(dev->local_fd, DRM_MSM_GET_PARAM, &req,
-                                 sizeof(req));
+   int ret = drmCommandWriteRead(fd, DRM_MSM_GET_PARAM, &req, sizeof(req));
    if (ret)
       return ret;
 
@@ -77,7 +74,7 @@ static int
 tu_drm_get_gpu_id(const struct tu_physical_device *dev, uint32_t *id)
 {
    uint64_t value;
-   int ret = tu_drm_get_param(dev, MSM_PARAM_GPU_ID, &value);
+   int ret = tu_drm_get_param(dev->local_fd, MSM_PARAM_GPU_ID, &value);
    if (ret)
       return ret;
 
@@ -89,7 +86,7 @@ static int
 tu_drm_get_gmem_size(const struct tu_physical_device *dev, uint32_t *size)
 {
    uint64_t value;
-   int ret = tu_drm_get_param(dev, MSM_PARAM_GMEM_SIZE, &value);
+   int ret = tu_drm_get_param(dev->local_fd, MSM_PARAM_GMEM_SIZE, &value);
    if (ret)
       return ret;
 
@@ -100,7 +97,7 @@ tu_drm_get_gmem_size(const struct tu_physical_device *dev, uint32_t *size)
 static int
 tu_drm_get_gmem_base(const struct tu_physical_device *dev, uint64_t *base)
 {
-   return tu_drm_get_param(dev, MSM_PARAM_GMEM_BASE, base);
+   return tu_drm_get_param(dev->local_fd, MSM_PARAM_GMEM_BASE, base);
 }
 
 static int
@@ -108,13 +105,13 @@ tu_drm_get_va_prop(const struct tu_physical_device *dev,
                    uint64_t *va_start, uint64_t *va_size)
 {
    uint64_t value;
-   int ret = tu_drm_get_param(dev, MSM_PARAM_VA_START, &value);
+   int ret = tu_drm_get_param(dev->local_fd, MSM_PARAM_VA_START, &value);
    if (ret)
       return ret;
 
    *va_start = value;
 
-   ret = tu_drm_get_param(dev, MSM_PARAM_VA_SIZE, &value);
+   ret = tu_drm_get_param(dev->local_fd, MSM_PARAM_VA_SIZE, &value);
    if (ret)
       return ret;
 
@@ -127,7 +124,7 @@ static uint32_t
 tu_drm_get_priorities(const struct tu_physical_device *dev)
 {
    uint64_t val = 1;
-   tu_drm_get_param(dev, MSM_PARAM_PRIORITIES, &val);
+   tu_drm_get_param(dev->local_fd, MSM_PARAM_PRIORITIES, &val);
    assert(val >= 1);
 
    return val;
@@ -152,37 +149,64 @@ tu_drm_is_memory_type_supported(int fd, uint32_t flags)
    return true;
 }
 
+static VkResult
+msm_device_init(struct tu_device *dev)
+{
+   int fd = open(dev->physical_device->fd_path, O_RDWR | O_CLOEXEC);
+   if (fd < 0) {
+      return vk_startup_errorf(
+            dev->physical_device->instance, VK_ERROR_INITIALIZATION_FAILED,
+            "failed to open device %s", dev->physical_device->fd_path);
+   }
+
+   int ret = tu_drm_get_param(fd, MSM_PARAM_FAULTS, &dev->fault_count);
+   if (ret != 0) {
+      close(fd);
+      return vk_startup_errorf(dev->physical_device->instance,
+                               VK_ERROR_INITIALIZATION_FAILED,
+                               "Failed to get initial fault count: %d", ret);
+   }
+
+   dev->fd = fd;
+
+   return VK_SUCCESS;
+}
+
+static void
+msm_device_finish(struct tu_device *dev)
+{
+   close(dev->fd);
+}
+
 static int
 msm_device_get_gpu_timestamp(struct tu_device *dev, uint64_t *ts)
 {
-   return tu_drm_get_param(dev->physical_device, MSM_PARAM_TIMESTAMP, ts);
+   return tu_drm_get_param(dev->fd, MSM_PARAM_TIMESTAMP, ts);
 }
 
 static int
 msm_device_get_suspend_count(struct tu_device *dev, uint64_t *suspend_count)
 {
-   int ret = tu_drm_get_param(dev->physical_device, MSM_PARAM_SUSPENDS, suspend_count);
+   int ret = tu_drm_get_param(dev->fd, MSM_PARAM_SUSPENDS, suspend_count);
    return ret;
 }
 
 static VkResult
 msm_device_check_status(struct tu_device *device)
 {
-   struct tu_physical_device *physical_device = device->physical_device;
-
-   uint64_t last_fault_count = physical_device->fault_count;
-   int ret = tu_drm_get_param(physical_device, MSM_PARAM_FAULTS, &physical_device->fault_count);
+   uint64_t last_fault_count = device->fault_count;
+   int ret = tu_drm_get_param(device->fd, MSM_PARAM_FAULTS, &device->fault_count);
    if (ret != 0)
       return vk_device_set_lost(&device->vk, "error getting GPU fault count: %d", ret);
 
-   if (last_fault_count != physical_device->fault_count)
+   if (last_fault_count != device->fault_count)
       return vk_device_set_lost(&device->vk, "GPU faulted or hung");
 
    return VK_SUCCESS;
 }
 
 static int
-msm_submitqueue_new(const struct tu_device *dev,
+msm_submitqueue_new(struct tu_device *dev,
                     int priority,
                     uint32_t *queue_id)
 {
@@ -203,7 +227,7 @@ msm_submitqueue_new(const struct tu_device *dev,
 }
 
 static void
-msm_submitqueue_close(const struct tu_device *dev, uint32_t queue_id)
+msm_submitqueue_close(struct tu_device *dev, uint32_t queue_id)
 {
    drmCommandWrite(dev->fd, DRM_MSM_SUBMITQUEUE_CLOSE,
                    &queue_id, sizeof(uint32_t));
@@ -236,58 +260,122 @@ tu_gem_info(const struct tu_device *dev, uint32_t gem_handle, uint32_t info)
    return req.value;
 }
 
-enum tu_mem_sync_op
+static VkResult
+tu_wait_fence(struct tu_device *dev,
+              uint32_t queue_id,
+              int fence,
+              uint64_t timeout_ns)
 {
-   TU_MEM_SYNC_CACHE_TO_GPU,
-   TU_MEM_SYNC_CACHE_FROM_GPU,
-};
+   /* fence was created when no work was yet submitted */
+   if (fence < 0)
+      return VK_SUCCESS;
 
-void
-sync_cache_bo(struct tu_device *dev,
-              struct tu_bo *bo,
-              VkDeviceSize offset,
-              VkDeviceSize size,
-              enum tu_mem_sync_op op);
+   struct drm_msm_wait_fence req = {
+      .fence = fence,
+      .queueid = queue_id,
+   };
+   int ret;
+
+   get_abs_timeout(&req.timeout, timeout_ns);
+
+   ret = drmCommandWrite(dev->fd, DRM_MSM_WAIT_FENCE, &req, sizeof(req));
+   if (ret) {
+      if (ret == -ETIMEDOUT) {
+         return VK_TIMEOUT;
+      } else {
+         mesa_loge("tu_wait_fence failed! %d (%s)", ret, strerror(errno));
+         return VK_ERROR_UNKNOWN;
+      }
+   }
+
+   return VK_SUCCESS;
+}
 
 static VkResult
-tu_allocate_userspace_iova(struct tu_device *dev,
-                           uint32_t gem_handle,
-                           uint64_t size,
-                           uint64_t client_iova,
-                           enum tu_bo_alloc_flags flags,
-                           uint64_t *iova)
+tu_free_zombie_vma_locked(struct tu_device *dev, bool wait)
 {
-   mtx_lock(&dev->physical_device->vma_mutex);
+   if (!u_vector_length(&dev->zombie_vmas))
+      return VK_SUCCESS;
+
+   if (wait) {
+      struct tu_zombie_vma *vma = (struct tu_zombie_vma *)
+            u_vector_head(&dev->zombie_vmas);
+      /* Wait for 3s (arbitrary timeout) */
+      VkResult ret = tu_wait_fence(dev, dev->queues[0]->msm_queue_id,
+                                   vma->fence, 3000000000);
+
+      if (ret != VK_SUCCESS)
+         return ret;
+   }
+
+   int last_signaled_fence = -1;
+   while (u_vector_length(&dev->zombie_vmas) > 0) {
+      struct tu_zombie_vma *vma = (struct tu_zombie_vma *)
+            u_vector_tail(&dev->zombie_vmas);
+      if (vma->fence > last_signaled_fence) {
+         VkResult ret =
+            tu_wait_fence(dev, dev->queues[0]->msm_queue_id, vma->fence, 0);
+         if (ret != VK_SUCCESS)
+            return ret;
+
+         last_signaled_fence = vma->fence;
+      }
+
+      /* Ensure that internal kernel's vma is freed. */
+      struct drm_msm_gem_info req = {
+         .handle = vma->gem_handle,
+         .info = MSM_INFO_SET_IOVA,
+         .value = 0,
+      };
+
+      int ret =
+         drmCommandWriteRead(dev->fd, DRM_MSM_GEM_INFO, &req, sizeof(req));
+      if (ret < 0) {
+         mesa_loge("MSM_INFO_SET_IOVA(0) failed! %d (%s)", ret,
+                   strerror(errno));
+         return VK_ERROR_UNKNOWN;
+      }
+
+      tu_gem_close(dev, vma->gem_handle);
+
+      util_vma_heap_free(&dev->vma, vma->iova, vma->size);
+      u_vector_remove(&dev->zombie_vmas);
+   }
+
+   return VK_SUCCESS;
+}
+
+static VkResult
+msm_allocate_userspace_iova(struct tu_device *dev,
+                            uint32_t gem_handle,
+                            uint64_t size,
+                            uint64_t client_iova,
+                            enum tu_bo_alloc_flags flags,
+                            uint64_t *iova)
+{
+   VkResult result;
+
+   mtx_lock(&dev->vma_mutex);
 
    *iova = 0;
 
-   if (flags & TU_BO_ALLOC_REPLAYABLE) {
-      if (client_iova) {
-         if (util_vma_heap_alloc_addr(&dev->physical_device->vma, client_iova,
-                                      size)) {
-            *iova = client_iova;
-         } else {
-            mtx_unlock(&dev->physical_device->vma_mutex);
-            return VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS;
-         }
-      } else {
-         /* We have to separate replayable IOVAs from ordinary one in order to
-          * for them not to clash. The easiest way to do this is to allocate
-          * them from the other end of the address space.
-          */
-         dev->physical_device->vma.alloc_high = true;
-         *iova =
-            util_vma_heap_alloc(&dev->physical_device->vma, size, 0x1000);
-      }
-   } else {
-      dev->physical_device->vma.alloc_high = false;
-      *iova = util_vma_heap_alloc(&dev->physical_device->vma, size, 0x1000);
+   tu_free_zombie_vma_locked(dev, false);
+
+   result = tu_allocate_userspace_iova(dev, size, client_iova, flags, iova);
+   if (result == VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS) {
+      /* Address may be already freed by us, but not considered as
+       * freed by the kernel. We have to wait until all work that
+       * may hold the address is done. Since addresses are meant to
+       * be replayed only by debug tooling, it should be ok to wait.
+       */
+      tu_free_zombie_vma_locked(dev, true);
+      result = tu_allocate_userspace_iova(dev, size, client_iova, flags, iova);
    }
 
-   mtx_unlock(&dev->physical_device->vma_mutex);
+   mtx_unlock(&dev->vma_mutex);
 
-   if (!*iova)
-      return VK_ERROR_OUT_OF_DEVICE_MEMORY;
+   if (result != VK_SUCCESS)
+      return result;
 
    struct drm_msm_gem_info req = {
       .handle = gem_handle,
@@ -297,8 +385,10 @@ tu_allocate_userspace_iova(struct tu_device *dev,
 
    int ret =
       drmCommandWriteRead(dev->fd, DRM_MSM_GEM_INFO, &req, sizeof(req));
-   if (ret < 0)
+   if (ret < 0) {
+      mesa_loge("MSM_INFO_SET_IOVA failed! %d (%s)", ret, strerror(errno));
       return VK_ERROR_OUT_OF_HOST_MEMORY;
+   }
 
    return VK_SUCCESS;
 }
@@ -330,8 +420,8 @@ tu_bo_init(struct tu_device *dev,
    assert(!client_iova || dev->physical_device->has_set_iova);
 
    if (dev->physical_device->has_set_iova) {
-      result = tu_allocate_userspace_iova(dev, gem_handle, size, client_iova,
-                                          flags, &iova);
+      result = msm_allocate_userspace_iova(dev, gem_handle, size, client_iova,
+                                           flags, &iova);
    } else {
       result = tu_allocate_kernel_iova(dev, gem_handle, &iova);
    }
@@ -473,7 +563,7 @@ msm_bo_init(struct tu_device *dev,
        *
        * MSM already does this automatically for uncached (MSM_BO_WC) memory.
        */
-      sync_cache_bo(dev, bo, 0, VK_WHOLE_SIZE, TU_MEM_SYNC_CACHE_TO_GPU);
+      tu_sync_cache_bo(dev, bo, 0, VK_WHOLE_SIZE, TU_MEM_SYNC_CACHE_TO_GPU);
    }
 
    return result;
@@ -533,16 +623,6 @@ msm_bo_init_dmabuf(struct tu_device *dev,
    return result;
 }
 
-static int
-msm_bo_export_dmabuf(struct tu_device *dev, struct tu_bo *bo)
-{
-   int prime_fd;
-   int ret = drmPrimeHandleToFD(dev->fd, bo->gem_handle,
-                                DRM_CLOEXEC | DRM_RDWR, &prime_fd);
-
-   return ret == 0 ? prime_fd : -1;
-}
-
 static VkResult
 msm_bo_map(struct tu_device *dev, struct tu_bo *bo)
 {
@@ -569,352 +649,6 @@ msm_bo_allow_dump(struct tu_device *dev, struct tu_bo *bo)
    mtx_lock(&dev->bo_mutex);
    dev->bo_list[bo->bo_list_idx].flags |= MSM_SUBMIT_BO_DUMP;
    mtx_unlock(&dev->bo_mutex);
-}
-
-static void
-msm_bo_finish(struct tu_device *dev, struct tu_bo *bo)
-{
-   assert(bo->gem_handle);
-
-   u_rwlock_rdlock(&dev->dma_bo_lock);
-
-   if (!p_atomic_dec_zero(&bo->refcnt)) {
-      u_rwlock_rdunlock(&dev->dma_bo_lock);
-      return;
-   }
-
-   if (bo->map)
-      munmap(bo->map, bo->size);
-
-   tu_debug_bos_del(dev, bo);
-
-   mtx_lock(&dev->bo_mutex);
-   dev->bo_count--;
-   dev->bo_list[bo->bo_list_idx] = dev->bo_list[dev->bo_count];
-
-   struct tu_bo* exchanging_bo = tu_device_lookup_bo(dev, dev->bo_list[bo->bo_list_idx].handle);
-   exchanging_bo->bo_list_idx = bo->bo_list_idx;
-
-   if (bo->implicit_sync)
-      dev->implicit_sync_bo_count--;
-
-   mtx_unlock(&dev->bo_mutex);
-
-   if (dev->physical_device->has_set_iova) {
-      mtx_lock(&dev->physical_device->vma_mutex);
-      util_vma_heap_free(&dev->physical_device->vma, bo->iova, bo->size);
-      mtx_unlock(&dev->physical_device->vma_mutex);
-   }
-
-   /* Our BO structs are stored in a sparse array in the physical device,
-    * so we don't want to free the BO pointer, instead we want to reset it
-    * to 0, to signal that array entry as being free.
-    */
-   uint32_t gem_handle = bo->gem_handle;
-   memset(bo, 0, sizeof(*bo));
-
-   tu_gem_close(dev, gem_handle);
-
-   u_rwlock_rdunlock(&dev->dma_bo_lock);
-}
-
-static inline void
-tu_sync_cacheline_to_gpu(void const *p __attribute__((unused)))
-{
-#if DETECT_ARCH_AARCH64
-   /* Clean data cache. */
-   __asm volatile("dc cvac, %0" : : "r" (p) : "memory");
-#elif (DETECT_ARCH_X86 || DETECT_ARCH_X86_64)
-   __builtin_ia32_clflush(p);
-#elif DETECT_ARCH_ARM
-   /* DCCMVAC - same as DC CVAC on aarch64.
-    * Seems to be illegal to call from userspace.
-    */
-   //__asm volatile("mcr p15, 0, %0, c7, c10, 1" : : "r" (p) : "memory");
-   unreachable("Cache line clean is unsupported on ARMv7");
-#endif
-}
-
-static inline void
-tu_sync_cacheline_from_gpu(void const *p __attribute__((unused)))
-{
-#if DETECT_ARCH_AARCH64
-   /* Clean and Invalidate data cache, there is no separate Invalidate. */
-   __asm volatile("dc civac, %0" : : "r" (p) : "memory");
-#elif (DETECT_ARCH_X86 || DETECT_ARCH_X86_64)
-   __builtin_ia32_clflush(p);
-#elif DETECT_ARCH_ARM
-   /* DCCIMVAC - same as DC CIVAC on aarch64.
-    * Seems to be illegal to call from userspace.
-    */
-   //__asm volatile("mcr p15, 0, %0, c7, c14, 1" : : "r" (p) : "memory");
-   unreachable("Cache line invalidate is unsupported on ARMv7");
-#endif
-}
-
-void
-sync_cache_bo(struct tu_device *dev,
-              struct tu_bo *bo,
-              VkDeviceSize offset,
-              VkDeviceSize size,
-              enum tu_mem_sync_op op)
-{
-   uintptr_t level1_dcache_size = dev->physical_device->level1_dcache_size;
-   char *start = (char *) bo->map + offset;
-   char *end = start + (size == VK_WHOLE_SIZE ? (bo->size - offset) : size);
-
-   start = (char *) ((uintptr_t) start & ~(level1_dcache_size - 1));
-
-   for (; start < end; start += level1_dcache_size) {
-      if (op == TU_MEM_SYNC_CACHE_TO_GPU) {
-         tu_sync_cacheline_to_gpu(start);
-      } else {
-         tu_sync_cacheline_from_gpu(start);
-      }
-   }
-}
-
-static VkResult
-sync_cache(VkDevice _device,
-           enum tu_mem_sync_op op,
-           uint32_t count,
-           const VkMappedMemoryRange *ranges)
-{
-   TU_FROM_HANDLE(tu_device, device, _device);
-
-   if (!device->physical_device->has_cached_non_coherent_memory) {
-      tu_finishme(
-         "data cache clean and invalidation are unsupported on this arch!");
-      return VK_SUCCESS;
-   }
-
-   for (uint32_t i = 0; i < count; i++) {
-      TU_FROM_HANDLE(tu_device_memory, mem, ranges[i].memory);
-      sync_cache_bo(device, mem->bo, ranges[i].offset, ranges[i].size, op);
-   }
-
-   return VK_SUCCESS;
-}
-
-VkResult
-tu_FlushMappedMemoryRanges(VkDevice _device,
-                           uint32_t memoryRangeCount,
-                           const VkMappedMemoryRange *pMemoryRanges)
-{
-   return sync_cache(_device, TU_MEM_SYNC_CACHE_TO_GPU, memoryRangeCount,
-                     pMemoryRanges);
-}
-
-VkResult
-tu_InvalidateMappedMemoryRanges(VkDevice _device,
-                                uint32_t memoryRangeCount,
-                                const VkMappedMemoryRange *pMemoryRanges)
-{
-   return sync_cache(_device, TU_MEM_SYNC_CACHE_FROM_GPU, memoryRangeCount,
-                     pMemoryRanges);
-}
-
-extern const struct vk_sync_type tu_timeline_sync_type;
-
-static inline bool
-vk_sync_is_tu_timeline_sync(const struct vk_sync *sync)
-{
-   return sync->type == &tu_timeline_sync_type;
-}
-
-static struct tu_timeline_sync *
-to_tu_timeline_sync(struct vk_sync *sync)
-{
-   assert(sync->type == &tu_timeline_sync_type);
-   return container_of(sync, struct tu_timeline_sync, base);
-}
-
-static uint32_t
-tu_syncobj_from_vk_sync(struct vk_sync *sync)
-{
-   uint32_t syncobj = -1;
-   if (vk_sync_is_tu_timeline_sync(sync)) {
-      syncobj = to_tu_timeline_sync(sync)->syncobj;
-   } else if (vk_sync_type_is_drm_syncobj(sync->type)) {
-      syncobj = vk_sync_as_drm_syncobj(sync)->syncobj;
-   }
-
-   assert(syncobj != -1);
-
-   return syncobj;
-}
-
-static VkResult
-tu_timeline_sync_init(struct vk_device *vk_device,
-                      struct vk_sync *vk_sync,
-                      uint64_t initial_value)
-{
-   struct tu_device *device = container_of(vk_device, struct tu_device, vk);
-   struct tu_timeline_sync *sync = to_tu_timeline_sync(vk_sync);
-   uint32_t flags = 0;
-
-   assert(device->fd >= 0);
-
-   int err = drmSyncobjCreate(device->fd, flags, &sync->syncobj);
-
-   if (err < 0) {
-        return vk_error(device, VK_ERROR_DEVICE_LOST);
-   }
-
-   sync->state = initial_value ? TU_TIMELINE_SYNC_STATE_SIGNALED :
-                                    TU_TIMELINE_SYNC_STATE_RESET;
-
-   return VK_SUCCESS;
-}
-
-static void
-tu_timeline_sync_finish(struct vk_device *vk_device,
-                   struct vk_sync *vk_sync)
-{
-   struct tu_device *dev = container_of(vk_device, struct tu_device, vk);
-   struct tu_timeline_sync *sync = to_tu_timeline_sync(vk_sync);
-
-   assert(dev->fd >= 0);
-   ASSERTED int err = drmSyncobjDestroy(dev->fd, sync->syncobj);
-   assert(err == 0);
-}
-
-static VkResult
-tu_timeline_sync_reset(struct vk_device *vk_device,
-                  struct vk_sync *vk_sync)
-{
-   struct tu_device *dev = container_of(vk_device, struct tu_device, vk);
-   struct tu_timeline_sync *sync = to_tu_timeline_sync(vk_sync);
-
-   int err = drmSyncobjReset(dev->fd, &sync->syncobj, 1);
-   if (err) {
-      return vk_errorf(dev, VK_ERROR_UNKNOWN,
-                       "DRM_IOCTL_SYNCOBJ_RESET failed: %m");
-   } else {
-       sync->state = TU_TIMELINE_SYNC_STATE_RESET;
-   }
-
-   return VK_SUCCESS;
-}
-
-static VkResult
-drm_syncobj_wait(struct tu_device *device,
-                 uint32_t *handles, uint32_t count_handles,
-                 uint64_t timeout_nsec, bool wait_all)
-{
-   uint32_t syncobj_wait_flags = DRM_SYNCOBJ_WAIT_FLAGS_WAIT_FOR_SUBMIT;
-   if (wait_all) syncobj_wait_flags |= DRM_SYNCOBJ_WAIT_FLAGS_WAIT_ALL;
-
-   /* syncobj absolute timeouts are signed.  clamp OS_TIMEOUT_INFINITE down. */
-   timeout_nsec = MIN2(timeout_nsec, (uint64_t)INT64_MAX);
-
-   int err = drmSyncobjWait(device->fd, handles,
-                            count_handles, timeout_nsec,
-                            syncobj_wait_flags,
-                            NULL /* first_signaled */);
-   if (err && errno == ETIME) {
-      return VK_TIMEOUT;
-   } else if (err) {
-      return vk_errorf(device, VK_ERROR_UNKNOWN,
-                       "DRM_IOCTL_SYNCOBJ_WAIT failed: %m");
-   }
-
-   return VK_SUCCESS;
-}
-
-/* Based on anv_bo_sync_wait */
-static VkResult
-tu_timeline_sync_wait(struct vk_device *vk_device,
-                 uint32_t wait_count,
-                 const struct vk_sync_wait *waits,
-                 enum vk_sync_wait_flags wait_flags,
-                 uint64_t abs_timeout_ns)
-{
-   struct tu_device *dev = container_of(vk_device, struct tu_device, vk);
-   bool wait_all = !(wait_flags & VK_SYNC_WAIT_ANY);
-
-   uint32_t handles[wait_count];
-   uint32_t submit_count;
-   VkResult ret = VK_SUCCESS;
-   uint32_t pending = wait_count;
-   struct tu_timeline_sync *submitted_syncs[wait_count];
-
-   while (pending) {
-      pending = 0;
-      submit_count = 0;
-
-      for (unsigned i = 0; i < wait_count; ++i) {
-         struct tu_timeline_sync *sync = to_tu_timeline_sync(waits[i].sync);
-
-         if (sync->state == TU_TIMELINE_SYNC_STATE_RESET) {
-            assert(!(wait_flags & VK_SYNC_WAIT_PENDING));
-            pending++;
-         } else if (sync->state == TU_TIMELINE_SYNC_STATE_SIGNALED) {
-            if (wait_flags & VK_SYNC_WAIT_ANY)
-               return VK_SUCCESS;
-         } else if (sync->state == TU_TIMELINE_SYNC_STATE_SUBMITTED) {
-            if (!(wait_flags & VK_SYNC_WAIT_PENDING)) {
-               handles[submit_count] = sync->syncobj;
-               submitted_syncs[submit_count++] = sync;
-            }
-         }
-      }
-
-      if (submit_count > 0) {
-         do {
-            ret = drm_syncobj_wait(dev, handles, submit_count, abs_timeout_ns, wait_all);
-         } while (ret == VK_TIMEOUT && os_time_get_nano() < abs_timeout_ns);
-
-         if (ret == VK_SUCCESS) {
-            for (unsigned i = 0; i < submit_count; ++i) {
-               struct tu_timeline_sync *sync = submitted_syncs[i];
-               sync->state = TU_TIMELINE_SYNC_STATE_SIGNALED;
-            }
-         } else {
-            /* return error covering timeout */
-            return ret;
-         }
-      } else if (pending > 0) {
-         /* If we've hit this then someone decided to vkWaitForFences before
-          * they've actually submitted any of them to a queue.  This is a
-          * fairly pessimal case, so it's ok to lock here and use a standard
-          * pthreads condition variable.
-          */
-         pthread_mutex_lock(&dev->submit_mutex);
-
-         /* It's possible that some of the fences have changed state since the
-          * last time we checked.  Now that we have the lock, check for
-          * pending fences again and don't wait if it's changed.
-          */
-         uint32_t now_pending = 0;
-         for (uint32_t i = 0; i < wait_count; i++) {
-            struct tu_timeline_sync *sync = to_tu_timeline_sync(waits[i].sync);
-            if (sync->state == TU_TIMELINE_SYNC_STATE_RESET)
-               now_pending++;
-         }
-         assert(now_pending <= pending);
-
-         if (now_pending == pending) {
-            struct timespec abstime = {
-               .tv_sec = abs_timeout_ns / NSEC_PER_SEC,
-               .tv_nsec = abs_timeout_ns % NSEC_PER_SEC,
-            };
-
-            ASSERTED int ret;
-            ret = pthread_cond_timedwait(&dev->timeline_cond,
-                                         &dev->submit_mutex, &abstime);
-            assert(ret != EINVAL);
-            if (os_time_get_nano() >= abs_timeout_ns) {
-               pthread_mutex_unlock(&dev->submit_mutex);
-               return VK_TIMEOUT;
-            }
-         }
-
-         pthread_mutex_unlock(&dev->submit_mutex);
-      }
-   }
-
-   return ret;
 }
 
 static VkResult
@@ -1137,6 +871,41 @@ tu_queue_submit_locked(struct tu_queue *queue, struct tu_queue_submit *submit)
       .syncobj_stride = sizeof(struct drm_msm_gem_submit_syncobj),
    };
 
+   if (TU_DEBUG(RD)) {
+      struct tu_device *device = queue->device;
+      static uint32_t submit_idx;
+      char path[32];
+      sprintf(path, "%.5d.rd", p_atomic_inc_return(&submit_idx));
+      int rd = open(path, O_CLOEXEC | O_WRONLY | O_CREAT | O_TRUNC, 0777);
+      if (rd >= 0) {
+         rd_write_section(rd, RD_CHIP_ID, &device->physical_device->dev_id.chip_id, 4);
+
+         rd_write_section(rd, RD_CMD, "tu-dump", 8);
+
+         for (unsigned i = 0; i < device->bo_count; i++) {
+            struct drm_msm_gem_submit_bo bo = device->bo_list[i];
+            struct tu_bo *tu_bo = tu_device_lookup_bo(device, bo.handle);
+            uint64_t iova = bo.presumed;
+
+            uint32_t buf[3] = { iova, tu_bo->size, iova >> 32 };
+            rd_write_section(rd, RD_GPUADDR, buf, 12);
+            if (bo.flags & MSM_SUBMIT_BO_DUMP) {
+               msm_bo_map(device, tu_bo); /* note: this would need locking to be safe */
+               rd_write_section(rd, RD_BUFFER_CONTENTS, tu_bo->map, tu_bo->size);
+            }
+         }
+
+         for (unsigned i = 0; i < req.nr_cmds; i++) {
+            struct drm_msm_gem_submit_cmd *cmd = &submit->cmds[i];
+            uint64_t iova = device->bo_list[cmd->submit_idx].presumed + cmd->submit_offset;
+            uint32_t size = cmd->size >> 2;
+            uint32_t buf[3] = { iova, size, iova >> 32 };
+            rd_write_section(rd, RD_CMDSTREAM_ADDR, buf, 12);
+         }
+         close(rd);
+      }
+   }
+
    int ret = drmCommandWriteRead(queue->device->fd,
                                  DRM_MSM_GEM_SUBMIT,
                                  &req, sizeof(req));
@@ -1148,14 +917,20 @@ tu_queue_submit_locked(struct tu_queue *queue, struct tu_queue_submit *submit)
    if (ret)
       return vk_device_set_lost(&queue->device->vk, "submit failed: %m");
 
+   p_atomic_set(&queue->fence, req.fence);
+
+   uint64_t gpu_offset = 0;
 #if HAVE_PERFETTO
-   tu_perfetto_submit(queue->device, queue->device->submit_count);
+   struct tu_perfetto_clocks clocks =
+      tu_perfetto_submit(queue->device, queue->device->submit_count, NULL);
+   gpu_offset = clocks.gpu_ts_offset;
 #endif
 
    if (submit->u_trace_submission_data) {
       struct tu_u_trace_submission_data *submission_data =
          submit->u_trace_submission_data;
       submission_data->submission_id = queue->device->submit_count;
+      submission_data->gpu_ts_offset = gpu_offset;
       /* We have to allocate it here since it is different between drm/kgsl */
       submission_data->syncobj = (struct tu_u_trace_syncobj *)
          vk_alloc(&queue->device->vk.alloc, sizeof(struct tu_u_trace_syncobj),
@@ -1212,33 +987,10 @@ tu_queue_submit_locked(struct tu_queue *queue, struct tu_queue_submit *submit)
    return VK_SUCCESS;
 }
 
-static inline void
-get_abs_timeout(struct drm_msm_timespec *tv, uint64_t ns)
-{
-   struct timespec t;
-   clock_gettime(CLOCK_MONOTONIC, &t);
-   tv->tv_sec = t.tv_sec + ns / 1000000000;
-   tv->tv_nsec = t.tv_nsec + ns % 1000000000;
-}
-
 static VkResult
 msm_device_wait_u_trace(struct tu_device *dev, struct tu_u_trace_syncobj *syncobj)
 {
-   struct drm_msm_wait_fence req = {
-      .fence = syncobj->fence,
-      .queueid = syncobj->msm_queue_id,
-   };
-   int ret;
-
-   get_abs_timeout(&req.timeout, 1000000000);
-
-   ret = drmCommandWrite(dev->fd, DRM_MSM_WAIT_FENCE, &req, sizeof(req));
-   if (ret && (ret != -ETIMEDOUT)) {
-      fprintf(stderr, "wait-fence failed! %d (%s)", ret, strerror(errno));
-      return VK_TIMEOUT;
-   }
-
-   return VK_SUCCESS;
+   return tu_wait_fence(dev, syncobj->msm_queue_id, syncobj->fence, 1000000000);
 }
 
 static VkResult
@@ -1276,6 +1028,7 @@ msm_queue_submit(struct tu_queue *queue, struct vk_queue_submit *submit)
       in_syncobjs[nr_in_syncobjs++] = (struct drm_msm_gem_submit_syncobj) {
          .handle = tu_syncobj_from_vk_sync(sync),
          .flags = 0,
+         .point = submit->waits[i].wait_value,
       };
    }
 
@@ -1285,6 +1038,7 @@ msm_queue_submit(struct tu_queue *queue, struct vk_queue_submit *submit)
       out_syncobjs[nr_out_syncobjs++] = (struct drm_msm_gem_submit_syncobj) {
          .handle = tu_syncobj_from_vk_sync(sync),
          .flags = 0,
+         .point = submit->signals[i].signal_value,
       };
    }
 
@@ -1304,6 +1058,8 @@ msm_queue_submit(struct tu_queue *queue, struct vk_queue_submit *submit)
 static const struct tu_knl msm_knl_funcs = {
       .name = "msm",
 
+      .device_init = msm_device_init,
+      .device_finish = msm_device_finish,
       .device_get_gpu_timestamp = msm_device_get_gpu_timestamp,
       .device_get_suspend_count = msm_device_get_suspend_count,
       .device_check_status = msm_device_check_status,
@@ -1311,25 +1067,12 @@ static const struct tu_knl msm_knl_funcs = {
       .submitqueue_close = msm_submitqueue_close,
       .bo_init = msm_bo_init,
       .bo_init_dmabuf = msm_bo_init_dmabuf,
-      .bo_export_dmabuf = msm_bo_export_dmabuf,
+      .bo_export_dmabuf = tu_drm_export_dmabuf,
       .bo_map = msm_bo_map,
       .bo_allow_dump = msm_bo_allow_dump,
-      .bo_finish = msm_bo_finish,
+      .bo_finish = tu_drm_bo_finish,
       .device_wait_u_trace = msm_device_wait_u_trace,
       .queue_submit = msm_queue_submit,
-};
-
-const struct vk_sync_type tu_timeline_sync_type = {
-   .size = sizeof(struct tu_timeline_sync),
-   .features = (enum vk_sync_features)(
-      VK_SYNC_FEATURE_BINARY | VK_SYNC_FEATURE_GPU_WAIT |
-      VK_SYNC_FEATURE_GPU_MULTI_WAIT | VK_SYNC_FEATURE_CPU_WAIT |
-      VK_SYNC_FEATURE_CPU_RESET | VK_SYNC_FEATURE_WAIT_ANY |
-      VK_SYNC_FEATURE_WAIT_PENDING),
-   .init = tu_timeline_sync_init,
-   .finish = tu_timeline_sync_finish,
-   .reset = tu_timeline_sync_reset,
-   .wait_many = tu_timeline_sync_wait,
 };
 
 VkResult
@@ -1338,7 +1081,6 @@ tu_knl_drm_msm_load(struct tu_instance *instance,
                     struct tu_physical_device **out)
 {
    VkResult result = VK_SUCCESS;
-   int ret;
 
    /* Version 1.6 added SYNCOBJ support. */
    const int min_version_major = 1;
@@ -1375,7 +1117,7 @@ tu_knl_drm_msm_load(struct tu_instance *instance,
       goto fail;
    }
 
-   if (tu_drm_get_param(device, MSM_PARAM_CHIP_ID, &device->dev_id.chip_id)) {
+   if (tu_drm_get_param(fd, MSM_PARAM_CHIP_ID, &device->dev_id.chip_id)) {
       result = vk_startup_errorf(instance, VK_ERROR_INITIALIZATION_FAILED,
                                  "could not get CHIP ID");
       goto fail;
@@ -1394,38 +1136,13 @@ tu_knl_drm_msm_load(struct tu_instance *instance,
       goto fail;
    }
 
-   /*
-    * device->has_set_iova = !tu_drm_get_va_prop(device, &device->va_start,
-    *                                            &device->va_size);
-    *
-    * If BO is freed while kernel considers it busy, our VMA state gets
-    * desynchronized from kernel's VMA state, because kernel waits
-    * until BO stops being busy. And whether BO is busy decided at
-    * submission granularity.
-    *
-    * Disable this capability until solution is found.
-    */
-   device->has_set_iova = false;
+   device->has_set_iova = !tu_drm_get_va_prop(device, &device->va_start,
+                                              &device->va_size);
 
    /* Even if kernel is new enough, the GPU itself may not support it. */
    device->has_cached_coherent_memory =
       (device->msm_minor_version >= 8) &&
       tu_drm_is_memory_type_supported(fd, MSM_BO_CACHED_COHERENT);
-#ifdef _SC_LEVEL1_DCACHE_LINESIZE
-   if (DETECT_ARCH_AARCH64 || DETECT_ARCH_X86 || DETECT_ARCH_X86_64) {
-      long l1_dcache = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
-      device->has_cached_non_coherent_memory = l1_dcache > 0;
-      device->level1_dcache_size = l1_dcache;
-   }
-#endif
-
-
-   ret = tu_drm_get_param(device, MSM_PARAM_FAULTS, &device->fault_count);
-   if (ret != 0) {
-      result = vk_startup_errorf(instance, VK_ERROR_INITIALIZATION_FAILED,
-                                 "Failed to get initial fault count: %d", ret);
-      goto fail;
-   }
 
    device->submitqueue_priority_count = tu_drm_get_priorities(device);
 
@@ -1438,7 +1155,7 @@ tu_knl_drm_msm_load(struct tu_instance *instance,
    device->sync_types[1] = &device->timeline_type.sync;
    device->sync_types[2] = NULL;
 
-   device->heap.size = tu_get_system_heap_size();
+   device->heap.size = tu_get_system_heap_size(device);
    device->heap.used = 0u;
    device->heap.flags = VK_MEMORY_HEAP_DEVICE_LOCAL_BIT;
 

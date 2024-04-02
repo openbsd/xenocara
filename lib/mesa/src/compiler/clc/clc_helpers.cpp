@@ -23,6 +23,7 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
+#include <cstdlib>
 #include <filesystem>
 #include <sstream>
 #include <mutex>
@@ -39,6 +40,7 @@
 #include <llvm-c/Target.h>
 #include <LLVMSPIRVLib/LLVMSPIRVLib.h>
 
+#include <clang/Config/config.h>
 #include <clang/Driver/Driver.h>
 #include <clang/CodeGen/CodeGenAction.h>
 #include <clang/Lex/PreprocessorOptions.h>
@@ -55,6 +57,10 @@
 #include "glsl_types.h"
 
 #include "spirv.h"
+
+#if DETECT_OS_UNIX
+#include <dlfcn.h>
+#endif
 
 #ifdef USE_STATIC_OPENCL_C_H
 #if LLVM_VERSION_MAJOR < 15
@@ -76,6 +82,7 @@ using ::llvm::Function;
 using ::llvm::LLVMContext;
 using ::llvm::Module;
 using ::llvm::raw_string_ostream;
+using ::clang::driver::Driver;
 
 static void
 llvm_log_handler(const ::llvm::DiagnosticInfo &di, void *data) {
@@ -743,6 +750,7 @@ clc_free_kernels_info(const struct clc_kernel_info *kernels,
             free((void *)kernels[i].args[j].name);
             free((void *)kernels[i].args[j].type_name);
          }
+         free((void *)kernels[i].args);
       }
       free((void *)kernels[i].name);
    }
@@ -755,6 +763,9 @@ clc_compile_to_llvm_module(LLVMContext &llvm_ctx,
                            const struct clc_compile_args *args,
                            const struct clc_logger *logger)
 {
+   static_assert(std::has_unique_object_representations<clc_optional_features>(),
+                 "no padding allowed inside clc_optional_features");
+
    std::string diag_log_str;
    raw_string_ostream diag_log_stream { diag_log_str };
 
@@ -779,7 +790,7 @@ clc_compile_to_llvm_module(LLVMContext &llvm_ctx,
 #else
       "-finclude-default-header",
 #endif
-#if LLVM_VERSION_MAJOR >= 15
+#if LLVM_VERSION_MAJOR >= 15 && LLVM_VERSION_MAJOR < 17
       "-no-opaque-pointers",
 #endif
       // Add a default CL compiler version. Clang will pick the last one specified
@@ -795,6 +806,16 @@ clc_compile_to_llvm_module(LLVMContext &llvm_ctx,
       "-U__SPIR__",
       "-U__SPIRV__",
    };
+
+   // llvm handles these extensions differently so we have to pass this flag instead to expose the clc functions
+
+   clang_opts.push_back("-Dcl_khr_expect_assume=1");
+   if (args->features.integer_dot_product) {
+      clang_opts.push_back("-Dcl_khr_integer_dot_product=1");
+      clang_opts.push_back("-D__opencl_c_integer_dot_product_input_4x8bit_packed=1");
+      clang_opts.push_back("-D__opencl_c_integer_dot_product_input_4x8bit=1");
+   }
+
    // We assume there's appropriate defines for __OPENCL_VERSION__ and __IMAGE_SUPPORT__
    // being provided by the caller here.
    clang_opts.insert(clang_opts.end(), args->args, args->args + args->num_args);
@@ -860,12 +881,24 @@ clc_compile_to_llvm_module(LLVMContext &llvm_ctx,
 #endif
    }
 #else
+
+   Dl_info info;
+   if (dladdr((void *)clang::CompilerInvocation::CreateFromArgs, &info) == 0) {
+      clc_error(logger, "Couldn't find libclang path.\n");
+      return {};
+   }
+
+   char *clang_path = realpath(info.dli_fname, NULL);
+   if (clang_path == nullptr) {
+      clc_error(logger, "Couldn't find libclang path.\n");
+      return {};
+   }
+
    // GetResourcePath is a way to retrive the actual libclang resource dir based on a given binary
-   // or library. The path doesn't even need to exist, we just have to put something in there,
-   // because we might have linked clang statically.
-   auto libclang_path = fs::path(LLVM_LIB_DIR) / "libclang.so";
+   // or library.
    auto clang_res_path =
-      fs::path(clang::driver::Driver::GetResourcesPath(libclang_path.string())) / "include";
+      fs::path(Driver::GetResourcesPath(std::string(clang_path), CLANG_RESOURCE_DIR)) / "include";
+   free(clang_path);
 
    c->getHeaderSearchOpts().UseBuiltinIncludes = true;
    c->getHeaderSearchOpts().UseStandardSystemIncludes = true;
@@ -915,6 +948,10 @@ clc_compile_to_llvm_module(LLVMContext &llvm_ctx,
       c->getTargetOpts().OpenCLExtensionsAsWritten.push_back("+cl_intel_subgroups");
    }
    if (args->features.subgroups) {
+      c->getTargetOpts().OpenCLExtensionsAsWritten.push_back("+__opencl_c_subgroups");
+   }
+   if (args->features.subgroups_ifp) {
+      assert(args->features.subgroups);
       c->getTargetOpts().OpenCLExtensionsAsWritten.push_back("+cl_khr_subgroups");
    }
 #endif
@@ -1100,7 +1137,7 @@ public:
          return;
 
       std::ostringstream message;
-      message << "(file=" << src
+      message << "(file=" << (src ? src : "input")
               << ",line=" << pos.line
               << ",column=" << pos.column
               << ",index=" << pos.index
@@ -1150,13 +1187,22 @@ clc_link_spirv_binaries(const struct clc_linker_args *args,
 
 bool
 clc_validate_spirv(const struct clc_binary *spirv,
-                   const struct clc_logger *logger)
+                   const struct clc_logger *logger,
+                   const struct clc_validator_options *options)
 {
    SPIRVMessageConsumer msgconsumer(logger);
    spvtools::SpirvTools tools(spirv_target);
    tools.SetMessageConsumer(msgconsumer);
+   spvtools::ValidatorOptions spirv_options;
    const uint32_t *data = static_cast<const uint32_t *>(spirv->data);
-   return tools.Validate(data, spirv->size / 4);
+
+   if (options) {
+      spirv_options.SetUniversalLimit(
+         spv_validator_limit_max_function_args,
+         options->limit_max_function_arg);
+   }
+
+   return tools.Validate(data, spirv->size / 4, spirv_options);
 }
 
 int

@@ -124,8 +124,8 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(nir_serialize_all_test, alu_single_value_src_swizzle)
 {
-   nir_ssa_def *zero = nir_imm_zero(b, GetParam(), 32);
-   nir_ssa_def *fmax = nir_fmax(b, zero, zero);
+   nir_def *zero = nir_imm_zero(b, GetParam(), 32);
+   nir_def *fmax = nir_fmax(b, zero, zero);
 
    nir_alu_instr *fmax_alu = nir_instr_as_alu(fmax->parent_instr);
 
@@ -142,15 +142,15 @@ TEST_P(nir_serialize_all_test, alu_single_value_src_swizzle)
 
 TEST_P(nir_serialize_all_test, alu_vec)
 {
-   nir_ssa_def *undef = nir_ssa_undef(b, GetParam(), 32);
-   nir_ssa_def *undefs[] = {
+   nir_def *undef = nir_undef(b, GetParam(), 32);
+   nir_def *undefs[] = {
       undef, undef, undef, undef,
       undef, undef, undef, undef,
       undef, undef, undef, undef,
       undef, undef, undef, undef,
    };
 
-   nir_ssa_def *vec = nir_vec(b, undefs, GetParam());
+   nir_def *vec = nir_vec(b, undefs, GetParam());
    nir_alu_instr *vec_alu = nir_instr_as_alu(vec->parent_instr);
    for (int i = 0; i < GetParam(); i++)
       vec_alu->src[i].swizzle[0] = (GetParam() - 1) - i;
@@ -164,12 +164,11 @@ TEST_P(nir_serialize_all_test, alu_vec)
 
 TEST_P(nir_serialize_all_test, alu_two_components_full_swizzle)
 {
-   nir_ssa_def *undef = nir_ssa_undef(b, 2, 32);
-   nir_ssa_def *fma = nir_ffma(b, undef, undef, undef);
+   nir_def *undef = nir_undef(b, 2, 32);
+   nir_def *fma = nir_ffma(b, undef, undef, undef);
    nir_alu_instr *fma_alu = nir_instr_as_alu(fma->parent_instr);
 
    fma->num_components = GetParam();
-   fma_alu->dest.write_mask = (1 << GetParam()) - 1;
 
    memset(fma_alu->src[0].swizzle, 1, GetParam());
    memset(fma_alu->src[1].swizzle, 1, GetParam());
@@ -184,93 +183,10 @@ TEST_P(nir_serialize_all_test, alu_two_components_full_swizzle)
    ASSERT_SWIZZLE_EQ(fma_alu, fma_alu_dup, GetParam(), 2);
 }
 
-TEST_P(nir_serialize_all_but_one_test, alu_two_components_reg_two_swizzle)
-{
-   nir_ssa_def *undef = nir_ssa_undef(b, 2, 32);
-   nir_ssa_def *fma = nir_ffma(b, undef, undef, undef);
-   nir_alu_instr *fma_alu = nir_instr_as_alu(fma->parent_instr);
-
-   memset(fma_alu->src[0].swizzle, 1, GetParam());
-   memset(fma_alu->src[1].swizzle, 1, GetParam());
-   memset(fma_alu->src[2].swizzle, 1, GetParam());
-
-   ASSERT_TRUE(nir_convert_from_ssa(b->shader, false));
-
-   fma_alu = get_last_alu(b->shader);
-   ASSERT_FALSE(fma_alu->dest.dest.is_ssa);
-   fma_alu->dest.dest.reg.reg->num_components = GetParam();
-   fma_alu->dest.write_mask = 1 | (1 << (GetParam() - 1));
-
-   serialize();
-
-   nir_alu_instr *fma_alu_dup = get_last_alu(dup);
-
-   ASSERT_EQ(fma_alu->src[0].swizzle[0], fma_alu_dup->src[0].swizzle[0]);
-   ASSERT_EQ(fma_alu->src[0].swizzle[GetParam() - 1], fma_alu_dup->src[0].swizzle[GetParam() - 1]);
-   ASSERT_EQ(fma_alu->src[1].swizzle[0], fma_alu_dup->src[1].swizzle[0]);
-   ASSERT_EQ(fma_alu->src[1].swizzle[GetParam() - 1], fma_alu_dup->src[1].swizzle[GetParam() - 1]);
-   ASSERT_EQ(fma_alu->src[2].swizzle[0], fma_alu_dup->src[2].swizzle[0]);
-   ASSERT_EQ(fma_alu->src[2].swizzle[GetParam() - 1], fma_alu_dup->src[2].swizzle[GetParam() - 1]);
-}
-
-TEST_P(nir_serialize_all_but_one_test, alu_full_width_reg_two_swizzle)
-{
-   nir_ssa_def *undef = nir_ssa_undef(b, GetParam(), 32);
-   nir_ssa_def *fma = nir_ffma(b, undef, undef, undef);
-   nir_alu_instr *fma_alu = nir_instr_as_alu(fma->parent_instr);
-
-   memset(fma_alu->src[0].swizzle, GetParam() - 1, GetParam());
-   memset(fma_alu->src[1].swizzle, GetParam() - 1, GetParam());
-   memset(fma_alu->src[2].swizzle, GetParam() - 1, GetParam());
-
-   ASSERT_TRUE(nir_convert_from_ssa(b->shader, false));
-
-   fma_alu = get_last_alu(b->shader);
-   ASSERT_FALSE(fma_alu->dest.dest.is_ssa);
-   fma_alu->dest.write_mask = 1 | (1 << (GetParam() - 1));
-
-   serialize();
-
-   nir_alu_instr *fma_alu_dup = get_last_alu(dup);
-
-   ASSERT_EQ(fma_alu->src[0].swizzle[0], fma_alu_dup->src[0].swizzle[0]);
-   ASSERT_EQ(fma_alu->src[0].swizzle[GetParam() - 1], fma_alu_dup->src[0].swizzle[GetParam() - 1]);
-   ASSERT_EQ(fma_alu->src[1].swizzle[0], fma_alu_dup->src[1].swizzle[0]);
-   ASSERT_EQ(fma_alu->src[1].swizzle[GetParam() - 1], fma_alu_dup->src[1].swizzle[GetParam() - 1]);
-   ASSERT_EQ(fma_alu->src[2].swizzle[0], fma_alu_dup->src[2].swizzle[0]);
-   ASSERT_EQ(fma_alu->src[2].swizzle[GetParam() - 1], fma_alu_dup->src[2].swizzle[GetParam() - 1]);
-}
-
-TEST_P(nir_serialize_all_but_one_test, alu_two_component_reg_full_src)
-{
-   nir_ssa_def *undef = nir_ssa_undef(b, GetParam(), 32);
-   nir_ssa_def *fma = nir_ffma(b, undef, undef, undef);
-   nir_alu_instr *fma_alu = nir_instr_as_alu(fma->parent_instr);
-
-   memset(fma_alu->src[0].swizzle, 1, GetParam());
-   memset(fma_alu->src[1].swizzle, 1, GetParam());
-   memset(fma_alu->src[2].swizzle, 1, GetParam());
-
-   ASSERT_TRUE(nir_convert_from_ssa(b->shader, false));
-
-   fma_alu = get_last_alu(b->shader);
-   ASSERT_FALSE(fma_alu->dest.dest.is_ssa);
-   fma_alu->dest.dest.reg.reg->num_components = 2;
-   fma_alu->dest.write_mask = 0x3;
-
-   serialize();
-
-   nir_alu_instr *fma_alu_dup = get_last_alu(dup);
-
-   ASSERT_SWIZZLE_EQ(fma_alu, fma_alu_dup, 2, 0);
-   ASSERT_SWIZZLE_EQ(fma_alu, fma_alu_dup, 2, 1);
-   ASSERT_SWIZZLE_EQ(fma_alu, fma_alu_dup, 2, 2);
-}
-
 TEST_P(nir_serialize_all_but_one_test, single_channel)
 {
-   nir_ssa_def *zero = nir_ssa_undef(b, GetParam(), 32);
-   nir_ssa_def *vec = nir_channel(b, zero, GetParam() - 1);
+   nir_def *zero = nir_undef(b, GetParam(), 32);
+   nir_def *vec = nir_channel(b, zero, GetParam() - 1);
    nir_alu_instr *vec_alu = nir_instr_as_alu(vec->parent_instr);
 
    serialize();

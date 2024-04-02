@@ -13,9 +13,9 @@ $ make headers_install INSTALL_HDR_PATH=/path/to/install
 
 The last update was done at the following kernel commit :
 
-commit 7f7a942c0a338c4a2a7b359bdb2b68e9896122ec
-Merge: 0a20a3ea4259 ddcb8fa6514f
+commit d9aa1da9a8cfb0387eb5703c15bd1f54421460ac
+Merge: 7c9aa0f7463e 28e671114fb0
 Author: Dave Airlie <airlied@redhat.com>
-Date:   Thu Oct 27 14:44:02 2022 +1000
+Date:   Mon Aug 7 13:49:24 2023 +1000
 
-    Merge tag 'drm-next-20221025' of git://linuxtv.org/pinchartl/media into drm-next
+    Merge tag 'drm-intel-gt-next-2023-08-04' of git://anongit.freedesktop.org/drm/drm-intel into drm-next

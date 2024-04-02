@@ -91,6 +91,11 @@ extern uint64_t intel_debug;
 #define DEBUG_CAPTURE_ALL         (1ull << 43)
 #define DEBUG_PERF_SYMBOL_NAMES   (1ull << 44)
 #define DEBUG_SWSB_STALL          (1ull << 45)
+#define DEBUG_HEAPS               (1ull << 46)
+#define DEBUG_ISL                 (1ull << 47)
+#define DEBUG_SPARSE              (1ull << 48)
+#define DEBUG_DRAW_BKP            (1ull << 49)
+#define DEBUG_BATCH_STATS         (1ull << 50)
 
 #define DEBUG_ANY                 (~0ull)
 
@@ -103,6 +108,8 @@ extern uint64_t intel_debug;
    DEBUG_SPILL_VEC4 | DEBUG_NO_COMPACTION | DEBUG_DO32 | DEBUG_SOFT64)
 
 extern uint64_t intel_simd;
+extern uint32_t intel_debug_bkp_before_draw_count;
+extern uint32_t intel_debug_bkp_after_draw_count;
 
 #define INTEL_SIMD(type, size)        (!!(intel_simd & (DEBUG_ ## type ## _SIMD ## size)))
 
@@ -196,6 +203,8 @@ extern uint32_t intel_debug_write_identifiers(void *output,
 extern void *intel_debug_get_identifier_block(void *buffer,
                                               uint32_t buffer_size,
                                               enum intel_debug_block_type type);
+
+bool intel_debug_batch_in_range(uint64_t frame_id);
 
 #ifdef __cplusplus
 }

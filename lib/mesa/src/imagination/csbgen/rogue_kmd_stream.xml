@@ -1,0 +1,118 @@
+<?xml version="1.0" ?>
+
+<!--
+Copyright © 2022 Imagination Technologies Ltd.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice (including the next
+paragraph) shall be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
+<!--
+These definitions are based on the ones for the firmware streams found
+in the fwif header (pvr_rogue_fwif_stream.h).
+
+TODO: Once the kernel driver is merged upstream, check to see if this comment
+needs updating.
+-->
+
+<!--
+This file is structured as follows:
+  - defines
+  - enums
+  - structs
+
+Elements in each section are ordered alphabetically.
+-->
+
+<!--
+TODO: Currently the sizes for fields are in bits. Those should be changed to
+bytes. Might want to do this in conjunction with csbgen being changed from
+dword to bytes granular.
+-->
+<csbgen name="ROGUE" prefix="KMD_STREAM">
+
+  <define name="EXTHDR_DATA_MASK" value="0xFFFFFFF"/>
+
+  <!--
+    Note: this does not depend on
+    \ref pvr_device_features.has_eight_output_registers .
+    It's always 8 catering for the largest size.
+  -->
+  <!--
+    TODO: Instead of defining this, see if we can use something like anvil's
+    "group" where a field is repeated n times. That would allow us to get the
+    total length of the whole group instead of the driver calculating it by
+    multiplying this with the size of the usc reg.
+  -->
+  <define name="USC_CLEAR_REGISTER_COUNT" value="8"/>
+
+  <enum name="EXTHDR_TYPE_COMPUTE">
+    <value name="0" value="0"/>
+  </enum>
+
+  <enum name="EXTHDR_TYPE_FRAG">
+    <value name="0" value="0"/>
+  </enum>
+
+  <enum name="EXTHDR_TYPE_GEOM">
+    <value name="0" value="0"/>
+  </enum>
+
+  <enum name="PIXEL_PHANTOM_STATE">
+    <value name="DISABLED" value="0x0"/>
+    <value name="ENABLED"  value="0xF"/>
+  </enum>
+
+  <struct name="EXTHDR_COMPUTE0" length="1">
+    <field name="type" start="29" end="31" type="EXTHDR_TYPE_COMPUTE" default="0"/>
+    <field name="continuation" start="28" end="28" type="bool"/>
+    <field name="has_brn49927" start="0" end="0" type="bool"/>
+  </struct>
+
+  <struct name="EXTHDR_FRAG0" length="1">
+    <field name="type" start="29" end="31" type="EXTHDR_TYPE_FRAG" default="0"/>
+    <field name="continuation" start="28" end="28" type="bool"/>
+    <field name="has_brn49927" start="1" end="1" type="bool"/>
+    <field name="has_brn47217" start="0" end="0" type="bool"/>
+  </struct>
+
+  <struct name="EXTHDR_GEOM0" length="1">
+    <field name="type" start="29" end="31" type="EXTHDR_TYPE_GEOM" default="0"/>
+    <field name="continuation" start="28" end="28" type="bool"/>
+    <field name="has_brn49927" start="0" end="0" type="bool"/>
+  </struct>
+
+  <struct name="HDR" length="2">
+    <field name="length" start="0" end="31" type="uint"/>
+  </struct>
+
+  <!--
+    Note: if there's an attempt to disable all phantoms, they will all be set
+    to their default states (i.e. all enabled).
+  -->
+  <struct name="PIXEL_PHANTOM" length="1">
+    <field name="phantom_1" start="4" end="7" type="PIXEL_PHANTOM_STATE"/>
+    <field name="phantom_0" start="0" end="3" type="PIXEL_PHANTOM_STATE"/>
+  </struct>
+
+  <struct name="VIEW_IDX" length="1">
+    <field name="idx" start="0" end="7" type="uint"/>
+  </struct>
+
+</csbgen>

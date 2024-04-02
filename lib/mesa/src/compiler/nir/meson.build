@@ -107,22 +107,23 @@ files_libnir = files(
   'nir_control_flow.c',
   'nir_control_flow.h',
   'nir_control_flow_private.h',
-  'nir_convert_ycbcr.c',
   'nir_deref.c',
   'nir_deref.h',
   'nir_divergence_analysis.c',
   'nir_dominance.c',
   'nir_format_convert.h',
   'nir_from_ssa.c',
+  'nir_functions.c',
   'nir_gather_info.c',
-  'nir_gather_ssa_types.c',
+  'nir_gather_types.c',
   'nir_gather_xfb_info.c',
   'nir_group_loads.c',
   'nir_gs_count_vertices.c',
-  'nir_inline_functions.c',
   'nir_inline_uniforms.c',
   'nir_instr_set.c',
   'nir_instr_set.h',
+  'nir_legacy.c',
+  'nir_legacy.h',
   'nir_linking_helpers.c',
   'nir_liveness.c',
   'nir_loop_analyze.c',
@@ -157,6 +158,7 @@ files_libnir = files(
   'nir_lower_flrp.c',
   'nir_lower_fp16_conv.c',
   'nir_lower_fragcoord_wtrans.c',
+  'nir_lower_frag_coord_to_pixel_coord.c',
   'nir_lower_fragcolor.c',
   'nir_lower_frexp.c',
   'nir_lower_global_vars_to_local.c',
@@ -167,6 +169,7 @@ files_libnir = files(
   'nir_lower_locals_to_regs.c',
   'nir_lower_idiv.c',
   'nir_lower_image.c',
+  'nir_lower_image_atomics_to_global.c',
   'nir_lower_indirect_derefs.c',
   'nir_lower_input_attachments.c',
   'nir_lower_int64.c',
@@ -194,9 +197,10 @@ files_libnir = files(
   'nir_lower_point_smooth.c',
   'nir_lower_poly_line_smooth.c',
   'nir_lower_printf.c',
-  'nir_lower_regs_to_ssa.c',
+  'nir_lower_reg_intrinsics_to_ssa.c',
   'nir_lower_readonly_images_to_tex.c',
   'nir_lower_returns.c',
+  'nir_lower_robust_access.c',
   'nir_lower_samplers.c',
   'nir_lower_scratch.c',
   'nir_lower_shader_calls.c',
@@ -205,16 +209,16 @@ files_libnir = files(
   'nir_lower_subgroups.c',
   'nir_lower_system_values.c',
   'nir_lower_task_shader.c',
+  'nir_lower_tess_coord_z.c',
   'nir_lower_tex_shadow.c',
   'nir_lower_tex.c',
   'nir_lower_texcoord_replace.c',
   'nir_lower_texcoord_replace_late.c',
-  'nir_lower_to_source_mods.c',
   'nir_lower_two_sided_color.c',
   'nir_lower_undef_to_zero.c',
   'nir_lower_vars_to_ssa.c',
   'nir_lower_var_copies.c',
-  'nir_lower_vec_to_movs.c',
+  'nir_lower_vec_to_regs.c',
   'nir_lower_vec3_to_vec4.c',
   'nir_lower_viewport_transform.c',
   'nir_lower_wpos_center.c',
@@ -258,8 +262,10 @@ files_libnir = files(
   'nir_opt_phi_precision.c',
   'nir_opt_preamble.c',
   'nir_opt_ray_queries.c',
+  'nir_opt_reassociate_bfi.c',
   'nir_opt_rematerialize_compares.c',
   'nir_opt_remove_phis.c',
+  'nir_opt_reuse_constants.c',
   'nir_opt_shrink_stores.c',
   'nir_opt_shrink_vectors.c',
   'nir_opt_sink.c',
@@ -276,6 +282,7 @@ files_libnir = files(
   'nir_range_analysis.c',
   'nir_range_analysis.h',
   'nir_remove_dead_variables.c',
+  'nir_remove_tex_shadow.c',
   'nir_repair_ssa.c',
   'nir_scale_fdiv.c',
   'nir_schedule.c',
@@ -291,91 +298,23 @@ files_libnir = files(
   'nir_split_vars.c',
   'nir_sweep.c',
   'nir_to_lcssa.c',
+  'nir_trivialize_registers.c',
   'nir_validate.c',
   'nir_vla.h',
-  'nir_vulkan.h',
   'nir_worklist.c',
   'nir_worklist.h',
   'nir_xfb_info.h',
-  '../spirv/GLSL.ext.AMD.h',
-  '../spirv/GLSL.std.450.h',
-  '../spirv/gl_spirv.c',
-  '../spirv/nir_load_libclc.c',
-  '../spirv/nir_lower_libclc.c',
-  '../spirv/nir_spirv.h',
-  '../spirv/OpenCL.std.h',
-  '../spirv/spirv.h',
-  '../spirv/spirv_info.h',
-  '../spirv/spirv_to_nir.c',
-  '../spirv/vtn_alu.c',
-  '../spirv/vtn_amd.c',
-  '../spirv/vtn_cfg.c',
-  '../spirv/vtn_glsl450.c',
-  '../spirv/vtn_opencl.c',
-  '../spirv/vtn_private.h',
-  '../spirv/vtn_subgroup.c',
-  '../spirv/vtn_variables.c',
 )
-
-_libnir_args = []
-if dep_clc.found()
-  _basedir = dep_clc.get_variable(pkgconfig : 'libexecdir')
-
-  _static_libclc = get_option('static-libclc')
-  if _static_libclc.length() > 0
-    if _static_libclc.contains('all')
-      _static_libclc = ['spirv', 'spirv64']
-    endif
-
-    prog_zstd = find_program('zstd', required : false)
-    _zstd_static_libclc = dep_zstd.found() and prog_zstd.found()
-    if _zstd_static_libclc
-      _libnir_args += '-DHAVE_STATIC_LIBCLC_ZSTD'
-    endif
-
-    foreach s : _static_libclc
-      _libnir_args += '-DHAVE_STATIC_LIBCLC_@0@'.format(s.to_upper())
-      f = '@0@-mesa3d-.spv'.format(s)
-      _libclc_file = _basedir / f
-
-      if _zstd_static_libclc
-        _libclc_file = custom_target(
-          '@0@.zstd'.format(f),
-          command : [prog_zstd, '-f', '@INPUT@', '-o', '@OUTPUT@'],
-          input : [_libclc_file],
-          output : '@0@.zstd'.format(f),
-        )
-      endif
-
-      files_libnir += custom_target(
-        '@0@.h'.format(f),
-        command : [
-          prog_python, files_xxd, '-b', '@INPUT@', '@OUTPUT@',
-          '-n', 'libclc_@0@_mesa3d_spv'.format(s),
-        ],
-        input : [_libclc_file],
-        output : '@0@.h'.format(f),
-        depend_files : files_xxd,
-      )
-    endforeach
-  else
-    _libnir_args += ['-DDYNAMIC_LIBCLC_PATH="@0@/"'.format(_basedir)]
-    if not cc.has_function('mmap')
-      error('mmap required for dynamic libCLC loading')
-    endif
-  endif
-endif
 
 _libnir = static_library(
   'nir',
-  [files_libnir, spirv_info_c, nir_opt_algebraic_c, nir_opcodes_c,
+  [files_libnir, nir_opt_algebraic_c, nir_opcodes_c,
    nir_opcodes_h, nir_constant_expressions_c, nir_builder_opcodes_h,
-   vtn_gather_types_c, nir_intrinsics_c, nir_intrinsics_h, nir_intrinsics_indices_h, vtn_generator_ids_h],
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_compiler, include_directories('../spirv')],
-  c_args : [c_msvc_compat_args, no_override_init_args, _libnir_args],
+   nir_intrinsics_c, nir_intrinsics_h, nir_intrinsics_indices_h],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+  c_args : [c_msvc_compat_args, no_override_init_args],
   gnu_symbol_visibility : 'hidden',
-  dependencies : dep_valgrind,
-  link_with : libcompiler,
+  dependencies : [idep_compiler, dep_valgrind],
   build_by_default : false,
 )
 
@@ -383,13 +322,14 @@ inc_nir = include_directories('.')
 
 # Headers-only dependency
 idep_nir_headers = declare_dependency(
-  sources : [nir_opcodes_h, nir_builder_opcodes_h, nir_intrinsics_h, nir_intrinsics_indices_h],
-  include_directories : inc_nir,
+  sources : [nir_opcodes_h, nir_builder_opcodes_h, nir_intrinsics_h, nir_intrinsics_indices_h,
+             ir_expression_operation_h, builtin_types_h, builtin_types_cpp_h],
+  include_directories : [inc_nir, inc_compiler],
 )
 
 # Also link with nir
 idep_nir = declare_dependency(
-  dependencies : [idep_nir_headers, idep_mesautil],
+  dependencies : [idep_nir_headers, idep_mesautil, idep_compiler],
   link_with : _libnir,
 )
 
@@ -410,16 +350,17 @@ if with_tests
         'tests/comparison_pre_tests.cpp',
         'tests/control_flow_tests.cpp',
         'tests/core_tests.cpp',
+        'tests/dce_tests.cpp',
+        'tests/load_store_vectorizer_tests.cpp',
         'tests/loop_analyze_tests.cpp',
         'tests/loop_unroll_tests.cpp',
         'tests/lower_alu_width_tests.cpp',
-        'tests/lower_returns_tests.cpp',
         'tests/mod_analysis_tests.cpp',
         'tests/negative_equal_tests.cpp',
         'tests/opt_if_tests.cpp',
         'tests/opt_shrink_vectors_tests.cpp',
         'tests/serialize_tests.cpp',
-        'tests/ssa_def_bits_used_tests.cpp',
+        'tests/range_analysis_tests.cpp',
         'tests/vars_tests.cpp',
       ),
       cpp_args : [cpp_msvc_compat_args],
@@ -438,35 +379,6 @@ if with_tests
     args : [
       files('tests/algebraic_parser_test.py')
     ],
-    suite : ['compiler', 'nir'],
-  )
-
-  test(
-    'load_store_vectorizer',
-    executable(
-      'load_store_vectorizer',
-      files('tests/load_store_vectorizer_tests.cpp'),
-      cpp_args : [cpp_msvc_compat_args],
-      gnu_symbol_visibility : 'hidden',
-      include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
-      dependencies : [dep_thread, idep_gtest, idep_nir, idep_mesautil],
-    ),
-    suite : ['compiler', 'nir'],
-    # TODO: Use a negative filter for gtest instead of the expect failure here.
-    should_fail : meson.get_external_property('xfail', '').contains('load_store_vectorizer'),
-    protocol : 'gtest',
-  )
-
-  test(
-    'nir_opt_dce',
-    executable(
-      'nir_opt_dce_tests',
-      files('tests/dce_tests.cpp'),
-      cpp_args : [cpp_msvc_compat_args],
-      gnu_symbol_visibility : 'hidden',
-      include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
-      dependencies : [dep_thread, idep_gtest, idep_nir, idep_mesautil],
-    ),
     suite : ['compiler', 'nir'],
   )
 endif

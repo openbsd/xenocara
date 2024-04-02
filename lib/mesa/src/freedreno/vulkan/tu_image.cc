@@ -118,7 +118,7 @@ tu_is_r8g8_compatible(enum pipe_format format)
 void
 tu_cs_image_ref(struct tu_cs *cs, const struct fdl6_view *iview, uint32_t layer)
 {
-   tu_cs_emit(cs, iview->PITCH);
+   tu_cs_emit(cs, A6XX_RB_MRT_PITCH(0, iview->pitch).value);
    tu_cs_emit(cs, iview->layer_size >> 6);
    tu_cs_emit_qw(cs, iview->base_addr + iview->layer_size * layer);
 }
@@ -126,7 +126,7 @@ tu_cs_image_ref(struct tu_cs *cs, const struct fdl6_view *iview, uint32_t layer)
 void
 tu_cs_image_stencil_ref(struct tu_cs *cs, const struct tu_image_view *iview, uint32_t layer)
 {
-   tu_cs_emit(cs, iview->stencil_PITCH);
+   tu_cs_emit(cs, A6XX_RB_STENCIL_BUFFER_PITCH(iview->stencil_pitch).value);
    tu_cs_emit(cs, iview->stencil_layer_size >> 6);
    tu_cs_emit_qw(cs, iview->stencil_base_addr + iview->stencil_layer_size * layer);
 }
@@ -134,18 +134,23 @@ tu_cs_image_stencil_ref(struct tu_cs *cs, const struct tu_image_view *iview, uin
 void
 tu_cs_image_depth_ref(struct tu_cs *cs, const struct tu_image_view *iview, uint32_t layer)
 {
-   tu_cs_emit(cs, iview->depth_PITCH);
+   tu_cs_emit(cs, A6XX_RB_DEPTH_BUFFER_PITCH(iview->depth_pitch).value);
    tu_cs_emit(cs, iview->depth_layer_size >> 6);
    tu_cs_emit_qw(cs, iview->depth_base_addr + iview->depth_layer_size * layer);
 }
 
+template <chip CHIP>
 void
 tu_cs_image_ref_2d(struct tu_cs *cs, const struct fdl6_view *iview, uint32_t layer, bool src)
 {
    tu_cs_emit_qw(cs, iview->base_addr + iview->layer_size * layer);
    /* SP_PS_2D_SRC_PITCH has shifted pitch field */
-   tu_cs_emit(cs, iview->PITCH << (src ? 9 : 0));
+   if (src)
+      tu_cs_emit(cs, SP_PS_2D_SRC_PITCH(CHIP, .pitch = iview->pitch).value);
+   else
+      tu_cs_emit(cs, A6XX_RB_2D_DST_PITCH(iview->pitch).value);
 }
+TU_GENX(tu_cs_image_ref_2d);
 
 void
 tu_cs_image_flag_ref(struct tu_cs *cs, const struct fdl6_view *iview, uint32_t layer)
@@ -204,7 +209,11 @@ tu_image_view_init(struct tu_device *device,
       layouts[2] = &image->layout[2];
    }
 
+   vk_component_mapping_to_pipe_swizzle(pCreateInfo->components,
+                                        iview->swizzle);
+
    struct fdl_view_args args = {};
+   args.chip = device->physical_device->info->chip;
    args.iova = image->iova;
    args.base_array_layer = range->baseArrayLayer;
    args.base_miplevel = range->baseMipLevel;
@@ -255,13 +264,13 @@ tu_image_view_init(struct tu_device *device,
       iview->depth_base_addr = image->iova +
          fdl_surface_offset(layout, range->baseMipLevel, range->baseArrayLayer);
       iview->depth_layer_size = fdl_layer_stride(layout, range->baseMipLevel);
-      iview->depth_PITCH = A6XX_RB_DEPTH_BUFFER_PITCH(fdl_pitch(layout, range->baseMipLevel)).value;
+      iview->depth_pitch = fdl_pitch(layout, range->baseMipLevel);
 
       layout = &image->layout[1];
       iview->stencil_base_addr = image->iova +
          fdl_surface_offset(layout, range->baseMipLevel, range->baseArrayLayer);
       iview->stencil_layer_size = fdl_layer_stride(layout, range->baseMipLevel);
-      iview->stencil_PITCH = A6XX_RB_STENCIL_BUFFER_PITCH(fdl_pitch(layout, range->baseMipLevel)).value;
+      iview->stencil_pitch = fdl_pitch(layout, range->baseMipLevel);
    }
 }
 
@@ -307,11 +316,8 @@ ubwc_possible(struct tu_device *device,
       return false;
 
    if (!info->a6xx.has_8bpp_ubwc &&
-       (format == VK_FORMAT_R8_UNORM ||
-        format == VK_FORMAT_R8_SNORM ||
-        format == VK_FORMAT_R8_UINT ||
-        format == VK_FORMAT_R8_SINT ||
-        format == VK_FORMAT_R8_SRGB))
+       vk_format_get_blocksizebits(format) == 8 &&
+       tu6_plane_count(format) == 1)
       return false;
 
    if (type == VK_IMAGE_TYPE_3D) {
@@ -450,6 +456,14 @@ tu_image_init(struct tu_device *device, struct tu_image *image,
 
    /* No sense in tiling a 1D image, you'd just waste space and cache locality. */
    if (pCreateInfo->imageType == VK_IMAGE_TYPE_1D) {
+      tile_mode = TILE6_LINEAR;
+      ubwc_enabled = false;
+   }
+
+   /* Fragment density maps are sampled on the CPU and we don't support
+    * sampling tiled images on the CPU or UBWC at the moment.
+    */
+   if (pCreateInfo->usage & VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT) {
       tile_mode = TILE6_LINEAR;
       ubwc_enabled = false;
    }
@@ -598,8 +612,7 @@ tu_image_init(struct tu_device *device, struct tu_image *image,
    }
 
    const struct util_format_description *desc = util_format_description(image->layout[0].format);
-   if (util_format_has_depth(desc) && !TU_DEBUG(NOLRZ))
-   {
+   if (util_format_has_depth(desc) && device->use_lrz) {
       /* Depth plane is the first one */
       struct fdl_layout *layout = &image->layout[0];
       unsigned width = layout->width0;
@@ -824,31 +837,59 @@ tu_GetDeviceImageSparseMemoryRequirements(
    tu_stub();
 }
 
-VKAPI_ATTR void VKAPI_CALL
-tu_GetImageSubresourceLayout(VkDevice _device,
-                             VkImage _image,
-                             const VkImageSubresource *pSubresource,
-                             VkSubresourceLayout *pLayout)
+static void
+tu_get_image_subresource_layout(struct tu_image *image,
+                                const VkImageSubresource2KHR *pSubresource,
+                                VkSubresourceLayout2KHR *pLayout)
 {
-   TU_FROM_HANDLE(tu_image, image, _image);
-
    struct fdl_layout *layout =
-      &image->layout[tu6_plane_index(image->vk.format, pSubresource->aspectMask)];
-   const struct fdl_slice *slice = layout->slices + pSubresource->mipLevel;
+      &image->layout[tu6_plane_index(image->vk.format,
+                                     pSubresource->imageSubresource.aspectMask)];
+   const struct fdl_slice *slice = layout->slices +
+      pSubresource->imageSubresource.mipLevel;
 
-   pLayout->offset =
-      fdl_surface_offset(layout, pSubresource->mipLevel, pSubresource->arrayLayer);
-   pLayout->rowPitch = fdl_pitch(layout, pSubresource->mipLevel);
-   pLayout->arrayPitch = fdl_layer_stride(layout, pSubresource->mipLevel);
-   pLayout->depthPitch = slice->size0;
-   pLayout->size = pLayout->depthPitch * layout->depth0;
+   pLayout->subresourceLayout.offset =
+      fdl_surface_offset(layout, pSubresource->imageSubresource.mipLevel,
+                         pSubresource->imageSubresource.arrayLayer);
+   pLayout->subresourceLayout.rowPitch =
+      fdl_pitch(layout, pSubresource->imageSubresource.mipLevel);
+   pLayout->subresourceLayout.arrayPitch =
+      fdl_layer_stride(layout, pSubresource->imageSubresource.mipLevel);
+   pLayout->subresourceLayout.depthPitch = slice->size0;
+   pLayout->subresourceLayout.size = slice->size0 * layout->depth0;
 
-   if (fdl_ubwc_enabled(layout, pSubresource->mipLevel)) {
+   if (fdl_ubwc_enabled(layout, pSubresource->imageSubresource.mipLevel)) {
       /* UBWC starts at offset 0 */
-      pLayout->offset = 0;
+      pLayout->subresourceLayout.offset = 0;
       /* UBWC scanout won't match what the kernel wants if we have levels/layers */
       assert(image->vk.mip_levels == 1 && image->vk.array_layers == 1);
    }
+}
+
+VKAPI_ATTR void VKAPI_CALL
+tu_GetImageSubresourceLayout2KHR(VkDevice _device,
+                                 VkImage _image,
+                                 const VkImageSubresource2KHR *pSubresource,
+                                 VkSubresourceLayout2KHR *pLayout)
+{
+   TU_FROM_HANDLE(tu_image, image, _image);
+
+   tu_get_image_subresource_layout(image, pSubresource, pLayout);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+tu_GetDeviceImageSubresourceLayoutKHR(VkDevice _device,
+                                      const VkDeviceImageSubresourceInfoKHR *pInfo,
+                                      VkSubresourceLayout2KHR *pLayout)
+{
+   TU_FROM_HANDLE(tu_device, device, _device);
+
+   struct tu_image image = {0};
+
+   tu_image_init(device, &image, pInfo->pCreateInfo, DRM_FORMAT_MOD_INVALID,
+                 NULL);
+
+   tu_get_image_subresource_layout(&image, pInfo->pSubresource, pLayout);
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL
@@ -938,4 +979,39 @@ tu_DestroyBufferView(VkDevice _device,
       return;
 
    vk_object_free(&device->vk, pAllocator, view);
+}
+
+/* Impelements the operations described in "Fragment Density Map Operations."
+ */
+void
+tu_fragment_density_map_sample(const struct tu_image_view *fdm,
+                               uint32_t x, uint32_t y,
+                               uint32_t width, uint32_t height,
+                               uint32_t layers,
+                               struct tu_frag_area *areas)
+{
+   assert(fdm->image->layout[0].tile_mode == TILE6_LINEAR);
+
+   uint32_t fdm_shift_x = util_logbase2_ceil(DIV_ROUND_UP(width, fdm->vk.extent.width));
+   uint32_t fdm_shift_y = util_logbase2_ceil(DIV_ROUND_UP(height, fdm->vk.extent.height));
+
+   fdm_shift_x = CLAMP(fdm_shift_x, MIN_FDM_TEXEL_SIZE_LOG2, MAX_FDM_TEXEL_SIZE_LOG2);
+   fdm_shift_y = CLAMP(fdm_shift_y, MIN_FDM_TEXEL_SIZE_LOG2, MAX_FDM_TEXEL_SIZE_LOG2);
+
+   uint32_t i = x >> fdm_shift_x;
+   uint32_t j = y >> fdm_shift_y;
+
+   unsigned cpp = fdm->image->layout[0].cpp;
+   unsigned pitch = fdm->view.pitch;
+
+   void *pixel = (char *)fdm->image->map + fdm->view.offset + cpp * i + pitch * j;
+   for (unsigned i = 0; i < layers; i++) {
+      float density_src[4], density[4];
+      util_format_unpack_rgba(fdm->view.format, density_src, pixel, 1);
+      pipe_swizzle_4f(density, density_src, fdm->swizzle);
+      areas[i].width = 1.0f / density[0];
+      areas[i].height = 1.0f / density[1];
+
+      pixel = (char *)pixel + fdm->view.layer_size;
+   }
 }

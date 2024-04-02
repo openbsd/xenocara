@@ -39,7 +39,7 @@ namespace r600 {
 
 GDSInstr::GDSInstr(
    ESDOp op, Register *dest, const RegisterVec4& src, int uav_base, PRegister uav_id):
-    InstrWithResource(uav_base, uav_id),
+    Resource(this, uav_base, uav_id),
     m_op(op),
     m_dest(dest),
     m_src(src)
@@ -91,7 +91,7 @@ GDSInstr::do_print(std::ostream& os) const
    else
       os << "___";
    os << " " << m_src;
-   os << " BASE:" << resource_base();
+   os << " BASE:" << resource_id();
 
    print_resource_offset(os);
 }
@@ -192,7 +192,7 @@ bool
 GDSInstr::emit_atomic_op2(nir_intrinsic_instr *instr, Shader& shader)
 {
    auto& vf = shader.value_factory();
-   bool read_result = !instr->dest.is_ssa || !list_is_empty(&instr->dest.ssa.uses);
+   bool read_result = !list_is_empty(&instr->def.uses);
 	
    ESDOp op =
       read_result ? get_opcode(instr->intrinsic) : get_opcode_wo(instr->intrinsic);
@@ -205,7 +205,7 @@ GDSInstr::emit_atomic_op2(nir_intrinsic_instr *instr, Shader& shader)
    }
    offset += nir_intrinsic_base(instr);
 
-   auto dest = read_result ? vf.dest(instr->dest, 0, pin_free) : nullptr;
+   auto dest = read_result ? vf.dest(instr->def, 0, pin_free) : nullptr;
 
    PRegister src_as_register = nullptr;
    auto src_val = vf.src(instr->src[1], 0);
@@ -226,7 +226,7 @@ GDSInstr::emit_atomic_op2(nir_intrinsic_instr *instr, Shader& shader)
       ir = new GDSInstr(op, dest, src, offset, uav_id);
 
    } else {
-      auto dest = vf.dest(instr->dest, 0, pin_free);
+      auto dest = vf.dest(instr->def, 0, pin_free);
       auto tmp = vf.temp_vec4(pin_group, {0, 1, 7, 7});
       if (uav_id)
          shader.emit_instruction(new AluInstr(op3_muladd_uint24,
@@ -256,7 +256,7 @@ GDSInstr::emit_atomic_read(nir_intrinsic_instr *instr, Shader& shader)
    }
    offset += shader.remap_atomic_base(nir_intrinsic_base(instr));
 
-   auto dest = vf.dest(instr->dest, 0, pin_free);
+   auto dest = vf.dest(instr->def, 0, pin_free);
 
    GDSInstr *ir = nullptr;
 
@@ -287,7 +287,7 @@ bool
 GDSInstr::emit_atomic_inc(nir_intrinsic_instr *instr, Shader& shader)
 {
    auto& vf = shader.value_factory();
-   bool read_result = !instr->dest.is_ssa || !list_is_empty(&instr->dest.ssa.uses);
+   bool read_result = !list_is_empty(&instr->def.uses);
 
    auto [offset, uav_id] = shader.evaluate_resource_offset(instr, 0);
    {
@@ -295,7 +295,7 @@ GDSInstr::emit_atomic_inc(nir_intrinsic_instr *instr, Shader& shader)
    offset += shader.remap_atomic_base(nir_intrinsic_base(instr));
 
    GDSInstr *ir = nullptr;
-   auto dest = read_result ? vf.dest(instr->dest, 0, pin_free) : nullptr;
+   auto dest = read_result ? vf.dest(instr->def, 0, pin_free) : nullptr;
 
    if (shader.chip_class() < ISA_CC_CAYMAN) {
             RegisterVec4 src(nullptr, shader.atomic_update(), nullptr, nullptr, pin_chan);
@@ -328,7 +328,7 @@ GDSInstr::emit_atomic_pre_dec(nir_intrinsic_instr *instr, Shader& shader)
 {
    auto& vf = shader.value_factory();
 
-   bool read_result = !instr->dest.is_ssa || !list_is_empty(&instr->dest.ssa.uses);
+   bool read_result = !list_is_empty(&instr->def.uses);
 
    auto opcode = read_result ? DS_OP_SUB_RET : DS_OP_SUB;
 	
@@ -366,11 +366,17 @@ GDSInstr::emit_atomic_pre_dec(nir_intrinsic_instr *instr, Shader& shader)
    shader.emit_instruction(ir);
    if (read_result)
       shader.emit_instruction(new AluInstr(op2_sub_int,
-                                           vf.dest(instr->dest, 0, pin_free),
+                                           vf.dest(instr->def, 0, pin_free),
                                            tmp_dest,
                                            vf.one_i(),
                                            AluInstr::last_write));
    return true;
+}
+
+void GDSInstr::update_indirect_addr(PRegister old_reg, PRegister addr)
+{
+   (void)old_reg;
+   set_resource_offset(addr);
 }
 
 RatInstr::RatInstr(ECFOpCode cf_opcode,
@@ -382,7 +388,7 @@ RatInstr::RatInstr(ECFOpCode cf_opcode,
                    int burst_count,
                    int comp_mask,
                    int element_size):
-    InstrWithResource(rat_id, rat_id_offset),
+    Resource(this, rat_id, rat_id_offset),
     m_cf_opcode(cf_opcode),
     m_rat_op(rat_op),
     m_data(data),
@@ -433,7 +439,7 @@ RatInstr::do_ready() const
 void
 RatInstr::do_print(std::ostream& os) const
 {
-   os << "MEM_RAT RAT " << resource_base();
+   os << "MEM_RAT RAT " << resource_id();
    print_resource_offset(os);
    os << " @" << m_index;
    os << " OP:" << m_rat_op << " " << m_data;
@@ -442,89 +448,66 @@ RatInstr::do_print(std::ostream& os) const
       os << " ACK";
 }
 
+void RatInstr::update_indirect_addr(UNUSED PRegister old_reg, PRegister addr)
+{
+   set_resource_offset(addr);
+}
+
 static RatInstr::ERatOp
-get_rat_opcode(const nir_intrinsic_op opcode, pipe_format format)
+get_rat_opcode(const nir_atomic_op opcode)
 {
    switch (opcode) {
-   case nir_intrinsic_image_load:
-      return RatInstr::NOP_RTN;
-   case nir_intrinsic_ssbo_atomic_add:
-   case nir_intrinsic_image_atomic_add:
+   case nir_atomic_op_iadd:
       return RatInstr::ADD_RTN;
-   case nir_intrinsic_ssbo_atomic_and:
-   case nir_intrinsic_image_atomic_and:
+   case nir_atomic_op_iand:
       return RatInstr::AND_RTN;
-   case nir_intrinsic_ssbo_atomic_or:
-   case nir_intrinsic_image_atomic_or:
+   case nir_atomic_op_ior:
       return RatInstr::OR_RTN;
-   case nir_intrinsic_ssbo_atomic_imin:
-   case nir_intrinsic_image_atomic_imin:
+   case nir_atomic_op_imin:
       return RatInstr::MIN_INT_RTN;
-   case nir_intrinsic_ssbo_atomic_imax:
-   case nir_intrinsic_image_atomic_imax:
+   case nir_atomic_op_imax:
       return RatInstr::MAX_INT_RTN;
-   case nir_intrinsic_ssbo_atomic_umin:
-   case nir_intrinsic_image_atomic_umin:
+   case nir_atomic_op_umin:
       return RatInstr::MIN_UINT_RTN;
-   case nir_intrinsic_ssbo_atomic_umax:
-   case nir_intrinsic_image_atomic_umax:
+   case nir_atomic_op_umax:
       return RatInstr::MAX_UINT_RTN;
-   case nir_intrinsic_ssbo_atomic_xor:
-   case nir_intrinsic_image_atomic_xor:
+   case nir_atomic_op_ixor:
       return RatInstr::XOR_RTN;
-   case nir_intrinsic_ssbo_atomic_comp_swap:
-   case nir_intrinsic_image_atomic_comp_swap:
-      if (util_format_is_float(format))
-         return RatInstr::CMPXCHG_FLT_RTN;
-      else
-         return RatInstr::CMPXCHG_INT_RTN;
-   case nir_intrinsic_ssbo_atomic_exchange:
-   case nir_intrinsic_image_atomic_exchange:
+   case nir_atomic_op_cmpxchg:
+      return RatInstr::CMPXCHG_INT_RTN;
+   case nir_atomic_op_xchg:
       return RatInstr::XCHG_RTN;
    default:
-      unreachable("Unsupported WO RAT instruction");
+      unreachable("Unsupported atomic");
    }
 }
 
 static RatInstr::ERatOp
-get_rat_opcode_wo(const nir_intrinsic_op opcode, pipe_format format)
+get_rat_opcode_wo(const nir_atomic_op opcode)
 {
    switch (opcode) {
-   case nir_intrinsic_ssbo_atomic_add:
-   case nir_intrinsic_image_atomic_add:
+   case nir_atomic_op_iadd:
       return RatInstr::ADD;
-   case nir_intrinsic_ssbo_atomic_and:
-   case nir_intrinsic_image_atomic_and:
+   case nir_atomic_op_iand:
       return RatInstr::AND;
-   case nir_intrinsic_ssbo_atomic_or:
-   case nir_intrinsic_image_atomic_or:
+   case nir_atomic_op_ior:
       return RatInstr::OR;
-   case nir_intrinsic_ssbo_atomic_imin:
-   case nir_intrinsic_image_atomic_imin:
+   case nir_atomic_op_imin:
       return RatInstr::MIN_INT;
-   case nir_intrinsic_ssbo_atomic_imax:
-   case nir_intrinsic_image_atomic_imax:
+   case nir_atomic_op_imax:
       return RatInstr::MAX_INT;
-   case nir_intrinsic_ssbo_atomic_umin:
-   case nir_intrinsic_image_atomic_umin:
+   case nir_atomic_op_umin:
       return RatInstr::MIN_UINT;
-   case nir_intrinsic_ssbo_atomic_umax:
-   case nir_intrinsic_image_atomic_umax:
+   case nir_atomic_op_umax:
       return RatInstr::MAX_UINT;
-   case nir_intrinsic_ssbo_atomic_xor:
-   case nir_intrinsic_image_atomic_xor:
+   case nir_atomic_op_ixor:
       return RatInstr::XOR;
-   case nir_intrinsic_ssbo_atomic_comp_swap:
-   case nir_intrinsic_image_atomic_comp_swap:
-      if (util_format_is_float(format))
-         return RatInstr::CMPXCHG_FLT;
-      else
-         return RatInstr::CMPXCHG_INT;
-   case nir_intrinsic_ssbo_atomic_exchange:
-   case nir_intrinsic_image_atomic_exchange:
+   case nir_atomic_op_cmpxchg:
+      return RatInstr::CMPXCHG_INT;
+   case nir_atomic_op_xchg:
       return RatInstr::XCHG_RTN;
    default:
-      unreachable("Unsupported WO RAT instruction");
+      unreachable("Unsupported atomic");
    }
 }
 
@@ -536,30 +519,16 @@ RatInstr::emit(nir_intrinsic_instr *intr, Shader& shader)
       return emit_ssbo_load(intr, shader);
    case nir_intrinsic_store_ssbo:
       return emit_ssbo_store(intr, shader);
-   case nir_intrinsic_ssbo_atomic_add:
-   case nir_intrinsic_ssbo_atomic_comp_swap:
-   case nir_intrinsic_ssbo_atomic_or:
-   case nir_intrinsic_ssbo_atomic_xor:
-   case nir_intrinsic_ssbo_atomic_imax:
-   case nir_intrinsic_ssbo_atomic_imin:
-   case nir_intrinsic_ssbo_atomic_umax:
-   case nir_intrinsic_ssbo_atomic_umin:
-   case nir_intrinsic_ssbo_atomic_and:
-   case nir_intrinsic_ssbo_atomic_exchange:
+   case nir_intrinsic_ssbo_atomic:
+   case nir_intrinsic_ssbo_atomic_swap:
       return emit_ssbo_atomic_op(intr, shader);
+   case nir_intrinsic_store_global:
+      return emit_global_store(intr, shader);
    case nir_intrinsic_image_store:
       return emit_image_store(intr, shader);
    case nir_intrinsic_image_load:
-   case nir_intrinsic_image_atomic_add:
-   case nir_intrinsic_image_atomic_and:
-   case nir_intrinsic_image_atomic_or:
-   case nir_intrinsic_image_atomic_xor:
-   case nir_intrinsic_image_atomic_exchange:
-   case nir_intrinsic_image_atomic_comp_swap:
-   case nir_intrinsic_image_atomic_umin:
-   case nir_intrinsic_image_atomic_umax:
-   case nir_intrinsic_image_atomic_imin:
-   case nir_intrinsic_image_atomic_imax:
+   case nir_intrinsic_image_atomic:
+   case nir_intrinsic_image_atomic_swap:
       return emit_image_load_or_atomic(intr, shader);
    case nir_intrinsic_image_size:
       return emit_image_size(intr, shader);
@@ -576,7 +545,7 @@ bool
 RatInstr::emit_ssbo_load(nir_intrinsic_instr *intr, Shader& shader)
 {
    auto& vf = shader.value_factory();
-   auto dest = vf.dest_vec4(intr->dest, pin_group);
+   auto dest = vf.dest_vec4(intr->def, pin_group);
 
    /** src0 not used, should be some offset */
    auto addr = vf.src(intr->src[1], 0);
@@ -595,7 +564,7 @@ RatInstr::emit_ssbo_load(nir_intrinsic_instr *intr, Shader& shader)
       {0, 1, 2, 3}
    };
 
-   int comp_idx = nir_dest_num_components(intr->dest) - 1;
+   int comp_idx = intr->def.num_components - 1;
 
    auto [offset, res_offset] = shader.evaluate_resource_offset(intr, 0);
    {
@@ -609,6 +578,50 @@ RatInstr::emit_ssbo_load(nir_intrinsic_instr *intr, Shader& shader)
    ir->set_num_format(vtx_nf_int);
 
    shader.emit_instruction(ir);
+   return true;
+}
+
+bool
+RatInstr::emit_global_store(nir_intrinsic_instr *intr, Shader& shader)
+{
+   auto& vf = shader.value_factory();
+   auto addr_orig = vf.src(intr->src[1], 0);
+   auto addr_vec = vf.temp_vec4(pin_chan, {0, 7, 7, 7});
+
+   shader.emit_instruction(
+      new AluInstr(op2_lshr_int, addr_vec[0], addr_orig, vf.literal(2),
+                   AluInstr::last_write));
+
+   RegisterVec4::Swizzle value_swz = {0,7,7,7};
+   auto mask = nir_intrinsic_write_mask(intr);
+   for (int i = 0; i < 4; ++i) {
+      if (mask & (1 << i))
+         value_swz[i] = i;
+   }
+
+   auto value_vec = vf.temp_vec4(pin_chgr, value_swz);
+
+   AluInstr *ir = nullptr;
+   for (int i = 0; i < 4; ++i) {
+      if (value_swz[i] < 4) {
+         ir = new AluInstr(op1_mov, value_vec[i],
+                           vf.src(intr->src[0], i), AluInstr::write);
+         shader.emit_instruction(ir);
+      }
+   }
+   if (ir)
+      ir->set_alu_flag(alu_last_instr);
+
+   auto store = new RatInstr(cf_mem_rat_cacheless,
+                             RatInstr::STORE_RAW,
+                             value_vec,
+                             addr_vec,
+                             shader.ssbo_image_offset(),
+                             nullptr,
+                             1,
+                             mask,
+                             0);
+   shader.emit_instruction(store);
    return true;
 }
 
@@ -661,9 +674,9 @@ RatInstr::emit_ssbo_atomic_op(nir_intrinsic_instr *intr, Shader& shader)
    {
    }
 
-   bool read_result = !intr->dest.is_ssa || !list_is_empty(&intr->dest.ssa.uses);
-   auto opcode = read_result ? get_rat_opcode(intr->intrinsic, PIPE_FORMAT_R32_UINT)
-                             : get_rat_opcode_wo(intr->intrinsic, PIPE_FORMAT_R32_UINT);
+   bool read_result = !list_is_empty(&intr->def.uses);
+   auto opcode = read_result ? get_rat_opcode(nir_intrinsic_atomic_op(intr))
+                             : get_rat_opcode_wo(nir_intrinsic_atomic_op(intr));
 
    auto coord_orig = vf.src(intr->src[1], 0);
    auto coord = vf.temp_register(0);
@@ -676,7 +689,7 @@ RatInstr::emit_ssbo_atomic_op(nir_intrinsic_instr *intr, Shader& shader)
    shader.emit_instruction(
       new AluInstr(op1_mov, data_vec4[1], shader.rat_return_address(), AluInstr::write));
 
-   if (intr->intrinsic == nir_intrinsic_ssbo_atomic_comp_swap) {
+   if (intr->intrinsic == nir_intrinsic_ssbo_atomic_swap) {
       shader.emit_instruction(
          new AluInstr(op1_mov, data_vec4[0], vf.src(intr->src[3], 0), AluInstr::write));
       shader.emit_instruction(
@@ -705,7 +718,7 @@ RatInstr::emit_ssbo_atomic_op(nir_intrinsic_instr *intr, Shader& shader)
    atomic->set_ack();
    if (read_result) {
       atomic->set_instr_flag(ack_rat_return_write);
-      auto dest = vf.dest_vec4(intr->dest, pin_group);
+      auto dest = vf.dest_vec4(intr->def, pin_group);
 
       auto fetch = new FetchInstr(vc_fetch,
                                   dest,
@@ -735,7 +748,7 @@ bool
 RatInstr::emit_ssbo_size(nir_intrinsic_instr *intr, Shader& shader)
 {
    auto& vf = shader.value_factory();
-   auto dest = vf.dest_vec4(intr->dest, pin_group);
+   auto dest = vf.dest_vec4(intr->def, pin_group);
 
    auto const_offset = nir_src_as_const_value(intr->src[0]);
    int res_id = R600_IMAGE_REAL_RESOURCE_OFFSET;
@@ -798,9 +811,11 @@ RatInstr::emit_image_load_or_atomic(nir_intrinsic_instr *intrin, Shader& shader)
    {
    }
 
-   bool read_result = !intrin->dest.is_ssa || !list_is_empty(&intrin->dest.ssa.uses);
-   auto opcode = read_result ? get_rat_opcode(intrin->intrinsic, PIPE_FORMAT_R32_UINT)
-                             : get_rat_opcode_wo(intrin->intrinsic, PIPE_FORMAT_R32_UINT);
+   bool read_result = !list_is_empty(&intrin->def.uses);
+   bool image_load = (intrin->intrinsic == nir_intrinsic_image_load);
+   auto opcode = image_load  ? RatInstr::NOP_RTN :
+                 read_result ? get_rat_opcode(nir_intrinsic_atomic_op(intrin))
+                             : get_rat_opcode_wo(nir_intrinsic_atomic_op(intrin));
 
    auto coord_orig = vf.src_vec4(intrin->src[1], pin_chan);
    auto coord = vf.temp_vec4(pin_chgr);
@@ -821,7 +836,7 @@ RatInstr::emit_image_load_or_atomic(nir_intrinsic_instr *intrin, Shader& shader)
    shader.emit_instruction(
       new AluInstr(op1_mov, data_vec4[1], shader.rat_return_address(), AluInstr::write));
 
-   if (intrin->intrinsic == nir_intrinsic_image_atomic_comp_swap) {
+   if (intrin->intrinsic == nir_intrinsic_image_atomic_swap) {
       shader.emit_instruction(
          new AluInstr(op1_mov, data_vec4[0], vf.src(intrin->src[4], 0), AluInstr::write));
       shader.emit_instruction(
@@ -843,7 +858,7 @@ RatInstr::emit_image_load_or_atomic(nir_intrinsic_instr *intrin, Shader& shader)
    atomic->set_ack();
    if (read_result) {
       atomic->set_instr_flag(ack_rat_return_write);
-      auto dest = vf.dest_vec4(intrin->dest, pin_group);
+      auto dest = vf.dest_vec4(intrin->def, pin_group);
 
       pipe_format format = nir_intrinsic_format(intrin);
       unsigned fmt = fmt_32;
@@ -899,22 +914,21 @@ RatInstr::emit_image_size(nir_intrinsic_instr *intrin, Shader& shader)
       dyn_offset = shader.emit_load_to_register(vf.src(intrin->src[0], 0));
 
    if (nir_intrinsic_image_dim(intrin) == GLSL_SAMPLER_DIM_BUF) {
-      auto dest = vf.dest_vec4(intrin->dest, pin_group);
+      auto dest = vf.dest_vec4(intrin->def, pin_group);
       shader.emit_instruction(new QueryBufferSizeInstr(dest, {0, 1, 2, 3}, res_id));
       return true;
    } else {
 
       if (nir_intrinsic_image_dim(intrin) == GLSL_SAMPLER_DIM_CUBE &&
           nir_intrinsic_image_array(intrin) &&
-          nir_dest_num_components(intrin->dest) > 2) {
+          intrin->def.num_components > 2) {
          /* Need to load the layers from a const buffer */
 
-         auto dest = vf.dest_vec4(intrin->dest, pin_group);
+         auto dest = vf.dest_vec4(intrin->def, pin_group);
          shader.emit_instruction(new TexInstr(TexInstr::get_resinfo,
                                               dest,
                                               {0, 1, 7, 3},
                                               src,
-                                              0 /* ?? */,
                                               res_id,
                                               dyn_offset));
 
@@ -930,7 +944,7 @@ RatInstr::emit_image_size(nir_intrinsic_instr *intrin, Shader& shader)
                                        R600_BUFFER_INFO_CONST_BUFFER),
                             AluInstr::last_write));
          } else {
-            /* If the adressing is indirect we have to get the z-value by
+            /* If the addressing is indirect we have to get the z-value by
              * using a binary search */
             auto addr = vf.temp_register();
             auto comp1 = vf.temp_register();
@@ -973,12 +987,11 @@ RatInstr::emit_image_size(nir_intrinsic_instr *intrin, Shader& shader)
                op3_cnde_int, dest[2], low_bit, comp1, comp2, AluInstr::last_write));
          }
       } else {
-         auto dest = vf.dest_vec4(intrin->dest, pin_group);
+         auto dest = vf.dest_vec4(intrin->def, pin_group);
          shader.emit_instruction(new TexInstr(TexInstr::get_resinfo,
                                               dest,
                                               {0, 1, 2, 3},
                                               src,
-                                              0 /* ?? */,
                                               res_id,
                                               dyn_offset));
       }
@@ -994,7 +1007,7 @@ RatInstr::emit_image_samples(nir_intrinsic_instr *intrin, Shader& shader)
    auto src = RegisterVec4(0, true, {4, 4, 4, 4});
 
    auto tmp =  shader.value_factory().temp_vec4(pin_group);
-   auto dest =  shader.value_factory().dest(intrin->dest, 0, pin_free);
+   auto dest =  shader.value_factory().dest(intrin->def, 0, pin_free);
 
    auto const_offset = nir_src_as_const_value(intrin->src[0]);
    PRegister dyn_offset = nullptr;
@@ -1009,7 +1022,6 @@ RatInstr::emit_image_samples(nir_intrinsic_instr *intrin, Shader& shader)
                                         tmp,
                                         {3, 7, 7, 7},
                                         src,
-                                        0 /* ?? */,
                                         res_id,
                                         dyn_offset));
 

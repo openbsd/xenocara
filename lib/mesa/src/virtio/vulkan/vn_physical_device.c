@@ -68,7 +68,6 @@ static void
 vn_physical_device_init_features(struct vn_physical_device *physical_dev)
 {
    const uint32_t renderer_version = physical_dev->renderer_version;
-   struct vn_physical_device_features *feats = &physical_dev->features;
    struct vn_instance *instance = physical_dev->instance;
    const struct vk_device_extension_table *exts =
       &physical_dev->renderer_extensions;
@@ -76,6 +75,11 @@ vn_physical_device_init_features(struct vn_physical_device *physical_dev)
       .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
    };
    struct {
+      VkPhysicalDeviceFeatures vulkan_1_0;
+      VkPhysicalDeviceVulkan11Features vulkan_1_1;
+      VkPhysicalDeviceVulkan12Features vulkan_1_2;
+      VkPhysicalDeviceVulkan13Features vulkan_1_3;
+
       /* Vulkan 1.1 */
       VkPhysicalDevice16BitStorageFeatures _16bit_storage;
       VkPhysicalDeviceMultiviewFeatures multiview;
@@ -122,10 +126,58 @@ vn_physical_device_init_features(struct vn_physical_device *physical_dev)
          texture_compression_astc_hdr;
       VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures
          zero_initialize_workgroup_memory;
+
+      /* Vulkan 1.3: The extensions for the below structs were promoted, but
+       * some struct members were omitted from
+       * VkPhysicalDeviceVulkan13Features.
+       */
+      VkPhysicalDevice4444FormatsFeaturesEXT _4444_formats;
+      VkPhysicalDeviceExtendedDynamicStateFeaturesEXT extended_dynamic_state;
+      VkPhysicalDeviceExtendedDynamicState2FeaturesEXT
+         extended_dynamic_state_2;
+      VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT texel_buffer_alignment;
+      VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT
+         ycbcr_2plane_444_formats;
+
+      /* KHR */
+      VkPhysicalDeviceShaderClockFeaturesKHR shader_clock;
+
+      /* EXT */
+      VkPhysicalDeviceBorderColorSwizzleFeaturesEXT border_color_swizzle;
+      VkPhysicalDeviceColorWriteEnableFeaturesEXT color_write_enable;
+      VkPhysicalDeviceConditionalRenderingFeaturesEXT conditional_rendering;
+      VkPhysicalDeviceCustomBorderColorFeaturesEXT custom_border_color;
+      VkPhysicalDeviceDepthClipControlFeaturesEXT depth_clip_control;
+      VkPhysicalDeviceDepthClipEnableFeaturesEXT depth_clip_enable;
+      VkPhysicalDeviceDynamicRenderingUnusedAttachmentsFeaturesEXT
+         dynamic_rendering_unused_attachments;
+      VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT
+         fragment_shader_interlock;
+      VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT
+         graphics_pipeline_library;
+      VkPhysicalDeviceImage2DViewOf3DFeaturesEXT image_2d_view_of_3d;
+      VkPhysicalDeviceImageViewMinLodFeaturesEXT image_view_min_lod;
+      VkPhysicalDeviceIndexTypeUint8FeaturesEXT index_type_uint8;
+      VkPhysicalDeviceLineRasterizationFeaturesEXT line_rasterization;
+      VkPhysicalDeviceMultiDrawFeaturesEXT multi_draw;
+      VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT mutable_descriptor_type;
+      VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT non_seamless_cube_map;
+      VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT
+         primitive_topology_list_restart;
+      VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT
+         primitives_generated_query;
+      VkPhysicalDeviceProvokingVertexFeaturesEXT provoking_vertex;
+      VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT
+         rasterization_order_attachment_access;
+      VkPhysicalDeviceRobustness2FeaturesEXT robustness_2;
+      VkPhysicalDeviceTransformFeedbackFeaturesEXT transform_feedback;
+      VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT
+         vertex_attribute_divisor;
+      VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT
+         vertex_input_dynamic_state;
    } local_feats;
 
-   /* Clear the structs so that all unqueried features will be VK_FALSE. */
-   memset(feats, 0, sizeof(*feats));
+   /* Clear the struct so that all unqueried features will be VK_FALSE. */
    memset(&local_feats, 0, sizeof(local_feats));
 
    assert(renderer_version >= VK_API_VERSION_1_1);
@@ -133,8 +185,8 @@ vn_physical_device_init_features(struct vn_physical_device *physical_dev)
    /* clang-format off */
 
    if (renderer_version >= VK_API_VERSION_1_2) {
-      VN_ADD_PNEXT(feats2, VULKAN_1_1_FEATURES, feats->vulkan_1_1);
-      VN_ADD_PNEXT(feats2, VULKAN_1_2_FEATURES, feats->vulkan_1_2);
+      VN_ADD_PNEXT(feats2, VULKAN_1_1_FEATURES, local_feats.vulkan_1_1);
+      VN_ADD_PNEXT(feats2, VULKAN_1_2_FEATURES, local_feats.vulkan_1_2);
    } else {
       /* Vulkan 1.1 */
       VN_ADD_PNEXT(feats2, 16BIT_STORAGE_FEATURES, local_feats._16bit_storage);
@@ -161,7 +213,7 @@ vn_physical_device_init_features(struct vn_physical_device *physical_dev)
    }
 
    if (renderer_version >= VK_API_VERSION_1_3) {
-      VN_ADD_PNEXT(feats2, VULKAN_1_3_FEATURES, feats->vulkan_1_3);
+      VN_ADD_PNEXT(feats2, VULKAN_1_3_FEATURES, local_feats.vulkan_1_3);
    } else {
       VN_ADD_PNEXT_EXT(feats2, DYNAMIC_RENDERING_FEATURES, local_feats.dynamic_rendering, exts->KHR_dynamic_rendering);
       VN_ADD_PNEXT_EXT(feats2, IMAGE_ROBUSTNESS_FEATURES_EXT, local_feats.image_robustness, exts->EXT_image_robustness);
@@ -181,214 +233,71 @@ vn_physical_device_init_features(struct vn_physical_device *physical_dev)
    /* Vulkan 1.3: The extensions for the below structs were promoted, but some
     * struct members were omitted from VkPhysicalDeviceVulkan13Features.
     */
-   VN_ADD_PNEXT_EXT(feats2, 4444_FORMATS_FEATURES_EXT, feats->_4444_formats, exts->EXT_4444_formats);
-   VN_ADD_PNEXT_EXT(feats2, EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT, feats->extended_dynamic_state_2, exts->EXT_extended_dynamic_state2);
-   VN_ADD_PNEXT_EXT(feats2, EXTENDED_DYNAMIC_STATE_FEATURES_EXT, feats->extended_dynamic_state, exts->EXT_extended_dynamic_state);
-   VN_ADD_PNEXT_EXT(feats2, TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT, feats->texel_buffer_alignment, exts->EXT_texel_buffer_alignment);
-   VN_ADD_PNEXT_EXT(feats2, YCBCR_2_PLANE_444_FORMATS_FEATURES_EXT, feats->ycbcr_2plane_444_formats, exts->EXT_ycbcr_2plane_444_formats);
+   VN_ADD_PNEXT_EXT(feats2, 4444_FORMATS_FEATURES_EXT, local_feats._4444_formats, exts->EXT_4444_formats);
+   VN_ADD_PNEXT_EXT(feats2, EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT, local_feats.extended_dynamic_state_2, exts->EXT_extended_dynamic_state2);
+   VN_ADD_PNEXT_EXT(feats2, EXTENDED_DYNAMIC_STATE_FEATURES_EXT, local_feats.extended_dynamic_state, exts->EXT_extended_dynamic_state);
+   VN_ADD_PNEXT_EXT(feats2, TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT, local_feats.texel_buffer_alignment, exts->EXT_texel_buffer_alignment);
+   VN_ADD_PNEXT_EXT(feats2, YCBCR_2_PLANE_444_FORMATS_FEATURES_EXT, local_feats.ycbcr_2plane_444_formats, exts->EXT_ycbcr_2plane_444_formats);
+
+   /* KHR */
+   VN_ADD_PNEXT_EXT(feats2, SHADER_CLOCK_FEATURES_KHR, local_feats.shader_clock, exts->KHR_shader_clock);
 
    /* EXT */
-   VN_ADD_PNEXT_EXT(feats2, CONDITIONAL_RENDERING_FEATURES_EXT, feats->conditional_rendering, exts->EXT_conditional_rendering);
-   VN_ADD_PNEXT_EXT(feats2, CUSTOM_BORDER_COLOR_FEATURES_EXT, feats->custom_border_color, exts->EXT_custom_border_color);
-   VN_ADD_PNEXT_EXT(feats2, DEPTH_CLIP_CONTROL_FEATURES_EXT, feats->depth_clip_control, exts->EXT_depth_clip_control);
-   VN_ADD_PNEXT_EXT(feats2, DEPTH_CLIP_ENABLE_FEATURES_EXT, feats->depth_clip_enable, exts->EXT_depth_clip_enable);
-   VN_ADD_PNEXT_EXT(feats2, IMAGE_VIEW_MIN_LOD_FEATURES_EXT, feats->image_view_min_lod, exts->EXT_image_view_min_lod);
-   VN_ADD_PNEXT_EXT(feats2, INDEX_TYPE_UINT8_FEATURES_EXT, feats->index_type_uint8, exts->EXT_index_type_uint8);
-   VN_ADD_PNEXT_EXT(feats2, LINE_RASTERIZATION_FEATURES_EXT, feats->line_rasterization, exts->EXT_line_rasterization);
-   VN_ADD_PNEXT_EXT(feats2, MULTI_DRAW_FEATURES_EXT, feats->multi_draw, exts->EXT_multi_draw);
-   VN_ADD_PNEXT_EXT(feats2, MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT, feats->mutable_descriptor_type, exts->EXT_mutable_descriptor_type || exts->VALVE_mutable_descriptor_type);
-   VN_ADD_PNEXT_EXT(feats2, PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT, feats->primitive_topology_list_restart, exts->EXT_primitive_topology_list_restart);
-   VN_ADD_PNEXT_EXT(feats2, PRIMITIVES_GENERATED_QUERY_FEATURES_EXT, feats->primitives_generated_query, exts->EXT_primitives_generated_query);
-   VN_ADD_PNEXT_EXT(feats2, PROVOKING_VERTEX_FEATURES_EXT, feats->provoking_vertex, exts->EXT_provoking_vertex);
-   VN_ADD_PNEXT_EXT(feats2, RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_EXT, feats->rasterization_order_attachment_access, exts->EXT_rasterization_order_attachment_access);
-   VN_ADD_PNEXT_EXT(feats2, ROBUSTNESS_2_FEATURES_EXT, feats->robustness_2, exts->EXT_robustness2);
-   VN_ADD_PNEXT_EXT(feats2, TRANSFORM_FEEDBACK_FEATURES_EXT, feats->transform_feedback, exts->EXT_transform_feedback);
-   VN_ADD_PNEXT_EXT(feats2, VERTEX_ATTRIBUTE_DIVISOR_FEATURES_EXT, feats->vertex_attribute_divisor, exts->EXT_vertex_attribute_divisor);
+   VN_ADD_PNEXT_EXT(feats2, BORDER_COLOR_SWIZZLE_FEATURES_EXT, local_feats.border_color_swizzle, exts->EXT_border_color_swizzle);
+   VN_ADD_PNEXT_EXT(feats2, COLOR_WRITE_ENABLE_FEATURES_EXT, local_feats.color_write_enable, exts->EXT_color_write_enable);
+   VN_ADD_PNEXT_EXT(feats2, CONDITIONAL_RENDERING_FEATURES_EXT, local_feats.conditional_rendering, exts->EXT_conditional_rendering);
+   VN_ADD_PNEXT_EXT(feats2, CUSTOM_BORDER_COLOR_FEATURES_EXT, local_feats.custom_border_color, exts->EXT_custom_border_color);
+   VN_ADD_PNEXT_EXT(feats2, DEPTH_CLIP_CONTROL_FEATURES_EXT, local_feats.depth_clip_control, exts->EXT_depth_clip_control);
+   VN_ADD_PNEXT_EXT(feats2, DEPTH_CLIP_ENABLE_FEATURES_EXT, local_feats.depth_clip_enable, exts->EXT_depth_clip_enable);
+   VN_ADD_PNEXT_EXT(feats2, DYNAMIC_RENDERING_UNUSED_ATTACHMENTS_FEATURES_EXT, local_feats.dynamic_rendering_unused_attachments, exts->EXT_dynamic_rendering_unused_attachments);
+   VN_ADD_PNEXT_EXT(feats2, FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT, local_feats.fragment_shader_interlock, exts->EXT_fragment_shader_interlock);
+   VN_ADD_PNEXT_EXT(feats2, GRAPHICS_PIPELINE_LIBRARY_FEATURES_EXT, local_feats.graphics_pipeline_library, exts->EXT_graphics_pipeline_library);
+   VN_ADD_PNEXT_EXT(feats2, IMAGE_2D_VIEW_OF_3D_FEATURES_EXT, local_feats.image_2d_view_of_3d, exts->EXT_image_2d_view_of_3d);
+   VN_ADD_PNEXT_EXT(feats2, IMAGE_VIEW_MIN_LOD_FEATURES_EXT, local_feats.image_view_min_lod, exts->EXT_image_view_min_lod);
+   VN_ADD_PNEXT_EXT(feats2, INDEX_TYPE_UINT8_FEATURES_EXT, local_feats.index_type_uint8, exts->EXT_index_type_uint8);
+   VN_ADD_PNEXT_EXT(feats2, LINE_RASTERIZATION_FEATURES_EXT, local_feats.line_rasterization, exts->EXT_line_rasterization);
+   VN_ADD_PNEXT_EXT(feats2, MULTI_DRAW_FEATURES_EXT, local_feats.multi_draw, exts->EXT_multi_draw);
+   VN_ADD_PNEXT_EXT(feats2, MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT, local_feats.mutable_descriptor_type, exts->EXT_mutable_descriptor_type || exts->VALVE_mutable_descriptor_type);
+   VN_ADD_PNEXT_EXT(feats2, NON_SEAMLESS_CUBE_MAP_FEATURES_EXT, local_feats.non_seamless_cube_map, exts->EXT_non_seamless_cube_map);
+   VN_ADD_PNEXT_EXT(feats2, PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT, local_feats.primitive_topology_list_restart, exts->EXT_primitive_topology_list_restart);
+   VN_ADD_PNEXT_EXT(feats2, PRIMITIVES_GENERATED_QUERY_FEATURES_EXT, local_feats.primitives_generated_query, exts->EXT_primitives_generated_query);
+   VN_ADD_PNEXT_EXT(feats2, PROVOKING_VERTEX_FEATURES_EXT, local_feats.provoking_vertex, exts->EXT_provoking_vertex);
+   VN_ADD_PNEXT_EXT(feats2, RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_EXT, local_feats.rasterization_order_attachment_access, exts->EXT_rasterization_order_attachment_access);
+   VN_ADD_PNEXT_EXT(feats2, ROBUSTNESS_2_FEATURES_EXT, local_feats.robustness_2, exts->EXT_robustness2);
+   VN_ADD_PNEXT_EXT(feats2, TRANSFORM_FEEDBACK_FEATURES_EXT, local_feats.transform_feedback, exts->EXT_transform_feedback);
+   VN_ADD_PNEXT_EXT(feats2, VERTEX_ATTRIBUTE_DIVISOR_FEATURES_EXT, local_feats.vertex_attribute_divisor, exts->EXT_vertex_attribute_divisor);
+   VN_ADD_PNEXT_EXT(feats2, VERTEX_INPUT_DYNAMIC_STATE_FEATURES_EXT, local_feats.vertex_input_dynamic_state, exts->EXT_vertex_input_dynamic_state);
 
    /* clang-format on */
 
    vn_call_vkGetPhysicalDeviceFeatures2(
       instance, vn_physical_device_to_handle(physical_dev), &feats2);
 
-   VkPhysicalDeviceFeatures *vk10_feats = &feats->vulkan_1_0;
-   VkPhysicalDeviceVulkan11Features *vk11_feats = &feats->vulkan_1_1;
-   VkPhysicalDeviceVulkan12Features *vk12_feats = &feats->vulkan_1_2;
-   VkPhysicalDeviceVulkan13Features *vk13_feats = &feats->vulkan_1_3;
+   struct vk_features *feats = &physical_dev->base.base.supported_features;
+   vk_set_physical_device_features(feats, &feats2);
 
-   *vk10_feats = feats2.features;
-
-   /* clang-format off */
-
-   /* vkQueueBindSparse relies on explicit sync primitives. To intercept the
-    * timeline semaphores within each bind info to write the feedback buffer,
-    * we have to split the call into bindInfoCount number of calls while
-    * inserting vkQueueSubmit to wait on the signal timeline semaphores before
-    * filling the feedback buffer. To intercept the fence to be signaled, we
-    * have to relocate the fence to another vkQueueSubmit call and potentially
-    * have to use an internal timeline semaphore to synchronize between them.
-    * Those would make the code overly complex, so we disable sparse binding
-    * for simplicity.
+   /* Enable features for extensions natively implemented in Venus driver.
+    * See vn_physical_device_get_native_extensions.
     */
-   VN_SET_CORE_VALUE(vk10_feats, sparseBinding, false);
-   VN_SET_CORE_VALUE(vk10_feats, sparseResidencyBuffer, false);
-   VN_SET_CORE_VALUE(vk10_feats, sparseResidencyImage2D, false);
-   VN_SET_CORE_VALUE(vk10_feats, sparseResidencyImage3D, false);
-   VN_SET_CORE_VALUE(vk10_feats, sparseResidency2Samples, false);
-   VN_SET_CORE_VALUE(vk10_feats, sparseResidency4Samples, false);
-   VN_SET_CORE_VALUE(vk10_feats, sparseResidency8Samples, false);
-   VN_SET_CORE_VALUE(vk10_feats, sparseResidency16Samples, false);
-   VN_SET_CORE_VALUE(vk10_feats, sparseResidencyAliased, false);
+   VN_SET_CORE_VALUE(feats, deviceMemoryReport, true);
 
-   if (renderer_version < VK_API_VERSION_1_2) {
-      /* Vulkan 1.1 */
-      VN_SET_CORE_FIELD(vk11_feats, storageBuffer16BitAccess, local_feats._16bit_storage);
-      VN_SET_CORE_FIELD(vk11_feats, uniformAndStorageBuffer16BitAccess, local_feats._16bit_storage);
-      VN_SET_CORE_FIELD(vk11_feats, storagePushConstant16, local_feats._16bit_storage);
-      VN_SET_CORE_FIELD(vk11_feats, storageInputOutput16, local_feats._16bit_storage);
-
-      VN_SET_CORE_FIELD(vk11_feats, multiview, local_feats.multiview);
-      VN_SET_CORE_FIELD(vk11_feats, multiviewGeometryShader, local_feats.multiview);
-      VN_SET_CORE_FIELD(vk11_feats, multiviewTessellationShader, local_feats.multiview);
-
-      VN_SET_CORE_FIELD(vk11_feats, variablePointersStorageBuffer, local_feats.variable_pointers);
-      VN_SET_CORE_FIELD(vk11_feats, variablePointers, local_feats.variable_pointers);
-
-      VN_SET_CORE_FIELD(vk11_feats, protectedMemory, local_feats.protected_memory);
-
-      VN_SET_CORE_FIELD(vk11_feats, samplerYcbcrConversion, local_feats.sampler_ycbcr_conversion);
-
-      VN_SET_CORE_FIELD(vk11_feats, shaderDrawParameters, local_feats.shader_draw_parameters);
-
-      if (exts->KHR_sampler_mirror_clamp_to_edge) {
-         VN_SET_CORE_VALUE(vk12_feats, samplerMirrorClampToEdge, true);
-      }
-      if (exts->KHR_draw_indirect_count) {
-         VN_SET_CORE_VALUE(vk12_feats, drawIndirectCount, true);
-      }
-      if (exts->KHR_8bit_storage) {
-         VN_SET_CORE_FIELD(vk12_feats, storageBuffer8BitAccess, local_feats._8bit_storage);
-         VN_SET_CORE_FIELD(vk12_feats, uniformAndStorageBuffer8BitAccess, local_feats._8bit_storage);
-         VN_SET_CORE_FIELD(vk12_feats, storagePushConstant8, local_feats._8bit_storage);
-      }
-      if (exts->KHR_shader_atomic_int64) {
-         VN_SET_CORE_FIELD(vk12_feats, shaderBufferInt64Atomics, local_feats.shader_atomic_int64);
-         VN_SET_CORE_FIELD(vk12_feats, shaderSharedInt64Atomics, local_feats.shader_atomic_int64);
-      }
-      if (exts->KHR_shader_float16_int8) {
-         VN_SET_CORE_FIELD(vk12_feats, shaderFloat16, local_feats.shader_float16_int8);
-         VN_SET_CORE_FIELD(vk12_feats, shaderInt8, local_feats.shader_float16_int8);
-      }
-      if (exts->EXT_descriptor_indexing) {
-         VN_SET_CORE_VALUE(vk12_feats, descriptorIndexing, true);
-         VN_SET_CORE_FIELD(vk12_feats, shaderInputAttachmentArrayDynamicIndexing, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, shaderUniformTexelBufferArrayDynamicIndexing, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, shaderStorageTexelBufferArrayDynamicIndexing, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, shaderUniformBufferArrayNonUniformIndexing, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, shaderSampledImageArrayNonUniformIndexing, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, shaderStorageBufferArrayNonUniformIndexing, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, shaderStorageImageArrayNonUniformIndexing, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, shaderInputAttachmentArrayNonUniformIndexing, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, shaderUniformTexelBufferArrayNonUniformIndexing, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, shaderStorageTexelBufferArrayNonUniformIndexing, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, descriptorBindingUniformBufferUpdateAfterBind, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, descriptorBindingSampledImageUpdateAfterBind, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, descriptorBindingStorageImageUpdateAfterBind, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, descriptorBindingStorageBufferUpdateAfterBind, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, descriptorBindingUniformTexelBufferUpdateAfterBind, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, descriptorBindingStorageTexelBufferUpdateAfterBind, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, descriptorBindingUpdateUnusedWhilePending, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, descriptorBindingPartiallyBound, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, descriptorBindingVariableDescriptorCount, local_feats.descriptor_indexing);
-         VN_SET_CORE_FIELD(vk12_feats, runtimeDescriptorArray, local_feats.descriptor_indexing);
-      }
-      if (exts->EXT_sampler_filter_minmax) {
-         VN_SET_CORE_VALUE(vk12_feats, samplerFilterMinmax, true);
-      }
-      if (exts->EXT_scalar_block_layout) {
-         VN_SET_CORE_FIELD(vk12_feats, scalarBlockLayout, local_feats.scalar_block_layout);
-      }
-      if (exts->KHR_imageless_framebuffer) {
-         VN_SET_CORE_FIELD(vk12_feats, imagelessFramebuffer, local_feats.imageless_framebuffer);
-      }
-      if (exts->KHR_uniform_buffer_standard_layout) {
-         VN_SET_CORE_FIELD(vk12_feats, uniformBufferStandardLayout, local_feats.uniform_buffer_standard_layout);
-      }
-      if (exts->KHR_shader_subgroup_extended_types) {
-         VN_SET_CORE_FIELD(vk12_feats, shaderSubgroupExtendedTypes, local_feats.shader_subgroup_extended_types);
-      }
-      if (exts->KHR_separate_depth_stencil_layouts) {
-         VN_SET_CORE_FIELD(vk12_feats, separateDepthStencilLayouts, local_feats.separate_depth_stencil_layouts);
-      }
-      if (exts->EXT_host_query_reset) {
-         VN_SET_CORE_FIELD(vk12_feats, hostQueryReset, local_feats.host_query_reset);
-      }
-      if (exts->KHR_timeline_semaphore) {
-         VN_SET_CORE_FIELD(vk12_feats, timelineSemaphore, local_feats.timeline_semaphore);
-      }
-      if (exts->KHR_buffer_device_address) {
-         VN_SET_CORE_FIELD(vk12_feats, bufferDeviceAddress, local_feats.buffer_device_address);
-         VN_SET_CORE_FIELD(vk12_feats, bufferDeviceAddressCaptureReplay, local_feats.buffer_device_address);
-         VN_SET_CORE_FIELD(vk12_feats, bufferDeviceAddressMultiDevice, local_feats.buffer_device_address);
-      }
-      if (exts->KHR_vulkan_memory_model) {
-         VN_SET_CORE_FIELD(vk12_feats, vulkanMemoryModel, local_feats.vulkan_memory_model);
-         VN_SET_CORE_FIELD(vk12_feats, vulkanMemoryModelDeviceScope, local_feats.vulkan_memory_model);
-         VN_SET_CORE_FIELD(vk12_feats, vulkanMemoryModelAvailabilityVisibilityChains, local_feats.vulkan_memory_model);
-      }
-      if (exts->EXT_shader_viewport_index_layer) {
-         VN_SET_CORE_VALUE(vk12_feats, shaderOutputViewportIndex, true);
-      }
-      if (exts->EXT_shader_viewport_index_layer) {
-         VN_SET_CORE_VALUE(vk12_feats, shaderOutputLayer, true);
-      }
-      VN_SET_CORE_VALUE(vk12_feats, subgroupBroadcastDynamicId, false);
+   /* To support sparse binding with feedback, we require sparse binding queue
+    * families to  also support submiting feedback commands. Any queue
+    * families that exclusively support sparse binding are filtered out. If a
+    * device only supports sparse binding with exclusive queue families that
+    * get filtered out then disable the feature.
+    */
+   if (physical_dev->sparse_binding_disabled) {
+      VN_SET_CORE_VALUE(feats, sparseBinding, false);
+      VN_SET_CORE_VALUE(feats, sparseResidencyBuffer, false);
+      VN_SET_CORE_VALUE(feats, sparseResidencyImage2D, false);
+      VN_SET_CORE_VALUE(feats, sparseResidencyImage3D, false);
+      VN_SET_CORE_VALUE(feats, sparseResidency2Samples, false);
+      VN_SET_CORE_VALUE(feats, sparseResidency4Samples, false);
+      VN_SET_CORE_VALUE(feats, sparseResidency8Samples, false);
+      VN_SET_CORE_VALUE(feats, sparseResidency16Samples, false);
+      VN_SET_CORE_VALUE(feats, sparseResidencyAliased, false);
    }
-
-   if (renderer_version < VK_API_VERSION_1_3) {
-      if (exts->EXT_image_robustness) {
-         VN_SET_CORE_FIELD(vk13_feats, robustImageAccess, local_feats.image_robustness);
-      }
-      if (exts->EXT_inline_uniform_block) {
-         VN_SET_CORE_FIELD(vk13_feats, inlineUniformBlock, local_feats.inline_uniform_block);
-         VN_SET_CORE_FIELD(vk13_feats, descriptorBindingInlineUniformBlockUpdateAfterBind, local_feats.inline_uniform_block);
-      }
-      if (exts->EXT_pipeline_creation_cache_control) {
-         VN_SET_CORE_FIELD(vk13_feats, pipelineCreationCacheControl, local_feats.pipeline_creation_cache_control);
-      }
-      if (exts->EXT_private_data) {
-         VN_SET_CORE_FIELD(vk13_feats, privateData, local_feats.private_data);
-      }
-      if (exts->EXT_shader_demote_to_helper_invocation) {
-         VN_SET_CORE_FIELD(vk13_feats, shaderDemoteToHelperInvocation, local_feats.shader_demote_to_helper_invocation);
-      }
-      if (exts->KHR_shader_terminate_invocation) {
-         VN_SET_CORE_FIELD(vk13_feats, shaderTerminateInvocation, local_feats.shader_terminate_invocation);
-      }
-      if (exts->EXT_subgroup_size_control) {
-         VN_SET_CORE_FIELD(vk13_feats, subgroupSizeControl, local_feats.subgroup_size_control);
-         VN_SET_CORE_FIELD(vk13_feats, computeFullSubgroups, local_feats.subgroup_size_control);
-      }
-      if (exts->KHR_synchronization2) {
-         VN_SET_CORE_FIELD(vk13_feats, synchronization2, local_feats.synchronization2);
-      }
-      if (exts->EXT_texture_compression_astc_hdr) {
-         VN_SET_CORE_FIELD(vk13_feats, textureCompressionASTC_HDR, local_feats.texture_compression_astc_hdr);
-      }
-      if (exts->KHR_zero_initialize_workgroup_memory) {
-         VN_SET_CORE_FIELD(vk13_feats, shaderZeroInitializeWorkgroupMemory, local_feats.zero_initialize_workgroup_memory);
-      }
-      if (exts->KHR_dynamic_rendering) {
-         VN_SET_CORE_FIELD(vk13_feats, dynamicRendering, local_feats.dynamic_rendering);
-      }
-      if (exts->KHR_shader_integer_dot_product) {
-         VN_SET_CORE_FIELD(vk13_feats, shaderIntegerDotProduct, local_feats.shader_integer_dot_product);
-      }
-      if (exts->KHR_maintenance4) {
-         VN_SET_CORE_FIELD(vk13_feats, maintenance4, local_feats.maintenance4);
-      }
-   }
-
-   /* clang-format on */
 }
 
 static void
@@ -515,6 +424,7 @@ vn_physical_device_init_properties(struct vn_physical_device *physical_dev)
    /* EXT */
    VN_ADD_PNEXT_EXT(props2, CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT, props->conservative_rasterization, exts->EXT_conservative_rasterization);
    VN_ADD_PNEXT_EXT(props2, CUSTOM_BORDER_COLOR_PROPERTIES_EXT, props->custom_border_color, exts->EXT_custom_border_color);
+   VN_ADD_PNEXT_EXT(props2, GRAPHICS_PIPELINE_LIBRARY_PROPERTIES_EXT, props->graphics_pipeline_library, exts->EXT_graphics_pipeline_library);
    VN_ADD_PNEXT_EXT(props2, LINE_RASTERIZATION_PROPERTIES_EXT, props->line_rasterization, exts->EXT_line_rasterization);
    VN_ADD_PNEXT_EXT(props2, MULTI_DRAW_PROPERTIES_EXT, props->multi_draw, exts->EXT_multi_draw);
    VN_ADD_PNEXT_EXT(props2, PCI_BUS_INFO_PROPERTIES_EXT, props->pci_bus_info, exts->EXT_pci_bus_info);
@@ -537,8 +447,11 @@ vn_physical_device_init_properties(struct vn_physical_device *physical_dev)
 
    /* clang-format off */
 
-   VN_SET_CORE_VALUE(vk10_props, limits.sparseAddressSpaceSize, 0);
-   VN_SET_CORE_VALUE(vk10_props, sparseProperties, (VkPhysicalDeviceSparseProperties){ 0 });
+   /* See comment for sparse binding feature disable */
+   if (physical_dev->sparse_binding_disabled) {
+      VN_SET_CORE_VALUE(vk10_props, limits.sparseAddressSpaceSize, 0);
+      VN_SET_CORE_VALUE(vk10_props, sparseProperties, (VkPhysicalDeviceSparseProperties){ 0 });
+   }
 
    if (renderer_version < VK_API_VERSION_1_2) {
       /* Vulkan 1.1 */
@@ -728,6 +641,8 @@ vn_physical_device_init_properties(struct vn_physical_device *physical_dev)
    }
    memcpy(vk10_props->deviceName, device_name, device_name_len + 1);
 
+   /* store renderer VkDriverId for implementation specific workarounds */
+   physical_dev->renderer_driver_id = vk12_props->driverID;
    VN_SET_CORE_VALUE(vk12_props, driverID, VK_DRIVER_ID_MESA_VENUS);
 
    snprintf(vk12_props->driverName, sizeof(vk12_props->driverName), "venus");
@@ -766,8 +681,29 @@ vn_physical_device_init_queue_family_properties(
    vn_call_vkGetPhysicalDeviceQueueFamilyProperties2(
       instance, vn_physical_device_to_handle(physical_dev), &count, props);
 
+   /* Filter out queue families that exclusively support sparse binding as
+    * we need additional support for submitting feedback commands
+    */
+   uint32_t sparse_count = 0;
+   uint32_t non_sparse_only_count = 0;
+   for (uint32_t i = 0; i < count; i++) {
+      if (props[i].queueFamilyProperties.queueFlags &
+          ~VK_QUEUE_SPARSE_BINDING_BIT) {
+         props[non_sparse_only_count++].queueFamilyProperties =
+            props[i].queueFamilyProperties;
+      }
+      if (props[i].queueFamilyProperties.queueFlags &
+          VK_QUEUE_SPARSE_BINDING_BIT) {
+         sparse_count++;
+      }
+   }
+
+   if (VN_DEBUG(NO_SPARSE) ||
+       (sparse_count && non_sparse_only_count + sparse_count == count))
+      physical_dev->sparse_binding_disabled = true;
+
    physical_dev->queue_family_properties = props;
-   physical_dev->queue_family_count = count;
+   physical_dev->queue_family_count = non_sparse_only_count;
 
    return VK_SUCCESS;
 }
@@ -777,27 +713,56 @@ vn_physical_device_init_memory_properties(
    struct vn_physical_device *physical_dev)
 {
    struct vn_instance *instance = physical_dev->instance;
-   VkPhysicalDeviceMemoryProperties2 *props2 =
-      &physical_dev->memory_properties;
-   VkPhysicalDeviceMemoryProperties *props1 = &props2->memoryProperties;
-
-   props2->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
-
+   VkPhysicalDeviceMemoryProperties2 props2 = {
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2,
+   };
    vn_call_vkGetPhysicalDeviceMemoryProperties2(
-      instance, vn_physical_device_to_handle(physical_dev), props2);
+      instance, vn_physical_device_to_handle(physical_dev), &props2);
 
-   for (uint32_t i = 0; i < props1->memoryTypeCount; i++) {
-      VkMemoryType *type = &props1->memoryTypes[i];
+   physical_dev->memory_properties = props2.memoryProperties;
 
-      /* Kernel makes every mapping coherent.  If a memory type is truly
-       * incoherent, it's better to remove the host-visible flag than silently
-       * making it coherent.
-       */
-      if (!(type->propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+   /* Kernel makes every mapping coherent. If a memory type is truly
+    * incoherent, it's better to remove the host-visible flag than silently
+    * making it coherent. However, for app compatibility purpose, when
+    * coherent-cached memory type is unavailable, we emulate the first cached
+    * memory type with the first coherent memory type.
+    */
+   uint32_t coherent_uncached = VK_MAX_MEMORY_TYPES;
+   uint32_t incoherent_cached = VK_MAX_MEMORY_TYPES;
+   VkPhysicalDeviceMemoryProperties *props = &physical_dev->memory_properties;
+   for (uint32_t i = 0; i < props->memoryTypeCount; i++) {
+      const VkMemoryPropertyFlags flags = props->memoryTypes[i].propertyFlags;
+      const bool coherent = flags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+      const bool cached = flags & VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+      if (coherent && cached) {
+         coherent_uncached = VK_MAX_MEMORY_TYPES;
+         incoherent_cached = VK_MAX_MEMORY_TYPES;
+         break;
+      } else if (coherent && coherent_uncached == VK_MAX_MEMORY_TYPES) {
+         coherent_uncached = i;
+      } else if (cached && incoherent_cached == VK_MAX_MEMORY_TYPES) {
+         incoherent_cached = i;
+      }
+   }
+
+   for (uint32_t i = 0; i < props->memoryTypeCount; i++) {
+      VkMemoryType *type = &props->memoryTypes[i];
+      if (i == incoherent_cached) {
+         /* Only get here if no coherent+cached type is available, and the
+          * spec guarantees that there is at least one coherent type, so it
+          * must be coherent+uncached, hence the index is always valid.
+          */
+         assert(coherent_uncached < props->memoryTypeCount);
+         type->heapIndex = props->memoryTypes[coherent_uncached].heapIndex;
+      } else if (!(type->propertyFlags &
+                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
          type->propertyFlags &= ~(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                   VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
       }
    }
+
+   physical_dev->coherent_uncached = coherent_uncached;
+   physical_dev->incoherent_cached = incoherent_cached;
 }
 
 static void
@@ -880,10 +845,10 @@ vn_physical_device_init_external_fence_handles(
 
    physical_dev->external_fence_handles = 0;
 
-#ifdef ANDROID
-   physical_dev->external_fence_handles =
-      VK_EXTERNAL_FENCE_HANDLE_TYPE_SYNC_FD_BIT;
-#endif
+   if (physical_dev->instance->renderer->info.has_external_sync) {
+      physical_dev->external_fence_handles =
+         VK_EXTERNAL_FENCE_HANDLE_TYPE_SYNC_FD_BIT;
+   }
 }
 
 static void
@@ -931,10 +896,10 @@ vn_physical_device_init_external_semaphore_handles(
    physical_dev->external_binary_semaphore_handles = 0;
    physical_dev->external_timeline_semaphore_handles = 0;
 
-#ifdef ANDROID
-   physical_dev->external_binary_semaphore_handles =
-      VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT;
-#endif
+   if (physical_dev->instance->renderer->info.has_external_sync) {
+      physical_dev->external_binary_semaphore_handles =
+         VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT;
+   }
 }
 
 static inline bool
@@ -964,11 +929,19 @@ vn_physical_device_get_native_extensions(
 {
    memset(exts, 0, sizeof(*exts));
 
+   if (physical_dev->instance->renderer->info.has_external_sync &&
+       physical_dev->renderer_sync_fd.fence_exportable)
+      exts->KHR_external_fence_fd = true;
+
+   if (physical_dev->instance->renderer->info.has_external_sync &&
+       physical_dev->renderer_sync_fd.semaphore_importable &&
+       physical_dev->renderer_sync_fd.semaphore_exportable)
+      exts->KHR_external_semaphore_fd = true;
+
    const bool can_external_mem =
       vn_physical_device_get_external_memory_support(physical_dev);
-
-#ifdef ANDROID
    if (can_external_mem) {
+#ifdef ANDROID
       exts->ANDROID_external_memory_android_hardware_buffer = true;
 
       /* For wsi, we require renderer:
@@ -984,21 +957,11 @@ vn_physical_device_get_native_extensions(
       if (physical_dev->renderer_sync_fd.semaphore_importable &&
           physical_dev->renderer_sync_fd.fence_exportable)
          exts->ANDROID_native_buffer = true;
-   }
-
-   if (physical_dev->renderer_sync_fd.fence_exportable)
-      exts->KHR_external_fence_fd = true;
-
-   if (physical_dev->renderer_sync_fd.semaphore_importable &&
-       physical_dev->renderer_sync_fd.semaphore_exportable)
-      exts->KHR_external_semaphore_fd = true;
-
 #else  /* ANDROID */
-   if (can_external_mem) {
       exts->KHR_external_memory_fd = true;
       exts->EXT_external_memory_dma_buf = true;
-   }
 #endif /* ANDROID */
+   }
 
 #ifdef VN_USE_WSI_PLATFORM
    if (can_external_mem &&
@@ -1023,6 +986,7 @@ vn_physical_device_get_native_extensions(
    exts->EXT_physical_device_drm = true;
    /* use common implementation */
    exts->EXT_tooling_info = true;
+   exts->EXT_device_memory_report = true;
 }
 
 static void
@@ -1117,23 +1081,33 @@ vn_physical_device_get_passthrough_extensions(
       .EXT_ycbcr_2plane_444_formats = true,
 
       /* KHR */
+      .KHR_pipeline_library = true,
       .KHR_push_descriptor = true,
+      .KHR_shader_clock = true,
 
       /* EXT */
+      .EXT_border_color_swizzle = true,
       .EXT_calibrated_timestamps = true,
+      .EXT_color_write_enable = true,
       .EXT_conditional_rendering = true,
       .EXT_conservative_rasterization = true,
       .EXT_custom_border_color = true,
       .EXT_depth_clip_control = true,
       .EXT_depth_clip_enable = true,
+      .EXT_dynamic_rendering_unused_attachments = true,
+      .EXT_fragment_shader_interlock = true,
+      .EXT_graphics_pipeline_library = VN_DEBUG(GPL),
+      .EXT_image_2d_view_of_3d = true,
       .EXT_image_drm_format_modifier = true,
       .EXT_image_view_min_lod = true,
       .EXT_index_type_uint8 = true,
       .EXT_line_rasterization = true,
       .EXT_load_store_op_none = true,
-      .EXT_memory_budget = true,
+      /* TODO: re-enable after generic app compat issues are resolved */
+      .EXT_memory_budget = false,
       .EXT_multi_draw = true,
       .EXT_mutable_descriptor_type = true,
+      .EXT_non_seamless_cube_map = true,
       .EXT_primitive_topology_list_restart = true,
       .EXT_primitives_generated_query = true,
       /* TODO(VK_EXT_private_data): Support natively.
@@ -1159,8 +1133,10 @@ vn_physical_device_get_passthrough_extensions(
       .EXT_rasterization_order_attachment_access = true,
       .EXT_robustness2 = true,
       .EXT_shader_stencil_export = true,
+      .EXT_shader_subgroup_ballot = true,
       .EXT_transform_feedback = true,
       .EXT_vertex_attribute_divisor = true,
+      .EXT_vertex_input_dynamic_state = true,
 
       /* vendor */
       .VALVE_mutable_descriptor_type = true,
@@ -1317,13 +1293,13 @@ vn_physical_device_init(struct vn_physical_device *physical_dev)
 
    vn_physical_device_init_supported_extensions(physical_dev);
 
-   /* TODO query all caps with minimal round trips */
-   vn_physical_device_init_features(physical_dev);
-   vn_physical_device_init_properties(physical_dev);
-
    result = vn_physical_device_init_queue_family_properties(physical_dev);
    if (result != VK_SUCCESS)
       goto fail;
+
+   /* TODO query all caps with minimal round trips */
+   vn_physical_device_init_features(physical_dev);
+   vn_physical_device_init_properties(physical_dev);
 
    vn_physical_device_init_memory_properties(physical_dev);
 
@@ -1476,7 +1452,7 @@ enumerate_physical_devices(struct vn_instance *instance,
    VkPhysicalDevice *handles = NULL;
    VkResult result;
 
-   uint32_t count;
+   uint32_t count = 0;
    result = vn_call_vkEnumeratePhysicalDevices(
       instance, vn_instance_to_handle(instance), &count, NULL);
    if (result != VK_SUCCESS || !count)
@@ -1722,74 +1698,6 @@ vn_physical_device_add_format_properties(
 }
 
 void
-vn_GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice,
-                              VkPhysicalDeviceFeatures2 *pFeatures)
-{
-   struct vn_physical_device *physical_dev =
-      vn_physical_device_from_handle(physicalDevice);
-   const struct vn_physical_device_features *in_feats =
-      &physical_dev->features;
-
-   pFeatures->features = in_feats->vulkan_1_0;
-
-   vk_foreach_struct(out, pFeatures->pNext) {
-      if (vk_get_physical_device_core_1_1_feature_ext(out,
-                                                      &in_feats->vulkan_1_1))
-         continue;
-
-      if (vk_get_physical_device_core_1_2_feature_ext(out,
-                                                      &in_feats->vulkan_1_2))
-         continue;
-
-      if (vk_get_physical_device_core_1_3_feature_ext(out,
-                                                      &in_feats->vulkan_1_3))
-         continue;
-
-      switch (out->sType) {
-
-#define CASE(stype, member)                                                  \
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_##stype:                           \
-      vk_copy_struct_guts(out, (VkBaseInStructure *)&in_feats->member,       \
-                          sizeof(in_feats->member));                         \
-      break
-
-         /* clang-format off */
-
-      /* Vulkan 1.3 */
-      CASE(4444_FORMATS_FEATURES_EXT, _4444_formats);
-      CASE(EXTENDED_DYNAMIC_STATE_FEATURES_EXT, extended_dynamic_state);
-      CASE(EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT, extended_dynamic_state_2);
-      CASE(TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT, texel_buffer_alignment);
-      CASE(YCBCR_2_PLANE_444_FORMATS_FEATURES_EXT, ycbcr_2plane_444_formats);
-
-      /* EXT */
-      CASE(CONDITIONAL_RENDERING_FEATURES_EXT, conditional_rendering);
-      CASE(CUSTOM_BORDER_COLOR_FEATURES_EXT, custom_border_color);
-      CASE(DEPTH_CLIP_CONTROL_FEATURES_EXT, depth_clip_control);
-      CASE(DEPTH_CLIP_ENABLE_FEATURES_EXT, depth_clip_enable);
-      CASE(IMAGE_VIEW_MIN_LOD_FEATURES_EXT, image_view_min_lod);
-      CASE(INDEX_TYPE_UINT8_FEATURES_EXT, index_type_uint8);
-      CASE(LINE_RASTERIZATION_FEATURES_EXT, line_rasterization);
-      CASE(MULTI_DRAW_FEATURES_EXT, multi_draw);
-      CASE(MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT, mutable_descriptor_type);
-      CASE(PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT, primitive_topology_list_restart);
-      CASE(PRIMITIVES_GENERATED_QUERY_FEATURES_EXT, primitives_generated_query);
-      CASE(PROVOKING_VERTEX_FEATURES_EXT, provoking_vertex);
-      CASE(RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_EXT, rasterization_order_attachment_access);
-      CASE(ROBUSTNESS_2_FEATURES_EXT, robustness_2);
-      CASE(TRANSFORM_FEEDBACK_FEATURES_EXT, transform_feedback);
-      CASE(VERTEX_ATTRIBUTE_DIVISOR_FEATURES_EXT, vertex_attribute_divisor);
-
-         /* clang-format on */
-
-      default:
-         break;
-#undef CASE
-      }
-   }
-}
-
-void
 vn_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
                                 VkPhysicalDeviceProperties2 *pProperties)
 {
@@ -1830,6 +1738,7 @@ vn_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
       /* EXT */
       CASE(CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT, conservative_rasterization);
       CASE(CUSTOM_BORDER_COLOR_PROPERTIES_EXT, custom_border_color);
+      CASE(GRAPHICS_PIPELINE_LIBRARY_PROPERTIES_EXT, graphics_pipeline_library);
       CASE(LINE_RASTERIZATION_PROPERTIES_EXT, line_rasterization);
       CASE(MULTI_DRAW_PROPERTIES_EXT, multi_draw);
       CASE(PROVOKING_VERTEX_PROPERTIES_EXT, provoking_vertex);
@@ -1934,8 +1843,7 @@ vn_GetPhysicalDeviceMemoryProperties2(
     * our cached version.  Our cached version may differ from the server's
     * version due to workarounds.
     */
-   pMemoryProperties->memoryProperties =
-      physical_dev->memory_properties.memoryProperties;
+   pMemoryProperties->memoryProperties = physical_dev->memory_properties;
 }
 
 void
@@ -2192,12 +2100,21 @@ vn_GetPhysicalDeviceSparseImageFormatProperties2(
    VkSparseImageFormatProperties2 *pProperties)
 {
 
+   struct vn_physical_device *physical_dev =
+      vn_physical_device_from_handle(physicalDevice);
    /* If VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT is not supported for the given
     * arguments, pPropertyCount will be set to zero upon return, and no data
     * will be written to pProperties.
     */
-   *pPropertyCount = 0;
-   return;
+   if (physical_dev->sparse_binding_disabled) {
+      *pPropertyCount = 0;
+      return;
+   }
+
+   /* TODO per-device cache */
+   vn_call_vkGetPhysicalDeviceSparseImageFormatProperties2(
+      physical_dev->instance, physicalDevice, pFormatInfo, pPropertyCount,
+      pProperties);
 }
 
 void

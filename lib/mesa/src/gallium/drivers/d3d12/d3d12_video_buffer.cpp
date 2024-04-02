@@ -62,6 +62,7 @@ d3d12_video_buffer_create_impl(struct pipe_context *pipe,
 
    // Fill vtable
    pD3D12VideoBuffer->base.destroy                     = d3d12_video_buffer_destroy;
+   pD3D12VideoBuffer->base.get_resources               = d3d12_video_buffer_resources;
    pD3D12VideoBuffer->base.get_sampler_view_planes     = d3d12_video_buffer_get_sampler_view_planes;
    pD3D12VideoBuffer->base.get_sampler_view_components = d3d12_video_buffer_get_sampler_view_components;
    pD3D12VideoBuffer->base.get_surfaces                = d3d12_video_buffer_get_surfaces;
@@ -72,9 +73,20 @@ d3d12_video_buffer_create_impl(struct pipe_context *pipe,
    templ.target     = PIPE_TEXTURE_2D;
    templ.bind       = pD3D12VideoBuffer->base.bind;
    templ.format     = pD3D12VideoBuffer->base.buffer_format;
-   // YUV 4:2:0 formats in D3D12 need to have multiple of 2 dimensions
-   templ.width0     = align(pD3D12VideoBuffer->base.width, 2);
-   templ.height0    = align(pD3D12VideoBuffer->base.height, 2);
+   if (handle)
+   {
+      // YUV 4:2:0 formats in D3D12 always require multiple of 2 dimensions
+      // We must respect the input dimensions of the imported resource handle (e.g no extra aligning)
+      templ.width0     = align(pD3D12VideoBuffer->base.width, 2);
+      templ.height0    = align(pD3D12VideoBuffer->base.height, 2);
+   }
+   else
+   {
+      // When creating (e.g not importing) resources we allocate
+      // with a higher alignment to maximize HW compatibility
+      templ.width0     = align(pD3D12VideoBuffer->base.width, 2);
+      templ.height0    = align(pD3D12VideoBuffer->base.height, 16);
+   }
    templ.depth0     = 1;
    templ.array_size = 1;
    templ.flags      = 0;
@@ -148,13 +160,6 @@ d3d12_video_buffer_destroy(struct pipe_video_buffer *buffer)
       d3d12_video_buffer_destroy_associated_data(pD3D12VideoBuffer->base.associated_data);
       // Set to nullptr after cleanup, no dangling pointers
       pD3D12VideoBuffer->base.associated_data = nullptr;
-   }
-
-   // Destroy (if any) codec where the associated data came from
-   if (pD3D12VideoBuffer->base.codec != nullptr) {
-      d3d12_video_decoder_destroy(pD3D12VideoBuffer->base.codec);
-      // Set to nullptr after cleanup, no dangling pointers
-      pD3D12VideoBuffer->base.codec = nullptr;
    }
 
    for (uint i = 0; i < pD3D12VideoBuffer->surfaces.size(); ++i) {
@@ -231,6 +236,32 @@ error:
    }
 
    return nullptr;
+}
+
+/**
+ * get an individual resource for each plane,
+ * only returns existing resources by reference
+ */
+void
+d3d12_video_buffer_resources(struct pipe_video_buffer *buffer,
+                             struct pipe_resource **resources)
+{
+   struct d3d12_video_buffer *pD3D12VideoBuffer = (struct d3d12_video_buffer *) buffer;
+   assert(pD3D12VideoBuffer);
+
+   // pCurPlaneResource refers to the planar resource, not the overall resource.
+   // in d3d12_resource this is handled by having a linked list of planes with
+   // d3dRes->base.next ptr to next plane resource
+   // starting with the plane 0 being the overall resource
+   struct pipe_resource *pCurPlaneResource = &pD3D12VideoBuffer->texture->base.b;
+
+   for (uint i = 0; i < pD3D12VideoBuffer->num_planes; ++i) {
+      assert(pCurPlaneResource); // the d3d12_resource has a linked list with the exact name of number of elements
+                                 // as planes
+
+      resources[i] = pCurPlaneResource;
+      pCurPlaneResource = pCurPlaneResource->next;
+   }
 }
 
 /**

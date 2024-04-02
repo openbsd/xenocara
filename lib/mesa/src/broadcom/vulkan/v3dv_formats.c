@@ -22,12 +22,17 @@
  */
 
 #include "v3dv_private.h"
-#include "vk_util.h"
+#ifdef ANDROID
+#include "vk_android.h"
+#endif
 #include "vk_enum_defines.h"
+#include "vk_util.h"
 
 #include "drm-uapi/drm_fourcc.h"
 #include "util/format/u_format.h"
 #include "vulkan/wsi/wsi_common.h"
+
+#include <vulkan/vulkan_android.h>
 
 const uint8_t *
 v3dv_get_format_swizzle(struct v3dv_device *device, VkFormat f, uint8_t plane)
@@ -169,6 +174,7 @@ image_format_plane_features(struct v3dv_physical_device *pdevice,
          if (desc->nr_channels == 1 && vk_format_is_int(vk_format))
             flags |= VK_FORMAT_FEATURE_2_STORAGE_IMAGE_ATOMIC_BIT;
       } else if (vk_format == VK_FORMAT_A2B10G10R10_UNORM_PACK32 ||
+                 vk_format == VK_FORMAT_A2R10G10B10_UNORM_PACK32 ||
                  vk_format == VK_FORMAT_A2B10G10R10_UINT_PACK32 ||
                  vk_format == VK_FORMAT_B10G11R11_UFLOAT_PACK32) {
          /* To comply with shaderStorageImageExtendedFormats */
@@ -291,7 +297,8 @@ buffer_format_features(VkFormat vk_format, const struct v3dv_format *v3dv_format
                   VK_FORMAT_FEATURE_2_STORAGE_TEXEL_BUFFER_BIT |
                   VK_FORMAT_FEATURE_2_STORAGE_READ_WITHOUT_FORMAT_BIT_KHR;
       }
-   } else if (vk_format == VK_FORMAT_A2B10G10R10_UNORM_PACK32) {
+   } else if (vk_format == VK_FORMAT_A2B10G10R10_UNORM_PACK32 ||
+              vk_format == VK_FORMAT_A2R10G10B10_UNORM_PACK32) {
       flags |= VK_FORMAT_FEATURE_2_VERTEX_BUFFER_BIT |
                VK_FORMAT_FEATURE_2_UNIFORM_TEXEL_BUFFER_BIT |
                VK_FORMAT_FEATURE_2_STORAGE_TEXEL_BUFFER_BIT;
@@ -658,6 +665,7 @@ v3dv_GetPhysicalDeviceImageFormatProperties2(VkPhysicalDevice physicalDevice,
    const VkPhysicalDeviceExternalImageFormatInfo *external_info = NULL;
    const VkPhysicalDeviceImageDrmFormatModifierInfoEXT *drm_format_mod_info = NULL;
    VkExternalImageFormatProperties *external_props = NULL;
+   UNUSED VkAndroidHardwareBufferUsageANDROID *android_usage = NULL;
    VkSamplerYcbcrConversionImageFormatProperties *ycbcr_props = NULL;
    VkImageTiling tiling = base_info->tiling;
 
@@ -698,6 +706,9 @@ v3dv_GetPhysicalDeviceImageFormatProperties2(VkPhysicalDevice physicalDevice,
       case VK_STRUCTURE_TYPE_EXTERNAL_IMAGE_FORMAT_PROPERTIES:
          external_props = (void *) s;
          break;
+      case VK_STRUCTURE_TYPE_ANDROID_HARDWARE_BUFFER_USAGE_ANDROID:
+         android_usage = (void *)s;
+         break;
       case VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_IMAGE_FORMAT_PROPERTIES:
          ycbcr_props = (void *) s;
          break;
@@ -721,10 +732,26 @@ v3dv_GetPhysicalDeviceImageFormatProperties2(VkPhysicalDevice physicalDevice,
          if (external_props)
             external_props->externalMemoryProperties = prime_fd_props;
          break;
+#ifdef ANDROID
+      case VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID:
+         if (external_props) {
+            external_props->externalMemoryProperties.exportFromImportedHandleTypes = 0;
+            external_props->externalMemoryProperties.compatibleHandleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID;
+            external_props->externalMemoryProperties.externalMemoryFeatures = VK_EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_BIT | VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT | VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT;
+         }
+         break;
+#endif
       default:
          result = VK_ERROR_FORMAT_NOT_SUPPORTED;
          break;
       }
+   }
+
+   if (android_usage) {
+#ifdef ANDROID
+      android_usage->androidHardwareBufferUsage =
+         vk_image_usage_to_ahb_usage(base_info->flags, base_info->usage);
+#endif
    }
 
 done:

@@ -25,7 +25,7 @@
 #define VN_MIN_RENDERER_VERSION VK_API_VERSION_1_1
 
 /* max advertised version at both instance and device levels */
-#ifdef ANDROID
+#if defined(ANDROID) && ANDROID_API_LEVEL < 33
 #define VN_MAX_API_VERSION VK_MAKE_VERSION(1, 1, VK_HEADER_VERSION)
 #else
 #define VN_MAX_API_VERSION VK_MAKE_VERSION(1, 3, VK_HEADER_VERSION)
@@ -57,9 +57,6 @@ struct vn_instance {
       mtx_t roundtrip_mutex;
       uint64_t roundtrip_next;
    } ring;
-
-   /* XXX staged features to be merged to core venus protocol */
-   VkVenusExperimentalFeatures100000MESA experimental;
 
    /* Between the driver and the app, VN_MAX_API_VERSION is what we advertise
     * and base.base.app_info.api_version is what the app requests.

@@ -2,24 +2,7 @@
 ************************************************************************************************************************
 *
 *  Copyright (C) 2007-2022 Advanced Micro Devices, Inc.  All rights reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"),
-* to deal in the Software without restriction, including without limitation
-* the rights to use, copy, modify, merge, publish, distribute, sublicense,
-* and/or sell copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-* THE COPYRIGHT HOLDER(S) OR AUTHOR(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR
-* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE
+*  SPDX-License-Identifier: MIT
 *
 ***********************************************************************************************************************/
 
@@ -745,15 +728,21 @@ ChipFamily Gfx11Lib::HwlConvertChipFamily(
 
     switch (chipFamily)
     {
-        case FAMILY_GFX1100:
-            if (ASICREV_IS_GFX1100(chipRevision))
+        case FAMILY_NV3:
+            if (ASICREV_IS_NAVI31_P(chipRevision))
             {
             }
-            if (ASICREV_IS_GFX1101(chipRevision))
+            if (ASICREV_IS_NAVI32_P(chipRevision))
             {
             }
-            if (ASICREV_IS_GFX1102(chipRevision))
+            if (ASICREV_IS_NAVI33_P(chipRevision))
             {
+            }
+            break;
+        case FAMILY_GFX1150:
+            if (ASICREV_IS_GFX1150(chipRevision))
+            {
+                m_settings.isGfx1150 = 1;
             }
             break;
         case FAMILY_GFX1103:
@@ -1348,6 +1337,7 @@ UINT_32 Gfx11Lib::GetValidDisplaySwizzleModes(
 
         if (false
             || (m_settings.isGfx1103)
+            || (m_settings.isGfx1150)
            )
         {
             // Not all GPUs support displaying with 256kB swizzle modes.

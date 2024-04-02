@@ -50,6 +50,11 @@ struct zink_rasterizer_state;
 struct zink_resource;
 struct zink_vertex_elements_state;
 
+#define perf_debug(ctx, ...) do {                      \
+   util_debug_message(&ctx->dbg, PERF_INFO, __VA_ARGS__); \
+} while(0)
+
+
 static inline struct zink_resource *
 zink_descriptor_surface_resource(struct zink_descriptor_surface *ds)
 {
@@ -74,13 +79,13 @@ zink_program_cache_stages(uint32_t stages_present)
                              (1 << MESA_SHADER_GEOMETRY))) >> 1;
 }
 
-static inline bool
+static ALWAYS_INLINE bool
 zink_is_zsbuf_used(const struct zink_context *ctx)
 {
    return ctx->blitting || tc_renderpass_info_is_zsbuf_used(&ctx->dynamic_fb.tc_info);
 }
 
-static inline bool
+static ALWAYS_INLINE bool
 zink_is_zsbuf_write(const struct zink_context *ctx)
 {
    if (!zink_is_zsbuf_used(ctx))
@@ -94,7 +99,8 @@ zink_fence_wait(struct pipe_context *ctx);
 
 void
 zink_wait_on_batch(struct zink_context *ctx, uint64_t batch_id);
-
+void
+zink_reset_ds3_states(struct zink_context *ctx);
 bool
 zink_check_batch_completion(struct zink_context *ctx, uint64_t batch_id);
 VkCommandBuffer
@@ -114,8 +120,10 @@ void
 zink_resource_buffer_barrier2(struct zink_context *ctx, struct zink_resource *res, VkAccessFlags flags, VkPipelineStageFlags pipeline);
 bool
 zink_resource_image_needs_barrier(struct zink_resource *res, VkImageLayout new_layout, VkAccessFlags flags, VkPipelineStageFlags pipeline);
-bool
+void
 zink_resource_image_barrier_init(VkImageMemoryBarrier *imb, struct zink_resource *res, VkImageLayout new_layout, VkAccessFlags flags, VkPipelineStageFlags pipeline);
+void
+zink_resource_image_barrier2_init(VkImageMemoryBarrier2 *imb, struct zink_resource *res, VkImageLayout new_layout, VkAccessFlags flags, VkPipelineStageFlags pipeline);
 void
 zink_resource_image_barrier(struct zink_context *ctx, struct zink_resource *res,
                       VkImageLayout new_layout, VkAccessFlags flags, VkPipelineStageFlags pipeline);
@@ -198,6 +206,19 @@ zink_cmd_debug_marker_end(struct zink_context *ctx, VkCommandBuffer cmdbuf,bool 
 void
 zink_copy_buffer(struct zink_context *ctx, struct zink_resource *dst, struct zink_resource *src,
                  unsigned dst_offset, unsigned src_offset, unsigned size);
+
+VkIndirectCommandsLayoutTokenNV *
+zink_dgc_add_token(struct zink_context *ctx, VkIndirectCommandsTokenTypeNV type, void **mem);
+void
+zink_flush_dgc(struct zink_context *ctx);
+
+static ALWAYS_INLINE void
+zink_flush_dgc_if_enabled(struct zink_context *ctx)
+{
+   if (unlikely(zink_debug & ZINK_DEBUG_DGC))
+      zink_flush_dgc(ctx);
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -260,10 +281,8 @@ zink_resource_rebind(struct zink_context *ctx, struct zink_resource *res);
 
 void
 zink_rebind_framebuffer(struct zink_context *ctx, struct zink_resource *res);
-bool
-zink_use_dummy_attachments(const struct zink_context *ctx);
 void
-zink_set_color_write_enables(struct zink_context *ctx);
+zink_set_null_fs(struct zink_context *ctx);
 
 void
 zink_copy_image_buffer(struct zink_context *ctx, struct zink_resource *dst, struct zink_resource *src,

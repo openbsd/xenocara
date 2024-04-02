@@ -34,7 +34,6 @@ unsigned brw_required_dispatch_width(const struct shader_info *info);
 static constexpr int SIMD_COUNT = 3;
 
 struct brw_simd_selection_state {
-   void *mem_ctx;
    const struct intel_device_info *devinfo;
 
    std::variant<struct brw_cs_prog_data *,
@@ -71,5 +70,7 @@ int brw_simd_select(const brw_simd_selection_state &state);
 int brw_simd_select_for_workgroup_size(const struct intel_device_info *devinfo,
                                        const struct brw_cs_prog_data *prog_data,
                                        const unsigned *sizes);
+
+bool brw_should_print_shader(const nir_shader *shader, uint64_t debug_flag);
 
 #endif // BRW_PRIVATE_H

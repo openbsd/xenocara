@@ -95,7 +95,25 @@ v3dX(start_binning)(struct v3d_context *v3d, struct v3d_job *job)
 #endif
 
         assert(!job->msaa || !job->double_buffer);
-#if V3D_VERSION >= 40
+#if V3D_VERSION >= 71
+        cl_emit(&job->bcl, TILE_BINNING_MODE_CFG, config) {
+                config.width_in_pixels = job->draw_width;
+                config.height_in_pixels = job->draw_height;
+
+                config.log2_tile_width = log2_tile_size(job->tile_width);
+                config.log2_tile_height = log2_tile_size(job->tile_height);
+
+                /* FIXME: ideallly we would like next assert on the packet header (as is
+                 * general, so also applies to GL). We would need to expand
+                 * gen_pack_header for that.
+                 */
+                assert(config.log2_tile_width == config.log2_tile_height ||
+                       config.log2_tile_width == config.log2_tile_height + 1);
+        }
+
+#endif
+
+#if V3D_VERSION >= 40 && V3D_VERSION <= 42
         cl_emit(&job->bcl, TILE_BINNING_MODE_CFG, config) {
                 config.width_in_pixels = job->draw_width;
                 config.height_in_pixels = job->draw_height;
@@ -107,7 +125,8 @@ v3dX(start_binning)(struct v3d_context *v3d, struct v3d_job *job)
 
                 config.maximum_bpp_of_all_render_targets = job->internal_bpp;
         }
-#else /* V3D_VERSION < 40 */
+#endif
+#if V3D_VERSION < 40
         /* "Binning mode lists start with a Tile Binning Mode Configuration
          * item (120)"
          *
@@ -134,7 +153,7 @@ v3dX(start_binning)(struct v3d_context *v3d, struct v3d_job *job)
 
                 config.maximum_bpp_of_all_render_targets = job->internal_bpp;
         }
-#endif /* V3D_VERSION < 40 */
+#endif
 
         /* There's definitely nothing in the VCD cache we want. */
         cl_emit(&job->bcl, FLUSH_VCD_CACHE, bin);
@@ -377,7 +396,9 @@ v3d_emit_gs_state_record(struct v3d_job *job,
                         gs_bin->prog_data.gs->base.threads == 4;
                 shader.geometry_bin_mode_shader_start_in_final_thread_section =
                         gs_bin->prog_data.gs->base.single_seg;
+#if V3D_VERSION <= 42
                 shader.geometry_bin_mode_shader_propagate_nans = true;
+#endif
                 shader.geometry_bin_mode_shader_uniforms_address =
                         gs_bin_uniforms;
 
@@ -387,21 +408,23 @@ v3d_emit_gs_state_record(struct v3d_job *job,
                         gs->prog_data.gs->base.threads == 4;
                 shader.geometry_render_mode_shader_start_in_final_thread_section =
                         gs->prog_data.gs->base.single_seg;
+#if V3D_VERSION <= 42
                 shader.geometry_render_mode_shader_propagate_nans = true;
+#endif
                 shader.geometry_render_mode_shader_uniforms_address =
                         gs_render_uniforms;
         }
 }
 
 static uint8_t
-v3d_gs_output_primitive(enum shader_prim prim_type)
+v3d_gs_output_primitive(enum mesa_prim prim_type)
 {
     switch (prim_type) {
-    case SHADER_PRIM_POINTS:
+    case MESA_PRIM_POINTS:
         return GEOMETRY_SHADER_POINTS;
-    case SHADER_PRIM_LINE_STRIP:
+    case MESA_PRIM_LINE_STRIP:
         return GEOMETRY_SHADER_LINE_STRIP;
-    case SHADER_PRIM_TRIANGLE_STRIP:
+    case MESA_PRIM_TRIANGLE_STRIP:
         return GEOMETRY_SHADER_TRI_STRIP;
     default:
         unreachable("Unsupported primitive type");
@@ -600,7 +623,7 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                 shader.enable_clipping = true;
                 /* V3D_DIRTY_PRIM_MODE | V3D_DIRTY_RASTERIZER */
                 shader.point_size_in_shaded_vertex_data =
-                        (info->mode == PIPE_PRIM_POINTS &&
+                        (info->mode == MESA_PRIM_POINTS &&
                          v3d->rasterizer->base.point_size_per_vertex);
 
                 /* Must be set if the shader modifies Z, discards, or modifies
@@ -638,10 +661,6 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                 shader.number_of_varyings_in_fragment_shader =
                         v3d->prog.fs->prog_data.fs->num_inputs;
 
-                shader.coordinate_shader_propagate_nans = true;
-                shader.vertex_shader_propagate_nans = true;
-                shader.fragment_shader_propagate_nans = true;
-
                 shader.coordinate_shader_code_address =
                         cl_address(v3d_resource(v3d->prog.cs->resource)->bo,
                                    v3d->prog.cs->offset);
@@ -652,6 +671,11 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                         cl_address(v3d_resource(v3d->prog.fs->resource)->bo,
                                    v3d->prog.fs->offset);
 
+#if V3D_VERSION <= 42
+                shader.coordinate_shader_propagate_nans = true;
+                shader.vertex_shader_propagate_nans = true;
+                shader.fragment_shader_propagate_nans = true;
+
                 /* XXX: Use combined input/output size flag in the common
                  * case.
                  */
@@ -659,13 +683,24 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                         v3d->prog.cs->prog_data.vs->separate_segments;
                 shader.vertex_shader_has_separate_input_and_output_vpm_blocks =
                         v3d->prog.vs->prog_data.vs->separate_segments;
-
                 shader.coordinate_shader_input_vpm_segment_size =
                         v3d->prog.cs->prog_data.vs->separate_segments ?
                         v3d->prog.cs->prog_data.vs->vpm_input_size : 1;
                 shader.vertex_shader_input_vpm_segment_size =
                         v3d->prog.vs->prog_data.vs->separate_segments ?
                         v3d->prog.vs->prog_data.vs->vpm_input_size : 1;
+#endif
+                /* On V3D 7.1 there isn't a specific flag to set if we are using
+                 * shared/separate segments or not. We just set the value of
+                 * vpm_input_size to 0, and set output to the max needed. That should be
+                 * already properly set on prog_data_vs_bin
+                 */
+#if V3D_VERSION == 71
+                shader.coordinate_shader_input_vpm_segment_size =
+                        v3d->prog.cs->prog_data.vs->vpm_input_size;
+                shader.vertex_shader_input_vpm_segment_size =
+                        v3d->prog.vs->prog_data.vs->vpm_input_size;
+#endif
 
                 shader.coordinate_shader_output_vpm_segment_size =
                         v3d->prog.cs->prog_data.vs->vpm_output_size;
@@ -724,9 +759,11 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                 shader.instance_id_read_by_vertex_shader =
                         v3d->prog.vs->prog_data.vs->uses_iid;
 
+#if V3D_VERSION <= 42
                 shader.address_of_default_attribute_values =
                         cl_address(v3d_resource(vtx->defaults)->bo,
                                    vtx->defaults_offset);
+#endif
         }
 
         bool cs_loaded_any = false;
@@ -743,7 +780,7 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                 cl_emit_with_prepacked(&job->indirect,
                                        GL_SHADER_STATE_ATTRIBUTE_RECORD,
                                        &vtx->attrs[i * size], attr) {
-                        attr.stride = vb->stride;
+                        attr.stride = elem->src_stride;
                         attr.address = cl_address(rsc->bo,
                                                   vb->buffer_offset +
                                                   elem->src_offset);
@@ -1033,8 +1070,12 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
          * rendering to each texture's BO.
          */
         if (v3d->tex[PIPE_SHADER_VERTEX].num_textures || (indirect && indirect->buffer)) {
-                perf_debug("Blocking binner on last render "
-                           "due to vertex texturing or indirect drawing.\n");
+                static bool warned = false;
+                if (!warned) {
+                        perf_debug("Blocking binner on last render due to "
+                                   "vertex texturing or indirect drawing.\n");
+                        warned = true;
+                }
                 job->submit.in_sync_bcl = v3d->out_sync;
         }
 
@@ -1089,11 +1130,7 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
          */
         v3d_emit_wait_for_tf_if_needed(v3d, job);
 
-#if V3D_VERSION >= 41
-        v3d41_emit_state(pctx);
-#else
-        v3d33_emit_state(pctx);
-#endif
+        v3dX(emit_state)(pctx);
 
         if (v3d->dirty & (V3D_DIRTY_VTXBUF |
                           V3D_DIRTY_VTXSTATE |
@@ -1135,7 +1172,9 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
                 prim_tf_enable = (V3D_PRIM_POINTS_TF - V3D_PRIM_POINTS);
 #endif
 
-        if (!v3d->prog.gs)
+        v3d->prim_restart = info->primitive_restart;
+
+        if (!v3d->prog.gs && !v3d->prim_restart)
                 v3d_update_primitives_generated_counter(v3d, info, &draws[0]);
 
         uint32_t hw_prim_type = v3d_hw_prim_type(info->mode);
@@ -1262,10 +1301,16 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
 
         /* Increment the TF offsets by how many verts we wrote.  XXX: This
          * needs some clamping to the buffer size.
+         *
+         * If primitive restart is enabled or we have a geometry shader, we
+         * update it later, when we can query the device to know how many
+         * vertices were written.
          */
-        for (int i = 0; i < v3d->streamout.num_targets; i++)
-                v3d_stream_output_target(v3d->streamout.targets[i])->offset +=
-                        u_stream_outputs_for_vertices(info->mode, draws[0].count);
+        if (!v3d->prog.gs && !v3d->prim_restart) {
+                for (int i = 0; i < v3d->streamout.num_targets; i++)
+                        v3d_stream_output_target(v3d->streamout.targets[i])->offset +=
+                                u_stream_outputs_for_vertices(info->mode, draws[0].count);
+        }
 
         if (v3d->zsa && job->zsbuf && v3d->zsa->base.depth_enabled) {
                 struct v3d_resource *rsc = v3d_resource(job->zsbuf->texture);
@@ -1428,8 +1473,15 @@ v3d_launch_grid(struct pipe_context *pctx, const struct pipe_grid_info *info)
         submit.cfg[3] |= (wg_size & 0xff) << V3D_CSD_CFG3_WG_SIZE_SHIFT;
 
 
-        /* Number of batches the dispatch will invoke (minus 1). */
-        submit.cfg[4] = num_batches - 1;
+        /* Number of batches the dispatch will invoke.
+         * V3D 7.1.6 and later don't subtract 1 from the number of batches
+         */
+        if (v3d->screen->devinfo.ver < 71 ||
+            (v3d->screen->devinfo.ver == 71 && v3d->screen->devinfo.rev < 6)) {
+                submit.cfg[4] = num_batches - 1;
+        } else {
+                submit.cfg[4] = num_batches;
+        }
 
         /* Make sure we didn't accidentally underflow. */
         assert(submit.cfg[4] != ~0);
@@ -1437,7 +1489,8 @@ v3d_launch_grid(struct pipe_context *pctx, const struct pipe_grid_info *info)
         v3d_job_add_bo(job, v3d_resource(v3d->prog.compute->resource)->bo);
         submit.cfg[5] = (v3d_resource(v3d->prog.compute->resource)->bo->offset +
                          v3d->prog.compute->offset);
-        submit.cfg[5] |= V3D_CSD_CFG5_PROPAGATE_NANS;
+        if (v3d->screen->devinfo.ver < 71)
+                submit.cfg[5] |= V3D_CSD_CFG5_PROPAGATE_NANS;
         if (v3d->prog.compute->prog_data.base->single_seg)
                 submit.cfg[5] |= V3D_CSD_CFG5_SINGLE_SEG;
         if (v3d->prog.compute->prog_data.base->threads == 4)
@@ -1552,9 +1605,10 @@ v3d_tlb_clear(struct v3d_job *job, unsigned buffers,
         /* GFXH-1461: If we were to emit a load of just depth or just stencil,
          * then the clear for the other may get lost.  We need to decide now
          * if it would be possible to need to emit a load of just one after
-         * we've set up our TLB clears.
+         * we've set up our TLB clears. This issue is fixed since V3D 4.3.18.
          */
-        if (buffers & PIPE_CLEAR_DEPTHSTENCIL &&
+        if (v3d->screen->devinfo.ver <= 42 &&
+            buffers & PIPE_CLEAR_DEPTHSTENCIL &&
             (buffers & PIPE_CLEAR_DEPTHSTENCIL) != PIPE_CLEAR_DEPTHSTENCIL &&
             job->zsbuf &&
             util_format_is_depth_and_stencil(job->zsbuf->texture->format)) {
@@ -1590,6 +1644,9 @@ v3d_tlb_clear(struct v3d_job *job, unsigned buffers,
                         clamped_color.f[2] = orig_color.f[0];
                         clamped_color.f[3] = orig_color.f[3];
                 }
+
+                if (util_format_is_alpha(psurf->format))
+                        clamped_color.f[0] = clamped_color.f[3];
 
                 switch (surf->internal_type) {
                 case V3D_INTERNAL_TYPE_8:
@@ -1673,7 +1730,13 @@ v3d_clear_render_target(struct pipe_context *pctx, struct pipe_surface *ps,
                         unsigned x, unsigned y, unsigned w, unsigned h,
                         bool render_condition_enabled)
 {
-        fprintf(stderr, "unimpl: clear RT\n");
+        struct v3d_context *v3d = v3d_context(pctx);
+
+        if (render_condition_enabled && !v3d_render_condition_check(v3d))
+                return;
+
+        v3d_blitter_save(v3d, false, render_condition_enabled);
+        util_blitter_clear_render_target(v3d->blitter, ps, color, x, y, w, h);
 }
 
 static void
@@ -1682,7 +1745,14 @@ v3d_clear_depth_stencil(struct pipe_context *pctx, struct pipe_surface *ps,
                         unsigned x, unsigned y, unsigned w, unsigned h,
                         bool render_condition_enabled)
 {
-        fprintf(stderr, "unimpl: clear DS\n");
+        struct v3d_context *v3d = v3d_context(pctx);
+
+        if (render_condition_enabled && !v3d_render_condition_check(v3d))
+                return;
+
+        v3d_blitter_save(v3d, false, render_condition_enabled);
+        util_blitter_clear_depth_stencil(v3d->blitter, ps, buffers, depth,
+                                         stencil, x, y, w, h);
 }
 
 void

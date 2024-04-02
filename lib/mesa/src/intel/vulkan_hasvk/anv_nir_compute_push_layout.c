@@ -31,7 +31,7 @@
 void
 anv_nir_compute_push_layout(nir_shader *nir,
                             const struct anv_physical_device *pdevice,
-                            bool robust_buffer_access,
+                            enum brw_robustness_flags robust_flags,
                             struct brw_stage_prog_data *prog_data,
                             struct anv_pipeline_bind_map *map,
                             void *mem_ctx)
@@ -41,11 +41,8 @@ anv_nir_compute_push_layout(nir_shader *nir,
 
    bool has_const_ubo = false;
    unsigned push_start = UINT_MAX, push_end = 0;
-   nir_foreach_function(function, nir) {
-      if (!function->impl)
-         continue;
-
-      nir_foreach_block(block, function->impl) {
+   nir_foreach_function_impl(impl, nir) {
+      nir_foreach_block(block, impl) {
          nir_foreach_instr(instr, block) {
             if (instr->type != nir_instr_type_intrinsic)
                continue;
@@ -80,7 +77,7 @@ anv_nir_compute_push_layout(nir_shader *nir,
       has_const_ubo && nir->info.stage != MESA_SHADER_COMPUTE &&
       !brw_shader_stage_requires_bindless_resources(nir->info.stage);
 
-   if (push_ubo_ranges && robust_buffer_access) {
+   if (push_ubo_ranges && (robust_flags & BRW_ROBUSTNESS_UBO)) {
       /* We can't on-the-fly adjust our push ranges because doing so would
        * mess up the layout in the shader.  When robustBufferAccess is
        * enabled, we push a mask into the shader indicating which pushed
@@ -127,14 +124,8 @@ anv_nir_compute_push_layout(nir_shader *nir,
    };
 
    if (has_push_intrinsic) {
-      nir_foreach_function(function, nir) {
-         if (!function->impl)
-            continue;
-
-         nir_builder build, *b = &build;
-         nir_builder_init(b, function->impl);
-
-         nir_foreach_block(block, function->impl) {
+      nir_foreach_function_impl(impl, nir) {
+         nir_foreach_block(block, impl) {
             nir_foreach_instr_safe(instr, block) {
                if (instr->type != nir_instr_type_intrinsic)
                   continue;
@@ -189,7 +180,7 @@ anv_nir_compute_push_layout(nir_shader *nir,
       if (push_constant_range.length > 0)
          map->push_ranges[n++] = push_constant_range;
 
-      if (robust_buffer_access) {
+      if (robust_flags & BRW_ROBUSTNESS_UBO) {
          const uint32_t push_reg_mask_offset =
             offsetof(struct anv_push_constants, push_reg_mask[nir->info.stage]);
          assert(push_reg_mask_offset >= push_start);
@@ -221,7 +212,8 @@ anv_nir_compute_push_layout(nir_shader *nir,
          };
 
          /* We only bother to shader-zero pushed client UBOs */
-         if (binding->set < MAX_SETS && robust_buffer_access) {
+         if (binding->set < MAX_SETS &&
+             (robust_flags & BRW_ROBUSTNESS_UBO)) {
             prog_data->zero_push_reg |= BITFIELD64_RANGE(range_start_reg,
                                                          ubo_range->length);
          }

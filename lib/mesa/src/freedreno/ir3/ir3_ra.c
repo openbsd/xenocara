@@ -879,9 +879,13 @@ try_evict_regs(struct ra_ctx *ctx, struct ra_file *file,
       if (evicted)
          continue;
 
-      /* If we couldn't evict this range, we may be able to swap it with a
-       * killed range to acheive the same effect.
+      /* If we couldn't evict this range, but the register we're allocating is
+       * allowed to overlap with a killed range, then we may be able to swap it
+       * with a killed range to acheive the same effect.
        */
+      if (is_early_clobber(reg) || is_source)
+         return false;
+
       foreach_interval (killed, file) {
          if (!killed->is_killed)
             continue;
@@ -1711,8 +1715,14 @@ handle_collect(struct ra_ctx *ctx, struct ir3_instruction *instr)
 
       struct ra_interval *interval = &ctx->intervals[src->def->name];
 
-      if (src->def->merge_set != dst_set || interval->is_killed)
+      /* We only need special handling if the source's interval overlaps with
+       * the destination's interval.
+       */
+      if (src->def->interval_start >= instr->dsts[0]->interval_end ||
+          instr->dsts[0]->interval_start >= src->def->interval_end ||
+          interval->is_killed)
          continue;
+
       while (interval->interval.parent != NULL) {
          interval = ir3_reg_interval_to_ra_interval(interval->interval.parent);
       }
@@ -2577,7 +2587,7 @@ ir3_ra(struct ir3_shader_variant *v)
     * because on some gens the register file is not big enough to hold a
     * double-size wave with all 48 registers in use.
     */
-   if (v->real_wavesize == IR3_DOUBLE_ONLY) {
+   if (v->shader_options.real_wavesize == IR3_DOUBLE_ONLY) {
       limit_pressure.full =
          MAX2(limit_pressure.full, ctx->compiler->reg_size_vec4 / 2 * 16);
    }

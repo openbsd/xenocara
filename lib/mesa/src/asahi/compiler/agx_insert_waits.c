@@ -84,6 +84,16 @@ agx_insert_waits_local(agx_context *ctx, agx_block *block)
          }
       }
 
+      /* Check for barriers */
+      if (I->op == AGX_OPCODE_THREADGROUP_BARRIER ||
+          I->op == AGX_OPCODE_MEMORY_BARRIER) {
+
+         for (unsigned slot = 0; slot < ARRAY_SIZE(slots); ++slot) {
+            if (slots[slot].nr_pending)
+               wait_mask |= BITSET_BIT(slot);
+         }
+      }
+
       /* Try to assign a free slot */
       if (instr_is_async(I)) {
          for (unsigned slot = 0; slot < ARRAY_SIZE(slots); ++slot) {
@@ -111,6 +121,9 @@ agx_insert_waits_local(agx_context *ctx, agx_block *block)
       /* Record access */
       if (instr_is_async(I)) {
          agx_foreach_dest(I, d) {
+            if (agx_is_null(I->dest[d]))
+               continue;
+
             assert(I->dest[d].type == AGX_INDEX_REGISTER);
             BITSET_SET_RANGE(slots[I->scoreboard].writes, I->dest[d].value,
                              I->dest[d].value + agx_write_registers(I, d) - 1);
@@ -120,11 +133,16 @@ agx_insert_waits_local(agx_context *ctx, agx_block *block)
       }
    }
 
-   /* If there are outstanding messages, wait for them */
-   for (unsigned slot = 0; slot < ARRAY_SIZE(slots); ++slot) {
-      if (slots[slot].nr_pending) {
-         agx_builder b = agx_init_builder(ctx, agx_after_block_logical(block));
-         agx_wait(&b, slot);
+   /* If there are outstanding messages, wait for them. We don't do this for the
+    * exit block, though, since nothing else will execute in the shader so
+    * waiting is pointless.
+    */
+   if (block != agx_exit_block(ctx)) {
+      agx_builder b = agx_init_builder(ctx, agx_after_block_logical(block));
+
+      for (unsigned slot = 0; slot < ARRAY_SIZE(slots); ++slot) {
+         if (slots[slot].nr_pending)
+            agx_wait(&b, slot);
       }
    }
 }

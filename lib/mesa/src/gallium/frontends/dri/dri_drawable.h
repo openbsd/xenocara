@@ -28,7 +28,7 @@
 #ifndef DRI_DRAWABLE_H
 #define DRI_DRAWABLE_H
 
-#include "pipe/p_compiler.h"
+#include "util/compiler.h"
 #include "util/format/u_formats.h"
 #include "frontend/api.h"
 #include "dri_util.h"
@@ -88,6 +88,7 @@ struct dri_drawable
    struct kopper_loader_info info;
    __DRIimage   *image; //texture_from_pixmap
    bool is_window;
+   bool has_modifiers;
 
    /* hooks filled in by dri2 & drisw */
    void (*allocate_textures)(struct dri_context *ctx,

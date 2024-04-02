@@ -94,9 +94,7 @@ fd6_emit_flushes(struct fd_context *ctx, struct fd_ringbuffer *ring,
    if (flushes & FD6_WAIT_MEM_WRITES)
       OUT_PKT7(ring, CP_WAIT_MEM_WRITES, 0);
 
-   if ((flushes & FD6_WAIT_FOR_IDLE) ||
-       (ctx->screen->info->a6xx.has_ccu_flush_bug &&
-        (flushes & (FD6_FLUSH_CCU_COLOR | FD6_FLUSH_CCU_DEPTH))))
+   if (flushes & FD6_WAIT_FOR_IDLE)
       OUT_PKT7(ring, CP_WAIT_FOR_IDLE, 0);
 
    if (flushes & FD6_WAIT_FOR_ME)
@@ -186,10 +184,23 @@ fd6_memory_barrier(struct pipe_context *pctx, unsigned flags)
 
    if (flags & (PIPE_BARRIER_TEXTURE |
                 PIPE_BARRIER_IMAGE |
-                PIPE_BARRIER_INDIRECT_BUFFER |
                 PIPE_BARRIER_UPDATE_BUFFER |
                 PIPE_BARRIER_UPDATE_TEXTURE)) {
       flushes |= FD6_FLUSH_CACHE | FD6_WAIT_FOR_IDLE;
+   }
+
+   if (flags & PIPE_BARRIER_INDIRECT_BUFFER) {
+      flushes |= FD6_FLUSH_CACHE | FD6_WAIT_FOR_IDLE;
+
+     /* Various firmware bugs/inconsistencies mean that some indirect draw opcodes
+      * do not wait for WFI's to complete before executing. Add a WAIT_FOR_ME if
+      * pending for these opcodes. This may result in a few extra WAIT_FOR_ME's
+      * with these opcodes, but the alternative would add unnecessary WAIT_FOR_ME's
+      * before draw opcodes that don't need it.
+      */
+      if (fd_context(pctx)->screen->info->a6xx.indirect_draw_wfm_quirk) {
+         flushes |= FD6_WAIT_FOR_ME;
+      }
    }
 
    if (flags & PIPE_BARRIER_FRAMEBUFFER) {

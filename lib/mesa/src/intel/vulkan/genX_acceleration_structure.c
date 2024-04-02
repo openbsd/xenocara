@@ -33,8 +33,9 @@
 #include "genxml/genX_pack.h"
 #include "genxml/genX_rt_pack.h"
 
-#if GFX_VERx10 >= 125
+#include "ds/intel_tracepoints.h"
 
+#if GFX_VERx10 == 125
 #include "grl/grl_structs.h"
 
 /* Wait for the previous dispatches to finish and flush their data port
@@ -315,7 +316,7 @@ get_gpu_scratch_layout(struct anv_address base,
    };
    gpuva_t current = anv_address_physical(base);
 
-   scratch.globals = intel_canonical_address(current);
+   scratch.globals = current;
    current += sizeof(struct Globals);
 
    scratch.primrefs = intel_canonical_address(current);
@@ -622,6 +623,8 @@ cmd_build_acceleration_structures(
       return;
    }
 
+   trace_intel_begin_as_build(&cmd_buffer->trace);
+
    /* TODO: Indirect */
    assert(ppBuildRangeInfos != NULL);
 
@@ -742,15 +745,30 @@ cmd_build_acceleration_structures(
    private_mem_binnedsah_offset = private_mem_total;
    private_mem_total += align_private_size(private_mem_binnedsah_size);
 
-   /* Allocate required memory */
-   struct anv_cmd_alloc private_mem_alloc =
-      anv_cmd_buffer_alloc_space(cmd_buffer, private_mem_total, 64);
-   if (private_mem_total > 0 && anv_cmd_alloc_is_empty(private_mem_alloc)) {
-      anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_DEVICE_MEMORY);
-      goto error;
+   /* Allocate required memory, unless we already have a suiteable buffer */
+   struct anv_cmd_alloc private_mem_alloc;
+   if (private_mem_total > cmd_buffer->state.rt.build_priv_mem_size) {
+      private_mem_alloc =
+         anv_cmd_buffer_alloc_space(cmd_buffer, private_mem_total, 64,
+                                    false /* mapped */);
+      if (anv_cmd_alloc_is_empty(private_mem_alloc)) {
+         anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_DEVICE_MEMORY);
+         goto error;
+      }
+
+      cmd_buffer->state.rt.build_priv_mem_addr = private_mem_alloc.address;
+      cmd_buffer->state.rt.build_priv_mem_size = private_mem_alloc.size;
+   } else {
+      private_mem_alloc = (struct anv_cmd_alloc) {
+         .address = cmd_buffer->state.rt.build_priv_mem_addr,
+         .map     = anv_address_map(cmd_buffer->state.rt.build_priv_mem_addr),
+         .size    = cmd_buffer->state.rt.build_priv_mem_size,
+      };
    }
+
    struct anv_cmd_alloc transient_mem_alloc =
-      anv_cmd_buffer_alloc_space(cmd_buffer, transient_total, 64);
+      anv_cmd_buffer_alloc_space(cmd_buffer, transient_total, 64,
+                                 true /* mapped */);
    if (transient_total > 0 && anv_cmd_alloc_is_empty(transient_mem_alloc)) {
       anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_DEVICE_MEMORY);
       goto error;
@@ -835,7 +853,9 @@ cmd_build_acceleration_structures(
                               transient_mem_init_globals_offset),
       infoCount);
 
-   cmd_buffer->state.pending_pipe_bits |= ANV_GRL_FLUSH_FLAGS;
+   anv_add_pending_pipe_bits(cmd_buffer,
+                             ANV_GRL_FLUSH_FLAGS,
+                             "building accel struct");
 
    /* Round 2 : Copy instance/geometry data from the application provided
     *           buffers into the acceleration structures.
@@ -949,7 +969,9 @@ cmd_build_acceleration_structures(
       }
    }
 
-   cmd_buffer->state.pending_pipe_bits |= ANV_GRL_FLUSH_FLAGS;
+   anv_add_pending_pipe_bits(cmd_buffer,
+                             ANV_GRL_FLUSH_FLAGS,
+                             "building accel struct");
 
    /* Dispatch trivial builds */
    if (num_trivial_builds) {
@@ -1023,7 +1045,9 @@ cmd_build_acceleration_structures(
    }
 
    if (num_new_sah_builds == 0)
-      cmd_buffer->state.pending_pipe_bits |= ANV_GRL_FLUSH_FLAGS;
+      anv_add_pending_pipe_bits(cmd_buffer,
+                              ANV_GRL_FLUSH_FLAGS,
+                             "building accel struct");
 
    /* Finally write the leaves. */
    for (uint32_t i = 0; i < infoCount; i++) {
@@ -1078,7 +1102,11 @@ cmd_build_acceleration_structures(
       }
    }
 
-   cmd_buffer->state.pending_pipe_bits |= ANV_GRL_FLUSH_FLAGS;
+   anv_add_pending_pipe_bits(cmd_buffer,
+                             ANV_GRL_FLUSH_FLAGS,
+                             "building accel struct");
+
+   trace_intel_end_as_build(&cmd_buffer->trace);
 
  error:
    vk_free(&cmd_buffer->device->vk.alloc, builds);
@@ -1140,7 +1168,9 @@ genX(CmdCopyAccelerationStructureKHR)(
          vk_acceleration_structure_get_va(src_accel));
    }
 
-   cmd_buffer->state.pending_pipe_bits |= ANV_PIPE_END_OF_PIPE_SYNC_BIT;
+   anv_add_pending_pipe_bits(cmd_buffer,
+                             ANV_PIPE_END_OF_PIPE_SYNC_BIT,
+                             "after copy acceleration struct");
 }
 
 void
@@ -1164,7 +1194,9 @@ genX(CmdCopyAccelerationStructureToMemoryKHR)(
       anv_address_physical(device->rt_uuid_addr),
       src_size_addr);
 
-   cmd_buffer->state.pending_pipe_bits |= ANV_PIPE_END_OF_PIPE_SYNC_BIT;
+   anv_add_pending_pipe_bits(cmd_buffer,
+                             ANV_PIPE_END_OF_PIPE_SYNC_BIT,
+                             "after copy acceleration struct");
 }
 
 void
@@ -1185,7 +1217,9 @@ genX(CmdCopyMemoryToAccelerationStructureKHR)(
       pInfo->src.deviceAddress,
       src_size_addr);
 
-   cmd_buffer->state.pending_pipe_bits |= ANV_PIPE_END_OF_PIPE_SYNC_BIT;
+   anv_add_pending_pipe_bits(cmd_buffer,
+                             ANV_PIPE_END_OF_PIPE_SYNC_BIT,
+                             "after copy acceleration struct");
 }
 
 /* TODO: Host commands */

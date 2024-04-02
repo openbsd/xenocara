@@ -11,6 +11,7 @@
 #include "vn_common.h"
 
 #include <stdarg.h>
+#include <sys/syscall.h>
 
 #include "util/log.h"
 #include "util/os_misc.h"
@@ -31,6 +32,8 @@ static const struct debug_control vn_debug_options[] = {
    { "no_abort", VN_DEBUG_NO_ABORT },
    { "log_ctx_info", VN_DEBUG_LOG_CTX_INFO },
    { "cache", VN_DEBUG_CACHE },
+   { "no_sparse", VN_DEBUG_NO_SPARSE },
+   { "gpl", VN_DEBUG_GPL },
    { NULL, 0 },
    /* clang-format on */
 };
@@ -45,6 +48,8 @@ static const struct debug_control vn_perf_options[] = {
    { "no_memory_suballoc", VN_PERF_NO_MEMORY_SUBALLOC },
    { "no_cmd_batching", VN_PERF_NO_CMD_BATCHING },
    { "no_timeline_sem_feedback", VN_PERF_NO_TIMELINE_SEM_FEEDBACK },
+   { "no_query_feedback", VN_PERF_NO_QUERY_FEEDBACK },
+   { "no_async_mem_alloc", VN_PERF_NO_ASYNC_MEM_ALLOC },
    { NULL, 0 },
    /* clang-format on */
 };
@@ -91,7 +96,7 @@ vn_trace_init(void)
 #ifdef ANDROID
    atrace_init();
 #else
-   util_perfetto_init();
+   util_cpu_trace_init();
 #endif
 }
 
@@ -126,7 +131,7 @@ vn_extension_get_spec_version(const char *name)
 static bool
 vn_ring_monitor_acquire(struct vn_ring *ring)
 {
-   pid_t tid = gettid();
+   pid_t tid = syscall(SYS_gettid);
    if (!ring->monitor.threadid && tid != ring->monitor.threadid &&
        mtx_trylock(&ring->monitor.mutex) == thrd_success) {
       /* register as the only waiting thread that monitors the ring. */
@@ -138,7 +143,7 @@ vn_ring_monitor_acquire(struct vn_ring *ring)
 void
 vn_ring_monitor_release(struct vn_ring *ring)
 {
-   if (gettid() != ring->monitor.threadid)
+   if (syscall(SYS_gettid) != ring->monitor.threadid)
       return;
 
    ring->monitor.threadid = 0;
@@ -163,10 +168,8 @@ vn_relax_init(struct vn_ring *ring, const char *reason)
              ring->monitor.report_period_us);
 #endif
 
-      if (vn_ring_monitor_acquire(ring)) {
-         ring->monitor.alive = true;
+      if (vn_ring_monitor_acquire(ring))
          vn_ring_unset_status_bits(ring, VK_RING_STATUS_ALIVE_BIT_MESA);
-      }
    }
 
    return (struct vn_relax_state){

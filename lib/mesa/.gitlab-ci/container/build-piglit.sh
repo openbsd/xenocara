@@ -1,9 +1,14 @@
 #!/bin/bash
 # shellcheck disable=SC2086 # we want word splitting
-
 set -ex
 
-REV="355ad6bcb2cb3d9e030b7c6eef2b076b0dfb4d63"
+# When changing this file, you need to bump the following
+# .gitlab-ci/image-tags.yml tags:
+# DEBIAN_X86_64_TEST_GL_TAG
+# DEBIAN_X86_64_TEST_VK_TAG
+# KERNEL_ROOTFS_TAG
+
+REV="f7db20b03de6896d013826c0a731bc4417c1a5a0"
 
 git clone https://gitlab.freedesktop.org/mesa/piglit.git --single-branch --no-checkout /piglit
 pushd /piglit

@@ -86,9 +86,46 @@ agx_optimizer_fmov(agx_instr **defs, agx_instr *ins)
          continue;
       if (def->saturate)
          continue;
+      if (ins->op == AGX_OPCODE_FCMPSEL && s >= 2)
+         continue;
+
+      /* We can fold f2f32 into 32-bit instructions, but we can't fold f2f16
+       * into 16-bit instructions, since the latter would implicitly promote to
+       * a 32-bit instruction which is not exact.
+       */
+      assert(def->src[0].size == AGX_SIZE_32 ||
+             def->src[0].size == AGX_SIZE_16);
+      assert(src.size == AGX_SIZE_32 || src.size == AGX_SIZE_16);
+
+      if (src.size == AGX_SIZE_16 && def->src[0].size == AGX_SIZE_32)
+         continue;
 
       ins->src[s] = agx_compose_float_src(src, def->src[0]);
    }
+}
+
+static bool
+image_write_source_can_be_immediate(agx_instr *I, unsigned s)
+{
+   assert(I->op == AGX_OPCODE_IMAGE_WRITE);
+
+   /* LOD can always be immediate. Actually, it's just zero so far, we don't
+    * support nonzero LOD for images yet.
+    */
+   if (s == 2)
+      return true;
+
+   /* If the "bindless" source (source 3) is an immediate, it means we don't
+    * have a bindless image, instead we have a texture state index. We're
+    * allowed to have immediate texture state registers (source 4). However,
+    * we're not allowed to have immediate bindless offsets (also source 4).
+    */
+   bool is_texture_state = (I->src[3].type == AGX_INDEX_IMMEDIATE);
+   if (s == 4 && is_texture_state)
+      return true;
+
+   /* Otherwise, must be from a register */
+   return false;
 }
 
 static void
@@ -111,9 +148,9 @@ agx_optimizer_inline_imm(agx_instr **defs, agx_instr *I, unsigned srcs,
 
       bool float_src = is_float;
 
-      /* cmpselsrc takes integer immediates only */
-      if (s >= 2 && I->op == AGX_OPCODE_FCMPSEL)
-         float_src = false;
+      /* fcmpsel takes first 2 as floats specially */
+      if (s < 2 && I->op == AGX_OPCODE_FCMPSEL)
+         float_src = true;
       if (I->op == AGX_OPCODE_ST_TILE && s == 0)
          continue;
       if (I->op == AGX_OPCODE_ZS_EMIT && s != 0)
@@ -125,6 +162,10 @@ agx_optimizer_inline_imm(agx_instr **defs, agx_instr *I, unsigned srcs,
          continue;
       if ((I->op == AGX_OPCODE_LOCAL_LOAD || I->op == AGX_OPCODE_DEVICE_LOAD) &&
           s != 1)
+         continue;
+
+      if (I->op == AGX_OPCODE_IMAGE_WRITE &&
+          !image_write_source_can_be_immediate(I, s))
          continue;
 
       if (float_src) {
@@ -150,6 +191,16 @@ agx_optimizer_fmov_rev(agx_instr *I, agx_instr *use)
    if (!agx_is_fmov(use))
       return false;
    if (use->src[0].neg || use->src[0].abs)
+      return false;
+
+   /* We can fold f2f16 into 32-bit instructions, but we can't fold f2f32 into
+    * 16-bit instructions, since the latter would implicitly promote to a 32-bit
+    * instruction which is not exact.
+    */
+   assert(use->dest[0].size == AGX_SIZE_32 || use->dest[0].size == AGX_SIZE_16);
+   assert(I->dest[0].size == AGX_SIZE_32 || I->dest[0].size == AGX_SIZE_16);
+
+   if (I->dest[0].size == AGX_SIZE_16 && use->dest[0].size == AGX_SIZE_32)
       return false;
 
    /* saturate(saturate(x)) = saturate(x) */
@@ -192,6 +243,85 @@ agx_optimizer_copyprop(agx_instr **defs, agx_instr *I)
    }
 }
 
+/*
+ * Fuse conditions into if. Specifically, acts on if_icmp and fuses:
+ *
+ *    if_icmp(cmp(x, y, *), 0, ne) -> if_cmp(x, y, *)
+ */
+static void
+agx_optimizer_if_cmp(agx_instr **defs, agx_instr *I)
+{
+   /* Check for unfused if */
+   if (!agx_is_equiv(I->src[1], agx_zero()) || I->icond != AGX_ICOND_UEQ ||
+       !I->invert_cond || I->src[0].type != AGX_INDEX_NORMAL)
+      return;
+
+   /* Check for condition */
+   agx_instr *def = defs[I->src[0].value];
+   if (def->op != AGX_OPCODE_ICMP && def->op != AGX_OPCODE_FCMP)
+      return;
+
+   /* Fuse */
+   I->src[0] = def->src[0];
+   I->src[1] = def->src[1];
+   I->invert_cond = def->invert_cond;
+
+   if (def->op == AGX_OPCODE_ICMP) {
+      I->op = AGX_OPCODE_IF_ICMP;
+      I->icond = def->icond;
+   } else {
+      I->op = AGX_OPCODE_IF_FCMP;
+      I->fcond = def->fcond;
+   }
+}
+
+/*
+ * Fuse conditions into select. Specifically, acts on icmpsel and fuses:
+ *
+ *    icmpsel(cmp(x, y, *), 0, z, w, eq) -> cmpsel(x, y, w, z, *)
+ *
+ * Care must be taken to invert the condition by swapping cmpsel arguments.
+ */
+static void
+agx_optimizer_cmpsel(agx_instr **defs, agx_instr *I)
+{
+   /* Check for unfused select */
+   if (!agx_is_equiv(I->src[1], agx_zero()) || I->icond != AGX_ICOND_UEQ ||
+       I->src[0].type != AGX_INDEX_NORMAL)
+      return;
+
+   /* Check for condition */
+   agx_instr *def = defs[I->src[0].value];
+   if (def->op != AGX_OPCODE_ICMP && def->op != AGX_OPCODE_FCMP)
+      return;
+
+   /* Fuse */
+   I->src[0] = def->src[0];
+   I->src[1] = def->src[1];
+
+   /* In the unfused select, the condition is inverted due to the form:
+    *
+    *    (cond == 0) ? x : y
+    *
+    * So we need to swap the arguments when fusing to become cond ? y : x. If
+    * the condition was supposed to be inverted, we don't swap since it's
+    * already inverted. cmpsel does not have an invert_cond bit to use.
+    */
+   if (!def->invert_cond) {
+      agx_index temp = I->src[2];
+      I->src[2] = I->src[3];
+      I->src[3] = temp;
+   }
+
+   if (def->op == AGX_OPCODE_ICMP) {
+      I->op = AGX_OPCODE_ICMPSEL;
+      I->icond = def->icond;
+   } else {
+      I->op = AGX_OPCODE_FCMPSEL;
+      I->fcond = def->fcond;
+   }
+}
+
 static void
 agx_optimizer_forward(agx_context *ctx)
 {
@@ -208,16 +338,21 @@ agx_optimizer_forward(agx_context *ctx)
       agx_optimizer_copyprop(defs, I);
 
       /* Propagate fmov down */
-      if (info.is_float)
+      if (info.is_float || I->op == AGX_OPCODE_FCMPSEL)
          agx_optimizer_fmov(defs, I);
 
       /* Inline immediates if we can. TODO: systematic */
       if (I->op != AGX_OPCODE_ST_VARY && I->op != AGX_OPCODE_COLLECT &&
           I->op != AGX_OPCODE_TEXTURE_SAMPLE &&
-          I->op != AGX_OPCODE_TEXTURE_LOAD &&
+          I->op != AGX_OPCODE_IMAGE_LOAD && I->op != AGX_OPCODE_TEXTURE_LOAD &&
           I->op != AGX_OPCODE_UNIFORM_STORE &&
           I->op != AGX_OPCODE_BLOCK_IMAGE_STORE)
          agx_optimizer_inline_imm(defs, I, info.nr_srcs, info.is_float);
+
+      if (I->op == AGX_OPCODE_IF_ICMP)
+         agx_optimizer_if_cmp(defs, I);
+      else if (I->op == AGX_OPCODE_ICMPSEL)
+         agx_optimizer_cmpsel(defs, I);
    }
 
    free(defs);

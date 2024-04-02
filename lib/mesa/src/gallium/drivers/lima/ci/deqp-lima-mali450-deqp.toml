@@ -24,7 +24,7 @@ prefix = "wayland-"
 
 # x11
 [[deqp]]
-deqp = "/deqp/modules/egl/deqp-egl"
+deqp = "/deqp/modules/egl/deqp-egl-x11"
 caselists = ["/deqp/mustpass/egl-master.txt"]
 tests_per_group = 250
 deqp_args = [

@@ -100,12 +100,11 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_FRAGMENT_COLOR_CLAMPED:
    case PIPE_CAP_SEAMLESS_CUBE_MAP:
    case PIPE_CAP_SEAMLESS_CUBE_MAP_PER_TEXTURE:
-   case PIPE_CAP_RGB_OVERRIDE_DST_ALPHA_BLEND:
       return 0;
 
    case PIPE_CAP_SUPPORTED_PRIM_MODES_WITH_RESTART:
    case PIPE_CAP_SUPPORTED_PRIM_MODES:
-      return BITFIELD_MASK(PIPE_PRIM_MAX);
+      return BITFIELD_MASK(MESA_PRIM_COUNT);
 
    case PIPE_CAP_MIN_TEXEL_OFFSET:
       /* GL 3.x minimum value. */
@@ -153,6 +152,7 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
 
    case PIPE_CAP_START_INSTANCE:
    case PIPE_CAP_QUERY_TIMESTAMP:
+   case PIPE_CAP_TIMER_RESOLUTION:
    case PIPE_CAP_TEXTURE_MULTISAMPLE:
       return 0;
 
@@ -271,7 +271,6 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
       return 1;
 
    case PIPE_CAP_COPY_BETWEEN_COMPRESSED_AND_PLAIN_FORMATS:
-   case PIPE_CAP_CLEAR_TEXTURE:
    case PIPE_CAP_CLEAR_SCISSORED:
    case PIPE_CAP_DRAW_PARAMETERS:
    case PIPE_CAP_SHADER_PACK_HALF_FLOAT:
@@ -335,7 +334,6 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_LEGACY_MATH_RULES:
    case PIPE_CAP_DOUBLES:
    case PIPE_CAP_INT64:
-   case PIPE_CAP_INT64_DIVMOD:
    case PIPE_CAP_TGSI_TEX_TXF_LZ:
    case PIPE_CAP_SHADER_CLOCK:
    case PIPE_CAP_POLYGON_MODE_FILL_RECTANGLE:
@@ -549,6 +547,7 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_VALIDATE_ALL_DIRTY_STATES:
    case PIPE_CAP_NULL_TEXTURES:
    case PIPE_CAP_ASTC_VOID_EXTENTS_NEED_DENORM_FLUSH:
+   case PIPE_CAP_HAS_CONST_BW:
       return 0;
 
    default:
@@ -628,7 +627,7 @@ static simple_mtx_t screen_mutex = SIMPLE_MTX_INITIALIZER;
 static void
 drm_screen_destroy(struct pipe_screen *pscreen)
 {
-   boolean destroy;
+   bool destroy;
 
    simple_mtx_lock(&screen_mutex);
    destroy = --pscreen->refcnt == 0;

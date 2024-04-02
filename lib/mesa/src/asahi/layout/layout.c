@@ -56,6 +56,8 @@ ail_get_max_tile_size(unsigned blocksize_B)
    case  4: return (struct ail_tile) {  64,  64 };
    case  8: return (struct ail_tile) {  64,  32 };
    case 16: return (struct ail_tile) {  32,  32 };
+   case 32: return (struct ail_tile) {  32,  16 };
+   case 64: return (struct ail_tile) {  16,  16 };
    default: unreachable("Invalid blocksize");
    }
    /* clang-format on */
@@ -158,9 +160,17 @@ ail_initialize_twiddled(struct ail_layout *layout)
    layout->page_aligned_layers = layout->levels != 1 && offset_B > AIL_PAGESIZE;
 
    /* Single-layer images are not padded unless they are Z/S */
-   if (layout->depth_px == 1 &&
-       !util_format_is_depth_or_stencil(layout->format))
+   bool zs = util_format_is_depth_or_stencil(layout->format);
+   if (layout->depth_px == 1 && !zs)
       layout->page_aligned_layers = false;
+
+   /* For writable images, we require page-aligned layers. This appears to be
+    * required for PBE stores, including block stores for colour rendering.
+    * Likewise, we specify the ZLS layer stride in pages, so we need
+    * page-aligned layers for renderable depth/stencil targets.
+    */
+   layout->page_aligned_layers |= layout->writeable_image;
+   layout->page_aligned_layers |= layout->renderable && layout->depth_px > 1;
 
    if (layout->page_aligned_layers)
       layout->layer_stride_B = ALIGN_POT(offset_B, AIL_PAGESIZE);
@@ -177,29 +187,35 @@ ail_initialize_compression(struct ail_layout *layout)
           "Compressed pixel formats not supported");
    assert(util_format_get_blockwidth(layout->format) == 1);
    assert(util_format_get_blockheight(layout->format) == 1);
-   assert(layout->width_px >= 16 && "Small textures are never compressed");
-   assert(layout->height_px >= 16 && "Small textures are never compressed");
+
+   unsigned width_sa =
+      ail_effective_width_sa(layout->width_px, layout->sample_count_sa);
+   unsigned height_sa =
+      ail_effective_height_sa(layout->height_px, layout->sample_count_sa);
+
+   assert(width_sa >= 16 && "Small textures are never compressed");
+   assert(height_sa >= 16 && "Small textures are never compressed");
 
    layout->metadata_offset_B = layout->size_B;
 
-   unsigned width_px = ALIGN_POT(layout->width_px, 16);
-   unsigned height_px = ALIGN_POT(layout->height_px, 16);
+   width_sa = ALIGN_POT(width_sa, 16);
+   height_sa = ALIGN_POT(height_sa, 16);
 
    unsigned compbuf_B = 0;
 
    for (unsigned l = 0; l < layout->levels; ++l) {
-      if (width_px < 16 && height_px < 16)
+      if (width_sa < 16 && height_sa < 16)
          break;
 
       layout->level_offsets_compressed_B[l] = compbuf_B;
 
-      /* The compression buffer seems to have 8 bytes per 16 x 16 pixel block. */
-      unsigned cmpw_el = DIV_ROUND_UP(util_next_power_of_two(width_px), 16);
-      unsigned cmph_el = DIV_ROUND_UP(util_next_power_of_two(height_px), 16);
+      /* The compression buffer seems to have 8 bytes per 16 x 16 sample block. */
+      unsigned cmpw_el = DIV_ROUND_UP(util_next_power_of_two(width_sa), 16);
+      unsigned cmph_el = DIV_ROUND_UP(util_next_power_of_two(height_sa), 16);
       compbuf_B += ALIGN_POT(cmpw_el * cmph_el * 8, AIL_CACHELINE);
 
-      width_px = DIV_ROUND_UP(width_px, 2);
-      height_px = DIV_ROUND_UP(height_px, 2);
+      width_sa = DIV_ROUND_UP(width_sa, 2);
+      height_sa = DIV_ROUND_UP(height_sa, 2);
    }
 
    layout->compression_layer_stride_B = compbuf_B;
@@ -226,6 +242,10 @@ ail_make_miptree(struct ail_layout *layout)
       assert(layout->levels >= 1 && "Invalid dimensions");
       assert(layout->sample_count_sa >= 1 && "Invalid sample count");
    }
+
+   assert(!(layout->writeable_image &&
+            layout->tiling == AIL_TILING_TWIDDLED_COMPRESSED) &&
+          "Writeable images must not be compressed");
 
    /* Hardware strides are based on the maximum number of levels, so always
     * allocate them all.

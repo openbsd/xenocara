@@ -31,8 +31,6 @@
 
 #include "util/timespec.h"
 
-#include "pipe/p_defines.h"
-
 #ifndef __user
 #define __user
 #endif
@@ -106,7 +104,7 @@ get_abs_timeout(struct drm_msm_timespec *tv, uint64_t ns)
 {
    struct timespec t;
 
-   if (ns == PIPE_TIMEOUT_INFINITE)
+   if (ns == OS_TIMEOUT_INFINITE)
       ns = 3600ULL * NSEC_PER_SEC; /* 1 hour timeout is almost infinite */
 
    clock_gettime(CLOCK_MONOTONIC, &t);

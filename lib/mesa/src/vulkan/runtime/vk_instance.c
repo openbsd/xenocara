@@ -24,6 +24,7 @@
 #include "vk_instance.h"
 
 #include "util/libdrm.h"
+#include "util/perf/cpu_trace.h"
 
 #include "vk_alloc.h"
 #include "vk_common_entrypoints.h"
@@ -38,6 +39,11 @@
 #define VERSION_IS_1_0(version) \
    (VK_API_VERSION_MAJOR(version) == 1 && VK_API_VERSION_MINOR(version) == 0)
 
+static const struct debug_control trace_options[] = {
+   {"rmv", VK_TRACE_MODE_RMV},
+   {NULL, 0},
+};
+
 VkResult
 vk_instance_init(struct vk_instance *instance,
                  const struct vk_instance_extension_table *supported_extensions,
@@ -46,8 +52,10 @@ vk_instance_init(struct vk_instance *instance,
                  const VkAllocationCallbacks *alloc)
 {
    memset(instance, 0, sizeof(*instance));
-   vk_object_base_init(NULL, &instance->base, VK_OBJECT_TYPE_INSTANCE);
+   vk_object_base_instance_init(instance, &instance->base, VK_OBJECT_TYPE_INSTANCE);
    instance->alloc = *alloc;
+
+   util_cpu_trace_init();
 
    /* VK_EXT_debug_utils */
    /* These messengers will only be used during vkCreateInstance or
@@ -67,8 +75,8 @@ vk_instance_init(struct vk_instance *instance,
          if (!messenger)
             return vk_error(instance, VK_ERROR_OUT_OF_HOST_MEMORY);
 
-         vk_object_base_init(NULL, &messenger->base,
-                             VK_OBJECT_TYPE_DEBUG_UTILS_MESSENGER_EXT);
+         vk_object_base_instance_init(instance, &messenger->base,
+                                      VK_OBJECT_TYPE_DEBUG_UTILS_MESSENGER_EXT);
 
          messenger->alloc = *alloc;
          messenger->severity = debugMessengerCreateInfo->messageSeverity;
@@ -188,6 +196,10 @@ vk_instance_init(struct vk_instance *instance,
       mtx_destroy(&instance->debug_utils.callbacks_mutex);
       return vk_error(instance, VK_ERROR_INITIALIZATION_FAILED);
    }
+
+   instance->trace_mode = parse_debug_string(getenv("MESA_VK_TRACE"), trace_options);
+   instance->trace_frame = (uint32_t)debug_get_num_option("MESA_VK_TRACE_FRAME", 0xFFFFFFFF);
+   instance->trace_trigger_file = secure_getenv("MESA_VK_TRACE_TRIGGER");
 
    glsl_type_singleton_init_or_ref();
 
@@ -354,6 +366,13 @@ vk_instance_get_physical_device_proc_addr(const struct vk_instance *instance,
                                                              name,
                                                              instance->app_info.api_version,
                                                              &instance->enabled_extensions);
+}
+
+void
+vk_instance_add_driver_trace_modes(struct vk_instance *instance,
+                                   const struct debug_control *modes)
+{
+   instance->trace_mode |= parse_debug_string(getenv("MESA_VK_TRACE"), modes);
 }
 
 static VkResult

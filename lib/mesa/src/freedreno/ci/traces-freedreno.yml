@@ -16,7 +16,6 @@ text: |-
     stk:                  11.15s
     0ad:                  10.93s
     counterstrike:         9.87s
-    minetest:              8.24s
     neverball:             8.53s
 
 traces:
@@ -30,6 +29,7 @@ traces:
       checksum: 6aef509acd1257cc56612141e24dc11c
     freedreno-a630:
       checksum: 6aef509acd1257cc56612141e24dc11c
+      label: [skip, flakes]
     zink-a618:
       checksum: 45bdbb33bf87ed114bd548248be13408
       label: [skip, broken]
@@ -47,7 +47,9 @@ traces:
     freedreno-a530:
       checksum: 102a09ce76092436173fd09a6a2bd941
     freedreno-a618:
+      label: [skip, flakes]
       checksum: e0e18dcc50ab2e23cead650d64469178
+      text: "intermittent segfault https://mesa.pages.freedesktop.org/-/mesa/-/jobs/39893593/artifacts/results/summary/results/trace@freedreno-a618@valve@portal-2-v2.trace.html"
     freedreno-a630:
       checksum: e0e18dcc50ab2e23cead650d64469178
     zink-a618:
@@ -77,7 +79,9 @@ traces:
       label: [skip, slow]
       checksum: ade41e6fe932552914c678155149babb
     zink-a630:
+      label: [skip, slow]
       checksum: ade41e6fe932552914c678155149babb
+      text: "intermittent timeouts"
 
   xonotic/xonotic-keybench-high-v2.trace:
     freedreno-a306:
@@ -229,38 +233,6 @@ traces:
     zink-a630:
       checksum: d25edb433abfcde517b626b3071906ff
 
-  minetest/minetest-high-v2.trace:
-    freedreno-a306:
-      label: [crash]
-    freedreno-a530:
-      checksum: 48d4d4776885fd120429cd36a35ddaf2
-    freedreno-a618:
-      checksum: 2aebe86d6c0488b953bfaacd8000c01a
-    freedreno-a630:
-      checksum: 2aebe86d6c0488b953bfaacd8000c01a
-    zink-a618:
-      label: [skip, flakes]
-      checksum: c167b29121b4bbba7675070b2ab1f51a
-    zink-a630:
-      label: [skip, flakes]
-      checksum: c167b29121b4bbba7675070b2ab1f51a
-
-  minetest/minetest-v2.trace:
-    freedreno-a306:
-      checksum: 37081a69137df415cfda13dac62966c4
-    freedreno-a530:
-      checksum: 824672b1eef72c0223ac754dfc46e2d5
-    freedreno-a618:
-      checksum: 5c0c5da476775dfac94b79e7edb556ce
-    freedreno-a630:
-      checksum: 5c0c5da476775dfac94b79e7edb556ce
-    zink-a618:
-      checksum: a8dea3dcb341c0f6c786a264dee51766
-    zink-a630:
-      label: [skip, flakes]
-      checksum: a8dea3dcb341c0f6c786a264dee51766
-      text: occasional Different pixels 1 (no tolerance), 0 (1% tol.)
-
   filament/filament-default.trace:
     freedreno-a306:
       label: [unsupported]
@@ -372,7 +344,7 @@ traces:
       text: missing 3/4 of rendered image
       checksum: e7f01e62180b60aef8c67fc4977c90d1
     freedreno-a530:
-      checksum: 71f46ff29ab058f89c745ddede5cc907
+      checksum: 777ecb806510d9a038a0d06d44deeb6f
     freedreno-a618:
       label: [skip]
     freedreno-a630:
@@ -381,9 +353,9 @@ traces:
         One of the material textures appears brighter on freedreno than
         i965 in a way that is probably wrong.
     zink-a618:
-      checksum: 227516d3818969c68a1864aa942119c2
+      checksum: ba79e6d4a64b4391d3e9e20d3d630f0a
     zink-a630:
-      checksum: 227516d3818969c68a1864aa942119c2
+      checksum: e64bcc59d61d1c75ce5eeb109343d9bd
 
   gputest/pixmark-volplosion-v2.trace:
     freedreno-a306:
@@ -669,7 +641,9 @@ traces:
     zink-a618:
       checksum: 8533a3fd4dca0c68df6721f7eab75960
     zink-a630:
+      label: [skip, flakes]
       checksum: 8533a3fd4dca0c68df6721f7eab75960
+      text: "intermittent gpu fault ring 0 fence 4b1 status 00C40085 rb 004b/004b ib1 000000012240C000/485c ib2 0000000121A3C270/0037"
 
   nheko/nheko-colors.trace:
     freedreno-a306:
@@ -730,27 +704,6 @@ traces:
       label: [skip, flakes]
       text: Inconsistent rendering, but looks good.
 
-  freedoom/freedoom-phase2-gl-high.trace:
-    freedreno-a306:
-      label: [unsupported]
-    freedreno-a530:
-      label: [unsupported]
-      text: needs GL 4.6
-    freedreno-a618:
-      checksum: a2dbcd27c404a1bb0f7d60476d93d22c
-    freedreno-a630:
-      checksum: a2dbcd27c404a1bb0f7d60476d93d22c
-    zink-a618:
-      label: [crash]
-      text: |-
-        ../src/gallium/drivers/zink/zink_context.c:541: update_descriptor_state_ubo:
-        Assertion `ctx->di.ubos[shader][slot].range <= screen->info.props.limits.maxUniformBufferRange' failed.
-    zink-a630:
-      label: [crash]
-      text: |-
-        ../src/gallium/drivers/zink/zink_context.c:541: update_descriptor_state_ubo:
-        Assertion `ctx->di.ubos[shader][slot].range <= screen->info.props.limits.maxUniformBufferRange' failed.
-
   unvanquished/unvanquished-lowest.trace:
     freedreno-a306:
       label: [skip]
@@ -775,11 +728,14 @@ traces:
     freedreno-a618:
       checksum: a71d1ad391162acef60cbb2804d0cf64
     freedreno-a630:
+      label: [skip, flakes]
       checksum: a71d1ad391162acef60cbb2804d0cf64
     zink-a618:
       checksum: 7d084f2cd05644b717cc591bd8e9dcce
     zink-a630:
+      label: [skip, flakes]
       checksum: 7d084f2cd05644b717cc591bd8e9dcce
+      text: "intermittent gpu fault ring 0 fence 4b4 status 00CE0185 rb 0067/0067 ib1 000000010C498000/14d14 ib2 0000000000000000/0000"
 
   warzone2100/warzone2100-default.trace:
     freedreno-a306:

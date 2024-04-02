@@ -64,27 +64,27 @@ static inline unsigned vk_conv_topology(VkPrimitiveTopology topology)
 {
    switch (topology) {
    case VK_PRIMITIVE_TOPOLOGY_POINT_LIST:
-      return PIPE_PRIM_POINTS;
+      return MESA_PRIM_POINTS;
    case VK_PRIMITIVE_TOPOLOGY_LINE_LIST:
-      return PIPE_PRIM_LINES;
+      return MESA_PRIM_LINES;
    case VK_PRIMITIVE_TOPOLOGY_LINE_STRIP:
-      return PIPE_PRIM_LINE_STRIP;
+      return MESA_PRIM_LINE_STRIP;
    case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST:
-      return PIPE_PRIM_TRIANGLES;
+      return MESA_PRIM_TRIANGLES;
    case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP:
-      return PIPE_PRIM_TRIANGLE_STRIP;
+      return MESA_PRIM_TRIANGLE_STRIP;
    case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN:
-      return PIPE_PRIM_TRIANGLE_FAN;
+      return MESA_PRIM_TRIANGLE_FAN;
    case VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY:
-      return PIPE_PRIM_LINES_ADJACENCY;
+      return MESA_PRIM_LINES_ADJACENCY;
    case VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY:
-      return PIPE_PRIM_LINE_STRIP_ADJACENCY;
+      return MESA_PRIM_LINE_STRIP_ADJACENCY;
    case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY:
-      return PIPE_PRIM_TRIANGLES_ADJACENCY;
+      return MESA_PRIM_TRIANGLES_ADJACENCY;
    case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY:
-      return PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY;
+      return MESA_PRIM_TRIANGLE_STRIP_ADJACENCY;
    case VK_PRIMITIVE_TOPOLOGY_PATCH_LIST:
-      return PIPE_PRIM_PATCHES;
+      return MESA_PRIM_PATCHES;
    default:
       assert(0);
       return 0;
@@ -104,113 +104,6 @@ static inline unsigned vk_conv_wrap_mode(enum VkSamplerAddressMode addr_mode)
       return PIPE_TEX_WRAP_CLAMP_TO_BORDER;
    case VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE:
       return PIPE_TEX_WRAP_MIRROR_CLAMP_TO_EDGE;
-   default:
-      assert(0);
-      return 0;
-   }
-}
-
-static inline unsigned vk_conv_blend_factor(enum VkBlendFactor vk_factor)
-{
-   switch (vk_factor) {
-   case VK_BLEND_FACTOR_ZERO:
-      return PIPE_BLENDFACTOR_ZERO;
-   case VK_BLEND_FACTOR_ONE:
-      return PIPE_BLENDFACTOR_ONE;
-   case VK_BLEND_FACTOR_SRC_COLOR:
-      return PIPE_BLENDFACTOR_SRC_COLOR;
-   case VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR:
-      return PIPE_BLENDFACTOR_INV_SRC_COLOR;
-   case VK_BLEND_FACTOR_DST_COLOR:
-      return PIPE_BLENDFACTOR_DST_COLOR;
-   case VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR:
-      return PIPE_BLENDFACTOR_INV_DST_COLOR;
-   case VK_BLEND_FACTOR_SRC_ALPHA:
-      return PIPE_BLENDFACTOR_SRC_ALPHA;
-   case VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA:
-      return PIPE_BLENDFACTOR_INV_SRC_ALPHA;
-   case VK_BLEND_FACTOR_DST_ALPHA:
-      return PIPE_BLENDFACTOR_DST_ALPHA;
-   case VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA:
-      return PIPE_BLENDFACTOR_INV_DST_ALPHA;
-   case VK_BLEND_FACTOR_CONSTANT_COLOR:
-      return PIPE_BLENDFACTOR_CONST_COLOR;
-   case VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR:
-      return PIPE_BLENDFACTOR_INV_CONST_COLOR;
-   case VK_BLEND_FACTOR_CONSTANT_ALPHA:
-      return PIPE_BLENDFACTOR_CONST_ALPHA;
-   case VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA:
-      return PIPE_BLENDFACTOR_INV_CONST_ALPHA;
-   case VK_BLEND_FACTOR_SRC1_COLOR:
-      return PIPE_BLENDFACTOR_SRC1_COLOR;
-   case VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR:
-      return PIPE_BLENDFACTOR_INV_SRC1_COLOR;
-   case VK_BLEND_FACTOR_SRC1_ALPHA:
-      return PIPE_BLENDFACTOR_SRC1_ALPHA;
-   case VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA:
-      return PIPE_BLENDFACTOR_INV_SRC1_ALPHA;
-   case VK_BLEND_FACTOR_SRC_ALPHA_SATURATE:
-      return PIPE_BLENDFACTOR_SRC_ALPHA_SATURATE;
-   default:
-      assert(0);
-      return 0;
-   }
-}
-
-static inline unsigned vk_conv_blend_func(enum VkBlendOp op)
-{
-   switch (op) {
-   case VK_BLEND_OP_ADD:
-      return PIPE_BLEND_ADD;
-   case VK_BLEND_OP_SUBTRACT:
-      return PIPE_BLEND_SUBTRACT;
-   case VK_BLEND_OP_REVERSE_SUBTRACT:
-      return PIPE_BLEND_REVERSE_SUBTRACT;
-   case VK_BLEND_OP_MIN:
-      return PIPE_BLEND_MIN;
-   case VK_BLEND_OP_MAX:
-      return PIPE_BLEND_MAX;
-   default:
-      assert(0);
-      return 0;
-   }
-}
-
-static inline unsigned vk_conv_logic_op(enum VkLogicOp op)
-{
-   switch (op) {
-   case VK_LOGIC_OP_CLEAR:
-       return PIPE_LOGICOP_CLEAR;
-   case VK_LOGIC_OP_NOR:
-       return PIPE_LOGICOP_NOR;
-   case VK_LOGIC_OP_AND_INVERTED:
-       return PIPE_LOGICOP_AND_INVERTED;
-   case VK_LOGIC_OP_COPY_INVERTED:
-       return PIPE_LOGICOP_COPY_INVERTED;
-   case VK_LOGIC_OP_AND_REVERSE:
-       return PIPE_LOGICOP_AND_REVERSE;
-   case VK_LOGIC_OP_INVERT:
-       return PIPE_LOGICOP_INVERT;
-   case VK_LOGIC_OP_XOR:
-       return PIPE_LOGICOP_XOR;
-   case VK_LOGIC_OP_NAND:
-       return PIPE_LOGICOP_NAND;
-   case VK_LOGIC_OP_AND:
-       return PIPE_LOGICOP_AND;
-   case VK_LOGIC_OP_EQUIVALENT:
-       return PIPE_LOGICOP_EQUIV;
-   case VK_LOGIC_OP_NO_OP:
-       return PIPE_LOGICOP_NOOP;
-   case VK_LOGIC_OP_OR_INVERTED:
-       return PIPE_LOGICOP_OR_INVERTED;
-   case VK_LOGIC_OP_COPY:
-       return PIPE_LOGICOP_COPY;
-   case VK_LOGIC_OP_OR_REVERSE:
-       return PIPE_LOGICOP_OR_REVERSE;
-   case VK_LOGIC_OP_OR:
-       return PIPE_LOGICOP_OR;
-   case VK_LOGIC_OP_SET:
-       return PIPE_LOGICOP_SET;
    default:
       assert(0);
       return 0;

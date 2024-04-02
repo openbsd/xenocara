@@ -229,12 +229,18 @@ v3d40_vir_emit_tex(struct v3d_compile *c, nir_tex_instr *instr)
         assert(instr->op != nir_texop_lod || c->devinfo->ver >= 42);
 
         unsigned texture_idx = instr->texture_index;
-        unsigned sampler_idx = instr->sampler_index;
+
+        /* For instructions that don't have a sampler (i.e. txf) we bind
+         * default sampler state via the backend_flags to handle precision.
+         */
+        unsigned sampler_idx = nir_tex_instr_need_sampler(instr) ?
+                               instr->sampler_index : instr->backend_flags;
 
         /* Even if the texture operation doesn't need a sampler by
          * itself, we still need to add the sampler configuration
          * parameter if the output is 32 bit
          */
+        assert(sampler_idx < c->key->num_samplers_used);
         bool output_type_32_bit =
                 c->key->sampler[sampler_idx].return_size == 32;
 
@@ -244,20 +250,26 @@ v3d40_vir_emit_tex(struct v3d_compile *c, nir_tex_instr *instr)
         /* Limit the number of channels returned to both how many the NIR
          * instruction writes and how many the instruction could produce.
          */
-        if (instr->dest.is_ssa) {
+        nir_intrinsic_instr *store = nir_store_reg_for_def(&instr->def);
+        if (store == NULL) {
                 p0_unpacked.return_words_of_texture_data =
-                        nir_ssa_def_components_read(&instr->dest.ssa);
+                        nir_def_components_read(&instr->def);
         } else {
+                nir_def *reg = store->src[1].ssa;
+                nir_intrinsic_instr *decl = nir_reg_get_decl(reg);
+                unsigned reg_num_components =
+                        nir_intrinsic_num_components(decl);
+
                 /* For the non-ssa case we don't have a full equivalent to
-                 * nir_ssa_def_components_read. This is a problem for the 16
+                 * nir_def_components_read. This is a problem for the 16
                  * bit case. nir_lower_tex will not change the destination as
                  * nir_tex_instr_dest_size will still return 4. The driver is
                  * just expected to not store on other channels, so we
                  * manually ensure that here.
                  */
                 uint32_t num_components = output_type_32_bit ?
-                        MIN2(instr->dest.reg.reg->num_components, 4) :
-                        MIN2(instr->dest.reg.reg->num_components, 2);
+                        MIN2(reg_num_components, 4) :
+                        MIN2(reg_num_components, 2);
 
                 p0_unpacked.return_words_of_texture_data = (1 << num_components) - 1;
         }
@@ -395,8 +407,27 @@ v3d40_vir_emit_tex(struct v3d_compile *c, nir_tex_instr *instr)
         }
 
         retiring->ldtmu_count = p0_unpacked.return_words_of_texture_data;
-        ntq_add_pending_tmu_flush(c, &instr->dest,
+        ntq_add_pending_tmu_flush(c, &instr->def,
                                   p0_unpacked.return_words_of_texture_data);
+}
+
+static uint32_t
+v3d40_image_atomic_tmu_op(nir_intrinsic_instr *instr)
+{
+        nir_atomic_op atomic_op = nir_intrinsic_atomic_op(instr);
+        switch (atomic_op) {
+        case nir_atomic_op_iadd:    return v3d_get_op_for_atomic_add(instr, 3);
+        case nir_atomic_op_imin:    return V3D_TMU_OP_WRITE_SMIN;
+        case nir_atomic_op_umin:    return V3D_TMU_OP_WRITE_UMIN_FULL_L1_CLEAR;
+        case nir_atomic_op_imax:    return V3D_TMU_OP_WRITE_SMAX;
+        case nir_atomic_op_umax:    return V3D_TMU_OP_WRITE_UMAX;
+        case nir_atomic_op_iand:    return V3D_TMU_OP_WRITE_AND_READ_INC;
+        case nir_atomic_op_ior:     return V3D_TMU_OP_WRITE_OR_READ_DEC;
+        case nir_atomic_op_ixor:    return V3D_TMU_OP_WRITE_XOR_READ_NOT;
+        case nir_atomic_op_xchg:    return V3D_TMU_OP_WRITE_XCHG_READ_FLUSH;
+        case nir_atomic_op_cmpxchg: return V3D_TMU_OP_WRITE_CMPXCHG_READ_FLUSH;
+        default:                    unreachable("unknown atomic op");
+        }
 }
 
 static uint32_t
@@ -406,26 +437,11 @@ v3d40_image_load_store_tmu_op(nir_intrinsic_instr *instr)
         case nir_intrinsic_image_load:
         case nir_intrinsic_image_store:
                 return V3D_TMU_OP_REGULAR;
-        case nir_intrinsic_image_atomic_add:
-                return v3d_get_op_for_atomic_add(instr, 3);
-        case nir_intrinsic_image_atomic_imin:
-                return V3D_TMU_OP_WRITE_SMIN;
-        case nir_intrinsic_image_atomic_umin:
-                return V3D_TMU_OP_WRITE_UMIN_FULL_L1_CLEAR;
-        case nir_intrinsic_image_atomic_imax:
-                return V3D_TMU_OP_WRITE_SMAX;
-        case nir_intrinsic_image_atomic_umax:
-                return V3D_TMU_OP_WRITE_UMAX;
-        case nir_intrinsic_image_atomic_and:
-                return V3D_TMU_OP_WRITE_AND_READ_INC;
-        case nir_intrinsic_image_atomic_or:
-                return V3D_TMU_OP_WRITE_OR_READ_DEC;
-        case nir_intrinsic_image_atomic_xor:
-                return V3D_TMU_OP_WRITE_XOR_READ_NOT;
-        case nir_intrinsic_image_atomic_exchange:
-                return V3D_TMU_OP_WRITE_XCHG_READ_FLUSH;
-        case nir_intrinsic_image_atomic_comp_swap:
-                return V3D_TMU_OP_WRITE_CMPXCHG_READ_FLUSH;
+
+        case nir_intrinsic_image_atomic:
+        case nir_intrinsic_image_atomic_swap:
+                return v3d40_image_atomic_tmu_op(instr);
+
         default:
                 unreachable("unknown image intrinsic");
         };
@@ -496,7 +512,8 @@ vir_image_emit_register_writes(struct v3d_compile *c,
                 }
 
                 /* Second atomic argument */
-                if (instr->intrinsic == nir_intrinsic_image_atomic_comp_swap) {
+                if (instr->intrinsic == nir_intrinsic_image_atomic_swap &&
+                    nir_intrinsic_atomic_op(instr) == nir_atomic_op_cmpxchg) {
                         struct qreg src_4_0 = ntq_get_src(c, instr->src[4], 0);
                         vir_TMU_WRITE_or_count(c, V3D_QPU_WADDR_TMUD, src_4_0,
                                                tmu_writes);
@@ -568,9 +585,10 @@ v3d40_vir_emit_image_load_store(struct v3d_compile *c,
          * amount to add/sub, as that is implicit.
          */
         bool atomic_add_replaced =
-                (instr->intrinsic == nir_intrinsic_image_atomic_add &&
-                 (p2_unpacked.op == V3D_TMU_OP_WRITE_AND_READ_INC ||
-                  p2_unpacked.op == V3D_TMU_OP_WRITE_OR_READ_DEC));
+                instr->intrinsic == nir_intrinsic_image_atomic &&
+                nir_intrinsic_atomic_op(instr) == nir_atomic_op_iadd &&
+                (p2_unpacked.op == V3D_TMU_OP_WRITE_AND_READ_INC ||
+                 p2_unpacked.op == V3D_TMU_OP_WRITE_OR_READ_DEC);
 
         uint32_t p0_packed;
         V3D41_TMU_CONFIG_PARAMETER_0_pack(NULL,
@@ -621,6 +639,6 @@ v3d40_vir_emit_image_load_store(struct v3d_compile *c,
         struct qinst *retiring =
                 vir_image_emit_register_writes(c, instr, atomic_add_replaced, NULL);
         retiring->ldtmu_count = p0_unpacked.return_words_of_texture_data;
-        ntq_add_pending_tmu_flush(c, &instr->dest,
+        ntq_add_pending_tmu_flush(c, &instr->def,
                                   p0_unpacked.return_words_of_texture_data);
 }

@@ -48,6 +48,7 @@ class InstrClass(Enum):
    VMem = 17
    Waitcnt = 18
    Other = 19
+   WMMA = 20
 
 class Format(Enum):
    PSEUDO = 0
@@ -69,8 +70,8 @@ class Format(Enum):
    PSEUDO_BRANCH = 17
    PSEUDO_BARRIER = 18
    PSEUDO_REDUCTION = 19
-   VOP3P = 20
    VINTERP_INREG = 21
+   VOP3P = 1 << 7
    VOP1 = 1 << 8
    VOP2 = 1 << 9
    VOPC = 1 << 10
@@ -160,7 +161,11 @@ class Format(Enum):
          return [('uint16_t', 'dpp_ctrl', None),
                  ('uint8_t', 'row_mask', '0xF'),
                  ('uint8_t', 'bank_mask', '0xF'),
-                 ('bool', 'bound_ctrl', 'true')]
+                 ('bool', 'bound_ctrl', 'true'),
+                 ('bool', 'fetch_inactive', 'true')]
+      elif self == Format.DPP8:
+         return [('uint32_t', 'lane_sel', 0),
+                 ('bool', 'fetch_inactive', 'true')]
       elif self == Format.VOP3P:
          return [('uint8_t', 'opsel_lo', None),
                  ('uint8_t', 'opsel_hi', None)]
@@ -192,6 +197,8 @@ class Format(Enum):
          for i in range(min(num_operands, 2)):
             res += 'instr->sel[{0}] = SubdwordSel(op{0}.op.bytes(), 0, false);'.format(i)
          res += 'instr->dst_sel = SubdwordSel(def0.bytes(), 0, false);\n'
+      elif self in [Format.DPP16, Format.DPP8]:
+         res += 'instr->fetch_inactive &= program->gfx_level >= GFX10;\n'
       return res
 
 
@@ -200,16 +207,6 @@ class Opcode(object):
    NOTE: this must be kept in sync with aco_op_info
    """
    def __init__(self, name, opcode_gfx7, opcode_gfx9, opcode_gfx10, opcode_gfx11, format, input_mod, output_mod, is_atomic, cls):
-      """Parameters:
-
-      - name is the name of the opcode (prepend nir_op_ for the enum name)
-      - all types are strings that get nir_type_ prepended to them
-      - input_types is a list of types
-      - algebraic_properties is a space-seperated string, where nir_op_is_ is
-        prepended before each entry
-      - const_expr is an expression or series of statements that computes the
-        constant value of the opcode given the constant values of its inputs.
-      """
       assert isinstance(name, str)
       assert isinstance(opcode_gfx7, int)
       assert isinstance(opcode_gfx9, int)
@@ -274,6 +271,7 @@ def default_class(opcodes, cls):
 opcode("exp", 0, 0, 0, 0, format = Format.EXP, cls = InstrClass.Export)
 opcode("p_parallelcopy")
 opcode("p_startpgm")
+opcode("p_return")
 opcode("p_phi")
 opcode("p_linear_phi")
 opcode("p_as_uniform")
@@ -302,38 +300,67 @@ opcode("p_cbranch_nz", format=Format.PSEUDO_BRANCH)
 
 opcode("p_barrier", format=Format.PSEUDO_BARRIER)
 
+# Primitive Ordered Pixel Shading pseudo-instructions.
+
+# For querying whether the current wave can enter the ordered section on GFX9-10.3, doing
+# s_add_i32(pops_exiting_wave_id, op0), but in a way that it's different from a usual SALU
+# instruction so that it's easier to maintain the volatility of pops_exiting_wave_id and to handle
+# the polling specially in scheduling.
+# Definitions:
+# - Result SGPR;
+# - Clobbered SCC.
+# Operands:
+# - s1 value to add, usually -(current_wave_ID + 1) (or ~current_wave_ID) to remap the exiting wave
+#   ID from wrapping [0, 0x3FF] to monotonic [0, 0xFFFFFFFF].
+opcode("p_pops_gfx9_add_exiting_wave_id")
+
+# Indicates that the wait for the completion of the ordered section in overlapped waves has been
+# finished on GFX9-10.3. Not lowered to any hardware instructions.
+opcode("p_pops_gfx9_overlapped_wave_wait_done")
+
+# Indicates that a POPS ordered section has ended, hints that overlapping waves can possibly
+# continue execution. The overlapping waves may actually be resumed by this instruction or anywhere
+# later, however, especially taking into account the fact that there can be multiple ordered
+# sections in a wave (for instance, if one is chosen in divergent control flow in the source
+# shader), thus multiple p_pops_gfx9_ordered_section_done instructions. At least one must be present
+# in the program if POPS is used, however, otherwise the location of the end of the ordered section
+# will be undefined. Only needed on GFX9-10.3 (GFX11+ ordered section is until the last export,
+# can't be exited early). Not lowered to any hardware instructions.
+opcode("p_pops_gfx9_ordered_section_done")
+
 opcode("p_spill")
 opcode("p_reload")
 
-# start/end linear vgprs
+# Start/end linear vgprs. p_start_linear_vgpr can take an operand to copy from, into the linear vgpr
 opcode("p_start_linear_vgpr")
 opcode("p_end_linear_vgpr")
 
-opcode("p_wqm")
+opcode("p_end_wqm")
 opcode("p_discard_if")
 opcode("p_demote_to_helper")
 opcode("p_is_helper")
 opcode("p_exit_early_if")
 
-# simulates proper bpermute behavior on GFX6
+# simulates proper bpermute behavior using v_readlane_b32
 # definitions: result VGPR, temp EXEC, clobbered VCC
 # operands: index, input data
-opcode("p_bpermute_gfx6")
+opcode("p_bpermute_readlane")
 
-# simulates proper bpermute behavior on GFX10
+# simulates proper wave64 bpermute behavior using shared vgprs (for GFX10/10.3)
 # definitions: result VGPR, temp EXEC, clobbered SCC
 # operands: index * 4, input data, same half (bool)
-opcode("p_bpermute_gfx10w64")
+opcode("p_bpermute_shared_vgpr")
 
-# simulates proper bpermute behavior on GFX11
+# simulates proper wave64 bpermute behavior using v_permlane64_b32 (for GFX11+)
 # definitions: result VGPR, temp EXEC, clobbered SCC
 # operands: linear VGPR, index * 4, input data, same half (bool)
-opcode("p_bpermute_gfx11w64")
+opcode("p_bpermute_permlane")
 
 # creates a lane mask where only the first active lane is selected
 opcode("p_elect")
 
 opcode("p_constaddr")
+opcode("p_resume_shader_address")
 
 # These don't have to be pseudo-ops, but it makes optimization easier to only
 # have to consider two instructions.
@@ -354,6 +381,10 @@ opcode("p_interp_gfx11")
 
 # performs dual source MRTs swizzling and emits exports on GFX11
 opcode("p_dual_src_export_gfx11")
+
+# Let shader end with specific registers set to wanted value, used by multi part
+# shader to pass arguments to next part.
+opcode("p_end_with_regs")
 
 # SOP2 instructions: 2 scalar inputs, 1 scalar output (+optional scc)
 SOP2 = {
@@ -414,6 +445,7 @@ SOP2 = {
    (  -1,   -1,   -1, 0x2d, 0x36, 0x2e, "s_mul_hi_i32"),
    # actually a pseudo-instruction. it's lowered to SALU during assembly though, so it's useful to identify it as a SOP2.
    (  -1,   -1,   -1,   -1,   -1,   -1, "p_constaddr_addlo"),
+   (  -1,   -1,   -1,   -1,   -1,   -1, "p_resumeaddr_addlo"),
 }
 for (gfx6, gfx7, gfx8, gfx9, gfx10, gfx11, name, cls) in default_class(SOP2, InstrClass.Salu):
     opcode(name, gfx7, gfx9, gfx10, gfx11, Format.SOP2, cls)
@@ -530,6 +562,8 @@ SOP1 = {
    (  -1,   -1,   -1,   -1,   -1, 0x4d, "s_sendmsg_rtn_b64"),
    # actually a pseudo-instruction. it's lowered to SALU during assembly though, so it's useful to identify it as a SOP1.
    (  -1,   -1,   -1,   -1,   -1,   -1, "p_constaddr_getpc"),
+   (  -1,   -1,   -1,   -1,   -1,   -1, "p_resumeaddr_getpc"),
+   (  -1,   -1,   -1,   -1,   -1,   -1, "p_load_symbol"),
 }
 for (gfx6, gfx7, gfx8, gfx9, gfx10, gfx11, name, cls) in default_class(SOP1, InstrClass.Salu):
    opcode(name, gfx7, gfx9, gfx10, gfx11, Format.SOP1, cls)
@@ -711,6 +745,7 @@ for (gfx6, gfx7, gfx8, gfx9, gfx10, gfx11, name) in SMEM:
 # TODO: misses some GFX6_7 opcodes which were shifted to VOP3 in GFX8
 VOP2 = {
   # GFX6, GFX7, GFX8, GFX9, GFX10,GFX11,name, input modifiers, output modifiers
+   (0x00, 0x00, 0x00, 0x00, 0x01, 0x01, "v_cndmask_b32", True, False),
    (0x01, 0x01,   -1,   -1,   -1,   -1, "v_readlane_b32", False, False),
    (0x02, 0x02,   -1,   -1,   -1,   -1, "v_writelane_b32", False, False),
    (0x03, 0x03, 0x01, 0x01, 0x03, 0x03, "v_add_f32", True, True),
@@ -789,11 +824,6 @@ VOP2 = {
 }
 for (gfx6, gfx7, gfx8, gfx9, gfx10, gfx11, name, in_mod, out_mod) in VOP2:
    opcode(name, gfx7, gfx9, gfx10, gfx11, Format.VOP2, InstrClass.Valu32, in_mod, out_mod)
-
-if True:
-    # v_cndmask_b32 can use input modifiers but not output modifiers
-    (gfx6, gfx7, gfx8, gfx9, gfx10, gfx11, name) = (0x00, 0x00, 0x00, 0x00, 0x01, 0x01, "v_cndmask_b32")
-    opcode(name, gfx7, gfx9, gfx10, gfx11, Format.VOP2, InstrClass.Valu32, True, False)
 
 
 # VOP1 instructions: instructions with 1 input and 1 output
@@ -1022,6 +1052,12 @@ opcode("v_dot8_i32_iu4", -1, -1, -1, 0x18, Format.VOP3P, InstrClass.Valu32)
 opcode("v_dot8_u32_u4", -1, 0x2b, 0x19, 0x19, Format.VOP3P, InstrClass.Valu32)
 opcode("v_dot2_f32_f16", -1, 0x23, 0x13, 0x13, Format.VOP3P, InstrClass.Valu32)
 opcode("v_dot2_f32_bf16", -1, -1, -1, 0x1a, Format.VOP3P, InstrClass.Valu32)
+opcode("v_wmma_f32_16x16x16_f16", -1, -1, -1, 0x40, Format.VOP3P, InstrClass.WMMA, False, False)
+opcode("v_wmma_f32_16x16x16_bf16", -1, -1, -1, 0x41, Format.VOP3P, InstrClass.WMMA, False, False)
+opcode("v_wmma_f16_16x16x16_f16", -1, -1, -1, 0x42, Format.VOP3P, InstrClass.WMMA, False, False)
+opcode("v_wmma_bf16_16x16x16_bf16", -1, -1, -1, 0x43, Format.VOP3P, InstrClass.WMMA, False, False)
+opcode("v_wmma_i32_16x16x16_iu8", -1, -1, -1, 0x44, Format.VOP3P, InstrClass.WMMA, False, False)
+opcode("v_wmma_i32_16x16x16_iu4", -1, -1, -1, 0x45, Format.VOP3P, InstrClass.WMMA, False, False)
 
 
 # VINTRP (GFX6 - GFX10.3) instructions:
@@ -1045,7 +1081,7 @@ VINTERP = {
    (0x05, "v_interp_p2_rtz_f16_f32_inreg"),
 }
 for (code, name) in VINTERP:
-   opcode(name, -1, -1, -1, code, Format.VINTERP_INREG, InstrClass.Valu32)
+   opcode(name, -1, -1, -1, code, Format.VINTERP_INREG, InstrClass.Valu32, False, True)
 
 
 # VOP3 instructions: 3 inputs, 1 output
@@ -1155,7 +1191,7 @@ VOP3 = {
    (0x11e, 0x11e, 0x293, 0x293, 0x363, 0x31d, "v_bfm_b32", False, False),
    (0x12d, 0x12d, 0x294, 0x294, 0x368, 0x321, "v_cvt_pknorm_i16_f32", True, False),
    (0x12e, 0x12e, 0x295, 0x295, 0x369, 0x322, "v_cvt_pknorm_u16_f32", True, False),
-   (0x12f, 0x12f, 0x296, 0x296, 0x12f, 0x12f, "v_cvt_pkrtz_f16_f32_e64", True, False), # GFX6_7_10_11 is VOP2 with opcode 0x02f
+   (   -1,    -1, 0x296, 0x296,    -1,    -1, "v_cvt_pkrtz_f16_f32_e64", True, False),
    (0x130, 0x130, 0x297, 0x297, 0x36a, 0x323, "v_cvt_pk_u16_u32", False, False),
    (0x131, 0x131, 0x298, 0x298, 0x36b, 0x324, "v_cvt_pk_i16_i32", False, False),
    (   -1,    -1,    -1, 0x299, 0x312, 0x312, "v_cvt_pknorm_i16_f16", True, False), #v_cvt_pk_norm_i16_f32 in GFX11

@@ -643,7 +643,7 @@ iris_get_query_result(struct pipe_context *ctx,
       struct pipe_screen *screen = ctx->screen;
 
       result->b = screen->fence_finish(screen, ctx, q->fence,
-                                       wait ? PIPE_TIMEOUT_INFINITE : 0);
+                                       wait ? OS_TIMEOUT_INFINITE : 0);
       return result->b;
    }
 
@@ -730,6 +730,8 @@ iris_get_query_result_resource(struct pipe_context *ctx,
 
    struct mi_builder b;
    mi_builder_init(&b, batch->screen->devinfo, batch);
+   const uint32_t mocs = iris_mocs(query_bo, &batch->screen->isl_dev, 0);
+   mi_builder_set_mocs(&b, mocs);
 
    iris_batch_sync_region_start(batch);
 
@@ -801,6 +803,8 @@ set_predicate_for_result(struct iris_context *ice,
 
    struct mi_builder b;
    mi_builder_init(&b, batch->screen->devinfo, batch);
+   const uint32_t mocs = iris_mocs(bo, &batch->screen->isl_dev, 0);
+   mi_builder_set_mocs(&b, mocs);
 
    struct mi_value result;
 

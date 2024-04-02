@@ -134,10 +134,10 @@ compare_with_negation(nir_type_uint64)
 
 TEST_F(alu_srcs_negative_equal_test, trivial_float)
 {
-   nir_ssa_def *two = nir_imm_float(&bld, 2.0f);
-   nir_ssa_def *negative_two = nir_imm_float(&bld, -2.0f);
+   nir_def *two = nir_imm_float(&bld, 2.0f);
+   nir_def *negative_two = nir_imm_float(&bld, -2.0f);
 
-   nir_ssa_def *result = nir_fadd(&bld, two, negative_two);
+   nir_def *result = nir_fadd(&bld, two, negative_two);
    nir_alu_instr *instr = nir_instr_as_alu(result->parent_instr);
 
    ASSERT_NE((void *) 0, instr);
@@ -148,10 +148,10 @@ TEST_F(alu_srcs_negative_equal_test, trivial_float)
 
 TEST_F(alu_srcs_negative_equal_test, trivial_int)
 {
-   nir_ssa_def *two = nir_imm_int(&bld, 2);
-   nir_ssa_def *negative_two = nir_imm_int(&bld, -2);
+   nir_def *two = nir_imm_int(&bld, 2);
+   nir_def *negative_two = nir_imm_int(&bld, -2);
 
-   nir_ssa_def *result = nir_iadd(&bld, two, negative_two);
+   nir_def *result = nir_iadd(&bld, two, negative_two);
    nir_alu_instr *instr = nir_instr_as_alu(result->parent_instr);
 
    ASSERT_NE((void *) 0, instr);
@@ -166,11 +166,11 @@ TEST_F(alu_srcs_negative_equal_test, trivial_negation_float)
     * nir_alu_srcs_negative_equal expects that constant folding will convert
     * fneg(2.0) to just -2.0.
     */
-   nir_ssa_def *two = nir_imm_float(&bld, 2.0f);
-   nir_ssa_def *two_plus_two = nir_fadd(&bld, two, two);
-   nir_ssa_def *negation = nir_fneg(&bld, two_plus_two);
+   nir_def *two = nir_imm_float(&bld, 2.0f);
+   nir_def *two_plus_two = nir_fadd(&bld, two, two);
+   nir_def *negation = nir_fneg(&bld, two_plus_two);
 
-   nir_ssa_def *result = nir_fadd(&bld, two_plus_two, negation);
+   nir_def *result = nir_fadd(&bld, two_plus_two, negation);
 
    nir_alu_instr *instr = nir_instr_as_alu(result->parent_instr);
 
@@ -186,11 +186,11 @@ TEST_F(alu_srcs_negative_equal_test, trivial_negation_int)
     * nir_alu_srcs_negative_equal expects that constant folding will convert
     * ineg(2) to just -2.
     */
-   nir_ssa_def *two = nir_imm_int(&bld, 2);
-   nir_ssa_def *two_plus_two = nir_iadd(&bld, two, two);
-   nir_ssa_def *negation = nir_ineg(&bld, two_plus_two);
+   nir_def *two = nir_imm_int(&bld, 2);
+   nir_def *two_plus_two = nir_iadd(&bld, two, two);
+   nir_def *negation = nir_ineg(&bld, two_plus_two);
 
-   nir_ssa_def *result = nir_iadd(&bld, two_plus_two, negation);
+   nir_def *result = nir_iadd(&bld, two_plus_two, negation);
 
    nir_alu_instr *instr = nir_instr_as_alu(result->parent_instr);
 
@@ -207,11 +207,11 @@ TEST_F(alu_srcs_negative_equal_test, trivial_negation_int)
 TEST_F(alu_srcs_negative_equal_test, full_type ## _self)                \
 {                                                                       \
    count_sequence(c1, full_type, 1);                                    \
-   nir_ssa_def *a = nir_build_imm(&bld,                                 \
+   nir_def *a = nir_build_imm(&bld,                                 \
                                   NIR_MAX_VEC_COMPONENTS,               \
                                   nir_alu_type_get_type_size(full_type), \
                                   c1);                                  \
-   nir_ssa_def *result;                                                 \
+   nir_def *result;                                                 \
    if (nir_alu_type_get_base_type(full_type) == nir_type_float)         \
       result = nir_fadd(&bld, a, a);                                    \
    else                                                                 \
@@ -243,15 +243,15 @@ TEST_F(alu_srcs_negative_equal_test, full_type ## _trivially_true)      \
 {                                                                       \
    count_sequence(c1, full_type, 1);                                    \
    negate(c2, c1, full_type, NIR_MAX_VEC_COMPONENTS);                   \
-   nir_ssa_def *a = nir_build_imm(&bld,                                 \
+   nir_def *a = nir_build_imm(&bld,                                 \
                                   NIR_MAX_VEC_COMPONENTS,               \
                                   nir_alu_type_get_type_size(full_type), \
                                   c1);                                  \
-   nir_ssa_def *b = nir_build_imm(&bld,                                 \
+   nir_def *b = nir_build_imm(&bld,                                 \
                                   NIR_MAX_VEC_COMPONENTS,               \
                                   nir_alu_type_get_type_size(full_type), \
                                   c2);                                  \
-   nir_ssa_def *result;                                                 \
+   nir_def *result;                                                 \
    if (nir_alu_type_get_base_type(full_type) == nir_type_float)         \
       result = nir_fadd(&bld, a, b);                                    \
    else                                                                 \
@@ -278,7 +278,7 @@ compare_with_negation(nir_type_uint64)
 
 TEST_F(alu_srcs_negative_equal_test, swizzle_scalar_to_vector)
 {
-   nir_ssa_def *v = nir_imm_vec2(&bld, 1.0, -1.0);
+   nir_def *v = nir_imm_vec2(&bld, 1.0, -1.0);
    const uint8_t s0[4] = { 0, 0, 0, 0 };
    const uint8_t s1[4] = { 1, 1, 1, 1 };
 
@@ -292,23 +292,6 @@ TEST_F(alu_srcs_negative_equal_test, swizzle_scalar_to_vector)
    memcpy(&instr->src[1].swizzle, s1, sizeof(s1));
 
    nir_builder_alu_instr_finish_and_insert(&bld, instr);
-
-   EXPECT_TRUE(nir_alu_srcs_negative_equal(instr, instr, 0, 1));
-}
-
-TEST_F(alu_srcs_negative_equal_test, unused_components_mismatch)
-{
-   nir_ssa_def *v1 = nir_imm_vec4(&bld, -2.0, 18.0, 43.0,  1.0);
-   nir_ssa_def *v2 = nir_imm_vec4(&bld,  2.0, 99.0, 76.0, -1.0);
-
-   nir_ssa_def *result = nir_fadd(&bld, v1, v2);
-
-   nir_alu_instr *instr = nir_instr_as_alu(result->parent_instr);
-
-   /* Disable the channels that aren't negations of each other. */
-   nir_register *reg = nir_local_reg_create(bld.impl);
-   nir_instr_rewrite_dest(&instr->instr, &instr->dest.dest, nir_dest_for_reg(reg));
-   instr->dest.write_mask = 8 + 1;
 
    EXPECT_TRUE(nir_alu_srcs_negative_equal(instr, instr, 0, 1));
 }

@@ -79,6 +79,8 @@ public:
       return m_slots[0] ? m_slots[0]->has_alu_flag(alu_lds_group_start) : false;
    }
 
+   bool index_mode_load();
+
    bool has_lds_group_end() const;
 
    const auto& readport_reserer() const { return m_readports_evaluator; }
@@ -95,6 +97,8 @@ public:
    bool has_kill_op() const { return m_has_kill_op; }
 
    void set_origin(AluInstr *o) { m_origin = o;}
+
+   AluGroup *as_alu_group() override { return this;}
 
 private:
    void forward_set_blockid(int id, int index) override;

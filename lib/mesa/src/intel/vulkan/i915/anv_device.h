@@ -30,6 +30,8 @@ struct anv_physical_device;
 
 VkResult
 anv_i915_physical_device_get_parameters(struct anv_physical_device *device);
+VkResult
+anv_i915_physical_device_init_memory_types(struct anv_physical_device *device);
 
 VkResult
 anv_i915_device_setup_context(struct anv_device *device,
@@ -37,3 +39,9 @@ anv_i915_device_setup_context(struct anv_device *device,
                               const uint32_t num_queues);
 
 VkResult anv_i915_device_check_status(struct vk_device *vk_device);
+bool anv_i915_device_destroy_vm(struct anv_device *device);
+VkResult anv_i915_device_setup_vm(struct anv_device *device);
+VkResult anv_i915_set_queue_parameters(
+      struct anv_device *device,
+      uint32_t context_id,
+      const VkDeviceQueueGlobalPriorityCreateInfoKHR *queue_priority);

@@ -55,16 +55,18 @@ void
 emit_clause(Builder& bld, unsigned num_instrs, aco_ptr<Instruction>* instrs)
 {
    unsigned start = 0;
+   unsigned end = num_instrs;
 
-   /* skip any stores at the start */
-   for (; (start < num_instrs) && instrs[start]->definitions.empty(); start++)
-      bld.insert(std::move(instrs[start]));
+   if (bld.program->gfx_level < GFX11) {
+      /* skip any stores at the start */
+      for (; (start < num_instrs) && instrs[start]->definitions.empty(); start++)
+         bld.insert(std::move(instrs[start]));
 
-   unsigned end = start;
-   for (; (end < num_instrs) && !instrs[end]->definitions.empty(); end++)
-      ;
+      for (end = start; (end < num_instrs) && !instrs[end]->definitions.empty(); end++)
+         ;
+   }
+
    unsigned clause_size = end - start;
-
    if (clause_size > 1)
       bld.sopp(aco_opcode::s_clause, -1, clause_size - 1);
 
@@ -246,6 +248,10 @@ get_type(Program* program, aco_ptr<Instruction>& instr)
 void
 form_hard_clauses(Program* program)
 {
+   /* The ISA documentation says 63 is the maximum for GFX11/12, but according to
+    * LLVM there are HW bugs with more than 32 instructions.
+    */
+   const unsigned max_clause_length = program->gfx_level >= GFX11 ? 32 : 63;
    for (Block& block : program->blocks) {
       unsigned num_instrs = 0;
       aco_ptr<Instruction> current_instrs[63];
@@ -259,7 +265,7 @@ form_hard_clauses(Program* program)
          aco_ptr<Instruction>& instr = block.instructions[i];
 
          clause_type type = get_type(program, instr);
-         if (type != current_type || num_instrs == 63 ||
+         if (type != current_type || num_instrs == max_clause_length ||
              (num_instrs && !should_form_clause(current_instrs[0].get(), instr.get()))) {
             emit_clause(bld, num_instrs, current_instrs);
             num_instrs = 0;

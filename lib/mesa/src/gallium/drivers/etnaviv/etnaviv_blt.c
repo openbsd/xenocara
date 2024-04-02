@@ -262,15 +262,15 @@ etna_blit_clear_color_blt(struct pipe_context *pctx, struct pipe_surface *dst,
       /* update clear color in SW meta area of the buffer if TS is exported */
       if (unlikely(new_clear_value != surf->level->clear_value &&
           etna_resource_ext_ts(etna_resource(dst->texture))))
-         etna_resource(dst->texture)->ts_meta->v0.clear_value = new_clear_value;
+         surf->level->ts_meta->v0.clear_value = new_clear_value;
 
-      surf->level->ts_valid = true;
+      etna_resource_level_ts_mark_valid(surf->level);
       ctx->dirty |= ETNA_DIRTY_TS | ETNA_DIRTY_DERIVE_TS;
    }
 
    surf->level->clear_value = new_clear_value;
    resource_written(ctx, surf->base.texture);
-   etna_resource(surf->base.texture)->seqno++;
+   etna_resource_level_mark_changed(surf->level);
 }
 
 static void
@@ -346,12 +346,12 @@ etna_blit_clear_zs_blt(struct pipe_context *pctx, struct pipe_surface *dst,
    /* This made the TS valid */
    if (surf->level->ts_size) {
       ctx->framebuffer.TS_DEPTH_CLEAR_VALUE = surf->level->clear_value;
-      surf->level->ts_valid = true;
+      etna_resource_level_ts_mark_valid(surf->level);
       ctx->dirty |= ETNA_DIRTY_TS | ETNA_DIRTY_DERIVE_TS;
    }
 
    resource_written(ctx, surf->base.texture);
-   etna_resource(surf->base.texture)->seqno++;
+   etna_resource_level_mark_changed(surf->level);
 }
 
 static void
@@ -359,6 +359,9 @@ etna_clear_blt(struct pipe_context *pctx, unsigned buffers, const struct pipe_sc
            const union pipe_color_union *color, double depth, unsigned stencil)
 {
    struct etna_context *ctx = etna_context(pctx);
+
+   if (!etna_render_condition_check(pctx))
+      return;
 
    etna_set_state(ctx->stream, VIVS_GL_FLUSH_CACHE, 0x00000c23);
    etna_set_state(ctx->stream, VIVS_TS_FLUSH_CACHE, VIVS_TS_FLUSH_CACHE_FLUSH);
@@ -393,14 +396,26 @@ etna_try_blt_blit(struct pipe_context *pctx,
    struct etna_context *ctx = etna_context(pctx);
    struct etna_resource *src = etna_resource(blit_info->src.resource);
    struct etna_resource *dst = etna_resource(blit_info->dst.resource);
-   int msaa_xscale = 1, msaa_yscale = 1;
+   int src_xscale, src_yscale, dst_xscale, dst_yscale;
+   bool downsample_x = false, downsample_y = false;
 
    /* Ensure that the level is valid */
    assert(blit_info->src.level <= src->base.last_level);
    assert(blit_info->dst.level <= dst->base.last_level);
 
-   if (!translate_samples_to_xyscale(src->base.nr_samples, &msaa_xscale, &msaa_yscale))
+   if (!translate_samples_to_xyscale(src->base.nr_samples, &src_xscale, &src_yscale))
       return false;
+   if (!translate_samples_to_xyscale(dst->base.nr_samples, &dst_xscale, &dst_yscale))
+      return false;
+
+   /* BLT does not support upscaling */
+   if ((src_xscale < dst_xscale) || (src_yscale < dst_yscale))
+      return false;
+
+   if (src_xscale > dst_xscale)
+      downsample_x = true;
+   if (src_yscale > dst_yscale)
+      downsample_y = true;
 
    /* The width/height are in pixels; they do not change as a result of
     * multi-sampling. So, when blitting from a 4x multisampled surface
@@ -436,7 +451,7 @@ etna_try_blt_blit(struct pipe_context *pctx,
    /* When not resolving MSAA, but only doing a layout conversion, we can get
     * away with a fallback format of matching size.
     */
-   if (format == ETNA_NO_MATCH && msaa_xscale == 1 && msaa_yscale == 1)
+   if (format == ETNA_NO_MATCH && !downsample_x && !downsample_y)
       format = etna_compatible_blt_format(blit_info->dst.format);
    if (format == ETNA_NO_MATCH)
       return false;
@@ -456,9 +471,14 @@ etna_try_blt_blit(struct pipe_context *pctx,
     */
    if (src == dst) {
       assert(!memcmp(&blit_info->src, &blit_info->dst, sizeof(blit_info->src)));
-      if (!src_lev->ts_size || !src_lev->ts_valid) /* No TS, no worries */
+      if (!etna_resource_level_ts_valid(src_lev)) /* No TS, no worries */
          return true;
    }
+
+   /* Flush destination, as the blit will invalidate any pending TS changes. */
+   if (dst != src && etna_resource_level_needs_flush(dst_lev))
+      etna_copy_resource(pctx, &dst->base, &dst->base,
+                         blit_info->dst.level, blit_info->dst.level);
 
    /* Kick off BLT here */
    if (src == dst && src_lev->ts_compress_fmt < 0) {
@@ -492,12 +512,12 @@ etna_try_blt_blit(struct pipe_context *pctx,
       op.src.format = format;
       op.src.stride = src_lev->stride;
       op.src.tiling = src->layout;
-      op.src.downsample_x = msaa_xscale > 1;
-      op.src.downsample_y = msaa_yscale > 1;
+      op.src.downsample_x = downsample_x;
+      op.src.downsample_y = downsample_y;
       for (unsigned x=0; x<4; ++x)
          op.src.swizzle[x] = x;
 
-      if (src_lev->ts_size && src_lev->ts_valid) {
+      if (etna_resource_level_ts_valid(src_lev)) {
          op.src.use_ts = 1;
          op.src.ts_addr.bo = src->ts_bo;
          op.src.ts_addr.offset = src_lev->ts_offset + blit_info->src.box.z * src_lev->ts_layer_stride;
@@ -534,10 +554,10 @@ etna_try_blt_blit(struct pipe_context *pctx,
          op.src_y += blit_info->src.box.height;
       }
 
-      op.src_x *= msaa_xscale;
-      op.src_y *= msaa_yscale;
-      op.rect_w *= msaa_xscale;
-      op.rect_h *= msaa_yscale;
+      op.src_x *= src_xscale;
+      op.src_y *= src_yscale;
+      op.rect_w *= src_xscale;
+      op.rect_h *= src_yscale;
 
       assert(op.src_x < src_lev->padded_width);
       assert(op.src_y < src_lev->padded_height);
@@ -558,8 +578,15 @@ etna_try_blt_blit(struct pipe_context *pctx,
    resource_read(ctx, &src->base);
    resource_written(ctx, &dst->base);
 
-   dst->seqno++;
-   dst_lev->ts_valid = false;
+   etna_resource_level_mark_changed(dst_lev);
+
+   /* We don't need to mark the TS as invalid if this was just a flush without
+    * compression, as in that case only clear tiles are filled and the tile
+    * status still matches the blit target buffer. For compressed formats the
+    * tiles are decompressed, so tile status doesn't match anymore.
+    */
+   if (src != dst || src_lev->ts_compress_fmt >= 0)
+      etna_resource_level_ts_mark_invalid(dst_lev);
 
    return true;
 }

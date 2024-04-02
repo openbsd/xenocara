@@ -27,8 +27,6 @@
 #include "vulkan/vulkan_core.h"
 #include "vk_device.h"
 
-#include "drm-uapi/gpu_scheduler.h"
-
 struct anv_device;
 struct anv_physical_device;
 
@@ -38,5 +36,5 @@ VkResult anv_xe_device_check_status(struct vk_device *vk_device);
 
 VkResult
 anv_xe_physical_device_get_parameters(struct anv_physical_device *device);
-enum drm_sched_priority
-anv_vk_priority_to_drm_sched_priority(VkQueueGlobalPriorityKHR vk_priority);
+VkResult
+anv_xe_physical_device_init_memory_types(struct anv_physical_device *device);

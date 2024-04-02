@@ -55,7 +55,6 @@ struct gl_extensions
    GLboolean ARB_bindless_texture;
    GLboolean ARB_blend_func_extended;
    GLboolean ARB_buffer_storage;
-   GLboolean ARB_clear_texture;
    GLboolean ARB_clip_control;
    GLboolean ARB_color_buffer_float;
    GLboolean ARB_compatibility;
@@ -250,6 +249,7 @@ struct gl_extensions
    GLboolean KHR_texture_compression_astc_ldr;
    GLboolean KHR_texture_compression_astc_sliced_3d;
    GLboolean MESA_framebuffer_flip_y;
+   GLboolean MESA_texture_const_bandwidth;
    GLboolean MESA_pack_invert;
    GLboolean MESA_tile_raster_order;
    GLboolean EXT_shader_framebuffer_fetch;
@@ -800,6 +800,16 @@ struct gl_constants
    bool DisableUniformArrayResize;
 
    /**
+    * Alias extension e.g. GL_ATI_shader_texture_lod to GL_ARB_shader_texture_lod.
+    */
+   char *AliasShaderExtension;
+
+   /**
+    * Allow fs-only bias argument in vertex shaders.
+    */
+   GLboolean AllowVertexTextureBias;
+
+   /**
     * Align varyings to POT in a slot
     *
     * Drivers that prefer varyings to be aligned to POT must set this value to GL_TRUE
@@ -940,6 +950,15 @@ struct gl_constants
 
    /** Is the drivers uniform storage packed or padded to 16 bytes. */
    bool PackedDriverUniformStorage;
+
+   bool HasFBFetch;
+
+   /** Whether the backend supports reading from outputs */
+   bool SupportsReadingOutputs;
+
+   bool CombinedClipCullDistanceArrays;
+
+   bool PointSizeFixed;
 
    /** Wether or not glBitmap uses red textures rather than alpha */
    bool BitmapUsesRed;

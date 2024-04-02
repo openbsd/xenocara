@@ -155,7 +155,7 @@ clear_stale_syncobjs(struct iris_batch *batch)
                                struct iris_batch_fence, i);
       assert(fence->flags & IRIS_BATCH_FENCE_WAIT);
 
-      if (iris_wait_syncobj(bufmgr, *syncobj, 0))
+      if (iris_wait_syncobj(bufmgr, *syncobj, 0) == false)
          continue;
 
       /* This sync object has already passed, there's no need to continue
@@ -225,7 +225,7 @@ iris_wait_syncobj(struct iris_bufmgr *bufmgr,
       .count_handles = 1,
       .timeout_nsec = timeout_nsec,
    };
-   return intel_ioctl(fd, DRM_IOCTL_SYNCOBJ_WAIT, &args);
+   return intel_ioctl(fd, DRM_IOCTL_SYNCOBJ_WAIT, &args) == 0;
 }
 
 #define CSI "\e["
@@ -270,8 +270,7 @@ iris_fence_flush(struct pipe_context *ctx,
       iris_measure_frame_end(ice);
    }
 
-   u_trace_context_process(&ice->ds.trace_context,
-                           flags & PIPE_FLUSH_END_OF_FRAME);
+   intel_ds_device_process(&ice->ds, flags & PIPE_FLUSH_END_OF_FRAME);
 
    if (!out_fence)
       return;
@@ -289,8 +288,7 @@ iris_fence_flush(struct pipe_context *ctx,
       unsigned b = batch->name;
 
       if (deferred && iris_batch_bytes_used(batch) > 0) {
-         struct iris_fine_fence *fine =
-            iris_fine_fence_new(batch, IRIS_FENCE_BOTTOM_OF_PIPE);
+         struct iris_fine_fence *fine = iris_fine_fence_new(batch);
          iris_fine_fence_reference(screen, &fence->fine[b], fine);
          iris_fine_fence_reference(screen, &fine, NULL);
       } else {
@@ -567,7 +565,6 @@ iris_fence_create_fd(struct pipe_context *ctx,
    fine->seqno = UINT32_MAX;
    fine->map = &zero;
    fine->syncobj = syncobj;
-   fine->flags = IRIS_FENCE_END;
    pipe_reference_init(&fine->reference, 1);
 
    struct pipe_fence_handle *fence = calloc(1, sizeof(*fence));
@@ -601,7 +598,7 @@ iris_fence_signal(struct pipe_context *ctx,
             continue;
 
          batch->contains_fence_signal = true;
-         iris_batch_add_syncobj(batch, fine->syncobj, I915_EXEC_FENCE_SIGNAL);
+         iris_batch_add_syncobj(batch, fine->syncobj, IRIS_BATCH_FENCE_SIGNAL);
       }
       if (batch->contains_fence_signal)
          iris_batch_flush(batch);
