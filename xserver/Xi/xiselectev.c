@@ -418,10 +418,21 @@ ProcXIGetSelectedEvents(ClientPtr client)
         }
     }
 
-    WriteReplyToClient(client, sizeof(xXIGetSelectedEventsReply), &reply);
+    if (client->swapped) {
+        /* save the value before SRepXIGetSelectedEvents swaps it */
+        uint32_t length = reply.length;
 
-    if (reply.num_masks)
-        WriteToClient(client, reply.length * 4, buffer);
+        WriteReplyToClient(client, sizeof(xXIGetSelectedEventsReply), &reply);
+
+        if (length)
+            WriteToClient(client, length * 4, buffer);
+    }
+    else {
+        WriteReplyToClient(client, sizeof(xXIGetSelectedEventsReply), &reply);
+
+        if (reply.num_masks)
+            WriteToClient(client, reply.length * 4, buffer);
+    }
 
     free(buffer);
     return Success;
