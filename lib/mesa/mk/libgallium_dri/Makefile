@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.10 2024/04/03 22:10:09 jsg Exp $
 
 LIB=	gallium_dri
 
@@ -83,7 +83,6 @@ SLIBS=	libdri \
 	libmesa_util_c11 \
 	libnir \
 	libcompiler \
-	libvtn \
 	libgalliumvl \
 	libgallium \
 	libpipe_loader_static \
@@ -94,6 +93,10 @@ SLIBS=	libdri \
 	libswdri \
 	libswkmsdri \
 	libsoftpipe
+
+.if ${WITH_AMD_VK} == "yes" || ${WITH_INTEL_VK} == "yes"
+SLIBS+=	libvtn
+.endif
 
 .if ${WITH_SSE41} == "yes"
 SLIBS+=	libmesa_sse41
