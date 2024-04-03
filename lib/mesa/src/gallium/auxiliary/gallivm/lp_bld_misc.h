@@ -96,7 +96,7 @@ void
 lp_set_module_stack_alignment_override(LLVMModuleRef M, unsigned align);
 
 void
-lp_set_module_branch_target_enforcement(LLVMModuleRef M);
+lp_set_module_branch_protection(LLVMModuleRef M);
 
 #ifdef __cplusplus
 }

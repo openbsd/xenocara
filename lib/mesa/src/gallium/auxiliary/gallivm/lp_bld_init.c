@@ -361,7 +361,7 @@ init_gallivm_state(struct gallivm_state *gallivm, const char *name,
 #endif
 
 #if DETECT_ARCH_AARCH64
-   lp_set_module_branch_target_enforcement(gallivm->module);
+   lp_set_module_branch_protection(gallivm->module);
 #endif
 
    gallivm->builder = LLVMCreateBuilderInContext(gallivm->context);
