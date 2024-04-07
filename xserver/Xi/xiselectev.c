@@ -349,6 +349,7 @@ ProcXIGetSelectedEvents(ClientPtr client)
     InputClientsPtr others = NULL;
     xXIEventMask *evmask = NULL;
     DeviceIntPtr dev;
+    uint32_t length;
 
     REQUEST(xXIGetSelectedEventsReq);
     REQUEST_SIZE_MATCH(xXIGetSelectedEventsReq);
@@ -418,21 +419,12 @@ ProcXIGetSelectedEvents(ClientPtr client)
         }
     }
 
-    if (client->swapped) {
-        /* save the value before SRepXIGetSelectedEvents swaps it */
-        uint32_t length = reply.length;
+    /* save the value before SRepXIGetSelectedEvents swaps it */
+    length = reply.length;
+    WriteReplyToClient(client, sizeof(xXIGetSelectedEventsReply), &reply);
 
-        WriteReplyToClient(client, sizeof(xXIGetSelectedEventsReply), &reply);
-
-        if (length)
-            WriteToClient(client, length * 4, buffer);
-    }
-    else {
-        WriteReplyToClient(client, sizeof(xXIGetSelectedEventsReply), &reply);
-
-        if (reply.num_masks)
-            WriteToClient(client, reply.length * 4, buffer);
-    }
+    if (reply.num_masks)
+        WriteToClient(client, length * 4, buffer);
 
     free(buffer);
     return Success;

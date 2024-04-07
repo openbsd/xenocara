@@ -536,6 +536,7 @@ DisableDevice(DeviceIntPtr dev, BOOL sendevent)
     }
 
     RecalculateMasterButtons(dev);
+    dev->master = NULL;
 
     return TRUE;
 }

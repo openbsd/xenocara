@@ -189,6 +189,8 @@ Bool CoreDump;
 
 Bool enableIndirectGLX = FALSE;
 
+Bool AllowByteSwappedClients = TRUE;
+
 #ifdef PANORAMIX
 Bool PanoramiXExtensionDisabledHack = FALSE;
 #endif
@@ -535,6 +537,8 @@ UseMsg(void)
     ErrorF("-br                    create root window with black background\n");
     ErrorF("+bs                    enable any backing store support\n");
     ErrorF("-bs                    disable any backing store support\n");
+    ErrorF("+byteswappedclients    Allow clients with endianess different to that of the server\n");
+    ErrorF("-byteswappedclients    Prohibit clients with endianess different to that of the server\n");
     ErrorF("-c                     turns off key-click\n");
     ErrorF("c #                    key-click volume (0-100)\n");
     ErrorF("-cc int                default color visual class\n");
@@ -730,6 +734,11 @@ ProcessCommandLine(int argc, char *argv[])
                 InitAuthorization(argv[i]);
             else
                 UseMsg();
+        }
+        else if (strcmp(argv[i], "-byteswappedclients") == 0) {
+            AllowByteSwappedClients = FALSE;
+        } else if (strcmp(argv[i], "+byteswappedclients") == 0) {
+            AllowByteSwappedClients = TRUE;
         }
         else if (strcmp(argv[i], "-br") == 0)  /* default */
             party_like_its_1989 = FALSE;
