@@ -181,35 +181,23 @@ o How to get a core file out of the X server?
 
 Several things are needed:
 
-1) set kern.nosuidcoredump=2 in /etc/sysctl.conf
-2) put
+1) set kern.nosuidcoredump=3 in /etc/sysctl.conf
 
-        Option  "NoTrapSignals" "true"
-
-   in the "ServerFlags" section of /etc/X11/xorg.conf. If such a section
-   doesn't exist, it can be added as follow:
-
-   Section "ServerFlags"
-        Option  "NoTrapSignals" "true"
-   EndSection
-
-   anywhere in the configuration file.
-
-3) start the X server as root, with the -keepPriv option. A regular
-   user is not allowed to use this option. If you use xenodm, you can
-   add the option in /etc/X11/xenodm/Xservers. If you want to use
-   startx, you need to run it as root, like this:
+2) start the X server as root, with the -keepPriv option. If you use
+   xenodm, you can add the option in /etc/X11/xenodm/Xservers. If you
+   want to use startx, you need to run it as root, like this:
 
    startx -- /usr/X11R6/bin/X -keepPriv
 
-Now the X server will dump core when catching a fatal signal. But it
-will also not be able to restore the text mode on exit. So be prepared
-to log in remotely (serial terminal or ssh) to reboot your machine or
-to restart X.
+Now the X server should dump core when catching a fatal signal and the
+core dump should be in /var/crash/Xorg/<pid>.core.
 
-The core dump will be in /var/crash.
+Alternatively, if the X server is using the modesetting(4) driver
+(it's the case with most recent AMD and Intel GPUs), it can be started
+as a regular user, without setting kern.nosuidcoredump=3, and the core
+dump will be in the current directory where startx was executed.
 
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 --
-$OpenBSD: README,v 1.48 2023/05/07 06:55:21 matthieu Exp $
+$OpenBSD: README,v 1.49 2024/04/27 18:34:23 matthieu Exp $
