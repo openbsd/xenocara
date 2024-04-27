@@ -291,8 +291,6 @@ AddGlyph(GlyphSetPtr glyphSet, GlyphPtr glyph, Glyph id)
     gr = FindGlyphRef(&globalGlyphs[glyphSet->fdepth], signature,
                       TRUE, glyph->sha1);
     if (gr->glyph && gr->glyph != DeletedGlyph && gr->glyph != glyph) {
-        FreeGlyphPicture(glyph);
-        dixFreeObjectWithPrivates(glyph, PRIVATE_GLYPH);
         glyph = gr->glyph;
     }
     else if (gr->glyph != glyph) {

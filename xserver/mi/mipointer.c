@@ -622,8 +622,8 @@ miPointerSetPosition(DeviceIntPtr pDev, int mode, double *screenx,
     pPointer = MIPOINTER(pDev);
     pScreen = pPointer->pScreen;
 
-    x = trunc(*screenx);
-    y = trunc(*screeny);
+    x = floor(*screenx);
+    y = floor(*screeny);
 
     switch_screen = !point_on_screen(pScreen, x, y);
 
@@ -701,9 +701,9 @@ miPointerSetPosition(DeviceIntPtr pDev, int mode, double *screenx,
      * drop the float component on the floor
      * FIXME: only drop remainder for ConstrainCursorHarder, not for screen
      * crossings */
-    if (x != trunc(*screenx))
+    if (x != floor(*screenx))
         *screenx = x;
-    if (y != trunc(*screeny))
+    if (y != floor(*screeny))
         *screeny = y;
 
     return pScreen;
