@@ -38,6 +38,8 @@ static Bool actionsInitialized;
 static ExprDef constTrue;
 static ExprDef constFalse;
 
+static void ActionsInit(void);
+
 /***====================================================================***/
 
 static Bool
@@ -333,16 +335,15 @@ ReportNotFound(unsigned action, unsigned field, const char *what, char *bad)
 }
 
 static Bool
-HandleNoAction(XkbDescPtr xkb,
-               XkbAnyAction * action,
-               unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleNoAction(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+               const ExprDef *array_ndx, const ExprDef *value)
 {
     return ReportIllegal(action->type, field);
 }
 
 static Bool
-CheckLatchLockFlags(unsigned action,
-                    unsigned field, ExprDef * value, unsigned *flags_inout)
+CheckLatchLockFlags(unsigned action, unsigned field,
+                    const ExprDef *value, unsigned *flags_inout)
 {
     unsigned tmp;
     ExprResult result;
@@ -363,16 +364,14 @@ CheckLatchLockFlags(unsigned action,
 }
 
 static Bool
-CheckModifierField(XkbDescPtr xkb,
-                   unsigned action,
-                   ExprDef * value,
+CheckModifierField(XkbDescPtr xkb, unsigned action, const ExprDef *value,
                    unsigned *flags_inout, unsigned *mods_rtrn)
 {
     ExprResult rtrn;
 
     if (value->op == ExprIdent)
     {
-        register char *valStr;
+        char *valStr;
         valStr = XkbAtomGetString(NULL, value->value.str);
         if (valStr && ((uStrCaseCmp(valStr, "usemodmapmods") == 0) ||
                        (uStrCaseCmp(valStr, "modmapmods") == 0)))
@@ -391,13 +390,10 @@ CheckModifierField(XkbDescPtr xkb,
 }
 
 static Bool
-HandleSetLatchMods(XkbDescPtr xkb,
-                   XkbAnyAction * action,
-                   unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleSetLatchMods(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+                   const ExprDef *array_ndx, const ExprDef *value)
 {
     XkbModAction *act;
-    unsigned rtrn;
-    unsigned t1, t2;
 
     act = (XkbModAction *) action;
     if (array_ndx != NULL)
@@ -414,15 +410,18 @@ HandleSetLatchMods(XkbDescPtr xkb,
     {
     case F_ClearLocks:
     case F_LatchToLock:
-        rtrn = act->flags;
+    {
+        unsigned rtrn = act->flags;
         if (CheckLatchLockFlags(action->type, field, value, &rtrn))
         {
             act->flags = rtrn;
             return True;
         }
         return False;
+    }
     case F_Modifiers:
-        t1 = act->flags;
+    {
+        unsigned t1 = act->flags, t2;
         if (CheckModifierField(xkb, action->type, value, &t1, &t2))
         {
             act->flags = t1;
@@ -432,6 +431,7 @@ HandleSetLatchMods(XkbDescPtr xkb,
             return True;
         }
         return False;
+    }
     }
     return ReportIllegal(action->type, field);
 }
@@ -445,13 +445,10 @@ static LookupEntry lockWhich[] = {
 };
 
 static Bool
-HandleLockMods(XkbDescPtr xkb,
-               XkbAnyAction * action,
-               unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleLockMods(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+               const ExprDef *array_ndx, const ExprDef *value)
 {
     XkbModAction *act;
-    unsigned t1, t2;
-    ExprResult rtrn;
 
     act = (XkbModAction *) action;
     if ((array_ndx != NULL) && (field == F_Modifiers || field == F_Affect))
@@ -459,13 +456,17 @@ HandleLockMods(XkbDescPtr xkb,
     switch (field)
     {
     case F_Affect:
+    {
+        ExprResult rtrn;
         if (!ExprResolveEnum(value, &rtrn, lockWhich))
             return ReportMismatch(action->type, field, "lock or unlock");
         act->flags &= ~(XkbSA_LockNoLock | XkbSA_LockNoUnlock);
         act->flags |= rtrn.uval;
         return True;
+    }
     case F_Modifiers:
-        t1 = act->flags;
+    {
+        unsigned t1 = act->flags, t2;
         if (CheckModifierField(xkb, action->type, value, &t1, &t2))
         {
             act->flags = t1;
@@ -475,6 +476,7 @@ HandleLockMods(XkbDescPtr xkb,
             return True;
         }
         return False;
+    }
     }
     return ReportIllegal(action->type, field);
 }
@@ -492,10 +494,10 @@ static LookupEntry groupNames[] = {
 };
 
 static Bool
-CheckGroupField(unsigned action,
-                ExprDef * value, unsigned *flags_inout, int *grp_rtrn)
+CheckGroupField(unsigned action, const ExprDef *value,
+                unsigned *flags_inout, int *grp_rtrn)
 {
-    ExprDef *spec;
+    const ExprDef *spec;
     ExprResult rtrn;
 
     if ((value->op == OpNegate) || (value->op == OpUnaryPlus))
@@ -529,14 +531,10 @@ CheckGroupField(unsigned action,
 }
 
 static Bool
-HandleSetLatchGroup(XkbDescPtr xkb,
-                    XkbAnyAction * action,
-                    unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleSetLatchGroup(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+                    const ExprDef *array_ndx, const ExprDef *value)
 {
     XkbGroupAction *act;
-    unsigned rtrn;
-    unsigned t1;
-    int t2;
 
     act = (XkbGroupAction *) action;
     if (array_ndx != NULL)
@@ -553,15 +551,19 @@ HandleSetLatchGroup(XkbDescPtr xkb,
     {
     case F_ClearLocks:
     case F_LatchToLock:
-        rtrn = act->flags;
+    {
+        unsigned rtrn = act->flags;
         if (CheckLatchLockFlags(action->type, field, value, &rtrn))
         {
             act->flags = rtrn;
             return True;
         }
         return False;
+    }
     case F_Group:
-        t1 = act->flags;
+    {
+        unsigned t1 = act->flags;
+        int t2;
         if (CheckGroupField(action->type, value, &t1, &t2))
         {
             act->flags = t1;
@@ -570,24 +572,23 @@ HandleSetLatchGroup(XkbDescPtr xkb,
         }
         return False;
     }
+    }
     return ReportIllegal(action->type, field);
 }
 
 static Bool
-HandleLockGroup(XkbDescPtr xkb,
-                XkbAnyAction * action,
-                unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleLockGroup(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+                const ExprDef * array_ndx, const ExprDef *value)
 {
     XkbGroupAction *act;
-    unsigned t1;
-    int t2;
 
     act = (XkbGroupAction *) action;
     if ((array_ndx != NULL) && (field == F_Group))
         return ReportActionNotArray(action->type, field);
     if (field == F_Group)
     {
-        t1 = act->flags;
+        unsigned t1 = act->flags;
+        int t2;
         if (CheckGroupField(action->type, value, &t1, &t2))
         {
             act->flags = t1;
@@ -600,13 +601,11 @@ HandleLockGroup(XkbDescPtr xkb,
 }
 
 static Bool
-HandleMovePtr(XkbDescPtr xkb,
-              XkbAnyAction * action,
-              unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleMovePtr(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+              const ExprDef *array_ndx, const ExprDef *value)
 {
     ExprResult rtrn;
     XkbPtrAction *act;
-    Bool absolute;
 
     act = (XkbPtrAction *) action;
     if ((array_ndx != NULL) && ((field == F_X) || (field == F_Y)))
@@ -614,6 +613,8 @@ HandleMovePtr(XkbDescPtr xkb,
 
     if ((field == F_X) || (field == F_Y))
     {
+        Bool absolute;
+
         if ((value->op == OpNegate) || (value->op == OpUnaryPlus))
             absolute = False;
         else
@@ -658,9 +659,8 @@ static LookupEntry btnNames[] = {
 };
 
 static Bool
-HandlePtrBtn(XkbDescPtr xkb,
-             XkbAnyAction * action,
-             unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandlePtrBtn(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+             const ExprDef *array_ndx, const ExprDef *value)
 {
     ExprResult rtrn;
     XkbPtrBtnAction *act;
@@ -720,9 +720,8 @@ static LookupEntry ptrDflts[] = {
 };
 
 static Bool
-HandleSetPtrDflt(XkbDescPtr xkb,
-                 XkbAnyAction * action,
-                 unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleSetPtrDflt(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+                 const ExprDef *array_ndx, const ExprDef *value)
 {
     ExprResult rtrn;
     XkbPtrDfltAction *act;
@@ -739,7 +738,7 @@ HandleSetPtrDflt(XkbDescPtr xkb,
     }
     else if ((field == F_Button) || (field == F_Value))
     {
-        ExprDef *btn;
+        const ExprDef *btn;
         if (array_ndx != NULL)
             return ReportActionNotArray(action->type, field);
         if ((value->op == OpNegate) || (value->op == OpUnaryPlus))
@@ -797,19 +796,19 @@ static LookupEntry isoNames[] = {
 };
 
 static Bool
-HandleISOLock(XkbDescPtr xkb,
-              XkbAnyAction * action,
-              unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleISOLock(XkbDescPtr xkb,  XkbAnyAction *action, unsigned field,
+              const ExprDef *array_ndx, const ExprDef *value)
 {
     ExprResult rtrn;
     XkbISOAction *act;
-    unsigned flags, mods;
-    int group;
+    unsigned flags;
 
     act = (XkbISOAction *) action;
     switch (field)
     {
     case F_Modifiers:
+    {
+        unsigned mods;
         if (array_ndx != NULL)
             return ReportActionNotArray(action->type, field);
         flags = act->flags;
@@ -822,7 +821,10 @@ HandleISOLock(XkbDescPtr xkb,
             return True;
         }
         return False;
+    }
     case F_Group:
+    {
+        int group;
         if (array_ndx != NULL)
             return ReportActionNotArray(action->type, field);
         flags = act->flags;
@@ -833,6 +835,7 @@ HandleISOLock(XkbDescPtr xkb,
             return True;
         }
         return False;
+    }
     case F_Affect:
         if (array_ndx != NULL)
             return ReportActionNotArray(action->type, field);
@@ -847,9 +850,8 @@ HandleISOLock(XkbDescPtr xkb,
 }
 
 static Bool
-HandleSwitchScreen(XkbDescPtr xkb,
-                   XkbAnyAction * action,
-                   unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleSwitchScreen(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+                   const ExprDef *array_ndx, const ExprDef *value)
 {
     ExprResult rtrn;
     XkbSwitchScreenAction *act;
@@ -857,7 +859,7 @@ HandleSwitchScreen(XkbDescPtr xkb,
     act = (XkbSwitchScreenAction *) action;
     if (field == F_Screen)
     {
-        ExprDef *scrn;
+        const ExprDef *scrn;
         if (array_ndx != NULL)
             return ReportActionNotArray(action->type, field);
         if ((value->op == OpNegate) || (value->op == OpUnaryPlus))
@@ -939,9 +941,8 @@ LookupEntry ctrlNames[] = {
 };
 
 static Bool
-HandleSetLockControls(XkbDescPtr xkb,
-                      XkbAnyAction * action,
-                      unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleSetLockControls(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+                      const ExprDef *array_ndx, const ExprDef *value)
 {
     ExprResult rtrn;
     XkbCtrlsAction *act;
@@ -980,9 +981,8 @@ static LookupEntry evNames[] = {
 };
 
 static Bool
-HandleActionMessage(XkbDescPtr xkb,
-                    XkbAnyAction * action,
-                    unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleActionMessage(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+                    const ExprDef *array_ndx, const ExprDef *value)
 {
     ExprResult rtrn;
     XkbMessageAction *act;
@@ -1058,14 +1058,11 @@ HandleActionMessage(XkbDescPtr xkb,
 }
 
 static Bool
-HandleRedirectKey(XkbDescPtr xkb,
-                  XkbAnyAction * action,
-                  unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleRedirectKey(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+                  const ExprDef *array_ndx, const ExprDef *value)
 {
     ExprResult rtrn;
     XkbRedirectKeyAction *act;
-    unsigned t1, t2, vmods, vmask;
-    unsigned long tmp;
 
     if (array_ndx != NULL)
         return ReportActionNotArray(action->type, field);
@@ -1074,6 +1071,10 @@ HandleRedirectKey(XkbDescPtr xkb,
     switch (field)
     {
     case F_Keycode:
+    {
+        unsigned int t1;
+        unsigned long tmp;
+
         if (!ExprResolveKeyName(value, &rtrn, NULL, NULL))
             return ReportMismatch(action->type, field, "key name");
         tmp = KeyNameToLong(rtrn.keyName.name);
@@ -1085,11 +1086,16 @@ HandleRedirectKey(XkbDescPtr xkb,
         }
         act->new_key = t1;
         return True;
+    }
     case F_ModsToClear:
     case F_Modifiers:
-        t1 = 0;
+    {
+        unsigned t1 = 0, t2;
+
         if (CheckModifierField(xkb, action->type, value, &t1, &t2))
         {
+            unsigned vmods, vmask;
+
             act->mods_mask |= (t2 & 0xff);
             if (field == F_Modifiers)
                 act->mods |= (t2 & 0xff);
@@ -1110,13 +1116,13 @@ HandleRedirectKey(XkbDescPtr xkb,
         }
         return True;
     }
+    }
     return ReportIllegal(action->type, field);
 }
 
 static Bool
-HandleDeviceBtn(XkbDescPtr xkb,
-                XkbAnyAction * action,
-                unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleDeviceBtn(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+                const ExprDef *array_ndx, const ExprDef *value)
 {
     ExprResult rtrn;
     XkbDeviceBtnAction *act;
@@ -1184,9 +1190,8 @@ HandleDeviceBtn(XkbDescPtr xkb,
 }
 
 static Bool
-HandleDeviceValuator(XkbDescPtr xkb,
-                     XkbAnyAction * action,
-                     unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandleDeviceValuator(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+                     const ExprDef *array_ndx, const ExprDef *value)
 {
 #if 0
     ExprResult rtrn;
@@ -1199,9 +1204,8 @@ HandleDeviceValuator(XkbDescPtr xkb,
 }
 
 static Bool
-HandlePrivate(XkbDescPtr xkb,
-              XkbAnyAction * action,
-              unsigned field, ExprDef * array_ndx, ExprDef * value)
+HandlePrivate(XkbDescPtr xkb, XkbAnyAction *action, unsigned field,
+              const ExprDef *array_ndx, const ExprDef *value)
 {
     ExprResult rtrn;
 
@@ -1270,8 +1274,8 @@ HandlePrivate(XkbDescPtr xkb,
 typedef Bool(*actionHandler) (XkbDescPtr /* xkb */ ,
                               XkbAnyAction * /* action */ ,
                               unsigned /* field */ ,
-                              ExprDef * /* array_ndx */ ,
-                              ExprDef * /* value */
+                              const ExprDef * /* array_ndx */ ,
+                              const ExprDef * /* value */
     );
 
 static actionHandler handleAction[XkbSA_NumActions + 1] = {
@@ -1319,12 +1323,11 @@ ApplyActionFactoryDefaults(XkbAction * action)
 
 
 int
-HandleActionDef(ExprDef * def,
-                XkbDescPtr xkb,
-                XkbAnyAction * action, unsigned mergeMode, ActionInfo * info)
+HandleActionDef(const ExprDef *def, XkbDescPtr xkb, XkbAnyAction *action,
+                unsigned mergeMode, const ActionInfo *info)
 {
     ExprDef *arg;
-    register char *str;
+    const char *str;
     unsigned tmp, hndlrType;
 
     if (!actionsInitialized)
@@ -1419,17 +1422,15 @@ HandleActionDef(ExprDef * def,
 /***====================================================================***/
 
 int
-SetActionField(XkbDescPtr xkb,
-               const char *elem,
-               const char *field,
-               ExprDef * array_ndx, ExprDef * value, ActionInfo ** info_rtrn)
+SetActionField(XkbDescPtr xkb, const char *elem, const char *field,
+               ExprDef *array_ndx, ExprDef *value, ActionInfo **info_rtrn)
 {
     ActionInfo *new, *old;
 
     if (!actionsInitialized)
         ActionsInit();
 
-    new = uTypedAlloc(ActionInfo);
+    new = malloc(sizeof(ActionInfo));
     if (new == NULL)
     {
         WSGO("Couldn't allocate space for action default\n");
@@ -1468,23 +1469,27 @@ SetActionField(XkbDescPtr xkb,
 
 /***====================================================================***/
 
-void
+static void
 ActionsInit(void)
 {
     if (!actionsInitialized)
     {
-        bzero((char *) &constTrue, sizeof(constTrue));
-        bzero((char *) &constFalse, sizeof(constFalse));
-        constTrue.common.stmtType = StmtExpr;
-        constTrue.common.next = NULL;
-        constTrue.op = ExprIdent;
-        constTrue.type = TypeBoolean;
-        constTrue.value.str = XkbInternAtom(NULL, "true", False);
-        constFalse.common.stmtType = StmtExpr;
-        constFalse.common.next = NULL;
-        constFalse.op = ExprIdent;
-        constFalse.type = TypeBoolean;
-        constFalse.value.str = XkbInternAtom(NULL, "false", False);
+        bzero(&constTrue, sizeof(constTrue));
+        constTrue = (ExprDef) {
+            .common.stmtType = StmtExpr,
+            .common.next = NULL,
+            .op = ExprIdent,
+            .type = TypeBoolean,
+            .value.str = XkbInternAtom(NULL, "true", False)
+        };
+        bzero(&constFalse, sizeof(constFalse));
+        constFalse = (ExprDef) {
+            .common.stmtType = StmtExpr,
+            .common.next = NULL,
+            .op = ExprIdent,
+            .type = TypeBoolean,
+            .value.str = XkbInternAtom(NULL, "false", False)
+        };
         actionsInitialized = 1;
     }
     return;

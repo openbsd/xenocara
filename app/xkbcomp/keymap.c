@@ -85,7 +85,7 @@ CompileKeymap(XkbFile * file, XkbFileInfo * result, unsigned merge)
     while ((file) && (ok))
     {
         file->topName = mainName;
-        if ((have & (1 << file->type)) != 0)
+        if ((have & (1U << file->type)) != 0)
         {
             ERROR("More than one %s section in a %s file\n",
                    XkbConfigText(file->type, XkbMessage),
@@ -93,7 +93,7 @@ CompileKeymap(XkbFile * file, XkbFileInfo * result, unsigned merge)
             ACTION("All sections after the first ignored\n");
             ok = False;
         }
-        else if ((1 << file->type) & (~legal))
+        else if ((1U << file->type) & (~legal))
         {
             ERROR("Cannot define %s in a %s file\n",
                    XkbConfigText(file->type, XkbMessage),
@@ -138,7 +138,7 @@ CompileKeymap(XkbFile * file, XkbFileInfo * result, unsigned merge)
                 break;
             }
         if (ok)
-            have |= (1 << file->type);
+            have |= (1U << file->type);
         file = (XkbFile *) file->common.next;
     }
     /* compile the sections we have in the file one-by-one, or fail. */
@@ -161,7 +161,7 @@ CompileKeymap(XkbFile * file, XkbFileInfo * result, unsigned merge)
     result->defined = have;
     if (required & (~have))
     {
-        register int i, bit;
+        int i, bit;
         unsigned missing;
         missing = required & (~have);
         for (i = 0, bit = 1; missing != 0; i++, bit <<= 1)

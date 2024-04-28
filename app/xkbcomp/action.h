@@ -64,11 +64,11 @@ typedef struct _ActionInfo
     struct _ActionInfo *next;
 } ActionInfo;
 
-extern int HandleActionDef(ExprDef * /* def */ ,
+extern int HandleActionDef(const ExprDef * /* def */ ,
                            XkbDescPtr /* xkb */ ,
                            XkbAnyAction * /* action */ ,
                            unsigned /* mergeMode */ ,
-                           ActionInfo * /* info */
+                           const ActionInfo * /* info */
     );
 
 extern int SetActionField(XkbDescPtr /* xkb */ ,
@@ -78,8 +78,6 @@ extern int SetActionField(XkbDescPtr /* xkb */ ,
                           ExprDef * /* value */ ,
                           ActionInfo ** /* info_rtrn */
     );
-
-extern void ActionsInit(void);
 
 extern LookupEntry ctrlNames[];
 

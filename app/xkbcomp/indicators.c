@@ -57,16 +57,17 @@ ClearIndicatorMapInfo(Display * dpy, LEDInfo * info)
 }
 
 LEDInfo *
-AddIndicatorMap(LEDInfo * oldLEDs, LEDInfo * new)
+AddIndicatorMap(LEDInfo *oldLEDs, const LEDInfo *new)
 {
     LEDInfo *old, *last;
-    unsigned collide;
 
     last = NULL;
     for (old = oldLEDs; old != NULL; old = (LEDInfo *) old->defs.next)
     {
         if (old->name == new->name)
         {
+            unsigned collide;
+
             if ((old->real_mods == new->real_mods) &&
                 (old->vmods == new->vmods) &&
                 (old->groups == new->groups) &&
@@ -146,7 +147,7 @@ AddIndicatorMap(LEDInfo * oldLEDs, LEDInfo * new)
             last = old;
     }
     /* new definition */
-    old = uTypedAlloc(LEDInfo);
+    old = malloc(sizeof(LEDInfo));
     if (!old)
     {
         WSGO("Couldn't allocate indicator map\n");
@@ -198,9 +199,8 @@ static LookupEntry groupComponentNames[] = {
 };
 
 int
-SetIndicatorMapField(LEDInfo * led,
-                     XkbDescPtr xkb,
-                     const char *field, ExprDef *arrayNdx, ExprDef *value)
+SetIndicatorMapField(LEDInfo *led, XkbDescPtr xkb, const char *field,
+                     const ExprDef *arrayNdx, const ExprDef *value)
 {
     ExprResult rtrn;
     Bool ok;
@@ -323,12 +323,10 @@ SetIndicatorMapField(LEDInfo * led,
 }
 
 LEDInfo *
-HandleIndicatorMapDef(IndicatorMapDef * def,
-                      XkbDescPtr xkb,
-                      LEDInfo * dflt, LEDInfo * oldLEDs, unsigned merge)
+HandleIndicatorMapDef(IndicatorMapDef *def, XkbDescPtr xkb,
+                      const LEDInfo *dflt, LEDInfo *oldLEDs, unsigned merge)
 {
-    LEDInfo led, *rtrn;
-    VarDef *var;
+    LEDInfo led;
     Bool ok;
 
     if (def->merge != MergeDefault)
@@ -339,7 +337,8 @@ HandleIndicatorMapDef(IndicatorMapDef * def,
     led.name = def->name;
 
     ok = True;
-    for (var = def->body; var != NULL; var = (VarDef *) var->common.next)
+    for (VarDef *var = def->body; var != NULL;
+         var = (VarDef *) var->common.next)
     {
         ExprResult elem, field;
         ExprDef *arrayNdx;
@@ -364,7 +363,7 @@ HandleIndicatorMapDef(IndicatorMapDef * def,
     }
     if (ok)
     {
-        rtrn = AddIndicatorMap(oldLEDs, &led);
+        LEDInfo *rtrn = AddIndicatorMap(oldLEDs, &led);
         return rtrn;
     }
     return NULL;
@@ -414,11 +413,11 @@ CopyIndicatorMapDefs(XkbFileInfo * result, LEDInfo * leds,
                 last = led;
             }
             else
-                uFree(led);
+                free(led);
         }
         else
         {
-            register XkbIndicatorMapPtr im;
+            XkbIndicatorMapPtr im;
             im = &xkb->indicators->maps[led->indicator - 1];
             im->flags = led->flags;
             im->which_groups = led->which_groups;
@@ -430,7 +429,7 @@ CopyIndicatorMapDefs(XkbFileInfo * result, LEDInfo * leds,
             im->ctrls = led->ctrls;
             if (xkb->names != NULL)
                 xkb->names->indicators[led->indicator - 1] = led->name;
-            uFree(led);
+            free(led);
         }
     }
     if (unboundRtrn != NULL)
@@ -445,8 +444,7 @@ BindIndicators(XkbFileInfo * result,
                Bool force, LEDInfo * unbound, LEDInfo ** unboundRtrn)
 {
     XkbDescPtr xkb;
-    register int i;
-    register LEDInfo *led, *next, *last;
+    LEDInfo *led, *next, *last;
 
     xkb = result->xkb;
     if (xkb->names != NULL)
@@ -455,7 +453,7 @@ BindIndicators(XkbFileInfo * result,
         {
             if (led->indicator == _LED_NotBound)
             {
-                for (i = 0; i < XkbNumIndicators; i++)
+                for (int i = 0; i < XkbNumIndicators; i++)
                 {
                     if (xkb->names->indicators[i] == led->name)
                     {
@@ -471,7 +469,7 @@ BindIndicators(XkbFileInfo * result,
             {
                 if (led->indicator == _LED_NotBound)
                 {
-                    for (i = 0; i < XkbNumIndicators; i++)
+                    for (int i = 0; i < XkbNumIndicators; i++)
                     {
                         if (xkb->names->indicators[i] == None)
                         {
@@ -501,7 +499,7 @@ BindIndicators(XkbFileInfo * result,
             if (force)
             {
                 unbound = next;
-                uFree(led);
+                free(led);
             }
             else
             {
@@ -526,7 +524,7 @@ BindIndicators(XkbFileInfo * result,
                 led->indicator = _LED_NotBound;
                 if (force)
                 {
-                    uFree(led);
+                    free(led);
                     unbound = next;
                 }
                 else
@@ -555,7 +553,7 @@ BindIndicators(XkbFileInfo * result,
                 else
                     unbound = next;
                 led->defs.next = NULL;
-                uFree(led);
+                free(led);
             }
         }
     }
@@ -568,7 +566,7 @@ BindIndicators(XkbFileInfo * result,
         for (led = unbound; led != NULL; led = next)
         {
             next = (LEDInfo *) led->defs.next;
-            uFree(led);
+            free(led);
         }
     }
     return True;

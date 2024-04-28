@@ -247,7 +247,7 @@ typedef struct _GeometryInfo
 } GeometryInfo;
 
 static char *
-ddText(Display * dpy, DoodadInfo * di)
+ddText(Display *dpy, const DoodadInfo *di)
 {
     static char buf[64];
 
@@ -269,7 +269,7 @@ ddText(Display * dpy, DoodadInfo * di)
 /***====================================================================***/
 
 static void
-InitPropertyInfo(PropertyInfo * pi, GeometryInfo * info)
+InitPropertyInfo(PropertyInfo *pi, const GeometryInfo *info)
 {
     pi->defs.defined = 0;
     pi->defs.fileID = info->fileID;
@@ -291,19 +291,17 @@ FreeProperties(PropertyInfo * pi, GeometryInfo * info)
     }
     for (tmp = pi; tmp != NULL; tmp = next)
     {
-        if (tmp->name)
-            uFree(tmp->name);
-        if (tmp->value)
-            uFree(tmp->value);
+        free(tmp->name);
+        free(tmp->value);
         tmp->name = tmp->value = NULL;
         next = (PropertyInfo *) tmp->defs.next;
-        uFree(tmp);
+        free(tmp);
     }
     return;
 }
 
 static void
-InitKeyInfo(KeyInfo * key, RowInfo * row, GeometryInfo * info)
+InitKeyInfo(KeyInfo *key, RowInfo *row, const GeometryInfo *info)
 {
 
     if (key != &row->dfltKey)
@@ -315,12 +313,14 @@ InitKeyInfo(KeyInfo * key, RowInfo * row, GeometryInfo * info)
     else
     {
         bzero(key, sizeof(KeyInfo));
+        *key = (KeyInfo) {
+            .defs.defined = _GK_Default,
+            .defs.fileID = info->fileID,
+            .defs.merge = info->merge,
+            .defs.next = NULL,
+            .row = row
+        };
         strcpy(key->name, "default");
-        key->defs.defined = _GK_Default;
-        key->defs.fileID = info->fileID;
-        key->defs.merge = info->merge;
-        key->defs.next = NULL;
-        key->row = row;
     }
     return;
 }
@@ -337,7 +337,7 @@ ClearKeyInfo(KeyInfo * key)
 }
 
 static void
-FreeKeys(KeyInfo * key, RowInfo * row, GeometryInfo * info)
+FreeKeys(KeyInfo *key, RowInfo *row, const GeometryInfo *info)
 {
     KeyInfo *tmp;
     KeyInfo *next;
@@ -351,13 +351,13 @@ FreeKeys(KeyInfo * key, RowInfo * row, GeometryInfo * info)
     {
         ClearKeyInfo(tmp);
         next = (KeyInfo *) tmp->defs.next;
-        uFree(tmp);
+        free(tmp);
     }
     return;
 }
 
 static void
-InitRowInfo(RowInfo * row, SectionInfo * section, GeometryInfo * info)
+InitRowInfo(RowInfo *row, SectionInfo *section, const GeometryInfo *info)
 {
     if (row != &section->dfltRow)
     {
@@ -380,7 +380,7 @@ InitRowInfo(RowInfo * row, SectionInfo * section, GeometryInfo * info)
 }
 
 static void
-ClearRowInfo(RowInfo * row, GeometryInfo * info)
+ClearRowInfo(RowInfo *row, const GeometryInfo *info)
 {
     row->defs.defined &= ~_GR_Default;
     row->top = row->left = 0;
@@ -394,21 +394,20 @@ ClearRowInfo(RowInfo * row, GeometryInfo * info)
 }
 
 static void
-FreeRows(RowInfo * row, SectionInfo * section, GeometryInfo * info)
+FreeRows(RowInfo *row, SectionInfo *section, const GeometryInfo *info)
 {
     RowInfo *next;
-    RowInfo *tmp;
 
     if (row == section->rows)
     {
         section->nRows = 0;
         section->rows = NULL;
     }
-    for (tmp = row; tmp != NULL; tmp = next)
+    for (RowInfo *tmp = row; tmp != NULL; tmp = next)
     {
         ClearRowInfo(tmp, info);
         next = (RowInfo *) tmp->defs.next;
-        uFree(tmp);
+        free(tmp);
     }
     return;
 }
@@ -527,7 +526,7 @@ FreeDoodads(DoodadInfo * di, SectionInfo * si, GeometryInfo * info)
     {
         next = (DoodadInfo *) tmp->defs.next;
         ClearDoodadInfo(tmp);
-        uFree(tmp);
+        free(tmp);
     }
     return;
 }
@@ -558,7 +557,8 @@ InitSectionInfo(SectionInfo * si, GeometryInfo * info)
 }
 
 static void
-DupSectionInfo(SectionInfo * into, SectionInfo * from, GeometryInfo * info)
+DupSectionInfo(SectionInfo *into, const SectionInfo *from,
+               const GeometryInfo *info)
 {
     CommonInfo defs;
 
@@ -617,7 +617,7 @@ FreeSections(SectionInfo * si, GeometryInfo * info)
     {
         ClearSectionInfo(tmp, info);
         next = (SectionInfo *) tmp->defs.next;
-        uFree(tmp);
+        free(tmp);
     }
     return;
 }
@@ -637,24 +637,24 @@ FreeShapes(ShapeInfo * si, GeometryInfo * info)
     {
         if (tmp->outlines)
         {
-            register int i;
+            int i;
             for (i = 0; i < tmp->nOutlines; i++)
             {
                 if (tmp->outlines[i].points != NULL)
                 {
-                    uFree(tmp->outlines[i].points);
+                    free(tmp->outlines[i].points);
                     tmp->outlines[i].num_points = 0;
                     tmp->outlines[i].points = NULL;
                 }
             }
-            uFree(tmp->outlines);
+            free(tmp->outlines);
             tmp->szOutlines = 0;
             tmp->nOutlines = 0;
             tmp->outlines = NULL;
             tmp->primary = tmp->approx = NULL;
         }
         next = (ShapeInfo *) tmp->defs.next;
-        uFree(tmp);
+        free(tmp);
     }
     return;
 }
@@ -675,8 +675,7 @@ InitGeometryInfo(GeometryInfo * info, unsigned fileID, unsigned merge)
 static void
 ClearGeometryInfo(GeometryInfo * info)
 {
-    if (info->name)
-        uFree(info->name);
+    free(info->name);
     info->name = NULL;
     if (info->props)
         FreeProperties(info->props, info);
@@ -701,10 +700,9 @@ NextProperty(GeometryInfo * info)
 {
     PropertyInfo *pi;
 
-    pi = uTypedAlloc(PropertyInfo);
+    pi = calloc(1, sizeof(PropertyInfo));
     if (pi)
     {
-        bzero((char *) pi, sizeof(PropertyInfo));
         info->props = (PropertyInfo *) AddCommonInfo(&info->props->defs,
                                                      (CommonInfo *) pi);
         info->nProps++;
@@ -713,7 +711,7 @@ NextProperty(GeometryInfo * info)
 }
 
 static PropertyInfo *
-FindProperty(GeometryInfo * info, char *name)
+FindProperty(const GeometryInfo *info, const char *name)
 {
     PropertyInfo *old;
 
@@ -749,8 +747,7 @@ AddProperty(GeometryInfo * info, PropertyInfo * new)
                 ACTION("Ignoring \"%s\", using \"%s\"\n", old->value,
                         new->value);
             }
-            if (old->value)
-                uFree(old->value);
+            free(old->value);
             old->value = uStringDup(new->value);
             return True;
         }
@@ -779,10 +776,9 @@ NextShape(GeometryInfo * info)
 {
     ShapeInfo *si;
 
-    si = uTypedAlloc(ShapeInfo);
+    si = calloc(1, sizeof(ShapeInfo));
     if (si)
     {
-        bzero((char *) si, sizeof(ShapeInfo));
         info->shapes = (ShapeInfo *) AddCommonInfo(&info->shapes->defs,
                                                    (CommonInfo *) si);
         info->nShapes++;
@@ -883,7 +879,7 @@ NextDfltDoodad(SectionInfo * si, GeometryInfo * info)
 {
     DoodadInfo *di;
 
-    di = uTypedCalloc(1, DoodadInfo);
+    di = calloc(1, sizeof(DoodadInfo));
     if (!di)
         return NULL;
     if (si)
@@ -906,7 +902,7 @@ NextDoodad(SectionInfo * si, GeometryInfo * info)
 {
     DoodadInfo *di;
 
-    di = uTypedCalloc(1, DoodadInfo);
+    di = calloc(1, sizeof(DoodadInfo));
     if (di)
     {
         if (si)
@@ -1047,7 +1043,7 @@ AddOverlay(SectionInfo * si, GeometryInfo * info, OverlayInfo * new)
         return True;
     }
     old = new;
-    new = uTypedCalloc(1, OverlayInfo);
+    new = calloc(1, sizeof(OverlayInfo));
     if (!new)
     {
         if (warningLevel > 0)
@@ -1076,7 +1072,7 @@ NextSection(GeometryInfo * info)
 {
     SectionInfo *si;
 
-    si = uTypedAlloc(SectionInfo);
+    si = malloc(sizeof(SectionInfo));
     if (si)
     {
         *si = info->dfltSection;
@@ -1093,11 +1089,9 @@ NextSection(GeometryInfo * info)
 }
 
 static SectionInfo *
-FindMatchingSection(GeometryInfo * info, SectionInfo * new)
+FindMatchingSection(GeometryInfo *info, const SectionInfo *new)
 {
-    SectionInfo *old;
-
-    for (old = info->sections; old != NULL;
+    for (SectionInfo *old = info->sections; old != NULL;
          old = (SectionInfo *) old->defs.next)
     {
         if (new->name == old->name)
@@ -1168,7 +1162,7 @@ NextRow(SectionInfo * si)
 {
     RowInfo *row;
 
-    row = uTypedAlloc(RowInfo);
+    row = malloc(sizeof(RowInfo));
     if (row)
     {
         *row = si->dfltRow;
@@ -1205,7 +1199,7 @@ NextKey(RowInfo * row)
 {
     KeyInfo *key;
 
-    key = uTypedAlloc(KeyInfo);
+    key = malloc(sizeof(KeyInfo));
     if (key)
     {
         *key = row->dfltKey;
@@ -1353,8 +1347,7 @@ HandleIncludeGeometry(IncludeStmt * stmt, XkbDescPtr xkb, GeometryInfo * info,
         (*hndlr) (rtrn, xkb, MergeOverride, &included);
         if (stmt->stmt != NULL)
         {
-            if (included.name != NULL)
-                uFree(included.name);
+            free(included.name);
             included.name = stmt->stmt;
             stmt->stmt = NULL;
         }
@@ -1407,9 +1400,8 @@ HandleIncludeGeometry(IncludeStmt * stmt, XkbDescPtr xkb, GeometryInfo * info,
 }
 
 static int
-SetShapeField(ShapeInfo * si,
-              const char *field,
-              ExprDef * arrayNdx, ExprDef * value, GeometryInfo * info)
+SetShapeField(ShapeInfo *si, const char *field,
+              const ExprDef *arrayNdx, const ExprDef *value, GeometryInfo *info)
 {
     ExprResult tmp;
 
@@ -1439,10 +1431,8 @@ SetShapeField(ShapeInfo * si,
 }
 
 static int
-SetShapeDoodadField(DoodadInfo * di,
-                    const char *field,
-                    ExprDef * arrayNdx,
-                    ExprDef * value, SectionInfo * si, GeometryInfo * info)
+SetShapeDoodadField(DoodadInfo *di, const char *field, const ExprDef *arrayNdx,
+                    const ExprDef *value, SectionInfo *si, GeometryInfo *info)
 {
     ExprResult tmp;
     const char *typeName;
@@ -1509,10 +1499,8 @@ SetShapeDoodadField(DoodadInfo * di,
 #define	FIELD_USHORT	2
 
 static int
-SetTextDoodadField(DoodadInfo * di,
-                   const char *field,
-                   ExprDef * arrayNdx,
-                   ExprDef * value, SectionInfo * si, GeometryInfo * info)
+SetTextDoodadField(DoodadInfo *di, const char *field, const ExprDef *arrayNdx,
+                   const ExprDef *value, SectionInfo *si, GeometryInfo *info)
 {
     ExprResult tmp;
     unsigned def;
@@ -1659,11 +1647,9 @@ SetTextDoodadField(DoodadInfo * di,
 }
 
 static int
-SetIndicatorDoodadField(DoodadInfo * di,
-                        const char *field,
-                        ExprDef * arrayNdx,
-                        ExprDef * value,
-                        SectionInfo * si, GeometryInfo * info)
+SetIndicatorDoodadField(DoodadInfo * di, const char *field,
+                        const ExprDef *arrayNdx, const ExprDef *value,
+                        SectionInfo *si, GeometryInfo *info)
 {
     ExprResult tmp;
 
@@ -1704,10 +1690,8 @@ SetIndicatorDoodadField(DoodadInfo * di,
 }
 
 static int
-SetLogoDoodadField(DoodadInfo * di,
-                   const char *field,
-                   ExprDef * arrayNdx,
-                   ExprDef * value, SectionInfo * si, GeometryInfo * info)
+SetLogoDoodadField(DoodadInfo *di, const char *field, const ExprDef *arrayNdx,
+                   const ExprDef *value, SectionInfo *si, GeometryInfo *info)
 {
     ExprResult tmp;
     const char *typeName = "logo doodad";
@@ -1785,10 +1769,9 @@ SetLogoDoodadField(DoodadInfo * di,
 }
 
 static int
-SetDoodadField(DoodadInfo * di,
-               const char *field,
-               ExprDef * arrayNdx,
-               ExprDef * value, SectionInfo * si, GeometryInfo * info)
+SetDoodadField(DoodadInfo *di, const char *field,
+               const ExprDef *arrayNdx, const ExprDef *value,
+               SectionInfo *si, GeometryInfo *info)
 {
     ExprResult tmp;
 
@@ -1888,9 +1871,9 @@ SetDoodadField(DoodadInfo * di,
 }
 
 static int
-SetSectionField(SectionInfo * si,
-                const char *field,
-                ExprDef * arrayNdx, ExprDef * value, GeometryInfo * info)
+SetSectionField(SectionInfo *si, const char *field,
+                const ExprDef *arrayNdx, const ExprDef *value,
+                GeometryInfo *info)
 {
     unsigned short *pField;
     unsigned def;
@@ -1976,9 +1959,8 @@ SetSectionField(SectionInfo * si,
 }
 
 static int
-SetRowField(RowInfo * row,
-            const char *field,
-            ExprDef * arrayNdx, ExprDef * value, GeometryInfo * info)
+SetRowField(RowInfo *row, const char *field,
+            const ExprDef *arrayNdx, const ExprDef *value, GeometryInfo *info)
 {
     ExprResult tmp;
 
@@ -2042,9 +2024,8 @@ SetRowField(RowInfo * row,
 }
 
 static int
-SetKeyField(KeyInfo * key,
-            const char *field,
-            ExprDef * arrayNdx, ExprDef * value, GeometryInfo * info)
+SetKeyField(KeyInfo *key, const char *field,
+            const ExprDef *arrayNdx, const ExprDef *value, GeometryInfo *info)
 {
     ExprResult tmp;
 
@@ -2120,7 +2101,7 @@ SetKeyField(KeyInfo * key,
 }
 
 static int
-SetGeometryProperty(GeometryInfo * info, char *property, ExprDef * value)
+SetGeometryProperty(GeometryInfo *info, char *property, const ExprDef *value)
 {
     PropertyInfo pi;
     ExprResult result;
@@ -2405,7 +2386,7 @@ HandleShapeBody(ShapeDef * def, ShapeInfo * si, unsigned merge,
         return True;
     }
     si->nOutlines = def->nOutlines;
-    si->outlines = uTypedCalloc(def->nOutlines, XkbOutlineRec);
+    si->outlines = calloc(def->nOutlines, sizeof(XkbOutlineRec));
     if (!si->outlines)
     {
         ERROR("Couldn't allocate outlines for \"%s\"\n",
@@ -2426,7 +2407,7 @@ HandleShapeBody(ShapeDef * def, ShapeInfo * si, unsigned merge,
         outline = &si->outlines[nOut++];
         outline->num_points = ol->nPoints;
         outline->corner_radius = si->dfltCornerRadius;
-        outline->points = uTypedCalloc(ol->nPoints, XkbPointRec);
+        outline->points = calloc(ol->nPoints, sizeof(XkbPointRec));
         if (!outline->points)
         {
             ERROR("Can't allocate points for \"%s\"\n",
@@ -2550,8 +2531,6 @@ static int
 HandleOverlayDef(OverlayDef * def,
                  unsigned merge, SectionInfo * si, GeometryInfo * info)
 {
-    OverlayKeyDef *keyDef;
-    OverlayKeyInfo *key;
     OverlayInfo ol;
 
     if ((def->nKeys < 1) && (warningLevel > 3))
@@ -2565,20 +2544,23 @@ HandleOverlayDef(OverlayDef * def,
     bzero(&ol, sizeof(OverlayInfo));
     ol.name =
         XkbInternAtom(info->dpy, XkbAtomGetString(NULL, def->name), False);
-    for (keyDef = def->keys; keyDef;
+    for (OverlayKeyDef *keyDef = def->keys; keyDef;
          keyDef = (OverlayKeyDef *) keyDef->common.next)
     {
-        key = uTypedCalloc(1, OverlayKeyInfo);
-        if ((!key) && warningLevel > 0)
+        OverlayKeyInfo *key = calloc(1, sizeof(OverlayKeyInfo));
+        if (!key)
         {
-            WSGO("Couldn't allocate OverlayKeyInfo\n");
-            ACTION("Overlay %s for section %s will be incomplete\n",
-                    XkbAtomText(info->dpy, ol.name, XkbMessage),
-                    scText(info->dpy, si));
+            if (warningLevel > 0)
+            {
+                WSGO("Couldn't allocate OverlayKeyInfo\n");
+                ACTION("Overlay %s for section %s will be incomplete\n",
+                        XkbAtomText(info->dpy, ol.name, XkbMessage),
+                        scText(info->dpy, si));
+            }
             return False;
         }
-        strncpy(key->over, keyDef->over, XkbKeyNameLength);
-        strncpy(key->under, keyDef->under, XkbKeyNameLength);
+        strncpy(key->over, keyDef->over, sizeof(key->over));
+        strncpy(key->under, keyDef->under, sizeof(key->under));
         key->sectionRow = _GOK_UnknownRow;
         key->overlayRow = _GOK_UnknownRow;
         ol.keys = (OverlayKeyInfo *) AddCommonInfo(&ol.keys->defs,
@@ -2596,11 +2578,10 @@ HandleOverlayDef(OverlayDef * def,
 static Bool
 HandleComplexKey(KeyDef * def, KeyInfo * key, GeometryInfo * info)
 {
-    RowInfo *row;
-    ExprDef *expr;
+    RowInfo *row = key->row;
 
-    row = key->row;
-    for (expr = def->expr; expr != NULL; expr = (ExprDef *) expr->common.next)
+    for (ExprDef *expr = def->expr; expr != NULL;
+         expr = (ExprDef *) expr->common.next)
     {
         if (expr->op == OpAssign)
         {
@@ -2654,15 +2635,13 @@ static Bool
 HandleRowBody(RowDef * def, RowInfo * row, unsigned merge,
               GeometryInfo * info)
 {
-    KeyDef *keyDef;
-
     if ((def->nKeys < 1) && (warningLevel > 3))
     {
         ERROR("Row in section %s has no keys\n", rowText(info->dpy, row));
         ACTION("Section ignored\n");
         return True;
     }
-    for (keyDef = def->keys; keyDef != NULL;
+    for (KeyDef *keyDef = def->keys; keyDef != NULL;
          keyDef = (KeyDef *) keyDef->common.next)
     {
         if (keyDef->common.stmtType == StmtVarDef)
@@ -2726,10 +2705,7 @@ static Bool
 HandleSectionBody(SectionDef * def,
                   SectionInfo * si, unsigned merge, GeometryInfo * info)
 {
-    RowDef *rowDef;
-    DoodadInfo *di;
-
-    for (rowDef = def->rows; rowDef != NULL;
+    for (RowDef *rowDef = def->rows; rowDef != NULL;
          rowDef = (RowDef *) rowDef->common.next)
     {
         if (rowDef->common.stmtType == StmtVarDef)
@@ -2737,6 +2713,8 @@ HandleSectionBody(SectionDef * def,
             VarDef *var = (VarDef *) rowDef;
             ExprResult elem, field;
             ExprDef *ndx;
+            DoodadInfo *di;
+
             if (ExprResolveLhs(var->name, &elem, &field, &ndx) == 0)
                 return 0;       /* internal error, already reported */
             if ((elem.str == NULL) || (uStrCaseCmp(elem.str, "section") == 0))
@@ -2840,7 +2818,6 @@ HandleGeometryFile(XkbFile * file,
                    XkbDescPtr xkb, unsigned merge, GeometryInfo * info)
 {
     ParseCommon *stmt;
-    const char *failWhat;
 
     if (merge == MergeDefault)
         merge = MergeAugment;
@@ -2848,7 +2825,8 @@ HandleGeometryFile(XkbFile * file,
     stmt = file->defs;
     while (stmt)
     {
-        failWhat = NULL;
+        const char *failWhat = NULL;
+
         switch (stmt->stmtType)
         {
         case StmtInclude:
@@ -2881,17 +2859,18 @@ HandleGeometryFile(XkbFile * file,
                 info->errorCount++;
             break;
         case StmtVModDef:
-            if (!failWhat)
-                failWhat = "virtual modifier";
+            failWhat = "virtual modifier";
+            goto fail;
         case StmtInterpDef:
-            if (!failWhat)
-                failWhat = "symbol interpretation";
+            failWhat = "symbol interpretation";
+            goto fail;
         case StmtGroupCompatDef:
-            if (!failWhat)
-                failWhat = "group compatibility map";
+            failWhat = "group compatibility map";
+            goto fail;
         case StmtKeycodeDef:
-            if (!failWhat)
-                failWhat = "key name";
+            failWhat = "key name";
+            goto fail;
+        fail:
             ERROR("Interpretation files may not include other types\n");
             ACTION("Ignoring %s definition.\n", failWhat);
             info->errorCount++;
@@ -2919,9 +2898,9 @@ HandleGeometryFile(XkbFile * file,
 static Bool
 CopyShapeDef(Display * dpy, XkbGeometryPtr geom, ShapeInfo * si)
 {
-    register int i, n;
+    int n;
     XkbShapePtr shape;
-    XkbOutlinePtr old_outline, outline;
+    XkbOutlinePtr old_outline;
     Atom name;
 
     si->index = geom->num_shapes;
@@ -2934,9 +2913,11 @@ CopyShapeDef(Display * dpy, XkbGeometryPtr geom, ShapeInfo * si)
         return False;
     }
     old_outline = si->outlines;
-    for (i = 0; i < si->nOutlines; i++, old_outline++)
+    for (int i = 0; i < si->nOutlines; i++, old_outline++)
     {
-        outline = XkbAddGeomOutline(shape, old_outline->num_points);
+        XkbOutlinePtr outline =
+            XkbAddGeomOutline(shape, old_outline->num_points);
+
         if (!outline)
         {
             WSGO("Couldn't allocate outline in shape\n");
@@ -3271,7 +3252,6 @@ FontFromParts(Atom fontTok,
               Atom slantTok,
               Atom setWidthTok, Atom varTok, int size, Atom encodingTok)
 {
-    int totalSize;
     const char *font, *weight, *slant, *setWidth, *variant, *encoding;
     char *rtrn;
 
@@ -3290,15 +3270,22 @@ FontFromParts(Atom fontTok,
          None ? XkbAtomGetString(NULL, encodingTok) : DFLT_ENCODING);
     if (size == 0)
         size = DFLT_SIZE;
-    totalSize =
+
+#ifdef HAVE_ASPRINTF
+    if (asprintf(&rtrn, FONT_TEMPLATE, font, weight, slant,
+                 setWidth, variant, size, encoding) < 0)
+        rtrn = NULL;
+#else
+    size_t totalSize =
         strlen(FONT_TEMPLATE) + strlen(font) + strlen(weight) + strlen(slant);
     totalSize += strlen(setWidth) + strlen(variant) + strlen(encoding);
-    rtrn = uCalloc(totalSize, 1);
+    rtrn = calloc(totalSize, 1);
     if (rtrn)
     {
         snprintf(rtrn, totalSize, FONT_TEMPLATE, font, weight, slant,
                  setWidth, variant, size, encoding);
     }
+#endif
     return rtrn;
 }
 
@@ -3401,8 +3388,7 @@ VerifyOverlayInfo(XkbGeometryPtr geom,
                   OverlayInfo * oi,
                   GeometryInfo * info, short rowMap[256], short rowSize[256])
 {
-    register OverlayKeyInfo *ki, *next;
-    unsigned long oKey, uKey, sKey;
+    OverlayKeyInfo *ki, *next;
     XkbRowPtr row;
     XkbKeyPtr key;
     int r, k;
@@ -3410,15 +3396,16 @@ VerifyOverlayInfo(XkbGeometryPtr geom,
     /* find out which row each key is in */
     for (ki = oi->keys; ki != NULL; ki = (OverlayKeyInfo *) ki->defs.next)
     {
-        oKey = KeyNameToLong(ki->over);
-        uKey = KeyNameToLong(ki->under);
+        unsigned long oKey = KeyNameToLong(ki->over);
+        unsigned long uKey = KeyNameToLong(ki->under);
+
         for (r = 0, row = section->rows; (r < section->num_rows) && oKey;
              r++, row++)
         {
             for (k = 0, key = row->keys; (k < row->num_keys) && oKey;
                  k++, key++)
             {
-                sKey = KeyNameToLong(key->name.name);
+                unsigned long sKey = KeyNameToLong(key->name.name);
                 if (sKey == oKey)
                 {
                     if (warningLevel > 0)
@@ -3455,7 +3442,7 @@ VerifyOverlayInfo(XkbGeometryPtr geom,
     while ((oi->keys != NULL) && (oi->keys->sectionRow == _GOK_UnknownRow))
     {
         next = (OverlayKeyInfo *) oi->keys->defs.next;
-        uFree(oi->keys);
+        free(oi->keys);
         oi->keys = next;
         oi->nKeys--;
     }
@@ -3466,7 +3453,7 @@ VerifyOverlayInfo(XkbGeometryPtr geom,
         {
             ki->defs.next = next->defs.next;
             oi->nKeys--;
-            uFree(next);
+            free(next);
             next = (OverlayKeyInfo *) ki->defs.next;
         }
     }
@@ -3501,11 +3488,7 @@ CopyOverlayDef(XkbGeometryPtr geom,
 {
     Atom name;
     XkbOverlayPtr ol;
-    XkbOverlayRowPtr row;
-    XkbOverlayKeyPtr key;
-    OverlayKeyInfo *ki;
     short rowMap[256], rowSize[256];
-    int i;
 
     if (!VerifyOverlayInfo(geom, section, oi, info, rowMap, rowSize))
         return False;
@@ -3518,7 +3501,7 @@ CopyOverlayDef(XkbGeometryPtr geom,
               XkbAtomText(info->dpy, section->name, XkbMessage));
         return False;
     }
-    for (i = 0; i < oi->nRows; i++)
+    for (int i = 0; i < oi->nRows; i++)
     {
         int tmp, row_under;
         for (tmp = 0, row_under = -1;
@@ -3536,10 +3519,11 @@ CopyOverlayDef(XkbGeometryPtr geom,
             return False;
         }
     }
-    for (ki = oi->keys; ki != NULL; ki = (OverlayKeyInfo *) ki->defs.next)
+    for (OverlayKeyInfo *ki = oi->keys; ki != NULL;
+         ki = (OverlayKeyInfo *) ki->defs.next)
     {
-        row = &ol->rows[ki->overlayRow];
-        key = &row->keys[row->num_keys++];
+        XkbOverlayRowPtr row = &ol->rows[ki->overlayRow];
+        XkbOverlayKeyPtr key = &row->keys[row->num_keys++];
         bzero(key, sizeof(XkbOverlayKeyRec));
         strncpy(key->over.name, ki->over, XkbKeyNameLength);
         strncpy(key->under.name, ki->under, XkbKeyNameLength);
@@ -3553,10 +3537,6 @@ static Bool
 CopySectionDef(XkbGeometryPtr geom, SectionInfo * si, GeometryInfo * info)
 {
     XkbSectionPtr section;
-    XkbRowPtr row;
-    XkbKeyPtr key;
-    KeyInfo *ki;
-    RowInfo *ri;
     Atom name;
 
     name = XkbInternAtom(NULL, XkbAtomGetString(NULL, si->name), False);
@@ -3574,9 +3554,9 @@ CopySectionDef(XkbGeometryPtr geom, SectionInfo * si, GeometryInfo * info)
     section->height = si->height;
     section->angle = si->angle;
     section->priority = si->priority;
-    for (ri = si->rows; ri != NULL; ri = (RowInfo *) ri->defs.next)
+    for (RowInfo *ri = si->rows; ri != NULL; ri = (RowInfo *) ri->defs.next)
     {
-        row = XkbAddGeomRow(section, ri->nKeys);
+        XkbRowPtr row = XkbAddGeomRow(section, ri->nKeys);
         if (row == NULL)
         {
             WSGO("Couldn't allocate row in section\n");
@@ -3586,8 +3566,9 @@ CopySectionDef(XkbGeometryPtr geom, SectionInfo * si, GeometryInfo * info)
         row->top = ri->top;
         row->left = ri->left;
         row->vertical = ri->vertical;
-        for (ki = ri->keys; ki != NULL; ki = (KeyInfo *) ki->defs.next)
+        for (KeyInfo *ki = ri->keys; ki != NULL; ki = (KeyInfo *) ki->defs.next)
         {
+            XkbKeyPtr key;
             XkbColorPtr color;
             if ((ki->defs.defined & _GK_Name) == 0)
             {
@@ -3628,16 +3609,15 @@ CopySectionDef(XkbGeometryPtr geom, SectionInfo * si, GeometryInfo * info)
     }
     if (si->doodads != NULL)
     {
-        DoodadInfo *di;
-        for (di = si->doodads; di != NULL; di = (DoodadInfo *) di->defs.next)
+        for (DoodadInfo *di = si->doodads; di != NULL;
+             di = (DoodadInfo *) di->defs.next)
         {
             CopyDoodadDef(geom, section, di, info);
         }
     }
     if (si->overlays != NULL)
     {
-        OverlayInfo *oi;
-        for (oi = si->overlays; oi != NULL;
+        for (OverlayInfo *oi = si->overlays; oi != NULL;
              oi = (OverlayInfo *) oi->defs.next)
         {
             CopyOverlayDef(geom, section, oi, info);
@@ -3670,14 +3650,15 @@ CompileGeometry(XkbFile * file, XkbFileInfo * result, unsigned merge)
     if (info.errorCount == 0)
     {
         XkbGeometryPtr geom;
-        XkbGeometrySizesRec sizes;
-        bzero(&sizes, sizeof(sizes));
-        sizes.which = XkbGeomAllMask;
-        sizes.num_properties = info.nProps;
-        sizes.num_colors = 8;
-        sizes.num_shapes = info.nShapes;
-        sizes.num_sections = info.nSections;
-        sizes.num_doodads = info.nDoodads;
+        XkbGeometrySizesRec sizes = {
+            .which = XkbGeomAllMask,
+            .num_properties = info.nProps,
+            .num_colors = 8,
+            .num_shapes = info.nShapes,
+            .num_sections = info.nSections,
+            .num_doodads = info.nDoodads
+        };
+
         if (XkbAllocGeometry(xkb, &sizes) != Success)
         {
             WSGO("Couldn't allocate GeometryRec\n");
@@ -3720,8 +3701,7 @@ CompileGeometry(XkbFile * file, XkbFileInfo * result, unsigned merge)
 
         if (info.props)
         {
-            PropertyInfo *pi;
-            for (pi = info.props; pi != NULL;
+            for (PropertyInfo *pi = info.props; pi != NULL;
                  pi = (PropertyInfo *) pi->defs.next)
             {
                 if (!XkbAddGeomProperty(geom, pi->name, pi->value))
@@ -3730,8 +3710,7 @@ CompileGeometry(XkbFile * file, XkbFileInfo * result, unsigned merge)
         }
         if (info.shapes)
         {
-            ShapeInfo *si;
-            for (si = info.shapes; si != NULL;
+            for (ShapeInfo *si = info.shapes; si != NULL;
                  si = (ShapeInfo *) si->defs.next)
             {
                 if (!CopyShapeDef(xkb->dpy, geom, si))
@@ -3740,8 +3719,7 @@ CompileGeometry(XkbFile * file, XkbFileInfo * result, unsigned merge)
         }
         if (info.sections)
         {
-            SectionInfo *si;
-            for (si = info.sections; si != NULL;
+            for (SectionInfo *si = info.sections; si != NULL;
                  si = (SectionInfo *) si->defs.next)
             {
                 if (!CopySectionDef(geom, si, &info))
@@ -3750,8 +3728,7 @@ CompileGeometry(XkbFile * file, XkbFileInfo * result, unsigned merge)
         }
         if (info.doodads)
         {
-            DoodadInfo *di;
-            for (di = info.doodads; di != NULL;
+            for (DoodadInfo *di = info.doodads; di != NULL;
                  di = (DoodadInfo *) di->defs.next)
             {
                 if (!CopyDoodadDef(geom, NULL, di, &info))

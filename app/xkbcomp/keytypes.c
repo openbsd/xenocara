@@ -92,27 +92,6 @@ Atom tok_KEYPAD;
 
 /***====================================================================***/
 
-extern Bool AddMapEntry(XkbDescPtr /* xkb */ ,
-                        KeyTypeInfo * /* type */ ,
-                        XkbKTMapEntryPtr /* new */ ,
-                        Bool /* clobber */ ,
-                        Bool    /* report */
-    );
-
-extern Bool AddPreserve(XkbDescPtr /* xkb */ ,
-                        KeyTypeInfo * /* type */ ,
-                        PreserveInfo * /* new */ ,
-                        Bool /* clobber */ ,
-                        Bool    /* report */
-    );
-
-extern Bool AddLevelName(KeyTypeInfo * /* type */ ,
-                         unsigned /* level */ ,
-                         Atom /* name */ ,
-                         Bool /* clobber */ ,
-                         Bool   /* report */
-    );
-
 #define	MapEntryTxt(t,x,e)	\
     XkbVModMaskText((t)->dpy,(x),(e)->mods.real_mods,(e)->mods.vmods,XkbMessage)
 #define	PreserveIndexTxt(t,x,p)	\
@@ -126,7 +105,7 @@ extern Bool AddLevelName(KeyTypeInfo * /* type */ ,
 /***====================================================================***/
 
 static void
-InitKeyTypesInfo(KeyTypesInfo * info, XkbDescPtr xkb, KeyTypesInfo * from)
+InitKeyTypesInfo(KeyTypesInfo *info, XkbDescPtr xkb, const KeyTypesInfo *from)
 {
     tok_ONE_LEVEL = XkbInternAtom(NULL, "ONE_LEVEL", False);
     tok_TWO_LEVEL = XkbInternAtom(NULL, "TWO_LEVEL", False);
@@ -159,8 +138,8 @@ InitKeyTypesInfo(KeyTypesInfo * info, XkbDescPtr xkb, KeyTypesInfo * from)
         info->dflt = from->dflt;
         if (from->dflt.entries)
         {
-            info->dflt.entries = uTypedCalloc(from->dflt.szEntries,
-                                              XkbKTMapEntryRec);
+            info->dflt.entries = calloc(from->dflt.szEntries,
+                                        sizeof(XkbKTMapEntryRec));
             if (info->dflt.entries)
             {
                 unsigned sz = from->dflt.nEntries * sizeof(XkbKTMapEntryRec);
@@ -169,21 +148,21 @@ InitKeyTypesInfo(KeyTypesInfo * info, XkbDescPtr xkb, KeyTypesInfo * from)
         }
         if (from->dflt.lvlNames)
         {
-            info->dflt.lvlNames = uTypedCalloc(from->dflt.szNames, Atom);
+            info->dflt.lvlNames = calloc(from->dflt.szNames, sizeof(Atom));
             if (info->dflt.lvlNames)
             {
-                register unsigned sz = from->dflt.szNames * sizeof(Atom);
+                unsigned sz = from->dflt.szNames * sizeof(Atom);
                 memcpy(info->dflt.lvlNames, from->dflt.lvlNames, sz);
             }
         }
         if (from->dflt.preserve)
         {
-            PreserveInfo *old, *new, *last;
-            last = NULL;
-            old = from->dflt.preserve;
-            for (; old; old = (PreserveInfo *) old->defs.next)
+            PreserveInfo *last = NULL;
+
+            for (PreserveInfo *old = from->dflt.preserve;
+                 old; old = (PreserveInfo *) old->defs.next)
             {
-                new = uTypedAlloc(PreserveInfo);
+                PreserveInfo *new = malloc(sizeof(PreserveInfo));
                 if (!new)
                     return;
                 *new = *old;
@@ -202,16 +181,12 @@ InitKeyTypesInfo(KeyTypesInfo * info, XkbDescPtr xkb, KeyTypesInfo * from)
 static void
 FreeKeyTypeInfo(KeyTypeInfo * type)
 {
-    if (type->entries != NULL)
-    {
-        uFree(type->entries);
-        type->entries = NULL;
-    }
-    if (type->lvlNames != NULL)
-    {
-        uFree(type->lvlNames);
-        type->lvlNames = NULL;
-    }
+    free(type->entries);
+    type->entries = NULL;
+
+    free(type->lvlNames);
+    type->lvlNames = NULL;
+
     if (type->preserve != NULL)
     {
         ClearCommonInfo(&type->preserve->defs);
@@ -224,13 +199,12 @@ static void
 FreeKeyTypesInfo(KeyTypesInfo * info)
 {
     info->dpy = NULL;
-    if (info->name)
-        uFree(info->name);
+    free(info->name);
     info->name = NULL;
     if (info->types)
     {
-        register KeyTypeInfo *type;
-        for (type = info->types; type; type = (KeyTypeInfo *) type->defs.next)
+        for (KeyTypeInfo *type = info->types; type;
+             type = (KeyTypeInfo *) type->defs.next)
         {
             FreeKeyTypeInfo(type);
         }
@@ -245,10 +219,9 @@ NextKeyType(KeyTypesInfo * info)
 {
     KeyTypeInfo *type;
 
-    type = uTypedAlloc(KeyTypeInfo);
+    type = calloc(1, sizeof(KeyTypeInfo));
     if (type != NULL)
     {
-        bzero(type, sizeof(KeyTypeInfo));
         type->defs.fileID = info->fileID;
         type->dpy = info->dpy;
         info->types = (KeyTypeInfo *) AddCommonInfo(&info->types->defs,
@@ -259,11 +232,10 @@ NextKeyType(KeyTypesInfo * info)
 }
 
 static KeyTypeInfo *
-FindMatchingKeyType(KeyTypesInfo * info, KeyTypeInfo * new)
+FindMatchingKeyType(KeyTypesInfo *info, const KeyTypeInfo *new)
 {
-    KeyTypeInfo *old;
-
-    for (old = info->types; old; old = (KeyTypeInfo *) old->defs.next)
+    for (KeyTypeInfo *old = info->types; old;
+         old = (KeyTypeInfo *) old->defs.next)
     {
         if (old->name == new->name)
             return old;
@@ -368,8 +340,6 @@ static void
 MergeIncludedKeyTypes(KeyTypesInfo * into,
                       KeyTypesInfo * from, unsigned merge, XkbDescPtr xkb)
 {
-    KeyTypeInfo *type;
-
     if (from->errorCount > 0)
     {
         into->errorCount += from->errorCount;
@@ -380,7 +350,8 @@ MergeIncludedKeyTypes(KeyTypesInfo * into,
         into->name = from->name;
         from->name = NULL;
     }
-    for (type = from->types; type; type = (KeyTypeInfo *) type->defs.next)
+    for (KeyTypeInfo *type = from->types; type;
+         type = (KeyTypeInfo *) type->defs.next)
     {
         if (merge != MergeDefault)
             type->defs.merge = merge;
@@ -422,8 +393,7 @@ HandleIncludeKeyTypes(IncludeStmt * stmt,
         (*hndlr) (rtrn, xkb, newMerge, &included);
         if (stmt->stmt != NULL)
         {
-            if (included.name != NULL)
-                uFree(included.name);
+            free(included.name);
             included.name = stmt->stmt;
             stmt->stmt = NULL;
         }
@@ -435,11 +405,10 @@ HandleIncludeKeyTypes(IncludeStmt * stmt,
     }
     if ((stmt->next != NULL) && (included.errorCount < 1))
     {
-        IncludeStmt *next;
         unsigned op;
         KeyTypesInfo next_incl;
 
-        for (next = stmt->next; next != NULL; next = next->next)
+        for (IncludeStmt *next = stmt->next; next != NULL; next = next->next)
         {
             if ((next->file == NULL) && (next->map == NULL))
             {
@@ -476,9 +445,9 @@ HandleIncludeKeyTypes(IncludeStmt * stmt,
 /***====================================================================***/
 
 static XkbKTMapEntryPtr
-FindMatchingMapEntry(KeyTypeInfo * type, unsigned mask, unsigned vmask)
+FindMatchingMapEntry(const KeyTypeInfo *type, unsigned mask, unsigned vmask)
 {
-    register int i;
+    int i;
     XkbKTMapEntryPtr entry;
 
     for (i = 0, entry = type->entries; i < type->nEntries; i++, entry++)
@@ -492,13 +461,11 @@ FindMatchingMapEntry(KeyTypeInfo * type, unsigned mask, unsigned vmask)
 static void
 DeleteLevel1MapEntries(KeyTypeInfo * type)
 {
-    register int i, n;
-
-    for (i = 0; i < type->nEntries; i++)
+    for (int i = 0; i < type->nEntries; i++)
     {
         if (type->entries[i].level == 0)
         {
-            for (n = i; n < type->nEntries - 1; n++)
+            for (int n = i; n < type->nEntries - 1; n++)
             {
                 type->entries[n] = type->entries[n + 1];
             }
@@ -517,7 +484,7 @@ NextMapEntry(KeyTypeInfo * type)
 {
     if (type->entries == NULL)
     {
-        type->entries = uTypedCalloc(2, XkbKTMapEntryRec);
+        type->entries = calloc(2, sizeof(XkbKTMapEntryRec));
         if (type->entries == NULL)
         {
             ERROR("Couldn't allocate map entries for %s\n", TypeTxt(type));
@@ -530,9 +497,9 @@ NextMapEntry(KeyTypeInfo * type)
     else if (type->nEntries >= type->szEntries)
     {
         type->szEntries *= 2;
-        type->entries = uTypedRecalloc(type->entries,
-                                       type->nEntries, type->szEntries,
-                                       XkbKTMapEntryRec);
+        type->entries = recallocarray(type->entries,
+                                      type->nEntries, type->szEntries,
+                                      sizeof(XkbKTMapEntryRec));
         if (type->entries == NULL)
         {
             ERROR("Couldn't reallocate map entries for %s\n", TypeTxt(type));
@@ -543,7 +510,7 @@ NextMapEntry(KeyTypeInfo * type)
     return &type->entries[type->nEntries++];
 }
 
-Bool
+static Bool
 AddPreserve(XkbDescPtr xkb,
             KeyTypeInfo * type, PreserveInfo * new, Bool clobber, Bool report)
 {
@@ -593,7 +560,7 @@ AddPreserve(XkbDescPtr xkb,
         }
         return True;
     }
-    old = uTypedAlloc(PreserveInfo);
+    old = malloc(sizeof(PreserveInfo));
     if (!old)
     {
         WSGO("Couldn't allocate preserve in %s\n", TypeTxt(type));
@@ -615,7 +582,7 @@ AddPreserve(XkbDescPtr xkb,
  * @param clobber Overwrite existing entry.
  * @param report True if a warning is to be printed on.
  */
-Bool
+static Bool
 AddMapEntry(XkbDescPtr xkb,
             KeyTypeInfo * type,
             XkbKTMapEntryPtr new, Bool clobber, Bool report)
@@ -681,8 +648,8 @@ static LookupEntry lnames[] = {
 };
 
 static Bool
-SetMapEntry(KeyTypeInfo * type,
-            XkbDescPtr xkb, ExprDef * arrayNdx, ExprDef * value)
+SetMapEntry(KeyTypeInfo *type, XkbDescPtr xkb,
+            const ExprDef *arrayNdx, const ExprDef *value)
 {
     ExprResult rtrn;
     XkbKTMapEntryRec entry;
@@ -728,8 +695,8 @@ SetMapEntry(KeyTypeInfo * type,
 }
 
 static Bool
-SetPreserve(KeyTypeInfo * type,
-            XkbDescPtr xkb, ExprDef * arrayNdx, ExprDef * value)
+SetPreserve(KeyTypeInfo *type, XkbDescPtr xkb,
+            const ExprDef *arrayNdx, const ExprDef *value)
 {
     ExprResult rtrn;
     PreserveInfo new;
@@ -766,7 +733,7 @@ SetPreserve(KeyTypeInfo * type,
     new.preMods = rtrn.uval & 0xff;
     new.preVMods = (rtrn.uval >> 16) & 0xffff;
     if ((new.preMods & (~new.indexMods))
-        || (new.preVMods && (~new.indexVMods)))
+        || (new.preVMods & (~new.indexVMods)))
     {
         if (warningLevel > 0)
         {
@@ -786,14 +753,14 @@ SetPreserve(KeyTypeInfo * type,
 
 /***====================================================================***/
 
-Bool
+static Bool
 AddLevelName(KeyTypeInfo * type,
              unsigned level, Atom name, Bool clobber, Bool report)
 {
     if ((type->lvlNames == NULL) || (type->szNames <= level))
     {
-        type->lvlNames =
-            uTypedRecalloc(type->lvlNames, type->szNames, level + 1, Atom);
+        type->lvlNames = recallocarray(type->lvlNames, type->szNames,
+                                       level + 1, sizeof(Atom));
         if (type->lvlNames == NULL)
         {
             ERROR("Couldn't allocate level names for type %s\n",
@@ -838,7 +805,7 @@ AddLevelName(KeyTypeInfo * type,
 }
 
 static Bool
-SetLevelName(KeyTypeInfo * type, ExprDef * arrayNdx, ExprDef * value)
+SetLevelName(KeyTypeInfo *type, const ExprDef *arrayNdx, const ExprDef *value)
 {
     ExprResult rtrn;
     unsigned level;
@@ -877,16 +844,15 @@ SetLevelName(KeyTypeInfo * type, ExprDef * arrayNdx, ExprDef * value)
  * @param field The field to parse (e.g. modifiers, map, level_name)
  */
 static Bool
-SetKeyTypeField(KeyTypeInfo * type,
-                XkbDescPtr xkb,
-                const char *field,
-                ExprDef * arrayNdx, ExprDef * value, KeyTypesInfo * info)
+SetKeyTypeField(KeyTypeInfo * type, XkbDescPtr xkb, const char *field,
+                const ExprDef *arrayNdx, const ExprDef *value,
+                KeyTypesInfo *info)
 {
-    ExprResult tmp;
-
     if (uStrCaseCmp(field, "modifiers") == 0)
     {
+        ExprResult tmp;
         unsigned mods, vmods;
+
         if (arrayNdx != NULL)
         {
             WARN("The modifiers field of a key type is not an array\n");
@@ -937,7 +903,7 @@ SetKeyTypeField(KeyTypeInfo * type,
 }
 
 static Bool
-HandleKeyTypeVar(VarDef * stmt, XkbDescPtr xkb, KeyTypesInfo * info)
+HandleKeyTypeVar(const VarDef *stmt, XkbDescPtr xkb, KeyTypesInfo *info)
 {
     ExprResult elem, field;
     ExprDef *arrayNdx;
@@ -962,8 +928,8 @@ HandleKeyTypeVar(VarDef * stmt, XkbDescPtr xkb, KeyTypesInfo * info)
 }
 
 static int
-HandleKeyTypeBody(VarDef * def,
-                  XkbDescPtr xkb, KeyTypeInfo * type, KeyTypesInfo * info)
+HandleKeyTypeBody(const VarDef *def, XkbDescPtr xkb,
+                  KeyTypeInfo *type, KeyTypesInfo *info)
 {
     int ok = 1;
     ExprResult tmp, field;
@@ -989,30 +955,27 @@ HandleKeyTypeBody(VarDef * def,
  *
  */
 static int
-HandleKeyTypeDef(KeyTypeDef * def,
-                 XkbDescPtr xkb, unsigned merge, KeyTypesInfo * info)
+HandleKeyTypeDef(const KeyTypeDef *def,
+                 XkbDescPtr xkb, unsigned merge, KeyTypesInfo *info)
 {
-    register int i;
-    KeyTypeInfo type;
-
-    if (def->merge != MergeDefault)
-        merge = def->merge;
-
-    type.defs.defined = 0;
-    type.defs.fileID = info->fileID;
-    type.defs.merge = merge;
-    type.defs.next = NULL;
-    type.dpy = info->dpy;
-    type.name = def->name;
-    type.mask = info->dflt.mask;
-    type.vmask = info->dflt.vmask;
-    type.groupInfo = info->dflt.groupInfo;
-    type.numLevels = 1;
-    type.nEntries = type.szEntries = 0;
-    type.entries = NULL;
-    type.szNames = 0;
-    type.lvlNames = NULL;
-    type.preserve = NULL;
+    KeyTypeInfo type = {
+        .defs.defined = 0,
+        .defs.fileID = info->fileID,
+        .defs.merge = (def->merge != MergeDefault) ? def->merge : merge,
+        .defs.next = NULL,
+        .dpy = info->dpy,
+        .name = def->name,
+        .mask = info->dflt.mask,
+        .vmask = info->dflt.vmask,
+        .groupInfo = info->dflt.groupInfo,
+        .numLevels = 1,
+        .nEntries = 0,
+        .szEntries = 0,
+        .entries = NULL,
+        .preserve = NULL,
+        .szNames = 0,
+        .lvlNames = NULL
+    };
 
     /* Parse the actual content. */
     if (!HandleKeyTypeBody(def->body, xkb, &type, info))
@@ -1023,7 +986,7 @@ HandleKeyTypeDef(KeyTypeDef * def,
 
     /* now copy any appropriate map, preserve or level names from the */
     /* default type */
-    for (i = 0; i < info->dflt.nEntries; i++)
+    for (int i = 0; i < info->dflt.nEntries; i++)
     {
         XkbKTMapEntryPtr dflt;
         dflt = &info->dflt.entries[i];
@@ -1046,7 +1009,7 @@ HandleKeyTypeDef(KeyTypeDef * def,
             dflt = (PreserveInfo *) dflt->defs.next;
         }
     }
-    for (i = 0; i < info->dflt.szNames; i++)
+    for (int i = 0; i < info->dflt.szNames; i++)
     {
         if ((i < type.numLevels) && (info->dflt.lvlNames[i] != None))
         {
@@ -1134,17 +1097,16 @@ HandleKeyTypesFile(XkbFile * file,
 static Bool
 CopyDefToKeyType(XkbDescPtr xkb, XkbKeyTypePtr type, KeyTypeInfo * def)
 {
-    register int i;
-    PreserveInfo *pre;
-
-    for (pre = def->preserve; pre != NULL;
+    for (PreserveInfo *pre = def->preserve; pre != NULL;
          pre = (PreserveInfo *) pre->defs.next)
     {
         XkbKTMapEntryPtr match;
-        XkbKTMapEntryRec tmp;
-        tmp.mods.real_mods = pre->indexMods;
-        tmp.mods.vmods = pre->indexVMods;
-        tmp.level = 0;
+        XkbKTMapEntryRec tmp = {
+            .mods.real_mods = pre->indexMods,
+            .mods.vmods = pre->indexVMods,
+            .level = 0
+        };
+
         AddMapEntry(xkb, def, &tmp, False, False);
         match = FindMatchingMapEntry(def, pre->indexMods, pre->indexVMods);
         if (!match)
@@ -1162,7 +1124,7 @@ CopyDefToKeyType(XkbDescPtr xkb, XkbKeyTypePtr type, KeyTypeInfo * def)
     type->map = def->entries;
     if (def->preserve)
     {
-        type->preserve = uTypedCalloc(type->map_count, XkbModsRec);
+        type->preserve = calloc(type->map_count, sizeof(XkbModsRec));
         if (!type->preserve)
         {
             WARN("Couldn't allocate preserve array in CopyDefToKeyType\n");
@@ -1171,8 +1133,8 @@ CopyDefToKeyType(XkbDescPtr xkb, XkbKeyTypePtr type, KeyTypeInfo * def)
         }
         else
         {
-            pre = def->preserve;
-            for (; pre != NULL; pre = (PreserveInfo *) pre->defs.next)
+            for (PreserveInfo *pre = def->preserve; pre != NULL;
+                 pre = (PreserveInfo *) pre->defs.next)
             {
                 int ndx = pre->matchingMapIndex;
                 type->preserve[ndx].mask = pre->preMods;
@@ -1186,10 +1148,10 @@ CopyDefToKeyType(XkbDescPtr xkb, XkbKeyTypePtr type, KeyTypeInfo * def)
     type->name = (Atom) def->name;
     if (def->szNames > 0)
     {
-        type->level_names = uTypedCalloc(def->numLevels, Atom);
+        type->level_names = calloc(def->numLevels, sizeof(Atom));
 
         /* assert def->szNames<=def->numLevels */
-        for (i = 0; i < def->szNames; i++)
+        for (int i = 0; i < def->szNames; i++)
         {
             type->level_names[i] = (Atom) def->lvlNames[i];
         }
@@ -1217,9 +1179,9 @@ CompileKeyTypes(XkbFile * file, XkbFileInfo * result, unsigned merge)
 
     if (info.errorCount == 0)
     {
-        register int i;
-        register KeyTypeInfo *def;
-        register XkbKeyTypePtr type, next;
+        int i;
+        KeyTypeInfo *def;
+        XkbKeyTypePtr type, next;
 
         if (info.name != NULL)
         {

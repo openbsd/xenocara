@@ -36,7 +36,9 @@
 #include "utils.h"
 #include "parseutils.h"
 
+#ifdef DEBUG
 unsigned int scanDebug;
+#endif
 
 static FILE *yyin;
 
@@ -576,7 +578,7 @@ static int numKeywords = sizeof(keywords) / sizeof(struct _Keyword);
 static int
 yyGetIdent(int first)
 {
-    int ch, i, j, found;
+    int ch, j, found;
     int rtrn = IDENT;
 
     scanBuf[0] = first;
@@ -589,7 +591,7 @@ yyGetIdent(int first)
     scanBuf[j++] = '\0';
     found = 0;
 
-    for (i = 0; (!found) && (i < numKeywords); i++)
+    for (int i = 0; (!found) && (i < numKeywords); i++)
     {
         if (uStrCaseCmp(scanBuf, keywords[i].keyword) == 0)
         {

@@ -89,7 +89,7 @@ static void HandleKeycodesFile(XkbFile * file,
                                KeyNamesInfo * info);
 
 static void
-InitIndicatorNameInfo(IndicatorNameInfo * ii, KeyNamesInfo * info)
+InitIndicatorNameInfo(IndicatorNameInfo *ii, const KeyNamesInfo *info)
 {
     ii->defs.defined = 0;
     ii->defs.merge = info->merge;
@@ -117,7 +117,7 @@ NextIndicatorName(KeyNamesInfo * info)
 {
     IndicatorNameInfo *ii;
 
-    ii = uTypedAlloc(IndicatorNameInfo);
+    ii = malloc(sizeof(IndicatorNameInfo));
     if (ii)
     {
         InitIndicatorNameInfo(ii, info);
@@ -130,9 +130,7 @@ NextIndicatorName(KeyNamesInfo * info)
 static IndicatorNameInfo *
 FindIndicatorByIndex(KeyNamesInfo * info, int ndx)
 {
-    IndicatorNameInfo *old;
-
-    for (old = info->leds; old != NULL;
+    for (IndicatorNameInfo *old = info->leds; old != NULL;
          old = (IndicatorNameInfo *) old->defs.next)
     {
         if (old->ndx == ndx)
@@ -144,9 +142,7 @@ FindIndicatorByIndex(KeyNamesInfo * info, int ndx)
 static IndicatorNameInfo *
 FindIndicatorByName(KeyNamesInfo * info, Atom name)
 {
-    IndicatorNameInfo *old;
-
-    for (old = info->leds; old != NULL;
+    for (IndicatorNameInfo *old = info->leds; old != NULL;
          old = (IndicatorNameInfo *) old->defs.next)
     {
         if (old->name == name)
@@ -200,9 +196,7 @@ AddIndicatorName(KeyNamesInfo * info, IndicatorNameInfo * new)
                     info->leds = (IndicatorNameInfo *) old->defs.next;
                 else
                 {
-                    IndicatorNameInfo *tmp;
-                    tmp = info->leds;
-                    for (; tmp != NULL;
+                    for (IndicatorNameInfo *tmp = info->leds; tmp != NULL;
                          tmp = (IndicatorNameInfo *) tmp->defs.next)
                     {
                         if (tmp->defs.next == (CommonInfo *) old)
@@ -212,7 +206,7 @@ AddIndicatorName(KeyNamesInfo * info, IndicatorNameInfo * new)
                         }
                     }
                 }
-                uFree(old);
+                free(old);
             }
         }
     }
@@ -276,16 +270,15 @@ AddIndicatorName(KeyNamesInfo * info, IndicatorNameInfo * new)
 static void
 ClearKeyNamesInfo(KeyNamesInfo * info)
 {
-    if (info->name != NULL)
-        uFree(info->name);
+    free(info->name);
     info->name = NULL;
     info->computedMax = info->explicitMax = info->explicitMin = -1;
     info->computedMin = 256;
     info->effectiveMin = 8;
     info->effectiveMax = 255;
-    bzero((char *) info->names, sizeof(info->names));
-    bzero((char *) info->files, sizeof(info->files));
-    bzero((char *) info->has_alt_forms, sizeof(info->has_alt_forms));
+    bzero(info->names, sizeof(info->names));
+    bzero(info->files, sizeof(info->files));
+    bzero(info->has_alt_forms, sizeof(info->has_alt_forms));
     if (info->leds)
         ClearIndicatorNameInfo(info->leds, info);
     if (info->aliases)
@@ -305,11 +298,9 @@ InitKeyNamesInfo(KeyNamesInfo * info)
 }
 
 static int
-FindKeyByLong(KeyNamesInfo * info, unsigned long name)
+FindKeyByLong(const KeyNamesInfo *info, unsigned long name)
 {
-    register int i;
-
-    for (i = info->effectiveMin; i <= info->effectiveMax; i++)
+    for (int i = info->effectiveMin; i <= info->effectiveMax; i++)
     {
         if (info->names[i] == name)
             return i;
@@ -323,9 +314,8 @@ FindKeyByLong(KeyNamesInfo * info, unsigned long name)
  * Note that the key's name is stored as a long, the keycode is the index.
  */
 static Bool
-AddKeyName(KeyNamesInfo * info,
-           int kc,
-           char *name, unsigned merge, unsigned fileID, Bool reportCollisions)
+AddKeyName(KeyNamesInfo *info, int kc, const char *name,
+           unsigned merge, unsigned fileID, Bool reportCollisions)
 {
     int old;
     unsigned long lval;
@@ -435,9 +425,6 @@ static void
 MergeIncludedKeycodes(KeyNamesInfo * into, KeyNamesInfo * from,
                       unsigned merge)
 {
-    register int i;
-    char buf[5];
-
     if (from->errorCount > 0)
     {
         into->errorCount += from->errorCount;
@@ -448,9 +435,11 @@ MergeIncludedKeycodes(KeyNamesInfo * into, KeyNamesInfo * from,
         into->name = from->name;
         from->name = NULL;
     }
-    for (i = from->computedMin; i <= from->computedMax; i++)
+    for (int i = from->computedMin; i <= from->computedMax; i++)
     {
         unsigned thisMerge;
+        char buf[5];
+
         if (from->names[i] == 0)
             continue;
         LongToKeyName(from->names[i], buf);
@@ -526,8 +515,7 @@ HandleIncludeKeycodes(IncludeStmt * stmt, XkbDescPtr xkb, KeyNamesInfo * info)
         HandleKeycodesFile(rtrn, xkb, MergeOverride, &included);
         if (stmt->stmt != NULL)
         {
-            if (included.name != NULL)
-                uFree(included.name);
+            free(included.name);
             included.name = stmt->stmt;
             stmt->stmt = NULL;
         }
@@ -540,11 +528,10 @@ HandleIncludeKeycodes(IncludeStmt * stmt, XkbDescPtr xkb, KeyNamesInfo * info)
     /* Do we have more than one include statement? */
     if ((stmt->next != NULL) && (included.errorCount < 1))
     {
-        IncludeStmt *next;
         unsigned op;
         KeyNamesInfo next_incl;
 
-        for (next = stmt->next; next != NULL; next = next->next)
+        for (IncludeStmt *next = stmt->next; next != NULL; next = next->next)
         {
             if ((next->file == NULL) && (next->map == NULL))
             {
@@ -581,7 +568,7 @@ HandleIncludeKeycodes(IncludeStmt * stmt, XkbDescPtr xkb, KeyNamesInfo * info)
  * e.g. <ESC> = 9
  */
 static int
-HandleKeycodeDef(KeycodeDef * stmt, unsigned merge, KeyNamesInfo * info)
+HandleKeycodeDef(const KeycodeDef *stmt, unsigned merge, KeyNamesInfo *info)
 {
     int code;
     ExprResult result;
@@ -622,7 +609,7 @@ HandleKeycodeDef(KeycodeDef * stmt, unsigned merge, KeyNamesInfo * info)
  * @return 1 on success, 0 otherwise.
  */
 static int
-HandleKeyNameVar(VarDef * stmt, KeyNamesInfo * info)
+HandleKeyNameVar(const VarDef *stmt, KeyNamesInfo *info)
 {
     ExprResult tmp, field;
     ExprDef *arrayNdx;
@@ -720,7 +707,7 @@ HandleKeyNameVar(VarDef * stmt, KeyNamesInfo * info)
 }
 
 static int
-HandleIndicatorNameDef(IndicatorNameDef * def,
+HandleIndicatorNameDef(const IndicatorNameDef *def,
                        unsigned merge, KeyNamesInfo * info)
 {
     IndicatorNameInfo ii;
@@ -860,7 +847,7 @@ CompileKeycodes(XkbFile * file, XkbFileInfo * result, unsigned merge)
         if (XkbAllocNames(xkb, XkbKeyNamesMask | XkbIndicatorNamesMask, 0, 0)
                 == Success)
         {
-            register int i;
+            int i;
             xkb->names->keycodes = XkbInternAtom(xkb->dpy, info.name, False);
             uDEBUG2(1, "key range: %d..%d\n", xkb->min_key_code,
                     xkb->max_key_code);
@@ -892,8 +879,8 @@ CompileKeycodes(XkbFile * file, XkbFileInfo * result, unsigned merge)
                                   XkbAtomGetString(NULL, ii->name), False);
                 if (xkb->indicators != NULL)
                 {
-                    register unsigned bit;
-                    bit = 1 << (ii->ndx - 1);
+                    unsigned bit = 1U << (ii->ndx - 1);
+
                     if (ii->virtual)
                         xkb->indicators->phys_indicators &= ~bit;
                     else

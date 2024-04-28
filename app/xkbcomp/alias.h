@@ -34,7 +34,7 @@ typedef struct _AliasInfo
     char real[XkbKeyNameLength + 1];
 } AliasInfo;
 
-extern int HandleAliasDef(KeyAliasDef * /* def   */ ,
+extern int HandleAliasDef(const KeyAliasDef * /* def   */ ,
                           unsigned /* merge */ ,
                           unsigned /* file_id */ ,
                           AliasInfo **  /* info  */

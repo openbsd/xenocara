@@ -70,15 +70,12 @@ SOFTWARE.
 
 ******************************************************************/
 
+#include "utils.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <X11/keysym.h>
-
-#if defined(sgi)
-#include <malloc.h>
-#endif
 
 #define	DEBUG_VAR listingDebug
 #include "xkbcomp.h"
@@ -126,7 +123,9 @@ SOFTWARE.
 
 #define	lowbit(x)	((x) & (-(x)))
 
+#ifdef DEBUG
 unsigned int listingDebug;
+#endif
 
 static int szListing = 0;
 static int nListed = 0;
@@ -155,7 +154,7 @@ AddMapOnly(char *map)
             szMapOnly = 5;
         else
             szMapOnly *= 2;
-        mapOnly = uTypedRealloc(list, szMapOnly, char *);
+        mapOnly = reallocarray(list, szMapOnly, sizeof(char *));
         if (!mapOnly)
         {
             WSGO("Couldn't allocate list of maps\n");
@@ -166,7 +165,7 @@ AddMapOnly(char *map)
     return 1;
 }
 
-int
+static int
 AddListing(char *file, char *map)
 {
     if (nListed >= szListing)
@@ -175,7 +174,7 @@ AddListing(char *file, char *map)
             szListing = 10;
         else
             szListing *= 2;
-        list = uTypedRealloc(list, szListing, Listing);
+        list = reallocarray(list, szListing, sizeof(Listing));
         if (!list)
         {
             WSGO("Couldn't allocate list of files and maps\n");
@@ -195,10 +194,10 @@ AddListing(char *file, char *map)
 /***====================================================================***/
 
 static void
-ListFile(FILE * outFile, char *fileName, XkbFile * map)
+ListFile(FILE *outFile, const char *fileName, XkbFile *map)
 {
-    register unsigned flags;
-    char *mapName;
+    unsigned flags;
+    const char *mapName;
 
     flags = map->flags;
     if ((flags & XkbLC_Hidden) && (!(verboseLevel & WantHiddenMaps)))
@@ -228,7 +227,7 @@ ListFile(FILE * outFile, char *fileName, XkbFile * map)
         mapName = NULL;
     if (dirsToStrip > 0)
     {
-        char *tmp, *last;
+        const char *tmp, *last;
         int i;
         for (i = 0, tmp = last = fileName; (i < dirsToStrip) && tmp; i++)
         {
@@ -303,28 +302,33 @@ AddDirectory(char *head, char *ptrn, char *rest, char *map)
     {
         char *tmp, *filename;
         struct stat sbuf;
-        size_t tmpsize;
 
         filename = FileName(file);
         if (!filename || filename[0] == '.')
             continue;
         if (ptrn && (!XkbNameMatchesPattern(filename, ptrn)))
             continue;
-        tmpsize = (head ? strlen(head) : 0) + strlen(filename) + 2;
-        tmp = uAlloc(tmpsize);
+#ifdef HAVE_ASPRINTF
+        if (asprintf(&tmp, "%s%s%s",
+                     (head ? head : ""), (head ? "/" : ""), filename) < 0)
+            continue;
+#else
+        size_t tmpsize = (head ? strlen(head) : 0) + strlen(filename) + 2;
+        tmp = malloc(tmpsize);
         if (!tmp)
             continue;
         snprintf(tmp, tmpsize, "%s%s%s",
                  (head ? head : ""), (head ? "/" : ""), filename);
+#endif
         if (stat(tmp, &sbuf) < 0)
         {
-            uFree(tmp);
+            free(tmp);
             continue;
         }
         if (((rest != NULL) && (!S_ISDIR(sbuf.st_mode))) ||
             ((map != NULL) && (S_ISDIR(sbuf.st_mode))))
         {
-            uFree(tmp);
+            free(tmp);
             continue;
         }
         if (S_ISDIR(sbuf.st_mode))
@@ -400,13 +404,11 @@ AddMatchingFiles(char *head_in)
 static Bool
 MapMatches(char *mapToConsider, char *ptrn)
 {
-    int i;
-
     if (ptrn != NULL)
         return XkbNameMatchesPattern(mapToConsider, ptrn);
     if (nMapOnly < 1)
         return True;
-    for (i = 0; i < nMapOnly; i++)
+    for (int i = 0; i < nMapOnly; i++)
     {
         if (XkbNameMatchesPattern(mapToConsider, mapOnly[i]))
             return True;
@@ -415,13 +417,10 @@ MapMatches(char *mapToConsider, char *ptrn)
 }
 
 int
-GenerateListing(char *out_name)
+GenerateListing(const char *out_name)
 {
-    int i;
-    FILE *inputFile, *outFile;
-    XkbFile *rtrn, *mapToUse;
-    unsigned oldWarningLevel;
-    char *mapName;
+    FILE *outFile;
+    XkbFile *rtrn;
 
     if (nFilesListed < 1)
     {
@@ -441,8 +440,9 @@ GenerateListing(char *out_name)
     if (warningLevel > 9)
         fprintf(stderr, "should list:\n");
 #endif
-    for (i = 0; i < nListed; i++)
+    for (int i = 0; i < nListed; i++)
     {
+        unsigned oldWarningLevel;
 #ifdef DEBUG
         if (warningLevel > 9)
         {
@@ -455,6 +455,7 @@ GenerateListing(char *out_name)
         warningLevel = 0;
         if (list[i].file)
         {
+            FILE *inputFile;
             struct stat sbuf;
 
             if (stat(list[i].file, &sbuf) < 0)
@@ -480,8 +481,8 @@ GenerateListing(char *out_name)
             setScanState(list[i].file, 1);
             if (XKBParseFile(inputFile, &rtrn) && (rtrn != NULL))
             {
-                mapName = list[i].map;
-                mapToUse = rtrn;
+                char *mapName = list[i].map;
+                XkbFile *mapToUse = rtrn;
                 for (; mapToUse; mapToUse = (XkbFile *) mapToUse->common.next)
                 {
                     if (!MapMatches(mapToUse->name, mapName))
@@ -492,6 +493,10 @@ GenerateListing(char *out_name)
             fclose(inputFile);
         }
         warningLevel = oldWarningLevel;
+    }
+    if (outFile != stdout)
+    {
+        fclose(outFile);
     }
     return 1;
 }
