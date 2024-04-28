@@ -1,0 +1,10 @@
+# Choose whether or not to compress encodings - default is to compress all
+option('gzip-small-encodings', type: 'boolean', value: true,
+       description: 'gzip small encoding files')
+option('gzip-large-encodings', type: 'boolean', value: true,
+       description: 'gzip large encoding files')
+# options for setting the installation path
+option('fontrootdir', type: 'string',
+       description: 'Path to root directory for font files')
+option('encodingsdir', type: 'string',
+       description: 'Path to directory for encodings files')

@@ -38,7 +38,13 @@ ENCODING_FILES =		\
 	tis620-2.enc		\
 	viscii1.1-1.enc
 
-EXTRA_DIST = $(ENCODING_FILES) README.md
+EXTRA_DIST = \
+        $(ENCODING_FILES) \
+        large/meson.build \
+        meson.build \
+        meson_options.txt \
+        mkencodingsdir.in \
+        README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

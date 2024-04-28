@@ -1,0 +1,10 @@
+#! /bin/sh
+
+if [ -z ${MESON_INSTALL_QUIET+x} ]; then
+    set -x
+fi
+
+cd ${DESTDIR}@encodingsdir@
+@mkfontscale@ -b -s -l -n -r -p @encodingsdir@ -e . -e large .
+cd large
+@mkfontscale@ -b -s -l -n -r -p @encodingsdir@/large -e . .

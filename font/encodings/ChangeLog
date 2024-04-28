@@ -1,3 +1,35 @@
+commit a7e63704951b95351096c1d96808d48d0fb7e0a8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 13:06:10 2024 -0800
+
+    font-encodings 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c9411b1271ab87bd7004ed461f2021e8bc87ca2f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 6 14:01:20 2023 -0800
+
+    Add a meson build system
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dylan Baker <dylan@pnwbakers.com>
+
+commit 4d05dc49a1d96dd1f0d1c36e34554f7c55b3f9bd
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Mon May 8 12:08:16 2023 +0200
+
+    Add the ISO8859-14 encoding
+    
+    Source: https://en.wikipedia.org/wiki/ISO/IEC_8859-14
+    
+    This allows legacy applications (xcalc for instance) to work without
+    the: "Warning: missing charsets in String to FontSet conversion"
+    message on systems with only ISO8859-1 and UTF-8 encoded fonts
+    installed.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
 commit 61b7e8126a5f57bf4649ce128c78b1266bd5ce3c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Feb 27 16:14:27 2023 -0800
@@ -541,7 +573,7 @@ Date:   Fri Jul 29 21:22:48 2005 +0000
     - Update modular Xorg version
 
 commit c9b1f243c82c35f5a01b4f930afd149236ad387d
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 12 21:03:09 2005 +0000
 
     Move encodings here.
