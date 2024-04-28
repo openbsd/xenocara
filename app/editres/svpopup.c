@@ -25,6 +25,10 @@ in this Software without prior written authorization from The Open Group.
  * Author:  Chris D. Peterson, MIT X Consortium
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>	/* Get standard string definitions. */
 #include <X11/Xatom.h>
@@ -80,7 +84,7 @@ PopupSetValues(Widget parent, XEvent *event)
  * Clear out the old strings, and set the active widget to the name widget.
  */
 
-    XtSetArg(args[0], XtNstring, "");
+    XtSetArg(args[0], (String)XtNstring, "");
     XtSetValues(global_screen_data.res_text, args, ONE);
     XtSetValues(global_screen_data.val_text, args, ONE);
 
@@ -165,20 +169,20 @@ _SetField(Widget new, Widget old)
 
     XtSetKeyboardFocus(XtParent(new), new);
 
-    XtSetArg(args[0], XtNborderColor, &old_border);
-    XtSetArg(args[1], XtNbackground, &old_bg);
+    XtSetArg(args[0], (String)XtNborderColor, &old_border);
+    XtSetArg(args[1], (String)XtNbackground, &old_bg);
     XtGetValues(new, args, TWO);
 
-    XtSetArg(args[0], XtNborderColor, &new_border);
+    XtSetArg(args[0], (String)XtNborderColor, &new_border);
     XtGetValues(old, args, ONE);
 
     if (old_border != old_bg)	/* Colors are already correct, return. */
 	return;
 
-    XtSetArg(args[0], XtNborderColor, old_border);
+    XtSetArg(args[0], (String)XtNborderColor, old_border);
     XtSetValues(old, args, ONE);
 
-    XtSetArg(args[0], XtNborderColor, new_border);
+    XtSetArg(args[0], (String)XtNborderColor, new_border);
     XtSetValues(new, args, ONE);
 }
 
@@ -210,42 +214,42 @@ CreateSetValuesPopup(Widget parent, ScreenData *scr_data)
 
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNfromVert, label); num_args++;
+    XtSetArg(args[num_args], (String)XtNfromVert, label); num_args++;
     res_label = XtCreateManagedWidget("resourceLabel", labelWidgetClass,
 				  form, args, num_args);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNfromVert, label); num_args++;
-    XtSetArg(args[num_args], XtNfromHoriz, res_label); num_args++;
+    XtSetArg(args[num_args], (String)XtNfromVert, label); num_args++;
+    XtSetArg(args[num_args], (String)XtNfromHoriz, res_label); num_args++;
     scr_data->res_text = XtCreateManagedWidget("resourceText",
 						  asciiTextWidgetClass,
 						  form, args, num_args);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNfromVert, scr_data->res_text); num_args++;
+    XtSetArg(args[num_args], (String)XtNfromVert, scr_data->res_text); num_args++;
     (void)  XtCreateManagedWidget("valueLabel", labelWidgetClass,
 				  form, args, num_args);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNfromHoriz, res_label); num_args++;
-    XtSetArg(args[num_args], XtNfromVert, scr_data->res_text); num_args++;
+    XtSetArg(args[num_args], (String)XtNfromHoriz, res_label); num_args++;
+    XtSetArg(args[num_args], (String)XtNfromVert, scr_data->res_text); num_args++;
     scr_data->val_text = XtCreateManagedWidget("valueText",
 						  asciiTextWidgetClass,
 						  form, args, num_args);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNfromVert, scr_data->val_text); num_args++;
+    XtSetArg(args[num_args], (String)XtNfromVert, scr_data->val_text); num_args++;
     do_it = XtCreateManagedWidget("setValues", commandWidgetClass,
 					  form, args, num_args);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNfromVert, scr_data->val_text); num_args++;
-    XtSetArg(args[num_args], XtNfromHoriz, do_it); num_args++;
+    XtSetArg(args[num_args], (String)XtNfromVert, scr_data->val_text); num_args++;
+    XtSetArg(args[num_args], (String)XtNfromHoriz, do_it); num_args++;
     cancel = XtCreateManagedWidget("cancel", commandWidgetClass,
 				   form, args, num_args);
 
-    XtAddCallback(do_it, XtNcallback, DoSetValues, NULL);
-    XtAddCallback(cancel, XtNcallback, CancelSetValues, NULL);
+    XtAddCallback(do_it, (String)XtNcallback, DoSetValues, NULL);
+    XtAddCallback(cancel, (String)XtNcallback, CancelSetValues, NULL);
 
 /*
  * Initialize the text entry fields.
@@ -255,11 +259,11 @@ CreateSetValuesPopup(Widget parent, ScreenData *scr_data)
 	Pixel color;
 
 	num_args = 0;
-	XtSetArg(args[num_args], XtNbackground, &color); num_args++;
+	XtSetArg(args[num_args], (String)XtNbackground, &color); num_args++;
 	XtGetValues(scr_data->val_text, args, num_args);
 
 	num_args = 0;
-	XtSetArg(args[num_args], XtNborderColor, color); num_args++;
+	XtSetArg(args[num_args], (String)XtNborderColor, color); num_args++;
 	XtSetValues(scr_data->val_text, args, num_args);
 
 	XtSetKeyboardFocus(form, scr_data->res_text);
@@ -288,10 +292,10 @@ DoSetValues(Widget w, XtPointer junk, XtPointer garbage)
 	return;
     }
 
-    XtSetArg(args[0], XtNstring, &res_name);
+    XtSetArg(args[0], (String)XtNstring, &res_name);
     XtGetValues(global_screen_data.res_text, args, ONE);
 
-    XtSetArg(args[0], XtNstring, &res_value);
+    XtSetArg(args[0], (String)XtNstring, &res_value);
     XtGetValues(global_screen_data.val_text, args, ONE);
 
     _XEditResResetStream(stream);

@@ -23,6 +23,10 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <X11/Intrinsic.h>
 #include <X11/Xutil.h>
@@ -111,7 +115,7 @@ AddTreeNode(Widget tree, WNode *top)
                      top->name, top->parent->name, "not been created yet");
 	    SetMessage(global_screen_data.info_label, msg);
 	}
-	XtSetArg(args[num_args], XtNtreeParent, top->parent->widget);
+	XtSetArg(args[num_args], (String)XtNtreeParent, top->parent->widget);
 	num_args++;
     }
 
@@ -365,7 +369,7 @@ _TreeSelectNode(WNode *node, SelectTypes type, Boolean recurse)
 	state = FALSE;
 	break;
     case SelectInvert:
-	XtSetArg(args[0], XtNstate, &state);
+	XtSetArg(args[0], (String)XtNstate, &state);
 	XtGetValues(node->widget, args, ONE);
 
 	state = !state;
@@ -376,7 +380,7 @@ _TreeSelectNode(WNode *node, SelectTypes type, Boolean recurse)
 	return;
     }
 
-    XtSetArg(args[0], XtNstate, state);
+    XtSetArg(args[0], (String)XtNstate, state);
     XtSetValues(node->widget, args, ONE);
     TreeToggle(node->widget, (XtPointer) node, (XtPointer)(long) state);
 
@@ -422,10 +426,10 @@ _TreeRelabelNode(WNode *node, LabelTypes type, Boolean recurse)
 	else
 	    snprintf(buf, sizeof(buf), "win: 0x%lx", node->window);
 
-	XtSetArg(args[0], XtNlabel, buf);
+	XtSetArg(args[0], (String)XtNlabel, buf);
 	break;
     case ToggleLabel:
-	XtSetArg(args[0], XtNlabel, &label);
+	XtSetArg(args[0], (String)XtNlabel, &label);
 	XtGetValues(node->widget, args, ONE);
 	if (label && !strcmp(label, node->name))
 	    XtSetArg(args[0], XtNlabel, node->class);
@@ -461,7 +465,7 @@ _TreeActivateNode(WNode* node, SelectTypes type)
     Arg args[1];
     Cardinal i;
 
-    XtSetArg(args[0], XtNstate, TRUE);
+    XtSetArg(args[0], (String)XtNstate, TRUE);
 
     if ((type == SelectParent) || (type == SelectAncestors)) {
 	node = node->parent;

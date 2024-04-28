@@ -23,6 +23,10 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/Intrinsic.h>
@@ -37,10 +41,16 @@ in this Software without prior written authorization from The Open Group.
  * Private data.
  */
 
+//struct ActionValues {
+//    String name;
+//    int type;
+//};
+
 struct ActionValues {
-    String name;
-    int type;
+	const char * name;
+        int  type;
 };
+
 
 static struct ActionValues select_values[] = {
     { "widget", (int) SelectWidget },
@@ -72,7 +82,7 @@ static void PopdownFileDialogAction ( Widget w, XEvent *event,
 static void ActionQuit ( Widget w, XEvent *event,
 			 String *params, Cardinal *num_params );
 static WNode * FindTreeNodeFromWidget ( Widget w );
-static Boolean CheckAndFindEntry ( String action_name,
+static Boolean CheckAndFindEntry (  const char *action_name,
 				   String * params, Cardinal num_params,
 				   struct ActionValues * table,
 				   Cardinal num_table, int * type );
@@ -241,12 +251,12 @@ ActionQuit(Widget w, XEvent *event, String *params, Cardinal *num_params)
  */
 
 static XtActionsRec actions[] = {
-  {"EnableGetVal",      EnableGetVal},
-  {"Select",            SelectAction},
-  {"SVActiveEntry",     ModifySVEntry},
-  {"Relabel",      	RelabelAction},
-  {"PopdownFileDialog", PopdownFileDialogAction},
-  {"quit",              ActionQuit}
+  {(String)"EnableGetVal",      EnableGetVal},
+  {(String)"Select",            SelectAction},
+  {(String)"SVActiveEntry",     ModifySVEntry},
+  {(String)"Relabel",      	RelabelAction},
+  {(String)"PopdownFileDialog", PopdownFileDialogAction},
+  {(String)"quit",              ActionQuit}
 };
 
 void
@@ -275,7 +285,7 @@ SetApplicationActions(XtAppContext app_con)
  */
 
 static Boolean
-CheckAndFindEntry(String action_name, String *params, Cardinal num_params,
+CheckAndFindEntry(const char *action_name, String *params, Cardinal num_params,
 		  struct ActionValues *table, Cardinal num_table, int *type)
 {
     char buf[BUFSIZ];

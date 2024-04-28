@@ -27,6 +27,10 @@ in this Software without prior written authorization from The Open Group.
  * Code for creating all widgets used by EditRes.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>	/* Get standard string definitions. */
@@ -56,8 +60,8 @@ in this Software without prior written authorization from The Open Group.
  */
 
 static Widget CreateTopArea ( Widget parent );
-static void CreateCommandMenu ( Widget parent, String toolkit );
-static void CreateTreeCommandMenu ( Widget parent, String toolkit );
+static void CreateCommandMenu ( Widget parent, const char *toolkit );
+static void CreateTreeCommandMenu ( Widget parent, const char *toolkit );
 static void CreateResourceNameForm ( Widget parent, WNode * node );
 static void SetToggleGroupLeaders ( WNode * node );
 static void MakeBoxLookNice ( Widget dot, Widget star, Widget any,
@@ -87,7 +91,7 @@ static Widget hPane = NULL;
 #define Offset(index) sizeof(String) * index
 
 #define res_entry(index, name, class) \
-  {name, class, XtRString, sizeof(String), \
+  {(String)name, (String)class, XtRString, sizeof(String), \
      Offset(index), XtRString, (XtPointer)NULL}
 
 static XtResource resources[] = {
@@ -134,7 +138,7 @@ static XtResource resources[] = {
 #undef Offset
 
 void
-RebuildMenusAndLabel(String toolkit)
+RebuildMenusAndLabel(const char *toolkit)
 {
   if (strcmp(global_effective_toolkit, toolkit)) {
     CreateCommandMenu(box, toolkit);
@@ -255,7 +259,7 @@ static Boolean CM_set_insensitive = True;
 Widget CM_entries[NUM_CM_ENTRIES];
 
 static void
-CreateCommandMenu(Widget parent, String toolkit)
+CreateCommandMenu(Widget parent, const char *toolkit)
 {
     Arg args[1];
 
@@ -265,7 +269,7 @@ CreateCommandMenu(Widget parent, String toolkit)
 				      parent, NULL, ZERO);
 
     /* set the menu name to the toolkit name */
-    XtSetArg(args[0], XtNmenuName, toolkit);
+    XtSetArg(args[0], (String)XtNmenuName, toolkit);
     XtSetValues(cbutton, args, ONE);
 
     cmenu = XtCreatePopupShell(toolkit, simpleMenuWidgetClass, cbutton,
@@ -334,7 +338,7 @@ static Boolean TM_set_insensitive = True;
 Widget TM_entries[NUM_TM_ENTRIES];
 
 static void
-CreateTreeCommandMenu(Widget parent, String toolkit)
+CreateTreeCommandMenu(Widget parent, const char *toolkit)
 {
     int i, number;
     static struct tree_ops_menu tree_menu[] = {
@@ -362,7 +366,7 @@ CreateTreeCommandMenu(Widget parent, String toolkit)
       tbutton = XtCreateManagedWidget("treeCommands", menuButtonWidgetClass,
 				      parent, NULL, ZERO);
 
-    XtSetArg(args[0], XtNmenuName, toolkit);
+    XtSetArg(args[0], (String)XtNmenuName, toolkit);
     XtSetValues(tbutton, args, ONE);
 
     tmenu = XtCreatePopupShell(toolkit, simpleMenuWidgetClass, tbutton,
@@ -417,10 +421,10 @@ PrepareToLayoutTree(Widget tree)
 {
     Arg args[1];
 
-    XtSetArg(args[0], XtNbackgroundPixmap, &old_pixmap);
+    XtSetArg(args[0], (String)XtNbackgroundPixmap, &old_pixmap);
     XtGetValues(XtParent(tree), args, ONE);
 
-    XtSetArg(args[0], XtNbackgroundPixmap, None);
+    XtSetArg(args[0], (String)XtNbackgroundPixmap, None);
     XtSetValues(XtParent(tree), args, ONE);
 
     XtUnmapWidget(tree);
@@ -442,7 +446,7 @@ LayoutTree(Widget tree)
     XawTreeForceLayout(tree);
     XtMapWidget(tree);
 
-    XtSetArg(args[0], XtNbackgroundPixmap, old_pixmap);
+    XtSetArg(args[0], (String)XtNbackgroundPixmap, old_pixmap);
     XtSetValues(XtParent(tree), args, ONE);
 }
 
@@ -466,7 +470,7 @@ LayoutTree(Widget tree)
 void
 CreateResourceBoxWidgets(WNode *node, char **names, char **cons_names)
 {
-    Widget pane, box, button, viewport, pane_child;
+    Widget rbox, pane, button, viewport, pane_child;
     ResourceBoxInfo * res_box;
     Dimension max_width = WidthOfScreen(XtScreen(node->widget)) - 20;
     Dimension max_height = HeightOfScreen(XtScreen(node->widget)) - 40;
@@ -501,28 +505,28 @@ CreateResourceBoxWidgets(WNode *node, char **names, char **cons_names)
 
     XtSetKeyboardFocus(pane, res_box->value_wid); /* send keyboard to value. */
 
-    box = XtCreateManagedWidget("commandBox", boxWidgetClass,
+    rbox = XtCreateManagedWidget("commandBox", boxWidgetClass,
 				 pane, NULL, ZERO);
 
     button = XtCreateManagedWidget("setFile", commandWidgetClass,
-				   box, NULL, ZERO);
+				   rbox, NULL, ZERO);
     XtAddCallback(button, XtNcallback, SetFile, NULL);
 
     button = XtCreateManagedWidget("save", commandWidgetClass,
-				   box, NULL, ZERO);
+				   rbox, NULL, ZERO);
     XtAddCallback(button, XtNcallback, SaveResource,(XtPointer) res_box);
 
     button = XtCreateManagedWidget("apply", commandWidgetClass,
-				   box, NULL, ZERO);
+				   rbox, NULL, ZERO);
     XtAddCallback(button, XtNcallback, ApplyResource,(XtPointer) node);
 
     button = XtCreateManagedWidget("saveAndApply", commandWidgetClass,
-				   box, NULL, ZERO);
+				   rbox, NULL, ZERO);
     XtAddCallback(button, XtNcallback, SaveResource,(XtPointer) res_box);
     XtAddCallback(button, XtNcallback, ApplyResource,(XtPointer) node);
 
     button = XtCreateManagedWidget("cancel", commandWidgetClass,
-				   box, NULL, ZERO);
+				   rbox, NULL, ZERO);
     XtAddCallback(button,XtNcallback,PopdownResBox,(XtPointer)res_box->shell);
 
     SetToggleGroupLeaders(node);
@@ -563,18 +567,18 @@ CreateResourceNameForm(Widget parent, WNode *node)
     while (TRUE) {
 
 	num_args = 0;
-	XtSetArg(args[num_args], XtNfromHoriz, name); num_args++;
-	XtSetArg(args[num_args], XtNradioData, "."); num_args++;
+	XtSetArg(args[num_args], (String)XtNfromHoriz, name); num_args++;
+	XtSetArg(args[num_args], (String)XtNradioData, "."); num_args++;
 	dot = XtCreateManagedWidget("dot", toggleWidgetClass,
 				    form, args, num_args);
 	XtAddCallback(dot, XtNcallback,
 		      ActivateWidgetsAndSetResourceString,(XtPointer) node);
 
 	num_args = 0;
-	XtSetArg(args[num_args], XtNfromHoriz, class); num_args++;
-	XtSetArg(args[num_args], XtNfromVert, dot); num_args++;
-	XtSetArg(args[num_args], XtNradioGroup, dot); num_args++;
-	XtSetArg(args[num_args], XtNradioData, "*"); num_args++;
+	XtSetArg(args[num_args], (String)XtNfromHoriz, class); num_args++;
+	XtSetArg(args[num_args], (String)XtNfromVert, dot); num_args++;
+	XtSetArg(args[num_args], (String)XtNradioGroup, dot); num_args++;
+	XtSetArg(args[num_args], (String)XtNradioData, "*"); num_args++;
 	star = XtCreateManagedWidget("star", toggleWidgetClass,
 				     form, args, num_args);
 	XtAddCallback(star,XtNcallback,
@@ -618,40 +622,40 @@ CreateResourceNameForm(Widget parent, WNode *node)
 	old_info = new_info;
 
 	num_args = 0;
-	XtSetArg(args[num_args], XtNfromHoriz, dot); num_args++;
-	XtSetArg(args[num_args], XtNlabel, names[i]); num_args++;
-	XtSetArg(args[num_args], XtNradioData, names[i]); num_args++;
+	XtSetArg(args[num_args], (String)XtNfromHoriz, dot); num_args++;
+	XtSetArg(args[num_args], (String)XtNlabel, names[i]); num_args++;
+	XtSetArg(args[num_args], (String)XtNradioData, names[i]); num_args++;
 	name = XtCreateManagedWidget("name", toggleWidgetClass,
 				     form, args, num_args);
 	XtAddCallback(name,XtNcallback,
 		      ActivateWidgetsAndSetResourceString,(XtPointer) node);
 
 	num_args = 0;
-	XtSetArg(args[num_args], XtNfromHoriz, star); num_args++;
-	XtSetArg(args[num_args], XtNfromVert, name); num_args++;
-	XtSetArg(args[num_args], XtNlabel, classes[i]); num_args++;
-	XtSetArg(args[num_args], XtNradioGroup, name); num_args++;
-	XtSetArg(args[num_args], XtNradioData, classes[i]); num_args++;
+	XtSetArg(args[num_args], (String)XtNfromHoriz, star); num_args++;
+	XtSetArg(args[num_args], (String)XtNfromVert, name); num_args++;
+	XtSetArg(args[num_args], (String)XtNlabel, classes[i]); num_args++;
+	XtSetArg(args[num_args], (String)XtNradioGroup, name); num_args++;
+	XtSetArg(args[num_args], (String)XtNradioData, classes[i]); num_args++;
 	class = XtCreateManagedWidget("class", toggleWidgetClass,
 				      form,args,num_args);
 	XtAddCallback(class, XtNcallback,
 		      ActivateWidgetsAndSetResourceString,(XtPointer) node);
 
 	num_args = 0;
-	XtSetArg(args[num_args], XtNfromHoriz, star); num_args++;
-	XtSetArg(args[num_args], XtNfromVert, class); num_args++;
-	XtSetArg(args[num_args], XtNradioData, "?"); num_args++;
-	XtSetArg(args[num_args], XtNradioGroup, name); num_args++;
+	XtSetArg(args[num_args], (String)XtNfromHoriz, star); num_args++;
+	XtSetArg(args[num_args], (String)XtNfromVert, class); num_args++;
+	XtSetArg(args[num_args], (String)XtNradioData, "?"); num_args++;
+	XtSetArg(args[num_args], (String)XtNradioGroup, name); num_args++;
 	single = XtCreateManagedWidget("single", toggleWidgetClass,
 				       form, args, num_args);
 	XtAddCallback(single,XtNcallback,
 		      ActivateWidgetsAndSetResourceString,(XtPointer) node);
 
 	num_args = 0;
-	XtSetArg(args[num_args], XtNfromHoriz, any); num_args++;
-	XtSetArg(args[num_args], XtNfromVert, single); num_args++;
-	XtSetArg(args[num_args], XtNradioGroup, name); num_args++;
-	XtSetArg(args[num_args], XtNradioData, ANY_RADIO_DATA); num_args++;
+	XtSetArg(args[num_args], (String)XtNfromHoriz, any); num_args++;
+	XtSetArg(args[num_args], (String)XtNfromVert, single); num_args++;
+	XtSetArg(args[num_args], (String)XtNradioGroup, name); num_args++;
+	XtSetArg(args[num_args], (String)XtNradioData, ANY_RADIO_DATA); num_args++;
 	any = XtCreateManagedWidget("any", toggleWidgetClass,
 				    form, args, num_args);
 
@@ -682,7 +686,7 @@ SetToggleGroupLeaders(WNode *node)
     NameInfo *name;
     ResourceBoxInfo * res_box = node->resources->res_box;
     static Arg args[] = {
-	{XtNstate, (XtArgVal) TRUE}
+      {(String)XtNstate, (XtArgVal) TRUE}
     };
 
     for (name  = res_box->name_info; name != NULL; name = name->next) {
@@ -723,18 +727,18 @@ MakeBoxLookNice(Widget dot, Widget star, Widget any, Widget single,
      */
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNhorizDistance, &(h_dist[0])); num_args++;
-    XtSetArg(args[num_args], XtNwidth, &width_1); num_args++;
+    XtSetArg(args[num_args], (String)XtNhorizDistance, &(h_dist[0])); num_args++;
+    XtSetArg(args[num_args], (String)XtNwidth, &width_1); num_args++;
     XtGetValues(dot, args, num_args);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNhorizDistance, &(h_dist[1])); num_args++;
-    XtSetArg(args[num_args], XtNwidth, &width_2); num_args++;
+    XtSetArg(args[num_args], (String)XtNhorizDistance, &(h_dist[1])); num_args++;
+    XtSetArg(args[num_args], (String)XtNwidth, &width_2); num_args++;
     XtGetValues(star, args, num_args);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNhorizDistance, &(h_dist[2])); num_args++;
-    XtSetArg(args[num_args], XtNwidth, &any_width); num_args++;
+    XtSetArg(args[num_args], (String)XtNhorizDistance, &(h_dist[2])); num_args++;
+    XtSetArg(args[num_args], (String)XtNwidth, &any_width); num_args++;
     XtGetValues(any, args, num_args);
 
     dot_star_width = (width_1 > width_2) ? width_1 : width_2;
@@ -743,13 +747,13 @@ MakeBoxLookNice(Widget dot, Widget star, Widget any, Widget single,
     }
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNhorizDistance, h_dist[0]); num_args++;
+    XtSetArg(args[num_args], (String)XtNhorizDistance, h_dist[0]); num_args++;
     XtSetValues(any, args, num_args);
 
     /*
      * Add a new arg, and continue...
      */
-    XtSetArg(args[num_args], XtNwidth, dot_star_width); num_args++;
+    XtSetArg(args[num_args], (String)XtNwidth, dot_star_width); num_args++;
     XtSetValues(star, args, num_args);
     XtSetValues(dot, args, num_args);
 
@@ -761,21 +765,21 @@ MakeBoxLookNice(Widget dot, Widget star, Widget any, Widget single,
      */
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNwidth, &width_1); num_args++;
-    XtSetArg(args[num_args], XtNhorizDistance, &(h_dist[0])); num_args++;
+    XtSetArg(args[num_args], (String)XtNwidth, &width_1); num_args++;
+    XtSetArg(args[num_args], (String)XtNhorizDistance, &(h_dist[0])); num_args++;
     XtGetValues(name, args, num_args);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNwidth, &width_2); num_args++;
-    XtSetArg(args[num_args], XtNhorizDistance, &(h_dist[1])); num_args++;
+    XtSetArg(args[num_args], (String)XtNwidth, &width_2); num_args++;
+    XtSetArg(args[num_args], (String)XtNhorizDistance, &(h_dist[1])); num_args++;
     XtGetValues(class, args, num_args);
 
     if (width_2 > width_1) width_1 = width_2;
     if (h_dist[1] > h_dist[0]) h_dist[0] = h_dist[1];
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNwidth, &width_2); num_args++;
-    XtSetArg(args[num_args], XtNhorizDistance, &(h_dist[1])); num_args++;
+    XtSetArg(args[num_args], (String)XtNwidth, &width_2); num_args++;
+    XtSetArg(args[num_args], (String)XtNhorizDistance, &(h_dist[1])); num_args++;
     XtGetValues(single, args, num_args);
 
     name_class_width = (width_1 > width_2) ? width_1 : width_2;
@@ -787,17 +791,17 @@ MakeBoxLookNice(Widget dot, Widget star, Widget any, Widget single,
     num_args = 0;
     if (endbox < 0) {
 	any_width -= dot_star_width & 1;
-	XtSetArg(args[num_args], XtNhorizDistance,
+	XtSetArg(args[num_args], (String)XtNhorizDistance,
 		 h_dist[2] + (dot_star_width >> 1) + (dot_star_width & 1));
 	++num_args;
     }
 
-    XtSetArg(args[num_args], XtNwidth, any_width); num_args++;
+    XtSetArg(args[num_args], (String)XtNwidth, any_width); num_args++;
     XtSetValues(any, args, num_args);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNwidth, name_class_width); num_args++;
-    XtSetArg(args[num_args], XtNhorizDistance, h_dist[0]); num_args++;
+    XtSetArg(args[num_args], (String)XtNwidth, name_class_width); num_args++;
+    XtSetArg(args[num_args], (String)XtNhorizDistance, h_dist[0]); num_args++;
     XtSetValues(name, args, num_args);
     XtSetValues(class, args, num_args);
     XtSetValues(single, args, num_args);
@@ -832,11 +836,11 @@ CreateLists(Widget parent, WNode *node, char **names, char **cons_names)
      * list.
      */
     if (!names) {
-        XtSetArg(args[num_args], XtNlist, noneList); num_args++;
-        XtSetArg(args[num_args], XtNnumberStrings, 1); num_args++;
-        XtSetArg(args[num_args], XtNsensitive, False); num_args++;
+        XtSetArg(args[num_args], (String)XtNlist, noneList); num_args++;
+        XtSetArg(args[num_args], (String)XtNnumberStrings, 1); num_args++;
+        XtSetArg(args[num_args], (String)XtNsensitive, False); num_args++;
     }
-    else { XtSetArg(args[num_args], XtNlist, names); num_args++; }
+    else { XtSetArg(args[num_args], (String)XtNlist, names); num_args++; }
     viewport = XtCreateManagedWidget("normalViewport", viewportWidgetClass,
 				     parent, NULL, 0);
     res_box->norm_list = XtCreateManagedWidget("namesList", listWidgetClass,
@@ -851,7 +855,7 @@ CreateLists(Widget parent, WNode *node, char **names, char **cons_names)
 				     parent, NULL, ZERO);
 
 	num_args = 0;
-	XtSetArg(args[num_args], XtNlist, cons_names); num_args++;
+	XtSetArg(args[num_args], (String)XtNlist, cons_names); num_args++;
 	viewport = XtCreateManagedWidget("constraintViewport", viewportWidgetClass,
 					 parent, NULL, 0);
 	res_box->cons_list = XtCreateManagedWidget("constraintList",
@@ -885,19 +889,19 @@ CreateValueWidget(Widget parent, WNode *node)
 				 parent, NULL, ZERO);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNleft, XawChainLeft); num_args++;
-    XtSetArg(args[num_args], XtNright, XawChainLeft); num_args++;
-    XtSetArg(args[num_args], XtNtop, XawChainTop); num_args++;
-    XtSetArg(args[num_args], XtNbottom, XawChainBottom); num_args++;
+    XtSetArg(args[num_args], (String)XtNleft, XawChainLeft); num_args++;
+    XtSetArg(args[num_args], (String)XtNright, XawChainLeft); num_args++;
+    XtSetArg(args[num_args], (String)XtNtop, XawChainTop); num_args++;
+    XtSetArg(args[num_args], (String)XtNbottom, XawChainBottom); num_args++;
     label = XtCreateManagedWidget("valueLabel", labelWidgetClass,
 				 form, args, num_args);
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNfromHoriz, label); num_args++;
-    XtSetArg(args[num_args], XtNleft, XawChainLeft); num_args++;
-    XtSetArg(args[num_args], XtNright, XawChainRight); num_args++;
-    XtSetArg(args[num_args], XtNtop, XawChainTop); num_args++;
-    XtSetArg(args[num_args], XtNbottom, XawChainBottom); num_args++;
+    XtSetArg(args[num_args], (String)XtNfromHoriz, label); num_args++;
+    XtSetArg(args[num_args], (String)XtNleft, XawChainLeft); num_args++;
+    XtSetArg(args[num_args], (String)XtNright, XawChainRight); num_args++;
+    XtSetArg(args[num_args], (String)XtNtop, XawChainTop); num_args++;
+    XtSetArg(args[num_args], (String)XtNbottom, XawChainBottom); num_args++;
     res_box->value_wid = XtCreateManagedWidget("valueText",
 					       asciiTextWidgetClass,
 					       form, args, num_args);
@@ -925,9 +929,9 @@ PopupOnNode(WNode *node, Widget shell)
     Dimension width, height, bw;
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNwidth, &width); num_args++;
-    XtSetArg(args[num_args], XtNheight, &height); num_args++;
-    XtSetArg(args[num_args], XtNborderWidth, &bw); num_args++;
+    XtSetArg(args[num_args], (String)XtNwidth, &width); num_args++;
+    XtSetArg(args[num_args], (String)XtNheight, &height); num_args++;
+    XtSetArg(args[num_args], (String)XtNborderWidth, &bw); num_args++;
     XtGetValues(node->widget, args, num_args);
     XtTranslateCoords(node->widget,
 		      (Position) (width/2 + bw), (Position) (height/2 + bw),
@@ -958,8 +962,8 @@ PopupOnNode(WNode *node, Widget shell)
 	y = 0;
 
     num_args = 0;
-    XtSetArg(args[num_args], XtNx, x); num_args++;
-    XtSetArg(args[num_args], XtNy, y); num_args++;
+    XtSetArg(args[num_args], (String)XtNx, x); num_args++;
+    XtSetArg(args[num_args], (String)XtNy, y); num_args++;
     XtSetValues(shell, args, num_args);
 
     XtPopup(shell, XtGrabNone);

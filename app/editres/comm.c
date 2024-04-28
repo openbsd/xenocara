@@ -32,6 +32,10 @@ from The Open Group.
  * being edited.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>	/* Get standard string definitions. */
 #include <X11/Xatom.h>

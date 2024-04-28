@@ -315,7 +315,7 @@ typedef union _Event {
  * Global variables.
  */
 extern int global_effective_protocol_version;
-extern String global_effective_toolkit;
+extern const char *global_effective_toolkit;
 extern int global_error_code;
 extern unsigned long global_serial_num;
 extern int (*global_old_error_handler)(Display *, XErrorEvent *);
@@ -405,7 +405,7 @@ extern char * PrintSetValuesError ( Event * event );
 extern char * ProtocolFailure ( ProtocolStream * stream );
 extern XrmQuarkList Quarkify ( char ** list, const char * ptr );
 extern void Quit ( Widget w, XtPointer client_data, XtPointer call_data ) _X_NORETURN;
-extern void RebuildMenusAndLabel ( String toolkit );
+extern void RebuildMenusAndLabel ( const char * toolkit );
 extern void ResourceListCallback ( Widget list, XtPointer node_ptr, XtPointer junk );
 extern void SaveResource ( Widget w, XtPointer res_box_ptr, XtPointer junk );
 extern void SendTree ( Widget w, XtPointer value, XtPointer call_data );
@@ -414,7 +414,7 @@ extern void SetApplicationActions ( XtAppContext app_con );
 extern void SetCommand ( Widget w, ResCommand command, String msg );
 extern void SetEntriesSensitive ( Widget *entries, int num, Boolean sensitive );
 extern void SetFile ( Widget w, XtPointer junk, XtPointer garbage );
-extern void SetMessage ( Widget w, String str );
+extern void SetMessage ( Widget w, const char * str );
 extern void SetResourceString ( Widget w, XtPointer node_ptr, XtPointer junk );
 extern void TreeRelabel ( Widget w, XtPointer client_data, XtPointer call_data );
 extern void TreeSelect ( Widget w, XtPointer client_data, XtPointer call_data );
@@ -423,7 +423,7 @@ extern void _DumpTreeToFile ( Widget w, XtPointer tree_ptr, XtPointer filename )
 extern void _FindWidget ( Widget w );
 extern void _FlashActiveWidgets ( TreeInfo * tree_info );
 extern void _PopdownFileDialog ( Widget w, XtPointer client_data, XtPointer junk );
-extern void _PopupFileDialog ( Widget w, String str, String default_value, XtCallbackProc func, XtPointer data );
+extern void _PopupFileDialog ( Widget w, const char *str, const char *default_value, XtCallbackProc func, XtPointer data );
 extern void _TreeActivateNode ( WNode * node, SelectTypes type );
 extern void _TreeRelabel ( TreeInfo * tree_info, LabelTypes type );
 extern void _TreeRelabelNode ( WNode * node, LabelTypes type, Boolean recurse );

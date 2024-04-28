@@ -23,6 +23,10 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/Intrinsic.h>
@@ -45,7 +49,7 @@ String res_labels[NUM_RES_LABELS];
 int global_effective_protocol_version = CURRENT_PROTOCOL_VERSION;
 
 /* toolkit type of client whose "resources" we are currently editing */
-String global_effective_toolkit = "xt";
+const char *global_effective_toolkit = "xt";
 
 int global_error_code;
 unsigned long global_serial_num;
@@ -61,7 +65,7 @@ Widget global_toplevel;
 AppResources global_resources;
 
 
-static void Syntax ( XtAppContext app_con, char *call ) _X_NORETURN;
+static void Syntax (XtAppContext, const char *, int) _X_NORETURN;
 
 static String fallback_resources[] = {
     NULL,
@@ -70,15 +74,15 @@ static String fallback_resources[] = {
 #define Offset(field) (XtOffsetOf(AppResources, field))
 
 static XtResource editres_resources[] = {
-  {"debug", "Debug", XtRBoolean, sizeof(Boolean),
+  {(String)"debug", (String)"Debug", XtRBoolean, sizeof(Boolean),
      Offset(debug), XtRImmediate, (XtPointer) FALSE},
-  {"numFlashes", "NumFlashes", XtRInt, sizeof(int),
+  {(String)"numFlashes", (String)"NumFlashes", XtRInt, sizeof(int),
      Offset(num_flashes), XtRImmediate, (XtPointer) NUM_FLASHES},
-  {"flashTime", "FlashTime", XtRInt, sizeof(int),
+  {(String)"flashTime", (String)"FlashTime", XtRInt, sizeof(int),
      Offset(flash_time), XtRImmediate, (XtPointer) FLASH_TIME},
-  {"flashColor", XtCForeground, XtRPixel, sizeof(Pixel),
+  {(String)"flashColor", XtCForeground, XtRPixel, sizeof(Pixel),
      Offset(flash_color), XtRImmediate, (XtPointer) XtDefaultForeground},
-  {"saveResourceFile", "SaveResourcesFile", XtRString, sizeof(String),
+  {(String)"saveResourceFile", (String)"SaveResourcesFile", XtRString, sizeof(String),
      Offset(save_resources_file), XtRString, (XtPointer) ""},
 };
 
@@ -89,12 +93,34 @@ main(int argc, char **argv)
 {
     XtAppContext app_con;
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    Syntax(NULL, argv[0], 0);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     global_toplevel = XtAppInitialize(&app_con, "Editres", NULL, ZERO,
 			       &argc, argv, fallback_resources,
 			       NULL, ZERO);
 
-    if (argc != 1)
-	Syntax(app_con, argv[0]);
+    if (argc != 1) {
+	fputs("Unknown argument(s):", stderr);
+	for (int n = 1; n < argc; n++) {
+	    fprintf(stderr, " %s", argv[n]);
+	}
+	fputs("\n\n", stderr);
+	Syntax(app_con, argv[0], 1);
+    }
 
     SetApplicationActions(app_con);
     XtGetApplicationResources(global_toplevel, (XtPointer) &global_resources,
@@ -136,9 +162,10 @@ main(int argc, char **argv)
  */
 
 static void
-Syntax(XtAppContext app_con, char *call)
+Syntax(XtAppContext app_con, const char *call, int exit_val)
 {
-    XtDestroyApplicationContext(app_con);
-    fprintf(stderr, "Usage: %s\n", call);
-    exit(1);
+    if (app_con != NULL)
+        XtDestroyApplicationContext(app_con);
+    fprintf(stderr, "Usage: %s [ toolkitoptions ] [-help] [-version]\n", call);
+    exit(exit_val);
 }

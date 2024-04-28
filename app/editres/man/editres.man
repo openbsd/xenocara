@@ -28,12 +28,21 @@
 .SH NAME
 editres \- a dynamic resource editor for X Toolkit applications
 .SH SYNTAX
-\fBeditres\fP [ \fI\-toolkitoption\fP .\|.\|. ]
+\fBeditres\fP [ \fI\-toolkitoption\fP .\|.\|. ] [\fB\-help\fP] [\fB\-version\fP]
 .SH OPTIONS
 .I Editres
 accepts all of the standard X Toolkit command line
 options (see \fIX(__miscmansuffix__)\fP).  The order of the command line options is
 not important.
+.PP
+.I Editres
+also accepts the following additional options:
+.TP 12
+.B \-help
+Prints a usage message and exits.
+.TP 12
+.B \-version
+Prints version info and exits.
 .SH DESCRIPTION
 Editres is a tool that allows users and application developers to view
 the full widget hierarchy of any X Toolkit application that speaks the

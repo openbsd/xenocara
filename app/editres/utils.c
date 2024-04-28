@@ -23,6 +23,10 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <X11/Intrinsic.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
@@ -56,7 +60,7 @@ static void FreeResources ( WidgetResources * resources );
  */
 
 void
-SetMessage(Widget w, String str)
+SetMessage(Widget w, const char *str)
 {
     Arg args[1];
 
@@ -308,7 +312,7 @@ typedef struct _FileDialogInfo {
 } FileDialogInfo;
 
 void
-_PopupFileDialog(Widget w, String str, String default_value,
+_PopupFileDialog(Widget w, const char *str, const char *default_value,
 		 XtCallbackProc func, XtPointer data)
 {
     FileDialogInfo * file_info;

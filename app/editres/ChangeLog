@@ -1,3 +1,152 @@
+commit 6013f24444d576ad263004c45edd52b4e8cec632
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 09:37:16 2024 -0800
+
+    editres 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0bc9be0ef9545b8f34a35a766c165bd7fb073f3
+Author: Peter Radisson <Radisson97@web.de>
+Date:   Wed Sep 6 14:46:40 2023 +0200
+
+    fix const error
+    
+    missing const causes 'conflicting type' error at initialisation
+    and aborted compilation.
+
+commit 6cb5bf04ccdfadef8f7acd81b41b15f0cf053c5f
+Author: Walter Harms <xt4ever@web.de>
+Date:   Fri Apr 7 14:48:42 2023 +0200
+
+    Fix shadowing box
+    
+    widgets.c: In function ‘CreateResourceBoxWidgets’:
+    widgets.c:473:18: warning: declaration of ‘box’ shadows a global declaration [-Wshadow]
+         Widget pane, box, button, viewport, pane_child;
+    
+    rename box to rbox
+
+commit c10de6efe50fcd7be57e79274889d11e6845f82e
+Author: Walter Harms <xt4ever@web.de>
+Date:   Fri Apr 7 13:09:26 2023 +0200
+
+    fix initialization discards const
+    
+    FIX warnings like:
+    
+        initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+       {"debug", "Debug", XtRBoolean, sizeof(Boolean),
+
+commit 316df270e14ce13a3a631cdfd383a5a367fe14b0
+Author: Walter Harms <xt4ever@web.de>
+Date:   Fri Apr 7 13:03:39 2023 +0200
+
+    stop const warnings
+    
+    fix  passing argument 1 of ‘RebuildMenusAndLabel’ discards ‘const’ qualifier
+    from pointer target type
+    only user is in comm.c
+
+commit 417f15e05e739e171b36dfa643b6418dc07ab6bc
+Author: Walter Harms <xt4ever@web.de>
+Date:   Fri Apr 7 12:58:05 2023 +0200
+
+    stop const warnings
+    
+        most warnings occur because XtSetArg() needs (String) aka char *
+        and the "string" is const char * these days.
+
+commit ce2c6484fec8055480cfaf99137bc9922d44373a
+Author: Walter Harms <xt4ever@web.de>
+Date:   Fri Apr 7 12:53:11 2023 +0200
+
+    stop const warnings
+    
+       The warning occurs because XtSetArg() needs (String) aka char *
+        and the "string" is const char * these days.
+
+commit d3409224807c5d779162f92465d58120c77b7840
+Author: Walter Harms <xt4ever@web.de>
+Date:   Fri Apr 7 12:44:06 2023 +0200
+
+    stop const warnings
+    
+        The warning occurs because XtSetArg() needs (String) aka char *
+        and the "string" is const char * these days.
+
+commit 07a58318ccd96c644b2748c57b285d5779fed0a8
+Author: Walter Harms <xt4ever@web.de>
+Date:   Fri Apr 7 12:38:09 2023 +0200
+
+    stop const warnings
+    
+    The warning occurs because XtSetArg() needs (String) aka char *
+    and the "string" is const char * these days.
+
+commit ce35acb5b2a0892863fc63a1315a60cbbb7f553f
+Author: Walter Harms <xt4ever@web.de>
+Date:   Fri Apr 7 12:17:22 2023 +0200
+
+    FIX some const warnings
+    
+    make type const char * to avoid warning
+
+commit 16df4dd92868ebc9663aae575df7dc3ce6e73797
+Author: Walter Harms <xt4ever@web.de>
+Date:   Fri Apr 7 11:57:37 2023 +0200
+
+    FIX const warning
+    
+    getting a bunch of warnings make i had to see the import ones.
+    So reduce the warnings by adding a few "const" no problem
+    for internals. For externals function add some casts.
+
+commit e15440c5456c798e2ba5368afcd3b17c752cc44c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 9 11:55:52 2023 -0800
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 85a3ccd43c4601c9d80bea8441ec9711af9bd52d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 18:20:20 2023 -0800
+
+    List which options were unrecognized before printing usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ad1da487b343ffdbeda09563984869cc56ab29a0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 18:19:29 2023 -0800
+
+    Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 80959deec664cd80cd5dbf84af86b52ded4eaee0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 18:09:37 2023 -0800
+
+    Re-enable code to use XKB Bells
+    
+    Enabled by default, use ./configure --without-xkb to disable.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca502149fb2abad58446ebf234aa5e1e40ed4517
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 17:55:31 2023 -0800
+
+    Ensure all *.c files include config.h before any other headers
+    
+    Makes sure that any flags set in config.h that affect system headers
+    are applied equally across all source files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 2f248e96dcde3be96c21142c032f517aa5a06554
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 3 11:30:51 2022 -0700
@@ -758,13 +907,13 @@ Date:   Sun Jul 17 20:11:01 2005 +0000
     fix rules to work with non-GNU make and outside of $srcdir
 
 commit d15169a6a4c05a63b17ae630c9ade3b14a3d7181
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 27 22:30:58 2005 +0000
 
     Use $(foreach ) instead of listing the appdefaults files twice
 
 commit 349b2847900798cacdfe358eb8eb4773106657e8
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 27 21:35:04 2005 +0000
 
     - Fix string test in lib/Xaw/xaw.m4
