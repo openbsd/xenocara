@@ -22,8 +22,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([mkfontscale], [1.2.2],
-        [https://gitlab.freedesktop.org/xorg/app/mkfontscale/issues],
+AC_INIT([mkfontscale], [1.2.3],
+        [https://gitlab.freedesktop.org/xorg/app/mkfontscale/-/issues],
         [mkfontscale])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -38,9 +38,6 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AC_CHECK_LIB(z, gzopen, [],
-	[AC_MSG_ERROR([zlib is required, but was not found.])])
-
 AC_ARG_WITH(bzip2,
 	AS_HELP_STRING([--with-bzip2],
 			[Support bzip2 compressed bitmap fonts]),
@@ -51,11 +48,15 @@ if test "x$with_bzip2" = xyes; then
 	AC_DEFINE(X_BZIP2_FONT_COMPRESSION,1,[Support bzip2 for bitmap fonts])
 fi
 
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
+
 # Checks for system functions / libraries
 AC_CHECK_FUNCS([vasprintf])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(MKFONTSCALE, fontenc freetype2)
+PKG_CHECK_MODULES(ZLIB, zlib)
 PKG_CHECK_MODULES(X11, [xproto >= 7.0.25])
 
 dnl Allow checking code with lint, sparse, etc.

@@ -1,3 +1,163 @@
+commit bcfa27aeef3a9eb720e6b48e3fb8a4c2813fef52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 10:06:37 2024 -0800
+
+    mkfontscale 1.2.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b7ebb9b042974874782f4e662bfc442bc96c5647
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 4 12:24:49 2023 -0700
+
+    Fix -Wimplicit-float-conversion warnings from clang
+    
+    mkfontscale.c:110:32: warning: implicit conversion loses floating-point precision: 'double' to 'float' [-Wimplicit-float-conversion]
+    static float bigEncodingFuzz = 0.02;
+                 ~~~~~~~~~~~~~~~   ^~~~
+    mkfontscale.c:262:52: warning: implicit conversion loses floating-point precision: 'double' to 'float' [-Wimplicit-float-conversion]
+                bigEncodingFuzz = atof(argv[argn + 1]) / 100.0;
+                                ~ ~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3bc4d05ff753c1b8357455a614bc5d11fffcfc0e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 4 12:21:16 2023 -0700
+
+    Resolve some -Wsign-conversion warnings from clang
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 19137ec2f129f91ce3adb46218c86e1bf547e661
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 4 11:28:44 2023 -0700
+
+    Variable scope reductions as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ffd69eb38f153229f5033ef5cc789c0ab3704edd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 4 10:43:35 2023 -0700
+
+    ident.c: clear -Wdeclaration-after-statement warning
+    
+    ident.c: In function ‘getInt32’:
+    ident.c:228:5: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+      228 |     unsigned int u[4] = { c[0], c[1], c[2], c[3] };
+          |     ^~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 568f31aefd6e060779572c1fe593519714f0d50b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 4 10:39:54 2023 -0700
+
+    mkfontscale.c: handle -Wshadow warnings from gcc
+    
+    mkfontscale.c: In function ‘doDirectory’:
+    mkfontscale.c:810:66: warning: declaration of ‘encodingsToDo’ shadows a global declaration [-Wshadow]
+      810 | doDirectory(const char *dirname_given, int numEncodings, ListPtr encodingsToDo)
+          |                                                          ~~~~~~~~^~~~~~~~~~~~~
+    mkfontscale.c:117:16: note: shadowed declaration is here
+      117 | static ListPtr encodingsToDo;
+          |                ^~~~~~~~~~~~~
+    mkfontscale.c: In function ‘readEncodings’:
+    mkfontscale.c:1353:23: warning: declaration of ‘encodings’ shadows a global declaration [-Wshadow]
+     1353 | readEncodings(ListPtr encodings, char *dirname)
+          |               ~~~~~~~~^~~~~~~~~
+    mkfontscale.c:93:21: note: shadowed declaration is here
+       93 | static ConstListPtr encodings, extra_encodings;
+          |                     ^~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa682decde0b4513f5ce6084df590107359158f5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 4 10:10:34 2023 -0700
+
+    doDirectory: add missing check for malloc() returning NULL
+    
+    Resolves gcc analyzer warning:
+    
+    mkfontscale.c: In function ‘doDirectory’:
+    mkfontscale.c:974:17: warning: use of possibly-NULL ‘s’ where non-null expected [CWE-690] [-Wanalyzer-possible-null-argument]
+      974 |                 memcpy(s, xlfd_name, l - 11);
+          |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 05401f3c4e641c1e67d11187dfb943c7ec1708f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 4 10:06:36 2023 -0700
+
+    Convert to X.Org standard code style
+    
+    Mostly via util/modular/x-indent-all.sh, plus some manual cleanup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a631117eb3d816e8b3fdb969017fc5d3c7357ba3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 08:54:46 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 44459a9f083c78c53aa17b266ccd26da3478e7ec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 20 19:16:22 2022 -0800
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9a63cbccd03b643622df89a0fda4e81c2f523c7d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 19 19:11:00 2022 -0800
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    While font files should never be more than 2gb in size,
+    they may be stored on filesystems with large inodes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a992510baba1ae46f0c1a4013f955cc74ecb212e
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sat Dec 3 15:14:25 2022 -0800
+
+    Address s UBSan warning about int left shift overflow
+    
+    ident.c:220:22: runtime error: left shift of 255 by 24 places cannot be represented in type 'int'
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 592c3d2b8f56679b35f2b8b97aeba3f8e3fb3b9e
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun Jun 19 10:43:33 2022 -0700
+
+    configure: Move check for zlib into its own section
+    
+    This allows systems that don't have zlib.pc (eg: darwin) to build
+    by specifying ZLIB_CFLAGS and ZLIB_LIBS in the build environment
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 54b0411f06c4b84ae7efd110c7540edc688a991e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 5 19:04:07 2022 -0700
+
+    configure: Use pkg-config to find zlib
+    
+    Fixes: #6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b7e75ca2ccd8733496e0e891e84dc3856840813d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 3 12:20:15 2022 -0700
