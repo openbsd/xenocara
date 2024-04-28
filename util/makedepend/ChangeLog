@@ -1,3 +1,192 @@
+commit 4d8b529937da8d83691ad4b6d9fea7cb82801598
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 4 15:04:20 2024 -0800
+
+    makedepend 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b34434f7b94862194d14674e702e8a3226181b86
+Author: Petre Rodan <2b4eda@subdimension.ro>
+Date:   Wed Oct 11 19:05:22 2023 +0300
+
+    ifparser.c: divide-by-zero fix
+
+commit 48c4ae4742542f0c4d0c43993871f4c649f39f38
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 13:13:21 2023 -0800
+
+    configure: raise minimum autoconf requirement to 2.70
+    
+    Needed for builds on NetBSD to work correctly, since it depends on
+    AC_USE_SYSTEM_EXTENSIONS defining _OPENBSD_SOURCE to expose the
+    prototype for reallocarray() in the system headers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bfd2bb4f70d2c155c1bd281ce0ea6b106ec0e2fb
+Author: Fabian Vogt <fvogt@suse.de>
+Date:   Tue Jan 31 10:22:52 2023 +0100
+
+    Avoid depending on xproto
+    
+    makedepend is rather early in the distro bootstrap chain, so it shouldn't pull
+    in anything it doesn't really need.
+    
+    xproto is only pulled in for two macros which we can just as easily provide
+    ourselves.
+
+commit 14b042d2061409540c6f645271bf562d15cc14cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 7 15:54:43 2022 -0800
+
+    Make more things static that aren't needed in more than one file
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c46d912071dd8fad6c1ed532cbef26db34a639e9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 7 11:17:32 2022 -0800
+
+    Call strrchr() instead of hand coding a custom version
+    
+    Also correct comments on hand-coded custom strcmp() replacements
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 72a6cb64b0aded790e44d97e71434a4eddb91f15
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 7 10:11:04 2022 -0800
+
+    Cache filename after realpath() processing
+    
+    Avoid having to make an additional system call for every time
+    we compare full path names.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ffe60c0f58ae4b385ad733fad4455efaebdd1342
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 18:45:03 2022 -0800
+
+    Make malloc error checking/reporting more consistent
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 37371f1cdcf351e29bf542e6b2fc269b29a4fba2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 18:24:08 2022 -0800
+
+    cppsetup: use C99 struct initialization
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ce3d4de40fa89b2b209ab19acd763eec83bc70f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 18:17:12 2022 -0800
+
+    Stop casting _parse_data pointers through (char *) and back
+    
+    Eliminates clang warnings:
+    cppsetup.c:41:30: warning: cast from 'char *' to 'struct _parse_data *'
+      increases required alignment from 1 to 8 [-Wcast-align]
+        struct _parse_data *pd = (struct _parse_data *) ip->data;
+                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    cppsetup.c:69:30: warning: cast from 'char *' to 'struct _parse_data *'
+      increases required alignment from 1 to 8 [-Wcast-align]
+        struct _parse_data *pd = (struct _parse_data *) ip->data;
+                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 84f5fee3c769fc907c561110f4828416f921e81a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 18:12:15 2022 -0800
+
+    Handle some implicit conversion warnings from clang
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 40bcc8c3303a858c786f1d6d04ae5bbdec6b04ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 17:42:04 2022 -0800
+
+    Use reallocarray() on systems that provide it
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 47f2e64d865568d4f00cb97e42ad5cfc47e9c161
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 17:27:04 2022 -0800
+
+    quoteColons: Remove redundant initialization of tmp
+    
+    As warned by cppcheck:
+    
+    pr.c:83:9: style: Redundant initialization for 'tmp'. The initialized
+      value is overwritten before it is read. [redundantInitialization]
+        tmp = input;
+            ^
+    pr.c:74:21: note: tmp is initialized
+        const char *tmp = input;
+                        ^
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d212d91dad2fdc3f30b79d90fca763659ac23307
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 17:24:15 2022 -0800
+
+    find_includes: rename variables to avoid shadowing global
+    
+    Clears gcc warning:
+    
+    parse.c: In function ‘find_includes’:
+    parse.c:620:29: warning: declaration of ‘inclistp’ shadows a global declaration [-Wshadow]
+                 struct inclist *inclistp = inclistnext;
+                                 ^~~~~~~~
+    In file included from parse.c:27:0:
+    def.h:171:26: note: shadowed declaration is here
+     extern struct inclist   *inclistp;
+                              ^~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0da7cf06cea7837f78ee53c310453a32356227b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 17:20:49 2022 -0800
+
+    Store predefined -D values in const char fields
+    
+    Clears up 28 -Wdiscarded-qualifiers warnings from gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2bb1bd63e2e766ce281a61cadbffad7a12d5fd18
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 17:06:49 2022 -0800
+
+    Variable scope reduction as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 78139e4cfe37c56bb8e06a2574c7d476d9607af9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 16:46:15 2022 -0800
+
+    Remove register keyword from variable declarations
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2c49a8335a953206ce8603c5522153c59e1f7a0d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 6 16:42:35 2022 -0800
+
+    Reformat code into X.Org standard coding style
+    
+    Make indentation and formatting much more consistent across this project
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f7ad4c3164cf673bc30a2a038beb7cdb45ee3e94
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Dec 12 11:07:08 2022 -0800
@@ -609,7 +798,7 @@ Date:   Fri May 14 21:14:44 2010 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 8522c314da7537169996476fe5ba411f720a09fe
-Author: Martin Pärtel  <lagitus@mbnet.fi>
+Author: Martin Pärtel <lagitus@mbnet.fi>
 Date:   Fri May 14 21:00:15 2010 -0700
 
     Bug 28045 - makedepend fails on directory named like an include file

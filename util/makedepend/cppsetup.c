@@ -36,26 +36,26 @@ struct _parse_data {
 };
 
 static const char *
-my_if_errors (IfParser *ip, const char *cp, const char *expecting)
+my_if_errors(IfParser *ip, const char *cp, const char *expecting)
 {
-    struct _parse_data *pd = (struct _parse_data *) ip->data;
-    int lineno = pd->filep->f_line;
+    struct _parse_data *pd = ip->data;
+    long lineno = pd->filep->f_line;
     const char *filename = pd->filename;
     char prefix[300];
-    int prefixlen;
-    int i;
+    long prefixlen;
+    long i;
 
-    snprintf (prefix, sizeof(prefix), "\"%s\":%d", filename, lineno);
-    prefixlen = strlen(prefix);
-    fprintf (stderr, "%s:  %s", prefix, pd->line);
+    snprintf(prefix, sizeof(prefix), "\"%s\":%ld", filename, lineno);
+    prefixlen = (long) strlen(prefix);
+    fprintf(stderr, "%s:  %s", prefix, pd->line);
     i = cp - pd->line;
-    if (i > 0 && pd->line[i-1] != '\n') {
-	putc ('\n', stderr);
+    if (i > 0 && pd->line[i - 1] != '\n') {
+        putc('\n', stderr);
     }
     for (i += prefixlen + 3; i > 0; i--) {
-	putc (' ', stderr);
+        putc(' ', stderr);
     }
-    fprintf (stderr, "^--- expecting %s\n", expecting);
+    fprintf(stderr, "^--- expecting %s\n", expecting);
     return NULL;
 }
 
@@ -63,75 +63,74 @@ my_if_errors (IfParser *ip, const char *cp, const char *expecting)
 #define MAXNAMELEN 256
 
 static struct symtab **
-lookup_variable (IfParser *ip, const char *var, int len)
+lookup_variable(IfParser *ip, const char *var, int len)
 {
     char tmpbuf[MAXNAMELEN + 1];
-    struct _parse_data *pd = (struct _parse_data *) ip->data;
+    struct _parse_data *pd = ip->data;
 
     if (len > MAXNAMELEN)
-	return NULL;
+        return NULL;
 
-    strncpy (tmpbuf, var, len);
+    strncpy(tmpbuf, var, len);
     tmpbuf[len] = '\0';
-    return isdefined (tmpbuf, pd->inc, NULL);
+    return isdefined(tmpbuf, pd->inc, NULL);
 }
 
 
 static int
-my_eval_defined (IfParser *ip, const char *var, int len)
+my_eval_defined(IfParser *ip, const char *var, int len)
 {
-    if (lookup_variable (ip, var, len))
-	return 1;
+    if (lookup_variable(ip, var, len))
+        return 1;
     else
-	return 0;
+        return 0;
 }
 
 #define isvarfirstletter(ccc) (isalpha(ccc) || (ccc) == '_')
 
 static long
-my_eval_variable (IfParser *ip, const char *var, int len)
+my_eval_variable(IfParser *ip, const char *var, int len)
 {
     long val;
     struct symtab **s;
 
-    s = lookup_variable (ip, var, len);
+    s = lookup_variable(ip, var, len);
     if (!s)
-	return 0;
+        return 0;
     do {
-	var = (*s)->s_value;
-	if (!isvarfirstletter(*var) || !strcmp((*s)->s_name, var))
-	    break;
-	s = lookup_variable (ip, var, strlen(var));
+        var = (*s)->s_value;
+        if (!isvarfirstletter(*var) || !strcmp((*s)->s_name, var))
+            break;
+        s = lookup_variable(ip, var, strlen(var));
     } while (s);
 
     var = ParseIfExpression(ip, var, &val);
-    if (var && *var) debug(4, ("extraneous: '%s'\n", var));
+    if (var && *var)
+        debug(4, ("extraneous: '%s'\n", var));
     return val;
 }
 
 int
-cppsetup(const char *filename,
-	 const char *line,
-	 struct filepointer *filep,
-	 struct inclist *inc)
+cppsetup(const char *filename, const char *line,
+         struct filepointer *filep, struct inclist *inc)
 {
-    IfParser ip;
-    struct _parse_data pd;
+    struct _parse_data pd = {
+        .filep = filep,
+        .inc = inc,
+        .line = line,
+        .filename = filename
+    };
+    IfParser ip = {
+        .funcs.handle_error = my_if_errors,
+        .funcs.eval_defined = my_eval_defined,
+        .funcs.eval_variable = my_eval_variable,
+        .data = &pd
+    };
     long val = 0;
 
-    pd.filep = filep;
-    pd.inc = inc;
-    pd.line = line;
-    pd.filename = filename;
-    ip.funcs.handle_error = my_if_errors;
-    ip.funcs.eval_defined = my_eval_defined;
-    ip.funcs.eval_variable = my_eval_variable;
-    ip.data = (char *) &pd;
-
-    (void) ParseIfExpression (&ip, line, &val);
+    (void) ParseIfExpression(&ip, line, &val);
     if (val)
-	return IF;
+        return IF;
     else
-	return IFFALSE;
+        return IFFALSE;
 }
-

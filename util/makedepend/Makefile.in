@@ -232,8 +232,6 @@ STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
-X_CFLAGS = @X_CFLAGS@
-X_LIBS = @X_LIBS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -295,8 +293,7 @@ makedepend_SOURCES = include.c \
                      def.h \
                      imakemdep.h
 
-AM_CPPFLAGS = -DOBJSUFFIX=\".${OBJEXT}\" -DINCLUDEDIR=\"/usr/include\" \
-	$(X_CFLAGS)
+AM_CPPFLAGS = -DOBJSUFFIX=\".${OBJEXT}\" -DINCLUDEDIR=\"/usr/include\"
 AM_CFLAGS = $(CWARNFLAGS)
 EXTRA_DIST = autogen.sh makedepend.man README.md ChangeLog \
 	tests/28045/makedep.sh tests/28045/foo.cpp tests/1/makedep.sh \
