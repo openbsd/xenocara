@@ -24,7 +24,6 @@
  * Author: Thomas Hellström, 2004.
  */
 
-
 #ifndef _VLDXVMC_H
 #define _VLDXVMC_H
 
@@ -93,21 +92,20 @@
 #define XVMC_P_PICTURE 2
 #define XVMC_B_PICTURE 3
 
-typedef struct _XvMCMpegControl{
+typedef struct _XvMCMpegControl {
     unsigned
-        BVMV_range,        /* Backward vertical motion vector range */
-	BHMV_range,        /* Backward horizontal motion vector range */
-	FVMV_range,        /* Forward vertical motion vector range */
-	FHMV_range,        /* Forward horizontal motion vector range */
-	picture_structure, /* XVMC_TOP_FIELD, XVMC_BOTTOM_FIELD,
-			    *  XVMC_FRAME_PICTURE
-			    */
-	intra_dc_precision, /* 0x00 - 0x03 corresponds to 8 to 11 bits prec. */
-	picture_coding_type,/* XVMC_X_PICTURE */
-	mpeg_coding,        /* XVMC_MPEG_2 */
-	flags;              /* See above */
-}XvMCMpegControl;
-
+     BVMV_range,                /* Backward vertical motion vector range */
+     BHMV_range,                /* Backward horizontal motion vector range */
+     FVMV_range,                /* Forward vertical motion vector range */
+     FHMV_range,                /* Forward horizontal motion vector range */
+     picture_structure,         /* XVMC_TOP_FIELD, XVMC_BOTTOM_FIELD,
+                                 *  XVMC_FRAME_PICTURE
+                                 */
+     intra_dc_precision,        /* 0x00 - 0x03 corresponds to 8 to 11 bits prec. */
+     picture_coding_type,       /* XVMC_X_PICTURE */
+     mpeg_coding,               /* XVMC_MPEG_2 */
+     flags;                     /* See above */
+} XvMCMpegControl;
 
 /*
  * The following function is called BEFORE starting sending slices to the
@@ -117,12 +115,11 @@ typedef struct _XvMCMpegControl{
  */
 
 extern Status XvMCBeginSurface(Display *display,
-			       XvMCContext *context,
-			       XvMCSurface *target_surface,
-			       XvMCSurface *past_surface,
-			       XvMCSurface *future_surface,
-			       const XvMCMpegControl *control);
-
+                               XvMCContext *context,
+                               XvMCSurface *target_surface,
+                               XvMCSurface *past_surface,
+                               XvMCSurface *future_surface,
+                               const XvMCMpegControl *control);
 
 /*
  * The quantizer matrix structure. This should be filled in by the user and
@@ -150,16 +147,15 @@ typedef struct _XvMCQMatrix {
  */
 
 extern Status XvMCLoadQMatrix(Display *display, XvMCContext *context,
-			      const XvMCQMatrix *qmx);
-
+                              const XvMCQMatrix *qmx);
 
 /*
  * Put a slice to the decoder. The hardware will start processing it
  * immediately.
  */
 
-extern Status XvMCPutSlice(Display *display,XvMCContext *context,
-			   char *slice, int nBytes);
+extern Status XvMCPutSlice(Display *display, XvMCContext *context,
+                           char *slice, int nBytes);
 /*
  * Put a slice without the slice start code to the decoder.
  * The hardware will start processing it
@@ -168,7 +164,7 @@ extern Status XvMCPutSlice(Display *display,XvMCContext *context,
  * XvMCPutSlice2(display,context,slice+4,nBytes-4,slice[3]);
  */
 
-extern Status XvMCPutSlice2(Display *display,XvMCContext *context,
-			   char *slice, int nBytes, int sliceCode);
+extern Status XvMCPutSlice2(Display *display, XvMCContext *context,
+                            char *slice, int nBytes, int sliceCode);
 
 #endif

@@ -4,7 +4,7 @@
 project(
   'libXvMC',
   'c',
-  version : '1.0.13',
+  version : '1.0.14',
   meson_version : '>= 0.58',
   default_options : ['default_library=both'],
 )
@@ -44,7 +44,7 @@ install_headers(
 
 install_data(
   'XvMC_API.txt',
-  install_dir : get_option('datadir') / 'doc',
+  install_dir : get_option('datadir') / 'doc' / 'libXvMC',
 )
 
 pkg = import('pkgconfig')
@@ -58,6 +58,7 @@ libXvMC = library(
   include_directories : inc,
   dependencies : deps,
   version : '1.0.0',
+  darwin_versions  : [ '2.0.0', '2.0.0' ],
   install : true,
 )
 
@@ -86,6 +87,7 @@ libXvMCW = library(
   ],
   dependencies : deps,
   version : '1.0.0',
+  darwin_versions  : [ '2.0.0', '2.0.0' ],
   install : true,
 )
 

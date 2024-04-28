@@ -21,16 +21,17 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXvMC], [1.0.13],
-	[https://gitlab.freedesktop.org/xorg/lib/libXvMC/issues], [libXvMC])
+AC_INIT([libXvMC], [1.0.14],
+	[https://gitlab.freedesktop.org/xorg/lib/libxvmc/-/issues], [libXvMC])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIRS([m4])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Require X.Org macros 1.8 or later for AC_PROG_INSTALL
 m4_ifndef([XORG_MACROS_VERSION],

@@ -1,3 +1,133 @@
+commit f43e6cb2ae6ba22e0b882da435d50346634a8d09
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 4 14:38:14 2024 -0800
+
+    libXvMC 1.0.14
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 76c83199fce3a54f78a2a167037db7460c7161f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 19 14:26:55 2023 -0700
+
+    Handle implicit conversion warnings from clang
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5e66fb64762b6d442a55d0506b07be18aeee7643
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 19 13:51:24 2023 -0700
+
+    Replace custom copy of GetReq macro with call to Xlib 1.5's _XGetRequest
+    
+    XvMCproto.h names don't match those required by the Xlibint.h GetReq*
+    macros, but at least we can rely on the _XGetRequest function for the
+    bulk of the work now, instead of duplicating it.
+    
+    Continues to use sizeof() instead of SIZEOF() due to stray ; on the
+    end of many sz_* definitions in XvMCproto.h, but I've verified the
+    sizes are the same with both methods.
+    
+    Also clears clang warnings that were repeated for every call:
+    
+    XvMC.c:79:5: warning: cast from 'char *' to 'xvmcQueryVersionReq *'
+      increases required alignment from 1 to 2 [-Wcast-align]
+        XvMCGetReq(QueryVersion, req);
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ./XvMClibint.h:16:8: note: expanded from macro 'XvMCGetReq'
+            req = (xvmc##name##Req *)(dpy->last_req = dpy->bufptr);\
+                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    XvMC.c:79:5: warning: implicit conversion loses integer precision:
+      'int' to 'CARD8' (aka 'unsigned char') [-Wconversion]
+        XvMCGetReq(QueryVersion, req);
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ./XvMClibint.h:17:30: note: expanded from macro 'XvMCGetReq'
+            req->reqType = info->codes->major_opcode;\
+                         ~ ~~~~~~~~~~~~~^~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 58073bc12d17341cb9459f36caf161256fc8be19
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 19 12:49:56 2023 -0700
+
+    Variable scope reductions as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0f537ab4913a8d2b3e58a40385a7745c4974bd76
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 19 12:02:41 2023 -0700
+
+    Convert to X.Org standard code style
+    
+    Mostly via util/modular/x-indent-all.sh, plus some manual cleanup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 162422fa80332129168097fd4bcc094cd73a1e65
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 8 16:21:35 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:33: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:33: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:33: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b6292a9da83dbf7f2399f5c76a453cb850eab13a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d2a53a1bfd19719a8b9d7b7f62071e00d7f35e62
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 17:28:06 2023 -0800
+
+    gitlab CI: Add libtool to required packages
+    
+    At least until the autoconf build is dropped in favor of meson
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dd9b244314702b1f50b6d5db86f6049109c77bc4
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun Jun 19 12:35:02 2022 -0700
+
+    meson: Fix compatibility version and current version of meson build to be compatible with autotools build
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 163e04cfdcdf6c87a2eea5060787c7943a24690f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 26 16:04:55 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 20354910dab40522a7dcde152d5e900ed916dc66
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 26 14:10:54 2022 -0700
+
+    Make doc install path from meson match autotools
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 590fb6835170aa60cd4d3d46eaeac51725300d23
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sat Mar 26 10:51:18 2022 -0700
