@@ -30,6 +30,10 @@ from the X Consortium.
 */
 /* $XFree86: xc/programs/xmessage/readfile.c,v 1.2 2000/02/14 19:21:04 dawes Exp $ */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <X11/Xos.h>			/* for types.h */
 #include <sys/stat.h>
 #include <stdio.h>

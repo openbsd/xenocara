@@ -29,6 +29,10 @@ from the X Consortium.
 */
 /* $XFree86: xc/programs/xmessage/xmessage.c,v 1.4 2000/02/17 16:53:03 dawes Exp $ */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <assert.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
@@ -307,6 +311,23 @@ main (int argc, char *argv[])
 
     XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp (argn, "-help") == 0) {
+	    usage(stdout);
+	    exit(0);
+	}
+	if (strcmp (argn, "-version") == 0) {
+	    puts (PACKAGE_STRING);
+	    exit (0);
+	}
+    }
+
     top = XtAppInitialize (&app_con, "Xmessage",
 			   optionList, XtNumber(optionList), &argc, argv,
 			   fallback_resources, NULL, 0);
@@ -314,10 +335,6 @@ main (int argc, char *argv[])
     XtGetApplicationResources (top, (XtPointer) &qres, resources,
 			       XtNumber(resources), NULL, 0);
 
-    if (argc > 1 && !strcmp(argv[1], "-help")) {
-	usage(stdout);
-	exit(0);
-    }
     if (argc == 1 && qres.file != NULL) {
 	message_str = read_file (qres.file, &message_len);
 	if (message_str == NULL) {
@@ -349,6 +366,11 @@ main (int argc, char *argv[])
 	}
 	message_len = len;
     } else {
+	fputs("Unknown argument(s):", stderr);
+	for (int n = 1; n < argc; n++) {
+	    fprintf(stderr, " %s", argv[n]);
+	}
+	fputs("\n\n", stderr);
 	usage(stderr);
 	exit(1);
     }

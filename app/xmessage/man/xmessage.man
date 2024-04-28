@@ -27,6 +27,13 @@ xmessage \- display a message or query in a window (X-based /bin/echo)
 ]
 .I message
 \&.\|.\|.
+.br
+.B xmessage
+[
+.B \-help
+|
+.B \-version
+]
 .SH DESCRIPTION
 The
 .I xmessage
@@ -101,6 +108,12 @@ Equivalent to setting the \fBnearMouse\fP resource to TRUE.
 Exit with status 0 after \fIsecs\fP seconds if the user has not
 clicked on a button yet.
 The corresponding resource is \fBtimeout\fP.
+.TP 8
+.B \-help
+Print a usage message and exit.
+.TP 8
+.B \-version
+Print version info and exit.
 .SH "WIDGET HIERARCHY"
 Knowing the name and position in the hierarchy of each widget is
 useful when specifying resources for them.  In the following chart, the

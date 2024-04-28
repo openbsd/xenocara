@@ -23,8 +23,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT(xmessage, [1.0.6],
-	[https://gitlab.freedesktop.org/xorg/app/xmessage/issues], xmessage)
+AC_INIT([xmessage], [1.0.7],
+	[https://gitlab.freedesktop.org/xorg/app/xmessage/-/issues], [xmessage])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
@@ -36,6 +36,9 @@ m4_ifndef([XORG_MACROS_VERSION],
           [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XMESSAGE, xaw7)
