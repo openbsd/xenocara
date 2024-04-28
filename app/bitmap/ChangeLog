@@ -1,3 +1,59 @@
+commit 8330c04c89b5983a4c8a32a78a812343dba8ac05
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 3 09:55:48 2024 -0800
+
+    bitmap 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ab9f888fa8158ba9b930abc58ca1aa5ff57f6556
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 08:53:46 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 03579181022489d95b6a1361a1d3568a1d4b47e0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 5 18:52:45 2023 -0800
+
+    bitmap: Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a53f6c680d78e41e17e1b6af05d588f5d0083f2d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 5 18:38:18 2023 -0800
+
+    atobm, bmtoa, bitmap: Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit da8af2618143577c36ba7fe7656bb6e296616438
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 5 18:01:35 2023 -0800
+
+    Ensure all *.c files include config.h before any other headers
+    
+    Makes sure that any flags set in config.h that affect system headers
+    are applied equally across all source files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit af15f44aabf3fccf096e04d73f4e6e2fd8ca3771
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 23 10:29:44 2022 -0800
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    While X bitmap files should never be more than 2gb in size,
+    they may be stored on filesystems with large inodes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b3e36bd9e5c72f4d8045b13ec066826545560361
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Apr 30 13:22:09 2022 -0700
@@ -1071,7 +1127,7 @@ Date:   Tue Oct 4 23:15:11 2005 +0000
     Add bitmap.icon to EXTRA_DIST
 
 commit c3f282e1aa6176896089ea79be84b7250888a65c
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Thu Sep 29 18:22:01 2005 +0000
 
     Add Bitmap-nocase app default file to APPDEFAULTFILES.
@@ -1124,13 +1180,13 @@ Date:   Sat Jul 16 21:59:14 2005 +0000
         against tempfile race conditions in many places)
 
 commit cc48a5df41c59071eab0f58818366e10cb1ff4ac
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 15 16:52:07 2005 +0000
 
     Add dependency on xbitmaps
 
 commit c6129c090ad25cd2f8b191f503ac6e8cd452a31d
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 15:47:38 2005 +0000
 
     Build system for bitmap

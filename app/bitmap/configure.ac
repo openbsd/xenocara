@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([bitmap], [1.1.0],
+AC_INIT([bitmap], [1.1.1],
 	[https://gitlab.freedesktop.org/xorg/app/bitmap/issues], [bitmap])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -39,6 +39,10 @@ XORG_DEFAULT_OPTIONS
 
 AM_PROG_CC_C_O
 
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
+
+# Checks for library functions.
 AC_CHECK_FUNCS([mkstemp])
 
 # Math libraries & functions

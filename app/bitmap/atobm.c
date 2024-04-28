@@ -31,6 +31,10 @@ from The Open Group.
  * Author:  Jim Fulton, MIT X Consortium
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <X11/Xos.h>
@@ -43,7 +47,7 @@ static void doit(FILE *fp, const char *filename, const char *chars,
 		 int xhot, int yhot, const char *name);
 
 static void _X_NORETURN _X_COLD
-usage (const char *msg)
+usage (const char *msg, int exitval)
 {
     if (msg)
 	fprintf(stderr, "%s: %s\n", ProgramName, msg);
@@ -51,10 +55,12 @@ usage (const char *msg)
 	     ProgramName,
              "where options include:\n"
              "    -chars cc        chars to use for 0 and 1 bits, respectively\n"
+             "    -help            print this message\n"
              "    -name variable   name to use in bitmap file\n"
+             "    -version         print version info\n"
              "    -xhot number     x position of hotspot\n"
              "    -yhot number     y position of hotspot\n");
-    exit (1);
+    exit(exitval);
 }
 
 static void _X_NORETURN _X_COLD
@@ -63,7 +69,7 @@ missing_arg (const char *option)
     char msg[32];
 
     snprintf(msg, sizeof(msg), "%s requires an argument", option);
-    usage(msg);
+    usage(msg, 1);
 }
 
 static char *
@@ -119,10 +125,21 @@ main (int argc, char *argv[])
 		if (++i >= argc) missing_arg("-chars");
 		chars = argv[i];
 		continue;
+	      case 'h':
+		if (strcmp(arg, "-help") == 0) {
+		    usage(NULL, 0);
+		}
+		goto unknown;
 	      case 'n':
 		if (++i >= argc) missing_arg("-name");
 		name = argv[i];
 		continue;
+	      case 'v':
+		if (strcmp(arg, "-version") == 0) {
+		    puts(PACKAGE_STRING);
+		    exit(0);
+		}
+		goto unknown;
 	      case 'x':
 		if (++i >= argc) missing_arg("-xhot");
 		xhot = atoi (argv[i]);
@@ -132,9 +149,10 @@ main (int argc, char *argv[])
 		yhot = atoi (argv[i]);
 		continue;
 	      default:
+	      unknown:
 		fprintf(stderr, "%s: unrecognized option '%s'\n",
 			ProgramName, argv[i]);
-		usage (NULL);
+		usage(NULL, 1);
 	    }
 	} else {
 	    filename = arg;

@@ -152,6 +152,14 @@ are allowed.  By default, no hotspot information is included.
 .B \-yhot \fInumber\fP
 This option specifies the Y coordinate of the hotspot.  Only positive values
 are allowed.  By default, no hotspot information is included.
+.PP
+All three commands also accept these options:
+.TP 4
+.B \-help
+Prints a usage message and exits.
+.TP 4
+.B \-version
+Prints version info and exits.
 .SH USAGE
 \fIBitmap\fP displays grid in which each square represents a single
 bit in the picture being edited.  Actual size of the bitmap image, as

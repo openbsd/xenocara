@@ -54,13 +54,16 @@ static void print_scanline (unsigned int width, unsigned int height,
 			    unsigned const char *data, const char *chars);
 
 static void _X_NORETURN
-usage (void)
+usage (int exitval)
 {
     fprintf (stderr, "usage:  %s [-options ...] [filename]\n\n%s\n",
 	     ProgramName,
 	"where options include:\n"
-	"    -chars cc        chars to use for 0 and 1 bits, respectively\n");
-    exit (1);
+	"    -chars cc        chars to use for 0 and 1 bits, respectively\n"
+	"    -help            print this usage message\n"
+	"    -version         print version information\n"
+        );
+    exit (exitval);
 }
 
 static char *
@@ -133,14 +136,26 @@ main (int argc, char *argv[])
 		if (++i >= argc) {
 		    fprintf(stderr, "%s: -chars requires an argument\n",
 			    ProgramName);
-		    usage ();
+		    usage(1);
 		}
 		chars = argv[i];
 		continue;
+	      case 'h':
+		if (strcmp(arg, "-help") == 0) {
+		    usage(0);
+		}
+		goto unknown;
+	      case 'v':
+		if (strcmp(arg, "-version") == 0) {
+		    puts(PACKAGE_STRING);
+		    exit(0);
+		}
+                goto unknown;
 	      default:
+	      unknown:
 		fprintf(stderr, "%s: unrecognized option '%s'\n",
 			ProgramName, argv[i]);
-		usage ();
+		usage(1);
 	    }
 	} else {
 	    filename = arg;
