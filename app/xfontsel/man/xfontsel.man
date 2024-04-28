@@ -42,13 +42,11 @@
 xfontsel \- point and click selection of X11 font names
 .SH SYNTAX
 .PP
-\fBxfontsel\fP [-\fItoolkitoption\fP ...]
-[\fB-pattern \fIfontname\fP]
-[\fB-print\fP]
-[\fB-sample \fItext\fP]
-[\fB-sample16 \fItext16\fP]
-[\fB-sampleUCS \fItextUCS\fP]
-[\fB-scaled\fP]
+.nf
+\fBxfontsel\fP [-\fItoolkitoption\fP ...] [\fB-help\fP] [\fB-pattern\fP \fIfontname\fP] [\fB-print\fP]
+         [\fB-sample\fP \fItext\fP] [\fB-sample16\fP \fItext16\fP] [\fB-sampleUCS\fP \fItextUCS\fP]
+         [\fB-scaled\fP] [\fB-version\fP]
+.fi
 .PP
 .SH DESCRIPTION
 .PP
@@ -84,6 +82,12 @@ CHARSET_REGISTRY of ISO10646, overriding the default.
 .PP
 The \fB-scaled\fP option enables the ability to select scaled fonts
 at arbitrary pixel or point sizes.
+.PP
+The \fB\-help\fP option specifies that \fIxfontsel\fP should
+print a usage message and exit.
+.PP
+The \fB\-version\fP option specifies that \fIxfontsel\fP should
+print version info and exit.
 .PP
 .SH INTERACTIONS
 .PP

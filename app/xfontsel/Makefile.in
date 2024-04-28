@@ -164,7 +164,7 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-DATA = $(dist_appdefault_DATA)
+DATA = $(dist_appdefault_DATA) $(noinst_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
@@ -234,7 +234,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -245,11 +244,9 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
-EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
-GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -261,6 +258,7 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LOCALEDIR = @LOCALEDIR@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
@@ -343,6 +341,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man
 AM_CPPFLAGS = -D_CONST_X_STRING
+@USE_GETTEXT_TRUE@AM_CPPFLAGS = -DLOCALEDIR='"$(LOCALEDIR)"'
 AM_CFLAGS = $(XFONTSEL_CFLAGS) $(CWARNFLAGS)
 xfontsel_LDADD = $(XFONTSEL_LIBS)
 xfontsel_SOURCES = \
@@ -359,6 +358,8 @@ dist_appdefault_DATA = \
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 EXTRA_DIST = README.md
+@USE_GETTEXT_TRUE@noinst_DATA = xfontsel.po
+@USE_GETTEXT_TRUE@CLEANFILES = xfontsel.po
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -850,6 +851,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -964,6 +966,9 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+@USE_GETTEXT_TRUE@xfontsel.po: $(xfontsel_SOURCES:%=$(srcdir)/%)
+@USE_GETTEXT_TRUE@	$(AM_V_GEN)xgettext -d xfontsel -c -n $(xfontsel_SOURCES:%=$(srcdir)/%)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

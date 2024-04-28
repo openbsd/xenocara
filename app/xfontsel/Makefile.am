@@ -53,3 +53,14 @@ ChangeLog:
 dist-hook: ChangeLog INSTALL
 
 EXTRA_DIST = README.md
+
+if USE_GETTEXT
+AM_CPPFLAGS = -DLOCALEDIR='"$(LOCALEDIR)"'
+
+noinst_DATA = xfontsel.po
+
+xfontsel.po: $(xfontsel_SOURCES:%=$(srcdir)/%)
+	$(AM_V_GEN)xgettext -d xfontsel -c -n $(xfontsel_SOURCES:%=$(srcdir)/%)
+
+CLEANFILES = xfontsel.po
+endif

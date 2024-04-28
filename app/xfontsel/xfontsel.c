@@ -31,6 +31,35 @@ Author:	Ralph R. Swick, DEC/MIT Project Athena
 Modified: Mark Leisher <mleisher@crl.nmsu.edu> to deal with UCS sample text.
 */
 
+/*
+ * Copyright (c) 2000, 2022, Oracle and/or its affiliates.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Modifications by Jay Hobson (Sun Microsystems) to internationalize messages
+ */
+
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/Intrinsic.h>
@@ -52,6 +81,13 @@ Modified: Mark Leisher <mleisher@crl.nmsu.edu> to deal with UCS sample text.
 #include <X11/Xfuncs.h>
 #include <X11/Xlib.h>
 #include "ULabel.h"
+
+#ifdef USE_GETTEXT
+# include <locale.h>	/* setlocale()	*/
+# include <libintl.h>	/* gettext(), textdomain(), etc. */
+#else
+# define gettext(a) (a)
+#endif
 
 #define MIN_APP_DEFAULTS_VERSION 1
 #define FIELD_COUNT 14
@@ -151,9 +187,10 @@ static XrmOptionDescRec options[] = {
 {"-scaled",	"scaledFonts",	XrmoptionNoArg,		"True"},
 };
 
-static void Syntax(const char *call)
+static void Syntax(const char *call, int exitval)
 {
     fprintf (stderr, "usage:  %s [-options ...] -fn font\n\n%s\n", call,
+       gettext(
 	"where options include:\n"
 	"    -display dpy           X server to contact\n"
 	"    -geometry geom         size and location of window\n"
@@ -163,8 +200,8 @@ static void Syntax(const char *call)
 	"    -sample16 string       sample text to use for 2-byte fonts\n"
 	"    -sampleUCS string      sample text to use for ISO10646 fonts\n"
 	"    -scaled                use scaled instances of fonts\n"
-	"plus any standard toolkit options\n");
-    exit (1);
+	"plus any standard toolkit options\n"));
+    exit (exitval);
 }
 
 
@@ -260,10 +297,52 @@ main(int argc, char **argv)
 
     XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    Syntax(argv[0], 0);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     topLevel = XtAppInitialize(&appCtx, "XFontSel", options, XtNumber(options),
 			       &argc, argv, NULL, NULL, 0);
 
-    if (argc != 1) Syntax(argv[0]);
+#ifdef USE_GETTEXT
+    /*
+     * Set up internationalized messages    Jhobson 8/23/00
+     *
+     * Do this after the AppInitialize since setlocale is setup by
+     * XtSetLanguageProc, but does not occur until XtAppInitialize happens.
+     */
+    textdomain("xfontsel");
+
+    {
+	const char *domaindir;
+
+	if ((domaindir = getenv("TEXTDOMAINDIR")) == NULL) {
+	    domaindir = LOCALEDIR;
+	}
+	bindtextdomain("xfontsel", domaindir);
+    }
+#endif
+
+    if (argc != 1) {
+	fputs(gettext("Unknown argument(s):"), stderr);
+	for (int n = 1; n < argc; n++) {
+	    fprintf(stderr, " %s", argv[n]);
+	}
+	fputs("\n\n", stderr);
+	Syntax(argv[0], 1);
+    }
 
     XtAppAddActions(appCtx, xfontsel_actions, XtNumber(xfontsel_actions));
     XtOverrideTranslations
@@ -272,12 +351,16 @@ main(int argc, char **argv)
     XtGetApplicationResources( topLevel, (XtPointer)&AppRes,
 			       resources, XtNumber(resources), NZ );
     if (AppRes.app_defaults_version < MIN_APP_DEFAULTS_VERSION) {
+	char full_message[300];
 	XrmDatabase rdb = XtDatabase(XtDisplay(topLevel));
-	XtWarning( "app-defaults file not properly installed." );
-	XrmPutLineResource( &rdb,
-"*sampleText*UCSLabel:XFontSel app-defaults file not properly installed;\\n\
-see 'xfontsel' manual page."
-			  );
+
+	XtWarning(gettext("app-defaults file not properly installed."));
+
+	snprintf(full_message, sizeof(full_message),
+		 "*sampleText*UCSLabel:%s",
+		 gettext("XFontSel app-defaults file not properly installed;\\n"
+			 "see 'xfontsel' manual page."));
+	XrmPutLineResource(&rdb, full_message);
     }
 
     ScheduleWork(GetFontNames, (XtPointer)topLevel, 0);
@@ -519,7 +602,7 @@ void GetFontNames(XtPointer closure)
 	    }
 	    else
 		XtAppWarning( appCtx,
-		    "internal error; pattern didn't match first font" );
+		    gettext("internal error; pattern didn't match first font" ));
 	}
 	else {
 	    SetNoFonts();
@@ -535,7 +618,7 @@ void ParseFontNames(XtPointer closure)
     ParseRec *parseRec = (ParseRec*)closure;
     char **fontNames = parseRec->fontNames;
     int num_fonts = parseRec->end;
-    FieldValueList **fieldValues = parseRec->fieldValues;
+    FieldValueList **fValues = parseRec->fieldValues;
     FontValues *fontValues = parseRec->fonts - numBadFonts;
     int i, font;
 
@@ -562,7 +645,7 @@ void ParseFontNames(XtPointer closure)
 		while (*p && *++p != DELIM);
 		len = p - fieldP;
 	    }
-	    for (i=fieldValues[f]->count,v=fieldValues[f]->value; i;i--,v++) {
+	    for (i=fValues[f]->count,v=fValues[f]->value; i;i--,v++) {
 		if (len == 0) {
 		    if (v->string == NULL) break;
 		}
@@ -573,15 +656,15 @@ void ParseFontNames(XtPointer closure)
 			break;
 	    }
 	    if (i == 0) {
-		int count = fieldValues[f]->count++;
-		if (count == fieldValues[f]->allocated) {
-		    int allocated = (fieldValues[f]->allocated += 10);
-		    fieldValues[f] = (FieldValueList*)
-			XtRealloc( (char *) fieldValues[f],
+		int count = fValues[f]->count++;
+		if (count == fValues[f]->allocated) {
+		    int allocated = (fValues[f]->allocated += 10);
+		    fValues[f] = (FieldValueList*)
+			XtRealloc( (char *) fValues[f],
 				   sizeof(FieldValueList) +
 					(allocated-1) * sizeof(FieldValue) );
 		}
-		v = &fieldValues[f]->value[count];
+		v = &fValues[f]->value[count];
 		v->field = f;
 		if (len == 0)
 		    v->string = NULL;
@@ -597,7 +680,7 @@ void ParseFontNames(XtPointer closure)
 		v->enable = True;
 		i = 1;
 	    }
-	    fontValues->value_index[f] = fieldValues[f]->count - i;
+	    fontValues->value_index[f] = fValues[f]->count - i;
 	    if ((i = v->count++) == v->allocated) {
 		int allocated = (v->allocated += 10);
 		v->font = (int*)XtRealloc( (char *) v->font,
@@ -623,13 +706,13 @@ static void AddScalables(int f)
     FieldValue *fval = fieldValues[f]->value;
 
     for (i = 0; i < max; i++, fval++) {
-	int *oofonts, *ofonts, *nfonts, *fonts;
+	int *oofonts, *ofonts, *nfonts, *sfonts;
 	int ocount, ncount, count;
 
 	if (fval->string && !strcmp(fval->string, "0"))
 	    continue;
 	count = numScaledFonts;
-	fonts = scaledFonts;
+	sfonts = scaledFonts;
 	ocount = fval->count;
 	ncount = ocount + count;
 	nfonts = (int *)XtMalloc( ncount * sizeof(int) );
@@ -638,11 +721,11 @@ static void AddScalables(int f)
 	fval->count = ncount;
 	fval->allocated = ncount;
 	while (count && ocount) {
-	    if (*fonts < *ofonts) {
-		*nfonts++ = *fonts++;
+	    if (*sfonts < *ofonts) {
+		*nfonts++ = *sfonts++;
 		count--;
-	    } else if (*fonts == *ofonts) {
-		*nfonts++ = *fonts++;
+	    } else if (*sfonts == *ofonts) {
+		*nfonts++ = *sfonts++;
 		count--;
 		ofonts++;
 		ocount--;
@@ -657,7 +740,7 @@ static void AddScalables(int f)
 	    ocount--;
 	}
 	while (count) {
-	    *nfonts++ = *fonts++;
+	    *nfonts++ = *sfonts++;
 	    count--;
 	}
 	XtFree((char *)oofonts);
@@ -1056,11 +1139,11 @@ static void SetCurrentFontCount(void)
     char label[80];
     Arg args[1];
     if (matchingFontCount == 1)
-	strcpy( label, "1 name matches" );
+	strcpy( label, gettext("1 name matches") );
     else if (matchingFontCount)
-	snprintf( label, sizeof(label), "%d names match", matchingFontCount );
+	snprintf( label, sizeof(label), gettext("%d names match"), matchingFontCount);
     else
-	strcpy( label, "no names match" );
+	strcpy( label, gettext("no names match") );
     XtSetArg( args[0], XtNlabel, label );
     XtSetValues( countLabel, args, ONE );
 }
@@ -1071,9 +1154,9 @@ static void SetParsingFontCount(int count)
     char label[80];
     Arg args[1];
     if (count == 1)
-	strcpy( label, "1 name to parse" );
+	strcpy( label, gettext("1 name to parse") );
     else
-	snprintf( label, sizeof(label), "%d names to parse", count );
+	snprintf( label, sizeof(label), gettext("%d names to parse"), count );
     XtSetArg( args[0], XtNlabel, label );
     XtSetValues( countLabel, args, ONE );
     FlushXqueue(XtDisplay(countLabel));
@@ -1279,9 +1362,9 @@ void SelectField(Widget w, XtPointer closure, XtPointer callData)
     int field = (long)closure;
     FieldValue *values = fieldValues[field]->value;
     int count = fieldValues[field]->count;
-    printf( "field %d:\n", field );
+    printf(gettext("field %d:\n"), field );
     while (count--) {
-	printf( " %s: %d fonts\n", values->string, values->count );
+	printf( gettext(" %s: %d fonts\n"), values->string, values->count );
 	values++;
     }
     printf( "\n" );

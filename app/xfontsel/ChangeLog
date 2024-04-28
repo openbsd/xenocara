@@ -1,3 +1,56 @@
+commit e7c62d035698841b12599384ee921e04ab417138
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 14:21:49 2024 -0800
+
+    xfontsel 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 48772e02a3067fb8450b98ddde5e1fed7a6ce80e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 11:27:51 2023 -0800
+
+    Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7c9e106e65767598b786804dc7324adc50d7efc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 11:17:41 2023 -0800
+
+    Print which arguments were unknown before giving usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 37ee1293a35cd2f86463e2954f44db58692aa053
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 11:13:37 2023 -0800
+
+    include config.h in xfontsel.c before checking for USE_GETTEXT
+    
+    It will never be true if we never include the file that defines it.
+    
+    Fixes: f286ef3 ("Use gettext() to localize messages if available")
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f286ef347dc9e87c6d5b5b8bce22afdeb82af4ed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 9 13:19:21 2022 -0800
+
+    Use gettext() to localize messages if available
+    
+    Originally fixed for Solaris in August 2000 by Jay Hobson under
+    Sun bug 4256527 "Internationalize xfontsel"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 57f670195bb1854edbea97b672ae966343965bb7
+Author: Thomas Kuehne <thomas@kuehne.cn>
+Date:   Sun Dec 5 13:16:35 2021 +0100
+
+    Fixed -Wshadow declaration warnings
+
 commit 6ef6ff13da2adc354eeca629d2fc523cbe3aab42
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 10 15:16:18 2022 -0700
@@ -789,7 +842,7 @@ Date:   Wed Jul 20 19:31:55 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit fb8c54ae47b8dd71f082fd0c4b705690c8aca524
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 18:11:22 2005 +0000
 
     Build system for xfontsel

@@ -23,8 +23,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xfontsel], [1.1.0],
-	[https://gitlab.freedesktop.org/xorg/app/xfontsel/issues], [xfontsel])
+AC_INIT([xfontsel], [1.1.1],
+	[https://gitlab.freedesktop.org/xorg/app/xfontsel/-/issues], [xfontsel])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
@@ -46,6 +46,26 @@ AC_ARG_WITH(appdefaultdir,
 	  [specify directory for app-defaults files (default is autodetected)]),
 	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
+
+# Internationalization & localization support
+AC_SEARCH_LIBS([gettext], [intl], [USE_GETTEXT="yes"], [USE_GETTEXT="no"])
+AC_MSG_CHECKING([where to install localized messages])
+AC_ARG_WITH([localedir], AS_HELP_STRING([--with-localedir=<path>],
+        [Path to install message files in (default: datadir/locale)]),
+        [LOCALEDIR=${withval}], [LOCALEDIR=${datadir}/locale])
+if test "x$LOCALEDIR" = "xno" -o "x$USE_GETTEXT" = "xno" ; then
+        AC_MSG_RESULT([nowhere])
+        USE_GETTEXT="no"
+else
+        AC_SUBST([LOCALEDIR])
+        AC_MSG_RESULT([$LOCALEDIR])
+fi
+
+if test "x$USE_GETTEXT" = "xyes" ; then
+        AC_DEFINE([USE_GETTEXT], 1,
+                  [Define to 1 if you want to use the gettext() function.])
+fi
+AM_CONDITIONAL(USE_GETTEXT, test "x$USE_GETTEXT" = "xyes")
 
 
 AC_CONFIG_FILES([
