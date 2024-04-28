@@ -215,7 +215,6 @@ main(int argc, char *argv[])
         NULL
     };
 
-    uSetErrorFile(NullString);
     bzero(leds, XkbNumIndicators * sizeof(Widget));
     toplevel = XtOpenApplication(&app_con, "XkbLEDPanel", NULL, 0, &argc, argv,
                                  fallback_resources,
@@ -345,7 +344,7 @@ main(int argc, char *argv[])
             char buf[12];
             ArgList list;
 
-            sprintf(buf, "led%d", i + 1);
+            snprintf(buf, sizeof(buf), "led%d", i + 1);
             if (n & bit)
                 list = onArgs;
             else

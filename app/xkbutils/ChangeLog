@@ -1,3 +1,73 @@
+commit 29396321dad13c4edddc8d3a8de2baf07b0e0c8d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 3 12:36:36 2024 -0800
+
+    xkbutils 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e2ee9c21f0d6341e664688f30ed9cd4f49b8ab6f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 18 17:47:15 2024 -0800
+
+    Change sprintf calls to use snprintf instead
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aa03a3b7f00c9b3697fc5c33b1febf38247450a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 18 17:19:18 2024 -0800
+
+    Remove uSetErrorFile()
+    
+    It was only ever called with an argument of NullString, which set the
+    errorFile to stderr, so we'll just do that at compile time instead.
+    
+    Also removes NullString, which was only ever used in uSetErrorFile.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5f875c8a6bc12d47ad655ba820031bb917f321c0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 5 15:01:42 2023 -0800
+
+    xkbwatch: Fix -Wincompatible-pointer-types warning (Issue #2)
+    
+    Fixes warning from gcc 13 that is becoming an error in gcc 14
+    
+    xkbwatch.c:92:34: warning: passing argument 7 of ‘XtOpenApplication’
+     from incompatible pointer type [-Wincompatible-pointer-types]
+       92 |                                  fallback_resources,
+          |                                  ^~~~~~~~~~~~~~~~~~
+          |                                  |
+          |                                  char **
+    In file included from xkbwatch.c:31:
+    .../X11/Intrinsic.h:1473:5: note: expected ‘const char **’ but
+     argument is of type ‘char **’
+     1473 |     String*             /* fallback_resources */,
+          |     ^~~~~~~
+    
+    Closes: #2
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6dbcbb55951efb25af2e38034bdd86fa095aa9e5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:00:57 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 56c99e3fcefc5552286fa9b9756dd798eb1eb6ce
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3a4570e0ee3ff46e3332a9938bb9e9a81b7148e9
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jul 12 10:27:28 2022 -0700
@@ -666,7 +736,7 @@ Date:   Fri Jul 22 15:02:12 2005 +0000
     Add utils.h as source so it lands in distdir.
 
 commit 3423f5d91ecd66a2a967ccf6ed9ddfd2940d12ba
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 20:54:51 2005 +0000
 
     Build system for xkbutils

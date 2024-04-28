@@ -33,25 +33,7 @@
 /***			PRINT FUNCTIONS					***/
 /***====================================================================***/
 
-static FILE *errorFile = NULL;
-
-Boolean
-uSetErrorFile(const char *name)
-{
-    if ((errorFile != NULL) && (errorFile != stderr)) {
-        fprintf(errorFile, "switching to %s\n", name ? name : "stderr");
-        fclose(errorFile);
-    }
-    if (name != NullString)
-        errorFile = fopen(name, "w");
-    else
-        errorFile = stderr;
-    if (errorFile == NULL) {
-        errorFile = stderr;
-        return (False);
-    }
-    return (True);
-}
+#define errorFile stderr
 
 void
 uInformation(const char *s, ...)

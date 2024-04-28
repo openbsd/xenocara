@@ -72,7 +72,7 @@ main(int argc, char *argv[])
     static Arg vArgs[] = { {XtNorientation, (XtArgVal) XtorientVertical} };
     static Arg onArgs[] = { {XtNon, (XtArgVal) True} };
     static Arg offArgs[] = { {XtNon, (XtArgVal) False} };
-    static char *fallback_resources[] = {
+    static String fallback_resources[] = {
         "*Box*background: grey50",
         "*Box*borderWidth: 0",
         "*Box*vSpace: 1",
@@ -86,7 +86,6 @@ main(int argc, char *argv[])
         }
     }
 
-    uSetErrorFile(NullString);
     toplevel = XtOpenApplication(&app_con, "XkbWatch",
                                  options, XtNumber(options), &argc, argv,
                                  fallback_resources,
@@ -138,34 +137,34 @@ main(int argc, char *argv[])
 
         char buf[30];
 
-        sprintf(buf, "base%d", i);
+        snprintf(buf, sizeof(buf), "base%d", i);
         if (state.base_mods & bit)
             list = onArgs;
         else
             list = offArgs;
         base[i] = XtCreateManagedWidget(buf, ledWidgetClass, baseBox, list, 1);
-        sprintf(buf, "latched%d", i);
+        snprintf(buf, sizeof(buf), "latched%d", i);
         if (state.latched_mods & bit)
             list = onArgs;
         else
             list = offArgs;
         latched[i] =
             XtCreateManagedWidget(buf, ledWidgetClass, latchBox, list, 1);
-        sprintf(buf, "locked%d", i);
+        snprintf(buf, sizeof(buf), "locked%d", i);
         if (state.locked_mods & bit)
             list = onArgs;
         else
             list = offArgs;
         locked[i] =
             XtCreateManagedWidget(buf, ledWidgetClass, lockBox, list, 1);
-        sprintf(buf, "effective%d", i);
+        snprintf(buf, sizeof(buf), "effective%d", i);
         if (state.mods & bit)
             list = onArgs;
         else
             list = offArgs;
         effective[i] =
             XtCreateManagedWidget(buf, ledWidgetClass, effBox, list, 1);
-        sprintf(buf, "compat%d", i);
+        snprintf(buf, sizeof(buf), "compat%d", i);
         if (state.compat_state & bit)
             list = onArgs;
         else
