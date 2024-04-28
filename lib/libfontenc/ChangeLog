@@ -1,3 +1,62 @@
+commit 92a85fda2acb4e14ec0b2f6d8fe3eaf2b687218c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 10:25:05 2024 -0800
+
+    libfontenc 1.1.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2408433404732b146bf41a2451d23ffadad5a816
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 28 11:55:59 2023 -0700
+
+    Set close-on-exec when opening files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0aa003e3d897d2d5bdaac1af404d3e23c76268ec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:38: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:38: You should run autoupdate.
+    aclocal.m4:3863: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:38: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3440aed9d2bd38f72e8e62ffac400cf613fcb908
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:17:19 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d7a986586469dd5d69869ee151c5fa7501c2767c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 13:13:21 2023 -0800
+
+    configure: raise minimum autoconf requirement to 2.70
+    
+    Needed for builds on NetBSD to work correctly, since it depends on
+    AC_USE_SYSTEM_EXTENSIONS defining _OPENBSD_SOURCE to expose the
+    prototype for reallocarray() in the system headers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 68300c3452592a9e7bf60b4edb008785c4c891c4
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Thu Dec 8 10:37:07 2022 -0500

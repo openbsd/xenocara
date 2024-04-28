@@ -37,6 +37,14 @@ THE SOFTWARE.
 
 #include <stdlib.h>
 
+#include <fcntl.h>
+#ifdef O_CLOEXEC
+#define FOPEN_CLOEXEC "e"
+#else
+#define FOPEN_CLOEXEC ""
+#endif
+
+
 #include "zlib.h"
 typedef gzFile FontFilePtr;
 
@@ -889,7 +897,7 @@ FontEncReallyReallyLoad(const char *charset,
     /* As we don't really expect to open encodings that often, we don't
        take the trouble of caching encodings directories. */
 
-    if ((file = fopen(dirname, "r")) == NULL) {
+    if ((file = fopen(dirname, "r" FOPEN_CLOEXEC)) == NULL) {
         return NULL;
     }
 
