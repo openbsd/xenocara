@@ -36,6 +36,14 @@ in this Software without prior written authorization from The Open Group.
 #include <limits.h>
 #include "dsimple.h"
 
+#ifdef HAVE_BSD_STDLIB_H
+#include <bsd/stdlib.h>
+#endif
+
+#ifndef HAVE_REALLOCARRAY
+#define reallocarray(old, num, size) realloc(old, (num) * (size))
+#endif
+
 #define N_START INT_MAX         /* Maximum # of fonts to start with (should
                                  * always be be > 10000 as modern OSes like
                                  * Solaris 8 already have more than 9000 XLFD
@@ -58,7 +66,7 @@ static int  font_cnt                  = 0;
 static int  min_max;
 
 typedef struct {
-    char *name;
+    const char *name;
     XFontStruct *info;
 } FontList;
 
@@ -73,7 +81,7 @@ static int  IgnoreError(Display *disp, XErrorEvent *event);
 static void PrintProperty(XFontProp *prop);
 static void ComputeFontType(XFontStruct *fs);
 static void print_character_metrics(register XFontStruct *info);
-static void do_query_font(Display *dpy, char *name);
+static void do_query_font(Display *dpy, const char *name);
 
 void
 usage(const char *errmsg)
@@ -191,56 +199,69 @@ main(int argc, char **argv)
 static void
 get_list(const char *pattern)
 {
-    int available = nnames + 1, i;
-    char **fonts;
     XFontStruct *info;
 
-    /* Get list of fonts matching pattern */
-    for (;;) {
-        if (open_instead_of_list) {
-            info = XLoadQueryFont(dpy, pattern);
+    if (open_instead_of_list) {
+        info = XLoadQueryFont(dpy, pattern);
 
-            if (info) {
-                fonts = &pattern;
-                available = 1;
-                XUnloadFont(dpy, info->fid);
-            }
-            else {
-                fonts = NULL;
-            }
-            break;
+        if (info == NULL) {
+            fprintf(stderr, "%s: pattern \"%s\" unmatched\n",
+                    program_name, pattern);
+            return;
         }
 
-        if (long_list == L_MEDIUM)
-            fonts = XListFontsWithInfo(dpy, pattern, nnames, &available, &info);
-        else
-            fonts = XListFonts(dpy, pattern, nnames, &available);
-        if (fonts == NULL || available < nnames)
-            break;
-        if (long_list == L_MEDIUM)
-            XFreeFontInfo(fonts, info, available);
-        else
-            XFreeFontNames(fonts);
-        nnames = available * 2;
-    }
-
-    if (fonts == NULL) {
-        fprintf(stderr, "%s: pattern \"%s\" unmatched\n",
-                program_name, pattern);
-        return;
-    }
-
-    font_list = realloc(font_list, (font_cnt + available) * sizeof(FontList));
-    if (font_list == NULL)
-        Fatal_Error("Out of memory!");
-    for (i = 0; i < available; i++) {
-        font_list[font_cnt].name = fonts[i];
-        if (long_list == L_MEDIUM)
-            font_list[font_cnt].info = info + i;
-        else
+        font_list = reallocarray(font_list, (font_cnt + 1), sizeof(FontList));
+        if (font_list == NULL)
+            Fatal_Error("Out of memory!");
+        font_list[font_cnt].name = pattern;
+        if (long_list == L_MEDIUM) {
+            font_list[font_cnt].info = info;
+            XUnloadFont(dpy, info->fid);
+        }
+        else {
             font_list[font_cnt].info = NULL;
-
+            XFreeFont(dpy, info);
+        }
         font_cnt++;
+    }
+    else {
+        /* Get list of fonts matching pattern */
+        int available = nnames + 1;
+        char **fonts;
+
+        for (;;) {
+            if (long_list == L_MEDIUM)
+                fonts = XListFontsWithInfo(dpy, pattern, nnames, &available,
+                                           &info);
+            else
+                fonts = XListFonts(dpy, pattern, nnames, &available);
+            if (fonts == NULL) {
+                fprintf(stderr, "%s: pattern \"%s\" unmatched\n",
+                        program_name, pattern);
+                return;
+            }
+            if (available < nnames)
+                break;
+            if (long_list == L_MEDIUM)
+                XFreeFontInfo(fonts, info, available);
+            else
+                XFreeFontNames(fonts);
+            nnames = available * 2;
+        }
+
+        font_list = reallocarray(font_list,
+                                 (font_cnt + available), sizeof(FontList));
+        if (font_list == NULL)
+            Fatal_Error("Out of memory!");
+        for (int i = 0; i < available; i++) {
+            font_list[font_cnt].name = fonts[i];
+            if (long_list == L_MEDIUM)
+                font_list[font_cnt].info = info + i;
+            else
+                font_list[font_cnt].info = NULL;
+
+            font_cnt++;
+        }
     }
 }
 
@@ -625,7 +646,7 @@ print_character_metrics(register XFontStruct *info)
 }
 
 static void
-do_query_font(Display *display, char *name)
+do_query_font(Display *display, const char *name)
 {
     register int i;
     register XFontStruct *info = XLoadQueryFont(display, name);

@@ -1,3 +1,56 @@
+commit d20bea4979d6aedc088d2c6a1e31874017562372
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 16:52:51 2024 -0800
+
+    xlsfonts 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 71d8e89f43de90571ed7e7486035f56190f10888
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 17 09:26:40 2024 -0800
+
+    Use reallocarray() if available
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2b9d8f5bac5d2352f8021548b4852014ed683b2c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 5 15:41:28 2023 -0800
+
+    Fix -Wincompatible-pointer-types warning from gcc (issue #1)
+    
+    xlsfonts.c: In function ‘get_list’:
+    xlsfonts.c:204:23: warning: assignment to ‘char **’ from incompatible
+     pointer type ‘const char **’ [-Wincompatible-pointer-types]
+      204 |                 fonts = &pattern;
+          |                       ^
+    
+    v2: Split the open vs. list code to allow preserving the constness
+    of the argument to get_list, at the cost of less code sharing between
+    the two paths
+    
+    Closes: #1
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e53bf74c4662c8473690c7f5fb00cd80fb86fdd7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 314d802f6870a08163b47e058eeda775b8257744
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 10 13:42:13 2022 -0700
+
+    man page: emphasize this program is for querying an X server
+    
+    Try to answer the question "How is this different from fslsfonts?"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 8a29554a2edd31bf6f54babad0a13abb5618a155
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 3 16:39:17 2022 -0700
@@ -697,7 +750,7 @@ Date:   Wed Jul 20 19:32:02 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 8eab7c1c0df42316eca01fb7038efb2be1667b79
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:10 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,

@@ -1,13 +1,13 @@
 .\" -*- coding: us-ascii -*-
 .TH xlsfonts __appmansuffix__ __xorgversion__
 .SH NAME
-xlsfonts \- server font list displayer for X
+xlsfonts \- list fonts available to X server
 .SH SYNOPSIS
 .ad l
 \fBxlsfonts\fR
 [\fB\-display \fBhost:dpy\fR\fR] [\fB\-l\fR] [\fB\-ll\fR] [\fB\-lll\fR] [\fB\-m\fR] [\fB\-C\fR] [\fB\-1\fR] [\fB\-w \fBwidth\fR\fR] [\fB\-n \fBcolumns\fR\fR] [\fB\-u\fR] [\fB\-o\fR] [\fB\-fn \fBpattern\fR\fR] [\fB\-v\fR]
 .SH DESCRIPTION
-xlsfonts lists the fonts that match the given pattern.
+xlsfonts lists the fonts available on an X server that match the given pattern.
 The wildcard character "*" may be used to match any sequence of characters
 (including none), and "?" to match any single character.
 If no pattern is given, "*" is assumed.
@@ -77,7 +77,7 @@ and exit.
 \fBDISPLAY\fR
 \fBDISPLAY\fR must be set to get the default host and display to use.
 .SH BUGS
-Doing ``xlsfonts -l'' can tie up your server for a very long time.
+Doing ``xlsfonts -l'' can tie up your X server for a very long time.
 This is really a bug with single-threaded
 non-preemptable servers, not with this program.
 .SH AUTHOR

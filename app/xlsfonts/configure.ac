@@ -23,10 +23,11 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT(xlsfonts, [1.0.7],
-        [https://gitlab.freedesktop.org/xorg/app/xlsfonts/issues],xlsfonts)
+AC_INIT(xlsfonts, [1.0.8],
+        [https://gitlab.freedesktop.org/xorg/app/xlsfonts/-/issues],xlsfonts)
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-xz])
@@ -39,6 +40,12 @@ XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XLSFONTS, [x11 xproto >= 7.0.17])
+
+# Checks for library functions
+AC_SEARCH_LIBS([reallocarray], [bsd])
+AS_IF([test "x$ac_cv_search_reallocarray" = "x-lbsd"],
+      [AC_CHECK_HEADERS([bsd/stdlib.h])])
+AC_CHECK_FUNCS([reallocarray])
 
 AC_CONFIG_FILES([
 	Makefile
