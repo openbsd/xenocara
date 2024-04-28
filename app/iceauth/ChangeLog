@@ -1,3 +1,85 @@
+commit 14e122c85b9fba7100b1bdc11abdb9b939d59254
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 10 14:48:50 2024 -0700
+
+    iceauth 1.0.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 51a526dbe4fe4586b6e35a018c7c9b9e1ad36a8a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 11:05:16 2024 -0800
+
+    unifdef __UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 29e22b4199f3b0fb4044a8026664951e5aab4700
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 3 12:12:21 2024 -0800
+
+    Variable scope reductions, as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 43da1a3b78fbe0afc5db4a89fa8f72d3b5f7b91a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 3 11:22:53 2024 -0800
+
+    Silence -Wanalyzer-out-of-bounds warnings from gcc 13
+    
+    Analyzer seems not to realize that the last allocated argv entry
+    should always be set to NULL, causing the || to stop checking argv
+    entries before getting to any that are not allocated.  Raising our
+    minimum allocation from 4 pointers to 6 soothes it, and costs us
+    basically nothing.
+    
+    process.c:1285:26: warning: heap-based buffer over-read [CWE-126] [-Wanalyzer-out-of-bounds]
+     1285 |         !argv[3] || !argv[4] || !argv[5])
+          |                      ~~~~^~~
+    [...]
+    process.c:1285:26: note: read of 8 bytes from after the end of the region
+     1285 |         !argv[3] || !argv[4] || !argv[5])
+          |                      ~~~~^~~
+    process.c:1285:38: warning: heap-based buffer over-read [CWE-126] [-Wanalyzer-out-of-bounds]
+     1285 |         !argv[3] || !argv[4] || !argv[5])
+          |                                  ~~~~^~~
+    [...]
+    process.c:1285:38: note: read of 8 bytes from after the end of the region
+     1285 |         !argv[3] || !argv[4] || !argv[5])
+          |                                  ~~~~^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 16ace290b2e6d261db21b60bf6ab7c074b112569
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 3 11:20:19 2024 -0800
+
+    Use reallocarray if available, provide local version if not
+    
+    Based on similar commits to xauth
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba4c183d8721f3ef086fb1d15881bb9aeeb4ecd4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 8 11:57:44 2023 -0800
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    While .ICEauthority files should never be more than 2gb in size,
+    they may be stored on filesystems with large inodes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ea496769469da48aebce7d95b79b4db373cda24
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 82ef227485f6d102beae907212b4e903a05110e6
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 3 11:41:21 2022 -0700
@@ -828,7 +910,7 @@ Date:   Sat Jul 16 20:52:25 2005 +0000
         4496504)
 
 commit d0bc63cf13e98f686bd371a0ab609018e7fdf8c2
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 15:04:15 2005 +0000
 
     Add build system for iceauth

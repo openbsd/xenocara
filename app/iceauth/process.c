@@ -270,17 +270,28 @@ static char *skip_nonspace (register char *s)
     return s;
 }
 
+#ifndef HAVE_REALLOCARRAY
+static inline void *
+reallocarray(void *optr, size_t nmemb, size_t size)
+{
+    if ((nmemb > 0) && (SIZE_MAX / nmemb < size)) {
+        errno = ENOMEM;
+        return NULL;
+    }
+    return realloc(optr, size * nmemb);
+}
+#endif
+
 static char **split_into_words (  /* argvify string */
     char *src,
     int *argcp)
 {
     char *jword;
-    char savec;
     char **argv;
     int cur, total;
 
     *argcp = 0;
-#define WORDSTOALLOC 4			/* most lines are short */
+#define WORDSTOALLOC 6			/* most lines are short */
     argv = (char **) malloc (WORDSTOALLOC * sizeof (char *));
     if (!argv) return NULL;
     cur = 0;
@@ -293,6 +304,8 @@ static char **split_into_words (  /* argvify string */
      */
 
     do {
+	char savec;
+
 	jword = skip_space (src);
 	src = skip_nonspace (jword);
 	savec = *src;
@@ -300,7 +313,7 @@ static char **split_into_words (  /* argvify string */
 	if (cur == total) {
 	    char **prevargv = argv;
 	    total += WORDSTOALLOC;
-	    argv = (char **) realloc (argv, total * sizeof (char *));
+	    argv = reallocarray (argv, total, sizeof (char *));
 	    if (!argv) {
 		free (prevargv);
 		return NULL;
@@ -393,13 +406,11 @@ static int cvthexkey (	/* turn hex key string into octets */
     unsigned int i;
     unsigned int len = 0;
     char *retval;
-    const char *s;
     unsigned char *us;
-    char c;
     char savec = '\0';
 
     /* count */
-    for (s = hexstr; *s; s++) {
+    for (const char *s = hexstr; *s; s++) {
 	if (!isascii(*s)) return -1;
 	if (isspace(*s)) continue;
 	if (!isxdigit(*s)) return -1;
@@ -420,7 +431,8 @@ static int cvthexkey (	/* turn hex key string into octets */
     }
 
     for (us = (unsigned char *) retval, i = len; i > 0; hexstr++) {
-	c = *hexstr;
+	char c = *hexstr;
+
 	if (isspace(c)) continue;	 /* already know it is ascii */
 	if (isupper(c))
 	    c = tolower(c);
@@ -447,13 +459,12 @@ static int dispatch_command (
     const CommandTable *tab,
     int *statusp)
 {
-    const CommandTable *ct;
     const char *cmd;
     size_t n;
 					/* scan table for command */
     cmd = argv[0];
     n = strlen (cmd);
-    for (ct = tab; ct->name; ct++) {
+    for (const CommandTable *ct = tab; ct->name; ct++) {
 					/* look for unique prefix */
 	if (n >= ct->minlen && n <= ct->maxlen &&
 	    strncmp (cmd, ct->name, n) == 0) {
@@ -521,7 +532,6 @@ static void register_signals (void)
 int auth_initialize ( char *authfilename )
 {
     int n;
-    AuthList *head, *tail;
     FILE *authfp;
     Bool exists;
 
@@ -598,6 +608,8 @@ int auth_initialize ( char *authfilename )
 		 "%s:  creating new authority file %s\n",
 		 ProgramName, authfilename);
     } else {
+	AuthList *head, *tail;
+
 	iceauth_existed = True;
 	n = read_auth_entries (authfp, &head, &tail);
 	(void) fclose (authfp);
@@ -622,7 +634,6 @@ int auth_initialize ( char *authfilename )
 static int write_auth_file (char *tmp_nam, size_t tmp_nam_len)
 {
     FILE *fp;
-    AuthList *list;
 
     if ((strlen(iceauth_filename) + 3) > tmp_nam_len) {
 	strncpy(tmp_nam, "filename too long", tmp_nam_len);
@@ -640,8 +651,9 @@ static int write_auth_file (char *tmp_nam, size_t tmp_nam_len)
 	return -1;
     } 
 
-    for (list = iceauth_head; list; list = list->next)
+    for (AuthList *list = iceauth_head; list; list = list->next) {
 	IceWriteAuthFileEntry (fp, list->auth);
+    }
 
     (void) fclose (fp);
     return 0;
@@ -649,8 +661,6 @@ static int write_auth_file (char *tmp_nam, size_t tmp_nam_len)
 
 int auth_finalize (void)
 {
-    char temp_name[1024];			/* large filename size */
-
     if (iceauth_modified) {
 	if (dying) {
 	    if (verbose) {
@@ -674,6 +684,8 @@ int auth_finalize (void)
 		     "%s:  %s not writable, changes ignored\n",
 		     ProgramName, iceauth_filename);
 	} else {
+	    char temp_name[1024];		/* large filename size */
+
 	    if (verbose) {
 		printf ("%s authority file %s\n", 
 			ignore_locks ? "Ignoring locks and writing" :
@@ -686,7 +698,7 @@ int auth_finalize (void)
 			 ProgramName, temp_name);
 	    } else {
 		(void) unlink (iceauth_filename);
-#if defined(WIN32) || defined(__UNIXOS2__)
+#ifdef WIN32
 		if (rename(temp_name, iceauth_filename) == -1)
 #else
 		/* Attempt to rename() if link() fails, since this may be on a FS that does not support hard links */
@@ -835,7 +847,7 @@ static int merge_entries (
     AuthList **firstp, AuthList *second,
     int *nnewp, int *nreplp, int *ndupp)
 {
-    AuthList *a, *b, *first, *tail;
+    AuthList *first, *tail;
     int n = 0, nnew = 0, nrepl = 0, ndup = 0;
 
     if (!second) return 0;
@@ -861,12 +873,11 @@ static int merge_entries (
      * bump the tail up to include it, otherwise, cut the entry out of
      * the chain.
      */
-    for (b = second; b; ) {
+    for (AuthList *b = second; b; ) {
 	AuthList *next = b->next;	/* in case we free it */
-	int duplicate;
+	AuthList *a = first;
+	int duplicate = 0;
 
-	duplicate = 0;
-	a = first;
 	for (;;) {
 	    int authDataSame;
 	    if (match_auth (a->auth, b->auth, &authDataSame)) {
@@ -928,19 +939,19 @@ static int search_and_do (
     DoFunc do_func,
     void *data)
 {
-    int i;
     int status = 0;
     int errors = 0;
-    AuthList *l, *next;
-    const char *protoname, *protodata, *netid, *authname;
+    AuthList *next;
 
-    for (l = iceauth_head; l; l = next)
+    for (AuthList *l = iceauth_head; l; l = next)
     {
+	const char *protoname, *protodata, *netid, *authname;
+
 	next = l->next;
 
 	protoname = protodata = netid = authname = NULL;
 
-	for (i = start; i < argc; i++)
+	for (int i = start; i < argc; i++)
 	{
 	    if (!strncmp ("protoname=", argv[i], 10))
 		protoname = argv[i] + 10;
@@ -1018,18 +1029,17 @@ int print_help (
     FILE *fp,
     const char *cmd)
 {
-    const CommandTable *ct;
     int n = 0;
 
     fprintf (fp, "\n");
     if (!cmd) {				/* if no cmd, print all help */
-	for (ct = command_table; ct->name; ct++) {
+	for (const CommandTable *ct = command_table; ct->name; ct++) {
 	    fprintf (fp, "%s\n\n", ct->helptext);
 	    n++;
 	}
     } else {
 	size_t len = strlen (cmd);
-	for (ct = command_table; ct->name; ct++) {
+	for (const CommandTable *ct = command_table; ct->name; ct++) {
 	    if (strncmp (cmd, ct->name, len) == 0) {
 		fprintf (fp, "%s\n\n", ct->helptext);
 		n++;
@@ -1080,13 +1090,11 @@ static int do_questionmark (
     int argc _X_UNUSED,
     const char **argv _X_UNUSED)
 {
-    const CommandTable *ct;
-    unsigned int i;
 #define WIDEST_COLUMN 72
     unsigned int col = WIDEST_COLUMN;
 
     printf ("Commands:\n");
-    for (ct = command_table; ct->name; ct++) {
+    for (const CommandTable *ct = command_table; ct->name; ct++) {
 	if ((col + ct->maxlen) > WIDEST_COLUMN) {
 	    if (ct != command_table) {
 		putc ('\n', stdout);
@@ -1096,7 +1104,7 @@ static int do_questionmark (
 	}
 	fputs (ct->name, stdout);
 	col += ct->maxlen;
-	for (i = ct->maxlen; i < COMMAND_NAMES_PADDED_WIDTH; i++) {
+	for (unsigned int i = ct->maxlen; i < COMMAND_NAMES_PADDED_WIDTH; i++) {
 	    putc (' ', stdout);
 	    col++;
 	}
@@ -1123,10 +1131,8 @@ static int do_list (
     ld.fp = stdout;
 
     if (argc == 1) {
-	register AuthList *l;
-
 	if (iceauth_head) {
-	    for (l = iceauth_head; l; l = l->next) {
+	    for (AuthList *l = iceauth_head; l; l = l->next) {
 		dump_entry (inputfilename, lineno, l->auth, &ld);
 	    }
 	}
@@ -1148,10 +1154,8 @@ static int do_merge (
     int argc,
     const char **argv)
 {
-    int i;
     int errors = 0;
-    AuthList *head, *tail, *listhead, *listtail;
-    int nentries, nnew, nrepl, ndup;
+    AuthList *listhead, *listtail;
 
     if (argc < 2) {
 	prefix (inputfilename, lineno);
@@ -1161,10 +1165,12 @@ static int do_merge (
 
     listhead = listtail = NULL;
 
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
 	const char *filename = argv[i];
 	FILE *fp;
 	Bool used_stdin = False;
+	int nentries;
+	AuthList *head, *tail;
 
 	fp = open_file (&filename, "rb",
 			&used_stdin, inputfilename, lineno,
@@ -1192,6 +1198,8 @@ static int do_merge (
      * if we have new entries, merge them in (freeing any duplicates)
      */
     if (listhead) {
+        int nentries, nnew, nrepl, ndup;
+
 	nentries = merge_entries (&iceauth_head, listhead,
 	    &nnew, &nrepl, &ndup);
 	if (verbose) 
@@ -1531,14 +1539,10 @@ static int do_source (
     const char **argv)
 {
     const char *script;
-    char buf[BUFSIZ];
     FILE *fp;
     Bool used_stdin = False;
-    size_t len;
-    int errors = 0, status;
+    int errors = 0;
     int sublineno = 0;
-    char **subargv;
-    int subargc;
     Bool prompt = False;		/* only true if reading from tty */
 
     if (argc != 2 || !argv[1]) {
@@ -1557,6 +1561,11 @@ static int do_source (
     if (verbose && used_stdin && isatty (fileno (fp))) prompt = True;
 
     while (!alldone) {
+	char buf[BUFSIZ];
+	size_t len;
+	char **subargv;
+	int subargc;
+
 	buf[0] = '\0';
 	if (prompt) {
 	    printf ("iceauth> ");
@@ -1575,8 +1584,8 @@ static int do_source (
 	buf[--len] = '\0';		/* remove new line */
 	subargv = split_into_words (buf, &subargc);
 	if (subargv) {
-	    status = process_command (script, sublineno, subargc,
-                                      (const char **) subargv);
+	    int status = process_command (script, sublineno, subargc,
+                                          (const char **) subargv);
 	    free ((char *) subargv);
 	    errors += status;
 	} else {

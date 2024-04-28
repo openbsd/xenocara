@@ -85,7 +85,6 @@ usage (int exitcode)
 int
 main (int argc, char *argv[])
 {
-    int i;
     const char *sourcename = defsource;
     const char **arglist = defcmds;
     int nargs = ndefcmds;
@@ -93,13 +92,11 @@ main (int argc, char *argv[])
 
     ProgramName = argv[0];
 
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
 	const char *arg = argv[i];
 
 	if (arg[0] == '-') {
-	    const char *flag;
-
-	    for (flag = (arg + 1); *flag; flag++) {
+	    for (const char *flag = (arg + 1); *flag; flag++) {
 		switch (*flag) {
 		  case 'f':		/* -f authfilename */
 		    if (++i >= argc) {
