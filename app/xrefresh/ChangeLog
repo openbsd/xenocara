@@ -1,3 +1,33 @@
+commit e4d55bdc6ca6f9e4b7ff07d253acd04d0a9ec1f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 15:15:14 2024 -0800
+
+    xrefresh 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1a829930f7b5b00e5fa128c6dd0dd1a7c4065213
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 17:04:31 2023 -0800
+
+    Add -help option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1b141ab13d101fa7a2c4ab3a220307643d419655
+Author: Andrew LeTourneau <centerorbit@gmail.com>
+Date:   Tue Aug 13 12:08:47 2019 -0500
+
+    Adding in a '-delay ms' parameter to optionally prolong refreshx
+
+commit ac5126afc8e62dfc1fd69887984ba43fcb16e8eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 13 15:46:06 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 8d1b74a3bf970609d1d2a2db5191bf7d67353197
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jul 12 10:45:59 2022 -0700
@@ -512,7 +542,7 @@ Date:   Wed Jul 20 19:32:04 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 67d4877c3b7fcc2324da39842da689f8bdf6122d
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:27:45 2005 +0000
 
     Build systems for xrdb, xrandr, xrefresh

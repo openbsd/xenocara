@@ -70,9 +70,11 @@ static Window win;
 static char *ProgramName;
 
 static void _X_NORETURN _X_COLD
-Syntax(void)
+Syntax(int exitval)
 {
-    fprintf (stderr, "usage:  %s [-options] [geometry] [display]\n\n%s",
+    FILE *out = (exitval == EXIT_SUCCESS) ? stdout : stderr;
+
+    fprintf (out, "usage:  %s [-options] [geometry] [display]\n\n%s",
 	     ProgramName,
 	     "where the available options are:\n"
 	     "    -display host:dpy       or -d\n"
@@ -82,24 +84,25 @@ Syntax(void)
 	     "    -solid colorname        use the color indicated\n"
 	     "    -root                   use the root background\n"
 	     "    -none                   no background in window\n"
+	     "    -delay ms               time to hold refresh\n"
 	     "    -version                print program version\n"
 	);
-    fprintf (stderr, "\nThe default is:  %s -none\n\n", ProgramName);
-    exit (1);
+    fprintf(out, "\nThe default is:  %s -none -delay 0\n\n", ProgramName);
+    exit (exitval);
 }
 
 static void _X_NORETURN _X_COLD
 missing_arg(const char *arg)
 {
     fprintf (stderr, "%s: %s requires an argument\n\n", ProgramName, arg);
-    Syntax ();
+    Syntax (EXIT_FAILURE);
 }
 
 static void _X_NORETURN _X_COLD
 unknown_arg(const char *arg)
 {
     fprintf (stderr, "%s: unrecognized argument %s\n\n", ProgramName, arg);
-    Syntax ();
+    Syntax (EXIT_FAILURE);
 }
 
 /*
@@ -191,11 +194,13 @@ main(int argc, char *argv[])
     unsigned long mask;
     int screen;
     int x, y, width, height;
+    unsigned long delay = 0;
     char *geom = NULL;
     int geom_result;
     int display_width, display_height;
     char *solidcolor = NULL;
     XColor cdef;
+    struct timespec tim;
 
     ProgramName = argv[0];
 
@@ -228,9 +233,17 @@ main(int argc, char *argv[])
 	    } else if (isabbreviation ("-root", arg, 2)) {
 		action = doRoot;
 		continue;
-	    } else if (isabbreviation ("-version", arg, 1)) {
+	    } else if (isabbreviation("-delay", arg, 2)) {
+		if (++i >= argc) missing_arg(arg);
+		delay = ((unsigned long)atol(argv[i])) * 1000000L;
+		continue;
+	    }
+	    else if (isabbreviation ("-version", arg, 1)) {
 		puts(PACKAGE_STRING);
-		exit(0);
+		exit(EXIT_SUCCESS);
+            }
+	    else if (isabbreviation ("-help", arg, 1)) {
+		Syntax(EXIT_SUCCESS);
 	    } else 
 		unknown_arg (arg);
 	} else if (arg[0] == '=')			/* obsolete */
@@ -376,6 +389,15 @@ main(int argc, char *argv[])
      * backing store;  or do a ClearArea generating exposures on all windows
      */
     XMapWindow (dpy, win);
+    /* flushing, because sometimes window will never show (especially for
+	 * exceptionally short delays) */
+    XFlush(dpy);
+
+    /* pause before returning screen */
+    tim.tv_sec = delay / 1000000000L;
+    tim.tv_nsec = delay % 1000000000L;
+    nanosleep(&tim , NULL);
+
     /* the following will free the color that we might have allocated */
     XCloseDisplay (dpy);
     exit (0);

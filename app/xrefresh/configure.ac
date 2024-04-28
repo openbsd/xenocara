@@ -23,8 +23,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xrefresh], [1.0.7],
-        [https://gitlab.freedesktop.org/xorg/app/xrefresh/issues], [xrefresh])
+AC_INIT([xrefresh], [1.1.0],
+        [https://gitlab.freedesktop.org/xorg/app/xrefresh/-/issues], [xrefresh])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_USE_SYSTEM_EXTENSIONS
