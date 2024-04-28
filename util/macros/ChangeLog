@@ -1,3 +1,20 @@
+commit 7ed2b3798c030bd1729b699b446b43aba2ec606e
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Apr 16 16:06:37 2024 -0400
+
+    Version bump: 1.20.1
+
+commit 1031f8cc5c7a170e278372ccdf2e70151b096ef7
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Jan 8 14:48:49 2024 -0500
+
+    Remove unnecessary escape
+    
+    Avoids warnings like:
+    
+      checking if /usr/bin/cpp requires -traditional... grep: warning: stray \ before "
+      grep: warning: stray \ before "
+
 commit cb147377e9341af05232f95814022abdecf14024
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Feb 7 14:49:10 2023 -0800
@@ -2269,13 +2286,13 @@ Date:   Wed Oct 19 02:48:17 2005 +0000
     Update package version number for RC1 release.
 
 commit b15a7b3dcc5c8af0a1ab837d8ca03910611e0968
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Oct 17 16:04:44 2005 +0000
 
     Add missing comma in AC_HELP_STRING call.
 
 commit 764ee0f698a17e34998b0e6d85f2c6cbf8f624c7
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Oct 3 21:22:08 2005 +0000
 
     - For all drivers that have a <driver>.sgml file, add code in their build
