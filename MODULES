@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.518 2024/04/27 17:57:10 matthieu Exp $
+# $OpenBSD: MODULES,v 1.519 2024/04/28 14:46:15 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -6,15 +6,15 @@
 app/appres		1.0.6
 app/bdftopcf		1.1.1
 app/beforelight		1.0.6
-app/bitmap		1.1.1		needs-update
-app/editres		1.0.9		needs-update
+app/bitmap		1.1.1
+app/editres		1.0.9
 app/fonttosfnt		1.2.3
-app/iceauth		1.0.10		needs-update
+app/iceauth		1.0.10
 app/ico			1.0.6
-app/listres		1.0.6		needs-update
+app/listres		1.0.6
 app/luit		1.1.1		remove?
 app/mkcomposecache	1.2.2		needs-import
-app/mkfontscale		1.2.3		needs-update
+app/mkfontscale		1.2.3
 app/oclock		1.0.5
 app/rgb			1.1.0		remove?
 app/sessreg		1.1.3
@@ -23,7 +23,7 @@ app/smproxy		1.0.7
 app/twm			1.0.12
 app/viewres		1.0.7
 app/x11perf		1.6.2
-app/xauth		1.1.3		needs-update
+app/xauth		1.1.3
 app/xbacklight		1.2.3
 app/xbiff		1.0.5
 app/xcalc		1.1.2
@@ -34,39 +34,39 @@ app/xcompmgr		1.1.9
 app/xconsole		1.0.8
 app/xdpyinfo		1.3.4
 app/xdriinfo		1.0.7
-app/xedit		1.2.4		needs-update
-app/xev			1.2.6		needs-update
+app/xedit		1.2.4
+app/xev			1.2.6
 app/xeyes		1.3.0
 app/xf86dga		1.0.3
 app/xfd			1.1.4
-app/xfontsel		1.1.1		needs-update
+app/xfontsel		1.1.1
 app/xgamma		1.0.7
 app/xgc			1.0.6
 app/xhost		1.0.9
 app/xinit		1.4.2
 app/xinput		1.6.4
-app/xkbcomp		1.4.7		needs-update
+app/xkbcomp		1.4.7
 app/xkbevd		1.1.5
 app/xkbprint		1.0.6
-app/xkbutils		1.0.6		needs-update
+app/xkbutils		1.0.6
 app/xkill		1.0.6
-app/xload		1.2.0		needs-update
+app/xload		1.2.0
 app/xlogo		1.0.6
 app/xlsatoms		1.1.4
 app/xlsclients		1.1.5
-app/xlsfonts		1.0.8		needs-update
+app/xlsfonts		1.0.8
 app/xmag		1.0.7
-app/xmessage		1.0.7		needs-update
+app/xmessage		1.0.7
 app/xmodmap		1.0.11
-app/xmore		1.0.4		needs-update
-app/xpr			1.2.0		needs-update
-app/xprop		1.2.7		needs-update
+app/xmore		1.0.4
+app/xpr			1.2.0
+app/xprop		1.2.7
 app/xrandr		1.5.2
 app/xrdb		1.2.2
-app/xrefresh		1.1.0		needs-update
+app/xrefresh		1.1.0
 app/xset		1.2.5
 app/xsetroot		1.1.3
-app/xsm			1.0.6		needs-update
+app/xsm			1.0.6
 app/xvidtune		1.0.4
 app/xvinfo		1.1.5
 app/xwd			1.0.9
@@ -75,7 +75,7 @@ app/xwud		1.0.6
 
 data/bitmaps		1.1.3
 
-doc/xorg-docs		1.7.3		needs-update
+doc/xorg-docs		1.7.3
 
 driver/xf86-input-acecad	1.5.0
 driver/xf86-input-elographics	1.4.3
@@ -109,7 +109,7 @@ driver/xf86-video-vesa		2.6.0		needs-update
 driver/xf86-video-vmware	13.4.0		needs-update
 driver/xf86-video-wsfb		0.4.1
 
-font/encodings			1.1.0		needs-update
+font/encodings			1.1.0
 font/adobe-100dpi		1.0.4
 font/adobe-75dpi		1.0.4		
 font/adobe-utopia-100dpi	1.0.5
@@ -143,7 +143,7 @@ font/schumacher-misc		1.1.3
 font/screen-cyrillic		1.0.5
 font/sony-misc			1.0.4
 font/sun-misc			1.0.4
-font/util			1.4.1		needs-update
+font/util			1.4.1
 font/winitzki-cyrillic		1.0.4
 font/xfree86-type1		1.0.5
 
@@ -172,14 +172,14 @@ lib/libXres			1.2.2
 lib/libXt			1.3.0
 lib/libXtst			1.2.4
 lib/libXv			1.0.12
-lib/libXvMC			1.0.14		needs-update
+lib/libXvMC			1.0.14
 lib/libXxf86dga			1.1.6
 lib/libXxf86vm			1.1.5
-lib/libfontenc			1.1.8		needs-update
+lib/libfontenc			1.1.8
 lib/libpciaccess		0.18.1		needs-update
 lib/libxcb			1.17.0		needs-update
 lib/libxcvt			0.1.2
-lib/libxkbfile			1.1.3		needs-update
+lib/libxkbfile			1.1.3
 lib/libxshmfence		1.3.2
 lib/libxtrans			1.5.0
 lib/pixman			0.43.4		needs-update
@@ -194,8 +194,8 @@ proto/xcb-proto			1.17.0		needs-update
 proto/xorgproto			2024.1		needs-update
 
 util/cf				1.0.4
-util/gccmakedep			1.0.4		needs-update
-util/macros			1.20.1		needs-update
-util/makedepend			1.0.9		needs-update
+util/gccmakedep			1.0.4
+util/macros			1.20.1
+util/makedepend			1.0.9
 
 xserver				21.1.13
