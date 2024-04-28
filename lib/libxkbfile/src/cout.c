@@ -1074,9 +1074,8 @@ XkbWriteCFile(FILE *out, char *name, XkbFileInfo *result)
             tmp = name;
         else
             tmp++;
-        hdrdef = (char *) _XkbCalloc(strlen(tmp) + 1, sizeof(char));
+        hdrdef = strdup(tmp);
         if (hdrdef) {
-            strcpy(hdrdef, tmp);
             tmp = hdrdef;
             while (*tmp) {
                 if (islower(*tmp))
@@ -1099,8 +1098,10 @@ XkbWriteCFile(FILE *out, char *name, XkbFileInfo *result)
         fprintf(out, "#endif\n");
         fprintf(out, "#define NUM_KEYS	%d\n", xkb->max_key_code + 1);
         ok = (*func) (out, result);
-        if (hdrdef)
+        if (hdrdef) {
             fprintf(out, "#endif /* %s */\n", hdrdef);
+            free(hdrdef);
+        }
     }
 
     if (!ok) {

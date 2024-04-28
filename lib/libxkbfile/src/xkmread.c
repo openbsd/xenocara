@@ -113,9 +113,9 @@ XkmGetCARD32(FILE * file, int *pNRead)
 static int
 XkmSkipPadding(FILE * file, unsigned pad)
 {
-    register int i, nRead = 0;
+    int nRead = 0;
 
-    for (i = 0; i < pad; i++) {
+    for (unsigned int i = 0; i < pad; i++) {
         if (getc(file) != EOF)
             nRead++;
     }
@@ -205,7 +205,7 @@ ReadXkmVirtualMods(FILE *file, XkbFileInfo *result, XkbChangesPtr changes)
 static int
 ReadXkmKeycodes(FILE *file, XkbFileInfo *result, XkbChangesPtr changes)
 {
-    register int i;
+    unsigned int i;
     unsigned minKC, maxKC, nAl;
     int nRead = 0;
     char name[100];
@@ -241,7 +241,7 @@ ReadXkmKeycodes(FILE *file, XkbFileInfo *result, XkbChangesPtr changes)
         xkb->names->keycodes = XkbInternAtom(xkb->dpy, name, False);
     }
 
-    for (pN = &xkb->names->keys[minKC], i = minKC; i <= (int) maxKC; i++, pN++) {
+    for (pN = &xkb->names->keys[minKC], i = minKC; i <= maxKC; i++, pN++) {
         if (fread(pN, 1, XkbKeyNameLength, file) != XkbKeyNameLength) {
             _XkbLibError(_XkbErrBadLength, "ReadXkmKeycodes", 0);
             return -1;
@@ -418,7 +418,6 @@ ReadXkmKeyTypes(FILE *file, XkbFileInfo *result, XkbChangesPtr changes)
 static int
 ReadXkmCompatMap(FILE *file, XkbFileInfo *result, XkbChangesPtr changes)
 {
-    register int i;
     unsigned num_si, groups;
     char name[100];
     XkbSymInterpretPtr interp;
@@ -449,7 +448,7 @@ ReadXkmCompatMap(FILE *file, XkbFileInfo *result, XkbChangesPtr changes)
     compat = xkb->compat;
     compat->num_si = num_si;
     interp = compat->sym_interpret;
-    for (i = 0; i < num_si; i++, interp++) {
+    for (unsigned int i = 0; i < num_si; i++, interp++) {
         tmp = fread(&wire, SIZEOF(xkmSymInterpretDesc), 1, file);
         nRead += tmp * SIZEOF(xkmSymInterpretDesc);
         interp->sym = wire.sym;
@@ -471,9 +470,9 @@ ReadXkmCompatMap(FILE *file, XkbFileInfo *result, XkbChangesPtr changes)
         changes->compat.num_si = num_si;
     }
     if (groups) {
-        register unsigned bit;
+        unsigned int bit = 1;
 
-        for (i = 0, bit = 1; i < XkbNumKbdGroups; i++, bit <<= 1) {
+        for (int i = 0; i < XkbNumKbdGroups; i++, bit <<= 1) {
             xkmModsDesc md;
 
             if (groups & bit) {

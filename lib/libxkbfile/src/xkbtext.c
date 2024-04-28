@@ -68,6 +68,20 @@ tbGetBuffer(unsigned size)
 
 /***====================================================================***/
 
+static inline char *
+tbGetBufferString(const char *str)
+{
+    size_t size = strlen(str) + 1;
+    char *rtrn = tbGetBuffer((unsigned) size);
+
+    if (rtrn != NULL)
+        memcpy(rtrn, str, size);
+
+    return rtrn;
+}
+
+/***====================================================================***/
+
 char *
 XkbAtomText(Display *dpy, Atom atm, unsigned format)
 {
@@ -236,7 +250,6 @@ static const char *modNames[XkbNumModifiers] = {
 char *
 XkbModIndexText(unsigned ndx, unsigned format)
 {
-    char *rtrn;
     char buf[100];
 
     if (format == XkbCFile) {
@@ -255,9 +268,7 @@ XkbModIndexText(unsigned ndx, unsigned format)
         else
             snprintf(buf, sizeof(buf), "ILLEGAL_%02x", ndx);
     }
-    rtrn = tbGetBuffer(strlen(buf) + 1);
-    strcpy(rtrn, buf);
-    return rtrn;
+    return tbGetBufferString(buf);
 }
 
 char *
@@ -537,7 +548,7 @@ XkbNKNDetailMaskText(unsigned detail, unsigned format)
 {
     char *buf;
     const char *prefix, *suffix;
-    register int i;
+    unsigned int i;
     register unsigned bit;
     int len, plen, slen;
 
@@ -548,9 +559,7 @@ XkbNKNDetailMaskText(unsigned detail, unsigned format)
             tmp = "0";
         else if (format == XkbMessage)
             tmp = "none";
-        buf = tbGetBuffer(strlen(tmp) + 1);
-        strcpy(buf, tmp);
-        return buf;
+        return tbGetBufferString(tmp);
     }
     else if ((detail & XkbAllNewKeyboardEventsMask) ==
              XkbAllNewKeyboardEventsMask) {
@@ -560,9 +569,7 @@ XkbNKNDetailMaskText(unsigned detail, unsigned format)
             tmp = "XkbAllNewKeyboardEventsMask";
         else
             tmp = "all";
-        buf = tbGetBuffer(strlen(tmp) + 1);
-        strcpy(buf, tmp);
-        return buf;
+        return tbGetBufferString(tmp);
     }
     if (format == XkbMessage) {
         prefix = "";
@@ -1424,7 +1431,7 @@ static actionCopy copyActionArgs[XkbSA_NumActions] = {
 char *
 XkbActionText(Display *dpy, XkbDescPtr xkb, XkbAction *action, unsigned format)
 {
-    char buf[ACTION_SZ], *tmp;
+    char buf[ACTION_SZ];
     int sz;
 
     if (format == XkbCFile) {
@@ -1445,16 +1452,13 @@ XkbActionText(Display *dpy, XkbDescPtr xkb, XkbAction *action, unsigned format)
             CopyOtherArgs(dpy, xkb, action, buf, &sz);
         TryCopyStr(buf, ")", &sz);
     }
-    tmp = tbGetBuffer(strlen(buf) + 1);
-    if (tmp != NULL)
-        strcpy(tmp, buf);
-    return tmp;
+    return tbGetBufferString(buf);
 }
 
 char *
 XkbBehaviorText(XkbDescPtr xkb, XkbBehavior * behavior, unsigned format)
 {
-    char buf[256], *tmp;
+    char buf[256];
 
     if (format == XkbCFile) {
         if (behavior->type == XkbKB_Default)
@@ -1509,10 +1513,7 @@ XkbBehaviorText(XkbDescPtr xkb, XkbBehavior * behavior, unsigned format)
                 snprintf(buf, sizeof(buf), "overlay%d= %s", ndx, kn);
         }
     }
-    tmp = tbGetBuffer(strlen(buf) + 1);
-    if (tmp != NULL)
-        strcpy(tmp, buf);
-    return tmp;
+    return tbGetBufferString(buf);
 }
 
 /***====================================================================***/
@@ -1521,7 +1522,7 @@ char *
 XkbIndentText(unsigned size)
 {
     static char buf[32];
-    register int i;
+    unsigned int i;
 
     if (size > 31)
         size = 31;

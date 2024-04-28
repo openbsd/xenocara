@@ -1,3 +1,223 @@
+commit 39a5f8e67615f443e76146769d5f5f9abc5ebd2f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 4 14:06:06 2024 -0800
+
+    libxkbfile 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0888158e30bfcd0ae6881b9d78c8122ce2d5f4e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 4 15:40:40 2023 -0700
+
+    Add a meson build system
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 752d9cbc0efc51bdef2ea25fba2b92974327f6a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 13:32:21 2023 -0700
+
+    Fix -Wsign-compare warnings in xkbtext.c & xkmread.c
+    
+    xkbtext.c: In function ‘XkbNKNDetailMaskText’:
+    xkbtext.c:588:37: warning: comparison of integer expressions of different
+     signedness: ‘int’ and ‘long unsigned int’ [-Wsign-compare]
+      588 |     for (len = 0, i = 0, bit = 1; i < NUM_NKN; i++, bit <<= 1) {
+          |                                     ^
+    xkbtext.c:597:37: warning: comparison of integer expressions of different
+     signedness: ‘int’ and ‘long unsigned int’ [-Wsign-compare]
+      597 |     for (len = 0, i = 0, bit = 1; i < NUM_NKN; i++, bit <<= 1) {
+          |                                     ^
+    
+    xkmread.c: In function ‘XkmSkipPadding’:
+    xkmread.c:118:19: warning: comparison of integer expressions of different
+     signedness: ‘int’ and ‘unsigned int’ [-Wsign-compare]
+      118 |     for (i = 0; i < pad; i++) {
+          |                   ^
+    xkmread.c: In function ‘ReadXkmKeycodes’:
+    xkmread.c:254:54: warning: comparison of integer expressions of different
+     signedness: ‘int’ and ‘unsigned int’ [-Wsign-compare]
+      254 |         for (pAl = xkb->names->key_aliases, i = 0; i < nAl; i++, pAl++)
+     {
+          |                                                      ^
+    xkmread.c: In function ‘ReadXkmCompatMap’:
+    xkmread.c:452:19: warning: comparison of integer expressions of different
+     signedness: ‘int’ and ‘unsigned int’ [-Wsign-compare]
+      452 |     for (i = 0; i < num_si; i++, interp++) {
+          |                   ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f908dc6c1205feb66f3538096f24e2ee22947893
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 13:26:51 2023 -0700
+
+    XkbIndentText: Fix -Wsign-compare warning
+    
+    xkbtext.c: In function ‘XkbIndentText’:
+    xkbtext.c:1529:19: warning: comparison of integer expressions of different
+     signedness: ‘int’ and ‘unsigned int’ [-Wsign-compare]
+     1529 |     for (i = 0; i < size; i++) {
+          |                   ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8a91517ca6ea77633476595b0eb5b213357c60e5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 13:22:13 2023 -0700
+
+    xkbtext.c: Add tbGetBufferString helper function
+    
+    Handles common case of allocating & copying string to temporary buffer
+    
+    As a side effect, clears up gcc warning:
+    xkbtext.c: In function ‘XkbBehaviorText’:
+    xkbtext.c:1476:19: warning: declaration of ‘tmp’ shadows a previous local [-Wshadow]
+     1476 |             char *tmp;
+          |                   ^~~
+    xkbtext.c:1457:21: note: shadowed declaration is here
+     1457 |     char buf[256], *tmp;
+          |                     ^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e7bae89a887b189aa4c5e551ce0fba4a763df1a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 12:45:41 2023 -0700
+
+    DefaultParser: avoid -Wimplicit-fallthrough warnings
+    
+    Clears up 24 warnings from gcc 12 of the form:
+    
+    xkbconfig.c: In function ‘DefaultParser’:
+    xkbconfig.c:469:36: warning: this statement may fall through [-Wimplicit-fallthrough=]
+      469 |     case _XkbCF_RulesFile:      if (!str) str = &rtrn->rules_file;
+          |                                    ^
+    xkbconfig.c:470:5: note: here
+      470 |     case _XkbCF_Model:          if (!str) str = &rtrn->model;
+          |     ^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8f5e188675d81a8310a1f50f0675a7d421cc53e9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 12:20:59 2023 -0700
+
+    XkbWriteCFile: stop leaking header file ifdef name
+    
+    Found by gcc 12 analyzer:
+    cout.c:1106:8: warning: leak of ‘hdrdef’ [CWE-401] [-Wanalyzer-malloc-leak]
+     1106 |     if (!ok) {
+          |        ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d4eef750160356c8a9dc55d5e28c3546f8ef5418
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 12:12:30 2023 -0700
+
+    XkbCFReportError: avoid -Wformat-nonliteral warning
+    
+    xkbconfig.c: In function ‘XkbCFReportError’:
+    xkbconfig.c:1344:5: warning: format not a string literal,
+     argument types not checked [-Wformat-nonliteral]
+     1344 |     fprintf(file, msg, line);
+          |     ^~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 340dd95c6a566b01bfaf9ce2baa0b49f07e3ac22
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 12:02:58 2023 -0700
+
+    XkbChangeAtomDisplay: stop leaking atom name
+    
+    Found by gcc 12 analyzer:
+    xkbatom.c: In function ‘XkbChangeAtomDisplay’:
+    xkbatom.c:218:16: warning: leak of ‘tmp’ [CWE-401] [-Wanalyzer-malloc-leak]
+    xkbatom.c:220:12: warning: leak of ‘tmp’ [CWE-401] [-Wanalyzer-malloc-leak]
+      220 |     return XInternAtom(dpy, name, onlyIfExists);
+          |            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Fixes: 5e5bd09 ("Fix offline operation.")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a8c782571d3b2419404f3a623f4b5396cd5e7aa4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 11:34:00 2023 -0700
+
+    _XkbInitAtoms: check for malloc() failure
+    
+    Handles gcc 12 analyzer warning:
+    xkbatom.c: In function ‘_XkbInitAtoms’:
+    xkbatom.c:194:21: warning: dereference of possibly-NULL ‘nodeTable’
+     [CWE-690] [-Wanalyzer-possible-null-dereference]
+      194 |     nodeTable[None] = (NodePtr) NULL;
+          |                     ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d44b8926620bf6d033062557441d1aa935a0ac02
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 11:24:05 2023 -0700
+
+    _XkbMakeAtom: remove check for impossible case
+    
+    nd->string is always the result of a new allocation, so can
+    never be equal to string.
+    
+    This resolves a warning from the gcc 12 analyzer, which reported
+    a memory leak if the impossible condition was ever true:
+    
+    In file included from xkbatom.c:85:
+    xkbatom.c: In function ‘_XkbMakeAtom’:
+    XKBfileInt.h:51:33: warning: leak of ‘<unknown>’ [CWE-401]
+      [-Wanalyzer-malloc-leak]
+    [...]
+               |  158 |             if (!table) {
+               |      |                ^
+               |      |                |
+               |      |                (15) following ‘true’ branch (when ‘table’ is NULL)...
+               |  159 |                 if (nd->string != string)
+               |      |                 ~~ ~
+               |      |                 |  |
+               |      |                 |  (17) following ‘false’ branch...
+               |      |                 (16) ...to here
+               |  161 |                 _XkbFree(nd);
+               |      |                 ^~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 20b6672a6d7d5531ff1db1e5af762c052bf883bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 25 13:13:44 2023 -0700
+
+    Set close-on-exec when opening files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8f8a0a4f798bddcf402fecb0ac60e18f027ff276
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:35: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:35: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:35: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3c0bca45d61982295ae0051fb874d57dc3d6f327
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Thu Dec 8 10:39:07 2022 -0500

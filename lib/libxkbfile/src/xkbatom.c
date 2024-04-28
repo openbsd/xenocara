@@ -100,7 +100,7 @@ typedef struct _Node {
 static Atom lastAtom = None;
 static NodePtr atomRoot = (NodePtr) NULL;
 static unsigned long tableLength;
-static NodePtr *nodeTable;
+static NodePtr *nodeTable = NULL;
 
 static Atom
 _XkbMakeAtom(const char *string, size_t len, Bool makeit)
@@ -156,8 +156,7 @@ _XkbMakeAtom(const char *string, size_t len, Bool makeit)
                                             tableLength * (2 *
                                                            sizeof(NodePtr)));
             if (!table) {
-                if (nd->string != string)
-                    _XkbFree(nd->string);
+                _XkbFree(nd->string);
                 _XkbFree(nd);
                 return BAD_RESOURCE;
             }
@@ -192,7 +191,8 @@ _XkbInitAtoms(void)
 {
     tableLength = InitialTableSize;
     nodeTable = (NodePtr *) _XkbAlloc(InitialTableSize * sizeof(NodePtr));
-    nodeTable[None] = (NodePtr) NULL;
+    if (nodeTable != NULL)
+        nodeTable[None] = (NodePtr) NULL;
 }
 
 /***====================================================================***/
@@ -225,12 +225,13 @@ XkbInternAtom(Display *dpy, const char *name, Bool onlyIfExists)
 Atom
 XkbChangeAtomDisplay(Display *oldDpy, Display *newDpy, Atom atm)
 {
-    char *tmp;
-
     if (atm != None) {
-        tmp = XkbAtomGetString(oldDpy, atm);
-        if (tmp != NULL)
-            return XkbInternAtom(newDpy, tmp, False);
+        char *tmp = XkbAtomGetString(oldDpy, atm);
+        if (tmp != NULL) {
+            Atom a = XkbInternAtom(newDpy, tmp, False);
+            _XkbFree(tmp);
+            return a;
+        }
     }
     return None;
 }
@@ -240,11 +241,8 @@ XkbChangeAtomDisplay(Display *oldDpy, Display *newDpy, Atom atm)
 void
 XkbInitAtoms(Display *dpy)
 {
-    static int been_here = 0;
-
-    if ((dpy == NULL) && (!been_here)) {
+    if ((dpy == NULL) && (nodeTable == NULL)) {
         _XkbInitAtoms();
-        been_here = 1;
     }
     return;
 }

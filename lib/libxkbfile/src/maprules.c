@@ -51,6 +51,11 @@
 #include "XKBfileInt.h"
 #include "XKBrules.h"
 
+#ifdef O_CLOEXEC
+#define FOPEN_CLOEXEC "e"
+#else
+#define FOPEN_CLOEXEC ""
+#endif
 
 #ifdef DEBUG
 #define PR_DEBUG(s)		fprintf(stderr,s)
@@ -1040,10 +1045,10 @@ XkbRF_LoadRulesByName(char *base, char *locale, XkbRF_RulesPtr rules)
         strcpy(buf, base);
     }
 
-    file = fopen(buf, "r");
+    file = fopen(buf, "r" FOPEN_CLOEXEC);
     if ((!file) && (locale)) {  /* fallback if locale was specified */
         strcpy(buf, base);
-        file = fopen(buf, "r");
+        file = fopen(buf, "r" FOPEN_CLOEXEC);
     }
     if (!file)
         return False;
@@ -1245,11 +1250,11 @@ XkbRF_LoadDescriptionsByName(char *base, char *locale, XkbRF_RulesPtr rules)
         snprintf(buf, sizeof(buf), "%s.lst", base);
     }
 
-    file = fopen(buf, "r");
+    file = fopen(buf, "r" FOPEN_CLOEXEC);
     if ((!file) && (locale)) {  /* fallback if locale was specified */
         snprintf(buf, sizeof(buf), "%s.lst", base);
 
-        file = fopen(buf, "r");
+        file = fopen(buf, "r" FOPEN_CLOEXEC);
     }
     if (!file)
         return False;

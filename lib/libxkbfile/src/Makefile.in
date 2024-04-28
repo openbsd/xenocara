@@ -166,7 +166,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -319,7 +318,7 @@ libxkbfileinclude_HEADERS = \
     $(top_srcdir)/include/X11/extensions/XKMformat.h\
     $(top_srcdir)/include/X11/extensions/XKBfile.h
 
-EXTRA_DIST = magic
+EXTRA_DIST = magic meson.build
 all: all-am
 
 .SUFFIXES:

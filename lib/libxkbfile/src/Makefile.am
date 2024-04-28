@@ -31,4 +31,4 @@ libxkbfileinclude_HEADERS = \
     $(top_srcdir)/include/X11/extensions/XKMformat.h\
     $(top_srcdir)/include/X11/extensions/XKBfile.h
 
-EXTRA_DIST = magic
+EXTRA_DIST = magic meson.build

@@ -210,7 +210,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -337,7 +336,7 @@ SUBDIRS = src
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xkbfile.pc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-EXTRA_DIST = README.md
+EXTRA_DIST = README.md meson.build
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
