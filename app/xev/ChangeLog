@@ -1,3 +1,54 @@
+commit 22a6e7416e126ba4860a62128254d96ad2c1fa84
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 13:56:28 2024 -0800
+
+    xev 1.2.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 104e6cd3459df1e3020bf8c27d275392c5b15531
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 11 12:17:13 2023 -0700
+
+    Mark graceful_exit as noreturn
+    
+    Suggested by clang -Wmissing-noreturn
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9588a366cd0ca9b38cc545a8f70ae1f70f062ee9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 11 12:14:03 2023 -0700
+
+    Mark global variables as "static" since there's only one source file
+    
+    Quiets clang -Wmissing-variable-declarations warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fc70d05dad45c92809ec5e84090e7708b21815cd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa66bacb97ab55840630f717406c588885637739
+Author: Mikael Magnusson <mikachu@gmail.com>
+Date:   Wed Jun 29 12:08:43 2022 +0200
+
+    Fix overflow on XmbLookupString buffer
+    
+    The returned nmbbytes value is the length we need the buffer to be, but
+    the current size is only bsize. We can't store a NUL at buf[nmbbytes]
+    before the realloc, so only do this when the buffer is sized properly.
+    
+    Signed-off-by: Mikael Magnusson <mikachu@gmail.com>
+    [ismael@iodev.co.uk: Moved string termination out of the loop]
+    Signed-off-by: Ismael Luceno <ismael@iodev.co.uk>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 19e473aa6b1fbd01bb8c7206c06aacf5e789d758
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jul 12 09:58:53 2022 -0700
@@ -744,7 +795,7 @@ Date:   Wed Jul 20 19:31:52 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 275174c66316b789f96ec23974de50499ea3c5a2
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 19:58:25 2005 +0000
 
     Build system for xev
