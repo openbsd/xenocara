@@ -23,10 +23,10 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
 AC_INIT([xmore],
-	[1.0.3],
-	[https://gitlab.freedesktop.org/xorg/app/xmore/issues],
+	[1.0.4],
+	[https://gitlab.freedesktop.org/xorg/app/xmore/-/issues],
 	[xmore])
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -38,7 +38,7 @@ AC_CONFIG_HEADERS([config.h])
 
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XMORE, xaw7)
+PKG_CHECK_MODULES(XMORE, [xaw7 xproto >= 7.0.25])
 
 PKG_CHECK_MODULES(APPDEFS, xt)
 xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`

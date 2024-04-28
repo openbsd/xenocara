@@ -1,3 +1,123 @@
+commit 6d773b98f4a7ed7ca3f981f1aabad1f2873e3d6e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 3 14:44:38 2024 -0800
+
+    xmore 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 80cfd749eb786776713d9004d28cc184b32c5380
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 26 17:54:22 2023 -0700
+
+    Fix spelling/wording issues
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 133e08eb45fcff0c8d39e38babb979e1f1c0c2e3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 26 17:47:35 2023 -0700
+
+    Handle clang -Wunused-parameter warnings
+    
+    xmore.c:117:31: warning: unused parameter 'event' [-Wunused-parameter]
+    quitAction(Widget w,  XEvent *event, String *params, Cardinal *num_params)
+                                  ^
+    xmore.c:117:46: warning: unused parameter 'params' [-Wunused-parameter]
+    quitAction(Widget w,  XEvent *event, String *params, Cardinal *num_params)
+                                                 ^
+    xmore.c:117:64: warning: unused parameter 'num_params' [-Wunused-parameter]
+    quitAction(Widget w,  XEvent *event, String *params, Cardinal *num_params)
+                                                                   ^
+    xmore.c:123:32: warning: unused parameter 'client_data' [-Wunused-parameter]
+    quitXtProc(Widget w, XtPointer client_data, XtPointer callData)
+                                   ^
+    xmore.c:123:55: warning: unused parameter 'callData' [-Wunused-parameter]
+    quitXtProc(Widget w, XtPointer client_data, XtPointer callData)
+                                                          ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 88ec82664a95715bf6958462ad810e2da077394c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 26 17:40:32 2023 -0700
+
+    Handle clang -Wunused-macros warnings
+    
+      xmore.c:55:9: warning: macro is not used [-Wunused-macros]
+      #define Error(x) { printf x ; exit(EXIT_FAILURE); }
+              ^
+      xmore.c:56:9: warning: macro is not used [-Wunused-macros]
+      #define Assertion(expr, msg) { if (!(expr)) { Error msg } }
+              ^
+      xmore.c:53:9: warning: macro is not used [-Wunused-macros]
+      #define NULLSTR(x) (((x)!=NULL)?(x):(""))
+              ^
+      xmore.c:57:9: warning: macro is not used [-Wunused-macros]
+      #define Log(x)   { if (userOptions.verbose) printf x; }
+              ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 38c72bc8abf651cbc0ebffcc0d0da10d0bcaf7a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 26 17:32:10 2023 -0700
+
+    Handle clang -Wmissing-noreturn warning
+    
+    xmore.c:137:1: warning: function 'usage' could be declared with
+      attribute 'noreturn' [-Wmissing-noreturn]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 76bf671666c5d5626287788df4e1e5ea9be7dbb2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 16:50:24 2023 -0800
+
+    Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5c022b0f411e6cd7c35f2905b77fe2a1df2cd760
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 16:42:43 2023 -0800
+
+    Print which arguments were unknown before giving usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c00677ee7745532fc20027f6e67481f1ed1b5e9f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ef82d7d3c12dca6dc24c43465bfafc1a96027a7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 12:42:02 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cd63cf35b75c298ba9c8d67673054ff9c00507d6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 12:42:00 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f1d979d7a304113ab5df35971c440e6a76761ad9
+Author: Samy Mahmoudi <samy.mahmoudi@gmail.com>
+Date:   Wed Mar 6 03:44:03 2019 +0100
+
+    COPYING: set license information
+    
+    Based on code headers.
+
 commit 2e08823f494fed631a6e8b2d96f9cb37dba6e480
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 3 13:08:40 2019 -0800

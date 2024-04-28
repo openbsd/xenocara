@@ -25,6 +25,10 @@ in this Software without prior written authorization from The Open Group.
  *
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 /* Force ANSI C prototypes from X11 headers */
 #ifndef FUNCPROTO 
 #define FUNCPROTO 15
@@ -44,13 +48,6 @@ in this Software without prior written authorization from The Open Group.
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
-
-/* Turn a NULL pointer string into an empty string */
-#define NULLSTR(x) (((x)!=NULL)?(x):(""))
-
-#define Error(x) { printf x ; exit(EXIT_FAILURE); }
-#define Assertion(expr, msg) { if (!(expr)) { Error msg } }
-#define Log(x)   { if (userOptions.verbose) printf x; }
 
 /* Global vars */
 static Widget        toplevel          = NULL;
@@ -89,7 +86,7 @@ static String fallback_resources[] = {
     "*iconMask:      xmore32",
 #endif /* NOTYET */
     "*textfont: " STANDARDFONT,
-    "*international: True", /* set this globally for ALL widgets to avoid wiered crashes */
+    "*international: True", /* set this globally for ALL widgets to avoid wierd crashes */
     "*text.Translations: #override \\n\\"
         "\tCtrl<Key>S:     no-op(RingBell)\\n\\"
         "\tCtrl<Key>R:     no-op(RingBell)\\n\\"
@@ -117,15 +114,27 @@ static String fallback_resources[] = {
 };
 
 static void
-quitAction(Widget w,  XEvent *event, String *params, Cardinal *num_params)
+quitAction(Widget w, _X_UNUSED XEvent *event,
+           _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     XtAppSetExitFlag(XtWidgetToApplicationContext(w));
 }
 
 static void
-quitXtProc(Widget w, XtPointer client_data, XtPointer callData)
+quitXtProc(Widget w, _X_UNUSED XtPointer client_data,
+           _X_UNUSED XtPointer callData)
 {
     XtCallActionProc(w, "quit", NULL, NULL, 0);
+}
+
+_X_NORETURN _X_COLD
+static void
+usage(FILE *out, int exitval)
+{
+  fprintf(out,
+          "usage: %s [ x options ] [-help|-version] filename\n",
+          ProgramName);
+  exit(exitval);
 }
 
 int main( int argc, char *argv[] )
@@ -138,6 +147,22 @@ int main( int argc, char *argv[] )
 
   ProgramName = argv[0];
 
+  /* Handle args that don't require opening a display */
+  for (int i = 1; i < argc; i++) {
+    const char *argn = argv[i];
+    /* accept single or double dash for -help & -version */
+    if (argn[0] == '-' && argn[1] == '-') {
+      argn++;
+    }
+    if (strcmp (argn, "-help") == 0) {
+      usage(stdout, EXIT_SUCCESS);
+    }
+    if (strcmp (argn, "-version") == 0) {
+      puts(PACKAGE_STRING);
+      exit(EXIT_SUCCESS);
+    }
+  }
+
   XtSetLanguageProc(NULL, NULL, NULL);
   toplevel = XtOpenApplication(&app, "XMore",
                                options, XtNumber(options), 
@@ -146,8 +171,12 @@ int main( int argc, char *argv[] )
 
   if (argc != 2)
   {
-    printf("usage: %s [ x options ] filename\n", argv[0]);
-    exit(EXIT_FAILURE);
+    fputs("Unknown argument(s):", stderr);
+    for (int i = 1; i < argc; i++) {
+      fprintf(stderr, " %s", argv[i]);
+    }
+    fputs("\n\n", stderr);
+    usage(stderr, EXIT_FAILURE);
   }
 
   XtGetApplicationResources(toplevel, (XtPointer)&userOptions, resources, 
