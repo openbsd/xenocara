@@ -658,7 +658,7 @@ void prepare_color_mapping (
     setup_RGBshiftmask(&color.sm, xwd_header.red_mask,
 		       xwd_header.green_mask, xwd_header.blue_mask);
   else {
-    if (!(colormap = (long *) malloc(xwd_header.ncolors * sizeof(long))))
+    if (!(colormap = malloc(xwd_header.ncolors * sizeof(long))))
       fatal_err((catgets(nlmsg_fd,NL_SETN,24,
 		"Could not allocate memory for X-to-printer colormap.")));
 
@@ -937,7 +937,7 @@ void add_index_to_chain (
    * if possible, otherwise malloc space.
    */
   if (color.freechain == NULL) {
-    if (!(new = (COLORINDEX *) malloc(sizeof(COLORINDEX))))
+    if (!(new = malloc(sizeof(COLORINDEX))))
       fatal_err((catgets(nlmsg_fd,NL_SETN,8,
 			"Could not allocate memory for color translation.")));
   } else {
@@ -1116,7 +1116,7 @@ void read_xwd_data (FILE *in)
     }
 
     /* Allocate space for xwd color structures */
-    if (!(xwd_colors = (XColor*) malloc(sizeof(XColor) * xwd_header.ncolors)))
+    if (!(xwd_colors = malloc(sizeof(XColor) * xwd_header.ncolors)))
     	fatal_err((catgets(nlmsg_fd,NL_SETN,12,
 			"Could not allocate memory for xwdfile color table.")));
 
@@ -1285,7 +1285,10 @@ void write_image_suffix (
   if (device == PJETXL)
      fprintf(out,"\033*rC");
   else
+  {
      fprintf(out,"\033*rB");
+     fprintf(out,"\033E");
+  }
 
   /* If doing transparencies, tell it to stop */
   if (slide && device != LJET)
@@ -1526,7 +1529,7 @@ void write_portrait_Z_image (
   int height = limit.height;
   long *line, *lp;
 
-  if (!(line = (long *) malloc(width * sizeof(long))))
+  if (!(line = malloc(width * sizeof(long))))
     fatal_err((catgets(nlmsg_fd,NL_SETN,18,
 			"Could not allocate memory for image line buffer.")));
 
@@ -1551,7 +1554,7 @@ void write_landscape_Z_image (
   int height = limit.width;
   long *line, *lp;
 
-  if (!(line = (long *) malloc(width * sizeof(long))))
+  if (!(line = malloc(width * sizeof(long))))
     fatal_err((catgets(nlmsg_fd,NL_SETN,19,
 			"Could not allocate memory for image line buffer.")));
 
@@ -1576,7 +1579,7 @@ void write_portrait_XY_image (
   int height = limit.height;
   long *line, *lp;
 
-  if (!(line = (long *) malloc(width * sizeof(long))))
+  if (!(line = malloc(width * sizeof(long))))
     fatal_err((catgets(nlmsg_fd,NL_SETN,20,
 			"Could not allocate memory for image line buffer.")));
 
@@ -1601,7 +1604,7 @@ void write_landscape_XY_image (
   int height = limit.width;
   long *line, *lp;
 
-  if (!(line = (long *) malloc(width * sizeof(long))))
+  if (!(line = malloc(width * sizeof(long))))
     fatal_err((catgets(nlmsg_fd,NL_SETN,21,
 			"Could not allocate memory for image line buffer.")));
 

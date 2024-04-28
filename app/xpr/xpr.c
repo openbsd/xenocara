@@ -69,6 +69,29 @@ from the X Consortium.
  * to devices recognized.  Also added -density, -cutoff, and -noposition
  * command line options.
  *
+ * Modified by Jay Hobson, Sun Microsystems to support paper sizes other
+ * than 8.5x11 inches.
+ *
+ * Copyright (c) 2002, Oracle and/or its affiliates.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -115,6 +138,9 @@ int debug = 0;
 #define W_PAGE 2550
 #define H_PAGE 3225
 
+#define PAPER_WIDTH 85*30 /* 8.5 inches */
+#define PAPER_LENGTH 11*300 /* 11 inches */
+
 #ifdef NOINLINE
 #define min(x,y) (((x)<(y))?(x):(y))
 #endif /* NOINLINE */
@@ -155,6 +181,51 @@ static GrayRec gray2x2 = {sizeof(grayscale2x2)/sizeof(long), 2, 2, grayscale2x2}
 static GrayRec gray3x3 = {sizeof(grayscale3x3)/sizeof(long), 3, 3, grayscale3x3};
 static GrayRec gray4x4 = {sizeof(grayscale4x4)/sizeof(long), 4, 4, grayscale4x4};
 
+typedef struct {
+	char *name;
+	double width;
+	double length;
+} PaperRec;
+
+PaperRec paper_size[] = {
+	{"Letter", 8.5,	 11.0 },
+	{"Legal",  8.5,	 14.0 },
+	{"A0",	  33.11, 46.81},
+	{"A1",	  23.39, 33.11},
+	{"A2",	  16.5,	 23.39},
+	{"A3",	  11.7,	 16.5 },
+	{"A4",	   8.27, 11.7 },
+	{"A5",	   5.83,  8.27},
+	{"A6",	   4.13,  5.83},
+	{"A7",	   2.91,  4.13},
+	{"A8",	   2.05,  2.91},
+	{"A9",	   1.46,  2.05},
+	{"A10",	   1.02,  1.46},
+	{"B0",	  39.37, 55.67},
+	{"B1",	  27.83, 39.37},
+	{"B2",	  19.69, 27.83},
+	{"B3",	  13.90, 19.69},
+	{"B4",	   9.84, 13.90},
+	{"B5",	   6.93,  9.84},
+	{"B6",	   4.92,  6.93},
+	{"B7",	   3.46,  4.92},
+	{"B8",	   2.44,  3.46},
+	{"B9",	   1.73,  2.44},
+	{"B10",	   1.22,  1.73},
+	{"C0",	  36.10, 51.06},
+	{"C1",	  25.51, 36.10},
+	{"C2",	  18.03, 25.51},
+	{"C3",	  12.76, 18.03},
+	{"C4",	   9.02, 12.76},
+	{"C5",	   6.38,  9.02},
+	{"C6",	   4.49,  6.38},
+	{"C7",	   3.19,  4.49},
+	{"C8",	   2.24,  3.19},
+	{"C9",	   1.57,  2.24},
+	{"C10",	   1.10,  1.57}
+};
+
+
 /* mapping tables to map a byte in to the hex representation of its
  * bit-reversal
  */
@@ -192,7 +263,9 @@ void parse_args(
   int *density,
   unsigned int *cutoff,
   float *gamma,
-  int *render);
+  int *render,
+  int *paper_width,
+  int *paper_length);
 static
 void setup_layout(
   enum device device,
@@ -204,7 +277,9 @@ void setup_layout(
   char *header,
   char *trailer,
   int *scale,
-  enum orientation *orientation);
+  enum orientation *orientation,
+  int wmax,
+  int hmax);
 static
 char *convert_data(
     XWDFileHeader *win,
@@ -227,7 +302,9 @@ void ps_setup(
   int flags,
   const char *header,
   const char *trailer,
-  const char *name);
+  const char *name,
+  int paper_width,
+  int paper_length);
 static void ps_finish(void);
 static void ps_output_bits(
   int iw,
@@ -273,6 +350,10 @@ int main(int argc, char **argv)
     enum orientation orientation;
     enum device device;
     XColor *colors = (XColor *)NULL;
+    int paper_width  = PAPER_WIDTH;
+    int paper_length = PAPER_LENGTH;
+    int w_max        = W_MAX;
+    int h_max        = W_MAX;
 
     if (!(progname = argv[0]))
       progname = "xpr";
@@ -281,7 +362,12 @@ int main(int argc, char **argv)
 #endif
     parse_args (argc, argv, &scale, &width, &height, &left, &top, &device,
 		&flags, &split, &header, &trailer, &plane, &gray,
-		&density, &cutoff, &gamma, &render);
+		&density, &cutoff, &gamma, &render, &paper_width, &paper_length);
+
+    if (paper_width != PAPER_WIDTH)
+       w_max = paper_width - 150;
+    if (paper_length != PAPER_LENGTH)
+       h_max = paper_length - 150;
 
     if (device == PP) {
 	x2pmp(stdin, stdout, scale,
@@ -329,7 +415,7 @@ int main(int argc, char **argv)
 
     if(win.ncolors) {
 	XWDColor xwdcolor;
-	colors = (XColor *)malloc((unsigned) (win.ncolors * sizeof(XColor)));
+	colors = malloc((unsigned) (win.ncolors * sizeof(XColor)));
 	for (i = 0; i < win.ncolors; i++) {
 	    fullread(0, (char*)&xwdcolor, (int) sizeof xwdcolor);
 	    colors[i].pixel = xwdcolor.pixel;
@@ -370,13 +456,14 @@ int main(int argc, char **argv)
 
     /* calculate orientation and scale */
     setup_layout(device, (int) win.pixmap_width, (int) win.pixmap_height,
-		 flags, width, height, header, trailer, &scale, &orientation);
+		 flags, width, height, header, trailer, &scale, &orientation,
+		 w_max, h_max);
 
     iw = win.pixmap_width;
     ih = win.pixmap_height;
 
     ps_setup(iw, ih, orientation, scale, left, top,
-             flags, header, trailer, w_name);
+             flags, header, trailer, w_name, paper_width, paper_length);
     ps_output_bits(iw, ih, flags, orientation, &win, data);
     ps_finish();
 
@@ -428,6 +515,8 @@ usage(void)
 	    "    -landscape  -portrait\n"
 	    "    -left <inches>  -top <inches>\n"
 	    "    -noposition\n"
+	    "    -papertype {letter | legal | A0-A10 | B0-B10 | C0-C10}\n"
+	    "	 -pheight <inches>[in | cm | mm] -pwidth <inches>[in | cm | mm]\n"
 	    "    -plane <n>\n"
 	    "    -psfig\n"
 	    "    -render <type>\n"
@@ -460,11 +549,12 @@ void parse_args(
   int *density,
   unsigned int *cutoff,
   float *gamma,
-  int *render)
+  int *render,
+  int *paper_width,
+  int *paper_length)
 {
     register char *output_filename;
     register int f;
-    register int pos;
 
     output_filename = NULL;
     *device = PS;	/* default */
@@ -568,12 +658,48 @@ void parse_args(
 	    output_filename = *argv;
 	} else if (!strcmp(*argv, "-portrait")) {
 	    *flags |= F_PORTRAIT;
+	} else if (!strcmp(*argv, "-papertype")) {
+	    int found = 0;
+	    int i;
+
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    for (i = 0; i < sizeof (paper_size) / sizeof (PaperRec); i++)
+	    {
+		if (!strcasecmp(paper_size[i].name, *argv))
+		{
+		    found = 1;
+		    *paper_width  = (int)(300.0 * paper_size[i].width);
+		    *paper_length = (int)(300.0 * paper_size[i].length);
+		}
+	    }
+	    if (!found) usage();
 	} else if (!strcmp(*argv, "-plane")) {
 	    argc--; argv++;
 	    if (argc == 0) missing_arg(arg);
 	    *plane = atoi(*argv);
 	} else if (!strcmp(*argv, "-psfig")) {
 	    *flags |= F_NPOSITION;
+	} else if (!strcmp(*argv, "-pwidth")) {
+	    double mult = 1.0;
+
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    if (strstr(*argv, "cm"))
+		mult = 2.54;
+	    else if ( strstr ( *argv, "mm" ))
+		mult = 25.4;
+	    *paper_width = (int)(300.0 * atof(*argv) / mult);
+	} else if (!strcmp(*argv, "-pheight")) {
+	    double mult = 1.0;
+
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    if ( strstr ( *argv, "cm" ))
+		mult = 2.54;
+	    else if ( strstr ( *argv, "mm" ))
+		mult = 25.4;
+	    *paper_length = (int)(300.0 * atof(*argv) / mult);
 	} else if (!strcmp(*argv, "-rv")) {
 	    *flags |= F_INVERT;
 	} else if (!strcmp(*argv, "-render")) {
@@ -637,12 +763,12 @@ void parse_args(
 	    exit(1);
 	}
 	if (*flags & F_APPEND) {
-	    pos = lseek(f, 0, 2);          /* get eof position */
+	    off_t pos = lseek(f, 0, SEEK_END);	/* get eof position */
 	    if ((*flags & F_NOFF) &&
 		!(*device == LJET || *device == PJET || *device == PJETXL))
 		pos -= 3; /* set position before trailing */
 	    		  /*     formfeed and reset */
-	    lseek(f, pos, 0);              /* set pointer */
+	    lseek(f, pos, SEEK_SET);		/* set pointer */
 	}
 	dup2(f, 1);
 	close(f);
@@ -660,7 +786,9 @@ void setup_layout(
   char *header,
   char *trailer,
   int *scale,
-  enum orientation *orientation)
+  enum orientation *orientation,
+  int wmax,
+  int hmax)
 {
     register int w_scale;
     register int h_scale;
@@ -676,22 +804,22 @@ void setup_layout(
 	if ((win_width < win_height || (flags & F_PORTRAIT)) &&
 	    !(flags & F_LANDSCAPE)) {
 	    *orientation = PORTRAIT;
-	    w_max = (width > 0)? width : W_MAX;
-	    h_max = (height > 0)? height : H_MAX;
+	    w_max = (width > 0)? width : wmax;
+	    h_max = (height > 0)? height : hmax;
 	    w_scale = w_max / win_width;
 	    h_scale = h_max / win_height;
 	    *scale = min(w_scale, h_scale);
 	} else {
 	    *orientation = LANDSCAPE;
-	    w_max = (width > 0)? width : H_MAX;
-	    h_max = (height > 0)? height : W_MAX;
+	    w_max = (width > 0)? width : hmax;
+	    h_max = (height > 0)? height : wmax;
 	    w_scale = w_max / win_width;
 	    h_scale = h_max / win_height;
 	    *scale = min(w_scale, h_scale);
 	}
     } else {
 	*orientation = PORTRAIT;
-	*scale = W_MAX / win_width;
+	*scale = wmax / win_width;
     }
     if (*scale == 0) *scale = 1;
     if (*scale > 6) *scale = 6;
@@ -1072,7 +1200,9 @@ void ps_setup(
   int flags,
   const char *header,
   const char *trailer,
-  const char *name)
+  const char *name,
+  int paper_width,
+  int paper_length)
 {
     char    hostname[256];
 #ifdef WIN32
@@ -1230,16 +1360,15 @@ void ps_output_bits(
 	 * Owidth and Oheight are rounded up to a multiple of 32 bits,
 	 * to avoid special cases at the boundaries
 	 */
-	obuf = malloc((unsigned)(owidth*oheight));
+	obuf = calloc(owidth, oheight);
 	if (obuf==NULL) {
 	    fprintf(stderr,"xpr: cannot allocate %d bytes\n",owidth*oheight);
 	    exit(1);
 	}
-	bzero(obuf,owidth*oheight);
 
-	ibuf = (unsigned char *)malloc((unsigned)(iwb + 3));
+	ibuf = malloc((unsigned)(iwb + 3));
 	for (i=0;i<ih;i++) {
-	    memmove((char *)ibuf, (char *)buffer, iwb);
+	    memcpy(ibuf, buffer, iwb);
 	    buffer += iwb;
 	    if (!(*(char *) &swaptest))
 		_swaplong((char *)ibuf,(long)iwb);

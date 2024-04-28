@@ -65,8 +65,7 @@ void x2pmp(FILE *in, FILE *out,
     }
 
     win_name_size = abs_(header.header_size - sizeof(header));
-    if ((win_name = (unsigned char *)
-	 calloc(win_name_size, (unsigned) sizeof(char))) == NULL)
+    if ((win_name = calloc(win_name_size, sizeof(char))) == NULL)
       leave("Can't calloc window name storage.");
 
     /* Read window name from file */
@@ -113,7 +112,7 @@ void x2pmp(FILE *in, FILE *out,
     ncolors = header.ncolors;
     if (ncolors) {
 	int i;
-	XColor *colors = (XColor *)malloc((unsigned) (header.ncolors * sizeof(XColor)));
+	XColor *colors = malloc((unsigned) (header.ncolors * sizeof(XColor)));
 
 	if (fread((char *)colors, sizeof(XColor), ncolors, in) != ncolors)
 	  leave("Unable to read colormap from dump file.");
@@ -131,9 +130,8 @@ void x2pmp(FILE *in, FILE *out,
 
     invert = !invert;		/* 3812 puts ink (i.e. black) on 1-bits */
 
-    if ((buffer = (unsigned char *) calloc(buffer_size, 1)) == NULL)
+    if ((buffer = calloc(buffer_size, 1)) == NULL)
       leave("Can't calloc data buffer.");
-    bzero((char *) buffer, (int) buffer_size);
 
     /* Read bitmap from file */
     if (fread((char *) buffer, sizeof(char), (int) buffer_size, in)
@@ -182,8 +180,8 @@ void x2pmp(FILE *in, FILE *out,
 	unsigned char *scale_buf;
 	int i, j, k;
 
-	if ((scale_buf = (unsigned char *)
-	     calloc((unsigned) (buffer_size *= scale*scale), sizeof(char)))
+	if ((scale_buf =
+             calloc((unsigned) (buffer_size *= scale*scale), sizeof(char)))
 	    == NULL)
 	  leave("Can't calloc scaled buffer.");
 	for(i = 0; i < height; i++) {
@@ -198,8 +196,8 @@ void x2pmp(FILE *in, FILE *out,
 		}
 	    }
 	}
-	free((char *) buffer);
-	free((char *) tbl);
+	free(buffer);
+	free(tbl);
 	buffer = scale_buf;
 	byte_width *= scale;
 	width *= scale;
@@ -236,8 +234,8 @@ void x2pmp(FILE *in, FILE *out,
     p_move_abs(out, x_pos, y_pos);
     p_bitmap(out, height, fixed_width, (unsigned long) one_plane_size,
 	     buffer + plane * one_plane_size);
-    free((char *) win_name);
-    free((char *) buffer);
+    free(win_name);
+    free(buffer);
 }
 
 static
@@ -246,10 +244,8 @@ unsigned char *magnification_table(int scale)
     unsigned char *tbl;
     int c;
 
-    if ((tbl = (unsigned char *)
-	 calloc((unsigned) (scale*256), sizeof(char))) == NULL)
+    if ((tbl = calloc(scale, 256)) == NULL)
       leave("Can't calloc magnification table.");
-    bzero((char *) tbl, scale*256);
     for(c = 256; c--;) {
 	int b = c, bit;
 	unsigned char *entry = tbl+c*scale;

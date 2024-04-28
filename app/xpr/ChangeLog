@@ -1,3 +1,80 @@
+commit cf22dfd15e2db067767534290e4c8f2e6f6130b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 14:59:05 2024 -0800
+
+    xpr 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 369a038ab70860a051f785e95c06f681eabea32a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 21 09:34:27 2024 -0800
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    While X window dump files should never be more than 2gb in size,
+    they may be stored on filesystems with large inodes or timestamps.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ee1d1c10f4c966b39689d0fe0e602cabb47d72e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 21 09:33:06 2024 -0800
+
+    Modernize lseek() calls
+    
+    Position should be stored in an off_t, not an int, and use
+    symbolic constants instead of raw numbers for the "whence" arg.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 58686e938a099bd6e3f4fb491dea9382a50febdb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6f34ba3a67e2c25f4fd6b2878038793422bf8770
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 7 16:46:54 2022 -0800
+
+    Add support for paper sizes other than 8.5 x 11 inches
+    
+    This adds new command line arguments -papertype, -pheight, and -pwidth
+    
+    Originally implemented by Jay Hobson in August 2002 to fix
+    Sun bug 4704388: xpr does not work with A3 paper
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 24c71e04d248f06337f7885dc5642d720a087ba9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 6 11:44:08 2022 -0700
+
+    No need to bzero() buffers allocated by calloc()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 52b7307f42f99c81eda97a322dc3ffccd9e371f6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 6 11:40:59 2022 -0700
+
+    Remove unnnecessary casts from malloc(), calloc(), and free() calls
+    
+    These are not needed in C89 and later.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b0b9b4c5a134c559404b4052c2c42b9fcde66915
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 6 11:32:02 2022 -0700
+
+    Use memcpy() instead of memmove() when buffers are known not to overlap
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 2ca9da7c52152add1567deb11000cf9570577b12
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 10 15:55:09 2022 -0700
@@ -663,7 +740,7 @@ Date:   Wed Jul 20 19:32:03 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit e3928f9b676c1054790b5ef69b8a568e80482189
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 21:10:15 2005 +0000
 
     symlink.sh: add xplsprinters.sgml xprehashprinterlist.sgml xdpr.script

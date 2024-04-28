@@ -52,6 +52,19 @@ xpr \- print an X window dump
 .B \-split
 .I n
 ] [
+.B \-papertype
+.I format
+] [
+.B \-pheight
+.I inches
+[
+.I units
+]] [
+.B \-pwidth
+.I inches
+[
+.I units
+]] [
 .B \-psfig
 ] [
 .B \-density
@@ -176,6 +189,125 @@ on the same page as the previous window.
 This option allows the user to split a window onto several pages.
 This might be necessary for very large windows that would otherwise
 cause the printer to overload and print the page in an obscure manner.
+.IP "\fB\-papertype\fP \fIformat\fP"
+Specifies the output paper format.  Currently supported:
+.RS 12
+.PD 0
+.TP
+.B letter
+letter size 8.5x11 inches
+.TP
+.B legal
+legal size 8.5x14 inches
+.TP
+.B A0
+A0  size  841x1189 mm or 33.11x46.81 inches
+.TP
+.B A1
+A1  size  594x841  mm or 23.39x33.11 inches
+.TP
+.B A2
+A2  size  420x594  mm or 16.54x23.39 inches
+.TP
+.B A3
+A3  size  297x420  mm or 11.69x16.54 inches
+.TP
+.B A4
+A4  size  210x297  mm or  8.27x11.69 inches
+.TP
+.B A5
+A5  size  148x210  mm or  5.83x 8.27 inches
+.TP
+.B A6
+A6  size  105x148  mm or  4.13x 5.83 inches
+.TP
+.B A7
+A7  size   74x105  mm or  2.91x 4.13 inches
+.TP
+.B A8
+A8  size   52x74   mm or  2.05x 2.91 inches
+.TP
+.B A9
+A9  size   37x52   mm or  1.46x 2.05 inches
+.TP
+.B A10
+A10 size   26x37   mm or  1.02x 1.46 inches
+.TP
+.B B0
+B0  size 1000x1414 mm or 39.37x55.67
+.TP
+.B B1
+B1  size  707x1000 mm or 27.83x39.37 inches
+.TP
+.B B2
+B2  size  500x707  mm or 19.69x27.83 inches
+.TP
+.B B3
+B3  size  353x500  mm or 13.90x19.69 inches
+.TP
+.B B4
+B4  size  250x353  mm or  9.84x13.90 inches
+.TP
+.B B5
+B5  size  176x250  mm or  6.93x 9.84 inches
+.TP
+.B B6
+B6  size  125x176  mm or  4.92x 6.93 inches
+.TP
+.B B7
+B7  size   88x125  mm or  3.46x 4.92 inches
+.TP
+.B B8
+B8  size   62x88   mm or  2.44x 3.46 inches
+.TP
+.B B9
+B9  size   44x62   mm or  1.73x 2.44 inches
+.TP
+.B B10
+B10 size   31x44   mm or  1.22x 1.73 inches
+.TP
+.B C0
+C0  size  917x1297 mm or 36.10x51.06 inches
+.TP
+.B C1
+C1  size  648x917  mm or 25.51x36.10 inches
+.TP
+.B C2
+C2  size  458x648  mm or 18.03x25.51 inches
+.TP
+.B C3
+C3  size  324x458  mm or 12.76x18.03 inches
+.TP
+.B C4
+C4  size  229x324  mm or  9.02x12.76 inches
+.TP
+.B C5
+C5  size  162x229  mm or  6.38x 9.02 inches
+.TP
+.B C6
+C6  size  114x162  mm or  4.49x 6.38 inches
+.TP
+.B C7
+C7  size   81x114  mm or  3.19x 4.49 inches
+.TP
+.B C8
+C8  size   57x81   mm or  2.24x 3.19 inches
+.TP
+.B C9
+C9  size   40x57   mm or  1.57x 2.24 inches
+.TP
+.B C10
+C10 size   28x40   mm or  1.10x 1.57 inches
+.PD
+.RE
+.IP "\fB\-pheight\fP \fIinches\fP [ \fIunits\fP ]"
+This option allows the user to specify a specific paper height. The
+default units are in inches (in), but may be overridden with cm or mm
+for centimeters or millimeters respectively.
+.IP "\fB\-pwidth\fP \fIinches\fP [ \fIunits\fP ]"
+This option allows the user to specify a specific paper width. The
+default units are in inches (in), but may be overridden with cm or mm
+for centimeters or millimeters respectively.
 .IP "\fB\-psfig\fP"
 Suppress translation of the PostScript picture to the center of the page.
 .IP "\fB\-density\fP \fIdpi\fP"
