@@ -1,3 +1,36 @@
+commit b5ca142f81a6f14eddb23be050291d1c25514777
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 8 14:03:50 2023 +1000
+
+    font-util 1.4.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5a9e7c7d3c3da68e5b421e7d038bc0a7a5f66b22
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 6 12:11:31 2023 +1000
+
+    Replace unicode files with ones that provide better terms of use
+    
+    Identical files but these have the unicode terms-of-use (SPDX:
+    Unicode-TOU) instead of some old license format.
+    
+    https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-1.TXT
+    https://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0201.TXT
+    https://www.unicode.org/Public/MAPPINGS/VENDORS/MISC/KOI8-R.TXT
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c28d8ca618f24855e735313c2b8f6effa7b7f1e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:15:09 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit eee69c3f26f8e5d7f97599185d8d009f7fd76a7c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Feb 22 10:41:20 2023 -0800
@@ -471,7 +504,7 @@ Date:   Wed Oct 6 16:59:20 2010 -0700
     Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 62529733e57b6d6c775b1bcf584260b1cff6af5c
-Author: Michał Górny < <mgorny@gentoo.org>
+Author: Michał Górny <mgorny@gentoo.org>
 Date:   Thu Oct 7 17:31:06 2010 +0200
 
     fontutil.m4: Add a shorthand --disable-all-encodings option.
