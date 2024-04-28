@@ -29,6 +29,10 @@ in this Software without prior written authorization from the X Consortium.
  */
 /* $XFree86: xc/programs/listres/listres.c,v 1.3 2000/02/17 14:00:32 dawes Exp $ */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/Xos.h>
@@ -83,7 +87,7 @@ static XtResource Resources[] = {
 static const char *ProgramName;
 
 static void
-usage (void)
+usage (int exitval)
 {
     fprintf(stderr, "usage:  %s [-options...]\n%s\n", ProgramName,
 	    "\nwhere options include:\n"
@@ -92,8 +96,11 @@ usage (void)
 	    "    -nosuper         do not print superclass resources\n"
 	    "    -variable        show variable name instead of class name\n"
 	    "    -top name        object to be top of tree\n"
-	    "    -format string   printf format for instance, class, type\n");
-    exit (1);
+	    "    -format string   printf format for instance, class, type\n"
+	    "    -help            print this message and exit\n"
+	    "    -version         print version info and exit\n"
+        );
+    exit (exitval);
 }
 
 static void print_tree_level (register XmuWidgetNode *wn, register int level)
@@ -234,6 +241,22 @@ main (int argc, char **argv)
 
     XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    usage(0);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     toplevel = XtAppInitialize (&appcon, "Listres", Options, XtNumber(Options),
 				&argc, argv, NULL, NULL, 0);
     container = XtCreateWidget ("dummy", widgetClass, toplevel, NULL, ZERO);
@@ -262,13 +285,18 @@ main (int argc, char **argv)
 				(Bool) options.show_superclass,
 				(Bool) options.show_variable);
 	    }
-	} else
-	  usage();
+	} else {
+	  fprintf(stderr, "Unknown argument: %s\n", argv[0]);
+	  usage(1);
+	}
     } else {
 	for (; argc > 0; argc--, argv++) {
 	    XmuWidgetNode *node;
 
-	    if (argv[0][0] == '-') usage ();
+	    if (argv[0][0] == '-') {
+		fprintf(stderr, "Unknown argument: %s\n", argv[0]);
+		usage(1);
+	    }
 	    node = XmuWnNameToNode (widget_list, nwidgets, *argv);
 	    if (!node) {
 		fprintf (stderr, "%s:  unable to find widget \"%s\"\n",
