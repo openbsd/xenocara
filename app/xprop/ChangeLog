@@ -1,3 +1,29 @@
+commit 400dbeda3b1e43f7815f596679bd785e7dbb7a4d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 3 14:55:48 2024 -0800
+
+    xprop 1.2.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d2837162ef0e54647485eee2ba4b88012fbb1b4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 7 18:09:54 2023 -0800
+
+    Fix C23 build by renaming variable 'true'
+    
+    Reported by gcc 13.2 with -std=gnu2x:
+    
+    xprop.c: In function ‘Handle_Question_Mark’:
+    xprop.c:1291:10: error: expected identifier or ‘(’ before ‘true’
+     1291 |     long true;
+          |          ^~~~
+    xprop.c:1293:49: error: lvalue required as unary ‘&’ operand
+     1293 |     dformat = Scan_Exp(dformat, thunks, format, &true);
+          |                                                 ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6d5cb0110b8b21ce94a52993e6e175266a4153fb
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Dec 3 14:29:46 2022 -0800
@@ -761,13 +787,13 @@ Date:   Thu Oct 1 14:54:29 2009 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit 11fb62d5aa6304d1813b56a372b8b662f0016f92
-Author: Søren Sandmann Pedersen  <sandmann@redhat.com>
+Author: Søren Sandmann Pedersen <sandmann@redhat.com>
 Date:   Tue Apr 21 21:13:16 2009 -0400
 
     Display _NET_WM_ICONs as ASCII art instead of as a big list of integers
 
 commit 1b89edb419ee103d0ef834433b16a3822398a519
-Author: Søren Sandmann Pedersen  <sandmann@redhat.com>
+Author: Søren Sandmann Pedersen <sandmann@redhat.com>
 Date:   Tue Apr 21 15:10:07 2009 -0400
 
     The "visible bit" is called "urgency bit" in the ICCCM 2.0
@@ -1075,7 +1101,7 @@ Date:   Wed Jul 20 19:32:03 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 721114f44cbd225a8fcd3655d4ded2dc8cc8837f
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 8 20:58:05 2005 +0000
 
     Add build system for xprop

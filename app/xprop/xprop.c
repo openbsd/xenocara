@@ -1288,15 +1288,15 @@ Scan_Exp (const char *string, thunk *thunks, const char *format, long *value)
 static const char *
 Handle_Question_Mark (const char *dformat, thunk *thunks, const char *format)
 {
-    long true;
+    long is_true;
 
-    dformat = Scan_Exp(dformat, thunks, format, &true);
+    dformat = Scan_Exp(dformat, thunks, format, &is_true);
 
     if (*dformat != '(')
 	Fatal_Error("Bad conditional: '(' expected: %s.", dformat);
     ++dformat;
 
-    if (!true)
+    if (!is_true)
 	dformat = Skip_Past_Right_Paren(dformat);
 
     return dformat;
