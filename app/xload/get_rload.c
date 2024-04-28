@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include <stdio.h>
 #include <X11/Intrinsic.h>
@@ -9,7 +12,7 @@
 /* Not all OS supports get_rload
    steal the STUB idea from get_load
  */
-#if defined(QNX4) || defined(__CYGWIN__) || defined(_WIN32)
+#ifndef HAVE_PROTOCOLS_RWHOD_H
 #define RLOADSTUB
 #endif
 
@@ -44,6 +47,12 @@ void GetRLoadPoint(
   *(double *)call_data = 0.0; /* to be on the safe side */
 
   if (fname == NULL) {
+#ifdef HAVE_ASPRINTF
+    if (asprintf(&fname, "%s/whod.%s", _PATH_RWHODIR, resources.remote) < 0) {
+      perror("GetRLoadPoint: asprintf() failed");
+      exit(1);
+    }
+#else
     if ((fname = malloc(strlen(_PATH_RWHODIR)+strlen("/whod.")+strlen(resources.remote)+1)) == NULL) {
       fprintf(stderr,"GetRLoadPoint: malloc() failed\n");
       exit(1);
@@ -51,6 +60,7 @@ void GetRLoadPoint(
     strcpy(fname,_PATH_RWHODIR);
     strcat(fname,"/whod.");
     strcat(fname,resources.remote);
+#endif
   }
   if ((f = open(fname, O_RDONLY, 0)) < 0)
     return;

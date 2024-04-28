@@ -23,8 +23,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xload], [1.1.4],
-	[https://gitlab.freedesktop.org/xorg/app/xload/issues], [xload])
+AC_INIT([xload], [1.2.0],
+	[https://gitlab.freedesktop.org/xorg/app/xload/-/issues], [xload])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -38,6 +38,12 @@ m4_ifndef([XORG_MACROS_VERSION],
           [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
+
+# Checks for library functions.
+AC_CHECK_FUNCS([asprintf])
 
 # Internationalization & localization support
 AC_SEARCH_LIBS([gettext], [intl], [USE_GETTEXT="yes"], [USE_GETTEXT="no"])
@@ -65,6 +71,8 @@ AM_CONDITIONAL(USE_GETTEXT, test "x$USE_GETTEXT" = "xyes")
 # getloadavg: 4.3BSD-Reno & later, glibc 2.2 & later, Solaris 7 & later
 # BSD & GNU libc use <stdlib.h>, Solaris requires <sys/loadavg.h>
 AC_CHECK_FUNCS([getloadavg], [AC_CHECK_HEADERS([sys/loadavg.h])])
+
+AC_CHECK_HEADERS([paths.h protocols/rwhod.h])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XLOAD, xaw7 xmu xt x11 [xproto >= 7.0.17])

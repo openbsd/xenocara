@@ -28,7 +28,7 @@ from the X Consortium.
 
 */
 /*
- * Copyright (c) 2000, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2023, Oracle and/or its affiliates.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -140,7 +140,7 @@ static int light_update = 10 * 1000;
  */
 
 static void _X_NORETURN
-usage(void)
+usage(int exitval)
 {
     fprintf (stderr, gettext("usage:  %s [-options ...]\n\n%s\n"),
              ProgramName, gettext(
@@ -157,8 +157,10 @@ usage(void)
       "    -nolabel                removes the label from above the chart.\n"
       "    -jumpscroll <value>     number of pixels to scroll on overflow\n"
       "    -lights                 use keyboard leds to display current load\n"
+      "    -help                   print this message\n"
+      "    -version                print version info\n"
                  ));
-    exit(1);
+    exit(exitval);
 }
 
 int
@@ -174,6 +176,22 @@ main(int argc, char **argv)
     XtSetLanguageProc ( NULL, NULL, NULL );
 
     ProgramName = argv[0];
+
+    /* Handle args that don't require opening a display or load info source */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    usage(0);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
 
     /* For security reasons, we reset our uid/gid after doing the necessary
        system initialization and before calling any X routines. */
@@ -207,7 +225,14 @@ main(int argc, char **argv)
     bindtextdomain("xload", domaindir);
 #endif
 
-    if (argc != 1) usage();
+    if (argc != 1) {
+	fputs(gettext("Unknown argument(s):"), stderr);
+	for (int n = 1; n < argc; n++) {
+	    fprintf(stderr, " %s", argv[n]);
+	}
+	fputs("\n\n", stderr);
+	usage(1);
+    }
 
     XtGetApplicationResources( toplevel, (XtPointer) &resources,
 			      my_resources, XtNumber(my_resources),

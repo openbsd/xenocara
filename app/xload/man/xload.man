@@ -3,11 +3,12 @@
 .SH NAME
 xload \- system load average display for X
 .SH SYNOPSIS
-\fBxload\fP	[-\fItoolkitoption\fP ...] [-scale \fIinteger\fP] [-update \fIseconds\fP]
-.br
-        [-hl \fIcolor\fP] [-highlight \fIcolor\fP]  [-remote \fIhost\fP]
-.br
-        [-jumpscroll \fIpixels\fP] [-label \fIstring\fP] [-nolabel] [-lights]
+.nf
+\fBxload\fP [-\fItoolkitoption\fP ...] [-scale \fIinteger\fP] [-update \fIseconds\fP]
+      [-hl \fIcolor\fP] [-highlight \fIcolor\fP] [-remote \fIhost\fP]
+      [-jumpscroll \fIpixels\fP] [-label \fIstring\fP] [-nolabel] [-lights]
+      [-help|-version]
+.fi
 .SH DESCRIPTION
 The
 .I xload
@@ -57,6 +58,12 @@ is 1 second.  The default is 10.
 .TP 8
 .B \-remote \fIhost\fP
 This option tells \fIxload\fP to display the load of \fIhost\fP instead of \fIlocalhost\fP. \fIXload\fP gets the information from the \fIrwhod\fP database and consequently requires \fIrwhod\fP to be executing both on \fIlocalhost\fP and \fIhost\fP.
+.TP 8
+.B \-help
+This option specifies that \fIxload\fP should print a usage message and exit.
+.TP 8
+.B \-version
+This option specifies that \fIxload\fP should print version info and exit.
 .SH RESOURCES
 In addition to the resources available to each of the widgets used by
 \fIxload\fP there is one resource defined by the application itself.

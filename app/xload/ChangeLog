@@ -1,3 +1,146 @@
+commit 624100511d6ac22f254bcf7f0cde12febc2e74a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 24 09:59:41 2024 -0700
+
+    xload 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 491660b263c06396d11655351a09d80eafb83fb9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 15:24:12 2024 -0800
+
+    Use imdent to realign remaining pre-processer directives
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa11c30113115991cdc5f15042944cf5bab6eb0b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 15:21:12 2024 -0800
+
+    unifdef __bsdi__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f15b8097a00299291263cfe64947942564ccc373
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 16:29:40 2024 -0800
+
+    Use autoconf to check for <protocols/rwhod.h> instead of OS-specific ifdefs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit de7b5bb18da4e5a626794db292f8b41d30aa2232
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 15:59:33 2024 -0800
+
+    Use autoconf to check for <paths.h> instead of ifdef BSD
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f16d6f2c273c6896a4e79ac9db7a80c830794392
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 15:42:38 2024 -0800
+
+    unifdef QNX4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f1ef1f0ac2a81b4aa59f1fba37ee11f6a0acbe22
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 15:41:48 2024 -0800
+
+    unifdef att
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fe24c5e19d4d309b4f3a3e435b9d834836312301
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 15:39:43 2024 -0800
+
+    unifdef SVR4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7c97025b18baf00c81319c7a01120bd6417fdadf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 15:32:30 2024 -0800
+
+    unifdef hpux
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4842fc779bc6bfc9ba932b2602d0166317b415d9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 15:30:13 2024 -0800
+
+    unifdef __osf__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0e0df8ca1d53fddeeddb918323050b9e9bbffd4a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 15:29:25 2024 -0800
+
+    unifdef SYSV
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f971deabd26413efd6fa87c0c3ab2952bae163bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jan 23 18:17:04 2024 -0800
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    Handle files whose sizes, inode numbers, or timestamps may be
+    out of range of the original 32-bit APIs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ebcdc687d02e34240bd98b9f1396225eee4e4240
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jan 23 18:15:13 2024 -0800
+
+    Use asprintf() if available
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ef450fb99630a406c4638d8ba251eac45e434411
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 12:51:58 2023 -0800
+
+    Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7063169a70b6ce49de777f5daa1c256552a9e32a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 12:38:58 2023 -0800
+
+    Print which arguments were unknown before giving usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8fc5bb64756ffae562032613bd5616481ec67f2d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 523cedbf302fea0b46cca88244fc97677216009a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 15 17:27:46 2022 -0700
+
+    unifdef -UUSG
+    
+    USG was defined for a handful of pre-SVR4 systems based on
+    AT&T's Unix System Group releases in the old imake configs
+    and has never been defined in X11R7 modular builds.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 8f9450b897b16bc9b9940b137dd805d443be050e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 3 16:27:26 2022 -0700
@@ -1024,7 +1167,7 @@ Date:   Wed Jul 20 19:31:57 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 62d4ea34f0fd64e258abb993004c8966eecc6cf7
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:36:58 2005 +0000
 
     Build system for xload
