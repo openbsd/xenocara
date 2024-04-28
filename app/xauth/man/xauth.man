@@ -136,7 +136,7 @@ in the same format as the \fIhexkey\fP described in the add command.
 The default is to send no data.
 
 .TP 8
-.B "[n]extract \fIfilename displayname..."
+.RB [ n ] "extract \fIfilename displayname..."
 Authorization entries for each of the specified displays are written to the
 indicated file.  If the \fInextract\fP command is used, the entries are written
 in a numeric format suitable for non-binary transmission (such as secure
@@ -144,7 +144,7 @@ electronic mail).  The extracted entries can be read back in using the
 \fImerge\fP and \fInmerge\fP commands.  If the filename consists of
 just a single dash, the entries will be written to the standard output.
 .TP 8
-.B "[n]list \fR[\fIdisplayname\fP...]"
+.RB [ n ] "list \fR[\fIdisplayname\fP...]"
 Authorization entries for each of the specified displays (or all if no
 displays are named) are printed on the standard output.  If the \fInlist\fP
 command is used, entries will be shown in the numeric format used by
@@ -152,7 +152,7 @@ the \fInextract\fP command; otherwise, they are shown in a textual format.
 Key data is always displayed in the hexadecimal format given in the
 description of the \fIadd\fP command.
 .TP 8
-.B "[n]merge \fR[\fIfilename\fP...]"
+.RB [ n ] "merge \fR[\fIfilename\fP...]"
 Authorization entries are read from the specified files and are merged into
 the authorization database, superseding any matching existing entries. If
 the \fInmerge\fP command is used, the numeric format given in the description

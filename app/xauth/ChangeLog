@@ -1,3 +1,102 @@
+commit c29eef23683f0e3575a3c60d9314de8156fbe2c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 10:51:41 2024 -0800
+
+    xauth 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5ee6bf0c09c9fe56afb5ee35e678bb481671f216
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:17:24 2024 -0800
+
+    unifdef Lynx
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 561f7d92ab0dfa6ac0501aa7696b750587a41f9e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:16:52 2024 -0800
+
+    unifdef hpux
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a3bbfd7986f9b67f7db0112faee37f6109dfbcac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 16 18:33:46 2023 -0800
+
+    configure: raise minimum autoconf requirement to 2.70
+    
+    Needed for builds on NetBSD to work correctly, since it depends on
+    AC_USE_SYSTEM_EXTENSIONS defining _OPENBSD_SOURCE to expose the
+    prototype for reallocarray() in the system headers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eeae8f6a501e5fb90ca2a90556d8c6bf9679eb91
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 20 12:11:43 2022 -0800
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    While .Xauthority files should never be more than 2gb in size,
+    they may be stored on filesystems with large inodes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 64b9f4e080694bc8bfec14504489f43a3b005da4
+Author: наб <nabijaczleweli@nabijaczleweli.xyz>
+Date:   Thu Nov 24 12:47:27 2022 +0100
+
+    Unbold brackets for optional n at start of commands
+    
+    This makes it more consistent with the rest of the spec,
+    as well as making it correcter: "[n]list" isn't a valid command,
+    "list" and "nlist" are
+    
+    Signed-off-by: Ahelenia Ziemiańska <nabijaczleweli@nabijaczleweli.xyz>
+
+commit ec22154c5014a8d5e496766202b4ec504953e957
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 11 10:18:58 2022 -0700
+
+    Handle -Wempty-body warning for WRITES() macro
+    
+    process.c:659:57: warning: suggest braces around empty body in an ‘if’ statement
+     [-Wempty-body]
+     #define WRITES(fd, S) {if(write((fd), (S), strlen((S))));}
+                                                             ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1651502a43502da5ebbbfbd50b9f3cf0c709e8f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 11 09:57:25 2022 -0700
+
+    Remove unnecessary casts from malloc() calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b367ca379ad97763f28a41f601680c376c3de040
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 11 09:54:02 2022 -0700
+
+    Variable scope reductions, as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 88380275fe13af5238955047f6b018e6e6a3adc8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 24 10:07:25 2022 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit c5783216c07fa9870da1b5cce023e24d649254c3
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Tue Apr 19 19:04:26 2022 -0700

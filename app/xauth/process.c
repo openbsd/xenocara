@@ -268,7 +268,6 @@ static const char **
 split_into_words(char *src, int *argcp)  /* argvify string */
 {
     char *jword;
-    char savec;
     const char **argv;
     int cur, total;
 
@@ -286,6 +285,8 @@ split_into_words(char *src, int *argcp)  /* argvify string */
      */
 
     do {
+	char savec;
+
 	jword = skip_space (src);
 	src = skip_nonspace (jword);
 	savec = *src;
@@ -360,14 +361,14 @@ getinput(FILE *fp)
 static int
 get_short(FILE *fp, unsigned short *sp)	/* for reading numeric input */
 {
-    int c;
-    int i;
     unsigned short us = 0;
 
     /*
      * read family:  written with %04x
      */
-    for (i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
+	int c;
+
 	switch (c = getinput (fp)) {
 	  case EOF:
 	  case '\n':
@@ -385,12 +386,13 @@ get_bytes(FILE *fp, unsigned int n, char **ptr)	/* for reading numeric input */
 {
     char *s;
     register char *cp;
-    int c1, c2;
 
     cp = s = malloc (n);
     if (!cp) return 0;
 
     while (n > 0) {
+	int c1, c2;
+
 	if ((c1 = getinput (fp)) == EOF || c1 == '\n' ||
 	    (c2 = getinput (fp)) == EOF || c2 == '\n') {
 	    free (s);
@@ -411,7 +413,7 @@ read_numeric(FILE *fp)
 {
     Xauth *auth;
 
-    auth = (Xauth *) malloc (sizeof (Xauth));
+    auth = malloc (sizeof (Xauth));
     if (!auth) goto bad;
     auth->family = 0;
     auth->address = NULL;
@@ -467,7 +469,7 @@ read_auth_entries(FILE *fp, Bool numeric, AuthList **headp, AuthList **tailp)
     n = 0;
 					/* put all records into linked list */
     while ((auth = ((*readfunc) (fp))) != NULL) {
-	AuthList *l = (AuthList *) malloc (sizeof (AuthList));
+	AuthList *l = malloc (sizeof (AuthList));
 	if (!l) {
 	    fprintf (stderr,
 		     "%s:  unable to alloc entry reading auth file\n",
@@ -572,13 +574,11 @@ cvthexkey(const char *hexstr, char **ptrp) /* turn hex key string into octets */
     int i;
     int len = 0;
     char *retval;
-    const char *s;
     unsigned char *us;
-    char c;
     char savec = '\0';
 
     /* count */
-    for (s = hexstr; *s; s++) {
+    for (const char *s = hexstr; *s; s++) {
 	if (!isascii(*s)) return -1;
 	if (isspace(*s)) continue;
 	if (!isxdigit(*s)) return -1;
@@ -599,7 +599,7 @@ cvthexkey(const char *hexstr, char **ptrp) /* turn hex key string into octets */
     }
 
     for (us = (unsigned char *) retval, i = len; i > 0; hexstr++) {
-	c = *hexstr;
+	char c = *hexstr;
 	if (isspace(c)) continue;	 /* already know it is ascii */
 	if (isupper(c))
 	    c = tolower(c);
@@ -626,13 +626,12 @@ dispatch_command(const char *inputfilename,
 		 CommandTable *tab,
 		 int *statusp)
 {
-    CommandTable *ct;
     const char *cmd;
     int n;
 					/* scan table for command */
     cmd = argv[0];
     n = strlen (cmd);
-    for (ct = tab; ct->name; ct++) {
+    for (CommandTable *ct = tab; ct->name; ct++) {
 					/* look for unique prefix */
 	if (n >= ct->minlen && n <= ct->maxlen &&
 	    strncmp (cmd, ct->name, n) == 0) {
@@ -657,7 +656,7 @@ static volatile Bool dying = False;
 
 /* poor man's puts(), for under signal handlers, 
    extended to ignore warn_unused_result */
-#define WRITES(fd, S) {if(write((fd), (S), strlen((S))));}
+#define WRITES(fd, S) {if(write((fd), (S), strlen((S)))){}}
 
 /* ARGSUSED */
 _X_NORETURN
@@ -712,7 +711,6 @@ int
 auth_initialize(const char *authfilename)
 {
     int n;
-    AuthList *head, *tail;
     FILE *authfp;
     Bool exists;
 
@@ -794,6 +792,8 @@ auth_initialize(const char *authfilename)
 		 "%s:  file %s does not exist\n",
 		 ProgramName, authfilename);
     } else {
+	AuthList *head, *tail;
+
 	xauth_existed = True;
 	n = read_auth_entries (authfp, False, &head, &tail);
 	(void) fclose (authfp);
@@ -826,7 +826,6 @@ write_auth_file(char *tmp_nam)
 {
     FILE *fp = NULL;
     int fd;
-    AuthList *list;
 
     /*
      * xdm and auth spec assumes auth file is 12 or fewer characters
@@ -848,7 +847,7 @@ write_auth_file(char *tmp_nam)
      * Write MIT-MAGIC-COOKIE-1 first, because R4 Xlib knows
      * only that and uses the first authorization it finds.
      */
-    for (list = xauth_head; list; list = list->next) {
+    for (AuthList *list = xauth_head; list; list = list->next) {
 	if (list->auth->name_length == 18
 	    && strncmp(list->auth->name, "MIT-MAGIC-COOKIE-1", 18) == 0) {
 	    if (!XauWriteAuth(fp, list->auth)) {
@@ -857,7 +856,7 @@ write_auth_file(char *tmp_nam)
 	    }
 	}
     }
-    for (list = xauth_head; list; list = list->next) {
+    for (AuthList *list = xauth_head; list; list = list->next) {
 	if (list->auth->name_length != 18
 	    || strncmp(list->auth->name, "MIT-MAGIC-COOKIE-1", 18) != 0) {
 	    if (!XauWriteAuth(fp, list->auth)) {
@@ -877,8 +876,6 @@ write_auth_file(char *tmp_nam)
 int
 auth_finalize(void)
 {
-    char temp_name[1025];	/* large filename size */
-
     if (xauth_modified) {
 	if (dying) {
 	    if (verbose) {
@@ -902,6 +899,8 @@ auth_finalize(void)
 		     "%s:  %s not writable, changes ignored\n",
 		     ProgramName, xauth_filename);
 	} else {
+	    char temp_name[1025];	/* large filename size */
+
 	    if (verbose) {
 		printf ("%s authority file %s\n",
 			ignore_locks ? "Ignoring locks and writing" :
@@ -957,7 +956,7 @@ bintohex(unsigned int len, const char *bindata)
     char *hexdata, *starthex;
 
     /* two chars per byte, plus null termination */
-    starthex = hexdata = (char *)malloc(2*len + 1);
+    starthex = hexdata = malloc((2 * len) + 1);
     if (!hexdata)
 	return NULL;
 
@@ -1124,7 +1123,7 @@ match_auth_dpy(register Xauth *a, register Xauth *b)
 static int
 merge_entries(AuthList **firstp, AuthList *second, int *nnewp, int *nreplp)
 {
-    AuthList *a, *b, *first, *tail;
+    AuthList *first, *tail;
     int n = 0, nnew = 0, nrepl = 0;
 
     if (!second) return 0;
@@ -1149,10 +1148,10 @@ merge_entries(AuthList **firstp, AuthList *second, int *nnewp, int *nreplp)
      * bump the tail up to include it, otherwise, cut the entry out of
      * the chain.
      */
-    for (b = second; b; ) {
+    for (AuthList *b = second; b; ) {
 	AuthList *next = b->next;	/* in case we free it */
+	AuthList *a = first;
 
-	a = first;
 	for (;;) {
 	    if (eq_auth_dpy_and_name (a->auth, b->auth)) {  /* found a duplicate */
 		AuthList tmp;		/* swap it in for old one */
@@ -1192,11 +1191,10 @@ sort_entries(AuthList **firstp)
     /* cathegory from the given list and inserts them into the sorted list. */
 
     AuthList *sorted = NULL, *sorted_tail = NULL;
-    AuthList *prev, *iter, *next;
 
     #define SORT_OUT(EXPRESSION) { \
-	prev = NULL; \
-	for (iter = *firstp; iter; iter = next) { \
+	AuthList *prev = NULL, *next; \
+	for (AuthList *iter = *firstp; iter; iter = next) { \
 	    next = iter->next; \
 	    if (EXPRESSION) { \
 		if (prev) \
@@ -1229,7 +1227,7 @@ copyAuth(Xauth *auth)
 {
     Xauth *a;
 
-    a = (Xauth *)malloc(sizeof(Xauth));
+    a = malloc(sizeof(Xauth));
     if (a == NULL) {
 	return NULL;
     }
@@ -1287,18 +1285,17 @@ iterdpy (const char *inputfilename, int lineno, int start,
 	 int argc, const char *argv[],
 	 YesNoFunc yfunc, YesNoFunc nfunc, char *data)
 {
-    int i;
-    int status;
     int errors = 0;
-    Xauth *tmp_auth;
-    AuthList *proto_head, *proto;
-    AuthList *l, *next;
 
     /*
      * iterate
      */
-    for (i = start; i < argc; i++) {
+    for (int i = start; i < argc; i++) {
 	const char *displayname = argv[i];
+	AuthList *proto_head;
+	AuthList *next;
+	int status;
+
 	if (!get_displayname_auth (displayname, &proto_head)) {
 	    prefix (inputfilename, lineno);
 	    baddisplayname (displayname, argv[0]);
@@ -1306,13 +1303,14 @@ iterdpy (const char *inputfilename, int lineno, int start,
 	    continue;
 	}
 	status = 0;
-	for (l = xauth_head; l; l = next) {
+	for (AuthList *l = xauth_head; l; l = next) {
 	    Bool matched = False;
+	    Xauth *tmp_auth;
 
 	    /* l may be freed by remove_entry below. so save its contents */
 	    next = l->next;
 	    tmp_auth = copyAuth(l->auth);
-	    for (proto = proto_head; proto; proto = proto->next) {
+	    for (AuthList *proto = proto_head; proto; proto = proto->next) {
 		if (match_auth_dpy (proto->auth, tmp_auth)) {
 		    matched = True;
 		    if (yfunc) {
@@ -1331,7 +1329,7 @@ iterdpy (const char *inputfilename, int lineno, int start,
 	    }
 	    if (status < 0) break;
 	}
-	for (proto = proto_head; proto ; proto = next) {
+	for (AuthList *proto = proto_head; proto ; proto = next) {
 	    next = proto->next;
 	    if (proto->auth->address) free (proto->auth->address);
 	    if (proto->auth->number) free (proto->auth->number);
@@ -1381,19 +1379,18 @@ remove_entry(const char *inputfilename, int lineno, Xauth *auth, char *data)
 int
 print_help(FILE *fp, const char *cmd, const char *line_prefix)
 {
-    CommandTable *ct;
     int n = 0;
 
     if (!line_prefix) line_prefix = "";
 
     if (!cmd) {				/* if no cmd, print all help */
-	for (ct = command_table; ct->name; ct++) {
+	for (CommandTable *ct = command_table; ct->name; ct++) {
 	    fprintf (fp, "%s%s\n", line_prefix, ct->helptext);
 	    n++;
 	}
     } else {
 	int len = strlen (cmd);
-	for (ct = command_table; ct->name; ct++) {
+	for (CommandTable *ct = command_table; ct->name; ct++) {
 	    if (strncmp (cmd, ct->name, len) == 0) {
 		fprintf (fp, "%s%s\n", line_prefix, ct->helptext);
 		n++;
@@ -1438,13 +1435,11 @@ do_help(const char *inputfilename, int lineno, int argc, const char **argv)
 static int
 do_questionmark(const char *inputfilename, int lineno, int argc, const char **argv)
 {
-    CommandTable *ct;
-    int i;
 #define WIDEST_COLUMN 72
     int col = WIDEST_COLUMN;
 
     printf ("Commands:\n");
-    for (ct = command_table; ct->name; ct++) {
+    for (CommandTable *ct = command_table; ct->name; ct++) {
 	if ((col + ct->maxlen) > WIDEST_COLUMN) {
 	    if (ct != command_table) {
 		putc ('\n', stdout);
@@ -1454,7 +1449,7 @@ do_questionmark(const char *inputfilename, int lineno, int argc, const char **ar
 	}
 	fputs (ct->name, stdout);
 	col += ct->maxlen;
-	for (i = ct->maxlen; i < COMMAND_NAMES_PADDED_WIDTH; i++) {
+	for (int i = ct->maxlen; i < COMMAND_NAMES_PADDED_WIDTH; i++) {
 	    putc (' ', stdout);
 	    col++;
 	}
@@ -1490,10 +1485,8 @@ do_list (const char *inputfilename, int lineno, int argc, const char **argv)
     ld.numeric = (argv[0][0] == 'n');
 
     if (argc == 1) {
-	register AuthList *l;
-
 	if (xauth_head) {
-	    for (l = xauth_head; l; l = l->next) {
+	    for (AuthList *l = xauth_head; l; l = l->next) {
 		dump_entry (inputfilename, lineno, l->auth, (char *) &ld);
 	    }
 	}
@@ -1510,10 +1503,8 @@ do_list (const char *inputfilename, int lineno, int argc, const char **argv)
 static int
 do_merge(const char *inputfilename, int lineno, int argc, const char **argv)
 {
-    int i;
     int errors = 0;
-    AuthList *head, *tail, *listhead, *listtail;
-    int nentries, nnew, nrepl;
+    AuthList *listhead, *listtail;
     Bool numeric = False;
 
     if (argc < 2) {
@@ -1525,10 +1516,12 @@ do_merge(const char *inputfilename, int lineno, int argc, const char **argv)
     if (argv[0][0] == 'n') numeric = True;
     listhead = listtail = NULL;
 
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
 	const char *filename = argv[i];
 	FILE *fp;
 	Bool used_stdin = False;
+	int nentries;
+	AuthList *head, *tail;
 
 	fp = open_file (&filename,
 			numeric ? "r" : "rb",
@@ -1557,6 +1550,8 @@ do_merge(const char *inputfilename, int lineno, int argc, const char **argv)
      * if we have new entries, merge them in (freeing any duplicates)
      */
     if (listhead) {
+	int nentries, nnew, nrepl;
+
 	nentries = merge_entries (&xauth_head, listhead, &nnew, &nrepl);
 	if (verbose)
 	  printf ("%d entries read in:  %d new, %d replacement%s\n",
@@ -1811,14 +1806,10 @@ static int
 do_source(const char *inputfilename, int lineno, int argc, const char **argv)
 {
     const char *script;
-    char buf[BUFSIZ];
     FILE *fp;
     Bool used_stdin = False;
-    int len;
-    int errors = 0, status;
+    int errors = 0;
     int sublineno = 0;
-    const char **subargv;
-    int subargc;
     Bool prompt = False;		/* only true if reading from tty */
 
     if (argc != 2 || !argv[1]) {
@@ -1837,6 +1828,11 @@ do_source(const char *inputfilename, int lineno, int argc, const char **argv)
     if (verbose && used_stdin && isatty (fileno (fp))) prompt = True;
 
     while (!alldone) {
+	char buf[BUFSIZ];
+	int len;
+	const char **subargv;
+	int subargc;
+
 	buf[0] = '\0';
 	if (prompt) {
 	    printf ("xauth> ");
@@ -1855,9 +1851,9 @@ do_source(const char *inputfilename, int lineno, int argc, const char **argv)
 	buf[--len] = '\0';		/* remove new line */
 	subargv = (const char **) split_into_words (buf, &subargc);
 	if (subargv) {
-	    status = process_command (script, sublineno, subargc, subargv);
-	    free (subargv);
+	    int status = process_command (script, sublineno, subargc, subargv);
 	    errors += status;
+	    free (subargv);
 	} else {
 	    prefix (script, sublineno);
 	    fprintf (stderr, "unable to break line into words\n");
@@ -1898,7 +1894,6 @@ do_generate(const char *inputfilename, int lineno, int argc, const char **argv)
     int status;
     const char *args[4];
     const char *protoname = ".";
-    int i;
     int authdatalen = 0;
     const char *hexdata;
     char *authdata = NULL;
@@ -1916,7 +1911,7 @@ do_generate(const char *inputfilename, int lineno, int argc, const char **argv)
 	protoname = argv[2];
     }
 
-    for (i = 3; i < argc; i++) {
+    for (int i = 3; i < argc; i++) {
 	if (0 == strcmp(argv[i], "timeout")) {
 	    if (++i == argc) {
 		prefix (inputfilename, lineno);

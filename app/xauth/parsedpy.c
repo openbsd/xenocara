@@ -36,9 +36,6 @@ in this Software without prior written authorization from The Open Group.
 #include <ctype.h>			/* for isascii() and isdigit() */
 #include <X11/Xos.h>			/* for strchr() and string routines */
 #include <X11/Xlib.h>			/* for Family constants */
-#ifdef hpux
-#include <sys/utsname.h>		/* for struct utsname */
-#endif
 #include <X11/Xauth.h>			/* for FamilyLocal */
 #include <X11/Xmu/SysUtil.h>
 

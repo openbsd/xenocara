@@ -79,16 +79,15 @@ NULL };
 "standard input.  Commands beginning with \"n\" use numeric format.",
 "",
 NULL };
-    const char **msg;
 
     fprintf (stderr, "usage:  %s [-options ...] [command arg ...]\n",
 	     ProgramName);
-    for (msg = prefixmsg; *msg; msg++) {
+    for (const char **msg = prefixmsg; *msg; msg++) {
 	fprintf (stderr, "%s\n", *msg);
     }
     print_help (stderr, NULL, "    ");	/* match prefix indentation */
     fprintf (stderr, "\n");
-    for (msg = suffixmsg; *msg; msg++) {
+    for (const char **msg = suffixmsg; *msg; msg++) {
 	fprintf (stderr, "%s\n", *msg);
     }
     exit (1);
@@ -101,7 +100,6 @@ NULL };
 int
 main(int argc, const char *argv[])
 {
-    int i;
     const char *sourcename = defsource;
     const char **arglist = defcmds;
     int nargs = ndefcmds;
@@ -109,12 +107,11 @@ main(int argc, const char *argv[])
 
     ProgramName = argv[0];
 
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
 	const char *arg = argv[i];
 
 	if (arg[0] == '-') {
-	    const char *flag;
-	    for (flag = (arg + 1); *flag; flag++) {
+	    for (const char *flag = (arg + 1); *flag; flag++) {
 	        switch (*flag) {
 		  case 'f':		/* -f authfilename */
 		    if (++i >= argc) usage ();
