@@ -15,14 +15,13 @@ Unlike the kernel maintainers file, this goes more or less alphabetically
 by component within each subsystem, rather than alphabetically on maintainer
 name.
 
-P: Person
-M: Mail patches to (but cc the mailing list as well)
+M: Maintainer
 L: Mailing list that is relevant to this area
 W: Web-page with status/info
 S: Status, one of the following:
 
 	Supported:	Someone is actually paid to look after this.
-	Maintained:     Someone actually looks after it.
+	Maintained:	Someone actually looks after it.
 	Odd Fixes:	It has a maintainer but they don't have time to do
 			much other than throw the odd patch in. See below..
 	Unmaintained:	No current maintainer [but maybe you could take the
@@ -33,43 +32,58 @@ S: Status, one of the following:
 	Obsolete:	Old code. Something tagged obsolete generally means
 			it has been replaced by a better system and you
 			should be using that.
+C: URI for *chat* protocol, server and channel where developers
+   usually hang out, for example irc://server/channel.
+T: SCM tree location.
+F: Files and directories wildcard patterns.
+   One pattern per line.  Multiple F: lines acceptable.
+X: Excluded files and directories that are NOT maintained
+   One pattern per line.  Multiple F: lines acceptable.
+
+Please use gitlab to submit issue reports & merge requests for all projects
+that use gitlab.
 
 For patch submission instructions, see:
-        https://www.x.org/wiki/Development/Documentation/SubmittingPatches
-
-Send all patches for modules without a specific maintainer address listed
-to xorg-devel@lists.x.org
+	https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 
 Misc. core code
 ---------------
 DRM library
-P:	Adam Jackson
-M:	ajax@nwnk.net
+M:	Adam Jackson <ajax@nwnk.net>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/mesa/drm
+C:	irc://irc.oftc.net/dri-devel
+T:	https://gitlab.freedesktop.org/mesa/drm
 S:	Maintained
 
 PCI Access Library
-P:	Ian Romanick
-M:	?
+M:	Ian Romanick
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/lib/libpciaccess
+T:	https://gitlab.freedesktop.org/xorg/lib/libpciaccess
 S:	Supported
 
 X.Org apps
 ---------------
 
 beforelight
+fdclock
+glxcompmgr
+grandr
 S:	Obsolete
 
 lbxproxy
 S:	Obsolete - use ssh X forwarding + compression instead
+
+luit
+S:	Obsolete - use http://invisible-island.net/luit/ instead.
 
 makepsres
 S:	Obsolete - DPS support has been dropped
 
 mkcfm
 S:	Obsolete - CID font support has been dropped
+
+mkfontdir
+S:	Merged into mkfontscale
 
 pclcomp
 S:	Obsolete - only used by Xprint
@@ -80,94 +94,114 @@ S:	Obsolete
 rstart
 S:	Obsolete - use ssh instead
 
-xauth
-P:	Dr. Tilmann Bubeck
-M:	t.bubeck@reinform.de
+scripts
+T:	https://gitlab.freedesktop.org/xorg/app/scripts
+S:	Deactivated
+
+twm
+M:	Thomas E. Dickey <dickey@his.com>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xauth
+T:	https://gitlab.freedesktop.org/xorg/app/twm
+S:	Maintained
+
+xauth
+M:	Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/app/xauth
 S:	Maintained
 
 xbiff
-P:	Matthieu Herrb
-M:	matthieu.herrb@laas.fr
+M:	Matthieu Herrb <matthieu.herrb@laas.fr>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xbiff
+T:	https://gitlab.freedesktop.org/xorg/app/xbiff
 S:	Maintained
 
-xcalc 
-P:	Matthieu Herrb
-M:	matthieu.herrb@laas.fr
+xcalc
+M:	Matthieu Herrb <matthieu.herrb@laas.fr>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xcalc
+T:	https://gitlab.freedesktop.org/xorg/app/xcalc
 S:	Maintained
 
 xclock
-P:	Matthieu Herrb
-M:	matthieu.herrb@laas.fr
+M:	Matthieu Herrb <matthieu.herrb@laas.fr>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xclock
+T:	https://gitlab.freedesktop.org/xorg/app/xclock
 S:	Maintained
 
 xconsole
-P:	Matthieu Herrb
-M:	matthieu.herrb@laas.fr
+M:	Matthieu Herrb <matthieu.herrb@laas.fr>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xconsole
+T:	https://gitlab.freedesktop.org/xorg/app/xconsole
 S:	Maintained
 
+xdbedizzy
+S:	Obsolete
+
 xdm
-P:	?
-M:	xorg-devel@lists.x.org
+M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xdm
+T:	https://gitlab.freedesktop.org/xorg/app/xdm
 S:	Unmaintained
 
 xedit
-P:	Paulo César Pereira de Andrade
-M:	pcpa@mandriva.com.br
+M:	Paulo César Pereira de Andrade <pcpa@mandriva.com.br>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xedit
+T:	https://gitlab.freedesktop.org/xorg/app/xedit
 S:	Maintained
 
+xf86dga
+T:	https://gitlab.freedesktop.org/xorg/app/xf86dga
+S:	Deactivated
+
+xfindproxy
+T:	https://gitlab.freedesktop.org/xorg/app/xfindproxy
+S:	Deactivated
+
 xinput
-P:	Peter Hutterer
-M:	peter.hutterer@who-t.net
+M:	Peter Hutterer <peter.hutterer@who-t.net>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xinput
+T:	https://gitlab.freedesktop.org/xorg/app/xinput
+S:	Maintained
+
+xisxwayland
+M:	Peter Hutterer <peter.hutterer@who-t.net>
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/app/xisxwayland
 S:	Maintained
 
 xkbcomp
-P:	Daniel Stone
-M:	daniel@fooishbar.org
+M:	Daniel Stone <daniel@fooishbar.org>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xkbcomp
+T:	https://gitlab.freedesktop.org/xorg/app/xkbcomp
 S:	Maintained
-S:	XKB being overhauled
 S:	Please contact Daniel if you're planning to work on this
 
 xload
-P:	Matthieu Herrb
-M:	matthieu.herrb@laas.fr
+M:	Matthieu Herrb <matthieu.herrb@laas.fr>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xload
+T:	https://gitlab.freedesktop.org/xorg/app/xload
 S:	Maintained
 
-xman 
-P:	Matthieu Herrb
-M:	matthieu.herrb@laas.fr
+xman
+M:	Matthieu Herrb <matthieu.herrb@laas.fr>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xman
+T:	https://gitlab.freedesktop.org/xorg/app/xman
 S:	Maintained
 
 xmessage
-P:	Matthieu Herrb
-M:	matthieu.herrb@laas.fr
+M:	Matthieu Herrb <matthieu.herrb@laas.fr>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xmessage
+T:	https://gitlab.freedesktop.org/xorg/app/xmessage
 S:	Maintained
 
 xmh
 S:	Obsolete - use exmh instead
+
+xoo
+S:	Obsolete
+
+xphelloworld, xplsprinters, xprehashprinterlist
+S:	Obsolete - they require XPRINT which is obsolete
 
 xrx
 S:	Obsolete - all major browsers have dropped NSAPI plugin support now
@@ -179,20 +213,18 @@ xsetpointer
 S:	Obsolete - use xinput instead (for Xorg < 1.4, can't work after that)
 
 xsetroot
-P:	Matthieu Herrb
-M:	matthieu.herrb@laas.fr
+M:	Matthieu Herrb <matthieu.herrb@laas.fr>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app/xsetroot
+T:	https://gitlab.freedesktop.org/xorg/app/xsetroot
 S:	Maintained
 
 xtrap
-S:	Obsolete
+S:	Obsolete - server side removed in xorg-server 1.6 & later
 
 all others
-P:	?
-M:	xorg-devel@lists.x.org
+M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/app
+T:	https://gitlab.freedesktop.org/xorg/app
 S:	Unmaintained
 
 X.Org libraries
@@ -201,29 +233,60 @@ X.Org libraries
 FS
 ICE
 SM
-WindowsWM
 XRes
 XScrnSaver
 Xau
+Xaw3d
+T:	https://gitlab.freedesktop.org/xorg/lib
 S:	Unmaintained
 
 AppleWM
-P:	Jeremy Huddleston Sequoia
-M:	jeremyhu@apple.com
+M:	Jeremy Huddleston Sequoia <jeremyhu@apple.com>
 L:	xquartz-dev@lists.macosforge.org
 W:	https://www.xquartz.org/
 L:	xorg-devel@lists.x.org
 W:	https://wiki.x.org
+T:	https://gitlab.freedesktop.org/xorg/lib/libapplewm
 S:	Maintained
 
-X11, Xcomposite, Xcursor, Xdamage, Xfixes, Xrandr, Xrender
-P:	Keith Packard
-M:	keith.packard@intel.com
+WindowsWM
+S:	Obsolete
+
+X11, Xcomposite, Xcursor, Xdamage, Xfixes, Xpresent, Xrandr, Xrender, xshmfence
+M:	Keith Packard <keithp@keithp.com>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/lib
+T:	https://gitlab.freedesktop.org/xorg/lib
+S:	Maintained
+
+Xaw
+M:	Thomas E. Dickey <dickey@his.com>
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/lib/libxaw
+S:	Maintained
+
+XCB (libxcb, xcbproto)
+M:	?
+L:	xcb@lists.freedesktop.org
+W:	https://xcb.freedesktop.org/
+T:	https://gitlab.freedesktop.org/xorg/lib/libxcb
+T:	https://gitlab.freedesktop.org/xorg/proto/xcbproto
+S:	Maintained
+
+XCB Utils (libxcb-*)
+M:	?
+L:	xcb@lists.freedesktop.org
+W:	https://xcb.freedesktop.org/
+T:	https://gitlab.freedesktop.org/xorg/lib/
+S:	Unmaintained
+
+xcvt
+M:	Olivier Fourdan <ofourdan@redhat.com>
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/lib/libxcvt
 S:	Maintained
 
 Xdmcp
+T:	https://gitlab.freedesktop.org/xorg/lib/libxdmcp
 S:	Unmaintained
 
 Xevie
@@ -231,29 +294,33 @@ S:	Obsolete
 
 Xext
 Xfont
+T:	https://gitlab.freedesktop.org/xorg/lib
 S:	Unmaintained
 
 Xfontcache
 S:	Obsolete
 
 Xft
+M:	Thomas E. Dickey <dickey@his.com>
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/lib/libxft
+S:	Maintained
+
 Xinerama
+T:	https://gitlab.freedesktop.org/xorg/lib
 S:	Unmaintained
 
 Xi
-P:	Peter Hutterer
-M:	peter.hutterer@who-t.net
+M:	Peter Hutterer <peter.hutterer@who-t.net>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/lib/libxi
+T:	https://gitlab.freedesktop.org/xorg/lib/libxi
 S:	Maintained
 
 xkbfile
-P:	Daniel Stone
-M:	daniel@fooishbar.org
+M:	Daniel Stone <daniel@fooishbar.org>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/lib/libxkbfile
+T:	https://gitlab.freedesktop.org/xorg/lib/libxkbfile
 S:	Maintained
-S:	XKB being overhauled
 S:	Please contact Daniel if you're planning to work on this
 
 xkbui
@@ -261,6 +328,7 @@ S:	Obsolete
 
 Xmu
 Xpm
+T:	https://gitlab.freedesktop.org/xorg/lib
 S:	Unmaintained
 
 Xp
@@ -270,17 +338,17 @@ S:	maintained solely for binary compatibility for software like Motif
 XprintAppUtil, XprintUtil
 S:	Obsolete
 
-Xt, Xaw, twm
-P:	Thomas E. Dickey
-M:	dickey@his.com
+Xt
+M:	Thomas E. Dickey <dickey@his.com>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/lib/libxt
+T:	https://gitlab.freedesktop.org/xorg/lib/libxt
 S:	Maintained
 
 Xtst
 Xv
 XvMC
 Xxf86dga
+T:	https://gitlab.freedesktop.org/xorg/lib
 S:	Unmaintained
 
 Xxf86misc
@@ -288,12 +356,22 @@ Xxf86rush
 S:	Obsolete
 
 Xxf86vm
+T:	https://gitlab.freedesktop.org/xorg/lib/libxxf86vm
+S:	Unmaintained
+
 dmx
+S:	Obsolete - Xdmx removed from xorg-server 21 & later releases
+
 fontenc
+T:	https://gitlab.freedesktop.org/xorg/lib/libfontenc
 S:	Unmaintained
 
 lbxutil
-S:	Obsolete
+S:	Obsolete - LBX removed from xorg-server 1.2 & later releases
+
+pthread-stubs
+T:	https://gitlab.freedesktop.org/xorg/lib/pthread-stubs
+S:	Unmaintained
 
 oldX
 S:	Obsolete - use libX11 instead
@@ -301,540 +379,520 @@ S:	Obsolete - use libX11 instead
 XTrap
 S:	Obsolete - use libXtst instead
 
-xtrans
-P:      Bill Crawford
-M:      billcrawford1970@gmail.com
-L:      xorg-devel@lists.x.org
-W:      https://gitlab.freedesktop.org/xorg/lib/libxtrans
-S:      Maintained
+xpyb
+S:	Obsolete - use https://github.com/tych0/xcffib instead
 
-X.Org core
-----------
-Composite extension
-P:	Keith Packard
-M:	keith.packard@intel.com
+xtrans
+M:	Bill Crawford <billcrawford1970@gmail.com>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
+T:	https://gitlab.freedesktop.org/xorg/lib/libxtrans
 S:	Maintained
 
-Configuration subsystem
-P:	Adam Jackson
-M:	ajax@nwnk.net
-L:	xorg-devel@lists.x.org
+Xserver core
+------------
+All subsystems
+C:	irc://irc.oftc.net/xorg-devel
 W:	https://wiki.x.org
+T:	https://gitlab.freedesktop.org/xorg/xserver
+
+Composite extension
+M:	Keith Packard <keithp@keithp.com>
+L:	xorg-devel@lists.x.org
+S:	Maintained
+F:	composite
+
+Configuration subsystem
+M:	Adam Jackson <ajax@nwnk.net>
+L:	xorg-devel@lists.x.org
 S:	Maintained
 
 Damage extension
-P:	Keith Packard
-M:	keith.packard@intel.com
+M:	Keith Packard <keithp@keithp.com>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
+F:	damageext
 
 Device Independent X (DIX)
-P:	Keith Packard
-M:	keith.packard@intel.com
+M:	Keith Packard <keithp@keithp.com>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
+F:	dix
 
 DRI subsystem
-P:	Adam Jackson
-M:	ajax@nwnk.net
+M:	Adam Jackson <ajax@nwnk.net>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
+F:	hw/xfree86/dri*
+F:	dri3
 
 EXA subsystem
-P:	Eric Anholt
-M:	anholt@freebsd.org
+M:	?
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
+F:	exa
+
+Glamor subsystem
+M:	?
+L:	xorg-devel@lists.x.org
+S:	Maintained
+F:	glamor
 
 GL subsystem
-P:	Ian Romanick
-M:	idr@us.ibm.com
+M:	Ian Romanick <idr@us.ibm.com>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
+F:	GL
 
 KDrive
-P:	Keith Packard
-M:	keith.packard@intel.com
+M:	Keith Packard <keithp@keithp.com>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
+F:	hw/kdrive
 
 Loader subsystem
-P:	Adam Jackson
-M:	ajax@nwnk.net
+M:	Adam Jackson <ajax@nwnk.net>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
+F:	hw/xfree86/loader
 
 Randr extension
-P:	Keith Packard
-M:	keith.packard@intel.com
+M:	Keith Packard <keithp@keithp.com>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
+F:	randr
 
 Render extension
-P:	Keith Packard
-M:	keith.packard@intel.com
+M:	Keith Packard <keithp@keithp.com>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
+F:	render
 
 XAA subsystem
-P:	Adam Jackson
-M:	ajax@nwnk.net
+M:	Adam Jackson <ajax@nwnk.net>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
-S:	Despised
+S:	Removed in xorg-server 1.13 and later
 
 XACE subsystem (security policy extensions framework)
-P:	Eamon Walsh
-M:	ewalsh@tycho.nsa.gov
+M:	Eamon Walsh <ewalsh@tycho.nsa.gov>
 L:	xorg-devel@lists.x.org
 W:	http://people.freedesktop.org/~ewalsh/xace_proposal.html
 S:	Maintained
 
 Xfixes extension
-P:	Keith Packard
-M:	keith.packard@intel.com
+M:	Keith Packard <keithp@keithp.com>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
+F:	xfixes
 
 XKB
-P:	Daniel Stone
-M:	daniel@fooishbar.org
+M:	Daniel Stone <daniel@fooishbar.org>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
-S:	Maintained, being seriously overhauled
+S:	Maintained
 S:	Please contact Daniel if you're planning to work on this
+F:	xkb
 
 Input subsystem
-P:	Daniel Stone
-M:	daniel@fooishbar.org
-P:	Peter Hutterer
-M:	peter.hutterer@who-t.net
+M:	Daniel Stone <daniel@fooishbar.org>
+M:	Peter Hutterer <peter.hutterer@who-t.net>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
-S:	Maintained, being overhauled
-S:	Please contact Daniel or Peter if you're planning to work on this
+S:	Maintained
+F:	Xi
 
-Xprint
-P:	Drew Parsons
-P:	Felix Schulte
+Xorg server
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/xserver-xprint
-S:	Deactivated
+S:	Maintained, for now
+F:	hw/xfree86
+
+Xwayland server
+M:	Olivier Fourdan <ofourdan@redhat.com>
+L:	wayland-devel@lists.freedesktop.org
+W:	https://wayland.freedesktop.org/xserver.html
+S:	Maintained
+F:	hw/xwayland
+
+Xvfb server
+M:	?
+L:	xorg-devel@lists.x.org
+S:	Unmaintained
+F:	hw/vfb
+
+Xnest server
+M:	Enrico Weigelt <info@metux.net>
+L:	xorg-devel@lists.x.org
+S:	Maintained
+F:	hw/xnest
+
+Xdmx server & DMX subsystem/tools
+S:	Removed from xorg-server 21 & later releases
+F:	hw/dmx
+
+Xprint
+M:	Drew Parsons
+M:	Felix Schulte
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/xserver-xprint
+S:	Obsolete - use other printing APIs instead
 
 X.Org OS ports
 --------------
 FreeBSD
-P:	Eric Anholt
-M:	anholt@freebsd.org
+M:	?
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
-S:	Maintained
+S:	Unmaintained
 
 Linux/i386
-P:	Egbert Eich
-M:	eich@freedesktop.org
+M:	Egbert Eich <eich@freedesktop.org>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
 
 Linux/x86_64
-P:	Egbert Eich
-M:	eich@freedesktop.org
+M:	Egbert Eich <eich@freedesktop.org>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
 
 Linux/ia64
-P:	Jesse Barnes
-M:	jbarnes@virtuousgeek.org
+M:	Jesse Barnes <jbarnes@virtuousgeek.org>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
 
 Linux/ppc
-P:	Benjamin Herrenschmidt
-M:	benh@kernel.crashing.org
+M:	Benjamin Herrenschmidt <benh@kernel.crashing.org>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
 
 Linux/sparc
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Unmaintained
 
 LynxOS
 S:	Obsolete / Removed
 
 Mac OS X (Xquartz)
-P:	Jeremy Huddleston Sequoia
-M:	jeremyhu@apple.com
+M:	Jeremy Huddleston Sequoia <jeremyhu@apple.com>
 L:	xquartz-dev@lists.macosforge.org
 W:	https://www.xquartz.org/
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
 
 NetBSD
-P:	?
-M:	xorg-devel@lists.x.org
+M:	?
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Unmaintained
 
 OpenBSD
-P:	Matthieu Herrb
-M:	matthieu.herrb@laas.fr
+M:	Matthieu Herrb <matthieu.herrb@laas.fr>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Maintained
 
 SCO (OpenServer 5)
-P:	Kean Johnston
-M:	jkj@freedesktop.org
+M:	Kean Johnston <jkj@freedesktop.org>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
-S:	Maintained
+S:	Unmaintained
 
 System V (other than Solaris & SCO)
-P:	?
-M:	xorg-devel@lists.x.org
+M:	?
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
 S:	Unmaintained (libraries/apps) ; Obsolete/Removed (Xorg server)
 
-Solaris (x86 & sparc)
-P:	Alan Coopersmith
-M:	alan.coopersmith@oracle.com
-P:	Niveditha Rau
-M:	niveditha.rau@oracle.com
+Solaris (x86 & sparc) & illumos
+M:	Alan Coopersmith <alan.coopersmith@oracle.com>
+M:	Niveditha Rau <niveditha.rau@oracle.com>
 L:	xorg-devel@lists.x.org
 W:	https://github.com/oracle/solaris-userland/tree/master/components/x11
 S:	Maintained
 
 USL (UnixWare 7.1.x, OpenServer 6)
-P:	Kean Johnston
-M:	jkj@freedesktop.org
+M:	Kean Johnston <jkj@freedesktop.org>
 L:	xorg-devel@lists.x.org
-W:	https://wiki.x.org
-S:	Maintained
+S:	Unmaintained
 
 Cygwin
-P:	Jon TURNEY
-M:	jon.turney@dronecode.org.uk
-P:	Yaakov Selkowitz
-M:	yselkowitz@users.sourceforge.net
+M:	Jon TURNEY <jon.turney@dronecode.org.uk>
+M:	Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
 L:	cygwin-xfree@cygwin.com
 W:	https://x.cygwin.com/
 S:	Maintained
 
 MinGW
-P:	Colin Harrison
-M:	colin.harrison@virgin.net
+M:	Colin Harrison <colin.harrison@virgin.net>
 W:	http://www.straightrunning.com/XmingNotes/
 S:	Maintained
 
 GNU/Hurd
-P:	Samuel Thibault
-M:	samuel.thibault@ens-lyon.org
-W:	https://wiki.x.org
+M:	Samuel Thibault <samuel.thibault@ens-lyon.org>
 L:	bug-hurd@gnu.org
 S:	Maintained
 
 Drivers
 -------
 xf86-input-acecad
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-acecad
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-acecad
+S:	Obsolete
 
 xf86-input-aiptek
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-aiptek
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-aiptek
+S:	Obsolete
 
 xf86-input-calcomp
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-calcomp
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-calcomp
+S:	Obsolete
 
 xf86-input-citron
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-citron
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-citron
+S:	Obsolete
 
 xf86-input-digitaledge
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-digitaledge
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-digitaledge
+S:	Obsolete
 
 xf86-input-dmc
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-dmc
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-dmc
+S:	Obsolete
 
 xf86-input-dynapro
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-dynapro
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-dynapro
+S:	Obsolete
 
 xf86-input-elo2300
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-elo2300
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-elo2300
+S:	Obsolete
 
 xf86-input-elographics
-P:	Marc Balmer
-M:	marc.balmer@arcapos.com
+M:	Marc Balmer <marc.balmer@arcapos.com>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-elographics
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-elographics
 S:	Maintained
 
 xf86-input-evdev
-P:	Peter Hutterer
-M:	peter.hutterer@who-t.net
+M:	Peter Hutterer <peter.hutterer@who-t.net>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-evdev
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-evdev
 S:	Maintained
 
 xf86-input-fpit
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-fpit
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-fpit
+S:	Obsolete
 
 xf86-input-hyperpen
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-hyperpen
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-hyperpen
+S:	Obsolete
 
 xf86-input-jamstudio
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-jamstudio
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-jamstudio
+S:	Obsolete
 
 xf86-input-joystick
-P:	Sascha Hlusiak
-M:	saschahlusiak@arcor.de
+M:	Sascha Hlusiak <saschahlusiak@arcor.de>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-joystick
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-joystick
 S:	Maintained
 
 xf86-input-keyboard
-P:	Alan Coopersmith
-M:	alan.coopersmith@oracle.com
+M:	Alan Coopersmith <alan.coopersmith@oracle.com>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-keyboard
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-keyboard
+S:	Maintained for non-Linux systems, support removed for Linux systems
+
+xf86-input-libinput
+M:	Peter Hutterer <peter.hutterer@who-t.net>
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-libinput
 S:	Maintained
 
 xf86-input-magellan
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-magellan
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-magellan
+S:	Obsolete
 
 xf86-input-magictouch
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-magictouch
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-magictouch
+S:	Obsolete
 
 xf86-input-microtouch
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-microtouch
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-microtouch
+S:	Obsolete
 
 xf86-input-mouse
-P:	Alan Coopersmith
-M:	alan.coopersmith@oracle.com
+M:	Alan Coopersmith <alan.coopersmith@oracle.com>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-mouse
-S:	Maintained
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-mouse
+S:	Maintained for non-Linux systems, unmaintained for Linux systems
 
 xf86-input-mutouch
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-mutouch
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-mutouch
+S:	Obsolete
 
 xf86-input-palmax
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-palmax
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-palmax
+S:	Obsolete
 
 xf86-input-penmount
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-penmount
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-penmount
+S:	Obsolete
 
 xf86-input-sample
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
 W	https://gitlab.freedesktop.org/xorg/driver/xf86-input-sample
 S:	Obsolete
 
 xf86-input-spaceorb
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-spaceorb
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-spaceorb
+S:	Obsolete
 
 xf86-input-summa
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-summa
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-summa
+S:	Obsolete
 
 xf86-input-synaptics
-P:	Peter Hutterer
-M:	peter.hutterer@who-t.net
+M:	Peter Hutterer <peter.hutterer@who-t.net>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics
 S:	Maintained
 
 xf86-input-tek4957
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-tek4957
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-tek4957
+S:	Obsolete
 
 xf86-input-ur98
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-ur98
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-ur98
+S:	Obsolete
 
 xf86-input-vmmouse
-P:	VMware Linux Graphics Maintainer
-M:	linux-graphics-maintainer@vmware.com
+M:	VMware Linux Graphics Maintainer <linux-graphics-maintainer@vmware.com>
 L:	xorg-devel@lists.x.org
 W:	https://wiki.x.org/wiki/vmware
 S:	Supported
 
 xf86-input-void
-P:	Peter Hutterer
-M:	peter.hutterer@who-t.net
+M:	Peter Hutterer <peter.hutterer@who-t.net>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-void
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-input-void
+S:	Maintained
+
+xf86-video-amdgpu
+M:	Shashank Sharma
+L:	amd-gfx@lists.freedesktop.org
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu
 S:	Maintained
 
 xf86-video-apm
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-apm
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-apm
 S:	Deactivated
 
 xf86-video-ark
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-ark
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-ark
+S:	Deactivated
+
+xf86-video-armsoc
+M:	?
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-armsoc
 S:	Deactivated
 
 xf86-video-ast
-P:	Y.C. Chen
-M:	yc_chen@aspeedtech.com
+M:	Y.C. Chen <yc_chen@aspeedtech.com>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-ast
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-ast
 S:	Maintained
 
 xf86-video-ati
-P:	Alex Deucher
-P:      Ben Herrenschmidt
-P:      et al
-M:	?
+M:	Alex Deucher
+M:	Ben Herrenschmidt
 L:	xorg-driver-ati@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-ati
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-ati
 S:	Maintained
 
-xf86-video-chips
-P:	Egbert Eich
-M:	eich@freedesktop.org
+xf86-video-avivo
+M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-chips
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-avivo
+S:	Obsolete
+
+xf86-video-chips
+M:	Egbert Eich <eich@freedesktop.org>
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-chips
 S:	Maintained
 
 xf86-video-cirrus
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-cirrus
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-cirrus
 S:	Unmaintained
 
 xf86-video-cyrix
-P:	?
 M:	?
 L:	xorg-driver-geode@lists.x.org
 W:	https://www.x.org/wiki/GeodeDriver
 S:	Obsolete - mostly replaced by xf86-video-geode
 
 xf86-video-dummy
-P:	Adam Jackson
-M:	ajax@nwnk.net
+M:	Adam Jackson <ajax@nwnk.net>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-dummy
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-dummy
 S:	Maintained
 
 xf86-video-fbdev
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-fbdev
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-fbdev
+S:	Unmaintained
+
+xf86-video-freedreno
+M:	?
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-freedreno
 S:	Unmaintained
 
 xf86-video-geode
-P:	?
 M:	?
 L:	xorg-driver-geode@lists.x.org
 W:	https://lists.x.org/mailman/listinfo/xorg-driver-geode
@@ -842,326 +900,323 @@ W:	https://www.x.org/wiki/GeodeDriver
 S:	Maintained
 
 xf86-video-glide
-P:	Guillem Jover
-M:	guillem@hadrons.org
+M:	Guillem Jover <guillem@hadrons.org>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-glide
-S:	Obsolete, yet still somehow maintained
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-glide
+S:	Obsolete
 
 xf86-video-glint
-P:	Alan Hourihane
-M:	alanh@fairlite.demon.co.uk
+M:	Alan Hourihane <alanh@fairlite.demon.co.uk>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-glint
-S:	Maintained
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-glint
+S:	Deactivated (does not build for xorg-server 21 or later)
 
 xf86-video-i128
-P:	Adam Jackson
-M:	ajax@nwnk.net
+M:	Adam Jackson <ajax@nwnk.net>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-i128
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-i128
 S:	Maintained
 
 xf86-video-i740
-P:	Egbert Eich
-P:	??
-M:	eich@freedesktop.org
+M:	Egbert Eich <eich@freedesktop.org>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-i740
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-i740
 S:	Unmaintained
 
-xf86-video-imstt
-P:	?
+xf86-video-impact
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-imstt
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-impact
+S:	Deactivated (does not build for xorg-server 1.13 and later)
+
+xf86-video-imstt
+M:	?
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-imstt
+S:	Obsolete
 
 xf86-video-intel
-P:	Eric Anholt
-M:	eric@anholt.net
+M:	?
 L:	intel-gfx@lists.freedesktop.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-intel
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-intel
 S:	Supported
 
 xf86-video-mach64
-P:      Luc Verhaegen
-M:      libv@skynet.be
+M:	Luc Verhaegen <libv@skynet.be>
 L:	xorg-driver-ati@lists.x.org
-W:      https://gitlab.freedesktop.org/xorg/driver/xf86-video-mach64
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-mach64
 S:	Maintained
 
 xf86-video-mga
-P:	Ian Romanick
-M:	?
+M:	Ian Romanick
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-mga
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-mga
 S:	Maintained
 
 xf86-video-modesetting
-P:	Dave Airlie
-M:	airlied@redhat.com
+M:	Dave Airlie <airlied@redhat.com>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/xserver
-S:	Maintained
+T:	https://gitlab.freedesktop.org/xorg/xserver
+S:	Maintained, but as part of xorg-server now
 
 xf86-video-neomagic
-P:	Egbert Eich
-M:	eich@freedesktop.org
+M:	Egbert Eich <eich@freedesktop.org>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-neomagic
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-neomagic
 S:	Maintained
 
 xf86-video-nested
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-nested
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-nested
 S:	Maintained
 
 xf86-video-newport
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-newport
-S:	Unmaintained
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-newport
+S:	Deactivated (does not build for xorg-server 1.13 and later)
 
 xf86-video-nsc
-P:	Alan Hourihane
-M:	alanh@fairlite.demon.co.uk
+M:	Alan Hourihane <alanh@fairlite.demon.co.uk>
 L:	xorg-driver-geode@lists.x.org
 W:	https://www.x.org/wiki/GeodeDriver
 S:	Obsolete - mostly replaced by xf86-video-geode
 
-xf86-video-nv
-P:	Aaron Plattner
-M:	aplattner@freedesktop.org
-L:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-nv
-W:	https://wiki.x.org
+xf86-video-nouveau
+M:	Ilia Mirkin
+L:	nouveau@lists.freedesktop.org
+C:	irc://irc.oftc.net/nouveau
+W:	https://nouveau.freedesktop.org/
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-nouveau
 S:	Maintained
+
+xf86-video-nv
+M:	Aaron Plattner <aplattner@freedesktop.org>
+L:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-nv
+S:	Unmaintained - see https://lists.freedesktop.org/archives/xorg/2010-March/049560.html
 
 xf86-video-omap
-P:	Rob Clark
-M:	robclark@freedesktop.org
+M:	Rob Clark <robclark@freedesktop.org>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-omap
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-omap
 S:	Maintained
 
-xf86-video-qxl
-P:	?
+xf86-video-opentegra
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-qxl
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-opentegra
+S:	Deactivated
+
+xf86-video-qxl
+M:	?
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-qxl
 S:	Maintained
 
 xf86-video-rendition
-P:	Adam Jackson
-M:	ajax@nwnk.net
+M:	Adam Jackson <ajax@nwnk.net>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-rendition
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-rendition
 S:	Odd fixes.
 
 xf86-video-r128
-P:	Alex Deucher
-P:      Ben Herrenschmidt
-P:      et al
-M:	?
+M:	Alex Deucher
+M:	Ben Herrenschmidt
 L:	xorg-driver-ati@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-r128
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-r128
 S:	Maintained
 
 radeon driver (xf86-video-ati)
-P:	Alex Deucher
-P:      Ben Herrenschmidt
-P:      et al
-M:	?
+M:	Alex Deucher
+M:	Ben Herrenschmidt
 L:	xorg-driver-ati@lists.x.org
 W:	https://www.x.org/wiki/radeon
 S:	Maintained
 
 xf86-video-s3
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-s3
-S:	Unmaintained
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-s3
+S:	Deactivated (does not build for xorg-server 21 or later)
 
 xf86-video-s3virge
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-s3virge
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-s3virge
 S:	Unmaintained
 
 xf86-video-savage
-P:	Alex Deucher
-M:	agd5f@yahoo.com
+M:	Alex Deucher <agd5f@yahoo.com>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-savage
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-savage
 S:	Maintained
 
 xf86-video-siliconmotion
-P:	Alex Deucher
-M:	agd5f@yahoo.com
+M:	Alex Deucher <agd5f@yahoo.com>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-siliconmotion
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-siliconmotion
 S:	Unmaintained
 
 xf86-video-sis
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-sis
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-sis
 S:	Unmaintained
 
 xf86-video-sisusb
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-sisusb
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-sisusb
 S:	Unmaintained
 
 xf86-video-sunbw2
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-sunbw2
-S:	Deactivated
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-sunbw2
+S:	Obsolete
 
 xf86-video-suncg14
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-suncg14
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-suncg14
 S:	Unmaintained
 
 xf86-video-suncg3
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-suncg3
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-suncg3
 S:	Unmaintained
 
 xf86-video-suncg6
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-suncg6
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-suncg6
 S:	Unmaintained
 
 xf86-video-sunffb
-P:	David S. Miller
-M:	?
+M:	David S. Miller
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-sunffb
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-sunffb
 S:	Odd fixes
 
 xf86-video-sunleo
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-sunleo
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-sunleo
 S:	Unmaintained
 
 xf86-video-suntcx
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-suntcx
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-suntcx
 S:	Unmaintained
 
 xf86-video-tdfx
-P:	Adam Jackson
-M:	ajax@nwnk.net
+M:	Adam Jackson <ajax@nwnk.net>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-tdfx
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-tdfx
 S:	Maintained
 
 xf86-video-tga
-P:	Alan Hourihane
-M:	alanh@fairlite.demon.co.uk
+M:	Alan Hourihane <alanh@fairlite.demon.co.uk>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-tga
-S:	Maintained
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-tga
+S:	Deactivated (does not build for xorg-server 21 or later)
 
 xf86-video-trident
-P:	Alan Hourihane
-M:	alanh@fairlite.demon.co.uk
+M:	Alan Hourihane <alanh@fairlite.demon.co.uk>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-trident
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-trident
 S:	Maintained
 
 xf86-video-tseng
-P:	Luc Verhaegen
-M:	libv@skynet.be
+M:	Luc Verhaegen <libv@skynet.be>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-tseng
-S:	Maintained
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-tseng
+S:	Deactivated
 
 xf86-video-v4l
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-v4l
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-v4l
 S:	Unmaintained
 
-xf86-video-vesa
-P:	Adam Jackson
-M:	ajax@nwnk.net
+xf86-video-vbox
+M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-vesa
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-vbox
+S:	Unmaintained
+
+xf86-video-vermilion
+M:	?
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-vermilion
+S:	Obsolete
+
+xf86-video-vesa
+M:	Adam Jackson <ajax@nwnk.net>
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-vesa
 S:	Maintained
 
 xf86-video-vga
 S:	Obsolete - use xf86-video-vesa instead
 
 xf86-video-via
-S:	Obsolete - use xf86-video-openchrome or xf86-video-unichrome instead
+S:	Obsolete - use xf86-video-openchrome instead
 
 xf86-video-vmware
-P:	VMware Linux Graphics Maintainer
-M:	linux-graphics-maintainer@vmware.com
+M:	VMware Linux Graphics Maintainer <linux-graphics-maintainer@vmware.com>
 L:	xorg-devel@lists.x.org
 W:	https://wiki.x.org/vmware
 S:	Maintained
 
 xf86-video-voodoo
-P:	Alan Cox
-M:	?
+M:	Alan Cox
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-voodoo
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-voodoo
 S:	Odd fixes
 
 xf86-video-wsfb
-P:	Matthieu Herrb
-M:	matthieu.herrb@laas.fr
+M:	Matthieu Herrb <matthieu.herrb@laas.fr>
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-wsfb
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-wsfb
 S:	Maintained
 
 xf86-video-xgi
-P:	Ian Romanick
-M:	?
+M:	Ian Romanick
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-xgi
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-xgi
 S:	Maintained
 
 xf86-video-xgixp
-P:	?
 M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-xgixp
-S:	Unmaintained
+T:	https://gitlab.freedesktop.org/xorg/driver/xf86-video-xgixp
+S:	Deactivated
 
 Other modules
 -------------
 
-data/bitmaps, data/cursors, doc/*, fonts/*, util/*
-P:	?
-M:	xorg-devel@lists.x.org
+fonts/bitstream-speedo
+S:	Obsolete - Speedo format support removed in libXfont 1.4.0 & later
+
+data/bitmaps, data/cursors, doc/*, fonts/*, test/*, util/*
+M:	?
 L:	xorg-devel@lists.x.org
-W:	https://gitlab.freedesktop.org/xorg/
+T:	https://gitlab.freedesktop.org/xorg/
 S:	Unmaintained
+
+proto/xorgproto
+M:	?
+L:	xorg-devel@lists.x.org
+T:	https://gitlab.freedesktop.org/xorg/proto/xorgproto
+S:	Maintained
+
+proto/*proto (everything but xorgproto & xcbproto)
+T:	https://gitlab.freedesktop.org/groups/xorg/proto/-/archived
+S:	Obsolete - rolled into xorgproto
 
 xkbdata
 S:	Obsolete - use xkeyboard-config instead
@@ -1169,23 +1224,35 @@ S:	Obsolete - use xkeyboard-config instead
 Developer relations & services
 ------------------------------
 
+Foundation (funding, conference organizing, management, etc.)
+M:	https://www.x.org/wiki/BoardOfDirectors/
+C:	irc://irc.oftc.net/xf-bod
+W:	https://www.x.org/wiki/XorgFoundation/
+T:	https://gitlab.freedesktop.org/xorgfoundation
+S:	Maintained
+
+Gitlab (gitlab.freedesktop.org)
+M:	sitewranglers@lists.freedesktop.org
+C:	irc://irc.oftc.net/freedesktop
+W:	https://gitlab.freedesktop.org/freedesktop/freedesktop/-/wikis/home
+S:	Maintained
+
 Mailing lists (lists.x.org)
-P:	?
 M:	mailman@lists.x.org
 L:	mailman@lists.x.org
+C:	irc://irc.oftc.net/freedesktop
 W:	https://lists.x.org/mailman/listinfo/
 S:	Maintained
 
-Website (www.x.org)
-P:	Stuart Anderson
-M:	anderson@netsweng.com
+Website (www.x.org / wiki.x.org)
+M:	sitewranglers@lists.freedesktop.org
 L:	xorg-devel@lists.x.org
+C:	irc://irc.oftc.net/freedesktop
 W:	https://www.x.org/
 S:	Maintained
 
 Supply of pastries, other food, beverages
-P:	Luc Verhaegen
-M:	libv@skynet.be
+M:	Luc Verhaegen <libv@skynet.be>
 L:	xorg-devel@lists.x.org
 W:	https://wiki.x.org
 S:	Disrepair

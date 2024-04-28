@@ -1,3 +1,138 @@
+commit 019a2ac61d5a93166738d0954ec3f170855e637c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 24 11:18:09 2024 -0700
+
+    xorg-docs 1.7.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8735c2e28db537baef0cee35878254b74f32cf97
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Fri Feb 16 11:57:46 2024 +0100
+
+    MAINTAINERS: take Xnest maintainership
+    
+    Picking up maintenance of Xnest and adding myself as maintainer.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+
+commit 9024082a504df81741a1b334963ff4842ffe934e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Dec 21 18:44:48 2023 -0500
+
+    add maintainer for Xft
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 506abe2773faa1ce52ccbeecf3ac2264528f5776
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 13 15:57:50 2023 -0700
+
+    gitlab CI: Update to latest CI templates & Debian stable release
+    
+    Current template fails to rebuild the CI container with the current
+    Debian stable release (a new release since the last update)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit af572d6faf359a807aca703e612076e9ed20c180
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 4 14:38:28 2023 +1000
+
+    MAINTAINERS: add xisxwayland
+    
+    Let's avoid possible panic stampedes if this utility isn't listed here.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4f30423f4aed44010b7ba93df980834e929d370d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 23 17:29:49 2023 -0700
+
+    MAINTAINERS: update data
+    
+    - Mark all projects that have been archived in gitlab as Obsolete
+    - Mark unarchived projects that haven't had a new release in many years
+      and drivers that don't build for current Xorg as Deactivated
+    - Add new projects: libXpresent, libxshmfence, libxcvt, xf86-input-libinput,
+      xf86-video-amdgpu, xf86-video-freedreno, xf86-video-nouveau, xf86-video-vbox,
+      xorgproto
+    - Add new entries for old projects: fdclock, glxcompmgr, grandr, luit,
+      mkfontdir, scripts, xdbedizzy, xf86dga, xfindproxy, xoo, xphelloworld,
+      xplsprinters, xprehashprinterlist, Xaw3d, xf86-video-armsoc, xf86-video-avivo,
+      xf86-video-impact, xf86-video-opentegra, xf86-video-vermilion,
+      fonts/bitstream-speedo, tests/*, proto/*proto
+    - Add entries for XCB projects that merged into the xorg namespace in gitlab
+    - Move twm entry from libraries section to app section
+    - Add new subsystems of Xserver tree: Xorg, Xwayland, Xvfb, Xnest, Glamor
+    - Add X.Org Foundation & gitlab entries under "Developer relations & services"
+    - Add IRC & gitlab info to many projects
+    - Add subdirectory info to X server subsystem entries
+    - Add "all subsystems" entry for data common to all parts of the X server
+    - Mark DMX & XAA subsystems of the X server as Removed from the codebase
+    - Change SCO & USL ports from Maintained to Unmaintained
+    
+    Changes to Maintainers:
+    - Removed @anholt from all projects per private email conversation
+    - List @contactshashanksharma in new entry for xf86-video-amdgpu
+    - Stop claiming @daniels is working on an overhaul of XKB
+    - List @imirkin for newly added xf86-video-nouveau
+    - List @keithp for newly added libXpresent & libxshmfence
+    - Update email addresss for @keithp from intel.com to keithp.com
+    - List @ofourdan in new entries for libxcvt, Xwayland
+    - List @whot in new entry for xf86-input-libinput
+    - Change website maintainer from Stuart Anderson to sitewranglers@fd.o
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f95d538cf9c4d1afe57fa2723fbde706a9150853
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 10 16:04:45 2023 -0700
+
+    MAINTAINERS: update format
+    
+    Combine P: & M: lines into single M: line for maintainer.
+    Add definitions of C:, T:, F:, & X: lines
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2f3d2ffe5a0acc26e4ed64fd31ef7b1ed3733d27
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:05:43 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 918d2058e91cfa003a8d899e5cfe8d349f0d2c62
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 18 09:22:18 2023 -0800
+
+    Switch to XORG_DEFAULT_NOCODE_OPTIONS
+    
+    Stop running all sorts of compiler tests we don't need since there
+    is no code in this module to compile.  Requires xorg-macros 1.20.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77be95db572feaa0b265a4c7948e8f1ad73460eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 18 15:42:10 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 28afdec875e8042c324bce528efceee814a5dcac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 18 15:28:21 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit cd4a375968a85e3c96b5bc2217b8a4143fa1707a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 3 17:18:21 2022 -0700
@@ -4020,7 +4155,7 @@ Date:   Fri Sep 3 16:18:22 2004 +0000
         Keith Packard).
 
 commit 719ac6c84480381069b74220fc93500e1ed2c453
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Aug 30 21:01:21 2004 +0000
 
     Update release notes

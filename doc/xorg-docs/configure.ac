@@ -23,19 +23,19 @@ dnl  Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xorg-docs],
-        [1.7.2],
-        [https://gitlab.freedesktop.org/xorg/doc/xorg-docs/issues],
+        [1.7.3],
+        [https://gitlab.freedesktop.org/xorg/doc/xorg-docs/-/issues],
         [xorg-docs])
 AC_CONFIG_SRCDIR([Makefile.am])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
-# Require xorg-macros minimum of 1.12 for XORG_WITH_XSLTPROC
+# Require xorg-macros minimum of 1.20 for XORG_DEFAULT_NOCODE_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.12 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.12)
-XORG_DEFAULT_OPTIONS
+          [m4_fatal([must install xorg-macros 1.20 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.20)
+XORG_DEFAULT_NOCODE_OPTIONS
 XORG_ENABLE_DOCS
 XORG_ENABLE_SPECS
 XORG_WITH_XMLTO(0.0.22)
