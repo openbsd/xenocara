@@ -22,8 +22,8 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([xedit], [1.2.3],
-        [https://gitlab.freedesktop.org/xorg/app/xedit/issues], [xedit])
+AC_INIT([xedit], [1.2.4],
+        [https://gitlab.freedesktop.org/xorg/app/xedit/-/issues], [xedit])
 AM_INIT_AUTOMAKE([foreign dist-xz subdir-objects])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
@@ -33,6 +33,8 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 AC_CONFIG_HEADERS([config.h])
+
+AC_C_INLINE
 
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_RANLIB

@@ -43,11 +43,8 @@
 #ifndef __mp_h_
 #define __mp_h_
 
-#ifdef __GNUC__
-#define INLINE __inline__
-#else
-#define INLINE /**/
-#endif
+/* relies on autoconf's AC_C_INLINE to #define inline if needed */
+#define INLINE inline
 
 /* this normally is better for multiplication and also
  * simplify addition loops putting the larger value first */

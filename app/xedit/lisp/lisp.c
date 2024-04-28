@@ -697,7 +697,8 @@ LispDestroy(const char *fmt, ...)
     lisp__data.mem.index = 0;
 
     /* If the package was changed and an error happened */
-    PACKAGE = lisp__data.savepackage;
+    if (lisp__data.savepackage != NULL)
+        PACKAGE = lisp__data.savepackage;
     lisp__data.pack = lisp__data.savepack;
 
     LispTopLevel();

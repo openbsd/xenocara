@@ -26,6 +26,10 @@
  */
 /* $XFree86: xc/programs/xedit/xedit.c,v 1.17 2002/09/22 07:09:05 paulo Exp $ */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include "xedit.h"
 #include <X11/Xaw/SmeBSB.h>
 #include <time.h>
@@ -51,11 +55,9 @@ static XtActionsRec actions[] = {
 {"xedit-focus", XeditFocus},
 {"other-window", OtherWindow},
 {"switch-source", SwitchSource},
-#ifndef __UNIXOS2__
 {"lisp-eval", XeditLispEval},
 {"xedit-print-lisp-eval", XeditPrintLispEval},
 {"xedit-keyboard-reset",XeditKeyboardReset},
-#endif
 {"ispell", IspellAction},
 {"line-edit", LineEditAction},
 {"tags", TagsAction}
@@ -131,6 +133,25 @@ main(int argc, char *argv[])
     show_dir = FALSE;
     first_item = NULL;
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    fprintf(stderr,
+                "usage: %s [-toolkitoption] [-help] [-version] [filename...]\n",
+                    argv[0]);
+            exit(0);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     topwindow = XtAppInitialize(&appcon, "Xedit", NULL, 0, &argc, argv,
 				NULL,
 				NULL, 0);
@@ -160,9 +181,7 @@ main(int argc, char *argv[])
     }
     XtRealizeWidget(topwindow);
 
-#ifndef __UNIXOS2__
     XeditLispInitialize();
-#endif
 
     options_popup = XtCreatePopupShell("optionsMenu", simpleMenuWidgetClass,
 				       topwindow, NULL, 0);

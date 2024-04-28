@@ -1,3 +1,62 @@
+commit 75ad621cfcf3c2591b7b9602bc0934d445153c6a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 24 09:36:54 2024 -0700
+
+    xedit 1.2.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b6596aebd1fea78945881123c68a6aeb62bdb05
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 13:43:02 2024 -0800
+
+    Fix crash when undefined function called in lisp.lsp
+    
+    Reported-by: Gregory James DUCK <gjduck@gmail.com>
+    Closes: #1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d0f06bc317fa4e65b9689bbfa0565a7ba7bc013
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 14:45:56 2024 -0800
+
+    unifdef ISC
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c5e1104503f13bb530f9c51bbe5674339675756f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 11:00:19 2024 -0800
+
+    Use AC_C_INLINE instead of ifdef __GNUC__ to check for inline keyword
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7a9fa61950200eb13600cdb57830e58a53bf78fa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 10:51:53 2024 -0800
+
+    unifdef __UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 981dfdb23272bc02977c5bb9bc18d0d3fb618fa3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 10:33:47 2023 -0800
+
+    Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 13cef251511816a9b1b20675800ae6da3e1ff4c6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 4a6d485fd3d35fe9d58927971bfe653a425becc1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 3 15:01:12 2022 -0700
@@ -201,7 +260,7 @@ Date:   Tue Dec 17 11:28:21 2013 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit 505fc48999ca2c7040a47900697d95c6ab78d009
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sat Jul 6 15:40:00 2013 +0200
 
     Drop CRAY support
@@ -1077,7 +1136,7 @@ Date:   Wed Sep 28 03:04:23 2005 +0000
     Don't override , automake predefines it.
 
 commit dad8235ff737556e2eaa645a5d7b48641eba270a
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Tue Sep 27 20:20:36 2005 +0000
 
     Only add -DINCLUDE_XPRINT_SUPPORT if the Xaw version supports it.
@@ -1123,7 +1182,7 @@ Date:   Wed Jul 20 19:31:52 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit c46761f286f8c9a41ee0e510211b5ed667a78479
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 12 18:45:46 2005 +0000
 
     - lib/lbxutil/lbxutil.pc.in: link to lbxutil, not Xfixes
@@ -1135,7 +1194,7 @@ Date:   Tue Jul 12 18:45:46 2005 +0000
     - add forgotten lbxproxytrans.c file
 
 commit fc1f512d7cd7876f79190511315fe219667b2e81
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 12 17:41:52 2005 +0000
 
     Build system for xprint
@@ -1268,7 +1327,7 @@ Date:   Thu Sep 2 08:40:32 2004 +0000
         Xprint support optional (Bug #1273, Roland Mainz).
 
 commit 6b12ddbb33c8722e50e7f69f456ba0ba72b76ddd
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Aug 16 16:36:16 2004 +0000
 
     As discussed and agreed on on the release-wranglers meeting of August 16,

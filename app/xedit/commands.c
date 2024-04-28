@@ -114,9 +114,7 @@ DoQuit(Widget w, XtPointer client_data, XtPointer call_data)
 	    }
     }
     if (!source_changed) {
-#ifndef __UNIXOS2__
 	XeditLispCleanUp();
-#endif
 	exit(0);
     }
 

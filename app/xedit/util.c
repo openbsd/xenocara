@@ -490,15 +490,12 @@ SwitchTextSource(xedit_flist_item *item)
 char *
 ResolveName(char *filename)
 {
-#ifndef __UNIXOS2__
     static char *name;
     char	*result, *tmp = name;
-#endif
 
     if (filename == NULL)
 	filename = GetString(filenamewindow);
 
-#ifndef __UNIXOS2__
     /* Ensure not passing the same pointer again to realpath */
     name = XtMalloc(BUFSIZ);
     XtFree(tmp);
@@ -531,9 +528,6 @@ ResolveName(char *filename)
     }
 
     return (result);
-#else
-    return filename;
-#endif
 }
 
 static void

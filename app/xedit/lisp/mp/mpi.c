@@ -31,7 +31,7 @@
 
 #include "mp.h"
 
-#if defined(__UNIXOS2__) || defined(__APPLE__)
+#ifdef __APPLE__
 # define finite(x) isfinite(x)
 #endif
 

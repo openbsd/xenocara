@@ -1060,12 +1060,8 @@ LispProbeFile(LispBuiltin *builtin, int probe)
     else if (STREAMP(pathname) && pathname->data.stream.type == LispStreamFile)
 	name = THESTR(CAR(pathname->data.stream.pathname->data.pathname));
 
-#ifndef __UNIXOS2__
     if (realpath(name, &resolved[0]) == NULL ||
 	stat(resolved, &st)) {
-#else
-    if ((name == NULL) || stat(resolved, &st)) {
-#endif
 	if (probe)
 	    return (NIL);
 	LispDestroy("%s: realpath(\"%s\"): %s",

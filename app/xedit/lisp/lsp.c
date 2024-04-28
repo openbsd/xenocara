@@ -39,11 +39,6 @@ int strncasecmp(const char *s1, const char *s2, size_t n);
 #endif
 #ifdef NEED_REALPATH
 #include <sys/param.h>
-#if defined(ISC)
-#ifndef MAXPATHLEN
-#define MAXPATHLEN      1024
-#endif
-#endif
 char *realpath(const char *pathname, char resolvedname[MAXPATHLEN]);
 #endif
 

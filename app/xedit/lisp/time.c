@@ -41,7 +41,6 @@ Lisp_Time(LispBuiltin *builtin)
  time form
  */
 {
-#ifndef __UNIXOS2__
     struct itimerval real, virt, prof;
     unsigned long count;
     long sec, usec;
@@ -136,8 +135,4 @@ Lisp_Time(LispBuiltin *builtin)
     lisp__data.gc.timebits = 0;
 
     return (result);
-#else
-    LispMessage("\"Lisp_Time\" not implemented under OS/2");
-    return (NIL);
-#endif
 }
