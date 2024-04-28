@@ -31,7 +31,10 @@
 xsm \- X Session Manager
 .SH SYNOPSIS
 .B xsm
-[-display \fIdisplay\fP] [-session \fIsessionName\fP] [-verbose]
+[\fB\-display\fP \fIdisplay\fP] [\fB\-session\fP \fIsessionName\fP] [\fB-verbose\fP]
+.br
+.B xsm
+[\fB\-help\fP | \fB-verbose\fP]
 .SH DESCRIPTION
 .PP
 \fIxsm\fP is a session manager.  A session is a group of applications, each
@@ -61,6 +64,12 @@ Causes \fIxsm\fP to load the specified session, bypassing the session menu.
 .TP 8
 .B \-verbose
 Turns on debugging information.
+.TP 8
+.B \-help
+Prints usage message and exits.
+.TP 8
+.B \-version
+Prints version info and exits.
 .SH SETUP
 .SS .xsession file
 Using \fIxsm\fP requires a change to your \fI.xsession\fP file:

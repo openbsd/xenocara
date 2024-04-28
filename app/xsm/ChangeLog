@@ -1,3 +1,74 @@
+commit 0575b27ebc908042e85a7b717a021ace939762a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 15:25:02 2024 -0800
+
+    xsm 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1c7a3d9a12b825e4d96bfdded86f233404970261
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 14:13:14 2024 -0800
+
+    unifdef SYSV
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 71a8ea3d874084d24840b8869f0475146ad8a414
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 14:09:57 2024 -0800
+
+    unifdef SCO
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 06517bd7bff541f85fbddf78a6728ad0c29bd12c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 14:09:30 2024 -0800
+
+    unifdef SCO325
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4c6626a0d6a2a3615713a44c2226028e37d68ec1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 17:33:24 2023 -0800
+
+    Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1958a53e86c2aad0cdeb03d588d6ea1d2616c4a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5680c13e833dfc3375f25e33a18b151f33147ea5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 15 17:37:51 2022 -0700
+
+    unifdef -UMOTOROLA
+    
+    Motorola System V/88 was last released in the mid-90's and has
+    never been supported in X11R7 modular builds.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8779682224ef654ac654d75c9ba6df09bd9b92fa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 15 17:32:13 2022 -0700
+
+    unifdef -UUSG
+    
+    USG was defined for a handful of pre-SVR4 systems based on
+    AT&T's Unix System Group releases in the old imake configs
+    and has never been defined in X11R7 modular builds.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6733ee9baffaef106792c0457c53b5c9452d0021
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 3 17:03:13 2022 -0700
@@ -227,7 +298,7 @@ Date:   Tue Dec 17 11:08:50 2013 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit 9f4bee64da58ed95923ceee4abfe56d5125974f6
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Thu Jul 4 00:53:43 2013 +0200
 
     Improve help messages & man page
@@ -237,7 +308,7 @@ Date:   Thu Jul 4 00:53:43 2013 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 9a7429ed7734531ca313d8c1f724bcb07c33ff54
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sat Jul 6 15:40:56 2013 +0200
 
     Drop CRAY support
@@ -834,7 +905,7 @@ Date:   Sat Jul 16 21:59:14 2005 +0000
         against tempfile race conditions in many places)
 
 commit 2f07c342e877fde5d3f64041ca6ff365a643ddc8
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:09:07 2005 +0000
 
     xtrap.pc.in: s/Xfixes/XTrap/ xi.pc.in: s/Xt/Xi/ Xv/src/Makefile.am: remove

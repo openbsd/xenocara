@@ -39,17 +39,9 @@ in this Software without prior written authorization from The Open Group.
 #ifndef X_NOT_POSIX
 #include <dirent.h>
 #else
-#ifdef SYSV
-#include <dirent.h>
-#else
-#ifdef USG
-#include <dirent.h>
-#else
 #include <sys/dir.h>
 #ifndef dirent
 #define dirent direct
-#endif
-#endif
 #endif
 #endif
 

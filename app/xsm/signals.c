@@ -36,20 +36,7 @@ in this Software without prior written authorization from The Open Group.
 #include "save.h"
 
 #include <errno.h>
-#ifdef USG
-#ifndef __TYPES__
-#include <sys/types.h>			/* forgot to protect it... */
-#define __TYPES__
-#endif /* __TYPES__ */
-#else
-#if defined(_POSIX_SOURCE) && defined(MOTOROLA)
-#undef _POSIX_SOURCE
 #include <sys/types.h>
-#define _POSIX_SOURCE
-#else
-#include <sys/types.h>
-#endif
-#endif /* USG */
 
 #ifdef X_POSIX_C_SOURCE
 #define _POSIX_C_SOURCE X_POSIX_C_SOURCE
@@ -63,10 +50,6 @@ in this Software without prior written authorization from The Open Group.
 #else
 #define _POSIX_SOURCE
 #include <signal.h>
-#ifdef SCO325
-#include <sys/procset.h>
-#include <sys/siginfo.h>
-#endif
 #include <sys/wait.h>
 #undef _POSIX_SOURCE
 #endif
@@ -78,16 +61,8 @@ in this Software without prior written authorization from The Open Group.
 #define USE_POSIX_WAIT
 #endif
 
-#if defined(linux) || defined(SYSV)
+#ifdef linux
 #define USE_SYSV_SIGNALS
-#endif
-
-#if defined(SCO)
-#undef SIGTSTP			/* defined, but not the BSD way */
-#endif
-
-#if defined(X_NOT_POSIX) && defined(SYSV)
-#define SIGNALS_RESET_WHEN_CAUGHT
 #endif
 
 #include <stddef.h>
@@ -120,10 +95,6 @@ sig_child_handler (int sig)
 
 #if !defined(USE_POSIX_WAIT) && defined(USE_SYSV_SIGNALS) && !defined(SIGTSTP)
     wait (NULL);
-#endif
-
-#ifdef SIGNALS_RESET_WHEN_CAUGHT
-    Signal (SIGCHLD, sig_child_handler);
 #endif
 
     /*

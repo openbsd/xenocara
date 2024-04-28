@@ -170,6 +170,8 @@ main(int argc, char *argv[])
 
     for (i = 1; i < argc; i++)
     {
+	int exit_val = EXIT_FAILURE;
+
 	if (argv[i][0] == '-')
 	{
 	    switch (argv[i][1])
@@ -183,6 +185,13 @@ main(int argc, char *argv[])
 		cmd_line_display = (char *) XtNewString (argv[i]);
 		continue;
 
+	    case 'h':
+		if (strcmp (argv[i], "-help") == 0) {
+		    exit_val = EXIT_SUCCESS;
+		    goto usage;
+		}
+		break; /* goto unrecognized argument errror */
+
 	    case 's':					/* -session */
 		if (++i >= argc) {
 		    fprintf (stderr, "%s: -session requires an argument\n",
@@ -192,8 +201,14 @@ main(int argc, char *argv[])
 		session_name = XtNewString (argv[i]);
 		continue;
 
-	    case 'v':					/* -verbose */
-		verbose = 1;
+	    case 'v':
+		if (strcmp (argv[i], "-version") == 0) {
+		    puts (PACKAGE_STRING);
+		    exit (0);
+		}
+		else {					/* -verbose */
+		    verbose = 1;
+		}
 		continue;
 	    }
 	}
@@ -202,8 +217,9 @@ main(int argc, char *argv[])
 
     usage:
 	fprintf (stderr,
-	 "Usage: xsm [-display display] [-session sessionName] [-verbose]\n");
-	exit (1);
+	 "Usage: xsm [-display display] [-session sessionName] [-verbose]\n"
+         "       xsm [-help|-version]\n");
+	exit (exit_val);
     }
 
     topLevel = XtVaAppInitialize (&appContext, "XSm", NULL, 0,
