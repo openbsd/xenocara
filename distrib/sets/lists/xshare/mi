@@ -4005,7 +4005,6 @@
 ./usr/X11R6/share/doc/xorg-docs
 ./usr/X11R6/share/doc/xorg-docs/MAINTAINERS
 ./usr/X11R6/share/doc/xorgproto
-./usr/X11R6/share/doc/xorgproto/PM_spec
 ./usr/X11R6/share/doc/xorgproto/SIAddresses
 ./usr/X11R6/share/doc/xorgproto/SIAddresses/IPv6.txt
 ./usr/X11R6/share/doc/xorgproto/SIAddresses/README
