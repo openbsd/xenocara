@@ -1,3 +1,115 @@
+commit 413decf2b5aa16c3a3a00daaff8b7f4b4cf4c08c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 13:57:52 2024 -0800
+
+    gccmakedep 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 51837aae6cdd59ef2730a00b9542f43019a8c452
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 89c99e47dc51c2aef44819921bbfd4d37a00101c
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e6c25d863b16be74e8c174192ace16fb66f5fc6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 13c89f88d92cbe727f7b77b9f8b402e6b3c5b3fa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 15 15:07:47 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cb068098c1bef71520d06d00a963f81640ad7612
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 15 15:07:57 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8dce46a9e7ab5421cb9b1e5d1b512fc53b7350e7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 15 15:05:57 2022 -0800
+
+    Add standard X.Org README.md file
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5787c2f5459e19bb7206c98116dbdec54da7bcc0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 20:22:00 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a66b5b9b2401f478bf581a85fd7c1f0cfca9cecd
+Author: Anderson Luiz da Silva <anderson.silva@autotrac.com.br>
+Date:   Fri Mar 23 14:59:54 2012 -0300
+
+    Add parsing of GCC option '-std='.
+    
+    Especially useful when forcing language standards. Correct error when
+    using experimental code in GCC (-std=c++0x or -std=gnu++0x.)
+    
+    Signed-off-by: Anderson Luiz da Silva <anderson.silva@autotrac.com.br>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a68b280111f7dd0a975398745a08fd873f77732f
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 2f04a60f8b744d4e111fe86bca7eb9fc2230d536
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 462494a27bf1682dd49eaad2433a55a61b35905d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 1f01500a313ed91f093e1d489162742e3d588dde
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Wed May 21 20:20:47 2014 +0200

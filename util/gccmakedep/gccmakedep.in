@@ -31,7 +31,7 @@ while [ $# != 0 ]; do
 	endmarker=
     else
 	case "$1" in
-	    -D*|-I*|-U*)
+	    -D*|-I*|-U*|-std=*)
 # arg may contain single quotes
 		qarg=`echo "$1" | sed "s/'/'\\\\\\\\''/g"`
                 args="$args '$qarg'"
