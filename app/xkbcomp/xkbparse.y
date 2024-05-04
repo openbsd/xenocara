@@ -91,13 +91,14 @@
 %{
 #ifdef DEBUG
 #define	YYDEBUG 1
-#define	DEBUG_VAR parseDebug
-unsigned int parseDebug;
 #endif
+#define	DEBUG_VAR parseDebug
 #include "parseutils.h"
 #include <X11/keysym.h>
 #include <X11/extensions/XKBgeom.h>
 #include <stdlib.h>
+
+unsigned int parseDebug;
 
 %}
 %right	EQUALS

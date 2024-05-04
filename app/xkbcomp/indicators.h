@@ -57,19 +57,19 @@ extern void ClearIndicatorMapInfo(Display * /* dpy */ ,
 
 
 extern LEDInfo *AddIndicatorMap(LEDInfo * /* oldLEDs */ ,
-                                const LEDInfo * /* newLED */
+                                LEDInfo *       /* newLED */
     );
 
 extern int SetIndicatorMapField(LEDInfo * /* led */ ,
                                 XkbDescPtr /* xkb */ ,
                                 const char * /* field */ ,
-                                const ExprDef * /* arrayNdx */ ,
-                                const ExprDef * /* value */
+                                ExprDef * /* arrayNdx */ ,
+                                ExprDef *       /* value */
     );
 
 extern LEDInfo *HandleIndicatorMapDef(IndicatorMapDef * /* stmt */ ,
                                       XkbDescPtr /* xkb */ ,
-                                      const LEDInfo * /* dflt */ ,
+                                      LEDInfo * /* dflt */ ,
                                       LEDInfo * /* oldLEDs */ ,
                                       unsigned  /* mergeMode */
     );

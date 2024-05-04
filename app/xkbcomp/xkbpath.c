@@ -123,7 +123,7 @@ XkbParseIncludeMap(char **str_inout, char **file_rtrn, char **map_rtrn,
         }
         else if (str[0] == '(')
         {
-            free(*extra_data);
+            uFree(*extra_data);
             return False;
         }
         else
@@ -134,8 +134,8 @@ XkbParseIncludeMap(char **str_inout, char **file_rtrn, char **map_rtrn,
             tmp = strchr(str, ')');
             if ((tmp == NULL) || (tmp[1] != '\0'))
             {
-                free(*file_rtrn);
-                free(*extra_data);
+                uFree(*file_rtrn);
+                uFree(*extra_data);
                 return False;
             }
             *tmp++ = '\0';
@@ -175,15 +175,20 @@ XkbAddDefaultDirectoriesToPath(void)
 /**
  * Remove all entries from the global includePath.
  */
-static void
+void
 XkbClearIncludePath(void)
 {
+    register int i;
+
     if (szPath > 0)
     {
-        for (int i = 0; i < nPathEntries; i++)
+        for (i = 0; i < nPathEntries; i++)
         {
-            free(includePath[i]);
-            includePath[i] = NULL;
+            if (includePath[i] != NULL)
+            {
+                uFree(includePath[i]);
+                includePath[i] = NULL;
+            }
         }
         nPathEntries = 0;
     }
@@ -213,24 +218,22 @@ XkbAddDirectoryToPath(const char *dir)
     }
     if (nPathEntries >= szPath)
     {
-        char **new;
         szPath += PATH_CHUNK;
-        new = (char **) realloc(includePath, szPath * sizeof(char *));
-        if (new == NULL)
+        includePath = (char **) realloc(includePath, szPath * sizeof(char *));
+        if (includePath == NULL)
         {
             WSGO("Allocation failed (includePath)\n");
             return False;
         }
-        else
-            includePath = new;
     }
-    includePath[nPathEntries] = strdup(dir);
+    includePath[nPathEntries] =
+        (char *) calloc(strlen(dir) + 1, sizeof(char));
     if (includePath[nPathEntries] == NULL)
     {
         WSGO("Allocation failed (includePath[%d])\n", nPathEntries);
         return False;
     }
-    nPathEntries++;
+    strcpy(includePath[nPathEntries++], dir);
     return True;
 }
 
@@ -283,7 +286,7 @@ XkbDirectoryForInclude(unsigned type)
 
 typedef struct _FileCacheEntry
 {
-    const char *name;
+    char *name;
     unsigned type;
     char *path;
     void *data;
@@ -305,7 +308,7 @@ static FileCacheEntry *fileCache;
  * @return The data from the overwritten file or NULL.
  */
 void *
-XkbAddFileToCache(const char *name, unsigned type, char *path, void *data)
+XkbAddFileToCache(char *name, unsigned type, char *path, void *data)
 {
     FileCacheEntry *entry;
 
@@ -320,16 +323,14 @@ XkbAddFileToCache(const char *name, unsigned type, char *path, void *data)
             return old;
         }
     }
-    entry = malloc(sizeof(FileCacheEntry));
+    entry = uTypedAlloc(FileCacheEntry);
     if (entry != NULL)
     {
-        *entry = (FileCacheEntry) {
-            .name = name,
-            .type = type,
-            .path = path,
-            .data = data,
-            .next = fileCache
-        };
+        entry->name = name;
+        entry->type = type;
+        entry->path = path;
+        entry->data = data;
+        entry->next = fileCache;
         fileCache = entry;
     }
     return NULL;
@@ -345,7 +346,7 @@ XkbAddFileToCache(const char *name, unsigned type, char *path, void *data)
  * @return the data from the cache entry or NULL if no matching entry was found.
  */
 void *
-XkbFindFileInCache(const char *name, unsigned type, char **pathRtrn)
+XkbFindFileInCache(char *name, unsigned type, char **pathRtrn)
 {
     FileCacheEntry *entry;
 
@@ -373,19 +374,19 @@ XkbFindFileInCache(const char *name, unsigned type, char **pathRtrn)
  * pathRtrn is undefined.
  */
 FILE *
-XkbFindFileInPath(const char *name, unsigned type, char **pathRtrn)
+XkbFindFileInPath(char *name, unsigned type, char **pathRtrn)
 {
+    register int i;
     FILE *file = NULL;
-    int nameLen, typeLen;
-    char buf[PATH_MAX];
-    const char *typeDir;
+    int nameLen, typeLen, pathLen;
+    char buf[PATH_MAX], *typeDir;
 
     typeDir = XkbDirectoryForInclude(type);
     nameLen = strlen(name);
     typeLen = strlen(typeDir);
-    for (int i = 0; i < nPathEntries; i++)
+    for (i = 0; i < nPathEntries; i++)
     {
-        int pathLen = strlen(includePath[i]);
+        pathLen = strlen(includePath[i]);
         if (typeLen < 1)
             continue;
 
@@ -404,7 +405,9 @@ XkbFindFileInPath(const char *name, unsigned type, char **pathRtrn)
 
     if ((file != NULL) && (pathRtrn != NULL))
     {
-        *pathRtrn = strdup(buf);
+        *pathRtrn = (char *) calloc(strlen(buf) + 1, sizeof(char));
+        if (*pathRtrn != NULL)
+            strcpy(*pathRtrn, buf);
     }
     return file;
 }

@@ -81,7 +81,7 @@ typedef struct _CompatInfo
 /***====================================================================***/
 
 static char *
-siText(const SymInterpInfo *si, const CompatInfo *info)
+siText(SymInterpInfo * si, CompatInfo * info)
 {
     static char buf[128];
 
@@ -102,6 +102,8 @@ siText(const SymInterpInfo *si, const CompatInfo *info)
 static void
 InitCompatInfo(CompatInfo * info, XkbDescPtr xkb)
 {
+    register int i;
+
     info->xkb = xkb;
     info->name = NULL;
     info->fileID = 0;
@@ -115,7 +117,7 @@ InitCompatInfo(CompatInfo * info, XkbDescPtr xkb)
     info->dflt.interp.flags = 0;
     info->dflt.interp.virtual_mod = XkbNoModifier;
     info->dflt.interp.act.type = XkbSA_NoAction;
-    for (int i = 0; i < XkbAnyActionDataSize; i++)
+    for (i = 0; i < XkbAnyActionDataSize; i++)
     {
         info->dflt.interp.act.data[i] = 0;
     }
@@ -123,7 +125,8 @@ InitCompatInfo(CompatInfo * info, XkbDescPtr xkb)
     info->ledDflt.defs.fileID = info->fileID;
     info->ledDflt.defs.defined = 0;
     info->ledDflt.defs.merge = MergeOverride;
-    bzero(&info->groupCompat[0], XkbNumKbdGroups * sizeof(GroupCompatInfo));
+    bzero((char *) &info->groupCompat[0],
+          XkbNumKbdGroups * sizeof(GroupCompatInfo));
     info->leds = NULL;
     InitVModInfo(&info->vmods, xkb);
     return;
@@ -132,21 +135,25 @@ InitCompatInfo(CompatInfo * info, XkbDescPtr xkb)
 static void
 ClearCompatInfo(CompatInfo * info, XkbDescPtr xkb)
 {
-    free(info->name);
+    register int i;
+
+    if (info->name != NULL)
+        uFree(info->name);
     info->name = NULL;
     info->dflt.defs.defined = 0;
     info->dflt.defs.merge = MergeAugment;
     info->dflt.interp.flags = 0;
     info->dflt.interp.virtual_mod = XkbNoModifier;
     info->dflt.interp.act.type = XkbSA_NoAction;
-    for (int i = 0; i < XkbAnyActionDataSize; i++)
+    for (i = 0; i < XkbAnyActionDataSize; i++)
     {
         info->dflt.interp.act.data[i] = 0;
     }
     ClearIndicatorMapInfo(xkb->dpy, &info->ledDflt);
     info->nInterps = 0;
     info->interps = (SymInterpInfo *) ClearCommonInfo(&info->interps->defs);
-    bzero(&info->groupCompat[0], XkbNumKbdGroups * sizeof(GroupCompatInfo));
+    bzero((char *) &info->groupCompat[0],
+          XkbNumKbdGroups * sizeof(GroupCompatInfo));
     info->leds = (LEDInfo *) ClearCommonInfo(&info->leds->defs);
     /* 3/30/94 (ef) -- XXX! Should free action info here */
     ClearVModInfo(&info->vmods, xkb);
@@ -158,9 +165,10 @@ NextInterp(CompatInfo * info)
 {
     SymInterpInfo *si;
 
-    si = calloc(1, sizeof(SymInterpInfo));
+    si = uTypedAlloc(SymInterpInfo);
     if (si)
     {
+        bzero((char *) si, sizeof(SymInterpInfo));
         info->interps =
             (SymInterpInfo *) AddCommonInfo(&info->interps->defs,
                                             (CommonInfo *) si);
@@ -170,7 +178,7 @@ NextInterp(CompatInfo * info)
 }
 
 static SymInterpInfo *
-FindMatchingInterp(CompatInfo *info, const SymInterpInfo *new)
+FindMatchingInterp(CompatInfo * info, SymInterpInfo * new)
 {
     SymInterpInfo *old;
 
@@ -190,13 +198,13 @@ FindMatchingInterp(CompatInfo *info, const SymInterpInfo *new)
 static Bool
 AddInterp(CompatInfo * info, SymInterpInfo * new)
 {
+    unsigned collide;
     SymInterpInfo *old;
 
+    collide = 0;
     old = FindMatchingInterp(info, new);
     if (old != NULL)
     {
-        unsigned collide = 0;
-
         if (new->defs.merge == MergeReplace)
         {
             SymInterpInfo *next = (SymInterpInfo *) old->defs.next;
@@ -255,7 +263,7 @@ AddInterp(CompatInfo * info, SymInterpInfo * new)
 }
 
 static Bool
-AddGroupCompat(CompatInfo *info, unsigned group, const GroupCompatInfo *newGC)
+AddGroupCompat(CompatInfo * info, unsigned group, GroupCompatInfo * newGC)
 {
     GroupCompatInfo *gc;
     unsigned merge;
@@ -281,9 +289,9 @@ AddGroupCompat(CompatInfo *info, unsigned group, const GroupCompatInfo *newGC)
 /***====================================================================***/
 
 static Bool
-ResolveStateAndPredicate(const ExprDef *expr,
-                         unsigned *pred_rtrn, unsigned *mods_rtrn,
-                         const CompatInfo *info)
+ResolveStateAndPredicate(ExprDef * expr,
+                         unsigned *pred_rtrn,
+                         unsigned *mods_rtrn, CompatInfo * info)
 {
     ExprResult result;
 
@@ -341,9 +349,10 @@ ResolveStateAndPredicate(const ExprDef *expr,
 static void
 MergeIncludedCompatMaps(CompatInfo * into, CompatInfo * from, unsigned merge)
 {
-    LEDInfo *next;
+    SymInterpInfo *si;
+    LEDInfo *led, *rtrn, *next;
     GroupCompatInfo *gcm;
-    int i;
+    register int i;
 
     if (from->errorCount > 0)
     {
@@ -355,8 +364,7 @@ MergeIncludedCompatMaps(CompatInfo * into, CompatInfo * from, unsigned merge)
         into->name = from->name;
         from->name = NULL;
     }
-    for (SymInterpInfo *si = from->interps; si;
-         si = (SymInterpInfo *) si->defs.next)
+    for (si = from->interps; si; si = (SymInterpInfo *) si->defs.next)
     {
         if (merge != MergeDefault)
             si->defs.merge = merge;
@@ -370,10 +378,8 @@ MergeIncludedCompatMaps(CompatInfo * into, CompatInfo * from, unsigned merge)
         if (!AddGroupCompat(into, i, gcm))
             into->errorCount++;
     }
-    for (LEDInfo *led = from->leds; led != NULL; led = next)
+    for (led = from->leds; led != NULL; led = next)
     {
-        LEDInfo *rtrn;
-
         next = (LEDInfo *) led->defs.next;
         if (merge != MergeDefault)
             led->defs.merge = merge;
@@ -386,14 +392,14 @@ MergeIncludedCompatMaps(CompatInfo * into, CompatInfo * from, unsigned merge)
     return;
 }
 
-typedef void (*FileHandler) (const XkbFile * /* rtrn */ ,
+typedef void (*FileHandler) (XkbFile * /* rtrn */ ,
                              XkbDescPtr /* xkb */ ,
                              unsigned /* merge */ ,
                              CompatInfo *       /* info */
     );
 
 static Bool
-HandleIncludeCompatMap(IncludeStmt *stmt,
+HandleIncludeCompatMap(IncludeStmt * stmt,
                        XkbDescPtr xkb, CompatInfo * info, FileHandler hndlr)
 {
     unsigned newMerge;
@@ -421,7 +427,8 @@ HandleIncludeCompatMap(IncludeStmt *stmt,
         (*hndlr) (rtrn, xkb, MergeOverride, &included);
         if (stmt->stmt != NULL)
         {
-            free(included.name);
+            if (included.name != NULL)
+                uFree(included.name);
             included.name = stmt->stmt;
             stmt->stmt = NULL;
         }
@@ -485,9 +492,10 @@ static LookupEntry useModMapValues[] = {
 };
 
 static int
-SetInterpField(SymInterpInfo *si, XkbDescPtr xkb, const char *field,
-               const ExprDef *arrayNdx, const ExprDef *value,
-               const CompatInfo *info)
+SetInterpField(SymInterpInfo * si,
+               XkbDescPtr xkb,
+               const char *field,
+               ExprDef * arrayNdx, ExprDef * value, CompatInfo * info)
 {
     int ok = 1;
     ExprResult tmp;
@@ -596,7 +604,7 @@ LookupEntry groupNames[] = {
 };
 
 static int
-HandleInterpVar(const VarDef *stmt, XkbDescPtr xkb, CompatInfo *info)
+HandleInterpVar(VarDef * stmt, XkbDescPtr xkb, CompatInfo * info)
 {
     ExprResult elem, field;
     ExprDef *ndx;
@@ -616,8 +624,8 @@ HandleInterpVar(const VarDef *stmt, XkbDescPtr xkb, CompatInfo *info)
 }
 
 static int
-HandleInterpBody(const VarDef *def, XkbDescPtr xkb, SymInterpInfo *si,
-                 CompatInfo *info)
+HandleInterpBody(VarDef * def, XkbDescPtr xkb, SymInterpInfo * si,
+                 CompatInfo * info)
 {
     int ok = 1;
     ExprResult tmp, field;
@@ -639,8 +647,8 @@ HandleInterpBody(const VarDef *def, XkbDescPtr xkb, SymInterpInfo *si,
 }
 
 static int
-HandleInterpDef(const InterpDef *def, XkbDescPtr xkb, unsigned merge,
-                CompatInfo *info)
+HandleInterpDef(InterpDef * def, XkbDescPtr xkb, unsigned merge,
+                CompatInfo * info)
 {
     unsigned pred, mods;
     SymInterpInfo si;
@@ -681,8 +689,8 @@ HandleInterpDef(const InterpDef *def, XkbDescPtr xkb, unsigned merge,
 }
 
 static int
-HandleGroupCompatDef(const GroupCompatDef *def,
-                     XkbDescPtr xkb, unsigned merge, CompatInfo *info)
+HandleGroupCompatDef(GroupCompatDef * def,
+                     XkbDescPtr xkb, unsigned merge, CompatInfo * info)
 {
     ExprResult val;
     GroupCompatInfo tmp;
@@ -713,8 +721,8 @@ HandleGroupCompatDef(const GroupCompatDef *def,
 }
 
 static void
-HandleCompatMapFile(const XkbFile *file,
-                    XkbDescPtr xkb, unsigned merge, CompatInfo *info)
+HandleCompatMapFile(XkbFile * file,
+                    XkbDescPtr xkb, unsigned merge, CompatInfo * info)
 {
     ParseCommon *stmt;
 
@@ -783,11 +791,12 @@ HandleCompatMapFile(const XkbFile *file,
 }
 
 static void
-CopyInterps(const CompatInfo *info,
+CopyInterps(CompatInfo * info,
             XkbCompatMapPtr compat, Bool needSymbol, unsigned pred)
 {
-    for (SymInterpInfo *si = info->interps; si;
-         si = (SymInterpInfo *) si->defs.next)
+    SymInterpInfo *si;
+
+    for (si = info->interps; si; si = (SymInterpInfo *) si->defs.next)
     {
         if (((si->interp.match & XkbSI_OpMask) != pred) ||
             (needSymbol && (si->interp.sym == NoSymbol)) ||
@@ -805,11 +814,13 @@ CopyInterps(const CompatInfo *info,
 }
 
 Bool
-CompileCompatMap(const XkbFile *file,
-                 XkbFileInfo *result, unsigned merge, LEDInfo **unboundLEDs)
+CompileCompatMap(XkbFile * file,
+                 XkbFileInfo * result, unsigned merge, LEDInfo ** unboundLEDs)
 {
+    int i;
     CompatInfo info;
     XkbDescPtr xkb;
+    GroupCompatInfo *gcm;
 
     xkb = result->xkb;
     InitCompatInfo(&info, xkb);
@@ -819,9 +830,7 @@ CompileCompatMap(const XkbFile *file,
 
     if (info.errorCount == 0)
     {
-        int size, i;
-        GroupCompatInfo *gcm;
-
+        int size;
         if (XkbAllocCompatMap(xkb, XkbAllCompatMask, info.nInterps) !=
             Success)
         {
@@ -874,6 +883,7 @@ CompileCompatMap(const XkbFile *file,
         ClearCompatInfo(&info, xkb);
         return True;
     }
-    free(info.interps);
+    if (info.interps != NULL)
+        uFree(info.interps);
     return False;
 }

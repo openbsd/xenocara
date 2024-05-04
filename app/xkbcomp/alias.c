@@ -76,8 +76,8 @@ HandleCollision(AliasInfo * old, AliasInfo * new)
 }
 
 static void
-InitAliasInfo(AliasInfo *info, unsigned merge, unsigned file_id,
-              const char *alias, const char *real)
+InitAliasInfo(AliasInfo * info,
+              unsigned merge, unsigned file_id, char *alias, char *real)
 {
     bzero(info, sizeof(AliasInfo));
     info->def.merge = merge;
@@ -88,8 +88,8 @@ InitAliasInfo(AliasInfo *info, unsigned merge, unsigned file_id,
 }
 
 int
-HandleAliasDef(const KeyAliasDef *def,
-               unsigned merge, unsigned file_id, AliasInfo **info_in)
+HandleAliasDef(KeyAliasDef * def,
+               unsigned merge, unsigned file_id, AliasInfo ** info_in)
 {
     AliasInfo *info;
 
@@ -103,7 +103,7 @@ HandleAliasDef(const KeyAliasDef *def,
             return True;
         }
     }
-    info = calloc(1, sizeof(AliasInfo));
+    info = uTypedCalloc(1, AliasInfo);
     if (info == NULL)
     {
         WSGO("Allocation failure in HandleAliasDef\n");
@@ -140,7 +140,7 @@ MergeAliases(AliasInfo ** into, AliasInfo ** merge, unsigned how_merge)
         *merge = NULL;
         return True;
     }
-    bzero(&def, sizeof(KeyAliasDef));
+    bzero((char *) &def, sizeof(KeyAliasDef));
     for (tmp = *merge; tmp != NULL; tmp = (AliasInfo *) tmp->def.next)
     {
         if (how_merge == MergeDefault)
@@ -158,7 +158,7 @@ MergeAliases(AliasInfo ** into, AliasInfo ** merge, unsigned how_merge)
 int
 ApplyAliases(XkbDescPtr xkb, Bool toGeom, AliasInfo ** info_in)
 {
-    int i;
+    register int i;
     XkbKeyAliasPtr old, a;
     AliasInfo *info;
     int nNew, nOld;
@@ -237,10 +237,10 @@ ApplyAliases(XkbDescPtr xkb, Bool toGeom, AliasInfo ** info_in)
     {
         if (!xkb->geom)
         {
-            XkbGeometrySizesRec sizes = {
-                .which = XkbGeomKeyAliasesMask,
-                .num_key_aliases = nOld + nNew
-            };
+            XkbGeometrySizesRec sizes;
+            bzero((char *) &sizes, sizeof(XkbGeometrySizesRec));
+            sizes.which = XkbGeomKeyAliasesMask;
+            sizes.num_key_aliases = nOld + nNew;
             status = XkbAllocGeometry(xkb, &sizes);
         }
         else

@@ -57,15 +57,13 @@ ExprDef *
 ExprCreate(unsigned op, unsigned type)
 {
     ExprDef *expr;
-    expr = malloc(sizeof(ExprDef));
+    expr = uTypedAlloc(ExprDef);
     if (expr)
     {
-        *expr = (ExprDef) {
-            .common.stmtType = StmtExpr,
-            .common.next = NULL,
-            .op = op,
-            .type = type
-        };
+        expr->common.stmtType = StmtExpr;
+        expr->common.next = NULL;
+        expr->op = op;
+        expr->type = type;
     }
     else
     {
@@ -79,16 +77,14 @@ ExprDef *
 ExprCreateUnary(unsigned op, unsigned type, ExprDef * child)
 {
     ExprDef *expr;
-    expr = malloc(sizeof(ExprDef));
+    expr = uTypedAlloc(ExprDef);
     if (expr)
     {
-        *expr = (ExprDef) {
-            .common.stmtType = StmtExpr,
-            .common.next = NULL,
-            .op = op,
-            .type = type,
-            .value.child = child
-        };
+        expr->common.stmtType = StmtExpr;
+        expr->common.next = NULL;
+        expr->op = op;
+        expr->type = type;
+        expr->value.child = child;
     }
     else
     {
@@ -102,22 +98,20 @@ ExprDef *
 ExprCreateBinary(unsigned op, ExprDef * left, ExprDef * right)
 {
     ExprDef *expr;
-    expr = malloc(sizeof(ExprDef));
+    expr = uTypedAlloc(ExprDef);
     if (expr)
     {
-        *expr = (ExprDef) {
-            .common.stmtType = StmtExpr,
-            .common.next = NULL,
-            .op = op,
-            .type = TypeUnknown,
-            .value.binary.left = left,
-            .value.binary.right = right
-        };
-
+        expr->common.stmtType = StmtExpr;
+        expr->common.next = NULL;
+        expr->op = op;
         if ((op == OpAssign) || (left->type == TypeUnknown))
             expr->type = right->type;
         else if ((left->type == right->type) || (right->type == TypeUnknown))
             expr->type = left->type;
+        else
+            expr->type = TypeUnknown;
+        expr->value.binary.left = left;
+        expr->value.binary.right = right;
     }
     else
     {
@@ -128,20 +122,18 @@ ExprCreateBinary(unsigned op, ExprDef * left, ExprDef * right)
 }
 
 KeycodeDef *
-KeycodeCreate(const char *name, ExprDef *value)
+KeycodeCreate(char *name, ExprDef * value)
 {
     KeycodeDef *def;
 
-    def = malloc(sizeof(KeycodeDef));
+    def = uTypedAlloc(KeycodeDef);
     if (def)
     {
-        *def = (KeycodeDef) {
-            .common.stmtType = StmtKeycodeDef,
-            .common.next = NULL,
-            .value = value
-        };
+        def->common.stmtType = StmtKeycodeDef;
+        def->common.next = NULL;
         strncpy(def->name, name, XkbKeyNameLength);
         def->name[XkbKeyNameLength] = '\0';
+        def->value = value;
     }
     else
     {
@@ -152,17 +144,15 @@ KeycodeCreate(const char *name, ExprDef *value)
 }
 
 KeyAliasDef *
-KeyAliasCreate(const char *alias, const char *real)
+KeyAliasCreate(char *alias, char *real)
 {
     KeyAliasDef *def;
 
-    def = malloc(sizeof(KeyAliasDef));
+    def = uTypedAlloc(KeyAliasDef);
     if (def)
     {
-        *def = (KeyAliasDef) {
-            .common.stmtType = StmtKeyAliasDef,
-            .common.next = NULL,
-        };
+        def->common.stmtType = StmtKeyAliasDef;
+        def->common.next = NULL;
         strncpy(def->alias, alias, XkbKeyNameLength);
         def->alias[XkbKeyNameLength] = '\0';
         strncpy(def->real, real, XkbKeyNameLength);
@@ -180,15 +170,13 @@ VModDef *
 VModCreate(Atom name, ExprDef * value)
 {
     VModDef *def;
-    def = malloc(sizeof(VModDef));
+    def = uTypedAlloc(VModDef);
     if (def)
     {
-        *def = (VModDef) {
-            .common.stmtType = StmtVModDef,
-            .common.next = NULL,
-            .name = name,
-            .value = value
-        };
+        def->common.stmtType = StmtVModDef;
+        def->common.next = NULL;
+        def->name = name;
+        def->value = value;
     }
     else
     {
@@ -202,15 +190,13 @@ VarDef *
 VarCreate(ExprDef * name, ExprDef * value)
 {
     VarDef *def;
-    def = malloc(sizeof(VarDef));
+    def = uTypedAlloc(VarDef);
     if (def)
     {
-        *def = (VarDef) {
-            .common.stmtType = StmtVarDef,
-            .common.next = NULL,
-            .name = name,
-            .value = value
-        };
+        def->common.stmtType = StmtVarDef;
+        def->common.next = NULL;
+        def->name = name;
+        def->value = value;
     }
     else
     {
@@ -237,18 +223,16 @@ InterpCreate(const char *sym_str, ExprDef * match)
 {
     InterpDef *def;
 
-    def = malloc(sizeof(InterpDef));
+    def = uTypedAlloc(InterpDef);
     if (def)
     {
-        *def = (InterpDef) {
-            .common.stmtType = StmtInterpDef,
-            .common.next = NULL,
-            .match = match
-        };
+        def->common.stmtType = StmtInterpDef;
+        def->common.next = NULL;
         if (LookupKeysym(sym_str, &def->sym) == 0)
             def->ignore = True;
         else
             def->ignore = False;
+        def->match = match;
     }
     else
     {
@@ -263,16 +247,14 @@ KeyTypeCreate(Atom name, VarDef * body)
 {
     KeyTypeDef *def;
 
-    def = malloc(sizeof(KeyTypeDef));
+    def = uTypedAlloc(KeyTypeDef);
     if (def)
     {
-        *def = (KeyTypeDef) {
-            .common.stmtType = StmtKeyTypeDef,
-            .common.next = NULL,
-            .merge = MergeDefault,
-            .name = name,
-            .body = body
-        };
+        def->common.stmtType = StmtKeyTypeDef;
+        def->common.next = NULL;
+        def->merge = MergeDefault;
+        def->name = name;
+        def->body = body;
     }
     else
     {
@@ -287,17 +269,15 @@ SymbolsCreate(char *keyName, ExprDef * symbols)
 {
     SymbolsDef *def;
 
-    def = malloc(sizeof(SymbolsDef));
+    def = uTypedAlloc(SymbolsDef);
     if (def)
     {
-        *def = (SymbolsDef) {
-            .common.stmtType = StmtSymbolsDef,
-            .common.next = NULL,
-            .merge = MergeDefault,
-            .symbols = symbols
-        };
+        def->common.stmtType = StmtSymbolsDef;
+        def->common.next = NULL;
+        def->merge = MergeDefault;
+        bzero(def->keyName, 5);
         strncpy(def->keyName, keyName, 4);
-        def->keyName[4] = 0;
+        def->symbols = symbols;
     }
     else
     {
@@ -312,16 +292,14 @@ GroupCompatCreate(int group, ExprDef * val)
 {
     GroupCompatDef *def;
 
-    def = malloc(sizeof(GroupCompatDef));
+    def = uTypedAlloc(GroupCompatDef);
     if (def)
     {
-        *def = (GroupCompatDef) {
-            .common.stmtType = StmtGroupCompatDef,
-            .common.next = NULL,
-            .merge = MergeDefault,
-            .group = group,
-            .def = val
-        };
+        def->common.stmtType = StmtGroupCompatDef;
+        def->common.next = NULL;
+        def->merge = MergeDefault;
+        def->group = group;
+        def->def = val;
     }
     else
     {
@@ -336,16 +314,14 @@ ModMapCreate(Atom modifier, ExprDef * keys)
 {
     ModMapDef *def;
 
-    def = malloc(sizeof(ModMapDef));
+    def = uTypedAlloc(ModMapDef);
     if (def)
     {
-        *def = (ModMapDef) {
-            .common.stmtType = StmtModMapDef,
-            .common.next = NULL,
-            .merge = MergeDefault,
-            .modifier = modifier,
-            .keys = keys
-        };
+        def->common.stmtType = StmtModMapDef;
+        def->common.next = NULL;
+        def->merge = MergeDefault;
+        def->modifier = modifier;
+        def->keys = keys;
     }
     else
     {
@@ -360,16 +336,14 @@ IndicatorMapCreate(Atom name, VarDef * body)
 {
     IndicatorMapDef *def;
 
-    def = malloc(sizeof(IndicatorMapDef));
+    def = uTypedAlloc(IndicatorMapDef);
     if (def)
     {
-        *def = (IndicatorMapDef) {
-            .common.stmtType = StmtIndicatorMapDef,
-            .common.next = NULL,
-            .merge = MergeDefault,
-            .name = name,
-            .body = body
-        };
+        def->common.stmtType = StmtIndicatorMapDef;
+        def->common.next = NULL;
+        def->merge = MergeDefault;
+        def->name = name;
+        def->body = body;
     }
     else
     {
@@ -384,17 +358,15 @@ IndicatorNameCreate(int ndx, ExprDef * name, Bool virtual)
 {
     IndicatorNameDef *def;
 
-    def = malloc(sizeof(IndicatorNameDef));
+    def = uTypedAlloc(IndicatorNameDef);
     if (def)
     {
-        *def = (IndicatorNameDef) {
-            .common.stmtType = StmtIndicatorNameDef,
-            .common.next = NULL,
-            .merge = MergeDefault,
-            .ndx = ndx,
-            .name = name,
-            .virtual = virtual
-        };
+        def->common.stmtType = StmtIndicatorNameDef;
+        def->common.next = NULL;
+        def->merge = MergeDefault;
+        def->ndx = ndx;
+        def->name = name;
+        def->virtual = virtual;
     }
     else
     {
@@ -409,16 +381,14 @@ ActionCreate(Atom name, ExprDef * args)
 {
     ExprDef *act;
 
-    act = malloc(sizeof(ExprDef));
+    act = uTypedAlloc(ExprDef);
     if (act)
     {
-        *act = (ExprDef) {
-            .common.stmtType = StmtExpr,
-            .common.next = NULL,
-            .op = ExprActionDecl,
-            .value.action.name = name,
-            .value.action.args = args
-        };
+        act->common.stmtType = StmtExpr;
+        act->common.next = NULL;
+        act->op = ExprActionDecl;
+        act->value.action.name = name;
+        act->value.action.args = args;
         return act;
     }
     FATAL("Couldn't allocate ActionDef in parser\n");
@@ -435,7 +405,7 @@ CreateKeysymList(char *sym)
     {
         def->value.list.nSyms = 1;
         def->value.list.szSyms = 4;
-        def->value.list.syms = calloc(4, sizeof(char *));
+        def->value.list.syms = uTypedCalloc(4, char *);
         if (def->value.list.syms != NULL)
         {
             def->value.list.syms[0] = sym;
@@ -450,20 +420,19 @@ ShapeDef *
 ShapeDeclCreate(Atom name, OutlineDef * outlines)
 {
     ShapeDef *shape;
+    OutlineDef *ol;
 
-    shape = calloc(1, sizeof(ShapeDef));
+    shape = uTypedAlloc(ShapeDef);
     if (shape != NULL)
     {
-        *shape = (ShapeDef) {
-            .common.stmtType = StmtShapeDef,
-            .common.next = NULL,
-            .merge = MergeDefault,
-            .name = name,
-            .nOutlines = 0,
-            .outlines = outlines
-        };
-        for (OutlineDef *ol = outlines; ol != NULL;
-             ol = (OutlineDef *) ol->common.next)
+        bzero(shape, sizeof(ShapeDef));
+        shape->common.stmtType = StmtShapeDef;
+        shape->common.next = NULL;
+        shape->merge = MergeDefault;
+        shape->name = name;
+        shape->nOutlines = 0;
+        shape->outlines = outlines;
+        for (ol = outlines; ol != NULL; ol = (OutlineDef *) ol->common.next)
         {
             if (ol->nPoints > 0)
                 shape->nOutlines++;
@@ -476,25 +445,24 @@ OutlineDef *
 OutlineCreate(Atom field, ExprDef * points)
 {
     OutlineDef *outline;
+    ExprDef *pt;
 
-    outline = calloc(1, sizeof(OutlineDef));
+    outline = uTypedAlloc(OutlineDef);
     if (outline != NULL)
     {
-        *outline = (OutlineDef) {
-            .common.stmtType = StmtOutlineDef,
-            .common.next = NULL,
-            .field = field,
-            .nPoints = 0,
-            .points = points
-        };
+        bzero(outline, sizeof(OutlineDef));
+        outline->common.stmtType = StmtOutlineDef;
+        outline->common.next = NULL;
+        outline->field = field;
+        outline->nPoints = 0;
         if (points->op == ExprCoord)
         {
-            for (ExprDef *pt = points; pt != NULL;
-                 pt = (ExprDef *) pt->common.next)
+            for (pt = points; pt != NULL; pt = (ExprDef *) pt->common.next)
             {
                 outline->nPoints++;
             }
         }
+        outline->points = points;
     }
     return outline;
 }
@@ -504,13 +472,12 @@ KeyDeclCreate(char *name, ExprDef * expr)
 {
     KeyDef *key;
 
-    key = calloc(1, sizeof(KeyDef));
+    key = uTypedAlloc(KeyDef);
     if (key != NULL)
     {
-        *key = (KeyDef) {
-            .common.stmtType = StmtKeyDef,
-            .common.next = NULL,
-        };
+        bzero(key, sizeof(KeyDef));
+        key->common.stmtType = StmtKeyDef;
+        key->common.next = NULL;
         if (name)
             key->name = name;
         else
@@ -519,33 +486,31 @@ KeyDeclCreate(char *name, ExprDef * expr)
     return key;
 }
 
-#if 0
 KeyDef *
 KeyDeclMerge(KeyDef * into, KeyDef * from)
 {
     into->expr =
         (ExprDef *) AppendStmt(&into->expr->common, &from->expr->common);
     from->expr = NULL;
-    free(from);
+    uFree(from);
     return into;
 }
-#endif
 
 RowDef *
 RowDeclCreate(KeyDef * keys)
 {
     RowDef *row;
+    KeyDef *key;
 
-    row = calloc(1, sizeof(RowDef));
+    row = uTypedAlloc(RowDef);
     if (row != NULL)
     {
-        *row = (RowDef) {
-            .common.stmtType = StmtRowDef,
-            .common.next = NULL,
-            .nKeys = 0,
-            .keys = keys
-        };
-        for (KeyDef *key = keys; key != NULL; key = (KeyDef *) key->common.next)
+        bzero(row, sizeof(RowDef));
+        row->common.stmtType = StmtRowDef;
+        row->common.next = NULL;
+        row->nKeys = 0;
+        row->keys = keys;
+        for (key = keys; key != NULL; key = (KeyDef *) key->common.next)
         {
             if (key->common.stmtType == StmtKeyDef)
                 row->nKeys++;
@@ -558,18 +523,18 @@ SectionDef *
 SectionDeclCreate(Atom name, RowDef * rows)
 {
     SectionDef *section;
+    RowDef *row;
 
-    section = calloc(1, sizeof(SectionDef));
+    section = uTypedAlloc(SectionDef);
     if (section != NULL)
     {
-        *section = (SectionDef) {
-            .common.stmtType = StmtSectionDef,
-            .common.next = NULL,
-            .name = name,
-            .nRows = 0,
-            .rows = rows
-        };
-        for (RowDef *row = rows; row != NULL; row = (RowDef *) row->common.next)
+        bzero(section, sizeof(SectionDef));
+        section->common.stmtType = StmtSectionDef;
+        section->common.next = NULL;
+        section->name = name;
+        section->nRows = 0;
+        section->rows = rows;
+        for (row = rows; row != NULL; row = (RowDef *) row->common.next)
         {
             if (row->common.stmtType == StmtRowDef)
                 section->nRows++;
@@ -583,16 +548,15 @@ OverlayKeyCreate(char *under, char *over)
 {
     OverlayKeyDef *key;
 
-    key = calloc(1, sizeof(OverlayKeyDef));
+    key = uTypedAlloc(OverlayKeyDef);
     if (key != NULL)
     {
-        *key = (OverlayKeyDef) {
-            .common.stmtType = StmtOverlayKeyDef
-        };
+        bzero(key, sizeof(OverlayKeyDef));
+        key->common.stmtType = StmtOverlayKeyDef;
         strncpy(key->over, over, XkbKeyNameLength);
         strncpy(key->under, under, XkbKeyNameLength);
-        free(over);
-        free(under);
+        uFree(over);
+        uFree(under);
     }
     return key;
 }
@@ -601,16 +565,16 @@ OverlayDef *
 OverlayDeclCreate(Atom name, OverlayKeyDef * keys)
 {
     OverlayDef *ol;
+    OverlayKeyDef *key;
 
-    ol = calloc(1, sizeof(OverlayDef));
+    ol = uTypedAlloc(OverlayDef);
     if (ol != NULL)
     {
-        *ol = (OverlayDef) {
-            .common.stmtType = StmtOverlayDef,
-            .name = name,
-            .keys = keys
-        };
-        for (OverlayKeyDef *key = keys; key != NULL;
+        bzero(ol, sizeof(OverlayDef));
+        ol->common.stmtType = StmtOverlayDef;
+        ol->name = name;
+        ol->keys = keys;
+        for (key = keys; key != NULL;
              key = (OverlayKeyDef *) key->common.next)
         {
             ol->nKeys++;
@@ -624,16 +588,15 @@ DoodadCreate(unsigned type, Atom name, VarDef * body)
 {
     DoodadDef *doodad;
 
-    doodad = calloc(1, sizeof(DoodadDef));
+    doodad = uTypedAlloc(DoodadDef);
     if (doodad != NULL)
     {
-        *doodad = (DoodadDef) {
-            .common.stmtType = StmtDoodadDef,
-            .common.next = NULL,
-            .type = type,
-            .name = name,
-            .body = body
-        };
+        bzero(doodad, sizeof(DoodadDef));
+        doodad->common.stmtType = StmtDoodadDef;
+        doodad->common.next = NULL;
+        doodad->type = type;
+        doodad->name = name;
+        doodad->body = body;
     }
     return doodad;
 }
@@ -644,10 +607,10 @@ AppendKeysymList(ExprDef * list, char *sym)
     if (list->value.list.nSyms >= list->value.list.szSyms)
     {
         list->value.list.szSyms *= 2;
-        list->value.list.syms = recallocarray(list->value.list.syms,
-                                              list->value.list.nSyms,
-                                              list->value.list.szSyms,
-                                              sizeof(char *));
+        list->value.list.syms = uTypedRecalloc(list->value.list.syms,
+                                               list->value.list.nSyms,
+                                               list->value.list.szSyms,
+                                               char *);
         if (list->value.list.syms == NULL)
         {
             FATAL("Couldn't resize list of symbols for append\n");
@@ -662,6 +625,7 @@ int
 LookupKeysym(const char *str, KeySym * sym_rtrn)
 {
     KeySym sym;
+    char *tmp;
 
     if ((!str) || (uStrCaseCmp(str, "any") == 0)
         || (uStrCaseCmp(str, "nosymbol") == 0))
@@ -682,8 +646,6 @@ LookupKeysym(const char *str, KeySym * sym_rtrn)
         return 1;
     }
     if (strlen(str) > 2 && str[0] == '0' && str[1] == 'x') {
-        char *tmp;
-
         sym = strtoul(str, &tmp, 16);
         if (sym != ULONG_MAX && (!tmp || *tmp == '\0')) {
             *sym_rtrn = sym;
@@ -717,25 +679,23 @@ IncludeCreate(char *str, unsigned merge)
                 haveSelf = True;
             }
             if (first == NULL)
-                first = incl = malloc(sizeof(IncludeStmt));
+                first = incl = uTypedAlloc(IncludeStmt);
             else
             {
-                incl->next = malloc(sizeof(IncludeStmt));
+                incl->next = uTypedAlloc(IncludeStmt);
                 incl = incl->next;
             }
             if (incl)
             {
-                *incl = (IncludeStmt) {
-                    .common.stmtType = StmtInclude,
-                    .common.next = NULL,
-                    .merge = merge,
-                    .stmt = NULL,
-                    .file = file,
-                    .map = map,
-                    .modifier = extra_data,
-                    .path = NULL,
-                    .next = NULL
-                };
+                incl->common.stmtType = StmtInclude;
+                incl->common.next = NULL;
+                incl->merge = merge;
+                incl->stmt = NULL;
+                incl->file = file;
+                incl->map = map;
+                incl->modifier = extra_data;
+                incl->path = NULL;
+                incl->next = NULL;
             }
             else
             {
@@ -756,7 +716,7 @@ IncludeCreate(char *str, unsigned merge)
     if (first)
         first->stmt = stmt;
     else if (stmt)
-        free(stmt);
+        uFree(stmt);
     return first;
   BAIL:
     ERROR("Illegal include statement \"%s\"\n", stmt);
@@ -764,16 +724,20 @@ IncludeCreate(char *str, unsigned merge)
     while (first)
     {
         incl = first->next;
-        free(first->file);
-        free(first->map);
-        free(first->modifier);
-        free(first->path);
-        first->file = first->map = first->modifier = first->path = NULL;
-        free(first);
+        if (first->file)
+            uFree(first->file);
+        if (first->map)
+            uFree(first->map);
+        if (first->modifier)
+            uFree(first->modifier);
+        if (first->path)
+            uFree(first->path);
+        first->file = first->map = first->path = NULL;
+        uFree(first);
         first = incl;
     }
     if (stmt)
-        free(stmt);
+        uFree(stmt);
     return NULL;
 }
 
@@ -798,9 +762,10 @@ PrintStmtAddrs(ParseCommon * stmt)
 static void
 CheckDefaultMap(XkbFile * maps)
 {
-    XkbFile *dflt = NULL;
+    XkbFile *dflt, *tmp;
 
-    for (XkbFile *tmp = maps; tmp != NULL;
+    dflt = NULL;
+    for (tmp = maps, dflt = NULL; tmp != NULL;
          tmp = (XkbFile *) tmp->common.next)
     {
         if (tmp->flags & XkbLC_Default)
@@ -851,19 +816,18 @@ CreateXKBFile(int type, char *name, ParseCommon * defs, unsigned flags)
     XkbFile *file;
     static int fileID;
 
-    file = calloc(1, sizeof(XkbFile));
+    file = uTypedAlloc(XkbFile);
     if (file)
     {
         XkbEnsureSafeMapName(name);
-        *file = (XkbFile) {
-            .type = type,
-            .topName = uStringDup(name),
-            .name = name,
-            .defs = defs,
-            .id = fileID++,
-            .compiled = False,
-            .flags = flags
-        };
+        bzero(file, sizeof(XkbFile));
+        file->type = type;
+        file->topName = uStringDup(name);
+        file->name = name;
+        file->defs = defs;
+        file->id = fileID++;
+        file->compiled = False;
+        file->flags = flags;
     }
     return file;
 }

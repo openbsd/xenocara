@@ -31,10 +31,6 @@
 #define	DEBUG_VAR debugFlags
 #endif
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>
 
@@ -114,6 +110,7 @@ typedef struct _ParseCommon
 #define	CreateKeyNames(x)	((x)->flags&AutoKeyNames)
 
 extern unsigned warningLevel;
+extern unsigned optionalParts;
 
 typedef struct _IncludeStmt
 {
@@ -171,7 +168,7 @@ typedef struct _Expr
         unsigned uval;
         int ival;
         char keyName[5];
-        void *ptr;
+        Opaque ptr;
     } value;
 } ExprDef;
 
@@ -363,7 +360,7 @@ extern Bool CompileKeyTypes(XkbFile * /* file */ ,
 
 typedef struct _LEDInfo *LEDInfoPtr;
 
-extern Bool CompileCompatMap(const XkbFile * /* file */ ,
+extern Bool CompileCompatMap(XkbFile * /* file */ ,
                              XkbFileInfo * /* result */ ,
                              unsigned /* merge */ ,
                              LEDInfoPtr *       /* unboundLEDs */
@@ -380,8 +377,13 @@ extern Bool CompileSymbols(XkbFile * /* file */ ,
 #define	WantFullNames	(1<<3)
 #define	ListRecursive	(1<<4)
 
+extern char *rootDir;
 extern unsigned verboseLevel;
 extern unsigned dirsToStrip;
+
+extern Bool AddListing(char * /* file */ ,
+                       char *   /* map */
+    );
 
 extern Bool AddMatchingFiles(char *     /* head_in */
     );
@@ -389,7 +391,7 @@ extern Bool AddMatchingFiles(char *     /* head_in */
 extern int AddMapOnly(char *    /* map */
     );
 
-extern int GenerateListing(const char * /* filename */
+extern int GenerateListing(char *       /* filename */
     );
 
 #endif /* XKBCOMP_H */

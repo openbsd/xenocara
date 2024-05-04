@@ -36,9 +36,15 @@ typedef struct _CommonInfo
 } CommonInfo;
 
 extern Bool UseNewField(unsigned /* field */ ,
-                        const CommonInfo * /* oldDefs */ ,
-                        const CommonInfo * /* newDefs */ ,
+                        CommonInfo * /* oldDefs */ ,
+                        CommonInfo * /* newDefs */ ,
                         unsigned *      /* pCollide */
+    );
+
+extern Bool MergeNewField(unsigned /* field */ ,
+                          CommonInfo * /* oldDefs */ ,
+                          CommonInfo * /* newDefs */ ,
+                          unsigned *    /* pCollide */
     );
 
 extern XPointer ClearCommonInfo(CommonInfo *    /* cmn */

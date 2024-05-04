@@ -47,6 +47,8 @@ InitVModInfo(VModInfo * info, XkbDescPtr xkb)
 void
 ClearVModInfo(VModInfo * info, XkbDescPtr xkb)
 {
+    register int i;
+
     if (XkbAllocNames(xkb, XkbVirtualModNamesMask, 0, 0) != Success)
         return;
     if (XkbAllocServerMap(xkb, XkbVirtualModsMask, 0) != Success)
@@ -55,8 +57,7 @@ ClearVModInfo(VModInfo * info, XkbDescPtr xkb)
     info->newlyDefined = info->defined = info->available = 0;
     if (xkb && xkb->names)
     {
-        int i, bit;
-
+        register int bit;
         for (i = 0, bit = 1; i < XkbNumVirtualMods; i++, bit <<= 1)
         {
             if (xkb->names->vmods[i] != None)
@@ -77,9 +78,9 @@ ClearVModInfo(VModInfo * info, XkbDescPtr xkb)
  * @param mergeMode Merge strategy (e.g. MergeOverride)
  */
 Bool
-HandleVModDef(const VModDef *stmt, unsigned mergeMode, VModInfo *info)
+HandleVModDef(VModDef * stmt, unsigned mergeMode, VModInfo * info)
 {
-    int i, bit, nextFree;
+    register int i, bit, nextFree;
     ExprResult mod;
     XkbServerMapPtr srv;
     XkbNamesPtr names;
@@ -137,9 +138,9 @@ HandleVModDef(const VModDef *stmt, unsigned mergeMode, VModInfo *info)
         ACTION("Exiting\n");
         return False;
     }
-    info->defined |= (1U << nextFree);
-    info->newlyDefined |= (1U << nextFree);
-    info->available |= (1U << nextFree);
+    info->defined |= (1 << nextFree);
+    info->newlyDefined |= (1 << nextFree);
+    info->available |= (1 << nextFree);
     names->vmods[nextFree] = stmtName;
     if (stmt->value == NULL)
         return True;
@@ -165,12 +166,13 @@ HandleVModDef(const VModDef *stmt, unsigned mergeMode, VModInfo *info)
  * @return True on success, False otherwise. If False is returned, val_rtrn is
  * undefined.
  */
-static int
+int
 LookupVModIndex(XPointer priv,
                 Atom elem, Atom field, unsigned type, ExprResult * val_rtrn)
 {
-    int i;
-    char *fieldStr;
+    register int i;
+    register char *fieldStr;
+    register char *modStr;
     XkbDescPtr xkb;
 
     xkb = (XkbDescPtr) priv;
@@ -190,7 +192,7 @@ LookupVModIndex(XPointer priv,
      */
     for (i = 0; i < XkbNumVirtualMods; i++)
     {
-        char *modStr = XkbAtomGetString(xkb->dpy, xkb->names->vmods[i]);
+        modStr = XkbAtomGetString(xkb->dpy, xkb->names->vmods[i]);
         if ((modStr != NULL) && (uStrCaseCmp(fieldStr, modStr) == 0))
         {
             val_rtrn->uval = i;
@@ -216,8 +218,8 @@ LookupVModMask(XPointer priv,
 {
     if (LookupVModIndex(priv, elem, field, type, val_rtrn))
     {
-        unsigned ndx = val_rtrn->uval;
-        val_rtrn->uval = (1U << (XkbNumModifiers + ndx));
+        register unsigned ndx = val_rtrn->uval;
+        val_rtrn->uval = (1 << (XkbNumModifiers + ndx));
         return True;
     }
     return False;
@@ -226,28 +228,26 @@ LookupVModMask(XPointer priv,
 int
 FindKeypadVMod(XkbDescPtr xkb)
 {
-    if (xkb) {
-        Atom name = XkbInternAtom(xkb->dpy, "NumLock", False);
-        ExprResult rtrn;
+    Atom name;
+    ExprResult rtrn;
 
-        if (LookupVModIndex((XPointer) xkb, None, name, TypeInt, &rtrn))
-        {
-            return rtrn.ival;
-        }
+    name = XkbInternAtom(xkb->dpy, "NumLock", False);
+    if ((xkb) && LookupVModIndex((XPointer) xkb, None, name, TypeInt, &rtrn))
+    {
+        return rtrn.ival;
     }
     return -1;
 }
 
 Bool
-ResolveVirtualModifier(const ExprDef *def, ExprResult *val_rtrn,
-                       const VModInfo *info)
+ResolveVirtualModifier(ExprDef * def, ExprResult * val_rtrn, VModInfo * info)
 {
     XkbNamesPtr names;
 
     names = info->xkb->names;
     if (def->op == ExprIdent)
     {
-        int i, bit;
+        register int i, bit;
         for (i = 0, bit = 1; i < XkbNumVirtualMods; i++, bit <<= 1)
         {
             char *str1, *str2;

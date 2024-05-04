@@ -94,7 +94,7 @@ exprOpText(unsigned type)
     return buf;
 }
 
-static char *
+char *
 exprTypeText(unsigned type)
 {
     static char buf[20];
@@ -127,8 +127,9 @@ exprTypeText(unsigned type)
 }
 
 int
-ExprResolveLhs(const ExprDef *expr, ExprResult *elem_rtrn,
-               ExprResult *field_rtrn, ExprDef **index_rtrn)
+ExprResolveLhs(ExprDef * expr,
+               ExprResult * elem_rtrn,
+               ExprResult * field_rtrn, ExprDef ** index_rtrn)
 {
     switch (expr->op)
     {
@@ -153,10 +154,11 @@ ExprResolveLhs(const ExprDef *expr, ExprResult *elem_rtrn,
 }
 
 Bool
-SimpleLookup(const XPointer priv,
-             Atom elem, Atom field, unsigned type, ExprResult *val_rtrn)
+SimpleLookup(XPointer priv,
+             Atom elem, Atom field, unsigned type, ExprResult * val_rtrn)
 {
-    char *str;
+    LookupEntry *entry;
+    register char *str;
 
     if ((priv == NULL) ||
         (field == None) || (elem != None) ||
@@ -165,7 +167,7 @@ SimpleLookup(const XPointer priv,
         return False;
     }
     str = XkbAtomGetString(NULL, field);
-    for (const LookupEntry *entry = (const LookupEntry *) priv;
+    for (entry = (LookupEntry *) priv;
          (entry != NULL) && (entry->name != NULL); entry++)
     {
         if (uStrCaseCmp(str, entry->name) == 0)
@@ -180,10 +182,10 @@ SimpleLookup(const XPointer priv,
 }
 
 Bool
-RadioLookup(const XPointer priv,
-            Atom elem, Atom field, unsigned type, ExprResult *val_rtrn)
+RadioLookup(XPointer priv,
+            Atom elem, Atom field, unsigned type, ExprResult * val_rtrn)
 {
-    char *str;
+    register char *str;
     int rg;
 
     if ((field == None) || (elem != None) || (type != TypeInt))
@@ -207,13 +209,12 @@ RadioLookup(const XPointer priv,
     return True;
 }
 
-#if 0
-static int
+int
 TableLookup(XPointer priv,
             Atom elem, Atom field, unsigned type, ExprResult * val_rtrn)
 {
     LookupTable *tbl = (LookupTable *) priv;
-    char *str;
+    register char *str;
 
     if ((priv == NULL) || (field == None) || (type != TypeInt))
         return False;
@@ -233,7 +234,6 @@ TableLookup(XPointer priv,
     priv = (XPointer) tbl->entries;
     return SimpleLookup(priv, (Atom) None, field, type, val_rtrn);
 }
-#endif
 
 static LookupEntry modIndexNames[] = {
     {"shift", ShiftMapIndex},
@@ -248,15 +248,15 @@ static LookupEntry modIndexNames[] = {
     {NULL, 0}
 };
 
-Bool
-LookupModIndex(const XPointer priv,
-               Atom elem, Atom field, unsigned type, ExprResult *val_rtrn)
+int
+LookupModIndex(XPointer priv,
+               Atom elem, Atom field, unsigned type, ExprResult * val_rtrn)
 {
     return SimpleLookup((XPointer) modIndexNames, elem, field, type,
                         val_rtrn);
 }
 
-static int
+int
 LookupModMask(XPointer priv,
               Atom elem, Atom field, unsigned type, ExprResult * val_rtrn)
 {
@@ -272,7 +272,7 @@ LookupModMask(XPointer priv,
     else if (uStrCaseCmp(str, "none") == 0)
         val_rtrn->uval = 0;
     else if (LookupModIndex(priv, elem, field, type, val_rtrn))
-        val_rtrn->uval = (1U << val_rtrn->uval);
+        val_rtrn->uval = (1 << val_rtrn->uval);
     else if (priv != NULL)
     {
         LookupPriv *lpriv = (LookupPriv *) priv;
@@ -286,9 +286,8 @@ LookupModMask(XPointer priv,
     return True;
 }
 
-#if 0
 int
-ExprResolveModIndex(const ExprDef *expr,
+ExprResolveModIndex(ExprDef * expr,
                     ExprResult * val_rtrn,
                     IdentLookupFunc lookup, XPointer lookupPriv)
 {
@@ -363,23 +362,23 @@ ExprResolveModIndex(const ExprDef *expr,
     }
     return ok;
 }
-#endif
 
 int
-ExprResolveModMask(const ExprDef *expr, ExprResult *val_rtrn,
+ExprResolveModMask(ExprDef * expr,
+                   ExprResult * val_rtrn,
                    IdentLookupFunc lookup, XPointer lookupPriv)
 {
-    LookupPriv priv = {
-        .priv = NULL,
-        .chain = lookup,
-        .chainPriv = lookupPriv
-    };
+    LookupPriv priv;
 
-    return ExprResolveMask(expr, val_rtrn, LookupModMask, (XPointer) &priv);
+    priv.priv = NULL;
+    priv.chain = lookup;
+    priv.chainPriv = lookupPriv;
+    return ExprResolveMask(expr, val_rtrn, LookupModMask, (XPointer) & priv);
 }
 
 int
-ExprResolveBoolean(const ExprDef *expr, ExprResult *val_rtrn,
+ExprResolveBoolean(ExprDef * expr,
+                   ExprResult * val_rtrn,
                    IdentLookupFunc lookup, XPointer lookupPriv)
 {
     int ok = 0;
@@ -444,24 +443,23 @@ ExprResolveBoolean(const ExprDef *expr, ExprResult *val_rtrn,
             val_rtrn->uval = !val_rtrn->uval;
         return ok;
     case OpAdd:
-        bogus = "Addition";
-        goto boolean;
+        if (bogus == NULL)
+            bogus = "Addition";
     case OpSubtract:
-        bogus = "Subtraction";
-        goto boolean;
+        if (bogus == NULL)
+            bogus = "Subtraction";
     case OpMultiply:
-        bogus = "Multiplication";
-        goto boolean;
+        if (bogus == NULL)
+            bogus = "Multiplication";
     case OpDivide:
-        bogus = "Division";
-        goto boolean;
+        if (bogus == NULL)
+            bogus = "Division";
     case OpAssign:
-        bogus = "Assignment";
-        goto boolean;
+        if (bogus == NULL)
+            bogus = "Assignment";
     case OpNegate:
-        bogus = "Negation";
-        goto boolean;
-    boolean:
+        if (bogus == NULL)
+            bogus = "Negation";
         ERROR("%s of boolean values not permitted\n", bogus);
         break;
     case OpUnaryPlus:
@@ -475,7 +473,8 @@ ExprResolveBoolean(const ExprDef *expr, ExprResult *val_rtrn,
 }
 
 int
-ExprResolveFloat(const ExprDef *expr, ExprResult *val_rtrn,
+ExprResolveFloat(ExprDef * expr,
+                 ExprResult * val_rtrn,
                  IdentLookupFunc lookup, XPointer lookupPriv)
 {
     int ok = 0;
@@ -487,7 +486,7 @@ ExprResolveFloat(const ExprDef *expr, ExprResult *val_rtrn,
     case ExprValue:
         if (expr->type == TypeString)
         {
-            char *str;
+            register char *str;
             str = XkbAtomGetString(NULL, expr->value.str);
             if ((str != NULL) && (strlen(str) == 1))
             {
@@ -587,7 +586,8 @@ ExprResolveFloat(const ExprDef *expr, ExprResult *val_rtrn,
 }
 
 int
-ExprResolveInteger(const ExprDef *expr, ExprResult *val_rtrn,
+ExprResolveInteger(ExprDef * expr,
+                   ExprResult * val_rtrn,
                    IdentLookupFunc lookup, XPointer lookupPriv)
 {
     int ok = 0;
@@ -599,7 +599,7 @@ ExprResolveInteger(const ExprDef *expr, ExprResult *val_rtrn,
     case ExprValue:
         if (expr->type == TypeString)
         {
-            char *str;
+            register char *str;
             str = XkbAtomGetString(NULL, expr->value.str);
             if (str != NULL)
                 switch (strlen(str))
@@ -707,7 +707,8 @@ ExprResolveInteger(const ExprDef *expr, ExprResult *val_rtrn,
 }
 
 int
-ExprResolveString(const ExprDef *expr, ExprResult *val_rtrn,
+ExprResolveString(ExprDef * expr,
+                  ExprResult * val_rtrn,
                   IdentLookupFunc lookup, XPointer lookupPriv)
 {
     int ok = 0;
@@ -760,44 +761,36 @@ ExprResolveString(const ExprDef *expr, ExprResult *val_rtrn,
         if (ExprResolveString(left, &leftRtrn, lookup, lookupPriv) &&
             ExprResolveString(right, &rightRtrn, lookup, lookupPriv))
         {
+            int len;
             char *new;
-
-#ifdef HAVE_ASPRINTF
-            if (asprintf(&new, "%s%s", leftRtrn.str, rightRtrn.str) < 0)
-                new = NULL;
-#else
-            size_t len = strlen(leftRtrn.str) + strlen(rightRtrn.str) + 1;
-            new = malloc(len);
-#endif
+            len = strlen(leftRtrn.str) + strlen(rightRtrn.str) + 1;
+            new = (char *) uAlloc(len);
             if (new)
             {
-#ifndef HAVE_ASPRINTF
                 snprintf(new, len, "%s%s", leftRtrn.str, rightRtrn.str);
-#endif
                 val_rtrn->str = new;
                 return True;
             }
         }
         return False;
     case OpSubtract:
-        bogus = "Subtraction";
-        goto string;
+        if (bogus == NULL)
+            bogus = "Subtraction";
     case OpMultiply:
-        bogus = "Multiplication";
-        goto string;
+        if (bogus == NULL)
+            bogus = "Multiplication";
     case OpDivide:
-        bogus = "Division";
-        goto string;
+        if (bogus == NULL)
+            bogus = "Division";
     case OpAssign:
-        bogus = "Assignment";
-        goto string;
+        if (bogus == NULL)
+            bogus = "Assignment";
     case OpNegate:
-        bogus = "Negation";
-        goto string;
+        if (bogus == NULL)
+            bogus = "Negation";
     case OpInvert:
-        bogus = "Bitwise complement";
-        goto string;
-    string:
+        if (bogus == NULL)
+            bogus = "Bitwise complement";
         ERROR("%s of string values not permitted\n", bogus);
         return False;
     case OpNot:
@@ -822,7 +815,8 @@ ExprResolveString(const ExprDef *expr, ExprResult *val_rtrn,
 }
 
 int
-ExprResolveKeyName(const ExprDef *expr, ExprResult *val_rtrn,
+ExprResolveKeyName(ExprDef * expr,
+                   ExprResult * val_rtrn,
                    IdentLookupFunc lookup, XPointer lookupPriv)
 {
     int ok = 0;
@@ -864,27 +858,26 @@ ExprResolveKeyName(const ExprDef *expr, ExprResult *val_rtrn,
                    XkbAtomText(NULL, expr->value.field.field, XkbMessage));
         return ok;
     case OpAdd:
-        bogus = "Addition";
-        goto keyname;
+        if (bogus == NULL)
+            bogus = "Addition";
     case OpSubtract:
-        bogus = "Subtraction";
-        goto keyname;
+        if (bogus == NULL)
+            bogus = "Subtraction";
     case OpMultiply:
-        bogus = "Multiplication";
-        goto keyname;
+        if (bogus == NULL)
+            bogus = "Multiplication";
     case OpDivide:
-        bogus = "Division";
-        goto keyname;
+        if (bogus == NULL)
+            bogus = "Division";
     case OpAssign:
-        bogus = "Assignment";
-        goto keyname;
+        if (bogus == NULL)
+            bogus = "Assignment";
     case OpNegate:
-        bogus = "Negation";
-        goto keyname;
+        if (bogus == NULL)
+            bogus = "Negation";
     case OpInvert:
-        bogus = "Bitwise complement";
-        goto keyname;
-    keyname:
+        if (bogus == NULL)
+            bogus = "Bitwise complement";
         ERROR("%s of key name values not permitted\n", bogus);
         return False;
     case OpNot:
@@ -911,8 +904,7 @@ ExprResolveKeyName(const ExprDef *expr, ExprResult *val_rtrn,
 /***====================================================================***/
 
 int
-ExprResolveEnum(const ExprDef *expr, ExprResult *val_rtrn,
-                const LookupEntry *values)
+ExprResolveEnum(ExprDef * expr, ExprResult * val_rtrn, LookupEntry * values)
 {
     if (expr->op != ExprIdent)
     {
@@ -942,12 +934,13 @@ ExprResolveEnum(const ExprDef *expr, ExprResult *val_rtrn,
 }
 
 int
-ExprResolveMask(const ExprDef *expr, ExprResult *val_rtrn,
+ExprResolveMask(ExprDef * expr,
+                ExprResult * val_rtrn,
                 IdentLookupFunc lookup, XPointer lookupPriv)
 {
     int ok = 0;
     ExprResult leftRtrn, rightRtrn;
-    const ExprDef *left, *right;
+    ExprDef *left, *right;
     const char *bogus = NULL;
 
     switch (expr->op)
@@ -986,11 +979,9 @@ ExprResolveMask(const ExprDef *expr, ExprResult *val_rtrn,
         return ok;
     case ExprArrayRef:
         bogus = "array reference";
-        goto unexpected_mask;
     case ExprActionDecl:
-        bogus = "function use";
-        goto unexpected_mask;
-    unexpected_mask:
+        if (bogus == NULL)
+            bogus = "function use";
         ERROR("Unexpected %s in mask expression\n", bogus);
         ACTION("Expression ignored\n");
         return False;
@@ -1050,16 +1041,16 @@ ExprResolveMask(const ExprDef *expr, ExprResult *val_rtrn,
 }
 
 int
-ExprResolveKeySym(const ExprDef *expr, ExprResult *val_rtrn,
+ExprResolveKeySym(ExprDef * expr,
+                  ExprResult * val_rtrn,
                   IdentLookupFunc lookup, XPointer lookupPriv)
 {
     int ok = 0;
+    KeySym sym;
 
     if (expr->op == ExprIdent)
     {
-        const char *str;
-        KeySym sym;
-
+        char *str;
         str = XkbAtomGetString(NULL, expr->value.str);
         if ((str != NULL) && ((sym = XStringToKeysym(str)) != NoSymbol))
         {

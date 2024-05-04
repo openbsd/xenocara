@@ -30,41 +30,73 @@
 #include	<stdlib.h>
 #include	<stdarg.h>
 
+/***====================================================================***/
+
+Opaque
+uAlloc(unsigned size)
+{
+    return ((Opaque) malloc(size));
+}
 
 /***====================================================================***/
 
-#ifndef HAVE_RECALLOCARRAY
-void *
-uRecalloc(void *old, size_t nOld, size_t nNew, size_t itemSize)
+Opaque
+uCalloc(unsigned n, unsigned size)
+{
+    return ((Opaque) calloc(n, size));
+}
+
+/***====================================================================***/
+
+Opaque
+uRealloc(Opaque old, unsigned newSize)
+{
+    if (old == NULL)
+        return ((Opaque) malloc(newSize));
+    else
+        return ((Opaque) realloc((char *) old, newSize));
+}
+
+/***====================================================================***/
+
+Opaque
+uRecalloc(Opaque old, unsigned nOld, unsigned nNew, unsigned itemSize)
 {
     char *rtrn;
 
     if (old == NULL)
-        rtrn = calloc(nNew, itemSize);
+        rtrn = (char *) calloc(nNew, itemSize);
     else
     {
-        rtrn = reallocarray(old, nNew, itemSize);
+        rtrn = (char *) realloc((char *) old, nNew * itemSize);
         if ((rtrn) && (nNew > nOld))
         {
             bzero(&rtrn[nOld * itemSize], (nNew - nOld) * itemSize);
         }
     }
-    return (void *) rtrn;
+    return (Opaque) rtrn;
 }
-#endif
-
 
 /***====================================================================***/
-/***			DEBUG FUNCTIONS					***/
+
+void
+uFree(Opaque ptr)
+{
+    if (ptr != (Opaque) NULL)
+        free((char *) ptr);
+    return;
+}
+
+/***====================================================================***/
+/***			PRINT FUNCTIONS					***/
 /***====================================================================***/
 
-#ifdef DEBUG
-static FILE *uDebugFile = NULL;
+FILE *uDebugFile = NULL;
 int uDebugIndentLevel = 0;
-static const int uDebugIndentSize = 4;
+int uDebugIndentSize = 4;
 
 Boolean
-uSetDebugFile(const char *name)
+uSetDebugFile(char *name)
 {
     if ((uDebugFile != NULL) && (uDebugFile != stderr))
     {
@@ -84,11 +116,12 @@ uSetDebugFile(const char *name)
 }
 
 void
-uDebug(const char *s, ...)
+uDebug(char *s, ...)
 {
+    int i;
     va_list args;
 
-    for (int i = (uDebugIndentLevel * uDebugIndentSize); i > 0; i--)
+    for (i = (uDebugIndentLevel * uDebugIndentSize); i > 0; i--)
     {
         putc(' ', uDebugFile);
     }
@@ -97,18 +130,28 @@ uDebug(const char *s, ...)
     va_end(args);
     fflush(uDebugFile);
 }
-#endif
+
+void
+uDebugNOI(char *s, ...)
+{
+    va_list args;
+
+    va_start(args, s);
+    vfprintf(uDebugFile, s, args);
+    va_end(args);
+    fflush(uDebugFile);
+}
 
 /***====================================================================***/
 
 static FILE *errorFile = NULL;
 static int outCount = 0;
-static const char *preMsg = NULL;
-static const char *postMsg = NULL;
-static const char *prefix = NULL;
+static char *preMsg = NULL;
+static char *postMsg = NULL;
+static char *prefix = NULL;
 
 Boolean
-uSetErrorFile(const char *name)
+uSetErrorFile(char *name)
 {
     if ((errorFile != NULL) && (errorFile != stderr))
     {
@@ -234,7 +277,7 @@ uInternalError(const char *s, ...)
 }
 
 void
-uSetPreErrorMessage(const char *msg)
+uSetPreErrorMessage(char *msg)
 {
     outCount = 0;
     preMsg = msg;
@@ -242,14 +285,14 @@ uSetPreErrorMessage(const char *msg)
 }
 
 void
-uSetPostErrorMessage(const char *msg)
+uSetPostErrorMessage(char *msg)
 {
     postMsg = msg;
     return;
 }
 
 void
-uSetErrorPrefix(const char *pre)
+uSetErrorPrefix(char *pre)
 {
     prefix = pre;
     return;
@@ -273,7 +316,7 @@ uStringDup(const char *str)
 
     if (str == NULL)
         return NULL;
-    rtrn = malloc(strlen(str) + 1);
+    rtrn = (char *) uAlloc(strlen(str) + 1);
     strcpy(rtrn, str);
     return rtrn;
 }
@@ -285,7 +328,7 @@ uStrCaseCmp(const char *str1, const char *str2)
 {
     char buf1[512], buf2[512];
     char c, *s;
-    int n;
+    register int n;
 
     for (n = 0, s = buf1; (c = *str1++); n++)
     {
@@ -309,7 +352,7 @@ uStrCaseCmp(const char *str1, const char *str2)
 }
 
 int
-uStrCasePrefix(const char *my_prefix, const char *str)
+uStrCasePrefix(const char *my_prefix, char *str)
 {
     char c1;
     char c2;

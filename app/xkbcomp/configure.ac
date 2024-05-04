@@ -21,16 +21,11 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
-AC_PREREQ([2.70])
-AC_INIT([xkbcomp], [1.4.7],
+AC_PREREQ([2.60])
+AC_INIT([xkbcomp], [1.4.6],
         [https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/issues], [xkbcomp])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
-
-# Set common system defines for POSIX extensions, such as _GNU_SOURCE
-# Must be called before any macros that run the compiler (like AC_PROG_LIBTOOL)
-# to avoid autoconf errors.
-AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-xz])
@@ -50,7 +45,7 @@ if test ! -f "$srcdir/xkbparse.c"; then
    fi
 fi
 
-AC_CHECK_FUNCS([asprintf reallocarray recallocarray strdup strcasecmp])
+AC_CHECK_FUNCS([strdup strcasecmp])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XKBCOMP, [x11 xkbfile xproto >= 7.0.17])

@@ -44,13 +44,20 @@ extern void ClearVModInfo(VModInfo * /* info */ ,
                           XkbDescPtr    /* xkb */
     );
 
-extern Bool HandleVModDef(const VModDef * /* stmt */ ,
+extern Bool HandleVModDef(VModDef * /* stmt */ ,
                           unsigned /* mergeMode */ ,
                           VModInfo *    /* info */
     );
 
 extern Bool ApplyVModDefs(VModInfo * /* info */ ,
                           XkbDescPtr    /* xkb */
+    );
+
+extern int LookupVModIndex(XPointer /* priv */ ,
+                           Atom /* elem */ ,
+                           Atom /* field */ ,
+                           unsigned /* type */ ,
+                           ExprResult * /* val_rtrn */
     );
 
 extern int LookupVModMask(XPointer /* priv */ ,
@@ -63,9 +70,9 @@ extern int LookupVModMask(XPointer /* priv */ ,
 extern int FindKeypadVMod(XkbDescPtr    /* xkb */
     );
 
-extern Bool ResolveVirtualModifier(const ExprDef * /* def */ ,
+extern Bool ResolveVirtualModifier(ExprDef * /* def */ ,
                                    ExprResult * /* value_rtrn */ ,
-                                   const VModInfo *   /* info */
+                                   VModInfo *   /* info */
     );
 
 #endif /* VMOD_H */
