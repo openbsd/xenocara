@@ -38,7 +38,7 @@ endif
 
 inc_src = include_directories('.')
 
-libpciaccess = shared_library(
+libpciaccess = library(
   'pciaccess',
   [
     'common_bridge.c',

@@ -82,7 +82,7 @@ pci_device_hurd_probe(struct pci_device *dev)
     struct pci_bar regions[6];
     struct pci_xrom_bar rom;
     struct pci_device_private *d;
-    size_t size;
+    mach_msg_type_number_t size;
     char *buf;
 
     /* Many of the fields were filled in during initial device enumeration.
@@ -323,7 +323,7 @@ pciclient_cfg_read(mach_port_t device_port, int reg, char *buf,
                    size_t * nbytes)
 {
     int err;
-    size_t nread;
+    mach_msg_type_number_t nread;
     char *data;
 
     data = buf;
@@ -473,7 +473,7 @@ simple_readdir(mach_port_t port, uint32_t *first_entry)
 {
     char *data;
     int nentries = 0;
-    vm_size_t size;
+    mach_msg_type_number_t size;
 
     dir_readdir (port, &data, &size, *first_entry, 1, 0, &nentries);
 

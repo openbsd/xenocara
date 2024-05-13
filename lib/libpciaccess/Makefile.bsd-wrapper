@@ -1,7 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2022/11/07 16:52:35 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2024/05/13 19:16:27 matthieu Exp $
 
-SHARED_LIBS=	pciaccess 2.1
+SUBDIR = mk
 
-CONFIGURE_ARGS+= --with-pciids-path=${X11BASE}/share
-
+.include <bsd.subdir.mk>
 .include <bsd.xorg.mk>
