@@ -138,6 +138,12 @@ class Kernel(object):
         return version if version != self.versions[0] else None
 
 
+TARGET_KEYSYM_COLUMN = 54
+"""Column in the file we want the keysym codes to end"""
+KEYSYM_NAME_MAX_LENGTH = TARGET_KEYSYM_COLUMN - len("#define ") - len("_EVDEVK(0xNNN)")
+KERNEL_VERSION_PADDING = 7
+
+
 def generate_keysym_line(code, kernel, kver_list=[]):
     """
     Generate the line to append to the keysym file.
@@ -153,7 +159,9 @@ def generate_keysym_line(code, kernel, kver_list=[]):
 
     name = "".join([s.capitalize() for s in evcode.name[4:].lower().split("_")])
     keysym = f"XF86XK_{name}"
-    tabs = 4 - len(keysym) // 8
+    spaces = KEYSYM_NAME_MAX_LENGTH - len(keysym)
+    if not spaces:
+        raise ValueError(f"Insufficient padding for keysym “{keysym}”.")
     kver = kernel.introduced_in_version(evcode.name) or " "
     if kver_list:
         from fnmatch import fnmatch
@@ -165,7 +173,7 @@ def generate_keysym_line(code, kernel, kver_list=[]):
         else:  # no match
             return None
 
-    return f"#define {keysym}{'	' * tabs}_EVDEVK(0x{code:03X})		/* {kver:5s} {evcode.name} */"
+    return f"#define {keysym}{' ' * spaces}_EVDEVK(0x{code:03x})  /* {kver: <{KERNEL_VERSION_PADDING}s} {evcode.name} */"
 
 
 def verify(ns):
@@ -181,17 +189,17 @@ def verify(ns):
 
     # This is the full pattern we expect.
     expected_pattern = re.compile(
-        r"#define XF86XK_\w+\t+_EVDEVK\(0x([0-9A-F]{3})\)\t+/\* (v[2-6]\.[0-9]+(\.[0-9]+)?)? +KEY_\w+ \*/"
+        r"#define XF86XK_\w+ +_EVDEVK\(0x([0-9A-Fa-f]{3})\) +/\* (v[2-6]\.[0-9]+(\.[0-9]+)?)? +KEY_\w+ \*/"
     )
     # This is the comment pattern we expect
     expected_comment_pattern = re.compile(
-        r"/\* Use: (?P<name>\w+)\t+_EVDEVK\(0x(?P<value>[0-9A-F]{3})\)\t+   (v[2-6]\.[0-9]+(\.[0-9]+)?)? +KEY_\w+ \*/"
+        r"/\* Use: (?P<name>\w+) +_EVDEVK\(0x(?P<value>[0-9A-Fa-f]{3})\) +   (v[2-6]\.[0-9]+(\.[0-9]+)?)? +KEY_\w+ \*/"
     )
 
     # Some patterns to spot specific errors, just so we can print useful errors
     define = re.compile(r"^#define .*")
     name_pattern = re.compile(r"#define (XF86XK_[^\s]*)")
-    tab_check = re.compile(r"#define \w+(\s+)[^\s]+(\s+)")
+    space_check = re.compile(r"#define \w+(\s+)[^\s]+(\s+)")
     hex_pattern = re.compile(r".*0x([a-f0-9]+).*", re.I)
     comment_format = re.compile(r".*/\* ([^\s]+)?\s+(\w+)")
     kver_format = re.compile(r"v[2-6]\.[0-9]+(\.[0-9]+)?")
@@ -231,13 +239,13 @@ def verify(ns):
                     continue
 
                 # Comments we only search for a hex pattern and where there is one present
-                # we only check for uppercase format, ordering and update our last_keycode.
+                # we only check for lower case format, ordering and update our last_keycode.
                 if not re.match(define, line):
                     match = re.match(expected_comment_pattern, line)
                     if match:
                         hexcode = match.group("value")
-                        if hexcode != hexcode.upper():
-                            error(f"Hex code 0x{hexcode} must be uppercase", line)
+                        if hexcode != hexcode.lower():
+                            error(f"Hex code 0x{hexcode} must be lower case", line)
                         if hexcode:
                             keycode = int(hexcode, 16)
                             if keycode < last_keycode:
@@ -269,14 +277,14 @@ def verify(ns):
                 match = re.match(hex_pattern, line)
                 if not match:
                     error("No hex code", line)
-                if match.group(1) != match.group(1).upper():
-                    error(f"Hex code 0x{match.group(1)} must be uppercase", line)
+                if match.group(1) != match.group(1).lower():
+                    error(f"Hex code 0x{match.group(1)} must be lowercase", line)
 
-                tabs = re.match(tab_check, line)
-                if not tabs:  # bug
+                spaces = re.match(space_check, line)
+                if not spaces:  # bug
                     error("Matching error", line)
-                if " " in tabs.group(1) or " " in tabs.group(2):
-                    error("Use tabs, not spaces", line)
+                if "\t" in spaces.group(1) or "\t" in spaces.group(2):
+                    error("Use spaces, not tabs", line)
 
                 comment = re.match(comment_format, line)
                 if not comment:
@@ -337,7 +345,7 @@ def add_keysyms(ns):
     # If verification succeeds, we can be a bit more lenient here because we already know
     # what the format of the field is. Specifically, we're searching for
     # 3-digit hexcode in brackets and use that as keycode.
-    pattern = re.compile(r".*_EVDEVK\((0x[a-fA-F0-9]{3})\).*")
+    pattern = re.compile(r".*_EVDEVK\((0x[0-9A-Fa-f]{3})\).*")
     max_code = max(
         [
             c.value

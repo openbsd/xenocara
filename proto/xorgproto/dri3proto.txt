@@ -1,5 +1,5 @@
 			  The DRI3 Extension
-			     Version 1.3
+			     Version 1.4
 			      2021-11-30
 
 			    Keith Packard
@@ -60,7 +60,7 @@ DRI3 defines no events.
 
 6. Protocol Types
 
-DRI3 defines no new protocol types.
+SYNCOBJ { XID }
 
 			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
 
@@ -395,6 +395,36 @@ The name of this extension is "DRI3"
 	If the window specified was not found, a Window error will
 	be returned.
 
+
+┌───
+    DRI3ImportSyncobj
+	syncobj: SYNCOBJ
+	drawable: DRAWABLE
+	fd: FD
+└───
+	Errors: IDchoice, Drawable
+
+	Imports the DRM synchronization object bound to the given 'fd'.  This
+	may then be used to enable explicit synchronization with the
+	server-side direct rendering device associated with 'drawable'.
+
+	The provided syncobj must be a timeline syncobj.
+
+	If 'drawable' is not found, a Drawable error will be returned.
+
+
+┌───
+    DRI3FreeSyncobj
+	syncobj: SYNCOBJ
+└───
+	Errors: Value
+
+	Indicates that any resources associated with the given 'syncobj' should
+	be released by the server. The actual release may be deferred until any
+	pending operations that depend on the object have completed.
+
+	If 'syncobj' is not found, a Value error will be returned.
+
 			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 9. Extension Events
@@ -701,6 +731,24 @@ A.2 Protocol Requests
 	4	Window			window
 	4	CARD32			drmMajor
 	4	CARD32			drmMinor
+└───
+
+┌───
+    DRI3ImportSyncobj
+	1	CARD8			major opcode
+	1	11			DRI3 opcode
+	2	3			length
+	4	SYNCOBJ			syncobj
+	4	Drawable		drawable
+	0	FD			syncobj fd
+└───
+
+┌───
+    DRI3FreeSyncobj
+	1	CARD8			major opcode
+	1	12			DRI3 opcode
+	2	2			length
+	4	SYNCOBJ			syncobj
 └───
 
 A.3 Protocol Events

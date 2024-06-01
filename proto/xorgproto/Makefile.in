@@ -53,47 +53,49 @@ build_triplet = @build@
 host_triplet = @host@
 @LEGACY_TRUE@am__append_1 = include/X11/extensions/XKBgeom.h
 @LEGACY_TRUE@am__append_2 = include/X11/extensions/vldXvMC.h
+@LEGACY_TRUE@am__append_3 = PM_spec
 subdir = .
 DIST_COMMON = $(am__XCalibrateinclude_HEADERS_DIST) \
 	$(am__applewm_HEADERS_DIST) $(am__compat_HEADERS_DIST) \
-	$(am__configure_deps) $(am__evie_HEADERS_DIST) \
-	$(am__fontcache_HEADERS_DIST) $(am__kb_HEADERS_DIST) \
-	$(am__lg3d_HEADERS_DIST) $(am__print_HEADERS_DIST) \
-	$(am__trap_HEADERS_DIST) $(am__video_HEADERS_DIST) \
-	$(am__windowswm_HEADERS_DIST) $(am__xf86misc_HEADERS_DIST) \
-	$(am__xf86rush_HEADERS_DIST) $(am__xproxymng_HEADERS_DIST) \
-	$(bigreqs_HEADERS) $(composite_HEADERS) $(damage_HEADERS) \
-	$(dist_doc_DATA) $(dmx_HEADERS) $(dri2_HEADERS) \
-	$(dri3_HEADERS) $(fixes_HEADERS) $(fonts_HEADERS) \
-	$(gl_HEADERS) $(glinternal_HEADERS) $(input_HEADERS) \
-	$(present_HEADERS) $(randr_HEADERS) $(record_HEADERS) \
-	$(render_HEADERS) $(resource_HEADERS) $(scrnsaver_HEADERS) \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/applewmproto.pc.in $(srcdir)/bigreqsproto.pc.in \
-	$(srcdir)/compositeproto.pc.in $(srcdir)/damageproto.pc.in \
-	$(srcdir)/dmxproto.pc.in $(srcdir)/dpmsproto.pc.in \
-	$(srcdir)/dri2proto.pc.in $(srcdir)/dri3proto.pc.in \
-	$(srcdir)/evieproto.pc.in $(srcdir)/fixesproto.pc.in \
-	$(srcdir)/fontcacheproto.pc.in $(srcdir)/fontsproto.pc.in \
-	$(srcdir)/glproto.pc.in $(srcdir)/inputproto.pc.in \
-	$(srcdir)/kbproto.pc.in $(srcdir)/lg3dproto.pc.in \
-	$(srcdir)/presentproto.pc.in $(srcdir)/printproto.pc.in \
-	$(srcdir)/randrproto.pc.in $(srcdir)/recordproto.pc.in \
-	$(srcdir)/renderproto.pc.in $(srcdir)/resourceproto.pc.in \
-	$(srcdir)/scrnsaverproto.pc.in $(srcdir)/trapproto.pc.in \
-	$(srcdir)/videoproto.pc.in $(srcdir)/windowswmproto.pc.in \
-	$(srcdir)/xcalibrateproto.pc.in $(srcdir)/xcmiscproto.pc.in \
-	$(srcdir)/xextproto.pc.in $(srcdir)/xf86bigfontproto.pc.in \
-	$(srcdir)/xf86dgaproto.pc.in $(srcdir)/xf86driproto.pc.in \
-	$(srcdir)/xf86miscproto.pc.in $(srcdir)/xf86rushproto.pc.in \
-	$(srcdir)/xf86vidmodeproto.pc.in $(srcdir)/xineramaproto.pc.in \
-	$(srcdir)/xproto.pc.in $(srcdir)/xproxymngproto.pc.in \
-	$(srcdir)/xwaylandproto.pc.in $(top_srcdir)/configure \
-	$(top_srcdir)/include/X11/Xpoll.h.in $(xcmisc_HEADERS) \
-	$(xext_HEADERS) $(xf86bigfont_HEADERS) $(xf86dga_HEADERS) \
-	$(xf86dri_HEADERS) $(xf86vidmode_HEADERS) $(xinerama_HEADERS) \
-	$(xproto_HEADERS) $(xwaylandproto_HEADERS) AUTHORS INSTALL \
-	compile config.guess config.sub install-sh missing
+	$(am__configure_deps) $(am__dist_doc_DATA_DIST) \
+	$(am__evie_HEADERS_DIST) $(am__fontcache_HEADERS_DIST) \
+	$(am__kb_HEADERS_DIST) $(am__lg3d_HEADERS_DIST) \
+	$(am__print_HEADERS_DIST) $(am__trap_HEADERS_DIST) \
+	$(am__video_HEADERS_DIST) $(am__windowswm_HEADERS_DIST) \
+	$(am__xf86misc_HEADERS_DIST) $(am__xf86rush_HEADERS_DIST) \
+	$(am__xproxymng_HEADERS_DIST) $(bigreqs_HEADERS) \
+	$(composite_HEADERS) $(damage_HEADERS) $(dmx_HEADERS) \
+	$(dri2_HEADERS) $(dri3_HEADERS) $(fixes_HEADERS) \
+	$(fonts_HEADERS) $(gl_HEADERS) $(glinternal_HEADERS) \
+	$(input_HEADERS) $(present_HEADERS) $(randr_HEADERS) \
+	$(record_HEADERS) $(render_HEADERS) $(resource_HEADERS) \
+	$(scrnsaver_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/applewmproto.pc.in \
+	$(srcdir)/bigreqsproto.pc.in $(srcdir)/compositeproto.pc.in \
+	$(srcdir)/damageproto.pc.in $(srcdir)/dmxproto.pc.in \
+	$(srcdir)/dpmsproto.pc.in $(srcdir)/dri2proto.pc.in \
+	$(srcdir)/dri3proto.pc.in $(srcdir)/evieproto.pc.in \
+	$(srcdir)/fixesproto.pc.in $(srcdir)/fontcacheproto.pc.in \
+	$(srcdir)/fontsproto.pc.in $(srcdir)/glproto.pc.in \
+	$(srcdir)/inputproto.pc.in $(srcdir)/kbproto.pc.in \
+	$(srcdir)/lg3dproto.pc.in $(srcdir)/presentproto.pc.in \
+	$(srcdir)/printproto.pc.in $(srcdir)/randrproto.pc.in \
+	$(srcdir)/recordproto.pc.in $(srcdir)/renderproto.pc.in \
+	$(srcdir)/resourceproto.pc.in $(srcdir)/scrnsaverproto.pc.in \
+	$(srcdir)/trapproto.pc.in $(srcdir)/videoproto.pc.in \
+	$(srcdir)/windowswmproto.pc.in $(srcdir)/xcalibrateproto.pc.in \
+	$(srcdir)/xcmiscproto.pc.in $(srcdir)/xextproto.pc.in \
+	$(srcdir)/xf86bigfontproto.pc.in $(srcdir)/xf86dgaproto.pc.in \
+	$(srcdir)/xf86driproto.pc.in $(srcdir)/xf86miscproto.pc.in \
+	$(srcdir)/xf86rushproto.pc.in $(srcdir)/xf86vidmodeproto.pc.in \
+	$(srcdir)/xineramaproto.pc.in $(srcdir)/xproto.pc.in \
+	$(srcdir)/xproxymngproto.pc.in $(srcdir)/xwaylandproto.pc.in \
+	$(top_srcdir)/configure $(top_srcdir)/include/X11/Xpoll.h.in \
+	$(xcmisc_HEADERS) $(xext_HEADERS) $(xf86bigfont_HEADERS) \
+	$(xf86dga_HEADERS) $(xf86dri_HEADERS) $(xf86vidmode_HEADERS) \
+	$(xinerama_HEADERS) $(xproto_HEADERS) $(xwaylandproto_HEADERS) \
+	AUTHORS INSTALL compile config.guess config.sub install-sh \
+	missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -219,6 +221,10 @@ am__installdirs = "$(DESTDIR)$(applewmprotopkgconfigdir)" \
 	"$(DESTDIR)$(xf86vidmodedir)" "$(DESTDIR)$(xineramadir)" \
 	"$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(xproxymngdir)" \
 	"$(DESTDIR)$(xwaylandprotodir)"
+am__dist_doc_DATA_DIST = compositeproto.txt damageproto.txt \
+	dri2proto.txt dri3proto.txt fixesproto.txt presentproto.txt \
+	randrproto.txt renderproto.txt resproto.txt xv-protocol-v2.txt \
+	xwaylandproto.txt PM_spec
 DATA = $(applewmprotopkgconfig_DATA) $(bigreqsprotopkgconfig_DATA) \
 	$(calibrateprotopkgconfig_DATA) \
 	$(compositeprotopkgconfig_DATA) $(damageprotopkgconfig_DATA) \
@@ -338,7 +344,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -349,12 +354,10 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
-EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FOP = @FOP@
-GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -369,17 +372,16 @@ LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
-@APPLEWM_TRUE@MAN_SUBSTS = \
-@APPLEWM_TRUE@        -e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-@APPLEWM_TRUE@        -e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-@APPLEWM_TRUE@        -e 's|__datadir__|$(datadir)|g' \
-@APPLEWM_TRUE@        -e 's|__libdir__|$(libdir)|g' \
-@APPLEWM_TRUE@        -e 's|__sysconfdir__|$(sysconfdir)|g' \
-@APPLEWM_TRUE@        -e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-@APPLEWM_TRUE@        -e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-@APPLEWM_TRUE@        -e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g'
+MAN_SUBSTS = \
+        -e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
+        -e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
+        -e 's|__datadir__|$(datadir)|g' \
+        -e 's|__libdir__|$(libdir)|g' \
+        -e 's|__sysconfdir__|$(sysconfdir)|g' \
+        -e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
+        -e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
+        -e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g'
 
-MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MKDIR_P = @MKDIR_P@
@@ -400,8 +402,7 @@ PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
 PYTHON_PLATFORM = @PYTHON_PLATFORM@
 PYTHON_PREFIX = @PYTHON_PREFIX@
 PYTHON_VERSION = @PYTHON_VERSION@
-@APPLEWM_TRUE@SED = sed
-SED = @SED@
+SED = sed
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
@@ -469,9 +470,13 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-@APPLEWM_TRUE@XORGRELSTRING = @PACKAGE_STRING@
-@APPLEWM_TRUE@XORGMANNAME = X Version 11
-@APPLEWM_TRUE@SUFFIXES = .$(MISC_MAN_SUFFIX) .man
+XORGRELSTRING = @PACKAGE_STRING@
+XORGMANNAME = X Version 11
+SUFFIXES = .$(MISC_MAN_SUFFIX) .man
+dist_doc_DATA = compositeproto.txt damageproto.txt dri2proto.txt \
+	dri3proto.txt fixesproto.txt presentproto.txt randrproto.txt \
+	renderproto.txt resproto.txt xv-protocol-v2.txt \
+	xwaylandproto.txt $(am__append_3)
 @APPLEWM_TRUE@applewmdir = $(includedir)/X11/extensions
 @APPLEWM_TRUE@applewm_HEADERS = \
 @APPLEWM_TRUE@        include/X11/extensions/applewmconst.h \
@@ -827,20 +832,6 @@ xwaylandprotopkgconfig_DATA = xwaylandproto.pc
 @LEGACY_TRUE@xf86rushprotopkgconfig_DATA = xf86rushproto.pc
 
 # SUBDIRS=specs
-dist_doc_DATA = \
-	compositeproto.txt \
-	damageproto.txt \
-	dri2proto.txt \
-	dri3proto.txt \
-	fixesproto.txt \
-	PM_spec \
-	presentproto.txt \
-	randrproto.txt \
-	renderproto.txt \
-	resproto.txt \
-	xv-protocol-v2.txt \
-	xwaylandproto.txt
-
 EXTRA_DIST = \
     COPYING-applewmproto \
     COPYING-bigreqsproto \
@@ -3366,9 +3357,9 @@ uninstall-am: uninstall-XCalibrateincludeHEADERS \
 	uninstall-xwaylandprotopkgconfigDATA
 
 
-@APPLEWM_TRUE@.man.$(MISC_MAN_SUFFIX): man
-@APPLEWM_TRUE@	$(MKDIR_P) man
-@APPLEWM_TRUE@	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+.man.$(MISC_MAN_SUFFIX): man
+	$(MKDIR_P) man
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
