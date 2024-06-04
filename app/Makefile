@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.38 2019/08/15 17:01:12 matthieu Exp $
+# $OpenBSD: Makefile,v 1.39 2024/06/04 08:13:08 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR= bdftopcf mkfontscale \
@@ -22,7 +22,7 @@ SUBDIR +=   xdriinfo glxgears glxinfo
 .endif
 
 # extras
-SUBDIR += cwm fvwm ssh-askpass video xterm xidle xlockmore \
+SUBDIR += cwm fvwm ssh-askpass sxpm video xterm xidle xlockmore \
 	  xtsscale xvctl
 
 .include <bsd.subdir.mk>
