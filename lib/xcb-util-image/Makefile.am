@@ -12,5 +12,5 @@ ChangeLog:
 
 dist-hook: ChangeLog INSTALL
 
-SUBDIRS = image test
+SUBDIRS = image
 EXTRA_DIST = autogen.sh README.md

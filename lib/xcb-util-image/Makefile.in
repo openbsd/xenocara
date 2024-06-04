@@ -298,7 +298,7 @@ top_srcdir = @top_srcdir@
 xcbincludedir = @xcbincludedir@
 ACLOCAL_AMFLAGS = -I m4
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-SUBDIRS = image test
+SUBDIRS = image
 EXTRA_DIST = autogen.sh README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
