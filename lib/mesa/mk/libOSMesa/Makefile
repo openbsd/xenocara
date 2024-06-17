@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2023/03/03 06:32:18 jsg Exp $
+#	$OpenBSD: Makefile,v 1.9 2024/06/17 01:29:12 jsg Exp $
 
 LIB=	OSMesa
 
@@ -34,7 +34,8 @@ SLIBS=	libmesa \
 	libcompiler \
 	libgallium \
 	libws_null \
-	libsoftpipe
+	libsoftpipe \
+	libvtn
 
 .if ${WITH_SSE41} == "yes"
 SLIBS+=	libmesa_sse41
