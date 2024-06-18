@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2024/04/02 10:42:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2024/06/18 02:44:13 jsg Exp $
 
 .include "config.mk"
 
@@ -12,7 +12,7 @@ SUBDIR=		include pkgconfig \
 		libnir libpipe_loader_static libsoftpipe \
 		libmesa_util_sse41 \
 		libswdri libswkmsdri \
-		libws_null libwsw libxmlconfig
+		libws_null libwsw libvtn libxmlconfig
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes" || make(obj)
 SUBDIR+=	libloader_dri3_helper
@@ -43,8 +43,7 @@ SUBDIR+=	libradeonwinsys
 .endif
 
 .if ${WITH_AMD_VK} == "yes" || ${WITH_INTEL_VK} == "yes" || make(obj)
-SUBDIR+=	libvulkan_runtime libvulkan_util libvulkan_wsi \
-		libvtn
+SUBDIR+=	libvulkan_runtime libvulkan_util libvulkan_wsi
 .endif
 
 .if ${WITH_LLVM} == "yes" || make(obj)
