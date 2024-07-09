@@ -1,3 +1,227 @@
+commit 792f80402ee06ce69bca3a8f2a84295999c3a170
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Apr 16 15:54:52 2024 -0400
+
+    libXmu 1.2.1
+
+commit 41548e8322062540cce4670c2b7a8ef75b130d82
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Apr 16 13:44:21 2024 -0400
+
+    test: Add prototype for Xmureallocarray to silence warning
+    
+    In file included from reallocarray.c:50:
+    ../src/reallocarray.c:35:1: warning: no previous prototype for ‘Xmureallocarray’ [-Wmissing-prototypes]
+       35 | Xmureallocarray(void *optr, size_t nmemb, size_t size)
+          | ^~~~~~~~~~~~~~~
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxmu/-/merge_requests/14>
+
+commit 9329cf7611284fe7e68a67aef852c76ad30e9ebd
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Apr 16 13:40:40 2024 -0400
+
+    test: Add missing setjmp()
+    
+    Bug: https://bugs.gentoo.org/928419
+    Closes: https://gitlab.freedesktop.org/xorg/lib/libxmu/-/issues/2
+    Fixes: d729c59 ("test: Add simple test cases for functions in src/StrToShap.c")
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxmu/-/merge_requests/12>
+
+commit cc378e4f0cc2ab5b66d378050ba4956612a01197
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 24 15:27:24 2024 -0700
+
+    libXmu 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 117f425f68a087c833ee5ad17e3b17094360b184
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:45:24 2024 -0800
+
+    Use XtAsprintf to simplify os_name string generation
+    
+    Raises minimum libXt requirement to 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1c4827041087c539af3261b6947b2fd4db26f9d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:35:29 2024 -0800
+
+    unifdef SYSV
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7d3ce8808355a1850620dd290a0e5a7cf7a583fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:32:59 2024 -0800
+
+    Remove "#ifndef notdef" checks
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c85d4dd1eca410bd1b97823ebde88de85a665ca7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:30:14 2024 -0800
+
+    unifdef Lynx
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e0c9afd60eaa2209930e7a93f1d27d219a790e80
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:29:09 2024 -0800
+
+    unifdef hpux
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 017d1deaf923887df74b068c33d080008b0c25cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 27 16:23:55 2023 -0700
+
+    XmuReadBitmapDataFromFile: set close-on-exec when opening files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 35eb34a9513467a88bf5e59f5cb44beb993753db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 27 13:34:27 2023 -0700
+
+    test: Add simple test cases for functions in src/reallocarray.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d729c59e46a939f5179e711dec9a53ef1e9cd1b4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 27 09:06:08 2023 -0700
+
+    test: Add simple test cases for functions in src/StrToShap.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 73764fa6f672a2aa540cae72155ba4ebfa1bcf4f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 27 08:47:44 2023 -0700
+
+    test: Add simple test cases for functions in src/StrToOrnt.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5db0a3c95fbcc0ac3bf1711f9b28e5b76dcb49c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 27 08:30:18 2023 -0700
+
+    test: Add simple test cases for functions in src/StrToLong.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4335c55ea6848665969c17a8bf19bdf39be3758b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 26 17:58:47 2023 -0700
+
+    test: Add simple test cases for functions in src/StrToJust.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 18c9c8968c91224df16cb06cd798a4ba6893b632
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 26 17:28:48 2023 -0700
+
+    test: Add simple test cases for functions in src/StrToGrav.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3078ccc44c25a1e96c7cd48961092931f583525e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 26 16:54:34 2023 -0700
+
+    test: Add simple test cases for functions in src/StrToBS.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7ad1689cbdf8b026b57844d584fdd7b5df3700b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 26 15:35:12 2023 -0700
+
+    test: Add simple test cases for functions in src/Lower.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b6f70b5167557c8aa845feb53209d5b6ce58ce09
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 26 12:25:48 2023 -0700
+
+    test: Add simple test cases for functions in src/CursorName.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b08c297a37c2b061de783b1954bb908796fe91b0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 26 11:33:06 2023 -0700
+
+    test: Add simple test cases for functions in src/RdBitF.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f3d7d1f96fba76c275df990b97d4c0995a70ee4b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 26 10:03:05 2023 -0700
+
+    test: Convert test code to use glib test helpers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 171ec5c8cc463e0160d90d05865df9ee4fd1861e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 6 16:25:28 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:13: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:13: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:13: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e1843320680f13de5571d9f704ce2161c224a23e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 16 19:19:39 2023 -0800
+
+    src/Makefile.am: Remove hardcoded -D_BSD_SOURCE
+    
+    Not needed now that AC_USE_SYSTEM_EXTENSIONS is in configure.ac
+    
+    Avoids compiler warning of:
+    /usr/include/features.h:194:3: warning: #warning "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE" [-Wcpp]
+      194 | # warning "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE"
+          |   ^~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba551e9b92e2d11547abbf23f1d799749f4b2d04
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 16 19:11:24 2023 -0800
+
+    configure: raise minimum autoconf requirement to 2.70
+    
+    Needed for builds on NetBSD to work correctly, since it depends on
+    AC_USE_SYSTEM_EXTENSIONS defining _OPENBSD_SOURCE to expose the
+    prototype for reallocarray() in the system headers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b29c739b577ee142877e69eb3fb07c7312d81557
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 17 14:05:25 2022 -0700
@@ -1259,7 +1483,7 @@ Date:   Wed Oct 5 19:57:36 2005 +0000
     Add missing file to EXTRA_DIST
 
 commit bf4087e453d8fd83630976cd6e7e31c63737a4a1
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Oct 3 20:55:36 2005 +0000
 
     Remvoe README file that is symlinked from monolith
@@ -1334,13 +1558,13 @@ Date:   Thu May 19 00:10:08 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit 2e403190ff21b0bb277391a73741cfc6d5005ac3
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed May 18 19:38:36 2005 +0000
 
     - Add Xmu build system
 
 commit 7cea083d37cfaaad321bddca0fb75b3308956938
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed May 18 19:30:41 2005 +0000
 
     - Add Xmu to symlink.sh

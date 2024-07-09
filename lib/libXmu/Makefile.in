@@ -55,7 +55,8 @@ DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/xmu.pc.in $(srcdir)/xmuu.pc.in \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
-	config.guess config.sub depcomp install-sh ltmain.sh missing
+	config.guess config.sub depcomp install-sh ltmain.sh missing \
+	tap-driver.sh
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -189,7 +190,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -209,6 +209,8 @@ FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FOP = @FOP@
+GLIB_CFLAGS = @GLIB_CFLAGS@
+GLIB_LIBS = @GLIB_LIBS@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
@@ -267,6 +269,7 @@ XMUU_CFLAGS = @XMUU_CFLAGS@
 XMUU_LIBS = @XMUU_LIBS@
 XMU_CFLAGS = @XMU_CFLAGS@
 XMU_LIBS = @XMU_LIBS@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XSLTPROC = @XSLTPROC@

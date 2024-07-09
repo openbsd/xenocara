@@ -59,6 +59,12 @@ in this Software without prior written authorization from The Open Group.
 #include <direct.h>            /* for _getdrives() */
 #endif
 
+#ifdef O_CLOEXEC
+#define FOPEN_CLOEXEC "e"
+#else
+#define FOPEN_CLOEXEC ""
+#endif
+
 #define MAX_SIZE 255
 
 /*
@@ -384,7 +390,7 @@ XmuReadBitmapDataFromFile(_Xconst char *filename, unsigned int *width,
     FILE *fstream;
     int status;
 
-    if ((fstream = fopen_file (filename, "r")) == NULL) {
+    if ((fstream = fopen_file (filename, "r" FOPEN_CLOEXEC)) == NULL) {
 	return BitmapOpenFailed;
     }
     status = XmuReadBitmapData(fstream, width, height, datap, x_hot, y_hot);

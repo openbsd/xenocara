@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# Copyright (c) 2022, Oracle and/or its affiliates.
+# Copyright (c) 2022, 2023, Oracle and/or its affiliates.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -72,7 +72,18 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = EditResStream$(EXEEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@check_PROGRAMS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	CursorName$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	EditResStream$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	Lower$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	ReadBitmapData$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	reallocarray$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToBS$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToGrav$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToJust$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToLong$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToOrnt$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToShap$(EXEEXT)
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -84,15 +95,80 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_EditResStream_OBJECTS = EditResStream.$(OBJEXT)
-EditResStream_OBJECTS = $(am_EditResStream_OBJECTS)
+am__CursorName_SOURCES_DIST = CursorName.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_CursorName_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	CursorName.$(OBJEXT)
+CursorName_OBJECTS = $(am_CursorName_OBJECTS)
 am__DEPENDENCIES_1 =
-EditResStream_DEPENDENCIES = ${top_builddir}/src/libXmu.la \
-	$(am__DEPENDENCIES_1)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am__DEPENDENCIES_2 = ${top_builddir}/src/libXmuu.la \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_1)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@CursorName_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_2)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am__EditResStream_SOURCES_DIST = EditResStream.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_EditResStream_OBJECTS = EditResStream.$(OBJEXT)
+EditResStream_OBJECTS = $(am_EditResStream_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am__DEPENDENCIES_3 = ${top_builddir}/src/libXmu.la \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_1)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@EditResStream_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_3)
+am__Lower_SOURCES_DIST = Lower.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_Lower_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	Lower.$(OBJEXT)
+Lower_OBJECTS = $(am_Lower_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@Lower_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_2)
+am__ReadBitmapData_SOURCES_DIST = ReadBitmapData.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_ReadBitmapData_OBJECTS = ReadBitmapData.$(OBJEXT)
+ReadBitmapData_OBJECTS = $(am_ReadBitmapData_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@ReadBitmapData_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_3)
+am__StrToBS_SOURCES_DIST = StrToBS.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_StrToBS_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToBS.$(OBJEXT)
+StrToBS_OBJECTS = $(am_StrToBS_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToBS_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_3)
+am__StrToGrav_SOURCES_DIST = StrToGrav.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_StrToGrav_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToGrav.$(OBJEXT)
+StrToGrav_OBJECTS = $(am_StrToGrav_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToGrav_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_3)
+am__StrToJust_SOURCES_DIST = StrToJust.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_StrToJust_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToJust.$(OBJEXT)
+StrToJust_OBJECTS = $(am_StrToJust_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToJust_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_3)
+am__StrToLong_SOURCES_DIST = StrToLong.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_StrToLong_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToLong.$(OBJEXT)
+StrToLong_OBJECTS = $(am_StrToLong_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToLong_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_3)
+am__StrToOrnt_SOURCES_DIST = StrToOrnt.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_StrToOrnt_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToOrnt.$(OBJEXT)
+StrToOrnt_OBJECTS = $(am_StrToOrnt_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToOrnt_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_3)
+am__StrToShap_SOURCES_DIST = StrToShap.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_StrToShap_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	StrToShap.$(OBJEXT)
+StrToShap_OBJECTS = $(am_StrToShap_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToShap_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_3)
+am__reallocarray_SOURCES_DIST = reallocarray.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@am_reallocarray_OBJECTS = reallocarray.$(OBJEXT)
+reallocarray_OBJECTS = $(am_reallocarray_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@reallocarray_DEPENDENCIES =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -127,8 +203,17 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(EditResStream_SOURCES)
-DIST_SOURCES = $(EditResStream_SOURCES)
+SOURCES = $(CursorName_SOURCES) $(EditResStream_SOURCES) \
+	$(Lower_SOURCES) $(ReadBitmapData_SOURCES) $(StrToBS_SOURCES) \
+	$(StrToGrav_SOURCES) $(StrToJust_SOURCES) $(StrToLong_SOURCES) \
+	$(StrToOrnt_SOURCES) $(StrToShap_SOURCES) \
+	$(reallocarray_SOURCES)
+DIST_SOURCES = $(am__CursorName_SOURCES_DIST) \
+	$(am__EditResStream_SOURCES_DIST) $(am__Lower_SOURCES_DIST) \
+	$(am__ReadBitmapData_SOURCES_DIST) $(am__StrToBS_SOURCES_DIST) \
+	$(am__StrToGrav_SOURCES_DIST) $(am__StrToJust_SOURCES_DIST) \
+	$(am__StrToLong_SOURCES_DIST) $(am__StrToOrnt_SOURCES_DIST) \
+	$(am__StrToShap_SOURCES_DIST) $(am__reallocarray_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -158,7 +243,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -178,6 +262,8 @@ FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FOP = @FOP@
+GLIB_CFLAGS = @GLIB_CFLAGS@
+GLIB_LIBS = @GLIB_LIBS@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
@@ -236,6 +322,7 @@ XMUU_CFLAGS = @XMUU_CFLAGS@
 XMUU_LIBS = @XMUU_LIBS@
 XMU_CFLAGS = @XMU_CFLAGS@
 XMU_LIBS = @XMU_LIBS@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XSLTPROC = @XSLTPROC@
@@ -293,10 +380,47 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -D_CONST_X_STRING -I${top_srcdir}/include
-TESTS = $(check_PROGRAMS)
-EditResStream_SOURCES = EditResStream.c
-EditResStream_LDADD = ${top_builddir}/src/libXmu.la $(XMU_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@AM_CPPFLAGS = -D_CONST_X_STRING -I${top_srcdir}/include
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@AM_CFLAGS = $(CWARNFLAGS) $(XMU_CFLAGS) $(GLIB_CFLAGS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@XMU_TEST_LIBS = ${top_builddir}/src/libXmu.la $(XMU_LIBS) $(GLIB_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@XMUU_TEST_LIBS = ${top_builddir}/src/libXmuu.la $(XMUU_LIBS) $(GLIB_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@TESTS = $(check_PROGRAMS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@TESTS_ENVIRONMENT =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	$(MALLOC_DEBUG_ENV) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	G_TEST_SRCDIR="$(abs_srcdir)" \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@	G_TEST_BUILDDIR="$(abs_builddir)"
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@                  $(top_srcdir)/tap-driver.sh
+
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@LOG_COMPILER = $(srcdir)/tap-test
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@CursorName_SOURCES = CursorName.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@CursorName_LDADD = $(XMUU_TEST_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@EditResStream_SOURCES = EditResStream.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@EditResStream_LDADD = $(XMU_TEST_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@Lower_SOURCES = Lower.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@Lower_LDADD = $(XMUU_TEST_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@ReadBitmapData_SOURCES = ReadBitmapData.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@ReadBitmapData_LDADD = $(XMU_TEST_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@reallocarray_SOURCES = reallocarray.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@reallocarray_LDADD = $(GLIB_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToBS_SOURCES = StrToBS.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToBS_LDADD = $(XMU_TEST_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToGrav_SOURCES = StrToGrav.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToGrav_LDADD = $(XMU_TEST_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToJust_SOURCES = StrToJust.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToJust_LDADD = $(XMU_TEST_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToLong_SOURCES = StrToLong.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToLong_LDADD = $(XMU_TEST_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToOrnt_SOURCES = StrToOrnt.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToOrnt_LDADD = $(XMU_TEST_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToShap_SOURCES = StrToShap.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@StrToShap_LDADD = $(XMU_TEST_LIBS)
+EXTRA_DIST = \
+        bitmaps/plaid \
+        bitmaps/star \
+        bitmaps/xlogo64 \
+        tap-test
+
 all: all-am
 
 .SUFFIXES:
@@ -340,9 +464,39 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+CursorName$(EXEEXT): $(CursorName_OBJECTS) $(CursorName_DEPENDENCIES) $(EXTRA_CursorName_DEPENDENCIES) 
+	@rm -f CursorName$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(CursorName_OBJECTS) $(CursorName_LDADD) $(LIBS)
 EditResStream$(EXEEXT): $(EditResStream_OBJECTS) $(EditResStream_DEPENDENCIES) $(EXTRA_EditResStream_DEPENDENCIES) 
 	@rm -f EditResStream$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(EditResStream_OBJECTS) $(EditResStream_LDADD) $(LIBS)
+Lower$(EXEEXT): $(Lower_OBJECTS) $(Lower_DEPENDENCIES) $(EXTRA_Lower_DEPENDENCIES) 
+	@rm -f Lower$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(Lower_OBJECTS) $(Lower_LDADD) $(LIBS)
+ReadBitmapData$(EXEEXT): $(ReadBitmapData_OBJECTS) $(ReadBitmapData_DEPENDENCIES) $(EXTRA_ReadBitmapData_DEPENDENCIES) 
+	@rm -f ReadBitmapData$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(ReadBitmapData_OBJECTS) $(ReadBitmapData_LDADD) $(LIBS)
+StrToBS$(EXEEXT): $(StrToBS_OBJECTS) $(StrToBS_DEPENDENCIES) $(EXTRA_StrToBS_DEPENDENCIES) 
+	@rm -f StrToBS$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(StrToBS_OBJECTS) $(StrToBS_LDADD) $(LIBS)
+StrToGrav$(EXEEXT): $(StrToGrav_OBJECTS) $(StrToGrav_DEPENDENCIES) $(EXTRA_StrToGrav_DEPENDENCIES) 
+	@rm -f StrToGrav$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(StrToGrav_OBJECTS) $(StrToGrav_LDADD) $(LIBS)
+StrToJust$(EXEEXT): $(StrToJust_OBJECTS) $(StrToJust_DEPENDENCIES) $(EXTRA_StrToJust_DEPENDENCIES) 
+	@rm -f StrToJust$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(StrToJust_OBJECTS) $(StrToJust_LDADD) $(LIBS)
+StrToLong$(EXEEXT): $(StrToLong_OBJECTS) $(StrToLong_DEPENDENCIES) $(EXTRA_StrToLong_DEPENDENCIES) 
+	@rm -f StrToLong$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(StrToLong_OBJECTS) $(StrToLong_LDADD) $(LIBS)
+StrToOrnt$(EXEEXT): $(StrToOrnt_OBJECTS) $(StrToOrnt_DEPENDENCIES) $(EXTRA_StrToOrnt_DEPENDENCIES) 
+	@rm -f StrToOrnt$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(StrToOrnt_OBJECTS) $(StrToOrnt_LDADD) $(LIBS)
+StrToShap$(EXEEXT): $(StrToShap_OBJECTS) $(StrToShap_DEPENDENCIES) $(EXTRA_StrToShap_DEPENDENCIES) 
+	@rm -f StrToShap$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(StrToShap_OBJECTS) $(StrToShap_LDADD) $(LIBS)
+reallocarray$(EXEEXT): $(reallocarray_OBJECTS) $(reallocarray_DEPENDENCIES) $(EXTRA_reallocarray_DEPENDENCIES) 
+	@rm -f reallocarray$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(reallocarray_OBJECTS) $(reallocarray_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -350,7 +504,17 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CursorName.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/EditResStream.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Lower.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ReadBitmapData.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StrToBS.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StrToGrav.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StrToJust.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StrToLong.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StrToOrnt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StrToShap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reallocarray.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

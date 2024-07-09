@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates.
+ * Copyright (c) 2022, 2023, Oracle and/or its affiliates.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,14 +22,16 @@
  */
 
 /* Test code for ProtocolStream Get/Put functions in src/EditResCom.c */
+#include "config.h"
 #include <X11/Xmu/EditresP.h>
-#include <assert.h>
+#include <glib.h>
 
 static const char *test_string = "\tIt was a dark and stormy night...\n";
 
 #define FillBuffer(d, v) memset(d, v, sizeof(d))
 
-int main(void)
+static void
+test_EditResStream(void)
 {
     ProtocolStream ps = { 0, 0, NULL, NULL, NULL };
     unsigned char c;
@@ -60,40 +62,50 @@ int main(void)
     ps.current = ps.top;
 
     res = _XEditResGet8(&ps, &c);
-    assert(res == True);
-    assert(c == 8);
+    g_assert_cmpint(res, ==, True);
+    g_assert_cmpint(c, ==, 8);
 
     res = _XEditResGet16(&ps, &s);
-    assert(res == True);
-    assert(s == 16);
+    g_assert_cmpint(res, ==, True);
+    g_assert_cmpint(s, ==, 16);
 
     res = _XEditResGet16(&ps, &s);
-    assert(res == True);
-    assert(s == 0xface);
+    g_assert_cmpint(res, ==, True);
+    g_assert_cmpint(s, ==, 0xface);
 
     /* set the full value so we can make sure that in 64-bit mode we
        write to the full long value, not just 32-bits of it. */
     memset(&l, 0x0f, sizeof(l));
     res = _XEditResGet32(&ps, &l);
-    assert(res == True);
-    assert(l == 32);
+    g_assert_cmpint(res, ==, True);
+    g_assert_cmpint(l, ==, 32);
 
     memset(&l, 0x0f, sizeof(l));
     res = _XEditResGet32(&ps, &l);
-    assert(res == True);
-    assert(l == 0xbabeface);
+    g_assert_cmpint(res, ==, True);
+    g_assert_cmpint(l, ==, 0xbabeface);
 
     res = _XEditResGetString8(&ps, &str);
-    assert(res == True);
-    assert(strcmp(str, test_string) == 0);
+    g_assert_cmpint(res, ==, True);
+    g_assert_cmpstr(str, ==, test_string);
     XtFree(str);
     str = NULL;
 
     res = _XEditResGetWidgetInfo(&ps, &out);
-    assert(res == True);
-    assert(memcmp(ids, out.ids, sizeof(ids)) == 0);
+    g_assert_cmpint(res, ==, True);
+    g_assert_cmpmem(ids, sizeof(ids), out.ids, out.num_widgets * sizeof(long));
     XtFree((char *) out.ids);
     out.ids = NULL;
+}
 
-    return 0;
+int
+main(int argc, char** argv)
+{
+    g_test_init(&argc, &argv, NULL);
+    g_test_bug_base(PACKAGE_BUGREPORT);
+
+    g_test_add_func("/EditResCom/ProtocolStream",
+                    test_EditResStream);
+
+    return g_test_run();
 }

@@ -5,7 +5,7 @@ BITMAP_DEFINES = -DBITMAPDIR=\"$(includedir)/X11/bitmaps\"
 AM_CPPFLAGS = \
 	-I${top_srcdir}/include \
 	-I${top_srcdir}/include/X11/Xmu \
-	$(BITMAP_DEFINES) -D_CONST_X_STRING -D_BSD_SOURCE
+	$(BITMAP_DEFINES) -D_CONST_X_STRING
 
 AM_CFLAGS = $(CWARNFLAGS) $(XMU_CFLAGS)
 
