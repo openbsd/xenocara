@@ -44,6 +44,13 @@
 #include "cursor.h"
 #include "xcb_cursor.h"
 
+#ifdef O_CLOEXEC
+#define FOPEN_CLOEXEC "e"
+#else
+#define FOPEN_CLOEXEC ""
+#define O_CLOEXEC 0
+#endif
+
 static const char *cursor_path(struct xcb_cursor_context_t *c) {
     if (c->path == NULL) {
         c->path = getenv("XCURSOR_PATH");
@@ -76,7 +83,7 @@ _XcursorThemeInherits (const char *full)
     if (!full)
         return NULL;
 
-    f = fopen (full, "r");
+    f = fopen (full, "r" FOPEN_CLOEXEC);
     if (f)
     {
         while (fgets (line, sizeof (line), f))
@@ -84,15 +91,14 @@ _XcursorThemeInherits (const char *full)
             if (!strncmp (line, "Inherits", 8))
             {
                 char    *l = line + 8;
-                char    *r;
                 while (*l == ' ') l++;
                 if (*l != '=') continue;
                 l++;
                 while (*l == ' ') l++;
-                result = malloc (strlen (l));
+                result = malloc (strlen (l) + 1);
                 if (result)
                 {
-                    r = result;
+                    char *r = result;
                     while (*l)
                     {
                         while (XcursorSep(*l) || XcursorWhite (*l)) l++;
@@ -155,7 +161,7 @@ static int open_cursor_file(xcb_cursor_context_t *c, const char *theme, const ch
             free(themedir);
             return -1;
         }
-        fd = open(full, O_RDONLY);
+        fd = open(full, O_RDONLY | O_CLOEXEC);
         free(full);
         if (fd == -1 && inherits == NULL) {
             if (asprintf(&full, "%s/index.theme", themedir) == -1) {

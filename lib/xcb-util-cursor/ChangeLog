@@ -1,3 +1,41 @@
+commit c393b71fff76fe8627d0e95c53e756615f84d7a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 19 13:30:26 2023 -0700
+
+    xcb-util-cursor 0.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 103bccad6f4a421ede6a0ef2eecc2749ff9be083
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 3 20:25:43 2021 -0400
+
+    cppcheck style-fixes in _XcursorThemeInherits
+    
+    Copied from libxcursor@f807ac9c786714ef4e86ad7edfa60f92baf0b4a6
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 12ea0a8599ecba7663899d7e6ab82f3a27e506f0
+Author: shubham shrivastav <shubham.sh@samsung.com>
+Date:   Fri Jun 5 13:36:22 2015 -0700
+
+    Insufficient memory for terminating null of string in _XcursorThemeInherits
+    
+    Copied from libxcursor@897213f36baf6926daf6d192c709cf627aa5fd05
+    
+    Reported-by: @ithinkapps in libxcb-cursor issue #11
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9b9ec3cfd1db9fac09b119715dabc36aaa77f497
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 28 11:33:43 2023 -0700
+
+    Set close-on-exec when opening files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3d7e713e85af18d7e52cafdc9d20a2715048dee7
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 18 09:58:51 2022 -0700
@@ -170,7 +208,7 @@ Date:   Wed Mar 25 23:06:23 2015 +0100
     set version to 0.1.2
 
 commit cf26479ece9ab9e04616bc10ba674d88a284e5b0
-Author: Martin Gräßlin < <mgraesslin@kde.org>
+Author: Martin Gräßlin <mgraesslin@kde.org>
 Date:   Tue Mar 17 18:41:07 2015 +0100
 
     Perform safety check before trying to load glyph cursor
