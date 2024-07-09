@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.65 2023/05/07 06:55:21 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.66 2024/07/09 09:27:00 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -146,7 +146,9 @@ all:	config.status
 .endif
 
 autoreconf:
-	cd ${_SRCDIR}; ${AUTOTOOLS_ENV} exec autoreconf -v --install --force
+	cd ${_SRCDIR}; ${AUTOTOOLS_ENV} exec autoreconf -v --install --force 
+	find ${_SRCDIR} \( -name 'config.sub' -o -name 'config.guess' \
+		-o -name 'install-sh' \) -exec chmod 0644 {} +
 
 .if !target(config.status)
 config.status:
