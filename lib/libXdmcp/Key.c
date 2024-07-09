@@ -31,6 +31,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/X.h>
 #include <X11/Xmd.h>
 #include <X11/Xdmcp.h>
+#include <stdlib.h>
 
 #ifndef HAVE_ARC4RANDOM_BUF
 static void
@@ -41,11 +42,8 @@ getbits (long data, unsigned char *dst)
     dst[2] = (data >> 16) & 0xff;
     dst[3] = (data >> 24) & 0xff;
 }
-#endif
 
 #define Time_t time_t
-
-#include <stdlib.h>
 
 #if defined(HAVE_LRAND48) && defined(HAVE_SRAND48)
 #define srandom srand48
@@ -57,8 +55,6 @@ getbits (long data, unsigned char *dst)
 #define random rand
 #define getpid(x) _getpid(x)
 #endif
-
-#ifndef HAVE_ARC4RANDOM_BUF
 
 /* Solaris 11.3.0 - 11.4.15 only define getentropy() in <sys/random.h> */
 #if HAVE_GETENTROPY && HAVE_SYS_RANDOM_H

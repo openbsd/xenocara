@@ -1,3 +1,114 @@
+commit 1192d3bc407348ff316bd3bffc791b3ac73f591b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 13:31:40 2024 -0800
+
+    libXdmcp 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa41f9bfd7a0e57ba3e0f40d9a96e1dba1deeb4a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 23 12:23:17 2023 -0700
+
+    gitlab CI: add xz-utils to container for "make distcheck"
+    
+    Also update to latest ci-templates
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2ed49718a8ff8710bfebf6c286df9e3b5df754c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 23 12:16:29 2023 -0700
+
+    XdmcpWriteHeader: use calloc instead of malloc to alloc buffer
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f59fbae7a1890b243c69f0ff20099c6d6aa93c4e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 23 12:11:31 2023 -0700
+
+    XdmcpWriteHeader: drop unnecessary cast of free() argument
+    
+    Clears clang complaint:
+    
+    Write.c:48:7: warning: cast from 'BYTE *' (aka 'unsigned char *') to
+      'unsigned long *' increases required alignment from 1 to 8 [-Wcast-align]
+            free((unsigned long *)(buffer->data));
+                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6e6917dd5918f5ae520f71e53128eee3267656b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 23 12:00:08 2023 -0700
+
+    Clear -Wunused-macros warnings when arc4random_buf() is available
+    
+    Reported by clang:
+    
+      Key.c:46:9: warning: macro is not used [-Wunused-macros]
+      #define Time_t time_t
+              ^
+      Key.c:52:9: warning: macro is not used [-Wunused-macros]
+      #define random lrand48
+              ^
+      Key.c:51:9: warning: macro is not used [-Wunused-macros]
+      #define srandom srand48
+              ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f431e5b6c266a751dfabb19be286baf08393516a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 30 10:48:58 2023 -0700
+
+    Xdmcp.h: add access attributes to function prototypes
+    
+    May aid in static analysis by gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eaceeee93c3b9310be5422b9ed0450265779b491
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:38: warning: The macro `AC_LIBTOOL_WIN32_DLL' is obsolete.
+    configure.ac:38: You should run autoupdate.
+    aclocal.m4:11889: AC_LIBTOOL_WIN32_DLL is expanded from...
+    configure.ac:38: the top level
+    configure.ac:38: warning: AC_LIBTOOL_WIN32_DLL: Remove this warning and the call to _LT_SET_OPTION when you
+    configure.ac:38: put the 'win32-dll' option into LT_INIT's first parameter.
+    ./lib/autoconf/general.m4:2434: AC_DIAGNOSE is expanded from...
+    aclocal.m4:11889: AC_LIBTOOL_WIN32_DLL is expanded from...
+    configure.ac:38: the top level
+    configure.ac:39: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:39: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:39: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 45d7acc61ce08280dead99e1fb57ad07ca7eca1b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:22:37 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 7f5677e87df575298f62320d76408823b54cd883
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Nov 18 15:05:39 2022 -0800
@@ -585,7 +696,7 @@ Date:   Thu Dec 16 17:55:30 2010 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit b64cac63e0bcdd87bbfd19678552fd7ed1a3b58f
-Author: Cristian Rodríguez  <cristian.rodriguez@opensuse.org>
+Author: Cristian Rodríguez <cristian.rodriguez@opensuse.org>
 Date:   Tue Dec 14 15:40:20 2010 -0500
 
     Export only public API symbols
@@ -1102,7 +1213,7 @@ Date:   Thu May 19 00:10:07 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit 2f31285482451b8ed44b0b61969a7f324dbe905a
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue May 17 14:43:47 2005 +0000
 
     Tue May 17 10:38:30 2005 Søren Sandmann <sandmann@redhat.com>
@@ -1129,7 +1240,7 @@ Date:   Sat May 14 07:46:48 2005 +0000
         source can reference them with <X11/...>.
 
 commit 0ea8a9fde966a2fbdc075e4cfc47235d3c899022
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu May 12 16:27:25 2005 +0000
 
     Thu May 12 12:24:16 2005 Søren Sandmann <sandmann@redhat.com>
@@ -1137,7 +1248,7 @@ Date:   Thu May 12 16:27:25 2005 +0000
     add Makefile.am
 
 commit 845dff36906d99a80ea920a8d0efb73bd0b88d56
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu May 12 16:12:34 2005 +0000
 
     Make xtrans install in $(includedir)/X11/Xtrans. Remove all references to
