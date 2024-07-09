@@ -171,7 +171,7 @@ Status XeviGetVisualInfo(
 	sz_xInfo = rep.n_info * sz_xExtendedVisualInfo;
 	sz_conflict = rep.n_conflicts * sizeof(VisualID);
 	sz_xConflict = rep.n_conflicts * sz_VisualID32;
-	*evi_return = Xcalloc(sz_info + sz_conflict, 1);
+	*evi_return = Xcalloc(1, sz_info + sz_conflict);
 	temp_xInfo = Xmalloc(sz_xInfo);
 	temp_conflict = Xmalloc(sz_xConflict);
     } else {

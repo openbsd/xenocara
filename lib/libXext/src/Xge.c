@@ -188,13 +188,14 @@ _xgeGetExtensionVersion(Display* dpy,
 
     if (!_XReply (dpy, (xReply *) &rep, 0, xTrue))
     {
-        Xfree(info);
         return NULL;
     }
 
     vers = Xmalloc(sizeof(XGEVersionRec));
-    vers->major_version = rep.majorVersion;
-    vers->minor_version = rep.minorVersion;
+    if (vers != NULL) {
+        vers->major_version = rep.majorVersion;
+        vers->minor_version = rep.minorVersion;
+    }
     return vers;
 }
 
@@ -207,7 +208,7 @@ _xgeDpyClose(Display* dpy, XExtCodes* codes)
 {
     XExtDisplayInfo *info = _xgeFindDisplay(dpy);
 
-    if (info->data != NULL) {
+    if (info != NULL && info->data != NULL) {
         XGEData* xge_data = (XGEData*)info->data;
 
         if (xge_data->extensions)

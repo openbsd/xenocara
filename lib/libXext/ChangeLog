@@ -1,3 +1,126 @@
+commit 3826a58d190c2d8093d3586cb33867668cbb4553
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 4 13:39:32 2024 -0800
+
+    libXext 1.3.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6cb21433d745abea3a161a6fc8e141f7e08b2c27
+Author: Sam James <sam@gentoo.org>
+Date:   Tue Nov 7 23:03:27 2023 +0000
+
+    XEVI: fix -Walloc-size
+    
+    GCC 14 introduces a new -Walloc-size included in -Wextra which gives (when forced
+    to be an error):
+    ```
+    XEVI.c:174:21: error: allocation of insufficient size '1' for type 'ExtendedVisualInfo' with size '48' [-Werror=alloc-size]
+      174 |         *evi_return = Xcalloc(sz_info + sz_conflict, 1);
+          |                     ^
+    ```
+    
+    The calloc prototype is:
+    ```
+    void *calloc(size_t nmemb, size_t size);
+    ```
+    
+    (Xcalloc is esenetially the same.)
+    
+    So, just swap the number of members and size arguments to match the prototype, as
+    we're initialising 1 element of size `sz_info + sz_conflict`. GCC then sees we're not
+    doing anything wrong.
+    
+    Signed-off-by: Sam James <sam@gentoo.org>
+
+commit e8db0fc7c047ccdd6c11381681b184bbe9ea8270
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 09:57:09 2023 -0700
+
+    _xgeDpyClose: handle NULL return from _xgeFindDisplay
+    
+    Resolves gcc warning:
+    Xge.c: In function ‘_xgeDpyClose’:
+    Xge.c:211:13: warning: dereference of NULL ‘info’ [CWE-476]
+      [-Wanalyzer-null-dereference]
+      211 |     if (info->data != NULL) {
+          |         ~~~~^~~~~~
+    
+    Fixes: 850263a ("Add GenericEvent extension (XGE).")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7bed7727a86096a0f83a785a5a9a2ecad50507d9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 09:41:30 2023 -0700
+
+    Check for malloc failure in _xgeGetExtensionVersion
+    
+    Handles gcc warning:
+    Xge.c: In function ‘_xgeGetExtensionVersion’:
+    Xge.c:196:25: warning: dereference of possibly-NULL ‘vers’ [CWE-690]
+      [-Wanalyzer-possible-null-dereference]
+    
+    Fixes: 850263a ("Add GenericEvent extension (XGE).")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fe0c5f29cdd80d8d2c42f7c21a7077b6d744df9f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 09:35:01 2023 -0700
+
+    _xgeGetExtensionVersion should not free info on failure
+    
+    Flagged by gcc:
+    Xge.c: In function ‘_xgeCheckExtInit’:
+    Xge.c:154:20: warning: use after ‘free’ of ‘info’ [CWE-416]
+     [-Wanalyzer-use-after-free]
+    
+    _xgeCheckExtInit passes the info pointer to _xgeGetExtensionVersion
+    and continues to use it after the call returns.
+    
+    Fixes: 850263a ("Add GenericEvent extension (XGE).")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit de2ebd62c1eb8fe16c11aceac4a6981bda124cf4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:19: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:19: You should run autoupdate.
+    m4/libtool.m4:100: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:19: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 50cac0209f96469d3a332a59a9c8d6d658edaf5f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 16 19:02:48 2023 -0800
+
+    configure: raise minimum autoconf requirement to 2.70
+    
+    Needed for builds on NetBSD to work correctly, since it depends on
+    AC_USE_SYSTEM_EXTENSIONS defining _OPENBSD_SOURCE to expose the
+    prototype for reallocarray() in the system headers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e8556ab06e03b59e9a512eb02955247efd4c4054
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 10:42:59 2022 -0800
+
+    Wrap Xext*CheckExtension() in do { ... } while(0)
+    
+    Makes macro expansion safer and eliminates -Wextra-semi-stmt warnings
+    from clang every time it is called due to semicolon after bracket.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 67e82cc395f44faddd83ec3d0d21624fe91c6fc0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 28 18:54:39 2022 -0700
@@ -2178,7 +2301,7 @@ Date:   Thu May 19 00:10:07 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit dc7cb253ba14b78ef0f863995bd0fc5a6a0ee017
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed May 18 18:52:39 2005 +0000
 
     - Link Xext to /lib/Xext/src rather than /lib/Xext
@@ -2186,13 +2309,13 @@ Date:   Wed May 18 18:52:39 2005 +0000
     - Remove unnecessary include of ImUtil.h from XShm.c
 
 commit 279e13a6a36bfeb3c8aa4272fdd6d4bcef9723a6
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed May 18 18:50:58 2005 +0000
 
     Add man/Makefile.am and src/Makefile.am
 
 commit 3dde0d733cad58f01c3d667d7e6bc0dd6ca40608
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed May 18 18:50:23 2005 +0000
 
     - Add build system for Xext
