@@ -181,12 +181,12 @@ static void
 CreateGC(Widget w)
 {
     SmeLineObject entry = (SmeLineObject)w;
-    XGCValues values;
     XtGCMask mask = GCForeground | GCGraphicsExposures | GCLineWidth;
-
-    values.foreground = entry->sme_line.foreground;
-    values.graphics_exposures = False;
-    values.line_width = entry->sme_line.line_width;
+    XGCValues values = {
+        .foreground = entry->sme_line.foreground,
+        .graphics_exposures = False,
+        .line_width = entry->sme_line.line_width
+    };
 
     if (entry->sme_line.stipple != XtUnspecifiedPixmap) {
 	values.stipple = entry->sme_line.stipple;

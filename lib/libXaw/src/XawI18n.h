@@ -38,29 +38,6 @@ in this Software without prior written authorization from The Open Group.
 #include <wchar.h>
 #endif
 
-#if defined(AIXV3) || defined(__SCO__)
-#include <ctype.h>
-#endif
-
-#ifdef NCR
-#define iswspace(c) _Xaw_iswspace(c)
-int _Xaw_iswspace
-(
- wchar_t		c
- );
-#endif
-
-#ifdef sony
-#ifndef SVR4
-#include <jctype.h>
-#define iswspace(c) jisspace(c)
-#endif
-#endif
-
-#ifdef QNX4
-#define toascii( c ) ((unsigned)(c) & 0x007f)
-#endif
-
 #include <stdlib.h>
 
 #ifdef USE_XWCHAR_STRING
@@ -103,10 +80,16 @@ wchar_t _Xaw_atowc
  );
 
 #ifndef HAS_ISW_FUNCS
-#include <ctype.h>
-#ifndef iswspace
-#define iswspace(c) (isascii(c) && isspace(toascii(c)))
-#endif
+#  include <ctype.h>
+#  ifndef isascii
+#    define isascii(c)  ((unsigned char)(c) < 127)
+#  endif
+#  ifndef toascii
+#    define toascii(c)  ((c) & 0x7f)
+#  endif
+#  ifndef iswspace
+#    define iswspace(c) (isascii(c) && isspace(toascii(c)))
+#  endif
 #endif
 
 #if !defined(iswalnum) && !defined(HAVE_ISWALNUM)

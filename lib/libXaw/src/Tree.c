@@ -206,9 +206,6 @@ WidgetClass treeWidgetClass = (WidgetClass) &treeClassRec;
 static void
 initialize_dimensions(Dimension **listp, int *sizep, int n)
 {
-    int i;
-    Dimension *l;
-
     if (!*listp) {
 	*listp = (Dimension *) XtCalloc ((unsigned int) n,
 					 (unsigned int) sizeof(Dimension));
@@ -221,9 +218,14 @@ initialize_dimensions(Dimension **listp, int *sizep, int n)
 	if (!*listp) {
 	    *sizep = 0;
 	    return;
+	} else {
+	    int i;
+	    Dimension *l;
+
+	    for (i = *sizep, l = (*listp) + i; i < n; i++, l++)
+		*l = 0;
+	    *sizep = n;
 	}
-	for (i = *sizep, l = (*listp) + i; i < n; i++, l++) *l = 0;
-	*sizep = n;
     }
     return;
 }
@@ -282,7 +284,8 @@ static void
 delete_node(Widget parent, Widget node)
 {
     TreeConstraints pc;
-    int pos, i;
+    int pos;
+    int i;
 
     /*
      * Make sure the parent exists.
@@ -587,6 +590,8 @@ static void
 XawTreeRedisplay(Widget gw, XEvent *event _X_UNUSED, Region region _X_UNUSED)
 {
     TreeWidget tw = (TreeWidget) gw;
+    Cardinal i;
+    int j;
 
 #ifndef OLDXAW
     if (tw->tree.display_list)
@@ -597,8 +602,6 @@ XawTreeRedisplay(Widget gw, XEvent *event _X_UNUSED, Region region _X_UNUSED)
      * If the Tree widget is visible, visit each managed child.
      */
     if (tw->core.visible) {
-	Cardinal i;
-	int j;
 	Display *dpy = XtDisplay (tw);
 	Window w = XtWindow (tw);
 
@@ -722,10 +725,10 @@ static void
 compute_bounding_box_subtree(TreeWidget tree, Widget w, int depth)
 {
     TreeConstraints tc = TREE_CONSTRAINT(w);  /* info attached to all kids */
-    int i;
     Bool horiz = IsHorizontal (tree);
     Dimension newwidth, newheight;
     Dimension bw2 = (Dimension)(w->core.border_width * 2);
+    int i;
 
     /*
      * Set the max-size per level.
@@ -792,10 +795,9 @@ compute_bounding_box_subtree(TreeWidget tree, Widget w, int depth)
 static void
 set_positions(TreeWidget tw, Widget w, int level)
 {
-    int i;
-
     if (w) {
 	TreeConstraints tc = TREE_CONSTRAINT(w);
+	int i;
 
 	if (level > 0) {
 	    /*
@@ -832,15 +834,13 @@ static void
 arrange_subtree(TreeWidget tree, Widget w, int depth, int x, int y)
 {
     TreeConstraints tc = TREE_CONSTRAINT(w);  /* info attached to all kids */
-    TreeConstraints firstcc, lastcc;
-    int i;
     int newx, newy;
     Bool horiz = IsHorizontal (tree);
     Widget child = NULL;
     Dimension tmp;
     Dimension bw2 = (Dimension)(w->core.border_width * 2);
     Bool relayout = True;
-
+    int i;
 
     /*
      * If no children, then just lay out where requested.
@@ -903,10 +903,10 @@ arrange_subtree(TreeWidget tree, Widget w, int depth, int x, int y)
     /*
      * now layout parent between first and last children
      */
-    if (relayout) {
+    if (relayout && (child != NULL)) {
 	Position adjusted;
-	firstcc = TREE_CONSTRAINT (tc->tree.children[0]);
-	lastcc = TREE_CONSTRAINT (child);
+	TreeConstraints firstcc = TREE_CONSTRAINT (tc->tree.children[0]);
+	TreeConstraints lastcc = TREE_CONSTRAINT (child);
 
 	/* Adjustments are disallowed if they result in a position above
          * or to the left of the originally requested position, because

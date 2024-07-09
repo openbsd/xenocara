@@ -216,6 +216,9 @@ ViewportClassRec viewportClassRec = {
   /* form */
   {
     Layout,				/* layout */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
   /* viewport */
   {
@@ -441,10 +444,6 @@ XawViewportChangeManaged(Widget widget)
 	    ((FormWidget)w, XtWidth(w), XtHeight(w), True /* True? */);
 	}
     }
-
-#ifdef notdef
-    (*Superclass->composite_class.change_managed)(widget);
-#endif
 }
 
 static void
@@ -472,19 +471,18 @@ RedrawThumbs(ViewportWidget w)
 static void
 SendReport(ViewportWidget w, unsigned int changed)
 {
-    XawPannerReport rep;
-
     if (w->viewport.report_callbacks) {
 	Widget child = w->viewport.child;
 	Widget clip = w->viewport.clip;
-
-	rep.changed = changed;
-	rep.slider_x = (Position) -XtX(child);	/* child is canvas */
-	rep.slider_y = (Position) -XtY(child);	/* clip is slider */
-	rep.slider_width = XtWidth(clip);
-	rep.slider_height = XtHeight(clip);
-	rep.canvas_width = XtWidth(child);
-	rep.canvas_height = XtHeight(child);
+	XawPannerReport rep = {
+	    .changed = changed,
+	    .slider_x = (Position) -XtX(child),	/* child is canvas */
+	    .slider_y = (Position) -XtY(child),	/* clip is slider */
+	    .slider_width = XtWidth(clip),
+	    .slider_height = XtHeight(clip),
+	    .canvas_width = XtWidth(child),
+	    .canvas_height = XtHeight(child)
+	};
 	XtCallCallbackList((Widget)w, w->viewport.report_callbacks,
 			   (XtPointer)&rep);
     }

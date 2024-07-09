@@ -61,6 +61,12 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xaw/Toggle.h>
 #include "XawI18n.h"
 
+#ifdef O_CLOEXEC
+#define FOPEN_CLOEXEC "e"
+#else
+#define FOPEN_CLOEXEC ""
+#endif
+
 static _Xconst char* INSERT_FILE = "Enter Filename:";
 static _Xconst char* SEARCH_LABEL_1 = "Use <Tab> to change fields.";
 static _Xconst char* SEARCH_LABEL_2 = "Use ^q<Tab> for <Tab>.";
@@ -305,7 +311,8 @@ InsertFileNamed(Widget tw, String str)
     XawTextBlock text;
     XawTextPosition pos;
 
-    if (str == NULL || strlen(str) == 0 || (file = fopen(str, "r")) == NULL)
+    if (str == NULL || strlen(str) == 0 ||
+        (file = fopen(str, "r" FOPEN_CLOEXEC)) == NULL)
 	return (False);
 
     pos = XawTextGetInsertionPoint(tw);

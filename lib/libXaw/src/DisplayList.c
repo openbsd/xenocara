@@ -122,7 +122,6 @@ void
 XawRunDisplayList(Widget w, _XawDisplayList *list,
 		       XEvent *event, Region region)
 {
-  XawDLProc *proc;
   Cardinal i;
 
   if (!XtIsRealized(w))
@@ -130,7 +129,7 @@ XawRunDisplayList(Widget w, _XawDisplayList *list,
 
   for (i = 0; i < list->num_procs; i++)
     {
-      proc = list->procs[i];
+      XawDLProc *proc = list->procs[i];
       proc->proc(w, proc->args, proc->data->data, event, region);
     }
 }
@@ -236,8 +235,6 @@ _XawDisplayList *XawCreateDisplayList(String string, Screen *screen,
   char cname[64], fname[64], aname[1024];
   Cardinal i;
   String cp;
-  String fp;
-  String lp;
   int status;
 
   xlibc = XawGetDisplayListClass(xlib);
@@ -264,6 +261,8 @@ _XawDisplayList *XawCreateDisplayList(String string, Screen *screen,
   status = 0;
   while (status != DLEOF)
     {
+      String fp, lp;
+
       lp = cp;
       cp = read_token(cp, fname, sizeof(fname), &status);
 
@@ -449,16 +448,14 @@ void
 XawDestroyDisplayList(_XawDisplayList *dlist)
 {
   Cardinal i, j;
-  XawDLProc *proc;
-  XawDLData *data;
 
   if (!dlist)
     return;
 
   for (i = 0; i < dlist->num_procs; i++)
     {
-      proc = dlist->procs[i];
-      data = proc->data;
+      XawDLProc *proc = dlist->procs[i];
+      XawDLData *data = proc->data;
 
       if (data)
 	{
@@ -707,7 +704,6 @@ DlXPoints(Widget w, XtPointer args, XtPointer data, int id)
 {
   XawDLPositionPtr *pos_ptr = (XawDLPositionPtr *)args;
   XawXlibData *xdata = (XawXlibData *)data;
-  XawDLPosition *pos;
   XPoint points_buf[16];
   XPoint *points;
   Display *display;
@@ -719,7 +715,7 @@ DlXPoints(Widget w, XtPointer args, XtPointer data, int id)
 
   for (i = j = 0; i < num_points; i++, j = i << 1)
     {
-      pos = &pos_ptr->pos[j];
+      XawDLPosition *pos = &pos_ptr->pos[j];
       points[i].x = X_ARG(pos[0]);
       points[i].y = Y_ARG(pos[1]);
     }
@@ -738,7 +734,7 @@ DlXPoints(Widget w, XtPointer args, XtPointer data, int id)
 	      points[i].y = (short)(points[i].y + ypad);
 	    }
 	}
-      else
+      else if (num_points != 0)
 	{
 	  points[0].x = (short)(points[0].x + xpad);
 	  points[0].y = (short)(points[0].y + ypad);
@@ -888,12 +884,14 @@ DlMask(Widget w, XtPointer args _X_UNUSED, XtPointer data,
     XSetRegion(display, xdata->gc, region);
   else if (event)
     {
-      XRectangle rect;
+      XRectangle rect =
+	{
+	  .x = (short)event->xexpose.x,
+	  .y = (short)event->xexpose.y,
+	  .width = (unsigned short)event->xexpose.width,
+	  .height = (unsigned short)event->xexpose.height
+	};
 
-      rect.x = (short)event->xexpose.x;
-      rect.y = (short)event->xexpose.y;
-      rect.width = (unsigned short)event->xexpose.width;
-      rect.height = (unsigned short)event->xexpose.height;
       XSetClipRectangles(display, xdata->gc, 0, 0, &rect, 1, Unsorted);
     }
 }
@@ -916,7 +914,7 @@ DlLineWidth(Widget w, XtPointer args, XtPointer data,
   XawXlibData *xdata = (XawXlibData *)data;
   unsigned line_width = (unsigned)(unsigned long)args;
 
-  if (xdata->values.line_width != line_width)
+  if ((unsigned)xdata->values.line_width != line_width)
     {
       xdata->mask |= GCLineWidth;
       xdata->values.line_width = (int)line_width;
@@ -938,7 +936,6 @@ DlDrawSegments(Widget w, XtPointer args, XtPointer data,
 {
   XawDLPositionPtr *pos_ptr = (XawDLPositionPtr *)args;
   XawXlibData *xdata = (XawXlibData *)data;
-  XawDLPosition *pos;
   XSegment *segments;
   XSegment segments_buf[8];
   Display *display;
@@ -950,7 +947,7 @@ DlDrawSegments(Widget w, XtPointer args, XtPointer data,
 
   for (i = j = 0; i < num_segments; i++, j = i << 2)
     {
-      pos = &pos_ptr->pos[j];
+      XawDLPosition *pos = &pos_ptr->pos[j];
       segments[i].x1 = X_ARG(pos[0]);
       segments[i].y1 = Y_ARG(pos[1]);
       segments[i].x2 = X_ARG(pos[2]);
@@ -1323,10 +1320,8 @@ DlClipRectangles(Widget w, XtPointer args, XtPointer data,
 {
   XawDLPositionPtr *pos_ptr = (XawDLPositionPtr *)args;
   XawXlibData *xdata = (XawXlibData *)data;
-  XawDLPosition *pos;
   XRectangle *rects;
   XRectangle rects_buf[8];
-  Position x1, y1, x2, y2;
   Cardinal num_rects, i, j;
 
   num_rects = pos_ptr->num_pos>>2;
@@ -1334,11 +1329,11 @@ DlClipRectangles(Widget w, XtPointer args, XtPointer data,
 
   for (i = j = 0; i < num_rects; i++, j = i << 2)
     {
-      pos = &pos_ptr->pos[j];
-      x1 = X_ARG(pos[0]);
-      y1 = Y_ARG(pos[1]);
-      x2 = X_ARG(pos[2]);
-      y2 = Y_ARG(pos[3]);
+      XawDLPosition *pos = &pos_ptr->pos[j];
+      Position x1 = X_ARG(pos[0]);
+      Position y1 = Y_ARG(pos[1]);
+      Position x2 = X_ARG(pos[2]);
+      Position y2 = Y_ARG(pos[3]);
       rects[i].x = XawMin(x1, x2);
       rects[i].y = XawMin(y1, y2);
       rects[i].width = (unsigned short)(XawMax(x1, x2) - rects[i].x);
@@ -1751,7 +1746,10 @@ _Xaw_Xlib_ArgsInitProc(String proc_name, String *params, Cardinal *num_params,
       break;
     case LWIDTH:
       if (*num_params == 1)
-	retval = (void *)read_int((char *)params[0], NULL);
+	{
+	  long x = read_int((char *)params[0], NULL);
+	  retval = (void *)x;
+	}
       break;
     case ARCMODE:
       if (*num_params == 1)
@@ -1896,7 +1894,10 @@ _Xaw_Xlib_ArgsInitProc(String proc_name, String *params, Cardinal *num_params,
       break;
     case PLANEMASK:
       if (*num_params == 1)
-	retval = (void *)read_int((char *)params[0], NULL);
+	{
+	  long x = read_int((char *)params[0], NULL);
+	  retval = (void *)x;
+	}
       break;
     case DSTRING:
     case PSTRING:
@@ -1914,7 +1915,10 @@ _Xaw_Xlib_ArgsInitProc(String proc_name, String *params, Cardinal *num_params,
       break;
     case FONT:
       if (*num_params == 1)
-	retval = (void *)XLoadFont(DisplayOfScreen(screen), params[0]);
+	{
+	  Font x = XLoadFont(DisplayOfScreen(screen), params[0]);
+	  retval = (void *)x;
+	}
       break;
     case DASHES:
       if (*num_params && *num_params < 127)
@@ -1942,7 +1946,10 @@ _Xaw_Xlib_ArgsInitProc(String proc_name, String *params, Cardinal *num_params,
       if (*num_params == 1)
 	{
 	  if (isdigit((unsigned char)params[0][0]) || params[0][0] == '+' || params[0][0] == '-')
-	    retval = (void *)read_int((char *)params[0], NULL);
+	    {
+	      long x = read_int((char *)params[0], NULL);
+	      retval = (void *)x;
+	    }
 	  else if (XmuCompareISOLatin1(params[0], "true") == 0 ||
 	    XmuCompareISOLatin1(params[0], "on") == 0)
 	    retval = (void *)True;
@@ -2125,7 +2132,7 @@ Bool XawDeclareDisplayListProc(XawDLClass *lc, String name,
   if (!lc || !proc || !name || name[0] == '\0')
     return (False);
 
-  if ((info = _XawFindDLInfo(lc, name)) != NULL)
+  if (_XawFindDLInfo(lc, name) != NULL)
     /* Since the data structures to the displayList classes are(should be)
      * opaque, it is not a good idea to allow overriding a displayList
      * procedure; it's better to choose another name or class name!

@@ -316,6 +316,9 @@ ScrollbarClassRec scrollbarClassRec = {
   /* simple */
   {
     XtInheritChangeSensitive,		/* change_sensitive */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
   /* scrollbar */
   {

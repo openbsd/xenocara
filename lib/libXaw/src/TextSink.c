@@ -198,6 +198,9 @@ TextSinkClassRec textSinkClassRec = {
     MaxHeight,				/* MaxHeight */
     SetTabs,				/* SetTabs */
     GetCursorBounds,			/* GetCursorBounds */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
 };
 
@@ -423,10 +426,10 @@ ClearToBackground(Widget w, int x, int y,
     TextWidget xaw = (TextWidget)XtParent(w);
     Position x1, y1, x2, y2;
 
-    x1 = (XawMax(x, xaw->text.r_margin.left));
-    y1 = (XawMax(y, xaw->text.r_margin.top));
-    x2 = (XawMin(x + (int)width, (int)XtWidth(xaw) - xaw->text.r_margin.right));
-    y2 = (XawMin(y + (int)height, (int)XtHeight(xaw) - xaw->text.r_margin.bottom));
+    x1 = (Position) (XawMax(x, xaw->text.r_margin.left));
+    y1 = (Position) (XawMax(y, xaw->text.r_margin.top));
+    x2 = (Position) (XawMin(x + (int)width, (int)XtWidth(xaw) - xaw->text.r_margin.right));
+    y2 = (Position) (XawMin(y + (int)height, (int)XtHeight(xaw) - xaw->text.r_margin.bottom));
 
     x = (int)x1;
     y = (int)y1;
@@ -939,15 +942,6 @@ XawTextSinkPreparePaint(Widget w, int y, int line, XawTextPosition from,
 	(w, y, line, from, to, highlight);
 }
 
-#if 0
-/*ARGSUSED*/
-static void
-PreparePaint(Widget w, int y, int line, XawTextPosition from, XawTextPosition to,
-	     Bool highlight)
-{
-}
-#endif
-
 void
 XawTextSinkDoPaint(Widget w)
 {
@@ -955,14 +949,6 @@ XawTextSinkDoPaint(Widget w)
 
     (*cclass->text_sink_class.extension->DoPaint)(w);
 }
-
-#if 0
-/*ARGSUSED*/
-static void
-DoPaint(Widget w)
-{
-}
-#endif
 
 Bool
 XawTextSinkEndPaint(Widget w)

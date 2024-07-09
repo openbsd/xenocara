@@ -1,13 +1,5 @@
 lib_LTLIBRARIES =
 
-#
-# This doesn't appear to be used on any
-# current systems -- it requires SUNSHLIB and !SHAREDCODE,
-# but only sunLib.rules defines SUNSHLIB and that file also
-# always defines SHAREDCODE. Go figure
-#
-# SHAREDLIB_SOURCES = sharedlib.c
-
 COMMON_SOURCES = \
 	Actions.c \
 	AllWidgets.c \
@@ -138,5 +130,3 @@ endif
 endif
 
 endif
-
-EXTRA_DIST = sharedlib.c

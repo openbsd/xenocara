@@ -272,6 +272,9 @@ static CompositeClassExtensionRec extension_rec = {
   XtCompositeExtensionVersion,		/* version */
   sizeof(CompositeClassExtensionRec),	/* record_size */
   True,					/* accepts_objects */
+#ifndef OLDXAW
+  False,				/* allows_change_managed_set */
+#endif
 };
 
 #define Superclass	(&overrideShellClassRec)
@@ -1070,7 +1073,9 @@ CreateLabel(Widget w)
 	    *next_child = *child;
 	next_child = child;
     }
-    *child = (Widget)smw->simple_menu.label;
+
+    if (child != NULL)
+	*child = (Widget)smw->simple_menu.label;
 }
 
 /*
@@ -1104,8 +1109,6 @@ Layout(Widget w, Dimension *width_ret, Dimension *height_ret)
     int width_kid, height_kid, tmp_w, tmp_h;
     short vadd, hadd, x_ins, y_ins;
     Dimension *widths;
-
-    height = 0;
 
     if (XtIsSubclass(w, simpleMenuWidgetClass)) {
 	smw = (SimpleMenuWidget)w;
@@ -1196,7 +1199,7 @@ Layout(Widget w, Dimension *width_ret, Dimension *height_ret)
 	++n;
     }
 
-    height = (tmp_h + smw->simple_menu.bottom_margin);
+    height = (Dimension)(tmp_h + smw->simple_menu.bottom_margin);
     width = (Dimension)(width + tmp_w);
 
     if (smw->simple_menu.label && width < XtWidth(smw->simple_menu.label)) {
@@ -1306,12 +1309,14 @@ AddPositionAction(XtAppContext app_con, XPointer data _X_UNUSED)
 static Widget
 FindMenu(Widget widget, String name)
 {
-    Widget w, menu;
+    Widget w;
 
-    for (w = widget; w != NULL; w = XtParent(w))
-	if ((menu = XtNameToWidget(w, name)) != NULL)
+    for (w = widget; w != NULL; w = XtParent(w)) {
+	Widget menu = XtNameToWidget(w, name);
+
+	if (menu != NULL)
 	    return (menu);
-
+    }
     return (NULL);
 }
 
@@ -1458,11 +1463,12 @@ static void
 MakeSetValuesRequest(Widget w, unsigned int width, unsigned int height)
 {
     SimpleMenuWidget smw = (SimpleMenuWidget)w;
-    Arg arglist[2];
-    Cardinal num_args = 0;
 
     if (!smw->simple_menu.recursive_set_values) {
 	if (XtWidth(smw) != width || XtHeight(smw) != height) {
+	    Arg arglist[2];
+	    Cardinal num_args = 0;
+
 	    smw->simple_menu.recursive_set_values = True;
 	    XtSetArg(arglist[num_args], XtNwidth, width);   num_args++;
 	    XtSetArg(arglist[num_args], XtNheight, height); num_args++;
@@ -1553,7 +1559,6 @@ GetEventEntry(Widget w, XEvent *event)
      */
     if (x_root == WidthOfScreen(XtScreen(w)) - 1 &&
 	XtX(w) + XtWidth(w) + (XtBorderWidth(w)) > x_root) {
-	warp = -8;
 	if (smw->simple_menu.entry_set) {
 	    entry = DoGetEventEntry(w,
 				    XtX(smw->simple_menu.entry_set)

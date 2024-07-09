@@ -208,7 +208,6 @@ DoLayout(BoxWidget bbw, unsigned int width, unsigned int height,
     Dimension lw, lh;	/* Width and height needed for current line	*/
     Dimension bw, bh;	/* Width and height needed for current widget	*/
     Dimension h_space;  /* Local copy of bbw->box.h_space		*/
-    Widget widget;	/* Current widget				*/
     unsigned int num_mapped_children = 0;
 
     /* Box width and height */
@@ -230,7 +229,7 @@ DoLayout(BoxWidget bbw, unsigned int width, unsigned int height,
     lw = h_space;
 
     for (i = 0; i < bbw->composite.num_children; i++) {
-	widget = bbw->composite.children[i];
+	Widget widget = bbw->composite.children[i]; /* Current widget */
 	if (widget->core.managed) {
 	    if (widget->core.mapped_when_managed)
 		num_mapped_children++;
@@ -498,10 +497,12 @@ TryNewLayout(BoxWidget bbw)
 		    proposed_height = preferred_height;
 		}
 		else {	/* proposed_height != preferred_height */
-		    XtWidgetGeometry constraints, reply;
+		    XtWidgetGeometry constraints = {
+                        .request_mode = CWHeight,
+                        .height = proposed_height
+                    };
+                    XtWidgetGeometry reply;
 
-		    constraints.request_mode = CWHeight;
-		    constraints.height = proposed_height;
 		    (void)XawBoxQueryGeometry((Widget)bbw, &constraints, &reply);
 		    proposed_width = preferred_width;
 		}
@@ -525,9 +526,6 @@ static XtGeometryResult
 XawBoxGeometryManager(Widget w, XtWidgetGeometry *request,
 		      XtWidgetGeometry *reply _X_UNUSED)
 {
-    Dimension	width, height, borderWidth;
-    BoxWidget bbw;
-
     /* Position request always denied */
     if (((request->request_mode & CWX) && request->x != XtX(w))
 	|| ((request->request_mode & CWY) && request->y != XtY(w)))
@@ -535,6 +533,9 @@ XawBoxGeometryManager(Widget w, XtWidgetGeometry *request,
 
     /* Size changes must see if the new size can be accommodated */
     if (request->request_mode & (CWWidth | CWHeight | CWBorderWidth)) {
+	Dimension width, height, borderWidth;
+	BoxWidget bbw;
+
 	/* Make all three fields in the request valid */
 	if ((request->request_mode & CWWidth) == 0)
 	    request->width = XtWidth(w);
@@ -544,12 +545,12 @@ XawBoxGeometryManager(Widget w, XtWidgetGeometry *request,
 	    request->border_width = XtBorderWidth(w);
 
 	/* Save current size and set to new size */
-      width = XtWidth(w);
-      height = XtHeight(w);
-      borderWidth = XtBorderWidth(w);
-      XtWidth(w) = request->width;
-      XtHeight(w) = request->height;
-      XtBorderWidth(w) = request->border_width;
+	width = XtWidth(w);
+	height = XtHeight(w);
+	borderWidth = XtBorderWidth(w);
+	XtWidth(w) = request->width;
+	XtHeight(w) = request->height;
+	XtBorderWidth(w) = request->border_width;
 
       /* Decide if new layout works:
 	 (1) new widget is smaller,

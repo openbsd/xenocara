@@ -1,4 +1,4 @@
-SUBDIRS = include src man specs
+SUBDIRS = include src examples man specs
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA =

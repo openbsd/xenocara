@@ -300,10 +300,15 @@ ListClassRec listClassRec = {
     NULL,				/* callback_private */
     defaultTranslations,		/* tm_table */
     XawListQueryGeometry,		/* query_geometry */
+    NULL,				/* display_accelerator */
+    NULL,				/* extension */
   },
   /* simple */
   {
     XtInheritChangeSensitive,		/* change_sensitive */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
   /* list */
   {
@@ -319,11 +324,11 @@ WidgetClass listWidgetClass = (WidgetClass)&listClassRec;
 static void
 GetGCs(Widget w)
 {
-    XGCValues	values;
     ListWidget lw = (ListWidget)w;
-
-    values.foreground	= lw->list.foreground;
-    values.font		= lw->list.font->fid;
+    XGCValues	values = {
+	.foreground	= lw->list.foreground,
+	.font		= lw->list.font->fid
+    };
 
     if (lw->simple.international == True)
 	lw->list.normgc = XtAllocateGC(w, 0, GCForeground, &values, GCFont, 0);
@@ -353,7 +358,6 @@ GetGCs(Widget w)
 static void
 CalculatedValues(Widget w)
 {
-    int i, len;
     ListWidget lw = (ListWidget)w;
 
     /* If list is NULL then the list will just be the name of the widget */
@@ -369,9 +373,13 @@ CalculatedValues(Widget w)
 
     /* Get column width */
     if (LongestFree(lw)) {
+        int i;
+
 	lw->list.longest = 0; /* so it will accumulate real longest below */
 
 	for (i = 0 ; i < lw->list.nitems; i++) {
+	    int len;
+
 	    if (lw->simple.international == True)
 		len = XmbTextEscapement(lw->list.fontset, lw->list.list[i],
 					(int)strlen(lw->list.list[i]));
@@ -432,11 +440,12 @@ ResetList(Widget w, Bool changex, Bool changey)
 static void
 ChangeSize(Widget w, unsigned int width, unsigned int height)
 {
-    XtWidgetGeometry request, reply;
-
-    request.request_mode = CWWidth | CWHeight;
-    request.width = (Dimension)width;
-    request.height = (Dimension)height;
+    XtWidgetGeometry request = {
+	.request_mode = CWWidth | CWHeight,
+	.width = (Dimension)width,
+	.height = (Dimension)height
+    };
+    XtWidgetGeometry reply;
 
     switch (XtMakeGeometryRequest(w, &request, &reply)) {
 	case XtGeometryYes:
@@ -668,12 +677,15 @@ HighlightBackground(Widget w, int x, int y, GC gc)
 static void
 ClipToShadowInteriorAndLongest(ListWidget lw, GC *gc_p, unsigned int x)
 {
-    XRectangle rect;
+    XRectangle rect = {
+	.x = (short)x,
+	.y = (short)lw->list.internal_height,
+	.height = (unsigned short)
+			(XtHeight(lw) - (lw->list.internal_height << 1)),
+	.width = (unsigned short)
+			(XtWidth(lw) - (unsigned)lw->list.internal_width - x),
+    };
 
-    rect.x = (short)x;
-    rect.y = (short)lw->list.internal_height;
-    rect.height = (unsigned short)(XtHeight(lw) - (lw->list.internal_height << 1));
-    rect.width = (unsigned short)(XtWidth(lw) - (unsigned)lw->list.internal_width - x);
     if (rect.width > lw->list.longest)
 	rect.width = (unsigned short)lw->list.longest;
 
@@ -980,7 +992,6 @@ Notify(Widget w, XEvent *event, String *params _X_UNUSED, Cardinal *num_params _
 {
     ListWidget lw = (ListWidget)w;
     int item, item_len;
-    XawListReturnStruct ret_value;
 
     /*
      * Find item and if out of range then unhighlight and return
@@ -1012,10 +1023,14 @@ Notify(Widget w, XEvent *event, String *params _X_UNUSED, Cardinal *num_params _
     /*
      * Call Callback function
      */
-    ret_value.string = lw->list.list[item];
-    ret_value.list_index = item;
+    {
+	XawListReturnStruct ret_value = {
+	    .string = lw->list.list[item],
+	    .list_index = item
+	};
 
-    XtCallCallbacks(w, XtNcallback, (XtPointer)&ret_value);
+	XtCallCallbacks(w, XtNcallback, (XtPointer)&ret_value);
+    }
 }
 
 /* Unset() - Action
@@ -1178,7 +1193,7 @@ XawListDestroy(Widget w)
  *	If nitems is <= 0 then the list needs to be NULL terminated
  */
 void
-XawListChange(Widget w, _Xconst char **list, int nitems, int longest,
+XawListChange(Widget w, String *list, int nitems, int longest,
 #if NeedWidePrototypes
 	int resize_it
 #else

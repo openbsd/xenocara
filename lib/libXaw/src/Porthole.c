@@ -153,15 +153,15 @@ SendReport(PortholeWidget pw, unsigned int changed)
     Widget child = find_child(pw);
 
     if (pw->porthole.report_callbacks && child) {
-	XawPannerReport prep;
-
-	prep.changed = changed;
-	prep.slider_x = (Position)(-XtX(child));	/* porthole is "inner" */
-	prep.slider_y = (Position)(-XtY(child));	/* child is outer since it is larger */
-	prep.slider_width = XtWidth(pw);
-	prep.slider_height = XtHeight(pw);
-	prep.canvas_width = XtWidth(child);
-	prep.canvas_height = XtHeight(child);
+	XawPannerReport prep = {
+	    .changed = changed,
+	    .slider_x = (Position)(-XtX(child)), /* porthole is "inner" */
+	    .slider_y = (Position)(-XtY(child)), /* child is outer since it is larger */
+	    .slider_width = XtWidth(pw),
+	    .slider_height = XtHeight(pw),
+	    .canvas_width = XtWidth(child),
+	    .canvas_height = XtHeight(child)
+	};
 	XtCallCallbackList((Widget)pw, pw->porthole.report_callbacks,
 			   (XtPointer)&prep);
     }
@@ -351,9 +351,8 @@ XawPortholeChangeManaged(Widget gw)
 
     if (child) {
 	if (!XtIsRealized (gw)) {
-	    XtWidgetGeometry geom, retgeom;
+	    XtWidgetGeometry geom = { .request_mode = 0 }, retgeom;
 
-	    geom.request_mode = 0;
 	    if (XtWidth(pw) == 0) {
 		geom.width = XtWidth(child);
 		geom.request_mode |= CWWidth;

@@ -306,6 +306,7 @@ XAW6_LIBS = @XAW6_LIBS@
 XAW7_CFLAGS = @XAW7_CFLAGS@
 XAW7_LIBS = @XAW7_LIBS@
 XMLTO = @XMLTO@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XSLTPROC = @XSLTPROC@
@@ -364,14 +365,6 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = $(am__append_1) $(am__append_2)
-
-#
-# This doesn't appear to be used on any
-# current systems -- it requires SUNSHLIB and !SHAREDCODE,
-# but only sunLib.rules defines SUNSHLIB and that file also
-# always defines SHAREDCODE. Go figure
-#
-# SHAREDLIB_SOURCES = sharedlib.c
 COMMON_SOURCES = \
 	Actions.c \
 	AllWidgets.c \
@@ -453,7 +446,6 @@ AM_CPPFLAGS = \
 
 @BUILD_XAW7_TRUE@libXaw7_la_LDFLAGS = -version-info 7:0:0 -no-undefined
 @BUILD_XAW7_TRUE@libXaw7_la_LIBADD = $(XAW7_LIBS)
-EXTRA_DIST = sharedlib.c
 all: all-am
 
 .SUFFIXES:

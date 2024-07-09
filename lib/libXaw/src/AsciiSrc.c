@@ -55,6 +55,10 @@ in this Software without prior written authorization from The Open Group.
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
+
 #if (defined(ASCII_STRING) || defined(ASCII_DISK))
 #include <X11/Xaw/AsciiText.h>		/* for Widget Classes */
 #endif
@@ -240,6 +244,9 @@ AsciiSrcClassRec asciiSrcClassRec = {
     Search,				/* Search */
     XtInheritSetSelection,		/* SetSelection */
     XtInheritConvertSelection,		/* ConvertSelection */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
   /* ascii_src */
   {
@@ -389,7 +396,7 @@ ReadText(Widget w, XawTextPosition pos, XawTextBlock *text, int length)
 	text->format = XawFmt8Bit;
 	if (length == 0) {
 	    text->firstPos = (int)(end = (offset + entity->length));
-	    text->ptr = "";
+	    text->ptr = (char*)"";
 	}
 	else {
 	    text->firstPos = (int)pos;
@@ -411,7 +418,7 @@ ReadText(Widget w, XawTextPosition pos, XawTextBlock *text, int length)
     text->firstPos = (int)pos;
     text->ptr = piece->text + (pos - start);
     count = piece->used - (pos - start);
-    text->length = (Max(0, (length > count) ? count : length));
+    text->length = (int)(Max(0, (length > count) ? count : length));
     text->format = XawFmt8Bit;
 
     return (pos + text->length);
@@ -449,8 +456,10 @@ ReplaceText(Widget w, XawTextPosition startPos, XawTextPosition endPos,
     if (src->text_src.edit_mode == XawtextRead)
 	return (XawEditError);
 
-    start_piece = FindPiece(src, startPos, &start_first);
-    end_piece = FindPiece(src, endPos, &end_first);
+    if ((start_piece = FindPiece(src, startPos, &start_first)) == NULL)
+	return XawEditError;
+    if ((end_piece = FindPiece(src, endPos, &end_first)) == NULL)
+	return XawEditError;
 
 #ifndef OLDXAW
     /*
@@ -461,7 +470,7 @@ ReplaceText(Widget w, XawTextPosition startPos, XawTextPosition endPos,
     if (start_piece->used) {
 	int i;
 
-	for (i = 0; i < src->text_src.num_text; i++) {
+	for (i = 0; i < (int)src->text_src.num_text; i++) {
 	    int line;
 	    TextWidget ctx = (TextWidget)src->text_src.text[i];
 
@@ -514,7 +523,8 @@ ReplaceText(Widget w, XawTextPosition startPos, XawTextPosition endPos,
      * Remove Old Stuff
      */
     if (start_piece != end_piece) {
-	temp_piece = start_piece->next;
+	if ((temp_piece = start_piece->next) == NULL)
+	    return XawEditError;
 
 	/*
 	 * If empty and not the only piece then remove it.
@@ -973,8 +983,7 @@ XawAsciiSrcSetValues(Widget current, Widget request _X_UNUSED, Widget cnew,
     AsciiSrcObject src = (AsciiSrcObject)cnew;
     AsciiSrcObject old_src = (AsciiSrcObject)current;
     Bool total_reset = False, string_set = False;
-    FILE *file;
-    unsigned int i;
+    Cardinal i;
 
     if (old_src->ascii_src.use_string_in_place
 	!= src->ascii_src.use_string_in_place) {
@@ -992,6 +1001,8 @@ XawAsciiSrcSetValues(Widget current, Widget request _X_UNUSED, Widget cnew,
 	}
 
     if (string_set || (old_src->ascii_src.type != src->ascii_src.type)) {
+	FILE *file;
+
 	RemoveOldStringOrFile(old_src, string_set); /* remove old info */
 	file = InitStringOrFile(src, string_set);   /* Init new info */
 	LoadPieces(src, file, NULL);   /* load new info into internal buffers */
@@ -1039,7 +1050,7 @@ static void
 XawAsciiSrcGetValuesHook(Widget w, ArgList args, Cardinal *num_args)
 {
     AsciiSrcObject src = (AsciiSrcObject)w;
-    unsigned int i;
+    Cardinal i;
 
     if (src->ascii_src.type == XawAsciiString) {
 	for (i = 0; i < *num_args ; i++)
@@ -1280,7 +1291,7 @@ WriteToFile(String string, String name, unsigned length)
 {
     int fd;
 
-    if ((fd = creat(name, 0666)) == -1)
+    if ((fd = open(name, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)) == -1)
 	return (False);
 
     if (write(fd, string, length) == -1) {
@@ -1317,14 +1328,13 @@ WritePiecesToFile(AsciiSrcObject src, String name)
     int fd;
 
     if (src->ascii_src.data_compression) {
-	Piece *tmp;
-
 	piece = src->ascii_src.first_piece;
 	while (piece) {
 	    int bytes = (int)(src->ascii_src.piece_size - piece->used);
+	    Piece *tmp;
 
 	    if (bytes > 0 && (tmp = piece->next) != NULL) {
-		bytes = (XawMin(bytes, tmp->used));
+		bytes = (int)(XawMin(bytes, tmp->used));
 		memcpy(piece->text + piece->used, tmp->text, (size_t)bytes);
 		memmove(tmp->text, tmp->text + bytes, (size_t)(tmp->used - bytes));
 		piece->used += bytes;
@@ -1337,7 +1347,7 @@ WritePiecesToFile(AsciiSrcObject src, String name)
 	}
     }
 
-    if ((fd = creat(name, 0666)) == -1)
+    if ((fd = open(name, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)) == -1)
 	return (False);
 
     for (piece = src->ascii_src.first_piece; piece; piece = piece->next)
@@ -1403,8 +1413,6 @@ InitStringOrFile(AsciiSrcObject src, Bool newString)
 {
     mode_t open_mode = 0;
     const char *fdopen_mode = NULL;
-    int fd;
-    FILE *file;
 
     if (src->ascii_src.type == XawAsciiString) {
 	if (src->ascii_src.string == NULL)
@@ -1443,19 +1451,19 @@ InitStringOrFile(AsciiSrcObject src, Bool newString)
 		XtErrorMsg("NoFile", "asciiSourceCreate", "XawError",
 			   "Creating a read only disk widget and no file specified.",
 			   NULL, NULL);
-	    open_mode = O_RDONLY;
+	    open_mode = O_RDONLY | O_CLOEXEC;
 	    fdopen_mode = "r";
 	    break;
 	case XawtextAppend:
 	case XawtextEdit:
 	    if (src->ascii_src.string == NULL) {
-		src->ascii_src.string = "*ascii-src*";
+		src->ascii_src.string = (char*)"*ascii-src*";
 		src->ascii_src.is_tempfile = True;
 	    }
 	    else {
-/* O_NOFOLLOW is a FreeBSD & Linux extension */
+/* O_NOFOLLOW was a FreeBSD & Linux extension, now adopted by POSIX */
 #ifdef O_NOFOLLOW
-		open_mode = O_RDWR | O_NOFOLLOW;
+		open_mode = O_RDWR | O_NOFOLLOW | O_CLOEXEC;
 #else
 		open_mode = O_RDWR; /* unsafe; subject to race conditions */
 #endif /* O_NOFOLLOW */
@@ -1477,8 +1485,12 @@ InitStringOrFile(AsciiSrcObject src, Bool newString)
     }
 
     if (!src->ascii_src.is_tempfile) {
-	if ((fd = open(src->ascii_src.string, (int)open_mode, 0666)) != -1) {
-	    if ((file = fdopen(fd, fdopen_mode))) {
+	int fd = open(src->ascii_src.string, (int)open_mode, 0666);
+
+	if (fd != -1) {
+	    FILE *file = fdopen(fd, fdopen_mode);
+
+	    if (file != NULL) {
 		(void)fseek(file, 0, SEEK_END);
 		src->ascii_src.length = (XawTextPosition)ftell(file);
 		return (file);
@@ -1511,11 +1523,11 @@ LoadPieces(AsciiSrcObject src, FILE *file, char *string)
     if (string == NULL) {
 	if (src->ascii_src.type == XawAsciiFile) {
 	    if (src->ascii_src.length != 0) {
-		int len;
-
 		left = 0;
 		fseek(file, 0, SEEK_SET);
 		while (left < src->ascii_src.length) {
+		    int len;
+
 		    ptr = XtMalloc((unsigned)src->ascii_src.piece_size);
 		    if ((len = (int)fread(ptr, sizeof(unsigned char),
 				     (size_t)src->ascii_src.piece_size, file)) < 0)

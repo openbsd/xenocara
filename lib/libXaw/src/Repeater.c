@@ -190,6 +190,9 @@ RepeaterClassRec repeaterClassRec = {
   /* simple */
   {
     XtInheritChangeSensitive,		/* change_sensitive */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
   /* label */
   {

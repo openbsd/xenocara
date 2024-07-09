@@ -551,7 +551,6 @@ FindDistance(Widget w, XawTextPosition fromPos, int fromx,
     TextWidget ctx = (TextWidget)XtParent(w);
     Widget source = ctx->text.source;
     XawTextPosition idx, pos;
-    wchar_t c;
     XFontSetExtents *ext = XExtentsOfFontSet(fontset);
     XawTextBlock blk;
     int i, rWidth;
@@ -559,6 +558,8 @@ FindDistance(Widget w, XawTextPosition fromPos, int fromx,
     pos = XawTextSourceRead(source, fromPos, &blk, (int)(toPos - fromPos));
     rWidth = 0;
     for (i = 0, idx = fromPos; idx < toPos; i++, idx++) {
+	wchar_t c;
+
 	if (i >= blk.length) {
 	    i = 0;
 	    XawTextSourceRead(source, pos, &blk, (int)(toPos - pos));
@@ -656,15 +657,15 @@ GetGC(MultiSinkObject sink)
 {
     XtGCMask valuemask = (GCGraphicsExposures | GCClipXOrigin |
 			  GCForeground | GCBackground);
-    XGCValues values;
+    XGCValues values = {
+	/* XXX We dont want to share a gc that will change the clip-mask */
+	.clip_x_origin = (int)(long)sink,
+	.clip_mask = None,
+	.graphics_exposures = False,
 
-    /* XXX We dont want do share a gc that will change the clip-mask */
-    values.clip_x_origin = (int)(long)sink;
-    values.clip_mask = None;
-    values.graphics_exposures = False;
-
-    values.foreground = sink->text_sink.foreground;
-    values.background = sink->text_sink.background;
+	.foreground = sink->text_sink.foreground,
+	.background = sink->text_sink.background
+    };
 
     sink->multi_sink.normgc = XtAllocateGC((Widget)sink, 0, valuemask, &values,
 					   GCFont | GCClipMask, 0);

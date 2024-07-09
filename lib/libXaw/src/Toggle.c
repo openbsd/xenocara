@@ -159,6 +159,9 @@ ToggleClassRec toggleClassRec = {
   /* simple */
   {
     XtInheritChangeSensitive,		/* change_sensitive */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
   /* label */
   {
@@ -489,7 +492,6 @@ void
 XawToggleChangeRadioGroup(Widget w, Widget radio_group)
 {
     ToggleWidget tw = (ToggleWidget)w;
-    RadioGroup *group;
 
     RemoveFromRadioGroup(w);
 
@@ -502,7 +504,9 @@ XawToggleChangeRadioGroup(Widget w, Widget radio_group)
 	XawToggleUnsetCurrent(radio_group);
 
     if (radio_group != NULL) {
-	if ((group = GetRadioGroup(radio_group)) == NULL)
+	RadioGroup *group = GetRadioGroup(radio_group);
+
+	if (group == NULL)
 	    CreateRadioGroup(w, radio_group);
 	else
 	    AddToRadioGroup(group, w);
@@ -611,12 +615,13 @@ XawToggleSetCurrent(Widget radio_group, XtPointer radio_data)
 void
 XawToggleUnsetCurrent(Widget radio_group)
 {
-    ToggleWidgetClass cclass;
     ToggleWidget local_tog = (ToggleWidget)radio_group;
 
     /* Special Case no radio group */
 
     if (local_tog->command.set) {
+	ToggleWidgetClass cclass;
+
 	cclass = (ToggleWidgetClass)local_tog->core.widget_class;
 	cclass->toggle_class.Unset(radio_group, NULL, NULL, NULL);
 	Notify(radio_group, NULL, NULL, NULL);

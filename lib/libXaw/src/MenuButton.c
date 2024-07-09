@@ -128,7 +128,10 @@ MenuButtonClassRec menuButtonClassRec = {
   },
   /* simple */
   {
-    XtInheritChangeSensitive		/* change_sensitive	  */
+    XtInheritChangeSensitive,		/* change_sensitive	  */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
   /* label */
   {
@@ -208,7 +211,9 @@ PopupMenu(Widget w, XEvent *event _X_UNUSED, String *params _X_UNUSED, Cardinal 
     int menu_x, menu_y, menu_width, menu_height, button_height;
     Position button_x, button_y;
 
-    temp = w;
+    if ((temp = w) == NULL)
+	return;
+
     while(temp != NULL) {
 	menu = XtNameToWidget(temp, mbw->menu_button.menu_name);
 	if (menu == NULL)

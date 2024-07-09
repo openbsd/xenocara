@@ -39,12 +39,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xaw/PannerP.h>
 #include <X11/Xaw/XawInit.h>
 #include "Private.h"
-
-#if defined(ISC) && __STDC__ && !defined(ISC30)
-extern double atof(char *);
-#else
 #include <stdlib.h>			/* for atof() */
-#endif
 
 /*
  * Class Methods
@@ -342,7 +337,7 @@ WidgetClass pannerWidgetClass = (WidgetClass) &pannerClassRec;
 static void
 reset_shadow_gc(PannerWidget pw)
 {
-    XtGCMask valuemask = GCForeground;
+    XtGCMask valuemask;
     XGCValues values;
     unsigned long   pixels[3];
 
@@ -981,11 +976,11 @@ ActionPage(Widget gw, XEvent *event, String *params, Cardinal *num_params)
 	y += pw->panner.knob_y;
 
     if (isin) {				/* if in, then use move */
-	XEvent ev;
-
-	ev.xbutton.type = ButtonPress;
-	ev.xbutton.x = x;
-	ev.xbutton.y = y;
+	XEvent ev = {
+	    .xbutton.type = ButtonPress,
+	    .xbutton.x = x,
+	    .xbutton.y = y
+	};
 	ActionMove(gw, &ev, NULL, &zero);
     }
     else {

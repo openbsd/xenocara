@@ -200,6 +200,9 @@ CommandClassRec commandClassRec = {
   /* simple */
   {
     ChangeSensitive,			/* change_sensitive */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
   /* label */
   {
@@ -219,17 +222,16 @@ WidgetClass commandWidgetClass = (WidgetClass)&commandClassRec;
 static GC
 Get_GC(CommandWidget cbw, Pixel fg, Pixel bg)
 {
-    XGCValues	values;
-
-    values.foreground	= fg;
-    values.background	= bg;
-    values.font		= cbw->label.font->fid;
-    values.cap_style	= CapProjecting;
+    XGCValues	values = {
+	.foreground	= fg,
+	.background	= bg,
+	.font		= cbw->label.font->fid,
+	.cap_style	= CapProjecting,
+	.line_width	= 0
+    };
 
     if (cbw->command.highlight_thickness > 1)
 	values.line_width = cbw->command.highlight_thickness;
-    else
-	values.line_width = 0;
 
     if (cbw->simple.international == True)
 	return (XtAllocateGC((Widget)cbw, 0,
@@ -296,8 +298,8 @@ HighlightRegion(CommandWidget cbw)
     rect.height = XtHeight(cbw);
     XUnionRectWithRegion(&rect, emptyRegion, outerRegion);
     rect.x = rect.y = (short)cbw->command.highlight_thickness;
-    rect.width = (rect.width - cbw->command.highlight_thickness * 2);
-    rect.height = (rect.height - cbw->command.highlight_thickness * 2);
+    rect.width = (unsigned short)(rect.width - cbw->command.highlight_thickness * 2);
+    rect.height = (unsigned short)(rect.height - cbw->command.highlight_thickness * 2);
     XUnionRectWithRegion(&rect, emptyRegion, innerRegion);
     XSubtractRegion(outerRegion, innerRegion, outerRegion);
 
@@ -563,7 +565,7 @@ static void
 XawCommandGetValuesHook(Widget w, ArgList args, Cardinal *num_args)
 {
     CommandWidget cbw = (CommandWidget)w;
-    unsigned int i;
+    Cardinal i;
 
     for (i = 0; i < *num_args; i++) {
 	if (STR_EQUAL(args[i].name, XtNforeground))

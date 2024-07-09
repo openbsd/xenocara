@@ -151,15 +151,17 @@ static Cardinal num_variable_list;
 Bool
 XawParseBoolean(Widget w, String param, XEvent *event, Bool *succeed)
 {
-  char *tmp = (char *)param;
-  int value;
-
   if (!param)
     return (False);
+  else
+    {
+      char *tmp = (char *)param;
+      double dd = strtod(param, &tmp);
+      int value = (int) dd;
 
-  value = (int)strtod(param, &tmp);
-  if (*tmp == '\0')
-    return (value);
+      if (*tmp == '\0')
+        return (value);
+    }
 
   if (XmuCompareISOLatin1(param, "true") == 0
       || XmuCompareISOLatin1(param, "yes") == 0
@@ -188,7 +190,6 @@ Bool
 XawBooleanExpression(Widget w, String param, XEvent *event)
 {
   XawEvalInfo info;
-  Bool retval;
 
   if (!param)
     return (False);
@@ -215,16 +216,18 @@ XawBooleanExpression(Widget w, String param, XEvent *event)
   (void)get_token(&info);
   if (info.token == ERROR)
     return (False);
-  retval = expr(&info);
+  else
+    {
+      Bool retval = expr(&info);
 
-  return (info.token != ERROR ? retval : False);
+      return (info.token != ERROR ? retval : False);
+    }
 }
 
 static int
 get_token(XawEvalInfo *info)
 {
   int ch;
-  char *p, name[256];
 
   info->lp = info->cp;
 
@@ -248,7 +251,8 @@ get_token(XawEvalInfo *info)
     {
       Bool succeed = True;
 
-      p = info->cp - 1;
+      char *p = info->cp - 1;
+      char name[256];
 
       while ((ch = *info->cp) && (isalnum(ch) || ch == '_'))
 	++info->cp;
@@ -409,6 +413,7 @@ XawSetValuesAction(Widget w, XEvent *event,
 #ifdef LONG64
   long  c_8;
 #endif
+  unsigned use_size;
 
   if (!(*num_params & 1))
     {
@@ -440,13 +445,14 @@ XawSetValuesAction(Widget w, XEvent *event,
       from.size = (Cardinal) strlen(value) + 1;
       from.addr = (char *)value;
       to.size = resource->size;
-      switch (to.size)
+      use_size = resource->size;
+      switch (use_size)
 	{
-	case 1: to.addr = (XPointer)&c_1; break;
-	case 2: to.addr = (XPointer)&c_2; break;
-	case 4: to.addr = (XPointer)&c_4; break;
+	case 1: to.addr = (XPointer)&c_1; c_1 = 0; break;
+	case 2: to.addr = (XPointer)&c_2; c_2 = 0; break;
+	case 4: to.addr = (XPointer)&c_4; c_4 = 0; break;
 #ifdef LONG64
-	case 8: to.addr = (XPointer)&c_8; break;
+	case 8: to.addr = (XPointer)&c_8; c_8 = 0; break;
 #endif
 	default:
 	  {
@@ -466,10 +472,11 @@ XawSetValuesAction(Widget w, XEvent *event,
 	c_4 = (int)from.addr;
 #endif
       else if (!XtConvertAndStore(w, XtRString, &from,
-				  XrmQuarkToString(resource->qtype), &to))
+				  XrmQuarkToString(resource->qtype), &to)
+	       || to.size != use_size)
 	continue;
 
-      switch (to.size)
+      switch (use_size)
 	{
 	case 1:
 	  XtSetArg(arglist[num_args], XrmQuarkToString(resource->qname), c_1);
@@ -499,7 +506,6 @@ XawGetValuesAction(Widget w, XEvent *event,
 {
   XawActionResList *rlist;
   XawActionVarList *vlist;
-  String value;
   Cardinal count;
 
   if (!(*num_params & 1))
@@ -515,7 +521,8 @@ XawGetValuesAction(Widget w, XEvent *event,
 
   for (count = 1; count < *num_params; count += 2)
     {
-      if ((value = XawConvertActionRes(rlist, w, params[count + 1])) == NULL)
+      String value = XawConvertActionRes(rlist, w, params[count + 1]);
+      if (value == NULL)
 	continue;
       XawDeclareActionVar(vlist, params[count], value);
     }
@@ -865,11 +872,9 @@ _XawFindActionRes(XawActionResList *list, Widget detail, String name)
 static char *
 _XawEscapeActionVarValue(String value)
 {
-  char * escape;
-
   if (value[0] == '$' || value[0] == '\\')
     {
-      escape = XtMalloc((Cardinal)strlen(value) + 2);
+      char *escape = XtMalloc((Cardinal)strlen(value) + 2);
       escape[0] = '\\';
       strcpy(escape + 1, value);
       return (escape);
@@ -881,11 +886,9 @@ _XawEscapeActionVarValue(String value)
 static char *
 _XawUnescapeActionVarValue(String value)
 {
-  char * unescape;
-
   if (value[0] == '\\')
     {
-      unescape = XtMalloc((Cardinal)strlen(value));
+      char *unescape = XtMalloc((Cardinal)strlen(value));
       strcpy(unescape, value + 1);
       return (unescape);
     }
@@ -918,7 +921,7 @@ XawDeclareActionVar(XawActionVarList *list, String name, String value)
     {
       String val = escape ? escape : value;
 
-      if (strcmp(XrmQuarkToString(variable->qvalue), val) == 0)
+      if (val != NULL && strcmp(XrmQuarkToString(variable->qvalue), val) == 0)
 	{
 	  if (escape)
 	    XtFree(escape);

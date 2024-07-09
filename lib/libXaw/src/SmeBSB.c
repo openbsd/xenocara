@@ -705,15 +705,16 @@ static void
 CreateGCs(Widget w)
 {
     SmeBSBObject entry = (SmeBSBObject)w;
-    XGCValues values;
-    XtGCMask mask, mask_i18n;
+    XGCValues values = {
+        .foreground = XtParent(w)->core.background_pixel,
+        .background = entry->sme_bsb.foreground,
+        .font = entry->sme_bsb.font->fid,
+        .graphics_exposures = False
+    };
 
-    values.foreground = XtParent(w)->core.background_pixel;
-    values.background = entry->sme_bsb.foreground;
-    values.font = entry->sme_bsb.font->fid;
-    values.graphics_exposures = False;
-    mask      = GCForeground | GCBackground | GCGraphicsExposures | GCFont;
-    mask_i18n = GCForeground | GCBackground | GCGraphicsExposures;
+    XtGCMask mask = GCForeground | GCBackground | GCGraphicsExposures | GCFont;
+    XtGCMask mask_i18n = GCForeground | GCBackground | GCGraphicsExposures;
+
     if (entry->sme.international == True)
 	entry->sme_bsb.rev_gc = XtAllocateGC(w, 0, mask_i18n, &values, GCFont, 0);
     else

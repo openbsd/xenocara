@@ -225,6 +225,9 @@ SimpleClassRec simpleClassRec = {
   /* simple */
   {
     ChangeSensitive,			/* change_sensitive */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
 };
 

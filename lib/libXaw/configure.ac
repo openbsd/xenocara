@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXaw], [1.0.15],
+AC_INIT([libXaw], [1.0.16],
         [https://gitlab.freedesktop.org/xorg/lib/libxaw/-/issues], [libXaw])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -115,7 +115,16 @@ if test "x$USE_CONST" = "xyes" ; then
 	AC_DEFINE(_CONST_X_STRING, 1, [Define to 1 to use standard C const feature.])
 fi
 
+# --enable-unit-tests
+XORG_ENABLE_UNIT_TESTS(no)
+XORG_MEMORY_CHECK_FLAGS
+if test "x$enable_unit_tests" != "xno" ; then
+	AC_CHECK_FUNCS([malloc_usable_size])
+	AC_CHECK_HEADERS([malloc.h])
+fi
+
 AC_CONFIG_FILES([Makefile
+		examples/Makefile
 		include/Makefile
 		man/Makefile
 		specs/Makefile

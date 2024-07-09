@@ -204,7 +204,7 @@ externaldef(vendorshellclassrec) VendorShellClassRec vendorShellClassRec = {
   }
 };
 
-#if !defined(__UNIXOS2__) && !defined(__APPLE__)
+#if !defined(__APPLE__)
 externaldef(vendorshellwidgetclass) WidgetClass vendorShellWidgetClass =
 	(WidgetClass) (&vendorShellClassRec);
 #endif
@@ -280,16 +280,16 @@ XawCvtCompoundTextToString(Display *dpy, XrmValuePtr args _X_UNUSED, Cardinal *n
 			   XrmValue *fromVal, XrmValue *toVal,
 			   XtPointer *cvt_data _X_UNUSED)
 {
-    XTextProperty prop;
     char **list;
     int count;
     static char *mbs = NULL;
     int len;
-
-    prop.value = (unsigned char *)fromVal->addr;
-    prop.encoding = XA_COMPOUND_TEXT(dpy);
-    prop.format = 8;
-    prop.nitems = fromVal->size;
+    XTextProperty prop = {
+	.value = (unsigned char *)fromVal->addr,
+	.encoding = XA_COMPOUND_TEXT(dpy),
+	.format = 8,
+	.nitems = fromVal->size
+    };
 
     if(XmbTextPropertyToTextList(dpy, &prop, &list, &count) < Success) {
 	XtAppWarningMsg(XtDisplayToApplicationContext(dpy),
@@ -330,11 +330,11 @@ XawVendorShellClassPartInit(WidgetClass cclass)
     CompositeClassExtension ext;
     VendorShellWidgetClass vsclass = (VendorShellWidgetClass)cclass;
 
-    if ((ext = (CompositeClassExtension)
-	    XtGetClassExtension (cclass,
-				 XtOffsetOf(CompositeClassRec,
-					    composite_class.extension),
-				 NULLQUARK, 1L, (Cardinal) 0)) == NULL) {
+    if (((CompositeClassExtension)
+	  XtGetClassExtension (cclass,
+			       XtOffsetOf(CompositeClassRec,
+					  composite_class.extension),
+			       NULLQUARK, 1L, (Cardinal) 0)) == NULL) {
 	ext = (CompositeClassExtension) XtNew (CompositeClassExtensionRec);
 	if (ext != NULL) {
 	    ext->next_extension = vsclass->composite_class.extension;
@@ -348,8 +348,8 @@ XawVendorShellClassPartInit(WidgetClass cclass)
     }
 }
 
-#if defined(__osf__) || defined(__UNIXOS2__) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__APPLE__)
-/* stupid OSF/1 shared libraries have the wrong semantics */
+#if defined(__CYGWIN__) || defined(__MINGW32__) || defined(__APPLE__)
+/* shared libraries on these platforms have the wrong semantics */
 /* symbols do not get resolved external to the shared library */
 void _XawFixupVendorShell()
 {

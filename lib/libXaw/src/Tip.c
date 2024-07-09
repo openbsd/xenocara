@@ -330,13 +330,13 @@ XawTipExpose(Widget w, XEvent *event, Region region)
 	Position ksy = (Position)tip->tip.top_margin;
 	XFontSetExtents *ext = XExtentsOfFontSet(tip->tip.fontset);
 
-	ksy = (ksy + XawAbs(ext->max_ink_extent.y));
+	ksy = (Position) (ksy + XawAbs(ext->max_ink_extent.y));
 
 	while ((nl = strchr(label, '\n')) != NULL) {
 	    XmbDrawString(XtDisplay(w), XtWindow(w), tip->tip.fontset,
 			  gc, tip->tip.left_margin, ksy, label,
 			  (int)(nl - label));
-	    ksy = (ksy + ext->max_ink_extent.height);
+	    ksy = (Position) (ksy + ext->max_ink_extent.height);
 	    label = nl + 1;
 	}
 	len = (int)strlen(label);
@@ -380,12 +380,13 @@ XawTipSetValues(Widget current, Widget request _X_UNUSED, Widget cnew,
 
     if (curtip->tip.font->fid != newtip->tip.font->fid ||
 	curtip->tip.foreground != newtip->tip.foreground) {
-	XGCValues values;
+	XGCValues values = {
+	    .foreground = newtip->tip.foreground,
+	    .background = newtip->core.background_pixel,
+	    .font = newtip->tip.font->fid,
+	    .graphics_exposures = False
+	};
 
-	values.foreground = newtip->tip.foreground;
-	values.background = newtip->core.background_pixel;
-	values.font = newtip->tip.font->fid;
-	values.graphics_exposures = False;
 	XtReleaseGC(cnew, curtip->tip.gc);
 	newtip->tip.gc = XtAllocateGC(cnew, 0, GCForeground | GCBackground |
 				      GCFont | GCGraphicsExposures, &values,
@@ -454,10 +455,10 @@ TipLayout(XawTipInfo *info)
 		XTextWidth16(fs, (_Xconst XChar2b*)label, (int)(strlen(label) >> 1)) :
 		XTextWidth(fs, label, (int)strlen(label));
     }
-    XtWidth(info->tip) = (width + info->tip->tip.left_margin +
-				  info->tip->tip.right_margin);
-    XtHeight(info->tip) = (height + info->tip->tip.top_margin +
-				    info->tip->tip.bottom_margin);
+    XtWidth(info->tip) = (Dimension) (width + info->tip->tip.left_margin +
+				      info->tip->tip.right_margin);
+    XtHeight(info->tip) = (Dimension) (height + info->tip->tip.top_margin +
+				       info->tip->tip.bottom_margin);
 }
 
 #define	DEFAULT_TIP_Y_OFFSET	12
@@ -526,7 +527,7 @@ FindTipInfo(Widget w)
     Screen *screen = XtScreenOfObject(w);
 
     if (tip == NULL)
-	return (first_tip = tip = CreateTipInfo(w));
+	return (first_tip = CreateTipInfo(w));
 
     for (ptip = tip; tip; ptip = tip, tip = tip->next)
 	if (tip->screen == screen)

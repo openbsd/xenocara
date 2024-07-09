@@ -160,6 +160,9 @@ GripClassRec gripClassRec = {
    /* simple */
    {
      XtInheritChangeSensitive,		/* change_sensitive */
+#ifndef OLDXAW
+     NULL,
+#endif
    },
    /* grip */
    {
@@ -175,11 +178,11 @@ WidgetClass gripWidgetClass = (WidgetClass)&gripClassRec;
 static void
 GripAction(Widget widget, XEvent *event, String *params, Cardinal *num_params)
 {
-    XawGripCallDataRec call_data;
-
-    call_data.event = event;
-    call_data.params = params;
-    call_data.num_params = *num_params;
+    XawGripCallDataRec call_data = {
+	.event = event,
+	.params = params,
+	.num_params = *num_params
+    };
 
     XtCallCallbacks(widget, XtNcallback, (XtPointer)&call_data);
 }

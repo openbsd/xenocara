@@ -318,7 +318,7 @@ static void
 draw_it(XtPointer client_data, XtIntervalId *id _X_UNUSED)
 {
     StripChartWidget w = (StripChartWidget)client_data;
-    double value;
+    double value = 0.0;
 
     if (w->strip_chart.update > 0)
 	w->strip_chart.interval_id =
@@ -385,7 +385,6 @@ draw_it(XtPointer client_data, XtIntervalId *id _X_UNUSED)
 static int
 repaint_window(StripChartWidget w, int left, int width)
 {
-    int i, j;
     int next = w->strip_chart.interval;
     int scale = w->strip_chart.scale;
     int scalewidth = 0;
@@ -410,6 +409,7 @@ repaint_window(StripChartWidget w, int left, int width)
     }
 
     if (XtIsRealized((Widget)w)) {
+	int i;
 	Display *dpy = XtDisplay(w);
 	Window win = XtWindow(w);
 
@@ -434,7 +434,7 @@ repaint_window(StripChartWidget w, int left, int width)
 
 	/* Draw graph reference lines */
 	for (i = 1; i < w->strip_chart.scale; i++) {
-	    j = i * ((int)XtHeight(w) / w->strip_chart.scale);
+	    int j = i * ((int)XtHeight(w) / w->strip_chart.scale);
 	    XDrawLine(dpy, win, w->strip_chart.hiGC, left, j, scalewidth, j);
 	}
     }

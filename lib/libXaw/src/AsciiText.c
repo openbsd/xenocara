@@ -123,10 +123,15 @@ AsciiTextClassRec asciiTextClassRec = {
     NULL,				/* callback_private */
     XtInheritTranslations,		/* tm_table */
     XtInheritQueryGeometry,		/* query_geometry */
+    NULL,				/* display_accelerator */
+    NULL,				/* extension */
   },
   /* simple */
   {
     XtInheritChangeSensitive,		/* change_sensitive */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
   /* text */
   {

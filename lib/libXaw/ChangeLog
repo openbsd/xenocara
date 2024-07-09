@@ -1,3 +1,382 @@
+commit f14ba54e9c7e415a05e33dd0b3b5f96e5de05c8b
+Author: Thomas E. Dickey <dickey@his.com>
+Date:   Sun Mar 10 16:25:47 2024 +0000
+
+    libXaw 1.0.16:  amends XawListChange() prototype, plus code-cleanup
+
+commit 254e1f657496d21aef0c5e0a14ecca076a9ebcd5
+Author: Thomas E. Dickey <dickey@his.com>
+Date:   Sun Mar 10 14:31:35 2024 +0000
+
+    delete code which is never used
+
+commit c07b1728e38529ff8177e2075c2bae4724d3abe7
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 10 10:03:25 2024 -0400
+
+    make the examples configurable as (interactive) unit-tests
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d0fcbd9722ad691ca0b5873c98e8e9c236fa718b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 3 20:21:40 2024 -0500
+
+    amend change to XawListChange()
+    
+    My previous commit in July 2019
+    
+      build-fixes when _CONST_X_STRING is defined
+    
+    modified the interface of XawListChange() to use "_Xconst char *"
+    to fix builds when the Xt symbol _CONST_X_STRING is defined (which
+    makes the String typedef "const").
+    
+    While this fixed building Xaw, clients which use Xaw were impacted.
+    Changing that function to use String resolves both problems.
+    
+    (report by Karl Berry).
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit b116d033a5b4daf75a10ad959e42aac398036ef9
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 3 19:04:21 2024 -0500
+
+    clang/gcc warnings about undefined behavior (minor bug-fix)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fd4b2ce63feae01744a850fa6f1809ff15361a8b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 3 18:51:46 2024 -0500
+
+    fix clang/gcc warnings for undefined behavior, also fix a bug
+    
+    XtConvertAndStore may update the XrmValue value, changing its size.
+    clang and gcc warn about undefined behavior in the case-statement
+    following the call (which uses the size), but do not explain what
+    the problem is.  Since this code is not intended to handle changes
+    of the size, simply reject that case.  That quiets the gcc warnings
+    and is actually all that is needed for correctness.  clang still
+    complains (neither knows what the call does), but can be quieted
+    by initializing the variable before calling the function.
+    
+    The code happens to work without the fix as long as it is not
+    used to convert between resource types which would increase the
+    size.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d33708e30f102f6ab278d6f809eeaa18e65d0716
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 3 15:13:27 2024 -0500
+
+    scan-build(clang-17) reports possible null dereference, add checks
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 9aba0a9212e0bb3ad010fff569bce95c20c3ebfa
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 3 14:50:21 2024 -0500
+
+    split-up assignments which give unnecessary compiler-warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ce94a168f6a10455e98e2be7bd905bb9fb7f7fc1
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 1 20:32:17 2024 -0500
+
+    add check for null pointer, avoid dereferencing
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 95e93cfd56c8dec57a3bb2627d7714944713c37a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 1 20:32:01 2024 -0500
+
+    add check for null pointer, avoid dereferencing
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 28b5ce87555b5c85f240895c64818015d134b3b7
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 1 20:31:43 2024 -0500
+
+    add check for null pointer, avoid dereferencing
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 96e4ac3ae1afdeafb16ea0e147364d15e7bfd549
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 1 20:31:26 2024 -0500
+
+    add check for null pointer, avoid dereferencing
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5815fc38a12e5ac7f8bd391ce8f04f13b8178e69
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 1 20:31:09 2024 -0500
+
+    add check for null pointer, avoid dereferencing
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a3fb321330ccb6d9dcd6fd3d41971cda3987527a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 1 20:30:50 2024 -0500
+
+    add check for null pointer, avoid dereferencing
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 3841474f3ba6914b6909e29c5cf0c5e7207a69a7
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 1 20:30:28 2024 -0500
+
+    add check for null pointer, avoid dereferencing
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit f4906b8a4fc09eb3ce971272f993be81885f602f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 1 19:30:22 2024 -0500
+
+    delete unused assignments
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1b1d164cdcd3b30d1effb4a07a40ae1cf08d0419
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 1 18:47:16 2024 -0500
+
+    reduce variable-length argument lists to match the existing code
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ff9312d99940be2d81d91601ad6c1688da1016bd
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 1 17:01:07 2024 -0500
+
+    fix references to uninitialized data when constructing argument-lists
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit cc1e73a85d437ebd0d5c8efbe14a7f398c1b9fcc
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 29 20:19:25 2024 -0500
+
+    manpage: improve formatting consistency of bold/italics
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 080e6e49825c2e03adb0c5dd8dad53767ec41ce6
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 29 18:12:40 2024 -0500
+
+    manpage: assume .EX/.EE macros
+    
+    Branden Robinson says macros have to go after ".TH"; the existing macros did
+    not match the format used in groff, etc., and can be simply removed.  The
+    ".TQ" macro is used only without a parameter, causing an extra space to be
+    emitted (and fixed that by dropping the parameter).
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d696cf912efb884af1a73952f3bd70bd28a9a942
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 29 17:54:04 2024 -0500
+
+    manpage: adjust line-breaks to avoid embedded full-stops
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6ded4c0487220253a2cb2fefc4983ff31e486dd4
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 29 16:45:23 2024 -0500
+
+    cppcheck scope and assignment warnings
+
+commit f181d10b934c85a30f27de6aa0b71c94e68d2293
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Feb 28 20:46:24 2024 -0500
+
+    reduce compiler-warnings using casts
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 785ba6f4ee7677f395252daf9c1de30fb80a179d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Feb 28 20:18:34 2024 -0500
+
+    provide fallback for deprecated isascii/toascii
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 36ac433450b7e0b260e44b4320c4b6af0ba12a8f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Feb 28 19:43:50 2024 -0500
+
+    quiet conversion-warnings with casts
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit eb5cbbd6f8056b3008c0f8e7e603b10a3ff4cbb2
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Feb 28 18:04:28 2024 -0500
+
+    fix missing-initializer warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5c23a1f5e5b0961a0938a8f3da1c9ad01fe67af7
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Feb 28 16:30:11 2024 -0500
+
+    build-fix
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 239a9d1f8fa2655a5ebc53de00e3311ae1413e33
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 14:48:34 2024 -0800
+
+    unifdef ISC
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6bbdea682c9c0064895e1619815a8d116f197c3f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 13 17:59:23 2024 -0800
+
+    Remove unused sharedlib.c
+    
+    It was only built by Imake if SUNSHLIB was defined.
+    SUNSHLIB was only set in the Imake configs for SunOS versions < 5
+    (i.e. before Solaris 2.0).
+    
+    It has never been used in the autoconf builds.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 84f62d9c2a37366661332b8218c842f5af98356d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 13 17:54:47 2024 -0800
+
+    unifdef __UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bce0fc281e883f4ffa53e47cd5fa96ea04ea4227
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 13 17:53:49 2024 -0800
+
+    unifdef __osf__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b6de2199357cdbde852a9caea1ed752d3c236d65
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 13 17:51:04 2024 -0800
+
+    unifdef AIXV3 || __SCO__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dbd28c703175051e0d20df664c4423317ed556a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 13 17:48:19 2024 -0800
+
+    unifdef QNX4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 04a5e1a7d8cb1446e4fe2bb4a823d9795254fecb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 13 17:47:21 2024 -0800
+
+    unifdef sony
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a6cd58c90cf5e47678fd50932d6fc2fdbffb2605
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 13 17:46:44 2024 -0800
+
+    unifdef NCR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1b5fe7cf8b5e7ed3f214b43b9f7e081c82df5b1d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 23 09:46:16 2023 -0700
+
+    gitlab CI: add xz-utils to container for "make distcheck"
+    
+    Also update to latest ci-templates
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e1b030770a2d489ff832b619ba646aa96e0bfb5c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 28 19:19:13 2023 -0800
+
+    Use C99 designated initializers where appropriate
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77533b88018c2923075562e106ef2970c7e6c6a9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 28 17:49:59 2023 -0800
+
+    Handle redundantInitialization warnings from cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c5a5fcea941e4ee7c4c68ae090601d6282f0a5cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 28 16:10:19 2023 -0800
+
+    Variable scope reductions as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 571c764ace3d4415531641db3dee0c2b066edc10
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Jun 18 21:05:34 2023 +0200
+
+    expand for simple widget demo
+
+commit 55c2ab7cd46efb17f59f18d22307fcf5b26f3692
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Jun 18 21:04:43 2023 +0200
+
+    add simple widget demo
+
+commit e67c7ff2bd6bff84edd70c224bc672535e4b41a4
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat May 13 19:08:12 2023 +0200
+
+    add xawhisto
+
+commit 2f99a415913b6be4ed2955a3e30694c2216aafbd
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri May 12 23:03:32 2023 +0200
+
+    add examples
+    
+    provide some examples to support the documentation
+
+commit 324358180ddeaae482c5f66bb5647a4918710296
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 28 12:08:41 2023 -0700
+
+    Set close-on-exec when opening files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 78eb3c75688a1e92ec435e5bc3ded063cd339a73
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 15 16:29:53 2023 -0700
@@ -1909,7 +2288,7 @@ Date:   Sun Jan 31 17:43:29 2010 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit ceaf6f7f0e516b1479744df421de404b1decc556
-Author: Rémi Cardona  <remi@gentoo.org>
+Author: Rémi Cardona <remi@gentoo.org>
 Date:   Thu Dec 17 08:28:30 2009 +0100
 
     require autoconf 2.60 because of $(docdir) use
@@ -2567,7 +2946,7 @@ Date:   Sat Jul 9 06:11:58 2005 +0000
         libraries not yet installed will work properly.
 
 commit 5fc8851308321a65a6987aedea6618d056ff7879
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 19:26:27 2005 +0000
 
     - Xaw/xaw.m4: Change help string to say "enable xprint" instead of "disable
@@ -2578,7 +2957,7 @@ Date:   Wed Jul 6 19:26:27 2005 +0000
     - remove font/arabic-misc/README and font/mutt-misc/README
 
 commit d4f214b6255184a2cbf571c02409a0e3f4405fb0
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:11 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,
@@ -2599,7 +2978,7 @@ Date:   Sun Jul 3 07:00:56 2005 +0000
         <X11/fonts/foo.h>.
 
 commit f8e7a4ec6117006123dfdc7c970f9f1392bf7d84
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 13:30:15 2005 +0000
 
     lib/Xaw/Makefile.am: install the libXaw.so symlink in $(DESTDIR)$(libdir) -
@@ -2607,7 +2986,7 @@ Date:   Tue Jun 28 13:30:15 2005 +0000
     lib/Xaw/man/Makefile.am: add Xaw.man to EXTRA_DIST to make it distcheck.
 
 commit c35ec1561bfc9bf8d79b68a071619f4904764002
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 27 21:35:04 2005 +0000
 
     - Fix string test in lib/Xaw/xaw.m4
@@ -2615,26 +2994,26 @@ Date:   Mon Jun 27 21:35:04 2005 +0000
     - add build system for editres
 
 commit f6c298f70e13ecf37b4824f6ac01007b876dd3cb
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jun 24 22:54:24 2005 +0000
 
     Add m4 macro to check for versions of the Xaw library
 
 commit e3e78cd7815716d8af729c19833bec51d7e3f19c
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jun 24 21:20:32 2005 +0000
 
     Change the so names to libXaw{6,7,8}.so and install a symlink from
         libXaw.so to the newest version installed
 
 commit cc658b573a13f36868c5a2263e0b3ff8d0230b86
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon May 23 21:47:37 2005 +0000
 
     Conditionally include config.h in xc/lib/Xaw/*.c
 
 commit 62b680d868fbe4bfdf1af6e6067d0ef27f773559
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon May 23 20:01:46 2005 +0000
 
     Check in build system for Xaw
@@ -2675,7 +3054,7 @@ Date:   Thu Sep 2 01:10:29 2004 +0000
     Bump major version number of libXaw (Bug #1273).
 
 commit 93df4ff66635ea936d57723d317d0a0cdaa55e62
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Aug 16 16:36:14 2004 +0000
 
     As discussed and agreed on on the release-wranglers meeting of August 16,

@@ -403,14 +403,14 @@ _SelectionReceived(Widget w, XtPointer client_data, Atom *selection _X_UNUSED,
 
     StartAction(ctx, NULL);
     if (XawTextFormat(ctx, XawFmtWide)) {
-	XTextProperty textprop;
 	wchar_t **wlist;
 	int count;
-
-	textprop.encoding = *type;
-	textprop.value = (unsigned char *)value;
-	textprop.nitems = strlen(value);
-	textprop.format = 8;
+	XTextProperty textprop = {
+	    .encoding = *type,
+	    .value = (unsigned char *)value,
+	    .nitems = strlen(value),
+	    .format = 8
+	};
 
 	if (XwcTextPropertyToTextList(d, &textprop, &wlist, &count)
 	    !=	Success
@@ -421,7 +421,7 @@ _SelectionReceived(Widget w, XtPointer client_data, Atom *selection _X_UNUSED,
 	    fprintf(stderr, "Xaw Text Widget: An attempt was made to insert "
 		    "an illegal selection.\n");
 
-	    textprop.value = (const unsigned char *)" >> ILLEGAL SELECTION << ";
+	    textprop.value = (unsigned char *)" >> ILLEGAL SELECTION << ";
 	    textprop.nitems = strlen((char *) textprop.value);
 	    if (XwcTextPropertyToTextList(d, &textprop, &wlist, &count)
 		!=  Success
@@ -950,7 +950,6 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
     TextWidget ctx = (TextWidget)w;
     Widget src = ctx->text.source;
     XawTextEditType edit_mode;
-    Arg args[1];
     XawTextSelectionSalt *salt = NULL;
     XawTextSelection *s;
 
@@ -960,9 +959,12 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
 
 	if (SrcCvtSel(src, selection, target, type, value, length, format))
 	    return (True);
+	else {
+	    Arg args[1];
 
-	XtSetArg(args[0], XtNeditType,&edit_mode);
-	XtGetValues(src, args, 1);
+	    XtSetArg(args[0], XtNeditType,&edit_mode);
+	    XtGetValues(src, args, 1);
+	}
 
 	XmuConvertStandardSelection(w, ctx->text.time, selection,
 				    target, type, (XPointer *)&std_targets,
@@ -1035,21 +1037,22 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
 		*length = strlen(*value);
 	}
 	else {
-	    *value = XtMalloc(((size_t)(salt->length + 1) * sizeof(unsigned char)));
+	    *value = XtMalloc((Cardinal)((size_t)(salt->length + 1) * sizeof(unsigned char)));
 	    strcpy (*value, salt->contents);
 	    *length = (unsigned long)salt->length;
 	}
 	/* Got *value,*length, now in COMPOUND_TEXT format. */
 	if (XawTextFormat(ctx, XawFmtWide)) {
 	    if (*type == XA_STRING) {
-		XTextProperty textprop;
 		wchar_t **wlist;
 		int count;
+		XTextProperty textprop = {
+		    .encoding = XA_COMPOUND_TEXT(d),
+		    .value = (unsigned char *)*value,
+		    .nitems = strlen(*value),
+		    .format = 8
+		};
 
-		textprop.encoding = XA_COMPOUND_TEXT(d);
-		textprop.value = (unsigned char *)*value;
-		textprop.nitems = strlen(*value);
-		textprop.format = 8;
 		if (XwcTextPropertyToTextList(d, &textprop, &wlist, &count)
 		     < Success
 		    || count < 1) {
@@ -1067,14 +1070,15 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
 		XwcFreeStringList((wchar_t**) wlist);
 	    }
 	    else if (*type == XA_UTF8_STRING(d)) {
-		XTextProperty textprop;
 		char **list;
 		int count;
+		XTextProperty textprop = {
+		    .encoding = XA_COMPOUND_TEXT(d),
+		    .value = (unsigned char *)*value,
+		    .nitems = strlen(*value),
+		    .format = 8
+		};
 
-		textprop.encoding = XA_COMPOUND_TEXT(d);
-		textprop.value = (unsigned char *)*value;
-		textprop.nitems = strlen(*value);
-		textprop.format = 8;
 		if (Xutf8TextPropertyToTextList(d, &textprop, &list, &count)
 		    < Success
 		    || count < 1) {
@@ -1194,7 +1198,7 @@ _LoseSelection(Widget w, Atom *selection, char **contents _X_UNUSED, int *length
 			tail = kill_ring;
 			kill_ring = kill_ring->next;
 		    }
-		    if (kill_ring->refcount == 0) {
+		    if (tail != NULL && kill_ring->refcount == 0) {
 			--num_kill_rings;
 			tail->next = NULL;
 			XtFree(kill_ring->contents);
@@ -1289,16 +1293,24 @@ _DeleteOrKill(TextWidget ctx, XawTextPosition from, XawTextPosition to,
 	if (!append)
 	    salt->contents = string;
 	else {
-	    salt->contents = XtMalloc((length + size + 1));
+	    salt->contents = XtMalloc((Cardinal)(length + size + 1));
 	    if (from >= old_from) {
-		strncpy(salt->contents, ring, (size_t)size);
-		salt->contents[size] = '\0';
+		if (ring != NULL) {
+		    strncpy(salt->contents, ring, (size_t)size);
+		    salt->contents[size] = '\0';
+		} else {
+		    salt->contents[size = 0] = '\0';
+		}
 		strncat(salt->contents, string, (size_t)length);
 	    }
 	    else {
 		strncpy(salt->contents, string, (size_t)length);
 		salt->contents[length] = '\0';
-		strncat(salt->contents, ring, (size_t)size);
+		if (ring != NULL) {
+		    strncat(salt->contents, ring, (size_t)size);
+		} else {
+		    size = 0;
+		}
 	    }
 	    salt->contents[length + size] = '\0';
 	    XtFree(ring);
@@ -1330,7 +1342,7 @@ _DeleteOrKill(TextWidget ctx, XawTextPosition from, XawTextPosition to,
     text.firstPos = 0;
 
     text.format = (unsigned long)_XawTextFormat(ctx);
-    text.ptr = "";
+    text.ptr = (char*)"";
 
     if (_XawTextReplace(ctx, from, to, &text)) {
 	XBell(XtDisplay(ctx), 50);
@@ -1399,7 +1411,8 @@ DeleteChar(Widget w, XEvent *event, XawTextScanDirection dir)
     short mul = MULT(ctx);
 
     if (mul < 0) {
-	ctx->text.mult = mul = (short)(-mul);
+	mul = -mul;
+	ctx->text.mult = mul;
 	dir = dir == XawsdLeft ? XawsdRight : XawsdLeft;
     }
     DeleteOrKill(ctx, event, dir, XawstPositions, True, False);
@@ -1600,11 +1613,10 @@ StripSpaces(TextWidget ctx, XawTextPosition left, XawTextPosition right,
 
     text.firstPos = 0;
     text.format = XawFmt8Bit;
-    text.ptr = " ";
+    text.ptr = (char*)" ";
     text.length = 1;
 
-    position = XawTextSourceRead(ctx->text.source, position,
-				 &block, (int)(right - left));
+    XawTextSourceRead(ctx->text.source, position, &block, (int)(right - left));
     done = False;
     space = False;
     /* convert tabs and returns to spaces */
@@ -1637,11 +1649,10 @@ StripSpaces(TextWidget ctx, XawTextPosition left, XawTextPosition right,
 	    done = True;
     }
 
-    text.ptr = "";
+    text.ptr = (char*)"";
     text.length = 0;
     position = tmp = left;
-    position = XawTextSourceRead(ctx->text.source, position,
-				 &block, (int)(right - left));
+    XawTextSourceRead(ctx->text.source, position, &block, (int)(right - left));
     ipos = ctx->text.insertPos;
     done = False;
     while (!done) {
@@ -1717,12 +1728,11 @@ Tabify(TextWidget ctx, XawTextPosition left, XawTextPosition right,
     int tab_index = 0, tab_column = 0, TAB_SIZE = DEFAULT_TAB_SIZE;
 
     text.firstPos = 0;
-    text.ptr = "\t";
+    text.ptr = (char*)"\t";
     text.format = XawFmt8Bit;
     text.length = 1;
 
-    position = XawTextSourceRead(ctx->text.source, position,
-				 &block, (int)(right - left));
+    XawTextSourceRead(ctx->text.source, position, &block, (int)(right - left));
     ipos = ctx->text.insertPos;
     done = zero = False;
     if (tab_count)
@@ -1859,14 +1869,13 @@ Untabify(TextWidget ctx, XawTextPosition left, XawTextPosition right,
     short *char_tabs = sink->text_sink.char_tabs;
     int tab_count = sink->text_sink.tab_count;
     int tab_index = 0, tab_column = 0, tab_base = 0;
-    static char *tabs = "        ";
+    static char *tabs = (char*)"        ";
 
     text.firstPos = 0;
     text.format = XawFmt8Bit;
     text.ptr = tabs;
 
-    position = XawTextSourceRead(ctx->text.source, position,
-				 &block, (int)(right - left));
+    XawTextSourceRead(ctx->text.source, position, &block, (int)(right - left));
     ipos = ctx->text.insertPos;
     done = False;
     zero = False;
@@ -2182,7 +2191,7 @@ DoFormatText(TextWidget ctx, XawTextPosition left, Bool force, int level,
 	    position = tmp;
 	if (position > left && position - left > ctx->text.left_column
 	    && position != right) {
-	    text.ptr = "\n";
+	    text.ptr = (char*)"\n";
 	    text.length = 1;
 	    CHECK_SAVE();
 	    if (_XawTextReplace(ctx, position, position + 1, &text))
@@ -2235,7 +2244,6 @@ DoFormatText(TextWidget ctx, XawTextPosition left, Bool force, int level,
 		}
 		XawStackFree(text.ptr, buf);
 		position += count;
-		right += count;
 		if (num_pos) {
 		    for (cpos = 0; cpos < num_pos; cpos++)
 			if (pos[cpos] > left)
@@ -2297,7 +2305,6 @@ DoFormatText(TextWidget ctx, XawTextPosition left, Bool force, int level,
 			inc += ii;
 		    }
 		    position += count;
-		    right += count;
 		    XawStackFree(text.ptr, buf);
 		}
 		break;
@@ -2322,18 +2329,17 @@ Indent(Widget w, XEvent *event, String *params _X_UNUSED, Cardinal *num_params _
     TextWidget ctx = (TextWidget)w;
     TextSrcObject src = (TextSrcObject)ctx->text.source;
     XawTextPosition from, to, tmp, end = 0, *pos, *posbuf[32];
-    char buf[32];
     XawTextBlock text;
     int i, spaces = MULT(ctx);
     char *lbuf = NULL, *rbuf;
-    unsigned llen = 0, rlen, size;
+    unsigned llen = 0;
     Bool undo = src->textSrc.enable_undo && src->textSrc.undo_state == False;
     Bool format = ctx->text.auto_fill
 	&& ctx->text.left_column < ctx->text.right_column;
 
     text.firstPos = 0;
     text.format = XawFmt8Bit;
-    text.ptr = "";
+    text.ptr = (char*)"";
 
     StartAction(ctx, event);
 
@@ -2370,6 +2376,8 @@ Indent(Widget w, XEvent *event, String *params _X_UNUSED, Cardinal *num_params _
     tmp = from;
 
     if (spaces > 0) {
+	char buf[32];
+
 	text.ptr = XawStackAlloc((unsigned)spaces, buf);
 	for (i = 0; i < spaces; i++)
 	    text.ptr[i] = ' ';
@@ -2424,7 +2432,9 @@ Indent(Widget w, XEvent *event, String *params _X_UNUSED, Cardinal *num_params _
 	Tabify(ctx, from, to, pos, (int)src->textSrc.num_text, NULL);
 
     if (undo) {
-	rlen = (unsigned)(llen + (ctx->text.lastPos - end));
+	unsigned rlen = (unsigned)(llen + (ctx->text.lastPos - end));
+	unsigned size;
+
 	rbuf = _XawTextGetText(ctx, from, from + rlen);
 
 	text.format = (unsigned long)_XawTextFormat(ctx);
@@ -2601,7 +2611,7 @@ InsertNewLineAndIndent(Widget w, XEvent *event, String *p _X_UNUSED, Cardinal *n
 	char *ptr;
 
 	length = (int)strlen(line_to_ip);
-	text.ptr = XtMalloc(((size_t)(2 + length) * sizeof(char)));
+	text.ptr = XtMalloc((Cardinal)((size_t)(2 + length) * sizeof(char)));
 	ptr = text.ptr;
 	ptr[0] = XawLF;
 	strcpy(++ptr, line_to_ip);
@@ -3020,7 +3030,7 @@ AutoFill(TextWidget ctx)
 	    return;
 
 	text.format = XawFmt8Bit;
-	text.ptr = "\n";
+	text.ptr = (char*)"\n";
     }
     text.length = 1;
     text.firstPos = 0;
@@ -3295,7 +3305,7 @@ InsertString(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
     StartAction(ctx, event);
     for (i = (int)*num_params; i; i--, params++) {	/* DO FOR EACH PARAMETER */
-	text.ptr = IfHexConvertHexElseReturnParam(*params, &text.length);
+	text.ptr = IfHexConvertHexElseReturnParam((char*) *params, &text.length);
 
 	if (text.length == 0)
 	    continue;
@@ -3370,7 +3380,7 @@ DisplayCaret(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
     if (*num_params > 0) {	/* default arg is "True" */
 	XrmValue from, to;
-	from.size = (unsigned)strlen(from.addr = params[0]);
+	from.size = (unsigned)strlen(from.addr = (char*)params[0]);
 	XtConvert(w, XtRString, &from, XtRBoolean, &to);
 
 	if (to.addr != NULL)
@@ -3416,7 +3426,6 @@ Numeric(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	    return;
 	}
 	else if (mult == 32767) {
-	    mult = ctx->text.mult = (short)(- (params[0][0] - '0'));
 	    return;
 	}
 	else {
@@ -3520,19 +3529,20 @@ static XawTextPosition
 StripOutOldCRs(TextWidget ctx, XawTextPosition from, XawTextPosition to,
 	       XawTextPosition *pos, int num_pos)
 {
-    XawTextPosition startPos, endPos, eop_begin, eop_end, temp;
+    XawTextPosition startPos, endPos, eop_begin, eop_end;
     Widget src = ctx->text.source;
     XawTextBlock text;
     char *buf;
-    static wchar_t wc_two_spaces[3];
     int idx;
 
     /* Initialize our TextBlock with two spaces. */
     text.firstPos = 0;
     text.format = (unsigned long)_XawTextFormat(ctx);
-    if (text.format == XawFmt8Bit)
-      text.ptr= "  ";
-    else {
+    if (text.format == XawFmt8Bit) {
+        text.ptr= (char*)" ";
+    } else {
+	static wchar_t wc_two_spaces[3];
+
 	wc_two_spaces[0] = _Xaw_atowc(XawSP);
 	wc_two_spaces[1] = _Xaw_atowc(XawSP);
 	wc_two_spaces[2] = 0;
@@ -3540,11 +3550,13 @@ StripOutOldCRs(TextWidget ctx, XawTextPosition from, XawTextPosition to,
     }
 
     /* Strip out CR's. */
-    eop_begin = eop_end = startPos = endPos = from;
+    eop_begin = eop_end = startPos = from;
 
     /* CONSTCOND */
     while (TRUE) {
-	endPos=SrcScan(src, startPos, XawstEOL, XawsdRight, 1, False);
+	XawTextPosition temp;
+
+	endPos = SrcScan(src, startPos, XawstEOL, XawsdRight, 1, False);
 
 	temp = SrcScan(src, endPos, XawstWhiteSpace, XawsdLeft, 1, False);
 	temp = SrcScan(src, temp,   XawstWhiteSpace, XawsdRight,1, False);
@@ -3626,19 +3638,19 @@ static void
 InsertNewCRs(TextWidget ctx, XawTextPosition from, XawTextPosition to,
 	     XawTextPosition *pos, int num_pos)
 {
-    XawTextPosition startPos, endPos, space, eol;
+    XawTextPosition startPos;
     XawTextBlock text;
-    int i, width, height, len, wwidth, idx;
-    char *buf;
-    static wchar_t wide_CR[2];
+    int i, width, height, wwidth, idx;
 
     text.firstPos = 0;
     text.length = 1;
     text.format = (unsigned long)_XawTextFormat(ctx);
 
-    if (text.format == XawFmt8Bit)
-	text.ptr = "\n";
-    else {
+    if (text.format == XawFmt8Bit) {
+	text.ptr = (char*)"\n";
+    } else {
+	static wchar_t wide_CR[2];
+
 	wide_CR[0] = _Xaw_atowc(XawLF);
 	wide_CR[1] = 0;
 	text.ptr = (char*)wide_CR;
@@ -3657,6 +3669,10 @@ InsertNewCRs(TextWidget ctx, XawTextPosition from, XawTextPosition to,
 
     /* CONSTCOND */
     while (TRUE) {
+	int len;
+	char *buf;
+	XawTextPosition endPos, space, eol;
+
 	XawTextSinkFindPosition(ctx->text.sink, startPos,
 				(int)ctx->text.r_margin.left, wwidth,
 				True, &eol, &width, &height);
@@ -3735,14 +3751,12 @@ FormRegion(TextWidget ctx, XawTextPosition from, XawTextPosition to,
 	    ctx->text.justify == XawjustifyFull) {
 	    Untabify(ctx, from, to, pos, num_pos, NULL);
 	    to += ctx->text.lastPos - len;
-	    len = ctx->text.insertPos;
 	    (void)BlankLine((Widget)ctx, from, &inc);
 	    if (from + inc >= to)
 		return (XawEditDone);
 	}
 	if (!StripSpaces(ctx, from + inc, to, pos, num_pos, NULL))
 	    return (XawReplaceError);
-	to += ctx->text.lastPos - len;
 
 	FormatText(ctx, from, ctx->text.justify != XawjustifyFull, pos, num_pos);
     }

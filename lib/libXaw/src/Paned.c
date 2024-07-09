@@ -466,6 +466,10 @@ PanedClassRec panedClassRec = {
     XawPanedPaneSetValues,		/* set_values */
     NULL,				/* extension */
   },
+  /* paned */
+  {
+    NULL,				/* extension */
+  }
 };
 
 WidgetClass panedWidgetClass = (WidgetClass)&panedClassRec;
@@ -506,7 +510,7 @@ AdjustPanedSize(PanedWidget pw, unsigned int off_size,
 	int size = Max(PaneInfo(*childP)->size, (int)PaneInfo(*childP)->min);
 
 	AssignMin(size, (int)PaneInfo(*childP)->max);
-	newsize = (newsize + (size + pw->paned.internal_bw));
+	newsize = (Dimension)(newsize + (size + pw->paned.internal_bw));
     }
     newsize = (Dimension)(newsize - pw->paned.internal_bw);
 
@@ -792,9 +796,7 @@ static void
 CommitNewLocations(PanedWidget pw)
 {
     Widget *childP;
-    XWindowChanges changes;
-
-    changes.stack_mode = Above;
+    XWindowChanges changes = { .stack_mode = Above };
 
     ForAllPanes(pw, childP) {
 	Pane pane = PaneInfo(*childP);
@@ -910,7 +912,7 @@ static void
 _DrawInternalBorders(PanedWidget pw, GC gc)
 {
     Widget *childP;
-    int on_loc, off_loc;
+    int off_loc;
     unsigned int on_size, off_size;
 
     /*
@@ -925,7 +927,7 @@ _DrawInternalBorders(PanedWidget pw, GC gc)
     on_size = (unsigned int)pw->paned.internal_bw;
 
     ForAllPanes(pw, childP) {
-	on_loc = IsVert(pw) ? XtY(*childP) : XtX(*childP);
+	int on_loc = IsVert(pw) ? XtY(*childP) : XtX(*childP);
 	on_loc -= (int)on_size;
 
 	_DrawRect(pw, gc, on_loc, off_loc, on_size, off_size);
@@ -1041,7 +1043,6 @@ static void
 StartGripAdjustment(PanedWidget pw, Widget grip, Direction dir)
 {
     Widget *childP;
-    Cursor cursor;
 
     pw->paned.whichadd = pw->paned.whichsub = NULL;
 
@@ -1054,6 +1055,8 @@ StartGripAdjustment(PanedWidget pw, Widget grip, Direction dir)
      * Change the cursor
      */
     if (XtIsRealized(grip)) {
+	Cursor cursor;
+
 	if (IsVert(pw)) {
 	    if (dir == UpLeftPane)
 		cursor = pw->paned.adjust_upper_cursor;
@@ -1122,10 +1125,16 @@ MoveGripAdjustment(PanedWidget pw, Widget grip, Direction dir, int loc)
     if (dir == ThisBorderOnly) {
 	int old_add_size = add_size, old_sub_size;
 
+	if (pw->paned.whichadd == NULL)
+	    return;
+
 	AssignMax(add_size, (int)PaneInfo(pw->paned.whichadd)->min);
 	AssignMin(add_size, (int)PaneInfo(pw->paned.whichadd)->max);
 	if (add_size != old_add_size)
 	    sub_size += old_add_size - add_size;
+
+	if (pw->paned.whichsub == NULL)
+	    return;
 
 	old_sub_size = sub_size;
 	AssignMax(sub_size, (int)PaneInfo(pw->paned.whichsub)->min);
@@ -1452,7 +1461,6 @@ ChangeAllGripCursors(PanedWidget pw)
     Widget *childP;
 
     ForAllPanes(pw, childP) {
-	Arg arglist[1];
 	Cursor cursor;
 
 	if ((cursor = pw->paned.grip_cursor) == None) {
@@ -1463,6 +1471,8 @@ ChangeAllGripCursors(PanedWidget pw)
 	}
 
 	if (HasGrip(*childP)) {
+	    Arg arglist[1];
+
 	    XtSetArg(arglist[0], XtNcursor, cursor);
 	    XtSetValues(PaneInfo(*childP)->grip, arglist, 1);
 	}

@@ -469,14 +469,15 @@ _XawFindCache(XawCache *xaw,
 static XawCache *
 _XawGetCache(XawCache *xaw, Screen *screen, Colormap colormap, int depth)
 {
-  XawCache *s_cache, *c_cache, *d_cache, *cache, *pcache;
+  XawCache *cache;
 
   cache = _XawFindCache(xaw, screen, colormap, depth, FIND_ALL);
 
   if (!cache)
     {
-      s_cache = _XawFindCache(xaw,
-			      screen, colormap, depth, FIND_SCREEN);
+      XawCache *c_cache, *d_cache, *pcache;
+      XawCache *s_cache = _XawFindCache(xaw,
+					screen, colormap, depth, FIND_SCREEN);
       if (!s_cache)
 	{
 	  pcache = (XawCache *)XtMalloc(sizeof(XawCache));
@@ -664,7 +665,7 @@ GetResourcePixmapPath(Display *display)
     XrmRepresentation rep_type;
     XrmValue value;
     static char *default_path =
-	"%H/%T/%N:%P/include/X11/%T/%N:/usr/X11R6/include/X11/%T/%N:/usr/include/X11/%T/%N:%N";
+	(char*)"%H/%T/%N:%P/include/X11/%T/%N:/usr/X11R6/include/X11/%T/%N:/usr/include/X11/%T/%N:%N";
 
     xrm_name[0] = XrmPermStringToQuark("pixmapFilePath");
     xrm_name[1] = NULLQUARK;
@@ -707,7 +708,6 @@ BitmapLoader(XawParams *params, Screen *screen, Colormap colormap, int depth,
 {
   Pixel fg, bg;
   XColor color, exact;
-  Pixmap pixmap;
   unsigned int width, height;
   unsigned char *data = NULL;
   int hotX, hotY;
@@ -716,8 +716,8 @@ BitmapLoader(XawParams *params, Screen *screen, Colormap colormap, int depth,
   static SubstitutionRec sub[] = {
     {'H',   NULL},
     {'N',   NULL},
-    {'T',   "bitmaps"},
-    {'P',   PROJECT_ROOT},
+    {'T',   (_XtString) "bitmaps"},
+    {'P',   (_XtString) PROJECT_ROOT},
   };
   char *filename;
 
@@ -747,7 +747,7 @@ BitmapLoader(XawParams *params, Screen *screen, Colormap colormap, int depth,
     {
       if (!sub[0].substitution)
 	sub[0].substitution = getenv("HOME");
-      sub[1].substitution = params->name;
+      sub[1].substitution = (_XtString)params->name;
       if (pixmap_path == NULL)
 	GetResourcePixmapPath(DisplayOfScreen(screen));
       filename = XtFindFile(pixmap_path, sub, XtNumber(sub), NULL);
@@ -755,15 +755,16 @@ BitmapLoader(XawParams *params, Screen *screen, Colormap colormap, int depth,
 	return (FALSE);
     }
   else
-    filename = params->name;
+    filename = (char*)params->name;
 
   if (XReadBitmapFileData(filename, &width, &height, &data,
 			  &hotX, &hotY) == BitmapSuccess)
     {
-      pixmap = XCreatePixmapFromBitmapData(DisplayOfScreen(screen),
-					   RootWindowOfScreen(screen),
-					   (char *)data,
-					   width, height, fg, bg, (unsigned)depth);
+      Pixmap pixmap =
+	  XCreatePixmapFromBitmapData(DisplayOfScreen(screen),
+				      RootWindowOfScreen(screen),
+				      (char *)data,
+				      width, height, fg, bg, (unsigned)depth);
       if (data)
 	XFree(data);
       *pixmap_return = pixmap;
@@ -828,7 +829,7 @@ GradientLoader(XawParams *params, Screen *screen, Colormap colormap, int depth,
 
   value = NULL;
   if ((argval = XawFindArgVal(params, "start")) != NULL)
-    value = argval->value;
+    value = (char*)argval->value;
   if (value && !XAllocNamedColor(DisplayOfScreen(screen), colormap, value,
 			    &start, &color))
     return (False);
@@ -839,7 +840,7 @@ GradientLoader(XawParams *params, Screen *screen, Colormap colormap, int depth,
     }
   value = NULL;
   if ((argval = XawFindArgVal(params, "end")) != NULL)
-    value = argval->value;
+    value = (char*)argval->value;
   if (value && !XAllocNamedColor(DisplayOfScreen(screen), colormap, value,
 			    &end, &color))
     return (False);
@@ -936,8 +937,8 @@ XPixmapLoader(XawParams *params, Screen *screen, Colormap colormap, int depth _X
   static SubstitutionRec sub[] = {
     {'H',   NULL},
     {'N',   NULL},
-    {'T',   "pixmaps"},
-    {'P',   PROJECT_ROOT},
+    {'T',   (_XtString) "pixmaps"},
+    {'P',   (_XtString) PROJECT_ROOT},
   };
   const char *filename;
 
@@ -949,7 +950,7 @@ XPixmapLoader(XawParams *params, Screen *screen, Colormap colormap, int depth _X
     {
       if (!sub[0].substitution)
 	sub[0].substitution = getenv("HOME");
-      sub[1].substitution = params->name;
+      sub[1].substitution = (_XtString)params->name;
       if (pixmap_path == NULL)
 	GetResourcePixmapPath(DisplayOfScreen(screen));
       filename = XtFindFile(pixmap_path, sub, XtNumber(sub), NULL);

@@ -75,6 +75,10 @@ in this Software without prior written authorization from The Open Group.
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
+
 #define MAGIC_VALUE	((XawTextPosition)-1)
 #define streq(a, b)	(strcmp((a), (b)) == 0)
 
@@ -331,7 +335,7 @@ ReadText(Widget w, XawTextPosition pos, XawTextBlock *text, int length)
     text->firstPos = (int)pos;
     text->ptr = (char *)(piece->text + (pos - start));
     count = piece->used - (pos - start);
-    text->length = (Max(0, (length > count) ? count : length));
+    text->length = (int)(Max(0, (length > count) ? count : length));
 
     return (pos + text->length);
 }
@@ -404,12 +408,15 @@ ReplaceText(Widget w, XawTextPosition startPos, XawTextPosition endPos,
     if (src->text_src.edit_mode == XawtextRead)
 	return (XawEditError);
 
-    start_piece = FindPiece(src, startPos, &start_first);
-    end_piece = FindPiece(src, endPos, &end_first);
+    if ((start_piece = FindPiece(src, startPos, &start_first)) == NULL)
+	return XawEditError;
+    if ((end_piece = FindPiece(src, endPos, &end_first)) == NULL)
+	return XawEditError;
 
     /* STEP 3: remove the empty pieces... */
     if (start_piece != end_piece) {
-	temp_piece = start_piece->next;
+	if ((temp_piece = start_piece->next) == NULL)
+	    return XawEditError;
 
 	/* If empty and not the only piece then remove it */
 	if (((start_piece->used = startPos - start_first) == 0)
@@ -587,7 +594,6 @@ Scan(Widget w, register XawTextPosition position, XawTextScanType type,
 			if (piece == NULL)	/* Beginning of text */
 			    return (0);
 			ptr = piece->text + piece->used - 1;
-			c = *ptr;
 		    }
 		    else if (ptr >= piece->text + piece->used) {
 			piece = piece->next;
@@ -869,7 +875,7 @@ static void
 XawMultiSrcGetValuesHook(Widget w, ArgList args, Cardinal *num_args)
 {
     MultiSrcObject src = (MultiSrcObject)w;
-    unsigned int i;
+    Cardinal i;
 
     if (src->multi_src.type == XawAsciiString) {
 	for (i = 0; i < *num_args ; i++) {
@@ -1034,13 +1040,10 @@ Bool
 _XawMultiSaveAsFile(Widget w, _Xconst char* name)
 {
     MultiSrcObject src = (MultiSrcObject)w;
-    char * mb_string;
-    Bool ret;
-
-    mb_string = StorePiecesInString(src);
+    char *mb_string = StorePiecesInString(src);
 
     if (mb_string != 0) {
-	ret = WriteToFile(mb_string, (String)name);
+	Bool ret = WriteToFile(mb_string, (String)name);
 	XtFree(mb_string);
 
 	return (ret);
@@ -1089,7 +1092,7 @@ WriteToFile(String string, String name)
     int fd;
     Bool result = True;
 
-    if ((fd = creat(name, 0666)) == -1)
+    if ((fd = open(name, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)) == -1)
 	return (False);
 
     if (write(fd, string, strlen(string)) == -1)
@@ -1215,7 +1218,7 @@ InitStringOrFile(MultiSrcObject src, Bool newString)
 		XtErrorMsg("NoFile", "multiSourceCreate", "XawError",
 			   "Creating a read only disk widget and no file specified.",
 			   NULL, 0);
-	    open_mode = O_RDONLY;
+	    open_mode = O_RDONLY | O_CLOEXEC;
 	    fdopen_mode = "r";
 	    break;
 	case XawtextAppend:
@@ -1225,9 +1228,9 @@ InitStringOrFile(MultiSrcObject src, Bool newString)
 		src->multi_src.is_tempfile = True;
 	    }
 	    else {
-/* O_NOFOLLOW is a BSD & Linux extension */
+/* O_NOFOLLOW was a FreeBSD & Linux extension, now adopted by POSIX */
 #ifdef O_NOFOLLOW
-		open_mode = O_RDWR | O_NOFOLLOW;
+		open_mode = O_RDWR | O_NOFOLLOW | O_CLOEXEC;
 #else
 		open_mode = O_RDWR; /* unsafe; subject to race conditions */
 #endif
@@ -1323,7 +1326,7 @@ LoadPieces(MultiSrcObject src, FILE *file, char *string)
     else {
 	if (src->multi_src.length != 0) {
 	    temp_mb_holder =
-		XtMalloc(((size_t)(src->multi_src.length + 1) * sizeof(unsigned char)));
+		XtMalloc((Cardinal)((size_t)(src->multi_src.length + 1) * sizeof(unsigned char)));
 	    fseek(file, 0, SEEK_SET);
 	    src->multi_src.length = (XawTextPosition)fread(temp_mb_holder,
 					  sizeof(unsigned char),

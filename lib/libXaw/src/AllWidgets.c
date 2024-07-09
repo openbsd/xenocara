@@ -60,7 +60,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xaw/Tree.h>
 #include <X11/Xaw/Viewport.h>
 
-#define DATA(name,class) { (char *)name, class }
+#define DATA(name,class) { (char *)name, class, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 XmuWidgetNode XawWidgetArray[] = {
 DATA( "applicationShell", &applicationShellWidgetClass ),
 DATA( "asciiSink", &asciiSinkObjectClass ),

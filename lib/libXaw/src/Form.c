@@ -301,13 +301,12 @@ WidgetClass formWidgetClass = (WidgetClass)&formClassRec;
 static void
 XawFormRealize(Widget w, Mask *mask, XSetWindowAttributes *attr)
 {
-    XawPixmap *pixmap;
-
     (*formWidgetClass->core_class.superclass->core_class.realize)(w, mask, attr);
 
     if (w->core.background_pixmap > XtUnspecifiedPixmap) {
-	pixmap = XawPixmapFromXPixmap(w->core.background_pixmap, XtScreen(w),
-				      w->core.colormap, (int)w->core.depth);
+	XawPixmap *pixmap =
+	    XawPixmapFromXPixmap(w->core.background_pixmap, XtScreen(w),
+				 w->core.colormap, (int)w->core.depth);
 	if (pixmap && pixmap->mask)
 	    XawReshapeWidget(w, pixmap);
     }
@@ -781,8 +780,8 @@ XawFormResize(Widget w)
 				    fw->form.old_height, XtHeight(fw),
 				    form->form.bottom) -
 				    (y + (XtBorderWidth(*childP) << 1));
-	    form->form.virtual_width = width;
-	    form->form.virtual_height = height;
+	    form->form.virtual_width = (short)width;
+	    form->form.virtual_height = (short)height;
 #endif
 
 	    width = width < 1 ? 1 : width;
@@ -1022,10 +1021,8 @@ static void
 XawFormChangeManaged(Widget w)
 {
     FormWidget fw = (FormWidget)w;
-    FormConstraints form;
     WidgetList children, childP;
     int num_children = (int)fw->composite.num_children;
-    Widget child;
 
     (*((FormWidgetClass)w->core.widget_class)->form_class.layout)
 	(fw, XtWidth(w), XtHeight(w), True);
@@ -1035,7 +1032,8 @@ XawFormChangeManaged(Widget w)
     for (children = childP = fw->composite.children;
 	 childP - children < num_children;
 	 childP++) {
-	child = *childP;
+	FormConstraints form;
+	Widget child = *childP;
 	if (!XtIsManaged(child))
 	    continue;
 	form = (FormConstraints)child->core.constraints;

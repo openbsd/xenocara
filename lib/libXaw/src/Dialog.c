@@ -174,6 +174,9 @@ DialogClassRec dialogClassRec = {
   /* form */
   {
     XtInheritLayout,			/* layout */
+#ifndef OLDXAW
+    NULL,
+#endif
   },
   /* dialog */
   {
@@ -271,7 +274,6 @@ XawDialogSetValues(Widget current, Widget request _X_UNUSED, Widget cnew,
     DialogWidget w = (DialogWidget)cnew;
     DialogWidget old = (DialogWidget)current;
     Arg args[5];
-    Cardinal num_args;
     unsigned int i;
     Bool checks[NUM_CHECKS];
 
@@ -310,7 +312,8 @@ XawDialogSetValues(Widget current, Widget request _X_UNUSED, Widget cnew,
     }
 
     if (checks[LABEL]) {
-	num_args = 0;
+	Cardinal num_args = 0;
+
 	XtSetArg(args[num_args], XtNlabel, w->dialog.label);	num_args++;
 	if (w->dialog.iconW != NULL &&
 	    XtHeight(w->dialog.labelW) <= XtHeight(w->dialog.iconW)) {
@@ -359,9 +362,9 @@ XawDialogGetValuesHook(Widget w, ArgList args, Cardinal *num_args)
     Arg a[1];
     char * s;
     DialogWidget src = (DialogWidget)w;
-    unsigned int i;
+    Cardinal i;
 
-    for (i = 0; i < *num_args; i++)
+    for (i = 0; i < *num_args; i++) {
 	if (streq(args[i].name, XtNvalue)) {
 	    XtSetArg(a[0], XtNstring, &s);
 	    XtGetValues(src->dialog.valueW, a, 1);
@@ -372,6 +375,7 @@ XawDialogGetValuesHook(Widget w, ArgList args, Cardinal *num_args)
 	    XtGetValues(src->dialog.labelW, a, 1);
 	    *((char **)args[i].value) = s;
 	}
+    }
 }
 
 /*
