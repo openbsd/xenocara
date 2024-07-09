@@ -1,3 +1,86 @@
+commit 09617bcc9a0f1b5072212da5f8fede92ab85d157
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 12:55:30 2024 -0800
+
+    libXcursor 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3783190da9aaa5ddd23aad6060469fd3f3ebece9
+Author: Robin Linden <dev@robinlinden.eu>
+Date:   Thu Jan 18 18:36:39 2024 +0100
+
+    Remove superfluous and unguarded config.h include
+    
+    config.h is correctly included behind a HAVE_CONFIG_H guard earlier in
+    the file, so this isn't needed.
+    
+    Signed-off-by: Robin Linden <dev@robinlinden.eu>
+
+commit 5e0f8347cebef2b3a9f5d75ca254aabaa0bca259
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 8 10:48:25 2023 -0700
+
+    XcursorXcFileLoad: plug memory leak in error paths
+    
+    Found by gcc analyzer:
+    file.c: In function ‘XcursorXcFileLoad’:
+    file.c:782:8: warning: leak of ‘fileHeader’ [CWE-401] [-Wanalyzer-malloc-leak]
+      782 |     if (!images)
+          |        ^
+    
+    Fixes: 3b84b14 ("Initial revision")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9c1b50ed98d354488329c99bc8bf77d1c6df657c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 8 11:07:03 2023 -0700
+
+    Add comment about keeping libxcb-cursor copy of code in sync
+    
+    _XcursorThemeInherits, XcursorWhite, & XcursorSep are copied in
+    libxcb-cursor/cursor/load_cursor.c and should be kept in sync
+    with changes to the libXcursor originals of those.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a353f02a7ac4504ad5edb5407278c7a03c507aef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 25 12:14:36 2023 -0700
+
+    If O_CLOEXEC is defined, add "e" to fopen modes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 81dc4a481b64499ab7c355ee43c91e4fe0767545
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:42: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:42: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:42: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 87a30b1758b7757dd74d0a70e871d7af1cac3a44
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 27adb16027fa99d83818a0ed9f6623cb03f0c574
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 3 09:55:44 2022 -0700
@@ -1296,19 +1379,19 @@ Date:   Mon Jun 13 16:44:53 2005 +0000
     Bug #1043: Fix leak when creating animated cursors.
 
 commit 89e52cde6eaf5e2d46198ee2fa16b67ef7e1dd32
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 20:51:37 2005 +0000
 
     Remove experiment with calling the man page file 4x
 
 commit 5589b4f6a36f2c039adc81fa4d406574eeef35b3
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 20:44:18 2005 +0000
 
     Remove all the not found with pkgconfig stuff
 
 commit 4070c0af6c7bfe12218181d56e8e3cbb86006d27
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 19:15:43 2005 +0000
 
     - Add Xcursor build system

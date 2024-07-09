@@ -780,10 +780,14 @@ XcursorXcFileLoad (XcursorFile	    *file,
     }
     images = XcursorImagesCreate (nimage);
     if (!images)
+    {
+	_XcursorFileHeaderDestroy (fileHeader);
 	return 0;
+    }
     comments = XcursorCommentsCreate (ncomment);
     if (!comments)
     {
+	_XcursorFileHeaderDestroy (fileHeader);
 	XcursorImagesDestroy (images);
 	return 0;
     }
@@ -1019,7 +1023,7 @@ XcursorFilenameLoadImage (const char *file, int size)
     if (!file || size < 0)
         return NULL;
 
-    f = fopen (file, "r");
+    f = fopen (file, "r" FOPEN_CLOEXEC);
     if (!f)
 	return NULL;
     image = XcursorFileLoadImage (f, size);
@@ -1036,7 +1040,7 @@ XcursorFilenameLoadImages (const char *file, int size)
     if (!file || size < 0)
         return NULL;
 
-    f = fopen (file, "r");
+    f = fopen (file, "r" FOPEN_CLOEXEC);
     if (!f)
 	return NULL;
     images = XcursorFileLoadImages (f, size);
@@ -1053,7 +1057,7 @@ XcursorFilenameLoadAllImages (const char *file)
     if (!file)
         return NULL;
 
-    f = fopen (file, "r");
+    f = fopen (file, "r" FOPEN_CLOEXEC);
     if (!f)
 	return NULL;
     images = XcursorFileLoadAllImages (f);
@@ -1072,7 +1076,7 @@ XcursorFilenameLoad (const char		*file,
     if (!file)
         return XcursorFalse;
 
-    f = fopen (file, "r");
+    f = fopen (file, "r" FOPEN_CLOEXEC);
     if (!f)
 	return 0;
     ret = XcursorFileLoad (f, commentsp, imagesp);
@@ -1089,7 +1093,7 @@ XcursorFilenameSaveImages (const char *file, const XcursorImages *images)
     if (!file || !images)
         return XcursorFalse;
 
-    f = fopen (file, "w");
+    f = fopen (file, "w" FOPEN_CLOEXEC);
     if (!f)
 	return 0;
     ret = XcursorFileSaveImages (f, images);
@@ -1107,7 +1111,7 @@ XcursorFilenameSave (const char		    *file,
     if (!file || !comments || !images)
         return XcursorFalse;
 
-    f = fopen (file, "w");
+    f = fopen (file, "w" FOPEN_CLOEXEC);
     if (!f)
 	return 0;
     ret = XcursorFileSave (f, comments, images);

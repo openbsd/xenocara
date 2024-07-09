@@ -26,12 +26,15 @@ AC_PREREQ([2.60])
 # This is the package version number, not the shared library
 # version.  This version number will be substituted into Xcursor.h
 #
-AC_INIT([libXcursor], [1.2.1],
-        [https://gitlab.freedesktop.org/xorg/lib/libXcursor/issues],[libXcursor])
+AC_INIT([libXcursor], [1.2.2],
+        [https://gitlab.freedesktop.org/xorg/lib/libxcursor/-/issues],
+        [libXcursor])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h include/X11/Xcursor/Xcursor.h])
+AC_CONFIG_MACRO_DIRS([m4])
+
 # Set common system defines for POSIX extensions, such as _GNU_SOURCE
-# Must be called before any macros that run the compiler (like AC_PROG_LIBTOOL)
+# Must be called before any macros that run the compiler (like LT_INIT)
 # to avoid autoconf errors.
 AC_USE_SYSTEM_EXTENSIONS
 
@@ -39,7 +42,7 @@ AC_USE_SYSTEM_EXTENSIONS
 AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],

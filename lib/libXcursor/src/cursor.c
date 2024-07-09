@@ -146,7 +146,7 @@ _XcursorPixelToColor (XcursorPixel p, XColor *color)
 static void
 _XcursorDumpImage (XImage *image)
 {
-    FILE    *f = fopen ("/tmp/images", "a");
+    FILE    *f = fopen ("/tmp/images", "a" FOPEN_CLOEXEC);
     int	    x, y;
     if (!f)
 	return;
@@ -164,7 +164,7 @@ _XcursorDumpImage (XImage *image)
 static void
 _XcursorDumpColor (XColor *color, char *name)
 {
-    FILE    *f = fopen ("/tmp/images", "a");
+    FILE    *f = fopen ("/tmp/images", "a" FOPEN_CLOEXEC);
     fprintf (f, "%s: %x %x %x\n", name,
 	     color->red, color->green, color->blue);
     fflush (f);

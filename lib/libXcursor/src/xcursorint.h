@@ -36,7 +36,13 @@
 #endif
 
 #include "Xcursor.h"
-#include "config.h"
+
+#include <fcntl.h>
+#ifdef O_CLOEXEC
+#define FOPEN_CLOEXEC "e"
+#else
+#define FOPEN_CLOEXEC ""
+#endif
 
 typedef struct _XcursorFontInfo {
     struct _XcursorFontInfo	*next;
