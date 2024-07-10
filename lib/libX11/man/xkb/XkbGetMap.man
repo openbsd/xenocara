@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -35,13 +35,13 @@ client map and server map
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- display
+.I display
 connection to X server
 .TP
-.I \- which
+.I which
 mask selecting subcomponents to populate
 .TP
-.I \- device_spec
+.I device_spec
 device_id, or XkbUseCoreKbd
 .SH DESCRIPTION
 .LP

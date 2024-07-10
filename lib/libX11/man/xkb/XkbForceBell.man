@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -33,10 +33,10 @@ bell on the default keyboard
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- display
+.I display
 connection to the X server
 .TP
-.I \- percent
+.I percent
 volume for the bell, which can range from -100 to 100 inclusive
 .SH DESCRIPTION
 .LP

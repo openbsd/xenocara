@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -20,9 +20,9 @@
 .\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 .\" DEALINGS IN THE SOFTWARE.
 .\"
-.TH XkbSAActionSetCtrls __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
+.TH XkbActionSetCtrls __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbSAActionSetCtrls \- Sets the 
+XkbActionSetCtrls \- Sets the
 .I ctrls0 
 through 
 .I ctrls3
@@ -32,17 +32,17 @@ from
 .I ctrls
 .SH SYNOPSIS
 .HP
-.B void XkbSAActionSetCtrls
+.B void XkbActionSetCtrls
 .BI "(\^XkbCtrlsAction " "act" "\^,"
 .BI "unsigned int " "ctrls" "\^);"
 .if n .ti +5n
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- act
+.I act
 action in which to set ctrls0-ctrls3
 .TP
-.I \- ctrls
+.I ctrls
 value to set in ctrls0-ctrls3
 .SH DESCRIPTION
 .LP
@@ -121,7 +121,7 @@ fields represent the boolean controls in the
 .I enabled_ctrls 
 field of the controls structure. Xkb macros, to convert between the two formats.
 
-.I XkbSAActionSetCtrls 
+.I XkbActionSetCtrls
 sets the 
 .I ctrls0 
 through 

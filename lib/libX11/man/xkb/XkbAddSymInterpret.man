@@ -1,4 +1,4 @@
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -34,16 +34,16 @@ interpretations in an XkbCompatRec
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- xkb
+.I xkb
 keyboard description to be updated 
 .TP
-.I \- si
+.I si
 symbol interpretation to be added
 .TP
-.I \- updateMap
+.I updateMap
 True=>apply compatibility map to keys
 .TP
-.I \- changes
+.I changes
 changes are put here 
 .SH DESCRIPTION
 .LP

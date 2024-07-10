@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -33,13 +33,13 @@ XkbFreeNames \- Free symbolic names structures
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- xkb
+.I xkb
 keyboard description for which names are to be freed
 .TP
-.I \- which
+.I which
 mask of names components to be freed
 .TP
-.I \- free_map
+.I free_map
 True => XkbNamesRec structure itself should be freed
 .SH DESCRIPTION
 .LP

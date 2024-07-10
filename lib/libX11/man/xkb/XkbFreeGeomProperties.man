@@ -1,4 +1,4 @@
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -33,16 +33,16 @@ XkbFreeGeomProperties \- Free geometry properties
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- geom
+.I geom
 geometry in which properties should be freed
 .TP
-.I \- first
+.I first
 first property to be freed 
 .TP
-.I \- count
+.I count
 number of properties to be freed 
 .TP
-.I \- free_all
+.I free_all
 True => all properties are freed
 .SH DESCRIPTION
 .LP

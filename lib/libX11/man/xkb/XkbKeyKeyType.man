@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -20,47 +20,51 @@
 .\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 .\" DEALINGS IN THE SOFTWARE.
 .\"
-.TH XkbKeySymsOffset __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
+.TH XkbKeyKeyType __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbKeySymsOffset \- Returns the offset of the two-dimensional array of keysyms 
-for the key corresponding to 
-.I keycode
+XkbKeyKeyType \- Obtain the index of a key type or the pointer to a key type
 .SH SYNOPSIS
 .HP
-.B int XkbKeySymsOffset
+.B XkbKeyTypePtr XkbKeyKeyType
 .BI "(\^XkbDescPtr " "xkb" "\^,"
-.BI "KeyCode " "keycode" "\^);"
+.BI "KeyCode " "keycode" "\^,"
+.BI "int " "group" "\^);"
 .if n .ti +5n
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- xkb
+.I xkb
 Xkb description of interest
 .TP
-.I \- keycode
+.I keycode
 keycode of interest
+.TP
+.I group
+group index
 .SH DESCRIPTION
 .LP
-The key width and number of groups associated with a key are used to form a 
-small two-dimensional array of KeySyms for a key. This array may be different 
-sizes for different keys. The array for a single key is stored as a linear list, 
-in row-major order. The arrays for all of the keys are stored in the 
-.I syms 
-field of the client map. There is one row for each group associated with a key 
-and one column for each level. The index corresponding to a given group and 
-shift level is computed as:
+.I XkbKeyKeyType
+returns a pointer to the key type in the 
+.I types 
+vector of the client map in 
+.I xkb 
+corresponding to the given 
+.I keycode 
+and 
+.I group 
+index.
+.SH STRUCTURES
+.LP
 .nf
 
-     idx = group_index * key_width + shift_level
-     
-.fi
-The 
-.I offset 
-field of the 
-.I key_sym_map 
-entry for a key is used to access the beginning of the array.
+typedef struct {                             /\&* Key Type */
+	XkbModsRec              mods;           /\&* modifiers used to compute shift level */
+	unsigned char           num_levels;     /\&* total # shift levels, do not modify directly */
+	unsigned char           map_count;      /\&* # entries in map, preserve (if non-NULL) */
+	XkbKTMapEntryPtr        map;            /\&* vector of modifiers for each shift level */
+	XkbModsPtr              preserve;       /\&* mods to preserve for corresponding map entry */
+	Atom                    name;           /\&* name of key type */
+	Atom *                  level_names;    /\&* array of names of each shift level */
+} XkbKeyTypeRec, *XkbKeyTypePtr;
 
-.I XkbKeySymsOffset 
-returns the offset of the two-dimensional array of keysyms for the key 
-corresponding to 
-.I keycode.
+.fi

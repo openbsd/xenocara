@@ -1,4 +1,4 @@
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -34,19 +34,19 @@ XkbTranslateKeyCode \-  Translate a keycode to a key symbol and modifiers
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- xkb
+.I xkb
 keyboard description to use for translation
 .TP
-.I \- key
+.I key
 keycode to translate
 .TP
-.I \- mods
+.I mods
 modifiers to apply when translating key
 .TP
-.I \- mods_rtrn
+.I mods_rtrn
 backfilled with consumed modifiers
 .TP
-.I \- keysym_rtrn
+.I keysym_rtrn
 keysym resulting from translation
 .SH DESCRIPTION
 .LP

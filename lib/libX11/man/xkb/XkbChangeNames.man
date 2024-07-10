@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -22,24 +22,24 @@
 .\"
 .TH XkbChangeNames __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbChangeNames \- _summary-line_
+XkbChangeNames \- Change symbolic names in the server
 .SH SYNOPSIS
 .HP
 .B Bool XkbChangeNames
 .BI "(\^Display *" "dpy" "\^,"
 .BI "unsigned int " "which" "\^,"
-.BI "XkbDescPtr " "Xkb" "\^);"
+.BI "XkbDescPtr " "xkb" "\^);"
 .if n .ti +5n
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- dpy
+.I dpy
 connection to the X server
 .TP
-.I \- which
+.I which
 mask of names or map components to be updated
 .TP
-.I \- Xkb
+.I xkb
 keyboard description to be updated
 .SH DESCRIPTION
 .LP

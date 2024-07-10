@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -32,10 +32,10 @@ XkbAllocGeomSectionDoodads \- Allocate doodads that are specific to a section
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- section
+.I section
 section for which doodads should be allocated
 .TP
-.I \- num_needed
+.I num_needed
 number of new doodads required
 .SH DESCRIPTION
 .LP

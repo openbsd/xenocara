@@ -1,4 +1,4 @@
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -30,13 +30,13 @@ XkbSetDetectableAutoRepeat \- Sets DetectableAutoRepeat
 .BI "Bool *" "supported_rtrn" "\^);"
 .SH ARGUMENTS
 .TP
-.I \- display
+.I display
 connection to X server
 .TP
-.I \- detectable
+.I detectable
 True => set DetectableAutoRepeat
 .TP
-.I \- supported_rtrn
+.I supported_rtrn
 backfilled True if DetectableAutoRepeat supported
 .SH DESCRIPTION
 .LP

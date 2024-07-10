@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -20,51 +20,37 @@
 .\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 .\" DEALINGS IN THE SOFTWARE.
 .\"
-.TH XkbGetNameChanges __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
+.TH XkbKeyKeyTypeIndex __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetNameChanges \- Update the local copy of the keyboard description with the 
-actual values of the results of one or more calls to 
-.I XkbNoteNameChanges
+XkbKeyKeyTypeIndex \- Obtain the index of a key type or the pointer to a key type
 .SH SYNOPSIS
 .HP
-.B Status XkbGetNameChanges
-.BI "(\^Display *" "dpy" "\^,"
-.BI "XkbDescPtr " "xkb" "\^,"
-.BI "XkbNameChangesPtr " "changes" "\^);"
+.B int XkbKeyKeyTypeIndex
+.BI "(\^XkbDescPtr " "xkb" "\^,"
+.BI "KeyCode " "keycode" "\^,"
+.BI "int " "group" "\^);"
 .if n .ti +5n
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- dpy
-connection to the X server
+.I xkb
+Xkb description of interest
 .TP
-.I \- xkb
-keyboard description to which names are copied
+.I keycode
+keycode of interest
 .TP
-.I \- changes
-names components to be obtained from the server
+.I group
+group index
 .SH DESCRIPTION
 .LP
-.I XkbGetNameChanges 
-examines the 
-.I changes 
-parameter, retrieves the necessary information from the server, and places the 
-results into the 
+.I XkbKeyKeyTypeIndex
+computes an index into the 
+.I types 
+vector of the client map in 
 .I xkb 
-keyboard description.
+from the given 
+.I keycode 
+and 
+.I group 
+index.
 
-.I XkbGetNamesChanges 
-can generate BadAlloc, BadImplementation, and BadMatch errors.
-.SH DIAGNOSTICS
-.TP 15
-.B BadAlloc
-Unable to allocate storage
-.TP 15
-.B BadImplementation
-Invalid reply from server
-.TP 15
-.B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
-correct type and range, but is otherwise invalid
-.SH "SEE ALSO"
-.BR XkbNoteNameChanges (__libmansuffix__)

@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -33,13 +33,13 @@ XkbAddDeviceLedInfo \- Initialize an XkbDeviceLedInfoRec structure
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- device_info
+.I device_info
 structure in which to add LED info
 .TP
-.I \- led_class
+.I led_class
 input extension class for LED device of interest
 .TP
-.I \- led_id
+.I led_id
 input extension ID for LED device of interest
 .SH DESCRIPTION
 .LP

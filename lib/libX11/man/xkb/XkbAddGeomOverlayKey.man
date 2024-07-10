@@ -1,4 +1,4 @@
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -33,13 +33,13 @@ XkbAddGeomOverlayKey \- Add a key to an existing overlay row
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- overlay
+.I overlay
 overlay to be updated
 .TP
-.I \- row
+.I row
 row in overlay to be updated
 .TP
-.I \- under
+.I under
 primary name of the key to be considered 
 .SH DESCRIPTION
 .LP

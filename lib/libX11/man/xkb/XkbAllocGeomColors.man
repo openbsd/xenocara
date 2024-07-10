@@ -1,4 +1,4 @@
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -31,10 +31,10 @@ XkbAllocGeomColors \- Allocate geometry colors
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- geom
+.I geom
 geometry for which colors should be allocated
 .TP
-.I \- num_needed
+.I num_needed
 number of new colors required
 .SH DESCRIPTION
 .LP

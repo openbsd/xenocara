@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -35,16 +35,16 @@ keyboard mapping
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- dpy
+.I dpy
 connection to X server
 .TP
-.I \- first
+.I first
 index to first type to get, 0 => 1st type
 .TP
-.I \- num
+.I num
 number of key types to be returned
 .TP
-.I \- xkb
+.I xkb
 keyboard description containing client map to update
 .SH DESCRIPTION
 .LP
@@ -77,6 +77,6 @@ The Xkb extension has not been properly initialized
 .B BadValue
 An argument is out of range
 .SH "SEE ALSO"
-.BR XkbKeyType (__libmansuffix__),
-.BR XkbKeyTypeIndex (__libmansuffix__)
+.BR XkbKeyKeyType (__libmansuffix__),
+.BR XkbKeyKeyTypeIndex (__libmansuffix__)
 

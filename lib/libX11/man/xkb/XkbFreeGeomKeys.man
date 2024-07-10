@@ -1,4 +1,4 @@
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -33,16 +33,16 @@ XkbFreeGeomKeys \-  Free geometry keys
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- row
+.I row
 row in which keys should be freed 
 .TP
-.I \- first
+.I first
 first key to be freed
 .TP
-.I \- count
+.I count
 number of keys to be freed
 .TP
-.I \- free_all
+.I free_all
 True => all keys are freed
 .SH DESCRIPTION
 .LP

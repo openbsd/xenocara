@@ -1,4 +1,4 @@
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -36,16 +36,16 @@ keycode
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- xkb
+.I xkb
 Xkb description of interest
 .TP
-.I \- keycode
+.I keycode
 keycode of interest
 .TP
-.I \- shift
+.I shift
 shift level within group
 .TP
-.I \- grp
+.I grp
 group index for group of interest
 .SH DESCRIPTION
 .LP

@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -33,13 +33,13 @@ XkbFreeCompatMap \- Free an entire compatibility map or selected portions of one
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- xkb
+.I xkb
 Xkb description in which to free compatibility map
 .TP
-.I \- which
+.I which
 mask of compatibility map components to free
 .TP
-.I \- free_map
+.I free_map
 True => free XkbCompatMap structure itself
 .SH DESCRIPTION
 .LP

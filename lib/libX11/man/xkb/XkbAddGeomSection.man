@@ -1,4 +1,4 @@
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -34,19 +34,19 @@ XkbAddGeomSection \- Add one section to an existing keyboard geometry
 .if t .ti +.5i
 .SH ARGUMENTS
 .TP
-.I \- geom
+.I geom
 geometry to be updated
 .TP
-.I \- name
+.I name
 name of the new section
 .TP
-.I \- sz_rows
+.I sz_rows
 number of rows to reserve in the section
 .TP
-.I \- sz_doodads
+.I sz_doodads
 number of doodads to reserve in the section
 .TP
-.I \- sz_overlays
+.I sz_overlays
 number of overlays to reserve in the section
 .SH DESCRIPTION
 .LP

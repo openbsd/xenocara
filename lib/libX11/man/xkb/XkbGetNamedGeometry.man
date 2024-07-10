@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright 1999 Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1999, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -32,13 +32,13 @@ by name
 .BI "Atom " "name" "\^);"
 .SH ARGUMENTS
 .TP
-.I \- dpy
+.I dpy
 connection to the X server
 .TP
-.I \- xkb
+.I xkb
 keyboard description into which the geometry should be loaded
 .TP
-.I \- name
+.I name
 name of the geometry to be loaded
 .SH DESCRIPTION
 .LP
