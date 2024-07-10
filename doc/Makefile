@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile,v 1.1 2006/11/29 17:42:27 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2024/07/10 07:00:41 matthieu Exp $
 
-SUBDIR= gl-docs xorg-docs
+SUBDIR= xorg-docs
 
 .include <bsd.subdir.mk>
 
