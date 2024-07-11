@@ -22,7 +22,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.TH APPRES 1 __xorgversion__
+.TH APPRES 1 "@PACKAGE_STRING@" "@XORG_MAN_PAGE@"
 .SH NAME
 appres \- list X application resource database
 .SH SYNOPSIS
@@ -86,6 +86,6 @@ will list the resources matching the \fIxterm\fP vt100 widget.
 The -V option prints the appres command version and exits.
 .SH "SEE ALSO"
 .PP
-X(__miscmansuffix__), xrdb(__appmansuffix__), listres(__appmansuffix__)
+X(@MISC_MAN_SUFFIX@), xrdb(@APP_MAN_SUFFIX@), listres(@APP_MAN_SUFFIX@)
 .SH AUTHOR
 Jim Fulton, MIT X Consortium

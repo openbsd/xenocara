@@ -1,3 +1,49 @@
+commit 07075bda9cd863fa10f47993271dbe7e6e256d71
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 16 10:32:47 2024 -0700
+
+    appres 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/appres/-/merge_requests/5>
+
+commit b297a7738a02b3fb7a8842e054c4068195038c38
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 7 13:58:13 2024 -0700
+
+    meson: Add a meson build system
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/appres/-/merge_requests/4>
+
+commit 2b5316265c5ce6c7dbd8f726826d5d5a7385febd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 7 12:53:58 2024 -0700
+
+    configure: use @-style substitutions for man pages instead of __-style
+    
+    Moves substitution of variables from Makefile.am to configure.ac
+    in preparation for allowing meson.build to do the same.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/appres/-/merge_requests/4>
+
+commit 888aece87c0af4e0b326d4d92fcc079f249a7f73
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 9 12:25:47 2023 -0800
+
+    Accept -help, -version, & -V without requiring display to open
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 163ba88d2d98369df78c2700b634cf62012f8c31
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 55db329c8363e6ca969c27652f0da714364065bd
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 3 11:54:44 2022 -0700
@@ -467,7 +513,7 @@ Date:   Fri Oct 14 00:25:40 2005 +0000
     Use sed to fill in variables in man page
 
 commit 61d84d9c527921b252706b251ce29caac4eb5ad4
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Fri Sep 23 20:34:52 2005 +0000
 
     Add some content to these.
@@ -513,7 +559,7 @@ Date:   Fri Jul 1 16:55:14 2005 +0000
     More freedestkop->freedesktop typo fixes
 
 commit e6418cf03e9a7f835a7ee7d958ea6a1d4318f7b5
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 22 23:52:44 2005 +0000
 
     - Add script that can generate the build system for applications

@@ -42,7 +42,7 @@ static char *ProgramName;
 static XrmQuark XrmQString;
 
 static void _X_NORETURN
-usage (void)
+usage (int exitval)
 {
     fprintf (stderr,
 	     "usage:  %s  [class [instance]] [-1] [-V] [toolkitoptions]\n"
@@ -50,7 +50,7 @@ usage (void)
 	     "-V      print command version and exit\n"
              "The number of class and instance elements must be equal.\n",
 	     ProgramName);
-    exit (1);
+    exit (exitval);
 }
 
 /* stolen from Xlib Xrm.c */
@@ -133,6 +133,23 @@ main (int argc, char *argv[])
     int mode = XrmEnumAllLevels;
 
     ProgramName = argv[0];
+
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version, but not -V */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    usage(0);
+	}
+	if ((strcmp(argn, "-version") == 0) || (strcmp(argv[n], "-V") == 0)) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     if (argc > 1 && argv[1][0] != '-') {
 	cname = argv[1];
 	if (argc > 2 && argv[2][0] != '-')
@@ -143,7 +160,8 @@ main (int argc, char *argv[])
     XrmStringToNameList(iname, names);
     for (i = 0; names[i]; i++)
 	;
-    if (!i || classes[i] || !classes[i-1]) usage ();
+    if (!i || classes[i] || !classes[i-1])
+	usage(1);
     argv[0] = XrmNameToString(names[0]);
 
     toplevel = XtAppInitialize(&xtcontext, XrmClassToString(classes[0]),
@@ -154,21 +172,17 @@ main (int argc, char *argv[])
     for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-1"))
 	    mode = XrmEnumOneLevel;
-	else if (!strcmp(argv[i], "-V")) {
-	    printf("%s\n", PACKAGE_STRING);
-	    exit(0);
-	}
 	else if (argv[i][0] == '-') {
 	    fprintf(stderr, "%s: unrecognized option '%s'\n",
 		    ProgramName, argv[i]);
-	    usage();
+	    usage(1);
 	}
 	else if (!cname)
 	    cname = argv[i];
 	else if (!iname)
 	    iname = argv[i];
 	else
-	    usage();
+	    usage(1);
     }
 
     if (!iname) {
