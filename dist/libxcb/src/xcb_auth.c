@@ -73,7 +73,7 @@ enum auth_protos {
 #define AUTH_PROTO_XDM_AUTHORIZATION "XDM-AUTHORIZATION-1"
 #define AUTH_PROTO_MIT_MAGIC_COOKIE "MIT-MAGIC-COOKIE-1"
 
-static char *authnames[N_AUTH_PROTOS] = {
+static const char *authnames[N_AUTH_PROTOS] = {
 #ifdef HASXDMAUTH
     AUTH_PROTO_XDM_AUTHORIZATION,
 #endif
@@ -165,7 +165,7 @@ static Xauth *get_authptr(struct sockaddr *sockname, int display)
     return XauGetBestAuthByAddr (family,
                                  (unsigned short) addrlen, addr,
                                  (unsigned short) dispbuflen, dispbuf,
-                                 N_AUTH_PROTOS, authnames, authnameslen);
+                                 N_AUTH_PROTOS, (char **)authnames, authnameslen);
 }
 
 #ifdef HASXDMAUTH

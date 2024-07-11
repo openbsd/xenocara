@@ -1,6 +1,10 @@
 #include <check.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef __unix__
+#include <unistd.h>
+#endif
 #include "check_suites.h"
 #include "xcb.h"
 #include "xcbext.h"
@@ -11,6 +15,10 @@ typedef enum test_type_t {
 	TEST_ARGUMENT, TEST_ENVIRONMENT, TEST_END
 } test_type_t;
 static const char *const test_string[] = { "", "via $DISPLAY " };
+
+/* putenv(3) takes a pointer to a writable string that it adds directly
+   to the environment, so it must be in persistent memory, not on the stack */
+static char display_env[] = "DISPLAY=";
 
 static void parse_display_pass(const char *name, const char *host, const int display, const int screen)
 {
@@ -25,7 +33,7 @@ static void parse_display_pass(const char *name, const char *host, const int dis
 		if(test_type == TEST_ARGUMENT)
 		{
 			argument = name;
-			putenv("DISPLAY=");
+			putenv(display_env);
 		}
 		else if(test_type == TEST_ENVIRONMENT)
 		{
@@ -50,7 +58,7 @@ static void parse_display_pass(const char *name, const char *host, const int dis
 		ck_assert_msg(strcmp(host, got_host) == 0, "screenless parse %sproduced unexpected hostname '%s' for '%s': expected '%s'", test_string[test_type], got_host, name, host);
 		ck_assert_msg(display == got_display, "screenless parse %sproduced unexpected display '%d' for '%s': expected '%d'", test_string[test_type], got_display, name, display);
 	}
-	putenv("DISPLAY=");
+	putenv(display_env);
 }
 
 static void parse_display_fail(const char *name)
@@ -66,7 +74,7 @@ static void parse_display_fail(const char *name)
 		if(test_type == TEST_ARGUMENT)
 		{
 			argument = name;
-			putenv("DISPLAY=");
+			putenv(display_env);
 		}
 		else if(test_type == TEST_ENVIRONMENT)
 		{
@@ -92,11 +100,42 @@ static void parse_display_fail(const char *name)
 		ck_assert_msg(got_host == (char *) -1, "host changed on parse failure %sfor '%s': got %p", test_string[test_type], name, got_host);
 		ck_assert_msg(got_display == -42, "display changed on parse failure %sfor '%s': got %d", test_string[test_type], name, got_display);
 	}
-	putenv("DISPLAY=");
+	putenv(display_env);
 }
 
 START_TEST(parse_display_unix)
 {
+#ifdef __unix__
+	char buf[sizeof "/tmp/xcb-test.XXXXXXX"];
+	char buf2[sizeof(buf) + 7];
+	int r, v;
+	memcpy(buf, "/tmp/xcb-test.XXXXXXX", sizeof buf);
+	v = mkstemp(buf);
+	ck_assert_msg(v >= 0, "cannot create temporary file");
+	parse_display_pass(buf, buf, 0, 0);
+	r = snprintf(buf2, sizeof buf2, "unix:%s", buf);
+	if (r < 5 || r >= (int)sizeof buf2) {
+		ck_assert_msg(0, "snprintf() failed (return value %d)", r);
+		unlink(buf);
+		return;
+	}
+	parse_display_pass(buf2, buf, 0, 0);
+	r = snprintf(buf2, sizeof buf2, "unix:%s.1", buf);
+	if (r < 7 || r >= (int)sizeof buf2) {
+		ck_assert_msg(0, "snprintf() failed (return value %d)", r);
+		unlink(buf);
+		return;
+	}
+	parse_display_pass(buf2, buf, 0, 1);
+	r = snprintf(buf2, sizeof buf2, "%s.1", buf);
+	if (r < 2 || r >= (int)sizeof buf2) {
+		ck_assert_msg(0, "snprintf() failed (return value %d)", r);
+		unlink(buf);
+		return;
+	}
+	parse_display_pass(buf2, buf, 0, 1);
+	unlink(buf);
+#endif
 	parse_display_pass(":0", "", 0, 0);
 	parse_display_pass(":1", "", 1, 0);
 	parse_display_pass(":0.1", "", 0, 1);
@@ -206,7 +245,7 @@ END_TEST
 Suite *public_suite(void)
 {
 	Suite *s = suite_create("Public API");
-	putenv("DISPLAY=");
+	putenv(display_env);
 	suite_add_test(s, parse_display_unix, "xcb_parse_display unix");
 	suite_add_test(s, parse_display_ip, "xcb_parse_display ip");
 	suite_add_test(s, parse_display_ipv4, "xcb_parse_display ipv4");

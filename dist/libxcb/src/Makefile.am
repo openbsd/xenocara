@@ -40,6 +40,14 @@ libxcb_damage_la_LIBADD = $(XCB_LIBS)
 nodist_libxcb_damage_la_SOURCES = damage.c damage.h
 endif
 
+EXTSOURCES += dbe.c
+if BUILD_DBE
+lib_LTLIBRARIES += libxcb-dbe.la
+libxcb_dbe_la_LDFLAGS = -version-info 0:0:0 -no-undefined @lt_enable_auto_import@
+libxcb_dbe_la_LIBADD = $(XCB_LIBS)
+nodist_libxcb_dbe_la_SOURCES = dbe.c dbe.h
+endif
+
 EXTSOURCES += dpms.c
 if BUILD_DPMS
 lib_LTLIBRARIES += libxcb-dpms.la

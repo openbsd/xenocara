@@ -331,7 +331,7 @@ def c_close(self):
     _h(' */')
 
     # Write header file
-    hfile = open('%s.h' % _ns.header, 'w')
+    hfile = open('%s.h' % _ns.header, 'w', encoding='UTF-8')
     for list in _hlines:
         for line in list:
             hfile.write(line)
@@ -339,7 +339,7 @@ def c_close(self):
     hfile.close()
 
     # Write source file
-    cfile = open('%s.c' % _ns.header, 'w')
+    cfile = open('%s.c' % _ns.header, 'w', encoding='UTF-8')
     for list in _clines:
         for line in list:
             cfile.write(line)
@@ -2266,13 +2266,13 @@ def _c_request_helper(self, name, void, regular, aux=False, reply_fds=False):
             elif base_func_name == 'xcb_create_window' and field.c_field_name == 'value_mask':
                 field.enum = 'CW'
             if field.enum:
-                # XXX: why the 'xcb' prefix?
-                key = ('xcb', field.enum)
+                assert 2 <= len(self.name) <= 3
+                key = (*self.name[:-1], field.enum)
 
                 tname = _t(key)
                 if namecount[tname] > 1:
                     tname = _t(key + ('enum',))
-                _h(' * @param %s A bitmask of #%s values.' % (field.c_field_name, tname))
+                _h(' * @param %s A bitmask of #%s values.', field.c_field_name, tname)
 
             if self.doc and field.field_name in self.doc.fields:
                 desc = self.doc.fields[field.field_name]
@@ -2280,7 +2280,8 @@ def _c_request_helper(self, name, void, regular, aux=False, reply_fds=False):
                     desc = desc.replace('`%s`' % name, '\\a %s' % (name))
                 desc = desc.split("\n")
                 desc = [line if line != '' else '\\n' for line in desc]
-                _h(' * @param %s %s' % (field.c_field_name, "\n * ".join(desc)))
+                _h(' * @param %s %s', field.c_field_name, "\n * ".join(desc))
+
             # If there is no documentation yet, we simply don't generate an
             # @param tag. Doxygen will then warn about missing documentation.
 
@@ -2339,7 +2340,7 @@ def _c_request_helper(self, name, void, regular, aux=False, reply_fds=False):
         for field in param_fields:
             if not field.type.fixed_size() and field.wire:
                 count = count + 2
-                if field.type.c_need_serialize:
+                if field.type.c_need_serialize or field.type.c_need_sizeof:
                     # _serialize() keeps track of padding automatically
                     count -= 1
     dimension = count + 2

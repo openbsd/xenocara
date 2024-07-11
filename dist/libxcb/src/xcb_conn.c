@@ -310,9 +310,11 @@ static int write_vec(xcb_connection_t *c, struct iovec **vector, int *count)
         int cur = (*vector)->iov_len;
         if(cur > n)
             cur = n;
-        (*vector)->iov_len -= cur;
-        (*vector)->iov_base = (char *) (*vector)->iov_base + cur;
-        n -= cur;
+        if(cur) {
+            (*vector)->iov_len -= cur;
+            (*vector)->iov_base = (char *) (*vector)->iov_base + cur;
+            n -= cur;
+        }
         if((*vector)->iov_len)
             break;
     }

@@ -2,8 +2,8 @@ dnl Process this file with autoconf to produce a configure script.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libxcb],[1.15],
-        [https://gitlab.freedesktop.org/xorg/lib/libxcb/issues],
+AC_INIT([libxcb],[1.17.0],
+        [https://gitlab.freedesktop.org/xorg/lib/libxcb/-/issues],
         [libxcb])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
@@ -12,12 +12,13 @@ AC_CONFIG_HEADERS([src/config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-xz])
-AM_PATH_PYTHON([2.6])
+AM_PATH_PYTHON([3.0])
 
 # Set common system defines for POSIX extensions, such as _GNU_SOURCE
 # Must be called before any macros that run the compiler (like AC_PROG_LIBTOOL)
 # to avoid autoconf errors.
 AC_USE_SYSTEM_EXTENSIONS
+AC_SYS_LARGEFILE
 
 # Initialize libtool
 LT_PREREQ([2.2])
@@ -50,10 +51,10 @@ fi
 AC_SUBST(HTML_CHECK_RESULT)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.14)
+PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.17.0)
 NEEDED="xau >= 0.99.2"
 case $host_os in
-linux*) ;;
+linux*|darwin*|solaris*|dragonfly*|freebsd*|netbsd*) ;;
      *) NEEDED="$NEEDED pthread-stubs" ;;
 esac
 PKG_CHECK_MODULES(NEEDED, $NEEDED)
@@ -90,7 +91,6 @@ XCBPROTO_XCBPYTHONDIR=`$PKG_CONFIG --variable=pythondir xcb-proto`
 AC_MSG_RESULT($XCBPROTO_XCBPYTHONDIR)
 AC_SUBST(XCBPROTO_XCBPYTHONDIR)
 
-AC_HEADER_STDC
 AC_SEARCH_LIBS(getaddrinfo, socket)
 AC_SEARCH_LIBS(connect, socket)
 
@@ -221,6 +221,7 @@ esac
 
 XCB_EXTENSION(Composite, yes)
 XCB_EXTENSION(Damage, yes)
+XCB_EXTENSION(Dbe, yes)
 XCB_EXTENSION(DPMS, yes)
 XCB_EXTENSION(DRI2, yes)
 XCB_EXTENSION(DRI3, $have_sendmsg)
@@ -247,16 +248,6 @@ XCB_EXTENSION(XTest, yes)
 XCB_EXTENSION(Xv, yes)
 XCB_EXTENSION(XvMC, yes)
 
-AC_ARG_WITH(launchd, AS_HELP_STRING([--with-launchd], [Build with support for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
-if test "x$LAUNCHD" = xauto; then
-        unset LAUNCHD
-        AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no], [$PATH$PATH_SEPARATOR/sbin])
-fi
-
-if test "x$LAUNCHD" = xyes ; then
-        AC_DEFINE(HAVE_LAUNCHD, 1, [launchd support available])
-fi
-
 AC_ARG_WITH(serverside-support, AS_HELP_STRING([--with-serverside-support], [Build with support for server-side usage of xcb. This is still EXPERIMENTAL! ABI/API may change! (default: no)]), [XCB_SERVERSIDE_SUPPORT=$withval], [XCB_SERVERSIDE_SUPPORT=no])
 
 AM_CONDITIONAL(XCB_SERVERSIDE_SUPPORT, test "x$XCB_SERVERSIDE_SUPPORT" = "xyes")
@@ -273,6 +264,7 @@ AC_CONFIG_FILES([
 xcb.pc
 xcb-composite.pc
 xcb-damage.pc
+xcb-dbe.pc
 xcb-dpms.pc
 xcb-dri2.pc
 xcb-dri3.pc
@@ -321,6 +313,7 @@ echo ""
 echo "  X11 extensions"
 echo "    Composite...........: ${BUILD_COMPOSITE}"
 echo "    Damage..............: ${BUILD_DAMAGE}"
+echo "    Dbe.................: ${BUILD_DBE}"
 echo "    Dpms................: ${BUILD_DPMS}"
 echo "    Dri2................: ${BUILD_DRI2}"
 echo "    Dri3................: ${BUILD_DRI3}"

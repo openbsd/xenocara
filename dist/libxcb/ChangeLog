@@ -1,3 +1,444 @@
+commit 622152ee42a310876f10602601206954b8d0613e
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Fri Apr 12 12:35:55 2024 -0400
+
+    libxcb 1.17.0
+
+commit 4574ab269b082bf412e1b6fb5f09daf8134acd0b
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Fri Apr 12 12:35:32 2024 -0400
+
+    configure.ac: Require xcb-proto >= 1.17.0
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit b78d304531bfe2359baf40db06099d9158d398d4
+Author: Uli Schlachter <psychon@znc.in>
+Date:   Sun Sep 17 12:43:43 2023 +0200
+
+    Always write C code in UTF-8
+    
+    Some people apparently use non-utf8 locales and this caused errors when
+    xcb-proto started using some "fancy" quote marks. Fix this by always
+    using utf8 encoding.
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/lib/libxcb/-/issues/72
+    Signed-off-by: Uli Schlachter <psychon@znc.in>
+
+commit 389f22d1cb53e47337e96d9f78a3ef0001e8e588
+Author: Erik Kurzinger <ekurzinger@nvidia.com>
+Date:   Wed Mar 20 07:06:01 2024 -0700
+
+    Add xcb-dri3 dependency to xcb-present.pc.in
+    
+    Present version 1.4 introduces a dependency on DRI3 for the DRI3Syncobj
+    protocol type.
+    
+    Signed-off-by: Erik Kurzinger <ekurzinger@nvidia.com>
+
+commit 86a478032ba93f30adbc0ce96eecd3420fdf7ed1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 12:01:54 2024 -0800
+
+    xcb_popcount: Use __builtin_popcount if compiler supports it
+    
+    If the compiler knows of a better implementation for counting the number
+    of bits set in a word for the target CPU, let it use that, instead of the
+    classic algorithm optimized for PDP-6.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c268499c305317d2e9a67cc590c9147e11438fc7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 11:47:47 2024 -0800
+
+    tests: fix -Werror=discarded-qualifiers errors in check_public.c
+    
+    check_public.c: In function ‘parse_display_pass’:
+    check_public.c:32:32: error: passing argument 1 of ‘putenv’ discards ‘const’ qualifier from pointer target type [-Werror=discarded-qualifiers]
+       32 |                         putenv("DISPLAY=");
+          |                                ^~~~~~~~~~
+    In file included from check_public.c:4:
+    /usr/include/stdlib.h:148:19: note: expected ‘char *’ but argument is of type ‘const char *’
+      148 | extern int putenv(char *);
+          |                   ^~~~~~
+    check_public.c:57:16: error: passing argument 1 of ‘putenv’ discards ‘const’ qualifier from pointer target type [-Werror=discarded-qualifiers]
+       57 |         putenv("DISPLAY=");
+          |                ^~~~~~~~~~
+    /usr/include/stdlib.h:148:19: note: expected ‘char *’ but argument is of type ‘const char *’
+      148 | extern int putenv(char *);
+          |                   ^~~~~~
+    check_public.c: In function ‘parse_display_fail’:
+    check_public.c:73:32: error: passing argument 1 of ‘putenv’ discards ‘const’ qualifier from pointer target type [-Werror=discarded-qualifiers]
+       73 |                         putenv("DISPLAY=");
+          |                                ^~~~~~~~~~
+    /usr/include/stdlib.h:148:19: note: expected ‘char *’ but argument is of type ‘const char *’
+      148 | extern int putenv(char *);
+          |                   ^~~~~~
+    check_public.c:99:16: error: passing argument 1 of ‘putenv’ discards ‘const’ qualifier from pointer target type [-Werror=discarded-qualifiers]
+       99 |         putenv("DISPLAY=");
+          |                ^~~~~~~~~~
+    /usr/include/stdlib.h:148:19: note: expected ‘char *’ but argument is of type ‘const char *’
+      148 | extern int putenv(char *);
+          |                   ^~~~~~
+    check_public.c: In function ‘public_suite’:
+    check_public.c:244:16: error: passing argument 1 of ‘putenv’ discards ‘const’ qualifier from pointer target type [-Werror=discarded-qualifiers]
+      244 |         putenv("DISPLAY=");
+          |                ^~~~~~~~~~
+    /usr/include/stdlib.h:148:19: note: expected ‘char *’ but argument is of type ‘const char *’
+      148 | extern int putenv(char *);
+          |                   ^~~~~~
+    cc1: all warnings being treated as errors
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c671b9b30aecada4e43cb48e0dee46d19fb5cb9c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 11:13:37 2024 -0800
+
+    libxcb 1.16.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3c946010c8521497b0fba2c8bc9bde184622345a
+Author: Fergus Dall <sidereal@google.com>
+Date:   Tue Nov 7 17:42:42 2023 +1100
+
+    Enable large file support
+    
+    Signed-off-by: Fergus Dall <sidereal@google.com>
+
+commit 02a7bbed391859c79864b9aacf040d84f103d38a
+Author: Peter Williams <peter@newton.cx>
+Date:   Thu Aug 24 21:50:29 2023 -0400
+
+    Fix compilation on Windows
+    
+    Merge request !30 broke compilation on Windows by introducing unbalanced
+    curly braces. This change restores the previous behavior on Windows:
+    only TCP is supported.
+
+commit 18c3f055e7c02db6f15ae56f6995639635d1b055
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 20 11:34:31 2023 -0700
+
+    gitlab CI: use latest xcbproto from git to build against
+    
+    Closes issue #70
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 453115f7eeb694de9f41ea842a29bbb31b90c8dd
+Author: Thomas Klausner <wiz@gatalith.at>
+Date:   Sat Aug 19 19:34:51 2023 +0200
+
+    configure.ac: drop `pthread-stubs` dependency on NetBSD
+
+commit f11691a09893d2329948521e32a18c13b0b03d01
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 20 10:22:19 2023 -0700
+
+    gitlab CI: regenerate container used for builds
+    
+    This updates the included xcb-proto to the newly required 1.16.
+    As explained in issue #70, this is a quick workaround, not the
+    long-term fix for this problem.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc4b93c9cd93bad15b7106747b0213e4b9c53a1c
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Aug 16 16:09:50 2023 -0400
+
+    libxcb 1.16
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 1519334652837cb7b2a8f8117628ea3cc744f7cb
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Aug 16 16:08:46 2023 -0400
+
+    configure.ac: Require xcb-proto >= 1.16.0
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 038636786ad1914f3daf3503ae9611f40dffbb8f
+Author: Ilya Pominov <ipominov@astralinux.ru>
+Date:   Sun Apr 2 11:35:16 2023 +0300
+
+    c_client: Fix crash in xcb_randr_set_monitor
+    
+    Take into account c_need_sizeof when evaluating
+    xcb_protocol_request_t.count
+    
+    Incorrect xcb_protocol_request_t.count causes a segmentation fault when
+    calling functions:
+    - xcb_randr_set_monitor{_checked}
+    - xcb_input_change_feedback_control{_checked}
+    - xcb_input_change_device_control{_unchecked}
+    
+    Steps to reproduce:
+    Call xcb_randr_set_monitor() with valid arguments
+    
+    OBSERVED RESULT
+    Segmentation fault
+    ```
+    Process terminating with default action of signal 11 (SIGSEGV)
+      Access not within mapped region at address 0x780
+        at 0x4852925: memmove (in /usr/libexec/valgrind/vgpreload_memcheck-
+    amd64-linux.so)
+        by 0x486967C: memcpy (string_fortified.h:29)
+        by 0x486967C: send_request (xcb_out.c:59)
+        by 0x486967C: send_request (xcb_out.c:46)
+        by 0x486967C: xcb_send_request_with_fds64 (xcb_out.c:338)
+        by 0x48699FC: xcb_send_request (xcb_out.c:359)
+        by 0x4891F11: xcb_randr_set_monitor_checked (randr.c:5350)
+    ```
+    
+    EXPECTED RESULT
+    Function returns cookie
+    
+    Amend: 77b594f9583ea0247ff27130316d8e045da7f921
+    
+    Signed-off-by: Ilya Pominov <ipominov@astralinux.ru>
+
+commit 8935793f1f3751a6aa9d78955c7d6236177986de
+Author: Demi Marie Obenour <demiobenour@gmail.com>
+Date:   Sat Mar 25 15:27:33 2023 -0400
+
+    Add tests for unix socket parsing
+    
+    Signed-off-by: Demi Marie Obenour <demiobenour@gmail.com>
+
+commit 095255531b90f0b442e6ca41fb3752a058562d07
+Author: Demi Marie Obenour <demiobenour@gmail.com>
+Date:   Fri Aug 12 22:02:02 2022 -0400
+
+    DISPLAY starting with / or unix: is always a socket path
+    
+    If DISPLAY starts with / or unix:, do not check for anything but a full
+    filesystem socket path.  In particular, abstract AF_UNIX sockets and TCP
+    sockets will not be used in this case.   Also be stricter about parsing
+    the screen part of /path.screen displays, and bail out after all stat()
+    errors other than ENOENT.
+    
+    Signed-off-by: Demi Marie Obenour <demiobenour@gmail.com>
+
+commit ccdef1a8a5b6956a3fb7115d634db213433dca75
+Author: Demi Marie Obenour <demiobenour@gmail.com>
+Date:   Sun Jul 3 17:57:11 2022 -0400
+
+    Allow full paths to sockets on non-macOS
+    
+    When combined with xorg/lib/libxtrans!7, this allows CVE-2020-25697 to
+    be mitigated by placing the AF_UNIX socket in a secure directory on the
+    filesystem.
+    
+    This enables HAVE_LAUNCHD unconditionally and deletes the configure
+    switch.
+    
+    Signed-off-by: Demi Marie Obenour <demiobenour@gmail.com>
+
+commit 18e109d755c5ce18157fdabb6de8ee6845b348ff
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Tue Feb 28 14:19:21 2023 +0100
+
+    Fix xcb_connect() call with a custom xcb_auth_info_t
+    
+    If the function implementing xcb_connect is called directly with a
+    custom xcb_auth_info_t then checking that the screen in $DISPLAY
+    is valid is skipped.
+    
+    Reported by chohag AT jtan DOT com
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit fd04ab24a5e99d53874789439d3ffb0eb82574f7
+Author: Jan Beich <jbeich@FreeBSD.org>
+Date:   Fri Feb 10 14:16:20 2023 +0000
+
+    configure.ac: drop `pthread-stubs` dependency on DragonFly and FreeBSD
+    
+    All `pthread_*` symbols used by libxcb have stubs in libc. So, stop
+    linking against libpthread.
+
+commit 4d1a578dd5348909ade2a853d806272326d228d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 9 14:56:38 2023 -0800
+
+    Raise minimum required version of Python from 2.6 to 3.0
+    
+    Trying to build with Python 2.7.14 fails with:
+      File "./c_client.py", line 2270
+        key = (*self.name[:-1], field.enum)
+               ^
+    SyntaxError: invalid syntax
+    
+    Fixes: 33f3dbe ("Fix handling of documented enum parameters")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e2a3e80eb837eaaa834a01a2741d4c249c984442
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 15:48:49 2023 -0800
+
+    configure.ac: Remove obsolete AC_HEADER_STDC
+    
+    Nothing checks for the STDC_HEADERS flag this set, and all supported
+    systems have C89 compatible headers now.
+    
+    Clears autoconf warnings of:
+    configure.ac:93: warning: The macro `AC_HEADER_STDC' is obsolete.
+    configure.ac:93: You should run autoupdate.
+    ./lib/autoconf/headers.m4:704: AC_HEADER_STDC is expanded from...
+    configure.ac:93: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3333d5bde8baaca8981e806ef86b74f4adb77ba7
+Author: Daniel G <giri@nwrk.biz>
+Date:   Mon Jan 9 16:21:35 2023 +0000
+
+    Fix indentation.
+
+commit 973b510e954f6989ed773f8b357ca50fbc99bced
+Author: Daniel G <giri@nwrk.biz>
+Date:   Sat Jan 7 19:35:47 2023 +0000
+
+    Fix windows build.
+
+commit cb8c70f5a65b4bd68b449dcaa637c3c4753e2f81
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sat Nov 26 14:55:07 2022 -0800
+
+    xcb_conn: Add a check for NULL to silence a UBSan runtime error
+    
+    xcb_conn.c:314:60: runtime error: applying zero offset to null pointer
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 33f3dbe3699a92e8ca18f470adac456e0b935e75
+Author: Demi Marie Obenour <demiobenour@gmail.com>
+Date:   Sun Oct 16 01:50:53 2022 -0400
+
+    Fix handling of documented enum parameters
+    
+    Previously this would crash the code generator.
+    
+    Signed-off-by: Demi Marie Obenour <demiobenour@gmail.com>
+
+commit c9513aac2d78808f63b83d71072c2c483b20162d
+Author: Demi Marie Obenour <demi@invisiblethingslab.com>
+Date:   Sat Aug 28 12:25:05 2021 -0400
+
+    Fix a compiler warning
+    
+    The warning is harmless but annoying.
+    
+    Signed-off-by: Demi Marie Obenour <demiobenour@gmail.com>
+
+commit 06e1ef43bbb8c84fc243fa6a53c81147a3a24273
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 4 11:30:09 2022 -0700
+
+    configure.ac: drop dependency `pthread-stubs` on Solaris
+    
+    On Solaris 10 and later, the pthread functions are directly in libc,
+    and libpthread only has metadata to redirect calls from it to the
+    libc functions.
+    
+    On Solaris 9 and older (no longer supported), libc contained its own
+    thread stubs that libpthread then overrode.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d53ad60d774176c5b057e2ed4d03a4658ee13690
+Author: PaperChalice <lgamma@163.com>
+Date:   Sat Aug 13 13:11:10 2022 +0800
+
+    configure.ac: drop dependency `pthread-stubs` on macOS
+    
+    `libpthread.dylib` on macOS is an alias of `libSystem.B.dylib`,
+    every program should link against `libSystem.B.dylib`.
+
+commit e2ee5aabe9f731b7231b0d4a5a21367d1aced6ed
+Author: Uli Schlachter <psychon@znc.in>
+Date:   Wed Sep 14 14:53:35 2022 +0200
+
+    Improve tutorial example
+    
+    This tutorial example only handles XCB_EXPOSURE and XCB_KEY_RELEASE
+    events and ignores everything else. Thus, there is no point in asking
+    for more kinds of events.
+    
+    A while ago, I ported this tutorial to x11rb [1]. Recently, I received a
+    pull request [2] removing these unnecessary event masks. This commit is
+    thus only partially by me and the 'issue' was originally found by the
+    author of [2].
+    
+    [1]: https://github.com/psychon/x11rb/blob/master/x11rb/examples/tutorial.rs
+    [2]: https://github.com/psychon/x11rb/pull/754
+    
+    Signed-off-by: Uli Schlachter <psychon@znc.in>
+
+commit 9dcb08170898d3bd5ddb3bc26c514a6bfccf3fae
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7d798d3ccbe537f2f102665447ec3e15a8cdb1a1
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7071b4a13c1e4df13b138748feebadc17fe2522b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ee60239b7308f98a7a32e2a567681e00c6b652f5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 18 17:55:43 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3123dfe723648c5abeab429e7cb4bd194ceeb8f6
+Author: Mike Sharov <msharov@users.sourceforge.net>
+Date:   Wed Jun 22 10:56:37 2022 -0400
+
+    Require xcb-proto >= 1.15.1, which has Dbe
+    
+    Signed-off-by: Mike Sharov <msharov@users.sourceforge.net>
+
+commit 816407655f75cf8ae505432cb743c316e009679d
+Author: Mike Sharov <msharov@users.sourceforge.net>
+Date:   Thu Jun 2 13:27:48 2022 -0400
+
+    Build DOUBLE-BUFFER extension.
+    
+    Signed-off-by: Mike Sharov <msharov@users.sourceforge.net>
+
 commit c2c4a2cd1947e559718acdba19ef6e7db731dbeb
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Tue May 3 15:09:54 2022 -0700

@@ -12,6 +12,9 @@ endif
 if BUILD_DAMAGE
 pkgconfig_DATA += xcb-damage.pc
 endif
+if BUILD_DBE
+pkgconfig_DATA += xcb-dbe.pc
+endif
 if BUILD_DPMS
 pkgconfig_DATA += xcb-dpms.pc
 endif
