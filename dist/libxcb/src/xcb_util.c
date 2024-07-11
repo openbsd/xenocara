@@ -170,8 +170,10 @@ static int _xcb_parse_display(const char *name, char **host, char **protocol,
     if (name[0] == '/')
         return _xcb_parse_display_path_to_socket(name, host, protocol, displayp, screenp);
 
+#ifndef __OpenBSD__
     if (strncmp(name, "unix:", 5) == 0)
         return _xcb_parse_display_path_to_socket(name + 5, host, protocol, displayp, screenp);
+#endif
 
     slash = strrchr(name, '/');
 
