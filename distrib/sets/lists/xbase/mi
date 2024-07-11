@@ -322,11 +322,11 @@
 ./usr/X11R6/lib/libxcb-damage.a
 ./usr/X11R6/lib/libxcb-damage.so.1.0
 ./usr/X11R6/lib/libxcb-dpms.a
-./usr/X11R6/lib/libxcb-dpms.so.1.0
+./usr/X11R6/lib/libxcb-dpms.so.1.1
 ./usr/X11R6/lib/libxcb-dri2.a
 ./usr/X11R6/lib/libxcb-dri2.so.1.1
 ./usr/X11R6/lib/libxcb-dri3.a
-./usr/X11R6/lib/libxcb-dri3.so.0.2
+./usr/X11R6/lib/libxcb-dri3.so.0.3
 ./usr/X11R6/lib/libxcb-ewmh.a
 ./usr/X11R6/lib/libxcb-ewmh.la
 ./usr/X11R6/lib/libxcb-ewmh.so.2.0
@@ -342,7 +342,7 @@
 ./usr/X11R6/lib/libxcb-keysyms.la
 ./usr/X11R6/lib/libxcb-keysyms.so.3.0
 ./usr/X11R6/lib/libxcb-present.a
-./usr/X11R6/lib/libxcb-present.so.0.1
+./usr/X11R6/lib/libxcb-present.so.0.2
 ./usr/X11R6/lib/libxcb-randr.a
 ./usr/X11R6/lib/libxcb-randr.so.2.3
 ./usr/X11R6/lib/libxcb-record.a
