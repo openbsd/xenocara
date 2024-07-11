@@ -55,7 +55,7 @@ DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/x11-xcb.pc.in \
 	$(srcdir)/x11.pc.in $(top_srcdir)/configure \
 	$(top_srcdir)/include/X11/XlibConf.h.in AUTHORS COPYING \
-	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
+	ChangeLog INSTALL compile config.guess config.sub depcomp \
 	install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
@@ -281,6 +281,7 @@ STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
+USE_THREAD_LIBS = @USE_THREAD_LIBS@
 VERSION = @VERSION@
 WCHAR32 = @WCHAR32@
 X11_CFLAGS = @X11_CFLAGS@

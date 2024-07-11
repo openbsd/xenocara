@@ -56,8 +56,7 @@ host_triplet = @host@
 # ========================= Extra stuff ============================
 #
 @OS2_TRUE@am__append_1 = os2Stubs.c
-@THRSTUBS_TRUE@am__append_2 = UIThrStubs.c
-@MAKE_LINT_LIB_TRUE@am__append_3 = $(lintlib_DATA)
+@MAKE_LINT_LIB_TRUE@am__append_2 = $(lintlib_DATA)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/depcomp reallocarray.c
@@ -115,7 +114,8 @@ libX11_xcb_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(libX11_xcb_la_LDFLAGS) $(LDFLAGS) -o $@
 am__DEPENDENCIES_1 =
 libX11_la_DEPENDENCIES = $(LTLIBOBJS) $(USE_I18N_LIBS) \
-	$(USE_XCMS_LIBS) $(USE_XKB_LIBS) $(am__DEPENDENCIES_1)
+	$(USE_XCMS_LIBS) $(USE_XKB_LIBS) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 am__libX11_la_SOURCES_DIST = AllCells.c AllowEv.c AllPlanes.c \
 	AutoRep.c Backgnd.c BdrWidth.c Bell.c Border.c ChAccCon.c \
 	ChActPGb.c ChClMode.c ChCmap.c ChGC.c ChKeyCon.c ChkIfEv.c \
@@ -166,9 +166,8 @@ am__libX11_la_SOURCES_DIST = AllCells.c AllowEv.c AllPlanes.c \
 	Window.c WinEvent.c Withdraw.c WMGeom.c WMProps.c WrBitF.c \
 	Xatomtype.h xcb_disp.c xcb_io.c Xintatom.h Xintconn.h \
 	XlibAsync.c XlibInt.c Xprivate.h XomGeneric.h Xresinternal.h \
-	Xrm.c Xxcbint.h os2Stubs.c UIThrStubs.c
+	Xrm.c Xxcbint.h os2Stubs.c
 @OS2_TRUE@am__objects_1 = os2Stubs.lo
-@THRSTUBS_TRUE@am__objects_2 = UIThrStubs.lo
 am_libX11_la_OBJECTS = AllCells.lo AllowEv.lo AllPlanes.lo AutoRep.lo \
 	Backgnd.lo BdrWidth.lo Bell.lo Border.lo ChAccCon.lo \
 	ChActPGb.lo ChClMode.lo ChCmap.lo ChGC.lo ChKeyCon.lo \
@@ -222,7 +221,7 @@ am_libX11_la_OBJECTS = AllCells.lo AllowEv.lo AllPlanes.lo AutoRep.lo \
 	UnldFont.lo UnmapSubs.lo UnmapWin.lo VisUtil.lo WarpPtr.lo \
 	Window.lo WinEvent.lo Withdraw.lo WMGeom.lo WMProps.lo \
 	WrBitF.lo xcb_disp.lo xcb_io.lo XlibAsync.lo XlibInt.lo Xrm.lo \
-	$(am__objects_1) $(am__objects_2)
+	$(am__objects_1)
 libX11_la_OBJECTS = $(am_libX11_la_OBJECTS)
 libX11_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -417,6 +416,7 @@ STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
+USE_THREAD_LIBS = @USE_THREAD_LIBS@
 VERSION = @VERSION@
 WCHAR32 = @WCHAR32@
 X11_CFLAGS = @X11_CFLAGS@
@@ -500,7 +500,7 @@ top_srcdir = @top_srcdir@
 SUBDIRS = util xcms xlibi18n $(XKB_SUBDIRS)
 lib_LTLIBRARIES = libX11.la libX11-xcb.la
 BUILT_SOURCES = ks_tables.h
-CLEANFILES = ks_tables.h ks_tables_h $(am__append_3)
+CLEANFILES = ks_tables.h ks_tables_h $(am__append_2)
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/include/X11 \
@@ -592,13 +592,12 @@ libX11_la_SOURCES = AllCells.c AllowEv.c AllPlanes.c AutoRep.c \
 	Window.c WinEvent.c Withdraw.c WMGeom.c WMProps.c WrBitF.c \
 	Xatomtype.h xcb_disp.c xcb_io.c Xintatom.h Xintconn.h \
 	XlibAsync.c XlibInt.c Xprivate.h XomGeneric.h Xresinternal.h \
-	Xrm.c Xxcbint.h $(am__append_1) $(am__append_2)
+	Xrm.c Xxcbint.h $(am__append_1)
 x11datadir = @X11_DATADIR@
 x11data_DATA = XErrorDB
 EXTRA_DIST = \
 	$(x11data_DATA) \
-	os2Stubs.c \
-	UIThrStubs.c 
+	os2Stubs.c
 
 libX11_xcb_la_SOURCES = x11_xcb.c Xxcbint.h
 libX11_xcb_la_LDFLAGS = -version-number 1:0:0 -no-undefined
@@ -615,6 +614,7 @@ libX11_la_LIBADD = \
 	$(USE_I18N_LIBS) \
 	$(USE_XCMS_LIBS) \
 	$(USE_XKB_LIBS) \
+	$(USE_THREAD_LIBS) \
 	$(X11_LIBS)
 
 
@@ -953,7 +953,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TextExt16.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TextToStr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TrCoords.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UIThrStubs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UndefCurs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UngrabBut.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UngrabKbd.Plo@am__quote@
