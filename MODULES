@@ -1,9 +1,9 @@
-# $OpenBSD: MODULES,v 1.522 2024/06/01 12:48:00 matthieu Exp $
+# $OpenBSD: MODULES,v 1.523 2024/07/11 08:29:54 matthieu Exp $
 #
 # X.Org maintained modules
 #
 
-app/appres		1.0.6
+app/appres		1.0.7
 app/bdftopcf		1.1.1
 app/beforelight		1.0.6
 app/bitmap		1.1.1
@@ -149,21 +149,21 @@ font/xfree86-type1		1.0.5
 
 lib/libICE			1.1.1
 lib/libSM			1.2.4
-lib/libX11			1.8.9		needs-update
+lib/libX11			1.8.9
 lib/libXScrnSaver		1.2.4
 lib/libXau			1.0.11
-lib/libXaw			1.0.16		needs-update
+lib/libXaw			1.0.16
 lib/libXcomposite		0.4.6
-lib/libXcursor			1.2.2		needs-update
+lib/libXcursor			1.2.2
 lib/libXdamage			1.1.6
-lib/libXdmcp			1.1.5		needs-update
-lib/libXext			1.3.6		needs-update
+lib/libXdmcp			1.1.5
+lib/libXext			1.3.6
 lib/libXfixes			6.0.1
 lib/libXfont2			2.0.6
 lib/libXft			2.3.8
 lib/libXi			1.8.1
 lib/libXinerama			1.1.5
-lib/libXmu			1.2.1		needs-update
+lib/libXmu			1.2.1
 lib/libXpm			3.5.17
 lib/libXpresent			1.0.1
 lib/libXrandr			1.5.4
@@ -184,13 +184,13 @@ lib/libxshmfence		1.3.2
 lib/libxtrans			1.5.0
 lib/pixman			0.43.4		needs-update
 lib/xcb-util			0.4.1
-lib/xcb-util-cursor		0.1.5		needs-update
+lib/xcb-util-cursor		0.1.5
 lib/xcb-util-image		0.4.1
 lib/xcb-util-keysyms		0.4.1
 lib/xcb-util-renderutil		0.3.10
 lib/xcb-util-wm			0.4.2
 
-proto/xcb-proto			1.17.0		needs-update
+proto/xcb-proto			1.17.0
 proto/xorgproto			2024.1
 
 util/cf				1.0.4
