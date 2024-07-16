@@ -177,6 +177,7 @@
 ./usr/X11R6/include/pixman-1
 ./usr/X11R6/include/pixman-1/pixman-version.h
 ./usr/X11R6/include/pixman-1/pixman.h
+./usr/X11R6/include/va
 ./usr/X11R6/include/vulkan
 ./usr/X11R6/include/xcb
 ./usr/X11R6/lib
