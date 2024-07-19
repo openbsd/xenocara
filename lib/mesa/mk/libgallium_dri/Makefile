@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.11 2024/06/17 01:29:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.12 2024/07/19 14:41:46 rsadowski Exp $
 
 LIB=	gallium_dri
 
@@ -16,6 +16,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/gallium/drivers \
 		-I${MESA_SRC}/src/gallium/frontends/dri \
+		-I${MESA_SRC}/src/gallium/frontends/va \
 		-I${MESA_SRC}/src/gallium/winsys \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mesa/drivers/dri/common \
