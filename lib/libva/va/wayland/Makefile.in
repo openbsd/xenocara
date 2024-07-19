@@ -389,9 +389,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu va/wayland/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign va/wayland/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu va/wayland/Makefile
+	  $(AUTOMAKE) --foreign va/wayland/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
