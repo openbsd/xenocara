@@ -1,5 +1,5 @@
 # generated automatically by aclocal 1.12.6 -*- Autoconf -*-
-
+# dummy change -- matthieu
 # Copyright (C) 1996-2012 Free Software Foundation, Inc.
 
 # This file is free software; the Free Software Foundation
