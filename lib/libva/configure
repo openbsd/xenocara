@@ -17865,14 +17865,14 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        DRM_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libdrm >= $LIBDRM_VERSION" 2>&1`
+                DRM_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libdrm >= $LIBDRM_VERSION" 2>&1`
         else
-	        DRM_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libdrm >= $LIBDRM_VERSION" 2>&1`
+                DRM_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libdrm >= $LIBDRM_VERSION" 2>&1`
         fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$DRM_PKG_ERRORS" >&5
+        # Put the nasty error message in config.log where it belongs
+        echo "$DRM_PKG_ERRORS" >&5
 
-	as_fn_error $? "Package requirements (libdrm >= $LIBDRM_VERSION) were not met:
+        as_fn_error $? "Package requirements (libdrm >= $LIBDRM_VERSION) were not met:
 
 $DRM_PKG_ERRORS
 
@@ -17885,7 +17885,7 @@ See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-	{ { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+        { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
 is in your PATH or set the PKG_CONFIG environment variable to the full
@@ -17898,8 +17898,8 @@ See the pkg-config man page for more details.
 To get pkg-config, see <http://pkg-config.freedesktop.org/>.
 See \`config.log' for more details" "$LINENO" 5; }
 else
-	DRM_CFLAGS=$pkg_cv_DRM_CFLAGS
-	DRM_LIBS=$pkg_cv_DRM_LIBS
+        DRM_CFLAGS=$pkg_cv_DRM_CFLAGS
+        DRM_LIBS=$pkg_cv_DRM_LIBS
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 
@@ -17977,24 +17977,24 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        X11_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "x11 xext xfixes x11-xcb xcb xcb-dri3" 2>&1`
+                X11_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "x11 xext xfixes x11-xcb xcb xcb-dri3" 2>&1`
         else
-	        X11_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "x11 xext xfixes x11-xcb xcb xcb-dri3" 2>&1`
+                X11_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "x11 xext xfixes x11-xcb xcb xcb-dri3" 2>&1`
         fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$X11_PKG_ERRORS" >&5
+        # Put the nasty error message in config.log where it belongs
+        echo "$X11_PKG_ERRORS" >&5
 
-	:
+        :
 elif test $pkg_failed = untried; then
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-	:
+        :
 else
-	X11_CFLAGS=$pkg_cv_X11_CFLAGS
-	X11_LIBS=$pkg_cv_X11_LIBS
+        X11_CFLAGS=$pkg_cv_X11_CFLAGS
+        X11_LIBS=$pkg_cv_X11_LIBS
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-	USE_X11="yes"
+        USE_X11="yes"
 fi
 
     if test "x$USE_X11" = "xno" -a "x$enable_x11" = "xyes"; then
@@ -18076,24 +18076,24 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GLX_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gl x11" 2>&1`
+                GLX_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gl x11" 2>&1`
         else
-	        GLX_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gl x11" 2>&1`
+                GLX_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gl x11" 2>&1`
         fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$GLX_PKG_ERRORS" >&5
+        # Put the nasty error message in config.log where it belongs
+        echo "$GLX_PKG_ERRORS" >&5
 
-	:
+        :
 elif test $pkg_failed = untried; then
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-	:
+        :
 else
-	GLX_CFLAGS=$pkg_cv_GLX_CFLAGS
-	GLX_LIBS=$pkg_cv_GLX_LIBS
+        GLX_CFLAGS=$pkg_cv_GLX_CFLAGS
+        GLX_LIBS=$pkg_cv_GLX_LIBS
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-	USE_GLX="yes"
+        USE_GLX="yes"
 fi
     saved_CPPFLAGS="$CPPFLAGS"
     saved_LIBS="$LIBS"
@@ -18234,24 +18234,24 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        WAYLAND_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "wayland-client >= 1.11.0" 2>&1`
+                WAYLAND_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "wayland-client >= 1.11.0" 2>&1`
         else
-	        WAYLAND_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "wayland-client >= 1.11.0" 2>&1`
+                WAYLAND_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "wayland-client >= 1.11.0" 2>&1`
         fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$WAYLAND_PKG_ERRORS" >&5
+        # Put the nasty error message in config.log where it belongs
+        echo "$WAYLAND_PKG_ERRORS" >&5
 
-	:
+        :
 elif test $pkg_failed = untried; then
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-	:
+        :
 else
-	WAYLAND_CFLAGS=$pkg_cv_WAYLAND_CFLAGS
-	WAYLAND_LIBS=$pkg_cv_WAYLAND_LIBS
+        WAYLAND_CFLAGS=$pkg_cv_WAYLAND_CFLAGS
+        WAYLAND_LIBS=$pkg_cv_WAYLAND_LIBS
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-	USE_WAYLAND="yes"
+        USE_WAYLAND="yes"
 fi
 
     if test "x$USE_WAYLAND" = "xno" -a "x$enable_wayland" = "xyes"; then
@@ -18358,24 +18358,24 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        WL_SCANNER_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "wayland-scanner >= 1.15" 2>&1`
+                WL_SCANNER_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "wayland-scanner >= 1.15" 2>&1`
         else
-	        WL_SCANNER_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "wayland-scanner >= 1.15" 2>&1`
+                WL_SCANNER_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "wayland-scanner >= 1.15" 2>&1`
         fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$WL_SCANNER_PKG_ERRORS" >&5
+        # Put the nasty error message in config.log where it belongs
+        echo "$WL_SCANNER_PKG_ERRORS" >&5
 
-	:
+        :
 elif test $pkg_failed = untried; then
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-	:
+        :
 else
-	WL_SCANNER_CFLAGS=$pkg_cv_WL_SCANNER_CFLAGS
-	WL_SCANNER_LIBS=$pkg_cv_WL_SCANNER_LIBS
+        WL_SCANNER_CFLAGS=$pkg_cv_WL_SCANNER_CFLAGS
+        WL_SCANNER_LIBS=$pkg_cv_WL_SCANNER_LIBS
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-	USE_WAYLAND="yes"
+        USE_WAYLAND="yes"
 fi
 
             if test "x$USE_WAYLAND" = "xno" -a "x$enable_wayland" = "xyes"; then
