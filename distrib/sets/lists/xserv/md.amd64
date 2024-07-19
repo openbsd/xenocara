@@ -41,8 +41,10 @@
 ./usr/X11R6/lib/modules/drivers/openchrome_drv.so
 ./usr/X11R6/lib/modules/drivers/r128_drv.la
 ./usr/X11R6/lib/modules/drivers/r128_drv.so
+./usr/X11R6/lib/modules/drivers/r600_drv_video.so
 ./usr/X11R6/lib/modules/drivers/radeon_drv.la
 ./usr/X11R6/lib/modules/drivers/radeon_drv.so
+./usr/X11R6/lib/modules/drivers/radeonsi_drv_video.so
 ./usr/X11R6/lib/modules/drivers/savage_drv.la
 ./usr/X11R6/lib/modules/drivers/savage_drv.so
 ./usr/X11R6/lib/modules/drivers/siliconmotion_drv.la
