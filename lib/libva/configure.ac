@@ -91,7 +91,7 @@ AC_INIT([libva],
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([dist-bzip2 -Wno-portability])
+AM_INIT_AUTOMAKE([dist-bzip2 foreign -Wno-portability])
 
 AC_CONFIG_HEADERS([config.h])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
