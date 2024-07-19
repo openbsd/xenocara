@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.523 2024/07/11 08:29:54 matthieu Exp $
+# $OpenBSD: MODULES,v 1.524 2024/07/19 14:42:33 rsadowski Exp $
 #
 # X.Org maintained modules
 #
@@ -177,6 +177,7 @@ lib/libXxf86dga			1.1.6
 lib/libXxf86vm			1.1.5
 lib/libfontenc			1.1.8
 lib/libpciaccess		0.18.1
+lib/libva			2.22.0
 lib/libxcb			1.17.0		needs-update
 lib/libxcvt			0.1.2
 lib/libxkbfile			1.1.3

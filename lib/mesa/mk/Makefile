@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2024/06/18 02:44:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.9 2024/07/19 14:42:33 rsadowski Exp $
 
 .include "config.mk"
 
@@ -39,6 +39,7 @@ SUBDIR+=	libisl_gfx${GFX}
 
 .if ${WITH_GALLIUM_R300} == "yes" || ${WITH_GALLIUM_R600} == "yes" || \
     ${WITH_GALLIUM_RADEONSI} == "yes" || make(obj)
+SUBDIR+=	libva_st
 SUBDIR+=	libradeonwinsys
 .endif
 
@@ -100,5 +101,7 @@ SUBDIR+=	libradeonsi
 SUBDIR+=	libglapi libgbm libEGL libGL libGLESv1_CM libGLESv2 libOSMesa
 
 SUBDIR+=	libgallium_dri
+
+SUBDIR+=	libgallium_drv_video
 
 .include <bsd.subdir.mk>

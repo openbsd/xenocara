@@ -224,12 +224,14 @@ WITH_SSE41=yes
     ${MACHINE} == "sparc64"
 WITH_GALLIUM_R300=yes
 WITH_GALLIUM_R600=yes
+WITH_VAAPI=yes
 CPPFLAGS+=	-DHAVE_R300 -DHAVE_R600
 .endif
 
 .if ${MACHINE} == "amd64" || ${MACHINE} == "arm64" || ${MACHINE} == "i386" || \
     ${MACHINE} == "powerpc64" || ${MACHINE} == "riscv64"
 WITH_GALLIUM_RADEONSI=yes
+WITH_VAAPI=yes
 WITH_AMD_VK=yes
 CPPFLAGS+=	-DHAVE_RADEONSI
 .endif
