@@ -1,0 +1,567 @@
+libva NEWS -- summary of user visible changes.  2024-06-20
+Copyright (C) 2009-2024 Intel Corporation
+
+version 2.22.0 - 20.Jun.2024
+* va:Add VVC decode LibVA interface.
+* va: fix --version-script detection for lld >= 17
+* wayland: add support for linux-dmabuf
+* meson:remove autogen.sh from the meson script
+* trace: Add bit_depth capturing in trace log
+
+version 2.21.0 - 12.Mar.2024
+* va: Add allow_content_tools and force_intger_mv to AV1 enc
+* va: add VASurfaceAttribAlignmentSize
+* va: Re-add drm_state and fd checks to VA_DRM_GetDriverNames
+* va: export symbol vaGetLibFunc for Windows
+* va: Add PRIME3 defination and correct the value
+* va: add driver name map for new intel KMD xe
+* va: export symbol vaMapBuffer2 for Windows
+* va: add new interface vaMapBuffer2 for map operation optimization
+* va: Add VAConfigAttribEncMaxTileRows and VAConfigAttribEncMaxTileCols
+* va: fix handling when all wayland backends fail
+* va_trace:add return value trace for vaPutSurfaces
+* ci: harden permissions for all github workflows
+* ci: update to vmactions/freebsd-vm from v0 to v1
+* ci: windows.yml: Add windows-msvc-debug
+* meson: create dist archives suitable for building with configure, too
+* autogen.sh: successfully detect if the autoreconf program is installed
+* build(deps): bump actions/upload-pages-artifact from 2 to 3
+* build(deps): bump actions/deploy-pages from 3 to 4
+* build(deps): bump actions/setup-python from 4 to 5
+* build(deps): bump actions/deploy-pages from 2 to 3
+* win32: Fix debug build break
+
+version 2.20.0 - 14.Sep.2023
+* va: drop no longer applicable vaGetDriverNames check
+* va: remove unreachable "DRIVER BUG"
+* x11/dri2: limit the array handling to avoid out of range access
+* va/backend: document the vaGetDriver* APIs
+* va/backend: annotate vafool as deprecated
+* win32: remove duplicate adapter_luid entry
+* va: Added Q416 fourcc (three-plane 16-bit YUV 4:4:4)
+* trace: fix minor issue about printf data type and value range
+* jpeg: add support for crop and partial decode
+* trace: Unlock mutex before return
+* trace: Add trace for vaExportSurfaceHandle
+* av1: Revise offsets comments for av1 encode
+* va: Add new VADecodeErrorType to indicate the reset happended in the driver.
+* drm: limit the array size to avoid out of range
+* va: fix:set driver number to be zero if vaGetDriverNames failed
+* va: fix:don't leak driver names, when override is set
+* win32: Only print win32 driver messages in DEBUG builds
+* va: Add vendor string on va_TraceInitialize
+* va: remove legacy code paths
+* drm: remove no longer used helpers
+* x11: remove legacy code paths
+* x11: allow disabling DRI3 via LIBVA_DRI3_DISABLE env var
+* x11: implement vaGetDriverNames
+* va/x11/va_nvctrl: remove some dead code
+* va/x11/va_fglrx: remove some dead code
+* va: optimize code of getting driver name for all protocols/os(wayland,x11,drm,win32,android)
+
+version 2.19.0 - 04.Jul.2023
+* docs: fix references and descriptions snf focyhrn mstkup
+* ci: add build docs test
+* win: change default driver search path to bindir
+* win: rely on compiler to define link names
+* add: Add mono_chrome to VAEncSequenceParameterBufferAV1
+* add: Enable support for license acquisition of multiple protected playbacks
+* fix: year for version 2.18.0 in NEWS
+* fix: use secure_getenv instead of getenv
+* trace: Improve and add VA trace log for AV1 encode
+* trace: Unify va log message, replace va_TracePrint with va_TraceMsg.
+
+version 2.18.0 - 19.Mar.2023
+* doc: Add build and install libva informatio in home page.
+* fix: NULL check before calling strncmp.
+* ci: add dependabot
+* va: fix the codying style of CHECK_DISPLAY
+* va: remove dummy isValid() hook
+* x11: use LIBVA_DRI3_DISABLE in GetNumCandidates
+* win: compat_win32: Add getenv wrapper for WIN32
+* win(WSL): va_drm_utils: Map d3d12 gallium driver for Windows Subsytem for Linux
+* fix: Add libva.def into distribution package
+* x11: allow disabling DRI3 via LIBVA_DRI3_DISABLe env var
+* ci: enable Werror across the build
+* win: explicitly ignore CloseAdapter return value
+* win: use wide string literal where needed
+* win: Add vaDisplayIsValid to .def export list
+* va: Always build with va-messaging API
+* meson: docs: use libva_version over project_version()
+* ci: add github pages workflow
+* meson: docs: add encoder interface for av1
+* va: add VAProfileH264High10
+* fix: Remove reference to non-existent symbol
+* va: va/sysdeps.h: remove Android section
+* va: remove Android pre Jelly Bean workarounds
+* va: remove unused drm_sarea.h include & ANDROID references in va_dricommon.h
+
+version 2.17.0 - 16.Dec.2022
+* win: Simplify signature for driver name loading
+* win: Rewrite driver registry query and fix some bugs/leaks/inefficiencies
+* win: Add missing null check after calloc
+* va: Update security disclaimer
+* ci: drop paths-ignore in github workflow
+* dep:remove the file .cvsignore
+* ci: install-clang.sh: install the requested version
+* ci: freebsd: add pretty(ier) step names
+* ci: freebsd: use meson setup and meson install
+* ci: ubuntu: add pretty(ier) step names
+* ci: polish the windows/meson invocations
+* ci: style: use prettier formatting
+* pkgconfig: add 'with-legacy' for emgd, nvctrl and fglrx
+* meson: add 'with-legacy' for emgd, nvctrl and fglrx
+* x11: move all FGLRX code to va_fglrx.c
+* x11: move all NVCTRL code to va_nvctrl.c
+* meson: stop using deprecated meson.source_root()
+* meson: stop using configure_file copy=true
+* va: correctly include the win32 (local) headers
+* ci: add style check/unify job
+* win: clean-up the coding style
+* va: dos2unix all the files
+* ci: add meson permutation in the Ubuntu builds
+* ci: remove unused make check
+* drm: remove unnecessary dri2 version/extension query
+* ci: use matrix, add ubuntu 20.04 + clang-15
+* trace: annotate internal functions with DLL_HIDDEN
+* build/sysdeps: Remove HAVE_GNUC_VISIBILITY_ATTRIBUTE and use _GNUC_ support level attribute instead
+* meson: Check support for -Wl,-version-script and build link_args accordingly
+* ci: switch python action from @v2 to @v4
+* ci: dos2unix for windows workflow files
+* ci: switch checkout action from @v2 to @v3
+* meson: Set va_win32 soversion to '' and remove the install_data rename
+* fix: resouce check null
+* ci: Add msvc/mingw Windows CI
+* va_trace: Add Win32 memory types in va_TraceSurfaceAttributes
+* va_trace: va_TraceSurfaceAttributes should check the VASurfaceAttribMemoryType
+* va: Adds Win32 Node and Windows build support
+* va: Adds compat_win32 abstraction for Windows build and prepares va common code for windows build
+* pkgconfig: Add Win32 package for when WITH_WIN32 is enabled
+* meson: Add with_win32 option, makes libdrm non-mandatory on Win
+* ci(va_win): add libx11-xcb-dev libxcb-dri3-dev to trigger X11 backend build
+* x11: add basic DRI3 support
+* drm: remove VA_DRM_IsRenderNodeFd() helper
+* drm: add radeon drm + radeonsi mesa combo
+
+version 2.16.0 - 27.Sep.2022
+* add: Add HierarchicalFlag & hierarchical_level_plus1 for AV1e.
+* dep: Update README.md to remove badge links
+* dep: Removed waffle-io badge from README to fix broken link
+* dep: Drop mailing list, IRC and Slack
+* autotools: use wayland-scanner private-code
+* autotools: use the wayland-scanner.pc to locate the prog
+* meson: use wayland-scanner private-code
+* meson: request native wayland-scanner
+* meson: use the wayland-scanner.pc to locate the prog
+* meson: set HAVE_VA_X11 when applicable
+* style:Correct slight coding style in several new commits
+* trace: add Linux ftrace mode for va trace
+* trace: Add missing pthread_mutex_destroy
+* drm: remove no-longer needed X == X mappings
+* drm: fallback to drm driver name == va driver name
+* drm: simplify the mapping table
+* x11: simplify the mapping table
+* android: open() with O_CLOEXEC for device fd
+* android: remove convoluted open_device() helper
+* android: drop va_fool references
+* ci: strengthen ci with -Werror
+* ci: va/x11/nvctl: fix Wdeprecated-non-prototype on close_display
+* ci: add clang-15 coverage and rearrange runners
+* ci: upgrade FreeBSD to 13.1
+
+version 2.15.0 - 28.Jun.2022
+* Add: new display HW attribute to report PCI ID
+* Add: sample depth related parameters for AV1e
+* Add: refresh_frame_flags for AV1e
+* Add: missing fields in va_TraceVAEncSequenceParameterBufferHEVC.
+* Add: nvidia-drm to the drm driver map
+* Add: type and buffer for delta qp per block
+* Deprecation: remove the va_fool support
+* Fix:Correct the version of meson build on master branch
+* Fix:X11 DRI2: check if device is a render node
+* Build:Use also strong stack protection if supported
+* Trace:print the string for profile/entrypoint/configattrib
+
+version 2.14.0 - 16.Feb.2022
+* add: Add av1 encode interfaces
+* add: VA/X11 VAAPI driver mapping for crocus DRI driver
+* doc: Add description of the fd management for surface importing
+* ci: fix freebsd build
+* meson: Copy public headers to build directory to support subproject
+
+version 2.13.0 - 16.Sep.2021
+* fix:Check the function pointer before using
+* code style:unify the code styles using the style_unify script
+* doc:Fix av1 dec doc page link issue
+* add:(sep_layer) add new surface format fourcc XYUV
+
+version 2.12.0 - 17.Jun.2021
+* add: Report the capability of vaCopy support
+* add: Report the capability of sub device
+* add: Add config attributes to advertise HEVC/H.265 encoder features
+* add: Video processing HVS Denoise: Added 4 modes
+* add: Introduce VASurfaceAttribDRMFormatModifiers
+* add: Add 3DLUT Filter in Video Processing.
+* doc: Update log2_tile_column description for vp9enc
+* trace: Correct av1 film grain trace information
+* ci: Fix freebsd build by switching to vmactions/freebsd-vm@v0.1.3
+
+version 2.11.0 - 23.Mar.2021
+* add: LibVA Protected Content API
+* add: Add a configuration attribute to advertise AV1d LST feature
+* fix: wayland: don't try to authenticate with render nodes
+* autotools: use shell grouping instead of sed to prepend a line
+* trace: Add details data dump for mpeg2 IQ matrix.
+* doc: update docs for VASurfaceAttribPixelFormat
+* doc: Libva documentation edit for AV1 reference frames
+* doc: Modify AV1 frame_width_minus1 and frame_height_minus1 comment
+* doc: Remove tile_rows and tile_cols restriction to match AV1 spec
+* doc: Format code for doxygen output
+* doc: AV1 decode documentation edit for superres_scale_denominator
+* ci: upgrade FreeBSD to 12.2
+* ci: disable travis build
+* ci: update cache before attempting to install packages
+* ci: avoid running workloads on other workloads changes
+* ci: enable github actions
+
+version 2.10.0 - 04.Dec.2020
+* add: Pass offset and size of pred_weight_table
+* add: add vaCopy interface to copy surface and buffer
+* add: add definition for different execution
+* add: New parameters for transport controlled BRC were added
+* add: add FreeBSD support
+* add: add a bufer type to adjust context priority dynamically
+* fix: correct the api version in meson.build
+* fix: remove deprecated variable from va_trace.c
+* fix: Use va_deprecated for the deprecate variable
+* fix: Mark chroma_sample_position as deprecated
+* doc: va_dec_av1: clarifies CDEF syntax element packing
+* doc: [AV1] Update documented ranges for loop filter and quantization params.
+* doc: Update va.h for multi-threaded usages
+* trace: va/va_trace: ignore system gettid() on Linux
+
+version 2.9.0 - 11.Sep.2020
+* trace: Refine the va_TraceVAPictureParameterBufferAV1.
+* doc: Add comments for backward/forward reference to avoid confusion
+* doc: Modify comments in av1 decoder interfaces
+* doc: Update mailing list
+* Add SCC fields trace for HEVC SCC encoding.
+* Add FOURCC code for Y212 and Y412 format.
+* Add interpolation method for scaling.
+* add attributes for context priority setting
+* Add vaSyncBuffer for output buffers synchronization
+* Add vaSyncSurface2 with timeout
+
+version 2.8.0 - 18.Jun.2020
+* trace: enable return value trace for successful function call
+* trace: divide va_TraceEndPicture to two seperate function
+* trace: add support for VAProfileHEVCSccMain444_10
+* fix:Fixes file descriptor leak
+* add fourcc code for P012 format
+* travis: Add a test that code files don't have the exec bit set
+* Remove the execute bit from all source code files
+* meson: Allow for libdir and includedir to be absolute paths
+* trace: Fix format string warnings
+* fix:Fix clang warning (reading garbage)
+* add definition to enforce both reflist not empty
+* trace: List correct field names in va_TraceVAPictureParameterBufferHEVC
+* change the return value to be UNIMPLEMENTED when the function pointer is NULL
+* remove check of vaPutSurface implementation
+* Add new slice structure flag for CAPS reporting
+* VA/X11: VAAPI driver mapping for iris DRI driver
+* VA/X11: enable driver candidate selection for DRI2
+* Add SCC flags to enable/disable features
+* fix: Fix HDR10 MaxCLL and MaxFALL documentation
+* Add VAProfileHEVCSccMain444_10 for HEVC
+* change the compatible list to be dynamic one
+* trace:Convert VAProfileAV1Profile0 VAProfileAV1Profile1 to string
+
+version 2.7.0 - 26.Mar.2020
+* trace: av1 decode buffers trace
+* trace: Add HEVC REXT and SCC trace for decoding.
+* Add av1 decode interfaces
+* Fix crashes on system without supported hardware by PR #369.
+* Add 2 FourCC for 10bit RGB(without Alpha) format: X2R10G10B10 and X2B10G10R10.
+* Fix android build issue #365 and remove some trailing whitespace
+* Adjust call sequence to ensure authenticate operation is executed to fix #355
+
+version 2.6.0 - 15.Dec.2019
+* enable the mutiple driver selection logic and enable it for DRM.
+* drm: Add iHD to driver_name_map
+* Add missed slice parameter 'slice_data_num_emu_prevn_bytes'
+* ensure that all meson files are part of the release tarball
+* configure: use correct comparison operator
+* trace: support VAConfigAttribMultipleFrame in trace
+* remove incorrect field of VAConfigAttribValDecJPEG
+* va/va_trace: Dump VP9 parameters for profile 1~3
+* add multiple frame capability report
+* add variable to indicate layer infromation
+* trace: fix memory leak on closing the trace
+* add prediction direction caps report
+* Add comments for colour primaries and transfer characteristics in VAProcColorProperties
+
+version 2.5.0 - 05.Jul.2019
+* Correct the comment of color_range.
+* Add VA_FOURCC_A2B10G10R10 for format a2b10g10r10.
+* Adjust VAEncMiscParameterQuantization structure to be align with VAEncMiscParameterBuffer(possible to impact BC)
+* Add attribute for max frame size
+* Add va_footer.html into distribution build
+* va_trace: hevc profiles added
+* Add new definition for input/output surface flag
+* va/va_trace: add trace support for VAEncMiscParameterTypeSkipFrame structure.
+* va/va_trace: add MPEG2 trace support for MiscParam and SequenceParam
+* va_openDriver: check strdup return value
+* Mark some duplicated field as deprecated
+* Add return value into logs
+* va/va_trace: add trace support for VAEncMiscParameterEncQuality structure.
+* Add newformat foucc defination
+* va_backend: remove unneeded linux/videodev2.h include
+* va_trace: add missing <sys/time.h> include
+* configure: don't build glx if VA/X11 isn't built
+* va/va_trace: unbreak with C89 after b3694671c784
+* [common] Add A2RGB10 fourcc definition
+* build: meson: enables va messaging and visibility
+* va/va_trace: add trace support for RIR(rolling intra refresh).
+* va/va_trace: add trace support for ROI(region of interest).
+
+version 2.4.0 - 25.Jan.2019
+* va_TraceSurface support for VA_FOURCC_P010
+* Add pointer to struct wl_interface for driver to use
+* (integrate) va: fix new line symbol in error message
+* av: avoid driver path truncation
+* Fix compilation warning (uninit and wrong variable types) for Android O MR1
+* Allow import of the DRM PRIME 2 memory type
+* android: ignore unimportant compile warnnings
+* compile: fix sign/unsign compare in va_trace.c
+* android: replace utils/Log.h with log/log.h
+* High Dynamic Range Tone Mapping: Add a new filter for input metadata and some comments.
+* Remove restrictions on vaSetDriverName()
+
+version 2.3.0 - 30.Sep.2018
+* Bump VA-API version to 1.3.0 and libva to 2.3.0
+* Add max frame size parameters for multiple pass case in legacy mode
+* Add new BRC mode AVBR
+* Add new interface for High Dynamic Range tone mapping
+* Add missing enum to string conversions
+* Add hevc subsets parameters structure
+* Add Customized Noise Reduction (HVS) interfaces
+* Add new BRC mode definition QVBR
+* Add more complete colour properties for use in VPP
+
+Version 2.2.0 - 12.July.2018
+* Bump VA-API version to 1.2.0 and libva to 2.2.0
+* Add support for hevc range extension decoding
+* Add support for fast intra prediction in HEVC FEI
+* Add 10/12-bit YUV render target formats
+* Add fourcc code for Y210/Y216/Y410/Y416/RGB565/BGR565
+* Add VA_STATUS_ERROR_NOT_ENOUGH_BUFFER
+* Add VA_SURFACE_ATTRIB_USAGE_HINT_EXPORT
+* Improve documentation
+
+Version 2.1.0 - 12.Feb.2018
+* Bump VA-API version to 1.1.0 and libva to 2.1.0
+* Add API for multi-frame processing
+* Add entrypoint VAEntrypointStats for Statistics
+* Add data structures for HEVC FEI support
+* Add new attributes for decoding/encoding/video processing
+* Add new VPP filter for Total Color Correction
+* Add blending interface in VPP
+* Add rotation interface in VPP
+* Add mirroring interface in VPP
+* Add Chroma siting flags in VPP
+* Add new color standard definitions
+* Add new interface for exporting surface
+* Add message callbacks for drivers to use
+
+Version 2.0.0 - 21.Oct.2017
+* Bump VA-API version to 1.0.0 and libva to 2.0.0
+* Add new API for H264 FEI support
+* Add definition of VA_FOURCC_I420
+* Add functions for converting common enums to strings
+* Deprecate H.264 baseline profile and FMO support
+* Deprecate packed misc packed header flag
+* Delete libva-tpi and libva-egl backends
+* Refine VASliceParameterBufferHEVC, VAEncMiscParameterBuffer
+* Fix errors in VAConfigAttribValEncROI, VAEncMacroblockParameterBufferH264
+* Fix race condition in wayland support
+* Rename vaMessageCallback to VAMessageCallback
+* Make logging callbacks library-safe
+
+Version 1.8.3 - 28.Jun.2017
+* Bump libva to 1.8.3
+* Fix build issue on Android
+* Remove the dummy driver
+* Add traces for MB rate control / temporal layer
+* Set verbosity level between {0, 1, 2} by setting the variable LIBVA_MESSAGING_LEVEL
+  in /etc/libva.conf or by setting the environment variable LIBVA_MESSAGING_LEVEL.
+
+Version 1.8.2 - 22.May.2017
+* Bump libva to 1.8.2
+
+Version 1.8.1 - 10.Apr.2017
+* Bump libva to 1.8.1
+
+Version 1.8.0 - 31.March.2017
+* Bump VA API version to 0.40
+* API: Change vaRenderPicture semantics that vaRenderPicture no longer deletes the passed buffer automatically.
+* API: Add VA_FOURCC_I010 for 10bit surface
+* API: Add vaSetErrorCallback and vaSetInfoCallback for error and info message.
+* va/drm: Update the support for Mesa Gallium driver
+* va/drm: Fix authentication check for /dev/dri/card0
+* Move all utilities and tests to libva-utils (https://github.com/01org/libva-utils)
+
+Version 1.7.3 - DD.Nov.2016
+* Bump VA API version to 0.39.4
+* API: add support for bitrate control per temporal layer
+* API: update the usage for framerate in VAEncMiscParameterFrameRate to support non-integer frame-rate
+* Add has_prime_sharing flag in VADriverVTableWayland to indicate if buffer sharing with prime fd can
+  be used in the backend driver
+
+Version 1.7.2 - 05.Sep.2016
+* Bump VA API version to 0.39.3
+* API: add support for ROI
+* Add support for VP9 encoder in VA tracer
+* Refine test cases
+* Fix the issue of not properly terminating the parsed environment values with '\0'
+  https://bugs.freedesktop.org/show_bug.cgi?id=96677
+
+Version 1.7.1 - 21.Jun.2016
+* Bump VA API version to 0.39.2
+* API: add support for VP9 8bit encode
+* API: add support for low power/high performance encode
+* API: add support for encoding ROI attribute
+* API: add support for macroblock based rate control
+* Fix VA tracer to support multiple contexts in one instance
+
+Version 1.7.0 - 15.Mar.2016
+* Bump VA API version to 0.39
+* Add support for VP9 10bit decode API
+* Allow libva to load the vaapi driver provided by Mesa Gallium for nouveau and radeon
+* Fix libva-glx against OpenGL 3.1 or above
+
+Version 1.6.2 - 15.Dec.2015
+* Bump VA API version to 0.38.1
+* Add new RT format for 16 bits per channel memory layout(P010,P016): VA_RT_FORMAT_YUV420_10BPP
+* Add new fourcc codes: VA_FOURCC_P010, VA_FOURCC_P016, VA_FOURCC_YV16
+* Fix crash if user doesn't have right to access the DRI device
+* Fix uninitialized x11_screen driver context member for X11 output
+  https://bugs.freedesktop.org/show_bug.cgi?id=61603
+* Fix the issue of not to use LIBVA_DRIVER_NAME
+  https://bugs.freedesktop.org/show_bug.cgi?id=72822
+* Fix build issue with wayland
+  https://bugs.freedesktop.org/show_bug.cgi?id=79478
+* vainfo: Add option '--display'
+
+Version 1.6.1 - 09.Sep.2015
+* Add support for VP9 decode and HEVC encode in VA trace module
+* Add VP9 profile to vainfo
+* Enhance VA trace to dump VP8 encode parameters
+
+Version 1.6.0 - 01.Jul.2015
+* Bump VA API version to 0.38
+* Add support for HEVC encode API
+* Add support for VP9 decode API
+* Add API (vaSetDriverName()) to allow the user to specify the loaded backend driver
+* Add VAConfigAttribEncSkipFrame and corresponding structures to support
+  sending skip frame parameters to the backend driver.
+* Add support for querying slice decoding mode supported by the backend driver
+* Fix quality issue in the JPEG encode demo
+
+Version 1.5.1 - DD.Mar.2015
+* API: correct the comment for num_token_partitions in struct  _VAEncPictureParameterBufferVP8
+* VA/x11: fix double Unlocks/SyncHandle to avoid segmentation fault
+
+Version 1.5.0 - 28.Dec.2014
+* API: add support for HEVC decoding
+* API: extend JPEG encoding data structures and add configuration attribute for JPEG encoding
+* Add a unit test for JPEG encoding (Sirisha Muppavarapu)
+* Add support for HEVC decoding and JPEG encoding in VA trace utility
+* Fix out of tree builds (Emil Velikov)
+* VA/X11: fix BadDrawable issue when calling vaTerminate() after the pixmaps have been destroyed (Lionel Landwerlin)
+
+Version 1.4.1 - 24.Oct.2014
+* Add support for DRM Render-Nodes (Andrey Larionov)
+
+Version 1.4.0 - 30.Sep.2014
+* API: add support for VP8 encoding
+* API: add H.264 MVC profiles for decoding and encoding
+* API: add buffer export interfaces for interop with 3rdparty APIs (EGL, OCL)
+* API: add suppor for encoder quality level
+* API: add attribute usage hint flag
+* Fix build on 64-bit versions of Android (Qiming Shi)
+* Assorted fixes to the VA fool and trace modules (Austin Yuan)
+
+Version 1.3.1 - 09.May.2014
+* API: fix VA_ENC_PACKED_HEADER_RAW_DATA value
+* API: add STE filter to the VPP pipeline
+* Update doxygen tags in libva
+* Fix doc/Makefile.am
+* A workaround for https://bugs.freedesktop.org/show_bug.cgi?id=76755
+
+Version 1.3.0 - 24.Mar.2014
+* API: add support for VP8 decoding
+* API: drop VAEntrypointMax enumeration
+* Enhancement for VA trace utility
+
+Version 1.2.1 - 27.Jun.2013
+* Fix https://bugs.freedesktop.org/show_bug.cgi?id=66221 
+* Add back VA_DRIVER_INIT_FUNC definition for testing
+
+Version 1.2.0 - 25.Jun.2013
+* API: new H.264 encoding API for Main and High profiles
+* API: add support for MPEG-2 encoding
+* API: add video processing interfaces
+* API: add vaQuerySurfaceAttributes() to query surface attributes supported by the underlying drivers.
+* API: new version of vaCreateSurfaces()
+* API: add new surface attributes to enable VA surface creation from external buffer
+* API: add new RT formats and fourcc codes
+* Refine VA trace utility
+* Refine H.264 encoding test cases {avcenc, h264enc}
+* A new test case for MPEG-2 encoding
+* A lot of bug fixes
+
+Version 1.1.1 - 19.Mar.2013
+* Support wayland 1.0 protocol (Rob Bradford)
+* Automake 1.13 fixups (Armin K)
+
+Version 1.1.0 - 04.Oct.2012
+* API: add Wayland support
+* API: add raw DRM support for headless pipelines
+* Fix generic VA/GLX implementation for newer cluttersink versions
+* Fix threading issues in VA objects reference code (+Krzysztof Kotlenga)
+* Fix build on Android Ice Cream Sandwich (+Haitao Huang, Daniel Charles)
+
+Version 1.0.16 - 02.Aug.2012
+* API: data structures for JPEG Baseline decoding
+* API: clarify the definition of slice_data_bit_offset
+* Add a simple test case for JPEG decoding
+
+Version 1.0.15 - 28.Oct.2011
+* API: make {Top,Bottom}FieldOrderCnt signed (Yi Wang)
+* Add auto-generated Debian packaging
+* Refine VA trace & VA fool utilities
+* Move i965 driver to a specific repository (vaapi/intel-driver)
+* Fix DSO link issue in tests
+* Fix fglrx driver name detection
+* Fix API vs. DSO vs. package versioning
+
+Version 1.0.14 - 28.Jul.2011
+* API: rename VA_DECODE_ERROR_TYPE to VADecodeErrorType
+* Fix memory leaks (Edgar Hucek)
+* Fix VA trace logs (Alexander Osin)
+* Fix vaTerminate() with some applications, e.g. GStreamer
+
+Version 1.0.13 - 30.May.2011
+* API: fix VA_ROTATION_270 definition
+* Add a simple H.264 encoder "avcenc" (Chang Zhou)
+* Fix VA tracer (Alexander Osin)
+* Fix vaBufferInfo() interface (Alexander Osin)
+
+Version 1.0.12 - 01.Apr.2011
+* API: add VARenderMode interface to select overlay or GPU rendering mode
+* API: add VARenderDevice interface to allow rendering to an external device
+* API: add VADisplayAttribOverlay{ColorKey,AutoPaintColorKey} interface
+* Fix build issues on Android 2.3
+
+Changes for older versions can be found in git log or previously
+released packages.

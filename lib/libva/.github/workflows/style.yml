@@ -1,0 +1,21 @@
+name: style
+
+permissions:
+  contents: read
+
+on: [push, pull_request]
+
+jobs:
+  style-check:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: 'Checkout'
+      uses: actions/checkout@v4
+    - name: 'Install prerequisites'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          astyle
+    - name: 'Check for style changes'
+      run: ./style_unify && .github/workflows/style.sh
+
