@@ -1,0 +1,12 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2024/07/19 14:35:16 rsadowski Exp $
+
+SHARED_LIBS += va-drm 2.22
+SHARED_LIBS += va-glx 2.22
+SHARED_LIBS += va-x11 2.22
+SHARED_LIBS += va 2.22
+
+CONFIGURE_ARGS= --disable-wayland
+CONFIGURE_ARGS+= \
+	--with-drivers-path=${DESTDIR}${X11BASE}/lib/modules/drivers/
+
+.include <bsd.xorg.mk>
