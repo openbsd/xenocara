@@ -29,3 +29,4 @@ SUBDIRS += doc
 endif
 
 EXTRA_DIST=doc/va_footer.html meson.build meson_options.txt
+MAINTAINERCLEANFILES=
