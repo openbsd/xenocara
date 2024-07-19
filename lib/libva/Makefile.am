@@ -29,8 +29,3 @@ SUBDIRS += doc
 endif
 
 EXTRA_DIST=doc/va_footer.html meson.build meson_options.txt
-# Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = \
-	aclocal.m4 compile config.guess config.sub \
-	configure depcomp install-sh ltmain.sh     \
-	Makefile.in missing
