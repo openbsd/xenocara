@@ -1,5 +1,4 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
-/* dummy - matthieu */
 
 /* Define if SSP C support is enabled. */
 #undef ENABLE_SSP_CC
