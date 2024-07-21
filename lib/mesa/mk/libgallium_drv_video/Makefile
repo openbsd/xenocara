@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2024/07/19 14:40:46 rsadowski Exp $
+#	$OpenBSD: Makefile,v 1.2 2024/07/21 13:30:50 jsg Exp $
 
 LIB=	gallium_drv_video
 
@@ -81,10 +81,7 @@ SLIBS+=	libradeonwinsys
 .endif
 
 LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--whole-archive -Wl,--start-group
-
-.if ${WITH_VAAPI} == "yes"
 LDADD+=	${.CURDIR}/../libva_st/${__objdir}/libva_st.a -Wl,--no-whole-archive -Wl,-z,origin
-.endif
 
 .if ${WITH_GALLIUM_R600} == "yes"
 SLIBS+=	libr600

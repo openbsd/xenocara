@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2024/07/19 14:42:33 rsadowski Exp $
+#	$OpenBSD: Makefile,v 1.10 2024/07/21 13:30:50 jsg Exp $
 
 .include "config.mk"
 
@@ -102,6 +102,8 @@ SUBDIR+=	libglapi libgbm libEGL libGL libGLESv1_CM libGLESv2 libOSMesa
 
 SUBDIR+=	libgallium_dri
 
+.if ${WITH_VAAPI} == "yes" || make(obj)
 SUBDIR+=	libgallium_drv_video
+.endif
 
 .include <bsd.subdir.mk>
