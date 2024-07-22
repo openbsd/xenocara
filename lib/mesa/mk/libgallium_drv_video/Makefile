@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2024/07/21 13:30:50 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2024/07/22 00:40:30 jsg Exp $
 
 LIB=	gallium_drv_video
 
@@ -22,11 +22,6 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/generated/src/gallium/drivers \
 		-DGALLIUM_SOFTPIPE
 
-obj: _xenocara_obj
-
-.include <bsd.lib.mk>
-.include <bsd.xorg.mk>
-
 .if ${WITH_GALLIUM_R600} == "yes"
 GALLIUM_DRIVERS+=	r600
 CPPFLAGS+=	-DGALLIUM_R600
@@ -42,11 +37,19 @@ CPPFLAGS+=	-DGALLIUM_LLVMPIPE
 .endif
 
 install:
-.for driver in ${GALLIUM_DRIVERS}
 	${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
 	    -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    lib${LIB}.so ${DESTDIR}${X11BASE}/lib/modules/drivers/${driver}_drv_video.so
+	    lib${LIB}.so ${DESTDIR}${X11BASE}/lib/modules/drivers
+.for driver in ${GALLIUM_DRIVERS}
+	ln -f ${DESTDIR}${X11BASE}/lib/modules/drivers/lib${LIB}.so \
+	    ${DESTDIR}${X11BASE}/lib/modules/drivers/${driver}_drv_video.so
 .endfor
+	rm ${DESTDIR}${X11BASE}/lib/modules/drivers/lib${LIB}.so
+
+obj: _xenocara_obj
+
+.include <bsd.lib.mk>
+.include <bsd.xorg.mk>
 
 SLIBS+=	libdri \
 	libmesa \
