@@ -100,8 +100,8 @@ in a non-standard directory (the default is /usr/xenocara).
 
 Xenocara requires objdirs. Just run 'make obj' as root at any level
 before 'make build' to make sure that the object directories are
-created.  XOBJDIR defines the obj directory that is used (defaults to
-/usr/xobj).  It should be created before running 'make obj'.
+created. XOBJDIR defines the obj directory that is used (defaults to
+/usr/xobj). It should be created before running 'make obj'.
 
 ## Regenerating configure scripts
 
@@ -156,18 +156,18 @@ to a new release of XCB:
    python3 package.
 3. Update dist/libxcb.
 4. Check lib/libxcb/src/Makefile if new files need to be generated.
-5. Run `make` in lib/xcb/src to generate the files for the new version.
+5. Run make in lib/xcb/src to generate the files for the new version.
 6. Check lib/libxcb/ for other files needing updates.
 7. Commit the result.
 
 ## How to build something with debug information?
 
-You can use `env CFLAGS=-g make -f Makefile.bsd-wrapper build` to
+You can use env CFLAGS=-g make -f Makefile.bsd-wrapper build to
 build any module with debugging information, but you'll need to remove
-`XOBJDIR/xorg-config.cache.${MACHINE}` before doing that because
+XOBJDIR/xorg-config.cache.${MACHINE} before doing that because
 autoconf caches the value of CFLAGS in its cache.
 
-##  How to get a core file out of the X server?
+## How to get a core file out of the X server?
 
 Several things are needed:
 
@@ -176,7 +176,7 @@ Several things are needed:
    xenodm, you can add the option in /etc/X11/xenodm/Xservers. If you
    want to use startx, you need to run it as root, like this:
 
-	`startx -- /usr/X11R6/bin/X -keepPriv`
+    startx -- /usr/X11R6/bin/X -keepPriv
 
 Now the X server should dump core when catching a fatal signal and the
 core dump should be in /var/crash/Xorg/<pid>.core.
@@ -189,4 +189,4 @@ dump will be in the current directory where startx was executed.
 See also http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging
 
 --
-$OpenBSD: README.md,v 1.1 2024/07/20 19:56:40 matthieu Exp $
+$OpenBSD: README.md,v 1.2 2024/07/22 19:36:31 rsadowski Exp $
