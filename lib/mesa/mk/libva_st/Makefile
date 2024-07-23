@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2024/07/19 14:40:39 rsadowski Exp $
+#	$OpenBSD: Makefile,v 1.2 2024/07/23 08:22:36 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -32,9 +32,9 @@ SRCS=	buffer.c \
 CFLAGS+=	${C_VIS_ARGS}
 CXXFLAGS+=	${CXX_VIS_ARGS}
 
-# XXX keep in sync with libva
-CFLAGS +=	-DVA_DRIVER_INIT_FUNC=__vaDriverInit_1_22
-CPPFLAGS +=	-DVA_DRIVER_INIT_FUNC=__vaDriverInit_1_22
+VA_INIT!=	pkg-config --modversion libva \
+		    | awk -F. '{printf "__vaDriverInit_%d_%d\n", $$1, $$2}'
+CPPFLAGS+=	-DVA_DRIVER_INIT_FUNC=${VA_INIT}
 
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/frontends/va \
 		-I${MESA_SRC}/src/gallium/include \
