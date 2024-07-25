@@ -6,7 +6,9 @@
 ./usr/X11R6/lib/modules/dri/kms_swrast_dri.so
 ./usr/X11R6/lib/modules/dri/r300_dri.so
 ./usr/X11R6/lib/modules/dri/r600_dri.so
+./usr/X11R6/lib/modules/dri/r600_drv_video.so
 ./usr/X11R6/lib/modules/dri/radeonsi_dri.so
+./usr/X11R6/lib/modules/dri/radeonsi_drv_video.so
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
 ./usr/X11R6/lib/modules/drivers/amdgpu_drv.la
 ./usr/X11R6/lib/modules/drivers/amdgpu_drv.so
@@ -14,10 +16,8 @@
 ./usr/X11R6/lib/modules/drivers/ati_drv.so
 ./usr/X11R6/lib/modules/drivers/modesetting_drv.la
 ./usr/X11R6/lib/modules/drivers/modesetting_drv.so
-./usr/X11R6/lib/modules/drivers/r600_drv_video.so
 ./usr/X11R6/lib/modules/drivers/radeon_drv.la
 ./usr/X11R6/lib/modules/drivers/radeon_drv.so
-./usr/X11R6/lib/modules/drivers/radeonsi_drv_video.so
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/drivers/wsudl_drv.la
