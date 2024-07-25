@@ -1,7 +1,7 @@
-/* $XTermId: cachedGCs.c,v 1.81 2021/09/16 19:48:02 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.82 2024/05/17 20:59:36 tom Exp $ */
 
 /*
- * Copyright 2007-2019,2021 by Thomas E. Dickey
+ * Copyright 2007-2021,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -92,7 +92,7 @@ traceCgsEnum(CgsEnum value)
 	CASE(BoldReverse);
 	CASE(Border);
 	CASE(Filler);
-#if OPT_BOX_CHARS
+#if OPT_BOX_CHARS || OPT_WIDE_CHARS
 	CASE(Line);
 	CASE(Dots);
 #endif
@@ -343,7 +343,7 @@ newCache(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, CgsCache * me)
 	xgcv.graphics_exposures = True;		/* default */
 	xgcv.function = GXcopy;
 	break;
-#if OPT_BOX_CHARS
+#if OPT_BOX_CHARS || OPT_WIDE_CHARS
     case gcLine:
 	mask |= (GCGraphicsExposures | GCFunction);
 	xgcv.graphics_exposures = True;		/* default */

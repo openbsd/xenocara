@@ -1,7 +1,7 @@
-/* $XTermId: error.h,v 1.26 2012/10/05 00:17:51 tom Exp $ */
+/* $XTermId: error.h,v 1.28 2023/11/24 00:56:16 tom Exp $ */
 
 /*
- * Copyright 1997-2011,2012 by Thomas E. Dickey
+ * Copyright 1997-2012,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -53,6 +53,8 @@
 
 /* @(#)error.h	X10/6.6	11/6/86 */
 
+#define ERROR_MISC      1	/* miscellaneous errors */
+
 /* main.c */
 #define	ERROR_FIONBIO	11	/* main: ioctl() failed on FIONBIO */
 #define	ERROR_F_GETFL	12	/* main: ioctl() failed on F_GETFL */
@@ -73,6 +75,7 @@
 #define	ERROR_INIGROUPS 28	/* spawn: initgroups() failed */
 #define	ERROR_FORK	29	/* spawn: fork() failed */
 #define	ERROR_EXEC	30	/* spawn: exec() failed */
+#define	ERROR_GET_ATOM	31	/* intern_atom() failed */
 #define	ERROR_PTYS	32	/* get_pty: not enough ptys */
 #define ERROR_PTY_EXEC	34	/* waiting for initial map */
 #define	ERROR_SETUID	35	/* spawn: setuid() failed */

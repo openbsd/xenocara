@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2022,2023 by Thomas E. Dickey                              *
+ * Copyright 1997-2023,2024 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2478 2023/01/09 10:29:25 tom Exp $
+  $XTermId: xterm.log.html,v 1.2635 2024/07/11 23:37:57 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -50,7 +50,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2022,2023 by <a href=
+  <p>Copyright &copy; 1997-2023,2024 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
 
   <hr>
@@ -70,6 +70,36 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_393">Patch #393 - 2024/07/11</a></li>
+
+    <li><a href="#xterm_392">Patch #392 - 2024/05/22</a></li>
+
+    <li><a href="#xterm_391">Patch #391 - 2024/05/12</a></li>
+
+    <li><a href="#xterm_390">Patch #390 - 2024/02/19</a></li>
+
+    <li><a href="#xterm_389">Patch #389 - 2024/01/01</a></li>
+
+    <li><a href="#xterm_388">Patch #388 - 2023/10/22</a></li>
+
+    <li><a href="#xterm_387">Patch #387 - 2023/10/15</a></li>
+
+    <li><a href="#xterm_386">Patch #386 - 2023/10/09</a></li>
+
+    <li><a href="#xterm_385">Patch #385 - 2023/10/01</a></li>
+
+    <li><a href="#xterm_384">Patch #384 - 2023/07/10</a></li>
+
+    <li><a href="#xterm_383">Patch #383 - 2023/06/27</a></li>
+
+    <li><a href="#xterm_382">Patch #382 - 2023/05/30</a></li>
+
+    <li><a href="#xterm_381">Patch #381 - 2023/05/28</a></li>
+
+    <li><a href="#xterm_380">Patch #380 - 2023/05/09</a></li>
+
+    <li><a href="#xterm_379">Patch #379 - 2023/02/15</a></li>
+
     <li><a href="#xterm_378">Patch #378 - 2023/01/09</a></li>
 
     <li><a href="#xterm_377">Patch #377 - 2022/11/25</a></li>
@@ -1032,6 +1062,606 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_393" id="xterm_393">Patch #393 -
+  2024/07/11</a></h1>
+
+  <ul>
+    <li>add a check for ANSI SC/RC, to ignore CSI parameters.</li>
+
+    <li>improve check for missing characters for bitmap-fonts by
+    using the normal font for reference in the case where the
+    current font, e.g., the wide-font was derived from the normal
+    font and lacks per-character metrics (report by Rajeev V.
+    Pillai).</li>
+
+    <li>fix regression in error-recovery for SGR parameters from
+    <a href="#xterm_357">patch #357</a> (report by James
+    Holderness).</li>
+
+    <li>remove some duplicates in <tt>xtermcfg.h</tt> (report by
+    Matthew Green).</li>
+
+    <li>change default for <tt>--enable-imake</tt> configure
+    option.</li>
+
+    <li>fixes for <tt>wcwidth</tt>:
+      <ul>
+        <li>return 0 for format effectors, like a zero-width
+        printing character rather than -1 like a control character
+        (report by Rajeev V. Pillai).</li>
+
+        <li>correct <tt>doublewidth</tt> to account for reserved
+        codepoints which are listed in the EastAsianWidth
+        file.</li>
+
+        <li>add a special case for surrogate pairs, which might be
+        checked in testing the <tt>wcwidth</tt> function.</li>
+      </ul>
+    </li>
+
+    <li>amend sixel bounds-check added in <a href=
+    "#xterm_371">patch #371</a> to not wrap out-of-bounds
+    data.</li>
+
+    <li>eliminate <tt>maxStringParse</tt> limit for SIXEL.</li>
+
+    <li>improve logic which ignores APC, PM and SOS controls to
+    also not accumulate their data temporarily in a buffer.</li>
+
+    <li>exclude <tt>TERM_INGRESS</tt> from cleanup of environment
+    variables (patch by Iain Riley).</li>
+
+    <li>fix some documentation typos (report by Thomas Wolff).</li>
+  </ul>
+
+  <h1><a name="xterm_392" id="xterm_392">Patch #392 -
+  2024/05/22</a></h1>
+
+  <ul>
+    <li>improve input decoding for non-Latin1 character sets by
+    preserving the sense of GL/GR.</li>
+
+    <li>add resource <tt>preferLatin1</tt> to simplify UPSS
+    configuration (Gentoo #932154).</li>
+
+    <li>build-fix for <tt>--disable-boxchars</tt>; <a href=
+    "#xterm_390">patch #390</a> reuses that feature's code to draw
+    the part of the DEC Technical character set which has no
+    Unicode equivalent.</li>
+
+    <li>modify <tt>#include</tt> of <tt>pty.h</tt> to work with
+    musl (report by Khem Raj).</li>
+
+    <li>improve definitions used in <tt>clock_gettime</tt> logic in
+    <tt>graphics_sixel.c</tt>, as well as updating comments (patch
+    by Ben Wong).</li>
+
+    <li>amend <code>allowC1Printable</code> changes from <a href=
+    "#xterm_391">patch #391</a>, restoring a special case which
+    caused C1 characters to be ignored (report/testcase by Dmytro
+    Bagrii).</li>
+  </ul>
+
+  <h1><a name="xterm_391" id="xterm_391">Patch #391 -
+  2024/05/12</a></h1>
+
+  <ul>
+    <li>improve integration between UTF-8 and
+    <code>allowC1Printable</code>.</li>
+
+    <li>alter SIXEL HLS computation to make blue 0 degrees (patch
+    by Ben Wong).</li>
+
+    <li>disable SIXEL aspect-ratio, pending a rewrite (patch by Ben
+    Wong).</li>
+
+    <li>add resource <code>incrementalGraphics</code> (prompted by
+    patch by Ben Wong).</li>
+
+    <li>reorganize <tt>graphics_sixel.c</tt> as a step toward
+    eliminating graphics buffer-size (integrated patch by Ben
+    Wong).</li>
+
+    <li>use <code>__linux__</code> consistently rather than the
+    older <code>linux</code>.</li>
+
+    <li>build-fix for musl (report by Jon&aacute;&scaron; Vidra,
+    adapted patch by Khem Raj):
+      <ul>
+        <li>modify <code><em>ifdef</em></code> for
+        <code>USE_OPENPTY</code>, changing test for
+        <code>__GLIBC__</code> to <code>__linux__</code></li>
+
+        <li>change <code><em>ifdef</em></code>'s for
+        <code>_POSIX_SOURCE</code> to
+        <code>_POSIX_VERSION</code></li>
+
+        <li>modify <code><em>ifdef</em></code> for
+        <code>setsid</code> to use a configure-script check for
+        that function's existence and move the old check to imake
+        fallbacks.</li>
+      </ul>
+    </li>
+
+    <li>minor consistency fixes for manpage.</li>
+
+    <li>fix regression in <a href="#xterm_390">patch #390</a>:
+    non-UTF8 text pasted as a XA_UTF8_STRING was not decoded
+    (report by Petri Kaukasoina).</li>
+  </ul>
+
+  <h1><a name="xterm_390" id="xterm_390">Patch #390 -
+  2024/02/19</a></h1>
+
+  <ul>
+    <li>improve typography of control-sequences page (patches by
+    Branden Robinson).</li>
+
+    <li>amend UPSS change from <a href="#xterm_389">patch #389</a>,
+    fixing a regression in VT100/VT220 character sets.</li>
+
+    <li>modify ANSI conformance per ECMA-43 and DEC 070:
+      <ul>
+        <li>set ANSI conformance level to 3 for DEC levels 2 and
+        up.</li>
+
+        <li>disable locking shifts in level 1, e.g., VT100.</li>
+
+        <li>disable single-shifts from G2/G3 in level 1.</li>
+
+        <li>use UPSS for G2/G3 in levels 2 and up.</li>
+      </ul>
+    </li>
+
+    <li>modify invisible-character attribute to permit
+    <tt>DECRQCRA</tt> to report a consistent checksum
+    (report/testcase by Thomas Wolff).</li>
+
+    <li>align terminfo building blocks in terminfo to correspond to
+    recent refactoring/trimming in ncurses.</li>
+
+    <li>set flag in regexec call for
+    <code>on<em>N</em>Clicks</code> to handle
+    &ldquo;<tt>^</tt>&rdquo; anchor (patch by Matthew Martin).</li>
+
+    <li>add line-drawing data for the characters in <a href=
+    "https://www.vt100.net/charsets/technical.html"><em>DEC
+    Technical</em></a> which have no Unicode equivalents.</li>
+
+    <li>remove a special case in <tt>encode_scs</tt> which made
+    xterm report Latin-1 when encoding is set to UTF-8, where ASCII
+    is the selected character set. This fixes a regression in
+    vttest for the <tt>DECRSPS</tt> cursor test.</li>
+
+    <li>correct values for <em>Ps</em> of <tt>DECAUPSS</tt> in
+    <tt>ctlseqs.ms</tt> (report by James Holderness).</li>
+
+    <li>simplify/correct expression for checking Unicode
+    non-characters (report by Thomas Wolff).</li>
+
+    <li>correct loop for trimming environment variables
+    (report/patch by Casper Dik).</li>
+
+    <li>fixes for manpage formatting (Debian #1041809).</li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
+
+  <h1><a name="xterm_389" id="xterm_389">Patch #389 -
+  2024/01/01</a></h1>
+
+  <ul>
+    <li>interchange variables in subparameter parsing, fixing a bug
+    where subparameters after the first parameter could be
+    misidentified (patch by Adam Saponara).</li>
+
+    <li>correct popping of icon/window titles in a case where only
+    one was pushed from <a href="#xterm_385">patch #385</a>
+    changes.</li>
+
+    <li>add <tt>XTQMODKEYS</tt> response in <tt>DECRQSS</tt>, as
+    alternative for vim.</li>
+
+    <li>correct <tt>DECCIR</tt> encoded information on character
+    set size, handle a VT525 quirk, and add <tt>DECST8C</tt>
+    (Windows Terminal #14984).</li>
+
+    <li>improve <tt>DECRQCRA</tt> (prompted by discussion with
+    James Holderness, Windows Terminal #14974).</li>
+
+    <li>add part of VT525 color controls:
+      <ul>
+        <li><tt>DECAC</tt>, to update default
+        foreground/background, respond to <tt>DECRQSS</tt></li>
+
+        <li><tt>DECATC</tt>, to respond with <tt>DECRQSS</tt></li>
+      </ul>
+    </li>
+
+    <li>prevent Unicode non-characters from being printed (prompted
+    by patch by Grady Martin).</li>
+
+    <li>modify <tt>send_SGR()</tt> to avoid modifying colors 16 to
+    255 in printed output (patch by Grady Martin).</li>
+
+    <li>minor cleanup of miscellaneous error-codes with
+    <tt>ERROR_MISC</tt>.</li>
+
+    <li>remove legacy <tt><em>CSI</em> 53</tt> for locator status,
+    corrected in <a href="#xterm_294">patch #294</a>.</li>
+
+    <li>modify <tt>DECRQUPSS</tt> and <tt>DECAUPSS</tt> feature to
+    support VT5xx character sets (report by Thomas Wolff).</li>
+
+    <li>improve configure script:
+      <ul>
+        <li>reduce configure-check compiler warnings (prompted by
+        Florian Weimer, Redhat #2251945)</li>
+
+        <li>improve usage messages in configure script to make it
+        clearer when an option value is optional.</li>
+      </ul>
+    </li>
+
+    <li>improve EWMH handling (report/analysis by Edward Rosten)
+      <ul>
+        <li>reset <tt>_NET_WM_STATE_HIDDEN</tt> flag from
+        <tt>_NET_WM_STATE</tt> before mapping the window to
+        deiconify.</li>
+
+        <li>cache X properties to reduce latency (adapted from
+        patch by Edward Rosten).</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h1><a name="xterm_388" id="xterm_388">Patch #388 -
+  2023/10/22</a></h1>
+
+  <ul>
+    <li>improve <tt>disallowPasteControls</tt> by adding a category
+    for the special characters known to <tt>stty</tt> (prompted by
+    discussion with David Leadbeater).</li>
+
+    <li>amend support of <tt>DECAUPSS</tt>, undoing change to
+    initialization of G2/G3 so that pasting of GR characters works
+    properly (report/analysis by Petri Kaukasoina).</li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
+
+  <h1><a name="xterm_387" id="xterm_387">Patch #387 -
+  2023/10/15</a></h1>
+
+  <ul>
+    <li>add <tt>DECRQUPSS</tt> and <tt>DECAUPSS</tt>.</li>
+
+    <li>add <tt>DECRQDE</tt> (report by Jake Hamby).</li>
+
+    <li>correct indexing expression in title-stack, from <a href=
+    "#xterm_385">patch #385</a> changes (report by Brian
+    Lindholm).</li>
+  </ul>
+
+  <h1><a name="xterm_386" id="xterm_386">Patch #386 -
+  2023/10/09</a></h1>
+
+  <ul>
+    <li>improve references in <tt>ctlseqs.ms</tt> (prompted by
+    discussion with Kirill Chibisov).</li>
+
+    <li>make the maximum amount of memory used for buffering DCS
+    and OSC strings configurable with <tt>maxStringParse</tt>
+    resource (report by Daniel Franke).</li>
+
+    <li>improve performance of ReGIS when initializing the largest
+    fontsize (report by Ben Wong).</li>
+
+    <li>fix regression in SIXEL colors, in <a href=
+    "#xterm_385">patch #385</a> (report/patch by Jonny
+    Langley).</li>
+
+    <li>fix typo in <code>--with-wtmp</code> (report/patch by Sven
+    Joachim)</li>
+  </ul>
+
+  <h1><a name="xterm_385" id="xterm_385">Patch #385 -
+  2023/10/01</a></h1>
+
+  <ul>
+    <li>fixes for ReGIS (report by Ben Wong).
+      <ul>
+        <li>correct conversion from HLS to RGB</li>
+
+        <li>improve font-caching performance.</li>
+      </ul>
+    </li>
+
+    <li>update tables in <code>wcwidth.c</code> based on Unicode
+    15.1.0</li>
+
+    <li>improve <code>fastScroll</code> resource:
+      <ul>
+        <li>suppress screen-refreshes for carriage-returns</li>
+
+        <li>add <code>-jf</code> option to simplify use of this
+        resource.</li>
+
+        <li>add a control sequence for enabling/disabling the
+        resource.</li>
+
+        <li>enable this feature by default</li>
+      </ul>
+    </li>
+
+    <li>extend title-stack feature to allow an additional parameter
+    to directly access the stack, like the
+    <code>XTPUSHCOLORS</code> and <code>XTPOPCOLORS</code>
+    feature.</li>
+
+    <li>correct size and position of box shown for double-cell
+    character which happens to be missing from the bitmap font
+    (report by Peter Fabinski).</li>
+
+    <li>improved configure script:
+      <ul>
+        <li>add pattern for uClibc-ng to <tt>CF_XOPEN_SOURCE</tt>
+        (report/patch by Waldemar Brodkorb).</li>
+
+        <li>add configure options <tt>--with-utmp-path</tt> and
+        <tt>--with-wtmp-path</tt> to override configure script's
+        check for utmp/wtmp pathnames which are shown in the manual
+        (Debian #1042767).</li>
+
+        <li><tt>CF_XOPEN_SOURCE</tt> provides for defining
+        <tt>_DEFAULT_SOURCE</tt> for MinGW32 and MinGW64.</li>
+
+        <li>sed expression used to report gcc version now works
+        with MinGW</li>
+      </ul>
+    </li>
+
+    <li>ensure that line-attributes are reset after drawing missing
+    character (report by Christian Weisgerber).</li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
+
+  <h1><a name="xterm_384" id="xterm_384">Patch #384 -
+  2023/07/10</a></h1>
+
+  <ul>
+    <li>exclude ASCII space from <code>showMissingGlyphs</code>,
+    since a few bitmap fonts lack this (report by "SanRemo",
+    Emanuel Haupt).</li>
+
+    <li>correct a step in rendering double-width characters with
+    bitmap-fonts (report by Peter Fabinski, Debian #1039986).</li>
+
+    <li>fixes for ReGIS-related problems (report by Ben Wong):
+      <ul>
+        <li>mimic an undocumented hardware VT340 feature which
+        handles color initialization with incomplete
+        parameters.</li>
+
+        <li>handle whitespace between operator/operands for color
+        values.</li>
+
+        <li>reset ReGIS-context when resetting graphics in
+        <tt>RIS</tt>.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h1><a name="xterm_383" id="xterm_383">Patch #383 -
+  2023/06/27</a></h1>
+
+  <ul>
+    <li>expand description of full- and soft-reset in the
+    manual.</li>
+
+    <li>fixes for full- and soft-reset:
+      <ul>
+        <li>clear alternate screen on full reset.</li>
+
+        <li>disable menu-entry for active icon; it merely shows
+        whether the feature is enabled.</li>
+
+        <li>use <tt>appcursorDefault</tt> and
+        <tt>appkeypadDefault</tt> resources for reset of
+        <tt>DECCKM</tt> and <tt>DECKPAM</tt>.</li>
+
+        <li>save initial resource values for
+        <tt>sixelScrolling</tt> and <tt>privateColorRegisters</tt>,
+        using those in full reset.</li>
+
+        <li>update checkbox for <em>Enable Blinking Cursor</em>
+        (report by Rajeev V. Pillai).</li>
+      </ul>
+    </li>
+
+    <li>add reply for <tt>DECSACE</tt> with <tt>DECRQSS</tt>.</li>
+
+    <li>modify status-line feature to exit without erasing for
+    <tt>DECSTR</tt>.</li>
+
+    <li>add private mode <tt>1045</tt> which imitates the original
+    xterm cursor-back reverse wrapping mode <tt>45</tt> (see
+    <a href="#xterm_380">patch #380</a>).</li>
+
+    <li>improve checks for non-Unicode values, e.g., in
+    <tt>DECRQCRA</tt>.</li>
+
+    <li>re-checkout from RCS archive to fix stale identifiers
+    (report by Sven Joachim).</li>
+  </ul>
+
+  <h1><a name="xterm_382" id="xterm_382">Patch #382 -
+  2023/05/30</a></h1>
+
+  <ul>
+    <li>amend change to <tt>CursorBack</tt> in <a href=
+    "#xterm_380">patch #380</a>, allowing the result to be on the
+    hidden right-half of double-cell characters (report by Rajeev
+    V. Pillai).</li>
+
+    <li>amend <tt>xtermDrawString</tt>, fixing regression with
+    <tt>--disable-wide-chars</tt> configuration from <a href=
+    "#xterm_380">patch #380</a>.</li>
+
+    <li>corrected pathname for <tt>run-tic.sh</tt>, for full
+    install in an out-of-tree build (report by Rajeev V.
+    Pillai).</li>
+  </ul>
+
+  <h1><a name="xterm_381" id="xterm_381">Patch #381 -
+  2023/05/28</a></h1>
+
+  <ul>
+    <li>fix a regression in wide bitmap fonts versus check for
+    missing glyphs (report by Rajeev V. Pillai).</li>
+  </ul>
+
+  <h1><a name="xterm_380" id="xterm_380">Patch #380 -
+  2023/05/09</a></h1>
+
+  <ul>
+    <li>simplify the change for <code>sixelScrolling</code> from
+    <a href="#xterm_374">patch #374</a> (report by Per
+    Bothner).</li>
+
+    <li>add <tt>xterm+focus</tt> and <tt>report+da2</tt>, update
+    <tt>report+version</tt> building blocks in terminfo, from
+    post-ncurses 6.4</li>
+
+    <li>drop the <tt>-title</tt> option from <tt>uxterm</tt> and
+    <tt>koi8rxterm</tt>, because that interferes with deriving the
+    default title from the <tt>-e</tt> option (Debian #1031837).
+    Compensate for this by using the <tt>-class</tt> option to
+    derive a default title.</li>
+
+    <li>improve description of readline 2003 mode in
+    <tt>ctlseqs.ms</tt> (report by Thomas Wolff).</li>
+
+    <li>other improvements to status-line feature (report by Thomas
+    Wolff):
+      <ul>
+        <li>clear status line on <tt>DECCOLM</tt></li>
+
+        <li>ignore <tt>DECSASD</tt> if no previous
+        <tt>DECSSDT</tt></li>
+
+        <li>allow <tt>DECSSDT&nbsp;1</tt> immediately after
+        <tt>DECSSDT&nbsp;2</tt>, i.e., without switching back to
+        host mode.</li>
+      </ul>
+    </li>
+
+    <li>adjust <tt>RequestResize</tt> to avoid shrinking screen
+    when using <tt>DECCOLM</tt> while the status-line is active
+    (report/patch by Thomas Wolff).</li>
+
+    <li>disallow wrapping before the beginning of the screen, to
+    the end of the screen, for cursor-back sequences (Redhat
+    #2182357).</li>
+
+    <li>modify makefile to install the 16x16 xpm files (report by
+    Harald Dunkel).</li>
+
+    <li>update test-package to reflect resolution of Debian
+    #906901.</li>
+
+    <li>change default of <code>showMissingGlyphs</code> to
+    <em>True</em>.</li>
+
+    <li>improve handling of double-sized characters when those
+    happen to be missing from the bitmap font and/or are
+    fullwidth.</li>
+
+    <li>pointer/overflow fixes (reported by David Leadbeater):
+      <ul>
+        <li>improve limit-checks for control-sequence numeric
+        parameters in SIXEL graphics.</li>
+
+        <li>add null-pointer checks in <tt>WriteNow</tt> macro to
+        handle a case where <tt>SS2</tt> or <tt>SS3</tt> might be
+        in effect while processing a combining character.</li>
+
+        <li>disallow ReGIS reporting for character-set names
+        containing characters other than alphanumerics or
+        underscore.</li>
+
+        <li>implement TrueType fallback font for double-sized
+        characters, including Unicode fullwidth. Also add
+        <tt>limitFontHeight</tt> to provide for configuring the
+        distinction between slightly-oversized glyphs and
+        double-sized glyphs.</li>
+      </ul>
+    </li>
+
+    <li>configure script improvements:
+      <ul>
+        <li>check for <tt>nfsd_t</tt></li>
+      </ul>
+    </li>
+
+    <li>fix a typo in the underline cursor thickness derivation
+    (patch by Jan Engelhardt).</li>
+  </ul>
+
+  <h1><a name="xterm_379" id="xterm_379">Patch #379 -
+  2023/02/15</a></h1>
+
+  <ul>
+    <li>improve text-cursor (patch by Jan Engelhardt):
+      <ul>
+        <li>allow selecting <tt>CURSOR_BAR</tt> mode from
+        command-line/Xresources.</li>
+
+        <li>draw cursor using filled rectangle instead of rectangle
+        outline to permit thicker underlines/bars.</li>
+
+        <li>scale up cursor relative to font size.</li>
+      </ul>
+    </li>
+
+    <li>improve readline modes (Fedora #2166860):
+      <ul>
+        <li>document readline modes</li>
+
+        <li>change the feature to configure by default</li>
+
+        <li>replace hard-coded SS3 for cursor movement with current
+        mode</li>
+
+        <li>replace hard-coded erase/lnext characters with current
+        values</li>
+      </ul>
+    </li>
+
+    <li>improve status-line (report by Thomas Wolff):
+      <ul>
+        <li><tt>RIS</tt> turns off status-line</li>
+
+        <li>Right-margin (<tt>DECLRMM</tt> and <tt>DECSLRM</tt>)
+        limits the length of text written/updated in the
+        status-line.</li>
+
+        <li>Most controls which affect the whole screen are ignored
+        while updating the status-line.</li>
+      </ul>
+    </li>
+
+    <li>modify configure check for <tt>tgetent</tt> to allow for
+    some special cases of ncurses configuration (report by Satadru
+    Pramani).</li>
+
+    <li>reduce timeout, improve warning message if resize is run on
+    a terminal which is not VT100-compatible.</li>
+
+    <li>reduce compiler warnings in configure script.</li>
   </ul>
 
   <h1><a name="xterm_378" id="xterm_378">Patch #378 -

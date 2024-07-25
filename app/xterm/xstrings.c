@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.79 2022/11/16 23:54:32 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.80 2023/05/09 08:13:56 tom Exp $ */
 
 /*
- * Copyright 2000-2020,2022 by Thomas E. Dickey
+ * Copyright 2000-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -163,9 +163,8 @@ login_alias(char *login_name, uid_t uid, struct passwd *in_out)
     if (!IsEmpty(login_name)
 	&& strcmp(login_name, in_out->pw_name)) {
 	struct passwd pw2;
-	Boolean ok2;
 
-	if ((ok2 = x_getpwnam(login_name, &pw2))) {
+	if (x_getpwnam(login_name, &pw2)) {
 	    uid_t uid2 = pw2.pw_uid;
 	    struct passwd pw3;
 	    Boolean ok3;
@@ -177,8 +176,7 @@ login_alias(char *login_name, uid_t uid, struct passwd *in_out)
 	    } else {
 		FreeAndNull(login_name);
 	    }
-	    if (ok2)
-		free_pw(&pw2);
+	    free_pw(&pw2);
 	    if (ok3)
 		free_pw(&pw3);
 	}

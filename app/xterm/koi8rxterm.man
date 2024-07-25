@@ -1,6 +1,6 @@
-.\" $XTermId: koi8rxterm.man,v 1.8 2018/06/23 00:19:53 tom Exp $
+.\" $XTermId: koi8rxterm.man,v 1.9 2024/01/11 21:55:09 tom Exp $
 .\"
-.\" Copyright 2007-2012, 2018 Thomas E. Dickey
+.\" Copyright 2007-2018,2024 Thomas E. Dickey
 .\" Copyright 2004 Branden Robinson
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
@@ -24,16 +24,24 @@
 .ds N Koi8rxterm
 .ds n koi8rxterm
 .\"
-.ie \n(.g .ds AQ \(aq
-.el       .ds AQ '
-.ie \n(.g .ds `` \(lq
-.el       .ds `` ``
-.ie \n(.g .ds '' \(rq
-.el       .ds '' ''
-.\"
 .TH KOI8RXTERM 1 "__app_date__" "__app_version__" "X Window System"
+.\"
+.ie \n(.g \{\
+.ds `` \(lq
+.ds '' \(rq
+.ds '  \(aq
+.\}
+.el \{\
+.ie t .ds `` ``
+.el   .ds `` ""
+.ie t .ds '' ''
+.el   .ds '' ""
+.ie t .ds '  \(aq
+.el   .ds '  '
+.\}
 .SH NAME
-koi8rxterm \- X terminal emulator for KOI8-R environments
+koi8rxterm \-
+X terminal emulator for KOI8-R environments
 .SH SYNOPSIS
 .B \*n
 [
@@ -95,7 +103,7 @@ is available for Unicode UTF-8 environments.
 .B LC_ALL\fR, \fBLC_CTYPE\fR, \fBLANG
 The values of these variables are checked, in order, to determine the
 character set used by the current locale.
-.SH AUTHOR
+.SH AUTHORS
 .B \*n
 was written by Branden Robinson and is very heavily based on
 .BR uxterm ,

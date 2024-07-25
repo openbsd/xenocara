@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.392 2023/01/08 11:41:52 tom Exp $
+dnl $XTermId: configure.in,v 1.402 2024/05/11 17:24:20 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2022,2023 by Thomas E. Dickey
+dnl Copyright 1997-2023,2024 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -82,6 +82,7 @@ AM_LANGINFO_CODESET
 CF_SIG_ATOMIC_T
 AC_CHECK_TYPE(time_t, long)
 CF_TYPE_CC_T
+CF_TYPE_NFDS_T
 AC_TYPE_MODE_T
 AC_TYPE_PID_T
 AC_TYPE_UID_T
@@ -99,12 +100,15 @@ AC_CHECK_FUNCS( \
 	unsetenv \
 	sched_yield \
 	setpgid \
-	strftime \
+	setsid \
 	tcgetattr \
 	waitpid \
 	wcswidth \
 	wcwidth )
+CF_FUNC_GETTIME
+CF_FUNC_STRFTIME
 CF_MKSTEMP
+CF_SETITIMER
 CF_UTMP
 CF_STRUCT_LASTLOG
 CF_POSIX_SAVED_IDS
@@ -163,7 +167,7 @@ cf_name=`echo "$program_transform_name" | sed -e '[s,\\$\\$,$,g]'`
 cf_name=`echo xterm |sed -e "$cf_name"`
 AC_MSG_CHECKING(for symbolic link to create to $cf_name)
 AC_ARG_WITH(xterm-symlink,
-	[  --with-xterm-symlink=XXX make symbolic link to installed xterm],
+	[[  --with-xterm-symlink[=XXX] make symbolic link to installed xterm]],
 	[with_symlink=$withval],
 	[with_symlink=xterm])
 AC_MSG_RESULT($with_symlink)
@@ -200,7 +204,7 @@ AC_MSG_RESULT($disable_setgid)
 
 AC_MSG_CHECKING(if you want to run xterm setuid to a given user)
 AC_ARG_WITH(setuid,
-	[  --with-setuid=XXX       use the given setuid user],
+	[[  --with-setuid[=XXX]     use the given setuid user]],
 	[use_given_setuid=$withval],
 	[use_given_setuid=no])
 AC_MSG_RESULT($use_given_setuid)
@@ -217,7 +221,7 @@ fi
 
 AC_MSG_CHECKING(if you want to run xterm setgid to match utmp/utmpx file)
 AC_ARG_WITH(utmp-setgid,
-	[  --with-utmp-setgid=XXX  use setgid to match utmp/utmpx file],
+	[[  --with-utmp-setgid[=XXX] use setgid to match utmp/utmpx file]],
 	[use_utmp_setgid=$withval],
 	[use_utmp_setgid=no])
 AC_MSG_RESULT($use_utmp_setgid)
@@ -260,6 +264,10 @@ if test "$use_utempter" = yes ; then
 	fi
 fi
 
+# We use these for the manpage:
+CF_WITH_UTMP_PATH
+CF_WITH_WTMP_PATH
+
 ###	checks for external data
 CF_ERRNO
 CF_TTY_GROUP
@@ -296,7 +304,7 @@ CF_TERMIOS_TYPES
 # the feature if it is unwanted.
 AC_MSG_CHECKING(if we expect to use the Xcursor library)
 CF_ARG_DISABLE(xcursor,
-	[  --disable-xcursor        disable cursorTheme resource],
+	[  --disable-xcursor       disable cursorTheme resource],
 	[enable_xcursor=no],
 	[enable_xcursor=yes])
 AC_MSG_RESULT($enable_xcursor)
@@ -342,6 +350,11 @@ AC_ARG_WITH(terminal-id,
 AC_MSG_RESULT($default_termid)
 case $default_termid in
 (vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
+	;;
+([[1-9]][[0-9]][[0-9]]|[[1-9]][[0-9]])
+	;;
+(*)
+	AC_MSG_ERROR([expected a number, not $default_termid])
 	;;
 esac
 AC_DEFINE_UNQUOTED(DFT_DECID,"$default_termid",[default terminal-id])
@@ -415,7 +428,7 @@ if test "$cf_tic_prog" = yes ; then
 	fi
 	AC_MSG_CHECKING(for private terminfo-directory)
 	AC_ARG_WITH(own-terminfo,
-		[  --with-own-terminfo=P   set default $TERMINFO (default: from environment)],
+		[[  --with-own-terminfo[=P] set default $TERMINFO (default: from environment)]],
 		[TERMINFO_DIR=$withval],
 		[TERMINFO_DIR=${TERMINFO-none}])
 	AC_MSG_RESULT($TERMINFO_DIR)
@@ -759,7 +772,7 @@ CF_INPUT_METHOD
 test "$cf_cv_input_method" = no && enable_ximp=no
 if test "$enable_ximp" != no ; then
 	if test "$enable_i18n" = no ; then
-		AC_MSG_WARN(input-methor relies upon internationalization)
+		AC_MSG_WARN(input-method relies upon internationalization)
 		enable_ximp=no
 	fi
 fi
@@ -839,10 +852,10 @@ else
 fi
 
 AC_MSG_CHECKING(if you want support for mouse in readline applications)
-CF_ARG_ENABLE(readline-mouse,
-	[  --enable-readline-mouse enable support for mouse in readline applications],
-	[enable_readline_mouse=yes],
-	[enable_readline_mouse=no])
+CF_ARG_DISABLE(readline-mouse,
+	[  --disable-readline-mouse disable support for mouse in readline applications],
+	[enable_readline_mouse=no],
+	[enable_readline_mouse=yes])
 AC_MSG_RESULT($enable_readline_mouse)
 if test "$enable_readline_mouse" = yes ; then
 	AC_DEFINE(OPT_READLINE,1,[Define to 1 to enable support for mouse in readline applications])
@@ -1084,7 +1097,11 @@ if test "$enable_regis_graphics" = yes || test "$enable_sixel_graphics" = yes ; 
 	EXTRAHDRS="$EXTRAHDRS graphics.h"
 	EXTRASRCS="$EXTRASRCS graphics.c"
 	EXTRAOBJS="$EXTRAOBJS graphics.o"
+	STRINGS_MAX=600000
+else
+	STRINGS_MAX=20000
 fi
+AC_SUBST(STRINGS_MAX)
 
 AC_MSG_CHECKING(if you want sixel screen dump support)
 CF_ARG_DISABLE(print-graphics,

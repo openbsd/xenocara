@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.225 2022/02/13 13:50:45 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.232 2024/05/17 08:13:42 tom Exp $ */
 
 /*
- * Copyright 1997-2021,2022 by Thomas E. Dickey
+ * Copyright 1997-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -43,7 +43,6 @@
  * DEBUG* (any debug-option)
  * DUMP_* (mostly in the ReGIS/SIXEL code)
  * HAS_LTCHARS
- * HAVE_SYS_PTEM_H
  * PUCC_PTYD
  * USE_LOGIN_DASH_P
  * USE_X11TERM
@@ -65,15 +64,18 @@
 #define DFT_TERMTYPE "xterm"		/* AC_ARG_WITH(default-term-type) */
 /* #undef DISABLE_SETGID */		/* CF_ARG_DISABLE(setgid) */
 /* #undef DISABLE_SETUID */		/* CF_ARG_DISABLE(setuid) */
+#define HAVE_CLOCK_GETTIME	/* CF_FUNC_GETTIME */
 #define HAVE_ENDUSERSHELL		/* AC_CHECK_FUNCS(endusershell) */
 #define HAVE_GETHOSTNAME 1		/* AC_CHECK_FUNCS(gethostname) */
 #define HAVE_GETLOGIN 1		/* AC_CHECK_FUNCS(getlogin) */
+#define HAVE_GETTIMEOFDAY	/* CF_FUNC_GETTIME */
 #define HAVE_GETUSERSHELL	/* AC_CHECK_FUNCS(getusershell) */
 /* #undef HAVE_GRANTPT */		/* CF_FUNC_GRANTPT */
 /* #undef HAVE_GRANTPT_PTY_ISATTY */	/* CF_FUNC_GRANTPT */
 #define HAVE_INITGROUPS 1		/* AC_CHECK_FUNCS(initgroups) */
 #define HAVE_LANGINFO_CODESET 1	/* AM_LANGINFO_CODESET */
 /* #undef HAVE_LASTLOG_H */		/* CF_LASTLOG */
+/* #undef HAVE_LIBUTIL_H */		/* AC_CHECK_HEADERS(libutil.h) */
 #define HAVE_LIBXPM		/* CF_WITH_XPM */
 /* #undef HAVE_LIB_NEXTAW */		/* CF_X_ATHENA(--with-neXtaw) */
 /* #undef HAVE_LIB_PCRE */		/* CF_WITH_PCRE */
@@ -84,23 +86,29 @@
 /* #undef HAVE_LIB_XAWPLUS */		/* CF_X_ATHENA(--with-XawPlus) */
 #define HAVE_LIB_XCURSOR 1	/* AC_CHECK_LIB(Xcursor) */
 #define HAVE_MKDTEMP 1		/* AC_CHECK_FUNCS(mkdtemp) */
-#define HAVE_MKSTEMP		/* CF_MKSTEMP */
+#define HAVE_MKSTEMP 1		/* CF_MKSTEMP */
 /* #undef HAVE_NCURSES_CURSES_H	*/	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 /* #undef HAVE_NCURSES_TERM_H */	/* AC_CHECK_HEADERS(ncurses/term.h) */
-#define HAVE_PATHS_H 1		/* CF_LASTLOG */
+#define HAVE_PATHS_H 1		/* AC_CHECK_HEADERS(paths.h)  */
 /* #undef HAVE_PCRE2POSIX_H */	/* CF_WITH_PCRE2 */
 /* #undef HAVE_PCRE2REGCOMP */	/* CF_WITH_PCRE2 */
 /* #undef HAVE_PCREPOSIX_H */		/* CF_WITH_PCRE */
 /* #undef HAVE_POSIX_OPENPT */	/* CF_FUNC_GRANTPT */
 #define HAVE_POSIX_SAVED_IDS 1	/* CF_POSIX_SAVED_IDS */
 /* #undef HAVE_PTSNAME */		/* CF_FUNC_GRANTPT */
+/* #undef HAVE_PTY_H */		/* AC_CHECK_HEADERS(pty.h) */
 #define HAVE_PUTENV 1		/* AC_CHECK_FUNCS(putenv) */
 #define HAVE_SCHED_YIELD 1		/* AC_CHECK_FUNCS(sched_yield) */
+#define HAVE_SETITIMER 1		/* CF_SETITIMER */
 #define HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */
+#define HAVE_SETSID 1		/* AC_CHECK_FUNCS(setsid) */
 #define HAVE_STDINT_H 1		/* AC_PROG_CC_STDC */
 #define HAVE_STDLIB_H 1		/* AC_CHECK_HEADERS(stdlib.h) */
 #undef HAVE_STDNORETURN_H	/* CF_C11_NORETURN */
 #define HAVE_STRFTIME 1		/* AC_CHECK_FUNCS(strftime) */
+/* #undef HAVE_STROPTS_H */	     /* AC_CHECK_HEADERS(stropts.h) */
+#define HAVE_SYS_PARAM_H 1	     /* AC_CHECK_HEADERS(sys/param.h) */
+/* #undef HAVE_SYS_PTEM_H */	     /* AC_CHECK_HEADERS(sys/ptem.h) */
 /* #undef HAVE_SYS_TIME_H */		/* AC_HEADER_TIME */
 #define HAVE_SYS_TTYDEFAULTS_H 1	/* AC_CHECK_HEADERS(sys/ttydefaults.h) */
 #define HAVE_SYS_WAIT_H 1		/* AC_HEADER_SYS_WAIT */
@@ -113,6 +121,7 @@
 #define HAVE_UNISTD_H 1		/* AC_CHECK_HEADERS(unistd.h) */
 #define HAVE_UNSETENV		/* AC_CHECK_FUNCS(unsetenv) */
 #define HAVE_USE_EXTENDED_NAMES 1	/* AC_CHECK_FUNCS(use_extended_names) */
+#define HAVE_UTIL_H			/* AC_CHECK_HEADERS(util.h) */
 #define HAVE_UTMP 1		/* CF_UTMP */
 #define HAVE_UTMP_UT_HOST 1	/* CF_UTMP_UT_HOST */
 /* #undef HAVE_UTMP_UT_SESSION */	/* CF_UTMP_UT_SESSION */
@@ -222,6 +231,7 @@
 /* #undef cc_t */		/* CF_TYPE_CC_T */
 /* #undef gid_t */			/* AC_TYPE_UID_T */
 /* #undef mode_t */			/* AC_TYPE_MODE_T */
+/* +#undef nfds_t */			/* CF_TYPE_NFDS_T */
 /* #undef off_t */			/* AC_TYPE_OFF_T */
 /* #undef pid_t */			/* AC_TYPE_PID_T */
 /* #undef time_t */			/* AC_CHECK_TYPE(time_t, long) */

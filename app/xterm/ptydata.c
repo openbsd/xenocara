@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.158 2022/10/10 19:27:56 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.160 2024/05/10 22:54:17 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2022 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -98,13 +98,24 @@ decodeUtf8(TScreen *screen, PtyData *data)
 	} else if (c < 0xc0) {
 	    /* We received a continuation byte */
 	    if (utf_count < 1) {
-		/*
-		 * We received a continuation byte before receiving a sequence
-		 * state.  Or an attempt to use a C1 control string.  Either
-		 * way, it is mapped to the replacement character, unless
-		 * allowed by optional feature.
-		 */
-		data->utf_data = (IChar) (screen->c1_printable ? c : UCS_REPL);
+		if (screen->c1_printable) {
+		    data->utf_data = (IChar) c;
+		} else if ((i + 1) < length
+			   && data->next[i + 1] > 0x20
+			   && data->next[i + 1] < 0x80) {
+		    /*
+		     * Allow for C1 control string if the next byte is
+		     * available for inspection.
+		     */
+		    data->utf_data = (IChar) c;
+		} else {
+		    /*
+		     * We received a continuation byte before receiving a
+		     * sequence state, or a failed attempt to use a C1 control
+		     * string.
+		     */
+		    data->utf_data = (IChar) UCS_REPL;
+		}
 		data->utf_size = (i + 1);
 		break;
 	    } else if (screen->utf8_weblike
@@ -224,10 +235,10 @@ decodeUtf8(TScreen *screen, PtyData *data)
 	}
     }
 #if OPT_TRACE > 1
-    TRACE(("UTF-8 char %04X [%d..%d]\n",
+    TRACE(("UTF-8 char %04X [%lu..%lu]\n",
 	   data->utf_data,
-	   (size_t) (data->next - data->buffer),
-	   (size_t) (data->next - data->buffer + data->utf_size - 1)));
+	   (unsigned long) (data->next - data->buffer),
+	   (unsigned long) (data->next - data->buffer + data->utf_size - 1)));
 #endif
 
     return (data->utf_size != 0);
@@ -889,7 +900,7 @@ do_range(const char *source)
 		data->last = data->buffer + j;
 		while (decodeUtf8(&screen, data)) {
 		    total_test++;
-		    if (data->utf_data == UCS_REPL)
+		    if (is_UCS_SPECIAL(data->utf_data))
 			total_errs++;
 		    data->next += data->utf_size;
 		    if (message_level > 1) {

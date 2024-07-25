@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.239 2022/10/06 20:43:02 tom Exp $ */
+/* $XTermId: trace.c,v 1.240 2023/10/14 16:52:49 tom Exp $ */
 
 /*
- * Copyright 1997-2021,2022 by Thomas E. Dickey
+ * Copyright 1997-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -269,6 +269,7 @@ visibleScsCode(DECNRCM_codes chrset)
 	MAP("1", nrc_DEC_Alt_Chars);
 	MAP("2", nrc_DEC_Alt_Graphics);
 	MAP("<", nrc_DEC_Supp);
+	MAP("<", nrc_DEC_UPSS);
 	MAP("%5", nrc_DEC_Supp_Graphic);
 	MAP(">", nrc_DEC_Technical);
 	MAP("4", nrc_Dutch);

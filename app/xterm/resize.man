@@ -1,6 +1,6 @@
-.\" $XTermId: resize.man,v 1.37 2019/02/07 00:16:12 tom Exp $
+.\" $XTermId: resize.man,v 1.40 2024/01/11 22:06:30 tom Exp $
 .\"
-.\" Copyright 1998-2017,2019 by Thomas E. Dickey
+.\" Copyright 1998-2023,2024 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -32,22 +32,49 @@
 .\"
 .ds N Resize
 .ds n resize
+.
+.TH RESIZE 1 "__app_date__" "__app_version__" "X Window System"
 .\"
-.\" Bulleted paragraph
+.ie n .ds CW R
+.el   \{
+.ie \n(.g .ds CW CR
+.el       .ds CW CW
+.\}
+.
+.ie \n(.g \{\
+.ds `` \(lq
+.ds '' \(rq
+.ds '  \(aq
+.\}
+.el \{\
+.ie t .ds `` ``
+.el   .ds `` ""
+.ie t .ds '' ''
+.el   .ds '' ""
+.ie t .ds '  \(aq
+.el   .ds '  '
+.\}
 .de bP
 .ie n  .IP \(bu 4
 .el    .IP \(bu 2
 ..
-.\" Escape single quotes in literal strings from groff's Unicode transform.
-.ie \n(.g .ds AQ \(aq
-.el       .ds AQ '
-.ie \n(.g .ds `` \(lq
-.el       .ds `` ``
-.ie \n(.g .ds '' \(rq
-.el       .ds '' ''
-.TH RESIZE 1 "__app_date__" "__app_version__" "X Window System"
+.de NE
+.fi
+.ft R
+.ie n  .in -4
+.el    .in -2
+..
+.de NS
+.ie n  .sp
+.el    .sp .5
+.ie n  .in +4
+.el    .in +2
+.nf
+.ft \*(CW
+..
 .SH NAME
-resize \- set environment and terminal settings to current xterm window size
+resize \-
+set environment and terminal settings to current xterm window size
 .SH SYNOPSIS
 .B \*n
 [ \fB\-v\fP | \fB\-u\fP | \fB\-c\fP ] [ \fB\-s\fP [ \fIrow col\fP ] ]
@@ -98,34 +125,6 @@ This affects the values shown by \fIstty\fP.
 finally, \fI\*n\fP generates shell commands for setting the
 environment variables,
 and writes that to the standard output.
-.SH EXAMPLES
-For \fI\*n\fP's output to take effect,
-\fI\*n\fP must either be evaluated
-as part of the command line (usually done with a shell alias or function) or
-else redirected to a file which can then be read in.
-From the C shell (usually
-known as \fI/bin/csh\fP), the following alias could be defined in the
-user's \fI.cshrc\fP:
-.sp
-.nf
-        %  alias rs \*(AQset noglob; eval \fC\`\fP\*n\fC\`\fP\*(AQ
-.fi
-.sp
-After resizing the window, the user would type:
-.sp
-.nf
-        %  rs
-.fi
-.sp
-Users of versions of the Bourne shell (usually known as \fI/bin/sh\fP) that
-don't have command
-functions will need to send the output to a temporary file and then read it back
-in with the \*(``.\*('' command:
-.sp
-.nf
-        $  \*n > /tmp/out
-        $  .\0/tmp/out
-.fi
 .SH OPTIONS
 The following options may be used with \fI\*n\fP:
 .TP 8
@@ -167,13 +166,6 @@ which causes makes it assume the \fB\-s\fP option.
 The \fIrows\fP and
 \fIcolumns\fP arguments must appear last; though they are normally
 associated with the \fB\-s\fP option, they are parsed separately.
-.SH FILES
-.TP 15
-/etc/termcap
-for the base termcap entry to modify.
-.TP 15
-~/.cshrc
-user's alias for the command.
 .SH ENVIRONMENT
 .TP 15
 SHELL
@@ -215,14 +207,40 @@ COLUMNS, LINES
 .IR \*N 's
 generated shell command
 sets these variables on systems using terminfo.
-Many applications (including the curses library) 
+Many applications (including the curses library)
 use those variables when set to override their screensize.
-.SH "SEE ALSO"
-use_env(3x)
-.br
-csh(1), stty(1), tset(1)
-.br
-xterm(__mansuffix__)
+.SH FILES
+.TP 15
+/etc/termcap
+for the base termcap entry to modify.
+.TP 15
+~/.cshrc
+user's alias for the command.
+.SH EXAMPLES
+For \fI\*n\fP's output to take effect,
+\fI\*n\fP must either be evaluated
+as part of the command line (usually done with a shell alias or function) or
+else redirected to a file which can then be read in.
+From the C shell (usually
+known as \fI/bin/csh\fP), the following alias could be defined in the
+user's \fI.cshrc\fP:
+.NS
+% alias rs \*'set noglob; eval \`\*n\`\*'
+.NE
+.PP
+After resizing the window, the user would type:
+.NS
+% rs
+.NE
+.PP
+Users of versions of the Bourne shell (usually known as \fI/bin/sh\fP) that
+don't have command
+functions will need to send the output to a temporary file and then read it back
+in with the \*(``.\*('' command:
+.NS
+$ \*n > /tmp/out
+$ .\0/tmp/out
+.NE
 .SH AUTHORS
 Mark Vandevoorde (MIT-Athena), Edward Moy (Berkeley)
 .br
@@ -233,3 +251,9 @@ Copyright (c) 1984, 1985 by X Consortium
 See
 .IR X (__miscmansuffix__)
 for a complete copyright notice.
+.SH "SEE ALSO"
+use_env(3x)
+.br
+csh(1), stty(1), tset(1)
+.br
+xterm(__mansuffix__)

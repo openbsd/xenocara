@@ -1,8 +1,8 @@
-/* $XTermId: graphics.h,v 1.29 2022/02/22 23:36:19 tom Exp $ */
+/* $XTermId: graphics.h,v 1.32 2023/09/28 00:24:13 tom Exp $ */
 
 /*
- * Copyright 2013-2016,2022 by Ross Combs
- * Copyright 2013-2016,2022 by Thomas E. Dickey
+ * Copyright 2013-2022,2023 by Ross Combs
+ * Copyright 2013-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -66,7 +66,7 @@ typedef struct {
     RegisterNum *pixels;
     ColorRegister *private_color_registers;
     ColorRegister *color_registers;
-    char color_registers_used[MAX_COLOR_REGISTERS];
+    Boolean color_registers_used[MAX_COLOR_REGISTERS];
     XtermWidget xw;
     int max_width;              /* largest image which can be stored */
     int max_height;             /* largest image which can be stored */
@@ -93,8 +93,10 @@ extern void draw_solid_pixel(Graphic */* graphic */, int /* x */, int /* y */, u
 extern void draw_solid_rectangle(Graphic */* graphic */, int /* x1 */, int /* y1 */, int /* x2 */, int /* y2 */, unsigned /* color */);
 extern void copy_overlapping_area(Graphic */* graphic */, int /* src_x */, int /* src_y */, int /* dst_x */, int /* dst_y */, unsigned /* w */, unsigned /* h */, unsigned /* default_color */);
 extern void hls2rgb(int /* h */, int /* l */, int /* s */, short */* r */, short */* g */, short */* b */);
+extern void rgb2hls(int /* r */, int /* g */, int /* b */, short */* h */, short */* l */, short */* s */);
 extern void dump_graphic(Graphic const */* graphic */);
 extern unsigned get_color_register_count(TScreen const */* screen */);
+extern void fetch_color_register(Graphic */* graphic */, unsigned /* color */, ColorRegister* /* reg */);
 extern void update_color_register(Graphic */* graphic */, unsigned /* color */, int /* r */, int /* g */, int /* b */);
 extern RegisterNum find_color_register(ColorRegister const */* color_registers */, int /* r */, int /* g */, int /* b */);
 extern void chararea_clear_displayed_graphics(TScreen const */* screen */, int /* leftcol */, int /* toprow */, int /* ncols */, int /* nrows */);
@@ -117,6 +119,7 @@ extern void noleaks_graphics(Display */* dpy */);
 #define draw_solid_rectangle(graphic, x1, y1, x2, y2, color) /* nothing */
 #define copy_overlapping_area(graphic, src_x, src_y, dst_x, dst_y, w, h, default_color) /* nothing */
 #define hls2rgb(h, l, s, r, g, b) /* nothing */
+#define rgb2hls(r, g, b, h, l, s) /* nothing */
 #define dump_graphic(graphic) /* nothing */
 #define get_color_register_count(screen) /* nothing */
 #define update_color_register(graphic, color, r, g, b) /* nothing */

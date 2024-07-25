@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.46 2023/01/04 09:26:46 tom Exp $ */
+/* $XTermId: charclass.c,v 1.50 2023/04/01 00:11:47 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -262,8 +262,8 @@ report_wide_char_class(void)
     printf("from these overlapping intervals of character codes:\n");
     for (i = classtab[0].first; i <= classtab[0].last; i++) {
 	printf("\tU+%04X .. U+%04X %s\n",
-	       classtab[i].first,
-	       classtab[i].last,
+	       (unsigned) classtab[i].first,
+	       (unsigned) classtab[i].last,
 	       class_name((Classes) classtab[i].cclass));
     }
     printf("\n");
@@ -311,7 +311,7 @@ expected_class(int wch)
 {
     int result = wch;
     wint_t ch = (wint_t) wch;
-    if (ch == '\0' || ch == '\t') {
+    if (wch < 0 || ch == '\0' || ch == '\t') {
 	result = BLANK;
     } else if (iswcntrl(ch)) {
 	result = CNTRL;

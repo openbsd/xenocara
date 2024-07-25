@@ -109,7 +109,7 @@ install: install-stamp
 install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
-	dh_clean -k
+	dh_prep
 	dh_installdirs
 
 	$(MAKE) install \
@@ -123,8 +123,8 @@ install-indep:
 install-arch:
 	dh_testdir
 	dh_testroot
-	dh_prep -s 
-	dh_installdirs -s
+	dh_prep -a
+	dh_installdirs -a
 
 	$(MAKE) install-bin \
 		DESTDIR=$(DSTDIR)

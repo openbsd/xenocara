@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.214 2021/12/31 23:35:02 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.215 2023/11/12 22:08:19 tom Exp $ */
 
 /*
- * Copyright 2000-2020,2021 by Thomas E. Dickey
+ * Copyright 2000-2021,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -862,7 +862,7 @@ getXkbLED(Display *dpy, const char *name, Boolean *result)
     Bool state;
 
     if (have_xkb(dpy)) {
-	my_atom = XInternAtom(dpy, name, False);
+	my_atom = CachedInternAtom(dpy, name);
 	if ((my_atom != None) &&
 	    XkbGetNamedIndicator(dpy, my_atom, NULL, &state, NULL, NULL)) {
 	    *result = (Boolean) state;
@@ -883,7 +883,7 @@ showXkbLED(Display *dpy, const char *name, Bool enable)
     Boolean result = False;
 
     if (have_xkb(dpy)) {
-	my_atom = XInternAtom(dpy, name, False);
+	my_atom = CachedInternAtom(dpy, name);
 	if ((my_atom != None) &&
 	    XkbGetNamedIndicator(dpy, my_atom, NULL, NULL, NULL, NULL) &&
 	    XkbSetNamedIndicator(dpy, my_atom, True, enable, False, NULL)) {

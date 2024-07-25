@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.27 2022/10/02 20:13:11 tom Exp $
+# $XTermId: minstall.in,v 1.32 2023/10/08 21:11:07 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2021,2022 by Thomas E. Dickey
+# Copyright 2001-2022,2023 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -66,54 +66,22 @@ break
 fi
 done
 
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+datarootdir=@datarootdir@
+datadir=@datadir@
+
 # get parameters
 MINSTALL="$1"
 OLD_FILE="$2"
 END_FILE="$3"
-APPS_DIR="$4"
-APP_TYPE="$5"
-APP_name="$6"
-USE_name="$7"
-XPMS_DIR="$8"
+APP_name="$4"
+USE_name="$5"
 
 suffix=`echo "$END_FILE" | sed -e 's%^.*\.%%'`
 NEW_FILE=temp$$
 
 MY_MANSECT=$suffix
-
-# utmp and wtmp have different pathnames on different systems, but there
-# are only a few common choices.  Note that they may not necessarily appear
-# in the same directories.  Prefer utmpx/wtmpx to utmp/wtmp, since that's
-# the way the configure script is designed.
-UTMP_NAME=utmp
-UTMP_PATH=/etc
-for name in /etc /var/adm /var/run /var/log
-do
-	if test -f $name/utmpx ; then
-		UTMP_NAME=utmpx
-		UTMP_PATH=$name
-		break
-	elif test -f $name/utmp ; then
-		UTMP_PATH=$name
-		break
-	fi
-done
-UTMP_PATH=$UTMP_PATH/$UTMP_NAME
-
-WTMP_NAME=wtmp
-WTMP_PATH=/etc
-for name in /etc /var/adm /var/run /var/log
-do
-	if test -f $name/wtmpx ; then
-		WTMP_NAME=wtmpx
-		WTMP_PATH=$name
-		break
-	elif test -f $name/wtmp ; then
-		WTMP_PATH=$name
-		break
-	fi
-done
-WTMP_PATH=$WTMP_PATH/$WTMP_NAME
 
 lower=abcdefghijklmnopqrstuvwxyz
 upper=ABCDEFGHIJKLMNOPQRSTUVWXYZ
@@ -157,15 +125,16 @@ sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e "s%__delete_is_del__%@delete_is_del@%" \
 	-e "s%__double_buffer__%@double_buffer@%" \
 	-e "s%__initial_erase__%@initial_erase@%" \
-	-e "s%__default_class__%$APP_TYPE%" \
-	-e "s%__apploaddir__%$APPS_DIR%" \
+	-e "s%__default_class__%@APP_CLASS@%" \
+	-e "s%__apploaddir__%@APPSDIR@%" \
 	-e "s%__mansuffix__%$MY_MANSECT%g" \
 	-e "s%__miscmansuffix__%$X_MANSECT%g" \
-	-e "s%__pixmapsdir__%$XPMS_DIR%" \
-	-e 's%fIutmp\\%fI'$UTMP_NAME'\\%g' \
-	-e "s%/etc/utmp%$UTMP_PATH%g" \
-	-e 's%fIwtmp\\%fI'$WTMP_NAME'\\%g' \
-	-e "s%/etc/wtmp%$WTMP_PATH%g" \
+	-e "s%__pixmapsdir__%@PIXMAPDIR@%" \
+	-e "s%__strings_max__%@STRINGS_MAX@%" \
+	-e "s%__utmp_name__%@UTMP_NAME@%g" \
+	-e "s%__utmp_path__%@UTMP_PATH@%g" \
+	-e "s%__wtmp_name__%@WTMP_NAME@%g" \
+	-e "s%__wtmp_path__%@WTMP_PATH@%g" \
 	-e 's%/\\(\*\*%/*%g' \
 	"$OLD_FILE" >$NEW_FILE
 # diff -u $OLD_FILE $NEW_FILE

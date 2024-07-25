@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-378
+MANIFEST for xterm, version xterm-393
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -33,6 +33,8 @@ charclass.c                     compact character-class module
 charclass.h                     interface of charclass.c
 charproc.c                      VT100 parser functions
 charsets.c                      module to translate character-sets
+charsets.dat                    raw data to transform into charsets.h
+charsets.h                      charset definitions for xterm
 config.guess                    configure script: guess the system type
 config.sub                      configure script: validate system type
 configure                       generated
@@ -148,6 +150,8 @@ icons/xterm.xpms                collection of icons
 icons/xterm_16x16.xpm           normal icon 16x16 pixmap
 icons/xterm_32x32.xpm           32x32 monochrome icon
 icons/xterm_48x48.xpm           48x48 monochrome icon
+package                         subdirectory
+package/xterm.spec              build-script
 package/debian                  subdirectory
 package/debian/changelog        build-script
 package/debian/color.sed        build-script
@@ -157,14 +161,13 @@ package/debian/copyright        build-script
 package/debian/postinst         post-install script for update-alternatives
 package/debian/prerm            pre-remove script for update-alternatives
 package/debian/rules            build-script
-package/debian/source           subdirectory
-package/debian/source/format    build-script
-package/debian                  subdirectory
 package/debian/watch            build-script
 package/debian/xterm-dev.docs   build-script
 package/debian/xterm-dev.lintian-overrides  ignore useless warnings from lintian
 package/debian/xterm-dev.menu   Debian menu-file for xterm-dev package.
 package/debian/xterm-xres.sed   build-script
+package/debian/source           subdirectory
+package/debian/source/format    build-script
 package/freebsd                 subdirectory
 package/freebsd/Makefile        build-script
 package/freebsd/distinfo        generated sums
@@ -178,8 +181,6 @@ package/pkgsrc/Makefile         build-script
 package/pkgsrc/PLIST            build-script
 package/pkgsrc/distinfo         build-script
 package/pkgsrc/options.mk       build-script
-package                         subdirectory
-package/xterm.spec              build-script
 tektests                        subdirectory
 tektests/aitest.tek             tek4014 demo: draw a globe
 tektests/dmerc.tek              tek4014 demo: draws a Mercator projection with orbit

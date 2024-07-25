@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2023)
-               updated for XTerm Patch #378 (2023/01/06)
+                    invisible-island.net (2006-2024)
+               updated for XTerm Patch #392 (2024/05/25)
 
 
 
@@ -315,6 +315,7 @@ ESC ( C   Designate G0 Character Set, VT100, ISO 2022.
           There are a few other 94-character sets:
             C = 0  -> DEC Special Character and Line Drawing Set, VT100.
             C = <  -> DEC Supplemental, VT200.
+            C = <  -> User Preferred Selection Set, VT300.
             C = >  -> DEC Technical, VT300.
           These are documented as 94-character sets (like USASCII)
           without NRCS:
@@ -413,6 +414,29 @@ DCS Ps ; Ps | Pt ST
           key value.  The key codes correspond to the DEC function-key
           codes (e.g., F6=17).
 
+DCS Ps! u Pt ST
+          Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320,
+          VT510.  XTerm ignores this in UTF-8 mode, and uses the
+          preferLatin1 resource to choose the default setting.
+          VT320 provides these:
+            DCS 0 ! u % 5 ST  -> DEC Supplemental Graphic
+            DCS 1 ! u A ST    -> ISO Latin-1 supplemental
+          VT510 adds these:
+            DCS 0 ! u " ? ST  -> DEC Greek
+            DCS 0 ! u " 4 ST  -> DEC Hebrew
+            DCS 0 ! u % 0 ST  -> DEC Turkish
+            DCS 0 ! u & 4 ST  -> DEC Cyrillic
+            DCS 1 ! u B ST    -> ISO Latin-2 Supplemental
+            DCS 1 ! u F ST    -> ISO Greek Supplemental
+            DCS 1 ! u H ST    -> ISO Hebrew Supplemental
+            DCS 1 ! u M ST    -> ISO Latin-5 Supplemental
+            DCS 1 ! u L ST    -> ISO Latin-Cyrillic
+          VT520 accepts a few others (undocumented); xterm adds these:
+            DCS 0 ! u B ST    -> United States (USASCII).
+            DCS 0 ! u 0 ST    -> DEC Special Character and Line Drawing
+          Set.
+            DCS 0 ! u > ST    -> DEC Technical.
+
 DCS $ q Pt ST
           Request Status String (DECRQSS), VT420 and up.
           The string following the "q" is one of the following:
@@ -426,7 +450,11 @@ DCS $ q Pt ST
             $ |     -> DECSCPP
             $ }     -> DECSASD
             $ ~     -> DECSSDT
+            * x     -> DECSACE
             * |     -> DECSNLS
+            , |     -> DECAC (VT525 only)
+            , }     -> DECATC (VT525 only)
+            > Pm m  -> XTQMODKEYS (xterm)
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
           r  ST for invalid requests.
@@ -615,7 +643,7 @@ CSI ? Pi ; Pa ; Pv S
               sizes, but disallows modifying those sizes because that is
               done once, using resource-values.
           o   Graphics geometry is not necessarily the same as "window
-              size" (see the dtterm window manipulation extensions).
+              size" (see the XTWINOPS window manipulation extensions).
               XTerm limits the maximum graphics geometry according to
               the maxGraphicSize resource.
               The maxGraphicSize resource can be either an explicit
@@ -655,6 +683,9 @@ CSI > Pm T
 
           (See discussion of Title Modes).
 
+CSI ? 5 W Reset tab stops to start with column 9, every 8 columns
+          (DECST8C), VT510.
+
 CSI Ps X  Erase Ps Character(s) (default = 1) (ECH).
 
 CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
@@ -683,6 +714,7 @@ CSI Ps c  Send Device Attributes (Primary DA).
             -> CSI ? 6 2 ; Ps c  ("VT220")
             -> CSI ? 6 3 ; Ps c  ("VT320")
             -> CSI ? 6 4 ; Ps c  ("VT420")
+            -> CSI ? 6 5 ; Ps c  ("VT510" to ("VT525")
 
           The VT100-style response parameters do not mean anything by
           themselves.  VT220 (and higher) parameters do, telling the
@@ -793,16 +825,21 @@ CSI ? Pm h
             Ps = 4 1  -> more(1) fix (see curses resource).
             Ps = 4 2  -> Enable National Replacement Character sets
           (DECNRCM), VT220.
-            Ps = 4 3  -> Enable Graphics Expanded Print Mode (DECGEPM).
+            Ps = 4 3  -> Enable Graphic Expanded Print Mode (DECGEPM),
+          VT340.
             Ps = 4 4  -> Turn on margin bell, xterm.
-            Ps = 4 4  -> Enable Graphics Print Color Mode (DECGPCM).
-            Ps = 4 5  -> Reverse-wraparound mode, xterm.
-            Ps = 4 5  -> Enable Graphics Print ColorSpace (DECGPCS).
-            Ps = 4 6  -> Start logging, xterm.  This is normally
-          disabled by a compile-time option.
+            Ps = 4 4  -> Enable Graphic Print Color Mode (DECGPCM),
+          VT340.
+            Ps = 4 5  -> Reverse-wraparound mode (XTREVWRAP), xterm.
+            Ps = 4 5  -> Enable Graphic Print Color Syntax (DECGPCS),
+          VT340.
+            Ps = 4 6  -> Start logging (XTLOGGING), xterm.  This is
+          normally disabled by a compile-time option.
+            Ps = 4 6  -> Graphic Print Background Mode, VT340.
             Ps = 4 7  -> Use Alternate Screen Buffer, xterm.  This may
           be disabled by the titeInhibit resource.
-            Ps = 4 7  -> Enable Graphics Rotated Print Mode (DECGRPM).
+            Ps = 4 7  -> Enable Graphic Rotated Print Mode (DECGRPM),
+          VT340.
             Ps = 6 6  -> Application keypad mode (DECNKM), VT320.
             Ps = 6 7  -> Backarrow key sends backspace (DECBKM), VT340,
           VT420.  This sets the backarrowKey resource to "true".
@@ -829,6 +866,7 @@ CSI ? Pm h
           This sets the scrollTtyOutput resource to "true".
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).  This
           sets the scrollKey resource to "true".
+            Ps = 1 0 1 4  -> Enable fastScroll resource, xterm.
             Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 1 6  -> Enable SGR Mouse PixelMode, xterm.
             Ps = 1 0 3 4  -> Interpret "meta" key, xterm.  This sets the
@@ -853,6 +891,8 @@ CSI ? Pm h
           is received, xterm.  This enables the popOnBell resource.
             Ps = 1 0 4 4  -> Reuse the most recent data copied to
           CLIPBOARD, xterm.  This enables the keepClipboard resource.
+            Ps = 1 0 4 5  -> Extended Reverse-wraparound mode
+          (XTREVWRAP2), xterm.
             Ps = 1 0 4 6  -> Enable switching to/from Alternate Screen
           Buffer, xterm.  This works for terminfo-based systems,
           updating the titeInhibit resource.
@@ -874,7 +914,12 @@ CSI ? Pm h
             Ps = 1 0 6 0  -> Set legacy keyboard emulation, i.e, X11R6,
           xterm.
             Ps = 1 0 6 1  -> Set VT220 keyboard emulation, xterm.
+            Ps = 2 0 0 1  -> Enable readline mouse button-1, xterm.
+            Ps = 2 0 0 2  -> Enable readline mouse button-2, xterm.
+            Ps = 2 0 0 3  -> Enable readline mouse button-3, xterm.
             Ps = 2 0 0 4  -> Set bracketed paste mode, xterm.
+            Ps = 2 0 0 5  -> Enable readline character-quoting, xterm.
+            Ps = 2 0 0 6  -> Enable readline newline pasting, xterm.
 
 CSI Ps i  Media Copy (MC).
             Ps = 0  -> Print screen (default).
@@ -924,15 +969,19 @@ CSI ? Pm l
             Ps = 4 1  -> No more(1) fix (see curses resource).
             Ps = 4 2  -> Disable National Replacement Character sets
           (DECNRCM), VT220.
-            Ps = 4 3  -> Disable Graphics Expanded Print Mode (DECGEPM).
+            Ps = 4 3  -> Disable Graphic Expanded Print Mode (DECGEPM),
+          VT340.
             Ps = 4 4  -> Turn off margin bell, xterm.
-            Ps = 4 4  -> Disable Graphics Print Color Mode (DECGPCM).
-            Ps = 4 5  -> No Reverse-wraparound mode, xterm.
-            Ps = 4 5  -> Disable Graphics Print ColorSpace (DECGPCS).
-            Ps = 4 6  -> Stop logging, xterm.  This is normally disabled
-          by a compile-time option.
+            Ps = 4 4  -> Disable Graphic Print Color Mode (DECGPCM),
+          VT340.
+            Ps = 4 5  -> No Reverse-wraparound mode (XTREVWRAP), xterm.
+            Ps = 4 5  -> Disable Graphic Print Color Syntax (DECGPCS),
+          VT340.
+            Ps = 4 6  -> Stop logging (XTLOGGING), xterm.  This is
+          normally disabled by a compile-time option.
             Ps = 4 7  -> Use Normal Screen Buffer, xterm.
-            Ps = 4 7  -> Disable Graphics Rotated Print Mode (DECGRPM).
+            Ps = 4 7  -> Disable Graphic Rotated Print Mode (DECGRPM),
+          VT340.
             Ps = 6 6  -> Numeric keypad mode (DECNKM), VT320.
             Ps = 6 7  -> Backarrow key sends delete (DECBKM), VT340,
           VT420.  This sets the backarrowKey resource to "false".
@@ -959,6 +1008,7 @@ CSI ? Pm l
           (rxvt).  This sets the scrollTtyOutput resource to "false".
             Ps = 1 0 1 1  -> Don't scroll to bottom on key press (rxvt).
           This sets the scrollKey resource to "false".
+            Ps = 1 0 1 4  -> Disable fastScroll resource, xterm.
             Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
             Ps = 1 0 1 6  -> Disable SGR Mouse Pixel-Mode, xterm.
             Ps = 1 0 3 4  -> Don't interpret "meta" key, xterm.  This
@@ -980,6 +1030,8 @@ CSI ? Pm l
           resource.
             Ps = 1 0 4 3  -> Disable raising of the window when Control-
           G is received, xterm.  This disables the popOnBell resource.
+            Ps = 1 0 4 5  -> No Extended Reverse-wraparound mode
+          (XTREVWRAP2), xterm.
             Ps = 1 0 4 6  -> Disable switching to/from Alternate Screen
           Buffer, xterm.  This works for terminfo-based systems,
           updating the titeInhibit resource.  If currently using the
@@ -1004,7 +1056,12 @@ CSI ? Pm l
           X11R6, xterm.
             Ps = 1 0 6 1  -> Reset keyboard emulation to Sun/PC style,
           xterm.
+            Ps = 2 0 0 1  -> Disable readline mouse button-1, xterm.
+            Ps = 2 0 0 2  -> Disable readline mouse button-2, xterm.
+            Ps = 2 0 0 3  -> Disable readline mouse button-3, xterm.
             Ps = 2 0 0 4  -> Reset bracketed paste mode, xterm.
+            Ps = 2 0 0 5  -> Disable readline character-quoting, xterm.
+            Ps = 2 0 0 6  -> Disable readline newline pasting, xterm.
 
 CSI Pm m  Character Attributes (SGR).
             Ps = 0  -> Normal (default), VT100.
@@ -1250,11 +1307,8 @@ CSI ? Ps n
           The last two parameters apply to VT300 & up (keyboard ready)
           and VT400 & up (LK01) respectively.
 
-            Ps = 5 3  -> Report Locator status.  The response is CSI ? 5
-          3 n  Locator available, if compiled-in, or CSI ? 5 0 n  No
-          Locator, if not.
             Ps = 5 5  -> Report Locator status.  The response is CSI ? 5
-          3 n  Locator available, if compiled-in, or CSI ? 5 0 n  No
+          0 n  Locator available, if compiled-in, or CSI ? 5 3 n  No
           Locator, if not.
             Ps = 5 6  -> Report Locator type.  The response is CSI ? 5 7
           ; 1 n  Mouse, if compiled-in, or CSI ? 5 7 ; 0 n  Cannot
@@ -1338,9 +1392,9 @@ CSI Pm # p
           limitations of C#.
 
 CSI > Ps q
-          Ps = 0  -> Report xterm name and version (XTVERSION).  The
-          response is a DSR sequence identifying the version: DCS > |
-          text ST
+            Ps = 0  -> Report xterm name and version (XTVERSION).
+          The response is a DSR sequence identifying the version:
+            DCS > | text ST
 
 CSI Ps q  Load LEDs (DECLL), VT100.
             Ps = 0  -> Clear all LEDS (default).
@@ -1500,6 +1554,12 @@ CSI Ps ; Ps ; Ps t
             Ps >= 2 4  -> Resize to Ps lines (DECSLPP), VT340 and VT420.
           xterm adapts this by resizing its window.
 
+          XTWINOPS 2 2  (save/push title) and 2 3  (restore/pop title)
+          accept an optional third parameter for direct access to the
+          stack.  Parameters in the range 1 through 10, may be used to
+          store the title into the stack or retrieve the title from the
+          stack without pushing/popping.
+
 CSI > Pm t
           This xterm control sets one or more features of the title
           modes (XTSMTITLE), xterm.  Each parameter enables a single
@@ -1524,11 +1584,24 @@ CSI Pt ; Pl ; Pb ; Pr ; Pm $ t
 
 CSI u     Restore cursor (SCORC, also ANSI.SYS).
 
+CSI & u   User-Preferred Supplemental Set (DECRQUPSS), VT320, VT510.
+          Response is DECAUPSS.
+
 CSI Ps SP u
           Set margin-bell volume (DECSMBV), VT520.
             Ps = 0 , 5 , 6 , 7 , or 8  -> high.
             Ps = 1  -> off.
             Ps = 2 , 3  or 4  -> low.
+
+CSI " v   Request Displayed Extent (DECRQDE), VT340, VT420.
+          Response is
+            CSI Ph; Pw; Pc; Pr; Pp " w
+          where
+            Ph is the number of lines of the current page
+            Pw is the number of columns of the current page
+            Pc is the column number at the top-left of the window
+            Pr is the row number at the top-left of the window
+            Pp is the current page number
 
 CSI Pt ; Pl ; Pb ; Pr ; Pp ; Pt ; Pl ; Pp $ v
           Copy Rectangular Area (DECCRA), VT400 and up.
@@ -1595,7 +1668,6 @@ CSI Ps # y
             3  -> omit checksum for cells not explicitly initialized.
             4  -> do not mask cell value to 8 bits or ignore combining
           characters.
-            5  -> do not mask cell value to 7 bits.
 
 CSI Pi ; Pg ; Pt ; Pl ; Pb ; Pr * y
           Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
@@ -1718,6 +1790,42 @@ CSI # }   Pop video attributes from stack (XTPOPSGR), xterm.  Popping
           restores the video-attributes which were saved using XTPUSHSGR
           to their previous state.
 
+CSI Ps; Pf; Pb, |
+          Assign Color (DECAC), VT525 only.
+            Ps selects the color item
+            Pf is the foreground color index 0..15
+            Pb is the background color index 0..15
+          Color items:
+            Ps = 1  -> normal text
+            Ps = 2  -> window frame
+          xterm uses the SGR color palette with DECAC color item 1 to
+          update the VT100 window colors, like OSC  1 0  and 1 1 .
+
+CSI Ps; Pf; Pb, }
+          Alternate Text Color (DECATC), VT525 only.  This feature
+          specifies the colors to use when DECSTGLT is selected to 1 or
+          2.
+            Ps selects attribute combinations
+            Pf is the foreground color index 0..15
+            Pb is the background color index 0..15
+          Attribute combinations:
+            Ps = 0  -> normal text
+            Ps = 1  -> bold
+            Ps = 2  -> reverse
+            Ps = 3  -> underline
+            Ps = 4  -> blink
+            Ps = 5  -> bold reverse
+            Ps = 6  -> bold underline
+            Ps = 7  -> bold blink
+            Ps = 8  -> reverse underline
+            Ps = 9  -> reverse blink
+            Ps = 1 0  -> underline blink
+            Ps = 1 1  -> bold reverse underline
+            Ps = 1 2  -> bold reverse blink
+            Ps = 1 3  -> bold underline blink
+            Ps = 1 4  -> reverse underline blink
+            Ps = 1 5  -> bold reverse underline blink
+
 CSI Ps ' }
           Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.
 
@@ -1741,13 +1849,15 @@ Operating System Commands
 OSC Ps ; Pt BEL
 
 OSC Ps ; Pt ST
-          Set Text Parameters.  Some control sequences return
+          Set Text Parameters, xterm.  Some control sequences return
           information:
           o   For colors and font, if Pt is a "?", the control sequence
               elicits a response which consists of the control sequence
               which would set the corresponding value.
-          o   The dtterm control sequences allow you to determine the
-              icon name and window title.
+          o   A few of these control sequences began with dtterm (codes
+              0 , 1 , and 2 ).  Code 3  in dtterm sets the working
+              directory for the next session.  XTerm does that with the
+              spawn-new-terminal action.
 
           XTerm accepts either BEL  or ST  for terminating OSC
           sequences, and when returning information, uses the same
@@ -1816,6 +1926,25 @@ OSC Ps ; Pt ST
           list.  The colors are specified by name or RGB specification
           as per XParseColor.
 
+               Resource                 Description
+               -----------------------+-----------------------------
+               foreground             | VT100 text foreground color
+               background             | VT100 text background color
+               cursorColor            | text cursor color
+               pointerColor           | pointer foreground color
+               pointerColorBackground | pointer background
+               (foreground)           | Tektronix foreground color
+               (background)           | Tektronix background color
+               highlightColor         | highlight background color
+               (cursorColor)          | Tektronix cursor color
+               highlightTextColor     | highlight foreground color
+               -----------------------+-----------------------------
+
+
+          The Tektronix colors are initially set from the VT100 colors,
+          but after that can be set independently using these control
+          sequences.
+
           If a "?" is given rather than a name or RGB specification,
           xterm replies with a control sequence of the same form which
           can be used to set the corresponding dynamic color.  Because
@@ -1834,10 +1963,14 @@ OSC Ps ; Pt ST
             Ps = 1 8  -> Change Tektronix cursor color to Pt.
             Ps = 1 9  -> Change highlight foreground color to Pt.
 
-            Ps = 2 2  -> Change pointer cursor to Pt.
+            Ps = 2 2  -> Change pointer cursor shape to Pt.  The
+          parameter Pt sets the pointerShape resource.  If Pt is empty,
+          or does not match any of the standard names, n  uses the
+          resource's default "xterm" shape.
 
-            Ps = 4 6  -> Change Log File to Pt.  This is normally
-          disabled by a compile-time option.
+            Ps = 4 6  -> Change Log File to Pt.  The parameter Pt sets
+          the logFile resource.  Logging is normally disabled by a
+          compile-time option.
 
             Ps = 5 0  -> Set Font to Pt.  These controls may be disabled
           using the allowFontOps resource.  If Pt begins with a "#",
@@ -1981,8 +2114,8 @@ XTerm detects all of these keys via X key-press and key-release events.
 It uses the translations resource to decide what to do with these
 events.
 
-o   Ordinary keys are handled with the insert-seven-bit or insert-eight-
-    bit action.
+o   Ordinary keys are handled with the insert-seven-bit action, or the
+    insert-eight-bit action.
 
 o   Special keys may be handled with other resources.  However, xterm
     also has built-in logic to map commonly-used special keys into
@@ -2459,6 +2592,50 @@ For background and discussion, see the FAQ:
 
 
 
+Readline Modes
+
+Several modes provide support for mouse button events in readline.
+Bracketed paste is one of these readline modes, but is used more widely.
+
+Some assumptions (particular mouse buttons) and limitations (the mouse
+is clicked on the current row on the screen) apply:
+
+2 0 0 1   If mouse button 1 is used to end or extend a selection (the
+          select-end action), and if the cursor position is on the same
+          row as the mouse-click, send left/right cursor control
+          sequences to the host to adjust the cursor position to match
+          the mouse click.
+
+2 0 0 2   When pasting text (the insert-selection action which is
+          normally bound to mouse button 2), if mouse protocol is not
+          enabled, and if the cursor position is on the same row as the
+          mouse-click, send left/right cursor control sequences to the
+          host to adjust the cursor position to match the mouse click.
+
+2 0 0 3   If mouse button 3 is double-clicked when ending or extending a
+          selection, (the select-end action), and if the cursor position
+          is on the same line as the mouse-click:
+
+          o   Send left/right cursor control sequences to the host to
+              adjust the cursor position to match the mouse click.
+
+          o   In addition to the same row, the selection may be part of
+              a wrapped line as in other xterm selections (see the
+              Selection Functions section in the manual page).
+
+          o   After adjusting the cursor position, xterm sends erase-
+              characters (one for each character in the selection) to
+              tell the host to delete the selected text.
+
+2 0 0 5   When writing a selection to the host (i.e., pasting text),
+          escape each character with the literal-next (Ctrl-V)
+          character.
+
+2 0 0 6   Normally when xterm writes selections to the host, it
+          translates newlines to carriage returns.  This mode disables
+          the translation, passing newlines literally.
+
+
 Title Modes
 
 The window- and icon-labels can be set or queried using control
@@ -2858,6 +3035,13 @@ DCS Pm p Pr..Pr ST
             Pm = 2 -> resume command, use command display mode.
             Pm = 3 -> start new command, use command display mode.
 
+A few of the VT330/VT340 private modes conflict with xterm.  Codes 4 0
+to 4 7  were first used by xterm in X10R4 (December 1986).  While X11R1
+xterm dropped codes 4 1  and 4 2 , the remaining ones are still used.
+The VT330/VT340 introduced in April 1987 uses 4 4  to 4 7  for color
+graphics printing controls.  When configured for ReGIS, xterm uses the
+VT330/VT340 interpretation of these private modes.
+
 
 Non-VT100 Modes
 
@@ -3019,10 +3203,11 @@ However long, the technical manuals have problems:
 o   DEC's manuals did not provide a comprehensive comparison of the
     features in different model.
 
-    Peter Sichel's Host Interface Functions Checklist spreadsheet is
-    useful for noting which model introduced a given feature (although
-    there are a few apparent errors such as the DECRQSS feature cited
-    for VT320 whereas the technical manual omits it).
+    Host Interface Functions Checklist by Peter Sichel (January 12,
+    1994) is helpful.  This spreadsheet is useful for noting which model
+    introduced a given feature (although there are a few apparent errors
+    such as the DECRQSS feature cited for VT320 whereas the technical
+    manual omits it).
 
 o   Sometimes the manuals disagree.  For example, DEC's standard
     document (DEC STD 070) for terminals says that DECSCL performs a
@@ -3159,7 +3344,7 @@ Standards
 The DEC terminal family (VT100 through VT525) is upward-compatible,
 using standards plus extensions, e.g., "private modes".  Not all
 commonly-used features are standard.  For example, scrolling regions are
-not found in ECMA-48.  On the other hand, ECMA-48 was not intended to
+not found in ECMA-48.  On the other hand, ECMA-48 was not intended to be
 all-encompassing.  Quoting from the second edition:
 
     Full conformance to a standard means that all its requirements are
@@ -3173,7 +3358,7 @@ all-encompassing.  Quoting from the second edition:
 
     This Standard addresses a whole class of devices which can vary
     greatly from each other depending on the application for which a
-    device has been specifically designed. Obviously, a product which
+    device has been specifically designed.  Obviously, a product which
     implements all facilities described in this standard - thus being in
     "full conformance" with it - whilst theoretically possible, would be
     technically and economically unthinkable.
@@ -3215,7 +3400,7 @@ o   ANSI X3.64-1979 does not list color as a feature of the SGR sequence
         ANSI X3.64-1979, and ECMA-48, Additional Controls for Character-
         Imaging I/O Devices, were developed in parallel, with close
         liaison.  ISO DP 6429, Additional Control Functions for
-        Character-Imaging Devices, was developed as a synthesis of X3.04
+        Character-Imaging Devices, was developed as a synthesis of X3.64
         and ECMA-48.  During this process, some control functions as
         well as additional selective parameters were added.  Except for
         point 1 below, X3.64 is a subset of ISO 6429.  Although the two
@@ -3352,47 +3537,47 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
         Most Dec Private mode settings can be saved away internally
         using \E[?ns, where n is the same number to set or reset the Dec
         Private mode.  The mode can be restored using \E[?nr.  This can
-        be used in termcap for vi, for example, to turn off saving of
+        be used in termcap for vi(1), for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while the SCOSC/SCORC  pair  was  added  in  1995  by  XFree86  (and
+    while  the  SCOSC/SCORC  pair  was  added  in  1995  by XFree86 (and
     documented long afterwards).
 
-    The  SCO  ANSI  console  terminal  descriptions  did  not  use these
-    controls (they used the VT100-compatible SC/RC  pair).   SCOSC/SCORC
-    were  an artifact of DOS 2.00 (January 1983), by Microsoft and later
+    The SCO  ANSI  console  terminal  descriptions  did  not  use  these
+    controls  (they  used the VT100-compatible SC/RC pair).  SCOSC/SCORC
+    were an artifact of DOS 2.00 (January 1983), by Microsoft and  later
     supported by SCO and other vendors.
 
-    The SCOSC/SCORC pair is considered a private mode because the  final
+    The  SCOSC/SCORC pair is considered a private mode because the final
     characters (s  and u ) fall in the range from "`" to "~" (octal 0140
-    to octal 0176).  Other private control sequences can be  constructed
+    to  octal 0176).  Other private control sequences can be constructed
     by using octets 074 to 077 (characters "<", "=", ">", or "?") at the
     beginning  of  the  parameter  string.   The  XTSAVE  and  XTRESTORE
     controls use "?") in this manner.
 
     Because  the  XTSAVE  and  XTRESTORE  controls  are  private,  other
-    terminals may behave differently.  For example, DEC  (a  contributor
-    to  the  early xterm as well as a manufacturer of terminals) used an
-    incompatible private control in one of its terminals more than  five
+    terminals  may  behave differently.  For example, DEC (a contributor
+    to the early xterm as well as a manufacturer of terminals)  used  an
+    incompatible  private control in one of its terminals more than five
     years later (for the VT420 PCTerm, announced in February 1992).
 
-    In  that  model  of  the  VT420,  CSI ? Pm; Pc r selects the PC TERM
-    emulation mode.  When this mode is enabled, the keyboard sends  scan
-    codes  rather than characters (analogous to X keyboard events).  The
-    first parameter of this private control enables or disables PC  TERM
+    In that model of the VT420, CSI ? Pm;  Pc  r  selects  the  PC  TERM
+    emulation  mode.  When this mode is enabled, the keyboard sends scan
+    codes rather than characters (analogous to X keyboard events).   The
+    first  parameter of this private control enables or disables PC TERM
     mode, while the second selects a character set.  An ambiguity arises
     if an application omits the second parameter.  In that special case,
-    it  cannot  be  distinguished from XTRESTORE.  DEC did not take this
+    it cannot be distinguished from XTRESTORE.  DEC did  not  take  this
     into account when designing the feature.
 
-    If there were potential users, xterm could  accommodate  this  by  a
-    resource  setting.   In  retrospect (thirty years later), there have
-    been no uses of PC TERM, while the XTRESTORE  feature  is  still  in
+    If  there  were  potential  users, xterm could accommodate this by a
+    resource setting.  In retrospect (thirty years  later),  there  have
+    been  no  uses  of  PC TERM, while the XTRESTORE feature is still in
     use.
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground and background colors 8-15, but  does  not  specify  what
-    those  colors  are.  That is implied by the description's mention of
+    foreground  and  background  colors  8-15, but does not specify what
+    those colors are.  That is implied by the description's  mention  of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -3402,7 +3587,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the  reader  to  assume that the mapping is hard-coded.  The control
-    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
-    (as  done  in  other instances by xterm) chosen to not conflict with
+    the reader to assume that the mapping is  hard-coded.   The  control
+    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
+    (as done in other instances by xterm) chosen to  not  conflict  with
     current or future standards.

@@ -1,7 +1,7 @@
-/* $XTermId: svg.c,v 1.21 2021/09/19 18:22:57 tom Exp $ */
+/* $XTermId: svg.c,v 1.23 2023/03/31 23:08:13 tom Exp $ */
 
 /*
- * Copyright 2017-2020,2021	Thomas E. Dickey
+ * Copyright 2017-2021,2023	Thomas E. Dickey
  * Copyright 2015-2016,2017	Jens Schweikhardt
  *
  * All Rights Reserved
@@ -105,11 +105,12 @@ dumpSvgScreen(XtermWidget xw, FILE *fp)
     int row;
 
     fprintf(fp, "  <rect x='0' y='0' width='%u' height='%u' fill='%s'/>\n",
-	    cols * CELLW + 2 * (bw + ib), rows * CELLH + 2 * (bw + ib),
+	    (unsigned) (cols * CELLW + 2 * (bw + ib)),
+	    (unsigned) (rows * CELLH + 2 * (bw + ib)),
 	    PixelToCSSColor(xw, xw->core.border_pixel));
     fprintf(fp, "  <rect x='%u' y='%u' width='%u' height='%u' fill='%s'/>\n",
 	    bw, bw,
-	    MaxCols(s) * CELLW + 2 * ib,
+	    (unsigned) (MaxCols(s) * CELLW + 2 * ib),
 	    (unsigned) (rows * CELLH + 2 * ib),
 	    PixelToCSSColor(xw, xw->old_background));
 

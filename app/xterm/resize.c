@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.148 2022/02/18 20:32:48 tom Exp $ */
+/* $XTermId: resize.c,v 1.150 2023/03/31 23:09:38 tom Exp $ */
 
 /*
- * Copyright 2003-2021,2022 by Thomas E. Dickey
+ * Copyright 2003-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -98,7 +98,7 @@ int ignore_unused;
 #define	SUN		1
 #define	VT100		0
 
-#define	TIMEOUT		10
+#define	TIMEOUT		3
 
 #define	SHELL_UNKNOWN	0
 #define	SHELL_C		1
@@ -133,6 +133,11 @@ static const char *const emuname[EMULATIONS] =
 };
 static char *myname;
 static int shell_type = SHELL_UNKNOWN;
+static const char *const getattr[EMULATIONS] =
+{
+    ESCAPE("[c"),
+    NULL,
+};
 static const char *const getsize[EMULATIONS] =
 {
     ESCAPE("7") ESCAPE("[r") ESCAPE("[9999;9999H") ESCAPE("[6n"),
@@ -164,7 +169,12 @@ static struct termios tioorig;
 static struct sgttyb sgorig;
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 
-static const char *const size[EMULATIONS] =
+static const char *const reply_attr[EMULATIONS] =
+{
+    ESCAPE("[?%d;%dc"),
+    NULL,
+};
+static const char *const reply_size[EMULATIONS] =
 {
     ESCAPE("[%d;%dR"),
     ESCAPE("[8;%d;%dt"),
@@ -211,10 +221,12 @@ onintr(int sig GCC_UNUSED)
     exit(EXIT_FAILURE);
 }
 
+const char *timeout_message = "?";
+
 static void
 resize_timeout(int sig)
 {
-    fprintf(stderr, "\n%s: Time out occurred\r\n", myname);
+    fprintf(stderr, "\n%s: %s\r\n", myname, timeout_message);
     onintr(sig);
 }
 
@@ -267,7 +279,9 @@ checkdigits(char *str)
 static void
 unexpected_char(int c)
 {
-    fprintf(stderr, "%s: unknown character %#x, exiting.\r\n", myname, c);
+    fprintf(stderr,
+	    "%s: unknown character %#x, exiting.\r\n",
+	    myname, (unsigned) c);
     onintr(0);
 }
 
@@ -275,19 +289,18 @@ static void
 readstring(FILE *fp, char *buf, const char *str)
 {
     int last, c;
-#if !defined(USG) && !defined(__minix)
-    /* What is the advantage of setitimer() over alarm()? */
+#if HAVE_SETITIMER
     struct itimerval it;
 #endif
     int limit = (BUFSIZ - 3);
 
     signal(SIGALRM, resize_timeout);
-#if defined(USG) || defined(__minix)
-    alarm(TIMEOUT);
-#else
+#if HAVE_SETITIMER
     memset((char *) &it, 0, sizeof(struct itimerval));
     it.it_value.tv_sec = TIMEOUT;
     setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
+#else
+    alarm(TIMEOUT);
 #endif
     if ((c = getc(fp)) == 0233) {	/* meta-escape, CSI */
 	c = ESCAPE("")[0];
@@ -312,11 +325,11 @@ readstring(FILE *fp, char *buf, const char *str)
 	if (c == last)
 	    break;
     }
-#if defined(USG) || defined(__minix)
-    alarm(0);
-#else
+#if HAVE_SETITIMER
     memset((char *) &it, 0, sizeof(struct itimerval));
     setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
+#else
+    alarm(0);
 #endif
     *buf = 0;
 }
@@ -513,9 +526,15 @@ main(int argc, char **argv ENVP_ARG)
 	    free(tmpbuf);
 	}
     }
+    if (getattr[emu]) {
+	timeout_message = "Terminal is not VT100-compatible";
+	IGNORE_RC(write(tty, getattr[emu], strlen(getattr[emu])));
+	readstring(ttyfp, buf, reply_attr[emu]);
+    }
+    timeout_message = "Time out occurred";
     IGNORE_RC(write(tty, getsize[emu], strlen(getsize[emu])));
-    readstring(ttyfp, buf, size[emu]);
-    if (sscanf(buf, size[emu], &rows, &cols) != 2) {
+    readstring(ttyfp, buf, reply_size[emu]);
+    if (sscanf(buf, reply_size[emu], &rows, &cols) != 2) {
 	fprintf(stderr, "%s: Can't get rows and columns\r\n", myname);
 	onintr(0);
     }

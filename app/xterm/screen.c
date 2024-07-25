@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.627 2022/10/23 22:57:40 tom Exp $ */
+/* $XTermId: screen.c,v 1.651 2024/02/13 22:10:51 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -193,6 +193,9 @@ setupLineData(TScreen *screen,
     /* these names are based on types */
     unsigned skipNcolIAttr;
     unsigned skipNcolCharData;
+#if OPT_DEC_RECTOPS
+    unsigned skipNcolChar;
+#endif
 #if OPT_ISO_COLORS
     unsigned skipNcolCellColor;
 #endif
@@ -207,8 +210,12 @@ setupLineData(TScreen *screen,
     }
 #endif
 
-    skipNcolIAttr = (ncol * SizeofScrnPtr(attribs));
-    skipNcolCharData = (ncol * SizeofScrnPtr(charData));
+    /* *INDENT-EQLS* */
+    skipNcolIAttr     = (ncol * SizeofScrnPtr(attribs));
+    skipNcolCharData  = (ncol * SizeofScrnPtr(charData));
+#if OPT_DEC_RECTOPS
+    skipNcolChar      = (ncol * SizeofScrnPtr(charSeen));	/* = charSets */
+#endif
 #if OPT_ISO_COLORS
     skipNcolCellColor = (ncol * SizeofScrnPtr(color));
 #endif
@@ -226,6 +233,10 @@ setupLineData(TScreen *screen,
 	SetupScrnPtr(ptr->color, data, CellColor);
 #endif
 	SetupScrnPtr(ptr->charData, data, CharData);
+#if OPT_DEC_RECTOPS
+	SetupScrnPtr(ptr->charSeen, data, Char);
+	SetupScrnPtr(ptr->charSets, data, Char);
+#endif
 #if OPT_WIDE_CHARS
 	if (screen->wide_chars) {
 	    unsigned extra = (unsigned) screen->max_combining;
@@ -302,8 +313,15 @@ sizeofScrnRow(TScreen *screen, unsigned ncol)
 
     (void) screen;
 
-    result = (ncol * (unsigned) sizeof(CharData));
+    result = (ncol * (unsigned) sizeof(CharData));	/* ->charData */
     AlignValue(result);
+
+#if OPT_DEC_RECTOPS
+    result += (ncol * (unsigned) sizeof(Char));		/* ->charSeen */
+    AlignValue(result);
+    result += (ncol * (unsigned) sizeof(Char));		/* ->charSets */
+    AlignValue(result);
+#endif
 
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
@@ -800,6 +818,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	flags = (int) ((unsigned) flags | TERM_COLOR_FLAGS(xw));
 
 	for (n = 0; n < len; ++n) {
+	    if_OPT_DEC_RECTOPS(ld->charSeen[(unsigned) col + n] = ' ');
 	    ld->charData[(unsigned) col + n] = (CharData) ' ';
 	}
 
@@ -867,16 +886,20 @@ ScrnDisownSelection(XtermWidget xw)
  */
 void
 ScrnWriteText(XtermWidget xw,
-	      IChar *str,
+	      Cardinal offset,
+	      Cardinal length,
 	      unsigned flags,
-	      CellColor cur_fg_bg,
-	      unsigned length)
+	      CellColor cur_fg_bg)
 {
+    IChar *str = xw->work.write_text + offset;
     TScreen *screen = TScreenOf(xw);
     LineData *ld;
     IAttr *attrs;
     int avail = MaxCols(screen) - screen->cur_col;
     IChar *chars;
+#if OPT_DEC_RECTOPS
+    Char *seens;
+#endif
 #if OPT_WIDE_CHARS
     IChar starcol1;
 #endif
@@ -898,6 +921,7 @@ ScrnWriteText(XtermWidget xw,
 
     ld = getLineData(screen, screen->cur_row);
 
+    if_OPT_DEC_RECTOPS(seens = ld->charSeen + screen->cur_col);
     chars = ld->charData + screen->cur_col;
     attrs = ld->attribs + screen->cur_col;
 
@@ -905,12 +929,26 @@ ScrnWriteText(XtermWidget xw,
     starcol1 = *chars;
 #endif
 
-    /* write blanks if we're writing invisible text */
+    /*
+     * Copy the string onto the line,
+     * writing blanks if we're writing invisible text.
+     */
     for (n = 0; n < length; ++n) {
-	if ((flags & INVISIBLE))
-	    chars[n] = ' ';
-	else
-	    chars[n] = str[n];
+#if OPT_DEC_RECTOPS
+	if (xw->work.write_sums != NULL) {
+	    ld->charSeen[screen->cur_col + (int) n] = xw->work.buffer_sums[n];
+	    ld->charSets[screen->cur_col + (int) n] = xw->work.buffer_sets[n];
+	} else {
+	    seens[n] = (str[n] < 32
+#if OPT_WIDE_CHARS
+			|| str[n] > 255
+#endif
+		)
+		? ANSI_ESC
+		: (Char) str[n];
+	}
+#endif /* OPT_DEC_RECTOPS */
+	chars[n] = str[n];
     }
 
 #if OPT_BLINK_TEXT
@@ -1049,6 +1087,10 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	    memset(work->color, 0, size * sizeof(work->color[0]));
 #endif
 	}
+	if_OPT_DEC_RECTOPS({
+	    memset(work->charSeen, 0, size * sizeof(Char));
+	    memset(work->charSets, 0, size * sizeof(work->charSets[0]));
+	});
 #if OPT_WIDE_CHARS
 	if (screen->wide_chars) {
 	    size_t off;
@@ -1636,7 +1678,6 @@ ScrnRefresh(XtermWidget xw,
 	    fg = extract_fg(xw, fg_bg, flags);
 	    bg = extract_bg(xw, fg_bg, flags);
 	});
-
 #if OPT_WIDE_ATTRS
 	old_attrs = xtermUpdateItalics(xw, flags, old_attrs);
 #endif
@@ -1896,7 +1937,7 @@ freeLineData(TScreen *screen, LineData *source)
 
 #define ALLOC_IT(field) \
     if (result != NULL) { \
-	if ((result->field = calloc(ncol, sizeof(*result->field))) == NULL) { \
+	if ((result->field = calloc((size_t) ncol, sizeof(*result->field))) == NULL) { \
 	    result = freeLineData(screen, result); \
 	} \
     }
@@ -1913,14 +1954,18 @@ allocLineData(TScreen *screen, LineData *source)
 #if OPT_WIDE_CHARS
     size += source->combSize * sizeof(result->combData[0]);
 #endif
-    if ((result = calloc(1, size)) != NULL) {
+    if ((result = calloc((size_t) 1, size)) != NULL) {
 	result->lineSize = ncol;
 	ALLOC_IT(attribs);
 #if OPT_ISO_COLORS
 	ALLOC_IT(color);
 #endif
+#if OPT_DEC_RECTOPS
+	ALLOC_IT(charSeen);
 	ALLOC_IT(charData);
+#endif
 #if OPT_WIDE_CHARS
+	ALLOC_IT(charSets);
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
 	    for_each_combData(off, source) {
@@ -2603,11 +2648,6 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 /*
  * Modifies the video-attributes only - so selection (not a video attribute) is
  * unaffected.  Colors and double-size flags are unaffected as well.
- *
- * FIXME: our representation for "invisible" does not work with this operation,
- * since the attribute byte is fully-allocated for other flags.  The logic
- * is shown for INVISIBLE because it's harmless, and useful in case the
- * CHARDRAWN or PROTECTED flags are reassigned.
  */
 void
 ScrnMarkRectangle(XtermWidget xw,
@@ -2812,14 +2852,13 @@ xtermCheckRect(XtermWidget xw,
     int trimmed = 0;
     int mode = screen->checksum_ext;
 
-    TRACE(("xtermCheckRect: %s%s%s%s%s%s%s\n",
+    TRACE(("xtermCheckRect: %s%s%s%s%s%s\n",
 	   (mode == csDEC) ? "DEC" : "checksumExtension",
 	   (mode & csPOSITIVE) ? " !negative" : "",
 	   (mode & csATTRIBS) ? " !attribs" : "",
 	   (mode & csNOTRIM) ? " !trimmed" : "",
 	   (mode & csDRAWN) ? " !drawn" : "",
-	   (mode & csBYTE) ? " !byte" : "",
-	   (mode & cs8TH) ? " !7bit" : ""));
+	   (mode & csBYTE) ? " !byte" : ""));
 
     if (nparam > 2) {
 	nparam -= 2;
@@ -2832,29 +2871,62 @@ xtermCheckRect(XtermWidget xw,
 	int row, col;
 	Boolean first = True;
 	int embedded = 0;
-	DECNRCM_codes my_GR = screen->gsets[(int) screen->curgr];
 
 	for (row = top; row <= bottom; ++row) {
 	    int left = (target.left - 1);
 	    int right = (target.right - 1);
+	    int ch;
 
 	    ld = getLineData(screen, row);
 	    if (ld == 0)
 		continue;
 	    for (col = left; col <= right && col < (int) ld->lineSize; ++col) {
-		int ch = ((ld->attribs[col] & CHARDRAWN)
-			  ? (int) ld->charData[col]
-			  : ' ');
-		if (!(mode & csBYTE)) {
-		    unsigned c2 = (unsigned) ch;
-		    if (c2 > 0x7f && my_GR != nrc_ASCII) {
-			c2 = xtermCharSetIn(xw, c2, my_GR);
-			if (!(mode & cs8TH) && (c2 < 0x80))
-			    c2 |= 0x80;
-		    }
-		    ch = (c2 & 0xff);
+		if (!(ld->attribs[col] & CHARDRAWN)) {
+		    if (!(mode & (csNOTRIM | csDRAWN)))
+			continue;
+		    ch = ' ';
+		} else if (!(mode & csBYTE)) {
+		    ch = xtermCharSetDec(xw,
+					 ld->charSeen[col],
+					 ld->charSets[col]);
+		} else {
+		    ch = (int) ld->charData[col];
+		    if_OPT_WIDE_CHARS(screen, {
+			if (is_UCS_SPECIAL(ch))
+			    continue;
+		    });
 		}
 		if (!(mode & csATTRIBS)) {
+#if OPT_ISO_COLORS && OPT_VT525_COLORS
+		    if (screen->terminal_id == 525) {
+			IAttr flags = ld->attribs[col];
+			CellColor fg_bg = ld->color[col];
+			int fg = (int) extract_fg(xw, fg_bg, flags);
+			int bg = (int) extract_bg(xw, fg_bg, flags);
+			Boolean dft_bg = (bg < 0);
+			Boolean dft_fg = (fg < 0);
+
+			if (dft_bg)
+			    bg = screen->assigned_bg;
+			if (bg >= 0 && bg < 16)
+			    ch += bg;
+
+			if (dft_fg)
+			    fg = screen->assigned_fg;
+			if (fg >= 0 && fg < 16)
+			    ch += (fg << 4);
+
+			/* special case to match VT525 behavior */
+			if (dft_bg && !dft_fg && (ld->attribs[col] & BOLD))
+			    ch -= 0x80;
+		    }
+#endif
+		    if (ld->attribs[col] & PROTECTED)
+			ch += 0x4;
+#if OPT_WIDE_ATTRS
+		    if (ld->attribs[col] & INVISIBLE)
+			ch += 0x8;
+#endif
 		    if (ld->attribs[col] & UNDERLINE)
 			ch += 0x10;
 		    if (ld->attribs[col] & INVERSE)
@@ -2871,20 +2943,16 @@ xtermCheckRect(XtermWidget xw,
 		    if ((mode & csNOTRIM))
 			embedded += ch;
 		}
-		if ((ld->attribs[col] & CHARDRAWN)) {
-		    total += ch;
-		    if_OPT_WIDE_CHARS(screen, {
-			/* FIXME - not counted if trimming blanks */
-			if (!(mode & csBYTE)) {
-			    size_t off;
-			    for_each_combData(off, ld) {
-				total += (int) ld->combData[off][col];
-			    }
+		total += ch;
+		if_OPT_WIDE_CHARS(screen, {
+		    /* FIXME - not counted if trimming blanks */
+		    if (!(mode & csBYTE)) {
+			size_t off;
+			for_each_combData(off, ld) {
+			    total += (int) ld->combData[off][col];
 			}
-		    })
-		} else if (!(mode & csDRAWN)) {
-		    total += ch;
-		}
+		    }
+		});
 		first = ((mode & csNOTRIM) != 0) ? True : False;
 	    }
 	    if (!(mode & csNOTRIM)) {
@@ -2900,6 +2968,55 @@ xtermCheckRect(XtermWidget xw,
     *result = total;
 }
 #endif /* OPT_DEC_RECTOPS */
+
+static void
+set_ewmh_hint(XtermWidget xw, int operation, _Xconst char *prop)
+{
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    Window window;
+    XEvent e;
+    Atom atom_fullscreen = CachedInternAtom(dpy, prop);
+    Atom atom_state = CachedInternAtom(dpy, "_NET_WM_STATE");
+
+#if OPT_TRACE
+    const char *what = "?";
+    switch (operation) {
+    case _NET_WM_STATE_ADD:
+	what = "adding";
+	break;
+    case _NET_WM_STATE_REMOVE:
+	what = "removing";
+	break;
+    }
+    TRACE(("set_ewmh_hint %s %s\n", what, prop));
+#endif
+
+#if OPT_TEK4014
+    if (TEK4014_ACTIVE(xw)) {
+	window = TShellWindow;
+    } else
+#endif
+	window = VShellWindow(xw);
+
+    memset(&e, 0, sizeof(e));
+    e.xclient.type = ClientMessage;
+    e.xclient.message_type = atom_state;
+    e.xclient.display = dpy;
+    e.xclient.window = window;
+    e.xclient.format = 32;
+    e.xclient.data.l[0] = operation;
+    e.xclient.data.l[1] = (long) atom_fullscreen;
+
+    XSendEvent(dpy, DefaultRootWindow(dpy), False,
+	       SubstructureRedirectMask, &e);
+}
+
+void
+ResetHiddenHint(XtermWidget xw)
+{
+    set_ewmh_hint(xw, _NET_WM_STATE_REMOVE, "_NET_WM_STATE_HIDDEN");
+}
 
 #if OPT_MAXIMIZE
 
@@ -2982,39 +3099,6 @@ unset_resize_increments(XtermWidget xw)
     XFlush(XtDisplay(xw));
 }
 
-static void
-set_ewmh_hint(Display *dpy, Window window, int operation, _Xconst char *prop)
-{
-    XEvent e;
-    Atom atom_fullscreen = XInternAtom(dpy, prop, False);
-    Atom atom_state = XInternAtom(dpy, "_NET_WM_STATE", False);
-
-#if OPT_TRACE
-    const char *what = "?";
-    switch (operation) {
-    case _NET_WM_STATE_ADD:
-	what = "adding";
-	break;
-    case _NET_WM_STATE_REMOVE:
-	what = "removing";
-	break;
-    }
-    TRACE(("set_ewmh_hint %s %s\n", what, prop));
-#endif
-
-    memset(&e, 0, sizeof(e));
-    e.xclient.type = ClientMessage;
-    e.xclient.message_type = atom_state;
-    e.xclient.display = dpy;
-    e.xclient.window = window;
-    e.xclient.format = 32;
-    e.xclient.data.l[0] = operation;
-    e.xclient.data.l[1] = (long) atom_fullscreen;
-
-    XSendEvent(dpy, DefaultRootWindow(dpy), False,
-	       SubstructureRedirectMask, &e);
-}
-
 /*
  * Check if the given property is supported on the root window.
  *
@@ -3029,8 +3113,8 @@ set_ewmh_hint(Display *dpy, Window window, int operation, _Xconst char *prop)
 static Boolean
 probe_netwm(Display *dpy, _Xconst char *propname)
 {
-    Atom atom_fullscreen = XInternAtom(dpy, propname, False);
-    Atom atom_supported = XInternAtom(dpy, "_NET_SUPPORTED", False);
+    Atom atom_fullscreen = CachedInternAtom(dpy, propname);
+    Atom atom_supported = CachedInternAtom(dpy, "_NET_SUPPORTED");
     Atom actual_type;
     int actual_format;
     long long_offset = 0;
@@ -3107,15 +3191,10 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
     _Xconst char *newprop;
 
     int which = 0;
-    Window window;
-
 #if OPT_TEK4014
-    if (TEK4014_ACTIVE(xw)) {
+    if (TEK4014_ACTIVE(xw))
 	which = 1;
-	window = TShellWindow;
-    } else
 #endif
-	window = VShellWindow(xw);
 
     old_ewmh_mode = xw->work.ewmh[which].mode;
     oldprop = ewmhProperty(old_ewmh_mode);
@@ -3146,15 +3225,15 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
 	TRACE(("...new EWMH mode is allowed\n"));
 	if (new_ewmh_mode && !xw->work.ewmh[which].mode) {
 	    unset_resize_increments(xw);
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);
+	    set_ewmh_hint(xw, _NET_WM_STATE_ADD, newprop);
 	} else if (xw->work.ewmh[which].mode && !new_ewmh_mode) {
 	    if (!xw->misc.resizeByPixel) {
 		set_resize_increments(xw);
 	    }
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);
+	    set_ewmh_hint(xw, _NET_WM_STATE_REMOVE, oldprop);
 	} else {
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);
+	    set_ewmh_hint(xw, _NET_WM_STATE_REMOVE, oldprop);
+	    set_ewmh_hint(xw, _NET_WM_STATE_ADD, newprop);
 	}
 	xw->work.ewmh[which].mode = new_ewmh_mode;
 	update_fullscreen();

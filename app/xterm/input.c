@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.369 2022/11/24 12:48:54 tom Exp $ */
+/* $XTermId: input.c,v 1.370 2023/05/09 08:14:04 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1204,8 +1204,7 @@ Input(XtermWidget xw,
 		reply.a_param[0] = (ParmType) dec_code;
 		reply.a_final = '~';
 	    }
-	    if (reply.a_final != 0
-		&& (reply.a_nparam == 0 || reply.a_param[0] >= 0))
+	    if (reply.a_nparam == 0 || reply.a_param[0] >= 0)
 		unparseseq(xw, &reply);
 	}
 	key = True;

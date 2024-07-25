@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.760 2023/01/08 23:42:23 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.783 2024/07/10 15:48:26 tom Exp $ */
 
 /*
- * Copyright 1998-2022,2023 by Thomas E. Dickey
+ * Copyright 1998-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -44,6 +44,7 @@
 
 #include <main.h>
 #include <data.h>
+#include <error.h>
 #include <menu.h>
 #include <xstrings.h>
 #include <xterm.h>
@@ -393,7 +394,7 @@ get_font_name_props(Display *dpy, XFontStruct *fs, char **result)
      * first get the full font name
      */
     name = 0;
-    fontatom = XInternAtom(dpy, "FONT", False);
+    fontatom = CachedInternAtom(dpy, "FONT");
     if (fontatom != 0) {
 	XFontProp *fp;
 	int i;
@@ -1202,6 +1203,81 @@ reportXCharStruct(const char *tag, XCharStruct * cs)
 }
 
 static void
+fillXCharStruct(XCharStruct * cs, short value)
+{
+    cs->lbearing = value;
+    cs->rbearing = value;
+    cs->width = value;
+    cs->ascent = value;
+    cs->descent = value;
+}
+
+/* if the per-character data differs from the summary, that is a problem */
+static void
+compareXCharStruct(const char *tag, XCharStruct * actual, XCharStruct * expect)
+{
+#define CompareXCharStruct(field) \
+    if (actual->field != expect->field) \
+    	ReportFonts("\t\t%s %s differs: %d\n", tag, #field, actual->field)
+    CompareXCharStruct(lbearing);
+    CompareXCharStruct(rbearing);
+    CompareXCharStruct(width);
+    CompareXCharStruct(ascent);
+    CompareXCharStruct(descent);
+}
+
+static void
+reportXPerChar(XFontStruct *fs)
+{
+    XCharStruct *cs = fs->per_char;
+
+    if (cs != NULL) {
+	XCharStruct min_bounds;
+	XCharStruct max_bounds;
+	int valid = 0;
+	int total = 0;
+	unsigned first_char = 0;
+	unsigned last_char = 0;
+	unsigned ch;
+
+	if (fs->max_byte1 == 0) {
+	    first_char = fs->min_char_or_byte2;
+	    last_char = fs->max_char_or_byte2;
+	} else {
+	    first_char = (fs->min_byte1 * 256) + fs->min_char_or_byte2;
+	    last_char = (fs->max_byte1 * 256) + fs->max_char_or_byte2;
+	}
+
+	fillXCharStruct(&max_bounds, -32768);
+	fillXCharStruct(&min_bounds, 32767);
+	for (ch = first_char; ch < last_char; ++ch) {
+	    XCharStruct *item = cs + ch;
+	    ++total;
+	    if (!CI_NONEXISTCHAR(item)) {
+		++valid;
+#define MIN_BOUNDS(field) min_bounds.field = Min(min_bounds.field, item->field)
+		MIN_BOUNDS(lbearing);
+		MIN_BOUNDS(rbearing);
+		MIN_BOUNDS(width);
+		MIN_BOUNDS(ascent);
+		MIN_BOUNDS(descent);
+#define MAX_BOUNDS(field) max_bounds.field = Max(max_bounds.field, item->field)
+		MAX_BOUNDS(lbearing);
+		MAX_BOUNDS(rbearing);
+		MAX_BOUNDS(width);
+		MAX_BOUNDS(ascent);
+		MAX_BOUNDS(descent);
+	    }
+	}
+	ReportFonts("\t\tPer-character: %d/%d\n", valid, total);
+	compareXCharStruct("Max", &max_bounds, &(fs->max_bounds));
+	compareXCharStruct("Min", &min_bounds, &(fs->min_bounds));
+    } else {
+	ReportFonts("\t\tPer-character: none\n");
+    }
+}
+
+static void
 reportOneVTFont(const char *tag,
 		XTermFonts * fnt)
 {
@@ -1222,8 +1298,8 @@ reportOneVTFont(const char *tag,
 	ReportFonts("\t\tall chars:     %s\n", (fs->all_chars_exist
 						? "yes"
 						: "no"));
-	ReportFonts("\t\tdefault char:  %d\n", fs->default_char);
-	ReportFonts("\t\tdirection:     %d\n", fs->direction);
+	ReportFonts("\t\tdefault char:  %u\n", fs->default_char);
+	ReportFonts("\t\tdirection:     %u\n", fs->direction);
 	ReportFonts("\t\tascent:        %d\n", fs->ascent);
 	ReportFonts("\t\tdescent:       %d\n", fs->descent);
 	ReportFonts("\t\tfirst char:    %u\n", first_char);
@@ -1243,12 +1319,13 @@ reportOneVTFont(const char *tag,
 	    ReportFonts("\t\tmissing-chars: %u\n", missing);
 	    ReportFonts("\t\tpresent-chars: %u\n", countGlyphs(fs) - missing);
 	}
-	ReportFonts("\t\tmin_byte1:     %d\n", fs->min_byte1);
-	ReportFonts("\t\tmax_byte1:     %d\n", fs->max_byte1);
+	ReportFonts("\t\tmin_byte1:     %u\n", fs->min_byte1);
+	ReportFonts("\t\tmax_byte1:     %u\n", fs->max_byte1);
 	ReportFonts("\t\tproperties:    %d\n", fs->n_properties);
 	reportXCharStruct("min_bounds", &(fs->min_bounds));
 	reportXCharStruct("max_bounds", &(fs->max_bounds));
-	/* TODO: report fs->properties and fs->per_char */
+	reportXPerChar(fs);
+	/* TODO: report fs->properties */
     }
 }
 
@@ -1264,11 +1341,12 @@ reportVTFontInfo(XtermWidget xw, int fontnum)
 	    ReportFonts("Loaded VTFonts(default)\n");
 	}
 
-	reportOneVTFont("fNorm", GetNormalFont(screen, fNorm));
-	reportOneVTFont("fBold", GetNormalFont(screen, fBold));
+#define ReportOneVTFont(name) reportOneVTFont(#name, screen->fnts + name)
+	ReportOneVTFont(fNorm);
+	ReportOneVTFont(fBold);
 #if OPT_WIDE_CHARS
-	reportOneVTFont("fWide", GetNormalFont(screen, fWide));
-	reportOneVTFont("fWBold", GetNormalFont(screen, fWBold));
+	ReportOneVTFont(fWide);
+	ReportOneVTFont(fWBold);
 #endif
     }
 }
@@ -1775,7 +1853,7 @@ xtermLoadFont(XtermWidget xw,
 	    UIntSet(screen->fnt_boxes, 2);
 	    for (ch = 1; ch < 32; ch++) {
 		unsigned n = dec2ucs(screen, ch);
-		if ((n != UCS_REPL)
+		if (!is_UCS_SPECIAL(n)
 		    && (n != ch)
 		    && (screen->fnt_boxes & 2)) {
 		    if (xtermMissingChar(n, &new_fonts[fNorm]) ||
@@ -2188,7 +2266,7 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 #define ALLOC_SUBLIST(which,field) \
 	    if (subresourceRec.default_font.field != NULL) { \
 		char *blob = x_strdup(subresourceRec.default_font.field); \
-		char *base = blob; \
+		char *base; \
 		for (base = blob; ; base = NULL) { \
 		    char *item = strtok(base, ","); \
 		    if (item == NULL) \
@@ -2398,8 +2476,12 @@ xtermSetCursorBox(TScreen *screen)
     XPoint *vp;
     int fw = FontWidth(screen) - 1;
     int fh = FontHeight(screen) - 1;
-    int ww = isCursorBar(screen) ? 1 : fw;
-    int hh = isCursorUnderline(screen) ? 1 : fh;
+    int ww = isCursorBar(screen) ? fw / 8 : fw;
+    int hh = isCursorUnderline(screen) ? fh / 8 : fh;
+    if (ww < 2)
+	ww = 2;
+    if (hh < 2)
+	hh = 2;
 
     vp = &VTbox[1];
     (vp++)->x = (short) ww;
@@ -3268,7 +3350,7 @@ checkFontInfo(int value, const char *tag, int failed)
     if (value == 0 || failed) {
 	if (value == 0) {
 	    xtermWarning("Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
-	    exit(1);
+	    exit(ERROR_MISC);
 	} else {
 	    xtermWarning("Selected font has no valid %s for ISO-8859-1 encoding\n", tag);
 	}
@@ -3512,8 +3594,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		     */
 		    if (screen->fnt_boxes) {
 			screen->fnt_boxes = 0;
-			TRACE(("Xft opened - will %suse internal line-drawing characters\n",
-			       screen->fnt_boxes ? "not " : ""));
+			TRACE(("Xft opened - will not use internal line-drawing characters\n"));
 		    }
 		}
 
@@ -3813,7 +3894,7 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 }
 #endif
 
-#if OPT_BOX_CHARS
+#if OPT_BOX_CHARS || OPT_WIDE_CHARS
 /*
  * The grid is arbitrary, enough resolution that nothing's lost in
  * initialization.
@@ -3987,6 +4068,39 @@ xtermDrawBoxChar(XTermDraw * params,
 	SEG(  0,	  2*BOX_HIGH/3,	  CHR_WIDE,   2*BOX_HIGH/3),
 	SEG(  0,	    MID_HIGH,	  CHR_WIDE,	MID_HIGH),
 	-1
+    }, sigma_1[] =
+    {
+	SEG(BOX_WIDE,	    MID_HIGH,	  BOX_WIDE/2,	MID_HIGH),
+	SEG(BOX_WIDE/2,	    MID_HIGH,	  BOX_WIDE,	BOX_HIGH),
+	-1
+    }, sigma_2[] =
+    {
+	SEG(BOX_WIDE,	    MID_HIGH,	  BOX_WIDE/2,	MID_HIGH),
+	SEG(BOX_WIDE/2,	    MID_HIGH,	  BOX_WIDE,	0),
+	-1
+    }, sigma_3[] =
+    {
+	SEG(  0,	    0,	  	  BOX_WIDE,	BOX_HIGH),
+	-1
+    }, sigma_4[] =
+    {
+	SEG(  0,	    BOX_HIGH,	  BOX_WIDE,	0),
+	-1
+    }, sigma_5[] =
+    {
+	SEG(  0,	    MID_HIGH,	  MID_WIDE,	MID_HIGH),
+	SEG(MID_WIDE,	    MID_HIGH,	  MID_WIDE,	BOX_HIGH),
+	-1
+    }, sigma_6[] =
+    {
+	SEG(  0,	    MID_HIGH,	  MID_WIDE,	MID_HIGH),
+	SEG(MID_WIDE,	    MID_HIGH,	  MID_WIDE,	0),
+	-1
+    }, sigma_7[] =
+    {
+	SEG(  0,	    0,		  MID_WIDE,	MID_HIGH),
+	SEG(  0,	    BOX_HIGH,	  MID_WIDE,	MID_HIGH),
+	-1
     };
 
     static const struct {
@@ -4026,6 +4140,14 @@ xtermDrawBoxChar(XTermDraw * params,
 	{ 0, not_equal_to },		/* 1D */
 	{ 0, 0 },			/* 1E LB */
 	{ 0, 0 },			/* 1F bullet */
+	{ 0, 0 },			/* 20 space */
+	{ 3, sigma_1 },			/* PUA(0) */
+	{ 3, sigma_2 },			/* PUA(1) */
+	{ 3, sigma_3 },			/* PUA(2) */
+	{ 3, sigma_4 },			/* PUA(3) */
+	{ 3, sigma_5 },			/* PUA(4) */
+	{ 3, sigma_6 },			/* PUA(5) */
+	{ 3, sigma_7 },			/* PUA(6) */
     };
     /* *INDENT-ON* */
 
@@ -4037,6 +4159,7 @@ xtermDrawBoxChar(XTermDraw * params,
 			   * screen->fnt_wide);
     unsigned font_height = (((params->draw_flags & DOUBLEHFONT) ? 2U : 1U)
 			    * screen->fnt_high);
+    unsigned thick;
 
     if (cells > 1)
 	font_width *= (unsigned) cells;
@@ -4051,11 +4174,11 @@ xtermDrawBoxChar(XTermDraw * params,
 	&& !UsingRenderFont(params->xw)
 #endif
 	&& (ch > 127)
-	&& (ch != UCS_REPL)) {
+	&& !is_UCS_SPECIAL(ch)) {
 	int which = (params->attr_flags & BOLD) ? fBold : fNorm;
 	unsigned n;
 	for (n = 1; n < 32; n++) {
-	    if (xtermMissingChar(n, getNormalFont(screen, which)))
+	    if (xtermMissingChar(n, XTermFontsRef(screen->fnts, which)))
 		continue;
 	    if (dec2ucs(screen, n) != ch)
 		continue;
@@ -4080,7 +4203,7 @@ xtermDrawBoxChar(XTermDraw * params,
 #endif
 
     /*
-     * Line-drawing characters show use the full (scaled) cellsize, while
+     * Line-drawing characters display using the full (scaled) cellsize, while
      * other characters should be shifted to center them vertically.
      */
     if (!xftords) {
@@ -4089,6 +4212,11 @@ xtermDrawBoxChar(XTermDraw * params,
 	} else {
 	    y += ScaleShift(screen);
 	}
+    }
+
+    if (xtermIsDecTechnical(ch)) {
+	ch -= XTERM_PUA;
+	ch += 33;
     }
 
     TRACE(("DRAW_BOX(%02X) cell %dx%d at %d,%d%s\n",
@@ -4119,19 +4247,18 @@ xtermDrawBoxChar(XTermDraw * params,
     setCgsBack(params->xw, cgsWin, cgsId, getCgsBack(params->xw, cgsWin, gc));
     gc2 = getCgsGC(params->xw, cgsWin, cgsId);
 
-    XSetLineAttributes(screen->display, gc2,
-		       (params->attr_flags & BOLD)
-		       ? ((font_height > 12)
-			  ? font_height / 12
-			  : 1)
-		       : ((font_height > 16)
-			  ? font_height / 16
-			  : 1),
-		       LineSolid,
-		       CapProjecting,
-		       JoinMiter);
+    thick = ((params->attr_flags & BOLD)
+	     ? (Max((unsigned) screen->fnt_high / 12, 1))
+	     : (Max((unsigned) screen->fnt_high / 16, 1)));
+    setXtermLineAttributes(screen->display, gc2,
+			   thick,
+			   ((ch < XtNumber(lines))
+			    ? LineSolid
+			    : LineOnOffDash));
 
-    if (ch == 1) {		/* diamond */
+    if (ch == 32) {		/* space! */
+	;			/* boxing a missing space is pointless */
+    } else if (ch == 1) {	/* diamond */
 	XPoint points[5];
 	int npoints = 5, n;
 
@@ -4209,12 +4336,37 @@ xtermDrawBoxChar(XTermDraw * params,
 	}
     } else if (screen->force_all_chars) {
 	/* bounding rectangle, for debugging */
-	XDrawRectangle(screen->display, VDrawable(screen), gc2, x, y,
-		       font_width - 1,
-		       font_height - 1);
+	if ((params->draw_flags & DOUBLEHFONT)) {
+	    XRectangle clip;
+
+	    clip.x = 0;
+	    clip.y = 0;
+	    clip.width = (unsigned short) ((font_width - 1) + (unsigned) thick);
+	    clip.height = (unsigned short) ((unsigned) FontHeight(screen) + thick);
+
+	    if ((params->draw_flags & DOUBLEFIRST)) {
+		y -= (2 * FontDescent(screen));
+		clip.height =
+		    (unsigned short) (clip.height
+				      - ((unsigned short) FontDescent(screen)));
+	    } else {
+		y -= FontHeight(screen);
+		y += FontDescent(screen);
+		clip.y = (short) FontHeight(screen);
+	    }
+	    XSetClipRectangles(screen->display, gc2, x, y, &clip, 1, Unsorted);
+	}
+	XDrawRectangle(screen->display, VDrawable(screen), gc2,
+		       x + (int) thick, y + (int) thick,
+		       font_width - (2 * thick),
+		       font_height - (2 * thick));
+	if ((params->draw_flags & DOUBLEHFONT)) {
+	    XSetClipMask(screen->display, gc2, None);
+	}
     }
+    resetXtermLineAttributes(screen->display, gc2);
 }
-#endif /* OPT_BOX_CHARS */
+#endif /* OPT_BOX_CHARS || OPT_WIDE_CHARS */
 
 #if OPT_RENDERFONT
 static int
@@ -4401,7 +4553,7 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
     }
 
     /* initialize on the first call */
-    if (fontData->fontset == NULL) {
+    if (fontData->fontset == NULL && fontData->pattern != NULL) {
 	FcFontSet *sortedFonts;
 	FcPattern *myPattern;
 	int j;
@@ -4462,7 +4614,8 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 	FcPatternDestroy(myPattern);
 
 	fontData->fs_size = Min(MaxXftCache, fontData->fontset->nfont);
-    } {
+    }
+    if (fontData->fontset != NULL && fontData->fs_size > 0) {
 	XftFont *check;
 	int empty = fontData->fs_size;
 
@@ -4542,9 +4695,8 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 		    TRACE_FALLBACK(xw, "new", wc, result, actual);
 		    break;
 		} else {
-		    Bool ok;
 		    if (defer >= 0
-			&& (ok = !slowXftMissing(xw, check, wc))
+			&& !slowXftMissing(xw, check, wc)
 			&& checkXftGlyph(xw, check, wc)) {
 			XTermFontMap *font_map = &(fontData->font_map);
 			TRACE(("checkrecover2 %d\n", n));
@@ -4660,7 +4812,7 @@ ucs2dec(TScreen *screen, unsigned ch)
 
     (void) screen;
     if ((ch > 127)
-	&& (ch != UCS_REPL)) {
+	&& !is_UCS_SPECIAL(ch)) {
 #if OPT_VT52_MODE
 	if (screen != 0 && !(screen->vtXX_level)) {
 	    /*
@@ -5776,6 +5928,7 @@ getDoubleXftFont(XTermDraw * params, XTermXftFonts *data, unsigned chrset, unsig
 			    (void *) 0);
 	}
 	xtermOpenXft(xw, data, 0, face_name, sub_pattern, category);
+	data->pattern = sub_pattern;
     }
 }
 #endif

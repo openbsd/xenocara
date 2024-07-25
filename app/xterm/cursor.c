@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.83 2022/09/23 08:13:43 tom Exp $ */
+/* $XTermId: cursor.c,v 1.93 2023/09/21 08:17:56 tom Exp $ */
 
 /*
- * Copyright 2002-2021,2022 by Thomas E. Dickey
+ * Copyright 2002-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -100,46 +100,101 @@ CursorSet(TScreen *screen, int row, int col, unsigned flags)
 }
 
 /*
- * moves the cursor left n, no wrap around
+ * Unlike VT100, xterm allows reverse wrapping of the cursor.  This feature was
+ * introduced in X10R4 (December 1986), but did not modify the comment which
+ * said "moves the cursor left n, no wrap around".  However, this reverse
+ * wrapping allowed the cursor to wrap around to the end of the screen.
+ *
+ * xterm added VT420-compatible left/right margin support in 2012.  If the
+ * cursor starts off within the margins, the reverse wrapping result will be
+ * within the margins.
+ *
+ * Wrapping to the end of the screen did not appear to be the original intent.
+ * That was revised in 2023, using private mode 45 for movement within the
+ * current (wrapped) line, and 1045 for movement to "any" line.
  */
 void
 CursorBack(XtermWidget xw, int n)
 {
 #define WRAP_MASK (REVERSEWRAP | WRAPAROUND)
+#define WRAP_MASK2 (REVERSEWRAP2 | WRAPAROUND)
     TScreen *screen = TScreenOf(xw);
-    int rev;
-    int left = ScrnLeftMargin(xw);
+    /* *INDENT-EQLS* */
+    int rev    = (((xw->flags & WRAP_MASK) == WRAP_MASK) != 0);
+    int rev2   = (((xw->flags & WRAP_MASK2) == WRAP_MASK2) != 0);
+    int left   = ScrnLeftMargin(xw);
+    int right  = ScrnRightMargin(xw);
     int before = screen->cur_col;
+    int top    = ScrnTopMargin(xw);
+    int bottom = ScrnBottomMargin(xw);
+    int col    = screen->cur_col;
+    int row    = screen->cur_row;
 
-    if ((rev = ((xw->flags & WRAP_MASK) == WRAP_MASK)) != 0
-	&& screen->do_wrap) {
-	n--;
-    }
+    int count;
+    CLineData *ld;
+
+    TRACE(("CursorBack(%d) current %d,%d rev=%d/%d margins H[%d..%d] V[%d..%d]\n",
+	   n,
+	   screen->cur_row, screen->cur_col,
+	   rev, rev2,
+	   left, right,
+	   top, bottom));
 
     /* if the cursor is already before the left-margin, we have to let it go */
     if (before < left)
 	left = 0;
 
-    if ((screen->cur_col -= n) < left) {
-	if (rev) {
-	    int in_row = ScrnRightMargin(xw) - left + 1;
-	    int offset = (in_row * screen->cur_row) + screen->cur_col - left;
-	    if ((before == left) &&
-		ScrnIsColInMargins(screen, before) &&
-		ScrnIsRowInMargins(screen, screen->cur_row) &&
-		screen->cur_row == screen->top_marg) {
-		offset = (screen->bot_marg + 1) * in_row - 1;
-	    } else if (offset < 0) {
-		int length = in_row * MaxRows(screen);
-		offset += ((-offset) / length + 1) * length;
-	    }
-	    set_cur_row(screen, (offset / in_row));
-	    set_cur_col(screen, (offset % in_row) + left);
-	    do_xevents(xw);
+    ld = NULL;
+    if ((count = n) > 0) {
+	if ((rev || rev2) && screen->do_wrap) {
+	    --count;
 	} else {
-	    set_cur_col(screen, left);
+	    --col;
 	}
     }
+
+    for (;;) {
+	if (col < left) {
+	    if (rev2) {
+		col = right;
+		if (row == top)
+		    row = bottom + 1;
+	    } else {
+		if (!rev) {
+		    col = left;
+		    break;
+		}
+		if (row <= top) {
+		    col = left;
+		    row = top;
+		    break;
+		}
+	    }
+	    ld = NULL;		/* try a reverse-wrap */
+	    --row;
+	}
+	if (ld == NULL) {
+	    ld = getLineData(screen, ROW2INX(screen, row));
+	    if (ld == NULL)
+		break;		/* should not happen */
+	    if (row != screen->cur_row) {
+		if (!rev2 && !LineTstWrapped(ld)) {
+		    ++row;	/* reverse-wrap failed */
+		    col = left;
+		    break;
+		}
+		col = right;
+	    }
+	}
+
+	if (--count <= 0)
+	    break;
+	--col;
+    }
+    set_cur_row(screen, row);
+    set_cur_col(screen, col);
+    do_xevents(xw);
+
     ResetWrap(screen);
 }
 
@@ -289,7 +344,8 @@ CarriageReturn(XtermWidget xw)
 
     set_cur_col(screen, col);
     ResetWrap(screen);
-    do_xevents(xw);
+    if (screen->jumpscroll && !screen->fastscroll)
+	do_xevents(xw);
 }
 
 /*
@@ -451,7 +507,6 @@ CursorNextLine(XtermWidget xw, int count)
 
     CursorDown(screen, count < 1 ? 1 : count);
     CarriageReturn(xw);
-    do_xevents(xw);
 }
 
 /*
@@ -464,7 +519,6 @@ CursorPrevLine(XtermWidget xw, int count)
 
     CursorUp(screen, count < 1 ? 1 : count);
     CarriageReturn(xw);
-    do_xevents(xw);
 }
 
 /*

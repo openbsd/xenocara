@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.173 2022/09/18 21:00:08 tom Exp $ */
+/* $XTermId: print.c,v 1.176 2023/11/24 12:16:37 tom Exp $ */
 
 /*
- * Copyright 1997-2021,2022 by Thomas E. Dickey
+ * Copyright 1997-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -395,6 +395,7 @@ send_SGR(XtermWidget xw, unsigned attr, unsigned fg, unsigned bg)
     if ((attr & FG_COLOR) && (fg != NO_COLOR)) {
 	if (TScreenOf(xw)->boldColors
 	    && fg > 8
+	    && fg < 16
 	    && (attr & BOLD) != 0)
 	    fg -= 8;
     }
@@ -412,6 +413,17 @@ static void
 charToPrinter(XtermWidget xw, unsigned chr)
 {
     TScreen *screen = TScreenOf(xw);
+
+#if OPT_WIDE_CHARS
+    if (screen->wide_chars && screen->utf8_mode) {
+	if (chr == UCS_REPL) {
+	    stringToPrinter(xw, screen->default_string);
+	    return;
+	}
+    }
+#endif
+    if (is_NON_CHAR(chr))
+	return;
 
     if (!SPS.isOpen && (SPS.toFile || xtermHasPrinter(xw))) {
 	switch (SPS.toFile) {
@@ -453,7 +465,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 
 		    /* don't want privileges! */
 		    if (xtermResetIds(screen) < 0)
-			exit(1);
+			exit(ERROR_MISC);
 
 		    SPS.fp = popen(SPS.printer_command, "w");
 		    if (SPS.fp != 0) {

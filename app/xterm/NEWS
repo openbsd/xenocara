@@ -1,22 +1,31 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #378 - 2023/01/09
+                            Patch #393 - 2024/07/11
 
-     * improve  descriptions  of  XTQMODKEYS  and  XTQALLOWED  features in
-       ctlseqs.ms (reports by Bram Moolenaar, Thomas Wolff).
-     * add bracketed+paste and report+version building blocks to terminfo,
-       from ncurses 6.4
-     * improve   check   for   unsupported  formatting  characters,  e.g.,
-       zero-width space, to properly ignore them (report by Thomas Wolff).
-     * improve/document  error-checking  for  some  of  the controls which
-       return   responses:   DECRQSS,   XTGETXRES,   XTSETTCAP,  XTGETTCAP
-       (prompted by discussion with David Leadbeater).
-     * improve  limit-checks  for fallback font cache (report by Dimitrije
-       Erdeljan).
-     * improve check for too-wide glyph in fallback font by allowing xterm
-       to  continue searching for a suitable font rather than just failing
-       on  the first. Also add limitFontWidth to allow changing the amount
-       by  which  a  glyph  must extend outside the font's bounding box to
-       disallow it.
+     * add a check for ANSI SC/RC, to ignore CSI parameters.
+     * improve  check for missing characters for bitmap-fonts by using the
+       normal font for reference in the case where the current font, e.g.,
+       the   wide-font   was  derived  from  the  normal  font  and  lacks
+       per-character metrics (report by Rajeev V. Pillai).
+     * fix regression in error-recovery for SGR parameters from patch #357
+       (report by James Holderness).
+     * remove some duplicates in xtermcfg.h (report by Matthew Green).
+     * change default for --enable-imake configure option.
+     * fixes for wcwidth:
+          + return  0  for  format  effectors,  like a zero-width printing
+            character  rather  than -1 like a control character (report by
+            Rajeev V. Pillai).
+          + correct  doublewidth  to account for reserved codepoints which
+            are listed in the EastAsianWidth file.
+          + add a special case for surrogate pairs, which might be checked
+            in testing the wcwidth function.
+     * amend   sixel   bounds-check  added  in  patch  #371  to  not  wrap
+       out-of-bounds data.
+     * eliminate maxStringParse limit for SIXEL.
+     * improve  logic  which  ignores APC, PM and SOS controls to also not
+       accumulate their data temporarily in a buffer.
+     * exclude  TERM_INGRESS  from cleanup of environment variables (patch
+       by Iain Riley).
+     * fix some documentation typos (report by Thomas Wolff).
 

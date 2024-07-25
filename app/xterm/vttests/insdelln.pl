@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: vxt-insdelln,v 1.10 2022/10/10 17:05:38 tom Exp $
+# $XTermId: insdelln.pl,v 1.10 2022/10/10 17:05:38 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #

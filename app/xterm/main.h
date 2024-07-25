@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.82 2022/11/21 22:28:35 tom Exp $ */
+/* $XTermId: main.h,v 1.85 2023/10/22 10:34:12 tom Exp $ */
 
 /*
- * Copyright 2000-2021,2022 by Thomas E. Dickey
+ * Copyright 2000-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -132,7 +132,7 @@
 #endif
 
 #ifndef DEF_DISALLOWED_PASTE_CONTROLS
-#define DEF_DISALLOWED_PASTE_CONTROLS	"BS,DEL,ENQ,EOT,ESC,NUL"
+#define DEF_DISALLOWED_PASTE_CONTROLS	"BS,DEL,ENQ,EOT,ESC,NUL,STTY"
 #endif
 
 #ifndef DEF_DISALLOWED_TCAP
@@ -227,8 +227,24 @@
 #define DEF_SCROLL_LINES	1
 #endif
 
+#ifndef DEF_SL_CLOCK
+#define DEF_SL_CLOCK		1000
+#endif
+
+#ifndef DEF_SL_COORDS
+#define DEF_SL_COORDS		80
+#endif
+
 #ifndef DEF_SL_FORMAT
 #define DEF_SL_FORMAT           "%{version%}  %{position%}  %{unixtime%}"
+#endif
+
+#ifndef DEF_STRINGS_MAX
+#if OPT_REGIS_GRAPHICS || OPT_SIXEL_GRAPHICS
+#define DEF_STRINGS_MAX		600000
+#else
+#define DEF_STRINGS_MAX		20000
+#endif
 #endif
 
 #ifndef DEF_TITLE_MODES

@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.370 2022/10/07 08:00:53 Ben.Wong Exp $ */
+/* $XTermId: menu.c,v 1.375 2023/12/01 21:39:31 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -55,6 +55,7 @@
 
 #include <xterm.h>
 #include <data.h>
+#include <error.h>
 #include <menu.h>
 #include <fontutils.h>
 #include <xstrings.h>
@@ -696,7 +697,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 				 toplevel,
 				 NULL, 0);
     TRACE(("created popupShell(%s) widget %p, window %#lx\n",
-	   data->internal_name, list->w, XtWindow(list->w)));
+	   data->internal_name, (void *) list->w, XtWindow(list->w)));
 #endif
     if (list->w != 0) {
 	Boolean *unused = unusedEntries(xw, num);
@@ -1434,7 +1435,7 @@ do_quit(Widget gw GCC_UNUSED,
 	XtPointer closure GCC_UNUSED,
 	XtPointer data GCC_UNUSED)
 {
-    Cleanup(SIGHUP);
+    Cleanup(ERROR_MISC);
 }
 
 /*
@@ -3754,6 +3755,7 @@ update_titeInhibit(void)
 void
 update_activeicon(void)
 {
+    SetItemSensitivity(vtMenuEntries[vtMenu_activeicon].widget, False);
     UpdateCheckbox("update_activeicon",
 		   vtMenuEntries,
 		   vtMenu_activeicon,

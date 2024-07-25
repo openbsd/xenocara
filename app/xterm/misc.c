@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.1044 2023/01/07 01:11:16 tom Exp $ */
+/* $XTermId: misc.c,v 1.1094 2024/06/26 08:05:39 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -137,8 +137,6 @@
 
 static Boolean xtermAllocColor(XtermWidget, XColor *, const char *);
 static Cursor make_hidden_cursor(XtermWidget);
-
-static char emptyString[] = "";
 
 #if OPT_EXEC_XTERM
 /* Like readlink(2), but returns a malloc()ed buffer, or NULL on
@@ -308,14 +306,9 @@ do_xevents(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     if (xtermAppPending()
-	||
-#if defined(VMS) || defined(__VMS)
-	screen->display->qlen > 0
-#else
-	GetBytesAvailable(ConnectionNumber(screen->display)) > 0
-#endif
-	)
+	|| GetBytesAvailable(screen->display) > 0) {
 	xevents(xw);
+    }
 }
 
 void
@@ -1346,7 +1339,7 @@ AtomBell(XtermWidget xw, int which)
 
     for (n = 0; n < XtNumber(table); ++n) {
 	if (table[n].value == which) {
-	    result = XInternAtom(XtDisplay(xw), table[n].name, False);
+	    result = CachedInternAtom(XtDisplay(xw), table[n].name);
 	    break;
 	}
     }
@@ -1780,10 +1773,11 @@ xtermDeiconify(XtermWidget xw)
     Display *dpy = screen->display;
     Window target = VShellWindow(xw);
     XEvent e;
-    Atom atom_state = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
+    Atom atom_state = CachedInternAtom(dpy, "_NET_ACTIVE_WINDOW");
 
     if (xtermIsIconified(xw)) {
 	TRACE(("...de-iconify window %#lx\n", target));
+	ResetHiddenHint(xw);
 	XMapWindow(dpy, target);
 
 	memset(&e, 0, sizeof(e));
@@ -1833,8 +1827,8 @@ xtermIsIconified(XtermWidget xw)
 	unsigned char *prop_return = 0;
 	long long_length = 1024;
 	Atom requested_type = XA_ATOM;
-	Atom is_hidden = XInternAtom(dpy, "_NET_WM_STATE_HIDDEN", False);
-	Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+	Atom is_hidden = CachedInternAtom(dpy, "_NET_WM_STATE_HIDDEN");
+	Atom wm_state = CachedInternAtom(dpy, "_NET_WM_STATE");
 
 	/* this works with non-EWMH */
 	result = (win_attrs.map_state != IsViewable) ? True : False;
@@ -2484,9 +2478,11 @@ GenerateLogPath(void)
 	}
     }
 #else
-    static const char log_def_name[] = "XtermLog.XXXXXX";
-    if ((log_default = x_strdup(log_def_name)) != NULL) {
-	MakeTemp(log_default);
+    {
+	static const char log_def_name[] = "XtermLog.XXXXXX";
+	if ((log_default = x_strdup(log_def_name)) != NULL) {
+	    MakeTemp(log_default);
+	}
     }
 #endif
 
@@ -3482,7 +3478,7 @@ xtermIsPrintable(XtermWidget xw, Char **bufp, Char *last)
 	PtyData data;
 
 	if (decodeUtf8(screen, fakePtyData(&data, cp, last))) {
-	    if (data.utf_data != UCS_REPL
+	    if (!is_UCS_SPECIAL(data.utf_data)
 		&& (data.utf_data >= 128 ||
 		    ansi_table[data.utf_data] == CASE_PRINT)) {
 		next += (data.utf_size - 1);
@@ -4462,7 +4458,7 @@ parse_decudk(XtermWidget xw, const char *cp)
  * Parse numeric parameters.  Normally we use a state machine to simplify
  * interspersing with control characters, but have the string already.
  */
-static void
+void
 parse_ansi_params(ANSI *params, const char **string)
 {
     const char *cp = *string;
@@ -4615,7 +4611,6 @@ parse_decdld(ANSI *params, const char *string)
 #define parse_decdld(p,q)	/* nothing */
 #endif
 
-#if OPT_DEC_RECTOPS
 static const char *
 skip_params(const char *cp)
 {
@@ -4624,9 +4619,11 @@ skip_params(const char *cp)
     return cp;
 }
 
+#if OPT_MOD_FKEYS || OPT_DEC_RECTOPS || (OPT_VT525_COLORS && OPT_ISO_COLORS)
 static int
 parse_int_param(const char **cp)
 {
+    Boolean found = False;
     int result = 0;
     const char *s = *cp;
     while (*s != '\0') {
@@ -4635,15 +4632,18 @@ parse_int_param(const char **cp)
 	    break;
 	} else if (*s >= '0' && *s <= '9') {
 	    result = (result * 10) + (*s++ - '0');
+	    found = True;
 	} else {
 	    s += strlen(s);
 	}
     }
-    TRACE(("parse-int %s ->%d, %#x->%s\n", *cp, result, result, s));
+    TRACE(("parse-int \"%s\" ->%d, %#x->\"%s\"\n", *cp, result, result, s));
     *cp = s;
-    return result;
+    return found ? result : -1;
 }
+#endif
 
+#if OPT_DEC_RECTOPS
 static int
 parse_chr_param(const char **cp)
 {
@@ -4658,10 +4658,16 @@ parse_chr_param(const char **cp)
 	    }
 	}
     }
-    TRACE(("parse-chr %s ->%d, %#x->%s\n", *cp, result, result, s));
+    TRACE(("parse-chr %s ->%#x, %#x->%s\n", *cp, result, result, s));
     *cp = s;
     return result;
 }
+
+#if OPT_TRACE
+#define done_DECCIR()	do { TRACE(("...quit DECCIR @%d\n", __LINE__)); return; } while(0)
+#else
+#define done_DECCIR()	return
+#endif
 
 static void
 restore_DECCIR(XtermWidget xw, const char *cp)
@@ -4671,22 +4677,33 @@ restore_DECCIR(XtermWidget xw, const char *cp)
 
     /* row */
     if ((value = parse_int_param(&cp)) <= 0 || value > MaxRows(screen))
-	return;
+	done_DECCIR();
     screen->cur_row = (value - 1);
 
     /* column */
     if ((value = parse_int_param(&cp)) <= 0 || value > MaxCols(screen))
-	return;
+	done_DECCIR();
     screen->cur_col = (value - 1);
 
     /* page */
     if (parse_int_param(&cp) != 1)
-	return;
+	done_DECCIR();
 
     /* rendition */
-    if (((value = parse_chr_param(&cp)) & 0xf0) != 0x40)
-	return;
+    if (((value = parse_chr_param(&cp)) & 0xf0) != 0x40) {
+	if (value & 0x10) {
+	    /*
+	     * VT420 is documented for bit 5 always reset; VT520/VT525 are not
+	     * documented, but do use the bit for setting invisible mode.
+	     */
+	    if (screen->vtXX_level <= 4)
+		done_DECCIR();
+	} else if (!(value & 0x40)) {
+	    done_DECCIR();
+	}
+    }
     UIntClr(xw->flags, (INVERSE | BLINK | UNDERLINE | BOLD));
+    xw->flags |= (value & 16) ? INVISIBLE : 0;
     xw->flags |= (value & 8) ? INVERSE : 0;
     xw->flags |= (value & 4) ? BLINK : 0;
     xw->flags |= (value & 2) ? UNDERLINE : 0;
@@ -4694,38 +4711,39 @@ restore_DECCIR(XtermWidget xw, const char *cp)
 
     /* attributes */
     if (((value = parse_chr_param(&cp)) & 0xfe) != 0x40)
-	return;
+	done_DECCIR();
     screen->protected_mode &= ~DEC_PROTECT;
     screen->protected_mode |= (value & 1) ? DEC_PROTECT : 0;
 
     /* flags */
     if (((value = parse_chr_param(&cp)) & 0xf0) != 0x40)
-	return;
+	done_DECCIR();
     screen->do_wrap = (value & 8) ? True : False;
     screen->curss = (Char) ((value & 4) ? 3 : ((value & 2) ? 2 : 0));
     UIntClr(xw->flags, ORIGIN);
     xw->flags |= (value & 1) ? ORIGIN : 0;
 
     if ((value = (parse_chr_param(&cp) - '0')) < 0 || value >= NUM_GSETS)
-	return;
+	done_DECCIR();
     screen->curgl = (Char) value;
 
     if ((value = (parse_chr_param(&cp) - '0')) < 0 || value >= NUM_GSETS)
-	return;
+	done_DECCIR();
     screen->curgr = (Char) value;
 
     /* character-set size */
-    if (parse_chr_param(&cp) != 0x4f)	/* works for xterm */
-	return;
+    if (parse_chr_param(&cp) == 0xffff)		/* FIXME: limit SCS? */
+	done_DECCIR();
 
     /* SCS designators */
     for (value = 0; value < NUM_GSETS; ++value) {
-	if (*cp == '%') {
-	    xtermDecodeSCS(xw, value, 0, '%', *++cp);
-	} else if (*cp != '\0') {
-	    xtermDecodeSCS(xw, value, 0, '\0', *cp);
+	if (*cp == '\0') {
+	    done_DECCIR();
+	} else if (strchr("%&\"", *cp) != NULL) {
+	    int prefix = *cp++;
+	    xtermDecodeSCS(xw, value, 0, prefix, *cp);
 	} else {
-	    return;
+	    xtermDecodeSCS(xw, value, 0, '\0', *cp);
 	}
 	cp++;
     }
@@ -4747,10 +4765,8 @@ restore_DECTABSR(XtermWidget xw, const char *cp)
 	    --stop;
 	    if (OkTAB(stop)) {
 		TabSet(xw->tabs, stop);
-		stop = 0;
-	    } else {
-		fail = True;
 	    }
+	    stop = 0;
 	} else {
 	    fail = True;
 	}
@@ -4762,7 +4778,116 @@ restore_DECTABSR(XtermWidget xw, const char *cp)
 
     TRACE(("...done DECTABSR\n"));
 }
-#endif
+#endif /* OPT_DEC_RECTOPS */
+
+/*
+ * VT510 and VT520 reference manual have the same explanation for Pn (params),
+ * but it does not agree with the possible values for Dscs because it refers
+ * to "ISO Latin-7" (ISO 8859-13 aka "Baltic Rim"), and omits ISO Greek
+ * (ISO 8859-7):
+ *
+ * ------------------------------------------------------------------------
+ * Pn  Meaning
+ * ------------------------------------------------------------------------
+ * 0   DEC, ISO Latin-1, ISO Latin-2
+ * 1   ISO Latin-5, ISO Latin-7, ISO Cyrillic, ISO Hebrew
+ * ------------------------------------------------------------------------
+ *
+ * versus
+ *
+ * ------------------------------------------------------------------------
+ * Dscs   Character Set
+ * ------------------------------------------------------------------------
+ * %5     DEC Supplemental
+ * "?     DEC Greek
+ * "4     DEC Hebrew
+ * %0     DEC Turkish
+ * &4     DEC Cyrillic
+ * <      User-preferred Supplemental
+ * A      ISO Latin-1 Supplemental
+ * B      ISO Latin-2 Supplemental
+ * F      ISO Greek Supplemental
+ * H      ISO Hebrew Supplemental
+ * M      ISO Latin-5 Supplemental
+ * L      ISO Latin-Cyrillic
+ * ------------------------------------------------------------------------
+ *
+ * DEC 070, page 5-123 explains that Pn ("Ps" in the text) selects 94 or 96
+ * character sets (0 or 1, respectively), and on the next page states that
+ * the valid combinations are 0 (DEC Supplemental) and 1 (ISO Latin-1
+ * supplemental).  The document comments in regard to LS0 that (applications)
+ * should not assume that they can use 96-character sets for G0, but that it
+ * is possible to do this using UPSS.
+ *
+ * The VT510/VT520 reference manuals under SCS Select Character Set show
+ * a list of 94- and 96-character sets with "DEC" and "NRCS" as 94-characters,
+ * and the "ISO" as 96-characters.  A few 94-character sets are added, based
+ * on testing VT520/VT525 that shows that DEC Special Graphics also is allowed.
+ */
+static Bool
+decode_upss(XtermWidget xw, const char *cp, char psarg, DECNRCM_codes * upss)
+{
+    /* *INDENT-OFF* */
+    static const struct {
+	DECNRCM_codes code;
+	int params;	/* 0 for 94-characters, 1 for 96-characters */
+	int prefix;
+	int suffix;
+	int min_level;
+	int max_level;
+    } upss_table[] = {
+	{ DFT_UPSS,               0,  '%', '5', 3, 9 },
+    	{ nrc_ASCII,              0,  0,   'A', 1, 9 },	/* undocumented */
+    	{ nrc_DEC_Spec_Graphic,   0,  0,   '0', 1, 9 },	/* undocumented */
+    	{ nrc_DEC_Technical,      0,  0,   '>', 3, 9 },	/* undocumented */
+	{ nrc_DEC_Greek_Supp,     0,  '"', '?', 5, 9 },
+	{ nrc_DEC_Hebrew_Supp,    0,  '"', '4', 5, 9 },
+	{ nrc_DEC_Turkish_Supp,   0,  '%', '0', 5, 9 },
+	{ nrc_DEC_Cyrillic,       0,  '&', '4', 5, 9 },
+	{ ALT_UPSS,               1,  0,   'A', 3, 9 },
+	{ nrc_ISO_Latin_2_Supp,   1,  0,   'B', 5, 9 },
+	{ nrc_ISO_Greek_Supp,     1,  0,   'F', 5, 9 },
+	{ nrc_ISO_Hebrew_Supp,    1,  0,   'H', 5, 9 },
+	{ nrc_ISO_Latin_5_Supp,   1,  0,   'M', 5, 9 },
+	{ nrc_ISO_Latin_Cyrillic, 1,  0,   'L', 5, 9 },
+    };
+    /* *INDENT-ON* */
+    TScreen *screen = TScreenOf(xw);
+    Bool result = False;
+
+    *upss = nrc_ASCII;
+    if (screen->vtXX_level >= 3) {
+	Cardinal n;
+	for (n = 0; n < XtNumber(upss_table); ++n) {
+	    if (((int) psarg - '0') != upss_table[n].params)
+		continue;
+
+	    if (cp[1] == '\0') {
+		if (upss_table[n].suffix != cp[0])
+		    continue;
+	    } else if (cp[2] == '\0') {
+		if (upss_table[n].prefix != cp[0])
+		    continue;
+		if (upss_table[n].suffix != cp[1])
+		    continue;
+	    } else {
+		continue;
+	    }
+
+	    result = True;
+	    *upss = upss_table[n].code;
+	    if (*upss == DFT_UPSS) {
+		TRACE(("DECAUPSS (default)\n"));
+	    } else if (*upss == ALT_UPSS) {
+		TRACE(("DECAUPSS (alternate)\n"));
+	    }
+	    break;
+	}
+	TRACE(("DECAUPSS %ssuccessful %s\n",
+	       result ? "" : "not ", visibleScsCode(*upss)));
+    }
+    return result;
+}
 
 void
 do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
@@ -4772,8 +4897,12 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
     const char *cp = (const char *) dcsbuf;
     Bool okay;
     ANSI params;
-#if OPT_DEC_RECTOPS
     char psarg = '0';
+#if OPT_VT525_COLORS && OPT_ISO_COLORS
+    const char *cp2;
+#endif
+#if (OPT_VT525_COLORS && OPT_ISO_COLORS) || OPT_MOD_FKEYS
+    int ival;
 #endif
 
     TRACE(("do_dcs(%s:%lu)\n", (char *) dcsbuf, (unsigned long) dcslen));
@@ -4864,12 +4993,79 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			cp);
 	    } else
 #endif
+#if OPT_DEC_RECTOPS
+	    if (!strcmp(cp, "*x")) {	/* DECSACE */
+		TRACE(("reply DECSACE\n"));
+		sprintf(reply, "%d%s",
+			screen->cur_decsace,
+			cp);
+	    } else
+#endif
 	    if (!strcmp(cp, "*|")) {	/* DECSNLS */
 		TRACE(("reply DECSNLS\n"));
 		sprintf(reply, "%d%s",
 			screen->max_row + 1,
 			cp);
-	    } else {
+	    } else
+#if OPT_VT525_COLORS && OPT_ISO_COLORS
+		if (screen->terminal_id == 525
+		    && !strcmp((cp2 = skip_params(cp)), ",}")) {	/* DECATC */
+		ival = parse_int_param(&cp);
+		TRACE(("reply DECATC:%s\n", cp));
+		if (ival >= 0 && ival < 16 && *cp2 == ',') {
+		    sprintf(reply, "%d;%d;%d%s", ival,
+			    screen->alt_colors[ival].fg,
+			    screen->alt_colors[ival].bg,
+			    cp2);
+		} else {
+		    okay = False;
+		}
+	    } else if (screen->terminal_id == 525
+		       && !strcmp((cp2 = skip_params(cp)), ",|")) {	/* DECAC */
+		ival = parse_int_param(&cp);
+		TRACE(("reply DECAC\n"));
+		switch (ival) {
+		case 1:	/* normal text */
+		    sprintf(reply, "%d,%d%s",
+			    screen->assigned_fg,
+			    screen->assigned_bg,
+			    cp2);
+		    break;
+		case 2:	/* window frame (not implemented) */
+		    /* FALLTHRU */
+		default:
+		    okay = False;
+		    break;
+		}
+	    } else
+#endif
+#if OPT_MOD_FKEYS
+	    if (*cp == '>' && !strcmp(skip_params(1 + cp), "m")) {	/* XTQMODKEYS */
+		++cp;
+		okay = True;
+		ival = parse_int_param(&cp);
+#define GET_MOD_FKEYS(field) xw->keyboard.modify_now.field
+#define FMT_MOD_FKEYS(field) sprintf(reply, ">%d;%dm", ival, GET_MOD_FKEYS(field))
+		switch (ival) {
+		case 0:
+		    FMT_MOD_FKEYS(allow_keys);
+		    break;
+		case 1:
+		    FMT_MOD_FKEYS(cursor_keys);
+		    break;
+		case 2:
+		    FMT_MOD_FKEYS(function_keys);
+		    break;
+		case 4:
+		    FMT_MOD_FKEYS(other_keys);
+		    break;
+		default:
+		    okay = False;
+		    break;
+		}
+	    } else
+#endif
+	    {
 		okay = False;
 	    }
 
@@ -4935,7 +5131,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 				    unparseputn(xw, xw->rgb_widths[0]);
 				} else {
 				    char temp[1024];
-				    sprintf(temp, "%d/%d/%d",
+				    sprintf(temp, "%u/%u/%u",
 					    xw->rgb_widths[0],
 					    xw->rgb_widths[1],
 					    xw->rgb_widths[2]);
@@ -4988,6 +5184,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			break;	/* no data found, error */
 		    }
 		    if ((cp - parsed) > 1024) {
+			free(name);
 			break;	/* ignore improbable resource */
 		    }
 		    TRACE(("query-feature '%s'\n", name));
@@ -5032,8 +5229,25 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 #endif
 	}
 	break;
-#if OPT_DEC_RECTOPS
+    case '0':
+	/* FALLTHRU */
     case '1':
+	if (screen->vtXX_level >= 3 && *skip_params(cp) == '!') {
+	    DECNRCM_codes upss;
+	    psarg = *cp++;
+	    if (*cp++ == '!' && *cp++ == 'u') {
+#if OPT_WIDE_CHARS
+		if (screen->wide_chars && screen->utf8_mode) {
+		    ;		/* EMPTY */
+		} else
+#endif
+		if (decode_upss(xw, cp, psarg, &upss)) {
+		    screen->gsets_upss = upss;
+		}
+	    }
+	    break;
+	}
+#if OPT_DEC_RECTOPS
 	/* FALLTHRU */
     case '2':
 	if (*skip_params(cp) == '$') {
@@ -5058,7 +5272,6 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	/* FALLTHRU */
     default:
 	if (optRegisGraphics(screen) ||
-	    optSixelGraphics(screen) ||
 	    screen->vtXX_level >= 2) {	/* VT220 */
 	    parse_ansi_params(&params, &cp);
 	    switch (params.a_final) {
@@ -5071,14 +5284,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		TRACE(("ignoring ReGIS graphic (compilation flag not enabled)\n"));
 #endif
 		break;
-	    case 'q':		/* sixel */
-#if OPT_SIXEL_GRAPHICS
-		if (optSixelGraphics(screen)) {
-		    (void) parse_sixel(xw, &params, cp);
-		}
-#else
-		TRACE(("ignoring sixel graphic (compilation flag not enabled)\n"));
-#endif
+	    case 'q':		/* sixel is done in charproc.c */
 		break;
 	    case '|':		/* DECUDK */
 		if (screen->vtXX_level >= 2) {	/* VT220 */
@@ -5304,6 +5510,9 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    if_PRINT_GRAPHICS2(result = MdBool(screen->graphics_print_color_syntax))
 		result = MdFlag(xw->flags, REVERSEWRAP);
 	    break;
+	case srm_REVERSEWRAP2:	/* extended reverse wraparound   */
+	    result = MdFlag(xw->flags, REVERSEWRAP2);
+	    break;
 #if defined(ALLOWLOGGING)
 	case srm_ALLOWLOGGING:	/* logging              */
 	    if_PRINT_GRAPHICS2(result = MdBool(screen->graphics_print_background_mode))
@@ -5429,6 +5638,9 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	case srm_SAVE_CURSOR:
 	    result = MdBool(screen->sc[screen->whichBuf].saved);
 	    break;
+	case srm_FAST_SCROLL:
+	    result = MdBool(screen->fastscroll);
+	    break;
 #if OPT_TCAP_FKEYS
 	case srm_TCAP_FKEYS:
 	    result = MdBool(xw->keyboard.type == keyboardIsTermcap);
@@ -5489,6 +5701,35 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->sixel_scrolls_right);
 	    break;
 #endif
+	case srm_DECARSM:	/* ignore */
+	case srm_DECATCBM:	/* ignore */
+	case srm_DECATCUM:	/* ignore */
+	case srm_DECBBSM:	/* ignore */
+	case srm_DECCAAM:	/* ignore */
+	case srm_DECCANSM:	/* ignore */
+	case srm_DECCAPSLK:	/* ignore */
+	case srm_DECCRTSM:	/* ignore */
+	case srm_DECECM:	/* ignore */
+	case srm_DECFWM:	/* ignore */
+	case srm_DECHCCM:	/* ignore */
+	case srm_DECHDPXM:	/* ignore */
+	case srm_DECHEM:	/* ignore */
+	case srm_DECHWUM:	/* ignore */
+	case srm_DECIPEM:	/* ignore */
+	case srm_DECKBUM:	/* ignore */
+	case srm_DECKLHIM:	/* ignore */
+	case srm_DECKPM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
+	case srm_DECMCM:	/* ignore */
+	case srm_DECNAKB:	/* ignore */
+	case srm_DECNULM:	/* ignore */
+	case srm_DECNUMLK:	/* ignore */
+	case srm_DECOSCNM:	/* ignore */
+	case srm_DECPCCM:	/* ignore */
+	case srm_DECRLCM:	/* ignore */
+	case srm_DECRPL:	/* ignore */
+	case srm_DECVCCM:	/* ignore */
+	case srm_DECXRLM:	/* ignore */
 	default:
 	    TRACE(("DATA_ERROR: requested report for unknown private mode %d\n",
 		   params[0]));
@@ -5914,7 +6155,9 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	char *buf = 0;
 	XtSetArg(args[0], my_attr, &buf);
 	XtGetValues(top, args, 1);
-	TRACE(("...comparing{%s}\n", NonNull(buf)));
+	TRACE(("...comparing resource{%s} to new value{%s}\n",
+	       NonNull(buf),
+	       NonNull(value)));
 	if (buf != 0 && strcmp(value, buf) == 0)
 	    changed = False;
     }
@@ -5932,7 +6175,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	const char *propname = (!strcmp(my_attr, XtNtitle)
 				? "_NET_WM_NAME"
 				: "_NET_WM_ICON_NAME");
-	Atom my_atom = XInternAtom(dpy, propname, False);
+	Atom my_atom = CachedInternAtom(dpy, propname);
 
 	if (my_atom != None) {
 	    changed = True;
@@ -5997,9 +6240,6 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 void
 ChangeIconName(XtermWidget xw, char *name)
 {
-    if (name == 0) {
-	name = emptyString;
-    }
     if (!showZIconBeep(xw, name))
 	ChangeGroup(xw, XtNiconName, name);
 }
@@ -6023,7 +6263,7 @@ ChangeXprop(char *buf)
 
     if (pchEndPropName)
 	*pchEndPropName = '\0';
-    aprop = XInternAtom(dpy, buf, False);
+    aprop = CachedInternAtom(dpy, buf);
     if (pchEndPropName == NULL) {
 	/* no "=value" given, so delete the property */
 	XDeleteProperty(dpy, w, aprop);
@@ -6581,7 +6821,7 @@ xt_error(String message)
     if (x_getenv("DISPLAY") == 0) {
 	xtermWarning("DISPLAY is not set\n");
     }
-    exit(1);
+    exit(ERROR_MISC);
 }
 
 int
@@ -7591,6 +7831,90 @@ xtermSetWinSize(XtermWidget xw)
 			   Height(screen),
 			   Width(screen));
 	}
+}
+
+static void
+xtermInitTitle(TScreen *screen, int which)
+{
+    TRACE(("xtermInitTitle #%d\n", which));
+    screen->saved_titles.data[which].iconName = NULL;
+    screen->saved_titles.data[which].windowName = NULL;
+}
+
+/*
+ * Store/update an item on the title stack.
+ */
+void
+xtermPushTitle(TScreen *screen, int which, SaveTitle * item)
+{
+    if (which-- <= 0) {
+	which = screen->saved_titles.used++;
+	screen->saved_titles.used %= MAX_SAVED_TITLES;
+    }
+    which %= MAX_SAVED_TITLES;
+    xtermFreeTitle(&screen->saved_titles.data[which]);
+    screen->saved_titles.data[which] = *item;
+    TRACE(("xtermPushTitle #%d: icon='%s', window='%s'\n", which,
+	   NonNull(item->iconName),
+	   NonNull(item->windowName)));
+}
+
+/*
+ * Pop/retrieve an item from the title stack.
+ */
+Boolean
+xtermPopTitle(TScreen *screen, int which, SaveTitle * item)
+{
+    Boolean result = True;
+    Boolean popped = False;
+
+    if (which-- > 0) {
+	which %= MAX_SAVED_TITLES;
+    } else if (screen->saved_titles.used > 0) {
+	which = ((--(screen->saved_titles.used) + MAX_SAVED_TITLES) % MAX_SAVED_TITLES);
+	popped = True;
+    } else {
+	result = False;
+    }
+    if (result) {
+	*item = screen->saved_titles.data[which];
+	TRACE(("xtermPopTitle #%d: icon='%s', window='%s'\n", which,
+	       NonNull(item->iconName),
+	       NonNull(item->windowName)));
+
+	/* if the data is incomplete, try to get it from the next levels */
+#define TryHigher(name) \
+	if (item->name == NULL) { \
+	    int n; \
+	    for (n = 1; n < MAX_SAVED_TITLES; ++n) { \
+		int nw = ((which - n) + MAX_SAVED_TITLES) % MAX_SAVED_TITLES; \
+		if ((item->name = screen->saved_titles.data[nw].name) != NULL) { \
+		    item->name = x_strdup(item->name); \
+		    break; \
+		} \
+	    } \
+	}
+	TryHigher(iconName);
+	TryHigher(windowName);
+
+	if (popped) {
+	    xtermInitTitle(screen, which);
+	}
+    }
+    return result;
+}
+
+/*
+ * Discard data used for pushing or popping title.
+ */
+void
+xtermFreeTitle(SaveTitle * item)
+{
+    TRACE(("xtermFreeTitle icon='%s', window='%s'\n",
+	   NonNull(item->iconName),
+	   NonNull(item->windowName)));
+    FreeAndNull(item->iconName);
+    FreeAndNull(item->windowName);
 }
 
 #if OPT_XTERM_SGR

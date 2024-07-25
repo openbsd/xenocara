@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1082 2023/01/02 13:24:41 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1124 2024/05/21 23:30:59 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -389,6 +389,7 @@ typedef struct {
 #define	ANSI_OSC	0x9D
 #define	ANSI_PM		0x9E
 #define	ANSI_APC	0x9F
+#define XTERM_PUA	0xEEEE		/* internal mapping for DEC Technical */
 
 #define BAD_ASCII	'?'
 #define NonLatin1(c)	(((c) != ANSI_LF) && \
@@ -396,6 +397,9 @@ typedef struct {
 			 (((c) < ANSI_SPA) || \
 			  ((c) >= ANSI_DEL && (c) <= ANSI_APC)))
 #define OnlyLatin1(c)	(NonLatin1(c) ? BAD_ASCII : (c))
+
+#define L_BLOK		'['
+#define R_BLOK		']'
 
 #define L_CURL		'{'
 #define R_CURL		'}'
@@ -445,6 +449,12 @@ typedef	struct {
 typedef short ParmType;
 typedef unsigned short UParm;		/* unparseputn passes ParmType	*/
 
+#define MaxSParm   0x7fff		/* limit if a signed value is needed */
+#define MaxUParm   0xffff		/* limit if unsigned value is needed */
+
+#define SParmOf(n) ((int)(ParmType)(n))
+#define UParmOf(n) ((unsigned)(UParm)(n))
+
 typedef struct {
 	Char		a_type;		/* CSI, etc., see unparseq()	*/
 	Char		a_pintro;	/* private-mode char, if any	*/
@@ -485,15 +495,14 @@ typedef struct {
 	int height;
 } BitmapBits;
 
-/* bit-assignments for extensions to DECRQCRA */
+/* bit-assignments for extensions to DECRQCRA, to omit DEC features */
 typedef enum {
     csDEC = 0
-    ,csPOSITIVE = xBIT(0)
-    ,csATTRIBS = xBIT(1)
-    ,csNOTRIM = xBIT(2)
-    ,csDRAWN = xBIT(3)
-    ,csBYTE = xBIT(4)
-    ,cs8TH = xBIT(5)
+    ,csPOSITIVE = xBIT(0)	/* do not negate the result */
+    ,csATTRIBS = xBIT(1)	/* do not report the VT100 video attributes */
+    ,csNOTRIM = xBIT(2)		/* do not omit checksum for blanks */
+    ,csDRAWN = xBIT(3)		/* do not skip uninitialized cells */
+    ,csBYTE = xBIT(4)		/* do not mask cell value to 8 bits or ignore combining chars */
 } CSBITS;
 
 #define EXCHANGE(a,b,tmp) tmp = a; a = b; b = tmp
@@ -830,6 +839,10 @@ typedef enum {
 #define OPT_WIDE_ATTRS  1 /* true if xterm supports 16-bit attributes */
 #endif
 
+#ifndef OPT_VT525_COLORS
+#define OPT_VT525_COLORS 1 /* true if xterm is configured for VT525 colors */
+#endif
+
 #ifndef OPT_WIDE_CHARS
 #define OPT_WIDE_CHARS  1 /* true if xterm supports 16-bit characters */
 #endif
@@ -923,7 +936,7 @@ typedef enum {
     , gcBoldReverse
     , gcFiller
     , gcBorder
-#if OPT_BOX_CHARS
+#if OPT_BOX_CHARS || OPT_WIDE_CHARS
     , gcLine
     , gcDots
 #endif
@@ -1028,6 +1041,7 @@ typedef enum {
     ,nrc_DEC_Supp		/* vt2xx */
     ,nrc_DEC_Supp_Graphic	/* vt3xx */
     ,nrc_DEC_Technical		/* vt3xx */
+    ,nrc_DEC_UPSS		/* vt3xx */
     ,nrc_Dutch			/* vt2xx */
     ,nrc_Finnish		/* vt2xx */
     ,nrc_Finnish2		/* vt2xx */
@@ -1043,7 +1057,7 @@ typedef enum {
     ,nrc_Hebrew			/* vt5xx */
     ,nrc_ISO_Hebrew_Supp	/* vt5xx */
     ,nrc_Italian		/* vt2xx */
-    ,nrc_ISO_Latin_1_Supp	/* vt5xx */
+    ,nrc_ISO_Latin_1_Supp	/* vt3xx */
     ,nrc_ISO_Latin_2_Supp	/* vt5xx */
     ,nrc_ISO_Latin_5_Supp	/* vt5xx */
     ,nrc_ISO_Latin_Cyrillic	/* vt5xx */
@@ -1063,18 +1077,25 @@ typedef enum {
 } DECNRCM_codes;
 
 /*
+ * Default and alternate codes for user-preferred supplemental set.
+ */
+#define DFT_UPSS nrc_DEC_Supp_Graphic
+#define ALT_UPSS nrc_ISO_Latin_1_Supp
+#define PreferredUPSS(screen)	((screen)->prefer_latin1 ? ALT_UPSS : DFT_UPSS)
+
+/*
  * Use this enumerated type to check consistency among dpmodes(), savemodes()
  * restoremodes() and do_dec_rqm().
  */
 typedef enum {
-    srm_DECCKM = 1
-    ,srm_DECANM = 2
-    ,srm_DECCOLM = 3
-    ,srm_DECSCLM = 4
-    ,srm_DECSCNM = 5
-    ,srm_DECOM = 6
-    ,srm_DECAWM = 7
-    ,srm_DECARM = 8
+    srm_DECCKM = 1		/* Cursor Keys Mode */
+    ,srm_DECANM = 2		/* ANSI Mode */
+    ,srm_DECCOLM = 3		/* Column Mode */
+    ,srm_DECSCLM = 4		/* Scrolling Mode */
+    ,srm_DECSCNM = 5		/* Screen Mode */
+    ,srm_DECOM = 6		/* Origin Mode */
+    ,srm_DECAWM = 7		/* Autowrap Mode */
+    ,srm_DECARM = 8		/* Autorepeat Mode */
     ,srm_X10_MOUSE = SET_X10_MOUSE
 #if OPT_TOOLBAR
     ,srm_RXVT_TOOLBAR = 10
@@ -1084,19 +1105,21 @@ typedef enum {
     ,srm_CURSOR_BLINK_OPS = 13
     ,srm_XOR_CURSOR_BLINKS = 14
 #endif
-    ,srm_DECPFF = 18
-    ,srm_DECPEX = 19
-    ,srm_DECTCEM = 25
+    ,srm_DECPFF = 18		/* Print Form Feed Mode */
+    ,srm_DECPEX = 19		/* Printer Extent Mode */
+    ,srm_DECTCEM = 25		/* Text Cursor Enable Mode */
     ,srm_RXVT_SCROLLBAR = 30
+    ,srm_DECRLM = 34		/* vt510:Cursor Right to Left Mode */
 #if OPT_SHIFT_FONTS
-    ,srm_RXVT_FONTSIZE = 35
+    ,srm_RXVT_FONTSIZE = 35	/* also vt520:DECHEBM */
 #endif
+    ,srm_DECHEM = 36		/* vt510:Hebrew Encoding Mode */
 #if OPT_TEK4014
     ,srm_DECTEK = 38
 #endif
     ,srm_132COLS = 40
     ,srm_CURSES_HACK = 41
-    ,srm_DECNRCM = 42
+    ,srm_DECNRCM = 42		/* National Replacement Character Set Mode */
 #if OPT_PRINT_GRAPHICS
     ,srm_DECGEPM = 43		/* Graphics Expanded Print Mode */
 #endif
@@ -1108,13 +1131,40 @@ typedef enum {
     ,srm_DECGPBM = 46		/* Graphics Print Background Mode */
 #endif
     ,srm_ALTBUF = 47		/* also DECGRPM (Graphics Rotated Print Mode) */
-    ,srm_DECNKM = 66
-    ,srm_DECBKM = 67
-    ,srm_DECLRMM = 69
+    ,srm_DECNAKB = 57		/* vt510:Greek/N-A Keyboard Mapping */
+    ,srm_DECIPEM = 58		/* vt510:IBM ProPrinter Emulation Mode */
+    ,srm_DECHCCM = 60		/* vt420:Horizontal Cursor-Coupling Mode */
+    ,srm_DECVCCM = 61		/* vt420:Vertical Cursor-Coupling Mode */
+    ,srm_DECPCCM = 64		/* vt420:Page Cursor-Coupling Mode */
+    ,srm_DECNKM = 66		/* vt420:Numeric Keypad Mode */
+    ,srm_DECBKM = 67		/* vt420:Backarrow Key mode */
+    ,srm_DECKBUM = 68		/* vt420:Keyboard Usage mode */
+    ,srm_DECLRMM = 69		/* vt420:Vertical Split Screen Mode (DECVSSM) */
+    ,srm_DECXRLM = 73		/* vt420:Transmit Rate Limiting */
 #if OPT_SIXEL_GRAPHICS
     ,srm_DECSDM = 80		/* Sixel Display Mode */
 #endif
-    ,srm_DECNCSM = 95
+    ,srm_DECKPM = 81		/* vt420:Key Position Mode */
+    ,srm_DECNCSM = 95		/* vt510:No Clearing Screen On Column Change */
+    ,srm_DECRLCM = 96		/* vt510:Right-to-Left Copy */
+    ,srm_DECCRTSM = 97		/* vt510:CRT Save Mode */
+    ,srm_DECARSM = 98		/* vt510:Auto Resize Mode */
+    ,srm_DECMCM = 99		/* vt510:Modem Control Mode */
+    ,srm_DECCAAM = 100		/* vt510:Auto Answerback Mode */
+    ,srm_DECCANSM = 101		/* vt510:Conceal Answerback Message Mode */
+    ,srm_DECNULM = 102		/* vt510:Ignoring Null Mode */
+    ,srm_DECHDPXM = 103		/* vt510:Half-Duplex Mode */
+    ,srm_DECOSCNM = 106		/* vt510:Overscan Mode */
+    ,srm_DECNUMLK = 108		/* vt510:Num Lock Mode */
+    ,srm_DECCAPSLK = 109	/* vt510:Caps Lock Mode */
+    ,srm_DECKLHIM = 110		/* vt510:Keyboard LEDs Host Indicator Mode */
+    ,srm_DECFWM = 111		/* vt520:Framed Windows Mode */
+    ,srm_DECRPL = 112		/* vt520:Review Previous Lines */
+    ,srm_DECHWUM = 113		/* vt520:Host Wake-Up */
+    ,srm_DECATCUM = 114		/* vt520:Alternate Text Color Underline */
+    ,srm_DECATCBM = 115		/* vt520:Alternate Text Color Blink */
+    ,srm_DECBBSM = 116		/* vt520:Bold and Blink Style Mode */
+    ,srm_DECECM = 117		/* vt520:Erase Color Mode */
     ,srm_VT200_MOUSE = SET_VT200_MOUSE
     ,srm_VT200_HIGHLIGHT_MOUSE = SET_VT200_HIGHLIGHT_MOUSE
     ,srm_BTN_EVENT_MOUSE = SET_BTN_EVENT_MOUSE
@@ -1129,6 +1179,7 @@ typedef enum {
     ,srm_ALTERNATE_SCROLL = SET_ALTERNATE_SCROLL
     ,srm_RXVT_SCROLL_TTY_OUTPUT = 1010
     ,srm_RXVT_SCROLL_TTY_KEYPRESS = 1011
+    ,srm_FAST_SCROLL = 1014
     ,srm_EIGHT_BIT_META = 1034
 #if OPT_NUM_LOCK
     ,srm_REAL_NUMLOCK = 1035
@@ -1143,6 +1194,7 @@ typedef enum {
     ,srm_BELL_IS_URGENT = 1042
     ,srm_POP_ON_BELL = 1043
     ,srm_KEEP_CLIPBOARD = 1044
+    ,srm_REVERSEWRAP2 = 1045	/* reverse-wrap without limits */
     ,srm_ALLOW_ALTBUF = 1046
     ,srm_OPT_ALTBUF = 1047
     ,srm_SAVE_CURSOR = 1048
@@ -1295,6 +1347,7 @@ typedef enum {
     /* aliases */
     , DATA(C0)
     , DATA(DEL)
+    , DATA(STTY)
 #undef DATA
     , epLAST
 } PasteControls;
@@ -1531,10 +1584,10 @@ typedef enum {
 #if OPT_DEC_CHRSET
 #define if_OPT_DEC_CHRSET(code) code
 	/* Use 2 bits for encoding the double high/wide sense of characters */
-#define CSET_SWL        0
-#define CSET_DHL_TOP    1
-#define CSET_DHL_BOT    2
-#define CSET_DWL        3
+#define CSET_SWL        0	/* character set: single-width line */
+#define CSET_DHL_TOP    1	/* character set: double-height top line */
+#define CSET_DHL_BOT    2	/* character set: double-height bottom line */
+#define CSET_DWL        3	/* character set: double-width line */
 #define NUM_CHRSET      8	/* normal/bold and 4 CSET_xxx values */
 
 	/* Use remaining bits for encoding the other character-sets */
@@ -1584,6 +1637,14 @@ typedef enum {
 
 /***====================================================================***/
 
+#if OPT_DEC_RECTOPS
+#define if_OPT_DEC_RECTOPS(stmt) stmt
+#else
+#define if_OPT_DEC_RECTOPS(stmt) /* nothing */
+#endif
+
+/***====================================================================***/
+
 #if OPT_EBCDIC
 extern int E2A(int);
 extern int A2E(int);
@@ -1593,6 +1654,9 @@ extern int A2E(int);
 #endif
 
 #define CONTROL(a) (A2E(E2A(a)&037))
+
+#define XTERM_ERASE A2E(CONTROL('H'))
+#define XTERM_LNEXT A2E(CONTROL('V'))
 
 /***====================================================================***/
 
@@ -1652,15 +1716,24 @@ typedef unsigned char IAttr;	/* at least 8 bits */
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
-#define NARROW_ICHAR	0xffff
+#define NARROW_ICHAR    0xffff
 #if OPT_WIDER_ICHAR
-#define WIDEST_ICHAR	0x1fffff
-typedef unsigned IChar;		/* for 8-21 bit characters */
+#define is_NON_CHAR(c)          (((c) >= 0xffd0 && (c) <= 0xfdef) || \
+                                 (((c) & 0xffff) >= 0xfffe))
+#define is_UCS_SPECIAL(c)       ((c) >= 0xfff0 && (c) <= 0xffff)
+#define WIDEST_ICHAR    0x1fffff
+typedef unsigned IChar;         /* for 8-21 bit characters */
 #else
-#define WIDEST_ICHAR	NARROW_ICHAR
+#define is_NON_CHAR(c)          (((c) >= 0xffd0 && (c) <= 0xfdef) || \
+                                 ((c) >= 0xfffe && (c) <= 0xffff))
+#define is_UCS_SPECIAL(c)       ((c) >= 0xfff0)
+#define WIDEST_ICHAR    NARROW_ICHAR
 typedef unsigned short IChar;	/* for 8-16 bit characters */
 #endif
-#else
+#else	/* !OPT_WIDE_CHARS */
+#undef OPT_WIDER_ICHAR
+#define OPT_WIDER_ICHAR 0
+#define is_NON_CHAR(c)          ((c) > 255)
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
 #define if_WIDE_OR_NARROW(screen, wide, narrow) narrow
 typedef unsigned char IChar;	/* for 8-bit characters */
@@ -1811,16 +1884,20 @@ typedef IChar CharData;
  */
 typedef struct {
 	Dimension lineSize;	/* number of columns in this row */
-	RowData bufHead;	/* flag for wrapped lines */
+	RowData	 bufHead;	/* flag for wrapped lines */
 #if OPT_WIDE_CHARS
-	Char combSize;		/* number of items in combData[] */
+	Char	 combSize;	/* number of items in combData[] */
 #endif
-	IAttr *attribs;		/* video attributes */
+#if OPT_DEC_RECTOPS
+	Char	 *charSets;	/* SCS code (DECNRCM_codes) */
+	Char     *charSeen;	/* pre-SCS value */
+#endif
+	IAttr	 *attribs;	/* video attributes */
 #if OPT_ISO_COLORS
 	CellColor *color;	/* foreground+background color numbers */
 #endif
 	CharData *charData;	/* cell's base character */
-	CharData *combData[1];	/* first enum past fixed-offsets */
+	CharData *combData[1];	/* first field past fixed-offsets */
 } LineData;
 
 typedef const LineData CLineData;
@@ -1830,12 +1907,16 @@ typedef const LineData CLineData;
  * variable.
  */
 typedef struct {
-	IAttr attribs;
+	IAttr    attribs;	/* video attributes */
 #if OPT_WIDE_CHARS
-	Char combSize;		/* number of items in combData[] */
+	Char     combSize;	/* number of items in combData[] */
+#endif
+#if OPT_DEC_RECTOPS
+	Char     charSets;	/* SCS code (DECNRCM_codes) */
+	Char     charSeen;	/* pre-SCS value */
 #endif
 #if OPT_ISO_COLORS
-	CellColor color;	/* color-array */
+	CellColor color;	/* foreground+background color numbers */
 #endif
 	CharData charData;	/* cell's base character */
 	CharData combData[1];	/* array of combining chars */
@@ -2018,6 +2099,7 @@ typedef enum {
 	DP_DECTCEM,
 	DP_DELETE_IS_DEL,
 	DP_EIGHT_BIT_META,
+	DP_FAST_SCROLL,
 	DP_KEEP_CLIPBOARD,
 	DP_KEEP_SELECTION,
 	DP_KEYBOARD_TYPE,
@@ -2038,6 +2120,7 @@ typedef enum {
 	DP_X_MOUSE,
 	DP_X_NCSM,
 	DP_X_REVWRAP,
+	DP_X_REVWRAP2,
 	DP_X_X10MSE,
 #if OPT_BLINK_CURS
 	DP_CRS_BLINK,
@@ -2138,6 +2221,10 @@ typedef struct {
 } ScrnColors;
 
 #define NUM_GSETS 4
+#define NUM_GSETS2 (NUM_GSETS + 1)	/* include user-preferred */
+#define gsets_upss	gsets[4]
+
+#define SAVED_CURSORS 2
 
 typedef struct {
 	Boolean		saved;
@@ -2146,7 +2233,7 @@ typedef struct {
 	IFlags		flags;		/* VTxxx saves graphics rendition */
 	Char		curgl;
 	Char		curgr;
-	DECNRCM_codes	gsets[NUM_GSETS];
+	DECNRCM_codes	gsets[NUM_GSETS2];
 	Boolean		wrap_flag;
 #if OPT_ISO_COLORS
 	int		cur_foreground;  /* current foreground color	*/
@@ -2163,7 +2250,12 @@ typedef struct _SaveTitle {
 	char		*windowName;
 } SaveTitle;
 
-#define SAVED_CURSORS 2
+#define MAX_SAVED_TITLES 10
+
+typedef struct {
+	int		used;		/* index to current item	*/
+	SaveTitle	data[MAX_SAVED_TITLES];
+} SavedTitles;
 
 typedef struct {
 	int		width;		/* if > 0, width of scrollbar,	*/
@@ -2330,6 +2422,7 @@ typedef struct {
 	IChar		*unparse_bfr;
 	unsigned	unparse_len;
 	unsigned	unparse_max;	/* limitResponse resource	*/
+	unsigned	strings_max;	/* maxStringParse resource	*/
 
 #if OPT_TCAP_QUERY
 	int		tc_query_code;
@@ -2364,6 +2457,14 @@ typedef struct {
 #endif
 #if OPT_WIDE_ATTRS && OPT_SGR2_HASH
 	Boolean		faint_relative;	/* faint is relative?		*/
+#endif
+#if OPT_VT525_COLORS
+	int		assigned_fg;	/* DECAC			*/
+	int		assigned_bg;
+	struct {
+	    int fg;			/* 0..15			*/
+	    int bg;			/* 0..15			*/
+	} alt_colors[16];		/* DECATC if DECSTGLT is 1 or 2	*/
 #endif
 #endif /* OPT_ISO_COLORS */
 #if OPT_DEC_CHRSET
@@ -2404,9 +2505,10 @@ typedef struct {
 	Boolean		char_was_written;
 	int		last_written_col;
 	int		last_written_row;
-	TypedBuffer(XChar2b);
-	TypedBuffer(char);
 #endif
+	TypedBuffer(IChar);
+	TypedBuffer(Char);
+	TypedBuffer(XChar2b);
 #if OPT_BROKEN_OSC
 	Boolean		brokenLinuxOSC; /* true to ignore Linux palette ctls */
 #endif
@@ -2533,7 +2635,8 @@ typedef struct {
 	Cursor		pointer_cursor;	/* current pointer cursor	*/
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
 
-	String	answer_back;		/* response to ENQ		*/
+	String		answer_back;	/* response to ENQ		*/
+	Boolean		prefer_latin1;	/* preference for UPSS		*/
 
 	PrinterState	printer_state;	/* actual printer state		*/
 	PrinterFlags	printer_flags;	/* working copy of printer flags */
@@ -2547,10 +2650,13 @@ typedef struct {
 #if OPT_BOX_CHARS
 	Boolean		force_box_chars;/* true if we assume no boxchars */
 	Boolean		broken_box_chars;/* true if broken boxchars	*/
-	Boolean		force_all_chars;/* true to outline missing chars */
 	Boolean		assume_all_chars;/* true to allow missing chars */
 	Boolean		allow_packing;	/* true to allow packed-fonts	*/
 #endif
+#if OPT_BOX_CHARS || OPT_WIDE_CHARS
+	Boolean		force_all_chars;/* true to outline missing chars */
+#endif
+
 	Dimension	fnt_wide;
 	Dimension	fnt_high;
 	float		scale_height;	/* scaling for font-height	*/
@@ -2572,6 +2678,7 @@ typedef struct {
 	int		cursor_state;	/* ON, OFF, or BLINKED_OFF	*/
 	int		cursor_busy;	/* do not redraw...		*/
 	Boolean		cursor_underline; /* true if cursor is in underline mode */
+	Boolean         cursor_bar;     /* true if cursor is in bar mode */
 	XtCursorShape	cursor_shape;
 #if OPT_BLINK_CURS
 	BlinkOps	cursor_blink;	/* cursor blink enable		*/
@@ -2685,16 +2792,17 @@ typedef struct {
 
 	int		title_modes;	/* control set/get of titles	*/
 	int		title_modes0;	/* ...initial value         	*/
-	SaveTitle	*save_title;
+	SavedTitles	saved_titles;
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/
-	DECNRCM_codes	gsets[NUM_GSETS]; /* G0 through G3.		*/
+	DECNRCM_codes	gsets[NUM_GSETS2]; /* G0 through G3, plus UPSS	*/
 	Char		curgl;		/* Current GL setting.		*/
 	Char		curgr;		/* Current GR setting.		*/
 	Char		curss;		/* Current single shift.	*/
 	String		term_id;	/* resource for terminal_id	*/
 	int		terminal_id;	/* 100=vt100, 220=vt220, etc.	*/
+	int		display_da1;	/* 100=vt100, 220=vt220, etc.	*/
 	int		vtXX_level;	/* 0=vt52, 1,2,3 = vt100 ... vt320 */
 	int		ansi_level;	/* dpANSI levels 1,2,3		*/
 	int		protected_mode;	/* 0=off, 1=DEC, 2=ISO		*/
@@ -2743,11 +2851,14 @@ typedef struct {
 #if OPT_SIXEL_GRAPHICS
 	Boolean		sixel_scrolling; /* sixel scrolling             */
 	Boolean		sixel_scrolls_right; /* sixel scrolling moves cursor to right */
+	Boolean		sixel_scrolls_right0; /* initial sixelScrolling mode */
 #endif
 
 #if OPT_GRAPHICS
 	int		numcolorregisters; /* number of supported color registers */
 	Boolean		privatecolorregisters; /* private color registers for each graphic */
+	Boolean		privatecolorregisters0; /* initial privateColorRegisters */
+	Boolean		incremental_graphics; /* draw graphics incrementally */
 #endif
 
 	/* Graphics Printing */
@@ -2782,10 +2893,10 @@ typedef struct {
 	if (IsStatusShown(screen) && (screen)->status_active) stmt
 
 	Boolean		status_timeout;	/* status timeout needs service	*/
-	Boolean		status_active;	/* DECSASD */
+	int		status_active;	/* DECSASD */
 	int		status_type;	/* DECSSDT */
 	int		status_shown;	/* last-displayed type */
-	SavedCursor	status_data[2];
+	SavedCursor	status_data[2];	/* main- and status-cursors */
 	char *		status_fmt;	/* format for indicator-status	*/
 
 #else /* !OPT_STATUS_LINE */
@@ -2804,7 +2915,7 @@ typedef struct {
 	Char		vt52_save_curgl;
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;
-	DECNRCM_codes	vt52_save_gsets[NUM_GSETS];
+	DECNRCM_codes	vt52_save_gsets[NUM_GSETS2];
 #endif
 	/* Testing */
 #if OPT_XMC_GLITCH
@@ -3230,6 +3341,7 @@ typedef struct _Misc {
     float face_size[NMENUFONTS];
     char *render_font_s;
     int limit_fontsets;
+    int limit_fontheight;
     int limit_fontwidth;
 #endif
 } Misc;
@@ -3286,6 +3398,14 @@ typedef struct _Work {
     ScrnColors *oldColors;
     Boolean palette_changed;
     Boolean broken_box_chars;
+    /* data write dotext/WriteText */
+    IChar *write_text;		/* points to print_area */
+#if OPT_DEC_RECTOPS
+    Char *write_sums;		/* if non-null, points to buffer_sums */
+    Char *buffer_sums;		/* data for ->charSeen[] */
+    Char *buffer_sets;		/* data for ->charSets[] */
+    size_t sizeof_sums;		/* allocated size of buffer_sums */
+#endif
 } Work;
 
 typedef struct {int foo;} XtermClassPart, TekClassPart;
@@ -3326,7 +3446,7 @@ extern WidgetClass tekWidgetClass;
 #define TAB_ARRAY_SIZE	(1024 / TAB_BITS_WIDTH)
 #define MAX_TABS	(TAB_BITS_WIDTH * TAB_ARRAY_SIZE)
 
-#define OkTAB(c)	((c) >= 0 && (c) < MAX_TABS)
+#define OkTAB(c)	((c) > 0 && (c) < MAX_TABS)
 
 typedef unsigned Tabs [TAB_ARRAY_SIZE];
 
@@ -3429,45 +3549,57 @@ typedef struct _TekWidgetRec {
 					   the screen.  Used to distinguish
 					   blanks from empty parts of the
 					   screen when selecting */
+/*
+ * This does not fit in a byte with the other (more important) attributes, but
+ * if wide-attributes are configured, it is possible to maintain it there.
+ */
+#define INVISIBLE	AttrBIT(8)	/* true if writing invisible text */
 
 #if OPT_WIDE_ATTRS
-#define ATR_FAINT	AttrBIT(8)
-#define ATR_ITALIC	AttrBIT(9)
-#define ATR_STRIKEOUT	AttrBIT(10)
-#define ATR_DBL_UNDER	AttrBIT(11)
-#define ATR_DIRECT_FG	AttrBIT(12)
-#define ATR_DIRECT_BG	AttrBIT(13)
+#define ATR_FAINT	AttrBIT(9)
+#define ATR_ITALIC	AttrBIT(10)
+#define ATR_STRIKEOUT	AttrBIT(11)
+#define ATR_DBL_UNDER	AttrBIT(12)
+#define ATR_DIRECT_FG	AttrBIT(13)
+#define ATR_DIRECT_BG	AttrBIT(14)
 #define SGR_MASK2       (ATR_FAINT | ATR_ITALIC | ATR_STRIKEOUT | ATR_DBL_UNDER | ATR_DIRECT_FG | ATR_DIRECT_BG)
+#define AttrEND         15
 #else
 #define SGR_MASK2       0
+#define AttrEND         9
 #endif
 
 /*
  * Other flags
  */
-#define WRAPAROUND	MiscBIT(0)	/* true if auto wraparound mode */
-#define	REVERSEWRAP	MiscBIT(1)	/* true if reverse wraparound mode */
-#define REVERSE_VIDEO	MiscBIT(2)	/* true if screen white on black */
-#define LINEFEED	MiscBIT(3)	/* true if in auto linefeed mode */
-#define ORIGIN		MiscBIT(4)	/* true if in origin mode */
-#define INSERT		MiscBIT(5)	/* true if in insert mode */
-#define SMOOTHSCROLL	MiscBIT(6)	/* true if in smooth scroll mode */
-#define IN132COLUMNS	MiscBIT(7)	/* true if in 132 column mode */
-#define INVISIBLE	MiscBIT(8)	/* true if writing invisible text */
+#define REVERSE_VIDEO	MiscBIT(0)	/* true if screen white on black */
+#define WRAPAROUND	MiscBIT(1)	/* true if auto wraparound mode */
+#define	REVERSEWRAP	MiscBIT(2)	/* true if reverse wraparound mode */
+#define	REVERSEWRAP2	MiscBIT(3)	/* true if extended reverse wraparound */
+#define LINEFEED	MiscBIT(4)	/* true if in auto linefeed mode */
+#define ORIGIN		MiscBIT(5)	/* true if in origin mode */
+#define INSERT		MiscBIT(6)	/* true if in insert mode */
+#define SMOOTHSCROLL	MiscBIT(7)	/* true if in smooth scroll mode */
+#define IN132COLUMNS	MiscBIT(8)	/* true if in 132 column mode */
 #define NATIONAL        MiscBIT(9)	/* true if writing national charset */
 #define LEFT_RIGHT      MiscBIT(10)	/* true if left/right margin mode */
 #define NOCLEAR_COLM    MiscBIT(11)	/* true if no clear on DECCOLM change */
 
-#define DrawBIT(n)	xBIT(n + 8)	/* XTermDraw.draw_flags */
+/*
+ * Drawing-bits start after the video/color attributes, and are independent
+ * of the miscellaneous flags.
+ */
+#define DrawBIT(n)	xBIT(n + AttrEND) /* XTermDraw.draw_flags */
 /* The following attributes are used in the argument of drawXtermText()  */
 #define NOBACKGROUND	DrawBIT(0)	/* Used for overstrike */
 #define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
 #define DOUBLEWFONT	DrawBIT(2)	/* The actual X-font is double-width */
 #define DOUBLEHFONT	DrawBIT(3)	/* The actual X-font is double-height */
-#define CHARBYCHAR	DrawBIT(4)	/* Draw chars one-by-one */
+#define DOUBLEFIRST	DrawBIT(4)	/* Draw chars one-by-one */
+#define CHARBYCHAR	DrawBIT(5)	/* Draw chars one-by-one */
 
 /* The following attribute is used in the argument of xtermSpecialFont etc */
-#define NORESOLUTION	DrawBIT(5)	/* find the font without resolution */
+#define NORESOLUTION	DrawBIT(6)	/* find the font without resolution */
 
 /*
  * Groups of attributes

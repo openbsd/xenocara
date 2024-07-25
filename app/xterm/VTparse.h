@@ -1,7 +1,7 @@
-/* $XTermId: VTparse.h,v 1.69 2019/02/10 23:34:21 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.72 2023/11/24 13:18:38 tom Exp $ */
 
 /*
- * Copyright 1996-2018,2019 by Thomas E. Dickey
+ * Copyright 1996-2019,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -51,10 +51,13 @@ typedef unsigned char PARSE_T;
 extern Const PARSE_T ansi_table[];
 extern Const PARSE_T cigtable[];
 extern Const PARSE_T csi2_table[];
+extern Const PARSE_T csi_amp_table[];
+extern Const PARSE_T csi_dec_dollar_table[];
 extern Const PARSE_T csi_ex_table[];
 extern Const PARSE_T csi_quo_table[];
 extern Const PARSE_T csi_sp_table[];
 extern Const PARSE_T csi_table[];
+extern Const PARSE_T csi_tick_table[];
 extern Const PARSE_T dec2_table[];
 extern Const PARSE_T dec3_table[];
 extern Const PARSE_T dec_table[];
@@ -65,8 +68,6 @@ extern Const PARSE_T scrtable[];
 extern Const PARSE_T scs96table[];
 extern Const PARSE_T scstable[];
 extern Const PARSE_T sos_table[];
-extern Const PARSE_T csi_dec_dollar_table[];
-extern Const PARSE_T csi_tick_table[];
 
 #if OPT_DEC_RECTOPS
 extern Const PARSE_T csi_dollar_table[];
@@ -77,6 +78,10 @@ extern Const PARSE_T csi_star_table[];
 extern Const PARSE_T vt52_table[];
 extern Const PARSE_T vt52_esc_table[];
 extern Const PARSE_T vt52_ignore_table[];
+#endif
+
+#if OPT_VT525_COLORS
+extern Const PARSE_T csi_comma_table[];
 #endif
 
 #if OPT_WIDE_CHARS
