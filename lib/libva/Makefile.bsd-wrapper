@@ -1,13 +1,12 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2024/07/25 00:23:49 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2024/07/25 19:40:55 matthieu Exp $
 
 SHARED_LIBS += va-drm 2.22
-SHARED_LIBS += va-glx 2.22
 SHARED_LIBS += va-x11 2.22
 SHARED_LIBS += va 2.22
 
 LOCALBASE ?= /usr/local
 
-CONFIGURE_ARGS= --disable-wayland
+CONFIGURE_ARGS= --disable-wayland --disable-glx
 CONFIGURE_ARGS+= \
 	--with-drivers-path=${DESTDIR}${X11BASE}/lib/modules/dri:${LOCALBASE}/lib/dri
 
