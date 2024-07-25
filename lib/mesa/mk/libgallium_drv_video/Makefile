@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2024/07/22 00:40:30 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2024/07/25 00:18:21 jsg Exp $
 
 LIB=	gallium_drv_video
 
@@ -39,12 +39,12 @@ CPPFLAGS+=	-DGALLIUM_LLVMPIPE
 install:
 	${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
 	    -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    lib${LIB}.so ${DESTDIR}${X11BASE}/lib/modules/drivers
+	    lib${LIB}.so ${DESTDIR}${X11BASE}/lib/modules/dri
 .for driver in ${GALLIUM_DRIVERS}
-	ln -f ${DESTDIR}${X11BASE}/lib/modules/drivers/lib${LIB}.so \
-	    ${DESTDIR}${X11BASE}/lib/modules/drivers/${driver}_drv_video.so
+	ln -f ${DESTDIR}${X11BASE}/lib/modules/dri/lib${LIB}.so \
+	    ${DESTDIR}${X11BASE}/lib/modules/dri/${driver}_drv_video.so
 .endfor
-	rm ${DESTDIR}${X11BASE}/lib/modules/drivers/lib${LIB}.so
+	rm ${DESTDIR}${X11BASE}/lib/modules/dri/lib${LIB}.so
 
 obj: _xenocara_obj
 
