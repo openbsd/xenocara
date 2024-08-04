@@ -801,7 +801,7 @@ glamor_dri3_open_client(ClientPtr client,
     int fd;
     drm_magic_t magic;
 
-#ifndef __OpenBSD__
+#ifndef X_PRIVSEP
     fd = open(glamor_egl->device_path, O_RDWR|O_CLOEXEC);
 #else
     fd = priv_open_device(glamor_egl->device_path);
