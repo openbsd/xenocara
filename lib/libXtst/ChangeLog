@@ -1,3 +1,126 @@
+commit abf3ff74b97c4231d2324d66318bfa1d22e44913
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 1 17:25:18 2024 -0700
+
+    libXtst 1.2.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e4eb10495cc0d24b02c4cc82d86f3977f3cc95f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 21 10:05:36 2024 -0700
+
+    parse_reply_call_callback: avoid NULL dereference if reply is missing data
+    
+    Clears up 7 -Wanalyzer-null-dereference warnings from gcc 14.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxtst/-/merge_requests/7>
+
+commit 3f05df5a6c5140dc3d44f35b9fb635cca8b682c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 17:03:59 2024 -0700
+
+    XRecordFreeState: avoid NULL dereference when called in error path
+    
+    If the client_info pointer is NULL (for instance, if we decided
+    the number of entries would cause an integer overflow), then
+    don't attempt to walk it to free the entries.
+    
+    Found by gcc 14.1:
+    
+    XRecord.c:513:31: warning: dereference of NULL ‘0’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+      513 |         if (state->client_info[i]->ranges) {
+          |             ~~~~~~~~~~~~~~~~~~^~~
+    [...]
+        |  452 |         ret->client_info = client_inf;
+        |      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        |      |                          |
+        |      |                          (10) ‘client_inf’ is NULL
+    [...]
+        |  457 |            XRecordFreeState(ret);
+        |      |            ^~~~~~~~~~~~~~~~~~~~~
+        |      |            |
+        |      |            (14) ...to here
+        |      |            (15) calling ‘XRecordFreeState’ from ‘XRecordGetContext’
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxtst/-/merge_requests/7>
+
+commit eb8370d5e4cf3d68f05b679d3679f695542eddb1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 16:35:48 2024 -0700
+
+    XRecordGetContext: Avoid double free in error path
+    
+    XRecordFreeState() will handle the free for us, so let it.
+    
+    Found by gcc 14.1:
+    
+    XRecord.c:514:31: warning: use after ‘free’ of ‘*state.client_info + i * 8’
+     [CWE-416] [-Wanalyzer-use-after-free]
+      514 |         if (state->client_info[i]->ranges) {
+          |             ~~~~~~~~~~~~~~~~~~^~~
+    [...]
+        |  455 |            free(client_inf);
+        |      |            ~~~~~~~~~~~~~~~~
+        |      |            |
+        |      |            (18) freed here
+    
+    Fixes: e7e04b7 ("integer overflow in XRecordGetContext() [CVE-2013-2063]")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxtst/-/merge_requests/7>
+
+commit c542acce77be47156e53b74f5f9ca7156b3de7f5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 13 13:53:39 2023 -0700
+
+    gitlab CI: add xz-utils to container for "make distcheck"
+    
+    Also update to latest ci-templates to support new Debian "stable" release
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b0d55c9d98269aeefb521f1f2ce464288f176326
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 8 16:05:18 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:34: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:34: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:34: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a6ea11a5b35e838879152e8141c9c68813994848
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:33:45 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e8215d8b4c85343da4301cd022639ae5f36756c
+Author: Christos Zoulas <christos@NetBSD.org>
+Date:   Wed Sep 28 09:46:26 2022 +0200
+
+    Coverity CID 1373522: Fix memory leak
+    
+    Signed-off-by: Thomas Klausner <wiz@gatalith.at>
+
 commit 99b89c3bcb0ebb0b6dd86bfdc9d276715eaea889
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Sep 26 18:07:24 2022 -0700
@@ -1204,7 +1327,7 @@ Date:   Tue Jun 21 15:41:36 2005 +0000
         src/Makefile.am
 
 commit dbedf673f50e0baf6d5af60f60dbd16368071ed4
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 19:44:25 2005 +0000
 
     - Add Xtst to symlink.sh

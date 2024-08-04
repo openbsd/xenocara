@@ -452,10 +452,9 @@ XRecordGetContext(Display *dpy, XRecordContext context,
 	ret->client_info = client_inf;
         if (!client_inf || !client_inf_str)
         {
-	   free(client_inf);
 	   _XEatDataWords (dpy, rep.length);
 	   UnlockDisplay(dpy);
-	   XRecordFreeState(ret);
+	   XRecordFreeState(ret); /* frees ret->client_info, aka client_inf */
 	   SyncHandle();
 	   return 0;
         }
@@ -510,14 +509,14 @@ XRecordGetContext(Display *dpy, XRecordContext context,
 void
 XRecordFreeState(XRecordState *state)
 {
-    for (unsigned long i = 0; i < state->nclients; i++) {
-	if (state->client_info[i]->ranges) {
-	    if (state->client_info[i]->ranges[0])
-		Xfree(state->client_info[i]->ranges[0]);
-	    Xfree(state->client_info[i]->ranges);
-	}
-    }
     if (state->client_info) {
+	for (unsigned long i = 0; i < state->nclients; i++) {
+	    if (state->client_info[i]->ranges) {
+		if (state->client_info[i]->ranges[0])
+		    Xfree(state->client_info[i]->ranges[0]);
+		Xfree(state->client_info[i]->ranges);
+	    }
+	}
 	if (state->client_info[0])
 	    Xfree(state->client_info[0]);
 	Xfree(state->client_info);
@@ -725,13 +724,14 @@ parse_reply_call_callback(
     XRecordInterceptProc callback,
     XPointer		 closure)
 {
+    XRecordInterceptData *data;
     unsigned int current_index;
     int datum_bytes = 0;
 
     /* call the callback for each protocol element in the reply */
     current_index = 0;
     do {
-	XRecordInterceptData *data = alloc_inter_data(info);
+	data = alloc_inter_data(info);
 	if (!data)
 	    return Error;
 
@@ -745,6 +745,8 @@ parse_reply_call_callback(
 	 */
 	switch (rep->category) {
 	case XRecordFromServer:
+	    if (reply == NULL)
+		goto out;
 	    if (rep->elementHeader&XRecordFromServerTime) {
 		if (current_index + 4 > rep->length << 2)
 		    return Error;
@@ -754,15 +756,15 @@ parse_reply_call_callback(
 		current_index += 4;
 	    }
 	    if (current_index + 1 > rep->length << 2)
-		return Error;
+		goto out;
 	    switch (reply->buf[current_index]) {
 	    case X_Reply: /* reply */
 		if (current_index + 8 > rep->length << 2)
-		    return Error;
+		    goto out;
 		EXTRACT_CARD32(rep->clientSwapped,
 			       reply->buf+current_index+4, datum_bytes);
 		if (datum_bytes < 0 || datum_bytes > ((INT_MAX >> 2) - 8))
-		    return Error;
+		    goto out;
 		datum_bytes = (datum_bytes+8) << 2;
 		break;
 	    default: /* error or event */
@@ -770,9 +772,11 @@ parse_reply_call_callback(
 	    }
 	    break;
 	case XRecordFromClient:
+	    if (reply == NULL)
+		goto out;
 	    if (rep->elementHeader&XRecordFromClientTime) {
 		if (current_index + 4 > rep->length << 2)
-		    return Error;
+		    goto out;
 		EXTRACT_CARD32(rep->clientSwapped,
 			       reply->buf+current_index,
 			       data->server_time);
@@ -780,19 +784,19 @@ parse_reply_call_callback(
 	    }
 	    if (rep->elementHeader&XRecordFromClientSequence) {
 		if (current_index + 4 > rep->length << 2)
-		    return Error;
+		    goto out;
 		EXTRACT_CARD32(rep->clientSwapped,
 			       reply->buf+current_index,
 			       data->client_seq);
 		current_index += 4;
 	    }
 	    if (current_index + 4 > rep->length<<2)
-		return Error;
+		goto out;
 	    if (reply->buf[current_index+2] == 0
 		&& reply->buf[current_index+3] == 0) /* needn't swap 0 */
 	    {	/* BIG-REQUESTS */
 		if (current_index + 8 > rep->length << 2)
-		    return Error;
+		    goto out;
 		EXTRACT_CARD32(rep->clientSwapped,
 			       reply->buf+current_index+4, datum_bytes);
 	    } else {
@@ -800,32 +804,36 @@ parse_reply_call_callback(
 			       reply->buf+current_index+2, datum_bytes);
 	    }
 	    if (datum_bytes < 0 || datum_bytes > INT_MAX >> 2)
-		return Error;
+		goto out;
 	    datum_bytes <<= 2;
 	    break;
 	case XRecordClientStarted:
+	    if (reply == NULL)
+		goto out;
 	    if (current_index + 8 > rep->length << 2)
-		return Error;
+		goto out;
 	    EXTRACT_CARD16(rep->clientSwapped,
 			   reply->buf+current_index+6, datum_bytes);
 	    datum_bytes = (datum_bytes+2) << 2;
 	    break;
 	case XRecordClientDied:
 	    if (rep->elementHeader&XRecordFromClientSequence) {
+		if (reply == NULL)
+		    goto out;
 		if (current_index + 4 > rep->length << 2)
-		    return Error;
+		    goto out;
 		EXTRACT_CARD32(rep->clientSwapped,
 			       reply->buf+current_index,
 			       data->client_seq);
 		current_index += 4;
 	    } else if (current_index < rep->length << 2)
-		return Error;
+		goto out;
 	    datum_bytes = 0;
 	    break;
 	case XRecordStartOfData:
 	case XRecordEndOfData:
 	    if (current_index < rep->length << 2)
-		return Error;
+		goto out;
 	    datum_bytes = 0;
 	    break;
 	}
@@ -836,7 +844,7 @@ parse_reply_call_callback(
 			"XRecord: %lu-byte reply claims %d-byte element (seq %lu)\n",
 			(unsigned long)rep->length << 2, current_index + datum_bytes,
 			dpy->last_request_read);
-		return Error;
+		goto out;
 	    }
 	    /*
 	     * This assignment (and indeed the whole buffer sharing
@@ -859,6 +867,9 @@ parse_reply_call_callback(
 	return End;
 
     return Continue;
+out:
+    Xfree(data);
+    return Error;
 }
 
 Status
