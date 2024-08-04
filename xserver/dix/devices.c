@@ -2568,7 +2568,6 @@ RecalculateMasterButtons(DeviceIntPtr slave)
                    (maxbuttons - last_num_buttons) * sizeof(XkbAction));
         }
 
-
         memcpy(&event.buttons.names, master->button->labels, maxbuttons *
                sizeof(Atom));
 
