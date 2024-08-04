@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.30 2024/07/11 07:28:46 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.31 2024/08/04 17:15:57 matthieu Exp $
 .include <bsd.xconf.mk>
 
 # when buming X11 major also bump:
@@ -10,7 +10,7 @@
 # when bumping X11_xcb also bump:
 # libEGL libGL libIntelXvMC libGLU
 
-SHARED_LIBS=	X11 18.1 X11_xcb 2.0
+SHARED_LIBS=	X11 18.2 X11_xcb 2.0
 
 CONFIGURE_ARGS= --enable-tcp-transport --enable-unix-transport --enable-ipv6 \
 	--disable-composecache \
