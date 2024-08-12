@@ -3901,7 +3901,7 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
 	       (ch > NARROW_ICHAR) ||
 #endif
 	       xtermMissingChar(ch,
-				(((xf >= fn) && (xf - fn) <= fMAX)
+				(((xf >= fn) && (xf - fn) < fMAX)
 				 ? XTermFontsRef(screen->fnts,
 						 (VTFontEnum) (xf - fn))
 				 : fp))) {
