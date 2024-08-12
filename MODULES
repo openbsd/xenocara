@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.527 2024/08/04 18:22:48 matthieu Exp $
+# $OpenBSD: MODULES,v 1.528 2024/08/12 05:59:08 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -22,7 +22,7 @@ app/setxkbmap		1.3.4
 app/smproxy		1.0.7
 app/twm			1.0.12
 app/viewres		1.0.7
-app/x11perf		1.7.0		needs-update
+app/x11perf		1.7.0
 app/xauth		1.1.3
 app/xbacklight		1.2.3
 app/xbiff		1.0.5
