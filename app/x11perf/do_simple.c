@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -31,7 +31,7 @@ SOFTWARE.
 
 static Atom XA_PK_TEMP;
 
-void 
+void
 DoNoOp(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
@@ -41,7 +41,7 @@ DoNoOp(XParms xp, Parms p, int64_t reps)
 }
 
 
-void 
+void
 DoGetAtom(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
@@ -51,7 +51,7 @@ DoGetAtom(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 DoQueryPointer(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
@@ -64,7 +64,7 @@ DoQueryPointer(XParms xp, Parms p, int64_t reps)
     }
 }
 
-int 
+int
 InitGetProperty(XParms xp, Parms p, int64_t reps)
 {
     long foo[4];
@@ -80,7 +80,7 @@ InitGetProperty(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoGetProperty(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {

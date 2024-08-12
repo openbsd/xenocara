@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -28,7 +28,7 @@ static GC   pgc;
 
 #define DegreesToX(degrees) (degrees * 64)
 
-static void 
+static void
 GenerateCircles(XParms xp, Parms p, Bool partialArcs, Bool ddashed)
 {
     int     rows;       /* Number of rows filled in current column	    */
@@ -88,14 +88,14 @@ GenerateCircles(XParms xp, Parms p, Bool partialArcs, Bool ddashed)
     }
 }
 
-int 
+int
 InitCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateCircles(xp, p, False, False);
     return reps;
 }
 
-int 
+int
 InitPartCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateCircles(xp, p, True, False);
@@ -103,7 +103,7 @@ InitPartCircles(XParms xp, Parms p, int64_t reps)
 }
 
 
-int 
+int
 InitChordPartCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateCircles(xp, p, True, False);
@@ -113,7 +113,7 @@ InitChordPartCircles(XParms xp, Parms p, int64_t reps)
 }
 
 
-int 
+int
 InitSlicePartCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateCircles(xp, p, True, False);
@@ -144,21 +144,21 @@ GenerateWideCircles(XParms xp, Parms p, Bool partialArcs, Bool ddashed)
     }
 }
 
-int 
+int
 InitWideCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateWideCircles (xp, p, False, False);
     return reps;
 }
- 
-int 
+
+int
 InitPartWideCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateWideCircles (xp, p, True, False);
     return reps;
 }
- 
-int 
+
+int
 InitDashedCircles(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
@@ -174,7 +174,7 @@ InitDashedCircles(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitWideDashedCircles(XParms xp, Parms p, int64_t reps)
 {
     int		size;
@@ -195,7 +195,7 @@ InitWideDashedCircles(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitDoubleDashedCircles(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
@@ -211,7 +211,7 @@ InitDoubleDashedCircles(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitWideDoubleDashedCircles(XParms xp, Parms p, int64_t reps)
 {
     int		size;
@@ -232,7 +232,7 @@ InitWideDoubleDashedCircles(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-static void 
+static void
 GenerateEllipses(XParms xp, Parms p, int partialArcs, Bool ddashed)
 {
     int     size;
@@ -294,7 +294,7 @@ GenerateEllipses(XParms xp, Parms p, int partialArcs, Bool ddashed)
 		x = half;
 	    }
 	}
-	
+
 	vsize += vsizeinc;
 	if (vsize > size) {
 	    vsize -= size;
@@ -303,7 +303,7 @@ GenerateEllipses(XParms xp, Parms p, int partialArcs, Bool ddashed)
     }
 }
 
-int 
+int
 InitEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateEllipses(xp, p, False, False);
@@ -311,7 +311,7 @@ InitEllipses(XParms xp, Parms p, int64_t reps)
 }
 
 
-int 
+int
 InitPartEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateEllipses(xp, p, True, False);
@@ -319,7 +319,7 @@ InitPartEllipses(XParms xp, Parms p, int64_t reps)
 }
 
 
-int 
+int
 InitChordPartEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateEllipses(xp, p, True, False);
@@ -329,7 +329,7 @@ InitChordPartEllipses(XParms xp, Parms p, int64_t reps)
 }
 
 
-int 
+int
 InitSlicePartEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateEllipses(xp, p, True, False);
@@ -361,21 +361,21 @@ GenerateWideEllipses(XParms xp, Parms p, Bool partialArcs, Bool ddashed)
 
 }
 
-int 
+int
 InitWideEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateWideEllipses(xp, p, False, False);
     return reps;
 }
- 
-int 
+
+int
 InitPartWideEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateWideEllipses(xp, p, True, False);
     return reps;
 }
- 
-int 
+
+int
 InitDashedEllipses(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
@@ -391,7 +391,7 @@ InitDashedEllipses(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitWideDashedEllipses(XParms xp, Parms p, int64_t reps)
 {
     int		size;
@@ -412,7 +412,7 @@ InitWideDashedEllipses(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitDoubleDashedEllipses(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
@@ -428,7 +428,7 @@ InitDoubleDashedEllipses(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitWideDoubleDashedEllipses(XParms xp, Parms p, int64_t reps)
 {
     int		size;
@@ -449,7 +449,7 @@ InitWideDoubleDashedEllipses(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoArcs(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
@@ -466,7 +466,7 @@ DoArcs(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 DoFilledArcs(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
@@ -483,7 +483,7 @@ DoFilledArcs(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 EndArcs(XParms xp, Parms p)
 {
     free(arcs);

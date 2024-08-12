@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -28,7 +28,7 @@ SOFTWARE.
 static XPoint *points;
 static GC      pgc;
 
-int 
+int
 InitTrapezoids(XParms xp, Parms p, int64_t reps)
 {
     int     numPoints;
@@ -40,7 +40,7 @@ InitTrapezoids(XParms xp, Parms p, int64_t reps)
     pgc = xp->fggc;
 
     size = p->special;
-    numPoints = (p->objects) * NUM_POINTS;  
+    numPoints = (p->objects) * NUM_POINTS;
     points = malloc(numPoints * sizeof(XPoint));
     curPoint = points;
     x = size;
@@ -77,13 +77,13 @@ InitTrapezoids(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoTrapezoids(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
         XPoint  *curPoint = points;
         for (int j = 0; j != p->objects; j++) {
-            XFillPolygon(xp->d, xp->w, pgc, curPoint, NUM_POINTS, Convex, 
+            XFillPolygon(xp->d, xp->w, pgc, curPoint, NUM_POINTS, Convex,
 			 CoordModeOrigin);
             curPoint += NUM_POINTS;
 	}
@@ -95,7 +95,7 @@ DoTrapezoids(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 EndTrapezoids(XParms xp, Parms p)
 {
     free(points);
@@ -142,10 +142,10 @@ InitFixedTraps(XParms xp, Parms p, int64_t reps)
     y = 0;
     rows = 0;
     skew = size;
-    aadraw = XftDrawCreate (xp->d, xp->w, 
-			    xp->vinfo.visual, 
+    aadraw = XftDrawCreate (xp->d, xp->w,
+			    xp->vinfo.visual,
 			    xp->cmap);
-    
+
     depth = 0;
     width = 0;
     if (p->font)
@@ -167,17 +167,17 @@ InitFixedTraps(XParms xp, Parms p, int64_t reps)
     maskFormat = XRenderFindStandardFormat (xp->d, std_fmt);
     if (!maskFormat)
 	return 0;
-    
+
     maskPixmap = XCreatePixmap (xp->d, xp->w, WIDTH, HEIGHT, depth);
 
     mask = XRenderCreatePicture (xp->d, maskPixmap, maskFormat, 0, NULL);
-    
+
     color.red = 0;
     color.green = 0;
     color.blue = 0;
     color.alpha = 0xffff;
     if (!XftColorAllocValue (xp->d,
-			     xp->vinfo.visual, 
+			     xp->vinfo.visual,
 			     xp->cmap,
 			     &color, &aablack))
     {
@@ -190,7 +190,7 @@ InitFixedTraps(XParms xp, Parms p, int64_t reps)
     color.blue = 0xffff;
     color.alpha = 0xffff;
     if (!XftColorAllocValue (xp->d,
-			     xp->vinfo.visual, 
+			     xp->vinfo.visual,
 			     xp->cmap,
 			     &color, &aawhite))
     {
@@ -208,7 +208,7 @@ InitFixedTraps(XParms xp, Parms p, int64_t reps)
 	curTrap->bottom.y = XDoubleToFixed (y + size);
 	curTrap->bottom.left = XDoubleToFixed (x + skew - width);
 	curTrap->bottom.right = XDoubleToFixed (x + skew);
-	
+
 	skew--;
 	if (skew < 0) skew = size;
 
@@ -223,12 +223,12 @@ InitFixedTraps(XParms xp, Parms p, int64_t reps)
 	    }
 	}
     }
-    
+
     SetFillStyle(xp, p);
     return reps;
 }
 
-void 
+void
 DoFixedTraps(XParms xp, Parms p, int64_t reps)
 {
     Picture	white, black, src, dst;
@@ -281,8 +281,8 @@ InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
     y = 0;
     rows = 0;
     skew = size;
-    aadraw = XftDrawCreate (xp->d, xp->w, 
-			    xp->vinfo.visual, 
+    aadraw = XftDrawCreate (xp->d, xp->w,
+			    xp->vinfo.visual,
 			    xp->cmap);
     if (p->font && !strcmp (p->font, "add"))
     {
@@ -291,7 +291,7 @@ InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 	templ.depth = 8;
 	templ.direct.alpha = 0;
 	templ.direct.alphaMask = 0xff;
-	maskFormat = XRenderFindFormat (xp->d, 
+	maskFormat = XRenderFindFormat (xp->d,
 					PictFormatType |
 					PictFormatDepth |
 					PictFormatAlpha |
@@ -306,7 +306,7 @@ InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
     color.blue = 0;
     color.alpha = 0xffff;
     if (!XftColorAllocValue (xp->d,
-			     xp->vinfo.visual, 
+			     xp->vinfo.visual,
 			     xp->cmap,
 			     &color, &aablack))
     {
@@ -319,7 +319,7 @@ InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
     color.blue = 0xffff;
     color.alpha = 0xffff;
     if (!XftColorAllocValue (xp->d,
-			     xp->vinfo.visual, 
+			     xp->vinfo.visual,
 			     xp->cmap,
 			     &color, &aawhite))
     {
@@ -335,12 +335,12 @@ InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 	curTrap->left.p1.y = XDoubleToFixed (y);
 	curTrap->left.p2.x = XDoubleToFixed (x + skew - size);
 	curTrap->left.p2.y = XDoubleToFixed (y + size);
-	
+
 	curTrap->right.p1.x = XDoubleToFixed (x - skew + size);
 	curTrap->right.p1.y = XDoubleToFixed (y);
 	curTrap->right.p2.x = XDoubleToFixed (x + skew);
 	curTrap->right.p2.y = XDoubleToFixed (y + size);
-	
+
 	skew--;
 	if (skew < 0) skew = size;
 
@@ -356,12 +356,12 @@ InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 	}
     }
 
-    
+
     SetFillStyle(xp, p);
     return reps;
 }
 
-void 
+void
 DoFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 {
     Picture	white, black, src, dst;

@@ -1,3 +1,316 @@
+commit 82ee29eaa466dbdca6d8c075270896127944fc0d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 1 17:33:00 2024 -0700
+
+    x11perf 1.7.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 397cfd30aed296e1f3f7c37e0c65ecf558ca8baa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 13 16:42:19 2024 -0700
+
+    Include both option name & argument in invalid argument errors
+    
+    Found by gcc 14.1:
+    x11perf.c: In function ‘invalid_arg’:
+    x11perf.c:339:21: warning: too many arguments for format [-Wformat-extra-args]
+      339 |     fprintf(stderr, "Error: invalid argument to %s\n", arg, option);
+          |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Fixes: e7a6545 ("When users give invalid arguments, tell them what they did wrong")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/11>
+
+commit e7a65459a2f6ce9ea5fd3d0ac413043986c19471
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 18 14:26:38 2024 -0700
+
+    When users give invalid arguments, tell them what they did wrong
+    
+    Don't just dump a usage message and leave them to figure it out
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/10>
+
+commit 6deca4cb7bd0293760d0f1e3678387d74ca72251
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 18 13:27:10 2024 -0700
+
+    Add -help [options|tests|all] and remove tests from default usage message
+    
+    Previously, the error message when giving a bad option was over 350 lines
+    long.  This moves the list of tests out into the `-help tests` option and
+    makes the usage error message a much more reasonable 32 lines long.
+    
+    (Also accepts but does not document --help.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/10>
+
+commit 7e24793ede11649a412413ff2567bf20670ba4ef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 18 13:06:17 2024 -0700
+
+    Mark tests introduced in version 1.6 as version 1.6 & later
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/10>
+
+commit 3fd3380e289717d657b7c42e6f6980d4207e5bbb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 18 13:04:16 2024 -0700
+
+    Mark tests introduced since version 1.6 as version 1.7
+    
+    Also bumps package version to 1.6.99.0 to prepare for 1.7 release.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/10>
+
+commit cb073d318328d8ac2df64aed195d933cf64b5358
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 18 12:23:45 2024 -0700
+
+    Add -version option
+    
+    (Also accepts but does not document --version)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/10>
+
+commit 16fda0825a0c6a51f800c225e66adce65e5f327c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 18 12:00:43 2024 -0700
+
+    Add -v1.6 & -v1.7 to recognized version flags
+    
+    Also adds missing -v1.4 & -v1.5 to the man page.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/10>
+
+commit 2454977d35ee9961ade650a8fa0e908d8feaf363
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 17:07:32 2024 -0700
+
+    x11perf.man: Add missing tests inherited from XFree86 4.3
+    
+    Fixes: ee11b04 ("XFree86 4.3.0.1")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/9>
+
+commit bb2566b73b547fb6d097ff9b86c2e3a38808c35d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 17:03:40 2024 -0700
+
+    x11perf.man: Add missing tests inherited from X11R6.6
+    
+    Fixes: d7d99c8 ("R6.6 is the Xorg base-line")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/9>
+
+commit 7964896807fa0bb608ce2d274b2ae5a56e16bc95
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 16:38:12 2024 -0700
+
+    x11perf.man: Add tests for anti-aliased trapezoids
+    
+    Fixes: 9f86498 ("Add RenderAddTraps. Rewrite trapezoid rendering code.")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/9>
+
+commit 9b289139ffaf017857dc3cbb0ceea21a44da6f7d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 16:26:28 2024 -0700
+
+    x11perf.man: Add tests for ShmGetImage
+    
+    Fixes: 7f46d58 ("Add tests for ShmGetImage")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/9>
+
+commit 3853dd4a66d1fb6c29965a6664f9a7e6a3fe7bf7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 16:15:14 2024 -0700
+
+    x11perf.man: Add tiled text test
+    
+    Fixes: 0fcb26e ("Add tiled text test")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/9>
+
+commit 76df8ca88c6553a290e9e003b117ee800c165451
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 16:13:00 2024 -0700
+
+    x11perf.man: Add xybitmap putimage tests
+    
+    Fixes: bd6b810 ("Add xybitmap putimage tests")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/9>
+
+commit c923e89b0756dd40c41b6969f400a248ca4d0b22
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 16:32:02 2024 -0700
+
+    man pages: use .BR markup for references to other man pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/9>
+
+commit bcabb502977e3680b955c131f037f8d817a3af4f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 16:07:00 2024 -0700
+
+    configure: use @-style substitutions for man pages instead of __-style
+    
+    Moves substitution of variables from Makefile.am to configure.ac
+    in preparation for allowing meson.build to do the same.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/9>
+
+commit ebab5f63aaab943a8e6495fbac0cd5c41869d286
+Author: Mike A. Harris <mharris@redhat.com>
+Date:   Thu Aug 27 13:09:49 2020 -0400
+
+    Move x11perfcomp scripts into datadir
+    
+    These don't need to be in libdir, they're not arch-sensitive.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/2>
+
+commit 55e9fceffc45bb4cbbeabe8fd45028f50caec906
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Apr 3 17:57:43 2020 -0700
+
+    Fix core AA text tests which now fail due to change in fontconfig
+    
+    Xft can no longer support 'render' in font names due to a
+    change in fontconfig. Work around this by removing that from
+    the font names and apply it to the pattern manually whenever
+    the 'bfont' name is not NULL.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit 95a84fd5584873885f3123f25b6424008409afc1
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Apr 3 16:48:10 2020 -0700
+
+    Validate fonts used in Xft tests
+    
+    This compares the font family from the loaded font with the requested
+    family and skips tests where the requested family wasn't available.
+    
+    It's not perfect, as someone could have a mis-configured font family,
+    but should catch most incorrect font usages.
+    
+    I've also switched from Charter to DejaVu Sans as that is more widely
+    installed.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit c0ba2f7af7270f2e6edf1bc2386c97ed3f0783cb
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Oct 3 15:12:34 2016 -0700
+
+    Don't try to make XOR 'look good'. Best to make it visible.
+    
+    Attempts to pick 'good' pixel values to make XOR rendering look decent
+    instead make it invisible on modern TrueColor visuals. Just use the
+    defined fg/bg pixel values, which at least make it appear.
+    
+    Adapt to this change by drawing the lines for the blt tests in copy
+    mode so they appear on the screen.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit bd6b8109b34e2effbe071b7881aebb8a7cfac53d
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Oct 3 15:09:20 2016 -0700
+
+    Add xybitmap putimage tests
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit ba26e97853d209663de8527cfefee16afe3b959b
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Apr 1 14:48:42 2014 -0700
+
+    Make put image tests work with planemasks
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit 0fcb26e0efdab2a8662b50dd6957b681c87b6737
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Apr 1 15:38:22 2014 -0700
+
+    Add tiled text test
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit c6bbcba1102cb4420303afa0f6c1338e5885cf3d
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Apr 1 15:37:51 2014 -0700
+
+    Eliminate overlaps in rects and traps
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit bd0f1e637f960962203cb5bb7cf0c5ce58cb2cec
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Mar 25 16:59:02 2014 -0700
+
+    Ensure that 100x100 rectangle outlines do not overlap
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit f0c5c1c49bfbae402b11367103acae7675edf779
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Mar 25 16:56:29 2014 -0700
+
+    Ensure that 100x100 rectangles do not overlap
+    
+    This avoids the obvious optimization which catch overlapping
+    rectangles to avoid re-rendering the same pixels.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit a2f8e2cf966156b2ce93e16068c31e088c578eda
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Mar 25 16:54:40 2014 -0700
+
+    Set position of the status window based on perf window pos
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit 3e9ee84d8ce39c3f8cbc598c4105dcc9da9a7c15
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Mar 25 16:52:02 2014 -0700
+
+    Ensure that vertical/horizontal segments do not overlap
+    
+    Some drivers manage to optimize the solid block of segments into a
+    single square fill operation, which is a nifty optimization, but
+    doesn't really measure what we're interested here.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/test/x11perf/-/merge_requests/1>
+
+commit 688bebb13c9a82983f544ff415440321a721fd53
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 15:09:08 2024 -0700
+
+    Strip trailing whitespace from source files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 95ff3954dea7deb1cc995c09c404ebb22b6f18a0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 28 19:19:52 2022 -0700
@@ -710,7 +1023,7 @@ Date:   Thu Dec 6 16:37:08 2007 -0500
     Replace static ChangeLog with dist-hook to generate from git log
 
 commit b1c5b72bb4bb5f3e116255f9d04b368137ff25f7
-Author: Michel Dänzer  <michel@tungstengraphics.com>
+Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Nov 1 09:13:43 2007 +0100
 
     Fix typos in descriptions of -compwinwin{1,5}00.
@@ -943,7 +1256,7 @@ Date:   Sat Jul 16 23:29:38 2005 +0000
         correctly
 
 commit 68ebb5b755791822c2f1d9f9659c2ee94bb63f1c
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 29 20:41:01 2005 +0000
 
     Add x11perf build system Add some x11perf shell script to symlink.sh

@@ -1,6 +1,6 @@
 .\" This manpage was written by Richard Braakman and is licensed under the
 .\" XFree86 license.
-.TH Xmark 1 __xorgversion__
+.TH Xmark 1 "@PACKAGE_STRING@" "@XORG_MAN_PAGE@"
 .SH NAME
 Xmark \- summarize x11perf results
 .SH SYNTAX
@@ -63,4 +63,4 @@ by x11perf in the expected way.
 .BR "Diagnostic: ERROR: sum of weights =" nnn ", not equal to 4566.0;"
 There is an internal error in Xmark.
 .SH "SEE ALSO"
-X(__miscmansuffix__), x11perf(__appmansuffix__), x11perfcomp(__appmansuffix__)
+X(@MISC_MAN_SUFFIX@), x11perf(@APP_MAN_SUFFIX@), x11perfcomp(@APP_MAN_SUFFIX@)

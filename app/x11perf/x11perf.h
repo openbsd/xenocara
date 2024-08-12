@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -61,12 +61,17 @@ typedef unsigned char Version;
 #define VERSION1_4  ((Version)(1 << 2))
 #define VERSION1_5  ((Version)(1 << 3))
 #define VERSION1_6  ((Version)(1 << 4))
+#define VERSION1_7  ((Version)(1 << 5))
+
 #define V1_2ONLY VERSION1_2
-#define V1_2FEATURE	(VERSION1_2 | VERSION1_3 | VERSION1_4 | VERSION1_5 | VERSION1_6)
-#define V1_3FEATURE	(VERSION1_3 | VERSION1_4 | VERSION1_5 | VERSION1_6)
-#define V1_4FEATURE	(VERSION1_4 | VERSION1_5 | VERSION1_6)
-#define V1_5FEATURE     (VERSION1_5 | VERSION1_6)
-#define V1_6FEATURE     (VERSION1_6)
+
+/* Each V1_*FEATURE flag includes all later versions */
+#define V1_7FEATURE	(VERSION1_7)
+#define V1_6FEATURE	(VERSION1_6 | V1_7FEATURE)
+#define V1_5FEATURE	(VERSION1_5 | V1_6FEATURE)
+#define V1_4FEATURE	(VERSION1_4 | V1_5FEATURE)
+#define V1_3FEATURE	(VERSION1_3 | V1_4FEATURE)
+#define V1_2FEATURE	(VERSION1_2 | V1_3FEATURE)
 
 typedef struct _Parms {
     /* Required fields */

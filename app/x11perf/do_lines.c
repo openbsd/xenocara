@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -26,7 +26,7 @@ SOFTWARE.
 static XPoint   *points;
 static GC       pgc;
 
-static void 
+static void
 GenerateLines(XParms xp, Parms p, Bool ddashed)
 {
     int size;
@@ -34,7 +34,7 @@ GenerateLines(XParms xp, Parms p, Bool ddashed)
     int     rows;       /* Number of rows filled in current column      */
     int x, y;		/* Next point					*/
     int xdir, ydir;	/* Which direction x, y are going		*/
-    int bigxdir;	
+    int bigxdir;
     int x1 = 0, y1 = 0;	/* offsets to compute next point from current	*/
     int phase;		/* how far into 0..4*(size_1) we are		*/
     float phasef;       /* how far we are in real numbers		*/
@@ -79,7 +79,7 @@ GenerateLines(XParms xp, Parms p, Bool ddashed)
 	phase = phasef;
 	switch (phase / (size+1)) {
 	case 0:
-	    x1 = size;			
+	    x1 = size;
 	    y1 = phase;
 	    break;
 
@@ -159,15 +159,15 @@ GenerateLines(XParms xp, Parms p, Bool ddashed)
 
     }
 }
- 
-int 
+
+int
 InitLines(XParms xp, Parms p, int64_t reps)
 {
     GenerateLines(xp, p, False);
 	return reps;
 }
 
-static int 
+static int
 GenerateWideLines(XParms xp, Parms p, int64_t reps, Bool ddashed)
 {
     int size;
@@ -191,13 +191,13 @@ GenerateWideLines(XParms xp, Parms p, int64_t reps, Bool ddashed)
     return reps;
 }
 
-int 
+int
 InitWideLines(XParms xp, Parms p, int64_t reps)
 {
     return GenerateWideLines(xp, p, reps, False);
 }
- 
-int 
+
+int
 InitDashedLines(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
@@ -213,7 +213,7 @@ InitDashedLines(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitWideDashedLines(XParms xp, Parms p, int64_t reps)
 {
     int		size;
@@ -234,7 +234,7 @@ InitWideDashedLines(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitDoubleDashedLines(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
@@ -250,7 +250,7 @@ InitDoubleDashedLines(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitWideDoubleDashedLines(XParms xp, Parms p, int64_t reps)
 {
     int		size;
@@ -271,7 +271,7 @@ InitWideDoubleDashedLines(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoLines(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++)
@@ -289,7 +289,7 @@ DoLines(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 EndLines(XParms xp, Parms p)
 {
     free(points);

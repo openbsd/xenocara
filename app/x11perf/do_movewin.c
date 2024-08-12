@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -33,11 +33,11 @@ static int delta1;		/* Private global data for DoResizeWindows */
 
 #define STACK (4*(HEIGHT-10)/CHILDSIZE)
 
-int 
+int
 InitMoveWindows(XParms xp, Parms p, int64_t reps)
 {
     rows = (p->objects + MAXCOLS - 1) / MAXCOLS;
-    
+
     x_offset = 0;
     y_offset = 0;
     delta1   = 1;
@@ -60,7 +60,7 @@ InitMoveWindows(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoMoveWindows(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
@@ -78,14 +78,14 @@ DoMoveWindows(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 EndMoveWindows(XParms xp, Parms p)
 {
     free(children);
     free(positions);
 }
 
-void 
+void
 DoResizeWindows(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
@@ -109,7 +109,7 @@ InitCircWindows(XParms xp, Parms p, int64_t reps)
     for (int i = 0; i != p->objects; i++) {
 	int pos = i % STACK;
 	int color = (i & 1 ? xp->foreground : xp->background);
-	children[i] = XCreateSimpleWindow (xp->d, xp->w, 
+	children[i] = XCreateSimpleWindow (xp->d, xp->w,
 	    pos*CHILDSIZE/4 + (i/STACK)*2*CHILDSIZE, pos*CHILDSIZE/4,
 	    CHILDSIZE, CHILDSIZE, 0, color, color);
     }
@@ -118,7 +118,7 @@ InitCircWindows(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoCircWindows(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++)
@@ -129,18 +129,18 @@ DoCircWindows(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 EndCircWindows(XParms xp, Parms p)
 {
     free(children);
 }
 
 
-int 
+int
 InitMoveTree(XParms xp, Parms p, int64_t reps)
 {
     rows = (p->objects + MAXCOLS - 1) / MAXCOLS;
-    
+
     x_offset = 0;
     y_offset = 0;
     delta1   = 1;
@@ -154,7 +154,7 @@ InitMoveTree(XParms xp, Parms p, int64_t reps)
     cover = XCreateSimpleWindow(xp->d, xp->w,
 				0, 0, xmax, ymax, 0,
 				xp->background, xp->background);
-				
+
     for (int i = 0; i != p->objects; i++) {
 	positions[i].x = (CHILDSIZE+CHILDSPACE) * (i/rows) + CHILDSPACE/2;
 	positions[i].y = (CHILDSIZE+CHILDSPACE) * (i%rows) + CHILDSPACE/2;
@@ -167,7 +167,7 @@ InitMoveTree(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoMoveTree(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
@@ -182,7 +182,7 @@ DoMoveTree(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 EndMoveTree(XParms xp, Parms p)
 {
     XDestroyWindow(xp->d, cover);

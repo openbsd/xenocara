@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -35,7 +35,7 @@ static GC       pgc;
 #define PI M_PI
 #endif /* QNX4 */
 
-int 
+int
 InitComplexPoly(XParms xp, Parms p, int64_t reps)
 {
     int     numPoints;
@@ -66,7 +66,7 @@ InitComplexPoly(XParms xp, Parms p, int64_t reps)
     }
     iradius = (int) radius + 1;
 
-    numPoints = (p->objects) * NUM_POINTS;  
+    numPoints = (p->objects) * NUM_POINTS;
     points = malloc(numPoints * sizeof(XPoint));
     curPoint = points;
     x = iradius;
@@ -95,13 +95,13 @@ InitComplexPoly(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoComplexPoly(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
         XPoint  *curPoint = points;
         for (int j = 0; j != p->objects; j++) {
-            XFillPolygon(xp->d, xp->w, pgc, curPoint, NUM_POINTS, Complex, 
+            XFillPolygon(xp->d, xp->w, pgc, curPoint, NUM_POINTS, Complex,
 			 CoordModeOrigin);
             curPoint += NUM_POINTS;
 	  }
@@ -113,13 +113,13 @@ DoComplexPoly(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 EndComplexPoly(XParms xp, Parms p)
 {
     free(points);
 }
 
-int 
+int
 InitGeneralPoly(XParms xp, Parms p, int64_t reps)
 {
     int     numPoints;
@@ -165,7 +165,7 @@ InitGeneralPoly(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoGeneralPoly(XParms xp, Parms p, int64_t reps)
 {
     int	    nsides;
@@ -176,7 +176,7 @@ DoGeneralPoly(XParms xp, Parms p, int64_t reps)
     for (int i = 0; i != reps; i++) {
         XPoint  *curPoint = points;
         for (int j = 0; j != p->objects; j++) {
-            XFillPolygon(xp->d, xp->w, pgc, curPoint, nsides, mode, 
+            XFillPolygon(xp->d, xp->w, pgc, curPoint, nsides, mode,
 			 CoordModeOrigin);
             curPoint += nsides;
 	  }

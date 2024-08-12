@@ -52,14 +52,15 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = man
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/mkinstalldirs
+	$(srcdir)/Xmark.man $(srcdir)/x11perf.man \
+	$(srcdir)/x11perfcomp.man $(top_srcdir)/mkinstalldirs
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = x11perf.1 x11perfcomp.1 Xmark.1
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -126,7 +127,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -137,11 +137,9 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
-EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
-GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -245,11 +243,9 @@ appman_PRE = x11perfcomp.man  x11perf.man  Xmark.man
 appman_DATA = $(appman_PRE:man=$(APP_MAN_SUFFIX))
 EXTRA_DIST = $(appman_PRE)
 CLEANFILES = $(appman_DATA)
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(APP_MAN_SUFFIX) .man
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -280,6 +276,12 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+x11perf.1: $(top_builddir)/config.status $(srcdir)/x11perf.man
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+x11perfcomp.1: $(top_builddir)/config.status $(srcdir)/x11perfcomp.man
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+Xmark.1: $(top_builddir)/config.status $(srcdir)/Xmark.man
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(appman_DATA)'; test -n "$(appmandir)" || list=; \
@@ -457,10 +459,6 @@ uninstall-am: uninstall-appmanDATA
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am uninstall uninstall-am uninstall-appmanDATA
 
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

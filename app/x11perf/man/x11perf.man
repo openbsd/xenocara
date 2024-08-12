@@ -24,7 +24,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.TH X11PERF 1 __xorgversion__
+.TH X11PERF 1 "@PACKAGE_STRING@" "@XORG_MAN_PAGE@"
 .SH NAME
 x11perf \- X11 server performance test program
 .SH SYNTAX
@@ -86,7 +86,7 @@ may be able to use the numbers
 reports to predict its performance on a given X implementation.
 .PP
 That said, you might also want to look at
-.I x11perfcomp(__appmansuffix__),
+.BR x11perfcomp (@APP_MAN_SUFFIX@),
 a program to compare the outputs of different
 .I x11perf
 runs.  You provide a list of files containing results from
@@ -236,6 +236,21 @@ Perform only x11perf Version 1.2 tests using Version 1.2 semantics.
 .B \-v1.3
 Perform only x11perf Version 1.3 tests using Version 1.3 semantics.
 .TP 14
+.B \-v1.4
+Perform only x11perf Version 1.4 tests using Version 1.4 semantics.
+.TP 14
+.B \-v1.5
+Perform only x11perf Version 1.5 tests using Version 1.5 semantics.
+.TP 14
+.B \-v1.6
+Perform only x11perf Version 1.6 tests using Version 1.6 semantics.
+.TP 14
+.B \-v1.7
+Perform only x11perf Version 1.7 tests using Version 1.7 semantics.
+.TP 14
+.B \-version
+Print program version and exit.
+.TP 14
 .B \-su
 Set the save_under window attribute to True on all windows created by x11perf.
 Default is False.
@@ -244,6 +259,18 @@ Default is False.
 Set the backing_store window attribute to the given value on all windows
 created by x11perf. <backing_store_hint> can be WhenMapped or
 Always.  Default is NotUseful.
+.TP 14
+.B \-help [options|tests|all]
+Print information about available options and exit.
+If no argument is specified, or \fBoptions\fR is specified, just prints
+information about general options, but does not include the long list of
+options for running specific tests.
+If \fBtests\fR is specified,  just prints the long list of options for
+running specific tests.
+If \fBall\fR is specified, prints information about both sets of options.
+If \fB-v\fR\fIversion\fR is also specified, the list of options for
+running specific tests will be limited to the tests for that version.
+.SS Options for running specific tests
 .TP 14
 .B \-dot
 Dot.
@@ -777,6 +804,78 @@ Fill 100x100 tiled trapezoid, 216x208 tile pattern.
 .B \-eschertiletrap300
 Fill 300x300 tiled trapezoid, 216x208 tile pattern.
 .TP 14
+.B \-aatrap1
+Fill 1x1 aa trap
+.TP 14
+.B \-aatrap10
+Fill 10x10 aa trap
+.TP 14
+.B \-aatrap100
+Fill 100x100 aa trap
+.TP 14
+.B \-aatrap300
+Fill 300x300 aa trap
+.TP 14
+.B \-aa4trap1
+Fill 1x1 aa trap with 4 bit alpha
+.TP 14
+.B \-aa4trap10
+Fill 10x10 aa trap with 4 bit alpha
+.TP 14
+.B \-aa4trap100
+Fill 100x100 aa trap with 4 bit alpha
+.TP 14
+.B \-aa4trap300
+Fill 300x300 aa trap with 4 bit alpha
+.TP 14
+.B \-aa1trap1
+Fill 1x1 aa trap with 1 bit alpha
+.TP 14
+.B \-aa1trap10
+Fill 10x10 aa trap with 1 bit alpha
+.TP 14
+.B \-aa1trap100
+Fill 100x100 aa trap with 1 bit alpha
+.TP 14
+.B \-aa1trap300
+Fill 300x300 aa trap with 1 bit alpha
+.TP 14
+.B \-aatrap2x1
+Fill 2x1 aa trap
+.TP 14
+.B \-aatrap2x10
+Fill 2x10 aa trap
+.TP 14
+.B \-aatrap2x100
+Fill 2x100 aa trap
+.TP 14
+.B \-aatrap2x300
+Fill 2x300 aa trap
+.TP 14
+.B \-aatrapezoid1
+Fill 1x1 aa trapezoid
+.TP 14
+.B \-aatrapezoid10
+Fill 10x10 aa trapezoid
+.TP 14
+.B \-aatrapezoid100
+Fill 100x100 aa trapezoid
+.TP 14
+.B \-aatrapezoid300
+Fill 300x300 aa trapezoid
+.TP 14
+.B \-addaatrapezoid1
+Fill 1x1 aa pre-added trapezoid
+.TP 14
+.B \-addaatrapezoid10
+Fill 10x10 aa pre-added trapezoid
+.TP 14
+.B \-addaatrapezoid100
+Fill 100x100 aa pre-added trapezoid
+.TP 14
+.B \-addaatrapezoid300
+Fill 300x300 aa pre-added trapezoid
+.TP 14
 .B \-complex10
 Fill 10-pixel/side complex polygon.
 .TP 14
@@ -798,6 +897,9 @@ Fill 100x100 complex 64-gon.
 .B \-ftext
 Character in 80-char line (6x13).
 .TP 14
+.B \-tileftext
+Character in 80-char line tiled (6x13).
+.TP 14
 .B \-f8text
 Character in 70-char line (8x13).
 .TP 14
@@ -806,6 +908,9 @@ Character in 60-char line (9x15).
 .TP 14
 .B \-f14text16
 2-byte character in 40-char line (k14).
+.TP 14
+.B \-f24text16
+Char16 in 23-char line (k24)
 .TP 14
 .B \-tr10text
 Character in 80-char line (Times-Roman 10).
@@ -839,6 +944,60 @@ Character in 80-char image line (Times-Roman 10).
 .TP 14
 .B \-tr24itext
 Character in 30-char image line (Times-Roman 24).
+.TP 14
+.B \-aa10text
+Character in 80-char aa line (DejaVu Sans 10)
+.TP 14
+.B \-aa24text
+Character in 30-char aa line (DejaVu Sans 24)
+.TP 14
+.B \-aaftext
+Character in 80-char aa line (Courier 12)
+.TP 14
+.B \-a10text
+Character in 80-char a line (DejaVu Sans 10)
+.TP 14
+.B \-a24text
+Character in 30-char a line (DejaVu Sans 24)
+.TP 14
+.B \-aftext
+Character in 80-char a line (Courier 12)
+.TP 14
+.B \-rgb10text
+Character in 80-char rgb line (DejaVu Sans 10)
+.TP 14
+.B \-rgb24text
+Character in 30-char rgb line (DejaVu Sans 24)
+.TP 14
+.B \-rgbftext
+Character in 80-char rgb line (Courier 12)
+.TP 14
+.B \-caa10text
+Character in 80-char aa core line (DejaVu Sans 10)
+.TP 14
+.B \-caa24text
+Character in 30-char aa core line (DejaVu Sans 24)
+.TP 14
+.B \-caaftext
+Character in 80-char aa core line (Courier 12)
+.TP 14
+.B \-ca10text
+Character in 80-char a core line (DejaVu Sans 10)
+.TP 14
+.B \-ca24text
+Character in 30-char a core line (DejaVu Sans 24)
+.TP 14
+.B \-caftext
+Character in 80-char a core line (Courier 12)
+.TP 14
+.B \-crgb10text
+Character in 80-char rgb core line (DejaVu Sans 10)
+.TP 14
+.B \-crgb24text
+Character in 30-char rgb core line (DejaVu Sans 24)
+.TP 14
+.B \-crgbftext
+Character in 80-char rgb core line (Courier 12)
 .TP 14
 .B \-scroll10
 Scroll 10x10 pixels vertically.
@@ -894,6 +1053,15 @@ Copy 100x100 1-bit deep plane.
 .B \-copyplane500
 Copy 500x500 1-bit deep plane.
 .TP 14
+.B \-deepcopyplane10
+Copy 10x10 n-bit deep plane
+.TP 14
+.B \-deepcopyplane100
+Copy 100x100 n-bit deep plane
+.TP 14
+.B \-deepcopyplane500
+Copy 500x500 n-bit deep plane
+.TP 14
 .B \-putimage10
 PutImage 10x10 square.
 .TP 14
@@ -912,6 +1080,15 @@ PutImage XY format 100x100 square.
 .B \-putimagexy500
 PutImage XY format 500x500 square.
 .TP 14
+.B \-putimagexybitmap10
+PutImage XYbitmap 10x10 square.
+.TP 14
+.B \-putimagexybitmap100
+PutImage XYbitmap 100x100 square.
+.TP 14
+.B \-putimagexybitmap500
+PutImage XYbitmap 500x500 square.
+.TP 14
 .B \-shmput10
 PutImage 10x10 square, MIT shared memory extension.
 .TP 14
@@ -929,6 +1106,33 @@ PutImage XY format 100x100 square, MIT shared memory extension.
 .TP 14
 .B \-shmputxy500
 PutImage XY format 500x500 square, MIT shared memory extension.
+.TP 14
+.B \-shmputxybitmap10
+PutImage XYbitmap 10x10 square, MIT shared memory extension.
+.TP 14
+.B \-shmputxybitmap100
+PutImage XYbitmap 100x100 square, MIT shared memory extension.
+.TP 14
+.B \-shmputxybitmap500
+PutImage XYbitmap 500x500 square, MIT shared memory extension.
+.TP 14
+.B \-shmget10
+GetImage 10x10 square, MIT shared memory extension.
+.TP 14
+.B \-shmget100
+GetImage 100x100 square, MIT shared memory extension.
+.TP 14
+.B \-shmget500
+GetImage 500x500 square, MIT shared memory extension.
+.TP 14
+.B \-shmgetxy10
+GetImage XY format 10x10 square, MIT shared memory extension.
+.TP 14
+.B \-shmgetxy100
+GetImage XY format 100x100 square, MIT shared memory extension.
+.TP 14
+.B \-shmgetxy500
+GetImage XY format 500x500 square, MIT shared memory extension.
 .TP 14
 .B \-getimage10
 GetImage 10x10 square.
@@ -1040,7 +1244,8 @@ Circulate unmapped window to top.
 .SH X DEFAULTS
 There are no X defaults used by this program.
 .SH "SEE ALSO"
-X(__miscmansuffix__), x11perfcomp(__appmansuffix__)
+.BR X (@MISC_MAN_SUFFIX@),
+.BR x11perfcomp (@APP_MAN_SUFFIX@)
 .SH AUTHORS
 Joel McCormack
 .br

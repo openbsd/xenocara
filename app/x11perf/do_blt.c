@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -34,7 +34,7 @@ static XSegment *segsa2, *segsb2;
 
 #define NegMod(x, y) ((y) - (((-x)-1) % (7)) - 1)
 
-static void 
+static void
 InitBltLines(void)
 {
     int x, y;
@@ -49,7 +49,7 @@ InitBltLines(void)
 	y += HEIGHT / (NUMPOINTS/2);
 	points[i].y = y;
     }
-    
+
     x = 0;
     for (int i = NUMPOINTS/2; i!= NUMPOINTS; i++) {
 	if (i & 1) {
@@ -62,15 +62,17 @@ InitBltLines(void)
     }
 }
 
-int 
+int
 InitScroll(XParms xp, Parms p, int64_t reps)
 {
     InitBltLines();
+    XSetFunction(xp->d, xp->fggc, GXcopy);
     XDrawLines(xp->d, xp->w, xp->fggc, points, NUMPOINTS, CoordModeOrigin);
+    XSetFunction(xp->d, xp->fggc, xp->func);
     return reps;
 }
 
-void 
+void
 DoScroll(XParms xp, Parms p, int64_t reps)
 {
     int size, x, y, xorg, yorg, delta;
@@ -111,20 +113,20 @@ DoScroll(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 MidScroll(XParms xp, Parms p)
 {
     XClearWindow(xp->d, xp->w);
     XDrawLines(xp->d, xp->w, xp->fggc, points, NUMPOINTS, CoordModeOrigin);
 }
 
-void 
+void
 EndScroll(XParms xp, Parms p)
 {
 }
 
-static void 
-InitCopyLocations(int size, int mul, int div, 
+static void
+InitCopyLocations(int size, int mul, int div,
 		  int64_t reps, XSegment **ap, XSegment **bp)
 {
     int x1, y1, x2, y2;
@@ -143,12 +145,12 @@ InitCopyLocations(int size, int mul, int div,
 
     width = (WIDTH - size) & ~31;
     height = (HEIGHT - size) & ~31;
-    
+
     x1 = 0;
     y1 = 0;
     x2 = width;
     y2 = height;
-    
+
     *ap = a = malloc(reps * sizeof(XSegment));
     *bp = b = malloc(reps * sizeof(XSegment));
     for (int i = 0; i != reps; i++) {
@@ -185,7 +187,7 @@ InitCopyLocations(int size, int mul, int div,
 }
 
 
-int 
+int
 InitCopyWin(XParms xp, Parms p, int64_t reps)
 {
     (void) InitScroll(xp, p, reps);
@@ -193,7 +195,7 @@ InitCopyWin(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitCopyPix(XParms xp, Parms p, int64_t reps)
 {
     GC		pixgc;
@@ -208,30 +210,62 @@ InitCopyPix(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
-InitGetImage(XParms xp, Parms p, int64_t reps)
+static int
+InitImage(XParms xp, Parms p, int64_t reps, long pm)
 {
     (void) InitCopyWin(xp, p, reps);
 
     /* Create image to stuff bits into */
-    image = XGetImage(xp->d, xp->w, 0, 0, WIDTH, HEIGHT, xp->planemask,
-		      p->font==NULL?ZPixmap:XYPixmap);
+    image = XGetImage(xp->d, xp->w, 0, 0, WIDTH, HEIGHT, pm,
+		      p->font==NULL ? ZPixmap : (strcmp(p->font, "XY") == 0? XYPixmap : ZPixmap));
     if(image==NULL){
 	printf("XGetImage failed\n");
 	return False;
-    }	
+    }
+    if (p->font && !strcmp(p->font, "XYBitmap")) {
+	    int		bytes_per_line = (WIDTH + 31) / 8;
+	    char	*data = malloc (bytes_per_line * HEIGHT);
+	    XImage	*new = XCreateImage(xp->d, xp->vinfo.visual, 1, XYBitmap, 0,
+					    data, WIDTH, HEIGHT, 32, bytes_per_line);
+	    int		x, y;
+	    unsigned long	zero_pixel;
+	    int		has_zero = 0;
+
+	    for (y = 0; y < HEIGHT; y++)
+		    for (x = 0; x < WIDTH; x++) {
+			    unsigned long src_pixel = XGetPixel(image, x, y);
+			    unsigned long dst_pixel = 0;
+			    if (!has_zero) {
+				    zero_pixel = src_pixel;
+				    has_zero = 1;
+			    }
+			    if (src_pixel == zero_pixel)
+				    dst_pixel = 0;
+			    else
+				    dst_pixel = 1;
+			    XPutPixel(new, x, y, dst_pixel);
+		    }
+	    XDestroyImage(image);
+	    image = new;
+    }
     return reps;
 }
 
-int 
+int
+InitGetImage(XParms xp, Parms p, int64_t reps)
+{
+    return InitImage(xp, p, reps, xp->planemask);
+}
+
+int
 InitPutImage(XParms xp, Parms p, int64_t reps)
 {
-    if(!InitGetImage(xp, p, reps))return False;
+    if(!InitImage(xp, p, reps, 0xffffffff))return False;
     XClearWindow(xp->d, xp->w);
     return reps;
 }
 
-static void 
+static void
 CopyArea(XParms xp, Parms p, int64_t reps, Drawable src, Drawable dst)
 {
     int i, size;
@@ -251,33 +285,33 @@ CopyArea(XParms xp, Parms p, int64_t reps, Drawable src, Drawable dst)
     }
 }
 
-void 
+void
 DoCopyWinWin(XParms xp, Parms p, int64_t reps)
 {
     CopyArea(xp, p, reps, xp->w, xp->w);
 }
 
-void 
+void
 DoCopyPixWin(XParms xp, Parms p, int64_t reps)
 {
     CopyArea(xp, p, reps, pix, xp->w);
 }
 
-void 
+void
 DoCopyWinPix(XParms xp, Parms p, int64_t reps)
 {
     CopyArea(xp, p, reps, xp->w, pix);
     xp->p = pix;	/* HardwareSync will now sync on pixmap */
 }
 
-void 
+void
 DoCopyPixPix(XParms xp, Parms p, int64_t reps)
 {
     CopyArea(xp, p, reps, pix, pix);
     xp->p = pix;	/* HardwareSync will now sync on pixmap */
 }
 
-void 
+void
 DoGetImage(XParms xp, Parms p, int64_t reps)
 {
     int i, size;
@@ -318,7 +352,7 @@ rectangle.
     }
 }
 
-void 
+void
 DoPutImage(XParms xp, Parms p, int64_t reps)
 {
     int i, size;
@@ -356,14 +390,14 @@ static XShmSegmentInfo	shm_info;
 static int haderror;
 static int (*origerrorhandler)(Display *, XErrorEvent *);
 
-static int 
+static int
 shmerrorhandler(Display *d, XErrorEvent *e)
 {
     haderror++;
     if(e->error_code==BadAccess) {
 	fprintf(stderr,"failed to attach shared memory\n");
 	return 0;
-    } else 
+    } else
 	return (*origerrorhandler)(d,e);
 }
 
@@ -372,7 +406,7 @@ InitShmImage(XParms xp, Parms p, int64_t reps, Bool read_only)
 {
     int	image_size;
 
-    if(!InitGetImage(xp, p, reps))return False;
+    if(!InitImage(xp, p, reps, 0xffffffff))return False;
     if (!XShmQueryExtension(xp->d)) {
 	/*
  	 * Clean up here because cleanup function is not called if this
@@ -463,7 +497,7 @@ InitShmGetImage(XParms xp, Parms p, int64_t reps)
     return InitShmImage(xp, p, reps, False);
 }
 
-void 
+void
 DoShmPutImage(XParms xp, Parms p, int64_t reps)
 {
     int i, size;
@@ -530,13 +564,13 @@ EndShmPutImage(XParms xp, Parms p)
 #endif
 
 
-void 
+void
 MidCopyPix(XParms xp, Parms p)
 {
     XClearWindow(xp->d, xp->w);
 }
 
-void 
+void
 EndCopyWin(XParms xp, Parms p)
 {
     EndScroll(xp, p);
@@ -549,7 +583,7 @@ EndCopyWin(XParms xp, Parms p)
     segsa = segsb = segsa2 = segsb2 = NULL;
 }
 
-void 
+void
 EndCopyPix(XParms xp, Parms p)
 {
     EndCopyWin(xp, p);
@@ -560,7 +594,7 @@ EndCopyPix(XParms xp, Parms p)
     xp->p = (Pixmap)0;
 }
 
-void 
+void
 EndGetImage(XParms xp, Parms p)
 {
     EndCopyWin(xp, p);
@@ -577,12 +611,12 @@ InitCopyPlane(XParms xp, Parms p, int64_t reps)
     InitCopyLocations(p->special, 1, 1, reps, &segsa, &segsb);
 
     /* Create pixmap to write stuff into, and initialize it */
-    pix = XCreatePixmap(xp->d, xp->w, WIDTH, HEIGHT, 
+    pix = XCreatePixmap(xp->d, xp->w, WIDTH, HEIGHT,
 	    p->font==NULL ? 1 : xp->vinfo.depth);
     gcv.graphics_exposures = False;
     gcv.foreground = 0;
     gcv.background = 1;
-    pixgc = XCreateGC(xp->d, pix, 
+    pixgc = XCreateGC(xp->d, pix,
 		GCForeground | GCBackground | GCGraphicsExposures, &gcv);
     XFillRectangle(xp->d, pix, pixgc, 0, 0, WIDTH, HEIGHT);
     gcv.foreground = 1;
@@ -594,7 +628,7 @@ InitCopyPlane(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoCopyPlane(XParms xp, Parms p, int64_t reps)
 {
     int		i, size;
@@ -643,7 +677,7 @@ InitCompositePix(XParms xp, Parms p, int64_t reps)
     static XRenderColor c = { 0xffff, 0x0000, 0xffff, 0xffff };
 
     (void) InitCompositeWin (xp, p, reps);
-    
+
     /* Create pixmap to write stuff into, and initialize it */
     switch (xp->planemask) {
     case PictStandardNative:
@@ -671,14 +705,14 @@ InitCompositePix(XParms xp, Parms p, int64_t reps)
     }
     if (!format)
 	format = XRenderFindStandardFormat (xp->d, xp->planemask);
-    
+
     pix = XCreatePixmap(xp->d, xp->w, WIDTH, HEIGHT, depth);
     pixPict = XRenderCreatePicture (xp->d, pix, format, 0, NULL);
-    
+
     XRenderComposite (xp->d, PictOpClear,
 		      winPict, None, pixPict,
 		      0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
-    
+
     XRenderFillRectangle (xp->d, PictOpSrc,
 			  pixPict, &c, 0, 0, WIDTH, HEIGHT);
 #if 1
@@ -713,13 +747,13 @@ EndCompositeWin (XParms xp, Parms p)
     }
 }
 
-static void 
+static void
 CompositeArea(XParms xp, Parms p, int64_t reps, Picture src, Picture dst)
 {
     int size;
     XSegment *sa, *sb;
     XSegment *sa2, *sb2;
-    
+
 
     size = p->special;
     sa = segsa;

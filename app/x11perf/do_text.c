@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -23,6 +23,7 @@ SOFTWARE.
 
 #include "x11perf.h"
 #include <stdio.h>
+#include "bitmaps.h"
 
 static char **charBuf;
 static XFontStruct *font, *bfont;
@@ -34,7 +35,7 @@ static int charsPerLine, totalLines;
 #define SEGS 3
 
 
-int 
+int
 InitText(XParms xp, Parms p, int64_t reps)
 {
     XGCValues   gcv;
@@ -64,6 +65,8 @@ InitText(XParms xp, Parms p, int64_t reps)
     gcv.font = font->fid;
     XChangeGC(xp->d, xp->fggc, GCFont, &gcv);
     XChangeGC(xp->d, xp->bggc, GCFont, &gcv);
+
+    SetFillStyle(xp, p);
 
     charsPerLine = p->objects;
     charsPerLine = (charsPerLine + 3) & ~3;
@@ -118,7 +121,7 @@ InitText(XParms xp, Parms p, int64_t reps)
              | pci->ascent | pci->descent | pci->attributes) == 0);     \
 } /* GetRealChar */
 
-int 
+int
 InitText16(XParms xp, Parms p, int64_t reps)
 {
     XGCValues   	gcv;
@@ -218,7 +221,7 @@ InitText16(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoText(XParms xp, Parms p, int64_t reps)
 {
     int     line, startLine;
@@ -240,7 +243,7 @@ DoText(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 DoText16(XParms xp, Parms p, int64_t reps)
 {
     int     line, startLine;
@@ -262,7 +265,7 @@ DoText16(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 DoPolyText(XParms xp, Parms p, int64_t reps)
 {
     int     line, startLine;
@@ -284,7 +287,7 @@ DoPolyText(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 DoPolyText16(XParms xp, Parms p, int64_t reps)
 {
     int     line, startLine;
@@ -306,7 +309,7 @@ DoPolyText16(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 DoImageText(XParms xp, Parms p, int64_t reps)
 {
     int     line, startLine;
@@ -328,7 +331,7 @@ DoImageText(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 DoImageText16(XParms xp, Parms p, int64_t reps)
 {
     int     line, startLine;
@@ -350,13 +353,13 @@ DoImageText16(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 ClearTextWin(XParms xp, Parms p)
 {
     XClearWindow(xp->d, xp->w);
 }
 
-void 
+void
 EndText(XParms xp, Parms p)
 {
     if(font==NULL)return;
@@ -370,7 +373,7 @@ EndText(XParms xp, Parms p)
 	XFreeFont(xp->d, bfont);
 }
 
-void 
+void
 EndText16(XParms xp, Parms p)
 {
     if(font==NULL)return;
@@ -401,26 +404,55 @@ static XftFont	*aafont;
 static XftDraw	*aadraw;
 static XftColor	aacolor;
 
-int 
+int
 InitAAText(XParms xp, Parms p, int64_t reps)
 {
     char		ch;
     XRenderColor	color;
+    FcValue             value;
+    int                 v_len;
+    FcPattern		*pat;
+    FcPattern		*match;
+    FcResult		result;
 
-    aafont = XftFontOpenName (xp->d, DefaultScreen (xp->d), p->font);
-    
-    if (aafont == NULL) 
+    pat = FcNameParse((FcChar8 *) p->font);
+    match = XftFontMatch(xp->d, DefaultScreen(xp->d), pat, &result);
+    FcPatternDestroy(pat);
+    if (p->bfont) {
+	    FcPatternDel(match, XFT_RENDER);
+	    FcPatternAddBool(match, XFT_RENDER, False);
+    }
+
+    aafont = XftFontOpenPattern (xp->d, match);
+
+    if (aafont == NULL)
     {
-	printf("Could not load font '%s', benchmark omitted\n", 
+	printf("Could not load font '%s', benchmark omitted\n",
 	       p->font);
 	return 0;
     }
+    if (FcPatternGet(aafont->pattern, FC_FAMILY, 0, &value) != FcResultMatch ||
+        value.type != FcTypeString)
+    {
+	printf("Could not load font '%s', benchmark omitted\n",
+	       p->font);
+	XftFontClose (xp->d, aafont);
+	return 0;
+    }
+    v_len = strlen((char *) value.u.s);
+    if (strncmp((char *) value.u.s, p->font, v_len) != 0 || p->font[v_len] != ':') {
+	printf("Could not load font '%s' (found %s), benchmark omitted\n",
+	       p->font,
+               (char *) value.u.s);
+	XftFontClose (xp->d, aafont);
+	return 0;
+    }
 
-    aadraw = XftDrawCreate (xp->d, xp->w, 
-			    xp->vinfo.visual, 
+    aadraw = XftDrawCreate (xp->d, xp->w,
+			    xp->vinfo.visual,
 			    xp->cmap);
 
-    if (!aadraw) 
+    if (!aadraw)
     {
 	printf ("Cannot create XftDraw object\n");
 	XftFontClose (xp->d, aafont);
@@ -431,7 +463,7 @@ InitAAText(XParms xp, Parms p, int64_t reps)
     color.blue = 0;
     color.alpha = 0xffff;
     if (!XftColorAllocValue (xp->d,
-			     xp->vinfo.visual, 
+			     xp->vinfo.visual,
 			     xp->cmap,
 			     &color, &aacolor))
     {
@@ -442,10 +474,10 @@ InitAAText(XParms xp, Parms p, int64_t reps)
 	aadraw = NULL;
 	return 0;
     }
-    
+
     ypos = XPOS;
     height = aafont->height;
-    
+
     charsPerLine = p->objects;
     charsPerLine = (charsPerLine + 3) & ~3;
     p->objects = charsPerLine;
@@ -466,7 +498,7 @@ InitAAText(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoAAText(XParms xp, Parms p, int64_t reps)
 {
     int     line, startLine;
@@ -474,7 +506,7 @@ DoAAText(XParms xp, Parms p, int64_t reps)
     startLine = 0;
     line = 0;
     for (int i = 0; i != reps; i++) {
-	XftDrawString8 (aadraw, &aacolor, aafont, 
+	XftDrawString8 (aadraw, &aacolor, aafont,
 		       XPOS, ypos, (unsigned char *) charBuf[line], charsPerLine);
 	ypos += height;
 	if (ypos > HEIGHT - height) {
@@ -488,7 +520,7 @@ DoAAText(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 EndAAText(XParms xp, Parms p)
 {
     if(!aadraw)return;
@@ -498,7 +530,7 @@ EndAAText(XParms xp, Parms p)
     XftDrawDestroy (aadraw);
     XftFontClose (xp->d, aafont);
     XftColorFree (xp->d,
-		  xp->vinfo.visual, 
+		  xp->vinfo.visual,
 		  xp->cmap,
 		  &aacolor);
 }

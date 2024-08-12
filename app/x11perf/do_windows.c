@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -30,7 +30,7 @@ static int parentrows, parentcolumns, parentwindows;
 static int parentwidth, parentheight;
 static Window popup;
 
-static void 
+static void
 ComputeSizes(XParms xp, Parms p)
 {
     childwindows = p->objects;
@@ -41,7 +41,7 @@ ComputeSizes(XParms xp, Parms p)
     parentheight = (CHILDSIZE+CHILDSPACE) * childrows;
 }
 
-int 
+int
 CreateParents(XParms xp, Parms p, int64_t reps)
 {
     ComputeSizes(xp, p);
@@ -81,7 +81,7 @@ CreateParents(XParms xp, Parms p, int64_t reps)
 } /* CreateParents */
 
 
-void 
+void
 MapParents(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != parentwindows; i++) {
@@ -89,7 +89,7 @@ MapParents(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 MapParentsCleanup(XParms xp, Parms p)
 {
     for (int i = 0; i != parentwindows; i++) {
@@ -98,7 +98,7 @@ MapParentsCleanup(XParms xp, Parms p)
 }
 
 
-int 
+int
 InitCreate(XParms xp, Parms p, int64_t reps)
 {
     reps = CreateParents(xp, p, reps);
@@ -106,7 +106,7 @@ InitCreate(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-static void 
+static void
 CreateChildGroup(XParms xp, Parms p, Window parent)
 {
     for (int j = 0; j != childwindows; j++) {
@@ -120,7 +120,7 @@ CreateChildGroup(XParms xp, Parms p, Window parent)
 	XMapSubwindows (xp->d, parent);
 }
 
-void 
+void
 CreateChildren(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != parentwindows; i++) {
@@ -128,7 +128,7 @@ CreateChildren(XParms xp, Parms p, int64_t reps)
     } /* end i */
 }
 
-void 
+void
 DestroyChildren(XParms xp, Parms p)
 {
     for (int i = 0; i != parentwindows; i++) {
@@ -136,7 +136,7 @@ DestroyChildren(XParms xp, Parms p)
     }
 }
 
-void 
+void
 EndCreate(XParms xp, Parms p)
 {
     XDestroySubwindows(xp->d, xp->w);
@@ -145,7 +145,7 @@ EndCreate(XParms xp, Parms p)
 }
 
 
-int 
+int
 InitMap(XParms xp, Parms p, int64_t reps)
 {
     reps = CreateParents(xp, p, reps);
@@ -153,7 +153,7 @@ InitMap(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 UnmapParents(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != parentwindows; i++) {
@@ -161,7 +161,7 @@ UnmapParents(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 UnmapParentsCleanup(XParms xp, Parms p)
 {
     for (int i = 0; i != parentwindows; i++) {
@@ -169,7 +169,7 @@ UnmapParentsCleanup(XParms xp, Parms p)
     }
 }
 
-int 
+int
 InitDestroy(XParms xp, Parms p, int64_t reps)
 {
     reps = CreateParents(xp, p, reps);
@@ -178,7 +178,7 @@ InitDestroy(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DestroyParents(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != parentwindows; i++) {
@@ -187,7 +187,7 @@ DestroyParents(XParms xp, Parms p, int64_t reps)
 }
 
 
-void 
+void
 RenewParents(XParms xp, Parms p)
 {
     for (int i = 0; i != parentwindows; i++) {
@@ -198,7 +198,7 @@ RenewParents(XParms xp, Parms p)
     MapParents(xp, p, parentwindows);
 }
 
-int 
+int
 InitPopups(XParms xp, Parms p, int64_t reps)
 {
 #ifdef CHILDROOT
@@ -215,11 +215,11 @@ InitPopups(XParms xp, Parms p, int64_t reps)
     (void) XGetWindowAttributes(xp->d, xp->w, &xwa);
     xswa.override_redirect = True;
     popup =  XCreateSimpleWindow (
-	    xp->d, DefaultRootWindow(xp->d), 
+	    xp->d, DefaultRootWindow(xp->d),
 	    xwa.x + xwa.border_width, xwa.y + xwa.border_width,
 	    parentwidth, parentheight,
 	    0, xp->foreground, xp->foreground);
-#else   
+#else
     isolate = XCreateSimpleWindow(
 	    xp->d, xp->w, 0, 0, WIDTH, HEIGHT,
 	    0, xp->background, xp->background);
@@ -239,7 +239,7 @@ InitPopups(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-void 
+void
 DoPopUps(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
@@ -249,7 +249,7 @@ DoPopUps(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 EndPopups(XParms xp, Parms p)
 {
     XDestroySubwindows(xp->d, xp->w);

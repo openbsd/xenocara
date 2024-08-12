@@ -3,13 +3,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -26,7 +26,7 @@ SOFTWARE.
 static XSegment *segments;
 static GC       pgc;
 
-static void 
+static void
 GenerateSegments(XParms xp, Parms p, Bool ddashed)
 {
     int     size;
@@ -71,7 +71,7 @@ GenerateSegments(XParms xp, Parms p, Bool ddashed)
     if (phaseinc == 0) phaseinc = 1;
     rows = 0;
 
-    for (i = 0; i != p->objects; i++) {    
+    for (i = 0; i != p->objects; i++) {
 	switch (phase / size) {
 	case 0:
 	    x1 = 0;
@@ -81,7 +81,7 @@ GenerateSegments(XParms xp, Parms p, Bool ddashed)
 	    break;
 
 	case 1:
-	    x1 = phase % size;    
+	    x1 = phase % size;
 	    y1 = 0;
 	    x2 = size;
 	    y2 = size;
@@ -164,15 +164,15 @@ GenerateSegments(XParms xp, Parms p, Bool ddashed)
 	XChangeGC(xp->d, xp->bggc, GCCapStyle, &gcv);
     }
 }
-   
-int 
+
+int
 InitSegments(XParms xp, Parms p, int64_t reps)
 {
     GenerateSegments(xp, p, False);
     return reps;
 }
 
-int 
+int
 InitDashedSegments(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
@@ -190,7 +190,7 @@ InitDashedSegments(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
 InitDoubleDashedSegments(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
@@ -208,13 +208,11 @@ InitDoubleDashedSegments(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
-InitHorizSegments(XParms xp, Parms p, int64_t reps)
+static int
+InitHorizSegmentsWidth(XParms xp, Parms p, int64_t reps, int width)
 {
     int     size;
-    int     half;
     int     i;
-    int     rows;       /* Number of rows filled in current column      */
     int     x, y;	/* base of square to draw in			*/
     int     y1;		/* y position inside square			*/
     int     inc;
@@ -223,39 +221,33 @@ InitHorizSegments(XParms xp, Parms p, int64_t reps)
     pgc = xp->fggc;
 
     size = p->special;
-    half = (size + 19) / 20;
 
     segments = malloc((p->objects) * sizeof(XSegment));
 
-    x = half;
-    y = half;
+    x = width / 2 + 1;
+    y = width / 2 + 1;
     y1 = 0;
-    rows = 0;
-    inc = size / p->objects;
-    if (inc == 0) inc = 1;
+    inc = width + 1;
 
     for (i = 0; i != p->objects; i++) {
 	if (i % 2) {
 	    segments[i].x1 = x + size;
 	    segments[i].x2 = x;
-	    segments[i].y1 = y + size - y1;
-	    segments[i].y2 = y + size - y1;
-	    y1 += inc;
-	    if (y1 >= size) y1 -= size;
+	    segments[i].y1 = y + (HEIGHT - width - 2) - y1;
+	    segments[i].y2 = y + (HEIGHT - width - 2) - y1;
+            y1 += inc;
 	} else {
 	    segments[i].x1 = x;
 	    segments[i].x2 = x + size;
 	    segments[i].y1 = y + y1;
 	    segments[i].y2 = y + y1;
 	}
-	rows++;
-	y += size;
-	if (y >= HEIGHT - size - half || rows == MAXROWS) {
-	    rows = 0;
-	    y = half;
-	    x += size;
-	    if (x >= WIDTH - size - half)
-		x = half;
+        /* Go to next row */
+	if (y1 >= HEIGHT / 2 - (width + 2)) {
+	    y1 =0;
+	    x += size + inc;
+	    if (x >= WIDTH - size - width)
+		x = width/2 + 1;
 	}
     }
     gcv.cap_style = CapNotLast;
@@ -264,14 +256,19 @@ InitHorizSegments(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
+InitHorizSegments(XParms xp, Parms p, int64_t reps)
+{
+    return InitHorizSegmentsWidth(xp, p, reps, 1);
+}
+
+int
 InitWideHorizSegments(XParms xp, Parms p, int64_t reps)
 {
-    int size;
+    int size = p->special;
 
-    (void)InitHorizSegments(xp, p, reps);
+    (void)InitHorizSegmentsWidth(xp, p, reps, (int) ((size + 9) / 10));
 
-    size = p->special;
     XSetLineAttributes(xp->d, xp->bggc, (int) ((size + 9) / 10),
 	LineSolid, CapRound, JoinRound);
     XSetLineAttributes(xp->d, xp->fggc, (int) ((size + 9) / 10),
@@ -279,15 +276,12 @@ InitWideHorizSegments(XParms xp, Parms p, int64_t reps)
 
     return reps;
 }
- 
 
-int 
-InitVertSegments(XParms xp, Parms p, int64_t reps)
+static int
+InitVertSegmentsWidth(XParms xp, Parms p, int64_t reps, int width)
 {
     int     size;
-    int     half;
     int     i;
-    int     rows;       /* Number of rows filled in current column      */
     int     x, y;	/* base of square to draw in			*/
     int     x1;		/* x position inside square			*/
     int     inc;
@@ -296,41 +290,33 @@ InitVertSegments(XParms xp, Parms p, int64_t reps)
     pgc = xp->fggc;
 
     size = p->special;
-    half = (size + 19) / 20;
 
     segments = malloc((p->objects) * sizeof(XSegment));
 
-    x = half;
-    y = half;
+    x = width / 2 + 1;
+    y = width / 2 + 1;
     x1 = 0;
-    rows = 0;
-    inc = size / p->objects;
-    if (inc == 0) inc = 1;
+    inc = width + 1;
 
     for (i = 0; i != p->objects; i++) {
 	if (i % 2) {
-	    segments[i].x1 = x + size - x1;
-	    segments[i].x2 = x + size - x1;
+	    segments[i].x1 = x + (WIDTH - width - 2) - x1;
+	    segments[i].x2 = x + (WIDTH - width - 2) - x1;
 	    segments[i].y1 = y + size;
 	    segments[i].y2 = y;
-	    x1 += inc;
-	    if (x1 >= size) x1 -= size;
+            x1 += inc;
 	} else {
 	    segments[i].x1 = x + x1;
 	    segments[i].x2 = x + x1;
 	    segments[i].y1 = y;
 	    segments[i].y2 = y + size;
 	}
-	rows++;
-	y += size;
-	if (y >= HEIGHT - size - half || rows == MAXROWS) {
-	    /* Go to next column */
-	    rows = 0;
-	    y = half;
-	    x += size;
-	    if (x >= WIDTH - size - half) {
-		x = half;
-	    }
+        /* Go to next column */
+	if (x1 >= WIDTH / 2 - (width + 2)) {
+	    x1 = 0;
+            y += size + inc;
+            if (y >= HEIGHT - size - width)
+                y = width/2 + 1;
 	}
     }
     gcv.cap_style = CapNotLast;
@@ -339,14 +325,19 @@ InitVertSegments(XParms xp, Parms p, int64_t reps)
     return reps;
 }
 
-int 
+int
+InitVertSegments(XParms xp, Parms p, int64_t reps)
+{
+    return InitVertSegmentsWidth(xp, p, reps, 1);
+}
+
+int
 InitWideVertSegments(XParms xp, Parms p, int64_t reps)
 {
-    int size;
+    int    size = p->special;
 
-    (void)InitVertSegments(xp, p, reps);
+    (void)InitVertSegmentsWidth(xp, p, reps, (size + 9) / 10);
 
-    size = p->special;
     XSetLineAttributes(xp->d, xp->bggc, (int) ((size + 9) / 10),
 	LineSolid, CapRound, JoinRound);
     XSetLineAttributes(xp->d, xp->fggc, (int) ((size + 9) / 10),
@@ -354,9 +345,8 @@ InitWideVertSegments(XParms xp, Parms p, int64_t reps)
 
     return reps;
 }
- 
 
-void 
+void
 DoSegments(XParms xp, Parms p, int64_t reps)
 {
     int i;
@@ -375,9 +365,8 @@ DoSegments(XParms xp, Parms p, int64_t reps)
     }
 }
 
-void 
+void
 EndSegments(XParms xp, Parms p)
 {
     free(segments);
 }
-

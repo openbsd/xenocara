@@ -6,13 +6,13 @@ Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -43,7 +43,7 @@ static GC     pgc;
 #define PI  3.14159265357989
 #endif
 
-static double 
+static double
 Area(XPoint p1, XPoint p2, XPoint p3)
 {
     return
@@ -51,14 +51,14 @@ Area(XPoint p1, XPoint p2, XPoint p3)
 }
 
 /*
-static double 
+static double
 Distance(XPoint p1, XPoint p2)
 {
     return sqrt((float) ((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y)));
 }
 */
-    
-int 
+
+int
 InitTriangles(XParms xp, Parms p, int64_t reps)
 {
     int     numPoints;
@@ -90,7 +90,7 @@ InitTriangles(XParms xp, Parms p, int64_t reps)
     }
     iradius = (int) (radius + 0.5);
 
-    numPoints = (p->objects) * NUM_POINTS;  
+    numPoints = (p->objects) * NUM_POINTS;
     points = malloc(numPoints * sizeof(XPoint));
     curPoint = points;
     x = iradius;
@@ -112,7 +112,7 @@ InitTriangles(XParms xp, Parms p, int64_t reps)
 	    Distance(curPoint[-1], curPoint[-3]),
 	    Distance(curPoint[-2], curPoint[-3]),
 	    area);
-*/	
+*/
 	phi += phiinc;
 	y += 2 * iradius;
 	rows++;
@@ -134,13 +134,13 @@ InitTriangles(XParms xp, Parms p, int64_t reps)
 
 #ifndef POLYTRIANGLE_HACK
 
-void 
+void
 DoTriangles(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
         XPoint  *curPoint = points;
         for (int j = 0; j != p->objects; j++) {
-            XFillPolygon(xp->d, xp->w, pgc, curPoint, NUM_POINTS, Convex, 
+            XFillPolygon(xp->d, xp->w, pgc, curPoint, NUM_POINTS, Convex,
 			 CoordModeOrigin);
             curPoint += NUM_POINTS;
 	}
@@ -159,8 +159,8 @@ static xReq _dummy_request = {
 };
 
 static void
-XPolyTriangle(register Display *dpy, 
-	      Drawable d, GC gc, XPoint *points, 
+XPolyTriangle(register Display *dpy,
+	      Drawable d, GC gc, XPoint *points,
 	      int n_triangles, int shape, int mode)
 {
     register xFillPolyReq *req;
@@ -183,7 +183,7 @@ XPolyTriangle(register Display *dpy,
 	if ((n_this_time = max_triangles) > n_triangles)
 	    n_this_time = n_triangles;
 	n_triangles -= n_this_time;
-	GetReqExtra(FillPoly, 
+	GetReqExtra(FillPoly,
 	    (SIZEOF(xFillPolyReq) + 12) * n_this_time - SIZEOF(xFillPolyReq), req);
 	--dpy->request;
 
@@ -206,11 +206,11 @@ XPolyTriangle(register Display *dpy,
     SyncHandle();
 }
 
-void 
+void
 DoTriangles(XParms xp, Parms p, int64_t reps)
 {
     for (int i = 0; i != reps; i++) {
-        XPolyTriangle (xp->d, xp->w, pgc, points, p->objects, Convex, 
+        XPolyTriangle (xp->d, xp->w, pgc, points, p->objects, Convex,
 			 CoordModeOrigin);
         if (pgc == xp->bggc)
             pgc = xp->fggc;
@@ -221,7 +221,7 @@ DoTriangles(XParms xp, Parms p, int64_t reps)
 }
 #endif
 
-void 
+void
 EndTriangles(XParms xp, Parms p)
 {
     free(points);

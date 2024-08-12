@@ -23,7 +23,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.TH X11PERFCOMP 1 __xorgversion__
+.TH X11PERFCOMP 1 "@PACKAGE_STRING@" "@XORG_MAN_PAGE@"
 .SH NAME
 x11perfcomp \- X11 server performance comparison program
 .SH SYNTAX
@@ -33,7 +33,7 @@ x11perfcomp \- X11 server performance comparison program
 The
 .I x11perfcomp
 program merges the output of several
-.I x11perf(__appmansuffix__)
+.BR x11perf (@APP_MAN_SUFFIX@)
 runs into a nice tabular
 format.  It takes the results in each file, fills in any missing test results if
 necessary, and for each test shows the objects/second rate of each server.
@@ -73,7 +73,8 @@ Specifies a label file to use.
 .SH X DEFAULTS
 There are no X defaults used by this program.
 .SH "SEE ALSO"
-X(__miscmansuffix__), x11perf(__appmansuffix__)
+.BR X (@MISC_MAN_SUFFIX@),
+.BR x11perf(@APP_MAN_SUFFIX@)
 .SH AUTHORS
 Mark Moraes wrote the original scripts to compare servers.
 .br
