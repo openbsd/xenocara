@@ -674,11 +674,6 @@
 ./usr/X11R6/include/xcb/xtest.h
 ./usr/X11R6/include/xcb/xv.h
 ./usr/X11R6/include/xcb/xvmc.h
-./usr/X11R6/lib/X11/x11perfcomp
-./usr/X11R6/lib/X11/x11perfcomp/Xmark
-./usr/X11R6/lib/X11/x11perfcomp/fillblnk
-./usr/X11R6/lib/X11/x11perfcomp/perfboth
-./usr/X11R6/lib/X11/x11perfcomp/perfratio
 ./usr/X11R6/lib/X11/xedit
 ./usr/X11R6/lib/X11/xedit/lisp
 ./usr/X11R6/lib/X11/xedit/lisp/indent.lsp
@@ -2858,6 +2853,11 @@
 ./usr/X11R6/share/X11/locale/zh_TW/XI18N_OBJS
 ./usr/X11R6/share/X11/locale/zh_TW/XLC_LOCALE
 ./usr/X11R6/share/X11/rgb.txt
+./usr/X11R6/share/X11/x11perfcomp
+./usr/X11R6/share/X11/x11perfcomp/Xmark
+./usr/X11R6/share/X11/x11perfcomp/fillblnk
+./usr/X11R6/share/X11/x11perfcomp/perfboth
+./usr/X11R6/share/X11/x11perfcomp/perfratio
 ./usr/X11R6/share/X11/xkb
 ./usr/X11R6/share/X11/xkb/compat
 ./usr/X11R6/share/X11/xkb/compat/README
