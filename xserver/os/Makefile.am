@@ -31,7 +31,6 @@ libos_la_SOURCES = 	\
 	xstrans.c	\
 	xprintf.c	\
 	$(XORG_SRCS)
-
 libos_la_LIBADD = @SHA1_LIBS@ $(DLOPEN_LIBS) $(LTLIBOBJS)
 
 if SECURE_RPC
