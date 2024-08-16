@@ -83,11 +83,11 @@ checkDevMem(Bool warn)
     /* Try the aperture driver first */
     if ((fd = open(DEV_APERTURE, O_RDWR)) >= 0) {
         /* Try to map a page at the VGA address */
-        base = mmap((caddr_t)0, 4096, PROT_READ | PROT_WRITE,
-                    MAP_FLAGS, fd, (off_t)0xA0000);
-        
+        base = mmap((caddr_t) 0, 4096, PROT_READ | PROT_WRITE,
+                    MAP_FLAGS, fd, (off_t) 0xA0000);
+
         if (base != MAP_FAILED) {
-            munmap((caddr_t)base, 4096);
+            munmap((caddr_t) base, 4096);
             devMemFd = fd;
             useDevMem = TRUE;
             xf86Msg(X_PROBED, "checkDevMem: using aperture driver %s\n",
@@ -104,16 +104,17 @@ checkDevMem(Bool warn)
 #endif
     if ((fd = open(DEV_MEM, O_RDWR)) >= 0) {
         /* Try to map a page at the VGA address */
-        base = mmap((caddr_t)0, 4096, PROT_READ | PROT_WRITE,
-                    MAP_FLAGS, fd, (off_t)0xA0000);
-        
+        base = mmap((caddr_t) 0, 4096, PROT_READ | PROT_WRITE,
+                    MAP_FLAGS, fd, (off_t) 0xA0000);
+
         if (base != MAP_FAILED) {
-            munmap((caddr_t)base, 4096);
+            munmap((caddr_t) base, 4096);
             devMemFd = fd;
             useDevMem = TRUE;
             return;
         }
         else {
+
             if (warn) {
                 xf86Msg(X_WARNING, "checkDevMem: failed to mmap %s (%s)\n",
                         DEV_MEM, strerror(errno));
@@ -128,17 +129,19 @@ checkDevMem(Bool warn)
 #else
 #ifndef __OpenBSD__
         xf86Msg(X_WARNING, "checkDevMem: failed to open %s and %s\n"
-		"\t(%s)\n", DEV_APERTURE, DEV_MEM, strerror(errno));
+		"\t(%s)\n", DEV_MEM, DEV_APERTURE, strerror(errno));
 #else /* __OpenBSD__ */
         xf86Msg(X_WARNING, "checkDevMem: failed to open %s and %s\n"
-                "\t(%s)\n%s", DEV_APERTURE, DEV_MEM, strerror(errno),
+                "\t(%s)\n%s", DEV_MEM, DEV_APERTURE, strerror(errno),
                 SYSCTL_MSG);
 #endif /* __OpenBSD__ */
         
         xf86ErrorF("\tlinear framebuffer access unavailable\n");
     }
+
     useDevMem = FALSE;
     return;
+
 #endif
 }
 
@@ -148,6 +151,7 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
     checkDevMem(TRUE);
 
     pci_system_init_dev_mem(devMemFd);
+
     pVidMem->initialised = TRUE;
 }
 
@@ -228,13 +232,13 @@ xf86DisableIO(void)
 {
     if (!ExtendedEnabled)
         return;
-    
+
     if (amd64_iopl(FALSE) == 0) {
         ExtendedEnabled = FALSE;
     }
     /* Otherwise, the X server has revoqued its root uid,
        and thus cannot give up IO privileges any more */
-    
+
     return;
 }
 
@@ -279,18 +283,18 @@ xf86SetTVOut(int mode)
 {
     switch (xf86Info.consType) {
 #ifdef PCCONS_SUPPORT
-      case PCCONS:{
-          
-          if (ioctl (xf86Info.consoleFd, CONSOLE_X_TV_ON, &mode) < 0) {
-              xf86Msg(X_WARNING,
-                      "xf86SetTVOut: Could not set console to TV output, %s\n",
-                      strerror(errno));
-          }
-      }
-	break;
-#endif /* PCCONS_SUPPORT */
+    case PCCONS:{
 
-      default:
+        if (ioctl(xf86Info.consoleFd, CONSOLE_X_TV_ON, &mode) < 0) {
+            xf86Msg(X_WARNING,
+                    "xf86SetTVOut: Could not set console to TV output, %s\n",
+                    strerror(errno));
+        }
+    }
+        break;
+#endif                          /* PCCONS_SUPPORT */
+
+    default:
         FatalError("Xf86SetTVOut: Unsupported console");
         break;
     }
@@ -302,18 +306,18 @@ xf86SetRGBOut(void)
 {
     switch (xf86Info.consType) {
 #ifdef PCCONS_SUPPORT
-      case PCCONS:{
-          
-          if (ioctl (xf86Info.consoleFd, CONSOLE_X_TV_OFF, 0) < 0) {
-              xf86Msg(X_WARNING,
-                      "xf86SetTVOut: Could not set console to RGB output, %s\n",
-                      strerror(errno));
-          }
-      }
-	break;
-#endif /* PCCONS_SUPPORT */
+    case PCCONS:{
 
-      default:
+        if (ioctl(xf86Info.consoleFd, CONSOLE_X_TV_OFF, 0) < 0) {
+            xf86Msg(X_WARNING,
+                    "xf86SetTVOut: Could not set console to RGB output, %s\n",
+                    strerror(errno));
+        }
+    }
+        break;
+#endif                          /* PCCONS_SUPPORT */
+
+    default:
         FatalError("Xf86SetTVOut: Unsupported console");
         break;
     }

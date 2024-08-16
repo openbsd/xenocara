@@ -430,7 +430,7 @@ xf86OpenSyscons(void)
                         xf86Info.vtno = -1;
                     }
 #if 0
-            }
+                }
 #endif
 
                 if (xf86Info.vtno == -1) {
@@ -458,11 +458,8 @@ xf86OpenSyscons(void)
             }
 
             close(fd);
-#ifndef __OpenBSD__
-            snprintf(vtname, sizeof(vtname), "/dev/ttyv%01x", xf86Info.vtno - 1);
-#else
-            sprintf(vtname, sizeof(vtname), "/dev/ttyC%01x", xf86Info.vtno - 1);
-#endif
+            snprintf(vtname, sizeof(vtname), "/dev/ttyv%01x",
+                     xf86Info.vtno - 1);
             if ((fd = open(vtname, SYSCONS_CONSOLE_MODE, 0)) < 0) {
                 FatalError("xf86OpenSyscons: Cannot open %s (%s)",
                            vtname, strerror(errno));
@@ -525,7 +522,7 @@ xf86OpenPcvt(void)
 #endif
     if (fd >= 0) {
         if (ioctl(fd, VGAPCVTID, &pcvt_version) >= 0) {
-            if(ioctl(fd, VT_GETMODE, &vtmode) < 0) {
+            if (ioctl(fd, VT_GETMODE, &vtmode) < 0) {
                 FatalError("%s: VT_GETMODE failed\n%s%s\n%s",
                            "xf86OpenPcvt",
                            "Found pcvt driver but X11 seems to be",
@@ -551,22 +548,23 @@ xf86OpenPcvt(void)
                         xf86Info.vtno = initialVT;
                     }
                     else {
-                        FatalError("%s: Cannot find a free VT",
-                                   "xf86OpenPcvt");
+                        FatalError("%s: Cannot find a free VT", "xf86OpenPcvt");
                     }
                 }
             }
 
             close(fd);
-            snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix, xf86Info.vtno - 1);
+            snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix,
+                     xf86Info.vtno - 1);
             if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0) {
                 ErrorF("xf86OpenPcvt: Cannot open %s (%s)",
                        vtname, strerror(errno));
                 xf86Info.vtno = initialVT;
-                snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix, xf86Info.vtno - 1);
+                snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix,
+                         xf86Info.vtno - 1);
                 if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0) {
                     FatalError("xf86OpenPcvt: Cannot open %s (%s)",
-                                vtname, strerror(errno));
+                               vtname, strerror(errno));
                 }
             }
             if (ioctl(fd, VT_GETMODE, &vtmode) < 0) {
