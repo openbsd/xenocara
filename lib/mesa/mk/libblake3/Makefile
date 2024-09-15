@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2024/04/02 10:42:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2024/09/15 10:56:40 jsg Exp $
 
 LIB=	blake3
 
@@ -13,6 +13,8 @@ SRCS+=	blake3_sse2_x86-64_unix.S \
 	blake3_sse41_x86-64_unix.S \
 	blake3_avx2_x86-64_unix.S \
 	blake3_avx512_x86-64_unix.S
+.elif ${MACHINE_ARCH} == "aarch64"
+SRCS+=	blake3_neon.c
 .endif
 
 .include "../Makefile.inc"
