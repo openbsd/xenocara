@@ -1,0 +1,6 @@
+subdirs = ["*"]
+
+cc_library_headers {
+    name: "libdrm_test_headers",
+    export_include_dirs: ["."],
+}

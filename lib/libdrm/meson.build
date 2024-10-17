@@ -18,14 +18,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# The versioning should always stay at 2.4.x. If bumping away from this,
+# you must ensure that all users of patch_ver are changed such that DSO versions
+# continuously increment (e.g. blindly bumping from 2.4.122 to 2.5.0 would
+# roll the libdrm DSO versioning from libdrm.so.2.122.0 back to libdrm.so.2.0.0
+# which would be bad)
 project(
   'libdrm',
   ['c'],
-  version : '2.4.120',
+  version : '2.4.123',
   license : 'MIT',
   meson_version : '>= 0.59',
   default_options : ['buildtype=debugoptimized', 'c_std=c11'],
 )
+
+patch_ver = meson.project_version().split('.')[2]
 
 if ['windows', 'darwin'].contains(host_machine.system())
   error('unsupported OS: @0@'.format(host_machine.system()))
@@ -45,6 +52,12 @@ dep_threads = dependency('threads')
 cc = meson.get_compiler('c')
 
 android = cc.compiles('''int func() { return __ANDROID__; }''')
+
+# Solaris / Illumos
+if host_machine.system() == 'sunos'
+  add_global_arguments('-D__EXTENSIONS__', language : 'c')
+  add_global_arguments('-D_POSIX_C_SOURCE=3', language : 'c')
+endif
 
 symbols_check = find_program('symbols-check.py')
 prog_nm = find_program('nm')
@@ -154,7 +167,6 @@ if not cc.has_function('clock_gettime', prefix : '#define _GNU_SOURCE\n#include 
 else
   dep_rt = []
 endif
-dep_m = cc.find_library('m', required : false)
 
 # The header is not required on Linux, and is in fact deprecated in glibc 2.30+
 if ['linux'].contains(host_machine.system())
@@ -231,11 +243,15 @@ if target_machine.endian() == 'big'
   config.set('HAVE_BIG_ENDIAN', 1)
 endif
 
+if android
+  config.set('BIONIC_IOCTL_NO_SIGNEDNESS_OVERLOAD', 1)
+endif
+
 config_file = configure_file(
   configuration : config,
   output : 'config.h',
 )
-add_project_arguments('-include', '@0@'.format(config_file), language : 'c')
+add_project_arguments('-include', meson.current_build_dir() / 'config.h', language : 'c')
 
 inc_root = include_directories('.')
 inc_drm = include_directories('include/drm')
@@ -251,14 +267,14 @@ libdrm_files = [files(
 if android
   libdrm_kw = {}
 else
-  libdrm_kw = {'version' : '2.4.0'}
+  libdrm_kw = { 'version' : '2.@0@.0'.format(patch_ver) }
 endif
 
 libdrm = library(
   'drm',
   libdrm_files,
   c_args : libdrm_c_args,
-  dependencies : [dep_valgrind, dep_rt, dep_m],
+  dependencies : [dep_valgrind, dep_rt],
   include_directories : inc_drm,
   install : true,
   kwargs : libdrm_kw,

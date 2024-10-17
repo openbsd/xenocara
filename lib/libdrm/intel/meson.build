@@ -32,7 +32,7 @@ libdrm_intel = library(
   dependencies : [dep_pciaccess, dep_threads, dep_rt, dep_valgrind, dep_atomic_ops],
   c_args : libdrm_c_args,
   gnu_symbol_visibility : 'hidden',
-  version : '1.0.0',
+  version : '1.@0@.0'.format(patch_ver),
   install : true,
 )
 
@@ -104,6 +104,6 @@ test(
   args : [
     '--lib', libdrm_intel,
     '--symbols-file', files('intel-symbols.txt'),
-    '--nm', prog_nm.path(),
+    '--nm', prog_nm.full_path(),
   ],
 )

@@ -33,7 +33,7 @@ libdrm_etnaviv = library(
   c_args : libdrm_c_args,
   gnu_symbol_visibility : 'hidden',
   dependencies : [dep_threads, dep_rt, dep_atomic_ops],
-  version : '1.0.0',
+  version : '1.@0@.0'.format(patch_ver),
   install : true,
 )
 
@@ -61,6 +61,6 @@ test(
   args : [
     '--lib', libdrm_etnaviv,
     '--symbols-file', files('etnaviv-symbols.txt'),
-    '--nm', prog_nm.path(),
+    '--nm', prog_nm.full_path(),
   ],
 )

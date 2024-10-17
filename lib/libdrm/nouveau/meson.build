@@ -27,7 +27,7 @@ libdrm_nouveau = library(
   include_directories : [inc_root, inc_drm],
   link_with : libdrm,
   dependencies : [dep_threads, dep_atomic_ops],
-  version : '2.0.0',
+  version : '2.@0@.0'.format(patch_ver),
   install : true,
 )
 

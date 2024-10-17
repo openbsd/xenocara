@@ -31,7 +31,7 @@ libdrm_tegra = library(
   dependencies : [dep_threads, dep_atomic_ops],
   c_args : libdrm_c_args,
   gnu_symbol_visibility : 'hidden',
-  version : '0.0.0',
+  version : '0.@0@.0'.format(patch_ver),
   install : true,
 )
 
@@ -59,6 +59,6 @@ test(
   args : [
     '--lib', libdrm_tegra,
     '--symbols-file', files('tegra-symbols.txt'),
-    '--nm', prog_nm.path(),
+    '--nm', prog_nm.full_path(),
   ],
 )

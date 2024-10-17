@@ -598,24 +598,31 @@ drm_public int amdgpu_cs_signal_semaphore(amdgpu_context_handle ctx,
 			       uint32_t ring,
 			       amdgpu_semaphore_handle sem)
 {
+	int ret;
+
 	if (!ctx || !sem)
 		return -EINVAL;
 	if (ip_type >= AMDGPU_HW_IP_NUM)
 		return -EINVAL;
 	if (ring >= AMDGPU_CS_MAX_RINGS)
 		return -EINVAL;
-	/* sem has been signaled */
-	if (sem->signal_fence.context)
-		return -EINVAL;
+
 	pthread_mutex_lock(&ctx->sequence_mutex);
+	/* sem has been signaled */
+	if (sem->signal_fence.context) {
+		ret = -EINVAL;
+		goto unlock;
+	}
 	sem->signal_fence.context = ctx;
 	sem->signal_fence.ip_type = ip_type;
 	sem->signal_fence.ip_instance = ip_instance;
 	sem->signal_fence.ring = ring;
 	sem->signal_fence.fence = ctx->last_seq[ip_type][ip_instance][ring];
 	update_references(NULL, &sem->refcount);
+	ret = 0;
+unlock:
 	pthread_mutex_unlock(&ctx->sequence_mutex);
-	return 0;
+	return ret;
 }
 
 drm_public int amdgpu_cs_wait_semaphore(amdgpu_context_handle ctx,

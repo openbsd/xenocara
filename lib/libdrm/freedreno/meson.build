@@ -46,7 +46,7 @@ libdrm_freedreno = library(
   include_directories : [inc_root, inc_drm],
   dependencies : [dep_valgrind, dep_threads, dep_rt, dep_atomic_ops],
   link_with : libdrm,
-  version : '1.0.0',
+  version : '1.@0@.0'.format(patch_ver),
   install : true,
 )
 
@@ -77,6 +77,6 @@ test(
   args : [
     '--lib', libdrm_freedreno,
     '--symbols-file', files('freedreno-symbols.txt'),
-    '--nm', prog_nm.path(),
+    '--nm', prog_nm.full_path(),
   ],
 )
