@@ -27,7 +27,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "DRM-MEMORY" 7 "September 2012" "" "Direct Rendering Manager"
+.TH "DRM-MEMORY" "7" "September 2012" "" "Direct Rendering Manager"
 .SH NAME
 drm-memory \- DRM Memory Management
 .SH SYNOPSIS
@@ -67,8 +67,7 @@ The \fBDRM_IOCTL_MODE_CREATE_DUMB\fP ioctl takes as argument a structure of type
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 struct drm_mode_create_dumb {
     __u32 height;
     __u32 width;
@@ -79,8 +78,7 @@ struct drm_mode_create_dumb {
     __u32 pitch;
     __u64 size;
 };
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -104,16 +102,14 @@ To prepare the buffer for \fBmmap\fP(2) you need to use the
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 struct drm_mode_map_dumb {
     __u32 handle;
     __u32 pad;
 
     __u64 offset;
 };
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -130,13 +126,11 @@ structure of type \fBstruct drm_mode_destroy_dumb\fP:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 struct drm_mode_destroy_dumb {
     __u32 handle;
 };
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -217,14 +211,12 @@ GEM\-handles. To create a name for a GEM\-handle, you use the
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 struct drm_gem_flink {
     __u32 handle;
     __u32 name;
 };
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -236,16 +228,14 @@ this name to other processes which can then import the name with the
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 struct drm_gem_open {
     __u32 name;
 
     __u32 handle;
     __u32 size;
 };
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -289,8 +279,7 @@ can be used for scanout with the KMS API (see \fBdrm\-kms\fP(7)).
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 struct drm_mode_create_dumb creq;
 struct drm_mode_destroy_dumb dreq;
 struct drm_mode_map_dumb mreq;
@@ -338,14 +327,13 @@ if (map == MAP_FAILED) {
 
 /* clear the framebuffer to 0 */
 memset(map, 0, creq.size);
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .SH REPORTING BUGS
 .sp
 Bugs in this manual should be reported to
-\fI\%https://gitlab.freedesktop.org/mesa/drm/\-/issues\fP
+ <https://gitlab.freedesktop.org/mesa/drm/\-/issues> 
 .SH SEE ALSO
 .sp
 \fBdrm\fP(7), \fBdrm\-kms\fP(7), \fBdrm\-prime\fP(7), \fBdrmAvailable\fP(3),

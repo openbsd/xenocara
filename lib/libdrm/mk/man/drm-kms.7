@@ -27,7 +27,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "DRM-KMS" 7 "September 2012" "" "Direct Rendering Manager"
+.TH "DRM-KMS" "7" "September 2012" "" "Direct Rendering Manager"
 .SH NAME
 drm-kms \- Kernel Mode-Setting
 .SH SYNOPSIS
@@ -178,8 +178,7 @@ failure, otherwise, a valid CRTC id is returned.
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 static int modeset_find_crtc(int fd, drmModeRes *res, drmModeConnector *conn)
 {
     drmModeEncoder *enc;
@@ -218,14 +217,13 @@ static int modeset_find_crtc(int fd, drmModeRes *res, drmModeConnector *conn)
     /* cannot find a suitable CRTC */
     return \-ENOENT;
 }
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .SH REPORTING BUGS
 .sp
 Bugs in this manual should be reported to
-\fI\%https://gitlab.freedesktop.org/mesa/drm/\-/issues\fP
+ <https://gitlab.freedesktop.org/mesa/drm/\-/issues> 
 .SH SEE ALSO
 .sp
 \fBdrm\fP(7), \fBdrm\-memory\fP(7), \fBdrmModeGetResources\fP(3),

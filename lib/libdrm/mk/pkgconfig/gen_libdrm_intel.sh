@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $OpenBSD: gen_libdrm_intel.sh,v 1.1 2021/02/11 10:34:51 jsg Exp $
+# $OpenBSD: gen_libdrm_intel.sh,v 1.2 2024/10/17 10:00:00 jsg Exp $
 #
 # Copyright (c) 2010,2011 Jasper Lievisse Adriaanse <jasper@openbsd.org>
 #
@@ -50,7 +50,7 @@ if [ ! -w "${objdir}" ]; then
 	exit 1
 fi
 
-lib_version=$(fgrep -m1 version ${curdir}/../../meson.build | sed -e "s/^.*'\(.*\)'.*$/\1/")
+lib_version=$(fgrep -m1 'version :' ${curdir}/../../meson.build | sed -e "s/^.*'\(.*\)'.*$/\1/")
 
 pc_file="${objdir}/libdrm_intel.pc"
 cat > ${pc_file} << __EOF__

@@ -60,7 +60,6 @@
 #if HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
 #endif
-#include <math.h>
 #include <inttypes.h>
 
 #if defined(__FreeBSD__)
@@ -4502,14 +4501,24 @@ process_device(drmDevicePtr *device, const char *d_name,
 {
     struct stat sbuf;
     char node[PATH_MAX + 1];
-    int node_type, subsystem_type;
+    int node_type, subsystem_type, written;
     unsigned int maj, min;
+    const int max_node_length = ALIGN(drmGetMaxNodeName(), sizeof(void *));
 
     node_type = drmGetNodeType(d_name);
     if (node_type < 0)
         return -1;
 
-    snprintf(node, PATH_MAX, "%s/%s", DRM_DIR_NAME, d_name);
+    written = snprintf(node, PATH_MAX, "%s/%s", DRM_DIR_NAME, d_name);
+    if (written < 0)
+        return -1;
+
+    /* anything longer than this will be truncated in drmDeviceAlloc.
+     * Account for NULL byte
+     */
+    if (written + 1 > max_node_length)
+        return -1;
+
     if (stat(node, &sbuf))
         return -1;
 

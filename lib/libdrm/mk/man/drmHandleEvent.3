@@ -27,7 +27,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "DRMHANDLEEVENT" 3 "September 2012" "" "Direct Rendering Manager"
+.TH "DRMHANDLEEVENT" "3" "September 2012" "" "Direct Rendering Manager"
 .SH NAME
 drmHandleEvent \- read and process pending DRM events
 .SH SYNOPSIS
@@ -45,8 +45,7 @@ parameters noted below:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 typedef struct _drmEventContext {
     int version;
     void (*vblank_handler) (int fd,
@@ -60,8 +59,7 @@ typedef struct _drmEventContext {
                                unsigned int tv_usec,
                                void *user_data)
 } drmEventContext, *drmEventContextPtr;
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .SH RETURN VALUE
@@ -72,7 +70,7 @@ file\-descriptor fails or returns less than a full event record.
 .SH REPORTING BUGS
 .sp
 Bugs in this function should be reported to
-\fI\%https://gitlab.freedesktop.org/mesa/drm/\-/issues\fP
+ <https://gitlab.freedesktop.org/mesa/drm/\-/issues> 
 .SH SEE ALSO
 .sp
 \fBdrm\fP(7), \fBdrm\-kms\fP(7), \fBdrmModePageFlip\fP(3),

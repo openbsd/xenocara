@@ -919,6 +919,11 @@ extern int drmGetDeviceFromDevId(dev_t dev_id, uint32_t flags, drmDevicePtr *dev
  */
 extern int drmGetNodeTypeFromDevId(dev_t devid);
 
+/**
+ * Check if two drmDevice pointers represent the same DRM device.
+ *
+ * Returns 1 if the devices are equal, 0 otherwise.
+ */
 extern int drmDevicesEqual(drmDevicePtr a, drmDevicePtr b);
 
 extern int drmSyncobjCreate(int fd, uint32_t flags, uint32_t *handle);

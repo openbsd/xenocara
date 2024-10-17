@@ -27,7 +27,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "DRMMODEGETRESOURCES" 3 "September 2012" "" "Direct Rendering Manager"
+.TH "DRMMODEGETRESOURCES" "3" "September 2012" "" "Direct Rendering Manager"
 .SH NAME
 drmModeGetResources \- retrieve current display configuration information
 .SH SYNOPSIS
@@ -45,8 +45,7 @@ configuration. The structure contains the following fields:
 .INDENT 0.0
 .INDENT 3.5
 .sp
-.nf
-.ft C
+.EX
 typedef struct _drmModeRes {
     int count_fbs;
     uint32_t *fbs;
@@ -63,8 +62,7 @@ typedef struct _drmModeRes {
     uint32_t min_width, max_width;
     uint32_t min_height, max_height;
 } drmModeRes, *drmModeResPtr;
-.ft P
-.fi
+.EE
 .UNINDENT
 .UNINDENT
 .sp
@@ -100,7 +98,7 @@ success, NULL on failure. The returned structure must be freed with
 .SH REPORTING BUGS
 .sp
 Bugs in this function should be reported to
-\fI\%https://gitlab.freedesktop.org/mesa/drm/\-/issues\fP
+ <https://gitlab.freedesktop.org/mesa/drm/\-/issues> 
 .SH SEE ALSO
 .sp
 \fBdrm\fP(7), \fBdrm\-kms\fP(7), \fBdrmModeGetFB\fP(3), \fBdrmModeAddFB\fP(3),
