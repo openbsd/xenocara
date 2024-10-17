@@ -302,7 +302,7 @@
 ./usr/X11R6/lib/libdrm.a
 ./usr/X11R6/lib/libdrm.so.7.13
 ./usr/X11R6/lib/libdrm_amdgpu.a
-./usr/X11R6/lib/libdrm_amdgpu.so.1.13
+./usr/X11R6/lib/libdrm_amdgpu.so.1.14
 ./usr/X11R6/lib/libdrm_amdgpu_p.a
 ./usr/X11R6/lib/libdrm_intel.a
 ./usr/X11R6/lib/libdrm_intel.so.5.4
