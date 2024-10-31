@@ -1135,8 +1135,10 @@ handle_detailed_monset(struct detailed_monitor_section *det_mon, void *data)
             p->Monitor->nHsync++;
         }
         else {
+#ifdef SPAM_XORG_LOG
             xf86DrvMsg(scrnIndex, X_INFO,
                        "Using hsync ranges from config file\n");
+#endif
         }
 
         if (!p->have_vrefresh) {
@@ -1150,8 +1152,10 @@ handle_detailed_monset(struct detailed_monitor_section *det_mon, void *data)
             p->Monitor->nVrefresh++;
         }
         else {
+#ifdef SPAM_XORG_LOG
             xf86DrvMsg(scrnIndex, X_INFO,
                        "Using vrefresh ranges from config file\n");
+#endif
         }
 
         clock = det_mon->section.ranges.max_clock * 1000;
@@ -1198,6 +1202,7 @@ xf86EdidMonitorSet(int scrnIndex, MonPtr Monitor, xf86MonPtr DDC)
     xf86ForEachDetailedBlock(DDC, handle_detailed_monset, &p);
 
     if (Modes) {
+#ifdef SPAM_XORG_LOG
         /* Print Modes */
         xf86DrvMsg(scrnIndex, X_INFO, "Printing DDC gathered Modelines:\n");
 
@@ -1206,7 +1211,7 @@ xf86EdidMonitorSet(int scrnIndex, MonPtr Monitor, xf86MonPtr DDC)
             xf86PrintModeline(scrnIndex, Mode);
             Mode = Mode->next;
         }
-
+#endif
         /* Do we still need ranges to be filled in? */
         if (!Monitor->nHsync || !Monitor->nVrefresh)
             DDCGuessRangesFromModes(scrnIndex, Monitor, Modes);
