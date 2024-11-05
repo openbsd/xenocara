@@ -683,6 +683,8 @@ eventToDeviceEvent(DeviceEvent *ev, xEvent **xi)
     len += vallen * 4;          /* valuators mask */
 
     *xi = calloc(1, len);
+    if (*xi == NULL)
+        return BadAlloc;
     xde = (xXIDeviceEvent *) * xi;
     xde->type = GenericEvent;
     xde->extension = IReqCode;
@@ -751,6 +753,8 @@ eventToTouchOwnershipEvent(TouchOwnershipEvent *ev, xEvent **xi)
     xXITouchOwnershipEvent *xtoe;
 
     *xi = calloc(1, len);
+    if (*xi == NULL)
+        return BadAlloc;
     xtoe = (xXITouchOwnershipEvent *) * xi;
     xtoe->type = GenericEvent;
     xtoe->extension = IReqCode;
@@ -781,6 +785,8 @@ eventToRawEvent(RawDeviceEvent *ev, xEvent **xi)
     len += vallen * 4;          /* valuators mask */
 
     *xi = calloc(1, len);
+    if (*xi == NULL)
+        return BadAlloc;
     raw = (xXIRawEvent *) * xi;
     raw->type = GenericEvent;
     raw->extension = IReqCode;
@@ -816,6 +822,8 @@ eventToBarrierEvent(BarrierEvent *ev, xEvent **xi)
     int len = sizeof(xXIBarrierEvent);
 
     *xi = calloc(1, len);
+    if (*xi == NULL)
+        return BadAlloc;
     barrier = (xXIBarrierEvent*) *xi;
     barrier->type = GenericEvent;
     barrier->extension = IReqCode;
@@ -845,6 +853,8 @@ eventToGesturePinchEvent(GestureEvent *ev, xEvent **xi)
     xXIGesturePinchEvent *xpe;
 
     *xi = calloc(1, len);
+    if (*xi == NULL)
+        return BadAlloc;
     xpe = (xXIGesturePinchEvent *) * xi;
     xpe->type = GenericEvent;
     xpe->extension = IReqCode;
@@ -887,6 +897,8 @@ eventToGestureSwipeEvent(GestureEvent *ev, xEvent **xi)
     xXIGestureSwipeEvent *xde;
 
     *xi = calloc(1, len);
+    if (*xi == NULL)
+        return BadAlloc;
     xde = (xXIGestureSwipeEvent *) * xi;
     xde->type = GenericEvent;
     xde->extension = IReqCode;

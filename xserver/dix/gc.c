@@ -811,7 +811,8 @@ CreateScratchGC(ScreenPtr pScreen, unsigned depth)
         FreeGC(pGC, (XID) 0);
         pGC = (GCPtr) NULL;
     }
-    pGC->graphicsExposures = FALSE;
+    else
+        pGC->graphicsExposures = FALSE;
     return pGC;
 }
 

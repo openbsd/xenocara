@@ -1352,18 +1352,18 @@ int
 PolyText(ClientPtr client, DrawablePtr pDraw, GC * pGC, unsigned char *pElt,
          unsigned char *endReq, int xorg, int yorg, int reqType, XID did)
 {
-    PTclosureRec local_closure;
-
-    local_closure.pElt = pElt;
-    local_closure.endReq = endReq;
-    local_closure.client = client;
-    local_closure.pDraw = pDraw;
-    local_closure.xorg = xorg;
-    local_closure.yorg = yorg;
-    local_closure.reqType = reqType;
-    local_closure.pGC = pGC;
-    local_closure.did = did;
-    local_closure.err = Success;
+    PTclosureRec local_closure = {
+        .client = client,
+        .pDraw = pDraw,
+        .pGC = pGC,
+        .pElt = pElt,
+        .endReq = endReq,
+        .xorg = xorg,
+        .yorg = yorg,
+        .reqType = reqType,
+        .did = did,
+        .err = Success
+    };
 
     (void) doPolyText(client, &local_closure);
     return Success;
@@ -1687,7 +1687,8 @@ SetFontPath(ClientPtr client, int npaths, unsigned char *paths)
         int bad;
 
         err = SetFontPathElements(npaths, paths, &bad, FALSE);
-        client->errorValue = bad;
+        if (err != Success)
+            client->errorValue = bad;
     }
     return err;
 }

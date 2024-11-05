@@ -1250,6 +1250,7 @@ FindBestPixel(EntryPtr pentFirst, int size, xrgb * prgb, int channel)
         case PSEUDOMAP:
             dg = (long) pent->co.local.green - prgb->green;
             db = (long) pent->co.local.blue - prgb->blue;
+            /* fallthrough */
         case REDMAP:
             dr = (long) pent->co.local.red - prgb->red;
             break;

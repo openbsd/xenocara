@@ -683,7 +683,7 @@ HashResourceID(XID id, unsigned int numBits)
     id &= mask;
     if (numBits < 9)
         return (id ^ (id >> numBits) ^ (id >> (numBits<<1))) & ~((~0U) << numBits);
-    return (id ^ (id >> numBits)) & ~((~0) << numBits);
+    return (id ^ (id >> numBits)) & ~((~0U) << numBits);
 }
 
 static XID

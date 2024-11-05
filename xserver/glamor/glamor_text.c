@@ -235,7 +235,11 @@ static const char fs_vars_text[] =
 
 static const char fs_exec_text[] =
     "       ivec2 itile_texture = ivec2(glyph_pos);\n"
+#if BITMAP_BIT_ORDER == MSBFirst
+    "       uint x = uint(7) - uint(itile_texture.x & 7);\n"
+#else
     "       uint x = uint(itile_texture.x & 7);\n"
+#endif
     "       itile_texture.x >>= 3;\n"
     "       uint texel = texelFetch(font, itile_texture, 0).x;\n"
     "       uint bit = (texel >> x) & uint(1);\n"
@@ -244,7 +248,11 @@ static const char fs_exec_text[] =
 
 static const char fs_exec_te[] =
     "       ivec2 itile_texture = ivec2(glyph_pos);\n"
+#if BITMAP_BIT_ORDER == MSBFirst
+    "       uint x = uint(7) - uint(itile_texture.x & 7);\n"
+#else
     "       uint x = uint(itile_texture.x & 7);\n"
+#endif
     "       itile_texture.x >>= 3;\n"
     "       uint texel = texelFetch(font, itile_texture, 0).x;\n"
     "       uint bit = (texel >> x) & uint(1);\n"

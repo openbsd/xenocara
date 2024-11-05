@@ -26,8 +26,8 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 21.1.13, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
-RELEASE_DATE="2024-04-12"
+AC_INIT([xorg-server], 21.1.14, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
+RELEASE_DATE="2024-10-29"
 RELEASE_NAME="Caramel Ice Cream"
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
@@ -807,7 +807,7 @@ PKG_CHECK_MODULES(PIXMAN, $LIBPIXMAN)
 REQUIRED_LIBS="$REQUIRED_LIBS $LIBPIXMAN $LIBXFONT xau"
 
 dnl Core modules for most extensions, et al.
-SDK_REQUIRED_MODULES="$XPROTO $RANDRPROTO $RENDERPROTO $XEXTPROTO $INPUTPROTO $KBPROTO $FONTSPROTO $LIBPIXMAN $LIBXCVT"
+SDK_REQUIRED_MODULES="$XPROTO $RANDRPROTO $RENDERPROTO $XEXTPROTO $INPUTPROTO $KBPROTO $FONTSPROTO $LIBPIXMAN"
 # Make SDK_REQUIRED_MODULES available for inclusion in xorg-server.pc
 AC_SUBST(SDK_REQUIRED_MODULES)
 

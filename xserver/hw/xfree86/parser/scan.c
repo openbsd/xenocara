@@ -332,10 +332,10 @@ xf86getToken(const xf86ConfigSymTabRec * tab)
             }
             while ((c != '\n') && (c != '\r') && (c != '\0'));
             configRBuf[i] = '\0';
-            /* XXX no private copy.
+            /* XXX private copy.
              * Use xf86addComment when setting a comment.
              */
-            xf86_lex_val.str = configRBuf;
+            xf86_lex_val.str = strdup(configRBuf);
             return COMMENT;
         }
 
@@ -448,8 +448,11 @@ xf86getSubToken(char **comment)
     for (;;) {
         token = xf86getToken(NULL);
         if (token == COMMENT) {
-            if (comment)
+            if (comment) {
                 *comment = xf86addComment(*comment, xf86_lex_val.str);
+                free(xf86_lex_val.str);
+                xf86_lex_val.str = NULL;
+            }
         }
         else
             return token;
@@ -464,8 +467,11 @@ xf86getSubTokenWithTab(char **comment, const xf86ConfigSymTabRec * tab)
     for (;;) {
         token = xf86getToken(tab);
         if (token == COMMENT) {
-            if (comment)
+            if (comment) {
                 *comment = xf86addComment(*comment, xf86_lex_val.str);
+                free(xf86_lex_val.str);
+                xf86_lex_val.str = NULL;
+            }
         }
         else
             return token;

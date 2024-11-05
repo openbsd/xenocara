@@ -136,7 +136,7 @@ DetermineClientPid(struct _Client * client)
 void
 DetermineClientCmd(pid_t pid, const char **cmdname, const char **cmdargs)
 {
-#if !defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(__OpenBSD__)
     char path[PATH_MAX + 1];
     int totsize = 0;
     int fd = 0;
@@ -269,10 +269,9 @@ DetermineClientCmd(pid_t pid, const char **cmdname, const char **cmdargs)
             return;
         argv = kvm_getargv(kd, kp, 0);
         if (cmdname) {
-            if (argv == NULL || argv[0] == NULL) {
-                *cmdname = strdup("");
+            if (argv == NULL || argv[0] == NULL)
                 return;
-            } else
+            else
                 *cmdname = strdup(argv[0]);
         }
         if (cmdargs) {

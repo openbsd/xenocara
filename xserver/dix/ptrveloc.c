@@ -143,6 +143,7 @@ InitPredictableAccelerationScheme(DeviceIntPtr dev,
     schemeData->vel = vel;
     scheme.accelData = schemeData;
     if (!InitializePredictableAccelerationProperties(dev, vel, schemeData)) {
+        FreeVelocityData(vel);
         free(vel);
         free(schemeData);
         return FALSE;
