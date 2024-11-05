@@ -1,3 +1,83 @@
+commit 3c2d5aedd7708c75710b39268631762de904c304
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 5 11:15:04 2024 +1000
+
+    libXi 1.8.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a5af26c654b4da5fd5eaaeaa2173c734ab9e63ec
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 27 11:01:06 2024 +1000
+
+    XGetFeedbackControl: skip over unknown feedback controls
+    
+    If the server sends an unknown feedback control class we would allocate
+    the amount of *protocol* bytes for the client representation but then
+    later mess up the actual composition of the classes due to
+    Feedback->length never being initialized.
+    
+    So while in theory it looks like this:
+       |-------------- allocated size -----------------|
+       [led feedback] [ ?unknown? ] [kbd feedback][....]
+    with unknown being the size of the class on the protocol,
+    in practice it looks like this:
+       |-------------- allocated size -----------------|
+       [led feedback] [ ?unknown?                ] [kbd feedback][...]
+    with unknown being the size of whatever was in the Feeback->length
+    pointed to at the time. The content of unknown is never initialized.
+    
+    Fix this by making unknown classes disappear so the above becomes:
+       |------- allocated size ---------|
+       [led feedback][kbd feedback][....]
+    
+    Closes #16
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/18>
+
+commit dabce4dbe5eab35076e31fd0a628cbe11b858fa1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 26 11:49:49 2024 -0700
+
+    wireTo*Event: check for malloc() failure
+    
+    Fixes 6 -Wanalyzer-possible-null-dereference and
+    1 -Wanalyzer-null-dereference and warnings from gcc 14.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/17>
+
+commit 56b11459f833df8f324587847534a548b070da94
+Author: kyomawolf <kyomawolf@kyomawolf.eu>
+Date:   Thu Oct 5 21:52:36 2023 +0200
+
+    fixed wrong type in man page
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/14>
+
+commit 57ce2e8ba4c1f1bc5792e14bc7082f3ebd0915be
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jan 29 11:27:11 2024 +1000
+
+    Allow XIFreeDeviceInfo on a null pointer
+
+commit a340bc0424a73d9fc4badbb7aee5284877635ca9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 13 11:17:43 2023 -0700
+
+    gitlab CI: Update to latest CI templates
+    
+    Current template fails to rebuild the CI container with the current
+    Debian stable release (a new release since the last update)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 09f3eb570fe79bfc0c430b6059d7b4acaf371c24
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sat Aug 5 10:32:03 2023 +0000
+
+    Fix double alignment on 32bits machines with strict constraints
+
 commit 3a7503ec7703f10de17c622ea22b7bff736cea74
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu May 4 14:42:12 2023 +1000
@@ -1064,7 +1144,7 @@ Date:   Wed Dec 26 15:29:43 2012 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit af9f26510d87eee71f1cd688d7dcfbf173c13943
-Merge: 31c6cf9 9e8a55d
+Merge: 31c6cf9f6fbc 9e8a55dfcb3d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Dec 17 14:34:53 2012 +1000
 
@@ -1382,7 +1462,7 @@ Date:   Thu Dec 22 09:42:43 2011 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 47f3d887a7731f4ab68a69ed31dbe7acf6d13270
-Merge: 82a6312 e73e2fe
+Merge: 82a631263ef4 e73e2fe95dab
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Dec 21 15:40:37 2011 +1000
 
@@ -1587,7 +1667,7 @@ Date:   Sun Sep 18 00:53:56 2011 -0700
     Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit 69f2580fd47cfe24105892e9ffb79cd046954b7d
-Merge: fc5d478 3ed1b46
+Merge: fc5d47895c13 3ed1b4632052
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Sat Sep 17 06:41:30 2011 +1000
 
@@ -3403,7 +3483,7 @@ Date:   Thu Jun 4 16:29:20 2009 +0200
     Fix building if asciidoc or xmlto is not installed.
 
 commit 5975cb9e6f89bf71b1740cee951fc583d7b7cfc1
-Merge: 8ea9ebc 279a8c3
+Merge: 8ea9ebcedcb9 279a8c3a6466
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Jun 4 15:49:07 2009 +1000
 
@@ -4220,7 +4300,7 @@ Date:   Thu May 22 12:58:55 2008 +0930
     Ansify the XI 2 functions.
 
 commit 50990b8deb8b8484e9e02e313387ea4d2ddbd242
-Merge: 26dde5a 145947e
+Merge: 26dde5aaf4bb 145947ed6032
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu May 22 12:48:40 2008 +0930
 
@@ -4268,7 +4348,7 @@ Date:   Wed Apr 30 10:35:12 2008 +0930
     Fix up AM_CFLAGS, pulled in the system-includes before the local ones.
 
 commit d68d321c0692848dd5eb67a3713676498c1c646b
-Merge: 7d0977b 3e99cc2
+Merge: 7d0977bc02ce 3e99cc281509
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Mon Apr 28 14:35:11 2008 +0930
 
@@ -4808,14 +4888,14 @@ Date:   Sat Oct 14 23:56:20 2006 -0700
     Add *.o to .gitignore.
 
 commit 6e08a76fd8e356f98d2d6913f0c1b1401090768d
-Merge: ba84e84 360ceac
+Merge: ba84e84575b4 360ceacb2a3c
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Sep 24 20:02:24 2006 +0300
 
     Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/lib/libXi
 
 commit ba84e84575b4167b0c6298e86a860b0741e2d2a3
-Merge: 93d3c2c 576c579
+Merge: 93d3c2c45ccd 576c5794cf4b
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Sep 24 19:58:56 2006 +0300
 

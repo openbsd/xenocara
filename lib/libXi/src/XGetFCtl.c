@@ -67,7 +67,7 @@ XFeedbackState *
 XGetFeedbackControl(
     register Display	*dpy,
     XDevice		*dev,
-    int			*num_feedbacks)
+    int			*num_feedbacks_out)
 {
     XFeedbackState *Feedback = NULL;
     XFeedbackState *Sav = NULL;
@@ -77,6 +77,8 @@ XGetFeedbackControl(
     xGetFeedbackControlReq *req;
     xGetFeedbackControlReply rep;
     XExtDisplayInfo *info = XInput_find_display(dpy);
+    int num_feedbacks = 0;
+    int known_feedbacks = 0;
 
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_Initial_Release, info) == -1)
@@ -95,7 +97,7 @@ XGetFeedbackControl(
 	size_t size = 0;
 	int i;
 
-	*num_feedbacks = rep.num_feedbacks;
+	num_feedbacks = rep.num_feedbacks;
 
 	if (rep.length < (INT_MAX >> 2)) {
 	    nbytes = rep.length << 2;
@@ -109,7 +111,7 @@ XGetFeedbackControl(
 	end = (char *)f + nbytes;
 	_XRead(dpy, (char *)f, nbytes);
 
-	for (i = 0; i < *num_feedbacks; i++) {
+	for (i = 0; i < num_feedbacks; i++) {
 	    if ((char *)f + sizeof(*f) > end ||
 	        f->length == 0 || f->length > nbytes)
 		goto out;
@@ -141,7 +143,7 @@ XGetFeedbackControl(
 		size += sizeof(XBellFeedbackState);
 		break;
 	    default:
-		size += f->length;
+		/* unknown classes are skipped */
 		break;
 	    }
 	    if (size > INT_MAX)
@@ -154,9 +156,11 @@ XGetFeedbackControl(
 	    goto out;
 
 	Sav = Feedback;
+	known_feedbacks = num_feedbacks;
 
 	f = sav;
-	for (i = 0; i < *num_feedbacks; i++) {
+	for (i = 0; i < num_feedbacks; i++) {
+	    Bool skip = False;
 	    switch (f->class) {
 	    case KbdFeedbackClass:
 	    {
@@ -262,14 +266,18 @@ XGetFeedbackControl(
 		break;
 	    }
 	    default:
+		--known_feedbacks;
+		skip = True;
 		break;
 	    }
 	    f = (xFeedbackState *) ((char *)f + f->length);
-	    Feedback = (XFeedbackState *) ((char *)Feedback + Feedback->length);
+	    if (!skip)
+		Feedback = (XFeedbackState *) ((char *)Feedback + Feedback->length);
 	}
     }
 out:
     XFree((char *)sav);
+    *num_feedbacks_out = known_feedbacks;
 
     UnlockDisplay(dpy);
     SyncHandle();

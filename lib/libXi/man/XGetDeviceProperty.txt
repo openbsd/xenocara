@@ -32,7 +32,7 @@ SYNOPSIS
                                Atom type,
                                int format,
                                int mode,
-                               const char *data,
+                               const unsigned char *data,
                                int nelements)
 
    void XDeleteDeviceProperty( Display *display,

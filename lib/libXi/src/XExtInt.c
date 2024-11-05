@@ -1597,6 +1597,8 @@ wireToDeviceEvent(xXIDeviceEvent *in, XGenericEventCookie* cookie)
     len = sizeDeviceEvent(in->buttons_len * 4, in->valuators_len * 4, ptr);
 
     cookie->data = ptr_lib = malloc(len);
+    if (!ptr_lib)
+        return 0;
 
     out = next_block(&ptr_lib, sizeof(XIDeviceEvent));
     out->display = cookie->display;
@@ -1890,6 +1892,8 @@ wireToDeviceChangedEvent(xXIDeviceChangedEvent *in, XGenericEventCookie *cookie)
     len = size_classes((xXIAnyInfo*)&in[1], in->num_classes);
 
     cookie->data = out = malloc(sizeof(XIDeviceChangedEvent) + len);
+    if (!out)
+        return 0;
 
     out->type = in->type;
     out->serial = cookie->serial;
@@ -1920,7 +1924,9 @@ wireToHierarchyChangedEvent(xXIHierarchyEvent *in, XGenericEventCookie *cookie)
     xXIHierarchyInfo *info_in;
     XIHierarchyEvent *out;
 
-    cookie->data = out = malloc(sizeof(XIHierarchyEvent) + in->num_info * sizeof(XIHierarchyInfo));;
+    cookie->data = out = malloc(sizeof(XIHierarchyEvent) + in->num_info * sizeof(XIHierarchyInfo));
+    if (!out)
+        return 0;
 
     out->info           = (XIHierarchyInfo*)&out[1];
     out->display        = cookie->display;
@@ -2016,6 +2022,9 @@ wireToEnterLeave(xXIEnterEvent *in, XGenericEventCookie *cookie)
     len = sizeof(XIEnterEvent) + in->buttons_len * 4;
 
     cookie->data = out = malloc(len);
+    if (!out)
+        return 0;
+
     out->buttons.mask = (unsigned char*)&out[1];
 
     out->type           = in->type;
@@ -2060,6 +2069,8 @@ wireToPropertyEvent(xXIPropertyEvent *in, XGenericEventCookie *cookie)
     XIPropertyEvent *out = malloc(sizeof(XIPropertyEvent));
 
     cookie->data = out;
+    if (!out)
+        return 0;
 
     out->type           = in->type;
     out->serial         = cookie->serial;
@@ -2081,6 +2092,8 @@ wireToTouchOwnershipEvent(xXITouchOwnershipEvent *in,
     XITouchOwnershipEvent *out = malloc(sizeof(XITouchOwnershipEvent));
 
     cookie->data = out;
+    if (!out)
+        return 0;
 
     out->type           = in->type;
     out->serial         = cookie->serial;
@@ -2106,6 +2119,8 @@ wireToBarrierEvent(xXIBarrierEvent *in, XGenericEventCookie *cookie)
     XIBarrierEvent *out = malloc(sizeof(XIBarrierEvent));
 
     cookie->data = out;
+    if (!out)
+        return 0;
 
     out->display    = cookie->display;
     out->type       = in->type;
@@ -2137,6 +2152,8 @@ wireToPinchEvent(xXIGesturePinchEvent *in,
     XIGesturePinchEvent *out;
 
     cookie->data = out = malloc(sizeof(XIGesturePinchEvent));
+    if (!out)
+        return 0;
 
     out->display    = cookie->display;
     out->type       = in->type;
@@ -2182,6 +2199,8 @@ wireToSwipeEvent(xXIGestureSwipeEvent *in,
     XIGestureSwipeEvent *out;
 
     cookie->data = out = malloc(sizeof(XIGestureSwipeEvent));
+    if (!out)
+        return 0;
 
     out->display    = cookie->display;
     out->type       = in->type;

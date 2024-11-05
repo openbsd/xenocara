@@ -150,7 +150,7 @@ void
 XIFreeDeviceInfo(XIDeviceInfo* info)
 {
     XIDeviceInfo *ptr = info;
-    while(ptr->name)
+    while(ptr && ptr->name)
     {
         Xfree(ptr->classes);
         Xfree(ptr->name);
