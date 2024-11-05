@@ -23,10 +23,12 @@
 #ifndef _LIBXFONT2_H_
 #define _LIBXFONT2_H_
 
+#include	<stddef.h>
 #include	<stdarg.h>
 #include	<stdint.h>
 #include	<X11/Xfuncproto.h>
 #include	<X11/fonts/font.h>
+#include	<X11/fonts/fontproto.h>
 
 #define XFONT2_FPE_FUNCS_VERSION	1
 

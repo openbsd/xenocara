@@ -41,10 +41,6 @@ from The Open Group.
 #include <X11/fonts/fontutil.h>
 #include <math.h>
 
-#ifndef MAX
-#define   MAX(a,b)    (((a)>(b)) ? a : b)
-#endif
-
 static void bitmapUnloadScalable (FontPtr pFont);
 static void ScaleBitmap ( FontPtr pFont, CharInfoPtr opci,
 			  CharInfoPtr pci, double *inv_xform,
@@ -281,24 +277,24 @@ ComputeScaleFactors(FontScalablePtr from, FontScalablePtr to,
 /* favor enlargement over reduction because of aliasing resulting
    from reduction */
 #define SCORE(m,s) \
-if (m >= 1.0) { \
-    if (m == 1.0) \
-        score += (16 * s); \
-    else if (m == 2.0) \
-        score += (4 * s); \
+if ((m) >= 1.0) { \
+    if ((m) == 1.0) \
+        score += (16 * (s)); \
+    else if ((m) == 2.0) \
+        score += (4 * (s)); \
     else \
-        score += (int)(((double)(3 * s)) / m); \
+        score += (int)(((double)(3 * (s))) / (m)); \
 } else { \
-        score += (int)(((double)(2 * s)) * m); \
+        score += (int)(((double)(2 * (s))) * (m)); \
 }
 
 /* don't need to favor enlargement when looking for bitmap that can
    be used unscalable */
 #define SCORE2(m,s) \
-if (m >= 1.0) \
-    score += (int)(((double)(8 * s)) / m); \
+if ((m) >= 1.0) \
+    score += (int)(((double)(8 * (s))) / (m));	\
 else \
-    score += (int)(((double)(8 * s)) * m);
+    score += (int)(((double)(8 * (s))) * (m));
 
 static FontEntryPtr
 FindBestToScale(FontPathElementPtr fpe, FontEntryPtr entry,

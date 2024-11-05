@@ -47,6 +47,10 @@ in this Software without prior written authorization from The Open Group.
 #include <limits.h>
 #include "src/util/replace.h"
 
+#ifndef O_CLOEXEC
+#define O_CLOEXEC	0
+#endif
+
 static Bool AddFileNameAliases ( FontDirectoryPtr dir );
 static int ReadFontAlias ( char *directory, Bool isFile,
 			   FontDirectoryPtr *pdir );
@@ -96,7 +100,7 @@ FontFileReadDirectory (const char *directory, FontDirectoryPtr *pdir)
 	strlcat(dir_file, "/", sizeof(dir_file));
     strlcat(dir_file, FontDirFile, sizeof(dir_file));
 #ifndef WIN32
-    file_fd = open(dir_file, O_RDONLY | O_NOFOLLOW);
+    file_fd = open(dir_file, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (file_fd >= 0) {
 	file = fdopen(file_fd, "rt");
     }
@@ -293,7 +297,7 @@ ReadFontAlias(char *directory, Bool isFile, FontDirectoryPtr *pdir)
     }
 
 #ifndef WIN32
-    file_fd = open(alias_file, O_RDONLY | O_NOFOLLOW);
+    file_fd = open(alias_file, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (file_fd >= 0) {
 	file = fdopen(file_fd, "rt");
     }

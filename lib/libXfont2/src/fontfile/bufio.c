@@ -83,9 +83,9 @@ BufFileRawFill (BufFilePtr f)
 static int
 BufFileRawSkip (BufFilePtr f, int count)
 {
-    int	    curoff;
-    int	    fileoff;
-    int	    todo;
+    off_t	curoff;
+    off_t	fileoff;
+    off_t	todo;
 
     curoff = f->bufp - f->buffer;
     fileoff = curoff + f->left;
@@ -94,7 +94,7 @@ BufFileRawSkip (BufFilePtr f, int count)
 	f->left -= count;
     } else {
 	todo = count - (fileoff - curoff);
-	if (lseek (FileDes(f), todo, 1) == -1) {
+	if (lseek (FileDes(f), todo, SEEK_CUR) == -1) {
 	    if (errno != ESPIPE)
 		return BUFFILEEOF;
 	    while (todo) {

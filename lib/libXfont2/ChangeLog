@@ -1,3 +1,263 @@
+commit 2c2e44c94ef17ecd5003a173237b57b315e28d93
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 1 15:53:10 2024 -0700
+
+    libXfont2 2.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dbc2fbc5823e2a9fb6dc9536a1716674840da24c
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Fri Jul 19 13:33:21 2024 +0200
+
+    include: libxfont2: fix missing includes of fontproto.h
+    
+    * needs types from X11/fonts/fontproto.h (eg. NameCheckFunc) from this header,
+    but forgot to include it.
+    * needs NULL, which is defined in stddef.h
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/28>
+
+commit 0006737243ee3599775e41b59c42028e07a68f0a
+Author: José Expósito <jexposit@redhat.com>
+Date:   Mon Jul 1 16:28:04 2024 +0200
+
+    stubs/atom.c: Fix memory leak in __libxfont_internal__MakeAtom
+    
+    Reported by a static analysis tool:
+    
+         9. libXfont2-2.0.6/src/stubs/atom.c:179:5:
+            alloc_fn: Storage is returned from allocation function "malloc".
+        10. libXfont2-2.0.6/src/stubs/atom.c:179:5:
+            var_assign: Assigning: "a" = storage returned from
+            "malloc(24UL + len + 1UL)".
+        16. libXfont2-2.0.6/src/stubs/atom.c:194:6:
+            leaked_storage: Variable "a" going out of scope leaks the
+            storage it points to.
+        #   192|  if ((ResizeHashTable() == FALSE) &&
+        #   193|     ((hashTable == NULL) || (hashUsed == hashSize)))
+        #   194|->   return None;
+        #   195|  h = hash & hashMask;
+        #   196|  if (hashTable[h]) {
+    
+    Fixes: 78085e6b683b ("stubs/atom.c: check for ResizeHashTable failure")
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/27>
+
+commit c47d610ae27e89911539773f15bd7940fc00d35d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 12:56:52 2024 -0800
+
+    Use autoconf to check for float.h instead of platform-specific ifdefs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3d41257544d7903935e6a1407f3da6624bbc3914
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 12:25:15 2024 -0800
+
+    unifdef NCD
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bac7adac9a9865ef736589863ad144d4172585e1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 12:22:09 2024 -0800
+
+    unifdef Lynx
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1f7b4edf09faa5ca8088745c0ad94a01c63043cd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 12:21:15 2024 -0800
+
+    unifdef ISC
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e38d1d27a1867b79eb86309f9d757133216cb32c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 12:20:37 2024 -0800
+
+    unifdef __OSF1__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 24951703b738407e172343f7721bd8217ee8430e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 12:19:18 2024 -0800
+
+    unifdef sony
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c908d2773aea21692edcd1ea8aa9e11e9f5828b7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 27 11:20:21 2024 -0800
+
+    bitscale.c: remove unused MAX() macro
+    
+    Code that used it was removed in commit 632a2e90a4b209facc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0be12a9f7c8cbc710660d29ec54328916cc41beb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 27 11:19:36 2024 -0800
+
+    bitscale.c: ensure SCORE macro expands properly
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 42d2b5add560ad9a14f36c5f628e83a39ac89f47
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 27 11:12:09 2024 -0800
+
+    bitscale.c: ensure SCORE2 macro expands properly
+    
+    Handles warning from Oracle Parfait 11.2 static analyzer:
+    
+    Error: Misleading macro
+       Misleading macro [misleading-macro]:
+          misleading evaluation of '/' operator in expansion of macro SCORE2 due to missing parentheses
+            at line 299 of src/bitmap/bitscale.c.
+            '/' operator has lower precedence than '/' operator inside macro body at line 438
+            low precedence '/' operator is hidden by expansion of macro argument m at line 299
+       Misleading macro [misleading-macro]:
+          misleading evaluation of '/' operator in expansion of macro SCORE2 due to missing parentheses
+            at line 299 of src/bitmap/bitscale.c.
+            binary '*' operator has lower precedence than '/' operator inside macro body at line 440
+            low precedence binary '*' operator is hidden by expansion of macro argument m at line 299
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 87b05995a861f75e38b889659a56b13485e58ce2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 24 17:44:38 2024 -0800
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    While font files should never be more than 2gb in size, they may be
+    stored on filesystems with large inodes or timestamps outside of the
+    32-bit range.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b4b35189d54bef2c5d6062518076505167c3dd9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 24 17:42:19 2024 -0800
+
+    Modernize lseek() calls
+    
+    Position should be stored in an off_t, not an int, and the
+    "whence" arg should use symbolic constants instead of raw numbers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0ab2a2c42af6d2f34a987c7b9903e9737e27a87
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 25 10:40:19 2023 -0700
+
+    Set close-on-exec when opening fonts.dir & fonts.alias files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5ee0e9ab968d795fdb9983457a9b7d16ed249ef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:38: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:38: You should run autoupdate.
+    aclocal.m4:3640: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:38: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a3a85df9a65a5185bdbd47823f336c4cb3fa14c3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:26:20 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0bee036267c8e44a3109002965d18c9224296c08
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 16 19:02:29 2023 -0800
+
+    configure: raise minimum autoconf requirement to 2.70
+    
+    Needed for builds on NetBSD to work correctly, since it depends on
+    AC_USE_SYSTEM_EXTENSIONS defining _OPENBSD_SOURCE to expose the
+    prototype for reallocarray() in the system headers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 572d9d52f408f23905d3af22a02108991944ab2d
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sat Nov 26 21:55:16 2022 -0800
+
+    atom: Update Hash() to be unsigned
+    
+    This avoids undefined behavior (left shift overflow in signed integer type)
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 5ca90ec8665294cb8499a54c303b8275eeeaaf4d
+Author: Peter Harris <pharris@opentext.com>
+Date:   Wed Nov 2 15:38:19 2022 -0400
+
+    Fix font server reconnection timeout
+    
+    The great libxfont2 rewrite 135fb032e940ce226c9feb13e6e903f3ecbc5eb0 split
+    fs_wakeup into fs_wakeup and fs_fd_handler. The fs_fd_handler side is
+    called when there is new data on the socket. The fs_wakeup side is called
+    on a timeout.
+    
+    If there's a connection timeout, the block handler will set the timeout
+    to zero, expecting fs_wakeup to handle the timeout. Therefore, we need to
+    call _fs_check_reconnect in fs_wakeup to handle the connection timeout.
+    If we don't, the X server will go to 100% CPU (and the font server
+    connection will not be retried).
+    
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+
+commit 644bea5c481365343e709d0f2ddbc553a6d8fc30
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 5 09:16:14 2022 -0700
+
+    Only link with libbsd if needed for reallocarray() or strlcat()
+    
+    Avoid unnecessary library dependency when using a libc with these
+    functions included
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f476c0a09c0d0dd22d22f447cae9fa02eb560506
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Thu Oct 6 00:38:36 2022 +0000
+
+    Switch from libbsd to libbsd-overlay
+    
+    This is the preferred usage form for libbsd, as it makes the code more
+    portable and requires no special includes for libbsd, by transparently
+    injects the needed standard headers that would be used on a BSD.
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+
 commit d54aaf2483df6a1f98fadc09004157e657b7f73e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Aug 26 16:22:15 2022 -0700
@@ -2719,25 +2979,25 @@ Date:   Mon Jul 16 12:24:34 2007 +0200
     by the first call disappears.
 
 commit e3642d9b2c0819a607d4cce413b9f0541285545b
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Jul 2 15:01:05 2007 -0400
 
     Bump version to 1.3.0.
 
 commit f33f9361086db3cf1d09cec067f38fe751ed22eb
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Jul 2 14:59:11 2007 -0400
 
     Fix crash when no attributes are present for symlink.
 
 commit 8d47483711be6076e7bfefab14aa890c5f37e1aa
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Thu Jun 21 21:44:02 2007 -0400
 
     Bump version to 1.2.9.
 
 commit c5ab59762c4ad5def68436d55937a2bd558d5c99
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Tue Jun 19 10:38:02 2007 -0400
 
     Add a new 'catalogue' FPE, which takes font paths from symlinks in a dir.
@@ -2877,7 +3137,7 @@ Date:   Tue Feb 20 00:20:23 2007 -0800
     added -flat_namespace to CFLAGS for Darwin
 
 commit 9509d5c7ee5d5e78c6eef54e8faceede5ca5f24e
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Jan 22 18:24:19 2007 -0500
 
     Bump to 1.2.7.
@@ -2892,7 +3152,7 @@ Date:   Fri Jan 19 08:50:39 2007 +1100
     loaded), load it as a valid font path anyway.
 
 commit 931b777108526dd0761f948dcd9f1603ac02efc8
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Wed Jan 17 17:19:53 2007 -0500
 
     Add stubs for the scalable renderer callbacks.
@@ -3387,7 +3647,7 @@ Date:   Fri Jul 1 21:24:31 2005 +0000
     Default --enable-fc to yes; minor formatting changes.
 
 commit 4534fa0c8adb77b7db47101318e0e863edb186ce
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 27 16:09:14 2005 +0000
 
     - Remove fontenc from Xfont
@@ -3399,26 +3659,26 @@ Date:   Mon Jun 27 16:09:14 2005 +0000
     - Fix xp.pc.in to add XPRINT_LIBS/CFLAGS instead of X_LIBS/CFLAGS
 
 commit fda7215c0783ad170eb14f7dda078fac3f134470
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jun 21 21:29:40 2005 +0000
 
     Add fontenc directory, update buildsystem
 
 commit db8fd7e670cbd901116344212217bee8001ab460
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jun 17 20:33:33 2005 +0000
 
     Add lbxutil to symlink.sh Add back accidentally removed include in Type1
         directory Disable Speedo by default
 
 commit e5525d268c6165318894f326be445b22a2523558
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu Jun 16 21:35:26 2005 +0000
 
     Add Speedo directory to Xfont
 
 commit b96f539005da57273dc7e2bee13651de4eedf087
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu Jun 16 20:50:12 2005 +0000
 
     Add Type1 subdirectory to lib/Xfonts, update build system accordingly.

@@ -73,7 +73,6 @@ static int FontFileOpenBitmapNCF (FontPathElementPtr fpe, FontPtr *pFont,
 int
 FontFileNameCheck (const char *name)
 {
-#ifndef NCD
 #if defined(WIN32)
     /* WIN32 uses D:/... as a path name for fonts, so accept this as a valid
      * path if it starts with a letter and a colon.
@@ -82,9 +81,6 @@ FontFileNameCheck (const char *name)
         return TRUE;
 #endif
     return *name == '/';
-#else
-    return ((strcmp(name, "built-ins") == 0) || (*name == '/'));
-#endif
 }
 
 int

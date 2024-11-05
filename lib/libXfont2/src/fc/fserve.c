@@ -77,10 +77,6 @@ in this Software without prior written authorization from The Open Group.
 #include	<time.h>
 #define Time_t time_t
 
-#ifdef NCD
-#include	<ncd/nvram.h>
-#endif
-
 #include <stddef.h>
 
 #ifndef MIN
@@ -335,10 +331,6 @@ fs_init_fpe(FontPathElementPtr fpe)
 
     if (err == Successful)
     {
-#ifdef NCD
-	if (configData.ExtendedFontDiags)
-	    printf("Connected to font server \"%s\"\n", name);
-#endif
 #ifdef DEBUG
 	fprintf (stderr, "connected to FS \"%s\"\n", name);
 #endif
@@ -347,10 +339,6 @@ fs_init_fpe(FontPathElementPtr fpe)
     {
 #ifdef DEBUG
 	fprintf(stderr, "failed to connect to FS \"%s\" %d\n", name, err);
-#endif
-#ifdef NCD
-	if (configData.ExtendedFontDiags)
-	    printf("Failed to connect to font server \"%s\"\n", name);
 #endif
 	;
     }
@@ -388,10 +376,6 @@ fs_free_fpe(FontPathElementPtr fpe)
     _fs_free_conn (conn);
     fpe->private = (pointer) 0;
 
-#ifdef NCD
-    if (configData.ExtendedFontDiags)
-	printf("Disconnected from font server \"%s\"\n", fpe->name);
-#endif
 #ifdef DEBUG
     fprintf (stderr, "disconnect from FS \"%s\"\n", fpe->name);
 #endif
@@ -1484,6 +1468,8 @@ fs_wakeup(FontPathElementPtr fpe)
 {
     FSFpePtr	    conn = (FSFpePtr) fpe->private;
 
+    if ((conn->blockState & FS_RECONNECTING))
+	_fs_check_reconnect (conn);
     if (conn->blockState & (FS_PENDING_REPLY|FS_BROKEN_CONNECTION|FS_BROKEN_WRITE))
 	_fs_do_blocked (conn);
     if (conn->blockState & FS_COMPLETE_REPLY)
@@ -1760,15 +1746,6 @@ fs_send_open_font(pointer client, FontPathElementPtr fpe, Mask flags,
 	_fs_write(conn, (char *) &extreq, SIZEOF(fsQueryXExtents16Req));
     }
 
-#ifdef NCD
-    if (configData.ExtendedFontDiags)
-    {
-	memcpy(buf, name, MIN(256, namelen));
-	buf[MIN(256, namelen)] = '\0';
-	printf("Requesting font \"%s\" from font server \"%s\"\n",
-	       buf, font->fpe->name);
-    }
-#endif
     _fs_prepare_for_reply (conn);
 
     err = blockrec->errcode;
@@ -2448,17 +2425,6 @@ fs_send_list_fonts(pointer client, FontPathElementPtr fpe, const char *pattern,
 
     blockrec->sequenceNumber = conn->current_seq;
 
-#ifdef NCD
-    if (configData.ExtendedFontDiags) {
-	char        buf[256];
-
-	memcpy(buf, pattern, MIN(256, patlen));
-	buf[MIN(256, patlen)] = '\0';
-	printf("Listing fonts on pattern \"%s\" from font server \"%s\"\n",
-	       buf, fpe->name);
-    }
-#endif
-
     _fs_prepare_for_reply (conn);
     return Suspended;
 }
@@ -2675,17 +2641,6 @@ fs_start_list_with_info(pointer client, FontPathElementPtr fpe,
     (void) _fs_write_pad(conn, pattern, len);
 
     blockrec->sequenceNumber = conn->current_seq;
-
-#ifdef NCD
-    if (configData.ExtendedFontDiags) {
-	char        buf[256];
-
-	memcpy(buf, pattern, MIN(256, len));
-	buf[MIN(256, len)] = '\0';
-	printf("Listing fonts with info on pattern \"%s\" from font server \"%s\"\n",
-	       buf, fpe->name);
-    }
-#endif
 
     _fs_prepare_for_reply (conn);
     return Successful;

@@ -50,11 +50,7 @@
 #include	<signal.h>
 #include	<sys/types.h>
 #if !defined(WIN32)
-#ifndef Lynx
 #include	<sys/socket.h>
-#else
-#include	<socket.h>
-#endif
 #endif
 #include	<errno.h>
 #ifdef WIN32

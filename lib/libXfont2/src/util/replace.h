@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,9 +32,6 @@
 #include <X11/Xfuncproto.h>
 
 #include <stdlib.h>
-#if defined(HAVE_LIBBSD) && defined(HAVE_REALLOCARRAY)
-#include <bsd/stdlib.h>       /* for reallocarray */
-#endif
 
 #ifndef HAVE_REALLOCARRAY
 extern _X_HIDDEN void *
@@ -46,9 +43,6 @@ reallocarray(void *optr, size_t nmemb, size_t size);
 #endif
 
 #include <string.h>
-#if defined(HAVE_LIBBSD) && defined(HAVE_STRLCPY)
-#include <bsd/string.h>       /* for strlcpy, strlcat */
-#endif
 
 #ifndef HAVE_STRLCPY
 extern _X_HIDDEN size_t
