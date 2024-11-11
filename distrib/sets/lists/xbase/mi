@@ -235,7 +235,7 @@
 ./usr/X11R6/lib/libXcomposite.so.4.0
 ./usr/X11R6/lib/libXcursor.a
 ./usr/X11R6/lib/libXcursor.la
-./usr/X11R6/lib/libXcursor.so.5.0
+./usr/X11R6/lib/libXcursor.so.5.1
 ./usr/X11R6/lib/libXdamage.a
 ./usr/X11R6/lib/libXdamage.la
 ./usr/X11R6/lib/libXdamage.so.4.0
