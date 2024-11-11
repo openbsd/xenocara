@@ -135,8 +135,10 @@ NewClip(Widget w, ClipPtr old)
     ClipPtr newClip;
 
     newClip = calloc (1, sizeof (ClipRec));
-    if (!newClip)
+    if (!newClip) {
+	XtError("Failed to allocate memory for ClipRec\n");
 	return newClip;
+    }
     newClip->prev = old;
     if (old)
     {
@@ -377,11 +379,13 @@ WMProtocols(Widget w, XEvent *ev, String *params, Cardinal *n)
     }
 }
 
+static char empty_string[] = "";
+
 /* ARGUSED */
 static void
 NewCurrentClip(Widget w, XEvent *ev, String *parms, Cardinal *np)
 {
-    NewCurrentClipContents ("", 0);
+    NewCurrentClipContents (empty_string, 0);
 }
 
 static void
@@ -417,7 +421,7 @@ EraseTextWidget(void)
 {
     XawTextBlock block;
 
-    block.ptr = "";
+    block.ptr = empty_string;
     block.length = 0;
     block.firstPos = 0;
     block.format = FMT8BIT;
@@ -459,7 +463,7 @@ InsertClipboard(Widget w, XtPointer client_data, Atom *selection,
 		int *format)
 {
     Display *d = XtDisplay(w);
-    Atom target = (Atom)client_data;
+    Atom target = *((Atom *)client_data);
     Boolean convert_failed = (*type == XT_CONVERT_FAIL);
 
     if (!convert_failed)
@@ -489,9 +493,10 @@ InsertClipboard(Widget w, XtPointer client_data, Atom *selection,
 	/* if UTF8_STRING failed try COMPOUND_TEXT */
 	if (target == XA_UTF8_STRING(d))
 	{
-	    XtGetSelectionValue(w, *selection, XA_COMPOUND_TEXT(d),
+	    Atom compound_text = XA_COMPOUND_TEXT(d);
+	    XtGetSelectionValue(w, *selection, compound_text,
 				InsertClipboard,
-				(XtPointer)(XA_COMPOUND_TEXT(d)),
+				&compound_text,
 				CurrentTime);
 	    return;
 	}
@@ -633,8 +638,9 @@ static void
 LoseSelection(Widget w, Atom *selection)
 {
     Display *d = XtDisplay(w);
-    XtGetSelectionValue(w, *selection, XA_UTF8_STRING(d), InsertClipboard,
-			(XtPointer)(XA_UTF8_STRING(d)), CurrentTime);
+    Atom utf8_string = XA_UTF8_STRING(d);
+    XtGetSelectionValue(w, *selection, utf8_string, InsertClipboard,
+			&utf8_string, CurrentTime);
 }
 
 /*ARGSUSED*/
@@ -675,6 +681,7 @@ main(int argc, char *argv[])
     Cardinal n;
     XtAppContext xtcontext;
     Widget parent;
+    Window w;
 
     XtSetLanguageProc(NULL, NULL, NULL);
 
@@ -689,8 +696,10 @@ main(int argc, char *argv[])
     /* CLIPBOARD_MANAGER is a non-standard mechanism */
     ManagerAtom = XInternAtom(XtDisplay(top), "CLIPBOARD_MANAGER", False);
     ClipboardAtom = XA_CLIPBOARD(XtDisplay(top));
-    if (XGetSelectionOwner(XtDisplay(top), ManagerAtom))
+    if ((w = XGetSelectionOwner(XtDisplay(top), ManagerAtom))) {
+        printf("window %lu\n", w);
 	XtError("another clipboard is already running\n");
+    }
 
     parent = XtCreateManagedWidget("form", formWidgetClass, top, NULL, ZERO);
     (void) XtCreateManagedWidget("quit", Command, parent, NULL, ZERO);

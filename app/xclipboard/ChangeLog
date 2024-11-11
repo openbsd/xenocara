@@ -1,3 +1,92 @@
+commit 02e7dc1231436274bd84232927bc99201a772b3d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 26 18:36:09 2024 -0700
+
+    xclipboard 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 36d6d686dba46f595a690c529bf56f05834ee15b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 28 11:59:38 2024 -0700
+
+    NewClip: error out if failed to allocate memory for new ClipRec
+    
+    Quiets -Wanalyzer-possible-null-dereference warnings from gcc 14.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/6>
+
+commit 316cd14b9cbd2ef518a090edb80ce5f715282ad9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 12:51:19 2024 -0700
+
+    gitlab CI: Update build container contents
+    
+    Updates include:
+    - gcc 11.1 -> 14.1
+    - binutils 2.36 -> 2.42
+    - libX11 1.7.2 -> 1.8.9
+    - autoconf 2.71 -> 2.72
+    - xorg-util-macros 1.19.3 -> 1.20.1
+    - xorgproto 2021.5 -> 2024.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/5>
+
+commit e074743e9c38afdcf5809d857921959bb6c14241
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 7 12:07:58 2024 -0700
+
+    Handle -Wdiscarded-qualifiers warnings for XawTextBlock ptr
+    
+    xclipboard.c: In function ‘NewCurrentClip’:
+    xclipboard.c:384:29: warning: passing argument 1 of ‘NewCurrentClipContents’
+     discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+      384 |     NewCurrentClipContents ("", 0);
+          |                             ^~
+    xclipboard.c:77:44: note: expected ‘char *’ but argument is of type
+     ‘const char *’
+       77 | static void NewCurrentClipContents ( char *data, int len );
+          |                                      ~~~~~~^~~~
+    xclipboard.c: In function ‘EraseTextWidget’:
+    xclipboard.c:420:15: warning: assignment discards ‘const’ qualifier from
+     pointer target type [-Wdiscarded-qualifiers]
+      420 |     block.ptr = "";
+          |               ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/4>
+
+commit 98ebfcf3bc9a9f7cdd94eea880bd64e2af705fd5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 6 11:26:45 2024 -0700
+
+    Fix -Wbad-function-cast warnings from casting Atom to void *
+    
+    xclipboard.c: In function ‘InsertClipboard’:
+    xclipboard.c:494:33: warning: cast from function call of type ‘Atom’
+     {aka ‘long unsigned int’} to non-matching type ‘void *’ [-Wbad-function-cast]
+      494 |                                 (XtPointer)(XA_COMPOUND_TEXT(d)),
+          |                                 ^
+    xclipboard.c: In function ‘LoseSelection’:
+    xclipboard.c:637:25: warning: cast from function call of type ‘Atom’
+     {aka ‘long unsigned int’} to non-matching type ‘void *’ [-Wbad-function-cast]
+      637 |                         (XtPointer)(XA_UTF8_STRING(d)), CurrentTime);
+          |                         ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/4>
+
+commit b2d0637073564107c1e038da339d47e2e8c40bb9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/4>
+
 commit 0220c7d59cbb83c53dce331ec7e8108a76f75328
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 10 14:42:43 2022 -0700
@@ -719,7 +808,7 @@ Date:   Sun Jul 17 20:11:02 2005 +0000
     fix rules to work with non-GNU make and outside of $srcdir
 
 commit e0a326f3bd7889da2352a1e534871a64b693545a
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 17:30:20 2005 +0000
 
     Build system for xclipboard and xcutsel
