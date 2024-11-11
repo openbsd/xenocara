@@ -1,3 +1,270 @@
+commit 8ea4c3e22a2ff79d373f8a364309c5a4a0c01ced
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 12 11:04:07 2024 -0700
+
+    xkbprint 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3ce73201e3d808e5e4f6c20e22d6e6e86e3b81e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 28 16:53:26 2024 -0700
+
+    Use C99 struct initializers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/6>
+
+commit 4868f37f09843432b261371875b2f433f2a1f7fa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 28 16:38:24 2024 -0700
+
+    Variable scope reductions
+    
+    Some recommended by cppcheck, others found by manual inspection
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/6>
+
+commit 823cecf574645cd26ed43b18c9c68a06dc25f95a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 28 16:20:59 2024 -0700
+
+    FindKeysymsByName: avoid NULL pointer dereference
+    
+    Clears warning from cppcheck:
+    
+    psgeom.c:1645:15: warning: Either the condition 'state->args!=0L' is
+     redundant or there is possible null pointer dereference: state->args.
+     [nullPointerRedundantCheck]
+        if ((state->args->wantDiffs) && (eG >= XkbKeyNumGroups(xkb, kc)))
+                  ^
+    psgeom.c:1635:21: note: Assuming that condition 'state->args!=0L' is not
+     redundant
+        if (state->args != NULL) {
+                        ^
+    psgeom.c:1645:15: note: Null pointer dereference
+        if ((state->args->wantDiffs) && (eG >= XkbKeyNumGroups(xkb, kc)))
+                  ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/6>
+
+commit ed190ca257c808b5d76babf01a5dd57c7d749c9d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 28 16:18:02 2024 -0700
+
+    ClearFontStuff: avoid NULL pointer dereference
+    
+    Clears warning from cppcheck:
+    
+    psgeom.c:400:5: warning: Either the condition 'stuff' is redundant or there
+     is possible null pointer dereference: stuff. [nullPointerRedundantCheck]
+        bzero(stuff, sizeof(FontStuff));
+        ^
+    psgeom.c:398:9: note: Assuming that condition 'stuff' is not redundant
+        if (stuff && stuff->foundry)
+            ^
+    psgeom.c:400:5: note: Null pointer dereference
+        bzero(stuff, sizeof(FontStuff));
+        ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/6>
+
+commit 75a78342999f5c98ba5e0d154a1c506497daac5d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 28 16:13:11 2024 -0700
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    While keymap files or generated output should never be more than 2gb in
+    size, they may be stored on filesystems with inodes or timestamps outside
+    of the 32-bit range.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/6>
+
+commit 1a4c0388e5a8c938544e0e6c5ccdb92a51de1b84
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 12:31:51 2023 -0800
+
+    unifdef -Usgi
+    
+    SGI's End of Support Life for Irix was December 2013
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7500b59a3ce665fa53c476fe26a01db96dc994be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 10:26:33 2022 -0700
+
+    xkbprint 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 69deaf13057d3a8b9c01350e2cdfc40080f5433a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 16 11:56:06 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f586ae4a0a8d081c46f10f4cb4c27840d611edec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 16 11:51:37 2022 -0700
+
+    Stop leaking XkbAtomGetString allocations
+    
+    XkbAtomGetString is a wrapper around XGetAtomName, and like XGetAtomName
+    returns a newly allocated string (or NULL) on every call, so we should
+    free those strings when done instead of leaking them.
+    
+    Reported by Oracle Parfait static analyser:
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XkbAtomGetString(state->dpy, state->geom->name)
+            at line 720 of app/xkbprint/psgeom.c in function 'PSProlog'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              pointer allocated at line 612 of app/xkbprint/psgeom.c in function 'PSProlog' with XkbAtomGetString(state->dpy, state->geom->name)
+              pointer leaks when (i + 1) >= state->geom->num_colors at line 694
+                  and (i + 1) >= state->geom->num_shapes at line 712.
+    
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XkbAtomGetString(state->dpy, state->geom->name)
+            at line 720 of app/xkbprint/psgeom.c in function 'PSProlog'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              pointer allocated at line 657 of app/xkbprint/psgeom.c in function 'PSProlog' with XkbAtomGetString(state->dpy, state->geom->name)
+              pointer leaks when (i + 1) >= state->geom->num_colors at line 694
+                  and (i + 1) >= state->geom->num_shapes at line 712.
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer name allocated with XkbAtomGetString(state->dpy, geom->name)
+            at line 962 of app/xkbprint/psgeom.c in function 'PSPageTrailer'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              name allocated at line 845 of app/xkbprint/psgeom.c in function 'PSPageTrailer' with XkbAtomGetString(state->dpy, geom->name)
+              name leaks when (p + 1) >= state->args->copies at line 926.
+    
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer sName allocated with XkbAtomGetString(state->dpy, sAtom)
+            at line 962 of app/xkbprint/psgeom.c in function 'PSPageTrailer'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              sName allocated at line 877 of app/xkbprint/psgeom.c in function 'PSPageTrailer' with XkbAtomGetString(state->dpy, sAtom)
+              sName leaks when (p + 1) >= state->args->copies at line 926.
+    
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer sName allocated with XkbAtomGetString(state->dpy, sAtom)
+            at line 962 of app/xkbprint/psgeom.c in function 'PSPageTrailer'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              sName allocated at line 910 of app/xkbprint/psgeom.c in function 'PSPageTrailer' with XkbAtomGetString(state->dpy, sAtom)
+              sName leaks when (p + 1) >= state->args->copies at line 926.
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer dname allocated with XkbAtomGetString(xkb->dpy, doodad.any.name)
+            at line 1068 of app/xkbprint/psgeom.c in function 'PSDoodad'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              dname allocated at line 974 of app/xkbprint/psgeom.c in function 'PSDoodad' with XkbAtomGetString(xkb->dpy, doodad.any.name)
+    
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer name allocated with XkbAtomGetString(...)
+            at line 1068 of app/xkbprint/psgeom.c in function 'PSDoodad'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              name allocated at line 980 of app/xkbprint/psgeom.c in function 'PSDoodad' with XkbAtomGetString(...)
+    
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer name allocated with XkbAtomGetString(...)
+            at line 1068 of app/xkbprint/psgeom.c in function 'PSDoodad'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              name allocated at line 1044 of app/xkbprint/psgeom.c in function 'PSDoodad' with XkbAtomGetString(...)
+    
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer name allocated with XkbAtomGetString(...)
+            at line 1068 of app/xkbprint/psgeom.c in function 'PSDoodad'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              name allocated at line 1058 of app/xkbprint/psgeom.c in function 'PSDoodad' with XkbAtomGetString(...)
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XkbAtomGetString(dpy, section->name)
+            at line 2063 of app/xkbprint/psgeom.c in function 'PSSection'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              pointer allocated at line 1907 of app/xkbprint/psgeom.c in function 'PSSection' with XkbAtomGetString(dpy, section->name)
+              pointer leaks when (k + 1) >= (section->rows + <pointer arithmetic>)->num_keys at line 1936
+    
+      Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XkbAtomGetString(dpy, shape->name)
+            at line 2063 of app/xkbprint/psgeom.c in function 'PSSection'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              pointer allocated at line 1945 of app/xkbprint/psgeom.c in function 'PSSection' with XkbAtomGetString(dpy, shape->name)
+              pointer leaks when (k + 1) >= (section->rows + <pointer arithmetic>)->num_keys at line 1936
+                  and (r + 1) >= section->num_rows at line 1925.
+    
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XkbAtomGetString(dpy, shape->name)
+            at line 2063 of app/xkbprint/psgeom.c in function 'PSSection'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              pointer allocated at line 1951 of app/xkbprint/psgeom.c in function 'PSSection' with XkbAtomGetString(dpy, shape->name)
+              pointer leaks when (k + 1) >= (section->rows + <pointer arithmetic>)->num_keys at line 1936
+                  and (r + 1) >= section->num_rows at line 1925.
+    
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XkbAtomGetString(dpy, shape->name)
+            at line 2063 of app/xkbprint/psgeom.c in function 'PSSection'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              pointer allocated at line 1960 of app/xkbprint/psgeom.c in function 'PSSection' with XkbAtomGetString(dpy, shape->name)
+              pointer leaks when (k + 1) >= (section->rows + <pointer arithmetic>)->num_keys at line 1936
+                  and (r + 1) >= section->num_rows at line 1925.
+    
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XkbAtomGetString(dpy, shape->name)
+            at line 2063 of app/xkbprint/psgeom.c in function 'PSSection'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              pointer allocated at line 1966 of app/xkbprint/psgeom.c in function 'PSSection' with XkbAtomGetString(dpy, shape->name)
+              pointer leaks when (k + 1) >= (section->rows + <pointer arithmetic>)->num_keys at line 1936
+                  and (r + 1) >= section->num_rows at line 1925.
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer name allocated with XkbAtomGetString(...)
+            at line 2131 of app/xkbprint/psgeom.c in function 'GeometryToPostScript'.
+            Allocated value returned to caller at line 207 of lib/libxkbfile/src/xkbatom.c in function 'XkbAtomGetString'
+              name allocated at line 2110 of app/xkbprint/psgeom.c in function 'GeometryToPostScript' with XkbAtomGetString(...)
+              name leaks when name != NULL at line 2111.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc85e7b233613633a5496f0fa27bf49b409c33e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 12:57:58 2022 -0700
+
+    man page: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit df4b45b62fafb218b613baade4a831522effdfcc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 15:01:12 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 963fd74b2c425e700e9a15942963fd78c9dcd447
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 15:01:09 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 7defa9ddfd5f5d1853b9f404af854b0f42fa6ee5
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sun Nov 3 14:20:07 2019 -0800

@@ -39,9 +39,6 @@
 #include <X11/extensions/XKBfile.h>
 #include <X11/keysym.h>
 
-#if defined(sgi)
-#include <malloc.h>
-#endif
 
 #include <stdlib.h>
 
@@ -127,24 +124,24 @@ Usage(int argc, char *argv[])
 static Bool
 parseArgs(int argc, char *argv[])
 {
-    register int i;
-
-    args.copies = 1;
-    args.grid = 0;
-    args.level1 = True;
-    args.scaleToFit = True;
-    args.wantColor = False;
-    args.wantSymbols = COMMON_SYMBOLS;
-    args.wantKeycodes = True;
-    args.wantDiffs = False;
-    args.wantEPS = False;
-    args.label = LABEL_AUTO;
-    args.baseLabelGroup = 0;
-    args.nLabelGroups = 1;
-    args.nTotalGroups = 0;
-    args.nKBPerPage = 0;
-    args.labelLevel = 0;
-    for (i = 1; i < argc; i++) {
+    args = (XKBPrintArgs) {
+        .copies = 1,
+        .grid = 0,
+        .level1 = True,
+        .scaleToFit = True,
+        .wantColor = False,
+        .wantSymbols = COMMON_SYMBOLS,
+        .wantKeycodes = True,
+        .wantDiffs = False,
+        .wantEPS = False,
+        .label = LABEL_AUTO,
+        .baseLabelGroup = 0,
+        .nLabelGroups = 1,
+        .nTotalGroups = 0,
+        .nKBPerPage = 0,
+        .labelLevel = 0
+    };
+    for (int i = 1; i < argc; i++) {
         if ((argv[i][0] != '-') || (uStringEqual(argv[i], "-"))) {
             if (inputFile == NULL) {
                 inputFile = argv[i];
@@ -622,12 +619,6 @@ main(int argc, char *argv[])
     uSetErrorFile(NullString);
     if (!parseArgs(argc, argv))
         exit(1);
-#ifdef DEBUG
-#ifdef sgi
-    if (debugFlags & 0x4)
-        mallopt(M_DEBUG, 1);
-#endif
-#endif
     file = NULL;
     XkbInitAtoms(NULL);
 /*     XkbInitIncludePath(); */

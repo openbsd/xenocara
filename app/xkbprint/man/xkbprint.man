@@ -105,12 +105,5 @@ Sets warning level (0 for no warning, 10 for all warnings).
 .SH "SEE ALSO"
 .BR X (__miscmansuffix__),
 .BR xkbcomp (__appmansuffix__)
-.SH COPYRIGHT
-Copyright 1995, Silicon Graphics Computer Systems
-Copyright 1995, 1998  The Open Group
-.br
-See
-.BR X (__miscmansuffix__)
-for a full statement of rights and permissions.
 .SH AUTHOR
 Erik Fortune, Silicon Graphics
