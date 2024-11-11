@@ -1,3 +1,61 @@
+commit f27a02acd302fef3104394a9a966c1194158b62f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 12 11:39:37 2024 -0700
+
+    xwud 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b29feb2bdde8b7aae84e6dbfd9daa46eda888dcd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 12:13:49 2024 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/4>
+
+commit 13bc4b3ce3e9b3a8554cbb82d455ad229bad25e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 12:09:59 2024 -0700
+
+    Replace strcpy+strcat calls with snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/4>
+
+commit 04d9a2f023c3cbe669a470e9b2dc101aad51c589
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 12:03:00 2024 -0700
+
+    Call free() instead of XFree() on pointers returned by malloc()
+    
+    Matches the deallocator to the allocator that was actually used
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/4>
+
+commit 18ab2dba7f2ed12e0a52a2a9af33262c0b2e612a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 12:00:02 2024 -0700
+
+    Add missing checks for malloc failure
+    
+    Most malloc calls were already checked, but these were not.
+    Clears up 4 -Wanalyzer-possible-null-dereference warnings from gcc 14.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/4>
+
+commit 3ae261d6c005727eaad85e8acc767e3dbb88deba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/4>
+
 commit 46334b79e8aea2c444927eee3b0281e4ab012085
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 10 16:13:11 2022 -0700
@@ -498,7 +556,7 @@ Date:   Wed Jul 20 19:32:05 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 78c7fa573ce8acc58820ef0f8b587cb49bc285b2
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:16:57 2005 +0000
 
     Build system for xwud

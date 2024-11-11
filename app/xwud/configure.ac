@@ -23,8 +23,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xwud], [1.0.6],
-        [https://gitlab.freedesktop.org/xorg/app/xwud/issues], [xwud])
+AC_INIT([xwud], [1.0.7],
+        [https://gitlab.freedesktop.org/xorg/app/xwud/-/issues], [xwud])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 

@@ -184,7 +184,8 @@ main(int argc, char *argv[])
 	    geom = argv[i];
 	    continue;
 	}
-	if (strcmp(argv[i], "-help") == 0) {
+	if ((strcmp(argv[i], "-help") == 0) ||
+            (strcmp(argv[i], "--help") == 0)) {
 	    usage(NULL);
 	}
 	if (strcmp(argv[i], "-in") == 0) {
@@ -239,7 +240,8 @@ main(int argc, char *argv[])
 	    vis = argv[i];
 	    continue;
 	}
-	if (strcmp(argv[i], "-version") == 0) {
+	if ((strcmp(argv[i], "-version") == 0) ||
+            (strcmp(argv[i], "--version") == 0)) {
 	    puts(PACKAGE_STRING);
 	    exit(0);
 	}
@@ -377,10 +379,12 @@ main(int argc, char *argv[])
     in_image->data = buffer;
 
     if (std) {
-	map_name = malloc(strlen(std) + 9);
-	strcpy(map_name, "RGB_");
-	strcat(map_name, std);
-	strcat(map_name, "_MAP");
+	size_t map_name_len = strlen(std) + 9;
+
+	map_name = malloc(map_name_len);
+	if (map_name == NULL)
+	    Error("Can't malloc map name");
+	snprintf(map_name, map_name_len, "RGB_%s_MAP", std);
 	Latin1Upper(map_name);
 	map_prop = XInternAtom(dpy, map_name, True);
 	if (!map_prop || !XGetRGBColormaps(dpy, RootWindow(dpy, screen),
@@ -535,6 +539,8 @@ main(int argc, char *argv[])
 				 in_image->width, in_image->height,
 				 XBitmapPad(dpy), 0);
 	out_image->data = malloc(Image_Size(out_image));
+	if (out_image->data == NULL)
+	    Error("Can't malloc output image data");
 	Extract_Plane(in_image, out_image, plane);
 	ncolors = 0;
     } else if (rawbits || newmap) {
@@ -547,6 +553,8 @@ main(int argc, char *argv[])
 				 in_image->width, in_image->height,
 				 XBitmapPad(dpy), 0);
 	out_image->data = malloc(Image_Size(out_image));
+	if (out_image->data == NULL)
+	    Error("Can't malloc output image data");
 	if (std) {
 	    if (!stdmap->green_max && !stdmap->blue_max && IsGray(dpy, stdmap))
 		Do_StdGray(dpy, stdmap, ncolors, colors, in_image, out_image);
@@ -786,13 +794,23 @@ putScaledImage(Display *display, Drawable d, GC gc, XImage *src_image,
 			      dest_width, h,
 			      src_image->bitmap_pad, 0);
     dest_image->data = malloc(dest_image->bytes_per_line * h);
+    if (dest_image->data == NULL)
+        Error("Can't malloc scaled image data");
     fast8 = (src_image->depth == 8 && src_image->bits_per_pixel == 8 &&
 	     dest_image->bits_per_pixel == 8 && src_image->format == ZPixmap);
 
     table.x = (Position *) malloc(sizeof(Position) * (src_image->width + 1));
+    if (table.x == NULL)
+        Error("Can't malloc scaled image X table");
     table.y = (Position *) malloc(sizeof(Position) * (src_image->height + 1));
+    if (table.y == NULL)
+        Error("Can't malloc scaled image Y table");
     table.width = (Dimension *) malloc(sizeof(Dimension) * src_image->width);
+    if (table.width == NULL)
+        Error("Can't malloc scaled image width table");
     table.height = (Dimension *) malloc(sizeof(Dimension)*src_image->height);
+    if (table.height == NULL)
+        Error("Can't malloc scaled image height table");
     
     table.x[0] = 0;
     for (x = 1; x <= src_image->width; x++) {
@@ -845,10 +863,10 @@ putScaledImage(Display *display, Drawable d, GC gc, XImage *src_image,
 	    break;
     }
     
-    XFree((char *)table.x);
-    XFree((char *)table.y);
-    XFree((char *)table.width);
-    XFree((char *)table.height);
+    free(table.x);
+    free(table.y);
+    free(table.width);
+    free(table.height);
 
     XDestroyImage(dest_image);
 }
