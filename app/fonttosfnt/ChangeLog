@@ -1,3 +1,92 @@
+commit 6b29ee45a794e459d53643ee72a82442cd30d4e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 12 10:28:05 2024 -0700
+
+    fonttosfnt 1.2.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a6a5574001d7a9959ba4d924522b96f8cc57b43
+Author: Bernhard M. Wiedemann <bwiedemann@suse.de>
+Date:   Wed Jul 24 16:28:43 2024 +0200
+
+    Allow to override build date with SOURCE_DATE_EPOCH
+    
+    to make builds reproducible.
+    See https://reproducible-builds.org/ for why this is good
+    and https://reproducible-builds.org/specs/source-date-epoch/
+    for the definition of this variable.
+    
+    This patch was done while working on reproducible builds for openSUSE, sponsored by the NLnet NGI0 fund.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/merge_requests/22>
+
+commit 5fb8b61537b832561f074a6d400956c8cb6b31a5
+Author: Bernhard M. Wiedemann <bwiedemann@suse.de>
+Date:   Wed Jul 24 16:27:35 2024 +0200
+
+    Use long long for timestamp diff
+    
+    to avoid integer overflows in the future
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/merge_requests/22>
+
+commit e3971be7b20580a54b3c26281a5912433b9a7319
+Author: Jan Friesse <jfriesse@gmail.com>
+Date:   Wed Nov 2 09:41:57 2022 +0100
+
+    Use FONT_UNITS_FLOOR for ascent/descent
+    
+    Before version 1.49.3 the pango was using (probably) values from BLC
+    table, since 1.49.3 pango uses harfbuzz for metrics and it seems
+    harfbuzz is using OS2 table. Result is font with 1px extra for
+    ascend/descent.
+    
+    Solution seems to be to use FONT_UNITS_FLOOR instead of FONT_UNITS_CEIL
+    when storing file.
+    
+    Fixes: #7
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/merge_requests/18>
+
+commit 7532e3ad70441041395c77d12424edd31cf63a42
+Author: philg314 <philg314@fastmail.com>
+Date:   Thu Aug 11 11:42:22 2022 +0000
+
+    Fix `cmap` Subtable Format 4 `entrySelector`
+    
+    https://docs.microsoft.com/en-us/typography/opentype/spec/cmap defines
+    `entrySelector` as "Log2 of the maximum power of 2 less than or equal to
+    numTables (log2(searchRange/2), which is equal to floor(log2(segCount)))"
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/merge_requests/17>
+
+commit 6eeb52757c9d2d1f40a3d31a6b6d3925dc17fbb2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 15 16:38:08 2024 -0800
+
+    unifdef NEED_SNPRINTF
+    
+    If it was defined, it would try to include a snprintf.c file that's
+    not actually in our source tree.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 964b103be665953306e9476ce7dd3c305f0541bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 15 16:35:51 2024 -0800
+
+    unifdef __SCO__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 13fcc6781f192c1bd1ae61ca88543dc1d27e79e9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 15 16:35:01 2024 -0800
+
+    unifdef __UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3b0f4a799bb7820dd27257be16f1a9d61a4969f9
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Sep 27 18:37:58 2023 -0700

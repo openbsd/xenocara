@@ -26,11 +26,7 @@ THE SOFTWARE.
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#ifndef __UNIXOS2__
-# include <math.h>
-#else
-# include <float.h>
-#endif
+#include <math.h>
 #include <stdarg.h>
 
 #include <ft2build.h>
@@ -40,12 +36,6 @@ THE SOFTWARE.
 #include "X11/Xfuncproto.h" /* for _X_ATTRIBUTE_PRINTF */
 #include "fonttosfnt.h"
 
-#ifdef NEED_SNPRINTF
-#undef SCOPE
-#define SCOPE static
-#include "snprintf.c"
-#endif
-
 #ifdef __GLIBC__
 #define HAVE_TIMEGM
 #define HAVE_TM_GMTOFF
@@ -54,11 +44,6 @@ THE SOFTWARE.
 #ifdef BSD
 #define HAVE_TM_GMTOFF
 #define GMTOFFMEMBER tm_gmtoff
-#endif
-
-#ifdef __SCO__
-#define HAVE_TM_GMTOFF
-#define GMTOFFMEMBER tm_tzadj
 #endif
 
 /* That's in POSIX */
@@ -196,7 +181,8 @@ mktime_gmt(struct tm *tm)
 int
 macTime(int *hi, unsigned *lo)
 {
-    unsigned long diff;		/* Not time_t */
+    unsigned long long diff;		/* Not time_t */
+    char *source_date_epoch;
     time_t macEpoch, current;
     struct tm tm;
     tm.tm_sec = 0;
@@ -210,7 +196,11 @@ macTime(int *hi, unsigned *lo)
     macEpoch = mktime_gmt(&tm);
     if(macEpoch == -1) return -1;
 
-    current = time(NULL);
+    /* This assumes that the SOURCE_DATE_EPOCH environment variable will contain
+       a correct, positive integer in the time_t range */
+    if ((source_date_epoch = getenv("SOURCE_DATE_EPOCH")) == NULL ||
+        (current = (time_t)strtoll(source_date_epoch, NULL, 10)) <= 0)
+            current = time(NULL);
     if(current == -1)
         return -1;
 

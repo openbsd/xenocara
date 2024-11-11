@@ -875,7 +875,7 @@ writecmap(FILE* out, FontPtr font)
     /* How baroque can you get? */
     writeUSHORT(out, segcount * 2); /* segCountX2 */
     writeUSHORT(out, 2 * two_log2_floor(segcount)); /* searchRange */
-    writeUSHORT(out, 1 + log2_floor(segcount));   /* entrySelector */
+    writeUSHORT(out, log2_floor(segcount));   /* entrySelector */
     writeUSHORT(out, 2 * (segcount - two_log2_floor(segcount)));   
                                 /* rangeShift */
 
@@ -941,8 +941,8 @@ writehhea(FILE* out, FontPtr font)
     degreesToFraction(font->italicAngle, &num, &den);
 
     writeULONG(out, 0x00010000); /* version */
-    writeSHORT(out, FONT_UNITS_CEIL(font->metrics.ascent)); /* ascender */
-    writeSHORT(out, -FONT_UNITS_CEIL(font->metrics.descent)); /* descender */
+    writeSHORT(out, FONT_UNITS_FLOOR(font->metrics.ascent)); /* ascender */
+    writeSHORT(out, -FONT_UNITS_FLOOR(font->metrics.descent)); /* descender */
     writeSHORT(out, FONT_UNITS(font->metrics.size - font->metrics.ascent - font->metrics.descent));	/* lineGap */
     writeUSHORT(out, FONT_UNITS(font->metrics.maxAwidth)); /* advanceWidthMax */
     /* TODO: the next three are not calculated according to spec, are they ?
@@ -1116,14 +1116,14 @@ writeOS2(FILE* out, FontPtr font)
     writeUSHORT(out, i);	/* fsSelection; */
     writeUSHORT(out, 0x20);     /* usFirstCharIndex; */
     writeUSHORT(out, 0xFFFD);   /* usLastCharIndex; */
-    writeUSHORT(out, FONT_UNITS_CEIL(font->metrics.ascent)); /* sTypoAscender; */
-    writeSHORT(out, -FONT_UNITS_CEIL(font->metrics.descent)); /* sTypoDescender; */
+    writeUSHORT(out, FONT_UNITS_FLOOR(font->metrics.ascent)); /* sTypoAscender; */
+    writeSHORT(out, -FONT_UNITS_FLOOR(font->metrics.descent)); /* sTypoDescender; */
     writeSHORT(out, FONT_UNITS(font->metrics.size - font->metrics.ascent - font->metrics.descent));	/* sTypoLineGap */
 #ifdef NO_TYPO_METRICS
-    writeUSHORT(out, FONT_UNITS_CEIL(font->metrics.ascent)); /* usWinAscent; */
-    writeUSHORT(out, FONT_UNITS_CEIL(font->metrics.descent)); /* usWinDescent; */
+    writeUSHORT(out, FONT_UNITS_FLOOR(font->metrics.ascent)); /* usWinAscent; */
+    writeUSHORT(out, FONT_UNITS_FLOOR(font->metrics.descent)); /* usWinDescent; */
 #else
-    writeUSHORT(out, FONT_UNITS_CEIL(font->metrics.maxY)); /* usWinAscent; */
+    writeUSHORT(out, FONT_UNITS_FLOOR(font->metrics.maxY)); /* usWinAscent; */
     writeUSHORT(out, -FONT_UNITS_FLOOR(font->metrics.minY)); /* usWinDescent; */
 #endif
     writeULONG(out, 3);						/* ulCodePageRange1; */
