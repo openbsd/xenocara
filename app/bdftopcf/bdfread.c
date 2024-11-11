@@ -126,7 +126,7 @@ bdfReadBitmap(CharInfoPtr pCI, FontFilePtr file, int bit, int byte,
         if (!line)
             break;
 
-        if (widthBits == 0) {
+        if ((widthBits == 0) || (picture == NULL)) {
             if (bdfIsPrefix(line, "ENDCHAR"))
                 break;
             else
@@ -152,7 +152,7 @@ bdfReadBitmap(CharInfoPtr pCI, FontFilePtr file, int bit, int byte,
             for (i = widthHexChars - inLineLen; i > 0; i--)
                 picture[nextByte++] = 0;
         }
-        else {
+        else if (nextByte > 0) {
             unsigned char mask;
 
             mask = 0xff << (8 - (widthBits & 0x7));

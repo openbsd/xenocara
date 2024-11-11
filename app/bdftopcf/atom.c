@@ -44,34 +44,32 @@ typedef struct _AtomList {
 
 static AtomListPtr *hashTable;
 
-static int hashSize, hashUsed;
-static int hashMask;
-static int rehash;
+static unsigned hashSize, hashUsed;
+static unsigned hashMask;
+static unsigned rehash;
 
 static AtomListPtr *reverseMap;
 static size_t reverseMapSize;
 static Atom lastAtom;
 
-static int
-Hash(const char *string, int len)
+static unsigned
+Hash(const char *string, unsigned len)
 {
-    int h;
+    unsigned h = 0;
 
-    h = 0;
     while (len--)
         h = (h << 3) ^ *string++;
-    if (h < 0)
-        return -h;
+
     return h;
 }
 
 static int
 ResizeHashTable(void)
 {
-    int newHashSize;
-    int newHashMask;
+    unsigned newHashSize;
+    unsigned newHashMask;
     AtomListPtr *newHashTable;
-    int newRehash;
+    unsigned newRehash;
 
     if (hashSize == 0)
         newHashSize = 1024;
@@ -88,9 +86,9 @@ ResizeHashTable(void)
     newRehash = (newHashMask - 2);
     for (int i = 0; i < hashSize; i++) {
         if (hashTable[i]) {
-            int h = (hashTable[i]->hash) & newHashMask;
+            unsigned h = (hashTable[i]->hash) & newHashMask;
             if (newHashTable[h]) {
-                int r = hashTable[i]->hash % newRehash | 1;
+                unsigned r = hashTable[i]->hash % newRehash | 1;
                 do {
                     h += r;
                     if (h >= newHashSize)
@@ -143,9 +141,9 @@ Atom
 MakeAtom(const char *string, unsigned len, int makeit)
 {
     AtomListPtr a;
-    int hash;
-    int h = 0;
-    int r;
+    unsigned hash;
+    unsigned h = 0;
+    unsigned r;
 
     hash = Hash(string, len);
     if (hashTable) {

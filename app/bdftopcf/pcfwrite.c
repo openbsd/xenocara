@@ -213,7 +213,7 @@ pcfNameForAtom(Atom a)
 int
 pcfWriteFont(FontPtr pFont, FontFilePtr file)
 {
-    PCFTableRec tables[32], *table;
+    PCFTableRec tables[32] = { { 0 } }, *table;
     CARD32      mask;
     int         ntables;
     int         size;

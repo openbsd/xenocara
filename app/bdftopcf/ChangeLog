@@ -1,3 +1,70 @@
+commit 0ee2c68b5d3ea3eb36f895d9dfcc4ebe1416f176
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 12 13:52:45 2024 -0700
+
+    bdftopcf 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dc539964379c3dfad255260983bca72e4e28c298
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 21 14:43:50 2024 -0700
+
+    pcfWriteFont: Avoid uninitialized values in tables
+    
+    Clears gcc 14.1 warning:
+    pcfwrite.c: In function ‘pcfWriteFont’:
+    pcfwrite.c:369:24: warning: use of uninitialized value ‘*table.size’
+     [CWE-457] [-Wanalyzer-use-of-uninitialized-value]
+      369 |         offset += table->size;
+          |                   ~~~~~^~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/bdftopcf/-/merge_requests/7>
+
+commit 8dee1b3a8008202810e18c06bf78b3b05409ffaf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 21 14:42:32 2024 -0700
+
+    bdfReadBitmap: avoid access to byte before start of array
+    
+    Clears 4 -Wanalyzer-out-of-bounds warnings from gcc 14.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/bdftopcf/-/merge_requests/7>
+
+commit daba8411d9a658f0fec116f36550652aa7dfabe9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 21 14:00:58 2024 -0700
+
+    bdfReadBitmap: avoid NULL dereference on zero-width glyphs
+    
+    Clears 3 -Wanalyzer-null-dereference warnings from gcc 14.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/bdftopcf/-/merge_requests/7>
+
+commit 62862a862ab045ac7bbe16b30c58bb301958a00e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/bdftopcf/-/merge_requests/7>
+
+commit 59a952e39f186bc42e12502317981cd07930d939
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sat Nov 26 21:48:45 2022 -0800
+
+    atom: Update Hash() to be unsigned
+    
+    This avoids undefined behavior (left shift overflow in signed integer type)
+    
+    atom.c:62:16: runtime error: left shift of 1324774199 by 3 places cannot be represented in type 'int'
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
 commit 84eaf7f1bdd402661a83db7ad914eb7f8d5dc627
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 15 11:53:35 2022 -0700
@@ -670,7 +737,7 @@ Date:   Fri Oct 14 00:25:40 2005 +0000
     Use sed to fill in variables in man page
 
 commit 1367d1093078bb49e4f1b5f1453fea41ae6f2b25
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Fri Sep 23 20:39:52 2005 +0000
 
     Fill these in.
