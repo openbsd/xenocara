@@ -1,14 +1,14 @@
-# $OpenBSD: MODULES,v 1.530 2024/11/05 10:22:37 matthieu Exp $
+# $OpenBSD: MODULES,v 1.531 2024/11/11 09:52:04 matthieu Exp $
 #
 # X.Org maintained modules
 #
 
 app/appres		1.0.7
-app/bdftopcf		1.1.1
+app/bdftopcf		1.1.2
 app/beforelight		1.0.6
 app/bitmap		1.1.1
 app/editres		1.0.9
-app/fonttosfnt		1.2.3
+app/fonttosfnt		1.2.4
 app/iceauth		1.0.10
 app/ico			1.0.6
 app/listres		1.0.6
@@ -24,12 +24,12 @@ app/twm			1.0.12
 app/viewres		1.0.7
 app/x11perf		1.7.0
 app/xauth		1.1.3
-app/xbacklight		1.2.3
+app/xbacklight		1.2.4
 app/xbiff		1.0.5
 app/xcalc		1.1.2
-app/xclipboard		1.1.4
+app/xclipboard		1.1.5
 app/xclock		1.1.1
-app/xcmsdb		1.0.6
+app/xcmsdb		1.0.7
 app/xcompmgr		1.1.9
 app/xconsole		1.0.8
 app/xdpyinfo		1.3.4
@@ -47,7 +47,7 @@ app/xinit		1.4.2
 app/xinput		1.6.4
 app/xkbcomp		1.4.7		reverted
 app/xkbevd		1.1.5
-app/xkbprint		1.0.6
+app/xkbprint		1.0.7
 app/xkbutils		1.0.6
 app/xkill		1.0.6
 app/xload		1.2.0
@@ -55,13 +55,13 @@ app/xlogo		1.0.6
 app/xlsatoms		1.1.4
 app/xlsclients		1.1.5
 app/xlsfonts		1.0.8
-app/xmag		1.0.7
+app/xmag		1.0.8
 app/xmessage		1.0.7
 app/xmodmap		1.0.11
 app/xmore		1.0.4
 app/xpr			1.2.0
 app/xprop		1.2.7
-app/xrandr		1.5.2
+app/xrandr		1.5.3
 app/xrdb		1.2.2
 app/xrefresh		1.1.0
 app/xset		1.2.5
@@ -71,7 +71,7 @@ app/xvidtune		1.0.4
 app/xvinfo		1.1.5
 app/xwd			1.0.9
 app/xwininfo		1.1.6
-app/xwud		1.0.6
+app/xwud		1.0.7
 
 data/bitmaps		1.1.3
 
@@ -97,11 +97,11 @@ driver/xf86-video-cirrus	1.6.0		needs-update
 driver/xf86-video-dummy		0.4.1
 driver/xf86-video-geode		2.11.21		needs-update
 driver/xf86-video-intel		2.99.917	needs-update
-driver/xf86-video-mach64	6.9.7
-driver/xf86-video-mga		2.0.1
+driver/xf86-video-mach64	6.10.0		needs-update
+driver/xf86-video-mga		2.1.0		needs-update
 driver/xf86-video-nv		2.1.23		needs-update
 driver/xf86-video-openchrome	0.6.179		needs-update
-driver/xf86-video-r128		6.12.1
+driver/xf86-video-r128		6.13.0		needs-update
 driver/xf86-video-savage	2.4.1		needs-update
 driver/xf86-video-siliconmotion	1.7.10		needs-update
 driver/xf86-video-sunffb	1.2.3
@@ -154,7 +154,7 @@ lib/libXScrnSaver		1.2.4
 lib/libXau			1.0.11
 lib/libXaw			1.0.16
 lib/libXcomposite		0.4.6
-lib/libXcursor			1.2.2
+lib/libXcursor			1.2.3
 lib/libXdamage			1.1.6
 lib/libXdmcp			1.1.5
 lib/libXext			1.3.6
@@ -181,8 +181,8 @@ lib/libxcb			1.17.0
 lib/libxcvt			0.1.2
 lib/libxkbfile			1.1.3
 lib/libxshmfence		1.3.2
-lib/libxtrans			1.5.0
-lib/pixman			0.43.4		needs-update
+lib/libxtrans			1.5.2		needs-update
+lib/pixman			0.44.0		needs-update
 lib/xcb-util			0.4.1
 lib/xcb-util-cursor		0.1.5
 lib/xcb-util-image		0.4.1
