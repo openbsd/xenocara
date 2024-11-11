@@ -29,6 +29,8 @@ xbacklight \- adjust backlight brightness using RandR extension
 [\-set percent]
 [\-inc percent]
 [\-dec percent]
+[\-time milliseconds]
+[\-steps number]
 .SH DESCRIPTION
 .I Xbacklight
 is used to adjust the backlight brightness where supported. It finds all

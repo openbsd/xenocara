@@ -217,11 +217,12 @@ main (int argc, char **argv)
 	    steps = atoi (argv[i]);
 	    continue;
 	}
-	if (!strcmp (argv[i], "-help") || !strcmp (argv[i], "-?"))
+	if (!strcmp (argv[i], "-help") || !strcmp (argv[i], "-?") ||
+            !strcmp (argv[i], "--help"))
 	{
 	    usage (0);
 	}
-	if (!strcmp (argv[i], "-version"))
+	if (!strcmp (argv[i], "-version") || !strcmp (argv[i], "--version"))
 	{
 	    puts (PACKAGE_STRING);
 	    exit (0);

@@ -1,3 +1,53 @@
+commit 26dec2410f8b2c1df0817e51b7f702cfb7dfd2cc
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Nov 7 13:08:21 2024 -0500
+
+    xbacklight 1.2.4
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbacklight/-/merge_requests/5>
+
+commit 0d54d6fc02bec076e6e086d04eaf6cb3fe03bac2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 26 15:01:06 2024 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbacklight/-/merge_requests/3>
+
+commit e42b6e5321edfac3d0584163cbd93a7c2ec5e3eb
+Author: Andreas Tille <tille@debian.org>
+Date:   Mon Aug 19 09:48:10 2024 +0200
+
+    xbacklight.man: Add missing items in SYNOPSIS
+    
+    Bug-Debian: https://bugs.debian.org/825274
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbacklight/-/merge_requests/4>
+
+commit e710db137f0bd7a39e211013597cc0f91eb7157f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2f35e416419c64bb3e9357ee0ad77e17e5ddf8a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:33:51 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4f98c5f3c9b8ece7bb401222b830712f3df02eef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:33:47 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 76de9d7a0faeb74b7d5d8b5dfcf632c6c1eae879
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 14 11:25:03 2019 -0700
