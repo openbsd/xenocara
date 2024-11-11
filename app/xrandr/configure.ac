@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xrandr], [1.5.2],
+AC_INIT([xrandr], [1.5.3],
         [https://gitlab.freedesktop.org/xorg/app/xrandr/-/issues], [xrandr])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])

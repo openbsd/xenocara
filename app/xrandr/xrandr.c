@@ -1063,17 +1063,12 @@ set_gamma_info(output_t *output)
     if (!output->crtc_info)
 	return;
 
-    size = XRRGetCrtcGammaSize(dpy, output->crtc_info->crtc.xid);
-    if (!size) {
-	warning("Failed to get size of gamma for output %s\n", output->output.string);
-	return;
-    }
-
     crtc_gamma = XRRGetCrtcGamma(dpy, output->crtc_info->crtc.xid);
     if (!crtc_gamma) {
 	warning("Failed to get gamma for output %s\n", output->output.string);
 	return;
     }
+    size = crtc_gamma->size;
 
     /*
      * Here is a bit tricky because gamma is a whole curve for each
@@ -1691,8 +1686,8 @@ apply (void)
 	XGrabServer (dpy);
     
     /*
-     * Turn off any crtcs which are to be disabled or which are
-     * larger than the target size
+     * Turn off any crtcs which are to be disabled or which
+     * need to be updated
      */
     for (int c = 0; c < res->ncrtc; c++)
     {
@@ -1705,30 +1700,32 @@ apply (void)
 	
 	/* 
 	 * If this crtc is to be left enabled, make
-	 * sure the old size fits then new screen
+	 * sure the new geometry is unchanged and fits
 	 */
 	if (crtc->mode_info) 
 	{
 	    XRRModeInfo	*old_mode = find_mode_by_xid (crtc_info->mode);
-	    int x, y, w, h;
-	    box_t bounds;
+	    box_t cur, pending;
 
 	    if (!old_mode) 
 		panic (RRSetConfigFailed, crtc);
-	    
-	    /* old position and size information */
+
 	    mode_geometry (old_mode, crtc_info->rotation,
-			   &crtc->current_transform.transform,
-			   &bounds);
+			   &crtc->current_transform.transform, &cur);
+	    mode_geometry (crtc->mode_info, crtc_info->rotation,
+			   &crtc->pending_transform.transform, &pending);
 
-	    x = crtc_info->x + bounds.x1;
-	    y = crtc_info->y + bounds.y1;
-	    w = bounds.x2 - bounds.x1;
-	    h = bounds.y2 - bounds.y1;
+	    if (cur.x1 == pending.x1 && cur.x2 == pending.x2 &&
+	        cur.y1 == pending.y1 && cur.y2 == pending.y2) {
+		int x = crtc_info->x + cur.x1;
+		int y = crtc_info->y + cur.y1;
+		int w = cur.x2 - cur.x1;
+		int h = cur.y2 - cur.y1;
 
-	    /* if it fits, skip it */
-	    if (x + w <= fb_width && y + h <= fb_height) 
-		continue;
+		/* if it fits, skip it */
+		if (x + w <= fb_width && y + h <= fb_height)
+		    continue;
+	    }
 	    crtc->changing = True;
 	}
 	s = crtc_disable (crtc);
@@ -2274,6 +2271,38 @@ check_strtod(char *s)
     return result;
 }
 
+static void *
+ctm_from_string(const char *str, int *returned_nitems)
+{
+    double ctm[9];
+    long *prop;
+    int i;
+
+    if (sscanf (str, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
+		&ctm[0],&ctm[1],&ctm[2],
+		&ctm[3],&ctm[4],&ctm[5],
+		&ctm[6],&ctm[7],&ctm[8]) != 9)
+	return NULL;
+
+    prop = malloc (2*9*sizeof(prop[0]));
+    if (!prop)
+	return NULL;
+
+    for (i = 0; i < 9; i++) {
+	unsigned long long tmp;
+
+	tmp = fabs (ctm[i]) * (1ULL << 32);
+	if (ctm[i] < 0.0)
+	    tmp |= 1ULL << 63;
+
+	prop[i*2+0] = tmp & 0xffffffff;
+	prop[i*2+1] = tmp >> 32;
+    }
+
+    *returned_nitems = 2*9;
+
+    return prop;
+}
 
 static void *
 property_values_from_string(const char *str, const Atom type, const int format,
@@ -2462,6 +2491,32 @@ print_guid(const unsigned char *prop)
 }
 
 static void
+print_ctm(const unsigned long *prop)
+{
+    printf("\t");
+    for (int i = 0; i < 9; i++)
+    {
+	unsigned long long tmp;
+	double c;
+
+	tmp = prop[2*i+1];
+	tmp <<= 32;
+	tmp |= prop[2*i+0];
+
+	c = (double)(tmp & ~(1ULL << 63)) / (1ULL << 32);
+	if (tmp & (1ULL << 63))
+	    c = -c;
+
+	printf("%f", c);
+	if (i == 2 || i == 5)
+	    printf("\n\t\t");
+	else if (i != 8)
+	    printf(" ");
+    }
+    printf("\n");
+}
+
+static void
 print_output_property(const char *atom_name,
                       int value_format,
                       Atom value_type,
@@ -2496,6 +2551,12 @@ print_output_property(const char *atom_name,
 	     value_type == XA_INTEGER && nitems == 16)
     {
 	print_guid (prop);
+	return;
+    }
+    else if (strcmp (atom_name, "CTM") == 0 && value_format == 32 &&
+	     value_type == XA_INTEGER && nitems == 9*2)
+    {
+	print_ctm ((unsigned long *)prop);
 	return;
     }
 
@@ -3364,6 +3425,7 @@ main (int argc, char **argv)
 	    for (output_prop_t *prop = output->props; prop; prop = prop->next)
 	    {
 		Atom		name = XInternAtom (dpy, prop->name, False);
+		char            *atom_name = XGetAtomName (dpy, name);
 		Atom		type;
 		int		format = 0;
 		unsigned char	*data, *malloced_data = NULL;
@@ -3391,8 +3453,12 @@ main (int argc, char **argv)
 		    format = actual_format;
 		}
 
-		malloced_data = property_values_from_string
-		    (prop->value, type, actual_format, &nelements);
+		if (strcmp (atom_name, "CTM") == 0 && type == XA_INTEGER && actual_format == 32)
+		    malloced_data = ctm_from_string (prop->value, &nelements);
+
+		if (!malloced_data)
+		    malloced_data = property_values_from_string (prop->value, type,
+								 actual_format, &nelements);
 
 		if (malloced_data)
 		{

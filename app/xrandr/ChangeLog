@@ -1,3 +1,55 @@
+commit 0591ca56f9628d1a1a691160d79d9afb0f225c4d
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Nov 7 13:02:28 2024 -0500
+
+    xrandr 1.5.3
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/14>
+
+commit 9362e430f59b9fb47129122fa3a5db687819d74d
+Author: Justin Mayfield <tooker@gmail.com>
+Date:   Mon Aug 7 15:34:11 2023 -0600
+
+    Reworked transform fix from Arsalan Awan
+    
+    Check that the transform for a display is unmodified before allowing it
+    to be skipped during an update.
+    
+    This is a reworked patch from Arsalan Awan's 2017 post:
+        https://lists.x.org/archives/xorg-devel/2017-December/055482.html
+    
+    Fixes #36
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/11>
+
+commit b05887508dcf65a58204fb69763e1a7846d2e857
+Author: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Date:   Tue Apr 11 12:31:06 2023 +0300
+
+    xrandr: Print/consume the CTM prop in human readable form
+    
+    Print/consume the CTM in floats for easier human consumption.
+    
+    Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/10>
+
+commit 71ab94418ead8f59c6124e8b3e53f8df7340f095
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 18 14:06:41 2023 -0700
+
+    set_gamma_info: remove unnecessary round-trip to server
+    
+    XRRGetCrtcGamma() returns the exact same size information as
+    XRRGetCrtcGammaSize(), so just use it instead of waiting for
+    the X server to send it an extra time.
+    
+    (And if something has gone very wrong so that they aren't the same,
+     this avoids out-of-bounds reads processing the returned gamma arrays
+     by using the size of the arrays we allocated.)
+    
+    Reported-by: Gregory James DUCK <gjduck@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6f714830da6c8d74f024be6b0bb32c1ea39c1217
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Dec 3 15:47:06 2022 -0800
@@ -179,7 +231,7 @@ Date:   Thu Sep 13 09:44:16 2018 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 9882680c9f7f433a47514a9cb799c79e3e10a024
-Author: Pali Rohár  <pali.rohar@gmail.com>
+Author: Pali Rohár <pali.rohar@gmail.com>
 Date:   Sat Mar 10 16:23:29 2018 +0100
 
     Document that --dpi and --fbmm options set DPI of whole X screen
@@ -290,7 +342,7 @@ Date:   Thu Mar 23 16:05:02 2017 -0700
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 5d5db88d106a49d7560a8042fa054df8b609f00a
-Author: Pali Rohár  <pali.rohar@gmail.com>
+Author: Pali Rohár <pali.rohar@gmail.com>
 Date:   Sun May 28 23:33:26 2017 +0200
 
     Document format of --dpi option in non-ambiguous way
@@ -504,7 +556,7 @@ Date:   Fri Aug 1 23:10:46 2014 -0700
             xrandr.c
 
 commit 193a358563a59c1a3fc55f55029c605e2419c80b
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sat Jun 29 16:50:25 2013 -0700
 
     Mention of --brightness with -h option
@@ -609,7 +661,7 @@ Date:   Fri May 3 10:05:04 2013 +1000
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 00c795e99fe29ecd56e05e915e508c7af0ac39ad
-Author: Ville Syrjälä < <ville.syrjala@linux.intel.com>
+Author: Ville Syrjälä <ville.syrjala@linux.intel.com>
 Date:   Fri May 31 17:01:54 2013 +0300
 
     xrandr: Use floating point for VTotal when calculating refresh rate
@@ -622,7 +674,7 @@ Date:   Fri May 31 17:01:54 2013 +0300
     Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 8f9b993342fddfceaa1afbec2996ce10038f10d7
-Author: Ville Syrjälä < <ville.syrjala@linux.intel.com>
+Author: Ville Syrjälä <ville.syrjala@linux.intel.com>
 Date:   Fri May 31 17:01:53 2013 +0300
 
     xrandr: Use more decimal places when printing various rates
@@ -1530,7 +1582,7 @@ Date:   Thu Feb 11 10:08:07 2010 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit ac6606d8da914610446c5327813798bfbba4d6c2
-Author: Éric Piel  <eric.piel@tremplin-utc.net>
+Author: Éric Piel <eric.piel@tremplin-utc.net>
 Date:   Wed Jan 6 14:42:15 2010 +0100
 
     xrandr: fix brightness to prevent gamma to overflow and to allow 0
@@ -1686,7 +1738,7 @@ Date:   Tue Nov 17 10:34:41 2009 +0100
     Reviewed-by: Rémi Cardona <remi@gentoo.org>
 
 commit b84560759141ed52b8779c184184f888e9be8b2f
-Author: Éric Piel  <eric.piel@tremplin-utc.net>
+Author: Éric Piel <eric.piel@tremplin-utc.net>
 Date:   Mon Oct 26 14:11:02 2009 +0100
 
     xrandr: do not segfault when "--scale" or "--transform" have no output
@@ -1700,7 +1752,7 @@ Date:   Mon Oct 26 14:11:02 2009 +0100
     Signed-off-by: Matthias Hopf <mhopf@suse.de>
 
 commit 34829957441a10f6b6e31141aa1018f7a72aeaf9
-Author: Éric Piel  <eric.piel@tremplin-utc.net>
+Author: Éric Piel <eric.piel@tremplin-utc.net>
 Date:   Mon Oct 26 13:57:10 2009 +0100
 
     xrandr: make --query really the default option
@@ -1790,7 +1842,7 @@ Date:   Mon Jul 20 16:44:52 2009 -0500
     Signed-off-by: Federico Mena Quintero <federico@novell.com>
 
 commit 68d5134142e3c616f3996c7ea8d08c887ce56118
-Author: Éric Piel  <E.A.B.Piel@tudelft.nl>
+Author: Éric Piel <E.A.B.Piel@tudelft.nl>
 Date:   Tue Jul 14 21:36:32 2009 +0200
 
     xrandr: Document --nograb option
@@ -1923,7 +1975,7 @@ Date:   Fri Jan 30 17:46:05 2009 +0100
     Several fatal() were missing \n.
 
 commit 9ea6e4210d49c13991a7d07e54f6f59e3dc8ce72
-Author: Éric Piel  <E.A.B.Piel@tudelft.nl>
+Author: Éric Piel <E.A.B.Piel@tudelft.nl>
 Date:   Mon Jan 19 16:18:46 2009 +0100
 
     Add docs for --transform and --scale.
@@ -3040,7 +3092,7 @@ Date:   Wed Jul 20 19:32:03 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 5666f22654447eb381186a85a8e1630d419b0a88
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:27:45 2005 +0000
 
     Build systems for xrdb, xrandr, xrefresh
