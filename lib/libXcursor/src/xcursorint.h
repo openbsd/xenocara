@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2024 Thomas E. Dickey
  * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -86,6 +87,7 @@ typedef struct _XcursorDisplayInfo {
     XExtCodes			*codes;
     XcursorBool			has_render_cursor;
     XcursorBool			has_anim_cursor;
+    XcursorBool			resized_cursors;
     XcursorBool			theme_core;
     int				size;
     XcursorFontInfo		*fonts;
@@ -109,5 +111,50 @@ _XcursorCreateGlyphCursor(Display	    *dpy,
 
 Cursor
 _XcursorCreateFontCursor (Display *dpy, unsigned int shape);
+
+/* provide for XCURSOR_RESIZED */
+XcursorImage *
+_XcursorFileLoadImage (FILE *file, int size, XcursorBool resize);
+
+XcursorImages *
+_XcursorXcFileLoadImages (XcursorFile *file, int size, XcursorBool resize);
+
+XcursorImages *
+_XcursorFileLoadImages (FILE *file, int size, XcursorBool resize);
+
+XcursorImages *
+_XcursorFilenameLoadImages (const char *file, int size, XcursorBool resize);
+
+XcursorImages *
+_XcursorShapeLoadImages (Display *dpy, unsigned int shape);
+
+#ifdef DEBUG_XCURSOR
+void     _XcursorTrace(const char *fmt, ...) __attribute__((format(printf,1,2)));
+void    *_XcursorReturnAddr(void *addr);
+int      _XcursorReturnCode(int code);
+unsigned long _XcursorReturnLong(unsigned long code);
+unsigned _XcursorReturnUint(unsigned code);
+void     _XcursorReturnVoid(void);
+#define T_CALLED(func) "called: { " #func
+#define T_OPTION(opts) "option: : " #opts
+#define T_RETURN(form) "return: } %" #form "\n"
+#define enterFunc(params) _XcursorTrace params
+#define traceOpts(params) _XcursorTrace params
+#define returnAddr(addr) return _XcursorReturnAddr(addr)
+#define returnCode(code) return _XcursorReturnCode(code)
+#define returnLong(code) return _XcursorReturnLong(code)
+#define returnUint(code) return _XcursorReturnUint(code)
+#define returnVoid()     do { _XcursorReturnVoid(); return; } while (0)
+#else
+#define enterFunc(params) /* nothing */
+#define traceOpts(params) /* nothing */
+#define returnAddr(addr) return (addr)
+#define returnCode(code) return (code)
+#define returnLong(code) return (code)
+#define returnUint(code) return (code)
+#define returnVoid()     return
+#endif
+
+#define NonNull(p) ((p) != NULL ? (p) : "<null>")
 
 #endif /* _XCURSORINT_H_ */

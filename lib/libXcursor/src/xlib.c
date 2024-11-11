@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2024 Thomas E. Dickey
  * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -90,19 +91,23 @@ XcursorTryShapeCursor (Display	    *dpy,
 {
     Cursor  cursor = None;
 
+    enterFunc((T_CALLED(XcursorTryShapeCursor) "(%p, %lu, %lu, %u, %u, %p, %p)\n",
+	      (void*)dpy, source_font, mask_font,
+	      source_char, mask_char,
+	      (const void*)foreground,
+	      (const void*)background));
+
     if (!dpy || !source_font || !mask_font || !foreground || !background)
-        return 0;
+        returnLong(None);
 
     if (!XcursorSupportsARGB (dpy) && !XcursorGetThemeCore (dpy))
-	return None;
+	returnLong(None);
 
     if (source_font == mask_font &&
 	_XcursorFontIsCursor (dpy, source_font) &&
 	source_char + 1 == mask_char)
     {
-	int		size = XcursorGetDefaultSize (dpy);
-	char		*theme = XcursorGetTheme (dpy);
-	XcursorImages   *images = XcursorShapeLoadImages (source_char, theme, size);
+	XcursorImages   *images = _XcursorShapeLoadImages (dpy, source_char);
 
 	if (images)
 	{
@@ -110,7 +115,7 @@ XcursorTryShapeCursor (Display	    *dpy,
 	    XcursorImagesDestroy (images);
 	}
     }
-    return cursor;
+    returnLong(cursor);
 }
 
 void
@@ -126,18 +131,21 @@ XcursorNoticeCreateBitmap (Display	*dpy,
     int			replace = 0;
     XcursorBitmapInfo	*bmi;
 
+    enterFunc((T_CALLED(XcursorNoticeCreateBitmap) "(%p, %lu, %u, %u)\n",
+	      (void*)dpy, pid, width, height));
+
     if (!dpy)
-        return;
+        returnVoid();
 
     if (!XcursorSupportsARGB (dpy) && !XcursorGetThemeCore (dpy))
-	return;
+	returnVoid();
 
     if (width > MAX_BITMAP_CURSOR_SIZE || height > MAX_BITMAP_CURSOR_SIZE)
-	return;
+	returnVoid();
 
     info = _XcursorGetDisplayInfo (dpy);
     if (!info)
-	return;
+	returnVoid();
 
     LockDisplay (dpy);
     replace = 0;
@@ -164,6 +172,8 @@ XcursorNoticeCreateBitmap (Display	*dpy,
     bmi->height = height;
     bmi->has_image = False;
     UnlockDisplay (dpy);
+
+    returnVoid();
 }
 
 static XcursorBitmapInfo *
@@ -247,8 +257,11 @@ XcursorImageHash (XImage	  *image,
     int		    low_addr;
     Bool	    bit_swap;
 
+    enterFunc((T_CALLED(XcursorImageHash) "(%p, %p)\n",
+	      (void*)image, (void*)hash));
+
     if (!image)
-        return;
+        returnVoid();
 
     for (i = 0; i < XCURSOR_BITMAP_HASH_SIZE; i++)
 	hash[i] = 0;
@@ -295,6 +308,8 @@ XcursorImageHash (XImage	  *image,
 	}
 	line += image->bytes_per_line;
     }
+
+    returnVoid();
 }
 
 static Bool
@@ -309,6 +324,7 @@ _XcursorLogDiscover (void)
 
 	if (getenv ("XCURSOR_DISCOVER"))
 	    log = True;
+	traceOpts((T_OPTION(XCURSOR_DISCOVER) ": %d\n", log));
     }
     return log;
 }
@@ -320,26 +336,29 @@ XcursorNoticePutBitmap (Display	    *dpy,
 {
     XcursorBitmapInfo	*bmi;
 
+    enterFunc((T_CALLED(XcursorNoticePutBitmap ) "(%p, %lu, %p)\n",
+	      (void*)dpy, draw, (void*)image));
+
     if (!dpy || !image)
-        return;
+        returnVoid();
 
     if (!XcursorSupportsARGB (dpy) && !XcursorGetThemeCore (dpy))
-	return;
+	returnVoid();
 
     if (image->width > MAX_BITMAP_CURSOR_SIZE ||
 	image->height > MAX_BITMAP_CURSOR_SIZE)
-	return;
+	returnVoid();
 
     bmi = _XcursorGetBitmap (dpy, (Pixmap) draw);
     if (!bmi)
-	return;
+	returnVoid();
     /*
      * Make sure the image fills the bitmap
      */
     if (image->width != (int)bmi->width || image->height != (int)bmi->height)
     {
 	bmi->bitmap = 0;
-	return;
+	returnVoid();
     }
     /*
      * If multiple images are placed in the same bitmap,
@@ -348,7 +367,7 @@ XcursorNoticePutBitmap (Display	    *dpy,
     if (bmi->has_image)
     {
 	bmi->bitmap = 0;
-	return;
+	returnVoid();
     }
     /*
      * Make sure the image is valid
@@ -356,7 +375,7 @@ XcursorNoticePutBitmap (Display	    *dpy,
     if (image->bytes_per_line & ((image->bitmap_unit >> 3) - 1))
     {
 	bmi->bitmap = 0;
-	return;
+	returnVoid();
     }
     /*
      * Hash the image
@@ -387,6 +406,7 @@ XcursorNoticePutBitmap (Display	    *dpy,
 	}
     }
     bmi->has_image = True;
+    returnVoid();
 }
 
 Cursor
@@ -407,19 +427,27 @@ XcursorTryShapeBitmapCursor (Display		*dpy,
     (void) x;		/* UNUSED */
     (void) y;		/* UNUSED */
 
+    enterFunc((T_CALLED(XcursorTryShapeBitmapCursor)
+	      "(%p, %lu, %lu, %p, %p, %u, %u)\n",
+	      (void*)dpy,
+	      source, mask,
+	      (void*)foreground,
+	      (void*)background,
+	      x, y));
+
     if (!dpy || !foreground || !background)
-        return 0;
+        returnLong(None);
 
     if (!XcursorSupportsARGB (dpy) && !XcursorGetThemeCore (dpy))
-	return None;
+	returnLong(None);
 
     bmi = _XcursorGetBitmap (dpy, source);
     if (!bmi || !bmi->has_image)
-	return None;
+	returnLong(None);
     for (i = 0; i < XCURSOR_BITMAP_HASH_SIZE; i++)
 	sprintf (name + 2 * i, "%02x", bmi->hash[i]);
     cursor = XcursorLibraryLoadCursor (dpy, name);
     if (_XcursorLogDiscover())
 	printf ("Cursor hash %s returns 0x%x\n", name, (unsigned int) cursor);
-    return cursor;
+    returnLong(cursor);
 }

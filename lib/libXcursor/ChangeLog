@@ -1,3 +1,210 @@
+commit 8ae6cf61b18ecddf26f72a07bbfbd1ea9f022c36
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Nov 4 04:06:21 2024 -0500
+
+    amend per merge_requests/22#note_2642042
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 68fe24020cf637df092db42c79b5e7ee0c04c17b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Nov 4 04:00:20 2024 -0500
+
+    amend per merge_requests/22#note_2642034
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8d27f282e40f855a41de53becba07fd5a2ceee0f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 3 19:05:59 2024 -0500
+
+    reduce the message-check to ignore the over-long one
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d8b955d6b225f2dc2dcc7946fd73c87b5c9b4b2d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 3 18:50:54 2024 -0500
+
+    fix overlooked compiler-warning
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit cb2d1b97c39723efd2475fd6c93089aaca560e6a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 3 18:33:06 2024 -0500
+
+    add debug-trace for the configuration information
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 304ac296f3207e46d36e0628af2702e83f6dc259
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 3 17:36:03 2024 -0500
+
+    ensure ncomment and nimage values are positive
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 00a59a71994ce3e2484dc0241117d8d9a0095514
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Nov 1 19:49:27 2024 -0400
+
+    changes will suggest new release
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 83071fff3f09a3c2ff45061f6082d5d77d074073
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Oct 31 20:20:09 2024 -0400
+
+    document/tidy the new set/get functions
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fa5c5bb1bdf379e616e239e5edfac06d489d73ea
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Oct 31 20:08:13 2024 -0400
+
+    document the new XCURSOR_RESIZED environment variable and resource "resized"
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit f155414617de37ab49c81f8d9fa352dc31e77d80
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Oct 31 18:59:24 2024 -0400
+
+    add traces for library.c and xlib.c, also another internal function for dpy
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fbfe95e05f6791c1f66d5f16b200c19f243454b6
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Oct 30 19:16:09 2024 -0400
+
+    add debug-logging for file.c, to help with analysis
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8a1de722164f60aa721fdb8d70d56505e52f4bd6
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Oct 29 16:53:05 2024 -0400
+
+    add/use _XcursorLibraryLoadImages to pass resized-parameter when loading
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit b00d7da27bd5dad244e076e55df27143a9a5b55f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Oct 29 16:44:17 2024 -0400
+
+    use resized-parameter where available when loading images
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5cb505f21e0baec05f4eaa445663bad8cc1d0e5a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Oct 29 16:36:57 2024 -0400
+
+    provide internal variants of existing functions to pass "resized" parameter
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit e7272c804610bbc61a751b6faf5744028c4e9c3f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Oct 29 16:10:51 2024 -0400
+
+    restore behavior of image-loading, provide resizing via internal function
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6816ed58e9217a70734137e3c934de1fa8588866
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Oct 29 04:07:17 2024 -0400
+
+    add getter/setter for "resized" property
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit e5e63e2ba8395c538ca1377323bbc8879bcfd696
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Oct 29 04:01:49 2024 -0400
+
+    add new property "resized" and environment "XCURSOR_RESIZED"
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a5739d863beec78719cf1667382fc2323ff76481
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Oct 27 19:17:19 2024 -0400
+
+    trim redundant code from the resize-calls
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit e1b6d3abb4bf09f42e8144e019a322a9a39e043f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Oct 27 12:49:16 2024 -0400
+
+    improve manpage formatting
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 7e03738efd6d19c141e8a4e0a59a9b628ffa7fd8
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Oct 27 10:12:52 2024 -0400
+
+    fix compiler warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit b09856069ce80409c7b03f13a96584a820898bff
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Oct 27 06:40:18 2024 -0400
+
+    build-fix
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit dfc856124754c3638460adbecc74dfe7e41987ce
+Author: Jin Liu <m.liu.jin@gmail.com>
+Date:   Fri Oct 11 10:51:47 2024 +0800
+
+    Remove unnecessary MIN calls
+
+commit a21cdaf167f449f7c9eb2baab4150ea864d8c8da
+Author: Jin Liu <m.liu.jin@gmail.com>
+Date:   Thu Oct 10 11:43:30 2024 +0800
+
+    Change all *LoadImage(..., size) APIs to always return a cursor with the requested size.
+    
+    Callers of these APIs (especially on Wayland) currently uses different
+    strategies to scale the returned cursor to the size set by the user,
+    resulting in inconsistent cursor sizes and looks across different apps
+    and toolkits. Having the cursor scaled in libXcursor will skip app's
+    own scaling algorithm and guarantee a consistent look.
+    
+    `*LoadAllImages()` are not changed. They still only return the sizes present
+    in the theme.
+    
+    This change needs to be synchronized to libraries (libxcb-cursor, wayland),
+    toolkits (GTK), window managers / Wayland compositors (i3, wlroots) who have
+    a (modified) copy of libXcursor source code, in order to have a fully consistent
+    cursor size across all apps.
+    
+    Signed-off-by: Jin Liu <m.liu.jin@gmail.com>
+
+commit 833735e3232e28153411b3703dfe51883edf47ea
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Thu Sep 12 22:23:50 2024 +0200
+
+    Ignore invalid cursor files
+    
+    If a cursor file contains a header offset which is too small, ignore
+    the file instead of jumping to an incorrect offset.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+
 commit 09617bcc9a0f1b5072212da5f8fede92ab85d157
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 2 12:55:30 2024 -0800

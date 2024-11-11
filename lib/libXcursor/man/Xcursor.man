@@ -1,5 +1,5 @@
 .\"
-.\" Copyright © 2021 Thomas E. Dickey
+.\" Copyright © 2021,2024 Thomas E. Dickey
 .\" Copyright © 2002 Keith Packard
 .\"
 .\" Permission to use, copy, modify, distribute, and sell this software and
@@ -25,13 +25,16 @@
 .el    .ta 0.5i 1.0i 1.5i 2.0i
 ..
 .de PS
-.sp
 .ns
-.TP \\$1
+.TP
 .na
 .nf
 .ie n  .ta 0.8i 3.0i
 .el    .ta 0.5i 2.0i
+..
+.de PC
+.sp
+.PS
 ..
 .de PE
 .br
@@ -71,8 +74,8 @@
 .TH XCURSOR __libmansuffix__ __xorgversion__ "X Version 11"
 .hy 0
 .SH NAME
-Xcursor \- Cursor management library
-.
+Xcursor \-
+Cursor management library
 .SH SYNOPSIS
 .nf
 .B #include <X11/Xcursor/Xcursor.h>
@@ -99,7 +102,7 @@ to use the Render extension CreateCursor request if supported by the X server.
 Where not supported, Xcursor maps the cursor image to a standard X
 cursor and uses the core CreateCursor request.
 .
-.SS CURSOR FILES
+.SS "CURSOR FILES"
 Xcursor defines a new format for cursors on disk.
 Each file holds
 one or more cursor images.
@@ -121,7 +124,7 @@ The file header looks like:
 \fIversion\fP\^:	CARD32 file version number
 \fIntoc\fP\^:	CARD32 number of toc entries
 \fItoc\fP\^:	LISTofTOC table of contents
-.in -.2i
+.QE
 .P
 Each table of contents entry looks like:
 .LP
@@ -130,7 +133,6 @@ Each table of contents entry looks like:
 \fIsubtype\fP\^:	CARD32 type-specific label - size for images
 \fIposition\fP\^:	CARD32 absolute byte position of table in file
 .QE
-.P
 .P
 Each chunk in the file has set of common header fields followed by
 additional type-specific fields:
@@ -194,7 +196,7 @@ Within the theme directory,
 it looks for cursor files in the \*(``cursors\*('' subdirectory.
 .IP
 Xcursor looks for a specific file,
-which must be one of the cursor \fIshape\fP names, 
+which must be one of the cursor \fIshape\fP names,
 e.g., as used in XcursorLibraryLoadImage or XcursorLibraryShape.
 .bP
 If it finds no matching cursor file in the \*(``cursors\*('' subdirectory,
@@ -308,16 +310,15 @@ typedef struct _XcursorFile {
     int (*seek)  (XcursorFile *file, long offset, int whence);
 };
 .QE
-.fi
 .
 .SH FUNCTIONS
 .
-.SS Object Management
+.SS "Object Management"
 .PS
 XcursorImage *XcursorImageCreate (
 	int 	 \fIwidth\fP,
 	int 	 \fIheight\fP)
-.PS
+.PC
 void XcursorImageDestroy (
 	XcursorImage 	*\fIimage\fP)
 .PE
@@ -328,7 +329,7 @@ The size is set to the maximum of \fIwidth\fP and \fIheight\fP.
 .PS
 XcursorImages *XcursorImagesCreate (
 	int 	 \fIsize\fP)
-.PS
+.PC
 void XcursorImagesDestroy (
 	XcursorImages 	*\fIimages\fP)
 .PE
@@ -339,7 +340,7 @@ On allocation, \fInimage\fP is set to zero.
 XcursorCursors *XcursorCursorsCreate (
 	Display 	*\fIdpy\fP,
 	int 	 \fIsize\fP)
-.PS
+.PC
 void XcursorCursorsDestroy (
 	XcursorCursors 	*\fIcursors\fP)
 .PE
@@ -347,25 +348,25 @@ Allocate and free arrays to hold multiple cursors.
 On allocation, \fIncursor\fP is set to zero, \fIref\fP is set to one.
 .
 .
-.SS Reading and writing images.
+.SS "Reading and writing images"
 .
 .PS
 XcursorImage *XcursorXcFileLoadImage (
 	XcursorFile 	*\fIfile\fP,
 	int 	 \fIsize\fP)
-.PS
+.PC
 XcursorImages *XcursorXcFileLoadImages (
 	XcursorFile 	*\fIfile\fP,
 	int 	 \fIsize\fP)
-.PS
+.PC
 XcursorImages *XcursorXcFileLoadAllImages (
 	XcursorFile 	*\fIfile\fP)
-.PS
+.PC
 XcursorBool XcursorXcFileLoad (
 	XcursorFile 	*\fIfile\fP,
 	XcursorComments 	**\fIcommentsp\fP,
 	XcursorImages 	**\fIimagesp\fP)
-.PS
+.PC
 XcursorBool XcursorXcFileSave (
 	XcursorFile 	*\fIfile\fP,
 	const XcursorComments 	*\fIcomments\fP,
@@ -378,23 +379,23 @@ After reading, the file pointer will be left at some random place in the file.
 XcursorImage *XcursorFileLoadImage (
 	FILE 	*\fIfile\fP,
 	int 	 \fIsize\fP)
-.PS
+.PC
 XcursorImages *XcursorFileLoadImages (
 	FILE 	*\fIfile\fP,
 	int 	 \fIsize\fP)
-.PS
+.PC
 XcursorImages *XcursorFileLoadAllImages (
 	FILE 	*\fIfile\fP)
-.PS
+.PC
 XcursorBool XcursorFileLoad (
 	FILE 	*\fIfile\fP,
 	XcursorComments 	**\fIcommentsp\fP,
 	XcursorImages 	**\fIimagesp\fP)
-.PS
+.PC
 XcursorBool XcursorFileSaveImages (
 	FILE 	*\fIfile\fP,
 	const XcursorImages 	*\fIimages\fP)
-.PS
+.PC
 XcursorBool XcursorFileSave (
 	FILE 	*\fIfile\fP,
 	const XcursorComments 	*\fIcomments\fP,
@@ -407,23 +408,23 @@ Writing flushes before returning so that any errors should be detected.
 XcursorImage *XcursorFilenameLoadImage (
 	const char 	*\fIfilename\fP,
 	int 	 \fIsize\fP)
-.PS
+.PC
 XcursorImages *XcursorFilenameLoadImages (
 	const char 	*\fIfilename\fP,
 	int 	 \fIsize\fP)
-.PS
+.PC
 XcursorImages *XcursorFilenameLoadAllImages (
 	const char 	*\fIfile\fP)
-.PS
+.PC
 XcursorBool XcursorFilenameLoad (
 	const char 	*\fIfile\fP,
 	XcursorComments 	**\fIcommentsp\fP,
 	XcursorImages 	**\fIimagesp\fP)
-.PS
+.PC
 XcursorBool XcursorFilenameSaveImages (
 	const char 	*\fIfilename\fP,
 	const XcursorImages 	*\fIimages\fP)
-.PS
+.PC
 XcursorBool XcursorFilenameSave (
 	const char 	*\fIfile\fP,
 	const XcursorComments 	*\fIcomments\fP,
@@ -431,13 +432,13 @@ XcursorBool XcursorFilenameSave (
 .PE
 These parallel the stdio FILE interfaces above, but take filenames.
 .
-.SS Reading library images
+.SS "Reading library images"
 .PS
 XcursorImage *XcursorLibraryLoadImage (
 	const char 	*\fIname\fP,
 	const char 	*\fItheme\fP,
 	int 	 \fIsize\fP)
-.PS
+.PC
 XcursorImages *XcursorLibraryLoadImages (
 	const char 	*\fIname\fP,
 	const char 	*\fItheme\fP,
@@ -467,7 +468,7 @@ and (on success)
 it calls XcursorImagesSetName to associate \fIname\fP with the result.
 .RE
 .
-.SS Library attributes
+.SS "Library attributes"
 .PS
 const char * XcursorLibraryPath (void)
 .PE
@@ -480,7 +481,7 @@ return that value.
 Otherwise, return the compiled-in search path.
 .RE
 .
-.PS
+.PC
 int XcursorLibraryShape (
 	const char 	*\fIlibrary\fP)
 .PE
@@ -495,13 +496,13 @@ used in an X cursor font).
 If not found, return -1.
 .RE
 .
-.SS Cursor APIs
+.SS "Cursor APIs"
 .
 .PS
 Cursor XcursorFilenameLoadCursor (
 	Display 	*\fIdpy\fP,
 	const char 	*\fIfile\fP)
-.PS
+.PC
 XcursorCursors *XcursorFilenameLoadCursors (
 	Display 	*\fIdpy\fP,
 	const char 	*\fIfile\fP)
@@ -512,7 +513,7 @@ These load cursors from the specified file.
 Cursor XcursorLibraryLoadCursor (
 	Display 	*\fIdpy\fP,
 	const char 	*\fIname\fP)
-.PS
+.PC
 XcursorCursors *XcursorLibraryLoadCursors (
 	Display 	*\fIdpy\fP,
 	const char 	*\fIname\fP)
@@ -534,7 +535,7 @@ XRenderCreateCursor is used if ARGB is supported on the display, and
 XCreatePixmapCursor is used otherwise.
 .RE
 .
-.PS
+.PC
 Cursor XcursorImagesLoadCursor(
 	Display 	*\fIdpy\fP,
 	const XcursorImages 	*\fIimages\fP)
@@ -557,14 +558,14 @@ Normally it returns the resulting array pointer.
 On any failure, it discards the result XcursorCursorsDestroy,
 and returns NULL.
 .
-.SS X Cursor Name APIs
+.SS "X Cursor Name APIs"
 .
 .PS
 XcursorImage *XcursorShapeLoadImage (
 	unsigned int 	 \fIshape\fP,
 	const char 	*\fItheme\fP,
 	int 	 \fIsize\fP)
-.PS
+.PC
 XcursorImages *XcursorShapeLoadImages (
 	unsigned int 	 \fIshape\fP,
 	const char 	*\fItheme\fP,
@@ -577,14 +578,14 @@ then load the images.
 Cursor XcursorShapeLoadCursor (
 	Display 	*\fIdpy\fP,
 	unsigned int 	 \fIshape\fP)
-.PS
+.PC
 XcursorCursors *XcursorShapeLoadCursors (
 	Display 	*\fIdpy\fP,
 	unsigned int 	 \fIshape\fP)
 .PE
 These map \fIshape\fP to a library name and then load the cursors.
 .
-.SS X Cursor Comment APIs
+.SS "X Cursor Comment APIs"
 .PS
 XcursorComment *XcursorCommentCreate (
 	XcursorUInt 	 \fIcomment_type\fP,
@@ -617,7 +618,7 @@ void XcursorCommentsDestroy (
 Deallocates the given XcursorComments structure
 as well as the XcursorComment structures which it points to.
 .
-.SS Animated Cursors
+.SS "Animated Cursors"
 .PS
 XcursorAnimate * XcursorAnimateCreate (
 	XcursorCursors 	*\fIcursors\fP)
@@ -643,7 +644,7 @@ incrementing the sequence number to prepare for the next call.
 The caller is responsible for displaying the series of Cursor images.
 Xcursor does not do that.
 .
-.SS Glyph Cursor APIs
+.SS "Glyph Cursor APIs"
 The X11 XCreateFontCursor and XCreateGlyphCursor functions use
 this part of the API to extend the X core cursors feature to use themes.
 .PS
@@ -727,7 +728,7 @@ Xcursor calls XcursorShapeLoadImages to load the cursor images.
 If successful, Xcursor uses XcursorImagesLoadCursor
 to load the cursor information.
 .
-.SS Display Information APIs
+.SS "Display Information APIs"
 .
 .PS
 XcursorBool XcursorSupportsARGB (
@@ -759,6 +760,20 @@ int XcursorGetDefaultSize (
 Gets the default cursor size.
 .
 .PS
+XcursorBool XcursorSetResizable (
+	Display 	*\fIdpy\fP,
+	XcursorBool 	 \fIresizable\fP)
+.PE
+Sets the current resizable-cursors state.
+.
+.PS
+XcursorBool XcursorGetResizable (
+	Display 	*\fIdpy\fP)
+.PE
+Gets the current resizable-cursors state.
+.
+.
+.PS
 XcursorBool XcursorSetTheme (
 	Display 	*\fIdpy\fP,
 	const char 	*\fItheme\fP)
@@ -771,18 +786,18 @@ char *XcursorGetTheme (
 .PE
 Gets the current theme name.
 .
-.PS
+.PC
 XcursorBool XcursorGetThemeCore (
 	Display 	*\fIdpy\fP)
-.PS
+.PC
 XcursorBool XcursorSetThemeCore (
 	Display 	*\fIdpy\fP,
 	XcursorBool 	 \fItheme_core\fP)
 .PE
-Get or set property which tells Xcursor whether to 
+Get or set property which tells Xcursor whether to
 enable themes for core cursors.
 .
-.SH "ENVIRONMENT VARIABLES"
+.SH ENVIRONMENT
 Environment variables can be used to override resource settings,
 which in turn override compiled-in default values.
 .PP
@@ -850,6 +865,13 @@ rather than the compiled-in default list.
 .IP
 Directories in this path are separated by colons (:).
 .TP 15
+.B XCURSOR_RESIZED
+Enables automatic resizing of cursors to improve their displayed size
+if the environment variable is \fItrue\fP.
+.IP
+If the environment variable is not given,
+Xcursor tries the \fBXcursor.resized\fP resource.
+.TP 15
 .B XCURSOR_SIZE
 This variable sets the desired cursor size, in pixels.
 .IP
@@ -881,6 +903,15 @@ Xcursor tries the \fBXcursor.theme_core\fP resource.
 .IP
 An application can enable or disable themes using XcursorSetThemeCore.
 .
+.SH CAVEATS
+.B Xcursor
+will probably change radically in the future; weak attempts will be made to
+retain some level of source-file compatibility.
+.
+.SH AUTHORS
+Keith Packard
+Thomas E. Dickey
+.
 .SH SEE ALSO
 .na
 XCreateRenderCursor(__libmansuffix__),
@@ -893,11 +924,3 @@ as well as
 \fIIcon Theme Specification\fP
 .br
 https://specifications.freedesktop.org/icon-theme-spec/
-.
-.SH RESTRICTIONS
-.B Xcursor
-will probably change radically in the future; weak attempts will be made to
-retain some level of source-file compatibility.
-.
-.SH AUTHOR
-Keith Packard

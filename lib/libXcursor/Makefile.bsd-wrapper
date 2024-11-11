@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2013/08/13 07:07:14 guenther Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2024/11/11 09:26:22 matthieu Exp $
 
-SHARED_LIBS=	Xcursor 5.0
+SHARED_LIBS=	Xcursor 5.1
 
 CONFIGURE_ARGS+=	--with-cursorpath="~/.icons:/usr/local/lib/X11/icons:/usr/local/share/icons:/usr/local/share/pixmaps:${X11BASE}/share/icons:${X11BASE}/share/pixmaps"
 

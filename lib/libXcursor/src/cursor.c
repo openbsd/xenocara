@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2024 Thomas E. Dickey
  * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -742,9 +743,11 @@ Cursor
 XcursorFilenameLoadCursor (Display *dpy, const char *file)
 {
     int		    size = XcursorGetDefaultSize (dpy);
-    XcursorImages   *images = XcursorFilenameLoadImages (file, size);
+    XcursorBool     resize = XcursorGetResizable (dpy);
+    XcursorImages   *images;
     Cursor	    cursor;
 
+    images = _XcursorFilenameLoadImages (file, size, resize);
     if (!images)
 	return None;
     cursor = XcursorImagesLoadCursor (dpy, images);
@@ -756,9 +759,11 @@ XcursorCursors *
 XcursorFilenameLoadCursors (Display *dpy, const char *file)
 {
     int		    size = XcursorGetDefaultSize (dpy);
-    XcursorImages   *images = XcursorFilenameLoadImages (file, size);
+    XcursorBool     resize = XcursorGetResizable (dpy);
+    XcursorImages   *images;
     XcursorCursors  *cursors;
 
+    images = _XcursorFilenameLoadImages (file, size, resize);
     if (!images)
 	return NULL;
     cursors = XcursorImagesLoadCursors (dpy, images);
