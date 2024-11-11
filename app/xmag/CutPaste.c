@@ -39,7 +39,6 @@ from The Open Group.
 #include <stdio.h>
 
 
-/*ARGSUSED*/
 static Boolean
 ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
 		 XtPointer *value, unsigned long *length, int *format)
@@ -88,11 +87,10 @@ SWGrabSelection(Widget w, Time time)
 }
 
 
-/*ARGSUSED*/
 static void
-SelectionCallback(Widget w, XtPointer client_data, Atom *selection,
-		  Atom *type, XtPointer value, unsigned long *length,
-		  int *format)
+SelectionCallback(Widget w, _X_UNUSED XtPointer client_data,
+                  _X_UNUSED Atom *selection, Atom *type, XtPointer value,
+                  _X_UNUSED unsigned long *length, _X_UNUSED int *format)
 {
 
     if  (*type == XA_PIXMAP) {

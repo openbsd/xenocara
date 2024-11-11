@@ -202,9 +202,9 @@ static XtActionsRec actions_table[] = {
  *            area that contains bits of different depths.
  */
 static int
-Error(Display *dpy, XErrorEvent *err)
+Error(Display *display, XErrorEvent *err)
 {
-  (void) XmuPrintDefaultErrorMessage (dpy, err, stderr);
+  (void) XmuPrintDefaultErrorMessage (display, err, stderr);
   return 0;
 }
 
@@ -213,8 +213,9 @@ Error(Display *dpy, XErrorEvent *err)
  * CloseAP() -- Close this dialog.  If its the last one exit the program.
  *
  */
-static void			/* ARGSUSED */
-CloseAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
+static void
+CloseAP(Widget w, XEvent *event,
+        _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
   Arg wargs[2]; int n; hlPtr data;
   if (!--numXmags) exit(0);
@@ -234,8 +235,9 @@ CloseAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
  * SetCmapPropsAP() -- Put the scale widget first in WM_COLORMAP_WINDOWS
  *
  */
-static void			/* ARGSUSED */
-SetCmapPropsAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
+static void
+SetCmapPropsAP(Widget w, _X_UNUSED XEvent *event,
+               _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
   Arg wargs[2]; int n; hlPtr data;
   n = 0;			/* get user data */
@@ -254,8 +256,9 @@ SetCmapPropsAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
  * UnsetCmapPropsAP() -- Put the shell first in WM_COLORMAP_WINDOWS
  *
  */
-static void			/* ARGSUSED */
-UnsetCmapPropsAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
+static void
+UnsetCmapPropsAP(Widget w, _X_UNUSED XEvent *event,
+                 _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
   Arg wargs[2]; int n; hlPtr data;
   n = 0;			/* get user data */
@@ -274,8 +277,9 @@ UnsetCmapPropsAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
  * NewAP() -- Create an additional xmag dialog. THIS IS A COPY OF NewEH
  *                                              FIND A BETTER WAY....
  */
-static void			/* ARGSUSED */
-NewAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
+static void
+NewAP(_X_UNUSED Widget w, _X_UNUSED XEvent *event,
+      _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
   StartRootPtrGrab(True, NULL);
 }
@@ -285,8 +289,9 @@ NewAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
 /*
  * ReplaceAP() -- Replace this particular xmag dialog.
  */
-static void                     /* ARGSUSED */
-ReplaceAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
+static void
+ReplaceAP(Widget w, _X_UNUSED XEvent *event,
+          _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
   Arg wargs[2]; int n; hlPtr data;
   n = 0;			/* get user data */
@@ -300,8 +305,9 @@ ReplaceAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
 /*
  * PopupPixelAP() -- Show pixel information.
  */
-static void			/* ARGSUSED */
-PopupPixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
+static void
+PopupPixelAP(Widget w, XEvent *event,
+             _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     Position scale_x, scale_y;
     Dimension scale_height;
@@ -348,8 +354,9 @@ PopupPixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
 /*
  * UpdatePixelAP() -- Update pixel information.
  */
-static void			/* ARGSUSED */
-UpdatePixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
+static void
+UpdatePixelAP(Widget w, XEvent *event,
+              _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     Position x, y;
     Pixel pixel;
@@ -384,8 +391,9 @@ UpdatePixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
 /*
  * PopdownPixelAP() -- Remove pixel info.
  */
-static void			/* ARGSUSED */
-PopdownPixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
+static void
+PopdownPixelAP(Widget w, _X_UNUSED XEvent *event,
+               _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
   int n;
   Arg wargs[3];
@@ -401,8 +409,9 @@ PopdownPixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 
-static void			/* ARGSUSED */
-SelectRegionAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
+static void
+SelectRegionAP(_X_UNUSED Widget w, _X_UNUSED XEvent *event,
+               _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
 /***** NOT SURE WHAT TO DO WITH THIS
     if (app_resources.unmap)
@@ -451,7 +460,7 @@ CheckPoints(Position *x1, Position *x2, Position *y1, Position *y2)
  * HighlightTO() -- Timer to highlight the selection box
  */
 static void
-HighlightTO(XtPointer closure, XtIntervalId *id)	/* ARGSUSED */
+HighlightTO(XtPointer closure, _X_UNUSED XtIntervalId *id)
 {
   hlPtr data = (hlPtr)closure;
   XGrabServer(dpy);
@@ -487,8 +496,8 @@ HighlightTO(XtPointer closure, XtIntervalId *id)	/* ARGSUSED */
  * CloseCB() -- Delete this xmag dialog.  If its the only one on the screen
  *             then exit.
  */
-static void			/* ARGSUSED */
-CloseCB(Widget w, XtPointer clientData, XtPointer callData)
+static void
+CloseCB(_X_UNUSED Widget w, XtPointer clientData, _X_UNUSED XtPointer callData)
 {
   Widget shell = (Widget)clientData;
   if (!--numXmags) exit(0);
@@ -501,8 +510,8 @@ CloseCB(Widget w, XtPointer clientData, XtPointer callData)
 /*
  * ReplaceCB() -- Replace this particular xmag dialog.
  */
-static void                     /* ARGSUSED */
-ReplaceCB(Widget w, XtPointer clientData, XtPointer callData)
+static void
+ReplaceCB(_X_UNUSED Widget w, XtPointer clientData, _X_UNUSED XtPointer callData)
 {
   hlPtr data = (hlPtr)clientData;
   StartRootPtrGrab(False, data);
@@ -513,8 +522,8 @@ ReplaceCB(Widget w, XtPointer clientData, XtPointer callData)
 /*
  * NewCB() -- Create an additional xmag dialog.
  */
-static void			/* ARGSUSED */
-NewCB(Widget w, XtPointer clientData, XtPointer callData)
+static void
+NewCB(_X_UNUSED Widget w, _X_UNUSED XtPointer clientData, _X_UNUSED XtPointer callData)
 {
   StartRootPtrGrab(True, NULL);
 }
@@ -524,8 +533,8 @@ NewCB(Widget w, XtPointer clientData, XtPointer callData)
 /*
  * SelectCB() -- Own the primary selection.
  */
-static void			/* ARGSUSED */
-SelectCB(Widget w, XtPointer clientData, XtPointer callData)
+static void
+SelectCB(_X_UNUSED Widget w, XtPointer clientData, _X_UNUSED XtPointer callData)
 {
   hlPtr data = (hlPtr)clientData;
   SWGrabSelection(data->scaleInstance, XtLastTimestampProcessed(dpy));
@@ -536,8 +545,8 @@ SelectCB(Widget w, XtPointer clientData, XtPointer callData)
 /*
  * PasteCB() -- Paste from the primary selection into xmag.
  */
-static void			/* ARGSUSED */
-PasteCB(Widget w, XtPointer clientData, XtPointer callData)
+static void
+PasteCB(_X_UNUSED Widget w, XtPointer clientData, _X_UNUSED XtPointer callData)
 {
   hlPtr data = (hlPtr)clientData;
   SWRequestSelection(data->scaleInstance, XtLastTimestampProcessed(dpy));
@@ -596,7 +605,7 @@ FindWindow(int x, int y)	/* Location of cursor */
  */
 static void
 ResizeEH(Widget w, XtPointer closure, XEvent *event,
-	 Boolean *continue_to_dispatch)	/* ARGSUSED */
+	 _X_UNUSED Boolean *continue_to_dispatch)
 {
   hlPtr data = (hlPtr)closure;
   switch (event->type) {
@@ -635,7 +644,7 @@ ResizeEH(Widget w, XtPointer closure, XEvent *event,
  */
 static void
 DragEH(Widget w, XtPointer closure, XEvent *event,
-       Boolean *continue_to_dispatch) /* ARGSUSED */
+       _X_UNUSED Boolean *continue_to_dispatch)
 {
   hlPtr data = (hlPtr)closure;
   switch (event->type) {
@@ -743,7 +752,7 @@ CreateRoot(void)
   if (XValue & srcStat && YValue &srcStat) {
     numXmags = 1;
     data = (hlPtr)XtMalloc(sizeof(hlStruct));
-    data = data;
+
     data->newScale   = True;
     data->selectMode = drag;
     data->x          = srcX;
@@ -1105,15 +1114,40 @@ ParseSourceGeom(void)
 
 
 
+static void _X_NORETURN
+usage(const char *progname, int exitval)
+{
+  fprintf (stderr,
+           "usage: %s [-source geom] [-mag magfactor] [-toolkitoption]\n"
+           "       %s [-help|-version]\n",
+           progname, progname);
+  exit (exitval);
+}
+
 /*
  * Main program.
  */
 int
 main(int argc, char *argv[])
 {
+  /* Handle args that don't require opening a display */
+  for (int n = 1; n < argc; n++) {
+    const char *argn = argv[n];
+    /* accept single or double dash for -help & -version */
+    if (argn[0] == '-' && argn[1] == '-') {
+      argn++;
+    }
+    if (strcmp(argn, "-help") == 0) {
+      usage(argv[0], 0);
+    }
+    if (strcmp(argn, "-version") == 0) {
+      puts(PACKAGE_STRING);
+      exit(0);
+    }
+  }
+
   XSetErrorHandler(Error);
 
-				/* SUPPRESS 594 */
   toplevel = XtAppInitialize(&app, "Xmag", optionDesc, XtNumber(optionDesc),
 			     &argc, argv, NULL,
 			     NULL, 0);
@@ -1123,9 +1157,12 @@ main(int argc, char *argv[])
   XtGetApplicationResources(toplevel, (XtPointer) &options, resources,
 			    XtNumber(resources), NULL, 0);
   if (argc != 1) {
-    fprintf (stderr,
-	    "usage:  xmag [-source geom] [-mag magfactor] [-toolkitoption]\n");
-    exit(1);
+    fputs("Unknown argument(s):", stderr);
+    for (int n = 1; n < argc; n++) {
+      fprintf(stderr, " %s", argv[n]);
+    }
+    fputs("\n\n", stderr);
+    usage(argv[0], 1);
   }
 
 

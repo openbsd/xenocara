@@ -78,9 +78,9 @@ typedef struct {
     XtPointer   userData;
     Visual      *visual;
   /* private */
-    float       scale_x, scale_y;
-    float       aspect_ratio;
-    float       precision;
+    double      scale_x, scale_y;
+    double      aspect_ratio;
+    double      precision;
     GC          gc;
     Position    x, y;
     Dimension   width, height;

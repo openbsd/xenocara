@@ -37,6 +37,13 @@ xmag \- magnify parts of the screen
 ] [
 .I \-toolkitoption
 \&.\|.\|. ]
+.br
+.B xmag
+[
+.B \-help
+|
+.B \-version
+]
 .SH DESCRIPTION
 The \fIxmag\fP program allows you to magnify portions of an X screen.  If no
 explicit region is specified, a square with the pointer in the upper left
@@ -95,5 +102,11 @@ an area of the screen.
 .TP 15
 .B \-mag\fI integer\fP
 This option indicates the magnification to be used.  5 is the default.
+.TP 15
+.B \-help
+This option indicates that \fIxmag\fP should print a usage message and exit.
+.TP 15
+.B \-version
+This option indicates that \fIxmag\fP should print version info and exit.
 .SH AUTHORS
 Dave Sternlicht and Davor Matic, MIT X Consortium.

@@ -266,9 +266,9 @@ GetRectangleBuffer(ScaleWidget sw, Cardinal buffer_size)
 
 
 
-/* ARGSUSED */
 static void
-Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
+Initialize(_X_UNUSED Widget request, Widget new,
+           _X_UNUSED ArgList args, _X_UNUSED Cardinal *num_args)
 {
     ScaleWidget new_sw = (ScaleWidget) new;
 
@@ -543,9 +543,8 @@ SWGetImagePixel(Widget w, Position x, Position y,
 
 
 
-/* ARGSUSED */
 static void
-Redisplay(Widget w, XEvent *event, Region region)
+Redisplay(Widget w, XEvent *event, _X_UNUSED Region region)
 {
     ScaleWidget sw = (ScaleWidget) w;
     Position  x, y, img_x, img_y;
@@ -573,12 +572,10 @@ Redisplay(Widget w, XEvent *event, Region region)
 	    height = event->xexpose.height;
 	}
 
-	img_x = min(max((Position) floor((float) x
-					 / (float) sw->scale.scale_x), 0),
+	img_x = min(max((Position) floor(x / sw->scale.scale_x), 0),
 		    (Position) sw->scale.image->width - 1);
 
-	img_y = min(max((Position) floor((float) y
-					 / (float) sw->scale.scale_y), 0),
+	img_y = min(max((Position) floor(y / sw->scale.scale_y), 0),
 		    (Position) sw->scale.image->height - 1);
 
 	if (sw->core.visible) {
@@ -586,9 +583,9 @@ Redisplay(Widget w, XEvent *event, Region region)
 		       img_x, img_y,
 		       sw->scale.x + sw->scale.table.x[(int) img_x],
 		       sw->scale.y + sw->scale.table.y[(int) img_y],
-		       (Dimension) ceil((float) width
+		       (Dimension) ceil(width
 					/ sw->scale.scale_x) + 1,
-		       (Dimension) ceil((float) height
+		       (Dimension) ceil(height
 					/ sw->scale.scale_y) + 1);
 	}
     }
@@ -638,7 +635,7 @@ Precision(ScaleWidget sw)
 static void
 Proportional(ScaleWidget sw)
 {
-    float scale_x, scale_y;
+    double scale_x, scale_y;
 
     scale_x = sw->scale.scale_y / sw->scale.aspect_ratio;
     scale_y = sw->scale.scale_x * sw->scale.aspect_ratio;
@@ -654,7 +651,7 @@ Proportional(ScaleWidget sw)
     else if (scale_y <= sw->scale.scale_y)
 	sw->scale.scale_y = scale_y;
     else {
-	float x_ratio, y_ratio;
+	double x_ratio, y_ratio;
 
 	x_ratio = scale_x / sw->scale.scale_x;
 	y_ratio = scale_y / sw->scale.scale_y;
@@ -691,12 +688,12 @@ GetScaleValues(ScaleWidget sw)
      */
 
     sw->scale.scale_x =
-	(float) max((int)(sw->core.width - 2 * sw->scale.internal_width), 1)
-	    / (float) sw->scale.image->width;
+	max((int)(sw->core.width - 2 * sw->scale.internal_width), 1)
+	    / sw->scale.image->width;
 
     sw->scale.scale_y =
-	(float) max((int)(sw->core.height - 2 * sw->scale.internal_height), 1)
-	    / (float) sw->scale.image->height;
+	max((int)(sw->core.height - 2 * sw->scale.internal_height), 1)
+	    / sw->scale.image->height;
 }
 
 
@@ -771,7 +768,7 @@ Realize(Widget wid, Mask *vmask, XSetWindowAttributes *attr)
 {
   ScaleWidget sw = (ScaleWidget) wid;
   XtCreateWindow(wid, (unsigned int) InputOutput,
-		 (Visual *) sw->scale.visual, *vmask, attr);
+		 sw->scale.visual, *vmask, attr);
 }
 
 
@@ -795,9 +792,8 @@ Destroy(Widget w)
 
 
 
-/* ARGSUSED */
 static Boolean
-SetValues(Widget current, Widget request, Widget new,
+SetValues(Widget current, _X_UNUSED Widget request, Widget new,
 	  ArgList args, Cardinal *num_args)
 {
     ScaleWidget cur_sw = (ScaleWidget) current;
@@ -941,7 +937,8 @@ SetValues(Widget current, Widget request, Widget new,
 
 
 void
-SWUnscale(Widget w, XEvent *event, String *params, Cardinal *num_params)
+SWUnscale(Widget w, _X_UNUSED XEvent *event,
+          _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     ScaleWidget sw = (ScaleWidget) w;
 
@@ -953,7 +950,8 @@ SWUnscale(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 void
-SWAutoscale(Widget w, XEvent *event, String *params, Cardinal *num_params)
+SWAutoscale(Widget w, _X_UNUSED XEvent *event,
+            _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     ScaleWidget sw = (ScaleWidget) w;
 
@@ -965,7 +963,8 @@ SWAutoscale(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 void
-SWInitialSize(Widget w, XEvent *event, String *params, Cardinal *num_params)
+SWInitialSize(Widget w, _X_UNUSED XEvent *event,
+              _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     ScaleWidget sw = (ScaleWidget) w;
 
@@ -998,7 +997,8 @@ SWSetImage(Widget w, XImage *image)
 
 
 void
-RequestSelection(Widget w, XEvent *event, String *params, Cardinal *num_params)
+RequestSelection(Widget w, XEvent *event,
+                 _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     SWRequestSelection(w, event->xbutton.time);
 }
@@ -1006,7 +1006,8 @@ RequestSelection(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 void
-GrabSelection(Widget w, XEvent *event, String *params, Cardinal *num_params)
+GrabSelection(Widget w, XEvent *event,
+              _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     SWGrabSelection(w, event->xbutton.time);
 }

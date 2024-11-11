@@ -33,7 +33,7 @@ from The Open Group.
 
 static void Realize ( Widget w, XtValueMask *value_mask, XSetWindowAttributes *attributes );
 
-RootWindowClassRec rootWindowClassRec = {
+static RootWindowClassRec rootWindowClassRec = {
   { /* core fields */
     /* superclass		*/	(WidgetClass) &widgetClassRec,
     /* class_name		*/	"RootWindow",
@@ -75,9 +75,9 @@ RootWindowClassRec rootWindowClassRec = {
 
 WidgetClass rootWindowWidgetClass = (WidgetClass)&rootWindowClassRec;
 
-/*ARGSUSED*/
 static void
-Realize(Widget w, XtValueMask *value_mask, XSetWindowAttributes *attributes)
+Realize(Widget w, _X_UNUSED XtValueMask *value_mask,
+        _X_UNUSED XSetWindowAttributes *attributes)
 {
     w->core.window = RootWindowOfScreen(w->core.screen);
 }

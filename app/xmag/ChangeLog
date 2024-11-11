@@ -1,3 +1,123 @@
+commit a19a7428e7786e73f252e3534f4e5d8a3c878be4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 12 11:20:44 2024 -0700
+
+    xmag 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 571d6fe3a04bd5bf598a4a7ad0b1c56c6c3bfe1d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Aug 28 17:05:18 2024 -0700
+
+    Use double for all floating point numbers, not a mix of double and float
+    
+    Gets rid of a lot of inadvertent converting back and forth, along
+    with clearing up 49 -Wdouble-promotion, 12 -Wimplicit-float-conversion,
+    and 6 -Wimplicit-int-float-conversion warnings from clang 13.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmag/-/merge_requests/5>
+
+commit 7c426e265997398ee4a0bfa935db0c829875671e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 27 18:06:55 2024 -0700
+
+    Quiet 64 -Wunused-parameter warnings from clang 13
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmag/-/merge_requests/5>
+
+commit e1257515beb2e80a76f8021738f6d334749f1132
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 27 17:37:48 2024 -0700
+
+    usage: add noreturn attribute
+    
+    Suggested by clang 13:
+    
+    xmag.c:1110:1: warning: function 'usage' could be declared with attribute
+     'noreturn' [-Wmissing-noreturn]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmag/-/merge_requests/5>
+
+commit 225f2d6ae57413367cc36109dda9c461febb49bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 27 17:34:31 2024 -0700
+
+    Fix -Wmissing-variable-declarations warning from clang 13
+    
+    RootWin.c:36:20: warning: no previous extern declaration for non-static
+     variable 'rootWindowClassRec' [-Wmissing-variable-declarations]
+    RootWindowClassRec rootWindowClassRec = {
+                       ^
+    RootWin.c:36:1: note: declare 'static' if the variable is not intended to
+     be used outside of this translation unit
+    RootWindowClassRec rootWindowClassRec = {
+    ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmag/-/merge_requests/5>
+
+commit edad605ad1f45dabd425263bd0ae0362c5854166
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 27 17:31:25 2024 -0700
+
+    Fix -Wself-assign warning from clang 13
+    
+    xmag.c:746:10: warning: explicitly assigning value of variable of type
+     'hlPtr' (aka 'hlStruct *') to itself [-Wself-assign]
+        data = data;
+        ~~~~ ^ ~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmag/-/merge_requests/5>
+
+commit b2d5d64f190666499b7ed5909203be4281e4afc7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 27 17:18:18 2024 -0700
+
+    Fix -Wshadow warning for Display argument to Error()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmag/-/merge_requests/5>
+
+commit 71c460a1d5a9ee51dcc3f2df475fe4e9d27f16f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 27 17:16:01 2024 -0700
+
+    Clear 9 -Wuseless-cast warnings
+    
+    No point in casting struct members to the same type they were defined as.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmag/-/merge_requests/5>
+
+commit a67a5771ecf2cdce8c4214dec58489ba6eb48219
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 15:46:31 2023 -0800
+
+    Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 972d4c5c6a4293b7da32194f219e5299e4e33e37
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 15:39:53 2023 -0800
+
+    Print which arguments were unknown before giving usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dcdcf365ed71dbceb591e01993c4ef390099b2ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 4a7f2c546bdb3083f64f328651628f940ea9ea44
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jul 12 10:32:42 2022 -0700
@@ -640,7 +760,7 @@ Date:   Wed Jul 20 19:32:02 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 38ca5441b199b16b3d2dee2c2b8eaa133aec99a9
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:11 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,

@@ -23,8 +23,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xmag], [1.0.7],
-        [https://gitlab.freedesktop.org/xorg/app/xmag/issues], [xmag])
+AC_INIT([xmag], [1.0.8],
+        [https://gitlab.freedesktop.org/xorg/app/xmag/-/issues], [xmag])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
@@ -48,7 +48,7 @@ AC_SEARCH_LIBS([lrint], [m])
 AC_CHECK_FUNCS([lrint])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XMAG, xaw7 xmu xt x11)
+PKG_CHECK_MODULES(XMAG, [xaw7 xmu xt x11 xproto >= 7.0.22])
 
 xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
 AC_ARG_WITH(appdefaultdir,
