@@ -1,3 +1,125 @@
+commit 42eebb75e2e5e6c5f8205ce3af3355fef4cf1476
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 12 10:48:30 2024 -0700
+
+    xcmsdb 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1985c52593c2a88dd96d60b14fe416ce4b9de457
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 26 18:59:33 2024 -0700
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    While X Device Color Characterization files should never be more than 2gb
+    in size, they may be stored on filesystems with inodes or timestamps
+    outside the normal range for 32-bit programs.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcmsdb/-/merge_requests/7>
+
+commit b70540f49144d517a21a04caa0e01cab9d345177
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 2 18:50:12 2024 -0700
+
+    ProcessColorimetric: limit string size written by scanf()
+    
+    Raised by cppcheck:
+    
+    loadData.c:341:20: warning: sscanf() without field width limits can crash
+     with huge input data. [invalidscanf]
+            int ntok = sscanf(buf, "%s %s", keyword, token);
+                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcmsdb/-/merge_requests/6>
+
+commit c2b16b542179bf61cbbf25774c4b2796047c23c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 2 18:39:46 2024 -0700
+
+    ProcessIProfile: Avoid NULL dereference if strtok doesn't find a match
+    
+    Reported by cppcheck:
+    
+    loadData.c:552:38: warning: Either the condition 'sizeStr==0L' is redundant
+     or there is possible null pointer dereference: sizeStr.
+      [nullPointerRedundantCheck]
+                                linenum, sizeStr);
+                                         ^
+    loadData.c:548:30: note: Assuming that condition 'sizeStr==0L' is not redundant
+                    if ((sizeStr == NULL) ||
+                                 ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcmsdb/-/merge_requests/6>
+
+commit bd3ac0d85c8efc36507e7b437a4b119ce033dff7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 2 18:36:52 2024 -0700
+
+    SCScrnClassStringOf: always return a non-NULL string
+    
+    Clears 4 -Wformat-overflow warnings from gcc of the form:
+    
+    loadData.c: In function ‘LoadSCCData’:
+    loadData.c:397:83: warning: ‘%s’ directive argument is null [-Wformat-overflow=]
+      397 |                             "Line %d: Keyword RGBTOXYZMAT_END mismatch for visual %s.\n",
+          |                                                                                   ^~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcmsdb/-/merge_requests/6>
+
+commit e9cfb815eb6c8342ea0d38e7bf14e247bd37576c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 2 18:20:42 2024 -0700
+
+    Correct comment describing DefineToStr
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcmsdb/-/merge_requests/6>
+
+commit 626f3daaec912273850f94de624930a7359ece59
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 27 15:24:59 2024 -0700
+
+    Declare DefineEntry tables of string to id mappings as const
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcmsdb/-/merge_requests/5>
+
+commit a5a3e02ff607f8526403368e999c2fb58ddbecfb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 27 15:13:46 2024 -0700
+
+    Variable scope reduction as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcmsdb/-/merge_requests/5>
+
+commit 75067cd1491e9bd74f1eb57936e62cbc162f2474
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 27 14:41:44 2024 -0700
+
+    ParseVisualOptions: eliminate unneccessary strcpy & strcat
+    
+    We can just place constant string literals side by side to concatenate
+    them at build time instead of having to copy to a fixed size buffer at
+    run time.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcmsdb/-/merge_requests/5>
+
+commit 3e309af84791b8b8bf22938952eecbdd0f863657
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcmsdb/-/merge_requests/5>
+
 commit 8067bc3bd82c1bd3b50e03b7f1614907509495cb
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 10 14:54:38 2022 -0700
@@ -379,7 +501,7 @@ Date:   Thu Apr 16 22:49:23 2015 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit aa02eb3d4f0c5722b8f9012ec08512daa7420184
-Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä <erkki.seppala@vincit.fi>
 Date:   Sun Jan 4 12:51:10 2015 -0800
 
     _XcmsGetProperty: don't deal with uninitialized values, fail instead
@@ -842,7 +964,7 @@ Date:   Wed Jul 20 19:31:52 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit bdf7beaadb08e4599d28433a49422825949b8295
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 20:07:41 2005 +0000
 
     Build system for xcmsdb

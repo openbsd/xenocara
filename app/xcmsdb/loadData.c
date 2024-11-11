@@ -37,6 +37,10 @@
  *      INCLUDES
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <X11/Xos.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -61,7 +65,7 @@
  *
  */
 
-typedef struct _DefineEntry {
+typedef const struct _DefineEntry {
     const char	*pString;
     int		define;
 } DefineEntry;
@@ -191,10 +195,10 @@ DefineToStr(DefineEntry pde[],  /* IN: table of X string-define pairs */
             int id)             /* IN: id to be looked up in that table   */
 /*
  *	DESCRIPTION
- *		Converts a string to an integer define.
+ *		Converts an integer define to a string.
  *
- *		Looks up the string in the table and returns the integer
- *		associated with the string.
+ *		Looks up the integer in the table and returns the string
+ *		associated with the integer.
  *
  *		Later may need similar function for unsigned long define.
  *
@@ -202,7 +206,7 @@ DefineToStr(DefineEntry pde[],  /* IN: table of X string-define pairs */
  *
  *	RETURNS
  *		The int equivalent of the defined string.
- *		-1 if the string is not found in table
+ *		NULL if the string is not found in table
  *
  */
 {
@@ -284,24 +288,27 @@ SCScrnClassStringOf(int id)
  *		Converts a id to astring
  *
  *	RETURNS
- *		Pointer to string if found; otherwise NULL.
+ *		Pointer to string if found; otherwise "unknown".
  *
  */
 {
-    return (DefineToStr(ScrnClassTbl, id));
+    const char *str = DefineToStr(ScrnClassTbl, id);
+
+    if (str != NULL)
+        return str;
+    else
+        return "unknown";
 }
 
 /* close the stream and return any memory allocated. */
 static void
 closeS(FILE *stream, XDCCC_Correction *pCorrection)
 {
-    XDCCC_Correction *pNext;
-
     if (stream) {
         fclose(stream);
     }
     while (pCorrection) {
-        pNext = pCorrection->next;
+        XDCCC_Correction *pNext = pCorrection->next;
         free(pCorrection);
         pCorrection = pNext;
     }
@@ -322,8 +329,7 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 {
     char buf[BUFSIZ];
     char keyword[BUFSIZ];
-    char token[BUFSIZ], *ptoken;
-    int  ntok;
+    char token[BUFSIZ];
     unsigned int matrices_processed = 0;
 		/* bit 0 for XYZtoRGB matrix */
 		/* bit 1 for RGBtoXYZ matrix */
@@ -336,7 +342,9 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
     XcmsFloat *pElement = NULL;
 
     while ((nextline(buf, BUFSIZ, stream)) != NULL) {
-        if ((ntok = sscanf(buf, "%s %s", keyword, token)) > 0) {
+        int ntok = sscanf(buf, "%1023s %1023s", keyword, token);
+
+        if (ntok > 0) {
             switch (SCKeyOf(keyword)) {
             case XYZTORGBMAT_BEGIN:
                 if (VisualFlag != VIDEO_RGB) {
@@ -448,7 +456,7 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
                 break;
 #endif /* GRAY */
             case DATA:
-                for (ptoken = strtok(buf, DATA_DELIMS); ptoken != NULL;
+                for (char *ptoken = strtok(buf, DATA_DELIMS); ptoken != NULL;
                      ptoken = strtok(NULL, DATA_DELIMS)) {
                     if (sscanf(ptoken, "%lf", pElement) != 1) {
                         if (VisualFlag == VIDEO_RGB) {
@@ -516,8 +524,7 @@ static int
 ProcessIProfile(FILE *stream, XDCCC_Correction *pCorrection)
 {
     char buf[BUFSIZ];
-    char *keyword;
-    char *tableStr, *sizeStr, *ptoken;
+    char *tableStr, *sizeStr;
     int  size;
     int  state = 0;
          /************************************************
@@ -529,7 +536,9 @@ ProcessIProfile(FILE *stream, XDCCC_Correction *pCorrection)
     IntensityRec *pIRec = NULL;
 
     while ((nextline(buf, BUFSIZ, stream)) != NULL) {
-        ptoken = keyword = strtok(buf, DATA_DELIMS);
+        char *ptoken = strtok(buf, DATA_DELIMS);
+        char *keyword = ptoken;
+
         if (keyword != NULL) {
             switch (SCKeyOf(keyword)) {
             case ITBL_BEGIN:
@@ -544,7 +553,7 @@ ProcessIProfile(FILE *stream, XDCCC_Correction *pCorrection)
                     sscanf(sizeStr, "%d", &size) != 1) {
                     fprintf(stderr,
                             "Line %d: invalid Intensity Table size, %s.\n",
-                            linenum, sizeStr);
+                            linenum, sizeStr ? sizeStr : "\"\"");
                     return (0);
                 }
                 if (size < 0) {
@@ -1133,8 +1142,6 @@ static int
 LoadDataGray(Display *pDpy, window root, int tableType,
              LINEAR_RGB_SCCData *pScreenData, int targetFormat)
 {
-    unsigned char *ret_prop;
-    int count;
     int nLevels;
     unsigned char *pCard8;
     unsigned char *pCard8Array = NULL;
@@ -1143,16 +1150,14 @@ LoadDataGray(Display *pDpy, window root, int tableType,
     unsigned long *pCard32;
     unsigned long *pCard32Array = NULL;
     unsigned long Card32Array[18];
-    int ret_format;
-    unsigned long ret_len, ret_after;
-    Atom MatricesAtom, CorrectAtom, ret_atom;
+    Atom MatricesAtom, CorrectAtom;
     XcmsFloat *pValue;
     int total;
 
     /* Now store the XDCCC_SCREENWHITEPT */
     pCard32 = Card32Array;
     pValue = (XcmsFloat *) pScreenData->XYZtoRGBmatrix;
-    for (count = 0; count < 3; count++) {
+    for (int count = 0; count < 3; count++) {
         *pCard32++ = (unsigned long) (*pValue++ * (XcmsFloat) XDCCC_NUMBER);
     }
     MatricesAtom = XInternAtom(pDpy, XDCCC_SCREENWHITEPT_ATOM_NAME, False);
@@ -1163,6 +1168,11 @@ LoadDataGray(Display *pDpy, window root, int tableType,
     CorrectAtom = XInternAtom(pDpy, XDCCC_GRAY_CORRECT_ATOM_NAME, False);
 
     if (tableType == CORR_TYPE_NONE) {
+        unsigned char *ret_prop;
+        Atom ret_atom;
+        int ret_format;
+        unsigned long ret_len, ret_after;
+
         XGetWindowProperty(pDpy, root, CorrectAtom,
                            0, 5, False, XA_INTEGER,
                            &ret_atom, &ret_format, &ret_len, &ret_after,
@@ -1300,19 +1310,16 @@ static int
 ParseVisualOptions(Display *pDpy, XDCCC_Correction *pCorrection, char *pbuf)
 {
     char *key;
-    char *value;
     XVisualInfo *vinfo;
     int n_matches;
-    char delims[8];
+    const char *delims = DATA_DELIMS ":";
 
-    strcpy(delims, DATA_DELIMS);
-    strcat(delims, ":");
     pCorrection->visual_info_mask = VisualNoMask;
     key = strtok(pbuf, delims);
     do {
         long tmp;
+        char *value = strtok(NULL, delims);
 
-        value = strtok(NULL, delims);
         if ((key == NULL) || (value == NULL)) {
             return (0);
         }

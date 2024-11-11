@@ -108,7 +108,6 @@ int
 main(int argc, char *argv[])
 {
     Display *dpy;
-    int i;
     char *displayname = NULL;
     char *filename = NULL;
     int query = 0;
@@ -119,7 +118,7 @@ main(int argc, char *argv[])
 
     ProgramName = argv[0];
 
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
         char *arg = argv[i];
 
         if (arg[0] == '-') {
@@ -575,7 +574,6 @@ QuerySCCDataGray(Display * dpy, Window root)
  */
 {
     char *property_return, *pChar;
-    int j;
     int count, format, cType;
     unsigned long nitems, nbytes_return;
     Atom MatricesAtom, CorrectAtom;
@@ -604,7 +602,7 @@ QuerySCCDataGray(Display * dpy, Window root)
         printf("\nQuerying property %s\n", XDCCC_SCREENWHITEPT_ATOM_NAME);
         printf("\tWhite Point XYZ :\n");
         printf("\t");
-        for (j = 0; j < 3; j++) {
+        for (int j = 0; j < 3; j++) {
             printf("\t%8.5lf",
                    (long) _XcmsGetElement(format, &pChar, &nitems) /
                    (XcmsFloat) XDCCC_NUMBER);
