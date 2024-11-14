@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.663 2024/04/19 07:42:00 tom Exp $ */
+/* $XTermId: button.c,v 1.666 2024/09/30 07:44:57 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -2285,11 +2285,7 @@ GettingSelection(Display *dpy, Atom type, Char *line, unsigned long len)
 #define GettingSelection(dpy,type,line,len)	/* nothing */
 #endif
 
-#ifdef VMS
-#  define tty_vwrite(pty,lag,l)		tt_write(lag,l)
-#else /* !( VMS ) */
-#  define tty_vwrite(pty,lag,l)		v_write(pty,lag,(size_t) l)
-#endif /* defined VMS */
+#define tty_vwrite(pty,lag,l)		v_write(pty,lag,(size_t) l)
 
 #if OPT_PASTE64
 /* Return base64 code character given 6-bit number */
@@ -2487,14 +2483,6 @@ _WriteSelectionData(XtermWidget xw, Char *line, size_t length)
     TScreen *screen = TScreenOf(xw);
 #endif
 
-    /* in the VMS version, if tt_pasting isn't set to True then qio
-       reads aren't blocked and an infinite loop is entered, where the
-       pasted text shows up as new input, goes in again, shows up
-       again, ad nauseum. */
-#ifdef VMS
-    tt_pasting = True;
-#endif
-
 #if OPT_PASTE64
     if (screen->base64_paste) {
 	_qWriteSelectionData(xw, line, length);
@@ -2513,10 +2501,6 @@ _WriteSelectionData(XtermWidget xw, Char *line, size_t length)
 
 	_qWriteSelectionData(xw, line, length);
     }
-#ifdef VMS
-    tt_pasting = False;
-    tt_start_read();		/* reenable reads or a character may be lost */
-#endif
 }
 
 #if OPT_PASTE64 || OPT_READLINE
@@ -3754,7 +3738,13 @@ okPosition(TScreen *screen,
 {
     Boolean result = True;
 
-    if (cell->row > screen->max_row) {
+    assert(ld != NULL);
+    assert(*ld != NULL);
+
+    if (*ld == NULL) {
+	result = False;
+	TRACE(("okPosition LineData is null!\n"));
+    } else if (cell->row > screen->max_row) {
 	result = False;
 	TRACE(("okPosition cell row %d > screen max %d\n", cell->row, screen->max_row));
     } else if (cell->col > (LastTextCol(screen, *ld, cell->row) + 1)) {
@@ -5168,7 +5158,7 @@ SaveText(TScreen *screen,
     for (i = scol; i < ecol; i++) {
 	unsigned c;
 	assert(i < (int) ld->lineSize);
-	c = E2A(ld->charData[i]);
+	c = ld->charData[i];
 	if (ld->attribs[i] & INVISIBLE)
 	    continue;
 #if OPT_WIDE_CHARS
@@ -5212,15 +5202,15 @@ SaveText(TScreen *screen,
 #endif
 	{
 	    if (c == 0) {
-		c = E2A(' ');
-	    } else if (c < E2A(' ')) {
+		c = ' ';
+	    } else if (c < ' ') {
 		c = DECtoASCII(c);
 	    } else if (c == 0x7f) {
 		c = 0x5f;
 	    }
-	    *lp++ = CharOf(A2E(c));
+	    *lp++ = CharOf(c);
 	}
-	if (c != E2A(' '))
+	if (c != ' ')
 	    result = lp;
     }
 

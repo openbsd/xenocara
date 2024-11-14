@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.150 2023/03/31 23:09:38 tom Exp $ */
+/* $XTermId: resize.c,v 1.152 2024/09/30 08:11:57 tom Exp $ */
 
 /*
- * Copyright 2003-2022,2023 by Thomas E. Dickey
+ * Copyright 2003-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -88,11 +88,7 @@
 int ignore_unused;
 #endif
 
-#ifdef __MVS__
-#define ESCAPE(string) "\047" string
-#else
 #define ESCAPE(string) "\033" string
-#endif
 
 #define	EMULATIONS	2
 #define	SUN		1

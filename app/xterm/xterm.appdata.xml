@@ -35,7 +35,7 @@
     <keyword>terminal</keyword>
   </keywords>
   <releases>
-    <release version="393" date="2024-07-11"/>
+    <release version="395" date="2024-10-24"/>
   </releases>
   <url type="homepage">https://invisible-island.net/xterm/</url>
   <update_contact>dickey@invisible-island.net</update_contact>

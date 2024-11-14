@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.904 2024/06/28 23:56:28 tom Exp $
+.\" $XTermId: xterm.man,v 1.908 2024/09/30 07:57:01 tom Exp $
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
 .\"
@@ -1017,6 +1017,26 @@ This option specifies the number of characters from the right end of a line
 at which the margin bell, if enabled, will ring.
 The default is \*(``10\*(''.
 .TP 8
+.B "\-nomap"
+This option disables the initial \fImapping\fP of the terminal window.
+Mapping an X window makes it visible if it is \fImanaged\fP.
+The default is \*(``false\*('' because \fI\*n\fP's window
+is normally displayed on startup.
+.IP
+After startup, an unmapped \fI\*n\fP window can be mapped
+by identifying its window-id, e.g., using \fBxwininfo\fP(1)
+or \fBxlsclients\fP(1),
+and then employing another program such as \fBxdotool\fP(1)
+to ask the window manager to make it visible.
+.IP
+If the \fI\*n\fP window is visible (i.e., mapped),
+\fI\*n\fP's menus and actions (i.e., \fBset\-visibility\fP)
+allow one to select whether the VT100 or Tek4014 windows should be displayed.
+.TP 8
+.B "+nomap"
+This option enables the initial \fImapping\fP of the terminal window.
+This is the default behavior.
+.TP 8
 .B "\-nul"
 This option disables the display of underlining.
 .TP 8
@@ -1279,11 +1299,11 @@ when your operating system does not support locale.
 This option resets the \fButf8\fP resource.
 .TP 8
 .B "\-uc"
-This option, corresponding to the \fBcursorUnderline\fP resource,
+This option, corresponding to the \fBcursorUnderLine\fP resource,
 makes the cursor underlined instead of a box.
 .TP 8
 .B "+uc"
-This option m, corresponding to the \fBcursorUnderline\fP resource,
+This option m, corresponding to the \fBcursorUnderLine\fP resource,
 akes the cursor a box instead of underlined.
 .TP 8
 .B "\-ulc"
@@ -1595,7 +1615,7 @@ First, \fI\*n\fP obtains the initial \fIerase\fP character:
 .bP
 \fI\*n\fP's internal value is ^H
 .bP
-\fI\*n\fP asks the operating system for the value which \fBstty\fP shows
+\fI\*n\fP asks the operating system for the value which \fBstty\fP(1) shows
 .bP
 the \fBttyModes\fP resource may override \fIerase\fP
 .bP
@@ -2768,7 +2788,7 @@ You may have to set this option to \*(``true\*(''
 if you have some old East Asian terminal based programs that assume that
 line-drawing characters have a column width of 2.
 If this resource is false, the \fBmkWidth\fP resource controls the
-choice between the system's \fBwcwidth\fP and \fI\*n\fP's built-in tables.
+choice between the system's \fBwcwidth\fP(3) and \fI\*n\fP's built-in tables.
 The default is \*(``false\*(''.
 .TP 8
 .B "color0\fP (class\fB Color0\fP)"
@@ -2983,7 +3003,7 @@ The default is \*(``false\*(''.
 .TP 8
 .B "cursorBar\fP (class\fB CursorBar\fP)"
 Specifies whether to make the cursor a left-bar or a box,
-unless the \fBcursorUnderline\fP resource is set.
+unless the \fBcursorUnderLine\fP resource is set.
 The default is \*(``false\*(''.
 .TP 8
 .B "cursorBlink\fP (class\fB CursorBlink\fP)"
@@ -3985,7 +4005,7 @@ the cursor position and the time/date:
 .IP
 If a \*(``%\*('' marker does not match any
 of the three special tokens used in the default resource setting,
-\fI\*n\fP uses \fBstrftime\fP to interpret it.
+\fI\*n\fP uses \fBstrftime\fP(3) to interpret it.
 .TP 8
 .B "initialFont\fP (class\fB InitialFont\fP)"
 Specifies which of the VT100 fonts to use initially.
@@ -4085,7 +4105,7 @@ The default is \*(``1024\*(''.
 The minimum value is \*(``256\*(''.
 .TP 8
 .B "locale\fP (class\fB Locale\fP)"
-Specifies how to use \fIluit\fR, an encoding converter between UTF-8
+Specifies how to use \fBluit\fR(1), an encoding converter between UTF-8
 and locale encodings.
 The resource value (ignoring case) may be:
 .RS
@@ -5960,7 +5980,7 @@ This entry invokes the \fBset\-utf8\-title(\fIs\fB)\fR action.
 This entry invokes the \fBallow\-color\-ops(\fItoggle\fB)\fR action.
 .TP 8
 .B "allow\-font\-ops\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBallow\-fonts\-ops(\fItoggle\fB)\fR action.
+This entry invokes the \fBallow\-font\-ops(\fItoggle\fB)\fR action.
 .TP 8
 .B "allow\-tcap\-ops\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBallow\-tcap\-ops(\fItoggle\fB)\fR action.
@@ -6894,7 +6914,7 @@ Reset origin mode (DECOM).
 .bP
 Reset all margins (i.e., top/bottom and left/right).
 This can be convenient when some program has left the scroll regions
-set incorrectly (often a problem when using VMS or TOPS-20).
+set incorrectly.
 .bP
 Set autowrap and reverse wrapping according to the resource values
 .BR autoWrap " and"
@@ -7421,7 +7441,7 @@ This action sets, unsets or toggles the \fBallowFontOps\fP resource and is also
 invoked by the \fBallow\-font\-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "allow\-mouse\-ops(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBallowMousepOps\fP resource
+This action sets, unsets or toggles the \fBallowMouseOps\fP resource
 and is also invoked by the \fBallow\-mouse\-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "allow\-send\-events(\fIon/off/toggle\fP)"
@@ -8487,7 +8507,7 @@ the shell to interpret the string \*(``\\e\*('' as
 the \fIescape\fP character and
 to suppress a trailing newline on output.
 Those are not portable, nor recommended.
-Instead, use \fBprintf\fP (POSIX).
+Instead, use \fBprintf\fP(1) (POSIX).
 .PP
 For example, to set the \fIwindow title\fP to \*(``Hello world!\*('',
 you could use one of these commands in a script:
@@ -8498,7 +8518,7 @@ printf \*'\\033]2;%s\\033\\\\\*' "Hello world!"
 printf \*'\\033]2;%s\\007\*' "Hello world!"
 .NE
 .PP
-The \fBprintf\fP command interprets the octal value \*(``\\033\*('' for
+The \fBprintf\fP(1) command interprets the octal value \*(``\\033\*('' for
 \fIescape\fP, and (since it was not given in the format) omits a trailing
 newline from the output.
 .PP
@@ -8612,7 +8632,7 @@ to convert a terminal capability with its parameters into a string
 that can be written to the terminal.
 .bP
 Shells lacking a comparable feature (such as \fBbash\fP) can always
-use the program \fBtput\fP to do this transformation.
+use the program \fBtput\fP(1) to do this transformation.
 .PP
 Hard-coded escape sequences are supported by each shell,
 but are not recommended because those rely upon particular configurations

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1124 2024/05/21 23:30:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1130 2024/09/30 08:03:20 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -186,9 +186,6 @@
 #undef USE_PTY_DEVICE
 #undef USE_PTY_SEARCH
 #define USE_PTS_DEVICE 1
-#elif defined(VMS)
-#undef USE_PTY_DEVICE
-#undef USE_PTY_SEARCH
 #elif defined(PUCC_PTYD)
 #undef USE_PTY_SEARCH
 #elif (defined(sun) && defined(SVR4)) || defined(_ALL_SOURCE) || defined(__CYGWIN__)
@@ -204,7 +201,7 @@
 
 #if (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 #define USE_USG_PTYS
-#elif (defined(ATT) && !defined(__sgi)) || defined(__MVS__) || (defined(SYSV) && defined(i386))
+#elif (defined(ATT) && !defined(__sgi)) || (defined(SYSV) && defined(i386))
 #define USE_USG_PTYS
 #endif
 
@@ -221,8 +218,6 @@
 #ifndef PTYDEV
 #if defined(__hpux)
 #define	PTYDEV		"/dev/ptym/ptyxx"
-#elif defined(__MVS__)
-#define	PTYDEV		"/dev/ptypxxxx"
 #else
 #define	PTYDEV		"/dev/ptyxx"
 #endif
@@ -231,8 +226,6 @@
 #ifndef TTYDEV
 #if defined(__hpux)
 #define TTYDEV		"/dev/pty/ttyxx"
-#elif defined(__MVS__)
-#define TTYDEV		"/dev/ptypxxxx"
 #elif defined(USE_PTS_DEVICE)
 #define TTYDEV		"/dev/pts/0"
 #else
@@ -263,8 +256,6 @@
 #ifndef TTYFORMAT
 #if defined(CRAY)
 #define TTYFORMAT "/dev/ttyp%03d"
-#elif defined(__MVS__)
-#define TTYFORMAT "/dev/ttyp%04d"
 #else
 #define TTYFORMAT "/dev/ttyp%d"
 #endif
@@ -273,8 +264,6 @@
 #ifndef PTYFORMAT
 #ifdef CRAY
 #define PTYFORMAT "/dev/pty/%03d"
-#elif defined(__MVS__)
-#define PTYFORMAT "/dev/ptyp%04d"
 #else
 #define PTYFORMAT "/dev/ptyp%d"
 #endif
@@ -283,8 +272,6 @@
 #ifndef PTYCHARLEN
 #ifdef CRAY
 #define PTYCHARLEN 3
-#elif defined(__MVS__)
-#define PTYCHARLEN 8     /* OS/390 stores, e.g. ut_id="ttyp1234"  */
 #else
 #define PTYCHARLEN 2
 #endif
@@ -340,7 +327,8 @@ typedef Char *UString;
 
 #define CASETYPE(name) case name: result = #name; break
 
-#define CharOf(n) ((Char)(n))
+#define AsciiOf(n) (0x7f & (n))		/* extract 7-bit character */
+#define CharOf(n) ((Char)(n))		/* extract 8-bit character */
 
 typedef struct {
     int row;
@@ -609,14 +597,6 @@ typedef enum {
 
 #ifndef OPT_DOUBLE_BUFFER
 #define OPT_DOUBLE_BUFFER 0 /* true if using double-buffering */
-#endif
-
-#ifndef OPT_EBCDIC
-#ifdef __MVS__
-#define OPT_EBCDIC 1
-#else
-#define OPT_EBCDIC 0
-#endif
 #endif
 
 #ifndef OPT_EXEC_SELECTION
@@ -1061,6 +1041,8 @@ typedef enum {
     ,nrc_ISO_Latin_2_Supp	/* vt5xx */
     ,nrc_ISO_Latin_5_Supp	/* vt5xx */
     ,nrc_ISO_Latin_Cyrillic	/* vt5xx */
+    ,nrc_JIS_Katakana		/* vt382 */
+    ,nrc_JIS_Roman		/* vt382 */
     ,nrc_Norwegian_Danish	/* vt3xx */
     ,nrc_Norwegian_Danish2	/* vt2xx */
     ,nrc_Norwegian_Danish3	/* vt2xx */
@@ -1099,19 +1081,29 @@ typedef enum {
     ,srm_X10_MOUSE = SET_X10_MOUSE
 #if OPT_TOOLBAR
     ,srm_RXVT_TOOLBAR = 10
+#else
+    ,srm_DECEDM = 10		/* vt330:edit */
 #endif
+    ,srm_DECLTM = 11		/* vt330:line transmit */
 #if OPT_BLINK_CURS
     ,srm_ATT610_BLINK = 12
     ,srm_CURSOR_BLINK_OPS = 13
     ,srm_XOR_CURSOR_BLINKS = 14
+#else
+    ,srm_DECKANAM = 12		/* vt382:Katakana shift */
+    ,srm_DECSCFDM = 13		/* vt330:space compression field delimiter */
+    ,srm_DECTEM = 14		/* vt330:transmission execution */
 #endif
-    ,srm_DECPFF = 18		/* Print Form Feed Mode */
-    ,srm_DECPEX = 19		/* Printer Extent Mode */
+    ,srm_DECEKEM = 16		/* vt330:edit key execution */
+    ,srm_DECPFF = 18		/* vt220:Print Form Feed Mode */
+    ,srm_DECPEX = 19		/* vt220:Printer Extent Mode */
     ,srm_DECTCEM = 25		/* Text Cursor Enable Mode */
     ,srm_RXVT_SCROLLBAR = 30
     ,srm_DECRLM = 34		/* vt510:Cursor Right to Left Mode */
 #if OPT_SHIFT_FONTS
     ,srm_RXVT_FONTSIZE = 35	/* also vt520:DECHEBM */
+#else
+    ,srm_DECHEBM = 35		/* vt520:Hebrew keyboard mapping */
 #endif
     ,srm_DECHEM = 36		/* vt510:Hebrew Encoding Mode */
 #if OPT_TEK4014
@@ -1131,8 +1123,10 @@ typedef enum {
     ,srm_DECGPBM = 46		/* Graphics Print Background Mode */
 #endif
     ,srm_ALTBUF = 47		/* also DECGRPM (Graphics Rotated Print Mode) */
+    ,srm_DEC131TM = 53		/* vt330:VT131 transmit */
     ,srm_DECNAKB = 57		/* vt510:Greek/N-A Keyboard Mapping */
     ,srm_DECIPEM = 58		/* vt510:IBM ProPrinter Emulation Mode */
+    ,srm_DECKKDM = 59   	/* vt382:Kanji/Katakana */
     ,srm_DECHCCM = 60		/* vt420:Horizontal Cursor-Coupling Mode */
     ,srm_DECVCCM = 61		/* vt420:Vertical Cursor-Coupling Mode */
     ,srm_DECPCCM = 64		/* vt420:Page Cursor-Coupling Mode */
@@ -1142,7 +1136,7 @@ typedef enum {
     ,srm_DECLRMM = 69		/* vt420:Vertical Split Screen Mode (DECVSSM) */
     ,srm_DECXRLM = 73		/* vt420:Transmit Rate Limiting */
 #if OPT_SIXEL_GRAPHICS
-    ,srm_DECSDM = 80		/* Sixel Display Mode */
+    ,srm_DECSDM = 80		/* vt320:Sixel Display Mode */
 #endif
     ,srm_DECKPM = 81		/* vt420:Key Position Mode */
     ,srm_DECNCSM = 95		/* vt510:No Clearing Screen On Column Change */
@@ -1150,10 +1144,11 @@ typedef enum {
     ,srm_DECCRTSM = 97		/* vt510:CRT Save Mode */
     ,srm_DECARSM = 98		/* vt510:Auto Resize Mode */
     ,srm_DECMCM = 99		/* vt510:Modem Control Mode */
-    ,srm_DECCAAM = 100		/* vt510:Auto Answerback Mode */
+    ,srm_DECAAM = 100		/* vt510:Auto Answerback Mode */
     ,srm_DECCANSM = 101		/* vt510:Conceal Answerback Message Mode */
     ,srm_DECNULM = 102		/* vt510:Ignoring Null Mode */
     ,srm_DECHDPXM = 103		/* vt510:Half-Duplex Mode */
+    ,srm_DECESKM = 104		/* vt510:enable secondary keyboard language */
     ,srm_DECOSCNM = 106		/* vt510:Overscan Mode */
     ,srm_DECNUMLK = 108		/* vt510:Num Lock Mode */
     ,srm_DECCAPSLK = 109	/* vt510:Caps Lock Mode */
@@ -1598,7 +1593,7 @@ typedef enum {
 #define DBLCS_BITS            4
 #define DBLCS_MASK            BITS2MASK(DBLCS_BITS)
 
-#define GetLineDblCS(ld)      (((ld)->bufHead >> LINEFLAG_BITS) & DBLCS_MASK)
+#define GetLineDblCS(ld)      ((ld) != NULL ? (((ld)->bufHead >> LINEFLAG_BITS) & DBLCS_MASK) : 0)
 #define SetLineDblCS(ld,cs)   (ld)->bufHead = (RowData) ((ld->bufHead & LINEFLAG_MASK) | (cs << LINEFLAG_BITS))
 
 #define LineCharSet(screen, ld) \
@@ -1645,18 +1640,10 @@ typedef enum {
 
 /***====================================================================***/
 
-#if OPT_EBCDIC
-extern int E2A(int);
-extern int A2E(int);
-#else
-#define E2A(a) (a)
-#define A2E(a) (a)
-#endif
+#define CONTROL(a) ((a) & 037)
 
-#define CONTROL(a) (A2E(E2A(a)&037))
-
-#define XTERM_ERASE A2E(CONTROL('H'))
-#define XTERM_LNEXT A2E(CONTROL('V'))
+#define XTERM_ERASE CONTROL('H')
+#define XTERM_LNEXT CONTROL('V')
 
 /***====================================================================***/
 

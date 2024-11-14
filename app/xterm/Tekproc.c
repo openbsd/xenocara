@@ -1,7 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.249 2022/10/06 19:41:47 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.252 2024/09/30 07:44:22 tom Exp $ */
 
 /*
- * Copyright 2001-2021,2022 by Thomas E. Dickey
+ * Copyright 2001-2022,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -181,8 +181,8 @@ static jmp_buf Tekjump;
 static TekLink *TekRecord;
 static XSegment *Tline;
 
-static Const int *curstate = Talptable;
-static Const int *Tparsestate = Talptable;
+static const int *curstate = Talptable;
+static const int *Tparsestate = Talptable;
 
 static char defaultTranslations[] = "\
                 ~Meta<KeyPress>: insert-seven-bit() \n\
@@ -258,11 +258,7 @@ static Dimension defOne = 1;
 #define GIN_TERM_CR	1
 #define GIN_TERM_EOT	2
 
-#ifdef VMS
-#define DFT_FONT_SMALL "FIXED"
-#else
 #define DFT_FONT_SMALL "6x10"
-#endif
 
 static XtResource resources[] =
 {
@@ -822,11 +818,7 @@ Tinput(TekWidget tw)
 
 	if (nplot > 0)		/* flush line */
 	    TekFlush(tw);
-#ifdef VMS
-	Tselect_mask = pty_mask;	/* force a read */
-#else /* VMS */
 	XFD_COPYSET(&pty_mask, &Tselect_mask);
-#endif /* VMS */
 	for (;;) {
 #ifdef CRAY
 	    struct timeval crocktimeout;
@@ -844,17 +836,9 @@ Tinput(TekWidget tw)
 		Ttoggled = False;
 	    }
 	    if (xtermAppPending() & XtIMXEvent) {
-#ifdef VMS
-		Tselect_mask = X_mask;
-#else /* VMS */
 		XFD_COPYSET(&X_mask, &Tselect_mask);
-#endif /* VMS */
 	    } else {
 		XFlush(XtDisplay(tw));
-#ifdef VMS
-		Tselect_mask = Select_mask;
-
-#else /* VMS */
 		XFD_COPYSET(&Select_mask, &Tselect_mask);
 		if (need_cleanup)
 		    Cleanup(0);
@@ -863,21 +847,12 @@ Tinput(TekWidget tw)
 			SysError(ERROR_TSELECT);
 		    continue;
 		}
-#endif /* VMS */
 	    }
-#ifdef VMS
-	    if (Tselect_mask & X_mask) {
-		xevents(tw->vt);
-		if (VTbuffer->update != update)
-		    goto again;
-	    }
-#else /* VMS */
 	    if (FD_ISSET(ConnectionNumber(XtDisplay(tw)), &Tselect_mask)) {
 		xevents(tw->vt);
 		if (VTbuffer->update != update)
 		    goto again;
 	    }
-#endif /* VMS */
 	}
 	if (!Ttoggled && curstate == Talptable) {
 	    TCursorToggle(tw, TOGGLE);
@@ -1336,11 +1311,7 @@ TekEnq(TekWidget tw,
 	cplot[len++] = '\r';
     if (tekscr->gin_terminator == GIN_TERM_EOT)
 	cplot[len++] = '\004';
-#ifdef VMS
-    tt_write(cplot + adj, (size_t) (len - adj));
-#else /* VMS */
     v_write(screen->respond, cplot + adj, (size_t) (len - adj));
-#endif /* VMS */
 }
 
 void
@@ -1355,7 +1326,7 @@ TekRun(void)
     if (tekWidget != 0) {
 	TRACE(("TekRun ...\n"));
 
-	if (!TEK4014_SHOWN(xw)) {
+	if (!TEK4014_SHOWN(xw) && !resource.notMapped) {
 	    set_tek_visibility(True);
 	}
 	update_vttekmode();
@@ -2030,12 +2001,10 @@ TekCopy(TekWidget tw)
 	    Bell(tw->vt, XkbBI_MinorError, 0);
 	    return;
 	}
-#ifndef VMS
 	if (access(".", W_OK) < 0) {	/* can't write in directory */
 	    Bell(tw->vt, XkbBI_MinorError, 0);
 	    return;
 	}
-#endif
 
 	tekcopyfd = open_userfile(screen->uid, screen->gid, buf, False);
 	if (tekcopyfd >= 0) {

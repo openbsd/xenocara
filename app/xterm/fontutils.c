@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.783 2024/07/10 15:48:26 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.786 2024/09/30 07:35:30 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -1250,8 +1250,9 @@ reportXPerChar(XFontStruct *fs)
 
 	fillXCharStruct(&max_bounds, -32768);
 	fillXCharStruct(&min_bounds, 32767);
+	TRACE2(("\t\tCells: %d..%d\n", first_char, last_char));
 	for (ch = first_char; ch < last_char; ++ch) {
-	    XCharStruct *item = cs + ch;
+	    XCharStruct *item = cs + ch - first_char;
 	    ++total;
 	    if (!CI_NONEXISTCHAR(item)) {
 		++valid;
@@ -1267,6 +1268,15 @@ reportXPerChar(XFontStruct *fs)
 		MAX_BOUNDS(width);
 		MAX_BOUNDS(ascent);
 		MAX_BOUNDS(descent);
+		TRACE2(("\t\t\t%d: cell [%d .. %d] wide %d high %d / %d\n",
+			ch,
+			item->lbearing,
+			item->rbearing,
+			item->width,
+			item->ascent,
+			item->descent));
+	    } else {
+		TRACE(("\t\t\t%d: cell missing\n", ch));
 	    }
 	}
 	ReportFonts("\t\tPer-character: %d/%d\n", valid, total);
@@ -3872,7 +3882,7 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 	if (ch < 256)
 #endif
 	{
-	    CI_GET_CHAR_INFO_1D(fs, E2A(ch), pc);
+	    CI_GET_CHAR_INFO_1D(fs, ch, pc);
 	}
     }
 #if OPT_WIDE_CHARS
@@ -4449,7 +4459,7 @@ markXftOpened(XtermWidget xw, XTermXftFonts *which, int n, unsigned wc)
 }
 
 static char **
-xftData2List(XtermWidget xw, XTermXftFonts *fontData)
+xftData2List(XtermWidget xw, const XTermXftFonts *fontData)
 {
     TScreen *screen = TScreenOf(xw);
     VTFontList *lists = &xw->work.fonts.xft;
@@ -5998,7 +6008,7 @@ getMyXftFont(XtermWidget xw, int which, int fontnum)
 }
 
 const char *
-whichXftFonts(XtermWidget xw, XTermXftFonts *data)
+whichXftFonts(XtermWidget xw, const XTermXftFonts *data)
 {
     TScreen *screen = TScreenOf(xw);
     const char *result = "?";
@@ -6075,7 +6085,7 @@ whichFontEnum(VTFontEnum value)
 }
 
 const char *
-whichFontList(XtermWidget xw, VTFontList * value)
+whichFontList(XtermWidget xw, const VTFontList * value)
 {
     const char *result = "?";
     if (value == &(xw->work.fonts.x11))

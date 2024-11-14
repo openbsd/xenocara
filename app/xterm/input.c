@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.370 2023/05/09 08:14:04 tom Exp $ */
+/* $XTermId: input.c,v 1.373 2024/09/30 07:48:35 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -57,10 +57,6 @@
 #include <xterm.h>
 
 #include <X11/keysym.h>
-
-#ifdef VMS
-#include <X11/keysymdef.h>
-#endif
 
 #if HAVE_X11_DECKEYSYM_H
 #include <X11/DECkeysym.h>
@@ -1170,7 +1166,7 @@ Input(XtermWidget xw,
 		 && (dec_code >= 11 && dec_code <= 14)) {
 	    reply.a_type = ANSI_SS3;
 	    VT52_CURSOR_KEYS;
-	    reply.a_final = (Char) A2E(dec_code - 11 + E2A('P'));
+	    reply.a_final = (Char) (dec_code - 11 + 'P');
 	    modifyCursorKey(&reply,
 			    keyboard->modify_now.function_keys,
 			    &modify_parm);
@@ -1926,7 +1922,7 @@ xtermHasTranslation(XtermWidget xw, const char *keyword, Bool onlyInsert)
 				      onlyInsert));
 }
 
-#if OPT_EXTRA_PASTE
+#if OPT_EXTRA_PASTE && (defined(XF86XK_Paste) || defined(SunXK_Paste))
 static void
 addTranslation(XtermWidget xw, const char *fromString, const char *toString)
 {

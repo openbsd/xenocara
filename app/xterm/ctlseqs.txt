@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2024)
-               updated for XTerm Patch #392 (2024/05/25)
+               updated for XTerm Patch #395 (2024/10/14)
 
 
 
@@ -92,6 +92,42 @@ o   Single-byte controls can be handled separately from multi-byte
 
 o   Some controls (such as OSC ) introduce a string mode, which is ended
     on a ST  (string terminator).
+
+    Section 9 of ECMA-48, like DEC STD 070, chapter 3, goes into detail
+    to explain that when processing 8-bit controls, the eighth bit of
+    each byte is ignored.  This applies to the content of APC, DCS, OSC,
+    and PM strings, as well as to the terminating bytes such as the two-
+    byte string terminator.  Quoting from the latter, 3.5.4.5 GR Graphic
+    Characters within Control Strings:
+
+        GR (8-bit) graphic characters in APC, OSC, and PM control
+        strings will be treated as their 7-bit equivalent (the eighth
+        bit will be ignored).
+
+        GR (8-bit) graphic characters are permitted within Device
+        Control Strings, and the graphic character's interpretation will
+        be dependent on the internal control string format.  When they
+        occur in the introducer sequence to a Device Control String, the
+        eighth bit will be ignored, and they will be treated as their
+        7-bit equivalent.  (Note that this is the same way 8-bit graphic
+        characters are handled within control sequences.)
+
+    The reason for that is because ECMA-48 presents 7-bit controls as an
+    alternative to 8-bit controls.  It says this:
+
+        The control functions defined in this Standard can be coded in a
+        7-bit code as well as in an 8-bit code; both forms of coded
+        representation are equivalent and in accordance with Standard
+        ECMA-35.
+
+    and in turn, ECMA-35 9.1 says
+
+        A 7-bit code shall have a structure which is based on a 7-bit
+        code table arranged in separate areas as follows (see figure 7):
+
+    In short, a standard-compliant implementation of ECMA-48 ignores the
+    eighth bit of bytes in control strings other than the C1 controls.
+    XTerm does this.
 
     ECMA-48 describes only correct behavior, telling what types of
     characters are expected at each stage of the control sequences.  It
@@ -324,6 +360,8 @@ ESC ( C   Designate G0 Character Set, VT100, ISO 2022.
             C = % 0  -> DEC Turkish, VT500.
             C = % 5  -> DEC Supplemental Graphics, VT300.
             C = & 4  -> DEC Cyrillic, VT500.
+            C = I  -> JIS-Katakana, VT382.
+            C = J  -> JIS-Roman, VT382.
           The VT520 reference manual lists a few more, but no
           documentation has been found for the mappings:
             C = % 3  -> SCS NRCS, VT500.
@@ -414,7 +452,7 @@ DCS Ps ; Ps | Pt ST
           key value.  The key codes correspond to the DEC function-key
           codes (e.g., F6=17).
 
-DCS Ps! u Pt ST
+DCS Ps ! u Pt ST
           Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320,
           VT510.  XTerm ignores this in UTF-8 mode, and uses the
           preferLatin1 resource to choose the default setting.
@@ -450,6 +488,7 @@ DCS $ q Pt ST
             $ |     -> DECSCPP
             $ }     -> DECSASD
             $ ~     -> DECSSDT
+            ) {     -> DECSTGLT (VT525 only)
             * x     -> DECSACE
             * |     -> DECSNLS
             , |     -> DECAC (VT525 only)
@@ -1256,7 +1295,7 @@ CSI Ps n  Device Status Report (DSR).
 
           Note: it is possible for this sequence to be sent by a
           function key.  For example, with the default keyboard
-          configuration the shifted F1 key may send (with shift-,
+          configuration the shifted F3 key may send (with shift-,
           control-, alt-modifiers)
 
             CSI 1 ; 2  R , or
@@ -1266,7 +1305,7 @@ CSI Ps n  Device Status Report (DSR).
           The second parameter encodes the modifiers; values range from
           2 to 16.  See the section PC-Style Function Keys for the
           codes.  The modifyFunctionKeys and modifyKeyboard resources
-          can change the form of the string sent from the modified F1
+          can change the form of the string sent from the modified F3
           key.
 
 CSI > Ps n
@@ -1366,7 +1405,7 @@ CSI Pl ; Pc " p
 
 CSI Ps $ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply DECRPM is
-            CSI Ps; Pm $ y
+            CSI Ps ; Pm $ y
           where Ps is the mode number as in SM/RM, and Pm is the mode
           value:
             0 - not recognized
@@ -1378,7 +1417,7 @@ CSI Ps $ p
 CSI ? Ps $ p
           Request DEC private mode (DECRQM).  For VT300 and up, reply
           DECRPM is
-            CSI ? Ps; Pm $ y
+            CSI ? Ps ; Pm $ y
           where Ps is the mode number as in DECSET/DECSET, Pm is the
           mode value as in the ANSI DECRQM.
           Two private modes are read-only (i.e., 1 3  and 1 4 ),
@@ -1443,7 +1482,11 @@ CSI ? Pm r
 CSI Pt ; Pl ; Pb ; Pr ; Pm $ r
           Change Attributes in Rectangular Area (DECCARA), VT400 and up.
             Pt ; Pl ; Pb ; Pr denotes the rectangle.
-            Pm denotes the SGR attributes to change: 0, 1, 4, 5, 7.
+            Pm denotes the SGR attributes to change: 0 , 1 , 4 , 5 , 7 ,
+          8 .  Setting SGR 0  resets modes 1 , 4 , 5 , 7 .  Those modes
+          can be individually reset with SGR 2 2 , 2 4 , 2 5  and 2 7 .
+          Setting SGR 8  is an xterm extension; it may be reset with SGR
+          2 8 .  See DECSACE.
 
 CSI s     Save cursor, available only when DECLRMM is disabled (SCOSC,
           also ANSI.SYS).
@@ -1580,7 +1623,9 @@ CSI Pt ; Pl ; Pb ; Pr ; Pm $ t
           Reverse Attributes in Rectangular Area (DECRARA), VT400 and
           up.
             Pt ; Pl ; Pb ; Pr denotes the rectangle.
-            Pm denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
+            Pm denotes the attributes to reverse, i.e.,  0, 1, 4, 5, 7,
+          8.  Reversing SGR 0 reverses modes 1, 4, 5, 7.  Reversing SGR
+          8 is an xterm extension.  See DECSACE.
 
 CSI u     Restore cursor (SCORC, also ANSI.SYS).
 
@@ -1595,7 +1640,7 @@ CSI Ps SP u
 
 CSI " v   Request Displayed Extent (DECRQDE), VT340, VT420.
           Response is
-            CSI Ph; Pw; Pc; Pr; Pp " w
+            CSI Ph ; Pw ; Pc ; Pr ; Pp " w
           where
             Ph is the number of lines of the current page
             Pw is the number of columns of the current page
@@ -1653,6 +1698,18 @@ CSI Ps * x
             Ps = 0  -> from start to end position, wrapped.
             Ps = 1  -> from start to end position, wrapped.
             Ps = 2  -> rectangle (exact).
+          Modes 0  and 1  are the stream modes of the DECCARA and
+          DECRARA controls.  There are several aspects to stream versus
+          rectangle modes:
+          1. In both stream and rectangle modes, the row- and column-
+          positions are affected by Origin Mode.
+          2. In rectangle mode, cells outside the row- and column-
+          positions are unaffected.  In stream mode, the row- and
+          column-positions are the starting and ending cells, with
+          wrapping which ignores Origin Mode.
+          3. In stream mode, those controls affect only cells where a
+          character was drawn.  In rectangle mode, cells where no
+          character was drawn are first filled in with a space.
 
 CSI Pc ; Pt ; Pl ; Pb ; Pr $ x
           Fill Rectangular Area (DECFRA), VT420 and up.
@@ -1790,7 +1847,7 @@ CSI # }   Pop video attributes from stack (XTPOPSGR), xterm.  Popping
           restores the video-attributes which were saved using XTPUSHSGR
           to their previous state.
 
-CSI Ps; Pf; Pb, |
+CSI Ps ; Pf ; Pb , |
           Assign Color (DECAC), VT525 only.
             Ps selects the color item
             Pf is the foreground color index 0..15
@@ -1801,7 +1858,7 @@ CSI Ps; Pf; Pb, |
           xterm uses the SGR color palette with DECAC color item 1 to
           update the VT100 window colors, like OSC  1 0  and 1 1 .
 
-CSI Ps; Pf; Pb, }
+CSI Ps ; Pf ; Pb , }
           Alternate Text Color (DECATC), VT525 only.  This feature
           specifies the colors to use when DECSTGLT is selected to 1 or
           2.
@@ -3526,7 +3583,12 @@ o   XTerm supports control sequences for manipulating its window which
 
     The CDE source was unavailable for inspection until 2012, so that
     clarification of the details of the window operations relied upon
-    vttest.
+    vttest.  However, the manual page for the control sequences (i.e.,
+    dtterm(5) in the file formats section) was readily available.  DEC
+    adapted the control sequences for setting the window and icon labels
+    in the VT525.  In doing so, DEC's VT520/VT525 manual changed the
+    letter l to a number 1, and added a parameter 2 before the l/L (or
+    1/L) code used to distinguish the window and icon labels.
 
 o   The SCOSC/SCORC control sequences for saving/restoring the cursor
     and for saving/restoring "DEC Private Mode Values" (XTSAVE and
@@ -3540,44 +3602,44 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
         be used in termcap for vi(1), for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while  the  SCOSC/SCORC  pair  was  added  in  1995  by XFree86 (and
+    while the SCOSC/SCORC  pair  was  added  in  1995  by  XFree86  (and
     documented long afterwards).
 
-    The SCO  ANSI  console  terminal  descriptions  did  not  use  these
-    controls  (they  used the VT100-compatible SC/RC pair).  SCOSC/SCORC
-    were an artifact of DOS 2.00 (January 1983), by Microsoft and  later
+    The  SCO  ANSI  console  terminal  descriptions  did  not  use these
+    controls (they used the VT100-compatible SC/RC  pair).   SCOSC/SCORC
+    were  an artifact of DOS 2.00 (January 1983), by Microsoft and later
     supported by SCO and other vendors.
 
-    The  SCOSC/SCORC pair is considered a private mode because the final
+    The SCOSC/SCORC pair is considered a private mode because the  final
     characters (s  and u ) fall in the range from "`" to "~" (octal 0140
-    to  octal 0176).  Other private control sequences can be constructed
+    to octal 0176).  Other private control sequences can be  constructed
     by using octets 074 to 077 (characters "<", "=", ">", or "?") at the
     beginning  of  the  parameter  string.   The  XTSAVE  and  XTRESTORE
     controls use "?") in this manner.
 
     Because  the  XTSAVE  and  XTRESTORE  controls  are  private,  other
-    terminals  may  behave differently.  For example, DEC (a contributor
-    to the early xterm as well as a manufacturer of terminals)  used  an
-    incompatible  private control in one of its terminals more than five
+    terminals may behave differently.  For example, DEC  (a  contributor
+    to  the  early xterm as well as a manufacturer of terminals) used an
+    incompatible private control in one of its terminals more than  five
     years later (for the VT420 PCTerm, announced in February 1992).
 
-    In that model of the VT420, CSI ? Pm;  Pc  r  selects  the  PC  TERM
-    emulation  mode.  When this mode is enabled, the keyboard sends scan
-    codes rather than characters (analogous to X keyboard events).   The
-    first  parameter of this private control enables or disables PC TERM
+    In  that  model  of  the  VT420, CSI ? Pm ; Pc r selects the PC TERM
+    emulation mode.  When this mode is enabled, the keyboard sends  scan
+    codes  rather than characters (analogous to X keyboard events).  The
+    first parameter of this private control enables or disables PC  TERM
     mode, while the second selects a character set.  An ambiguity arises
     if an application omits the second parameter.  In that special case,
-    it cannot be distinguished from XTRESTORE.  DEC did  not  take  this
+    it  cannot  be  distinguished from XTRESTORE.  DEC did not take this
     into account when designing the feature.
 
-    If  there  were  potential  users, xterm could accommodate this by a
-    resource setting.  In retrospect (thirty years  later),  there  have
-    been  no  uses  of  PC TERM, while the XTRESTORE feature is still in
+    If there were potential users, xterm could  accommodate  this  by  a
+    resource  setting.   In  retrospect (thirty years later), there have
+    been no uses of PC TERM, while the XTRESTORE  feature  is  still  in
     use.
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground  and  background  colors  8-15, but does not specify what
-    those colors are.  That is implied by the description's  mention  of
+    foreground and background colors 8-15, but  does  not  specify  what
+    those  colors  are.  That is implied by the description's mention of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -3587,7 +3649,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the reader to assume that the mapping is  hard-coded.   The  control
-    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
-    (as done in other instances by xterm) chosen to  not  conflict  with
+    the  reader  to  assume that the mapping is hard-coded.  The control
+    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
+    (as  done  in  other instances by xterm) chosen to not conflict with
     current or future standards.

@@ -1,5 +1,5 @@
 #! /usr/bin/env perl
-# $XTermId: gen-charsets.pl,v 1.37 2024/02/09 01:11:52 tom Exp $
+# $XTermId: gen-charsets.pl,v 1.41 2024/10/03 22:01:13 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -40,7 +40,7 @@ use Getopt::Std;
 
 $| = 1;
 
-our ( $opt_d, $opt_i, $opt_v, $opt_x );
+our ( $opt_i, $opt_v, $opt_x );
 our $undef     = hex(0x2426);
 our $head_file = "charsets.h";
 our $data_file = "charsets.dat";
@@ -57,8 +57,12 @@ our %wide_chars = qw(
   map_ISO_Latin_2 1
   map_ISO_Latin_5 1
   map_ISO_Latin_Cyrillic 1
+  map_JIS_Roman 1
+  map_JIS_Katakana 1
   map_NRCS_Greek 1
   map_NRCS_Hebrew 1
+  map_NRCS_Serbo_Croatian 1
+  map_NRCS_Russian 1
   map_NRCS_Turkish 1
 );
 
@@ -293,6 +297,7 @@ sub do_update($) {
             $state = 2;
             $codep = 0;
             $codep = 94 if ( $data =~ /_DEC_/ );
+            $codep = 94 if ( $data =~ /_JIS_/ );
             $codep = 96 if ( $data =~ /_ISO_/ );
 
             $data .= "(code)" unless ( $data =~ /\(code/ );
@@ -402,7 +407,6 @@ sub main::HELP_MESSAGE() {
 Usage: $0 [options]
 
 Options:
- -d       debug
  -i       import charset data from Unicode file
  -v       verbose
  -x       update charsets.h from $data_file

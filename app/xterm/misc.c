@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1094 2024/06/26 08:05:39 tom Exp $ */
+/* $XTermId: misc.c,v 1.1099 2024/10/14 16:00:49 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -104,13 +104,6 @@
 #else
 #define MakeTemp(f) mktemp(f)
 #endif
-
-#ifdef VMS
-#define XTERM_VMS_LOGFILE "SYS$SCRATCH:XTERM_LOG.TXT"
-#ifdef ALLOWLOGFILEEXEC
-#undef ALLOWLOGFILEEXEC
-#endif
-#endif /* VMS */
 
 #if USE_DOUBLE_BUFFER
 #include <X11/extensions/Xdbe.h>
@@ -2116,11 +2109,7 @@ Redraw(void)
 #endif
 }
 
-#ifdef VMS
-#define TIMESTAMP_FMT "%s%d-%02d-%02d-%02d-%02d-%02d"
-#else
 #define TIMESTAMP_FMT "%s%d-%02d-%02d.%02d:%02d:%02d"
-#endif
 
 void
 timestamp_filename(char *dst, const char *src)
@@ -2149,9 +2138,7 @@ create_printfile(XtermWidget xw, const char *suffix)
     int fd;
     FILE *fp;
 
-#ifdef VMS
-    sprintf(fname, "sys$scratch:xterm%s", suffix);
-#elif defined(HAVE_STRFTIME)
+#if defined(HAVE_STRFTIME)
     {
 	char format[1024];
 	time_t now;
@@ -2181,17 +2168,6 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
     int fd;
     struct stat sb;
 
-#ifdef VMS
-    if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0) {
-	int the_error = errno;
-	xtermWarning("cannot open %s: %d:%s\n",
-		     path,
-		     the_error,
-		     SysErrorMsg(the_error));
-	return -1;
-    }
-    chown(path, uid, gid);
-#else
     if ((access(path, F_OK) != 0 && (errno != ENOENT))
 	|| (creat_as(uid, gid, append, path, 0644) <= 0)
 	|| ((fd = open(path, O_WRONLY | O_APPEND)) < 0)) {
@@ -2202,7 +2178,6 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
 		     SysErrorMsg(the_error));
 	return -1;
     }
-#endif
 
     /*
      * Doublecheck that the user really owns the file that we've opened before
@@ -2218,7 +2193,6 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
     return fd;
 }
 
-#ifndef VMS
 /*
  * Create a file only if we could with the permissions of the real user id.
  * We could emulate this with careful use of access() and following
@@ -2321,7 +2295,6 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
 	return retval;
     }
 }
-#endif /* !VMS */
 #endif /* OPT_SCREEN_DUMPS || defined(ALLOWLOGGING) */
 
 int
@@ -2496,13 +2469,6 @@ StartLog(XtermWidget xw)
 
     if (screen->logging || (screen->inhibit & I_LOG))
 	return;
-#ifdef VMS			/* file name is fixed in VMS variant */
-    screen->logfd = open(XTERM_VMS_LOGFILE,
-			 O_CREAT | O_TRUNC | O_APPEND | O_RDWR,
-			 0640);
-    if (screen->logfd < 0)
-	return;			/* open failed */
-#else /*VMS */
 
     /* if we weren't supplied with a logfile path, generate one */
     if (IsEmpty(screen->logfile))
@@ -2529,7 +2495,6 @@ StartLog(XtermWidget xw)
 					   True)) < 0)
 	    return;
     }
-#endif /*VMS */
     screen->logstart = VTbuffer->next;
     screen->logging = True;
     update_logging();
@@ -2557,12 +2522,6 @@ FlushLog(XtermWidget xw)
 	Char *cp;
 	size_t i;
 
-#ifdef VMS			/* avoid logging output loops which otherwise occur sometimes
-				   when there is no output and cp/screen->logstart are 1 apart */
-	if (!tt_new_output)
-	    return;
-	tt_new_output = False;
-#endif /* VMS */
 	cp = VTbuffer->next;
 	if (screen->logstart != 0
 	    && (i = (size_t) (cp - screen->logstart)) > 0) {
@@ -5021,6 +4980,12 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    okay = False;
 		}
 	    } else if (screen->terminal_id == 525
+		       && !strcmp((cp2 = skip_params(cp)), "){")) {	/* DECSTGLT */
+		TRACE(("reply DECSTGLT:%s\n", cp));
+		sprintf(reply, "%d%s",
+			3,	/* ANSI SGR color */
+			cp);
+	    } else if (screen->terminal_id == 525
 		       && !strcmp((cp2 = skip_params(cp)), ",|")) {	/* DECAC */
 		ival = parse_int_param(&cp);
 		TRACE(("reply DECAC\n"));
@@ -5556,7 +5521,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdFlag(xw->keyboard.flags, MODE_DECSDM);
 	    break;
 #endif
-	case srm_DECNCSM:
+	case srm_DECNCSM:	/* no clearing screen on column change */
 	    if (screen->vtXX_level >= 5) {	/* VT510 */
 		result = MdFlag(xw->flags, NOCLEAR_COLM);
 	    } else {
@@ -5701,35 +5666,64 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->sixel_scrolls_right);
 	    break;
 #endif
-	case srm_DECARSM:	/* ignore */
-	case srm_DECATCBM:	/* ignore */
-	case srm_DECATCUM:	/* ignore */
-	case srm_DECBBSM:	/* ignore */
-	case srm_DECCAAM:	/* ignore */
-	case srm_DECCANSM:	/* ignore */
-	case srm_DECCAPSLK:	/* ignore */
-	case srm_DECCRTSM:	/* ignore */
-	case srm_DECECM:	/* ignore */
-	case srm_DECFWM:	/* ignore */
-	case srm_DECHCCM:	/* ignore */
-	case srm_DECHDPXM:	/* ignore */
-	case srm_DECHEM:	/* ignore */
-	case srm_DECHWUM:	/* ignore */
-	case srm_DECIPEM:	/* ignore */
-	case srm_DECKBUM:	/* ignore */
-	case srm_DECKLHIM:	/* ignore */
-	case srm_DECKPM:	/* ignore */
-	case srm_DECRLM:	/* ignore */
-	case srm_DECMCM:	/* ignore */
-	case srm_DECNAKB:	/* ignore */
-	case srm_DECNULM:	/* ignore */
-	case srm_DECNUMLK:	/* ignore */
-	case srm_DECOSCNM:	/* ignore */
-	case srm_DECPCCM:	/* ignore */
-	case srm_DECRLCM:	/* ignore */
-	case srm_DECRPL:	/* ignore */
-	case srm_DECVCCM:	/* ignore */
-	case srm_DECXRLM:	/* ignore */
+	    /* the remainder are recognized but unimplemented */
+	    /* VT3xx */
+	case srm_DEC131TM:	/* vt330:VT131 transmit */
+	case srm_DECEKEM:	/* vt330:edit key execution */
+	case srm_DECHCCM:	/* vt320:Horizontal Cursor-Coupling Mode */
+	case srm_DECKBUM:	/* vt330:Keyboard Usage mode */
+	case srm_DECKKDM:	/* vt382:Kanji/Katakana */
+	case srm_DECLTM:	/* vt330:line transmit */
+	case srm_DECPCCM:	/* vt330:Page Cursor-Coupling Mode */
+	case srm_DECVCCM:	/* vt330:Vertical Cursor-Coupling Mode */
+	case srm_DECXRLM:	/* vt330:Transmit Rate Limiting */
+#if !OPT_BLINK_CURS
+	case srm_DECKANAM:	/* vt382:Katakana shift */
+	case srm_DECSCFDM:	/* vt330:space compression field delimiter */
+	case srm_DECTEM:	/* vt330:transmission execution */
+#endif
+#if !OPT_TOOLBAR
+	case srm_DECEDM:	/* vt330:edit */
+#endif
+	    if (screen->vtXX_level >= 3)
+		result = mdAlwaysReset;
+	    break;
+	    /* VT4xx */
+	case srm_DECKPM:	/* vt420:Key Position Mode */
+	    if (screen->vtXX_level >= 4)
+		result = mdAlwaysReset;
+	    break;
+	    /* VT5xx */
+	case srm_DECAAM:	/* vt510:auto answerback */
+	case srm_DECARSM:	/* vt510:auto resize */
+	case srm_DECATCBM:	/* vt520:alternate text color blink */
+	case srm_DECATCUM:	/* vt520:alternate text color underline */
+	case srm_DECBBSM:	/* vt520:bold and blink style */
+	case srm_DECCANSM:	/* vt510:conceal answerback */
+	case srm_DECCAPSLK:	/* vt510:Caps Lock Mode */
+	case srm_DECCRTSM:	/* vt510:CRT save */
+	case srm_DECECM:	/* vt520:erase color */
+	case srm_DECESKM:	/* vt510:enable secondary keyboard language */
+	case srm_DECFWM:	/* vt520:framed windows */
+	case srm_DECHDPXM:	/* vt510:half duplex */
+	case srm_DECHEM:	/* vt510:Hebrew encoding */
+	case srm_DECHWUM:	/* vt520:host wake-up mode (CRT and energy saver) */
+	case srm_DECIPEM:	/* vt510:IBM ProPrinter Emulation Mode */
+	case srm_DECKLHIM:	/* vt510:ignore */
+	case srm_DECMCM:	/* vt510:modem control */
+	case srm_DECNAKB:	/* vt510:Greek/N-A Keyboard Mapping */
+	case srm_DECNULM:	/* vt510:Ignoring Null Mode */
+	case srm_DECNUMLK:	/* vt510:Num Lock Mode */
+	case srm_DECOSCNM:	/* vt510:Overscan Mode */
+	case srm_DECRLCM:	/* vt510:Right-to-Left Copy */
+	case srm_DECRLM:	/* vt510:left-to-right */
+	case srm_DECRPL:	/* vt520:Review Previous Lines */
+#if !OPT_SHIFT_FONTS
+	case srm_DECHEBM:	/* vt520:Hebrew keyboard mapping */
+#endif
+	    if (screen->vtXX_level >= 5)
+		result = mdAlwaysReset;
+	    break;
 	default:
 	    TRACE(("DATA_ERROR: requested report for unknown private mode %d\n",
 		   params[0]));
@@ -6561,7 +6555,6 @@ validProgram(const char *pathname)
     return result;
 }
 
-#ifndef VMS
 #ifndef PATH_MAX
 #define PATH_MAX 512		/* ... is not defined consistently in Xos.h */
 #endif
@@ -6635,7 +6628,6 @@ xtermFindShell(char *leaf, Bool warning)
 	result = x_strdup(result);
     return result;
 }
-#endif /* VMS */
 
 #define ENV_HUNK(n)	(unsigned) ((((n) + 1) | 31) + 1)
 
@@ -6854,8 +6846,10 @@ set_vt_visibility(Bool on)
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("set_vt_visibility(%d)\n", on));
+
     if (on) {
 	if (!screen->Vshow && xw) {
+	    resource.notMapped = False;
 	    VTInit(xw);
 	    XtMapWidget(XtParent(xw));
 #if OPT_TOOLBAR
@@ -6899,6 +6893,7 @@ set_tek_visibility(Bool on)
 	    }
 	    if (tekWidget != 0) {
 		Widget tekParent = SHELL_OF(tekWidget);
+		resource.notMapped = False;
 		XtRealizeWidget(tekParent);
 		XtMapWidget(XtParent(tekWidget));
 #if OPT_TOOLBAR

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.651 2024/02/13 22:10:51 tom Exp $ */
+/* $XTermId: screen.c,v 1.652 2024/09/01 19:16:42 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -2354,11 +2354,11 @@ non_blank_line(TScreen *screen,
 #define maxRectCol(screen) (getMaxCol(screen) + 1)
 
 static int
-limitedParseRow(XtermWidget xw, int row, int err)
+limitedParseRow(XtermWidget xw, int row)
 {
     TScreen *screen = TScreenOf(xw);
     int min_row = minRectRow(screen);
-    int max_row = maxRectRow(screen) + err;
+    int max_row = maxRectRow(screen);
 
     if (xw->flags & ORIGIN)
 	row += screen->top_marg;
@@ -2372,11 +2372,11 @@ limitedParseRow(XtermWidget xw, int row, int err)
 }
 
 static int
-limitedParseCol(XtermWidget xw, int col, int err)
+limitedParseCol(XtermWidget xw, int col)
 {
     TScreen *screen = TScreenOf(xw);
     int min_col = minRectCol(screen);
-    int max_col = maxRectCol(screen) + err;
+    int max_col = maxRectCol(screen);
 
     if (xw->flags & ORIGIN)
 	col += screen->lft_marg;
@@ -2389,8 +2389,8 @@ limitedParseCol(XtermWidget xw, int col, int err)
     return col;
 }
 
-#define LimitedParse(num, func, dft, err) \
-	func(xw, (nparams > num && params[num] > 0) ? params[num] : dft, err)
+#define LimitedParse(num, func, dft) \
+	func(xw, (nparams > num && params[num] > 0) ? params[num] : dft)
 
 /*
  * Copy the rectangle boundaries into a struct, providing default values as
@@ -2402,10 +2402,10 @@ xtermParseRect(XtermWidget xw, int nparams, int *params, XTermRect *target)
     TScreen *screen = TScreenOf(xw);
 
     memset(target, 0, sizeof(*target));
-    target->top = LimitedParse(0, limitedParseRow, minRectRow(screen), 1);
-    target->left = LimitedParse(1, limitedParseCol, minRectCol(screen), 1);
-    target->bottom = LimitedParse(2, limitedParseRow, maxRectRow(screen), 0);
-    target->right = LimitedParse(3, limitedParseCol, maxRectCol(screen), 0);
+    target->top = LimitedParse(0, limitedParseRow, minRectRow(screen));
+    target->left = LimitedParse(1, limitedParseCol, minRectCol(screen));
+    target->bottom = LimitedParse(2, limitedParseRow, maxRectRow(screen));
+    target->right = LimitedParse(3, limitedParseCol, maxRectCol(screen));
     TRACE(("parsed %d params for rectangle %d,%d %d,%d default %d,%d %d,%d\n",
 	   nparams,
 	   target->top,
@@ -2648,6 +2648,65 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 /*
  * Modifies the video-attributes only - so selection (not a video attribute) is
  * unaffected.  Colors and double-size flags are unaffected as well.
+ *
+ * Reference: VSRM - Character Cell Display EL-00070-05
+ *
+ * Section:
+ * -------
+ * CHANGE ATTRIBUTES RECTANGULAR AREA -- DECCARA
+ * Page 5-173
+ *
+ * Quote:
+ * The character positions affected depend on the current setting of DECSACE
+ * (STREAM or RECTANGLE).  See DECSACE for details.
+ *
+ * Notes:
+ * xterm allows 8 (hidden) to be reversed, as an extension.
+ *
+ * Section:
+ * -------
+ * REVERSE ATTRIBUTES RECTANGULAR AREA -- DECRARA
+ * Page 5-175
+ *
+ * Quote:
+ * The video attribute(s) to be reversed are in the affected area are indicated
+ * by one or more subsequent parameters.  These parameters are similar to the
+ * parameters of the Set Graphic Rendition control function (SGR):
+ *
+ * Parameter  Parameter Meaning
+ *    0       Reverse all attributes
+ *    1       Reverse bold attribute
+ *    4       Reverse underscore attribute
+ *    5       Reverse blinking attribute
+ *    7       Reverse negative (reverse) image attribute
+ *
+ * All other parameter values shall be ignored unless they are part of a well
+ * defined extension to the architecture.  Note if the Color Text Extension is
+ * present, the color text SGR values are ignored since the "reverse" of a
+ * color is not defined by the extension.
+ *
+ * Notes:
+ * xterm allows 8 (hidden) to be reversed, as an extension.
+ *
+ * Section:
+ * -------
+ * SELECT ATTRIBUTE CHANGE EXTENT -- DECSACE
+ * Page 5-177
+ *
+ * Quote:
+ * When Ps = 0 or 1, DECCARA and DECRARA affects the stream of character
+ * positions beginning with the first character position specified in the
+ * command, and ending with the second character position specified.
+ *
+ * Notes:
+ * The description of DECSACE goes on to state that "unoccupied" cells are
+ * not affected in STREAM mode, while in RECTANGLE mode they are converted
+ * to blanks.
+ *
+ * While STREAM uses the upper-left and lower-right cell coordinates for a
+ * RECTANGLE (which may take into account ORIGIN mode), the characters wrap,
+ * in STREAM mode, and DEC 070 does not appear to state that ORIGIN mode
+ * affects the wrap-margins.
  */
 void
 ScrnMarkRectangle(XtermWidget xw,
@@ -2675,16 +2734,25 @@ ScrnMarkRectangle(XtermWidget xw,
 	for (row = top; row <= bottom; ++row) {
 	    int left = ((exact || (row == top))
 			? (target->left - 1)
-			: getMinCol(screen));
+			: 0);
 	    int right = ((exact || (row == bottom))
 			 ? (target->right - 1)
-			 : getMaxCol(screen));
+			 : screen->max_col);
 
 	    ld = getLineData(screen, row);
 
 	    TRACE(("marking %d [%d..%d]\n", row, left, right));
 	    for (col = left; col <= right; ++col) {
 		unsigned flags = ld->attribs[col];
+
+		if (!(flags & CHARDRAWN)) {
+		    if (exact) {
+			flags |= CHARDRAWN;
+			Clear1Cell(ld, col);
+		    } else {
+			continue;
+		    }
+		}
 
 		for (n = 0; n < nparam; ++n) {
 #if OPT_TRACE
@@ -2693,6 +2761,9 @@ ScrnMarkRectangle(XtermWidget xw,
 #endif
 		    if (reverse) {
 			switch (params[n]) {
+			case 0:
+			    flags ^= SGR_MASK;
+			    break;
 			case 1:
 			    flags ^= BOLD;
 			    break;

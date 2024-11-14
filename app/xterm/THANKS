@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.39 2024/02/10 01:24:54 tom Exp $
+-- $XTermId: THANKS,v 1.40 2024/08/11 23:05:42 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -49,6 +49,7 @@ Brendan O' Dea
 Bruno Haible
 Cade Foster
 Caetano Jimenez Carezzato
+Casper Dik
 Chris Adams
 Chris Clayton
 Christian Biere
@@ -104,6 +105,7 @@ Greg Smith
 H Merijn Brand
 Hasso Tepper
 Holger Veit
+Iain Riley
 Ilya Zakharevich
 Ingo Brückl
 Iwamoto Kouichi
@@ -138,6 +140,7 @@ Ken Martin
 Kevin Buhr
 Kevin Ryde
 Kevin Schoedel
+Khem Raj
 Kiyokazu Suto
 Larry Hynes
 Larry Riedel

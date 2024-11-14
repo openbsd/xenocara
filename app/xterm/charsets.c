@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.126 2024/05/22 00:27:53 tom Exp $ */
+/* $XTermId: charsets.c,v 1.129 2024/10/03 22:21:32 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -110,6 +110,8 @@ isSevenBit(DECNRCM_codes cs)
     case nrc_Greek:
     case nrc_Hebrew:
     case nrc_Italian:
+    case nrc_JIS_Katakana:
+    case nrc_JIS_Roman:
     case nrc_Norwegian_Danish2:
     case nrc_Norwegian_Danish3:
     case nrc_Norwegian_Danish:
@@ -248,6 +250,14 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 	map_ISO_Latin_Cyrillic(code);
 	break;
 
+    case nrc_JIS_Katakana:
+	map_JIS_Katakana(code);
+	break;
+
+    case nrc_JIS_Roman:
+	map_JIS_Roman(code);
+	break;
+
     case nrc_Norwegian_Danish:
     case nrc_Norwegian_Danish2:
     case nrc_Norwegian_Danish3:
@@ -258,8 +268,12 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 	map_NRCS_Portuguese(code);
 	break;
 
+    case nrc_Russian:
+	map_NRCS_Russian(code);
+	break;
+
     case nrc_SCS_NRCS:		/* vt5xx - Serbo/Croatian */
-	/* FIXME */
+	map_NRCS_Serbo_Croatian(code);
 	break;
 
     case nrc_Spanish:
@@ -289,7 +303,6 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 
     case nrc_ISO_Latin_1_Supp:
     case nrc_British_Latin_1:
-    case nrc_Russian:
     case nrc_French_Canadian2:
     case nrc_Unknown:
     case nrc_DEC_UPSS:
@@ -351,7 +364,7 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 #endif
 
     for (s = buf; s < ptr; ++s) {
-	int eight = CharOf(E2A(*s));
+	int eight = CharOf(*s);
 	int seven = eight & 0x7f;
 	DECNRCM_codes cs = (eight >= 128) ? rightset : leftset;
 	int chr = eight;
@@ -497,6 +510,14 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 	    map_ISO_Latin_Cyrillic(chr = seven);
 	    break;
 
+	case nrc_JIS_Katakana:
+	    map_JIS_Katakana(chr = seven);
+	    break;
+
+	case nrc_JIS_Roman:
+	    map_JIS_Roman(chr = seven);
+	    break;
+
 	case nrc_Norwegian_Danish:
 	case nrc_Norwegian_Danish2:
 	case nrc_Norwegian_Danish3:
@@ -507,8 +528,12 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 	    map_NRCS_Portuguese(chr = seven);
 	    break;
 
+	case nrc_Russian:
+	    map_NRCS_Russian(chr = seven);
+	    break;
+
 	case nrc_SCS_NRCS:	/* vt5xx - Serbo/Croatian */
-	    /* FIXME */
+	    map_NRCS_Serbo_Croatian(chr = seven);
 	    break;
 
 	case nrc_Spanish:
@@ -536,7 +561,6 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 	    map_DEC_Cyrillic(chr = seven);
 	    break;
 
-	case nrc_Russian:
 	case nrc_Unknown:
 	default:		/* any character sets we don't recognize */
 	    break;
@@ -558,7 +582,7 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 	} else {
 	    if (eight >= 128 && chr < 128 && chr > 32)
 		chr |= 128;
-	    *s = (IChar) A2E(chr);
+	    *s = (IChar) chr;
 	}
     }
     TRACE(("%d\t%s\n",
@@ -707,6 +731,14 @@ xtermCharSetDec(XtermWidget xw, IChar chr, DECNRCM_codes cs)
 		unmap_NRCS_Italian(chr, DFT_94(chr));
 		break;
 
+	    case nrc_JIS_Katakana:
+		unmap_JIS_Katakana(chr, DFT_94(chr));
+		break;
+
+	    case nrc_JIS_Roman:
+		unmap_JIS_Roman(chr, DFT_94(chr));
+		break;
+
 	    case nrc_ISO_Latin_1_Supp:
 		unmap_ISO_Latin_1(chr, DFTMAP());
 		break;
@@ -733,6 +765,14 @@ xtermCharSetDec(XtermWidget xw, IChar chr, DECNRCM_codes cs)
 		unmap_NRCS_Portuguese(chr, DFT_94(chr));
 		break;
 
+	    case nrc_Russian:
+		unmap_NRCS_Russian(chr, DFT_94(chr));
+		break;
+
+	    case nrc_SCS_NRCS:
+		unmap_NRCS_Serbo_Croatian(chr, DFT_94(chr));
+		break;
+
 	    case nrc_Spanish:
 		unmap_NRCS_Spanish(chr, DFT_94(chr));
 		break;
@@ -755,8 +795,6 @@ xtermCharSetDec(XtermWidget xw, IChar chr, DECNRCM_codes cs)
 		break;
 
 	    case nrc_British_Latin_1:
-	    case nrc_SCS_NRCS:
-	    case nrc_Russian:
 	    case nrc_Unknown:
 	    case nrc_DEC_UPSS:
 	    default:		/* anything we cannot unmap */

@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.59 2023/12/25 21:18:03 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.62 2024/10/23 21:14:15 tom Exp $ */
 
 /*
- * Copyright 2007-2020,2023 by Thomas E. Dickey
+ * Copyright 2007-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -35,10 +35,6 @@
 
 #include <X11/keysym.h>
 #include <ctype.h>
-
-#ifdef VMS
-#include <X11/keysymdef.h>
-#endif
 
 #include <xstrings.h>
 
@@ -544,6 +540,7 @@ get_tcap_buffer(XtermWidget xw)
 /*
  * Retrieve the erase-key, for initialization in main program.
  */
+#if OPT_INITIAL_ERASE
 char *
 get_tcap_erase(XtermWidget xw)
 {
@@ -565,6 +562,7 @@ get_tcap_erase(XtermWidget xw)
 	fkey = x_strdup(fkey);
     return fkey;
 }
+#endif /* OPT_INITIAL_ERASE */
 
 /*
  * A legal termcap (or terminfo) name consists solely of graphic characters,

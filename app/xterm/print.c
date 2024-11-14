@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.176 2023/11/24 12:16:37 tom Exp $ */
+/* $XTermId: print.c,v 1.178 2024/09/30 08:11:40 tom Exp $ */
 
 /*
- * Copyright 1997-2022,2023 by Thomas E. Dickey
+ * Copyright 1997-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -55,10 +55,6 @@
 
 #define SPS PrinterOf(screen)
 
-#ifdef VMS
-#define VMS_TEMP_PRINT_FILE "sys$scratch:xterm_print.txt"
-#endif
-
 static void charToPrinter(XtermWidget /* xw */ ,
 			  unsigned /* chr */ );
 static void printLine(XtermWidget /* xw */ ,
@@ -90,25 +86,13 @@ closePrinter(XtermWidget xw)
 	    fclose(SPS.fp);
 	    SPS.fp = 0;
 	} else if (xtermHasPrinter(xw) != 0) {
-#ifdef VMS
-	    char pcommand[256];
-	    (void) sprintf(pcommand, "%s %s;",
-			   SPS.printer_command,
-			   VMS_TEMP_PRINT_FILE);
-#endif
 
 	    DEBUG_MSG("closePrinter\n");
 	    pclose(SPS.fp);
 	    TRACE(("closed printer, waiting...\n"));
-#ifdef VMS			/* This is a quick hack, really should use
-				   spawn and check status or system services
-				   and go straight to the queue */
-	    (void) system(pcommand);
-#else /* VMS */
 	    while (nonblocking_wait() > 0) {
 		;
 	    }
-#endif /* VMS */
 	    SPS.fp = 0;
 	    SPS.isOpen = False;
 	    TRACE(("closed printer\n"));
@@ -431,15 +415,6 @@ charToPrinter(XtermWidget xw, unsigned chr)
 	     * write to a pipe.
 	     */
 	case False:
-#ifdef VMS
-	    /*
-	     * This implementation only knows how to write to a file.  When the
-	     * file is closed the print command executes.  Print command must
-	     * be of the form:
-	     *   print/queue=name/delete [/otherflags].
-	     */
-	    SPS.fp = fopen(VMS_TEMP_PRINT_FILE, "w");
-#else
 	    {
 		int my_pipe[2];
 		pid_t my_pid;
@@ -510,7 +485,6 @@ charToPrinter(XtermWidget xw, unsigned chr)
 		    }
 		}
 	    }
-#endif
 	    break;
 	case True:
 	    TRACE(("opening \"%s\" as printer output\n", SPS.printer_command));

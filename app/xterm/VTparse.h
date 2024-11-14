@@ -1,7 +1,7 @@
-/* $XTermId: VTparse.h,v 1.72 2023/11/24 13:18:38 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.73 2024/09/02 16:06:16 tom Exp $ */
 
 /*
- * Copyright 1996-2019,2023 by Thomas E. Dickey
+ * Copyright 1996-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -35,64 +35,56 @@
 
 #include <xterm.h>
 
-#ifndef Const
-# if defined(__STDC__) && !defined(__cplusplus)
-#  define Const const
-# else
-#  define Const	/**/
-# endif
-#endif
-
 /*
  * PARSE_T has to be large enough to handle the number of cases enumerated here.
  */
 typedef unsigned char PARSE_T;
 
-extern Const PARSE_T ansi_table[];
-extern Const PARSE_T cigtable[];
-extern Const PARSE_T csi2_table[];
-extern Const PARSE_T csi_amp_table[];
-extern Const PARSE_T csi_dec_dollar_table[];
-extern Const PARSE_T csi_ex_table[];
-extern Const PARSE_T csi_quo_table[];
-extern Const PARSE_T csi_sp_table[];
-extern Const PARSE_T csi_table[];
-extern Const PARSE_T csi_tick_table[];
-extern Const PARSE_T dec2_table[];
-extern Const PARSE_T dec3_table[];
-extern Const PARSE_T dec_table[];
-extern Const PARSE_T eigtable[];
-extern Const PARSE_T esc_sp_table[];
-extern Const PARSE_T esc_table[];
-extern Const PARSE_T scrtable[];
-extern Const PARSE_T scs96table[];
-extern Const PARSE_T scstable[];
-extern Const PARSE_T sos_table[];
+extern const PARSE_T ansi_table[];
+extern const PARSE_T cigtable[];
+extern const PARSE_T csi2_table[];
+extern const PARSE_T csi_amp_table[];
+extern const PARSE_T csi_dec_dollar_table[];
+extern const PARSE_T csi_ex_table[];
+extern const PARSE_T csi_quo_table[];
+extern const PARSE_T csi_sp_table[];
+extern const PARSE_T csi_table[];
+extern const PARSE_T csi_tick_table[];
+extern const PARSE_T dec2_table[];
+extern const PARSE_T dec3_table[];
+extern const PARSE_T dec_table[];
+extern const PARSE_T eigtable[];
+extern const PARSE_T esc_sp_table[];
+extern const PARSE_T esc_table[];
+extern const PARSE_T scrtable[];
+extern const PARSE_T scs96table[];
+extern const PARSE_T scstable[];
+extern const PARSE_T sos_table[];
 
 #if OPT_DEC_RECTOPS
-extern Const PARSE_T csi_dollar_table[];
-extern Const PARSE_T csi_star_table[];
+extern const PARSE_T csi_dollar_table[];
+extern const PARSE_T csi_star_table[];
 #endif /* OPT_DEC_LOCATOR */
 
 #if OPT_VT52_MODE
-extern Const PARSE_T vt52_table[];
-extern Const PARSE_T vt52_esc_table[];
-extern Const PARSE_T vt52_ignore_table[];
+extern const PARSE_T vt52_table[];
+extern const PARSE_T vt52_esc_table[];
+extern const PARSE_T vt52_ignore_table[];
 #endif
 
 #if OPT_VT525_COLORS
-extern Const PARSE_T csi_comma_table[];
+extern const PARSE_T csi_comma_table[];
 #endif
 
 #if OPT_WIDE_CHARS
-extern Const PARSE_T esc_pct_table[];
-extern Const PARSE_T scs_amp_table[];
-extern Const PARSE_T scs_pct_table[];
-extern Const PARSE_T scs_2qt_table[];
+extern const PARSE_T esc_pct_table[];
+extern const PARSE_T scs_amp_table[];
+extern const PARSE_T scs_pct_table[];
+extern const PARSE_T scs_2qt_table[];
 #endif
 
 #if OPT_XTERM_SGR
-extern Const PARSE_T csi_hash_table[];
+extern const PARSE_T csi_hash_table[];
 #endif
 
 #include <VTparse.hin>

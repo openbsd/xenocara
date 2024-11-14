@@ -1,7 +1,7 @@
-/* $XTermId: Tekparse.h,v 1.8 2016/10/06 00:32:30 tom Exp $ */
+/* $XTermId: Tekparse.h,v 1.9 2024/09/02 16:05:58 tom Exp $ */
 
 /*
- * Copyright 1998-2006,2016 by Thomas E. Dickey
+ * Copyright 1998-2016,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -33,22 +33,14 @@
 #ifndef included_Tekparse_h
 #define included_Tekparse_h 1
 
-#ifndef Const
-# if defined(__STDC__) && !defined(__cplusplus)
-#  define Const const
-# else
-#  define Const /**/
-# endif
-#endif
-
-extern Const int Talptable[];
-extern Const int Tbestable[];
-extern Const int Tbyptable[];
-extern Const int Tesctable[];
-extern Const int Tipltable[];
-extern Const int Tplttable[];
-extern Const int Tpttable[];
-extern Const int Tspttable[];
+extern const int Talptable[];
+extern const int Tbestable[];
+extern const int Tbyptable[];
+extern const int Tesctable[];
+extern const int Tipltable[];
+extern const int Tplttable[];
+extern const int Tpttable[];
+extern const int Tspttable[];
 
 #include <Tekparse.hin>
 

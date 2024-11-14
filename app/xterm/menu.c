@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.375 2023/12/01 21:39:31 tom Exp $ */
+/* $XTermId: menu.c,v 1.377 2024/09/30 07:53:29 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -769,7 +769,7 @@ static Bool
 domenu(Widget w,
        XEvent *event GCC_UNUSED,
        String *params,		/* mainMenu, vtMenu, or tekMenu */
-       Cardinal *param_count)	/* 0 or 1 */
+       const Cardinal *param_count)	/* 0 or 1 */
 {
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
@@ -984,14 +984,12 @@ HandlePopupMenu(Widget w,
 static void
 handle_send_signal(Widget gw GCC_UNUSED, int sig)
 {
-#ifndef VMS
     TScreen *screen = TScreenOf(term);
 
     if (hold_screen > 1)
 	hold_screen = 0;
     if (screen->pid > 1)
 	kill_process_group(screen->pid, sig);
-#endif
 }
 
 #if OPT_VT52_MODE

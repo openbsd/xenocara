@@ -1,31 +1,18 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #393 - 2024/07/11
+                            Patch #395 - 2024/10/24
 
-     * add a check for ANSI SC/RC, to ignore CSI parameters.
-     * improve  check for missing characters for bitmap-fonts by using the
-       normal font for reference in the case where the current font, e.g.,
-       the   wide-font   was  derived  from  the  normal  font  and  lacks
-       per-character metrics (report by Rajeev V. Pillai).
-     * fix regression in error-recovery for SGR parameters from patch #357
-       (report by James Holderness).
-     * remove some duplicates in xtermcfg.h (report by Matthew Green).
-     * change default for --enable-imake configure option.
-     * fixes for wcwidth:
-          + return  0  for  format  effectors,  like a zero-width printing
-            character  rather  than -1 like a control character (report by
-            Rajeev V. Pillai).
-          + correct  doublewidth  to account for reserved codepoints which
-            are listed in the EastAsianWidth file.
-          + add a special case for surrogate pairs, which might be checked
-            in testing the wcwidth function.
-     * amend   sixel   bounds-check  added  in  patch  #371  to  not  wrap
-       out-of-bounds data.
-     * eliminate maxStringParse limit for SIXEL.
-     * improve  logic  which  ignores APC, PM and SOS controls to also not
-       accumulate their data temporarily in a buffer.
-     * exclude  TERM_INGRESS  from cleanup of environment variables (patch
-       by Iain Riley).
-     * fix some documentation typos (report by Thomas Wolff).
+     * add DECRQSS response for DECSTGLT, i.e., ANSI SGR color.
+     * add Russian and SCS NRCS character set mappings.
+     * remove obsolete code for OS390 and VMS.
+     * minor fixes to work with vttest 20240929's 7-bit parsing test.
+     * improve  DECRPM  responses  for  unsupported modes; those which are
+       valid  for  a  given DEC terminal are reported as permanently reset
+       rather than unknown.
+     * add JIS-Roman and JIS-Katakana character sets, for VT382.
+     * fix  typo  in  ctlseqs.ms note about function key vs DSR (report by
+       Michael Thomas Greer).
+     * formatting fixes for ctlseqs.ms (report by Mark Manning).
+     * update tables in wcwidth.c based on Unicode 16.0.0
 

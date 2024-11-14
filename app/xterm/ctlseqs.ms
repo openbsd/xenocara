@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.717 2024/05/25 16:43:09 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.726 2024/10/14 16:52:40 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #392
-.ds RF 2024/05/25
+.ds LF Patch #395
+.ds RF 2024/10/14
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -449,6 +449,55 @@ sequence because those cannot alter the meaning of the control sequence.
 Some controls (such as \*(Os) introduce a string mode,
 which is ended on a \*(ST (string terminator).
 .IP
+Section 9 of ECMA-48, like DEC STD 070, chapter 3, goes into detail to
+explain that when processing 8-bit controls, the eighth bit of each
+byte is ignored.
+This applies to the content of APC, DCS, OSC, and PM strings,
+as well as to the terminating bytes such as the two-byte string terminator.
+Quoting from the latter,
+3.5.4.5 \fIGR Graphic Characters within Control Strings\fP:
+.in +4n
+.ft \*(CW
+.sp
+GR (8-bit) graphic characters in APC, OSC, and PM control strings will be
+treated as their 7-bit equivalent (the eighth bit will be ignored).
+.sp
+GR (8-bit) graphic characters are permitted within Device Control
+Strings, and the graphic character's interpretation will be
+dependent on the internal control string format.
+When they occur in the introducer sequence to a Device Control String,
+the eighth bit will be ignored,
+and they will be treated as their 7-bit equivalent.
+(Note that this is the same way 8-bit graphic characters
+are handled within control sequences.)
+.in -4n
+.ft R
+.IP
+The reason for that is because ECMA-48 presents 7-bit controls as an
+alternative to 8-bit controls.
+It says this:
+.in +4n
+.ft \*(CW
+.sp
+The control functions defined in this Standard can be coded in a 7-bit code as
+well as in an 8-bit code; both forms of coded representation are equivalent and
+in accordance with Standard ECMA-35.
+.in -4n
+.ft R
+.IP
+and in turn, ECMA-35 9.1 says
+.in +4n
+.ft \*(CW
+.sp
+A 7-bit code shall have a structure which is based on a 7-bit
+code table arranged in separate areas as follows (see figure 7):
+.in -4n
+.ft R
+.IP
+In short, a standard-compliant implementation of ECMA-48 ignores the
+eighth bit of bytes in control strings other than the C1 controls.
+\fI\*(XT\fP does this.
+.IP
 ECMA-48 describes only correct behavior,
 telling what types of characters are expected
 at each stage of the control sequences.
@@ -752,6 +801,8 @@ These are documented as 94-character sets (like USASCII) without NRCS:
   \*(Cc = \*%\*0 \(-> DEC Turkish, VT500.
   \*(Cc = \*%\*5 \(-> DEC Supplemental Graphics, VT300.
   \*(Cc = \*&\*4 \(-> DEC Cyrillic, VT500.
+  \*(Cc = \*I \(-> JIS-Katakana, VT382.
+  \*(Cc = \*J \(-> JIS-Roman, VT382.
 .br
 The VT520 reference manual lists a few more,
 but no documentation has been found for the mappings:
@@ -891,7 +942,7 @@ the key-code separated by a \*(``/\*('' from the hex-encoded key value.
 The key codes correspond to the DEC function-key codes (e.g., F6=17).
 .
 .iP
-.IP \\*(Dc\\*(Ps\\*!\\*u\\*(Pt\\*s\\*(ST
+.IP \\*(Dc\\*(Ps\\*s\\*!\\*u\\*(Pt\\*s\\*(ST
 Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320, VT510.
 \fI\*(XT\fP ignores this in UTF-8 mode,
 and uses the \fBpreferLatin1\fP resource to choose the default setting.
@@ -931,6 +982,7 @@ The string following the \*(``q\*('' is one of the following:
   \*$\*|	\(-> DECSCPP
   \*$\*}	\(-> DECSASD
   \*$\*~	\(-> DECSSDT
+  \*)\*{	\(-> DECSTGLT (VT525 only)
   \**\*x	\(-> DECSACE
   \**\*|	\(-> DECSNLS
   \*,\*|	\(-> DECAC (VT525 only)
@@ -1870,7 +1922,7 @@ Result is
 \fBNote\fP:
 it is possible for this sequence to be sent by a function key.
 For example, with the default keyboard configuration
-the shifted F1 key may send (with shift-, control-, alt-modifiers)
+the shifted F3 key may send (with shift-, control-, alt-modifiers)
 .iP
   \*(Cs\*1\*;\*2\*s\*R, or
   \*(Cs\*1\*;\*5\*s\*R, or
@@ -1880,7 +1932,7 @@ the shifted F1 key may send (with shift-, control-, alt-modifiers)
 The second parameter encodes the modifiers; values range from 2 to 16.
 See the section \fBPC-Style Function Keys\fP for the codes.
 The \fB\%modifyFunctionKeys\fP and \fB\%modifyKeyboard\fP resources
-can change the form of the string sent from the modified F1 key.
+can change the form of the string sent from the modified F3 key.
 .
 .iP
 .IP \\*(Cs\\*>\\*(Ps\\*s\\*n
@@ -2008,7 +2060,7 @@ but DECSCL is preferred.
 Request ANSI mode (DECRQM).
 For VT300 and up, reply DECRPM is
 .br
-  \*(Cs\*(Ps\*;\*(Pm\*s\*$\*y
+  \*(Cs\*(Ps\*s\*;\*(Pm\*s\*$\*y
 .br
 where \*(Ps is the mode number as in SM/RM,
 and \*(Pm is the mode value:
@@ -2024,7 +2076,7 @@ and \*(Pm is the mode value:
 Request DEC private mode (DECRQM).
 For VT300 and up, reply DECRPM is
 .br
-  \*(Cs\*?\*(Ps\*;\*(Pm\*s\*$\*y
+  \*(Cs\*?\*(Ps\*s\*;\*(Pm\*s\*$\*y
 .br
 where \*(Ps is the mode number as in DECSET/DECSET,
 \*(Pm is the mode value as in the ANSI DECRQM.
@@ -2104,7 +2156,12 @@ Only those modes listed as parameters are restored.
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Pm\\*s\\*$\\*r
 Change Attributes in Rectangular Area (DECCARA), VT400 and up.
   \*(Pt\*s\*;\*(Pl\*s\*;\*(Pb\*s\*;\*(Pr denotes the rectangle.
-  \*(Pm denotes the SGR attributes to change: 0, 1, 4, 5, 7.
+  \*(Pm denotes the SGR attributes to change: \*0, \*1, \*4, \*5, \*7, \*8.
+Setting SGR \*0 resets modes \*1, \*4, \*5, \*7.
+Those modes can be individually reset with SGR \*2\*2, \*2\*4, \*2\*5 and \*2\*7.
+Setting SGR \*8 is an \fI\*(xt\fP extension;
+it may be reset with SGR \*2\*8.
+See DECSACE.
 .
 .iP
 .IP \\*(Cs\\*(cs
@@ -2271,7 +2328,10 @@ Set warning-bell volume (DECSWBV), VT520.
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Pm\\*s\\*$\\*t
 Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
   \*(Pt\*s\*;\*(Pl\*s\*;\*(Pb\*s\*;\*(Pr denotes the rectangle.
-  \*(Pm denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
+  \*(Pm denotes the attributes to reverse, i.e.,  0, 1, 4, 5, 7, 8.
+Reversing SGR 0 reverses modes 1, 4, 5, 7.
+Reversing SGR 8 is an \fI\*(xt\fP extension.
+See DECSACE.
 .
 .iP
 .IP \\*(Cs\\*u
@@ -2295,7 +2355,7 @@ Request Displayed Extent (DECRQDE), VT340, VT420.
 .br
 Response is
 .br
-  \*(Cs\*(Ph\*;\*(Pw\*;\*(Pc\*;\*(Pr\*;\*(Pp\*s\*(Dq\*w
+  \*(Cs\*(Ph\*s\*;\*(Pw\*s\*;\*(Pc\*s\*;\*(Pr\*s\*;\*(Pp\*s\*(Dq\*w
 .br
 where
   \*(Ph is the number of lines of the current page
@@ -2368,6 +2428,23 @@ Select Attribute Change Extent (DECSACE), VT420 and up.
   \*(Ps = \*0 \(-> from start to end position, wrapped.
   \*(Ps = \*1 \(-> from start to end position, wrapped.
   \*(Ps = \*2 \(-> rectangle (exact).
+.br
+Modes \*0 and \*1 are the \fIstream\fP modes
+of the DECCARA and DECRARA controls.
+There are several aspects to \fIstream\fP versus \fIrectangle\fP modes:
+.br
+1. In both \fIstream\fP and \fIrectangle\fP modes, the
+row- and column-positions are affected by Origin Mode.
+.br
+2. In \fIrectangle\fP mode, cells outside the row- and column-positions
+are unaffected.
+In \fIstream\fP mode, the row- and column-positions are the starting
+and ending cells, with wrapping which ignores Origin Mode.
+.br
+3. In \fIstream\fP mode,
+those controls affect only cells where a character was drawn.
+In \fIrectangle\fP mode, cells where no character was drawn
+are first filled in with a space.
 .
 .iP
 .IP \\*(Cs\\*(Pc\\*s\\*;\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*$\\*x
@@ -2526,7 +2603,7 @@ Pop video attributes from stack (XTPOPSGR), \fI\*(xt\fP.
 Popping restores the video-attributes which were saved using XTPUSHSGR
 to their previous state.
 .iP
-.IP  \\*(Cs\\*(Ps\\*;\\*(Pf\\*;\\*(Pb\\*,\\*|
+.IP  \\*(Cs\\*(Ps\\*s\\*;\\*(Pf\\*s\\*;\\*(Pb\\*s\\*,\\*|
 Assign Color (DECAC), VT525 only.
   \*(Ps selects the color item
   \*(Pf is the foreground color index 0..15
@@ -2540,7 +2617,7 @@ Color items:
 update the VT100 window colors,
 like \*(Os \*1\*0 and \*1\*1.
 .iP
-.IP \\*(Cs\\*(Ps\\*;\\*(Pf\\*;\\*(Pb\\*,\\*}
+.IP \\*(Cs\\*(Ps\\*s\\*;\\*(Pf\\*s\\*;\\*(Pb\\*s\\*,\\*}
 Alternate Text Color (DECATC), VT525 only.
 This feature specifies the colors to use when \%DECSTGLT is selected to 1 or 2.
   \*(Ps selects attribute combinations
@@ -4668,6 +4745,14 @@ Besides the Sun-derived OSC controls for setting window title and icon label,
 The \fICDE\fP source was unavailable for inspection until 2012,
 so that clarification of the details of the window operations
 relied upon \fIvttest\fP.
+However, the manual page for the control sequences
+(i.e., \fB\%dtterm\fP(5) in the file formats section) was readily available.
+DEC adapted the control sequences for setting the window and icon
+labels in the VT525.
+In doing so, DEC's VT520/VT525 manual changed
+the letter \fBl\fP to a number \fB1\fP,
+and added a parameter \fB2\fP before the \fIl/L\fP (or \fI1/L\fP) code used to
+distinguish the window and icon labels.
 .bP
 The SCOSC/SCORC control sequences for saving/restoring the cursor and
 for saving/restoring \*(``DEC Private Mode Values\*(''
@@ -4717,7 +4802,7 @@ private control in one of its terminals more than five years later
 (for the VT420 PCTerm, announced in February 1992).
 .IP
 In that model of the VT420,
-\*(Cs\*?\*(Pm\*;\*(Pc\*s\*r
+\*(Cs\*?\*(Pm\*s\*;\*(Pc\*s\*r
 selects the \fIPC TERM\fP emulation mode.
 When this mode is enabled, the keyboard sends \fIscan codes\fP
 rather than characters (analogous to X keyboard events).

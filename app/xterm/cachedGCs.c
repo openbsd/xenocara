@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.82 2024/05/17 20:59:36 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.83 2024/09/01 21:26:44 tom Exp $ */
 
 /*
  * Copyright 2007-2021,2024 by Thomas E. Dickey
@@ -121,7 +121,7 @@ traceCgsEnum(CgsEnum value)
 #undef CASE
 
 static const char *
-traceVTwin(XtermWidget xw, VTwin *value)
+traceVTwin(XtermWidget xw, const VTwin *value)
 {
     const char *result = "?";
     if (value == 0)

@@ -1,7 +1,7 @@
-/* $XTermId: data.h,v 1.141 2021/05/27 22:29:12 tom Exp $ */
+/* $XTermId: data.h,v 1.143 2024/09/30 07:48:05 tom Exp $ */
 
 /*
- * Copyright 2002-2019,2021 by Thomas E. Dickey
+ * Copyright 2002-2021,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -59,21 +59,6 @@
 extern Widget toplevel;
 
 extern XtAppContext app_con;
-
-#ifdef VMS
-/* actually in vms.c */
-extern int tt_width;
-extern int tt_length;
-extern int tt_changed;
-extern int tt_pasting;
-extern int tt_new_output;
-#define VMS_TERM_BUFFER_SIZE	500
-struct q_head {
-    int flink;
-    int blink;
-};
-extern struct q_head read_queue;
-#endif
 
 #if OPT_TEK4014
 extern Char *Tpushb;
@@ -170,6 +155,7 @@ typedef struct XTERM_RESOURCE {
     Boolean utmpInhibit;
     Boolean utmpDisplayId;
     Boolean messages;
+    Boolean notMapped;
 
 #ifdef HAVE_LIB_XCURSOR
     String cursorTheme;

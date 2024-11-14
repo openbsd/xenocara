@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.147 2024/07/11 08:16:39 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.149 2024/09/01 22:40:13 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2024 by Thomas E. Dickey
@@ -45,7 +45,7 @@ extern XTermFonts * getNormalFont (TScreen * /* screen */, int /* which */);
 extern const VTFontNames * defaultVTFontNames(XtermWidget /* xw */);
 extern const VTFontNames * xtermFontName (const char */* normal */);
 extern const char * whichFontEnum (VTFontEnum /* value */);
-extern const char * whichFontList (XtermWidget /* xw */, VTFontList * /* value */);
+extern const char * whichFontList (XtermWidget /* xw */, const VTFontList * /* value */);
 extern const char * whichFontList2(XtermWidget /* xw */, char ** /* value */);
 extern int lookupRelativeFontSize (XtermWidget /* xw */, int /* old */, int /* relative */);
 extern int xtermGetFont (const char * /* param */);
@@ -120,9 +120,11 @@ extern char *xtermSpecialFont (XTermDraw * /* params */);
 
 #define IsXtermMissingChar(screen, ch, font) \
 	 (CheckedKnownMissing(font, ch) \
-	  ? ((font)->known_missing[(Char)(ch)] > 1) \
-	  : ((FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
-	   || ForceBoxChars(screen, ch)))
+	  ? ( (font)->known_missing[(Char)(ch)] > 1) \
+	  : ( ( ( FontIsIncomplete(font) \
+	         || ( (ch) < MaxUChar && !IsLatin1(ch) ) ) \
+	       && xtermMissingChar(ch, font) ) \
+	     || ForceBoxChars(screen, ch) ) )
 #else
 #define IsXtermMissingChar(screen, ch, font) False
 #endif
@@ -159,7 +161,7 @@ extern void xtermSaveVTFonts (XtermWidget /* xw */);
 extern Boolean maybeXftCache(XtermWidget /* xw */, XftFont * /* font */);
 extern Bool xtermXftMissing (XtermWidget /* xw */, XTermXftFonts * /* fontData */, int /* fontNum */, XftFont * /* font */, unsigned /* wc */);
 extern XTermXftFonts *getMyXftFont (XtermWidget /* xw */, int /* which */, int /* fontnum */);
-extern const char * whichXftFonts(XtermWidget /* xw */, XTermXftFonts * /* data */);
+extern const char * whichXftFonts(XtermWidget /* xw */, const XTermXftFonts * /* data */);
 extern int findXftGlyph (XtermWidget /* xw */, XTermXftFonts * /* fontData */, unsigned /* wc */);
 extern XftFont *getXftFont (XtermWidget /* xw */, VTFontEnum /* which */, int /* fontnum */);
 extern void closeCachedXft (TScreen * /* screen */, XftFont * /* font */);

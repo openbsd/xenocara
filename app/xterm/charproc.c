@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2032 2024/07/10 21:09:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2047 2024/10/03 22:56:45 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -870,14 +870,7 @@ static void VTResize(Widget w);
 static void VTInitI18N(XtermWidget);
 #endif
 
-#ifdef VMS
-globaldef {
-    "xtermclassrec"
-} noshare
-
-#else
 static
-#endif				/* VMS */
 WidgetClassRec xtermClassRec =
 {
     {
@@ -917,12 +910,6 @@ WidgetClassRec xtermClassRec =
     }
 };
 
-#ifdef VMS
-globaldef {
-    "xtermwidgetclass"
-}
-noshare
-#endif /* VMS */
 WidgetClass xtermWidgetClass = (WidgetClass) & xtermClassRec;
 
 /*
@@ -1231,7 +1218,7 @@ saveCharsets(TScreen *screen, DECNRCM_codes * target)
 }
 
 void
-restoreCharsets(TScreen *screen, DECNRCM_codes * source)
+restoreCharsets(TScreen *screen, const DECNRCM_codes * source)
 {
     int g;
     for (g = 0; g < NUM_GSETS2; ++g) {
@@ -1417,7 +1404,7 @@ set_max_row(TScreen *screen, int rows)
 #if OPT_TRACE
 #define DATA(name) { name, #name }
 static const struct {
-    Const PARSE_T *table;
+    const PARSE_T *table;
     const char *name;
 } all_tables[] = {
 
@@ -1471,7 +1458,7 @@ static const struct {
 
 #define WHICH_TABLE(name) if (table == name) result = #name
 static const char *
-which_table(Const PARSE_T * table)
+which_table(const PARSE_T * table)
 {
     const char *result = "?";
     Cardinal n;
@@ -1496,7 +1483,7 @@ check_tables(void)
 
     TRACE(("** check_tables\n"));
     for (n = 0; n < XtNumber(all_tables); ++n) {
-	Const PARSE_T *table = all_tables[n].table;
+	const PARSE_T *table = all_tables[n].table;
 	TRACE(("*** %s\n", all_tables[n].name));
 	/*
 	 * Most of the tables should use the same codes in 0..31, 128..159
@@ -1571,7 +1558,7 @@ check_bitmasks(void)
     static struct {
 	int mode;
 	int code;
-	Const char *name;
+	const char *name;
     } table[] = {
 	DATA(DGRP(1), INVERSE),
 	    DATA(DGRP(1), UNDERLINE),
@@ -1736,8 +1723,8 @@ struct ParseState {
 #if OPT_VT52_MODE
     Bool vt52_cup;
 #endif
-    Const PARSE_T *groundtable;
-    Const PARSE_T *parsestate;
+    const PARSE_T *groundtable;
+    const PARSE_T *parsestate;
     int scstype;
     int scssize;
     Bool private_function;	/* distinguish private-mode from standard */
@@ -1835,9 +1822,13 @@ static const struct {
     { nrc_Norwegian_Danish,  0,   '`', 3, 9, 1, 0 },
     { nrc_Portugese,         '%', '6', 3, 9, 1, 0 },
     { nrc_ISO_Latin_1_Supp,  0,   'A', 3, 9, 0, 1 },
+    { nrc_JIS_Katakana,      0,   'I', 3, 3, 0, 0 },
+    { nrc_JIS_Roman,         0,   'J', 3, 3, 0, 0 },
     /* VT5xx */
     { nrc_Greek,             '"', '>', 5, 9, 1, 0 },
     { nrc_Hebrew,            '%', '=', 5, 9, 1, 0 },
+    { nrc_Russian,	     '&', '5', 5, 9, 1, 0 },
+    { nrc_SCS_NRCS,	     '%', '3', 5, 9, 1, 0 },
     { nrc_Turkish,	     '%', '2', 5, 9, 1, 0 },
     { nrc_DEC_Cyrillic,      '&', '4', 5, 9, 0, 0 },
     { nrc_DEC_Greek_Supp,    '"', '?', 5, 9, 0, 0 },
@@ -1848,11 +1839,6 @@ static const struct {
     { nrc_ISO_Latin_2_Supp,  0,   'B', 5, 9, 0, 1 },
     { nrc_ISO_Latin_5_Supp,  0,   'M', 5, 9, 0, 1 },
     { nrc_ISO_Latin_Cyrillic,0,   'L', 5, 9, 0, 1 },
-    /* VT5xx (not implemented) */
-#if 0
-    { nrc_Russian,           '&', '5', 5, 9, 1, 0 },
-    { nrc_SCS_NRCS,          '%', '3', 5, 9, 0, 0 },
-#endif
 };
 /* *INDENT-ON* */
 
@@ -1901,7 +1887,8 @@ xtermDecodeSCS(XtermWidget xw, int which, int sgroup, int prefix, int suffix)
     Cardinal n;
     DECNRCM_codes result = nrc_Unknown;
 
-    suffix &= 0x7f;
+    prefix = AsciiOf(prefix);
+    suffix = AsciiOf(suffix);
     for (n = 0; n < XtNumber(scs_table); ++n) {
 	if (prefix == scs_table[n].prefix
 	    && suffix == scs_table[n].suffix
@@ -2205,22 +2192,17 @@ only_default(void)
 }
 
 static int
-zero_if_default(int which)
+use_default_value(int which, int default_value)
 {
-    int result = (nparam > which) ? GetParam(which) : 0;
+    int result = (nparam > which) ? GetParam(which) : default_value;
     if (result <= 0)
-	result = 0;
+	result = default_value;
     return result;
 }
 
-static int
-one_if_default(int which)
-{
-    int result = (nparam > which) ? GetParam(which) : 0;
-    if (result <= 0)
-	result = 1;
-    return result;
-}
+#define zero_if_default(which) use_default_value(which, 0)
+
+#define one_if_default(which) use_default_value(which, 1)
 
 #define BeginString(mode) \
 	do { \
@@ -2319,7 +2301,7 @@ static void
 illegal_parse(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
     ResetState(sp);
-    sp->nextstate = sp->parsestate[E2A(c)];
+    sp->nextstate = sp->parsestate[c];
     Bell(xw, XkbBI_MinorError, 0);
 }
 
@@ -2939,6 +2921,8 @@ update_vt52_vt100_settings(void)
 }
 #endif
 
+#define TRACE_GSETS(name) TRACE(("CASE_GSETS%s(%d) = '%c'\n", name, sp->scstype, AsciiOf(c)))
+
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
@@ -3047,7 +3031,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #if OPT_VT52_MODE
 	if (sp->vt52_cup) {
 	    if (nparam < NPARAM - 1) {
-		SetParam(nparam++, (int) (c & 0x7f) - 32);
+		SetParam(nparam++, (int) AsciiOf(c) - 32);
 		parms.is_sub[nparam] = 0;
 	    }
 	    if (nparam < 2)
@@ -3092,7 +3076,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    }
 	} else
 #endif
-	    sp->nextstate = sp->parsestate[E2A(c)];
+	    sp->nextstate = sp->parsestate[c];
 
 #if OPT_BROKEN_OSC
 	/*
@@ -3161,7 +3145,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		&& (c >= 128 && c < 256)) {
 		sp->nextstate = (sp->parsestate == esc_table
 				 ? CASE_ESC_IGNORE
-				 : sp->parsestate[E2A(160)]);
+				 : sp->parsestate[160]);
 		TRACE(("allowC1Printable %04X %s ->%s\n",
 		       c, which_table(sp->parsestate),
 		       visibleVTparse(sp->nextstate)));
@@ -3212,7 +3196,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * doing this for so long we shouldn't change this behavior.
 	     */
 	    if (screen->vtXX_level < 1)
-		c &= 0x7f;
+		c = AsciiOf(c);
 #endif
 	    sp->print_area[sp->print_used++] = (IChar) c;
 	    sp->lastchar = thischar = (int) c;
@@ -3256,7 +3240,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    else if (sp->string_args == sa_SIXEL) {
 		/* avoid adding the string-terminator */
 		if (sos_table[CharOf(c)] == CASE_IGNORE)
-		    parse_sixel_char((char) c);
+		    parse_sixel_char(AsciiOf(c));
 	    }
 #endif
 	    else if (sp->string_skip) {
@@ -3279,7 +3263,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * parameters to the first non-parameter character and
 		 * inspecting it.  Since both are DCS, we can also ignore OSC.
 		 */
-		sp->string_area[(sp->string_used)++] = CharOf(c);
+		sp->string_area[(sp->string_used)++] = AsciiOf(c);
 		if (sp->string_args < sa_LAST) {
 		    switch (c) {
 		    case ':':
@@ -3543,16 +3527,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_DECDHL:
-	    xterm_DECDHL(xw, c == '3');
+	    TRACE(("CASE_DECDHL - double-height line: %s\n",
+		   (AsciiOf(c) == '3') ? "top" : "bottom"));
+	    xterm_DECDHL(xw, AsciiOf(c) == '3');
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECSWL:
+	    TRACE(("CASE_DECSWL - single-width line\n"));
 	    xterm_DECSWL(xw);
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECDWL:
+	    TRACE(("CASE_DECDWL - double-width line\n"));
 	    xterm_DECDWL(xw);
 	    ResetState(sp);
 	    break;
@@ -3606,7 +3594,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    /* digit in csi or dec mode */
 	    if (nparam > 0) {
 		value = zero_if_default(nparam - 1);
-		SetParam(nparam - 1, (10 * value) + ((int) c - '0'));
+		SetParam(nparam - 1, (10 * value) + (int) (AsciiOf(c) - '0'));
 		if (GetParam(nparam - 1) > MAX_I_PARAM)
 		    SetParam(nparam - 1, MAX_I_PARAM);
 		if (sp->parsestate == csi_table)
@@ -4560,7 +4548,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS5:
 	    if (screen->vtXX_level >= 5) {
-		TRACE(("CASE_GSETS5(%d) = '%c'\n", sp->scstype, c));
+		TRACE_GSETS("5");
 		xtermDecodeSCS(xw, sp->scstype, 5, 0, (int) c);
 	    }
 	    ResetState(sp);
@@ -4568,18 +4556,18 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS3:
 	    if (screen->vtXX_level >= 3) {
-		TRACE(("CASE_GSETS3(%d) = '%c'\n", sp->scstype, c));
+		TRACE_GSETS("3");
 		xtermDecodeSCS(xw, sp->scstype, 3, 0, (int) c);
 	    }
 	    ResetState(sp);
 	    break;
 
 	case CASE_GSETS:
-	    if (strchr("012AB", (int) c) != 0) {
-		TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
+	    if (strchr("012AB", AsciiOf(c)) != 0) {
+		TRACE_GSETS("");
 		xtermDecodeSCS(xw, sp->scstype, 1, 0, (int) c);
 	    } else if (screen->vtXX_level >= 2) {
-		TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
+		TRACE_GSETS("");
 		xtermDecodeSCS(xw, sp->scstype, 2, 0, (int) c);
 	    }
 	    ResetState(sp);
@@ -5366,10 +5354,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECFRA:
 	    if (screen->vtXX_level >= 4) {
-		value = zero_if_default(0);
+		value = use_default_value(0, ' ');
 
 		TRACE(("CASE_DECFRA - Fill rectangular area\n"));
-		if (nparam > 0 && CharWidth(screen, value) > 0) {
+		/* DEC 070, page 5-170 says the fill-character is either
+		 * ASCII or Latin1; xterm allows printable Unicode values.
+		 */
+		if (nparam > 0
+		    && ((value >= 256 && CharWidth(screen, value) > 0)
+			|| IsLatin1(value))) {
 		    xtermParseRect(xw, ParamPair(1), &myRect);
 		    ScrnFillRectangle(xw, &myRect, value, xw->flags, True);
 		}
@@ -5926,19 +5919,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_UTF8 wide:%d, utf8:%d, req:%s\n",
 		   screen->wide_chars,
 		   screen->utf8_mode,
-		   BtoS(c == 'G')));
-	    if ((!screen->wide_chars) && (c == 'G')) {
+		   BtoS(AsciiOf(c) == 'G')));
+	    if ((!screen->wide_chars) && (AsciiOf(c) == 'G')) {
 		WriteNow();
 		ChangeToWide(xw);
 	    }
 	    if (screen->wide_chars
 		&& !screen->utf8_always) {
-		switchPtyData(screen, c == 'G');
+		switchPtyData(screen, AsciiOf(c) == 'G');
 		TRACE(("UTF8 mode %s\n",
 		       BtoS(screen->utf8_mode)));
 	    } else {
 		TRACE(("UTF8 mode NOT turned %s (%s)\n",
-		       BtoS(c == 'G'),
+		       BtoS(AsciiOf(c) == 'G'),
 		       (screen->utf8_mode == uAlways)
 		       ? "UTF-8 mode set from command-line"
 		       : "wideChars resource was not set"));
@@ -5953,7 +5946,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS_DQUOTE:
 	    if (screen->vtXX_level >= 5) {
-		TRACE(("CASE_GSETS_DQUOTE(%d) = '%c'\n", sp->scstype, c));
+		TRACE_GSETS("_DQUOTE");
 		xtermDecodeSCS(xw, sp->scstype, 5, '"', (int) c);
 	    }
 	    ResetState(sp);
@@ -5966,7 +5959,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS_AMPRSND:
 	    if (screen->vtXX_level >= 5) {
-		TRACE(("CASE_GSETS_AMPRSND(%d) = '%c'\n", sp->scstype, c));
+		TRACE_GSETS("_AMPRSND");
 		xtermDecodeSCS(xw, sp->scstype, 5, '&', (int) c);
 	    }
 	    ResetState(sp);
@@ -5979,8 +5972,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS_PERCENT:
 	    if (screen->vtXX_level >= 3) {
-		TRACE(("CASE_GSETS_PERCENT(%d) = '%c'\n", sp->scstype, c));
-		switch (c) {
+		TRACE_GSETS("_PERCENT");
+		switch (AsciiOf(c)) {
 		case '0':	/* DEC Turkish */
 		case '2':	/* Turkish */
 		case '=':	/* Hebrew */
@@ -6221,17 +6214,10 @@ v_write(int f, const Char *data, size_t len)
 	fprintf(stderr, "\n");
     });
 
-#ifdef VMS
-    if ((1 << f) != pty_mask) {
-	tt_write((const char *) data, len);
-	return;
-    }
-#else /* VMS */
     if (!FD_ISSET(f, &pty_mask)) {
 	IGNORE_RC(write(f, (const char *) data, (size_t) len));
 	return;
     }
-#endif /* VMS */
 
     /*
      * Append to the block we already have.
@@ -6305,20 +6291,11 @@ v_write(int f, const Char *data, size_t len)
     if (v_bufptr > v_bufstr) {
 	int riten;
 
-#ifdef VMS
-	riten = tt_write(v_bufstr,
-			 (size_t) ((v_bufptr - v_bufstr <= VMS_TERM_BUFFER_SIZE)
-				   ? v_bufptr - v_bufstr
-				   : VMS_TERM_BUFFER_SIZE));
-	if (riten == 0)
-	    return (riten);
-#else /* VMS */
 	riten = (int) write(f, v_bufstr,
 			    (size_t) ((v_bufptr - v_bufstr <= MAX_PTY_WRITE)
 				      ? v_bufptr - v_bufstr
 				      : MAX_PTY_WRITE));
 	if (riten < 0)
-#endif /* VMS */
 	{
 	    if_DEBUG({
 		perror("write");
@@ -6413,84 +6390,6 @@ update_the_screen(XtermWidget xw)
 	updateCursor(xw);
     }
 }
-
-#ifdef VMS
-#define	ptymask()	(v_bufptr > v_bufstr ? pty_mask : 0)
-
-static void
-in_put(XtermWidget xw)
-{
-    static PtySelect select_mask;
-    static PtySelect write_mask;
-    int update = VTbuffer->update;
-    int size;
-
-    int status;
-    Dimension replyWidth, replyHeight;
-    XtGeometryResult stat;
-
-    TScreen *screen = TScreenOf(xw);
-    char *cp;
-    int i;
-
-    select_mask = pty_mask;	/* force initial read */
-    for (;;) {
-
-	/* if the terminal changed size, resize the widget */
-	if (tt_changed) {
-	    tt_changed = False;
-
-	    stat = REQ_RESIZE((Widget) xw,
-			      ((Dimension) FontWidth(screen)
-			       * (tt_width)
-			       + 2 * screen->border
-			       + screen->fullVwin.sb_info.width),
-			      ((Dimension) FontHeight(screen)
-			       * (tt_length)
-			       + 2 * screen->border),
-			      &replyWidth, &replyHeight);
-
-	    if (stat == XtGeometryYes || stat == XtGeometryDone) {
-		xw->core.width = replyWidth;
-		xw->core.height = replyHeight;
-
-		ScreenResize(xw, replyWidth, replyHeight, &xw->flags);
-	    }
-	    repairSizeHints();
-	}
-
-	if (screen->eventMode == NORMAL
-	    && readPtyData(xw, &select_mask, VTbuffer)) {
-	    if (screen->scrollWidget
-		&& screen->scrollttyoutput
-		&& screen->topline < 0)
-		/* Scroll to bottom */
-		WindowScroll(xw, 0, False);
-	    break;
-	}
-	update_the_screen(xw);
-
-	if (QLength(screen->display)) {
-	    select_mask = X_mask;
-	} else {
-	    write_mask = ptymask();
-	    XFlush(screen->display);
-	    select_mask = Select_mask;
-	    if (screen->eventMode != NORMAL)
-		select_mask = X_mask;
-	}
-	if (write_mask & ptymask()) {
-	    v_write(screen->respond, 0, 0);	/* flush buffer */
-	}
-
-	if (select_mask & X_mask) {
-	    xevents(xw);
-	    if (VTbuffer->update != update)
-		break;
-	}
-    }
-}
-#else /* VMS */
 
 static void
 init_timeval(struct timeval *target, long usecs)
@@ -6686,7 +6585,6 @@ in_put(XtermWidget xw)
 
     }
 }
-#endif /* VMS */
 
 static IChar
 doinput(XtermWidget xw)
@@ -7375,6 +7273,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_RXVT_TOOLBAR:
 	    ShowToolbar(IsSM());
 	    break;
+#else
+	case srm_DECEDM:	/* vt330:edit */
+	    break;
 #endif
 #if OPT_BLINK_CURS
 	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
@@ -7388,6 +7289,11 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 	case srm_XOR_CURSOR_BLINKS:
 	    /* intentionally ignored (this is user-preference) */
+	    break;
+#else
+	case srm_DECKANAM:	/* vt382:Katakana shift */
+	case srm_DECSCFDM:	/* vt330:space compression field delimiter */
+	case srm_DECTEM:	/* vt330:transmission execution */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -7739,25 +7645,29 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 #endif
+	case srm_DEC131TM:	/* ignore */
+	case srm_DECAAM:	/* ignore */
 	case srm_DECARSM:	/* ignore */
 	case srm_DECATCBM:	/* ignore */
 	case srm_DECATCUM:	/* ignore */
 	case srm_DECBBSM:	/* ignore */
-	case srm_DECCAAM:	/* ignore */
 	case srm_DECCANSM:	/* ignore */
 	case srm_DECCAPSLK:	/* ignore */
 	case srm_DECCRTSM:	/* ignore */
 	case srm_DECECM:	/* ignore */
+	case srm_DECEKEM:	/* ignore */
+	case srm_DECESKM:	/* ignore */
 	case srm_DECFWM:	/* ignore */
+	case srm_DECHCCM:	/* ignore */
 	case srm_DECHDPXM:	/* ignore */
 	case srm_DECHEM:	/* ignore */
-	case srm_DECHCCM:	/* ignore */
 	case srm_DECHWUM:	/* ignore */
 	case srm_DECIPEM:	/* ignore */
 	case srm_DECKBUM:	/* ignore */
 	case srm_DECKLHIM:	/* ignore */
+	case srm_DECKKDM:	/* ignore */
 	case srm_DECKPM:	/* ignore */
-	case srm_DECRLM:	/* ignore */
+	case srm_DECLTM:	/* ignore */
 	case srm_DECMCM:	/* ignore */
 	case srm_DECNAKB:	/* ignore */
 	case srm_DECNULM:	/* ignore */
@@ -7765,6 +7675,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_DECOSCNM:	/* ignore */
 	case srm_DECPCCM:	/* ignore */
 	case srm_DECRLCM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
@@ -7824,6 +7735,9 @@ savemodes(XtermWidget xw)
 	case srm_RXVT_TOOLBAR:
 	    DoSM(DP_TOOLBAR, resource.toolBar);
 	    break;
+#else
+	case srm_DECEDM:	/* vt330:edit */
+	    break;
 #endif
 #if OPT_BLINK_CURS
 	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
@@ -7836,6 +7750,11 @@ savemodes(XtermWidget xw)
 	    break;
 	case srm_XOR_CURSOR_BLINKS:
 	    /* intentionally ignored (this is user-preference) */
+	    break;
+#else
+	case srm_DECKANAM:	/* vt382:Katakana shift */
+	case srm_DECSCFDM:	/* vt330:space compression field delimiter */
+	case srm_DECTEM:	/* vt330:transmission execution */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -8067,15 +7986,18 @@ savemodes(XtermWidget xw)
 	    DoSM(DP_SIXEL_SCROLLS_RIGHT, screen->sixel_scrolls_right);
 	    break;
 #endif
+	case srm_DEC131TM:	/* ignore */
+	case srm_DECAAM:	/* ignore */
 	case srm_DECARSM:	/* ignore */
 	case srm_DECATCBM:	/* ignore */
 	case srm_DECATCUM:	/* ignore */
 	case srm_DECBBSM:	/* ignore */
-	case srm_DECCAAM:	/* ignore */
 	case srm_DECCANSM:	/* ignore */
 	case srm_DECCAPSLK:	/* ignore */
 	case srm_DECCRTSM:	/* ignore */
 	case srm_DECECM:	/* ignore */
+	case srm_DECEKEM:	/* ignore */
+	case srm_DECESKM:	/* ignore */
 	case srm_DECFWM:	/* ignore */
 	case srm_DECHCCM:	/* ignore */
 	case srm_DECHDPXM:	/* ignore */
@@ -8083,9 +8005,10 @@ savemodes(XtermWidget xw)
 	case srm_DECHWUM:	/* ignore */
 	case srm_DECIPEM:	/* ignore */
 	case srm_DECKBUM:	/* ignore */
+	case srm_DECKKDM:	/* ignore */
 	case srm_DECKLHIM:	/* ignore */
 	case srm_DECKPM:	/* ignore */
-	case srm_DECRLM:	/* ignore */
+	case srm_DECLTM:	/* ignore */
 	case srm_DECMCM:	/* ignore */
 	case srm_DECNAKB:	/* ignore */
 	case srm_DECNULM:	/* ignore */
@@ -8093,6 +8016,7 @@ savemodes(XtermWidget xw)
 	case srm_DECOSCNM:	/* ignore */
 	case srm_DECPCCM:	/* ignore */
 	case srm_DECRLCM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
@@ -8181,6 +8105,9 @@ restoremodes(XtermWidget xw)
 	    DoRM(DP_TOOLBAR, resource.toolBar);
 	    ShowToolbar(resource.toolBar);
 	    break;
+#else
+	case srm_DECEDM:	/* vt330:edit */
+	    break;
 #endif
 #if OPT_BLINK_CURS
 	case srm_ATT610_BLINK:	/* Start/stop blinking cursor */
@@ -8194,6 +8121,11 @@ restoremodes(XtermWidget xw)
 	    break;
 	case srm_XOR_CURSOR_BLINKS:
 	    /* intentionally ignored (this is user-preference) */
+	    break;
+#else
+	case srm_DECKANAM:	/* vt382:Katakana shift */
+	case srm_DECSCFDM:	/* vt330:space compression field delimiter */
+	case srm_DECTEM:	/* vt330:transmission execution */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -8488,15 +8420,18 @@ restoremodes(XtermWidget xw)
 		   BtoS(screen->sixel_scrolls_right)));
 	    break;
 #endif
+	case srm_DEC131TM:	/* ignore */
+	case srm_DECAAM:	/* ignore */
 	case srm_DECARSM:	/* ignore */
 	case srm_DECATCBM:	/* ignore */
 	case srm_DECATCUM:	/* ignore */
 	case srm_DECBBSM:	/* ignore */
-	case srm_DECCAAM:	/* ignore */
 	case srm_DECCANSM:	/* ignore */
 	case srm_DECCAPSLK:	/* ignore */
 	case srm_DECCRTSM:	/* ignore */
 	case srm_DECECM:	/* ignore */
+	case srm_DECEKEM:	/* ignore */
+	case srm_DECESKM:	/* ignore */
 	case srm_DECFWM:	/* ignore */
 	case srm_DECHCCM:	/* ignore */
 	case srm_DECHDPXM:	/* ignore */
@@ -8504,9 +8439,10 @@ restoremodes(XtermWidget xw)
 	case srm_DECHWUM:	/* ignore */
 	case srm_DECIPEM:	/* ignore */
 	case srm_DECKBUM:	/* ignore */
+	case srm_DECKKDM:	/* ignore */
 	case srm_DECKLHIM:	/* ignore */
 	case srm_DECKPM:	/* ignore */
-	case srm_DECRLM:	/* ignore */
+	case srm_DECLTM:	/* ignore */
 	case srm_DECMCM:	/* ignore */
 	case srm_DECNAKB:	/* ignore */
 	case srm_DECNULM:	/* ignore */
@@ -8514,6 +8450,7 @@ restoremodes(XtermWidget xw)
 	case srm_DECOSCNM:	/* ignore */
 	case srm_DECPCCM:	/* ignore */
 	case srm_DECRLCM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
@@ -9027,8 +8964,8 @@ unparseputc1(XtermWidget xw, int c)
 {
     if (c >= 0x80 && c <= 0x9F) {
 	if (!TScreenOf(xw)->control_eight_bits) {
-	    unparseputc(xw, A2E(ANSI_ESC));
-	    c = A2E(c - 0x40);
+	    unparseputc(xw, ANSI_ESC);
+	    c = c - 0x40;
 	}
     }
     unparseputc(xw, c);
@@ -9181,11 +9118,7 @@ unparse_end(XtermWidget xw)
 	TRACE(("unparse_end %u:%s\n",
 	       screen->unparse_len,
 	       visibleIChars(screen->unparse_bfr, (size_t) screen->unparse_len)));
-#ifdef VMS
-	tt_write(screen->unparse_bfr, screen->unparse_len);
-#else /* VMS */
 	writePtyData(screen->respond, screen->unparse_bfr, (size_t) screen->unparse_len);
-#endif /* VMS */
 	screen->unparse_len = 0;
     }
 }
@@ -9313,7 +9246,7 @@ VTRun(XtermWidget xw)
 
     TRACE(("VTRun ...\n"));
 
-    if (!screen->Vshow) {
+    if (!screen->Vshow && !resource.notMapped) {
 	set_vt_visibility(True);
     }
     update_vttekmode();

@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.240 2023/10/14 16:52:49 tom Exp $ */
+/* $XTermId: trace.c,v 1.243 2024/09/30 07:36:29 tom Exp $ */
 
 /*
- * Copyright 1997-2022,2023 by Thomas E. Dickey
+ * Copyright 1997-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -223,7 +223,7 @@ formatAscii(char *dst, unsigned value)
 	sprintf(dst, "\\t");
 	break;
     default:
-	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
+	if (value < 32 || (value >= 127 && value < 160))
 	    sprintf(dst, "\\%03o", value & 0xff);
 	else
 	    sprintf(dst, "%c", CharOf(value));
@@ -289,6 +289,8 @@ visibleScsCode(DECNRCM_codes chrset)
 	MAP("Y", nrc_Italian);
 	MAP("A", nrc_ISO_Latin_1_Supp);
 	MAP("B", nrc_ISO_Latin_2_Supp);
+	MAP("I", nrc_JIS_Katakana);
+	MAP("J", nrc_JIS_Roman);
 	MAP("M", nrc_ISO_Latin_5_Supp);
 	MAP("L", nrc_ISO_Latin_Cyrillic);
 	MAP("`", nrc_Norwegian_Danish);
@@ -784,7 +786,7 @@ formatEventMask(char *target, unsigned source, Boolean buttons)
 }
 
 void
-TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
+TraceEvent(const char *tag, XEvent *ev, String *params, const Cardinal *num_params)
 {
     char mask_buffer[160];
 

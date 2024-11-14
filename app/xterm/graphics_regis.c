@@ -1,8 +1,8 @@
-/* $XTermId: graphics_regis.c,v 1.149 2023/10/08 23:11:35 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.150 2024/09/01 22:49:10 tom Exp $ */
 
 /*
+ * Copyright 2014-2023,2024 by Thomas E. Dickey
  * Copyright 2014-2022,2023 by Ross Combs
- * Copyright 2014-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4169,9 +4169,6 @@ load_regis_write_control(RegisParseState *state,
 	    if (!regis_num_to_int(arg, &val) || val < 0 || val >= 1) {
 		TRACE(("DATA_ERROR: interpreting out of range value as 0 FIXME\n"));
 		break;
-	    }
-	    if (val == 1) {
-		TRACE(("ERROR: blink display method not supported FIXME\n"));
 	    }
 	}
 	break;

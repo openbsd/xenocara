@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.948 2024/06/26 07:45:55 tom Exp $ */
+/* $XTermId: xterm.h,v 1.952 2024/09/30 08:03:20 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -123,7 +123,7 @@
 #define HAVE_UTMP 1
 #endif
 
-#if (defined(__MVS__) || defined(SVR4) || defined(__SCO__) || defined(BSD_UTMPX)) && !defined(__CYGWIN__)
+#if (defined(SVR4) || defined(__SCO__) || defined(BSD_UTMPX)) && !defined(__CYGWIN__)
 #define UTMPX_FOR_UTMP 1
 #endif
 
@@ -131,7 +131,7 @@
 #define HAVE_UTMP_UT_HOST 1
 #endif
 
-#if defined(UTMPX_FOR_UTMP) && !(defined(__MVS__) || defined(__hpux) || defined(__FreeBSD__))
+#if defined(UTMPX_FOR_UTMP) && !(defined(__hpux) || defined(__FreeBSD__))
 #define HAVE_UTMP_UT_SESSION 1
 #endif
 
@@ -174,11 +174,11 @@
 #define USE_POSIX_WAIT
 #endif
 
-#if defined(AIXV3) || defined(CRAY) || defined(__SCO__) || defined(SVR4) || (defined(SYSV) && defined(i386)) || defined(__MVS__) || defined(__hpux) || defined(__osf__) || defined(__linux__) || defined(macII) || defined(BSD_UTMPX)
+#if defined(AIXV3) || defined(CRAY) || defined(__SCO__) || defined(SVR4) || (defined(SYSV) && defined(i386)) || defined(__hpux) || defined(__osf__) || defined(__linux__) || defined(macII) || defined(BSD_UTMPX)
 #define USE_SYSV_UTMP
 #endif
 
-#if defined(__GNU__) || defined(__MVS__) || defined(__osf__)
+#if defined(__GNU__) || defined(__osf__)
 #define USE_TTY_GROUP
 #endif
 
@@ -188,13 +188,6 @@
 
 #ifdef __osf__
 #define TTY_GROUP_NAME "terminal"
-#endif
-
-#if defined(__MVS__)
-#undef ut_xstatus
-#define ut_name ut_user
-#define ut_xstatus ut_exit.ut_e_exit
-#define ut_xtime ut_tv.tv_sec
 #endif
 
 #if defined(ut_xstatus)
@@ -209,7 +202,7 @@
 #define HAVE_POSIX_SAVED_IDS
 #endif
 
-#if defined(__linux__) || defined(__GLIBC__) || (defined(SYSV) && (defined(CRAY) || defined(macII) || defined(__hpux) || defined(__osf__) || defined(__sgi))) || !(defined(SYSV) || defined(__QNX__) || defined(VMS) || defined(__INTERIX))
+#if defined(__linux__) || defined(__GLIBC__) || (defined(SYSV) && (defined(CRAY) || defined(macII) || defined(__hpux) || defined(__osf__) || defined(__sgi))) || !(defined(SYSV) || defined(__QNX__) || defined(__INTERIX))
 #define HAVE_INITGROUPS
 #endif
 
@@ -368,9 +361,6 @@ extern int errno;
 #else
 #define Select(n,r,w,e,t) select(n,(fd_set*)r,(fd_set*)w,(fd_set*)e,(struct timeval *)t)
 #define XFD_COPYSET(src,dst) memcpy((dst)->fds_bits, (src)->fds_bits, sizeof(fd_set))
-#if defined(__MVS__) && !defined(TIME_WITH_SYS_TIME)
-#define TIME_WITH_SYS_TIME
-#endif
 #endif
 
 #ifdef TIME_WITH_SYS_TIME
@@ -400,7 +390,7 @@ extern int errno;
 
 #include <setjmp.h>
 
-#if !defined(VMS) && !(defined(__linux__) && defined(__USE_GNU)) && !defined(__hpux) && !defined(_ALL_SOURCE) && !defined(__osf__)
+#if !(defined(__linux__) && defined(__USE_GNU)) && !defined(__hpux) && !defined(_ALL_SOURCE) && !defined(__osf__)
 extern char **environ;
 #endif
 
@@ -610,6 +600,7 @@ extern char **environ;
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
 #define XtNnextEventDelay	"nextEventDelay"
+#define XtNnotMapped		"notMapped"
 #define XtNnumColorRegisters	"numColorRegisters"
 #define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
@@ -868,6 +859,7 @@ extern char **environ;
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
 #define XtCNextEventDelay	"NextEventDelay"
+#define XtCNotMapped		"NotMapped"
 #define XtCNumColorRegisters	"NumColorRegisters"
 #define XtCNumLock		"NumLock"
 #define XtCOldXtermFKeys	"OldXtermFKeys"
@@ -1142,7 +1134,7 @@ extern void releaseCursorGCs(XtermWidget /*xw*/);
 extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
 extern void resetCharsets (TScreen * /* screen */);
 extern void resetMargins (XtermWidget /* xw */);
-extern void restoreCharsets (TScreen * /* screen */, DECNRCM_codes * /* source */);
+extern void restoreCharsets (TScreen * /* screen */, const DECNRCM_codes * /* source */);
 extern void saveCharsets (TScreen * /* screen */, DECNRCM_codes * /* target */);
 extern void set_max_col(TScreen * /* screen */, int /* cols */);
 extern void set_max_row(TScreen * /* screen */, int /* rows */);
@@ -1269,10 +1261,6 @@ extern Atom CachedInternAtom(Display * /* display */, const char * /* name */);
 
 extern int get_tty_erase(int /* fd */, int /* default_erase */, const char * /* tag */);
 extern int get_tty_lnext(int /* fd */, int /* default_lnext */, const char * /* tag */);
-
-#if (defined(VMS) || defined(__VMS))
-#define GetBytesAvailable(dpy) ((dpy)->qlen > 0)
-#endif
 
 #if OPT_PTY_HANDSHAKE
 extern void first_map_occurred (void);
@@ -1516,11 +1504,7 @@ extern void xtermDumpSvg (XtermWidget /* xw */);
 #endif
 
 /* ptydata.c */
-#ifdef VMS
-#define PtySelect int
-#else
 #define PtySelect fd_set
-#endif
 
 extern Bool decodeUtf8 (TScreen * /* screen */, PtyData * /* data */);
 extern int readPtyData (XtermWidget /* xw */, PtySelect * /* select_mask */, PtyData * /* data */);
@@ -1722,7 +1706,7 @@ extern char * xtermSetLocale (int /* category */, String /* after */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
-extern int drawXtermText (XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, Cardinal /* len */);
+extern int drawXtermText (const XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, Cardinal /* len */);
 extern int extendedBoolean (const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget /* xw */, ScrnColors * /* pNew */);
 extern void ClearLine (XtermWidget /* xw */);

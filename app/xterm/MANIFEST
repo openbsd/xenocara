@@ -1,11 +1,10 @@
-MANIFEST for xterm, version xterm-393
+MANIFEST for xterm, version xterm-395
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
 256colres.pl                    script to generate 256colres.h
 88colres.h                      resource definitions for 88-color mode
 88colres.pl                     script to generate 88colres.h
-AAA_README_VMS.txt              note for VMS port of 'xterm'
 COPYING                         license for this program
 INSTALL                         configure script: options and related install instructions
 Imakefile                       imake template for Makefile
@@ -13,7 +12,6 @@ KOI8RXTerm.ad                   resources for koi8rxterm
 Makefile.in                     configure script template for Makefile
 README                          overview & caveats for 'xterm'
 README.i18n                     i18n readme:
-README.os390                    overview for os390 (EBCDIC) port of 'xterm'
 THANKS                          list of direct contributors
 TekPrsTbl.c                     Tek4014 parser state tables
 Tekparse.def                    template for generating Tekparse.h
@@ -65,10 +63,8 @@ keysym2ucs.h                    interface of keysym2ucs.c
 koi8rxterm                      KOI-8 wrapper from Debian (originally me)
 koi8rxterm.man                  manpage for koi8rxterm
 linedata.c                      manage all line-data for VT100 widget
-link_axp.com                    build-script for VMS port of xterm
 main.c                          main program of 'xterm'
 main.h                          default definitions for 'xterm'
-make.com                        build-script for VMS port of 'xterm'
 menu.c                          popup/pulldown menus for 'xterm'
 menu.h                          interface of menu.c
 minstall.in                     script for installing manpages
@@ -99,20 +95,16 @@ uxterm.desktop                  sample desktop file for uxterm
 uxterm.man                      manpage for uxterm, from Debian
 version.c                       xterm package version, used also in resize
 version.h                       version of xterm
-vms.c                           VMS version of xterm's spawn(), etc.
-vms.h                           system headers and definitions for vms.c
 wcwidth.c                       wide-character utility functions
 wcwidth.h                       interface of wcwidth.c
 xcharmouse.h                    Jason Bacon's mouse-defs, cleaned up a little
 xstrings.c                      a few common string functions
 xstrings.h                      interface of xstrings.c
 xterm.appdata.xml               sample "appdata.xml" file
-xterm.dat                       application defaults for VMS port of 'xterm'
 xterm.desktop                   sample desktop file for xterm.
 xterm.h                         common includes, definitions and prototypes for 'xterm'
 xterm.log.html                  changelog for xterm
 xterm.man                       manual page for 'xterm'
-xterm_axp.opt                   linker options file for VMS port of 'xterm'
 xterm_io.h                      split-out definitions of termio/termios/sgtty and winsize from main.c, os2main.c, screen.c and resize.c
 xtermcap.c                      termcap-related functions.
 xtermcap.h                      interface of xtermcap.c

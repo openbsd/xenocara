@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.950 2024/07/10 20:22:19 tom Exp $ */
+/* $XTermId: util.c,v 1.955 2024/09/01 22:51:57 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3702,7 +3702,7 @@ fixupItalics(XTermDraw * params,
 
 #if OPT_DEC_CHRSET
 static int
-fakeDoubleChars(XTermDraw * params,
+fakeDoubleChars(const XTermDraw * params,
 		GC gc,
 		int y,
 		int x,
@@ -3905,8 +3905,11 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
 				 ? XTermFontsRef(screen->fnts,
 						 (VTFontEnum) (xf - fn))
 				 : fp))) {
+	    unsigned part = ucs2dec(screen, ch);
+	    if (xtermIsDecGraphic(part) && ch > 255)
+		ch = (IChar) part;
 	    x = xtermPartString16(screen, flags, gc, x, y, dst);
-	    if (xtermIsDecTechnical(ch)) {
+	    if (xtermIsInternalCs(ch)) {
 		xtermDrawBoxChar(params, ch, gc,
 				 x, y - FontAscent(screen), 1, False);
 		x += FontWidth(screen);
@@ -3968,7 +3971,7 @@ xtermDrawString(TScreen *screen, unsigned flags, GC gc, int x, int y, int length
  * value is the updated x position.
  */
 int
-drawXtermText(XTermDraw * params,
+drawXtermText(const XTermDraw * params,
 	      GC gc,
 	      int start_x,
 	      int start_y,
@@ -4496,6 +4499,7 @@ drawXtermText(XTermDraw * params,
 	    Bool isMissing;
 	    int ch_width;
 #if OPT_WIDE_CHARS
+	    unsigned part;
 
 	    if (ch == HIDDEN_CHAR) {
 		if (last > first) {
@@ -4533,8 +4537,8 @@ drawXtermText(XTermDraw * params,
 		if (!isMissing
 		    && TScreenOf(recur.xw)->force_box_chars) {
 		    if (ch > 255
-			&& ucs2dec(screen, ch) < 32) {
-			ch = ucs2dec(screen, ch);
+			&& (part = ucs2dec(screen, ch)) < 32) {
+			ch = part;
 			isMissing = True;
 		    } else if (ch < 32) {
 			isMissing = True;
@@ -4557,7 +4561,9 @@ drawXtermText(XTermDraw * params,
 		    ch_width = 1;	/* special case for line-drawing */
 		else if (ch_width < 0)
 		    ch_width = 1;	/* special case for combining char */
-		if (!ucs_workaround(&recur, ch, gc, x, y)) {
+		if (ch > 255 && (part = ucs2dec(screen, ch)) < 32) {
+		    xtermDrawBoxChar(&recur, part, gc, x, y, 1, False);
+		} else if (!ucs_workaround(&recur, ch, gc, x, y)) {
 		    xtermDrawBoxChar(&recur, ch, gc, x, y, ch_width, False);
 		}
 #else
@@ -5269,7 +5275,7 @@ typedef struct _DimColorHT {
 } DimColorHT;
 
 static unsigned
-jhash1(unsigned char *key, size_t len)
+jhash1(const unsigned char *key, size_t len)
 {
     unsigned hash;
     size_t i;

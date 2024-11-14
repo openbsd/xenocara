@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2635 2024/07/11 23:37:57 tom Exp $
+  $XTermId: xterm.log.html,v 1.2653 2024/10/24 08:21:09 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -70,6 +70,10 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_395">Patch #395 - 2024/10/24</a></li>
+
+    <li><a href="#xterm_394">Patch #394 - 2024/09/02</a></li>
+
     <li><a href="#xterm_393">Patch #393 - 2024/07/11</a></li>
 
     <li><a href="#xterm_392">Patch #392 - 2024/05/22</a></li>
@@ -1062,6 +1066,62 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_395" id="xterm_395">Patch #395 -
+  2024/10/24</a></h1>
+
+  <ul>
+    <li>add <tt>DECRQSS</tt> response for <tt>DECSTGLT</tt>, i.e.,
+    ANSI SGR color.</li>
+
+    <li>add Russian and SCS NRCS character set mappings.</li>
+
+    <li>remove obsolete code for OS390 and VMS.</li>
+
+    <li>minor fixes to work with vttest 20240929's 7-bit parsing
+    test.</li>
+
+    <li>improve DECRPM responses for unsupported modes; those which
+    are valid for a given DEC terminal are reported as permanently
+    reset rather than unknown.</li>
+
+    <li>add JIS-Roman and JIS-Katakana character sets, for
+    VT382.</li>
+
+    <li>fix typo in <tt>ctlseqs.ms</tt> note about function key vs
+    DSR (report by Michael Thomas Greer).</li>
+
+    <li>formatting fixes for <tt>ctlseqs.ms</tt> (report by Mark
+    Manning).</li>
+
+    <li>update tables in <code>wcwidth.c</code> based on Unicode
+    16.0.0</li>
+  </ul>
+
+  <h1><a name="xterm_394" id="xterm_394">Patch #394 -
+  2024/09/02</a></h1>
+
+  <ul>
+    <li>add <tt>-nomap</tt> option (request by Tavis Ormandy).</li>
+
+    <li>improve checks for rectangle operations, per DEC 070.</li>
+
+    <li>improve check for missing characters in bitmap fonts, for a
+    case where the font is marked complete but its range does not
+    include non-Latin1 codes (prompted by discussion with Craig
+    Leres).</li>
+
+    <li>correct upper-limit in check for missing characters, from
+    <a href="#xterm_393">patch #393</a> changes (report/patch by
+    Matthew Martin).</li>
+
+    <li>fix for <tt>-report-fonts</tt> option when the font's first
+    character position is nonzero (prompted by discussion with
+    Craig Leres).</li>
+
+    <li>add null-pointer check for a Heisenbug (Debian
+    #1078255).</li>
   </ul>
 
   <h1><a name="xterm_393" id="xterm_393">Patch #393 -

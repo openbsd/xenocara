@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.108 2022/10/23 14:46:14 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.109 2024/09/01 22:49:10 tom Exp $ */
 
 /*
- * Copyright 1997-2021,2022 by Thomas E. Dickey
+ * Copyright 1997-2022,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -196,7 +196,7 @@ discard_font(XtermWidget xw, int n)
 
 /* push back existing fonts and create a new entry */
 static XTermFonts *
-pushback_font(XtermWidget xw, XTermFonts * source)
+pushback_font(XtermWidget xw, const XTermFonts * source)
 {
     TScreen *screen = TScreenOf(xw);
     XTermFonts *data = getDoubleFont(screen, 0);
@@ -219,7 +219,7 @@ pushback_font(XtermWidget xw, XTermFonts * source)
 }
 
 static int
-xterm_Double_index(XTermDraw * params)
+xterm_Double_index(const XTermDraw * params)
 {
     XTermDraw local = *params;
     int n;

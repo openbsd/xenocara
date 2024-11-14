@@ -1,4 +1,4 @@
-/* $XTermId: xterm_io.h,v 1.69 2024/05/03 23:32:26 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.71 2024/09/30 08:03:20 tom Exp $ */
 
 /*
  * Copyright 2000-2023,2024 by Thomas E. Dickey
@@ -103,11 +103,6 @@
 #define USE_POSIX_TERMIOS	/* GNU/KFreeBSD and GNU/KNetBSD */
 #endif
 
-#ifdef __MVS__
-#define SVR4
-#define USE_POSIX_TERMIOS
-#endif
-
 #ifdef __QNX__
 #define USE_POSIX_TERMIOS
 #endif
@@ -168,8 +163,6 @@
 # endif
 #elif defined(SYSV) || defined(ISC)
 # include <sys/termio.h>
-#elif !defined(VMS)
-# include <sgtty.h>
 #endif /* USE_POSIX_TERMIOS */
 
 /*
@@ -203,7 +196,7 @@
 
 #ifdef Lynx
 #include <resource.h>
-#elif !(defined(SYSV) || defined(__linux__) || defined(VMS) || (defined(__QNX__)&&!defined(__QNXNTO__)))
+#elif !(defined(SYSV) || defined(__linux__) || (defined(__QNX__)&&!defined(__QNXNTO__)))
 #include <sys/resource.h>
 #endif
 
@@ -212,7 +205,7 @@
 #undef FIONCLEX
 #endif /* macII */
 
-#if defined(__QNX__) || defined(__GNU__) || defined(__MVS__) || defined(__osf__)
+#if defined(__QNX__) || defined(__GNU__) || defined(__osf__)
 #undef TIOCSLTC			/* <sgtty.h> conflicts with <termios.h> */
 #undef TIOCSLTC
 #endif
@@ -225,7 +218,7 @@
 #include <sys/filio.h>
 #endif
 
-#if defined(TIOCSLTC) && ! (defined(__linux__) || defined(__MVS__) || defined(Lynx) || defined(SVR4))
+#if defined(TIOCSLTC) && ! (defined(__linux__) || defined(Lynx) || defined(SVR4))
 #define HAS_LTCHARS
 #endif
 

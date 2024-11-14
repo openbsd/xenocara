@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.160 2024/05/10 22:54:17 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.161 2024/09/30 07:55:25 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -251,19 +251,6 @@ readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData *data)
     TScreen *screen = TScreenOf(xw);
     int size = 0;
 
-#ifdef VMS
-    if (*select_mask & pty_mask) {
-	trimPtyData(xw, data);
-	if (read_queue.flink != 0) {
-	    size = tt_read(data->next);
-	    if (size == 0) {
-		Panic("input: read returned zero\n", 0);
-	    }
-	} else {
-	    sys$hiber();
-	}
-    }
-#else /* !VMS */
     if (FD_ISSET(screen->respond, select_mask)) {
 	int save_err;
 	trimPtyData(xw, data);
@@ -300,7 +287,6 @@ readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData *data)
 	}
 #endif /* f*ugly */
     }
-#endif /* VMS */
 
     if (size) {
 #if OPT_TRACE
