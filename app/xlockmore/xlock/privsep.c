@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.4 2024/01/22 10:13:34 claudio Exp $ */
+/* $OpenBSD: privsep.c,v 1.5 2024/11/21 13:45:40 claudio Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -83,7 +83,7 @@ pw_check(char *name, char *pass, char *style)
 static int
 send_cmd(struct imsgbuf *ibuf, char *user, char *pass, char *style)
 {
-	size_t n, datalen = 0;
+	size_t datalen = 0;
 	struct ibuf *wbuf;
 	struct priv_cmd_hdr hdr;
 
@@ -120,29 +120,11 @@ send_cmd(struct imsgbuf *ibuf, char *user, char *pass, char *style)
 		}
 	imsg_close(ibuf, wbuf);
 
-	if ((n = msgbuf_write(&ibuf->w)) == -1 && errno != EAGAIN) {
-		warn("imsg_write");
+	if (imsgbuf_write(ibuf) == -1) {
+		warn("imsgbuf_write");
 		return -1;
 	}
-	if (n == 0)
-		return -1;
 	return 0;
-}
-
-static char *
-ibuf_get_string(struct ibuf *buf, size_t len)
-{
-	char *str;
-
-	if (ibuf_size(buf) < len) {
-		errno = EBADMSG;
-		return (NULL);
-	}
-	str = strndup(ibuf_data(buf), len);
-	if (str == NULL)
-		return (NULL);
-	buf->rpos += len;
-	return (str);
 }
 
 static int
@@ -154,8 +136,8 @@ receive_cmd(struct imsgbuf *ibuf, char **name, char **pass, char **style)
 	ssize_t n, nread;
 
 	do {
-		if ((nread = imsg_read(ibuf)) == -1 && errno != EAGAIN) {
-			warn("imsg_read");
+		if ((nread = imsgbuf_read(ibuf)) == -1) {
+			warn("imsgbuf_read");
 			return -1;
 		}
 		if (nread == 0) {
@@ -196,7 +178,7 @@ send_result(struct imsgbuf *ibuf, int result)
 {
 	imsg_compose(ibuf, XLOCK_CHECKPW_RESULT, 0, 0, -1,
 		     &result, sizeof(int));
-	return msgbuf_write(&ibuf->w);
+	return imsgbuf_write(ibuf);
 }
 
 static int
@@ -207,7 +189,7 @@ receive_result(struct imsgbuf *ibuf, int *presult)
 	struct imsg imsg;
 
 	do {
-		if ((nread = imsg_read(ibuf)) == -1 && errno != EAGAIN)
+		if ((nread = imsgbuf_read(ibuf)) == -1)
 			return -1;
 		if (nread == 0)
 			return -1;
@@ -244,7 +226,8 @@ priv_init(gid_t gid)
 				return -1;
 		}
 		close(socks[0]);
-		imsg_init(&parent_ibuf, socks[1]);
+		if (imsgbuf_init(&parent_ibuf, socks[1]) == -1)
+			return -1;
 		priv_inited = 1;
 		return 0;
 	}
@@ -253,7 +236,8 @@ priv_init(gid_t gid)
 
 	setproctitle("[priv]");
 
-	imsg_init(&child_ibuf, socks[0]);
+	if (imsgbuf_init(&child_ibuf, socks[0]) == -1)
+		err(1, "imsgbuf_init");
 
 	if (unveil(_PATH_LOGIN_CONF, "r") == -1)
 		err(1, "unveil %s", _PATH_LOGIN_CONF);
