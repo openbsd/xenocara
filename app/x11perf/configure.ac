@@ -76,6 +76,8 @@ yes)
 esac
 
 AC_CHECK_FUNCS([srand_deterministic])
+
+# Substitute config variables in man pages
 AC_CONFIG_FILES([man/x11perf.1:man/x11perf.man])
 AC_CONFIG_FILES([man/x11perfcomp.1:man/x11perfcomp.man])
 AC_CONFIG_FILES([man/Xmark.1:man/Xmark.man])
