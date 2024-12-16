@@ -418,12 +418,12 @@ InitShmImage(XParms xp, Parms p, int64_t reps, Bool read_only)
     	free(segsa);
     	free(segsb);
     	return False;
-    }	
+    }
     shm_image = *image;
     image_size = image->bytes_per_line * image->height;
     /* allow XYPixmap choice: */
-    if(p->font)image_size *= xp->vinfo.depth;
-    shm_info.shmid = shmget(IPC_PRIVATE, image_size, IPC_CREAT|0700);
+    if(p->font && strcmp(p->font, "XYBitmap") != 0) image_size *= xp->vinfo.depth;
+    shm_info.shmid = shmget(IPC_PRIVATE, image_size, IPC_CREAT|0777);
     if (shm_info.shmid < 0)
     {
 	/*
