@@ -11325,6 +11325,8 @@ then :
 
 fi
 
+
+# Substitute config variables in man pages
 ac_config_files="$ac_config_files man/x11perf.1:man/x11perf.man"
 
 ac_config_files="$ac_config_files man/x11perfcomp.1:man/x11perfcomp.man"
