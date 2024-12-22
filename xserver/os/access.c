@@ -1864,7 +1864,7 @@ siHostnameAddrMatch(int family, void *addr, int len,
         char hostname[SI_HOSTNAME_MAXLEN];
         int f, hostaddrlen;
         void *hostaddr;
-        const char **addrlist;
+        char **addrlist;
 
         if (siAddrLen >= sizeof(hostname))
             return FALSE;
@@ -1889,7 +1889,9 @@ siHostnameAddrMatch(int family, void *addr, int len,
                 if ((f == family) && (len == hostaddrlen) &&
                     (memcmp(addr, hostaddr, len) == 0)) {
                     res = TRUE;
+#ifdef h_addr
                     break;
+#endif
                 }
             }
         }
