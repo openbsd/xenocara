@@ -177,7 +177,8 @@ static void Initialize (Widget greq, Widget gnew,
     if (w->clock.shape_window && !XShapeQueryExtension (XtDisplay (w),
 							&shape_event_base,
 							&shape_error_base))
-    w->clock.shape_window = False;
+        w->clock.shape_window = False;
+
     w->clock.shape_mask = 0;
     w->clock.shapeGC = NULL;
     w->clock.shape_width = 0;
@@ -189,11 +190,8 @@ static void Resize (Widget widget)
 {
     ClockWidget	w = (ClockWidget) widget;
     XGCValues	xgcv;
-    Widget	parent;
     XWindowChanges	xwc;
     int		face_width, face_height;
-    int		x, y;
-    Pixmap	shape_mask;
 
     if (!XtIsRealized((Widget) w))
 	return;
@@ -216,6 +214,9 @@ static void Resize (Widget widget)
      */
 
     if (w->clock.shape_window) {
+	Widget	parent;
+	Pixmap	shape_mask;
+	int	x, y;
 
 	SetTransform (&w->clock.t,
 			face_width, w->core.width - face_width,
@@ -476,7 +477,6 @@ check_jewel_poly (ClockWidget w, TPoint poly[POLY_SIZE])
     if (JEWEL_SIZE(w) > 0.0)
     {
 	double	x, y, size;
-	int	i;
 
 	x = JEWEL_X(w);
 	y = JEWEL_Y(w);
@@ -486,7 +486,7 @@ check_jewel_poly (ClockWidget w, TPoint poly[POLY_SIZE])
 	 * distance from the line to the center of the
 	 * circular jewel is less than the radius.
 	 */
-	for (i = 0; i < POLY_SIZE-1; i++) {
+	for (int i = 0; i < POLY_SIZE-1; i++) {
 		double	a2, b2, c2, d2;
 
 		a2 = sqr (poly[i].x - x) + sqr (poly[i].y - y);

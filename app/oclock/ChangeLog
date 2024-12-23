@@ -1,3 +1,53 @@
+commit 3803281f7466146baa0bbb54173719a77eed0ef6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 4 12:49:05 2024 -0800
+
+    oclock 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5cd1068b0a60431a80520ef11b176a9915182154
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 9 13:42:48 2024 -0800
+
+    Initialize: fix indentation of conditional clause after if statement
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/oclock/-/merge_requests/5>
+
+commit 408c2843083c89b3eaef2ad54c2706bdd038e357
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 9 13:37:47 2024 -0800
+
+    Variable scope reductions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/oclock/-/merge_requests/5>
+
+commit 414e18fa0cde56038b39e1a850abbcc3ccda500e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 9 11:59:47 2023 -0800
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c6b5813f7258bbccc8368fcdc0e1ba94219a7843
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 8 16:27:53 2023 -0800
+
+    Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e43205f548795c2cab5c1f92ca839b72d25f2a10
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 8 16:27:13 2023 -0800
+
+    Print which argument was unknown before giving usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a2ca36a770cac1684dc5e39d9b777b1b02c69114
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Aug 30 17:21:34 2022 -0700
@@ -573,7 +623,7 @@ Date:   Sun Jul 17 20:11:01 2005 +0000
     fix rules to work with non-GNU make and outside of $srcdir
 
 commit f9b186fdd589267fc8d448ffc5da6d775afe01f2
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 15:22:52 2005 +0000
 
     Add buildsystem for oclock

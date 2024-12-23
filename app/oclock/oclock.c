@@ -46,7 +46,7 @@ in this Software without prior written authorization from The Open Group.
 
 static void die ( Widget w, XtPointer client_data, XtPointer call_data );
 static void save ( Widget w, XtPointer client_data, XtPointer call_data );
-static void usage ( void );
+static void usage ( int exitval );
 static void quit ( Widget w, XEvent *event, String *params,
 		   Cardinal *num_params );
 
@@ -70,7 +70,7 @@ static void save(Widget w, XtPointer client_data, XtPointer call_data)
 
 /* Exit with message describing command line format */
 
-static void usage(void)
+static void usage(int exitval)
 {
     fprintf(stderr,
 "usage: oclock\n"
@@ -78,8 +78,10 @@ static void usage(void)
 "       [-display [{host}]:[{vs}]]\n"
 "       [-fg {color}] [-bg {color}] [-bd {color}] [-bw {pixels}]\n"
 "       [-minute {color}] [-hour {color}] [-jewel {color}]\n"
-"       [-backing {backing-store}] [-shape] [-noshape] [-transparent]\n");
-    exit(1);
+"       [-backing {backing-store}] [-shape] [-noshape] [-transparent]\n"
+"       [-help] [-version]\n"
+        );
+    exit(exitval);
 }
 
 /* Command line options table.  Only resources are entered here...there is a
@@ -107,10 +109,33 @@ main(int argc, char *argv[])
     Arg arg[2];
     int	i;
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    usage(0);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     toplevel = XtOpenApplication(&xtcontext, "Clock",
 				 options, XtNumber(options), &argc, argv, NULL,
 				 sessionShellWidgetClass, NULL, 0);
-    if (argc != 1) usage();
+    if (argc != 1) {
+	fputs("Unknown argument(s):", stderr);
+	for (int n = 1; n < argc; n++) {
+	    fprintf(stderr, " %s", argv[n]);
+	}
+	fputs("\n\n", stderr);
+	usage(1);
+    }
     XtAddCallback(toplevel, XtNsaveCallback, save, NULL);
     XtAddCallback(toplevel, XtNdieCallback, die, NULL);
 

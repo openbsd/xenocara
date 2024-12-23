@@ -75,6 +75,12 @@ fit the outline of the clock.
 .TP 8
 .B \-transparent
 causes the clock to consist only of the jewel, the hands, and the border.
+.TP 8
+.B \-help
+prints a usage message and exits.
+.TP 8
+.B \-version
+prints version info and exits.
 .SH COLORS
 If you would like your clock to be viewable in color, include the following
 in the #ifdef COLOR section you read with xrdb:

@@ -40,13 +40,12 @@ TranslatePoints(TPoint *points, int n_points,
 		Transform *t, int mode)
 {
 	XPoint	*xpoints;
-	int	i;
 	double	xoff = 0.0, yoff = 0.0;
 
 	xpoints = (XPoint *) malloc ((unsigned)n_points * sizeof (*xpoints));
 	if (!xpoints)
 		return NULL;
-	for (i = 0; i < n_points; i++) {
+	for (int i = 0; i < n_points; i++) {
 		xpoints[i].x = Xx(points[i].x + xoff, points[i].y + yoff, t);
 		xpoints[i].y = Xy(points[i].x + xoff, points[i].y + yoff, t);
 		if (mode == CoordModePrevious) {
