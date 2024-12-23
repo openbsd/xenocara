@@ -780,18 +780,21 @@ Format_Icons (const unsigned long *icon, int len)
 
     while (icon < end)
     {
-	unsigned long width, height, display_width;
+	unsigned long width, height, display_width, display_height;
 	unsigned int icon_pixel_bytes;
 	unsigned int icon_line_bytes;
 	int offset;
 	
-	width = *icon++;
-	height = *icon++;
-	display_width = width * 2; /* Two characters per icon pixel. */
+	width = display_width = *icon++;
+	height = display_height = *icon++;
+	if (is_truecolor_term())
+	    display_height /= 2; /* Two vertical icon pixels per character. */
+	else
+	    display_width *= 2;  /* Two horizontal characters per icon pixel. */
 
 	icon_pixel_bytes = 1;
 	if (is_truecolor_term())
-	    icon_pixel_bytes = 25; /* 16 control characters, and up to 9 chars of RGB. */
+	    icon_pixel_bytes = 39; /* 21 control characters, and up to 18 chars of RGB. */
 	else if (is_utf8_locale())
 	    icon_pixel_bytes = 3; /* Up to 3 bytes per character in that mode. */
 
@@ -801,7 +804,7 @@ Format_Icons (const unsigned long *icon, int len)
 	offset = (tail - result);
 	
 	alloced += 80;				/* For the header, final newline, color reset */
-	alloced += icon_line_bytes * height;	/* For the rows */
+	alloced += icon_line_bytes * display_height;	/* For the rows */
 	
 	result = realloc (result, alloced);
 	if (!result)
@@ -820,7 +823,7 @@ Format_Icons (const unsigned long *icon, int len)
 	    continue;
 	}
 	
-	for (unsigned int h = 0; h < height; ++h)
+	for (unsigned int h = 0; h < display_height; ++h)
 	{
 	    tail += sprintf (tail, "\t");
 	    
@@ -843,12 +846,19 @@ Format_Icons (const unsigned long *icon, int len)
 		if (is_truecolor_term())
 		{
 		    float opacity = a / 255.0;
+		    unsigned long pixel2 = *(icon + width - 1);
 
 		    r = r * opacity;
 		    g = g * opacity;
 		    b = b * opacity;
+		    tail += sprintf (tail, "\033[48;2;%d;%d;%d;", r, g, b);
 
-		    tail += sprintf (tail, "\033[38;2;%d;%d;%dm\342\226\210\342\226\210", r, g, b );
+		    opacity = ((pixel2 & 0xff000000) >> 24) / 255.0;
+		    r = ((pixel2 & 0x00ff0000) >> 16) * opacity;
+		    g = ((pixel2 & 0x0000ff00) >>  8) * opacity;
+		    b = ((pixel2 & 0x000000ff) >>  0) * opacity;
+		    tail += sprintf (tail, "38;2;%d;%d;%dm\342\226\204", r, g, b);
+
 		}
 		else if (is_utf8_locale())
 		{
@@ -879,12 +889,13 @@ Format_Icons (const unsigned long *icon, int len)
 		}
 	    }
 
+	    if (is_truecolor_term()) {
+	        /* Reset colors before newline to avoid bleed. */
+	        tail += sprintf (tail, "\033[0m");
+	        icon += width; /* Advance past handled row. */
+	    }
 	    tail += sprintf (tail, "\n");
 	}
-
-	/* Reset colors. */
-	if (is_truecolor_term())
-	    tail += sprintf (tail, "\033[0m");
 
 	tail += sprintf (tail, "\n");
     }

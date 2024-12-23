@@ -1,3 +1,29 @@
+commit a6906a8a067bbfaf2f4a47af1521a85340461714
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 13 16:17:48 2024 -0800
+
+    xprop 1.2.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dc2c565fac0fe747b33899eea0425bac101ddf6d
+Author: Eden Bynever <edenbynever@proton.me>
+Date:   Sun May 19 07:19:40 2024 -0400
+
+    Draw truecolor icons using dual-color half blocks
+    
+    The vast majority of monospaced fonts are roughly half as wide as they
+    are tall; to account for this when displaying icons, `xprop` draws each
+    pixel twice in the horizontal, which nicely evens out the proportions.
+    
+    This patch utilizes the Lower Half Block character (▄) to obtain the
+    same result in a quarter of the space. By setting both a background and
+    a foreground color, we can draw two pixels per character cell, thereby
+    halving the apparent height of an icon rather than doubling its width.
+    
+    Signed-off-by: Eden Bynever <edenbynever@proton.me>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xprop/-/merge_requests/10>
+
 commit 400dbeda3b1e43f7815f596679bd785e7dbb7a4d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Feb 3 14:55:48 2024 -0800
