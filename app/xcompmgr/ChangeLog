@@ -1,3 +1,88 @@
+commit 5244f3a61beb61702f6dcaca64aa99b63b78e3b9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 12 16:51:40 2024 -0800
+
+    xcompmgr 1.1.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ebc2a566d68bdfc86e94ae5e37d2ad2124095f5c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 3 11:37:48 2024 -0700
+
+    More variable scope reductions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcompmgr/-/merge_requests/6>
+
+commit 1972797736a5aa25a69c5b0ba53a33592fe1640e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 3 11:22:16 2024 -0700
+
+    Add {} around for loops containing multiple lines of code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcompmgr/-/merge_requests/6>
+
+commit 7175619585083d6378229e5f86b900472c7d7c01
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 3 11:11:42 2024 -0700
+
+    Use C99 struct initializers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcompmgr/-/merge_requests/6>
+
+commit 4c4bc9a67fbefb63e9dc1355a686622eac7a5da3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 3 10:23:12 2024 -0700
+
+    Convert sprintf calls to snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcompmgr/-/merge_requests/6>
+
+commit fb596ae3eb7a4732319391c0274c29cc5499cb23
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 3 09:38:53 2024 -0700
+
+    Use reallocarray() if it is available
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcompmgr/-/merge_requests/6>
+
+commit e455e9eb8091fa7bbcfde9fbe2920ff053f1ee9c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 3 09:30:32 2024 -0700
+
+    Handle realloc() failure
+    
+    Flagged by cppcheck:
+    
+    xcompmgr.c:2290:8: error: Common realloc mistake: 'expose_rects' nulled
+     but not freed upon failure [memleakOnRealloc]
+           expose_rects = realloc (expose_rects,
+           ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcompmgr/-/merge_requests/6>
+
+commit 062ba6bd66ac4998047467490d608d15c0f6caae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 3 09:11:17 2024 -0700
+
+    find_fade: declare argument as const
+    
+    Suggested by cppcheck:
+    
+    xcompmgr.c:211:17: style: Parameter 'w' can be declared with const
+     [constParameter]
+    find_fade (win *w)
+                    ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcompmgr/-/merge_requests/6>
+
 commit 052a0d39908a33e62f4d77b4d9e395f2f3583925
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Nov 12 11:55:23 2022 -0800
