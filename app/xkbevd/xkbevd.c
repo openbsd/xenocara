@@ -57,7 +57,6 @@ Display *       dpy = NULL;
 static const char *cfgFileName = NULL;
 int             xkbOpcode = 0;
 int             xkbEventCode = 0;
-Bool            detectableRepeat = False;
 
 static CfgEntryPtr config = NULL;
 static unsigned long eventMask = 0;
@@ -192,12 +191,14 @@ parseArgs(int argc, char *argv[])
         else if (strcmp(argv[i], "-v") == 0) {
             verbose++;
         }
-        else if (strcmp(argv[i], "-version") == 0) {
+        else if ((strcmp(argv[i], "-version") == 0) ||
+                 (strcmp(argv[i], "--version") == 0)) {
             puts(PACKAGE_STRING);
             exit(0);
         }
         else if ((strcmp(argv[i], "-?") == 0) ||
-                 (strcmp(argv[i], "-help") == 0)) {
+                 (strcmp(argv[i], "-help") == 0) ||
+                 (strcmp(argv[i], "--help") == 0)) {
             Usage(argc, argv);
             exit(0);
         }
@@ -403,7 +404,8 @@ static Bool
 ProcessMatchingConfig(XkbEvent * ev)
 {
     CfgEntryPtr cfg;
-    char buf[1024], *cmd;
+    char buf[1024];
+    const char *cmd;
     int ok;
 
     cfg = FindMatchingConfig(ev);

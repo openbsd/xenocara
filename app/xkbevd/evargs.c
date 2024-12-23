@@ -29,7 +29,7 @@
 /***====================================================================***/
 
 static char *
-AppendBellNotifyArg(char *sink, char *arg, XkbEvent *ev)
+AppendBellNotifyArg(char *sink, const char *arg, const XkbEvent *ev)
 {
     if (uStringEqual(arg, "device") || uStringEqual(arg, "D"))
         sprintf(sink, "%d", ev->bell.device);
@@ -51,7 +51,7 @@ AppendBellNotifyArg(char *sink, char *arg, XkbEvent *ev)
 }
 
 static char *
-AppendAccessXNotifyArg(char *sink, char *arg, XkbEvent *ev)
+AppendAccessXNotifyArg(char *sink, const char *arg, const XkbEvent *ev)
 {
     if (uStringEqual(arg, "device") || uStringEqual(arg, "D"))
         sprintf(sink, "%d", ev->accessx.device);
@@ -70,7 +70,7 @@ AppendAccessXNotifyArg(char *sink, char *arg, XkbEvent *ev)
 }
 
 static char *
-AppendActionMessageArg(char *sink, char *arg, XkbEvent *ev)
+AppendActionMessageArg(char *sink, const char *arg, const XkbEvent *ev)
 {
     if (uStringEqual(arg, "device") || uStringEqual(arg, "D"))
         sprintf(sink, "%d", ev->message.device);
@@ -88,7 +88,7 @@ AppendActionMessageArg(char *sink, char *arg, XkbEvent *ev)
 }
 
 static char *
-AppendEventArg(char *sink, char *arg, XkbEvent *ev)
+AppendEventArg(char *sink, const char *arg, const XkbEvent *ev)
 {
     switch (ev->any.xkb_type) {
     case XkbBellNotify:
@@ -108,10 +108,11 @@ AppendEventArg(char *sink, char *arg, XkbEvent *ev)
 }
 
 static void
-CopyEventArg(char **sink_inout, char **source_inout, XkbEvent *ev)
+CopyEventArg(char **sink_inout, const char **source_inout, const XkbEvent *ev)
 {
     char buf[1024];
-    char *source, *sink;
+    const char *source;
+    char *sink;
     char *arg;
 
     arg = buf;
@@ -150,13 +151,14 @@ CopyEventArg(char **sink_inout, char **source_inout, XkbEvent *ev)
     return;
 }
 
-char *
-SubstituteEventArgs(char *cmd, XkbEvent *ev)
+const char *
+SubstituteEventArgs(const char *cmd, const XkbEvent *ev)
 {
     static char buf[1024];
-    char *source, *sink;
+    const char *source;
+    char *sink;
 
-    if (index(cmd, '$') == NULL)
+    if (strchr(cmd, '$') == NULL)
         return cmd;
     buf[0] = '\0';
     sink = buf;

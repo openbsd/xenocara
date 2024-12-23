@@ -39,6 +39,9 @@
 #include	<X11/Xfuncs.h>
 #include 	<stdarg.h>
 #include	<stddef.h>
+#if !defined(_MSC_VER)
+#include	<strings.h>
+#endif
 
 _XFUNCPROTOBEGIN
 
@@ -87,6 +90,10 @@ extern void uInternalError(const char *s, ...) _X_ATTRIBUTE_PRINTF(1, 2);
 
 /***====================================================================***/
 
+#if defined(_MSC_VER)
+#define strcasecmp _stricmp
+#endif
+
 #define	NullString	((char *)NULL)
 
 #define	uStringText(s)		((s)==NullString?"<NullString>":(s))
@@ -94,11 +101,7 @@ extern void uInternalError(const char *s, ...) _X_ATTRIBUTE_PRINTF(1, 2);
 #define	uStringPrefix(p,s)	(strncmp(p,s,strlen(p))==0)
 #define	uStringCompare(s1,s2)	(strcmp(s1,s2))
 #define	uStrCaseEqual(s1,s2)	(uStrCaseCmp(s1,s2)==0)
-#ifdef HAVE_STRCASECMP
 #define	uStrCaseCmp(s1,s2)	(strcasecmp(s1,s2))
-#else
-extern int uStrCaseCmp(const char *s1, const char *s2);
-#endif
 #define	uStringDup(s1)		(strdup(s1))
 
 /***====================================================================***/

@@ -1,3 +1,73 @@
+commit fc79791bd8ec7adb88e206158484b940343c6765
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 4 13:19:49 2024 -0800
+
+    xkbevd 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit df09a8bd9d4692612647c5054d8113f7b83ce961
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 11 11:06:39 2024 -0800
+
+    Use _stricmp() instead of strcasecmp() on Windows
+    
+    v2: Exclude include of <strings.h> as well
+    
+    Fixes: e4bae5f ("Assume target platforms have strcasecmp now")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbevd/-/merge_requests/7>
+
+commit 53fc60d2eb2c6e3847d2e6cb6e3d3f48eaa8e0d8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 28 15:44:00 2024 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbevd/-/merge_requests/6>
+
+commit ab1024ef4bd01324d8506d069b465dacc9579165
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 28 15:23:33 2024 -0700
+
+    evargs.c: constify pointer arguments that aren't modified
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbevd/-/merge_requests/6>
+
+commit 1176594f37734c3f60a0932c1e666edb5179a702
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 28 15:12:49 2024 -0700
+
+    evargs.c: Use standard strchr() instead of deprecated index()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbevd/-/merge_requests/6>
+
+commit 7685c5d538067e726723dd99ef8108d303a9ee1a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 28 12:58:01 2024 -0700
+
+    Remove detectableRepeat variable
+    
+    The only uses of it were in the code in the '#ifdef notyet' bits
+    removed a decade ago in commit 01774fb58330733858ff41ceabe2d646d127d4f3.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbevd/-/merge_requests/6>
+
+commit e4bae5f23e2c12d2771b93adc7c686d8f600b3a9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 22 10:26:01 2024 -0700
+
+    Assume target platforms have strcasecmp now
+    
+    It has been required since Unix98/SUSv2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbevd/-/merge_requests/5>
+
 commit ca8e535970c7bec44e02141113e31a42bb0a1c5e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Nov 12 15:47:00 2022 -0800
@@ -871,7 +941,7 @@ Date:   Wed Jul 20 19:31:57 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 6b1df45952ed9088b8f9db18afbd62f1ee84f59d
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 20:38:28 2005 +0000
 
     build system for xkbevd

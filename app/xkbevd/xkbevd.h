@@ -47,7 +47,6 @@ extern  int             scanStrLine;
 extern  Display *       dpy;
 extern  int             xkbOpcode;
 extern  int             xkbEventCode;
-extern  Bool            detectableRepeat;
 
 extern  XkbDescPtr      xkb;
 
@@ -83,9 +82,9 @@ extern void InterpretConfigs(
         CfgEntryPtr     /* cfgs */
 );
 
-extern char *SubstituteEventArgs(
-    char *              /* cmd */,
-    XkbEvent *          /* ev */
+extern const char *SubstituteEventArgs(
+    const char *        /* cmd */,
+    const XkbEvent *    /* ev */
 );
 
 extern void PrintXkbEvent(

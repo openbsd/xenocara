@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xkbevd], [1.1.5],
+AC_INIT([xkbevd], [1.1.6],
         [https://gitlab.freedesktop.org/xorg/app/xkbevd/-/issues], [xkbevd])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -43,8 +43,6 @@ if test ! -f "cfgparse.c"; then
       AC_MSG_ERROR([yacc not found - unable to compile cfgparse.y])
    fi
 fi
-
-AC_CHECK_FUNCS([strcasecmp])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XKBEVD, xkbfile x11)
