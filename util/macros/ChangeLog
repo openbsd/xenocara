@@ -1,3 +1,54 @@
+commit a9d71e3fd8e6758b70be31c586921bbbcd2a8449
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 13 15:19:37 2024 -0800
+
+    util-macros 1.20.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b9f5184ed2e9c019d867ced99020e22abb7c2e53
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 28 11:28:26 2024 -0700
+
+    XORG_CHECK_MALLOC_ZERO: stop testing malloc, assume the worst
+    
+    Since there is no guarantee applications will run with the same malloc
+    implementation we tested against, and the cost of always ensuring the
+    size passed to malloc is non-zero is minimal now, stop testing it, and
+    default the answer to yes.
+    
+    Still allows builders to override when they have complete control over
+    which malloc implementation will be used.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/macros/-/merge_requests/9>
+
+commit 91ece2a5f6408d34074522c8588ef1c53478daa0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 22 12:45:55 2024 -0700
+
+    XORG_CHECK_MALLOC_ZERO: disable optimization when building with clang
+    
+    clang at -O1 or higher optimizes out the malloc checks
+    Fixes https://gitlab.freedesktop.org/xorg/util/macros/-/issues/4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/macros/-/merge_requests/8>
+
+commit 9f858d74b36bce8a16771d75a208bd7db8fa80b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 1 16:20:49 2024 -0700
+
+    Remove -Wdeclaration-after-statement from default warning set
+    
+    We're going to treat this as a code style issue to be considered in review
+    instead of a code portability issue that should always be warned about,
+    now that all the compilers we support can handle variable declarations
+    after statements.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/macros/-/merge_requests/7>
+
 commit 7ed2b3798c030bd1729b699b446b43aba2ec606e
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Tue Apr 16 16:06:37 2024 -0400
