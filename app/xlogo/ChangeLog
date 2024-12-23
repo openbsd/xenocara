@@ -1,3 +1,104 @@
+commit 9eccaab05022b492fb02e8ef4aa3e9b8fc113f84
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 13 15:56:13 2024 -0800
+
+    xlogo 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c31ea299ed8e2915361dc4109d7720bb32992413
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 13 15:55:34 2024 -0800
+
+    Fix up copyright & license notices in COPYING & xlogo.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 48cacfa7eb128a0a44c7db3f8a0345dafb562786
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 4 11:45:15 2024 -0700
+
+    Add -help and -version to man page and usage output
+    
+    Fixes: d5410a7 ("Add -help and -version options")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlogo/-/merge_requests/6>
+
+commit f9d404920f085a3966037483a7e2760a728fad5f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 4 11:34:19 2024 -0700
+
+    Handle -Wsign-compare warning in Syntax()
+    
+    xlogo.c:159:14: warning: comparison of integer expressions of different
+     signedness: ‘int’ and ‘unsigned int’ [-Wsign-compare]
+      159 |     assert(n <= XtNumber(reasons));
+          |              ^~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlogo/-/merge_requests/6>
+
+commit cc1c058a788690720c4618d534a2490af10f1931
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 4 11:30:25 2024 -0700
+
+    Use struct initializers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlogo/-/merge_requests/6>
+
+commit 79a125950a0cbbc7f4fd8aeca395121d649bee02
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 4 11:02:58 2024 -0700
+
+    Fix -Wextra-semi-stmt from donestr() macro
+    
+    Logo.c:346:46: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+        donestr (XftColor, xftColor, XtRXftColor);
+                                                 ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlogo/-/merge_requests/6>
+
+commit 7a6efff5e88a4c7100b01af152fbd96805959d29
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 4 11:01:33 2024 -0700
+
+    Clear up 17 -Wunused-parameter warnings from clang 13
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlogo/-/merge_requests/6>
+
+commit f99641cc2fd30cd0ec639f26bc59808b0351389f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 4 10:05:01 2024 -0700
+
+    Mark Syntax() with noreturn attribute
+    
+    Suggested by clang:
+    xlogo.c:139:1: warning: function 'Syntax' could be declared with attribute
+     'noreturn' [-Wmissing-noreturn]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlogo/-/merge_requests/6>
+
+commit d5410a70e91eb83697cbb833379298cf8d0599e3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 14:17:24 2023 -0800
+
+    Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 18d485fcbce0f9f587b683756ee3fe78d7fd3372
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 14:11:21 2023 -0800
+
+    Print which arguments were unknown before giving usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a03055d5b3385f41a50ba40fcc00e8cdb8758947
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Nov 12 16:08:41 2022 -0800
@@ -715,7 +816,7 @@ Date:   Wed Jul 20 19:31:58 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 6fc943cfccd96e6ad0fec6a2e1b836fa0d0d7d3a
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:09 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,
@@ -812,7 +913,7 @@ Date:   Thu Sep 2 01:10:30 2004 +0000
     Bump major version number of libXaw (Bug #1273).
 
 commit 18ae14262f9859a2e1f2dd769a0c4dcf4e1bb344
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Aug 16 16:36:16 2004 +0000
 
     As discussed and agreed on on the release-wranglers meeting of August 16,

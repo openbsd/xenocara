@@ -34,6 +34,7 @@ from The Open Group.
 #include <X11/Xmu/Drawing.h>
 #include "LogoP.h"
 #include <X11/extensions/shape.h>
+#include <X11/Xfuncproto.h>
 #include <X11/Xos.h>
 
 #ifdef XRENDER
@@ -131,7 +132,7 @@ WidgetClass logoWidgetClass = (WidgetClass) &logoClassRec;
 static void
 create_gcs(LogoWidget w)
 {
-    XGCValues v;
+    XGCValues v = { 0 };
 
 #ifdef XRENDER
     w->logo.fgpixel = w->logo.fg.pixel;
@@ -158,7 +159,7 @@ check_shape(LogoWidget w)
 static void
 unset_shape(LogoWidget w)
 {
-    XSetWindowAttributes attr;
+    XSetWindowAttributes attr = { 0 };
     unsigned long mask;
     Display *dpy = XtDisplay ((Widget) w);
     Window win = XtWindow ((Widget) w);
@@ -186,7 +187,7 @@ set_shape(LogoWidget w)
     unsigned int width = (unsigned int) w->core.width;
     unsigned int height = (unsigned int) w->core.height;
     Pixmap pm = XCreatePixmap (dpy, win, width, height, (unsigned int) 1);
-    XGCValues v;
+    XGCValues v = { 0 };
 
     v.foreground = (Pixel) 1;
     v.background = (Pixel) 0;
@@ -245,7 +246,7 @@ static XtConvertArgRec xftColorConvertArgs[] = {
 };
 
 #define	donestr(type, value, tstr) \
-	{							\
+	do {							\
 	    if (toVal->addr != NULL) {				\
 		if (toVal->size < sizeof(type)) {		\
 		    toVal->size = sizeof(type);			\
@@ -262,10 +263,11 @@ static XtConvertArgRec xftColorConvertArgs[] = {
 	    }							\
 	    toVal->size = sizeof(type);				\
 	    return True;					\
-	}
+	} while (0)
 
 static void
-XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
+XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal,
+                 _X_UNUSED XtPointer closure,
 		 XrmValuePtr args, Cardinal *num_args)
 {
     Screen	*screen;
@@ -295,7 +297,7 @@ static Boolean
 XmuCvtStringToXftColor(Display *dpy,
 		       XrmValue *args, Cardinal *num_args,
 		       XrmValue *fromVal, XrmValue *toVal,
-		       XtPointer *converter_data)
+		       _X_UNUSED XtPointer *converter_data)
 {
     char	    *spec;
     XRenderColor    renderColor;
@@ -319,17 +321,21 @@ XmuCvtStringToXftColor(Display *dpy,
     spec = (char *) fromVal->addr;
     if (strcasecmp (spec, XtDefaultForeground) == 0)
     {
-	renderColor.red = 0;
-	renderColor.green = 0;
-	renderColor.blue = 0;
-	renderColor.alpha = 0xffff;
+	renderColor = (XRenderColor) {
+	    .red = 0,
+	    .green = 0,
+	    .blue = 0,
+	    .alpha = 0xffff
+	};
     }
     else if (strcasecmp (spec, XtDefaultBackground) == 0)
     {
-	renderColor.red = 0xffff;
-	renderColor.green = 0xffff;
-	renderColor.blue = 0xffff;
-	renderColor.alpha = 0xffff;
+	renderColor = (XRenderColor) {
+	    .red = 0xffff,
+	    .green = 0xffff,
+	    .blue = 0xffff,
+	    .alpha = 0xffff
+	};
     }
     else if (!XRenderParseColor (dpy, spec, &renderColor))
 	return False;
@@ -360,7 +366,8 @@ ClassInitialize(void)
 
 /* ARGSUSED */
 static void
-Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
+Initialize(_X_UNUSED Widget request, Widget new,
+           _X_UNUSED ArgList args, _X_UNUSED Cardinal *num_args)
 {
     LogoWidget w = (LogoWidget)new;
 
@@ -415,7 +422,7 @@ Resize(Widget gw)
 
 /* ARGSUSED */
 static void
-Redisplay(Widget gw, XEvent *event, Region region)
+Redisplay(Widget gw, _X_UNUSED XEvent *event, _X_UNUSED Region region)
 {
     LogoWidget w = (LogoWidget) gw;
 
@@ -451,8 +458,8 @@ Redisplay(Widget gw, XEvent *event, Region region)
 
 /* ARGSUSED */
 static Boolean
-SetValues (Widget gcurrent, Widget grequest, Widget gnew,
-	   ArgList args, Cardinal *num_args)
+SetValues (Widget gcurrent, _X_UNUSED Widget grequest, Widget gnew,
+	   _X_UNUSED ArgList args, _X_UNUSED Cardinal *num_args)
 {
     LogoWidget current = (LogoWidget) gcurrent;
     LogoWidget new = (LogoWidget) gnew;

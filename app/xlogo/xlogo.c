@@ -24,12 +24,37 @@ in this Software without prior written authorization from The Open Group.
 
  */
 
+/*
+ * Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
+#include <X11/Xfuncproto.h>
 #include "xlogo.h"
 #include "Logo.h"
 #include <X11/Xaw/Cardinals.h>
@@ -38,6 +63,21 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
+#ifndef HAVE_STRLCAT
+#define strlcat(dst, src, len) do {              \
+    strncat(dst, src, len - strlen(dst) - 1);    \
+    dst[len] = '\0';                             \
+} while(0)
+#endif
+#ifndef HAVE_STRLCPY
+#define strlcpy(dst, src, len) do {              \
+    strncpy(dst, src, len - 1);                  \
+    dst[len] = '\0';                             \
+} while(0)
+#endif
 
 /* Global vars*/
 const char *ProgramName;    /* program name (from argv[0]) */
@@ -80,13 +120,14 @@ static String fallback_resources[] = {
 };
 
 static void
-die(Widget w, XtPointer client_data, XtPointer call_data)
+die(Widget w, _X_UNUSED XtPointer client_data, _X_UNUSED XtPointer call_data)
 {
     XtAppSetExitFlag(XtWidgetToApplicationContext(w));
 }
 
 static void
-save(Widget w, XtPointer client_data, XtPointer call_data)
+save(_X_UNUSED Widget w, _X_UNUSED XtPointer client_data,
+     _X_UNUSED XtPointer call_data)
 {
     return;
 }
@@ -94,14 +135,16 @@ save(Widget w, XtPointer client_data, XtPointer call_data)
 /*
  * Report the syntax for calling xlogo.
  */
-
+_X_NORETURN
 static void
-Syntax(Widget toplevel)
+Syntax(Widget toplevel, String message, int exitval)
 {
-    Arg arg;
     SmcConn connection;
     String reasons[10];
-    int i, n = 0;
+    unsigned int n = 0;
+
+    if (message)
+        reasons[n++] = message;
 
     reasons[n++] = "Usage: ";
     reasons[n++] = (String)ProgramName;
@@ -112,17 +155,26 @@ Syntax(Widget toplevel)
 #ifdef XRENDER
     reasons[n++] = "             [-render] [-sharp]\n";
 #endif /* XRENDER */
-    reasons[n++] = "             [-shape]\n\n";
+    reasons[n++] = "             [-shape]\n";
+    reasons[n++] = "             [-version] [-help]\n";
+    assert(n <= XtNumber(reasons));
 
-    XtSetArg(arg, XtNconnection, &connection);
-    XtGetValues(toplevel, &arg, (Cardinal)1);
+    if (toplevel != NULL) {
+	Arg arg;
+
+	XtSetArg(arg, XtNconnection, &connection);
+	XtGetValues(toplevel, &arg, (Cardinal)1);
+    }
+    else
+	connection = NULL;
+
     if (connection)
-	SmcCloseConnection(connection, n, (char **) reasons);
+	SmcCloseConnection(connection, (int) n, (char **) reasons);
     else {
-	for (i=0; i < n; i++)
+	for (unsigned int i = 0; i < n; i++)
 	    printf("%s", reasons[i]);
     }
-    exit(EXIT_FAILURE);
+    exit(exitval);
 }
 
 int
@@ -133,12 +185,44 @@ main(int argc, char *argv[])
 
     ProgramName = argv[0];
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    Syntax(NULL, NULL, EXIT_SUCCESS);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(EXIT_SUCCESS);
+	}
+    }
+
     toplevel = XtOpenApplication(&app_con, "XLogo",
 				 options, XtNumber(options),
 				 &argc, argv, fallback_resources,
 				 sessionShellWidgetClass, NULL, ZERO);
-    if (argc != 1)
-	Syntax(toplevel);
+    if (argc != 1) {
+        const char *header = "Unknown argument(s):";
+        char *message;
+        size_t len = strlen(header) + 3; /* 3 for "\n\n\0" */
+        for (int n = 1; n < argc; n++) {
+            len += strlen(argv[n]) + 1;
+	}
+        message = malloc(len);
+        if (message != NULL) {
+            strlcpy(message, header, len);
+            for (int n = 1; n < argc; n++) {
+                strlcat(message, " ", len);
+                strlcat(message, argv[n], len);
+            }
+            strlcat(message, "\n\n", len);
+        }
+	Syntax(toplevel, message, EXIT_FAILURE);
+    }
 
     XtGetApplicationResources(toplevel, (XtPointer)&userOptions, resources,
                               XtNumber(resources), NULL, 0);
@@ -163,7 +247,8 @@ main(int argc, char *argv[])
 
 /*ARGSUSED*/
 static void
-quit(Widget w, XEvent *event, String *params, Cardinal *num_params)
+quit(Widget w, XEvent *event,
+     _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     Arg arg;
 

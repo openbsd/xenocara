@@ -44,6 +44,12 @@ If -render is also specified, this forces the edges to be rendered in sharp mode
 .B \-shape
 This option indicates that the logo window should be shaped rather than
 rectangular.
+.TP 8
+.B \-help
+This option indicates that \fIxlogo\fP should print a usage message and exit.
+.TP 8
+.B \-version
+This option indicates that \fIxlogo\fP should print version info and exit.
 .SH RESOURCES
 The default width and the default height are each 100 pixels.
 This program uses the \fILogo\fP widget in the Athena widget set.  It

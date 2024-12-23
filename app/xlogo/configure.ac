@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xlogo], [1.0.6],
+AC_INIT([xlogo], [1.0.7],
         [https://gitlab.freedesktop.org/xorg/app/xlogo/-/issues], [xlogo])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -36,8 +36,11 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
+# Checks for library functions.
+AC_CHECK_FUNCS([strlcat strlcpy])
+
 # Base set of required pkg-config packages
-XLOGO_DEPS="sm xaw7 xmu xt >= 1.0 xext x11"
+XLOGO_DEPS="sm xaw7 xmu xt >= 1.0 xext x11 xproto >= 7.0.22"
 
 # Ensure pkg-config is initialized, since first call to macros is conditional
 PKG_PROG_PKG_CONFIG
