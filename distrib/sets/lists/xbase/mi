@@ -14,9 +14,9 @@
 ./etc/fonts/conf.avail/10-hinting-none.conf
 ./etc/fonts/conf.avail/10-hinting-slight.conf
 ./etc/fonts/conf.avail/10-no-antialias.conf
-./etc/fonts/conf.avail/10-no-sub-pixel.conf
 ./etc/fonts/conf.avail/10-scale-bitmap-fonts.conf
 ./etc/fonts/conf.avail/10-sub-pixel-bgr.conf
+./etc/fonts/conf.avail/10-sub-pixel-none.conf
 ./etc/fonts/conf.avail/10-sub-pixel-rgb.conf
 ./etc/fonts/conf.avail/10-sub-pixel-vbgr.conf
 ./etc/fonts/conf.avail/10-sub-pixel-vrgb.conf
@@ -25,6 +25,7 @@
 ./etc/fonts/conf.avail/11-lcdfilter-default.conf
 ./etc/fonts/conf.avail/11-lcdfilter-legacy.conf
 ./etc/fonts/conf.avail/11-lcdfilter-light.conf
+./etc/fonts/conf.avail/11-lcdfilter-none.conf
 ./etc/fonts/conf.avail/20-unhint-small-dejavu-sans-mono.conf
 ./etc/fonts/conf.avail/20-unhint-small-dejavu-sans.conf
 ./etc/fonts/conf.avail/20-unhint-small-dejavu-serif.conf
@@ -304,7 +305,7 @@
 ./usr/X11R6/lib/libXxf86vm.so.6.0
 ./usr/X11R6/lib/libfontconfig.a
 ./usr/X11R6/lib/libfontconfig.la
-./usr/X11R6/lib/libfontconfig.so.13.1
+./usr/X11R6/lib/libfontconfig.so.13.2
 ./usr/X11R6/lib/libfontenc.a
 ./usr/X11R6/lib/libfontenc.la
 ./usr/X11R6/lib/libfontenc.so.4.0

@@ -1055,6 +1055,7 @@
 ./usr/X11R6/man/man3/FcMatrixShear.3
 ./usr/X11R6/man/man3/FcNameConstant.3
 ./usr/X11R6/man/man3/FcNameGetConstant.3
+./usr/X11R6/man/man3/FcNameGetConstantFor.3
 ./usr/X11R6/man/man3/FcNameGetObjectType.3
 ./usr/X11R6/man/man3/FcNameParse.3
 ./usr/X11R6/man/man3/FcNameRegisterConstants.3
@@ -3303,6 +3304,7 @@
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcmatrixshear.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcnameconstant.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcnamegetconstant.html
+./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcnamegetconstantfor.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcnamegetobjecttype.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcnameparse.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcnameregisterconstants.html
