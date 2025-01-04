@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: fontconfig 2.12.92\n"
 "Report-Msgid-Bugs-To: https://gitlab.freedesktop.org/fontconfig/fontconfig/"
 "issues/new\n"
-"POT-Creation-Date: 2022-10-21 16:35+0900\n"
+"POT-Creation-Date: 2023-12-22 22:56+0900\n"
 "PO-Revision-Date: 2018-02-16 01:19-0600\n"
 "Last-Translator: Mingcong Bai <jeffbai@aosc.xyz>\n"
 "Language-Team: AOSC\n"
@@ -21,6 +21,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.0.5\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#: conf.d/09-autohint-if-no-hinting.conf:4
+msgid "Enable autohinter if font doesn't have any hinting"
+msgstr ""
 
 #: conf.d/10-autohint.conf:4
 msgid "Enable autohinter"
@@ -42,9 +46,10 @@ msgstr "设置微调风格为“无 (hintnone)”"
 msgid "Set hintslight to hintstyle"
 msgstr "设置微调风格为“轻微 (hintslight)”"
 
-#: conf.d/10-no-sub-pixel.conf:4
-msgid "Disable sub-pixel rendering"
-msgstr "禁用次像素渲染"
+#: conf.d/10-no-antialias.conf:4
+#, fuzzy
+msgid "Disable antialiasing"
+msgstr "禁用微调"
 
 #: conf.d/10-scale-bitmap-fonts.conf:4
 msgid "Bitmap scaling"
@@ -53,6 +58,10 @@ msgstr "位图缩放"
 #: conf.d/10-sub-pixel-bgr.conf:4
 msgid "Enable sub-pixel rendering with the BGR stripes layout"
 msgstr "启用蓝绿红 (BGR) 像素布局的次像素渲染"
+
+#: conf.d/10-sub-pixel-none.conf:4
+msgid "Disable sub-pixel rendering"
+msgstr "禁用次像素渲染"
 
 #: conf.d/10-sub-pixel-rgb.conf:4
 msgid "Enable sub-pixel rendering with the RGB stripes layout"
@@ -69,6 +78,11 @@ msgstr "启用垂直红绿蓝 (RGB) 像素布局的次像素渲染"
 #: conf.d/10-unhinted.conf:4
 msgid "Disable hinting"
 msgstr "禁用微调"
+
+#: conf.d/10-yes-antialias.conf:4
+#, fuzzy
+msgid "Enable antialiasing"
+msgstr "启用自动微调"
 
 #: conf.d/11-lcdfilter-default.conf:4
 msgid "Use lcddefault as default for LCD filter"
@@ -106,6 +120,11 @@ msgstr "为绘文字 (Emoji) 或数学字体设置替换"
 #: conf.d/45-latin.conf:4
 msgid "Set substitutions for Latin fonts"
 msgstr "为拉丁语言字体设置替换"
+
+#: conf.d/48-spacing.conf:4
+#, fuzzy
+msgid "Add mono to the family when spacing is 100"
+msgstr "在没有通用名称时添加 sans-serif 到字体家族"
 
 #: conf.d/49-sansserif.conf:4
 msgid "Add sans-serif to the family when no generic name"

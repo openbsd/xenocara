@@ -103,7 +103,7 @@ WIDTH="100%"
 ><PRE
 CLASS="FUNCSYNOPSISINFO"
 >#include &#60;fontconfig/fontconfig.h&#62;
-	</PRE
+        </PRE
 ></TD
 ></TR
 ></TABLE
@@ -135,15 +135,36 @@ NAME="AEN3218"
 >Description</H2
 ><P
 >Builds the set of available fonts for the given configuration.  Note that
-any changes to the configuration after this call have indeterminate effects.
-Returns FcFalse if this operation runs out of memory.
-If <TT
+any changes to the configuration after this call (through
+<TT
+CLASS="FUNCTION"
+>FcConfigParseAndLoad</TT
+> or
+<TT
+CLASS="FUNCTION"
+>FcConfigParseAndLoadFromMemory</TT
+>) have indeterminate
+effects. (On the other hand, application fonts can still be modified
+through <TT
+CLASS="FUNCTION"
+>FcConfigAppFontAddFile</TT
+>,
+<TT
+CLASS="FUNCTION"
+>FcConfigAppFontAddDir</TT
+> and
+<TT
+CLASS="FUNCTION"
+>FcConfigAppFontClear</TT
+>). Returns FcFalse if this operation
+runs out of memory. If <TT
 CLASS="PARAMETER"
 ><I
 >config</I
 ></TT
-> is NULL, the current configuration is used.
-	    </P
+> is NULL, the current
+configuration is used.
+            </P
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"

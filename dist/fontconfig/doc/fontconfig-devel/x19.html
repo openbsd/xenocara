@@ -91,7 +91,7 @@ data found within.  From an external perspective, configuration of the
 library consists of generating a valid XML tree and feeding that to
 FcConfigParse.  The only other mechanism provided to applications for
 changing the running configuration is to add fonts and directories to the
-list of application-provided font files.  
+list of application-provided font files.
     </P
 ><P
 >The intent is to make font configurations relatively static, and shared by
@@ -178,7 +178,7 @@ CLASS="PROGRAMLISTING"
                                                   face object
     rasterizer     FC_RASTERIZER          String  Which rasterizer is in use (deprecated)
     outline        FC_OUTLINE             Bool    Whether the glyphs are outlines
-    scalable       FC_SCALABLE            Bool    Whether glyphs can be scaled
+    scalable       FC_SCALABLE            Bool    Whether the glyphs are outlines or have color
     dpi            FC_DPI                 Double  Target dots per inch
     rgba           FC_RGBA                Int     unknown, rgb, bgr, vrgb,
                                                   vbgr, none - subpixel geometry
@@ -186,6 +186,7 @@ CLASS="PROGRAMLISTING"
                                                   conversions (deprecated)
     minspace       FC_MINSPACE            Bool    Eliminate leading from line
                                                   spacing
+    matrix         FC_MATRIX              Matrix  Hold an affine transformation
     charset        FC_CHARSET             CharSet Unicode chars encoded by
                                                   the font
     lang           FC_LANG                LangSet Set of RFC-3066-style
@@ -210,12 +211,15 @@ CLASS="PROGRAMLISTING"
     hash           FC_HASH                String  SHA256 hash value of the font data
                                                   with "sha256:" prefix (deprecated)
     postscriptname FC_POSTSCRIPT_NAME     String  Font name in PostScript
-    symbol         FC_SYMBOL              Bool    Whether font uses MS symbol-font encoding
     color          FC_COLOR               Bool    Whether any glyphs have color
+    symbol         FC_SYMBOL              Bool    Whether font uses MS symbol-font encoding
     fontvariations FC_FONT_VARIATIONS     String  comma-separated string of axes in variable font
     variable       FC_VARIABLE            Bool    Whether font is Variable Font
     fonthashint    FC_FONT_HAS_HINT       Bool    Whether font has hinting
     order          FC_ORDER               Int     Order number of the font
+    desktop        FC_DESKTOP_NAME        String  Current desktop name
+    namedinstance  FC_NAMED_INSTANCE      Bool    Whether font is a named instance
+    fontwarapper   FC_FONT_WRAPPER        String  The font wrapper format
     </PRE
 ></TD
 ></TR

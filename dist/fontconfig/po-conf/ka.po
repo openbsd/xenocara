@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fontconfig 2.14.0\n"
 "Report-Msgid-Bugs-To: https://gitlab.freedesktop.org/fontconfig/fontconfig/"
 "issues/new\n"
-"POT-Creation-Date: 2022-10-21 16:35+0900\n"
+"POT-Creation-Date: 2023-12-22 22:56+0900\n"
 "PO-Revision-Date: 2022-10-01 11:01+0200\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
@@ -18,6 +18,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 3.1.1\n"
+
+#: conf.d/09-autohint-if-no-hinting.conf:4
+msgid "Enable autohinter if font doesn't have any hinting"
+msgstr ""
 
 #: conf.d/10-autohint.conf:4
 msgid "Enable autohinter"
@@ -39,9 +43,10 @@ msgstr "hintstyle-ის hintnone-ზე დაყენება"
 msgid "Set hintslight to hintstyle"
 msgstr "hintstyle-ის hintslight-ზე დაყენება"
 
-#: conf.d/10-no-sub-pixel.conf:4
-msgid "Disable sub-pixel rendering"
-msgstr "ქვეპიქსელის რენდერის გამორთვა"
+#: conf.d/10-no-antialias.conf:4
+#, fuzzy
+msgid "Disable antialiasing"
+msgstr "მომრგვალების გამორთვა"
 
 #: conf.d/10-scale-bitmap-fonts.conf:4
 msgid "Bitmap scaling"
@@ -50,6 +55,10 @@ msgstr "ბიტური რუკის მასშტაბირება"
 #: conf.d/10-sub-pixel-bgr.conf:4
 msgid "Enable sub-pixel rendering with the BGR stripes layout"
 msgstr "ქვეპიქსელების რენდერის ჩართვა BGR ზოლების განლაგებით"
+
+#: conf.d/10-sub-pixel-none.conf:4
+msgid "Disable sub-pixel rendering"
+msgstr "ქვეპიქსელის რენდერის გამორთვა"
 
 #: conf.d/10-sub-pixel-rgb.conf:4
 msgid "Enable sub-pixel rendering with the RGB stripes layout"
@@ -66,6 +75,11 @@ msgstr "ქვეპიქსელების რენდერის ჩა�
 #: conf.d/10-unhinted.conf:4
 msgid "Disable hinting"
 msgstr "მომრგვალების გამორთვა"
+
+#: conf.d/10-yes-antialias.conf:4
+#, fuzzy
+msgid "Enable antialiasing"
+msgstr "autohinter-ის ჩართვა"
 
 #: conf.d/11-lcdfilter-default.conf:4
 msgid "Use lcddefault as default for LCD filter"
@@ -105,6 +119,11 @@ msgstr "ემოჯი/მათემატიკური ფონტებ�
 #: conf.d/45-latin.conf:4
 msgid "Set substitutions for Latin fonts"
 msgstr "Latin ფონტების ჩამნაცვლებლების დაყენება"
+
+#: conf.d/48-spacing.conf:4
+#, fuzzy
+msgid "Add mono to the family when spacing is 100"
+msgstr "როცა ზოგადი სახელი არ არსებობს, ოჯახისთვის sans-serif-ის დამატება"
 
 #: conf.d/49-sansserif.conf:4
 msgid "Add sans-serif to the family when no generic name"

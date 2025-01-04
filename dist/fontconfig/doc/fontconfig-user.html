@@ -90,7 +90,7 @@ data found within.  From an external perspective, configuration of the
 library consists of generating a valid XML tree and feeding that to
 FcConfigParse.  The only other mechanism provided to applications for
 changing the running configuration is to add fonts and directories to the
-list of application-provided font files.  
+list of application-provided font files.
     </P
 ><P
 >The intent is to make font configurations relatively static, and shared by
@@ -132,57 +132,58 @@ WIDTH="100%"
 ><TD
 ><PRE
 CLASS="PROGRAMLISTING"
->  Property        Type    Description
-  --------------------------------------------------------------
-  family          String  Font family names
-  familylang      String  Languages corresponding to each family
-  style           String  Font style. Overrides weight and slant
-  stylelang       String  Languages corresponding to each style
-  fullname        String  Font full names (often includes style)
-  fullnamelang    String  Languages corresponding to each fullname
-  slant           Int     Italic, oblique or roman
-  weight          Int     Light, medium, demibold, bold or black
-  size            Double  Point size
-  width           Int     Condensed, normal or expanded
-  aspect          Double  Stretches glyphs horizontally before hinting
-  pixelsize       Double  Pixel size
-  spacing         Int     Proportional, dual-width, monospace or charcell
-  foundry         String  Font foundry name
-  antialias       Bool    Whether glyphs can be antialiased
-  hinting         Bool    Whether the rasterizer should use hinting
-  hintstyle       Int     Automatic hinting style
-  verticallayout  Bool    Use vertical layout
-  autohint        Bool    Use autohinter instead of normal hinter
-  globaladvance   Bool    Use font global advance data (deprecated)
-  file            String  The filename holding the font
-  index           Int     The index of the font within the file
-  ftface          FT_Face Use the specified FreeType face object
-  rasterizer      String  Which rasterizer is in use (deprecated)
-  outline         Bool    Whether the glyphs are outlines
-  scalable        Bool    Whether glyphs can be scaled
-  color           Bool    Whether any glyphs have color
-  scale           Double  Scale factor for point-&#62;pixel conversions (deprecated)
-  dpi             Double  Target dots per inch
-  rgba            Int     unknown, rgb, bgr, vrgb, vbgr,
-                          none - subpixel geometry
-  lcdfilter       Int     Type of LCD filter
-  minspace        Bool    Eliminate leading from line spacing
-  charset         CharSet Unicode chars encoded by the font
-  lang            String  List of RFC-3066-style languages this
-                          font supports
-  fontversion     Int     Version number of the font
-  capability      String  List of layout capabilities in the font
-  fontformat      String  String name of the font format
-  embolden        Bool    Rasterizer should synthetically embolden the font
-  embeddedbitmap  Bool    Use the embedded bitmap instead of the outline
-  decorative      Bool    Whether the style is a decorative variant
-  fontfeatures    String  List of the feature tags in OpenType to be enabled
-  namelang        String  Language name to be used for the default value of
-                          familylang, stylelang, and fullnamelang
-  prgname         String  String  Name of the running program
-  postscriptname  String  Font family name in PostScript
-  fonthashint     Bool    Whether the font has hinting
-  order           Int     Order number of the font
+>Property        Type    Description
+--------------------------------------------------------------
+family          String  Font family names
+familylang      String  Languages corresponding to each family
+style           String  Font style. Overrides weight and slant
+stylelang       String  Languages corresponding to each style
+fullname        String  Font full names (often includes style)
+fullnamelang    String  Languages corresponding to each fullname
+slant           Int     Italic, oblique or roman
+weight          Int     Light, medium, demibold, bold or black
+size            Double  Point size
+width           Int     Condensed, normal or expanded
+aspect          Double  Stretches glyphs horizontally before hinting
+pixelsize       Double  Pixel size
+spacing         Int     Proportional, dual-width, monospace or charcell
+foundry         String  Font foundry name
+antialias       Bool    Whether glyphs can be antialiased
+hinting         Bool    Whether the rasterizer should use hinting
+hintstyle       Int     Automatic hinting style
+verticallayout  Bool    Use vertical layout
+autohint        Bool    Use autohinter instead of normal hinter
+globaladvance   Bool    Use font global advance data (deprecated)
+file            String  The filename holding the font
+index           Int     The index of the font within the file
+ftface          FT_Face Use the specified FreeType face object
+rasterizer      String  Which rasterizer is in use (deprecated)
+outline         Bool    Whether the glyphs are outlines
+scalable        Bool    Whether glyphs can be scaled
+color           Bool    Whether any glyphs have color
+scale           Double  Scale factor for point-&#62;pixel conversions
+                        (deprecated)
+dpi             Double  Target dots per inch
+rgba            Int     unknown, rgb, bgr, vrgb, vbgr,
+                        none - subpixel geometry
+lcdfilter       Int     Type of LCD filter
+minspace        Bool    Eliminate leading from line spacing
+charset         CharSet Unicode chars encoded by the font
+lang            String  List of RFC-3066-style languages this
+                        font supports
+fontversion     Int     Version number of the font
+capability      String  List of layout capabilities in the font
+fontformat      String  String name of the font format
+embolden        Bool    Rasterizer should synthetically embolden the font
+embeddedbitmap  Bool    Use the embedded bitmap instead of the outline
+decorative      Bool    Whether the style is a decorative variant
+fontfeatures    String  List of the feature tags in OpenType to be enabled
+namelang        String  Language name to be used for the default value of
+                        familylang, stylelang, and fullnamelang
+prgname         String  String  Name of the running program
+postscriptname  String  Font family name in PostScript
+fonthashint     Bool    Whether the font has hinting
+order           Int     Order number of the font
     </PRE
 ></TD
 ></TR
@@ -202,8 +203,7 @@ font is selected.  This ensures that a font will always be returned, but
 doesn't ensure that it is anything like the requested pattern.
     </P
 ><P
-> 
-Font matching starts with an application constructed pattern.  The desired
+>Font matching starts with an application constructed pattern.  The desired
 attributes of the resulting font are collected together in a pattern.  Each
 property of the pattern can contain one or more values; these are listed in
 priority order; matches earlier in the list are considered "closer" than
@@ -282,7 +282,7 @@ WIDTH="100%"
 ><TD
 ><PRE
 CLASS="PROGRAMLISTING"
->	&#60;families&#62;-&#60;point sizes&#62;:&#60;name1&#62;=&#60;values1&#62;:&#60;name2&#62;=&#60;values2&#62;...
+>&#60;families&#62;-&#60;point sizes&#62;:&#60;name1&#62;=&#60;values1&#62;:&#60;name2&#62;=&#60;values2&#62;...
     </PRE
 ></TD
 ></TR
@@ -301,13 +301,13 @@ WIDTH="100%"
 ><TD
 ><PRE
 CLASS="PROGRAMLISTING"
->  Name                            Meaning
-  ----------------------------------------------------------
-  Times-12                        12 point Times Roman
-  Times-12:bold                   12 point Times Bold
-  Courier:italic                  Courier Italic in the default size
-  Monospace:matrix=1 .1 0 1       The users preferred monospace font
-                                  with artificial obliquing
+>Name                            Meaning
+----------------------------------------------------------
+Times-12                        12 point Times Roman
+Times-12:bold                   12 point Times Bold
+Courier:italic                  Courier Italic in the default size
+Monospace:matrix=1 .1 0 1       The users preferred monospace font
+                                with artificial obliquing
     </PRE
 ></TD
 ></TR
@@ -343,21 +343,21 @@ WIDTH="100%"
 ><TD
 ><PRE
 CLASS="PROGRAMLISTING"
->  Name         Value    Meaning
-  ---------------------------------------------------------
-  MATCH            1    Brief information about font matching
-  MATCHV           2    Extensive font matching information
-  EDIT             4    Monitor match/test/edit execution
-  FONTSET          8    Track loading of font information at startup
-  CACHE           16    Watch cache files being written
-  CACHEV          32    Extensive cache file writing information
-  PARSE           64    (no longer in use)
-  SCAN           128    Watch font files being scanned to build caches
-  SCANV          256    Verbose font file scanning information
-  MEMORY         512    Monitor fontconfig memory usage
-  CONFIG        1024    Monitor which config files are loaded
-  LANGSET       2048    Dump char sets used to construct lang values
-  MATCH2        4096    Display font-matching transformation in patterns
+>Name         Value    Meaning
+---------------------------------------------------------
+MATCH            1    Brief information about font matching
+MATCHV           2    Extensive font matching information
+EDIT             4    Monitor match/test/edit execution
+FONTSET          8    Track loading of font information at startup
+CACHE           16    Watch cache files being written
+CACHEV          32    Extensive cache file writing information
+PARSE           64    (no longer in use)
+SCAN           128    Watch font files being scanned to build caches
+SCANV          256    Verbose font file scanning information
+MEMORY         512    Monitor fontconfig memory usage
+CONFIG        1024    Monitor which config files are loaded
+LANGSET       2048    Dump char sets used to construct lang values
+MATCH2        4096    Display font-matching transformation in patterns
   </PRE
 ></TD
 ></TR
@@ -423,11 +423,11 @@ WIDTH="100%"
 ><TD
 ><PRE
 CLASS="PROGRAMLISTING"
->	&#60;?xml version="1.0"?&#62;
-	&#60;!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd"&#62;
-	&#60;fontconfig&#62;
-	...
-	&#60;/fontconfig&#62;
+>&#60;?xml version="1.0"?&#62;
+&#60;!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd"&#62;
+&#60;fontconfig&#62;
+...
+&#60;/fontconfig&#62;
     </PRE
 ></TD
 ></TR
@@ -516,7 +516,7 @@ where <TT
 CLASS="LITERAL"
 >&#60;version&#62;</TT
 > is the fontconfig cache file
-version number (currently 7).
+version number (currently 8).
   </P
 ></DIV
 ><DIV
@@ -732,7 +732,8 @@ CLASS="LITERAL"
 ></H3
 ><P
 >Glob elements hold shell-style filename matching patterns (including ? and
-*) which match fonts based on their complete pathnames.  This can be used to
+*) which match fonts based on their complete pathnames. If it starts with '~',
+it refers to a directory in the users home directory.  This can be used to
 exclude a set of directories (/usr/share/fonts/uglyfont*), or particular
 font file types (*.pcf.gz), but the latter mechanism relies rather heavily
 on filenaming conventions which can't be relied upon.  Note that globs
@@ -813,7 +814,7 @@ CLASS="LITERAL"
 ></H3
 ><P
 >This element contains a single value which is compared with the target
-('pattern', 'font', 'scan' or 'default') property "property" (substitute any of the property names seen 
+('pattern', 'font', 'scan' or 'default') property "property" (substitute any of the property names seen
 above). 'compare' can be one of "eq", "not_eq", "less", "less_eq", "more", "more_eq", "contains" or
 "not_contains".  'qual' may either be the default, "any", in which case the match
 succeeds if any value associated with the property matches the test value, or
@@ -855,16 +856,16 @@ WIDTH="100%"
 ><TD
 ><PRE
 CLASS="PROGRAMLISTING"
->  Mode                    With Match              Without Match
-  ---------------------------------------------------------------------
-  "assign"                Replace matching value  Replace all values
-  "assign_replace"        Replace all values      Replace all values
-  "prepend"               Insert before matching  Insert at head of list
-  "prepend_first"         Insert at head of list  Insert at head of list
-  "append"                Append after matching   Append at end of list
-  "append_last"           Append at end of list   Append at end of list
-  "delete"                Delete matching value   Delete all values
-  "delete_all"            Delete all values       Delete all values
+>Mode                    With Match              Without Match
+---------------------------------------------------------------------
+"assign"                Replace matching value  Replace all values
+"assign_replace"        Replace all values      Replace all values
+"prepend"               Insert before matching  Insert at head of list
+"prepend_first"         Insert at head of list  Insert at head of list
+"append"                Append after matching   Append at end of list
+"append_last"           Append at end of list   Append at end of list
+"delete"                Delete matching value   Delete all values
+"delete_all"            Delete all values       Delete all values
     </PRE
 ></TD
 ></TR
@@ -1017,54 +1018,57 @@ WIDTH="100%"
 ><TD
 ><PRE
 CLASS="PROGRAMLISTING"
->  Constant        Property        Value
-  -------------------------------------
-  thin            weight          0
-  extralight      weight          40
-  ultralight      weight          40
-  light           weight          50
-  demilight       weight          55
-  semilight       weight          55
-  book            weight          75
-  regular         weight          80
-  normal          weight          80
-  medium          weight          100
-  demibold        weight          180
-  semibold        weight          180
-  bold            weight          200
-  extrabold       weight          205
-  black           weight          210
-  heavy           weight          210
-  roman           slant           0
-  italic          slant           100
-  oblique         slant           110
-  ultracondensed  width           50
-  extracondensed  width           63
-  condensed       width           75
-  semicondensed   width           87
-  normal          width           100
-  semiexpanded    width           113
-  expanded        width           125
-  extraexpanded   width           150
-  ultraexpanded   width           200
-  proportional    spacing         0
-  dual            spacing         90
-  mono            spacing         100
-  charcell        spacing         110
-  unknown         rgba            0
-  rgb             rgba            1
-  bgr             rgba            2
-  vrgb            rgba            3
-  vbgr            rgba            4
-  none            rgba            5
-  lcdnone         lcdfilter       0
-  lcddefault      lcdfilter       1
-  lcdlight        lcdfilter       2
-  lcdlegacy       lcdfilter       3
-  hintnone        hintstyle       0
-  hintslight      hintstyle       1
-  hintmedium      hintstyle       2
-  hintfull        hintstyle       3
+>Constant        Property        Value
+-------------------------------------
+thin            weight          0
+extralight      weight          40
+ultralight      weight          40
+light           weight          50
+demilight       weight          55
+semilight       weight          55
+book            weight          75
+regular         weight          80
+normal          weight          80
+medium          weight          100
+demibold        weight          180
+semibold        weight          180
+bold            weight          200
+extrabold       weight          205
+ultrabold       weight          205
+black           weight          210
+heavy           weight          210
+extrablack      weight          215
+ultrablack      weight          215
+roman           slant           0
+italic          slant           100
+oblique         slant           110
+ultracondensed  width           50
+extracondensed  width           63
+condensed       width           75
+semicondensed   width           87
+normal          width           100
+semiexpanded    width           113
+expanded        width           125
+extraexpanded   width           150
+ultraexpanded   width           200
+proportional    spacing         0
+dual            spacing         90
+mono            spacing         100
+charcell        spacing         110
+unknown         rgba            0
+rgb             rgba            1
+bgr             rgba            2
+vrgb            rgba            3
+vbgr            rgba            4
+none            rgba            5
+lcdnone         lcdfilter       0
+lcddefault      lcdfilter       1
+lcdlight        lcdfilter       2
+lcdlegacy       lcdfilter       3
+hintnone        hintstyle       0
+hintslight      hintstyle       1
+hintmedium      hintstyle       2
+hintfull        hintstyle       3
     </PRE
 ></TD
 ></TR
@@ -1293,103 +1297,135 @@ CLASS="PROGRAMLISTING"
 &#60;!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd"&#62;
 &#60;!-- /etc/fonts/fonts.conf file to configure system font access --&#62;
 &#60;fontconfig&#62;
-&#60;!-- 
-	Find fonts in these directories
---&#62;
-&#60;dir&#62;/usr/share/fonts&#60;/dir&#62;
-&#60;dir&#62;/usr/X11R6/lib/X11/fonts&#60;/dir&#62;
+  &#60;!--
+    Find fonts in these directories
+  --&#62;
+  &#60;dir&#62;/usr/share/fonts&#60;/dir&#62;
+  &#60;dir&#62;/usr/X11R6/lib/X11/fonts&#60;/dir&#62;
 
-&#60;!--
-	Accept deprecated 'mono' alias, replacing it with 'monospace'
---&#62;
-&#60;match target="pattern"&#62;
-	&#60;test qual="any" name="family"&#62;&#60;string&#62;mono&#60;/string&#62;&#60;/test&#62;
-	&#60;edit name="family" mode="assign"&#62;&#60;string&#62;monospace&#60;/string&#62;&#60;/edit&#62;
-&#60;/match&#62;
+  &#60;!--
+    Accept deprecated 'mono' alias, replacing it with 'monospace'
+  --&#62;
+  &#60;match target="pattern"&#62;
+    &#60;test qual="any" name="family"&#62;
+      &#60;string&#62;mono&#60;/string&#62;
+    &#60;/test&#62;
+    &#60;edit name="family" mode="assign"&#62;
+      &#60;string&#62;monospace&#60;/string&#62;
+    &#60;/edit&#62;
+  &#60;/match&#62;
 
-&#60;!--
-	Names not including any well known alias are given 'sans-serif'
---&#62;
-&#60;match target="pattern"&#62;
-	&#60;test qual="all" name="family" compare="not_eq"&#62;&#60;string&#62;sans-serif&#60;/string&#62;&#60;/test&#62;
-	&#60;test qual="all" name="family" compare="not_eq"&#62;&#60;string&#62;serif&#60;/string&#62;&#60;/test&#62;
-	&#60;test qual="all" name="family" compare="not_eq"&#62;&#60;string&#62;monospace&#60;/string&#62;&#60;/test&#62;
-	&#60;edit name="family" mode="append_last"&#62;&#60;string&#62;sans-serif&#60;/string&#62;&#60;/edit&#62;
-&#60;/match&#62;
+  &#60;!--
+    Names not including any well known alias are given 'sans-serif'
+  --&#62;
+  &#60;match target="pattern"&#62;
+    &#60;test qual="all" name="family" compare="not_eq"&#62;
+      &#60;string&#62;sans-serif&#60;/string&#62;
+    &#60;/test&#62;
+    &#60;test qual="all" name="family" compare="not_eq"&#62;
+      &#60;string&#62;serif&#60;/string&#62;
+    &#60;/test&#62;
+    &#60;test qual="all" name="family" compare="not_eq"&#62;
+      &#60;string&#62;monospace&#60;/string&#62;
+    &#60;/test&#62;
+    &#60;edit name="family" mode="append_last"&#62;
+      &#60;string&#62;sans-serif&#60;/string&#62;
+    &#60;/edit&#62;
+  &#60;/match&#62;
 
-&#60;!--
-	Load per-user customization file, but don't complain
-	if it doesn't exist
---&#62;
-&#60;include ignore_missing="yes" prefix="xdg"&#62;fontconfig/fonts.conf&#60;/include&#62;
+  &#60;!--
+    Load per-user customization file, but don't complain
+    if it doesn't exist
+  --&#62;
+  &#60;include ignore_missing="yes" prefix="xdg"&#62;
+    fontconfig/fonts.conf
+  &#60;/include&#62;
 
-&#60;!--
-	Load local customization files, but don't complain
-	if there aren't any
---&#62;
-&#60;include ignore_missing="yes"&#62;conf.d&#60;/include&#62;
-&#60;include ignore_missing="yes"&#62;local.conf&#60;/include&#62;
+  &#60;!--
+    Load local customization files, but don't complain
+    if there aren't any
+  --&#62;
+  &#60;include ignore_missing="yes"&#62;conf.d&#60;/include&#62;
+  &#60;include ignore_missing="yes"&#62;local.conf&#60;/include&#62;
 
-&#60;!--
-	Alias well known font names to available TrueType fonts.
-	These substitute TrueType faces for similar Type1
-	faces to improve screen appearance.
---&#62;
-&#60;alias&#62;
-	&#60;family&#62;Times&#60;/family&#62;
-	&#60;prefer&#62;&#60;family&#62;Times New Roman&#60;/family&#62;&#60;/prefer&#62;
-	&#60;default&#62;&#60;family&#62;serif&#60;/family&#62;&#60;/default&#62;
-&#60;/alias&#62;
-&#60;alias&#62;
-	&#60;family&#62;Helvetica&#60;/family&#62;
-	&#60;prefer&#62;&#60;family&#62;Arial&#60;/family&#62;&#60;/prefer&#62;
-	&#60;default&#62;&#60;family&#62;sans&#60;/family&#62;&#60;/default&#62;
-&#60;/alias&#62;
-&#60;alias&#62;
-	&#60;family&#62;Courier&#60;/family&#62;
-	&#60;prefer&#62;&#60;family&#62;Courier New&#60;/family&#62;&#60;/prefer&#62;
-	&#60;default&#62;&#60;family&#62;monospace&#60;/family&#62;&#60;/default&#62;
-&#60;/alias&#62;
+  &#60;!--
+    Alias well known font names to available TrueType fonts.
+    These substitute TrueType faces for similar Type1
+    faces to improve screen appearance.
+  --&#62;
+  &#60;alias&#62;
+    &#60;family&#62;Times&#60;/family&#62;
+    &#60;prefer&#62;
+      &#60;family&#62;Times New Roman&#60;/family&#62;
+    &#60;/prefer&#62;
+    &#60;default&#62;
+      &#60;family&#62;serif&#60;/family&#62;
+    &#60;/default&#62;
+  &#60;/alias&#62;
+  &#60;alias&#62;
+    &#60;family&#62;Helvetica&#60;/family&#62;
+    &#60;prefer&#62;
+      &#60;family&#62;Arial&#60;/family&#62;
+    &#60;/prefer&#62;
+    &#60;default&#62;
+      &#60;family&#62;sans&#60;/family&#62;
+    &#60;/default&#62;
+  &#60;/alias&#62;
+  &#60;alias&#62;
+    &#60;family&#62;Courier&#60;/family&#62;
+    &#60;prefer&#62;
+      &#60;family&#62;Courier New&#60;/family&#62;
+    &#60;/prefer&#62;
+    &#60;default&#62;
+      &#60;family&#62;monospace&#60;/family&#62;
+    &#60;/default&#62;
+  &#60;/alias&#62;
 
-&#60;!--
-	Provide required aliases for standard names
-	Do these after the users configuration file so that
-	any aliases there are used preferentially
---&#62;
-&#60;alias&#62;
-	&#60;family&#62;serif&#60;/family&#62;
-	&#60;prefer&#62;&#60;family&#62;Times New Roman&#60;/family&#62;&#60;/prefer&#62;
-&#60;/alias&#62;
-&#60;alias&#62;
-	&#60;family&#62;sans&#60;/family&#62;
-	&#60;prefer&#62;&#60;family&#62;Arial&#60;/family&#62;&#60;/prefer&#62;
-&#60;/alias&#62;
-&#60;alias&#62;
-	&#60;family&#62;monospace&#60;/family&#62;
-	&#60;prefer&#62;&#60;family&#62;Andale Mono&#60;/family&#62;&#60;/prefer&#62;
-&#60;/alias&#62;
+  &#60;!--
+    Provide required aliases for standard names
+    Do these after the users configuration file so that
+    any aliases there are used preferentially
+  --&#62;
+  &#60;alias&#62;
+    &#60;family&#62;serif&#60;/family&#62;
+    &#60;prefer&#62;
+      &#60;family&#62;Times New Roman&#60;/family&#62;
+    &#60;/prefer&#62;
+  &#60;/alias&#62;
+  &#60;alias&#62;
+    &#60;family&#62;sans&#60;/family&#62;
+    &#60;prefer&#62;
+      &#60;family&#62;Arial&#60;/family&#62;
+    &#60;/prefer&#62;
+  &#60;/alias&#62;
+  &#60;alias&#62;
+    &#60;family&#62;monospace&#60;/family&#62;
+    &#60;prefer&#62;
+      &#60;family&#62;Andale Mono&#60;/family&#62;
+    &#60;/prefer&#62;
+  &#60;/alias&#62;
 
-&#60;--
-	The example of the requirements of OR operator;
-	If the 'family' contains 'Courier New' OR 'Courier'
-	add 'monospace' as the alternative
---&#62;
-&#60;match target="pattern"&#62;
-	&#60;test name="family" compare="eq"&#62;
-		&#60;string&#62;Courier New&#60;/string&#62;
-	&#60;/test&#62;
-	&#60;edit name="family" mode="prepend"&#62;
-		&#60;string&#62;monospace&#60;/string&#62;
-	&#60;/edit&#62;
-&#60;/match&#62;
-&#60;match target="pattern"&#62;
-	&#60;test name="family" compare="eq"&#62;
-		&#60;string&#62;Courier&#60;/string&#62;
-	&#60;/test&#62;
-	&#60;edit name="family" mode="prepend"&#62;
-		&#60;string&#62;monospace&#60;/string&#62;
-	&#60;/edit&#62;
-&#60;/match&#62;
+  &#60;--
+    The example of the requirements of OR operator;
+    If the 'family' contains 'Courier New' OR 'Courier'
+    add 'monospace' as the alternative
+  --&#62;
+  &#60;match target="pattern"&#62;
+    &#60;test name="family" compare="eq"&#62;
+      &#60;string&#62;Courier New&#60;/string&#62;
+    &#60;/test&#62;
+    &#60;edit name="family" mode="prepend"&#62;
+      &#60;string&#62;monospace&#60;/string&#62;
+    &#60;/edit&#62;
+  &#60;/match&#62;
+  &#60;match target="pattern"&#62;
+    &#60;test name="family" compare="eq"&#62;
+      &#60;string&#62;Courier&#60;/string&#62;
+    &#60;/test&#62;
+    &#60;edit name="family" mode="prepend"&#62;
+      &#60;string&#62;monospace&#60;/string&#62;
+    &#60;/edit&#62;
+  &#60;/match&#62;
 
 &#60;/fontconfig&#62;
     </PRE
@@ -1418,57 +1454,61 @@ WIDTH="100%"
 CLASS="PROGRAMLISTING"
 >&#60;?xml version="1.0"?&#62;
 &#60;!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd"&#62;
-&#60;!-- $XDG_CONFIG_HOME/fontconfig/fonts.conf for per-user font configuration --&#62;
+&#60;!--
+  $XDG_CONFIG_HOME/fontconfig/fonts.conf for per-user font configuration
+--&#62;
 &#60;fontconfig&#62;
 
-&#60;!--
-	Private font directory
---&#62;
-&#60;dir prefix="xdg"&#62;fonts&#60;/dir&#62;
+  &#60;!--
+    Private font directory
+  --&#62;
+  &#60;dir prefix="xdg"&#62;fonts&#60;/dir&#62;
 
-&#60;!--
-	use rgb sub-pixel ordering to improve glyph appearance on
-	LCD screens.  Changes affecting rendering, but not matching
-	should always use target="font".
---&#62;
-&#60;match target="font"&#62;
-	&#60;edit name="rgba" mode="assign"&#62;&#60;const&#62;rgb&#60;/const&#62;&#60;/edit&#62;
-&#60;/match&#62;
-&#60;!--
-	use WenQuanYi Zen Hei font when serif is requested for Chinese
---&#62;
-&#60;match&#62;
-	&#60;!--
-		If you don't want to use WenQuanYi Zen Hei font for zh-tw etc,
-		you can use zh-cn instead of zh.
-		Please note, even if you set zh-cn, it still matches zh.
-		if you don't like it, you can use compare="eq"
-		instead of compare="contains".
-	--&#62;
-	&#60;test name="lang" compare="contains"&#62;
-		&#60;string&#62;zh&#60;/string&#62;
-	&#60;/test&#62;
-	&#60;test name="family"&#62;
-		&#60;string&#62;serif&#60;/string&#62;
-	&#60;/test&#62;
-	&#60;edit name="family" mode="prepend"&#62;
-		&#60;string&#62;WenQuanYi Zen Hei&#60;/string&#62;
-	&#60;/edit&#62;
-&#60;/match&#62;
-&#60;!--
-	use VL Gothic font when sans-serif is requested for Japanese
---&#62;
-&#60;match&#62;
-	&#60;test name="lang" compare="contains"&#62;
-		&#60;string&#62;ja&#60;/string&#62;
-	&#60;/test&#62;
-	&#60;test name="family"&#62;
-		&#60;string&#62;sans-serif&#60;/string&#62;
-	&#60;/test&#62;
-	&#60;edit name="family" mode="prepend"&#62;
-		&#60;string&#62;VL Gothic&#60;/string&#62;
-	&#60;/edit&#62;
-&#60;/match&#62;
+  &#60;!--
+    use rgb sub-pixel ordering to improve glyph appearance on
+    LCD screens.  Changes affecting rendering, but not matching
+    should always use target="font".
+  --&#62;
+  &#60;match target="font"&#62;
+    &#60;edit name="rgba" mode="assign"&#62;
+      &#60;const&#62;rgb&#60;/const&#62;
+    &#60;/edit&#62;
+  &#60;/match&#62;
+  &#60;!--
+    use WenQuanYi Zen Hei font when serif is requested for Chinese
+  --&#62;
+  &#60;match&#62;
+    &#60;!--
+      If you don't want to use WenQuanYi Zen Hei font for zh-tw etc,
+      you can use zh-cn instead of zh.
+      Please note, even if you set zh-cn, it still matches zh.
+      if you don't like it, you can use compare="eq"
+      instead of compare="contains".
+    --&#62;
+    &#60;test name="lang" compare="contains"&#62;
+      &#60;string&#62;zh&#60;/string&#62;
+    &#60;/test&#62;
+    &#60;test name="family"&#62;
+      &#60;string&#62;serif&#60;/string&#62;
+    &#60;/test&#62;
+    &#60;edit name="family" mode="prepend"&#62;
+      &#60;string&#62;WenQuanYi Zen Hei&#60;/string&#62;
+    &#60;/edit&#62;
+  &#60;/match&#62;
+  &#60;!--
+    use VL Gothic font when sans-serif is requested for Japanese
+  --&#62;
+  &#60;match&#62;
+    &#60;test name="lang" compare="contains"&#62;
+      &#60;string&#62;ja&#60;/string&#62;
+    &#60;/test&#62;
+    &#60;test name="family"&#62;
+      &#60;string&#62;sans-serif&#60;/string&#62;
+    &#60;/test&#62;
+    &#60;edit name="family" mode="prepend"&#62;
+      &#60;string&#62;VL Gothic&#60;/string&#62;
+    &#60;/edit&#62;
+  &#60;/match&#62;
 &#60;/fontconfig&#62;
     </PRE
 ></TD
@@ -1502,7 +1542,7 @@ is the conventional name for a directory of additional configuration files
 managed by external applications or the local administrator.  The
 filenames starting with decimal digits are sorted in lexicographic order
 and used as additional configuration files.  All of these files are in XML
-format.  The master fonts.conf file references this directory in an 
+format.  The master fonts.conf file references this directory in an
 &#60;include&#62; directive.
   </P
 ><P
@@ -1646,9 +1686,9 @@ NAME="AEN305"
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.14.1
+>Fontconfig version 2.15.0
 
-	    </P
+            </P
 ></DIV
 ></BODY
 ></HTML

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2021/11/11 08:46:46 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.7 2025/01/04 15:22:55 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 
@@ -132,6 +132,7 @@ MAN = FcAtomicCreate.3 \
 	FcMatrixShear.3 \
 	FcNameConstant.3 \
 	FcNameGetConstant.3 \
+	FcNameGetConstantFor.3 \
 	FcNameGetObjectType.3 \
 	FcNameParse.3 \
 	FcNameRegisterConstants.3 \
@@ -336,6 +337,7 @@ HTML_DEVEL_FILES = \
 	fcmatrixshear.html \
 	fcnameconstant.html \
 	fcnamegetconstant.html \
+	fcnamegetconstantfor.html \
 	fcnamegetobjecttype.html \
 	fcnameparse.html \
 	fcnameregisterconstants.html \

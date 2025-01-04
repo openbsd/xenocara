@@ -6,10 +6,10 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: fontconfig 2.14.1\n"
+"Project-Id-Version: fontconfig 2.15.0\n"
 "Report-Msgid-Bugs-To: https://gitlab.freedesktop.org/fontconfig/fontconfig/"
 "issues/new\n"
-"POT-Creation-Date: 2022-10-21 16:35+0900\n"
+"POT-Creation-Date: 2023-12-22 22:56+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: conf.d/09-autohint-if-no-hinting.conf:4
+msgid "Enable autohinter if font doesn't have any hinting"
+msgstr ""
 
 #: conf.d/10-autohint.conf:4
 msgid "Enable autohinter"
@@ -38,8 +42,8 @@ msgstr ""
 msgid "Set hintslight to hintstyle"
 msgstr ""
 
-#: conf.d/10-no-sub-pixel.conf:4
-msgid "Disable sub-pixel rendering"
+#: conf.d/10-no-antialias.conf:4
+msgid "Disable antialiasing"
 msgstr ""
 
 #: conf.d/10-scale-bitmap-fonts.conf:4
@@ -48,6 +52,10 @@ msgstr ""
 
 #: conf.d/10-sub-pixel-bgr.conf:4
 msgid "Enable sub-pixel rendering with the BGR stripes layout"
+msgstr ""
+
+#: conf.d/10-sub-pixel-none.conf:4
+msgid "Disable sub-pixel rendering"
 msgstr ""
 
 #: conf.d/10-sub-pixel-rgb.conf:4
@@ -64,6 +72,10 @@ msgstr ""
 
 #: conf.d/10-unhinted.conf:4
 msgid "Disable hinting"
+msgstr ""
+
+#: conf.d/10-yes-antialias.conf:4
+msgid "Enable antialiasing"
 msgstr ""
 
 #: conf.d/11-lcdfilter-default.conf:4
@@ -101,6 +113,10 @@ msgstr ""
 
 #: conf.d/45-latin.conf:4
 msgid "Set substitutions for Latin fonts"
+msgstr ""
+
+#: conf.d/48-spacing.conf:4
+msgid "Add mono to the family when spacing is 100"
 msgstr ""
 
 #: conf.d/49-sansserif.conf:4

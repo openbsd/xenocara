@@ -1,4 +1,4 @@
-Fontconfig Developers Reference, Version 2.14.1
+Fontconfig Developers Reference, Version 2.15.0
 
    Copyright © 2002 Keith Packard
 
@@ -2097,7 +2097,7 @@ FcCharSet
    FcCharSetCreate -- Create an empty character set
    FcCharSetDestroy -- Destroy a character set
    FcCharSetAddChar -- Add a character to a charset
-   FcCharSetDelChar -- Add a character to a charset
+   FcCharSetDelChar -- Delete a character from a charset
    FcCharSetCopy -- Copy a charset
    FcCharSetEqual -- Compare two charsets
    FcCharSetIntersect -- Intersect charsets
@@ -2179,7 +2179,7 @@ FcCharSetDelChar
 
 Name
 
-   FcCharSetDelChar -- Add a character to a charset
+   FcCharSetDelChar -- Delete a character from a charset
 
 Synopsis
 
@@ -3311,8 +3311,12 @@ Synopsis
 Description
 
    Builds the set of available fonts for the given configuration.
-   Note that any changes to the configuration after this call have
-   indeterminate effects. Returns FcFalse if this operation runs
+   Note that any changes to the configuration after this call
+   (through FcConfigParseAndLoad or
+   FcConfigParseAndLoadFromMemory) have indeterminate effects. (On
+   the other hand, application fonts can still be modified through
+   FcConfigAppFontAddFile, FcConfigAppFontAddDir and
+   FcConfigAppFontClear). Returns FcFalse if this operation runs
    out of memory. If config is NULL, the current configuration is
    used.
 
@@ -3760,7 +3764,10 @@ Description
    Error and warning messages will be output to stderr. Returns
    FcFalse if some error occurred while loading the file, either a
    parse error, semantic error or allocation failure. Otherwise
-   returns FcTrue.
+   returns FcTrue. After all configuration files / strings have
+   been loaded, with FcConfigParseAndLoad and/or
+   FcConfigParseAndLoadFromMemory, call FcConfigBuildFonts to
+   build the font database.
 
 FcConfigParseAndLoadFromMemory
 
@@ -3785,7 +3792,10 @@ Description
    Error and warning messages will be output to stderr. Returns
    FcFalse if fsome error occurred while loading the file, either
    a parse error, semantic error or allocation failure. Otherwise
-   returns FcTrue.
+   returns FcTrue. After all configuration files / strings have
+   been loaded, with FcConfigParseAndLoad and/or
+   FcConfigParseAndLoadFromMemory, call FcConfigBuildFonts to
+   build the font database.
 
 Since
 
@@ -4001,6 +4011,7 @@ FcConstant
    FcNameRegisterConstants -- Register symbolic constants
    FcNameUnregisterConstants -- Unregister symbolic constants
    FcNameGetConstant -- Lookup symbolic constant
+   FcNameGetConstantFor -- Lookup symbolic constant For object
    FcNameConstant -- Get the value for a symbolic constant
 
    Provides for application-specified symbolic constants for font
@@ -4056,6 +4067,24 @@ Description
 
    Return the FcConstant structure related to symbolic constant
    string.
+
+FcNameGetConstantFor
+
+Name
+
+   FcNameGetConstantFor -- Lookup symbolic constant For object
+
+Synopsis
+
+#include <fontconfig/fontconfig.h>
+
+   const FcConstant * FcNameGetConstantFor(FcChar8 *string, char
+   *object);
+
+Description
+
+   Return the FcConstant structure related to symbolic constant
+   string for object.
 
 FcNameConstant
 

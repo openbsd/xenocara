@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.17 2023/07/03 13:18:53 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.18 2025/01/04 15:22:55 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -39,9 +39,9 @@ AVAIL_FILES =				\
 	10-hinting-none.conf		\
 	10-hinting-slight.conf		\
 	10-no-antialias.conf		\
-	10-no-sub-pixel.conf		\
 	10-scale-bitmap-fonts.conf	\
 	10-sub-pixel-bgr.conf		\
+	10-sub-pixel-none.conf		\
 	10-sub-pixel-rgb.conf		\
 	10-sub-pixel-vbgr.conf		\
 	10-sub-pixel-vrgb.conf		\
@@ -50,6 +50,7 @@ AVAIL_FILES =				\
 	11-lcdfilter-default.conf	\
 	11-lcdfilter-legacy.conf	\
 	11-lcdfilter-light.conf		\
+	11-lcdfilter-none.conf		\
 	20-unhint-small-vera.conf	\
 	25-unhint-nonlatin.conf		\
 	30-lucida-aliases.conf		\

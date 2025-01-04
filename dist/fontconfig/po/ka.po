@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fontconfig 2.14.0\n"
 "Report-Msgid-Bugs-To: https://gitlab.freedesktop.org/fontconfig/fontconfig/"
 "issues/new\n"
-"POT-Creation-Date: 2022-10-21 16:35+0900\n"
+"POT-Creation-Date: 2023-12-22 22:56+0900\n"
 "PO-Revision-Date: 2022-10-01 10:53+0200\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(none)>\n"
@@ -654,6 +654,6 @@ msgstr "%s:%d აკლია %d გლიფი, რომ დააკმა�
 msgid "%s:%d Satisfy the coverage for %s language\n"
 msgstr "%s:%d აკმაყოფილებს დაფარვას ენისთვის: %s\n"
 
-#: src/fccfg.c:3243
+#: src/fccfg.c:3244
 msgid "No description"
 msgstr "აღწერის გარეშე"

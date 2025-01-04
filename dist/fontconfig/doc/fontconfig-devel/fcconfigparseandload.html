@@ -75,7 +75,7 @@ NAME="FCCONFIGPARSEANDLOAD"
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
-NAME="AEN3701"
+NAME="AEN3706"
 ></A
 ><H2
 >Name</H2
@@ -83,7 +83,7 @@ NAME="AEN3701"
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
-NAME="AEN3704"
+NAME="AEN3709"
 ></A
 ><H2
 >Synopsis</H2
@@ -92,7 +92,7 @@ CLASS="FUNCSYNOPSIS"
 ><P
 ></P
 ><A
-NAME="AEN3705"
+NAME="AEN3710"
 ></A
 ><TABLE
 BORDER="0"
@@ -103,7 +103,7 @@ WIDTH="100%"
 ><PRE
 CLASS="FUNCSYNOPSISINFO"
 >#include &#60;fontconfig/fontconfig.h&#62;
-	</PRE
+        </PRE
 ></TD
 ></TR
 ></TABLE
@@ -139,7 +139,7 @@ CLASS="PARAMETER"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN3716"
+NAME="AEN3721"
 ></A
 ><H2
 >Description</H2
@@ -150,7 +150,22 @@ and parsed.  If 'complain' is FcFalse, no warning will be displayed if
 'file' does not exist. Error and warning messages will be output to stderr.
 Returns FcFalse if some error occurred while loading the file, either a
 parse error, semantic error or allocation failure. Otherwise returns FcTrue.
-	    </P
+
+After all configuration files / strings have been loaded, with
+<TT
+CLASS="FUNCTION"
+>FcConfigParseAndLoad</TT
+> and/or
+<TT
+CLASS="FUNCTION"
+>FcConfigParseAndLoadFromMemory</TT
+>, call
+<TT
+CLASS="FUNCTION"
+>FcConfigBuildFonts</TT
+> to build the font
+database.
+            </P
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"

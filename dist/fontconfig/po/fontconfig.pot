@@ -6,10 +6,10 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: fontconfig 2.14.1\n"
+"Project-Id-Version: fontconfig 2.15.0\n"
 "Report-Msgid-Bugs-To: https://gitlab.freedesktop.org/fontconfig/fontconfig/"
 "issues/new\n"
-"POT-Creation-Date: 2022-10-21 16:35+0900\n"
+"POT-Creation-Date: 2023-12-22 22:56+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -607,6 +607,6 @@ msgstr ""
 msgid "%s:%d Satisfy the coverage for %s language\n"
 msgstr ""
 
-#: src/fccfg.c:3243
+#: src/fccfg.c:3244
 msgid "No description"
 msgstr ""
