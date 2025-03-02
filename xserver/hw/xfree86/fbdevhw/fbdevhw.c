@@ -335,9 +335,9 @@ fbdev_open(int scrnIndex, const char *dev, char **namep)
         char *sysfs_path = NULL;
         char *node = strrchr(dev, '/') + 1;
 
-        if (asprintf(&sysfs_path, "/sys/class/graphics/%s", node) < 0 ||
+        if (asprintf(&sysfs_path, "/sys/class/graphics/%s/device/subsystem", node) < 0 ||
             readlink(sysfs_path, buf, sizeof(buf) - 1) < 0 ||
-            strstr(buf, "devices/pci")) {
+            strstr(buf, "bus/pci")) {
             free(sysfs_path);
             close(fd);
             return -1;

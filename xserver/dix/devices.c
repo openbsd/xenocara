@@ -2704,11 +2704,14 @@ AttachDevice(ClientPtr client, DeviceIntPtr dev, DeviceIntPtr master)
         dev->spriteInfo->paired = dev;
     }
     else {
+        DeviceIntPtr keyboard = GetMaster(dev, MASTER_KEYBOARD);
+
         dev->spriteInfo->sprite = master->spriteInfo->sprite;
         dev->spriteInfo->paired = master;
         dev->spriteInfo->spriteOwner = FALSE;
 
-        XkbPushLockedStateToSlaves(GetMaster(dev, MASTER_KEYBOARD), 0, 0);
+        if (keyboard)
+            XkbPushLockedStateToSlaves(keyboard, 0, 0);
         RecalculateMasterButtons(master);
     }
 

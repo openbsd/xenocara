@@ -260,9 +260,13 @@ test_change_alarm_delta(xcb_connection_t *c)
     xcb_sync_create_alarm(c, alarm, 0, NULL);
 
     for (int i = 0; i < ARRAY_SIZE(some_values); i++) {
-        uint32_t values[] = { some_values[i] >> 32, some_values[i] };
+        uint32_t mask = XCB_SYNC_CA_TEST_TYPE | XCB_SYNC_CA_DELTA;
+        uint32_t test_type = (some_values[i] >= 0 ?
+                               XCB_SYNC_TESTTYPE_POSITIVE_COMPARISON :
+                               XCB_SYNC_TESTTYPE_NEGATIVE_COMPARISON);
+        uint32_t values[] = { test_type, some_values[i] >> 32, some_values[i] };
 
-        xcb_sync_change_alarm(c, alarm, XCB_SYNC_CA_DELTA, values);
+        xcb_sync_change_alarm(c, alarm, mask, values);
         queries[i] = xcb_sync_query_alarm_unchecked(c, alarm);
     }
 

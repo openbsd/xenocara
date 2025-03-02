@@ -308,7 +308,7 @@
 /* Use libmd SHA1 functions */
 #undef HAVE_SHA1_IN_LIBMD
 
-/* Use libnettle SHA1 functions */
+/* Use static libnettle SHA1 functions */
 #undef HAVE_SHA1_IN_LIBNETTLE
 
 /* Use libsha1 for SHA1 */

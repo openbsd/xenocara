@@ -801,7 +801,7 @@ SyncChangeAlarmAttributes(ClientPtr client, SyncAlarm * pAlarm, Mask mask,
     Mask origmask = mask;
     SyncTrigger trigger;
     Bool select_events_changed = FALSE;
-    Bool select_events_value;
+    Bool select_events_value = FALSE;
     int64_t delta;
 
     trigger = pAlarm->trigger;
