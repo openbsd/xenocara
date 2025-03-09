@@ -1,11 +1,11 @@
-#	$OpenBSD: Makefile,v 1.59 2024/08/04 17:17:23 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.60 2025/03/09 15:12:54 matthieu Exp $
 
 .include <bsd.own.mk>
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 26.1.20
+FT_VERSION_INFO= 26.2.20
 
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
