@@ -1,3 +1,167 @@
+commit a9c65683e68b3a4349afee5d7673b393fb924d2e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 13 17:23:57 2024 -0800
+
+    libXau 1.0.12
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6b2e9a63d8306282a2b384762bea004c19f301a1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 26 10:22:33 2024 -0700
+
+    XauDisposeAuth: remove void casts from functions that return void
+    
+    We rely on having included headers with proper prototypes to know
+    that these functions are declared to return void instead of adding
+    casts to paper over missing prototypes.
+    
+    Clears warnings from gcc 14.1:
+    
+    AuDispose.c: In function ‘XauDisposeAuth’:
+    AuDispose.c:42:13: warning: useless cast to type ‘void’ [-Wuseless-cast]
+       42 |             (void) explicit_bzero (auth->data, auth->data_length);
+          |             ^
+    AuDispose.c:48:13: warning: useless cast to type ‘void’ [-Wuseless-cast]
+       48 |             (void) free (auth->data);
+          |             ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxau/-/merge_requests/18>
+
+commit 89429bb36de409b204ef105e8b73126a639ccb03
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:23:58 2024 -0800
+
+    unifdef hpux
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c7b0ac2c894bbeebc337867388a8b338692550b8
+Author: Thierry LARONDE <tlaronde@kergis.com>
+Date:   Thu Feb 1 20:43:38 2024 +0100
+
+    Autest.c includes Xauth.h that depends on other headers.
+    
+    Xauth.h includes headers provided by xproto. So add for test
+    also the dependency.
+
+commit a5d1f88c3a74a099030ffbbb30ad3fd361fdd1af
+Author: Thierry LARONDE <tlaronde@kergis.com>
+Date:   Thu Feb 1 20:42:02 2024 +0100
+
+    Allow to use POSIX.2 compliant sed(1)
+    
+    POSIX.2 sed(1) doesn't allow file to be anywhere else than, if given,
+    last. Allow to use whatever compliant sed(1) is there, not only GNU
+    sed(1).
+
+commit 4866e00d737a1ece81c519ea867cfe16a0ae36b4
+Author: Thierry LARONDE <tlaronde@kergis.com>
+Date:   Thu Feb 1 20:40:25 2024 +0100
+
+    Also test for explicit_memset(3) support
+    
+    explicit_bzero(3) is not provided by every system, and some provide
+    explicit_memset(3) that is in the process of being standardized
+    (furthermore, POSIX deprecates bzero(3) since memset(3) can do
+    same or more).
+
+commit caa2d8e29adf43bb77fc00d718f7a0db4c2c35b1
+Author: Thierry LARONDE <tlaronde@kergis.com>
+Date:   Thu Feb 1 20:37:42 2024 +0100
+
+    Gcc < 11 doesn't allow opt. deallocator arg for __attribute((malloc))
+
+commit f4fc44202b554e68093828b556f8c7fd9644ddb0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 16 11:51:11 2023 -0700
+
+    gitlab CI: run meson build with both gcc & clang compilers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5acc34b51625676f8f297516e4f7915b18dd4cb2
+Author: Alex Richardson <arichardson@FreeBSD.org>
+Date:   Sun Sep 10 21:49:36 2023 -0700
+
+    Allow building with clang after aec9d7266777e0b9243ef0f112fe0e07256bd446
+    
+    Clang also supports the malloc attribute but unlike GCC does not accept
+    the deallocator argument. This has been reported as
+    https://github.com/llvm/llvm-project/issues/51607
+    
+    Signed-off-by: Alex Richardson <arichardson@FreeBSD.org>
+
+commit aec9d7266777e0b9243ef0f112fe0e07256bd446
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 30 10:30:52 2023 -0700
+
+    Xauth.h: add access & malloc attributes to function prototypes
+    
+    May aid in static analysis by gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68e74d37b99f56bbd1a5f2fb8cb4ad6116f27bd3
+Author: Dylan Baker <dylan@pnwbakers.com>
+Date:   Tue Jun 20 15:46:23 2023 -0700
+
+    add Meson build system
+    
+    This is, I think, equal to the autotools build-system in every practical
+    way. The man pages have hardcoded numbers. I think this is okay, as all
+    modern operating systems seem to use the same man page numbering now.
+    
+    I've also chosen to not generate a config.h file with Meson. This makes
+    using libXau as a subproject safer, since we don't have to worry about
+    conflicting config.h files, plus there are only a couple of declarations
+    that are actually used. This also saves some configure time in writing
+    out an additional file.
+
+commit df1bf4fe528a5a9eef420f78efb225e4696ac467
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 25 12:44:39 2023 -0700
+
+    Set close-on-exec when opening files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 41c43bdf85c91293af80b0b843947380b9b3378c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:21:23 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c52f54e9533046a52edf84bcc02abedc2dbcb1a7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 15:27:43 2023 -0800
+
+    Require LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    configure.ac:35: warning: The macro `AC_LIBTOOL_WIN32_DLL' is obsolete.
+    configure.ac:35: You should run autoupdate.
+    aclocal.m4:11889: AC_LIBTOOL_WIN32_DLL is expanded from...
+    configure.ac:35: the top level
+    configure.ac:35: warning: AC_LIBTOOL_WIN32_DLL: Remove this warning and the call to _LT_SET_OPTION when you
+    configure.ac:35: put the 'win32-dll' option into LT_INIT's first parameter.
+    ./lib/autoconf/general.m4:2434: AC_DIAGNOSE is expanded from...
+    aclocal.m4:11889: AC_LIBTOOL_WIN32_DLL is expanded from...
+    configure.ac:35: the top level
+    configure.ac:36: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:36: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:36: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 14fdf25db9f21c8f3ad37f0d32a5b8e726efdc0d
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Thu Dec 8 10:36:36 2022 -0500

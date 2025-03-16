@@ -61,7 +61,10 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(xauinclude_HEADERS) AUTHORS COPYING ChangeLog INSTALL \
 	config.guess config.sub depcomp install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -238,7 +241,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -393,6 +395,8 @@ Autest_LDADD = libXau.la
 @MAKE_LINT_LIB_TRUE@lintlib_DATA = $(LINTLIB)
 CLEANFILES = $(lintlib_DATA)
 MAINTAINERCLEANFILES = ChangeLog INSTALL
+ACLOCAL_AMFLAGS = -I m4
+EXTRA_DIST = meson.build meson_options.txt
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
