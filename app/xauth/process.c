@@ -521,7 +521,7 @@ get_displayname_auth(const char *displayname, AuthList **authl)
 	unsigned short dpylen;
 
 	buf[0] = '\0';
-	sprintf (buf, "%d", dpynum);
+	snprintf (buf, sizeof(buf), "%d", dpynum);
 	dpylen = strlen (buf);
 	if (dpylen > 0) {
 	    for (addrlist_cur = addrlist_head; addrlist_cur != NULL;
@@ -714,9 +714,14 @@ auth_initialize(const char *authfilename)
     FILE *authfp;
     Bool exists;
 
+    /*
+     * XauLockAuth in libXau limits file names to 1022 characters so it
+     * has room to append two characters in its 1025 character buffers.
+     */
     if (strlen(authfilename) > 1022) {
 	fprintf (stderr, "%s: authority file name \"%s\" too long\n",
 		 ProgramName, authfilename);
+	exit (1);
     }
     xauth_filename = authfilename;    /* used in cleanup, prevent race with
                                          signals */
@@ -822,17 +827,19 @@ auth_initialize(const char *authfilename)
 }
 
 static int
-write_auth_file(char *tmp_nam)
+write_auth_file(char *tmp_nam, size_t tmp_nam_size)
 {
     FILE *fp = NULL;
     int fd;
 
-    /*
-     * xdm and auth spec assumes auth file is 12 or fewer characters
-     */
-    strcpy (tmp_nam, xauth_filename);
-    strcat (tmp_nam, "-n");		/* for new */
-    (void) unlink (tmp_nam);
+    /* Append "-n" for "new" */
+    int ret = snprintf(tmp_nam, tmp_nam_size, "%s-n", xauth_filename);
+    if (ret < 0 || ret >= tmp_nam_size) {
+        fprintf(stderr, "Error constructing filename: %s\n",
+                (ret < 0) ? "snprintf failed" : "buffer size is too small");
+        return -1;
+    }
+    (void) remove (tmp_nam);
     /* CPhipps 2000/02/12 - fix file unlink/fopen race */
     fd = open(tmp_nam, O_WRONLY | O_CREAT | O_EXCL, 0600);
     if (fd != -1) fp = fdopen (fd, "wb");
@@ -907,7 +914,7 @@ auth_finalize(void)
 			"Writing", xauth_filename);
 	    }
 	    temp_name[0] = '\0';
-	    if (write_auth_file (temp_name) == -1) {
+	    if (write_auth_file (temp_name, sizeof(temp_name)) == -1) {
 		fprintf (stderr,
 			 "%s:  unable to write authority file %s\n",
 			 ProgramName, temp_name);
@@ -916,7 +923,7 @@ auth_finalize(void)
 		    fprintf (stderr,
 		     "%s:  unable to rename authority file %s, use %s\n",
 			     ProgramName, xauth_filename, temp_name);
-                    unlink(temp_name);
+                    remove(temp_name);
 		}
 	    }
 	}
@@ -1013,7 +1020,7 @@ dump_entry(const char *inputfilename, int lineno, Xauth *auth, char *data)
 	    fprintf (fp, "/unix");
 	    break;
 	  case FamilyInternet:
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
 	  case FamilyInternet6:
 #endif
 	  case FamilyDECnet:

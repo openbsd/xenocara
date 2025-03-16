@@ -1,3 +1,86 @@
+commit f71ca21cf1ab840e9664b7c3e99c229bd977a6a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 8 16:44:09 2025 -0800
+
+    xauth 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 20125640fdc37732cb3c04627bd02011cff60a12
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 19 10:54:44 2025 -0800
+
+    get_displayname_auth: replace sprintf() with snprintf()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/24>
+
+commit 88dde2ea3c45c992faf10b9b851af1ffa408a103
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 19 10:48:43 2025 -0800
+
+    Use remove() instead of unlink() to remove files
+    
+    Avoids filesystem corruption if file is actually a directory.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/24>
+
+commit 7b540bd56829c6e4bad5fc4b25af1905c398abf1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 19 09:57:03 2025 -0800
+
+    Avoid buffer overflow with long filenames in write_auth_file()
+    
+    Aligns buffer size for filenames with XauLockAuth in libXau
+    
+    Closes: #7 ("Buffer overflow when constructing tmp_nam")
+    Reported-by: Mingjie Shen (@szsam)
+    Reviewed-by: Olivier Fourdan <ofourdan@redhat.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/24>
+
+commit 0228cc6e5d3700a35179cf9b69da0d5ca492ef42
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 18 15:34:15 2025 -0800
+
+    if inet_ntop() is available, use it, even if IPv6 support is disabled
+    
+    Support for using inet_ntop() was originally added to support IPv6,
+    and only used if IPv6 support was enabled.  Two decades later, support
+    for inet_ntop() is ubiquitous and OS'es have marked inet_ntoa()
+    as deprecated, so use the modern interface whenever we can now.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/23>
+
+commit 6e31d5021ffd67e63b42608fae72baaebab68e80
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 12 13:15:39 2025 -0800
+
+    if getaddrinfo() is available, use it, even if IPv6 support is disabled
+    
+    Support for using getaddrinfo() was originally added to support IPv6,
+    and only used if IPv6 support was enabled.  Two decades later, support
+    for getaddrinfo() is ubiquitous and OS'es have marked gethostbyname()
+    as deprecated, so use the modern interface whenever we can now.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/22>
+
+commit e6e032846ea43259f989887d0eb48faced3009da
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 12 13:08:48 2025 -0800
+
+    Simplify ifdefs for IPv6 support
+    
+    Instead of checking for AF_INET6 at every ifdef, just check once for it
+    and report that IPv6 support is not available, instead of silently not
+    building support for it that configure said we were going to build.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/22>
+
 commit c29eef23683f0e3575a3c60d9314de8156fbe2c2
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 3 10:51:41 2024 -0800

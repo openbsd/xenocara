@@ -60,6 +60,10 @@ in this Software without prior written authorization from The Open Group.
 #include <arpa/inet.h>
 #endif
 
+#if defined(IPv6) && !defined(AF_INET6)
+#error "Cannot build IPv6 support without AF_INET6"
+#endif
+
 const char *
 get_hostname (Xauth *auth)
 {
@@ -67,15 +71,20 @@ get_hostname (Xauth *auth)
 	return "Illegal Address";
 #ifdef TCPCONN
     if (auth->family == FamilyInternet
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
       || auth->family == FamilyInternet6
 #endif
 	)
     {
 	static struct hostent *hp = NULL;
+#ifdef IPv6
+	static char addr[INET6_ADDRSTRLEN+2];
+#elif defined(HAVE_INET_NTOP)
+	static char addr[INET_ADDRSTRLEN];
+#endif
 	int af;
 
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
 	if (auth->family == FamilyInternet6)
 	    af = AF_INET6;
 	else
@@ -86,9 +95,8 @@ get_hostname (Xauth *auth)
 	}
 	if (hp)
 	  return (hp->h_name);
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
 	else if (af == AF_INET6) {
-	  static char addr[INET6_ADDRSTRLEN+2];
 	  /* Add [] for clarity to distinguish between address & display,
 	     like RFC 2732 for URL's.  Not required, since X display syntax
 	     always ends in :<display>, but makes it easier for people to read
@@ -101,7 +109,11 @@ get_hostname (Xauth *auth)
 	}
 #endif
 	else {
+#ifdef HAVE_INET_NTOP
+	  return (inet_ntop(af, auth->address, addr, sizeof(addr)));
+#else
 	  return (inet_ntoa(*((struct in_addr *)(auth->address))));
+#endif
 	}
     }
 #endif
@@ -109,7 +121,7 @@ get_hostname (Xauth *auth)
     return (NULL);
 }
 
-#if defined(TCPCONN) && (!defined(IPv6) || !defined(AF_INET6))
+#if defined(TCPCONN) && !defined(HAVE_GETADDRINFO)
 /*
  * cribbed from lib/X/XConnDis.c
  */
@@ -156,7 +168,7 @@ struct addrlist *get_address_info (
     int len = 0;
     const void *src = NULL;
 #ifdef TCPCONN
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef HAVE_GETADDRINFO
     struct addrlist *lastrv = NULL;
     struct addrinfo *firstai = NULL;
     struct addrinfo hints;
@@ -236,10 +248,16 @@ struct addrlist *get_address_info (
 	break;
       case FamilyInternet:		/* host:0 */
 #ifdef TCPCONN
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef HAVE_GETADDRINFO
+#ifdef IPv6
       case FamilyInternet6:
+#endif
 	memset(&hints, 0, sizeof(hints));
+#ifdef IPv6
 	hints.ai_family = PF_UNSPEC; /* IPv4 or IPv6 */
+#else
+	hints.ai_family = PF_INET;   /* IPv4 only */
+#endif
 	hints.ai_socktype = SOCK_STREAM; /* only interested in TCP */
 	hints.ai_protocol = 0;
         if (getaddrinfo(host,NULL,&hints,&firstai) !=0) return NULL;
@@ -261,6 +279,7 @@ struct addrlist *get_address_info (
                     len = sizeof(sin->sin_addr);
                     family = FamilyInternet;
                 }
+#ifdef IPv6
 	    } else if (ai->ai_family == AF_INET6) {
 		struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)ai->ai_addr;
 		src = &(sin6->sin6_addr);
@@ -282,6 +301,7 @@ struct addrlist *get_address_info (
                                   ai->ai_addr)->sin_addr);
                     family = FamilyInternet;
                 }
+#endif
 	    }
 
 	    for(duplicate = retval; duplicate != NULL; duplicate = duplicate->next) {
@@ -317,7 +337,7 @@ struct addrlist *get_address_info (
 	}
 	freeaddrinfo(firstai);
 	break;
-#else
+#else /* !HAVE_GETADDRINFO */
 	if (!get_inet_address (host, &hostinetaddr)) return NULL;
 	src = (char *) &hostinetaddr;
         if (*(const in_addr_t *) src == htonl(INADDR_LOOPBACK)) {
@@ -332,8 +352,8 @@ struct addrlist *get_address_info (
         } else
             len = 4; /* sizeof inaddr.sin_addr, would fail on Cray */
 	break;
-#endif /* IPv6 */
-#else
+#endif /* HAVE_GETADDRINFO */
+#else /* !TCPCONN */
 	return NULL;
 #endif
       case FamilyDECnet:		/* host::0 */

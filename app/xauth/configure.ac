@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.70])
 AC_INIT([xauth],
-	[1.1.3],
+	[1.1.4],
 	[https://gitlab.freedesktop.org/xorg/app/xauth/-/issues],
 	[xauth])
 AC_CONFIG_SRCDIR([xauth.c])
@@ -49,9 +49,6 @@ AC_CHECK_HEADERS([net/errno.h])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_SYS_LARGEFILE
 
-# Checks for library functions.
-AC_CHECK_FUNCS([reallocarray strlcpy])
-
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XAUTH, x11 xau xext xmuu xproto >= 7.0.17)
 
@@ -67,6 +64,9 @@ m4_pattern_forbid([^XTRANS_CONNECTION_FLAGS$])
 # Transport selection macro from xtrans.m4
 # Needed to set *CONN defines for gethost.c & parsedpy.c
 XTRANS_CONNECTION_FLAGS
+
+# Checks for library functions.
+AC_CHECK_FUNCS([getaddrinfo inet_ntop reallocarray strlcpy])
 
 XORG_WITH_LINT
 
