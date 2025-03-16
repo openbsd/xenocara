@@ -294,11 +294,21 @@ XRenderFindDisplay (Display *dpy)
     return dpyinfo;
 }
 
+static void
+XRenderFreeXRenderInfo (XRenderInfo *xri)
+{
+    Xfree(xri->format);
+    Xfree(xri->screen);
+    Xfree(xri->depth);
+    Xfree(xri->visual);
+    Xfree(xri);
+}
+
 static int
 XRenderCloseDisplay (Display *dpy, XExtCodes *codes _X_UNUSED)
 {
     XRenderExtDisplayInfo *info = XRenderFindDisplay (dpy);
-    if (info && info->info) XFree (info->info);
+    if (info && info->info) XRenderFreeXRenderInfo (info->info);
 
     return XRenderExtRemoveDisplay (&XRenderExtensionInfo, dpy);
 }
@@ -469,11 +479,8 @@ XRenderQueryFormats (Display *dpy)
 	(rep.numVisuals < ((INT_MAX / 4) / sizeof (XRenderVisual))) &&
 	(rep.numSubpixel < ((INT_MAX / 4) / 4)) &&
 	(rep.length < (INT_MAX >> 2)) ) {
-	xri = Xmalloc (sizeof (XRenderInfo) +
-		       (rep.numFormats * sizeof (XRenderPictFormat)) +
-		       (rep.numScreens * sizeof (XRenderScreen)) +
-		       (rep.numDepths * sizeof (XRenderDepth)) +
-		       (rep.numVisuals * sizeof (XRenderVisual)));
+        /* Zero-initialize so that pointers are NULL if there is a failure. */
+	xri = Xcalloc (1, sizeof (XRenderInfo));
 	rlength = ((rep.numFormats * sizeof (xPictFormInfo)) +
 		   (rep.numScreens * sizeof (xPictScreen)) +
 		   (rep.numDepths * sizeof (xPictDepth)) +
@@ -498,14 +505,23 @@ XRenderQueryFormats (Display *dpy)
     }
     xri->major_version = async_state.major_version;
     xri->minor_version = async_state.minor_version;
-    xri->format = (XRenderPictFormat *) (xri + 1);
+    xri->format = Xcalloc(rep.numFormats, sizeof(XRenderPictFormat));
     xri->nformat = (int) rep.numFormats;
-    xri->screen = (XRenderScreen *) (xri->format + rep.numFormats);
+    xri->screen = Xcalloc(rep.numScreens, sizeof(XRenderScreen));
     xri->nscreen = (int) rep.numScreens;
-    xri->depth = (XRenderDepth *) (xri->screen + rep.numScreens);
+    xri->depth = Xcalloc(rep.numDepths, sizeof(XRenderDepth));
     xri->ndepth = (int) rep.numDepths;
-    xri->visual = (XRenderVisual *) (xri->depth + rep.numDepths);
+    xri->visual = Xcalloc(rep.numVisuals, sizeof(XRenderVisual));
     xri->nvisual = (int) rep.numVisuals;
+    if (!xri->format || !xri->screen || !xri->depth || !xri->visual)
+    {
+	XRenderFreeXRenderInfo(xri);
+	Xfree (xData);
+	_XEatDataWords (dpy, rep.length);
+	UnlockDisplay (dpy);
+	SyncHandle ();
+	return 0;
+    }
     _XRead (dpy, (char *) xData, (long) rlength);
     format = xri->format;
     xFormat = (xPictFormInfo *) xData;
@@ -538,7 +554,7 @@ XRenderQueryFormats (Display *dpy)
 	screen->subpixel = SubPixelUnknown;
 	xPDepth = (xPictDepth *) (xScreen + 1);
 	if (screen->ndepths > rep.numDepths) {
-	    Xfree (xri);
+	    XRenderFreeXRenderInfo(xri);
 	    Xfree (xData);
 	    _XEatDataWords (dpy, rep.length);
 	    UnlockDisplay (dpy);
@@ -555,7 +571,7 @@ XRenderQueryFormats (Display *dpy)
 	    depth->visuals = visual;
 	    xVisual = (xPictVisual *) (xPDepth + 1);
 	    if (depth->nvisuals > rep.numVisuals) {
-		Xfree (xri);
+		XRenderFreeXRenderInfo (xri);
 		Xfree (xData);
 		_XEatDataWords (dpy, rep.length);
 		UnlockDisplay (dpy);

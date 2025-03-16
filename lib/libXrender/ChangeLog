@@ -1,3 +1,83 @@
+commit 46e12ff9e8e4d3f0313a2f097df93dbfdc14f92f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 13 13:02:31 2024 -0800
+
+    libXrender 0.9.12
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 432f2c85f0597f189f80fe80a67f00f7d10c930f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 21 16:15:37 2024 -0800
+
+    XRenderQueryFormats: add missing allocation failure check
+    
+    Most allocations in this function were already checked for failures,
+    but the recently added set had been missed.
+    
+    Clears 6 warnings from gcc 14.2 of the form:
+    Xrender.c:361:28: warning: dereference of possibly-NULL ‘format’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+      361 |         if (xri->format[nf].id == format)
+          |             ~~~~~~~~~~~~~~~^~~
+    
+    Fixes: 01e7546 ("Ensure XRenderInfo pointers are appropriately aligned")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxrender/-/merge_requests/15>
+
+commit 6663858e918923d02c466298670c992a8437a17b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 20 17:14:49 2024 -0800
+
+    Ensure all BufAlloc calls have trailing semicolon
+    
+    Most already did, this fixes 3 outliers, so they build with
+    libx11@563ddd4ff5575e3f8bbf635cbdc339b09a7e285e
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxrender/-/merge_requests/14>
+
+commit 01e754610df2195536c5b31c1e8df756480599d1
+Author: Alex Richardson <arichardson@FreeBSD.org>
+Date:   Tue Sep 12 22:55:37 2023 -0700
+
+    Ensure XRenderInfo pointers are appropriately aligned
+    
+    While runnig some X11 applications on an Arm Morello platform I noticed
+    bus errors inside xrender. XRenderInfo uses a single malloc call to
+    allocate multiple objects in one single allocation and places those objects
+    directly after the XRenderInfo object. However, these calculations do not
+    ensure that this objects are sufficiently aligned. I noticed this because
+    on Morello (and other CHERI-enabled architectures) pointers need to be
+    strongly aligned. Instead of allocating a single block with potentially
+    misaligned subsequent objects, this change uses seprate allocations for
+    the four arrays.
+    
+    This is an alternative to https://gitlab.freedesktop.org/xorg/lib/libxrender/-/merge_requests/12
+    
+    Signed-off-by: Alex Richardson <arichardson@FreeBSD.org>
+
+commit 07efd80468f6b595e6432edd28b8560ca7695ba0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 7 11:11:26 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:45: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:45: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:45: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e5e23272394c90731debd7e18dd167e8c25b5c15
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 21 18:12:50 2022 -0700
@@ -532,7 +612,7 @@ Date:   Thu Jan 14 09:43:56 2010 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit fc8b02894452ad93101b35fec41cb1baf72e746a
-Author: Rémi Cardona  <remi@gentoo.org>
+Author: Rémi Cardona <remi@gentoo.org>
 Date:   Thu Dec 17 08:30:04 2009 +0100
 
     require autoconf 2.60 because of $(docdir) use
@@ -592,7 +672,7 @@ Date:   Thu Oct 22 12:34:19 2009 -0400
     when the structure of the component changes. Do not edit defaults.
 
 commit 1da8c1bfbb17750e5ba51321961aaf39b8cf98f7
-Author: Tomáš Chvátal <s <scarabeus@gentoo.org>
+Author: Tomáš Chvátal <scarabeus@gentoo.org>
 Date:   Sun Nov 29 13:38:42 2009 +0100
 
     Make libXrender use docdir for documentation placement.
@@ -841,19 +921,19 @@ Date:   Thu Jun 9 13:49:06 2005 +0000
         $(top_srcdir) to INCLUDES
 
 commit 8f765c413911d355dd95a312e31deaf1166206f9
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu May 19 20:33:55 2005 +0000
 
     Add forgotten region.h
 
 commit 65cb00ad3da0cdaad1429ac5cb01e12d7f4a6d0d
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu May 19 19:58:24 2005 +0000
 
     - Add Xrender build system
 
 commit 99a8286d49152c45ebead33df9f32bf6b7799bee
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu May 19 19:26:35 2005 +0000
 
     - Conditionally include config.h in xc/lib/Xrender/*.c

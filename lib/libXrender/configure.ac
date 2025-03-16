@@ -29,11 +29,12 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so Xrender version l.n.m corresponds to protocol version l.n
 #
-AC_INIT(libXrender, [0.9.11],
+AC_INIT(libXrender, [0.9.12],
 	[https://gitlab.freedesktop.org/xorg/lib/libxrender/-/issues],
 	[libXrender])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIRS([m4])
 
 PACKAGE_BRIEF="Library for the Render Extension to the X11 protocol"
 AC_SUBST(PACKAGE_BRIEF)
@@ -42,7 +43,7 @@ AC_SUBST(PACKAGE_BRIEF)
 AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Require X.Org macros 1.8 or later for AC_PROG_INSTALL
 m4_ifndef([XORG_MACROS_VERSION],
