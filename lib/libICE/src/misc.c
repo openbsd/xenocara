@@ -405,6 +405,11 @@ _IceAddOpcodeMapping (
 	iceConn->process_msg_info = malloc (
 	    newsize * sizeof (_IceProcessMsgInfo));
 
+	if (iceConn->process_msg_info == NULL) {
+	    iceConn->process_msg_info = oldVec;
+	    return;
+	}
+
 	memcpy (&iceConn->process_msg_info[
 	    iceConn->his_min_opcode - hisOpcode], oldVec,
 	    oldsize * sizeof (_IceProcessMsgInfo));
@@ -431,6 +436,11 @@ _IceAddOpcodeMapping (
 
 	iceConn->process_msg_info = malloc (
 	    newsize * sizeof (_IceProcessMsgInfo));
+
+	if (iceConn->process_msg_info == NULL) {
+	    iceConn->process_msg_info = oldVec;
+	    return;
+	}
 
 	memcpy (iceConn->process_msg_info, oldVec,
 	    oldsize * sizeof (_IceProcessMsgInfo));

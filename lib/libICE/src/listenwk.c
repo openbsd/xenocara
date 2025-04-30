@@ -83,7 +83,7 @@ IceListenForWellKnownConnections (
 
     for (i = 0; i < transCount; i++)
     {
-	networkId = (char *)_IceTransGetMyNetworkId (transConns[i]);
+	networkId = _IceTransGetMyNetworkId (transConns[i]);
 
 	if (networkId)
 	{

@@ -184,9 +184,11 @@ _IceErrorSetupFailed (
 	WORD64COUNT (bytes));
 
     pBuf = pStart = IceAllocScratch (iceConn, PADDED_BYTES64 (bytes));
-    STORE_STRING (pBuf, reason);
-
-    IceWriteData (iceConn, PADDED_BYTES64 (bytes), pStart);
+    if (pStart != NULL)
+    {
+        STORE_STRING (pBuf, reason);
+        IceWriteData (iceConn, PADDED_BYTES64 (bytes), pStart);
+    }
     IceFlush (iceConn);
 }
 
@@ -213,9 +215,11 @@ _IceErrorAuthenticationRejected (
 	WORD64COUNT (bytes));
 
     pBuf = pStart = IceAllocScratch (iceConn, PADDED_BYTES64 (bytes));
-    STORE_STRING (pBuf, reason);
-
-    IceWriteData (iceConn, PADDED_BYTES64 (bytes), pStart);
+    if (pStart != NULL)
+    {
+        STORE_STRING (pBuf, reason);
+        IceWriteData (iceConn, PADDED_BYTES64 (bytes), pStart);
+    }
     IceFlush (iceConn);
 }
 
@@ -242,9 +246,11 @@ _IceErrorAuthenticationFailed (
 	WORD64COUNT (bytes));
 
     pBuf = pStart = IceAllocScratch (iceConn, PADDED_BYTES64 (bytes));
-    STORE_STRING (pBuf, reason);
-
-    IceWriteData (iceConn, PADDED_BYTES64 (bytes), pStart);
+    if (pStart != NULL)
+    {
+        STORE_STRING (pBuf, reason);
+        IceWriteData (iceConn, PADDED_BYTES64 (bytes), pStart);
+    }
     IceFlush (iceConn);
 }
 
@@ -270,9 +276,11 @@ _IceErrorProtocolDuplicate (
 	WORD64COUNT (bytes));
 
     pBuf = pStart = IceAllocScratch (iceConn, PADDED_BYTES64 (bytes));
-    STORE_STRING (pBuf, protocolName);
-
-    IceWriteData (iceConn, PADDED_BYTES64 (bytes), pStart);
+    if (pStart != NULL)
+    {
+        STORE_STRING (pBuf, protocolName);
+        IceWriteData (iceConn, PADDED_BYTES64 (bytes), pStart);
+    }
     IceFlush (iceConn);
 }
 
@@ -318,9 +326,11 @@ _IceErrorUnknownProtocol (
 	WORD64COUNT (bytes));
 
     pBuf = pStart = IceAllocScratch (iceConn, PADDED_BYTES64 (bytes));
-    STORE_STRING (pBuf, protocolName);
-
-    IceWriteData (iceConn, PADDED_BYTES64 (bytes), pStart);
+    if (pStart != NULL)
+    {
+        STORE_STRING (pBuf, protocolName);
+        IceWriteData (iceConn, PADDED_BYTES64 (bytes), pStart);
+    }
     IceFlush (iceConn);
 }
 

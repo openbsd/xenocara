@@ -43,6 +43,12 @@ Author: Ralph Mor, X Consortium
 #include <stdlib.h>
 #include <stddef.h>
 
+#ifdef O_CLOEXEC
+#define FOPEN_CLOEXEC "e"
+#else
+#define FOPEN_CLOEXEC ""
+#define O_CLOEXEC 0
+#endif
 
 /*
  * Vendor & Release
@@ -150,40 +156,40 @@ typedef struct {
  */
 
 #define STORE_CARD8(_pBuf, _val) \
-{ \
+do { \
     *((CARD8 *) _pBuf) = _val; \
     _pBuf += 1; \
-}
+} while (0)
 
 #define STORE_CARD16(_pBuf, _val) \
-{ \
+do { \
     *((CARD16 *) _pBuf) = _val; \
     _pBuf += 2; \
-}
+} while (0)
 
 #define STORE_CARD32(_pBuf, _val) \
-{ \
+do { \
     *((CARD32 *) _pBuf) = _val; \
     _pBuf += 4; \
-}
+} while (0)
 
 
 #define STORE_STRING(_pBuf, _string) \
-{ \
+do { \
     CARD16 _len = (CARD16) strlen (_string); \
     STORE_CARD16 (_pBuf, _len); \
     memcpy (_pBuf, _string, _len); \
     _pBuf += _len; \
     if (PAD32 (2 + _len)) \
         _pBuf += PAD32 (2 + _len); \
-}
+} while (0)
 
 
 /*
  * SEND FOO - write to connection instead of buffer
  */
 #define SEND_STRING(_iceConn, _string) \
-{ \
+do { \
     char _padding[3] = { 0 }; \
     CARD16 _len = (CARD16) strlen (_string); \
     IceWriteData32 (_iceConn, 2, &_len); \
@@ -191,71 +197,73 @@ typedef struct {
         IceSendData (_iceConn, _len, (char *) _string);  \
     if (PAD32 (2 + _len)) \
         IceSendData (_iceConn, PAD32 (2 + _len), _padding); \
-}
+} while (0)
 
 /*
  * EXTRACT FOO
  */
 
 #define EXTRACT_CARD8(_pBuf, _val) \
-{ \
+do { \
     _val = *((CARD8 *) _pBuf); \
     _pBuf += 1; \
-}
+} while (0)
 
 #define EXTRACT_CARD16(_pBuf, _swap, _val) \
-{ \
+do { \
     _val = *((CARD16 *) _pBuf); \
     _pBuf += 2; \
     if (_swap) \
         _val = lswaps (_val); \
-}
+} while (0)
 
 #define EXTRACT_CARD32(_pBuf, _swap, _val) \
-{ \
+do { \
     _val = *((CARD32 *) _pBuf); \
     _pBuf += 4; \
     if (_swap) \
         _val = lswapl (_val); \
-}
+} while (0)
 
 
 #define EXTRACT_STRING(_pBuf, _swap, _string) \
-{ \
+do { \
     CARD16 _len; \
     EXTRACT_CARD16 (_pBuf, _swap, _len); \
     _string = malloc (_len + 1); \
-    memcpy (_string, _pBuf, _len); \
+    if (_string != NULL) { \
+        memcpy (_string, _pBuf, _len); \
+        _string[_len] = '\0'; \
+    } \
     _pBuf += _len; \
-    _string[_len] = '\0'; \
     if (PAD32 (2 + _len)) \
         _pBuf += PAD32 (2 + _len); \
-}
+} while (0)
 
 #define EXTRACT_LISTOF_STRING(_pBuf, _swap, _count, _strings) \
-{ \
+do { \
     int _i; \
     for (_i = 0; _i < _count; _i++) \
         EXTRACT_STRING (_pBuf, _swap, _strings[_i]); \
-}
+} while (0)
 
 
 #define SKIP_STRING(_pBuf, _swap, _end, _bail) \
-{ \
+do { \
     CARD16 _len; \
     EXTRACT_CARD16 (_pBuf, _swap, _len); \
     _pBuf += _len + PAD32(2+_len); \
     if (_pBuf > _end) { \
 	_bail; \
     } \
-}
+} while (0)
 
 #define SKIP_LISTOF_STRING(_pBuf, _swap, _count, _end, _bail) \
-{ \
+do { \
     int _i; \
     for (_i = 0; _i < _count; _i++) \
         SKIP_STRING (_pBuf, _swap, _end, _bail); \
-}
+} while (0)
 
 
 

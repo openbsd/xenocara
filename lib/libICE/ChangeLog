@@ -1,3 +1,331 @@
+commit adf389fc19aedbf1be077b05365d164cd6f463d8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 13 13:31:30 2024 -0800
+
+    libICE 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6cea89b54964e756bc3fdebf3da42db2711785c7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 16 16:40:31 2024 -0800
+
+    ProcessAuthReply: Handle -Wconditional-uninitialized warning
+    
+    Clears warning from clang 13:
+    
+    process.c:1612:21: warning: variable 'authDataLen' may be uninitialized
+     when used here [-Wconditional-uninitialized]
+        if (authData && authDataLen > 0)
+                        ^~~~~~~~~~~
+    process.c:1344:22: note: initialize the variable 'authDataLen' to
+     silence this warning
+        int                 authDataLen;
+                                       ^
+                                        = 0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/23>
+
+commit 4f7f5b10fa5e328a6bfa83a0411cb6b8bf44b49d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 16 16:17:12 2024 -0800
+
+    ICElibint.h: add do ... while (0) around macro definitions
+    
+    Clears 71 warnings from clang 13 of the form:
+    
+    connect.c:351:39: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+            STORE_STRING (pData, IceVendorString);
+                                                 ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/23>
+
+commit a767164a8e4467a5faa1265536f05a4bea8f8df0
+Author: mahendra <mahendra.n@samsung.com>
+Date:   Tue Nov 10 14:01:39 2015 +0530
+
+    libICE : Dereferencing a possible NULL pointer in error.c
+    
+    In function _IceErrorSetupFailed at line no 188, IceAllocScratch is used to
+    allocate memory for variable pStart and pBuf.
+    
+    IceAllocScratch is using malloc for memory allocation, malloc can return
+    NULL on failure. So before dereferencing pStart and pBuf, NULL check must
+    apply.
+    
+    v2 (by alanc): correct inverted tests for NULL from original patch
+    
+    Closes: #5
+    Signed-off-by: mahendra <mahendra.n@samsung.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/22>
+
+commit 3ea01ff303843b13ffa18bc8207d4f41631ea66c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 9 08:07:37 2024 -0800
+
+    write_counted_string: avoid undefined behavior in fwrite() call
+    
+    In C23 and earlier, it is undefined behavior to call fwrite() with a
+    NULL pointer, even if the size to copy is zero bytes.
+    
+    Closes: #11
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/21>
+
+commit cea5bb04617449756994a999ff258884aac802d1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 8 11:52:26 2024 -0800
+
+    AuthRequired: avoid undefined behavior in memcpy() call
+    
+    In C23 and earlier, it is undefined behavior to call memcpy() with a
+    NULL pointer, even if the size to copy is zero bytes.
+    
+    Closes: #10
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/20>
+
+commit 296eff6b5f9ce0b2147c14ac96fea3bb2de37d70
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 25 10:50:47 2024 -0700
+
+    IceRegisterForProtocolSetup: return failure if malloc() failed
+    
+    Clears warning from gcc 14.1:
+    
+    register.c: In function ‘IceRegisterForProtocolSetup’:
+    register.c:92:15: warning: dereference of possibly-NULL ‘p’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+       92 |     p->vendor = strdup(vendor);
+          |     ~~~~~~~~~~^~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/19>
+
+commit fafdde691754159c586d95c87d090afcf306ca4d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 25 10:34:50 2024 -0700
+
+    IceProtocolSetup: return failure if malloc() failed for authIndices
+    
+    Clears warning from gcc 14.1:
+    
+    protosetup.c: In function ‘IceProtocolSetup’:
+    protosetup.c:178:24: warning: dereference of NULL ‘authIndices’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+      178 |             authIndices[i]]);
+          |             ~~~~~~~~~~~^~~
+    ICElibint.h:179:36: note: in definition of macro ‘STORE_STRING’
+      179 |     CARD16 _len = (CARD16) strlen (_string); \
+          |                                    ^~~~~~~
+      ‘IceProtocolSetup’: events 1-8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/19>
+
+commit b9c70bd2537bcb591135b8dc79ace7115c608ca7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 25 10:24:21 2024 -0700
+
+    ProcessProtocolSetup: return failure if malloc() failed for ProtocolName
+    
+    Clears warning from gcc 14.1:
+    
+    process.c: In function ‘ProcessProtocolSetup’:
+    process.c:1956:56: warning: use of NULL ‘protocolName’ where non-null
+     expected [CWE-476] [-Wanalyzer-null-argument]
+     1956 |             if (iceConn->process_msg_info[i].in_use && strcmp (protocolName,
+          |                                                        ^~~~~~~~~~~~~~~~~~~~
+     1957 |                 iceConn->process_msg_info[i].protocol->protocol_name) == 0)
+          |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/19>
+
+commit b25db77dba416c6684b3130f007a13d762033ebd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 25 10:12:47 2024 -0700
+
+    ProcessConnectionSetup: avoid writing to NULL pointer if malloc() failed
+    
+    Clears warning from gcc 14.1:
+    
+    process.c: In function ‘ProcessConnectionSetup’:
+    ICElibint.h:233:13: warning: dereference of possibly-NULL ‘hisAuthNames’
+     [CWE-690] [-Wanalyzer-possible-null-dereference]
+      233 |     _string = malloc (_len + 1); \
+    ICElibint.h:247:9: note: in expansion of macro ‘EXTRACT_STRING’
+      247 |         EXTRACT_STRING (_pBuf, _swap, _strings[_i]); \
+          |         ^~~~~~~~~~~~~~
+    process.c:947:9: note: in expansion of macro ‘EXTRACT_LISTOF_STRING’
+      947 |         EXTRACT_LISTOF_STRING (pData, swap, hisAuthCount, hisAuthNames);
+          |         ^~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/19>
+
+commit 8adbc70b77c80b75c9b66dd56852a01f524df37a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 25 09:41:35 2024 -0700
+
+    IceReadCompleteMessage: callers need to check if malloc() failed
+    
+    The IceReadCompleteMessage() macro may try to malloc() a buffer and
+    assign it to the final argument.
+    
+    Clears up 12 -Wanalyzer-null-dereference warnings from gcc 14.1
+    of the form:
+    
+    process.c: In function ‘ProcessError’:
+    ICElibint.h:214:10: warning: dereference of NULL ‘pStart’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+      214 |     _val = *((CARD16 *) _pBuf); \
+          |          ^
+    ICElibint.h:232:5: note: in expansion of macro ‘EXTRACT_CARD16’
+      232 |     EXTRACT_CARD16 (_pBuf, _swap, _len); \
+          |     ^~~~~~~~~~~~~~
+    process.c:689:17: note: in expansion of macro ‘EXTRACT_STRING’
+      689 |                 EXTRACT_STRING (pData, swap, temp);
+          |                 ^~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/19>
+
+commit ac3458271b0edbce1e9c827a8e9dc83aa938f8a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 24 16:42:09 2024 -0700
+
+    Clear some -Wuseless-cast warnings from gcc 14.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/19>
+
+commit 9d9841da2deca16a5350ee813fd6b9d3dd3b1b02
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 24 16:04:42 2024 -0700
+
+    _IceAddOpcodeMapping: Avoid writing to NULL pointer if malloc fails
+    
+    Clears warning from gcc 14.1:
+    
+    misc.c: In function ‘_IceAddOpcodeMapping’:
+    misc.c:435:9: warning: use of possibly-NULL ‘*iceConn.process_msg_info’
+     where non-null expected [CWE-690] [-Wanalyzer-possible-null-argument]
+      435 |         memcpy (iceConn->process_msg_info, oldVec,
+          |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      436 |             oldsize * sizeof (_IceProcessMsgInfo));
+          |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/19>
+
+commit 4b8b12b432c86601e773dfccf8d17e87bb453f07
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 24 15:34:50 2024 -0700
+
+    EXTRACT_STRING: Avoid writing to NULL pointer if malloc fails
+    
+    Fixes several warnings from gcc 14.1 of the form:
+    
+    In file included from error.c:33:
+    error.c: In function ‘_IceDefaultErrorHandler’:
+    ICElibint.h:234:5: warning: use of possibly-NULL ‘estr’ where non-null
+     expected [CWE-690] [-Wanalyzer-possible-null-argument]
+      234 |     memcpy (_string, _pBuf, _len); \
+          |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    error.c:515:13: note: in expansion of macro ‘EXTRACT_STRING’
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/19>
+
+commit 00f59affb7e14fb25b40ba0a009cd8ff5dd3039a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 24 15:21:07 2024 -0700
+
+    ConnectToPeer: return failure if malloc() fails
+    
+    Fixes warning from gcc 14.1:
+    connect.c: In function ‘ConnectToPeer’:
+    connect.c:541:9: warning: use of possibly-NULL ‘address’ where non-null
+     expected [CWE-690] [-Wanalyzer-possible-null-argument]
+      541 |         strncpy (address, ptr, len);
+          |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/19>
+
+commit 4b6f0759a8cbcd5cc1fc0a6ee0359f734194f365
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 24 15:13:26 2024 -0700
+
+    IceOpenConnection: stop processing messages if connection was closed
+    
+    Fixes warning from gcc 14.1 in cases where the connection was closed
+    and iceConn set to NULL on a previous time through the loop.
+    
+    connect.c: In function ‘IceOpenConnection’:
+    connect.c:439:51: warning: dereference of NULL ‘iceConn’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+      439 |                     iceConn->my_ice_version_index =
+          |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+      440 |                         reply.connection_reply.version_index;
+          |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libice/-/merge_requests/19>
+
+commit e8a561b500f7b783d84d81ba158fd28b007745ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 13 12:27:49 2023 -0700
+
+    gitlab CI: add xz-utils to container for "make distcheck"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 246bfdb00c1ec716caf4e91178bda8389d3ecf1d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 13 12:13:34 2023 -0700
+
+    gitlab CI: Update to latest CI templates
+    
+    Current template fails to rebuild the CI container with the current
+    Debian stable release (a new release since the last update)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e3fe79e3a5346bc2dbf8108afec1e69a42ff822
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 28 09:50:17 2023 -0700
+
+    Set close-on-exec when opening files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5b9d4d27a2b8441e966d701bf337ace848c4e4fd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:18: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:18: You should run autoupdate.
+    aclocal.m4:3640: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:18: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit be1888a46e446dfcaa62ac0a97d96bb77b6816d4
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Thu Dec 8 10:41:44 2022 -0500

@@ -1,21 +1,22 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libICE], [1.1.1],
+AC_INIT([libICE], [1.1.2],
         [https://gitlab.freedesktop.org/xorg/lib/libice/-/issues], [libICE])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIRS([m4])
 
 # Set common system defines for POSIX extensions, such as _GNU_SOURCE
 # Must be called before any macros that run the compiler (like
-# AC_PROG_LIBTOOL or XORG_DEFAULT_OPTIONS) to avoid autoconf errors.
+# LT_INIT or XORG_DEFAULT_OPTIONS) to avoid autoconf errors.
 AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Require xorg-macros minimum of 1.12 for DocBook external references
 m4_ifndef([XORG_MACROS_VERSION],

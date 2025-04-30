@@ -94,7 +94,7 @@ IceOpenConnection (
     for (i = 0; i < _IceConnectionCount; i++)
     {
 	char *strptr;
-	if ((strptr = (char *) strstr (
+	if ((strptr = strstr (
 	    networkIdsList, _IceConnectionStrings[i])) != NULL)
 	{
 	    char ch = *(strptr + strlen (_IceConnectionStrings[i]));
@@ -401,7 +401,7 @@ IceOpenConnection (
     gotReply = False;
     ioErrorOccured = False;
 
-    while (!gotReply && !ioErrorOccured)
+    while (!gotReply && !ioErrorOccured && iceConn)
     {
 	ioErrorOccured = (IceProcessMessages (
 	    iceConn, &replyWait, &gotReply) == IceProcessMessagesIOError);
@@ -527,12 +527,14 @@ ConnectToPeer (char *networkIdsList, char **actualConnectionRet)
     else
     {
        address = malloc (len + 1);
+       if (address == NULL)
+           return NULL;
        address_size = len;
     }
 
     while (ptr < endptr && !madeConnection)
     {
-	if ((delim = (char *) strchr (ptr, ',')) == NULL)
+	if ((delim = strchr (ptr, ',')) == NULL)
 	    delim = endptr;
 
 	len = delim - ptr;

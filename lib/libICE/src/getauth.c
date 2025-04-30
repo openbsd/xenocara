@@ -146,7 +146,7 @@ _IceGetPoValidAuthIndices (
     if (access (filename, R_OK) != 0)		/* checks REAL id */
 	return;
 
-    if (!(auth_file = fopen (filename, "rb")))
+    if (!(auth_file = fopen (filename, "rb" FOPEN_CLOEXEC)))
 	return;
 
     for (;;)

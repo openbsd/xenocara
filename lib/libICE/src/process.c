@@ -446,12 +446,15 @@ AuthRequired (
 
     pMsg->authIndex = authIndex;
     pMsg->authDataLength = authDataLen;
-    pMsg->length += WORD64COUNT (authDataLen);
 
-    IceWriteData (iceConn, authDataLen, (char *) authData);
+    if (authDataLen) {
+	pMsg->length += WORD64COUNT (authDataLen);
 
-    if (PAD64 (authDataLen))
-	IceWritePad (iceConn, PAD64 (authDataLen));
+	IceWriteData (iceConn, authDataLen, (char *) authData);
+
+	if (PAD64 (authDataLen))
+	    IceWritePad (iceConn, PAD64 (authDataLen));
+    }
 
     IceFlush (iceConn);
 }
@@ -619,7 +622,7 @@ ProcessError (
     IceReadCompleteMessage (iceConn, SIZEOF (iceErrorMsg),
 	iceErrorMsg, message, pStart);
 
-    if (!IceValidIO (iceConn))
+    if (!IceValidIO (iceConn) || pStart == NULL)
     {
 	IceDisposeCompleteMessage (iceConn, pStart);
 	return (0);
@@ -900,7 +903,7 @@ ProcessConnectionSetup (
     IceReadCompleteMessage (iceConn, SIZEOF (iceConnectionSetupMsg),
 	iceConnectionSetupMsg, message, pStart);
 
-    if (!IceValidIO (iceConn))
+    if (!IceValidIO (iceConn) || pStart == NULL)
     {
 	IceDisposeCompleteMessage (iceConn, pStart);
 	return (0);
@@ -944,7 +947,15 @@ ProcessConnectionSetup (
     if (hisAuthCount > 0)
     {
 	hisAuthNames = malloc (hisAuthCount * sizeof (char *));
-	EXTRACT_LISTOF_STRING (pData, swap, hisAuthCount, hisAuthNames);
+	if (hisAuthNames != NULL)
+	{
+	    EXTRACT_LISTOF_STRING (pData, swap, hisAuthCount, hisAuthNames);
+	}
+	else
+	{
+	    SKIP_LISTOF_STRING (pData, swap, hisAuthCount, pEnd, break);
+	    hisAuthCount = 0;
+	}
     }
 
     hisVersionCount = message->versionCount;
@@ -1152,7 +1163,7 @@ ProcessAuthRequired (
     IceReadCompleteMessage (iceConn, SIZEOF (iceAuthRequiredMsg),
 	iceAuthRequiredMsg, message, authData);
 
-    if (!IceValidIO (iceConn))
+    if (!IceValidIO (iceConn) || authData == NULL)
     {
 	IceDisposeCompleteMessage (iceConn, authData);
 	return (0);
@@ -1330,7 +1341,7 @@ ProcessAuthReply (
     iceAuthReplyMsg 	*message;
     int			replyDataLen;
     IcePointer		replyData;
-    int 		authDataLen;
+    int 		authDataLen = 0;
     IcePointer 		authData = NULL;
     char		*errorString = NULL;
 
@@ -1341,7 +1352,7 @@ ProcessAuthReply (
     IceReadCompleteMessage (iceConn, SIZEOF (iceAuthReplyMsg),
 	iceAuthReplyMsg, message, replyData);
 
-    if (!IceValidIO (iceConn))
+    if (!IceValidIO (iceConn) || replyData == NULL)
     {
 	IceDisposeCompleteMessage (iceConn, replyData);
 	return (0);
@@ -1635,7 +1646,7 @@ ProcessAuthNextPhase (
     IceReadCompleteMessage (iceConn, SIZEOF (iceAuthNextPhaseMsg),
 	iceAuthNextPhaseMsg, message, authData);
 
-    if (!IceValidIO (iceConn))
+    if (!IceValidIO (iceConn) || authData == NULL)
     {
 	IceDisposeCompleteMessage (iceConn, authData);
 	return (0);
@@ -1762,7 +1773,7 @@ ProcessConnectionReply (
     IceReadCompleteMessage (iceConn, SIZEOF (iceConnectionReplyMsg),
 	iceConnectionReplyMsg, message, pStart);
 
-    if (!IceValidIO (iceConn))
+    if (!IceValidIO (iceConn) || pStart == NULL)
     {
 	IceDisposeCompleteMessage (iceConn, pStart);
 	return (0);
@@ -1889,7 +1900,7 @@ ProcessProtocolSetup (
     IceReadCompleteMessage (iceConn, SIZEOF (iceProtocolSetupMsg),
 	iceProtocolSetupMsg, message, pStart);
 
-    if (!IceValidIO (iceConn))
+    if (!IceValidIO (iceConn) || pStart == NULL)
     {
 	IceDisposeCompleteMessage (iceConn, pStart);
 	return (0);
@@ -1940,6 +1951,13 @@ ProcessProtocolSetup (
     }
 
     EXTRACT_STRING (pData, swap, protocolName);
+    if (protocolName == NULL)
+    {
+	_IceErrorSetupFailed (iceConn, message->protocolOpcode,
+	    "protocolName allocation failed");
+	IceDisposeCompleteMessage (iceConn, pStart);
+	return (0);
+    }
 
     if (iceConn->process_msg_info)
     {

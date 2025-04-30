@@ -68,6 +68,8 @@ IceRegisterForProtocolSetup (
     if (i <= _IceLastMajorOpcode)
     {
 	p = _IceProtocols[i - 1].orig_client = malloc (sizeof(_IcePoProtocol));
+	if (p == NULL)
+	    return (-1);
 	opcodeRet = i;
     }
     else if (_IceLastMajorOpcode == 255 ||
@@ -80,9 +82,16 @@ IceRegisterForProtocolSetup (
     {
 	_IceProtocols[_IceLastMajorOpcode].protocol_name =
 	    strdup(protocolName);
+	if (_IceProtocols[_IceLastMajorOpcode].protocol_name == NULL)
+	    return (-1);
 
 	p = _IceProtocols[_IceLastMajorOpcode].orig_client =
 	    malloc (sizeof (_IcePoProtocol));
+	if (p == NULL)
+	{
+	    free(_IceProtocols[_IceLastMajorOpcode].protocol_name);
+	    return (-1);
+	}
 
 	_IceProtocols[_IceLastMajorOpcode].accept_client = NULL;
 

@@ -175,7 +175,8 @@ IceLockAuthFile (
     {
 	if (creat_fd == -1)
 	{
-	    creat_fd = creat (creat_name, 0666);
+	    creat_fd = open (creat_name,
+                             O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666);
 
 	    if (creat_fd == -1)
 	    {
@@ -347,7 +348,7 @@ IceGetAuthFileEntry (
     if (access (filename, R_OK) != 0)		/* checks REAL id */
 	return (NULL);
 
-    if (!(auth_file = fopen (filename, "rb")))
+    if (!(auth_file = fopen (filename, "rb" FOPEN_CLOEXEC)))
 	return (NULL);
 
     for (;;)
@@ -488,7 +489,8 @@ write_counted_string (FILE *file, unsigned short count, const char *string)
     if (!write_short (file, count))
 	return (0);
 
-    if (fwrite (string, sizeof (char), count, file) != count)
+    if ((count > 0) &&
+        (fwrite (string, sizeof (char), count, file) != count))
 	return (0);
 
     return (1);

@@ -121,6 +121,16 @@ IceProtocolSetup (
 	authIndices = malloc (
 	    myProtocol->orig_client->auth_count * sizeof (int));
 
+	if (authIndices == NULL)
+	{
+	    if (errorStringRet && errorLength > 0) {
+		strncpy (errorStringRet,
+			 "malloc of authIndices failed", errorLength);
+		errorStringRet[errorLength - 1] = '\0';
+	    }
+	    return (IceProtocolSetupFailure);
+	}
+
 	_IceGetPoValidAuthIndices (myProtocol->protocol_name,
 	    iceConn->connection_string,
 	    myProtocol->orig_client->auth_count,
