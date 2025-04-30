@@ -1,3 +1,633 @@
+commit 59917d28a3c41ad22d6fc52e323cafe2cdd596d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 8 15:23:04 2025 -0800
+
+    libX11 1.8.12
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5f8077b257ea27a5fd6f114d2bc15284b2416b3c
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Thu Nov 28 14:09:04 2024 +0100
+
+    xkb: Fix buffer overflow in XkbChangeTypesOfKey()
+    
+    If XkbChangeTypesOfKey() is called with nGroups == 0, it will resize the
+    key syms to 0 but leave the key actions unchanged.
+    
+    If later, the same function is called with a non-zero value for nGroups,
+    this will cause a buffer overflow because the key actions are of the wrong
+    size.
+    
+    To avoid the issue, make sure to resize both the key syms and key actions
+    when nGroups is 0.
+    
+    (cherry picked from xorg/xserver@0e4ed94952b255c04fe910f6a1d9c852878dcd64)
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/279>
+
+commit 865fd56aeb5c5d1812cce46ed197873c48b08692
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 1 15:45:08 2020 -0800
+
+    xkb: always set *mask_rtrn in XkbVirtualModsToReal
+    
+    Resolves warning from Oracle Parfait static analyser:
+    
+    Error: Uninitialised memory
+       Uninitialised memory variable [uninitialised-mem-var] (CWE 457):
+          Possible access to uninitialised memory referenced by variable 'mask'
+            at line 721 of xkb/XKBMisc.c in function 'XkbUpdateKeyTypeVirtualMods'.
+            Path in callee avoiding write at line 720
+              mask allocated at line 718
+    
+    (cherry picked from xorg/xserver@a6574033f464c7cde02bce8f1b130ff6b2b2d9eb)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/279>
+
+commit 88d1a84ca3c0f87ffcb83b9b96e34a7121d5e2d3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 22 11:59:13 2025 -0800
+
+    XkbChangeTypesOfKey: verify newTypesIn is not null before using it
+    
+    Based on xorg/xserver@97c9e6a7139e07a0761be05034fae42fcd65ba36
+    
+    Fixes: 8ba0ca32 ("Janitor: ansification, make distcheck, compiler warnings.")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/279>
+
+commit 48a1335cab13d883e15b4eb5e9a5e080289a5c64
+Author: Siddhesh Poyarekar <siddhesh.poyarekar@gmail.com>
+Date:   Tue May 29 10:17:50 2012 +0530
+
+    xkb: Allocate size_syms correctly when width of a type increases
+    
+    The current code seems to skip syms with width less than
+    type->num_levels when calculating the total size for the new
+    size_syms. This leads to less space being allocated than necessary
+    during the next phase, which is to copy over the syms to the new
+    location. This results in an overflow leading to a crash.
+    
+    (cherry picked from xorg/xserver@42ae2e8199fe875319978249963de7499607988b)
+    
+    Signed-off-by: Siddhesh Poyarekar <siddhesh.poyarekar@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/279>
+
+commit 158be3ebd7d1da4d16bfc2dee82aac477fbcb833
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Mar 21 02:04:12 2007 +0200
+
+    XKB: Fix size_syms calculation bug
+    
+    Apparently it needed to be nSyms*15/10, not *12/10; make it match the
+    other allocation code.
+    
+    (cherry picked from xorg/xserver@f292de2ef13dc994a38029cee9e2642576893332)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/279>
+
+commit d6e1ca046aef42ec5465ece5edbdffe0bc7c0cb6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 22 10:13:52 2025 -0800
+
+    XkbFreeKeyboard: set xkb->geom to NULL after freeing it
+    
+    Because XkbFreeGeometry takes a pointer to the geometry structure,
+    and not the overall xkb structure like the other XkbFree*() calls,
+    the caller is responsible for clearing the xkb->geom pointer to
+    ensure it is not used after free.
+    
+    Based on xorg/xserver@629798c73ad76a77fa6a55bc6403fd9b95ade2bb
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/279>
+
+commit 4a3ca6eeced253aacb0e2ecf640b9eb93863badc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 23 15:19:54 2025 -0800
+
+    x11.pc: Add URL field
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/280>
+
+commit 23f0352eca362515d598bfdbd8ecec070dcd1b28
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 2 13:54:27 2025 -0800
+
+    libX11 1.8.11
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4665733565eda7ae32302c3abf1aaf5075b8abde
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 11 10:31:08 2025 -0800
+
+    configure: drop `pthread-stubs` dependency on Dragonfly, FreeBSD, & NetBSD
+    
+    syncs with changes to libxcb 1.16 & 1.16.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/277>
+
+commit ba15d51bfe789e84e291ccfb31d5f0ae6192969e
+Author: Aaron Muir Hamilton <aaron@correspondwith.me>
+Date:   Sun Oct 27 21:42:23 2024 -0400
+
+    ximcp/imRm.c: allow XNArea with OnTheSpot
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/270>
+
+commit 61175323a8a374aaedb139894987ddaf2bb2ba27
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 30 10:27:23 2024 -0800
+
+    cmsColNm: remove obsolete comment about FirstCmp being public
+    
+    It was made a static function in May 14, 1991 by rws in
+    commit "make FirstCmp static" for X11R5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/276>
+
+commit 7c75a066454fbafe586f7c24aeee65348f9d2bcc
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Mon Dec 9 14:51:17 2024 +0100
+
+    Fix misuse of UCSConvertCase in XConvertCase
+    
+    There are two issues with the use of `UCSConvertCase` in `XConvertCase`:
+    
+    - Some Latin-1 keysyms do not map within Latin-1, e.g. `ssharp`.
+      Only Latin-1 keysyms have the same value as the Unicode code point of
+      their corresponding character. So `UCSConvertCase` does not work for
+      some Latin-1 keysyms as it returns Unicode code points outside Latin-1
+      that do not match their corresponding keysyms values.
+    - Some Unicode keysyms should map to Latin-1 keysyms (<0x100). But the
+      Unicode keysym mask 0x01000000 is applied blindly to the result of
+      `UCSConvertCase`, resulting in invalid Unicode keysyms (0x010000nn)
+      while they should be Latin-1 keysyms.
+    
+    Example with ß/ẞ:
+    
+    ```c
+    KeySym lower, upper;
+    
+    XConvertCase(XK_ssharp, &lower, &upper);
+    // Expected: lower == XK_ssharp, upper == U1E9E
+    // Got:      lower == XK_ssharp, upper == 0x1E9E
+    
+    XConvertCase(U1E9E, &lower, &upper);
+    // Expected: lower == XK_ssharp, upper == U1E9E
+    // Got:      lower == 0x10000df, upper == U1E9E
+    ```
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/274>
+
+commit 5a7d94e07fc7e4a10d6399f5e44793fa0c896af6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 12 12:40:04 2024 -0800
+
+    xkb: avoid undefined behavior due to left shift overflow
+    
+    Closes: #225
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/273>
+
+commit 1ef3c6f010c03eade038b4e662c0eef47014800d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 15:38:25 2024 -0800
+
+    XIM_SET_PAD: add do ... while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 8 warnings from clang of the form:
+    
+    imDefIc.c:366:29: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+            XIM_SET_PAD(&buf_s[2], len);            /* pad */
+                                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 22ded6890e9d11cc9eca59737fc531d40ec284a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 15:30:48 2024 -0800
+
+    Xrm.c: remove unneccessary ; after {}
+    
+    Clears 2 clang warnings:
+    
+    Xrm.c:1186:51: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                while (is_space(bits = next_char(c, str))) {};
+                                                             ^
+    Xrm.c:1191:48: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                    while (is_space(bits = next_char(c, str))) {};
+                                                                 ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit b7f59114abb4a4766d7fd5805d0435d023cd0c4b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 15:29:21 2024 -0800
+
+    DL_APPEND/DL_DELETE: remove trailing semicolon from definitions
+    
+    Clears 2 clang warnings:
+    
+    XlibInt.c:672:26: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+        DL_APPEND(*head, add);
+                             ^
+    XlibInt.c:694:36: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                DL_DELETE(*head, event);
+                                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit da431b8f7ff21d36b5a88237c991ca43b185d65f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 15:25:40 2024 -0800
+
+    xcb_io.c: add do ... while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 10 warnings from clang of the form:
+    
+    xcb_io.c:177:56: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                                             xcb_xlib_unknown_req_in_deq);
+                                                                         ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit a53c45d69e88799e59dfbd324843df65a30cf4a9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 13:16:41 2024 -0800
+
+    CI_GET_*_INFO_*: add do ... while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 24 warnings from clang of the form:
+    
+    TextExt16.c:63:34: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+            CI_GET_DEFAULT_INFO_1D (fs, def);
+                                            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 68912288218527846b04cbe8d647a2c252e82e20
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 13:11:12 2024 -0800
+
+    RETURN: add do ... while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 5 warnings from clang of the form:
+    
+    RdBitF.c:141:32: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                RETURN (BitmapFileInvalid);
+                                          ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 38c642c8ebd69f761fdda03664eba6889a331598
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 13:08:31 2024 -0800
+
+    poly.h: add do ... while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 3 warnings from clang of the form:
+    
+    PolyReg.c:224:67: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                BRESINITPGONSTRUCT(dy, top->x, bottom->x, pETEs->bres);
+                                                                      ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 906bf4a86d174ed20fda925d8f82de023aa26d2d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 12:37:53 2024 -0800
+
+    PutCommandResource: add do ... while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 4 warnings from clang of the form:
+    
+    ParseCmd.c:158:43: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                        PutCommandResource(options[i].value);
+                                                            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit c0768ab687fa07f83d0030dd161f4aa49cbe84f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 12:35:44 2024 -0800
+
+    GetFunc: add do ... while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 4 warnings from clang of the form:
+    
+    CrGlCur.c:140:64: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+        GetFunc (TryShapeCursorFunc, "XcursorTryShapeCursor", func);
+                                                                   ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 49350501687d9633a86ae317d5311228e7d812e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 12:33:01 2024 -0800
+
+    _XCreateMutex/_XFreeMutex: remove trailing semicolon from definitions
+    
+    Makes them match the style of the other macros here and clears
+    up 5 clang warnings of the form:
+    
+    Context.c:194:27: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+            _XCreateMutex(&db->linfo);
+                                     ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 41c4aa408c3488e920e1f08eb946442faa051e6c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 11:52:19 2024 -0800
+
+    OneDataCard32: add do ... while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 13 warnings from clang of the form:
+    
+    Backgnd.c:44:72: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+        OneDataCard32 (dpy, NEXTPTR(req,xChangeWindowAttributesReq), pixel);
+                                                                           ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 68e6caad8fcad28143769384536d4529fe0161c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 11:48:41 2024 -0800
+
+    _XkbCheckPendingRefresh: add do ... while (0) to avoid -Wextra-semi-stmt
+    
+    Clears 6 warnings from clang of the form:
+    
+    XKBBind.c:74:48: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+        _XkbCheckPendingRefresh(dpy, dpy->xkb_info);
+                                                   ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 563ddd4ff5575e3f8bbf635cbdc339b09a7e285e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 11:09:56 2024 -0800
+
+    BufAlloc: add do { ... } while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 46 warnings from clang of the form:
+    
+    XKB.c:207:69: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+            BufAlloc(char *, out, (((size * 2) + (unsigned) 3) / 4) * 4);
+                                                                        ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 5e22c4b3d56d8327d8610faabc8ecfc0c45399de
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 11:06:28 2024 -0800
+
+    set_toupper: add do { ... } while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 4 warnings from clang of the form:
+    
+    lcUtil.c:53:18: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+            set_toupper(ch1);
+                            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 4cb567d9a05b4a995a50e2fe178c2e697d339668
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 10:27:39 2024 -0800
+
+    Data: add do ... while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 38 warnings from clang of the form:
+    
+    cmsLkCol.c:155:35: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+        Data (dpy, colorname, (long)n);
+                                      ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 9ab8f6a5f73cbe0675d1555504f6ec269c9dde8d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 10 10:14:49 2024 -0800
+
+    DeqAsyncHandler: add do ... while (0) to avoid -Wextra-semi-stmt warnings
+    
+    Clears 12 warnings from clang of the form:
+    
+    cmsCmap.c:194:34: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                DeqAsyncHandler(dpy, &async);
+                                            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/272>
+
+commit 8703ecf105d5bf6e5b105bc25ceaee8f43344c71
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Nov 1 13:03:56 2024 +0100
+
+    ximcp: hide internal functions
+    
+    commit 13e9ac4d45 "ximcp: Unmark to fabricate key events with XKeyEvent
+    serial" added new _XimFabricateSerial / _XimUnfabricateSerial /
+    _XimIsFabricatedSerial functions; they don't need to be exported by
+    libX11.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/271>
+
+commit 41bc1a9dbe5b634489539f7779078d4a3b35df5e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 26 11:02:42 2024 -0700
+
+    ximcp: don't leak window if XGetAtomName() fails
+    
+    Found by Oracle Parfait 13.3 static analyzer:
+       X Resource Leak [X-resource-leak]:
+          Leaked X Resource window
+            at line 306 of imDefIm.c in function '_XimPreConnectionIM'.
+              window initialized at line 300 with XCreateSimpleWindow
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/269>
+
+commit df1f1a47f90e71fbe68b1fe57bd021ac2320579b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 21 12:31:56 2024 -0700
+
+    _XGetRequest: Set data field to 0 when initializing new requests
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/268>
+
+commit f2ebbce6d0978d2d84f840196b03ee35a3ca1736
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 29 10:24:23 2024 -0700
+
+    _XimStrConversionCallback: use size_t to calculate size to malloc
+    
+    Avoids build failures with gcc 14.2 when MALLOC_0_RETURNS_NULL is defined:
+    
+    imCallbk.c:346:9: error: ‘memcpy’ offset 10 is out of the bounds [0, 1]
+     [-Werror=array-bounds=]
+      346 |         memcpy(&buf[p],&cbrec.text->string.mbs,length_in_bytes);
+          |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/267>
+
+commit 75c5bdee81b3a1147c2f123db7a052a4a79fbea4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 29 10:04:40 2024 -0700
+
+    _XimEncodingNegotiation: swap order of arguments to calloc
+    
+    Avoids build failures with gcc 14.2 when MALLOC_0_RETURNS_NULL is defined:
+    
+    imDefIm.c: In function ‘_XimEncodingNegotiation’:
+    imDefIm.c:1739:15: error: ‘memcpy’ offset 8 is out of the bounds [0, 1]
+     [-Werror=array-bounds=]
+     1739 |         (void)memcpy((char *)&buf_s[2], name_ptr, name_len);
+          |               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/267>
+
+commit 1f01aafa6d9100c5d4a48636b188334cdb223bd5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 29 09:06:32 2024 -0700
+
+    _XlcDefaultMapModifiers: remove conversions between size_t & int
+    
+    Avoids build failures with gcc 14.2 when MALLOC_0_RETURNS_NULL is defined:
+    
+    lcWrap.c: In function ‘_XlcDefaultMapModifiers’:
+    lcWrap.c:149:9: warning: ‘strcpy’ writing between 4294967296 and
+     9223372036854775806 bytes into a region of size 1 [-Wstringop-overflow=]
+      149 |         strcpy(mods, prog_mods);
+          |         ^~~~~~~~~~~~~~~~~~~~~~~
+    ../../include/X11/Xlibint.h:457:24: note: destination object of size 1
+     allocated by ‘malloc’
+      457 | # define Xmalloc(size) malloc((size_t)((size) == 0 ? 1 : (size)))
+          |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    lcWrap.c:147:12: note: in expansion of macro ‘Xmalloc’
+      147 |     mods = Xmalloc(i);
+          |            ^~~~~~~
+    lcWrap.c:149:9: error: ‘__builtin_memcpy’ forming offset [1, 4294967295]
+     is out of the bounds [0, 1] [-Werror=array-bounds=]
+      149 |         strcpy(mods, prog_mods);
+          |         ^~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/267>
+
+commit 86e71472bc826ac5c850e200cb3820485b5689cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 31 10:49:16 2024 -0700
+
+    SetFontPath: if ndirs is 0, skip work to make a list of directories
+    
+    Clears warning from gcc 14.1:
+    
+    SetFPath.c: In function ‘XSetFontPath’:
+    ../include/X11/Xlibint.h:463:24: warning: argument 1 value is zero
+     [-Walloc-zero]
+      463 | # define Xmalloc(size) malloc((size_t)(size))
+          |                        ^~~~~~~~~~~~~~~~~~~~~~
+    SetFPath.c:61:18: note: in expansion of macro ‘Xmalloc’
+       61 |         if ((p = Xmalloc (nbytes))) {
+          |                  ^~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/266>
+
+commit 19b2f5c2d0935cbf9c17ecf30604f80592807b59
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Aug 9 10:24:13 2024 +0200
+
+    Fix indentation
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/264>
+
+commit f3d6ebac35301d4ad068e307f0fbe6aa12ccbccb
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Aug 9 09:21:31 2024 +0200
+
+    Close xcb connection after freeing display structure
+    
+    Commit 1472048b7 to fix a colormap threading issue added a display
+    lock/unlock and a call to SyncHandle() to _XcmsFreeClientCmaps().
+    
+    When running synchronized, that means calling XSync().
+    
+    _XcmsFreeClientCmaps() is called from _XFreeDisplayStructure() via
+    XCloseDisplay() after the xcb connection is closed.
+    
+    So when running synchronized, we may end up calling XSync() after the
+    xcb connection to the display is closed, which will generate a spurious
+    XIO error:
+    
+      | #0 in _XDefaultIOError () at /lib64/libX11.so.6
+      | #1 in _XIOError () at /lib64/libX11.so.6
+      | #2 in _XReply () at /lib64/libX11.so.6
+      | #3 in XSync () at /lib64/libX11.so.6
+      | #4 in _XSyncFunction () at /lib64/libX11.so.6
+      | 8#5 in _XFreeDisplayStructure () at /lib64/libX11.so.6
+      | 8#6 in XCloseDisplay () at /lib64/libX11.so.6
+    
+    To avoid that issue, closed the xcb connection to the display last.
+    
+    v2: And same in OutOfMemory() as well (José Expósito)
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Reviewed-by: José Expósito <jexposit@redhat.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/264>
+
 commit ed9fb5535efe1e5278654b6b3994a34337b4bf1a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 28 10:37:55 2024 -0700
