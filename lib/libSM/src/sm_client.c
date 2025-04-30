@@ -111,7 +111,7 @@ SmcOpenConnection(char *networkIdsList, SmPointer context,
 
     if (networkIdsList == NULL || *networkIdsList == '\0')
     {
-	if ((ids = (char *) getenv ("SESSION_MANAGER")) == NULL)
+	if ((ids = getenv ("SESSION_MANAGER")) == NULL)
 	{
 	    if (errorStringRet && errorLength > 0) {
 		strncpy (errorStringRet,

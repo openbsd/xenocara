@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2002, Oracle and/or its affiliates. All rights reserved.
+Copyright (c) 2002, Oracle and/or its affiliates.
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -69,38 +69,38 @@ in this Software without prior written authorization from The Open Group.
 #include <time.h>
 #define Time_t time_t
 
-#ifndef WIN32
-
-# ifdef TCPCONN
-#  include <sys/socket.h>
-#  include <netinet/in.h>
-#  include <arpa/inet.h>
-#  define XOS_USE_NO_LOCKING
-#  define X_INCLUDE_NETDB_H
-#  include <X11/Xos_r.h>
-# endif
-
-#else /* WIN32 */
-
-# include <X11/Xwinsock.h>
-# include <X11/Xw32defs.h>
-# define X_INCLUDE_NETDB_H
-# define XOS_USE_MTSAFE_NETDBAPI
-# include <X11/Xos_r.h>
-
-#endif /* WIN32 */
-
-#ifdef MNX_TCPCONN
-# include <net/gen/netdb.h>
-
-# define TCPCONN
-#endif
-
 #if defined(HAVE_UUID_CREATE)
 # include <uuid.h>
 #elif defined(HAVE_LIBUUID)
 # include <uuid/uuid.h>
-#endif
+#else
+
+# ifndef WIN32
+
+#  ifdef TCPCONN
+#   include <sys/socket.h>
+#   include <netinet/in.h>
+#   include <arpa/inet.h>
+#   define XOS_USE_NO_LOCKING
+#   define X_INCLUDE_NETDB_H
+#   include <X11/Xos_r.h>
+#  endif
+
+# else /* WIN32 */
+
+#  include <X11/Xwinsock.h>
+#  include <X11/Xw32defs.h>
+#  define X_INCLUDE_NETDB_H
+#  define XOS_USE_MTSAFE_NETDBAPI
+#  include <X11/Xos_r.h>
+
+# endif /* WIN32 */
+
+# if defined(IPv6) && !defined(AF_INET6)
+#  error "Cannot build IPv6 support without AF_INET6"
+# endif
+
+#endif /* !(HAVE_UUID_CREATE || HAVE_LIBUUID) */
 
 
 char *
@@ -138,8 +138,7 @@ SmsGenerateClientID(SmsConn smsConn)
     id = strdup (temp);
 
     return id;
-#else
-# ifdef TCPCONN
+#elif defined(TCPCONN)
     static const char hex[] = "0123456789abcdef";
     char hostname[256];
     char address[64], *addr_ptr = address;
@@ -151,26 +150,31 @@ SmsGenerateClientID(SmsConn smsConn)
     unsigned char decimal[4];
     int i;
     struct in_addr *haddr = NULL;
-#  if defined(IPv6) && defined(AF_INET6)
+# ifdef HAVE_GETADDRINFO
     struct addrinfo *ai, *first_ai;
-#  endif
+# endif
 
     if (gethostname (hostname, sizeof (hostname)))
 	return (NULL);
 
-#  if defined(IPv6) && defined(AF_INET6)
+# ifdef HAVE_GETADDRINFO
     if (getaddrinfo(hostname,NULL,NULL,&ai) != 0)
 	return NULL;
 
     for (first_ai = ai; ai != NULL; ai = ai->ai_next) {
-	if ( (ai->ai_family == AF_INET) || (ai->ai_family == AF_INET6) )
+	if (ai->ai_family == AF_INET)
 	    break;
+#  ifdef IPv6
+	if (ai->ai_family == AF_INET6)
+	    break;
+#  endif
     }
     if (ai == NULL) {
 	freeaddrinfo(first_ai);
 	return NULL;
     }
 
+#  ifdef IPv6
     if (ai->ai_family == AF_INET6) {
 	unsigned char *cp = (unsigned char *) &((struct sockaddr_in6 *)ai->ai_addr)->sin6_addr.s6_addr;
 
@@ -182,55 +186,39 @@ SmsGenerateClientID(SmsConn smsConn)
 	}
 
         *addr_ptr++ = '\0';
-
-    } else { /* Fall through to IPv4 address handling */
+    } else  /* Fall through to IPv4 address handling */
+#  endif /* IPv6 */
+    {
 	haddr = &((struct sockaddr_in *)ai->ai_addr)->sin_addr;
-#  else
-#   ifdef XTHREADS_NEEDS_BYNAMEPARAMS
+# else /* !HAVE_GETADDRINFO */
+#  ifdef XTHREADS_NEEDS_BYNAMEPARAMS
 	_Xgethostbynameparams hparams;
-#   endif
+#  endif
 	struct hostent *hostp;
 
 	if ((hostp = _XGethostbyname (hostname,hparams)) != NULL)
 	    haddr = (struct in_addr *)(hostp->h_addr);
 	else
 	    return NULL;
-#  endif
-
-	inet_addr = inet_ntoa (*haddr);
-	for (i = 0, ptr1 = inet_addr; i < 3; i++)
-	{
-	    char temp4[4];
-	    char *ptr2 = strchr (ptr1, '.');
-	    size_t len = (size_t) (ptr2 - ptr1);
-
-	    if (!ptr2 || len > 3) {
-#  if defined(IPv6) && defined(AF_INET6)
-		freeaddrinfo(first_ai);
-#  endif
-		return (NULL);
-	    }
-	    strncpy (temp4, ptr1, len);
-	    temp4[len] = '\0';
-	    decimal[i] = (unsigned char) atoi (temp4);
-	    ptr1 = ptr2 + 1;
-	}
-
-	decimal[3] = (unsigned char) atoi (ptr1);
+# endif /* !HAVE_GETADDRINFO */
 
 	*addr_ptr++ = '1';
 
-	for (i = 0; i < 4; i++) {
-	    *addr_ptr++ = hex[decimal[i] >> 4];
-	    *addr_ptr++ = hex[decimal[i] & 0x0f];
+	{
+	    unsigned char *cp = (unsigned char *) &(haddr->s_addr);
+
+	    for (i = 0; i < 4; i++) {
+		*addr_ptr++ = hex[cp[i] >> 4];
+		*addr_ptr++ = hex[cp[i] & 0x0f];
+	    }
 	}
 
 	*addr_ptr++ = '\0';
 
-#  if defined(IPv6) && defined(AF_INET6)
+# ifdef HAVE_GETADDRINFO
     }
     freeaddrinfo(first_ai);
-#  endif
+# endif
 
     sprintf (temp, "1%s%.13ld%.10ld%.4d", address, (long)time((Time_t*)0),
 	     (long)getpid(), sequence);
@@ -241,8 +229,7 @@ SmsGenerateClientID(SmsConn smsConn)
     id = strdup (temp);
 
     return (id);
-# else
+#else /* no supported id generation method, neither UUID nor TCPCONN */
     return (NULL);
-# endif
 #endif
 }

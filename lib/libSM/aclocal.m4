@@ -13,8 +13,8 @@
 
 m4_ifndef([AC_AUTOCONF_VERSION],
   [m4_copy([m4_PACKAGE_VERSION], [AC_AUTOCONF_VERSION])])dnl
-m4_if(m4_defn([AC_AUTOCONF_VERSION]), [2.69],,
-[m4_warning([this file was generated for autoconf 2.69.
+m4_if(m4_defn([AC_AUTOCONF_VERSION]), [2.71],,
+[m4_warning([this file was generated for autoconf 2.71.
 You have another version of autoconf.  It may work, but is not guaranteed to.
 If you have problems, you may need to regenerate the build system entirely.
 To do so, use the procedure documented by the package, typically 'autoreconf'.])])
@@ -9942,7 +9942,7 @@ dnl DEALINGS IN THE SOFTWARE.
 # See the "minimum version" comment for each macro you use to see what
 # version you require.
 m4_defun([XORG_MACROS_VERSION],[
-m4_define([vers_have], [1.20.0])
+m4_define([vers_have], [1.20.2])
 m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
 m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
 m4_if(m4_cmp(maj_have, maj_needed), 0,,
@@ -9989,10 +9989,10 @@ rm -f conftest.$ac_ext
 
 AC_MSG_CHECKING([if $RAWCPP requires -traditional])
 AC_LANG_CONFTEST([AC_LANG_SOURCE([[Does cpp preserve   "whitespace"?]])])
-if test `${RAWCPP} < conftest.$ac_ext | grep -c 'preserve   \"'` -eq 1 ; then
+if test `${RAWCPP} < conftest.$ac_ext | grep -c 'preserve   "'` -eq 1 ; then
 	AC_MSG_RESULT([no])
 else
-	if test `${RAWCPP} -traditional < conftest.$ac_ext | grep -c 'preserve   \"'` -eq 1 ; then
+	if test `${RAWCPP} -traditional < conftest.$ac_ext | grep -c 'preserve   "'` -eq 1 ; then
 		TRADITIONALCPPFLAGS="-traditional"
 		RAWCPPFLAGS="${RAWCPPFLAGS} -traditional"
 		AC_MSG_RESULT([yes])
@@ -11280,30 +11280,20 @@ AC_SUBST([XORG_MALLOC_DEBUG_ENV],[$malloc_debug_env])
 # Defines {MALLOC,XMALLOC,XTMALLOC}_ZERO_CFLAGS appropriately if
 # malloc(0) returns NULL.  Packages should add one of these cflags to
 # their AM_CFLAGS (or other appropriate *_CFLAGS) to use them.
+#
+# No longer actually tests since there is no guarantee applications will
+# run with the same malloc implementation we tested against, and the cost
+# of always ensuring the size passed to malloc is non-zero is minimal now.
+# Still allows builders to override when they have complete control over
+# which malloc implementation will be used.
 AC_DEFUN([XORG_CHECK_MALLOC_ZERO],[
 AC_ARG_ENABLE(malloc0returnsnull,
 	AS_HELP_STRING([--enable-malloc0returnsnull],
-		       [malloc(0) returns NULL (default: auto)]),
+		       [assume malloc(0) can return NULL (default: yes)]),
 	[MALLOC_ZERO_RETURNS_NULL=$enableval],
-	[MALLOC_ZERO_RETURNS_NULL=auto])
+	[MALLOC_ZERO_RETURNS_NULL=yes])
 
-AC_MSG_CHECKING([whether malloc(0) returns NULL])
-if test "x$MALLOC_ZERO_RETURNS_NULL" = xauto; then
-AC_CACHE_VAL([xorg_cv_malloc0_returns_null],
-	[AC_RUN_IFELSE([AC_LANG_PROGRAM([
-#include <stdlib.h>
-],[
-    char *m0, *r0, *c0, *p;
-    m0 = malloc(0);
-    p = malloc(10);
-    r0 = realloc(p,0);
-    c0 = calloc(0,10);
-    exit((m0 == 0 || r0 == 0 || c0 == 0) ? 0 : 1);
-])],
-		[xorg_cv_malloc0_returns_null=yes],
-		[xorg_cv_malloc0_returns_null=no])])
-MALLOC_ZERO_RETURNS_NULL=$xorg_cv_malloc0_returns_null
-fi
+AC_MSG_CHECKING([whether to act as if malloc(0) can return NULL])
 AC_MSG_RESULT([$MALLOC_ZERO_RETURNS_NULL])
 
 if test "x$MALLOC_ZERO_RETURNS_NULL" = xyes; then
@@ -11600,7 +11590,6 @@ AC_LANG_CASE(
 		XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wnested-externs])
 		XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wbad-function-cast])
 		XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wold-style-definition], [-fd])
-		XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wdeclaration-after-statement])
 	]
 )
 
@@ -11610,7 +11599,7 @@ XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wuninitialized])
 XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wshadow])
 XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wmissing-noreturn])
 XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wmissing-format-attribute])
-XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wredundant-decls])
+# XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wredundant-decls])
 XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wlogical-op])
 
 # These are currently disabled because they are noisy.  They will be enabled
@@ -11844,7 +11833,7 @@ AC_SUBST([CHANGELOG_CMD])
 ]) # XORG_CHANGELOG
 
 dnl
-dnl Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
+dnl Copyright (c) 2005, 2025, Oracle and/or its affiliates.
 dnl
 dnl Permission is hereby granted, free of charge, to any person obtaining a
 dnl copy of this software and associated documentation files (the "Software"),
@@ -11878,10 +11867,12 @@ AC_DEFUN([XTRANS_TCP_FLAGS],[
  fi
 
  # Needs to come after above checks for libsocket & libnsl for SVR4 systems
+ AC_CHECK_FUNCS([getaddrinfo inet_ntop])
+
  AC_ARG_ENABLE(ipv6,
 	AS_HELP_STRING([--enable-ipv6],[Enable IPv6 support]),
 	[IPV6CONN=$enableval],
-	[AC_CHECK_FUNC(getaddrinfo,[IPV6CONN=yes],[IPV6CONN=no])])
+	[IPV6CONN=$ac_cv_func_getaddrinfo])
  AC_MSG_CHECKING([if IPv6 support should be built])
  if test "$IPV6CONN" = "yes"; then
 	AC_DEFINE(IPv6,1,[Support IPv6 for TCP connections])
@@ -11898,9 +11889,11 @@ AC_DEFUN([XTRANS_TCP_FLAGS],[
  ])
 
  # POSIX.1g changed the type of pointer passed to getsockname/getpeername/etc.
- AC_CHECK_TYPES([socklen_t], [], [], [
+ # and added a type defined to be large enough to hold any sockaddr format.
+ AC_CHECK_TYPES([socklen_t, struct sockaddr_storage], [], [], [
 AC_INCLUDES_DEFAULT
-#include <sys/socket.h>])
+#include <sys/socket.h>
+ ])
 
  # XPG4v2/UNIX95 added msg_control - check to see if we need to define
  # _XOPEN_SOURCE to get it (such as on Solaris)
@@ -11967,7 +11960,7 @@ AC_DEFUN([XTRANS_CONNECTION_FLAGS],[
 	XTRANS_TCP_FLAGS
  fi
  [case $host_os in
-	solaris*|sco*|sysv4*)	localdef="yes" ;;
+	solaris*)		localdef="yes" ;;
 	*)			localdef="no"  ;;
  esac]
  AC_ARG_ENABLE(local-transport,

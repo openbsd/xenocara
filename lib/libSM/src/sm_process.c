@@ -202,7 +202,7 @@ _SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	IceReadCompleteMessage (iceConn, SIZEOF (iceErrorMsg),
 	    iceErrorMsg, pMsg, pData);
 
-	if (!IceValidIO (iceConn))
+	if (!IceValidIO (iceConn) || pData == NULL)
 	{
 	    IceDisposeCompleteMessage (iceConn, pData);
 	    return;
@@ -276,7 +276,7 @@ _SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	    IceReadCompleteMessage (iceConn, SIZEOF (smRegisterClientReplyMsg),
 		smRegisterClientReplyMsg, pMsg, pStart);
 
-	    if (!IceValidIO (iceConn))
+	    if (!IceValidIO (iceConn) || pStart == NULL)
 	    {
 		IceDisposeCompleteMessage (iceConn, pStart);
 		return;
@@ -481,7 +481,7 @@ _SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	    IceReadCompleteMessage (iceConn, SIZEOF (smPropertiesReplyMsg),
 		smPropertiesReplyMsg, pMsg, pStart);
 
-	    if (!IceValidIO (iceConn))
+	    if (!IceValidIO (iceConn) || pStart == NULL)
 	    {
 		IceDisposeCompleteMessage (iceConn, pStart);
 		return;
@@ -551,7 +551,7 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	IceReadCompleteMessage (iceConn, SIZEOF (iceErrorMsg),
 	    iceErrorMsg, pMsg, pData);
 
-	if (!IceValidIO (iceConn))
+	if (!IceValidIO (iceConn) || pData == NULL)
 	{
 	    IceDisposeCompleteMessage (iceConn, pData);
 	    return;
@@ -596,7 +596,7 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	IceReadCompleteMessage (iceConn, SIZEOF (smRegisterClientMsg),
 	    smRegisterClientMsg, pMsg, pStart);
 
-	if (!IceValidIO (iceConn))
+	if (!IceValidIO (iceConn) || pStart == NULL)
 	{
 	    IceDisposeCompleteMessage (iceConn, pStart);
 	    return;
@@ -850,7 +850,7 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	IceReadCompleteMessage (iceConn, SIZEOF (smCloseConnectionMsg),
 	    smCloseConnectionMsg, pMsg, pStart);
 
-	if (!IceValidIO (iceConn))
+	if (!IceValidIO (iceConn) || pStart == NULL)
 	{
 	    IceDisposeCompleteMessage (iceConn, pStart);
 	    return;
@@ -908,7 +908,7 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	IceReadCompleteMessage (iceConn, SIZEOF (smSetPropertiesMsg),
 	    smSetPropertiesMsg, pMsg, pStart);
 
-	if (!IceValidIO (iceConn))
+	if (!IceValidIO (iceConn) || pStart == NULL)
 	{
 	    IceDisposeCompleteMessage (iceConn, pStart);
 	    return;
@@ -946,7 +946,7 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	IceReadCompleteMessage (iceConn, SIZEOF (smDeletePropertiesMsg),
 	    smDeletePropertiesMsg, pMsg, pStart);
 
-	if (!IceValidIO (iceConn))
+	if (!IceValidIO (iceConn) || pStart == NULL)
 	{
 	    IceDisposeCompleteMessage (iceConn, pStart);
 	    return;

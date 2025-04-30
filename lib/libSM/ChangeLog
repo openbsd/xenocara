@@ -1,3 +1,188 @@
+commit 5f6da959a34bcefc425b6e37462553acf44369a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 8 17:35:22 2025 -0800
+
+    libSM 1.2.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 00040325385ab326b306477bcb175fd47468ac34
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 18 16:18:05 2025 -0800
+
+    SmsGenerateClientID: simplify code to convert IPv4 address to hex string
+    
+    Instead of calling the deprecated inet_ntoa() to convert to an ascii
+    string, which we then break into 4 dotted segments and call atoi()
+    on each segment, just get the byte values from the in_addr_t directly,
+    much like we've long done for IPv6 addreses.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libsm/-/merge_requests/11>
+
+commit 91d1015f723e437b032eec95f5d82a0d5d52f43c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 13 16:41:28 2025 -0800
+
+    if getaddrinfo() is available, use it, even if IPv6 support is disabled
+    
+    Support for using getaddrinfo() was originally added to support IPv6,
+    and only used if IPv6 support was enabled.  Two decades later, support
+    for getaddrinfo() is ubiquitous and OS'es have marked gethostbyname()
+    as deprecated, so use the modern interface whenever we can now.
+    
+    Of course, in libSM, this only matters if one of the UUID generation
+    interfaces isn't being used instead.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libsm/-/merge_requests/11>
+
+commit 220fda5f4888b148b51ac6be3457670dd60a3c45
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 13 15:41:40 2025 -0800
+
+    Simplify ifdefs for IPv6 support
+    
+    Instead of checking for AF_INET6 at every ifdef, just check once for it
+    and report that IPv6 support is not available, instead of silently not
+    building support for it that configure said we were going to build.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libsm/-/merge_requests/11>
+
+commit 8f133b4f0b03e32c044cda7c56f81c85d7b46c2d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 13 16:44:56 2025 -0800
+
+    sm_genid.c: simplify final fallback case
+    
+    Remove one level of #ifdef nesting to reach the final fallback of
+    return(NULL) if no id generation method was configured, neither
+    a UUID-based method nor the TCPCONN IP-address-based method.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libsm/-/merge_requests/11>
+
+commit c68a06e0637244a81d7cce3797b22ece15c2fa2b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 13 16:28:22 2025 -0800
+
+    Skip network checks/headers/libraries if using UUID-based ids
+    
+    Currently network host address based ids are only used if neither
+    of the UUID generation methods is found by configure, so check them
+    first, and only do network checks as a fallback.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libsm/-/merge_requests/11>
+
+commit 83644d01d64a93a1fc463affc8bd9b30dc023a83
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 13 14:11:23 2024 -0800
+
+    libSM 1.2.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f1e6fc8e62a5da42ea713ee970028be3d32fcf85
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 26 10:10:37 2024 -0700
+
+    IceReadCompleteMessage callers need to check if malloc() failed
+    
+    The IceReadCompleteMessage() macro may try to malloc() a buffer and
+    assign it to the final argument.
+    
+    Clears up 6 -Wanalyzer-null-dereference warnings from gcc 14.1
+    of the form:
+    
+    sm_process.c: In function ‘extractArray8’:
+    SMlibint.h:128:12: warning: dereference of NULL ‘pData’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+      128 |     _val = *((CARD32 *) _pBuf); \
+          |            ^~~~~~~~~~~~~~~~~~~
+    sm_process.c:66:5: note: in expansion of macro ‘EXTRACT_CARD32’
+       66 |     EXTRACT_CARD32 (*pBuf, swap, n);
+          |     ^~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libsm/-/merge_requests/9>
+
+commit bd243359c390b02bdb89e38779917996c6a38476
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 26 09:36:41 2024 -0700
+
+    SmcOpenConnection: remove cast of return value from getenv()
+    
+    getenv() is defined as returning char *, so the cast isn't necessary
+    if you've included the header with the proper prototype for it.
+    
+    Clears gcc 14.1 warning:
+    
+    sm_client.c: In function ‘SmcOpenConnection’:
+    sm_client.c:114:20: warning: useless cast to type ‘char *’ [-Wuseless-cast]
+      114 |         if ((ids = (char *) getenv ("SESSION_MANAGER")) == NULL)
+          |                    ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libsm/-/merge_requests/9>
+
+commit 5edd20b307ce70ccb14c360f1b94914c49544a24
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 15:05:20 2024 -0800
+
+    unifdef MNX_TCPCONN
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d7783633c5935a2e45c065b1f385a35bbf56e7b1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 15:03:49 2024 -0800
+
+    unifdef __UNIXWARE__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0b0f5e46af6da18a93a27a71e193fad8c7308b4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 13 13:11:28 2023 -0700
+
+    gitlab CI: add xz-utils to container for "make distcheck"
+    
+    Also update to latest ci-templates
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f3706322c5c948cbbe434dd67d86de71eee25e17
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:13: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:13: You should run autoupdate.
+    aclocal.m4:3640: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:13: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e0628f5ca2168a413b8b39f20ec62ae4f725bc63
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:20:43 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit dc882ac7b748048f12b033d0d8e5267a6e36036a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Dec 19 18:17:34 2022 -0800
@@ -1042,7 +1227,7 @@ Date:   Thu Jan 14 21:00:53 2010 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit 0b2e5ca9da6b35f5cf98ac879601cf8083c72dde
-Author: Rémi Cardona  <remi@gentoo.org>
+Author: Rémi Cardona <remi@gentoo.org>
 Date:   Thu Dec 17 08:26:28 2009 +0100
 
     require autoconf 2.60 because of $(docdir) use
@@ -1166,7 +1351,7 @@ Date:   Fri Oct 9 23:28:11 2009 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit 7fc343e70202279fd3daa3adf789ca35b0ec8891
-Author: Rémi Cardona  <remi@gentoo.org>
+Author: Rémi Cardona <remi@gentoo.org>
 Date:   Fri Aug 14 11:20:34 2009 +0200
 
     require libICE >= 1.0.5
@@ -1179,13 +1364,13 @@ Date:   Fri Aug 14 11:20:34 2009 +0200
     Signed-off-by: Rémi Cardona <remi@gentoo.org>
 
 commit 82bbf42a2ba0401a8346505b1292ddb7b58f4507
-Author: Rémi Cardona  <remi@gentoo.org>
+Author: Rémi Cardona <remi@gentoo.org>
 Date:   Fri Aug 7 14:19:50 2009 +0200
 
     libSM 1.1.1, update libtool version
 
 commit 45720a2e266748ac15bc0544b56e035383695588
-Author: Diego Elio 'Flameeyes' Pettenò  <flameeyes@gmail.com>
+Author: Diego Elio 'Flameeyes' Pettenò <flameeyes@gmail.com>
 Date:   Sat May 16 01:01:39 2009 +0200
 
     Use FreeBSD uuid functions when available.
@@ -1464,7 +1649,7 @@ Date:   Thu May 19 00:10:07 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit 0b4b811191a1e74356b7ff78a09107e29a7ef695
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue May 17 21:25:16 2005 +0000
 
     - Conditionally include config.h in xc/lib/SM

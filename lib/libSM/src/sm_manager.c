@@ -35,12 +35,6 @@ in this Software without prior written authorization from The Open Group.
 #include "SMlibint.h"
 #include <X11/Xtrans/Xtrans.h>
 
-#ifdef __UNIXWARE__
-#undef shutdown
-#endif
-
-
-
 static Status
 _SmsProtocolSetupProc (IceConn    iceConn,
 		       int majorVersion,
