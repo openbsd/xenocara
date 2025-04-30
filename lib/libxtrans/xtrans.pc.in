@@ -5,5 +5,6 @@ includedir=@includedir@
 
 Name: XTrans
 Description: Abstract network code for X
+URL: https://gitlab.freedesktop.org/xorg/lib/libxtrans
 Version: @PACKAGE_VERSION@
 Cflags: -I${includedir} -D_DEFAULT_SOURCE -D_BSD_SOURCE @fchown_define@ @sticky_bit_define@

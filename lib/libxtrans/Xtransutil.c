@@ -62,6 +62,16 @@ from The Open Group.
 #include <X11/Xwinsock.h>
 #endif
 
+#if defined(IPv6) && !defined(AF_INET6)
+#error "Cannot build IPv6 support without AF_INET6"
+#endif
+
+/* Temporary workaround for consumers whose configure scripts were
+   generated with pre-1.6 versions of xtrans.m4 */
+#if defined(IPv6) && !defined(HAVE_INET_NTOP)
+#define HAVE_INET_NTOP
+#endif
+
 #ifdef X11_t
 
 /*
@@ -123,7 +133,7 @@ TRANS(ConvertAddress)(int *familyp, int *addrlenp, Xtransaddr **addrp)
 	break;
     }
 
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
     case AF_INET6:
     {
 	struct sockaddr_in6 saddr6;
@@ -252,27 +262,28 @@ TRANS(GetMyNetworkId) (XtransConnInfo ciptr)
 	len = 3 + strlen (transName) +
 	    strlen (hostnamebuf) + strlen (saddr->sun_path);
 	networkId = (char *) malloc (len);
-	snprintf (networkId, len, "%s/%s:%s", transName,
-	    hostnamebuf, saddr->sun_path);
+	if (networkId != NULL)
+		snprintf (networkId, len, "%s/%s:%s", transName,
+		    hostnamebuf, saddr->sun_path);
 	break;
     }
 #endif /* defined(UNIXCONN) || defined(LOCALCONN) */
 
 #if defined(TCPCONN)
     case AF_INET:
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
     case AF_INET6:
 #endif
     {
 	struct sockaddr_in *saddr = (struct sockaddr_in *) addr;
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
 	struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *) addr;
 #endif
 	int portnum;
 	char portnumbuf[10];
 
 
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
 	if (family == AF_INET6)
 	    portnum = ntohs (saddr6->sin6_port);
 	else
@@ -283,11 +294,13 @@ TRANS(GetMyNetworkId) (XtransConnInfo ciptr)
 	len = 3 + strlen (transName) +
 	    strlen (hostnamebuf) + strlen (portnumbuf);
 	networkId = (char *) malloc (len);
-	snprintf (networkId, len, "%s/%s:%s", transName, hostnamebuf,
-	    portnumbuf);
+	if (networkId != NULL)
+		snprintf (networkId, len, "%s/%s:%s", transName, hostnamebuf,
+		    portnumbuf);
 	break;
     }
 #endif /* defined(TCPCONN) */
+
 
     default:
 	break;
@@ -337,12 +350,12 @@ TRANS(GetPeerNetworkId) (XtransConnInfo ciptr)
 
 #if defined(TCPCONN)
     case AF_INET:
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
     case AF_INET6:
 #endif
     {
 	struct sockaddr_in *saddr = (struct sockaddr_in *) peer_addr;
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
 	struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *) peer_addr;
 #endif
 	char *address;
@@ -352,7 +365,7 @@ TRANS(GetPeerNetworkId) (XtransConnInfo ciptr)
 #endif
 	struct hostent * volatile hostp = NULL;
 
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
 	if (family == AF_INET6)
 	{
 	    address = (char *) &saddr6->sin6_addr;
@@ -387,7 +400,7 @@ TRANS(GetPeerNetworkId) (XtransConnInfo ciptr)
 	if (hostp != NULL)
 	  addr = hostp->h_name;
 	else
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef HAVE_INET_NTOP
 	  addr = inet_ntop (family, address, addrbuf, sizeof (addrbuf));
 #else
 	  addr = inet_ntoa (saddr->sin_addr);
@@ -397,17 +410,21 @@ TRANS(GetPeerNetworkId) (XtransConnInfo ciptr)
 
 #endif /* defined(TCPCONN) */
 
+
     default:
 	return (NULL);
     }
 
+
     len = strlen (ciptr->transptr->TransName) + strlen (addr) + 2;
     hostname = (char *) malloc (len);
-    strlcpy (hostname, ciptr->transptr->TransName, len);
-    strlcat (hostname, "/", len);
-    if (addr)
-	strlcat (hostname, addr, len);
-
+    if (hostname)
+    {
+        strlcpy (hostname, ciptr->transptr->TransName, len);
+        strlcat (hostname, "/", len);
+        if (addr)
+            strlcat (hostname, addr, len);
+    }
     return (hostname);
 }
 
