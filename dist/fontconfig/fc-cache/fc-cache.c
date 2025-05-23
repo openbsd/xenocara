@@ -39,6 +39,7 @@
 #endif
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <err.h>
 #include <errno.h>
 #include <fcntl.h>
 #ifdef HAVE_DIRENT_H
@@ -378,6 +379,10 @@ main (int argc, char **argv)
 	}
 	systemOnly = FcTrue;
     }
+
+    if (pledge("stdio rpath wpath cpath flock", NULL) == -1)
+        err(1, "pledge");
+
     if (systemOnly)
 	FcConfigEnableHome (FcFalse);
     if (sysroot)
