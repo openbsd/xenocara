@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <err.h>
 #include <errno.h>
 #include <ctype.h>
 
@@ -149,6 +150,9 @@ main(int argc, char **argv)
     ProgramName = argv[0];
     encodingPrefix = NULL;
     exclusionSuffix = NULL;
+
+    if (pledge("stdio rpath wpath cpath", NULL) == -1)
+        err(1, "pledge");
 
     if (getcwd(prefix, NPREFIX - 1) == NULL) {
         perror("Couldn't get cwd");
