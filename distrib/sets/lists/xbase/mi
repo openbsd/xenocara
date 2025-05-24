@@ -208,6 +208,7 @@
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc-sample-1
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc-sample-2
+./usr/X11R6/lib/gbm
 ./usr/X11R6/lib/libICE.a
 ./usr/X11R6/lib/libICE.la
 ./usr/X11R6/lib/libICE.so.12.0
