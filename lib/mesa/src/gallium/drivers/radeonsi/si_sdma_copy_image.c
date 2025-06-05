@@ -8,7 +8,7 @@
 #include "si_build_pm4.h"
 #include "sid.h"
 #include "util/u_memory.h"
-
+#include "ac_formats.h"
 
 static
 bool si_prepare_for_sdma_copy(struct si_context *sctx, struct si_texture *dst,struct si_texture *src)
@@ -57,6 +57,7 @@ static bool si_sdma_v4_v5_copy_texture(struct si_context *sctx, struct si_textur
 {
    bool is_v5 = sctx->gfx_level >= GFX10;
    bool is_v5_2 = sctx->gfx_level >= GFX10_3;
+   bool is_v7 = sctx->gfx_level >= GFX12;
    unsigned bpp = sdst->surface.bpe;
    uint64_t dst_address = sdst->buffer.gpu_address + sdst->surface.u.gfx9.surf_offset;
    uint64_t src_address = ssrc->buffer.gpu_address + ssrc->surface.u.gfx9.surf_offset;
@@ -82,8 +83,8 @@ static bool si_sdma_v4_v5_copy_texture(struct si_context *sctx, struct si_textur
       radeon_begin(cs);
       for (int i = 0; i < chunk_count; i++) {
          uint32_t size = MIN2(chunk_size, bytes);
-         radeon_emit(CIK_SDMA_PACKET(CIK_SDMA_OPCODE_COPY,
-                                     CIK_SDMA_COPY_SUB_OPCODE_LINEAR,
+         radeon_emit(SDMA_PACKET(SDMA_OPCODE_COPY,
+                                     SDMA_COPY_SUB_OPCODE_LINEAR,
                                      (tmz ? 4 : 0)));
          radeon_emit(size - 1);
          radeon_emit(0);
@@ -111,22 +112,38 @@ static bool si_sdma_v4_v5_copy_texture(struct si_context *sctx, struct si_textur
       uint64_t tiled_address = tiled == ssrc ? src_address : dst_address;
       uint64_t linear_address = linear == ssrc ? src_address : dst_address;
       struct radeon_cmdbuf *cs = sctx->sdma_cs;
-      /* Only SDMA 5 supports DCC with SDMA */
-      bool dcc = vi_dcc_enabled(tiled, 0) && is_v5;
       assert(tiled->buffer.b.b.depth0 == 1);
+      bool dcc;
+
+      if (is_v7) {
+         /* Compress only when dst has DCC. If src has DCC, it automatically decompresses according
+          * to PTE.D (page table bit) even if we don't enable DCC in the packet.
+          */
+         dcc = tiled == sdst &&
+               tiled->buffer.flags & RADEON_FLAG_GFX12_ALLOW_DCC;
+
+         /* Check if everything fits into the bitfields */
+         if (!(tiled_width <= (1 << 16) && tiled_height <= (1 << 16) &&
+               linear_pitch <= (1 << 16) && linear_slice_pitch <= (1ull << 32) &&
+               copy_width <= (1 << 16) && copy_height <= (1 << 16)))
+            return false;
+      } else {
+         /* Only SDMA 5 supports DCC with SDMA */
+         dcc = is_v5 && vi_dcc_enabled(tiled, 0);
+
+         /* Check if everything fits into the bitfields */
+         if (!(tiled_width <= (1 << 14) && tiled_height <= (1 << 14) &&
+               linear_pitch <= (1 << 14) && linear_slice_pitch <= (1 << 28) &&
+               copy_width <= (1 << 14) && copy_height <= (1 << 14)))
+            return false;
+      }
 
       linear_address += linear->surface.u.gfx9.offset[0];
 
-      /* Check if everything fits into the bitfields */
-      if (!(tiled_width <= (1 << 14) && tiled_height <= (1 << 14) &&
-            linear_pitch <= (1 << 14) && linear_slice_pitch <= (1 << 28) &&
-            copy_width <= (1 << 14) && copy_height <= (1 << 14)))
-         return false;
-
       radeon_begin(cs);
       radeon_emit(
-         CIK_SDMA_PACKET(CIK_SDMA_OPCODE_COPY,
-                         CIK_SDMA_COPY_SUB_OPCODE_TILED_SUB_WINDOW,
+         SDMA_PACKET(SDMA_OPCODE_COPY,
+                     SDMA_COPY_SUB_OPCODE_TILED_SUB_WINDOW,
                          (tmz ? 4 : 0)) |
          dcc << 19 |
          (is_v5 ? 0 : tiled->buffer.b.b.last_level) << 20 |
@@ -138,7 +155,7 @@ static bool si_sdma_v4_v5_copy_texture(struct si_context *sctx, struct si_textur
       radeon_emit((tiled_height - 1));
       radeon_emit(util_logbase2(bpp) |
                   tiled->surface.u.gfx9.swizzle_mode << 3 |
-                  tiled->surface.u.gfx9.resource_type << 9 |
+                  (is_v7 ? 0 : tiled->surface.u.gfx9.resource_type << 9) |
                   (is_v5 ? tiled->buffer.b.b.last_level : tiled->surface.u.gfx9.epitch) << 16);
       radeon_emit((uint32_t)linear_address);
       radeon_emit((uint32_t)(linear_address >> 32));
@@ -149,20 +166,29 @@ static bool si_sdma_v4_v5_copy_texture(struct si_context *sctx, struct si_textur
       radeon_emit(0);
 
       if (dcc) {
-         unsigned hw_fmt = ac_get_cb_format(sctx->gfx_level, tiled->buffer.b.b.format);
-         unsigned hw_type = ac_get_cb_number_type(tiled->buffer.b.b.format);
+         unsigned data_format = ac_get_cb_format(sctx->gfx_level, tiled->buffer.b.b.format);
+         unsigned number_type = ac_get_cb_number_type(tiled->buffer.b.b.format);
          uint64_t md_address = tiled_address + tiled->surface.meta_offset;
 
-         /* Add metadata */
-         radeon_emit((uint32_t)md_address);
-         radeon_emit((uint32_t)(md_address >> 32));
-         radeon_emit(hw_fmt |
-                     vi_alpha_is_on_msb(sctx->screen, tiled->buffer.b.b.format) << 8 |
-                     hw_type << 9 |
-                     tiled->surface.u.gfx9.color.dcc.max_compressed_block_size << 24 |
-                     V_028C78_MAX_BLOCK_SIZE_256B << 26 |
-                     tmz << 29 |
-                     tiled->surface.u.gfx9.color.dcc.pipe_aligned << 31);
+         if (is_v7) {
+            radeon_emit(SDMA_DCC_DATA_FORMAT(data_format) |
+                        SDMA_DCC_NUM_TYPE(number_type) |
+                        SDMA_DCC_READ_CM(2) |
+                        SDMA_DCC_WRITE_CM(1) |
+                        SDMA_DCC_MAX_COM(tiled->surface.u.gfx9.color.dcc.max_compressed_block_size) |
+                        SDMA_DCC_MAX_UCOM(1));
+         } else {
+            /* Add metadata */
+            radeon_emit((uint32_t)md_address);
+            radeon_emit((uint32_t)(md_address >> 32));
+            radeon_emit(data_format |
+                        ac_alpha_is_on_msb(&sctx->screen->info, tiled->buffer.b.b.format) << 8 |
+                        number_type << 9 |
+                        tiled->surface.u.gfx9.color.dcc.max_compressed_block_size << 24 |
+                        V_028C78_MAX_BLOCK_SIZE_256B << 26 |
+                        tmz << 29 |
+                        tiled->surface.u.gfx9.color.dcc.pipe_aligned << 31);
+         }
       }
       radeon_end();
       return true;
@@ -216,7 +242,7 @@ bool cik_sdma_copy_texture(struct si_context *sctx, struct si_texture *sdst, str
       struct radeon_cmdbuf *cs = sctx->sdma_cs;
 
       radeon_begin(cs);
-      radeon_emit(CIK_SDMA_PACKET(CIK_SDMA_OPCODE_COPY, CIK_SDMA_COPY_SUB_OPCODE_LINEAR_SUB_WINDOW, 0) |
+      radeon_emit(SDMA_PACKET(SDMA_OPCODE_COPY, SDMA_COPY_SUB_OPCODE_LINEAR_SUB_WINDOW, 0) |
                   (util_logbase2(bpp) << 29));
       radeon_emit(src_address);
       radeon_emit(src_address >> 32);
@@ -338,8 +364,8 @@ bool cik_sdma_copy_texture(struct si_context *sctx, struct si_texture *sdst, str
          uint32_t direction = linear == sdst ? 1u << 31 : 0;
 
          radeon_begin(cs);
-         radeon_emit(CIK_SDMA_PACKET(CIK_SDMA_OPCODE_COPY,
-                                     CIK_SDMA_COPY_SUB_OPCODE_TILED_SUB_WINDOW, 0) |
+         radeon_emit(SDMA_PACKET(SDMA_OPCODE_COPY,
+                                 SDMA_COPY_SUB_OPCODE_TILED_SUB_WINDOW, 0) |
                      direction);
          radeon_emit(tiled_address);
          radeon_emit(tiled_address >> 32);
@@ -409,6 +435,7 @@ bool si_sdma_copy_image(struct si_context *sctx, struct si_texture *dst, struct 
       case GFX10_3:
       case GFX11:
       case GFX11_5:
+      case GFX12:
          if (!si_sdma_v4_v5_copy_texture(sctx, dst, src))
             return false;
          break;

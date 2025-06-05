@@ -8,7 +8,7 @@
 #ifndef VN_PROTOCOL_DRIVER_IMAGE_H
 #define VN_PROTOCOL_DRIVER_IMAGE_H
 
-#include "vn_instance.h"
+#include "vn_ring.h"
 #include "vn_protocol_driver_structs.h"
 
 /* struct VkSparseImageMemoryRequirements */
@@ -370,7 +370,7 @@ vn_sizeof_VkImageCreateInfo_self(const VkImageCreateInfo *val)
     size += vn_sizeof_VkFlags(&val->usage);
     size += vn_sizeof_VkSharingMode(&val->sharingMode);
     size += vn_sizeof_uint32_t(&val->queueFamilyIndexCount);
-    if (val->pQueueFamilyIndices) {
+    if (val->sharingMode == VK_SHARING_MODE_CONCURRENT) {
         size += vn_sizeof_array_size(val->queueFamilyIndexCount);
         size += vn_sizeof_uint32_t_array(val->pQueueFamilyIndices, val->queueFamilyIndexCount);
     } else {
@@ -458,7 +458,7 @@ vn_encode_VkImageCreateInfo_self(struct vn_cs_encoder *enc, const VkImageCreateI
     vn_encode_VkFlags(enc, &val->usage);
     vn_encode_VkSharingMode(enc, &val->sharingMode);
     vn_encode_uint32_t(enc, &val->queueFamilyIndexCount);
-    if (val->pQueueFamilyIndices) {
+    if (val->sharingMode == VK_SHARING_MODE_CONCURRENT) {
         vn_encode_array_size(enc, val->queueFamilyIndexCount);
         vn_encode_uint32_t_array(enc, val->pQueueFamilyIndices, val->queueFamilyIndexCount);
     } else {
@@ -1176,6 +1176,228 @@ vn_encode_VkImageDrmFormatModifierPropertiesEXT_partial(struct vn_cs_encoder *en
     vn_encode_VkStructureType(enc, &(VkStructureType){ VK_STRUCTURE_TYPE_IMAGE_DRM_FORMAT_MODIFIER_PROPERTIES_EXT });
     vn_encode_VkImageDrmFormatModifierPropertiesEXT_pnext_partial(enc, val->pNext);
     vn_encode_VkImageDrmFormatModifierPropertiesEXT_self_partial(enc, val);
+}
+
+/* struct VkImageSubresource2KHR chain */
+
+static inline size_t
+vn_sizeof_VkImageSubresource2KHR_pnext(const void *val)
+{
+    /* no known/supported struct */
+    return vn_sizeof_simple_pointer(NULL);
+}
+
+static inline size_t
+vn_sizeof_VkImageSubresource2KHR_self(const VkImageSubresource2KHR *val)
+{
+    size_t size = 0;
+    /* skip val->{sType,pNext} */
+    size += vn_sizeof_VkImageSubresource(&val->imageSubresource);
+    return size;
+}
+
+static inline size_t
+vn_sizeof_VkImageSubresource2KHR(const VkImageSubresource2KHR *val)
+{
+    size_t size = 0;
+
+    size += vn_sizeof_VkStructureType(&val->sType);
+    size += vn_sizeof_VkImageSubresource2KHR_pnext(val->pNext);
+    size += vn_sizeof_VkImageSubresource2KHR_self(val);
+
+    return size;
+}
+
+static inline void
+vn_encode_VkImageSubresource2KHR_pnext(struct vn_cs_encoder *enc, const void *val)
+{
+    /* no known/supported struct */
+    vn_encode_simple_pointer(enc, NULL);
+}
+
+static inline void
+vn_encode_VkImageSubresource2KHR_self(struct vn_cs_encoder *enc, const VkImageSubresource2KHR *val)
+{
+    /* skip val->{sType,pNext} */
+    vn_encode_VkImageSubresource(enc, &val->imageSubresource);
+}
+
+static inline void
+vn_encode_VkImageSubresource2KHR(struct vn_cs_encoder *enc, const VkImageSubresource2KHR *val)
+{
+    assert(val->sType == VK_STRUCTURE_TYPE_IMAGE_SUBRESOURCE_2_KHR);
+    vn_encode_VkStructureType(enc, &(VkStructureType){ VK_STRUCTURE_TYPE_IMAGE_SUBRESOURCE_2_KHR });
+    vn_encode_VkImageSubresource2KHR_pnext(enc, val->pNext);
+    vn_encode_VkImageSubresource2KHR_self(enc, val);
+}
+
+/* struct VkSubresourceLayout2KHR chain */
+
+static inline size_t
+vn_sizeof_VkSubresourceLayout2KHR_pnext(const void *val)
+{
+    /* no known/supported struct */
+    return vn_sizeof_simple_pointer(NULL);
+}
+
+static inline size_t
+vn_sizeof_VkSubresourceLayout2KHR_self(const VkSubresourceLayout2KHR *val)
+{
+    size_t size = 0;
+    /* skip val->{sType,pNext} */
+    size += vn_sizeof_VkSubresourceLayout(&val->subresourceLayout);
+    return size;
+}
+
+static inline size_t
+vn_sizeof_VkSubresourceLayout2KHR(const VkSubresourceLayout2KHR *val)
+{
+    size_t size = 0;
+
+    size += vn_sizeof_VkStructureType(&val->sType);
+    size += vn_sizeof_VkSubresourceLayout2KHR_pnext(val->pNext);
+    size += vn_sizeof_VkSubresourceLayout2KHR_self(val);
+
+    return size;
+}
+
+static inline void
+vn_decode_VkSubresourceLayout2KHR_pnext(struct vn_cs_decoder *dec, const void *val)
+{
+    /* no known/supported struct */
+    if (vn_decode_simple_pointer(dec))
+        assert(false);
+}
+
+static inline void
+vn_decode_VkSubresourceLayout2KHR_self(struct vn_cs_decoder *dec, VkSubresourceLayout2KHR *val)
+{
+    /* skip val->{sType,pNext} */
+    vn_decode_VkSubresourceLayout(dec, &val->subresourceLayout);
+}
+
+static inline void
+vn_decode_VkSubresourceLayout2KHR(struct vn_cs_decoder *dec, VkSubresourceLayout2KHR *val)
+{
+    VkStructureType stype;
+    vn_decode_VkStructureType(dec, &stype);
+    assert(stype == VK_STRUCTURE_TYPE_SUBRESOURCE_LAYOUT_2_KHR);
+
+    assert(val->sType == stype);
+    vn_decode_VkSubresourceLayout2KHR_pnext(dec, val->pNext);
+    vn_decode_VkSubresourceLayout2KHR_self(dec, val);
+}
+
+static inline size_t
+vn_sizeof_VkSubresourceLayout2KHR_pnext_partial(const void *val)
+{
+    /* no known/supported struct */
+    return vn_sizeof_simple_pointer(NULL);
+}
+
+static inline size_t
+vn_sizeof_VkSubresourceLayout2KHR_self_partial(const VkSubresourceLayout2KHR *val)
+{
+    size_t size = 0;
+    /* skip val->{sType,pNext} */
+    size += vn_sizeof_VkSubresourceLayout_partial(&val->subresourceLayout);
+    return size;
+}
+
+static inline size_t
+vn_sizeof_VkSubresourceLayout2KHR_partial(const VkSubresourceLayout2KHR *val)
+{
+    size_t size = 0;
+
+    size += vn_sizeof_VkStructureType(&val->sType);
+    size += vn_sizeof_VkSubresourceLayout2KHR_pnext_partial(val->pNext);
+    size += vn_sizeof_VkSubresourceLayout2KHR_self_partial(val);
+
+    return size;
+}
+
+static inline void
+vn_encode_VkSubresourceLayout2KHR_pnext_partial(struct vn_cs_encoder *enc, const void *val)
+{
+    /* no known/supported struct */
+    vn_encode_simple_pointer(enc, NULL);
+}
+
+static inline void
+vn_encode_VkSubresourceLayout2KHR_self_partial(struct vn_cs_encoder *enc, const VkSubresourceLayout2KHR *val)
+{
+    /* skip val->{sType,pNext} */
+    vn_encode_VkSubresourceLayout_partial(enc, &val->subresourceLayout);
+}
+
+static inline void
+vn_encode_VkSubresourceLayout2KHR_partial(struct vn_cs_encoder *enc, const VkSubresourceLayout2KHR *val)
+{
+    assert(val->sType == VK_STRUCTURE_TYPE_SUBRESOURCE_LAYOUT_2_KHR);
+    vn_encode_VkStructureType(enc, &(VkStructureType){ VK_STRUCTURE_TYPE_SUBRESOURCE_LAYOUT_2_KHR });
+    vn_encode_VkSubresourceLayout2KHR_pnext_partial(enc, val->pNext);
+    vn_encode_VkSubresourceLayout2KHR_self_partial(enc, val);
+}
+
+/* struct VkDeviceImageSubresourceInfoKHR chain */
+
+static inline size_t
+vn_sizeof_VkDeviceImageSubresourceInfoKHR_pnext(const void *val)
+{
+    /* no known/supported struct */
+    return vn_sizeof_simple_pointer(NULL);
+}
+
+static inline size_t
+vn_sizeof_VkDeviceImageSubresourceInfoKHR_self(const VkDeviceImageSubresourceInfoKHR *val)
+{
+    size_t size = 0;
+    /* skip val->{sType,pNext} */
+    size += vn_sizeof_simple_pointer(val->pCreateInfo);
+    if (val->pCreateInfo)
+        size += vn_sizeof_VkImageCreateInfo(val->pCreateInfo);
+    size += vn_sizeof_simple_pointer(val->pSubresource);
+    if (val->pSubresource)
+        size += vn_sizeof_VkImageSubresource2KHR(val->pSubresource);
+    return size;
+}
+
+static inline size_t
+vn_sizeof_VkDeviceImageSubresourceInfoKHR(const VkDeviceImageSubresourceInfoKHR *val)
+{
+    size_t size = 0;
+
+    size += vn_sizeof_VkStructureType(&val->sType);
+    size += vn_sizeof_VkDeviceImageSubresourceInfoKHR_pnext(val->pNext);
+    size += vn_sizeof_VkDeviceImageSubresourceInfoKHR_self(val);
+
+    return size;
+}
+
+static inline void
+vn_encode_VkDeviceImageSubresourceInfoKHR_pnext(struct vn_cs_encoder *enc, const void *val)
+{
+    /* no known/supported struct */
+    vn_encode_simple_pointer(enc, NULL);
+}
+
+static inline void
+vn_encode_VkDeviceImageSubresourceInfoKHR_self(struct vn_cs_encoder *enc, const VkDeviceImageSubresourceInfoKHR *val)
+{
+    /* skip val->{sType,pNext} */
+    if (vn_encode_simple_pointer(enc, val->pCreateInfo))
+        vn_encode_VkImageCreateInfo(enc, val->pCreateInfo);
+    if (vn_encode_simple_pointer(enc, val->pSubresource))
+        vn_encode_VkImageSubresource2KHR(enc, val->pSubresource);
+}
+
+static inline void
+vn_encode_VkDeviceImageSubresourceInfoKHR(struct vn_cs_encoder *enc, const VkDeviceImageSubresourceInfoKHR *val)
+{
+    assert(val->sType == VK_STRUCTURE_TYPE_DEVICE_IMAGE_SUBRESOURCE_INFO_KHR);
+    vn_encode_VkStructureType(enc, &(VkStructureType){ VK_STRUCTURE_TYPE_DEVICE_IMAGE_SUBRESOURCE_INFO_KHR });
+    vn_encode_VkDeviceImageSubresourceInfoKHR_pnext(enc, val->pNext);
+    vn_encode_VkDeviceImageSubresourceInfoKHR_self(enc, val);
 }
 
 static inline size_t vn_sizeof_vkGetImageMemoryRequirements(VkDevice device, VkImage image, VkMemoryRequirements* pMemoryRequirements)
@@ -1994,7 +2216,131 @@ static inline VkResult vn_decode_vkGetImageDrmFormatModifierPropertiesEXT_reply(
     return ret;
 }
 
-static inline void vn_submit_vkGetImageMemoryRequirements(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, VkMemoryRequirements* pMemoryRequirements, struct vn_instance_submit_command *submit)
+static inline size_t vn_sizeof_vkGetImageSubresourceLayout2KHR(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetImageSubresourceLayout2KHR_EXT;
+    const VkFlags cmd_flags = 0;
+    size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type) + vn_sizeof_VkFlags(&cmd_flags);
+
+    cmd_size += vn_sizeof_VkDevice(&device);
+    cmd_size += vn_sizeof_VkImage(&image);
+    cmd_size += vn_sizeof_simple_pointer(pSubresource);
+    if (pSubresource)
+        cmd_size += vn_sizeof_VkImageSubresource2KHR(pSubresource);
+    cmd_size += vn_sizeof_simple_pointer(pLayout);
+    if (pLayout)
+        cmd_size += vn_sizeof_VkSubresourceLayout2KHR_partial(pLayout);
+
+    return cmd_size;
+}
+
+static inline void vn_encode_vkGetImageSubresourceLayout2KHR(struct vn_cs_encoder *enc, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetImageSubresourceLayout2KHR_EXT;
+
+    vn_encode_VkCommandTypeEXT(enc, &cmd_type);
+    vn_encode_VkFlags(enc, &cmd_flags);
+
+    vn_encode_VkDevice(enc, &device);
+    vn_encode_VkImage(enc, &image);
+    if (vn_encode_simple_pointer(enc, pSubresource))
+        vn_encode_VkImageSubresource2KHR(enc, pSubresource);
+    if (vn_encode_simple_pointer(enc, pLayout))
+        vn_encode_VkSubresourceLayout2KHR_partial(enc, pLayout);
+}
+
+static inline size_t vn_sizeof_vkGetImageSubresourceLayout2KHR_reply(VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetImageSubresourceLayout2KHR_EXT;
+    size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
+
+    /* skip device */
+    /* skip image */
+    /* skip pSubresource */
+    cmd_size += vn_sizeof_simple_pointer(pLayout);
+    if (pLayout)
+        cmd_size += vn_sizeof_VkSubresourceLayout2KHR(pLayout);
+
+    return cmd_size;
+}
+
+static inline void vn_decode_vkGetImageSubresourceLayout2KHR_reply(struct vn_cs_decoder *dec, VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout)
+{
+    VkCommandTypeEXT command_type;
+    vn_decode_VkCommandTypeEXT(dec, &command_type);
+    assert(command_type == VK_COMMAND_TYPE_vkGetImageSubresourceLayout2KHR_EXT);
+
+    /* skip device */
+    /* skip image */
+    /* skip pSubresource */
+    if (vn_decode_simple_pointer(dec)) {
+        vn_decode_VkSubresourceLayout2KHR(dec, pLayout);
+    } else {
+        pLayout = NULL;
+    }
+}
+
+static inline size_t vn_sizeof_vkGetDeviceImageSubresourceLayoutKHR(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeviceImageSubresourceLayoutKHR_EXT;
+    const VkFlags cmd_flags = 0;
+    size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type) + vn_sizeof_VkFlags(&cmd_flags);
+
+    cmd_size += vn_sizeof_VkDevice(&device);
+    cmd_size += vn_sizeof_simple_pointer(pInfo);
+    if (pInfo)
+        cmd_size += vn_sizeof_VkDeviceImageSubresourceInfoKHR(pInfo);
+    cmd_size += vn_sizeof_simple_pointer(pLayout);
+    if (pLayout)
+        cmd_size += vn_sizeof_VkSubresourceLayout2KHR_partial(pLayout);
+
+    return cmd_size;
+}
+
+static inline void vn_encode_vkGetDeviceImageSubresourceLayoutKHR(struct vn_cs_encoder *enc, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeviceImageSubresourceLayoutKHR_EXT;
+
+    vn_encode_VkCommandTypeEXT(enc, &cmd_type);
+    vn_encode_VkFlags(enc, &cmd_flags);
+
+    vn_encode_VkDevice(enc, &device);
+    if (vn_encode_simple_pointer(enc, pInfo))
+        vn_encode_VkDeviceImageSubresourceInfoKHR(enc, pInfo);
+    if (vn_encode_simple_pointer(enc, pLayout))
+        vn_encode_VkSubresourceLayout2KHR_partial(enc, pLayout);
+}
+
+static inline size_t vn_sizeof_vkGetDeviceImageSubresourceLayoutKHR_reply(VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeviceImageSubresourceLayoutKHR_EXT;
+    size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
+
+    /* skip device */
+    /* skip pInfo */
+    cmd_size += vn_sizeof_simple_pointer(pLayout);
+    if (pLayout)
+        cmd_size += vn_sizeof_VkSubresourceLayout2KHR(pLayout);
+
+    return cmd_size;
+}
+
+static inline void vn_decode_vkGetDeviceImageSubresourceLayoutKHR_reply(struct vn_cs_decoder *dec, VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout)
+{
+    VkCommandTypeEXT command_type;
+    vn_decode_VkCommandTypeEXT(dec, &command_type);
+    assert(command_type == VK_COMMAND_TYPE_vkGetDeviceImageSubresourceLayoutKHR_EXT);
+
+    /* skip device */
+    /* skip pInfo */
+    if (vn_decode_simple_pointer(dec)) {
+        vn_decode_VkSubresourceLayout2KHR(dec, pLayout);
+    } else {
+        pLayout = NULL;
+    }
+}
+
+static inline void vn_submit_vkGetImageMemoryRequirements(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, VkMemoryRequirements* pMemoryRequirements, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2006,16 +2352,16 @@ static inline void vn_submit_vkGetImageMemoryRequirements(struct vn_instance *vn
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetImageMemoryRequirements_reply(device, image, pMemoryRequirements) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkGetImageMemoryRequirements(enc, cmd_flags, device, image, pMemoryRequirements);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkBindImageMemory(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkBindImageMemory(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2027,16 +2373,16 @@ static inline void vn_submit_vkBindImageMemory(struct vn_instance *vn_instance, 
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkBindImageMemory_reply(device, image, memory, memoryOffset) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkBindImageMemory(enc, cmd_flags, device, image, memory, memoryOffset);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkGetImageSparseMemoryRequirements(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements* pSparseMemoryRequirements, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkGetImageSparseMemoryRequirements(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements* pSparseMemoryRequirements, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2048,16 +2394,16 @@ static inline void vn_submit_vkGetImageSparseMemoryRequirements(struct vn_instan
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetImageSparseMemoryRequirements_reply(device, image, pSparseMemoryRequirementCount, pSparseMemoryRequirements) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkGetImageSparseMemoryRequirements(enc, cmd_flags, device, image, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkCreateImage(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkCreateImage(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2069,16 +2415,16 @@ static inline void vn_submit_vkCreateImage(struct vn_instance *vn_instance, VkCo
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkCreateImage_reply(device, pCreateInfo, pAllocator, pImage) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkCreateImage(enc, cmd_flags, device, pCreateInfo, pAllocator, pImage);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkDestroyImage(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkDestroyImage(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2090,16 +2436,16 @@ static inline void vn_submit_vkDestroyImage(struct vn_instance *vn_instance, VkC
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkDestroyImage_reply(device, image, pAllocator) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkDestroyImage(enc, cmd_flags, device, image, pAllocator);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkGetImageSubresourceLayout(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, const VkImageSubresource* pSubresource, VkSubresourceLayout* pLayout, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkGetImageSubresourceLayout(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, const VkImageSubresource* pSubresource, VkSubresourceLayout* pLayout, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2111,16 +2457,16 @@ static inline void vn_submit_vkGetImageSubresourceLayout(struct vn_instance *vn_
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetImageSubresourceLayout_reply(device, image, pSubresource, pLayout) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkGetImageSubresourceLayout(enc, cmd_flags, device, image, pSubresource, pLayout);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkBindImageMemory2(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkBindImageMemory2(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2132,16 +2478,16 @@ static inline void vn_submit_vkBindImageMemory2(struct vn_instance *vn_instance,
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkBindImageMemory2_reply(device, bindInfoCount, pBindInfos) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkBindImageMemory2(enc, cmd_flags, device, bindInfoCount, pBindInfos);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkGetImageMemoryRequirements2(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkGetImageMemoryRequirements2(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2153,16 +2499,16 @@ static inline void vn_submit_vkGetImageMemoryRequirements2(struct vn_instance *v
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetImageMemoryRequirements2_reply(device, pInfo, pMemoryRequirements) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkGetImageMemoryRequirements2(enc, cmd_flags, device, pInfo, pMemoryRequirements);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkGetImageSparseMemoryRequirements2(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkGetImageSparseMemoryRequirements2(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2174,16 +2520,16 @@ static inline void vn_submit_vkGetImageSparseMemoryRequirements2(struct vn_insta
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetImageSparseMemoryRequirements2_reply(device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkGetImageSparseMemoryRequirements2(enc, cmd_flags, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkGetDeviceImageMemoryRequirements(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkGetDeviceImageMemoryRequirements(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2195,16 +2541,16 @@ static inline void vn_submit_vkGetDeviceImageMemoryRequirements(struct vn_instan
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetDeviceImageMemoryRequirements_reply(device, pInfo, pMemoryRequirements) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkGetDeviceImageMemoryRequirements(enc, cmd_flags, device, pInfo, pMemoryRequirements);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkGetDeviceImageSparseMemoryRequirements(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkGetDeviceImageSparseMemoryRequirements(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2216,16 +2562,16 @@ static inline void vn_submit_vkGetDeviceImageSparseMemoryRequirements(struct vn_
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetDeviceImageSparseMemoryRequirements_reply(device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkGetDeviceImageSparseMemoryRequirements(enc, cmd_flags, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_submit_vkGetImageDrmFormatModifierPropertiesEXT(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties, struct vn_instance_submit_command *submit)
+static inline void vn_submit_vkGetImageDrmFormatModifierPropertiesEXT(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties, struct vn_ring_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
     void *cmd_data = local_cmd_data;
@@ -2237,253 +2583,333 @@ static inline void vn_submit_vkGetImageDrmFormatModifierPropertiesEXT(struct vn_
     }
     const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetImageDrmFormatModifierPropertiesEXT_reply(device, image, pProperties) : 0;
 
-    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
     if (cmd_size) {
         vn_encode_vkGetImageDrmFormatModifierPropertiesEXT(enc, cmd_flags, device, image, pProperties);
-        vn_instance_submit_command(vn_instance, submit);
+        vn_ring_submit_command(vn_ring, submit);
         if (cmd_data != local_cmd_data)
             free(cmd_data);
     }
 }
 
-static inline void vn_call_vkGetImageMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, VkImage image, VkMemoryRequirements* pMemoryRequirements)
+static inline void vn_submit_vkGetImageSubresourceLayout2KHR(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout, struct vn_ring_submit_command *submit)
+{
+    uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
+    void *cmd_data = local_cmd_data;
+    size_t cmd_size = vn_sizeof_vkGetImageSubresourceLayout2KHR(device, image, pSubresource, pLayout);
+    if (cmd_size > sizeof(local_cmd_data)) {
+        cmd_data = malloc(cmd_size);
+        if (!cmd_data)
+            cmd_size = 0;
+    }
+    const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetImageSubresourceLayout2KHR_reply(device, image, pSubresource, pLayout) : 0;
+
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
+    if (cmd_size) {
+        vn_encode_vkGetImageSubresourceLayout2KHR(enc, cmd_flags, device, image, pSubresource, pLayout);
+        vn_ring_submit_command(vn_ring, submit);
+        if (cmd_data != local_cmd_data)
+            free(cmd_data);
+    }
+}
+
+static inline void vn_submit_vkGetDeviceImageSubresourceLayoutKHR(struct vn_ring *vn_ring, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout, struct vn_ring_submit_command *submit)
+{
+    uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
+    void *cmd_data = local_cmd_data;
+    size_t cmd_size = vn_sizeof_vkGetDeviceImageSubresourceLayoutKHR(device, pInfo, pLayout);
+    if (cmd_size > sizeof(local_cmd_data)) {
+        cmd_data = malloc(cmd_size);
+        if (!cmd_data)
+            cmd_size = 0;
+    }
+    const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetDeviceImageSubresourceLayoutKHR_reply(device, pInfo, pLayout) : 0;
+
+    struct vn_cs_encoder *enc = vn_ring_submit_command_init(vn_ring, submit, cmd_data, cmd_size, reply_size);
+    if (cmd_size) {
+        vn_encode_vkGetDeviceImageSubresourceLayoutKHR(enc, cmd_flags, device, pInfo, pLayout);
+        vn_ring_submit_command(vn_ring, submit);
+        if (cmd_data != local_cmd_data)
+            free(cmd_data);
+    }
+}
+
+static inline void vn_call_vkGetImageMemoryRequirements(struct vn_ring *vn_ring, VkDevice device, VkImage image, VkMemoryRequirements* pMemoryRequirements)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageMemoryRequirements(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pMemoryRequirements, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageMemoryRequirements(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pMemoryRequirements, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         vn_decode_vkGetImageMemoryRequirements_reply(dec, device, image, pMemoryRequirements);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
     }
 }
 
-static inline void vn_async_vkGetImageMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, VkImage image, VkMemoryRequirements* pMemoryRequirements)
+static inline void vn_async_vkGetImageMemoryRequirements(struct vn_ring *vn_ring, VkDevice device, VkImage image, VkMemoryRequirements* pMemoryRequirements)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageMemoryRequirements(vn_instance, 0, device, image, pMemoryRequirements, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageMemoryRequirements(vn_ring, 0, device, image, pMemoryRequirements, &submit);
 }
 
-static inline VkResult vn_call_vkBindImageMemory(struct vn_instance *vn_instance, VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset)
+static inline VkResult vn_call_vkBindImageMemory(struct vn_ring *vn_ring, VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkBindImageMemory(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, memory, memoryOffset, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkBindImageMemory(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, memory, memoryOffset, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         const VkResult ret = vn_decode_vkBindImageMemory_reply(dec, device, image, memory, memoryOffset);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
         return ret;
     } else {
         return VK_ERROR_OUT_OF_HOST_MEMORY;
     }
 }
 
-static inline void vn_async_vkBindImageMemory(struct vn_instance *vn_instance, VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset)
+static inline void vn_async_vkBindImageMemory(struct vn_ring *vn_ring, VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkBindImageMemory(vn_instance, 0, device, image, memory, memoryOffset, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkBindImageMemory(vn_ring, 0, device, image, memory, memoryOffset, &submit);
 }
 
-static inline void vn_call_vkGetImageSparseMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, VkImage image, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements* pSparseMemoryRequirements)
+static inline void vn_call_vkGetImageSparseMemoryRequirements(struct vn_ring *vn_ring, VkDevice device, VkImage image, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements* pSparseMemoryRequirements)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageSparseMemoryRequirements(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageSparseMemoryRequirements(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         vn_decode_vkGetImageSparseMemoryRequirements_reply(dec, device, image, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
     }
 }
 
-static inline void vn_async_vkGetImageSparseMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, VkImage image, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements* pSparseMemoryRequirements)
+static inline void vn_async_vkGetImageSparseMemoryRequirements(struct vn_ring *vn_ring, VkDevice device, VkImage image, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements* pSparseMemoryRequirements)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageSparseMemoryRequirements(vn_instance, 0, device, image, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageSparseMemoryRequirements(vn_ring, 0, device, image, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
 }
 
-static inline VkResult vn_call_vkCreateImage(struct vn_instance *vn_instance, VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage)
+static inline VkResult vn_call_vkCreateImage(struct vn_ring *vn_ring, VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkCreateImage(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pCreateInfo, pAllocator, pImage, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkCreateImage(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pCreateInfo, pAllocator, pImage, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         const VkResult ret = vn_decode_vkCreateImage_reply(dec, device, pCreateInfo, pAllocator, pImage);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
         return ret;
     } else {
         return VK_ERROR_OUT_OF_HOST_MEMORY;
     }
 }
 
-static inline void vn_async_vkCreateImage(struct vn_instance *vn_instance, VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage)
+static inline void vn_async_vkCreateImage(struct vn_ring *vn_ring, VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkCreateImage(vn_instance, 0, device, pCreateInfo, pAllocator, pImage, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkCreateImage(vn_ring, 0, device, pCreateInfo, pAllocator, pImage, &submit);
 }
 
-static inline void vn_call_vkDestroyImage(struct vn_instance *vn_instance, VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator)
+static inline void vn_call_vkDestroyImage(struct vn_ring *vn_ring, VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkDestroyImage(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pAllocator, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkDestroyImage(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pAllocator, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         vn_decode_vkDestroyImage_reply(dec, device, image, pAllocator);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
     }
 }
 
-static inline void vn_async_vkDestroyImage(struct vn_instance *vn_instance, VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator)
+static inline void vn_async_vkDestroyImage(struct vn_ring *vn_ring, VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkDestroyImage(vn_instance, 0, device, image, pAllocator, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkDestroyImage(vn_ring, 0, device, image, pAllocator, &submit);
 }
 
-static inline void vn_call_vkGetImageSubresourceLayout(struct vn_instance *vn_instance, VkDevice device, VkImage image, const VkImageSubresource* pSubresource, VkSubresourceLayout* pLayout)
+static inline void vn_call_vkGetImageSubresourceLayout(struct vn_ring *vn_ring, VkDevice device, VkImage image, const VkImageSubresource* pSubresource, VkSubresourceLayout* pLayout)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageSubresourceLayout(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pSubresource, pLayout, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageSubresourceLayout(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pSubresource, pLayout, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         vn_decode_vkGetImageSubresourceLayout_reply(dec, device, image, pSubresource, pLayout);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
     }
 }
 
-static inline void vn_async_vkGetImageSubresourceLayout(struct vn_instance *vn_instance, VkDevice device, VkImage image, const VkImageSubresource* pSubresource, VkSubresourceLayout* pLayout)
+static inline void vn_async_vkGetImageSubresourceLayout(struct vn_ring *vn_ring, VkDevice device, VkImage image, const VkImageSubresource* pSubresource, VkSubresourceLayout* pLayout)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageSubresourceLayout(vn_instance, 0, device, image, pSubresource, pLayout, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageSubresourceLayout(vn_ring, 0, device, image, pSubresource, pLayout, &submit);
 }
 
-static inline VkResult vn_call_vkBindImageMemory2(struct vn_instance *vn_instance, VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos)
+static inline VkResult vn_call_vkBindImageMemory2(struct vn_ring *vn_ring, VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkBindImageMemory2(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, bindInfoCount, pBindInfos, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkBindImageMemory2(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, bindInfoCount, pBindInfos, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         const VkResult ret = vn_decode_vkBindImageMemory2_reply(dec, device, bindInfoCount, pBindInfos);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
         return ret;
     } else {
         return VK_ERROR_OUT_OF_HOST_MEMORY;
     }
 }
 
-static inline void vn_async_vkBindImageMemory2(struct vn_instance *vn_instance, VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos)
+static inline void vn_async_vkBindImageMemory2(struct vn_ring *vn_ring, VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkBindImageMemory2(vn_instance, 0, device, bindInfoCount, pBindInfos, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkBindImageMemory2(vn_ring, 0, device, bindInfoCount, pBindInfos, &submit);
 }
 
-static inline void vn_call_vkGetImageMemoryRequirements2(struct vn_instance *vn_instance, VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements)
+static inline void vn_call_vkGetImageMemoryRequirements2(struct vn_ring *vn_ring, VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageMemoryRequirements2(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pMemoryRequirements, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageMemoryRequirements2(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pMemoryRequirements, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         vn_decode_vkGetImageMemoryRequirements2_reply(dec, device, pInfo, pMemoryRequirements);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
     }
 }
 
-static inline void vn_async_vkGetImageMemoryRequirements2(struct vn_instance *vn_instance, VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements)
+static inline void vn_async_vkGetImageMemoryRequirements2(struct vn_ring *vn_ring, VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageMemoryRequirements2(vn_instance, 0, device, pInfo, pMemoryRequirements, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageMemoryRequirements2(vn_ring, 0, device, pInfo, pMemoryRequirements, &submit);
 }
 
-static inline void vn_call_vkGetImageSparseMemoryRequirements2(struct vn_instance *vn_instance, VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+static inline void vn_call_vkGetImageSparseMemoryRequirements2(struct vn_ring *vn_ring, VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageSparseMemoryRequirements2(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageSparseMemoryRequirements2(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         vn_decode_vkGetImageSparseMemoryRequirements2_reply(dec, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
     }
 }
 
-static inline void vn_async_vkGetImageSparseMemoryRequirements2(struct vn_instance *vn_instance, VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+static inline void vn_async_vkGetImageSparseMemoryRequirements2(struct vn_ring *vn_ring, VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageSparseMemoryRequirements2(vn_instance, 0, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageSparseMemoryRequirements2(vn_ring, 0, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
 }
 
-static inline void vn_call_vkGetDeviceImageMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements)
+static inline void vn_call_vkGetDeviceImageMemoryRequirements(struct vn_ring *vn_ring, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetDeviceImageMemoryRequirements(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pMemoryRequirements, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetDeviceImageMemoryRequirements(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pMemoryRequirements, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         vn_decode_vkGetDeviceImageMemoryRequirements_reply(dec, device, pInfo, pMemoryRequirements);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
     }
 }
 
-static inline void vn_async_vkGetDeviceImageMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements)
+static inline void vn_async_vkGetDeviceImageMemoryRequirements(struct vn_ring *vn_ring, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetDeviceImageMemoryRequirements(vn_instance, 0, device, pInfo, pMemoryRequirements, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetDeviceImageMemoryRequirements(vn_ring, 0, device, pInfo, pMemoryRequirements, &submit);
 }
 
-static inline void vn_call_vkGetDeviceImageSparseMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+static inline void vn_call_vkGetDeviceImageSparseMemoryRequirements(struct vn_ring *vn_ring, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetDeviceImageSparseMemoryRequirements(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetDeviceImageSparseMemoryRequirements(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         vn_decode_vkGetDeviceImageSparseMemoryRequirements_reply(dec, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
     }
 }
 
-static inline void vn_async_vkGetDeviceImageSparseMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+static inline void vn_async_vkGetDeviceImageSparseMemoryRequirements(struct vn_ring *vn_ring, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetDeviceImageSparseMemoryRequirements(vn_instance, 0, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetDeviceImageSparseMemoryRequirements(vn_ring, 0, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
 }
 
-static inline VkResult vn_call_vkGetImageDrmFormatModifierPropertiesEXT(struct vn_instance *vn_instance, VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties)
+static inline VkResult vn_call_vkGetImageDrmFormatModifierPropertiesEXT(struct vn_ring *vn_ring, VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties)
 {
     VN_TRACE_FUNC();
 
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageDrmFormatModifierPropertiesEXT(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pProperties, &submit);
-    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageDrmFormatModifierPropertiesEXT(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pProperties, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
     if (dec) {
         const VkResult ret = vn_decode_vkGetImageDrmFormatModifierPropertiesEXT_reply(dec, device, image, pProperties);
-        vn_instance_free_command_reply(vn_instance, &submit);
+        vn_ring_free_command_reply(vn_ring, &submit);
         return ret;
     } else {
         return VK_ERROR_OUT_OF_HOST_MEMORY;
     }
 }
 
-static inline void vn_async_vkGetImageDrmFormatModifierPropertiesEXT(struct vn_instance *vn_instance, VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties)
+static inline void vn_async_vkGetImageDrmFormatModifierPropertiesEXT(struct vn_ring *vn_ring, VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties)
 {
-    struct vn_instance_submit_command submit;
-    vn_submit_vkGetImageDrmFormatModifierPropertiesEXT(vn_instance, 0, device, image, pProperties, &submit);
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageDrmFormatModifierPropertiesEXT(vn_ring, 0, device, image, pProperties, &submit);
+}
+
+static inline void vn_call_vkGetImageSubresourceLayout2KHR(struct vn_ring *vn_ring, VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout)
+{
+    VN_TRACE_FUNC();
+
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageSubresourceLayout2KHR(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, image, pSubresource, pLayout, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
+    if (dec) {
+        vn_decode_vkGetImageSubresourceLayout2KHR_reply(dec, device, image, pSubresource, pLayout);
+        vn_ring_free_command_reply(vn_ring, &submit);
+    }
+}
+
+static inline void vn_async_vkGetImageSubresourceLayout2KHR(struct vn_ring *vn_ring, VkDevice device, VkImage image, const VkImageSubresource2KHR* pSubresource, VkSubresourceLayout2KHR* pLayout)
+{
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetImageSubresourceLayout2KHR(vn_ring, 0, device, image, pSubresource, pLayout, &submit);
+}
+
+static inline void vn_call_vkGetDeviceImageSubresourceLayoutKHR(struct vn_ring *vn_ring, VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout)
+{
+    VN_TRACE_FUNC();
+
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetDeviceImageSubresourceLayoutKHR(vn_ring, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pLayout, &submit);
+    struct vn_cs_decoder *dec = vn_ring_get_command_reply(vn_ring, &submit);
+    if (dec) {
+        vn_decode_vkGetDeviceImageSubresourceLayoutKHR_reply(dec, device, pInfo, pLayout);
+        vn_ring_free_command_reply(vn_ring, &submit);
+    }
+}
+
+static inline void vn_async_vkGetDeviceImageSubresourceLayoutKHR(struct vn_ring *vn_ring, VkDevice device, const VkDeviceImageSubresourceInfoKHR* pInfo, VkSubresourceLayout2KHR* pLayout)
+{
+    struct vn_ring_submit_command submit;
+    vn_submit_vkGetDeviceImageSubresourceLayoutKHR(vn_ring, 0, device, pInfo, pLayout, &submit);
 }
 
 #endif /* VN_PROTOCOL_DRIVER_IMAGE_H */

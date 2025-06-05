@@ -1,23 +1,5 @@
 # Copyright © 2022 Imagination Technologies Ltd.
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice (including the next
-# paragraph) shall be included in all copies or substantial portions of the
-# Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 subdir('pds')
 
@@ -35,6 +17,11 @@ pvr_entrypoints = custom_target(
 
 pvr_files = files(
   'winsys/powervr/pvr_drm.c',
+  'winsys/powervr/pvr_drm_bo.c',
+  'winsys/powervr/pvr_drm_job_compute.c',
+  'winsys/powervr/pvr_drm_job_null.c',
+  'winsys/powervr/pvr_drm_job_render.c',
+  'winsys/powervr/pvr_drm_job_transfer.c',
   'winsys/pvr_winsys.c',
   'winsys/pvr_winsys_helper.c',
   'pvr_blit.c',
@@ -56,6 +43,7 @@ pvr_files = files(
   'pvr_job_context.c',
   'pvr_job_render.c',
   'pvr_job_transfer.c',
+  'pvr_nir.c',
   'pvr_pass.c',
   'pvr_pipeline.c',
   'pvr_transfer_frag_store.c',
@@ -73,8 +61,6 @@ pvr_files = files(
 )
 
 pvr_includes = [
-  include_directories('usc/programs'),
-  include_directories('usc'),
   include_directories('winsys'),
   libpowervr_pds_includes,
 ]
@@ -112,7 +98,7 @@ endif
 
 libvulkan_powervr_mesa = shared_library(
   'vulkan_powervr_mesa',
-  [pvr_files, pvr_entrypoints, u_format_pack_h],
+  [pvr_files, pvr_entrypoints, sha1_h, u_format_pack_h],
   include_directories : [
     pvr_includes,
     inc_imagination,
@@ -121,13 +107,14 @@ libvulkan_powervr_mesa = shared_library(
   ],
   link_with : [
     libpowervr_common,
+    libpowervr_compiler,
     libpowervr_pds,
     libpowervr_rogue,
     libvulkan_wsi,
   ],
   dependencies : [
     pvr_deps,
-    idep_nir,
+    idep_nir_headers,
   ],
   c_args : pvr_flags,
   link_args : [
@@ -181,4 +168,6 @@ _dev_icd = custom_target(
   build_by_default : true,
 )
 
+devenv.append('VK_DRIVER_FILES', _dev_icd.full_path())
+# Deprecated: replaced by VK_DRIVER_FILES above
 devenv.append('VK_ICD_FILENAMES', _dev_icd.full_path())

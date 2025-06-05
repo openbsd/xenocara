@@ -29,8 +29,8 @@
 #include "util/u_inlines.h"
 #include "util/format/u_format.h"
 #include "util/u_upload_mgr.h"
-#include "drm-uapi/i915_drm.h"
 #include "iris_context.h"
+#include "iris_perf.h"
 #include "iris_resource.h"
 #include "iris_screen.h"
 #include "iris_utrace.h"
@@ -217,6 +217,9 @@ iris_destroy_context(struct pipe_context *ctx)
    struct iris_context *ice = (struct iris_context *)ctx;
    struct iris_screen *screen = (struct iris_screen *)ctx->screen;
 
+   blorp_finish(&ice->blorp);
+
+   intel_perf_free_context(ice->perf_ctx);
    if (ctx->stream_uploader)
       u_upload_destroy(ctx->stream_uploader);
    if (ctx->const_uploader)
@@ -245,6 +248,7 @@ iris_destroy_context(struct pipe_context *ctx)
 
    iris_destroy_batches(ice);
    iris_destroy_binder(&ice->state.binder);
+   iris_bo_unreference(ice->draw.generation.ring_bo);
 
    iris_utrace_fini(ice);
 
@@ -256,6 +260,9 @@ iris_destroy_context(struct pipe_context *ctx)
 
 #define genX_call(devinfo, func, ...)             \
    switch ((devinfo)->verx10) {                   \
+   case 300:                                      \
+      gfx30_##func(__VA_ARGS__);                  \
+      break;                                      \
    case 200:                                      \
       gfx20_##func(__VA_ARGS__);                  \
       break;                                      \
@@ -278,6 +285,12 @@ iris_destroy_context(struct pipe_context *ctx)
       unreachable("Unknown hardware generation"); \
    }
 
+#ifndef INTEL_USE_ELK
+static inline void gfx8_init_state(struct iris_context *ice) { unreachable("no elk support"); }
+static inline void gfx8_init_blorp(struct iris_context *ice) { unreachable("no elk support"); }
+static inline void gfx8_init_query(struct iris_context *ice) { unreachable("no elk support"); }
+#endif
+
 /**
  * Create a context.
  *
@@ -298,7 +311,11 @@ iris_create_context(struct pipe_screen *pscreen, void *priv, unsigned flags)
    ctx->screen = pscreen;
    ctx->priv = priv;
 
-   ctx->stream_uploader = u_upload_create_default(ctx);
+   ctx->stream_uploader = u_upload_create(ctx, 1024 * 1024 * 2,
+                                          PIPE_BIND_VERTEX_BUFFER |
+                                          PIPE_BIND_INDEX_BUFFER |
+                                          PIPE_BIND_CONSTANT_BUFFER,
+                                          PIPE_USAGE_STREAM, 0);
    if (!ctx->stream_uploader) {
       ralloc_free(ice);
       return NULL;
@@ -376,6 +393,7 @@ iris_create_context(struct pipe_screen *pscreen, void *priv, unsigned flags)
 
    screen->vtbl.init_render_context(&ice->batches[IRIS_BATCH_RENDER]);
    screen->vtbl.init_compute_context(&ice->batches[IRIS_BATCH_COMPUTE]);
+   screen->vtbl.init_copy_context(&ice->batches[IRIS_BATCH_BLITTER]);
 
    if (!(flags & PIPE_CONTEXT_PREFER_THREADED))
       return ctx;

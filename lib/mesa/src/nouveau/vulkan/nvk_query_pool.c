@@ -11,23 +11,21 @@
 #include "nvk_event.h"
 #include "nvk_mme.h"
 #include "nvk_physical_device.h"
-#include "nvk_pipeline.h"
+#include "nvkmd/nvkmd.h"
 
+#include "vk_common_entrypoints.h"
 #include "vk_meta.h"
 #include "vk_pipeline.h"
 
 #include "compiler/nir/nir.h"
 #include "compiler/nir/nir_builder.h"
 
-#include "nouveau_bo.h"
-#include "nouveau_context.h"
-
 #include "util/os_time.h"
 
-#include "nvk_cl906f.h"
-#include "nvk_cl9097.h"
-#include "nvk_cla0c0.h"
-#include "nvk_clc597.h"
+#include "nv_push_cl906f.h"
+#include "nv_push_cl9097.h"
+#include "nv_push_cla0c0.h"
+#include "nv_push_clc597.h"
 
 struct nvk_query_report {
    uint64_t value;
@@ -41,7 +39,9 @@ nvk_CreateQueryPool(VkDevice device,
                     VkQueryPool *pQueryPool)
 {
    VK_FROM_HANDLE(nvk_device, dev, device);
+   struct nvk_physical_device *pdev = nvk_device_physical(dev);
    struct nvk_query_pool *pool;
+   VkResult result;
 
    pool = vk_query_pool_create(&dev->vk, pCreateInfo,
                                pAllocator, sizeof(*pool));
@@ -55,6 +55,7 @@ nvk_CreateQueryPool(VkDevice device,
    uint32_t reports_per_query;
    switch (pCreateInfo->queryType) {
    case VK_QUERY_TYPE_OCCLUSION:
+   case VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT:
       reports_per_query = 2;
       break;
    case VK_QUERY_TYPE_TIMESTAMP:
@@ -73,20 +74,20 @@ nvk_CreateQueryPool(VkDevice device,
    pool->query_stride = reports_per_query * sizeof(struct nvk_query_report);
 
    if (pool->vk.query_count > 0) {
-      uint32_t bo_size = pool->query_start +
-                         pool->query_stride * pool->vk.query_count;
-      pool->bo = nouveau_ws_bo_new_mapped(dev->ws_dev, bo_size, 0,
-                                          NOUVEAU_WS_BO_GART |
-                                          NOUVEAU_WS_BO_NO_SHARE,
-                                          NOUVEAU_WS_BO_RDWR,
-                                          &pool->bo_map);
-      if (!pool->bo) {
+      uint32_t mem_size = pool->query_start +
+                          pool->query_stride * pool->vk.query_count;
+      result = nvkmd_dev_alloc_mapped_mem(dev->nvkmd, &dev->vk.base,
+                                          mem_size, 0 /* align_B */,
+                                          NVKMD_MEM_GART,
+                                          NVKMD_MEM_MAP_RDWR,
+                                          &pool->mem);
+      if (result != VK_SUCCESS) {
          vk_query_pool_destroy(&dev->vk, pAllocator, &pool->vk);
-         return vk_error(dev, VK_ERROR_OUT_OF_DEVICE_MEMORY);
+         return result;
       }
 
-      if (dev->ws_dev->debug_flags & NVK_DEBUG_ZERO_MEMORY)
-         memset(pool->bo_map, 0, bo_size);
+      if (pdev->debug_flags & NVK_DEBUG_ZERO_MEMORY)
+         memset(pool->mem->map, 0, mem_size);
    }
 
    *pQueryPool = nvk_query_pool_to_handle(pool);
@@ -105,10 +106,8 @@ nvk_DestroyQueryPool(VkDevice device,
    if (!pool)
       return;
 
-   if (pool->bo) {
-      nouveau_ws_bo_unmap(pool->bo, pool->bo_map);
-      nouveau_ws_bo_destroy(pool->bo);
-   }
+   if (pool->mem)
+      nvkmd_mem_unref(pool->mem);
    vk_query_pool_destroy(&dev->vk, pAllocator, &pool->vk);
 }
 
@@ -116,7 +115,7 @@ static uint64_t
 nvk_query_available_addr(struct nvk_query_pool *pool, uint32_t query)
 {
    assert(query < pool->vk.query_count);
-   return pool->bo->offset + query * sizeof(uint32_t);
+   return pool->mem->va->addr + query * sizeof(uint32_t);
 }
 
 static nir_def *
@@ -131,7 +130,7 @@ static uint32_t *
 nvk_query_available_map(struct nvk_query_pool *pool, uint32_t query)
 {
    assert(query < pool->vk.query_count);
-   return (uint32_t *)pool->bo_map + query;
+   return (uint32_t *)pool->mem->map + query;
 }
 
 static uint64_t
@@ -144,7 +143,7 @@ nvk_query_offset(struct nvk_query_pool *pool, uint32_t query)
 static uint64_t
 nvk_query_report_addr(struct nvk_query_pool *pool, uint32_t query)
 {
-   return pool->bo->offset + nvk_query_offset(pool, query);
+   return pool->mem->va->addr + nvk_query_offset(pool, query);
 }
 
 static nir_def *
@@ -160,7 +159,7 @@ nvk_nir_query_report_addr(nir_builder *b, nir_def *pool_addr,
 static struct nvk_query_report *
 nvk_query_report_map(struct nvk_query_pool *pool, uint32_t query)
 {
-   return (void *)((char *)pool->bo_map + nvk_query_offset(pool, query));
+   return (void *)((char *)pool->mem->map + nvk_query_offset(pool, query));
 }
 
 /**
@@ -174,7 +173,8 @@ emit_zero_queries(struct nvk_cmd_buffer *cmd, struct nvk_query_pool *pool,
    switch (pool->vk.query_type) {
    case VK_QUERY_TYPE_OCCLUSION:
    case VK_QUERY_TYPE_TIMESTAMP:
-   case VK_QUERY_TYPE_PIPELINE_STATISTICS: {
+   case VK_QUERY_TYPE_PIPELINE_STATISTICS:
+   case VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT: {
       for (uint32_t i = 0; i < num_queries; i++) {
          uint64_t addr = nvk_query_available_addr(pool, first_index + i);
 
@@ -401,10 +401,12 @@ nvk_cmd_begin_end_query(struct nvk_cmd_buffer *cmd,
    uint64_t report_addr = nvk_query_report_addr(pool, query) +
                           end * sizeof(struct nvk_query_report);
 
+   uint32_t end_size = 7 * end;
+
    struct nv_push *p;
    switch (pool->vk.query_type) {
    case VK_QUERY_TYPE_OCCLUSION:
-      p = nvk_cmd_buffer_push(cmd, 2 + 5 * (1 + end));
+      p = nvk_cmd_buffer_push(cmd, 7 + end_size);
 
       P_IMMD(p, NV9097, SET_ZPASS_PIXEL_COUNT, !end);
 
@@ -417,12 +419,13 @@ nvk_cmd_begin_end_query(struct nvk_cmd_buffer *cmd,
          .pipeline_location = PIPELINE_LOCATION_ALL,
          .report = REPORT_ZPASS_PIXEL_CNT64,
          .structure_size = STRUCTURE_SIZE_FOUR_WORDS,
+         .flush_disable = true,
       });
       break;
 
    case VK_QUERY_TYPE_PIPELINE_STATISTICS: {
       uint32_t stat_count = util_bitcount(pool->vk.pipeline_statistics);
-      p = nvk_cmd_buffer_push(cmd, (stat_count + end) * 5);
+      p = nvk_cmd_buffer_push(cmd, stat_count * 5 + end_size);
 
       ASSERTED uint32_t stats_left = pool->vk.pipeline_statistics;
       for (uint32_t i = 0; i < ARRAY_SIZE(nvk_3d_stat_queries); i++) {
@@ -447,6 +450,7 @@ nvk_cmd_begin_end_query(struct nvk_cmd_buffer *cmd,
                .pipeline_location = sq->loc,
                .report = sq->report,
                .structure_size = STRUCTURE_SIZE_FOUR_WORDS,
+               .flush_disable = true,
             });
          }
 
@@ -461,7 +465,7 @@ nvk_cmd_begin_end_query(struct nvk_cmd_buffer *cmd,
          NV9097_SET_REPORT_SEMAPHORE_D_REPORT_STREAMING_PRIMITIVES_SUCCEEDED,
          NV9097_SET_REPORT_SEMAPHORE_D_REPORT_STREAMING_PRIMITIVES_NEEDED,
       };
-      p = nvk_cmd_buffer_push(cmd, 5*ARRAY_SIZE(xfb_reports) + 5*end);
+      p = nvk_cmd_buffer_push(cmd, 5 * ARRAY_SIZE(xfb_reports) + end_size);
       for (uint32_t i = 0; i < ARRAY_SIZE(xfb_reports); ++i) {
          P_MTHD(p, NV9097, SET_REPORT_SEMAPHORE_A);
          P_NV9097_SET_REPORT_SEMAPHORE_A(p, report_addr >> 32);
@@ -473,16 +477,37 @@ nvk_cmd_begin_end_query(struct nvk_cmd_buffer *cmd,
                .report = xfb_reports[i],
                .structure_size = STRUCTURE_SIZE_FOUR_WORDS,
                .sub_report = index,
+               .flush_disable = true,
                });
-         report_addr += 2*sizeof(struct nvk_query_report);
+         report_addr += 2 * sizeof(struct nvk_query_report);
       }
       break;
    }
+
+   case VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT:
+      p = nvk_cmd_buffer_push(cmd, 5 + end_size);
+
+      P_MTHD(p, NV9097, SET_REPORT_SEMAPHORE_A);
+      P_NV9097_SET_REPORT_SEMAPHORE_A(p, report_addr >> 32);
+      P_NV9097_SET_REPORT_SEMAPHORE_B(p, report_addr);
+      P_NV9097_SET_REPORT_SEMAPHORE_C(p, 1);
+      P_NV9097_SET_REPORT_SEMAPHORE_D(p, {
+         .operation = OPERATION_REPORT_ONLY,
+         .pipeline_location = PIPELINE_LOCATION_STREAMING_OUTPUT,
+         .report = REPORT_VTG_PRIMITIVES_OUT,
+         .sub_report = index,
+         .structure_size = STRUCTURE_SIZE_FOUR_WORDS,
+         .flush_disable = true,
+      });
+      break;
+
    default:
       unreachable("Unsupported query type");
    }
 
    if (end) {
+      P_IMMD(p, NV9097, FLUSH_PENDING_WRITES, 0);
+
       uint64_t available_addr = nvk_query_available_addr(pool, query);
       P_MTHD(p, NV9097, SET_REPORT_SEMAPHORE_A);
       P_NV9097_SET_REPORT_SEMAPHORE_A(p, available_addr >> 32);
@@ -630,6 +655,7 @@ nvk_GetQueryPoolResults(VkDevice device,
       uint32_t available_dst_idx = 1;
       switch (pool->vk.query_type) {
       case VK_QUERY_TYPE_OCCLUSION:
+      case VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT:
          if (write_results)
             cpu_get_query_delta(dst, src, 0, flags);
          break;
@@ -795,11 +821,7 @@ nvk_nir_copy_query(nir_builder *b, nir_variable *push, nir_def *i)
 
          nir_push_loop(b);
          {
-            nir_push_if(b, nir_ige(b, nir_load_var(b, r), num_reports));
-            {
-               nir_jump(b, nir_jump_break);
-            }
-            nir_pop_if(b, NULL);
+            nir_break_if(b, nir_ige(b, nir_load_var(b, r), num_reports));
 
             nir_get_query_delta(b, nir_iadd(b, dst_addr, dst_offset),
                                 report_addr, nir_load_var(b, r), flags);
@@ -847,57 +869,55 @@ build_copy_queries_shader(void)
    nir_variable *push = nir_variable_create(b->shader, nir_var_mem_push_const,
                                             push_iface_type, "push");
 
+   b->shader->info.workgroup_size[0] = 32;
+   nir_def *wg_id = nir_load_workgroup_id(b);
+   nir_def *i = nir_iadd(b, nir_load_subgroup_invocation(b),
+                            nir_imul_imm(b, nir_channel(b, wg_id, 0), 32));
+
    nir_def *query_count = load_struct_var(b, push, 4);
-
-   nir_variable *i = nir_local_variable_create(b->impl, glsl_uint_type(), "i");
-   nir_store_var(b, i, nir_imm_int(b, 0), 0x1);
-
-   nir_push_loop(b);
+   nir_push_if(b, nir_ilt(b, i, query_count));
    {
-      nir_push_if(b, nir_ige(b, nir_load_var(b, i), query_count));
-      {
-         nir_jump(b, nir_jump_break);
-      }
-      nir_pop_if(b, NULL);
-
-      nvk_nir_copy_query(b, push, nir_load_var(b, i));
-
-      nir_store_var(b, i, nir_iadd_imm(b, nir_load_var(b, i), 1), 0x1);
+      nvk_nir_copy_query(b, push, i);
    }
-   nir_pop_loop(b, NULL);
+   nir_pop_if(b, NULL);
 
    return build.shader;
 }
 
-static VkResult
-get_copy_queries_pipeline(struct nvk_device *dev,
-                          VkPipelineLayout layout,
-                          VkPipeline *pipeline_out)
+static struct nvk_shader *
+atomic_set_or_destroy_shader(struct nvk_device *dev,
+                             struct nvk_shader **shader_ptr,
+                             struct nvk_shader *shader,
+                             const VkAllocationCallbacks *alloc)
 {
-   const char key[] = "nvk-meta-copy-query-pool-results";
-   VkPipeline cached = vk_meta_lookup_pipeline(&dev->meta, key, sizeof(key));
-   if (cached != VK_NULL_HANDLE) {
-      *pipeline_out = cached;
+   struct nvk_shader *old_shader = p_atomic_cmpxchg(shader_ptr, NULL, shader);
+   if (old_shader == NULL) {
+      return shader;
+   } else {
+      vk_shader_destroy(&dev->vk, &shader->vk, alloc);
+      return old_shader;
+   }
+}
+
+static VkResult
+get_copy_queries_shader(struct nvk_device *dev,
+                        struct nvk_shader **shader_out)
+{
+   struct nvk_shader *shader = p_atomic_read(&dev->copy_queries);
+   if (shader != NULL) {
+      *shader_out = shader;
       return VK_SUCCESS;
    }
 
-   const VkPipelineShaderStageNirCreateInfoMESA nir_info = {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_NIR_CREATE_INFO_MESA,
-      .nir = build_copy_queries_shader(),
-   };
-   const VkComputePipelineCreateInfo info = {
-      .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
-      .stage = {
-         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-         .pNext = &nir_info,
-         .stage = VK_SHADER_STAGE_COMPUTE_BIT,
-         .pName = "main",
-      },
-      .layout = layout,
-   };
+   nir_shader *nir = build_copy_queries_shader();
+   VkResult result = nvk_compile_nir_shader(dev, nir, &dev->vk.alloc, &shader);
+   if (result != VK_SUCCESS)
+      return result;
 
-   return vk_meta_create_compute_pipeline(&dev->vk, &dev->meta, &info,
-                                          key, sizeof(key), pipeline_out);
+   *shader_out = atomic_set_or_destroy_shader(dev, &dev->copy_queries,
+                                              shader, &dev->vk.alloc);
+
+   return VK_SUCCESS;
 }
 
 static void
@@ -910,11 +930,16 @@ nvk_meta_copy_query_pool_results(struct nvk_cmd_buffer *cmd,
                                  VkQueryResultFlags flags)
 {
    struct nvk_device *dev = nvk_cmd_buffer_device(cmd);
-   struct nvk_descriptor_state *desc = &cmd->state.cs.descriptors;
-   VkResult result;
+
+   struct nvk_shader *shader;
+   VkResult result = get_copy_queries_shader(dev, &shader);
+   if (result != VK_SUCCESS) {
+      vk_command_buffer_set_error(&cmd->vk, result);
+      return;
+   }
 
    const struct nvk_copy_query_push push = {
-      .pool_addr = pool->bo->offset,
+      .pool_addr = pool->mem->va->addr,
       .query_start = pool->query_start,
       .query_stride = pool->query_stride,
       .first_query = first_query,
@@ -923,179 +948,8 @@ nvk_meta_copy_query_pool_results(struct nvk_cmd_buffer *cmd,
       .dst_stride = dst_stride,
       .flags = flags,
    };
-
-   const char key[] = "nvk-meta-copy-query-pool-results";
-   const VkPushConstantRange push_range = {
-      .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-      .size = sizeof(push),
-   };
-   VkPipelineLayout layout;
-   result = vk_meta_get_pipeline_layout(&dev->vk, &dev->meta, NULL, &push_range,
-                                        key, sizeof(key), &layout);
-   if (result != VK_SUCCESS) {
-      vk_command_buffer_set_error(&cmd->vk, result);
-      return;
-   }
-
-   VkPipeline pipeline;
-   result = get_copy_queries_pipeline(dev, layout, &pipeline);
-   if (result != VK_SUCCESS) {
-      vk_command_buffer_set_error(&cmd->vk, result);
-      return;
-   }
-
-   /* Save pipeline and push constants */
-   struct nvk_compute_pipeline *pipeline_save = cmd->state.cs.pipeline;
-   uint8_t push_save[NVK_MAX_PUSH_SIZE];
-   memcpy(push_save, desc->root.push, NVK_MAX_PUSH_SIZE);
-
-   nvk_CmdBindPipeline(nvk_cmd_buffer_to_handle(cmd),
-                       VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-
-   nvk_CmdPushConstants(nvk_cmd_buffer_to_handle(cmd), layout,
-                        VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
-
-   nvk_CmdDispatchBase(nvk_cmd_buffer_to_handle(cmd), 0, 0, 0, 1, 1, 1);
-
-   /* Restore pipeline and push constants */
-   if (pipeline_save) {
-      nvk_CmdBindPipeline(nvk_cmd_buffer_to_handle(cmd),
-                          VK_PIPELINE_BIND_POINT_COMPUTE,
-                          nvk_pipeline_to_handle(&pipeline_save->base));
-   }
-   memcpy(desc->root.push, push_save, NVK_MAX_PUSH_SIZE);
-}
-
-void
-nvk_mme_copy_queries(struct mme_builder *b)
-{
-   if (b->devinfo->cls_eng3d < TURING_A)
-      return;
-
-   struct mme_value64 dst_addr = mme_load_addr64(b);
-   struct mme_value64 dst_stride = mme_load_addr64(b);
-   struct mme_value64 avail_addr = mme_load_addr64(b);
-   struct mme_value64 report_addr = mme_load_addr64(b);
-
-   struct mme_value query_count = mme_load(b);
-   struct mme_value control = mme_load(b);
-
-   struct mme_value flags = control;
-   struct mme_value write64 =
-      mme_and(b, flags, mme_imm(VK_QUERY_RESULT_64_BIT));
-   struct mme_value query_stride =
-      mme_merge(b, mme_zero(), control, 0, 16, 8);
-   struct mme_value is_timestamp =
-      mme_merge(b, mme_zero(), control, 0, 1, 24);
-
-   mme_while(b, ugt, query_count, mme_zero()) {
-      struct mme_value dw_per_query = mme_srl(b, query_stride, mme_imm(2));
-      mme_tu104_read_fifoed(b, report_addr, dw_per_query);
-      mme_free_reg(b, dw_per_query);
-
-      struct mme_value64 write_addr = mme_mov64(b, dst_addr);
-      struct mme_value report_count = mme_srl(b, query_stride, mme_imm(4));
-      mme_while(b, ugt, report_count, mme_zero()) {
-         struct mme_value result_lo = mme_alloc_reg(b);
-         struct mme_value result_hi = mme_alloc_reg(b);
-         struct mme_value64 result = mme_value64(result_lo, result_hi);
-
-         mme_if(b, ine, is_timestamp, mme_zero()) {
-            mme_load_to(b, mme_zero());
-            mme_load_to(b, mme_zero());
-            mme_load_to(b, result_lo);
-            mme_load_to(b, result_hi);
-            mme_sub_to(b, report_count, report_count, mme_imm(1));
-         }
-         mme_if(b, ieq, is_timestamp, mme_zero()) {
-            struct mme_value begin_lo = mme_load(b);
-            struct mme_value begin_hi = mme_load(b);
-            struct mme_value64 begin = mme_value64(begin_lo, begin_hi);
-            mme_load_to(b, mme_zero());
-            mme_load_to(b, mme_zero());
-
-            struct mme_value end_lo = mme_load(b);
-            struct mme_value end_hi = mme_load(b);
-            struct mme_value64 end = mme_value64(end_lo, end_hi);
-            mme_load_to(b, mme_zero());
-            mme_load_to(b, mme_zero());
-
-            mme_sub64_to(b, result, end, begin);
-            mme_sub_to(b, report_count, report_count, mme_imm(2));
-
-            mme_free_reg64(b, begin);
-            mme_free_reg64(b, end);
-         }
-
-         mme_store_global(b, write_addr, result_lo);
-         mme_add64_to(b, write_addr, write_addr, mme_imm64(4));
-         mme_if(b, ine, write64, mme_zero()) {
-            mme_store_global(b, write_addr, result_hi);
-            mme_add64_to(b, write_addr, write_addr, mme_imm64(4));
-         }
-      }
-
-      struct mme_value with_availability =
-         mme_and(b, flags, mme_imm(VK_QUERY_RESULT_WITH_AVAILABILITY_BIT));
-      mme_if(b, ine, with_availability, mme_zero()) {
-         mme_tu104_read_fifoed(b, avail_addr, mme_imm(1));
-         struct mme_value avail = mme_load(b);
-         mme_store_global(b, write_addr, avail);
-         mme_if(b, ine, write64, mme_zero()) {
-            mme_add64_to(b, write_addr, write_addr, mme_imm64(4));
-            mme_store_global(b, write_addr, mme_zero());
-         }
-      }
-      mme_free_reg(b, with_availability);
-
-      mme_add64_to(b, avail_addr, avail_addr, mme_imm64(4));
-
-      mme_add64_to(b, report_addr, report_addr,
-                   mme_value64(query_stride, mme_zero()));
-
-      mme_add64_to(b, dst_addr, dst_addr, dst_stride);
-
-      mme_sub_to(b, query_count, query_count, mme_imm(1));
-   }
-}
-
-static void
-nvk_cmd_copy_query_pool_results_mme(struct nvk_cmd_buffer *cmd,
-                                    struct nvk_query_pool *pool,
-                                    uint32_t first_query,
-                                    uint32_t query_count,
-                                    uint64_t dst_addr,
-                                    uint64_t dst_stride,
-                                    VkQueryResultFlags flags)
-{
-   /* TODO: vkCmdCopyQueryPoolResults() with a compute shader */
-   assert(nvk_cmd_buffer_device(cmd)->pdev->info.cls_eng3d >= TURING_A);
-
-   struct nv_push *p = nvk_cmd_buffer_push(cmd, 13);
-   P_IMMD(p, NVC597, SET_MME_DATA_FIFO_CONFIG, FIFO_SIZE_SIZE_4KB);
-   P_1INC(p, NVC597, CALL_MME_MACRO(NVK_MME_COPY_QUERIES));
-
-   P_INLINE_DATA(p, dst_addr >> 32);
-   P_INLINE_DATA(p, dst_addr);
-   P_INLINE_DATA(p, dst_stride >> 32);
-   P_INLINE_DATA(p, dst_stride);
-
-   uint64_t avail_start = nvk_query_available_addr(pool, first_query);
-   P_INLINE_DATA(p, avail_start >> 32);
-   P_INLINE_DATA(p, avail_start);
-
-   uint64_t report_start = nvk_query_report_addr(pool, first_query);
-   P_INLINE_DATA(p, report_start >> 32);
-   P_INLINE_DATA(p, report_start);
-
-   P_INLINE_DATA(p, query_count);
-
-   uint32_t is_timestamp = pool->vk.query_type == VK_QUERY_TYPE_TIMESTAMP;
-
-   uint32_t control = (flags & 0xff) |
-                      (pool->query_stride << 8) |
-                      (is_timestamp << 24);
-   P_INLINE_DATA(p, control);
+   nvk_cmd_dispatch_shader(cmd, shader, &push, sizeof(push),
+                           DIV_ROUND_UP(query_count, 32), 1, 1);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -1133,3 +987,4 @@ nvk_CmdCopyQueryPoolResults(VkCommandBuffer commandBuffer,
    nvk_meta_copy_query_pool_results(cmd, pool, firstQuery, queryCount,
                                     dst_addr, stride, flags);
 }
+

@@ -1,30 +1,18 @@
 # Copyright © 2019 Google, Inc
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 xml_files = [
   'adreno.xml',
-  'freedreno_copyright.xml',
-  'rules-ng.xsd',
 ]
 
+rules_file = 'rules-fd.xsd'
+copyright_file = 'freedreno_copyright.xml'
+
+install_files = xml_files + [rules_file, copyright_file]
+
 gen_header_py = files('gen_header.py')
+freedreno_schema = files(rules_file)
+freedreno_copyright = files(copyright_file)
 
 freedreno_xml_header_files = []
 
@@ -32,12 +20,14 @@ foreach f : xml_files
   _name = f + '.h'
   freedreno_xml_header_files += custom_target(
     _name,
-    input: [gen_header_py, f],
+    input: [gen_header_py, f, freedreno_schema, freedreno_copyright],
     output: _name,
     command: [prog_python, '@INPUT0@', '--rnn', rnn_src_path, '--xml', '@INPUT1@', 'c-defines'],
     capture: true,
   )
+endforeach
 
+foreach f : install_files
   _gzname = f + '.gz'
   custom_target(
     _gzname,

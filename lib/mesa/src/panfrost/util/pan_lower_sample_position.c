@@ -36,10 +36,36 @@ static bool
 pan_lower_sample_pos_impl(struct nir_builder *b, nir_intrinsic_instr *intr,
                           UNUSED void *data)
 {
-   if (intr->intrinsic != nir_intrinsic_load_sample_pos)
+   if (intr->intrinsic != nir_intrinsic_load_sample_pos &&
+       intr->intrinsic != nir_intrinsic_load_sample_pos_or_center)
       return false;
 
    b->cursor = nir_before_instr(&intr->instr);
+
+   if (!b->shader->info.fs.uses_sample_shading) {
+      assert(intr->intrinsic == nir_intrinsic_load_sample_pos_or_center);
+
+      /* When sample shading is disabled, lower to a constant (0.5,0.5).
+       *
+       * In Vulkan, sample shading state is always known statically. In
+       * OpenGL, it's possible to enable sample shading dynamically. The only
+       * thing that currently emits load_sample_pos_or_center is
+       * nir_lower_wpos_center, which is only used for Vulkan, so this is
+       * okay.
+       *
+       * In the case where multisample is disabled but sample shading is
+       * enabled , we would skip this branch and load (0.5,0.5) from index 0
+       * in the sample pos table.
+       *
+       * In theory we should get r61[13:23]=32 on Bifrost when sample shading
+       * is disabled, and can load (0.5,0.5) from sample_positions[32] with
+       * the same code we use for loading normal sample positions. This would
+       * allow dynamic sample shading state, but would require passing the raw
+       * sample ID register through to NIR. */
+      nir_def_replace(&intr->def, nir_imm_vec2(b, 0.5, 0.5));
+
+      return true;
+   }
 
    /* Elements are 4 bytes */
    nir_def *addr =
@@ -66,5 +92,5 @@ pan_lower_sample_pos(nir_shader *shader)
 
    return nir_shader_intrinsics_pass(
       shader, pan_lower_sample_pos_impl,
-      nir_metadata_block_index | nir_metadata_dominance, NULL);
+      nir_metadata_control_flow, NULL);
 }

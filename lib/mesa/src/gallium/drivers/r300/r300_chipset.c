@@ -1,25 +1,8 @@
 /*
  * Copyright 2008 Corbin Simpson <MostAwesomeDude@gmail.com>
  * Copyright 2011 Marek Olšák <maraeo@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE. */
+ * SPDX-License-Identifier: MIT
+ */
 
 #include "r300_chipset.h"
 #include "winsys/radeon_winsys.h"
@@ -33,34 +16,6 @@
 
 /* r300_chipset: A file all to itself for deducing the various properties of
  * Radeons. */
-
-static void r300_apply_hyperz_blacklist(struct r300_capabilities* caps)
-{
-    static const char *list[] = {
-        "X",    /* the DDX or indirect rendering */
-        "Xorg", /* (alternative name) */
-        "check_gl_texture_size", /* compiz */
-        "Compiz",
-        "gnome-session-check-accelerated-helper",
-        "gnome-shell",
-        "kwin_opengl_test",
-        "kwin",
-        "firefox",
-    };
-    int i;
-    const char *proc_name = util_get_process_name();
-
-    if (!proc_name)
-        return;
-
-    for (i = 0; i < ARRAY_SIZE(list); i++) {
-        if (strcmp(list[i], proc_name) == 0) {
-            caps->zmask_ram = 0;
-            caps->hiz_ram = 0;
-            break;
-        }
-    }
-}
 
 /* Parse a PCI ID and fill an r300_capabilities struct with information. */
 void r300_parse_chipset(uint32_t pci_id, struct r300_capabilities* caps)
@@ -174,6 +129,4 @@ void r300_parse_chipset(uint32_t pci_id, struct r300_capabilities* caps)
     caps->dxtc_swizzle = caps->is_r400 || caps->is_r500;
     caps->has_us_format = caps->family == CHIP_R520;
     caps->has_tcl = caps->num_vert_fpus > 0;
-
-    r300_apply_hyperz_blacklist(caps);
 }

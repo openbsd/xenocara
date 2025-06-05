@@ -24,6 +24,7 @@
 
 #include <sys/mman.h>
 
+#include "common/intel_debug_identifier.h"
 #include "common/intel_gem.h"
 #include "dev/intel_debug.h"
 #include "iris/iris_bufmgr.h"
@@ -52,10 +53,11 @@ xe_gem_create(struct iris_bufmgr *bufmgr,
     * do not know what the process this is shared with will do with it
     */
    if (alloc_flags & BO_ALLOC_SCANOUT)
-      flags |= XE_GEM_CREATE_FLAG_SCANOUT;
+      flags |= DRM_XE_GEM_CREATE_FLAG_SCANOUT;
    if (!intel_vram_all_mappable(iris_bufmgr_get_device_info(bufmgr)) &&
-       heap_flags == IRIS_HEAP_DEVICE_LOCAL_PREFERRED)
-      flags |= XE_GEM_CREATE_FLAG_NEEDS_VISIBLE_VRAM;
+       (heap_flags == IRIS_HEAP_DEVICE_LOCAL_PREFERRED ||
+        heap_flags == IRIS_HEAP_DEVICE_LOCAL_CPU_VISIBLE_SMALL_BAR))
+      flags |= DRM_XE_GEM_CREATE_FLAG_NEEDS_VISIBLE_VRAM;
 
    struct drm_xe_gem_create gem_create = {
      .vm_id = vm_id,
@@ -63,7 +65,22 @@ xe_gem_create(struct iris_bufmgr *bufmgr,
      .flags = flags,
    };
    for (uint16_t i = 0; i < regions_count; i++)
-      gem_create.flags |= BITFIELD_BIT(regions[i]->instance);
+      gem_create.placement |= BITFIELD_BIT(regions[i]->instance);
+
+   const struct intel_device_info *devinfo = iris_bufmgr_get_device_info(bufmgr);
+   const struct intel_device_info_pat_entry *pat_entry;
+   pat_entry = iris_heap_to_pat_entry(devinfo, heap_flags, alloc_flags & BO_ALLOC_SCANOUT);
+   switch (pat_entry->mmap) {
+   case INTEL_DEVICE_INFO_MMAP_MODE_WC:
+      gem_create.cpu_caching = DRM_XE_GEM_CPU_CACHING_WC;
+      break;
+   case INTEL_DEVICE_INFO_MMAP_MODE_WB:
+      gem_create.cpu_caching = DRM_XE_GEM_CPU_CACHING_WB;
+      break;
+   default:
+      unreachable("missing");
+      gem_create.cpu_caching = DRM_XE_GEM_CPU_CACHING_WC;
+   }
 
    if (intel_ioctl(iris_bufmgr_get_fd(bufmgr), DRM_IOCTL_XE_GEM_CREATE,
                    &gem_create))
@@ -89,36 +106,56 @@ xe_gem_mmap(struct iris_bufmgr *bufmgr, struct iris_bo *bo)
 static inline int
 xe_gem_vm_bind_op(struct iris_bo *bo, uint32_t op)
 {
-   uint32_t handle = op == XE_VM_BIND_OP_UNMAP ? 0 : bo->gem_handle;
+   struct iris_bufmgr *bufmgr = bo->bufmgr;
+   struct intel_bind_timeline *bind_timeline = iris_bufmgr_get_bind_timeline(bufmgr);
+   const struct intel_device_info *devinfo = iris_bufmgr_get_device_info(bufmgr);
+   uint32_t handle = op == DRM_XE_VM_BIND_OP_UNMAP ? 0 : bo->gem_handle;
+   struct drm_xe_sync xe_sync = {
+      .handle = intel_bind_timeline_get_syncobj(bind_timeline),
+      .type = DRM_XE_SYNC_TYPE_TIMELINE_SYNCOBJ,
+      .flags = DRM_XE_SYNC_FLAG_SIGNAL,
+   };
    uint64_t range, obj_offset = 0;
-   int ret;
+   uint32_t flags = 0;
+   int ret, fd;
+
+   fd = iris_bufmgr_get_fd(bufmgr);
 
    if (iris_bo_is_imported(bo))
       range = bo->size;
    else
-      range = align64(bo->size,
-                      iris_bufmgr_get_device_info(bo->bufmgr)->mem_alignment);
+      range = align64(bo->size, devinfo->mem_alignment);
 
    if (bo->real.userptr) {
       handle = 0;
       obj_offset = (uintptr_t)bo->real.map;
-      if (op == XE_VM_BIND_OP_MAP)
-         op = XE_VM_BIND_OP_MAP_USERPTR;
+      if (op == DRM_XE_VM_BIND_OP_MAP)
+         op = DRM_XE_VM_BIND_OP_MAP_USERPTR;
    }
 
+   if (bo->real.capture)
+      flags |= DRM_XE_VM_BIND_FLAG_DUMPABLE;
+
    struct drm_xe_vm_bind args = {
-      .vm_id = iris_bufmgr_get_global_vm_id(bo->bufmgr),
+      .vm_id = iris_bufmgr_get_global_vm_id(bufmgr),
+      .num_syncs = 1,
+      .syncs = (uintptr_t)&xe_sync,
       .num_binds = 1,
       .bind.obj = handle,
       .bind.obj_offset = obj_offset,
       .bind.range = range,
       .bind.addr = intel_48b_address(bo->address),
       .bind.op = op,
+      .bind.pat_index = iris_heap_to_pat_entry(devinfo, bo->real.heap, bo->real.scanout)->index,
+      .bind.flags = flags,
    };
-   ret = intel_ioctl(iris_bufmgr_get_fd(bo->bufmgr), DRM_IOCTL_XE_VM_BIND, &args);
-   if (ret) {
+
+   xe_sync.timeline_value = intel_bind_timeline_bind_begin(bind_timeline);
+   ret = intel_ioctl(fd, DRM_IOCTL_XE_VM_BIND, &args);
+   intel_bind_timeline_bind_end(bind_timeline);
+
+   if (ret)
       DBG("vm_bind_op: DRM_IOCTL_XE_VM_BIND failed(%i)", ret);
-   }
 
    return ret;
 }
@@ -126,13 +163,13 @@ xe_gem_vm_bind_op(struct iris_bo *bo, uint32_t op)
 static bool
 xe_gem_vm_bind(struct iris_bo *bo)
 {
-   return xe_gem_vm_bind_op(bo, XE_VM_BIND_OP_MAP) == 0;
+   return xe_gem_vm_bind_op(bo, DRM_XE_VM_BIND_OP_MAP) == 0;
 }
 
 static bool
 xe_gem_vm_unbind(struct iris_bo *bo)
 {
-   return xe_gem_vm_bind_op(bo, XE_VM_BIND_OP_UNMAP) == 0;
+   return xe_gem_vm_bind_op(bo, DRM_XE_VM_BIND_OP_UNMAP) == 0;
 }
 
 static bool
@@ -160,7 +197,7 @@ xe_batch_check_for_reset(struct iris_batch *batch)
    enum pipe_reset_status status = PIPE_NO_RESET;
    struct drm_xe_exec_queue_get_property exec_queue_get_property = {
       .exec_queue_id = batch->xe.exec_queue_id,
-      .property = XE_EXEC_QUEUE_GET_PROPERTY_BAN,
+      .property = DRM_XE_EXEC_QUEUE_GET_PROPERTY_BAN,
    };
    int ret = intel_ioctl(iris_bufmgr_get_fd(batch->screen->bufmgr),
                          DRM_IOCTL_XE_EXEC_QUEUE_GET_PROPERTY,
@@ -294,11 +331,12 @@ static int
 xe_batch_submit(struct iris_batch *batch)
 {
    struct iris_bufmgr *bufmgr = batch->screen->bufmgr;
+   struct intel_bind_timeline *bind_timeline = iris_bufmgr_get_bind_timeline(bufmgr);
    simple_mtx_t *bo_deps_lock = iris_bufmgr_get_bo_deps_lock(bufmgr);
    struct iris_implicit_sync implicit_sync = {};
    struct drm_xe_sync *syncs = NULL;
    unsigned long sync_len;
-   int ret;
+   int ret, i;
 
    iris_bo_unmap(batch->bo);
 
@@ -318,28 +356,26 @@ xe_batch_submit(struct iris_batch *batch)
    if (ret)
       goto error_implicit_sync_import;
 
-   sync_len = iris_batch_num_fences(batch);
-   if (sync_len) {
-      unsigned long i = 0;
-
-      syncs = calloc(sync_len, sizeof(*syncs));
-      if (!syncs) {
-         ret = -ENOMEM;
-         goto error_no_sync_mem;
-      }
-
-      util_dynarray_foreach(&batch->exec_fences, struct iris_batch_fence,
-                            fence) {
-         uint32_t flags = DRM_XE_SYNC_SYNCOBJ;
-
-         if (fence->flags & IRIS_BATCH_FENCE_SIGNAL)
-            flags |= DRM_XE_SYNC_SIGNAL;
-
-         syncs[i].handle = fence->handle;
-         syncs[i].flags = flags;
-         i++;
-      }
+   sync_len = iris_batch_num_fences(batch) + 1 /* vm bind sync */;
+   syncs = calloc(sync_len, sizeof(*syncs));
+   if (!syncs) {
+      ret = -ENOMEM;
+      goto error_no_sync_mem;
    }
+
+   i = 0;
+   util_dynarray_foreach(&batch->exec_fences, struct iris_batch_fence, fence) {
+      if (fence->flags & IRIS_BATCH_FENCE_SIGNAL)
+         syncs[i].flags = DRM_XE_SYNC_FLAG_SIGNAL;
+
+      syncs[i].handle = fence->handle;
+      syncs[i].type = DRM_XE_SYNC_TYPE_SYNCOBJ;
+      i++;
+   }
+
+   syncs[i].handle = intel_bind_timeline_get_syncobj(bind_timeline);
+   syncs[i].type = DRM_XE_SYNC_TYPE_TIMELINE_SYNCOBJ;
+   syncs[i].timeline_value = intel_bind_timeline_get_last_point(bind_timeline);
 
    if ((INTEL_DEBUG(DEBUG_BATCH) &&
         intel_debug_batch_in_range(batch->ice->frame)) ||

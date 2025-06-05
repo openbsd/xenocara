@@ -1,22 +1,5 @@
 # Copyright © 2018 Rob Clark
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 ir3_nir_trig_c = custom_target(
   'ir3_nir_trig.c',
@@ -33,6 +16,28 @@ ir3_nir_imul_c = custom_target(
   'ir3_nir_imul.c',
   input : 'ir3_nir_imul.py',
   output : 'ir3_nir_imul.c',
+  command : [
+    prog_python, '@INPUT@', '-p', dir_compiler_nir,
+  ],
+  capture : true,
+  depend_files : nir_algebraic_depends,
+)
+
+ir3_nir_branch_and_or_not_c = custom_target(
+  'ir3_nir_branch_and_or_not.c',
+  input : 'ir3_nir_branch_and_or_not.py',
+  output : 'ir3_nir_branch_and_or_not.c',
+  command : [
+    prog_python, '@INPUT@', '-p', dir_compiler_nir,
+  ],
+  capture : true,
+  depend_files : nir_algebraic_depends,
+)
+
+ir3_nir_triop_bitwise_c = custom_target(
+  'ir3_nir_triop_bitwise.c',
+  input : 'ir3_nir_triop_bitwise.py',
+  output : 'ir3_nir_triop_bitwise.c',
   command : [
     prog_python, '@INPUT@', '-p', dir_compiler_nir,
   ],
@@ -64,6 +69,7 @@ libfreedreno_ir3_files = files(
   'ir3.c',
   'ir3_a4xx.c',
   'ir3_a6xx.c',
+  'ir3_alias.c',
   'ir3_array_to_ssa.c',
   'ir3_assembler.c',
   'ir3_assembler.h',
@@ -86,6 +92,7 @@ libfreedreno_ir3_files = files(
   'ir3_legalize_relative.c',
   'ir3_liveness.c',
   'ir3_lower_parallelcopy.c',
+  'ir3_lower_shared_phi.c',
   'ir3_lower_spill.c',
   'ir3_lower_subgroups.c',
   'ir3_merge_regs.c',
@@ -93,37 +100,44 @@ libfreedreno_ir3_files = files(
   'ir3_nir.h',
   'ir3_nir_analyze_ubo_ranges.c',
   'ir3_nir_lower_64b.c',
+  'ir3_nir_lower_driver_params_to_ubo.c',
   'ir3_nir_lower_load_barycentric_at_sample.c',
   'ir3_nir_lower_load_barycentric_at_offset.c',
   'ir3_nir_lower_push_consts_to_preamble.c',
+  'ir3_nir_lower_shading_rate.c',
   'ir3_nir_lower_io_offsets.c',
   'ir3_nir_lower_tess.c',
   'ir3_nir_lower_tex_prefetch.c',
-  'ir3_nir_lower_wide_load_store.c',
   'ir3_nir_move_varying_inputs.c',
   'ir3_nir_lower_layer_id.c',
   'ir3_nir_opt_preamble.c',
+  'ir3_opt_predicates.c',
   'ir3_postsched.c',
   'ir3_print.c',
   'ir3_ra.c',
   'ir3_ra.h',
+  'ir3_ra_predicates.c',
   'ir3_ra_validate.c',
+  'ir3_reconvergence.c',
   'ir3_remove_unreachable.c',
+  'ir3_rpt.c',
   'ir3_sched.c',
   'ir3_shader.c',
   'ir3_shader.h',
+  'ir3_shared_folding.c',
+  'ir3_shared_ra.c',
   'ir3_spill.c',
   'ir3_validate.c',
 )
 
 libfreedreno_ir3 = static_library(
   'freedreno_ir3',
-  [libfreedreno_ir3_files, ir3_nir_trig_c, ir3_nir_imul_c, ir3_parser[0], ir3_parser[1], ir3_lexer],
+  [libfreedreno_ir3_files, ir3_nir_trig_c, ir3_nir_imul_c, ir3_nir_branch_and_or_not_c, ir3_nir_triop_bitwise_c, ir3_parser[0], ir3_parser[1], ir3_lexer],
   include_directories : [inc_freedreno, inc_include, inc_src],
   c_args : [no_override_init_args],
   gnu_symbol_visibility : 'hidden',
-  link_with: [libir3decode, libir3encode, libfreedreno_common],
-  dependencies : [idep_nir_headers, dep_dl, idep_mesautil],
+  link_with: [libir3encode, libfreedreno_common],
+  dependencies : [idep_libir3decode, idep_nir_headers, dep_dl, idep_mesautil],
   build_by_default : false,
 )
 
@@ -132,8 +146,8 @@ test('ir3_disasm',
     'ir3_disasm',
     'tests/disasm.c',
     link_args : [ld_args_build_id],
-    link_with: [libfreedreno_ir3, libir3decode],
-    dependencies: [idep_mesautil, idep_nir],
+    link_with: [libfreedreno_ir3],
+    dependencies: [idep_libir3decode, idep_mesautil, idep_nir],
     include_directories: [inc_freedreno, inc_include, inc_src],
   ),
   suite: ['freedreno'],

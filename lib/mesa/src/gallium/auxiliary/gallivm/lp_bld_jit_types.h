@@ -60,19 +60,25 @@ lp_llvm_buffer_num_elements(struct gallivm_state *gallivm,
                             LLVMValueRef buffers_ptr,
                             LLVMValueRef buffers_offset, unsigned buffers_limit);
 
+#define LP_JIT_TEXTURE_SAMPLE_STRIDE 15 /* mip_offsets[15] */
+
 struct lp_jit_texture
 {
    const void *base;
    uint32_t width;        /* same as number of elements */
-   uint32_t height;
-   uint32_t depth;        /* doubles as array size */
-   uint32_t num_samples;
-   uint32_t sample_stride;
-   uint32_t row_stride[PIPE_MAX_TEXTURE_LEVELS];
-   uint32_t img_stride[PIPE_MAX_TEXTURE_LEVELS];
-   uint32_t first_level;
-   uint32_t last_level;
-   uint32_t mip_offsets[PIPE_MAX_TEXTURE_LEVELS];
+   uint16_t height;
+   uint16_t depth;        /* doubles as array size */
+   union {
+      struct {
+         uint32_t row_stride[PIPE_MAX_TEXTURE_LEVELS];
+         uint32_t img_stride[PIPE_MAX_TEXTURE_LEVELS];
+      };
+      const void *residency;
+   };
+   uint8_t first_level;
+   uint8_t last_level;    /* contains num_samples for multisample */
+   uint32_t mip_offsets[PIPE_MAX_TEXTURE_LEVELS]; /* sample stride is in mip_offsets[15] */
+   uint32_t sampler_index;
 };
 
 enum {
@@ -80,13 +86,12 @@ enum {
    LP_JIT_TEXTURE_WIDTH,
    LP_JIT_TEXTURE_HEIGHT,
    LP_JIT_TEXTURE_DEPTH,
-   LP_JIT_TEXTURE_NUM_SAMPLES,
-   LP_JIT_TEXTURE_SAMPLE_STRIDE,
    LP_JIT_TEXTURE_ROW_STRIDE,
    LP_JIT_TEXTURE_IMG_STRIDE,
    LP_JIT_TEXTURE_FIRST_LEVEL,
    LP_JIT_TEXTURE_LAST_LEVEL,
    LP_JIT_TEXTURE_MIP_OFFSETS,
+   LP_JIT_SAMPLER_INDEX_DUMMY,
    LP_JIT_TEXTURE_NUM_FIELDS  /* number of fields above */
 };
 
@@ -96,7 +101,6 @@ struct lp_jit_sampler
    float max_lod;
    float lod_bias;
    float border_color[4];
-   float max_aniso;
 };
 
 enum {
@@ -104,7 +108,6 @@ enum {
    LP_JIT_SAMPLER_MAX_LOD,
    LP_JIT_SAMPLER_LOD_BIAS,
    LP_JIT_SAMPLER_BORDER_COLOR,
-   LP_JIT_SAMPLER_MAX_ANISO,
    LP_JIT_SAMPLER_NUM_FIELDS  /* number of fields above */
 };
 
@@ -112,12 +115,14 @@ struct lp_jit_image
 {
    const void *base;
    uint32_t width;        /* same as number of elements */
-   uint32_t height;
-   uint32_t depth;
-   uint32_t num_samples;
+   uint16_t height;
+   uint16_t depth;
+   uint8_t num_samples;
    uint32_t sample_stride;
    uint32_t row_stride;
    uint32_t img_stride;
+   const void *residency;
+   uint32_t base_offset;
 };
 
 enum {
@@ -129,6 +134,8 @@ enum {
    LP_JIT_IMAGE_SAMPLE_STRIDE,
    LP_JIT_IMAGE_ROW_STRIDE,
    LP_JIT_IMAGE_IMG_STRIDE,
+   LP_JIT_IMAGE_RESIDENCY,
+   LP_JIT_IMAGE_BASE_OFFSET,
    LP_JIT_IMAGE_NUM_FIELDS  /* number of fields above */
 };
 
@@ -138,7 +145,6 @@ struct lp_jit_resources {
    struct lp_jit_texture textures[PIPE_MAX_SHADER_SAMPLER_VIEWS];
    struct lp_jit_sampler samplers[PIPE_MAX_SAMPLERS];
    struct lp_jit_image images[PIPE_MAX_SHADER_IMAGES];
-   const float *aniso_filter_table;
 };
 
 enum {
@@ -147,7 +153,6 @@ enum {
    LP_JIT_RES_TEXTURES,
    LP_JIT_RES_SAMPLERS,
    LP_JIT_RES_IMAGES,
-   LP_JIT_RES_ANISO_FILTER_TABLE,
    LP_JIT_RES_COUNT,
 };
 
@@ -165,9 +170,6 @@ enum {
 
 #define lp_jit_resources_images(_gallivm, _type, _ptr)                   \
    lp_build_struct_get_ptr2(_gallivm, _type, _ptr, LP_JIT_RES_IMAGES, "images")
-
-#define lp_jit_resources_aniso_filter_table(_gallivm, _type, _ptr)       \
-   lp_build_struct_get2(_gallivm, _type, _ptr, LP_JIT_RES_ANISO_FILTER_TABLE, "aniso_filter_table")
 
 LLVMTypeRef
 lp_build_jit_resources_type(struct gallivm_state *gallivm);
@@ -215,10 +217,11 @@ struct lp_texture_functions {
    void **image_functions;
 
    struct lp_static_texture_state state;
-   uint32_t ref_count;
 
    bool sampled;
    bool storage;
+
+   void *matrix;
 };
 
 struct lp_texture_handle {
@@ -236,12 +239,12 @@ struct lp_descriptor {
          struct lp_jit_image image;
       };
       struct lp_jit_buffer buffer;
+      uint64_t accel_struct;
    };
 
    /* Store sample/image functions in the same location since some d3d12 games
     * rely on mismatched descriptor types with null descriptors.
     */
-   uint32_t sampler_index;
    void *functions;
 };
 

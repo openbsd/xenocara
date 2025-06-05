@@ -30,9 +30,11 @@
 #include "util/u_upload_mgr.h"
 #include "drm-uapi/i915_drm.h"
 #include "crocus_context.h"
+#include "crocus_perf.h"
 #include "crocus_resource.h"
 #include "crocus_screen.h"
-#include "common/intel_defines.h"
+#include "common/i915/intel_defines.h"
+#include "common/intel_debug_identifier.h"
 #include "common/intel_sample_positions.h"
 
 /**
@@ -188,6 +190,10 @@ crocus_destroy_context(struct pipe_context *ctx)
 {
    struct crocus_context *ice = (struct crocus_context *)ctx;
    struct crocus_screen *screen = (struct crocus_screen *)ctx->screen;
+
+   blorp_finish(&ice->blorp);
+
+   intel_perf_free_context(ice->perf_ctx);
    if (ctx->stream_uploader)
       u_upload_destroy(ctx->stream_uploader);
 

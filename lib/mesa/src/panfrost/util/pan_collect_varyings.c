@@ -67,10 +67,17 @@ struct slot_info {
    unsigned index;
 };
 
+struct walk_varyings_data {
+   struct pan_shader_info *info;
+   struct slot_info *slots;
+};
+
 static bool
 walk_varyings(UNUSED nir_builder *b, nir_instr *instr, void *data)
 {
-   struct slot_info *slots = data;
+   struct walk_varyings_data *wv_data = data;
+   struct pan_shader_info *info = wv_data->info;
+   struct slot_info *slots = wv_data->slots;
 
    if (instr->type != nir_instr_type_intrinsic)
       return false;
@@ -113,8 +120,9 @@ walk_varyings(UNUSED nir_builder *b, nir_instr *instr, void *data)
     * only to determine the type, and the GL linker uses the type from the
     * fragment shader instead.
     */
-   bool flat = (intr->intrinsic != nir_intrinsic_load_interpolated_input);
-   nir_alu_type type = flat ? nir_type_uint : nir_type_float;
+   bool flat = intr->intrinsic != nir_intrinsic_load_interpolated_input;
+   bool auto32 = !info->quirk_no_auto32;
+   nir_alu_type type = (flat && auto32) ? nir_type_uint : nir_type_float;
 
    /* Demote interpolated float varyings to fp16 where possible. We do not
     * demote flat varyings, including integer varyings, due to various
@@ -137,7 +145,7 @@ walk_varyings(UNUSED nir_builder *b, nir_instr *instr, void *data)
    /* Consider each slot separately */
    for (unsigned offset = 0; offset < sem.num_slots; ++offset) {
       unsigned location = sem.location + offset;
-      unsigned index = nir_intrinsic_base(intr) + offset;
+      unsigned index = pan_res_handle_get_index(nir_intrinsic_base(intr)) + offset;
 
       if (slots[location].type) {
          assert(slots[location].type == type);
@@ -153,6 +161,41 @@ walk_varyings(UNUSED nir_builder *b, nir_instr *instr, void *data)
    return false;
 }
 
+static bool
+collect_noperspective_varyings_fs(UNUSED nir_builder *b,
+                                  nir_intrinsic_instr *intr,
+                                  void *data)
+{
+   uint32_t *noperspective_varyings = data;
+
+   if (intr->intrinsic != nir_intrinsic_load_interpolated_input)
+      return false;
+
+   nir_io_semantics sem = nir_intrinsic_io_semantics(intr);
+   if (sem.location < VARYING_SLOT_VAR0)
+      return false;
+
+   nir_intrinsic_instr *bary_instr = nir_src_as_intrinsic(intr->src[0]);
+   assert(bary_instr);
+   if (nir_intrinsic_interp_mode(bary_instr) == INTERP_MODE_NOPERSPECTIVE)
+      *noperspective_varyings |= BITFIELD_BIT(sem.location - VARYING_SLOT_VAR0);
+
+   return false;
+}
+
+uint32_t
+pan_nir_collect_noperspective_varyings_fs(nir_shader *s)
+{
+   assert(s->info.stage == MESA_SHADER_FRAGMENT);
+
+   uint32_t noperspective_varyings = 0;
+   nir_shader_intrinsics_pass(s, collect_noperspective_varyings_fs,
+                              nir_metadata_all,
+                              (void *)&noperspective_varyings);
+
+   return noperspective_varyings;
+}
+
 void
 pan_nir_collect_varyings(nir_shader *s, struct pan_shader_info *info)
 {
@@ -161,7 +204,8 @@ pan_nir_collect_varyings(nir_shader *s, struct pan_shader_info *info)
       return;
 
    struct slot_info slots[64] = {0};
-   nir_shader_instructions_pass(s, walk_varyings, nir_metadata_all, slots);
+   struct walk_varyings_data wv_data = {info, slots};
+   nir_shader_instructions_pass(s, walk_varyings, nir_metadata_all, &wv_data);
 
    struct pan_shader_varying *varyings = (s->info.stage == MESA_SHADER_VERTEX)
                                             ? info->varyings.output
@@ -187,4 +231,8 @@ pan_nir_collect_varyings(nir_shader *s, struct pan_shader_info *info)
       info->varyings.output_count = count;
    else
       info->varyings.input_count = count;
+
+   if (s->info.stage == MESA_SHADER_FRAGMENT)
+      info->varyings.noperspective =
+         pan_nir_collect_noperspective_varyings_fs(s);
 }

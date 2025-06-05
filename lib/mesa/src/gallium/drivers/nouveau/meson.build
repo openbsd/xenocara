@@ -1,22 +1,5 @@
 # Copyright © 2017 Dylan Baker
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 files_libnouveau = files(
   'nouveau_buffer.c',
@@ -180,16 +163,24 @@ files_libnouveau = files(
 
 libnouveau = static_library(
   'nouveau',
-  files_libnouveau,
+  [files_libnouveau, sha1_h],
   include_directories : [
     inc_src, inc_include, inc_gallium, inc_gallium_aux, inc_mapi, inc_mesa,
   ],
   gnu_symbol_visibility : 'hidden',
-  dependencies : [dep_libdrm, idep_nouveau_codegen, dep_libdrm_nouveau, idep_mesautil, idep_nir_headers],
+  link_with : [libnouveauwinsys],
+  dependencies : [
+    dep_libdrm,
+    idep_libnouveauwinsys,
+    idep_mesautil,
+    idep_nir_headers,
+    idep_nouveau_codegen,
+    idep_nvidia_headers,
+  ],
 )
 
 driver_nouveau = declare_dependency(
   compile_args : '-DGALLIUM_NOUVEAU',
   dependencies : [idep_nir, idep_nouveau_codegen],
-  link_with : [libnouveauwinsys, libnouveau_codegen, libnouveau],
+  link_with : [libnouveau_codegen, libnouveau],
 )

@@ -8,13 +8,33 @@
 # .gitlab-ci/image-tags.yml tags:
 # KERNEL_ROOTFS_TAG
 
+set -uex
+
+uncollapsed_section_start skqp "Building skqp"
+
 SKQP_BRANCH=android-cts-12.1_r5
 
-# hack for skqp see the clang
-pushd /usr/bin/
-ln -s ../lib/llvm-15/bin/clang clang
-ln -s ../lib/llvm-15/bin/clang++ clang++
-popd
+SCRIPT_DIR="$(pwd)/.gitlab-ci/container"
+SKQP_PATCH_DIR="${SCRIPT_DIR}/patches"
+BASE_ARGS_GN_FILE="${SCRIPT_DIR}/build-skqp_base.gn"
+
+case "$DEBIAN_ARCH" in
+  amd64)
+    SKQP_ARCH=x64
+    ;;
+  armhf)
+    SKQP_ARCH=arm
+    ;;
+  arm64)
+    SKQP_ARCH=arm64
+    ;;
+esac
+
+SKIA_DIR=${SKIA_DIR:-$(mktemp -d)}
+SKQP_OUT_DIR=${SKIA_DIR}/out/${SKQP_ARCH}
+SKQP_INSTALL_DIR=${SKQP_INSTALL_DIR:-/skqp}
+SKQP_ASSETS_DIR="${SKQP_INSTALL_DIR}/assets"
+SKQP_BINARIES=(skqp list_gpu_unit_tests list_gms)
 
 create_gn_args() {
     # gn can be configured to cross-compile skia and its tools
@@ -38,19 +58,6 @@ download_skia_source() {
     git clone --branch "${SKQP_BRANCH}" --depth 1 "${SKQP_REPO}" "${SKIA_DIR}"
 }
 
-set -ex
-
-SCRIPT_DIR=$(realpath "$(dirname "$0")")
-SKQP_PATCH_DIR="${SCRIPT_DIR}/patches"
-BASE_ARGS_GN_FILE="${SCRIPT_DIR}/build-skqp_base.gn"
-
-SKQP_ARCH=${SKQP_ARCH:-x64}
-SKIA_DIR=${SKIA_DIR:-$(mktemp -d)}
-SKQP_OUT_DIR=${SKIA_DIR}/out/${SKQP_ARCH}
-SKQP_INSTALL_DIR=${SKQP_INSTALL_DIR:-/skqp}
-SKQP_ASSETS_DIR="${SKQP_INSTALL_DIR}/assets"
-SKQP_BINARIES=(skqp list_gpu_unit_tests list_gms)
-
 download_skia_source
 
 pushd "${SKIA_DIR}"
@@ -58,6 +65,12 @@ pushd "${SKIA_DIR}"
 # Apply all skqp patches for Mesa CI
 cat "${SKQP_PATCH_DIR}"/build-skqp_*.patch |
     patch -p1
+
+# hack for skqp see the clang
+pushd /usr/bin/
+ln -s "../lib/llvm-${LLVM_VERSION}/bin/clang" clang
+ln -s "../lib/llvm-${LLVM_VERSION}/bin/clang++" clang++
+popd
 
 # Fetch some needed build tools needed to build skia/skqp.
 # Basically, it clones repositories with commits SHAs from ${SKIA_DIR}/DEPS
@@ -87,3 +100,5 @@ popd
 rm -Rf "${SKIA_DIR}"
 
 set +ex
+
+section_end skqp

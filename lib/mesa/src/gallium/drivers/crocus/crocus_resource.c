@@ -38,6 +38,7 @@
 #include "util/u_cpu_detect.h"
 #include "util/u_inlines.h"
 #include "util/format/u_format.h"
+#include "util/u_resource.h"
 #include "util/u_threaded_context.h"
 #include "util/u_transfer.h"
 #include "util/u_transfer_helper.h"
@@ -215,6 +216,10 @@ crocus_resource_configure_main(const struct crocus_screen *screen,
       if (templ->format == PIPE_FORMAT_S8_UINT)
          tiling_flags = ISL_TILING_W_BIT;
    }
+
+   /* Disable aux for external memory objects. */
+   if (!res->mod_info && res->external_format != PIPE_FORMAT_NONE)
+      usage |= ISL_SURF_USAGE_DISABLE_AUX_BIT;
 
    const enum isl_format format =
       crocus_format_for_usage(&screen->devinfo, templ->format, usage).fmt;
@@ -436,8 +441,7 @@ crocus_resource_configure_aux(struct crocus_screen *screen,
 
    const bool has_ccs =
       devinfo->ver >= 7 && !res->mod_info &&
-      isl_surf_get_ccs_surf(&screen->isl_dev, &res->surf, NULL,
-                            &res->aux.surf, 0);
+      isl_surf_get_ccs_surf(&screen->isl_dev, &res->surf, &res->aux.surf, 0);
 
    /* Having more than one type of compression is impossible */
    assert(has_ccs + has_mcs + has_hiz <= 1);
@@ -502,7 +506,7 @@ crocus_resource_configure_aux(struct crocus_screen *screen,
       return false;
 
    /* Increase the aux offset if the main and aux surfaces will share a BO. */
-   res->aux.offset = ALIGN(res->surf.size_B, res->aux.surf.alignment_B);
+   res->aux.offset = (uint32_t)align64(res->surf.size_B, res->aux.surf.alignment_B);
    uint64_t size = res->aux.surf.size_B;
 
    /* Allocate space in the buffer for storing the clear color. On modern
@@ -515,7 +519,7 @@ crocus_resource_configure_aux(struct crocus_screen *screen,
     * starts at a 4K alignment. We believe that 256B might be enough, but due
     * to lack of testing we will leave this as 4K for now.
     */
-   size = ALIGN(size, 4096);
+   size = align64(size, 4096);
    *aux_size_B = size;
 
    if (isl_aux_usage_has_hiz(res->aux.usage)) {
@@ -798,7 +802,7 @@ crocus_resource_from_handle(struct pipe_screen *pscreen,
       unreachable("invalid winsys handle type");
    }
    if (!res->bo)
-      return NULL;
+      goto fail;
 
    res->offset = whandle->offset;
    res->external_format = whandle->format;
@@ -836,15 +840,15 @@ crocus_resource_from_memobj(struct pipe_screen *pscreen,
                             struct pipe_memory_object *pmemobj,
                             uint64_t offset)
 {
+   /* Disable Depth, and combined Depth+Stencil for now. */
+   if (util_format_has_depth(util_format_description(templ->format)))
+      return NULL;
+
    struct crocus_screen *screen = (struct crocus_screen *)pscreen;
    struct crocus_memory_object *memobj = (struct crocus_memory_object *)pmemobj;
    struct crocus_resource *res = crocus_alloc_resource(pscreen, templ);
 
    if (!res)
-      return NULL;
-
-   /* Disable Depth, and combined Depth+Stencil for now. */
-   if (util_format_has_depth(util_format_description(templ->format)))
       return NULL;
 
    if (templ->flags & PIPE_RESOURCE_FLAG_TEXTURING_MORE_LIKELY) {
@@ -909,7 +913,8 @@ crocus_resource_get_param(struct pipe_screen *pscreen,
                           uint64_t *value)
 {
    struct crocus_screen *screen = (struct crocus_screen *)pscreen;
-   struct crocus_resource *res = (struct crocus_resource *)resource;
+   struct crocus_resource *res =
+      (struct crocus_resource *)util_resource_at_index(resource, plane);
 
    /* Modifiers with compression are not supported. */
    assert(!res->mod_info ||
@@ -923,18 +928,14 @@ crocus_resource_get_param(struct pipe_screen *pscreen,
    crocus_resource_disable_aux_on_first_query(resource, handle_usage);
 
    switch (param) {
-   case PIPE_RESOURCE_PARAM_NPLANES: {
-      unsigned count = 0;
-      for (struct pipe_resource *cur = resource; cur; cur = cur->next)
-         count++;
-      *value = count;
+   case PIPE_RESOURCE_PARAM_NPLANES:
+      *value = util_resource_num(resource);
       return true;
-      }
    case PIPE_RESOURCE_PARAM_STRIDE:
       *value = res->surf.row_pitch_B;
       return true;
    case PIPE_RESOURCE_PARAM_OFFSET:
-      *value = 0;
+      *value = res->offset;
       return true;
    case PIPE_RESOURCE_PARAM_MODIFIER:
       *value = res->mod_info ? res->mod_info->modifier :
@@ -1576,10 +1577,10 @@ crocus_transfer_map(struct pipe_context *ctx,
    else
       map = slab_zalloc(&ice->transfer_pool);
 
-   struct pipe_transfer *xfer = &map->base.b;
-
    if (!map)
       return NULL;
+
+   struct pipe_transfer *xfer = &map->base.b;
 
    map->dbg = &ice->dbg;
 

@@ -1,25 +1,8 @@
 /*
  * Copyright 2011 Joakim Sindholt <opensource@zhasha.com>
  * Copyright 2013 Christoph Bumiller
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE. */
+ * SPDX-License-Identifier: MIT
+ */
 
 #define NINE_STATE
 
@@ -42,7 +25,7 @@
 #include "util/u_atomic.h"
 #include "util/u_upload_mgr.h"
 #include "util/u_math.h"
-#include "util/u_box.h"
+#include "util/box.h"
 #include "util/u_simple_shaders.h"
 #include "util/u_gen_mipmap.h"
 
@@ -157,7 +140,7 @@ nine_csmt_create( struct NineDevice9 *This )
     (void) mtx_init(&ctx->thread_running, mtx_plain);
     (void) mtx_init(&ctx->thread_resume, mtx_plain);
 
-#if defined(DEBUG) || !defined(NDEBUG)
+#if MESA_DEBUG || !defined(NDEBUG)
     u_thread_setname("Main thread");
 #endif
 
@@ -761,7 +744,7 @@ update_framebuffer(struct NineDevice9 *device, bool is_clear)
 
     /* Special case: D3DFMT_NULL is used to bound no real render target,
      * but render to depth buffer. We have to not take into account the render
-     * target info. TODO: know what should happen when there are several render targers
+     * target info. TODO: know what should happen when there are several render targets
      * and the first one is D3DFMT_NULL */
     if (rt0->desc.Format == D3DFMT_NULL && context->ds) {
         w = context->ds->desc.Width;
@@ -918,9 +901,8 @@ update_vertex_elements(struct NineDevice9 *device)
         index = vdecl_index_map[n];
         if (index >= 0) {
             ve.velems[n] = vdecl->elems[index];
-            ve.velems[n].vertex_buffer_index =
-                vtxbuf_holes_map[ve.velems[n].vertex_buffer_index];
             b = ve.velems[n].vertex_buffer_index;
+            ve.velems[n].vertex_buffer_index = vtxbuf_holes_map[b];
             ve.velems[n].src_stride = context->vtxstride[b];
             context->stream_usage_mask |= 1 << b;
             /* XXX wine just uses 1 here: */
@@ -959,7 +941,6 @@ update_vertex_buffers(struct NineDevice9 *device)
     struct pipe_context *pipe = context->pipe;
     struct pipe_vertex_buffer vbuffer[PIPE_MAX_ATTRIBS];
     unsigned vtxbuf_count;
-    unsigned trailing_count;
     unsigned mask, i, vtxbuf_i;
 
     mask = context->vtxbuf_mask |
@@ -978,12 +959,10 @@ update_vertex_buffers(struct NineDevice9 *device)
         }
     }
 
-    trailing_count = (context->last_vtxbuf_count <= vtxbuf_count) ? 0 :
-        context->last_vtxbuf_count - vtxbuf_count;
     if (vtxbuf_count)
-        pipe->set_vertex_buffers(pipe, vtxbuf_count, trailing_count, false, vbuffer);
+        util_set_vertex_buffers(pipe, vtxbuf_count, false, vbuffer);
     else
-        pipe->set_vertex_buffers(pipe, 0, trailing_count, false, NULL);
+        pipe->set_vertex_buffers(pipe, 0, NULL);
 
     context->last_vtxbuf_count = vtxbuf_count;
     context->changed.vtxbuf = 0;
@@ -2446,7 +2425,6 @@ init_draw_info(struct pipe_draw_info *info,
     info->increment_draw_id = false;
     info->was_line_loop = false;
     info->restart_index = 0;
-    info->view_mask = 0;
 }
 
 CSMT_ITEM_NO_WAIT(nine_context_draw_primitive,
@@ -2546,7 +2524,7 @@ CSMT_ITEM_NO_WAIT(nine_context_draw_indexed_primitive_from_vtxbuf_idxbuf,
     else
         info.index.user = user_ibuf;
 
-    context->pipe->set_vertex_buffers(context->pipe, 1, 0, false, vbuf);
+    util_set_vertex_buffers(context->pipe, 1, false, vbuf);
     context->changed.vtxbuf |= 1;
 
     context->pipe->draw_vbo(context->pipe, &info, 0, NULL, &draw, 1);
@@ -3067,7 +3045,7 @@ nine_context_clear(struct NineDevice9 *device)
     pipe->set_sampler_views(pipe, PIPE_SHADER_FRAGMENT, 0, 0,
                             NINE_MAX_SAMPLERS_PS, false, NULL);
 
-    pipe->set_vertex_buffers(pipe, 0, device->caps.MaxStreams, false, NULL);
+    pipe->set_vertex_buffers(pipe, 0, NULL);
 
     for (i = 0; i < ARRAY_SIZE(context->rt); ++i)
        nine_bind(&context->rt[i], NULL);
@@ -3193,9 +3171,8 @@ update_vertex_elements_sw(struct NineDevice9 *device)
         index = vdecl_index_map[n];
         if (index >= 0) {
             ve.velems[n] = vdecl->elems[index];
-            ve.velems[n].vertex_buffer_index =
-                vtxbuf_holes_map[ve.velems[n].vertex_buffer_index];
             b = ve.velems[n].vertex_buffer_index;
+            ve.velems[n].vertex_buffer_index = vtxbuf_holes_map[b];
             /* XXX wine just uses 1 here: */
             if (state->stream_freq[b] & D3DSTREAMSOURCE_INSTANCEDATA)
                 ve.velems[n].instance_divisor = state->stream_freq[b] & 0x7FFFFF;
@@ -3273,7 +3250,7 @@ update_vertex_buffers_sw(struct NineDevice9 *device, int dummy_vbo_stream,
     }
 
     vtxbuf_count = j;
-    pipe_sw->set_vertex_buffers(pipe_sw, vtxbuf_count, device->caps.MaxStreams-vtxbuf_count, true, vbuffer);
+    pipe_sw->set_vertex_buffers(pipe_sw, vtxbuf_count, vbuffer);
 
     nine_context_get_pipe_release(device);
 }
@@ -3412,7 +3389,7 @@ nine_state_after_draw_sw(struct NineDevice9 *device)
     struct pipe_context *pipe_sw = device->pipe_sw;
     int i;
 
-    pipe_sw->set_vertex_buffers(pipe_sw, 0, device->caps.MaxStreams, false, NULL);
+    pipe_sw->set_vertex_buffers(pipe_sw, 0, NULL);
     for (i = 0; i < 4; i++) {
         if (sw_internal->transfers_so[i])
             pipe->buffer_unmap(pipe, sw_internal->transfers_so[i]);

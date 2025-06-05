@@ -96,7 +96,7 @@ d3d12_video_encoder_references_manager_av1::begin_frame(D3D12_VIDEO_ENCODER_PICT
          reconPic.ReconstructedPictureSubresource;
    }
 
-#ifdef DEBUG
+#if MESA_DEBUG
    assert(m_PhysicalAllocationsStorage.get_number_of_tracked_allocations() <=
           (NUM_REF_FRAMES + 1));   // pool is not extended beyond maximum expected usage
 
@@ -294,7 +294,7 @@ d3d12_video_encoder_references_manager_av1::get_dpb_physical_slot_refcount_from_
    return refCount;
 }
 
-void
+bool
 d3d12_video_encoder_references_manager_av1::get_current_frame_picture_control_data(
    D3D12_VIDEO_ENCODER_PICTURE_CONTROL_CODEC_DATA &codecAllocation)
 {
@@ -314,13 +314,14 @@ d3d12_video_encoder_references_manager_av1::get_current_frame_picture_control_da
       m_CurrentFramePicParams.ReferenceFramesReconPictureDescriptors[i] =
          m_CurrentFrameReferencesData.pVirtualDPBEntries[i];
 
-#ifdef DEBUG   // Otherwise may iterate over structures and do no-op debug_printf
+#if MESA_DEBUG   // Otherwise may iterate over structures and do no-op debug_printf
    print_ref_frame_idx();
    print_virtual_dpb_entries();
    print_physical_resource_references();
 #endif
 
    *codecAllocation.pAV1PicData = m_CurrentFramePicParams;
+   return true;
 }
 
 void

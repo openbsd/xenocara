@@ -4,125 +4,613 @@ use crate::api::util::*;
 use crate::core::context::*;
 use crate::core::device::*;
 use crate::core::format::*;
+use crate::core::gl::*;
 use crate::core::queue::*;
 use crate::core::util::*;
 use crate::impl_cl_type_trait;
+use crate::impl_cl_type_trait_base;
+use crate::perf_warning;
 
 use mesa_rust::pipe::context::*;
 use mesa_rust::pipe::resource::*;
 use mesa_rust::pipe::screen::ResourceType;
 use mesa_rust::pipe::transfer::*;
 use mesa_rust_gen::*;
-use mesa_rust_util::math::*;
+use mesa_rust_util::conversion::*;
 use mesa_rust_util::properties::Properties;
+use mesa_rust_util::ptr::AllocSize;
+use mesa_rust_util::ptr::TrackedPointers;
 use rusticl_opencl_gen::*;
 
+use std::alloc;
+use std::alloc::Layout;
 use std::cmp;
-use std::collections::hash_map::Entry;
+use std::collections::btree_map::Entry;
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::mem;
 use std::mem::size_of;
-use std::ops::AddAssign;
+use std::ops::Deref;
 use std::os::raw::c_void;
 use std::ptr;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
 
-struct MappingTransfer {
-    tx: PipeTransfer,
-    shadow: Option<PipeResource>,
-    pending: u32,
+struct Mapping<T> {
+    layout: Layout,
+    writes: bool,
+    ptr: Option<MutMemoryPtr>,
+    /// reference count from the API perspective. Once it reaches 0, we need to write back the
+    /// mappings content to the GPU resource.
+    count: u32,
+    inner: T,
 }
 
-impl MappingTransfer {
-    fn new(tx: PipeTransfer, shadow: Option<PipeResource>) -> Self {
-        MappingTransfer {
-            tx: tx,
-            shadow: shadow,
-            pending: 1,
+impl<T> Drop for Mapping<T> {
+    fn drop(&mut self) {
+        if let Some(ptr) = &self.ptr {
+            unsafe {
+                alloc::dealloc(ptr.as_ptr().cast(), self.layout);
+            }
         }
     }
 }
 
-struct Mappings {
-    tx: HashMap<&'static Device, MappingTransfer>,
-    maps: HashMap<*mut c_void, u32>,
+impl<T> AllocSize<usize> for Mapping<T> {
+    fn size(&self) -> usize {
+        self.layout.size()
+    }
 }
 
-impl Mappings {
-    fn new() -> Mutex<Self> {
-        Mutex::new(Mappings {
-            tx: HashMap::new(),
-            maps: HashMap::new(),
+impl<T> Deref for Mapping<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+struct BufferMapping {
+    offset: usize,
+}
+
+struct ImageMapping {
+    origin: CLVec<usize>,
+    region: CLVec<usize>,
+}
+
+#[repr(transparent)]
+#[derive(Clone, Copy)]
+pub struct ConstMemoryPtr {
+    ptr: *const c_void,
+}
+unsafe impl Send for ConstMemoryPtr {}
+unsafe impl Sync for ConstMemoryPtr {}
+
+impl ConstMemoryPtr {
+    pub fn as_ptr(&self) -> *const c_void {
+        self.ptr
+    }
+
+    /// # Safety
+    ///
+    /// Users need to ensure that `ptr` is only accessed in a thread-safe manner sufficient for
+    /// [Send] and [Sync]
+    pub unsafe fn from_ptr(ptr: *const c_void) -> Self {
+        Self { ptr: ptr }
+    }
+}
+
+impl From<MutMemoryPtr> for ConstMemoryPtr {
+    fn from(value: MutMemoryPtr) -> Self {
+        Self {
+            ptr: value.ptr.cast(),
+        }
+    }
+}
+
+#[repr(transparent)]
+#[derive(Clone, Copy)]
+pub struct MutMemoryPtr {
+    ptr: *mut c_void,
+}
+unsafe impl Send for MutMemoryPtr {}
+unsafe impl Sync for MutMemoryPtr {}
+
+impl MutMemoryPtr {
+    pub fn as_ptr(&self) -> *mut c_void {
+        self.ptr
+    }
+
+    /// # Safety
+    ///
+    /// Users need to ensure that `ptr` is only accessed in a thread-safe manner sufficient for
+    /// [Send] and [Sync]
+    pub unsafe fn from_ptr(ptr: *mut c_void) -> Self {
+        Self { ptr: ptr }
+    }
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum ResourceValidityEntity {
+    Host,
+    Device(&'static Device),
+}
+
+/// Allocation with real GPU backing storage. Tracks on which device the content is valid on.
+pub struct ResourceAllocation {
+    pub res: HashMap<&'static Device, Arc<PipeResource>>,
+    valid_on: Mutex<Vec<ResourceValidityEntity>>,
+    // it's a bit hacky, but storing the pointer as `usize` gives us `Send` and `Sync`. The
+    // application is required to ensure no data races exist on the memory anyway.
+    host_ptr: usize,
+    hostptr_devs: Vec<ResourceValidityEntity>,
+    // this might be non zero for dma-buf imported resources
+    offset: usize,
+}
+
+impl ResourceAllocation {
+    /// # Panics
+    ///
+    /// valid_on needs to be a Vec with at least one element, will panic otherwise.
+    fn get_best_valid_entity_for_transfer(
+        valid_on: &MutexGuard<Vec<ResourceValidityEntity>>,
+    ) -> ResourceValidityEntity {
+        // We want to avoid having to copy over the PCIe bus, so we prefer an entity which is either
+        // the host itself or a device using host memory.
+        let res = valid_on.iter().min_by_key(|entity| match entity {
+            ResourceValidityEntity::Host => 0,
+            ResourceValidityEntity::Device(dev) => {
+                if dev.unified_memory() {
+                    1
+                } else {
+                    2
+                }
+            }
+        });
+
+        *res.unwrap()
+    }
+
+    /// Small helper function to indicate when transparent migration is never required, e.g. if it's
+    /// a single device allocation with no hostptr.
+    fn can_skip_migration(&self) -> bool {
+        match self.hostptr_devs.len() {
+            // If storage isn't shared between devices, we only need to migrate when there is more
+            // than one device.
+            0 => self.res.len() == 1,
+
+            // If all devices use a host_ptr allocation, the content is automatically synchronized
+            // as they share the same storage. The - 1 is required as the Host is also part of
+            // `hostptr_devs`.
+            len => len - 1 == self.res.len(),
+        }
+    }
+
+    /// Returns the GPU resource for the device `ctx` is associated with. It will transparently
+    /// migrate the data to the GPU.
+    /// TODO: add a map function to return a mapping to the resource of one device the data is valid
+    ///       on instead of migrating if the user would simply map the resource anyway.
+    fn get_res_for_access(&self, ctx: &QueueContext, rw: RWFlags) -> CLResult<&Arc<PipeResource>> {
+        let dev = ctx.dev;
+        let dev_entity = ResourceValidityEntity::Device(dev);
+        let to_res = self.res.get(dev).ok_or(CL_OUT_OF_HOST_MEMORY)?;
+
+        // in most cases we can skip most of the work below.
+        if self.can_skip_migration() {
+            return Ok(to_res);
+        }
+
+        let Ok(mut valid_on) = self.valid_on.lock() else {
+            return Err(CL_OUT_OF_HOST_MEMORY);
+        };
+
+        // If the content isn't valid on dev we need to migrate it to it.
+        if matches!(rw, RWFlags::RD | RWFlags::RW) && !valid_on.contains(&dev_entity) {
+            // valid_on is a vec with at least one element, so this call won't panic.
+            let entity = Self::get_best_valid_entity_for_transfer(&valid_on);
+
+            let helper_ctx;
+            let map;
+            let flush;
+
+            if to_res.is_buffer() {
+                let ptr;
+                match entity {
+                    ResourceValidityEntity::Host => {
+                        flush = false;
+                        ptr = self.host_ptr as *mut c_void;
+                    }
+                    ResourceValidityEntity::Device(dev) => {
+                        flush = true;
+
+                        let from_res = &self.res[dev];
+                        helper_ctx = dev.helper_ctx();
+
+                        // update the resource and wait for the operation to finish. We also map the resources
+                        // unsynchronized as we can't block or flush any other contexts here as this might cause
+                        // deadlocks.
+                        map = helper_ctx
+                            .map_buffer_unsynchronized(
+                                from_res,
+                                0,
+                                from_res.width() as i32,
+                                RWFlags::RD,
+                            )
+                            .ok_or(CL_OUT_OF_HOST_MEMORY)?;
+
+                        ptr = map.ptr();
+                    }
+                }
+
+                ctx.buffer_subdata(to_res, 0, ptr, to_res.width());
+            } else {
+                let ResourceValidityEntity::Device(dev) = entity else {
+                    // we don't support migrating from host_ptr for images yet. It's also not needed
+                    // because the Image struct has a more optimized way of doing things there.
+                    unimplemented!();
+                };
+
+                flush = true;
+                let from_res = &self.res[dev];
+                helper_ctx = dev.helper_ctx();
+
+                // update the resource and wait for the operation to finish. We also map the resources
+                // unsynchronized as we can't block or flush any other contexts here as this might cause
+                // deadlocks.
+                let bx = pipe_box {
+                    width: from_res.width() as i32,
+                    height: from_res.height() as i32,
+                    depth: from_res.depth() as i16,
+                    ..Default::default()
+                };
+
+                map = helper_ctx
+                    .map_texture_unsynchronized(from_res, &bx, RWFlags::RD)
+                    .ok_or(CL_OUT_OF_HOST_MEMORY)?;
+
+                let row_pitch: u32 = map.row_pitch();
+                let slice_pitch: usize = map.slice_pitch();
+
+                let bx = pipe_box {
+                    width: to_res.width() as i32,
+                    height: to_res.height() as i32,
+                    depth: to_res.depth() as i16,
+                    ..Default::default()
+                };
+
+                ctx.texture_subdata(to_res, &bx, map.ptr(), row_pitch, slice_pitch);
+            }
+
+            // TODO: we really kinda need to figure out how we can make the compiler scream, that
+            //       temporarily mapped memory might be accessed at some random point in the future
+            //       by a GPU unless it's queues are flushed and processed.
+            if flush {
+                ctx.flush().wait();
+            }
+        }
+
+        if matches!(rw, RWFlags::WR | RWFlags::RW) {
+            // If the user writes to it it's not valid on any other device anymore.
+            valid_on.clear();
+        }
+
+        if !valid_on.contains(&dev_entity) {
+            // if we update one hostptr resource, we update them all.
+            if self.hostptr_devs.contains(&dev_entity) {
+                valid_on.extend_from_slice(&self.hostptr_devs);
+            } else {
+                valid_on.push(ResourceValidityEntity::Device(dev));
+            }
+        }
+
+        Ok(to_res)
+    }
+
+    pub fn migrate_to_hostptr(&self, ctx: &QueueContext, rw: RWFlags) -> CLResult<()> {
+        let host_entity = ResourceValidityEntity::Host;
+        let host_ptr = self.host_ptr as *mut c_void;
+
+        // in most cases we can skip most of the work below.
+        if self.can_skip_migration() || host_ptr.is_null() {
+            return Ok(());
+        }
+
+        let Ok(mut valid_on) = self.valid_on.lock() else {
+            return Err(CL_OUT_OF_HOST_MEMORY);
+        };
+
+        // If the content isn't valid on the host we need to migrate it to it.
+        if matches!(rw, RWFlags::RD | RWFlags::RW) && !valid_on.contains(&host_entity) {
+            let ctx_dev_entity = ResourceValidityEntity::Device(ctx.dev);
+            let mut entity = ctx_dev_entity;
+
+            if !valid_on.contains(&entity) {
+                // valid_on is a vec with at least one element, so this call won't panic.
+                entity = Self::get_best_valid_entity_for_transfer(&valid_on);
+            }
+
+            debug_assert!(entity != ResourceValidityEntity::Host);
+
+            let ResourceValidityEntity::Device(from_dev) = entity else {
+                // we check if `valid_on` contains a host entity above, so this should never happen.
+                unreachable!();
+            };
+
+            let helper_ctx;
+            let map;
+            let from_res = &self.res[from_dev];
+
+            assert!(
+                from_res.is_buffer(),
+                "Transparent resource migration only supported on buffers."
+            );
+
+            if from_dev == ctx.dev {
+                map = ctx
+                    .buffer_map(from_res, 0, from_res.width() as i32, RWFlags::RD)
+                    .ok_or(CL_OUT_OF_HOST_MEMORY)?;
+            } else {
+                helper_ctx = from_dev.helper_ctx();
+                // update the resource and wait for the operation to finish. We also map the resources
+                // unsynchronized as we can't block or flush any other contexts here as this might cause
+                // deadlocks.
+                map = helper_ctx
+                    .map_buffer_unsynchronized(from_res, 0, from_res.width() as i32, RWFlags::RD)
+                    .ok_or(CL_OUT_OF_HOST_MEMORY)?;
+            }
+
+            let ptr = map.ptr();
+            // SAFETY: The application promises, that host_ptr is big enough to hold the entire
+            //         content of the buffer, also `ptr` is the mapped resource containing at least
+            //         `from_res.width()` bytes. Also both pointers do not overlap.
+            unsafe {
+                ptr::copy_nonoverlapping(ptr, host_ptr, from_res.width() as usize);
+            }
+        }
+
+        if matches!(rw, RWFlags::WR | RWFlags::RW) {
+            // If the user writes to it it's not valid on any other device anymore.
+            valid_on.clear();
+        }
+
+        if !valid_on.contains(&host_entity) {
+            // if we update the hostptr, we update all devices having a hostptr allocation.
+            valid_on.extend_from_slice(&self.hostptr_devs);
+        }
+
+        Ok(())
+    }
+}
+
+pub struct SubAllocation {
+    mem: Mem,
+    // offset relative to the actual resource, not relative to `mem`. This saves us a few
+    // calculations and we only need the total amount anyway.
+    offset: usize,
+}
+
+/// Abstraction over the memory allocation. It might be a real GPU backing storage or simply a sub
+/// allocation over an existing memory object.
+enum Allocation {
+    Resource(ResourceAllocation),
+    SubAlloc(SubAllocation),
+}
+
+// TODO: - Once it's used for more stuff might make sense to split it into an Image and Buffer
+//         variant.
+//       - Instead of doing full migration every time, it could also do it for only parts of the
+//         allocation.
+impl Allocation {
+    /// Creates a new allocation object assuming the initial data is valid on every device.
+    pub fn new(
+        res: HashMap<&'static Device, Arc<PipeResource>>,
+        offset: usize,
+        host_ptr: *mut c_void,
+    ) -> Self {
+        let hostptr_devs = if !host_ptr.is_null() {
+            res.iter()
+                // we only add devices we actually have a host ptr resource for
+                .filter_map(|(&dev, res)| {
+                    res.is_user().then_some(ResourceValidityEntity::Device(dev))
+                })
+                // and the host itself
+                .chain([ResourceValidityEntity::Host])
+                .collect()
+        } else {
+            Vec::new()
+        };
+
+        let mut valid_on: Vec<_> = res
+            .keys()
+            .copied()
+            .map(ResourceValidityEntity::Device)
+            .collect();
+        if !host_ptr.is_null() {
+            valid_on.push(ResourceValidityEntity::Host);
+        }
+
+        Self::Resource(ResourceAllocation {
+            valid_on: Mutex::new(valid_on),
+            res: res,
+            host_ptr: host_ptr as usize,
+            hostptr_devs: hostptr_devs,
+            offset: offset,
         })
     }
 
-    fn mark_pending(&mut self, dev: &Device) {
-        self.tx.get_mut(dev).unwrap().pending += 1;
+    fn new_sub(mem: Mem, offset: usize) -> Self {
+        Self::SubAlloc(SubAllocation {
+            // we precalculate the entire offset here.
+            offset: offset + mem.alloc.offset(),
+            mem: mem,
+        })
     }
 
-    fn unmark_pending(&mut self, dev: &Device) {
-        if let Some(tx) = self.tx.get_mut(dev) {
-            tx.pending -= 1;
+    /// Returns true if the backing storage of the two objects is equal.
+    fn backing_resource_eq(&self, other: &Self) -> bool {
+        ptr::eq(self.get_real_resource(), other.get_real_resource())
+    }
+
+    /// Follows the sub-allocation chain until it hits a real GPU allocation.
+    fn get_real_resource(&self) -> &ResourceAllocation {
+        match self {
+            Allocation::SubAlloc(sub) => sub.mem.alloc.get_real_resource(),
+            Allocation::Resource(res) => res,
         }
     }
 
-    fn increase_ref(&mut self, dev: &Device, ptr: *mut c_void) -> bool {
-        let res = self.maps.is_empty();
-        *self.maps.entry(ptr).or_default() += 1;
-        self.unmark_pending(dev);
-        res
+    /// Returns the resource associated with `dev` without any data migration.
+    fn get_res_of_dev(&self, dev: &Device) -> CLResult<&Arc<PipeResource>> {
+        self.get_real_resource()
+            .res
+            .get(dev)
+            .ok_or(CL_OUT_OF_HOST_MEMORY)
     }
 
-    fn decrease_ref(&mut self, ptr: *mut c_void, dev: &Device) -> (bool, Option<&PipeResource>) {
-        if let Some(r) = self.maps.get_mut(&ptr) {
-            *r -= 1;
+    /// Returns the resource associated with `ctx.dev` and transparently migrate the data.
+    fn get_res_for_access(&self, ctx: &QueueContext, rw: RWFlags) -> CLResult<&Arc<PipeResource>> {
+        self.get_real_resource().get_res_for_access(ctx, rw)
+    }
 
-            if *r == 0 {
-                self.maps.remove(&ptr);
-            }
+    /// Migrates the content to the host. Fails if there is no host ptr.
+    pub fn _migrate_to_hostptr(&self, ctx: &QueueContext, rw: RWFlags) -> CLResult<()> {
+        self.get_real_resource().migrate_to_hostptr(ctx, rw)
+    }
 
-            if self.maps.is_empty() {
-                let shadow = self.tx.get(dev).and_then(|tx| tx.shadow.as_ref());
-                return (true, shadow);
-            }
+    pub fn host_ptr(&self) -> *mut c_void {
+        let mut host_ptr = self.get_real_resource().host_ptr;
+
+        // we can only apply the offset as long the host_ptr isn't null.
+        if host_ptr != 0 {
+            host_ptr += self.offset();
         }
-        (false, None)
+
+        host_ptr as _
     }
 
-    fn clean_up_tx(&mut self, dev: &Device, ctx: &PipeContext) {
-        if self.maps.is_empty() {
-            if let Some(tx) = self.tx.get(&dev) {
-                if tx.pending == 0 {
-                    self.tx.remove(dev).unwrap().tx.with_ctx(ctx);
-                }
-            }
+    fn is_user_alloc_for_dev(&self, dev: &Device) -> CLResult<bool> {
+        Ok(self.get_res_of_dev(dev)?.is_user())
+    }
+
+    fn offset(&self) -> usize {
+        match self {
+            Allocation::Resource(res) => res.offset,
+            Allocation::SubAlloc(sub) => sub.offset,
         }
     }
 }
 
-pub struct Mem {
+pub enum Mem {
+    Buffer(Arc<Buffer>),
+    Image(Arc<Image>),
+}
+
+impl Deref for Mem {
+    type Target = MemBase;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Buffer(b) => &b.base,
+            Self::Image(i) => &i.base,
+        }
+    }
+}
+
+impl Mem {
+    pub fn is_mapped_ptr(&self, ptr: *mut c_void) -> bool {
+        match self {
+            Self::Buffer(b) => b.is_mapped_ptr(ptr),
+            Self::Image(i) => i.is_mapped_ptr(ptr),
+        }
+    }
+
+    pub fn sync_unmap(&self, ctx: &QueueContext, ptr: MutMemoryPtr) -> CLResult<()> {
+        match self {
+            Self::Buffer(b) => b.sync_unmap(ctx, ptr),
+            Self::Image(i) => i.sync_unmap(ctx, ptr),
+        }
+    }
+
+    pub fn unmap(&self, ptr: MutMemoryPtr) -> CLResult<bool> {
+        match self {
+            Self::Buffer(b) => b.unmap(ptr),
+            Self::Image(i) => i.unmap(ptr),
+        }
+    }
+}
+
+/// # Mapping memory
+///
+/// Maps the queue associated device's resource.
+///
+/// Mapping resources could have been quite straightforward if OpenCL wouldn't allow for so called
+/// non blocking maps. Non blocking maps shall return a valid pointer to the mapped region
+/// immediately, but should not synchronize data (in case of shadow buffers) until after the map
+/// event is reached in the queue. This makes it not possible to simply use pipe_transfers as those
+/// can't be explicitly synced by the frontend.
+///
+/// In order to have a compliant implementation of the mapping API we have to consider the following
+/// cases:
+///   1. Mapping a cl_mem object with CL_MEM_USE_HOST_PTR: We simply return the host_ptr.
+///      Synchronization of shadowed host ptrs are done in `sync_shadow` on demand.
+///   2. Mapping linear resources on UMA systems: We simply create the pipe_transfer with
+///      `PIPE_MAP_DIRECTLY` and `PIPE_MAP_UNSYNCHRONIZED` and return the attached pointer.
+///   3. On non UMA systems or when 2. fails (e.g. due to the resource being tiled) we
+///      - create a shadow pipe_resource with `PIPE_USAGE_STAGING`,
+///        `PIPE_RESOURCE_FLAG_MAP_PERSISTENT` and `PIPE_RESOURCE_FLAG_MAP_COHERENT`
+///      - create a pipe_transfer with `PIPE_MAP_COHERENT`, `PIPE_MAP_PERSISTENT` and
+///        `PIPE_MAP_UNSYNCHRONIZED`
+///      - sync the shadow buffer like a host_ptr shadow buffer in 1.
+///
+/// Taking this approach we guarentee that we only copy when actually needed while making sure the
+/// content behind the returned pointer is valid until unmapped.
+pub struct MemBase {
     pub base: CLObjectBase<CL_INVALID_MEM_OBJECT>,
     pub context: Arc<Context>,
-    pub parent: Option<Arc<Mem>>,
     pub mem_type: cl_mem_object_type,
     pub flags: cl_mem_flags,
     pub size: usize,
-    pub offset: usize,
-    pub host_ptr: *mut c_void,
+    pub props: Properties<cl_mem_properties>,
+    pub cbs: Mutex<Vec<MemCB>>,
+    pub gl_obj: Option<GLObject>,
+    alloc: Allocation,
+}
+
+pub struct Buffer {
+    base: MemBase,
+    maps: Mutex<TrackedPointers<usize, Mapping<BufferMapping>>>,
+}
+
+pub struct Image {
+    base: MemBase,
     pub image_format: cl_image_format,
     pub pipe_format: pipe_format,
     pub image_desc: cl_image_desc,
     pub image_elem_size: u8,
-    pub props: Vec<cl_mem_properties>,
-    pub cbs: Mutex<Vec<MemCB>>,
-    res: Option<HashMap<&'static Device, Arc<PipeResource>>>,
-    maps: Mutex<Mappings>,
+    maps: Mutex<TrackedPointers<usize, Mapping<ImageMapping>>>,
 }
 
-impl_cl_type_trait!(cl_mem, Mem, CL_INVALID_MEM_OBJECT);
+impl Deref for Buffer {
+    type Target = MemBase;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
+}
+
+impl Deref for Image {
+    type Target = MemBase;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
+}
+
+impl_cl_type_trait_base!(cl_mem, MemBase, [Buffer, Image], CL_INVALID_MEM_OBJECT);
+impl_cl_type_trait!(cl_mem, Buffer, CL_INVALID_MEM_OBJECT, base.base);
+impl_cl_type_trait!(cl_mem, Image, CL_INVALID_MEM_OBJECT, base.base);
 
 pub trait CLImageDescInfo {
     fn type_info(&self) -> (u8, bool);
@@ -202,8 +690,7 @@ impl CLImageDescInfo for cl_image_desc {
 
     fn row_pitch(&self) -> CLResult<u32> {
         self.image_row_pitch
-            .try_into()
-            .map_err(|_| CL_OUT_OF_HOST_MEMORY)
+            .try_into_with_err(CL_OUT_OF_HOST_MEMORY)
     }
 
     fn slice_pitch(&self) -> usize {
@@ -211,15 +698,11 @@ impl CLImageDescInfo for cl_image_desc {
     }
 
     fn width(&self) -> CLResult<u32> {
-        self.image_width
-            .try_into()
-            .map_err(|_| CL_OUT_OF_HOST_MEMORY)
+        self.image_width.try_into_with_err(CL_OUT_OF_HOST_MEMORY)
     }
 
     fn height(&self) -> CLResult<u32> {
-        self.image_height
-            .try_into()
-            .map_err(|_| CL_OUT_OF_HOST_MEMORY)
+        self.image_height.try_into_with_err(CL_OUT_OF_HOST_MEMORY)
     }
 }
 
@@ -235,44 +718,48 @@ fn sw_copy(
     dst_slice_pitch: usize,
     pixel_size: u8,
 ) {
+    let pixel_size = pixel_size as usize;
     for z in 0..region[2] {
-        for y in 0..region[1] {
+        if src_row_pitch == dst_row_pitch && region[1] * pixel_size == src_row_pitch {
             unsafe {
-                ptr::copy_nonoverlapping(
-                    src.add(
-                        (*src_origin + [0, y, z])
-                            * [pixel_size as usize, src_row_pitch, src_slice_pitch],
+                ptr::copy(
+                    src.byte_add(
+                        (*src_origin + [0, 0, z]) * [pixel_size, src_row_pitch, src_slice_pitch],
                     ),
-                    dst.add(
-                        (*dst_origin + [0, y, z])
-                            * [pixel_size as usize, dst_row_pitch, dst_slice_pitch],
+                    dst.byte_add(
+                        (*dst_origin + [0, 0, z]) * [pixel_size, dst_row_pitch, dst_slice_pitch],
                     ),
-                    region[0] * pixel_size as usize,
+                    region[0] * region[1] * pixel_size,
                 )
-            };
+            }
+        } else {
+            for y in 0..region[1] {
+                unsafe {
+                    ptr::copy(
+                        src.byte_add(
+                            (*src_origin + [0, y, z])
+                                * [pixel_size, src_row_pitch, src_slice_pitch],
+                        ),
+                        dst.byte_add(
+                            (*dst_origin + [0, y, z])
+                                * [pixel_size, dst_row_pitch, dst_slice_pitch],
+                        ),
+                        region[0] * pixel_size,
+                    )
+                };
+            }
         }
     }
 }
 
-/// helper function to determine if we can just map the resource in question or if we have to go
-/// through a shdow buffer to let the CPU access the resources memory
-fn can_map_directly(dev: &Device, res: &PipeResource) -> bool {
-    // there are two aprts to this check:
-    //   1. is the resource located in system RAM
-    //   2. has the resource a linear memory layout
-    // we do not want to map memory over the PCIe bus as this generally leads to bad performance.
-    (dev.unified_memory() || res.is_staging() || res.is_user)
-        && (res.is_buffer() || res.is_linear())
-}
-
-impl Mem {
+impl MemBase {
     pub fn new_buffer(
         context: Arc<Context>,
         flags: cl_mem_flags,
         size: usize,
-        host_ptr: *mut c_void,
-        props: Vec<cl_mem_properties>,
-    ) -> CLResult<Arc<Mem>> {
+        mut host_ptr: *mut c_void,
+        props: Properties<cl_mem_properties>,
+    ) -> CLResult<Arc<Buffer>> {
         let res_type = if bit_check(flags, CL_MEM_ALLOC_HOST_PTR) {
             ResourceType::Staging
         } else {
@@ -286,75 +773,60 @@ impl Mem {
             res_type,
         )?;
 
-        let host_ptr = if bit_check(flags, CL_MEM_USE_HOST_PTR) {
-            host_ptr
-        } else {
-            ptr::null_mut()
-        };
+        // We can only keep the host_ptr when `CL_MEM_USE_HOST_PTR` is set.
+        if !bit_check(flags, CL_MEM_USE_HOST_PTR) {
+            host_ptr = ptr::null_mut()
+        }
 
-        Ok(Arc::new(Self {
-            base: CLObjectBase::new(),
-            context: context,
-            parent: None,
-            mem_type: CL_MEM_OBJECT_BUFFER,
-            flags: flags,
-            size: size,
-            offset: 0,
-            host_ptr: host_ptr,
-            image_format: cl_image_format::default(),
-            pipe_format: pipe_format::PIPE_FORMAT_NONE,
-            image_desc: cl_image_desc::default(),
-            image_elem_size: 0,
-            props: props,
-            cbs: Mutex::new(Vec::new()),
-            res: Some(buffer),
-            maps: Mappings::new(),
+        let alloc = Allocation::new(buffer, 0, host_ptr);
+        Ok(Arc::new(Buffer {
+            base: Self {
+                base: CLObjectBase::new(RusticlTypes::Buffer),
+                context: context,
+                mem_type: CL_MEM_OBJECT_BUFFER,
+                flags: flags,
+                size: size,
+                props: props,
+                gl_obj: None,
+                cbs: Mutex::new(Vec::new()),
+                alloc: alloc,
+            },
+            maps: Mutex::new(TrackedPointers::new()),
         }))
     }
 
     pub fn new_sub_buffer(
-        parent: Arc<Mem>,
+        parent: Arc<Buffer>,
         flags: cl_mem_flags,
         offset: usize,
         size: usize,
-    ) -> Arc<Mem> {
-        let host_ptr = if parent.host_ptr.is_null() {
-            ptr::null_mut()
-        } else {
-            unsafe { parent.host_ptr.add(offset) }
-        };
-
-        Arc::new(Self {
-            base: CLObjectBase::new(),
-            context: parent.context.clone(),
-            parent: Some(parent),
-            mem_type: CL_MEM_OBJECT_BUFFER,
-            flags: flags,
-            size: size,
-            offset: offset,
-            host_ptr: host_ptr,
-            image_format: cl_image_format::default(),
-            pipe_format: pipe_format::PIPE_FORMAT_NONE,
-            image_desc: cl_image_desc::default(),
-            image_elem_size: 0,
-            props: Vec::new(),
-            cbs: Mutex::new(Vec::new()),
-            res: None,
-            maps: Mappings::new(),
+    ) -> Arc<Buffer> {
+        Arc::new(Buffer {
+            base: Self {
+                base: CLObjectBase::new(RusticlTypes::Buffer),
+                context: Arc::clone(&parent.context),
+                mem_type: CL_MEM_OBJECT_BUFFER,
+                flags: flags,
+                size: size,
+                props: Properties::default(),
+                gl_obj: None,
+                cbs: Mutex::new(Vec::new()),
+                alloc: Allocation::new_sub(Mem::Buffer(parent), offset),
+            },
+            maps: Mutex::new(TrackedPointers::new()),
         })
     }
 
     pub fn new_image(
         context: Arc<Context>,
-        parent: Option<Arc<Mem>>,
-        mem_type: cl_mem_object_type,
+        parent: Option<Mem>,
         flags: cl_mem_flags,
         image_format: &cl_image_format,
         mut image_desc: cl_image_desc,
         image_elem_size: u8,
-        host_ptr: *mut c_void,
-        props: Vec<cl_mem_properties>,
-    ) -> CLResult<Arc<Mem>> {
+        mut host_ptr: *mut c_void,
+        props: Properties<cl_mem_properties>,
+    ) -> CLResult<Arc<Image>> {
         // we have to sanitize the image_desc a little for internal use
         let api_image_desc = image_desc;
         let dims = image_desc.dims();
@@ -375,7 +847,9 @@ impl Mem {
             ResourceType::Normal
         };
 
-        let texture = if parent.is_none() {
+        let alloc = if let Some(parent) = parent {
+            Allocation::new_sub(parent, 0)
+        } else {
             let mut texture = context.create_texture(
                 &image_desc,
                 image_format,
@@ -396,575 +870,265 @@ impl Mem {
                 )
             }
 
-            Some(texture?)
-        } else {
-            None
-        };
+            // We can only keep the host_ptr when `CL_MEM_USE_HOST_PTR` is set.
+            if !bit_check(flags, CL_MEM_USE_HOST_PTR) {
+                host_ptr = ptr::null_mut()
+            }
 
-        let host_ptr = if bit_check(flags, CL_MEM_USE_HOST_PTR) {
-            host_ptr
-        } else {
-            ptr::null_mut()
+            Allocation::new(texture?, 0, host_ptr)
         };
 
         let pipe_format = image_format.to_pipe_format().unwrap();
-        Ok(Arc::new(Self {
-            base: CLObjectBase::new(),
-            context: context,
-            parent: parent,
-            mem_type: mem_type,
-            flags: flags,
-            size: image_desc.pixels() * image_format.pixel_size().unwrap() as usize,
-            offset: 0,
-            host_ptr: host_ptr,
+        Ok(Arc::new(Image {
+            base: Self {
+                base: CLObjectBase::new(RusticlTypes::Image),
+                context: context,
+                mem_type: image_desc.image_type,
+                flags: flags,
+                size: image_desc.pixels() * image_format.pixel_size().unwrap() as usize,
+                props: props,
+                gl_obj: None,
+                cbs: Mutex::new(Vec::new()),
+                alloc: alloc,
+            },
             image_format: *image_format,
             pipe_format: pipe_format,
             image_desc: api_image_desc,
             image_elem_size: image_elem_size,
-            props: props,
-            cbs: Mutex::new(Vec::new()),
-            res: texture,
-            maps: Mappings::new(),
+            maps: Mutex::new(TrackedPointers::new()),
         }))
     }
 
-    pub fn pixel_size(&self) -> Option<u8> {
-        if self.is_buffer() {
-            Some(1)
-        } else {
-            self.image_format.pixel_size()
+    pub fn arc_from_raw(ptr: cl_mem) -> CLResult<Mem> {
+        let mem = Self::ref_from_raw(ptr)?;
+        match mem.base.get_type()? {
+            RusticlTypes::Buffer => Ok(Mem::Buffer(Buffer::arc_from_raw(ptr)?)),
+            RusticlTypes::Image => Ok(Mem::Image(Image::arc_from_raw(ptr)?)),
+            _ => Err(CL_INVALID_MEM_OBJECT),
         }
+    }
+
+    pub fn arcs_from_arr(objs: *const cl_mem, count: u32) -> CLResult<Vec<Mem>> {
+        let count = count as usize;
+        let mut res = Vec::with_capacity(count);
+        for i in 0..count {
+            res.push(Self::arc_from_raw(unsafe { *objs.add(i) })?);
+        }
+        Ok(res)
+    }
+
+    pub fn from_gl(
+        context: Arc<Context>,
+        flags: cl_mem_flags,
+        gl_export_manager: &GLExportManager,
+    ) -> CLResult<cl_mem> {
+        let export_in = &gl_export_manager.export_in;
+        let export_out = &gl_export_manager.export_out;
+
+        let (mem_type, gl_object_type) = target_from_gl(export_in.target)?;
+        let gl_mem_props = gl_export_manager.get_gl_mem_props()?;
+
+        // Handle Buffers
+        let (image_format, pipe_format, rusticl_type) = if gl_export_manager.is_gl_buffer() {
+            (
+                cl_image_format::default(),
+                pipe_format::PIPE_FORMAT_NONE,
+                RusticlTypes::Buffer,
+            )
+        } else {
+            let image_format =
+                format_from_gl(export_out.internal_format).ok_or(CL_OUT_OF_HOST_MEMORY)?;
+            (
+                image_format,
+                image_format.to_pipe_format().unwrap(),
+                RusticlTypes::Image,
+            )
+        };
+
+        let imported_gl_tex = context.import_gl_buffer(
+            export_out.dmabuf_fd as u32,
+            export_out.modifier,
+            mem_type,
+            export_in.target,
+            image_format,
+            gl_mem_props.clone(),
+        )?;
+
+        // Cube maps faces are not linear in memory, so copy all contents
+        // of desired face into a 2D image and copy it back after gl release.
+        let (shadow_map, texture) = if is_cube_map_face(export_in.target) {
+            let shadow = create_shadow_slice(&imported_gl_tex, image_format)?;
+
+            let mut res_map = HashMap::new();
+            shadow
+                .iter()
+                .map(|(k, v)| {
+                    let gl_res = Arc::clone(imported_gl_tex.get(k).unwrap());
+                    res_map.insert(Arc::clone(v), gl_res);
+                })
+                .for_each(drop);
+
+            (Some(res_map), shadow)
+        } else {
+            (None, imported_gl_tex)
+        };
+
+        // it's kinda not supported, but we want to know if anything actually hits this as it's
+        // certainly not tested by the CL CTS.
+        if mem_type != CL_MEM_OBJECT_BUFFER {
+            assert_eq!(gl_mem_props.offset, 0);
+        }
+
+        let base = Self {
+            base: CLObjectBase::new(rusticl_type),
+            context: context,
+            mem_type: mem_type,
+            flags: flags,
+            size: gl_mem_props.size(),
+            props: Properties::default(),
+            gl_obj: Some(GLObject {
+                gl_object_target: gl_export_manager.export_in.target,
+                gl_object_type: gl_object_type,
+                gl_object_name: export_in.obj,
+                shadow_map: shadow_map,
+            }),
+            cbs: Mutex::new(Vec::new()),
+            alloc: Allocation::new(texture, gl_mem_props.offset as usize, ptr::null_mut()),
+        };
+
+        Ok(if rusticl_type == RusticlTypes::Buffer {
+            Arc::new(Buffer {
+                base: base,
+                maps: Mutex::new(TrackedPointers::new()),
+            })
+            .into_cl()
+        } else {
+            Arc::new(Image {
+                base: base,
+                image_format: image_format,
+                pipe_format: pipe_format,
+                image_desc: cl_image_desc {
+                    image_type: mem_type,
+                    image_width: gl_mem_props.width as usize,
+                    image_height: gl_mem_props.height as usize,
+                    image_depth: gl_mem_props.depth as usize,
+                    image_array_size: gl_mem_props.array_size as usize,
+                    image_row_pitch: 0,
+                    image_slice_pitch: 0,
+                    num_mip_levels: 0,
+                    num_samples: 0,
+                    ..Default::default()
+                },
+                image_elem_size: gl_mem_props.pixel_size,
+                maps: Mutex::new(TrackedPointers::new()),
+            })
+            .into_cl()
+        })
     }
 
     pub fn is_buffer(&self) -> bool {
         self.mem_type == CL_MEM_OBJECT_BUFFER
     }
 
-    fn tx_raw(
-        &self,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
-        mut offset: usize,
-        size: usize,
-        rw: RWFlags,
-    ) -> CLResult<PipeTransfer> {
-        let b = self.to_parent(&mut offset);
-        let r = b.get_res()?.get(&q.device).unwrap();
-
-        Ok(ctx.buffer_map(
-            r,
-            offset.try_into().map_err(|_| CL_OUT_OF_HOST_MEMORY)?,
-            size.try_into().map_err(|_| CL_OUT_OF_HOST_MEMORY)?,
-            rw,
-            ResourceMapType::Normal,
-        ))
-    }
-
-    fn tx_raw_async(
-        &self,
-        q: &Arc<Queue>,
-        rw: RWFlags,
-    ) -> CLResult<(PipeTransfer, Option<PipeResource>)> {
-        let mut offset = 0;
-        let b = self.to_parent(&mut offset);
-        let r = b.get_res()?.get(&q.device).unwrap();
-        let size = self.size.try_into().map_err(|_| CL_OUT_OF_HOST_MEMORY)?;
-        let ctx = q.device.helper_ctx();
-
-        assert!(self.is_buffer());
-
-        let tx = if can_map_directly(q.device, r) {
-            ctx.buffer_map_directly(
-                r,
-                offset.try_into().map_err(|_| CL_OUT_OF_HOST_MEMORY)?,
-                size,
-                rw,
-            )
-        } else {
-            None
-        };
-
-        if let Some(tx) = tx {
-            Ok((tx, None))
-        } else {
-            let shadow = q
-                .device
-                .screen()
-                .resource_create_buffer(size as u32, ResourceType::Staging)
-                .ok_or(CL_OUT_OF_RESOURCES)?;
-            let tx = ctx.buffer_map_coherent(&shadow, 0, size, rw);
-            Ok((tx, Some(shadow)))
-        }
-    }
-
-    fn tx<'a>(
-        &self,
-        q: &Arc<Queue>,
-        ctx: &'a PipeContext,
-        offset: usize,
-        size: usize,
-        rw: RWFlags,
-    ) -> CLResult<GuardedPipeTransfer<'a>> {
-        Ok(self.tx_raw(q, ctx, offset, size, rw)?.with_ctx(ctx))
-    }
-
-    fn tx_image_raw(
-        &self,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
-        bx: &pipe_box,
-        rw: RWFlags,
-    ) -> CLResult<PipeTransfer> {
-        assert!(!self.is_buffer());
-
-        let r = self.get_res()?.get(&q.device).unwrap();
-        Ok(ctx.texture_map(r, bx, rw, ResourceMapType::Normal))
-    }
-
-    fn tx_image_raw_async(
-        &self,
-        q: &Arc<Queue>,
-        bx: &pipe_box,
-        rw: RWFlags,
-    ) -> CLResult<(PipeTransfer, Option<PipeResource>)> {
-        assert!(!self.is_buffer());
-
-        let r = self.get_res()?.get(q.device).unwrap();
-        let ctx = q.device.helper_ctx();
-
-        let tx = if can_map_directly(q.device, r) {
-            ctx.texture_map_directly(r, bx, rw)
-        } else {
-            None
-        };
-
-        if let Some(tx) = tx {
-            Ok((tx, None))
-        } else {
-            let shadow = q
-                .device
-                .screen()
-                .resource_create_texture(
-                    r.width(),
-                    r.height(),
-                    r.depth(),
-                    r.array_size(),
-                    cl_mem_type_to_texture_target(self.image_desc.image_type),
-                    self.pipe_format,
-                    ResourceType::Staging,
-                    false,
-                )
-                .ok_or(CL_OUT_OF_RESOURCES)?;
-            let tx = ctx.texture_map_coherent(&shadow, bx, rw);
-            Ok((tx, Some(shadow)))
-        }
-    }
-
-    fn tx_image<'a>(
-        &self,
-        q: &Arc<Queue>,
-        ctx: &'a PipeContext,
-        bx: &pipe_box,
-        rw: RWFlags,
-    ) -> CLResult<GuardedPipeTransfer<'a>> {
-        Ok(self.tx_image_raw(q, ctx, bx, rw)?.with_ctx(ctx))
-    }
-
-    pub fn has_same_parent(&self, other: &Self) -> bool {
-        ptr::eq(self.get_parent(), other.get_parent())
-    }
-
-    pub fn is_parent_buffer(&self) -> bool {
-        self.parent.as_ref().map_or(false, |p| p.is_buffer())
-    }
-
-    pub fn is_image_from_buffer(&self) -> bool {
-        self.is_parent_buffer() && self.mem_type == CL_MEM_OBJECT_IMAGE2D
+    /// Checks if the backing memory is actually the same memory object.
+    pub fn backing_memory_eq(&self, other: &Self) -> bool {
+        self.alloc.backing_resource_eq(&other.alloc)
     }
 
     // this is kinda bogus, because that won't work with system SVM, but the spec wants us to
     // implement this.
     pub fn is_svm(&self) -> bool {
-        let mem = self.get_parent();
-        self.context.find_svm_alloc(mem.host_ptr.cast()).is_some()
-            && bit_check(mem.flags, CL_MEM_USE_HOST_PTR)
+        self.context
+            .find_svm_alloc(self.host_ptr() as usize)
+            .is_some()
+            && bit_check(self.flags, CL_MEM_USE_HOST_PTR)
     }
 
-    fn get_res(&self) -> CLResult<&HashMap<&'static Device, Arc<PipeResource>>> {
-        self.get_parent().res.as_ref().ok_or(CL_OUT_OF_HOST_MEMORY)
-    }
-
-    pub fn get_res_of_dev(&self, dev: &Device) -> CLResult<&Arc<PipeResource>> {
-        Ok(self.get_res()?.get(dev).unwrap())
-    }
-
-    fn get_parent(&self) -> &Self {
-        if let Some(parent) = &self.parent {
-            parent
-        } else {
-            self
-        }
-    }
-
-    fn to_parent<'a>(&'a self, offset: &mut usize) -> &'a Self {
-        if let Some(parent) = &self.parent {
-            offset.add_assign(self.offset);
-            parent
-        } else {
-            self
-        }
-    }
-
-    fn has_user_shadow_buffer(&self, d: &Device) -> CLResult<bool> {
-        let r = self.get_res()?.get(d).unwrap();
-        Ok(!r.is_user && bit_check(self.flags, CL_MEM_USE_HOST_PTR))
-    }
-
-    pub fn read_to_user(
+    pub fn get_res_for_access(
         &self,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
+        ctx: &QueueContext,
+        rw: RWFlags,
+    ) -> CLResult<&Arc<PipeResource>> {
+        self.alloc.get_res_for_access(ctx, rw)
+    }
+
+    /// Returns the parent memory object or None if self isn't a sub allocated memory object.
+    pub fn parent(&self) -> Option<&Mem> {
+        match &self.alloc {
+            Allocation::SubAlloc(sub) => Some(&sub.mem),
+            Allocation::Resource(_) => None,
+        }
+    }
+
+    pub fn host_ptr(&self) -> *mut c_void {
+        self.alloc.host_ptr()
+    }
+
+    fn is_pure_user_memory(&self, d: &Device) -> CLResult<bool> {
+        // 1Dbuffer objects are weird. The parent memory object can be a host_ptr thing, but we are
+        // not allowed to actually return a pointer based on the host_ptr when mapping.
+        Ok(self.alloc.is_user_alloc_for_dev(d)? && !self.host_ptr().is_null())
+    }
+
+    fn map<T>(
+        &self,
         offset: usize,
-        ptr: *mut c_void,
-        size: usize,
-    ) -> CLResult<()> {
-        assert!(self.is_buffer());
-
-        let tx = self.tx(q, ctx, offset, size, RWFlags::RD)?;
-
-        unsafe {
-            ptr::copy_nonoverlapping(tx.ptr(), ptr, size);
-        }
-
-        Ok(())
-    }
-
-    pub fn write_from_user(
-        &self,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
-        mut offset: usize,
-        ptr: *const c_void,
-        size: usize,
-    ) -> CLResult<()> {
-        assert!(self.is_buffer());
-
-        let b = self.to_parent(&mut offset);
-        let r = b.get_res()?.get(&q.device).unwrap();
-        ctx.buffer_subdata(
-            r,
-            offset.try_into().map_err(|_| CL_OUT_OF_HOST_MEMORY)?,
-            ptr,
-            size.try_into().map_err(|_| CL_OUT_OF_HOST_MEMORY)?,
-        );
-        Ok(())
-    }
-
-    pub fn copy_to(
-        &self,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
-        dst: &Arc<Mem>,
-        mut src_origin: CLVec<usize>,
-        mut dst_origin: CLVec<usize>,
-        region: &CLVec<usize>,
-    ) -> CLResult<()> {
-        let dst_base = dst;
-        let src = self.to_parent(&mut src_origin[0]);
-        let dst = dst.to_parent(&mut dst_origin[0]);
-
-        let src_res = src.get_res()?.get(&q.device).unwrap();
-        let dst_res = dst.get_res()?.get(&q.device).unwrap();
-
-        // We just want to use sw_copy if mem objects have different types
-        // or if copy can have custom strides (image2d from buff/images)
-        if self.is_buffer() != dst_base.is_buffer()
-            || !self.is_buffer() && self.parent.is_some()
-            || !dst_base.is_buffer() && dst_base.parent.is_some()
-        {
-            let tx_src;
-            let tx_dst;
-            let mut src_pitch = [0, 0, 0];
-            let mut dst_pitch = [0, 0, 0];
-
-            let bpp = if !self.is_buffer() {
-                self.pixel_size().unwrap() as usize
+        layout: Layout,
+        writes: bool,
+        maps: &Mutex<TrackedPointers<usize, Mapping<T>>>,
+        inner: T,
+    ) -> CLResult<MutMemoryPtr> {
+        let host_ptr = self.host_ptr();
+        let ptr = unsafe {
+            let ptr = if !host_ptr.is_null() {
+                host_ptr.byte_add(offset)
             } else {
-                dst_base.pixel_size().unwrap() as usize
+                alloc::alloc(layout).cast()
             };
 
-            if src.is_buffer() {
-                // If image is created from a buffer, use image's slice and row pitch instead
-                src_pitch[0] = bpp;
-                if self.is_image_from_buffer() {
-                    src_pitch[1] = self.image_desc.row_pitch()? as usize;
-                    src_pitch[2] = self.image_desc.slice_pitch();
-                } else {
-                    src_pitch[1] = region[0] * bpp;
-                    src_pitch[2] = region[0] * region[1] * bpp;
-                }
-
-                let (offset, size) = CLVec::calc_offset_size(src_origin, region, src_pitch);
-                tx_src = src.tx(q, ctx, offset, size, RWFlags::RD)?;
-            } else {
-                tx_src = src.tx_image(
-                    q,
-                    ctx,
-                    &create_pipe_box(src_origin, *region, src.mem_type)?,
-                    RWFlags::RD,
-                )?;
-
-                src_pitch = [1, tx_src.row_pitch() as usize, tx_src.slice_pitch()];
-            }
-
-            if dst.is_buffer() {
-                // If image is created from a buffer, use image's slice and row pitch instead
-                dst_pitch[0] = bpp;
-                if dst_base.is_image_from_buffer() {
-                    dst_pitch[1] = dst_base.image_desc.row_pitch()? as usize;
-                    dst_pitch[2] = dst_base.image_desc.slice_pitch();
-                } else {
-                    dst_pitch[1] = region[0] * bpp;
-                    dst_pitch[2] = region[0] * region[1] * bpp;
-                }
-
-                let (offset, size) = CLVec::calc_offset_size(dst_origin, region, dst_pitch);
-                tx_dst = dst.tx(q, ctx, offset, size, RWFlags::WR)?;
-            } else {
-                tx_dst = dst.tx_image(
-                    q,
-                    ctx,
-                    &create_pipe_box(dst_origin, *region, dst.mem_type)?,
-                    RWFlags::WR,
-                )?;
-
-                dst_pitch = [1, tx_dst.row_pitch() as usize, tx_dst.slice_pitch()];
-            }
-
-            // Those pitch values cannot have 0 value in its coordinates
-            assert!(src_pitch[0] != 0 && src_pitch[1] != 0 && src_pitch[2] != 0);
-            assert!(dst_pitch[0] != 0 && dst_pitch[1] != 0 && dst_pitch[2] != 0);
-
-            sw_copy(
-                tx_src.ptr(),
-                tx_dst.ptr(),
-                region,
-                &CLVec::default(),
-                src_pitch[1],
-                src_pitch[2],
-                &CLVec::default(),
-                dst_pitch[1],
-                dst_pitch[2],
-                bpp as u8,
-            )
-        } else {
-            let bx = create_pipe_box(src_origin, *region, src.mem_type)?;
-            let mut dst_origin: [u32; 3] = dst_origin.try_into()?;
-
-            if src.mem_type == CL_MEM_OBJECT_IMAGE1D_ARRAY {
-                (dst_origin[1], dst_origin[2]) = (dst_origin[2], dst_origin[1]);
-            }
-
-            ctx.resource_copy_region(src_res, dst_res, &dst_origin, &bx);
-        }
-        Ok(())
-    }
-
-    pub fn fill(
-        &self,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
-        pattern: &[u8],
-        mut offset: usize,
-        size: usize,
-    ) -> CLResult<()> {
-        assert!(self.is_buffer());
-
-        let b = self.to_parent(&mut offset);
-        let res = b.get_res()?.get(&q.device).unwrap();
-        ctx.clear_buffer(
-            res,
-            pattern,
-            offset.try_into().map_err(|_| CL_OUT_OF_HOST_MEMORY)?,
-            size.try_into().map_err(|_| CL_OUT_OF_HOST_MEMORY)?,
-        );
-        Ok(())
-    }
-
-    pub fn fill_image(
-        &self,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
-        pattern: &[u32],
-        origin: &CLVec<usize>,
-        region: &CLVec<usize>,
-    ) -> CLResult<()> {
-        assert!(!self.is_buffer());
-
-        let res = self.get_res()?.get(&q.device).unwrap();
-        // make sure we allocate multiples of 4 bytes so drivers don't read out of bounds or
-        // unaligned.
-        // TODO: use div_ceil once it's available
-        let pixel_size = align(self.pixel_size().unwrap() as usize, size_of::<u32>());
-        let mut new_pattern: Vec<u32> = vec![0; pixel_size / size_of::<u32>()];
-
-        // we don't support CL_DEPTH for now
-        assert!(pattern.len() == 4);
-
-        // SAFETY: pointers have to be valid for read/writes of exactly one pixel of their
-        // respective format.
-        // `new_pattern` has the correct size due to the `size` above.
-        // `pattern` is validated through the CL API and allows undefined behavior if not followed
-        // by CL API rules. It's expected to be a 4 component array of 32 bit values, except for
-        // CL_DEPTH where it's just one value.
-        unsafe {
-            util_format_pack_rgba(
-                self.pipe_format,
-                new_pattern.as_mut_ptr().cast(),
-                pattern.as_ptr().cast(),
-                1,
-            );
-        }
-
-        // If image is created from a buffer, use clear_image_buffer instead
-        // for each row
-        if self.is_parent_buffer() {
-            let strides = (
-                self.image_desc.row_pitch()? as usize,
-                self.image_desc.slice_pitch(),
-            );
-            ctx.clear_image_buffer(res, &new_pattern, origin, region, strides, pixel_size);
-        } else {
-            let bx = create_pipe_box(*origin, *region, self.mem_type)?;
-            ctx.clear_texture(res, &new_pattern, &bx);
-        }
-
-        Ok(())
-    }
-
-    pub fn write_from_user_rect(
-        &self,
-        src: *const c_void,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
-        region: &CLVec<usize>,
-        src_origin: &CLVec<usize>,
-        src_row_pitch: usize,
-        mut src_slice_pitch: usize,
-        dst_origin: &CLVec<usize>,
-        dst_row_pitch: usize,
-        dst_slice_pitch: usize,
-    ) -> CLResult<()> {
-        if self.is_buffer() || self.is_image_from_buffer() {
-            let pixel_size = self.pixel_size().unwrap();
-            let (offset, size) = CLVec::calc_offset_size(
-                dst_origin,
-                region,
-                [
-                    pixel_size.try_into().unwrap(),
-                    dst_row_pitch,
-                    dst_slice_pitch,
-                ],
-            );
-            let tx = self.tx(q, ctx, offset, size, RWFlags::WR)?;
-
-            sw_copy(
-                src,
-                tx.ptr(),
-                region,
-                src_origin,
-                src_row_pitch,
-                src_slice_pitch,
-                &CLVec::default(),
-                dst_row_pitch,
-                dst_slice_pitch,
-                pixel_size,
-            );
-        } else {
-            assert!(dst_row_pitch == self.image_desc.image_row_pitch);
-            assert!(dst_slice_pitch == self.image_desc.image_slice_pitch);
-            assert!(src_origin == &CLVec::default());
-
-            let res = self.get_res()?.get(&q.device).unwrap();
-            let bx = create_pipe_box(*dst_origin, *region, self.mem_type)?;
-
-            if self.mem_type == CL_MEM_OBJECT_IMAGE1D_ARRAY {
-                src_slice_pitch = src_row_pitch;
-            }
-
-            ctx.texture_subdata(
-                res,
-                &bx,
-                src,
-                src_row_pitch
-                    .try_into()
-                    .map_err(|_| CL_OUT_OF_HOST_MEMORY)?,
-                src_slice_pitch,
-            );
-        }
-        Ok(())
-    }
-
-    pub fn read_to_user_rect(
-        &self,
-        dst: *mut c_void,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
-        region: &CLVec<usize>,
-        src_origin: &CLVec<usize>,
-        mut src_row_pitch: usize,
-        mut src_slice_pitch: usize,
-        dst_origin: &CLVec<usize>,
-        dst_row_pitch: usize,
-        dst_slice_pitch: usize,
-    ) -> CLResult<()> {
-        let tx;
-        let pixel_size;
-
-        if self.is_buffer() || self.is_image_from_buffer() {
-            pixel_size = self.pixel_size().unwrap();
-            let (offset, size) = CLVec::calc_offset_size(
-                src_origin,
-                region,
-                [
-                    pixel_size.try_into().unwrap(),
-                    src_row_pitch,
-                    src_slice_pitch,
-                ],
-            );
-            tx = self.tx(q, ctx, offset, size, RWFlags::RD)?;
-        } else {
-            assert!(dst_origin == &CLVec::default());
-
-            let bx = create_pipe_box(*src_origin, *region, self.mem_type)?;
-            tx = self.tx_image(q, ctx, &bx, RWFlags::RD)?;
-            src_row_pitch = tx.row_pitch() as usize;
-            src_slice_pitch = tx.slice_pitch();
-
-            pixel_size = self.pixel_size().unwrap();
+            MutMemoryPtr::from_ptr(ptr)
         };
 
-        sw_copy(
-            tx.ptr(),
-            dst,
-            region,
-            &CLVec::default(),
-            src_row_pitch,
-            src_slice_pitch,
-            dst_origin,
-            dst_row_pitch,
-            dst_slice_pitch,
-            pixel_size,
-        );
+        match maps.lock().unwrap().entry(ptr.as_ptr() as usize) {
+            Entry::Occupied(mut e) => {
+                debug_assert!(!host_ptr.is_null());
+                e.get_mut().count += 1;
+            }
+            Entry::Vacant(e) => {
+                e.insert(Mapping {
+                    layout: layout,
+                    writes: writes,
+                    ptr: host_ptr.is_null().then_some(ptr),
+                    count: 1,
+                    inner: inner,
+                });
+            }
+        }
 
-        Ok(())
+        Ok(ptr)
+    }
+}
+
+impl Drop for MemBase {
+    fn drop(&mut self) {
+        let cbs = mem::take(self.cbs.get_mut().unwrap());
+        for cb in cbs.into_iter().rev() {
+            cb.call(self);
+        }
+    }
+}
+
+impl Buffer {
+    fn apply_offset(&self, offset: usize) -> CLResult<usize> {
+        self.offset()
+            .checked_add(offset)
+            .ok_or(CL_OUT_OF_HOST_MEMORY)
     }
 
-    pub fn copy_to_rect(
+    pub fn copy_rect(
         &self,
         dst: &Self,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
+        ctx: &QueueContext,
         region: &CLVec<usize>,
         src_origin: &CLVec<usize>,
         src_row_pitch: usize,
@@ -973,16 +1137,15 @@ impl Mem {
         dst_row_pitch: usize,
         dst_slice_pitch: usize,
     ) -> CLResult<()> {
-        assert!(self.is_buffer());
-        assert!(dst.is_buffer());
-
         let (offset, size) =
             CLVec::calc_offset_size(src_origin, region, [1, src_row_pitch, src_slice_pitch]);
-        let tx_src = self.tx(q, ctx, offset, size, RWFlags::RD)?;
+        let tx_src = self.tx(ctx, offset, size, RWFlags::RD)?;
 
         let (offset, size) =
             CLVec::calc_offset_size(dst_origin, region, [1, dst_row_pitch, dst_slice_pitch]);
-        let tx_dst = dst.tx(q, ctx, offset, size, RWFlags::WR)?;
+        let tx_dst = dst.tx(ctx, offset, size, RWFlags::WR)?;
+
+        perf_warning!("clEnqueueCopyBufferRect stalls the GPU");
 
         // TODO check to use hw accelerated paths (e.g. resource_copy_region or blits)
         sw_copy(
@@ -1001,238 +1164,579 @@ impl Mem {
         Ok(())
     }
 
-    // TODO: only sync on map when the memory is not mapped with discard
-    pub fn sync_shadow_buffer(
+    pub fn copy_to_buffer(
         &self,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
-        ptr: *mut c_void,
+        ctx: &QueueContext,
+        dst: &Buffer,
+        src_offset: usize,
+        dst_offset: usize,
+        size: usize,
     ) -> CLResult<()> {
-        let mut lock = self.maps.lock().unwrap();
-        if !lock.increase_ref(q.device, ptr) {
-            return Ok(());
-        }
+        let src_offset = self.apply_offset(src_offset)?;
+        let dst_offset = dst.apply_offset(dst_offset)?;
+        let src_res = self.get_res_for_access(ctx, RWFlags::RD)?;
+        let dst_res = dst.get_res_for_access(ctx, RWFlags::WR)?;
 
-        if self.has_user_shadow_buffer(q.device)? {
-            self.read_to_user(q, ctx, 0, self.host_ptr, self.size)
-        } else {
-            if let Some(shadow) = lock.tx.get(&q.device).and_then(|tx| tx.shadow.as_ref()) {
-                let mut offset = 0;
-                let b = self.to_parent(&mut offset);
-                let res = b.get_res_of_dev(q.device)?;
-                let bx = create_pipe_box(
-                    [offset, 0, 0].into(),
-                    [self.size, 1, 1].into(),
-                    CL_MEM_OBJECT_BUFFER,
-                )?;
-                ctx.resource_copy_region(res, shadow, &[0; 3], &bx);
-            }
-            Ok(())
-        }
+        let bx = create_pipe_box(
+            [src_offset, 0, 0].into(),
+            [size, 1, 1].into(),
+            CL_MEM_OBJECT_BUFFER,
+        )?;
+        let dst_origin: [u32; 3] = [dst_offset.try_into_with_err(CL_OUT_OF_HOST_MEMORY)?, 0, 0];
+
+        ctx.resource_copy_region(src_res, dst_res, &dst_origin, &bx);
+        Ok(())
     }
 
-    // TODO: only sync on map when the memory is not mapped with discard
-    pub fn sync_shadow_image(
+    pub fn copy_to_image(
         &self,
-        q: &Arc<Queue>,
-        ctx: &PipeContext,
-        ptr: *mut c_void,
+        ctx: &QueueContext,
+        dst: &Image,
+        src_offset: usize,
+        dst_origin: CLVec<usize>,
+        region: &CLVec<usize>,
     ) -> CLResult<()> {
-        let mut lock = self.maps.lock().unwrap();
-        if !lock.increase_ref(q.device, ptr) {
-            return Ok(());
-        }
+        let src_offset = self.apply_offset(src_offset)?;
+        let bpp = dst.image_format.pixel_size().unwrap().into();
+        let src_pitch = [bpp, bpp * region[0], bpp * region[0] * region[1]];
+        let size = CLVec::calc_size(region, src_pitch);
+        let tx_src = self.tx(ctx, src_offset, size, RWFlags::RD)?;
 
-        if self.has_user_shadow_buffer(q.device)? {
-            self.read_to_user_rect(
-                self.host_ptr,
-                q,
+        // If image is created from a buffer, use image's slice and row pitch instead
+        let tx_dst;
+        let dst_pitch;
+        if let Some(Mem::Buffer(buffer)) = dst.parent() {
+            dst_pitch = [
+                bpp,
+                dst.image_desc.row_pitch()? as usize,
+                dst.image_desc.slice_pitch(),
+            ];
+
+            let (offset, size) = CLVec::calc_offset_size(dst_origin, region, dst_pitch);
+            tx_dst = buffer.tx(ctx, offset, size, RWFlags::WR)?;
+        } else {
+            tx_dst = dst.tx_image(
                 ctx,
-                &self.image_desc.size(),
-                &CLVec::default(),
-                0,
-                0,
-                &CLVec::default(),
-                self.image_desc.image_row_pitch,
-                self.image_desc.image_slice_pitch,
-            )
-        } else {
-            if let Some(shadow) = lock.tx.get(q.device).and_then(|tx| tx.shadow.as_ref()) {
-                let res = self.get_res_of_dev(q.device)?;
-                let bx = self.image_desc.bx()?;
-                ctx.resource_copy_region(res, shadow, &[0, 0, 0], &bx);
-            }
-            Ok(())
+                &create_pipe_box(dst_origin, *region, dst.mem_type)?,
+                RWFlags::WR,
+            )?;
+
+            dst_pitch = [1, tx_dst.row_pitch() as usize, tx_dst.slice_pitch()];
         }
+
+        // Those pitch values cannot have 0 value in its coordinates
+        debug_assert!(src_pitch[0] != 0 && src_pitch[1] != 0 && src_pitch[2] != 0);
+        debug_assert!(dst_pitch[0] != 0 && dst_pitch[1] != 0 && dst_pitch[2] != 0);
+
+        perf_warning!("clEnqueueCopyBufferToImage stalls the GPU");
+
+        sw_copy(
+            tx_src.ptr(),
+            tx_dst.ptr(),
+            region,
+            &CLVec::default(),
+            src_pitch[1],
+            src_pitch[2],
+            &CLVec::default(),
+            dst_pitch[1],
+            dst_pitch[2],
+            bpp as u8,
+        );
+        Ok(())
     }
 
-    /// Maps the queue associated device's resource.
-    ///
-    /// Mapping resources could have been quite straightforward if OpenCL wouldn't allow for so
-    /// called non blocking maps. Non blocking maps shall return a valid pointer to the mapped
-    /// region immediately, but should not synchronize data (in case of shadow buffers) until after
-    /// the map event is reached in the queue.
-    /// This makes it not possible to simply use pipe_transfers as those can't be explicitly synced
-    /// by the frontend.
-    ///
-    /// In order to have a compliant implementation of the mapping API we have to consider the
-    /// following cases:
-    ///   1. Mapping a cl_mem object with CL_MEM_USE_HOST_PTR: We simply return the host_ptr.
-    ///      Synchronization of shadowed host ptrs are done in `sync_shadow_buffer` and
-    ///      `sync_shadow_image` on demand.
-    ///   2. Mapping linear resources on UMA systems: We simply create the pipe_transfer with
-    ///      `PIPE_MAP_DIRECTLY` and `PIPE_MAP_UNSYNCHRONIZED` and return the attached pointer.
-    ///   3. On non UMA systems or when 2. fails (e.g. due to the resource being tiled) we
-    ///      - create a shadow pipe_resource with `PIPE_USAGE_STAGING`,
-    ///        `PIPE_RESOURCE_FLAG_MAP_PERSISTENT` and `PIPE_RESOURCE_FLAG_MAP_COHERENT`
-    ///      - create a pipe_transfer with `PIPE_MAP_COHERENT`, `PIPE_MAP_PERSISTENT` and
-    ///        `PIPE_MAP_UNSYNCHRONIZED`
-    ///      - sync the shadow buffer like a host_ptr shadow buffer in 1.
-    ///
-    /// Taking this approach we guarentee that we only copy when actually needed while making sure
-    /// the content behind the returned pointer is valid until unmapped.
-    fn map<'a>(
+    pub fn fill(
         &self,
-        q: &Arc<Queue>,
-        lock: &'a mut MutexGuard<Mappings>,
-        rw: RWFlags,
-    ) -> CLResult<&'a PipeTransfer> {
-        if let Entry::Vacant(e) = lock.tx.entry(q.device) {
-            let (tx, res) = if self.is_buffer() {
-                self.tx_raw_async(q, rw)?
-            } else {
-                let bx = self.image_desc.bx()?;
-                self.tx_image_raw_async(q, &bx, rw)?
-            };
-
-            e.insert(MappingTransfer::new(tx, res));
-        } else {
-            lock.mark_pending(q.device);
-        }
-
-        Ok(&lock.tx.get_mut(&q.device).unwrap().tx)
+        ctx: &QueueContext,
+        pattern: &[u8],
+        offset: usize,
+        size: usize,
+    ) -> CLResult<()> {
+        let offset = self.apply_offset(offset)?;
+        let res = self.get_res_for_access(ctx, RWFlags::WR)?;
+        ctx.clear_buffer(
+            res,
+            pattern,
+            offset.try_into_with_err(CL_OUT_OF_HOST_MEMORY)?,
+            size.try_into_with_err(CL_OUT_OF_HOST_MEMORY)?,
+        );
+        Ok(())
     }
 
-    pub fn map_buffer(&self, q: &Arc<Queue>, offset: usize, _size: usize) -> CLResult<*mut c_void> {
-        assert!(self.is_buffer());
-
-        let mut lock = self.maps.lock().unwrap();
-        let ptr = if self.has_user_shadow_buffer(q.device)? {
-            self.host_ptr
-        } else {
-            let tx = self.map(q, &mut lock, RWFlags::RW)?;
-            tx.ptr()
-        };
-
-        let ptr = unsafe { ptr.add(offset) };
-        Ok(ptr)
+    fn is_mapped_ptr(&self, ptr: *mut c_void) -> bool {
+        let mut maps = self.maps.lock().unwrap();
+        let entry = maps.entry(ptr as usize);
+        matches!(entry, Entry::Occupied(entry) if entry.get().count > 0)
     }
 
-    pub fn map_image(
+    pub fn map(&self, size: usize, offset: usize, writes: bool) -> CLResult<MutMemoryPtr> {
+        let layout =
+            unsafe { Layout::from_size_align_unchecked(size, size_of::<[cl_ulong; 16]>()) };
+        self.base.map(
+            offset,
+            layout,
+            writes,
+            &self.maps,
+            BufferMapping { offset: offset },
+        )
+    }
+
+    pub fn offset(&self) -> usize {
+        self.alloc.offset()
+    }
+
+    pub fn read(
         &self,
-        q: &Arc<Queue>,
-        origin: &CLVec<usize>,
-        _region: &CLVec<usize>,
-        row_pitch: &mut usize,
-        slice_pitch: &mut usize,
-    ) -> CLResult<*mut c_void> {
-        assert!(!self.is_buffer());
+        ctx: &QueueContext,
+        offset: usize,
+        ptr: MutMemoryPtr,
+        size: usize,
+    ) -> CLResult<()> {
+        let ptr = ptr.as_ptr();
+        let tx = self.tx(ctx, offset, size, RWFlags::RD)?;
 
-        let mut lock = self.maps.lock().unwrap();
+        perf_warning!("clEnqueueReadBuffer and clEnqueueMapBuffer stall the GPU");
 
-        // we might have a host_ptr shadow buffer or image created from buffer
-        let ptr = if self.has_user_shadow_buffer(q.device)? || self.is_parent_buffer() {
-            *row_pitch = self.image_desc.image_row_pitch;
-            *slice_pitch = self.image_desc.image_slice_pitch;
-
-            if let Some(src) = &self.parent {
-                let tx = src.map(q, &mut lock, RWFlags::RW)?;
-                tx.ptr()
-            } else {
-                self.host_ptr
-            }
-        } else {
-            let tx = self.map(q, &mut lock, RWFlags::RW)?;
-
-            if self.image_desc.dims() > 1 {
-                *row_pitch = tx.row_pitch() as usize;
-            }
-            if self.image_desc.dims() > 2 || self.image_desc.is_array() {
-                *slice_pitch = tx.slice_pitch();
-            }
-
-            tx.ptr()
-        };
-
-        let ptr = unsafe {
-            ptr.add(
-                *origin
-                    * [
-                        self.pixel_size().unwrap() as usize,
-                        *row_pitch,
-                        *slice_pitch,
-                    ],
-            )
-        };
-
-        Ok(ptr)
-    }
-
-    pub fn is_mapped_ptr(&self, ptr: *mut c_void) -> bool {
-        self.maps.lock().unwrap().maps.contains_key(&ptr)
-    }
-
-    // TODO: only sync on unmap when the memory is not mapped for writing
-    pub fn unmap(&self, q: &Arc<Queue>, ctx: &PipeContext, ptr: *mut c_void) -> CLResult<()> {
-        let mut lock = self.maps.lock().unwrap();
-        if !lock.maps.contains_key(&ptr) {
-            return Ok(());
+        unsafe {
+            ptr::copy(tx.ptr(), ptr, size);
         }
-
-        let (needs_sync, shadow) = lock.decrease_ref(ptr, q.device);
-        if needs_sync {
-            if let Some(shadow) = shadow {
-                let mut offset = 0;
-                let b = self.to_parent(&mut offset);
-                let res = b.get_res_of_dev(q.device)?;
-
-                let bx = if b.is_buffer() {
-                    create_pipe_box(
-                        CLVec::default(),
-                        [self.size, 1, 1].into(),
-                        CL_MEM_OBJECT_BUFFER,
-                    )?
-                } else {
-                    self.image_desc.bx()?
-                };
-
-                ctx.resource_copy_region(shadow, res, &[offset as u32, 0, 0], &bx);
-            } else if self.has_user_shadow_buffer(q.device)? {
-                if self.is_buffer() {
-                    self.write_from_user(q, ctx, 0, self.host_ptr, self.size)?;
-                } else {
-                    self.write_from_user_rect(
-                        self.host_ptr,
-                        q,
-                        ctx,
-                        &self.image_desc.size(),
-                        &CLVec::default(),
-                        self.image_desc.image_row_pitch,
-                        self.image_desc.image_slice_pitch,
-                        &CLVec::default(),
-                        self.image_desc.image_row_pitch,
-                        self.image_desc.image_slice_pitch,
-                    )?;
-                }
-            }
-        }
-
-        lock.clean_up_tx(q.device, ctx);
 
         Ok(())
     }
 
-    pub fn pipe_image_host_access(&self) -> u16 {
+    pub fn read_rect(
+        &self,
+        dst: MutMemoryPtr,
+        ctx: &QueueContext,
+        region: &CLVec<usize>,
+        src_origin: &CLVec<usize>,
+        src_row_pitch: usize,
+        src_slice_pitch: usize,
+        dst_origin: &CLVec<usize>,
+        dst_row_pitch: usize,
+        dst_slice_pitch: usize,
+    ) -> CLResult<()> {
+        let dst = dst.as_ptr();
+        let (offset, size) =
+            CLVec::calc_offset_size(src_origin, region, [1, src_row_pitch, src_slice_pitch]);
+        let tx = self.tx(ctx, offset, size, RWFlags::RD)?;
+
+        perf_warning!("clEnqueueReadBufferRect stalls the GPU");
+
+        sw_copy(
+            tx.ptr(),
+            dst,
+            region,
+            &CLVec::default(),
+            src_row_pitch,
+            src_slice_pitch,
+            dst_origin,
+            dst_row_pitch,
+            dst_slice_pitch,
+            1,
+        );
+
+        Ok(())
+    }
+
+    pub fn sync_map(&self, ctx: &QueueContext, ptr: MutMemoryPtr) -> CLResult<()> {
+        let maps = self.maps.lock().unwrap();
+        let Some(mapping) = maps.find_alloc_precise(ptr.as_ptr() as usize) else {
+            return Err(CL_INVALID_VALUE);
+        };
+
+        // in this case we only need to migrate to the device if the data is located on a device not
+        // having a userptr allocation.
+        if self.is_pure_user_memory(ctx.dev)? {
+            let rw = if mapping.writes {
+                RWFlags::RW
+            } else {
+                RWFlags::RD
+            };
+
+            let _ = self.get_res_for_access(ctx, rw)?;
+            return Ok(());
+        }
+
+        self.read(ctx, mapping.offset, ptr, mapping.size())
+    }
+
+    pub fn sync_unmap(&self, ctx: &QueueContext, ptr: MutMemoryPtr) -> CLResult<()> {
+        // no need to update
+        if self.is_pure_user_memory(ctx.dev)? {
+            return Ok(());
+        }
+
+        match self.maps.lock().unwrap().entry(ptr.as_ptr() as usize) {
+            Entry::Vacant(_) => Err(CL_INVALID_VALUE),
+            Entry::Occupied(entry) => {
+                let mapping = entry.get();
+
+                if mapping.writes {
+                    self.write(ctx, mapping.offset, ptr.into(), mapping.size())?;
+                }
+
+                // only remove if the mapping wasn't reused in the meantime
+                if mapping.count == 0 {
+                    entry.remove();
+                }
+
+                Ok(())
+            }
+        }
+    }
+
+    fn tx<'a>(
+        &self,
+        ctx: &'a QueueContext,
+        offset: usize,
+        size: usize,
+        rw: RWFlags,
+    ) -> CLResult<PipeTransfer<'a>> {
+        let offset = self.apply_offset(offset)?;
+        let r = self.get_res_for_access(ctx, rw)?;
+
+        ctx.buffer_map(
+            r,
+            offset.try_into_with_err(CL_OUT_OF_HOST_MEMORY)?,
+            size.try_into_with_err(CL_OUT_OF_HOST_MEMORY)?,
+            rw,
+        )
+        .ok_or(CL_OUT_OF_RESOURCES)
+    }
+
+    pub fn unmap(&self, ptr: MutMemoryPtr) -> CLResult<bool> {
+        match self.maps.lock().unwrap().entry(ptr.as_ptr() as usize) {
+            Entry::Vacant(_) => Err(CL_INVALID_VALUE),
+            Entry::Occupied(mut entry) => {
+                let entry = entry.get_mut();
+                debug_assert!(entry.count > 0);
+                entry.count -= 1;
+                Ok(entry.count == 0)
+            }
+        }
+    }
+
+    pub fn write(
+        &self,
+        ctx: &QueueContext,
+        offset: usize,
+        ptr: ConstMemoryPtr,
+        size: usize,
+    ) -> CLResult<()> {
+        let ptr = ptr.as_ptr();
+        let offset = self.apply_offset(offset)?;
+        let r = self.get_res_for_access(ctx, RWFlags::WR)?;
+
+        perf_warning!("clEnqueueWriteBuffer and clEnqueueUnmapMemObject might stall the GPU");
+
+        ctx.buffer_subdata(
+            r,
+            offset.try_into_with_err(CL_OUT_OF_HOST_MEMORY)?,
+            ptr,
+            size.try_into_with_err(CL_OUT_OF_HOST_MEMORY)?,
+        );
+        Ok(())
+    }
+
+    pub fn write_rect(
+        &self,
+        src: ConstMemoryPtr,
+        ctx: &QueueContext,
+        region: &CLVec<usize>,
+        src_origin: &CLVec<usize>,
+        src_row_pitch: usize,
+        src_slice_pitch: usize,
+        dst_origin: &CLVec<usize>,
+        dst_row_pitch: usize,
+        dst_slice_pitch: usize,
+    ) -> CLResult<()> {
+        let src = src.as_ptr();
+        let (offset, size) =
+            CLVec::calc_offset_size(dst_origin, region, [1, dst_row_pitch, dst_slice_pitch]);
+        let tx = self.tx(ctx, offset, size, RWFlags::WR)?;
+
+        perf_warning!("clEnqueueWriteBufferRect stalls the GPU");
+
+        sw_copy(
+            src,
+            tx.ptr(),
+            region,
+            src_origin,
+            src_row_pitch,
+            src_slice_pitch,
+            &CLVec::default(),
+            dst_row_pitch,
+            dst_slice_pitch,
+            1,
+        );
+
+        Ok(())
+    }
+}
+
+impl Image {
+    pub fn copy_to_buffer(
+        &self,
+        ctx: &QueueContext,
+        dst: &Buffer,
+        src_origin: CLVec<usize>,
+        dst_offset: usize,
+        region: &CLVec<usize>,
+    ) -> CLResult<()> {
+        let bpp = self.image_format.pixel_size().unwrap().into();
+
+        let src_pitch;
+        let tx_src;
+        if let Some(Mem::Buffer(buffer)) = self.parent() {
+            src_pitch = [
+                bpp,
+                self.image_desc.row_pitch()? as usize,
+                self.image_desc.slice_pitch(),
+            ];
+            let (offset, size) = CLVec::calc_offset_size(src_origin, region, src_pitch);
+            tx_src = buffer.tx(ctx, offset, size, RWFlags::RD)?;
+        } else {
+            tx_src = self.tx_image(
+                ctx,
+                &create_pipe_box(src_origin, *region, self.mem_type)?,
+                RWFlags::RD,
+            )?;
+            src_pitch = [1, tx_src.row_pitch() as usize, tx_src.slice_pitch()];
+        }
+
+        // If image is created from a buffer, use image's slice and row pitch instead
+        let dst_pitch = [bpp, bpp * region[0], bpp * region[0] * region[1]];
+
+        let dst_origin: CLVec<usize> = [dst_offset, 0, 0].into();
+        let (offset, size) = CLVec::calc_offset_size(dst_origin, region, dst_pitch);
+        let tx_dst = dst.tx(ctx, offset, size, RWFlags::WR)?;
+
+        // Those pitch values cannot have 0 value in its coordinates
+        debug_assert!(src_pitch[0] != 0 && src_pitch[1] != 0 && src_pitch[2] != 0);
+        debug_assert!(dst_pitch[0] != 0 && dst_pitch[1] != 0 && dst_pitch[2] != 0);
+
+        perf_warning!("clEnqueueCopyImageToBuffer stalls the GPU");
+
+        sw_copy(
+            tx_src.ptr(),
+            tx_dst.ptr(),
+            region,
+            &CLVec::default(),
+            src_pitch[1],
+            src_pitch[2],
+            &CLVec::default(),
+            dst_pitch[1],
+            dst_pitch[2],
+            bpp as u8,
+        );
+        Ok(())
+    }
+
+    pub fn copy_to_image(
+        &self,
+        ctx: &QueueContext,
+        dst: &Image,
+        src_origin: CLVec<usize>,
+        dst_origin: CLVec<usize>,
+        region: &CLVec<usize>,
+    ) -> CLResult<()> {
+        let src_res = self.get_res_for_access(ctx, RWFlags::RD)?;
+        let dst_res = dst.get_res_for_access(ctx, RWFlags::WR)?;
+
+        // We just want to use sw_copy if mem objects have different types or if copy can have
+        // custom strides (image2d from buff/images)
+        if self.is_parent_buffer() || dst.is_parent_buffer() {
+            let bpp = self.image_format.pixel_size().unwrap().into();
+
+            let tx_src;
+            let tx_dst;
+            let dst_pitch;
+            let src_pitch;
+            if let Some(Mem::Buffer(buffer)) = self.parent() {
+                src_pitch = [
+                    bpp,
+                    self.image_desc.row_pitch()? as usize,
+                    self.image_desc.slice_pitch(),
+                ];
+
+                let (offset, size) = CLVec::calc_offset_size(src_origin, region, src_pitch);
+                tx_src = buffer.tx(ctx, offset, size, RWFlags::RD)?;
+            } else {
+                tx_src = self.tx_image(
+                    ctx,
+                    &create_pipe_box(src_origin, *region, self.mem_type)?,
+                    RWFlags::RD,
+                )?;
+
+                src_pitch = [1, tx_src.row_pitch() as usize, tx_src.slice_pitch()];
+            }
+
+            if let Some(Mem::Buffer(buffer)) = dst.parent() {
+                // If image is created from a buffer, use image's slice and row pitch instead
+                dst_pitch = [
+                    bpp,
+                    dst.image_desc.row_pitch()? as usize,
+                    dst.image_desc.slice_pitch(),
+                ];
+
+                let (offset, size) = CLVec::calc_offset_size(dst_origin, region, dst_pitch);
+                tx_dst = buffer.tx(ctx, offset, size, RWFlags::WR)?;
+            } else {
+                tx_dst = dst.tx_image(
+                    ctx,
+                    &create_pipe_box(dst_origin, *region, dst.mem_type)?,
+                    RWFlags::WR,
+                )?;
+
+                dst_pitch = [1, tx_dst.row_pitch() as usize, tx_dst.slice_pitch()];
+            }
+
+            // Those pitch values cannot have 0 value in its coordinates
+            debug_assert!(src_pitch[0] != 0 && src_pitch[1] != 0 && src_pitch[2] != 0);
+            debug_assert!(dst_pitch[0] != 0 && dst_pitch[1] != 0 && dst_pitch[2] != 0);
+
+            perf_warning!(
+                "clEnqueueCopyImage stalls the GPU when src or dst are created from a buffer"
+            );
+
+            sw_copy(
+                tx_src.ptr(),
+                tx_dst.ptr(),
+                region,
+                &CLVec::default(),
+                src_pitch[1],
+                src_pitch[2],
+                &CLVec::default(),
+                dst_pitch[1],
+                dst_pitch[2],
+                bpp as u8,
+            )
+        } else {
+            let bx = create_pipe_box(src_origin, *region, self.mem_type)?;
+            let mut dst_origin: [u32; 3] = dst_origin.try_into()?;
+
+            if self.mem_type == CL_MEM_OBJECT_IMAGE1D_ARRAY {
+                (dst_origin[1], dst_origin[2]) = (dst_origin[2], dst_origin[1]);
+            }
+
+            ctx.resource_copy_region(src_res, dst_res, &dst_origin, &bx);
+        }
+        Ok(())
+    }
+
+    pub fn fill(
+        &self,
+        ctx: &QueueContext,
+        pattern: [u32; 4],
+        origin: &CLVec<usize>,
+        region: &CLVec<usize>,
+    ) -> CLResult<()> {
+        let res = self.get_res_for_access(ctx, RWFlags::WR)?;
+
+        // make sure we allocate multiples of 4 bytes so drivers don't read out of bounds or
+        // unaligned.
+        let pixel_size: usize = self.image_format.pixel_size().unwrap().into();
+        let mut new_pattern: Vec<u32> = vec![0; pixel_size.div_ceil(size_of::<u32>())];
+
+        // SAFETY: pointers have to be valid for read/writes of exactly one pixel of their
+        // respective format.
+        // `new_pattern` has the correct size due to the `size` above.
+        // `pattern` is validated through the CL API and allows undefined behavior if not followed
+        // by CL API rules.
+        unsafe {
+            util_format_pack_rgba(
+                self.pipe_format,
+                new_pattern.as_mut_ptr().cast(),
+                pattern.as_ptr().cast(),
+                1,
+            );
+        }
+
+        // If image is created from a buffer, use clear_image_buffer instead
+        if self.is_parent_buffer() {
+            let strides = (
+                self.image_desc.row_pitch()? as usize,
+                self.image_desc.slice_pitch(),
+            );
+            ctx.clear_image_buffer(res, &new_pattern, origin, region, strides, pixel_size);
+        } else {
+            let bx = create_pipe_box(*origin, *region, self.mem_type)?;
+            ctx.clear_texture(res, &new_pattern, &bx);
+        }
+
+        Ok(())
+    }
+
+    fn is_mapped_ptr(&self, ptr: *mut c_void) -> bool {
+        let mut maps = self.maps.lock().unwrap();
+        let entry = maps.entry(ptr as usize);
+        matches!(entry, Entry::Occupied(entry) if entry.get().count > 0)
+    }
+
+    pub fn is_parent_buffer(&self) -> bool {
+        matches!(self.parent(), Some(Mem::Buffer(_)))
+    }
+
+    pub fn map(
+        &self,
+        origin: CLVec<usize>,
+        region: CLVec<usize>,
+        row_pitch: &mut usize,
+        slice_pitch: &mut usize,
+        writes: bool,
+    ) -> CLResult<MutMemoryPtr> {
+        let pixel_size = self.image_format.pixel_size().unwrap() as usize;
+
+        *row_pitch = self.image_desc.row_pitch()? as usize;
+        *slice_pitch = self.image_desc.slice_pitch();
+
+        let offset = CLVec::calc_offset(origin, [pixel_size, *row_pitch, *slice_pitch]);
+
+        // From the CL Spec:
+        //
+        //   The pointer returned maps a 1D, 2D or 3D region starting at origin and is at least
+        //   region[0] pixels in size for a 1D image, 1D image buffer or 1D image array,
+        //   (image_row_pitch × region[1]) pixels in size for a 2D image or 2D image array, and
+        //   (image_slice_pitch × region[2]) pixels in size for a 3D image. The result of a memory
+        //   access outside this region is undefined.
+        //
+        // It's not guaranteed that the row_pitch is taken into account for 1D images, but the CL
+        // CTS relies on this behavior.
+        //
+        // Also note, that the spec wording is wrong in regards to arrays, which need to take the
+        // image_slice_pitch into account.
+        let size = if self.image_desc.is_array() || self.image_desc.dims() == 3 {
+            debug_assert_ne!(*slice_pitch, 0);
+            // the slice count is in region[1] for 1D array images
+            if self.mem_type == CL_MEM_OBJECT_IMAGE1D_ARRAY {
+                region[1] * *slice_pitch
+            } else {
+                region[2] * *slice_pitch
+            }
+        } else {
+            debug_assert_ne!(*row_pitch, 0);
+            region[1] * *row_pitch
+        };
+
+        let layout;
+        unsafe {
+            layout = Layout::from_size_align_unchecked(size, size_of::<[u32; 4]>());
+        }
+
+        self.base.map(
+            offset,
+            layout,
+            writes,
+            &self.maps,
+            ImageMapping {
+                origin: origin,
+                region: region,
+            },
+        )
+    }
+
+    fn pipe_image_host_access(&self) -> u16 {
         // those flags are all mutually exclusive
         (if bit_check(self.flags, CL_MEM_HOST_READ_ONLY) {
             PIPE_IMAGE_ACCESS_READ
@@ -1244,17 +1748,248 @@ impl Mem {
             PIPE_IMAGE_ACCESS_READ_WRITE
         }) as u16
     }
-}
 
-impl Drop for Mem {
-    fn drop(&mut self) {
-        let cbs = mem::take(self.cbs.get_mut().unwrap());
-        for cb in cbs.into_iter().rev() {
-            cb.call(self);
+    pub fn read(
+        &self,
+        dst: MutMemoryPtr,
+        ctx: &QueueContext,
+        region: &CLVec<usize>,
+        src_origin: &CLVec<usize>,
+        dst_row_pitch: usize,
+        dst_slice_pitch: usize,
+    ) -> CLResult<()> {
+        let dst = dst.as_ptr();
+        let pixel_size = self.image_format.pixel_size().unwrap();
+
+        let tx;
+        let src_row_pitch;
+        let src_slice_pitch;
+        if let Some(Mem::Buffer(buffer)) = self.parent() {
+            src_row_pitch = self.image_desc.image_row_pitch;
+            src_slice_pitch = self.image_desc.image_slice_pitch;
+
+            let (offset, size) = CLVec::calc_offset_size(
+                src_origin,
+                region,
+                [pixel_size.into(), src_row_pitch, src_slice_pitch],
+            );
+
+            tx = buffer.tx(ctx, offset, size, RWFlags::RD)?;
+        } else {
+            let bx = create_pipe_box(*src_origin, *region, self.mem_type)?;
+            tx = self.tx_image(ctx, &bx, RWFlags::RD)?;
+            src_row_pitch = tx.row_pitch() as usize;
+            src_slice_pitch = tx.slice_pitch();
+        };
+
+        perf_warning!("clEnqueueReadImage and clEnqueueMapImage stall the GPU");
+
+        sw_copy(
+            tx.ptr(),
+            dst,
+            region,
+            &CLVec::default(),
+            src_row_pitch,
+            src_slice_pitch,
+            &CLVec::default(),
+            dst_row_pitch,
+            dst_slice_pitch,
+            pixel_size,
+        );
+
+        Ok(())
+    }
+
+    pub fn sync_map(&self, ctx: &QueueContext, ptr: MutMemoryPtr) -> CLResult<()> {
+        let maps = self.maps.lock().unwrap();
+        let Some(mapping) = maps.find_alloc_precise(ptr.as_ptr() as usize) else {
+            return Err(CL_INVALID_VALUE);
+        };
+
+        // in this case we only need to migrate to the device if the data is located on a device not
+        // having a userptr allocation.
+        if self.is_pure_user_memory(ctx.dev)? {
+            let rw = if mapping.writes {
+                RWFlags::RW
+            } else {
+                RWFlags::RD
+            };
+
+            let _ = self.get_res_for_access(ctx, rw)?;
+            return Ok(());
         }
 
-        for (d, tx) in self.maps.get_mut().unwrap().tx.drain() {
-            d.helper_ctx().unmap(tx.tx);
+        let row_pitch = self.image_desc.row_pitch()? as usize;
+        let slice_pitch = self.image_desc.slice_pitch();
+
+        self.read(
+            ptr,
+            ctx,
+            &mapping.region,
+            &mapping.origin,
+            row_pitch,
+            slice_pitch,
+        )
+    }
+
+    pub fn sync_unmap(&self, ctx: &QueueContext, ptr: MutMemoryPtr) -> CLResult<()> {
+        // no need to update
+        if self.is_pure_user_memory(ctx.dev)? {
+            return Ok(());
+        }
+
+        match self.maps.lock().unwrap().entry(ptr.as_ptr() as usize) {
+            Entry::Vacant(_) => Err(CL_INVALID_VALUE),
+            Entry::Occupied(entry) => {
+                let mapping = entry.get();
+                let row_pitch = self.image_desc.row_pitch()? as usize;
+                let slice_pitch = self.image_desc.slice_pitch();
+
+                if mapping.writes {
+                    self.write(
+                        ptr.into(),
+                        ctx,
+                        &mapping.region,
+                        row_pitch,
+                        slice_pitch,
+                        &mapping.origin,
+                    )?;
+                }
+
+                // only remove if the mapping wasn't reused in the meantime
+                if mapping.count == 0 {
+                    entry.remove();
+                }
+
+                Ok(())
+            }
+        }
+    }
+
+    fn tx_image<'a>(
+        &self,
+        ctx: &'a QueueContext,
+        bx: &pipe_box,
+        rw: RWFlags,
+    ) -> CLResult<PipeTransfer<'a>> {
+        let r = self.get_res_for_access(ctx, rw)?;
+        ctx.texture_map(r, bx, rw).ok_or(CL_OUT_OF_RESOURCES)
+    }
+
+    pub fn unmap(&self, ptr: MutMemoryPtr) -> CLResult<bool> {
+        match self.maps.lock().unwrap().entry(ptr.as_ptr() as usize) {
+            Entry::Vacant(_) => Err(CL_INVALID_VALUE),
+            Entry::Occupied(mut entry) => {
+                let entry = entry.get_mut();
+                debug_assert!(entry.count > 0);
+                entry.count -= 1;
+                Ok(entry.count == 0)
+            }
+        }
+    }
+
+    pub fn write(
+        &self,
+        src: ConstMemoryPtr,
+        ctx: &QueueContext,
+        region: &CLVec<usize>,
+        src_row_pitch: usize,
+        mut src_slice_pitch: usize,
+        dst_origin: &CLVec<usize>,
+    ) -> CLResult<()> {
+        let src = src.as_ptr();
+        let dst_row_pitch = self.image_desc.image_row_pitch;
+        let dst_slice_pitch = self.image_desc.image_slice_pitch;
+
+        // texture_subdata most likely maps the resource anyway
+        perf_warning!("clEnqueueWriteImage and clEnqueueUnmapMemObject stall the GPU");
+
+        if let Some(Mem::Buffer(buffer)) = self.parent() {
+            let pixel_size = self.image_format.pixel_size().unwrap();
+            let (offset, size) = CLVec::calc_offset_size(
+                dst_origin,
+                region,
+                [pixel_size.into(), dst_row_pitch, dst_slice_pitch],
+            );
+            let tx = buffer.tx(ctx, offset, size, RWFlags::WR)?;
+
+            sw_copy(
+                src,
+                tx.ptr(),
+                region,
+                &CLVec::default(),
+                src_row_pitch,
+                src_slice_pitch,
+                &CLVec::default(),
+                dst_row_pitch,
+                dst_slice_pitch,
+                pixel_size,
+            );
+        } else {
+            let res = self.get_res_for_access(ctx, RWFlags::WR)?;
+            let bx = create_pipe_box(*dst_origin, *region, self.mem_type)?;
+
+            if self.mem_type == CL_MEM_OBJECT_IMAGE1D_ARRAY {
+                src_slice_pitch = src_row_pitch;
+            }
+
+            ctx.texture_subdata(
+                res,
+                &bx,
+                src,
+                src_row_pitch.try_into_with_err(CL_OUT_OF_HOST_MEMORY)?,
+                src_slice_pitch,
+            );
+        }
+        Ok(())
+    }
+
+    /// Creates metadata when an 2D image or sampler view is created over a buffer resource.
+    fn buffer_2d_info(&self) -> CLResult<AppImgInfo> {
+        Ok(AppImgInfo::new(
+            self.image_desc.row_pitch()? / self.image_elem_size as u32,
+            self.image_desc.width()?,
+            self.image_desc.height()?,
+        ))
+    }
+
+    pub fn sampler_view<'c>(&self, ctx: &'c QueueContext) -> CLResult<PipeSamplerView<'c, '_>> {
+        let res = self.get_res_for_access(ctx, RWFlags::RD)?;
+
+        let template = if res.is_buffer() && self.mem_type == CL_MEM_OBJECT_IMAGE2D {
+            res.pipe_sampler_view_template_2d_buffer(self.pipe_format, &self.buffer_2d_info()?)
+        } else if res.is_buffer() {
+            // we need to pass in the size of the buffer, not the width.
+            let size = self.size.try_into_with_err(CL_OUT_OF_RESOURCES)?;
+            res.pipe_sampler_view_template_1d_buffer(self.pipe_format, size)
+        } else {
+            res.pipe_sampler_view_template()
+        };
+
+        PipeSamplerView::new(ctx, res, &template).ok_or(CL_OUT_OF_HOST_MEMORY)
+    }
+
+    pub fn image_view(&self, ctx: &QueueContext, read_write: bool) -> CLResult<PipeImageView> {
+        let rw = if read_write { RWFlags::RW } else { RWFlags::WR };
+
+        let res = self.get_res_for_access(ctx, rw)?;
+        if res.is_buffer() && self.mem_type == CL_MEM_OBJECT_IMAGE2D {
+            Ok(res.pipe_image_view_2d_buffer(
+                self.pipe_format,
+                read_write,
+                self.pipe_image_host_access(),
+                &self.buffer_2d_info()?,
+            ))
+        } else if res.is_buffer() {
+            let size = self.size.try_into_with_err(CL_OUT_OF_RESOURCES)?;
+            Ok(res.pipe_image_view_1d_buffer(
+                self.pipe_format,
+                read_write,
+                self.pipe_image_host_access(),
+                size,
+            ))
+        } else {
+            Ok(res.pipe_image_view(read_write, self.pipe_image_host_access()))
         }
     }
 }
@@ -1265,7 +2000,7 @@ pub struct Sampler {
     pub normalized_coords: bool,
     pub addressing_mode: cl_addressing_mode,
     pub filter_mode: cl_filter_mode,
-    pub props: Option<Properties<cl_sampler_properties>>,
+    pub props: Properties<cl_sampler_properties>,
 }
 
 impl_cl_type_trait!(cl_sampler, Sampler, CL_INVALID_SAMPLER);
@@ -1276,10 +2011,10 @@ impl Sampler {
         normalized_coords: bool,
         addressing_mode: cl_addressing_mode,
         filter_mode: cl_filter_mode,
-        props: Option<Properties<cl_sampler_properties>>,
+        props: Properties<cl_sampler_properties>,
     ) -> Arc<Sampler> {
         Arc::new(Self {
-            base: CLObjectBase::new(),
+            base: CLObjectBase::new(RusticlTypes::Sampler),
             context: context,
             normalized_coords: normalized_coords,
             addressing_mode: addressing_mode,

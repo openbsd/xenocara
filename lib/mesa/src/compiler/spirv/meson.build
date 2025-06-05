@@ -1,22 +1,5 @@
 # Copyright © 2017 Intel Corporation
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 vtn_gather_types_c = custom_target(
   'vtn_gather_types.c',
@@ -25,12 +8,14 @@ vtn_gather_types_c = custom_target(
   command : [prog_python, '@INPUT0@', '@INPUT1@', '@OUTPUT@'],
 )
 
-spirv_info_c = custom_target(
-  'spirv_info.c',
-  input : files('spirv_info_c.py', 'spirv.core.grammar.json'),
-  output : 'spirv_info.c',
-  command : [prog_python, '@INPUT0@', '@INPUT1@', '@OUTPUT@'],
+spirv_info = custom_target(
+  'spirv_info',
+  input : files('spirv_info_gen.py', 'spirv.core.grammar.json'),
+  output : ['spirv_info.h', 'spirv_info.c'],
+  command : [prog_python, '@INPUT0@', '--json', '@INPUT1@',
+             '--out-h', '@OUTPUT0@', '--out-c', '@OUTPUT1@'],
 )
+spirv_info_h = spirv_info[0]
 
 vtn_generator_ids_h = custom_target(
   'vtn_generator_ids.h',
@@ -46,12 +31,12 @@ files_libvtn = files(
   'gl_spirv.c',
   'nir_spirv.h',
   'spirv.h',
-  'spirv_info.h',
   'spirv_to_nir.c',
   'vtn_alu.c',
   'vtn_amd.c',
   'vtn_cfg.c',
   'vtn_cmat.c',
+  'vtn_debug.c',
   'vtn_glsl450.c',
   'vtn_opencl.c',
   'vtn_private.h',
@@ -63,19 +48,19 @@ files_libvtn = files(
 libvtn = static_library(
   'vtn',
   [files_libvtn,
-   spirv_info_c,
+   spirv_info,
    vtn_gather_types_c,
    vtn_generator_ids_h,
   ],
   include_directories : [inc_include, inc_src, inc_mapi, inc_mesa],
   c_args : [c_msvc_compat_args, no_override_init_args],
   gnu_symbol_visibility : 'hidden',
-  dependencies : [idep_nir, dep_valgrind],
+  dependencies : [dep_spirv_tools, idep_nir, dep_valgrind],
   build_by_default : false,
 )
 
 idep_vtn = declare_dependency(
-  dependencies : [idep_nir, idep_mesautil],
+  dependencies : [dep_spirv_tools, idep_nir, idep_mesautil],
   link_with : libvtn,
 )
 
@@ -85,12 +70,31 @@ spirv2nir = executable(
    vtn_generator_ids_h,
   ],
   dependencies : [dep_m, idep_vtn, idep_mesautil],
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa],
+  include_directories : [inc_include, inc_src],
   c_args : [c_msvc_compat_args, no_override_init_args],
   gnu_symbol_visibility : 'hidden',
   build_by_default : with_tools.contains('nir'),
   install : with_tools.contains('nir'),
 )
+
+if get_option('mesa-clc') != 'system' and (with_gallium_asahi or \
+                                           with_asahi_vk or \
+                                           with_intel_vk or \
+                                           with_gallium_iris or \
+                                           get_option('install-mesa-clc'))
+   prog_vtn_bindgen = executable(
+     'vtn_bindgen',
+     ['vtn_bindgen.c'],
+     include_directories : [inc_include, inc_src],
+     c_args : [c_msvc_compat_args, no_override_init_args],
+     dependencies : [idep_vtn, idep_mesautil],
+     # If we can run host binaries directly, just build vtn_bindgen for the host.
+     # Most commonly this happens when doing a cross compile from an x86_64 build
+     # machine to an x86 host
+     native : not meson.can_run_host_binaries(),
+     install : get_option('install-mesa-clc'),
+   )
+endif
 
 if with_tests
   test(
@@ -105,7 +109,7 @@ if with_tests
       ),
       c_args : [c_msvc_compat_args, no_override_init_args],
       gnu_symbol_visibility : 'hidden',
-      include_directories : [inc_include, inc_src, inc_mapi, inc_mesa],
+      include_directories : [inc_include, inc_src],
       dependencies : [idep_vtn, dep_thread, idep_gtest, idep_nir, idep_mesautil],
     ),
     suite : ['compiler', 'spirv'],

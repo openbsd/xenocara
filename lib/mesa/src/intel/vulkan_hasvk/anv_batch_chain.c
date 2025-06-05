@@ -32,7 +32,9 @@
 #include "anv_private.h"
 #include "anv_measure.h"
 
-#include "genxml/gen8_pack.h"
+#include "common/intel_debug_identifier.h"
+
+#include "genxml/gen80_pack.h"
 #include "genxml/genX_bits.h"
 #include "perf/intel_perf.h"
 
@@ -2152,8 +2154,7 @@ anv_queue_exec_locked(struct anv_queue *queue,
    if (result != VK_SUCCESS)
       goto error;
 
-   const bool has_perf_query =
-      perf_query_pool && perf_query_pass >= 0 && cmd_buffer_count;
+   const bool has_perf_query = perf_query_pool && cmd_buffer_count;
 
    if (INTEL_DEBUG(DEBUG_SUBMIT)) {
       fprintf(stderr, "Batch offset=0x%x len=0x%x on queue 0\n",
@@ -2220,8 +2221,12 @@ anv_queue_exec_locked(struct anv_queue *queue,
       if (!INTEL_DEBUG(DEBUG_NO_OACONFIG) &&
           (query_info->kind == INTEL_PERF_QUERY_TYPE_OA ||
            query_info->kind == INTEL_PERF_QUERY_TYPE_RAW)) {
-         int ret = intel_ioctl(device->perf_fd, I915_PERF_IOCTL_CONFIG,
-                               (void *)(uintptr_t) query_info->oa_metrics_set_id);
+         int ret = intel_perf_stream_set_metrics_id(device->physical->perf,
+                                                    device->fd,
+                                                    device->perf_fd,
+                                                    -1,/* this parameter, exec_queue is not used in i915 */
+                                                    query_info->oa_metrics_set_id,
+                                                    NULL);
          if (ret < 0) {
             result = vk_device_set_lost(&device->vk,
                                         "i915-perf config failed: %s",

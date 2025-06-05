@@ -46,11 +46,7 @@ lower_patch_vertices_in_instr(nir_builder *b, nir_intrinsic_instr *load,
 
    nir_def_rewrite_uses(
       &load->def,
-      nir_load_push_constant(
-         b, 1, 32,
-         nir_imm_int(b, 0),
-         .base = offsetof(struct anv_push_constants, gfx.tcs_input_vertices),
-         .range = sizeof_field(struct anv_push_constants, gfx.tcs_input_vertices)));
+      anv_load_driver_uniform(b, 1, gfx.tcs_input_vertices));
    nir_instr_remove(&load->instr);
 
    return true;
@@ -60,7 +56,6 @@ bool
 anv_nir_lower_load_patch_vertices_in(nir_shader *shader)
 {
    return nir_shader_intrinsics_pass(shader, lower_patch_vertices_in_instr,
-                                       nir_metadata_block_index |
-                                       nir_metadata_dominance,
+                                       nir_metadata_control_flow,
                                        NULL);
 }

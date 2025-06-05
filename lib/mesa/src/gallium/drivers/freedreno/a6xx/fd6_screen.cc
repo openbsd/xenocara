@@ -1,25 +1,7 @@
 /*
- * Copyright (C) 2016 Rob Clark <robclark@freedesktop.org>
+ * Copyright © 2016 Rob Clark <robclark@freedesktop.org>
  * Copyright © 2018 Google, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -82,7 +64,7 @@ fd6_screen_is_format_supported(struct pipe_screen *pscreen,
    }
 
    bool has_color = fd6_color_format(format, TILE6_LINEAR) != FMT6_NONE;
-   bool has_tex = fd6_texture_format(format, TILE6_LINEAR) != FMT6_NONE;
+   bool has_tex = fd6_texture_format(format, TILE6_LINEAR, false) != FMT6_NONE;
 
    if ((usage & (PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_SHADER_IMAGE)) &&
        has_tex &&
@@ -92,7 +74,14 @@ fd6_screen_is_format_supported(struct pipe_screen *pscreen,
    }
 
    if (usage & PIPE_BIND_SHADER_IMAGE) {
-      if (sample_count > 1)
+      if (sample_count > 0)
+         return false;
+
+      /* So, this only matters for image writes but 'usage' doesn't
+       * differentiate.  See f1c1b96
+       */
+      const struct util_format_description *desc = util_format_description(format);
+      if ((desc->nr_channels > 2) && (desc->block.bits == 16))
          return false;
    }
 
@@ -151,7 +140,7 @@ static const enum pc_di_primtype primtypes[] = {
    [MESA_PRIM_TRIANGLES_ADJACENCY]         = DI_PT_TRI_ADJ,
    [MESA_PRIM_TRIANGLE_STRIP_ADJACENCY]    = DI_PT_TRISTRIP_ADJ,
    [MESA_PRIM_PATCHES]                     = DI_PT_PATCHES0,
-   [MESA_PRIM_COUNT]                         = DI_PT_RECTLIST,  /* internal clear blits */
+   [MESA_PRIM_COUNT]                       = DI_PT_RECTLIST,  /* internal clear blits */
 };
 /* clang-format on */
 
@@ -163,13 +152,33 @@ fd6_screen_init(struct pipe_screen *pscreen)
    screen->max_rts = A6XX_MAX_RENDER_TARGETS;
 
    uint32_t depth_cache_size =
-      screen->info->num_ccu * screen->info->a6xx.sysmem_per_ccu_cache_size;
+      screen->info->num_ccu * screen->info->a6xx.sysmem_per_ccu_depth_cache_size;
    uint32_t color_cache_size =
-      (screen->info->num_ccu * screen->info->a6xx.sysmem_per_ccu_cache_size) /
+      (screen->info->num_ccu * screen->info->a6xx.sysmem_per_ccu_color_cache_size);
+   uint32_t color_cache_size_gmem =
+      color_cache_size /
       (1 << screen->info->a6xx.gmem_ccu_color_cache_fraction);
 
-   screen->ccu_offset_bypass = depth_cache_size;
-   screen->ccu_offset_gmem = screen->gmemsize_bytes - color_cache_size;
+   struct fd6_gmem_config *gmem = &screen->config_gmem;
+   struct fd6_gmem_config *sysmem = &screen->config_sysmem;
+
+   sysmem->depth_ccu_offset = 0;
+   sysmem->color_ccu_offset = sysmem->depth_ccu_offset + depth_cache_size;
+
+   if (screen->info->a7xx.has_gmem_vpc_attr_buf) {
+      sysmem->vpc_attr_buf_size = screen->info->a7xx.sysmem_vpc_attr_buf_size;
+      sysmem->vpc_attr_buf_offset = sysmem->color_ccu_offset + color_cache_size;
+
+      gmem->vpc_attr_buf_size = screen->info->a7xx.gmem_vpc_attr_buf_size;
+      gmem->vpc_attr_buf_offset = screen->gmemsize_bytes -
+         (gmem->vpc_attr_buf_size * screen->info->num_ccu);
+
+      gmem->color_ccu_offset = gmem->vpc_attr_buf_offset - color_cache_size_gmem;
+      screen->gmemsize_bytes = gmem->vpc_attr_buf_offset;
+   } else {
+      gmem->depth_ccu_offset = 0;
+      gmem->color_ccu_offset = screen->gmemsize_bytes - color_cache_size_gmem;
+   }
 
    /* Currently only FB_READ forces GMEM path, mostly because we'd have to
     * deal with cmdstream patching otherwise..
@@ -179,16 +188,12 @@ fd6_screen_init(struct pipe_screen *pscreen)
          FD_GMEM_DEPTH_ENABLED | FD_GMEM_STENCIL_ENABLED |
          FD_GMEM_BLEND_ENABLED | FD_GMEM_LOGICOP_ENABLED);
 
-   if (screen->gen == 7) {
-      pscreen->context_create = fd6_context_create<A7XX>;
-   } else {
-      pscreen->context_create = fd6_context_create<A6XX>;
-   }
+   pscreen->context_create = FD_CALLX(screen->info, fd6_context_create);
    pscreen->is_format_supported = fd6_screen_is_format_supported;
 
    screen->tile_mode = fd6_tile_mode;
 
-   fd6_resource_screen_init(pscreen);
+   FD_CALLX(screen->info, fd6_resource_screen_init)(pscreen);
    fd6_emit_init_screen(pscreen);
    ir3_screen_init(pscreen);
 

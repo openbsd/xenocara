@@ -1,9 +1,7 @@
-
-/* FF is big and ugly so feel free to write lines as long as you like.
- * Aieeeeeeeee !
- *
- * Let me make that clearer:
- * Aieeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ! !! !!!
+/*
+ * Copyright 2011 Joakim Sindholt <opensource@zhasha.com>
+ * Copyright Axel Davy <davyaxel0@gmail.com>
+ * SPDX-License-Identifier: MIT
  */
 
 #include "device9.h"
@@ -21,7 +19,7 @@
 #include "tgsi/tgsi_ureg.h"
 #include "tgsi/tgsi_dump.h"
 #include "util/bitscan.h"
-#include "util/u_box.h"
+#include "util/box.h"
 #include "util/u_hash_table.h"
 #include "util/u_upload_mgr.h"
 
@@ -306,7 +304,7 @@ struct vs_build_ctx
 static inline unsigned
 get_texcoord_sn(struct pipe_screen *screen)
 {
-    if (screen->get_param(screen, PIPE_CAP_TGSI_TEXCOORD))
+    if (screen->caps.tgsi_texcoord)
         return TGSI_SEMANTIC_TEXCOORD;
     return TGSI_SEMANTIC_GENERIC;
 }
@@ -821,7 +819,7 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
 
         const unsigned loop_label = l++;
 
-        /* Declare all light constants to allow indirect adressing */
+        /* Declare all light constants to allow indirect addressing */
         for (i = 32; i < 96; i++)
             ureg_DECL_constant(ureg, i);
 
@@ -1554,8 +1552,7 @@ nine_ff_build_ps(struct NineDevice9 *device, struct nine_ff_ps_key *key)
     if (key->fog_mode) {
         struct ureg_dst rFog = ureg_writemask(ps.rTmp, TGSI_WRITEMASK_X);
         struct ureg_src vPos;
-        if (device->screen->get_param(device->screen,
-                                      PIPE_CAP_FS_POSITION_IS_SYSVAL)) {
+        if (device->screen->caps.fs_position_is_sysval) {
             vPos = ureg_DECL_system_value(ureg, TGSI_SEMANTIC_POSITION, 0);
         } else {
             vPos = ureg_DECL_fs_input(ureg, TGSI_SEMANTIC_POSITION, 0,
@@ -1953,7 +1950,7 @@ nine_ff_load_lights(struct NineDevice9 *device)
         dst[19].z = dst[25].z * mtl->Ambient.b + mtl->Emissive.b;
     }
 
-    if (!(context->changed.group & NINE_STATE_FF_LIGHTING))
+    if (!(context->changed.group & NINE_STATE_FF_LIGHTING) && !IS_D3DTS_DIRTY(context, VIEW))
         return;
 
     for (l = 0; l < context->ff.num_lights_active; ++l) {
@@ -2530,7 +2527,7 @@ nine_d3d_matrix_inverse(D3DMATRIX *D, const D3DMATRIX *M)
     for (k = 0; k < 4; k++)
         D->m[i][k] *= det;
 
-#if defined(DEBUG) || !defined(NDEBUG)
+#if MESA_DEBUG || !defined(NDEBUG)
     {
         D3DMATRIX I;
 

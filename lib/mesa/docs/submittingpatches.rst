@@ -35,7 +35,7 @@ Patch formatting
 
       mesa: Add support for querying GL_VERTEX_ATTRIB_ARRAY_LONG
 
-      gallium: add PIPE_CAP_DEVICE_RESET_STATUS_QUERY
+      gallium: add pipe_caps.device_reset_status_query
 
       i965: Fix missing type in local variable declaration.
 
@@ -136,10 +136,12 @@ following example::
 
     Backport-to: 21.0
 
-Multiple ``Backport-to:`` lines are allowed.
+This will backport the commit to the 21.0 branch, as well as any more recent
+stable branch. Multiple ``Backport-to:`` lines are allowed, but only the
+lowest number mentioned actually matters, so for clarity, please only use one.
 
 The last option is deprecated and mostly here for historical reasons
-dating back to when patch submision was done via emails: using a ``Cc:``
+dating back to when patch submission was done via emails: using a ``Cc:``
 tag. Support for this tag will be removed at some point.
 Here are some examples of such a note::
 
@@ -174,7 +176,7 @@ to test this is to make use of the \`git rebase\` command, to run your
 tests on each commit. Assuming your branch is based off
 ``origin/main``, you can run:
 
-.. code-block:: console
+.. code-block:: sh
 
    $ git rebase --interactive --exec "meson test -C build/" origin/main
 
@@ -393,7 +395,7 @@ For patches that either need to be nominated after they've landed in
 main, or that are known ahead of time to not not apply cleanly to a
 stable branch (such as due to a rename), using a GitLab MR is most
 appropriate. The MR should be based on and target the
-``staging/**year.quarter**`` branch, not on the ``year.quarter`` branch,
+``staging/year.quarter`` branch, not on the ``year.quarter`` branch,
 per the stable branch policy. Assigning the MR to release maintainer for
 said branch or mentioning them is helpful, but not required.
 
@@ -408,6 +410,15 @@ Documentation patches
 
 Our documentation is written as `reStructuredText`_ files in the
 :file:`docs` folder, and built using `Sphinx`_.
+
+.. code-block:: sh
+
+   # Install dependencies (adapt for your distro)
+   apk add coreutils graphviz py3-clang clang-dev musl-dev linux-headers
+   pip3 install sphinx===5.1.1 mako===1.2.3 hawkmoth===0.16.0
+
+   # Build docs
+   sphinx-build -W -b html docs docs-html/
 
 The preferred language of the documentation is US English. This
 doesn't mean that everyone is expected to pay close attention to
@@ -424,7 +435,7 @@ Git tips
 -  ``git rebase -i ...`` is your friend. Don't be afraid to use it.
 -  Apply a fixup to commit FOO.
 
-   .. code-block:: console
+   .. code-block:: sh
 
       git add ...
       git commit --fixup=FOO
@@ -432,6 +443,6 @@ Git tips
 
 -  Test for build breakage between patches e.g last 8 commits.
 
-   .. code-block:: console
+   .. code-block:: sh
 
       git rebase -i --exec="ninja -C build/" HEAD~8

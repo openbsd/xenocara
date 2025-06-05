@@ -1,22 +1,5 @@
 # Copyright © 2017 Intel Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 nir_depends = files('nir_opcodes.py', 'nir_intrinsics.py')
 
@@ -62,8 +45,7 @@ nir_opt_algebraic_c = custom_target(
   'nir_opt_algebraic.c',
   input : 'nir_opt_algebraic.py',
   output : 'nir_opt_algebraic.c',
-  command : [prog_python, '@INPUT@'],
-  capture : true,
+  command : [prog_python, '@INPUT@', '--out', '@OUTPUT@'],
   depend_files : nir_algebraic_depends,
 )
 
@@ -111,10 +93,13 @@ files_libnir = files(
   'nir_deref.h',
   'nir_divergence_analysis.c',
   'nir_dominance.c',
+  'nir_fixup_is_exported.c',
+  'nir_format_convert.c',
   'nir_format_convert.h',
   'nir_from_ssa.c',
   'nir_functions.c',
   'nir_gather_info.c',
+  'nir_gather_tcs_info.c',
   'nir_gather_types.c',
   'nir_gather_xfb_info.c',
   'nir_group_loads.c',
@@ -139,6 +124,7 @@ files_libnir = files(
   'nir_lower_bool_to_bitsize.c',
   'nir_lower_bool_to_float.c',
   'nir_lower_bool_to_int32.c',
+  'nir_lower_calls_to_builtins.c',
   'nir_lower_cl_images.c',
   'nir_lower_clamp_color_outputs.c',
   'nir_lower_clip.c',
@@ -150,7 +136,6 @@ files_libnir = files(
   'nir_lower_convert_alu_types.c',
   'nir_lower_variable_initializers.c',
   'nir_lower_discard_if.c',
-  'nir_lower_discard_or_demote.c',
   'nir_lower_double_ops.c',
   'nir_lower_drawpixels.c',
   'nir_lower_fb_read.c',
@@ -203,12 +188,14 @@ files_libnir = files(
   'nir_lower_robust_access.c',
   'nir_lower_samplers.c',
   'nir_lower_scratch.c',
+  'nir_lower_scratch_to_var.c',
   'nir_lower_shader_calls.c',
   'nir_lower_single_sampled.c',
   'nir_lower_ssbo.c',
   'nir_lower_subgroups.c',
   'nir_lower_system_values.c',
   'nir_lower_task_shader.c',
+  'nir_lower_terminate_to_demote.c',
   'nir_lower_tess_coord_z.c',
   'nir_lower_tex_shadow.c',
   'nir_lower_tex.c',
@@ -220,6 +207,7 @@ files_libnir = files(
   'nir_lower_var_copies.c',
   'nir_lower_vec_to_regs.c',
   'nir_lower_vec3_to_vec4.c',
+  'nir_lower_view_index_to_device_index.c',
   'nir_lower_viewport_transform.c',
   'nir_lower_wpos_center.c',
   'nir_lower_wpos_ytransform.c',
@@ -230,10 +218,13 @@ files_libnir = files(
   'nir_lower_sysvals_to_varyings.c',
   'nir_metadata.c',
   'nir_mod_analysis.c',
+  'nir_move_output_stores_to_end.c',
   'nir_move_vec_src_uses_to_dest.c',
   'nir_normalize_cubemap_coords.c',
   'nir_opt_access.c',
   'nir_opt_barriers.c',
+  'nir_opt_call.c',
+  'nir_opt_clip_cull_const.c',
   'nir_opt_combine_stores.c',
   'nir_opt_comparison_pre.c',
   'nir_opt_conditional_discard.c',
@@ -245,17 +236,22 @@ files_libnir = files(
   'nir_opt_dead_cf.c',
   'nir_opt_dead_write_vars.c',
   'nir_opt_find_array_copies.c',
+  'nir_opt_frag_coord_to_pixel_coord.c',
   'nir_opt_fragdepth.c',
   'nir_opt_gcm.c',
+  'nir_opt_generate_bfi.c',
   'nir_opt_idiv_const.c',
   'nir_opt_if.c',
   'nir_opt_intrinsics.c',
   'nir_opt_large_constants.c',
+  'nir_opt_licm.c',
   'nir_opt_load_store_vectorize.c',
+  'nir_opt_loop.c',
   'nir_opt_loop_unroll.c',
   'nir_opt_memcpy.c',
   'nir_opt_move.c',
   'nir_opt_move_discards_to_top.c',
+  'nir_opt_mqsad.c',
   'nir_opt_non_uniform_access.c',
   'nir_opt_offsets.c',
   'nir_opt_peephole_select.c',
@@ -265,14 +261,15 @@ files_libnir = files(
   'nir_opt_reassociate_bfi.c',
   'nir_opt_rematerialize_compares.c',
   'nir_opt_remove_phis.c',
-  'nir_opt_reuse_constants.c',
   'nir_opt_shrink_stores.c',
   'nir_opt_shrink_vectors.c',
   'nir_opt_sink.c',
-  'nir_opt_trivial_continues.c',
   'nir_opt_undef.c',
   'nir_opt_uniform_atomics.c',
+  'nir_opt_uniform_subgroup.c',
+  'nir_opt_varyings.c',
   'nir_opt_vectorize.c',
+  'nir_opt_vectorize_io.c',
   'nir_passthrough_gs.c',
   'nir_passthrough_tcs.c',
   'nir_phi_builder.c',
@@ -299,22 +296,34 @@ files_libnir = files(
   'nir_sweep.c',
   'nir_to_lcssa.c',
   'nir_trivialize_registers.c',
+  'nir_use_dominance.c',
   'nir_validate.c',
   'nir_vla.h',
   'nir_worklist.c',
   'nir_worklist.h',
   'nir_xfb_info.h',
+  'nir_lower_atomics.c'
 )
+
+# When a file is too large, -Wmisleading-indentation will give a note about
+# not being able to process it, however that is not suppressable by a #pragma
+# in GCC.  This happens with the generated code in nir_opt_algebraic.c.
+#
+# As a workaround, drop the warning for GCC.  Clang builds should cover this.
+no_misleading_indentation = []
+if cc.get_id() == 'gcc'
+  no_misleading_indentation += cc.get_supported_arguments('-Wno-misleading-indentation')
+endif
 
 _libnir = static_library(
   'nir',
   [files_libnir, nir_opt_algebraic_c, nir_opcodes_c,
    nir_opcodes_h, nir_constant_expressions_c, nir_builder_opcodes_h,
    nir_intrinsics_c, nir_intrinsics_h, nir_intrinsics_indices_h],
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
-  c_args : [c_msvc_compat_args, no_override_init_args],
+  include_directories : [inc_include, inc_src],
+  c_args : [c_msvc_compat_args, no_override_init_args, no_misleading_indentation],
   gnu_symbol_visibility : 'hidden',
-  dependencies : [idep_compiler, dep_valgrind],
+  dependencies : [idep_compiler, dep_valgrind, idep_mesautil],
   build_by_default : false,
 )
 
@@ -323,8 +332,8 @@ inc_nir = include_directories('.')
 # Headers-only dependency
 idep_nir_headers = declare_dependency(
   sources : [nir_opcodes_h, nir_builder_opcodes_h, nir_intrinsics_h, nir_intrinsics_indices_h,
-             ir_expression_operation_h, builtin_types_h, builtin_types_cpp_h],
-  include_directories : [inc_nir, inc_compiler],
+             ir_expression_operation_h, builtin_types_h],
+  include_directories : [inc_nir, inc_compiler, inc_src, inc_include],
 )
 
 # Also link with nir
@@ -340,6 +349,11 @@ if with_tests
     msvc_designated_initializer = 'cpp_std=c++20'
   endif
 
+  msvc_bigobj = []
+  if cc.get_id() == 'msvc'
+    msvc_bigobj = '/bigobj'
+  endif
+
   test(
     'nir_tests',
     executable(
@@ -351,6 +365,7 @@ if with_tests
         'tests/control_flow_tests.cpp',
         'tests/core_tests.cpp',
         'tests/dce_tests.cpp',
+        'tests/format_convert_tests.cpp',
         'tests/load_store_vectorizer_tests.cpp',
         'tests/loop_analyze_tests.cpp',
         'tests/loop_unroll_tests.cpp',
@@ -358,15 +373,25 @@ if with_tests
         'tests/mod_analysis_tests.cpp',
         'tests/negative_equal_tests.cpp',
         'tests/opt_if_tests.cpp',
+        'tests/opt_loop_tests.cpp',
+        'tests/opt_peephole_select.cpp',
         'tests/opt_shrink_vectors_tests.cpp',
+        'tests/opt_varyings_tests_bicm_binary_alu.cpp',
+        'tests/opt_varyings_tests_dead_input.cpp',
+        'tests/opt_varyings_tests_dead_output.cpp',
+        'tests/opt_varyings_tests_dedup.cpp',
+        'tests/opt_varyings_tests_prop_const.cpp',
+        'tests/opt_varyings_tests_prop_ubo.cpp',
+        'tests/opt_varyings_tests_prop_uniform.cpp',
+        'tests/opt_varyings_tests_prop_uniform_expr.cpp',
         'tests/serialize_tests.cpp',
         'tests/range_analysis_tests.cpp',
         'tests/vars_tests.cpp',
       ),
-      cpp_args : [cpp_msvc_compat_args],
+      cpp_args : [cpp_msvc_compat_args, msvc_bigobj],
       override_options: [msvc_designated_initializer],
       gnu_symbol_visibility : 'hidden',
-      include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+      include_directories : [inc_include, inc_src],
       dependencies : [dep_thread, idep_gtest, idep_nir, idep_mesautil],
     ),
     suite : ['compiler', 'nir'],

@@ -37,8 +37,8 @@
 
 /* XXX comment these out to really use kernel uapi */
 #define SIMULATE_BO_SIZE_FIX 1
-#define SIMULATE_SYNCOBJ 1
-#define SIMULATE_SUBMIT 1
+#define SIMULATE_SYNCOBJ     1
+#define SIMULATE_SUBMIT      1
 
 #define VIRTGPU_PCI_VENDOR_ID 0x1af4
 #define VIRTGPU_PCI_DEVICE_ID 0x1050
@@ -114,6 +114,8 @@ struct virtgpu {
    mtx_t dma_buf_import_mutex;
 
    struct vn_renderer_shmem_cache shmem_cache;
+
+   bool supports_cross_device;
 };
 
 #ifdef SIMULATE_SYNCOBJ
@@ -161,10 +163,7 @@ sim_syncobj_create(struct virtgpu *gpu, bool signaled)
       util_idalloc_init(&sim.ida, 32);
 
       struct drm_virtgpu_execbuffer args = {
-         .flags = VIRTGPU_EXECBUF_FENCE_FD_OUT |
-                  (gpu->base.info.supports_multiple_timelines
-                      ? VIRTGPU_EXECBUF_RING_IDX
-                      : 0),
+         .flags = VIRTGPU_EXECBUF_RING_IDX | VIRTGPU_EXECBUF_FENCE_FD_OUT,
          .ring_idx = 0, /* CPU ring */
       };
       int ret = drmIoctl(gpu->fd, DRM_IOCTL_VIRTGPU_EXECBUFFER, &args);
@@ -513,8 +512,6 @@ sim_submit_alloc_gem_handles(struct vn_renderer_bo *const *bos,
 static int
 sim_submit(struct virtgpu *gpu, const struct vn_renderer_submit *submit)
 {
-   const bool use_ring_idx = gpu->base.info.supports_multiple_timelines;
-
    /* TODO replace submit->bos by submit->gem_handles to avoid malloc/loop */
    uint32_t *gem_handles = NULL;
    if (submit->bo_count) {
@@ -531,13 +528,13 @@ sim_submit(struct virtgpu *gpu, const struct vn_renderer_submit *submit)
       const struct vn_renderer_submit_batch *batch = &submit->batches[i];
 
       struct drm_virtgpu_execbuffer args = {
-         .flags = (batch->sync_count ? VIRTGPU_EXECBUF_FENCE_FD_OUT : 0) |
-                  (use_ring_idx ? VIRTGPU_EXECBUF_RING_IDX : 0),
+         .flags = VIRTGPU_EXECBUF_RING_IDX |
+                  (batch->sync_count ? VIRTGPU_EXECBUF_FENCE_FD_OUT : 0),
          .size = batch->cs_size,
          .command = (uintptr_t)batch->cs_data,
          .bo_handles = (uintptr_t)gem_handles,
          .num_bo_handles = submit->bo_count,
-         .ring_idx = (use_ring_idx ? batch->ring_idx : 0),
+         .ring_idx = batch->ring_idx,
       };
 
       ret = drmIoctl(gpu->fd, DRM_IOCTL_VIRTGPU_EXECBUFFER, &args);
@@ -1114,10 +1111,15 @@ virtgpu_bo_destroy(struct vn_renderer *renderer, struct vn_renderer_bo *_bo)
 
    if (bo->base.mmap_ptr)
       munmap(bo->base.mmap_ptr, bo->base.mmap_size);
-   virtgpu_ioctl_gem_close(gpu, bo->gem_handle);
 
-   /* set gem_handle to 0 to indicate that the bo is invalid */
+   /* Set gem_handle to 0 to indicate that the bo is invalid. Must be set
+    * before closing gem handle. Otherwise the same gem handle can be reused
+    * by another newly created bo and unexpectedly gotten zero'ed out the
+    * tracked gem handle.
+    */
+   const uint32_t gem_handle = bo->gem_handle;
    bo->gem_handle = 0;
+   virtgpu_ioctl_gem_close(gpu, gem_handle);
 
    mtx_unlock(&gpu->dma_buf_import_mutex);
 
@@ -1125,7 +1127,8 @@ virtgpu_bo_destroy(struct vn_renderer *renderer, struct vn_renderer_bo *_bo)
 }
 
 static uint32_t
-virtgpu_bo_blob_flags(VkMemoryPropertyFlags flags,
+virtgpu_bo_blob_flags(struct virtgpu *gpu,
+                      VkMemoryPropertyFlags flags,
                       VkExternalMemoryHandleTypeFlags external_handles)
 {
    uint32_t blob_flags = 0;
@@ -1133,8 +1136,10 @@ virtgpu_bo_blob_flags(VkMemoryPropertyFlags flags,
       blob_flags |= VIRTGPU_BLOB_FLAG_USE_MAPPABLE;
    if (external_handles)
       blob_flags |= VIRTGPU_BLOB_FLAG_USE_SHAREABLE;
-   if (external_handles & VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT)
-      blob_flags |= VIRTGPU_BLOB_FLAG_USE_CROSS_DEVICE;
+   if (external_handles & VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT) {
+      if (gpu->supports_cross_device)
+         blob_flags |= VIRTGPU_BLOB_FLAG_USE_CROSS_DEVICE;
+   }
 
    return blob_flags;
 }
@@ -1173,7 +1178,7 @@ virtgpu_bo_create_from_dma_buf(struct vn_renderer *renderer,
       if (info.blob_mem != gpu->bo_blob_mem)
          goto fail;
 
-      blob_flags |= virtgpu_bo_blob_flags(flags, 0);
+      blob_flags |= virtgpu_bo_blob_flags(gpu, flags, 0);
 
       /* mmap_size is only used when mappable */
       mmap_size = 0;
@@ -1233,7 +1238,7 @@ virtgpu_bo_create_from_device_memory(
    struct vn_renderer_bo **out_bo)
 {
    struct virtgpu *gpu = (struct virtgpu *)renderer;
-   const uint32_t blob_flags = virtgpu_bo_blob_flags(flags, external_handles);
+   const uint32_t blob_flags = virtgpu_bo_blob_flags(gpu, flags, external_handles);
 
    uint32_t res_id;
    uint32_t gem_handle = virtgpu_ioctl_resource_create_blob(
@@ -1348,24 +1353,29 @@ virtgpu_init_renderer_info(struct virtgpu *gpu)
 {
    struct vn_renderer_info *info = &gpu->base.info;
 
-   info->drm.has_primary = gpu->has_primary;
-   info->drm.primary_major = gpu->primary_major;
-   info->drm.primary_minor = gpu->primary_minor;
-   info->drm.has_render = true;
-   info->drm.render_major = gpu->render_major;
-   info->drm.render_minor = gpu->render_minor;
+   info->drm.props = (VkPhysicalDeviceDrmPropertiesEXT){
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRM_PROPERTIES_EXT,
+      .hasPrimary = gpu->has_primary,
+      .hasRender = true,
+      .primaryMajor = gpu->primary_major,
+      .primaryMinor = gpu->primary_minor,
+      .renderMajor = gpu->render_major,
+      .renderMinor = gpu->render_minor,
+   };
 
    info->pci.vendor_id = VIRTGPU_PCI_VENDOR_ID;
    info->pci.device_id = VIRTGPU_PCI_DEVICE_ID;
 
    if (gpu->bustype == DRM_BUS_PCI) {
       info->pci.has_bus_info = true;
-      info->pci.domain = gpu->pci_bus_info.domain;
-      info->pci.bus = gpu->pci_bus_info.bus;
-      info->pci.device = gpu->pci_bus_info.dev;
-      info->pci.function = gpu->pci_bus_info.func;
-   } else {
-      info->pci.has_bus_info = false;
+      info->pci.props = (VkPhysicalDevicePCIBusInfoPropertiesEXT){
+         .sType =
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PCI_BUS_INFO_PROPERTIES_EXT,
+         .pciDomain = gpu->pci_bus_info.domain,
+         .pciBus = gpu->pci_bus_info.bus,
+         .pciDevice = gpu->pci_bus_info.dev,
+         .pciFunction = gpu->pci_bus_info.func,
+      };
    }
 
    info->has_dma_buf_import = true;
@@ -1381,7 +1391,7 @@ virtgpu_init_renderer_info(struct virtgpu *gpu)
       capset->vk_ext_command_serialization_spec_version;
    info->vk_mesa_venus_protocol_spec_version =
       capset->vk_mesa_venus_protocol_spec_version;
-   info->supports_blob_id_0 = capset->supports_blob_id_0;
+   assert(capset->supports_blob_id_0);
 
    /* ensure vk_extension_mask is large enough to hold all capset masks */
    STATIC_ASSERT(sizeof(info->vk_extension_mask) >=
@@ -1389,12 +1399,16 @@ virtgpu_init_renderer_info(struct virtgpu *gpu)
    memcpy(info->vk_extension_mask, capset->vk_extension_mask1,
           sizeof(capset->vk_extension_mask1));
 
-   info->allow_vk_wait_syncs = capset->allow_vk_wait_syncs;
+   assert(capset->allow_vk_wait_syncs);
 
-   info->supports_multiple_timelines = capset->supports_multiple_timelines;
+   assert(capset->supports_multiple_timelines);
    info->max_timeline_count = gpu->max_timeline_count;
 
    if (gpu->bo_blob_mem == VIRTGPU_BLOB_MEM_GUEST_VRAM)
+      info->has_guest_vram = true;
+
+   /* Use guest blob allocations from dedicated heap (Host visible memory) */
+   if (gpu->bo_blob_mem == VIRTGPU_BLOB_MEM_HOST3D && capset->use_guest_vram)
       info->has_guest_vram = true;
 }
 
@@ -1476,6 +1490,14 @@ virtgpu_init_capset(struct virtgpu *gpu)
       return VK_ERROR_INITIALIZATION_FAILED;
    }
 
+   if (gpu->capset.data.wire_format_version == 0) {
+      if (VN_DEBUG(INIT)) {
+         vn_log(gpu->instance, "Unsupported wire format version %u",
+                gpu->capset.data.wire_format_version);
+      }
+      return VK_ERROR_INITIALIZATION_FAILED;
+   }
+
    return VK_SUCCESS;
 }
 
@@ -1484,8 +1506,7 @@ virtgpu_init_params(struct virtgpu *gpu)
 {
    const uint64_t required_params[] = {
       VIRTGPU_PARAM_3D_FEATURES,   VIRTGPU_PARAM_CAPSET_QUERY_FIX,
-      VIRTGPU_PARAM_RESOURCE_BLOB, VIRTGPU_PARAM_CROSS_DEVICE,
-      VIRTGPU_PARAM_CONTEXT_INIT,
+      VIRTGPU_PARAM_RESOURCE_BLOB, VIRTGPU_PARAM_CONTEXT_INIT,
    };
    uint64_t val;
    for (uint32_t i = 0; i < ARRAY_SIZE(required_params); i++) {
@@ -1515,6 +1536,14 @@ virtgpu_init_params(struct virtgpu *gpu)
              (int)VIRTGPU_PARAM_HOST_VISIBLE, (int)VIRTGPU_PARAM_GUEST_VRAM);
       return VK_ERROR_INITIALIZATION_FAILED;
    }
+
+   /* Cross-device feature is optional.  It enables sharing dma-bufs
+    * with other virtio devices, like virtio-wl or virtio-video used
+    * by ChromeOS VMs.  Qemu doesn't support cross-device sharing.
+    */
+   val = virtgpu_ioctl_getparam(gpu, VIRTGPU_PARAM_CROSS_DEVICE);
+   if (val)
+      gpu->supports_cross_device = true;
 
    /* implied by CONTEXT_INIT uapi */
    gpu->max_timeline_count = 64;

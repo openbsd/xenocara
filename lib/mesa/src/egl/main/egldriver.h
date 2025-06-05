@@ -73,6 +73,7 @@ struct wl_display;
 struct mesa_glinterop_device_info;
 struct mesa_glinterop_export_in;
 struct mesa_glinterop_export_out;
+struct mesa_glinterop_flush_out;
 typedef struct __GLsync *GLsync;
 
 /**
@@ -208,7 +209,7 @@ struct _egl_driver {
    int (*GLInteropFlushObjects)(_EGLDisplay *disp, _EGLContext *ctx,
                                 unsigned count,
                                 struct mesa_glinterop_export_in *in,
-                                GLsync *sync);
+                                struct mesa_glinterop_flush_out *out);
 
    /* for EGL_EXT_image_dma_buf_import_modifiers */
    EGLBoolean (*QueryDmaBufFormatsEXT)(_EGLDisplay *disp, EGLint max_formats,
@@ -223,6 +224,14 @@ struct _egl_driver {
    void (*SetBlobCacheFuncsANDROID)(_EGLDisplay *disp,
                                     EGLSetBlobFuncANDROID set,
                                     EGLGetBlobFuncANDROID get);
+
+   /* for EGL_EXT_surface_compression */
+   EGLBoolean (*QuerySupportedCompressionRatesEXT)(_EGLDisplay *disp,
+                                                   _EGLConfig *config,
+                                                   const EGLAttrib *attr_list,
+                                                   EGLint *rates,
+                                                   EGLint rate_size,
+                                                   EGLint *num_rates);
 };
 
 #ifdef __cplusplus

@@ -20,8 +20,9 @@
 #include <stdio.h>
 
 #include "ac_vcn_av1_default.h"
+#include "ac_debug.h"
 
-#define FB_BUFFER_OFFSET             0x1000
+#define FB_BUFFER_OFFSET             0x2000
 #define FB_BUFFER_SIZE               2048
 #define IT_SCALING_TABLE_SIZE        992
 #define VP9_PROBS_TABLE_SIZE         (RDECODE_VP9_PROBS_DATA_SIZE + 256)
@@ -33,6 +34,7 @@
 #define NUM_AV1_REFS   8
 #define NUM_AV1_REFS_PER_FRAME 7
 
+static enum pipe_format get_buffer_format(struct radeon_decoder *dec);
 static unsigned calc_dpb_size(struct radeon_decoder *dec);
 static unsigned calc_ctx_size_h264_perf(struct radeon_decoder *dec);
 static unsigned calc_ctx_size_h265_main(struct radeon_decoder *dec);
@@ -105,28 +107,12 @@ static rvcn_dec_message_avc_t get_h264_msg(struct radeon_decoder *dec,
    result.sps_info_flags |= ((dec->dpb_type == DPB_DYNAMIC_TIER_2) ? 0 : 1)
                               << RDECODE_SPS_INFO_H264_EXTENSION_SUPPORT_FLAG_SHIFT;
 
+   result.chroma_format = pic->pps->sps->chroma_format_idc;
    result.bit_depth_luma_minus8 = pic->pps->sps->bit_depth_luma_minus8;
    result.bit_depth_chroma_minus8 = pic->pps->sps->bit_depth_chroma_minus8;
    result.log2_max_frame_num_minus4 = pic->pps->sps->log2_max_frame_num_minus4;
    result.pic_order_cnt_type = pic->pps->sps->pic_order_cnt_type;
    result.log2_max_pic_order_cnt_lsb_minus4 = pic->pps->sps->log2_max_pic_order_cnt_lsb_minus4;
-
-   switch (dec->base.chroma_format) {
-   case PIPE_VIDEO_CHROMA_FORMAT_NONE:
-      break;
-   case PIPE_VIDEO_CHROMA_FORMAT_400:
-      result.chroma_format = 0;
-      break;
-   case PIPE_VIDEO_CHROMA_FORMAT_420:
-      result.chroma_format = 1;
-      break;
-   case PIPE_VIDEO_CHROMA_FORMAT_422:
-      result.chroma_format = 2;
-      break;
-   case PIPE_VIDEO_CHROMA_FORMAT_444:
-      result.chroma_format = 3;
-      break;
-   }
 
    result.pps_info_flags = 0;
    result.pps_info_flags |= pic->pps->transform_8x8_mode_flag << 0;
@@ -170,10 +156,10 @@ static rvcn_dec_message_avc_t get_h264_msg(struct radeon_decoder *dec,
    }
 
    for (i = 0; i < ARRAY_SIZE(dec->render_pic_list); i++) {
-      for (j = 0; (pic->ref[j] != NULL) && (j < ARRAY_SIZE(dec->render_pic_list)); j++) {
+      for (j = 0; (j < ARRAY_SIZE(pic->ref) && (pic->ref[j] != NULL)); j++) {
          if (dec->render_pic_list[i] == pic->ref[j])
             break;
-         if (j == ARRAY_SIZE(dec->render_pic_list) - 1)
+         if (j == ARRAY_SIZE(pic->ref) - 1)
             dec->render_pic_list[i] = NULL;
          else if (pic->ref[j + 1] == NULL)
             dec->render_pic_list[i] = NULL;
@@ -230,24 +216,21 @@ static rvcn_dec_message_avc_t get_h264_msg(struct radeon_decoder *dec,
                     || dec->h264_valid_poc_num[k] == result.field_order_cnt_list[i][1]))
                break;
          }
-      }
-      if (result.ref_frame_list[i] != 0xff && (j == ARRAY_SIZE(dec->h264_valid_ref_num))
-                                           && (k == ARRAY_SIZE(dec->h264_valid_poc_num))) {
-         result.non_existing_frame_flags |= 1 << i;
-         result.curr_pic_ref_frame_num--;
-         result.ref_frame_list[i] = 0xff;
+         if ((j == ARRAY_SIZE(dec->h264_valid_ref_num)) && (k == ARRAY_SIZE(dec->h264_valid_poc_num))) {
+            result.non_existing_frame_flags |= 1 << i;
+            result.curr_pic_ref_frame_num--;
+            result.ref_frame_list[i] = 0xff;
+         }
       }
    }
 
-   /* if reference picture exists, however no reference picture found at the end
-      curr_pic_ref_frame_num == 0, which is not reasonable, should be corrected. */
-   if (result.used_for_reference_flags && (result.curr_pic_ref_frame_num == 0)) {
-      for (i = 0; i < ARRAY_SIZE(result.ref_frame_list); i++) {
-         result.ref_frame_list[i] = pic->ref[i] ?
-                (uintptr_t)vl_video_buffer_get_associated_data(pic->ref[i], &dec->base) : 0xff;
-         if (result.ref_frame_list[i] != 0xff) {
+   /* need at least one reference for P/B frames */
+   if (result.curr_pic_ref_frame_num == 0 && pic->slice_parameter.slice_info_present) {
+      for (i = 0; i < pic->slice_count; i++) {
+         if (pic->slice_parameter.slice_type[i] % 5 != 2) {
             result.curr_pic_ref_frame_num++;
-            result.non_existing_frame_flags &= ~(1 << i);
+            result.ref_frame_list[0] = 0;
+            result.non_existing_frame_flags &= ~1;
             break;
          }
       }
@@ -279,7 +262,8 @@ static rvcn_dec_message_avc_t get_h264_msg(struct radeon_decoder *dec,
       dec->ref_codec.bts = CODEC_8_BITS;
       dec->ref_codec.index = result.decoded_pic_idx;
       dec->ref_codec.ref_size = 16;
-      memset(dec->ref_codec.ref_list, 0xff, sizeof(dec->ref_codec.ref_list));
+      dec->ref_codec.num_refs = result.curr_pic_ref_frame_num;
+      STATIC_ASSERT(sizeof(dec->ref_codec.ref_list) == sizeof(result.ref_frame_list));
       memcpy(dec->ref_codec.ref_list, result.ref_frame_list, sizeof(result.ref_frame_list));
    }
 
@@ -292,7 +276,7 @@ static rvcn_dec_message_hevc_t get_h265_msg(struct radeon_decoder *dec,
                                             struct pipe_h265_picture_desc *pic)
 {
    rvcn_dec_message_hevc_t result;
-   unsigned i, j;
+   unsigned i, j, num_refs = 0;
 
    memset(&result, 0, sizeof(result));
    result.sps_info_flags = 0;
@@ -307,12 +291,14 @@ static rvcn_dec_message_hevc_t get_h265_msg(struct radeon_decoder *dec,
    result.sps_info_flags |= pic->pps->sps->separate_colour_plane_flag << 8;
    if (((struct si_screen *)dec->screen)->info.family == CHIP_CARRIZO)
       result.sps_info_flags |= 1 << 9;
-   if (pic->UseRefPicList == true)
+   if (pic->UseRefPicList == true) {
       result.sps_info_flags |= 1 << 10;
+      result.sps_info_flags |= 1 << 12;
+   }
    if (pic->UseStRpsBits == true && pic->pps->st_rps_bits != 0) {
       result.sps_info_flags |= 1 << 11;
       result.st_rps_bits = pic->pps->st_rps_bits;
-  }
+   }
 
    result.chroma_format = pic->pps->sps->chroma_format_idc;
    result.bit_depth_luma_minus8 = pic->pps->sps->bit_depth_luma_minus8;
@@ -384,11 +370,11 @@ static rvcn_dec_message_hevc_t get_h265_msg(struct radeon_decoder *dec,
 
    for (i = 0; i < ARRAY_SIZE(dec->render_pic_list); i++) {
       for (j = 0;
-           (pic->ref[j] != NULL) && (j < ARRAY_SIZE(dec->render_pic_list));
+           (j < ARRAY_SIZE(pic->ref) && (pic->ref[j] != NULL));
            j++) {
          if (dec->render_pic_list[i] == pic->ref[j])
             break;
-         if (j == ARRAY_SIZE(dec->render_pic_list) - 1)
+         if (j == ARRAY_SIZE(pic->ref) - 1)
             dec->render_pic_list[i] = NULL;
          else if (pic->ref[j + 1] == NULL)
             dec->render_pic_list[i] = NULL;
@@ -411,9 +397,10 @@ static rvcn_dec_message_hevc_t get_h265_msg(struct radeon_decoder *dec,
 
       result.poc_list[i] = pic->PicOrderCntVal[i];
 
-      if (ref)
+      if (ref) {
          ref_pic = (uintptr_t)vl_video_buffer_get_associated_data(ref, &dec->base);
-      else
+         num_refs++;
+      } else
          ref_pic = 0x7F;
       result.ref_pic_list[i] = ref_pic;
    }
@@ -446,7 +433,7 @@ static rvcn_dec_message_hevc_t get_h265_msg(struct radeon_decoder *dec,
 
    for (i = 0; i < 2; i++) {
       for (j = 0; j < 15; j++)
-         result.direct_reflist[i][j] = pic->RefPicList[i][j];
+         result.direct_reflist[i][j] = pic->RefPicList[0][i][j];
    }
 
    if (pic->base.profile == PIPE_VIDEO_PROFILE_HEVC_MAIN_10) {
@@ -467,7 +454,8 @@ static rvcn_dec_message_hevc_t get_h265_msg(struct radeon_decoder *dec,
          CODEC_10_BITS : CODEC_8_BITS;
       dec->ref_codec.index = result.curr_idx;
       dec->ref_codec.ref_size = 15;
-      memset(dec->ref_codec.ref_list, 0x7f, sizeof(dec->ref_codec.ref_list));
+      dec->ref_codec.num_refs = num_refs;
+      STATIC_ASSERT(sizeof(dec->ref_codec.ref_list) == sizeof(result.ref_pic_list));
       memcpy(dec->ref_codec.ref_list, result.ref_pic_list, sizeof(result.ref_pic_list));
    }
    return result;
@@ -505,7 +493,7 @@ static rvcn_dec_message_vp9_t get_vp9_msg(struct radeon_decoder *dec,
                                           struct pipe_vp9_picture_desc *pic)
 {
    rvcn_dec_message_vp9_t result;
-   unsigned i ,j;
+   unsigned i, j, num_refs = 0;
 
    memset(&result, 0, sizeof(result));
 
@@ -533,7 +521,7 @@ static rvcn_dec_message_vp9_t get_vp9_msg(struct radeon_decoder *dec,
 
       prbs->seg.abs_delta = pic->picture_parameter.abs_delta;
    } else
-      memset(&prbs->seg, 0, 256);
+      memset(prbs->segment_data, 0, sizeof(prbs->segment_data));
 
    result.frame_header_flags = (pic->picture_parameter.pic_fields.frame_type
                                 << RDECODE_FRAME_HDR_INFO_VP9_FRAME_TYPE_SHIFT) &
@@ -639,9 +627,13 @@ static rvcn_dec_message_vp9_t get_vp9_msg(struct radeon_decoder *dec,
    get_current_pic_index(dec, target, &result.curr_pic_idx);
 
    for (i = 0; i < 8; i++) {
-      result.ref_frame_map[i] =
-         (pic->ref[i]) ? (uintptr_t)vl_video_buffer_get_associated_data(pic->ref[i], &dec->base)
-                       : 0x7f;
+      uintptr_t ref_frame;
+      if (pic->ref[i]) {
+         ref_frame = (uintptr_t)vl_video_buffer_get_associated_data(pic->ref[i], &dec->base);
+         num_refs++;
+      } else
+         ref_frame = 0x7f;
+      result.ref_frame_map[i] = ref_frame;
    }
 
    result.frame_refs[0] = result.ref_frame_map[pic->picture_parameter.pic_fields.last_ref_frame];
@@ -667,6 +659,7 @@ static rvcn_dec_message_vp9_t get_vp9_msg(struct radeon_decoder *dec,
          CODEC_10_BITS : CODEC_8_BITS;
       dec->ref_codec.index = result.curr_pic_idx;
       dec->ref_codec.ref_size = 8;
+      dec->ref_codec.num_refs = num_refs;
       memset(dec->ref_codec.ref_list, 0x7f, sizeof(dec->ref_codec.ref_list));
       memcpy(dec->ref_codec.ref_list, result.ref_frame_map, sizeof(result.ref_frame_map));
    }
@@ -675,6 +668,18 @@ static rvcn_dec_message_vp9_t get_vp9_msg(struct radeon_decoder *dec,
    dec->last_height = dec->base.height;
 
    return result;
+}
+
+static void get_h265_reflist(rvcn_dec_message_hevc_direct_ref_list_t *hevc_reflist,
+                             struct pipe_h265_picture_desc *pic)
+{
+   hevc_reflist->num_direct_reflist = pic->slice_parameter.slice_count;
+   for (int i = 0; i <hevc_reflist->num_direct_reflist; i++) {
+      for (int j = 0; j < 2; j++) {
+         for (int k = 0; k < 15; k++)
+            hevc_reflist->multi_direct_reflist[i][j][k] = pic->RefPicList[i][j][k];
+      }
+   }
 }
 
 static void set_drm_keys(rvcn_dec_message_drm_t *drm, DECRYPT_PARAMETERS *decrypted)
@@ -718,218 +723,6 @@ static void set_drm_keys(rvcn_dec_message_drm_t *drm, DECRYPT_PARAMETERS *decryp
    }
 }
 
-static int32_t rvcn_av1_film_grain_random_number(unsigned short *seed, int32_t bits)
-{
-   unsigned short bit;
-   unsigned short value = *seed;
-
-   bit = ((value >> 0) ^ (value >> 1) ^ (value >> 3) ^ (value >> 12)) & 1;
-   value = (value >> 1) | (bit << 15);
-   *seed = value;
-
-   return (value >> (16 - bits)) & ((1 << bits) - 1);
-}
-
-static void rvcn_av1_film_grain_init_scaling(uint8_t scaling_points[][2],
-                                             uint8_t num,
-                                             short scaling_lut[])
-{
-   int32_t i, x, delta_x, delta_y;
-   int64_t delta;
-
-   if (num == 0)
-      return;
-
-   for ( i = 0; i < scaling_points[0][0]; i++ )
-      scaling_lut[i] = scaling_points[0][1];
-
-   for ( i = 0; i < num - 1; i++ ) {
-      delta_y = scaling_points[i + 1][1] - scaling_points[i][1];
-      delta_x = scaling_points[i + 1][0] - scaling_points[i][0];
-
-      delta = delta_y * ((65536 + (delta_x >> 1)) / delta_x);
-
-      for ( x = 0; x < delta_x; x++ )
-         scaling_lut[scaling_points[i][0] + x] =
-            (short)(scaling_points[i][1] + (int32_t)((x * delta + 32768) >> 16));
-   }
-
-   for ( i = scaling_points[num - 1][0]; i < 256; i++ )
-      scaling_lut[i] = scaling_points[num - 1][1];
-}
-
-static void rvcn_av1_init_film_grain_buffer(rvcn_dec_film_grain_params_t *fg_params,
-                                            rvcn_dec_av1_fg_init_buf_t *fg_buf)
-{
-   const int32_t luma_block_size_y = 73;
-   const int32_t luma_block_size_x = 82;
-   const int32_t chroma_block_size_y = 38;
-   const int32_t chroma_block_size_x = 44;
-   const int32_t gauss_bits = 11;
-   int32_t filt_luma_grain_block[luma_block_size_y][luma_block_size_x];
-   int32_t filt_cb_grain_block[chroma_block_size_y][chroma_block_size_x];
-   int32_t filt_cr_grain_block[chroma_block_size_y][chroma_block_size_x];
-   int32_t chroma_subsamp_y = 1;
-   int32_t chroma_subsamp_x = 1;
-   unsigned short seed = fg_params->random_seed;
-   int32_t ar_coeff_lag = fg_params->ar_coeff_lag;
-   int32_t bit_depth = fg_params->bit_depth_minus_8 + 8;
-   short grain_center = 128 << (bit_depth - 8);
-   short grain_min = 0 - grain_center;
-   short grain_max = (256 << (bit_depth - 8)) - 1 - grain_center;
-   int32_t shift = 12 - bit_depth + fg_params->grain_scale_shift;
-   short luma_grain_block_tmp[64][80];
-   short cb_grain_block_tmp[32][40];
-   short cr_grain_block_tmp[32][40];
-   short *align_ptr, *align_ptr0, *align_ptr1;
-   int32_t x, y, g, i, j, c, c0, c1, delta_row, delta_col;
-   int32_t s, s0, s1, pos, r;
-
-   /* generate luma grain block */
-   memset(filt_luma_grain_block, 0, sizeof(filt_luma_grain_block));
-   for ( y = 0; y < luma_block_size_y; y++ ) {
-      for ( x = 0; x < luma_block_size_x; x++ ) {
-         g = 0;
-         if (fg_params->num_y_points > 0) {
-            r = rvcn_av1_film_grain_random_number(&seed, gauss_bits);
-            g = gaussian_sequence[CLAMP(r, 0, 2048 - 1)];
-         }
-         filt_luma_grain_block[y][x] = ROUND_POWER_OF_TWO(g, shift);
-      }
-   }
-
-   for ( y = 3; y < luma_block_size_y; y++ ) {
-      for ( x = 3; x < luma_block_size_x - 3; x++ ) {
-         s = 0;
-         pos = 0;
-         for (delta_row = -ar_coeff_lag; delta_row <= 0; delta_row++) {
-            for (delta_col = -ar_coeff_lag; delta_col <= ar_coeff_lag; delta_col++) {
-               if (delta_row == 0 && delta_col == 0)
-                  break;
-               c = fg_params->ar_coeffs_y[pos];
-               s += filt_luma_grain_block[y + delta_row][x + delta_col] * c;
-               pos++;
-            }
-         }
-         filt_luma_grain_block[y][x] =
-            AV1_CLAMP(filt_luma_grain_block[y][x]
-                      + ROUND_POWER_OF_TWO(s, fg_params->ar_coeff_shift),
-                      grain_min, grain_max);
-      }
-   }
-
-   /* generate chroma grain block */
-   memset(filt_cb_grain_block, 0, sizeof(filt_cb_grain_block));
-   shift = 12 - bit_depth + fg_params->grain_scale_shift;
-   seed = fg_params->random_seed ^ 0xb524;
-   for (y = 0; y < chroma_block_size_y; y++) {
-      for (x = 0; x < chroma_block_size_x; x++) {
-         g = 0;
-         if (fg_params->num_cb_points || fg_params->chroma_scaling_from_luma) {
-            r = rvcn_av1_film_grain_random_number(&seed, gauss_bits);
-            g = gaussian_sequence[CLAMP(r, 0, 2048 - 1)];
-         }
-         filt_cb_grain_block[y][x] = ROUND_POWER_OF_TWO(g, shift);
-      }
-   }
-
-   memset(filt_cr_grain_block, 0, sizeof(filt_cr_grain_block));
-   seed = fg_params->random_seed ^ 0x49d8;
-   for (y = 0; y < chroma_block_size_y; y++) {
-      for (x = 0; x < chroma_block_size_x; x++) {
-         g = 0;
-         if (fg_params->num_cr_points || fg_params->chroma_scaling_from_luma) {
-            r = rvcn_av1_film_grain_random_number(&seed, gauss_bits);
-            g = gaussian_sequence[CLAMP(r, 0, 2048 - 1)];
-         }
-         filt_cr_grain_block[y][x] = ROUND_POWER_OF_TWO(g, shift);
-      }
-   }
-
-   for (y = 3; y < chroma_block_size_y; y++) {
-      for (x = 3; x < chroma_block_size_x - 3; x++) {
-         s0 = 0, s1 = 0, pos = 0;
-         for (delta_row = -ar_coeff_lag; delta_row <= 0; delta_row++) {
-            for (delta_col = -ar_coeff_lag; delta_col <= ar_coeff_lag; delta_col++) {
-               c0 = fg_params->ar_coeffs_cb[pos];
-               c1 = fg_params->ar_coeffs_cr[pos];
-               if (delta_row == 0 && delta_col == 0) {
-                  if (fg_params->num_y_points > 0) {
-                     int luma = 0;
-                     int luma_x = ((x - 3) << chroma_subsamp_x) + 3;
-                     int luma_y = ((y - 3) << chroma_subsamp_y) + 3;
-                     for ( i = 0; i <= chroma_subsamp_y; i++)
-                        for ( j = 0; j <= chroma_subsamp_x; j++)
-                           luma += filt_luma_grain_block[luma_y + i][luma_x + j];
-
-                     luma = ROUND_POWER_OF_TWO(luma, chroma_subsamp_x + chroma_subsamp_y);
-                     s0 += luma * c0;
-                     s1 += luma * c1;
-                  }
-                  break;
-               }
-               s0 += filt_cb_grain_block[y + delta_row][x + delta_col] * c0;
-               s1 += filt_cr_grain_block[y + delta_row][x + delta_col] * c1;
-               pos++;
-            }
-         }
-         filt_cb_grain_block[y][x] = AV1_CLAMP(filt_cb_grain_block[y][x] +
-                                       ROUND_POWER_OF_TWO(s0, fg_params->ar_coeff_shift),
-                                     grain_min, grain_max);
-         filt_cr_grain_block[y][x] = AV1_CLAMP(filt_cr_grain_block[y][x] +
-                                       ROUND_POWER_OF_TWO(s1, fg_params->ar_coeff_shift),
-                                     grain_min, grain_max);
-      }
-   }
-
-   for ( i = 9; i < luma_block_size_y; i++ )
-      for ( j = 9; j < luma_block_size_x; j++ )
-         luma_grain_block_tmp[i - 9][j - 9] = filt_luma_grain_block[i][j];
-
-   for ( i = 6; i < chroma_block_size_y; i++ )
-      for ( j = 6; j < chroma_block_size_x; j++ ) {
-         cb_grain_block_tmp[i - 6][j - 6] = filt_cb_grain_block[i][j];
-         cr_grain_block_tmp[i - 6][j - 6] = filt_cr_grain_block[i][j];
-      }
-
-   align_ptr = &fg_buf->luma_grain_block[0][0];
-   for ( i = 0; i < 64; i++ ) {
-      for ( j = 0; j < 80; j++)
-         *align_ptr++ = luma_grain_block_tmp[i][j];
-
-      if (((i + 1) % 4) == 0)
-         align_ptr += 64;
-   }
-
-   align_ptr0 = &fg_buf->cb_grain_block[0][0];
-   align_ptr1 = &fg_buf->cr_grain_block[0][0];
-   for ( i = 0; i < 32; i++) {
-      for ( j = 0; j < 40; j++) {
-         *align_ptr0++ = cb_grain_block_tmp[i][j];
-         *align_ptr1++ = cr_grain_block_tmp[i][j];
-      }
-      if (((i + 1) % 8) == 0) {
-         align_ptr0 += 64;
-         align_ptr1 += 64;
-      }
-   }
-
-   memset(fg_buf->scaling_lut_y, 0, sizeof(fg_buf->scaling_lut_y));
-   rvcn_av1_film_grain_init_scaling(fg_params->scaling_points_y, fg_params->num_y_points,
-                                    fg_buf->scaling_lut_y);
-   if (fg_params->chroma_scaling_from_luma) {
-      memcpy(fg_buf->scaling_lut_cb, fg_buf->scaling_lut_y, sizeof(fg_buf->scaling_lut_y));
-      memcpy(fg_buf->scaling_lut_cr, fg_buf->scaling_lut_y, sizeof(fg_buf->scaling_lut_y));
-   } else {
-      memset(fg_buf->scaling_lut_cb, 0, sizeof(fg_buf->scaling_lut_cb));
-      memset(fg_buf->scaling_lut_cr, 0, sizeof(fg_buf->scaling_lut_cr));
-      rvcn_av1_film_grain_init_scaling(fg_params->scaling_points_cb, fg_params->num_cb_points,
-                                       fg_buf->scaling_lut_cb);
-      rvcn_av1_film_grain_init_scaling(fg_params->scaling_points_cr, fg_params->num_cr_points,
-                                       fg_buf->scaling_lut_cr);
-   }
-}
-
 static void rvcn_dec_av1_film_grain_surface(struct pipe_video_buffer **target,
                                             struct pipe_av1_picture_desc *pic)
 {
@@ -945,7 +738,7 @@ static rvcn_dec_message_av1_t get_av1_msg(struct radeon_decoder *dec,
                                           struct pipe_av1_picture_desc *pic)
 {
    rvcn_dec_message_av1_t result;
-   unsigned i, j;
+   unsigned i, j, num_refs = 0;
    uint16_t tile_count = pic->picture_parameter.tile_cols * pic->picture_parameter.tile_rows;
 
    memset(&result, 0, sizeof(result));
@@ -1136,10 +929,20 @@ static rvcn_dec_message_av1_t get_av1_msg(struct radeon_decoder *dec,
    result.superres_upscaled_width = pic->picture_parameter.frame_width;
    result.order_hint_bits = pic->picture_parameter.order_hint_bits_minus_1 + 1;
 
+   /* Limit to target size in case applications try to decode into smaller
+    * target buffer. */
+   result.width = MIN2(target->width, result.width);
+   result.height = MIN2(target->height, result.height);
+   result.superres_upscaled_width = MIN2(target->width, result.superres_upscaled_width);
+
    for (i = 0; i < NUM_AV1_REFS; ++i) {
-      result.ref_frame_map[i] =
-         (pic->ref[i]) ? (uintptr_t)vl_video_buffer_get_associated_data(pic->ref[i], &dec->base)
-                       : 0x7f;
+      uintptr_t ref_frame;
+      if (pic->ref[i]) {
+         ref_frame = (uintptr_t)vl_video_buffer_get_associated_data(pic->ref[i], &dec->base);
+         num_refs++;
+      } else
+         ref_frame = 0x7f;
+      result.ref_frame_map[i] = ref_frame;
    }
    for (i = 0; i < NUM_AV1_REFS_PER_FRAME; ++i)
        result.frame_refs[i] = result.ref_frame_map[pic->picture_parameter.ref_frame_idx[i]];
@@ -1176,7 +979,9 @@ static rvcn_dec_message_av1_t get_av1_msg(struct radeon_decoder *dec,
    }
 
    if (pic->picture_parameter.bit_depth_idx) {
-      if (target->buffer_format == PIPE_FORMAT_P010 || target->buffer_format == PIPE_FORMAT_P016) {
+      if (target->buffer_format == PIPE_FORMAT_P010 ||
+          target->buffer_format == PIPE_FORMAT_P012 ||
+          target->buffer_format == PIPE_FORMAT_P016) {
          result.p010_mode = 1;
          result.msb_mode = 1;
       } else {
@@ -1268,7 +1073,7 @@ static rvcn_dec_message_av1_t get_av1_msg(struct radeon_decoder *dec,
       fg_params->clip_to_restricted_range =
          pic->picture_parameter.film_grain_info.film_grain_info_fields.clip_to_restricted_range;
 
-      rvcn_av1_init_film_grain_buffer(fg_params, fg_buf);
+      ac_vcn_av1_init_film_grain_buffer(dec->av1_version, fg_params, fg_buf);
    }
 
    result.uncompressed_header_size = 0;
@@ -1283,266 +1088,15 @@ static rvcn_dec_message_av1_t get_av1_msg(struct radeon_decoder *dec,
    }
 
    if (dec->dpb_type == DPB_DYNAMIC_TIER_2) {
-      dec->ref_codec.bts = pic->picture_parameter.bit_depth_idx ? CODEC_10_BITS : CODEC_8_BITS;
+      dec->ref_codec.bts = pic->picture_parameter.bit_depth_idx;
       dec->ref_codec.index = result.curr_pic_idx;
       dec->ref_codec.ref_size = 8;
+      dec->ref_codec.num_refs = num_refs;
       memset(dec->ref_codec.ref_list, 0x7f, sizeof(dec->ref_codec.ref_list));
       memcpy(dec->ref_codec.ref_list, result.ref_frame_map, sizeof(result.ref_frame_map));
    }
 
    return result;
-}
-
-static void rvcn_init_mode_probs(void *prob)
-{
-   rvcn_av1_frame_context_t * fc = (rvcn_av1_frame_context_t*)prob;
-   int i;
-
-   memcpy(fc->palette_y_size_cdf, default_palette_y_size_cdf, sizeof(default_palette_y_size_cdf));
-   memcpy(fc->palette_uv_size_cdf, default_palette_uv_size_cdf, sizeof(default_palette_uv_size_cdf));
-   memcpy(fc->palette_y_color_index_cdf, default_palette_y_color_index_cdf, sizeof(default_palette_y_color_index_cdf));
-   memcpy(fc->palette_uv_color_index_cdf, default_palette_uv_color_index_cdf, sizeof(default_palette_uv_color_index_cdf));
-   memcpy(fc->kf_y_cdf, default_kf_y_mode_cdf, sizeof(default_kf_y_mode_cdf));
-   memcpy(fc->angle_delta_cdf, default_angle_delta_cdf, sizeof(default_angle_delta_cdf));
-   memcpy(fc->comp_inter_cdf, default_comp_inter_cdf, sizeof(default_comp_inter_cdf));
-   memcpy(fc->comp_ref_type_cdf, default_comp_ref_type_cdf,sizeof(default_comp_ref_type_cdf));
-   memcpy(fc->uni_comp_ref_cdf, default_uni_comp_ref_cdf, sizeof(default_uni_comp_ref_cdf));
-   memcpy(fc->palette_y_mode_cdf, default_palette_y_mode_cdf, sizeof(default_palette_y_mode_cdf));
-   memcpy(fc->palette_uv_mode_cdf, default_palette_uv_mode_cdf, sizeof(default_palette_uv_mode_cdf));
-   memcpy(fc->comp_ref_cdf, default_comp_ref_cdf, sizeof(default_comp_ref_cdf));
-   memcpy(fc->comp_bwdref_cdf, default_comp_bwdref_cdf, sizeof(default_comp_bwdref_cdf));
-   memcpy(fc->single_ref_cdf, default_single_ref_cdf, sizeof(default_single_ref_cdf));
-   memcpy(fc->txfm_partition_cdf, default_txfm_partition_cdf, sizeof(default_txfm_partition_cdf));
-   memcpy(fc->compound_index_cdf, default_compound_idx_cdfs, sizeof(default_compound_idx_cdfs));
-   memcpy(fc->comp_group_idx_cdf, default_comp_group_idx_cdfs, sizeof(default_comp_group_idx_cdfs));
-   memcpy(fc->newmv_cdf, default_newmv_cdf, sizeof(default_newmv_cdf));
-   memcpy(fc->zeromv_cdf, default_zeromv_cdf, sizeof(default_zeromv_cdf));
-   memcpy(fc->refmv_cdf, default_refmv_cdf, sizeof(default_refmv_cdf));
-   memcpy(fc->drl_cdf, default_drl_cdf, sizeof(default_drl_cdf));
-   memcpy(fc->motion_mode_cdf, default_motion_mode_cdf, sizeof(default_motion_mode_cdf));
-   memcpy(fc->obmc_cdf, default_obmc_cdf, sizeof(default_obmc_cdf));
-   memcpy(fc->inter_compound_mode_cdf, default_inter_compound_mode_cdf, sizeof(default_inter_compound_mode_cdf));
-   memcpy(fc->compound_type_cdf, default_compound_type_cdf, sizeof(default_compound_type_cdf));
-   memcpy(fc->wedge_idx_cdf, default_wedge_idx_cdf, sizeof(default_wedge_idx_cdf));
-   memcpy(fc->interintra_cdf, default_interintra_cdf, sizeof(default_interintra_cdf));
-   memcpy(fc->wedge_interintra_cdf, default_wedge_interintra_cdf, sizeof(default_wedge_interintra_cdf));
-   memcpy(fc->interintra_mode_cdf, default_interintra_mode_cdf, sizeof(default_interintra_mode_cdf));
-   memcpy(fc->pred_cdf, default_segment_pred_cdf, sizeof(default_segment_pred_cdf));
-   memcpy(fc->switchable_restore_cdf, default_switchable_restore_cdf, sizeof(default_switchable_restore_cdf));
-   memcpy(fc->wiener_restore_cdf, default_wiener_restore_cdf, sizeof(default_wiener_restore_cdf));
-   memcpy(fc->sgrproj_restore_cdf, default_sgrproj_restore_cdf, sizeof(default_sgrproj_restore_cdf));
-   memcpy(fc->y_mode_cdf, default_if_y_mode_cdf, sizeof(default_if_y_mode_cdf));
-   memcpy(fc->uv_mode_cdf, default_uv_mode_cdf, sizeof(default_uv_mode_cdf));
-   memcpy(fc->switchable_interp_cdf, default_switchable_interp_cdf, sizeof(default_switchable_interp_cdf));
-   memcpy(fc->partition_cdf, default_partition_cdf, sizeof(default_partition_cdf));
-   memcpy(fc->intra_ext_tx_cdf, default_intra_ext_tx_cdf, sizeof(default_intra_ext_tx_cdf));
-   memcpy(fc->inter_ext_tx_cdf, default_inter_ext_tx_cdf, sizeof(default_inter_ext_tx_cdf));
-   memcpy(fc->skip_cdfs, default_skip_cdfs, sizeof(default_skip_cdfs));
-   memcpy(fc->intra_inter_cdf, default_intra_inter_cdf, sizeof(default_intra_inter_cdf));
-   memcpy(fc->tree_cdf, default_seg_tree_cdf, sizeof(default_seg_tree_cdf));
-   for (i = 0; i < SPATIAL_PREDICTION_PROBS; ++i)
-      memcpy(fc->spatial_pred_seg_cdf[i], default_spatial_pred_seg_tree_cdf[i], sizeof(default_spatial_pred_seg_tree_cdf[i]));
-   memcpy(fc->tx_size_cdf, default_tx_size_cdf, sizeof(default_tx_size_cdf));
-   memcpy(fc->delta_q_cdf, default_delta_q_cdf, sizeof(default_delta_q_cdf));
-   memcpy(fc->skip_mode_cdfs, default_skip_mode_cdfs, sizeof(default_skip_mode_cdfs));
-   memcpy(fc->delta_lf_cdf, default_delta_lf_cdf, sizeof(default_delta_lf_cdf));
-   memcpy(fc->delta_lf_multi_cdf, default_delta_lf_multi_cdf, sizeof(default_delta_lf_multi_cdf));
-   memcpy(fc->cfl_sign_cdf, default_cfl_sign_cdf, sizeof(default_cfl_sign_cdf));
-   memcpy(fc->cfl_alpha_cdf, default_cfl_alpha_cdf, sizeof(default_cfl_alpha_cdf));
-   memcpy(fc->filter_intra_cdfs, default_filter_intra_cdfs, sizeof(default_filter_intra_cdfs));
-   memcpy(fc->filter_intra_mode_cdf, default_filter_intra_mode_cdf, sizeof(default_filter_intra_mode_cdf));
-   memcpy(fc->intrabc_cdf, default_intrabc_cdf, sizeof(default_intrabc_cdf));
-}
-
-static void rvcn_vcn4_init_mode_probs(void *prob)
-{
-   rvcn_av1_vcn4_frame_context_t * fc = (rvcn_av1_vcn4_frame_context_t*)prob;
-   int i;
-
-   memcpy(fc->palette_y_size_cdf, default_palette_y_size_cdf, sizeof(default_palette_y_size_cdf));
-   memcpy(fc->palette_uv_size_cdf, default_palette_uv_size_cdf, sizeof(default_palette_uv_size_cdf));
-   memcpy(fc->palette_y_color_index_cdf, default_palette_y_color_index_cdf, sizeof(default_palette_y_color_index_cdf));
-   memcpy(fc->palette_uv_color_index_cdf, default_palette_uv_color_index_cdf, sizeof(default_palette_uv_color_index_cdf));
-   memcpy(fc->kf_y_cdf, default_kf_y_mode_cdf, sizeof(default_kf_y_mode_cdf));
-   memcpy(fc->angle_delta_cdf, default_angle_delta_cdf, sizeof(default_angle_delta_cdf));
-   memcpy(fc->comp_inter_cdf, default_comp_inter_cdf, sizeof(default_comp_inter_cdf));
-   memcpy(fc->comp_ref_type_cdf, default_comp_ref_type_cdf,sizeof(default_comp_ref_type_cdf));
-   memcpy(fc->uni_comp_ref_cdf, default_uni_comp_ref_cdf, sizeof(default_uni_comp_ref_cdf));
-   memcpy(fc->palette_y_mode_cdf, default_palette_y_mode_cdf, sizeof(default_palette_y_mode_cdf));
-   memcpy(fc->palette_uv_mode_cdf, default_palette_uv_mode_cdf, sizeof(default_palette_uv_mode_cdf));
-   memcpy(fc->comp_ref_cdf, default_comp_ref_cdf, sizeof(default_comp_ref_cdf));
-   memcpy(fc->comp_bwdref_cdf, default_comp_bwdref_cdf, sizeof(default_comp_bwdref_cdf));
-   memcpy(fc->single_ref_cdf, default_single_ref_cdf, sizeof(default_single_ref_cdf));
-   memcpy(fc->txfm_partition_cdf, default_txfm_partition_cdf, sizeof(default_txfm_partition_cdf));
-   memcpy(fc->compound_index_cdf, default_compound_idx_cdfs, sizeof(default_compound_idx_cdfs));
-   memcpy(fc->comp_group_idx_cdf, default_comp_group_idx_cdfs, sizeof(default_comp_group_idx_cdfs));
-   memcpy(fc->newmv_cdf, default_newmv_cdf, sizeof(default_newmv_cdf));
-   memcpy(fc->zeromv_cdf, default_zeromv_cdf, sizeof(default_zeromv_cdf));
-   memcpy(fc->refmv_cdf, default_refmv_cdf, sizeof(default_refmv_cdf));
-   memcpy(fc->drl_cdf, default_drl_cdf, sizeof(default_drl_cdf));
-   memcpy(fc->motion_mode_cdf, default_motion_mode_cdf, sizeof(default_motion_mode_cdf));
-   memcpy(fc->obmc_cdf, default_obmc_cdf, sizeof(default_obmc_cdf));
-   memcpy(fc->inter_compound_mode_cdf, default_inter_compound_mode_cdf, sizeof(default_inter_compound_mode_cdf));
-   memcpy(fc->compound_type_cdf, default_compound_type_cdf, sizeof(default_compound_type_cdf));
-   memcpy(fc->wedge_idx_cdf, default_wedge_idx_cdf, sizeof(default_wedge_idx_cdf));
-   memcpy(fc->interintra_cdf, default_interintra_cdf, sizeof(default_interintra_cdf));
-   memcpy(fc->wedge_interintra_cdf, default_wedge_interintra_cdf, sizeof(default_wedge_interintra_cdf));
-   memcpy(fc->interintra_mode_cdf, default_interintra_mode_cdf, sizeof(default_interintra_mode_cdf));
-   memcpy(fc->pred_cdf, default_segment_pred_cdf, sizeof(default_segment_pred_cdf));
-   memcpy(fc->switchable_restore_cdf, default_switchable_restore_cdf, sizeof(default_switchable_restore_cdf));
-   memcpy(fc->wiener_restore_cdf, default_wiener_restore_cdf, sizeof(default_wiener_restore_cdf));
-   memcpy(fc->sgrproj_restore_cdf, default_sgrproj_restore_cdf, sizeof(default_sgrproj_restore_cdf));
-   memcpy(fc->y_mode_cdf, default_if_y_mode_cdf, sizeof(default_if_y_mode_cdf));
-   memcpy(fc->uv_mode_cdf, default_uv_mode_cdf, sizeof(default_uv_mode_cdf));
-   memcpy(fc->switchable_interp_cdf, default_switchable_interp_cdf, sizeof(default_switchable_interp_cdf));
-   memcpy(fc->partition_cdf, default_partition_cdf, sizeof(default_partition_cdf));
-   memcpy(fc->intra_ext_tx_cdf, &default_intra_ext_tx_cdf[1], sizeof(default_intra_ext_tx_cdf[1]) * 2);
-   memcpy(fc->inter_ext_tx_cdf, &default_inter_ext_tx_cdf[1], sizeof(default_inter_ext_tx_cdf[1]) * 3);
-   memcpy(fc->skip_cdfs, default_skip_cdfs, sizeof(default_skip_cdfs));
-   memcpy(fc->intra_inter_cdf, default_intra_inter_cdf, sizeof(default_intra_inter_cdf));
-   memcpy(fc->tree_cdf, default_seg_tree_cdf, sizeof(default_seg_tree_cdf));
-   for (i = 0; i < SPATIAL_PREDICTION_PROBS; ++i)
-      memcpy(fc->spatial_pred_seg_cdf[i], default_spatial_pred_seg_tree_cdf[i], sizeof(default_spatial_pred_seg_tree_cdf[i]));
-   memcpy(fc->tx_size_cdf, default_tx_size_cdf, sizeof(default_tx_size_cdf));
-   memcpy(fc->delta_q_cdf, default_delta_q_cdf, sizeof(default_delta_q_cdf));
-   memcpy(fc->skip_mode_cdfs, default_skip_mode_cdfs, sizeof(default_skip_mode_cdfs));
-   memcpy(fc->delta_lf_cdf, default_delta_lf_cdf, sizeof(default_delta_lf_cdf));
-   memcpy(fc->delta_lf_multi_cdf, default_delta_lf_multi_cdf, sizeof(default_delta_lf_multi_cdf));
-   memcpy(fc->cfl_sign_cdf, default_cfl_sign_cdf, sizeof(default_cfl_sign_cdf));
-   memcpy(fc->cfl_alpha_cdf, default_cfl_alpha_cdf, sizeof(default_cfl_alpha_cdf));
-   memcpy(fc->filter_intra_cdfs, default_filter_intra_cdfs, sizeof(default_filter_intra_cdfs));
-   memcpy(fc->filter_intra_mode_cdf, default_filter_intra_mode_cdf, sizeof(default_filter_intra_mode_cdf));
-   memcpy(fc->intrabc_cdf, default_intrabc_cdf, sizeof(default_intrabc_cdf));
-}
-
-static void rvcn_av1_init_mv_probs(void *prob)
-{
-   rvcn_av1_frame_context_t * fc = (rvcn_av1_frame_context_t*)prob;
-
-   memcpy(fc->nmvc_joints_cdf, default_nmv_context.joints_cdf, sizeof(default_nmv_context.joints_cdf));
-   memcpy(fc->nmvc_0_bits_cdf, default_nmv_context.comps[0].bits_cdf, sizeof(default_nmv_context.comps[0].bits_cdf));
-   memcpy(fc->nmvc_0_class0_cdf, default_nmv_context.comps[0].class0_cdf, sizeof(default_nmv_context.comps[0].class0_cdf));
-   memcpy(fc->nmvc_0_class0_fp_cdf, default_nmv_context.comps[0].class0_fp_cdf, sizeof(default_nmv_context.comps[0].class0_fp_cdf));
-   memcpy(fc->nmvc_0_class0_hp_cdf, default_nmv_context.comps[0].class0_hp_cdf, sizeof(default_nmv_context.comps[0].class0_hp_cdf));
-   memcpy(fc->nmvc_0_classes_cdf, default_nmv_context.comps[0].classes_cdf, sizeof(default_nmv_context.comps[0].classes_cdf));
-   memcpy(fc->nmvc_0_fp_cdf, default_nmv_context.comps[0].fp_cdf, sizeof(default_nmv_context.comps[0].fp_cdf));
-   memcpy(fc->nmvc_0_hp_cdf, default_nmv_context.comps[0].hp_cdf, sizeof(default_nmv_context.comps[0].hp_cdf));
-   memcpy(fc->nmvc_0_sign_cdf, default_nmv_context.comps[0].sign_cdf, sizeof(default_nmv_context.comps[0].sign_cdf));
-   memcpy(fc->nmvc_1_bits_cdf, default_nmv_context.comps[1].bits_cdf, sizeof(default_nmv_context.comps[1].bits_cdf));
-   memcpy(fc->nmvc_1_class0_cdf, default_nmv_context.comps[1].class0_cdf, sizeof(default_nmv_context.comps[1].class0_cdf));
-   memcpy(fc->nmvc_1_class0_fp_cdf, default_nmv_context.comps[1].class0_fp_cdf, sizeof(default_nmv_context.comps[1].class0_fp_cdf));
-   memcpy(fc->nmvc_1_class0_hp_cdf, default_nmv_context.comps[1].class0_hp_cdf, sizeof(default_nmv_context.comps[1].class0_hp_cdf));
-   memcpy(fc->nmvc_1_classes_cdf, default_nmv_context.comps[1].classes_cdf, sizeof(default_nmv_context.comps[1].classes_cdf));
-   memcpy(fc->nmvc_1_fp_cdf, default_nmv_context.comps[1].fp_cdf, sizeof(default_nmv_context.comps[1].fp_cdf));
-   memcpy(fc->nmvc_1_hp_cdf, default_nmv_context.comps[1].hp_cdf, sizeof(default_nmv_context.comps[1].hp_cdf));
-   memcpy(fc->nmvc_1_sign_cdf, default_nmv_context.comps[1].sign_cdf, sizeof(default_nmv_context.comps[1].sign_cdf));
-   memcpy(fc->ndvc_joints_cdf, default_nmv_context.joints_cdf, sizeof(default_nmv_context.joints_cdf));
-   memcpy(fc->ndvc_0_bits_cdf, default_nmv_context.comps[0].bits_cdf, sizeof(default_nmv_context.comps[0].bits_cdf));
-   memcpy(fc->ndvc_0_class0_cdf, default_nmv_context.comps[0].class0_cdf, sizeof(default_nmv_context.comps[0].class0_cdf));
-   memcpy(fc->ndvc_0_class0_fp_cdf, default_nmv_context.comps[0].class0_fp_cdf, sizeof(default_nmv_context.comps[0].class0_fp_cdf));
-   memcpy(fc->ndvc_0_class0_hp_cdf, default_nmv_context.comps[0].class0_hp_cdf, sizeof(default_nmv_context.comps[0].class0_hp_cdf));
-   memcpy(fc->ndvc_0_classes_cdf, default_nmv_context.comps[0].classes_cdf, sizeof(default_nmv_context.comps[0].classes_cdf));
-   memcpy(fc->ndvc_0_fp_cdf, default_nmv_context.comps[0].fp_cdf, sizeof(default_nmv_context.comps[0].fp_cdf));
-   memcpy(fc->ndvc_0_hp_cdf, default_nmv_context.comps[0].hp_cdf, sizeof(default_nmv_context.comps[0].hp_cdf));
-   memcpy(fc->ndvc_0_sign_cdf, default_nmv_context.comps[0].sign_cdf, sizeof(default_nmv_context.comps[0].sign_cdf));
-   memcpy(fc->ndvc_1_bits_cdf, default_nmv_context.comps[1].bits_cdf, sizeof(default_nmv_context.comps[1].bits_cdf));
-   memcpy(fc->ndvc_1_class0_cdf, default_nmv_context.comps[1].class0_cdf, sizeof(default_nmv_context.comps[1].class0_cdf));
-   memcpy(fc->ndvc_1_class0_fp_cdf, default_nmv_context.comps[1].class0_fp_cdf, sizeof(default_nmv_context.comps[1].class0_fp_cdf));
-   memcpy(fc->ndvc_1_class0_hp_cdf, default_nmv_context.comps[1].class0_hp_cdf, sizeof(default_nmv_context.comps[1].class0_hp_cdf));
-   memcpy(fc->ndvc_1_classes_cdf, default_nmv_context.comps[1].classes_cdf, sizeof(default_nmv_context.comps[1].classes_cdf));
-   memcpy(fc->ndvc_1_fp_cdf, default_nmv_context.comps[1].fp_cdf, sizeof(default_nmv_context.comps[1].fp_cdf));
-   memcpy(fc->ndvc_1_hp_cdf, default_nmv_context.comps[1].hp_cdf, sizeof(default_nmv_context.comps[1].hp_cdf));
-   memcpy(fc->ndvc_1_sign_cdf, default_nmv_context.comps[1].sign_cdf, sizeof(default_nmv_context.comps[1].sign_cdf));
-}
-
-static void rvcn_vcn4_av1_init_mv_probs(void *prob)
-{
-   rvcn_av1_vcn4_frame_context_t * fc = (rvcn_av1_vcn4_frame_context_t*)prob;
-
-   memcpy(fc->nmvc_joints_cdf, default_nmv_context.joints_cdf, sizeof(default_nmv_context.joints_cdf));
-   memcpy(fc->nmvc_0_bits_cdf, default_nmv_context.comps[0].bits_cdf, sizeof(default_nmv_context.comps[0].bits_cdf));
-   memcpy(fc->nmvc_0_class0_cdf, default_nmv_context.comps[0].class0_cdf, sizeof(default_nmv_context.comps[0].class0_cdf));
-   memcpy(fc->nmvc_0_class0_fp_cdf, default_nmv_context.comps[0].class0_fp_cdf, sizeof(default_nmv_context.comps[0].class0_fp_cdf));
-   memcpy(fc->nmvc_0_class0_hp_cdf, default_nmv_context.comps[0].class0_hp_cdf, sizeof(default_nmv_context.comps[0].class0_hp_cdf));
-   memcpy(fc->nmvc_0_classes_cdf, default_nmv_context.comps[0].classes_cdf, sizeof(default_nmv_context.comps[0].classes_cdf));
-   memcpy(fc->nmvc_0_fp_cdf, default_nmv_context.comps[0].fp_cdf, sizeof(default_nmv_context.comps[0].fp_cdf));
-   memcpy(fc->nmvc_0_hp_cdf, default_nmv_context.comps[0].hp_cdf, sizeof(default_nmv_context.comps[0].hp_cdf));
-   memcpy(fc->nmvc_0_sign_cdf, default_nmv_context.comps[0].sign_cdf, sizeof(default_nmv_context.comps[0].sign_cdf));
-   memcpy(fc->nmvc_1_bits_cdf, default_nmv_context.comps[1].bits_cdf, sizeof(default_nmv_context.comps[1].bits_cdf));
-   memcpy(fc->nmvc_1_class0_cdf, default_nmv_context.comps[1].class0_cdf, sizeof(default_nmv_context.comps[1].class0_cdf));
-   memcpy(fc->nmvc_1_class0_fp_cdf, default_nmv_context.comps[1].class0_fp_cdf, sizeof(default_nmv_context.comps[1].class0_fp_cdf));
-   memcpy(fc->nmvc_1_class0_hp_cdf, default_nmv_context.comps[1].class0_hp_cdf, sizeof(default_nmv_context.comps[1].class0_hp_cdf));
-   memcpy(fc->nmvc_1_classes_cdf, default_nmv_context.comps[1].classes_cdf, sizeof(default_nmv_context.comps[1].classes_cdf));
-   memcpy(fc->nmvc_1_fp_cdf, default_nmv_context.comps[1].fp_cdf, sizeof(default_nmv_context.comps[1].fp_cdf));
-   memcpy(fc->nmvc_1_hp_cdf, default_nmv_context.comps[1].hp_cdf, sizeof(default_nmv_context.comps[1].hp_cdf));
-   memcpy(fc->nmvc_1_sign_cdf, default_nmv_context.comps[1].sign_cdf, sizeof(default_nmv_context.comps[1].sign_cdf));
-   memcpy(fc->ndvc_joints_cdf, default_nmv_context.joints_cdf, sizeof(default_nmv_context.joints_cdf));
-   memcpy(fc->ndvc_0_bits_cdf, default_nmv_context.comps[0].bits_cdf, sizeof(default_nmv_context.comps[0].bits_cdf));
-   memcpy(fc->ndvc_0_class0_cdf, default_nmv_context.comps[0].class0_cdf, sizeof(default_nmv_context.comps[0].class0_cdf));
-   memcpy(fc->ndvc_0_class0_fp_cdf, default_nmv_context.comps[0].class0_fp_cdf, sizeof(default_nmv_context.comps[0].class0_fp_cdf));
-   memcpy(fc->ndvc_0_class0_hp_cdf, default_nmv_context.comps[0].class0_hp_cdf, sizeof(default_nmv_context.comps[0].class0_hp_cdf));
-   memcpy(fc->ndvc_0_classes_cdf, default_nmv_context.comps[0].classes_cdf, sizeof(default_nmv_context.comps[0].classes_cdf));
-   memcpy(fc->ndvc_0_fp_cdf, default_nmv_context.comps[0].fp_cdf, sizeof(default_nmv_context.comps[0].fp_cdf));
-   memcpy(fc->ndvc_0_hp_cdf, default_nmv_context.comps[0].hp_cdf, sizeof(default_nmv_context.comps[0].hp_cdf));
-   memcpy(fc->ndvc_0_sign_cdf, default_nmv_context.comps[0].sign_cdf, sizeof(default_nmv_context.comps[0].sign_cdf));
-   memcpy(fc->ndvc_1_bits_cdf, default_nmv_context.comps[1].bits_cdf, sizeof(default_nmv_context.comps[1].bits_cdf));
-   memcpy(fc->ndvc_1_class0_cdf, default_nmv_context.comps[1].class0_cdf, sizeof(default_nmv_context.comps[1].class0_cdf));
-   memcpy(fc->ndvc_1_class0_fp_cdf, default_nmv_context.comps[1].class0_fp_cdf, sizeof(default_nmv_context.comps[1].class0_fp_cdf));
-   memcpy(fc->ndvc_1_class0_hp_cdf, default_nmv_context.comps[1].class0_hp_cdf, sizeof(default_nmv_context.comps[1].class0_hp_cdf));
-   memcpy(fc->ndvc_1_classes_cdf, default_nmv_context.comps[1].classes_cdf, sizeof(default_nmv_context.comps[1].classes_cdf));
-   memcpy(fc->ndvc_1_fp_cdf, default_nmv_context.comps[1].fp_cdf, sizeof(default_nmv_context.comps[1].fp_cdf));
-   memcpy(fc->ndvc_1_hp_cdf, default_nmv_context.comps[1].hp_cdf, sizeof(default_nmv_context.comps[1].hp_cdf));
-   memcpy(fc->ndvc_1_sign_cdf, default_nmv_context.comps[1].sign_cdf, sizeof(default_nmv_context.comps[1].sign_cdf));
-}
-
-static void rvcn_av1_default_coef_probs(void *prob, int index)
-{
-   rvcn_av1_frame_context_t * fc = (rvcn_av1_frame_context_t*)prob;
-
-   memcpy(fc->txb_skip_cdf, av1_default_txb_skip_cdfs[index], sizeof(av1_default_txb_skip_cdfs[index]));
-   memcpy(fc->eob_extra_cdf, av1_default_eob_extra_cdfs[index], sizeof(av1_default_eob_extra_cdfs[index]));
-   memcpy(fc->dc_sign_cdf, av1_default_dc_sign_cdfs[index], sizeof(av1_default_dc_sign_cdfs[index]));
-   memcpy(fc->coeff_br_cdf, av1_default_coeff_lps_multi_cdfs[index], sizeof(av1_default_coeff_lps_multi_cdfs[index]));
-   memcpy(fc->coeff_base_cdf, av1_default_coeff_base_multi_cdfs[index], sizeof(av1_default_coeff_base_multi_cdfs[index]));
-   memcpy(fc->coeff_base_eob_cdf, av1_default_coeff_base_eob_multi_cdfs[index], sizeof(av1_default_coeff_base_eob_multi_cdfs[index]));
-   memcpy(fc->eob_flag_cdf16, av1_default_eob_multi16_cdfs[index], sizeof(av1_default_eob_multi16_cdfs[index]));
-   memcpy(fc->eob_flag_cdf32, av1_default_eob_multi32_cdfs[index], sizeof(av1_default_eob_multi32_cdfs[index]));
-   memcpy(fc->eob_flag_cdf64, av1_default_eob_multi64_cdfs[index], sizeof(av1_default_eob_multi64_cdfs[index]));
-   memcpy(fc->eob_flag_cdf128, av1_default_eob_multi128_cdfs[index], sizeof(av1_default_eob_multi128_cdfs[index]));
-   memcpy(fc->eob_flag_cdf256, av1_default_eob_multi256_cdfs[index], sizeof(av1_default_eob_multi256_cdfs[index]));
-   memcpy(fc->eob_flag_cdf512, av1_default_eob_multi512_cdfs[index], sizeof(av1_default_eob_multi512_cdfs[index]));
-   memcpy(fc->eob_flag_cdf1024, av1_default_eob_multi1024_cdfs[index], sizeof(av1_default_eob_multi1024_cdfs[index]));
-}
-
-static void rvcn_vcn4_av1_default_coef_probs(void *prob, int index)
-{
-   rvcn_av1_vcn4_frame_context_t *fc = (rvcn_av1_vcn4_frame_context_t*)prob;
-   void *p;
-   int i, j;
-   unsigned size;
-
-   memcpy(fc->txb_skip_cdf, av1_default_txb_skip_cdfs[index], sizeof(av1_default_txb_skip_cdfs[index]));
-
-   p = (void *)fc->eob_extra_cdf;
-   size = sizeof(av1_default_eob_extra_cdfs[0][0][0][0]) * EOB_COEF_CONTEXTS_VCN4;
-   for (i = 0; i < AV1_TX_SIZES; i++) {
-      for ( j = 0; j < AV1_PLANE_TYPES; j++) {
-         memcpy(p, &av1_default_eob_extra_cdfs[index][i][j][3], size);
-         p += size;
-      }
-   }
-
-   memcpy(fc->dc_sign_cdf, av1_default_dc_sign_cdfs[index], sizeof(av1_default_dc_sign_cdfs[index]));
-   memcpy(fc->coeff_br_cdf, av1_default_coeff_lps_multi_cdfs[index], sizeof(av1_default_coeff_lps_multi_cdfs[index]));
-   memcpy(fc->coeff_base_cdf, av1_default_coeff_base_multi_cdfs[index], sizeof(av1_default_coeff_base_multi_cdfs[index]));
-   memcpy(fc->coeff_base_eob_cdf, av1_default_coeff_base_eob_multi_cdfs[index], sizeof(av1_default_coeff_base_eob_multi_cdfs[index]));
-   memcpy(fc->eob_flag_cdf16, av1_default_eob_multi16_cdfs[index], sizeof(av1_default_eob_multi16_cdfs[index]));
-   memcpy(fc->eob_flag_cdf32, av1_default_eob_multi32_cdfs[index], sizeof(av1_default_eob_multi32_cdfs[index]));
-   memcpy(fc->eob_flag_cdf64, av1_default_eob_multi64_cdfs[index], sizeof(av1_default_eob_multi64_cdfs[index]));
-   memcpy(fc->eob_flag_cdf128, av1_default_eob_multi128_cdfs[index], sizeof(av1_default_eob_multi128_cdfs[index]));
-   memcpy(fc->eob_flag_cdf256, av1_default_eob_multi256_cdfs[index], sizeof(av1_default_eob_multi256_cdfs[index]));
-   memcpy(fc->eob_flag_cdf512, av1_default_eob_multi512_cdfs[index], sizeof(av1_default_eob_multi512_cdfs[index]));
-   memcpy(fc->eob_flag_cdf1024, av1_default_eob_multi1024_cdfs[index], sizeof(av1_default_eob_multi1024_cdfs[index]));
 }
 
 static unsigned calc_ctx_size_h265_main(struct radeon_decoder *dec)
@@ -1790,36 +1344,31 @@ static void rvcn_dec_message_create(struct radeon_decoder *dec)
 static unsigned rvcn_dec_dynamic_dpb_t2_message(struct radeon_decoder *dec, rvcn_dec_message_decode_t *decode,
       rvcn_dec_message_dynamic_dpb_t2_t *dynamic_dpb_t2, bool encrypted)
 {
-   struct rvcn_dec_dynamic_dpb_t2 *dpb = NULL, *dummy = NULL;
-   unsigned width, height, size;
+   struct rvcn_dec_dynamic_dpb_t2 *dpb = NULL;
+   struct si_resource *res;
+   unsigned width, height;
    uint64_t addr;
    int i;
 
    width = align(decode->width_in_samples, dec->db_alignment);
    height = align(decode->height_in_samples, dec->db_alignment);
-   size = align((width * height * 3) / 2, 256);
-   if (dec->ref_codec.bts == CODEC_10_BITS)
-      size = size * 3 / 2;
 
    list_for_each_entry_safe(struct rvcn_dec_dynamic_dpb_t2, d, &dec->dpb_ref_list, list) {
+      bool found = false;
+
+      res = &(((struct si_texture *)((struct vl_video_buffer *)d->vbuf)->resources[0])->buffer);
       for (i = 0; i < dec->ref_codec.ref_size; ++i) {
          if (((dec->ref_codec.ref_list[i] & 0x7f) != 0x7f) && (d->index == (dec->ref_codec.ref_list[i] & 0x7f))) {
-            if (!dummy)
-               dummy = d;
-
-            addr = dec->ws->buffer_get_virtual_address(d->dpb.res->buf);
-            if (!addr && dummy) {
-               RVID_ERR("Ref list from application is incorrect, using dummy buffer instead.\n");
-               addr = dec->ws->buffer_get_virtual_address(dummy->dpb.res->buf);
-            }
+            addr = dec->ws->buffer_get_virtual_address(res->buf);
+            dec->ws->cs_add_buffer(&dec->cs, res->buf, RADEON_USAGE_READWRITE | RADEON_USAGE_SYNCHRONIZED, RADEON_DOMAIN_VRAM);
             dynamic_dpb_t2->dpbAddrLo[i] = addr;
             dynamic_dpb_t2->dpbAddrHi[i] = addr >> 32;
             ++dynamic_dpb_t2->dpbArraySize;
-            break;
+            found = true;
          }
       }
-      if (i == dec->ref_codec.ref_size) {
-         if (d->dpb.res->b.b.width0 * d->dpb.res->b.b.height0 != size) {
+      if (!found) {
+         if (d->vbuf->width != width || d->vbuf->height != height) {
             list_del(&d->list);
             list_addtail(&d->list, &dec->dpb_unref_list);
          } else {
@@ -1829,7 +1378,7 @@ static unsigned rvcn_dec_dynamic_dpb_t2_message(struct radeon_decoder *dec, rvcn
    }
 
    list_for_each_entry_safe(struct rvcn_dec_dynamic_dpb_t2, d, &dec->dpb_ref_list, list) {
-      if (d->dpb.res->b.b.width0 * d->dpb.res->b.b.height0 == size && d->index == dec->ref_codec.index) {
+      if (d->vbuf->width == width && d->vbuf->height == height && d->index == dec->ref_codec.index) {
          dpb = d;
          break;
       }
@@ -1846,61 +1395,79 @@ static unsigned rvcn_dec_dynamic_dpb_t2_message(struct radeon_decoder *dec, rvcn
    }
 
    list_for_each_entry_safe(struct rvcn_dec_dynamic_dpb_t2, d, &dec->dpb_unref_list, list) {
-      if (dec->prev_fence)
-         dec->ws->fence_wait(dec->ws, dec->prev_fence, PIPE_DEFAULT_DECODER_FEEDBACK_TIMEOUT_NS);
       list_del(&d->list);
-      si_vid_destroy_buffer(&d->dpb);
+      d->vbuf->destroy(d->vbuf);
       FREE(d);
    }
 
    if (!dpb) {
-      bool r;
       dpb = CALLOC_STRUCT(rvcn_dec_dynamic_dpb_t2);
       if (!dpb)
          return 1;
       dpb->index = dec->ref_codec.index;
-      if (encrypted)
-         r = si_vid_create_tmz_buffer(dec->screen, &dpb->dpb, size, PIPE_USAGE_DEFAULT);
-      else
-         r = si_vid_create_buffer(dec->screen, &dpb->dpb, size, PIPE_USAGE_DEFAULT);
-      assert(encrypted == (bool)(dpb->dpb.res->flags & RADEON_FLAG_ENCRYPTED));
 
-      if (!r) {
-         RVID_ERR("Can't allocated dpb buffer.\n");
+      struct pipe_video_buffer templat;
+      memset(&templat, 0, sizeof(templat));
+      templat.buffer_format = get_buffer_format(dec);
+      templat.width = width;
+      templat.height = height;
+      templat.bind = PIPE_BIND_VIDEO_DECODE_DPB;
+      if (encrypted)
+         templat.bind |= PIPE_BIND_PROTECTED;
+      dpb->vbuf = dec->base.context->create_video_buffer(dec->base.context, &templat);
+
+      if (!dpb->vbuf) {
+         RADEON_DEC_ERR("Can't allocate dpb buffer.\n");
          FREE(dpb);
          return 1;
       }
       list_addtail(&dpb->list, &dec->dpb_ref_list);
    }
 
-   dec->ws->cs_add_buffer(&dec->cs, dpb->dpb.res->buf,
-      RADEON_USAGE_READWRITE | RADEON_USAGE_SYNCHRONIZED, RADEON_DOMAIN_VRAM);
-   addr = dec->ws->buffer_get_virtual_address(dpb->dpb.res->buf);
+   if (dynamic_dpb_t2->dpbArraySize < dec->ref_codec.num_refs) {
+      struct rvcn_dec_dynamic_dpb_t2 *d =
+         list_first_entry(&dec->dpb_ref_list, struct rvcn_dec_dynamic_dpb_t2, list);
+
+      res = &(((struct si_texture *)((struct vl_video_buffer *)d->vbuf)->resources[0])->buffer);
+      addr = dec->ws->buffer_get_virtual_address(res->buf);
+      for (i = 0; i < dec->ref_codec.num_refs; ++i) {
+         if (dynamic_dpb_t2->dpbAddrLo[i] || dynamic_dpb_t2->dpbAddrHi[i])
+            continue;
+         dynamic_dpb_t2->dpbAddrLo[i] = addr;
+         dynamic_dpb_t2->dpbAddrHi[i] = addr >> 32;
+         ++dynamic_dpb_t2->dpbArraySize;
+      }
+      assert(dynamic_dpb_t2->dpbArraySize == dec->ref_codec.num_refs);
+   }
+
+   struct si_texture *dpb_luma, *dpb_chroma;
+
+   dpb_luma   = (struct si_texture *)((struct vl_video_buffer *)dpb->vbuf)->resources[0];
+   dpb_chroma = (struct si_texture *)((struct vl_video_buffer *)dpb->vbuf)->resources[1];
+
+   decode->db_swizzle_mode = dpb_luma->surface.u.gfx9.swizzle_mode;
+
+   dec->ws->cs_add_buffer(&dec->cs, (dpb_luma->buffer).buf, RADEON_USAGE_READWRITE | RADEON_USAGE_SYNCHRONIZED, RADEON_DOMAIN_VRAM);
+   addr = dec->ws->buffer_get_virtual_address((dpb_luma->buffer).buf);
+
+   dynamic_dpb_t2->dpbLumaPitch = dpb_luma->surface.u.gfx9.surf_pitch;
+   dynamic_dpb_t2->dpbLumaAlignedHeight = dpb_luma->surface.u.gfx9.surf_height;
+   dynamic_dpb_t2->dpbLumaAlignedSize = dpb_luma->surface.u.gfx9.surf_slice_size;
+   dynamic_dpb_t2->dpbChromaPitch = dpb_chroma->surface.u.gfx9.surf_pitch;
+   dynamic_dpb_t2->dpbChromaAlignedHeight = dpb_chroma->surface.u.gfx9.surf_height;
+   dynamic_dpb_t2->dpbChromaAlignedSize = dpb_chroma->surface.u.gfx9.surf_slice_size;
+
    dynamic_dpb_t2->dpbCurrLo = addr;
    dynamic_dpb_t2->dpbCurrHi = addr >> 32;
-
    decode->decode_flags = 1;
    dynamic_dpb_t2->dpbConfigFlags = 0;
-   dynamic_dpb_t2->dpbLumaPitch = align(decode->width_in_samples, dec->db_alignment);
-   dynamic_dpb_t2->dpbLumaAlignedHeight = align(decode->height_in_samples, dec->db_alignment);
-   dynamic_dpb_t2->dpbLumaAlignedSize = dynamic_dpb_t2->dpbLumaPitch *
-      dynamic_dpb_t2->dpbLumaAlignedHeight;
-   dynamic_dpb_t2->dpbChromaPitch = dynamic_dpb_t2->dpbLumaPitch >> 1;
-   dynamic_dpb_t2->dpbChromaAlignedHeight = dynamic_dpb_t2->dpbLumaAlignedHeight >> 1;
-   dynamic_dpb_t2->dpbChromaAlignedSize = dynamic_dpb_t2->dpbChromaPitch *
-      dynamic_dpb_t2->dpbChromaAlignedHeight * 2;
-
-   if (dec->ref_codec.bts == CODEC_10_BITS) {
-      dynamic_dpb_t2->dpbLumaAlignedSize = dynamic_dpb_t2->dpbLumaAlignedSize * 3 / 2;
-      dynamic_dpb_t2->dpbChromaAlignedSize = dynamic_dpb_t2->dpbChromaAlignedSize * 3 / 2;
-   }
 
    return 0;
 }
 
-static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
-                                                 struct pipe_video_buffer *target,
-                                                 struct pipe_picture_desc *picture)
+static struct pb_buffer_lean *rvcn_dec_message_decode(struct radeon_decoder *dec,
+                                                      struct pipe_video_buffer *target,
+                                                      struct pipe_picture_desc *picture)
 {
    DECRYPT_PARAMETERS *decrypt = (DECRYPT_PARAMETERS *)picture->decrypt_key;
    bool encrypted = picture->protected_playback;
@@ -1912,13 +1479,15 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
    rvcn_dec_message_index_t *index_codec;
    rvcn_dec_message_index_t *index_drm = NULL;
    rvcn_dec_message_index_t *index_dynamic_dpb = NULL;
+   rvcn_dec_message_index_t *index_hevc_direct_reflist = NULL;
    rvcn_dec_message_decode_t *decode;
    unsigned sizes = 0, offset_decode, offset_codec;
-   unsigned offset_drm = 0, offset_dynamic_dpb = 0;
+   unsigned offset_drm = 0, offset_dynamic_dpb = 0, offset_hevc_direct_reflist = 0;
    void *codec;
    rvcn_dec_message_drm_t *drm = NULL;
    rvcn_dec_message_dynamic_dpb_t *dynamic_dpb = NULL;
    rvcn_dec_message_dynamic_dpb_t2_t *dynamic_dpb_t2 = NULL;
+   rvcn_dec_message_hevc_direct_ref_list_t *hevc_reflist = NULL;
    bool dpb_resize = false;
    header = dec->msg;
    sizes += sizeof(rvcn_dec_message_header_t);
@@ -1933,6 +1502,11 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
 
    if (dec->dpb_type >= DPB_DYNAMIC_TIER_1) {
       index_dynamic_dpb = (void*)header + sizes;
+      sizes += sizeof(rvcn_dec_message_index_t);
+   }
+
+   if (u_reduce_video_profile(picture->profile) == PIPE_VIDEO_FORMAT_HEVC) {
+      index_hevc_direct_reflist = (void*)header + sizes;
       sizes += sizeof(rvcn_dec_message_index_t);
    }
 
@@ -1958,6 +1532,12 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
       }
    }
 
+   if (u_reduce_video_profile(picture->profile) == PIPE_VIDEO_FORMAT_HEVC) {
+      offset_hevc_direct_reflist = sizes;
+      hevc_reflist = (void*)header + sizes;
+      sizes += align((4 + 2 * 15 * ((struct pipe_h265_picture_desc *)picture)->slice_parameter.slice_count), 4);
+   }
+
    offset_codec = sizes;
    codec = (void*)header + sizes;
 
@@ -1975,7 +1555,7 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
    header->num_buffers = 1;
 
    index_codec->offset = offset_codec;
-   index_codec->size = sizeof(rvcn_dec_message_avc_t);
+   index_codec->size = 0;
    index_codec->filled = 0;
    ++header->num_buffers;
 
@@ -1998,6 +1578,14 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
          index_dynamic_dpb->size = sizeof(rvcn_dec_message_dynamic_dpb_t2_t);
    }
 
+   if (u_reduce_video_profile(picture->profile) == PIPE_VIDEO_FORMAT_HEVC) {
+      index_hevc_direct_reflist->message_id = RDECODE_MESSAGE_HEVC_DIRECT_REF_LIST;
+      index_hevc_direct_reflist->offset = offset_hevc_direct_reflist;
+      index_hevc_direct_reflist->size = align((4 + 2 * 15 * ((struct pipe_h265_picture_desc *)picture)->slice_parameter.slice_count), 4);
+      index_hevc_direct_reflist->filled = 0;
+      ++header->num_buffers;
+   }
+
    decode->stream_type = dec->stream_type;
    decode->decode_flags = 0;
    decode->width_in_samples = dec->base.width;
@@ -2015,10 +1603,9 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
          }
          assert(encrypted == (bool)(dec->dpb.res->flags & RADEON_FLAG_ENCRYPTED));
          if (!r) {
-            RVID_ERR("Can't allocated dpb.\n");
+            RADEON_DEC_ERR("Can't allocate dpb.\n");
             return NULL;
          }
-         si_vid_clear_buffer(dec->base.context, &dec->dpb);
       } else if (dec->dpb_type == DPB_DYNAMIC_TIER_1 && dec->dpb.res &&
                  (dec->max_width < dec->base.width || dec->max_height < dec->base.height)) {
          struct rvid_buf_offset_info buf_offset_info;
@@ -2030,11 +1617,11 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
             align(dec->base.height, dec->db_alignment) * 3 / 2);
 
          dec->dpb_size = calc_dpb_size(dec);
-         r = si_vid_resize_buffer(dec->screen, &dec->cs, &dec->dpb, dec->dpb_size, &buf_offset_info);
+         r = si_vid_resize_buffer(dec->base.context, &dec->cs, &dec->dpb, dec->dpb_size, &buf_offset_info);
          if (!r) {
-            RVID_ERR("Can't resize dpb.\n");
+            RADEON_DEC_ERR("Can't resize dpb.\n");
             return NULL;
-	 }
+         }
          dec->max_width = dec->base.width;
          dec->max_height = dec->base.height;
          dpb_resize = true;
@@ -2054,10 +1641,9 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
          assert((encrypted && dec->tmz_ctx) == (bool)(dec->ctx.res->flags & RADEON_FLAG_ENCRYPTED));
 
          if (!r) {
-            RVID_ERR("Can't allocated context buffer.\n");
+            RADEON_DEC_ERR("Can't allocate context buffer.\n");
             return NULL;
          }
-         si_vid_clear_buffer(dec->base.context, &dec->ctx);
       } else if (fmt == PIPE_VIDEO_FORMAT_VP9) {
          unsigned ctx_size;
          uint8_t *ptr;
@@ -2088,10 +1674,9 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
             r = si_vid_create_buffer(dec->screen, &dec->ctx, ctx_size, PIPE_USAGE_DEFAULT);
          }
          if (!r) {
-            RVID_ERR("Can't allocated context buffer.\n");
+            RADEON_DEC_ERR("Can't allocate context buffer.\n");
             return NULL;
          }
-         si_vid_clear_buffer(dec->base.context, &dec->ctx);
 
          /* ctx needs probs table */
          ptr = dec->ws->buffer_map(dec->ws, dec->ctx.res->buf, &dec->cs,
@@ -2113,10 +1698,9 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
             r = si_vid_create_buffer(dec->screen, &dec->ctx, ctx_size, PIPE_USAGE_DEFAULT);
          }
          if (!r) {
-            RVID_ERR("Can't allocated context buffer.\n");
+            RADEON_DEC_ERR("Can't allocate context buffer.\n");
             return NULL;
          }
-         si_vid_clear_buffer(dec->base.context, &dec->ctx);
       }
    }
    if (encrypted != dec->ws->cs_is_secure(&dec->cs)) {
@@ -2156,7 +1740,7 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
    decode->dt_uv_pitch = chroma->surface.u.gfx9.surf_pitch * chroma->surface.blk_w;
 
    if (luma->surface.meta_offset) {
-      RVID_ERR("DCC surfaces not supported.\n");
+      RADEON_DEC_ERR("DCC surfaces not supported.\n");
       return NULL;
    }
 
@@ -2178,6 +1762,7 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
       decode->dt_luma_bottom_offset = decode->dt_luma_top_offset;
       decode->dt_chroma_bottom_offset = decode->dt_chroma_top_offset;
    }
+   decode->mif_wrc_en = sscreen->info.vcn_ip_version >= VCN_3_0_0;
    if (dec->stream_type == RDECODE_CODEC_AV1)
       decode->db_pitch_uv = chroma->surface.u.gfx9.surf_pitch * chroma->surface.blk_w;
 
@@ -2209,11 +1794,15 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
       }
    }
 
+   if (u_reduce_video_profile(picture->profile) == PIPE_VIDEO_FORMAT_HEVC)
+      get_h265_reflist(hevc_reflist, (struct pipe_h265_picture_desc *)picture);
+
    switch (u_reduce_video_profile(picture->profile)) {
    case PIPE_VIDEO_FORMAT_MPEG4_AVC: {
       rvcn_dec_message_avc_t avc = get_h264_msg(dec, target, (struct pipe_h264_picture_desc *)picture);
       memcpy(codec, (void *)&avc, sizeof(rvcn_dec_message_avc_t));
       index_codec->message_id = RDECODE_MESSAGE_AVC;
+      index_codec->size = sizeof(rvcn_dec_message_avc_t);
       break;
    }
    case PIPE_VIDEO_FORMAT_HEVC: {
@@ -2222,6 +1811,7 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
 
       memcpy(codec, (void *)&hevc, sizeof(rvcn_dec_message_hevc_t));
       index_codec->message_id = RDECODE_MESSAGE_HEVC;
+      index_codec->size = sizeof(rvcn_dec_message_hevc_t);
       break;
    }
    case PIPE_VIDEO_FORMAT_VC1: {
@@ -2234,6 +1824,7 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
          decode->height_in_samples = align(decode->height_in_samples, 16) / 16;
       }
       index_codec->message_id = RDECODE_MESSAGE_VC1;
+      index_codec->size = sizeof(rvcn_dec_message_vc1_t);
       break;
    }
    case PIPE_VIDEO_FORMAT_MPEG12: {
@@ -2242,6 +1833,7 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
 
       memcpy(codec, (void *)&mpeg2, sizeof(rvcn_dec_message_mpeg2_vld_t));
       index_codec->message_id = RDECODE_MESSAGE_MPEG2_VLD;
+      index_codec->size = sizeof(rvcn_dec_message_mpeg2_vld_t);
       break;
    }
    case PIPE_VIDEO_FORMAT_MPEG4: {
@@ -2250,6 +1842,7 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
 
       memcpy(codec, (void *)&mpeg4, sizeof(rvcn_dec_message_mpeg4_asp_vld_t));
       index_codec->message_id = RDECODE_MESSAGE_MPEG4_ASP_VLD;
+      index_codec->size = sizeof(rvcn_dec_message_mpeg4_asp_vld_t);
       break;
    }
    case PIPE_VIDEO_FORMAT_VP9: {
@@ -2258,6 +1851,7 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
 
       memcpy(codec, (void *)&vp9, sizeof(rvcn_dec_message_vp9_t));
       index_codec->message_id = RDECODE_MESSAGE_VP9;
+      index_codec->size = sizeof(rvcn_dec_message_vp9_t);
       break;
    }
    case PIPE_VIDEO_FORMAT_AV1: {
@@ -2266,55 +1860,18 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
 
       memcpy(codec, (void *)&av1, sizeof(rvcn_dec_message_av1_t));
       index_codec->message_id = RDECODE_MESSAGE_AV1;
+      index_codec->size = sizeof(rvcn_dec_message_av1_t);
 
       if (dec->ctx.res == NULL) {
-         unsigned frame_ctxt_size = dec->av1_version == RDECODE_AV1_VER_0
-                                       ? align(sizeof(rvcn_av1_frame_context_t), 2048)
-                                       : align(sizeof(rvcn_av1_vcn4_frame_context_t), 2048);
-
-         unsigned ctx_size = (9 + 4) * frame_ctxt_size + 9 * 64 * 34 * 512 + 9 * 64 * 34 * 256 * 5;
-         int num_64x64_CTB_8k = 68;
-         int num_128x128_CTB_8k = 34;
-         int sdb_pitch_64x64 = align(32 * num_64x64_CTB_8k, 256) * 2;
-         int sdb_pitch_128x128 = align(32 * num_128x128_CTB_8k, 256) * 2;
-         int sdb_lf_size_ctb_64x64 = sdb_pitch_64x64 * (align(1728, 64) / 64);
-         int sdb_lf_size_ctb_128x128 = sdb_pitch_128x128 * (align(3008, 64) / 64);
-         int sdb_superres_size_ctb_64x64 = sdb_pitch_64x64 * (align(3232, 64) / 64);
-         int sdb_superres_size_ctb_128x128 = sdb_pitch_128x128 * (align(6208, 64) / 64);
-         int sdb_output_size_ctb_64x64 = sdb_pitch_64x64 * (align(1312, 64) / 64);
-         int sdb_output_size_ctb_128x128 = sdb_pitch_128x128 * (align(2336, 64) / 64);
-         int sdb_fg_avg_luma_size_ctb_64x64 = sdb_pitch_64x64 * (align(384, 64) / 64);
-         int sdb_fg_avg_luma_size_ctb_128x128 = sdb_pitch_128x128 * (align(640, 64) / 64);
+         unsigned ctx_size = ac_vcn_dec_calc_ctx_size_av1(dec->av1_version);
          uint8_t *ptr;
-         int i;
-         struct rvcn_av1_prob_funcs prob;
-
-         if (dec->av1_version == RDECODE_AV1_VER_0) {
-            prob.init_mode_probs = rvcn_init_mode_probs;
-            prob.init_mv_probs = rvcn_av1_init_mv_probs;
-            prob.default_coef_probs = rvcn_av1_default_coef_probs;
-         } else {
-            prob.init_mode_probs = rvcn_vcn4_init_mode_probs;
-            prob.init_mv_probs = rvcn_vcn4_av1_init_mv_probs;
-            prob.default_coef_probs = rvcn_vcn4_av1_default_coef_probs;
-         }
-
-         ctx_size += (MAX2(sdb_lf_size_ctb_64x64, sdb_lf_size_ctb_128x128) +
-                      MAX2(sdb_superres_size_ctb_64x64, sdb_superres_size_ctb_128x128) +
-                      MAX2(sdb_output_size_ctb_64x64, sdb_output_size_ctb_128x128) +
-                      MAX2(sdb_fg_avg_luma_size_ctb_64x64, sdb_fg_avg_luma_size_ctb_128x128)) * 2  + 68 * 512;
 
          if (!si_vid_create_buffer(dec->screen, &dec->ctx, ctx_size, PIPE_USAGE_DEFAULT))
-            RVID_ERR("Can't allocated context buffer.\n");
-         si_vid_clear_buffer(dec->base.context, &dec->ctx);
+            RADEON_DEC_ERR("Can't allocate context buffer.\n");
 
          ptr = dec->ws->buffer_map(dec->ws, dec->ctx.res->buf, &dec->cs, PIPE_MAP_WRITE | RADEON_MAP_TEMPORARY);
 
-         for (i = 0; i < 4; ++i) {
-            prob.init_mode_probs((void*)(ptr + i * frame_ctxt_size));
-            prob.init_mv_probs((void*)(ptr + i * frame_ctxt_size));
-            prob.default_coef_probs((void*)(ptr + i * frame_ctxt_size), i);
-         }
+         ac_vcn_av1_init_probs(dec->av1_version, ptr);
          dec->ws->buffer_unmap(dec->ws, dec->ctx.res->buf);
       }
 
@@ -2325,12 +1882,17 @@ static struct pb_buffer *rvcn_dec_message_decode(struct radeon_decoder *dec,
       return NULL;
    }
 
+   header->total_size += index_codec->size;
+
    if (dec->ctx.res)
       decode->hw_ctxt_size = dec->ctx.res->buf->size;
 
-   if (dec->dpb_type == DPB_DYNAMIC_TIER_2)
+   if (dec->dpb_type == DPB_DYNAMIC_TIER_2) {
       if (rvcn_dec_dynamic_dpb_t2_message(dec, decode, dynamic_dpb_t2, encrypted))
          return NULL;
+   } else if (((struct si_screen *)dec->screen)->info.vcn_ip_version == VCN_5_0_0 &&
+                dec->dpb_type == DPB_MAX_RES)
+      decode->db_swizzle_mode = RDECODE_VCN5_256B_D;
 
    return luma->buffer.buf;
 }
@@ -2366,8 +1928,25 @@ static void rvcn_dec_sq_tail(struct radeon_decoder *dec)
 }
 /* flush IB to the hardware */
 static int flush(struct radeon_decoder *dec, unsigned flags,
-                 struct pipe_fence_handle **fence) {
+                 struct pipe_fence_handle **fence)
+{
+   struct si_screen *sscreen = (struct si_screen *)dec->screen;
+
    rvcn_dec_sq_tail(dec);
+
+   if (sscreen->debug_flags & DBG(IB)) {
+      struct ac_ib_parser ib_parser = {
+         .f = stderr,
+         .ib = dec->cs.current.buf,
+         .num_dw = dec->cs.current.cdw,
+         .gfx_level = sscreen->info.gfx_level,
+         .vcn_version = sscreen->info.vcn_ip_version,
+         .family = sscreen->info.family,
+         .ip_type = dec->stream_type == RDECODE_CODEC_JPEG ? AMD_IP_VCN_JPEG :
+                    dec->vcn_dec_sw_ring ? AMD_IP_VCN_ENC : AMD_IP_VCN_DEC,
+      };
+      ac_parse_ib(&ib_parser, "IB");
+   }
 
    return dec->ws->cs_flush(&dec->cs, flags, fence);
 }
@@ -2380,7 +1959,7 @@ static void set_reg(struct radeon_decoder *dec, unsigned reg, uint32_t val)
 }
 
 /* send a command to the VCPU through the GPCOM registers */
-static void send_cmd(struct radeon_decoder *dec, unsigned cmd, struct pb_buffer *buf, uint32_t off,
+static void send_cmd(struct radeon_decoder *dec, unsigned cmd, struct pb_buffer_lean *buf, uint32_t off,
                      unsigned usage, enum radeon_bo_domain domain)
 {
    uint64_t addr;
@@ -2548,35 +2127,35 @@ static unsigned calc_ctx_size_h264_perf(struct radeon_decoder *dec)
    height_in_mb = align(height / VL_MACROBLOCK_HEIGHT, 2);
 
    unsigned fs_in_mb = width_in_mb * height_in_mb;
-   unsigned num_dpb_buffer;
+   unsigned num_dpb_buffer_lean;
    switch (dec->base.level) {
    case 30:
-      num_dpb_buffer = 8100 / fs_in_mb;
+      num_dpb_buffer_lean = 8100 / fs_in_mb;
       break;
    case 31:
-      num_dpb_buffer = 18000 / fs_in_mb;
+      num_dpb_buffer_lean = 18000 / fs_in_mb;
       break;
    case 32:
-      num_dpb_buffer = 20480 / fs_in_mb;
+      num_dpb_buffer_lean = 20480 / fs_in_mb;
       break;
    case 41:
-      num_dpb_buffer = 32768 / fs_in_mb;
+      num_dpb_buffer_lean = 32768 / fs_in_mb;
       break;
    case 42:
-      num_dpb_buffer = 34816 / fs_in_mb;
+      num_dpb_buffer_lean = 34816 / fs_in_mb;
       break;
    case 50:
-      num_dpb_buffer = 110400 / fs_in_mb;
+      num_dpb_buffer_lean = 110400 / fs_in_mb;
       break;
    case 51:
-      num_dpb_buffer = 184320 / fs_in_mb;
+      num_dpb_buffer_lean = 184320 / fs_in_mb;
       break;
    default:
-      num_dpb_buffer = 184320 / fs_in_mb;
+      num_dpb_buffer_lean = 184320 / fs_in_mb;
       break;
    }
-   num_dpb_buffer++;
-   max_references = MAX2(MIN2(NUM_H264_REFS, num_dpb_buffer), max_references);
+   num_dpb_buffer_lean++;
+   max_references = MAX2(MIN2(NUM_H264_REFS, num_dpb_buffer_lean), max_references);
    ctx_size = max_references * align(width_in_mb * height_in_mb * 192, 256);
 
    return ctx_size;
@@ -2595,7 +2174,7 @@ static unsigned calc_dpb_size(struct radeon_decoder *dec)
    unsigned max_references = dec->base.max_references + 1;
 
    // aligned size of a single frame
-   image_size = align(width, 32) * height;
+   image_size = align(width, dec->db_alignment) * align(height, dec->db_alignment);
    image_size += image_size / 2;
    image_size = align(image_size, 1024);
 
@@ -2606,36 +2185,36 @@ static unsigned calc_dpb_size(struct radeon_decoder *dec)
    switch (u_reduce_video_profile(dec->base.profile)) {
    case PIPE_VIDEO_FORMAT_MPEG4_AVC: {
       unsigned fs_in_mb = width_in_mb * height_in_mb;
-      unsigned num_dpb_buffer;
+      unsigned num_dpb_buffer_lean;
 
       switch (dec->base.level) {
       case 30:
-         num_dpb_buffer = 8100 / fs_in_mb;
+         num_dpb_buffer_lean = 8100 / fs_in_mb;
          break;
       case 31:
-         num_dpb_buffer = 18000 / fs_in_mb;
+         num_dpb_buffer_lean = 18000 / fs_in_mb;
          break;
       case 32:
-         num_dpb_buffer = 20480 / fs_in_mb;
+         num_dpb_buffer_lean = 20480 / fs_in_mb;
          break;
       case 41:
-         num_dpb_buffer = 32768 / fs_in_mb;
+         num_dpb_buffer_lean = 32768 / fs_in_mb;
          break;
       case 42:
-         num_dpb_buffer = 34816 / fs_in_mb;
+         num_dpb_buffer_lean = 34816 / fs_in_mb;
          break;
       case 50:
-         num_dpb_buffer = 110400 / fs_in_mb;
+         num_dpb_buffer_lean = 110400 / fs_in_mb;
          break;
       case 51:
-         num_dpb_buffer = 184320 / fs_in_mb;
+         num_dpb_buffer_lean = 184320 / fs_in_mb;
          break;
       default:
-         num_dpb_buffer = 184320 / fs_in_mb;
+         num_dpb_buffer_lean = 184320 / fs_in_mb;
          break;
       }
-      num_dpb_buffer++;
-      max_references = MAX2(MIN2(NUM_H264_REFS, num_dpb_buffer), max_references);
+      num_dpb_buffer_lean++;
+      max_references = MAX2(MIN2(NUM_H264_REFS, num_dpb_buffer_lean), max_references);
       dpb_size = image_size * max_references;
       break;
    }
@@ -2646,12 +2225,12 @@ static unsigned calc_dpb_size(struct radeon_decoder *dec)
       else
          max_references = MAX2(max_references, 17);
 
-      width = align(width, 16);
-      height = align(height, 16);
       if (dec->base.profile == PIPE_VIDEO_PROFILE_HEVC_MAIN_10)
-         dpb_size = align((align(width, 64) * align(height, 64) * 9) / 4, 256) * max_references;
+         dpb_size = align((align(width, dec->db_alignment) *
+                    align(height, dec->db_alignment) * 9) / 4, 256) * max_references;
       else
-         dpb_size = align((align(width, 32) * height * 3) / 2, 256) * max_references;
+         dpb_size = align((align(width, dec->db_alignment) *
+                    align(height, dec->db_alignment) * 3) / 2, 256) * max_references;
       break;
 
    case PIPE_VIDEO_FORMAT_VC1:
@@ -2737,17 +2316,29 @@ static void radeon_dec_destroy(struct pipe_video_codec *decoder)
 
    assert(decoder);
 
+   if (dec->bs_ptr) {
+      dec->ws->buffer_unmap(dec->ws, dec->bs_buffers[dec->cur_buffer].res->buf);
+      dec->bs_ptr = NULL;
+   }
+
+   if (dec->msg) {
+      dec->ws->buffer_unmap(dec->ws, dec->msg_fb_it_probs_buffers[dec->cur_buffer].res->buf);
+      dec->msg = NULL;
+   }
+
    if (dec->stream_type != RDECODE_CODEC_JPEG) {
+      struct pipe_fence_handle *fence = NULL;
       map_msg_fb_it_probs_buf(dec);
       rvcn_dec_message_destroy(dec);
       send_msg_buf(dec);
-      flush(dec, 0, &dec->destroy_fence);
-      dec->ws->fence_wait(dec->ws, dec->destroy_fence, PIPE_DEFAULT_DECODER_FEEDBACK_TIMEOUT_NS);
-      dec->ws->fence_reference(&dec->destroy_fence, NULL);
+      flush(dec, 0, &fence);
+      dec->ws->fence_wait(dec->ws, fence, OS_TIMEOUT_INFINITE);
+      dec->ws->fence_reference(dec->ws, &fence, NULL);
    }
 
-   dec->ws->fence_reference(&dec->prev_fence, NULL);
    dec->ws->cs_destroy(&dec->cs);
+   if (dec->ectx)
+      dec->ectx->destroy(dec->ectx);
 
    if (dec->stream_type == RDECODE_CODEC_JPEG) {
       for (i = 0; i < dec->njctx; i++) {
@@ -2771,7 +2362,7 @@ static void radeon_dec_destroy(struct pipe_video_codec *decoder)
    } else {
       list_for_each_entry_safe(struct rvcn_dec_dynamic_dpb_t2, d, &dec->dpb_ref_list, list) {
          list_del(&d->list);
-         si_vid_destroy_buffer(&d->dpb);
+         d->vbuf->destroy(d->vbuf);
          FREE(d);
       }
    }
@@ -2794,6 +2385,33 @@ static void radeon_dec_begin_frame(struct pipe_video_codec *decoder,
    uintptr_t frame;
 
    assert(decoder);
+
+   if (dec->error)
+      return;
+
+   switch (dec->stream_type) {
+   case RDECODE_CODEC_VP9: {
+      struct pipe_vp9_picture_desc *pic = (struct pipe_vp9_picture_desc *)picture;
+      /* Only 10 bit is supported for Profile 2 */
+      if (pic->picture_parameter.bit_depth > 10) {
+         dec->error = true;
+         return;
+      }
+      break;
+   }
+   case RDECODE_CODEC_AV1: {
+      struct pipe_av1_picture_desc *pic = (struct pipe_av1_picture_desc *)picture;
+      /* Only 4:2:0 is supported for Profile 2 */
+      if (!pic->picture_parameter.seq_info_fields.subsampling_x ||
+          !pic->picture_parameter.seq_info_fields.subsampling_y) {
+         dec->error = true;
+         return;
+      }
+      break;
+   }
+   default:
+      break;
+   }
 
    frame = ++dec->frame_number;
    if (dec->stream_type != RDECODE_CODEC_VP9 && dec->stream_type != RDECODE_CODEC_AV1
@@ -2832,11 +2450,13 @@ static void radeon_dec_decode_bitstream(struct pipe_video_codec *decoder,
 
    assert(decoder);
 
-   if (!dec->bs_ptr)
+   if (dec->error)
       return;
 
-   if (dec->bs_size && dec->stream_type == RDECODE_CODEC_AV1)
+   if (!dec->bs_ptr) {
+      RADEON_DEC_ERR("Invalid bitstream ptr!\n");
       return;
+   }
 
    unsigned long total_bs_size = dec->bs_size;
    for (i = 0; i < num_buffers; ++i)
@@ -2847,8 +2467,18 @@ static void radeon_dec_decode_bitstream(struct pipe_video_codec *decoder,
    if (total_bs_size > buf->res->buf->size) {
       dec->ws->buffer_unmap(dec->ws, buf->res->buf);
       dec->bs_ptr = NULL;
-      if (!si_vid_resize_buffer(dec->screen, &dec->cs, buf, total_bs_size, NULL)) {
-         RVID_ERR("Can't resize bitstream buffer!");
+
+      total_bs_size = align(total_bs_size, 128);
+
+      if (!dec->bs_size) {
+         struct rvid_buffer old_buf = *buf;
+         if (!si_vid_create_buffer(dec->screen, buf, total_bs_size, buf->usage)) {
+            RADEON_DEC_ERR("Can't create bitstream buffer!");
+            return;
+         }
+         si_vid_destroy_buffer(&old_buf);
+      } else if (!si_vid_resize_buffer(dec->base.context, &dec->cs, buf, total_bs_size, NULL)) {
+         RADEON_DEC_ERR("Can't resize bitstream buffer!");
          return;
       }
 
@@ -2870,10 +2500,10 @@ static void radeon_dec_decode_bitstream(struct pipe_video_codec *decoder,
 /**
  * send cmd for vcn dec
  */
-void send_cmd_dec(struct radeon_decoder *dec, struct pipe_video_buffer *target,
+bool send_cmd_dec(struct radeon_decoder *dec, struct pipe_video_buffer *target,
                   struct pipe_picture_desc *picture)
 {
-   struct pb_buffer *dt;
+   struct pb_buffer_lean *dt;
    struct rvid_buffer *msg_fb_it_probs_buf, *bs_buf;
 
    msg_fb_it_probs_buf = &dec->msg_fb_it_probs_buffers[dec->cur_buffer];
@@ -2885,6 +2515,8 @@ void send_cmd_dec(struct radeon_decoder *dec, struct pipe_video_buffer *target,
 
    map_msg_fb_it_probs_buf(dec);
    dt = rvcn_dec_message_decode(dec, target, picture);
+   if (!dt)
+      return false;
    rvcn_dec_message_feedback(dec);
    send_msg_buf(dec);
 
@@ -2908,41 +2540,88 @@ void send_cmd_dec(struct radeon_decoder *dec, struct pipe_video_buffer *target,
 
    if (dec->vcn_dec_sw_ring == false)
       set_reg(dec, dec->reg.cntl, 1);
+
+   return true;
 }
 
 /**
  * end decoding of the current frame
  */
-static void radeon_dec_end_frame(struct pipe_video_codec *decoder, struct pipe_video_buffer *target,
-                                 struct pipe_picture_desc *picture)
+static int radeon_dec_end_frame(struct pipe_video_codec *decoder, struct pipe_video_buffer *target,
+                                struct pipe_picture_desc *picture)
 {
    struct radeon_decoder *dec = (struct radeon_decoder *)decoder;
 
    assert(decoder);
 
-   if (!dec->bs_ptr)
-      return;
+   if (dec->error)
+      return 1;
 
-   dec->send_cmd(dec, target, picture);
-   flush(dec, PIPE_FLUSH_ASYNC, picture->fence);
-   if (picture->fence)
-      dec->ws->fence_reference(&dec->prev_fence, *picture->fence);
+   if (!dec->send_cmd(dec, target, picture))
+      return 1;
+
+   flush(dec, picture->flush_flags, picture->fence);
+
    next_buffer(dec);
+   return 0;
+}
+
+static bool radeon_dec_jpeg_check_format(struct radeon_decoder *dec, enum pipe_format format,
+                                         unsigned sampling_factor)
+{
+   enum pipe_format expected_format;
+
+   switch (sampling_factor) {
+   case 0x221111:
+      expected_format = PIPE_FORMAT_NV12;
+      break;
+   case 0x211111:
+   case 0x221212:
+   case 0x222121:
+      expected_format = PIPE_FORMAT_YUYV;
+      break;
+   case 0x111111:
+   case 0x222222:
+   case 0x444444:
+      expected_format = PIPE_FORMAT_Y8_U8_V8_444_UNORM;
+      break;
+   case 0x121111:
+      expected_format = PIPE_FORMAT_Y8_U8_V8_440_UNORM;
+      break;
+   case 0x11:
+   case 0x44:
+      expected_format = PIPE_FORMAT_Y8_400_UNORM;
+      break;
+   default:
+      RADEON_DEC_ERR("Unsupported sampling factor 0x%x\n", sampling_factor);
+      return false;
+   }
+
+   /* Format conversion */
+   if (format == PIPE_FORMAT_R8G8B8A8_UNORM ||
+       format == PIPE_FORMAT_A8R8G8B8_UNORM ||
+       format == PIPE_FORMAT_R8_G8_B8_UNORM)
+      return true;
+
+   return expected_format == format;
 }
 
 /**
  * end decoding of the current jpeg frame
  */
-static void radeon_dec_jpeg_end_frame(struct pipe_video_codec *decoder, struct pipe_video_buffer *target,
-                                 struct pipe_picture_desc *picture)
+static int radeon_dec_jpeg_end_frame(struct pipe_video_codec *decoder, struct pipe_video_buffer *target,
+                                     struct pipe_picture_desc *picture)
 {
    struct radeon_decoder *dec = (struct radeon_decoder *)decoder;
    struct pipe_mjpeg_picture_desc *pic = (struct pipe_mjpeg_picture_desc *)picture;
 
    assert(decoder);
 
-   if (!dec->bs_ptr)
-      return;
+   if (!radeon_dec_jpeg_check_format(dec, target->buffer_format, pic->picture_parameter.sampling_factor))
+      RADEON_DEC_ERR("Decode format check failed\n");
+
+   if (dec->error)
+      return 1;
 
    dec->jpg.crop_x = ROUND_DOWN_TO(pic->picture_parameter.crop_x, VL_MACROBLOCK_WIDTH);
    dec->jpg.crop_y = ROUND_DOWN_TO(pic->picture_parameter.crop_y, VL_MACROBLOCK_HEIGHT);
@@ -2953,9 +2632,10 @@ static void radeon_dec_jpeg_end_frame(struct pipe_video_codec *decoder, struct p
    if (dec->jpg.crop_y + dec->jpg.crop_height > pic->picture_parameter.picture_height)
       dec->jpg.crop_height = 0;
    dec->send_cmd(dec, target, picture);
-   dec->ws->cs_flush(&dec->jcs[dec->cb_idx], PIPE_FLUSH_ASYNC, NULL);
+   dec->ws->cs_flush(&dec->jcs[dec->cb_idx], picture->flush_flags, NULL);
    next_buffer(dec);
    dec->cb_idx = (dec->cb_idx+1) % dec->njctx;
+   return 0;
 }
 
 /**
@@ -2965,10 +2645,10 @@ static void radeon_dec_flush(struct pipe_video_codec *decoder)
 {
 }
 
-static int radeon_dec_get_decoder_fence(struct pipe_video_codec *decoder,
-                                        struct pipe_fence_handle *fence,
-                                        uint64_t timeout) {
-
+static int radeon_dec_fence_wait(struct pipe_video_codec *decoder,
+                                 struct pipe_fence_handle *fence,
+                                 uint64_t timeout)
+{
    struct radeon_decoder *dec = (struct radeon_decoder *)decoder;
 
    return dec->ws->fence_wait(dec->ws, fence, timeout);
@@ -2979,29 +2659,9 @@ static void radeon_dec_destroy_fence(struct pipe_video_codec *decoder,
 {
    struct radeon_decoder *dec = (struct radeon_decoder *)decoder;
 
-   dec->ws->fence_reference(&fence, NULL);
+   dec->ws->fence_reference(dec->ws, &fence, NULL);
 }
 
-/**
- * update render list when target buffer got updated, use the existing
- * index and update the new buffer to associate with it.
- */
-static void radeon_dec_update_render_list(struct pipe_video_codec *decoder,
-                                          struct pipe_video_buffer *old,
-                                          struct pipe_video_buffer *updated)
-{
-   struct radeon_decoder *dec = (struct radeon_decoder *)decoder;
-   void *index = vl_video_buffer_get_associated_data(old, decoder);
-
-   vl_video_buffer_set_associated_data(updated, decoder, index,
-                                       old->destroy_associated_data);
-   for (int i = 0; i < ARRAY_SIZE(dec->render_pic_list); ++i) {
-      if (dec->render_pic_list[i] == old) {
-         dec->render_pic_list[i] = updated;
-         break;
-      }
-   }
-}
 /**
  * create and HW decoder
  */
@@ -3057,8 +2717,14 @@ struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,
    if (!dec)
       return NULL;
 
+   if (sctx->vcn_has_ctx) {
+      dec->ectx = context->screen->context_create(context->screen, NULL, PIPE_CONTEXT_COMPUTE_ONLY);
+      if (!dec->ectx)
+         sctx->vcn_has_ctx = false;
+   }
+
    dec->base = *templ;
-   dec->base.context = context;
+   dec->base.context = (sctx->vcn_has_ctx) ? dec->ectx : context;
    dec->base.width = width;
    dec->base.height = height;
    dec->max_width = width;
@@ -3069,9 +2735,8 @@ struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,
    dec->base.decode_bitstream = radeon_dec_decode_bitstream;
    dec->base.end_frame = radeon_dec_end_frame;
    dec->base.flush = radeon_dec_flush;
-   dec->base.get_decoder_fence = radeon_dec_get_decoder_fence;
+   dec->base.fence_wait = radeon_dec_fence_wait;
    dec->base.destroy_fence = radeon_dec_destroy_fence;
-   dec->base.update_decoder_target =  radeon_dec_update_render_list;
 
    dec->stream_type = stream_type;
    dec->stream_handle = si_vid_alloc_stream_handle();
@@ -3084,20 +2749,22 @@ struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,
       ring = AMD_IP_VCN_UNIFIED;
    }
 
-   dec->sq.ib_total_size_in_dw = NULL;
-   dec->sq.ib_checksum = NULL;
+   dec->sq.signature_ib_total_size_in_dw = NULL;
+   dec->sq.signature_ib_checksum = NULL;
+   dec->sq.engine_ib_size_of_packages = NULL;
 
-   if (!ws->cs_create(&dec->cs, sctx->ctx, ring, NULL, NULL)) {
-      RVID_ERR("Can't get command submission context.\n");
+   if (!ws->cs_create(&dec->cs,
+                      (sctx->vcn_has_ctx) ? ((struct si_context *)dec->ectx)->ctx : sctx->ctx,
+                      ring, NULL, NULL)) {
+      RADEON_DEC_ERR("Can't get command submission context.\n");
       goto error;
    }
 
    if (dec->stream_type == RDECODE_CODEC_JPEG) {
 
-      if (sctx->vcn_ip_ver == VCN_2_5_0 || sctx->vcn_ip_ver == VCN_2_6_0)
-         dec->njctx = 2;
-      else if (sctx->vcn_ip_ver == VCN_4_0_3)
-         dec->njctx = 24;
+      if (((struct si_screen*)dec->screen)->info.ip[AMD_IP_VCN_JPEG].num_instances > 1 &&
+          ((struct si_screen*)dec->screen)->info.ip[AMD_IP_VCN_JPEG].num_instances <= MAX_JPEG_INST)
+         dec->njctx = ((struct si_screen*)dec->screen)->info.ip[AMD_IP_VCN_JPEG].num_instances;
       else
          dec->njctx = 1;
 
@@ -3113,7 +2780,7 @@ struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,
          if (!sctx->ctx)
             goto error;
          if (!dec->ws->cs_create(&dec->jcs[i], dec->jctx[i], ring, NULL, NULL)) {
-            RVID_ERR("Can't get additional command submission context for mJPEG.\n");
+            RADEON_DEC_ERR("Can't get additional command submission context for mJPEG.\n");
             goto error;
          }
       }
@@ -3156,18 +2823,15 @@ struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,
       /* use vram to improve performance, workaround an unknown bug */
       if (!si_vid_create_buffer(dec->screen, &dec->msg_fb_it_probs_buffers[i], msg_fb_it_probs_size,
                                 PIPE_USAGE_DEFAULT)) {
-         RVID_ERR("Can't allocated message buffers.\n");
+         RADEON_DEC_ERR("Can't allocate message buffers.\n");
          goto error;
       }
 
       if (!si_vid_create_buffer(dec->screen, &dec->bs_buffers[i], bs_buf_size,
                                 PIPE_USAGE_STAGING)) {
-         RVID_ERR("Can't allocated bitstream buffers.\n");
+         RADEON_DEC_ERR("Can't allocate bitstream buffers.\n");
          goto error;
       }
-
-      si_vid_clear_buffer(context, &dec->msg_fb_it_probs_buffers[i]);
-      si_vid_clear_buffer(context, &dec->bs_buffers[i]);
 
       if (have_probs(dec) && dec->stream_type == RDECODE_CODEC_VP9) {
          struct rvid_buffer *buf;
@@ -3194,19 +2858,27 @@ struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,
    else
       dec->dpb_type = DPB_MAX_RES;
 
-   dec->db_alignment = (((struct si_screen *)dec->screen)->info.vcn_ip_version >= VCN_2_0_0 &&
+   dec->db_alignment = (sctx->vcn_ip_ver >= VCN_2_0_0 &&
                    dec->base.width > 32 && (dec->stream_type == RDECODE_CODEC_VP9 ||
                    dec->stream_type == RDECODE_CODEC_AV1 ||
                    dec->base.profile == PIPE_VIDEO_PROFILE_HEVC_MAIN_10)) ? 64 : 32;
 
-   dec->dpb_size = calc_dpb_size(dec);
+   if (sctx->vcn_ip_ver >= VCN_5_0_0) {
+      if (stream_type == RDECODE_CODEC_VP9 ||
+          stream_type == RDECODE_CODEC_AV1 ||
+          stream_type == RDECODE_CODEC_H265 ||
+          stream_type == RDECODE_CODEC_H264_PERF)
+         dec->db_alignment = 64;
+   }
+
+   if (dec->dpb_type != DPB_DYNAMIC_TIER_2)
+      dec->dpb_size = calc_dpb_size(dec);
 
    if (!si_vid_create_buffer(dec->screen, &dec->sessionctx, RDECODE_SESSION_CONTEXT_SIZE,
                              PIPE_USAGE_DEFAULT)) {
-      RVID_ERR("Can't allocated session ctx.\n");
+      RADEON_DEC_ERR("Can't allocate session ctx.\n");
       goto error;
    }
-   si_vid_clear_buffer(context, &dec->sessionctx);
 
    dec->addr_gfx_mode = RDECODE_ARRAY_MODE_LINEAR;
    dec->av1_version = RDECODE_AV1_VER_0;
@@ -3253,12 +2925,23 @@ struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,
    case VCN_4_0_2:
    case VCN_4_0_4:
    case VCN_4_0_5:
+   case VCN_4_0_6:
       dec->jpg_reg.version = RDECODE_JPEG_REG_VER_V2;
       dec->addr_gfx_mode = RDECODE_ARRAY_MODE_ADDRLIB_SEL_GFX11;
       dec->av1_version = RDECODE_AV1_VER_1;
       break;
+   case VCN_5_0_0:
+      dec->jpg_reg.version = RDECODE_JPEG_REG_VER_V3;
+      dec->addr_gfx_mode = RDECODE_ARRAY_MODE_ADDRLIB_SEL_GFX11;
+      dec->av1_version = RDECODE_AV1_VER_2;
+      break;
+   case VCN_5_0_1:
+      dec->jpg_reg.version = RDECODE_JPEG_REG_VER_V3;
+      dec->addr_gfx_mode = RDECODE_ARRAY_MODE_ADDRLIB_SEL_GFX9;
+      dec->av1_version = RDECODE_AV1_VER_2;
+      break;
    default:
-      RVID_ERR("VCN is not supported.\n");
+      RADEON_DEC_ERR("VCN is not supported.\n");
       goto error;
    }
 
@@ -3335,6 +3018,8 @@ struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,
 
 error:
    dec->ws->cs_destroy(&dec->cs);
+   if (dec->ectx)
+      dec->ectx->destroy(dec->ectx);
 
    if (dec->stream_type == RDECODE_CODEC_JPEG) {
       for (i = 0; i < dec->njctx; i++) {
@@ -3365,4 +3050,16 @@ err:
    FREE(dec);
 
    return NULL;
+}
+
+static enum pipe_format get_buffer_format(struct radeon_decoder *dec)
+{
+   switch (dec->ref_codec.bts) {
+   case CODEC_10_BITS:
+      return PIPE_FORMAT_P010;
+   case CODEC_12_BITS:
+      return PIPE_FORMAT_P012;
+   default:
+      return PIPE_FORMAT_NV12;
+   }
 }

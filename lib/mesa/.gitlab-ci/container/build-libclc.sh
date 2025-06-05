@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-set -ex
+set -uex
+
+uncollapsed_section_start libclc "Building libclc"
 
 export LLVM_CONFIG="llvm-config-${LLVM_VERSION:?"llvm unset!"}"
 LLVM_TAG="llvmorg-15.0.7"
@@ -29,3 +31,5 @@ ln -s /usr/share/clc/spirv-mesa3d-.spv /usr/lib/clc/
 
 du -sh ./*
 rm -rf /libclc /llvm-project
+
+section_end libclc

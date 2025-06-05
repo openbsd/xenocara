@@ -60,12 +60,13 @@ static void sp_blit(struct pipe_context *pipe,
 
    /* XXX turn off occlusion and streamout queries */
 
-   util_blitter_save_vertex_buffer_slot(sp->blitter, sp->vertex_buffer);
+   util_blitter_save_vertex_buffers(sp->blitter, sp->vertex_buffer,
+                                    sp->num_vertex_buffers);
    util_blitter_save_vertex_elements(sp->blitter, sp->velems);
    util_blitter_save_vertex_shader(sp->blitter, sp->vs);
    util_blitter_save_geometry_shader(sp->blitter, sp->gs);
    util_blitter_save_so_targets(sp->blitter, sp->num_so_targets,
-                     (struct pipe_stream_output_target**)sp->so_targets);
+                     (struct pipe_stream_output_target**)sp->so_targets, MESA_PRIM_UNKNOWN);
    util_blitter_save_rasterizer(sp->blitter, sp->rasterizer);
    util_blitter_save_viewport(sp->blitter, &sp->viewports[0]);
    util_blitter_save_scissor(sp->blitter, &sp->scissors[0]);
@@ -83,7 +84,7 @@ static void sp_blit(struct pipe_context *pipe,
                      sp->sampler_views[PIPE_SHADER_FRAGMENT]);
    util_blitter_save_render_condition(sp->blitter, sp->render_cond_query,
                                       sp->render_cond_cond, sp->render_cond_mode);
-   util_blitter_blit(sp->blitter, info);
+   util_blitter_blit(sp->blitter, info, NULL);
 }
 
 static void

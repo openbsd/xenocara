@@ -33,6 +33,7 @@ struct tu_lrz_state
    VkClearValue depth_clear_value;
    /* If LRZ is in invalid state we cannot use it until depth is cleared */
    bool valid : 1;
+   bool disable_for_rp : 1;
    /* Allows to temporary disable LRZ */
    bool enabled : 1;
    bool fast_clear : 1;
@@ -42,13 +43,20 @@ struct tu_lrz_state
    enum tu_lrz_direction prev_direction;
 };
 
+template <chip CHIP>
 void
 tu6_emit_lrz(struct tu_cmd_buffer *cmd, struct tu_cs *cs);
 
+template <chip CHIP>
 void
 tu_disable_lrz(struct tu_cmd_buffer *cmd, struct tu_cs *cs,
                struct tu_image *image);
 
+template <chip CHIP>
+void
+tu_disable_lrz_cpu(struct tu_device *device, struct tu_image *image);
+
+template <chip CHIP>
 void
 tu_lrz_clear_depth_image(struct tu_cmd_buffer *cmd,
                          struct tu_image *image,
@@ -56,28 +64,45 @@ tu_lrz_clear_depth_image(struct tu_cmd_buffer *cmd,
                          uint32_t rangeCount,
                          const VkImageSubresourceRange *pRanges);
 
+template <chip CHIP>
 void
 tu_lrz_begin_renderpass(struct tu_cmd_buffer *cmd);
 
+template <chip CHIP>
 void
 tu_lrz_begin_resumed_renderpass(struct tu_cmd_buffer *cmd);
 
 void
 tu_lrz_begin_secondary_cmdbuf(struct tu_cmd_buffer *cmd);
 
+template <chip CHIP>
 void
 tu_lrz_tiling_begin(struct tu_cmd_buffer *cmd, struct tu_cs *cs);
 
+template <chip CHIP>
+void
+tu_lrz_before_tile(struct tu_cmd_buffer *cmd, struct tu_cs *cs);
+
+template <chip CHIP>
 void
 tu_lrz_tiling_end(struct tu_cmd_buffer *cmd, struct tu_cs *cs);
 
+template <chip CHIP>
 void
 tu_lrz_sysmem_begin(struct tu_cmd_buffer *cmd, struct tu_cs *cs);
 
+template <chip CHIP>
 void
 tu_lrz_sysmem_end(struct tu_cmd_buffer *cmd, struct tu_cs *cs);
 
+template <chip CHIP>
 void
-tu_lrz_disable_during_renderpass(struct tu_cmd_buffer *cmd);
+tu_lrz_disable_during_renderpass(struct tu_cmd_buffer *cmd,
+                                 const char *reason);
+
+template <chip CHIP>
+void
+tu_lrz_flush_valid_during_renderpass(struct tu_cmd_buffer *cmd,
+                                     struct tu_cs *cs);
 
 #endif /* TU_LRZ_H */

@@ -65,7 +65,7 @@ d3d12_video_decoder_decode_bitstream(struct pipe_video_codec * codec,
 /**
  * end decoding of the current frame
  */
-void
+int
 d3d12_video_decoder_end_frame(struct pipe_video_codec * codec,
                               struct pipe_video_buffer *target,
                               struct pipe_picture_desc *picture);
@@ -80,9 +80,9 @@ d3d12_video_decoder_flush(struct pipe_video_codec *codec);
 /**
  * Get decoder fence.
  */
-int d3d12_video_decoder_get_decoder_fence(struct pipe_video_codec *codec,
-                                          struct pipe_fence_handle *fence,
-                                          uint64_t timeout);
+int d3d12_video_decoder_fence_wait(struct pipe_video_codec *codec,
+                                   struct pipe_fence_handle *fence,
+                                   uint64_t timeout);
 
 ///
 /// Pipe video interface ends
@@ -240,13 +240,13 @@ d3d12_video_decoder_reconfigure_dpb(struct d3d12_video_decoder *                
                                     const d3d12_video_decode_output_conversion_arguments &conversionArguments);
 void
 d3d12_video_decoder_get_frame_info(
-   struct d3d12_video_decoder *pD3D12Dec, uint32_t *pWidth, uint32_t *pHeight, uint16_t *pMaxDPB, bool &isInterlaced);
+   struct d3d12_video_decoder *pD3D12Dec, uint32_t *pWidth, uint32_t *pHeight, uint16_t *pMaxDPB);
 void
 d3d12_video_decoder_store_converted_dxva_picparams_from_pipe_input(struct d3d12_video_decoder *codec,
                                                                    struct pipe_picture_desc *  picture,
                                                                    struct d3d12_video_buffer * pD3D12VideoBuffer);
 
-uint64_t
+size_t
 d3d12_video_decoder_pool_current_index(struct d3d12_video_decoder *pD3D12Dec);
 
 template <typename T>
@@ -267,11 +267,11 @@ d3d12_video_decoder_resolve_profile(d3d12_video_decode_profile_type profileType,
 void
 d3d12_video_decoder_store_dxva_picparams_in_picparams_buffer(struct d3d12_video_decoder *codec,
                                                              void *                      pDXVABuffer,
-                                                             uint64_t                    DXVABufferSize);
+                                                             size_t                      DXVABufferSize);
 void
 d3d12_video_decoder_store_dxva_qmatrix_in_qmatrix_buffer(struct d3d12_video_decoder *pD3D12Dec,
                                                          void *                      pDXVAStruct,
-                                                         uint64_t                    DXVAStructSize);
+                                                         size_t                      DXVAStructSize);
 void
 d3d12_video_decoder_prepare_dxva_slices_control(struct d3d12_video_decoder *pD3D12Dec, struct pipe_picture_desc *picture);
 

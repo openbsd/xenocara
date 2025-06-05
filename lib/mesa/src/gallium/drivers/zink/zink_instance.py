@@ -28,6 +28,7 @@ from os import path
 from xml.etree import ElementTree
 from zink_extensions import Extension,Layer,ExtensionRegistry,Version
 import sys
+import platform
 
 # constructor: Extension(name, conditions=[], nonstandard=False)
 # The attributes:
@@ -43,12 +44,15 @@ EXTENSIONS = [
         nonstandard=True),
     Extension("VK_KHR_surface"),
     Extension("VK_EXT_headless_surface"),
-    Extension("VK_KHR_wayland_surface",
-              conditions=["!display_dev"]),
-    Extension("VK_KHR_xcb_surface",
-              conditions=["!display_dev"]),
+    Extension("VK_KHR_wayland_surface"),
+    Extension("VK_KHR_xcb_surface"),
     Extension("VK_KHR_win32_surface"),
 ]
+
+if platform.system() == "Darwin":
+    EXTENSIONS += [
+        Extension("VK_KHR_portability_enumeration"),
+    ]
 
 # constructor: Layer(name, conditions=[])
 # - conditions: See documentation of EXTENSIONS.
@@ -72,10 +76,11 @@ header_code = """
 
 #include <vulkan/vulkan_core.h>
 
-#if defined(__APPLE__)
+#ifdef __APPLE__
+#include "MoltenVK/mvk_vulkan.h"
 // Source of MVK_VERSION
-#include "MoltenVK/vk_mvk_moltenvk.h"
-#endif
+#include "MoltenVK/mvk_config.h"
+#endif /* __APPLE__ */
 
 struct pipe_screen;
 struct zink_screen;
@@ -92,8 +97,8 @@ struct zink_instance_info {
 %endfor
 };
 
-bool
-zink_create_instance(struct zink_screen *screen, bool display_dev);
+VkInstance
+zink_create_instance(struct zink_screen *screen, struct zink_instance_info *instance_info);
 
 void
 zink_verify_instance_extensions(struct zink_screen *screen);
@@ -104,10 +109,10 @@ zink_verify_instance_extensions(struct zink_screen *screen);
 %for ext in extensions:
 %if registry.in_registry(ext.name):
 %for cmd in registry.get_registry_entry(ext.name).instance_commands:
-void zink_stub_${cmd.lstrip("vk")}(void);
+void VKAPI_PTR zink_stub_${cmd.lstrip("vk")}(void);
 %endfor
 %for cmd in registry.get_registry_entry(ext.name).pdevice_commands:
-void zink_stub_${cmd.lstrip("vk")}(void);
+void VKAPI_PTR zink_stub_${cmd.lstrip("vk")}(void);
 %endfor
 %endif
 %endfor
@@ -123,11 +128,9 @@ impl_code = """
 #include "zink_instance.h"
 #include "zink_screen.h"
 
-bool
-zink_create_instance(struct zink_screen *screen, bool display_dev)
+VkInstance
+zink_create_instance(struct zink_screen *screen, struct zink_instance_info *instance_info)
 {
-   struct zink_instance_info *instance_info = &screen->instance_info;
-
    /* reserve one slot for MoltenVK */
    const char *layers[${len(layers) + 1}] = {0};
    uint32_t num_layers = 0;
@@ -156,12 +159,14 @@ zink_create_instance(struct zink_screen *screen, bool display_dev)
    // Build up the extensions from the reported ones but only for the unnamed layer
    uint32_t extension_count = 0;
    if (vk_EnumerateInstanceExtensionProperties(NULL, &extension_count, NULL) != VK_SUCCESS) {
-       mesa_loge("ZINK: vkEnumerateInstanceExtensionProperties failed");
+       if (!screen->driver_name_is_inferred)
+           mesa_loge("ZINK: vkEnumerateInstanceExtensionProperties failed");
    } else {
        VkExtensionProperties *extension_props = malloc(extension_count * sizeof(VkExtensionProperties));
        if (extension_props) {
            if (vk_EnumerateInstanceExtensionProperties(NULL, &extension_count, extension_props) != VK_SUCCESS) {
-              mesa_loge("ZINK: vkEnumerateInstanceExtensionProperties failed");
+               if (!screen->driver_name_is_inferred)
+                   mesa_loge("ZINK: vkEnumerateInstanceExtensionProperties failed");
            } else {
               for (uint32_t i = 0; i < extension_count; i++) {
         %for ext in extensions:
@@ -179,12 +184,14 @@ zink_create_instance(struct zink_screen *screen, bool display_dev)
     uint32_t layer_count = 0;
 
     if (vk_EnumerateInstanceLayerProperties(&layer_count, NULL) != VK_SUCCESS) {
-        mesa_loge("ZINK: vkEnumerateInstanceLayerProperties failed");
+        if (!screen->driver_name_is_inferred)
+           mesa_loge("ZINK: vkEnumerateInstanceLayerProperties failed");
     } else {
         VkLayerProperties *layer_props = malloc(layer_count * sizeof(VkLayerProperties));
         if (layer_props) {
             if (vk_EnumerateInstanceLayerProperties(&layer_count, layer_props) != VK_SUCCESS) {
-                mesa_loge("ZINK: vkEnumerateInstanceLayerProperties failed");
+                if (!screen->driver_name_is_inferred)
+                    mesa_loge("ZINK: vkEnumerateInstanceLayerProperties failed");
             } else {
                for (uint32_t i = 0; i < layer_count; i++) {
 %for layer in layers:
@@ -245,6 +252,9 @@ zink_create_instance(struct zink_screen *screen, bool display_dev)
 
    VkInstanceCreateInfo ici = {0};
    ici.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+#ifdef __APPLE__
+   ici.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
    ici.pApplicationInfo = &ai;
    ici.ppEnabledExtensionNames = extensions;
    ici.enabledExtensionCount = num_extensions;
@@ -254,13 +264,14 @@ zink_create_instance(struct zink_screen *screen, bool display_dev)
    GET_PROC_ADDR_INSTANCE_LOCAL(screen, NULL, CreateInstance);
    assert(vk_CreateInstance);
 
-   VkResult err = vk_CreateInstance(&ici, NULL, &screen->instance);
+   VkInstance instance;
+   VkResult err = vk_CreateInstance(&ici, NULL, &instance);
    if (err != VK_SUCCESS) {
-      mesa_loge("ZINK: vkCreateInstance failed (%s)", vk_Result_to_str(err));
-      return false;
+      if (!screen->driver_name_is_inferred)
+          mesa_loge("ZINK: vkCreateInstance failed (%s)", vk_Result_to_str(err));
    }
 
-   return true;
+   return instance;
 }
 
 void
@@ -271,7 +282,7 @@ zink_verify_instance_extensions(struct zink_screen *screen)
 %if ext.platform_guard:
 #ifdef ${ext.platform_guard}
 %endif
-   if (screen->instance_info.have_${ext.name_with_vendor()}) {
+   if (screen->instance_info->have_${ext.name_with_vendor()}) {
 %for cmd in registry.get_registry_entry(ext.name).instance_commands:
       if (!screen->vk.${cmd.lstrip("vk")}) {
 #ifndef NDEBUG
@@ -314,7 +325,7 @@ zink_verify_instance_extensions(struct zink_screen *screen)
 %if ext.platform_guard:
 #ifdef ${ext.platform_guard}
 %endif
-void
+void VKAPI_PTR
 zink_stub_${cmd.lstrip("vk")}()
 {
    mesa_loge("ZINK: ${cmd} is not loaded properly!");
@@ -386,12 +397,12 @@ if __name__ == "__main__":
         print("zink_instance.py: Found {} error(s) in total. Quitting.".format(error_count))
         exit(1)
 
-    with open(header_path, "w") as header_file:
+    with open(header_path, "w", encoding='utf-8') as header_file:
         header = Template(header_code).render(extensions=extensions, layers=layers, registry=registry).strip()
         header = replace_code(header, replacement)
         print(header, file=header_file)
 
-    with open(impl_path, "w") as impl_file:
+    with open(impl_path, "w", encoding='utf-8') as impl_file:
         impl = Template(impl_code).render(extensions=extensions, layers=layers, registry=registry).strip()
         impl = replace_code(impl, replacement)
         print(impl, file=impl_file)

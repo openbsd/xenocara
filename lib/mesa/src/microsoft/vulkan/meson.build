@@ -1,23 +1,5 @@
 # Copyright © Microsoft Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice (including the next
-# paragraph) shall be included in all copies or substantial portions of the
-# Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 dzn_entrypoints = custom_target(
   'dzn_entrypoints',
@@ -54,6 +36,7 @@ dzn_deps = [
   idep_vulkan_util,
   idep_vulkan_runtime,
   idep_vulkan_wsi,
+  idep_mesautil,
   dep_dxheaders,
 ]
 
@@ -81,10 +64,7 @@ libvulkan_dzn = shared_library(
   'vulkan_dzn',
   [libdzn_files, dzn_entrypoints, sha1_h],
   vs_module_defs : vulkan_api_def,
-  include_directories : [
-    inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux,
-    inc_util
-  ],
+  include_directories : [inc_include, inc_src, inc_util],
   dependencies : [dzn_deps, idep_vulkan_wsi, idep_xmlconfig],
   c_args : dzn_flags,
   cpp_args : dzn_cpp_flags,
@@ -97,7 +77,7 @@ libvulkan_dzn = shared_library(
 icd_file_name = 'libvulkan_dzn.so'
 icd_lib_path = join_paths(get_option('prefix'), get_option('libdir'))
 if with_platform_windows
-  icd_lib_path = join_paths(get_option('prefix'), get_option('bindir'))
+  icd_lib_path = import('fs').relative_to(get_option('bindir'), with_vulkan_icd_dir)
   icd_file_name = 'vulkan_dzn.dll'
 endif
 
@@ -141,4 +121,6 @@ _dev_icd = custom_target(
   build_by_default : true,
 )
 
+devenv.append('VK_DRIVER_FILES', _dev_icd.full_path())
+# Deprecated: replaced by VK_DRIVER_FILES above
 devenv.append('VK_ICD_FILENAMES', _dev_icd.full_path())

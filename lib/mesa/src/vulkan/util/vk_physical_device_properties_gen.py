@@ -41,6 +41,13 @@ def str_removeprefix(s, prefix):
         return s[len(prefix):]
     return s
 
+# Some extensions have been promoted to core, their properties are renamed
+# in the following hashtable.
+# The hashtable takes the form:
+# (VkPhysicalDevice{PropertyStruct}, PropertyName): RenamedPropertyName
+# Drivers just have to fill the RenamedPropertyName field in their struct
+# vk_properties, the runtime will expose the data with the original/right
+# name to consumers.
 RENAMED_PROPERTIES = {
     ("DrmPropertiesEXT", "hasPrimary"): "drmHasPrimary",
     ("DrmPropertiesEXT", "primaryMajor"): "drmPrimaryMajor",
@@ -58,8 +65,20 @@ RENAMED_PROPERTIES = {
     ("SubgroupProperties", "quadOperationsInAllStages"): "subgroupQuadOperationsInAllStages",
 }
 
+OUT_ARRAYS = {
+    'pCopySrcLayouts': 'copySrcLayoutCount',
+    'pCopyDstLayouts': 'copyDstLayoutCount',
+    'pLayeredApis': 'layeredApiCount',
+}
+OUT_ARRAY_COUNTS = OUT_ARRAYS.values()
+
 SPECIALIZED_PROPERTY_STRUCTS = [
-    "HostImageCopyPropertiesEXT",
+]
+
+# Properties not extending VkPhysicalDeviceProperties2 in the XML,
+# but which might still be present (in Android for instance)
+ANDROID_PROPERTIES = [
+    "VkPhysicalDevicePresentationPropertiesANDROID",
 ]
 
 @dataclass
@@ -68,8 +87,9 @@ class Property:
     name: str
     actual_name: str
     length: str
+    is_android: bool
 
-    def __init__(self, p, property_struct_name):
+    def __init__(self, p, property_struct_name, is_android=False):
         self.decl = ""
         for element in p:
             if element.tag != "comment":
@@ -85,15 +105,45 @@ class Property:
 
         self.decl = self.decl.replace(self.name, self.actual_name)
 
+        self.is_android = is_android
+
 @dataclass
 class PropertyStruct:
     c_type: str
     s_type: str
     name: str
+    is_android: bool
     properties: typing.List[Property]
 
-def copy_property(dst, src, decl, length="1"):
+ARRAY_COPY_TEMPLATE = Template("""
+    if (${dst_ptr} != NULL) {
+        uint32_t count = MIN2(${dst_count}, ${src_count});
+        for (uint32_t i = 0; i < count; i++)
+            ${dst_ptr}[i] = ${src_ptr}[i];
+        ${dst_count} = count;
+    } else {
+        ${dst_count} = ${src_count};
+    }
+""")
+
+def copy_property(dst_prefix, dst_name, src_prefix, src_name, decl, length="1"):
+    if src_name in OUT_ARRAY_COUNTS:
+        assert dst_name in OUT_ARRAY_COUNTS
+        # Skip these as we'll fill them out along with the data
+        return ""
+    elif src_name in OUT_ARRAYS:
+        assert dst_name in OUT_ARRAYS
+
+        return ARRAY_COPY_TEMPLATE.render(
+            dst_ptr=dst_prefix + dst_name,
+            dst_count=dst_prefix + OUT_ARRAYS[dst_name],
+            src_ptr=src_prefix + src_name,
+            src_count=src_prefix + OUT_ARRAYS[src_name]
+        )
+
     assert "*" not in decl
+    dst = dst_prefix + dst_name
+    src = src_prefix + src_name
 
     if "[" in decl:
         return "memcpy(%s, %s, sizeof(%s));" % (dst, src, dst)
@@ -105,22 +155,36 @@ TEMPLATE_H = Template(COPYRIGHT + """
 #ifndef VK_PROPERTIES_H
 #define VK_PROPERTIES_H
 
+#if DETECT_OS_ANDROID
+#include "vulkan/vk_android_native_buffer.h"
+#endif /* DETECT_OS_ANDROID */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct vk_properties {
 % for prop in all_properties:
+% if prop.is_android:
+#if DETECT_OS_ANDROID
+% endif
    ${prop.decl};
+% if prop.is_android:
+#endif /* DETECT_OS_ANDROID */
+% endif
 % endfor
 };
+
+void
+vk_set_physical_device_properties_struct(struct vk_properties *all_properties,
+                                         const VkBaseInStructure *pProperties);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-""", output_encoding="utf-8")
+""")
 
 TEMPLATE_C = Template(COPYRIGHT + """
 /* This file generated from ${filename}, don"t edit directly. */
@@ -138,59 +202,76 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
    VK_FROM_HANDLE(vk_physical_device, pdevice, physicalDevice);
 
 % for prop in pdev_properties:
-   ${copy_property("pProperties->properties." + prop.name, "pdevice->properties." + prop.actual_name, prop.decl)}
+   ${copy_property("pProperties->properties.", prop.name, "pdevice->properties.", prop.actual_name, prop.decl)}
 % endfor
 
-   vk_foreach_struct(ext, pProperties) {
-      switch (ext->sType) {
+   vk_foreach_struct(ext, pProperties->pNext) {
+      switch ((int32_t)ext->sType) {
 % for property_struct in property_structs:
+% if property_struct.is_android:
+#if DETECT_OS_ANDROID
+% endif
 % if property_struct.name not in SPECIALIZED_PROPERTY_STRUCTS:
       case ${property_struct.s_type}: {
          ${property_struct.c_type} *properties = (void *)ext;
 % for prop in property_struct.properties:
-         ${copy_property("properties->" + prop.name, "pdevice->properties." + prop.actual_name, prop.decl, "pdevice->properties." + prop.length)}
+         ${copy_property("properties->", prop.name, "pdevice->properties.", prop.actual_name, prop.decl, "pdevice->properties." + prop.length)}
 % endfor
          break;
       }
+% if property_struct.is_android:
+#endif /* DETECT_OS_ANDROID */
+% endif
 % endif
 % endfor
 
       /* Specialized propery handling defined in vk_physical_device_properties_gen.py */
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_IMAGE_COPY_PROPERTIES_EXT: {
-         VkPhysicalDeviceHostImageCopyPropertiesEXT *properties = (void *)ext;
-
-         if (properties->pCopySrcLayouts) {
-            uint32_t written_layout_count = MIN2(properties->copySrcLayoutCount,
-                                                 pdevice->properties.copySrcLayoutCount);
-            memcpy(properties->pCopySrcLayouts, pdevice->properties.pCopySrcLayouts,
-                   sizeof(VkImageLayout) * written_layout_count);
-            properties->copySrcLayoutCount = written_layout_count;
-         } else {
-            properties->copySrcLayoutCount = pdevice->properties.copySrcLayoutCount;
-         }
-
-         if (properties->pCopyDstLayouts) {
-            uint32_t written_layout_count = MIN2(properties->copyDstLayoutCount,
-                                                 pdevice->properties.copyDstLayoutCount);
-            memcpy(properties->pCopyDstLayouts, pdevice->properties.pCopyDstLayouts,
-                   sizeof(VkImageLayout) * written_layout_count);
-            properties->copyDstLayoutCount = written_layout_count;
-         } else {
-            properties->copyDstLayoutCount = pdevice->properties.copyDstLayoutCount;
-         }
-
-         memcpy(properties->optimalTilingLayoutUUID, pdevice->properties.optimalTilingLayoutUUID, VK_UUID_SIZE);
-         properties->identicalMemoryTypeRequirements = pdevice->properties.identicalMemoryTypeRequirements;
-         break;
-      }
 
       default:
          break;
       }
    }
 }
-""", output_encoding="utf-8")
+
+void
+vk_set_physical_device_properties_struct(struct vk_properties *all_properties,
+                                         const VkBaseInStructure *pProperties)
+{
+   switch ((int32_t)pProperties->sType) {
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2: {
+         const VkPhysicalDeviceProperties *properties = &((const VkPhysicalDeviceProperties2 *)pProperties)->properties;
+% for prop in pdev_properties:
+         ${copy_property("all_properties->", prop.actual_name, "properties->", prop.name, prop.decl)}
+% endfor
+         break;
+      }
+
+% for property_struct in property_structs:
+% if property_struct.is_android:
+#if DETECT_OS_ANDROID
+% endif
+% if property_struct.name not in SPECIALIZED_PROPERTY_STRUCTS:
+      case ${property_struct.s_type}: {
+         const ${property_struct.c_type} *properties = (const ${property_struct.c_type} *)pProperties;
+% for prop in property_struct.properties:
+         ${copy_property("all_properties->", prop.actual_name, "properties->", prop.name, prop.decl, "properties." + prop.length)}
+% endfor
+         break;
+      }
+% if property_struct.is_android:
+#endif /* DETECT_OS_ANDROID */
+% endif
+% endif
+% endfor
+
+      /* Don't assume anything with this struct type, and just copy things over */
+
+      default:
+         break;
+      }
+}
+
+""")
 
 def get_pdev_properties(doc, struct_name):
     _type = doc.find(".types/type[@name=\"VkPhysicalDevice%s\"]" % struct_name)
@@ -214,16 +295,23 @@ def get_property_structs(doc, api, beta):
 
     # parse all struct types where structextends VkPhysicalDeviceProperties2
     for _type in doc.findall("./types/type[@category=\"struct\"]"):
-        if _type.attrib.get("structextends") != "VkPhysicalDeviceProperties2":
-            continue
+        full_name = _type.attrib.get("name")
 
-        full_name = _type.attrib["name"]
+        if _type.attrib.get("structextends") != "VkPhysicalDeviceProperties2":
+            if full_name not in ANDROID_PROPERTIES:
+                continue
+
         if full_name not in required:
             continue
 
-        # Skip extensions with a define for now
         guard = required[full_name].guard
-        if guard is not None and (guard != "VK_ENABLE_BETA_EXTENSIONS" or beta != "true"):
+        is_android = full_name in ANDROID_PROPERTIES
+
+        if (guard is not None
+            # Skip beta extensions if not enabled
+            and (guard != "VK_ENABLE_BETA_EXTENSIONS" or beta != "true")
+            # Include android properties if included in ANDROID_PROPERTIES
+            and not is_android):
             continue
 
         # find Vulkan structure type
@@ -246,9 +334,10 @@ def get_property_structs(doc, api, beta):
             elif m_name == "sType":
                 s_type = p.attrib.get("values")
             else:
-                properties.append(Property(p, name))
+                properties.append(Property(p, name, is_android))
 
-        property_struct = PropertyStruct(c_type=full_name, s_type=s_type, name=name, properties=properties)
+        property_struct = PropertyStruct(c_type=full_name, s_type=s_type,
+            name=name, properties=properties, is_android=is_android)
         property_structs[property_struct.c_type] = property_struct
 
     return property_structs.values()
@@ -316,9 +405,9 @@ def main():
     }
 
     try:
-        with open(args.out_c, "wb") as f:
+        with open(args.out_c, "w", encoding='utf-8') as f:
             f.write(TEMPLATE_C.render(**environment))
-        with open(args.out_h, "wb") as f:
+        with open(args.out_h, "w", encoding='utf-8') as f:
             f.write(TEMPLATE_H.render(**environment))
     except Exception:
         # In the event there"s an error, this uses some helpers from mako

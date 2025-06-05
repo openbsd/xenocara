@@ -33,7 +33,6 @@
 #include "iris_context.h"
 #include "iris_resource.h"
 #include "iris_screen.h"
-#include "intel/compiler/brw_compiler.h"
 
 static bool
 iris_is_color_fast_clear_compatible(struct iris_context *ice,
@@ -138,6 +137,32 @@ can_fast_clear_color(struct iris_context *ice,
       return false;
    }
 
+   /* Wa_18020603990 - slow clear surfaces up to 256x256, 32bpp. */
+   const struct intel_device_info *devinfo =
+      ((struct iris_screen *)ice->ctx.screen)->devinfo;
+   if (intel_needs_workaround(devinfo, 18020603990)) {
+      if (isl_format_get_layout(res->surf.format)->bpb <= 32 &&
+          res->surf.logical_level0_px.w <= 256 &&
+          res->surf.logical_level0_px.h <= 256)
+         return false;
+   }
+
+   /* On gfx12.0, CCS fast clears don't seem to cover the correct portion of
+    * the aux buffer when the pitch is not 512B-aligned.
+    */
+   if (devinfo->verx10 == 120 &&
+       res->surf.samples == 1 &&
+       res->surf.row_pitch_B % 512) {
+      perf_debug(&ice->dbg, "Pitch not 512B-aligned. Slow clearing surface.");
+      return false;
+   }
+
+   /* Wa_16021232440: Disable fast clear when height is 16k */
+   if (intel_needs_workaround(devinfo, 16021232440) &&
+       res->surf.logical_level0_px.h == 16 * 1024) {
+      return false;
+   }
+
    return true;
 }
 
@@ -234,14 +259,6 @@ fast_clear_color(struct iris_context *ice,
 
    iris_resource_set_clear_color(ice, res, color);
 
-   /* If the buffer is already in ISL_AUX_STATE_CLEAR, and the color hasn't
-    * changed, the clear is redundant and can be skipped.
-    */
-   const enum isl_aux_state aux_state =
-      iris_resource_get_aux_state(res, level, box->z);
-   if (!color_changed && box->depth == 1 && aux_state == ISL_AUX_STATE_CLEAR)
-      return;
-
    /* Ivybridge PRM Vol 2, Part 1, "11.7 MCS Buffer for Render Target(s)":
     *
     *    "Any transition from any value in {Clear, Render, Resolve} to a
@@ -256,84 +273,33 @@ fast_clear_color(struct iris_context *ice,
     */
    iris_emit_end_of_pipe_sync(batch, "fast clear: pre-flush",
       PIPE_CONTROL_RENDER_TARGET_FLUSH |
-      PIPE_CONTROL_TILE_CACHE_FLUSH |
+      (devinfo->ver    == 12  ? PIPE_CONTROL_TEXTURE_CACHE_INVALIDATE |
+                                PIPE_CONTROL_TILE_CACHE_FLUSH : 0) |
       (devinfo->verx10 == 120 ? PIPE_CONTROL_DEPTH_STALL : 0) |
       (devinfo->verx10 == 125 ? PIPE_CONTROL_FLUSH_HDC |
                                 PIPE_CONTROL_DATA_CACHE_FLUSH : 0) |
       PIPE_CONTROL_PSS_STALL_SYNC);
 
-   /* From the ICL PRMs, Volume 9: Render Engine, State Caching :
-    *
-    *    "Any values referenced by pointers within the RENDER_SURFACE_STATE or
-    *     SAMPLER_STATE (e.g. Clear Color Pointer, Border Color or Indirect
-    *     State Pointer) are considered to be part of that state and any
-    *     changes to these referenced values requires an invalidation of the
-    *     L1 state cache to ensure the new values are being used as part of
-    *     the state. In the case of surface data pointed to by the Surface
-    *     Base Address in RENDER SURFACE STATE, the Texture Cache must be
-    *     invalidated if the surface data changes."
-    *
-    * and From the Render Target Fast Clear section,
-    *
-    *   "HwManaged FastClear allows SW to store FastClearValue in separate
-    *   graphics allocation, instead of keeping them in RENDER_SURFACE_STATE.
-    *   This behavior can be enabled by setting ClearValueAddressEnable in
-    *   RENDER_SURFACE_STATE.
-    *
-    *    Proper sequence of commands is as follows:
-    *
-    *       1. Storing clear color to allocation.
-    *       2. Ensuring that step 1. is finished and visible for TextureCache.
-    *       3. Performing FastClear.
-    *
-    *    Step 2. is required on products with ClearColorConversion feature.
-    *    This feature is enabled by setting ClearColorConversionEnable. This
-    *    causes HW to read stored color from ClearColorAllocation and write
-    *    back with the native format or RenderTarget - and clear color needs
-    *    to be present and visible. Reading is done from TextureCache, writing
-    *    is done to RenderCache."
-    *
-    * We're going to change the clear color. Invalidate the texture cache now
-    * to ensure the clear color conversion feature works properly. Although
-    * the docs seem to require invalidating the texture cache after updating
-    * the clear color allocation, we can do this beforehand so long as we
-    * ensure:
-    *
-    *    1. Step 1 is complete before the texture cache is accessed in step 3.
-    *    2. We don't access the texture cache between invalidation and step 3.
-    *
-    * The second requirement is satisfied because we'll be performing step 1
-    * and 3 right after invalidating. The first is satisfied because BLORP
-    * updates the clear color before performing the fast clear and it performs
-    * the synchronizations suggested by the Render Target Fast Clear section
-    * (not quoted here) to ensure its completion.
-    *
-    * While we're here, also invalidate the state cache as suggested.
-    *
-    * Due to a corruption reported in
-    * https://gitlab.freedesktop.org/mesa/mesa/-/issues/8853#note_2015707 when
-    * the clear color doesn´t change, we invalidate both caches always.
+   /* Update the clear color now that previous rendering is complete. */
+   if (color_changed && res->aux.clear_color_bo)
+      iris_resource_update_indirect_color(batch, res);
+
+   /* If the buffer is already in ISL_AUX_STATE_CLEAR, the clear is redundant
+    * and can be skipped.
     */
-   if (devinfo->ver >= 11) {
-      iris_emit_pipe_control_flush(batch, "fast clear: pre-flush",
-         PIPE_CONTROL_STATE_CACHE_INVALIDATE | 
-         PIPE_CONTROL_TEXTURE_CACHE_INVALIDATE);
-   }
+   const enum isl_aux_state aux_state =
+      iris_resource_get_aux_state(res, level, box->z);
+   if (box->depth == 1 && aux_state == ISL_AUX_STATE_CLEAR)
+      return;
 
    iris_batch_sync_region_start(batch);
 
-   /* If we reach this point, we need to fast clear to change the state to
-    * ISL_AUX_STATE_CLEAR, or to update the fast clear color (or both).
-    */
-   enum blorp_batch_flags blorp_flags = 0;
-   blorp_flags |= color_changed ? 0 : BLORP_BATCH_NO_UPDATE_CLEAR_COLOR;
-
    struct blorp_batch blorp_batch;
-   blorp_batch_init(&ice->blorp, &blorp_batch, batch, blorp_flags);
+   blorp_batch_init(&ice->blorp, &blorp_batch, batch, 0);
 
    struct blorp_surf surf;
-   iris_blorp_surf_for_resource(&batch->screen->isl_dev, &surf,
-                                p_res, res->aux.usage, level, true);
+   iris_blorp_surf_for_resource(batch, &surf, p_res, res->aux.usage,
+                                level, true);
 
    blorp_fast_clear(&blorp_batch, &surf, res->surf.format,
                     ISL_SWIZZLE_IDENTITY,
@@ -341,17 +307,64 @@ fast_clear_color(struct iris_context *ice,
                     box->x, box->y, box->x + box->width,
                     box->y + box->height);
    blorp_batch_finish(&blorp_batch);
-   iris_emit_end_of_pipe_sync(batch,
-                              "fast clear: post flush",
-                              PIPE_CONTROL_RENDER_TARGET_FLUSH |
-                              (devinfo->verx10 == 120 ?
-                                 PIPE_CONTROL_TILE_CACHE_FLUSH |
-                                 PIPE_CONTROL_DEPTH_STALL : 0) |
-                              PIPE_CONTROL_PSS_STALL_SYNC);
+
+   if (devinfo->verx10 >= 125) {
+      /* From the ACM PRM Vol. 9, "Color Fast Clear Synchronization":
+       *
+       *    Postamble post fast clear synchronization
+       *
+       *    PIPE_CONTROL:
+       *    PS sync stall = 1
+       *    RT flush = 1
+       */
+      iris_emit_pipe_control_flush(batch, "fast clear: post flush",
+                                   PIPE_CONTROL_RENDER_TARGET_FLUSH |
+                                   PIPE_CONTROL_PSS_STALL_SYNC);
+   } else if (devinfo->verx10 == 120) {
+      /* From the TGL PRM Vol. 9, "Color Fast Clear Synchronization":
+       *
+       *    Postamble post fast clear synchronization
+       *
+       *    PIPE_CONTROL:
+       *    Depth Stall = 1
+       *    Tile Cache Flush = 1
+       *    RT Write Flush = 1
+       *
+       * From the TGL PRM Vol. 2a, "PIPE_CONTROL::L3 Fabric Flush":
+       *
+       *    For a sequence of color fast clears. A single PIPE_CONTROL
+       *    command with Render Target Cache Flush, L3 Fabric Flush and Depth
+       *    Stall set at the end of the sequence suffices.
+       *
+       * Replace the Tile Cache flush with an L3 fabric flush.
+       */
+      iris_emit_pipe_control_flush(batch, "fast clear: post flush",
+                                   PIPE_CONTROL_DEPTH_STALL |
+                                   PIPE_CONTROL_L3_FABRIC_FLUSH |
+                                   PIPE_CONTROL_RENDER_TARGET_FLUSH);
+   } else {
+      /* From the Sky Lake PRM Vol. 7, "Render Target Fast Clear":
+       *
+       *    After Render target fast clear, pipe-control with color cache
+       *    write-flush must be issued before sending any DRAW commands on
+       *    that render target.
+       *
+       * From the Sky Lake PRM Vol. 7, "MCS Buffer for Render Target(s)":
+       *
+       *    Any transition from any value in {Clear, Render, Resolve} to a
+       *    different value in {Clear, Render, Resolve} requires end of pipe
+       *    synchronization.
+       */
+      iris_emit_end_of_pipe_sync(batch, "fast clear: post flush",
+                                 PIPE_CONTROL_RENDER_TARGET_FLUSH);
+   }
+
    iris_batch_sync_region_end(batch);
 
    iris_resource_set_aux_state(ice, res, level, box->z,
-                               box->depth, ISL_AUX_STATE_CLEAR);
+                               box->depth, devinfo->ver < 20 ?
+                               ISL_AUX_STATE_CLEAR :
+                               ISL_AUX_STATE_COMPRESSED_NO_CLEAR);
    ice->state.dirty |= IRIS_DIRTY_RENDER_BUFFER;
    ice->state.stage_dirty |= IRIS_ALL_STAGE_DIRTY_BINDINGS;
    return;
@@ -402,8 +415,7 @@ clear_color(struct iris_context *ice,
    iris_emit_buffer_barrier_for(batch, res->bo, IRIS_DOMAIN_RENDER_WRITE);
 
    struct blorp_surf surf;
-   iris_blorp_surf_for_resource(&batch->screen->isl_dev, &surf,
-                                p_res, aux_usage, level, true);
+   iris_blorp_surf_for_resource(batch, &surf, p_res, aux_usage, level, true);
 
    iris_batch_sync_region_start(batch);
 
@@ -463,10 +475,20 @@ can_fast_clear_depth(struct iris_context *ice,
    if (!iris_resource_level_has_hiz(devinfo, res, level))
       return false;
 
-   if (!blorp_can_hiz_clear_depth(devinfo, &res->surf, res->aux.usage,
-                                  level, box->z, box->x, box->y,
-                                  box->x + box->width,
-                                  box->y + box->height)) {
+   /* From the TGL PRM, Vol 9, "Compressed Depth Buffers" (under the
+    * "Texture performant" and "ZCS" columns):
+    *
+    *    Update with clear at either 16x8 or 8x4 granularity, based on
+    *    fs_clr or otherwise.
+    *
+    * When fast-clearing, hardware behaves in unexpected ways if the clear
+    * rectangle, aligned to 16x8, could cover neighboring LODs. Fortunately,
+    * ISL guarantees that LOD0 will be 8-row aligned and LOD0's height seems
+    * to not matter. Also, few applications ever clear LOD1+. Only allow
+    * fast-clearing upper LODs if no overlap can occur.
+    */
+   if (res->aux.usage == ISL_AUX_USAGE_HIZ_CCS_WT && level >= 1 &&
+       (p_res->width0 % 32 != 0 || res->surf.image_alignment_el.h % 8 != 0)) {
       return false;
    }
 
@@ -481,8 +503,28 @@ fast_clear_depth(struct iris_context *ice,
                  float depth)
 {
    struct iris_batch *batch = &ice->batches[IRIS_BATCH_RENDER];
+   const struct intel_device_info *devinfo = batch->screen->devinfo;
 
-   bool update_clear_depth = false;
+   if (res->aux.usage == ISL_AUX_USAGE_HIZ_CCS_WT) {
+      /* From Bspec 47010 (Depth Buffer Clear):
+       *
+       *    Since the fast clear cycles to CCS are not cached in TileCache,
+       *    any previous depth buffer writes to overlapping pixels must be
+       *    flushed out of TileCache before a succeeding Depth Buffer Clear.
+       *    This restriction only applies to Depth Buffer with write-thru
+       *    enabled, since fast clears to CCS only occur for write-thru mode.
+       *
+       * There may have been a write to this depth buffer. Flush it from the
+       * tile cache just in case.
+       *
+       * Set CS stall bit to guarantee that the fast clear starts the execution
+       * after the tile cache flush completed.
+       */
+      iris_emit_pipe_control_flush(batch, "hiz_ccs_wt: before fast clear",
+                                   PIPE_CONTROL_DEPTH_CACHE_FLUSH |
+                                   PIPE_CONTROL_CS_STALL |
+                                   PIPE_CONTROL_TILE_CACHE_FLUSH);
+   }
 
    /* If we're clearing to a new clear value, then we need to resolve any clear
     * flags out of the HiZ buffer into the real depth buffer.
@@ -515,53 +557,56 @@ fast_clear_depth(struct iris_context *ice,
              * value so this shouldn't happen often.
              */
             iris_hiz_exec(ice, batch, res, res_level, layer, 1,
-                          ISL_AUX_OP_FULL_RESOLVE, false);
+                          ISL_AUX_OP_FULL_RESOLVE);
             iris_resource_set_aux_state(ice, res, res_level, layer, 1,
                                         ISL_AUX_STATE_RESOLVED);
          }
       }
       const union isl_color_value clear_value = { .f32 = {depth, } };
       iris_resource_set_clear_color(ice, res, clear_value);
-      update_clear_depth = true;
-   }
 
-   if (res->aux.usage == ISL_AUX_USAGE_HIZ_CCS_WT) {
-      /* From Bspec 47010 (Depth Buffer Clear):
-       *
-       *    Since the fast clear cycles to CCS are not cached in TileCache,
-       *    any previous depth buffer writes to overlapping pixels must be
-       *    flushed out of TileCache before a succeeding Depth Buffer Clear.
-       *    This restriction only applies to Depth Buffer with write-thru
-       *    enabled, since fast clears to CCS only occur for write-thru mode.
-       *
-       * There may have been a write to this depth buffer. Flush it from the
-       * tile cache just in case.
-       *
-       * Set CS stall bit to guarantee that the fast clear starts the execution
-       * after the tile cache flush completed.
-       */
-      iris_emit_pipe_control_flush(batch, "hiz_ccs_wt: before fast clear",
-                                   PIPE_CONTROL_DEPTH_CACHE_FLUSH |
-                                   PIPE_CONTROL_CS_STALL |
-                                   PIPE_CONTROL_TILE_CACHE_FLUSH);
+      /* Also set the indirect clear color if it exists. */
+      if (res->aux.clear_color_bo) {
+         uint32_t packed_depth[4] = {};
+         isl_color_value_pack(&clear_value, res->surf.format, packed_depth);
+
+         const uint64_t clear_pixel_offset = res->aux.clear_color_offset +
+            isl_get_sampler_clear_field_offset(devinfo, res->surf.format);
+
+         iris_emit_pipe_control_write(batch, "update fast clear value (Z)",
+                                      PIPE_CONTROL_WRITE_IMMEDIATE,
+                                      res->aux.clear_color_bo,
+                                      clear_pixel_offset, packed_depth[0]);
+
+         /* From the TGL PRMs, Volume 9: Render Engine, State Caching :
+          *
+          *    "Any values referenced by pointers within the
+          *    RENDER_SURFACE_STATE or SAMPLER_STATE (e.g. Clear Color
+          *    Pointer, Border Color or Indirect State Pointer) are considered
+          *    to be part of that state and any changes to these referenced
+          *    values requires an invalidation of the L1 state cache to ensure
+          *    the new values are being used as part of the state."
+          *
+          * Invalidate the state cache as suggested.
+          */
+         iris_emit_pipe_control_flush(batch, "flush fast clear values (z)",
+                                      PIPE_CONTROL_FLUSH_ENABLE |
+                                      PIPE_CONTROL_STATE_CACHE_INVALIDATE);
+      }
    }
 
    for (unsigned l = 0; l < box->depth; l++) {
       enum isl_aux_state aux_state =
          iris_resource_get_aux_state(res, level, box->z + l);
-      if (update_clear_depth || aux_state != ISL_AUX_STATE_CLEAR) {
-         if (aux_state == ISL_AUX_STATE_CLEAR) {
-            perf_debug(&ice->dbg, "Performing HiZ clear just to update the "
-                                  "depth clear value\n");
-         }
+      if (aux_state != ISL_AUX_STATE_CLEAR) {
          iris_hiz_exec(ice, batch, res, level,
-                       box->z + l, 1, ISL_AUX_OP_FAST_CLEAR,
-                       update_clear_depth);
+                       box->z + l, 1, ISL_AUX_OP_FAST_CLEAR);
       }
    }
 
    iris_resource_set_aux_state(ice, res, level, box->z, box->depth,
-                               ISL_AUX_STATE_CLEAR);
+                               devinfo->ver < 20 ? ISL_AUX_STATE_CLEAR :
+                               ISL_AUX_STATE_COMPRESSED_NO_CLEAR);
    ice->state.dirty |= IRIS_DIRTY_DEPTH_BUFFER;
    ice->state.stage_dirty |= IRIS_ALL_STAGE_DIRTY_BINDINGS;
 }
@@ -621,8 +666,8 @@ clear_depth_stencil(struct iris_context *ice,
       iris_resource_prepare_render(ice, z_res, z_res->surf.format, level,
                                    box->z, box->depth, aux_usage);
       iris_emit_buffer_barrier_for(batch, z_res->bo, IRIS_DOMAIN_DEPTH_WRITE);
-      iris_blorp_surf_for_resource(&batch->screen->isl_dev, &z_surf,
-                                   &z_res->base.b, aux_usage, level, true);
+      iris_blorp_surf_for_resource(batch, &z_surf, &z_res->base.b,
+                                   aux_usage, level, true);
    }
 
    uint8_t stencil_mask = clear_stencil && stencil_res ? 0xff : 0;
@@ -631,8 +676,7 @@ clear_depth_stencil(struct iris_context *ice,
                                    box->depth, stencil_res->aux.usage, false);
       iris_emit_buffer_barrier_for(batch, stencil_res->bo,
                                    IRIS_DOMAIN_DEPTH_WRITE);
-      iris_blorp_surf_for_resource(&batch->screen->isl_dev,
-                                   &stencil_surf, &stencil_res->base.b,
+      iris_blorp_surf_for_resource(batch, &stencil_surf, &stencil_res->base.b,
                                    stencil_res->aux.usage, level, true);
    }
 

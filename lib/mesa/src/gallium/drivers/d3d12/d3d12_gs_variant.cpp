@@ -82,12 +82,13 @@ d3d12_make_passthrough_gs(struct d3d12_context *ctx, struct d3d12_gs_variant_key
    nir = b.shader;
    nir->info.inputs_read = varyings;
    nir->info.outputs_written = varyings;
-   nir->info.gs.input_primitive = GL_POINTS;
-   nir->info.gs.output_primitive = GL_POINTS;
+   nir->info.gs.input_primitive = MESA_PRIM_POINTS;
+   nir->info.gs.output_primitive = MESA_PRIM_POINTS;
    nir->info.gs.vertices_in = 1;
    nir->info.gs.vertices_out = 1;
    nir->info.gs.invocations = 1;
    nir->info.gs.active_stream_mask = 1;
+   nir->num_outputs = 0;
 
    /* Copy inputs to outputs. */
    while (varyings) {
@@ -120,11 +121,24 @@ d3d12_make_passthrough_gs(struct d3d12_context *ctx, struct d3d12_gs_variant_key
          out->data.driver_location = key->varyings->slots[i].vars[j].driver_location;
          out->data.interpolation = key->varyings->slots[i].vars[j].interpolation;
          out->data.compact = key->varyings->slots[i].vars[j].compact;
+         out->data.always_active_io = key->varyings->slots[i].vars[j].always_active_io;
 
          nir_deref_instr *in_value = nir_build_deref_array(&b, nir_build_deref_var(&b, in),
                                                                nir_imm_int(&b, 0));
          copy_vars(&b, nir_build_deref_var(&b, out), in_value);
+         nir->num_outputs++;
       }
+   }
+
+   if (key->has_front_face) {
+      nir_variable *front_facing_var = nir_variable_create(nir,
+                                                       nir_var_shader_out,
+                                                       glsl_uint_type(),
+                                                       "gl_FrontFacing");
+      front_facing_var->data.location = VARYING_SLOT_VAR12;
+      front_facing_var->data.driver_location = nir->num_outputs++;
+      front_facing_var->data.interpolation = INTERP_MODE_FLAT;
+      nir_store_deref(&b, nir_build_deref_var(&b, front_facing_var), nir_imm_int(&b, 1), 1);
    }
 
    nir_emit_vertex(&b, 0);
@@ -148,8 +162,8 @@ struct emit_primitives_context
    nir_builder b;
 
    unsigned num_vars;
-   nir_variable *in[VARYING_SLOT_MAX];
-   nir_variable *out[VARYING_SLOT_MAX];
+   nir_variable *in[VARYING_SLOT_MAX * 4];
+   nir_variable *out[VARYING_SLOT_MAX * 4];
    nir_variable *front_facing_var;
 
    nir_loop *loop;
@@ -163,7 +177,7 @@ static bool
 d3d12_begin_emit_primitives_gs(struct emit_primitives_context *emit_ctx,
                                struct d3d12_context *ctx,
                                struct d3d12_gs_variant_key *key,
-                               uint16_t output_primitive,
+                               enum mesa_prim output_primitive,
                                unsigned vertices_out)
 {
    nir_builder *b = &emit_ctx->b;
@@ -180,10 +194,10 @@ d3d12_begin_emit_primitives_gs(struct emit_primitives_context *emit_ctx,
    nir_shader *nir = b->shader;
    nir->info.inputs_read = varyings;
    nir->info.outputs_written = varyings;
-   nir->info.gs.input_primitive = GL_TRIANGLES;
+   nir->info.gs.input_primitive = MESA_PRIM_TRIANGLES;
    nir->info.gs.output_primitive = output_primitive;
    nir->info.gs.vertices_in = 3;
-   nir->info.gs.vertices_out = vertices_out;
+   nir->info.gs.vertices_out = static_cast<uint16_t>(vertices_out);
    nir->info.gs.invocations = 1;
    nir->info.gs.active_stream_mask = 1;
 
@@ -223,6 +237,7 @@ d3d12_begin_emit_primitives_gs(struct emit_primitives_context *emit_ctx,
          emit_ctx->out[emit_ctx->num_vars]->data.driver_location = key->varyings->slots[i].vars[j].driver_location;
          emit_ctx->out[emit_ctx->num_vars]->data.interpolation = key->varyings->slots[i].vars[j].interpolation;
          emit_ctx->out[emit_ctx->num_vars]->data.compact = key->varyings->slots[i].vars[j].compact;
+         emit_ctx->out[emit_ctx->num_vars]->data.always_active_io = key->varyings->slots[i].vars[j].always_active_io;
 
          emit_ctx->num_vars++;
       }
@@ -340,7 +355,7 @@ d3d12_emit_points(struct d3d12_context *ctx, struct d3d12_gs_variant_key *key)
    struct emit_primitives_context emit_ctx = {0};
    nir_builder *b = &emit_ctx.b;
 
-   d3d12_begin_emit_primitives_gs(&emit_ctx, ctx, key, GL_POINTS, 3);
+   d3d12_begin_emit_primitives_gs(&emit_ctx, ctx, key, MESA_PRIM_POINTS, 3);
 
    /**
     *  if (edge_flag)
@@ -358,11 +373,12 @@ d3d12_emit_points(struct d3d12_context *ctx, struct d3d12_gs_variant_key *key)
       nir_deref_instr *in_value = nir_build_deref_array(b, nir_build_deref_var(b, emit_ctx.in[i]), index);
       if (emit_ctx.in[i]->data.location == VARYING_SLOT_POS && emit_ctx.edgeflag_cmp) {
          nir_if *edge_check = nir_push_if(b, emit_ctx.edgeflag_cmp);
-         copy_vars(b, nir_build_deref_var(b, emit_ctx.out[i]), in_value);
+         nir_def *pos_then = nir_load_deref(b, in_value);
          nir_if *edge_else = nir_push_else(b, edge_check);
-         nir_store_deref(b, nir_build_deref_var(b, emit_ctx.out[i]),
-                         nir_imm_vec4(b, -2.0, -2.0, 0.0, 1.0), 0xf);
+         nir_def *pos_else = nir_imm_vec4(b, -2.0, -2.0, 0.0, 1.0);
          nir_pop_if(b, edge_else);
+         nir_def *pos = nir_if_phi(b, pos_then, pos_else);
+         nir_store_deref(b, nir_build_deref_var(b, emit_ctx.out[i]), pos, 0xf);
       } else {
          copy_vars(b, nir_build_deref_var(b, emit_ctx.out[i]), in_value);
       }
@@ -380,7 +396,7 @@ d3d12_emit_lines(struct d3d12_context *ctx, struct d3d12_gs_variant_key *key)
    struct emit_primitives_context emit_ctx = {0};
    nir_builder *b = &emit_ctx.b;
 
-   d3d12_begin_emit_primitives_gs(&emit_ctx, ctx, key, GL_LINE_STRIP, 6);
+   d3d12_begin_emit_primitives_gs(&emit_ctx, ctx, key, MESA_PRIM_LINE_STRIP, 6);
 
    nir_def *next_index = nir_imod_imm(b, nir_iadd_imm(b, emit_ctx.loop_index, 1), 3);
 
@@ -420,7 +436,7 @@ d3d12_emit_triangles(struct d3d12_context *ctx, struct d3d12_gs_variant_key *key
    struct emit_primitives_context emit_ctx = {0};
    nir_builder *b = &emit_ctx.b;
 
-   d3d12_begin_emit_primitives_gs(&emit_ctx, ctx, key, GL_TRIANGLE_STRIP, 3);
+   d3d12_begin_emit_primitives_gs(&emit_ctx, ctx, key, MESA_PRIM_TRIANGLE_STRIP, 3);
 
    /**
     *  [...] // Copy variables

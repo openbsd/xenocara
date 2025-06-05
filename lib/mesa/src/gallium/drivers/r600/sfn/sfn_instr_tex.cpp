@@ -1,27 +1,7 @@
 /* -*- mesa-c++  -*-
- *
- * Copyright (c) 2022 Collabora LTD
- *
+ * Copyright 2022 Collabora LTD
  * Author: Gert Wollny <gert.wollny@collabora.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "sfn_instr_tex.h"
@@ -677,9 +657,9 @@ TexInstr::emit_tex_txs(nir_tex_instr *tex,
    if (tex->sampler_dim == GLSL_SAMPLER_DIM_BUF) {
       if (shader.chip_class() >= ISA_CC_EVERGREEN) {
          shader.emit_instruction(new QueryBufferSizeInstr(
-            dest, {0, 7, 7, 7}, tex->sampler_index + R600_MAX_CONST_BUFFERS));
+            dest, {0, 7, 7, 7}, tex->texture_index + R600_MAX_CONST_BUFFERS));
       } else {
-         int id = 2 * tex->sampler_index + (512 + R600_BUFFER_INFO_OFFSET / 16) + 1;
+         int id = 2 * tex->texture_index + (512 + R600_BUFFER_INFO_OFFSET / 16) + 1;
          auto src = vf.uniform(id, 1, R600_BUFFER_INFO_CONST_BUFFER);
          shader.emit_instruction(
             new AluInstr(op1_mov, dest[0], src, AluInstr::last_write));
@@ -895,8 +875,6 @@ bool
 TexInstr::emit_tex_lod(nir_tex_instr *tex, Inputs& src, Shader& shader)
 {
    auto& vf = shader.value_factory();
-   auto sampler = get_sampler_id(tex->sampler_index, src.sampler_deref);
-   assert(!sampler.indirect && "Indirect sampler selection not yet supported");
 
    auto dst = shader.value_factory().dest_vec4(tex->def, pin_group);
 

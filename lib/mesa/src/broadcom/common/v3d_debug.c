@@ -82,8 +82,6 @@ static const struct debug_named_value debug_control[] = {
           "Precompiles shader variant at shader state creation time (v3d only)" },
         { "ra",          V3D_DEBUG_RA,
           "Dump register allocation failures" },
-        { "dump_spirv",  V3D_DEBUG_DUMP_SPIRV,
-          "Dump SPIR-V code (v3dv only)" },
         { "tmu32",  V3D_DEBUG_TMU_32BIT,
           "Force 32-bit precision on all TMU operations" },
         /* This can lead to incorrect behavior for applications that do
@@ -107,6 +105,8 @@ static const struct debug_named_value debug_control[] = {
         /* disable_tfu is v3dv only because v3d has some uses of the TFU without alternative codepaths */
         { "disable_tfu", V3D_DEBUG_DISABLE_TFU,
           "Disable TFU (v3dv only)" },
+        { "sync", V3D_DEBUG_SYNC,
+          "Sync wait for each job to complete after submission." },
         DEBUG_NAMED_VALUE_END
 };
 

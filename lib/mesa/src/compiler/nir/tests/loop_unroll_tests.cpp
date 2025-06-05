@@ -41,6 +41,24 @@
       EXPECT_EQ(_exp_loop_count, count_loops());                        \
    }
 
+#define UNROLL_TEST_UNKNOWN_INIT_INSERT(_label, __type, _limit, _step,    \
+                                        _cond, _incr, _rev, _exp_res,     \
+                                        _exp_instr_count, _exp_loop_count)\
+   TEST_F(nir_loop_unroll_test, _label)                                   \
+   {                                                                      \
+      nir_def *one = nir_imm_int(&bld, 1);                                \
+      nir_def *twelve = nir_imm_int(&bld, 12);                            \
+      nir_def *init = nir_load_ubo(&bld, 1, 32, one, twelve, (gl_access_qualifier)0, 0, 0, 0, 16); \
+      nir_def *limit = nir_imm_##__type(&bld, _limit);                    \
+      nir_def *step = nir_imm_##__type(&bld, _step);                      \
+      loop_unroll_test_helper(&bld, init, limit, step,                    \
+                              &nir_##_cond, &nir_##_incr, _rev);          \
+      EXPECT_##_exp_res(nir_opt_loop_unroll(bld.shader));                 \
+      EXPECT_EQ(_exp_instr_count, count_instr(nir_op_##_incr));           \
+      EXPECT_EQ(_exp_loop_count, count_loops());                          \
+   }
+
+
 namespace {
 
 class nir_loop_unroll_test : public ::testing::Test {
@@ -144,12 +162,10 @@ UNROLL_TEST_INSERT(iadd,     int,   0,     24,   4,
                    ige,      iadd,  false, TRUE, 6, 0)
 UNROLL_TEST_INSERT(iadd_rev, int,   0,     24,   4,
                    ilt,      iadd,  true,  TRUE, 7, 0)
-#ifndef __s390x__
 UNROLL_TEST_INSERT(fadd,     float, 0.0,   24.0, 4.0,
                    fge,      fadd,  false, TRUE, 6, 0)
 UNROLL_TEST_INSERT(fadd_rev, float, 0.0,   24.0, 4.0,
                    flt,      fadd,  true,  TRUE, 7, 0)
-#endif
 UNROLL_TEST_INSERT(imul,     int,   1,     81,   3,
                    ige,      imul,  false, TRUE, 4, 0)
 UNROLL_TEST_INSERT(imul_rev, int,   1,     81,   3,
@@ -177,3 +193,12 @@ UNROLL_TEST_INSERT(lshl_neg,     int,  0xf0f0f0f0, 0,    1,
                    ige,          ishl, false,      TRUE, 4, 0)
 UNROLL_TEST_INSERT(lshl_neg_rev, int,  0xf0f0f0f0, 0,    1,
                    ilt,          ishl, true,       TRUE, 4, 0)
+
+UNROLL_TEST_UNKNOWN_INIT_INSERT(iadd_uge_unknown_init_gt, int, 4, 6,
+                                uge, iadd, false, TRUE, 2, 0)
+UNROLL_TEST_UNKNOWN_INIT_INSERT(iadd_uge_unknown_init_eq, int, 16, 4,
+                                uge, iadd, false, TRUE, 5, 0)
+UNROLL_TEST_UNKNOWN_INIT_INSERT(iadd_ugt_unknown_init_eq, int, 16, 4,
+                                ult, iadd, true, TRUE, 6, 0)
+UNROLL_TEST_UNKNOWN_INIT_INSERT(iadd_ige_unknown_init, int, 4, 6,
+                                ige, iadd, false, FALSE, 1, 1)

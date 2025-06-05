@@ -62,7 +62,7 @@ is_copy_mov(const struct v3d_device_info *devinfo, struct qinst *inst)
                 return false;
         }
 
-        if (devinfo->ver <= 42) {
+        if (devinfo->ver == 42) {
                 switch (inst->src[0].file) {
                 case QFILE_MAGIC:
                         /* No copy propagating from R3/R4/R5 -- the MOVs from
@@ -207,6 +207,14 @@ try_copy_prop(struct v3d_compile *c, struct qinst *inst, struct qinst **movs)
                                 default:
                                         break;
                                 }
+                        }
+
+                        /* These are only available with FMOV */
+                        if (mov->qpu.alu.mul.a.unpack >= V3D71_QPU_UNPACK_SAT &&
+                            mov->qpu.alu.mul.a.unpack <= V3D71_QPU_UNPACK_MAX0 &&
+                            inst->qpu.alu.mul.op != V3D_QPU_M_FMOV) {
+                            assert(c->devinfo->ver >= 71);
+                            return false;
                         }
                 }
 

@@ -42,8 +42,15 @@
 
 #include "util/u_upload_mgr.h"
 #include "intel/common/intel_l3_config.h"
+#include "intel/compiler/brw_compiler.h"
 
-#include "blorp/blorp_genX_exec.h"
+#include "genxml/gen_macros.h"
+
+#if GFX_VER >= 9
+#include "blorp/blorp_genX_exec_brw.h"
+#else
+#include "blorp/blorp_genX_exec_elk.h"
+#endif
 
 static uint32_t *
 stream_state(struct iris_batch *batch,
@@ -127,6 +134,13 @@ blorp_get_surface_base_address(UNUSED struct blorp_batch *blorp_batch)
    return (struct blorp_address) { .offset = IRIS_MEMZONE_BINDER_START };
 }
 
+static uint32_t
+blorp_get_dynamic_state(struct blorp_batch *batch,
+                        enum blorp_dynamic_state name)
+{
+   unreachable("Not implemented");
+}
+
 static void *
 blorp_alloc_dynamic_state(struct blorp_batch *blorp_batch,
                           uint32_t size,
@@ -150,7 +164,7 @@ blorp_alloc_general_state(struct blorp_batch *blorp_batch,
    return blorp_alloc_dynamic_state(blorp_batch, size, alignment, offset);
 }
 
-static void
+static bool
 blorp_alloc_binding_table(struct blorp_batch *blorp_batch,
                           unsigned num_entries,
                           unsigned state_size,
@@ -181,6 +195,8 @@ blorp_alloc_binding_table(struct blorp_batch *blorp_batch,
    iris_use_pinned_bo(batch, binder->bo, false, IRIS_DOMAIN_NONE);
 
    batch->screen->vtbl.update_binder_address(batch, binder);
+
+   return true;
 }
 
 static uint32_t
@@ -272,6 +288,13 @@ blorp_flush_range(UNUSED struct blorp_batch *blorp_batch,
     */
 }
 
+static void
+blorp_pre_emit_urb_config(struct blorp_batch *blorp_batch,
+                          struct intel_urb_config *urb_cfg)
+{
+   genX(urb_workaround)(blorp_batch->driver_batch, urb_cfg);
+}
+
 static const struct intel_l3_config *
 blorp_get_l3_config(struct blorp_batch *blorp_batch)
 {
@@ -285,6 +308,7 @@ iris_blorp_exec_render(struct blorp_batch *blorp_batch,
 {
    struct iris_context *ice = blorp_batch->blorp->driver_ctx;
    struct iris_batch *batch = blorp_batch->driver_batch;
+   uint32_t pc_flags = 0;
 
 #if GFX_VER >= 11
    /* The PIPE_CONTROL command description says:
@@ -295,10 +319,8 @@ iris_blorp_exec_render(struct blorp_batch *blorp_batch,
     *     is set due to new association of BTI, PS Scoreboard Stall bit must
     *     be set in this packet."
     */
-   iris_emit_pipe_control_flush(batch,
-                                "workaround: RT BTI change [blorp]",
-                                PIPE_CONTROL_RENDER_TARGET_FLUSH |
-                                PIPE_CONTROL_STALL_AT_SCOREBOARD);
+   pc_flags = PIPE_CONTROL_RENDER_TARGET_FLUSH |
+              PIPE_CONTROL_STALL_AT_SCOREBOARD;
 #endif
 
    /* Check if blorp ds state matches ours. */
@@ -306,9 +328,15 @@ iris_blorp_exec_render(struct blorp_batch *blorp_batch,
       const bool blorp_ds_state =
          params->depth.enabled || params->stencil.enabled;
       if (ice->state.ds_write_state != blorp_ds_state) {
-         blorp_batch->flags |= BLORP_BATCH_NEED_PSS_STALL_SYNC;
+         pc_flags |= PIPE_CONTROL_PSS_STALL_SYNC;
          ice->state.ds_write_state = blorp_ds_state;
       }
+   }
+
+   if (pc_flags != 0) {
+      iris_emit_pipe_control_flush(batch,
+                                   "workaround: prior to [blorp]",
+                                   pc_flags);
    }
 
    if (params->depth.enabled &&
@@ -354,14 +382,8 @@ iris_blorp_exec_render(struct blorp_batch *blorp_batch,
                          IRIS_DIRTY_LINE_STIPPLE |
                          IRIS_ALL_DIRTY_FOR_COMPUTE |
                          IRIS_DIRTY_SCISSOR_RECT |
-                         IRIS_DIRTY_VF);
-   /* Wa_14016820455
-    * On Gfx 12.5 platforms, the SF_CL_VIEWPORT pointer can be invalidated
-    * likely by a read cache invalidation when clipping is disabled, so we
-    * don't skip its dirty bit here, in order to reprogram it.
-    */
-   if (GFX_VERx10 != 125)
-      skip_bits |= IRIS_DIRTY_SF_CL_VIEWPORT;
+                         IRIS_DIRTY_VF |
+                         IRIS_DIRTY_SF_CL_VIEWPORT);
 
    uint64_t skip_stage_bits = (IRIS_ALL_STAGE_DIRTY_FOR_COMPUTE |
                                IRIS_STAGE_DIRTY_UNCOMPILED_VS |
@@ -403,8 +425,8 @@ iris_blorp_exec_render(struct blorp_batch *blorp_batch,
    ice->state.dirty |= ~skip_bits;
    ice->state.stage_dirty |= ~skip_stage_bits;
 
-   for (int i = 0; i < ARRAY_SIZE(ice->shaders.urb.size); i++)
-      ice->shaders.urb.size[i] = 0;
+   for (int i = 0; i < ARRAY_SIZE(ice->shaders.urb.cfg.size); i++)
+      ice->shaders.urb.cfg.size[i] = 0;
 
    if (params->src.enabled)
       iris_bo_bump_seqno(params->src.addr.buffer, batch->next_seqno,
@@ -485,7 +507,8 @@ blorp_measure_end(struct blorp_batch *blorp_batch,
                          params->num_samples,
                          params->shader_pipeline,
                          params->dst.view.format,
-                         params->src.view.format);
+                         params->src.view.format,
+                         (blorp_batch->flags & BLORP_BATCH_PREDICATE_ENABLE));
 }
 
 void
@@ -493,23 +516,32 @@ genX(init_blorp)(struct iris_context *ice)
 {
    struct iris_screen *screen = (struct iris_screen *)ice->ctx.screen;
 
-   blorp_init(&ice->blorp, ice, &screen->isl_dev, NULL);
-   ice->blorp.compiler = screen->compiler;
+#if GFX_VER >= 9
+   blorp_init_brw(&ice->blorp, ice, &screen->isl_dev, screen->brw, NULL);
+#else
+   blorp_init_elk(&ice->blorp, ice, &screen->isl_dev, screen->elk, NULL);
+#endif
    ice->blorp.lookup_shader = iris_blorp_lookup_shader;
    ice->blorp.upload_shader = iris_blorp_upload_shader;
    ice->blorp.exec = iris_blorp_exec;
+   ice->blorp.enable_tbimr = screen->driconf.enable_tbimr;
 }
 
 static void
-blorp_emit_breakpoint_pre_draw(struct blorp_batch *blorp_batch)
+blorp_emit_pre_draw(struct blorp_batch *blorp_batch, const struct blorp_params *params)
 {
    struct iris_batch *batch = blorp_batch->driver_batch;
+   blorp_measure_start(blorp_batch, params);
    genX(maybe_emit_breakpoint)(batch, true);
 }
 
 static void
-blorp_emit_breakpoint_post_draw(struct blorp_batch *blorp_batch)
+blorp_emit_post_draw(struct blorp_batch *blorp_batch, const struct blorp_params *params)
 {
    struct iris_batch *batch = blorp_batch->driver_batch;
+
+   // A _3DPRIM_RECTLIST is a MESA_PRIM_QUAD_STRIP with a implied vertex
+   genX(emit_3dprimitive_was)(batch, NULL, MESA_PRIM_QUAD_STRIP, 3);
    genX(maybe_emit_breakpoint)(batch, false);
+   blorp_measure_end(blorp_batch, params);
 }

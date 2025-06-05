@@ -31,9 +31,12 @@
 #include "nir.h"
 #include "builtin_functions.h"
 #include "nir.h"
+#include "gl_nir.h"
+#include "gl_nir_linker.h"
+#include "glsl_parser_extras.h"
 #include "glsl_to_nir.h"
+#include "linker_util.h"
 #include "nir_builder.h"
-#include "program.h"
 
 /* The printed-GLSL-IR tests use fmemopen so we can do stdio to memory (or you'd
  * need equivalent tempfiles that you manage).  Just disable this test on those
@@ -85,14 +88,6 @@ namespace
          return alu->def.bit_size;
       }
 
-      char *get_fs_ir(void) {
-         char temp[4096];
-         FILE *ftemp = fmemopen(temp, sizeof(temp), "w");
-         _mesa_print_ir(ftemp, whole_program->_LinkedShaders[MESA_SHADER_FRAGMENT]->ir, NULL);
-         fclose(ftemp);
-         return strdup(temp);
-      }
-
       /* Returns the common bit size of all src operands (failing if not matching). */
       uint32_t op_src_bits(nir_op op)
       {
@@ -134,7 +129,7 @@ namespace
          }
       }
 
-      ralloc_free(nir);
+      standalone_destroy_shader_program(whole_program);
 
       free(fs_ir);
 
@@ -146,7 +141,18 @@ namespace
    {
       struct gl_shader *shader = standalone_add_shader_source(ctx, whole_program, type, source);
 
-      _mesa_glsl_compile_shader(ctx, shader, false, false, true);
+      /* Save off the GLSL IR, since the compile frees it. */
+      char temp[4096];
+      FILE *ftemp = NULL;
+      if (type == GL_FRAGMENT_SHADER)
+         ftemp = fmemopen(temp, sizeof(temp), "w");
+
+      _mesa_glsl_compile_shader(ctx, shader, ftemp, false, false, true);
+
+      if (type == GL_FRAGMENT_SHADER) {
+         fclose(ftemp);
+         fs_ir = strdup(temp);
+      }
 
       return shader;
    }
@@ -156,6 +162,10 @@ namespace
    {
       ctx = &local_ctx;
 
+      static const struct nir_shader_compiler_options compiler_options = {
+          .support_16bit_alu = true,
+      };
+
       /* Get better variable names from GLSL IR for debugging. */
       ir_variable::temporaries_allocate_names = true;
 
@@ -164,7 +174,15 @@ namespace
       for (int i = 0; i < MESA_SHADER_STAGES; i++) {
          ctx->Const.ShaderCompilerOptions[i].LowerPrecisionFloat16 = true;
          ctx->Const.ShaderCompilerOptions[i].LowerPrecisionInt16 = true;
+         ctx->Const.ShaderCompilerOptions[i].NirOptions = &compiler_options;
       }
+
+      /* GL_ARB_explicit_uniform_location, GL_MAX_UNIFORM_LOCATIONS */
+      ctx->Const.MaxUserAssignableUniformLocations =
+         4 * MESA_SHADER_STAGES * MAX_UNIFORMS;
+
+      ctx->Const.Program[MESA_SHADER_VERTEX].MaxCombinedUniformComponents = 128 * 4;
+      ctx->Const.Program[MESA_SHADER_FRAGMENT].MaxCombinedUniformComponents = 16 * 4;
 
       _mesa_glsl_builtin_functions_init_or_ref();
 
@@ -187,43 +205,13 @@ namespace
          ASSERT_EQ(shader->CompileStatus, COMPILE_SUCCESS);
       }
 
-      link_shaders(ctx, whole_program);
+      link_shaders_init(ctx, whole_program);
+      gl_nir_link_glsl(ctx, whole_program);
       if (whole_program->data->LinkStatus != LINKING_SUCCESS)
          fprintf(stderr, "Linker error: %s", whole_program->data->InfoLog);
       EXPECT_EQ(whole_program->data->LinkStatus, LINKING_SUCCESS);
 
-      for (unsigned i = 0; i < ARRAY_SIZE(whole_program->_LinkedShaders); i++) {
-         struct gl_linked_shader *sh = whole_program->_LinkedShaders[i];
-         if (!sh)
-            continue;
-
-         do_mat_op_to_vec(sh->ir);
-      }
-
-      /* Save off the GLSL IR now, since glsl_to_nir() frees it. */
-      fs_ir = get_fs_ir();
-
-      static const struct nir_shader_compiler_options compiler_options = {
-          .support_16bit_alu = true,
-      };
-
-      nir = glsl_to_nir(&ctx->Const, whole_program, MESA_SHADER_FRAGMENT, &compiler_options);
-
-      standalone_destroy_shader_program(whole_program);
-
-      /* nir_lower_mediump_vars happens after copy deref lowering. */
-      NIR_PASS_V(nir, nir_split_var_copies);
-      NIR_PASS_V(nir, nir_lower_var_copies);
-
-      /* Make the vars and i/o mediump like we'd expect, so people debugging aren't confused. */
-      NIR_PASS_V(nir, nir_lower_mediump_vars, nir_var_uniform | nir_var_function_temp | nir_var_shader_temp);
-      NIR_PASS_V(nir, nir_lower_mediump_io, nir_var_shader_out, ~0, false);
-
-      /* Clean up f2fmp(f2f32(x)) noise. */
-      NIR_PASS_V(nir, nir_opt_algebraic);
-      NIR_PASS_V(nir, nir_opt_algebraic_late);
-      NIR_PASS_V(nir, nir_copy_prop);
-      NIR_PASS_V(nir, nir_opt_dce);
+      nir = whole_program->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program->nir;
 
       /* Store the source for printing from later assertions. */
       this->source = source;
@@ -446,10 +434,7 @@ TEST_F(gl_nir_lower_mediump_test, func_args_in_mediump)
 
    EXPECT_PRED_FORMAT2(glsl_ir_contains, fs_ir, "expression float f162f (expression float16_t * (expression float16_t f2fmp (var_ref x) ) (expression float16_t f2fmp (var_ref y) ) )");
 
-   /* NIR optimization will notice that we downconvert the highp to mediump just
-    * to multiply and cast back up, and just multiply in highp instead.
-    */
-   EXPECT_EQ(op_dest_bits(nir_op_fmul), 32);
+   EXPECT_EQ(op_dest_bits(nir_op_fmul), 16);
 }
 
 TEST_F(gl_nir_lower_mediump_test, func_args_inout_mediump)
@@ -473,6 +458,36 @@ TEST_F(gl_nir_lower_mediump_test, func_args_inout_mediump)
              */
             highp float x = a;
             func(x, b);
+            result = x;
+         }
+    )"));
+
+   EXPECT_PRED_FORMAT2(glsl_ir_contains, fs_ir, "expression float16_t * ");
+
+   EXPECT_EQ(op_dest_bits(nir_op_fmul), 16);
+}
+
+TEST_F(gl_nir_lower_mediump_test, func_args_in_out_mediump)
+{
+   ASSERT_NO_FATAL_FAILURE(compile(
+       R"(#version 310 es
+         precision highp float; /* Make sure that default highp temps in function handling don't break our mediump inout. */
+         uniform highp float a, b;
+         out float result;
+
+         void func(mediump float x, mediump float y, out mediump float w)
+         {
+            w = x * y; /* should be mediump due to x and y, but propagating qualifiers from a,b by inlining could trick it. */
+         }
+
+         void main()
+         {
+            /* The spec says "function input and output is done through copies,
+             * and therefore qualifiers do not have to match."  So we use a
+             * highp here for our mediump out.
+             */
+            highp float x;
+            func(a, b, x);
             result = x;
          }
     )"));

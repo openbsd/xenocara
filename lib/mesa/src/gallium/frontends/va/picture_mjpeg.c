@@ -40,6 +40,9 @@ void vlVaHandlePictureParameterBufferMJPEG(vlVaDriver *drv, vlVaContext *context
 
    STATIC_ASSERT(sizeof(mjpeg->components) ==
                  sizeof(context->desc.mjpeg.picture_parameter.components));
+
+   context->desc.mjpeg.picture_parameter.sampling_factor = 0;
+
    for (i = 0; i < MIN2(mjpeg->num_components, ARRAY_SIZE(mjpeg->components)); ++i) {
       context->desc.mjpeg.picture_parameter.components[i].component_id =
          mjpeg->components[i].component_id;
@@ -51,16 +54,23 @@ void vlVaHandlePictureParameterBufferMJPEG(vlVaDriver *drv, vlVaContext *context
          mjpeg->components[i].quantiser_table_selector;
 
       sf = mjpeg->components[i].h_sampling_factor << 4 | mjpeg->components[i].v_sampling_factor;
-      context->mjpeg.sampling_factor <<= 8;
-      context->mjpeg.sampling_factor |= sf;
+      context->desc.mjpeg.picture_parameter.sampling_factor <<= 8;
+      context->desc.mjpeg.picture_parameter.sampling_factor |= sf;
    }
 
    context->desc.mjpeg.picture_parameter.num_components = mjpeg->num_components;
 
+#if VA_CHECK_VERSION(1, 21, 0)
+   context->desc.mjpeg.picture_parameter.crop_x = mjpeg->crop_rectangle.x;
+   context->desc.mjpeg.picture_parameter.crop_y = mjpeg->crop_rectangle.y;
+   context->desc.mjpeg.picture_parameter.crop_width = mjpeg->crop_rectangle.width;
+   context->desc.mjpeg.picture_parameter.crop_height = mjpeg->crop_rectangle.height;
+#else
    context->desc.mjpeg.picture_parameter.crop_x = mjpeg->va_reserved[0] & 0xffff;
    context->desc.mjpeg.picture_parameter.crop_y = (mjpeg->va_reserved[0] >> 16) & 0xffff;
    context->desc.mjpeg.picture_parameter.crop_width = mjpeg->va_reserved[1] & 0xffff;
    context->desc.mjpeg.picture_parameter.crop_height = (mjpeg->va_reserved[1] >> 16) & 0xffff;
+#endif
 
 }
 

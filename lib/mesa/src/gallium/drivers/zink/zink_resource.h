@@ -27,9 +27,8 @@
 #include "zink_types.h"
 
 #define ZINK_MAP_TEMPORARY (PIPE_MAP_DRV_PRV << 0)
-#define ZINK_BIND_SAMPLER_DESCRIPTOR (1u << 26)
-#define ZINK_BIND_RESOURCE_DESCRIPTOR (1u << 27)
-#define ZINK_BIND_DESCRIPTOR (ZINK_BIND_SAMPLER_DESCRIPTOR | ZINK_BIND_RESOURCE_DESCRIPTOR)
+#define ZINK_MAP_QBO (PIPE_MAP_DRV_PRV << 1)
+#define ZINK_BIND_DESCRIPTOR (1u << 27)
 #define ZINK_BIND_MUTABLE (1u << 28)
 #define ZINK_BIND_DMABUF (1u << 29)
 #define ZINK_BIND_TRANSIENT (1u << 30) //transient fb attachment
@@ -164,6 +163,7 @@ static inline void
 zink_resource_usage_set(struct zink_resource *res, struct zink_batch_state *bs, bool write)
 {
    zink_bo_usage_set(res->obj->bo, bs, write);
+   res->obj->unsync_access = false;
 }
 
 static inline bool
@@ -173,27 +173,34 @@ zink_resource_object_usage_unset(struct zink_resource_object *obj, struct zink_b
 }
 
 static inline void
-zink_batch_resource_usage_set(struct zink_batch *batch, struct zink_resource *res, bool write, bool is_buffer)
+zink_batch_resource_usage_set(struct zink_batch_state *bs, struct zink_resource *res, bool write, bool is_buffer)
 {
    if (!is_buffer) {
       if (res->obj->dt) {
-         VkSemaphore acquire = zink_kopper_acquire_submit(zink_screen(batch->state->ctx->base.screen), res);
+         VkSemaphore acquire = zink_kopper_acquire_submit(zink_screen(bs->ctx->base.screen), res);
          if (acquire)
-            util_dynarray_append(&batch->state->acquires, VkSemaphore, acquire);
+            util_dynarray_append(&bs->acquires, VkSemaphore, acquire);
       }
       if (write) {
          if (!res->valid && res->fb_bind_count)
-            batch->state->ctx->rp_loadop_changed = true;
+            bs->ctx->rp_loadop_changed = true;
          res->valid = true;
       }
    }
-   zink_resource_usage_set(res, batch->state, write);
-
-   batch->has_work = true;
+   zink_resource_usage_set(res, bs, write);
 }
 
 void
 zink_debug_mem_print_stats(struct zink_screen *screen);
+
+static inline void
+zink_resource_reference(struct zink_resource **d, struct zink_resource *s)
+{
+   struct pipe_resource *dst = &(*d)->base.b;
+   struct pipe_resource *src = &s->base.b;
+   pipe_resource_reference(&dst, src);
+   *d = zink_resource(dst);
+}
 
 #ifdef __cplusplus
 }

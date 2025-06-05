@@ -1,32 +1,17 @@
 /*
  * Copyright © 2014-2015 Broadcom
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
+#include "nir_to_rc.h"
 #include "compiler/nir/nir.h"
 #include "compiler/nir/nir_deref.h"
 #include "compiler/nir/nir_legacy.h"
 #include "compiler/nir/nir_worklist.h"
-#include "nir_to_rc.h"
+#include "compiler/radeon_code.h"
+#include "compiler/radeon_program_constants.h"
 #include "r300_nir.h"
+#include "r300_screen.h"
 #include "pipe/p_screen.h"
 #include "pipe/p_state.h"
 #include "tgsi/tgsi_dump.h"
@@ -36,9 +21,11 @@
 #include "tgsi/tgsi_ureg.h"
 #include "tgsi/tgsi_util.h"
 #include "util/u_debug.h"
+#include "util/u_dynarray.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
-#include "util/u_dynarray.h"
+#include "r300_nir.h"
+#include "r300_screen.h"
 
 struct ntr_insn {
    enum tgsi_opcode opcode;
@@ -69,9 +56,11 @@ struct ntr_reg_interval {
 struct ntr_compile {
    nir_shader *s;
    nir_function_impl *impl;
-   const struct nir_to_rc_options *options;
    struct pipe_screen *screen;
    struct ureg_program *ureg;
+
+   /* Options */
+   bool lower_fabs;
 
    bool addr_declared[3];
    struct ureg_dst addr_reg[3];
@@ -95,7 +84,6 @@ struct ntr_compile {
    bool precise;
 
    unsigned num_temps;
-   unsigned first_non_array_temp;
 
    /* Mappings from driver_location to TGSI input/output number.
     *
@@ -125,79 +113,67 @@ static void ntr_emit_cf_list(struct ntr_compile *c, struct exec_list *list);
 static void ntr_emit_cf_list_ureg(struct ntr_compile *c, struct exec_list *list);
 
 static struct ntr_insn *
-ntr_insn(struct ntr_compile *c, enum tgsi_opcode opcode,
-         struct ureg_dst dst,
-         struct ureg_src src0, struct ureg_src src1,
-         struct ureg_src src2, struct ureg_src src3)
+ntr_insn(struct ntr_compile *c, enum tgsi_opcode opcode, struct ureg_dst dst, struct ureg_src src0,
+         struct ureg_src src1, struct ureg_src src2, struct ureg_src src3)
 {
    struct ntr_insn insn = {
       .opcode = opcode,
-      .dst = { dst, ureg_dst_undef() },
-      .src = { src0, src1, src2, src3 },
+      .dst = {dst, ureg_dst_undef()},
+      .src = {src0, src1, src2, src3},
       .precise = c->precise,
    };
    util_dynarray_append(&c->cur_block->insns, struct ntr_insn, insn);
    return util_dynarray_top_ptr(&c->cur_block->insns, struct ntr_insn);
 }
 
-#define OP00( op )                                                                     \
-static inline void ntr_##op(struct ntr_compile *c)                                     \
-{                                                                                      \
-   ntr_insn(c, TGSI_OPCODE_##op, ureg_dst_undef(), ureg_src_undef(), ureg_src_undef(), ureg_src_undef(), ureg_src_undef()); \
-}
+#define OP00(op)                                                                                   \
+   static inline void ntr_##op(struct ntr_compile *c)                                              \
+   {                                                                                               \
+      ntr_insn(c, TGSI_OPCODE_##op, ureg_dst_undef(), ureg_src_undef(), ureg_src_undef(),          \
+               ureg_src_undef(), ureg_src_undef());                                                \
+   }
 
-#define OP01( op )                                                                     \
-static inline void ntr_##op(struct ntr_compile *c,                                     \
-                     struct ureg_src src0)                                             \
-{                                                                                      \
-   ntr_insn(c, TGSI_OPCODE_##op, ureg_dst_undef(), src0, ureg_src_undef(), ureg_src_undef(), ureg_src_undef()); \
-}
+#define OP01(op)                                                                                   \
+   static inline void ntr_##op(struct ntr_compile *c, struct ureg_src src0)                        \
+   {                                                                                               \
+      ntr_insn(c, TGSI_OPCODE_##op, ureg_dst_undef(), src0, ureg_src_undef(), ureg_src_undef(),    \
+               ureg_src_undef());                                                                  \
+   }
 
+#define OP10(op)                                                                                   \
+   static inline void ntr_##op(struct ntr_compile *c, struct ureg_dst dst)                         \
+   {                                                                                               \
+      ntr_insn(c, TGSI_OPCODE_##op, dst, ureg_src_undef(), ureg_src_undef(), ureg_src_undef(),     \
+               ureg_src_undef());                                                                  \
+   }
 
-#define OP10( op )                                                                     \
-static inline void ntr_##op(struct ntr_compile *c,                                     \
-                     struct ureg_dst dst)                                              \
-{                                                                                      \
-   ntr_insn(c, TGSI_OPCODE_##op, dst, ureg_src_undef(), ureg_src_undef(), ureg_src_undef(), ureg_src_undef()); \
-}
+#define OP11(op)                                                                                   \
+   static inline void ntr_##op(struct ntr_compile *c, struct ureg_dst dst, struct ureg_src src0)   \
+   {                                                                                               \
+      ntr_insn(c, TGSI_OPCODE_##op, dst, src0, ureg_src_undef(), ureg_src_undef(),                 \
+               ureg_src_undef());                                                                  \
+   }
 
-#define OP11( op )                                                                     \
-static inline void ntr_##op(struct ntr_compile *c,                                     \
-                     struct ureg_dst dst,                                              \
-                     struct ureg_src src0)                                             \
-{                                                                                      \
-   ntr_insn(c, TGSI_OPCODE_##op, dst, src0, ureg_src_undef(), ureg_src_undef(), ureg_src_undef()); \
-}
+#define OP12(op)                                                                                   \
+   static inline void ntr_##op(struct ntr_compile *c, struct ureg_dst dst, struct ureg_src src0,   \
+                               struct ureg_src src1)                                               \
+   {                                                                                               \
+      ntr_insn(c, TGSI_OPCODE_##op, dst, src0, src1, ureg_src_undef(), ureg_src_undef());          \
+   }
 
-#define OP12( op )                                                                     \
-static inline void ntr_##op(struct ntr_compile *c,                                     \
-                     struct ureg_dst dst,                                              \
-                     struct ureg_src src0,                                             \
-                     struct ureg_src src1)                                             \
-{                                                                                      \
-   ntr_insn(c, TGSI_OPCODE_##op, dst, src0, src1, ureg_src_undef(), ureg_src_undef()); \
-}
+#define OP13(op)                                                                                   \
+   static inline void ntr_##op(struct ntr_compile *c, struct ureg_dst dst, struct ureg_src src0,   \
+                               struct ureg_src src1, struct ureg_src src2)                         \
+   {                                                                                               \
+      ntr_insn(c, TGSI_OPCODE_##op, dst, src0, src1, src2, ureg_src_undef());                      \
+   }
 
-#define OP13( op )                                                                     \
-static inline void ntr_##op(struct ntr_compile *c,                                     \
-                     struct ureg_dst dst,                                              \
-                     struct ureg_src src0,                                             \
-                     struct ureg_src src1,                                             \
-                     struct ureg_src src2)                                             \
-{                                                                                      \
-   ntr_insn(c, TGSI_OPCODE_##op, dst, src0, src1, src2, ureg_src_undef());             \
-}
-
-#define OP14( op )                                                                     \
-static inline void ntr_##op(struct ntr_compile *c,                                     \
-                     struct ureg_dst dst,                                              \
-                     struct ureg_src src0,                                             \
-                     struct ureg_src src1,                                             \
-                     struct ureg_src src2,                                             \
-                     struct ureg_src src3)                                             \
-{                                                                                      \
-   ntr_insn(c, TGSI_OPCODE_##op, dst, src0, src1, src2, src3);                         \
-}
+#define OP14(op)                                                                                   \
+   static inline void ntr_##op(struct ntr_compile *c, struct ureg_dst dst, struct ureg_src src0,   \
+                               struct ureg_src src1, struct ureg_src src2, struct ureg_src src3)   \
+   {                                                                                               \
+      ntr_insn(c, TGSI_OPCODE_##op, dst, src0, src1, src2, src3);                                  \
+   }
 
 /* We hand-craft our tex instructions */
 #define OP12_TEX(op)
@@ -250,273 +226,9 @@ struct ntr_live_reg_state {
 };
 
 static void
-ntr_live_reg_mark_use(struct ntr_compile *c, struct ntr_live_reg_block_state *bs,
-                      int ip, unsigned index, unsigned used_mask)
-{
-   bs->use[index] |= used_mask & ~bs->def[index];
-
-   c->liveness[index].start = MIN2(c->liveness[index].start, ip);
-   c->liveness[index].end = MAX2(c->liveness[index].end, ip);
-
-}
-static void
-ntr_live_reg_setup_def_use(struct ntr_compile *c, nir_function_impl *impl, struct ntr_live_reg_state *state)
-{
-   for (int i = 0; i < impl->num_blocks; i++) {
-      state->blocks[i].def = rzalloc_array(state->blocks, uint8_t, c->num_temps);
-      state->blocks[i].defin = rzalloc_array(state->blocks, uint8_t, c->num_temps);
-      state->blocks[i].defout = rzalloc_array(state->blocks, uint8_t, c->num_temps);
-      state->blocks[i].use = rzalloc_array(state->blocks, uint8_t, c->num_temps);
-      state->blocks[i].livein = rzalloc_array(state->blocks, uint8_t, c->num_temps);
-      state->blocks[i].liveout = rzalloc_array(state->blocks, uint8_t, c->num_temps);
-   }
-
-   int ip = 0;
-   nir_foreach_block(block, impl) {
-      struct ntr_live_reg_block_state *bs = &state->blocks[block->index];
-      struct ntr_block *ntr_block = ntr_block_from_nir(c, block);
-
-      ntr_block->start_ip = ip;
-
-      util_dynarray_foreach(&ntr_block->insns, struct ntr_insn, insn) {
-         const struct tgsi_opcode_info *opcode_info =
-            tgsi_get_opcode_info(insn->opcode);
-
-         /* Set up use[] for the srcs.
-          *
-          * Uses are the channels of the reg read in the block that don't have a
-          * preceding def to screen them off.  Note that we don't do per-element
-          * tracking of array regs, so they're never screened off.
-          */
-         for (int i = 0; i < opcode_info->num_src; i++) {
-            if (insn->src[i].File != TGSI_FILE_TEMPORARY)
-               continue;
-            int index = insn->src[i].Index;
-
-            uint32_t used_mask = tgsi_util_get_src_usage_mask(insn->opcode, i,
-                                                              insn->dst->WriteMask,
-                                                              insn->src[i].SwizzleX,
-                                                              insn->src[i].SwizzleY,
-                                                              insn->src[i].SwizzleZ,
-                                                              insn->src[i].SwizzleW,
-                                                              insn->tex_target,
-                                                              insn->tex_target);
-
-            assert(!insn->src[i].Indirect || index < c->first_non_array_temp);
-            ntr_live_reg_mark_use(c, bs, ip, index, used_mask);
-         }
-
-         if (insn->is_tex) {
-            for (int i = 0; i < ARRAY_SIZE(insn->tex_offset); i++) {
-               if (insn->tex_offset[i].File == TGSI_FILE_TEMPORARY)
-                  ntr_live_reg_mark_use(c, bs, ip, insn->tex_offset[i].Index, 0xf);
-            }
-         }
-
-         /* Set up def[] for the srcs.
-          *
-          * Defs are the unconditionally-written (not R/M/W) channels of the reg in
-          * the block that don't have a preceding use.
-          */
-         for (int i = 0; i < opcode_info->num_dst; i++) {
-            if (insn->dst[i].File != TGSI_FILE_TEMPORARY)
-               continue;
-            int index = insn->dst[i].Index;
-            uint32_t writemask = insn->dst[i].WriteMask;
-
-            bs->def[index] |= writemask & ~bs->use[index];
-            bs->defout[index] |= writemask;
-
-            assert(!insn->dst[i].Indirect || index < c->first_non_array_temp);
-            c->liveness[index].start = MIN2(c->liveness[index].start, ip);
-            c->liveness[index].end = MAX2(c->liveness[index].end, ip);
-         }
-         ip++;
-      }
-
-      ntr_block->end_ip = ip;
-   }
-}
-
-static void
-ntr_live_regs(struct ntr_compile *c, nir_function_impl *impl)
-{
-   nir_metadata_require(impl, nir_metadata_block_index);
-
-   c->liveness = rzalloc_array(c, struct ntr_reg_interval, c->num_temps);
-
-   struct ntr_live_reg_state state = {
-       .blocks = rzalloc_array(impl, struct ntr_live_reg_block_state, impl->num_blocks),
-   };
-
-   /* The intervals start out with start > end (indicating unused) */
-   for (int i = 0; i < c->num_temps; i++)
-      c->liveness[i].start = ~0;
-
-   ntr_live_reg_setup_def_use(c, impl, &state);
-
-   /* Make a forward-order worklist of all the blocks. */
-   nir_block_worklist_init(&state.worklist, impl->num_blocks, NULL);
-   nir_foreach_block(block, impl) {
-      nir_block_worklist_push_tail(&state.worklist, block);
-   }
-
-   /* Propagate defin/defout down the CFG to calculate the live variables
-    * potentially defined along any possible control flow path.  We'll use this
-    * to keep things like conditional defs of the reg (or array regs where we
-    * don't track defs!) from making the reg's live range extend back to the
-    * start of the program.
-    */
-   while (!nir_block_worklist_is_empty(&state.worklist)) {
-      nir_block *block = nir_block_worklist_pop_head(&state.worklist);
-      for (int j = 0; j < ARRAY_SIZE(block->successors); j++) {
-         nir_block *succ = block->successors[j];
-         if (!succ || succ->index == impl->num_blocks)
-            continue;
-
-         for (int i = 0; i < c->num_temps; i++) {
-            uint8_t new_def = state.blocks[block->index].defout[i] & ~state.blocks[succ->index].defin[i];
-
-            if (new_def) {
-               state.blocks[succ->index].defin[i] |= new_def;
-               state.blocks[succ->index].defout[i] |= new_def;
-               nir_block_worklist_push_tail(&state.worklist, succ);
-            }
-         }
-      }
-   }
-
-   /* Make a reverse-order worklist of all the blocks. */
-   nir_foreach_block(block, impl) {
-      nir_block_worklist_push_head(&state.worklist, block);
-   }
-
-   /* We're now ready to work through the worklist and update the liveness sets
-    * of each of the blocks.  As long as we keep the worklist up-to-date as we
-    * go, everything will get covered.
-    */
-   while (!nir_block_worklist_is_empty(&state.worklist)) {
-      /* We pop them off in the reverse order we pushed them on.  This way
-       * the first walk of the instructions is backwards so we only walk
-       * once in the case of no control flow.
-       */
-      nir_block *block = nir_block_worklist_pop_head(&state.worklist);
-      struct ntr_block *ntr_block = ntr_block_from_nir(c, block);
-      struct ntr_live_reg_block_state *bs = &state.blocks[block->index];
-
-      for (int i = 0; i < c->num_temps; i++) {
-         /* Collect livein from our successors to include in our liveout. */
-         for (int j = 0; j < ARRAY_SIZE(block->successors); j++) {
-            nir_block *succ = block->successors[j];
-            if (!succ || succ->index == impl->num_blocks)
-               continue;
-            struct ntr_live_reg_block_state *sbs = &state.blocks[succ->index];
-
-            uint8_t new_liveout = sbs->livein[i] & ~bs->liveout[i];
-            if (new_liveout) {
-               if (state.blocks[block->index].defout[i])
-                  c->liveness[i].end = MAX2(c->liveness[i].end, ntr_block->end_ip);
-               bs->liveout[i] |= sbs->livein[i];
-            }
-         }
-
-         /* Propagate use requests from either our block's uses or our
-          * non-screened-off liveout up to our predecessors.
-          */
-         uint8_t new_livein = ((bs->use[i] | (bs->liveout[i] & ~bs->def[i])) &
-                               ~bs->livein[i]);
-         if (new_livein) {
-            bs->livein[i] |= new_livein;
-            set_foreach(block->predecessors, entry) {
-               nir_block *pred = (void *)entry->key;
-               nir_block_worklist_push_tail(&state.worklist, pred);
-            }
-
-            if (new_livein & state.blocks[block->index].defin[i])
-               c->liveness[i].start = MIN2(c->liveness[i].start, ntr_block->start_ip);
-         }
-      }
-   }
-
-   ralloc_free(state.blocks);
-   nir_block_worklist_fini(&state.worklist);
-}
-
-static void
-ntr_ra_check(struct ntr_compile *c, unsigned *ra_map, BITSET_WORD *released, int ip, unsigned index)
-{
-   if (index < c->first_non_array_temp)
-      return;
-
-   if (c->liveness[index].start == ip && ra_map[index] == ~0)
-      ra_map[index] = ureg_DECL_temporary(c->ureg).Index;
-
-   if (c->liveness[index].end == ip && !BITSET_TEST(released, index)) {
-      ureg_release_temporary(c->ureg, ureg_dst_register(TGSI_FILE_TEMPORARY, ra_map[index]));
-      BITSET_SET(released, index);
-   }
-}
-
-static void
-ntr_allocate_regs(struct ntr_compile *c, nir_function_impl *impl)
-{
-   ntr_live_regs(c, impl);
-
-   unsigned *ra_map = ralloc_array(c, unsigned, c->num_temps);
-   unsigned *released = rzalloc_array(c, BITSET_WORD, BITSET_WORDS(c->num_temps));
-
-   /* No RA on NIR array regs */
-   for (int i = 0; i < c->first_non_array_temp; i++)
-      ra_map[i] = i;
-
-   for (int i = c->first_non_array_temp; i < c->num_temps; i++)
-      ra_map[i] = ~0;
-
-   int ip = 0;
-   nir_foreach_block(block, impl) {
-      struct ntr_block *ntr_block = ntr_block_from_nir(c, block);
-
-      for (int i = 0; i < c->num_temps; i++)
-         ntr_ra_check(c, ra_map, released, ip, i);
-
-      util_dynarray_foreach(&ntr_block->insns, struct ntr_insn, insn) {
-         const struct tgsi_opcode_info *opcode_info =
-            tgsi_get_opcode_info(insn->opcode);
-
-         for (int i = 0; i < opcode_info->num_src; i++) {
-            if (insn->src[i].File == TGSI_FILE_TEMPORARY) {
-               ntr_ra_check(c, ra_map, released, ip, insn->src[i].Index);
-               insn->src[i].Index = ra_map[insn->src[i].Index];
-            }
-         }
-
-         if (insn->is_tex) {
-            for (int i = 0; i < ARRAY_SIZE(insn->tex_offset); i++) {
-               if (insn->tex_offset[i].File == TGSI_FILE_TEMPORARY) {
-                  ntr_ra_check(c, ra_map, released, ip, insn->tex_offset[i].Index);
-                  insn->tex_offset[i].Index = ra_map[insn->tex_offset[i].Index];
-               }
-            }
-         }
-
-         for (int i = 0; i < opcode_info->num_dst; i++) {
-            if (insn->dst[i].File == TGSI_FILE_TEMPORARY) {
-               ntr_ra_check(c, ra_map, released, ip, insn->dst[i].Index);
-               insn->dst[i].Index = ra_map[insn->dst[i].Index];
-            }
-         }
-         ip++;
-      }
-
-      for (int i = 0; i < c->num_temps; i++)
-         ntr_ra_check(c, ra_map, released, ip, i);
-   }
-}
-
-static void
 ntr_allocate_regs_unoptimized(struct ntr_compile *c, nir_function_impl *impl)
 {
-   for (int i = c->first_non_array_temp; i < c->num_temps; i++)
+   for (int i = 0; i < c->num_temps; i++)
       ureg_DECL_temporary(c->ureg);
 }
 
@@ -526,8 +238,7 @@ ntr_allocate_regs_unoptimized(struct ntr_compile *c, nir_function_impl *impl)
 static uint32_t
 ntr_tgsi_var_usage_mask(const struct nir_variable *var)
 {
-   const struct glsl_type *type_without_array =
-      glsl_without_array(var->type);
+   const struct glsl_type *type_without_array = glsl_without_array(var->type);
    unsigned num_components = glsl_get_vector_elements(type_without_array);
    if (num_components == 0) /* structs */
       num_components = 4;
@@ -545,8 +256,7 @@ ntr_output_decl(struct ntr_compile *c, nir_intrinsic_instr *instr, uint32_t *fra
    struct ureg_dst out;
    if (c->s->info.stage == MESA_SHADER_FRAGMENT) {
       unsigned semantic_name, semantic_index;
-      tgsi_get_gl_frag_result_semantic(semantics.location,
-                                       &semantic_name, &semantic_index);
+      tgsi_get_gl_frag_result_semantic(semantics.location, &semantic_name, &semantic_index);
       semantic_index += semantics.dual_source_blend_index;
 
       switch (semantics.location) {
@@ -564,8 +274,7 @@ ntr_output_decl(struct ntr_compile *c, nir_intrinsic_instr *instr, uint32_t *fra
    } else {
       unsigned semantic_name, semantic_index;
 
-      tgsi_get_gl_varying_semantic(semantics.location, true,
-                                   &semantic_name, &semantic_index);
+      tgsi_get_gl_varying_semantic(semantics.location, true, &semantic_name, &semantic_index);
 
       uint32_t usage_mask = u_bit_consecutive(*frac, instr->num_components);
       uint32_t gs_streams = semantics.gs_streams;
@@ -582,14 +291,8 @@ ntr_output_decl(struct ntr_compile *c, nir_intrinsic_instr *instr, uint32_t *fra
        */
       bool invariant = semantics.invariant;
 
-      out = ureg_DECL_output_layout(c->ureg,
-                                    semantic_name, semantic_index,
-                                    gs_streams,
-                                    base,
-                                    usage_mask,
-                                    array_id,
-                                    semantics.num_slots,
-                                    invariant);
+      out = ureg_DECL_output_layout(c->ureg, semantic_name, semantic_index, gs_streams, base,
+                                    usage_mask, array_id, semantics.num_slots, invariant);
    }
 
    unsigned write_mask;
@@ -603,9 +306,7 @@ ntr_output_decl(struct ntr_compile *c, nir_intrinsic_instr *instr, uint32_t *fra
 }
 
 static bool
-ntr_try_store_in_tgsi_output_with_use(struct ntr_compile *c,
-                                      struct ureg_dst *dst,
-                                      nir_src *src)
+ntr_try_store_in_tgsi_output_with_use(struct ntr_compile *c, struct ureg_dst *dst, nir_src *src)
 {
    *dst = ureg_dst_undef();
 
@@ -616,8 +317,7 @@ ntr_try_store_in_tgsi_output_with_use(struct ntr_compile *c,
       return false;
 
    nir_intrinsic_instr *intr = nir_instr_as_intrinsic(nir_src_parent_instr(src));
-   if (intr->intrinsic != nir_intrinsic_store_output ||
-       !nir_src_is_const(intr->src[1])) {
+   if (intr->intrinsic != nir_intrinsic_store_output || !nir_src_is_const(intr->src[1])) {
       return false;
    }
 
@@ -642,9 +342,9 @@ ntr_try_store_reg_in_tgsi_output(struct ntr_compile *c, struct ureg_dst *dst,
 
    /* Look for a single use for try_store_in_tgsi_output */
    nir_src *use = NULL;
-   nir_foreach_reg_load(src, reg_decl) {
+   nir_foreach_reg_load (src, reg_decl) {
       nir_intrinsic_instr *load = nir_instr_as_intrinsic(nir_src_parent_instr(src));
-      nir_foreach_use_including_if(load_use, &load->def) {
+      nir_foreach_use_including_if (load_use, &load->def) {
          /* We can only have one use */
          if (use != NULL)
             return false;
@@ -664,15 +364,14 @@ ntr_try_store_reg_in_tgsi_output(struct ntr_compile *c, struct ureg_dst *dst,
  * store_output emit its own MOV.
  */
 static bool
-ntr_try_store_ssa_in_tgsi_output(struct ntr_compile *c, struct ureg_dst *dst,
-                                 nir_def *def)
+ntr_try_store_ssa_in_tgsi_output(struct ntr_compile *c, struct ureg_dst *dst, nir_def *def)
 {
    *dst = ureg_dst_undef();
 
    if (!list_is_singular(&def->uses))
       return false;
 
-   nir_foreach_use_including_if(use, def) {
+   nir_foreach_use_including_if (use, def) {
       return ntr_try_store_in_tgsi_output_with_use(c, dst, use);
    }
    unreachable("We have one use");
@@ -687,45 +386,40 @@ ntr_setup_inputs(struct ntr_compile *c)
    unsigned num_inputs = 0;
    int num_input_arrays = 0;
 
-   nir_foreach_shader_in_variable(var, c->s) {
+   nir_foreach_shader_in_variable (var, c->s) {
       const struct glsl_type *type = var->type;
-      unsigned array_len =
-         glsl_count_attribute_slots(type, false);
+      unsigned array_len = glsl_count_attribute_slots(type, false);
 
       num_inputs = MAX2(num_inputs, var->data.driver_location + array_len);
    }
 
    c->input_index_map = ralloc_array(c, struct ureg_src, num_inputs);
 
-   nir_foreach_shader_in_variable(var, c->s) {
+   nir_foreach_shader_in_variable (var, c->s) {
       const struct glsl_type *type = var->type;
-      unsigned array_len =
-         glsl_count_attribute_slots(type, false);
+      unsigned array_len = glsl_count_attribute_slots(type, false);
 
       unsigned interpolation = TGSI_INTERPOLATE_CONSTANT;
       unsigned sample_loc;
       struct ureg_src decl;
 
       if (c->s->info.stage == MESA_SHADER_FRAGMENT) {
-         interpolation =
-            tgsi_get_interp_mode(var->data.interpolation,
-                                 var->data.location == VARYING_SLOT_COL0 ||
-                                 var->data.location == VARYING_SLOT_COL1);
+         interpolation = tgsi_get_interp_mode(
+            var->data.interpolation,
+            var->data.location == VARYING_SLOT_COL0 || var->data.location == VARYING_SLOT_COL1);
 
          if (var->data.location == VARYING_SLOT_POS)
             interpolation = TGSI_INTERPOLATE_LINEAR;
       }
 
       unsigned semantic_name, semantic_index;
-      tgsi_get_gl_varying_semantic(var->data.location, true,
-                                   &semantic_name, &semantic_index);
+      tgsi_get_gl_varying_semantic(var->data.location, true, &semantic_name, &semantic_index);
 
       if (var->data.sample) {
          sample_loc = TGSI_INTERPOLATE_LOC_SAMPLE;
       } else if (var->data.centroid) {
          sample_loc = TGSI_INTERPOLATE_LOC_CENTROID;
-         c->centroid_inputs |= (BITSET_MASK(array_len) <<
-                                var->data.driver_location);
+         c->centroid_inputs |= (BITSET_MASK(array_len) << var->data.driver_location);
       } else {
          sample_loc = TGSI_INTERPOLATE_LOC_CENTER;
       }
@@ -736,14 +430,9 @@ ntr_setup_inputs(struct ntr_compile *c)
 
       uint32_t usage_mask = ntr_tgsi_var_usage_mask(var);
 
-      decl = ureg_DECL_fs_input_centroid_layout(c->ureg,
-                                                semantic_name,
-                                                semantic_index,
-                                                interpolation,
-                                                sample_loc,
-                                                var->data.driver_location,
-                                                usage_mask,
-                                                array_id, array_len);
+      decl = ureg_DECL_fs_input_centroid_layout(
+         c->ureg, semantic_name, semantic_index, interpolation, sample_loc,
+         var->data.driver_location, usage_mask, array_id, array_len);
 
       if (semantic_name == TGSI_SEMANTIC_FACE) {
          struct ureg_dst temp = ntr_temp(c);
@@ -784,45 +473,32 @@ ntr_setup_outputs(struct ntr_compile *c)
 
    nir_sort_variables_with_modes(c->s, ntr_sort_by_location, nir_var_shader_out);
 
-   nir_foreach_shader_out_variable(var, c->s) {
+   nir_foreach_shader_out_variable (var, c->s) {
       if (var->data.location == FRAG_RESULT_COLOR)
          ureg_property(c->ureg, TGSI_PROPERTY_FS_COLOR0_WRITES_ALL_CBUFS, 1);
 
       unsigned semantic_name, semantic_index;
-      tgsi_get_gl_frag_result_semantic(var->data.location,
-                                       &semantic_name, &semantic_index);
+      tgsi_get_gl_frag_result_semantic(var->data.location, &semantic_name, &semantic_index);
 
       (void)ureg_DECL_output(c->ureg, semantic_name, semantic_index);
    }
 }
 
 static enum tgsi_texture_type
-tgsi_texture_type_from_sampler_dim(enum glsl_sampler_dim dim, bool is_array, bool is_shadow)
+tgsi_texture_type_from_sampler_dim(enum glsl_sampler_dim dim, bool is_array)
 {
    switch (dim) {
    case GLSL_SAMPLER_DIM_1D:
-      if (is_shadow)
-         return is_array ? TGSI_TEXTURE_SHADOW1D_ARRAY : TGSI_TEXTURE_SHADOW1D;
-      else
-         return is_array ? TGSI_TEXTURE_1D_ARRAY : TGSI_TEXTURE_1D;
+      return is_array ? TGSI_TEXTURE_1D_ARRAY : TGSI_TEXTURE_1D;
    case GLSL_SAMPLER_DIM_2D:
    case GLSL_SAMPLER_DIM_EXTERNAL:
-      if (is_shadow)
-         return is_array ? TGSI_TEXTURE_SHADOW2D_ARRAY : TGSI_TEXTURE_SHADOW2D;
-      else
-         return is_array ? TGSI_TEXTURE_2D_ARRAY : TGSI_TEXTURE_2D;
+      return is_array ? TGSI_TEXTURE_2D_ARRAY : TGSI_TEXTURE_2D;
    case GLSL_SAMPLER_DIM_3D:
       return TGSI_TEXTURE_3D;
    case GLSL_SAMPLER_DIM_CUBE:
-      if (is_shadow)
-         return is_array ? TGSI_TEXTURE_SHADOWCUBE_ARRAY : TGSI_TEXTURE_SHADOWCUBE;
-      else
-         return is_array ? TGSI_TEXTURE_CUBE_ARRAY : TGSI_TEXTURE_CUBE;
+      return is_array ? TGSI_TEXTURE_CUBE_ARRAY : TGSI_TEXTURE_CUBE;
    case GLSL_SAMPLER_DIM_RECT:
-      if (is_shadow)
-         return TGSI_TEXTURE_SHADOWRECT;
-      else
-         return TGSI_TEXTURE_RECT;
+      return TGSI_TEXTURE_RECT;
    case GLSL_SAMPLER_DIM_MS:
       return is_array ? TGSI_TEXTURE_2D_ARRAY_MSAA : TGSI_TEXTURE_2D_MSAA;
    case GLSL_SAMPLER_DIM_BUF:
@@ -841,7 +517,7 @@ tgsi_return_type_from_base_type(enum glsl_base_type type)
    case GLSL_TYPE_UINT:
       return TGSI_RETURN_TYPE_UINT;
    case GLSL_TYPE_FLOAT:
-     return TGSI_RETURN_TYPE_FLOAT;
+      return TGSI_RETURN_TYPE_FLOAT;
    default:
       unreachable("unexpected texture type");
    }
@@ -850,37 +526,36 @@ tgsi_return_type_from_base_type(enum glsl_base_type type)
 static void
 ntr_setup_uniforms(struct ntr_compile *c)
 {
-   nir_foreach_uniform_variable(var, c->s) {
+   nir_foreach_uniform_variable (var, c->s) {
       if (glsl_type_is_sampler(glsl_without_array(var->type)) ||
           glsl_type_is_texture(glsl_without_array(var->type))) {
          /* Don't use this size for the check for samplers -- arrays of structs
           * containing samplers should be ignored, and just the separate lowered
           * sampler uniform decl used.
           */
-         int size = glsl_type_get_sampler_count(var->type) +
-                    glsl_type_get_texture_count(var->type);
+         int size = glsl_type_get_sampler_count(var->type) + glsl_type_get_texture_count(var->type);
 
          const struct glsl_type *stype = glsl_without_array(var->type);
-         enum tgsi_texture_type target = tgsi_texture_type_from_sampler_dim(glsl_get_sampler_dim(stype),
-                                                                            glsl_sampler_type_is_array(stype),
-                                                                            glsl_sampler_type_is_shadow(stype));
-         enum tgsi_return_type ret_type = tgsi_return_type_from_base_type(glsl_get_sampler_result_type(stype));
+         enum tgsi_texture_type target = tgsi_texture_type_from_sampler_dim(
+            glsl_get_sampler_dim(stype), glsl_sampler_type_is_array(stype));
+         enum tgsi_return_type ret_type =
+            tgsi_return_type_from_base_type(glsl_get_sampler_result_type(stype));
          for (int i = 0; i < size; i++) {
-            ureg_DECL_sampler_view(c->ureg, var->data.binding + i,
-               target, ret_type, ret_type, ret_type, ret_type);
+            ureg_DECL_sampler_view(c->ureg, var->data.binding + i, target, ret_type, ret_type,
+                                   ret_type, ret_type);
             ureg_DECL_sampler(c->ureg, var->data.binding + i);
          }
 
-      /* lower_uniforms_to_ubo lowered non-sampler uniforms to UBOs, so CB0
-       * size declaration happens with other UBOs below.
-       */
+         /* lower_uniforms_to_ubo lowered non-sampler uniforms to UBOs, so CB0
+          * size declaration happens with other UBOs below.
+          */
       }
    }
 
    c->first_ubo = ~0;
 
    unsigned ubo_sizes[PIPE_MAX_CONSTANT_BUFFERS] = {0};
-   nir_foreach_variable_with_modes(var, c->s, nir_var_mem_ubo) {
+   nir_foreach_variable_with_modes (var, c->s, nir_var_mem_ubo) {
       int ubo = var->data.driver_location;
       if (ubo == -1)
          continue;
@@ -903,38 +578,21 @@ ntr_setup_registers(struct ntr_compile *c)
 {
    assert(c->num_temps == 0);
 
-   nir_foreach_reg_decl_safe(nir_reg, nir_shader_get_entrypoint(c->s)) {
-      /* Permanently allocate all the array regs at the start. */
-      unsigned num_array_elems = nir_intrinsic_num_array_elems(nir_reg);
-      unsigned index = nir_reg->def.index;
-
-      if (num_array_elems != 0) {
-         struct ureg_dst decl = ureg_DECL_array_temporary(c->ureg, num_array_elems, true);
-         c->reg_temp[index] = decl;
-         assert(c->num_temps == decl.Index);
-         c->num_temps += num_array_elems;
-      }
-   }
-   c->first_non_array_temp = c->num_temps;
-
    /* After that, allocate non-array regs in our virtual space that we'll
     * register-allocate before ureg emit.
     */
-   nir_foreach_reg_decl_safe(nir_reg, nir_shader_get_entrypoint(c->s)) {
-      unsigned num_array_elems = nir_intrinsic_num_array_elems(nir_reg);
+   nir_foreach_reg_decl_safe (nir_reg, nir_shader_get_entrypoint(c->s)) {
+      assert(nir_intrinsic_num_array_elems(nir_reg) == 0);
       unsigned num_components = nir_intrinsic_num_components(nir_reg);
       unsigned index = nir_reg->def.index;
 
-      /* We already handled arrays */
-      if (num_array_elems == 0) {
-         struct ureg_dst decl;
-         uint32_t write_mask = BITFIELD_MASK(num_components);
+      struct ureg_dst decl;
+      uint32_t write_mask = BITFIELD_MASK(num_components);
 
-         if (!ntr_try_store_reg_in_tgsi_output(c, &decl, nir_reg)) {
-            decl = ureg_writemask(ntr_temp(c), write_mask);
-         }
-         c->reg_temp[index] = decl;
+      if (!ntr_try_store_reg_in_tgsi_output(c, &decl, nir_reg)) {
+         decl = ureg_writemask(ntr_temp(c), write_mask);
       }
+      c->reg_temp[index] = decl;
    }
 }
 
@@ -958,8 +616,7 @@ ntr_reladdr(struct ntr_compile *c, struct ureg_src addr, int addr_index)
 
    for (int i = 0; i <= addr_index; i++) {
       if (!c->addr_declared[i]) {
-         c->addr_reg[i] = ureg_writemask(ureg_DECL_address(c->ureg),
-                                             TGSI_WRITEMASK_X);
+         c->addr_reg[i] = ureg_writemask(ureg_DECL_address(c->ureg), TGSI_WRITEMASK_X);
          c->addr_declared[i] = true;
       }
    }
@@ -969,8 +626,7 @@ ntr_reladdr(struct ntr_compile *c, struct ureg_src addr, int addr_index)
 }
 
 /* Forward declare for recursion with indirects */
-static struct ureg_src
-ntr_get_src(struct ntr_compile *c, nir_src src);
+static struct ureg_src ntr_get_src(struct ntr_compile *c, nir_src src);
 
 static struct ureg_src
 ntr_get_chased_src(struct ntr_compile *c, nir_legacy_src *src)
@@ -986,8 +642,7 @@ ntr_get_chased_src(struct ntr_compile *c, nir_legacy_src *src)
 
       if (src->reg.indirect) {
          struct ureg_src offset = ntr_get_src(c, nir_src_for_ssa(src->reg.indirect));
-         return ureg_src_indirect(ureg_src(reg_temp),
-                                  ntr_reladdr(c, offset, 0));
+         return ureg_src_indirect(ureg_src(reg_temp), ntr_reladdr(c, offset, 0));
       } else {
          return ureg_src(reg_temp);
       }
@@ -1008,18 +663,13 @@ ntr_get_alu_src(struct ntr_compile *c, nir_alu_instr *instr, int i)
     * officially supported by TGSI is 32-bit integer negates, but even those are
     * broken on virglrenderer, so skip lowering all integer and f64 float mods.
     *
-    * The options->lower_fabs requests that we not have native source modifiers
+    * The lower_fabs requests that we not have native source modifiers
     * for fabs, and instead emit MAX(a,-a) for nir_op_fabs.
     */
-   nir_legacy_alu_src src =
-      nir_legacy_chase_alu_src(&instr->src[i], !c->options->lower_fabs);
+   nir_legacy_alu_src src = nir_legacy_chase_alu_src(&instr->src[i], !c->lower_fabs);
    struct ureg_src usrc = ntr_get_chased_src(c, &src.src);
 
-   usrc = ureg_swizzle(usrc,
-                       src.swizzle[0],
-                       src.swizzle[1],
-                       src.swizzle[2],
-                       src.swizzle[3]);
+   usrc = ureg_swizzle(usrc, src.swizzle[0], src.swizzle[1], src.swizzle[2], src.swizzle[3]);
 
    if (src.fabs)
       usrc = ureg_abs(usrc);
@@ -1037,8 +687,7 @@ ntr_swizzle_for_write_mask(struct ureg_src src, uint32_t write_mask)
 {
    assert(write_mask);
    int first_chan = ffs(write_mask) - 1;
-   return ureg_swizzle(src,
-                       (write_mask & TGSI_WRITEMASK_X) ? TGSI_SWIZZLE_X : first_chan,
+   return ureg_swizzle(src, (write_mask & TGSI_WRITEMASK_X) ? TGSI_SWIZZLE_X : first_chan,
                        (write_mask & TGSI_WRITEMASK_Y) ? TGSI_SWIZZLE_Y : first_chan,
                        (write_mask & TGSI_WRITEMASK_Z) ? TGSI_SWIZZLE_Z : first_chan,
                        (write_mask & TGSI_WRITEMASK_W) ? TGSI_SWIZZLE_W : first_chan);
@@ -1047,7 +696,13 @@ ntr_swizzle_for_write_mask(struct ureg_src src, uint32_t write_mask)
 static struct ureg_dst
 ntr_get_ssa_def_decl(struct ntr_compile *c, nir_def *ssa)
 {
-   uint32_t writemask = BITSET_MASK(ssa->num_components);
+   uint32_t writemask;
+   /* Fix writemask for nir_intrinsic_load_ubo_vec4 according to uses. */
+   if (ssa->parent_instr->type == nir_instr_type_intrinsic &&
+       nir_instr_as_intrinsic(ssa->parent_instr)->intrinsic == nir_intrinsic_load_ubo_vec4)
+      writemask = nir_def_components_read(ssa);
+   else
+      writemask = BITSET_MASK(ssa->num_components);
 
    struct ureg_dst dst;
    if (!ntr_try_store_ssa_in_tgsi_output(c, &dst, ssa))
@@ -1141,9 +796,7 @@ ntr_store(struct ntr_compile *c, nir_def *def, struct ureg_src src)
 }
 
 static void
-ntr_emit_scalar(struct ntr_compile *c, unsigned tgsi_op,
-                struct ureg_dst dst,
-                struct ureg_src src0,
+ntr_emit_scalar(struct ntr_compile *c, unsigned tgsi_op, struct ureg_dst dst, struct ureg_src src0,
                 struct ureg_src src1)
 {
    unsigned i;
@@ -1154,11 +807,8 @@ ntr_emit_scalar(struct ntr_compile *c, unsigned tgsi_op,
 
    for (i = 0; i < 4; i++) {
       if (dst.WriteMask & (1 << i)) {
-         ntr_insn(c, tgsi_op,
-                  ureg_writemask(dst, 1 << i),
-                  ureg_scalar(src0, i),
-                  ureg_scalar(src1, i),
-                  ureg_src_undef(), ureg_src_undef());
+         ntr_insn(c, tgsi_op, ureg_writemask(dst, 1 << i), ureg_scalar(src0, i),
+                  ureg_scalar(src1, i), ureg_src_undef(), ureg_src_undef());
       }
    }
 }
@@ -1202,10 +852,6 @@ ntr_emit_alu(struct ntr_compile *c, nir_alu_instr *instr)
       [nir_op_sne] = TGSI_OPCODE_SNE,
 
       [nir_op_ftrunc] = TGSI_OPCODE_TRUNC,
-      [nir_op_fddx] = TGSI_OPCODE_DDX,
-      [nir_op_fddy] = TGSI_OPCODE_DDY,
-      [nir_op_fddx_coarse] = TGSI_OPCODE_DDX,
-      [nir_op_fddy_coarse] = TGSI_OPCODE_DDY,
       [nir_op_fadd] = TGSI_OPCODE_ADD,
       [nir_op_fmul] = TGSI_OPCODE_MUL,
 
@@ -1216,8 +862,7 @@ ntr_emit_alu(struct ntr_compile *c, nir_alu_instr *instr)
 
    if (instr->op < ARRAY_SIZE(op_map) && op_map[instr->op] > 0) {
       /* The normal path for NIR to TGSI ALU op translation */
-      ntr_insn(c, op_map[instr->op],
-                dst, src[0], src[1], src[2], src[3]);
+      ntr_insn(c, op_map[instr->op], dst, src[0], src[1], src[2], src[3]);
    } else {
       /* Special cases for NIR to TGSI ALU op translation. */
 
@@ -1228,10 +873,10 @@ ntr_emit_alu(struct ntr_compile *c, nir_alu_instr *instr)
       switch (instr->op) {
       case nir_op_fabs:
          /* Try to eliminate */
-         if (!c->options->lower_fabs && nir_legacy_float_mod_folds(instr))
+         if (!c->lower_fabs && nir_legacy_float_mod_folds(instr))
             break;
 
-         if (c->options->lower_fabs)
+         if (c->lower_fabs)
             ntr_MAX(c, dst, src[0], ureg_negate(src[0]));
          else
             ntr_MOV(c, dst, ureg_abs(src[0]));
@@ -1294,30 +939,15 @@ ntr_emit_alu(struct ntr_compile *c, nir_alu_instr *instr)
          break;
 
       case nir_op_fcsel:
-         /* If CMP isn't supported, then the flags that enable NIR to generate
-          * this opcode should also not be set.
-          */
-         assert(!c->options->lower_cmp);
-
          /* Implement this as CMP(-abs(src0), src1, src2). */
          ntr_CMP(c, dst, ureg_negate(ureg_abs(src[0])), src[1], src[2]);
          break;
 
       case nir_op_fcsel_gt:
-         /* If CMP isn't supported, then the flags that enable NIR to generate
-          * these opcodes should also not be set.
-          */
-         assert(!c->options->lower_cmp);
-
          ntr_CMP(c, dst, ureg_negate(src[0]), src[1], src[2]);
          break;
 
       case nir_op_fcsel_ge:
-         /* If CMP isn't supported, then the flags that enable NIR to generate
-          * these opcodes should also not be set.
-          */
-         assert(!c->options->lower_cmp);
-
          /* Implement this as if !(src0 < 0.0) was identical to src0 >= 0.0. */
          ntr_CMP(c, dst, src[0], src[2], src[1]);
          break;
@@ -1337,8 +967,7 @@ ntr_emit_alu(struct ntr_compile *c, nir_alu_instr *instr)
 }
 
 static struct ureg_src
-ntr_ureg_src_indirect(struct ntr_compile *c, struct ureg_src usrc,
-                      nir_src src, int addr_reg)
+ntr_ureg_src_indirect(struct ntr_compile *c, struct ureg_src usrc, nir_src src, int addr_reg)
 {
    if (nir_src_is_const(src)) {
       usrc.Index += ntr_src_as_uint(c, src);
@@ -1349,8 +978,7 @@ ntr_ureg_src_indirect(struct ntr_compile *c, struct ureg_src usrc,
 }
 
 static struct ureg_dst
-ntr_ureg_dst_indirect(struct ntr_compile *c, struct ureg_dst dst,
-                      nir_src src)
+ntr_ureg_dst_indirect(struct ntr_compile *c, struct ureg_dst dst, nir_src src)
 {
    if (nir_src_is_const(src)) {
       dst.Index += ntr_src_as_uint(c, src);
@@ -1361,15 +989,12 @@ ntr_ureg_dst_indirect(struct ntr_compile *c, struct ureg_dst dst,
 }
 
 static struct ureg_dst
-ntr_ureg_dst_dimension_indirect(struct ntr_compile *c, struct ureg_dst udst,
-                                nir_src src)
+ntr_ureg_dst_dimension_indirect(struct ntr_compile *c, struct ureg_dst udst, nir_src src)
 {
    if (nir_src_is_const(src)) {
       return ureg_dst_dimension(udst, ntr_src_as_uint(c, src));
    } else {
-      return ureg_dst_dimension_indirect(udst,
-                                         ntr_reladdr(c, ntr_get_src(c, src), 1),
-                                         0);
+      return ureg_dst_dimension_indirect(udst, ntr_reladdr(c, ntr_get_src(c, src), 1), 0);
    }
 }
 /* Some load operations in NIR will have a fractional offset that we need to
@@ -1378,13 +1003,9 @@ ntr_ureg_dst_dimension_indirect(struct ntr_compile *c, struct ureg_dst udst,
 static struct ureg_src
 ntr_shift_by_frac(struct ureg_src src, unsigned frac, unsigned num_components)
 {
-   return ureg_swizzle(src,
-                       frac,
-                       frac + MIN2(num_components - 1, 1),
-                       frac + MIN2(num_components - 1, 2),
-                       frac + MIN2(num_components - 1, 3));
+   return ureg_swizzle(src, frac, frac + MIN2(num_components - 1, 1),
+                       frac + MIN2(num_components - 1, 2), frac + MIN2(num_components - 1, 3));
 }
-
 
 static void
 ntr_emit_load_ubo(struct ntr_compile *c, nir_intrinsic_instr *instr)
@@ -1397,7 +1018,7 @@ ntr_emit_load_ubo(struct ntr_compile *c, nir_intrinsic_instr *instr)
       src = ureg_src_dimension(src, ntr_src_as_uint(c, instr->src[0]));
    } else {
       /* virglrenderer requires that indirect UBO references have the UBO
-       * array's base index in the Index field, not added to the indrect
+       * array's base index in the Index field, not added to the indirect
        * address.
        *
        * Many nir intrinsics have a base address const value for the start of
@@ -1406,12 +1027,10 @@ ntr_emit_load_ubo(struct ntr_compile *c, nir_intrinsic_instr *instr)
        */
       addr_temp = ntr_temp(c);
       ntr_UADD(c, addr_temp, ntr_get_src(c, instr->src[0]), ureg_imm1i(c->ureg, -c->first_ubo));
-      src = ureg_src_dimension_indirect(src,
-                                         ntr_reladdr(c, ureg_src(addr_temp), 1),
-                                         c->first_ubo);
+      src = ureg_src_dimension_indirect(src, ntr_reladdr(c, ureg_src(addr_temp), 1), c->first_ubo);
    }
 
-   /* !PIPE_CAP_LOAD_CONSTBUF: Just emit it as a vec4 reference to the const
+   /* !pipe_caps.load_constbuf: Just emit it as a vec4 reference to the const
     * file.
     */
    src.Index = nir_intrinsic_base(instr);
@@ -1457,8 +1076,7 @@ ntr_emit_load_input(struct ntr_compile *c, nir_intrinsic_instr *instr)
    case nir_intrinsic_load_interpolated_input: {
       input = ntr_ureg_src_indirect(c, input, instr->src[1], 0);
 
-      nir_intrinsic_instr *bary_instr =
-         nir_instr_as_intrinsic(instr->src[0].ssa->parent_instr);
+      nir_intrinsic_instr *bary_instr = nir_instr_as_intrinsic(instr->src[0].ssa->parent_instr);
 
       switch (bary_instr->intrinsic) {
       case nir_intrinsic_load_barycentric_pixel:
@@ -1483,14 +1101,12 @@ ntr_emit_load_input(struct ntr_compile *c, nir_intrinsic_instr *instr)
 
       case nir_intrinsic_load_barycentric_at_sample:
          /* We stored the sample in the fake "bary" dest. */
-         ntr_INTERP_SAMPLE(c, ntr_get_dest(c, &instr->def), input,
-                            ntr_get_src(c, instr->src[0]));
+         ntr_INTERP_SAMPLE(c, ntr_get_dest(c, &instr->def), input, ntr_get_src(c, instr->src[0]));
          break;
 
       case nir_intrinsic_load_barycentric_at_offset:
          /* We stored the offset in the fake "bary" dest. */
-         ntr_INTERP_OFFSET(c, ntr_get_dest(c, &instr->def), input,
-                            ntr_get_src(c, instr->src[0]));
+         ntr_INTERP_OFFSET(c, ntr_get_dest(c, &instr->def), input, ntr_get_src(c, instr->src[0]));
          break;
 
       default:
@@ -1527,7 +1143,7 @@ ntr_emit_store_output(struct ntr_compile *c, nir_intrinsic_instr *instr)
       out = ntr_ureg_dst_indirect(c, out, instr->src[1]);
    }
 
-   uint8_t swizzle[4] = { 0, 0, 0, 0 };
+   uint8_t swizzle[4] = {0, 0, 0, 0};
    for (int i = frac; i < 4; i++) {
       if (out.WriteMask & (1 << i))
          swizzle[i] = i - frac;
@@ -1567,7 +1183,7 @@ ntr_emit_load_output(struct ntr_compile *c, nir_intrinsic_instr *instr)
     * TESS_LEVEL_INNER.
     */
    int fill_channel = ffs(dst.WriteMask) - 1;
-   uint8_t swizzles[4] = { 0, 1, 2, 3 };
+   uint8_t swizzles[4] = {0, 1, 2, 3};
    for (int i = 0; i < 4; i++)
       if (!(dst.WriteMask & (1 << i)))
          swizzles[i] = fill_channel;
@@ -1645,11 +1261,11 @@ ntr_emit_intrinsic(struct ntr_compile *c, nir_intrinsic_instr *instr)
       ntr_emit_load_output(c, instr);
       break;
 
-   case nir_intrinsic_discard:
+   case nir_intrinsic_terminate:
       ntr_KILL(c);
       break;
 
-   case nir_intrinsic_discard_if: {
+   case nir_intrinsic_terminate_if: {
       struct ureg_src cond = ureg_scalar(ntr_get_src(c, instr->src[0]), 0);
       /* For !native_integers, the bool got lowered to 1.0 or 0.0. */
       ntr_KILL_IF(c, ureg_negate(cond));
@@ -1667,6 +1283,15 @@ ntr_emit_intrinsic(struct ntr_compile *c, nir_intrinsic_instr *instr)
    case nir_intrinsic_load_barycentric_at_offset:
       ntr_store(c, &instr->def, ntr_get_src(c, instr->src[0]));
       break;
+
+   case nir_intrinsic_ddx:
+   case nir_intrinsic_ddx_coarse:
+      ntr_DDX(c, ntr_get_dest(c, &instr->def), ntr_get_src(c, instr->src[0]));
+      return;
+   case nir_intrinsic_ddy:
+   case nir_intrinsic_ddy_coarse:
+      ntr_DDY(c, ntr_get_dest(c, &instr->def), ntr_get_src(c, instr->src[0]));
+      return;
 
    case nir_intrinsic_decl_reg:
    case nir_intrinsic_load_reg:
@@ -1690,9 +1315,7 @@ struct ntr_tex_operand_state {
 };
 
 static void
-ntr_push_tex_arg(struct ntr_compile *c,
-                 nir_tex_instr *instr,
-                 nir_tex_src_type tex_src_type,
+ntr_push_tex_arg(struct ntr_compile *c, nir_tex_instr *instr, nir_tex_src_type tex_src_type,
                  struct ntr_tex_operand_state *s)
 {
    int tex_src = nir_tex_instr_src_index(instr, tex_src_type);
@@ -1707,7 +1330,9 @@ static void
 ntr_emit_texture(struct ntr_compile *c, nir_tex_instr *instr)
 {
    struct ureg_dst dst = ntr_get_dest(c, &instr->def);
-   enum tgsi_texture_type target = tgsi_texture_type_from_sampler_dim(instr->sampler_dim, instr->is_array, instr->is_shadow);
+   assert(!instr->is_shadow);
+   enum tgsi_texture_type target =
+      tgsi_texture_type_from_sampler_dim(instr->sampler_dim, instr->is_array);
    unsigned tex_opcode;
 
    int tex_handle_src = nir_tex_instr_src_index(instr, nir_tex_src_texture_handle);
@@ -1731,7 +1356,7 @@ ntr_emit_texture(struct ntr_compile *c, nir_tex_instr *instr)
    switch (instr->op) {
    case nir_texop_tex:
       if (nir_tex_instr_src_size(instr, nir_tex_instr_src_index(instr, nir_tex_src_backend1)) >
-         MAX2(instr->coord_components, 2) + instr->is_shadow)
+          MAX2(instr->coord_components, 2) + instr->is_shadow)
          tex_opcode = TGSI_OPCODE_TXP;
       else
          tex_opcode = TGSI_OPCODE_TEX;
@@ -1764,7 +1389,7 @@ ntr_emit_texture(struct ntr_compile *c, nir_tex_instr *instr)
       unreachable("unsupported tex op");
    }
 
-   struct ntr_tex_operand_state s = { .i = 0 };
+   struct ntr_tex_operand_state s = {.i = 0};
    ntr_push_tex_arg(c, instr, nir_tex_src_backend1, &s);
    ntr_push_tex_arg(c, instr, nir_tex_src_backend2, &s);
 
@@ -1795,8 +1420,7 @@ ntr_emit_texture(struct ntr_compile *c, nir_tex_instr *instr)
    }
 
    if (instr->op == nir_texop_tg4 && target != TGSI_TEXTURE_SHADOWCUBE_ARRAY) {
-      if (c->screen->get_param(c->screen,
-                               PIPE_CAP_TGSI_TG4_COMPONENT_IN_SWIZZLE)) {
+      if (c->screen->caps.tgsi_tg4_component_in_swizzle) {
          sampler = ureg_scalar(sampler, instr->component);
          s.srcs[s.i++] = ureg_src_undef();
       } else {
@@ -1830,7 +1454,8 @@ ntr_emit_texture(struct ntr_compile *c, nir_tex_instr *instr)
    while (s.i < 4)
       s.srcs[s.i++] = ureg_src_undef();
 
-   struct ntr_insn *insn = ntr_insn(c, tex_opcode, tex_dst, s.srcs[0], s.srcs[1], s.srcs[2], s.srcs[3]);
+   struct ntr_insn *insn =
+      ntr_insn(c, tex_opcode, tex_dst, s.srcs[0], s.srcs[1], s.srcs[2], s.srcs[3]);
    insn->tex_target = target;
    insn->tex_return_type = tex_type;
    insn->is_tex = true;
@@ -1849,7 +1474,8 @@ ntr_emit_texture(struct ntr_compile *c, nir_tex_instr *instr)
 
    if (nir_tex_instr_has_explicit_tg4_offsets(instr)) {
       for (uint8_t i = 0; i < 4; ++i) {
-         struct ureg_src imm = ureg_imm2i(c->ureg, instr->tg4_offsets[i][0], instr->tg4_offsets[i][1]);
+         struct ureg_src imm =
+            ureg_imm2i(c->ureg, instr->tg4_offsets[i][0], instr->tg4_offsets[i][1]);
          insn->tex_offset[i].File = imm.File;
          insn->tex_offset[i].Index = imm.Index;
          insn->tex_offset[i].SwizzleX = imm.SwizzleX;
@@ -1962,7 +1588,7 @@ ntr_emit_block(struct ntr_compile *c, nir_block *block)
    struct ntr_block *ntr_block = ntr_block_from_nir(c, block);
    c->cur_block = ntr_block;
 
-   nir_foreach_instr(instr, block) {
+   nir_foreach_instr (instr, block) {
       ntr_emit_instr(c, instr);
 
       /* Sanity check that we didn't accidentally ureg_OPCODE() instead of ntr_OPCODE(). */
@@ -1989,7 +1615,7 @@ ntr_emit_block(struct ntr_compile *c, nir_block *block)
 static void
 ntr_emit_cf_list(struct ntr_compile *c, struct exec_list *list)
 {
-   foreach_list_typed(nir_cf_node, node, node, list) {
+   foreach_list_typed (nir_cf_node, node, node, list) {
       switch (node->type) {
       case nir_cf_node_block:
          ntr_emit_block(c, nir_cf_node_as_block(node));
@@ -2015,9 +1641,8 @@ ntr_emit_block_ureg(struct ntr_compile *c, struct nir_block *block)
    struct ntr_block *ntr_block = ntr_block_from_nir(c, block);
 
    /* Emit the ntr insns to tgsi_ureg. */
-   util_dynarray_foreach(&ntr_block->insns, struct ntr_insn, insn) {
-      const struct tgsi_opcode_info *opcode_info =
-         tgsi_get_opcode_info(insn->opcode);
+   util_dynarray_foreach (&ntr_block->insns, struct ntr_insn, insn) {
+      const struct tgsi_opcode_info *opcode_info = tgsi_get_opcode_info(insn->opcode);
 
       switch (insn->opcode) {
       case TGSI_OPCODE_IF:
@@ -2054,17 +1679,12 @@ ntr_emit_block_ureg(struct ntr_compile *c, struct nir_block *block)
                if (insn->tex_offset[i].File != TGSI_FILE_NULL)
                   num_offsets = i + 1;
             }
-            ureg_tex_insn(c->ureg, insn->opcode,
-                          insn->dst, opcode_info->num_dst,
-                          insn->tex_target, insn->tex_return_type,
-                          insn->tex_offset,
-                          num_offsets,
-                          insn->src, opcode_info->num_src);
+            ureg_tex_insn(c->ureg, insn->opcode, insn->dst, opcode_info->num_dst, insn->tex_target,
+                          insn->tex_return_type, insn->tex_offset, num_offsets, insn->src,
+                          opcode_info->num_src);
          } else {
-            ureg_insn(c->ureg, insn->opcode,
-                     insn->dst, opcode_info->num_dst,
-                     insn->src, opcode_info->num_src,
-                     insn->precise);
+            ureg_insn(c->ureg, insn->opcode, insn->dst, opcode_info->num_dst, insn->src,
+                      opcode_info->num_src, insn->precise);
          }
       }
    }
@@ -2090,7 +1710,7 @@ ntr_emit_if_ureg(struct ntr_compile *c, nir_if *if_stmt)
 static void
 ntr_emit_cf_list_ureg(struct ntr_compile *c, struct exec_list *list)
 {
-   foreach_list_typed(nir_cf_node, node, node, list) {
+   foreach_list_typed (nir_cf_node, node, node, list) {
       switch (node->type) {
       case nir_cf_node_block:
          ntr_emit_block_ureg(c, nir_cf_node_as_block(node));
@@ -2124,12 +1744,11 @@ ntr_emit_impl(struct ntr_compile *c, nir_function_impl *impl)
 
    /* Set up the struct ntr_blocks to put insns in */
    c->blocks = _mesa_pointer_hash_table_create(c);
-   nir_foreach_block(block, impl) {
+   nir_foreach_block (block, impl) {
       struct ntr_block *ntr_block = rzalloc(c->blocks, struct ntr_block);
       util_dynarray_init(&ntr_block->insns, ntr_block);
       _mesa_hash_table_insert(c->blocks, block, ntr_block);
    }
-
 
    ntr_setup_registers(c);
 
@@ -2141,20 +1760,13 @@ ntr_emit_impl(struct ntr_compile *c, nir_function_impl *impl)
    /* Emit the ntr insns */
    ntr_emit_cf_list(c, &impl->body);
 
-   /* Don't do optimized RA if the driver requests it, unless the number of
-    * temps is too large to be covered by the 16 bit signed int that TGSI
-    * allocates for the register index */
-   if (!c->options->unoptimized_ra || c->num_temps > 0x7fff)
-      ntr_allocate_regs(c, impl);
-   else
-      ntr_allocate_regs_unoptimized(c, impl);
+   ntr_allocate_regs_unoptimized(c, impl);
 
    /* Turn the ntr insns into actual TGSI tokens */
    ntr_emit_cf_list_ureg(c, &impl->body);
 
    ralloc_free(c->liveness);
    c->liveness = NULL;
-
 }
 
 static int
@@ -2175,15 +1787,14 @@ ntr_should_vectorize_instr(const nir_instr *instr, const void *data)
 }
 
 static bool
-ntr_should_vectorize_io(unsigned align, unsigned bit_size,
-                        unsigned num_components, unsigned high_offset,
-                        nir_intrinsic_instr *low, nir_intrinsic_instr *high,
+ntr_should_vectorize_io(unsigned align, unsigned bit_size, unsigned num_components,
+                        unsigned high_offset, nir_intrinsic_instr *low, nir_intrinsic_instr *high,
                         void *data)
 {
    if (bit_size != 32)
       return false;
 
-   /* Our offset alignment should aways be at least 4 bytes */
+   /* Our offset alignment should always be at least 4 bytes */
    if (align < 4)
       return false;
 
@@ -2202,20 +1813,9 @@ static nir_variable_mode
 ntr_no_indirects_mask(nir_shader *s, struct pipe_screen *screen)
 {
    unsigned pipe_stage = pipe_shader_type_from_mesa(s->info.stage);
-   unsigned indirect_mask = 0;
+   unsigned indirect_mask = nir_var_shader_in | nir_var_shader_out;
 
-   if (!screen->get_shader_param(screen, pipe_stage,
-                                 PIPE_SHADER_CAP_INDIRECT_INPUT_ADDR)) {
-      indirect_mask |= nir_var_shader_in;
-   }
-
-   if (!screen->get_shader_param(screen, pipe_stage,
-                                 PIPE_SHADER_CAP_INDIRECT_OUTPUT_ADDR)) {
-      indirect_mask |= nir_var_shader_out;
-   }
-
-   if (!screen->get_shader_param(screen, pipe_stage,
-                                 PIPE_SHADER_CAP_INDIRECT_TEMP_ADDR)) {
+   if (!screen->get_shader_param(screen, pipe_stage, PIPE_SHADER_CAP_INDIRECT_TEMP_ADDR)) {
       indirect_mask |= nir_var_function_temp;
    }
 
@@ -2228,10 +1828,8 @@ struct ntr_lower_tex_state {
 };
 
 static void
-nir_to_rc_lower_tex_instr_arg(nir_builder *b,
-                                nir_tex_instr *instr,
-                                nir_tex_src_type tex_src_type,
-                                struct ntr_lower_tex_state *s)
+nir_to_rc_lower_tex_instr_arg(nir_builder *b, nir_tex_instr *instr, nir_tex_src_type tex_src_type,
+                              struct ntr_lower_tex_state *s)
 {
    int tex_src = nir_tex_instr_src_index(instr, tex_src_type);
    if (tex_src < 0)
@@ -2293,11 +1891,9 @@ nir_to_rc_lower_tex_instr(nir_builder *b, nir_instr *instr, void *data)
          s.channels[i] = s.channels[0];
    }
 
-   nir_tex_instr_add_src(tex, nir_tex_src_backend1,
-                         nir_vec_scalars(b, s.channels, MIN2(s.i, 4)));
+   nir_tex_instr_add_src(tex, nir_tex_src_backend1, nir_vec_scalars(b, s.channels, MIN2(s.i, 4)));
    if (s.i > 4)
-      nir_tex_instr_add_src(tex, nir_tex_src_backend2,
-                            nir_vec_scalars(b, &s.channels[4], s.i - 4));
+      nir_tex_instr_add_src(tex, nir_tex_src_backend2, nir_vec_scalars(b, &s.channels[4], s.i - 4));
 
    return true;
 }
@@ -2305,10 +1901,7 @@ nir_to_rc_lower_tex_instr(nir_builder *b, nir_instr *instr, void *data)
 static bool
 nir_to_rc_lower_tex(nir_shader *s)
 {
-   return nir_shader_instructions_pass(s,
-                                       nir_to_rc_lower_tex_instr,
-                                       nir_metadata_block_index |
-                                       nir_metadata_dominance,
+   return nir_shader_instructions_pass(s, nir_to_rc_lower_tex_instr, nir_metadata_control_flow,
                                        NULL);
 }
 
@@ -2317,11 +1910,11 @@ static void
 nir_to_rc_lower_txp(nir_shader *s)
 {
    nir_lower_tex_options lower_tex_options = {
-       .lower_txp = 0,
+      .lower_txp = 0,
    };
 
-   nir_foreach_block(block, nir_shader_get_entrypoint(s)) {
-      nir_foreach_instr(instr, block) {
+   nir_foreach_block (block, nir_shader_get_entrypoint(s)) {
+      nir_foreach_instr (instr, block) {
          if (instr->type != nir_instr_type_tex)
             continue;
          nir_tex_instr *tex = nir_instr_as_tex(instr);
@@ -2330,7 +1923,8 @@ nir_to_rc_lower_txp(nir_shader *s)
             continue;
 
          bool has_compare = nir_tex_instr_src_index(tex, nir_tex_src_comparator) >= 0;
-         bool has_lod = nir_tex_instr_src_index(tex, nir_tex_src_lod) >= 0 || s->info.stage != MESA_SHADER_FRAGMENT;
+         bool has_lod = nir_tex_instr_src_index(tex, nir_tex_src_lod) >= 0 ||
+                        s->info.stage != MESA_SHADER_FRAGMENT;
          bool has_offset = nir_tex_instr_src_index(tex, nir_tex_src_offset) >= 0;
 
          /* We can do TXP for any tex (not txg) where we can fit all the
@@ -2340,7 +1934,8 @@ nir_to_rc_lower_txp(nir_shader *s)
           * nir_lower_tex() only handles the lowering on a sampler-dim basis, so
           * if we get any funny projectors then we just blow them all away.
           */
-         if (tex->op != nir_texop_tex || has_lod || has_offset || (tex->coord_components >= 3 && has_compare))
+         if (tex->op != nir_texop_tex || has_lod || has_offset ||
+             (tex->coord_components >= 3 && has_compare))
             lower_tex_options.lower_txp |= 1 << tex->sampler_dim;
       }
    }
@@ -2351,14 +1946,6 @@ nir_to_rc_lower_txp(nir_shader *s)
    NIR_PASS_V(s, nir_lower_tex, &lower_tex_options);
 }
 
-const void *
-nir_to_rc(struct nir_shader *s,
-            struct pipe_screen *screen)
-{
-   static const struct nir_to_rc_options default_ntr_options = {0};
-   return nir_to_rc_options(s, screen, &default_ntr_options);
-}
-
 /**
  * Translates the NIR shader to TGSI.
  *
@@ -2366,13 +1953,36 @@ nir_to_rc(struct nir_shader *s,
  * We take ownership of the NIR shader passed, returning a reference to the new
  * TGSI tokens instead.  If you need to keep the NIR, then pass us a clone.
  */
-const void *nir_to_rc_options(struct nir_shader *s,
-                                struct pipe_screen *screen,
-                                const struct nir_to_rc_options *options)
+const void *
+nir_to_rc(struct nir_shader *s, struct pipe_screen *screen,
+          struct r300_fragment_program_external_state state)
 {
    struct ntr_compile *c;
    const void *tgsi_tokens;
-   nir_variable_mode no_indirects_mask = ntr_no_indirects_mask(s, screen);
+   bool is_r500 = r300_screen(screen)->caps.is_r500;
+   c = rzalloc(NULL, struct ntr_compile);
+   c->screen = screen;
+   c->lower_fabs = !is_r500 && s->info.stage == MESA_SHADER_VERTEX;
+
+   if (s->info.stage == MESA_SHADER_FRAGMENT) {
+      if (is_r500) {
+         NIR_PASS_V(s, r300_transform_fs_trig_input);
+      }
+   } else if (r300_screen(screen)->caps.has_tcl) {
+      if (is_r500) {
+         /* Only nine should set both NTT shader name and
+          * use_legacy_math_rules and D3D9 already mandates
+          * the proper range for the trigonometric inputs.
+          */
+         if (!s->info.use_legacy_math_rules || !(s->info.name && !strcmp("TTN", s->info.name))) {
+            NIR_PASS_V(s, r300_transform_vs_trig_input);
+         }
+      } else {
+         if (r300_screen(screen)->caps.is_r400) {
+            NIR_PASS_V(s, r300_transform_vs_trig_input);
+         }
+      }
+   }
 
    /* Lower array indexing on FS inputs.  Since we don't set
     * ureg->supports_any_inout_decl_range, the TGSI input decls will be split to
@@ -2388,41 +1998,37 @@ const void *nir_to_rc_options(struct nir_shader *s,
       NIR_PASS_V(s, nir_remove_dead_variables, nir_var_shader_in, NULL);
    }
 
-   NIR_PASS_V(s, nir_lower_io, nir_var_shader_in | nir_var_shader_out,
-              type_size, (nir_lower_io_options)0);
+   NIR_PASS_V(s, nir_lower_io, nir_var_shader_in | nir_var_shader_out, type_size,
+              nir_lower_io_use_interpolated_input_intrinsics);
 
-   nir_to_rc_lower_txp(s);
-   NIR_PASS_V(s, nir_to_rc_lower_tex);
+   if (s->info.stage == MESA_SHADER_FRAGMENT) {
+      /* Shadow lowering. */
+      int num_texture_states = state.sampler_state_count;
+      if (num_texture_states > 0) {
+         nir_lower_tex_shadow_swizzle tex_swizzle[PIPE_MAX_SHADER_SAMPLER_VIEWS];
+         enum compare_func tex_compare_func[PIPE_MAX_SHADER_SAMPLER_VIEWS];
 
-   if (!s->options->lower_uniforms_to_ubo) {
-      NIR_PASS_V(s, nir_lower_uniforms_to_ubo,
-                 screen->get_param(screen, PIPE_CAP_PACKED_UNIFORMS),
-                 true);
+         for (unsigned i = 0; i < num_texture_states; i++) {
+            tex_compare_func[i] = state.unit[i].texture_compare_func;
+            tex_swizzle[i].swizzle_r = GET_SWZ(state.unit[i].texture_swizzle, 0);
+            tex_swizzle[i].swizzle_g = GET_SWZ(state.unit[i].texture_swizzle, 1);
+            tex_swizzle[i].swizzle_b = GET_SWZ(state.unit[i].texture_swizzle, 2);
+            tex_swizzle[i].swizzle_a = GET_SWZ(state.unit[i].texture_swizzle, 3);
+         }
+         NIR_PASS_V(s, nir_lower_tex_shadow, num_texture_states, tex_compare_func,
+                    tex_swizzle, true);
+      }
+
+      nir_to_rc_lower_txp(s);
+      NIR_PASS_V(s, nir_to_rc_lower_tex);
    }
 
-   if (!screen->get_param(screen, PIPE_CAP_LOAD_CONSTBUF))
-      NIR_PASS_V(s, nir_lower_ubo_vec4);
-
    bool progress;
-   NIR_PASS_V(s, nir_opt_constant_folding);
-
-   /* Clean up after triginometric input normalization. */
-   NIR_PASS_V(s, nir_opt_vectorize, ntr_should_vectorize_instr, NULL);
    do {
       progress = false;
-      NIR_PASS(progress, s, nir_opt_shrink_vectors);
+      NIR_PASS(progress, s, nir_opt_algebraic);
+      NIR_PASS(progress, s, nir_opt_constant_folding);
    } while (progress);
-   NIR_PASS_V(s, nir_copy_prop);
-   NIR_PASS_V(s, nir_opt_cse);
-   NIR_PASS_V(s, nir_opt_dce);
-   NIR_PASS_V(s, nir_opt_shrink_stores, true);
-
-   NIR_PASS_V(s, nir_lower_indirect_derefs, no_indirects_mask, UINT32_MAX);
-
-   /* Lower demote_if to if (cond) { demote } because TGSI doesn't have a DEMOTE_IF. */
-   NIR_PASS_V(s, nir_lower_discard_if, nir_lower_demote_if_to_cf);
-
-   NIR_PASS_V(s, nir_lower_frexp);
 
    do {
       progress = false;
@@ -2436,24 +2042,46 @@ const void *nir_to_rc_options(struct nir_shader *s,
 
    if (s->info.stage == MESA_SHADER_FRAGMENT) {
       NIR_PASS_V(s, r300_nir_prepare_presubtract);
-      NIR_PASS_V(s, r300_nir_clean_double_fneg);
    }
 
    NIR_PASS_V(s, nir_lower_int_to_float);
-   NIR_PASS_V(s, nir_lower_bool_to_float,
-              !options->lower_cmp && !options->lower_fabs);
+   NIR_PASS_V(s, nir_copy_prop);
+   NIR_PASS_V(s, r300_nir_post_integer_lowering);
+   NIR_PASS_V(s, nir_lower_bool_to_float, is_r500 || s->info.stage == MESA_SHADER_FRAGMENT);
    /* bool_to_float generates MOVs for b2f32 that we want to clean up. */
    NIR_PASS_V(s, nir_copy_prop);
+   /* CSE cleanup after late ftrunc lowering. */
+   NIR_PASS_V(s, nir_opt_cse);
+   /* At this point we need to clean;
+    *  a) fcsel_gt that come from the ftrunc lowering on R300,
+    *  b) all flavours of fcsels that read three different temp sources on R500.
+    */
+   if (s->info.stage == MESA_SHADER_VERTEX) {
+      if (is_r500)
+         NIR_PASS_V(s, r300_nir_lower_fcsel_r500);
+      else
+         NIR_PASS_V(s, r300_nir_lower_fcsel_r300);
+      NIR_PASS_V(s, r300_nir_lower_flrp);
+   } else {
+      NIR_PASS_V(s, r300_nir_lower_comparison_fs);
+   }
+   NIR_PASS_V(s, r300_nir_opt_algebraic_late);
+   NIR_PASS_V(s, nir_opt_dce);
+   NIR_PASS_V(s, nir_opt_shrink_vectors, false);
    NIR_PASS_V(s, nir_opt_dce);
 
-   nir_move_options move_all =
-       nir_move_const_undef | nir_move_load_ubo | nir_move_load_input |
-       nir_move_comparisons | nir_move_copies | nir_move_load_ssbo;
+   nir_move_options move_all = nir_move_const_undef | nir_move_load_ubo | nir_move_load_input |
+                               nir_move_comparisons | nir_move_copies | nir_move_load_ssbo;
 
    NIR_PASS_V(s, nir_opt_move, move_all);
    NIR_PASS_V(s, nir_move_vec_src_uses_to_dest, true);
+   /* Late vectorizing after nir_move_vec_src_uses_to_dest helps instructions but
+    * increases register usage. Testing shows this is beneficial only in VS.
+    */
+   if (s->info.stage == MESA_SHADER_VERTEX)
+      NIR_PASS_V(s, nir_opt_vectorize, ntr_should_vectorize_instr, NULL);
 
-   NIR_PASS_V(s, nir_convert_from_ssa, true);
+   NIR_PASS_V(s, nir_convert_from_ssa, true, false);
    NIR_PASS_V(s, nir_lower_vec_to_regs, NULL, NULL);
 
    /* locals_to_reg_intrinsics will leave dead derefs that are good to clean up.
@@ -2462,21 +2090,17 @@ const void *nir_to_rc_options(struct nir_shader *s,
    NIR_PASS_V(s, nir_opt_dce);
 
    /* See comment in ntr_get_alu_src for supported modifiers */
-   NIR_PASS_V(s, nir_legacy_trivialize, !options->lower_fabs);
+   NIR_PASS_V(s, nir_legacy_trivialize, !c->lower_fabs);
 
    if (NIR_DEBUG(TGSI)) {
       fprintf(stderr, "NIR before translation to TGSI:\n");
       nir_print_shader(s, stderr);
    }
 
-   c = rzalloc(NULL, struct ntr_compile);
-   c->screen = screen;
-   c->options = options;
-
    c->s = s;
    c->ureg = ureg_create(pipe_shader_type_from_mesa(s->info.stage));
    ureg_setup_shader_info(c->ureg, &s->info);
-   if (s->info.use_legacy_math_rules && screen->get_param(screen, PIPE_CAP_LEGACY_MATH_RULES))
+   if (s->info.use_legacy_math_rules && screen->caps.legacy_math_rules)
       ureg_property(c->ureg, TGSI_PROPERTY_LEGACY_MATH_RULES, 1);
 
    if (s->info.stage == MESA_SHADER_FRAGMENT) {
@@ -2488,14 +2112,12 @@ const void *nir_to_rc_options(struct nir_shader *s,
       if ((s->info.inputs_read & VARYING_BIT_POS) ||
           BITSET_TEST(s->info.system_values_read, SYSTEM_VALUE_FRAG_COORD)) {
          ureg_property(c->ureg, TGSI_PROPERTY_FS_COORD_ORIGIN,
-                       s->info.fs.origin_upper_left ?
-                       TGSI_FS_COORD_ORIGIN_UPPER_LEFT :
-                       TGSI_FS_COORD_ORIGIN_LOWER_LEFT);
+                       s->info.fs.origin_upper_left ? TGSI_FS_COORD_ORIGIN_UPPER_LEFT
+                                                    : TGSI_FS_COORD_ORIGIN_LOWER_LEFT);
 
          ureg_property(c->ureg, TGSI_PROPERTY_FS_COORD_PIXEL_CENTER,
-                       s->info.fs.pixel_center_integer ?
-                       TGSI_FS_COORD_PIXEL_CENTER_INTEGER :
-                       TGSI_FS_COORD_PIXEL_CENTER_HALF_INTEGER);
+                       s->info.fs.pixel_center_integer ? TGSI_FS_COORD_PIXEL_CENTER_INTEGER
+                                                       : TGSI_FS_COORD_PIXEL_CENTER_HALF_INTEGER);
       }
    }
    /* Emit the main function */

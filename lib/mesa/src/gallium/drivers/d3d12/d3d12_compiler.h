@@ -24,6 +24,8 @@
 #ifndef D3D12_COMPILER_H
 #define D3D12_COMPILER_H
 
+#include "d3d12_common.h"
+
 #include "dxil_nir_lower_int_samplers.h"
 
 #include "pipe/p_defines.h"
@@ -54,6 +56,7 @@ enum d3d12_state_var {
 
    D3D12_STATE_VAR_NUM_WORKGROUPS = 0,
    D3D12_STATE_VAR_TRANSFORM_GENERIC0,
+   D3D12_STATE_VAR_TRANSFORM_GENERIC1,
    D3D12_MAX_COMPUTE_STATE_VARS,
 
    D3D12_MAX_STATE_VARS = MAX2(D3D12_MAX_GRAPHICS_STATE_VARS, D3D12_MAX_COMPUTE_STATE_VARS)
@@ -77,12 +80,13 @@ d3d12_varying_cache_destroy(struct d3d12_screen *ctx);
 struct d3d12_varying_info {
    struct {
       const struct glsl_type *types[4];
-      uint8_t location_frac_mask:2;
+      uint8_t location_frac_mask:4;
       uint8_t patch:1;
       struct {
          unsigned interpolation:3;   // INTERP_MODE_COUNT = 5
          unsigned driver_location:6; // VARYING_SLOT_MAX = 64
          unsigned compact:1;
+         unsigned always_active_io:1;
       } vars[4];
    } slots[VARYING_SLOT_MAX];
    uint64_t mask;
@@ -94,7 +98,7 @@ struct d3d12_image_format_conversion_info {
    enum pipe_format view_format, emulated_format;
 };
 struct d3d12_image_format_conversion_info_arr {
-   int n_images;
+   unsigned n_images;
    struct d3d12_image_format_conversion_info* image_format_conversion;
 };
 
@@ -102,10 +106,10 @@ struct d3d12_shader_key {
    uint32_t hash;
    enum pipe_shader_type stage;
 
-   struct d3d12_varying_info *required_varying_inputs;
-   struct d3d12_varying_info *required_varying_outputs;
    uint64_t next_varying_inputs;
    uint64_t prev_varying_outputs;
+   BITSET_WORD *next_varying_frac_inputs;
+   BITSET_WORD *prev_varying_frac_outputs;
    union {
       struct {
          unsigned last_vertex_processing_stage : 1;
@@ -113,6 +117,8 @@ struct d3d12_shader_key {
          unsigned halfz : 1;
          unsigned samples_int_textures : 1;
          unsigned input_clip_size : 4;
+         unsigned next_has_frac_inputs : 1;
+         unsigned prev_has_frac_outputs : 1;
       };
       uint32_t common_all;
    };
@@ -152,13 +158,11 @@ struct d3d12_shader_key {
             };
             uint64_t all;
          };
-         struct d3d12_varying_info *required_patch_outputs;
       } hs;
 
       struct {
          unsigned tcs_vertices_out;
          uint32_t prev_patch_outputs;
-         struct d3d12_varying_info *required_patch_inputs;
       } ds;
 
       union {
@@ -186,7 +190,7 @@ struct d3d12_shader_key {
    dxil_texture_swizzle_state swizzle_state[PIPE_MAX_SHADER_SAMPLER_VIEWS];
    enum compare_func sampler_compare_funcs[PIPE_MAX_SHADER_SAMPLER_VIEWS];
 
-   int n_images;
+   unsigned n_images;
    struct d3d12_image_format_conversion_info image_format_conversion[PIPE_MAX_SHADER_IMAGES];
 };
 
@@ -195,20 +199,10 @@ struct d3d12_shader {
    size_t bytecode_length;
 
    nir_shader *nir;
-   struct d3d12_varying_info *output_vars_gs;
-   struct d3d12_varying_info *output_vars_fs;
-   struct d3d12_varying_info *output_vars_default;
 
-   struct d3d12_varying_info *input_vars_vs;
-   struct d3d12_varying_info *input_vars_default;
-
-   struct d3d12_varying_info *tess_eval_output_vars;
-   struct d3d12_varying_info *tess_ctrl_input_vars;
-
-   struct {
-      unsigned binding;
-   } cb_bindings[PIPE_MAX_CONSTANT_BUFFERS];
-   size_t num_cb_bindings;
+   /* UBOs can be sparse, if there's no uniforms then ubo0 is unused, and state vars are an internal ubo */
+   uint32_t begin_ubo_binding;
+   uint32_t end_ubo_binding;
 
    struct {
       enum d3d12_state_var var;
@@ -218,17 +212,18 @@ struct d3d12_shader {
    size_t state_vars_size;
    bool state_vars_used;
 
+   /* Samplers/textures can be sparse for some internal shaders */
    struct {
       uint32_t dimension;
    } srv_bindings[PIPE_MAX_SHADER_SAMPLER_VIEWS];
-   size_t begin_srv_binding;
-   size_t end_srv_binding;
+   uint32_t begin_srv_binding;
+   uint32_t end_srv_binding;
 
+   /* Images and SSBOs are never sparse */
    struct {
       uint32_t dimension;
    } uav_bindings[PIPE_MAX_SHADER_IMAGES];
 
-   bool has_default_ubo0;
    unsigned pstipple_binding;
 
    struct d3d12_shader_key key;
@@ -265,6 +260,7 @@ struct d3d12_shader_selector {
    enum pipe_shader_type stage;
    const nir_shader *initial;
    struct d3d12_varying_info *initial_output_vars;
+   struct d3d12_varying_info *initial_input_vars;
 
    struct d3d12_shader *first;
    struct d3d12_shader *current;
@@ -274,6 +270,11 @@ struct d3d12_shader_selector {
    unsigned samples_int_textures:1;
    unsigned compare_with_lod_bias_grad:1;
    unsigned workgroup_size_variable:1;
+   unsigned has_frac_inputs:1;
+   unsigned has_frac_outputs:1;
+
+   BITSET_DECLARE(varying_frac_inputs, 64 * 4);
+   BITSET_DECLARE(varying_frac_outputs, 64 * 4);
 
    bool is_variant;
    union {

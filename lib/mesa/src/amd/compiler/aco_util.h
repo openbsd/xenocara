@@ -2,25 +2,7 @@
  * Copyright Michael Schellenberger Costa
  * Copyright © 2020 Valve Corporation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
+ * SPDX-License-Identifier: MIT
  */
 
 #ifndef ACO_UTIL_H
@@ -36,6 +18,7 @@
 #include <functional>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -238,200 +221,6 @@ private:
 };
 
 /*
- * Cache-friendly set of 32-bit IDs with fast insert/erase/lookup and
- * the ability to efficiently iterate over contained elements.
- *
- * Internally implemented as a map of fixed-size bit vectors: If the set contains an ID, the
- * corresponding bit in the appropriate bit vector is set. It doesn't use std::vector<bool> since
- * we then couldn't efficiently iterate over the elements.
- *
- * The interface resembles a subset of std::set/std::unordered_set.
- */
-struct IDSet {
-   static const uint32_t block_size = 1024u;
-   using block_t = std::array<uint64_t, block_size / 64>;
-
-   struct Iterator {
-      const IDSet* set;
-      std::map<uint32_t, block_t>::const_iterator block;
-      uint32_t id;
-
-      Iterator& operator++();
-
-      bool operator!=(const Iterator& other) const;
-
-      uint32_t operator*() const;
-   };
-
-   size_t count(uint32_t id) const { return find(id) != end(); }
-
-   Iterator find(uint32_t id) const
-   {
-      uint32_t block_index = id / block_size;
-      auto it = words.find(block_index);
-      if (it == words.end())
-         return end();
-
-      const block_t& block = it->second;
-      uint32_t sub_id = id % block_size;
-
-      if (block[sub_id / 64u] & (1ull << (sub_id % 64u)))
-         return Iterator{this, it, id};
-      else
-         return end();
-   }
-
-   std::pair<Iterator, bool> insert(uint32_t id)
-   {
-      uint32_t block_index = id / block_size;
-      auto it = words.try_emplace(block_index).first;
-      block_t& block = it->second;
-      uint32_t sub_id = id % block_size;
-
-      uint64_t* word = &block[sub_id / 64u];
-      uint64_t mask = 1ull << (sub_id % 64u);
-      if (*word & mask)
-         return std::make_pair(Iterator{this, it, id}, false);
-
-      *word |= mask;
-      return std::make_pair(Iterator{this, it, id}, true);
-   }
-
-   bool insert(const IDSet other)
-   {
-      bool inserted = false;
-
-      for (auto it = other.words.begin(); it != other.words.end(); ++it) {
-         block_t& dst = words[it->first];
-         const block_t& src = it->second;
-
-         for (unsigned j = 0; j < src.size(); j++) {
-            uint64_t new_bits = src[j] & ~dst[j];
-            if (new_bits) {
-               inserted = true;
-               dst[j] |= new_bits;
-            }
-         }
-      }
-      return inserted;
-   }
-
-   size_t erase(uint32_t id)
-   {
-      uint32_t block_index = id / block_size;
-      auto it = words.find(block_index);
-      if (it == words.end())
-         return 0;
-
-      block_t& block = it->second;
-      uint32_t sub_id = id % block_size;
-
-      uint64_t* word = &block[sub_id / 64u];
-      uint64_t mask = 1ull << (sub_id % 64u);
-      if (!(*word & mask))
-         return 0;
-
-      *word ^= mask;
-      return 1;
-   }
-
-   Iterator cbegin() const
-   {
-      Iterator res;
-      res.set = this;
-
-      for (auto it = words.begin(); it != words.end(); ++it) {
-         uint32_t first = get_first_set(it->second);
-         if (first != UINT32_MAX) {
-            res.block = it;
-            res.id = it->first * block_size + first;
-            return res;
-         }
-      }
-
-      return cend();
-   }
-
-   Iterator cend() const { return Iterator{this, words.end(), UINT32_MAX}; }
-
-   Iterator begin() const { return cbegin(); }
-
-   Iterator end() const { return cend(); }
-
-   size_t size() const
-   {
-      size_t bits_set = 0;
-      for (auto block : words) {
-         for (uint64_t word : block.second)
-            bits_set += util_bitcount64(word);
-      }
-      return bits_set;
-   }
-
-   bool empty() const { return !size(); }
-
-private:
-   static uint32_t get_first_set(const block_t& words)
-   {
-      for (size_t i = 0; i < words.size(); i++) {
-         if (words[i])
-            return i * 64u + (ffsll(words[i]) - 1);
-      }
-      return UINT32_MAX;
-   }
-
-   std::map<uint32_t, block_t> words;
-};
-
-inline IDSet::Iterator&
-IDSet::Iterator::operator++()
-{
-   uint32_t block_index = id / block_size;
-   const block_t& block_words = block->second;
-   uint32_t sub_id = id % block_size;
-
-   uint64_t m = block_words[sub_id / 64u];
-   uint32_t bit = sub_id % 64u;
-   m = (m >> bit) >> 1;
-   if (m) {
-      id += ffsll(m);
-      return *this;
-   }
-
-   for (uint32_t i = sub_id / 64u + 1; i < block_words.size(); i++) {
-      if (block_words[i]) {
-         id = block_index * block_size + i * 64u + ffsll(block_words[i]) - 1;
-         return *this;
-      }
-   }
-
-   for (++block; block != set->words.end(); ++block) {
-      uint32_t first = get_first_set(block->second);
-      if (first != UINT32_MAX) {
-         id = block->first * block_size + first;
-         return *this;
-      }
-   }
-
-   id = UINT32_MAX;
-   return *this;
-}
-
-inline bool
-IDSet::Iterator::operator!=(const IDSet::Iterator& other) const
-{
-   assert(set == other.set);
-   assert(id != other.id || block == other.block);
-   return id != other.id;
-}
-
-inline uint32_t
-IDSet::Iterator::operator*() const
-{
-   return id;
-}
-
-/*
  * Light-weight memory resource which allows to sequentially allocate from
  * a buffer. Both, the release() method and the destructor release all managed
  * memory.
@@ -457,6 +246,18 @@ public:
    {
       release();
       free(buffer);
+   }
+
+   /* Move-constructor and -assignment */
+   monotonic_buffer_resource(monotonic_buffer_resource&& other) : monotonic_buffer_resource()
+   {
+      *this = std::move(other);
+   }
+   monotonic_buffer_resource& operator=(monotonic_buffer_resource&& other)
+   {
+      release();
+      std::swap(buffer, other.buffer);
+      return *this;
    }
 
    /* Delete copy-constructor and -assignment to avoid double free() */
@@ -589,6 +390,222 @@ using map = std::map<Key, T, Compare, aco::monotonic_allocator<std::pair<const K
 template <class Key, class T, class Hash = std::hash<Key>, class Pred = std::equal_to<Key>>
 using unordered_map =
    std::unordered_map<Key, T, Hash, Pred, aco::monotonic_allocator<std::pair<const Key, T>>>;
+
+/*
+ * Cache-friendly set of 32-bit IDs with fast insert/erase/lookup and
+ * the ability to efficiently iterate over contained elements.
+ *
+ * Internally implemented as a map of fixed-size bit vectors: If the set contains an ID, the
+ * corresponding bit in the appropriate bit vector is set. It doesn't use std::vector<bool> since
+ * we then couldn't efficiently iterate over the elements.
+ *
+ * The interface resembles a subset of std::set/std::unordered_set.
+ */
+struct IDSet {
+   static const uint32_t block_size = 1024u;
+   using block_t = std::array<uint64_t, block_size / 64>;
+
+   struct Iterator {
+      const IDSet* set;
+      aco::map<uint32_t, block_t>::const_iterator block;
+      uint32_t id;
+
+      Iterator& operator++();
+
+      bool operator!=(const Iterator& other) const;
+
+      uint32_t operator*() const;
+   };
+
+   size_t count(uint32_t id) const { return find(id) != end(); }
+
+   Iterator find(uint32_t id) const
+   {
+      uint32_t block_index = id / block_size;
+      auto it = words.find(block_index);
+      if (it == words.end())
+         return end();
+
+      const block_t& block = it->second;
+      uint32_t sub_id = id % block_size;
+
+      if (block[sub_id / 64u] & (1ull << (sub_id % 64u)))
+         return Iterator{this, it, id};
+      else
+         return end();
+   }
+
+   std::pair<Iterator, bool> insert(uint32_t id)
+   {
+      uint32_t block_index = id / block_size;
+      auto it = words.try_emplace(block_index).first;
+      block_t& block = it->second;
+      uint32_t sub_id = id % block_size;
+
+      uint64_t* word = &block[sub_id / 64u];
+      uint64_t mask = 1ull << (sub_id % 64u);
+      if (*word & mask)
+         return std::make_pair(Iterator{this, it, id}, false);
+
+      *word |= mask;
+      return std::make_pair(Iterator{this, it, id}, true);
+   }
+
+   bool insert(const IDSet other)
+   {
+      bool inserted = false;
+
+      for (auto it = other.words.begin(); it != other.words.end(); ++it) {
+         const block_t& src = it->second;
+         if (src == block_t{0})
+            continue;
+
+         block_t& dst = words[it->first];
+         for (unsigned j = 0; j < src.size(); j++) {
+            uint64_t new_bits = src[j] & ~dst[j];
+            if (new_bits) {
+               inserted = true;
+               dst[j] |= new_bits;
+            }
+         }
+      }
+      return inserted;
+   }
+
+   size_t erase(uint32_t id)
+   {
+      uint32_t block_index = id / block_size;
+      auto it = words.find(block_index);
+      if (it == words.end())
+         return 0;
+
+      block_t& block = it->second;
+      uint32_t sub_id = id % block_size;
+
+      uint64_t* word = &block[sub_id / 64u];
+      uint64_t mask = 1ull << (sub_id % 64u);
+      if (!(*word & mask))
+         return 0;
+
+      *word ^= mask;
+      return 1;
+   }
+
+   Iterator cbegin() const
+   {
+      Iterator res;
+      res.set = this;
+
+      for (auto it = words.begin(); it != words.end(); ++it) {
+         uint32_t first = get_first_set(it->second);
+         if (first != UINT32_MAX) {
+            res.block = it;
+            res.id = it->first * block_size + first;
+            return res;
+         }
+      }
+
+      return cend();
+   }
+
+   Iterator cend() const { return Iterator{this, words.end(), UINT32_MAX}; }
+
+   Iterator begin() const { return cbegin(); }
+
+   Iterator end() const { return cend(); }
+
+   size_t size() const
+   {
+      size_t bits_set = 0;
+      for (auto block : words) {
+         for (uint64_t word : block.second)
+            bits_set += util_bitcount64(word);
+      }
+      return bits_set;
+   }
+
+   bool empty() const { return !size(); }
+
+   explicit IDSet(monotonic_buffer_resource& m) : words(m) {}
+   explicit IDSet(const IDSet& other, monotonic_buffer_resource& m) : words(other.words, m) {}
+
+   bool operator==(const IDSet& other) const
+   {
+      auto it = words.begin();
+      for (auto block : other.words) {
+         if (block.second == block_t{0})
+            continue;
+         while (it != words.end() && it->second == block_t{0})
+            it++;
+         if (it == words.end() || block != *it)
+            return false;
+         it++;
+      }
+
+      return true;
+   }
+   bool operator!=(const IDSet& other) const { return !(*this == other); }
+
+private:
+   static uint32_t get_first_set(const block_t& words)
+   {
+      for (size_t i = 0; i < words.size(); i++) {
+         if (words[i])
+            return i * 64u + (ffsll(words[i]) - 1);
+      }
+      return UINT32_MAX;
+   }
+
+   aco::map<uint32_t, block_t> words;
+};
+
+inline IDSet::Iterator&
+IDSet::Iterator::operator++()
+{
+   uint32_t block_index = id / block_size;
+   const block_t& block_words = block->second;
+   uint32_t sub_id = id % block_size;
+
+   uint64_t m = block_words[sub_id / 64u];
+   uint32_t bit = sub_id % 64u;
+   m = (m >> bit) >> 1;
+   if (m) {
+      id += ffsll(m);
+      return *this;
+   }
+
+   for (uint32_t i = sub_id / 64u + 1; i < block_words.size(); i++) {
+      if (block_words[i]) {
+         id = block_index * block_size + i * 64u + ffsll(block_words[i]) - 1;
+         return *this;
+      }
+   }
+
+   for (++block; block != set->words.end(); ++block) {
+      uint32_t first = get_first_set(block->second);
+      if (first != UINT32_MAX) {
+         id = block->first * block_size + first;
+         return *this;
+      }
+   }
+
+   id = UINT32_MAX;
+   return *this;
+}
+
+inline bool
+IDSet::Iterator::operator!=(const IDSet::Iterator& other) const
+{
+   assert(set == other.set);
+   assert(id != other.id || block == other.block);
+   return id != other.id;
+}
+
+inline uint32_t
+IDSet::Iterator::operator*() const
+{
+   return id;
+}
 
 /*
  * Helper class for a integer/bool (access_type) packed into
@@ -777,7 +794,7 @@ template <typename T> struct bit_reference {
 
    constexpr bit_reference& operator&=(bool val)
    {
-      storage &= T(val) << bit;
+      storage &= ~(T(!val) << bit);
       return *this;
    }
 
@@ -1030,6 +1047,249 @@ template <typename T, unsigned offset, unsigned size>
 using bitfield_array64 = bitfield_array<T, offset, size, uint64_t>;
 
 using bitarray8 = bitfield_array<uint8_t, 0, 8, uint8_t>;
+using bitarray32 = bitfield_array<uint32_t, 0, 32, uint32_t>;
+
+/*
+ * Resizable array optimized for small lengths. If it's smaller than Size, the elements will be
+ * inlined into the object.
+ */
+template <typename T, uint32_t Size> class small_vec {
+public:
+   /* We could support destructors with some effort, but currently there's no use case. */
+   static_assert(std::is_trivially_destructible<T>::value);
+
+   using value_type = T;
+   using pointer = value_type*;
+   using const_pointer = const value_type*;
+   using reference = value_type&;
+   using const_reference = const value_type&;
+   using iterator = pointer;
+   using const_iterator = const_pointer;
+   using reverse_iterator = std::reverse_iterator<iterator>;
+   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+   using size_type = uint16_t;
+   using difference_type = std::ptrdiff_t;
+
+   constexpr small_vec() = default;
+   constexpr small_vec(const small_vec& other) { *this = other; }
+   constexpr small_vec(small_vec&& other) noexcept { *this = std::move(other); }
+
+   ~small_vec()
+   {
+      if (capacity > Size)
+         free(data);
+   }
+
+   constexpr small_vec& operator=(const small_vec& other)
+   {
+      if (&other == this)
+         return *this;
+      clear();
+      reserve(other.capacity);
+      length = other.length;
+      std::uninitialized_copy(other.begin(), other.end(), begin());
+      return *this;
+   }
+
+   constexpr small_vec& operator=(small_vec&& other) noexcept
+   {
+      if (&other == this)
+         return *this;
+      clear();
+      length = other.length;
+      capacity = other.capacity;
+      if (capacity > Size)
+         data = other.data;
+      else
+         std::uninitialized_move(other.begin(), other.end(), begin());
+      other.length = 0;
+      other.capacity = Size;
+      return *this;
+   }
+
+   constexpr iterator begin() noexcept { return capacity > Size ? data : (T*)inline_data; }
+
+   constexpr const_iterator begin() const noexcept
+   {
+      return capacity > Size ? data : (T*)inline_data;
+   }
+
+   constexpr iterator end() noexcept { return std::next(begin(), length); }
+
+   constexpr const_iterator end() const noexcept { return std::next(begin(), length); }
+
+   constexpr const_iterator cbegin() const noexcept { return begin(); }
+
+   constexpr const_iterator cend() const noexcept { return std::next(begin(), length); }
+
+   constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+
+   constexpr const_reverse_iterator rbegin() const noexcept
+   {
+      return const_reverse_iterator(end());
+   }
+
+   constexpr reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+
+   constexpr const_reverse_iterator rend() const noexcept
+   {
+      return const_reverse_iterator(begin());
+   }
+
+   constexpr const_reverse_iterator crbegin() const noexcept
+   {
+      return const_reverse_iterator(cend());
+   }
+
+   constexpr const_reverse_iterator crend() const noexcept
+   {
+      return const_reverse_iterator(cbegin());
+   }
+
+   constexpr reference operator[](const size_type index) noexcept
+   {
+      assert(length > index);
+      return *(std::next(begin(), index));
+   }
+
+   constexpr const_reference operator[](const size_type index) const noexcept
+   {
+      assert(length > index);
+      return *(std::next(begin(), index));
+   }
+
+   constexpr reference back() noexcept
+   {
+      assert(length > 0);
+      return *(std::next(begin(), length - 1));
+   }
+
+   constexpr const_reference back() const noexcept
+   {
+      assert(length > 0);
+      return *(std::next(begin(), length - 1));
+   }
+
+   constexpr reference front() noexcept
+   {
+      assert(length > 0);
+      return *begin();
+   }
+
+   constexpr const_reference front() const noexcept
+   {
+      assert(length > 0);
+      return *cbegin();
+   }
+
+   constexpr bool empty() const noexcept { return length == 0; }
+
+   constexpr size_type size() const noexcept { return length; }
+
+   constexpr void pop_back() noexcept
+   {
+      assert(length > 0);
+      --length;
+   }
+
+   constexpr void reserve(size_type n)
+   {
+      if (n > capacity) {
+         if constexpr (std::is_trivial<T>::value) {
+            if (capacity > Size) {
+               data = (T*)realloc(data, sizeof(T) * n);
+               capacity = n;
+               return;
+            }
+         }
+         T* ptr = (T*)malloc(sizeof(T) * n);
+         std::uninitialized_move(begin(), end(), ptr);
+         if (capacity > Size)
+            free(data);
+         data = ptr;
+         capacity = n;
+      }
+   }
+
+   constexpr void push_back(const value_type& val) noexcept
+   {
+      if (length == capacity)
+         reserve(2 * capacity);
+
+      new (std::next(begin(), length++)) T(val);
+   }
+
+   template <typename... Args> constexpr void emplace_back(Args... args) noexcept
+   {
+      if (length == capacity)
+         reserve(2 * capacity);
+
+      new (std::next(begin(), length++)) T(args...);
+   }
+
+   constexpr void insert(const_iterator it, const value_type& val) noexcept
+   {
+      size_t idx = it - begin();
+      assert(idx <= size());
+
+      if (length == capacity)
+         reserve(2 * capacity);
+
+      if (idx == length) {
+         new (end()) T(val);
+      } else {
+         /* We can't do this one as part of move_backward because end() is uninitialized. */
+         new (end()) T(std::move(*(end() - 1)));
+         std::move_backward(std::next(begin(), idx), std::prev(end(), 1), end());
+         *std::next(begin(), idx) = val;
+      }
+      length++;
+   }
+
+   constexpr void erase(const_iterator it) noexcept
+   {
+      std::move(iterator(it) + 1, end(), iterator(it));
+      length--;
+   }
+
+   constexpr void resize(uint32_t new_size) noexcept
+   {
+      if (new_size > capacity)
+         reserve(new_size);
+
+      for (uint32_t i = length; i < new_size; i++)
+         new (std::next(begin(), i)) T();
+
+      length = new_size;
+   }
+
+   constexpr void clear() noexcept
+   {
+      if (capacity > Size)
+         free(data);
+      length = 0;
+      capacity = Size;
+   }
+
+   constexpr bool operator==(const small_vec& other) const
+   {
+      if (size() != other.size())
+         return false;
+      for (unsigned i = 0; i < size(); i++) {
+         if (*(std::next(begin(), i)) != other[i])
+            return false;
+      }
+      return true;
+   }
+
+private:
+   uint32_t length = 0;
+   uint32_t capacity = Size;
+   union {
+      T* data = NULL;
+      alignas(T) uint8_t inline_data[sizeof(T) * Size];
+   };
+};
 
 } // namespace aco
 

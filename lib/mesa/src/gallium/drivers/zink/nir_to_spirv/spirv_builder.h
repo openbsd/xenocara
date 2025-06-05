@@ -62,6 +62,24 @@ struct spirv_builder {
    unsigned local_vars_begin;
 };
 
+struct spriv_tex_src {
+   SpvId src;
+   SpvId cl_sampler;
+   SpvId coord;
+   SpvId proj;
+   SpvId bias;
+   SpvId lod;
+   SpvId dref;
+   SpvId dx;
+   SpvId dy;
+   SpvId const_offset;
+   SpvId offset;
+   SpvId sample;
+   SpvId tex_offset;
+   SpvId min_lod;
+   bool sparse;
+};
+
 static inline SpvId
 spirv_builder_new_id(struct spirv_builder *b)
 {
@@ -188,7 +206,7 @@ spirv_builder_emit_load(struct spirv_builder *b, SpvId result_type,
                         SpvId pointer);
 
 SpvId
-spirv_builder_emit_load_aligned(struct spirv_builder *b, SpvId result_type, SpvId pointer, unsigned alignment);
+spirv_builder_emit_load_aligned(struct spirv_builder *b, SpvId result_type, SpvId pointer, unsigned alignment, bool coherent);
 void
 spirv_builder_emit_atomic_store(struct spirv_builder *b, SpvId pointer, SpvScope scope,
                                 SpvMemorySemanticsMask semantics, SpvId object);
@@ -196,7 +214,7 @@ spirv_builder_emit_atomic_store(struct spirv_builder *b, SpvId pointer, SpvScope
 void
 spirv_builder_emit_store(struct spirv_builder *b, SpvId pointer, SpvId object);
 void
-spirv_builder_emit_store_aligned(struct spirv_builder *b, SpvId pointer, SpvId object, unsigned alignment);
+spirv_builder_emit_store_aligned(struct spirv_builder *b, SpvId pointer, SpvId object, unsigned alignment, bool coherent);
 
 SpvId
 spirv_builder_emit_access_chain(struct spirv_builder *b, SpvId result_type,
@@ -297,17 +315,7 @@ SpvId
 spirv_builder_emit_image_sample(struct spirv_builder *b,
                                 SpvId result_type,
                                 SpvId sampled_image,
-                                SpvId coordinate,
-                                bool proj,
-                                SpvId lod,
-                                SpvId bias,
-                                SpvId dref,
-                                SpvId dx,
-                                SpvId dy,
-                                SpvId const_offset,
-                                SpvId offset,
-                                SpvId min_lod,
-                                bool sparse);
+                                const struct spriv_tex_src *src);
 
 SpvId
 spirv_builder_emit_image(struct spirv_builder *b, SpvId result_type,
@@ -343,24 +351,13 @@ SpvId
 spirv_builder_emit_image_fetch(struct spirv_builder *b,
                                SpvId result_type,
                                SpvId image,
-                               SpvId coordinate,
-                               SpvId lod,
-                               SpvId sample,
-                               SpvId const_offset,
-                               SpvId offset,
-                               bool sparse);
+                               const struct spriv_tex_src *src);
 SpvId
 spirv_builder_emit_image_gather(struct spirv_builder *b,
                                SpvId result_type,
                                SpvId image,
-                               SpvId coordinate,
-                               SpvId component,
-                               SpvId lod,
-                               SpvId sample,
-                               SpvId const_offset,
-                               SpvId offset,
-                               SpvId dref,
-                               bool sparse);
+                               const struct spriv_tex_src *src,
+                               SpvId component);
 
 SpvId
 spirv_builder_emit_image_query_size(struct spirv_builder *b,

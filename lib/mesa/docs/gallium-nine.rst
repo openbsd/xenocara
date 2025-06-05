@@ -20,11 +20,10 @@ Build
 
 Beware: Most Direct3D games are 32-bit, and thus need a 32-bit version of Mesa.
 
-.. code-block:: console
+.. code-block:: sh
 
    $ meson configure \
          -D gallium-nine=true \
-         -D dri3=enabled \
          ...
 
 Paths
@@ -43,6 +42,6 @@ Run
 
 Before running your application in Wine, verify that everything works as expected by running:
 
-.. code-block:: console
+.. code-block:: sh
 
    $ wine ninewinecfg

@@ -39,7 +39,7 @@ extern "C" {
 #include "util/list.h"
 
 
-#define DXIL_SHADER_MAX_IO_ROWS 80
+#define DXIL_SHADER_MAX_IO_ROWS 128
 
 enum dxil_shader_kind {
    DXIL_PIXEL_SHADER = 0,
@@ -132,7 +132,7 @@ enum dxil_opt_flags {
 };
 
 struct dxil_features {
-   unsigned doubles : 1,
+   uint64_t doubles : 1,
             cs_4x_raw_sb : 1,
             uavs_at_every_stage : 1,
             use_64uavs : 1,
@@ -162,7 +162,9 @@ struct dxil_features {
             unnamed : 1,
             atomic_int64_heap_resource : 1,
             advanced_texture_ops : 1,
-            writable_msaa : 1;
+            writable_msaa : 1,
+            sample_cmp_bias_gradient : 1,
+            extended_command_info : 1;
 };
 
 struct dxil_shader_info {
@@ -216,7 +218,9 @@ struct dxil_module {
     * should be allocated dynamically based on on the maximum
     * driver_location across all input vars.
     */
-   unsigned input_mappings[DXIL_SHADER_MAX_IO_ROWS * 4];
+   uint8_t input_mappings[DXIL_SHADER_MAX_IO_ROWS * 4];
+   uint8_t output_mappings[DXIL_SHADER_MAX_IO_ROWS * 4];
+   uint8_t patch_mappings[DXIL_SHADER_MAX_IO_ROWS * 4];
 
    struct dxil_psv_signature_element psv_inputs[DXIL_SHADER_MAX_IO_ROWS];
    struct dxil_psv_signature_element psv_outputs[DXIL_SHADER_MAX_IO_ROWS];

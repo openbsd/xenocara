@@ -28,13 +28,15 @@ void
 tu_bo_suballocator_init(struct tu_suballocator *suballoc,
                         struct tu_device *dev,
                         uint32_t default_size,
-                        enum tu_bo_alloc_flags flags)
+                        enum tu_bo_alloc_flags flags,
+                        const char *name)
 {
    suballoc->dev = dev;
    suballoc->default_size = default_size;
    suballoc->flags = flags;
    suballoc->bo = NULL;
    suballoc->cached_bo = NULL;
+   suballoc->name = name;
 }
 
 void
@@ -49,11 +51,11 @@ tu_bo_suballocator_finish(struct tu_suballocator *suballoc)
 VkResult
 tu_suballoc_bo_alloc(struct tu_suballoc_bo *suballoc_bo,
                      struct tu_suballocator *suballoc,
-                     uint32_t size, uint32_t align)
+                     uint32_t size, uint32_t alignment)
 {
    struct tu_bo *bo = suballoc->bo;
    if (bo) {
-      uint32_t offset = ALIGN(suballoc->next_offset, align);
+      uint32_t offset = ALIGN(suballoc->next_offset, alignment);
       if (offset + size <= bo->size) {
          suballoc_bo->bo = tu_bo_get_ref(bo);
          suballoc_bo->iova = bo->iova + offset;
@@ -80,14 +82,14 @@ tu_suballoc_bo_alloc(struct tu_suballoc_bo *suballoc_bo,
 
    /* Allocate the new BO if we didn't have one cached. */
    if (!suballoc->bo) {
-      VkResult result = tu_bo_init_new(suballoc->dev, &suballoc->bo,
-                                       alloc_size,
-                                       suballoc->flags, "suballoc");
+      VkResult result = tu_bo_init_new(suballoc->dev, NULL,
+                                       &suballoc->bo, alloc_size,
+                                       suballoc->flags, suballoc->name);
       if (result != VK_SUCCESS)
          return result;
    }
 
-   VkResult result = tu_bo_map(suballoc->dev, suballoc->bo);
+   VkResult result = tu_bo_map(suballoc->dev, suballoc->bo, NULL);
    if (result != VK_SUCCESS) {
       tu_bo_finish(suballoc->dev, suballoc->bo);
       return VK_ERROR_OUT_OF_HOST_MEMORY;

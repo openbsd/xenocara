@@ -28,56 +28,12 @@
 
 #include "pipe/p_state.h"
 #include "util/u_dynarray.h"
-#include "pan_cs.h"
+#include "util/u_tristate.h"
+#include "pan_csf.h"
+#include "pan_desc.h"
+#include "pan_jm.h"
 #include "pan_mempool.h"
 #include "pan_resource.h"
-#include "pan_scoreboard.h"
-
-/* Simple tri-state data structure. In the default "don't care" state, the value
- * may be set to true or false. However, once the value is set, it must not be
- * changed. Declared inside of a struct to prevent casting to bool, which is an
- * error. The getter needs to be used instead.
- */
-struct pan_tristate {
-   enum {
-      PAN_TRISTATE_DONTCARE,
-      PAN_TRISTATE_FALSE,
-      PAN_TRISTATE_TRUE,
-   } v;
-};
-
-/*
- * Try to set a tristate value to a desired boolean value. Returns whether the
- * operation is successful.
- */
-static inline bool
-pan_tristate_set(struct pan_tristate *state, bool value)
-{
-   switch (state->v) {
-   case PAN_TRISTATE_DONTCARE:
-      state->v = value ? PAN_TRISTATE_TRUE : PAN_TRISTATE_FALSE;
-      return true;
-
-   case PAN_TRISTATE_FALSE:
-      return (value == false);
-
-   case PAN_TRISTATE_TRUE:
-      return (value == true);
-
-   default:
-      unreachable("Invalid tristate value");
-   }
-}
-
-/*
- * Read the boolean value of a tristate. Return value undefined in the don't
- * care state.
- */
-static inline bool
-pan_tristate_get(struct pan_tristate state)
-{
-   return (state.v == PAN_TRISTATE_TRUE);
-}
 
 /* A panfrost_batch corresponds to a bound FBO we're rendering to,
  * collecting over multiple draws. */
@@ -139,12 +95,6 @@ struct panfrost_batch {
     * varyings */
    struct panfrost_pool invisible_pool;
 
-   /* Job scoreboarding state */
-   struct pan_scoreboard scoreboard;
-
-   /* Polygon list bound to the batch, or NULL if none bound yet */
-   struct panfrost_bo *polygon_list;
-
    /* Scratchpad BO bound to the batch, or NULL if none bound yet */
    struct panfrost_bo *scratchpad;
 
@@ -157,26 +107,45 @@ struct panfrost_batch {
    /* Thread local storage descriptor. */
    struct panfrost_ptr tls;
 
+   /* Vertex count */
+   uint32_t vertex_count;
+
    /* Tiler context */
    struct pan_tiler_context tiler_ctx;
 
+   /* Only used on midgard. */
+   struct panfrost_bo *polygon_list_bo;
+
    /* Keep the num_work_groups sysval around for indirect dispatch */
-   mali_ptr num_wg_sysval[3];
+   uint64_t num_wg_sysval[3];
 
    /* Cached descriptors */
-   mali_ptr viewport;
-   mali_ptr rsd[PIPE_SHADER_TYPES];
-   mali_ptr textures[PIPE_SHADER_TYPES];
-   mali_ptr samplers[PIPE_SHADER_TYPES];
-   mali_ptr attribs[PIPE_SHADER_TYPES];
-   mali_ptr attrib_bufs[PIPE_SHADER_TYPES];
-   mali_ptr uniform_buffers[PIPE_SHADER_TYPES];
-   mali_ptr push_uniforms[PIPE_SHADER_TYPES];
-   mali_ptr depth_stencil;
-   mali_ptr blend;
+   uint64_t viewport;
+   uint64_t rsd[PIPE_SHADER_TYPES];
+   uint64_t textures[PIPE_SHADER_TYPES];
+   uint64_t samplers[PIPE_SHADER_TYPES];
+   uint64_t attribs[PIPE_SHADER_TYPES];
+   uint64_t attrib_bufs[PIPE_SHADER_TYPES];
+   uint64_t uniform_buffers[PIPE_SHADER_TYPES];
+   uint64_t push_uniforms[PIPE_SHADER_TYPES];
+   uint64_t depth_stencil;
+   uint64_t blend;
 
    unsigned nr_push_uniforms[PIPE_SHADER_TYPES];
    unsigned nr_uniform_buffers[PIPE_SHADER_TYPES];
+
+   /* Varying related pointers */
+   struct {
+      uint64_t bufs;
+      unsigned nr_bufs;
+      uint64_t vs;
+      uint64_t fs;
+      uint64_t pos;
+      uint64_t psiz;
+   } varyings;
+
+   /* Index array */
+   uint64_t indices;
 
    /* Valhall: struct mali_scissor_packed */
    unsigned scissor[2];
@@ -185,13 +154,40 @@ struct panfrost_batch {
    /* Used on Valhall only. Midgard includes attributes in-band with
     * attributes, wildly enough.
     */
-   mali_ptr images[PIPE_SHADER_TYPES];
+   uint64_t images[PIPE_SHADER_TYPES];
+
+   /* SSBOs. */
+   uint64_t ssbos[PIPE_SHADER_TYPES];
 
    /* On Valhall, these are properties of the batch. On Bifrost, they are
     * per draw.
     */
-   struct pan_tristate sprite_coord_origin;
-   struct pan_tristate first_provoking_vertex;
+   enum u_tristate sprite_coord_origin;
+   enum u_tristate first_provoking_vertex;
+
+   /** This one is always on the batch */
+   enum u_tristate line_smoothing;
+
+   /* Number of effective draws in the batch. Draws with rasterization disabled
+    * don't count as effective draws. It's basically the number of IDVS or
+    * <vertex,tiler> jobs present in the batch.
+    */
+   uint32_t draw_count;
+
+   /* Number of compute jobs in the batch. */
+   uint32_t compute_count;
+
+   /* Set when cycle count is required for this batch. */
+   bool need_job_req_cycle_count;
+
+   /* The batch contains a time query. */
+   bool has_time_query;
+
+   /* Job frontend specific fields. */
+   union {
+      struct panfrost_jm_batch jm;
+      struct panfrost_csf_batch csf;
+   };
 };
 
 /* Functions for managing the above */
@@ -257,5 +253,11 @@ void panfrost_batch_union_scissor(struct panfrost_batch *batch, unsigned minx,
                                   unsigned miny, unsigned maxx, unsigned maxy);
 
 bool panfrost_batch_skip_rasterization(struct panfrost_batch *batch);
+
+static inline bool
+panfrost_has_fragment_job(struct panfrost_batch *batch)
+{
+   return batch->draw_count > 0 || batch->clear;
+}
 
 #endif

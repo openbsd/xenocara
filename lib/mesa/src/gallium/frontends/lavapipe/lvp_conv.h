@@ -91,7 +91,7 @@ static inline unsigned vk_conv_topology(VkPrimitiveTopology topology)
    }
 }
 
-static inline unsigned vk_conv_wrap_mode(enum VkSamplerAddressMode addr_mode)
+static inline unsigned vk_conv_wrap_mode(VkSamplerAddressMode addr_mode)
 {
    switch (addr_mode) {
    case VK_SAMPLER_ADDRESS_MODE_REPEAT:
@@ -110,7 +110,8 @@ static inline unsigned vk_conv_wrap_mode(enum VkSamplerAddressMode addr_mode)
    }
 }
 
-static inline enum pipe_swizzle vk_conv_swizzle(VkComponentSwizzle swiz)
+static inline enum pipe_swizzle vk_conv_swizzle(VkComponentSwizzle swiz,
+                                                enum pipe_swizzle identity)
 {
    switch (swiz) {
    case VK_COMPONENT_SWIZZLE_ZERO:
@@ -126,7 +127,8 @@ static inline enum pipe_swizzle vk_conv_swizzle(VkComponentSwizzle swiz)
    case VK_COMPONENT_SWIZZLE_A:
       return PIPE_SWIZZLE_W;
    case VK_COMPONENT_SWIZZLE_IDENTITY:
+      return identity;
    default:
-      return PIPE_SWIZZLE_NONE;
+      unreachable("Invalid VkComponentSwizzle value");
    }
 }

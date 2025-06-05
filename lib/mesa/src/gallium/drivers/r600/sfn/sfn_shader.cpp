@@ -1,27 +1,7 @@
 /* -*- mesa-c++  -*-
- *
- * Copyright (c) 2022 Collabora LTD
- *
+ * Copyright 2022 Collabora LTD
  * Author: Gert Wollny <gert.wollny@collabora.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "sfn_shader.h"
@@ -39,13 +19,14 @@
 #include "sfn_instr_fetch.h"
 #include "sfn_instr_lds.h"
 #include "sfn_instr_mem.h"
+#include "sfn_instr_tex.h"
 #include "sfn_liverangeevaluator.h"
 #include "sfn_shader_cs.h"
 #include "sfn_shader_fs.h"
 #include "sfn_shader_gs.h"
 #include "sfn_shader_tess.h"
 #include "sfn_shader_vs.h"
-#include "tgsi/tgsi_from_mesa.h"
+#include "util/u_math.h"
 
 #include <numeric>
 #include <sstream>
@@ -54,101 +35,79 @@ namespace r600 {
 
 using std::string;
 
-std::pair<unsigned, unsigned>
-r600_get_varying_semantic(unsigned varying_location)
-{
-   std::pair<unsigned, unsigned> result;
-   tgsi_get_gl_varying_semantic(static_cast<gl_varying_slot>(varying_location),
-                                true,
-                                &result.first,
-                                &result.second);
-
-   if (result.first == TGSI_SEMANTIC_GENERIC) {
-      result.second += 9;
-   } else if (result.first == TGSI_SEMANTIC_PCOORD) {
-      result.second = 8;
-   }
-   return result;
-}
-
-void
-ShaderIO::set_sid(int sid)
-{
-   m_sid = sid;
-   switch (m_name) {
-   case TGSI_SEMANTIC_POSITION:
-   case TGSI_SEMANTIC_PSIZE:
-   case TGSI_SEMANTIC_EDGEFLAG:
-   case TGSI_SEMANTIC_FACE:
-   case TGSI_SEMANTIC_SAMPLEMASK:
-   case TGSI_SEMANTIC_CLIPVERTEX:
-      m_spi_sid = 0;
-      break;
-   case TGSI_SEMANTIC_GENERIC:
-   case TGSI_SEMANTIC_TEXCOORD:
-   case TGSI_SEMANTIC_PCOORD:
-      m_spi_sid = m_sid + 1;
-      break;
-   default:
-      /* For non-generic params - pack name and sid into 8 bits */
-      m_spi_sid = (0x80 | (m_name << 3) | m_sid) + 1;
-   }
-}
-
-void
-ShaderIO::override_spi_sid(int spi)
-{
-   m_spi_sid = spi;
-}
-
 void
 ShaderIO::print(std::ostream& os) const
 {
-   os << m_type << " LOC:" << m_location << " NAME:" << m_name;
+   os << m_type << " LOC:" << m_location;
+   if (m_varying_slot != NUM_TOTAL_VARYING_SLOTS)
+      os << " VARYING_SLOT:" << static_cast<int>(m_varying_slot);
+   if (m_no_varying)
+      os << " NO_VARYING";
    do_print(os);
+}
 
-   if (m_sid > 0) {
-      os << " SID:" << m_sid << " SPI_SID:" << m_spi_sid;
+int
+ShaderIO::spi_sid() const
+{
+   if (no_varying())
+      return 0;
+
+   switch (varying_slot()) {
+   case NUM_TOTAL_VARYING_SLOTS:
+   case VARYING_SLOT_POS:
+   case VARYING_SLOT_PSIZ:
+   case VARYING_SLOT_EDGE:
+   case VARYING_SLOT_FACE:
+   case VARYING_SLOT_CLIP_VERTEX:
+      return 0;
+   default:
+      static_assert(static_cast<int>(NUM_TOTAL_VARYING_SLOTS) <= 0x100 - 1,
+                    "All varying slots plus 1 must be usable as 8-bit SPI semantic IDs");
+      return static_cast<int>(varying_slot()) + 1;
    }
 }
 
-ShaderIO::ShaderIO(const char *type, int loc, int name):
+ShaderIO::ShaderIO(const char *type, int loc, gl_varying_slot varying_slot):
     m_type(type),
     m_location(loc),
-    m_name(name)
+    m_varying_slot(varying_slot)
+{
+}
+
+ShaderOutput::ShaderOutput(int location, int writemask, gl_varying_slot varying_slot):
+    ShaderIO("OUTPUT", location, varying_slot),
+    m_writemask(writemask)
 {
 }
 
 ShaderOutput::ShaderOutput():
-    ShaderIO("OUTPUT", -1, -1)
-{
-}
-
-ShaderOutput::ShaderOutput(int location, int name, int writemask):
-    ShaderIO("OUTPUT", location, name),
-    m_writemask(writemask)
+    ShaderOutput(-1, 0)
 {
 }
 
 void
 ShaderOutput::do_print(std::ostream& os) const
 {
+   if (m_frag_result != static_cast<gl_frag_result>(FRAG_RESULT_MAX))
+      os << " FRAG_RESULT:" << static_cast<int>(m_frag_result);
    os << " MASK:" << m_writemask;
 }
 
-ShaderInput::ShaderInput(int location, int name):
-    ShaderIO("INPUT", location, name)
+ShaderInput::ShaderInput(int location, gl_varying_slot varying_slot):
+    ShaderIO("INPUT", location, varying_slot)
 {
 }
 
 ShaderInput::ShaderInput():
-    ShaderInput(-1, -1)
+    ShaderInput(-1)
 {
 }
 
 void
 ShaderInput::do_print(std::ostream& os) const
 {
+   if (m_system_value != SYSTEM_VALUE_MAX)
+      os << " SYSVALUE: " << static_cast<int>(m_system_value);
    if (m_interpolator)
       os << " INTERP:" << m_interpolator;
    if (m_interpolate_loc)
@@ -173,12 +132,15 @@ ShaderInput::set_uses_interpolate_at_centroid()
    m_uses_interpolate_at_centroid = true;
 }
 
+int64_t Shader::s_next_shader_id = 1;
+
 Shader::Shader(const char *type_id, unsigned atomic_base):
     m_current_block(nullptr),
     m_type_id(type_id),
     m_chip_class(ISA_CC_R600),
     m_next_block(0),
-    m_atomic_base(atomic_base)
+    m_atomic_base(atomic_base),
+    m_shader_id(s_next_shader_id++)
 {
    m_instr_factory = new InstrFactory();
    m_chain_instr.this_shader = this;
@@ -249,23 +211,25 @@ Shader::emit_instruction_from_string(const std::string& s)
 bool
 Shader::read_output(std::istream& is)
 {
-   string value;
-   is >> value;
-   int pos = int_from_string_with_prefix(value, "LOC:");
-   is >> value;
-   int name = int_from_string_with_prefix(value, "NAME:");
-   is >> value;
-   int mask = int_from_string_with_prefix(value, "MASK:");
-   ShaderOutput output(pos, name, mask);
+   ShaderOutput output;
 
-   value.clear();
-   is >> value;
-   if (!value.empty()) {
-      int sid = int_from_string_with_prefix(value, "SID:");
-      output.set_sid(sid);
-      is >> value;
-      ASSERTED int spi_sid = int_from_string_with_prefix(value, "SPI_SID:");
-      assert(spi_sid == output.spi_sid());
+   std::string token;
+   for (is >> token; !token.empty(); token.clear(), is >> token) {
+      int value;
+      if (int_from_string_with_prefix_optional(token, "LOC:", value))
+         output.set_location(value);
+      else if (int_from_string_with_prefix_optional(token, "VARYING_SLOT:", value))
+         output.set_varying_slot(static_cast<gl_varying_slot>(value));
+      else if (token == "NO_VARYING")
+         output.set_no_varying(true);
+      else if (int_from_string_with_prefix_optional(token, "FRAG_RESULT:", value))
+         output.set_frag_result(static_cast<gl_frag_result>(value));
+      else if (int_from_string_with_prefix_optional(token, "MASK:", value))
+         output.set_writemask(value);
+      else {
+         std::cerr << "Unknown parse value '" << token << "'";
+         assert(!"Unknown parse value in read_output");
+      }
    }
 
    add_output(output);
@@ -275,40 +239,33 @@ Shader::read_output(std::istream& is)
 bool
 Shader::read_input(std::istream& is)
 {
-   string value;
-   is >> value;
-   int pos = int_from_string_with_prefix(value, "LOC:");
-   is >> value;
-   int name = int_from_string_with_prefix(value, "NAME:");
-
-   value.clear();
-
-   ShaderInput input(pos, name);
+   ShaderInput input;
 
    int interp = 0;
    int interp_loc = 0;
    bool use_centroid = false;
 
-   is >> value;
-   while (!value.empty()) {
-      if (value.substr(0, 4) == "SID:") {
-         int sid = int_from_string_with_prefix(value, "SID:");
-         input.set_sid(sid);
-      } else if (value.substr(0, 8) == "SPI_SID:") {
-         ASSERTED int spi_sid = int_from_string_with_prefix(value, "SPI_SID:");
-         assert(spi_sid == input.spi_sid());
-      } else if (value.substr(0, 7) == "INTERP:") {
-         interp = int_from_string_with_prefix(value, "INTERP:");
-      } else if (value.substr(0, 5) == "ILOC:") {
-         interp_loc = int_from_string_with_prefix(value, "ILOC:");
-      } else if (value == "USE_CENTROID") {
+   std::string token;
+   for (is >> token; !token.empty(); token.clear(), is >> token) {
+      int value;
+      if (int_from_string_with_prefix_optional(token, "LOC:", value))
+         input.set_location(value);
+      else if (int_from_string_with_prefix_optional(token, "VARYING_SLOT:", value))
+         input.set_varying_slot(static_cast<gl_varying_slot>(value));
+      else if (token == "NO_VARYING")
+         input.set_no_varying(true);
+      else if (int_from_string_with_prefix_optional(token, "SYSVALUE:", value))
+         input.set_system_value(static_cast<gl_system_value>(value));
+      else if (int_from_string_with_prefix_optional(token, "INTERP:", interp))
+         ;
+      else if (int_from_string_with_prefix_optional(token, "ILOC:", interp_loc))
+         ;
+      else if (token == "USE_CENTROID")
          use_centroid = true;
-      } else {
-         std::cerr << "Unknown parse value '" << value << "'";
-         assert(!value.c_str());
+      else {
+         std::cerr << "Unknown parse value '" << token << "'";
+         assert(!"Unknown parse value in read_input");
       }
-      value.clear();
-      is >> value;
    }
 
    input.set_interpolator(interp, interp_loc, use_centroid);
@@ -477,7 +434,7 @@ Shader *
 Shader::translate_from_nir(nir_shader *nir,
                            const pipe_stream_output_info *so_info,
                            struct r600_shader *gs_shader,
-                           r600_shader_key& key,
+                           const r600_shader_key& key,
                            r600_chip_class chip_class,
                            radeon_family family)
 {
@@ -593,10 +550,10 @@ Shader::scan_shader(const nir_function *func)
       }
    }
 
-   int param_id = 0;
+   int export_param = 0;
    for (auto& [index, out] : m_outputs) {
-      if (out.is_param())
-         out.set_pos(param_id++);
+      if (out.spi_sid())
+         out.set_export_param(export_param++);
    }
 
    return true;
@@ -605,11 +562,11 @@ Shader::scan_shader(const nir_function *func)
 bool
 Shader::scan_uniforms(nir_variable *uniform)
 {
-   if (uniform->type->contains_atomic()) {
-      int natomics = uniform->type->atomic_size() / 4; /* ATOMIC_COUNTER_SIZE */
+   if (glsl_contains_atomic(uniform->type)) {
+      int natomics = glsl_atomic_size(uniform->type) / 4; /* ATOMIC_COUNTER_SIZE */
       m_nhwatomic += natomics;
 
-      if (uniform->type->is_array())
+      if (glsl_type_is_array(uniform->type))
          m_indirect_files |= 1 << TGSI_FILE_HW_ATOMIC;
 
       m_flags.set(sh_uses_atomics);
@@ -634,10 +591,10 @@ Shader::scan_uniforms(nir_variable *uniform)
       m_atomics.push_back(atom);
    }
 
-   auto type = uniform->type->is_array() ? uniform->type->without_array() : uniform->type;
-   if (type->is_image() || uniform->data.mode == nir_var_mem_ssbo) {
+   auto type = glsl_without_array(uniform->type);
+   if (glsl_type_is_image(type) || uniform->data.mode == nir_var_mem_ssbo) {
       m_flags.set(sh_uses_images);
-      if (uniform->type->is_array() && !(uniform->data.mode == nir_var_mem_ssbo))
+      if (glsl_type_is_array(uniform->type) && !(uniform->data.mode == nir_var_mem_ssbo))
          m_indirect_files |= 1 << TGSI_FILE_IMAGE;
    }
 
@@ -873,6 +830,46 @@ Shader::process_instr(nir_instr *instr)
 }
 
 bool
+Shader::emit_tex_fdd(const nir_intrinsic_instr* intr, int opcode, bool fine)
+{
+   auto& value_factory_ = value_factory();
+
+   int ncomp = intr->def.num_components;
+   RegisterVec4::Swizzle src_swz = {7, 7, 7, 7};
+   RegisterVec4::Swizzle tmp_swz = {7, 7, 7, 7};
+   for (auto i = 0; i < ncomp; ++i) {
+      src_swz[i] = i;
+      tmp_swz[i] = i;
+   }
+
+   auto src = value_factory_.src_vec4(intr->src[0], pin_none, src_swz);
+
+   auto tmp = value_factory_.temp_vec4(pin_group, tmp_swz);
+   AluInstr *mv = nullptr;
+   for (int i = 0; i < ncomp; ++i) {
+      mv = new AluInstr(op1_mov, tmp[i], src[i], AluInstr::write);
+      emit_instruction(mv);
+   }
+   if (mv)
+      mv->set_alu_flag(alu_last_instr);
+
+   auto dst = value_factory_.dest_vec4(intr->def, pin_group);
+   RegisterVec4::Swizzle dst_swz = {7, 7, 7, 7};
+   for (auto i = 0; i < ncomp; ++i) {
+      dst_swz[i] = i;
+   }
+
+   auto tex = new TexInstr((TexInstr::Opcode)opcode, dst, dst_swz, tmp, R600_MAX_CONST_BUFFERS, nullptr);
+
+   if (fine)
+      tex->set_tex_flag(TexInstr::grad_fine);
+
+   emit_instruction(tex);
+
+   return true;
+}
+
+bool
 Shader::process_intrinsic(nir_intrinsic_instr *intr)
 {
    if (process_stage_intrinsic(intr))
@@ -915,6 +912,16 @@ Shader::process_intrinsic(nir_intrinsic_instr *intr)
       return emit_atomic_local_shared(intr);
    case nir_intrinsic_shader_clock:
       return emit_shader_clock(intr);
+   case nir_intrinsic_ddx:
+   case nir_intrinsic_ddx_coarse:
+      return emit_tex_fdd(intr, TexInstr::get_gradient_h, false);
+   case nir_intrinsic_ddx_fine:
+      return emit_tex_fdd(intr, TexInstr::get_gradient_h, true);
+   case nir_intrinsic_ddy:
+   case nir_intrinsic_ddy_coarse:
+      return emit_tex_fdd(intr, TexInstr::get_gradient_v, false);
+   case nir_intrinsic_ddy_fine:
+      return emit_tex_fdd(intr, TexInstr::get_gradient_v, true);
    case nir_intrinsic_load_reg:
       return emit_load_reg(intr);
    case nir_intrinsic_load_reg_indirect:
@@ -962,13 +969,14 @@ lds_op_from_intrinsic(nir_atomic_op op, bool ret)
 }
 
 PRegister
-Shader::emit_load_to_register(PVirtualValue src)
+Shader::emit_load_to_register(PVirtualValue src, int chan)
 {
    assert(src);
    PRegister dest = src->as_register();
 
-   if (!dest) {
-      dest = value_factory().temp_register();
+   if (!dest || chan >= 0) {
+      dest = value_factory().temp_register(chan);
+      dest->set_pin(pin_free);
       emit_instruction(new AluInstr(op1_mov, dest, src, AluInstr::last_write));
    }
    return dest;
@@ -1388,6 +1396,22 @@ void Shader::InstructionChain::visit(AluInstr *instr)
          }
       }
    }
+
+   if (instr->has_lds_access()) {
+      last_lds_access = instr;
+      if (last_group_barrier)
+         instr->add_required_instr(last_group_barrier);
+   }
+
+   if (!instr->has_alu_flag(alu_is_lds) &&
+       instr->opcode() == op0_group_barrier) {
+      last_group_barrier = instr;
+      if (last_lds_access)
+         instr->add_required_instr(last_group_barrier);
+      if (last_ssbo_instr)
+         instr->add_required_instr(last_ssbo_instr);
+   }
+
 }
 
 void
@@ -1426,6 +1450,9 @@ Shader::InstructionChain::visit(RatInstr *instr)
 
    if (last_kill_instr)
       instr->add_required_instr(last_kill_instr);
+
+   if (last_group_barrier)
+      instr->add_required_instr(last_group_barrier);
 }
 
 void
@@ -1488,13 +1515,9 @@ Shader::emit_group_barrier(nir_intrinsic_instr *intr)
 {
    assert(m_control_flow_depth == 0);
    (void)intr;
-   /* Put barrier into it's own block, so that optimizers and the
-    * scheduler don't move code */
-   start_new_block(0);
    auto op = new AluInstr(op0_group_barrier, 0);
    op->set_alu_flag(alu_last_instr);
    emit_instruction(op);
-   start_new_block(0);
    return true;
 }
 
@@ -1642,6 +1665,7 @@ void
 Shader::print_header(std::ostream& os) const
 {
    assert(m_chip_class <= ISA_CC_CAYMAN);
+   os << "Shader: " << m_shader_id << "\n";
    os << m_type_id << "\n";
    os << "CHIPCLASS " << chip_class_names[m_chip_class] << "\n";
    print_properties(os);
@@ -1673,46 +1697,61 @@ void
 Shader::get_shader_info(r600_shader *sh_info)
 {
    sh_info->ninput = m_inputs.size();
-   int lds_pos = 0;
+   sh_info->nlds = 0;
    int input_array_array_loc = 0;
    for (auto& [index, info] : m_inputs) {
       r600_shader_io& io = sh_info->input[input_array_array_loc++];
 
-      io.sid = info.sid();
+      io.varying_slot = info.varying_slot();
+      io.system_value = info.system_value();
       io.gpr = info.gpr();
       io.spi_sid = info.spi_sid();
       io.ij_index = info.ij_index();
-      io.name = info.name();
       io.interpolate = info.interpolator();
       io.interpolate_location = info.interpolate_loc();
-      if (info.need_lds_pos())
-         io.lds_pos = lds_pos++;
-      else
+      if (info.need_lds_pos()) {
+         io.lds_pos = info.lds_pos();
+         sh_info->nlds = MAX2(unsigned(info.lds_pos() + 1), sh_info->nlds);
+      } else {
          io.lds_pos = 0;
+      }
 
       io.ring_offset = info.ring_offset();
       io.uses_interpolate_at_centroid = info.uses_interpolate_at_centroid();
 
-      sfn_log << SfnLog::io << "Emit Input [" << index << "] sid:" << io.sid
-              << " spi_sid:" << io.spi_sid << "\n";
+      sfn_log << SfnLog::io << "Emit input [" << index << "]";
+      if (io.varying_slot != NUM_TOTAL_VARYING_SLOTS)
+         sfn_log << " varying_slot:" << static_cast<int>(io.varying_slot);
+      if (io.system_value != SYSTEM_VALUE_MAX)
+         sfn_log << " system_value:" << static_cast<int>(io.system_value);
+      sfn_log << " spi_sid:" << io.spi_sid << "\n";
       assert(io.spi_sid >= 0);
    }
 
-   sh_info->nlds = lds_pos;
    sh_info->noutput = m_outputs.size();
+   /* VS is required to export at least one parameter. */
+   sh_info->highest_export_param = 0;
    sh_info->num_loops = m_nloops;
    int output_array_array_loc = 0;
 
    for (auto& [index, info] : m_outputs) {
       r600_shader_io& io = sh_info->output[output_array_array_loc++];
-      io.sid = info.sid();
+      io.varying_slot = info.varying_slot();
+      io.frag_result = info.frag_result();
       io.gpr = info.gpr();
       io.spi_sid = info.spi_sid();
-      io.name = info.name();
       io.write_mask = info.writemask();
+      io.export_param = info.export_param();
+      if (info.export_param() >= 0)
+         sh_info->highest_export_param = MAX2(unsigned(info.export_param()),
+                                              sh_info->highest_export_param);
 
-      sfn_log << SfnLog::io << "Emit output[" << index << "] sid:" << io.sid
-              << " spi_sid:" << io.spi_sid << "\n";
+      sfn_log << SfnLog::io << "Emit output[" << index << "]";
+      if (io.varying_slot != NUM_TOTAL_VARYING_SLOTS)
+         sfn_log << " varying_slot:" << static_cast<int>(io.varying_slot);
+      if (io.frag_result != static_cast<gl_frag_result>(FRAG_RESULT_MAX))
+         sfn_log << " frag_result:" << static_cast<int>(io.frag_result);
+      sfn_log << " spi_sid:" << io.spi_sid << " write_mask:" << io.write_mask << "\n";
       assert(io.spi_sid >= 0);
    }
 

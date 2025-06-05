@@ -22,7 +22,15 @@
 static void
 insert_z_write(nir_builder *b)
 {
-   nir_def *z = nir_load_frag_coord_zw(b, .component = 2);
+   /* When forcing depth test to NEVER, force Z to NaN.  This works around the
+    * hardware discarding depth=NEVER.
+    *
+    * TODO: Check if Apple has a better way of handling this.
+    */
+   nir_def *bias = nir_bcsel(b, nir_ine_imm(b, nir_load_depth_never_agx(b), 0),
+                             nir_imm_float(b, NAN), nir_imm_float(b, -0.0));
+
+   nir_def *z = nir_fadd(b, bias, nir_load_frag_coord_zw(b, .component = 2));
 
    nir_store_output(b, z, nir_imm_int(b, 0),
                     .io_semantics.location = FRAG_RESULT_DEPTH,
@@ -57,34 +65,31 @@ agx_nir_lower_frag_sidefx(nir_shader *s)
    if (!s->info.writes_memory)
       return false;
 
-   /* Lower writes from helper invocations with the common pass */
-   NIR_PASS_V(s, nir_lower_helper_writes, false);
+   /* Lower writes from helper invocations with the common pass. The hardware
+    * will predicate simple writes for us, but that fails with sample shading so
+    * we do that in software too.
+    */
+   NIR_PASS(_, s, nir_lower_helper_writes, s->info.fs.uses_sample_shading);
 
    bool writes_zs =
       s->info.outputs_written &
       (BITFIELD64_BIT(FRAG_RESULT_STENCIL) | BITFIELD64_BIT(FRAG_RESULT_DEPTH));
 
-   /* If the shader wants early fragment tests, trigger an early test at the
-    * beginning of the shader. This lets us use a Passthrough punch type,
-    * instead of Opaque which may result in the shader getting skipped
-    * incorrectly and then the side effects not kicking in.
+   /* If the shader wants early fragment tests, the sample mask lowering pass
+    * will trigger an early test at the beginning of the shader. This lets us
+    * use a Passthrough punch type, instead of Opaque which may result in the
+    * shader getting skipped incorrectly and then the side effects not kicking
+    * in. But this happens there to avoid it happening twice with a discard.
     */
-   if (s->info.fs.early_fragment_tests) {
-      assert(!writes_zs && "incompatible");
-      nir_function_impl *impl = nir_shader_get_entrypoint(s);
-      nir_builder b = nir_builder_at(nir_before_impl(impl));
-      nir_sample_mask_agx(&b, nir_imm_intN_t(&b, ALL_SAMPLES, 16),
-                          nir_imm_intN_t(&b, ALL_SAMPLES, 16));
-      return true;
-   }
+   if (s->info.fs.early_fragment_tests)
+      return false;
 
    /* If depth/stencil feedback is already used, we're done */
    if (writes_zs)
       return false;
 
    bool done = false;
-   nir_shader_intrinsics_pass(
-      s, pass, nir_metadata_block_index | nir_metadata_dominance, &done);
+   nir_shader_intrinsics_pass(s, pass, nir_metadata_control_flow, &done);
 
    /* If there's no render targets written, just put the write at the end */
    if (!done) {

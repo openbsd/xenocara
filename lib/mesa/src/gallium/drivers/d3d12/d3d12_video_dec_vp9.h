@@ -2,7 +2,7 @@
 /*
  * Copyright © Microsoft Corporation
  *
- * Permission is hereby granted, free of uint8_tge, to any person obtaining a
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -140,7 +140,7 @@ d3d12_video_decoder_refresh_dpb_active_references_vp9(struct d3d12_video_decoder
 
 void
 d3d12_video_decoder_get_frame_info_vp9(
-   struct d3d12_video_decoder *pD3D12Dec, uint32_t *pWidth, uint32_t *pHeight, uint16_t *pMaxDPB, bool *pIsInterlaced);
+   struct d3d12_video_decoder *pD3D12Dec, uint32_t *pWidth, uint32_t *pHeight, uint16_t *pMaxDPB);
 
 DXVA_PicParams_VP9
 d3d12_video_decoder_dxva_picparams_from_pipe_picparams_vp9(

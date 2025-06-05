@@ -31,6 +31,8 @@ enum tu_dynamic_state
    TU_DYNAMIC_STATE_BLEND,
    TU_DYNAMIC_STATE_VERTEX_INPUT,
    TU_DYNAMIC_STATE_PATCH_CONTROL_POINTS,
+   TU_DYNAMIC_STATE_PRIM_MODE_SYSMEM,
+   TU_DYNAMIC_STATE_A7XX_FRAGMENT_SHADING_RATE = TU_DYNAMIC_STATE_PRIM_MODE_SYSMEM,
    TU_DYNAMIC_STATE_COUNT,
 };
 
@@ -93,13 +95,17 @@ struct tu_program_state
       struct tu_draw_state vpc_state;
       struct tu_draw_state fs_state;
 
-      uint32_t hs_param_dwords;
-
       struct tu_push_constant_range shared_consts;
 
       struct tu_program_descriptor_linkage link[MESA_SHADER_STAGES];
 
+      unsigned dynamic_descriptor_offsets[MAX_SETS];
+
       bool per_view_viewport;
+      bool writes_shading_rate;
+      bool reads_shading_rate;
+      bool accesses_smask;
+      bool uses_ray_intersection;
 };
 
 struct tu_pipeline_executable {
@@ -136,6 +142,8 @@ struct tu_pipeline
    uint32_t set_state_mask;
    struct tu_draw_state dynamic_state[TU_DYNAMIC_STATE_COUNT];
 
+   BITSET_DECLARE(static_state_mask, MESA_VK_DYNAMIC_GRAPHICS_STATE_ENUM_MAX);
+
    struct {
       bool raster_order_attachment_access;
    } ds;
@@ -151,7 +159,7 @@ struct tu_pipeline
    struct {
       /* If the pipeline sets SINGLE_PRIM_MODE for sysmem. */
       bool sysmem_single_prim_mode;
-      struct tu_draw_state state_sysmem, state_gmem;
+      struct tu_draw_state state_gmem;
    } prim_order;
 
    /* draw states for the pipeline */
@@ -185,8 +193,6 @@ struct tu_graphics_lib_pipeline {
       struct tu_shader_key key;
    } shaders[MESA_SHADER_FRAGMENT + 1];
 
-   struct ir3_shader_key ir3_key;
-
    /* Used to stitch together an overall layout for the final pipeline. */
    struct tu_descriptor_set_layout *layouts[MAX_SETS];
    unsigned num_sets;
@@ -204,7 +210,7 @@ struct tu_graphics_pipeline {
     */
    struct vk_sample_locations_state sample_locations;
 
-   bool feedback_loop_color, feedback_loop_ds;
+   VkImageAspectFlags feedback_loops;
    bool feedback_loop_may_involve_textures;
 };
 

@@ -1,5 +1,11 @@
-# Keep the tags below under 25-30 chars each, as they end up combined into
+# Keep the tags below under 20 chars each, as they end up combined into
 # docker image tags, and docker has a length limit of 128 chars total in tags.
+#
+# The word after the date doesn't need to be overly descriptive, it exists
+# purely to avoid the risk of two people updating an image tag on the same day
+# while working on different changes, so it doesn't matter whether that word
+# will make sense to someone else. Aim for "nobody else will pick that word
+# for their change".
 #
 # If you update a tag and you get an error like this:
 #     cannot parse input: "$image:$tag": invalid reference format
@@ -7,35 +13,43 @@
 
 variables:
    DEBIAN_X86_64_BUILD_BASE_IMAGE: "debian/x86_64_build-base"
-   DEBIAN_BASE_TAG: "2023-10-13-rust-1.66"
+   DEBIAN_BASE_TAG: "20250130-vvless"
 
    DEBIAN_X86_64_BUILD_IMAGE_PATH: "debian/x86_64_build"
-   DEBIAN_BUILD_TAG: "2023-09-30-shader-db"
-
-   DEBIAN_X86_64_BUILD_MINGW_IMAGE_PATH: "debian/x86_64_build-mingw"
-   DEBIAN_BUILD_MINGW_TAG: "2023-05-25-bookworm"
+   DEBIAN_BUILD_TAG: "20250128-llvm19-up"
 
    DEBIAN_X86_64_TEST_BASE_IMAGE: "debian/x86_64_test-base"
+   DEBIAN_ARM64_TEST_BASE_IMAGE: "debian/arm64_test-base"
 
    DEBIAN_X86_64_TEST_IMAGE_GL_PATH: "debian/x86_64_test-gl"
+   DEBIAN_ARM64_TEST_IMAGE_GL_PATH: "debian/arm64_test-gl"
    DEBIAN_X86_64_TEST_IMAGE_VK_PATH: "debian/x86_64_test-vk"
+   DEBIAN_ARM64_TEST_IMAGE_VK_PATH: "debian/arm64_test-vk"
    DEBIAN_X86_64_TEST_ANDROID_IMAGE_PATH: "debian/x86_64_test-android"
 
-   DEBIAN_X86_64_TEST_ANDROID_TAG: "2023-10-15-deqp"
-   DEBIAN_X86_64_TEST_GL_TAG: "2023-10-15-deqp"
-   DEBIAN_X86_64_TEST_VK_TAG: "2023-10-15-deqp"
+   DEBIAN_TEST_ANDROID_TAG: "20250130-vvless"
+   DEBIAN_TEST_GL_TAG: "20250327-piglit-250"
+   DEBIAN_TEST_VK_TAG: "20250327-piglit-250"
+   KERNEL_ROOTFS_TAG: "20250327-trace-250"
 
-   ALPINE_X86_64_BUILD_TAG: "2023-10-04-ephemeral"
-   ALPINE_X86_64_LAVA_SSH_TAG: "2023-06-26-first-version"
-   FEDORA_X86_64_BUILD_TAG: "2023-08-04-shader-db"
-   KERNEL_ROOTFS_TAG: "2023-10-13-deqp"
-   KERNEL_TAG: "v6.4.12-for-mesa-ci-f6b4ad45f48d"
+   DEBIAN_PYUTILS_IMAGE: "debian/x86_64_pyutils"
+   DEBIAN_PYUTILS_TAG: "20250129-lavacli"
 
-   WINDOWS_X64_VS_PATH: "windows/x64_vs"
-   WINDOWS_X64_VS_TAG: "2022-10-20-upgrade-zlib"
+   ALPINE_X86_64_BUILD_TAG: "20250128-llversionm"
+   ALPINE_X86_64_LAVA_SSH_TAG: "20250124-spirv-tools"
+   FEDORA_X86_64_BUILD_TAG: "20250128-llversionm"
 
-   WINDOWS_X64_BUILD_PATH: "windows/x64_build"
-   WINDOWS_X64_BUILD_TAG: "2023-06-24-agility-711"
+   KERNEL_TAG: "v6.13-rc4-mesa-5e77"
+   KERNEL_REPO: "gfx-ci/linux"
+   PKG_REPO_REV: "95bf62c"
 
-   WINDOWS_X64_TEST_PATH: "windows/x64_test"
-   WINDOWS_X64_TEST_TAG: "2023-05-30-warp-1.0.7.1"
+   FLUSTER_VECTORS_VERSION: "5"
+
+   WINDOWS_X64_MSVC_PATH: "windows/x86_64_msvc"
+   WINDOWS_X64_MSVC_TAG: "20240827-v143"
+
+   WINDOWS_X64_BUILD_PATH: "windows/x86_64_build"
+   WINDOWS_X64_BUILD_TAG: "20241107-setup"
+
+   WINDOWS_X64_TEST_PATH: "windows/x86_64_test"
+   WINDOWS_X64_TEST_TAG: "20241107-setup"

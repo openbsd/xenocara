@@ -6,7 +6,7 @@
 
 #include "mme_fermi_sim.h"
 /* for VOLTA_A */
-#include "nvk_clc397.h"
+#include "nv_push_clc397.h"
 
 class mme_fermi_sim_test : public ::testing::Test, public mme_hw_runner {
 public:
@@ -51,7 +51,7 @@ mme_fermi_sim_test::test_macro(const mme_builder *b,
       .size = DATA_BO_SIZE,
    };
    mme_fermi_sim(insts.size(), &insts[0],
-                 params.size(), &params[0],
+                 params.size(), params.size() ? &params[0] : NULL,
                  1, &sim_mem);
 
    run_macro(macro, params);
@@ -291,6 +291,94 @@ TEST_F(mme_fermi_sim_test, addc)
    test_macro(&b, macro, params);
 }
 
+TEST_F(mme_fermi_sim_test, add_imm_carry)
+{
+   mme_builder b;
+   mme_builder_init(&b, devinfo);
+
+   mme_value max = mme_load(&b);
+
+   mme_value add_res = mme_alloc_reg(&b);
+   mme_value add_imm_res = mme_alloc_reg(&b);
+   mme_value carry = mme_alloc_reg(&b);
+
+   /* Dummy add clears the carry register */
+   mme_fermi_asm(&b, i) {
+      i.op = MME_FERMI_OP_ALU_REG;
+      i.assign_op = MME_FERMI_ASSIGN_OP_MOVE;
+      i.dst = mme_fermi_value_as_reg(add_res);
+      i.src[0] = MME_FERMI_REG_ZERO;
+      i.src[1] = MME_FERMI_REG_ZERO;
+      i.alu_op = MME_FERMI_ALU_OP_ADD;
+   }
+
+   /* ADD_IMM should not touch carry */
+   mme_fermi_asm(&b, i) {
+      i.op = MME_FERMI_OP_ADD_IMM;
+      i.assign_op = MME_FERMI_ASSIGN_OP_MOVE;
+      i.dst = mme_fermi_value_as_reg(add_imm_res);
+      i.src[0] = mme_fermi_value_as_reg(max);
+      i.imm = 1;
+   }
+
+   /* Grab the carry */
+   mme_fermi_asm(&b, i) {
+      i.op = MME_FERMI_OP_ALU_REG;
+      i.assign_op = MME_FERMI_ASSIGN_OP_MOVE;
+      i.dst = mme_fermi_value_as_reg(carry);
+      i.src[0] = MME_FERMI_REG_ZERO;
+      i.src[1] = MME_FERMI_REG_ZERO;
+      i.alu_op = MME_FERMI_ALU_OP_ADDC;
+   }
+
+   /* Store everything after all that ALU so none of the stores mess up the
+    * carry behind our back.
+    */
+   mme_store_imm_addr(&b, data_addr + 0, add_res, false);
+   mme_store_imm_addr(&b, data_addr + 4, add_imm_res, false);
+   mme_store_imm_addr(&b, data_addr + 8, carry, false);
+
+   /* Set carry to 1 */
+   mme_fermi_asm(&b, i) {
+      i.op = MME_FERMI_OP_ALU_REG;
+      i.assign_op = MME_FERMI_ASSIGN_OP_MOVE;
+      i.dst = mme_fermi_value_as_reg(add_res);
+      i.src[0] = mme_fermi_value_as_reg(max);
+      i.src[1] = mme_fermi_value_as_reg(max);
+      i.alu_op = MME_FERMI_ALU_OP_ADD;
+   }
+
+   /* ADD_IMM should not touch carry */
+   mme_fermi_asm(&b, i) {
+      i.op = MME_FERMI_OP_ADD_IMM;
+      i.assign_op = MME_FERMI_ASSIGN_OP_MOVE;
+      i.dst = mme_fermi_value_as_reg(add_imm_res);
+      i.src[0] = MME_FERMI_REG_ZERO;
+      i.imm = 1;
+   }
+
+   /* Grab the carry */
+   mme_fermi_asm(&b, i) {
+      i.op = MME_FERMI_OP_ALU_REG;
+      i.assign_op = MME_FERMI_ASSIGN_OP_MOVE;
+      i.dst = mme_fermi_value_as_reg(carry);
+      i.src[0] = MME_FERMI_REG_ZERO;
+      i.src[1] = MME_FERMI_REG_ZERO;
+      i.alu_op = MME_FERMI_ALU_OP_ADDC;
+   }
+
+   mme_store_imm_addr(&b, data_addr + 12, add_res, true);
+   mme_store_imm_addr(&b, data_addr + 16, add_imm_res, true);
+   mme_store_imm_addr(&b, data_addr + 20, carry, true);
+
+   auto macro = mme_builder_finish_vec(&b);
+
+   std::vector<uint32_t> params;
+   params.push_back(UINT32_MAX);
+
+   test_macro(&b, macro, params);
+}
+
 TEST_F(mme_fermi_sim_test, sub)
 {
    mme_builder b;
@@ -390,6 +478,23 @@ TEST_F(mme_fermi_sim_test, bfe)
    }
 }
 
+TEST_F(mme_fermi_sim_test, not)
+{
+   mme_builder b;
+   mme_builder_init(&b, devinfo);
+
+   mme_value x = mme_load(&b);
+   mme_value v1 = mme_not(&b, x);
+   mme_store_imm_addr(&b, data_addr + 0, v1, true);
+
+   auto macro = mme_builder_finish_vec(&b);
+
+   std::vector<uint32_t> params;
+   params.push_back(0x0c406fe0);
+
+   test_macro(&b, macro, params);
+}
+
 #define BITOP_TEST(op)                                   \
 TEST_F(mme_fermi_sim_test, op)                           \
 {                                                        \
@@ -415,7 +520,7 @@ TEST_F(mme_fermi_sim_test, op)                           \
 }
 
 BITOP_TEST(and)
-//BITOP_TEST(and_not)
+BITOP_TEST(and_not)
 BITOP_TEST(nand)
 BITOP_TEST(or)
 BITOP_TEST(xor)

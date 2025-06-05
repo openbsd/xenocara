@@ -151,18 +151,16 @@ nir_repair_ssa_impl(nir_function_impl *impl)
    state.phi_builder = NULL;
    state.progress = false;
 
-   nir_metadata_require(impl, nir_metadata_block_index |
-                                 nir_metadata_dominance);
+   nir_metadata_require(impl, nir_metadata_control_flow);
 
-   nir_foreach_block(block, impl) {
+   nir_foreach_block_unstructured(block, impl) {
       nir_foreach_instr_safe(instr, block) {
          nir_foreach_def(instr, repair_ssa_def, &state);
       }
    }
 
    if (state.progress)
-      nir_metadata_preserve(impl, nir_metadata_block_index |
-                                     nir_metadata_dominance);
+      nir_metadata_preserve(impl, nir_metadata_control_flow);
 
    if (state.phi_builder) {
       nir_phi_builder_finish(state.phi_builder);

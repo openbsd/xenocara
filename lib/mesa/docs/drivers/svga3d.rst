@@ -34,8 +34,7 @@ The components involved in this include:
 
 All of these components reside in the guest Linux virtual machine. On
 the host, all you're doing is running VMware
-`Workstation Pro <https://www.vmware.com/products/workstation-pro.html>`__ or
-`Fusion <https://www.vmware.com/products/fusion.html>`__.
+`Fusion or Workstation <https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion>`__.
 
 Prerequisites
 -------------
@@ -122,7 +121,7 @@ Building the Code
    ::
 
       cd $TOP/mesa
-      meson builddir -Dvulkan-drivers= -Dgallium-drivers=svga -Ddri-drivers= -Dglvnd=true -Dglvnd-vendor-name=mesa
+      meson builddir -Dvulkan-drivers= -Dgallium-drivers=svga -Ddri-drivers= -Dglvnd=enabled -Dglvnd-vendor-name=mesa
 
       meson compile -C builddir
       sudo meson install -C builddir

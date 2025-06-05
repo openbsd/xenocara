@@ -64,6 +64,7 @@ value_src(nir_intrinsic_op intrinsic)
    switch (intrinsic) {
    case nir_intrinsic_store_output:
    case nir_intrinsic_store_per_vertex_output:
+   case nir_intrinsic_store_per_view_output:
    case nir_intrinsic_store_ssbo:
    case nir_intrinsic_store_shared:
    case nir_intrinsic_store_global:
@@ -84,6 +85,7 @@ offset_src(nir_intrinsic_op intrinsic)
    case nir_intrinsic_store_scratch:
       return 1;
    case nir_intrinsic_store_per_vertex_output:
+   case nir_intrinsic_store_per_view_output:
    case nir_intrinsic_store_ssbo:
       return 2;
    default:
@@ -226,7 +228,6 @@ nir_lower_wrmasks(nir_shader *shader, nir_instr_filter_cb cb, const void *data)
 
    return nir_shader_instructions_pass(shader,
                                        nir_lower_wrmasks_instr,
-                                       nir_metadata_block_index |
-                                          nir_metadata_dominance,
+                                       nir_metadata_control_flow,
                                        &state);
 }

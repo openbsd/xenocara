@@ -22,7 +22,7 @@
  */
 
 #include <string.h>
-#include <xf86drm.h>
+#include "util/libdrm.h"
 
 #include "intel_kmd.h"
 
@@ -37,10 +37,8 @@ intel_get_kmd_type(int fd)
 
    if (strcmp(version->name, "i915") == 0)
       type = INTEL_KMD_TYPE_I915;
-#ifdef INTEL_XE_KMD_SUPPORTED
    else if (strcmp(version->name, "xe") == 0)
       type = INTEL_KMD_TYPE_XE;
-#endif
 
    drmFreeVersion(version);
    return type;

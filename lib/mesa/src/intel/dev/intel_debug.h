@@ -96,6 +96,17 @@ extern uint64_t intel_debug;
 #define DEBUG_SPARSE              (1ull << 48)
 #define DEBUG_DRAW_BKP            (1ull << 49)
 #define DEBUG_BATCH_STATS         (1ull << 50)
+#define DEBUG_REG_PRESSURE        (1ull << 51)
+#define DEBUG_SHADER_PRINT        (1ull << 52)
+#define DEBUG_CL_QUIET            (1ull << 53)
+#define DEBUG_BVH_BLAS            (1ull << 54)
+#define DEBUG_BVH_TLAS            (1ull << 55)
+#define DEBUG_BVH_BLAS_IR_HDR     (1ull << 56)
+#define DEBUG_BVH_TLAS_IR_HDR     (1ull << 57)
+#define DEBUG_BVH_BLAS_IR_AS      (1ull << 58)
+#define DEBUG_BVH_TLAS_IR_AS      (1ull << 59)
+#define DEBUG_BVH_NO_BUILD        (1ull << 60)
+#define DEBUG_NO_SEND_GATHER      (1ull << 61)
 
 #define DEBUG_ANY                 (~0ull)
 
@@ -105,11 +116,20 @@ extern uint64_t intel_debug;
 /* These flags may affect program generation */
 #define DEBUG_DISK_CACHE_MASK \
    (DEBUG_NO_DUAL_OBJECT_GS | DEBUG_SPILL_FS | \
-   DEBUG_SPILL_VEC4 | DEBUG_NO_COMPACTION | DEBUG_DO32 | DEBUG_SOFT64)
+   DEBUG_SPILL_VEC4 | DEBUG_NO_COMPACTION | DEBUG_DO32 | DEBUG_SOFT64 | \
+   DEBUG_NO_SEND_GATHER)
+
+/* Flags to determine what bvh to dump out */
+#define DEBUG_BVH_ANV (DEBUG_BVH_BLAS | DEBUG_BVH_TLAS)
+#define DEBUG_BVH_IR_HDR (DEBUG_BVH_BLAS_IR_HDR | DEBUG_BVH_TLAS_IR_HDR)
+#define DEBUG_BVH_IR_AS (DEBUG_BVH_BLAS_IR_AS | DEBUG_BVH_TLAS_IR_AS)
+#define DEBUG_BVH_ANY (DEBUG_BVH_ANV | DEBUG_BVH_IR_HDR | DEBUG_BVH_IR_AS)
 
 extern uint64_t intel_simd;
 extern uint32_t intel_debug_bkp_before_draw_count;
 extern uint32_t intel_debug_bkp_after_draw_count;
+extern uint64_t intel_debug_batch_frame_start;
+extern uint64_t intel_debug_batch_frame_stop;
 
 #define INTEL_SIMD(type, size)        (!!(intel_simd & (DEBUG_ ## type ## _SIMD ## size)))
 
@@ -117,24 +137,27 @@ extern uint32_t intel_debug_bkp_after_draw_count;
 #define DEBUG_FS_SIMD8    (1ull << 0)
 #define DEBUG_FS_SIMD16   (1ull << 1)
 #define DEBUG_FS_SIMD32   (1ull << 2)
+#define DEBUG_FS_SIMD2X8  (1ull << 3)
+#define DEBUG_FS_SIMD4X8  (1ull << 4)
+#define DEBUG_FS_SIMD2X16 (1ull << 5)
 
-#define DEBUG_CS_SIMD8    (1ull << 3)
-#define DEBUG_CS_SIMD16   (1ull << 4)
-#define DEBUG_CS_SIMD32   (1ull << 5)
+#define DEBUG_CS_SIMD8    (1ull << 6)
+#define DEBUG_CS_SIMD16   (1ull << 7)
+#define DEBUG_CS_SIMD32   (1ull << 8)
 
-#define DEBUG_TS_SIMD8    (1ull << 6)
-#define DEBUG_TS_SIMD16   (1ull << 7)
-#define DEBUG_TS_SIMD32   (1ull << 8)
+#define DEBUG_TS_SIMD8    (1ull << 9)
+#define DEBUG_TS_SIMD16   (1ull << 10)
+#define DEBUG_TS_SIMD32   (1ull << 11)
 
-#define DEBUG_MS_SIMD8    (1ull << 9)
-#define DEBUG_MS_SIMD16   (1ull << 10)
-#define DEBUG_MS_SIMD32   (1ull << 11)
+#define DEBUG_MS_SIMD8    (1ull << 12)
+#define DEBUG_MS_SIMD16   (1ull << 13)
+#define DEBUG_MS_SIMD32   (1ull << 14)
 
-#define DEBUG_RT_SIMD8    (1ull << 12)
-#define DEBUG_RT_SIMD16   (1ull << 13)
-#define DEBUG_RT_SIMD32   (1ull << 14)
+#define DEBUG_RT_SIMD8    (1ull << 15)
+#define DEBUG_RT_SIMD16   (1ull << 16)
+#define DEBUG_RT_SIMD32   (1ull << 17)
 
-#define SIMD_DISK_CACHE_MASK ((1ull << 15) - 1)
+#define SIMD_DISK_CACHE_MASK ((1ull << 18) - 1)
 
 #ifdef HAVE_ANDROID_PLATFORM
 #define LOG_TAG "INTEL-MESA"
@@ -158,53 +181,7 @@ extern uint32_t intel_debug_bkp_after_draw_count;
 
 extern uint64_t intel_debug_flag_for_shader_stage(gl_shader_stage stage);
 
-extern void brw_process_intel_debug_variable(void);
-
-/* Below is a list of structure located in the identifier buffer. The driver
- * can fill those in for debug purposes.
- */
-
-enum intel_debug_block_type {
-   /* End of the debug blocks */
-   INTEL_DEBUG_BLOCK_TYPE_END = 1,
-
-   /* Driver identifier (struct intel_debug_block_driver) */
-   INTEL_DEBUG_BLOCK_TYPE_DRIVER,
-
-   /* Frame identifier (struct intel_debug_block_frame) */
-   INTEL_DEBUG_BLOCK_TYPE_FRAME,
-
-   /* Internal, never to be written out */
-   INTEL_DEBUG_BLOCK_TYPE_MAX,
-};
-
-struct intel_debug_block_base {
-   uint32_t type; /* enum intel_debug_block_type */
-   uint32_t length; /* inclusive of this structure size */
-};
-
-struct intel_debug_block_driver {
-   struct intel_debug_block_base base;
-   uint8_t description[];
-};
-
-struct intel_debug_block_frame {
-   struct intel_debug_block_base base;
-   uint64_t frame_id;
-};
-
-extern void *intel_debug_identifier(void);
-extern uint32_t intel_debug_identifier_size(void);
-
-extern uint32_t intel_debug_write_identifiers(void *output,
-                                              uint32_t output_size,
-                                              const char *driver_name);
-
-extern void *intel_debug_get_identifier_block(void *buffer,
-                                              uint32_t buffer_size,
-                                              enum intel_debug_block_type type);
-
-bool intel_debug_batch_in_range(uint64_t frame_id);
+extern void process_intel_debug_variable(void);
 
 #ifdef __cplusplus
 }

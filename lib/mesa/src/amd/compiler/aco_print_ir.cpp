@@ -1,25 +1,7 @@
 /*
  * Copyright © 2018 Valve Corporation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
+ * SPDX-License-Identifier: MIT
  */
 
 #include "aco_builder.h"
@@ -31,6 +13,8 @@
 #include <array>
 
 namespace aco {
+
+namespace {
 
 const std::array<const char*, num_reduce_ops> reduce_ops = []()
 {
@@ -103,16 +87,20 @@ print_reg_class(const RegClass rc, FILE* output)
 void
 print_physReg(PhysReg reg, unsigned bytes, FILE* output, unsigned flags)
 {
-   if (reg == 124) {
+   if (reg == 106) {
+      fprintf(output, bytes > 4 ? "vcc" : "vcc_lo");
+   } else if (reg == 107) {
+      fprintf(output, "vcc_hi");
+   } else if (reg == 124) {
       fprintf(output, "m0");
-   } else if (reg == 106) {
-      fprintf(output, "vcc");
-   } else if (reg == 253) {
-      fprintf(output, "scc");
-   } else if (reg == 126) {
-      fprintf(output, "exec");
    } else if (reg == 125) {
       fprintf(output, "null");
+   } else if (reg == 126) {
+      fprintf(output, bytes > 4 ? "exec" : "exec_lo");
+   } else if (reg == 127) {
+      fprintf(output, "exec_hi");
+   } else if (reg == 253) {
+      fprintf(output, "scc");
    } else {
       bool is_vgpr = reg / 256;
       unsigned r = reg % 256;
@@ -155,39 +143,6 @@ print_constant(uint8_t reg, FILE* output)
    }
 }
 
-void
-aco_print_operand(const Operand* operand, FILE* output, unsigned flags)
-{
-   if (operand->isLiteral() || (operand->isConstant() && operand->bytes() == 1)) {
-      if (operand->bytes() == 1)
-         fprintf(output, "0x%.2x", operand->constantValue());
-      else if (operand->bytes() == 2)
-         fprintf(output, "0x%.4x", operand->constantValue());
-      else
-         fprintf(output, "0x%x", operand->constantValue());
-   } else if (operand->isConstant()) {
-      print_constant(operand->physReg().reg(), output);
-   } else if (operand->isUndefined()) {
-      print_reg_class(operand->regClass(), output);
-      fprintf(output, "undef");
-   } else {
-      if (operand->isLateKill())
-         fprintf(output, "(latekill)");
-      if (operand->is16bit())
-         fprintf(output, "(is16bit)");
-      if (operand->is24bit())
-         fprintf(output, "(is24bit)");
-      if ((flags & print_kill) && operand->isKill())
-         fprintf(output, "(kill)");
-
-      if (!(flags & print_no_ssa))
-         fprintf(output, "%%%d%s", operand->tempId(), operand->isFixed() ? ":" : "");
-
-      if (operand->isFixed())
-         print_physReg(operand->physReg(), operand->bytes(), output, flags);
-   }
-}
-
 static void
 print_definition(const Definition* definition, FILE* output, unsigned flags)
 {
@@ -195,6 +150,16 @@ print_definition(const Definition* definition, FILE* output, unsigned flags)
       print_reg_class(definition->regClass(), output);
    if (definition->isPrecise())
       fprintf(output, "(precise)");
+   if (definition->isInfPreserve() || definition->isNaNPreserve() || definition->isSZPreserve()) {
+      fprintf(output, "(");
+      if (definition->isSZPreserve())
+         fprintf(output, "Sz");
+      if (definition->isInfPreserve())
+         fprintf(output, "Inf");
+      if (definition->isNaNPreserve())
+         fprintf(output, "NaN");
+      fprintf(output, "Preserve)");
+   }
    if (definition->isNUW())
       fprintf(output, "(nuw)");
    if (definition->isNoCSE())
@@ -276,55 +241,142 @@ print_sync(memory_sync_info sync, FILE* output)
       print_scope(sync.scope, output);
 }
 
+template <typename T>
+static void
+print_cache_flags(enum amd_gfx_level gfx_level, const T& instr, FILE* output)
+{
+   if (gfx_level >= GFX12) {
+      if (instr_info.is_atomic[(unsigned)instr.opcode]) {
+         if (instr.cache.gfx12.temporal_hint & gfx12_atomic_return)
+            fprintf(output, " atomic_return");
+         if (instr.cache.gfx12.temporal_hint & gfx12_atomic_non_temporal)
+            fprintf(output, " non_temporal");
+         if (instr.cache.gfx12.temporal_hint & gfx12_atomic_accum_deferred_scope)
+            fprintf(output, " accum_deferred_scope");
+      } else if (instr.definitions.empty()) {
+         switch (instr.cache.gfx12.temporal_hint) {
+         case gfx12_load_regular_temporal: break;
+         case gfx12_load_non_temporal: fprintf(output, " non_temporal"); break;
+         case gfx12_load_high_temporal: fprintf(output, " high_temporal"); break;
+         case gfx12_load_last_use_discard: fprintf(output, " last_use_discard"); break;
+         case gfx12_load_near_non_temporal_far_regular_temporal:
+            fprintf(output, " near_non_temporal_far_regular_temporal");
+            break;
+         case gfx12_load_near_regular_temporal_far_non_temporal:
+            fprintf(output, " near_regular_temporal_far_non_temporal");
+            break;
+         case gfx12_load_near_non_temporal_far_high_temporal:
+            fprintf(output, " near_non_temporal_far_high_temporal");
+            break;
+         case gfx12_load_reserved: fprintf(output, " reserved"); break;
+         default: fprintf(output, "tmp:%u", (unsigned)instr.cache.gfx12.temporal_hint);
+         }
+      } else {
+         switch (instr.cache.gfx12.temporal_hint) {
+         case gfx12_store_regular_temporal: break;
+         case gfx12_store_non_temporal: fprintf(output, " non_temporal"); break;
+         case gfx12_store_high_temporal: fprintf(output, " high_temporal"); break;
+         case gfx12_store_high_temporal_stay_dirty:
+            fprintf(output, " high_temporal_stay_dirty");
+            break;
+         case gfx12_store_near_non_temporal_far_regular_temporal:
+            fprintf(output, " near_non_temporal_far_regular_temporal");
+            break;
+         case gfx12_store_near_regular_temporal_far_non_temporal:
+            fprintf(output, " near_regular_temporal_far_non_temporal");
+            break;
+         case gfx12_store_near_non_temporal_far_high_temporal:
+            fprintf(output, " near_non_temporal_far_high_temporal");
+            break;
+         case gfx12_store_near_non_temporal_far_writeback:
+            fprintf(output, " near_non_temporal_far_writeback");
+            break;
+         default: fprintf(output, "tmp:%u", (unsigned)instr.cache.gfx12.temporal_hint);
+         }
+      }
+      switch (instr.cache.gfx12.scope) {
+      case gfx12_scope_cu: break;
+      case gfx12_scope_se: fprintf(output, " se"); break;
+      case gfx12_scope_device: fprintf(output, " device"); break;
+      case gfx12_scope_memory: fprintf(output, " memory"); break;
+      }
+      if (instr.cache.gfx12.swizzled)
+         fprintf(output, " swizzled");
+   } else {
+      if (instr.cache.value & ac_glc)
+         fprintf(output, " glc");
+      if (instr.cache.value & ac_slc)
+         fprintf(output, " slc");
+      if (instr.cache.value & ac_dlc)
+         fprintf(output, " dlc");
+      if (instr.cache.value & ac_swizzled)
+         fprintf(output, " swizzled");
+   }
+}
+
 static void
 print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* instr, FILE* output)
 {
    switch (instr->format) {
    case Format::SOPK: {
-      const SOPK_instruction& sopk = instr->sopk();
+      const SALU_instruction& sopk = instr->salu();
       fprintf(output, " imm:%d", sopk.imm & 0x8000 ? (sopk.imm - 65536) : sopk.imm);
       break;
    }
    case Format::SOPP: {
-      uint16_t imm = instr->sopp().imm;
+      uint16_t imm = instr->salu().imm;
       switch (instr->opcode) {
-      case aco_opcode::s_waitcnt: {
-         wait_imm unpacked(gfx_level, imm);
-         if (unpacked.vm != wait_imm::unset_counter)
-            fprintf(output, " vmcnt(%d)", unpacked.vm);
-         if (unpacked.exp != wait_imm::unset_counter)
-            fprintf(output, " expcnt(%d)", unpacked.exp);
-         if (unpacked.lgkm != wait_imm::unset_counter)
-            fprintf(output, " lgkmcnt(%d)", unpacked.lgkm);
+      case aco_opcode::s_waitcnt:
+      case aco_opcode::s_wait_loadcnt_dscnt:
+      case aco_opcode::s_wait_storecnt_dscnt: {
+         wait_imm unpacked;
+         unpacked.unpack(gfx_level, instr);
+         const char* names[wait_type_num];
+         names[wait_type_exp] = "expcnt";
+         names[wait_type_vm] = gfx_level >= GFX12 ? "loadcnt" : "vmcnt";
+         names[wait_type_lgkm] = gfx_level >= GFX12 ? "dscnt" : "lgkmcnt";
+         names[wait_type_vs] = gfx_level >= GFX12 ? "storecnt" : "vscnt";
+         names[wait_type_sample] = "samplecnt";
+         names[wait_type_bvh] = "bvhcnt";
+         names[wait_type_km] = "kmcnt";
+         for (unsigned i = 0; i < wait_type_num; i++) {
+            if (unpacked[i] != wait_imm::unset_counter)
+               fprintf(output, " %s(%d)", names[i], unpacked[i]);
+         }
+         break;
+      }
+      case aco_opcode::s_wait_expcnt:
+      case aco_opcode::s_wait_dscnt:
+      case aco_opcode::s_wait_loadcnt:
+      case aco_opcode::s_wait_storecnt:
+      case aco_opcode::s_wait_samplecnt:
+      case aco_opcode::s_wait_bvhcnt:
+      case aco_opcode::s_wait_kmcnt:
+      case aco_opcode::s_setprio: {
+         fprintf(output, " imm:%u", imm);
          break;
       }
       case aco_opcode::s_waitcnt_depctr: {
-         unsigned va_vdst = (imm >> 12) & 0xf;
-         unsigned va_sdst = (imm >> 9) & 0x7;
-         unsigned va_ssrc = (imm >> 8) & 0x1;
-         unsigned hold_cnt = (imm >> 7) & 0x1;
-         unsigned vm_vsrc = (imm >> 2) & 0x7;
-         unsigned va_vcc = (imm >> 1) & 0x1;
-         unsigned sa_sdst = imm & 0x1;
-         if (va_vdst != 0xf)
-            fprintf(output, " va_vdst(%d)", va_vdst);
-         if (va_sdst != 0x7)
-            fprintf(output, " va_sdst(%d)", va_sdst);
-         if (va_ssrc != 0x1)
-            fprintf(output, " va_ssrc(%d)", va_ssrc);
-         if (hold_cnt != 0x1)
-            fprintf(output, " holt_cnt(%d)", hold_cnt);
-         if (vm_vsrc != 0x7)
-            fprintf(output, " vm_vsrc(%d)", vm_vsrc);
-         if (va_vcc != 0x1)
-            fprintf(output, " va_vcc(%d)", va_vcc);
-         if (sa_sdst != 0x1)
-            fprintf(output, " sa_sdst(%d)", sa_sdst);
+         depctr_wait wait = parse_depctr_wait(instr);
+         if (wait.va_vdst != 0xf)
+            fprintf(output, " va_vdst(%d)", wait.va_vdst);
+         if (wait.va_sdst != 0x7)
+            fprintf(output, " va_sdst(%d)", wait.va_sdst);
+         if (wait.va_ssrc != 0x1)
+            fprintf(output, " va_ssrc(%d)", wait.va_ssrc);
+         if (wait.hold_cnt != 0x1)
+            fprintf(output, " holt_cnt(%d)", wait.hold_cnt);
+         if (wait.vm_vsrc != 0x7)
+            fprintf(output, " vm_vsrc(%d)", wait.vm_vsrc);
+         if (wait.va_vcc != 0x1)
+            fprintf(output, " va_vcc(%d)", wait.va_vcc);
+         if (wait.sa_sdst != 0x1)
+            fprintf(output, " sa_sdst(%d)", wait.sa_sdst);
          break;
       }
       case aco_opcode::s_delay_alu: {
          unsigned delay[2] = {imm & 0xfu, (imm >> 7) & 0xfu};
-         unsigned skip = (imm >> 4) & 0x3;
+         unsigned skip = (imm >> 4) & 0x7;
          for (unsigned i = 0; i < 2; i++) {
             if (i == 1 && skip) {
                if (skip == 1)
@@ -390,18 +442,18 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
          break;
       }
       case aco_opcode::s_wait_event: {
-         if (!(imm & wait_event_imm_dont_wait_export_ready))
-            fprintf(output, " export_ready");
+         if (is_wait_export_ready(gfx_level, instr))
+            fprintf(output, " wait_export_ready");
          break;
       }
       default: {
-         if (imm)
+         if (instr_info.classes[(int)instr->opcode] == instr_class::branch)
+            fprintf(output, " block:BB%d", imm);
+         else if (imm)
             fprintf(output, " imm:%u", imm);
          break;
       }
       }
-      if (instr->sopp().block != -1)
-         fprintf(output, " block:BB%d", instr->sopp().block);
       break;
    }
    case Format::SOP1: {
@@ -423,12 +475,7 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
    }
    case Format::SMEM: {
       const SMEM_instruction& smem = instr->smem();
-      if (smem.glc)
-         fprintf(output, " glc");
-      if (smem.dlc)
-         fprintf(output, " dlc");
-      if (smem.nv)
-         fprintf(output, " nv");
+      print_cache_flags(gfx_level, smem, output);
       print_sync(smem.sync, output);
       break;
    }
@@ -441,6 +488,8 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
    case Format::VINTRP: {
       const VINTRP_instruction& vintrp = instr->vintrp();
       fprintf(output, " attr%d.%c", vintrp.attribute, "xyzw"[vintrp.component]);
+      if (vintrp.high_16bits)
+         fprintf(output, " high");
       break;
    }
    case Format::DS: {
@@ -460,6 +509,8 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
          fprintf(output, " attr%u.%c", ldsdir.attr, "xyzw"[ldsdir.attr_chan]);
       if (ldsdir.wait_vdst != 15)
          fprintf(output, " wait_vdst:%u", ldsdir.wait_vdst);
+      if (ldsdir.wait_vsrc != 1)
+         fprintf(output, " wait_vsrc:%u", ldsdir.wait_vsrc);
       print_sync(ldsdir.sync, output);
       break;
    }
@@ -473,12 +524,7 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
          fprintf(output, " idxen");
       if (mubuf.addr64)
          fprintf(output, " addr64");
-      if (mubuf.glc)
-         fprintf(output, " glc");
-      if (mubuf.dlc)
-         fprintf(output, " dlc");
-      if (mubuf.slc)
-         fprintf(output, " slc");
+      print_cache_flags(gfx_level, mubuf, output);
       if (mubuf.tfe)
          fprintf(output, " tfe");
       if (mubuf.lds)
@@ -490,8 +536,11 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
    }
    case Format::MIMG: {
       const MIMG_instruction& mimg = instr->mimg();
-      unsigned identity_dmask =
-         !instr->definitions.empty() ? (1 << instr->definitions[0].size()) - 1 : 0xf;
+      unsigned identity_dmask = 0xf;
+      if (!instr->definitions.empty()) {
+         unsigned num_channels = instr->definitions[0].bytes() / (mimg.d16 ? 2 : 4);
+         identity_dmask = (1 << num_channels) - 1;
+      }
       if ((mimg.dmask & identity_dmask) != identity_dmask)
          fprintf(output, " dmask:%s%s%s%s", mimg.dmask & 0x1 ? "x" : "",
                  mimg.dmask & 0x2 ? "y" : "", mimg.dmask & 0x4 ? "z" : "",
@@ -508,12 +557,7 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
       }
       if (mimg.unrm)
          fprintf(output, " unrm");
-      if (mimg.glc)
-         fprintf(output, " glc");
-      if (mimg.dlc)
-         fprintf(output, " dlc");
-      if (mimg.slc)
-         fprintf(output, " slc");
+      print_cache_flags(gfx_level, mimg, output);
       if (mimg.tfe)
          fprintf(output, " tfe");
       if (mimg.da)
@@ -564,6 +608,10 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
          fprintf(output, " BB%d", branch.target[0]);
       if (branch.target[1] != 0)
          fprintf(output, ", BB%d", branch.target[1]);
+      if (branch.rarely_taken)
+         fprintf(output, " rarely_taken");
+      if (branch.never_taken)
+         fprintf(output, " never_taken");
       break;
    }
    case Format::PSEUDO_REDUCTION: {
@@ -585,12 +633,7 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
       const FLAT_instruction& flat = instr->flatlike();
       if (flat.offset)
          fprintf(output, " offset:%d", flat.offset);
-      if (flat.glc)
-         fprintf(output, " glc");
-      if (flat.dlc)
-         fprintf(output, " dlc");
-      if (flat.slc)
-         fprintf(output, " slc");
+      print_cache_flags(gfx_level, flat, output);
       if (flat.lds)
          fprintf(output, " lds");
       if (flat.nv)
@@ -637,12 +680,7 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
          fprintf(output, " offen");
       if (mtbuf.idxen)
          fprintf(output, " idxen");
-      if (mtbuf.glc)
-         fprintf(output, " glc");
-      if (mtbuf.dlc)
-         fprintf(output, " dlc");
-      if (mtbuf.slc)
-         fprintf(output, " slc");
+      print_cache_flags(gfx_level, mtbuf, output);
       if (mtbuf.tfe)
          fprintf(output, " tfe");
       if (mtbuf.disable_wqm)
@@ -667,7 +705,13 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
          fprintf(output, " opsel_hi");
    }
 
-   if (instr->isDPP16()) {
+   bool bound_ctrl = false, fetch_inactive = false;
+
+   if (instr->opcode == aco_opcode::v_permlane16_b32 ||
+       instr->opcode == aco_opcode::v_permlanex16_b32) {
+      fetch_inactive = instr->valu().opsel[0];
+      bound_ctrl = instr->valu().opsel[1];
+   } else if (instr->isDPP16()) {
       const DPP16_instruction& dpp = instr->dpp16();
       if (dpp.dpp_ctrl <= 0xff) {
          fprintf(output, " quad_perm:[%d,%d,%d,%d]", dpp.dpp_ctrl & 0x3, (dpp.dpp_ctrl >> 2) & 0x3,
@@ -705,18 +749,15 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
          fprintf(output, " row_mask:0x%.1x", dpp.row_mask);
       if (dpp.bank_mask != 0xf)
          fprintf(output, " bank_mask:0x%.1x", dpp.bank_mask);
-      if (dpp.bound_ctrl)
-         fprintf(output, " bound_ctrl:1");
-      if (dpp.fetch_inactive)
-         fprintf(output, " fi");
+      bound_ctrl = dpp.bound_ctrl;
+      fetch_inactive = dpp.fetch_inactive;
    } else if (instr->isDPP8()) {
       const DPP8_instruction& dpp = instr->dpp8();
       fprintf(output, " dpp8:[");
       for (unsigned i = 0; i < 8; i++)
-         fprintf(output, "%s%u", i ? "," : "", (dpp.lane_sel >> (i * 3)) & 0x8);
+         fprintf(output, "%s%u", i ? "," : "", (dpp.lane_sel >> (i * 3)) & 0x7);
       fprintf(output, "]");
-      if (dpp.fetch_inactive)
-         fprintf(output, " fi");
+      fetch_inactive = dpp.fetch_inactive;
    } else if (instr->isSDWA()) {
       const SDWA_instruction& sdwa = instr->sdwa();
       if (!instr->isVOPC()) {
@@ -746,87 +787,40 @@ print_instr_format_specific(enum amd_gfx_level gfx_level, const Instruction* ins
          }
       }
    }
+
+   if (bound_ctrl)
+      fprintf(output, " bound_ctrl:1");
+   if (fetch_inactive)
+      fprintf(output, " fi");
 }
 
 void
-aco_print_instr(enum amd_gfx_level gfx_level, const Instruction* instr, FILE* output,
-                unsigned flags)
+print_vopd_instr(enum amd_gfx_level gfx_level, const Instruction* instr, FILE* output,
+                 unsigned flags)
 {
+   unsigned opy_start = get_vopd_opy_start(instr);
+
    if (!instr->definitions.empty()) {
-      for (unsigned i = 0; i < instr->definitions.size(); ++i) {
-         print_definition(&instr->definitions[i], output, flags);
-         if (i + 1 != instr->definitions.size())
-            fprintf(output, ", ");
-      }
+      print_definition(&instr->definitions[0], output, flags);
       fprintf(output, " = ");
    }
    fprintf(output, "%s", instr_info.name[(int)instr->opcode]);
-   if (instr->operands.size()) {
-      const unsigned num_operands = instr->operands.size();
-      bool* const abs = (bool*)alloca(num_operands * sizeof(bool));
-      bool* const neg = (bool*)alloca(num_operands * sizeof(bool));
-      bool* const opsel = (bool*)alloca(num_operands * sizeof(bool));
-      bool* const f2f32 = (bool*)alloca(num_operands * sizeof(bool));
-      for (unsigned i = 0; i < num_operands; ++i) {
-         abs[i] = false;
-         neg[i] = false;
-         opsel[i] = false;
-         f2f32[i] = false;
-      }
-      bool is_mad_mix = instr->opcode == aco_opcode::v_fma_mix_f32 ||
-                        instr->opcode == aco_opcode::v_fma_mixlo_f16 ||
-                        instr->opcode == aco_opcode::v_fma_mixhi_f16;
-      if (instr->isVALU() && !instr->isVOP3P()) {
-         const VALU_instruction& valu = instr->valu();
-         for (unsigned i = 0; i < MIN2(num_operands, 3); ++i) {
-            abs[i] = valu.abs[i];
-            neg[i] = valu.neg[i];
-            opsel[i] = valu.opsel[i];
-         }
-      } else if (instr->isVOP3P() && is_mad_mix) {
-         const VALU_instruction& vop3p = instr->valu();
-         for (unsigned i = 0; i < MIN2(num_operands, 3); ++i) {
-            abs[i] = vop3p.neg_hi[i];
-            neg[i] = vop3p.neg_lo[i];
-            f2f32[i] = vop3p.opsel_hi[i];
-            opsel[i] = f2f32[i] && vop3p.opsel_lo[i];
-         }
-      }
-      for (unsigned i = 0; i < num_operands; ++i) {
-         if (i)
-            fprintf(output, ", ");
-         else
-            fprintf(output, " ");
-
-         if (neg[i])
-            fprintf(output, "-");
-         if (abs[i])
-            fprintf(output, "|");
-         if (opsel[i])
-            fprintf(output, "hi(");
-         else if (f2f32[i])
-            fprintf(output, "lo(");
-         aco_print_operand(&instr->operands[i], output, flags);
-         if (f2f32[i] || opsel[i])
-            fprintf(output, ")");
-         if (abs[i])
-            fprintf(output, "|");
-
-         if (instr->isVOP3P() && !is_mad_mix) {
-            const VALU_instruction& vop3 = instr->valu();
-            if (vop3.opsel_lo[i] || !vop3.opsel_hi[i]) {
-               fprintf(output, ".%c%c", vop3.opsel_lo[i] ? 'y' : 'x', vop3.opsel_hi[i] ? 'y' : 'x');
-            }
-            if (vop3.neg_lo[i] && vop3.neg_hi[i])
-               fprintf(output, "*[-1,-1]");
-            else if (vop3.neg_lo[i])
-               fprintf(output, "*[-1,1]");
-            else if (vop3.neg_hi[i])
-               fprintf(output, "*[1,-1]");
-         }
-      }
+   for (unsigned i = 0; i < MIN2(instr->operands.size(), opy_start); ++i) {
+      fprintf(output, i ? ", " : " ");
+      aco_print_operand(&instr->operands[i], output, flags);
    }
-   print_instr_format_specific(gfx_level, instr, output);
+
+   fprintf(output, " ::");
+
+   if (instr->definitions.size() > 1) {
+      print_definition(&instr->definitions[1], output, flags);
+      fprintf(output, " = ");
+   }
+   fprintf(output, "%s", instr_info.name[(int)instr->vopd().opy]);
+   for (unsigned i = opy_start; i < instr->operands.size(); ++i) {
+      fprintf(output, i > opy_start ? ", " : " ");
+      aco_print_operand(&instr->operands[i], output, flags);
+   }
 }
 
 static void
@@ -854,10 +848,16 @@ print_block_kind(uint16_t kind, FILE* output)
       fprintf(output, "merge, ");
    if (kind & block_kind_invert)
       fprintf(output, "invert, ");
+   if (kind & block_kind_discard_early_exit)
+      fprintf(output, "discard_early_exit, ");
    if (kind & block_kind_uses_discard)
       fprintf(output, "discard, ");
+   if (kind & block_kind_resume)
+      fprintf(output, "resume, ");
    if (kind & block_kind_export_end)
       fprintf(output, "export_end, ");
+   if (kind & block_kind_end_with_regs)
+      fprintf(output, "end_with_regs, ");
 }
 
 static void
@@ -900,9 +900,30 @@ print_stage(Stage stage, FILE* output)
 }
 
 void
-aco_print_block(enum amd_gfx_level gfx_level, const Block* block, FILE* output, unsigned flags,
-                const live& live_vars)
+print_debug_info(const Program* program, const Instruction* instr, FILE* output)
 {
+   fprintf(output, "// ");
+
+   assert(instr->operands[0].isConstant());
+   const auto& info = program->debug_info[instr->operands[0].constantValue()];
+   switch (info.type) {
+   case ac_shader_debug_info_src_loc:
+      if (info.src_loc.spirv_offset)
+         fprintf(output, "0x%x ", info.src_loc.spirv_offset);
+      fprintf(output, "%s:%u:%u", info.src_loc.file, info.src_loc.line, info.src_loc.column);
+      break;
+   }
+
+   fprintf(output, "\n");
+}
+
+void
+aco_print_block(enum amd_gfx_level gfx_level, const Block* block, FILE* output, unsigned flags,
+                const Program* program)
+{
+   if (block->instructions.empty() && block->linear_preds.empty())
+      return;
+
    fprintf(output, "BB%d\n", block->index);
    fprintf(output, "/* logical preds: ");
    for (unsigned pred : block->logical_preds)
@@ -915,8 +936,8 @@ aco_print_block(enum amd_gfx_level gfx_level, const Block* block, FILE* output, 
    fprintf(output, "*/\n");
 
    if (flags & print_live_vars) {
-      fprintf(output, "\tlive out:");
-      for (unsigned id : live_vars.live_out[block->index])
+      fprintf(output, "\tlive in:");
+      for (unsigned id : program->live.live_in[block->index])
          fprintf(output, " %%%d", id);
       fprintf(output, "\n");
 
@@ -924,11 +945,14 @@ aco_print_block(enum amd_gfx_level gfx_level, const Block* block, FILE* output, 
       fprintf(output, "\tdemand: %u vgpr, %u sgpr\n", demand.vgpr, demand.sgpr);
    }
 
-   unsigned index = 0;
    for (auto const& instr : block->instructions) {
       fprintf(output, "\t");
+      if (instr->opcode == aco_opcode::p_debug_info) {
+         print_debug_info(program, instr.get(), output);
+         continue;
+      }
       if (flags & print_live_vars) {
-         RegisterDemand demand = live_vars.register_demand[block->index][index];
+         RegisterDemand demand = instr->register_demand;
          fprintf(output, "(%3u vgpr, %3u sgpr)   ", demand.vgpr, demand.sgpr);
       }
       if (flags & print_perf_info)
@@ -936,12 +960,139 @@ aco_print_block(enum amd_gfx_level gfx_level, const Block* block, FILE* output, 
 
       aco_print_instr(gfx_level, instr.get(), output, flags);
       fprintf(output, "\n");
-      index++;
+   }
+}
+
+} /* end namespace */
+
+void
+aco_print_operand(const Operand* operand, FILE* output, unsigned flags)
+{
+   if (operand->isLiteral() || (operand->isConstant() && operand->bytes() == 1)) {
+      if (operand->bytes() == 1)
+         fprintf(output, "0x%.2x", operand->constantValue());
+      else if (operand->bytes() == 2)
+         fprintf(output, "0x%.4x", operand->constantValue());
+      else
+         fprintf(output, "0x%x", operand->constantValue());
+   } else if (operand->isConstant()) {
+      print_constant(operand->physReg().reg(), output);
+   } else if (operand->isUndefined()) {
+      print_reg_class(operand->regClass(), output);
+      fprintf(output, "undef");
+   } else {
+      if (operand->isLateKill())
+         fprintf(output, "(latekill)");
+      if (operand->is16bit())
+         fprintf(output, "(is16bit)");
+      if (operand->is24bit())
+         fprintf(output, "(is24bit)");
+      if ((flags & print_kill) && operand->isKill())
+         fprintf(output, "(kill)");
+
+      if (!(flags & print_no_ssa))
+         fprintf(output, "%%%d%s", operand->tempId(), operand->isFixed() ? ":" : "");
+
+      if (operand->isFixed())
+         print_physReg(operand->physReg(), operand->bytes(), output, flags);
    }
 }
 
 void
-aco_print_program(const Program* program, FILE* output, const live& live_vars, unsigned flags)
+aco_print_instr(enum amd_gfx_level gfx_level, const Instruction* instr, FILE* output,
+                unsigned flags)
+{
+   if (instr->isVOPD()) {
+      print_vopd_instr(gfx_level, instr, output, flags);
+      return;
+   }
+
+   if (!instr->definitions.empty()) {
+      for (unsigned i = 0; i < instr->definitions.size(); ++i) {
+         print_definition(&instr->definitions[i], output, flags);
+         if (i + 1 != instr->definitions.size())
+            fprintf(output, ", ");
+      }
+      fprintf(output, " = ");
+   }
+   fprintf(output, "%s", instr_info.name[(int)instr->opcode]);
+   if (instr->operands.size()) {
+      const unsigned num_operands = instr->operands.size();
+      bitarray8 abs = 0;
+      bitarray8 neg = 0;
+      bitarray8 neg_lo = 0;
+      bitarray8 neg_hi = 0;
+      bitarray8 opsel = 0;
+      bitarray8 f2f32 = 0;
+      bitarray8 opsel_lo = 0;
+      bitarray8 opsel_hi = -1;
+
+      if (instr->opcode == aco_opcode::v_fma_mix_f32 ||
+          instr->opcode == aco_opcode::v_fma_mixlo_f16 ||
+          instr->opcode == aco_opcode::v_fma_mixhi_f16) {
+         const VALU_instruction& vop3p = instr->valu();
+         abs = vop3p.abs;
+         neg = vop3p.neg;
+         f2f32 = vop3p.opsel_hi;
+         opsel = f2f32 & vop3p.opsel_lo;
+      } else if (instr->isVOP3P()) {
+         const VALU_instruction& vop3p = instr->valu();
+         neg = vop3p.neg_lo & vop3p.neg_hi;
+         neg_lo = vop3p.neg_lo & ~neg;
+         neg_hi = vop3p.neg_hi & ~neg;
+         opsel_lo = vop3p.opsel_lo;
+         opsel_hi = vop3p.opsel_hi;
+      } else if (instr->isVALU() && instr->opcode != aco_opcode::v_permlane16_b32 &&
+                 instr->opcode != aco_opcode::v_permlanex16_b32) {
+         const VALU_instruction& valu = instr->valu();
+         abs = valu.abs;
+         neg = valu.neg;
+         opsel = valu.opsel;
+      }
+      for (unsigned i = 0; i < num_operands; ++i) {
+         if (i)
+            fprintf(output, ", ");
+         else
+            fprintf(output, " ");
+
+         if (i < 3) {
+            if (neg[i] && instr->operands[i].isConstant())
+               fprintf(output, "neg(");
+            else if (neg[i])
+               fprintf(output, "-");
+            if (abs[i])
+               fprintf(output, "|");
+            if (opsel[i])
+               fprintf(output, "hi(");
+            else if (f2f32[i])
+               fprintf(output, "lo(");
+         }
+
+         aco_print_operand(&instr->operands[i], output, flags);
+
+         if (i < 3) {
+            if (f2f32[i] || opsel[i])
+               fprintf(output, ")");
+            if (abs[i])
+               fprintf(output, "|");
+
+            if (opsel_lo[i] || !opsel_hi[i])
+               fprintf(output, ".%c%c", opsel_lo[i] ? 'y' : 'x', opsel_hi[i] ? 'y' : 'x');
+
+            if (neg[i] && instr->operands[i].isConstant())
+               fprintf(output, ")");
+            if (neg_lo[i])
+               fprintf(output, "*[-1,1]");
+            if (neg_hi[i])
+               fprintf(output, "*[1,-1]");
+         }
+      }
+   }
+   print_instr_format_specific(gfx_level, instr, output);
+}
+
+void
+aco_print_program(const Program* program, FILE* output, unsigned flags)
 {
    switch (program->progress) {
    case CompilationProgress::after_isel: fprintf(output, "After Instruction Selection:\n"); break;
@@ -950,12 +1101,15 @@ aco_print_program(const Program* program, FILE* output, const live& live_vars, u
       flags |= print_kill;
       break;
    case CompilationProgress::after_ra: fprintf(output, "After RA:\n"); break;
+   case CompilationProgress::after_lower_to_hw:
+      fprintf(output, "After lowering to hw instructions:\n");
+      break;
    }
 
    print_stage(program->stage, output);
 
    for (Block const& block : program->blocks)
-      aco_print_block(program->gfx_level, &block, output, flags, live_vars);
+      aco_print_block(program->gfx_level, &block, output, flags, program);
 
    if (program->constant_data.size()) {
       fprintf(output, "\n/* constant data */\n");
@@ -973,12 +1127,6 @@ aco_print_program(const Program* program, FILE* output, const live& live_vars, u
    }
 
    fprintf(output, "\n");
-}
-
-void
-aco_print_program(const Program* program, FILE* output, unsigned flags)
-{
-   aco_print_program(program, output, live(), flags);
 }
 
 } // namespace aco

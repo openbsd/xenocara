@@ -13,13 +13,17 @@
 #include "util/u_memory.h"
 #include "util/u_video.h"
 
+#include "ac_vcn_dec.h"
+#include "amd/addrlib/inc/addrtypes.h"
+
 #include <assert.h>
 #include <stdio.h>
 
-static struct pb_buffer *radeon_jpeg_get_decode_param(struct radeon_decoder *dec,
-                                                      struct pipe_video_buffer *target,
-                                                      struct pipe_picture_desc *picture)
+static struct pb_buffer_lean *radeon_jpeg_get_decode_param(struct radeon_decoder *dec,
+                                                           struct pipe_video_buffer *target,
+                                                           struct pipe_picture_desc *picture)
 {
+   struct si_context *sctx = (struct si_context *)dec->base.context;
    struct si_texture *luma = (struct si_texture *)((struct vl_video_buffer *)target)->resources[0];
    struct si_texture *chroma, *chromav;
 
@@ -27,11 +31,51 @@ static struct pb_buffer *radeon_jpeg_get_decode_param(struct radeon_decoder *dec
    dec->jpg.dt_luma_top_offset = luma->surface.u.gfx9.surf_offset;
    dec->jpg.dt_chroma_top_offset = 0;
    dec->jpg.dt_chromav_top_offset = 0;
+   dec->jpg.dt_swizzle_mode = luma->surface.u.gfx9.swizzle_mode;
+
+   if (sctx->gfx_level >= GFX12) {
+      switch (dec->jpg.dt_swizzle_mode) {
+      case ADDR3_256B_2D:
+      case ADDR3_4KB_2D:
+      case ADDR3_64KB_2D:
+      case ADDR3_256KB_2D:
+         dec->jpg.dt_addr_mode = RDECODE_TILE_8X8;
+         break;
+      case ADDR3_LINEAR:
+      default:
+         dec->jpg.dt_addr_mode = RDECODE_TILE_LINEAR;
+         break;
+      }
+   } else {
+      switch (dec->jpg.dt_swizzle_mode) {
+      case ADDR_SW_256B_D:
+      case ADDR_SW_4KB_D:
+      case ADDR_SW_64KB_D:
+      case ADDR_SW_4KB_D_X:
+      case ADDR_SW_64KB_D_X:
+      case ADDR_SW_64KB_R_X:
+      case ADDR_SW_256KB_D_X:
+      case ADDR_SW_256KB_R_X:
+         dec->jpg.dt_addr_mode = RDECODE_TILE_8X8;
+         break;
+      case ADDR_SW_256B_S:
+      case ADDR_SW_4KB_S:
+      case ADDR_SW_64KB_S:
+      case ADDR_SW_4KB_S_X:
+      case ADDR_SW_64KB_S_X:
+      case ADDR_SW_256KB_S_X:
+         dec->jpg.dt_addr_mode = RDECODE_TILE_32AS8;
+         break;
+      case ADDR_SW_LINEAR:
+      default:
+         dec->jpg.dt_addr_mode = RDECODE_TILE_LINEAR;
+         break;
+      }
+   }
 
    switch (target->buffer_format) {
-      case PIPE_FORMAT_IYUV:
-      case PIPE_FORMAT_YV12:
       case PIPE_FORMAT_Y8_U8_V8_444_UNORM:
+      case PIPE_FORMAT_Y8_U8_V8_440_UNORM:
       case PIPE_FORMAT_R8_G8_B8_UNORM:
          chromav = (struct si_texture *)((struct vl_video_buffer *)target)->resources[2];
          dec->jpg.dt_chromav_top_offset = chromav->surface.u.gfx9.surf_offset;
@@ -39,12 +83,16 @@ static struct pb_buffer *radeon_jpeg_get_decode_param(struct radeon_decoder *dec
          dec->jpg.dt_chroma_top_offset = chroma->surface.u.gfx9.surf_offset;
          break;
       case PIPE_FORMAT_NV12:
-      case PIPE_FORMAT_P010:
-      case PIPE_FORMAT_P016:
          chroma = (struct si_texture *)((struct vl_video_buffer*)target)->resources[1];
          dec->jpg.dt_chroma_top_offset = chroma->surface.u.gfx9.surf_offset;
          break;
+      case PIPE_FORMAT_YUYV:
+      case PIPE_FORMAT_Y8_400_UNORM:
+      case PIPE_FORMAT_R8G8B8A8_UNORM:
+      case PIPE_FORMAT_A8R8G8B8_UNORM:
+         break;
       default:
+         assert(0);
          break;
    }
    dec->jpg.dt_pitch = luma->surface.u.gfx9.surf_pitch * luma->surface.blk_w;
@@ -62,7 +110,7 @@ static void set_reg_jpeg(struct radeon_decoder *dec, unsigned reg, unsigned cond
 }
 
 /* send a bitstream buffer command */
-static void send_cmd_bitstream(struct radeon_decoder *dec, struct pb_buffer *buf, uint32_t off,
+static void send_cmd_bitstream(struct radeon_decoder *dec, struct pb_buffer_lean *buf, uint32_t off,
                                unsigned usage, enum radeon_bo_domain domain)
 {
    uint64_t addr;
@@ -105,7 +153,7 @@ static void send_cmd_bitstream(struct radeon_decoder *dec, struct pb_buffer *buf
 }
 
 /* send a target buffer command */
-static void send_cmd_target(struct radeon_decoder *dec, struct pb_buffer *buf, uint32_t off,
+static void send_cmd_target(struct radeon_decoder *dec, struct pb_buffer_lean *buf, uint32_t off,
                             unsigned usage, enum radeon_bo_domain domain)
 {
    uint64_t addr;
@@ -114,8 +162,10 @@ static void send_cmd_target(struct radeon_decoder *dec, struct pb_buffer *buf, u
    set_reg_jpeg(dec, SOC15_REG_ADDR(mmUVD_JPEG_UV_PITCH), COND0, TYPE0,
                 ((dec->jpg.dt_uv_pitch * 2) >> 4));
 
-   set_reg_jpeg(dec, SOC15_REG_ADDR(mmUVD_JPEG_TILING_CTRL), COND0, TYPE0, 0);
-   set_reg_jpeg(dec, SOC15_REG_ADDR(mmUVD_JPEG_UV_TILING_CTRL), COND0, TYPE0, 0);
+   set_reg_jpeg(dec, SOC15_REG_ADDR(mmUVD_JPEG_TILING_CTRL), COND0, TYPE0,
+                dec->jpg.dt_addr_mode | (dec->jpg.dt_swizzle_mode << 3));
+   set_reg_jpeg(dec, SOC15_REG_ADDR(mmUVD_JPEG_UV_TILING_CTRL), COND0, TYPE0,
+                dec->jpg.dt_addr_mode | (dec->jpg.dt_swizzle_mode << 3));
 
    dec->ws->cs_add_buffer(&dec->jcs[dec->cb_idx], buf, usage | RADEON_USAGE_SYNCHRONIZED, domain);
    addr = dec->ws->buffer_get_virtual_address(buf);
@@ -184,7 +234,7 @@ static void send_cmd_target(struct radeon_decoder *dec, struct pb_buffer *buf, u
 }
 
 /* send a bitstream buffer command */
-static void send_cmd_bitstream_direct(struct radeon_decoder *dec, struct pb_buffer *buf,
+static void send_cmd_bitstream_direct(struct radeon_decoder *dec, struct pb_buffer_lean *buf,
                                       uint32_t off, unsigned usage,
                                       enum radeon_bo_domain domain)
 {
@@ -224,7 +274,7 @@ static void send_cmd_bitstream_direct(struct radeon_decoder *dec, struct pb_buff
 }
 
 /* send a target buffer command */
-static void send_cmd_target_direct(struct radeon_decoder *dec, struct pb_buffer *buf, uint32_t off,
+static void send_cmd_target_direct(struct radeon_decoder *dec, struct pb_buffer_lean *buf, uint32_t off,
                                    unsigned usage, enum radeon_bo_domain domain,
                                    enum pipe_format buffer_format)
 {
@@ -258,9 +308,10 @@ static void send_cmd_target_direct(struct radeon_decoder *dec, struct pb_buffer 
       set_reg_jpeg(dec, dec->jpg_reg.jpeg_uv_pitch, COND0, TYPE0, ((dec->jpg.dt_uv_pitch * 2) >> 4));
    }
 
-   set_reg_jpeg(dec, dec->jpg_reg.dec_addr_mode, COND0, TYPE0, 0);
-   set_reg_jpeg(dec, dec->jpg_reg.dec_y_gfx10_tiling_surface, COND0, TYPE0, 0);
-   set_reg_jpeg(dec, dec->jpg_reg.dec_uv_gfx10_tiling_surface, COND0, TYPE0, 0);
+   set_reg_jpeg(dec, dec->jpg_reg.dec_addr_mode, COND0, TYPE0,
+                dec->jpg.dt_addr_mode | (dec->jpg.dt_addr_mode << 2));
+   set_reg_jpeg(dec, dec->jpg_reg.dec_y_gfx10_tiling_surface, COND0, TYPE0, dec->jpg.dt_swizzle_mode);
+   set_reg_jpeg(dec, dec->jpg_reg.dec_uv_gfx10_tiling_surface, COND0, TYPE0, dec->jpg.dt_swizzle_mode);
 
    dec->ws->cs_add_buffer(&dec->jcs[dec->cb_idx], buf, usage | RADEON_USAGE_SYNCHRONIZED, domain);
    addr = dec->ws->buffer_get_virtual_address(buf);
@@ -357,10 +408,10 @@ static void send_cmd_target_direct(struct radeon_decoder *dec, struct pb_buffer 
 /**
  * send cmd for vcn jpeg
  */
-void send_cmd_jpeg(struct radeon_decoder *dec, struct pipe_video_buffer *target,
+bool send_cmd_jpeg(struct radeon_decoder *dec, struct pipe_video_buffer *target,
                    struct pipe_picture_desc *picture)
 {
-   struct pb_buffer *dt;
+   struct pb_buffer_lean *dt;
    struct rvid_buffer *bs_buf;
 
    bs_buf = &dec->bs_buffers[dec->cur_buffer];
@@ -378,4 +429,6 @@ void send_cmd_jpeg(struct radeon_decoder *dec, struct pipe_video_buffer *target,
       send_cmd_bitstream_direct(dec, bs_buf->res->buf, 0, RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
       send_cmd_target_direct(dec, dt, 0, RADEON_USAGE_WRITE, RADEON_DOMAIN_VRAM, target->buffer_format);
    }
+
+   return true;
 }

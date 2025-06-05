@@ -1,28 +1,8 @@
-# should be fixed with kernel 6.8
-spec@ext_external_objects@vk-depth-display@D32S8,Fail
-spec@ext_external_objects@vk-image-overwrite@RGB 10 A2 UINT optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGB 10 A2 UNORM optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGB 5 A1 UNORM optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 16 INT optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 16 SFLOAT optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 16 UINT optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 32 INT optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 32 UINT optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 4 UNORM optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 8 INT optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 8 SRGB optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 8 UINT optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 8 UNORM optimal: Failed to create texture from GL memory object.,Fail
-spec@ext_external_objects@vk-stencil-display@D32S8,Fail
-
-KHR-GL46.gpu_shader_fp64.fp64.max_uniform_components,Fail
 KHR-GL46.shader_image_load_store.basic-allFormats-store,Fail
 KHR-GL46.shader_image_load_store.basic-allTargets-store,Fail
 KHR-GL46.shading_language_420pack.binding_images,Fail
 
-# "Invalid value returned: expected:[1, 1, 1, 1] retrieved: [0, 0, 0, 0
-#  Invalid rendering result at esextcTessellationShaderBarrier.cpp:504"
-KHR-GLES31.core.tessellation_shader.tessellation_shader_tc_barriers.barrier_guarded_read_calls,Fail
+dEQP-GLES31.functional.texture.border_clamp.range_clamp.linear_float_color,Fail
 
 # https://gitlab.freedesktop.org/mesa/mesa/-/issues/5582
 KHR-GLES31.core.texture_cube_map_array.color_depth_attachments,Fail
@@ -32,54 +12,13 @@ KHR-GL46.texture_cube_map_array.color_depth_attachments,Fail
 # new fails with gl45:
 #
 
-# MESA: warning: sample averaging on fallback z24s8 blit when we shouldn't.
-KHR-GL46.direct_state_access.renderbuffers_storage_multisample,Fail
 
-KHR-GL46.multi_bind.dispatch_bind_image_textures,Fail
-
-# Fails when TU_DEBUG=forcebin is set
-gmem-dEQP-VK.spirv_assembly.instruction.graphics.variable_pointers.graphics.writes_two_buffers_vert,Fail
-
-glx@glx_arb_create_context_es2_profile@invalid opengl es version,Fail
 glx@glx_arb_create_context_no_error@no error,Fail
-glx@glx_arb_create_context_robustness@invalid reset notification strategy,Fail
-glx@glx_ext_import_context@free context,Fail
-glx@glx_ext_import_context@get context id,Fail
-glx@glx_ext_import_context@get current display,Fail
-glx@glx_ext_import_context@import context- multi process,Fail
-glx@glx_ext_import_context@import context- single process,Fail
-glx@glx_ext_import_context@imported context has same context id,Fail
-glx@glx_ext_import_context@make current- multi process,Fail
-glx@glx_ext_import_context@make current- single process,Fail
-glx@glx_ext_import_context@query context info,Fail
-glx@glx-swap-pixmap-bad,Fail
-glx@glx-visuals-depth -pixmap,Crash
-glx@glx-visuals-stencil -pixmap,Crash
 
-# "../src/freedreno/ir3/ir3_shader.h:968:ir3_link_add: Assertion `i < ARRAY_SIZE(l->var)' failed."
-shaders@glsl-max-varyings >max_varying_components,Crash
-
-# "MESA: error: unknown vertex shader output name: VARYING_SLOT_EDGE
-#  gl-2.0-edgeflag: ../src/freedreno/ir3/ir3_context.c:411: ir3_context_error: Assertion `!""' failed."
-shaders@point-vertex-id divisor,Crash
-shaders@point-vertex-id gl_instanceid,Crash
-shaders@point-vertex-id gl_instanceid divisor,Crash
-shaders@point-vertex-id gl_vertexid,Crash
-shaders@point-vertex-id gl_vertexid divisor,Crash
-shaders@point-vertex-id gl_vertexid gl_instanceid,Crash
-shaders@point-vertex-id gl_vertexid gl_instanceid divisor,Crash
-spec@!opengl 2.0@gl-2.0-edgeflag,Crash
-spec@!opengl 2.0@gl-2.0-edgeflag-immediate,Crash
-spec@!opengl 1.0@gl-1.0-edgeflag,Crash
-spec@!opengl 1.0@gl-1.0-edgeflag-quads,Crash
-
-spec@arb_depth_buffer_float@fbo-clear-formats stencil,Fail
-spec@arb_depth_buffer_float@fbo-clear-formats stencil@GL_DEPTH32F_STENCIL8,Fail
 spec@arb_depth_buffer_float@fbo-generatemipmap-formats,Fail
 spec@arb_depth_buffer_float@fbo-generatemipmap-formats@GL_DEPTH_COMPONENT32F,Fail
 spec@arb_depth_buffer_float@fbo-generatemipmap-formats@GL_DEPTH_COMPONENT32F NPOT,Fail
 
-spec@arb_occlusion_query@occlusion_query_order,Fail
 spec@arb_point_sprite@arb_point_sprite-interactions 1.0,Fail
 spec@arb_program_interface_query@arb_program_interface_query-getprogramresourceindex,Fail
 spec@arb_program_interface_query@arb_program_interface_query-getprogramresourceindex@'vs_input2[1][0]' on GL_PROGRAM_INPUT,Fail
@@ -118,20 +57,13 @@ spec@arb_sample_shading@samplemask 4@noms partition,Fail
 # 0ef03f824d1833a853d1a20b4be121089bb9246c
 spec@arb_shader_image_load_store@qualifiers,Fail
 spec@arb_shader_image_load_store@qualifiers@r8/permissive layout qualifiers/permissive access qualifiers/permissive binding test,Fail
+spec@arb_shader_image_load_store@qualifiers@r8/permissive layout qualifiers/strict access qualifiers/permissive binding test,Fail
 spec@arb_shader_image_load_store@qualifiers@r8/strict layout qualifiers/permissive access qualifiers/permissive binding test,Fail
-
-# ir3_nir_lower_tess.c:251: lower_block_to_explicit_output: Assertion `util_is_power_of_two_nonzero(nir_intrinsic_write_mask(intr) + 1)' failed.
-spec@arb_tessellation_shader@execution@tcs-input-read-mat,Crash
-
-# Some 64b not getting lowered to 32b:
-spec@arb_tessellation_shader@execution@variable-indexing@vs-output-array-dvec4-index-wr-before-tcs,Crash
+spec@arb_shader_image_load_store@qualifiers@r8/strict layout qualifiers/strict access qualifiers/permissive binding test,Fail
 
 spec@arb_texture_rectangle@1-1-linear-texture,Fail
 
 spec@arb_vertex_type_2_10_10_10_rev@attrib-p-type-size-match,Fail
-
-# fails unrelated to GL_ARB_enhanced_layouts
-spec@arb_enhanced_layouts@execution@component-layout@vs-fs-array-dvec3,Crash
 
 # fails on gen1 (a618/a630) with both fd and zink, but passes on gen4..
 # maybe gen1 sqe doesn't handle the count==0 case?
@@ -141,7 +73,6 @@ spec@arb_indirect_parameters@tf-count-elements,Fail
 spec@egl 1.4@eglterminate then unbind context,Fail
 spec@egl_chromium_sync_control@conformance@eglGetSyncValuesCHROMIUM_msc_and_sbc_test,Fail
 spec@egl_chromium_sync_control@conformance,Fail
-spec@egl_ext_protected_content@conformance,Fail
 spec@egl_khr_surfaceless_context@viewport,Fail
 spec@egl_mesa_configless_context@basic,Fail
 
@@ -154,38 +85,10 @@ spec@egl_mesa_configless_context@basic,Fail
 spec@ext_external_objects@vk-depth-display,Fail
 spec@ext_external_objects@vk-depth-display@D16,Fail
 spec@ext_external_objects@vk-depth-display@D24S8,Fail
-
-# "Failed to submit queue." from the test some of the time.  No validation failures.
-# When it doesn't fail with that message, gets a set of corrupted colors (supposed
-# to be vertical stripes).
-spec@ext_external_objects@vk-image-display,Fail
-spec@ext_external_objects@vk-image-display-muliple-textures,Fail
-spec@ext_external_objects@vk-image-display-overwrite,Fail
-
-# Linear cases seem to do fine, optimal tiling fails.
-spec@ext_external_objects@vk-image-overwrite,Fail
-spec@ext_external_objects@vk-image-overwrite@RGB 10 A2 UINT optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGB 10 A2 UNORM optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGB 5 A1 UNORM optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 16 INT optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 16 SFLOAT optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 16 UINT optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 32 INT optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 32 UINT optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 4 UNORM optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 8 INT optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 8 SRGB optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 8 UINT optimal: Failed to initialize OpenGL FBO/RBO,Fail
-spec@ext_external_objects@vk-image-overwrite@RGBA 8 UNORM optimal: Failed to initialize OpenGL FBO/RBO,Fail
-
-spec@ext_external_objects@vk-semaphores,Fail
-spec@ext_external_objects@vk-semaphores-2,Fail
-
-# D32S8 skips (GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT), D24S8 fails.
+spec@ext_external_objects@vk-depth-display@D32S8,Fail
 spec@ext_external_objects@vk-stencil-display,Fail
+spec@ext_external_objects@vk-stencil-display@D32S8,Fail
 spec@ext_external_objects@vk-stencil-display@D24S8,Fail
-
-spec@ext_framebuffer_blit@fbo-blit-check-limits,Fail
 
 spec@ext_framebuffer_multisample@alpha-to-coverage-dual-src-blend 2,Fail
 spec@ext_framebuffer_multisample@alpha-to-coverage-dual-src-blend 4,Fail
@@ -210,8 +113,6 @@ spec@ext_framebuffer_object@fbo-alphatest-nocolor,Fail
 spec@ext_framebuffer_object@fbo-alphatest-nocolor-ff,Fail
 spec@ext_packed_float@query-rgba-signed-components,Fail
 
-spec@ext_texture_integer@multisample-formats 4 gl_ext_texture_integer,Fail
-
 # These failures go away with FD_MESA_DEBUG=noblit, but don't seem to be related
 # to the actual mipmap generation blits (which we do fall back on)
 spec@ext_texture_snorm@fbo-generatemipmap-formats,Fail
@@ -230,15 +131,10 @@ spec@ext_texture_snorm@fbo-generatemipmap-formats@GL_LUMINANCE16_SNORM NPOT,Fail
 
 spec@ext_texture_snorm@multisample-formats 2 gl_ext_texture_snorm,Fail
 spec@ext_texture_snorm@multisample-formats 4 gl_ext_texture_snorm,Fail
-spec@ext_transform_feedback@structs struct-array-elem run,Fail
-spec@ext_transform_feedback@structs struct-array-elem run interface,Fail
 spec@ext_transform_feedback@tessellation triangle_fan flat_first,Fail
 spec@ext_transform_feedback@tessellation triangle_strip flat_first,Fail
 spec@glsl-1.30@execution@texelfetch fs sampler3d 1x129x9-98x129x9,Fail
 spec@glsl-1.30@execution@texelfetch fs sampler3d 98x1x9-98x129x9,Fail
-
-spec@glsl-1.50@execution@compatibility@vs-gs-texcoord-array-2,Crash
-spec@glsl-1.50@execution@compatibility@vs-gs-texcoord-array,Crash
 
 spec@glsl-1.50@execution@primitive-id-no-gs-quads,Fail
 spec@glsl-1.50@execution@primitive-id-no-gs-quad-strip,Fail
@@ -246,8 +142,6 @@ spec@glsl-1.50@execution@primitive-id-no-gs-quad-strip,Fail
 # "ir3_shader.h:923:ir3_link_add: Assertion `i < ARRAY_SIZE(l->var)' failed"
 spec@glsl-1.50@execution@variable-indexing@gs-output-array-vec4-index-wr,Crash
 
-spec@glsl-1.50@gs-max-output-components,Fail
-spec@intel_performance_query@intel_performance_query-issue_2235,Fail
 spec@khr_texture_compression_astc@array-gl@12x12 Block Dim,Fail
 spec@khr_texture_compression_astc@array-gl@5x5 Block Dim,Fail
 spec@khr_texture_compression_astc@array-gles@12x12 Block Dim,Fail
@@ -258,8 +152,6 @@ spec@khr_texture_compression_astc@miptree-gles hdr,Fail
 spec@khr_texture_compression_astc@miptree-gles hdr@HDR Profile,Fail
 spec@khr_texture_compression_astc@miptree-gles ldr,Fail
 spec@khr_texture_compression_astc@miptree-gles ldr@LDR Profile,Fail
-spec@khr_texture_compression_astc@miptree-gles srgb-fp,Fail
-spec@khr_texture_compression_astc@miptree-gles srgb-fp@sRGB decode full precision,Fail
 spec@khr_texture_compression_astc@miptree-gles srgb-sd,Fail
 spec@khr_texture_compression_astc@miptree-gles srgb-sd@sRGB skip decode,Fail
 spec@khr_texture_compression_astc@miptree-gl hdr,Fail
@@ -281,15 +173,10 @@ spec@oes_egl_image_external_essl3@oes_egl_image_external_essl3,Fail
 # "Failure with Polygon Stipple set to fail mode."
 spec@!opengl 1.0@gl-1.0-no-op-paths,Fail
 
-# crash in tgsi exec doing st_freedback_draw_vbo().
-spec@!opengl 1.0@rasterpos,Crash
+spec@!opengl 1.0@rasterpos,Fail
+spec@!opengl 1.0@rasterpos@glsl_vs_gs_linked,Fail
+spec@!opengl 1.0@rasterpos@glsl_vs_tes_linked,Fail
 
-spec@!opengl 1.1@linestipple@Factor 2x,Fail
-spec@!opengl 1.1@linestipple@Factor 3x,Fail
-spec@!opengl 1.1@linestipple,Fail
-spec@!opengl 1.1@linestipple@Line loop,Fail
-spec@!opengl 1.1@linestipple@Line strip,Fail
-spec@!opengl 1.1@linestipple@Restarting lines within a single Begin-End block,Fail
 spec@!opengl 1.1@polygon-mode-facing,Fail
 spec@!opengl 1.1@polygon-mode,Fail
 spec@!opengl 1.1@polygon-mode-offset@config 0: Expected white pixel on bottom edge,Fail
@@ -310,7 +197,6 @@ spec@!opengl 1.4@gl-1.4-polygon-offset,Fail
 
 spec@!opengl 2.1@pbo,Fail
 spec@!opengl 2.1@pbo@test_polygon_stip,Fail
-spec@!opengl 2.1@polygon-stipple-fs,Fail
 spec@!opengl 3.2@gl-3.2-adj-prims cull-back pv-first,Fail
 spec@!opengl 3.2@gl-3.2-adj-prims cull-front pv-first,Fail
 spec@!opengl 3.2@gl-3.2-adj-prims line cull-back pv-first,Fail
@@ -322,1185 +208,241 @@ spec@!opengl 1.0@depth-clear-precision-check@depth24,Fail
 spec@!opengl 1.0@depth-clear-precision-check@depth24_stencil8,Fail
 spec@!opengl 1.0@depth-clear-precision-check@depth32,Fail
 
-# timestamp/time-elapsed qbo tests fail due to lack of way to convert
-# from ticks to ns on the CP (ie. we'd need to spin up a compute shader
-# or something equally drastic)
-spec@arb_query_buffer_object@qbo,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIMESTAMP-ASYNC_CPU_READ_AFTER-GL_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIMESTAMP-ASYNC_CPU_READ_AFTER-GL_UNSIGNED_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIMESTAMP-ASYNC_CPU_READ_AFTER-GL_UNSIGNED_INT64_ARB,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIMESTAMP-SYNC_CPU_READ_AFTER_CACHE_TEST-GL_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIMESTAMP-SYNC_CPU_READ_AFTER_CACHE_TEST-GL_UNSIGNED_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIMESTAMP-SYNC_CPU_READ_AFTER_CACHE_TEST-GL_UNSIGNED_INT64_ARB,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIME_ELAPSED-ASYNC_CPU_READ_AFTER-GL_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIME_ELAPSED-ASYNC_CPU_READ_AFTER-GL_UNSIGNED_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIME_ELAPSED-ASYNC_CPU_READ_AFTER-GL_UNSIGNED_INT64_ARB,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIME_ELAPSED-SYNC_CPU_READ_AFTER_CACHE_TEST-GL_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIME_ELAPSED-SYNC_CPU_READ_AFTER_CACHE_TEST-GL_UNSIGNED_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TIME_ELAPSED-SYNC_CPU_READ_AFTER_CACHE_TEST-GL_UNSIGNED_INT64_ARB,Fail
+spec@arb_gpu_shader5@arb_gpu_shader5-interpolateatsample-dynamically-nonuniform,Fail
+spec@arb_gpu_shader5@arb_gpu_shader5-xfb-streams,Fail
+spec@arb_gpu_shader5@arb_gpu_shader5-xfb-streams-without-invocations,Fail
+spec@arb_gpu_shader5@arb_gpu_shader5-xfb-streams-without-invocations spirv,Fail
+spec@arb_gpu_shader5@arb_gpu_shader5-xfb-streams@arb_gpu_shader5-xfb-streams,Fail
+spec@arb_gpu_shader5@arb_gpu_shader5-xfb-streams@arb_gpu_shader5-xfb-streams-blocks,Fail
+spec@arb_gpu_shader_fp64@execution@arb_gpu_shader_fp64-vs-getuniformdv,Crash
+spec@arb_gpu_shader_fp64@execution@built-in-functions@fs-op-div-dmat4-dmat4,Fail
+spec@arb_gpu_shader_fp64@execution@built-in-functions@fs-op-div-double-dmat4,Fail
+spec@arb_gpu_shader_fp64@execution@built-in-functions@fs-inverse-dmat4,Fail
+spec@arb_gpu_shader_fp64@uniform_buffers@fs-ubo-load.indirect.3,Fail
+spec@glsl-4.00@execution@built-in-functions@fs-op-div-double-dmat4,Fail
 
-# These seem to fail with zink as well (and on various other drivers
-# from what I can tell from expectations files, so maybe test issue?)
-spec@arb_query_buffer_object@coherency,Fail
-spec@arb_query_buffer_object@coherency@index-buffer-GL_TESS_CONTROL_SHADER_PATCHES,Fail
-spec@arb_query_buffer_object@coherency@indirect-dispatch-GL_TESS_CONTROL_SHADER_PATCHES,Fail
-spec@arb_query_buffer_object@coherency@indirect-draw-GL_TESS_CONTROL_SHADER_PATCHES,Fail
-spec@arb_query_buffer_object@coherency@indirect-draw-count-GL_COMPUTE_SHADER_INVOCATIONS,Fail
-spec@arb_query_buffer_object@coherency@indirect-draw-count-GL_GEOMETRY_SHADER_INVOCATIONS,Fail
-spec@arb_query_buffer_object@coherency@indirect-draw-count-GL_GEOMETRY_SHADER_PRIMITIVES_EMITTED,Fail
-spec@arb_query_buffer_object@coherency@indirect-draw-count-GL_TESS_CONTROL_SHADER_PATCHES,Fail
-spec@arb_query_buffer_object@coherency@indirect-draw-count-GL_TESS_EVALUATION_SHADER_INVOCATIONS,Fail
-spec@arb_query_buffer_object@coherency@indirect-draw-count-GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-ASYNC_CPU_READ_AFTER-GL_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-ASYNC_CPU_READ_AFTER-GL_UNSIGNED_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-ASYNC_CPU_READ_AFTER-GL_UNSIGNED_INT64_ARB,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-ASYNC_CPU_READ_BEFORE-GL_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-ASYNC_CPU_READ_BEFORE-GL_UNSIGNED_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-ASYNC_CPU_READ_BEFORE-GL_UNSIGNED_INT64_ARB,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-SYNC-GL_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-SYNC-GL_UNSIGNED_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-SYNC-GL_UNSIGNED_INT64_ARB,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-SYNC_CPU_READ_AFTER_CACHE_TEST-GL_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-SYNC_CPU_READ_AFTER_CACHE_TEST-GL_UNSIGNED_INT,Fail
-spec@arb_query_buffer_object@qbo@query-GL_TESS_CONTROL_SHADER_PATCHES-SYNC_CPU_READ_AFTER_CACHE_TEST-GL_UNSIGNED_INT64_ARB,Fail
+spec@glsl-4.00@execution@built-in-functions@fs-inverse-dmat4,Fail
+spec@glsl-4.00@execution@built-in-functions@fs-op-div-dmat4-dmat4,Fail
 
-spill-dEQP-VK.subgroups.ballot_broadcast.compute.subgroupbroadcast_bool,Fail
-spill-dEQP-VK.subgroups.ballot_broadcast.compute.subgroupbroadcast_bool_requiredsubgroupsize128,Fail
+# uprev Piglit in Mesa
+spec@glsl-1.30@execution@fs-uint-to-float-of-extract-int16,Fail
+spec@glsl-1.30@execution@fs-uint-to-float-of-extract-int8,Fail
 
-# skqp failure:
-# SRGBReadWritePixels FAILED (7 errors)
-# ../../tests/SRGBReadWritePixelsTest.cpp:214	Could not create sRGB surface context. [OpenGL]
-SRGBReadWritePixels,Fail
+# Updated by ci-collate
+spec@arb_gpu_shader_fp64@execution@arb_gpu_shader_fp64-gs-getuniformdv,Crash
 
-# https://gitlab.khronos.org/Tracker/vk-gl-cts/-/issues/4578
-nobin-dEQP-VK.transform_feedback.simple.lines_or_triangles_triangle_strip_3,Fail
+# uprev Piglit in Mesa
+glx@glx-swap-pixmap-bad,Fail
+spec@arb_occlusion_query@occlusion_query_order,Fail
+spec@khr_texture_compression_astc@miptree-gles srgb-fp,Fail
+spec@khr_texture_compression_astc@miptree-gles srgb-fp@sRGB decode full precision,Fail
 
-spec@arb_vertex_attrib_64bit@execution@unused-sub-dvec4-01,Crash
-spec@arb_vertex_attrib_64bit@execution@unused-sub-dvec4-02,Crash
+# glcts update
+dEQP-GLES2.functional.texture.mipmap.cube.projected.nearest_linear,Fail
+KHR-GL46.texture_view.view_classes,Fail
+KHR-GLES3.framebuffer_blit.framebuffer_blit_functionality_multisampled_to_singlesampled_blit,Fail
+KHR-GL46.texture_lod_bias.texture_lod_bias_all,Fail
+KHR-GL46.texture_lod_basic.lod_selection,Fail
 
-# After switch from 6.3.1 to 6.3.13
-dEQP-VK.binding_model.descriptor_buffer.basic.limits,Fail
-gmem-dEQP-VK.binding_model.descriptor_buffer.basic.limits,Fail
+# GL tests above, Vulkan tests below
 
-# New CTS failures in 1.3.6.3
-dEQP-VK.glsl.derivate.dfdx.dynamic_if.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_if.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_if.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_if.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_if.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_if.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_if.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_if.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_loop.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_loop.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_loop.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_loop.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_loop.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_loop.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_loop.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_loop.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_if.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_if.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_if.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_if.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_if.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_if.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_if.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_if.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_loop.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_loop.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_loop.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_loop.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_loop.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_loop.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_loop.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_loop.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_switch.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_switch.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_switch.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_switch.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_switch.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_switch.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_switch.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_switch.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_loop.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_loop.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_loop.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_loop.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_loop.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_loop.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_loop.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_loop.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_switch.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_switch.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_switch.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_switch.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_switch.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_switch.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_switch.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdxfine.dynamic_switch.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_if.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_if.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_if.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_if.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_if.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_if.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_if.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_if.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_loop.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_loop.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_loop.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_loop.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_loop.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_loop.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_loop.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_loop.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_switch.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_switch.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_switch.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_switch.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_switch.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_switch.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_switch.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdy.dynamic_switch.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_if.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_if.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_if.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_if.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_if.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_if.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_if.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_if.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_loop.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_loop.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_loop.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_loop.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_loop.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_loop.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_loop.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_loop.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_switch.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_switch.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_switch.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_switch.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_switch.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_switch.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_switch.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_switch.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_if.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_if.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_if.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_if.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_if.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_if.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_if.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_if.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_loop.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_loop.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_loop.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_loop.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_loop.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_loop.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_loop.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_loop.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.float_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.float_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.vec2_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.vec3_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.vec4_highp,Crash
-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_if.float_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_if.float_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_if.vec2_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_if.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_if.vec3_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_if.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_if.vec4_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_if.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_loop.float_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_loop.float_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_loop.vec2_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_loop.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_loop.vec3_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_loop.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_loop.vec4_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_loop.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_switch.float_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_switch.float_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_switch.vec2_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_switch.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_switch.vec3_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_switch.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_switch.vec4_highp,Crash
-dEQP-VK.glsl.derivate.fwidth.dynamic_switch.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_if.float_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_if.float_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_if.vec2_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_if.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_if.vec3_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_if.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_if.vec4_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_if.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.float_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.float_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.vec2_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.vec3_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.vec4_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_switch.float_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_switch.float_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_switch.vec2_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_switch.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_switch.vec3_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_switch.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_switch.vec4_highp,Crash
-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_switch.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_if.float_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_if.float_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_if.vec2_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_if.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_if.vec3_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_if.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_if.vec4_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_if.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.float_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.float_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.vec2_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.vec3_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.vec4_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.vec4_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.float_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.float_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.vec2_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.vec2_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.vec3_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.vec3_mediump,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.vec4_highp,Crash
-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.vec4_mediump,Crash
-dEQP-VK.info.device_mandatory_features,Fail
-gmem-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.vec2_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.vec2_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.vec3_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_loop.float_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_switch.float_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_switch.vec4_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdxfine.dynamic_loop.vec4_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdxfine.dynamic_loop.vec4_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.dfdy.dynamic_if.float_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.dfdy.dynamic_loop.vec2_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.dfdy.dynamic_loop.vec4_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdy.dynamic_switch.vec2_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_if.float_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_loop.vec4_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.dfdyfine.dynamic_if.float_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.dfdyfine.dynamic_if.vec3_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.vec3_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.vec4_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidth.dynamic_if.vec3_highp,Crash
-gmem-dEQP-VK.glsl.derivate.fwidth.dynamic_loop.vec2_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidth.dynamic_switch.float_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_if.vec3_highp,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.float_highp,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.vec2_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.vec3_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.float_highp,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.vec2_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.vec3_highp,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.vec4_mediump,Crash
+# New fails in 1.3.10.0
+dEQP-VK.dynamic_rendering.primary_cmd_buff.local_read.max_input_attachments,Fail
+dEQP-VK.dynamic_rendering.primary_cmd_buff.local_read.input_attachments_without_mapping,Fail
 
-# New CTS failures in 1.3.7.0
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.a1r5g5b5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.a1r5g5b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.b5g5r5a1_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.b5g5r5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16_unorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_unorm.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_unorm.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_unorm.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r5g5b5a1_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r5g5b5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r5g6b5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_snorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_snorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_snorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_uint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_uint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_unorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8_unorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_unorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_unorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.a1r5g5b5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.b4g4r4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.b4g4r4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.b4g4r4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.b5g5r5a1_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.b5g5r5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.b5g6r5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r16_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r16_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r16_snorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r16_uint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r16_uint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r16_unorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_unorm.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_unorm.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r5g5b5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r5g6b5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r5g6b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_sint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_snorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_snorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_srgb.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_srgb.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_uint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_uint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_unorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_unorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_unorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.a1r5g5b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.a1r5g5b5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.b4g4r4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.b5g5r5a1_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.b5g5r5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.b5g6r5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.b5g6r5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.b5g6r5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r16_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r16_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r16_sint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r16_snorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r16_snorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r16_uint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r16_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r16_unorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r16_unorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_unorm.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r5g5b5a1_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r5g5b5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r5g5b5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r5g6b5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r5g6b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r5g6b5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_snorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_snorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_srgb.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_srgb.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_uint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_unorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_unorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_unorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_unorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src16384x4_dst16384x4.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src16384x4_dst16384x4.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src16384x4_dst16384x4.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src16384x6_dst16384x6.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src4096x4_dst4096x4.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src4096x6_dst4096x6.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src4x16384_dst4x16384.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src4x4096_dst4x4096.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src4x4096_dst4x4096.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src4x8192_dst4x8192.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src4x8192_dst4x8192.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src4x8192_dst4x8192.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src6x16384_dst6x16384.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src6x16384_dst6x16384.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src6x4096_dst6x4096.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src6x8192_dst6x8192.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src6x8192_dst6x8192.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src8192x4_dst8192x4.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src8192x6_dst8192x6.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src8192x6_dst8192x6.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a1r5g5b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a1r5g5b5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a2b10g10r10_uint_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a2b10g10r10_uint_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a2b10g10r10_unorm_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a2b10g10r10_unorm_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a2r10g10b10_unorm_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_sint_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_sint_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_snorm_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_snorm_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_srgb_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_srgb_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_srgb_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_uint_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_uint_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_uint_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_unorm_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b5g6r5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b5g6r5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b5g6r5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_sint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_sint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_sint.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_snorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_snorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_snorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_srgb.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_uint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_unorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_unorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.bc1_rgb_unorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.bc1_rgb_unorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.bc1_rgba_srgb_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.bc4_snorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.bc4_snorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.bc4_unorm_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.eac_r11_snorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.eac_r11_snorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.eac_r11_snorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.eac_r11_unorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.eac_r11_unorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.etc2_r8g8b8_srgb_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.etc2_r8g8b8_srgb_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.etc2_r8g8b8a1_srgb_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.etc2_r8g8b8a1_unorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.etc2_r8g8b8a1_unorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.etc2_r8g8b8a1_unorm_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16_sint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16_uint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16_uint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16_unorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16_sint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16_sint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16_sint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16_uint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16_uint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16_uint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16_unorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_sint.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_sint.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_snorm.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_unorm.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_unorm.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_unorm.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r32_sint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r32_sint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r32_uint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r32_uint.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r32_uint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r32g32_sint.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r32g32_sint.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r32g32_uint.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r5g5b5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r5g5b5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r5g6b5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_snorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_snorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_snorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_uint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_unorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_sint.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_srgb.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_uint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_uint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_unorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_unorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a1r5g5b5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a1r5g5b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a1r5g5b5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a2b10g10r10_uint_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a2b10g10r10_unorm_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a2b10g10r10_unorm_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a2r10g10b10_uint_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a2r10g10b10_uint_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a2r10g10b10_uint_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a2r10g10b10_unorm_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a2r10g10b10_unorm_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_sint_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_sint_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_snorm_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_snorm_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_srgb_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_srgb_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_srgb_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_uint_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_uint_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_unorm_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a8b8g8r8_unorm_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b4g4r4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b4g4r4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b5g5r5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b5g6r5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b5g6r5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b5g6r5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_sint.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_sint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_snorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_snorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_snorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_snorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_srgb.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_srgb.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_srgb.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_uint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_uint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_uint.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_unorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_unorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgb_srgb_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgb_srgb_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgb_unorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgb_unorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgb_unorm_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgba_srgb_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgba_srgb_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgba_srgb_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgba_unorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgba_unorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc1_rgba_unorm_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc4_snorm_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc4_unorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc4_unorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.eac_r11_snorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.eac_r11_snorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.eac_r11_unorm_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.etc2_r8g8b8_srgb_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.etc2_r8g8b8_unorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.etc2_r8g8b8a1_srgb_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.etc2_r8g8b8a1_srgb_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.etc2_r8g8b8a1_srgb_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.etc2_r8g8b8a1_srgb_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.etc2_r8g8b8a1_unorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.etc2_r8g8b8a1_unorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.etc2_r8g8b8a1_unorm_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16_sint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16_uint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16_unorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16_sint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16_sint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16_sint.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16_sint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16_snorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16_snorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16_uint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16_uint.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16_unorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_sint.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_sint.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_snorm.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_uint.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_uint.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_unorm.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_unorm.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r32_sint.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r32_uint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r32_uint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r32g32_sint.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r32g32_uint.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r32g32_uint.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r32g32_uint.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r5g6b5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8_sint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8_srgb.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8_srgb.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8_unorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8_unorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_sint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_snorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_snorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_srgb.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_srgb.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_uint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_uint.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_uint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a1r5g5b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a2b10g10r10_uint_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a2b10g10r10_uint_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a2b10g10r10_uint_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a2b10g10r10_unorm_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a2b10g10r10_unorm_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a2r10g10b10_uint_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a2r10g10b10_uint_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a2r10g10b10_uint_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a2r10g10b10_unorm_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_sint_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_sint_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_sint_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_snorm_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_srgb_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_srgb_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_srgb_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_uint_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_unorm_pack32.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_unorm_pack32.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_unorm_pack32.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_unorm_pack32.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b4g4r4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b4g4r4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b5g6r5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b5g6r5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b5g6r5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b8g8r8a8_snorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b8g8r8a8_snorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b8g8r8a8_snorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b8g8r8a8_snorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b8g8r8a8_srgb.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b8g8r8a8_srgb.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b8g8r8a8_unorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b8g8r8a8_unorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b8g8r8a8_unorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.bc1_rgb_srgb_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.bc1_rgb_unorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.bc1_rgb_unorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.bc1_rgba_srgb_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.bc1_rgba_srgb_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.bc1_rgba_srgb_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.bc1_rgba_srgb_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.bc4_snorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.bc4_unorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.bc4_unorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.eac_r11_snorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.eac_r11_snorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.eac_r11_unorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.eac_r11_unorm_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8_srgb_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8_srgb_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8_srgb_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8_unorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8a1_srgb_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8a1_srgb_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8a1_srgb_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8a1_unorm_block.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8a1_unorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8a1_unorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_snorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_snorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_uint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_uint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_unorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_unorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_unorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_unorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_sint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_sint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_sint.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_sint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_snorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_uint.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_uint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_uint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_unorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_unorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_sint.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_sint.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_sint.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_snorm.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_snorm.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_snorm.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_uint.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_uint.r16g16b16a16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_uint.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_uint.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_unorm.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_unorm.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r32_sint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r32_uint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r32g32_sint.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r32g32_sint.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r32g32_uint.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r32g32_uint.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r5g5b5a1_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r5g6b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r5g6b5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_sint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_snorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_srgb.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_srgb.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_srgb.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_srgb.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_uint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_unorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_unorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_sint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_snorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_srgb.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_srgb.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_srgb.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_srgb.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_uint.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_uint.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_unorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_unorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_unorm.r16g16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src16384x4_dst16384x4.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src16384x4_dst16384x4.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src16384x6_dst16384x6.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src16384x6_dst16384x6.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src16384x6_dst16384x6.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4096x4_dst4096x4.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4096x4_dst4096x4.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4096x6_dst4096x6.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4096x6_dst4096x6.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x16384_dst4x16384.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x16384_dst4x16384.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x16384_dst4x16384.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x16384_dst4x16384.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x4096_dst4x4096.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x4096_dst4x4096.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x4096_dst4x4096.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x8192_dst4x8192.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x8192_dst4x8192.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x8192_dst4x8192.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src6x16384_dst6x16384.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src6x4096_dst6x4096.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src6x4096_dst6x4096.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src6x8192_dst6x8192.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src6x8192_dst6x8192.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src8192x4_dst8192x4.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src8192x4_dst8192x4.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src8192x4_dst8192x4.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src8192x6_dst8192x6.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src8192x6_dst8192x6.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.a1r5g5b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.b4g4r4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.b4g4r4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.b5g6r5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.b5g6r5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16_snorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16_uint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16_uint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16_unorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_unorm.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_unorm.r16g16b16a16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r5g5b5a1_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r5g5b5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r5g6b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r5g6b5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_snorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_snorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_uint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_unorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_unorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_unorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.a1r5g5b5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.a1r5g5b5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.b4g4r4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16_snorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16_snorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16_uint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16_unorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16_unorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16_unorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_unorm.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16g16b16a16_unorm.r16g16b16a16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r5g5b5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r5g5b5a1_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r5g5b5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r5g6b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r5g6b5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_sint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_snorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_snorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_srgb.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_uint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_uint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_unorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_unorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_unorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_unorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_unorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.a1r5g5b5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.a1r5g5b5_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.b4g4r4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.b5g5r5a1_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.b5g5r5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.b5g6r5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.b5g6r5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_sint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_uint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_uint.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_unorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_unorm.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_unorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_unorm.r16g16b16a16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r5g5b5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r5g5b5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r5g6b5_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r5g6b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r5g6b5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8_sint.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8_sint.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8_sint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8_snorm.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8_snorm.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8_srgb.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8_srgb.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8_uint.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8_unorm.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_unorm.r16g16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_unorm.r16g16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_unorm.r16g16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src16384x6_dst16384x6.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src16384x6_dst16384x6.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4096x4_dst4096x4.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4096x4_dst4096x4.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4096x6_dst4096x6.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4096x6_dst4096x6.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4096x6_dst4096x6.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4096x6_dst4096x6.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4x16384_dst4x16384.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4x4096_dst4x4096.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4x4096_dst4x4096.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4x4096_dst4x4096.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src4x8192_dst4x8192.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src6x16384_dst6x16384.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src6x16384_dst6x16384.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src6x16384_dst6x16384.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src6x4096_dst6x4096.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src6x4096_dst6x4096.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src6x8192_dst6x8192.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src6x8192_dst6x8192.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src8192x4_dst8192x4.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src8192x6_dst8192x6.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src8192x6_dst8192x6.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-dEQP-VK.api.maintenance3_check.support_count_combined_image_sampler,Fail
-dEQP-VK.api.maintenance3_check.support_count_combined_image_sampler_extra_bindings,Fail
-dEQP-VK.api.maintenance3_check.support_count_combined_image_sampler_extra_bindings_no_variable_size,Fail
-dEQP-VK.api.maintenance3_check.support_count_combined_image_sampler_no_variable_size,Fail
-dEQP-VK.api.maintenance3_check.support_count_inline_uniform_block,Fail
-dEQP-VK.api.maintenance3_check.support_count_inline_uniform_block_no_variable_size,Fail
-dEQP-VK.api.maintenance3_check.support_count_input_attachment,Fail
-dEQP-VK.api.maintenance3_check.support_count_input_attachment_extra_bindings,Fail
-dEQP-VK.api.maintenance3_check.support_count_input_attachment_extra_bindings_no_variable_size,Fail
-dEQP-VK.api.maintenance3_check.support_count_input_attachment_no_variable_size,Fail
-dEQP-VK.api.maintenance3_check.support_count_sampler,Fail
-dEQP-VK.api.maintenance3_check.support_count_sampler_extra_bindings,Fail
-dEQP-VK.api.maintenance3_check.support_count_sampler_extra_bindings_no_variable_size,Fail
-dEQP-VK.api.maintenance3_check.support_count_sampler_no_variable_size,Fail
-dEQP-VK.api.maintenance3_check.support_count_storage_buffer_dynamic,Fail
-dEQP-VK.api.maintenance3_check.support_count_storage_buffer_dynamic_extra_bindings,Fail
-dEQP-VK.api.maintenance3_check.support_count_storage_buffer_extra_bindings_no_variable_size,Fail
-dEQP-VK.api.maintenance3_check.support_count_storage_buffer_no_variable_size,Fail
-dEQP-VK.api.maintenance3_check.support_count_storage_image_extra_bindings,Fail
-dEQP-VK.api.maintenance3_check.support_count_storage_texel_buffer,Fail
-dEQP-VK.api.maintenance3_check.support_count_storage_texel_buffer_extra_bindings,Fail
-dEQP-VK.api.maintenance3_check.support_count_storage_texel_buffer_extra_bindings_no_variable_size,Fail
-dEQP-VK.api.maintenance3_check.support_count_uniform_buffer,Fail
-dEQP-VK.api.maintenance3_check.support_count_uniform_buffer_dynamic_extra_bindings,Fail
-dEQP-VK.api.maintenance3_check.support_count_uniform_buffer_extra_bindings,Fail
-dEQP-VK.api.maintenance3_check.support_count_uniform_buffer_no_variable_size,Fail
-dEQP-VK.api.version_check.unavailable_entry_points,Fail
-dEQP-VK.pipeline.fast_linked_library.extended_dynamic_state.after_pipelines.null_color_blend_state,Crash
-dEQP-VK.pipeline.fast_linked_library.extended_dynamic_state.after_pipelines.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.fast_linked_library.extended_dynamic_state.before_draw.null_color_blend_state,Crash
-dEQP-VK.pipeline.fast_linked_library.extended_dynamic_state.before_good_static.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.fast_linked_library.extended_dynamic_state.between_pipelines.null_color_blend_state,Crash
-dEQP-VK.pipeline.fast_linked_library.extended_dynamic_state.cmd_buffer_start.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.fast_linked_library.extended_dynamic_state.two_draws_dynamic.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.fast_linked_library.extended_dynamic_state.two_draws_dynamic.null_rasterization_state,Crash
-dEQP-VK.pipeline.fast_linked_library.extended_dynamic_state.two_draws_static.null_color_blend_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.after_pipelines.null_color_blend_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.before_draw.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.before_draw.null_rasterization_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.before_good_static.null_color_blend_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.before_good_static.null_rasterization_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.between_pipelines.null_color_blend_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.between_pipelines.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.two_draws_dynamic.null_color_blend_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.two_draws_dynamic.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.two_draws_static.null_color_blend_state,Crash
-dEQP-VK.pipeline.monolithic.extended_dynamic_state.two_draws_static.null_rasterization_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.after_pipelines.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.before_draw.null_color_blend_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.before_draw.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.before_good_static.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.before_good_static.null_rasterization_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.between_pipelines.null_color_blend_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.between_pipelines.null_rasterization_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.two_draws_dynamic.null_color_blend_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.two_draws_dynamic.null_depth_stencil_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.two_draws_dynamic.null_rasterization_state,Crash
-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.two_draws_static.null_rasterization_state,Crash
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.line_list.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.line_list_with_adjacency.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.line_strip.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.line_strip_with_adjacency.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.point_list.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.triangle_fan.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.triangle_list_with_adjacency.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.triangle_strip.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.triangle_strip.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.64bit.line_list_with_adjacency.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.64bit.triangle_list.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.64bit.triangle_list.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.64bit.triangle_list_with_adjacency.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.64bit.triangle_strip_with_adjacency.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_32bit_xfb_64bit.line_list_with_adjacency.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_32bit_xfb_64bit.line_strip.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_32bit_xfb_64bit.line_strip_with_adjacency.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_32bit_xfb_64bit.point_list.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_32bit_xfb_64bit.triangle_fan.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_32bit_xfb_64bit.triangle_list_with_adjacency.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_32bit_xfb_64bit.triangle_strip_with_adjacency.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.line_strip.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.line_strip_with_adjacency.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.line_strip_with_adjacency.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.triangle_fan.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.triangle_fan.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.triangle_list.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.triangle_list_with_adjacency.draw,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.triangle_list_with_adjacency.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.triangle_strip.indirect,Fail
-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.triangle_strip_with_adjacency.draw,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.b5g5r5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16_sint.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16_snorm.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r16_uint.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_1d.r8g8b8a8_unorm.r16g16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.b5g6r5_unorm_pack16.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r16_sint.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r5g5b5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r5g6b5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_2d.r8g8_snorm.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r5g6b5_unorm_pack16.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_uint.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.all_formats.color.2d_to_3d.r8g8_unorm.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src4x4096_dst4x4096.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src6x4096_dst6x4096.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.copy_commands2.image_to_image.dimensions.src8192x6_dst8192x6.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a1r5g5b5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.a8b8g8r8_uint_pack32.r16g16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.b8g8r8a8_sint.r16g16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.bc1_rgba_unorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.eac_r11_snorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.etc2_r8g8b8_srgb_block.r16g16b16a16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16_uint.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16_uint.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16_snorm.r16g16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_snorm.r16g16b16a16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r16g16b16a16_unorm.r16g16b16a16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_snorm.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a2b10g10r10_unorm_pack32.r16g16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.a2r10g10b10_unorm_pack32.r16g16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.b8g8r8a8_srgb.r16g16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.bc4_snorm_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.eac_r11_snorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.etc2_r8g8b8_srgb_block.r16g16b16a16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16_sint.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16_sint.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r16_snorm.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r32_sint.r16g16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r5g5b5a1_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_uint.r16g16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a2r10g10b10_uint_pack32.r16g16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.a8b8g8r8_sint_pack32.r16g16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b4g4r4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.b8g8r8a8_unorm.r16g16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.eac_r11_unorm_block.r16g16b16a16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.eac_r11_unorm_block.r16g16b16a16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.etc2_r8g8b8a1_srgb_block.r16g16b16a16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_sint.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_uint.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16_uint.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_sint.r16g16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_uint.r16g16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_unorm.r16g16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16_unorm.r16g16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_sint.r16g16b16a16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r16g16b16a16_sint.r16g16b16a16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r32_uint.r16g16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r32_uint.r16g16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r32g32_sint.r16g16b16a16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8_uint.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.all_formats.color.2d_to_3d.r8g8b8a8_uint.r16g16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4096x4_dst4096x4.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x16384_dst4x16384.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x4096_dst4x4096.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.core.image_to_image.dimensions.src4x8192_dst4x8192.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.a1r5g5b5_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r16_unorm.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r4g4b4a4_unorm_pack16.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r5g5b5a1_unorm_pack16.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_srgb.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_1d.r8g8_unorm.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r16_snorm.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r5g6b5_unorm_pack16.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r5g6b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_sint.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_srgb.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_unorm.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8_unorm.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_2d.r8g8b8a8_unorm.r16g16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.a1b5g5r5_unorm_pack16_khr.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.b5g5r5a1_unorm_pack16.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r16_snorm.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.all_formats.color.2d_to_3d.r5g6b5_unorm_pack16.r16_sfloat.general_optimal,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src16384x4_dst16384x4.r4g4b4a4_unorm_pack16.r16_sfloat.general_general,Fail
-gmem-dEQP-VK.api.copy_and_blit.dedicated_allocation.image_to_image.dimensions.src6x4096_dst6x4096.r4g4b4a4_unorm_pack16.r16_sfloat.optimal_general,Fail
-gmem-dEQP-VK.api.maintenance3_check.support_count_input_attachment_extra_bindings,Fail
-gmem-dEQP-VK.api.maintenance3_check.support_count_input_attachment_no_variable_size,Fail
-gmem-dEQP-VK.glsl.derivate.dfdx.dynamic_switch.float_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdxcoarse.dynamic_loop.vec3_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.vec3_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.vec3_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.dfdxfine.dynamic_if.vec4_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdy.dynamic_if.vec2_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_if.vec3_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.dfdycoarse.dynamic_switch.vec4_highp,Crash
-gmem-dEQP-VK.glsl.derivate.dfdyfine.dynamic_switch.vec2_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidth.dynamic_loop.vec4_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_loop.float_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_switch.vec2_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthcoarse.dynamic_switch.vec3_mediump,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthfine.dynamic_if.float_highp,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthfine.dynamic_if.vec3_highp,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthfine.dynamic_loop.vec2_highp,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.float_highp,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.vec2_highp,Crash
-gmem-dEQP-VK.glsl.derivate.fwidthfine.dynamic_switch.vec2_mediump,Crash
-gmem-dEQP-VK.pipeline.monolithic.extended_dynamic_state.two_draws_static.null_rasterization_state,Crash
-gmem-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.after_pipelines.null_depth_stencil_state,Crash
-gmem-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.before_good_static.null_color_blend_state,Crash
-gmem-dEQP-VK.pipeline.pipeline_library.extended_dynamic_state.before_good_static.null_rasterization_state,Crash
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_1.32bit.point_list.indirect,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_1.32bit.triangle_fan.draw,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_1.32bit.triangle_strip_with_adjacency.draw,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_1.64bit.triangle_list.draw,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_1.pgq_32bit_xfb_64bit.triangle_strip.indirect,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_1.pgq_64bit_xfb_32bit.triangle_strip_with_adjacency.indirect,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.point_list.indirect,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.32bit.triangle_strip.indirect,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.64bit.line_strip.draw,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.64bit.triangle_list.draw,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_32bit_xfb_64bit.line_strip.indirect,Fail
-gmem-dEQP-VK.transform_feedback.primitives_generated_query.concurrent.pipeline_statistics_3.pgq_64bit_xfb_32bit.line_list.draw,Fail
-gmem-dEQP-VK.dynamic_rendering.partial_secondary_cmd_buff.suballocation.load_store_op_none.depthstencil_d32_sfloat_s8_uint_load_op_depth_load_stencil_none_store_op_depth_store_stencil_none_stencil_write_off,Fail
+# OpenCL tests below
+#
+## rusticl-core issues:
+#
+#Unexpected CL error: CL_BUILD_PROGRAM_FAILURE -11
+#Expected CL error: CL_INVALID_BUILD_OPTIONS -43
+api@clbuildprogram,Fail
+
+#Unexpected CL error: CL_COMPILE_PROGRAM_FAILURE -15
+#Expected CL error: CL_INVALID_COMPILER_OPTIONS -66
+api@clcompileprogram,Fail
+
+#Unexpected CL error: CL_SUCCESS 0
+#Expected CL error: CL_KERNEL_ARG_INFO_NOT_AVAILABLE -19
+api@clgetkernelarginfo,Fail
+
+#Unexpected CL error: CL_SUCCESS 0
+#Expected CL error: CL_INVALID_LINKER_OPTIONS -67
+#Failed (error code: CL_SUCCESS): Trigger CL_INVALID_LINKER_OPTIONS if the linker options specified by options are invalid.
+#Unexpected CL error: CL_LINK_PROGRAM_FAILURE -17
+#Expected CL error: CL_INVALID_OPERATION -59
+#Failed (error code: CL_LINK_PROGRAM_FAILURE): Trigger CL_INVALID_OPERATION if the rules for devices containing compiled binaries or libraries as described in input_programs argument above are not followed.
+#Unexpected CL error: CL_SUCCESS 0
+#Expected CL error: CL_LINK_PROGRAM_FAILURE -17
+api@cllinkprogram,Fail
+
+# can be resolved by RUSTICL_FEATURES=fp16,fp64
+program@build@vector-data-types,Fail
+
+# https://gitlab.freedesktop.org/mesa/mesa/-/issues/8408
+program@execute@global-offset,Fail
+program@execute@global-offset@3d- input dependent,Fail
+
+#
+## freedreno issues:
+#
+#Error at data[0]
+custom@r600 create release buffer bug,Fail
+
+#
+## works on OnePlus 6:
+#
+#Failed: return NULL if platform is not a valid platform
+api@clgetextensionfunctionaddressforplatform,Fail
+
+#
+## Not our problem:
+#
+# CL_DEVICE_MAX_READ_IMAGE_ARGS: failed, expected at least 128, got 16 
+api@clgetdeviceinfo,Fail
+
+# CL_QUEUE_SIZE Unexpected CL error: CL_INVALID_COMMAND_QUEUE -36
+api@clgetcommandqueueinfo,Fail
+
+# broken piglit test (doesn't account for FTZ)
+program@execute@builtin@builtin-float-nextafter-1.0.generated,Fail
+program@execute@builtin@builtin-float-nextafter-1.0.generated@nextafter float1,Fail
+program@execute@builtin@builtin-float-nextafter-1.0.generated@nextafter float16,Fail
+program@execute@builtin@builtin-float-nextafter-1.0.generated@nextafter float2,Fail
+program@execute@builtin@builtin-float-nextafter-1.0.generated@nextafter float4,Fail
+program@execute@builtin@builtin-float-nextafter-1.0.generated@nextafter float8,Fail
+
+# (file=input,line=0,column=0,index=0): Unresolved external reference to "_Z21convert_char4_sat_rteDv4_i".
+program@execute@vector-conversion,Fail
+
+# piles of new fails since updating skqp; to be re-evaluated with new upstream
+gl_all_bitmap_configs,Fail
+gl_androidblendmodes,Fail
+gl_annotated_text,Fail
+gl_arithmode,Fail
+gl_bitmapcopy,Fail
+gl_blob_rsxform,Fail
+gl_blurSmallRadii,Fail
+gl_coloremoji_blendmodes,Fail
+gl_colorwheelnative,Fail
+gl_combinemaskfilter,Fail
+gl_dashtextcaps,Fail
+gl_degenerate_gradients,Fail
+gl_draw-atlas-colors,Fail
+gl_encode,Fail
+gl_gammagradienttext,Fail
+gl_gammatext,Fail
+gl_gpusamplerstress,Fail
+gl_gradtext,Fail
+gl_highcontrastfilter,Fail
+gl_image-surface,Fail
+gl_imageblur2,Fail
+gl_imageblur_large,Fail
+gl_imageblurtiled,Fail
+gl_lcdblendmodes,Fail
+gl_lcdtextsize,Fail
+gl_scaled_tilemode_bitmap,Fail
+gl_scaled_tilemode_gradient,Fail
+gl_scaled_tilemodes,Fail
+gl_simpleaaclip_aaclip,Fail
+gl_skbug_5321,Fail
+gl_srcmode,Fail
+gl_surfaceprops,Fail
+gl_textblob_intercepts,Fail
+gl_textblobblockreordering,Fail
+gl_textblobcolortrans,Fail
+gl_textfilter_color,Fail
+gl_textfilter_image,Fail
+gl_tilemode_bitmap,Fail
+gl_typefacestyles,Fail
+gl_wacky_yuv_formats,Fail
+gl_wacky_yuv_formats_cs,Fail
+gl_xfermodes2,Fail
+gl_xfermodes3,Fail
+# GLES failures started when EXT_mdi was properly exposed
+gles_all_bitmap_configs,Fail
+gles_androidblendmodes,Fail
+gles_annotated_text,Fail
+gles_arithmode,Fail
+gles_bitmapcopy,Fail
+gles_blob_rsxform,Fail
+gles_blurSmallRadii,Fail
+gles_coloremoji_blendmodes,Fail
+gles_colorwheelnative,Fail
+gles_combinemaskfilter,Fail
+gles_dashtextcaps,Fail
+gles_degenerate_gradients,Fail
+gles_draw-atlas-colors,Fail
+gles_encode,Fail
+gles_gammagradienttext,Fail
+gles_gammatext,Fail
+gles_gpusamplerstress,Fail
+gles_gradtext,Fail
+gles_highcontrastfilter,Fail
+gles_image-surface,Fail
+gles_imageblur2,Fail
+gles_imageblur_large,Fail
+gles_imageblurtiled,Fail
+gles_lcdblendmodes,Fail
+gles_lcdtextsize,Fail
+gles_scaled_tilemode_bitmap,Fail
+gles_scaled_tilemode_gradient,Fail
+gles_scaled_tilemodes,Fail
+gles_simpleaaclip_aaclip,Fail
+gles_skbug_5321,Fail
+gles_srcmode,Fail
+gles_surfaceprops,Fail
+gles_textblob_intercepts,Fail
+gles_textblobblockreordering,Fail
+gles_textblobcolortrans,Fail
+gles_textfilter_color,Fail
+gles_textfilter_image,Fail
+gles_tilemode_bitmap,Fail
+gles_typefacestyles,Fail
+gles_wacky_yuv_formats,Fail
+gles_wacky_yuv_formats_cs,Fail
+gles_xfermodes2,Fail
+gles_xfermodes3,Fail
+vk_all_bitmap_configs,Fail
+vk_androidblendmodes,Fail
+vk_annotated_text,Fail
+vk_arithmode,Fail
+vk_bitmapcopy,Fail
+vk_blob_rsxform,Fail
+vk_blurSmallRadii,Fail
+vk_coloremoji_blendmodes,Fail
+vk_colorwheelnative,Fail
+vk_combinemaskfilter,Fail
+vk_dashtextcaps,Fail
+vk_degenerate_gradients,Fail
+vk_draw-atlas-colors,Fail
+vk_encode,Fail
+vk_gammagradienttext,Fail
+vk_gammatext,Fail
+vk_gpusamplerstress,Fail
+vk_gradtext,Fail
+vk_highcontrastfilter,Fail
+vk_image-surface,Fail
+vk_imageblur2,Fail
+vk_imageblur_large,Fail
+vk_imageblurtiled,Fail
+vk_lcdblendmodes,Fail
+vk_lcdtextsize,Fail
+vk_scaled_tilemode_bitmap,Fail
+vk_scaled_tilemode_gradient,Fail
+vk_scaled_tilemodes,Fail
+vk_simpleaaclip_aaclip,Fail
+vk_skbug_5321,Fail
+vk_srcmode,Fail
+vk_surfaceprops,Fail
+vk_textblob_intercepts,Fail
+vk_textblobblockreordering,Fail
+vk_textblobcolortrans,Fail
+vk_textfilter_color,Fail
+vk_textfilter_image,Fail
+vk_tilemode_bitmap,Fail
+vk_typefacestyles,Fail
+vk_wacky_yuv_formats,Fail
+vk_wacky_yuv_formats_cs,Fail
+vk_xfermodes2,Fail
+vk_xfermodes3,Fail

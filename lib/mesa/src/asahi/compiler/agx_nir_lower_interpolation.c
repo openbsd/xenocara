@@ -4,7 +4,7 @@
  */
 
 #include "compiler/shader_enums.h"
-#include "agx_nir.h"
+#include "agx_compile.h"
 #include "nir.h"
 #include "nir_builder.h"
 #include "nir_builder_opcodes.h"
@@ -82,8 +82,14 @@ interpolate_at_offset(nir_builder *b, nir_def *cf, nir_def *offset,
 static nir_def *
 interpolate_flat(nir_builder *b, nir_def *coefficients)
 {
-   /* Same value anywhere, so just take the constant (affine) component */
-   return nir_channel(b, coefficients, 2);
+   /* Same value anywhere, so just take the constant (affine) component. For
+    * triangle fans with the first provoking vertex, the CF layout is slightly
+    * different. I am unsure why, but Apple does the same and the bcsel is
+    * required for corrctness.
+    */
+   return nir_bcsel(b, nir_load_is_first_fan_agx(b),
+                    nir_channel(b, coefficients, 1),
+                    nir_channel(b, coefficients, 2));
 }
 
 static enum glsl_interp_mode
@@ -116,19 +122,19 @@ needs_lower(const nir_instr *instr, UNUSED const void *_)
 static nir_def *
 interpolate_channel(nir_builder *b, nir_intrinsic_instr *load, unsigned channel)
 {
-   nir_io_semantics sem = nir_intrinsic_io_semantics(load);
-
-   /* Indirect varyings not supported, just bias the location */
-   sem.location += nir_src_as_uint(*nir_get_io_offset_src(load));
-   sem.num_slots = 1;
-
    nir_def *coefficients = nir_load_coefficients_agx(
-      b, .component = nir_intrinsic_component(load) + channel,
-      .interp_mode = interp_mode_for_load(load), .io_semantics = sem);
+      b, nir_get_io_offset_src(load)->ssa,
+      .component = nir_intrinsic_component(load) + channel,
+      .interp_mode = interp_mode_for_load(load),
+      .io_semantics = nir_intrinsic_io_semantics(load));
 
    if (load->intrinsic == nir_intrinsic_load_input) {
       assert(load->def.bit_size == 32);
-      return interpolate_flat(b, coefficients);
+
+      if (nir_intrinsic_io_semantics(load).location == VARYING_SLOT_LAYER)
+         return nir_load_layer_id(b);
+      else
+         return interpolate_flat(b, coefficients);
    } else {
       nir_intrinsic_instr *bary = nir_src_as_intrinsic(load->src[0]);
 

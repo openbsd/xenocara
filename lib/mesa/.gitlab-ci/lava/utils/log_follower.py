@@ -14,7 +14,7 @@ import logging
 import re
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Optional, Union
 
 from lava.exceptions import MesaCITimeoutError
@@ -33,6 +33,8 @@ from lava.utils.log_section import (
 @dataclass
 class LogFollower:
     starting_section: Optional[GitlabSection] = None
+    main_test_case: Optional[str] = None
+    timestamp_relative_to: Optional[datetime] = None
     _current_section: Optional[GitlabSection] = None
     section_history: list[GitlabSection] = field(default_factory=list, init=False)
     timeout_durations: dict[LogSectionType, timedelta] = field(
@@ -122,7 +124,9 @@ class LogFollower:
             return
 
         for log_section in LOG_SECTIONS:
-            if new_section := log_section.from_log_line_to_section(line):
+            if new_section := log_section.from_log_line_to_section(
+                line, self.main_test_case, self.timestamp_relative_to
+            ):
                 self.update_section(new_section)
                 break
 
@@ -187,6 +191,25 @@ class LogFollower:
 
         return False
 
+    def ignore_dut_feedback_lines(self, line: dict[str, str]) -> bool:
+        """
+        Ignores feedback lines from LAVA.
+        If we only receive this level of message for some time, it means that the job is
+        misbehaving. E.g Rebooting.
+
+        Args:
+            line: A dictionary representing a single log line.
+
+        Returns:
+            A boolean indicating whether the current line is a feedback line.
+        """
+        if line["lvl"] == "feedback" and line["ns"] == "dut":
+            return True
+        if line["lvl"] == "debug":
+            # This message happens after LAVA end receiving the feedback from the DUT
+            if line["msg"] == "Listened to connection for namespace 'dut' done":
+                return True
+        return False
 
     def feed(self, new_lines: list[dict[str, str]]) -> bool:
         """Input data to be processed by LogFollower instance
@@ -205,6 +228,9 @@ class LogFollower:
                 continue
 
             if self.merge_carriage_return_lines(line):
+                continue
+
+            if self.ignore_dut_feedback_lines(line):
                 continue
 
             # At least we are fed with a non-kernel dump log, it seems that the
@@ -230,7 +256,7 @@ class LogFollower:
         if line["lvl"] in ["results", "feedback", "debug"]:
             return
         elif line["lvl"] in ["warning", "error"]:
-            prefix = CONSOLE_LOG["FG_RED"]
+            prefix = CONSOLE_LOG["FG_BOLD_RED"]
             suffix = CONSOLE_LOG["RESET"]
         elif line["lvl"] == "input":
             prefix = "$ "
@@ -282,11 +308,13 @@ def fix_lava_gitlab_section_log():
 
 def print_log(msg: str, *args) -> None:
     # Reset color from timestamp, since `msg` can tint the terminal color
-    print(f"{CONSOLE_LOG['RESET']}{datetime.now()}: {msg}", *args)
+    ts = datetime.now(tz=UTC)
+    ts_str = f"{ts.hour:02}:{ts.minute:02}:{ts.second:02}.{int(ts.microsecond / 1000):03}"
+    print(f"{CONSOLE_LOG['RESET']}{ts_str}: {msg}", *args)
 
 
 def fatal_err(msg, exception=None):
-    colored_msg = f"{CONSOLE_LOG['FG_RED']}"
+    colored_msg = f"{CONSOLE_LOG['FG_BOLD_RED']}"
     print_log(colored_msg, f"{msg}", f"{CONSOLE_LOG['RESET']}")
     if exception:
         raise exception

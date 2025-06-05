@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2021 Valve Corporation
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2021 Valve Corporation
+ * SPDX-License-Identifier: MIT
  */
 
 #include "ir3_ra.h"
@@ -37,14 +19,15 @@
 
 static bool
 compute_block_liveness(struct ir3_liveness *live, struct ir3_block *block,
-                       BITSET_WORD *tmp_live, unsigned bitset_words)
+                       BITSET_WORD *tmp_live, unsigned bitset_words,
+                       reg_filter_cb filter_src, reg_filter_cb filter_dst)
 {
    memcpy(tmp_live, live->live_out[block->index],
           bitset_words * sizeof(BITSET_WORD));
 
    /* Process instructions */
    foreach_instr_rev (instr, &block->instr_list) {
-      ra_foreach_dst (dst, instr) {
+      foreach_dst_if (dst, instr, filter_dst) {
          if (BITSET_TEST(tmp_live, dst->name))
             dst->flags &= ~IR3_REG_UNUSED;
          else
@@ -54,18 +37,19 @@ compute_block_liveness(struct ir3_liveness *live, struct ir3_block *block,
 
       /* Phi node uses occur after the predecessor block */
       if (instr->opc != OPC_META_PHI) {
-         ra_foreach_src (src, instr) {
+         foreach_src_if (src, instr, filter_src) {
             if (BITSET_TEST(tmp_live, src->def->name))
                src->flags &= ~IR3_REG_KILL;
             else
                src->flags |= IR3_REG_KILL;
          }
 
-         ra_foreach_src (src, instr) {
+         foreach_src_if (src, instr, filter_src) {
             if (BITSET_TEST(tmp_live, src->def->name))
                src->flags &= ~IR3_REG_FIRST_KILL;
             else
                src->flags |= IR3_REG_FIRST_KILL;
+            assert(src->def->name != 0);
             BITSET_SET(tmp_live, src->def->name);
          }
       }
@@ -88,6 +72,8 @@ compute_block_liveness(struct ir3_liveness *live, struct ir3_block *block,
          if (phi->opc != OPC_META_PHI)
             break;
          if (!phi->srcs[i]->def)
+            continue;
+         if (!filter_dst(phi->srcs[i]))
             continue;
          unsigned name = phi->srcs[i]->def->name;
          if (!BITSET_TEST(live->live_out[pred->index], name)) {
@@ -115,7 +101,8 @@ compute_block_liveness(struct ir3_liveness *live, struct ir3_block *block,
 }
 
 struct ir3_liveness *
-ir3_calc_liveness(void *mem_ctx, struct ir3 *ir)
+ir3_calc_liveness_for(void *mem_ctx, struct ir3 *ir, reg_filter_cb filter_src,
+                      reg_filter_cb filter_dst)
 {
    struct ir3_liveness *live = rzalloc(mem_ctx, struct ir3_liveness);
 
@@ -129,7 +116,7 @@ ir3_calc_liveness(void *mem_ctx, struct ir3 *ir)
    foreach_block (block, &ir->block_list) {
       block->index = block_count++;
       foreach_instr (instr, &block->instr_list) {
-         ra_foreach_dst (dst, instr) {
+         foreach_dst_if (dst, instr, filter_dst) {
             dst->name = live->definitions_count;
             array_insert(live, live->definitions, dst);
          }
@@ -155,8 +142,8 @@ ir3_calc_liveness(void *mem_ctx, struct ir3 *ir)
    while (progress) {
       progress = false;
       foreach_block_rev (block, &ir->block_list) {
-         progress |=
-            compute_block_liveness(live, block, tmp_live, bitset_words);
+         progress |= compute_block_liveness(live, block, tmp_live, bitset_words,
+                                            filter_src, filter_dst);
       }
    }
 

@@ -1,24 +1,6 @@
 /*
  * Copyright © 2020 Valve Corporation
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  *
  */
 
@@ -27,6 +9,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -53,8 +36,32 @@ struct fd_dev_info {
 
    int wave_granularity;
 
+   /* These are fallback values that should match what drm/msm programs, for
+    * kernels that don't support returning them. Newer devices should not set
+    * them and just use the value from the kernel.
+    */
+   uint32_t highest_bank_bit;
+   uint32_t ubwc_swizzle;
+   uint32_t macrotile_mode;
+
    /* Information for private memory calculations */
    uint32_t fibers_per_sp;
+
+   uint32_t threadsize_base;
+
+   uint32_t max_waves;
+
+   /* Local Memory (i.e. shared memory in GL/Vulkan) and compute shader
+    * const registers, as well as other things not relevant here, share the
+    * same storage space, called the Local Buffer or LB. This is the size of
+    * the part of the LB used for consts and LM. Consts are duplicated
+    * wavesize_granularity times, and the size of duplicated consts + local
+    * memory must not exceed it. If it is left 0, assume that it is
+    * compute constlen + wavesize_granularity * cs_shared_mem_size, which is
+    * enough to hold both the maximum possible compute consts and local
+    * memory at the same time.
+    */
+   uint32_t compute_lb_size;
 
    /* number of CCU is always equal to the number of SP */
    union {
@@ -85,11 +92,9 @@ struct fd_dev_info {
       bool tess_use_shared;
 
       /* Does the hw support GL_QCOM_shading_rate? */
-      bool has_shading_rate;
+      bool has_legacy_pipeline_shading_rate;
 
-      /* newer a6xx allows using 16-bit descriptor for both 16-bit
-       * and 32-bit access
-       */
+      /* Whether a 16-bit descriptor can be used */
       bool storage_16bit;
 
       /* The latest known a630_sqe.fw fails to wait for WFI before
@@ -110,6 +115,11 @@ struct fd_dev_info {
       bool depth_bounds_require_depth_test_quirk;
 
       bool has_tex_filter_cubic;
+
+      /* The blob driver does not support SEPARATE_RECONSTRUCTION_FILTER_BIT
+       * before a6xx_gen3.  It still sets CHROMA_LINEAR bit according to
+       * chromaFilter, but the bit has no effect before a6xx_gen3.
+       */
       bool has_separate_chroma_filter;
 
       bool has_sample_locations;
@@ -139,6 +149,7 @@ struct fd_dev_info {
       bool enable_lrz_fast_clear;
       bool has_lrz_dir_tracking;
       bool lrz_track_quirk;
+      bool has_lrz_feedback;
 
       /* Some generations have a bit to add the multiview index to the
        * viewport index, which lets us implement different scaling for
@@ -149,7 +160,8 @@ struct fd_dev_info {
 
       /* Per CCU GMEM amount reserved for each of DEPTH and COLOR caches
        * in sysmem rendering. */
-      uint32_t sysmem_per_ccu_cache_size;
+      uint32_t sysmem_per_ccu_depth_cache_size;
+      uint32_t sysmem_per_ccu_color_cache_size;
       /* Per CCU GMEM amount reserved for color cache used by GMEM resolves
        * which require color cache (non-BLIT event case).
        * The size is expressed as a fraction of ccu cache used by sysmem
@@ -157,7 +169,7 @@ struct fd_dev_info {
        * to make sure it will not overwrite pixel data in GMEM that is still
        * needed.
        */
-      /* see enum a6xx_ccu_color_cache_size */
+      /* see enum a6xx_ccu_cache_size */
       uint32_t gmem_ccu_color_cache_fraction;
 
       /* Corresponds to HLSQ_CONTROL_1_REG::PRIMALLOCTHRESHOLD */
@@ -168,6 +180,45 @@ struct fd_dev_info {
       bool supports_double_threadsize;
 
       bool has_sampler_minmax;
+
+      bool broken_ds_ubwc_quirk;
+
+      /* See ir3_compiler::has_scalar_alu. */
+      bool has_scalar_alu;
+      /* See ir3_compiler::has_early_preamble. */
+      bool has_early_preamble;
+
+      bool has_isam_v;
+      bool has_ssbo_imm_offsets;
+
+      /* Whether writing to UBWC attachment and reading the same image as input
+       * attachment or as a texture reads correct values from the image.
+       * If this is false, we may read stale values from the flag buffer,
+       * thus reading incorrect values from the image.
+       * Happens with VK_EXT_attachment_feedback_loop_layout.
+       */
+      bool has_coherent_ubwc_flag_caches;
+
+      bool has_attachment_shading_rate;
+
+      /* Whether mipmaps below certain threshold can use LINEAR tiling when higher
+       * levels use UBWC,
+       */
+      bool has_ubwc_linear_mipmap_fallback;
+
+      /* Whether 4 nops are needed after the second pred[tf] of a
+       * pred[tf]/pred[ft] pair to work around a hardware issue.
+       */
+      bool predtf_nop_quirk;
+
+      /* Whether 6 nops are needed after prede to work around a hardware
+       * issue.
+       */
+      bool prede_nop_quirk;
+
+      /* Whether the sad instruction (iadd3) is supported. */
+      bool has_sad;
+
       struct {
          uint32_t PC_POWER_CNTL;
          uint32_t TPL1_DBG_ECO_CNTL;
@@ -182,15 +233,20 @@ struct fd_dev_info {
          uint32_t RB_UNKNOWN_8E01;
          uint32_t VPC_DBG_ECO_CNTL;
          uint32_t UCHE_UNKNOWN_0E12;
+
+         uint32_t RB_UNKNOWN_8E06;
       } magic;
 
       struct {
             uint32_t reg;
             uint32_t value;
-      } magic_raw[32];
+      } magic_raw[64];
 
       /* maximum number of descriptor sets */
       uint32_t max_sets;
+
+      float line_width_min;
+      float line_width_max;
    } a6xx;
 
    struct {
@@ -198,6 +254,109 @@ struct fd_dev_info {
        * _something_, observed in blob's disassembly.
        */
       bool stsc_duplication_quirk;
+
+      /* Whether there is CP_EVENT_WRITE7::WRITE_SAMPLE_COUNT */
+      bool has_event_write_sample_count;
+
+      bool has_64b_ssbo_atomics;
+
+      /* Blob executes a special compute dispatch at the start of each
+       * command buffers. We copy this dispatch as is.
+       */
+      bool cmdbuf_start_a725_quirk;
+
+      bool load_inline_uniforms_via_preamble_ldgk;
+      bool load_shader_consts_via_preamble;
+
+      bool has_gmem_vpc_attr_buf;
+      /* Size of buffer in gmem for VPC attributes */
+      uint32_t sysmem_vpc_attr_buf_size;
+      uint32_t gmem_vpc_attr_buf_size;
+
+      /* Whether UBWC is supported on all IBOs. Prior to this, only readonly
+       * or writeonly IBOs could use UBWC and mixing reads and writes was not
+       * permitted.
+       */
+      bool supports_ibo_ubwc;
+
+      /* Whether the UBWC fast-clear values for snorn, unorm, and int formats
+       * are the same. This is the case from a740 onwards. These formats were
+       * already otherwise UBWC-compatible, so this means that they are now
+       * fully compatible.
+       */
+      bool ubwc_unorm_snorm_int_compatible;
+
+      /* Having zero consts in one FS may corrupt consts in follow up FSs,
+       * on such GPUs blob never has zero consts in FS. The mechanism of
+       * corruption is unknown.
+       */
+      bool fs_must_have_non_zero_constlen_quirk;
+
+      /* On a750 there is a hardware bug where certain VPC sizes in a GS with
+       * an input primitive type that is a triangle with adjacency can hang
+       * with a high enough vertex count.
+       */
+      bool gs_vpc_adjacency_quirk;
+
+      /* On a740 TPL1_DBG_ECO_CNTL1.TP_UBWC_FLAG_HINT must be the same between
+       * all drivers in the system, somehow having different values affects
+       * BLIT_OP_SCALE. We cannot automatically match blob's value, so the
+       * best thing we could do is a toggle.
+       */
+      bool enable_tp_ubwc_flag_hint;
+
+      bool storage_8bit;
+
+      /* A750+ added a special flag that allows HW to correctly interpret UBWC, including
+       * UBWC fast-clear when casting image to a different format permitted by Vulkan.
+       * So it's possible to have UBWC enabled for image that has e.g. R32_UINT and
+       * R8G8B8A8_UNORM in the mutable formats list.
+       */
+      bool ubwc_all_formats_compatible;
+
+      bool has_compliant_dp4acc;
+
+      /* Whether a single clear blit could be used for both sysmem and gmem.*/
+      bool has_generic_clear;
+
+      /* Whether r8g8 UBWC fast-clear work correctly. */
+      bool r8g8_faulty_fast_clear_quirk;
+
+      /* a750 has a bug where writing and then reading a UBWC-compressed IBO
+       * requires flushing UCHE. This is reproducible in many CTS tests, for
+       * example dEQP-VK.image.load_store.with_format.2d.*.
+       */
+      bool ubwc_coherency_quirk;
+
+      /* Whether CP_ALWAYS_ON_COUNTER only resets on device loss rather than
+       * on every suspend/resume.
+       */
+      bool has_persistent_counter;
+
+      /* Whether only 256 vec4 constants are available for compute */
+      bool compute_constlen_quirk;
+
+      bool has_primitive_shading_rate;
+
+      /* A7XX gen1 and gen2 seem to require declaring SAMPLEMASK input
+       * for fragment shading rate to be read correctly.
+       * This workaround was seen in the prop driver v512.762.12.
+       */
+      bool reading_shading_rate_requires_smask_quirk;
+
+      /* Whether the ray_intersection instruction is present. */
+      bool has_ray_intersection;
+
+      /* Whether features may be fused off by the SW_FUSE. So far, this is
+       * just raytracing.
+       */
+      bool has_sw_fuse;
+
+      /* a750-specific HW bug workaround for ray tracing */
+      bool has_rt_workaround;
+
+      /* Whether alias.rt is supported. */
+      bool has_alias_rt;
    } a7xx;
 };
 
@@ -225,12 +384,26 @@ fd_dev_gpu_id(const struct fd_dev_id *id)
    return id->gpu_id;
 }
 
-const struct fd_dev_info * fd_dev_info(const struct fd_dev_id *id);
+/* Unmodified dev info as defined in freedreno_devices.py */
+const struct fd_dev_info *fd_dev_info_raw(const struct fd_dev_id *id);
+
+/* Helper to check if GPU is known before going any further */
+static inline uint8_t
+fd_dev_is_supported(const struct fd_dev_id *id) {
+   assert(id);
+   assert(id->gpu_id || id->chip_id);
+   return fd_dev_info_raw(id) != NULL;
+}
+
+/* Final dev info with dbg options and everything else applied.  */
+const struct fd_dev_info fd_dev_info(const struct fd_dev_id *id);
+
+const struct fd_dev_info *fd_dev_info_raw_by_name(const char *name);
 
 static uint8_t
 fd_dev_gen(const struct fd_dev_id *id)
 {
-   return fd_dev_info(id)->chip;
+   return fd_dev_info_raw(id)->chip;
 }
 
 static inline bool
@@ -251,6 +424,9 @@ fd_dev_64b(const struct fd_dev_id *id)
 #define A6XX_CCU_GMEM_COLOR_SIZE (16 * 1024)
 
 const char * fd_dev_name(const struct fd_dev_id *id);
+
+void
+fd_dev_info_apply_dbg_options(struct fd_dev_info *info);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

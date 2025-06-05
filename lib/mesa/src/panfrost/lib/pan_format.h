@@ -43,7 +43,8 @@ typedef uint32_t mali_pixel_format;
 #define PAN_BIND_VERTEX_BUFFER (1 << 4)
 
 struct panfrost_format {
-   mali_pixel_format hw;
+   uint32_t hw : 22;
+   uint32_t texfeat_bit : 5;
    unsigned bind;
 };
 
@@ -55,15 +56,60 @@ struct pan_blendable_format {
    mali_pixel_format bifrost[2];
 };
 
+#define panfrost_blendable_formats_v4 panfrost_blendable_formats_v5
+extern const struct pan_blendable_format
+   panfrost_blendable_formats_v5[PIPE_FORMAT_COUNT];
 extern const struct pan_blendable_format
    panfrost_blendable_formats_v6[PIPE_FORMAT_COUNT];
 extern const struct pan_blendable_format
    panfrost_blendable_formats_v7[PIPE_FORMAT_COUNT];
 extern const struct pan_blendable_format
    panfrost_blendable_formats_v9[PIPE_FORMAT_COUNT];
+extern const struct pan_blendable_format
+   panfrost_blendable_formats_v10[PIPE_FORMAT_COUNT];
+
+static inline const struct pan_blendable_format *
+panfrost_blendable_format_table(unsigned arch)
+{
+   switch (arch) {
+#define FMT_TABLE(x) case x: return panfrost_blendable_formats_v ## x
+   FMT_TABLE(4);
+   FMT_TABLE(5);
+   FMT_TABLE(6);
+   FMT_TABLE(7);
+   FMT_TABLE(9);
+   FMT_TABLE(10);
+#undef FMT_TABLE
+   default:
+      assert(!"Unsupported architecture");
+      return NULL;
+   }
+}
+
+#define panfrost_pipe_format_v4 panfrost_pipe_format_v5
+extern const struct panfrost_format panfrost_pipe_format_v5[PIPE_FORMAT_COUNT];
 extern const struct panfrost_format panfrost_pipe_format_v6[PIPE_FORMAT_COUNT];
 extern const struct panfrost_format panfrost_pipe_format_v7[PIPE_FORMAT_COUNT];
 extern const struct panfrost_format panfrost_pipe_format_v9[PIPE_FORMAT_COUNT];
+extern const struct panfrost_format panfrost_pipe_format_v10[PIPE_FORMAT_COUNT];
+
+static inline const struct panfrost_format *
+panfrost_format_table(unsigned arch)
+{
+   switch (arch) {
+#define FMT_TABLE(x) case x: return panfrost_pipe_format_v ## x
+   FMT_TABLE(4);
+   FMT_TABLE(5);
+   FMT_TABLE(6);
+   FMT_TABLE(7);
+   FMT_TABLE(9);
+   FMT_TABLE(10);
+#undef FMT_TABLE
+   default:
+      assert(!"Unsupported architecture");
+      return NULL;
+   }
+}
 
 /* Helpers to construct swizzles */
 
@@ -88,7 +134,7 @@ panfrost_get_default_swizzle(unsigned components)
    }
 }
 
-#if PAN_ARCH == 7
+#if PAN_ARCH == 7 || PAN_ARCH >= 10
 struct pan_decomposed_swizzle {
    /* Component ordering to apply first */
    enum mali_rgb_component_order pre;
@@ -99,6 +145,91 @@ struct pan_decomposed_swizzle {
 
 struct pan_decomposed_swizzle
    GENX(pan_decompose_swizzle)(enum mali_rgb_component_order order);
+#endif
+
+#define MALI_SRGB_L (0)
+#define MALI_SRGB_S (1)
+
+#if PAN_ARCH <= 6
+
+#define MALI_V6_0000 PAN_V6_SWIZZLE(0, 0, 0, 0)
+#define MALI_V6_000R PAN_V6_SWIZZLE(0, 0, 0, R)
+#define MALI_V6_0R00 PAN_V6_SWIZZLE(0, R, 0, 0)
+#define MALI_V6_0A00 PAN_V6_SWIZZLE(0, A, 0, 0)
+#define MALI_V6_AAAA PAN_V6_SWIZZLE(A, A, A, A)
+#define MALI_V6_A001 PAN_V6_SWIZZLE(A, 0, 0, 1)
+#define MALI_V6_ABG1 PAN_V6_SWIZZLE(A, B, G, 1)
+#define MALI_V6_ABGR PAN_V6_SWIZZLE(A, B, G, R)
+#define MALI_V6_ARGB PAN_V6_SWIZZLE(A, R, G, B)
+#define MALI_V6_BGR1 PAN_V6_SWIZZLE(B, G, R, 1)
+#define MALI_V6_BGRA PAN_V6_SWIZZLE(B, G, R, A)
+#define MALI_V6_GBA1 PAN_V6_SWIZZLE(G, B, A, 1)
+#define MALI_V6_GBAR PAN_V6_SWIZZLE(G, B, A, R)
+#define MALI_V6_R000 PAN_V6_SWIZZLE(R, 0, 0, 0)
+#define MALI_V6_R001 PAN_V6_SWIZZLE(R, 0, 0, 1)
+#define MALI_V6_RG01 PAN_V6_SWIZZLE(R, G, 0, 1)
+#define MALI_V6_RGB1 PAN_V6_SWIZZLE(R, G, B, 1)
+#define MALI_V6_RGBA PAN_V6_SWIZZLE(R, G, B, A)
+#define MALI_V6_RRR1 PAN_V6_SWIZZLE(R, R, R, 1)
+#define MALI_V6_RRRG PAN_V6_SWIZZLE(R, R, R, G)
+#define MALI_V6_RRRR PAN_V6_SWIZZLE(R, R, R, R)
+#define MALI_V6_GGGG PAN_V6_SWIZZLE(G, G, G, G)
+
+#define MALI_PACK_FMT(mali, swizzle, srgb)                                     \
+   (MALI_V6_##swizzle) | ((MALI_##mali) << 12) | (((MALI_SRGB_##srgb)) << 20)
+
+#else
+
+#define MALI_RGB_COMPONENT_ORDER_R001 MALI_RGB_COMPONENT_ORDER_RGB1
+#define MALI_RGB_COMPONENT_ORDER_RG01 MALI_RGB_COMPONENT_ORDER_RGB1
+#define MALI_RGB_COMPONENT_ORDER_GBAR MALI_RGB_COMPONENT_ORDER_ARGB
+#define MALI_RGB_COMPONENT_ORDER_GBA1 MALI_RGB_COMPONENT_ORDER_1RGB
+#define MALI_RGB_COMPONENT_ORDER_ABG1 MALI_RGB_COMPONENT_ORDER_1BGR
+
+#define MALI_PACK_FMT(mali, swizzle, srgb)                                     \
+   (MALI_RGB_COMPONENT_ORDER_##swizzle) | ((MALI_##mali) << 12) |              \
+      (((MALI_SRGB_##srgb)) << 20)
+
+#endif
+
+#define MALI_EXTRACT_INDEX(pixfmt) (((pixfmt) >> 12) & 0xFF)
+
+static inline bool panfrost_format_is_yuv(enum pipe_format f)
+{
+   enum util_format_layout layout = util_format_description(f)->layout;
+
+   /* Mesa's subsampled RGB formats are considered YUV formats on Mali */
+   return layout == UTIL_FORMAT_LAYOUT_SUBSAMPLED ||
+          layout == UTIL_FORMAT_LAYOUT_PLANAR2 ||
+          layout == UTIL_FORMAT_LAYOUT_PLANAR3;
+}
+
+#ifdef PAN_ARCH
+static inline const struct panfrost_format *
+GENX(panfrost_format_from_pipe_format)(enum pipe_format f)
+{
+   return &GENX(panfrost_pipe_format)[f];
+}
+
+static inline const struct pan_blendable_format *
+GENX(panfrost_blendable_format_from_pipe_format)(enum pipe_format f)
+{
+   return &GENX(panfrost_blendable_formats)[f];
+}
+
+#if PAN_ARCH >= 6
+static inline unsigned
+GENX(panfrost_dithered_format_from_pipe_format)(enum pipe_format f, bool dithered)
+{
+   mali_pixel_format pixfmt =
+      GENX(panfrost_blendable_formats)[f].bifrost[dithered];
+
+   /* Formats requiring blend shaders are stored raw in the tilebuffer and will
+    * have 0 as their pixel format. Assumes dithering is set, I don't know of a
+    * case when it makes sense to turn off dithering. */
+   return pixfmt ?: GENX(panfrost_format_from_pipe_format)(f)->hw;
+}
+#endif
 #endif
 
 #endif

@@ -1,22 +1,5 @@
 # Copyright © 2019 Raspberry Pi Ltd
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 v3dv_entrypoints = custom_target(
   'v3dv_entrypoints',
@@ -36,8 +19,6 @@ libv3dv_files = files(
   'v3dv_bo.c',
   'v3dv_cl.c',
   'v3dv_cmd_buffer.c',
-  'v3dv_debug.c',
-  'v3dv_debug.h',
   'v3dv_descriptor_set.c',
   'v3dv_device.c',
   'v3dv_event.c',
@@ -54,7 +35,7 @@ libv3dv_files = files(
   'v3dv_queue.c',
   'v3dv_uniforms.c',
   'v3dv_wsi.c',
-) + [v3d_xml_pack, vk_common_entrypoints[0], wsi_entrypoints[0]]
+) + [v3d_xml_pack]
 
 files_per_version = files(
   'v3dvx_cmd_buffer.c',
@@ -65,29 +46,25 @@ files_per_version = files(
   'v3dvx_pipeline.c',
   'v3dvx_meta_common.c',
   'v3dvx_pipeline.c',
-  'v3dvx_query.c',
   'v3dvx_queue.c',
 )
 
 v3d_versions = ['42', '71']
 
-v3dv_flags = []
-
-dep_v3dv3 = dependency('v3dv3', required : false)
-if dep_v3dv3.found()
-  v3dv_flags += '-DUSE_V3D_SIMULATOR'
-endif
+v3dv_flags = [v3d_simulator_arg]
 
 v3dv_deps = [
   dep_dl,
   dep_libdrm,
   dep_valgrind,
-  dep_v3dv3,
+  dep_v3d_hw,
+  idep_broadcom_perfcntrs,
   idep_nir,
   idep_nir_headers,
   idep_vulkan_util,
   idep_vulkan_runtime,
   idep_vulkan_wsi,
+  idep_mesautil,
 ]
 
 if with_platform_x11
@@ -111,7 +88,7 @@ foreach ver : v3d_versions
     'v3dv-v' + ver,
     [files_per_version, v3d_xml_pack, v3dv_entrypoints[0]],
     include_directories : [
-      inc_src, inc_include, inc_gallium, inc_gallium_aux, inc_broadcom,
+      inc_src, inc_include, inc_broadcom,
       inc_util,
     ],
     c_args : [v3dv_flags, '-DV3D_VERSION=' + ver],
@@ -124,7 +101,7 @@ libvulkan_broadcom = shared_library(
   'vulkan_broadcom',
   [libv3dv_files, v3dv_entrypoints, sha1_h],
   include_directories : [
-    inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_broadcom, inc_util,
+    inc_include, inc_src, inc_broadcom, inc_util,
   ],
   link_with : [
     libbroadcom_cle,
@@ -158,7 +135,7 @@ broadcom_icd = custom_target(
   output : 'broadcom_icd.@0@.json'.format(host_machine.cpu()),
   command : [
     prog_python, '@INPUT0@',
-    '--api-version', '1.2', '--xml', '@INPUT1@',
+    '--api-version', '1.3', '--xml', '@INPUT1@',
     '--lib-path', join_paths(get_option('prefix'), get_option('libdir'),
     		  	     'libvulkan_broadcom.so'),
     '--out', '@OUTPUT@',
@@ -183,4 +160,6 @@ _dev_icd = custom_target(
   build_by_default : true,
 )
 
+devenv.append('VK_DRIVER_FILES', _dev_icd.full_path())
+# Deprecated: replaced by VK_DRIVER_FILES above
 devenv.append('VK_ICD_FILENAMES', _dev_icd.full_path())

@@ -482,6 +482,11 @@ vk_common_CreateRenderPass2(VkDevice _device,
       subpass->attachment_count = num_subpass_attachments2(desc);
       subpass->attachments = next_subpass_attachment;
 
+      if (device->enabled_features.legacyDithering) {
+         subpass->legacy_dithering_enabled =
+            desc->flags & VK_SUBPASS_DESCRIPTION_ENABLE_LEGACY_DITHERING_BIT_EXT;
+      }
+
       /* From the Vulkan 1.3.204 spec:
        *
        *    VUID-VkRenderPassCreateInfo2-viewMask-03058
@@ -675,6 +680,9 @@ vk_common_CreateRenderPass2(VkDevice _device,
          next_subpass_color_samples += desc->colorAttachmentCount;
       }
 
+      subpass->ial.depth = VK_ATTACHMENT_UNUSED;
+      subpass->ial.stencil = VK_ATTACHMENT_UNUSED;
+
       VkFormat depth_format = VK_FORMAT_UNDEFINED;
       VkFormat stencil_format = VK_FORMAT_UNDEFINED;
       VkSampleCountFlagBits depth_stencil_samples = VK_SAMPLE_COUNT_1_BIT;
@@ -683,11 +691,22 @@ vk_common_CreateRenderPass2(VkDevice _device,
          if (ref->attachment < pCreateInfo->attachmentCount) {
             const VkAttachmentDescription2 *att =
                &pCreateInfo->pAttachments[ref->attachment];
+            uint32_t ia_idx = VK_ATTACHMENT_UNUSED;
 
-            if (vk_format_has_depth(att->format))
+            for (uint32_t j = 0; j < subpass->input_count; j++) {
+               if (subpass->input_attachments[j].attachment == ref->attachment)
+                  ia_idx = j;
+            }
+
+            if (vk_format_has_depth(att->format)) {
                depth_format = att->format;
-            if (vk_format_has_stencil(att->format))
+               subpass->ial.depth = ia_idx;
+            }
+
+            if (vk_format_has_stencil(att->format)) {
                stencil_format = att->format;
+               subpass->ial.stencil = ia_idx;
+            }
 
             depth_stencil_samples = att->samples;
 
@@ -703,9 +722,47 @@ vk_common_CreateRenderPass2(VkDevice _device,
          .depthStencilAttachmentSamples = depth_stencil_samples,
       };
 
+      subpass->ial.info = (VkRenderingInputAttachmentIndexInfo) {
+         .sType = VK_STRUCTURE_TYPE_RENDERING_INPUT_ATTACHMENT_INDEX_INFO,
+         .pNext = &subpass->sample_count_info_amd,
+         .colorAttachmentCount = subpass->color_count,
+         .pColorAttachmentInputIndices = subpass->ial.colors,
+         /* From the Vulkan 1.3.204 spec:
+          *
+          *    VUID-vkCmdDraw-OpTypeImage-07468
+          *
+          *    "If any shader executed by this pipeline accesses an OpTypeImage
+          *     variable with a Dim operand of SubpassData, it must be decorated
+          *     with an InputAttachmentIndex that corresponds to a valid input
+          *     attachment in the current subpass."
+          *
+          * So we don't have to worry about the missing InputAttachmentIndex
+          * decoration (AKA NO_INDEX) here, the depth/stencil attachment is
+          * either not used as an input attachment, or it has an explicit
+          * index.
+          */
+         .pDepthInputAttachmentIndex = &subpass->ial.depth,
+         .pStencilInputAttachmentIndex = &subpass->ial.stencil,
+      };
+
+      /* Build the color -> input attachment map. */
+      for (uint32_t i = 0; i < subpass->color_count; i++) {
+         subpass->ial.colors[i] = VK_ATTACHMENT_UNUSED;
+
+         if (subpass->color_attachments[i].attachment == VK_ATTACHMENT_UNUSED)
+            continue;
+
+         for (uint32_t j = 0; j < subpass->input_count; j++) {
+            if (subpass->input_attachments[j].attachment ==
+                   subpass->color_attachments[i].attachment) {
+               subpass->ial.colors[i] = j;
+            }
+         }
+      }
+
       subpass->pipeline_info = (VkPipelineRenderingCreateInfo) {
          .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-         .pNext = &subpass->sample_count_info_amd,
+         .pNext = &subpass->ial.info,
          .viewMask = desc->viewMask,
          .colorAttachmentCount = desc->colorAttachmentCount,
          .pColorAttachmentFormats = color_formats,
@@ -715,7 +772,7 @@ vk_common_CreateRenderPass2(VkDevice _device,
 
       subpass->inheritance_info = (VkCommandBufferInheritanceRenderingInfo) {
          .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_RENDERING_INFO,
-         .pNext = &subpass->sample_count_info_amd,
+         .pNext = &subpass->ial.info,
          /* If we're inheriting, the contents are clearly in secondaries */
          .flags = VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT,
          .viewMask = desc->viewMask,
@@ -838,14 +895,23 @@ vk_get_pipeline_rendering_create_info(const VkGraphicsPipelineCreateInfo *info)
    return vk_find_struct_const(info->pNext, PIPELINE_RENDERING_CREATE_INFO);
 }
 
-VkPipelineCreateFlags
+const VkRenderingInputAttachmentIndexInfo *
+vk_get_pipeline_rendering_ial_info(const VkGraphicsPipelineCreateInfo *info)
+{
+   VK_FROM_HANDLE(vk_render_pass, render_pass, info->renderPass);
+   if (render_pass != NULL) {
+      assert(info->subpass < render_pass->subpass_count);
+      return &render_pass->subpasses[info->subpass].ial.info;
+   }
+
+   return vk_find_struct_const(info->pNext,
+                               RENDERING_INPUT_ATTACHMENT_INDEX_INFO_KHR);
+}
+
+VkPipelineCreateFlags2KHR
 vk_get_pipeline_rendering_flags(const VkGraphicsPipelineCreateInfo *info)
 {
-   VkPipelineCreateFlags rendering_flags = info->flags &
-      (VK_PIPELINE_CREATE_COLOR_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT |
-       VK_PIPELINE_CREATE_DEPTH_STENCIL_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT |
-       VK_PIPELINE_CREATE_RENDERING_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR |
-       VK_PIPELINE_CREATE_RENDERING_FRAGMENT_DENSITY_MAP_ATTACHMENT_BIT_EXT);
+   VkPipelineCreateFlags2KHR rendering_flags = 0;
 
    VK_FROM_HANDLE(vk_render_pass, render_pass, info->renderPass);
    if (render_pass != NULL) {
@@ -1038,6 +1104,55 @@ vk_get_command_buffer_inheritance_as_rendering_resume(
       __vk_append_struct(&data->rendering, (void *)&subpass->mrtss);
 
    return &data->rendering;
+}
+
+const VkRenderingAttachmentLocationInfoKHR *
+vk_get_command_buffer_rendering_attachment_location_info(
+   VkCommandBufferLevel level,
+   const VkCommandBufferBeginInfo *pBeginInfo)
+{
+   /* From the Vulkan 1.3.295 spec:
+    *
+    *    "VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT specifies that a
+    *    secondary command buffer is considered to be entirely inside a render
+    *    pass. If this is a primary command buffer, then this bit is ignored."
+    *
+    * Since we're only concerned with the continue case here, we can ignore
+    * any primary command buffers.
+    */
+   if (level == VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+      return NULL;
+
+   /* From the Vulkan 1.3.295 spec:
+    *
+    *    "This structure can be included in the pNext chain of a
+    *    VkCommandBufferInheritanceInfo structure to specify inherited state
+    *    from the primary command buffer. If
+    *    VkCommandBufferInheritanceInfo::renderPass is not VK_NULL_HANDLE, or
+    *    VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT is not specified in
+    *    VkCommandBufferBeginInfo::flags, members of this structure are
+    *    ignored."
+    *
+    * For the case where a render pass is provided and we're emulating it on
+    * behalf of the driver, the default NULL behavior is sufficient:
+    *
+    *    "If this structure is not included in the pNext chain of
+    *    VkCommandBufferInheritanceInfo, it is equivalent to specifying this
+    *    structure with the following properties:
+    *
+    *     - colorAttachmentCount set to
+    *       VkCommandBufferInheritanceRenderingInfo::colorAttachmentCount.
+    *
+    *     - pColorAttachmentLocations set to NULL."
+    */
+   if (!(pBeginInfo->flags & VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT))
+      return NULL;
+
+   if (pBeginInfo->pInheritanceInfo->renderPass != VK_NULL_HANDLE)
+      return NULL;
+
+   return vk_find_struct_const(pBeginInfo,
+                               RENDERING_ATTACHMENT_LOCATION_INFO_KHR);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -1590,6 +1705,7 @@ load_attachment(struct vk_command_buffer *cmd_buffer,
 
    VkRenderingInfo render = {
       .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+      .flags = VK_RENDERING_INPUT_ATTACHMENT_NO_CONCURRENT_WRITES_BIT_MESA,
       .renderArea = cmd_buffer->render_area,
       .layerCount = pass->is_multiview ? 1 : framebuffer->layers,
       .viewMask = pass->is_multiview ? view_mask : 0,
@@ -2111,6 +2227,7 @@ begin_subpass(struct vk_command_buffer *cmd_buffer,
 
    VkRenderingInfo rendering = {
       .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+      .flags = VK_RENDERING_INPUT_ATTACHMENT_NO_CONCURRENT_WRITES_BIT_MESA,
       .renderArea = cmd_buffer->render_area,
       .layerCount = pass->is_multiview ? 1 : framebuffer->layers,
       .viewMask = pass->is_multiview ? subpass->view_mask : 0,
@@ -2119,6 +2236,9 @@ begin_subpass(struct vk_command_buffer *cmd_buffer,
       .pDepthAttachment = &depth_attachment,
       .pStencilAttachment = &stencil_attachment,
    };
+
+   if (subpass->legacy_dithering_enabled)
+      rendering.flags |= VK_RENDERING_ENABLE_LEGACY_DITHERING_BIT_EXT;
 
    VkRenderingFragmentShadingRateAttachmentInfoKHR fsr_attachment;
    if (subpass->fragment_shading_rate_attachment) {
@@ -2185,6 +2305,35 @@ begin_subpass(struct vk_command_buffer *cmd_buffer,
 
    disp->CmdBeginRendering(vk_command_buffer_to_handle(cmd_buffer),
                            &rendering);
+
+   if (disp->CmdSetRenderingInputAttachmentIndices) {
+      /* From the Vulkan 1.4.312 spec:
+       * "
+       * Until this command is called, mappings in the command buffer state
+       * are treated as each color attachment specified in vkCmdBeginRendering
+       * mapping to subpass inputs with a InputAttachmentIndex equal to its
+       * index in VkRenderingInfo::pColorAttachments, and depth/stencil
+       * attachments mapping to input attachments without these decorations.
+       * This state is reset whenever vkCmdBeginRendering is called.
+       * "
+       *
+       * In practice, CmdBindPipeline() should apply exactly the same
+       * state to the vk_command_buffer dynamic state, and that's exactly
+       * what the Vulkan spec wants:
+       *
+       * "
+       * This command sets the input attachment index mappings for subsequent
+       * drawing commands, and must match the mappings provided to the bound
+       * pipeline, if one is bound, which can be set by chaining
+       * VkRenderingInputAttachmentIndexInfo to VkGraphicsPipelineCreateInfo.
+       * "
+       *
+       * So I'm not sure this CmdSetRenderingInputAttachmentIndices() is
+       * really needed, but let's keep it to play by the rules.
+       */
+      disp->CmdSetRenderingInputAttachmentIndices(vk_command_buffer_to_handle(cmd_buffer),
+                                                  &subpass->ial.info);
+   }
 
    STACK_ARRAY_FINISH(color_attachments);
    STACK_ARRAY_FINISH(color_attachment_initial_layouts);

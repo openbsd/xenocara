@@ -1,30 +1,11 @@
 /*
  * Copyright © 2020 Google, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #define FD_BO_NO_HARDPIN 1
 
 #include "pipe/p_state.h"
-#include "util/u_prim.h"
 
 #include "freedreno_batch.h"
 #include "freedreno_gmem.h"
@@ -69,7 +50,7 @@ prim_count(const struct pipe_draw_info *info,
 {
    /* MESA_PRIM_COUNT used internally for RECTLIST blits on 3d pipe: */
    unsigned vtx_per_prim =
-      (info->mode == MESA_PRIM_COUNT) ? 2 : u_vertices_per_prim(info->mode);
+      (info->mode == MESA_PRIM_COUNT) ? 2 : mesa_vertices_per_prim(info->mode);
    return MAX2(1, (draw->count * info->instance_count) / vtx_per_prim);
 }
 
@@ -157,7 +138,7 @@ fd6_vsc_update_sizes(struct fd_batch *batch, const struct pipe_draw_info *info,
              prim_strm_bits, draw_strm_bits, batch->num_bins_per_pipe,
              info->instance_count, info->count,
              (info->count * info->instance_count) /
-             u_vertices_per_prim(info->mode),
+             mesa_vertices_per_prim(info->mode),
              u_prim_name(info->mode));
 #endif
 

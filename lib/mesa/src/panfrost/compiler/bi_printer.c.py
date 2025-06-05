@@ -49,7 +49,7 @@ static const char *
 bir_fau_name(unsigned fau_idx)
 {
     const char *names[] = {
-            "zero", "lane-id", "wrap-id", "core-id", "fb-extent",
+            "zero", "lane-id", "warp-id", "core-id", "fb-extent",
             "atest-param", "sample-pos", "reserved",
             "blend_descriptor_0", "blend_descriptor_1",
             "blend_descriptor_2", "blend_descriptor_3",
@@ -224,7 +224,11 @@ import sys
 from bifrost_isa import *
 from mako.template import Template
 
-instructions = parse_instructions(sys.argv[1], include_pseudo = True)
+instructions = {}
+for arg in sys.argv[1:]:
+    new_instructions = parse_instructions(arg, include_pseudo = True)
+    instructions.update(new_instructions)
+
 ir_instructions = partition_mnemonics(instructions)
 modifier_lists = order_modifiers(ir_instructions)
 

@@ -25,6 +25,16 @@
 #define _UTIL_PERFETTO_H
 
 #include "util/u_atomic.h"
+#include "util/detect_os.h"
+
+// On Unix, pass a clockid_t to designate which clock was used to gather the timestamp
+// On Windows, this paramter is ignored, and it's expected that `timestamp` comes from QueryPerformanceCounter
+#if DETECT_OS_POSIX
+#include <time.h>
+typedef clockid_t perfetto_clock_id;
+#else
+typedef int32_t perfetto_clock_id;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,6 +55,18 @@ util_perfetto_is_tracing_enabled(void)
 void util_perfetto_trace_begin(const char *name);
 
 void util_perfetto_trace_end(void);
+
+void util_perfetto_trace_begin_flow(const char *fname, uint64_t id);
+
+void util_perfetto_counter_set(const char *name, double value);
+
+void util_perfetto_trace_full_begin(const char *name, uint64_t track_id, uint64_t id, perfetto_clock_id clock, uint64_t timestamp);
+
+void util_perfetto_trace_full_end(const char *name, uint64_t track_id, perfetto_clock_id clock, uint64_t timestamp);
+
+uint64_t util_perfetto_next_id(void);
+
+uint64_t util_perfetto_new_track(const char *name);
 
 #else /* HAVE_PERFETTO */
 
@@ -67,6 +89,34 @@ util_perfetto_trace_begin(const char *name)
 static inline void
 util_perfetto_trace_end(void)
 {
+}
+
+static inline void util_perfetto_trace_begin_flow(const char *fname, uint64_t id)
+{
+}
+
+static inline void
+util_perfetto_trace_full_begin(const char *name, uint64_t track_id, uint64_t id, perfetto_clock_id clock, uint64_t timestamp)
+{
+}
+
+static inline void
+util_perfetto_trace_full_end(const char *name, uint64_t track_id, perfetto_clock_id clock, uint64_t timestamp)
+{
+}
+
+static inline void util_perfetto_counter_set(const char *name, double value)
+{
+}
+
+static inline uint64_t util_perfetto_next_id(void)
+{
+   return 0;
+}
+
+static inline uint64_t util_perfetto_new_track(const char *name)
+{
+   return 0;
 }
 
 #endif /* HAVE_PERFETTO */

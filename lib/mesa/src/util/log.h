@@ -44,6 +44,8 @@ enum mesa_log_level {
    MESA_LOG_DEBUG,
 };
 
+#define MAX_LOG_MESSAGE_LENGTH 4096
+
 FILE *
 mesa_log_get_file(void);
 
@@ -54,10 +56,19 @@ void
 mesa_log_v(enum mesa_log_level, const char *tag, const char *format,
             va_list va);
 
+void
+_mesa_log(const char *fmtString, ...) PRINTFLIKE(1, 2);
+
+void
+_mesa_log_direct(const char *string);
+
+void
+mesa_log_if_debug(enum mesa_log_level level, const char *outputString);
+
 #define mesa_loge(fmt, ...) mesa_log(MESA_LOG_ERROR, (MESA_LOG_TAG), (fmt), ##__VA_ARGS__)
 #define mesa_logw(fmt, ...) mesa_log(MESA_LOG_WARN, (MESA_LOG_TAG), (fmt), ##__VA_ARGS__)
 #define mesa_logi(fmt, ...) mesa_log(MESA_LOG_INFO, (MESA_LOG_TAG), (fmt), ##__VA_ARGS__)
-#ifdef DEBUG
+#if MESA_DEBUG
 #define mesa_logd(fmt, ...) mesa_log(MESA_LOG_DEBUG, (MESA_LOG_TAG), (fmt), ##__VA_ARGS__)
 #else
 #define mesa_logd(fmt, ...) __mesa_log_use_args((fmt), ##__VA_ARGS__)
@@ -66,7 +77,7 @@ mesa_log_v(enum mesa_log_level, const char *tag, const char *format,
 #define mesa_loge_v(fmt, va) mesa_log_v(MESA_LOG_ERROR, (MESA_LOG_TAG), (fmt), (va))
 #define mesa_logw_v(fmt, va) mesa_log_v(MESA_LOG_WARN, (MESA_LOG_TAG), (fmt), (va))
 #define mesa_logi_v(fmt, va) mesa_log_v(MESA_LOG_INFO, (MESA_LOG_TAG), (fmt), (va))
-#ifdef DEBUG
+#if MESA_DEBUG
 #define mesa_logd_v(fmt, va) mesa_log_v(MESA_LOG_DEBUG, (MESA_LOG_TAG), (fmt), (va))
 #else
 #define mesa_logd_v(fmt, va) __mesa_log_use_args((fmt), (va))
@@ -104,7 +115,7 @@ void mesa_log_stream_printf(struct log_stream *stream, const char *format, ...) 
 void _mesa_log_multiline(enum mesa_log_level level, const char *tag, const char *lines);
 #define mesa_log_multiline(level, lines) _mesa_log_multiline(level, (MESA_LOG_TAG), lines)
 
-#ifndef DEBUG
+#if !MESA_DEBUG
 /* Suppres -Wunused */
 static inline void PRINTFLIKE(1, 2)
 __mesa_log_use_args(UNUSED const char *format, ...) { }

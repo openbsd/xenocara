@@ -32,8 +32,8 @@
 #include <sys/types.h>
 
 #include "compiler/glsl/glsl_to_nir.h"
+#include "compiler/glsl_types.h"
 #include "compiler/nir/nir_builder.h"
-#include "compiler/nir_types.h"
 #include "util/half_float.h"
 #include "util/list.h"
 #include "util/u_debug.h"
@@ -92,7 +92,10 @@ schedule_barrier(compiler_context *ctx)
 /* Helpers to generate midgard_instruction's using macro magic, since every
  * driver seems to do it that way */
 
-#define EMIT(op, ...) emit_mir_instruction(ctx, v_##op(__VA_ARGS__));
+#define EMIT(op, ...) do {                                                     \
+   struct midgard_instruction ins = v_##op(__VA_ARGS__);                       \
+   emit_mir_instruction(ctx, &ins);                                            \
+} while(0)
 
 #define M_LOAD_STORE(name, store, T)                                           \
    static midgard_instruction m_##name(unsigned ssa, unsigned address)         \
@@ -271,7 +274,7 @@ midgard_nir_lower_global_load(nir_shader *shader)
 {
    return nir_shader_intrinsics_pass(
       shader, midgard_nir_lower_global_load_instr,
-      nir_metadata_block_index | nir_metadata_dominance, NULL);
+      nir_metadata_control_flow, NULL);
 }
 
 static bool
@@ -323,6 +326,48 @@ midgard_vectorize_filter(const nir_instr *instr, const void *data)
    return 4;
 }
 
+static nir_mem_access_size_align
+mem_access_size_align_cb(nir_intrinsic_op intrin, uint8_t bytes,
+                         uint8_t bit_size, uint32_t align_mul,
+                         uint32_t align_offset, bool offset_is_const,
+                         enum gl_access_qualifier access, const void *cb_data)
+{
+   uint32_t align = nir_combined_align(align_mul, align_offset);
+   assert(util_is_power_of_two_nonzero(align));
+
+   /* No more than 16 bytes at a time. */
+   bytes = MIN2(bytes, 16);
+
+   /* If the number of bytes is a multiple of 4, use 32-bit loads. Else if it's
+    * a multiple of 2, use 16-bit loads. Else use 8-bit loads.
+    *
+    * But if we're only aligned to 1 byte, use 8-bit loads. If we're only
+    * aligned to 2 bytes, use 16-bit loads, unless we needed 8-bit loads due to
+    * the size.
+    */
+   if ((bytes & 1) || (align == 1))
+      bit_size = 8;
+   else if ((bytes & 2) || (align == 2))
+      bit_size = 16;
+   else if (bit_size >= 32)
+      bit_size = 32;
+
+   unsigned num_comps = MIN2(bytes / (bit_size / 8), 4);
+
+   return (nir_mem_access_size_align){
+      .num_components = num_comps,
+      .bit_size = bit_size,
+      .align = bit_size / 8,
+      .shift = nir_mem_access_shift_method_scalar,
+   };
+}
+
+static uint8_t
+lower_vec816_alu(const nir_instr *instr, const void *cb_data)
+{
+  return 4;
+}
+
 void
 midgard_preprocess_nir(nir_shader *nir, unsigned gpu_id)
 {
@@ -332,44 +377,61 @@ midgard_preprocess_nir(nir_shader *nir, unsigned gpu_id)
     * (so we don't accidentally duplicate the epilogue since mesa/st has
     * messed with our I/O quite a bit already).
     */
-   NIR_PASS_V(nir, nir_lower_vars_to_ssa);
+   NIR_PASS(_, nir, nir_lower_vars_to_ssa);
 
    if (nir->info.stage == MESA_SHADER_VERTEX) {
-      NIR_PASS_V(nir, nir_lower_viewport_transform);
-      NIR_PASS_V(nir, nir_lower_point_size, 1.0, 0.0);
+      NIR_PASS(_, nir, pan_nir_lower_vertex_id);
+      NIR_PASS(_, nir, nir_lower_viewport_transform);
+      NIR_PASS(_, nir, nir_lower_point_size, 1.0, 0.0);
    }
 
-   NIR_PASS_V(nir, nir_lower_var_copies);
-   NIR_PASS_V(nir, nir_lower_vars_to_ssa);
-   NIR_PASS_V(nir, nir_split_var_copies);
-   NIR_PASS_V(nir, nir_lower_var_copies);
-   NIR_PASS_V(nir, nir_lower_global_vars_to_local);
-   NIR_PASS_V(nir, nir_lower_var_copies);
-   NIR_PASS_V(nir, nir_lower_vars_to_ssa);
+   NIR_PASS(_, nir, nir_lower_var_copies);
+   NIR_PASS(_, nir, nir_lower_vars_to_ssa);
+   NIR_PASS(_, nir, nir_split_var_copies);
+   NIR_PASS(_, nir, nir_lower_var_copies);
+   NIR_PASS(_, nir, nir_lower_global_vars_to_local);
+   NIR_PASS(_, nir, nir_lower_var_copies);
+   NIR_PASS(_, nir, nir_lower_vars_to_ssa);
 
-   NIR_PASS_V(nir, nir_lower_io, nir_var_shader_in | nir_var_shader_out,
-              glsl_type_size, 0);
+   NIR_PASS(_, nir, nir_lower_io, nir_var_shader_in | nir_var_shader_out,
+            glsl_type_size, nir_lower_io_use_interpolated_input_intrinsics);
 
    if (nir->info.stage == MESA_SHADER_VERTEX) {
       /* nir_lower[_explicit]_io is lazy and emits mul+add chains even
        * for offsets it could figure out are constant.  Do some
        * constant folding before pan_nir_lower_store_component below.
        */
-      NIR_PASS_V(nir, nir_opt_constant_folding);
-      NIR_PASS_V(nir, pan_nir_lower_store_component);
+      NIR_PASS(_, nir, nir_opt_constant_folding);
+      NIR_PASS(_, nir, pan_nir_lower_store_component);
    }
 
-   NIR_PASS_V(nir, nir_lower_ssbo);
-   NIR_PASS_V(nir, pan_nir_lower_zs_store);
+   /* Could be eventually useful for Vulkan, but we don't expect it to have
+    * the support, so limit it to compute */
+   if (gl_shader_stage_is_compute(nir->info.stage)) {
+      nir_lower_mem_access_bit_sizes_options mem_size_options = {
+         .modes = nir_var_mem_ubo | nir_var_mem_ssbo |
+                  nir_var_mem_constant | nir_var_mem_task_payload |
+                  nir_var_shader_temp | nir_var_function_temp |
+                  nir_var_mem_global | nir_var_mem_shared,
+         .callback = mem_access_size_align_cb,
+      };
 
-   NIR_PASS_V(nir, nir_lower_frexp);
-   NIR_PASS_V(nir, midgard_nir_lower_global_load);
+      NIR_PASS(_, nir, nir_lower_mem_access_bit_sizes, &mem_size_options);
+      NIR_PASS(_, nir, nir_lower_alu_width, lower_vec816_alu, NULL);
+      NIR_PASS(_, nir, nir_lower_alu_vec8_16_srcs);
+   }
+
+   NIR_PASS(_, nir, nir_lower_ssbo, NULL);
+   NIR_PASS(_, nir, pan_nir_lower_zs_store);
+
+   NIR_PASS(_, nir, nir_lower_frexp);
+   NIR_PASS(_, nir, midgard_nir_lower_global_load);
 
    nir_lower_idiv_options idiv_options = {
       .allow_fp16 = true,
    };
 
-   NIR_PASS_V(nir, nir_lower_idiv, &idiv_options);
+   NIR_PASS(_, nir, nir_lower_idiv, &idiv_options);
 
    nir_lower_tex_options lower_tex_options = {
       .lower_txs_lod = true,
@@ -379,27 +441,32 @@ midgard_preprocess_nir(nir_shader *nir, unsigned gpu_id)
       .lower_invalid_implicit_lod = true,
    };
 
-   NIR_PASS_V(nir, nir_lower_tex, &lower_tex_options);
-   NIR_PASS_V(nir, nir_lower_image_atomics_to_global);
+   NIR_PASS(_, nir, nir_lower_tex, &lower_tex_options);
+   NIR_PASS(_, nir, nir_lower_image_atomics_to_global);
 
    /* TEX_GRAD fails to apply sampler descriptor settings on some
     * implementations, requiring a lowering.
     */
    if (quirks & MIDGARD_BROKEN_LOD)
-      NIR_PASS_V(nir, midgard_nir_lod_errata);
+      NIR_PASS(_, nir, midgard_nir_lod_errata);
+
+   /* lower MSAA image operations to 3D load before coordinate lowering */
+   NIR_PASS(_, nir, pan_nir_lower_image_ms);
 
    /* Midgard image ops coordinates are 16-bit instead of 32-bit */
-   NIR_PASS_V(nir, midgard_nir_lower_image_bitsize);
+   NIR_PASS(_, nir, midgard_nir_lower_image_bitsize);
 
-   if (nir->info.stage == MESA_SHADER_FRAGMENT)
-      NIR_PASS_V(nir, nir_lower_helper_writes, true);
+   if (nir->info.stage == MESA_SHADER_FRAGMENT) {
+      NIR_PASS(_, nir, nir_lower_helper_writes, true);
+      NIR_PASS(_, nir, nir_lower_is_helper_invocation);
+      NIR_PASS(_, nir, pan_lower_helper_invocation);
+      NIR_PASS(_, nir, pan_lower_sample_pos);
+   }
 
-   NIR_PASS_V(nir, pan_lower_helper_invocation);
-   NIR_PASS_V(nir, pan_lower_sample_pos);
-   NIR_PASS_V(nir, midgard_nir_lower_algebraic_early);
-   NIR_PASS_V(nir, nir_lower_alu_to_scalar, mdg_should_scalarize, NULL);
-   NIR_PASS_V(nir, nir_lower_flrp, 16 | 32 | 64, false /* always_precise */);
-   NIR_PASS_V(nir, nir_lower_var_copies);
+   NIR_PASS(_, nir, midgard_nir_lower_algebraic_early);
+   NIR_PASS(_, nir, nir_lower_alu_to_scalar, mdg_should_scalarize, NULL);
+   NIR_PASS(_, nir, nir_lower_flrp, 16 | 32 | 64, false /* always_precise */);
+   NIR_PASS(_, nir, nir_lower_var_copies);
 }
 
 static void
@@ -429,7 +496,7 @@ optimise_nir(nir_shader *nir, unsigned quirks, bool is_blend)
                NULL);
    } while (progress);
 
-   NIR_PASS_V(nir, nir_lower_alu_to_scalar, mdg_should_scalarize, NULL);
+   NIR_PASS(_, nir, nir_lower_alu_to_scalar, mdg_should_scalarize, NULL);
 
    /* Run after opts so it can hit more */
    if (!is_blend)
@@ -453,7 +520,7 @@ optimise_nir(nir_shader *nir, unsigned quirks, bool is_blend)
    /* Now that booleans are lowered, we can run out late opts */
    NIR_PASS(progress, nir, midgard_nir_lower_algebraic_late);
    NIR_PASS(progress, nir, midgard_nir_cancel_inot);
-   NIR_PASS_V(nir, midgard_nir_type_csel);
+   NIR_PASS(_, nir, midgard_nir_type_csel);
 
    /* Clean up after late opts */
    do {
@@ -470,18 +537,18 @@ optimise_nir(nir_shader *nir, unsigned quirks, bool is_blend)
                                nir_move_load_input | nir_move_comparisons |
                                nir_move_copies | nir_move_load_ssbo;
 
-   NIR_PASS_V(nir, nir_opt_sink, move_all);
-   NIR_PASS_V(nir, nir_opt_move, move_all);
+   NIR_PASS(_, nir, nir_opt_sink, move_all);
+   NIR_PASS(_, nir, nir_opt_move, move_all);
 
    /* Take us out of SSA */
-   NIR_PASS(progress, nir, nir_convert_from_ssa, true);
+   NIR_PASS(progress, nir, nir_convert_from_ssa, true, false);
 
    /* We are a vector architecture; write combine where possible */
    NIR_PASS(progress, nir, nir_move_vec_src_uses_to_dest, false);
    NIR_PASS(progress, nir, nir_lower_vec_to_regs, NULL, NULL);
 
    NIR_PASS(progress, nir, nir_opt_dce);
-   NIR_PASS_V(nir, nir_trivialize_registers);
+   nir_trivialize_registers(nir);
 }
 
 /* Do not actually emit a load; instead, cache the constant for inlining */
@@ -535,7 +602,7 @@ emit_explicit_constant(compiler_context *ctx, unsigned node)
       midgard_instruction ins =
          v_mov(SSA_FIXED_REGISTER(REGISTER_CONSTANT), node);
       attach_constants(ctx, &ins, constant_value, node + 1);
-      emit_mir_instruction(ctx, ins);
+      emit_mir_instruction(ctx, &ins);
    }
 }
 
@@ -619,14 +686,6 @@ mir_copy_src(midgard_instruction *ins, nir_alu_instr *instr, unsigned i,
 static void
 emit_alu(compiler_context *ctx, nir_alu_instr *instr)
 {
-   /* Derivatives end up emitted on the texture pipe, not the ALUs. This
-    * is handled elsewhere */
-
-   if (instr->op == nir_op_fddx || instr->op == nir_op_fddy) {
-      midgard_emit_derivatives(ctx, instr);
-      return;
-   }
-
    unsigned nr_components = instr->def.num_components;
    unsigned nr_inputs = nir_op_infos[instr->op].num_inputs;
    unsigned op = 0;
@@ -702,6 +761,7 @@ emit_alu(compiler_context *ctx, nir_alu_instr *instr)
       ALU_CASE_CMP(b2f32, iand);
       ALU_CASE_CMP(b2f16, iand);
       ALU_CASE_CMP(b2i32, iand);
+      ALU_CASE_CMP(b2i16, iand);
 
       ALU_CASE(frcp, frcp);
       ALU_CASE(frsq, frsqrt);
@@ -760,8 +820,8 @@ emit_alu(compiler_context *ctx, nir_alu_instr *instr)
       ALU_CASE(fabs, fmov);
       ALU_CASE(fneg, fmov);
       ALU_CASE(fsat, fmov);
-      ALU_CASE(fsat_signed_mali, fmov);
-      ALU_CASE(fclamp_pos_mali, fmov);
+      ALU_CASE(fsat_signed, fmov);
+      ALU_CASE(fclamp_pos, fmov);
 
       /* For size conversion, we use a move. Ideally though we would squash
        * these ops together; maybe that has to happen after in NIR as part of
@@ -829,6 +889,14 @@ emit_alu(compiler_context *ctx, nir_alu_instr *instr)
       break;
    }
 
+   case nir_op_unpack_64_2x32:
+   case nir_op_unpack_64_4x16:
+   case nir_op_pack_64_2x32:
+   case nir_op_pack_64_4x16: {
+      op = midgard_alu_op_imov;
+      break;
+   }
+
    default:
       mesa_loge("Unhandled ALU op %s\n", nir_op_infos[instr->op].name);
       assert(0);
@@ -854,9 +922,9 @@ emit_alu(compiler_context *ctx, nir_alu_instr *instr)
       outmod = midgard_outmod_keeplo;
    } else if (instr->op == nir_op_fsat) {
       outmod = midgard_outmod_clamp_0_1;
-   } else if (instr->op == nir_op_fsat_signed_mali) {
+   } else if (instr->op == nir_op_fsat_signed) {
       outmod = midgard_outmod_clamp_m1_1;
-   } else if (instr->op == nir_op_fclamp_pos_mali) {
+   } else if (instr->op == nir_op_fclamp_pos) {
       outmod = midgard_outmod_clamp_0_inf;
    }
 
@@ -970,7 +1038,7 @@ emit_alu(compiler_context *ctx, nir_alu_instr *instr)
       ins.is_pack = true;
    }
 
-   emit_mir_instruction(ctx, ins);
+   emit_mir_instruction(ctx, &ins);
 }
 
 #undef ALU_CASE
@@ -1051,7 +1119,7 @@ emit_ubo_read(compiler_context *ctx, nir_instr *instr, unsigned dest,
 
    midgard_pack_ubo_index_imm(&ins.load_store, index);
 
-   return emit_mir_instruction(ctx, ins);
+   return emit_mir_instruction(ctx, &ins);
 }
 
 /* Globals are like UBOs if you squint. And shared memory is like globals if
@@ -1148,7 +1216,7 @@ emit_global(compiler_context *ctx, nir_instr *instr, bool is_read,
          ins.swizzle[0][i] = first_component;
    }
 
-   emit_mir_instruction(ctx, ins);
+   emit_mir_instruction(ctx, &ins);
 }
 
 static midgard_load_store_op
@@ -1227,7 +1295,7 @@ emit_atomic(compiler_context *ctx, nir_intrinsic_instr *instr)
 
    mir_set_intr_mask(&instr->instr, &ins, true);
 
-   emit_mir_instruction(ctx, ins);
+   emit_mir_instruction(ctx, &ins);
 }
 
 static void
@@ -1263,12 +1331,32 @@ emit_varying_read(compiler_context *ctx, unsigned dest, unsigned offset,
    ins.load_store.arg_reg = REGISTER_LDST_ZERO;
    ins.load_store.index_format = midgard_index_address_u32;
 
-   /* For flat shading, we always use .u32 and require 32-bit mode. For
-    * smooth shading, we use the appropriate floating-point type.
+   /* For flat shading, for GPUs supporting auto32, we always use .u32 and
+    * require 32-bit mode. For smooth shading, we use the appropriate
+    * floating-point type.
     *
     * This could be optimized, but it makes it easy to check correctness.
     */
-   if (flat) {
+   if (ctx->quirks & MIDGARD_NO_AUTO32) {
+      switch (type) {
+      case nir_type_uint32:
+      case nir_type_bool32:
+         ins.op = midgard_op_ld_vary_32u;
+         break;
+      case nir_type_int32:
+         ins.op = midgard_op_ld_vary_32i;
+         break;
+      case nir_type_float32:
+         ins.op = midgard_op_ld_vary_32;
+         break;
+      case nir_type_float16:
+         ins.op = midgard_op_ld_vary_16;
+         break;
+      default:
+         unreachable("Attempted to load unknown type");
+         break;
+      }
+   } else if (flat) {
       assert(nir_alu_type_get_type_size(type) == 32);
       ins.op = midgard_op_ld_vary_32u;
    } else {
@@ -1278,22 +1366,18 @@ emit_varying_read(compiler_context *ctx, unsigned dest, unsigned offset,
                                                         : midgard_op_ld_vary_16;
    }
 
-   emit_mir_instruction(ctx, ins);
+   emit_mir_instruction(ctx, &ins);
 }
 
 static midgard_instruction
 emit_image_op(compiler_context *ctx, nir_intrinsic_instr *instr)
 {
    enum glsl_sampler_dim dim = nir_intrinsic_image_dim(instr);
-   unsigned nr_attr = ctx->stage == MESA_SHADER_VERTEX
-                         ? util_bitcount64(ctx->nir->info.inputs_read)
-                         : 0;
    unsigned nr_dim = glsl_get_sampler_dim_coordinate_components(dim);
    bool is_array = nir_intrinsic_image_array(instr);
    bool is_store = instr->intrinsic == nir_intrinsic_image_store;
 
-   /* TODO: MSAA */
-   assert(dim != GLSL_SAMPLER_DIM_MS && "MSAA'd images not supported");
+   assert(dim != GLSL_SAMPLER_DIM_MS && "MSAA'd image not lowered");
 
    unsigned coord_reg = nir_src_index(ctx, &instr->src[1]);
    emit_explicit_constant(ctx, coord_reg);
@@ -1303,9 +1387,7 @@ emit_image_op(compiler_context *ctx, nir_intrinsic_instr *instr)
 
    /* For image opcodes, address is used as an index into the attribute
     * descriptor */
-   unsigned address = nr_attr;
-   if (is_direct)
-      address += nir_src_as_uint(*index);
+   unsigned address = is_direct ? nir_src_as_uint(*index) : 0;
 
    midgard_instruction ins;
    if (is_store) { /* emit st_image_* */
@@ -1342,7 +1424,7 @@ emit_image_op(compiler_context *ctx, nir_intrinsic_instr *instr)
    } else
       ins.load_store.index_reg = REGISTER_LDST_ZERO;
 
-   emit_mir_instruction(ctx, ins);
+   emit_mir_instruction(ctx, &ins);
 
    return ins;
 }
@@ -1373,7 +1455,7 @@ emit_attr_read(compiler_context *ctx, unsigned dest, unsigned offset,
       break;
    }
 
-   emit_mir_instruction(ctx, ins);
+   emit_mir_instruction(ctx, &ins);
 }
 
 static unsigned
@@ -1385,7 +1467,6 @@ compute_builtin_arg(nir_intrinsic_op op)
    case nir_intrinsic_load_local_invocation_id:
       return REGISTER_LDST_LOCAL_THREAD_ID;
    case nir_intrinsic_load_global_invocation_id:
-   case nir_intrinsic_load_global_invocation_id_zero_base:
       return REGISTER_LDST_GLOBAL_THREAD_ID;
    default:
       unreachable("Invalid compute paramater loaded");
@@ -1437,7 +1518,7 @@ emit_fragment_store(compiler_context *ctx, unsigned src, unsigned src_z,
    }
 
    /* Emit the branch */
-   br = emit_mir_instruction(ctx, ins);
+   br = emit_mir_instruction(ctx, &ins);
    schedule_barrier(ctx);
    ctx->writeout_branch[rt][sample_iter] = br;
 
@@ -1455,14 +1536,14 @@ emit_compute_builtin(compiler_context *ctx, nir_intrinsic_instr *instr)
    ins.mask = mask_of(3);
    ins.swizzle[0][3] = COMPONENT_X; /* xyzx */
    ins.load_store.arg_reg = compute_builtin_arg(instr->intrinsic);
-   emit_mir_instruction(ctx, ins);
+   emit_mir_instruction(ctx, &ins);
 }
 
 static unsigned
 vertex_builtin_arg(nir_intrinsic_op op)
 {
    switch (op) {
-   case nir_intrinsic_load_vertex_id_zero_base:
+   case nir_intrinsic_load_raw_vertex_id_pan:
       return PAN_VERTEX_ID;
    case nir_intrinsic_load_instance_id:
       return PAN_INSTANCE_ID;
@@ -1492,7 +1573,7 @@ emit_special(compiler_context *ctx, nir_intrinsic_instr *instr, unsigned idx)
    for (int i = 0; i < 4; ++i)
       ld.swizzle[0][i] = COMPONENT_X;
 
-   emit_mir_instruction(ctx, ld);
+   emit_mir_instruction(ctx, &ld);
 }
 
 static void
@@ -1505,7 +1586,7 @@ emit_control_barrier(compiler_context *ctx)
       .op = midgard_tex_op_barrier,
    };
 
-   emit_mir_instruction(ctx, ins);
+   emit_mir_instruction(ctx, &ins);
 }
 
 static uint8_t
@@ -1550,13 +1631,13 @@ emit_intrinsic(compiler_context *ctx, nir_intrinsic_instr *instr)
       ins.dest_type = ins.src_types[1] = nir_type_uint | instr->def.bit_size;
 
       ins.mask = BITFIELD_MASK(instr->def.num_components);
-      emit_mir_instruction(ctx, ins);
+      emit_mir_instruction(ctx, &ins);
       break;
    }
 
-   case nir_intrinsic_discard_if:
-   case nir_intrinsic_discard: {
-      bool conditional = instr->intrinsic == nir_intrinsic_discard_if;
+   case nir_intrinsic_terminate_if:
+   case nir_intrinsic_terminate: {
+      bool conditional = instr->intrinsic == nir_intrinsic_terminate_if;
       struct midgard_instruction discard = v_branch(conditional, false);
       discard.branch.target_type = TARGET_DISCARD;
 
@@ -1565,7 +1646,7 @@ emit_intrinsic(compiler_context *ctx, nir_intrinsic_instr *instr)
          discard.src_types[0] = nir_type_uint32;
       }
 
-      emit_mir_instruction(ctx, discard);
+      emit_mir_instruction(ctx, &discard);
       schedule_barrier(ctx);
 
       break;
@@ -1644,8 +1725,10 @@ emit_intrinsic(compiler_context *ctx, nir_intrinsic_instr *instr)
 
          if (*input == ~0)
             *input = reg;
-         else
-            emit_mir_instruction(ctx, v_mov(*input, reg));
+         else {
+            struct midgard_instruction ins = v_mov(*input, reg);
+            emit_mir_instruction(ctx, &ins);
+         }
       } else if (ctx->stage == MESA_SHADER_VERTEX) {
          emit_attr_read(ctx, reg, offset, nr_comp, t);
       } else {
@@ -1692,7 +1775,7 @@ emit_intrinsic(compiler_context *ctx, nir_intrinsic_instr *instr)
          ld.load_store.index_reg = REGISTER_LDST_ZERO;
       }
 
-      emit_mir_instruction(ctx, ld);
+      emit_mir_instruction(ctx, &ld);
       break;
    }
 
@@ -1723,7 +1806,7 @@ emit_intrinsic(compiler_context *ctx, nir_intrinsic_instr *instr)
          ld.load_store.index_reg = REGISTER_LDST_ZERO;
       }
 
-      emit_mir_instruction(ctx, ld);
+      emit_mir_instruction(ctx, &ld);
       break;
    }
 
@@ -1767,7 +1850,7 @@ emit_intrinsic(compiler_context *ctx, nir_intrinsic_instr *instr)
             unsigned out = make_compiler_temp(ctx);
 
             midgard_instruction ins = v_mov(reg_2, out);
-            emit_mir_instruction(ctx, ins);
+            emit_mir_instruction(ctx, &ins);
 
             ctx->blend_src1 = out;
          }
@@ -1832,7 +1915,7 @@ emit_intrinsic(compiler_context *ctx, nir_intrinsic_instr *instr)
                src_component++;
          }
 
-         emit_mir_instruction(ctx, st);
+         emit_mir_instruction(ctx, &st);
       } else {
          unreachable("Unknown store");
       }
@@ -1873,11 +1956,12 @@ emit_intrinsic(compiler_context *ctx, nir_intrinsic_instr *instr)
    case nir_intrinsic_load_workgroup_id:
    case nir_intrinsic_load_local_invocation_id:
    case nir_intrinsic_load_global_invocation_id:
-   case nir_intrinsic_load_global_invocation_id_zero_base:
       emit_compute_builtin(ctx, instr);
       break;
 
-   case nir_intrinsic_load_vertex_id_zero_base:
+   case nir_intrinsic_load_raw_vertex_id_pan:
+      ctx->info->midgard.vs.reads_raw_vertex_id = true;
+      FALLTHROUGH;
    case nir_intrinsic_load_instance_id:
       emit_vertex_builtin(ctx, instr);
       break;
@@ -1911,6 +1995,11 @@ emit_intrinsic(compiler_context *ctx, nir_intrinsic_instr *instr)
    case nir_intrinsic_global_atomic:
    case nir_intrinsic_global_atomic_swap:
       emit_atomic(ctx, instr);
+      break;
+
+   case nir_intrinsic_ddx:
+   case nir_intrinsic_ddy:
+      midgard_emit_derivatives(ctx, instr);
       break;
 
    default:
@@ -2055,7 +2144,7 @@ set_tex_coord(compiler_context *ctx, nir_tex_instr *instr,
       ld.mask = 0x3; /* xy */
       ld.load_store.bitsize_toggle = true;
       ld.swizzle[1][3] = COMPONENT_X;
-      emit_mir_instruction(ctx, ld);
+      emit_mir_instruction(ctx, &ld);
 
       /* We packed cube coordiates (X,Y,Z) into (X,Y), update the
        * written mask accordingly and decrement the number of
@@ -2090,7 +2179,7 @@ set_tex_coord(compiler_context *ctx, nir_tex_instr *instr,
       mov.mask = 1 << COMPONENT_Z;
       written_mask |= 1 << COMPONENT_Z;
       ins->swizzle[1][COMPONENT_Z] = COMPONENT_Z;
-      emit_mir_instruction(ctx, mov);
+      emit_mir_instruction(ctx, &mov);
    }
 
    /* Texelfetch coordinates uses all four elements (xyz/index) regardless
@@ -2106,7 +2195,7 @@ set_tex_coord(compiler_context *ctx, nir_tex_instr *instr,
          v_mov(SSA_FIXED_REGISTER(REGISTER_CONSTANT), ins->src[1]);
       mov.has_constants = true;
       mov.mask = (written_mask | write_mask) ^ 0xF;
-      emit_mir_instruction(ctx, mov);
+      emit_mir_instruction(ctx, &mov);
       for (unsigned c = 0; c < MIR_VEC_COMPONENTS; c++) {
          if (mov.mask & (1 << c))
             ins->swizzle[1][c] = c;
@@ -2130,7 +2219,7 @@ set_tex_coord(compiler_context *ctx, nir_tex_instr *instr,
       }
 
       mov.mask = write_mask;
-      emit_mir_instruction(ctx, mov);
+      emit_mir_instruction(ctx, &mov);
    }
 }
 
@@ -2226,7 +2315,7 @@ emit_texop_native(compiler_context *ctx, nir_tex_instr *instr,
       }
    }
 
-   emit_mir_instruction(ctx, ins);
+   emit_mir_instruction(ctx, &ins);
 }
 
 static void
@@ -2261,7 +2350,7 @@ emit_jump(compiler_context *ctx, nir_jump_instr *instr)
       struct midgard_instruction br = v_branch(false, false);
       br.branch.target_type = TARGET_BREAK;
       br.branch.target_break = ctx->current_loop_depth;
-      emit_mir_instruction(ctx, br);
+      emit_mir_instruction(ctx, &br);
       break;
    }
 
@@ -2360,9 +2449,9 @@ inline_alu_constants(compiler_context *ctx, midgard_block *block)
                &block->base.instructions, midgard_instruction, link);
 
             if (alu == first) {
-               mir_insert_instruction_before(ctx, alu, ins);
+               mir_insert_instruction_before(ctx, alu, &ins);
             } else {
-               mir_insert_instruction_before(ctx, mir_prev_op(alu), ins);
+               mir_insert_instruction_before(ctx, mir_prev_op(alu), &ins);
             }
          }
       }
@@ -2370,7 +2459,7 @@ inline_alu_constants(compiler_context *ctx, midgard_block *block)
 }
 
 unsigned
-max_bitsize_for_alu(midgard_instruction *ins)
+max_bitsize_for_alu(const midgard_instruction *ins)
 {
    unsigned max_bitsize = 0;
    for (int i = 0; i < MIR_SRC_COUNT; i++) {
@@ -2606,7 +2695,7 @@ emit_fragment_epilogue(compiler_context *ctx, unsigned rt, unsigned sample_iter)
    ins.branch.target_block = ctx->block_count - 1;
    ins.constants.u32[0] = br->constants.u32[0];
    memcpy(&ins.src_types, &br->src_types, sizeof(ins.src_types));
-   emit_mir_instruction(ctx, ins);
+   emit_mir_instruction(ctx, &ins);
 
    ctx->current_block->epilogue = true;
    schedule_barrier(ctx);
@@ -2722,7 +2811,7 @@ emit_loop(struct compiler_context *ctx, nir_loop *nloop)
    /* Branch back to loop back */
    struct midgard_instruction br_back = v_branch(false, false);
    br_back.branch.target_block = start_idx;
-   emit_mir_instruction(ctx, br_back);
+   emit_mir_instruction(ctx, &br_back);
 
    /* Mark down that branch in the graph. */
    pan_block_add_successor(&start_block->base, &loop_block->base);
@@ -2860,7 +2949,7 @@ mir_add_writeout_loops(compiler_context *ctx)
             midgard_instruction uncond = v_branch(false, false);
             uncond.branch.target_block = popped;
             uncond.branch.target_type = TARGET_GOTO;
-            emit_mir_instruction(ctx, uncond);
+            emit_mir_instruction(ctx, &uncond);
             pan_block_add_successor(&ctx->current_block->base,
                                     &(mir_get_block(ctx, popped)->base));
             schedule_barrier(ctx);
@@ -2896,6 +2985,7 @@ midgard_compile_shader_nir(nir_shader *nir,
    ctx->ssa_constants = _mesa_hash_table_u64_create(ctx);
 
    /* Collect varyings after lowering I/O */
+   info->quirk_no_auto32 = (ctx->quirks & MIDGARD_NO_AUTO32);
    pan_nir_collect_varyings(nir, info);
 
    /* Optimisation passes */
@@ -2920,7 +3010,7 @@ midgard_compile_shader_nir(nir_shader *nir,
          struct midgard_instruction wait = v_branch(false, false);
          wait.branch.target_type = TARGET_TILEBUF_WAIT;
 
-         emit_mir_instruction(ctx, wait);
+         emit_mir_instruction(ctx, &wait);
 
          ++ctx->instruction_count;
       }

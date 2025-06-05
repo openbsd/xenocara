@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2012-2018 Rob Clark <robclark@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2012-2018 Rob Clark <robclark@freedesktop.org>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -27,6 +9,7 @@
 #include "util/os_mman.h"
 
 #include "freedreno_drmif.h"
+#include "freedreno_drm_perfetto.h"
 #include "freedreno_priv.h"
 
 simple_mtx_t table_lock = SIMPLE_MTX_INITIALIZER;
@@ -105,7 +88,8 @@ fd_bo_init_common(struct fd_bo *bo, struct fd_device *dev)
    bo->max_fences = 1;
    bo->fences = &bo->_inline_fence;
 
-   VG_BO_ALLOC(bo);
+   if (!bo->map)
+      VG_BO_ALLOC(bo);
 }
 
 /* allocate a new buffer object, call w/ table_lock held */
@@ -140,10 +124,13 @@ bo_new(struct fd_device *dev, uint32_t size, uint32_t flags,
    struct fd_bo *bo = NULL;
 
    if (size < FD_BO_HEAP_BLOCK_SIZE) {
-      if ((flags == 0) && dev->default_heap)
-         return fd_bo_heap_alloc(dev->default_heap, size);
-      if ((flags == RING_FLAGS) && dev->ring_heap)
-         return fd_bo_heap_alloc(dev->ring_heap, size);
+      uint32_t alloc_flags = flags & ~_FD_BO_HINTS;
+      if ((alloc_flags == 0) && dev->default_heap)
+         bo = fd_bo_heap_alloc(dev->default_heap, size, flags);
+      else if ((flags == RING_FLAGS) && dev->ring_heap)
+         bo = fd_bo_heap_alloc(dev->ring_heap, size, flags);
+      if (bo)
+         return bo;
    }
 
    /* demote cached-coherent to WC if not supported: */
@@ -164,6 +151,8 @@ bo_new(struct fd_device *dev, uint32_t size, uint32_t flags,
    simple_mtx_unlock(&table_lock);
 
    bo->alloc_flags = flags;
+
+   fd_alloc_log(bo, FD_ALLOC_NONE, FD_ALLOC_ACTIVE);
 
    return bo;
 }
@@ -227,17 +216,27 @@ out_unlock:
    return bo;
 }
 
-struct fd_bo *
-fd_bo_from_dmabuf(struct fd_device *dev, int fd)
+uint32_t
+fd_handle_from_dmabuf_drm(struct fd_device *dev, int fd)
 {
-   int ret, size;
+   uint32_t handle;
+   int ret = drmPrimeFDToHandle(dev->fd, fd, &handle);
+   if (ret)
+      return 0;
+   return handle;
+}
+
+struct fd_bo *
+fd_bo_from_dmabuf_drm(struct fd_device *dev, int fd)
+{
+   int size;
    uint32_t handle;
    struct fd_bo *bo;
 
 restart:
    simple_mtx_lock(&table_lock);
-   ret = drmPrimeFDToHandle(dev->fd, fd, &handle);
-   if (ret) {
+   handle = dev->funcs->handle_from_dmabuf(dev, fd);
+   if (!handle) {
       simple_mtx_unlock(&table_lock);
       return NULL;
    }
@@ -261,6 +260,12 @@ out_unlock:
       goto restart;
 
    return bo;
+}
+
+struct fd_bo *
+fd_bo_from_dmabuf(struct fd_device *dev, int fd)
+{
+   return dev->funcs->bo_from_dmabuf(dev, fd);
 }
 
 struct fd_bo *
@@ -367,6 +372,7 @@ fd_bo_del(struct fd_bo *bo)
 
    bo_finalize(bo);
    dev_flush(dev);
+   fd_alloc_log(bo, FD_ALLOC_ACTIVE, FD_ALLOC_NONE);
    bo_del(bo);
 }
 
@@ -400,6 +406,7 @@ fd_bo_del_array(struct fd_bo **bos, int count)
     */
 
    for (int i = 0; i < count; i++) {
+      fd_alloc_log(bos[i], FD_ALLOC_ACTIVE, FD_ALLOC_NONE);
       bo_del(bos[i]);
    }
 }
@@ -439,6 +446,15 @@ fd_bo_fini_fences(struct fd_bo *bo)
       free(bo->fences);
 }
 
+void
+fd_bo_close_handle_drm(struct fd_bo *bo)
+{
+   struct drm_gem_close req = {
+      .handle = bo->handle,
+   };
+   drmIoctl(bo->dev->fd, DRM_IOCTL_GEM_CLOSE, &req);
+}
+
 /**
  * Helper called by backends bo->funcs->destroy()
  *
@@ -462,10 +478,7 @@ fd_bo_fini_common(struct fd_bo *bo)
 
    if (handle) {
       simple_mtx_lock(&table_lock);
-      struct drm_gem_close req = {
-         .handle = handle,
-      };
-      drmIoctl(dev->fd, DRM_IOCTL_GEM_CLOSE, &req);
+      dev->funcs->bo_close_handle(bo);
       _mesa_hash_table_remove_key(dev->handle_table, &handle);
       if (bo->name)
          _mesa_hash_table_remove_key(dev->name_table, &bo->name);
@@ -535,16 +548,28 @@ fd_bo_handle(struct fd_bo *bo)
 }
 
 int
-fd_bo_dmabuf(struct fd_bo *bo)
+fd_bo_dmabuf_drm(struct fd_bo *bo)
 {
    int ret, prime_fd;
+
+   ret = drmPrimeHandleToFD(bo->dev->fd, bo->handle, DRM_CLOEXEC | DRM_RDWR,
+                            &prime_fd);
+   if (ret < 0)
+      return ret;
+
+   return prime_fd;
+}
+
+int
+fd_bo_dmabuf(struct fd_bo *bo)
+{
+   int ret;
 
    if (suballoc_bo(bo))
       return -1;
 
-   ret = drmPrimeHandleToFD(bo->dev->fd, bo->handle, DRM_CLOEXEC | DRM_RDWR,
-                            &prime_fd);
-   if (ret) {
+   ret = bo->funcs->dmabuf(bo);
+   if (ret < 0) {
       ERROR_MSG("failed to get dmabuf fd: %d", ret);
       return ret;
    }
@@ -553,7 +578,7 @@ fd_bo_dmabuf(struct fd_bo *bo)
    bo->alloc_flags |= FD_BO_SHARED;
    bo_flush(bo);
 
-   return prime_fd;
+   return ret;
 }
 
 uint32_t
@@ -568,25 +593,47 @@ fd_bo_is_cached(struct fd_bo *bo)
    return !!(bo->alloc_flags & FD_BO_CACHED_COHERENT);
 }
 
-static void *
-bo_map(struct fd_bo *bo)
+void
+fd_bo_set_metadata(struct fd_bo *bo, void *metadata, uint32_t metadata_size)
+{
+   if (!bo->funcs->set_metadata)
+      return;
+   bo->funcs->set_metadata(bo, metadata, metadata_size);
+}
+
+int
+fd_bo_get_metadata(struct fd_bo *bo, void *metadata, uint32_t metadata_size)
+{
+   if (!bo->funcs->get_metadata)
+      return -ENOSYS;
+   return bo->funcs->get_metadata(bo, metadata, metadata_size);
+}
+
+void *
+fd_bo_map_os_mmap(struct fd_bo *bo)
+{
+   uint64_t offset;
+   int ret;
+   ret = bo->funcs->offset(bo, &offset);
+   if (ret) {
+      return NULL;
+   }
+   return os_mmap(0, bo->size, PROT_READ | PROT_WRITE, MAP_SHARED,
+                  bo->dev->fd, offset);
+}
+
+/* For internal use only, does not check FD_BO_NOMAP: */
+void *
+__fd_bo_map(struct fd_bo *bo)
 {
    if (!bo->map) {
-      uint64_t offset;
-      int ret;
-
-      ret = bo->funcs->offset(bo, &offset);
-      if (ret) {
-         return NULL;
-      }
-
-      bo->map = os_mmap(0, bo->size, PROT_READ | PROT_WRITE, MAP_SHARED,
-                        bo->dev->fd, offset);
+      bo->map = bo->funcs->map(bo);
       if (bo->map == MAP_FAILED) {
          ERROR_MSG("mmap failed: %s", strerror(errno));
          bo->map = NULL;
       }
    }
+
    return bo->map;
 }
 
@@ -599,7 +646,17 @@ fd_bo_map(struct fd_bo *bo)
    if (bo->alloc_flags & FD_BO_NOMAP)
       return NULL;
 
-   return bo_map(bo);
+   return __fd_bo_map(bo);
+}
+
+static void *
+fd_bo_map_for_upload(struct fd_bo *bo)
+{
+   void *addr = __fd_bo_map(bo);
+   if (bo->alloc_flags & FD_BO_NOMAP)
+      VG_BO_MAPPED(bo);
+
+   return addr;
 }
 
 void
@@ -610,7 +667,7 @@ fd_bo_upload(struct fd_bo *bo, void *src, unsigned off, unsigned len)
       return;
    }
 
-   memcpy((uint8_t *)bo_map(bo) + off, src, len);
+   memcpy((uint8_t *)fd_bo_map_for_upload(bo) + off, src, len);
 }
 
 bool

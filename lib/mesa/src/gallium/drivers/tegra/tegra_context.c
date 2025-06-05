@@ -635,8 +635,7 @@ tegra_set_shader_images(struct pipe_context *pcontext, enum pipe_shader_type sha
 
 static void
 tegra_set_vertex_buffers(struct pipe_context *pcontext,
-                         unsigned num_buffers, unsigned unbind_num_trailing_slots,
-                         bool take_ownership,
+                         unsigned num_buffers,
                          const struct pipe_vertex_buffer *buffers)
 {
    struct tegra_context *context = to_tegra_context(pcontext);
@@ -654,9 +653,7 @@ tegra_set_vertex_buffers(struct pipe_context *pcontext,
       buffers = buf;
    }
 
-   context->gpu->set_vertex_buffers(context->gpu, num_buffers,
-                                    unbind_num_trailing_slots,
-                                    take_ownership, buffers);
+   context->gpu->set_vertex_buffers(context->gpu, num_buffers, buffers);
 }
 
 static struct pipe_stream_output_target *
@@ -687,12 +684,13 @@ static void
 tegra_set_stream_output_targets(struct pipe_context *pcontext,
                                 unsigned num_targets,
                                 struct pipe_stream_output_target **targets,
-                                const unsigned *offsets)
+                                const unsigned *offsets,
+                                enum mesa_prim output_prim)
 {
    struct tegra_context *context = to_tegra_context(pcontext);
 
    context->gpu->set_stream_output_targets(context->gpu, num_targets,
-                                           targets, offsets);
+                                           targets, offsets, output_prim);
 }
 
 static void

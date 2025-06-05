@@ -41,8 +41,9 @@ void crocus_blitter_begin(struct crocus_context *ice, enum crocus_blitter_op op,
    util_blitter_save_tesseval_shader(ice->blitter, ice->shaders.uncompiled[MESA_SHADER_TESS_EVAL]);
    util_blitter_save_geometry_shader(ice->blitter, ice->shaders.uncompiled[MESA_SHADER_GEOMETRY]);
    util_blitter_save_so_targets(ice->blitter, ice->state.so_targets,
-                                (struct pipe_stream_output_target**)ice->state.so_target);
-   util_blitter_save_vertex_buffer_slot(ice->blitter, ice->state.vertex_buffers);
+                                (struct pipe_stream_output_target**)ice->state.so_target, MESA_PRIM_UNKNOWN);
+   util_blitter_save_vertex_buffers(ice->blitter, ice->state.vertex_buffers,
+                                    util_last_bit(ice->state.bound_vertex_buffers));
    util_blitter_save_vertex_elements(ice->blitter, (void *)ice->state.cso_vertex_elements);
    if (op & CROCUS_SAVE_FRAGMENT_STATE) {
       util_blitter_save_blend(ice->blitter, ice->state.cso_blend);
@@ -372,7 +373,7 @@ crocus_u_blitter(struct crocus_context *ice,
    if (!util_format_has_alpha(dinfo.dst.resource->format))
       dinfo.mask &= ~PIPE_MASK_A;
    crocus_blitter_begin(ice, CROCUS_SAVE_FRAMEBUFFER | CROCUS_SAVE_TEXTURES | CROCUS_SAVE_FRAGMENT_STATE, info->render_condition_enable);
-   util_blitter_blit(ice->blitter, &dinfo);
+   util_blitter_blit(ice->blitter, &dinfo, NULL);
 }
 
 /**
@@ -411,7 +412,7 @@ crocus_blit(struct pipe_context *ctx, const struct pipe_blit_info *info)
                struct pipe_blit_info depth_blit = *info;
                depth_blit.mask = PIPE_MASK_Z;
                crocus_blitter_begin(ice, CROCUS_SAVE_FRAMEBUFFER | CROCUS_SAVE_TEXTURES | CROCUS_SAVE_FRAGMENT_STATE, info->render_condition_enable);
-               util_blitter_blit(ice->blitter, &depth_blit);
+               util_blitter_blit(ice->blitter, &depth_blit, NULL);
 
                struct pipe_surface *dst_view, dst_templ;
                util_blitter_default_dst_texture(&dst_templ, info->dst.resource, info->dst.level, info->dst.box.z);

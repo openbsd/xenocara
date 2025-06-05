@@ -1,58 +1,41 @@
 # Copyright © 2018 Rob Clark
 # Copyright © 2019 Collabora
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 subdir('genxml')
+subdir('kmod')
 
-pixel_format_versions = ['6', '7', '9']
+pixel_format_versions = ['5', '6', '7', '9', '10']
 libpanfrost_pixel_format = []
+
+deps_for_libpanfrost = [dep_libdrm, idep_pan_packers, idep_mesautil]
 
 foreach ver : pixel_format_versions
   libpanfrost_pixel_format += static_library(
     'pan-format-v' + ver,
     ['pan_format.c', pan_packers],
-    include_directories : [
-      inc_src, inc_include, inc_gallium, inc_mesa, inc_panfrost_hw, inc_gallium_aux, inc_panfrost_hw
-    ],
+    include_directories : [inc_src, inc_include],
     c_args : ['-DPAN_ARCH=' + ver],
     gnu_symbol_visibility : 'hidden',
-    dependencies : [idep_pan_packers, dep_libdrm, dep_valgrind],
+    dependencies : [deps_for_libpanfrost, dep_valgrind],
 )
 endforeach
 
 libpanfrost_per_arch = []
 
-foreach ver : ['4', '5', '6', '7', '9']
+foreach ver : ['4', '5', '6', '7', '9', '10']
   libpanfrost_per_arch += static_library(
     'pan-arch-v' + ver,
     [
       'pan_blend.c',
-      'pan_blitter.c',
-      'pan_cs.c',
+      'pan_desc.c',
       'pan_shader.c',
       'pan_texture.c',
     ],
-    include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_panfrost_hw],
+    include_directories : [inc_include, inc_src],
     c_args : ['-DPAN_ARCH=' + ver],
     gnu_symbol_visibility : 'hidden',
-    dependencies : [dep_libdrm, idep_pan_packers, idep_nir],
+    dependencies : [deps_for_libpanfrost, idep_nir],
   )
 endforeach
 
@@ -60,10 +43,10 @@ foreach ver : ['7']
   libpanfrost_per_arch += static_library(
     'pan-arch-indirect-v' + ver,
     'pan_indirect_dispatch.c',
-    include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_panfrost_hw],
+    include_directories : [inc_include, inc_src],
     c_args : ['-DPAN_ARCH=' + ver],
     gnu_symbol_visibility : 'hidden',
-    dependencies : [dep_libdrm, idep_pan_packers, idep_nir],
+    dependencies : [deps_for_libpanfrost, idep_nir],
   )
 endforeach
 
@@ -71,8 +54,8 @@ libpanfrost_lib_files = files(
   'pan_encoder.h',
 
   'pan_afbc.c',
+  'pan_afrc.c',
   'pan_attributes.c',
-  'pan_bo.c',
   'pan_blend.c',
   'pan_clear.c',
   'pan_earlyzs.c',
@@ -87,18 +70,18 @@ libpanfrost_lib_files = files(
 libpanfrost_lib = static_library(
   'panfrost_lib',
   [libpanfrost_lib_files, pan_packers],
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_panfrost_hw],
+  include_directories : [inc_include, inc_src],
   c_args : [no_override_init_args],
   gnu_symbol_visibility : 'hidden',
   dependencies: [dep_libdrm, idep_nir, idep_mesautil],
   build_by_default : false,
-  link_with: [libpanfrost_pixel_format, libpanfrost_per_arch],
+  link_with: [libpanfrost_pixel_format, libpanfrost_per_arch, libpankmod_lib],
 )
 
 libpanfrost_dep = declare_dependency(
   link_with: [libpanfrost_lib, libpanfrost_decode, libpanfrost_midgard, libpanfrost_bifrost, libpanfrost_pixel_format, libpanfrost_per_arch],
-  include_directories: [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_panfrost_hw, inc_panfrost],
-  dependencies: [dep_libdrm, idep_nir, idep_pan_packers],
+  include_directories: [inc_include, inc_src, inc_panfrost],
+  dependencies: [deps_for_libpanfrost, libpankmod_dep, idep_nir],
 )
 
 if with_tests
@@ -109,7 +92,7 @@ if with_tests
       files('tests/test-blend.c'),
       c_args : [c_msvc_compat_args, no_override_init_args],
       gnu_symbol_visibility : 'hidden',
-      include_directories : [inc_include, inc_src, inc_mesa],
+      include_directories : [inc_include, inc_src],
       dependencies: [libpanfrost_dep],
     ),
     suite : ['panfrost'],
@@ -122,7 +105,7 @@ if with_tests
       files('tests/test-clear.c'),
       c_args : [c_msvc_compat_args, no_override_init_args],
       gnu_symbol_visibility : 'hidden',
-      include_directories : [inc_include, inc_src, inc_mesa],
+      include_directories : [inc_include, inc_src],
       dependencies: [libpanfrost_dep],
     ),
     suite : ['panfrost'],
@@ -138,7 +121,7 @@ if with_tests
       ),
       c_args : [c_msvc_compat_args, no_override_init_args],
       gnu_symbol_visibility : 'hidden',
-      include_directories : [inc_include, inc_src, inc_mesa, inc_panfrost, inc_gallium],
+      include_directories : [inc_include, inc_src, inc_panfrost],
       dependencies: [idep_gtest, libpanfrost_dep],
     ),
     suite : ['panfrost'],

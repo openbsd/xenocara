@@ -17,7 +17,7 @@ extern "C" {
 #include <stdbool.h>
 
 #include "util/macros.h"
-#include "GL/internal/dri_interface.h"
+#include "gallium/include/mesa_interface.h"
 
 struct u_gralloc;
 
@@ -51,6 +51,8 @@ enum u_gralloc_type {
    U_GRALLOC_TYPE_AUTO,
    U_GRALLOC_TYPE_GRALLOC4,
    U_GRALLOC_TYPE_CROS,
+   U_GRALLOC_TYPE_LIBDRM,
+   U_GRALLOC_TYPE_QCOM,
    U_GRALLOC_TYPE_FALLBACK,
    U_GRALLOC_TYPE_COUNT,
 };

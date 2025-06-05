@@ -24,7 +24,7 @@
 #ifndef MESA_CLC_HELPERS_H
 #define MESA_CLC_HELPERS_H
 
-#include "nir_types.h"
+#include "glsl_types.h"
 
 #include "clc.h"
 #include "util/u_string.h"
@@ -56,7 +56,8 @@ clc_free_kernels_info(const struct clc_kernel_info *kernels,
 int
 clc_c_to_spir(const struct clc_compile_args *args,
               const struct clc_logger *logger,
-              struct clc_binary *out_spir);
+              struct clc_binary *out_spir,
+              struct set *dependencies);
 
 int
 clc_spir_to_spirv(const struct clc_binary *in_spir,
@@ -66,7 +67,8 @@ clc_spir_to_spirv(const struct clc_binary *in_spir,
 int
 clc_c_to_spirv(const struct clc_compile_args *args,
                const struct clc_logger *logger,
-               struct clc_binary *out_spirv);
+               struct clc_binary *out_spirvl,
+               struct set *dependencies);
 
 int
 clc_link_spirv_binaries(const struct clc_linker_args *args,
@@ -96,7 +98,8 @@ clc_free_spirv_binary(struct clc_binary *spvbin);
 #define clc_log(logger, level, fmt, ...) do {        \
       if (!logger || !logger->level) break;          \
       char *_msg = NULL;                             \
-      asprintf(&_msg, fmt, ##__VA_ARGS__);           \
+      int r = asprintf(&_msg, fmt, ##__VA_ARGS__);   \
+      if (r < 0) break;                              \
       assert(_msg);                                  \
       logger->level(logger->priv, _msg);             \
       free(_msg);                                    \

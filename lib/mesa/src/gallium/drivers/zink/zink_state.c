@@ -32,7 +32,7 @@
 #include "util/u_dual_blend.h"
 #include "util/u_memory.h"
 #include "util/u_helpers.h"
-#include "vulkan/util/vk_format.h"
+#include "vk_format.h"
 
 #include <math.h>
 
@@ -49,8 +49,8 @@ zink_create_vertex_elements_state(struct pipe_context *pctx,
    ves->hw_state.hash = _mesa_hash_pointer(ves);
 
    int buffer_map[PIPE_MAX_ATTRIBS];
-   for (int i = 0; i < ARRAY_SIZE(buffer_map); ++i)
-      buffer_map[i] = -1;
+   for (int j = 0; j < ARRAY_SIZE(buffer_map); ++j)
+      buffer_map[j] = -1;
 
    int num_bindings = 0;
    unsigned num_decomposed = 0;
@@ -77,13 +77,13 @@ zink_create_vertex_elements_state(struct pipe_context *pctx,
       ves->divisor[binding] = MIN2(elem->instance_divisor, screen->info.vdiv_props.maxVertexAttribDivisor);
 
       VkFormat format;
-      if (screen->format_props[elem->src_format].bufferFeatures & VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT)
+      if (zink_get_format_props(screen, elem->src_format)->bufferFeatures & VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT)
          format = zink_get_format(screen, elem->src_format);
       else {
          enum pipe_format new_format = zink_decompose_vertex_format(elem->src_format);
          assert(new_format);
          num_decomposed++;
-         assert(screen->format_props[new_format].bufferFeatures & VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT);
+         assert(zink_get_format_props(screen, new_format)->bufferFeatures & VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT);
          if (util_format_get_blocksize(new_format) == 4)
             size32 |= BITFIELD_BIT(i);
          else if (util_format_get_blocksize(new_format) == 2)
@@ -127,23 +127,23 @@ zink_create_vertex_elements_state(struct pipe_context *pctx,
       }
    }
    assert(num_decomposed + num_elements <= PIPE_MAX_ATTRIBS);
-   u_foreach_bit(i, ves->decomposed_attrs | ves->decomposed_attrs_without_w) {
-      const struct pipe_vertex_element *elem = elements + i;
+   u_foreach_bit(attr_index, ves->decomposed_attrs | ves->decomposed_attrs_without_w) {
+      const struct pipe_vertex_element *elem = elements + attr_index;
       const struct util_format_description *desc = util_format_description(elem->src_format);
       unsigned size = 1;
-      if (size32 & BITFIELD_BIT(i))
+      if (size32 & BITFIELD_BIT(attr_index))
          size = 4;
-      else if (size16 & BITFIELD_BIT(i))
+      else if (size16 & BITFIELD_BIT(attr_index))
          size = 2;
       else
-         assert(size8 & BITFIELD_BIT(i));
+         assert(size8 & BITFIELD_BIT(attr_index));
       for (unsigned j = 1; j < desc->nr_channels; j++) {
          if (screen->info.have_EXT_vertex_input_dynamic_state) {
-            memcpy(&ves->hw_state.dynattribs[num_elements], &ves->hw_state.dynattribs[i], sizeof(VkVertexInputAttributeDescription2EXT));
+            memcpy(&ves->hw_state.dynattribs[num_elements], &ves->hw_state.dynattribs[attr_index], sizeof(VkVertexInputAttributeDescription2EXT));
             ves->hw_state.dynattribs[num_elements].location = num_elements;
             ves->hw_state.dynattribs[num_elements].offset += j * size;
          } else {
-            memcpy(&ves->hw_state.attribs[num_elements], &ves->hw_state.attribs[i], sizeof(VkVertexInputAttributeDescription));
+            memcpy(&ves->hw_state.attribs[num_elements], &ves->hw_state.attribs[attr_index], sizeof(VkVertexInputAttributeDescription));
             ves->hw_state.attribs[num_elements].location = num_elements;
             ves->hw_state.attribs[num_elements].offset += j * size;
          }
@@ -153,23 +153,23 @@ zink_create_vertex_elements_state(struct pipe_context *pctx,
    ves->hw_state.num_bindings = num_bindings;
    ves->hw_state.num_attribs = num_elements;
    if (screen->info.have_EXT_vertex_input_dynamic_state) {
-      for (int i = 0; i < num_bindings; ++i) {
-         ves->hw_state.dynbindings[i].sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_BINDING_DESCRIPTION_2_EXT;
-         ves->hw_state.dynbindings[i].binding = ves->bindings[i].binding;
-         ves->hw_state.dynbindings[i].inputRate = ves->bindings[i].inputRate;
-         ves->hw_state.dynbindings[i].stride = strides[i];
-         if (ves->divisor[i])
-            ves->hw_state.dynbindings[i].divisor = ves->divisor[i];
+      for (int j = 0; j < num_bindings; ++j) {
+         ves->hw_state.dynbindings[j].sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_BINDING_DESCRIPTION_2_EXT;
+         ves->hw_state.dynbindings[j].binding = ves->bindings[j].binding;
+         ves->hw_state.dynbindings[j].inputRate = ves->bindings[j].inputRate;
+         ves->hw_state.dynbindings[j].stride = strides[j];
+         if (ves->divisor[j])
+            ves->hw_state.dynbindings[j].divisor = ves->divisor[j];
          else
-            ves->hw_state.dynbindings[i].divisor = 1;
+            ves->hw_state.dynbindings[j].divisor = 1;
       }
    } else {
-      for (int i = 0; i < num_bindings; ++i) {
-         ves->hw_state.b.bindings[i].binding = ves->bindings[i].binding;
-         ves->hw_state.b.bindings[i].inputRate = ves->bindings[i].inputRate;
-         if (ves->divisor[i]) {
-            ves->hw_state.b.divisors[ves->hw_state.b.divisors_present].divisor = ves->divisor[i];
-            ves->hw_state.b.divisors[ves->hw_state.b.divisors_present].binding = ves->bindings[i].binding;
+      for (int j = 0; j < num_bindings; ++j) {
+         ves->hw_state.b.bindings[j].binding = ves->bindings[j].binding;
+         ves->hw_state.b.bindings[j].inputRate = ves->bindings[j].inputRate;
+         if (ves->divisor[j]) {
+            ves->hw_state.b.divisors[ves->hw_state.b.divisors_present].divisor = ves->divisor[j];
+            ves->hw_state.b.divisors[ves->hw_state.b.divisors_present].binding = ves->bindings[j].binding;
             ves->hw_state.b.divisors_present++;
          }
       }
@@ -183,7 +183,6 @@ zink_bind_vertex_elements_state(struct pipe_context *pctx,
 {
    struct zink_context *ctx = zink_context(pctx);
    struct zink_gfx_pipeline_state *state = &ctx->gfx_pipeline_state;
-   zink_flush_dgc_if_enabled(ctx);
    ctx->element_state = cso;
    if (cso) {
       if (state->element_state != &ctx->element_state->hw_state) {
@@ -205,8 +204,8 @@ zink_bind_vertex_elements_state(struct pipe_context *pctx,
          decomposed_attrs_without_w = vs->u16.decomposed_attrs_without_w;
          break;
       case 4:
-         decomposed_attrs = vs->u16.decomposed_attrs;
-         decomposed_attrs_without_w = vs->u16.decomposed_attrs_without_w;
+         decomposed_attrs = vs->u32.decomposed_attrs;
+         decomposed_attrs_without_w = vs->u32.decomposed_attrs_without_w;
          break;
       }
       if (ctx->element_state->decomposed_attrs != decomposed_attrs ||
@@ -414,7 +413,6 @@ zink_bind_blend_state(struct pipe_context *pctx, void *cso)
    struct zink_context *ctx = zink_context(pctx);
    struct zink_screen *screen = zink_screen(pctx->screen);
    struct zink_gfx_pipeline_state* state = &zink_context(pctx)->gfx_pipeline_state;
-   zink_flush_dgc_if_enabled(ctx);
    struct zink_blend_state *blend = cso;
    struct zink_blend_state *old_blend = state->blend_state;
 
@@ -549,7 +547,6 @@ zink_bind_depth_stencil_alpha_state(struct pipe_context *pctx, void *cso)
 {
    struct zink_context *ctx = zink_context(pctx);
 
-   zink_flush_dgc_if_enabled(ctx);
    ctx->dsa_state = cso;
 
    if (cso) {
@@ -689,7 +686,6 @@ zink_bind_rasterizer_state(struct pipe_context *pctx, void *cso)
    bool rasterizer_discard = ctx->rast_state ? ctx->rast_state->base.rasterizer_discard : false;
    bool half_pixel_center = ctx->rast_state ? ctx->rast_state->base.half_pixel_center : true;
    float line_width = ctx->rast_state ? ctx->rast_state->base.line_width : 1.0;
-   zink_flush_dgc_if_enabled(ctx);
    ctx->rast_state = cso;
 
    if (ctx->rast_state) {

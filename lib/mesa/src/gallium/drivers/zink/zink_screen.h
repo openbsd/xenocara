@@ -61,6 +61,7 @@ static inline bool
 zink_screen_check_last_finished(struct zink_screen *screen, uint32_t batch_id)
 {
    const uint32_t check_id = (uint32_t)batch_id;
+   assert(check_id);
    /* last_finished may have wrapped */
    if (screen->last_finished < UINT_MAX / 2) {
       /* last_finished has wrapped, batch_id has not */
@@ -114,8 +115,29 @@ zink_string_vkflags_unroll(char *buf, size_t bufsize, uint64_t flags, zink_vkfla
    return idx;
 }
 
+#define VRAM_ALLOC_LOOP(RET, DOIT, ...) \
+   do { \
+      unsigned _us[] = {0, 1000, 10000, 500000, 1000000}; \
+      for (unsigned _i = 0; _i < ARRAY_SIZE(_us); _i++) { \
+         RET = DOIT; \
+         if (RET == VK_SUCCESS || RET != VK_ERROR_OUT_OF_DEVICE_MEMORY) \
+            break; \
+         os_time_sleep(_us[_i]); \
+      } \
+      __VA_ARGS__ \
+   } while (0)
+
 VkSemaphore
 zink_create_semaphore(struct zink_screen *screen);
+
+static inline VkDriverId
+zink_driverid(const struct zink_screen *screen)
+{
+   if (!screen->info.have_KHR_maintenance7 || screen->info.layered_props.layeredAPI != VK_PHYSICAL_DEVICE_LAYERED_API_VULKAN_KHR)
+      return screen->info.driver_props.driverID;
+   /* if maint7 is supported, codegen ensures this will always be the "right" value */
+   return screen->info.vk_layered_driver_props.driverID;
+}
 
 void
 zink_screen_lock_context(struct zink_screen *screen);
@@ -128,6 +150,25 @@ VkSemaphore
 zink_screen_export_dmabuf_semaphore(struct zink_screen *screen, struct zink_resource *res);
 bool
 zink_screen_import_dmabuf_semaphore(struct zink_screen *screen, struct zink_resource *res, VkSemaphore sem);
+
+void
+zink_init_format_props(struct zink_screen *screen, enum pipe_format pformat);
+
+static inline const struct zink_modifier_props *
+zink_get_modifier_props(struct zink_screen *screen, enum pipe_format pformat)
+{
+   if (unlikely(!screen->format_props_init[pformat]))
+      zink_init_format_props(screen, pformat);
+   return &screen->modifier_props[pformat];
+}
+
+static inline const struct zink_format_props *
+zink_get_format_props(struct zink_screen *screen, enum pipe_format pformat)
+{
+   if (unlikely(!screen->format_props_init[pformat]))
+      zink_init_format_props(screen, pformat);
+   return &screen->format_props[pformat];
+}
 
 VkFormat
 zink_get_format(struct zink_screen *screen, enum pipe_format format);
@@ -151,7 +192,7 @@ zink_screen_update_pipeline_cache(struct zink_screen *screen, struct zink_progra
 void
 zink_screen_get_pipeline_cache(struct zink_screen *screen, struct zink_program *pg, bool in_thread);
 
-void
+void VKAPI_PTR
 zink_stub_function_not_loaded(void);
 
 bool

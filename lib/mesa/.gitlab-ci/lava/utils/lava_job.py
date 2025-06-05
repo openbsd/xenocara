@@ -1,11 +1,12 @@
 import re
 import xmlrpc
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any, Optional
 
 from lava.exceptions import (
     MesaCIException,
+    MesaCIRetriableException,
     MesaCIKnownIssueException,
     MesaCIParseException,
     MesaCITimeoutError,
@@ -20,9 +21,9 @@ from .lava_proxy import call_proxy
 class LAVAJob:
     COLOR_STATUS_MAP: dict[str, str] = {
         "pass": CONSOLE_LOG["FG_GREEN"],
-        "hung": CONSOLE_LOG["FG_YELLOW"],
-        "fail": CONSOLE_LOG["FG_RED"],
-        "canceled": CONSOLE_LOG["FG_MAGENTA"],
+        "hung": CONSOLE_LOG["FG_BOLD_YELLOW"],
+        "fail": CONSOLE_LOG["FG_BOLD_RED"],
+        "canceled": CONSOLE_LOG["FG_BOLD_MAGENTA"],
     }
 
     def __init__(self, proxy, definition, log=defaultdict(str)) -> None:
@@ -34,10 +35,14 @@ class LAVAJob:
         self._is_finished = False
         self.log: dict[str, Any] = log
         self.status = "not_submitted"
-        self.__exception: Optional[str] = None
+        # Set the default exit code to 1 because we should set it to 0 only if the job has passed.
+        # If it fails or if it is interrupted, the exit code should be set to a non-zero value to
+        # make the GitLab job fail.
+        self._exit_code: int = 1
+        self.__exception: Optional[Exception] = None
 
     def heartbeat(self) -> None:
-        self.last_log_time: datetime = datetime.now()
+        self.last_log_time: datetime = datetime.now(tz=UTC)
         self.status = "running"
 
     @property
@@ -48,6 +53,15 @@ class LAVAJob:
     def status(self, new_status: str) -> None:
         self._status = new_status
         self.log["status"] = self._status
+
+    @property
+    def exit_code(self) -> int:
+        return self._exit_code
+
+    @exit_code.setter
+    def exit_code(self, code: int) -> None:
+        self._exit_code = code
+        self.log["exit_code"] = self._exit_code
 
     @property
     def job_id(self) -> int:
@@ -63,13 +77,13 @@ class LAVAJob:
         return self._is_finished
 
     @property
-    def exception(self) -> str:
+    def exception(self) -> Optional[Exception]:
         return self.__exception
 
     @exception.setter
     def exception(self, exception: Exception) -> None:
-        self.__exception = repr(exception)
-        self.log["dut_job_fail_reason"] = self.__exception
+        self.__exception = exception
+        self.log["dut_job_fail_reason"] = repr(self.__exception)
 
     def validate(self) -> Optional[dict]:
         """Returns a dict with errors, if the validation fails.
@@ -157,11 +171,12 @@ class LAVAJob:
         last_line = None  # Print all lines. lines[:None] == lines[:]
 
         for idx, line in enumerate(lava_lines):
-            if result := re.search(r"hwci: mesa: (pass|fail)", line):
+            if result := re.search(r"hwci: mesa: (pass|fail), exit_code: (\d+)", line):
                 self._is_finished = True
-                self.status = result[1]
+                self.status = result.group(1)
+                self.exit_code = int(result.group(2))
 
-                last_line = idx + 1
+                last_line = idx
                 # We reached the log end here. hwci script has finished.
                 break
         return lava_lines[:last_line]
@@ -171,14 +186,21 @@ class LAVAJob:
         self.cancel()
         self.exception = exception
 
+        # Set the exit code to nonzero value
+        self.exit_code = 1
+
         # Give more accurate status depending on exception
         if isinstance(exception, MesaCIKnownIssueException):
             self.status = "canceled"
         elif isinstance(exception, MesaCITimeoutError):
             self.status = "hung"
-        elif isinstance(exception, MesaCIException):
+        elif isinstance(exception, MesaCIRetriableException):
             self.status = "failed"
         elif isinstance(exception, KeyboardInterrupt):
+            self.status = "interrupted"
+            print_log("LAVA job submitter was interrupted. Cancelling the job.")
+            raise
+        elif isinstance(exception, MesaCIException):
             self.status = "interrupted"
             print_log("LAVA job submitter was interrupted. Cancelling the job.")
             raise

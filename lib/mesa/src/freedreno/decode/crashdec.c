@@ -1,24 +1,6 @@
 /*
  * Copyright © 2020 Google, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 /*
@@ -45,6 +27,9 @@ bool verbose;
 struct rnn *rnn_gmu;
 struct rnn *rnn_control;
 struct rnn *rnn_pipe;
+
+static uint64_t fault_iova;
+static bool has_fault_iova;
 
 struct cffdec_options options = {
    .draw_filter = -1,
@@ -171,8 +156,16 @@ startswith(const char *line, const char *start)
    return strstr(line, start) == line;
 }
 
+static bool
+startswith_nowhitespace(const char *line, const char *start)
+{
+   while (*line == ' ' || *line == '\t')
+      line++;
+   return startswith(line, start);
+}
+
 static void
-parseline(const char *line, const char *fmt, ...)
+vparseline(const char *line, const char *fmt, va_list ap)
 {
    int fmtlen = strlen(fmt);
    int n = 0;
@@ -191,12 +184,30 @@ parseline(const char *line, const char *fmt, ...)
       }
    }
 
-   va_list ap;
-   va_start(ap, fmt);
    if (vsscanf(line, fmt, ap) != n) {
       fprintf(stderr, "parse error scanning: '%s'\n", fmt);
       exit(1);
    }
+}
+
+static void
+parseline(const char *line, const char *fmt, ...)
+{
+   va_list ap;
+   va_start(ap, fmt);
+   vparseline(line, fmt, ap);
+   va_end(ap);
+}
+
+static void
+parseline_nowhitespace(const char *line, const char *fmt, ...)
+{
+   while (*line == ' ' || *line == '\t')
+      line++;
+
+   va_list ap;
+   va_start(ap, fmt);
+   vparseline(line, fmt, ap);
    va_end(ap);
 }
 
@@ -345,10 +356,10 @@ dump_cmdstream(void)
    printf("got rb_base=%" PRIx64 "\n", rb_base);
 
    options.ibs[1].base = regval64("CP_IB1_BASE");
-   if (is_a6xx())
+   if (have_rem_info())
       options.ibs[1].rem = regval("CP_IB1_REM_SIZE");
    options.ibs[2].base = regval64("CP_IB2_BASE");
-   if (is_a6xx())
+   if (have_rem_info())
       options.ibs[2].rem = regval("CP_IB2_REM_SIZE");
 
    /* Adjust remaining size to account for cmdstream slurped into ROQ
@@ -360,7 +371,7 @@ dump_cmdstream(void)
     * TODO it would be nice to be able to extract out register bitfields
     * by name rather than hard-coding this.
     */
-   if (is_a6xx()) {
+   if (have_rem_info()) {
       uint32_t ib1_rem = regval("CP_ROQ_AVAIL_IB1") >> 16;
       uint32_t ib2_rem = regval("CP_ROQ_AVAIL_IB2") >> 16;
       options.ibs[1].rem += ib1_rem ? ib1_rem - 1 : 0;
@@ -430,6 +441,27 @@ dump_cmdstream(void)
 }
 
 /*
+ * Decode optional 'fault-info' section.  We only get this section if
+ * the devcoredump was triggered by an iova fault:
+ */
+
+static void
+decode_fault_info(void)
+{
+   foreach_line_in_section (line) {
+      if (startswith(line, "  - far:")) {
+         parseline(line, "  - far: %" PRIx64, &fault_iova);
+         has_fault_iova = true;
+      } else if (startswith(line, "  - iova=")) {
+         parseline(line, "  - iova=%" PRIx64, &fault_iova);
+         has_fault_iova = true;
+      }
+
+      printf("%s", line);
+   }
+}
+
+/*
  * Decode 'bos' (buffers) section:
  */
 
@@ -442,8 +474,32 @@ decode_bos(void)
    foreach_line_in_section (line) {
       if (startswith(line, "  - iova:")) {
          parseline(line, "  - iova: %" PRIx64, &iova);
+         continue;
       } else if (startswith(line, "    size:")) {
          parseline(line, "    size: %u", &size);
+
+         /*
+          * This is a bit convoluted, vs just printing the lines as
+          * they come.  But we want to have both the iova and size
+          * so we can print the end address of the buffer
+          */
+
+         uint64_t end = iova + size;
+
+         printf("  - iova: 0x%016" PRIx64 "-0x%016" PRIx64, iova, end);
+
+         if (has_fault_iova) {
+            if ((iova <= fault_iova) && (fault_iova < end)) {
+               /* Fault address was within what should be a mapped buffer!! */
+               printf("\t==");
+            } else if ((iova <= fault_iova) && (fault_iova < (end + size))) {
+               /* Fault address was near this mapped buffer */
+               printf("\t>=");
+            }
+         }
+         printf("\n");
+         printf("    size: %u (0x%x)\n", size, size);
+         continue;
       } else if (startswith(line, "    data: !!ascii85 |")) {
          uint32_t *buf = popline_ascii85(size / 4);
 
@@ -518,14 +574,15 @@ decode_clusters(void)
    struct regacc r = regacc(NULL);
 
    foreach_line_in_section (line) {
-      if (startswith(line, "  - cluster-name:") ||
-          startswith(line, "    - context:")) {
+      if (startswith_nowhitespace(line, "- cluster-name:") ||
+          startswith_nowhitespace(line, "- context:") ||
+          startswith_nowhitespace(line, "- pipe:")) {
          printf("%s", line);
          continue;
       }
 
       uint32_t offset, value;
-      parseline(line, "      - { offset: %x, value: %x }", &offset, &value);
+      parseline_nowhitespace(line, "- { offset: %x, value: %x }", &offset, &value);
 
       if (regacc_push(&r, offset / 4, value)) {
          printf("\t%08"PRIx64, r.value);
@@ -545,7 +602,7 @@ dump_cp_sqe_stat(uint32_t *stat)
    printf("\t PC: %04x\n", stat[0]);
    stat++;
 
-   if (is_a6xx() && valid_header(stat[0])) {
+   if (!is_a5xx() && valid_header(stat[0])) {
       if (pkt_is_type7(stat[0])) {
          unsigned opc = cp_type7_opcode(stat[0]);
          const char *name = pktname(opc);
@@ -645,10 +702,11 @@ decode_indexed_registers(void)
           * so far) not useful, so skip them if not in verbose mode:
           */
          bool dump = verbose || !strcmp(name, "CP_SQE_STAT") ||
+                     !strcmp(name, "CP_BV_SQE_STAT") ||
                      !strcmp(name, "CP_DRAW_STATE") ||
                      !strcmp(name, "CP_ROQ") || 0;
 
-         if (!strcmp(name, "CP_SQE_STAT"))
+         if (!strcmp(name, "CP_SQE_STAT") || !strcmp(name, "CP_BV_SQE_STAT"))
             dump_cp_sqe_stat(buf);
 
          if (!strcmp(name, "CP_UCODE_DBG_DATA"))
@@ -683,19 +741,23 @@ decode_shader_blocks(void)
       if (startswith(line, "  - type:")) {
          free(type);
          parseline(line, "  - type: %ms", &type);
-      } else if (startswith(line, "      size:")) {
-         parseline(line, "      size: %u", &sizedwords);
-      } else if (startswith(line, "    data: !!ascii85 |")) {
+      } else if (startswith_nowhitespace(line, "size:")) {
+         parseline_nowhitespace(line, "size: %u", &sizedwords);
+      } else if (startswith_nowhitespace(line, "data: !!ascii85 |")) {
          uint32_t *buf = popline_ascii85(sizedwords);
 
          /* some of the sections are pretty large, and are (at least
           * so far) not useful, so skip them if not in verbose mode:
           */
          bool dump = verbose || !strcmp(type, "A6XX_SP_INST_DATA") ||
-                     !strcmp(type, "A6XX_HLSQ_INST_RAM") || 0;
+                     !strcmp(type, "A6XX_HLSQ_INST_RAM") || 
+                     !strcmp(type, "A7XX_SP_INST_DATA") ||
+                     !strcmp(type, "A7XX_HLSQ_INST_RAM") || 0;
 
          if (!strcmp(type, "A6XX_SP_INST_DATA") ||
-             !strcmp(type, "A6XX_HLSQ_INST_RAM")) {
+             !strcmp(type, "A6XX_HLSQ_INST_RAM") ||
+             !strcmp(type, "A7XX_SP_INST_DATA") ||
+             !strcmp(type, "A7XX_HLSQ_INST_RAM")) {
             /* TODO this section actually contains multiple shaders
              * (or parts of shaders?), so perhaps we should search
              * for ends of shaders and decode each?
@@ -771,7 +833,7 @@ decode(void)
                    &core, &major, &minor, &patchid);
 
          options.dev_id.chip_id = (core << 24) | (major << 16) | (minor << 8) | patchid;
-         options.info = fd_dev_info(&options.dev_id);
+         options.info = fd_dev_info_raw(&options.dev_id);
          if (!options.info) {
             printf("Unsupported device\n");
             break;
@@ -781,7 +843,16 @@ decode(void)
 
          cffdec_init(&options);
 
-         if (is_a6xx()) {
+         if (is_a7xx()) {
+            rnn_gmu = rnn_new(!options.color);
+            rnn_load_file(rnn_gmu, "adreno/a6xx_gmu.xml", "A6XX");
+            rnn_control = rnn_new(!options.color);
+            rnn_load_file(rnn_control, "adreno/adreno_control_regs.xml",
+                          "A7XX_CONTROL_REG");
+            rnn_pipe = rnn_new(!options.color);
+            rnn_load_file(rnn_pipe, "adreno/adreno_pipe_regs.xml",
+                          "A7XX_PIPE_REG");
+         } else if (is_a6xx()) {
             rnn_gmu = rnn_new(!options.color);
             rnn_load_file(rnn_gmu, "adreno/a6xx_gmu.xml", "A6XX");
             rnn_control = rnn_new(!options.color);
@@ -797,6 +868,8 @@ decode(void)
          } else {
             rnn_control = NULL;
          }
+      } else if (startswith(line, "fault-info:")) {
+         decode_fault_info();
       } else if (startswith(line, "bos:")) {
          decode_bos();
       } else if (startswith(line, "ringbuffer:")) {

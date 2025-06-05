@@ -45,6 +45,15 @@ cs_get_cur_iova(struct cmdstream *cs)
    return cs->iova + cs->cur * sizeof(uint32_t);
 }
 
+struct wrbuf {
+   struct list_head link;
+
+   uint64_t iova;
+   uint64_t size;
+   uint64_t clear;
+   const char *name;
+};
+
 struct replay_context {
    void *mem_ctx;
 
@@ -58,6 +67,8 @@ struct replay_context {
    struct cmdstream *cp_log;
 
    struct list_head cs_list;
+
+   struct list_head wrbuf_list;
 
    struct ir3_compiler *compiler;
 
@@ -166,11 +177,24 @@ rd_write_cs_submit(FILE *out, struct cmdstream *cs)
 }
 
 static void
+rd_write_wrbuffer(FILE *out, struct wrbuf *wrbuf)
+{
+   uint32_t name_len = strlen(wrbuf->name) + 1;
+   struct rd_section section = {.type = RD_WRBUFFER,
+                                .size = (uint32_t)(sizeof(uint64_t) * 3) + name_len};
+   fwrite(&section, sizeof(section), 1, out);
+   fwrite(&wrbuf->iova, sizeof(uint64_t), 1, out);
+   fwrite(&wrbuf->size, sizeof(uint64_t), 1, out);
+   fwrite(&wrbuf->clear, sizeof(uint64_t), 1, out);
+   fwrite(wrbuf->name, sizeof(char), name_len, out);
+}
+
+static void
 print_usage(const char *name)
 {
    /* clang-format off */
    fprintf(stderr, "Usage:\n\n"
-           "\t%s [OPTSIONS]... FILE...\n\n"
+           "\t%s [OPTIONS]... FILE...\n\n"
            "Options:\n"
            "\t    --vastart=offset\n"
            "\t    --vasize=size\n"
@@ -225,6 +249,7 @@ replay_context_init(struct replay_context *ctx, struct fd_dev_id *dev_id,
 
    ctx->mem_ctx = ralloc_context(NULL);
    list_inithead(&ctx->cs_list);
+   list_inithead(&ctx->wrbuf_list);
 
    util_vma_heap_init(&ctx->vma, va_start, ROUND_DOWN_TO(va_size, 4096));
 
@@ -242,9 +267,11 @@ replay_context_init(struct replay_context *ctx, struct fd_dev_id *dev_id,
    ((uint64_t *)ctx->cp_log->mem)[1] = sizeof(uint64_t);
    ctx->cp_log->cur = ctx->cp_log->total_size;
 
-   struct ir3_compiler_options options{};
+   struct ir3_compiler_options options{
+      .disable_cache = true,
+   };
    ctx->compiler =
-      ir3_compiler_create(NULL, dev_id, &options);
+      ir3_compiler_create(NULL, dev_id, fd_dev_info_raw(dev_id), &options);
    ctx->compiled_shaders = _mesa_hash_table_u64_create(ctx->mem_ctx);
 }
 
@@ -269,6 +296,10 @@ replay_context_finish(struct replay_context *ctx)
       rd_write_cs_buffer(out, cs);
    }
    rd_write_cs_submit(out, ctx->submit_cs);
+
+   list_for_each_entry (struct wrbuf, wrbuf, &ctx->wrbuf_list, link) {
+      rd_write_wrbuffer(out, wrbuf);
+   }
 
    fclose(out);
 }
@@ -299,7 +330,13 @@ emit_shader_iova(struct replay_context *ctx, struct cmdstream *cs, uint64_t id)
 {
    uint64_t *shader_iova = (uint64_t *)
       _mesa_hash_table_u64_search(ctx->compiled_shaders, id);
-   pkt_qw(cs, *shader_iova);
+   if (shader_iova) {
+      pkt_qw(cs, *shader_iova);
+   } else {
+      fprintf(stderr,
+              "Not override for shader at 0x%" PRIx64 ", using original\n", id);
+      pkt_qw(cs, id);
+   }
 }
 
 #define begin_draw_state()                                                     \
@@ -325,7 +362,7 @@ emit_shader_iova(struct replay_context *ctx, struct cmdstream *cs, uint64_t id)
    pkt_qw(prev_cs, cs->iova);                                                  \
    pkt(prev_cs, ibcs_size);
 
-static void
+UNUSED static void
 gpu_print(struct replay_context *ctx, struct cmdstream *_cs, uint64_t iova,
           uint32_t dwords)
 {
@@ -378,4 +415,27 @@ gpu_print(struct replay_context *ctx, struct cmdstream *_cs, uint64_t iova,
    }
 
    end_ib();
+}
+
+/* This function is used to read a buffer from the GPU into a file.
+ * The buffer can optionally be cleared to 0xdeadbeef at the start
+ * of the cmdstream by setting the clear parameter to true.
+ *
+ * Note: Unlike gpu_print, this function isn't sequenced, it will
+ * read the state of the buffer at the end of the cmdstream, not
+ * at the point of the call.
+ */
+UNUSED static void
+gpu_read_into_file(struct replay_context *ctx, struct cmdstream *_cs,
+                   uint64_t iova, uint64_t size, bool clear, const char *name)
+{
+   struct wrbuf *wrbuf = (struct wrbuf *) calloc(1, sizeof(struct wrbuf));
+   wrbuf->iova = iova;
+   wrbuf->size = size;
+   wrbuf->clear = clear;
+   wrbuf->name = strdup(name);
+
+   assert(wrbuf->iova != 0);
+
+   list_addtail(&wrbuf->link, &ctx->wrbuf_list);
 }

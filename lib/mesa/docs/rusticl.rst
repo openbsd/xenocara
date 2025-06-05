@@ -1,6 +1,8 @@
 Rusticl
 =======
 
+Rusticl is an OpenCL implementation on top of Gallium drivers.
+
 Enabling
 --------
 
@@ -8,6 +10,23 @@ In order to use Rusticl on any platform the environment variable
 :envvar:`RUSTICL_ENABLE` has to be used. Rusticl does not advertise devices
 for any driver by default yet as doing so can impact system stability until
 remaining core issues are ironed out.
+
+Enabling drivers by default
+---------------------------
+
+Distributions and everybody building rusticl themselves can opt-in or opt-out
+certain drivers from being enabled by default. The
+``gallium-rusticl-enable-drivers`` takes a list of drivers to enable by
+default. The environment variable :envvar:`RUSTICL_ENABLE` will overwrite this
+list at runtime.
+
+Not all drivers are supported to be enabled by default, because that should
+require opt-in by the driver maintainers. Check out the meson option
+documentation to see for which drivers this option is supported.
+
+The ``auto`` option might not enable all drivers supported by this flag, but
+for distribution it's recommended to use that one unless they get an ack from
+driver maintainers to expand the list.
 
 Building
 --------
@@ -29,11 +48,11 @@ To build Rusticl you need to satisfy the following build dependencies:
 
 The minimum versions to build Rusticl are:
 
--  Rust: 1.66
--  Meson: 1.2.0
--  Bindgen: 0.62.0
--  LLVM: 11.0.0 (recommended: 15.0.0)
--  Clang: 11.0.0 (recommended: 15.0.0)
+-  Rust: 1.78
+-  Meson: 1.4.0
+-  Bindgen: 0.65.0
+-  LLVM: 15.0.0
+-  Clang: 15.0.0
    Updating clang requires a rebuilt of mesa and rusticl if and only if the value of
    ``CLANG_RESOURCE_DIR`` changes. It is defined through ``clang/Config/config.h``.
 -  SPIRV-Tools: any version (recommended: v2022.3)
@@ -46,29 +65,6 @@ the occasional use of enums, structs or constants through the code base.
 
 If you need help ping ``karolherbst`` either in ``#dri-devel`` or
 ``#rusticl`` on OFTC.
-
-Rust Update Policy
-------------------
-
-Given that for some distributions it's not feasible to keep up with the
-pace of Rust, we promise to only bump the minimum required Rust version
-following those rules:
-
--  Only up to the Rust requirement of other major Linux desktop
-   components, e.g.:
-
-   -  `Firefox ESR <https://whattrainisitnow.com/release/?version=esr>`__:
-      `Minimum Supported Rust Version:
-      <https://firefox-source-docs.mozilla.org/writing-rust-code/update-policy.html#schedule>`__
-
-   -  latest `Linux Kernel Rust requirement
-      <https://docs.kernel.org/process/changes.html#current-minimal-requirements>`__
-
--  Only require a newer Rust version than stated by other rules if and only
-   if it's required to get around a bug inside rustc.
-
-As bug fixes might run into rustc compiler bugs, a rust version bump _can_
-happen on a stable branch as well.
 
 Contributing 
 ------------
@@ -86,7 +82,7 @@ that add new features should be ran against the appropriate conformance
 tests.
 
 Also, make sure the formatting is in order before submitting code. That
-can easily be done via ``git ls-files */{lib,app}.rs | xargs rustfmt``.
+can easily be done via ``git ls-files */{lib,main}.rs | xargs rustfmt``.
 
 When submitting Merge Requests or filing bugs related to Rusticl, make
 sure to add the ``Rusticl`` label so people subscribed to that Label get

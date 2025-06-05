@@ -149,7 +149,12 @@ dxcore_get_memory_info(struct d3d12_screen *screen, struct d3d12_memory_info *ou
    DXCoreAdapterMemoryBudgetNodeSegmentGroup nonlocal_node_segment = { 0, DXCoreSegmentGroup::NonLocal };
    dxcore_screen->adapter->QueryState(DXCoreAdapterState::AdapterMemoryBudget, &local_node_segment, &local_info);
    dxcore_screen->adapter->QueryState(DXCoreAdapterState::AdapterMemoryBudget, &nonlocal_node_segment, &nonlocal_info);
+
+   output->budget_local = local_info.budget;
+   output->budget_nonlocal = nonlocal_info.budget;
    output->budget = local_info.budget + nonlocal_info.budget;
+   output->usage_local = local_info.currentUsage;
+   output->usage_nonlocal = nonlocal_info.currentUsage;
    output->usage = local_info.currentUsage + nonlocal_info.currentUsage;
 }
 
@@ -213,7 +218,8 @@ d3d12_init_dxcore_screen(struct d3d12_screen *dscreen)
    screen->base.device_id = hardware_ids.deviceID;
    screen->base.subsys_id = hardware_ids.subSysID;
    screen->base.revision = hardware_ids.revision;
-   screen->base.memory_size_megabytes = (dedicated_video_memory + dedicated_system_memory + shared_system_memory) >> 20;
+   screen->base.memory_device_size_megabytes = dedicated_video_memory >> 20;
+   screen->base.memory_system_size_megabytes = (dedicated_system_memory + shared_system_memory) >> 20;
    screen->base.base.get_name = dxcore_get_name;
    screen->base.get_memory_info = dxcore_get_memory_info;
 
@@ -245,5 +251,35 @@ d3d12_create_dxcore_screen(struct sw_winsys *winsys, LUID *adapter_luid)
       return nullptr;
    }
 
+   return &screen->base.base;
+}
+
+struct pipe_screen *
+d3d12_create_dxcore_screen_from_d3d12_device(struct sw_winsys *winsys, IUnknown* pDevUnk, LUID **out_adapter_luid)
+{
+   struct d3d12_dxcore_screen *screen = CALLOC_STRUCT(d3d12_dxcore_screen);
+   if (!screen)
+      return nullptr;
+
+   if (FAILED(pDevUnk->QueryInterface(IID_PPV_ARGS(&screen->base.dev)))) {
+      d3d12_destroy_screen(&screen->base);
+      return nullptr;
+   }
+
+   LUID adapter_luid = GetAdapterLuid(screen->base.dev);
+   if (!d3d12_init_screen_base(&screen->base, winsys, &adapter_luid)) {
+      d3d12_destroy_screen(&screen->base);
+      return nullptr;
+   }
+   screen->base.base.destroy = d3d12_destroy_dxcore_screen;
+   screen->base.init = d3d12_init_dxcore_screen;
+   screen->base.deinit = d3d12_deinit_dxcore_screen;
+
+   if (!d3d12_init_dxcore_screen(&screen->base)) {
+      d3d12_destroy_dxcore_screen(&screen->base.base);
+      return nullptr;
+   }
+
+   *out_adapter_luid = &screen->base.adapter_luid;
    return &screen->base.base;
 }

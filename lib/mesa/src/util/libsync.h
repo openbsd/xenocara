@@ -36,13 +36,16 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <time.h>
+
+#include "util/detect_os.h"
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-#ifdef ANDROID
+#if DETECT_OS_ANDROID
 /* On Android, rely on the system's libsync instead of rolling our own
  * sync_wait() and sync_merge().  This gives us compatibility with pre-4.7
  * Android kernels.
@@ -81,6 +84,14 @@ struct sync_merge_data {
 	int32_t	fence;
 	uint32_t	flags;
 	uint32_t	pad;
+};
+
+struct sync_fence_info {
+	char obj_name[32];
+	char driver_name[32];
+	int32_t status;
+	uint32_t flags;
+	uint64_t timestamp_ns;
 };
 
 struct sync_file_info {
@@ -157,7 +168,35 @@ sync_valid_fd(int fd)
 	return ioctl(fd, SYNC_IOC_FILE_INFO, &info) >= 0;
 }
 
-#endif /* !ANDROID */
+static inline struct sync_file_info* sync_file_info(int32_t fd)
+{
+    struct sync_file_info local_info;
+    struct sync_file_info *info;
+    int err;
+
+    memset(&local_info, 0, sizeof(local_info));
+    err = ioctl(fd, SYNC_IOC_FILE_INFO, &local_info);
+    if (err < 0)
+        return NULL;
+
+    info = (struct sync_file_info *)calloc(1, sizeof(struct sync_file_info) +
+                  local_info.num_fences * sizeof(struct sync_fence_info));
+    if (!info)
+        return NULL;
+
+    info->num_fences = local_info.num_fences;
+    info->sync_fence_info = (uint64_t)(uintptr_t)(info + 1);
+
+    err = ioctl(fd, SYNC_IOC_FILE_INFO, info);
+    if (err < 0) {
+        free(info);
+        return NULL;
+    }
+
+    return info;
+}
+
+#endif /* DETECT_OS_ANDROID */
 
 /* accumulate fd2 into fd1.  If *fd1 is not a valid fd then dup fd2,
  * otherwise sync_merge() and close the old *fd1.  This can be used
@@ -202,7 +241,7 @@ static inline int sync_accumulate(const char *name, int *fd1, int fd2)
 /* Helper macro to complain if fd is non-negative and not a valid fence fd.
  * Sprinkle this around to help catch fd lifetime issues.
  */
-#ifdef DEBUG
+#if MESA_DEBUG
 #  include "util/log.h"
 #  define validate_fence_fd(fd) do {                                         \
       if (((fd) >= 0) && !sync_valid_fd(fd))                                 \

@@ -32,8 +32,8 @@
 #include <stdbool.h>
 #include "genxml/gen_macros.h"
 #include "util/format/u_format.h"
-#include "pan_bo.h"
-#include "pan_device.h"
+
+#include "pan_pool.h"
 
 /* Tiler structure size computation */
 
@@ -48,14 +48,12 @@ unsigned panfrost_choose_hierarchy_mask(unsigned width, unsigned height,
 
 #if defined(PAN_ARCH) && PAN_ARCH <= 5
 static inline unsigned
-panfrost_tiler_get_polygon_list_size(const struct panfrost_device *dev,
-                                     unsigned fb_width, unsigned fb_height,
-                                     unsigned vertex_count)
+panfrost_tiler_get_polygon_list_size(unsigned fb_width, unsigned fb_height,
+                                     unsigned vertex_count, bool hierarchy)
 {
    if (!vertex_count)
       return MALI_MIDGARD_TILER_MINIMUM_HEADER_SIZE + 4;
 
-   bool hierarchy = !dev->model->quirks.no_hierarchical_tiling;
    unsigned hierarchy_mask = panfrost_choose_hierarchy_mask(
       fb_width, fb_height, vertex_count, hierarchy);
 
@@ -87,7 +85,7 @@ unsigned panfrost_compute_magic_divisor(unsigned hw_divisor, unsigned *o_shift,
 #if PAN_ARCH <= 5
 static inline void
 panfrost_vertex_id(unsigned padded_count,
-                   struct mali_attribute_buffer_packed *attr, bool instanced)
+                   struct mali_attribute_vertex_id_packed *attr, bool instanced)
 {
    pan_pack(attr, ATTRIBUTE_VERTEX_ID, cfg) {
       if (instanced) {
@@ -103,7 +101,8 @@ panfrost_vertex_id(unsigned padded_count,
 
 static inline void
 panfrost_instance_id(unsigned padded_count,
-                     struct mali_attribute_buffer_packed *attr, bool instanced)
+                     struct mali_attribute_instance_id_packed *attr,
+                     bool instanced)
 {
    pan_pack(attr, ATTRIBUTE_INSTANCE_ID, cfg) {
       if (!instanced || padded_count <= 1) {
@@ -231,12 +230,13 @@ panfrost_get_z_internal_format(enum pipe_format fmt)
 #if PAN_ARCH >= 9
 static inline void
 panfrost_make_resource_table(struct panfrost_ptr base, unsigned index,
-                             mali_ptr address, unsigned resource_count)
+                             uint64_t address, unsigned resource_count)
 {
    if (resource_count == 0)
       return;
 
-   pan_pack(base.cpu + index * pan_size(RESOURCE), RESOURCE, cfg) {
+   struct mali_resource_packed *res = base.cpu;
+   pan_pack(&res[index], RESOURCE, cfg) {
       cfg.address = address;
       cfg.size = resource_count * pan_size(BUFFER);
    }

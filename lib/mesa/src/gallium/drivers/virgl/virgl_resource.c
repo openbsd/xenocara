@@ -350,7 +350,7 @@ virgl_staging_map(struct virgl_context *vctx,
    unsigned align_offset;
    unsigned stride;
    uintptr_t layer_stride;
-   void *map_addr;
+   uint8_t *map_addr;
    bool alloc_succeeded;
 
    assert(vctx->supports_staging);
@@ -529,7 +529,7 @@ virgl_resource_transfer_map(struct pipe_context *ctx,
    case VIRGL_TRANSFER_MAP_HW_RES:
       trans->hw_res_map = vws->resource_map(vws, vres->hw_res);
       if (trans->hw_res_map)
-         map_addr = trans->hw_res_map + trans->offset;
+         map_addr = (uint8_t *)trans->hw_res_map + trans->offset;
       else
          map_addr = NULL;
       break;
@@ -717,21 +717,28 @@ static struct pipe_resource *virgl_resource_from_handle(struct pipe_screen *scre
    uint32_t storage_size;
 
    struct virgl_screen *vs = virgl_screen(screen);
-   if (templ->target == PIPE_BUFFER)
+   if (templ && templ->target == PIPE_BUFFER)
       return NULL;
 
    struct virgl_resource *res = CALLOC_STRUCT(virgl_resource);
-   res->b = *templ;
+   if (templ)
+      res->b = *templ;
    res->b.screen = &vs->base;
    pipe_reference_init(&res->b.reference, 1);
 
    plane = winsys_stride = plane_offset = modifier = 0;
    res->hw_res = vs->vws->resource_create_from_handle(vs->vws, whandle,
+                                                      &res->b,
                                                       &plane,
                                                       &winsys_stride,
                                                       &plane_offset,
                                                       &modifier,
                                                       &res->blob_mem);
+
+   if (!res->hw_res) {
+      FREE(res);
+      return NULL;
+   }
 
    /* do not use winsys returns for guest storage info of classic resource */
    if (!res->blob_mem) {
@@ -742,10 +749,6 @@ static struct pipe_resource *virgl_resource_from_handle(struct pipe_screen *scre
 
    virgl_resource_layout(&res->b, &res->metadata, plane, winsys_stride,
                          plane_offset, modifier);
-   if (!res->hw_res) {
-      FREE(res);
-      return NULL;
-   }
 
    /*
    *  If the overall resource is larger than a single page in size, we can
@@ -809,6 +812,28 @@ static struct pipe_resource *virgl_resource_from_handle(struct pipe_screen *scre
    return &res->b;
 }
 
+static bool
+virgl_resource_get_param(struct pipe_screen *screen,
+                         struct pipe_context *context,
+                         struct pipe_resource *resource,
+                         unsigned plane,
+                         unsigned layer,
+                         unsigned level,
+                         enum pipe_resource_param param,
+                         unsigned handle_usage,
+                         uint64_t *value)
+{
+   struct virgl_resource *res = virgl_resource(resource);
+
+   switch(param) {
+   case PIPE_RESOURCE_PARAM_MODIFIER:
+      *value = res->metadata.modifier;
+      return true;
+   default:
+      return false;
+   }
+}
+
 void virgl_init_screen_resource_functions(struct pipe_screen *screen)
 {
     screen->resource_create_front = virgl_resource_create_front;
@@ -816,6 +841,7 @@ void virgl_init_screen_resource_functions(struct pipe_screen *screen)
     screen->resource_from_handle = virgl_resource_from_handle;
     screen->resource_get_handle = virgl_resource_get_handle;
     screen->resource_destroy = virgl_resource_destroy;
+    screen->resource_get_param = virgl_resource_get_param;
 }
 
 static void virgl_buffer_subdata(struct pipe_context *pipe,

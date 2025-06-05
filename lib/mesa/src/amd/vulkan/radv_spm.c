@@ -1,30 +1,14 @@
 /*
  * Copyright © 2021 Valve Corporation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <inttypes.h>
 
+#include "radv_buffer.h"
 #include "radv_cs.h"
-#include "radv_private.h"
+#include "radv_spm.h"
 #include "sid.h"
 
 #define SPM_RING_BASE_ALIGN 32
@@ -33,17 +17,12 @@ static bool
 radv_spm_init_bo(struct radv_device *device)
 {
    struct radeon_winsys *ws = device->ws;
-   uint64_t size = 32 * 1024 * 1024; /* Default to 1MB. */
-   uint16_t sample_interval = 4096;  /* Default to 4096 clk. */
    VkResult result;
 
-   device->spm.buffer_size = size;
-   device->spm.sample_interval = sample_interval;
-
    struct radeon_winsys_bo *bo = NULL;
-   result = ws->buffer_create(ws, size, 4096, RADEON_DOMAIN_VRAM,
-                              RADEON_FLAG_CPU_ACCESS | RADEON_FLAG_NO_INTERPROCESS_SHARING | RADEON_FLAG_ZERO_VRAM,
-                              RADV_BO_PRIORITY_SCRATCH, 0, &bo);
+   result = radv_bo_create(device, NULL, device->spm.buffer_size, 4096, RADEON_DOMAIN_VRAM,
+                           RADEON_FLAG_CPU_ACCESS | RADEON_FLAG_NO_INTERPROCESS_SHARING | RADEON_FLAG_ZERO_VRAM,
+                           RADV_BO_PRIORITY_SCRATCH, 0, true, &bo);
    device->spm.bo = bo;
    if (result != VK_SUCCESS)
       return false;
@@ -52,7 +31,7 @@ radv_spm_init_bo(struct radv_device *device)
    if (result != VK_SUCCESS)
       return false;
 
-   device->spm.ptr = ws->buffer_map(device->spm.bo);
+   device->spm.ptr = radv_buffer_map(ws, device->spm.bo);
    if (!device->spm.ptr)
       return false;
 
@@ -60,9 +39,39 @@ radv_spm_init_bo(struct radv_device *device)
 }
 
 static void
+radv_spm_finish_bo(struct radv_device *device)
+{
+   struct radeon_winsys *ws = device->ws;
+
+   if (device->spm.bo) {
+      ws->buffer_make_resident(ws, device->spm.bo, false);
+      radv_bo_destroy(device, NULL, device->spm.bo);
+   }
+}
+
+static bool
+radv_spm_resize_bo(struct radv_device *device)
+{
+   /* Destroy the previous SPM bo. */
+   radv_spm_finish_bo(device);
+
+   /* Double the size of the SPM bo. */
+   device->spm.buffer_size *= 2;
+
+   fprintf(stderr,
+           "Failed to get the SPM trace because the buffer "
+           "was too small, resizing to %d KB\n",
+           device->spm.buffer_size / 1024);
+
+   /* Re-create the SPM bo. */
+   return radv_spm_init_bo(device);
+}
+
+static void
 radv_emit_spm_counters(struct radv_device *device, struct radeon_cmdbuf *cs, enum radv_queue_family qf)
 {
-   const enum amd_gfx_level gfx_level = device->physical_device->rad_info.gfx_level;
+   const struct radv_physical_device *pdev = radv_device_physical(device);
+   const enum amd_gfx_level gfx_level = pdev->info.gfx_level;
    struct ac_spm *spm = &device->spm;
 
    if (gfx_level >= GFX11) {
@@ -80,7 +89,7 @@ radv_emit_spm_counters(struct radv_device *device, struct radeon_cmdbuf *cs, enu
             const struct ac_spm_counter_select *cntr_sel = &spm->sq_wgp[instance].counters[b];
             uint32_t reg_base = R_036700_SQ_PERFCOUNTER0_SELECT;
 
-            radeon_set_uconfig_reg_seq_perfctr(gfx_level, qf, cs, reg_base + b * 4, 1);
+            radeon_set_uconfig_perfctr_reg_seq(gfx_level, qf, cs, reg_base + b * 4, 1);
             radeon_emit(cs, cntr_sel->sel0);
          }
       }
@@ -102,7 +111,7 @@ radv_emit_spm_counters(struct radv_device *device, struct radeon_cmdbuf *cs, enu
          const struct ac_spm_counter_select *cntr_sel = &spm->sqg[instance].counters[b];
          uint32_t reg_base = R_036700_SQ_PERFCOUNTER0_SELECT;
 
-         radeon_set_uconfig_reg_seq_perfctr(gfx_level, qf, cs, reg_base + b * 4, 1);
+         radeon_set_uconfig_perfctr_reg_seq(gfx_level, qf, cs, reg_base + b * 4, 1);
          radeon_emit(cs, cntr_sel->sel0 | S_036700_SQC_BANK_MASK(0xf)); /* SQC_BANK_MASK only gfx10 */
       }
    }
@@ -124,10 +133,10 @@ radv_emit_spm_counters(struct radv_device *device, struct radeon_cmdbuf *cs, enu
             if (!cntr_sel->active)
                continue;
 
-            radeon_set_uconfig_reg_seq_perfctr(gfx_level, qf, cs, regs->select0[c], 1);
+            radeon_set_uconfig_perfctr_reg_seq(gfx_level, qf, cs, regs->select0[c], 1);
             radeon_emit(cs, cntr_sel->sel0);
 
-            radeon_set_uconfig_reg_seq_perfctr(gfx_level, qf, cs, regs->select1[c], 1);
+            radeon_set_uconfig_perfctr_reg_seq(gfx_level, qf, cs, regs->select1[c], 1);
             radeon_emit(cs, cntr_sel->sel1);
          }
       }
@@ -142,7 +151,8 @@ radv_emit_spm_counters(struct radv_device *device, struct radeon_cmdbuf *cs, enu
 void
 radv_emit_spm_setup(struct radv_device *device, struct radeon_cmdbuf *cs, enum radv_queue_family qf)
 {
-   const enum amd_gfx_level gfx_level = device->physical_device->rad_info.gfx_level;
+   const struct radv_physical_device *pdev = radv_device_physical(device);
+   const enum amd_gfx_level gfx_level = pdev->info.gfx_level;
    struct ac_spm *spm = &device->spm;
    uint64_t va = radv_buffer_get_va(spm->bo);
    uint64_t ring_size = spm->buffer_size;
@@ -170,7 +180,7 @@ radv_emit_spm_setup(struct radv_device *device, struct radeon_cmdbuf *cs, enum r
 
    radeon_set_uconfig_reg(cs, R_03726C_RLC_SPM_ACCUM_MODE, 0);
 
-   if (device->physical_device->rad_info.gfx_level >= GFX11) {
+   if (pdev->info.gfx_level >= GFX11) {
       radeon_set_uconfig_reg(cs, R_03721C_RLC_SPM_PERFMON_SEGMENT_SIZE,
                              S_03721C_TOTAL_NUM_SEGMENT(total_muxsel_lines) |
                                 S_03721C_GLOBAL_NUM_SEGMENT(spm->num_muxsel_lines[AC_SPM_SEGMENT_TYPE_GLOBAL]) |
@@ -219,7 +229,7 @@ radv_emit_spm_setup(struct radv_device *device, struct radeon_cmdbuf *cs, enum r
          uint32_t *data = (uint32_t *)spm->muxsel_lines[s][l].muxsel;
 
          /* Select MUXSEL_ADDR to point to the next muxsel. */
-         radeon_set_uconfig_reg_perfctr(gfx_level, qf, cs, rlc_muxsel_addr, l * AC_SPM_MUXSEL_LINE_SIZE);
+         radeon_set_uconfig_perfctr_reg(gfx_level, qf, cs, rlc_muxsel_addr, l * AC_SPM_MUXSEL_LINE_SIZE);
 
          /* Write the muxsel line configuration with MUXSEL_DATA. */
          radeon_emit(cs, PKT3(PKT3_WRITE_DATA, 2 + AC_SPM_MUXSEL_LINE_SIZE, 0));
@@ -238,15 +248,19 @@ radv_emit_spm_setup(struct radv_device *device, struct radeon_cmdbuf *cs, enum r
 bool
 radv_spm_init(struct radv_device *device)
 {
-   const struct radeon_info *info = &device->physical_device->rad_info;
-   struct ac_perfcounters *pc = &device->physical_device->ac_perfcounters;
+   struct radv_physical_device *pdev = radv_device_physical(device);
+   const struct radeon_info *gpu_info = &pdev->info;
+   struct ac_perfcounters *pc = &pdev->ac_perfcounters;
 
    /* We failed to initialize the performance counters. */
    if (!pc->blocks)
       return false;
 
-   if (!ac_init_spm(info, pc, &device->spm))
+   if (!ac_init_spm(gpu_info, pc, &device->spm))
       return false;
+
+   device->spm.buffer_size = 32 * 1024 * 1024; /* Default to 32MB. */
+   device->spm.sample_interval = 4096;        /* Default to 4096 clk. */
 
    if (!radv_spm_init_bo(device))
       return false;
@@ -257,12 +271,21 @@ radv_spm_init(struct radv_device *device)
 void
 radv_spm_finish(struct radv_device *device)
 {
-   struct radeon_winsys *ws = device->ws;
-
-   if (device->spm.bo) {
-      ws->buffer_make_resident(ws, device->spm.bo, false);
-      ws->buffer_destroy(ws, device->spm.bo);
-   }
+   radv_spm_finish_bo(device);
 
    ac_destroy_spm(&device->spm);
+}
+
+bool
+radv_get_spm_trace(struct radv_queue *queue, struct ac_spm_trace *spm_trace)
+{
+   struct radv_device *device = radv_queue_device(queue);
+
+   if (!ac_spm_get_trace(&device->spm, spm_trace)) {
+      if (!radv_spm_resize_bo(device))
+         fprintf(stderr, "radv: Failed to resize the SPM buffer.\n");
+      return false;
+   }
+
+   return true;
 }

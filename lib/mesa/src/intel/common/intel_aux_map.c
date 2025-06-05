@@ -75,6 +75,8 @@
  *  - TM (Tile-mode): 0=Ys, 1=Y, 2=rsvd, 3=rsvd
  *  - aux-data-addr: VMA/GPU address for the aux-data
  *  - V: entry is valid
+ *
+ * BSpec 44930
  */
 
 #include "intel_aux_map.h"
@@ -83,7 +85,6 @@
 #include "dev/intel_device_info.h"
 #include "isl/isl.h"
 
-#include "drm-uapi/i915_drm.h"
 #include "util/list.h"
 #include "util/ralloc.h"
 #include "util/u_atomic.h"
@@ -144,10 +145,6 @@ struct aux_format_info {
     */
    uint64_t main_page_size;
    /**
-    * The ratio of main surface to an AUX entry.
-    */
-   uint64_t main_to_aux_ratio;
-   /**
     * Page size of level 1 page table. It must be power of 2.
     */
    uint64_t l1_page_size;
@@ -164,14 +161,12 @@ struct aux_format_info {
 static const struct aux_format_info aux_formats[] = {
    [INTEL_AUX_MAP_GFX12_64KB] = {
       .main_page_size = 64 * 1024,
-      .main_to_aux_ratio = 256,
       .l1_page_size = 8 * 1024,
       .l1_index_mask = 0xff,
       .l1_index_offset = 16,
    },
    [INTEL_AUX_MAP_GFX125_1MB] = {
       .main_page_size = 1024 * 1024,
-      .main_to_aux_ratio = 256,
       .l1_page_size = 2 * 1024,
       .l1_index_mask = 0xf,
       .l1_index_offset = 20,
@@ -224,7 +219,7 @@ get_page_mask(const uint64_t page_size)
 static inline uint64_t
 get_meta_page_size(const struct aux_format_info *info)
 {
-   return info->main_page_size / info->main_to_aux_ratio;
+   return info->main_page_size / INTEL_AUX_MAP_MAIN_SIZE_SCALEDOWN;
 }
 
 static inline uint64_t
@@ -241,9 +236,10 @@ intel_aux_get_meta_address_mask(struct intel_aux_map_context *ctx)
 }
 
 uint64_t
-intel_aux_get_main_to_aux_ratio(struct intel_aux_map_context *ctx)
+intel_aux_main_to_aux_offset(struct intel_aux_map_context *ctx,
+                             uint64_t main_offset)
 {
-   return ctx->format->main_to_aux_ratio;
+   return main_offset / INTEL_AUX_MAP_MAIN_SIZE_SCALEDOWN;
 }
 
 static const struct aux_format_info *
@@ -300,7 +296,7 @@ advance_current_pos(struct intel_aux_map_context *ctx, uint32_t size)
 
 static bool
 align_and_verify_space(struct intel_aux_map_context *ctx, uint32_t size,
-                       uint32_t align)
+                       uint32_t alignment)
 {
    if (ctx->tail_remaining < size)
       return false;
@@ -308,7 +304,7 @@ align_and_verify_space(struct intel_aux_map_context *ctx, uint32_t size,
    struct aux_map_buffer *tail =
       list_last_entry(&ctx->buffers, struct aux_map_buffer, link);
    uint64_t gpu = tail->buffer->gpu + ctx->tail_offset;
-   uint64_t aligned = align64(gpu, align);
+   uint64_t aligned = align64(gpu, alignment);
 
    if ((aligned - gpu) + size > ctx->tail_remaining) {
       return false;
@@ -725,10 +721,10 @@ intel_aux_map_add_mapping(struct intel_aux_map_context *ctx, uint64_t main_addre
       aux_inc_addr = aux_inc_addr + aux_page_size;
    }
    bool success = main_inc_addr - main_address >= main_size_B;
-   if (!success && (main_inc_addr - main_address) > 0) {
+   if (!success && (main_inc_addr > main_address)) {
       /* If the mapping failed, remove the mapped portion. */
       remove_mapping_locked(ctx, main_address,
-                            main_size_B - (main_inc_addr - main_address),
+                            main_inc_addr - main_address,
                             false /* reset_refcount */, &state_changed);
    }
    pthread_mutex_unlock(&ctx->mutex);

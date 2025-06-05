@@ -168,7 +168,7 @@ cs_program_emit(struct fd_ringbuffer *ring, struct kernel *kernel)
                A6XX_SP_CS_CTRL_REG0_FULLREGFOOTPRINT(i->max_reg + 1) |
                A6XX_SP_CS_CTRL_REG0_HALFREGFOOTPRINT(i->max_half_reg + 1) |
                COND(v->mergedregs, A6XX_SP_CS_CTRL_REG0_MERGEDREGS) |
-               COND(ir3_kernel->info.early_preamble, A6XX_SP_CS_CTRL_REG0_EARLYPREAMBLE) |
+               COND(v->early_preamble, A6XX_SP_CS_CTRL_REG0_EARLYPREAMBLE) |
                A6XX_SP_CS_CTRL_REG0_BRANCHSTACK(ir3_shader_branchstack_hw(v)));
    if (CHIP == A7XX) {
       OUT_REG(ring, HLSQ_FS_CNTL_0(CHIP, .threadsize = THREAD64));
@@ -179,14 +179,19 @@ cs_program_emit(struct fd_ringbuffer *ring, struct kernel *kernel)
               HLSQ_CONTROL_5_REG(CHIP, .dword = 0x0000fc00), );
    }
 
-   OUT_PKT4(ring, REG_A6XX_SP_CS_UNKNOWN_A9B1, 1);
-   OUT_RING(ring, A6XX_SP_CS_UNKNOWN_A9B1_SHARED_SIZE(1) |
-                  A6XX_SP_CS_UNKNOWN_A9B1_UNK6);
+   uint32_t shared_size = MAX2(((int)v->shared_size - 1) / 1024, 1);
+   enum a6xx_const_ram_mode mode =
+      v->constlen > 256 ? CONSTLEN_512 :
+      (v->constlen > 192 ? CONSTLEN_256 :
+      (v->constlen > 128 ? CONSTLEN_192 : CONSTLEN_128));
+   OUT_PKT4(ring, REG_A6XX_SP_CS_CTRL_REG1, 1);
+   OUT_RING(ring, A6XX_SP_CS_CTRL_REG1_SHARED_SIZE(shared_size) |
+                  A6XX_SP_CS_CTRL_REG1_CONSTANTRAMMODE(mode));
 
    if (CHIP == A6XX && a6xx_backend->info->a6xx.has_lpac) {
-      OUT_PKT4(ring, REG_A6XX_HLSQ_CS_UNKNOWN_B9D0, 1);
-      OUT_RING(ring, A6XX_HLSQ_CS_UNKNOWN_B9D0_SHARED_SIZE(1) |
-                        A6XX_HLSQ_CS_UNKNOWN_B9D0_UNK6);
+      OUT_PKT4(ring, REG_A6XX_HLSQ_CS_CTRL_REG1, 1);
+      OUT_RING(ring, A6XX_HLSQ_CS_CTRL_REG1_SHARED_SIZE(1) |
+                     A6XX_HLSQ_CS_CTRL_REG1_CONSTANTRAMMODE(mode));
    }
 
    uint32_t local_invocation_id, work_group_id;
@@ -203,16 +208,20 @@ cs_program_emit(struct fd_ringbuffer *ring, struct kernel *kernel)
       OUT_RING(ring, A6XX_HLSQ_CS_CNTL_1_LINEARLOCALIDREGID(regid(63, 0)) |
                         A6XX_HLSQ_CS_CNTL_1_THREADSIZE(thrsz));
    } else {
-      enum a7xx_cs_yalign yalign = (local_size[1] % 8 == 0)   ? CS_YALIGN_8
-                                   : (local_size[1] % 4 == 0) ? CS_YALIGN_4
-                                   : (local_size[1] % 2 == 0) ? CS_YALIGN_2
-                                                              : CS_YALIGN_1;
+      unsigned tile_height = (local_size[1] % 8 == 0)   ? 3
+                             : (local_size[1] % 4 == 0) ? 5
+                             : (local_size[1] % 2 == 0) ? 9
+                                                        : 17;
 
-      OUT_REG(ring, A7XX_HLSQ_CS_CNTL_1(.linearlocalidregid = regid(63, 0),
-                                        .threadsize = thrsz,
-                                        .unk11 = true,
-                                        .unk22 = true,
-                                        .yalign = yalign, ));
+      OUT_REG(ring,
+         HLSQ_CS_CNTL_1(CHIP,
+            .linearlocalidregid = regid(63, 0),
+            .threadsize = thrsz,
+            .workgrouprastorderzfirsten = true,
+            .wgtilewidth = 4,
+            .wgtileheight = tile_height,
+         )
+      );
    }
 
    if (CHIP == A7XX || a6xx_backend->info->a6xx.has_lpac) {
@@ -221,9 +230,17 @@ cs_program_emit(struct fd_ringbuffer *ring, struct kernel *kernel)
                         A6XX_SP_CS_CNTL_0_WGSIZECONSTID(regid(63, 0)) |
                         A6XX_SP_CS_CNTL_0_WGOFFSETCONSTID(regid(63, 0)) |
                         A6XX_SP_CS_CNTL_0_LOCALIDREGID(local_invocation_id));
-      OUT_REG(ring,
-         SP_CS_CNTL_1(CHIP, .linearlocalidregid = regid(63, 0),
-                            .threadsize = thrsz, ));
+      if (CHIP == A7XX) {
+         /* TODO allow the shader to control the tiling */
+         OUT_REG(ring,
+            SP_CS_CNTL_1(A7XX, .linearlocalidregid = regid(63, 0),
+                               .threadsize = thrsz,
+                               .workitemrastorder = WORKITEMRASTORDER_LINEAR));
+      } else {
+         OUT_REG(ring,
+            SP_CS_CNTL_1(CHIP, .linearlocalidregid = regid(63, 0),
+                               .threadsize = thrsz));
+      }
    }
 
    OUT_PKT4(ring, REG_A6XX_SP_CS_OBJ_START, 2);
@@ -303,7 +320,7 @@ cs_const_emit(struct fd_ringbuffer *ring, struct kernel *kernel,
    struct ir3_shader_variant *v = ir3_kernel->v;
 
    const struct ir3_const_state *const_state = ir3_const_state(v);
-   uint32_t base = const_state->offsets.immediate;
+   uint32_t base = const_state->allocs.max_const_offset_vec4;
    int size = DIV_ROUND_UP(const_state->immediates_count, 4);
 
    if (ir3_kernel->info.numwg != INVALID_REG) {
@@ -486,9 +503,9 @@ a6xx_emit_grid(struct kernel *kernel, uint32_t grid[3],
                     .localsizez = local_size[2] - 1,
                  ));
    if (CHIP == A7XX) {
-      OUT_REG(ring, A7XX_HLSQ_CS_LOCAL_SIZE(.localsizex = local_size[0] - 1,
-                                            .localsizey = local_size[1] - 1,
-                                            .localsizez = local_size[2] - 1, ));
+      OUT_REG(ring, A7XX_HLSQ_CS_LAST_LOCAL_SIZE(.localsizex = local_size[0] - 1,
+                                                 .localsizey = local_size[1] - 1,
+                                                 .localsizez = local_size[2] - 1, ));
    }
 
    OUT_REG(ring, HLSQ_CS_NDRANGE_1(CHIP,
@@ -610,10 +627,11 @@ a6xx_init(struct fd_device *dev, const struct fd_dev_id *dev_id)
    };
 
    struct ir3_compiler_options compiler_options = {};
-   a6xx_backend->compiler = ir3_compiler_create(dev, dev_id, &compiler_options);
+   a6xx_backend->compiler =
+      ir3_compiler_create(dev, dev_id, fd_dev_info_raw(dev_id), &compiler_options);
    a6xx_backend->dev = dev;
 
-   a6xx_backend->info = fd_dev_info(dev_id);
+   a6xx_backend->info = fd_dev_info_raw(dev_id);
 
    a6xx_backend->control_mem =
       fd_bo_new(dev, 0x1000, 0, "control");

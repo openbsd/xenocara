@@ -311,8 +311,9 @@ push_matrix(struct gl_context *ctx, struct gl_matrix_stack *stack,
    if (stack->Depth + 1 >= stack->StackSize) {
       unsigned new_stack_size = stack->StackSize * 2;
       unsigned i;
-      GLmatrix *new_stack = realloc(stack->Stack,
-                                    sizeof(*new_stack) * new_stack_size);
+      GLmatrix *new_stack =
+         os_realloc_aligned(stack->Stack, stack->StackSize * sizeof(GLmatrix),
+                            new_stack_size * sizeof(GLmatrix), 16);
 
       if (!new_stack) {
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "%s", func);
@@ -568,15 +569,10 @@ _mesa_MatrixLoadfEXT( GLenum matrixMode, const GLfloat *m )
 static void
 matrix_mult(struct gl_matrix_stack *stack, const GLfloat *m, const char* caller)
 {
-   static float identity[16] = {
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1,
-   };
-
    GET_CURRENT_CONTEXT(ctx);
-   if (!m || !memcmp(m, identity, sizeof(identity)))
+
+   /* glthread filters out identity matrices, so don't do it again. */
+   if (!m || (!ctx->GLThread.enabled && _mesa_matrix_is_identity(m)))
       return;
 
    if (MESA_VERBOSE & VERBOSE_API)
@@ -1013,7 +1009,7 @@ init_matrix_stack(struct gl_matrix_stack *stack,
    stack->MaxDepth = maxDepth;
    stack->DirtyFlag = dirtyFlag;
    /* The stack will be dynamically resized at glPushMatrix() time */
-   stack->Stack = calloc(1, sizeof(GLmatrix));
+   stack->Stack = os_malloc_aligned(sizeof(GLmatrix), 16);
    stack->StackSize = 1;
    _math_matrix_ctr(&stack->Stack[0]);
    stack->Top = stack->Stack;
@@ -1028,7 +1024,7 @@ init_matrix_stack(struct gl_matrix_stack *stack,
 static void
 free_matrix_stack( struct gl_matrix_stack *stack )
 {
-   free(stack->Stack);
+   os_free_aligned(stack->Stack);
    stack->Stack = stack->Top = NULL;
    stack->StackSize = 0;
 }

@@ -35,7 +35,7 @@
 #include "pvr_private.h"
 #include "pvr_transfer_frag_store.h"
 #include "pvr_types.h"
-#include "pvr_uscgen.h"
+#include "usc/pvr_uscgen.h"
 #include "util/hash_table.h"
 #include "util/macros.h"
 #include "util/ralloc.h"
@@ -99,7 +99,7 @@ static uint32_t pvr_transfer_frag_shader_key(
    uint32_t sample_cnt_bits = util_last_bit(util_logbase2(max_multisample));
    uint32_t hash = 0U;
 
-#if defined(DEBUG)
+#if MESA_DEBUG
    uint32_t max_shift = 0U;
 #   define shift_hash(hash, num)   \
       do {                         \
@@ -255,8 +255,8 @@ static VkResult pvr_transfer_frag_store_entry_data_create(
                        dev_addr.addr,
                        num_usc_temps,
                        shader_props->full_rate
-                          ? PVRX(PDSINST_DOUTU_SAMPLE_RATE_FULL)
-                          : PVRX(PDSINST_DOUTU_SAMPLE_RATE_INSTANCE),
+                          ? ROGUE_PDSINST_DOUTU_SAMPLE_RATE_FULL
+                          : ROGUE_PDSINST_DOUTU_SAMPLE_RATE_INSTANCE,
                        false);
 
    pvr_pds_kick_usc(&kick_usc_pds_prog, NULL, 0U, false, PDS_GENERATE_SIZES);

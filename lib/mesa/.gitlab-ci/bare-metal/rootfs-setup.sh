@@ -13,13 +13,10 @@ date +'%F %T'
 
 # Make JWT token available as file in the bare-metal storage to enable access
 # to MinIO
-cp "${CI_JOB_JWT_FILE}" "${rootfs_dst}${CI_JOB_JWT_FILE}"
+cp "${S3_JWT_FILE}" "${rootfs_dst}${S3_JWT_FILE}"
 
 date +'%F %T'
 
-cp $CI_COMMON/capture-devcoredump.sh $rootfs_dst/
-cp $CI_COMMON/intel-gpu-freq.sh $rootfs_dst/
-cp $CI_COMMON/kdl.sh $rootfs_dst/
 cp "$SCRIPTS_DIR/setup-test-env.sh" "$rootfs_dst/"
 
 set +x

@@ -588,7 +588,7 @@ lima_pack_render_state(struct lima_context *ctx, const struct pipe_draw_info *in
    bool pixel_kill = true;
 
    /* do hw support RGBA independ blend?
-    * PIPE_CAP_INDEP_BLEND_ENABLE
+    * pipe_caps.indep_blend_enable
     *
     * how to handle the no cbuf only zbuf case?
     */
@@ -1091,14 +1091,16 @@ lima_draw_vbo_indexed(struct pipe_context *pctx,
    else {
       ctx->index_res = lima_resource(info->index.resource);
       ctx->index_offset = 0;
-      needs_indices = !panfrost_minmax_cache_get(ctx->index_res->index_cache, draw->start,
-                                                 draw->count, &ctx->min_index, &ctx->max_index);
+      needs_indices = !panfrost_minmax_cache_get(ctx->index_res->index_cache, info->index_size,
+                                                 draw->start, draw->count,
+                                                 &ctx->min_index, &ctx->max_index);
    }
 
    if (needs_indices) {
       u_vbuf_get_minmax_index(pctx, info, draw, &ctx->min_index, &ctx->max_index);
       if (!info->has_user_indices)
-         panfrost_minmax_cache_add(ctx->index_res->index_cache, draw->start, draw->count,
+         panfrost_minmax_cache_add(ctx->index_res->index_cache, info->index_size,
+                                   draw->start, draw->count,
                                    ctx->min_index, ctx->max_index);
    }
 

@@ -104,6 +104,9 @@ class VkVersion:
 
         return self.__int_ver() > other.__int_ver()
 
+    def __le__(self, other):
+        return not self.__gt__(other)
+
 # Sort the extension list the way we expect: KHR, then EXT, then vendors
 # alphabetically. For digits, read them as a whole number sort that.
 # eg.: VK_KHR_8bit_storage < VK_KHR_16bit_storage < VK_EXT_acquire_xlib_display
@@ -175,8 +178,23 @@ def filter_api(elem, api):
 
     return api in elem.attrib['api'].split(',')
 
+def get_alias(aliases, name):
+    if name in aliases:
+        # in case the spec registry adds an alias chain later
+        return get_alias(aliases, aliases[name])
+    return name
+
 def get_all_required(xml, thing, api, beta):
     things = {}
+    aliases = {}
+    for struct in xml.findall('./types/type[@category="struct"][@alias]'):
+        if not filter_api(struct, api):
+            continue
+
+        name = struct.attrib['name']
+        alias = struct.attrib['alias']
+        aliases[name] = alias
+
     for feature in xml.findall('./feature'):
         if not filter_api(feature, api):
             continue
@@ -184,8 +202,10 @@ def get_all_required(xml, thing, api, beta):
         version = VkVersion(feature.attrib['number'])
         for t in feature.findall('./require/' + thing):
             name = t.attrib['name']
-            assert name not in things
-            things[name] = Requirements(core_version=version)
+            if name in things:
+                assert things[name].core_version <= version
+            else:
+                things[name] = Requirements(core_version=version)
 
     for extension in xml.findall('.extensions/extension'):
         ext = Extension.from_xml(extension)
@@ -200,7 +220,7 @@ def get_all_required(xml, thing, api, beta):
                 continue
 
             for t in require.findall('./' + thing):
-                name = t.attrib['name']
+                name = get_alias(aliases, t.attrib['name'])
                 r = things.setdefault(name, Requirements())
                 r.add_extension(ext)
 

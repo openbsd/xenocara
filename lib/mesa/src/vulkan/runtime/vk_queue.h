@@ -129,11 +129,11 @@ struct vk_queue {
     * call. This means that there can be no more than one such label at a
     * time.
     *
-    * \c labels contains all active labels at this point in order of submission
-    * \c region_begin denotes whether the most recent label opens a new region
-    * If \t labels is empty \t region_begin must be true.
+    * ``labels`` contains all active labels at this point in order of
+    * submission ``region_begin`` denotes whether the most recent label opens
+    * a new region If ``labels`` is empty ``region_begin`` must be true.
     *
-    * Anytime we modify labels, we first check for \c region_begin. If it's
+    * Anytime we modify labels, we first check for ``region_begin``. If it's
     * false, it means that the most recent label was submitted by
     * `*InsertDebugUtilsLabel` and we need to remove it before doing anything
     * else.
@@ -146,7 +146,7 @@ struct vk_queue {
    struct util_dynarray labels;
    bool region_begin;
 
-#ifdef ANDROID
+#if DETECT_OS_ANDROID
    /** SYNC_FD signal semaphore for vkQueueSignalReleaseImageANDROID
     *
     * VK_ANDROID_native_buffer enforces explicit fencing on the present api
@@ -237,11 +237,25 @@ struct vk_queue_submit {
    uint32_t perf_pass_index;
 
    /* Used internally; should be ignored by drivers */
+   uint32_t _bind_entry_count;
+   uint32_t _image_bind_entry_count;
+   VkSparseMemoryBind *_bind_entries;
+   VkSparseImageMemoryBind *_image_bind_entries;
+
+   bool _has_binary_permanent_semaphore_wait;
    struct vk_sync **_wait_temps;
    struct vk_sync *_mem_signal_temp;
    struct vk_sync_timeline_point **_wait_points;
    struct vk_sync_timeline_point **_signal_points;
 };
+
+static inline bool
+vk_queue_submit_has_bind(const struct vk_queue_submit *submit)
+{
+   return submit->buffer_bind_count > 0 ||
+          submit->image_opaque_bind_count > 0 ||
+          submit->image_bind_count > 0;
+}
 
 #ifdef __cplusplus
 }

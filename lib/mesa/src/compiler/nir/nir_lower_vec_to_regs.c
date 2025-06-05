@@ -211,6 +211,8 @@ lower(nir_builder *b, nir_instr *instr, void *data_)
       }
    }
 
+   b->cursor = nir_before_instr(instr);
+
    if (need_reg) {
       /* We'll replace with a register. Declare one for the purpose. */
       nir_def *reg = nir_decl_reg(b, num_components,
@@ -236,7 +238,6 @@ lower(nir_builder *b, nir_instr *instr, void *data_)
          swiz[i] = vec->src[i].swizzle[0];
       }
 
-      b->cursor = nir_before_instr(instr);
       nir_def *swizzled = nir_swizzle(b, vec->src[0].src.ssa, swiz,
                                       num_components);
       nir_def_rewrite_uses(&vec->def, swizzled);
@@ -257,7 +258,6 @@ nir_lower_vec_to_regs(nir_shader *shader, nir_instr_writemask_filter_cb cb,
    };
 
    return nir_shader_instructions_pass(shader, lower,
-                                       nir_metadata_block_index |
-                                          nir_metadata_dominance,
+                                       nir_metadata_control_flow,
                                        &data);
 }

@@ -1,32 +1,7 @@
 # Copyright © 2017 Intel Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 files_etnaviv = files(
-  'hw/cmdstream.xml.h',
-  'hw/common.xml.h',
-  'hw/common_3d.xml.h',
-  'hw/isa.xml.h',
-  'hw/state_3d.xml.h',
-  'hw/state_blt.xml.h',
-  'hw/state.xml.h',
-  'hw/texdesc_3d.xml.h',
   'etnaviv_asm.c',
   'etnaviv_asm.h',
   'etnaviv_blend.c',
@@ -57,6 +32,14 @@ files_etnaviv = files(
   'etnaviv_format.c',
   'etnaviv_format.h',
   'etnaviv_internal.h',
+  'etnaviv_ml.c',
+  'etnaviv_ml.h',
+  'etnaviv_ml_nn_v7.c',
+  'etnaviv_ml_nn_v8.c',
+  'etnaviv_ml_nn.c',
+  'etnaviv_ml_nn.h',
+  'etnaviv_ml_tp.c',
+  'etnaviv_ml_tp.h',
   'etnaviv_nir_lower_source_mods.c',
   'etnaviv_nir_lower_texture.c',
   'etnaviv_nir_lower_ubo_to_uniform.c',
@@ -106,25 +89,13 @@ files_etnaviv = files(
 
 libetnaviv = static_library(
   'etnaviv',
-  files_etnaviv,
+  files_etnaviv, etnaviv_enums_h,
   gnu_symbol_visibility : 'hidden',
   include_directories : [
     inc_include, inc_src, inc_gallium, inc_gallium_aux, inc_etnaviv,
   ],
-  link_with: libetnaviv_drm,
-  dependencies : [dep_libdrm, idep_nir_headers, idep_mesautil],
-)
-
-etnaviv_compiler = executable(
-  'etnaviv_compiler',
-  'etnaviv_compiler_cmdline.c',
-  include_directories : [
-    inc_include, inc_src, inc_gallium, inc_gallium_aux, inc_etnaviv,
-  ],
-  link_with : [libgallium, libetnaviv, libetnaviv_drm],
-  build_by_default : with_tools.contains('etnaviv'),
-  install : with_tools.contains('etnaviv'),
-  dependencies : [idep_mesautil, dep_libdrm, idep_nir],
+  link_with: [libetnaviv_drm, libetnaviv_encode],
+  dependencies : [dep_libdrm, idep_nir_headers, idep_mesautil, idep_libetnaviv_decode, idep_etna_common],
 )
 
 driver_etnaviv = declare_dependency(
@@ -143,7 +114,7 @@ if with_tests
       gnu_symbol_visibility : 'hidden',
       include_directories : [inc_include, inc_src, inc_gallium],
       link_with : [libetnaviv],
-      dependencies : [idep_gtest, idep_nir],
+      dependencies : [idep_gtest, idep_nir, idep_mesautil],
     ),
     suite : ['compiler', 'etnaviv'],
     protocol : 'gtest',

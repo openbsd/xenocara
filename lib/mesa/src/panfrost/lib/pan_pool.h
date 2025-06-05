@@ -27,34 +27,28 @@
 
 #include <stddef.h>
 #include <genxml/gen_macros.h>
-#include "pan_bo.h"
 
 #include "util/u_dynarray.h"
+
+struct panfrost_ptr {
+   /* CPU address */
+   void *cpu;
+
+   /* GPU address */
+   uint64_t gpu;
+};
 
 /* Represents grow-only memory. */
 
 struct pan_pool {
-   /* Parent device for allocation */
-   struct panfrost_device *dev;
-
-   /* Label for created BOs */
-   const char *label;
-
-   /* BO flags to use in the pool */
-   unsigned create_flags;
-
    /* Minimum size for allocated BOs. */
    size_t slab_size;
 };
 
 static inline void
-pan_pool_init(struct pan_pool *pool, struct panfrost_device *dev,
-              unsigned create_flags, size_t slab_size, const char *label)
+pan_pool_init(struct pan_pool *pool, size_t slab_size)
 {
-   pool->dev = dev;
-   pool->create_flags = create_flags;
    pool->slab_size = slab_size;
-   pool->label = label;
 }
 
 /* Represents a fat pointer for GPU-mapped memory, returned from the transient
@@ -71,16 +65,19 @@ struct panfrost_ptr pan_pool_alloc_aligned(struct pan_pool *pool, size_t sz,
       return alloc_func(pool, sz, alignment);                                  \
    }
 
-static inline mali_ptr
+static inline uint64_t
 pan_pool_upload_aligned(struct pan_pool *pool, const void *data, size_t sz,
                         unsigned alignment)
 {
    struct panfrost_ptr transfer = pan_pool_alloc_aligned(pool, sz, alignment);
-   memcpy(transfer.cpu, data, sz);
+
+   if (transfer.cpu)
+      memcpy(transfer.cpu, data, sz);
+
    return transfer.gpu;
 }
 
-static inline mali_ptr
+static inline uint64_t
 pan_pool_upload(struct pan_pool *pool, const void *data, size_t sz)
 {
    return pan_pool_upload_aligned(pool, data, sz, sz);

@@ -159,7 +159,7 @@ zink_fence_finish(struct zink_screen *screen, struct pipe_context *pctx, struct 
 
    if (pctx && mfence->deferred_ctx == pctx) {
       if (mfence->fence == ctx->deferred_fence) {
-         zink_context(pctx)->batch.has_work = true;
+         zink_context(pctx)->bs->has_work = true;
          /* this must be the current batch */
          pctx->flush(pctx, NULL, !timeout_ns ? PIPE_FLUSH_ASYNC : 0);
          if (!timeout_ns)
@@ -185,7 +185,12 @@ zink_fence_finish(struct zink_screen *screen, struct pipe_context *pctx, struct 
    if (submit_diff > 1)
       return true;
 
-   if (fence->submitted && zink_screen_check_last_finished(screen, fence->batch_id))
+   /* - if fence is submitted, batch_id is nonzero and can be checked
+    * - if fence is not submitted here, it must be reset; batch_id will be 0 and submitted is false
+    * in either case, the fence has finished
+    */
+   if ((fence->submitted && zink_screen_check_last_finished(screen, fence->batch_id)) ||
+       (!fence->submitted && submit_diff))
       return true;
 
    return fence_wait(screen, fence, timeout_ns);
@@ -207,6 +212,7 @@ fence_get_fd(struct pipe_screen *pscreen, struct pipe_fence_handle *pfence)
       return -1;
 
    struct zink_tc_fence *mfence = (struct zink_tc_fence *)pfence;
+   util_queue_fence_wait(&mfence->ready);
    if (!mfence->sem)
       return -1;
 
@@ -231,10 +237,10 @@ zink_fence_server_signal(struct pipe_context *pctx, struct pipe_fence_handle *pf
    struct zink_context *ctx = zink_context(pctx);
    struct zink_tc_fence *mfence = (struct zink_tc_fence *)pfence;
 
-   assert(!ctx->batch.state->signal_semaphore);
-   ctx->batch.state->signal_semaphore = mfence->sem;
-   ctx->batch.has_work = true;
-   struct zink_batch_state *bs = ctx->batch.state;
+   assert(!ctx->bs->signal_semaphore);
+   ctx->bs->signal_semaphore = mfence->sem;
+   ctx->bs->has_work = true;
+   struct zink_batch_state *bs = ctx->bs;
    /* this must produce a synchronous flush that completes before the function returns */
    pctx->flush(pctx, NULL, 0);
    if (zink_screen(ctx->base.screen)->threaded_submit)
@@ -253,13 +259,10 @@ zink_fence_server_sync(struct pipe_context *pctx, struct pipe_fence_handle *pfen
    mfence->deferred_ctx = pctx;
    /* this will be applied on the next submit */
    VkPipelineStageFlags flag = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
-   util_dynarray_append(&ctx->batch.state->wait_semaphores, VkSemaphore, mfence->sem);
-   util_dynarray_append(&ctx->batch.state->wait_semaphore_stages, VkPipelineStageFlags, flag);
+   util_dynarray_append(&ctx->bs->wait_semaphores, VkSemaphore, mfence->sem);
+   util_dynarray_append(&ctx->bs->wait_semaphore_stages, VkPipelineStageFlags, flag);
    pipe_reference(NULL, &mfence->reference);
-   util_dynarray_append(&ctx->batch.state->fences, struct zink_tc_fence*, mfence);
-
-   /* transfer the external wait sempahore ownership to the next submit */
-   mfence->sem = VK_NULL_HANDLE;
+   util_dynarray_append(&ctx->bs->fences, struct zink_tc_fence*, mfence);
 }
 
 void
@@ -287,17 +290,23 @@ zink_create_fence_fd(struct pipe_context *pctx, struct pipe_fence_handle **pfenc
    if (dup_fd < 0)
       goto fail_fd_dup;
 
-   static const VkExternalSemaphoreHandleTypeFlagBits flags[] = {
+   static const VkExternalSemaphoreHandleTypeFlagBits handle_type[] = {
       [PIPE_FD_TYPE_NATIVE_SYNC] = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT,
       [PIPE_FD_TYPE_SYNCOBJ] = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_FD_BIT,
+   };
+   assert(type < ARRAY_SIZE(handle_type));
+
+   static const VkSemaphoreImportFlagBits flags[] = {
+      [PIPE_FD_TYPE_NATIVE_SYNC] = VK_SEMAPHORE_IMPORT_TEMPORARY_BIT,
+      [PIPE_FD_TYPE_SYNCOBJ] = 0,
    };
    assert(type < ARRAY_SIZE(flags));
 
    const VkImportSemaphoreFdInfoKHR sdi = {
       .sType = VK_STRUCTURE_TYPE_IMPORT_SEMAPHORE_FD_INFO_KHR,
       .semaphore = mfence->sem,
-      .flags = VK_SEMAPHORE_IMPORT_TEMPORARY_BIT,
-      .handleType = flags[type],
+      .flags = flags[type],
+      .handleType = handle_type[type],
       .fd = dup_fd,
    };
    result = VKSCR(ImportSemaphoreFdKHR)(screen->dev, &sdi);

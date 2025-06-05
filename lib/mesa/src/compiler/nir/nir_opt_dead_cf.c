@@ -69,18 +69,6 @@
  */
 
 static void
-remove_after_cf_node(nir_cf_node *node)
-{
-   nir_cf_node *end = node;
-   while (!nir_cf_node_is_last(end))
-      end = nir_cf_node_next(end);
-
-   nir_cf_list list;
-   nir_cf_extract(&list, nir_after_cf_node(node), nir_after_cf_node(end));
-   nir_cf_delete(&list);
-}
-
-static void
 opt_constant_if(nir_if *if_stmt, bool condition)
 {
    nir_block *last_block = condition ? nir_if_last_then_block(if_stmt)
@@ -93,7 +81,7 @@ opt_constant_if(nir_if *if_stmt, bool condition)
     */
 
    if (nir_block_ends_in_jump(last_block)) {
-      remove_after_cf_node(&if_stmt->cf_node);
+      nir_remove_after_cf_node(&if_stmt->cf_node);
    } else {
       /* Remove any phi nodes after the if by rewriting uses to point to the
        * correct source.
@@ -109,8 +97,7 @@ opt_constant_if(nir_if *if_stmt, bool condition)
          }
 
          assert(def);
-         nir_def_rewrite_uses(&phi->def, def);
-         nir_instr_remove(&phi->instr);
+         nir_def_replace(&phi->def, def);
       }
    }
 
@@ -125,13 +112,21 @@ opt_constant_if(nir_if *if_stmt, bool condition)
 }
 
 static bool
+block_in_cf_node(nir_block *block, nir_cf_node *node)
+{
+   assert(node->type == nir_cf_node_loop || node->type == nir_cf_node_if);
+   for (nir_cf_node *cur = block->cf_node.parent; cur && cur != node->parent;
+        cur = cur->parent) {
+      if (cur == node)
+         return true;
+   }
+   return false;
+}
+
+static bool
 def_only_used_in_cf_node(nir_def *def, void *_node)
 {
    nir_cf_node *node = _node;
-   assert(node->type == nir_cf_node_loop || node->type == nir_cf_node_if);
-
-   nir_block *before = nir_cf_node_as_block(nir_cf_node_prev(node));
-   nir_block *after = nir_cf_node_as_block(nir_cf_node_next(node));
 
    nir_foreach_use_including_if(use, def) {
       nir_block *block;
@@ -141,11 +136,7 @@ def_only_used_in_cf_node(nir_def *def, void *_node)
       else
          block = nir_src_parent_instr(use)->block;
 
-      /* Because NIR is structured, we can easily determine whether or not a
-       * value escapes a CF node by looking at the block indices of its uses
-       * to see if they lie outside the bounds of the CF node.
-       *
-       * Note: Normally, the uses of a phi instruction are considered to be
+      /* Note: Normally, the uses of a phi instruction are considered to be
        * used in the block that is the predecessor of the phi corresponding to
        * that use.  If we were computing liveness or something similar, that
        * would mean a special case here for phis.  However, we're trying here
@@ -154,7 +145,7 @@ def_only_used_in_cf_node(nir_def *def, void *_node)
        * corresponding predecessor is inside the loop or not because the value
        * can go through the phi into the outside world and escape the loop.
        */
-      if (block->index <= before->index || block->index >= after->index)
+      if (block != def->parent_instr->block && !block_in_cf_node(block, node))
          return false;
    }
 
@@ -190,9 +181,6 @@ node_is_dead(nir_cf_node *node)
    if (!exec_list_is_empty(&after->instr_list) &&
        nir_block_first_instr(after)->type == nir_instr_type_phi)
       return false;
-
-   nir_function_impl *impl = nir_cf_node_get_function(node);
-   nir_metadata_require(impl, nir_metadata_block_index);
 
    nir_foreach_block_in_cf_node(block, node) {
       bool inside_loop = node->type == nir_cf_node_loop;
@@ -253,6 +241,7 @@ node_is_dead(nir_cf_node *node)
             case nir_intrinsic_load_shared2_amd:
             case nir_intrinsic_load_output:
             case nir_intrinsic_load_per_vertex_output:
+            case nir_intrinsic_load_per_view_output:
                /* Same as above loads. */
                return false;
 
@@ -276,7 +265,7 @@ dead_cf_block(nir_block *block)
    /* opt_constant_if() doesn't handle this case. */
    if (nir_block_ends_in_jump(block) &&
        !exec_node_is_tail_sentinel(block->cf_node.node.next)) {
-      remove_after_cf_node(&block->cf_node);
+      nir_remove_after_cf_node(&block->cf_node);
       return true;
    }
 
@@ -358,7 +347,7 @@ dead_cf_list(struct exec_list *list, bool *list_ends_in_jump)
             nir_block *next = nir_cf_node_as_block(nir_cf_node_next(cur));
             if (!exec_list_is_empty(&next->instr_list) ||
                 !exec_node_is_tail_sentinel(next->cf_node.node.next)) {
-               remove_after_cf_node(cur);
+               nir_remove_after_cf_node(cur);
                return true;
             }
          }
@@ -376,7 +365,7 @@ dead_cf_list(struct exec_list *list, bool *list_ends_in_jump)
          if (next->predecessors->entries == 0 &&
              (!exec_list_is_empty(&next->instr_list) ||
               !exec_node_is_tail_sentinel(next->cf_node.node.next))) {
-            remove_after_cf_node(cur);
+            nir_remove_after_cf_node(cur);
             return true;
          }
          break;

@@ -93,8 +93,8 @@ enum overlay_param_enabled {
 struct overlay_params {
    bool enabled[OVERLAY_PARAM_ENABLED_MAX];
    enum overlay_param_position position;
-   FILE *output_file;
-   int control;
+   const char *output_file;
+   const char *control;
    uint32_t fps_sampling_period; /* us */
    bool help;
    bool no_display;

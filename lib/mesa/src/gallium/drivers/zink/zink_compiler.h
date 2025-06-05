@@ -31,7 +31,7 @@
 #define ZINK_WORKGROUP_SIZE_Z 3
 #define ZINK_VARIABLE_SHARED_MEM 4
 #define ZINK_INLINE_VAL_FLAT_MASK 0
-#define ZINK_INLINE_VAL_PV_LAST_VERT 1
+#define ZINK_INLINE_VAL_PV_LAST_VERT 2
 
 /* stop inlining shaders if they have >limit ssa vals after inlining:
  * recompile time isn't worth the inline
@@ -75,9 +75,11 @@ struct zink_shader_object
 zink_shader_compile_separate(struct zink_screen *screen, struct zink_shader *zs);
 struct zink_shader *
 zink_shader_create(struct zink_screen *screen, struct nir_shader *nir);
+void
+zink_shader_init(struct zink_screen *screen, struct zink_shader *zs);
 
 char *
-zink_shader_finalize(struct pipe_screen *pscreen, void *nirptr);
+zink_shader_finalize(struct pipe_screen *pscreen, struct nir_shader *nir);
 
 void
 zink_shader_free(struct zink_screen *screen, struct zink_shader *shader);
@@ -89,7 +91,9 @@ zink_shader_spirv_compile(struct zink_screen *screen, struct zink_shader *zs, st
 struct zink_shader_object
 zink_shader_tcs_compile(struct zink_screen *screen, struct zink_shader *zs, unsigned patch_vertices, bool can_shobj, struct zink_program *pg);
 struct zink_shader *
-zink_shader_tcs_create(struct zink_screen *screen, nir_shader *tes, unsigned vertices_per_patch, nir_shader **nir_ret);
+zink_shader_tcs_create(struct zink_screen *screen, unsigned vertices_per_patch);
+void
+zink_shader_tcs_init(struct zink_screen *screen, struct zink_shader *zs, nir_shader *tes, nir_shader **nir_ret);
 
 static inline bool
 zink_shader_descriptor_is_buffer(struct zink_shader *zs, enum zink_descriptor_type type, unsigned i)

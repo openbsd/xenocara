@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2012-2018 Rob Clark <robclark@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2012-2018 Rob Clark <robclark@freedesktop.org>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -52,15 +34,17 @@
 #include "freedreno_common.h"
 #include "freedreno_dev_info.h"
 #include "freedreno_drmif.h"
+#include "freedreno_rd_output.h"
 #include "freedreno_ringbuffer.h"
 
 extern simple_mtx_t table_lock;
 extern simple_mtx_t fence_lock;
+extern uint64_t os_page_size;
 
 #define SUBALLOC_SIZE (32 * 1024)
 /* Maximum known alignment requirement is a6xx's TEX_CONST at 16 dwords */
 #define SUBALLOC_ALIGNMENT 64
-#define RING_FLAGS (FD_BO_GPUREADONLY | FD_BO_CACHED_COHERENT)
+#define RING_FLAGS (FD_BO_GPUREADONLY | FD_BO_CACHED_COHERENT | FD_BO_HINT_COMMAND)
 
 /*
  * Stupid/simple growable array implementation:
@@ -108,6 +92,9 @@ struct fd_device_funcs {
     */
    struct fd_bo *(*bo_from_handle)(struct fd_device *dev, uint32_t size,
                                    uint32_t handle);
+   uint32_t (*handle_from_dmabuf)(struct fd_device *dev, int fd);
+   struct fd_bo *(*bo_from_dmabuf)(struct fd_device *dev, int fd);
+   void (*bo_close_handle)(struct fd_bo *bo);
 
    struct fd_pipe *(*pipe_new)(struct fd_device *dev, enum fd_pipe_id id,
                                unsigned prio);
@@ -189,7 +176,7 @@ struct fd_bo_heap *fd_bo_heap_new(struct fd_device *dev, uint32_t flags);
 void fd_bo_heap_destroy(struct fd_bo_heap *heap);
 
 struct fd_bo *fd_bo_heap_block(struct fd_bo *bo);
-struct fd_bo *fd_bo_heap_alloc(struct fd_bo_heap *heap, uint32_t size);
+struct fd_bo *fd_bo_heap_alloc(struct fd_bo_heap *heap, uint32_t size, uint32_t flags);
 
 static inline uint32_t
 submit_offset(struct fd_bo *bo, uint32_t offset)
@@ -269,6 +256,8 @@ struct fd_device {
    simple_mtx_t suballoc_lock;
 
    struct util_queue submit_queue;
+
+   struct fd_rd_output rd;
 };
 
 static inline bool
@@ -311,6 +300,7 @@ struct fd_pipe_funcs {
     * the pipe implementation)
     */
    void (*flush)(struct fd_pipe *pipe, uint32_t fence);
+   void (*finish)(struct fd_pipe *pipe);
 
    int (*get_param)(struct fd_pipe *pipe, enum fd_param_id param,
                     uint64_t *value);
@@ -398,6 +388,7 @@ struct fd_submit_funcs {
 struct fd_submit {
    int32_t refcnt;
    struct fd_pipe *pipe;
+   struct fd_device *dev;
    const struct fd_submit_funcs *funcs;
 
    struct fd_ringbuffer *primary;
@@ -421,10 +412,12 @@ fd_dev_count_deferred_cmds(struct fd_device *dev)
 
 struct fd_bo_funcs {
    int (*offset)(struct fd_bo *bo, uint64_t *offset);
+   void *(*map)(struct fd_bo *bo);
    int (*cpu_prep)(struct fd_bo *bo, struct fd_pipe *pipe, uint32_t op);
    int (*madvise)(struct fd_bo *bo, int willneed);
    uint64_t (*iova)(struct fd_bo *bo);
    void (*set_name)(struct fd_bo *bo, const char *fmt, va_list ap);
+   int (*dmabuf)(struct fd_bo *bo);
 
    /**
     * Optional hook that is called before ->destroy().  In the case of
@@ -450,9 +443,14 @@ struct fd_bo_funcs {
     * Optional, if upload is supported, should upload be preferred?
     */
    bool (*prefer_upload)(struct fd_bo *bo, unsigned len);
+
+   void (*set_metadata)(struct fd_bo *bo, void *metadata, uint32_t metadata_size);
+   int (*get_metadata)(struct fd_bo *bo, void *metadata, uint32_t metadata_size);
 };
 
 void fd_bo_add_fence(struct fd_bo *bo, struct fd_fence *fence);
+void *fd_bo_map_os_mmap(struct fd_bo *bo);
+void *__fd_bo_map(struct fd_bo *bo);
 
 enum fd_bo_state {
    FD_BO_STATE_IDLE,
@@ -466,6 +464,10 @@ void fd_bo_fini_fences(struct fd_bo *bo);
 void fd_bo_fini_common(struct fd_bo *bo);
 
 struct fd_bo *fd_bo_new_ring(struct fd_device *dev, uint32_t size);
+
+uint32_t fd_handle_from_dmabuf_drm(struct fd_device *dev, int fd);
+struct fd_bo *fd_bo_from_dmabuf_drm(struct fd_device *dev, int fd);
+void fd_bo_close_handle_drm(struct fd_bo *bo);
 
 #define enable_debug 0 /* TODO make dynamic */
 
@@ -543,6 +545,12 @@ VG_BO_OBTAIN(struct fd_bo *bo)
       VALGRIND_MALLOCLIKE_BLOCK(bo->map, bo->size, 0, 1);
    }
 }
+/* special case for fd_bo_upload */
+static inline void
+VG_BO_MAPPED(struct fd_bo *bo)
+{
+   VALGRIND_MALLOCLIKE_BLOCK(bo->map, bo->size, 0, 1);
+}
 #else
 static inline void
 VG_BO_ALLOC(struct fd_bo *bo)
@@ -558,6 +566,10 @@ VG_BO_RELEASE(struct fd_bo *bo)
 }
 static inline void
 VG_BO_OBTAIN(struct fd_bo *bo)
+{
+}
+static inline void
+VG_BO_MAPPED(struct fd_bo *bo)
 {
 }
 #endif

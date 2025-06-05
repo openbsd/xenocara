@@ -49,6 +49,7 @@ dEQP-GLES31.functional.texture.border_clamp.per_axis_wrap_mode.texture_2d.unorm_
 dEQP-GLES31.functional.texture.border_clamp.per_axis_wrap_mode.texture_2d.unorm_color.gather.s_mirrored_repeat_t_clamp_to_border_pot,Fail
 dEQP-GLES31.functional.texture.border_clamp.per_axis_wrap_mode.texture_2d.unorm_depth.gather.s_mirrored_repeat_t_clamp_to_border_npot,Fail
 dEQP-GLES31.functional.texture.border_clamp.per_axis_wrap_mode.texture_2d.unorm_depth.gather.s_mirrored_repeat_t_clamp_to_border_pot,Fail
+dEQP-GLES31.functional.texture.border_clamp.range_clamp.linear_float_color,Fail
 dEQP-GLES31.functional.texture.gather.basic.2d.depth32f.size_npot.compare_greater.mirrored_repeat_clamp_to_edge,Fail
 dEQP-GLES31.functional.texture.gather.basic.2d.depth32f.size_npot.compare_greater.repeat_mirrored_repeat,Fail
 dEQP-GLES31.functional.texture.gather.basic.2d.depth32f.size_npot.compare_less.mirrored_repeat_clamp_to_edge,Fail
@@ -186,3 +187,17 @@ dEQP-GLES31.functional.texture.gather.offset.min_required_offset.2d_array.rgba8u
 dEQP-GLES31.functional.texture.gather.offset.min_required_offset.2d_array.rgba8ui.size_npot.repeat_mirrored_repeat,Fail
 dEQP-GLES31.functional.texture.gather.offset.min_required_offset.2d_array.rgba8ui.size_pot.mirrored_repeat_clamp_to_edge,Fail
 dEQP-GLES31.functional.texture.gather.offset.min_required_offset.2d_array.rgba8ui.size_pot.repeat_mirrored_repeat,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_src_dst_x,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_src_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_dst_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_src_x,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_x,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_dst_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_src_dst_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_dst_x,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_dst_x,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_dst_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_dst_x,Fail

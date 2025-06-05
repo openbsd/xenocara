@@ -94,7 +94,9 @@ anv_measure_init(struct anv_cmd_buffer *cmd_buffer)
    ASSERTED VkResult result =
       anv_device_alloc_bo(device, "measure data",
                           config->batch_size * sizeof(uint64_t),
-                          ANV_BO_ALLOC_MAPPED | ANV_BO_ALLOC_SNOOPED,
+                          ANV_BO_ALLOC_MAPPED |
+                          ANV_BO_ALLOC_HOST_CACHED_COHERENT |
+                          ANV_BO_ALLOC_INTERNAL,
                           0,
                           (struct anv_bo**)&measure->bo);
    measure->base.timestamps = measure->bo->map;
@@ -112,8 +114,9 @@ anv_measure_start_snapshot(struct anv_cmd_buffer *cmd_buffer,
    struct anv_physical_device *device = cmd_buffer->device->physical;
    struct intel_measure_device *measure_device = &device->measure_device;
    struct intel_measure_config *config = config_from_command_buffer(cmd_buffer);
-
+   enum anv_timestamp_capture_type capture_type;
    unsigned index = measure->base.index++;
+
    if (event_name == NULL)
       event_name = intel_measure_snapshot_string(type);
 
@@ -128,11 +131,18 @@ anv_measure_start_snapshot(struct anv_cmd_buffer *cmd_buffer,
       return;
    }
 
+
+   if ((batch->engine_class == INTEL_ENGINE_CLASS_COPY) ||
+       (batch->engine_class == INTEL_ENGINE_CLASS_VIDEO))
+      capture_type = ANV_TIMESTAMP_CAPTURE_TOP_OF_PIPE;
+   else
+      capture_type = ANV_TIMESTAMP_CAPTURE_AT_CS_STALL;
+
    (*device->cmd_emit_timestamp)(batch, cmd_buffer->device,
                                  (struct anv_address) {
                                     .bo = measure->bo,
                                     .offset = index * sizeof(uint64_t) },
-                                 ANV_TIMESTAMP_CAPTURE_AT_CS_STALL,
+                                 capture_type,
                                  NULL);
 
    struct intel_measure_snapshot *snapshot = &(measure->base.snapshots[index]);
@@ -144,11 +154,13 @@ anv_measure_start_snapshot(struct anv_cmd_buffer *cmd_buffer,
    snapshot->renderpass = (type == INTEL_SNAPSHOT_COMPUTE) ? 0
                             : measure->base.renderpass;
 
-   if (type == INTEL_SNAPSHOT_COMPUTE && cmd_buffer->state.compute.pipeline) {
-      snapshot->cs = cmd_buffer->state.compute.pipeline->source_hash;
-   } else if (type == INTEL_SNAPSHOT_DRAW && cmd_buffer->state.gfx.pipeline) {
+   if (type == INTEL_SNAPSHOT_COMPUTE && cmd_buffer->state.compute.base.pipeline) {
+      const struct anv_compute_pipeline *pipeline =
+         anv_pipeline_to_compute(cmd_buffer->state.compute.base.pipeline);
+      snapshot->cs = pipeline->source_hash;
+   } else if (type == INTEL_SNAPSHOT_DRAW && cmd_buffer->state.gfx.base.pipeline) {
       const struct anv_graphics_pipeline *pipeline =
-         cmd_buffer->state.gfx.pipeline;
+         anv_pipeline_to_graphics(cmd_buffer->state.gfx.base.pipeline);
       snapshot->vs = pipeline->base.source_hashes[MESA_SHADER_VERTEX];
       snapshot->tcs = pipeline->base.source_hashes[MESA_SHADER_TESS_CTRL];
       snapshot->tes = pipeline->base.source_hashes[MESA_SHADER_TESS_EVAL];
@@ -167,17 +179,24 @@ anv_measure_end_snapshot(struct anv_cmd_buffer *cmd_buffer,
    struct anv_measure_batch *measure = cmd_buffer->measure;
    struct anv_physical_device *device = cmd_buffer->device->physical;
    struct intel_measure_config *config = config_from_command_buffer(cmd_buffer);
-
+   enum anv_timestamp_capture_type capture_type;
    unsigned index = measure->base.index++;
    assert(index % 2 == 1);
+
    if (config->cpu_measure)
       return;
+
+   if ((batch->engine_class == INTEL_ENGINE_CLASS_COPY) ||
+       (batch->engine_class == INTEL_ENGINE_CLASS_VIDEO))
+      capture_type = ANV_TIMESTAMP_CAPTURE_END_OF_PIPE;
+   else
+      capture_type = ANV_TIMESTAMP_CAPTURE_AT_CS_STALL;
 
    (*device->cmd_emit_timestamp)(batch, cmd_buffer->device,
                                  (struct anv_address) {
                                     .bo = measure->bo,
                                     .offset = index * sizeof(uint64_t) },
-                                 ANV_TIMESTAMP_CAPTURE_AT_CS_STALL,
+                                 capture_type,
                                  NULL);
 
    struct intel_measure_snapshot *snapshot = &(measure->base.snapshots[index]);
@@ -198,11 +217,12 @@ state_changed(struct anv_cmd_buffer *cmd_buffer,
 
    if (type == INTEL_SNAPSHOT_COMPUTE) {
       const struct anv_compute_pipeline *cs_pipe =
-         cmd_buffer->state.compute.pipeline;
+         anv_pipeline_to_compute(cmd_buffer->state.compute.base.pipeline);
       assert(cs_pipe);
       cs = cs_pipe->source_hash;
    } else if (type == INTEL_SNAPSHOT_DRAW) {
-      const struct anv_graphics_pipeline *gfx = cmd_buffer->state.gfx.pipeline;
+      const struct anv_graphics_pipeline *gfx =
+         anv_pipeline_to_graphics(cmd_buffer->state.gfx.base.pipeline);
       assert(gfx);
       vs = gfx->base.source_hashes[MESA_SHADER_VERTEX];
       tcs = gfx->base.source_hashes[MESA_SHADER_TESS_CTRL];
@@ -365,16 +385,18 @@ _anv_measure_submit(struct anv_cmd_buffer *cmd_buffer)
    struct intel_measure_config *config = config_from_command_buffer(cmd_buffer);
    struct anv_measure_batch *measure = cmd_buffer->measure;
    struct intel_measure_device *measure_device = &cmd_buffer->device->physical->measure_device;
-
-   if (!config)
-      return;
-   if (measure == NULL)
-      return;
-
    struct intel_measure_batch *base = &measure->base;
-   if (base->index == 0)
-      /* no snapshots were started */
+
+   if (!config ||
+       measure == NULL ||
+       base->index == 0 /* no snapshots were started */ )
       return;
+
+   if (measure->base.link.next->prev != measure->base.link.next->next) {
+      fprintf(stderr, "INTEL_MEASURE: not tracking events from reused"
+                      "command buffer without reset. Not supported.\n");
+      return;
+   }
 
    /* finalize snapshots and enqueue them */
    static unsigned cmd_buffer_count = 0;

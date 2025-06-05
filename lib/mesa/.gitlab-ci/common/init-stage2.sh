@@ -7,6 +7,8 @@
 # Second-stage init, used to set up devices and our job environment before
 # running tests.
 
+shopt -s extglob
+
 # Make sure to kill itself and all the children process from this script on
 # exiting, since any console output may interfere with LAVA signals handling,
 # which based on the log console.
@@ -44,6 +46,13 @@ for path in '/dut-env-vars.sh' '/set-job-env-vars.sh' './set-job-env-vars.sh'; d
     [ -f "$path" ] && source "$path"
 done
 . "$SCRIPTS_DIR"/setup-test-env.sh
+
+# Flush out anything which might be stuck in a serial buffer
+echo
+echo
+echo
+
+section_switch init_stage2 "Pre-testing hardware setup"
 
 set -ex
 
@@ -106,6 +115,13 @@ export XDG_CACHE_HOME=/tmp
 # Make sure Python can find all our imports
 export PYTHONPATH=$(python3 -c "import sys;print(\":\".join(sys.path))")
 
+# If we need to specify a driver, it means several drivers could pick up this gpu;
+# ensure that the other driver can't accidentally be used
+if [ -n "$MESA_LOADER_DRIVER_OVERRIDE" ]; then
+  rm /install/lib/dri/!($MESA_LOADER_DRIVER_OVERRIDE)_dri.so
+fi
+ls -1 /install/lib/dri/*_dri.so || true
+
 if [ "$HWCI_FREQ_MAX" = "true" ]; then
   # Ensure initialization of the DRM device (needed by MSM)
   head -0 /dev/dri/renderD128
@@ -124,13 +140,14 @@ if [ "$HWCI_FREQ_MAX" = "true" ]; then
   # and enable throttling detection & reporting.
   # Additionally, set the upper limit for CPU scaling frequency to 65% of the
   # maximum permitted, as an additional measure to mitigate thermal throttling.
-  /intel-gpu-freq.sh -s 70% --cpu-set-max 65% -g all -d
+  /install/common/intel-gpu-freq.sh -s 70% --cpu-set-max 65% -g all -d
 fi
 
 # Start a little daemon to capture sysfs records and produce a JSON file
-if [ -x /kdl.sh ]; then
+KDL_PATH=/install/common/kdl.sh
+if [ -x "$KDL_PATH" ]; then
   echo "launch kdl.sh!"
-  /kdl.sh &
+  $KDL_PATH &
   BACKGROUND_PIDS="$! $BACKGROUND_PIDS"
 else
   echo "kdl.sh not found!"
@@ -144,10 +161,14 @@ fi
 
 # Start a little daemon to capture the first devcoredump we encounter.  (They
 # expire after 5 minutes, so we poll for them).
-if [ -x /capture-devcoredump.sh ]; then
-  /capture-devcoredump.sh &
+CAPTURE_DEVCOREDUMP=/install/common/capture-devcoredump.sh
+if [ -x "$CAPTURE_DEVCOREDUMP" ]; then
+  $CAPTURE_DEVCOREDUMP &
   BACKGROUND_PIDS="$! $BACKGROUND_PIDS"
 fi
+
+ARCH=$(uname -m)
+export VK_DRIVER_FILES="/install/share/vulkan/icd.d/${VK_DRIVER}_icd.$ARCH.json"
 
 # If we want Xorg to be running for the test, then we start it up before the
 # HWCI_TEST_SCRIPT because we need to use xinit to start X (otherwise
@@ -156,8 +177,7 @@ fi
 if [ -n "$HWCI_START_XORG" ]; then
   echo "touch /xorg-started; sleep 100000" > /xorg-script
   env \
-    VK_ICD_FILENAMES="/install/share/vulkan/icd.d/${VK_DRIVER}_icd.$(uname -m).json" \
-    xinit /bin/sh /xorg-script -- /usr/bin/Xorg -noreset -s 0 -dpms -logfile /Xorg.0.log &
+    xinit /bin/sh /xorg-script -- /usr/bin/Xorg -noreset -s 0 -dpms -logfile "$RESULTS_DIR/Xorg.0.log" &
   BACKGROUND_PIDS="$! $BACKGROUND_PIDS"
 
   # Wait for xorg to be ready for connections.
@@ -183,22 +203,24 @@ if [ -n "$HWCI_START_WESTON" ]; then
   mkdir -p /tmp/.X11-unix
 
   env \
-    VK_ICD_FILENAMES="/install/share/vulkan/icd.d/${VK_DRIVER}_icd.$(uname -m).json" \
     weston -Bheadless-backend.so --use-gl -Swayland-0 --xwayland --idle-time=0 &
   BACKGROUND_PIDS="$! $BACKGROUND_PIDS"
 
   while [ ! -S "$WESTON_X11_SOCK" ]; do sleep 1; done
 fi
 
+set +x
+
+section_end init_stage2
+
+echo "Running ${HWCI_TEST_SCRIPT} ${HWCI_TEST_ARGS} ..."
+
 set +e
-bash -c ". $SCRIPTS_DIR/setup-test-env.sh && $HWCI_TEST_SCRIPT"
-EXIT_CODE=$?
+$HWCI_TEST_SCRIPT ${HWCI_TEST_ARGS:-}; EXIT_CODE=$?
 set -e
 
-# Let's make sure the results are always stored in current working directory
-mv -f ${CI_PROJECT_DIR}/results ./ 2>/dev/null || true
-
-[ ${EXIT_CODE} -ne 0 ] || rm -rf results/trace/"$PIGLIT_REPLAY_DEVICE_NAME"
+section_start post_test_cleanup "Cleaning up after testing, uploading results"
+set -x
 
 # Make sure that capture-devcoredump is done before we start trying to tar up
 # artifacts -- if it's writing while tar is reading, tar will throw an error and
@@ -208,7 +230,7 @@ cleanup
 # upload artifacts
 if [ -n "$S3_RESULTS_UPLOAD" ]; then
   tar --zstd -cf results.tar.zst results/;
-  ci-fairy s3cp --token-file "${CI_JOB_JWT_FILE}" results.tar.zst https://"$S3_RESULTS_UPLOAD"/results.tar.zst;
+  s3_upload results.tar.zst https://"$S3_RESULTS_UPLOAD"/
 fi
 
 # We still need to echo the hwci: mesa message, as some scripts rely on it, such
@@ -216,11 +238,12 @@ fi
 [ ${EXIT_CODE} -eq 0 ] && RESULT=pass || RESULT=fail
 
 set +x
+section_end post_test_cleanup
 
 # Print the final result; both bare-metal and LAVA look for this string to get
 # the result of our run, so try really hard to get it out rather than losing
 # the run. The device gets shut down right at this point, and a630 seems to
 # enjoy corrupting the last line of serial output before shutdown.
-for _ in $(seq 0 3); do echo "hwci: mesa: $RESULT"; sleep 1; echo; done
+for _ in $(seq 0 3); do echo "hwci: mesa: $RESULT, exit_code: $EXIT_CODE"; sleep 1; echo; done
 
 exit $EXIT_CODE

@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2021 Valve Corporation
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2021 Valve Corporation
+ * SPDX-License-Identifier: MIT
  */
 
 #include "ir3_ra.h"
@@ -54,12 +36,11 @@ component_bytes(struct ir3_register *src)
 static void
 set_base_reg(struct ir3_instruction *mem, unsigned val)
 {
-   struct ir3_instruction *mov = ir3_instr_create(mem->block, OPC_MOV, 1, 1);
+   struct ir3_instruction *mov =
+      ir3_instr_create_at(ir3_before_instr(mem), OPC_MOV, 1, 1);
    ir3_dst_create(mov, mem->srcs[0]->num, mem->srcs[0]->flags);
    ir3_src_create(mov, INVALID_REG, IR3_REG_IMMED)->uim_val = val;
    mov->cat1.dst_type = mov->cat1.src_type = TYPE_U32;
-
-   ir3_instr_move_before(mov, mem);
 }
 
 static void
@@ -73,12 +54,11 @@ reset_base_reg(struct ir3_instruction *mem)
    if (base->flags & IR3_REG_KILL)
       return;
 
-   struct ir3_instruction *mov = ir3_instr_create(mem->block, OPC_MOV, 1, 1);
+   struct ir3_instruction *mov =
+      ir3_instr_create_at(ir3_after_instr(mem), OPC_MOV, 1, 1);
    ir3_dst_create(mov, base->num, base->flags);
    ir3_src_create(mov, INVALID_REG, IR3_REG_IMMED)->uim_val = 0;
    mov->cat1.dst_type = mov->cat1.src_type = TYPE_U32;
-
-   ir3_instr_move_after(mov, mem);
 }
 
 /* There are 13 bits, but 1 << 12 will be sign-extended into a negative offset
@@ -139,6 +119,8 @@ split_spill(struct ir3_instruction *spill)
       if (clone->srcs[1]->flags & IR3_REG_ARRAY) {
          clone->srcs[1]->num = clone->srcs[1]->array.base + comp;
          clone->srcs[1]->flags &= ~IR3_REG_ARRAY;
+      } else {
+         clone->srcs[1]->num += comp;
       }
 
       clone->srcs[2]->uim_val = components;
@@ -173,6 +155,8 @@ split_reload(struct ir3_instruction *reload)
       if (clone->dsts[0]->flags & IR3_REG_ARRAY) {
          clone->dsts[0]->num = clone->dsts[0]->array.base + comp;
          clone->dsts[0]->flags &= ~IR3_REG_ARRAY;
+      } else {
+         clone->dsts[0]->num += comp;
       }
 
       clone->srcs[2]->uim_val = components;

@@ -331,8 +331,15 @@ intel_device_info_i915_query_regions(struct intel_device_info *devinfo, int fd, 
 {
    struct drm_i915_query_memory_regions *meminfo =
       intel_i915_query_alloc(fd, DRM_I915_QUERY_MEMORY_REGIONS, NULL);
-   if (meminfo == NULL)
-      return false;
+
+   if (meminfo == NULL) {
+      /* If the memory region uAPI query is not available, try to generate some
+       * numbers out of os_* utils for sram only.
+       */
+      bool ret = intel_device_info_compute_system_memory(devinfo, false);
+      devinfo->mem.sram.mappable.size /= 2;
+      return ret;
+   }
 
    for (int i = 0; i < meminfo->num_regions; i++) {
       const struct drm_i915_memory_region_info *mem = &meminfo->regions[i];
@@ -341,18 +348,19 @@ intel_device_info_i915_query_regions(struct intel_device_info *devinfo, int fd, 
          if (!update) {
             devinfo->mem.sram.mem.klass = mem->region.memory_class;
             devinfo->mem.sram.mem.instance = mem->region.memory_instance;
-            devinfo->mem.sram.mappable.size = mem->probed_size;
+            /* i915 reports the whole RAM as SRAM size but Xe KMD only reports
+             * half, so adjusting i915 to follow Xe KMD.
+             */
+            devinfo->mem.sram.mappable.size = mem->probed_size / 2;
          } else {
             assert(devinfo->mem.sram.mem.klass == mem->region.memory_class);
             assert(devinfo->mem.sram.mem.instance == mem->region.memory_instance);
-            assert(devinfo->mem.sram.mappable.size == mem->probed_size);
+            assert(devinfo->mem.sram.mappable.size == mem->probed_size / 2);
          }
-         /* The kernel uAPI only reports an accurate unallocated_size value
-          * for I915_MEMORY_CLASS_DEVICE.
+         /* if running without elevated privileges i915 reports
+          * unallocated_size == probed_size
           */
-         uint64_t available;
-         if (os_get_available_system_memory(&available))
-            devinfo->mem.sram.mappable.free = MIN2(available, mem->probed_size);
+         devinfo->mem.sram.mappable.free = mem->unallocated_size;
          break;
       }
       case I915_MEMORY_CLASS_DEVICE:
@@ -483,7 +491,7 @@ has_get_tiling(int fd)
    struct drm_i915_gem_get_tiling get_tiling = {
       .handle = gem_create.handle,
    };
-   ret = intel_ioctl(fd, DRM_IOCTL_I915_GEM_SET_TILING, &get_tiling);
+   ret = intel_ioctl(fd, DRM_IOCTL_I915_GEM_GET_TILING, &get_tiling);
 
    struct drm_gem_close close = {
       .handle = gem_create.handle,
@@ -546,14 +554,6 @@ bool intel_device_info_i915_get_info_from_fd(int fd, struct intel_device_info *d
    void *hwconfig_blob;
    int32_t len;
 
-   hwconfig_blob = intel_device_info_i915_query_hwconfig(fd, &len);
-   if (hwconfig_blob) {
-      if (intel_hwconfig_process_table(devinfo, hwconfig_blob, len))
-         intel_device_info_update_after_hwconfig(devinfo);
-
-      free(hwconfig_blob);
-   }
-
    int val;
    if (getparam(fd, I915_PARAM_CS_TIMESTAMP_FREQUENCY, &val))
       devinfo->timestamp_frequency = val;
@@ -577,11 +577,15 @@ bool intel_device_info_i915_get_info_from_fd(int fd, struct intel_device_info *d
       getparam_topology(devinfo, fd);
    }
 
-   /* If the memory region uAPI query is not available, try to generate some
-    * numbers out of os_* utils for sram only.
-    */
-   if (!intel_device_info_i915_query_regions(devinfo, fd, false))
-      intel_device_info_compute_system_memory(devinfo, false);
+   hwconfig_blob = intel_device_info_i915_query_hwconfig(fd, &len);
+   if (hwconfig_blob) {
+      if (intel_hwconfig_process_table(devinfo, hwconfig_blob, len))
+         intel_device_info_update_after_hwconfig(devinfo);
+
+      free(hwconfig_blob);
+   }
+
+   intel_device_info_i915_query_regions(devinfo, fd, false);
 
    if (devinfo->platform == INTEL_PLATFORM_CHV)
       fixup_chv_device_info(devinfo);
@@ -604,7 +608,7 @@ bool intel_device_info_i915_get_info_from_fd(int fd, struct intel_device_info *d
    devinfo->has_tiling_uapi = has_get_tiling(fd);
    devinfo->has_caching_uapi =
       devinfo->platform < INTEL_PLATFORM_DG2_START && !devinfo->has_local_mem;
-   if (devinfo->ver > 12 || intel_device_info_is_mtl(devinfo))
+   if (devinfo->ver > 12 || intel_device_info_is_mtl_or_arl(devinfo))
       devinfo->has_set_pat_uapi = true;
 
    if (getparam(fd, I915_PARAM_MMAP_GTT_VERSION, &val))

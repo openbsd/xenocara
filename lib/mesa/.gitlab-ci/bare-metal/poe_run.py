@@ -24,23 +24,27 @@
 import argparse
 import os
 import re
-from serial_buffer import SerialBuffer
 import sys
 import threading
 
+from custom_logger import CustomLogger
+from serial_buffer import SerialBuffer
 
 class PoERun:
-    def __init__(self, args, test_timeout):
+    def __init__(self, args, boot_timeout, test_timeout, logger):
         self.powerup = args.powerup
         self.powerdown = args.powerdown
         self.ser = SerialBuffer(
-            args.dev, "results/serial-output.txt", "")
+            args.dev, "results/serial-output.txt", ": ")
+        self.boot_timeout = boot_timeout
         self.test_timeout = test_timeout
+        self.logger = logger
 
     def print_error(self, message):
         RED = '\033[0;31m'
         NO_COLOR = '\033[0m'
         print(RED + message + NO_COLOR)
+        self.logger.update_status_fail(message)
 
     def logged_system(self, cmd):
         print("Running '{}'".format(cmd))
@@ -48,10 +52,12 @@ class PoERun:
 
     def run(self):
         if self.logged_system(self.powerup) != 0:
+            self.logger.update_status_fail("powerup failed")
             return 1
 
         boot_detected = False
-        for line in self.ser.lines(timeout=5 * 60, phase="bootloader"):
+        self.logger.create_job_phase("boot")
+        for line in self.ser.lines(timeout=self.boot_timeout, phase="bootloader"):
             if re.search("Booting Linux", line):
                 boot_detected = True
                 break
@@ -59,10 +65,12 @@ class PoERun:
         if not boot_detected:
             self.print_error(
                 "Something wrong; couldn't detect the boot start up sequence")
-            return 1
+            return 2
 
+        self.logger.create_job_phase("test")
         for line in self.ser.lines(timeout=self.test_timeout, phase="test"):
             if re.search("---. end Kernel panic", line):
+                self.logger.update_status_fail("kernel panic")
                 return 1
 
             # Binning memory problems
@@ -79,12 +87,18 @@ class PoERun:
                 self.print_error("nouveau jetson tk1 network fail, abandoning run.")
                 return 1
 
-            result = re.search("hwci: mesa: (\S*)", line)
+            result = re.search(r"hwci: mesa: (\S*), exit_code: (\d+)", line)
             if result:
-                if result.group(1) == "pass":
-                    return 0
+                status = result.group(1)
+                exit_code = int(result.group(2))
+
+                if status == "pass":
+                    self.logger.update_dut_job("status", "pass")
                 else:
-                    return 1
+                    self.logger.update_status_fail("test fail")
+
+                self.logger.update_dut_job("exit_code", exit_code)
+                return exit_code
 
         self.print_error(
             "Reached the end of the CPU serial log without finding a result")
@@ -100,13 +114,18 @@ def main():
     parser.add_argument('--powerdown', type=str,
                         help='shell command for powering off', required=True)
     parser.add_argument(
-        '--test-timeout', type=int, help='Test phase timeout (minutes)', required=True)
+        '--boot-timeout-seconds', type=int, help='Boot phase timeout (seconds)', required=True)
+    parser.add_argument(
+        '--test-timeout-minutes', type=int, help='Test phase timeout (minutes)', required=True)
     args = parser.parse_args()
 
-    poe = PoERun(args, args.test_timeout * 60)
+    logger = CustomLogger("results/job_detail.json")
+    logger.update_dut_time("start", None)
+    poe = PoERun(args, args.boot_timeout_seconds, args.test_timeout_minutes * 60, logger)
     retval = poe.run()
 
     poe.logged_system(args.powerdown)
+    logger.update_dut_time("end", None)
 
     sys.exit(retval)
 

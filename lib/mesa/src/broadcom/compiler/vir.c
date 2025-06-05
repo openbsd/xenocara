@@ -23,9 +23,9 @@
 
 #include "broadcom/common/v3d_device_info.h"
 #include "v3d_compiler.h"
-#include "util/u_prim.h"
 #include "compiler/nir/nir_schedule.h"
 #include "compiler/nir/nir_builder.h"
+#include "util/perf/cpu_trace.h"
 
 int
 vir_get_nsrc(struct qinst *inst)
@@ -156,32 +156,6 @@ vir_is_tex(const struct v3d_device_info *devinfo, struct qinst *inst)
 }
 
 bool
-vir_writes_r3_implicitly(const struct v3d_device_info *devinfo,
-                         struct qinst *inst)
-{
-        if (!devinfo->has_accumulators)
-                return false;
-
-        for (int i = 0; i < vir_get_nsrc(inst); i++) {
-                switch (inst->src[i].file) {
-                case QFILE_VPM:
-                        return true;
-                default:
-                        break;
-                }
-        }
-
-        if (devinfo->ver < 41 && (inst->qpu.sig.ldvary ||
-                                  inst->qpu.sig.ldtlb ||
-                                  inst->qpu.sig.ldtlbu ||
-                                  inst->qpu.sig.ldvpm)) {
-                return true;
-        }
-
-        return false;
-}
-
-bool
 vir_writes_r4_implicitly(const struct v3d_device_info *devinfo,
                          struct qinst *inst)
 {
@@ -202,9 +176,6 @@ vir_writes_r4_implicitly(const struct v3d_device_info *devinfo,
         default:
                 break;
         }
-
-        if (devinfo->ver < 41 && inst->qpu.sig.ldtmu)
-                return true;
 
         return false;
 }
@@ -635,6 +606,130 @@ lower_tex_packing_cb(const nir_tex_instr *tex, const void *data)
       nir_lower_tex_packing_16 : nir_lower_tex_packing_none;
 }
 
+static bool
+v3d_nir_lower_null_pointers_cb(nir_builder *b,
+                               nir_intrinsic_instr *intr,
+                               void *_state)
+{
+        uint32_t buffer_src_idx;
+
+        switch (intr->intrinsic) {
+        case nir_intrinsic_load_ubo:
+        case nir_intrinsic_load_ssbo:
+                buffer_src_idx = 0;
+                break;
+        case nir_intrinsic_store_ssbo:
+                buffer_src_idx = 1;
+                break;
+        default:
+                return false;
+        }
+
+        /* If index if constant we are good */
+        nir_src *src = &intr->src[buffer_src_idx];
+        if (nir_src_is_const(*src))
+                return false;
+
+        /* Otherwise, see if it comes from a bcsel including a null pointer */
+        if (src->ssa->parent_instr->type != nir_instr_type_alu)
+                return false;
+
+        nir_alu_instr *alu = nir_instr_as_alu(src->ssa->parent_instr);
+        if (alu->op != nir_op_bcsel)
+                return false;
+
+        /* A null pointer is specified using block index 0xffffffff */
+        int32_t null_src_idx = -1;
+        for (int i = 1; i < 3; i++) {
+                 /* FIXME: since we are running this before optimization maybe
+                  * we need to also handle the case where we may have bcsel
+                  * chain that we need to recurse?
+                  */
+                if (!nir_src_is_const(alu->src[i].src))
+                        continue;
+                if (nir_src_comp_as_uint(alu->src[i].src, 0) != 0xffffffff)
+                        continue;
+
+                /* One of the bcsel srcs is a null pointer reference */
+                null_src_idx = i;
+                break;
+        }
+
+        if (null_src_idx < 0)
+                return false;
+
+        assert(null_src_idx == 1 || null_src_idx == 2);
+        int32_t copy_src_idx = null_src_idx == 1 ? 2 : 1;
+
+        /* Rewrite the null pointer reference so we use the same buffer index
+         * as the other bcsel branch. This will allow optimization to remove
+         * the bcsel and we should then end up with a constant buffer index
+         * like we need.
+         */
+        b->cursor = nir_before_instr(&alu->instr);
+        nir_def *copy = nir_mov(b, alu->src[copy_src_idx].src.ssa);
+        nir_src_rewrite(&alu->src[null_src_idx].src, copy);
+
+        return true;
+}
+
+static bool
+v3d_nir_lower_null_pointers(nir_shader *s)
+{
+        return nir_shader_intrinsics_pass(s, v3d_nir_lower_null_pointers_cb,
+                                            nir_metadata_control_flow, NULL);
+}
+
+static unsigned
+lower_bit_size_cb(const nir_instr *instr, void *_data)
+{
+        if (instr->type != nir_instr_type_alu)
+                return 0;
+
+        nir_alu_instr *alu = nir_instr_as_alu(instr);
+
+        switch (alu->op) {
+        case nir_op_mov:
+        case nir_op_vec2:
+        case nir_op_vec3:
+        case nir_op_vec4:
+        case nir_op_vec5:
+        case nir_op_vec8:
+        case nir_op_vec16:
+        case nir_op_b2i8:
+        case nir_op_b2f16:
+        case nir_op_b2i16:
+        case nir_op_b2f32:
+        case nir_op_b2i32:
+        case nir_op_f2f16:
+        case nir_op_f2f16_rtne:
+        case nir_op_f2f16_rtz:
+        case nir_op_f2f32:
+        case nir_op_f2i32:
+        case nir_op_f2u32:
+        case nir_op_i2i8:
+        case nir_op_i2i16:
+        case nir_op_i2f16:
+        case nir_op_i2f32:
+        case nir_op_i2i32:
+        case nir_op_u2u8:
+        case nir_op_u2u16:
+        case nir_op_u2f16:
+        case nir_op_u2f32:
+        case nir_op_u2u32:
+        case nir_op_pack_32_2x16_split:
+        case nir_op_pack_32_4x8_split:
+        case nir_op_pack_half_2x16_split:
+                return 0;
+
+        /* we need to handle those here as they only work with 32 bits */
+        default:
+                if (alu->src[0].src.ssa->bit_size != 1 && alu->src[0].src.ssa->bit_size < 32)
+                        return 32;
+                return 0;
+        }
+}
+
 static void
 v3d_lower_nir(struct v3d_compile *c)
 {
@@ -680,12 +775,9 @@ v3d_lower_nir(struct v3d_compile *c)
         }
 
         NIR_PASS(_, c->s, nir_lower_compute_system_values, NULL);
-
-        NIR_PASS(_, c->s, nir_lower_vars_to_scratch,
-                 nir_var_function_temp,
-                 0,
-                 glsl_get_natural_size_align_bytes);
-        NIR_PASS(_, c->s, v3d_nir_lower_scratch);
+        NIR_PASS(_, c->s, nir_lower_is_helper_invocation);
+        NIR_PASS(_, c->s, v3d_nir_lower_null_pointers);
+        NIR_PASS(_, c->s, nir_lower_bit_size, lower_bit_size_cb, NULL);
 }
 
 static void
@@ -744,6 +836,9 @@ v3d_vs_set_prog_data(struct v3d_compile *c,
                 prog_data->vpm_input_size++;
         if (prog_data->uses_iid)
                 prog_data->vpm_input_size++;
+
+        prog_data->writes_psiz =
+            c->s->info.outputs_written & (1 << VARYING_SLOT_PSIZ);
 
         /* Input/output segment size are in sectors (8 rows of 32 bits per
          * channel).
@@ -1011,6 +1106,10 @@ v3d_fixup_fs_output_types(struct v3d_compile *c)
                 case FRAG_RESULT_DATA1:
                 case FRAG_RESULT_DATA2:
                 case FRAG_RESULT_DATA3:
+                case FRAG_RESULT_DATA4:
+                case FRAG_RESULT_DATA5:
+                case FRAG_RESULT_DATA6:
+                case FRAG_RESULT_DATA7:
                         mask = 1 << (var->data.location - FRAG_RESULT_DATA0);
                         break;
                 }
@@ -1048,7 +1147,7 @@ v3d_nir_lower_gs_late(struct v3d_compile *c)
 {
         if (c->key->ucp_enables) {
                 NIR_PASS(_, c->s, nir_lower_clip_gs, c->key->ucp_enables,
-                         false, NULL);
+                         true, NULL);
         }
 
         /* Note: GS output scalarizing must happen after nir_lower_clip_gs. */
@@ -1060,7 +1159,7 @@ v3d_nir_lower_vs_late(struct v3d_compile *c)
 {
         if (c->key->ucp_enables) {
                 NIR_PASS(_, c->s, nir_lower_clip_vs, c->key->ucp_enables,
-                         false, false, NULL);
+                         false, true, NULL);
                 NIR_PASS_V(c->s, nir_lower_io_to_scalar,
                            nir_var_shader_out, NULL, NULL);
         }
@@ -1080,7 +1179,7 @@ v3d_nir_lower_fs_late(struct v3d_compile *c)
          * are using.
          */
         if (c->key->ucp_enables)
-                NIR_PASS(_, c->s, nir_lower_clip_fs, c->key->ucp_enables, true);
+                NIR_PASS(_, c->s, nir_lower_clip_fs, c->key->ucp_enables, true, false);
 
         NIR_PASS_V(c->s, nir_lower_io_to_scalar, nir_var_shader_in, NULL, NULL);
 }
@@ -1200,7 +1299,7 @@ v3d_instr_delay_cb(nir_instr *instr, void *data)
          case nir_intrinsic_image_load:
             return 3;
          case nir_intrinsic_load_ubo:
-            if (nir_src_is_divergent(intr->src[1]))
+            if (nir_src_is_divergent(&intr->src[1]))
                return 3;
             FALLTHROUGH;
          default:
@@ -1221,6 +1320,9 @@ v3d_instr_delay_cb(nir_instr *instr, void *data)
 
    case nir_instr_type_tex:
       return 5;
+
+   case nir_instr_type_debug_info:
+      return 0;
    }
 
    return 0;
@@ -1288,7 +1390,7 @@ v3d_nir_sort_constant_ubo_load(nir_block *block, nir_intrinsic_instr *ref)
                         continue;
 
                 /* We only produce unifa sequences for non-divergent loads */
-                if (nir_src_is_divergent(intr->src[1]))
+                if (nir_src_is_divergent(&intr->src[1]))
                         continue;
 
                 /* If there are any UBO loads that are not constant or that
@@ -1355,7 +1457,7 @@ v3d_nir_sort_constant_ubo_load(nir_block *block, nir_intrinsic_instr *ref)
                         if (tmp_intr->intrinsic != nir_intrinsic_load_ubo)
                                 continue;
 
-                        if (nir_src_is_divergent(tmp_intr->src[1]))
+                        if (nir_src_is_divergent(&tmp_intr->src[1]))
                                 continue;
 
                         /* Stop if we find a unifa UBO load that breaks the
@@ -1474,8 +1576,7 @@ v3d_nir_sort_constant_ubo_loads(nir_shader *s, struct v3d_compile *c)
                                 v3d_nir_sort_constant_ubo_loads_block(c, block);
                 }
                 nir_metadata_preserve(impl,
-                                      nir_metadata_block_index |
-                                      nir_metadata_dominance);
+                                      nir_metadata_control_flow);
         }
         return c->sorted_any_ubo_loads;
 }
@@ -1494,8 +1595,7 @@ lower_load_num_subgroups(struct v3d_compile *c,
                              c->s->info.workgroup_size[1] *
                              c->s->info.workgroup_size[2], V3D_CHANNELS);
         nir_def *result = nir_imm_int(b, num_subgroups);
-        nir_def_rewrite_uses(&intr->def, result);
-        nir_instr_remove(&intr->instr);
+        nir_def_replace(&intr->def, result);
 }
 
 static bool
@@ -1521,6 +1621,36 @@ lower_subgroup_intrinsics(struct v3d_compile *c,
                 case nir_intrinsic_load_subgroup_size:
                 case nir_intrinsic_load_subgroup_invocation:
                 case nir_intrinsic_elect:
+                case nir_intrinsic_ballot:
+                case nir_intrinsic_inverse_ballot:
+                case nir_intrinsic_ballot_bitfield_extract:
+                case nir_intrinsic_ballot_bit_count_reduce:
+                case nir_intrinsic_ballot_find_lsb:
+                case nir_intrinsic_ballot_find_msb:
+                case nir_intrinsic_ballot_bit_count_exclusive:
+                case nir_intrinsic_ballot_bit_count_inclusive:
+                case nir_intrinsic_reduce:
+                case nir_intrinsic_inclusive_scan:
+                case nir_intrinsic_exclusive_scan:
+                case nir_intrinsic_read_invocation:
+                case nir_intrinsic_read_first_invocation:
+                case nir_intrinsic_load_subgroup_eq_mask:
+                case nir_intrinsic_load_subgroup_ge_mask:
+                case nir_intrinsic_load_subgroup_gt_mask:
+                case nir_intrinsic_load_subgroup_le_mask:
+                case nir_intrinsic_load_subgroup_lt_mask:
+                case nir_intrinsic_shuffle:
+                case nir_intrinsic_shuffle_xor:
+                case nir_intrinsic_shuffle_up:
+                case nir_intrinsic_shuffle_down:
+                case nir_intrinsic_vote_all:
+                case nir_intrinsic_vote_any:
+                case nir_intrinsic_vote_feq:
+                case nir_intrinsic_vote_ieq:
+                case nir_intrinsic_quad_broadcast:
+                case nir_intrinsic_quad_swap_horizontal:
+                case nir_intrinsic_quad_swap_vertical:
+                case nir_intrinsic_quad_swap_diagonal:
                         c->has_subgroups = true;
                         break;
                 default:
@@ -1542,10 +1672,35 @@ v3d_nir_lower_subgroup_intrinsics(nir_shader *s, struct v3d_compile *c)
                         progress |= lower_subgroup_intrinsics(c, block, &b);
 
                 nir_metadata_preserve(impl,
-                                      nir_metadata_block_index |
-                                      nir_metadata_dominance);
+                                      nir_metadata_control_flow);
         }
         return progress;
+}
+
+static bool
+should_lower_robustness(const nir_intrinsic_instr *intr, const void *data)
+{
+        const struct v3d_key *key = data;
+
+        switch (intr->intrinsic) {
+        case nir_intrinsic_load_ubo:
+                return key->robust_uniform_access;
+
+        case nir_intrinsic_load_ssbo:
+        case nir_intrinsic_store_ssbo:
+        case nir_intrinsic_ssbo_atomic:
+        case nir_intrinsic_ssbo_atomic_swap:
+                return key->robust_storage_access;
+
+        case nir_intrinsic_image_load:
+        case nir_intrinsic_image_store:
+        case nir_intrinsic_image_atomic:
+        case nir_intrinsic_image_atomic_swap:
+                return key->robust_image_access;
+
+        default:
+                return false;
+        }
 }
 
 static void
@@ -1599,7 +1754,7 @@ v3d_attempt_compile(struct v3d_compile *c)
 
         NIR_PASS(_, c->s, v3d_nir_lower_io, c);
         NIR_PASS(_, c->s, v3d_nir_lower_txf_ms);
-        NIR_PASS(_, c->s, v3d_nir_lower_image_load_store);
+        NIR_PASS(_, c->s, v3d_nir_lower_image_load_store, c);
 
         NIR_PASS(_, c->s, nir_opt_idiv_const, 8);
         nir_lower_idiv_options idiv_options = {
@@ -1619,20 +1774,37 @@ v3d_attempt_compile(struct v3d_compile *c)
                 NIR_PASS(_, c->s, nir_copy_prop);
                 NIR_PASS(_, c->s, nir_opt_constant_folding);
 
-                nir_lower_robust_access_options opts = {
-                   .lower_image = c->key->robust_image_access,
-                   .lower_ssbo = c->key->robust_storage_access,
-                   .lower_ubo = c->key->robust_uniform_access,
-                };
-
-                NIR_PASS(_, c->s, nir_lower_robust_access, &opts);
+                NIR_PASS(_, c->s, nir_lower_robust_access,
+                         should_lower_robustness, c->key);
         }
 
-        NIR_PASS(_, c->s, nir_lower_wrmasks, should_split_wrmask, c->s);
+        NIR_PASS(_, c->s, nir_lower_vars_to_scratch,
+                 nir_var_function_temp,
+                 0,
+                 glsl_get_natural_size_align_bytes,
+                 glsl_get_natural_size_align_bytes);
 
+        NIR_PASS(_, c->s, v3d_nir_lower_global_2x32);
+        NIR_PASS(_, c->s, nir_lower_wrmasks, should_split_wrmask, c->s);
         NIR_PASS(_, c->s, v3d_nir_lower_load_store_bitsize);
+        NIR_PASS(_, c->s, v3d_nir_lower_scratch);
+
+        /* needs to run after load_store_bitsize */
+        NIR_PASS(_, c->s, nir_lower_pack);
 
         NIR_PASS(_, c->s, v3d_nir_lower_subgroup_intrinsics, c);
+
+        const nir_lower_subgroups_options subgroup_opts = {
+                .subgroup_size = V3D_CHANNELS,
+                .ballot_components = 1,
+                .ballot_bit_size = 32,
+                .lower_to_scalar = true,
+                .lower_inverse_ballot = true,
+                .lower_subgroup_masks = true,
+                .lower_relative_shuffle = true,
+                .lower_quad = true,
+        };
+        NIR_PASS(_, c->s, nir_lower_subgroups, &subgroup_opts);
 
         v3d_optimize_nir(c, c->s);
 
@@ -1654,7 +1826,7 @@ v3d_attempt_compile(struct v3d_compile *c)
         NIR_PASS(_, c->s, nir_lower_bool_to_int32);
         NIR_PASS(_, c->s, nir_convert_to_lcssa, true, true);
         NIR_PASS_V(c->s, nir_divergence_analysis);
-        NIR_PASS(_, c->s, nir_convert_from_ssa, true);
+        NIR_PASS(_, c->s, nir_convert_from_ssa, true, true);
 
         struct nir_schedule_options schedule_options = {
                 /* Schedule for about half our register space, to enable more
@@ -1842,9 +2014,11 @@ uint64_t *v3d_compile(const struct v3d_compiler *compiler,
                       uint32_t *final_assembly_size)
 {
         struct v3d_compile *c = NULL;
-
         uint32_t best_spill_fill_count = UINT32_MAX;
         struct v3d_compile *best_c = NULL;
+
+        MESA_TRACE_FUNC();
+
         for (int32_t strat = 0; strat < ARRAY_SIZE(strategies); strat++) {
                 /* Fallback strategy */
                 if (strat > 0) {
@@ -2081,7 +2255,7 @@ try_opt_ldunif(struct v3d_compile *c, uint32_t index, struct qreg *unif)
         struct qinst *prev_inst = NULL;
         assert(c->cur_block);
 
-#ifdef DEBUG
+#if MESA_DEBUG
         /* We can only reuse a uniform if it was emitted in the same block,
          * so callers must make sure the current instruction is being emitted
          * in the current block.
@@ -2373,4 +2547,24 @@ v3d_compute_vpm_config(struct v3d_device_info *devinfo,
    }
 
    return true;
+}
+
+static inline uint32_t
+compute_prog_score(struct v3d_prog_data *p, uint32_t qpu_size)
+{
+        const uint32_t inst_count = qpu_size / sizeof(uint64_t);
+        const uint32_t tmu_count = p->tmu_count + p->tmu_spills + p->tmu_fills;
+        return inst_count + 4 * tmu_count;
+}
+
+void
+v3d_update_double_buffer_score(uint32_t vertex_count,
+                               uint32_t vs_qpu_size,
+                               uint32_t fs_qpu_size,
+                               struct v3d_prog_data *vs,
+                               struct v3d_prog_data *fs,
+                               struct v3d_double_buffer_score *score)
+{
+        score->geom += vertex_count * compute_prog_score(vs, vs_qpu_size);
+        score->render += compute_prog_score(fs, fs_qpu_size);
 }

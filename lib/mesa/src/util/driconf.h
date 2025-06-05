@@ -269,17 +269,23 @@
    DRI_CONF_OPT_I(override_vram_size, -1, -1, 2147483647, \
                   "Override the VRAM size advertised to the application in MiB (-1 = default)")
 
-#define DRI_CONF_FORCE_GL_NAMES_REUSE(def) \
-   DRI_CONF_OPT_B(force_gl_names_reuse, def, "Force GL names reuse")
+#define DRI_CONF_FORCE_GL_NAMES_REUSE() \
+   DRI_CONF_OPT_I(reuse_gl_names, -1, -1, 1, "GL names reuse: 1=enable, 0=disable, -1=default")
 
 #define DRI_CONF_FORCE_GL_MAP_BUFFER_SYNCHRONIZED(def) \
    DRI_CONF_OPT_B(force_gl_map_buffer_synchronized, def, "Override GL_MAP_UNSYNCHRONIZED_BIT.")
+
+#define DRI_CONF_FORCE_GL_DEPTH_COMPONENT_TYPE_INT(def) \
+   DRI_CONF_OPT_B(force_gl_depth_component_type_int, def, "Override GL_DEPTH_COMPONENT type from unsigned short to unsigned int")
 
 #define DRI_CONF_TRANSCODE_ETC(def) \
    DRI_CONF_OPT_B(transcode_etc, def, "Transcode ETC formats to DXTC if unsupported")
 
 #define DRI_CONF_TRANSCODE_ASTC(def) \
    DRI_CONF_OPT_B(transcode_astc, def, "Transcode ASTC formats to DXTC if unsupported")
+
+#define DRI_CONF_ALLOW_COMPRESSED_FALLBACK(def) \
+   DRI_CONF_OPT_B(allow_compressed_fallback, def, "Allow fallback to uncompressed formats for unsupported compressed formats")
 
 #define DRI_CONF_MESA_EXTENSION_OVERRIDE() \
    DRI_CONF_OPT_S_NODEF(mesa_extension_override, \
@@ -317,7 +323,7 @@
    DRI_CONF_OPT_B(ignore_discard_framebuffer, def, \
                   "Ignore glDiscardFramebuffer/glInvalidateFramebuffer, workaround for games that use it incorrectly")
 
-#define DRI_CONF_FORCE_VK_VENDOR(def) \
+#define DRI_CONF_FORCE_VK_VENDOR() \
    DRI_CONF_OPT_I(force_vk_vendor, 0, -1, 2147483647, "Override GPU vendor id")
 
 #define DRI_CONF_FAKE_SPARSE(def) \
@@ -327,6 +333,10 @@
 #define DRI_CONF_INTEL_ENABLE_WA_14018912822(def) \
    DRI_CONF_OPT_B(intel_enable_wa_14018912822, def, \
                   "Intel workaround for using zero blend constants")
+
+#define DRI_CONF_INTEL_SAMPLER_ROUTE_TO_LSC(def) \
+   DRI_CONF_OPT_B(intel_sampler_route_to_lsc, def, \
+                  "Intel specific toggle to enable sampler route to LSC")
 
 #define DRI_CONF_VK_REQUIRE_ETC2(def) \
   DRI_CONF_OPT_B(vk_require_etc2, def, \
@@ -422,6 +432,10 @@
    DRI_CONF_OPT_B(vk_x11_ensure_min_image_count, def, \
                   "Force the X11 WSI to create at least the number of image specified by the driver in VkSurfaceCapabilitiesKHR::minImageCount")
 
+#define DRI_CONF_VK_X11_IGNORE_SUBOPTIMAL(def) \
+   DRI_CONF_OPT_B(vk_x11_ignore_suboptimal, def, \
+                  "Force the X11 WSI to never report VK_SUBOPTIMAL_KHR")
+
 #define DRI_CONF_VK_KHR_PRESENT_WAIT(def) \
    DRI_CONF_OPT_B(vk_khr_present_wait, def, \
                   "Expose VK_KHR_present_wait and id extensions despite them not being implemented for all supported surface types")
@@ -481,9 +495,17 @@
    DRI_CONF_OPT_B(allow_multisampled_copyteximage, def, \
                   "Allow CopyTexSubImage and other to copy sampled framebuffer")
 
+#define DRI_CONF_CUSTOM_BORDER_COLORS_WITHOUT_FORMAT(def) \
+   DRI_CONF_OPT_B(custom_border_colors_without_format, def, \
+                  "Enable custom border colors without format")
+
 #define DRI_CONF_NO_FP16(def) \
    DRI_CONF_OPT_B(no_fp16, def, \
                   "Disable 16-bit float support")
+
+#define DRI_CONF_VK_ZERO_VRAM(def) \
+   DRI_CONF_OPT_B(vk_zero_vram, def, \
+                  "Initialize to zero all VRAM allocations")
 
 /**
  * \brief Initialization configuration options
@@ -551,6 +573,18 @@
                   "Report the non-MSAA-only texture size limit")
 
 /**
+ * \brief wgl specific configuration options
+ */
+
+#define DRI_CONF_WGL_FRAME_LATENCY(def) \
+   DRI_CONF_OPT_I(wgl_frame_latency, def, 1, 16, \
+                  "Override default maximum frame latency")
+
+#define DRI_CONF_WGL_SWAP_INTERVAL(def) \
+   DRI_CONF_OPT_I(wgl_swap_interval, def, 1, 4, \
+                  "Override default swap interval")
+
+/**
  * \brief virgl specific configuration options
  */
 
@@ -590,12 +624,36 @@
    DRI_CONF_OPT_B(tu_dont_reserve_descriptor_set, def, \
                   "Don't internally reserve one of the HW descriptor sets for descriptor set dynamic offset support, this frees up an extra descriptor set at the cost of that feature")
 
+#define DRI_CONF_TU_ALLOW_OOB_INDIRECT_UBO_LOADS(def) \
+   DRI_CONF_OPT_B(tu_allow_oob_indirect_ubo_loads, def, \
+                  "Some D3D11 games rely on out-of-bounds indirect UBO loads to return real values from underlying bound descriptor, this prevents us from lowering indirectly accessed UBOs to consts")
+
+#define DRI_CONF_TU_DISABLE_D24S8_BORDER_COLOR_WORKAROUND(def) \
+   DRI_CONF_OPT_B(tu_disable_d24s8_border_color_workaround, def, \
+                  "Use UBWC for D24S8 images with VK_IMAGE_USAGE_SAMPLED_BIT when customBorderColorWithoutFormat is enabled")
+
+/**
+ * \brief Honeykrisp specific configuration options
+ */
+
+#define DRI_CONF_HK_DISABLE_BORDER_EMULATION(def) \
+   DRI_CONF_OPT_B(hk_disable_border_emulation, def, \
+                  "Disable custom border colour emulation")
+
+#define DRI_CONF_HK_DISABLE_RGBA4_BORDER_COLOR_WORKAROUND(def) \
+   DRI_CONF_OPT_B(hk_disable_rgba4_border_color_workaround, def, \
+                  "Use hardware opaque_black, breaking certain RGBA4 formats")
+
 /**
  * \brief venus specific configuration options
  */
 #define DRI_CONF_VENUS_IMPLICIT_FENCING(def) \
    DRI_CONF_OPT_B(venus_implicit_fencing, def, \
                   "Assume the virtio-gpu kernel driver supports implicit fencing")
+
+#define DRI_CONF_VENUS_WSI_MULTI_PLANE_MODIFIERS(def) \
+   DRI_CONF_OPT_B(venus_wsi_multi_plane_modifiers, def, \
+                  "Enable support of multi-plane format modifiers for wsi images")
 
 /**
  * \brief RADV specific configuration options
@@ -625,10 +683,6 @@
    DRI_CONF_OPT_B(radv_zero_vram, def, \
                   "Initialize to zero all VRAM allocations")
 
-#define DRI_CONF_RADV_LOWER_DISCARD_TO_DEMOTE(def) \
-   DRI_CONF_OPT_B(radv_lower_discard_to_demote, def, \
-                  "Lower discard instructions to demote")
-
 #define DRI_CONF_RADV_INVARIANT_GEOM(def) \
    DRI_CONF_OPT_B(radv_invariant_geom, def, \
                   "Mark geometry-affecting outputs as invariant")
@@ -645,6 +699,18 @@
    DRI_CONF_OPT_B(radv_disable_dcc, def, \
                   "Disable DCC for color images")
 
+#define DRI_CONF_RADV_DISABLE_DCC_MIPS(def) \
+   DRI_CONF_OPT_B(radv_disable_dcc_mips, def, \
+                  "Disable DCC for color images with mips")
+
+#define DRI_CONF_RADV_DISABLE_DCC_STORES(def) \
+   DRI_CONF_OPT_B(radv_disable_dcc_stores, def, \
+                  "Disable DCC for color storage images on GFX10-GFX11.5")
+
+#define DRI_CONF_RADV_LOWER_TERMINATE_TO_DISCARD(def) \
+   DRI_CONF_OPT_B(radv_lower_terminate_to_discard, def, \
+                  "Lower terminate to discard (which is implicitly demote)")
+
 #define DRI_CONF_RADV_DISABLE_ANISO_SINGLE_LEVEL(def) \
   DRI_CONF_OPT_B(radv_disable_aniso_single_level, def, \
                  "Disable anisotropic filtering for single level images")
@@ -657,9 +723,9 @@
    DRI_CONF_OPT_B(radv_disable_sinking_load_input_fs, def, \
                   "Disable sinking load inputs for fragment shaders")
 
-#define DRI_CONF_RADV_DGC(def) \
-   DRI_CONF_OPT_B(radv_dgc, def, \
-                  "Expose an experimental implementation of VK_NV_device_generated_commands")
+#define DRI_CONF_RADV_DISABLE_DEPTH_STORAGE(def) \
+  DRI_CONF_OPT_B(radv_disable_depth_storage, def, \
+                 "Hides support for storage access to depth formats")
 
 #define DRI_CONF_RADV_FLUSH_BEFORE_QUERY_COPY(def) \
   DRI_CONF_OPT_B( \
@@ -686,11 +752,46 @@
    DRI_CONF_OPT_B(radv_rt_wave64, def, \
                   "Force wave64 in RT shaders")
 
+#define DRI_CONF_RADV_LEGACY_SPARSE_BINDING(def) \
+   DRI_CONF_OPT_B(radv_legacy_sparse_binding, def, \
+                  "Enable legacy sparse binding (with implicit synchronization) on the graphics and compute queue")
+
+#define DRI_CONF_RADV_FORCE_PSTATE_PEAK_GFX11_DGPU(def) \
+   DRI_CONF_OPT_B(radv_force_pstate_peak_gfx11_dgpu, def, \
+                  "Force the performance level to profile_peak (all clocks to the highest levels) for RDNA3 dGPUs")
+
+/**
+ * Overrides for forcing re-compilation of pipelines when RADV_BUILD_ID_OVERRIDE is enabled.
+ * These need to be bumped every time a compiler bugfix is backported (up to 8 shader
+ * versions are supported).
+ */
+#define DRI_CONF_RADV_OVERRIDE_GRAPHICS_SHADER_VERSION(def) \
+   DRI_CONF_OPT_I(radv_override_graphics_shader_version, def, 0, 7, \
+                  "Override the shader version of graphics pipelines to force re-compilation. (0 = default)")
+
+#define DRI_CONF_RADV_OVERRIDE_COMPUTE_SHADER_VERSION(def) \
+   DRI_CONF_OPT_I(radv_override_compute_shader_version, def, 0, 7, \
+                  "Override the shader version of compute pipelines to force re-compilation. (0 = default)")
+
+#define DRI_CONF_RADV_OVERRIDE_RAY_TRACING_SHADER_VERSION(def) \
+   DRI_CONF_OPT_I(radv_override_ray_tracing_shader_version, def, 0, 7, \
+                  "Override the shader version of ray tracing pipelines to force re-compilation. (0 = default)")
+
 #define DRI_CONF_RADV_APP_LAYER() DRI_CONF_OPT_S_NODEF(radv_app_layer, "Select an application layer.")
 
-#define DRI_CONF_RADV_FORCE_ACTIVE_ACCEL_STRUCT_LEAVES(def) \
-   DRI_CONF_OPT_B(radv_force_active_accel_struct_leaves, def, \
-                  "Force leaf nodes of acceleration structures to be marked active.")
+#define DRI_CONF_RADV_CLEAR_LDS(def) \
+   DRI_CONF_OPT_B(radv_clear_lds, def, "Clear LDS at the end of shaders. Might decrease performance.")
+
+#define DRI_CONF_RADV_DISABLE_NGG_GS(def) \
+   DRI_CONF_OPT_B(radv_disable_ngg_gs, def, "Disable NGG GS on GFX10/GFX10.3.")
+
+#define DRI_CONF_RADV_FORCE_64K_SPARSE_ALIGNMENT(def) \
+   DRI_CONF_OPT_B(radv_force_64k_sparse_alignment, def, \
+                  "Force the alignment of sparse buffers to 64KiB")
+
+#define DRI_CONF_RADV_DISABLE_HIZ_HIS_GFX12(def) \
+   DRI_CONF_OPT_B(radv_disable_hiz_his_gfx12, def, \
+                  "Disable HiZ/HiS on GFX12 (RDNA4) to workaround a hw bug that causes random GPU hangs")
 
 /**
  * \brief ANV specific configuration options
@@ -699,6 +800,14 @@
 #define DRI_CONF_ANV_ASSUME_FULL_SUBGROUPS(def) \
    DRI_CONF_OPT_I(anv_assume_full_subgroups, def, 0, 32, \
                   "Allow assuming full subgroups requirement even when it's not specified explicitly and set the given size")
+
+#define DRI_CONF_ANV_ASSUME_FULL_SUBGROUPS_WITH_BARRIER(def) \
+   DRI_CONF_OPT_B(anv_assume_full_subgroups_with_barrier, def, \
+                  "Assume full subgroups requirement for compute shaders that use control barriers")
+
+#define DRI_CONF_ANV_ASSUME_FULL_SUBGROUPS_WITH_SHARED_MEMORY(def) \
+   DRI_CONF_OPT_B(anv_assume_full_subgroups_with_shared_memory, def, \
+                  "Allow assuming full subgroups requirement for shaders using shared memory even when it's not specified explicitly")
 
 #define DRI_CONF_ANV_SAMPLE_MASK_OUT_OPENGL_BEHAVIOUR(def) \
    DRI_CONF_OPT_B(anv_sample_mask_out_opengl_behaviour, def, \
@@ -745,6 +854,36 @@
    DRI_CONF_OPT_B(anv_disable_fcv, def, \
                   "Disable FCV optimization")
 
+#define DRI_CONF_ANV_ENABLE_BUFFER_COMP(def) \
+   DRI_CONF_OPT_B(anv_enable_buffer_comp, def, \
+                  "Enable CCS on buffers where possible")
+
+#define DRI_CONF_ANV_EXTERNAL_MEMORY_IMPLICIT_SYNC(def) \
+   DRI_CONF_OPT_B(anv_external_memory_implicit_sync, def, "Implicit sync on external BOs")
+
+#define DRI_CONF_ANV_COMPRESSION_CONTROL_ENABLED(def) \
+   DRI_CONF_OPT_B(compression_control_enabled, def, "Enable VK_EXT_image_compression_control support")
+
+#define DRI_CONF_ANV_FAKE_NONLOCAL_MEMORY(def) \
+   DRI_CONF_OPT_B(anv_fake_nonlocal_memory, def, \
+                  "Present host-visible device-local memory types as non device-local")
+
+#define DRI_CONF_ANV_UPPER_BOUND_DESCRIPTOR_POOL_SAMPLER(def) \
+   DRI_CONF_OPT_B(anv_upper_bound_descriptor_pool_sampler, def, \
+                  "Overallocate samplers in descriptor pools to workaround app bug")
+
+/**
+ * \brief HASVK specific configuration options
+ */
+
+#define DRI_CONF_HASVK_OVERRIDE_API_VERSION(def) \
+   DRI_CONF_OPT_B(hasvk_report_vk_1_3_version, def, \
+                  "Override intel_hasvk API version")
+
+#define DRI_CONF_ANV_FORCE_GUC_LOW_LATENCY(def) \
+   DRI_CONF_OPT_B(force_guc_low_latency, def, \
+                  "Enable low latency GuC strategy. Only supported on i915.")
+
 /**
  * \brief DZN specific configuration options
  */
@@ -754,5 +893,8 @@
 
 #define DRI_CONF_DZN_ENABLE_8BIT_LOADS_STORES(def) \
    DRI_CONF_OPT_B(dzn_enable_8bit_loads_stores, def, "Enable VK_KHR_8bit_loads_stores")
+
+#define DRI_CONF_DZN_DISABLE(def) \
+   DRI_CONF_OPT_B(dzn_disable, def, "Fail instance creation")
 
 #endif

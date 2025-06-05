@@ -25,6 +25,7 @@
 #ifndef __PAN_MEMPOOL_H__
 #define __PAN_MEMPOOL_H__
 
+#include "pan_bo.h"
 #include "pan_pool.h"
 
 /* Represents grow-only memory. It may be owned by the batch (OpenGL), or may
@@ -33,6 +34,15 @@
 struct panfrost_pool {
    /* Inherit from pan_pool */
    struct pan_pool base;
+
+   /* Parent device for allocation */
+   struct panfrost_device *dev;
+
+   /* Label for created BOs */
+   const char *label;
+
+   /* BO flags to use in the pool */
+   unsigned create_flags;
 
    /* BOs allocated by this pool */
    struct util_dynarray bos;
@@ -61,14 +71,14 @@ struct panfrost_pool_ref {
    struct panfrost_bo *bo;
 
    /* Mapped GPU VA */
-   mali_ptr gpu;
+   uint64_t gpu;
 };
 
 /* Take a reference to an allocation pool. Call directly after allocating from
  * an unowned pool for correct operation. */
 
 static inline struct panfrost_pool_ref
-panfrost_pool_take_ref(struct panfrost_pool *pool, mali_ptr ptr)
+panfrost_pool_take_ref(struct panfrost_pool *pool, uint64_t ptr)
 {
    if (!pool->owned)
       panfrost_bo_reference(pool->transient_bo);
@@ -79,10 +89,10 @@ panfrost_pool_take_ref(struct panfrost_pool *pool, mali_ptr ptr)
    };
 }
 
-void panfrost_pool_init(struct panfrost_pool *pool, void *memctx,
-                        struct panfrost_device *dev, unsigned create_flags,
-                        size_t slab_size, const char *label, bool prealloc,
-                        bool owned);
+int panfrost_pool_init(struct panfrost_pool *pool, void *memctx,
+                       struct panfrost_device *dev, unsigned create_flags,
+                       size_t slab_size, const char *label, bool prealloc,
+                       bool owned);
 
 void panfrost_pool_cleanup(struct panfrost_pool *pool);
 

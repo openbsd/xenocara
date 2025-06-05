@@ -1,24 +1,6 @@
 /*
  * Copyright © 2021 Google, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #ifndef _EMU_H_
@@ -46,6 +28,13 @@ struct emu_gpr_regs {
 struct emu_control_regs {
    BITSET_DECLARE(written, EMU_NUM_CONTROL_REGS);
    uint32_t val[EMU_NUM_CONTROL_REGS];
+};
+
+#define EMU_NUM_SQE_REGS 0x10
+
+struct emu_sqe_regs {
+   BITSET_DECLARE(written, EMU_NUM_SQE_REGS);
+   uint32_t val[EMU_NUM_SQE_REGS];
 };
 
 #define EMU_NUM_GPU_REGS 0x10000
@@ -101,12 +90,22 @@ emu_queue_pop(struct emu_queue *q, uint32_t *val)
    return true;
 }
 
+static inline bool
+emu_queue_peek(struct emu_queue *q, uint32_t *val)
+{
+   if (!q->count)
+      return false;
+
+   *val = q->fifo[q->tail];
+
+   return true;
+}
+
 /**
  * Draw-state (ie. CP_SET_DRAW_STATE) related emulation
  */
 struct emu_draw_state {
    unsigned prev_draw_state_sel;
-   unsigned write_idx;
    struct {
       union {
          uint32_t hdr;
@@ -163,9 +162,10 @@ struct emu {
 
    uint32_t *instrs;
    unsigned sizedwords;
-   unsigned gpu_id;
+   unsigned fw_id;
 
    struct emu_control_regs control_regs;
+   struct emu_sqe_regs     sqe_regs;
    struct emu_pipe_regs    pipe_regs;
    struct emu_gpu_regs     gpu_regs;
    struct emu_gpr_regs     gpr_regs;
@@ -185,14 +185,18 @@ struct emu {
    /* (r)un mode, don't stop for input until next waitin: */
    bool run_mode;
 
-   /* carry-bits for add/sub for addhi/subhi */
-   uint32_t carry;
-
-   /* call-stack of saved PCs.. I expect this to be a fixed size, but not
-    * sure what the actual size is
+   /* Don't prompt on a read from $data with an empty queue and instead assume
+    * the bootstrap routine has finished and return a dummy value while
+    * setting bootstrap_finished.
     */
-   uint32_t call_stack[5];
-   int call_stack_idx;
+   bool bootstrap_mode;
+
+   bool bootstrap_finished;
+
+   /* carry-bits for add/sub for addhi/subhi
+    * TODO: this is probably in a SQE register somewhere
+    */
+   uint32_t carry;
 
    /* packet table (aka jmptable) has offsets for pm4 packet handlers: */
    uint32_t jmptbl[0x80];
@@ -246,11 +250,15 @@ void emu_dump_state_change(struct emu *emu);
 /* Registers: */
 uint32_t emu_get_gpr_reg(struct emu *emu, unsigned n);
 void emu_set_gpr_reg(struct emu *emu, unsigned n, uint32_t val);
+uint32_t emu_get_gpr_reg_alu(struct emu *emu, unsigned n, bool peek);
 
 void emu_set_gpu_reg(struct emu *emu, unsigned n, uint32_t val);
 
 uint32_t emu_get_control_reg(struct emu *emu, unsigned n);
 void emu_set_control_reg(struct emu *emu, unsigned n, uint32_t val);
+
+uint32_t emu_get_sqe_reg(struct emu *emu, unsigned n);
+void emu_set_sqe_reg(struct emu *emu, unsigned n, uint32_t val);
 
 /* Register helpers for fixed fxn emulation, to avoid lots of boilerplate
  * for accessing other pipe/control registers.
@@ -269,10 +277,12 @@ struct emu_reg {
 };
 
 extern const struct emu_reg_accessor emu_control_accessor;
+extern const struct emu_reg_accessor emu_sqe_accessor;
 extern const struct emu_reg_accessor emu_pipe_accessor;
 extern const struct emu_reg_accessor emu_gpu_accessor;
 
 #define EMU_CONTROL_REG(name) static struct emu_reg name = { #name, &emu_control_accessor, ~0 }
+#define EMU_SQE_REG(name) static struct emu_reg name = { #name, &emu_sqe_accessor, ~0 }
 #define EMU_PIPE_REG(name)    static struct emu_reg name = { #name, &emu_pipe_accessor, ~0 }
 #define EMU_GPU_REG(name)     static struct emu_reg name = { #name, &emu_gpu_accessor, ~0 }
 
@@ -285,6 +295,7 @@ void emu_set_reg64(struct emu *emu, struct emu_reg *reg, uint64_t val);
 /* Draw-state control reg emulation: */
 uint32_t emu_get_draw_state_reg(struct emu *emu, unsigned n);
 void emu_set_draw_state_reg(struct emu *emu, unsigned n, uint32_t val);
+void emu_set_draw_state_base(struct emu *emu, unsigned n, uint32_t val);
 
 /* Helpers: */
 #define printdelta(fmt, ...) afuc_printc(AFUC_ERR, fmt, ##__VA_ARGS__)

@@ -33,6 +33,7 @@
 #include "util/slab.h"
 #include "broadcom/common/v3d_debug.h"
 #include "broadcom/common/v3d_device_info.h"
+#include "broadcom/perfcntrs/v3d_perfcntrs.h"
 
 struct v3d_bo;
 
@@ -57,6 +58,8 @@ struct v3d_screen {
         struct v3d_device_info devinfo;
 
         const char *name;
+
+        struct v3d_perfcntrs *perfcnt;
 
         struct slab_parent_pool transfer_pool;
 
@@ -83,8 +86,12 @@ struct v3d_screen {
         bool has_cache_flush;
         bool has_perfmon;
         bool nonmsaa_texture_size_limit;
+        bool has_cpu_queue;
+        bool has_multisync;
 
+#if USE_V3D_SIMULATOR
         struct v3d_simulator_file *sim_file;
+#endif
 
 #ifdef ENABLE_SHADER_CACHE
         struct disk_cache *disk_cache;
@@ -101,8 +108,10 @@ struct pipe_screen *v3d_screen_create(int fd,
                                       const struct pipe_screen_config *config,
                                       struct renderonly *ro);
 
+const char *v3d_screen_get_name(struct pipe_screen *pscreen);
+
 void
-v3d_fence_init(struct v3d_screen *screen);
+v3d_fence_screen_init(struct v3d_screen *screen);
 
 #ifdef ENABLE_SHADER_CACHE
 void

@@ -7,6 +7,27 @@
 #include "agx_builder.h"
 #include "agx_compiler.h"
 
+UNUSED static void
+print_copy(const struct agx_copy *cp)
+{
+   printf("%sr%u = ", cp->dest_mem ? "m" : "", cp->dest);
+   agx_print_index(cp->src, false, stdout);
+   printf("\n");
+}
+
+UNUSED static void
+print_copies(const struct agx_copy *copies, unsigned nr)
+{
+   printf("[\n");
+
+   for (unsigned i = 0; i < nr; ++i) {
+      printf("  ");
+      print_copy(&copies[i]);
+   }
+
+   printf("]\n");
+}
+
 /*
  * Emits code for
  *
@@ -22,10 +43,26 @@
  * We only handles register-register copies, not general agx_index sources. This
  * suffices for its internal use for register allocation.
  */
+
 static void
 do_copy(agx_builder *b, const struct agx_copy *copy)
 {
-   agx_mov_to(b, agx_register(copy->dest, copy->src.size), copy->src);
+   agx_index dst = copy->dest_mem
+                      ? agx_memory_register(copy->dest, copy->src.size)
+                      : agx_register(copy->dest, copy->src.size);
+
+   if (copy->dest_mem && copy->src.memory) {
+      /* Memory-memory copies need to be lowered to memory-register and
+       * register-memory, using a reserved scratch register.
+       */
+      agx_index scratch_reg = agx_register(2, copy->src.size);
+      agx_mov_to(b, scratch_reg, copy->src);
+      agx_mov_to(b, dst, scratch_reg);
+   } else if (copy->src.type == AGX_INDEX_IMMEDIATE) {
+      agx_mov_imm_to(b, dst, copy->src.value);
+   } else {
+      agx_mov_to(b, dst, copy->src);
+   }
 }
 
 static void
@@ -36,29 +73,24 @@ do_swap(agx_builder *b, const struct agx_copy *copy)
    if (copy->dest == copy->src.value)
       return;
 
-   /* We can swap lo/hi halves of a 32-bit register with a 32-bit extr */
-   if (copy->src.size == AGX_SIZE_16 &&
-       (copy->dest >> 1) == (copy->src.value >> 1)) {
-
-      assert(((copy->dest & 1) == (1 - (copy->src.value & 1))) &&
-             "no trivial swaps, and only 2 halves of a register");
-
-      /* r0 = extr r0, r0, #16
-       *    = (((r0 << 32) | r0) >> 16) & 0xFFFFFFFF
-       *    = (((r0 << 32) >> 16) & 0xFFFFFFFF) | (r0 >> 16)
-       *    = (r0l << 16) | r0h
-       */
-      agx_index reg32 = agx_register(copy->dest & ~1, AGX_SIZE_32);
-      agx_extr_to(b, reg32, reg32, reg32, agx_immediate(16), 0);
-      return;
-   }
-
-   agx_index x = agx_register(copy->dest, copy->src.size);
+   agx_index x = copy->dest_mem
+                    ? agx_memory_register(copy->dest, copy->src.size)
+                    : agx_register(copy->dest, copy->src.size);
    agx_index y = copy->src;
+   assert(x.memory == y.memory);
 
-   agx_xor_to(b, x, x, y);
-   agx_xor_to(b, y, x, y);
-   agx_xor_to(b, x, x, y);
+   /* Memory-memory swaps lowered here, GPR swaps lowered later */
+   if (x.memory) {
+      agx_index temp1 = agx_register(4, copy->src.size);
+      agx_index temp2 = agx_register(6, copy->src.size);
+
+      agx_mov_to(b, temp1, x);
+      agx_mov_to(b, temp2, y);
+      agx_mov_to(b, y, temp1);
+      agx_mov_to(b, x, temp2);
+   } else {
+      agx_swap(b, x, y);
+   }
 }
 
 struct copy_ctx {
@@ -69,12 +101,12 @@ struct copy_ctx {
     * source. Once this drops to zero, then the physreg is unblocked and can
     * be moved to.
     */
-   unsigned physreg_use_count[AGX_NUM_REGS];
+   unsigned physreg_use_count[AGX_NUM_MODELED_REGS];
 
    /* For each physreg, the pending copy_entry that uses it as a dest. */
-   struct agx_copy *physreg_dest[AGX_NUM_REGS];
+   struct agx_copy *physreg_dest[AGX_NUM_MODELED_REGS];
 
-   struct agx_copy entries[AGX_NUM_REGS];
+   struct agx_copy entries[AGX_NUM_MODELED_REGS];
 };
 
 static bool
@@ -91,7 +123,8 @@ entry_blocked(struct agx_copy *entry, struct copy_ctx *ctx)
 static bool
 is_real(struct agx_copy *entry)
 {
-   return entry->src.type == AGX_INDEX_REGISTER;
+   return entry->src.type == AGX_INDEX_REGISTER &&
+          entry->dest_mem == entry->src.memory;
 }
 
 /* TODO: Generalize to other bit sizes */
@@ -104,6 +137,7 @@ split_32bit_copy(struct copy_ctx *ctx, struct agx_copy *entry)
    struct agx_copy *new_entry = &ctx->entries[ctx->entry_count++];
 
    new_entry->dest = entry->dest + 1;
+   new_entry->dest_mem = entry->dest_mem;
    new_entry->src = entry->src;
    new_entry->src.value += 1;
    new_entry->done = false;
@@ -112,9 +146,9 @@ split_32bit_copy(struct copy_ctx *ctx, struct agx_copy *entry)
    ctx->physreg_dest[entry->dest + 1] = new_entry;
 }
 
-void
-agx_emit_parallel_copies(agx_builder *b, struct agx_copy *copies,
-                         unsigned num_copies)
+static void
+agx_emit_parallel_copies_for_class(agx_builder *b, struct agx_copy *copies,
+                                   unsigned num_copies, bool cls)
 {
    /* First, lower away 64-bit copies to smaller chunks, since we don't have
     * 64-bit ALU so we always want to split.
@@ -125,11 +159,26 @@ agx_emit_parallel_copies(agx_builder *b, struct agx_copy *copies,
    for (unsigned i = 0; i < num_copies; ++i) {
       struct agx_copy copy = copies[i];
 
+      /* Filter by class */
+      if (copy.dest_mem != cls)
+         continue;
+
+      assert(copy.dest < AGX_NUM_MODELED_REGS);
+
       if (copy.src.size == AGX_SIZE_64) {
          copy.src.size = AGX_SIZE_32;
          copies2[num_copies2++] = copy;
 
-         copy.src.value += 2;
+         if (copy.src.type == AGX_INDEX_IMMEDIATE) {
+            static_assert(sizeof(copy.src.value) * 8 == 32, "known size");
+            copy.src.value = 0;
+         } else {
+            assert(copy.src.type == AGX_INDEX_REGISTER ||
+                   copy.src.type == AGX_INDEX_UNIFORM);
+
+            copy.src.value += 2;
+         }
+
          copy.dest += 2;
          copies2[num_copies2++] = copy;
       } else {
@@ -339,4 +388,15 @@ agx_emit_parallel_copies(agx_builder *b, struct agx_copy *copies,
    }
 
    free(copies2);
+}
+
+void
+agx_emit_parallel_copies(agx_builder *b, struct agx_copy *copies,
+                         unsigned num_copies)
+{
+   /* Emit copies fo reach register class separately because we don't have
+    * register class awareness in the parallel copy lowering data structure.
+    */
+   agx_emit_parallel_copies_for_class(b, copies, num_copies, false);
+   agx_emit_parallel_copies_for_class(b, copies, num_copies, true);
 }

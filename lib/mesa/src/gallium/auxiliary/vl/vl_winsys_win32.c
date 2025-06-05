@@ -28,11 +28,13 @@
 
 #include "gallium/winsys/sw/gdi/gdi_sw_winsys.h"
 #include "gallium/drivers/d3d12/d3d12_public.h"
+#include <unknwn.h>
 
 struct vl_win32_screen
 {
    struct vl_screen base;
    LUID *adapter_luid;
+   struct sw_winsys* winsys;
 };
 
 static void
@@ -40,6 +42,10 @@ vl_win32_screen_destroy(struct vl_screen *vscreen)
 {
    if (vscreen == NULL)
       return;
+
+   struct vl_win32_screen* w32screen = (struct vl_win32_screen*) vscreen;
+   if (w32screen->winsys)
+      w32screen->winsys->destroy(w32screen->winsys);
 
    if (vscreen->pscreen)
       vscreen->pscreen->destroy(vscreen->pscreen);
@@ -57,17 +63,41 @@ vl_win32_screen_create(LUID *adapter)
    if (!vscreen)
       return NULL;
 
-   struct sw_winsys* winsys = gdi_create_sw_winsys();
-   if (!winsys)
+   vscreen->winsys = gdi_create_sw_winsys(gdi_sw_acquire_hdc_by_value, gdi_sw_release_hdc_by_value);
+   if (!vscreen->winsys)
       goto release_pipe;
 
    /* If adapter is null, d3d12_create_dxcore_screen will choose one */
-   vscreen->base.pscreen = d3d12_create_dxcore_screen(winsys, adapter);
+   vscreen->base.pscreen = d3d12_create_dxcore_screen(vscreen->winsys, adapter);
 
    if (!vscreen->base.pscreen)
       goto release_pipe;
 
    vscreen->adapter_luid = adapter;
+
+   vscreen->base.destroy = vl_win32_screen_destroy;
+   vscreen->base.get_private = NULL;
+   vscreen->base.texture_from_drawable = NULL;
+   vscreen->base.get_dirty_area = NULL;
+
+   return &vscreen->base;
+
+release_pipe:
+   vl_win32_screen_destroy(&vscreen->base);
+   return NULL;
+}
+
+struct vl_screen *
+vl_win32_screen_create_from_d3d12_device(IUnknown* d3d12_device, struct sw_winsys* winsys)
+{
+   struct vl_win32_screen *vscreen = CALLOC_STRUCT(vl_win32_screen);
+   if (!vscreen)
+      return NULL;
+
+   vscreen->base.pscreen = d3d12_create_dxcore_screen_from_d3d12_device(winsys, d3d12_device, &vscreen->adapter_luid);
+
+   if (!vscreen->base.pscreen)
+      goto release_pipe;
 
    vscreen->base.destroy = vl_win32_screen_destroy;
    vscreen->base.get_private = NULL;

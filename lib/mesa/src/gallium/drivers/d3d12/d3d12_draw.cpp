@@ -60,9 +60,8 @@ fill_cbv_descriptors(struct d3d12_context *ctx,
    struct d3d12_descriptor_handle table_start;
    d2d12_descriptor_heap_get_next_handle(batch->view_heap, &table_start);
 
-   for (unsigned i = 0; i < shader->num_cb_bindings; i++) {
-      unsigned binding = shader->cb_bindings[i].binding;
-      struct pipe_constant_buffer *buffer = &ctx->cbufs[stage][binding];
+   for (unsigned i = shader->begin_ubo_binding; i < shader->end_ubo_binding; i++) {
+      struct pipe_constant_buffer *buffer = &ctx->cbufs[stage][i];
 
       D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc = {};
       if (buffer && buffer->buffer) {
@@ -326,23 +325,23 @@ fill_image_descriptors(struct d3d12_context *ctx,
             unreachable("Unexpected image view dimension");
          }
          
-         if (!batch->pending_memory_barrier) {
-            if (res->base.b.target == PIPE_BUFFER) {
-               d3d12_transition_resource_state(ctx, res, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_TRANSITION_FLAG_ACCUMULATE_STATE);
-            } else {
-               unsigned transition_first_layer = view->u.tex.first_layer;
-               unsigned transition_array_size = array_size;
-               if (res->base.b.target == PIPE_TEXTURE_3D) {
-                  transition_first_layer = 0;
-                  transition_array_size = 0;
-               }
-               d3d12_transition_subresources_state(ctx, res,
-                                                   view->u.tex.level, 1,
-                                                   transition_first_layer, transition_array_size,
-                                                   0, 1,
-                                                   D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                   D3D12_TRANSITION_FLAG_ACCUMULATE_STATE);
+         d3d12_transition_flags transition_flags = (d3d12_transition_flags)(D3D12_TRANSITION_FLAG_ACCUMULATE_STATE |
+            (batch->pending_memory_barrier ? D3D12_TRANSITION_FLAG_PENDING_MEMORY_BARRIER : 0));
+         if (res->base.b.target == PIPE_BUFFER) {
+            d3d12_transition_resource_state(ctx, res, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, transition_flags);
+         } else {
+            unsigned transition_first_layer = view->u.tex.first_layer;
+            unsigned transition_array_size = array_size;
+            if (res->base.b.target == PIPE_TEXTURE_3D) {
+               transition_first_layer = 0;
+               transition_array_size = 0;
             }
+            d3d12_transition_subresources_state(ctx, res,
+                                                view->u.tex.level, 1,
+                                                transition_first_layer, transition_array_size,
+                                                0, 1,
+                                                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                                transition_flags);
          }
          d3d12_batch_reference_resource(batch, res, true);
 
@@ -364,6 +363,7 @@ fill_graphics_state_vars(struct d3d12_context *ctx,
                          const struct pipe_draw_start_count_bias *draw,
                          struct d3d12_shader *shader,
                          uint32_t *values,
+                         unsigned cur_root_param_idx,
                          struct d3d12_cmd_signature_key *cmd_sig_key)
 {
    unsigned size = 0;
@@ -377,8 +377,8 @@ fill_graphics_state_vars(struct d3d12_context *ctx,
          size += 4;
          break;
       case D3D12_STATE_VAR_PT_SPRITE:
-         ptr[0] = fui(1.0 / ctx->viewports[0].Width);
-         ptr[1] = fui(1.0 / ctx->viewports[0].Height);
+         ptr[0] = fui(1.0f / ctx->viewports[0].Width);
+         ptr[1] = fui(1.0f / ctx->viewports[0].Height);
          ptr[2] = fui(ctx->gfx_pipeline_state.rast->base.point_size);
          ptr[3] = fui(D3D12_MAX_POINT_SIZE);
          size += 4;
@@ -388,9 +388,11 @@ fill_graphics_state_vars(struct d3d12_context *ctx,
          ptr[1] = dinfo->start_instance;
          ptr[2] = drawid;
          ptr[3] = dinfo->index_size ? -1 : 0;
+         assert(!cmd_sig_key->draw_or_dispatch_params); // Should only be set once
          cmd_sig_key->draw_or_dispatch_params = 1;
          cmd_sig_key->root_sig = ctx->gfx_pipeline_state.root_signature;
-         cmd_sig_key->params_root_const_offset = size;
+         cmd_sig_key->params_root_const_offset = static_cast<uint8_t>(size);
+         cmd_sig_key->params_root_const_param = static_cast<uint8_t>(cur_root_param_idx);
          size += 4;
          break;
       case D3D12_STATE_VAR_DEPTH_TRANSFORM:
@@ -437,10 +439,11 @@ fill_compute_state_vars(struct d3d12_context *ctx,
          ptr[2] = info->grid[2];
          cmd_sig_key->draw_or_dispatch_params = 1;
          cmd_sig_key->root_sig = ctx->compute_pipeline_state.root_signature;
-         cmd_sig_key->params_root_const_offset = size;
+         cmd_sig_key->params_root_const_offset = static_cast<uint8_t>(size);
          size += 4;
          break;
-      case D3D12_STATE_VAR_TRANSFORM_GENERIC0: {
+      case D3D12_STATE_VAR_TRANSFORM_GENERIC0:
+      case D3D12_STATE_VAR_TRANSFORM_GENERIC1: {
          unsigned idx = shader->state_vars[j].var - D3D12_STATE_VAR_TRANSFORM_GENERIC0;
          ptr[0] = ctx->transform_state_vars[idx * 4];
          ptr[1] = ctx->transform_state_vars[idx * 4 + 1];
@@ -470,7 +473,7 @@ check_descriptors_left(struct d3d12_context *ctx, bool compute)
       if (!shader)
          continue;
 
-      needed_descs += shader->current->num_cb_bindings;
+      needed_descs += shader->current->end_ubo_binding;
       needed_descs += shader->current->end_srv_binding - shader->current->begin_srv_binding;
       needed_descs += shader->current->nir->info.num_ssbos;
       needed_descs += shader->current->nir->info.num_images;
@@ -510,7 +513,7 @@ update_shader_stage_root_parameters(struct d3d12_context *ctx,
    uint64_t dirty = ctx->shader_dirty[stage];
    assert(shader);
 
-   if (shader->num_cb_bindings > 0) {
+   if (shader->end_ubo_binding - shader->begin_ubo_binding > 0) {
       if (dirty & D3D12_SHADER_DIRTY_CONSTBUF) {
          assert(num_root_descriptors < MAX_DESCRIPTOR_TABLES);
          root_desc_tables[num_root_descriptors] = fill_cbv_descriptors(ctx, shader, stage);
@@ -571,9 +574,7 @@ update_graphics_root_parameters(struct d3d12_context *ctx,
       /* TODO Don't always update state vars */
       if (shader_sel->current->num_state_vars > 0) {
          uint32_t constants[D3D12_MAX_GRAPHICS_STATE_VARS * 4];
-         unsigned size = fill_graphics_state_vars(ctx, dinfo, drawid, draw, shader_sel->current, constants, cmd_sig_key);
-         if (cmd_sig_key->draw_or_dispatch_params)
-            cmd_sig_key->params_root_const_param = num_params;
+         unsigned size = fill_graphics_state_vars(ctx, dinfo, drawid, draw, shader_sel->current, constants, num_params, cmd_sig_key);
          ctx->cmdlist->SetGraphicsRoot32BitConstants(num_params, size, constants, 0);
          num_params++;
       }
@@ -599,7 +600,7 @@ update_compute_root_parameters(struct d3d12_context *ctx,
          uint32_t constants[D3D12_MAX_COMPUTE_STATE_VARS * 4];
          unsigned size = fill_compute_state_vars(ctx, info, shader_sel->current, constants, cmd_sig_key);
          if (cmd_sig_key->draw_or_dispatch_params)
-            cmd_sig_key->params_root_const_param = num_params;
+            cmd_sig_key->params_root_const_param = static_cast<uint8_t>(num_params);
          ctx->cmdlist->SetComputeRoot32BitConstants(num_params, size, constants, 0);
          num_params++;
       }
@@ -856,7 +857,7 @@ update_draw_auto(struct d3d12_context *ctx,
    d3d12_stream_output_target *target = (d3d12_stream_output_target *)so_arg;
 
    ctx->transform_state_vars[0] = ctx->gfx_pipeline_state.ves->strides[0];
-   ctx->transform_state_vars[1] = ctx->vbs[0].buffer_offset - so_arg->buffer_offset;
+   ctx->transform_state_vars[1] = 0;
    
    pipe_shader_buffer new_cs_ssbo;
    new_cs_ssbo.buffer = target->fill_buffer;
@@ -1290,7 +1291,7 @@ update_dispatch_indirect_with_sysvals(struct d3d12_context *ctx,
        ctx->compute_state == nullptr)
       return false;
 
-   if (!BITSET_TEST(ctx->compute_state->current->nir->info.system_values_read, SYSTEM_VALUE_NUM_WORKGROUPS))
+   if (!BITSET_TEST(ctx->compute_state->initial->info.system_values_read, SYSTEM_VALUE_NUM_WORKGROUPS))
       return false;
 
    if (ctx->current_predication)
@@ -1307,7 +1308,8 @@ update_dispatch_indirect_with_sysvals(struct d3d12_context *ctx,
    output_buf_templ.usage = PIPE_USAGE_DEFAULT;
    *indirect_out = ctx->base.screen->resource_create(ctx->base.screen, &output_buf_templ);
 
-   struct pipe_box src_box = { (int)*indirect_offset_inout, 0, 0, sizeof(uint32_t) * 3, 1, 1 };
+   struct pipe_box src_box;
+   u_box_3d((int)*indirect_offset_inout, 0, 0, sizeof(uint32_t) * 3, 1, 1, &src_box);
    ctx->base.resource_copy_region(&ctx->base, *indirect_out, 0, 0, 0, 0, indirect_in, 0, &src_box);
    ctx->base.resource_copy_region(&ctx->base, *indirect_out, 0, src_box.width, 0, 0, indirect_in, 0, &src_box);
 

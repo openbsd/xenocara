@@ -1,25 +1,8 @@
 /*
  * Copyright 2009 Corbin Simpson <MostAwesomeDude@gmail.com>
  * Copyright 2009 Marek Olšák <maraeo@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE. */
+ * SPDX-License-Identifier: MIT
+ */
 
 #include "r300_vs.h"
 
@@ -93,7 +76,7 @@ static void r300_shader_read_vs_outputs(
                 assert(index == 0);
                 /* Draw does clip vertex for us. */
                 if (r300->screen->caps.has_tcl) {
-                    fprintf(stderr, "r300 VP: cannot handle clip vertex output.\n");
+                    unreachable();
                 }
                 break;
 
@@ -199,6 +182,12 @@ void r300_translate_vertex_shader(struct r300_context *r300,
 
     r300_init_vs_outputs(r300, shader);
 
+    /* Nothing to do if the shader does not write gl_Position. */
+    if (vs->outputs.pos == ATTR_UNUSED) {
+        vs->dummy = true;
+        return;
+    }
+
     /* Setup the compiler */
     memset(&compiler, 0, sizeof(compiler));
     rc_init(&compiler.Base, &r300->vs_regalloc_state);
@@ -209,6 +198,12 @@ void r300_translate_vertex_shader(struct r300_context *r300,
     compiler.Base.debug = &r300->context.debug;
     compiler.Base.is_r500 = r300->screen->caps.is_r500;
     compiler.Base.disable_optimizations = DBG_ON(r300, DBG_NO_OPT);
+    /* Only R500 has few IEEE math opcodes. */
+    if (r300->screen->options.ieeemath && r300->screen->caps.is_r500) {
+        compiler.Base.math_rules = RC_MATH_IEEE;
+    } else if (r300->screen->options.ffmath) {
+        compiler.Base.math_rules = RC_MATH_FF;
+    }
     compiler.Base.has_half_swizzles = false;
     compiler.Base.has_presub = false;
     compiler.Base.has_omod = false;

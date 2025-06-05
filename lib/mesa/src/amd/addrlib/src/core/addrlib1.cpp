@@ -1,7 +1,7 @@
 /*
 ************************************************************************************************************************
 *
-*  Copyright (C) 2007-2022 Advanced Micro Devices, Inc.  All rights reserved.
+*  Copyright (C) 2007-2024 Advanced Micro Devices, Inc. All rights reserved.
 *  SPDX-License-Identifier: MIT
 *
 ***********************************************************************************************************************/
@@ -126,7 +126,7 @@ Lib* Lib::GetLib(
         ADDR_ASSERT_ALWAYS();
         hLib = NULL;
     }
-    return static_cast<Lib*>(hLib);
+    return static_cast<Lib*>(pAddrLib);
 }
 
 

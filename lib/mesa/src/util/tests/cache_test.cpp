@@ -36,11 +36,17 @@
 #include <limits.h>
 #include <time.h>
 #include <unistd.h>
+#include <utime.h>
 
+#include "util/detect_os.h"
 #include "util/mesa-sha1.h"
 #include "util/disk_cache.h"
 #include "util/disk_cache_os.h"
 #include "util/ralloc.h"
+
+#ifdef FOZ_DB_UTIL_DYNAMIC_LIST
+#include <sys/inotify.h>
+#endif
 
 #ifdef ENABLE_SHADER_CACHE
 
@@ -127,23 +133,46 @@ cache_exists(struct disk_cache *cache)
    return result != NULL;
 }
 
-static void *
-poll_disk_cache_get(struct disk_cache *cache,
-                    const cache_key key,
-                    size_t *size)
+#ifdef FOZ_DB_UTIL_DYNAMIC_LIST
+/*
+ * Wait for foz_db updater to close the foz db list file after its
+ * done updating.
+ */
+static void
+close_and_wait_for_list(FILE* list_file, const char* list_filename)
 {
-   void *result;
-
-   for (int iter = 0; iter < 1000; ++iter) {
-      result = disk_cache_get(cache, key, size);
-      if (result)
-         return result;
-
-      usleep(1000);
+   char buf[10 * (sizeof(struct inotify_event) + NAME_MAX + 1)];
+   int fd = inotify_init1(IN_CLOEXEC);
+   int wd = inotify_add_watch(fd, list_filename, IN_CLOSE_NOWRITE);
+   if (wd < 0) {
+       close(fd);
+       return;
    }
 
-   return NULL;
+   /* Prevent racing by closing the list file we wrote to after inotify
+    * has started. Since this was a write, it gets ignored by inotify
+    */
+   fclose(list_file);
+
+   int len = read(fd, buf, sizeof(buf));
+   if (len == -1)  {
+      close(fd);
+      inotify_rm_watch(fd, wd);
+      return;
+   }
+
+   int i = 0;
+   while (i < len) {
+      struct inotify_event *event = (struct inotify_event *)&buf[i];
+      i += sizeof(struct inotify_event) + event->len;
+      if (event->mask & IN_CLOSE_NOWRITE)
+         break;
+   }
+
+   inotify_rm_watch(fd, wd);
+   close(fd);
 }
+#endif
 
 #define CACHE_TEST_TMP "./cache-test-tmp"
 
@@ -190,7 +219,7 @@ test_disk_cache_create(void *mem_ctx, const char *cache_dir_name,
 
    disk_cache_destroy(cache);
 
-#ifdef ANDROID
+#if DETECT_OS_ANDROID
    /* Android doesn't try writing to disk (just calls the cache callbacks), so
     * the directory tests below don't apply.
     */
@@ -200,19 +229,8 @@ test_disk_cache_create(void *mem_ctx, const char *cache_dir_name,
    /* Test with XDG_CACHE_HOME set */
    setenv("XDG_CACHE_HOME", CACHE_TEST_TMP "/xdg-cache-home", 1);
    cache = disk_cache_create("test", driver_id, 0);
-   EXPECT_FALSE(cache_exists(cache))
-      << "disk_cache_create with XDG_CACHE_HOME set with a non-existing parent directory";
-
-   err = mkdir(CACHE_TEST_TMP, 0755);
-   if (err != 0) {
-      fprintf(stderr, "Error creating %s: %s\n", CACHE_TEST_TMP, strerror(errno));
-      GTEST_FAIL();
-   }
-   disk_cache_destroy(cache);
-
-   cache = disk_cache_create("test", driver_id, 0);
    EXPECT_TRUE(cache_exists(cache))
-      << "disk_cache_create with XDG_CACHE_HOME set";
+      << "disk_cache_create with XDG_CACHE_HOME set with a non-existing parent directory";
 
    char *path = ralloc_asprintf(
       mem_ctx, "%s%s", CACHE_TEST_TMP "/xdg-cache-home/", cache_dir_name);
@@ -226,18 +244,21 @@ test_disk_cache_create(void *mem_ctx, const char *cache_dir_name,
 
    setenv("MESA_SHADER_CACHE_DIR", CACHE_TEST_TMP "/mesa-shader-cache-dir", 1);
    cache = disk_cache_create("test", driver_id, 0);
-   EXPECT_FALSE(cache_exists(cache))
+   EXPECT_TRUE(cache_exists(cache))
       << "disk_cache_create with MESA_SHADER_CACHE_DIR set with a non-existing parent directory";
+
+   disk_cache_destroy(cache);
+   rmrf_local(CACHE_TEST_TMP);
+   EXPECT_EQ(err, 0) << "Removing " CACHE_TEST_TMP;
 
    err = mkdir(CACHE_TEST_TMP, 0755);
    if (err != 0) {
       fprintf(stderr, "Error creating %s: %s\n", CACHE_TEST_TMP, strerror(errno));
       GTEST_FAIL();
    }
-   disk_cache_destroy(cache);
 
    cache = disk_cache_create("test", driver_id, 0);
-   EXPECT_TRUE(cache_exists(cache)) << "disk_cache_create with MESA_SHADER_CACHE_DIR set";
+   EXPECT_TRUE(cache_exists(cache)) << "disk_cache_create with MESA_SHADER_CACHE_DIR set with existing parent directory";
 
    path = ralloc_asprintf(
       mem_ctx, "%s%s", CACHE_TEST_TMP "/mesa-shader-cache-dir/", cache_dir_name);
@@ -672,6 +693,36 @@ test_put_and_get_between_instances_with_eviction(const char *driver_id)
    disk_cache_destroy(cache[0]);
    disk_cache_destroy(cache[1]);
 }
+
+static void
+test_put_big_sized_entry_to_empty_cache(const char *driver_id)
+{
+   static uint8_t blob[4096];
+   uint8_t blob_key[20];
+   struct disk_cache *cache;
+   char *result;
+   size_t size;
+
+#ifdef SHADER_CACHE_DISABLE_BY_DEFAULT
+   setenv("MESA_SHADER_CACHE_DISABLE", "false", 1);
+#endif /* SHADER_CACHE_DISABLE_BY_DEFAULT */
+
+   setenv("MESA_SHADER_CACHE_MAX_SIZE", "1K", 1);
+   cache = disk_cache_create("test", driver_id, 0);
+
+   disk_cache_compute_key(cache, blob, sizeof(blob), blob_key);
+
+   disk_cache_put(cache, blob_key, blob, sizeof(blob), NULL);
+   disk_cache_wait_for_idle(cache);
+
+   result = (char *) disk_cache_get(cache, blob_key, &size);
+   EXPECT_NE(result, nullptr) << "disk_cache_get(cache) with existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob)) << "disk_cache_get of(cache) existing item (size)";
+
+   free(result);
+
+   disk_cache_destroy(cache);
+}
 #endif /* ENABLE_SHADER_CACHE */
 
 class Cache : public ::testing::Test {
@@ -696,6 +747,8 @@ TEST_F(Cache, MultiFile)
    bool compress = true;
 
 run_tests:
+   setenv("MESA_DISK_CACHE_MULTI_FILE", "true", 1);
+
    if (!compress)
       driver_id = "make_check_uncompressed";
    else
@@ -706,6 +759,8 @@ run_tests:
    test_put_and_get(true, driver_id);
 
    test_put_key_and_get_key(driver_id);
+
+   setenv("MESA_DISK_CACHE_MULTI_FILE", "false", 1);
 
    int err = rmrf_local(CACHE_TEST_TMP);
    EXPECT_EQ(err, 0) << "Removing " CACHE_TEST_TMP " again";
@@ -765,7 +820,6 @@ TEST_F(Cache, Database)
    GTEST_SKIP() << "ENABLE_SHADER_CACHE not defined.";
 #else
    setenv("MESA_DISK_CACHE_DATABASE_NUM_PARTS", "1", 1);
-   setenv("MESA_DISK_CACHE_DATABASE", "true", 1);
 
    test_disk_cache_create(mem_ctx, CACHE_DIR_NAME_DB, driver_id);
 
@@ -789,7 +843,8 @@ TEST_F(Cache, Database)
 
    test_put_and_get_between_instances_with_eviction(driver_id);
 
-   setenv("MESA_DISK_CACHE_DATABASE", "false", 1);
+   test_put_big_sized_entry_to_empty_cache(driver_id);
+
    unsetenv("MESA_DISK_CACHE_DATABASE_NUM_PARTS");
 
    err = rmrf_local(CACHE_TEST_TMP);
@@ -816,7 +871,7 @@ TEST_F(Cache, Combined)
    GTEST_SKIP() << "ENABLE_SHADER_CACHE not defined.";
 #else
    setenv("MESA_DISK_CACHE_SINGLE_FILE", "true", 1);
-   setenv("MESA_DISK_CACHE_DATABASE", "false", 1);
+   setenv("MESA_DISK_CACHE_MULTI_FILE", "true", 1);
 
 #ifdef SHADER_CACHE_DISABLE_BY_DEFAULT
    setenv("MESA_SHADER_CACHE_DISABLE", "false", 1);
@@ -886,7 +941,7 @@ TEST_F(Cache, Combined)
    EXPECT_EQ(unlink(foz_rw_idx_file), 0);
 
    setenv("MESA_DISK_CACHE_SINGLE_FILE", "false", 1);
-   setenv("MESA_DISK_CACHE_DATABASE", "true", 1);
+   setenv("MESA_DISK_CACHE_MULTI_FILE", "false", 1);
 
    /* Create MESA-DB cache with enabled retrieval from the read-only
     * cache. */
@@ -955,7 +1010,7 @@ TEST_F(Cache, Combined)
    disk_cache_destroy(cache_mesa_db);
 
    /* Create default multi-file cache. */
-   setenv("MESA_DISK_CACHE_DATABASE", "false", 1);
+   setenv("MESA_DISK_CACHE_MULTI_FILE", "true", 1);
 
    /* Enable read-only cache. */
    setenv("MESA_DISK_CACHE_COMBINE_RW_WITH_RO_FOZ", "true", 1);
@@ -1013,12 +1068,14 @@ TEST_F(Cache, Combined)
 
    disk_cache_destroy(cache_multifile);
 
+   unsetenv("MESA_DISK_CACHE_MULTI_FILE");
+
    int err = rmrf_local(CACHE_TEST_TMP);
    EXPECT_EQ(err, 0) << "Removing " CACHE_TEST_TMP " again";
 #endif
 }
 
-TEST_F(Cache, DISABLED_List)
+TEST_F(Cache, List)
 {
    const char *driver_id = "make_check";
    char blob[] = "This is a RO blob";
@@ -1118,10 +1175,12 @@ TEST_F(Cache, DISABLED_List)
    /* Add ro_cache to list file for loading */
    list_file = fopen(list_filename, "a");
    fputs("ro_cache\n", list_file);
-   fclose(list_file);
 
-   /* Poll result to give time for updater to load ro cache */
-   result = (char *)poll_disk_cache_get(cache_sf, blob_key, &size);
+   /* Close the list file for writing and wait for the updater to finish
+    * updating from the list.
+    */
+   close_and_wait_for_list(list_file, list_filename);
+   result = (char *)disk_cache_get(cache_sf, blob_key, &size);
 
    /* Blob entry must present because it shall be retrieved from the
     * ro_cache.foz loaded from list at runtime */
@@ -1153,10 +1212,12 @@ TEST_F(Cache, DISABLED_List)
    fputs("no_cache/no_cache3\n", list_file);
    /* Add ro_cache to list file for loading */
    fputs("ro_cache\n", list_file);
-   fclose(list_file);
 
-   /* Poll result to give time for updater to load ro cache */
-   result = (char *)poll_disk_cache_get(cache_sf, blob_key, &size);
+   /* Close the list file for writing and wait for the updater to finish
+    * updating from the list.
+    */
+   close_and_wait_for_list(list_file, list_filename);
+   result = (char *)disk_cache_get(cache_sf, blob_key, &size);
 
    /* Blob entry must present because it shall be retrieved from the
     * ro_cache.foz loaded from list at runtime despite invalid files
@@ -1265,14 +1326,12 @@ TEST_F(Cache, DatabaseMultipartEviction)
    GTEST_SKIP() << "ENABLE_SHADER_CACHE not defined.";
 #else
    setenv("MESA_DISK_CACHE_DATABASE_NUM_PARTS", "3", 1);
-   setenv("MESA_DISK_CACHE_DATABASE", "true", 1);
 
    test_disk_cache_create(mem_ctx, CACHE_DIR_NAME_DB, driver_id);
 
    test_multipart_eviction(driver_id);
 
    unsetenv("MESA_DISK_CACHE_DATABASE_NUM_PARTS");
-   unsetenv("MESA_DISK_CACHE_DATABASE");
 
    int err = rmrf_local(CACHE_TEST_TMP);
    EXPECT_EQ(err, 0) << "Removing " CACHE_TEST_TMP " again";
@@ -1336,5 +1395,117 @@ TEST_F(Cache, Disabled)
 
    int err = rmrf_local(CACHE_TEST_TMP);
    EXPECT_EQ(err, 0) << "Removing " CACHE_TEST_TMP " again";
+#endif
+}
+
+TEST_F(Cache, DoNotDeleteNewCache)
+{
+#ifndef ENABLE_SHADER_CACHE
+   GTEST_SKIP() << "ENABLE_SHADER_CACHE not defined.";
+#else
+
+#ifdef SHADER_CACHE_DISABLE_BY_DEFAULT
+   setenv("MESA_SHADER_CACHE_DISABLE", "false", 1);
+#endif /* SHADER_CACHE_DISABLE_BY_DEFAULT */
+
+   char dir_template[] = "/tmp/tmpdir.XXXXXX";
+   char *dir_name = mkdtemp(dir_template);
+   ASSERT_NE(dir_name, nullptr);
+
+   char cache_dir_name[256];
+   sprintf(cache_dir_name, "%s/mesa_shader_cache", dir_name);
+   mkdir(cache_dir_name, 0755);
+
+   setenv("MESA_SHADER_CACHE_DIR", dir_name, 1);
+
+   disk_cache_delete_old_cache();
+
+   struct stat st;
+   EXPECT_EQ(stat(cache_dir_name, &st), 0);
+
+   unsetenv("MESA_SHADER_CACHE_DIR");
+   rmdir(cache_dir_name);
+   rmdir(dir_name);
+#endif
+}
+
+TEST_F(Cache, DoNotDeleteCacheWithNewMarker)
+{
+#ifndef ENABLE_SHADER_CACHE
+   GTEST_SKIP() << "ENABLE_SHADER_CACHE not defined.";
+#else
+
+#ifdef SHADER_CACHE_DISABLE_BY_DEFAULT
+   setenv("MESA_SHADER_CACHE_DISABLE", "false", 1);
+#endif /* SHADER_CACHE_DISABLE_BY_DEFAULT */
+
+   char dir_template[] = "/tmp/tmpdir.XXXXXX";
+   char *dir_name = mkdtemp(dir_template);
+   ASSERT_NE(dir_name, nullptr);
+
+   char cache_dir_name[240];
+   sprintf(cache_dir_name, "%s/mesa_shader_cache", dir_name);
+   mkdir(cache_dir_name, 0755);
+
+   char file_name[256];
+   sprintf(file_name, "%s/marker", cache_dir_name);
+
+   FILE *file = fopen(file_name, "w");
+   fclose(file);
+
+   setenv("MESA_SHADER_CACHE_DIR", dir_name, 1);
+
+   disk_cache_delete_old_cache();
+
+   struct stat st;
+   EXPECT_EQ(stat(cache_dir_name, &st), 0);
+
+   unsetenv("MESA_SHADER_CACHE_DIR");
+   unlink(file_name);
+   rmdir(cache_dir_name);
+   rmdir(dir_name);
+#endif
+}
+
+TEST_F(Cache, DeleteOldCache)
+{
+#ifndef ENABLE_SHADER_CACHE
+   GTEST_SKIP() << "ENABLE_SHADER_CACHE not defined.";
+#else
+
+#ifdef SHADER_CACHE_DISABLE_BY_DEFAULT
+   setenv("MESA_SHADER_CACHE_DISABLE", "false", 1);
+#endif /* SHADER_CACHE_DISABLE_BY_DEFAULT */
+
+   char dir_template[] = "/tmp/tmpdir.XXXXXX";
+   char *dir_name = mkdtemp(dir_template);
+   ASSERT_NE(dir_name, nullptr) << "Creating temporary directory failed";
+
+   char cache_dir_name[240];
+   sprintf(cache_dir_name, "%s/mesa_shader_cache", dir_name);
+   mkdir(cache_dir_name, 0755);
+
+   char file_name[256];
+   sprintf(file_name, "%s/marker", cache_dir_name);
+
+   FILE *file = fopen(file_name, "w");
+   fclose(file);
+
+   struct utimbuf utime_buf = { };
+   EXPECT_EQ(utime(file_name, &utime_buf), 0);
+
+
+   setenv("MESA_SHADER_CACHE_DIR", dir_name, 1);
+
+   disk_cache_delete_old_cache();
+
+   struct stat st;
+   EXPECT_NE(stat(cache_dir_name, &st), 0);
+   EXPECT_EQ(errno, ENOENT);
+
+   unsetenv("MESA_SHADER_CACHE_DIR");
+   unlink(file_name);
+   rmdir(cache_dir_name);
+   rmdir(dir_name);
 #endif
 }

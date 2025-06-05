@@ -76,25 +76,33 @@
       }                                                                      \
    } while (false)
 
-static void
+static inline void
 vn_render_pass_count_present_src(const VkRenderPassCreateInfo *create_info,
                                  uint32_t *initial_count,
                                  uint32_t *final_count)
 {
+   if (VN_PRESENT_SRC_INTERNAL_LAYOUT == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
+      *initial_count = *final_count = 0;
+      return;
+   }
    COUNT_PRESENT_SRC(create_info->pAttachments, create_info->attachmentCount,
                      initial_count, final_count);
 }
 
-static void
+static inline void
 vn_render_pass_count_present_src2(const VkRenderPassCreateInfo2 *create_info,
                                   uint32_t *initial_count,
                                   uint32_t *final_count)
 {
+   if (VN_PRESENT_SRC_INTERNAL_LAYOUT == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
+      *initial_count = *final_count = 0;
+      return;
+   }
    COUNT_PRESENT_SRC(create_info->pAttachments, create_info->attachmentCount,
                      initial_count, final_count);
 }
 
-static void
+static inline void
 vn_render_pass_replace_present_src(struct vn_render_pass *pass,
                                    const VkRenderPassCreateInfo *create_info,
                                    VkAttachmentDescription *out_atts)
@@ -103,7 +111,7 @@ vn_render_pass_replace_present_src(struct vn_render_pass *pass,
                        create_info->attachmentCount, out_atts);
 }
 
-static void
+static inline void
 vn_render_pass_replace_present_src2(struct vn_render_pass *pass,
                                     const VkRenderPassCreateInfo2 *create_info,
                                     VkAttachmentDescription2 *out_atts)
@@ -208,40 +216,33 @@ vn_CreateRenderPass(VkDevice device,
 
    INIT_SUBPASSES(pass, pCreateInfo);
 
+   STACK_ARRAY(VkAttachmentDescription, attachments,
+               pCreateInfo->attachmentCount);
+
    VkRenderPassCreateInfo local_pass_info;
    if (pass->present_count) {
-      VkAttachmentDescription *temp_atts =
-         vk_alloc(alloc, sizeof(*temp_atts) * pCreateInfo->attachmentCount,
-                  VN_DEFAULT_ALIGN, VK_SYSTEM_ALLOCATION_SCOPE_COMMAND);
-      if (!temp_atts) {
-         vk_free(alloc, pass);
-         return vn_error(dev->instance, VK_ERROR_OUT_OF_HOST_MEMORY);
-      }
-
-      vn_render_pass_replace_present_src(pass, pCreateInfo, temp_atts);
+      vn_render_pass_replace_present_src(pass, pCreateInfo, attachments);
       vn_render_pass_setup_present_src_barriers(pass);
 
       local_pass_info = *pCreateInfo;
-      local_pass_info.pAttachments = temp_atts;
+      local_pass_info.pAttachments = attachments;
       pCreateInfo = &local_pass_info;
    }
 
+   /* Store the viewMask of each subpass for query feedback */
    const struct VkRenderPassMultiviewCreateInfo *multiview_info =
       vk_find_struct_const(pCreateInfo->pNext,
                            RENDER_PASS_MULTIVIEW_CREATE_INFO);
-
-   /* Store the viewMask of each subpass for query feedback */
    if (multiview_info) {
       for (uint32_t i = 0; i < multiview_info->subpassCount; i++)
          pass->subpasses[i].view_mask = multiview_info->pViewMasks[i];
    }
 
    VkRenderPass pass_handle = vn_render_pass_to_handle(pass);
-   vn_async_vkCreateRenderPass(dev->instance, device, pCreateInfo, NULL,
+   vn_async_vkCreateRenderPass(dev->primary_ring, device, pCreateInfo, NULL,
                                &pass_handle);
 
-   if (pCreateInfo == &local_pass_info)
-      vk_free(alloc, (void *)local_pass_info.pAttachments);
+   STACK_ARRAY_FINISH(attachments);
 
    *pRenderPass = pass_handle;
 
@@ -270,21 +271,16 @@ vn_CreateRenderPass2(VkDevice device,
 
    INIT_SUBPASSES(pass, pCreateInfo);
 
+   STACK_ARRAY(VkAttachmentDescription2, attachments,
+               pCreateInfo->attachmentCount);
+
    VkRenderPassCreateInfo2 local_pass_info;
    if (pass->present_count) {
-      VkAttachmentDescription2 *temp_atts =
-         vk_alloc(alloc, sizeof(*temp_atts) * pCreateInfo->attachmentCount,
-                  VN_DEFAULT_ALIGN, VK_SYSTEM_ALLOCATION_SCOPE_COMMAND);
-      if (!temp_atts) {
-         vk_free(alloc, pass);
-         return vn_error(dev->instance, VK_ERROR_OUT_OF_HOST_MEMORY);
-      }
-
-      vn_render_pass_replace_present_src2(pass, pCreateInfo, temp_atts);
+      vn_render_pass_replace_present_src2(pass, pCreateInfo, attachments);
       vn_render_pass_setup_present_src_barriers(pass);
 
       local_pass_info = *pCreateInfo;
-      local_pass_info.pAttachments = temp_atts;
+      local_pass_info.pAttachments = attachments;
       pCreateInfo = &local_pass_info;
    }
 
@@ -293,11 +289,10 @@ vn_CreateRenderPass2(VkDevice device,
       pass->subpasses[i].view_mask = pCreateInfo->pSubpasses[i].viewMask;
 
    VkRenderPass pass_handle = vn_render_pass_to_handle(pass);
-   vn_async_vkCreateRenderPass2(dev->instance, device, pCreateInfo, NULL,
+   vn_async_vkCreateRenderPass2(dev->primary_ring, device, pCreateInfo, NULL,
                                 &pass_handle);
 
-   if (pCreateInfo == &local_pass_info)
-      vk_free(alloc, (void *)local_pass_info.pAttachments);
+   STACK_ARRAY_FINISH(attachments);
 
    *pRenderPass = pass_handle;
 
@@ -317,7 +312,7 @@ vn_DestroyRenderPass(VkDevice device,
    if (!pass)
       return;
 
-   vn_async_vkDestroyRenderPass(dev->instance, device, renderPass, NULL);
+   vn_async_vkDestroyRenderPass(dev->primary_ring, device, renderPass, NULL);
 
    vn_object_base_fini(&pass->base);
    vk_free(alloc, pass);
@@ -332,11 +327,23 @@ vn_GetRenderAreaGranularity(VkDevice device,
    struct vn_render_pass *pass = vn_render_pass_from_handle(renderPass);
 
    if (!pass->granularity.width) {
-      vn_call_vkGetRenderAreaGranularity(dev->instance, device, renderPass,
-                                         &pass->granularity);
+      vn_call_vkGetRenderAreaGranularity(dev->primary_ring, device,
+                                         renderPass, &pass->granularity);
    }
 
    *pGranularity = pass->granularity;
+}
+
+void
+vn_GetRenderingAreaGranularityKHR(VkDevice device,
+                                  const VkRenderingAreaInfoKHR *pRenderingAreaInfo,
+                                  VkExtent2D *pGranularity)
+{
+   struct vn_device *dev = vn_device_from_handle(device);
+
+   /* TODO per-device cache */
+   vn_call_vkGetRenderingAreaGranularityKHR(dev->primary_ring, device,
+                                            pRenderingAreaInfo, pGranularity);
 }
 
 /* framebuffer commands */
@@ -371,7 +378,7 @@ vn_CreateFramebuffer(VkDevice device,
           sizeof(*pCreateInfo->pAttachments) * view_count);
 
    VkFramebuffer fb_handle = vn_framebuffer_to_handle(fb);
-   vn_async_vkCreateFramebuffer(dev->instance, device, pCreateInfo, NULL,
+   vn_async_vkCreateFramebuffer(dev->primary_ring, device, pCreateInfo, NULL,
                                 &fb_handle);
 
    *pFramebuffer = fb_handle;
@@ -392,7 +399,8 @@ vn_DestroyFramebuffer(VkDevice device,
    if (!fb)
       return;
 
-   vn_async_vkDestroyFramebuffer(dev->instance, device, framebuffer, NULL);
+   vn_async_vkDestroyFramebuffer(dev->primary_ring, device, framebuffer,
+                                 NULL);
 
    vn_object_base_fini(&fb->base);
    vk_free(alloc, fb);

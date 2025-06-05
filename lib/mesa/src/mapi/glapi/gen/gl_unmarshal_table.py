@@ -65,10 +65,23 @@ class PrintCode(gl_XML.gl_print_base):
         out('const _mesa_unmarshal_func _mesa_unmarshal_dispatch[NUM_DISPATCH_CMD] = {')
         with indent():
             for func in api.functionIterateAll():
-                flavor = func.marshal_flavor()
-                if flavor in ('skip', 'sync'):
+                if func.marshal_flavor() in ('skip', 'sync'):
                     continue
                 out('[DISPATCH_CMD_{0}] = (_mesa_unmarshal_func)_mesa_unmarshal_{0},'.format(func.name))
+                if func.packed_fixed_params:
+                    out('[DISPATCH_CMD_{0}_packed] = (_mesa_unmarshal_func)_mesa_unmarshal_{0}_packed,'.format(func.name))
+        out('};')
+
+        # Print the string table of function names.
+        out('')
+        out('const char *_mesa_unmarshal_func_name[NUM_DISPATCH_CMD] = {')
+        with indent():
+            for func in api.functionIterateAll():
+                if func.marshal_flavor() in ('skip', 'sync'):
+                    continue
+                out('[DISPATCH_CMD_{0}] = "{0}",'.format(func.name))
+                if func.packed_fixed_params:
+                    out('[DISPATCH_CMD_{0}_packed] = "{0}_packed",'.format(func.name))
         out('};')
 
 
@@ -80,10 +93,12 @@ def show_usage():
 if __name__ == '__main__':
     try:
         file_name = sys.argv[1]
+        pointer_size = int(sys.argv[2])
     except Exception:
         show_usage()
 
     printer = PrintCode()
 
-    api = gl_XML.parse_GL_API(file_name, marshal_XML.marshal_item_factory())
+    assert pointer_size != 0
+    api = gl_XML.parse_GL_API(file_name, marshal_XML.marshal_item_factory(), pointer_size)
     printer.Print(api)

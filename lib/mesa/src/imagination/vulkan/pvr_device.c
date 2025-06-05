@@ -41,6 +41,7 @@
 
 #include "git_sha1.h"
 #include "hwdef/rogue_hw_utils.h"
+#include "pco/pco.h"
 #include "pvr_bo.h"
 #include "pvr_border.h"
 #include "pvr_clear.h"
@@ -57,7 +58,7 @@
 #include "pvr_robustness.h"
 #include "pvr_tex_state.h"
 #include "pvr_types.h"
-#include "pvr_uscgen.h"
+#include "usc/pvr_uscgen.h"
 #include "pvr_util.h"
 #include "pvr_winsys.h"
 #include "rogue/rogue.h"
@@ -141,7 +142,8 @@ struct pvr_drm_device_config {
 /* This is the list of supported DRM render/display driver configs. */
 static const struct pvr_drm_device_config pvr_drm_configs[] = {
    DEF_CONFIG("mediatek,mt8173-gpu", "mediatek-drm"),
-   DEF_CONFIG("ti,am62-gpu", "ti,am65x-dss"),
+   DEF_CONFIG("ti,am62-gpu", "ti,am625-dss"),
+   DEF_CONFIG("ti,j721s2-gpu", "ti,j721e-dss"),
 };
 
 #undef DEF_CONFIG
@@ -155,6 +157,9 @@ static const struct vk_instance_extension_table pvr_instance_extensions = {
    .KHR_get_physical_device_properties2 = true,
    .KHR_get_surface_capabilities2 = PVR_USE_WSI_PLATFORM,
    .KHR_surface = PVR_USE_WSI_PLATFORM,
+#ifndef VK_USE_PLATFORM_WIN32_KHR
+   .EXT_headless_surface = PVR_USE_WSI_PLATFORM,
+#endif
    .EXT_debug_report = true,
    .EXT_debug_utils = true,
 };
@@ -180,11 +185,15 @@ static void pvr_physical_device_get_supported_extensions(
       .KHR_external_semaphore_fd = PVR_USE_WSI_PLATFORM,
       .KHR_get_memory_requirements2 = true,
       .KHR_image_format_list = true,
+      .KHR_index_type_uint8 = true,
+      .KHR_shader_expect_assume = true,
       .KHR_swapchain = PVR_USE_WSI_PLATFORM,
       .KHR_timeline_semaphore = true,
       .KHR_uniform_buffer_standard_layout = true,
       .EXT_external_memory_dma_buf = true,
       .EXT_host_query_reset = true,
+      .EXT_index_type_uint8 = true,
+      .EXT_memory_budget = true,
       .EXT_private_data = true,
       .EXT_scalar_block_layout = true,
       .EXT_texel_buffer_alignment = true,
@@ -254,6 +263,9 @@ static void pvr_physical_device_get_supported_features(
       .variableMultisampleRate = false,
       .inheritedQueries = false,
 
+      /* VK_KHR_index_type_uint8 */
+      .indexTypeUint8 = true,
+
       /* Vulkan 1.2 / VK_KHR_timeline_semaphore */
       .timelineSemaphore = true,
 
@@ -272,6 +284,8 @@ static void pvr_physical_device_get_supported_features(
       /* Vulkan 1.3 / VK_EXT_texel_buffer_alignment */
       .texelBufferAlignment = true,
 
+      /* VK_KHR_shader_expect_assume */
+      .shaderExpectAssume = true,
    };
 }
 
@@ -368,10 +382,12 @@ pvr_get_physical_device_descriptor_limits(
 }
 
 static bool pvr_physical_device_get_properties(
-   const struct pvr_device_info *const dev_info,
-   const struct pvr_device_runtime_info *const dev_runtime_info,
+   const struct pvr_physical_device *const pdevice,
    struct vk_properties *const properties)
 {
+   const struct pvr_device_info *const dev_info = &pdevice->dev_info;
+   const struct pvr_device_runtime_info *const dev_runtime_info =
+      &pdevice->dev_runtime_info;
    const struct pvr_descriptor_limits *descriptor_limits =
       pvr_get_physical_device_descriptor_limits(dev_info, dev_runtime_info);
 
@@ -532,7 +548,7 @@ static bool pvr_physical_device_get_properties(
       .viewportBoundsRange[1] = 2U * max_render_size,
 
       .viewportSubPixelBits = 0,
-      .minMemoryMapAlignment = 64U,
+      .minMemoryMapAlignment = pdevice->ws->page_size,
       .minTexelBufferOffsetAlignment = 16U,
       .minUniformBufferOffsetAlignment = 4U,
       .minStorageBufferOffsetAlignment = 4U,
@@ -601,7 +617,7 @@ static bool pvr_physical_device_get_properties(
 
    snprintf(properties->deviceName,
             sizeof(properties->deviceName),
-            "Imagination PowerVR %s %s",
+            "PowerVR %s %s",
             dev_info->ident.series_name,
             dev_info->ident.public_name);
 
@@ -643,6 +659,9 @@ static void pvr_physical_device_destroy(struct vk_physical_device *vk_pdevice)
     * finish is done in vkDestroyInstance(). Make sure that you check for NULL
     * before freeing or that the freeing functions accept NULL pointers.
     */
+
+   if (pdevice->pco_ctx)
+      ralloc_free(pdevice->pco_ctx);
 
    if (pdevice->compiler)
       ralloc_free(pdevice->compiler);
@@ -707,15 +726,6 @@ static VkResult pvr_physical_device_init(struct pvr_physical_device *pdevice,
    char *render_path;
    VkResult result;
 
-   if (!getenv("PVR_I_WANT_A_BROKEN_VULKAN_DRIVER")) {
-      return vk_errorf(instance,
-                       VK_ERROR_INCOMPATIBLE_DRIVER,
-                       "WARNING: powervr is not a conformant Vulkan "
-                       "implementation. Pass "
-                       "PVR_I_WANT_A_BROKEN_VULKAN_DRIVER=1 if you know "
-                       "what you're doing.");
-   }
-
    render_path = vk_strdup(&instance->vk.alloc,
                            drm_render_device->nodes[DRM_NODE_RENDER],
                            VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE);
@@ -741,6 +751,16 @@ static VkResult pvr_physical_device_init(struct pvr_physical_device *pdevice,
    if (result != VK_SUCCESS)
       goto err_vk_free_display_path;
 
+   if (!getenv("PVR_I_WANT_A_BROKEN_VULKAN_DRIVER")) {
+      result = vk_errorf(instance,
+                         VK_ERROR_INCOMPATIBLE_DRIVER,
+                         "WARNING: powervr is not a conformant Vulkan "
+                         "implementation. Pass "
+                         "PVR_I_WANT_A_BROKEN_VULKAN_DRIVER=1 if you know "
+                         "what you're doing.");
+      goto err_pvr_winsys_destroy;
+   }
+
    pdevice->instance = instance;
    pdevice->render_path = render_path;
    pdevice->display_path = display_path;
@@ -755,9 +775,7 @@ static VkResult pvr_physical_device_init(struct pvr_physical_device *pdevice,
    pvr_physical_device_get_supported_extensions(&supported_extensions);
    pvr_physical_device_get_supported_features(&pdevice->dev_info,
                                               &supported_features);
-   if (!pvr_physical_device_get_properties(&pdevice->dev_info,
-                                           &pdevice->dev_runtime_info,
-                                           &supported_properties)) {
+   if (!pvr_physical_device_get_properties(pdevice, &supported_properties)) {
       result = vk_errorf(instance,
                          VK_ERROR_INITIALIZATION_FAILED,
                          "Failed to collect physical device properties");
@@ -808,6 +826,15 @@ static VkResult pvr_physical_device_init(struct pvr_physical_device *pdevice,
       result = vk_errorf(instance,
                          VK_ERROR_INITIALIZATION_FAILED,
                          "Failed to initialize Rogue compiler");
+      goto err_wsi_finish;
+   }
+
+   pdevice->pco_ctx = pco_ctx_create(&pdevice->dev_info, NULL);
+   if (!pdevice->pco_ctx) {
+      ralloc_free(pdevice->compiler);
+      result = vk_errorf(instance,
+                         VK_ERROR_INITIALIZATION_FAILED,
+                         "Failed to initialize PCO compiler context");
       goto err_wsi_finish;
    }
 
@@ -1001,10 +1028,10 @@ pvr_physical_device_enumerate(struct vk_instance *const vk_instance)
    mesa_logd("Found compatible display device '%s'.",
              drm_display_device->nodes[DRM_NODE_PRIMARY]);
 
-   pdevice = vk_alloc(&vk_instance->alloc,
-                      sizeof(*pdevice),
-                      8,
-                      VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE);
+   pdevice = vk_zalloc(&vk_instance->alloc,
+                       sizeof(*pdevice),
+                       8,
+                       VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE);
    if (!pdevice) {
       result = vk_error(instance, VK_ERROR_OUT_OF_HOST_MEMORY);
       goto out_free_drm_devices;
@@ -1151,7 +1178,7 @@ uint32_t pvr_calc_fscommon_size_and_tiles_in_flight(
       max_common_size = MIN2(max_common_size, ROGUE_MAX_PIXEL_SHARED_REGISTERS);
       max_common_size =
          ROUND_DOWN_TO(max_common_size,
-                       PVRX(TA_STATE_PDS_SIZEINFO2_USC_SHAREDSIZE_UNIT_SIZE));
+                       ROGUE_TA_STATE_PDS_SIZEINFO2_USC_SHAREDSIZE_UNIT_SIZE);
 
       return max_common_size;
    }
@@ -1163,7 +1190,7 @@ uint32_t pvr_calc_fscommon_size_and_tiles_in_flight(
 
    num_tile_in_flight /= num_allocs;
 
-#if defined(DEBUG)
+#if MESA_DEBUG
    /* Validate the above result. */
 
    assert(num_tile_in_flight >= MIN2(num_tile_in_flight, max_tiles_in_flight));
@@ -1188,6 +1215,22 @@ const static VkQueueFamilyProperties pvr_queue_family_properties = {
    .minImageTransferGranularity = { 1, 1, 1 },
 };
 
+static uint64_t pvr_compute_heap_budget(struct pvr_physical_device *pdevice)
+{
+   const uint64_t heap_size = pdevice->memory.memoryHeaps[0].size;
+   const uint64_t heap_used = pdevice->heap_used;
+   uint64_t sys_available = 0, heap_available;
+   ASSERTED bool has_available_memory =
+      os_get_available_system_memory(&sys_available);
+   assert(has_available_memory);
+
+   /* Let's not incite the app to starve the system: report at most 90% of
+    * available system memory.
+    */
+   heap_available = sys_available * 9 / 10;
+   return MIN2(heap_size, heap_used + heap_available);
+}
+
 void pvr_GetPhysicalDeviceQueueFamilyProperties2(
    VkPhysicalDevice physicalDevice,
    uint32_t *pQueueFamilyPropertyCount,
@@ -1202,7 +1245,7 @@ void pvr_GetPhysicalDeviceQueueFamilyProperties2(
       p->queueFamilyProperties = pvr_queue_family_properties;
 
       vk_foreach_struct (ext, p->pNext) {
-         pvr_debug_ignored_stype(ext->sType);
+         vk_debug_ignored_stype(ext->sType);
       }
    }
 }
@@ -1216,15 +1259,38 @@ void pvr_GetPhysicalDeviceMemoryProperties2(
    pMemoryProperties->memoryProperties = pdevice->memory;
 
    vk_foreach_struct (ext, pMemoryProperties->pNext) {
-      pvr_debug_ignored_stype(ext->sType);
+      switch (ext->sType) {
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT: {
+         VkPhysicalDeviceMemoryBudgetPropertiesEXT *pMemoryBudget =
+            (VkPhysicalDeviceMemoryBudgetPropertiesEXT *)ext;
+
+         pMemoryBudget->heapBudget[0] = pvr_compute_heap_budget(pdevice);
+         pMemoryBudget->heapUsage[0] = pdevice->heap_used;
+
+         for (uint32_t i = 1; i < VK_MAX_MEMORY_HEAPS; i++) {
+            pMemoryBudget->heapBudget[i] = 0u;
+            pMemoryBudget->heapUsage[i] = 0u;
+         }
+         break;
+      }
+      default:
+         vk_debug_ignored_stype(ext->sType);
+         break;
+      }
    }
 }
 
 PFN_vkVoidFunction pvr_GetInstanceProcAddr(VkInstance _instance,
                                            const char *pName)
 {
-   PVR_FROM_HANDLE(pvr_instance, instance, _instance);
-   return vk_instance_get_proc_addr(&instance->vk,
+   const struct vk_instance *vk_instance = NULL;
+
+   if (_instance != NULL) {
+      PVR_FROM_HANDLE(pvr_instance, instance, _instance);
+      vk_instance = &instance->vk;
+   }
+
+   return vk_instance_get_proc_addr(vk_instance,
                                     &pvr_instance_entrypoints,
                                     pName);
 }
@@ -1238,17 +1304,6 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL
 vk_icdGetInstanceProcAddr(VkInstance instance, const char *pName)
 {
    return pvr_GetInstanceProcAddr(instance, pName);
-}
-
-/* With version 4+ of the loader interface the ICD should expose
- * vk_icdGetPhysicalDeviceProcAddr().
- */
-PUBLIC
-VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL
-vk_icdGetPhysicalDeviceProcAddr(VkInstance _instance, const char *pName)
-{
-   PVR_FROM_HANDLE(pvr_instance, instance, _instance);
-   return vk_instance_get_physical_device_proc_addr(&instance->vk, pName);
 }
 
 VkResult pvr_pds_compute_shader_create_and_upload(
@@ -1296,10 +1351,10 @@ VkResult pvr_pds_compute_shader_create_and_upload(
    result = pvr_gpu_upload_pds(device,
                                data_buffer,
                                program->data_size,
-                               PVRX(CDMCTRL_KERNEL1_DATA_ADDR_ALIGNMENT),
+                               ROGUE_CDMCTRL_KERNEL1_DATA_ADDR_ALIGNMENT,
                                code_buffer,
                                program->code_size / sizeof(uint32_t),
-                               PVRX(CDMCTRL_KERNEL2_CODE_ADDR_ALIGNMENT),
+                               ROGUE_CDMCTRL_KERNEL2_CODE_ADDR_ALIGNMENT,
                                cache_line_size,
                                pds_upload_out);
 
@@ -1367,7 +1422,7 @@ static VkResult pvr_pds_idfwdf_programs_create_and_upload(
    pvr_pds_setup_doutu(&program.usc_task_control,
                        usc_addr.addr,
                        temps,
-                       PVRX(PDSINST_DOUTU_SAMPLE_RATE_INSTANCE),
+                       ROGUE_PDSINST_DOUTU_SAMPLE_RATE_INSTANCE,
                        false);
 
    pvr_pds_vertex_shader_sa(&program, NULL, PDS_GENERATE_SIZES, dev_info);
@@ -1519,10 +1574,10 @@ static VkResult pvr_device_init_compute_idfwdf_state(struct pvr_device *device)
    /* Pack state words. */
 
    pvr_csb_pack (&sampler_state[0], TEXSTATE_SAMPLER, sampler) {
-      sampler.dadjust = PVRX(TEXSTATE_DADJUST_ZERO_UINT);
-      sampler.magfilter = PVRX(TEXSTATE_FILTER_POINT);
-      sampler.addrmode_u = PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
-      sampler.addrmode_v = PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
+      sampler.dadjust = ROGUE_TEXSTATE_DADJUST_ZERO_UINT;
+      sampler.magfilter = ROGUE_TEXSTATE_FILTER_POINT;
+      sampler.addrmode_u = ROGUE_TEXSTATE_ADDRMODE_CLAMP_TO_EDGE;
+      sampler.addrmode_v = ROGUE_TEXSTATE_ADDRMODE_CLAMP_TO_EDGE;
    }
 
    /* clang-format off */
@@ -1663,7 +1718,7 @@ static VkResult pvr_device_init_nop_program(struct pvr_device *device)
    pvr_pds_setup_doutu(&program.usc_task_control,
                        device->nop_program.usc->dev_addr.addr,
                        0U,
-                       PVRX(PDSINST_DOUTU_SAMPLE_RATE_INSTANCE),
+                       ROGUE_PDSINST_DOUTU_SAMPLE_RATE_INSTANCE,
                        false);
 
    pvr_pds_set_sizes_pixel_shader(&program);
@@ -1787,13 +1842,13 @@ err_release_lock:
 static void pvr_device_init_default_sampler_state(struct pvr_device *device)
 {
    pvr_csb_pack (&device->input_attachment_sampler, TEXSTATE_SAMPLER, sampler) {
-      sampler.addrmode_u = PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
-      sampler.addrmode_v = PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
-      sampler.addrmode_w = PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
-      sampler.dadjust = PVRX(TEXSTATE_DADJUST_ZERO_UINT);
-      sampler.magfilter = PVRX(TEXSTATE_FILTER_POINT);
-      sampler.minfilter = PVRX(TEXSTATE_FILTER_POINT);
-      sampler.anisoctl = PVRX(TEXSTATE_ANISOCTL_DISABLED);
+      sampler.addrmode_u = ROGUE_TEXSTATE_ADDRMODE_CLAMP_TO_EDGE;
+      sampler.addrmode_v = ROGUE_TEXSTATE_ADDRMODE_CLAMP_TO_EDGE;
+      sampler.addrmode_w = ROGUE_TEXSTATE_ADDRMODE_CLAMP_TO_EDGE;
+      sampler.dadjust = ROGUE_TEXSTATE_DADJUST_ZERO_UINT;
+      sampler.magfilter = ROGUE_TEXSTATE_FILTER_POINT;
+      sampler.minfilter = ROGUE_TEXSTATE_FILTER_POINT;
+      sampler.anisoctl = ROGUE_TEXSTATE_ANISOCTL_DISABLED;
       sampler.non_normalized_coords = true;
    }
 }
@@ -2065,6 +2120,27 @@ VkResult pvr_EnumerateInstanceLayerProperties(uint32_t *pPropertyCount,
    return vk_error(NULL, VK_ERROR_LAYER_NOT_PRESENT);
 }
 
+static void free_memory(struct pvr_device *device,
+                        struct pvr_device_memory *mem,
+                        const VkAllocationCallbacks *pAllocator)
+{
+   if (!mem)
+      return;
+
+   /* From the Vulkan spec (§11.2.13. Freeing Device Memory):
+    *   If a memory object is mapped at the time it is freed, it is implicitly
+    *   unmapped.
+    */
+   if (mem->bo->map)
+      device->ws->ops->buffer_unmap(mem->bo);
+
+   p_atomic_add(&device->pdevice->heap_used, -mem->bo->size);
+
+   device->ws->ops->buffer_destroy(mem->bo);
+
+   vk_object_free(&device->vk, pAllocator, mem);
+}
+
 VkResult pvr_AllocateMemory(VkDevice _device,
                             const VkMemoryAllocateInfo *pAllocateInfo,
                             const VkAllocationCallbacks *pAllocator,
@@ -2074,6 +2150,7 @@ VkResult pvr_AllocateMemory(VkDevice _device,
    PVR_FROM_HANDLE(pvr_device, device, _device);
    enum pvr_winsys_bo_type type = PVR_WINSYS_BO_TYPE_GPU;
    struct pvr_device_memory *mem;
+   uint64_t heap_used;
    VkResult result;
 
    assert(pAllocateInfo->sType == VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO);
@@ -2089,13 +2166,16 @@ VkResult pvr_AllocateMemory(VkDevice _device,
    vk_foreach_struct_const (ext, pAllocateInfo->pNext) {
       switch ((unsigned)ext->sType) {
       case VK_STRUCTURE_TYPE_WSI_MEMORY_ALLOCATE_INFO_MESA:
-         type = PVR_WINSYS_BO_TYPE_DISPLAY;
+         if (device->ws->display_fd >= 0)
+            type = PVR_WINSYS_BO_TYPE_DISPLAY;
          break;
       case VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHR:
          fd_info = (void *)ext;
          break;
+      case VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO:
+         break;
       default:
-         pvr_debug_ignored_stype(ext->sType);
+         vk_debug_ignored_stype(ext->sType);
          break;
       }
    }
@@ -2167,6 +2247,12 @@ VkResult pvr_AllocateMemory(VkDevice _device,
          goto err_vk_object_free_mem;
    }
 
+   heap_used = p_atomic_add_return(&device->pdevice->heap_used, mem->bo->size);
+   if (heap_used > device->pdevice->memory.memoryHeaps[0].size) {
+      free_memory(device, mem, pAllocator);
+      return vk_error(device, VK_ERROR_OUT_OF_DEVICE_MEMORY);
+   }
+
    *pMem = pvr_device_memory_to_handle(mem);
 
    return VK_SUCCESS;
@@ -2225,19 +2311,7 @@ void pvr_FreeMemory(VkDevice _device,
    PVR_FROM_HANDLE(pvr_device, device, _device);
    PVR_FROM_HANDLE(pvr_device_memory, mem, _mem);
 
-   if (!mem)
-      return;
-
-   /* From the Vulkan spec (§11.2.13. Freeing Device Memory):
-    *   If a memory object is mapped at the time it is freed, it is implicitly
-    *   unmapped.
-    */
-   if (mem->bo->map)
-      device->ws->ops->buffer_unmap(mem->bo);
-
-   device->ws->ops->buffer_destroy(mem->bo);
-
-   vk_object_free(&device->vk, pAllocator, mem);
+   free_memory(device, mem, pAllocator);
 }
 
 VkResult pvr_MapMemory(VkDevice _device,
@@ -2756,12 +2830,12 @@ pvr_framebuffer_create_ppp_state(struct pvr_device *device,
       term0.clip_right =
          DIV_ROUND_UP(
             framebuffer->width,
-            PVRX(TA_STATE_TERMINATE0_CLIP_RIGHT_BLOCK_SIZE_IN_PIXELS)) -
+            ROGUE_TA_STATE_TERMINATE0_CLIP_RIGHT_BLOCK_SIZE_IN_PIXELS) -
          1;
       term0.clip_bottom =
          DIV_ROUND_UP(
             framebuffer->height,
-            PVRX(TA_STATE_TERMINATE0_CLIP_BOTTOM_BLOCK_SIZE_IN_PIXELS)) -
+            ROGUE_TA_STATE_TERMINATE0_CLIP_BOTTOM_BLOCK_SIZE_IN_PIXELS) -
          1;
    }
 
@@ -2982,56 +3056,15 @@ void pvr_DestroyFramebuffer(VkDevice _device,
    vk_free2(&device->vk.alloc, pAllocator, framebuffer);
 }
 
-PUBLIC VKAPI_ATTR VkResult VKAPI_CALL
-vk_icdNegotiateLoaderICDInterfaceVersion(uint32_t *pSupportedVersion)
-{
-   /* For the full details on loader interface versioning, see
-    * <https://github.com/KhronosGroup/Vulkan-LoaderAndValidationLayers/blob/master/loader/LoaderAndLayerInterface.md>.
-    * What follows is a condensed summary, to help you navigate the large and
-    * confusing official doc.
-    *
-    *   - Loader interface v0 is incompatible with later versions. We don't
-    *     support it.
-    *
-    *   - In loader interface v1:
-    *       - The first ICD entrypoint called by the loader is
-    *         vk_icdGetInstanceProcAddr(). The ICD must statically expose this
-    *         entrypoint.
-    *       - The ICD must statically expose no other Vulkan symbol unless it
-    *         is linked with -Bsymbolic.
-    *       - Each dispatchable Vulkan handle created by the ICD must be
-    *         a pointer to a struct whose first member is VK_LOADER_DATA. The
-    *         ICD must initialize VK_LOADER_DATA.loadMagic to ICD_LOADER_MAGIC.
-    *       - The loader implements vkCreate{PLATFORM}SurfaceKHR() and
-    *         vkDestroySurfaceKHR(). The ICD must be capable of working with
-    *         such loader-managed surfaces.
-    *
-    *    - Loader interface v2 differs from v1 in:
-    *       - The first ICD entrypoint called by the loader is
-    *         vk_icdNegotiateLoaderICDInterfaceVersion(). The ICD must
-    *         statically expose this entrypoint.
-    *
-    *    - Loader interface v3 differs from v2 in:
-    *        - The ICD must implement vkCreate{PLATFORM}SurfaceKHR(),
-    *          vkDestroySurfaceKHR(), and other API which uses VKSurfaceKHR,
-    *          because the loader no longer does so.
-    *
-    *    - Loader interface v4 differs from v3 in:
-    *        - The ICD must implement vk_icdGetPhysicalDeviceProcAddr().
-    */
-   *pSupportedVersion = MIN2(*pSupportedVersion, 4u);
-   return VK_SUCCESS;
-}
-
 static uint32_t
 pvr_sampler_get_hw_filter_from_vk(const struct pvr_device_info *dev_info,
                                   VkFilter filter)
 {
    switch (filter) {
    case VK_FILTER_NEAREST:
-      return PVRX(TEXSTATE_FILTER_POINT);
+      return ROGUE_TEXSTATE_FILTER_POINT;
    case VK_FILTER_LINEAR:
-      return PVRX(TEXSTATE_FILTER_LINEAR);
+      return ROGUE_TEXSTATE_FILTER_LINEAR;
    default:
       unreachable("Unknown filter type.");
    }
@@ -3042,15 +3075,15 @@ pvr_sampler_get_hw_addr_mode_from_vk(VkSamplerAddressMode addr_mode)
 {
    switch (addr_mode) {
    case VK_SAMPLER_ADDRESS_MODE_REPEAT:
-      return PVRX(TEXSTATE_ADDRMODE_REPEAT);
+      return ROGUE_TEXSTATE_ADDRMODE_REPEAT;
    case VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT:
-      return PVRX(TEXSTATE_ADDRMODE_FLIP);
+      return ROGUE_TEXSTATE_ADDRMODE_FLIP;
    case VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE:
-      return PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
+      return ROGUE_TEXSTATE_ADDRMODE_CLAMP_TO_EDGE;
    case VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE:
-      return PVRX(TEXSTATE_ADDRMODE_FLIP_ONCE_THEN_CLAMP);
+      return ROGUE_TEXSTATE_ADDRMODE_FLIP_ONCE_THEN_CLAMP;
    case VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER:
-      return PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_BORDER);
+      return ROGUE_TEXSTATE_ADDRMODE_CLAMP_TO_BORDER;
    default:
       unreachable("Invalid sampler address mode.");
    }
@@ -3127,14 +3160,14 @@ VkResult pvr_CreateSampler(VkDevice _device,
                  TEXSTATE_SAMPLER,
                  word) {
       const struct pvr_device_info *dev_info = &device->pdevice->dev_info;
-      const float lod_clamp_max = (float)PVRX(TEXSTATE_CLAMP_MAX) /
-                                  (1 << PVRX(TEXSTATE_CLAMP_FRACTIONAL_BITS));
-      const float max_dadjust = ((float)(PVRX(TEXSTATE_DADJUST_MAX_UINT) -
-                                         PVRX(TEXSTATE_DADJUST_ZERO_UINT))) /
-                                (1 << PVRX(TEXSTATE_DADJUST_FRACTIONAL_BITS));
-      const float min_dadjust = ((float)(PVRX(TEXSTATE_DADJUST_MIN_UINT) -
-                                         PVRX(TEXSTATE_DADJUST_ZERO_UINT))) /
-                                (1 << PVRX(TEXSTATE_DADJUST_FRACTIONAL_BITS));
+      const float lod_clamp_max = (float)ROGUE_TEXSTATE_CLAMP_MAX /
+                                  (1 << ROGUE_TEXSTATE_CLAMP_FRACTIONAL_BITS);
+      const float max_dadjust = ((float)(ROGUE_TEXSTATE_DADJUST_MAX_UINT -
+                                         ROGUE_TEXSTATE_DADJUST_ZERO_UINT)) /
+                                (1 << ROGUE_TEXSTATE_DADJUST_FRACTIONAL_BITS);
+      const float min_dadjust = ((float)(ROGUE_TEXSTATE_DADJUST_MIN_UINT -
+                                         ROGUE_TEXSTATE_DADJUST_ZERO_UINT)) /
+                                (1 << ROGUE_TEXSTATE_DADJUST_FRACTIONAL_BITS);
 
       word.magfilter = pvr_sampler_get_hw_filter_from_vk(dev_info, mag_filter);
       word.minfilter = pvr_sampler_get_hw_filter_from_vk(dev_info, min_filter);
@@ -3150,10 +3183,10 @@ VkResult pvr_CreateSampler(VkDevice _device,
          pvr_sampler_get_hw_addr_mode_from_vk(pCreateInfo->addressModeW);
 
       /* TODO: Figure out defines for these. */
-      if (word.addrmode_u == PVRX(TEXSTATE_ADDRMODE_FLIP))
+      if (word.addrmode_u == ROGUE_TEXSTATE_ADDRMODE_FLIP)
          sampler->descriptor.data.word3 |= 0x40000000;
 
-      if (word.addrmode_v == PVRX(TEXSTATE_ADDRMODE_FLIP))
+      if (word.addrmode_v == ROGUE_TEXSTATE_ADDRMODE_FLIP)
          sampler->descriptor.data.word3 |= 0x20000000;
 
       /* The Vulkan 1.0.205 spec says:
@@ -3162,13 +3195,13 @@ VkResult pvr_CreateSampler(VkDevice _device,
        *    VkPhysicalDeviceLimits::maxSamplerLodBias.
        */
       word.dadjust =
-         PVRX(TEXSTATE_DADJUST_ZERO_UINT) +
+         ROGUE_TEXSTATE_DADJUST_ZERO_UINT +
          util_signed_fixed(
             CLAMP(pCreateInfo->mipLodBias, min_dadjust, max_dadjust),
-            PVRX(TEXSTATE_DADJUST_FRACTIONAL_BITS));
+            ROGUE_TEXSTATE_DADJUST_FRACTIONAL_BITS);
 
       /* Anisotropy is not supported for now. */
-      word.anisoctl = PVRX(TEXSTATE_ANISOCTL_DISABLED);
+      word.anisoctl = ROGUE_TEXSTATE_ANISOCTL_DISABLED;
 
       if (PVR_HAS_QUIRK(&device->pdevice->dev_info, 51025) &&
           pCreateInfo->mipmapMode == VK_SAMPLER_MIPMAP_MODE_NEAREST) {
@@ -3186,11 +3219,11 @@ VkResult pvr_CreateSampler(VkDevice _device,
 
       min_lod = pCreateInfo->minLod + lod_rounding_bias;
       word.minlod = util_unsigned_fixed(CLAMP(min_lod, 0.0f, lod_clamp_max),
-                                        PVRX(TEXSTATE_CLAMP_FRACTIONAL_BITS));
+                                        ROGUE_TEXSTATE_CLAMP_FRACTIONAL_BITS);
 
       max_lod = pCreateInfo->maxLod + lod_rounding_bias;
       word.maxlod = util_unsigned_fixed(CLAMP(max_lod, 0.0f, lod_clamp_max),
-                                        PVRX(TEXSTATE_CLAMP_FRACTIONAL_BITS));
+                                        ROGUE_TEXSTATE_CLAMP_FRACTIONAL_BITS);
 
       word.bordercolor_index = border_color_table_index;
 
@@ -3293,6 +3326,6 @@ void pvr_GetImageMemoryRequirements2(VkDevice _device,
     */
    pMemoryRequirements->memoryRequirements.alignment = image->alignment;
    pMemoryRequirements->memoryRequirements.size =
-      ALIGN(image->size, image->alignment);
+      align64(image->size, image->alignment);
    pMemoryRequirements->memoryRequirements.memoryTypeBits = memory_types;
 }

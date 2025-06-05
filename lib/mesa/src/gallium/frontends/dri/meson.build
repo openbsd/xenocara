@@ -1,22 +1,5 @@
 # Copyright © 2017 Dylan Baker
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 inc_st_dri = include_directories('.')
 deps_for_libdri = []
@@ -36,6 +19,15 @@ files_libdri = files(
   'dri_util.h',
 )
 
+if with_platform_x11
+  deps_for_libdri += dep_xcb
+  if with_dri_platform == 'drm'
+    deps_for_libdri += [dep_xcb_dri3, dep_xcb_present, dep_xcb_sync,
+                        dep_xshmfence, dep_xcb_xfixes]
+    files_libdri += files('loader_dri3_helper.c')
+  endif
+endif
+
 if with_dri
   files_libdri += files('drisw.c')
 endif
@@ -46,17 +38,15 @@ endif
 
 libdri_c_args = []
 if with_gallium_zink and not with_platform_android
-  if get_option('glvnd')
-    libdri_c_args += '-DKOPPER_LIB_NAMES="libEGL_@0@ and libGLX_@0@"'.format(get_option('glvnd-vendor-name'))
+  if with_glvnd
+    libdri_c_args += '-DKOPPER_LIB_NAMES="libEGL_@0@ and libGLX_@0@"'.format(glvnd_vendor_name)
   else
     libdri_c_args += '-DKOPPER_LIB_NAMES="libEGL and libGLX"'
   endif
   files_libdri += files('kopper.c')
-  deps_for_libdri += idep_vulkan_wsi_defines
-endif
-
-if with_gallium_softpipe
-  libdri_c_args += '-DGALLIUM_SOFTPIPE'
+  deps_for_libdri += vulkan_wsi_deps
+else
+  files_libdri += files('kopper_stubs.c')
 endif
 
 libdri = static_library(
@@ -64,7 +54,7 @@ libdri = static_library(
   [ files_libdri, sha1_h ],
   include_directories : [
     inc_include, inc_util, inc_mesa, inc_mapi, inc_src, inc_gallium,
-    inc_gallium_aux, inc_util,  inc_gallium_drivers,
+    inc_gallium_aux, inc_util, inc_gallium_drivers, inc_loader,
   ],
   c_args : [libdri_c_args],
   gnu_symbol_visibility : 'hidden',
@@ -73,6 +63,7 @@ libdri = static_library(
     idep_mesautil,
     deps_for_libdri,
   ],
+  link_with : [libloader],
 )
 
 if with_dri

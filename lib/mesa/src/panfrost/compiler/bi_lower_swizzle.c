@@ -54,12 +54,17 @@ lower_swizzle(bi_context *ctx, bi_instr *ins, unsigned src)
    case BI_OPCODE_CSEL_V2I16:
    case BI_OPCODE_CSEL_V2S16:
    case BI_OPCODE_CSEL_V2U16:
+      break;
 
    /* Despite ostensibly being 32-bit instructions, CLPER does not
     * inherently interpret the data, so it can be used for v2f16
     * derivatives, which might require swizzle lowering */
    case BI_OPCODE_CLPER_I32:
    case BI_OPCODE_CLPER_OLD_I32:
+      if (src == 0)
+         break;
+      else
+         return;
 
    /* Similarly, CSEL.i32 consumes a boolean as a 32-bit argument. If the
     * boolean is implemented as a 16-bit integer, the swizzle is needed
@@ -206,16 +211,18 @@ bi_instr_replicates(bi_instr *I, BITSET_WORD *replicates_16)
     * sources are identical. Check this case first.
     */
    case BI_OPCODE_MKVEC_V2I16:
+   case BI_OPCODE_V2F32_TO_V2F16:
+      return bi_is_value_equiv(I->src[0], I->src[1]);
+
    case BI_OPCODE_V2F16_TO_V2S16:
    case BI_OPCODE_V2F16_TO_V2U16:
-   case BI_OPCODE_V2F32_TO_V2F16:
    case BI_OPCODE_V2S16_TO_V2F16:
    case BI_OPCODE_V2S8_TO_V2F16:
    case BI_OPCODE_V2S8_TO_V2S16:
    case BI_OPCODE_V2U16_TO_V2F16:
    case BI_OPCODE_V2U8_TO_V2F16:
    case BI_OPCODE_V2U8_TO_V2U16:
-      return bi_is_value_equiv(I->src[0], I->src[1]);
+      return true;
 
    /* 16-bit transcendentals are defined to output zero in their
     * upper half, so they do not replicate

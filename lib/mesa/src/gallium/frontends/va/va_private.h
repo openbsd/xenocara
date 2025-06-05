@@ -60,7 +60,7 @@
 #define VL_VA_DRIVER(ctx) ((vlVaDriver *)ctx->pDriverData)
 #define VL_VA_PSCREEN(ctx) (VL_VA_DRIVER(ctx)->vscreen->pscreen)
 
-#define VL_VA_MAX_IMAGE_FORMATS 16
+#define VL_VA_MAX_IMAGE_FORMATS 22
 #define VL_VA_ENC_GOP_COEFF 16
 
 #define UINT_TO_PTR(x) ((void*)(uintptr_t)(x))
@@ -84,6 +84,21 @@
 
 #define VBAQ_DISABLE (0)
 #define VBAQ_AUTO    (1)
+
+#define ENC_PACKED_HEADERS_H264 (VA_ENC_PACKED_HEADER_SEQUENCE | \
+                                 VA_ENC_PACKED_HEADER_PICTURE | \
+                                 VA_ENC_PACKED_HEADER_SLICE | \
+                                 VA_ENC_PACKED_HEADER_MISC | \
+                                 VA_ENC_PACKED_HEADER_RAW_DATA)
+#define ENC_PACKED_HEADERS_HEVC (VA_ENC_PACKED_HEADER_SEQUENCE | \
+                                 VA_ENC_PACKED_HEADER_PICTURE | \
+                                 VA_ENC_PACKED_HEADER_SLICE | \
+                                 VA_ENC_PACKED_HEADER_MISC | \
+                                 VA_ENC_PACKED_HEADER_RAW_DATA)
+#define ENC_PACKED_HEADERS_AV1  (VA_ENC_PACKED_HEADER_SEQUENCE | \
+                                 VA_ENC_PACKED_HEADER_PICTURE  | \
+                                 VA_ENC_PACKED_HEADER_MISC | \
+                                 VA_ENC_PACKED_HEADER_RAW_DATA)
 
 static inline enum pipe_video_chroma_format
 ChromaToPipe(int format)
@@ -111,6 +126,8 @@ VaFourccToPipeFormat(unsigned format)
       return PIPE_FORMAT_NV12;
    case VA_FOURCC('P','0','1','0'):
       return PIPE_FORMAT_P010;
+   case VA_FOURCC('P','0','1','2'):
+      return PIPE_FORMAT_P012;
    case VA_FOURCC('P','0','1','6'):
       return PIPE_FORMAT_P016;
    case VA_FOURCC('I','4','2','0'):
@@ -134,10 +151,20 @@ VaFourccToPipeFormat(unsigned format)
       return PIPE_FORMAT_R8G8B8X8_UNORM;
    case VA_FOURCC('R','G','B','P'):
       return PIPE_FORMAT_R8_G8_B8_UNORM;
+   case VA_FOURCC('A','R','3','0'):
+      return PIPE_FORMAT_B10G10R10A2_UNORM;
+   case VA_FOURCC('A','B','3','0'):
+      return PIPE_FORMAT_R10G10B10A2_UNORM;
+   case VA_FOURCC('X','R','3','0'):
+      return PIPE_FORMAT_B10G10R10X2_UNORM;
+   case VA_FOURCC('X','B','3','0'):
+      return PIPE_FORMAT_R10G10B10X2_UNORM;
    case VA_FOURCC('Y','8','0','0'):
       return PIPE_FORMAT_Y8_400_UNORM;
    case VA_FOURCC('4','4','4','P'):
       return PIPE_FORMAT_Y8_U8_V8_444_UNORM;
+   case VA_FOURCC('4','2','2','V'):
+      return PIPE_FORMAT_Y8_U8_V8_440_UNORM;
    default:
       assert(0);
       return PIPE_FORMAT_NONE;
@@ -152,6 +179,8 @@ PipeFormatToVaFourcc(enum pipe_format p_format)
       return VA_FOURCC('N','V','1','2');
    case PIPE_FORMAT_P010:
       return VA_FOURCC('P','0','1','0');
+   case PIPE_FORMAT_P012:
+      return VA_FOURCC('P','0','1','2');
    case PIPE_FORMAT_P016:
       return VA_FOURCC('P','0','1','6');
    case PIPE_FORMAT_IYUV:
@@ -161,7 +190,7 @@ PipeFormatToVaFourcc(enum pipe_format p_format)
    case PIPE_FORMAT_UYVY:
       return VA_FOURCC('U','Y','V','Y');
    case PIPE_FORMAT_YUYV:
-      return VA_FOURCC('Y','U','Y','V');
+      return VA_FOURCC('Y','U','Y','2');
    case PIPE_FORMAT_B8G8R8A8_UNORM:
       return VA_FOURCC('B','G','R','A');
    case PIPE_FORMAT_R8G8B8A8_UNORM:
@@ -172,12 +201,22 @@ PipeFormatToVaFourcc(enum pipe_format p_format)
       return VA_FOURCC('B','G','R','X');
    case PIPE_FORMAT_R8G8B8X8_UNORM:
       return VA_FOURCC('R','G','B','X');
-    case PIPE_FORMAT_R8_G8_B8_UNORM:
+   case PIPE_FORMAT_B10G10R10A2_UNORM:
+      return VA_FOURCC('A','R','3','0');
+   case PIPE_FORMAT_R10G10B10A2_UNORM:
+      return VA_FOURCC('A','B','3','0');
+   case PIPE_FORMAT_B10G10R10X2_UNORM:
+      return VA_FOURCC('X','R','3','0');
+   case PIPE_FORMAT_R10G10B10X2_UNORM:
+      return VA_FOURCC('X','B','3','0');
+   case PIPE_FORMAT_R8_G8_B8_UNORM:
       return VA_FOURCC('R','G','B','P');
    case PIPE_FORMAT_Y8_400_UNORM:
       return VA_FOURCC('Y','8','0','0');
    case PIPE_FORMAT_Y8_U8_V8_444_UNORM:
       return VA_FOURCC('4','4','4','P');
+   case PIPE_FORMAT_Y8_U8_V8_440_UNORM:
+      return VA_FOURCC('4','2','2','V');
    default:
       assert(0);
       return -1;
@@ -226,6 +265,12 @@ PipeToProfile(enum pipe_video_profile profile)
       return VAProfileVP9Profile2;
    case PIPE_VIDEO_PROFILE_AV1_MAIN:
       return VAProfileAV1Profile0;
+   case PIPE_VIDEO_PROFILE_AV1_PROFILE2:
+#if VA_CHECK_VERSION(1, 23, 0)
+      return VAProfileAV1Profile2;
+#else
+      return VAProfileNone;
+#endif
    case PIPE_VIDEO_PROFILE_MPEG4_AVC_EXTENDED:
    case PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH422:
    case PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH444:
@@ -281,6 +326,10 @@ ProfileToPipe(VAProfile profile)
       return PIPE_VIDEO_PROFILE_VP9_PROFILE2;
    case VAProfileAV1Profile0:
       return PIPE_VIDEO_PROFILE_AV1_MAIN;
+#if VA_CHECK_VERSION(1, 23, 0)
+   case VAProfileAV1Profile2:
+      return PIPE_VIDEO_PROFILE_AV1_PROFILE2;
+#endif
    case VAProfileNone:
        return PIPE_VIDEO_PROFILE_UNKNOWN;
    default:
@@ -297,6 +346,11 @@ typedef struct {
    vl_csc_matrix csc;
    mtx_t mutex;
    char vendor_string[256];
+
+   bool has_external_handles;
+
+   int efc_count;
+   void *last_efc_surface;
 } vlVaDriver;
 
 typedef struct {
@@ -321,13 +375,14 @@ typedef struct {
    unsigned int export_refcount;
    VABufferInfo export_state;
    unsigned int coded_size;
-   struct pipe_video_buffer *derived_image_buffer;
+   struct pipe_enc_feedback_metadata extended_metadata;
    void *feedback;
-   VASurfaceID associated_encode_input_surf;
-   VAContextID ctx;
+   struct vlVaContext *ctx;
+   struct vlVaSurface *coded_surf;
+   struct pipe_fence_handle *fence;
 } vlVaBuffer;
 
-typedef struct {
+typedef struct vlVaContext {
    struct pipe_video_codec templat, *decoder;
    struct pipe_video_buffer *target;
    union {
@@ -356,12 +411,6 @@ typedef struct {
    } mpeg4;
 
    struct {
-      unsigned sampling_factor;
-      #define MJPEG_SAMPLING_FACTOR_NV12   (0x221111)
-      #define MJPEG_SAMPLING_FACTOR_YUY2   (0x221212)
-      #define MJPEG_SAMPLING_FACTOR_YUV422 (0x211111)
-      #define MJPEG_SAMPLING_FACTOR_YUV444 (0x111111)
-      #define MJPEG_SAMPLING_FACTOR_YUV400 (0x11)
       uint8_t slice_header[MAX_MJPEG_SLICE_HEADER_SIZE];
       unsigned int slice_header_size;
    } mjpeg;
@@ -369,13 +418,22 @@ typedef struct {
    struct vl_deint_filter *deint;
    vlVaBuffer *coded_buf;
    int target_id;
-   bool first_single_submitted;
    int gop_coeff;
    bool needs_begin_frame;
-   void *blit_cs;
    int packed_header_type;
    bool packed_header_emulation_bytes;
    struct set *surfaces;
+   struct set *buffers;
+   unsigned slice_data_offset;
+   bool have_slice_params;
+   mtx_t mutex;
+
+   struct {
+      void **buffers;
+      unsigned *sizes;
+      unsigned num_buffers;
+      unsigned allocated_size;
+   } bs;
 } vlVaContext;
 
 typedef struct {
@@ -385,18 +443,16 @@ typedef struct {
    unsigned int rt_format;
 } vlVaConfig;
 
-typedef struct {
-   struct pipe_video_buffer templat, *buffer, *deint_buffer;
+typedef struct vlVaSurface {
+   struct pipe_video_buffer templat, *buffer;
    struct util_dynarray subpics; /* vlVaSubpicture */
    vlVaContext *ctx;
    vlVaBuffer *coded_buf;
-   void *feedback;
-   unsigned int frame_num_cnt;
-   bool force_flushed;
-   struct pipe_video_buffer *obsolete_buf;
-   enum pipe_format encoder_format;
    bool full_range;
-   struct pipe_fence_handle *fence;
+   struct pipe_fence_handle *fence; /* pipe_video_codec fence */
+   struct pipe_fence_handle *pipe_fence; /* pipe_context fence */
+   struct vlVaSurface *efc_surface; /* input surface for EFC */
+   bool is_dpb;
 } vlVaSurface;
 
 typedef struct {
@@ -443,6 +499,9 @@ VAStatus vlVaBeginPicture(VADriverContextP ctx, VAContextID context, VASurfaceID
 VAStatus vlVaRenderPicture(VADriverContextP ctx, VAContextID context, VABufferID *buffers, int num_buffers);
 VAStatus vlVaEndPicture(VADriverContextP ctx, VAContextID context);
 VAStatus vlVaSyncSurface(VADriverContextP ctx, VASurfaceID render_target);
+#if VA_CHECK_VERSION(1, 15, 0)
+VAStatus vlVaSyncSurface2(VADriverContextP ctx, VASurfaceID surface, uint64_t timeout_ns);
+#endif
 VAStatus vlVaQuerySurfaceStatus(VADriverContextP ctx, VASurfaceID render_target, VASurfaceStatus *status);
 VAStatus vlVaQuerySurfaceError(VADriverContextP ctx, VASurfaceID render_target,
                                VAStatus error_status, void **error_info);
@@ -511,6 +570,15 @@ VAStatus vlVaMapBuffer2(VADriverContextP ctx, VABufferID buf_id, void **pbuf, ui
 VAStatus vlVaHandleVAProcPipelineParameterBufferType(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf);
 VAStatus vlVaHandleSurfaceAllocate(vlVaDriver *drv, vlVaSurface *surface, struct pipe_video_buffer *templat,
                                    const uint64_t *modifiers, unsigned int modifiers_count);
+struct pipe_video_buffer *vlVaGetSurfaceBuffer(vlVaDriver *drv, vlVaSurface *surface);
+void vlVaSurfaceFlush(vlVaDriver *drv, vlVaSurface *surf);
+void vlVaAddRawHeader(struct util_dynarray *headers, uint8_t type, uint32_t size, uint8_t *buf,
+                      bool is_slice, uint32_t emulation_bytes_start);
+void vlVaGetBufferFeedback(vlVaBuffer *buf);
+void vlVaSetSurfaceContext(vlVaDriver *drv, vlVaSurface *surf, vlVaContext *context);
+VAStatus vlVaPostProcCompositor(vlVaDriver *drv, const VARectangle *src_region, const VARectangle *dst_region,
+                                struct pipe_video_buffer *src, struct pipe_video_buffer *dst,
+                                enum vl_compositor_deinterlace deinterlace, VAProcPipelineParameterBuffer *param);
 void vlVaGetReferenceFrame(vlVaDriver *drv, VASurfaceID surface_id, struct pipe_video_buffer **ref_frame);
 void vlVaHandlePictureParameterBufferMPEG12(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf);
 void vlVaHandleIQMatrixBufferMPEG12(vlVaContext *context, vlVaBuffer *buf);
@@ -535,11 +603,8 @@ void vlVaHandleSliceParameterBufferMJPEG(vlVaContext *context, vlVaBuffer *buf);
 void vlVaHandlePictureParameterBufferVP9(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf);
 void vlVaHandleSliceParameterBufferVP9(vlVaContext *context, vlVaBuffer *buf);
 void vlVaDecoderVP9BitstreamHeader(vlVaContext *context, vlVaBuffer *buf);
-void vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf);
-void vlVaHandleSliceParameterBufferAV1(vlVaContext *context, vlVaBuffer *buf, unsigned num_slices);
-void getEncParamPresetH264(vlVaContext *context);
-void getEncParamPresetH265(vlVaContext *context);
-void getEncParamPresetAV1(vlVaContext *context);
+VAStatus vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf);
+void vlVaHandleSliceParameterBufferAV1(vlVaContext *context, vlVaBuffer *buf);
 void vlVaHandleVAEncMiscParameterTypeQualityLevel(struct pipe_enc_quality_modes *p, vlVaQualityBits *in);
 VAStatus vlVaHandleVAEncPictureParameterBufferTypeH264(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf);
 VAStatus vlVaHandleVAEncSliceParameterBufferTypeH264(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf);
@@ -560,6 +625,7 @@ VAStatus vlVaHandleVAEncPackedHeaderDataBufferTypeHEVC(vlVaContext *context, vlV
 VAStatus vlVaHandleVAEncMiscParameterTypeQualityLevelHEVC(vlVaContext *context, VAEncMiscParameterBuffer *buf);
 VAStatus vlVaHandleVAEncMiscParameterTypeMaxFrameSizeHEVC(vlVaContext *context, VAEncMiscParameterBuffer *buf);
 VAStatus vlVaHandleVAEncMiscParameterTypeHRDHEVC(vlVaContext *context, VAEncMiscParameterBuffer *buf);
+VAStatus vlVaHandleVAEncMiscParameterTypeTemporalLayerHEVC(vlVaContext *context, VAEncMiscParameterBuffer *buf);
 
 #if VA_CHECK_VERSION(1, 16, 0)
 VAStatus vlVaHandleVAEncSequenceParameterBufferTypeAV1(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf);

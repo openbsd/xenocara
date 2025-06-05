@@ -21,8 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef BRW_NIR_RT_BUILDER_H
-#define BRW_NIR_RT_BUILDER_H
+#pragma once
 
 /* This file provides helpers to access memory based data structures that the
  * RT hardware reads/writes and their locations.
@@ -60,25 +59,18 @@ brw_nir_rt_store(nir_builder *b, nir_def *addr, unsigned align,
 }
 
 static inline nir_def *
-brw_nir_rt_load_const(nir_builder *b, unsigned components,
-                      nir_def *addr, nir_def *pred)
+brw_nir_rt_load_const(nir_builder *b, unsigned components, nir_def *addr)
 {
-   return nir_load_global_const_block_intel(b, components, addr, pred);
+   return nir_load_global_constant_uniform_block_intel(
+      b, components, 32, addr,
+      .access = ACCESS_CAN_REORDER | ACCESS_NON_WRITEABLE,
+      .align_mul = 64);
 }
 
 static inline nir_def *
 brw_load_btd_dss_id(nir_builder *b)
 {
    return nir_load_topology_id_intel(b, .base = BRW_TOPOLOGY_ID_DSS);
-}
-
-static inline nir_def *
-brw_nir_rt_load_num_simd_lanes_per_dss(nir_builder *b,
-                                       const struct intel_device_info *devinfo)
-{
-   return nir_imm_int(b, devinfo->num_thread_per_eu *
-                         devinfo->max_eus_per_subslice *
-                         16 /* The RT computation is based off SIMD16 */);
 }
 
 static inline nir_def *
@@ -185,23 +177,27 @@ brw_nir_rt_sw_hotzone_addr(nir_builder *b,
 static inline nir_def *
 brw_nir_rt_sync_stack_addr(nir_builder *b,
                            nir_def *base_mem_addr,
-                           const struct intel_device_info *devinfo)
+                           nir_def *num_dss_rt_stacks)
 {
-   /* For Ray queries (Synchronous Ray Tracing), the formula is similar but
-    * goes down from rtMemBasePtr :
+   /* Bspec 47547 (Xe) and 56936 (Xe2+) say:
+    *    For Ray queries (Synchronous Ray Tracing), the formula is similar but
+    *    goes down from rtMemBasePtr :
     *
-    *    syncBase  = RTDispatchGlobals.rtMemBasePtr
-    *              - (DSSID * NUM_SIMD_LANES_PER_DSS + SyncStackID + 1)
-    *              * syncStackSize
+    *       syncBase  = RTDispatchGlobals.rtMemBasePtr
+    *                 - (DSSID * NUM_SIMD_LANES_PER_DSS + SyncStackID + 1)
+    *                 * syncStackSize
     *
-    * We assume that we can calculate a 32-bit offset first and then add it
-    * to the 64-bit base address at the end.
+    *    We assume that we can calculate a 32-bit offset first and then add it
+    *    to the 64-bit base address at the end.
+    *
+    * However, on HSD 14020275151 it's clarified that the HW uses
+    * NUM_SYNC_STACKID_PER_DSS instead.
     */
    nir_def *offset32 =
       nir_imul(b,
                nir_iadd(b,
                         nir_imul(b, brw_load_btd_dss_id(b),
-                                    brw_nir_rt_load_num_simd_lanes_per_dss(b, devinfo)),
+                                    num_dss_rt_stacks),
                         nir_iadd_imm(b, brw_nir_rt_sync_stack_id(b), 1)),
                nir_imm_int(b, BRW_RT_SIZEOF_RAY_QUERY));
    return nir_isub(b, base_mem_addr, nir_u2u64(b, offset32));
@@ -312,7 +308,7 @@ brw_nir_rt_load_globals_addr(nir_builder *b,
                              nir_def *addr)
 {
    nir_def *data;
-   data = brw_nir_rt_load_const(b, 16, addr, nir_imm_true(b));
+   data = brw_nir_rt_load_const(b, 16, addr);
    defs->base_mem_addr = nir_pack_64_2x32(b, nir_trim_vector(b, data, 2));
 
    defs->call_stack_handler_addr =
@@ -335,7 +331,7 @@ brw_nir_rt_load_globals_addr(nir_builder *b,
    defs->sw_stack_size = nir_channel(b, data, 12);
    defs->launch_size = nir_channels(b, data, 0x7u << 13);
 
-   data = brw_nir_rt_load_const(b, 8, nir_iadd_imm(b, addr, 64), nir_imm_true(b));
+   data = brw_nir_rt_load_const(b, 8, nir_iadd_imm(b, addr, 64));
    defs->call_sbt_addr =
       nir_pack_64_2x32_split(b, nir_channel(b, data, 0),
                                 nir_extract_i16(b, nir_channel(b, data, 1),
@@ -986,5 +982,3 @@ brw_nir_rt_acceleration_structure_to_root_node(nir_builder *b,
 
    return nir_if_phi(b, null_node_ptr, root_node_ptr);
 }
-
-#endif /* BRW_NIR_RT_BUILDER_H */

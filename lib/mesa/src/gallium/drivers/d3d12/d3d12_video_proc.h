@@ -53,14 +53,14 @@ d3d12_video_processor_begin_frame(struct pipe_video_codec * codec,
 /**
  * Perform post-process effect
  */
-void
+int
 d3d12_video_processor_process_frame(struct pipe_video_codec *codec,
                         struct pipe_video_buffer *input_texture,
                         const struct pipe_vpp_desc *process_properties);
 /**
  * end processing of the current frame
  */
-void
+int
 d3d12_video_processor_end_frame(struct pipe_video_codec * codec,
                               struct pipe_video_buffer *target,
                               struct pipe_picture_desc *picture);
@@ -150,12 +150,12 @@ d3d12_video_processor_ensure_fence_finished(struct pipe_video_codec *codec, uint
 bool
 d3d12_video_processor_sync_completion(struct pipe_video_codec *codec, uint64_t fenceValueToWaitOn, uint64_t timeout_ns);
 
-uint64_t
+unsigned int
 d3d12_video_processor_pool_current_index(struct d3d12_video_processor *codec);
 
-int d3d12_video_processor_get_processor_fence(struct pipe_video_codec *codec,
-                                              struct pipe_fence_handle *fence,
-                                              uint64_t timeout);
+int d3d12_video_processor_fence_wait(struct pipe_video_codec *codec,
+                                     struct pipe_fence_handle *fence,
+                                     uint64_t timeout);
 
 // We need enough to so next item in pipeline doesn't ask for a fence value we lost
 const uint64_t D3D12_VIDEO_PROC_ASYNC_DEPTH = 36;

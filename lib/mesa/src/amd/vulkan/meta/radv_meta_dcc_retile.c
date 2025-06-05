@@ -1,35 +1,19 @@
 /*
  * Copyright © 2021 Google
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #define AC_SURFACE_INCLUDE_NIR
 #include "ac_surface.h"
 
 #include "radv_meta.h"
-#include "radv_private.h"
+#include "vk_common_entrypoints.h"
 
 static nir_shader *
 build_dcc_retile_compute_shader(struct radv_device *dev, struct radeon_surf *surf)
 {
+   const struct radv_physical_device *pdev = radv_device_physical(dev);
    enum glsl_sampler_dim dim = GLSL_SAMPLER_DIM_BUF;
    const struct glsl_type *buf_type = glsl_image_type(dim, false, GLSL_TYPE_UINT);
    nir_builder b = radv_meta_init_shader(dev, MESA_SHADER_COMPUTE, "dcc_retile_compute");
@@ -59,12 +43,12 @@ build_dcc_retile_compute_shader(struct radv_device *dev, struct radeon_surf *sur
    coord =
       nir_imul(&b, coord, nir_imm_ivec2(&b, surf->u.gfx9.color.dcc_block_width, surf->u.gfx9.color.dcc_block_height));
 
-   nir_def *src = ac_nir_dcc_addr_from_coord(&b, &dev->physical_device->rad_info, surf->bpe,
-                                             &surf->u.gfx9.color.dcc_equation, src_dcc_pitch, src_dcc_height, zero,
-                                             nir_channel(&b, coord, 0), nir_channel(&b, coord, 1), zero, zero, zero);
-   nir_def *dst = ac_nir_dcc_addr_from_coord(
-      &b, &dev->physical_device->rad_info, surf->bpe, &surf->u.gfx9.color.display_dcc_equation, dst_dcc_pitch,
-      dst_dcc_height, zero, nir_channel(&b, coord, 0), nir_channel(&b, coord, 1), zero, zero, zero);
+   nir_def *src = ac_nir_dcc_addr_from_coord(&b, &pdev->info, surf->bpe, &surf->u.gfx9.color.dcc_equation,
+                                             src_dcc_pitch, src_dcc_height, zero, nir_channel(&b, coord, 0),
+                                             nir_channel(&b, coord, 1), zero, zero, zero);
+   nir_def *dst = ac_nir_dcc_addr_from_coord(&b, &pdev->info, surf->bpe, &surf->u.gfx9.color.display_dcc_equation,
+                                             dst_dcc_pitch, dst_dcc_height, zero, nir_channel(&b, coord, 0),
+                                             nir_channel(&b, coord, 1), zero, zero, zero);
 
    nir_def *dcc_val = nir_image_deref_load(&b, 1, 32, input_dcc_ref, nir_vec4(&b, src, src, src, src),
                                            nir_undef(&b, 1, 32), nir_imm_int(&b, 0), .image_dim = dim);
@@ -75,21 +59,47 @@ build_dcc_retile_compute_shader(struct radv_device *dev, struct radeon_surf *sur
    return b.shader;
 }
 
-void
-radv_device_finish_meta_dcc_retile_state(struct radv_device *device)
+static VkResult
+get_pipeline_layout(struct radv_device *device, VkPipelineLayout *layout_out)
 {
-   struct radv_meta_state *state = &device->meta_state;
+   enum radv_meta_object_key_type key = RADV_META_OBJECT_KEY_DCC_RETILE;
 
-   for (unsigned i = 0; i < ARRAY_SIZE(state->dcc_retile.pipeline); i++) {
-      radv_DestroyPipeline(radv_device_to_handle(device), state->dcc_retile.pipeline[i], &state->alloc);
-   }
-   radv_DestroyPipelineLayout(radv_device_to_handle(device), state->dcc_retile.p_layout, &state->alloc);
-   device->vk.dispatch_table.DestroyDescriptorSetLayout(radv_device_to_handle(device), state->dcc_retile.ds_layout,
-                                                        &state->alloc);
+   const VkDescriptorSetLayoutBinding bindings[] = {
+      {
+         .binding = 0,
+         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,
+         .descriptorCount = 1,
+         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+      },
+      {
+         .binding = 1,
+         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,
+         .descriptorCount = 1,
+         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+      },
 
-   /* Reset for next finish. */
-   memset(&state->dcc_retile, 0, sizeof(state->dcc_retile));
+   };
+
+   const VkDescriptorSetLayoutCreateInfo desc_info = {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT,
+      .bindingCount = 2,
+      .pBindings = bindings,
+   };
+
+   const VkPushConstantRange pc_range = {
+      .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+      .size = 16,
+   };
+
+   return vk_meta_get_pipeline_layout(&device->vk, &device->meta_state.device, &desc_info, &pc_range, &key, sizeof(key),
+                                      layout_out);
 }
+
+struct radv_dcc_retile_key {
+   enum radv_meta_object_key_type type;
+   uint32_t swizzle;
+};
 
 /*
  * This take a surface, but the only things used are:
@@ -100,48 +110,30 @@ radv_device_finish_meta_dcc_retile_state(struct radv_device *device)
  * BPE is always 4 at the moment and the rest is derived from the tilemode.
  */
 static VkResult
-radv_device_init_meta_dcc_retile_state(struct radv_device *device, struct radeon_surf *surf)
+get_pipeline(struct radv_device *device, struct radv_image *image, VkPipeline *pipeline_out,
+             VkPipelineLayout *layout_out)
 {
-   VkResult result = VK_SUCCESS;
-   nir_shader *cs = build_dcc_retile_compute_shader(device, surf);
+   const unsigned swizzle_mode = image->planes[0].surface.u.gfx9.swizzle_mode;
+   struct radv_dcc_retile_key key;
+   VkResult result;
 
-   VkDescriptorSetLayoutCreateInfo ds_create_info = {.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-                                                     .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR,
-                                                     .bindingCount = 2,
-                                                     .pBindings = (VkDescriptorSetLayoutBinding[]){
-                                                        {.binding = 0,
-                                                         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,
-                                                         .descriptorCount = 1,
-                                                         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-                                                         .pImmutableSamplers = NULL},
-                                                        {.binding = 1,
-                                                         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,
-                                                         .descriptorCount = 1,
-                                                         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-                                                         .pImmutableSamplers = NULL},
-                                                     }};
-
-   result = radv_CreateDescriptorSetLayout(radv_device_to_handle(device), &ds_create_info, &device->meta_state.alloc,
-                                           &device->meta_state.dcc_retile.ds_layout);
+   result = get_pipeline_layout(device, layout_out);
    if (result != VK_SUCCESS)
-      goto cleanup;
+      return result;
 
-   VkPipelineLayoutCreateInfo pl_create_info = {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-      .setLayoutCount = 1,
-      .pSetLayouts = &device->meta_state.dcc_retile.ds_layout,
-      .pushConstantRangeCount = 1,
-      .pPushConstantRanges = &(VkPushConstantRange){VK_SHADER_STAGE_COMPUTE_BIT, 0, 16},
-   };
+   memset(&key, 0, sizeof(key));
+   key.type = RADV_META_OBJECT_KEY_DCC_RETILE;
+   key.swizzle = swizzle_mode;
 
-   result = radv_CreatePipelineLayout(radv_device_to_handle(device), &pl_create_info, &device->meta_state.alloc,
-                                      &device->meta_state.dcc_retile.p_layout);
-   if (result != VK_SUCCESS)
-      goto cleanup;
+   VkPipeline pipeline_from_cache = vk_meta_lookup_pipeline(&device->meta_state.device, &key, sizeof(key));
+   if (pipeline_from_cache != VK_NULL_HANDLE) {
+      *pipeline_out = pipeline_from_cache;
+      return VK_SUCCESS;
+   }
 
-   /* compute shader */
+   nir_shader *cs = build_dcc_retile_compute_shader(device, &image->planes[0].surface);
 
-   VkPipelineShaderStageCreateInfo pipeline_shader_stage = {
+   const VkPipelineShaderStageCreateInfo stage_info = {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
       .stage = VK_SHADER_STAGE_COMPUTE_BIT,
       .module = vk_shader_module_handle_from_nir(cs),
@@ -149,19 +141,16 @@ radv_device_init_meta_dcc_retile_state(struct radv_device *device, struct radeon
       .pSpecializationInfo = NULL,
    };
 
-   VkComputePipelineCreateInfo vk_pipeline_info = {
+   const VkComputePipelineCreateInfo pipeline_info = {
       .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
-      .stage = pipeline_shader_stage,
+      .stage = stage_info,
       .flags = 0,
-      .layout = device->meta_state.dcc_retile.p_layout,
+      .layout = *layout_out,
    };
 
-   result = radv_compute_pipeline_create(radv_device_to_handle(device), device->meta_state.cache, &vk_pipeline_info,
-                                         NULL, &device->meta_state.dcc_retile.pipeline[surf->u.gfx9.swizzle_mode]);
-   if (result != VK_SUCCESS)
-      goto cleanup;
+   result = vk_meta_create_compute_pipeline(&device->vk, &device->meta_state.device, &pipeline_info, &key, sizeof(key),
+                                            pipeline_out);
 
-cleanup:
    ralloc_free(cs);
    return result;
 }
@@ -170,39 +159,36 @@ void
 radv_retile_dcc(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image)
 {
    struct radv_meta_saved_state saved_state;
-   struct radv_device *device = cmd_buffer->device;
+   struct radv_device *device = radv_cmd_buffer_device(cmd_buffer);
    struct radv_buffer buffer;
+   VkPipelineLayout layout;
+   VkPipeline pipeline;
+   VkResult result;
 
    assert(image->vk.image_type == VK_IMAGE_TYPE_2D);
    assert(image->vk.array_layers == 1 && image->vk.mip_levels == 1);
 
    struct radv_cmd_state *state = &cmd_buffer->state;
 
-   state->flush_bits |= radv_dst_access_flush(cmd_buffer, VK_ACCESS_2_SHADER_READ_BIT, image) |
-                        radv_dst_access_flush(cmd_buffer, VK_ACCESS_2_SHADER_WRITE_BIT, image);
-
-   unsigned swizzle_mode = image->planes[0].surface.u.gfx9.swizzle_mode;
-
-   /* Compile pipelines if not already done so. */
-   if (!cmd_buffer->device->meta_state.dcc_retile.pipeline[swizzle_mode]) {
-      VkResult ret = radv_device_init_meta_dcc_retile_state(cmd_buffer->device, &image->planes[0].surface);
-      if (ret != VK_SUCCESS) {
-         vk_command_buffer_set_error(&cmd_buffer->vk, ret);
-         return;
-      }
+   result = get_pipeline(device, image, &pipeline, &layout);
+   if (result != VK_SUCCESS) {
+      vk_command_buffer_set_error(&cmd_buffer->vk, result);
+      return;
    }
+
+   state->flush_bits |= radv_dst_access_flush(cmd_buffer, VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+                                              VK_ACCESS_2_SHADER_READ_BIT, 0, image, NULL);
 
    radv_meta_save(&saved_state, cmd_buffer,
                   RADV_META_SAVE_DESCRIPTORS | RADV_META_SAVE_COMPUTE_PIPELINE | RADV_META_SAVE_CONSTANTS);
 
-   radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_COMPUTE,
-                        device->meta_state.dcc_retile.pipeline[swizzle_mode]);
+   radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 
    radv_buffer_init(&buffer, device, image->bindings[0].bo, image->size, image->bindings[0].offset);
 
    struct radv_buffer_view views[2];
    VkBufferView view_handles[2];
-   radv_buffer_view_init(views, cmd_buffer->device,
+   radv_buffer_view_init(views, device,
                          &(VkBufferViewCreateInfo){
                             .sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
                             .buffer = radv_buffer_to_handle(&buffer),
@@ -210,7 +196,7 @@ radv_retile_dcc(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image)
                             .range = image->planes[0].surface.meta_size,
                             .format = VK_FORMAT_R8_UINT,
                          });
-   radv_buffer_view_init(views + 1, cmd_buffer->device,
+   radv_buffer_view_init(views + 1, device,
                          &(VkBufferViewCreateInfo){
                             .sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
                             .buffer = radv_buffer_to_handle(&buffer),
@@ -221,9 +207,7 @@ radv_retile_dcc(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image)
    for (unsigned i = 0; i < 2; ++i)
       view_handles[i] = radv_buffer_view_to_handle(&views[i]);
 
-   radv_meta_push_descriptor_set(cmd_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, device->meta_state.dcc_retile.p_layout,
-                                 0, /* set */
-                                 2, /* descriptorWriteCount */
+   radv_meta_push_descriptor_set(cmd_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, layout, 0, 2,
                                  (VkWriteDescriptorSet[]){
                                     {
                                        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
@@ -255,8 +239,8 @@ radv_retile_dcc(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image)
       image->planes[0].surface.u.gfx9.color.display_dcc_pitch_max + 1,
       image->planes[0].surface.u.gfx9.color.display_dcc_height,
    };
-   radv_CmdPushConstants(radv_cmd_buffer_to_handle(cmd_buffer), device->meta_state.dcc_retile.p_layout,
-                         VK_SHADER_STAGE_COMPUTE_BIT, 0, 16, constants);
+   vk_common_CmdPushConstants(radv_cmd_buffer_to_handle(cmd_buffer), layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 16,
+                              constants);
 
    radv_unaligned_dispatch(cmd_buffer, dcc_width, dcc_height, 1);
 
@@ -267,5 +251,6 @@ radv_retile_dcc(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image)
    radv_meta_restore(&saved_state, cmd_buffer);
 
    state->flush_bits |=
-      RADV_CMD_FLAG_CS_PARTIAL_FLUSH | radv_src_access_flush(cmd_buffer, VK_ACCESS_2_SHADER_WRITE_BIT, image);
+      RADV_CMD_FLAG_CS_PARTIAL_FLUSH | radv_src_access_flush(cmd_buffer, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+                                                             VK_ACCESS_2_SHADER_WRITE_BIT, 0, image, NULL);
 }

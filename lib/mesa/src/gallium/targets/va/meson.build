@@ -1,22 +1,5 @@
 # Copyright © 2017-2018 Intel Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 # TODO: support non-static targets
 # Static targets are always enabled in autotools (unless you modify
@@ -26,9 +9,11 @@ va_link_args = []
 va_link_depends = []
 va_drivers = []
 
+va_sym = configure_file(input : 'va.sym.in', output : 'va.sym', configuration : sym_config)
+
 if with_ld_version_script
-  va_link_args += ['-Wl,--version-script', join_paths(meson.current_source_dir(), 'va.sym')]
-  va_link_depends += files('va.sym')
+  va_link_args += ['-Wl,--version-script', join_paths(meson.current_build_dir(), 'va.sym')]
+  va_link_depends += va_sym
 endif
 if with_ld_dynamic_list
   va_link_args += ['-Wl,--dynamic-list', join_paths(meson.current_source_dir(), '../dri.dyn')]
@@ -43,6 +28,8 @@ link_with_libva_gallium = [
 if with_glx == 'xlib'
   link_with_libva_gallium += [libws_xlib]
 endif
+
+devenv.set('LIBVA_DRIVERS_PATH', meson.current_build_dir())
 
 if host_machine.system() == 'windows'
   link_with_libva_gallium += [libwsgdi]
@@ -65,7 +52,7 @@ if host_machine.system() == 'windows'
 
   libva_gallium = shared_library(
     'vaon12_drv_video',
-    'target.c',
+    'va_target.c',
     link_args : [va_link_args, ld_args_gc_sections, ld_args_build_id],
     vs_module_defs : vaon12_def,
     include_directories : [
@@ -82,7 +69,7 @@ if host_machine.system() == 'windows'
 else
   libva_gallium = shared_library(
     'gallium_drv_video',
-    'target.c',
+    'va_target.c',
     gnu_symbol_visibility : 'hidden',
     link_args : [va_link_args, ld_args_gc_sections, ld_args_build_id],
     include_directories : [
@@ -95,10 +82,9 @@ else
       idep_mesautil,
     ],
     link_depends : va_link_depends,
-    # Will be deleted during installation, see install_megadrivers.py
     install : true,
     install_dir : va_drivers_path,
-    name_suffix : 'so',
+    name_suffix : libname_suffix,
   )
 
   foreach d : [[with_gallium_r600, 'r600'],
@@ -111,11 +97,13 @@ else
     endif
   endforeach
 
-  meson.add_install_script(
-    install_megadrivers_py.full_path(),
-    libva_gallium.full_path(),
-    va_drivers_path,
-    va_drivers,
-    install_tag : 'runtime',
-  )
+  if va_drivers.length() > 0
+    meson.add_install_script(
+      install_megadrivers,
+      libva_gallium.full_path(),
+      va_drivers_path,
+      va_drivers,
+      install_tag : 'runtime',
+    )
+  endif
 endif

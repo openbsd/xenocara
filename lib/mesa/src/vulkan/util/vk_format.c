@@ -22,6 +22,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan_android.h>
+
 #include "vk_format.h"
 
 #include "vk_enum_defines.h"
@@ -257,26 +260,30 @@ const enum pipe_format vk_format_map[] = {
 };
 
 enum pipe_format
-vk_format_to_pipe_format(enum VkFormat vkformat)
+vk_format_to_pipe_format(VkFormat vkformat)
 {
    if (vkformat >= ARRAY_SIZE(vk_format_map)) {
       switch (vkformat) {
       case VK_FORMAT_R10X6_UNORM_PACK16:
-         return PIPE_FORMAT_R16_UNORM;
+         return PIPE_FORMAT_X6R10_UNORM;
+      case VK_FORMAT_R12X4_UNORM_PACK16:
+         return PIPE_FORMAT_X4R12_UNORM;
       case VK_FORMAT_R10X6G10X6_UNORM_2PACK16:
-         return PIPE_FORMAT_R16G16_UNORM;
+         return PIPE_FORMAT_X6R10X6G10_UNORM;
+      case VK_FORMAT_R12X4G12X4_UNORM_2PACK16:
+         return PIPE_FORMAT_X4R12X4G12_UNORM;
       case VK_FORMAT_G8B8G8R8_422_UNORM:
          return PIPE_FORMAT_G8B8_G8R8_UNORM;
       case VK_FORMAT_B8G8R8G8_422_UNORM:
          return PIPE_FORMAT_B8G8_R8G8_UNORM;
       case VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM:
-         return PIPE_FORMAT_IYUV;
+         return PIPE_FORMAT_G8_B8_R8_420_UNORM;
       case VK_FORMAT_G8_B8R8_2PLANE_420_UNORM:
-         return PIPE_FORMAT_NV12;
+         return PIPE_FORMAT_G8_B8R8_420_UNORM;
       case VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM:
          return PIPE_FORMAT_Y8_U8_V8_422_UNORM;
       case VK_FORMAT_G8_B8R8_2PLANE_422_UNORM:
-         return PIPE_FORMAT_Y8_U8V8_422_UNORM;
+         return PIPE_FORMAT_NV16;
       case VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM:
          return PIPE_FORMAT_Y8_U8_V8_444_UNORM;
       case VK_FORMAT_G16_B16_R16_3PLANE_420_UNORM:
@@ -290,7 +297,9 @@ vk_format_to_pipe_format(enum VkFormat vkformat)
       case VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM:
          return PIPE_FORMAT_Y16_U16_V16_444_UNORM;
       case VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16:
-         return PIPE_FORMAT_P010;
+         return PIPE_FORMAT_X6G10_X6B10X6R10_420_UNORM;
+      case VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16:
+         return PIPE_FORMAT_X4G12_X4B12X4R12_420_UNORM;
       case VK_FORMAT_A4R4G4B4_UNORM_PACK16:
          return PIPE_FORMAT_B4G4R4A4_UNORM;
       case VK_FORMAT_A4B4G4R4_UNORM_PACK16:
@@ -415,6 +424,20 @@ static const VkFormat formats[PIPE_FORMAT_COUNT] = {
 
    [PIPE_FORMAT_R11G11B10_FLOAT] = VK_FORMAT_B10G11R11_UFLOAT_PACK32,
    [PIPE_FORMAT_R9G9B9E5_FLOAT] = VK_FORMAT_E5B9G9R9_UFLOAT_PACK32,
+
+   [PIPE_FORMAT_X6R10_UNORM] = VK_FORMAT_R10X6_UNORM_PACK16,
+   [PIPE_FORMAT_X4R12_UNORM] = VK_FORMAT_R12X4_UNORM_PACK16,
+   [PIPE_FORMAT_X6R10X6G10_UNORM] = VK_FORMAT_R10X6G10X6_UNORM_2PACK16,
+   [PIPE_FORMAT_X4R12X4G12_UNORM] = VK_FORMAT_R12X4G12X4_UNORM_2PACK16,
+   [PIPE_FORMAT_G8B8_G8R8_UNORM] = VK_FORMAT_G8B8G8R8_422_UNORM,
+   [PIPE_FORMAT_B8G8_R8G8_UNORM] = VK_FORMAT_B8G8R8G8_422_UNORM,
+   [PIPE_FORMAT_G8_B8_R8_420_UNORM] = VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM,
+   [PIPE_FORMAT_G8_B8R8_420_UNORM] = VK_FORMAT_G8_B8R8_2PLANE_420_UNORM,
+   [PIPE_FORMAT_X6G10_X6B10X6R10_420_UNORM] = VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16,
+   [PIPE_FORMAT_X4G12_X4B12X4R12_420_UNORM] = VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16,
+   [PIPE_FORMAT_A8_UNORM] = VK_FORMAT_A8_UNORM_KHR,
+   [PIPE_FORMAT_R5G5B5A1_UNORM] = VK_FORMAT_A1B5G5R5_UNORM_PACK16_KHR,
+
    /* ARB_vertex_type_2_10_10_10 */
    [PIPE_FORMAT_R10G10B10A2_UNORM] = VK_FORMAT_A2B10G10R10_UNORM_PACK32,
    [PIPE_FORMAT_R10G10B10A2_SNORM] = VK_FORMAT_A2B10G10R10_SNORM_PACK32,
@@ -426,6 +449,7 @@ static const VkFormat formats[PIPE_FORMAT_COUNT] = {
    [PIPE_FORMAT_B10G10R10A2_SSCALED] = VK_FORMAT_A2R10G10B10_SSCALED_PACK32,
    [PIPE_FORMAT_R10G10B10A2_UINT] = VK_FORMAT_A2B10G10R10_UINT_PACK32,
    [PIPE_FORMAT_B10G10R10A2_UINT] = VK_FORMAT_A2R10G10B10_UINT_PACK32,
+   [PIPE_FORMAT_R10G10B10A2_SINT] = VK_FORMAT_A2B10G10R10_SINT_PACK32,
    [PIPE_FORMAT_B10G10R10A2_SINT] = VK_FORMAT_A2R10G10B10_SINT_PACK32,
 
    // depth/stencil formats
@@ -548,10 +572,10 @@ vk_format_aspects(VkFormat format)
    case VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16:
    case VK_FORMAT_G16_B16R16_2PLANE_420_UNORM:
    case VK_FORMAT_G16_B16R16_2PLANE_422_UNORM:
-   case VK_FORMAT_G8_B8R8_2PLANE_444_UNORM_EXT:
-   case VK_FORMAT_G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16_EXT:
-   case VK_FORMAT_G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16_EXT:
-   case VK_FORMAT_G16_B16R16_2PLANE_444_UNORM_EXT:
+   case VK_FORMAT_G8_B8R8_2PLANE_444_UNORM:
+   case VK_FORMAT_G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16:
+   case VK_FORMAT_G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16:
+   case VK_FORMAT_G16_B16R16_2PLANE_444_UNORM:
       return (VK_IMAGE_ASPECT_PLANE_0_BIT |
               VK_IMAGE_ASPECT_PLANE_1_BIT);
 
@@ -691,8 +715,6 @@ static const struct vk_format_ycbcr_info ycbcr_infos[] = {
              c_plane(VK_FORMAT_R8_UNORM, YCBCR_SWIZ(B, ZERO, ZERO, ZERO), 1, 1),
              c_plane(VK_FORMAT_R8_UNORM, YCBCR_SWIZ(R, ZERO, ZERO, ZERO), 1, 1)),
 
-   fmt_unsupported(VK_FORMAT_R10X6_UNORM_PACK16),
-   fmt_unsupported(VK_FORMAT_R10X6G10X6_UNORM_2PACK16),
    fmt_unsupported(VK_FORMAT_R10X6G10X6B10X6A10X6_UNORM_4PACK16),
 
    ycbcr_fmt(VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16, 1,
@@ -719,8 +741,6 @@ static const struct vk_format_ycbcr_info ycbcr_infos[] = {
              c_plane(VK_FORMAT_R10X6_UNORM_PACK16, YCBCR_SWIZ(B, ZERO, ZERO, ZERO), 1, 1),
              c_plane(VK_FORMAT_R10X6_UNORM_PACK16, YCBCR_SWIZ(R, ZERO, ZERO, ZERO), 1, 1)),
 
-   fmt_unsupported(VK_FORMAT_R12X4_UNORM_PACK16),
-   fmt_unsupported(VK_FORMAT_R12X4G12X4_UNORM_2PACK16),
    fmt_unsupported(VK_FORMAT_R12X4G12X4B12X4A12X4_UNORM_4PACK16),
 
    ycbcr_fmt(VK_FORMAT_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16, 1,
@@ -773,19 +793,19 @@ static const struct vk_format_ycbcr_info ycbcr_infos[] = {
 };
 
 static const struct vk_format_ycbcr_info ycbcr_2plane_444_infos[] = {
-   ycbcr_fmt(VK_FORMAT_G8_B8R8_2PLANE_444_UNORM_EXT, 2,
+   ycbcr_fmt(VK_FORMAT_G8_B8R8_2PLANE_444_UNORM, 2,
              y_plane(VK_FORMAT_R8_UNORM, YCBCR_SWIZ(G, ZERO, ZERO, ZERO), 1, 1),
              c_plane(VK_FORMAT_R8G8_UNORM, YCBCR_SWIZ(B, R, ZERO, ZERO), 1, 1)),
 
-   ycbcr_fmt(VK_FORMAT_G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16_EXT, 2,
+   ycbcr_fmt(VK_FORMAT_G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16, 2,
              y_plane(VK_FORMAT_R10X6_UNORM_PACK16, YCBCR_SWIZ(G, ZERO, ZERO, ZERO), 1, 1),
              c_plane(VK_FORMAT_R10X6G10X6_UNORM_2PACK16, YCBCR_SWIZ(B, R, ZERO, ZERO), 1, 1)),
 
-   ycbcr_fmt(VK_FORMAT_G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16_EXT, 2,
+   ycbcr_fmt(VK_FORMAT_G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16, 2,
              y_plane(VK_FORMAT_R12X4_UNORM_PACK16, YCBCR_SWIZ(G, ZERO, ZERO, ZERO), 1, 1),
              c_plane(VK_FORMAT_R12X4G12X4_UNORM_2PACK16, YCBCR_SWIZ(B, R, ZERO, ZERO), 1, 1)),
 
-   ycbcr_fmt(VK_FORMAT_G16_B16R16_2PLANE_444_UNORM_EXT, 2,
+   ycbcr_fmt(VK_FORMAT_G16_B16R16_2PLANE_444_UNORM, 2,
              y_plane(VK_FORMAT_R16_UNORM, YCBCR_SWIZ(G, ZERO, ZERO, ZERO), 1, 1),
              c_plane(VK_FORMAT_R16G16_UNORM, YCBCR_SWIZ(B, R, ZERO, ZERO), 1, 1)),
 };
@@ -846,4 +866,18 @@ vk_swizzle_color_value(VkClearColorValue color,
       swizzled_color_component(&color, swizzle.b, 2, is_int),
       swizzled_color_component(&color, swizzle.a, 3, is_int),
    }};
+}
+
+VkFormat
+vk_select_android_external_format(const void *next, VkFormat default_format)
+{
+   const VkExternalFormatANDROID *android_format = vk_find_struct_const(next, EXTERNAL_FORMAT_ANDROID);
+
+   if (android_format && android_format->externalFormat) {
+      assert(default_format == VK_FORMAT_UNDEFINED);
+      assert((VkFormat)android_format->externalFormat != VK_FORMAT_UNDEFINED);
+      return (VkFormat)android_format->externalFormat;
+   }
+
+   return default_format;
 }

@@ -49,22 +49,6 @@ type_size(const struct glsl_type *type, bool bindless)
    return glsl_count_attribute_slots(type, false);
 }
 
-static void
-function_temp_type_info(const struct glsl_type *type, unsigned *size, unsigned *align)
-{
-   assert(glsl_type_is_vector_or_scalar(type));
-
-   if (glsl_type_is_scalar(type)) {
-      glsl_get_natural_size_align_bytes(type, size, align);
-   } else {
-      unsigned comp_size = glsl_type_is_boolean(type) ? 4 : glsl_get_bit_size(type) / 8;
-      unsigned length = glsl_get_vector_elements(type);
-
-      *size = comp_size * length;
-      *align = 0x10;
-   }
-}
-
 bool
 nv50_nir_lower_load_user_clip_plane_cb(nir_builder *b, nir_intrinsic_instr *intrin, void *params)
 {
@@ -80,8 +64,7 @@ nv50_nir_lower_load_user_clip_plane_cb(nir_builder *b, nir_intrinsic_instr *intr
       nir_load_ubo(b, 4, 32, nir_imm_int(b, info->io.auxCBSlot),
                    nir_imm_int(b, offset), .range = ~0u);
 
-   nir_def_rewrite_uses(&intrin->def, replacement);
-   nir_instr_remove(&intrin->instr);
+   nir_def_replace(&intrin->def, replacement);
 
    return true;
 }
@@ -89,7 +72,7 @@ nv50_nir_lower_load_user_clip_plane_cb(nir_builder *b, nir_intrinsic_instr *intr
 bool
 nv50_nir_lower_load_user_clip_plane(nir_shader *nir, struct nv50_ir_prog_info *info) {
    return nir_shader_intrinsics_pass(nir, nv50_nir_lower_load_user_clip_plane_cb,
-                                     nir_metadata_block_index | nir_metadata_dominance,
+                                     nir_metadata_control_flow,
                                      info);
 }
 
@@ -141,9 +124,33 @@ private:
                          uint8_t c, Value *indirect0 = NULL,
                          Value *indirect1 = NULL, bool patch = false,
                          CacheMode cache=CACHE_CA);
+   Instruction *loadVector(nir_intrinsic_instr *insn,
+                           uint8_t buffer, Value *indirectBuffer,
+                           uint32_t offset, Value *indirectOffset);
    void storeTo(nir_intrinsic_instr *, DataFile, operation, DataType,
                 Value *src, uint8_t idx, uint8_t c, Value *indirect0 = NULL,
                 Value *indirect1 = NULL);
+   Instruction *storeVector(nir_intrinsic_instr *insn,
+                            uint8_t buffer, Value *indirectBuffer,
+                            uint32_t offset, Value *indirectOffset);
+
+   static bool memVectorizeCb(unsigned align_mul,
+                              unsigned align_offset,
+                              unsigned bit_size,
+                              unsigned num_components,
+                              int64_t hole_size,
+                              nir_intrinsic_instr *low,
+                              nir_intrinsic_instr *high,
+                              void *cb_data);
+   static nir_mem_access_size_align
+   getMemAccessSizeAlign(nir_intrinsic_op intrin,
+                         uint8_t bytes,
+                         uint8_t bit_size,
+                         uint32_t align_mul,
+                         uint32_t align_offset,
+                         bool offset_is_const,
+                         enum gl_access_qualifier access,
+                         const void *cb_data);
 
    bool isFloatType(nir_alu_type);
    bool isSignedType(nir_alu_type);
@@ -154,7 +161,7 @@ private:
    DataType getDType(nir_intrinsic_instr *);
    DataType getDType(nir_op, uint8_t);
 
-   DataFile getFile(nir_intrinsic_op);
+   DataFile getFile(nir_intrinsic_op) const;
 
    std::vector<DataType> getSTypes(nir_alu_instr *);
    DataType getSType(nir_src &, bool isFloat, bool isSigned);
@@ -190,6 +197,8 @@ private:
 
    // tex stuff
    unsigned int getNIRArgCount(TexInstruction::Target&);
+
+   void runOptLoop();
 
    struct nv50_ir_prog_info *info;
    struct nv50_ir_prog_info_out *info_out;
@@ -367,9 +376,16 @@ Converter::getSType(nir_src &src, bool isFloat, bool isSigned)
 }
 
 DataFile
-Converter::getFile(nir_intrinsic_op op)
+Converter::getFile(nir_intrinsic_op op) const
 {
    switch (op) {
+   case nir_intrinsic_load_uniform:
+   case nir_intrinsic_load_ubo:
+   case nir_intrinsic_ldc_nv:
+      return FILE_MEMORY_CONST;
+   case nir_intrinsic_load_ssbo:
+   case nir_intrinsic_store_ssbo:
+      return FILE_MEMORY_BUFFER;
    case nir_intrinsic_load_global:
    case nir_intrinsic_store_global:
    case nir_intrinsic_load_global_constant:
@@ -380,10 +396,18 @@ Converter::getFile(nir_intrinsic_op op)
    case nir_intrinsic_load_shared:
    case nir_intrinsic_store_shared:
       return FILE_MEMORY_SHARED;
+   case nir_intrinsic_load_input:
+   case nir_intrinsic_load_interpolated_input:
    case nir_intrinsic_load_kernel_input:
+   case nir_intrinsic_load_per_vertex_input:
       return FILE_SHADER_INPUT;
+   case nir_intrinsic_load_output:
+   case nir_intrinsic_load_per_vertex_output:
+   case nir_intrinsic_store_output:
+   case nir_intrinsic_store_per_vertex_output:
+      return FILE_SHADER_OUTPUT;
    default:
-      ERROR("couldn't get DateFile for op %s\n", nir_intrinsic_infos[op].name);
+      ERROR("couldn't get DataFile for op %s\n", nir_intrinsic_infos[op].name);
       assert(false);
    }
    return FILE_NULL;
@@ -432,14 +456,6 @@ Converter::getOperation(nir_op op)
    case nir_op_u2u32:
    case nir_op_u2u64:
       return OP_CVT;
-   case nir_op_fddx:
-   case nir_op_fddx_coarse:
-   case nir_op_fddx_fine:
-      return OP_DFDX;
-   case nir_op_fddy:
-   case nir_op_fddy_coarse:
-   case nir_op_fddy_fine:
-      return OP_DFDY;
    case nir_op_fdiv:
    case nir_op_idiv:
    case nir_op_udiv:
@@ -589,6 +605,14 @@ Converter::getOperation(nir_intrinsic_op op)
    case nir_intrinsic_bindless_image_store:
    case nir_intrinsic_image_store:
       return OP_SUSTP;
+   case nir_intrinsic_ddx:
+   case nir_intrinsic_ddx_coarse:
+   case nir_intrinsic_ddx_fine:
+      return OP_DFDX;
+   case nir_intrinsic_ddy:
+   case nir_intrinsic_ddy_coarse:
+   case nir_intrinsic_ddy_fine:
+      return OP_DFDY;
    default:
       ERROR("couldn't get operation for nir_intrinsic_op %u\n", op);
       assert(false);
@@ -889,13 +913,13 @@ static uint16_t
 calcSlots(const glsl_type *type, Program::Type stage, const shader_info &info,
           bool input, const nir_variable *var)
 {
-   if (!type->is_array())
-      return type->count_attribute_slots(false);
+   if (!glsl_type_is_array(type))
+      return glsl_count_attribute_slots(type, false);
 
    uint16_t slots;
    switch (stage) {
    case Program::TYPE_GEOMETRY:
-      slots = type->count_attribute_slots(false);
+      slots = glsl_count_attribute_slots(type, false);
       if (input)
          slots /= info.gs.vertices_in;
       break;
@@ -903,12 +927,12 @@ calcSlots(const glsl_type *type, Program::Type stage, const shader_info &info,
    case Program::TYPE_TESSELLATION_EVAL:
       // remove first dimension
       if (var->data.patch || (!input && stage == Program::TYPE_TESSELLATION_EVAL))
-         slots = type->count_attribute_slots(false);
+         slots = glsl_count_attribute_slots(type, false);
       else
-         slots = type->fields.array->count_attribute_slots(false);
+         slots = glsl_count_attribute_slots(type->fields.array, false);
       break;
    default:
-      slots = type->count_attribute_slots(false);
+      slots = glsl_count_attribute_slots(type, false);
       break;
    }
 
@@ -917,10 +941,10 @@ calcSlots(const glsl_type *type, Program::Type stage, const shader_info &info,
 
 static uint8_t
 getMaskForType(const glsl_type *type, uint8_t slot) {
-   uint16_t comp = type->without_array()->components();
+   uint16_t comp = glsl_get_components(glsl_without_array(type));
    comp = comp ? comp : 4;
 
-   if (glsl_base_type_is_64bit(type->without_array()->base_type)) {
+   if (glsl_base_type_is_64bit(glsl_without_array(type)->base_type)) {
       comp *= 2;
       if (comp > 4) {
          if (slot % 2)
@@ -1018,7 +1042,7 @@ bool Converter::assignSlots() {
             assert(glsl_type_is_scalar(type->fields.array));
             assert(slots == glsl_get_length(type));
          }
-         assert(!glsl_base_type_is_64bit(type->without_array()->base_type));
+         assert(!glsl_base_type_is_64bit(glsl_without_array(type)->base_type));
 
          uint32_t comps = BITFIELD_RANGE(var->data.location_frac, slots);
          assert(!(comps & ~0xff));
@@ -1122,7 +1146,7 @@ bool Converter::assignSlots() {
             assert(glsl_type_is_scalar(type->fields.array));
             assert(slots == glsl_get_length(type));
          }
-         assert(!glsl_base_type_is_64bit(type->without_array()->base_type));
+         assert(!glsl_base_type_is_64bit(glsl_without_array(type)->base_type));
 
          uint32_t comps = BITFIELD_RANGE(var->data.location_frac, slots);
          assert(!(comps & ~0xff));
@@ -1253,6 +1277,36 @@ Converter::loadFrom(DataFile file, uint8_t i, DataType ty, Value *def,
    }
 }
 
+Instruction *
+Converter::loadVector(nir_intrinsic_instr *insn,
+                      uint8_t buffer, Value *indirectBuffer,
+                      uint32_t offset, Value *indirectOffset)
+{
+   uint32_t load_bytes = insn->def.bit_size / 8 * insn->def.num_components;
+   DataType ty = typeOfSize(load_bytes, false, false);
+   DataFile file = getFile(insn->intrinsic);
+
+   LValues &newDefs = convert(&insn->def);
+   Value* def;
+   if (insn->def.num_components == 1) {
+      def = newDefs[0];
+   } else {
+      def = getSSA(load_bytes);
+   }
+
+   Instruction *ld = mkLoad(ty, def, mkSymbol(file, buffer, ty, offset), indirectOffset);
+   ld->setIndirect(0, 1, indirectBuffer);
+
+   if (insn->def.num_components != 1) {
+      Instruction *split = mkOp1(OP_SPLIT, ty, newDefs[0], def);
+      for (int i = 1; i < insn->def.num_components; i++) {
+         split->setDef(i, newDefs[i]);
+      }
+   }
+
+   return ld;
+}
+
 void
 Converter::storeTo(nir_intrinsic_instr *insn, DataFile file, operation op,
                    DataType ty, Value *src, uint8_t idx, uint8_t c,
@@ -1280,6 +1334,113 @@ Converter::storeTo(nir_intrinsic_instr *insn, DataFile file, operation op,
       mkStore(op, ty, mkSymbol(file, 0, ty, address), indirect0,
               src)->perPatch = info_out->out[idx].patch;
    }
+}
+
+Instruction *
+Converter::storeVector(nir_intrinsic_instr *insn,
+                       uint8_t buffer, Value *indirectBuffer,
+                       uint32_t offset, Value *indirectOffset)
+{
+   const uint8_t num_components = insn->src[0].ssa->num_components;
+   uint32_t bytes = insn->src[0].ssa->bit_size / 8 * num_components;
+   DataType ty = typeOfSize(bytes, false, false);
+   DataFile file = getFile(insn->intrinsic);
+   assert(nir_intrinsic_write_mask(insn) == nir_component_mask(num_components));
+
+   Value* src;
+   if (num_components == 1) {
+      src = getSrc(&insn->src[0], 0);
+   } else {
+      src = getSSA(bytes);
+
+      Instruction *merge = mkOp(OP_MERGE, ty, src);
+      for (int i = 0; i < num_components; i++) {
+         merge->setSrc(i, getSrc(&insn->src[0], i));
+      }
+   }
+
+   Instruction *st = mkStore(OP_STORE, ty, mkSymbol(file, buffer, ty, offset),
+                             indirectOffset, src);
+   st->setIndirect(0, 1, indirectBuffer);
+
+   return st;
+}
+
+bool
+Converter::memVectorizeCb(unsigned align_mul,
+                          unsigned align_offset,
+                          unsigned bit_size,
+                          unsigned num_components,
+                          int64_t hole_size,
+                          nir_intrinsic_instr *low,
+                          nir_intrinsic_instr *high,
+                          void *cb_data)
+{
+   if (hole_size > 0)
+      return false;
+
+   /*
+    * Since we legalize these later with nir_lower_mem_access_bit_sizes,
+    * we can optimistically combine anything that might be profitable
+    */
+   const Converter* converter = (Converter*) cb_data;
+   const Target* target = converter->prog->getTarget();
+
+   assert(util_is_power_of_two_nonzero(align_mul));
+   align_mul = std::min(align_mul, 128u / 8u);
+
+   const DataFile file = converter->getFile(low->intrinsic);
+   if (align_mul == 128u / 8u && !target->isAccessSupported(file, TYPE_B128))
+      align_mul = 64u / 8u;
+
+   if (align_mul == 64u / 8u && !target->isAccessSupported(file, TYPE_U64))
+      align_mul = 32u / 8u;
+
+   align_offset = align_offset % align_mul;
+
+   return align_offset + num_components * (bit_size / 8) <= align_mul;
+}
+
+nir_mem_access_size_align
+Converter::getMemAccessSizeAlign(nir_intrinsic_op intrin,
+                                 uint8_t original_bytes,
+                                 uint8_t original_bit_size,
+                                 uint32_t align_mul,
+                                 uint32_t align_offset,
+                                 bool offset_is_const,
+                                 enum gl_access_qualifier access,
+                                 const void *cb_data)
+{
+   const Converter* converter = (Converter*) cb_data;
+   const Target* target = converter->prog->getTarget();
+
+   const uint32_t align = nir_combined_align(align_mul, align_offset);
+
+   assert(original_bytes != 0);
+   uint32_t bytes = 1 << (util_last_bit(original_bytes) - 1);
+
+   bytes = std::min(bytes, align);
+   bytes = std::min(bytes, 128u / 8u);
+
+   assert(util_is_power_of_two_nonzero(bytes));
+
+   const DataFile file = converter->getFile(intrin);
+   if (bytes == 128u / 8u && !target->isAccessSupported(file, TYPE_B128))
+      bytes = 64u / 8u;
+
+   if (bytes == 64u / 8u && !target->isAccessSupported(file, TYPE_U64))
+      bytes = 32u / 8u;
+
+   uint32_t bit_size = original_bit_size;
+   bit_size = std::max(bit_size, 32u);
+   bit_size = std::min(bit_size, bytes * 8u);
+
+   return {
+      .num_components = (uint8_t) (bytes / (bit_size / 8)),
+      .bit_size = (uint8_t) bit_size,
+      .align = (uint16_t) bytes,
+      .shift = nir_mem_access_shift_method_scalar,
+   };
 }
 
 bool
@@ -1322,7 +1483,7 @@ Converter::parseNIR()
       info_out->prop.fp.postDepthCoverage = nir->info.fs.post_depth_coverage;
       info_out->prop.fp.readsSampleLocations =
          BITSET_TEST(nir->info.system_values_read, SYSTEM_VALUE_SAMPLE_POS);
-      info_out->prop.fp.usesDiscard = nir->info.fs.uses_discard || nir->info.fs.uses_demote;
+      info_out->prop.fp.usesDiscard = nir->info.fs.uses_discard;
       info_out->prop.fp.usesSampleMaskIn =
          BITSET_TEST(nir->info.system_values_read, SYSTEM_VALUE_SAMPLE_MASK_IN);
       break;
@@ -1615,7 +1776,6 @@ Converter::convert(nir_intrinsic_op intr)
    case nir_intrinsic_load_vertex_id:
       return SV_VERTEX_ID;
    case nir_intrinsic_load_workgroup_id:
-   case nir_intrinsic_load_workgroup_id_zero_base:
       return SV_CTAID;
    case nir_intrinsic_load_work_dim:
       return SV_WORK_DIM;
@@ -1708,7 +1868,7 @@ Converter::visit(nir_intrinsic_instr *insn)
             break;
          }
 
-         storeTo(insn, FILE_SHADER_OUTPUT, OP_EXPORT, dType, src, idx, i + offset, indirect);
+         storeTo(insn, getFile(op), OP_EXPORT, dType, src, idx, i + offset, indirect);
       }
       break;
    }
@@ -1780,7 +1940,7 @@ Converter::visit(nir_intrinsic_instr *insn)
 
       for (uint8_t i = 0u; i < dest_components; ++i) {
          uint32_t address = getSlotAddress(insn, idx, i);
-         Symbol *sym = mkSymbol(input ? FILE_SHADER_INPUT : FILE_SHADER_OUTPUT, 0, dType, address);
+         Symbol *sym = mkSymbol(getFile(op), 0, dType, address);
          if (prog->getType() == Program::TYPE_FRAGMENT) {
             int s = 1;
             if (typeSizeof(dType) == 8) {
@@ -1796,7 +1956,7 @@ Converter::visit(nir_intrinsic_instr *insn)
                interp->setInterpolate(mode);
                interp->setIndirect(0, 0, indirect);
 
-               Symbol *sym1 = mkSymbol(input ? FILE_SHADER_INPUT : FILE_SHADER_OUTPUT, 0, dType, address + 4);
+               Symbol *sym1 = mkSymbol(getFile(op), 0, dType, address + 4);
                interp = mkOp1(nvirOp, TYPE_U32, hi, sym1);
                if (nvirOp == OP_PINTERP)
                   interp->setSrc(s++, fp.position);
@@ -1861,14 +2021,12 @@ Converter::visit(nir_intrinsic_instr *insn)
       break;
    }
    case nir_intrinsic_demote:
-   case nir_intrinsic_discard:
       mkOp(OP_DISCARD, TYPE_NONE, NULL);
       break;
-   case nir_intrinsic_demote_if:
-   case nir_intrinsic_discard_if: {
+   case nir_intrinsic_demote_if: {
       Value *pred = getSSA(1, FILE_PREDICATE);
       if (insn->num_components > 1) {
-         ERROR("nir_intrinsic_discard_if only with 1 component supported!\n");
+         ERROR("nir_intrinsic_demote_if only with 1 component supported!\n");
          assert(false);
          return false;
       }
@@ -1903,7 +2061,6 @@ Converter::visit(nir_intrinsic_instr *insn)
    case nir_intrinsic_load_tess_level_outer:
    case nir_intrinsic_load_vertex_id:
    case nir_intrinsic_load_workgroup_id:
-   case nir_intrinsic_load_workgroup_id_zero_base:
    case nir_intrinsic_load_work_dim: {
       const DataType dType = getDType(insn);
       SVSemantic sv = convert(op);
@@ -1984,7 +2141,7 @@ Converter::visit(nir_intrinsic_instr *insn)
                               mkImm(baseVertex), indirectVertex);
       for (uint8_t i = 0u; i < dest_components; ++i) {
          uint32_t address = getSlotAddress(insn, idx, i);
-         loadFrom(FILE_SHADER_INPUT, 0, dType, newDefs[i], address, 0,
+         loadFrom(getFile(op), 0, dType, newDefs[i], address, 0,
                   indirectOffset, vtxBase, info_out->in[idx].patch);
       }
       break;
@@ -2007,7 +2164,7 @@ Converter::visit(nir_intrinsic_instr *insn)
 
       for (uint8_t i = 0u; i < dest_components; ++i) {
          uint32_t address = getSlotAddress(insn, idx, i);
-         loadFrom(FILE_SHADER_OUTPUT, 0, dType, newDefs[i], address, 0,
+         loadFrom(getFile(op), 0, dType, newDefs[i], address, 0,
                   indirectOffset, vtxBase, info_out->in[idx].patch);
       }
       break;
@@ -2024,7 +2181,8 @@ Converter::visit(nir_intrinsic_instr *insn)
       mkOp1(getOperation(op), TYPE_U32, NULL, mkImm(idx))->fixed = 1;
       break;
    }
-   case nir_intrinsic_load_ubo: {
+   case nir_intrinsic_load_ubo:
+   case nir_intrinsic_ldc_nv: {
       const DataType dType = getDType(insn);
       LValues &newDefs = convert(&insn->def);
       Value *indirectIndex;
@@ -2035,7 +2193,7 @@ Converter::visit(nir_intrinsic_instr *insn)
          indirectOffset = mkOp1v(OP_MOV, TYPE_U32, getSSA(4, FILE_ADDRESS), indirectOffset);
 
       for (uint8_t i = 0u; i < dest_components; ++i) {
-         loadFrom(FILE_MEMORY_CONST, index, dType, newDefs[i], offset, i,
+         loadFrom(getFile(op), index, dType, newDefs[i], offset, i,
                   indirectOffset, indirectIndex);
       }
       break;
@@ -2051,7 +2209,6 @@ Converter::visit(nir_intrinsic_instr *insn)
       break;
    }
    case nir_intrinsic_store_ssbo: {
-      DataType sType = getSType(insn->src[0], false, false);
       Value *indirectBuffer;
       Value *indirectOffset;
       uint32_t buffer = getIndirect(&insn->src[1], 0, indirectBuffer);
@@ -2059,21 +2216,12 @@ Converter::visit(nir_intrinsic_instr *insn)
 
       CacheMode cache = convert(nir_intrinsic_access(insn));
 
-      for (uint8_t i = 0u; i < nir_intrinsic_src_components(insn, 0); ++i) {
-         if (!((1u << i) & nir_intrinsic_write_mask(insn)))
-            continue;
-         Symbol *sym = mkSymbol(FILE_MEMORY_BUFFER, buffer, sType,
-                                offset + i * typeSizeof(sType));
-         Instruction *st = mkStore(OP_STORE, sType, sym, indirectOffset, getSrc(&insn->src[0], i));
-         st->setIndirect(0, 1, indirectBuffer);
-         st->cache = cache;
-      }
+      storeVector(insn, buffer, indirectBuffer, offset, indirectOffset)->cache = cache;
+
       info_out->io.globalAccess |= 0x2;
       break;
    }
    case nir_intrinsic_load_ssbo: {
-      const DataType dType = getDType(insn);
-      LValues &newDefs = convert(&insn->def);
       Value *indirectBuffer;
       Value *indirectOffset;
       uint32_t buffer = getIndirect(&insn->src[0], 0, indirectBuffer);
@@ -2081,9 +2229,7 @@ Converter::visit(nir_intrinsic_instr *insn)
 
       CacheMode cache = convert(nir_intrinsic_access(insn));
 
-      for (uint8_t i = 0u; i < dest_components; ++i)
-         loadFrom(FILE_MEMORY_BUFFER, buffer, dType, newDefs[i], offset, i,
-                  indirectOffset, indirectBuffer, false, cache);
+      loadVector(insn, buffer, indirectBuffer, offset, indirectOffset)->cache = cache;
 
       info_out->io.globalAccess |= 0x1;
       break;
@@ -2273,23 +2419,15 @@ Converter::visit(nir_intrinsic_instr *insn)
    }
    case nir_intrinsic_store_scratch:
    case nir_intrinsic_store_shared: {
-      DataType sType = getSType(insn->src[0], false, false);
       Value *indirectOffset;
       uint32_t offset = getIndirect(&insn->src[1], 0, indirectOffset);
       if (indirectOffset)
          indirectOffset = mkOp1v(OP_MOV, TYPE_U32, getSSA(4, FILE_ADDRESS), indirectOffset);
 
-      for (uint8_t i = 0u; i < nir_intrinsic_src_components(insn, 0); ++i) {
-         if (!((1u << i) & nir_intrinsic_write_mask(insn)))
-            continue;
-         Symbol *sym = mkSymbol(getFile(op), 0, sType, offset + i * typeSizeof(sType));
-         mkStore(OP_STORE, sType, sym, indirectOffset, getSrc(&insn->src[0], i));
-      }
+      storeVector(insn, 0, nullptr, offset, indirectOffset);
       break;
    }
-   case nir_intrinsic_load_kernel_input:
-   case nir_intrinsic_load_scratch:
-   case nir_intrinsic_load_shared: {
+   case nir_intrinsic_load_kernel_input: {
       const DataType dType = getDType(insn);
       LValues &newDefs = convert(&insn->def);
       Value *indirectOffset;
@@ -2299,6 +2437,17 @@ Converter::visit(nir_intrinsic_instr *insn)
 
       for (uint8_t i = 0u; i < dest_components; ++i)
          loadFrom(getFile(op), 0, dType, newDefs[i], offset, i, indirectOffset);
+
+      break;
+   }
+   case nir_intrinsic_load_scratch:
+   case nir_intrinsic_load_shared: {
+      Value *indirectOffset;
+      uint32_t offset = getIndirect(&insn->src[0], 0, indirectOffset);
+      if (indirectOffset)
+         indirectOffset = mkOp1v(OP_MOV, TYPE_U32, getSSA(4, FILE_ADDRESS), indirectOffset);
+
+      loadVector(insn, 0, nullptr, offset, indirectOffset);
 
       break;
    }
@@ -2340,39 +2489,33 @@ Converter::visit(nir_intrinsic_instr *insn)
    }
    case nir_intrinsic_load_global:
    case nir_intrinsic_load_global_constant: {
-      const DataType dType = getDType(insn);
-      LValues &newDefs = convert(&insn->def);
       Value *indirectOffset;
       uint32_t offset = getIndirect(&insn->src[0], 0, indirectOffset);
 
-      for (auto i = 0u; i < dest_components; ++i)
-         loadFrom(FILE_MEMORY_GLOBAL, 0, dType, newDefs[i], offset, i, indirectOffset);
+      loadVector(insn, 0, nullptr, offset, indirectOffset);
 
       info_out->io.globalAccess |= 0x1;
       break;
    }
    case nir_intrinsic_store_global: {
-      DataType sType = getSType(insn->src[0], false, false);
+      Value *indirectOffset;
+      uint32_t offset = getIndirect(&insn->src[1], 0, indirectOffset);
 
-      for (auto i = 0u; i < nir_intrinsic_src_components(insn, 0); ++i) {
-         if (!((1u << i) & nir_intrinsic_write_mask(insn)))
-            continue;
-         if (typeSizeof(sType) == 8) {
-            Value *split[2];
-            mkSplit(split, 4, getSrc(&insn->src[0], i));
-
-            Symbol *sym = mkSymbol(FILE_MEMORY_GLOBAL, 0, TYPE_U32, i * typeSizeof(sType));
-            mkStore(OP_STORE, TYPE_U32, sym, getSrc(&insn->src[1], 0), split[0]);
-
-            sym = mkSymbol(FILE_MEMORY_GLOBAL, 0, TYPE_U32, i * typeSizeof(sType) + 4);
-            mkStore(OP_STORE, TYPE_U32, sym, getSrc(&insn->src[1], 0), split[1]);
-         } else {
-            Symbol *sym = mkSymbol(FILE_MEMORY_GLOBAL, 0, sType, i * typeSizeof(sType));
-            mkStore(OP_STORE, sType, sym, getSrc(&insn->src[1], 0), getSrc(&insn->src[0], i));
-         }
-      }
+      storeVector(insn, 0, nullptr, offset, indirectOffset);
 
       info_out->io.globalAccess |= 0x2;
+      break;
+   }
+   case nir_intrinsic_ddx:
+   case nir_intrinsic_ddx_coarse:
+   case nir_intrinsic_ddx_fine:
+   case nir_intrinsic_ddy:
+   case nir_intrinsic_ddy_coarse:
+   case nir_intrinsic_ddy_fine: {
+      assert(insn->def.num_components == 1);
+      const DataType dType = getDType(insn);
+      LValues &newDefs = convert(&insn->def);
+      mkOp1(getOperation(op), dType, newDefs[0], getSrc(&insn->src[0], 0));
       break;
    }
    default:
@@ -2465,12 +2608,6 @@ Converter::visit(nir_alu_instr *insn)
    case nir_op_iand:
    case nir_op_fceil:
    case nir_op_fcos:
-   case nir_op_fddx:
-   case nir_op_fddx_coarse:
-   case nir_op_fddx_fine:
-   case nir_op_fddy:
-   case nir_op_fddy_coarse:
-   case nir_op_fddy_fine:
    case nir_op_fdiv:
    case nir_op_idiv:
    case nir_op_udiv:
@@ -3017,7 +3154,7 @@ Converter::visit(nir_tex_instr *insn)
       if (lodIdx != -1 && !target.isMS())
          srcs.push_back(getSrc(&insn->src[lodIdx].src, 0));
       else if (op == OP_TXQ)
-         srcs.push_back(zero); // TXQ always needs an LOD
+         srcs.push_back(loadImm(NULL, 0)); // TXQ always needs an LOD
       else if (op == OP_TXF)
          lz = true;
       if (msIdx != -1)
@@ -3160,8 +3297,7 @@ nv_nir_move_stores_to_end(nir_shader *s)
       }
    }
    nir_metadata_preserve(impl,
-                         nir_metadata_block_index |
-                         nir_metadata_dominance);
+                         nir_metadata_control_flow);
 }
 
 unsigned
@@ -3229,11 +3365,28 @@ Converter::lowerBitSizeCB(const nir_instr *instr, void *data)
    }
 }
 
+void
+Converter::runOptLoop()
+{
+   bool progress;
+   do {
+      progress = false;
+      NIR_PASS(progress, nir, nir_copy_prop);
+      NIR_PASS(progress, nir, nir_opt_remove_phis);
+      NIR_PASS(progress, nir, nir_opt_loop);
+      NIR_PASS(progress, nir, nir_opt_cse);
+      NIR_PASS(progress, nir, nir_opt_algebraic);
+      NIR_PASS(progress, nir, nir_opt_constant_folding);
+      NIR_PASS(progress, nir, nir_copy_prop);
+      NIR_PASS(progress, nir, nir_opt_dce);
+      NIR_PASS(progress, nir, nir_opt_dead_cf);
+      NIR_PASS(progress, nir, nir_lower_64bit_phis);
+   } while (progress);
+}
+
 bool
 Converter::run()
 {
-   bool progress;
-
    if (prog->dbgFlags & NV50_IR_DEBUG_VERBOSE)
       nir_print_shader(nir, stderr);
 
@@ -3277,7 +3430,7 @@ Converter::run()
    NIR_PASS_V(nir, nir_lower_vars_to_ssa);
 
    NIR_PASS_V(nir, nir_lower_io, nir_var_shader_in | nir_var_shader_out,
-              type_size, (nir_lower_io_options)0);
+              type_size, nir_lower_io_use_interpolated_input_intrinsics);
 
    NIR_PASS_V(nir, nir_lower_subgroups, &subgroup_options);
 
@@ -3298,27 +3451,41 @@ Converter::run()
    nir_lower_idiv_options idiv_options = {
       .allow_fp16 = true,
    };
-   NIR_PASS(progress, nir, nir_lower_idiv, &idiv_options);
+   NIR_PASS_V(nir, nir_lower_idiv, &idiv_options);
 
-   do {
-      progress = false;
-      NIR_PASS(progress, nir, nir_copy_prop);
-      NIR_PASS(progress, nir, nir_opt_remove_phis);
-      NIR_PASS(progress, nir, nir_opt_trivial_continues);
-      NIR_PASS(progress, nir, nir_opt_cse);
-      NIR_PASS(progress, nir, nir_opt_algebraic);
-      NIR_PASS(progress, nir, nir_opt_constant_folding);
-      NIR_PASS(progress, nir, nir_copy_prop);
-      NIR_PASS(progress, nir, nir_opt_dce);
-      NIR_PASS(progress, nir, nir_opt_dead_cf);
-      NIR_PASS(progress, nir, nir_lower_64bit_phis);
-   } while (progress);
+   runOptLoop();
 
-   /* codegen assumes vec4 alignment for memory */
    NIR_PASS_V(nir, nir_remove_dead_variables, nir_var_function_temp, NULL);
-   NIR_PASS_V(nir, nir_lower_vars_to_explicit_types, nir_var_function_temp, function_temp_type_info);
+   NIR_PASS_V(nir, nir_lower_vars_to_explicit_types, nir_var_function_temp,
+              glsl_get_natural_size_align_bytes);
    NIR_PASS_V(nir, nir_lower_explicit_io, nir_var_function_temp, nir_address_format_32bit_offset);
    NIR_PASS_V(nir, nir_remove_dead_variables, nir_var_function_temp, NULL);
+
+   NIR_PASS_V(nir, nir_opt_constant_folding);  // Improves aliasing information
+
+   nir_load_store_vectorize_options vectorize_opts = {};
+   vectorize_opts.modes = nir_var_mem_global |
+                          nir_var_mem_ssbo |
+                          nir_var_mem_shared |
+                          nir_var_shader_temp;
+   vectorize_opts.callback = Converter::memVectorizeCb;
+   vectorize_opts.cb_data = this;
+   NIR_PASS_V(nir, nir_opt_load_store_vectorize, &vectorize_opts);
+
+   nir_lower_mem_access_bit_sizes_options mem_bit_sizes = {};
+   mem_bit_sizes.modes = nir_var_mem_global |
+                         nir_var_mem_constant |
+                         nir_var_mem_ssbo |
+                         nir_var_mem_shared |
+                         nir_var_shader_temp | nir_var_function_temp;
+   mem_bit_sizes.callback = Converter::getMemAccessSizeAlign;
+   mem_bit_sizes.cb_data = this;
+   NIR_PASS_V(nir, nir_lower_mem_access_bit_sizes, &mem_bit_sizes);
+
+   NIR_PASS_V(nir, nir_lower_alu_to_scalar, NULL, NULL);
+   NIR_PASS_V(nir, nir_lower_pack);
+
+   runOptLoop();
 
    NIR_PASS_V(nir, nir_opt_combine_barriers, NULL, NULL);
 
@@ -3333,13 +3500,13 @@ Converter::run()
    if (nir->info.stage == MESA_SHADER_FRAGMENT)
       NIR_PASS_V(nir, nv_nir_move_stores_to_end);
 
-   NIR_PASS(progress, nir, nir_opt_algebraic_late);
+   NIR_PASS_V(nir, nir_opt_algebraic_late);
 
    NIR_PASS_V(nir, nir_lower_bool_to_int32);
    NIR_PASS_V(nir, nir_lower_bit_size, Converter::lowerBitSizeCB, this);
 
    NIR_PASS_V(nir, nir_divergence_analysis);
-   NIR_PASS_V(nir, nir_convert_from_ssa, true);
+   NIR_PASS_V(nir, nir_convert_from_ssa, true, true);
 
    // Garbage collect dead instructions
    nir_sweep(nir);
@@ -3447,7 +3614,6 @@ nvir_nir_shader_compiler_options(int chipset, uint8_t shader_type)
    op.lower_insert_byte = true;
    op.lower_insert_word = true;
    op.lower_all_io_to_temps = false;
-   op.lower_all_io_to_elements = false;
    op.vertex_id_zero_based = false;
    op.lower_base_vertex = false;
    op.lower_helper_invocation = false;
@@ -3460,10 +3626,8 @@ nvir_nir_shader_compiler_options(int chipset, uint8_t shader_type)
    op.lower_uadd_sat = true; // TODO
    op.lower_usub_sat = true; // TODO
    op.lower_iadd_sat = true; // TODO
-   op.vectorize_io = false;
    op.lower_to_scalar = false;
    op.unify_interfaces = false;
-   op.use_interpolated_input_intrinsics = true;
    op.lower_mul_2x32_64 = true; // TODO
    op.has_rotate32 = (chipset >= NVISA_GV100_CHIPSET);
    op.has_imul24 = false;
@@ -3507,6 +3671,20 @@ nvir_nir_shader_compiler_options(int chipset, uint8_t shader_type)
       ((chipset >= NVISA_GV100_CHIPSET) ? nir_lower_dsub : 0) |
       ((chipset >= NVISA_GV100_CHIPSET) ? nir_lower_ddiv : 0)
    );
+   op.discard_is_demote = true;
+   op.has_ddx_intrinsics = true;
+   op.scalarize_ddx = true;
+   op.support_indirect_inputs = (uint8_t)BITFIELD_MASK(MESA_SHADER_GEOMETRY + 1);
+   op.support_indirect_outputs = (uint8_t)BITFIELD_MASK(MESA_SHADER_GEOMETRY + 1);
+
+   /* HW doesn't support indirect addressing of fragment program inputs
+    * on Volta.  The binary driver generates a function to handle every
+    * possible indirection, and indirectly calls the function to handle
+    * this instead.
+    */
+   if (chipset < NVISA_GV100_CHIPSET)
+      op.support_indirect_outputs |= BITFIELD_BIT(MESA_SHADER_FRAGMENT);
+
    return op;
 }
 

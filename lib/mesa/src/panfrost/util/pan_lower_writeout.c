@@ -77,6 +77,22 @@ pan_nir_emit_combined_store(nir_builder *b, nir_intrinsic_instr *rt0_store,
 
    nir_builder_instr_insert(b, &intr->instr);
 }
+
+static bool
+kill_depth_stencil_writes(nir_builder *b, nir_intrinsic_instr *intr,
+                          UNUSED void *data)
+{
+   if (intr->intrinsic != nir_intrinsic_store_output)
+      return false;
+
+   nir_io_semantics sem = nir_intrinsic_io_semantics(intr);
+   if (sem.location != FRAG_RESULT_DEPTH && sem.location != FRAG_RESULT_STENCIL)
+      return false;
+
+   nir_instr_remove(&intr->instr);
+   return true;
+}
+
 bool
 pan_nir_lower_zs_store(nir_shader *nir)
 {
@@ -85,8 +101,15 @@ pan_nir_lower_zs_store(nir_shader *nir)
    if (nir->info.stage != MESA_SHADER_FRAGMENT)
       return false;
 
+   /* Remove all stencil/depth writes if early fragment test is forced. */
+   if (nir->info.fs.early_fragment_tests)
+      progress |= nir_shader_intrinsics_pass(nir, kill_depth_stencil_writes,
+                                             nir_metadata_control_flow, NULL);
+
    nir_foreach_function_impl(impl, nir) {
       nir_intrinsic_instr *stores[3] = {NULL};
+      nir_intrinsic_instr *last_mask_store = NULL;
+      nir_block *mask_block = NULL;
       unsigned writeout = 0;
 
       nir_foreach_block(block, impl) {
@@ -106,18 +129,20 @@ pan_nir_lower_zs_store(nir_shader *nir)
                stores[1] = intr;
                writeout |= PAN_WRITEOUT_S;
             } else if (sem.dual_source_blend_index) {
-               assert(!stores[2]); /* there should be only 1 source for dual
-                                      blending */
+               assert(!stores[2]); /* there should be only 1 source for dual blending */
                stores[2] = intr;
                writeout |= PAN_WRITEOUT_2;
+            } else if (sem.location == FRAG_RESULT_SAMPLE_MASK) {
+               last_mask_store = intr;
+               mask_block = intr->instr.block;
             }
          }
       }
 
-      if (!writeout)
+      if (!writeout && !last_mask_store)
          continue;
 
-      nir_block *common_block = NULL;
+      nir_block *common_block = mask_block;
 
       /* Ensure all stores are in the same block */
       for (unsigned i = 0; i < ARRAY_SIZE(stores); ++i) {
@@ -130,6 +155,28 @@ pan_nir_lower_zs_store(nir_shader *nir)
             assert(common_block == block);
          else
             common_block = block;
+      }
+
+      /* move data stores in the common block to after the last mask store */
+      if (last_mask_store) {
+         nir_cursor insert_point = nir_after_instr(&last_mask_store->instr);
+         nir_foreach_instr_safe(instr, mask_block) {
+            if (instr->type != nir_instr_type_intrinsic)
+               continue;
+            nir_intrinsic_instr *intr = nir_instr_as_intrinsic(instr);
+
+            /* stop when we've reached the last store to mask */
+            if (intr == last_mask_store)
+               break;
+            if (intr->intrinsic != nir_intrinsic_store_output)
+               continue;
+            nir_io_semantics sem = nir_intrinsic_io_semantics(intr);
+            if (sem.location >= FRAG_RESULT_DATA0 &&
+                sem.location <= FRAG_RESULT_DATA7) {
+               nir_instr_move(insert_point, instr);
+               insert_point = nir_after_instr(instr);
+            }
+         }
       }
 
       bool replaced = false;
@@ -183,7 +230,7 @@ pan_nir_lower_zs_store(nir_shader *nir)
       }
 
       nir_metadata_preserve(impl,
-                            nir_metadata_block_index | nir_metadata_dominance);
+                            nir_metadata_control_flow);
       progress = true;
    }
 

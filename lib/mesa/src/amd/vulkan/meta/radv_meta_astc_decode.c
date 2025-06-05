@@ -1,62 +1,21 @@
 /* Copyright (c) 2017-2023 Hans-Kristian Arntzen
  *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <assert.h>
 #include <stdbool.h>
 
 #include "radv_meta.h"
-#include "radv_private.h"
 #include "sid.h"
 #include "vk_common_entrypoints.h"
 #include "vk_format.h"
-
-VkResult
-radv_device_init_meta_astc_decode_state(struct radv_device *device, bool on_demand)
-{
-   struct radv_meta_state *state = &device->meta_state;
-
-   if (!device->physical_device->emulate_astc)
-      return VK_SUCCESS;
-
-   return vk_texcompress_astc_init(&device->vk, &state->alloc, state->cache, &state->astc_decode);
-}
-
-void
-radv_device_finish_meta_astc_decode_state(struct radv_device *device)
-{
-   struct radv_meta_state *state = &device->meta_state;
-   struct vk_texcompress_astc_state *astc = state->astc_decode;
-
-   if (!device->physical_device->emulate_astc)
-      return;
-
-   vk_texcompress_astc_finish(&device->vk, &state->alloc, astc);
-}
 
 static void
 decode_astc(struct radv_cmd_buffer *cmd_buffer, struct radv_image_view *src_iview, struct radv_image_view *dst_iview,
             VkImageLayout layout, const VkOffset3D *offset, const VkExtent3D *extent)
 {
-   struct radv_device *device = cmd_buffer->device;
+   struct radv_device *device = radv_cmd_buffer_device(cmd_buffer);
    struct radv_meta_state *state = &device->meta_state;
    struct vk_texcompress_astc_write_descriptor_set write_desc_set;
    VkFormat format = src_iview->image->vk.format;
@@ -66,8 +25,7 @@ decode_astc(struct radv_cmd_buffer *cmd_buffer, struct radv_image_view *src_ivie
    vk_texcompress_astc_fill_write_descriptor_sets(state->astc_decode, &write_desc_set,
                                                   radv_image_view_to_handle(src_iview), layout,
                                                   radv_image_view_to_handle(dst_iview), format);
-   radv_meta_push_descriptor_set(cmd_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, state->astc_decode->p_layout,
-                                 0, /* set number */
+   radv_meta_push_descriptor_set(cmd_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, state->astc_decode->p_layout, 0,
                                  VK_TEXCOMPRESS_ASTC_WRITE_DESC_SET_COUNT, write_desc_set.descriptor_set);
 
    VkPipeline pipeline =
@@ -80,8 +38,8 @@ decode_astc(struct radv_cmd_buffer *cmd_buffer, struct radv_image_view *src_ivie
    bool is_3Dimage = (src_iview->image->vk.image_type == VK_IMAGE_TYPE_3D) ? true : false;
    int push_constants[5] = {offset->x / blk_w, offset->y / blk_h, extent->width + offset->x, extent->height + offset->y,
                             is_3Dimage};
-   radv_CmdPushConstants(radv_cmd_buffer_to_handle(cmd_buffer), device->meta_state.etc_decode.pipeline_layout,
-                         VK_SHADER_STAGE_COMPUTE_BIT, 0, 20, push_constants);
+   vk_common_CmdPushConstants(radv_cmd_buffer_to_handle(cmd_buffer), device->meta_state.etc_decode.pipeline_layout,
+                              VK_SHADER_STAGE_COMPUTE_BIT, 0, 20, push_constants);
 
    struct radv_dispatch_info info = {
       .blocks[0] = DIV_ROUND_UP(extent->width, blk_w * 2),
@@ -127,13 +85,14 @@ image_view_init(struct radv_device *device, struct radv_image *image, VkFormat f
          },
    };
 
-   radv_image_view_init(iview, device, &iview_create_info, 0, NULL);
+   radv_image_view_init(iview, device, &iview_create_info, NULL);
 }
 
 void
 radv_meta_decode_astc(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image, VkImageLayout layout,
                       const VkImageSubresourceLayers *subresource, VkOffset3D offset, VkExtent3D extent)
 {
+   struct radv_device *device = radv_cmd_buffer_device(cmd_buffer);
    struct radv_meta_saved_state saved_state;
    radv_meta_save(&saved_state, cmd_buffer,
                   RADV_META_SAVE_COMPUTE_PIPELINE | RADV_META_SAVE_CONSTANTS | RADV_META_SAVE_DESCRIPTORS |
@@ -148,12 +107,10 @@ radv_meta_decode_astc(struct radv_cmd_buffer *cmd_buffer, struct radv_image *ima
    offset = vk_image_sanitize_offset(&image->vk, offset);
 
    struct radv_image_view src_iview, dst_iview;
-   image_view_init(cmd_buffer->device, image, VK_FORMAT_R32G32B32A32_UINT, VK_IMAGE_ASPECT_COLOR_BIT,
-                   subresource->mipLevel, subresource->baseArrayLayer,
-                   vk_image_subresource_layer_count(&image->vk, subresource), &src_iview);
-   image_view_init(cmd_buffer->device, image, VK_FORMAT_R8G8B8A8_UINT, VK_IMAGE_ASPECT_PLANE_1_BIT,
-                   subresource->mipLevel, subresource->baseArrayLayer,
-                   vk_image_subresource_layer_count(&image->vk, subresource), &dst_iview);
+   image_view_init(device, image, VK_FORMAT_R32G32B32A32_UINT, VK_IMAGE_ASPECT_COLOR_BIT, subresource->mipLevel,
+                   subresource->baseArrayLayer, vk_image_subresource_layer_count(&image->vk, subresource), &src_iview);
+   image_view_init(device, image, VK_FORMAT_R8G8B8A8_UINT, VK_IMAGE_ASPECT_PLANE_1_BIT, subresource->mipLevel,
+                   subresource->baseArrayLayer, vk_image_subresource_layer_count(&image->vk, subresource), &dst_iview);
 
    VkExtent3D extent_copy = {
       .width = extent.width,

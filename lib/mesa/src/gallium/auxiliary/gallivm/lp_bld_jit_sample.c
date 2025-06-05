@@ -153,12 +153,13 @@ lp_bld_llvm_sampler_soa_emit_fetch_texel(const struct lp_build_sampler_soa *base
 
    if (params->texture_resource) {
       LLVMTypeRef out_data_type = lp_build_vec_type(gallivm, params->type);
+      LLVMTypeRef out_residency_type = lp_build_vec_type(gallivm, lp_int_type(params->type));
 
-      LLVMValueRef out_data[4];
-      for (uint32_t i = 0; i < 4; i++) {
+      LLVMValueRef out_data[5];
+      for (uint32_t i = 0; i < ARRAY_SIZE(out_data) - 1; i++) {
          out_data[i] = lp_build_alloca(gallivm, out_data_type, "");
-         LLVMBuildStore(builder, lp_build_const_vec(gallivm, params->type, 0), out_data[i]);
       }
+      out_data[ARRAY_SIZE(out_data) - 1] = lp_build_alloca(gallivm, out_residency_type, "");
 
       struct lp_type uint_type = lp_uint_type(params->type);
       LLVMValueRef uint_zero = lp_build_const_int_vec(gallivm, uint_type, 0);
@@ -201,7 +202,7 @@ lp_bld_llvm_sampler_soa_emit_fetch_texel(const struct lp_build_sampler_soa *base
       } else {
          sampler_desc_ptr = lp_llvm_descriptor_base(gallivm, consts, params->sampler_resource, LP_MAX_TGSI_CONST_BUFFERS);
 
-         LLVMValueRef sampler_index_offset = lp_build_const_int64(gallivm, offsetof(struct lp_descriptor, sampler_index));
+         LLVMValueRef sampler_index_offset = lp_build_const_int64(gallivm, offsetof(struct lp_descriptor, texture.sampler_index));
          LLVMValueRef sampler_index_ptr = LLVMBuildAdd(builder, sampler_desc_ptr, sampler_index_offset, "");
 
          LLVMTypeRef sampler_index_type = LLVMInt32TypeInContext(gallivm->context);
@@ -223,8 +224,6 @@ lp_bld_llvm_sampler_soa_emit_fetch_texel(const struct lp_build_sampler_soa *base
 
       args[num_args++] = texture_descriptor;
       args[num_args++] = sampler_desc_ptr;
-
-      args[num_args++] = params->aniso_filter_table;
 
       LLVMTypeRef coord_type;
       if (op_type == LP_SAMPLER_OP_FETCH)
@@ -264,8 +263,8 @@ lp_bld_llvm_sampler_soa_emit_fetch_texel(const struct lp_build_sampler_soa *base
 
       LLVMValueRef result = LLVMBuildCall2(builder, texture_function_type, texture_function, args, num_args, "");
 
-      for (unsigned i = 0; i < 4; i++) {
-         params->texel[i] = LLVMBuildExtractValue(gallivm->builder, result, i, "");
+      for (unsigned i = 0; i < ARRAY_SIZE(out_data); i++) {
+         params->texel[i] = LLVMBuildExtractValue(builder, result, i, "");
 
          if (params->type.length != lp_native_vector_width / 32)
             params->texel[i] = truncate_to_type_width(gallivm, params->texel[i], params->type);
@@ -275,8 +274,10 @@ lp_bld_llvm_sampler_soa_emit_fetch_texel(const struct lp_build_sampler_soa *base
 
       lp_build_endif(&if_state);
 
-      for (unsigned i = 0; i < 4; i++)
-         params->texel[i] = LLVMBuildLoad2(gallivm->builder, out_data_type, out_data[i], "");
+      for (unsigned i = 0; i < ARRAY_SIZE(out_data) - 1; i++)
+         params->texel[i] = LLVMBuildLoad2(builder, out_data_type, out_data[i], "");
+      params->texel[ARRAY_SIZE(out_data) - 1] =
+         LLVMBuildLoad2(builder, out_residency_type, out_data[ARRAY_SIZE(out_data) - 1], "");
 
       return;
    }
@@ -295,7 +296,7 @@ lp_bld_llvm_sampler_soa_emit_fetch_texel(const struct lp_build_sampler_soa *base
 
    if (params->texture_index_offset) {
       LLVMValueRef unit =
-         LLVMBuildAdd(gallivm->builder, params->texture_index_offset,
+         LLVMBuildAdd(builder, params->texture_index_offset,
                       lp_build_const_int32(gallivm, texture_index), "");
 
       struct lp_build_sample_array_switch switch_info;
@@ -335,7 +336,6 @@ lp_bld_llvm_sampler_soa_emit_size_query(const struct lp_build_sampler_soa *base,
       LLVMValueRef out_data[4];
       for (uint32_t i = 0; i < 4; i++) {
          out_data[i] = lp_build_alloca(gallivm, out_data_type, "");
-         LLVMBuildStore(builder, lp_build_const_vec(gallivm, params->int_type, 0), out_data[i]);
       }
 
       struct lp_type uint_type = lp_uint_type(params->int_type);
@@ -441,13 +441,15 @@ lp_bld_llvm_image_soa_emit_op(const struct lp_build_image_soa *base,
 
    if (params->resource) {
       const struct util_format_description *desc = util_format_description(params->format);
-      LLVMTypeRef out_data_type = lp_build_vec_type(gallivm, lp_build_texel_type(params->type, desc));
+      struct lp_type texel_type = lp_build_texel_type(params->type, desc);
+      LLVMTypeRef out_data_type = lp_build_vec_type(gallivm, texel_type);
+      LLVMTypeRef out_residency_type = lp_build_vec_type(gallivm, lp_int_type(texel_type));
 
-      LLVMValueRef out_data[4];
-      for (uint32_t i = 0; i < 4; i++) {
+      LLVMValueRef out_data[5];
+      for (uint32_t i = 0; i < ARRAY_SIZE(out_data) - 1; i++) {
          out_data[i] = lp_build_alloca(gallivm, out_data_type, "");
-         LLVMBuildStore(builder, lp_build_const_vec(gallivm, lp_build_texel_type(params->type, desc), 0), out_data[i]);
       }
+      out_data[ARRAY_SIZE(out_data) - 1] = lp_build_alloca(gallivm, out_residency_type, "");
 
       struct lp_type uint_type = lp_uint_type(params->type);
       LLVMValueRef uint_zero = lp_build_const_int_vec(gallivm, uint_type, 0);
@@ -500,7 +502,7 @@ lp_bld_llvm_image_soa_emit_op(const struct lp_build_image_soa *base,
 
       args[num_args++] = image_descriptor;
 
-      if (params->img_op != LP_IMG_LOAD)
+      if (params->img_op != LP_IMG_LOAD && params->img_op != LP_IMG_LOAD_SPARSE)
          args[num_args++] = params->exec_mask;
 
       for (uint32_t i = 0; i < 3; i++)
@@ -509,7 +511,7 @@ lp_bld_llvm_image_soa_emit_op(const struct lp_build_image_soa *base,
       if (params->ms_index)
          args[num_args++] = params->ms_index;
 
-      if (params->img_op != LP_IMG_LOAD)
+      if (params->img_op != LP_IMG_LOAD && params->img_op != LP_IMG_LOAD_SPARSE)
          for (uint32_t i = 0; i < 4; i++)
             args[num_args++] = params->indata[i];
 
@@ -532,8 +534,9 @@ lp_bld_llvm_image_soa_emit_op(const struct lp_build_image_soa *base,
       LLVMValueRef result = LLVMBuildCall2(builder, image_function_type, image_function, args, num_args, "");
 
       if (params->img_op != LP_IMG_STORE) {
-         for (unsigned i = 0; i < 4; i++) {
-            LLVMValueRef channel = LLVMBuildExtractValue(gallivm->builder, result, i, "");
+         uint32_t channel_count = params->img_op == LP_IMG_LOAD_SPARSE ? 5 : 4;
+         for (unsigned i = 0; i < channel_count; i++) {
+            LLVMValueRef channel = LLVMBuildExtractValue(builder, result, i, "");
             if (params->type.length != lp_native_vector_width / 32)
                channel = truncate_to_type_width(gallivm, channel, params->type);
 
@@ -544,9 +547,11 @@ lp_bld_llvm_image_soa_emit_op(const struct lp_build_image_soa *base,
       lp_build_endif(&if_state);
 
       if (params->img_op != LP_IMG_STORE) {
-         for (unsigned i = 0; i < 4; i++) {
-            params->outdata[i] = LLVMBuildLoad2(gallivm->builder, out_data_type, out_data[i], "");
+         for (unsigned i = 0; i < ARRAY_SIZE(out_data) - 1; i++) {
+            params->outdata[i] = LLVMBuildLoad2(builder, out_data_type, out_data[i], "");
          }
+         params->outdata[ARRAY_SIZE(out_data) - 1] =
+            LLVMBuildLoad2(builder, out_residency_type, out_data[ARRAY_SIZE(out_data) - 1], "");
       }
 
       return;
@@ -559,7 +564,7 @@ lp_bld_llvm_image_soa_emit_op(const struct lp_build_image_soa *base,
    if (params->image_index_offset) {
       struct lp_build_img_op_array_switch switch_info;
       memset(&switch_info, 0, sizeof(switch_info));
-      LLVMValueRef unit = LLVMBuildAdd(gallivm->builder,
+      LLVMValueRef unit = LLVMBuildAdd(builder,
                                        params->image_index_offset,
                                        lp_build_const_int32(gallivm,
                                                             image_index), "");
@@ -605,6 +610,7 @@ lp_bld_llvm_image_soa_emit_size_query(const struct lp_build_image_soa *base,
          .format = format,
          .res_format = format,
          .target = params->target,
+         .level_zero_only = params->ms,
       };
       
       lp_build_size_query_soa(gallivm, &state, &image->dynamic_state.base, params);

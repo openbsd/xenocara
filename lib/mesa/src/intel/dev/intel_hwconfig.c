@@ -33,12 +33,6 @@
 
 #include "util/log.h"
 
-#ifdef NDEBUG
-#define DEBUG_BUILD false
-#else
-#define DEBUG_BUILD true
-#endif
-
 struct hwconfig {
    uint32_t key;
    uint32_t len;
@@ -153,26 +147,65 @@ process_hwconfig_table(struct intel_device_info *devinfo,
    assert(current == end);
 }
 
-/* If devinfo->apply_hwconfig is true, then we apply the hwconfig value.
+static inline bool
+apply_hwconfig(const struct intel_device_info *devinfo)
+{
+   /* returns is true when the platform should apply hwconfig values */
+   return devinfo->verx10 >= 125;
+}
+
+static inline void
+hwconfig_item_warning(const char *devinfo_name, uint32_t devinfo_val,
+                      const uint32_t hwconfig_key, uint32_t hwconfig_val)
+{
+#ifndef NDEBUG
+   if (devinfo_val != hwconfig_val) {
+      mesa_logw("%s (%u) != devinfo->%s (%u)",
+                key_to_name(hwconfig_key), hwconfig_val, devinfo_name,
+                devinfo_val);
+   }
+#endif
+}
+
+static inline bool
+should_apply_hwconfig_item(uint16_t always_apply_verx10,
+                           const struct intel_device_info *devinfo,
+                           uint32_t devinfo_val)
+{
+   assert(apply_hwconfig(devinfo));
+   if ((devinfo->verx10 >= always_apply_verx10 || devinfo_val == 0))
+      return true;
+
+   return false;
+}
+
+/* If apply_hwconfig(devinfo) is true, then we apply the
+ * hwconfig value to the devinfo field, ``F``.
  *
- * For debug builds, if devinfo->apply_hwconfig is false, we will compare the
- * hwconfig value with the current value in the devinfo and log a warning
+ * For debug builds, if apply_hwconfig() is false, we will compare the
+ * hwconfig value, ``V``, with the current value in ``F`` and log a warning
  * message if they differ. This should help to make sure the values in our
  * devinfo structures match what hwconfig is specified.
+ *
+ * If ``devinfo->verx10 >= CVER``, then the hwconfig value is always be used.
+ * If ``devinfo->verx10 < CVER``, the hwconfig value is only used if
+ * devinfo->F is 0.
  */
-#define DEVINFO_HWCONFIG(F, V)                                          \
+#define DEVINFO_HWCONFIG_KV(CVER, F, K, V)                              \
    do {                                                                 \
-      if (devinfo->apply_hwconfig)                                      \
-         devinfo->F = V;                                                \
-      else if (DEBUG_BUILD && devinfo->F != (V))                        \
-         mesa_logw("%s (%u) != devinfo->%s (%u)",                       \
-                   key_to_name(item->key), (V), #F,                     \
-                   devinfo->F);                                         \
+      if (check_only)                                                   \
+         hwconfig_item_warning(#F, devinfo->F, (K), (V));               \
+      else if (should_apply_hwconfig_item((CVER), devinfo, devinfo->F)) \
+         devinfo->F = (V);                                              \
    } while (0)
 
+#define DEVINFO_HWCONFIG(CVER, F, I)                                    \
+   DEVINFO_HWCONFIG_KV((CVER), F, (I)->key, (I)->val[0])
+
 static void
-apply_hwconfig_item(struct intel_device_info *devinfo,
-                    const struct hwconfig *item)
+process_hwconfig_item(struct intel_device_info *devinfo,
+                      const struct hwconfig *item,
+                      const bool check_only)
 {
    switch (item->key) {
    case INTEL_HWCONFIG_MAX_SLICES_SUPPORTED:
@@ -190,30 +223,34 @@ apply_hwconfig_item(struct intel_device_info *devinfo,
    case INTEL_HWCONFIG_DEPRECATED_SLM_SIZE_IN_KB:
       break; /* ignore */
    case INTEL_HWCONFIG_MAX_NUM_EU_PER_DSS:
-      DEVINFO_HWCONFIG(max_eus_per_subslice, item->val[0]);
+      DEVINFO_HWCONFIG(125, max_eus_per_subslice, item);
       break;
    case INTEL_HWCONFIG_NUM_THREADS_PER_EU:
-      DEVINFO_HWCONFIG(num_thread_per_eu, item->val[0]);
+      DEVINFO_HWCONFIG(125, num_thread_per_eu, item);
       break;
    case INTEL_HWCONFIG_TOTAL_VS_THREADS:
-      DEVINFO_HWCONFIG(max_vs_threads, item->val[0]);
+      DEVINFO_HWCONFIG(125, max_vs_threads, item);
       break;
    case INTEL_HWCONFIG_TOTAL_GS_THREADS:
-      DEVINFO_HWCONFIG(max_gs_threads, item->val[0]);
+      DEVINFO_HWCONFIG(125, max_gs_threads, item);
       break;
    case INTEL_HWCONFIG_TOTAL_HS_THREADS:
-      DEVINFO_HWCONFIG(max_tcs_threads, item->val[0]);
+      DEVINFO_HWCONFIG(125, max_tcs_threads, item);
       break;
    case INTEL_HWCONFIG_TOTAL_DS_THREADS:
-      DEVINFO_HWCONFIG(max_tes_threads, item->val[0]);
+      DEVINFO_HWCONFIG(125, max_tes_threads, item);
       break;
    case INTEL_HWCONFIG_TOTAL_VS_THREADS_POCS:
       break; /* ignore */
-   case INTEL_HWCONFIG_TOTAL_PS_THREADS:
-      DEVINFO_HWCONFIG(max_threads_per_psd, item->val[0] / 2);
+   case INTEL_HWCONFIG_TOTAL_PS_THREADS: {
+      unsigned threads = item->val[0];
+      if (devinfo->ver == 12)
+         threads /= 2;
+      DEVINFO_HWCONFIG_KV(125, max_threads_per_psd, item->key, threads);
       break;
+   }
    case INTEL_HWCONFIG_URB_SIZE_PER_SLICE_IN_KB:
-      DEVINFO_HWCONFIG(urb.size, item->val[0]);
+      DEVINFO_HWCONFIG(125, urb.size, item);
       break;
    case INTEL_HWCONFIG_DEPRECATED_MAX_FILL_RATE:
    case INTEL_HWCONFIG_MAX_RCS:
@@ -222,16 +259,34 @@ apply_hwconfig_item(struct intel_device_info *devinfo,
    case INTEL_HWCONFIG_MAX_VECS:
    case INTEL_HWCONFIG_MAX_COPY_CS:
    case INTEL_HWCONFIG_DEPRECATED_URB_SIZE_IN_KB:
+      break; /* ignore */
    case INTEL_HWCONFIG_MIN_VS_URB_ENTRIES:
+      DEVINFO_HWCONFIG(200, urb.min_entries[MESA_SHADER_VERTEX], item);
+      break;
    case INTEL_HWCONFIG_MAX_VS_URB_ENTRIES:
+      DEVINFO_HWCONFIG(200, urb.max_entries[MESA_SHADER_VERTEX], item);
+      break;
    case INTEL_HWCONFIG_MIN_PCS_URB_ENTRIES:
    case INTEL_HWCONFIG_MAX_PCS_URB_ENTRIES:
+      break; /* ignore */
    case INTEL_HWCONFIG_MIN_HS_URB_ENTRIES:
+      DEVINFO_HWCONFIG(200, urb.min_entries[MESA_SHADER_TESS_CTRL], item);
+      break;
    case INTEL_HWCONFIG_MAX_HS_URB_ENTRIES:
+      DEVINFO_HWCONFIG(200, urb.max_entries[MESA_SHADER_TESS_CTRL], item);
+      break;
    case INTEL_HWCONFIG_MIN_GS_URB_ENTRIES:
+      DEVINFO_HWCONFIG(200, urb.min_entries[MESA_SHADER_GEOMETRY], item);
+      break;
    case INTEL_HWCONFIG_MAX_GS_URB_ENTRIES:
+      DEVINFO_HWCONFIG(200, urb.max_entries[MESA_SHADER_GEOMETRY], item);
+      break;
    case INTEL_HWCONFIG_MIN_DS_URB_ENTRIES:
+      DEVINFO_HWCONFIG(200, urb.min_entries[MESA_SHADER_TESS_EVAL], item);
+      break;
    case INTEL_HWCONFIG_MAX_DS_URB_ENTRIES:
+      DEVINFO_HWCONFIG(200, urb.max_entries[MESA_SHADER_TESS_EVAL], item);
+      break;
    case INTEL_HWCONFIG_PUSH_CONSTANT_URB_RESERVED_SIZE:
    case INTEL_HWCONFIG_POCS_PUSH_CONSTANT_URB_RESERVED_SIZE:
    case INTEL_HWCONFIG_URB_REGION_ALIGNMENT_SIZE_IN_BYTES:
@@ -271,13 +326,21 @@ apply_hwconfig_item(struct intel_device_info *devinfo,
    }
 }
 
+static void
+apply_hwconfig_item(struct intel_device_info *devinfo,
+                    const struct hwconfig *item)
+{
+   process_hwconfig_item(devinfo, item, false);
+}
+
 bool
 intel_hwconfig_process_table(struct intel_device_info *devinfo,
                              void *data, int32_t len)
 {
-   process_hwconfig_table(devinfo, data, len, apply_hwconfig_item);
+   if (apply_hwconfig(devinfo))
+      process_hwconfig_table(devinfo, data, len, apply_hwconfig_item);
 
-   return devinfo->apply_hwconfig;
+   return apply_hwconfig(devinfo);
 }
 
 static void
@@ -298,26 +361,52 @@ intel_print_hwconfig_table(const struct hwconfig *hwconfig,
    process_hwconfig_table(NULL, hwconfig, hwconfig_len, print_hwconfig_item);
 }
 
+static struct hwconfig *
+intel_get_hwconfig_table(int fd, struct intel_device_info *devinfo,
+                         int32_t *hwconfig_len)
+{
+   switch (devinfo->kmd_type) {
+   case INTEL_KMD_TYPE_I915:
+      return intel_device_info_i915_query_hwconfig(fd, hwconfig_len);
+   case INTEL_KMD_TYPE_XE:
+      return intel_device_info_xe_query_hwconfig(fd, hwconfig_len);
+   default:
+      unreachable("unknown kmd type");
+      return NULL;
+   }
+}
+
 void
 intel_get_and_print_hwconfig_table(int fd, struct intel_device_info *devinfo)
 {
    struct hwconfig *hwconfig;
    int32_t hwconfig_len = 0;
 
-   switch (devinfo->kmd_type) {
-   case INTEL_KMD_TYPE_I915:
-      hwconfig = intel_device_info_i915_query_hwconfig(fd, &hwconfig_len);
-      break;
-   case INTEL_KMD_TYPE_XE:
-      hwconfig = intel_device_info_xe_query_hwconfig(fd, &hwconfig_len);
-      break;
-   default:
-      unreachable("unknown kmd type");
-      break;
-   }
-
+   hwconfig = intel_get_hwconfig_table(fd, devinfo, &hwconfig_len);
    if (hwconfig) {
       intel_print_hwconfig_table(hwconfig, hwconfig_len);
       free(hwconfig);
    }
+}
+
+UNUSED static void
+check_hwconfig_item(struct intel_device_info *devinfo,
+                    const struct hwconfig *item)
+{
+   process_hwconfig_item(devinfo, item, true);
+}
+
+void
+intel_check_hwconfig_items(int fd, struct intel_device_info *devinfo)
+{
+#ifndef NDEBUG
+   struct hwconfig *data;
+   int32_t len = 0;
+
+   data = intel_get_hwconfig_table(fd, devinfo, &len);
+   if (data) {
+      process_hwconfig_table(devinfo, data, len, check_hwconfig_item);
+      free(data);
+   }
+#endif
 }

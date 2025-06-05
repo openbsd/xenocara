@@ -6,16 +6,73 @@ use crate::core::platform::*;
 use crate::impl_cl_type_trait;
 
 use mesa_rust::pipe::context::PipeContext;
+use mesa_rust_gen::*;
 use mesa_rust_util::properties::*;
 use rusticl_opencl_gen::*;
 
+use std::cmp;
 use std::mem;
+use std::mem::ManuallyDrop;
+use std::ops::Deref;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::Weak;
 use std::thread;
 use std::thread::JoinHandle;
+
+/// State tracking wrapper for [PipeContext]
+///
+/// Used for tracking bound GPU state to lower CPU overhead and centralize state tracking
+pub struct QueueContext {
+    // need to use ManuallyDrop so we can recycle the context without cloning
+    ctx: ManuallyDrop<PipeContext>,
+    pub dev: &'static Device,
+    use_stream: bool,
+}
+
+impl QueueContext {
+    fn new_for(device: &'static Device) -> CLResult<Self> {
+        let ctx = device.create_context().ok_or(CL_OUT_OF_HOST_MEMORY)?;
+
+        Ok(Self {
+            ctx: ManuallyDrop::new(ctx),
+            dev: device,
+            use_stream: device.prefers_real_buffer_in_cb0(),
+        })
+    }
+
+    pub fn update_cb0(&self, data: &[u8]) -> CLResult<()> {
+        // only update if we actually bind data
+        if !data.is_empty() {
+            if self.use_stream {
+                if !self.ctx.set_constant_buffer_stream(0, data) {
+                    return Err(CL_OUT_OF_RESOURCES);
+                }
+            } else {
+                self.ctx.set_constant_buffer(0, data);
+            }
+        }
+        Ok(())
+    }
+}
+
+// This should go once we moved all state tracking into QueueContext
+impl Deref for QueueContext {
+    type Target = PipeContext;
+
+    fn deref(&self) -> &Self::Target {
+        &self.ctx
+    }
+}
+
+impl Drop for QueueContext {
+    fn drop(&mut self) {
+        let ctx = unsafe { ManuallyDrop::take(&mut self.ctx) };
+        ctx.set_constant_buffer(0, &[]);
+        self.dev.recycle_context(ctx);
+    }
+}
 
 struct QueueState {
     pending: Vec<Arc<Event>>,
@@ -30,18 +87,27 @@ pub struct Queue {
     pub context: Arc<Context>,
     pub device: &'static Device,
     pub props: cl_command_queue_properties,
-    pub props_v2: Option<Properties<cl_queue_properties>>,
+    pub props_v2: Properties<cl_queue_properties>,
     state: Mutex<QueueState>,
-    _thrd: JoinHandle<()>,
+    thrd: JoinHandle<()>,
 }
 
 impl_cl_type_trait!(cl_command_queue, Queue, CL_INVALID_COMMAND_QUEUE);
 
-fn flush_events(evs: &mut Vec<Arc<Event>>, pipe: &PipeContext) {
+fn flush_events(evs: &mut Vec<Arc<Event>>, pipe: &PipeContext) -> cl_int {
     if !evs.is_empty() {
         pipe.flush().wait();
-        evs.drain(..).for_each(|e| e.signal());
+        if pipe.device_reset_status() != pipe_reset_status::PIPE_NO_RESET {
+            // if the context reset while executing, simply put all events into error state.
+            evs.drain(..)
+                .for_each(|e| e.set_user_status(CL_OUT_OF_RESOURCES));
+            return CL_OUT_OF_RESOURCES;
+        } else {
+            evs.drain(..).for_each(|e| e.signal());
+        }
     }
+
+    CL_SUCCESS as cl_int
 }
 
 impl Queue {
@@ -49,14 +115,14 @@ impl Queue {
         context: Arc<Context>,
         device: &'static Device,
         props: cl_command_queue_properties,
-        props_v2: Option<Properties<cl_queue_properties>>,
+        props_v2: Properties<cl_queue_properties>,
     ) -> CLResult<Arc<Queue>> {
         // we assume that memory allocation is the only possible failure. Any other failure reason
         // should be detected earlier (e.g.: checking for CAPs).
-        let pipe = device.screen().create_context().unwrap();
+        let ctx = QueueContext::new_for(device)?;
         let (tx_q, rx_t) = mpsc::channel::<Vec<Arc<Event>>>();
         Ok(Arc::new(Self {
-            base: CLObjectBase::new(),
+            base: CLObjectBase::new(RusticlTypes::Queue),
             context: context,
             device: device,
             props: props,
@@ -66,57 +132,87 @@ impl Queue {
                 last: Weak::new(),
                 chan_in: tx_q,
             }),
-            _thrd: thread::Builder::new()
+            thrd: thread::Builder::new()
                 .name("rusticl queue thread".into())
-                .spawn(move || loop {
-                    let r = rx_t.recv();
-                    if r.is_err() {
-                        break;
+                .spawn(move || {
+                    // Track the error of all executed events. This is only needed for in-order
+                    // queues, so for out of order we'll need to update this.
+                    // Also, the OpenCL specification gives us enough freedom to do whatever we want
+                    // in case of any event running into an error while executing:
+                    //
+                    //   Unsuccessful completion results in abnormal termination of the command
+                    //   which is indicated by setting the event status to a negative value. In this
+                    //   case, the command-queue associated with the abnormally terminated command
+                    //   and all other command-queues in the same context may no longer be available
+                    //   and their behavior is implementation-defined.
+                    //
+                    // TODO: use pipe_context::set_device_reset_callback to get notified about gone
+                    //       GPU contexts
+                    let mut last_err = CL_SUCCESS as cl_int;
+                    loop {
+                        let r = rx_t.recv();
+                        if r.is_err() {
+                            break;
+                        }
+
+                        let new_events = r.unwrap();
+                        let mut flushed = Vec::new();
+
+                        for e in new_events {
+                            // If we hit any deps from another queue, flush so we don't risk a dead
+                            // lock.
+                            if e.deps.iter().any(|ev| ev.queue != e.queue) {
+                                let dep_err = flush_events(&mut flushed, &ctx);
+                                last_err = cmp::min(last_err, dep_err);
+                            }
+
+                            // check if any dependency has an error
+                            for dep in &e.deps {
+                                // We have to wait on user events or events from other queues.
+                                let dep_err = if dep.is_user() || dep.queue != e.queue {
+                                    dep.wait()
+                                } else {
+                                    dep.status()
+                                };
+
+                                last_err = cmp::min(last_err, dep_err);
+                            }
+
+                            if last_err < 0 {
+                                // If a dependency failed, fail this event as well.
+                                e.set_user_status(last_err);
+                                continue;
+                            }
+
+                            // if there is an execution error don't bother signaling it as the  context
+                            // might be in a broken state. How queues behave after any event hit an
+                            // error is entirely implementation defined.
+                            last_err = e.call(&ctx);
+                            if last_err < 0 {
+                                continue;
+                            }
+
+                            if e.is_user() {
+                                // On each user event we flush our events as application might
+                                // wait on them before signaling user events.
+                                last_err = flush_events(&mut flushed, &ctx);
+
+                                if last_err >= 0 {
+                                    // Wait on user events as they are synchronization points in the
+                                    // application's control.
+                                    e.wait();
+                                }
+                            } else if Platform::dbg().sync_every_event {
+                                flushed.push(e);
+                                last_err = flush_events(&mut flushed, &ctx);
+                            } else {
+                                flushed.push(e);
+                            }
+                        }
+
+                        let flush_err = flush_events(&mut flushed, &ctx);
+                        last_err = cmp::min(last_err, flush_err);
                     }
-
-                    let new_events = r.unwrap();
-                    let mut flushed = Vec::new();
-
-                    for e in new_events {
-                        // If we hit any deps from another queue, flush so we don't risk a dead
-                        // lock.
-                        if e.deps.iter().any(|ev| ev.queue != e.queue) {
-                            flush_events(&mut flushed, &pipe);
-                        }
-
-                        // We have to wait on user events or events from other queues.
-                        let err = e
-                            .deps
-                            .iter()
-                            .filter(|ev| ev.is_user() || ev.queue != e.queue)
-                            .map(|e| e.wait())
-                            .find(|s| *s < 0);
-
-                        if let Some(err) = err {
-                            // If a dependency failed, fail this event as well.
-                            e.set_user_status(err);
-                            continue;
-                        }
-
-                        e.call(&pipe);
-
-                        if e.is_user() {
-                            // On each user event we flush our events as application might
-                            // wait on them before signaling user events.
-                            flush_events(&mut flushed, &pipe);
-
-                            // Wait on user events as they are synchronization points in the
-                            // application's control.
-                            e.wait();
-                        } else if Platform::dbg().sync_every_event {
-                            flushed.push(e);
-                            flush_events(&mut flushed, &pipe);
-                        } else {
-                            flushed.push(e);
-                        }
-                    }
-
-                    flush_events(&mut flushed, &pipe);
                 })
                 .unwrap(),
         }))
@@ -163,9 +259,16 @@ impl Queue {
             // Waiting on the last event is good enough here as the queue will process it in order
             // It's not a problem if the weak ref is invalid as that means the work is already done
             // and waiting isn't necessary anymore.
-            last.upgrade().map(|e| e.wait());
+            let err = last.upgrade().map(|e| e.wait()).unwrap_or_default();
+            if err < 0 {
+                return Err(err);
+            }
         }
         Ok(())
+    }
+
+    pub fn is_dead(&self) -> bool {
+        self.thrd.is_finished()
     }
 
     pub fn is_profiling_enabled(&self) -> bool {

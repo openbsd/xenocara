@@ -37,15 +37,17 @@
 extern "C" {
 #endif
 
+struct vk_acceleration_structure_build_ops;
 struct vk_command_buffer_ops;
+struct vk_device_shader_ops;
 struct vk_sync;
 
 enum vk_queue_submit_mode {
    /** Submits happen immediately
     *
     * `vkQueueSubmit()` and `vkQueueBindSparse()` call
-    * `vk_queue::driver_submit` directly for all submits and the last call to
-    * `vk_queue::driver_submit` will have completed by the time
+    * ``vk_queue::driver_submit`` directly for all submits and the last call to
+    * ``vk_queue::driver_submit`` will have completed by the time
     * `vkQueueSubmit()` or `vkQueueBindSparse()` return.
     */
    VK_QUEUE_SUBMIT_MODE_IMMEDIATE,
@@ -73,7 +75,7 @@ enum vk_queue_submit_mode {
     *       semaphores after waiting on them.
     *
     *    3. All vk_sync types used as permanent payloads of semaphores support
-    *       `vk_sync_type::move` so that it can move the pending signal into a
+    *       ``vk_sync_type::move`` so that it can move the pending signal into a
     *       temporary vk_sync and reset the semaphore.
     *
     * This is requied for shared timeline semaphores where we need to handle
@@ -130,6 +132,43 @@ struct vk_device {
    /** Command buffer vtable when using the common command pool */
    const struct vk_command_buffer_ops *command_buffer_ops;
 
+   /** Shader vtable for VK_EXT_shader_object and common pipelines */
+   const struct vk_device_shader_ops *shader_ops;
+
+   /** Acceleration structure build vtable for common BVH building. */
+   const struct vk_acceleration_structure_build_ops *as_build_ops;
+
+   /**
+    * Write data to a buffer from the command processor. This is simpler than
+    * setting up a staging buffer and faster for small writes, but is not
+    * meant for larger amounts of data. \p data is owned by the caller and the
+    * driver is expected to write it out directly to the command stream as
+    * part of an immediate write packet.
+    */
+   void (*write_buffer_cp)(VkCommandBuffer cmdbuf, VkDeviceAddress addr,
+                           void *data, uint32_t size);
+
+   /* Flush data written via write_buffer_cp. Users must use a normal pipeline
+    * barrier in order to read this data, with the appropriate destination
+    * access, but this replaces the source access mask.
+    */
+   void (*flush_buffer_write_cp)(VkCommandBuffer cmdbuf);
+
+   /* An unaligned dispatch function. This launches a number of threads that
+    * may not be a multiple of the workgroup size, which may result in partial
+    * workgroups.
+    */
+   void (*cmd_dispatch_unaligned)(VkCommandBuffer cmdbuf,
+                                  uint32_t invocations_x,
+                                  uint32_t invocations_y,
+                                  uint32_t invocations_z);
+
+   /* vkCmdFillBuffer but with a device address. */
+   void (*cmd_fill_buffer_addr)(VkCommandBuffer cmdbuf,
+                                VkDeviceAddress devAddr,
+                                VkDeviceSize size,
+                                uint32_t data);
+
    /** Driver provided callback for capturing traces
     * 
     * Triggers for this callback are:
@@ -156,7 +195,7 @@ struct vk_device {
    /** Checks the status of this device
     *
     * This is expected to return either VK_SUCCESS or VK_ERROR_DEVICE_LOST.
-    * It is called before vk_queue::driver_submit and after every non-trivial
+    * It is called before ``vk_queue::driver_submit`` and after every non-trivial
     * wait operation to ensure the device is still around.  This gives the
     * driver a hook to ask the kernel if its device is still valid.  If the
     * kernel says the device has been lost, it MUST call vk_device_set_lost().
@@ -164,6 +203,14 @@ struct vk_device {
     * This function may be called from any thread at any time.
     */
    VkResult (*check_status)(struct vk_device *device);
+
+   /* Get the device timestamp in the VK_TIME_DOMAIN_DEVICE_KHR domain */
+   VkResult (*get_timestamp)(struct vk_device *device, uint64_t *timestamp);
+
+   /** Host time domain used for timestamp calibration */
+   VkTimeDomainKHR calibrate_time_domain;
+   /** Period of VK_TIME_DOMAIN_DEVICE_KHR */
+   uint64_t device_time_domain_period;
 
    /** Creates a vk_sync that wraps a memory object
     *
@@ -173,10 +220,10 @@ struct vk_device {
     * anyway.
     *
     * If `signal_memory` is set, the resulting vk_sync will be used to signal
-    * the memory object from a queue via vk_queue_submit::signals.  The common
+    * the memory object from a queue ``via vk_queue_submit::signals``.  The common
     * code guarantees that, by the time vkQueueSubmit() returns, the signal
     * operation has been submitted to the kernel via the driver's
-    * vk_queue::driver_submit hook.  This means that any vkQueueSubmit() call
+    * ``vk_queue::driver_submit`` hook.  This means that any vkQueueSubmit() call
     * which needs implicit synchronization may block.
     *
     * If `signal_memory` is not set, it can be assumed that memory object
@@ -190,6 +237,9 @@ struct vk_device {
 
    /* Set by vk_device_set_drm_fd() */
    int drm_fd;
+
+   /** Implicit pipeline cache, or NULL */
+   struct vk_pipeline_cache *mem_cache;
 
    /** An enum describing how timeline semaphores work */
    enum vk_device_timeline_mode {
@@ -260,6 +310,9 @@ struct vk_device {
    struct hash_table *swapchain_private;
    mtx_t swapchain_name_mtx;
    struct hash_table *swapchain_name;
+
+   /* For VK_KHR_pipeline_binary */
+   bool disable_internal_cache;
 };
 
 VK_DEFINE_HANDLE_CASTS(vk_device, base, VkDevice,
@@ -269,20 +322,20 @@ VK_DEFINE_HANDLE_CASTS(vk_device, base, VkDevice,
  *
  * Along with initializing the data structures in `vk_device`, this function
  * checks that every extension specified by
- * `VkInstanceCreateInfo::ppEnabledExtensionNames` is actually supported by
+ * ``VkInstanceCreateInfo::ppEnabledExtensionNames`` is actually supported by
  * the physical device and returns `VK_ERROR_EXTENSION_NOT_PRESENT` if an
  * unsupported extension is requested.  It also checks all the feature struct
  * chained into the `pCreateInfo->pNext` chain against the features returned
  * by `vkGetPhysicalDeviceFeatures2` and returns
  * `VK_ERROR_FEATURE_NOT_PRESENT` if an unsupported feature is requested.
  *
- * @param[out] device               The device to initialize
- * @param[in]  physical_device      The physical device
- * @param[in]  dispatch_table       Device-level dispatch table
- * @param[in]  pCreateInfo          VkDeviceCreateInfo pointer passed to
- *                                  `vkCreateDevice()`
- * @param[in]  alloc                Allocation callbacks passed to
- *                                  `vkCreateDevice()`
+ * :param device:               |out| The device to initialize
+ * :param physical_device:      |in|  The physical device
+ * :param dispatch_table:       |in|  Device-level dispatch table
+ * :param pCreateInfo:          |in|  VkDeviceCreateInfo pointer passed to
+ *                                    `vkCreateDevice()`
+ * :param alloc:                |in|  Allocation callbacks passed to
+ *                                    `vkCreateDevice()`
  */
 VkResult MUST_CHECK
 vk_device_init(struct vk_device *device,
@@ -299,7 +352,7 @@ vk_device_set_drm_fd(struct vk_device *device, int drm_fd)
 
 /** Tears down a vk_device
  *
- * @param[out] device               The device to tear down
+ * :param device:       |out| The device to tear down
  */
 void
 vk_device_finish(struct vk_device *device);
@@ -367,10 +420,16 @@ vk_device_check_status(struct vk_device *device)
    return result;
 }
 
+VkResult
+vk_device_get_timestamp(struct vk_device *device, VkTimeDomainKHR domain,
+                        uint64_t *timestamp);
+
 #ifndef _WIN32
 
 uint64_t
 vk_clock_gettime(clockid_t clock_id);
+
+#endif //!_WIN32
 
 static inline uint64_t
 vk_time_max_deviation(uint64_t begin, uint64_t end, uint64_t max_clock_period)
@@ -415,18 +474,9 @@ vk_time_max_deviation(uint64_t begin, uint64_t end, uint64_t max_clock_period)
    return sample_interval + max_clock_period;
 }
 
-#endif //!_WIN32
-
 PFN_vkVoidFunction
 vk_device_get_proc_addr(const struct vk_device *device,
                         const char *name);
-
-bool vk_get_physical_device_core_1_1_property_ext(struct VkBaseOutStructure *ext,
-                                                     const VkPhysicalDeviceVulkan11Properties *core);
-bool vk_get_physical_device_core_1_2_property_ext(struct VkBaseOutStructure *ext,
-                                                     const VkPhysicalDeviceVulkan12Properties *core);
-bool vk_get_physical_device_core_1_3_property_ext(struct VkBaseOutStructure *ext,
-                                                     const VkPhysicalDeviceVulkan13Properties *core);
 
 #ifdef __cplusplus
 }

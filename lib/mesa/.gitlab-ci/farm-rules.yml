@@ -217,25 +217,65 @@
     - !reference [.austriancoder-farm-rules, rules]
 
 
-.freedreno-farm-rules:
+.google-freedreno-farm-rules:
   rules:
-    - exists: [ .ci-farms-disabled/freedreno ]
+    - exists: [ .ci-farms-disabled/google-freedreno ]
       when: never
-    - changes: [ .ci-farms-disabled/freedreno ]
+    - changes: [ .ci-farms-disabled/google-freedreno ]
       if: '$CI_PIPELINE_SOURCE != "schedule"'
       when: on_success
     - changes: [ .ci-farms-disabled/* ]
       if: '$CI_PIPELINE_SOURCE != "schedule"'
       when: never
 
-.freedreno-farm-manual-rules:
+.google-freedreno-farm-manual-rules:
   rules:
-    - exists: [ .ci-farms-disabled/freedreno ]
+    - exists: [ .ci-farms-disabled/google-freedreno ]
       when: never
-    - changes: [ .ci-farms-disabled/freedreno ]
+    - changes: [ .ci-farms-disabled/google-freedreno ]
       if: '$CI_PIPELINE_SOURCE != "schedule"'
       when: never
-    - !reference [.freedreno-farm-rules, rules]
+    - !reference [.google-freedreno-farm-rules, rules]
+
+.vmware-farm-rules:
+  rules:
+    - exists: [ .ci-farms-disabled/vmware ]
+      when: never
+    - changes: [ .ci-farms-disabled/vmware ]
+      if: '$CI_PIPELINE_SOURCE != "schedule"'
+      when: on_success
+    - changes: [ .ci-farms-disabled/* ]
+      if: '$CI_PIPELINE_SOURCE != "schedule"'
+      when: never
+
+.vmware-farm-manual-rules:
+  rules:
+    - exists: [ .ci-farms-disabled/vmware ]
+      when: never
+    - changes: [ .ci-farms-disabled/vmware ]
+      if: '$CI_PIPELINE_SOURCE != "schedule"'
+      when: never
+    - !reference [.vmware-farm-rules, rules]
+
+.ondracka-farm-rules:
+  rules:
+    - exists: [ .ci-farms-disabled/ondracka ]
+      when: never
+    - changes: [ .ci-farms-disabled/ondracka ]
+      if: '$CI_PIPELINE_SOURCE != "schedule"'
+      when: on_success
+    - changes: [ .ci-farms-disabled/* ]
+      if: '$CI_PIPELINE_SOURCE != "schedule"'
+      when: never
+
+.ondracka-farm-manual-rules:
+  rules:
+    - exists: [ .ci-farms-disabled/ondracka ]
+      when: never
+    - changes: [ .ci-farms-disabled/ondracka ]
+      if: '$CI_PIPELINE_SOURCE != "schedule"'
+      when: never
+    - !reference [.ondracka-farm-rules, rules]
 
 
 # Skip container & build jobs when disabling any farm, and run them if any
@@ -283,8 +323,16 @@
       exists: [ .ci-farms-disabled/austriancoder ]
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: [ .ci-farms-disabled/freedreno ]
-      exists: [ .ci-farms-disabled/freedreno ]
+      changes: [ .ci-farms-disabled/google-freedreno ]
+      exists: [ .ci-farms-disabled/google-freedreno ]
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ .ci-farms-disabled/ondracka ]
+      exists: [ .ci-farms-disabled/ondracka ]
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ .ci-farms-disabled/vmware ]
+      exists: [ .ci-farms-disabled/vmware ]
       when: never
     # Any other change to ci-farms/* means some farm is getting re-enabled.
     # Run jobs in Marge pipelines (and let it fallback to manual otherwise)

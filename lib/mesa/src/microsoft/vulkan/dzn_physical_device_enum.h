@@ -24,13 +24,9 @@
 #ifndef DZN_PHYSICAL_DEVICE_ENUM_H
 #define DZN_PHYSICAL_DEVICE_ENUM_H
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
-#include <unknwn.h>
-
-#ifndef _WIN32
 #include <wsl/winadapter.h>
-#endif
 
 #include <stdbool.h>
 

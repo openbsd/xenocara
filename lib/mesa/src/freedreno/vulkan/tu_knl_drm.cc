@@ -10,102 +10,8 @@
 
 #include "tu_knl_drm.h"
 #include "tu_device.h"
-
-static inline void
-tu_sync_cacheline_to_gpu(void const *p __attribute__((unused)))
-{
-#if DETECT_ARCH_AARCH64
-   /* Clean data cache. */
-   __asm volatile("dc cvac, %0" : : "r" (p) : "memory");
-#elif (DETECT_ARCH_X86 || DETECT_ARCH_X86_64)
-   __builtin_ia32_clflush(p);
-#elif DETECT_ARCH_ARM
-   /* DCCMVAC - same as DC CVAC on aarch64.
-    * Seems to be illegal to call from userspace.
-    */
-   //__asm volatile("mcr p15, 0, %0, c7, c10, 1" : : "r" (p) : "memory");
-   unreachable("Cache line clean is unsupported on ARMv7");
-#endif
-}
-
-static inline void
-tu_sync_cacheline_from_gpu(void const *p __attribute__((unused)))
-{
-#if DETECT_ARCH_AARCH64
-   /* Clean and Invalidate data cache, there is no separate Invalidate. */
-   __asm volatile("dc civac, %0" : : "r" (p) : "memory");
-#elif (DETECT_ARCH_X86 || DETECT_ARCH_X86_64)
-   __builtin_ia32_clflush(p);
-#elif DETECT_ARCH_ARM
-   /* DCCIMVAC - same as DC CIVAC on aarch64.
-    * Seems to be illegal to call from userspace.
-    */
-   //__asm volatile("mcr p15, 0, %0, c7, c14, 1" : : "r" (p) : "memory");
-   unreachable("Cache line invalidate is unsupported on ARMv7");
-#endif
-}
-
-void
-tu_sync_cache_bo(struct tu_device *dev,
-                 struct tu_bo *bo,
-                 VkDeviceSize offset,
-                 VkDeviceSize size,
-                 enum tu_mem_sync_op op)
-{
-   uintptr_t level1_dcache_size = dev->physical_device->level1_dcache_size;
-   char *start = (char *) bo->map + offset;
-   char *end = start + (size == VK_WHOLE_SIZE ? (bo->size - offset) : size);
-
-   start = (char *) ((uintptr_t) start & ~(level1_dcache_size - 1));
-
-   for (; start < end; start += level1_dcache_size) {
-      if (op == TU_MEM_SYNC_CACHE_TO_GPU) {
-         tu_sync_cacheline_to_gpu(start);
-      } else {
-         tu_sync_cacheline_from_gpu(start);
-      }
-   }
-}
-
-static VkResult
-sync_cache(VkDevice _device,
-           enum tu_mem_sync_op op,
-           uint32_t count,
-           const VkMappedMemoryRange *ranges)
-{
-   TU_FROM_HANDLE(tu_device, device, _device);
-
-   if (!device->physical_device->has_cached_non_coherent_memory) {
-      tu_finishme(
-         "data cache clean and invalidation are unsupported on this arch!");
-      return VK_SUCCESS;
-   }
-
-   for (uint32_t i = 0; i < count; i++) {
-      TU_FROM_HANDLE(tu_device_memory, mem, ranges[i].memory);
-      tu_sync_cache_bo(device, mem->bo, ranges[i].offset, ranges[i].size, op);
-   }
-
-   return VK_SUCCESS;
-}
-
-VkResult
-tu_FlushMappedMemoryRanges(VkDevice _device,
-                           uint32_t memoryRangeCount,
-                           const VkMappedMemoryRange *pMemoryRanges)
-{
-   return sync_cache(_device, TU_MEM_SYNC_CACHE_TO_GPU, memoryRangeCount,
-                     pMemoryRanges);
-}
-
-VkResult
-tu_InvalidateMappedMemoryRanges(VkDevice _device,
-                                uint32_t memoryRangeCount,
-                                const VkMappedMemoryRange *pMemoryRanges)
-{
-   return sync_cache(_device, TU_MEM_SYNC_CACHE_FROM_GPU, memoryRangeCount,
-                     pMemoryRanges);
-}
+#include "tu_queue.h"
+#include "tu_rmv.h"
 
 VkResult
 tu_allocate_userspace_iova(struct tu_device *dev,
@@ -129,11 +35,11 @@ tu_allocate_userspace_iova(struct tu_device *dev,
           * them from the other end of the address space.
           */
          dev->vma.alloc_high = true;
-         *iova = util_vma_heap_alloc(&dev->vma, size, 0x1000);
+         *iova = util_vma_heap_alloc(&dev->vma, size, os_page_size);
       }
    } else {
       dev->vma.alloc_high = false;
-      *iova = util_vma_heap_alloc(&dev->vma, size, 0x1000);
+      *iova = util_vma_heap_alloc(&dev->vma, size, os_page_size);
    }
 
    if (!*iova)
@@ -164,17 +70,21 @@ tu_drm_bo_finish(struct tu_device *dev, struct tu_bo *bo)
       return;
    }
 
-   if (bo->map)
+   if (bo->map) {
+      TU_RMV(bo_unmap, dev, bo);
       munmap(bo->map, bo->size);
+   }
 
+   TU_RMV(bo_destroy, dev, bo);
    tu_debug_bos_del(dev, bo);
+   tu_dump_bo_del(dev, bo);
 
    mtx_lock(&dev->bo_mutex);
-   dev->bo_count--;
-   dev->bo_list[bo->bo_list_idx] = dev->bo_list[dev->bo_count];
+   dev->submit_bo_count--;
+   dev->submit_bo_list[bo->submit_bo_list_idx] = dev->submit_bo_list[dev->submit_bo_count];
 
-   struct tu_bo* exchanging_bo = tu_device_lookup_bo(dev, dev->bo_list[bo->bo_list_idx].handle);
-   exchanging_bo->bo_list_idx = bo->bo_list_idx;
+   struct tu_bo* exchanging_bo = tu_device_lookup_bo(dev, dev->submit_bo_list[bo->submit_bo_list_idx].handle);
+   exchanging_bo->submit_bo_list_idx = bo->submit_bo_list_idx;
 
    if (bo->implicit_sync)
       dev->implicit_sync_bo_count--;
@@ -218,6 +128,52 @@ tu_drm_bo_finish(struct tu_device *dev, struct tu_bo *bo)
    }
 
    u_rwlock_rdunlock(&dev->dma_bo_lock);
+}
+
+void *
+msm_submit_create(struct tu_device *device)
+{
+   return vk_zalloc(&device->vk.alloc, sizeof(struct tu_msm_queue_submit), 8,
+                    VK_SYSTEM_ALLOCATION_SCOPE_DEVICE);
+}
+
+void
+msm_submit_finish(struct tu_device *device,
+                  void *_submit)
+{
+   struct tu_msm_queue_submit *submit =
+      (struct tu_msm_queue_submit *)_submit;
+
+   util_dynarray_fini(&submit->commands);
+   util_dynarray_fini(&submit->command_bos);
+   vk_free(&device->vk.alloc, submit);
+}
+
+void
+msm_submit_add_entries(struct tu_device *device, void *_submit,
+                       struct tu_cs_entry *entries, unsigned num_entries)
+{
+   struct tu_msm_queue_submit *submit =
+      (struct tu_msm_queue_submit *)_submit;
+
+   struct drm_msm_gem_submit_cmd *cmds = (struct drm_msm_gem_submit_cmd *)
+      util_dynarray_grow(&submit->commands, struct drm_msm_gem_submit_cmd,
+                         num_entries);
+
+   const struct tu_bo **bos = (const struct tu_bo **)
+      util_dynarray_grow(&submit->command_bos, struct tu_bo *,
+                         num_entries);
+
+   for (unsigned i = 0; i < num_entries; i++) {
+      cmds[i].type = MSM_SUBMIT_CMD_BUF;
+      cmds[i].submit_idx = entries[i].bo->submit_bo_list_idx;
+      cmds[i].submit_offset = entries[i].offset;
+      cmds[i].size = entries[i].size;
+      cmds[i].pad = 0;
+      cmds[i].nr_relocs = 0;
+      cmds[i].relocs = 0;
+      bos[i] = entries[i].bo;
+   }
 }
 
 uint32_t

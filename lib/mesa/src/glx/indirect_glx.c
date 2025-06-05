@@ -37,7 +37,7 @@
 #include "indirect.h"
 #include "util/u_debug.h"
 
-#ifndef GLX_USE_APPLEGL
+#if !defined(GLX_USE_APPLEGL) || defined(GLX_USE_APPLE)
 
 extern struct _glapi_table *__glXNewIndirectAPI(void);
 
@@ -124,18 +124,18 @@ SendMakeCurrentRequest(Display * dpy, GLXContextID gc_id,
 
 static int
 indirect_bind_context(struct glx_context *gc,
-		      GLXDrawable draw, GLXDrawable read)
+            GLXDrawable draw, GLXDrawable read)
 {
    Display *dpy = gc->psc->dpy;
    Bool sent;
 
    sent = SendMakeCurrentRequest(dpy, gc->xid, 0, draw, read,
-				 &gc->currentContextTag);
+             &gc->currentContextTag);
 
    if (sent) {
       if (!IndirectAPI)
          IndirectAPI = __glXNewIndirectAPI();
-      _glapi_set_dispatch(IndirectAPI);
+      _mesa_glapi_set_dispatch(IndirectAPI);
 
       /* The indirect vertex array state must to be initialised after we
        * have setup the context, as it needs to query server attributes.
@@ -213,8 +213,8 @@ static const struct glx_context_vtable indirect_context_vtable = {
 
 _X_HIDDEN struct glx_context *
 indirect_create_context(struct glx_screen *psc,
-			struct glx_config *mode,
-			struct glx_context *shareList, int renderType)
+         struct glx_config *mode,
+         struct glx_context *shareList, int renderType)
 {
    unsigned error = 0;
    const uint32_t attribs[] = { GLX_RENDER_TYPE, renderType };
@@ -230,11 +230,11 @@ indirect_create_context(struct glx_screen *psc,
  */
 _X_HIDDEN struct glx_context *
 indirect_create_context_attribs(struct glx_screen *psc,
-				struct glx_config *mode,
-				struct glx_context *shareList,
-				unsigned num_attribs,
-				const uint32_t *attribs,
-				unsigned *error)
+            struct glx_config *mode,
+            struct glx_context *shareList,
+            unsigned num_attribs,
+            const uint32_t *attribs,
+            unsigned *error)
 {
    struct glx_context *gc;
    int bufSize;

@@ -146,13 +146,12 @@ lp_build_create_jit_texture_type(struct gallivm_state *gallivm)
    LLVMTypeRef elem_types[LP_JIT_TEXTURE_NUM_FIELDS];
 
    /* struct lp_jit_texture */
-   elem_types[LP_JIT_TEXTURE_WIDTH]  =
+   elem_types[LP_JIT_SAMPLER_INDEX_DUMMY] =
+   elem_types[LP_JIT_TEXTURE_WIDTH] = LLVMInt32TypeInContext(lc);
    elem_types[LP_JIT_TEXTURE_HEIGHT] =
-   elem_types[LP_JIT_TEXTURE_DEPTH] =
-   elem_types[LP_JIT_TEXTURE_NUM_SAMPLES] =
-   elem_types[LP_JIT_TEXTURE_SAMPLE_STRIDE] =
+   elem_types[LP_JIT_TEXTURE_DEPTH] = LLVMInt16TypeInContext(lc);
    elem_types[LP_JIT_TEXTURE_FIRST_LEVEL] =
-   elem_types[LP_JIT_TEXTURE_LAST_LEVEL] = LLVMInt32TypeInContext(lc);
+   elem_types[LP_JIT_TEXTURE_LAST_LEVEL] = LLVMInt8TypeInContext(lc);
    elem_types[LP_JIT_TEXTURE_BASE] = LLVMPointerType(LLVMInt8TypeInContext(lc), 0);
    elem_types[LP_JIT_TEXTURE_ROW_STRIDE] =
    elem_types[LP_JIT_TEXTURE_IMG_STRIDE] =
@@ -189,12 +188,6 @@ lp_build_create_jit_texture_type(struct gallivm_state *gallivm)
    LP_CHECK_MEMBER_OFFSET(struct lp_jit_texture, mip_offsets,
                           gallivm->target, texture_type,
                           LP_JIT_TEXTURE_MIP_OFFSETS);
-   LP_CHECK_MEMBER_OFFSET(struct lp_jit_texture, num_samples,
-                          gallivm->target, texture_type,
-                          LP_JIT_TEXTURE_NUM_SAMPLES);
-   LP_CHECK_MEMBER_OFFSET(struct lp_jit_texture, sample_stride,
-                          gallivm->target, texture_type,
-                          LP_JIT_TEXTURE_SAMPLE_STRIDE);
    LP_CHECK_STRUCT_SIZE(struct lp_jit_texture,
                         gallivm->target, texture_type);
    return texture_type;
@@ -208,8 +201,7 @@ lp_build_create_jit_sampler_type(struct gallivm_state *gallivm)
    LLVMTypeRef elem_types[LP_JIT_SAMPLER_NUM_FIELDS];
    elem_types[LP_JIT_SAMPLER_MIN_LOD] =
    elem_types[LP_JIT_SAMPLER_MAX_LOD] =
-   elem_types[LP_JIT_SAMPLER_LOD_BIAS] =
-   elem_types[LP_JIT_SAMPLER_MAX_ANISO] = LLVMFloatTypeInContext(lc);
+   elem_types[LP_JIT_SAMPLER_LOD_BIAS] = LLVMFloatTypeInContext(lc);
    elem_types[LP_JIT_SAMPLER_BORDER_COLOR] =
       LLVMArrayType(LLVMFloatTypeInContext(lc), 4);
 
@@ -228,9 +220,6 @@ lp_build_create_jit_sampler_type(struct gallivm_state *gallivm)
    LP_CHECK_MEMBER_OFFSET(struct lp_jit_sampler, border_color,
                           gallivm->target, sampler_type,
                           LP_JIT_SAMPLER_BORDER_COLOR);
-   LP_CHECK_MEMBER_OFFSET(struct lp_jit_sampler, max_aniso,
-                          gallivm->target, sampler_type,
-                          LP_JIT_SAMPLER_MAX_ANISO);
    LP_CHECK_STRUCT_SIZE(struct lp_jit_sampler,
                         gallivm->target, sampler_type);
    return sampler_type;
@@ -242,14 +231,16 @@ lp_build_create_jit_image_type(struct gallivm_state *gallivm)
    LLVMContextRef lc = gallivm->context;
    LLVMTypeRef image_type;
    LLVMTypeRef elem_types[LP_JIT_IMAGE_NUM_FIELDS];
-   elem_types[LP_JIT_IMAGE_WIDTH] =
+   elem_types[LP_JIT_IMAGE_WIDTH] = LLVMInt32TypeInContext(lc);
    elem_types[LP_JIT_IMAGE_HEIGHT] =
-   elem_types[LP_JIT_IMAGE_DEPTH] = LLVMInt32TypeInContext(lc);
-   elem_types[LP_JIT_IMAGE_BASE] = LLVMPointerType(LLVMInt8TypeInContext(lc), 0);
+   elem_types[LP_JIT_IMAGE_DEPTH] = LLVMInt16TypeInContext(lc);
+   elem_types[LP_JIT_IMAGE_NUM_SAMPLES] = LLVMInt8TypeInContext(lc);
+   elem_types[LP_JIT_IMAGE_BASE] = 
+   elem_types[LP_JIT_IMAGE_RESIDENCY] = LLVMPointerType(LLVMInt8TypeInContext(lc), 0);
    elem_types[LP_JIT_IMAGE_ROW_STRIDE] =
    elem_types[LP_JIT_IMAGE_IMG_STRIDE] =
-   elem_types[LP_JIT_IMAGE_NUM_SAMPLES] =
-   elem_types[LP_JIT_IMAGE_SAMPLE_STRIDE] = LLVMInt32TypeInContext(lc);
+   elem_types[LP_JIT_IMAGE_SAMPLE_STRIDE] = 
+   elem_types[LP_JIT_IMAGE_BASE_OFFSET] = LLVMInt32TypeInContext(lc);
 
    image_type = LLVMStructTypeInContext(lc, elem_types,
                                         ARRAY_SIZE(elem_types), 0);
@@ -301,7 +292,6 @@ lp_build_jit_resources_type(struct gallivm_state *gallivm)
                                                    PIPE_MAX_SAMPLERS);
    elem_types[LP_JIT_RES_IMAGES] = LLVMArrayType(image_type,
                                                  PIPE_MAX_SHADER_IMAGES);
-   elem_types[LP_JIT_RES_ANISO_FILTER_TABLE] = LLVMPointerType(LLVMFloatTypeInContext(gallivm->context), 0);
 
    resources_type = LLVMStructTypeInContext(gallivm->context, elem_types,
                                             ARRAY_SIZE(elem_types), 0);
@@ -321,9 +311,6 @@ lp_build_jit_resources_type(struct gallivm_state *gallivm)
    LP_CHECK_MEMBER_OFFSET(struct lp_jit_resources, images,
                           gallivm->target, resources_type,
                           LP_JIT_RES_IMAGES);
-   LP_CHECK_MEMBER_OFFSET(struct lp_jit_resources, aniso_filter_table,
-                          gallivm->target, resources_type,
-                          LP_JIT_RES_ANISO_FILTER_TABLE);
 
    return resources_type;
 }
@@ -414,6 +401,38 @@ lp_build_llvm_texture_member(struct gallivm_state *gallivm,
    return res;
 }
 
+static LLVMValueRef
+lp_build_llvm_texture_residency(struct gallivm_state *gallivm,
+                                      LLVMTypeRef resources_type,
+                                      LLVMValueRef resources_ptr,
+                                      unsigned texture_unit,
+                                      LLVMValueRef texture_unit_offset)
+{
+   LLVMBuilderRef builder = gallivm->builder;
+
+   static_assert(offsetof(struct lp_descriptor, texture) == 0, "Invalid texture offset");
+   LLVMValueRef texture_ptr = gallivm->texture_descriptor;
+
+   LLVMTypeRef texture_ptr_type = LLVMStructGetTypeAtIndex(resources_type, LP_JIT_RES_TEXTURES);
+   LLVMTypeRef texture_type = LLVMGetElementType(texture_ptr_type);
+   texture_ptr_type = LLVMPointerType(texture_type, 0);
+
+   texture_ptr = LLVMBuildIntToPtr(builder, texture_ptr, texture_ptr_type, "");
+
+   static_assert(offsetof(struct lp_jit_texture, row_stride) == offsetof(struct lp_jit_texture, residency),
+                 "Invalid texture descriptor layout");
+   LLVMValueRef indices[2] = {
+      lp_build_const_int32(gallivm, 0),
+      lp_build_const_int32(gallivm, LP_JIT_TEXTURE_ROW_STRIDE),
+   };
+   LLVMValueRef ptr = LLVMBuildGEP2(builder, texture_type, texture_ptr, indices, ARRAY_SIZE(indices), "");
+
+   LLVMTypeRef residency_type = LLVMPointerType(LLVMInt8TypeInContext(gallivm->context), 0);
+   ptr = LLVMBuildBitCast(builder, ptr, LLVMPointerType(residency_type, 0), "");
+
+   return LLVMBuildLoad2(builder, residency_type, ptr, "");
+}
+
 
 /**
  * Helper macro to instantiate the functions that generate the code to
@@ -460,8 +479,6 @@ LP_BUILD_LLVM_TEXTURE_MEMBER(base_ptr,   LP_JIT_TEXTURE_BASE, true)
 LP_BUILD_LLVM_TEXTURE_MEMBER_OUTTYPE(row_stride, LP_JIT_TEXTURE_ROW_STRIDE, false)
 LP_BUILD_LLVM_TEXTURE_MEMBER_OUTTYPE(img_stride, LP_JIT_TEXTURE_IMG_STRIDE, false)
 LP_BUILD_LLVM_TEXTURE_MEMBER_OUTTYPE(mip_offsets, LP_JIT_TEXTURE_MIP_OFFSETS, false)
-LP_BUILD_LLVM_TEXTURE_MEMBER(num_samples, LP_JIT_TEXTURE_NUM_SAMPLES, true)
-LP_BUILD_LLVM_TEXTURE_MEMBER(sample_stride, LP_JIT_TEXTURE_SAMPLE_STRIDE, true)
 
 /**
  * Fetch the specified member of the lp_jit_sampler structure.
@@ -545,7 +562,6 @@ LP_BUILD_LLVM_SAMPLER_MEMBER(min_lod,    LP_JIT_SAMPLER_MIN_LOD, true)
 LP_BUILD_LLVM_SAMPLER_MEMBER(max_lod,    LP_JIT_SAMPLER_MAX_LOD, true)
 LP_BUILD_LLVM_SAMPLER_MEMBER(lod_bias,   LP_JIT_SAMPLER_LOD_BIAS, true)
 LP_BUILD_LLVM_SAMPLER_MEMBER(border_color, LP_JIT_SAMPLER_BORDER_COLOR, false)
-LP_BUILD_LLVM_SAMPLER_MEMBER(max_aniso, LP_JIT_SAMPLER_MAX_ANISO, true)
 
 /**
  * Fetch the specified member of the lp_jit_image structure.
@@ -661,6 +677,8 @@ LP_BUILD_LLVM_IMAGE_MEMBER_OUTTYPE(row_stride, LP_JIT_IMAGE_ROW_STRIDE, true)
 LP_BUILD_LLVM_IMAGE_MEMBER_OUTTYPE(img_stride, LP_JIT_IMAGE_IMG_STRIDE, true)
 LP_BUILD_LLVM_IMAGE_MEMBER(num_samples, LP_JIT_IMAGE_NUM_SAMPLES, true)
 LP_BUILD_LLVM_IMAGE_MEMBER(sample_stride, LP_JIT_IMAGE_SAMPLE_STRIDE, true)
+LP_BUILD_LLVM_IMAGE_MEMBER(residency, LP_JIT_IMAGE_RESIDENCY, true)
+LP_BUILD_LLVM_IMAGE_MEMBER(base_offset, LP_JIT_IMAGE_BASE_OFFSET, true)
 
 void
 lp_build_jit_fill_sampler_dynamic_state(struct lp_sampler_dynamic_state *state)
@@ -674,14 +692,12 @@ lp_build_jit_fill_sampler_dynamic_state(struct lp_sampler_dynamic_state *state)
    state->row_stride = lp_build_llvm_texture_row_stride;
    state->img_stride = lp_build_llvm_texture_img_stride;
    state->mip_offsets = lp_build_llvm_texture_mip_offsets;
-   state->num_samples = lp_build_llvm_texture_num_samples;
-   state->sample_stride = lp_build_llvm_texture_sample_stride;
+   state->residency = lp_build_llvm_texture_residency;
 
    state->min_lod = lp_build_llvm_sampler_min_lod;
    state->max_lod = lp_build_llvm_sampler_max_lod;
    state->lod_bias = lp_build_llvm_sampler_lod_bias;
    state->border_color = lp_build_llvm_sampler_border_color;
-   state->max_aniso = lp_build_llvm_sampler_max_aniso;
 }
 
 void
@@ -694,8 +710,10 @@ lp_build_jit_fill_image_dynamic_state(struct lp_sampler_dynamic_state *state)
    state->base_ptr = lp_build_llvm_image_base_ptr;
    state->row_stride = lp_build_llvm_image_row_stride;
    state->img_stride = lp_build_llvm_image_img_stride;
-   state->num_samples = lp_build_llvm_image_num_samples;
+   state->last_level = lp_build_llvm_image_num_samples;
    state->sample_stride = lp_build_llvm_image_sample_stride;
+   state->residency = lp_build_llvm_image_residency;
+   state->base_offset = lp_build_llvm_image_base_offset;
 }
 
 /**
@@ -762,7 +780,7 @@ lp_build_sample_function_type(struct gallivm_state *gallivm, uint32_t sample_key
 
    LLVMTypeRef arg_types[LP_MAX_TEX_FUNC_ARGS];
    LLVMTypeRef ret_type;
-   LLVMTypeRef val_type[4];
+   LLVMTypeRef val_type[5];
    uint32_t num_params = 0;
 
    LLVMTypeRef coord_type;
@@ -773,8 +791,6 @@ lp_build_sample_function_type(struct gallivm_state *gallivm, uint32_t sample_key
 
    arg_types[num_params++] = LLVMInt64TypeInContext(gallivm->context);
    arg_types[num_params++] = LLVMInt64TypeInContext(gallivm->context);
-
-   arg_types[num_params++] = LLVMPointerType(LLVMFloatTypeInContext(gallivm->context), 0);
 
    for (unsigned i = 0; i < 4; i++)
       arg_types[num_params++] = coord_type;
@@ -793,7 +809,8 @@ lp_build_sample_function_type(struct gallivm_state *gallivm, uint32_t sample_key
       arg_types[num_params++] = coord_type;
 
    val_type[0] = val_type[1] = val_type[2] = val_type[3] = lp_build_vec_type(gallivm, type);
-   ret_type = LLVMStructTypeInContext(gallivm->context, val_type, 4, 0);
+   val_type[4] = lp_build_int_vec_type(gallivm, type);
+   ret_type = LLVMStructTypeInContext(gallivm->context, val_type, 5, 0);
    return LLVMFunctionType(ret_type, arg_types, num_params, false);
 }
 
@@ -842,7 +859,7 @@ lp_build_image_function_type(struct gallivm_state *gallivm,
 
    arg_types[num_params++] = LLVMInt64TypeInContext(gallivm->context);
 
-   if (params->img_op != LP_IMG_LOAD)
+   if (params->img_op != LP_IMG_LOAD && params->img_op != LP_IMG_LOAD_SPARSE)
       arg_types[num_params++] = lp_build_int_vec_type(gallivm, type);
 
    for (uint32_t i = 0; i < 3; i++)
@@ -851,7 +868,7 @@ lp_build_image_function_type(struct gallivm_state *gallivm,
    if (ms)
       arg_types[num_params++] = lp_build_vec_type(gallivm, lp_uint_type(type));
 
-   uint32_t num_inputs = params->img_op != LP_IMG_LOAD ? 4 : 0;
+   uint32_t num_inputs = params->img_op != LP_IMG_LOAD && params->img_op != LP_IMG_LOAD_SPARSE ? 4 : 0;
    if (params->img_op == LP_IMG_ATOMIC_CAS)
       num_inputs = 8;
 
@@ -860,8 +877,13 @@ lp_build_image_function_type(struct gallivm_state *gallivm,
 
    for (uint32_t i = 0; i < num_inputs; i++)
       arg_types[num_params++] = component_type;
-
-   if (params->img_op != LP_IMG_STORE) {
+   
+   if (params->img_op == LP_IMG_LOAD_SPARSE) {
+      LLVMTypeRef val_type[5];
+      val_type[0] = val_type[1] = val_type[2] = val_type[3] = component_type;
+      val_type[4] = lp_build_int_vec_type(gallivm, type);
+      ret_type = LLVMStructTypeInContext(gallivm->context, val_type, 5, 0);
+   } else if (params->img_op != LP_IMG_STORE) {
       LLVMTypeRef val_type[4];
       val_type[0] = val_type[1] = val_type[2] = val_type[3] = component_type;
       ret_type = LLVMStructTypeInContext(gallivm->context, val_type, 4, 0);

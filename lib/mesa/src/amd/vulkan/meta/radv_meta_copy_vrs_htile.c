@@ -1,47 +1,20 @@
 /*
  * Copyright © 2021 Valve Corporation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #define AC_SURFACE_INCLUDE_NIR
 #include "ac_surface.h"
 
 #include "radv_meta.h"
-#include "radv_private.h"
+#include "vk_common_entrypoints.h"
 #include "vk_format.h"
-
-void
-radv_device_finish_meta_copy_vrs_htile_state(struct radv_device *device)
-{
-   struct radv_meta_state *state = &device->meta_state;
-
-   radv_DestroyPipeline(radv_device_to_handle(device), state->copy_vrs_htile_pipeline, &state->alloc);
-   radv_DestroyPipelineLayout(radv_device_to_handle(device), state->copy_vrs_htile_p_layout, &state->alloc);
-   device->vk.dispatch_table.DestroyDescriptorSetLayout(radv_device_to_handle(device), state->copy_vrs_htile_ds_layout,
-                                                        &state->alloc);
-}
 
 static nir_shader *
 build_copy_vrs_htile_shader(struct radv_device *device, struct radeon_surf *surf)
 {
+   const struct radv_physical_device *pdev = radv_device_physical(device);
    nir_builder b = radv_meta_init_shader(device, MESA_SHADER_COMPUTE, "meta_copy_vrs_htile");
    b.shader->info.workgroup_size[0] = 8;
    b.shader->info.workgroup_size[1] = 8;
@@ -63,8 +36,8 @@ build_copy_vrs_htile_shader(struct radv_device *device, struct radeon_surf *surf
    /* Get the HTILE addr from coordinates. */
    nir_def *zero = nir_imm_int(&b, 0);
    nir_def *htile_addr =
-      ac_nir_htile_addr_from_coord(&b, &device->physical_device->rad_info, &surf->u.gfx9.zs.htile_equation, htile_pitch,
-                                   htile_slice_size, nir_channel(&b, coord, 0), nir_channel(&b, coord, 1), zero, zero);
+      ac_nir_htile_addr_from_coord(&b, &pdev->info, &surf->u.gfx9.zs.htile_equation, htile_pitch, htile_slice_size,
+                                   nir_channel(&b, coord, 0), nir_channel(&b, coord, 1), zero, zero);
 
    /* Set up the input VRS image descriptor. */
    const struct glsl_type *vrs_sampler_type = glsl_sampler_type(GLSL_SAMPLER_DIM_2D, false, false, GLSL_TYPE_FLOAT);
@@ -120,52 +93,53 @@ build_copy_vrs_htile_shader(struct radv_device *device, struct radeon_surf *surf
 }
 
 static VkResult
-radv_device_init_meta_copy_vrs_htile_state(struct radv_device *device, struct radeon_surf *surf)
+get_pipeline(struct radv_device *device, struct radv_image *image, VkPipeline *pipeline_out,
+             VkPipelineLayout *layout_out)
 {
-   struct radv_meta_state *state = &device->meta_state;
-   nir_shader *cs = build_copy_vrs_htile_shader(device, surf);
+   enum radv_meta_object_key_type key = RADV_META_OBJECT_KEY_COPY_VRS_HTILE;
    VkResult result;
 
-   VkDescriptorSetLayoutCreateInfo ds_layout_info = {.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-                                                     .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR,
-                                                     .bindingCount = 2,
-                                                     .pBindings = (VkDescriptorSetLayoutBinding[]){
-                                                        {.binding = 0,
-                                                         .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-                                                         .descriptorCount = 1,
-                                                         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-                                                         .pImmutableSamplers = NULL},
-                                                        {.binding = 1,
-                                                         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                                         .descriptorCount = 1,
-                                                         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-                                                         .pImmutableSamplers = NULL},
-                                                     }};
-
-   result = radv_CreateDescriptorSetLayout(radv_device_to_handle(device), &ds_layout_info, &state->alloc,
-                                           &state->copy_vrs_htile_ds_layout);
-   if (result != VK_SUCCESS)
-      goto fail;
-
-   VkPipelineLayoutCreateInfo p_layout_info = {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-      .setLayoutCount = 1,
-      .pSetLayouts = &state->copy_vrs_htile_ds_layout,
-      .pushConstantRangeCount = 1,
-      .pPushConstantRanges =
-         &(VkPushConstantRange){
-            VK_SHADER_STAGE_COMPUTE_BIT,
-            0,
-            20,
-         },
+   const VkDescriptorSetLayoutBinding bindings[] = {
+      {
+         .binding = 0,
+         .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+         .descriptorCount = 1,
+         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+      },
+      {
+         .binding = 1,
+         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+         .descriptorCount = 1,
+         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+      },
    };
 
-   result = radv_CreatePipelineLayout(radv_device_to_handle(device), &p_layout_info, &state->alloc,
-                                      &state->copy_vrs_htile_p_layout);
-   if (result != VK_SUCCESS)
-      goto fail;
+   const VkDescriptorSetLayoutCreateInfo desc_info = {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT,
+      .bindingCount = 2,
+      .pBindings = bindings,
+   };
 
-   VkPipelineShaderStageCreateInfo shader_stage = {
+   const VkPushConstantRange pc_range = {
+      .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+      .size = 20,
+   };
+
+   result = vk_meta_get_pipeline_layout(&device->vk, &device->meta_state.device, &desc_info, &pc_range, &key,
+                                        sizeof(key), layout_out);
+   if (result != VK_SUCCESS)
+      return result;
+
+   VkPipeline pipeline_from_cache = vk_meta_lookup_pipeline(&device->meta_state.device, &key, sizeof(key));
+   if (pipeline_from_cache != VK_NULL_HANDLE) {
+      *pipeline_out = pipeline_from_cache;
+      return VK_SUCCESS;
+   }
+
+   nir_shader *cs = build_copy_vrs_htile_shader(device, &image->planes[0].surface);
+
+   const VkPipelineShaderStageCreateInfo stage_info = {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
       .stage = VK_SHADER_STAGE_COMPUTE_BIT,
       .module = vk_shader_module_handle_from_nir(cs),
@@ -173,66 +147,51 @@ radv_device_init_meta_copy_vrs_htile_state(struct radv_device *device, struct ra
       .pSpecializationInfo = NULL,
    };
 
-   VkComputePipelineCreateInfo pipeline_info = {
+   const VkComputePipelineCreateInfo pipeline_info = {
       .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
-      .stage = shader_stage,
+      .stage = stage_info,
       .flags = 0,
-      .layout = state->copy_vrs_htile_p_layout,
+      .layout = *layout_out,
    };
 
-   result = radv_compute_pipeline_create(radv_device_to_handle(device), state->cache, &pipeline_info, NULL,
-                                         &state->copy_vrs_htile_pipeline);
-fail:
+   result = vk_meta_create_compute_pipeline(&device->vk, &device->meta_state.device, &pipeline_info, &key, sizeof(key),
+                                            pipeline_out);
+
    ralloc_free(cs);
    return result;
 }
 
 void
-radv_copy_vrs_htile(struct radv_cmd_buffer *cmd_buffer, struct radv_image *vrs_image, const VkRect2D *rect,
+radv_copy_vrs_htile(struct radv_cmd_buffer *cmd_buffer, struct radv_image_view *vrs_iview, const VkRect2D *rect,
                     struct radv_image *dst_image, struct radv_buffer *htile_buffer, bool read_htile_value)
 {
-   struct radv_device *device = cmd_buffer->device;
-   struct radv_meta_state *state = &device->meta_state;
+   struct radv_device *device = radv_cmd_buffer_device(cmd_buffer);
    struct radv_meta_saved_state saved_state;
-   struct radv_image_view vrs_iview;
+   VkPipelineLayout layout;
+   VkPipeline pipeline;
+   VkResult result;
 
    assert(radv_image_has_htile(dst_image));
 
-   if (!cmd_buffer->device->meta_state.copy_vrs_htile_pipeline) {
-      VkResult ret = radv_device_init_meta_copy_vrs_htile_state(cmd_buffer->device, &dst_image->planes[0].surface);
-      if (ret != VK_SUCCESS) {
-         vk_command_buffer_set_error(&cmd_buffer->vk, ret);
-         return;
-      }
+   result = get_pipeline(device, dst_image, &pipeline, &layout);
+   if (result != VK_SUCCESS) {
+      vk_command_buffer_set_error(&cmd_buffer->vk, result);
+      return;
    }
 
    cmd_buffer->state.flush_bits |=
-      radv_src_access_flush(cmd_buffer, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, NULL) |
-      radv_dst_access_flush(cmd_buffer, VK_ACCESS_2_SHADER_READ_BIT, NULL);
+      radv_src_access_flush(cmd_buffer, VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+                            VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, 0, NULL, NULL) |
+      radv_dst_access_flush(cmd_buffer, VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT, VK_ACCESS_2_SHADER_READ_BIT, 0, NULL,
+                            NULL);
 
    radv_meta_save(&saved_state, cmd_buffer,
                   RADV_META_SAVE_COMPUTE_PIPELINE | RADV_META_SAVE_CONSTANTS | RADV_META_SAVE_DESCRIPTORS);
 
-   radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_COMPUTE,
-                        state->copy_vrs_htile_pipeline);
-
-   radv_image_view_init(&vrs_iview, cmd_buffer->device,
-                        &(VkImageViewCreateInfo){
-                           .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-                           .image = radv_image_to_handle(vrs_image),
-                           .viewType = VK_IMAGE_VIEW_TYPE_2D,
-                           .format = vrs_image->vk.format,
-                           .subresourceRange = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                                                .baseMipLevel = 0,
-                                                .levelCount = 1,
-                                                .baseArrayLayer = 0,
-                                                .layerCount = 1},
-                        },
-                        0, NULL);
+   radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 
    radv_meta_push_descriptor_set(
-      cmd_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, state->copy_vrs_htile_p_layout, 0, /* set */
-      2,                                                                             /* descriptorWriteCount */
+      cmd_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, layout, 0, 2,
       (VkWriteDescriptorSet[]){{.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                                 .dstBinding = 0,
                                 .dstArrayElement = 0,
@@ -242,7 +201,7 @@ radv_copy_vrs_htile(struct radv_cmd_buffer *cmd_buffer, struct radv_image *vrs_i
                                    (VkDescriptorImageInfo[]){
                                       {
                                          .sampler = VK_NULL_HANDLE,
-                                         .imageView = radv_image_view_to_handle(&vrs_iview),
+                                         .imageView = radv_image_view_to_handle(vrs_iview),
                                          .imageLayout = VK_IMAGE_LAYOUT_GENERAL,
                                       },
                                    }},
@@ -263,18 +222,17 @@ radv_copy_vrs_htile(struct radv_cmd_buffer *cmd_buffer, struct radv_image *vrs_i
       read_htile_value,
    };
 
-   radv_CmdPushConstants(radv_cmd_buffer_to_handle(cmd_buffer), state->copy_vrs_htile_p_layout,
-                         VK_SHADER_STAGE_COMPUTE_BIT, 0, 20, constants);
+   vk_common_CmdPushConstants(radv_cmd_buffer_to_handle(cmd_buffer), layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 20,
+                              constants);
 
    uint32_t width = DIV_ROUND_UP(rect->extent.width, 8);
    uint32_t height = DIV_ROUND_UP(rect->extent.height, 8);
 
    radv_unaligned_dispatch(cmd_buffer, width, height, 1);
 
-   radv_image_view_finish(&vrs_iview);
-
    radv_meta_restore(&saved_state, cmd_buffer);
 
    cmd_buffer->state.flush_bits |= RADV_CMD_FLAG_CS_PARTIAL_FLUSH | RADV_CMD_FLAG_INV_VCACHE |
-                                   radv_src_access_flush(cmd_buffer, VK_ACCESS_2_SHADER_WRITE_BIT, NULL);
+                                   radv_src_access_flush(cmd_buffer, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+                                                         VK_ACCESS_2_SHADER_WRITE_BIT, 0, NULL, NULL);
 }

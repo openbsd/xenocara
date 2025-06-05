@@ -27,10 +27,14 @@
 #include "util/bitset.h"
 #include "util/glheader.h"
 #include "compiler/glsl/list.h"
+#include "compiler/glsl_types.h"
+#include "main/mtypes.h"
+#include "main/shader_types.h"
 
 struct gl_constants;
 struct gl_shader_program;
 struct gl_uniform_storage;
+struct set;
 
 /**
  * Built-in / reserved GL variables names start with "gl_"
@@ -39,6 +43,12 @@ static inline bool
 is_gl_identifier(const char *s)
 {
    return s && s[0] == 'g' && s[1] == 'l' && s[2] == '_';
+}
+
+static inline GLenum
+glsl_get_gl_type(const struct glsl_type *t)
+{
+   return t->gl_type;
 }
 
 #ifdef __cplusplus
@@ -74,6 +84,9 @@ struct array_deref_range {
    /** Size of the array.  Used for offset calculations. */
    unsigned size;
 };
+
+void
+link_shaders_init(struct gl_context *ctx, struct gl_shader_program *prog);
 
 void
 linker_error(struct gl_shader_program *prog, const char *fmt, ...);
@@ -120,6 +133,9 @@ link_util_mark_array_elements_referenced(const struct array_deref_range *dr,
                                          unsigned count, unsigned array_depth,
                                          BITSET_WORD *bits);
 
+void
+resource_name_updated(struct gl_resource_name *name);
+
 /**
  * Get the string value for an interpolation qualifier
  *
@@ -133,6 +149,44 @@ link_util_mark_array_elements_referenced(const struct array_deref_range *dr,
  * This function should only be used on a shader input or output variable.
  */
 const char *interpolation_string(unsigned interpolation);
+
+/**
+ * \brief Can \c from be implicitly converted to \c desired
+ *
+ * \return True if the types are identical or if \c from type can be converted
+ *         to \c desired according to Section 4.1.10 of the GLSL spec.
+ *
+ * \verbatim
+ * From page 25 (31 of the pdf) of the GLSL 1.50 spec, Section 4.1.10
+ * Implicit Conversions:
+ *
+ *     In some situations, an expression and its type will be implicitly
+ *     converted to a different type. The following table shows all allowed
+ *     implicit conversions:
+ *
+ *     Type of expression | Can be implicitly converted to
+ *     --------------------------------------------------
+ *     int                  float
+ *     uint
+ *
+ *     ivec2                vec2
+ *     uvec2
+ *
+ *     ivec3                vec3
+ *     uvec3
+ *
+ *     ivec4                vec4
+ *     uvec4
+ *
+ *     There are no implicit array or structure conversions. For example,
+ *     an array of int cannot be implicitly converted to an array of float.
+ *     There are no implicit conversions between signed and unsigned
+ *     integers.
+ * \endverbatim
+ */
+extern bool _mesa_glsl_can_implicitly_convert(const glsl_type *from, const glsl_type *desired,
+                                              bool has_implicit_conversions,
+                                              bool has_implicit_int_to_uint_conversion);
 
 #ifdef __cplusplus
 }

@@ -23,3 +23,8 @@ glx@glx-multi-context-single-window
 
 # unreliable, probably from scheduling.
 spec@arb_timer_query@timestamp-get
+
+# since hetzner migration
+KHR-Single-GL45.arrays_of_arrays_gl.SizedDeclarationsPrimitive
+spec@egl_ext_platform_device@conformance
+spec@ext_texture_swizzle@ext_texture_swizzle-swizzle

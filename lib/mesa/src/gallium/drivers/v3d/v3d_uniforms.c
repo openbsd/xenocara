@@ -28,9 +28,9 @@
 #include "compiler/v3d_compiler.h"
 
 /* We don't expect that the packets we use in this file change across across
- * hw versions, so we just include directly the v33 header
+ * hw versions, so we just include directly the v42 header
  */
-#include "broadcom/cle/v3d_packet_v33_pack.h"
+#include "broadcom/cle/v3d_packet_v42_pack.h"
 
 static uint32_t
 get_texrect_scale(struct v3d_texture_stateobj *texstate,
@@ -124,54 +124,6 @@ get_image_size(struct v3d_shaderimg_stateobj *shaderimg,
         }
 }
 
-/**
- *  Writes the V3D 3.x P0 (CFG_MODE=1) texture parameter.
- *
- * Some bits of this field are dependent on the type of sample being done by
- * the shader, while other bits are dependent on the sampler state.  We OR the
- * two together here.
- */
-static void
-write_texture_p0(struct v3d_job *job,
-                 struct v3d_cl_out **uniforms,
-                 struct v3d_texture_stateobj *texstate,
-                 uint32_t unit,
-                 uint32_t shader_data)
-{
-        struct pipe_sampler_state *psampler = texstate->samplers[unit];
-        struct v3d_sampler_state *sampler = v3d_sampler_state(psampler);
-
-        cl_aligned_u32(uniforms, shader_data | sampler->p0);
-}
-
-/** Writes the V3D 3.x P1 (CFG_MODE=1) texture parameter. */
-static void
-write_texture_p1(struct v3d_job *job,
-                 struct v3d_cl_out **uniforms,
-                 struct v3d_texture_stateobj *texstate,
-                 uint32_t data)
-{
-        /* Extract the texture unit from the top bits, and the compiler's
-         * packed p1 from the bottom.
-         */
-        uint32_t unit = data >> 5;
-        uint32_t p1 = data & 0x1f;
-
-        struct pipe_sampler_view *psview = texstate->textures[unit];
-        struct v3d_sampler_view *sview = v3d_sampler_view(psview);
-
-        struct V3D33_TEXTURE_UNIFORM_PARAMETER_1_CFG_MODE1 unpacked = {
-                .texture_state_record_base_address = texstate->texture_state[unit],
-        };
-
-        uint32_t packed;
-        V3D33_TEXTURE_UNIFORM_PARAMETER_1_CFG_MODE1_pack(&job->indirect,
-                                                         (uint8_t *)&packed,
-                                                         &unpacked);
-
-        cl_aligned_u32(uniforms, p1 | packed | sview->p1);
-}
-
 /** Writes the V3D 4.x TMU configuration parameter 0. */
 static void
 write_tmu_p0(struct v3d_job *job,
@@ -250,10 +202,13 @@ write_tmu_p1(struct v3d_job *job,
         if (sampler->border_color_variants)
                 variant = sview->sampler_variant;
 
+        uint32_t p1_packed = v3d_unit_data_get_offset(data);
+        v3d_pack_unnormalized_coordinates(&job->v3d->screen->devinfo, &p1_packed,
+                                          sampler->base.unnormalized_coords);
+
         cl_aligned_reloc(&job->indirect, uniforms,
                          v3d_resource(sampler->sampler_state)->bo,
-                         sampler->sampler_state_offset[variant] |
-                         v3d_unit_data_get_offset(data));
+                         sampler->sampler_state_offset[variant] | p1_packed);
 }
 
 struct v3d_cl_reloc
@@ -294,13 +249,11 @@ v3d_write_uniforms(struct v3d_context *v3d, struct v3d_job *job,
                         cl_aligned_u32(&uniforms, gallium_uniforms[data]);
                         break;
                 case QUNIFORM_VIEWPORT_X_SCALE: {
-                        float clipper_xy_granularity = V3DV_X(devinfo, CLIPPER_XY_GRANULARITY);
-                        cl_aligned_f(&uniforms, v3d->viewport.scale[0] * clipper_xy_granularity);
+                        cl_aligned_f(&uniforms, v3d->viewport.scale[0] * devinfo->clipper_xy_granularity);
                         break;
                 }
                 case QUNIFORM_VIEWPORT_Y_SCALE: {
-                        float clipper_xy_granularity = V3DV_X(devinfo, CLIPPER_XY_GRANULARITY);
-                        cl_aligned_f(&uniforms, v3d->viewport.scale[1] * clipper_xy_granularity);
+                        cl_aligned_f(&uniforms, v3d->viewport.scale[1] * devinfo->clipper_xy_granularity);
                         break;
                 }
                 case QUNIFORM_VIEWPORT_Z_OFFSET:
@@ -326,11 +279,6 @@ v3d_write_uniforms(struct v3d_context *v3d, struct v3d_job *job,
                 case QUNIFORM_IMAGE_TMU_CONFIG_P0:
                         write_image_tmu_p0(job, &uniforms,
                                            &v3d->shaderimg[stage], data);
-                        break;
-
-                case QUNIFORM_TEXTURE_CONFIG_P1:
-                        write_texture_p1(job, &uniforms, texstate,
-                                         data);
                         break;
 
                 case QUNIFORM_TEXRECT_SCALE_X:
@@ -427,9 +375,18 @@ v3d_write_uniforms(struct v3d_context *v3d, struct v3d_job *job,
                                        v3d->compute_num_workgroups[data]);
                         break;
 
+                case QUNIFORM_WORK_GROUP_SIZE:
+                        cl_aligned_u32(&uniforms,
+                                       v3d->compute_workgroup_size[data]);
+                        break;
+
                 case QUNIFORM_SHARED_OFFSET:
                         cl_aligned_reloc(&job->indirect, &uniforms,
                                          v3d->compute_shared_memory, 0);
+                        break;
+
+                case QUNIFORM_SHARED_SIZE:
+                        cl_aligned_u32(&uniforms, v3d->shared_memory);
                         break;
 
                 case QUNIFORM_FB_LAYERS:
@@ -437,13 +394,7 @@ v3d_write_uniforms(struct v3d_context *v3d, struct v3d_job *job,
                         break;
 
                 default:
-                        assert(quniform_contents_is_texture_p0(uinfo->contents[i]));
-
-                        write_texture_p0(job, &uniforms, texstate,
-                                         uinfo->contents[i] -
-                                         QUNIFORM_TEXTURE_CONFIG_P0_0,
-                                         data);
-                        break;
+                        unreachable("Unknown QUNIFORM");
 
                 }
 #if 0
@@ -525,7 +476,9 @@ v3d_set_shader_uniform_dirty_flags(struct v3d_compiled_shader *shader)
                         break;
 
                 case QUNIFORM_NUM_WORK_GROUPS:
+                case QUNIFORM_WORK_GROUP_SIZE:
                 case QUNIFORM_SHARED_OFFSET:
+                case QUNIFORM_SHARED_SIZE:
                         /* Compute always recalculates uniforms. */
                         break;
 

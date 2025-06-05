@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2018 Jonathan Marek <jonathan@marek.ca>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2018 Jonathan Marek <jonathan@marek.ca>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Jonathan Marek <jonathan@marek.ca>
@@ -31,6 +13,7 @@
 #include "nir_legacy.h"
 
 static const nir_shader_compiler_options options = {
+   .compact_arrays = true,
    .lower_fpow = true,
    .lower_flrp32 = true,
    .lower_fmod = true,
@@ -47,6 +30,7 @@ static const nir_shader_compiler_options options = {
    .lower_fdph = true,
    .has_fsub = true,
    .has_isub = true,
+   .no_integers = true,
    .lower_insert_byte = true,
    .lower_insert_word = true,
    .force_indirect_unrolling = nir_var_all,
@@ -86,9 +70,9 @@ ir2_optimize_loop(nir_shader *s)
       progress |= OPT(s, nir_opt_algebraic);
       progress |= OPT(s, nir_opt_constant_folding);
       progress |= OPT(s, nir_opt_dead_cf);
-      if (OPT(s, nir_opt_trivial_continues)) {
+      if (OPT(s, nir_opt_loop)) {
          progress |= true;
-         /* If nir_opt_trivial_continues makes progress, then we need to clean
+         /* If nir_opt_loop makes progress, then we need to clean
           * things up if we want any hope of nir_opt_if or nir_opt_loop_unroll
           * to make progress.
           */
@@ -150,7 +134,9 @@ static struct ir2_src
 load_const(struct ir2_context *ctx, float *value_f, unsigned ncomp)
 {
    struct fd2_shader_stateobj *so = ctx->so;
-   unsigned imm_ncomp, swiz, idx, i, j;
+   unsigned idx, i, j;
+   unsigned imm_ncomp = 0;
+   unsigned swiz = 0;
    uint32_t *value = (uint32_t *)value_f;
 
    /* try to merge with existing immediate (TODO: try with neg) */
@@ -643,11 +629,11 @@ emit_intrinsic(struct ir2_context *ctx, nir_intrinsic_instr *intr)
       instr = instr_create_alu_dest(ctx, nir_op_mov, &intr->def);
       instr->src[0] = ir2_src(idx, 0, IR2_SRC_CONST);
       break;
-   case nir_intrinsic_discard:
-   case nir_intrinsic_discard_if:
+   case nir_intrinsic_terminate:
+   case nir_intrinsic_terminate_if:
       instr = ir2_instr_create(ctx, IR2_ALU);
       instr->alu.vector_opc = VECTOR_NONE;
-      if (intr->intrinsic == nir_intrinsic_discard_if) {
+      if (intr->intrinsic == nir_intrinsic_terminate_if) {
          instr->alu.scalar_opc = KILLNEs;
          instr->src[0] = make_src(ctx, intr->src[0]);
       } else {
@@ -788,11 +774,11 @@ static void
 setup_input(struct ir2_context *ctx, nir_variable *in)
 {
    struct fd2_shader_stateobj *so = ctx->so;
-   ASSERTED unsigned array_len = MAX2(glsl_get_length(in->type), 1);
    unsigned n = in->data.driver_location;
    unsigned slot = in->data.location;
 
-   assert(array_len == 1);
+   assert(glsl_type_is_vector_or_scalar(in->type) ||
+          glsl_type_is_unsized_array(in->type));
 
    /* handle later */
    if (ctx->so->type == MESA_SHADER_VERTEX)
@@ -1145,7 +1131,7 @@ ir2_nir_compile(struct ir2_context *ctx, bool binning)
    OPT_V(ctx->nir, nir_opt_algebraic_late);
    OPT_V(ctx->nir, nir_lower_alu_to_scalar, ir2_alu_to_scalar_filter_cb, NULL);
 
-   OPT_V(ctx->nir, nir_convert_from_ssa, true);
+   OPT_V(ctx->nir, nir_convert_from_ssa, true, false);
 
    OPT_V(ctx->nir, nir_move_vec_src_uses_to_dest, false);
    OPT_V(ctx->nir, nir_lower_vec_to_regs, NULL, NULL);

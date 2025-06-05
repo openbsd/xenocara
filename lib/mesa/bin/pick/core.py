@@ -29,6 +29,7 @@ import subprocess
 import typing
 
 import attr
+from packaging.version import Version
 
 if typing.TYPE_CHECKING:
     from .ui import UI
@@ -71,10 +72,10 @@ class PickUIException(Exception):
 @enum.unique
 class NominationType(enum.Enum):
 
-    CC = 0
-    FIXES = 1
-    REVERT = 2
-    NONE = 3
+    NONE = 0
+    CC = 1
+    FIXES = 2
+    REVERT = 3
     BACKPORT = 4
 
 
@@ -292,11 +293,13 @@ async def resolve_nomination(commit: 'Commit', version: str) -> 'Commit':
                 commit.nominated = True
                 return commit
 
-    if backport_to := IS_BACKPORT.search(out):
-        if version in backport_to.groups():
-            commit.nominated = True
-            commit.nomination_type = NominationType.BACKPORT
-            return commit
+    if backport_to := IS_BACKPORT.findall(out):
+        for match in backport_to:
+            if any(Version(version) >= Version(backport_version)
+                   for backport_version in match if backport_version != ''):
+                commit.nominated = True
+                commit.nomination_type = NominationType.BACKPORT
+                return commit
 
     if cc_to := IS_CC.search(out):
         if cc_to.groups() == (None, None) or version in cc_to.groups():

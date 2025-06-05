@@ -7,7 +7,7 @@ set -o xtrace
 # network transfer, disk usage, and runtime on test jobs)
 
 # shellcheck disable=SC2154 # arch is assigned in previous scripts
-if curl -X HEAD -s "${ARTIFACTS_PREFIX}/${FDO_UPSTREAM_REPO}/${ARTIFACTS_SUFFIX}/${arch}/done"; then
+if curl --fail -X HEAD -s "${ARTIFACTS_PREFIX}/${FDO_UPSTREAM_REPO}/${ARTIFACTS_SUFFIX}/${arch}/done"; then
   ARTIFACTS_URL="${ARTIFACTS_PREFIX}/${FDO_UPSTREAM_REPO}/${ARTIFACTS_SUFFIX}/${arch}"
 else
   ARTIFACTS_URL="${ARTIFACTS_PREFIX}/${CI_PROJECT_PATH}/${ARTIFACTS_SUFFIX}/${arch}"
@@ -31,7 +31,7 @@ if [[ $arch == "arm64" ]]; then
         -O "${KERNEL_IMAGE_BASE}"/arm64/cheza-kernel
 
     DEVICE_TREES=""
-    DEVICE_TREES="$DEVICE_TREES apq8016-sbc.dtb"
+    DEVICE_TREES="$DEVICE_TREES apq8016-sbc-usb-host.dtb"
     DEVICE_TREES="$DEVICE_TREES apq8096-db820c.dtb"
     DEVICE_TREES="$DEVICE_TREES tegra210-p3450-0000.dtb"
     DEVICE_TREES="$DEVICE_TREES imx8mq-nitrogen.dtb"

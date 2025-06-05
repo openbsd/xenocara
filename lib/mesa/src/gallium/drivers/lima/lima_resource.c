@@ -28,6 +28,7 @@
 #include "util/u_inlines.h"
 #include "util/u_math.h"
 #include "util/u_debug.h"
+#include "util/u_resource.h"
 #include "util/u_transfer.h"
 #include "util/u_surface.h"
 #include "util/u_transfer_helper.h"
@@ -71,8 +72,10 @@ lima_resource_create_scanout(struct pipe_screen *pscreen,
 
    scanout = renderonly_scanout_for_resource(&scanout_templat,
                                              screen->ro, &handle);
-   if (!scanout)
+   if (!scanout) {
+      FREE(res);
       return NULL;
+   }
 
    res->base = *templat;
    res->base.screen = pscreen;
@@ -362,12 +365,11 @@ lima_resource_from_handle(struct pipe_screen *pscreen,
    /* check alignment for the buffer */
    if (res->tiled ||
        (pres->bind & (PIPE_BIND_RENDER_TARGET | PIPE_BIND_DEPTH_STENCIL))) {
-      unsigned width, height, stride, size;
+      unsigned width, stride, size;
 
       width = align(pres->width0, 16);
-      height = align(pres->height0, 16);
       stride = util_format_get_stride(pres->format, width);
-      size = util_format_get_2d_size(pres->format, stride, height);
+      size = util_format_get_2d_size(pres->format, stride, pres->height0);
 
       if (res->tiled && res->levels[0].stride != stride) {
          fprintf(stderr, "tiled imported buffer has mismatching stride: %d (BO) != %d (expected)",
@@ -447,7 +449,8 @@ lima_resource_get_param(struct pipe_screen *pscreen,
                         enum pipe_resource_param param,
                         unsigned usage, uint64_t *value)
 {
-   struct lima_resource *res = lima_resource(pres);
+   struct lima_resource *res =
+          (struct lima_resource *)util_resource_at_index(pres, plane);
 
    switch (param) {
    case PIPE_RESOURCE_PARAM_STRIDE:
@@ -461,7 +464,9 @@ lima_resource_get_param(struct pipe_screen *pscreen,
          *value = DRM_FORMAT_MOD_ARM_16X16_BLOCK_U_INTERLEAVED;
       else
          *value = DRM_FORMAT_MOD_LINEAR;
-
+      return true;
+   case PIPE_RESOURCE_PARAM_NPLANES:
+      *value = util_resource_num(pres);
       return true;
    default:
       return false;
@@ -705,7 +710,9 @@ lima_transfer_map(struct pipe_context *pctx,
       ptrans->layer_stride = res->levels[level].layer_stride;
 
       if ((usage & PIPE_MAP_WRITE) && (usage & PIPE_MAP_DIRECTLY))
-         panfrost_minmax_cache_invalidate(res->index_cache, ptrans);
+         panfrost_minmax_cache_invalidate(res->index_cache,
+                                          util_format_get_blocksize(pres->format),
+                                          ptrans->box.x, ptrans->box.width);
 
       return bo->map + res->levels[level].offset +
          box->z * res->levels[level].layer_stride +
@@ -813,7 +820,11 @@ lima_transfer_unmap(struct pipe_context *pctx,
    lima_transfer_flush_region(pctx, ptrans, &box);
    if (trans->staging)
       free(trans->staging);
-   panfrost_minmax_cache_invalidate(res->index_cache, ptrans);
+   if (ptrans->usage & PIPE_MAP_WRITE) {
+      panfrost_minmax_cache_invalidate(res->index_cache,
+                                       util_format_get_blocksize(res->base.format),
+                                       ptrans->box.x, ptrans->box.width);
+   }
 
    pipe_resource_reference(&ptrans->resource, NULL);
    slab_free(&ctx->transfer_pool, trans);
@@ -833,8 +844,8 @@ lima_util_blitter_save_states(struct lima_context *ctx)
    util_blitter_save_scissor(ctx->blitter, &ctx->scissor);
    util_blitter_save_vertex_elements(ctx->blitter,
                                      ctx->vertex_elements);
-   util_blitter_save_vertex_buffer_slot(ctx->blitter,
-                                        ctx->vertex_buffers.vb);
+   util_blitter_save_vertex_buffers(ctx->blitter,
+                                    ctx->vertex_buffers.vb, ctx->vertex_buffers.count);
 
    util_blitter_save_framebuffer(ctx->blitter, &ctx->framebuffer.base);
 
@@ -874,7 +885,7 @@ lima_blit(struct pipe_context *pctx, const struct pipe_blit_info *blit_info)
 
    lima_util_blitter_save_states(ctx);
 
-   util_blitter_blit(ctx->blitter, &info);
+   util_blitter_blit(ctx->blitter, &info, NULL);
 }
 
 static void

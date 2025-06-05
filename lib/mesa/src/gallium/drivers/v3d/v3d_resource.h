@@ -101,6 +101,11 @@ struct v3d_resource {
         bool compute_written;
 
         /**
+         * Indicates if the Graphics pipeline has written the resource
+         */
+        bool graphics_written;
+
+        /**
          * Number of times the resource has been written to.
          *
          * This is used to track whether we need to load the surface on first
@@ -118,6 +123,12 @@ struct v3d_resource {
          * buffer) may get marked.
          */
         uint32_t initialized_buffers;
+
+        /**
+         * The resource has been invalidated by glInvalidateFramebuffer so
+         * it doesn't need to be loaded until another job writes to it.
+         */
+        bool invalidated;
 
         /**
          * A serial ID that is incremented every time a new BO is bound to a

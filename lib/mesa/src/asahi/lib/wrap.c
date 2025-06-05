@@ -110,19 +110,22 @@ wrap_Method(mach_port_t connection, uint32_t selector, const uint64_t *input,
 
    case AGX_SELECTOR_SUBMIT_COMMAND_BUFFERS:
       assert(output == NULL && outputStruct == NULL);
-      assert(inputStructCnt == sizeof(struct agx_submit_cmdbuf_req));
       assert(inputCnt == 1);
 
       printf("%X: SUBMIT_COMMAND_BUFFERS command queue id:%llx %p\n",
              connection, input[0], inputStruct);
 
-      const struct agx_submit_cmdbuf_req *req = inputStruct;
+      const struct IOAccelCommandQueueSubmitArgs_Header *hdr = inputStruct;
+      const struct IOAccelCommandQueueSubmitArgs_Command *cmds =
+         (void *)(hdr + 1);
 
-      agxdecode_cmdstream(req->command_buffer_shmem_id,
-                          req->segment_list_shmem_id, true);
-
-      if (getenv("ASAHI_DUMP"))
-         agxdecode_dump_mappings(req->segment_list_shmem_id);
+      for (unsigned i = 0; i < hdr->count; ++i) {
+         const struct IOAccelCommandQueueSubmitArgs_Command *req = &cmds[i];
+         agxdecode_cmdstream(req->command_buffer_shmem_id,
+                             req->segment_list_shmem_id, true);
+         if (getenv("ASAHI_DUMP"))
+            agxdecode_dump_mappings(req->segment_list_shmem_id);
+      }
 
       agxdecode_next_frame();
       FALLTHROUGH;
@@ -168,12 +171,14 @@ wrap_Method(mach_port_t connection, uint32_t selector, const uint64_t *input,
 
       uint64_t *ptr = (uint64_t *)outputStruct;
       uint32_t *words = (uint32_t *)(ptr + 1);
+      bool mmap = inp[1];
 
+      /* Construct a synthetic GEM handle for the shmem */
       agxdecode_track_alloc(&(struct agx_bo){
-         .handle = words[1],
+         .handle = words[1] ^ (mmap ? (1u << 30) : (1u << 29)),
          .ptr.cpu = (void *)*ptr,
          .size = words[0],
-         .type = inp[1] ? AGX_ALLOC_CMDBUF : AGX_ALLOC_MEMMAP});
+      });
 
       break;
    }
@@ -206,7 +211,6 @@ wrap_Method(mach_port_t connection, uint32_t selector, const uint64_t *input,
          assert(resp->sub_size == resp->root_size);
 
       agxdecode_track_alloc(&(struct agx_bo){
-         .type = AGX_ALLOC_REGULAR,
          .size = resp->sub_size,
          .handle = resp->handle,
          .ptr.gpu = resp->gpu_va,
@@ -222,8 +226,7 @@ wrap_Method(mach_port_t connection, uint32_t selector, const uint64_t *input,
       assert(output == NULL);
       assert(outputStruct == NULL);
 
-      agxdecode_track_free(
-         &(struct agx_bo){.type = AGX_ALLOC_REGULAR, .handle = input[0]});
+      agxdecode_track_free(&(struct agx_bo){.handle = input[0]});
 
       break;
    }
@@ -234,8 +237,7 @@ wrap_Method(mach_port_t connection, uint32_t selector, const uint64_t *input,
       assert(output == NULL);
       assert(outputStruct == NULL);
 
-      agxdecode_track_free(
-         &(struct agx_bo){.type = AGX_ALLOC_CMDBUF, .handle = input[0]});
+      agxdecode_track_free(&(struct agx_bo){.handle = input[0] ^ (1u << 29)});
 
       break;
    }

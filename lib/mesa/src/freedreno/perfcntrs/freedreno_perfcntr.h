@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2018 Rob Clark <robclark@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2018 Rob Clark <robclark@freedesktop.org>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -99,21 +81,25 @@ struct fd_perfcntr_group {
 
 const struct fd_perfcntr_group *fd_perfcntrs(const struct fd_dev_id *id, unsigned *count);
 
-#define COUNTER(_sel, _lo, _hi) {                                              \
-      .select_reg = REG(_sel), .counter_reg_lo = REG(_lo),                     \
-      .counter_reg_hi = REG(_hi),                                              \
+#define COUNTER_BASE(_sel, _lo, _hi) {                                         \
+      .select_reg = _sel, .counter_reg_lo = _lo, .counter_reg_hi = _hi,        \
    }
+
+#define COUNTER(_sel, _lo, _hi) COUNTER_BASE(REG(_sel), REG(_lo), REG(_hi))
 
 #define COUNTER2(_sel, _lo, _hi, _en, _clr) {                                  \
       .select_reg = REG(_sel), .counter_reg_lo = REG(_lo),                     \
       .counter_reg_hi = REG(_hi), .enable = REG(_en), .clear = REG(_clr),      \
    }
 
-#define COUNTABLE(_selector, _query_type, _result_type) {                      \
-      .name = #_selector, .selector = _selector,                               \
+#define COUNTABLE_BASE(_sel_name, _sel, _query_type, _result_type ) {          \
+      .name = _sel_name, .selector = _sel,                                     \
       .query_type = FD_PERFCNTR_TYPE_##_query_type,                            \
       .result_type = FD_PERFCNTR_RESULT_TYPE_##_result_type,                   \
    }
+
+#define COUNTABLE(_selector, _query_type, _result_type)                        \
+   COUNTABLE_BASE(#_selector, _selector, _query_type, _result_type)
 
 #define GROUP(_name, _counters, _countables) {                                 \
       .name = _name, .num_counters = ARRAY_SIZE(_counters),                    \

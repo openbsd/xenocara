@@ -4,9 +4,12 @@ use crate::pipe::resource::*;
 use crate::pipe::screen::*;
 use crate::pipe::transfer::*;
 
+use mesa_rust_gen::pipe_fd_type::*;
 use mesa_rust_gen::*;
 use mesa_rust_util::has_required_feature;
 
+use std::mem;
+use std::mem::size_of;
 use std::os::raw::*;
 use std::ptr;
 use std::ptr::*;
@@ -34,31 +37,11 @@ impl From<RWFlags> for pipe_map_flags {
     }
 }
 
-pub enum ResourceMapType {
-    Normal,
-    Async,
-    Coherent,
-}
-
-impl From<ResourceMapType> for pipe_map_flags {
-    fn from(map_type: ResourceMapType) -> Self {
-        match map_type {
-            ResourceMapType::Normal => pipe_map_flags(0),
-            ResourceMapType::Async => pipe_map_flags::PIPE_MAP_UNSYNCHRONIZED,
-            ResourceMapType::Coherent => {
-                pipe_map_flags::PIPE_MAP_COHERENT
-                    | pipe_map_flags::PIPE_MAP_PERSISTENT
-                    | pipe_map_flags::PIPE_MAP_UNSYNCHRONIZED
-            }
-        }
-    }
-}
-
 impl PipeContext {
     pub(super) fn new(context: *mut pipe_context, screen: &Arc<PipeScreen>) -> Option<Self> {
         let s = Self {
             pipe: NonNull::new(context)?,
-            screen: screen.clone(),
+            screen: Arc::clone(screen),
         };
 
         if !has_required_cbs(unsafe { s.pipe.as_ref() }) {
@@ -67,6 +50,10 @@ impl PipeContext {
         }
 
         Some(s)
+    }
+
+    pub(crate) fn pipe(&self) -> NonNull<pipe_context> {
+        self.pipe
     }
 
     pub fn buffer_subdata(
@@ -112,7 +99,10 @@ impl PipeContext {
 
     pub fn clear_buffer(&self, res: &PipeResource, pattern: &[u8], offset: u32, size: u32) {
         unsafe {
-            self.pipe.as_ref().clear_buffer.unwrap()(
+            self.pipe
+                .as_ref()
+                .clear_buffer
+                .unwrap_or(u_default_clear_buffer)(
                 self.pipe.as_ptr(),
                 res.pipe(),
                 offset,
@@ -141,9 +131,6 @@ impl PipeContext {
                     .map(|i| ((origin[i] + [0, y, z][i]) * pitch[i]) as u32)
                     .sum();
 
-                // SAFETY: clear_buffer arguments are specified
-                // in bytes, so pattern.len() dimension value
-                // should be multiplied by pixel_size
                 unsafe {
                     self.pipe.as_ref().clear_buffer.unwrap()(
                         self.pipe.as_ptr(),
@@ -151,7 +138,7 @@ impl PipeContext {
                         offset,
                         (region[0] * pixel_size) as u32,
                         pattern.as_ptr().cast(),
-                        (pattern.len() * pixel_size) as i32,
+                        pixel_size as i32,
                     )
                 };
             }
@@ -219,11 +206,11 @@ impl PipeContext {
         if ptr.is_null() {
             None
         } else {
-            Some(PipeTransfer::new(is_buffer, out, ptr))
+            Some(PipeTransfer::new(self, is_buffer, out, ptr))
         }
     }
 
-    fn _buffer_map(
+    pub fn buffer_map_flags(
         &self,
         res: &PipeResource,
         offset: i32,
@@ -247,30 +234,15 @@ impl PipeContext {
         offset: i32,
         size: i32,
         rw: RWFlags,
-        map_type: ResourceMapType,
-    ) -> PipeTransfer {
-        let mut flags: pipe_map_flags = map_type.into();
-        flags |= rw.into();
-        self._buffer_map(res, offset, size, flags).unwrap()
-    }
-
-    pub fn buffer_map_directly(
-        &self,
-        res: &PipeResource,
-        offset: i32,
-        size: i32,
-        rw: RWFlags,
     ) -> Option<PipeTransfer> {
-        let flags =
-            pipe_map_flags::PIPE_MAP_DIRECTLY | pipe_map_flags::PIPE_MAP_UNSYNCHRONIZED | rw.into();
-        self._buffer_map(res, offset, size, flags)
+        self.buffer_map_flags(res, offset, size, rw.into())
     }
 
     pub(super) fn buffer_unmap(&self, tx: *mut pipe_transfer) {
         unsafe { self.pipe.as_ref().buffer_unmap.unwrap()(self.pipe.as_ptr(), tx) };
     }
 
-    pub fn _texture_map(
+    pub fn texture_map_flags(
         &self,
         res: &PipeResource,
         bx: &pipe_box,
@@ -284,22 +256,8 @@ impl PipeContext {
         res: &PipeResource,
         bx: &pipe_box,
         rw: RWFlags,
-        map_type: ResourceMapType,
-    ) -> PipeTransfer {
-        let mut flags: pipe_map_flags = map_type.into();
-        flags |= rw.into();
-        self._texture_map(res, bx, flags).unwrap()
-    }
-
-    pub fn texture_map_directly(
-        &self,
-        res: &PipeResource,
-        bx: &pipe_box,
-        rw: RWFlags,
     ) -> Option<PipeTransfer> {
-        let flags =
-            pipe_map_flags::PIPE_MAP_DIRECTLY | pipe_map_flags::PIPE_MAP_UNSYNCHRONIZED | rw.into();
-        self.resource_map(res, bx, flags, false)
+        self.texture_map_flags(res, bx, rw.into())
     }
 
     pub(super) fn texture_unmap(&self, tx: *mut pipe_transfer) {
@@ -342,6 +300,10 @@ impl PipeContext {
         }
     }
 
+    pub fn is_create_fence_fd_supported(&self) -> bool {
+        unsafe { self.pipe.as_ref().create_fence_fd.is_some() }
+    }
+
     pub fn create_sampler_state(&self, state: &pipe_sampler_state) -> *mut c_void {
         unsafe { self.pipe.as_ref().create_sampler_state.unwrap()(self.pipe.as_ptr(), state) }
     }
@@ -376,6 +338,24 @@ impl PipeContext {
         unsafe { self.pipe.as_ref().delete_sampler_state.unwrap()(self.pipe.as_ptr(), ptr) }
     }
 
+    pub fn bind_constant_buffer(&self, idx: u32, res: &PipeResource) {
+        let cb = pipe_constant_buffer {
+            buffer: res.pipe(),
+            buffer_offset: 0,
+            buffer_size: res.width(),
+            user_buffer: ptr::null(),
+        };
+        unsafe {
+            self.pipe.as_ref().set_constant_buffer.unwrap()(
+                self.pipe.as_ptr(),
+                pipe_shader_type::PIPE_SHADER_COMPUTE,
+                idx,
+                false,
+                &cb,
+            )
+        }
+    }
+
     pub fn set_constant_buffer(&self, idx: u32, data: &[u8]) {
         let cb = pipe_constant_buffer {
             buffer: ptr::null_mut(),
@@ -394,6 +374,45 @@ impl PipeContext {
         }
     }
 
+    /// returns false when failing to allocate GPU memory.
+    #[must_use]
+    pub fn set_constant_buffer_stream(&self, idx: u32, data: &[u8]) -> bool {
+        let mut cb = pipe_constant_buffer {
+            buffer: ptr::null_mut(),
+            buffer_offset: 0,
+            buffer_size: data.len() as u32,
+            user_buffer: ptr::null_mut(),
+        };
+
+        unsafe {
+            let stream = self.pipe.as_ref().stream_uploader;
+            u_upload_data(
+                stream,
+                0,
+                data.len() as u32,
+                size_of::<[u64; 16]>() as u32,
+                data.as_ptr().cast(),
+                &mut cb.buffer_offset,
+                &mut cb.buffer,
+            );
+            u_upload_unmap(stream);
+
+            if cb.buffer.is_null() {
+                return false;
+            }
+
+            self.pipe.as_ref().set_constant_buffer.unwrap()(
+                self.pipe.as_ptr(),
+                pipe_shader_type::PIPE_SHADER_COMPUTE,
+                idx,
+                true,
+                &cb,
+            );
+
+            true
+        }
+    }
+
     pub fn launch_grid(
         &self,
         work_dim: u32,
@@ -402,26 +421,17 @@ impl PipeContext {
         variable_local_mem: u32,
     ) {
         let info = pipe_grid_info {
-            pc: 0,
-            input: ptr::null(),
             variable_shared_mem: variable_local_mem,
             work_dim: work_dim,
             block: block,
-            last_block: [0; 3],
             grid: grid,
-            grid_base: [0; 3],
-            indirect: ptr::null_mut(),
-            indirect_offset: 0,
-            indirect_stride: 0,
-            draw_count: 0,
-            indirect_draw_count_offset: 0,
-            indirect_draw_count: ptr::null_mut(),
+            ..Default::default()
         };
         unsafe { self.pipe.as_ref().launch_grid.unwrap()(self.pipe.as_ptr(), &info) }
     }
 
-    pub fn set_global_binding(&self, res: &[&Arc<PipeResource>], out: &mut [*mut u32]) {
-        let mut res: Vec<_> = res.iter().map(|r| r.pipe()).collect();
+    pub fn set_global_binding(&self, res: &[&PipeResource], out: &mut [*mut u32]) {
+        let mut res: Vec<_> = res.iter().copied().map(PipeResource::pipe).collect();
         unsafe {
             self.pipe.as_ref().set_global_binding.unwrap()(
                 self.pipe.as_ptr(),
@@ -430,25 +440,6 @@ impl PipeContext {
                 res.as_mut_ptr(),
                 out.as_mut_ptr(),
             )
-        }
-    }
-
-    pub fn create_sampler_view(
-        &self,
-        res: &PipeResource,
-        format: pipe_format,
-        app_img_info: Option<&AppImgInfo>,
-    ) -> *mut pipe_sampler_view {
-        let template = res.pipe_sampler_view_template(format, app_img_info);
-
-        unsafe {
-            let s_view = self.pipe.as_ref().create_sampler_view.unwrap()(
-                self.pipe.as_ptr(),
-                res.pipe(),
-                &template,
-            );
-
-            s_view
         }
     }
 
@@ -464,7 +455,7 @@ impl PipeContext {
         }
     }
 
-    pub fn set_sampler_views(&self, views: &mut [*mut pipe_sampler_view]) {
+    pub fn set_sampler_views(&self, mut views: Vec<PipeSamplerView>) {
         unsafe {
             self.pipe.as_ref().set_sampler_views.unwrap()(
                 self.pipe.as_ptr(),
@@ -472,10 +463,14 @@ impl PipeContext {
                 0,
                 views.len() as u32,
                 0,
-                false,
-                views.as_mut_ptr(),
+                true,
+                PipeSamplerView::as_pipe(views.as_mut_slice()),
             )
         }
+
+        // the take_ownership parameter of set_sampler_views is set to true, so we need to forget
+        // about them on our side as ownership has been transferred to the driver.
+        views.into_iter().for_each(mem::forget);
     }
 
     pub fn clear_sampler_views(&self, count: u32) {
@@ -487,17 +482,14 @@ impl PipeContext {
                 0,
                 count,
                 0,
-                false,
+                true,
                 samplers.as_mut_ptr(),
             )
         }
     }
 
-    pub fn sampler_view_destroy(&self, view: *mut pipe_sampler_view) {
-        unsafe { self.pipe.as_ref().sampler_view_destroy.unwrap()(self.pipe.as_ptr(), view) }
-    }
-
-    pub fn set_shader_images(&self, images: &[pipe_image_view]) {
+    pub fn set_shader_images(&self, images: &[PipeImageView]) {
+        let images = PipeImageView::slice_to_pipe(images);
         unsafe {
             self.pipe.as_ref().set_shader_images.unwrap()(
                 self.pipe.as_ptr(),
@@ -565,9 +557,22 @@ impl PipeContext {
         }
     }
 
+    pub fn import_fence(&self, fence_fd: &FenceFd) -> PipeFence {
+        unsafe {
+            let mut fence = ptr::null_mut();
+            self.pipe.as_ref().create_fence_fd.unwrap()(
+                self.pipe.as_ptr(),
+                &mut fence,
+                fence_fd.fd,
+                PIPE_FD_TYPE_NATIVE_SYNC,
+            );
+            PipeFence::new(fence, &self.screen)
+        }
+    }
+
     pub fn svm_migrate(
         &self,
-        ptrs: &[*const c_void],
+        ptrs: &[usize],
         sizes: &[usize],
         to_device: bool,
         content_undefined: bool,
@@ -578,7 +583,7 @@ impl PipeContext {
                 cb(
                     self.pipe.as_ptr(),
                     ptrs.len() as u32,
-                    ptrs.as_ptr(),
+                    ptrs.as_ptr().cast(),
                     sizes.as_ptr(),
                     to_device,
                     content_undefined,
@@ -586,10 +591,21 @@ impl PipeContext {
             }
         }
     }
+
+    pub fn device_reset_status(&self) -> pipe_reset_status {
+        unsafe {
+            if let Some(get_device_reset_status) = self.pipe.as_ref().get_device_reset_status {
+                get_device_reset_status(self.pipe.as_ptr())
+            } else {
+                pipe_reset_status::PIPE_NO_RESET
+            }
+        }
+    }
 }
 
 impl Drop for PipeContext {
     fn drop(&mut self) {
+        self.flush().wait();
         unsafe {
             self.pipe.as_ref().destroy.unwrap()(self.pipe.as_ptr());
         }
@@ -605,7 +621,6 @@ fn has_required_cbs(context: &pipe_context) -> bool {
         & has_required_feature!(context, buffer_map)
         & has_required_feature!(context, buffer_subdata)
         & has_required_feature!(context, buffer_unmap)
-        & has_required_feature!(context, clear_buffer)
         & has_required_feature!(context, create_compute_state)
         & has_required_feature!(context, create_query)
         & has_required_feature!(context, delete_compute_state)
@@ -617,6 +632,7 @@ fn has_required_cbs(context: &pipe_context) -> bool {
         & has_required_feature!(context, launch_grid)
         & has_required_feature!(context, memory_barrier)
         & has_required_feature!(context, resource_copy_region)
+        // implicitly used through pipe_sampler_view_reference
         & has_required_feature!(context, sampler_view_destroy)
         & has_required_feature!(context, set_constant_buffer)
         & has_required_feature!(context, set_global_binding)

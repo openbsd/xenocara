@@ -239,8 +239,13 @@ class Expression(SSAStatement):
 
     def write_c(self, w):
         if self.zone == 'cpu':
-            w.write('uint64_t {} = ', self.c_name)
             c_cpu_vals = [s.c_cpu_val() for s in self.srcs]
+            # There is one bitfield that is a uint64_t, but only holds 2 bits.
+            # In practice we won't overflow, but let's help the compiler (and
+            # coverity) out here.
+            if self.op == '<<':
+                w.write(f'assume({c_cpu_vals[0]} < (1 << 8));')
+            w.write('uint64_t {} = ', self.c_name)
             if len(self.srcs) == 1:
                 w.write('({} {})', self.op, c_cpu_vals[0])
             elif len(self.srcs) == 2:
@@ -871,15 +876,7 @@ C_PROLOGUE = COPYRIGHT + '''
 #include "genxml/genX_pack.h"
 #include "genxml/genX_rt_pack.h"
 
-/* We reserve :
- *    - GPR 14 for secondary command buffer returns
- *    - GPR 15 for conditional rendering
- */
-#define MI_BUILDER_NUM_ALLOC_GPRS 14
-#define __gen_get_batch_dwords anv_batch_emit_dwords
-#define __gen_address_offset anv_address_add
-#define __gen_get_batch_address(b, a) anv_batch_address(b, a)
-#include "common/mi_builder.h"
+#include "genX_mi_builder.h"
 
 #define MI_PREDICATE_RESULT mi_reg32(0x2418)
 #define DISPATCHDIM_X mi_reg32(0x2500)

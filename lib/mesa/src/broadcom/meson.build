@@ -1,33 +1,23 @@
 # Copyright © 2017 Broadcom
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 inc_broadcom = include_directories('.', 'cle')
 
 subdir('cle')
 
-v3d_versions = ['33', '41', '42', '71']
+v3d_versions = ['42', '71']
 v3d_libs = []
+
+dep_v3d_hw = dependency('v3d_hw', required: false)
+with_v3d_hw = dep_v3d_hw.found()
+v3d_simulator_arg = '-DUSE_V3D_SIMULATOR=@0@'.format(with_v3d_hw.to_int())
 
 if with_gallium_v3d or with_broadcom_vk
   subdir('compiler')
   subdir('qpu')
+endif
+
+if with_v3d_hw
   subdir('simulator')
 endif
 
@@ -43,7 +33,7 @@ foreach ver : v3d_versions
       files('clif/v3dx_dump.c'),
       v3d_xml_pack
     ],
-    include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_broadcom],
+    include_directories : [inc_include, inc_src, inc_broadcom],
     c_args : [no_override_init_args, '-DV3D_VERSION=' + ver],
     gnu_symbol_visibility : 'hidden',
     dependencies: [dep_valgrind, dep_thread],
@@ -61,11 +51,11 @@ libv3d_neon = static_library(
   'v3d_neon',
   'common/v3d_tiling.c',
   include_directories : [
-    inc_src, inc_include, inc_gallium, inc_gallium_aux, inc_broadcom,
+    inc_src, inc_include, inc_broadcom,
   ],
   c_args : [v3d_args, v3d_neon_c_args],
   gnu_symbol_visibility : 'hidden',
-  dependencies : [dep_libdrm, dep_valgrind, idep_nir_headers],
+  dependencies : [dep_libdrm, dep_valgrind, idep_nir_headers, idep_mesautil],
 )
 
 libbroadcom_v3d = static_library(
@@ -74,14 +64,20 @@ libbroadcom_v3d = static_library(
     files('common/v3d_debug.c', 'common/v3d_device_info.c', 'clif/clif_dump.c', 'common/v3d_util.c'),
     v3d_xml_pack,
   ],
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_broadcom],
+  include_directories : [inc_include, inc_src, inc_broadcom],
   c_args : [no_override_init_args],
   gnu_symbol_visibility : 'hidden',
   link_whole : v3d_libs + per_version_libs,
   link_with: [libv3d_neon],
   build_by_default : false,
-  dependencies: [dep_valgrind, dep_thread],
+  dependencies: [dep_valgrind, dep_thread, idep_mesautil, dep_libdrm],
 )
+
+subdir('perfcntrs')
+
+if with_perfetto and (with_datasources.contains('v3d') or with_datasources.contains('auto'))
+  subdir('ds')
+endif
 
 if with_broadcom_vk
   subdir('vulkan')

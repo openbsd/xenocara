@@ -24,7 +24,9 @@
 #ifndef ANV_ANDROID_H
 #define ANV_ANDROID_H
 
-#if defined(ANDROID) && ANDROID_API_LEVEL >= 26
+#include "util/detect_os.h"
+
+#if DETECT_OS_ANDROID && ANDROID_API_LEVEL >= 26
 #include <vndk/hardware_buffer.h>
 #endif
 #include <vulkan/vulkan.h>
@@ -34,6 +36,13 @@
 struct anv_device_memory;
 struct anv_device;
 struct anv_image;
+struct u_gralloc_buffer_handle;
+enum isl_tiling;
+
+VkResult
+anv_android_get_tiling(struct anv_device *device,
+                       struct u_gralloc_buffer_handle *gr_handle,
+                       enum isl_tiling *tiling_out);
 
 VkResult anv_image_init_from_gralloc(struct anv_device *device,
                                      struct anv_image *image,

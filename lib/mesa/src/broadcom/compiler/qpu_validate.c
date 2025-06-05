@@ -52,6 +52,9 @@ struct v3d_qpu_validate_state {
         bool thrend_found;
 
         int thrsw_count;
+
+        bool rtop_hazard;
+        bool rtop_valid;
 };
 
 static void
@@ -129,6 +132,16 @@ qpu_validate_inst(struct v3d_qpu_validate_state *state, struct qinst *qinst)
 
         if (inst->type != V3D_QPU_INSTR_TYPE_ALU)
                 return;
+
+        if (inst->alu.mul.op == V3D_QPU_M_MULTOP)
+            state->rtop_valid = true;
+
+        if (inst->alu.mul.op == V3D_QPU_M_UMUL24) {
+            if (state->rtop_hazard)
+                fail_instr(state, "UMUL24 reads rtop from MULTOP but it got cleared by a previous THRSW");
+            state->rtop_valid = false;
+            state->rtop_hazard = false;
+        }
 
         if (inst->alu.add.op == V3D_QPU_A_SETMSF &&
             state->first_tlb_z_write >= 0 &&
@@ -243,7 +256,7 @@ qpu_validate_inst(struct v3d_qpu_validate_state *state, struct qinst *qinst)
                 }
 
                 if (inst->sig.ldvary) {
-                        if (devinfo->ver <= 42)
+                        if (devinfo->ver == 42)
                                 fail_instr(state, "LDVARY during THRSW delay slots");
                         if (devinfo->ver >= 71 &&
                             state->ip - state->last_thrsw_ip == 2) {
@@ -276,7 +289,7 @@ qpu_validate_inst(struct v3d_qpu_validate_state *state, struct qinst *qinst)
             vpm_writes +
             tlb_writes +
             tsy_writes +
-            (devinfo->ver <= 42 ? inst->sig.ldtmu : 0) +
+            (devinfo->ver == 42 ? inst->sig.ldtmu : 0) +
             inst->sig.ldtlb +
             inst->sig.ldvpm +
             inst->sig.ldtlbu > 1) {
@@ -316,7 +329,7 @@ qpu_validate_inst(struct v3d_qpu_validate_state *state, struct qinst *qinst)
             inst->type == V3D_QPU_INSTR_TYPE_ALU) {
                 if ((inst->alu.add.op != V3D_QPU_A_NOP &&
                      !inst->alu.add.magic_write)) {
-                        if (devinfo->ver <= 42) {
+                        if (devinfo->ver == 42) {
                                 fail_instr(state, "RF write after THREND");
                         } else if (devinfo->ver >= 71) {
                                 if (state->last_thrsw_ip - state->ip == 0) {
@@ -333,7 +346,7 @@ qpu_validate_inst(struct v3d_qpu_validate_state *state, struct qinst *qinst)
 
                 if ((inst->alu.mul.op != V3D_QPU_M_NOP &&
                      !inst->alu.mul.magic_write)) {
-                        if (devinfo->ver <= 42) {
+                        if (devinfo->ver == 42) {
                                 fail_instr(state, "RF write after THREND");
                         } else if (devinfo->ver >= 71) {
                                 if (state->last_thrsw_ip - state->ip == 0) {
@@ -351,7 +364,7 @@ qpu_validate_inst(struct v3d_qpu_validate_state *state, struct qinst *qinst)
 
                 if (v3d_qpu_sig_writes_address(devinfo, &inst->sig) &&
                     !inst->sig_magic) {
-                        if (devinfo->ver <= 42) {
+                        if (devinfo->ver == 42) {
                                 fail_instr(state, "RF write after THREND");
                         } else if (devinfo->ver >= 71 &&
                                    (inst->sig_addr == 2 ||
@@ -364,6 +377,11 @@ qpu_validate_inst(struct v3d_qpu_validate_state *state, struct qinst *qinst)
                 if (state->last_thrsw_ip - state->ip == 2 &&
                     inst->alu.add.op == V3D_QPU_A_TMUWT)
                         fail_instr(state, "TMUWT in last instruction");
+        }
+
+        if (state->rtop_valid && state->ip == state->last_thrsw_ip + 2) {
+                state->rtop_hazard = true;
+                state->rtop_valid = false;
         }
 
         if (inst->type == V3D_QPU_INSTR_TYPE_BRANCH) {
@@ -397,7 +415,7 @@ qpu_validate(struct v3d_compile *c)
          * keep compiling the validation code to make sure it doesn't get
          * broken.
          */
-#ifndef DEBUG
+#if !MESA_DEBUG
         return;
 #endif
 
@@ -410,6 +428,8 @@ qpu_validate(struct v3d_compile *c)
                 .ip = 0,
 
                 .last_thrsw_found = !c->last_thrsw,
+                .rtop_hazard = false,
+                .rtop_valid = false,
         };
 
         vir_for_each_block(block, c) {

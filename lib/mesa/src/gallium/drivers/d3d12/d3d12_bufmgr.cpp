@@ -64,7 +64,7 @@ describe_suballoc_bo(char *buf, struct d3d12_bo *ptr)
    d3d12_bo *base = d3d12_bo_get_base(ptr, &offset);
    describe_direct_bo(res, base);
    sprintf(buf, "d3d12_bo<suballoc<%s>,0x%x,0x%x>", res,
-           (unsigned)ptr->buffer->size, (unsigned)offset);
+           (unsigned)ptr->buffer->base.size, (unsigned)offset);
 }
 
 void
@@ -100,7 +100,8 @@ d3d12_bo_wrap_res(struct d3d12_screen *screen, ID3D12Resource *res, enum d3d12_r
 
    bo->residency_status = residency;
    bo->last_used_timestamp = 0;
-   screen->dev->GetCopyableFootprints(&desc, 0, total_subresources, 0, nullptr, nullptr, nullptr, &bo->estimated_size);
+   desc.Flags &= ~D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+   bo->estimated_size = GetResourceAllocationInfo(screen->dev, 0, 1, &desc).SizeInBytes;
    if (residency == d3d12_resident) {
       mtx_lock(&screen->submit_mutex);
       list_add(&bo->residency_list_entry, &screen->residency_list);
@@ -126,7 +127,7 @@ d3d12_bo_new(struct d3d12_screen *screen, uint64_t size, const pb_desc *pb_desc)
    res_desc.MipLevels = 1;
    res_desc.SampleDesc.Count = 1;
    res_desc.SampleDesc.Quality = 0;
-   res_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+   res_desc.Flags = (screen->max_feature_level >= D3D_FEATURE_LEVEL_11_0) ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAG_NONE;
    res_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
    D3D12_HEAP_TYPE heap_type = D3D12_HEAP_TYPE_DEFAULT;
@@ -225,12 +226,12 @@ d3d12_bo_map(struct d3d12_bo *bo, D3D12_RANGE *range)
    base_bo = d3d12_bo_get_base(bo, &offset);
 
    if (!range || range->Begin >= range->End) {
-      offset_range.Begin = offset;
-      offset_range.End = offset + d3d12_bo_get_size(bo);
+      offset_range.Begin = static_cast<size_t>(offset);
+      offset_range.End = static_cast<size_t>(offset + d3d12_bo_get_size(bo));
       range = &offset_range;
    } else {
-      offset_range.Begin = range->Begin + offset;
-      offset_range.End = range->End + offset;
+      offset_range.Begin = static_cast<size_t>(range->Begin + offset);
+      offset_range.End = static_cast<size_t>(range->End + offset);
       range = &offset_range;
    }
 
@@ -250,12 +251,12 @@ d3d12_bo_unmap(struct d3d12_bo *bo, D3D12_RANGE *range)
    base_bo = d3d12_bo_get_base(bo, &offset);
 
    if (!range || range->Begin >= range->End) {
-      offset_range.Begin = offset;
-      offset_range.End = offset + d3d12_bo_get_size(bo);
+      offset_range.Begin = static_cast<size_t>(offset);
+      offset_range.End = static_cast<size_t>(offset + d3d12_bo_get_size(bo));
       range = &offset_range;
    } else {
-      offset_range.Begin = range->Begin + offset;
-      offset_range.End = range->End + offset;
+      offset_range.Begin = static_cast<size_t>(range->Begin + offset);
+      offset_range.End = static_cast<size_t>(range->End + offset);
       range = &offset_range;
    }
 
@@ -331,13 +332,13 @@ d3d12_bufmgr_create_buffer(struct pb_manager *pmgr,
    if (!buf)
       return NULL;
 
-   pipe_reference_init(&buf->base.reference, 1);
-   buf->base.alignment_log2 = util_logbase2(pb_desc->alignment);
-   buf->base.usage = pb_desc->usage;
+   pipe_reference_init(&buf->base.base.reference, 1);
+   buf->base.base.alignment_log2 = static_cast<uint8_t>(util_logbase2(pb_desc->alignment));
+   buf->base.base.usage = static_cast<uint16_t>(pb_desc->usage);
    buf->base.vtbl = &d3d12_buffer_vtbl;
-   buf->base.size = size;
+   buf->base.base.size = size;
    buf->range.Begin = 0;
-   buf->range.End = size;
+   buf->range.End = static_cast<size_t>(size);
 
    buf->bo = d3d12_bo_new(mgr->screen, size, pb_desc);
    if (!buf->bo) {

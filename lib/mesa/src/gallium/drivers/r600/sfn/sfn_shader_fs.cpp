@@ -1,27 +1,7 @@
 /* -*- mesa-c++  -*-
- *
- * Copyright (c) 2022 Collabora LTD
- *
+ * Copyright 2022 Collabora LTD
  * Author: Gert Wollny <gert.wollny@collabora.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "sfn_shader_fs.h"
@@ -64,8 +44,6 @@ FragmentShader::do_get_shader_info(r600_shader *sh_info)
    sh_info->rat_base = m_rat_base;
    sh_info->uses_kill = m_uses_discard;
    sh_info->gs_prim_id_input = m_gs_prim_id_input;
-   if (chip_class() >= ISA_CC_EVERGREEN)
-      sh_info->ps_prim_id_input = m_ps_prim_id_input;
    sh_info->nsys_inputs = m_nsys_inputs;
    sh_info->uses_helper_invocation = m_helper_invocation != nullptr;
 }
@@ -137,7 +115,6 @@ barycentric_ij_index(nir_intrinsic_instr *intr)
    switch (nir_intrinsic_interp_mode(intr)) {
    case INTERP_MODE_NONE:
    case INTERP_MODE_SMOOTH:
-   case INTERP_MODE_COLOR:
       return index;
    case INTERP_MODE_NOPERSPECTIVE:
       return index + 3;
@@ -160,7 +137,7 @@ FragmentShader::process_stage_intrinsic(nir_intrinsic_instr *intr)
       return load_input(intr);
    case nir_intrinsic_load_interpolated_input:
       return load_interpolated_input(intr);
-   case nir_intrinsic_discard_if:
+   case nir_intrinsic_terminate_if:
       m_uses_discard = true;
       emit_instruction(new AluInstr(op2_killne_int,
                                     nullptr,
@@ -169,7 +146,7 @@ FragmentShader::process_stage_intrinsic(nir_intrinsic_instr *intr)
                                     {AluInstr::last}));
 
       return true;
-   case nir_intrinsic_discard:
+   case nir_intrinsic_terminate:
       m_uses_discard = true;
       emit_instruction(new AluInstr(op2_kille_int,
                                     nullptr,
@@ -235,7 +212,8 @@ FragmentShader::do_allocate_reserved_registers()
       sfn_log << SfnLog::io << "Set sample mask in register to " << *m_sample_mask_reg
               << "\n";
       m_nsys_inputs = 1;
-      ShaderInput input(ninputs(), TGSI_SEMANTIC_SAMPLEMASK);
+      ShaderInput input(ninputs());
+      input.set_system_value(SYSTEM_VALUE_SAMPLE_MASK_IN);
       input.set_gpr(face_reg_index);
       add_input(input);
    }
@@ -245,7 +223,8 @@ FragmentShader::do_allocate_reserved_registers()
       m_sample_id_reg = value_factory().allocate_pinned_register(sample_id_reg, 3);
       sfn_log << SfnLog::io << "Set sample id register to " << *m_sample_id_reg << "\n";
       m_nsys_inputs++;
-      ShaderInput input(ninputs(), TGSI_SEMANTIC_SAMPLEID);
+      ShaderInput input(ninputs());
+      input.set_system_value(SYSTEM_VALUE_SAMPLE_ID);
       input.set_gpr(sample_id_reg);
       add_input(input);
    }
@@ -350,17 +329,14 @@ FragmentShader::scan_input(nir_intrinsic_instr *intr, int index_src_id)
    const unsigned location_offset = chip_class() < ISA_CC_EVERGREEN ? 32 : 0;
    bool uses_interpol_at_centroid = false;
 
-   unsigned location = nir_intrinsic_io_semantics(intr).location + index->u32;
+   auto location =
+      static_cast<gl_varying_slot>(nir_intrinsic_io_semantics(intr).location + index->u32);
    unsigned driver_location = nir_intrinsic_base(intr) + index->u32;
-   auto semantic = r600_get_varying_semantic(location);
-   tgsi_semantic name = (tgsi_semantic)semantic.first;
-   unsigned sid = semantic.second;
 
    if (location == VARYING_SLOT_POS) {
       m_sv_values.set(es_pos);
       m_pos_driver_loc = driver_location + location_offset;
-      ShaderInput pos_input(m_pos_driver_loc, name);
-      pos_input.set_sid(sid);
+      ShaderInput pos_input(m_pos_driver_loc, location);
       pos_input.set_interpolator(TGSI_INTERPOLATE_LINEAR,
                                  TGSI_INTERPOLATE_LOC_CENTER,
                                  false);
@@ -371,14 +347,17 @@ FragmentShader::scan_input(nir_intrinsic_instr *intr, int index_src_id)
    if (location == VARYING_SLOT_FACE) {
       m_sv_values.set(es_face);
       m_face_driver_loc = driver_location + location_offset;
-      ShaderInput face_input(m_face_driver_loc, name);
-      face_input.set_sid(sid);
+      ShaderInput face_input(m_face_driver_loc, location);
       add_input(face_input);
       return true;
    }
 
    tgsi_interpolate_mode tgsi_interpolate = TGSI_INTERPOLATE_CONSTANT;
    tgsi_interpolate_loc tgsi_loc = TGSI_INTERPOLATE_LOC_CENTER;
+
+   const bool is_color =
+      (location >= VARYING_SLOT_COL0 && location <= VARYING_SLOT_COL1) ||
+      (location >= VARYING_SLOT_BFC0 && location <= VARYING_SLOT_BFC1);
 
    if (index_src_id > 0) {
       glsl_interp_mode mode = INTERP_MODE_NONE;
@@ -406,7 +385,7 @@ FragmentShader::scan_input(nir_intrinsic_instr *intr, int index_src_id)
 
       switch (mode) {
       case INTERP_MODE_NONE:
-         if (name == TGSI_SEMANTIC_COLOR || name == TGSI_SEMANTIC_BCOLOR) {
+         if (is_color) {
             tgsi_interpolate = TGSI_INTERPOLATE_COLOR;
             break;
          }
@@ -419,49 +398,37 @@ FragmentShader::scan_input(nir_intrinsic_instr *intr, int index_src_id)
          break;
       case INTERP_MODE_FLAT:
          break;
-      case INTERP_MODE_COLOR:
-         tgsi_interpolate = TGSI_INTERPOLATE_COLOR;
-         break;
       case INTERP_MODE_EXPLICIT:
       default:
          assert(0);
       }
    }
 
-   switch (name) {
-   case TGSI_SEMANTIC_PRIMID:
+   if (location == VARYING_SLOT_PRIMITIVE_ID) {
       m_gs_prim_id_input = true;
-      m_ps_prim_id_input = ninputs();
-      FALLTHROUGH;
-   case TGSI_SEMANTIC_COLOR:
-   case TGSI_SEMANTIC_BCOLOR:
-   case TGSI_SEMANTIC_FOG:
-   case TGSI_SEMANTIC_GENERIC:
-   case TGSI_SEMANTIC_TEXCOORD:
-   case TGSI_SEMANTIC_LAYER:
-   case TGSI_SEMANTIC_PCOORD:
-   case TGSI_SEMANTIC_VIEWPORT_INDEX:
-   case TGSI_SEMANTIC_CLIPDIST: {
-      sfn_log << SfnLog::io << " have IO at " << driver_location << "\n";
-      auto iinput = find_input(driver_location);
-      if (iinput == input_not_found()) {
-         ShaderInput input(driver_location, name);
-         input.set_sid(sid);
-         input.set_need_lds_pos();
-         input.set_interpolator(tgsi_interpolate, tgsi_loc, uses_interpol_at_centroid);
-         sfn_log << SfnLog::io << "add IO with LDS ID at " << input.location() << "\n";
-         add_input(input);
-         assert(find_input(input.location()) != input_not_found());
-      } else {
-         if (uses_interpol_at_centroid) {
-            iinput->second.set_uses_interpolate_at_centroid();
-         }
-      }
-      return true;
-   }
-   default:
+   } else if (!(is_color || (location >= VARYING_SLOT_VAR0 && location < VARYING_SLOT_MAX) ||
+                (location >= VARYING_SLOT_TEX0 && location <= VARYING_SLOT_TEX7) ||
+                (location >= VARYING_SLOT_CLIP_DIST0 && location <= VARYING_SLOT_CLIP_DIST1) ||
+                location == VARYING_SLOT_FOGC || location == VARYING_SLOT_LAYER ||
+                location == VARYING_SLOT_PNTC || location == VARYING_SLOT_VIEWPORT)) {
       return false;
    }
+
+   sfn_log << SfnLog::io << " have IO at " << driver_location << "\n";
+   auto iinput = find_input(driver_location);
+   if (iinput == input_not_found()) {
+      ShaderInput input(driver_location, location);
+      input.set_need_lds_pos();
+      input.set_interpolator(tgsi_interpolate, tgsi_loc, uses_interpol_at_centroid);
+      sfn_log << SfnLog::io << "add IO with LDS ID at " << input.location() << "\n";
+      add_input(input);
+      assert(find_input(input.location()) != input_not_found());
+   } else {
+      if (uses_interpol_at_centroid) {
+         iinput->second.set_uses_interpolate_at_centroid();
+      }
+   }
+   return true;
 }
 
 bool
@@ -494,7 +461,8 @@ FragmentShader::emit_export_pixel(nir_intrinsic_instr& intr)
        (semantics.location >= FRAG_RESULT_DATA0 &&
         semantics.location <= FRAG_RESULT_DATA7)) {
 
-      ShaderOutput output(driver_location, TGSI_SEMANTIC_COLOR, write_mask);
+      ShaderOutput output(driver_location, write_mask);
+      output.set_frag_result(static_cast<gl_frag_result>(semantics.location));
       add_output(output);
 
       unsigned color_outputs =
@@ -552,13 +520,9 @@ FragmentShader::emit_export_pixel(nir_intrinsic_instr& intr)
               semantics.location == FRAG_RESULT_STENCIL ||
               semantics.location == FRAG_RESULT_SAMPLE_MASK) {
       emit_instruction(new ExportInstr(ExportInstr::pixel, 61, value));
-      int semantic = TGSI_SEMANTIC_POSITION;
-      if (semantics.location == FRAG_RESULT_STENCIL)
-         semantic = TGSI_SEMANTIC_STENCIL;
-      else if (semantics.location == FRAG_RESULT_SAMPLE_MASK)
-         semantic = TGSI_SEMANTIC_SAMPLEMASK;
 
-      ShaderOutput output(driver_location, semantic, write_mask);
+      ShaderOutput output(driver_location, write_mask);
+      output.set_frag_result(static_cast<gl_frag_result>(semantics.location));
       add_output(output);
 
    } else {
@@ -670,7 +634,7 @@ FragmentShaderR600::allocate_interpolators_or_inputs()
                             pin_fully);
          inp.set_gpr(pos++);
 
-         sfn_log << SfnLog::io << "Reseve input register at pos " << index << " as "
+         sfn_log << SfnLog::io << "Reserve input register at pos " << index << " as "
                  << input << " with register " << inp.gpr() << "\n";
 
          m_interpolated_inputs[index] = input;

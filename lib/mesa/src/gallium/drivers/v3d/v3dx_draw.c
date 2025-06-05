@@ -21,6 +21,7 @@
  * IN THE SOFTWARE.
  */
 
+#include "util/perf/cpu_trace.h"
 #include "util/u_blitter.h"
 #include "util/u_draw.h"
 #include "util/u_prim.h"
@@ -36,6 +37,7 @@
 #include "broadcom/compiler/v3d_compiler.h"
 #include "broadcom/common/v3d_macros.h"
 #include "broadcom/common/v3d_util.h"
+#include "broadcom/common/v3d_csd.h"
 #include "broadcom/cle/v3dx_pack.h"
 
 void
@@ -52,38 +54,6 @@ v3dX(start_binning)(struct v3d_context *v3d, struct v3d_job *job)
         job->submit.bcl_start = job->bcl.bo->offset;
         v3d_job_add_bo(job, job->bcl.bo);
 
-        /* The PTB will request the tile alloc initial size per tile at start
-         * of tile binning.
-         */
-        uint32_t tile_alloc_size =
-                MAX2(job->num_layers, 1) * job->draw_tiles_x * job->draw_tiles_y * 64;
-
-        /* The PTB allocates in aligned 4k chunks after the initial setup. */
-        tile_alloc_size = align(tile_alloc_size, 4096);
-
-        /* Include the first two chunk allocations that the PTB does so that
-         * we definitely clear the OOM condition before triggering one (the HW
-         * won't trigger OOM during the first allocations).
-         */
-        tile_alloc_size += 8192;
-
-        /* For performance, allocate some extra initial memory after the PTB's
-         * minimal allocations, so that we hopefully don't have to block the
-         * GPU on the kernel handling an OOM signal.
-         */
-        tile_alloc_size += 512 * 1024;
-
-        job->tile_alloc = v3d_bo_alloc(v3d->screen, tile_alloc_size,
-                                       "tile_alloc");
-        uint32_t tsda_per_tile_size = v3d->screen->devinfo.ver >= 40 ? 256 : 64;
-        job->tile_state = v3d_bo_alloc(v3d->screen,
-                                       MAX2(job->num_layers, 1) *
-                                       job->draw_tiles_y *
-                                       job->draw_tiles_x *
-                                       tsda_per_tile_size,
-                                       "TSDA");
-
-#if V3D_VERSION >= 41
         /* This must go before the binning mode configuration. It is
          * required for layered framebuffers to work.
          */
@@ -92,16 +62,17 @@ v3dX(start_binning)(struct v3d_context *v3d, struct v3d_job *job)
                         config.number_of_layers = job->num_layers;
                 }
         }
-#endif
 
         assert(!job->msaa || !job->double_buffer);
+        job->bcl_tile_binning_mode_ptr = cl_start(&job->bcl);
+
 #if V3D_VERSION >= 71
         cl_emit(&job->bcl, TILE_BINNING_MODE_CFG, config) {
                 config.width_in_pixels = job->draw_width;
                 config.height_in_pixels = job->draw_height;
 
-                config.log2_tile_width = log2_tile_size(job->tile_width);
-                config.log2_tile_height = log2_tile_size(job->tile_height);
+                config.log2_tile_width = log2_tile_size(job->tile_desc.width);
+                config.log2_tile_height = log2_tile_size(job->tile_desc.height);
 
                 /* FIXME: ideallly we would like next assert on the packet header (as is
                  * general, so also applies to GL). We would need to expand
@@ -110,41 +81,12 @@ v3dX(start_binning)(struct v3d_context *v3d, struct v3d_job *job)
                 assert(config.log2_tile_width == config.log2_tile_height ||
                        config.log2_tile_width == config.log2_tile_height + 1);
         }
-
 #endif
 
-#if V3D_VERSION >= 40 && V3D_VERSION <= 42
+#if V3D_VERSION == 42
         cl_emit(&job->bcl, TILE_BINNING_MODE_CFG, config) {
                 config.width_in_pixels = job->draw_width;
                 config.height_in_pixels = job->draw_height;
-                config.number_of_render_targets =
-                        MAX2(job->nr_cbufs, 1);
-
-                config.multisample_mode_4x = job->msaa;
-                config.double_buffer_in_non_ms_mode = job->double_buffer;
-
-                config.maximum_bpp_of_all_render_targets = job->internal_bpp;
-        }
-#endif
-#if V3D_VERSION < 40
-        /* "Binning mode lists start with a Tile Binning Mode Configuration
-         * item (120)"
-         *
-         * Part1 signals the end of binning config setup.
-         */
-        cl_emit(&job->bcl, TILE_BINNING_MODE_CFG_PART2, config) {
-                config.tile_allocation_memory_address =
-                        cl_address(job->tile_alloc, 0);
-                config.tile_allocation_memory_size = job->tile_alloc->size;
-        }
-
-        cl_emit(&job->bcl, TILE_BINNING_MODE_CFG_PART1, config) {
-                config.tile_state_data_array_base_address =
-                        cl_address(job->tile_state, 0);
-
-                config.width_in_tiles = job->draw_tiles_x;
-                config.height_in_tiles = job->draw_tiles_y;
-                /* Must be >= 1 */
                 config.number_of_render_targets =
                         MAX2(job->nr_cbufs, 1);
 
@@ -190,9 +132,10 @@ v3d_predraw_check_stage_inputs(struct pipe_context *pctx,
                                enum pipe_shader_type s)
 {
         struct v3d_context *v3d = v3d_context(pctx);
+        unsigned i;
 
         /* Flush writes to textures we're sampling. */
-        for (int i = 0; i < v3d->tex[s].num_textures; i++) {
+        for (i = 0; i < v3d->tex[s].num_textures; i++) {
                 struct pipe_sampler_view *pview = v3d->tex[s].textures[i];
                 if (!pview)
                         continue;
@@ -203,12 +146,13 @@ v3d_predraw_check_stage_inputs(struct pipe_context *pctx,
                         v3d_update_shadow_texture(pctx, &view->base);
 
                 v3d_flush_jobs_writing_resource(v3d, view->texture,
-                                                V3D_FLUSH_DEFAULT,
+                                                V3D_FLUSH_NOT_CURRENT_JOB,
                                                 s == PIPE_SHADER_COMPUTE);
         }
 
         /* Flush writes to UBOs. */
-        u_foreach_bit(i, v3d->constbuf[s].enabled_mask) {
+        BITSET_FOREACH_SET(i, v3d->constbuf[s].enabled_mask,
+                           PIPE_MAX_CONSTANT_BUFFERS) {
                 struct pipe_constant_buffer *cb = &v3d->constbuf[s].cb[i];
                 if (cb->buffer) {
                         v3d_flush_jobs_writing_resource(v3d, cb->buffer,
@@ -218,7 +162,8 @@ v3d_predraw_check_stage_inputs(struct pipe_context *pctx,
         }
 
         /* Flush reads/writes to our SSBOs */
-        u_foreach_bit(i, v3d->ssbo[s].enabled_mask) {
+        BITSET_FOREACH_SET(i, v3d->ssbo[s].enabled_mask,
+                           PIPE_MAX_SHADER_BUFFERS) {
                 struct pipe_shader_buffer *sb = &v3d->ssbo[s].sb[i];
                 if (sb->buffer) {
                         v3d_flush_jobs_reading_resource(v3d, sb->buffer,
@@ -228,7 +173,8 @@ v3d_predraw_check_stage_inputs(struct pipe_context *pctx,
         }
 
         /* Flush reads/writes to our image views */
-        u_foreach_bit(i, v3d->shaderimg[s].enabled_mask) {
+        BITSET_FOREACH_SET(i, v3d->shaderimg[s].enabled_mask,
+                           PIPE_MAX_SHADER_IMAGES) {
                 struct v3d_image_view *view = &v3d->shaderimg[s].si[i];
 
                 v3d_flush_jobs_reading_resource(v3d, view->base.resource,
@@ -238,7 +184,8 @@ v3d_predraw_check_stage_inputs(struct pipe_context *pctx,
 
         /* Flush writes to our vertex buffers (i.e. from transform feedback) */
         if (s == PIPE_SHADER_VERTEX) {
-                u_foreach_bit(i, v3d->vertexbuf.enabled_mask) {
+                BITSET_FOREACH_SET(i, v3d->vertexbuf.enabled_mask,
+                                   PIPE_MAX_ATTRIBS) {
                         struct pipe_vertex_buffer *vb = &v3d->vertexbuf.vb[i];
 
                         v3d_flush_jobs_writing_resource(v3d, vb->buffer.resource,
@@ -280,10 +227,12 @@ v3d_state_reads_resource(struct v3d_context *v3d,
                          enum pipe_shader_type s)
 {
         struct v3d_resource *rsc = v3d_resource(prsc);
+        unsigned i;
 
         /* Vertex buffers */
         if (s == PIPE_SHADER_VERTEX) {
-                u_foreach_bit(i, v3d->vertexbuf.enabled_mask) {
+                BITSET_FOREACH_SET(i, v3d->vertexbuf.enabled_mask,
+                                   PIPE_MAX_ATTRIBS) {
                         struct pipe_vertex_buffer *vb = &v3d->vertexbuf.vb[i];
                         if (!vb->buffer.resource)
                                 continue;
@@ -296,7 +245,8 @@ v3d_state_reads_resource(struct v3d_context *v3d,
         }
 
         /* Constant buffers */
-        u_foreach_bit(i, v3d->constbuf[s].enabled_mask) {
+        BITSET_FOREACH_SET(i, v3d->constbuf[s].enabled_mask,
+                           PIPE_MAX_CONSTANT_BUFFERS) {
                 struct pipe_constant_buffer *cb = &v3d->constbuf[s].cb[i];
                 if (!cb->buffer)
                         continue;
@@ -307,7 +257,8 @@ v3d_state_reads_resource(struct v3d_context *v3d,
         }
 
         /* Shader storage buffers */
-        u_foreach_bit(i, v3d->ssbo[s].enabled_mask) {
+        BITSET_FOREACH_SET(i, v3d->ssbo[s].enabled_mask,
+                           PIPE_MAX_SHADER_BUFFERS) {
                 struct pipe_shader_buffer *sb = &v3d->ssbo[s].sb[i];
                 if (!sb->buffer)
                         continue;
@@ -380,7 +331,6 @@ v3d_emit_wait_for_tf_if_needed(struct v3d_context *v3d, struct v3d_job *job)
         }
 }
 
-#if V3D_VERSION >= 41
 static void
 v3d_emit_gs_state_record(struct v3d_job *job,
                          struct v3d_compiled_shader *gs_bin,
@@ -396,7 +346,7 @@ v3d_emit_gs_state_record(struct v3d_job *job,
                         gs_bin->prog_data.gs->base.threads == 4;
                 shader.geometry_bin_mode_shader_start_in_final_thread_section =
                         gs_bin->prog_data.gs->base.single_seg;
-#if V3D_VERSION <= 42
+#if V3D_VERSION == 42
                 shader.geometry_bin_mode_shader_propagate_nans = true;
 #endif
                 shader.geometry_bin_mode_shader_uniforms_address =
@@ -408,7 +358,7 @@ v3d_emit_gs_state_record(struct v3d_job *job,
                         gs->prog_data.gs->base.threads == 4;
                 shader.geometry_render_mode_shader_start_in_final_thread_section =
                         gs->prog_data.gs->base.single_seg;
-#if V3D_VERSION <= 42
+#if V3D_VERSION == 42
                 shader.geometry_render_mode_shader_propagate_nans = true;
 #endif
                 shader.geometry_render_mode_shader_uniforms_address =
@@ -500,7 +450,230 @@ v3d_emit_tes_gs_shader_params(struct v3d_job *job,
                 shader.gbg_min_gs_output_segments_required_in_play = 1;
         }
 }
+
+static void
+emit_shader_state_record(struct v3d_context *v3d,
+                         struct v3d_job *job,
+                         const struct pipe_draw_info *info,
+                         struct v3d_vertex_stateobj *vtx,
+                         struct v3d_cl_reloc cs_uniforms,
+                         struct v3d_cl_reloc vs_uniforms,
+                         struct v3d_cl_reloc fs_uniforms,
+                         struct vpm_config *vpm_cfg_bin,
+                         struct vpm_config *vpm_cfg)
+{
+#if V3D_VERSION >= 71
+        /* 2712D0 (V3D 7.1.10) has included draw index and base vertex,
+         * shuffling all the fields in the packet. Since the versioning
+         * framework doesn't handle revision numbers, the XML has a
+         * different shader state record packet including the new fields
+         * and we decide at run time which packet we need to emit.
+         */
+        if (v3d_device_has_draw_index(&v3d->screen->devinfo)) {
+                cl_emit(&job->indirect, GL_SHADER_STATE_RECORD_DRAW_INDEX, shader) {
+                        shader.enable_clipping = true;
+                        shader.point_size_in_shaded_vertex_data =
+                                (info->mode == MESA_PRIM_POINTS &&
+                                 v3d->rasterizer->base.point_size_per_vertex);
+                        shader.fragment_shader_does_z_writes =
+                                v3d->prog.fs->prog_data.fs->writes_z;
+                        shader.turn_off_early_z_test =
+                                v3d->prog.fs->prog_data.fs->disable_ez;
+                        shader.fragment_shader_uses_real_pixel_centre_w_in_addition_to_centroid_w2 =
+                                v3d->prog.fs->prog_data.fs->uses_center_w;
+                        shader.any_shader_reads_hardware_written_primitive_id =
+                                (v3d->prog.gs && v3d->prog.gs->prog_data.gs->uses_pid) ||
+                                v3d->prog.fs->prog_data.fs->uses_pid;
+                        shader.insert_primitive_id_as_first_varying_to_fragment_shader =
+                                !v3d->prog.gs && v3d->prog.fs->prog_data.fs->uses_pid;
+                        shader.do_scoreboard_wait_on_first_thread_switch =
+                                v3d->prog.fs->prog_data.fs->lock_scoreboard_on_first_thrsw;
+                        shader.disable_implicit_point_line_varyings =
+                                !v3d->prog.fs->prog_data.fs->uses_implicit_point_line_varyings;
+                        shader.number_of_varyings_in_fragment_shader =
+                                v3d->prog.fs->prog_data.fs->num_inputs;
+                        shader.coordinate_shader_code_address =
+                                cl_address(v3d_resource(v3d->prog.cs->resource)->bo,
+                                           v3d->prog.cs->offset);
+                        shader.vertex_shader_code_address =
+                                cl_address(v3d_resource(v3d->prog.vs->resource)->bo,
+                                           v3d->prog.vs->offset);
+                        shader.fragment_shader_code_address =
+                                cl_address(v3d_resource(v3d->prog.fs->resource)->bo,
+                                           v3d->prog.fs->offset);
+                        shader.coordinate_shader_input_vpm_segment_size =
+                                v3d->prog.cs->prog_data.vs->vpm_input_size;
+                        shader.vertex_shader_input_vpm_segment_size =
+                                v3d->prog.vs->prog_data.vs->vpm_input_size;
+                        shader.coordinate_shader_output_vpm_segment_size =
+                                v3d->prog.cs->prog_data.vs->vpm_output_size;
+                        shader.vertex_shader_output_vpm_segment_size =
+                                v3d->prog.vs->prog_data.vs->vpm_output_size;
+                        shader.coordinate_shader_uniforms_address = cs_uniforms;
+                        shader.vertex_shader_uniforms_address = vs_uniforms;
+                        shader.fragment_shader_uniforms_address = fs_uniforms;
+                        shader.min_coord_shader_input_segments_required_in_play =
+                                vpm_cfg_bin->As;
+                        shader.min_vertex_shader_input_segments_required_in_play =
+                                vpm_cfg->As;
+                        shader.min_coord_shader_output_segments_required_in_play_in_addition_to_vcm_cache_size =
+                                vpm_cfg_bin->Ve;
+                        shader.min_vertex_shader_output_segments_required_in_play_in_addition_to_vcm_cache_size =
+                                vpm_cfg->Ve;
+                        shader.coordinate_shader_4_way_threadable =
+                                v3d->prog.cs->prog_data.vs->base.threads == 4;
+                        shader.vertex_shader_4_way_threadable =
+                                v3d->prog.vs->prog_data.vs->base.threads == 4;
+                        shader.fragment_shader_4_way_threadable =
+                                v3d->prog.fs->prog_data.fs->base.threads == 4;
+                        shader.coordinate_shader_start_in_final_thread_section =
+                                v3d->prog.cs->prog_data.vs->base.single_seg;
+                        shader.vertex_shader_start_in_final_thread_section =
+                                v3d->prog.vs->prog_data.vs->base.single_seg;
+                        shader.fragment_shader_start_in_final_thread_section =
+                                v3d->prog.fs->prog_data.fs->base.single_seg;
+                        shader.vertex_id_read_by_coordinate_shader =
+                                v3d->prog.cs->prog_data.vs->uses_vid;
+                        shader.instance_id_read_by_coordinate_shader =
+                                v3d->prog.cs->prog_data.vs->uses_iid;
+                        shader.vertex_id_read_by_vertex_shader =
+                                v3d->prog.vs->prog_data.vs->uses_vid;
+                        shader.instance_id_read_by_vertex_shader =
+                                v3d->prog.vs->prog_data.vs->uses_iid;
+                }
+                return;
+        }
 #endif
+
+        assert(!v3d_device_has_draw_index(&v3d->screen->devinfo));
+        cl_emit(&job->indirect, GL_SHADER_STATE_RECORD, shader) {
+                shader.enable_clipping = true;
+                /* V3D_DIRTY_PRIM_MODE | V3D_DIRTY_RASTERIZER */
+                shader.point_size_in_shaded_vertex_data =
+                        (info->mode == MESA_PRIM_POINTS &&
+                         v3d->rasterizer->base.point_size_per_vertex);
+
+                /* Must be set if the shader modifies Z, discards, or modifies
+                 * the sample mask.  For any of these cases, the fragment
+                 * shader needs to write the Z value (even just discards).
+                 */
+                shader.fragment_shader_does_z_writes =
+                        v3d->prog.fs->prog_data.fs->writes_z;
+
+                /* Set if the EZ test must be disabled (due to shader side
+                 * effects and the early_z flag not being present in the
+                 * shader).
+                 */
+                shader.turn_off_early_z_test =
+                        v3d->prog.fs->prog_data.fs->disable_ez;
+
+                shader.fragment_shader_uses_real_pixel_centre_w_in_addition_to_centroid_w2 =
+                        v3d->prog.fs->prog_data.fs->uses_center_w;
+
+                shader.any_shader_reads_hardware_written_primitive_id =
+                        (v3d->prog.gs && v3d->prog.gs->prog_data.gs->uses_pid) ||
+                        v3d->prog.fs->prog_data.fs->uses_pid;
+                shader.insert_primitive_id_as_first_varying_to_fragment_shader =
+                        !v3d->prog.gs && v3d->prog.fs->prog_data.fs->uses_pid;
+
+                shader.do_scoreboard_wait_on_first_thread_switch =
+                        v3d->prog.fs->prog_data.fs->lock_scoreboard_on_first_thrsw;
+                shader.disable_implicit_point_line_varyings =
+                        !v3d->prog.fs->prog_data.fs->uses_implicit_point_line_varyings;
+
+                shader.number_of_varyings_in_fragment_shader =
+                        v3d->prog.fs->prog_data.fs->num_inputs;
+
+                shader.coordinate_shader_code_address =
+                        cl_address(v3d_resource(v3d->prog.cs->resource)->bo,
+                                   v3d->prog.cs->offset);
+                shader.vertex_shader_code_address =
+                        cl_address(v3d_resource(v3d->prog.vs->resource)->bo,
+                                   v3d->prog.vs->offset);
+                shader.fragment_shader_code_address =
+                        cl_address(v3d_resource(v3d->prog.fs->resource)->bo,
+                                   v3d->prog.fs->offset);
+
+#if V3D_VERSION == 42
+                shader.coordinate_shader_propagate_nans = true;
+                shader.vertex_shader_propagate_nans = true;
+                shader.fragment_shader_propagate_nans = true;
+
+                /* XXX: Use combined input/output size flag in the common
+                 * case.
+                 */
+                shader.coordinate_shader_has_separate_input_and_output_vpm_blocks =
+                        v3d->prog.cs->prog_data.vs->separate_segments;
+                shader.vertex_shader_has_separate_input_and_output_vpm_blocks =
+                        v3d->prog.vs->prog_data.vs->separate_segments;
+                shader.coordinate_shader_input_vpm_segment_size =
+                        v3d->prog.cs->prog_data.vs->separate_segments ?
+                        v3d->prog.cs->prog_data.vs->vpm_input_size : 1;
+                shader.vertex_shader_input_vpm_segment_size =
+                        v3d->prog.vs->prog_data.vs->separate_segments ?
+                        v3d->prog.vs->prog_data.vs->vpm_input_size : 1;
+#endif
+                /* On V3D 7.1 there isn't a specific flag to set if we are using
+                 * shared/separate segments or not. We just set the value of
+                 * vpm_input_size to 0, and set output to the max needed. That should be
+                 * already properly set on prog_data_vs_bin
+                 */
+#if V3D_VERSION == 71
+                shader.coordinate_shader_input_vpm_segment_size =
+                        v3d->prog.cs->prog_data.vs->vpm_input_size;
+                shader.vertex_shader_input_vpm_segment_size =
+                        v3d->prog.vs->prog_data.vs->vpm_input_size;
+#endif
+
+                shader.coordinate_shader_output_vpm_segment_size =
+                        v3d->prog.cs->prog_data.vs->vpm_output_size;
+                shader.vertex_shader_output_vpm_segment_size =
+                        v3d->prog.vs->prog_data.vs->vpm_output_size;
+
+                shader.coordinate_shader_uniforms_address = cs_uniforms;
+                shader.vertex_shader_uniforms_address = vs_uniforms;
+                shader.fragment_shader_uniforms_address = fs_uniforms;
+
+                shader.min_coord_shader_input_segments_required_in_play =
+                        vpm_cfg_bin->As;
+                shader.min_vertex_shader_input_segments_required_in_play =
+                        vpm_cfg->As;
+
+                shader.min_coord_shader_output_segments_required_in_play_in_addition_to_vcm_cache_size =
+                        vpm_cfg_bin->Ve;
+                shader.min_vertex_shader_output_segments_required_in_play_in_addition_to_vcm_cache_size =
+                        vpm_cfg->Ve;
+
+                shader.coordinate_shader_4_way_threadable =
+                        v3d->prog.cs->prog_data.vs->base.threads == 4;
+                shader.vertex_shader_4_way_threadable =
+                        v3d->prog.vs->prog_data.vs->base.threads == 4;
+                shader.fragment_shader_4_way_threadable =
+                        v3d->prog.fs->prog_data.fs->base.threads == 4;
+
+                shader.coordinate_shader_start_in_final_thread_section =
+                        v3d->prog.cs->prog_data.vs->base.single_seg;
+                shader.vertex_shader_start_in_final_thread_section =
+                        v3d->prog.vs->prog_data.vs->base.single_seg;
+                shader.fragment_shader_start_in_final_thread_section =
+                        v3d->prog.fs->prog_data.fs->base.single_seg;
+
+                shader.vertex_id_read_by_coordinate_shader =
+                        v3d->prog.cs->prog_data.vs->uses_vid;
+                shader.instance_id_read_by_coordinate_shader =
+                        v3d->prog.cs->prog_data.vs->uses_iid;
+                shader.vertex_id_read_by_vertex_shader =
+                        v3d->prog.vs->prog_data.vs->uses_vid;
+                shader.instance_id_read_by_vertex_shader =
+                        v3d->prog.vs->prog_data.vs->uses_iid;
+
+#if V3D_VERSION == 42
+                shader.address_of_default_attribute_values =
+                        cl_address(v3d_resource(vtx->defaults)->bo,
+                                   vtx->defaults_offset);
+#endif
+        }
+}
 
 static void
 v3d_emit_gl_shader_state(struct v3d_context *v3d,
@@ -559,14 +732,12 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
 
         uint32_t shader_state_record_length =
                 cl_packet_length(GL_SHADER_STATE_RECORD);
-#if V3D_VERSION >= 41
         if (v3d->prog.gs) {
                 shader_state_record_length +=
                         cl_packet_length(GEOMETRY_SHADER_STATE_RECORD) +
                         cl_packet_length(TESSELLATION_GEOMETRY_COMMON_PARAMS) +
                         2 * cl_packet_length(TESSELLATION_GEOMETRY_SHADER_PARAMS);
         }
-#endif
 
         /* See GFXH-930 workaround below */
         uint32_t shader_rec_offset =
@@ -582,8 +753,6 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
          */
 
         struct vpm_config vpm_cfg_bin, vpm_cfg;
-
-        assert(v3d->screen->devinfo.ver >= 41 || !v3d->prog.gs);
         v3d_compute_vpm_config(&v3d->screen->devinfo,
                                v3d->prog.cs->prog_data.vs,
                                v3d->prog.vs->prog_data.vs,
@@ -593,7 +762,6 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                                &vpm_cfg);
 
         if (v3d->prog.gs) {
-#if V3D_VERSION >= 41
                 v3d_emit_gs_state_record(v3d->job,
                                          v3d->prog.gs_bin, gs_bin_uniforms,
                                          v3d->prog.gs, gs_uniforms);
@@ -614,159 +782,16 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                                               vpm_cfg.gs_width,
                                               vpm_cfg.Gd,
                                               vpm_cfg.Gv);
-#else
-                unreachable("No GS support pre-4.1");
-#endif
         }
 
-        cl_emit(&job->indirect, GL_SHADER_STATE_RECORD, shader) {
-                shader.enable_clipping = true;
-                /* V3D_DIRTY_PRIM_MODE | V3D_DIRTY_RASTERIZER */
-                shader.point_size_in_shaded_vertex_data =
-                        (info->mode == MESA_PRIM_POINTS &&
-                         v3d->rasterizer->base.point_size_per_vertex);
-
-                /* Must be set if the shader modifies Z, discards, or modifies
-                 * the sample mask.  For any of these cases, the fragment
-                 * shader needs to write the Z value (even just discards).
-                 */
-                shader.fragment_shader_does_z_writes =
-                        v3d->prog.fs->prog_data.fs->writes_z;
-
-                /* Set if the EZ test must be disabled (due to shader side
-                 * effects and the early_z flag not being present in the
-                 * shader).
-                 */
-                shader.turn_off_early_z_test =
-                        v3d->prog.fs->prog_data.fs->disable_ez;
-
-                shader.fragment_shader_uses_real_pixel_centre_w_in_addition_to_centroid_w2 =
-                        v3d->prog.fs->prog_data.fs->uses_center_w;
-
-#if V3D_VERSION >= 41
-                shader.any_shader_reads_hardware_written_primitive_id =
-                        (v3d->prog.gs && v3d->prog.gs->prog_data.gs->uses_pid) ||
-                        v3d->prog.fs->prog_data.fs->uses_pid;
-                shader.insert_primitive_id_as_first_varying_to_fragment_shader =
-                        !v3d->prog.gs && v3d->prog.fs->prog_data.fs->uses_pid;
-#endif
-
-#if V3D_VERSION >= 40
-               shader.do_scoreboard_wait_on_first_thread_switch =
-                        v3d->prog.fs->prog_data.fs->lock_scoreboard_on_first_thrsw;
-               shader.disable_implicit_point_line_varyings =
-                        !v3d->prog.fs->prog_data.fs->uses_implicit_point_line_varyings;
-#endif
-
-                shader.number_of_varyings_in_fragment_shader =
-                        v3d->prog.fs->prog_data.fs->num_inputs;
-
-                shader.coordinate_shader_code_address =
-                        cl_address(v3d_resource(v3d->prog.cs->resource)->bo,
-                                   v3d->prog.cs->offset);
-                shader.vertex_shader_code_address =
-                        cl_address(v3d_resource(v3d->prog.vs->resource)->bo,
-                                   v3d->prog.vs->offset);
-                shader.fragment_shader_code_address =
-                        cl_address(v3d_resource(v3d->prog.fs->resource)->bo,
-                                   v3d->prog.fs->offset);
-
-#if V3D_VERSION <= 42
-                shader.coordinate_shader_propagate_nans = true;
-                shader.vertex_shader_propagate_nans = true;
-                shader.fragment_shader_propagate_nans = true;
-
-                /* XXX: Use combined input/output size flag in the common
-                 * case.
-                 */
-                shader.coordinate_shader_has_separate_input_and_output_vpm_blocks =
-                        v3d->prog.cs->prog_data.vs->separate_segments;
-                shader.vertex_shader_has_separate_input_and_output_vpm_blocks =
-                        v3d->prog.vs->prog_data.vs->separate_segments;
-                shader.coordinate_shader_input_vpm_segment_size =
-                        v3d->prog.cs->prog_data.vs->separate_segments ?
-                        v3d->prog.cs->prog_data.vs->vpm_input_size : 1;
-                shader.vertex_shader_input_vpm_segment_size =
-                        v3d->prog.vs->prog_data.vs->separate_segments ?
-                        v3d->prog.vs->prog_data.vs->vpm_input_size : 1;
-#endif
-                /* On V3D 7.1 there isn't a specific flag to set if we are using
-                 * shared/separate segments or not. We just set the value of
-                 * vpm_input_size to 0, and set output to the max needed. That should be
-                 * already properly set on prog_data_vs_bin
-                 */
-#if V3D_VERSION == 71
-                shader.coordinate_shader_input_vpm_segment_size =
-                        v3d->prog.cs->prog_data.vs->vpm_input_size;
-                shader.vertex_shader_input_vpm_segment_size =
-                        v3d->prog.vs->prog_data.vs->vpm_input_size;
-#endif
-
-                shader.coordinate_shader_output_vpm_segment_size =
-                        v3d->prog.cs->prog_data.vs->vpm_output_size;
-                shader.vertex_shader_output_vpm_segment_size =
-                        v3d->prog.vs->prog_data.vs->vpm_output_size;
-
-                shader.coordinate_shader_uniforms_address = cs_uniforms;
-                shader.vertex_shader_uniforms_address = vs_uniforms;
-                shader.fragment_shader_uniforms_address = fs_uniforms;
-
-#if V3D_VERSION >= 41
-                shader.min_coord_shader_input_segments_required_in_play =
-                        vpm_cfg_bin.As;
-                shader.min_vertex_shader_input_segments_required_in_play =
-                        vpm_cfg.As;
-
-                shader.min_coord_shader_output_segments_required_in_play_in_addition_to_vcm_cache_size =
-                        vpm_cfg_bin.Ve;
-                shader.min_vertex_shader_output_segments_required_in_play_in_addition_to_vcm_cache_size =
-                        vpm_cfg.Ve;
-
-                shader.coordinate_shader_4_way_threadable =
-                        v3d->prog.cs->prog_data.vs->base.threads == 4;
-                shader.vertex_shader_4_way_threadable =
-                        v3d->prog.vs->prog_data.vs->base.threads == 4;
-                shader.fragment_shader_4_way_threadable =
-                        v3d->prog.fs->prog_data.fs->base.threads == 4;
-
-                shader.coordinate_shader_start_in_final_thread_section =
-                        v3d->prog.cs->prog_data.vs->base.single_seg;
-                shader.vertex_shader_start_in_final_thread_section =
-                        v3d->prog.vs->prog_data.vs->base.single_seg;
-                shader.fragment_shader_start_in_final_thread_section =
-                        v3d->prog.fs->prog_data.fs->base.single_seg;
-#else
-                shader.coordinate_shader_4_way_threadable =
-                        v3d->prog.cs->prog_data.vs->base.threads == 4;
-                shader.coordinate_shader_2_way_threadable =
-                        v3d->prog.cs->prog_data.vs->base.threads == 2;
-                shader.vertex_shader_4_way_threadable =
-                        v3d->prog.vs->prog_data.vs->base.threads == 4;
-                shader.vertex_shader_2_way_threadable =
-                        v3d->prog.vs->prog_data.vs->base.threads == 2;
-                shader.fragment_shader_4_way_threadable =
-                        v3d->prog.fs->prog_data.fs->base.threads == 4;
-                shader.fragment_shader_2_way_threadable =
-                        v3d->prog.fs->prog_data.fs->base.threads == 2;
-#endif
-
-                shader.vertex_id_read_by_coordinate_shader =
-                        v3d->prog.cs->prog_data.vs->uses_vid;
-                shader.instance_id_read_by_coordinate_shader =
-                        v3d->prog.cs->prog_data.vs->uses_iid;
-                shader.vertex_id_read_by_vertex_shader =
-                        v3d->prog.vs->prog_data.vs->uses_vid;
-                shader.instance_id_read_by_vertex_shader =
-                        v3d->prog.vs->prog_data.vs->uses_iid;
-
-#if V3D_VERSION <= 42
-                shader.address_of_default_attribute_values =
-                        cl_address(v3d_resource(vtx->defaults)->bo,
-                                   vtx->defaults_offset);
-#endif
-        }
+        emit_shader_state_record(v3d, job, info, vtx,
+                                 cs_uniforms, vs_uniforms, fs_uniforms,
+                                 &vpm_cfg_bin, &vpm_cfg);
 
         bool cs_loaded_any = false;
+        const bool cs_uses_builtins = v3d->prog.cs->prog_data.vs->uses_iid ||
+                                      v3d->prog.cs->prog_data.vs->uses_biid ||
+                                      v3d->prog.cs->prog_data.vs->uses_vid;
         for (int i = 0; i < vtx->num_elements; i++) {
                 struct pipe_vertex_element *elem = &vtx->pipe[i];
                 struct pipe_vertex_buffer *vb =
@@ -796,15 +821,20 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                          * inputs.  (Since CS is just dead-code-elimination
                          * compared to VS, we can't have CS loading but not
                          * VS).
+                         *
+                         * GFXH-1602: first attribute must be active if using
+                         * builtins.
                          */
                         if (v3d->prog.cs->prog_data.vs->vattr_sizes[i])
                                 cs_loaded_any = true;
-                        if (i == vtx->num_elements - 1 && !cs_loaded_any) {
+                        if (i == 0 && cs_uses_builtins && !cs_loaded_any) {
                                 attr.number_of_values_read_by_coordinate_shader = 1;
+                                cs_loaded_any = true;
+                        } else if (i == vtx->num_elements - 1 && !cs_loaded_any) {
+                                attr.number_of_values_read_by_coordinate_shader = 1;
+                                cs_loaded_any = true;
                         }
-#if V3D_VERSION >= 41
                         attr.maximum_index = 0xffffff;
-#endif
                 }
                 STATIC_ASSERT(sizeof(vtx->attrs) >= V3D_MAX_VS_INPUTS / 4 * size);
         }
@@ -833,7 +863,6 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                 vcm.number_of_16_vertex_batches_for_rendering = vpm_cfg.Vc;
         }
 
-#if V3D_VERSION >= 41
         if (v3d->prog.gs) {
                 cl_emit(&job->bcl, GL_SHADER_STATE_INCLUDING_GS, state) {
                         state.address = cl_address(job->indirect.bo,
@@ -847,13 +876,6 @@ v3d_emit_gl_shader_state(struct v3d_context *v3d,
                         state.number_of_attribute_arrays = num_elements_to_emit;
                 }
         }
-#else
-        assert(!v3d->prog.gs);
-        cl_emit(&job->bcl, GL_SHADER_STATE, state) {
-                state.address = cl_address(job->indirect.bo, shader_rec_offset);
-                state.number_of_attribute_arrays = num_elements_to_emit;
-        }
-#endif
 
         v3d_bo_unreference(&cs_uniforms.bo);
         v3d_bo_unreference(&vs_uniforms.bo);
@@ -900,13 +922,15 @@ v3d_update_job_ez(struct v3d_context *v3d, struct v3d_job *job)
                 return;
         }
 
-        /* If this is the first time we update EZ state for this job we first
-         * check if there is anything that requires disabling it completely
-         * for the entire job (based on state that is not related to the
-         * current draw call and pipeline state).
+        /* When we update the EZ state we first check if there is anything
+         * that requires disabling it completely for the entire job (based on
+         * state that is not related to the current draw call and pipeline
+         * state).
          */
-        if (!job->decided_global_ez_enable) {
+        if (!job->decided_global_ez_enable ||
+            job->global_ez_zsa_decision_state != v3d->zsa) {
                 job->decided_global_ez_enable = true;
+                job->global_ez_zsa_decision_state = v3d->zsa;
 
                 if (!job->zsbuf) {
                         job->first_ez_state = V3D_EZ_DISABLED;
@@ -915,19 +939,29 @@ v3d_update_job_ez(struct v3d_context *v3d, struct v3d_job *job)
                 }
 
                 /* GFXH-1918: the early-Z buffer may load incorrect depth
-                 * values if the frame has odd width or height. Disable early-Z
-                 * in this case.
+                 * values if the frame has odd width or height, or if the
+                 * buffer is 16-bit and multisampled. Disable early-Z in these
+                 * cases.
                  */
                 bool needs_depth_load = v3d->zsa && job->zsbuf &&
                         v3d->zsa->base.depth_enabled &&
-                        (PIPE_CLEAR_DEPTH & ~job->clear);
-                if (needs_depth_load &&
-                     ((job->draw_width % 2 != 0) || (job->draw_height % 2 != 0))) {
-                        perf_debug("Loading depth buffer for framebuffer with odd width "
-                                   "or height disables early-Z tests\n");
-                        job->first_ez_state = V3D_EZ_DISABLED;
-                        job->ez_state = V3D_EZ_DISABLED;
-                        return;
+                        (PIPE_CLEAR_DEPTH & ~job->clear_tlb);
+                if (needs_depth_load) {
+                        if (job->zsbuf->texture->format == PIPE_FORMAT_Z16_UNORM &&
+                            job->zsbuf->texture->nr_samples > 0) {
+                                perf_debug("Loading 16-bit multisampled depth buffer "
+                                           "disables early-Z tests\n");
+                                job->first_ez_state = V3D_EZ_DISABLED;
+                                job->ez_state = V3D_EZ_DISABLED;
+                                return;
+                        }
+                        if ((job->draw_width % 2 != 0) || (job->draw_height % 2 != 0)) {
+                                perf_debug("Loading depth buffer for framebuffer with "
+                                           "odd width or height disables early-Z tests\n");
+                                job->first_ez_state = V3D_EZ_DISABLED;
+                                job->ez_state = V3D_EZ_DISABLED;
+                                return;
+                        }
                 }
         }
 
@@ -998,6 +1032,74 @@ v3d_check_compiled_shaders(struct v3d_context *v3d)
                 warned[failed_stage] = true;
         }
         return false;
+}
+
+static void
+update_double_buffer_score(struct v3d_job *job, uint32_t vertex_count)
+{
+        if (!job->can_use_double_buffer)
+                return;
+
+        if (job->v3d->prog.gs) {
+                job->can_use_double_buffer = false;
+                return;
+        }
+
+        struct v3d_compiled_shader *vs = job->v3d->prog.vs;
+        struct v3d_compiled_shader *fs = job->v3d->prog.fs;
+        v3d_update_double_buffer_score(vertex_count,
+                                       vs->qpu_size, fs->qpu_size,
+                                       vs->prog_data.base, fs->prog_data.base,
+                                       &job->double_buffer_score);
+}
+
+static void
+v3d_update_job_tlb_load_store(struct v3d_job *job) {
+        struct v3d_context *v3d = job->v3d;
+
+        if (v3d->rasterizer->base.rasterizer_discard)
+               return;
+
+        uint32_t no_load_mask =
+                job->clear_tlb | job->clear_draw | job->invalidated_load;
+
+        if (v3d->zsa && job->zsbuf && v3d->zsa->base.depth_enabled) {
+                struct v3d_resource *rsc = v3d_resource(job->zsbuf->texture);
+                v3d_job_add_bo(job, rsc->bo);
+                job->load |= PIPE_CLEAR_DEPTH & ~no_load_mask;
+                if (v3d->zsa->base.depth_writemask)
+                        job->store |= PIPE_CLEAR_DEPTH;
+                rsc->initialized_buffers |= PIPE_CLEAR_DEPTH;
+        }
+
+        if (v3d->zsa && job->zsbuf && v3d->zsa->base.stencil[0].enabled) {
+                struct v3d_resource *rsc = v3d_resource(job->zsbuf->texture);
+                if (rsc->separate_stencil)
+                        rsc = rsc->separate_stencil;
+
+                v3d_job_add_bo(job, rsc->bo);
+
+                job->load |= PIPE_CLEAR_STENCIL & ~no_load_mask;
+                if (v3d->zsa->base.stencil[0].writemask ||
+                    v3d->zsa->base.stencil[1].writemask) {
+                        job->store |= PIPE_CLEAR_STENCIL;
+                }
+                rsc->initialized_buffers |= PIPE_CLEAR_STENCIL;
+        }
+
+        for (int i = 0; i < job->nr_cbufs; i++) {
+                uint32_t bit = PIPE_CLEAR_COLOR0 << i;
+                int blend_rt = v3d->blend->base.independent_blend_enable ? i : 0;
+
+                if (job->store & bit || !job->cbufs[i])
+                        continue;
+                struct v3d_resource *rsc = v3d_resource(job->cbufs[i]->texture);
+                job->load |= bit & ~no_load_mask;
+
+                if (v3d->blend->base.rt[blend_rt].colormask)
+                        job->store |= bit;
+                v3d_job_add_bo(job, rsc->bo);
+        }
 }
 
 static void
@@ -1091,15 +1193,22 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
          * which ones are read vs written, so just assume the worst.
          */
         for (int s = 0; s < PIPE_SHADER_COMPUTE; s++) {
-                u_foreach_bit(i, v3d->ssbo[s].enabled_mask) {
+                unsigned i;
+                BITSET_FOREACH_SET(i, v3d->ssbo[s].enabled_mask,
+                                   PIPE_MAX_SHADER_BUFFERS) {
                         v3d_job_add_write_resource(job,
                                                    v3d->ssbo[s].sb[i].buffer);
+                        struct v3d_resource *rsc= v3d_resource(v3d->ssbo[s].sb[i].buffer);
+                        rsc->graphics_written = true;
                         job->tmu_dirty_rcl = true;
                 }
 
-                u_foreach_bit(i, v3d->shaderimg[s].enabled_mask) {
+                BITSET_FOREACH_SET(i, v3d->shaderimg[s].enabled_mask,
+                                   PIPE_MAX_SHADER_IMAGES) {
                         v3d_job_add_write_resource(job,
                                                    v3d->shaderimg[s].si[i].base.resource);
+                        struct v3d_resource *rsc= v3d_resource(v3d->shaderimg[s].si[i].base.resource);
+                        rsc->graphics_written = true;
                         job->tmu_dirty_rcl = true;
                 }
         }
@@ -1164,13 +1273,6 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
         }
 
         uint32_t prim_tf_enable = 0;
-#if V3D_VERSION < 40
-        /* V3D 3.x: The HW only processes transform feedback on primitives
-         * with the flag set.
-         */
-        if (v3d->streamout.num_targets)
-                prim_tf_enable = (V3D_PRIM_POINTS_TF - V3D_PRIM_POINTS);
-#endif
 
         v3d->prim_restart = info->primitive_restart;
 
@@ -1194,20 +1296,14 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
                 }
                 struct v3d_resource *rsc = v3d_resource(prsc);
 
-#if V3D_VERSION >= 40
                 cl_emit(&job->bcl, INDEX_BUFFER_SETUP, ib) {
                         ib.address = cl_address(rsc->bo, 0);
                         ib.size = rsc->bo->size;
                 }
-#endif
 
                 if (indirect && indirect->buffer) {
                         cl_emit(&job->bcl, INDIRECT_INDEXED_INSTANCED_PRIM_LIST, prim) {
                                 prim.index_type = ffs(info->index_size) - 1;
-#if V3D_VERSION < 40
-                                prim.address_of_indices_list =
-                                        cl_address(rsc->bo, offset);
-#endif /* V3D_VERSION < 40 */
                                 prim.mode = hw_prim_type | prim_tf_enable;
                                 prim.enable_primitive_restarts = info->primitive_restart;
 
@@ -1220,13 +1316,7 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
                 } else if (info->instance_count > 1) {
                         cl_emit(&job->bcl, INDEXED_INSTANCED_PRIM_LIST, prim) {
                                 prim.index_type = ffs(info->index_size) - 1;
-#if V3D_VERSION >= 40
                                 prim.index_offset = offset;
-#else /* V3D_VERSION < 40 */
-                                prim.maximum_index = (1u << 31) - 1; /* XXX */
-                                prim.address_of_indices_list =
-                                        cl_address(rsc->bo, offset);
-#endif /* V3D_VERSION < 40 */
                                 prim.mode = hw_prim_type | prim_tf_enable;
                                 prim.enable_primitive_restarts = info->primitive_restart;
 
@@ -1237,13 +1327,7 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
                         cl_emit(&job->bcl, INDEXED_PRIM_LIST, prim) {
                                 prim.index_type = ffs(info->index_size) - 1;
                                 prim.length = draws[0].count;
-#if V3D_VERSION >= 40
                                 prim.index_offset = offset;
-#else /* V3D_VERSION < 40 */
-                                prim.maximum_index = (1u << 31) - 1; /* XXX */
-                                prim.address_of_indices_list =
-                                        cl_address(rsc->bo, offset);
-#endif /* V3D_VERSION < 40 */
                                 prim.mode = hw_prim_type | prim_tf_enable;
                                 prim.enable_primitive_restarts = info->primitive_restart;
                         }
@@ -1312,44 +1396,12 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
                                 u_stream_outputs_for_vertices(info->mode, draws[0].count);
         }
 
-        if (v3d->zsa && job->zsbuf && v3d->zsa->base.depth_enabled) {
-                struct v3d_resource *rsc = v3d_resource(job->zsbuf->texture);
-                v3d_job_add_bo(job, rsc->bo);
+        v3d_update_job_tlb_load_store(job);
 
-                job->load |= PIPE_CLEAR_DEPTH & ~job->clear;
-                if (v3d->zsa->base.depth_writemask)
-                        job->store |= PIPE_CLEAR_DEPTH;
-                rsc->initialized_buffers = PIPE_CLEAR_DEPTH;
-        }
-
-        if (v3d->zsa && job->zsbuf && v3d->zsa->base.stencil[0].enabled) {
-                struct v3d_resource *rsc = v3d_resource(job->zsbuf->texture);
-                if (rsc->separate_stencil)
-                        rsc = rsc->separate_stencil;
-
-                v3d_job_add_bo(job, rsc->bo);
-
-                job->load |= PIPE_CLEAR_STENCIL & ~job->clear;
-                if (v3d->zsa->base.stencil[0].writemask ||
-                    v3d->zsa->base.stencil[1].writemask) {
-                        job->store |= PIPE_CLEAR_STENCIL;
-                }
-                rsc->initialized_buffers |= PIPE_CLEAR_STENCIL;
-        }
-
-        for (int i = 0; i < job->nr_cbufs; i++) {
-                uint32_t bit = PIPE_CLEAR_COLOR0 << i;
-                int blend_rt = v3d->blend->base.independent_blend_enable ? i : 0;
-
-                if (job->store & bit || !job->cbufs[i])
-                        continue;
-                struct v3d_resource *rsc = v3d_resource(job->cbufs[i]->texture);
-
-                job->load |= bit & ~job->clear;
-                if (v3d->blend->base.rt[blend_rt].colormask)
-                        job->store |= bit;
-                v3d_job_add_bo(job, rsc->bo);
-        }
+        if (indirect && indirect->buffer)
+                job->can_use_double_buffer = false;
+        else
+                update_double_buffer_score(job, draws[0].count * info->instance_count);
 
         if (job->referenced_size > 768 * 1024 * 1024) {
                 perf_debug("Flushing job with %dkb to try to free up memory\n",
@@ -1361,28 +1413,14 @@ v3d_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
                 v3d_flush(pctx);
 }
 
-#if V3D_VERSION >= 41
-#define V3D_CSD_CFG012_WG_COUNT_SHIFT 16
-#define V3D_CSD_CFG012_WG_OFFSET_SHIFT 0
-/* Allow this dispatch to start while the last one is still running. */
-#define V3D_CSD_CFG3_OVERLAP_WITH_PREV (1 << 26)
-/* Maximum supergroup ID.  6 bits. */
-#define V3D_CSD_CFG3_MAX_SG_ID_SHIFT 20
-/* Batches per supergroup minus 1.  8 bits. */
-#define V3D_CSD_CFG3_BATCHES_PER_SG_M1_SHIFT 12
-/* Workgroups per supergroup, 0 means 16 */
-#define V3D_CSD_CFG3_WGS_PER_SG_SHIFT 8
-#define V3D_CSD_CFG3_WG_SIZE_SHIFT 0
-
-#define V3D_CSD_CFG5_PROPAGATE_NANS (1 << 2)
-#define V3D_CSD_CFG5_SINGLE_SEG (1 << 1)
-#define V3D_CSD_CFG5_THREADING (1 << 0)
-
 static void
 v3d_launch_grid(struct pipe_context *pctx, const struct pipe_grid_info *info)
 {
         struct v3d_context *v3d = v3d_context(pctx);
         struct v3d_screen *screen = v3d->screen;
+        unsigned i;
+
+        MESA_TRACE_FUNC();
 
         v3d_predraw_check_stage_inputs(pctx, PIPE_SHADER_COMPUTE);
 
@@ -1443,12 +1481,13 @@ v3d_launch_grid(struct pipe_context *pctx, const struct pipe_grid_info *info)
         }
 
         uint32_t num_wgs = 1;
-        for (int i = 0; i < 3; i++) {
+        for (i = 0; i < 3; i++) {
                 num_wgs *= v3d->compute_num_workgroups[i];
                 submit.cfg[i] |= (v3d->compute_num_workgroups[i] <<
                                   V3D_CSD_CFG012_WG_COUNT_SHIFT);
         }
 
+        memcpy(v3d->compute_workgroup_size, info->block, 3 * sizeof(uint32_t));
         uint32_t wg_size = info->block[0] * info->block[1] * info->block[2];
 
         struct v3d_compute_prog_data *compute =
@@ -1496,12 +1535,21 @@ v3d_launch_grid(struct pipe_context *pctx, const struct pipe_grid_info *info)
         if (v3d->prog.compute->prog_data.base->threads == 4)
                 submit.cfg[5] |= V3D_CSD_CFG5_THREADING;
 
-        if (v3d->prog.compute->prog_data.compute->shared_size) {
+        uint32_t shared_size = v3d->prog.compute->prog_data.compute->shared_size +
+                               info->variable_shared_mem;
+        if (shared_size) {
                 v3d->compute_shared_memory =
                         v3d_bo_alloc(v3d->screen,
-                                     v3d->prog.compute->prog_data.compute->shared_size *
-                                     wgs_per_sg,
+                                     shared_size * num_wgs,
                                      "shared_vars");
+                v3d->shared_memory = shared_size;
+        }
+
+        util_dynarray_foreach(&v3d->global_buffers, struct pipe_resource *, res) {
+                if (!*res)
+                        continue;
+                struct v3d_resource *rsc = v3d_resource(*res);
+                v3d_job_add_bo(job, rsc->bo);
         }
 
         struct v3d_cl_reloc uniforms = v3d_write_uniforms(v3d, job,
@@ -1538,6 +1586,10 @@ v3d_launch_grid(struct pipe_context *pctx, const struct pipe_grid_info *info)
                 } else if (!ret) {
                         if (v3d->active_perfmon)
                                 v3d->active_perfmon->job_submitted = true;
+                        if (V3D_DBG(SYNC)) {
+                                drmSyncobjWait(v3d->fd, &v3d->out_sync, 1, INT64_MAX,
+                                               DRM_SYNCOBJ_WAIT_FLAGS_WAIT_ALL, NULL);
+                        }
                 }
         }
 
@@ -1546,16 +1598,27 @@ v3d_launch_grid(struct pipe_context *pctx, const struct pipe_grid_info *info)
         /* Mark SSBOs as being written.. we don't actually know which ones are
          * read vs written, so just assume the worst
          */
-        u_foreach_bit(i, v3d->ssbo[PIPE_SHADER_COMPUTE].enabled_mask) {
+        BITSET_FOREACH_SET(i, v3d->ssbo[PIPE_SHADER_COMPUTE].enabled_mask,
+                           PIPE_MAX_SHADER_BUFFERS) {
                 struct v3d_resource *rsc = v3d_resource(
                         v3d->ssbo[PIPE_SHADER_COMPUTE].sb[i].buffer);
                 rsc->writes++;
                 rsc->compute_written = true;
         }
 
-        u_foreach_bit(i, v3d->shaderimg[PIPE_SHADER_COMPUTE].enabled_mask) {
+        BITSET_FOREACH_SET(i,
+                           v3d->shaderimg[PIPE_SHADER_COMPUTE].enabled_mask,
+                           PIPE_MAX_SHADER_IMAGES) {
                 struct v3d_resource *rsc = v3d_resource(
                         v3d->shaderimg[PIPE_SHADER_COMPUTE].si[i].base.resource);
+                rsc->writes++;
+                rsc->compute_written = true;
+        }
+
+        util_dynarray_foreach(&v3d->global_buffers, struct pipe_resource *, res) {
+                struct v3d_resource *rsc = v3d_resource(*res);
+                if (!rsc)
+                        continue;
                 rsc->writes++;
                 rsc->compute_written = true;
         }
@@ -1563,18 +1626,25 @@ v3d_launch_grid(struct pipe_context *pctx, const struct pipe_grid_info *info)
         v3d_bo_unreference(&uniforms.bo);
         v3d_bo_unreference(&v3d->compute_shared_memory);
 }
-#endif
 
 /**
  * Implements gallium's clear() hook (glClear()) by drawing a pair of triangles.
  */
 static void
 v3d_draw_clear(struct v3d_context *v3d,
+               struct v3d_job *job,
                unsigned buffers,
                const union pipe_color_union *color,
                double depth, unsigned stencil)
 {
-        v3d_blitter_save(v3d, false, true);
+        /* Flag we are clearing these buffers with a draw call so we can
+         * skip loads for them. Notice that if we had emitted any draw calls
+         * before this clear the loads will still happen, since those previous
+         * draw calls would have flagged them.
+         */
+        job->clear_draw |= buffers;
+
+        v3d_blitter_save(v3d, V3D_CLEAR_COND);
         util_blitter_clear(v3d->blitter,
                            v3d->framebuffer.width,
                            v3d->framebuffer.height,
@@ -1607,7 +1677,7 @@ v3d_tlb_clear(struct v3d_job *job, unsigned buffers,
          * if it would be possible to need to emit a load of just one after
          * we've set up our TLB clears. This issue is fixed since V3D 4.3.18.
          */
-        if (v3d->screen->devinfo.ver <= 42 &&
+        if (v3d->screen->devinfo.ver == 42 &&
             buffers & PIPE_CLEAR_DEPTHSTENCIL &&
             (buffers & PIPE_CLEAR_DEPTHSTENCIL) != PIPE_CLEAR_DEPTHSTENCIL &&
             job->zsbuf &&
@@ -1700,7 +1770,7 @@ v3d_tlb_clear(struct v3d_job *job, unsigned buffers,
         job->draw_min_y = 0;
         job->draw_max_x = v3d->framebuffer.width;
         job->draw_max_y = v3d->framebuffer.height;
-        job->clear |= buffers;
+        job->clear_tlb |= buffers;
         job->store |= buffers;
         job->scissor.disabled = true;
 
@@ -1721,7 +1791,7 @@ v3d_clear(struct pipe_context *pctx, unsigned buffers, const struct pipe_scissor
         if (!buffers || !v3d_render_condition_check(v3d))
                 return;
 
-        v3d_draw_clear(v3d, buffers, color, depth, stencil);
+        v3d_draw_clear(v3d, job, buffers, color, depth, stencil);
 }
 
 static void
@@ -1735,7 +1805,8 @@ v3d_clear_render_target(struct pipe_context *pctx, struct pipe_surface *ps,
         if (render_condition_enabled && !v3d_render_condition_check(v3d))
                 return;
 
-        v3d_blitter_save(v3d, false, render_condition_enabled);
+        v3d_blitter_save(v3d, render_condition_enabled ?
+                         V3D_CLEAR_SURFACE_COND : V3D_CLEAR_SURFACE);
         util_blitter_clear_render_target(v3d->blitter, ps, color, x, y, w, h);
 }
 
@@ -1750,9 +1821,43 @@ v3d_clear_depth_stencil(struct pipe_context *pctx, struct pipe_surface *ps,
         if (render_condition_enabled && !v3d_render_condition_check(v3d))
                 return;
 
-        v3d_blitter_save(v3d, false, render_condition_enabled);
+        v3d_blitter_save(v3d, render_condition_enabled ?
+                         V3D_CLEAR_SURFACE_COND : V3D_CLEAR_SURFACE);
         util_blitter_clear_depth_stencil(v3d->blitter, ps, buffers, depth,
                                          stencil, x, y, w, h);
+}
+
+static void
+v3d_set_global_binding(struct pipe_context *pctx,
+                       unsigned first, unsigned count,
+                       struct pipe_resource **resources,
+                       uint32_t **handles)
+{
+        struct v3d_context *v3d = v3d_context(pctx);
+        unsigned old_size = util_dynarray_num_elements(&v3d->global_buffers, *resources);
+
+        if (old_size < first + count) {
+                /* we are screwed no matter what */
+                if (!util_dynarray_grow(&v3d->global_buffers, *resources, (first + count) - old_size))
+                        unreachable("out of memory");
+
+                for (unsigned i = old_size; i < first + count; i++)
+                        *util_dynarray_element(&v3d->global_buffers, struct pipe_resource *, i) = NULL;
+        }
+
+
+        for (unsigned i = first; i < first + count; ++i) {
+                struct pipe_resource **res = util_dynarray_element(&v3d->global_buffers, struct pipe_resource *, first + i);
+                if (resources && resources[i]) {
+                        struct v3d_resource *rsc = v3d_resource(resources[i]);
+                        pipe_resource_reference(res, resources[i]);
+
+                        /* We have to add the base address as there might be an existing offset */
+                        *handles[i] += rsc->bo->offset;
+                } else {
+                        pipe_resource_reference(res, NULL);
+                }
+        }
 }
 
 void
@@ -1762,8 +1867,8 @@ v3dX(draw_init)(struct pipe_context *pctx)
         pctx->clear = v3d_clear;
         pctx->clear_render_target = v3d_clear_render_target;
         pctx->clear_depth_stencil = v3d_clear_depth_stencil;
-#if V3D_VERSION >= 41
-        if (v3d_context(pctx)->screen->has_csd)
+        if (v3d_context(pctx)->screen->has_csd) {
                 pctx->launch_grid = v3d_launch_grid;
-#endif
+                pctx->set_global_binding = v3d_set_global_binding;
+        }
 }

@@ -29,6 +29,7 @@
 
 #include "util/format/u_format.h"
 #include "pan_context.h"
+#include "pan_resource.h"
 #include "pan_util.h"
 
 void
@@ -37,13 +38,14 @@ panfrost_blitter_save(struct panfrost_context *ctx,
 {
    struct blitter_context *blitter = ctx->blitter;
 
-   util_blitter_save_vertex_buffer_slot(blitter, ctx->vertex_buffers);
+   util_blitter_save_vertex_buffers(blitter, ctx->vertex_buffers,
+                                    util_last_bit(ctx->vb_mask));
    util_blitter_save_vertex_elements(blitter, ctx->vertex);
    util_blitter_save_vertex_shader(blitter,
                                    ctx->uncompiled[PIPE_SHADER_VERTEX]);
    util_blitter_save_rasterizer(blitter, ctx->rasterizer);
    util_blitter_save_viewport(blitter, &ctx->pipe_viewport);
-   util_blitter_save_so_targets(blitter, 0, NULL);
+   util_blitter_save_so_targets(blitter, 0, NULL, 0);
 
    if (blitter_op & PAN_SAVE_FRAGMENT_STATE) {
       if (blitter_op & PAN_SAVE_FRAGMENT_CONSTANT)
@@ -80,6 +82,18 @@ panfrost_blitter_save(struct panfrost_context *ctx,
 }
 
 void
+panfrost_blit_no_afbc_legalization(struct pipe_context *pipe,
+                                   const struct pipe_blit_info *info)
+{
+   struct panfrost_context *ctx = pan_context(pipe);
+
+   panfrost_blitter_save(ctx, info->render_condition_enable
+                                 ? PAN_RENDER_BLIT_COND
+                                 : PAN_RENDER_BLIT);
+   util_blitter_blit(ctx->blitter, info, NULL);
+}
+
+void
 panfrost_blit(struct pipe_context *pipe, const struct pipe_blit_info *info)
 {
    struct panfrost_context *ctx = pan_context(pipe);
@@ -91,11 +105,13 @@ panfrost_blit(struct pipe_context *pipe, const struct pipe_blit_info *info)
       unreachable("Unsupported blit\n");
 
    /* Legalize here because it could trigger a recursive blit otherwise */
-   pan_legalize_afbc_format(ctx, pan_resource(info->dst.resource),
-                            info->dst.format, true, false);
+   struct panfrost_resource *src = pan_resource(info->src.resource);
+   enum pipe_format src_view_format = util_format_linear(info->src.format);
+   pan_legalize_format(ctx, src, src_view_format, false, false);
 
-   panfrost_blitter_save(ctx, info->render_condition_enable
-                                 ? PAN_RENDER_BLIT_COND
-                                 : PAN_RENDER_BLIT);
-   util_blitter_blit(ctx->blitter, info);
+   struct panfrost_resource *dst = pan_resource(info->dst.resource);
+   enum pipe_format dst_view_format = util_format_linear(info->dst.format);
+   pan_legalize_format(ctx, dst, dst_view_format, true, false);
+
+   panfrost_blit_no_afbc_legalization(pipe, info);
 }

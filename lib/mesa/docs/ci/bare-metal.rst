@@ -53,7 +53,7 @@ of needing more storage on the runner.
 
 Telling the board about where its TFTP and NFS should come from is
 done using dnsmasq on the runner host.  For example, this snippet in
-the dnsmasq.conf.d in the google farm, with the gitlab-runner host we
+the dnsmasq.conf.d in the Google farm, with the gitlab-runner host we
 call "servo"::
 
    dhcp-host=1c:69:7a:0d:a3:d3,10.42.0.10,set:servo
@@ -123,7 +123,7 @@ With that set up, you should be able to power on/off a port with something like:
 
 Note that the "1.3.6..." SNMP OID changes between switches.  The last digit
 above is the interface id (port number).  You can probably find the right OID by
-google, that was easier than figuring it out from finding the switch's MIB
+Google, that was easier than figuring it out from finding the switch's MIB
 database.  You can query the POE status from the switch serial using the ``show
 power inline`` command.
 
@@ -138,7 +138,7 @@ Setup
 Each board will be registered in freedesktop.org GitLab.  You'll want
 something like this to register a fastboot board:
 
-.. code-block:: console
+.. code-block:: sh
 
    sudo gitlab-runner register \
         --url https://gitlab.freedesktop.org \
@@ -194,7 +194,7 @@ Caching downloads
 To improve the runtime for downloading traces during traces job runs, you will
 want a pass-through HTTP cache.  On your runner box, install nginx:
 
-.. code-block:: console
+.. code-block:: sh
 
    sudo apt install nginx libnginx-mod-http-lua
 
@@ -213,7 +213,7 @@ your devices are on.
 
 Enable the site and restart nginx:
 
-.. code-block:: console
+.. code-block:: sh
 
    sudo rm /etc/nginx/sites-enabled/default
    sudo ln -s /etc/nginx/sites-available/fdo-cache /etc/nginx/sites-enabled/fdo-cache

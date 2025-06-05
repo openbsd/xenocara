@@ -248,7 +248,7 @@ nv30_blit(struct pipe_context *pipe,
 
    /* XXX turn off occlusion queries */
 
-   util_blitter_save_vertex_buffer_slot(nv30->blitter, nv30->vtxbuf);
+   util_blitter_save_vertex_buffers(nv30->blitter, nv30->vtxbuf, nv30->num_vtxbufs);
    util_blitter_save_vertex_elements(nv30->blitter, nv30->vertex);
    util_blitter_save_vertex_shader(nv30->blitter, nv30->vertprog.program);
    util_blitter_save_rasterizer(nv30->blitter, nv30->rast);
@@ -268,7 +268,7 @@ nv30_blit(struct pipe_context *pipe,
                      nv30->fragprog.num_textures, nv30->fragprog.textures);
    util_blitter_save_render_condition(nv30->blitter, nv30->render_cond_query,
                                       nv30->render_cond_cond, nv30->render_cond_mode);
-   util_blitter_blit(nv30->blitter, &info);
+   util_blitter_blit(nv30->blitter, &info, NULL);
 }
 
 void

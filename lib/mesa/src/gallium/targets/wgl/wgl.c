@@ -116,7 +116,7 @@ wgl_screen_create(HDC hDC)
    struct sw_winsys *winsys;
    UNUSED bool sw_only = debug_get_bool_option("LIBGL_ALWAYS_SOFTWARE", false);
 
-   winsys = gdi_create_sw_winsys();
+   winsys = gdi_create_sw_winsys(gdi_sw_acquire_hdc_by_value, gdi_sw_release_hdc_by_value);
    if (!winsys)
       return NULL;
 
@@ -170,7 +170,7 @@ wgl_present(struct pipe_screen *screen,
     * other structs such as this stw_winsys as well...
     */
 
-#if defined(GALLIUM_LLVMPIPE) || defined(GALLIUM_SOFTPIPE)
+#if defined(HAVE_SWRAST)
    struct sw_winsys *winsys = NULL;
    struct sw_displaytarget *dt = NULL;
 #endif
@@ -193,7 +193,7 @@ wgl_present(struct pipe_screen *screen,
 
 #ifdef GALLIUM_ZINK
    if (use_zink) {
-      screen->flush_frontbuffer(screen, ctx, res, 0, 0, hDC, NULL);
+      screen->flush_frontbuffer(screen, ctx, res, 0, 0, hDC, 0, NULL);
       return;
    }
 #endif
@@ -219,17 +219,6 @@ wgl_get_adapter_luid(struct pipe_screen* screen,
    return true;
 }
 #endif
-
-
-static unsigned
-wgl_get_pfd_flags(struct pipe_screen *screen)
-{
-#ifdef GALLIUM_D3D12
-   if (use_d3d12)
-      return d3d12_wgl_get_pfd_flags(screen);
-#endif
-   return stw_pfd_gdi_support;
-}
 
 
 static struct stw_winsys_framebuffer *
@@ -262,7 +251,6 @@ static const struct stw_winsys stw_winsys = {
    NULL, /* shared_surface_open */
    NULL, /* shared_surface_close */
    NULL, /* compose */
-   &wgl_get_pfd_flags,
    &wgl_create_framebuffer,
    &wgl_get_name,
 };

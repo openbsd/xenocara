@@ -4,13 +4,14 @@
  */
 #include "nvk_buffer.h"
 #include "nvk_cmd_buffer.h"
+#include "nvk_descriptor_set.h"
 #include "nvk_device.h"
 #include "nvk_entrypoints.h"
 #include "nvk_image.h"
 #include "nvk_physical_device.h"
 
-#include "nvk_cl9097.h"
-#include "nvk_clb197.h"
+#include "nv_push_cl9097.h"
+#include "nv_push_clb197.h"
 
 static VkResult
 nvk_cmd_bind_map_buffer(struct vk_command_buffer *vk_cmd,
@@ -43,7 +44,8 @@ nvk_device_init_meta(struct nvk_device *dev)
    if (result != VK_SUCCESS)
       return result;
 
-   dev->meta.use_gs_for_layer = pdev->info.cls_eng3d < MAXWELL_B,
+   dev->meta.use_gs_for_layer = pdev->info.cls_eng3d < MAXWELL_B;
+   dev->meta.use_rect_list_pipeline = true;
    dev->meta.cmd_bind_map_buffer = nvk_cmd_bind_map_buffer;
    dev->meta.max_bind_map_buffer_size_B = 64 * 1024; /* TODO */
 
@@ -60,35 +62,25 @@ struct nvk_meta_save {
    struct vk_vertex_input_state _dynamic_vi;
    struct vk_sample_locations_state _dynamic_sl;
    struct vk_dynamic_graphics_state dynamic;
-   struct nvk_graphics_pipeline *pipeline;
+   struct nvk_shader *shaders[MESA_SHADER_MESH + 1];
    struct nvk_addr_range vb0;
-   struct nvk_descriptor_set *desc0;
-   bool has_push_desc0;
+   struct nvk_descriptor_set_binding desc0;
+   struct nvk_buffer_address desc0_set_addr;
    struct nvk_push_descriptor_set push_desc0;
-   uint8_t push[128];
+   uint8_t set_dynamic_buffer_start[NVK_MAX_SETS];
+   uint8_t push[NVK_MAX_PUSH_SIZE];
 };
 
 static void
 nvk_meta_begin(struct nvk_cmd_buffer *cmd,
                struct nvk_meta_save *save)
 {
-   save->dynamic = cmd->vk.dynamic_graphics_state;
-   save->_dynamic_vi = cmd->state.gfx._dynamic_vi;
-   save->_dynamic_sl = cmd->state.gfx._dynamic_sl;
+   const struct nvk_descriptor_state *desc = &cmd->state.gfx.descriptors;
 
-   save->pipeline = cmd->state.gfx.pipeline;
-   save->vb0 = cmd->state.gfx.vb0;
+   struct nv_push *p = nvk_cmd_buffer_push(cmd, 4);
 
-   save->desc0 = cmd->state.gfx.descriptors.sets[0];
-   save->has_push_desc0 = cmd->state.gfx.descriptors.push[0];
-   if (save->has_push_desc0)
-      save->push_desc0 = *cmd->state.gfx.descriptors.push[0];
+   P_IMMD(p, NV9097, SET_RENDER_ENABLE_OVERRIDE, MODE_ALWAYS_RENDER);
 
-   STATIC_ASSERT(sizeof(save->push) ==
-                 sizeof(cmd->state.gfx.descriptors.root.push));
-   memcpy(save->push, cmd->state.gfx.descriptors.root.push, sizeof(save->push));
-
-   struct nv_push *p = nvk_cmd_buffer_push(cmd, 2);
    P_IMMD(p, NV9097, SET_STATISTICS_COUNTER, {
       .da_vertices_generated_enable = false,
       .da_primitives_generated_enable = false,
@@ -106,6 +98,26 @@ nvk_meta_begin(struct nvk_cmd_buffer *cmd,
       .total_streaming_primitives_needed_succeeded_enable = false,
       .vtg_primitives_out_enable = false,
    });
+
+   save->dynamic = cmd->vk.dynamic_graphics_state;
+   save->_dynamic_vi = cmd->state.gfx._dynamic_vi;
+   save->_dynamic_sl = cmd->state.gfx._dynamic_sl;
+
+   STATIC_ASSERT(sizeof(cmd->state.gfx.shaders) == sizeof(save->shaders));
+   memcpy(save->shaders, cmd->state.gfx.shaders, sizeof(save->shaders));
+
+   save->vb0 = cmd->state.gfx.vb0;
+
+   save->desc0 = desc->sets[0];
+   nvk_descriptor_state_get_root(desc, sets[0], &save->desc0_set_addr);
+   if (desc->sets[0].push != NULL)
+      save->push_desc0 = *desc->sets[0].push;
+
+   nvk_descriptor_state_get_root_array(desc, set_dynamic_buffer_start,
+                                       0, NVK_MAX_SETS,
+                                       save->set_dynamic_buffer_start);
+   nvk_descriptor_state_get_root_array(desc, push, 0, NVK_MAX_PUSH_SIZE,
+                                       save->push);
 }
 
 static void
@@ -120,23 +132,57 @@ nvk_meta_init_render(struct nvk_cmd_buffer *cmd,
       .depth_attachment_format = render->depth_att.vk_format,
       .stencil_attachment_format = render->stencil_att.vk_format,
    };
-   for (uint32_t a = 0; a < render->color_att_count; a++)
+   for (uint32_t a = 0; a < render->color_att_count; a++) {
       info->color_attachment_formats[a] = render->color_att[a].vk_format;
+      info->color_attachment_write_masks[a] =
+         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+         VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+   }
 }
 
 static void
 nvk_meta_end(struct nvk_cmd_buffer *cmd,
              struct nvk_meta_save *save)
 {
-   if (save->desc0) {
-      cmd->state.gfx.descriptors.sets[0] = save->desc0;
-      cmd->state.gfx.descriptors.root.sets[0] = nvk_descriptor_set_addr(save->desc0);
-      cmd->state.gfx.descriptors.sets_dirty |= BITFIELD_BIT(0);
-      cmd->state.gfx.descriptors.push_dirty &= ~BITFIELD_BIT(0);
-   } else if (save->has_push_desc0) {
-      *cmd->state.gfx.descriptors.push[0] = save->push_desc0;
-      cmd->state.gfx.descriptors.push_dirty |= BITFIELD_BIT(0);
+   struct nvk_descriptor_state *desc = &cmd->state.gfx.descriptors;
+
+   switch (save->desc0.type) {
+   case NVK_DESCRIPTOR_SET_TYPE_NONE:
+      desc->sets[0].type = NVK_DESCRIPTOR_SET_TYPE_NONE;
+      break;
+
+   case NVK_DESCRIPTOR_SET_TYPE_SET: {
+      desc->sets[0].type = NVK_DESCRIPTOR_SET_TYPE_SET;
+      desc->sets[0].set = save->desc0.set;
+      struct nvk_buffer_address addr = nvk_descriptor_set_addr(save->desc0.set);
+      nvk_descriptor_state_set_root(cmd, desc, sets[0], addr);
+      break;
    }
+
+   case NVK_DESCRIPTOR_SET_TYPE_PUSH:
+      desc->sets[0].type = NVK_DESCRIPTOR_SET_TYPE_PUSH;
+      desc->sets[0].set = NULL;
+      *desc->sets[0].push = save->push_desc0;
+      desc->push_dirty |= BITFIELD_BIT(0);
+      break;
+
+   case NVK_DESCRIPTOR_SET_TYPE_BUFFER:
+      desc->sets[0].type = NVK_DESCRIPTOR_SET_TYPE_BUFFER;
+      desc->sets[0].set = NULL;
+      nvk_descriptor_state_set_root(cmd, desc, sets[0], save->desc0_set_addr);
+      break;
+
+   default:
+      unreachable("Unknown descriptor set type");
+   }
+   nvk_cmd_dirty_cbufs_for_descriptors(cmd, ~0, 0, 1);
+
+   /* Restore set_dynaic_buffer_start because meta binding set 0 can disturb
+    * all dynamic buffers starts for all sets.
+    */
+   nvk_descriptor_state_set_root_array(cmd, desc, set_dynamic_buffer_start,
+                                       0, NVK_MAX_SETS,
+                                       save->set_dynamic_buffer_start);
 
    /* Restore the dynamic state */
    assert(save->dynamic.vi == &cmd->state.gfx._dynamic_vi);
@@ -148,14 +194,20 @@ nvk_meta_end(struct nvk_cmd_buffer *cmd,
           cmd->vk.dynamic_graphics_state.set,
           sizeof(cmd->vk.dynamic_graphics_state.set));
 
-   if (save->pipeline)
-      nvk_cmd_bind_graphics_pipeline(cmd, save->pipeline);
+   for (uint32_t stage = 0; stage < ARRAY_SIZE(save->shaders); stage++) {
+      if (stage == MESA_SHADER_COMPUTE)
+         continue;
+
+      nvk_cmd_bind_graphics_shader(cmd, stage, save->shaders[stage]);
+   }
 
    nvk_cmd_bind_vertex_buffer(cmd, 0, save->vb0);
 
-   memcpy(cmd->state.gfx.descriptors.root.push, save->push, sizeof(save->push));
+   nvk_descriptor_state_set_root_array(cmd, desc, push, 0, sizeof(save->push),
+                                       save->push);
 
-   struct nv_push *p = nvk_cmd_buffer_push(cmd, 2);
+   struct nv_push *p = nvk_cmd_buffer_push(cmd, 4);
+
    P_IMMD(p, NV9097, SET_STATISTICS_COUNTER, {
       .da_vertices_generated_enable = true,
       .da_primitives_generated_enable = true,
@@ -173,6 +225,8 @@ nvk_meta_end(struct nvk_cmd_buffer *cmd,
       .total_streaming_primitives_needed_succeeded_enable = true,
       .vtg_primitives_out_enable = true,
    });
+
+   P_IMMD(p, NV9097, SET_RENDER_ENABLE_OVERRIDE, MODE_USE_RENDER_ENABLE);
 }
 
 VKAPI_ATTR void VKAPI_CALL

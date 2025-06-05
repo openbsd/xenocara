@@ -1,32 +1,14 @@
 /*
  * Copyright 2012 Vadim Girlin <vadimgirlin@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  * Authors:
  *      Vadim Girlin
+ * SPDX-License-Identifier: MIT
  */
 
 #ifndef R600_ISA_H_
 #define R600_ISA_H_
 
+#include "amd_family.h"
 #include "util/u_debug.h"
 
 #ifdef __cplusplus
@@ -679,7 +661,7 @@ struct r600_isa {
 
 struct r600_context;
 
-int r600_isa_init(struct r600_context *ctx, struct r600_isa *isa);
+int r600_isa_init(enum amd_gfx_level gfx_level, struct r600_isa *isa);
 int r600_isa_destroy(struct r600_isa *isa);
 
 extern const struct alu_op_info r600_alu_op_table[];

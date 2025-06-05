@@ -5,6 +5,8 @@
 
 #include "tu_cs.h"
 
+#include "tu_device.h"
+#include "tu_rmv.h"
 #include "tu_suballoc.h"
 
 /**
@@ -70,10 +72,12 @@ void
 tu_cs_finish(struct tu_cs *cs)
 {
    for (uint32_t i = 0; i < cs->read_only.bo_count; ++i) {
+      TU_RMV(resource_destroy, cs->device, cs->read_only.bos[i]);
       tu_bo_finish(cs->device, cs->read_only.bos[i]);
    }
 
    for (uint32_t i = 0; i < cs->read_write.bo_count; ++i) {
+      TU_RMV(resource_destroy, cs->device, cs->read_write.bos[i]);
       tu_bo_finish(cs->device, cs->read_write.bos[i]);
    }
 
@@ -104,7 +108,8 @@ tu_cs_current_bo(const struct tu_cs *cs)
 static uint32_t
 tu_cs_get_offset(const struct tu_cs *cs)
 {
-   return cs->start - (uint32_t *) tu_cs_current_bo(cs)->map;
+   const struct tu_bo_array *bos = cs->writeable ? &cs->read_write : &cs->read_only;
+   return (cs->refcount_bo || bos->bo_count != 0) ? cs->start - (uint32_t *) tu_cs_current_bo(cs)->map : 0;
 }
 
 /* Get the iova for the next dword to be emitted. Useful after
@@ -151,7 +156,7 @@ tu_cs_add_bo(struct tu_cs *cs, uint32_t size)
    struct tu_bo *new_bo;
 
    VkResult result =
-      tu_bo_init_new(cs->device, &new_bo, size * sizeof(uint32_t),
+      tu_bo_init_new(cs->device, NULL, &new_bo, size * sizeof(uint32_t),
                      (enum tu_bo_alloc_flags)(COND(!cs->writeable,
                                                    TU_BO_ALLOC_GPU_READ_ONLY) |
                                               TU_BO_ALLOC_ALLOW_DUMP),
@@ -160,11 +165,13 @@ tu_cs_add_bo(struct tu_cs *cs, uint32_t size)
       return result;
    }
 
-   result = tu_bo_map(cs->device, new_bo);
+   result = tu_bo_map(cs->device, new_bo, NULL);
    if (result != VK_SUCCESS) {
       tu_bo_finish(cs->device, new_bo);
       return result;
    }
+
+   TU_RMV(cmd_buffer_bo_create, cs->device, new_bo);
 
    bos->bos[bos->bo_count++] = new_bo;
 
@@ -310,19 +317,31 @@ tu_cs_set_writeable(struct tu_cs *cs, bool writeable)
  * emission.
  */
 VkResult
-tu_cs_begin_sub_stream(struct tu_cs *cs, uint32_t size, struct tu_cs *sub_cs)
+tu_cs_begin_sub_stream_aligned(struct tu_cs *cs, uint32_t count,
+                               uint32_t size, struct tu_cs *sub_cs)
 {
    assert(cs->mode == TU_CS_MODE_SUB_STREAM);
    assert(size);
 
-   VkResult result = tu_cs_reserve_space(cs, size);
+   VkResult result;
+   if (tu_cs_get_space(cs) < count * size) {
+      /* When we have to allocate a new BO, assume that the alignment of the
+       * BO is sufficient.
+       */
+      result = tu_cs_reserve_space(cs, count * size);
+   } else {
+      result = tu_cs_reserve_space(cs, count * size + (size - tu_cs_get_offset(cs)) % size);
+      cs->start += (size - tu_cs_get_offset(cs)) % size;
+   }
    if (result != VK_SUCCESS)
       return result;
+
+   cs->cur = cs->start;
 
    tu_cs_init_external(sub_cs, cs->device, cs->cur, cs->reserved_end,
                        tu_cs_get_cur_iova(cs), cs->writeable);
    tu_cs_begin(sub_cs);
-   result = tu_cs_reserve_space(sub_cs, size);
+   result = tu_cs_reserve_space(sub_cs, count * size);
    assert(result == VK_SUCCESS);
 
    return VK_SUCCESS;
@@ -482,10 +501,12 @@ tu_cs_reset(struct tu_cs *cs)
    }
 
    for (uint32_t i = 0; i + 1 < cs->read_only.bo_count; ++i) {
+      TU_RMV(resource_destroy, cs->device, cs->read_only.bos[i]);
       tu_bo_finish(cs->device, cs->read_only.bos[i]);
    }
 
    for (uint32_t i = 0; i + 1 < cs->read_write.bo_count; ++i) {
+      TU_RMV(resource_destroy, cs->device, cs->read_write.bos[i]);
       tu_bo_finish(cs->device, cs->read_write.bos[i]);
    }
 
@@ -505,6 +526,26 @@ tu_cs_reset(struct tu_cs *cs)
    }
 
    cs->entry_count = 0;
+}
+
+uint64_t
+tu_cs_emit_data_nop(struct tu_cs *cs,
+                    const uint32_t *data,
+                    uint32_t size,
+                    uint32_t align_dwords)
+{
+   uint32_t total_size = size + (align_dwords - 1);
+   tu_cs_emit_pkt7(cs, CP_NOP, total_size);
+
+   uint64_t iova = tu_cs_get_cur_iova(cs);
+   uint64_t iova_aligned = align64(iova, align_dwords * sizeof(uint32_t));
+   size_t offset = (iova_aligned - iova) / sizeof(uint32_t);
+   cs->cur += offset;
+   memcpy(cs->cur, data, size * sizeof(uint32_t));
+
+   cs->cur += total_size - offset;
+
+   return iova + offset * sizeof(uint32_t);
 }
 
 void

@@ -6,12 +6,15 @@
 
 #include "agx_bo.h"
 #include <inttypes.h>
+#include <stdlib.h>
+#include "util/hash_table.h"
+#include "util/ralloc.h"
 #include "agx_device.h"
 #include "decode.h"
 
 /* Helper to calculate the bucket index of a BO */
 static unsigned
-agx_bucket_index(unsigned size)
+agx_bucket_index(size_t size)
 {
    /* Round down to POT to compute a bucket index */
    unsigned bucket_index = util_logbase2(size);
@@ -24,16 +27,9 @@ agx_bucket_index(unsigned size)
 }
 
 static struct list_head *
-agx_bucket(struct agx_device *dev, unsigned size)
+agx_bucket(struct agx_device *dev, size_t size)
 {
    return &dev->bo_cache.buckets[agx_bucket_index(size)];
-}
-
-static bool
-agx_bo_wait(struct agx_bo *bo, int64_t timeout_ns)
-{
-   /* TODO: When we allow parallelism we'll need to implement this for real */
-   return true;
 }
 
 static void
@@ -51,8 +47,8 @@ agx_bo_cache_remove_locked(struct agx_device *dev, struct agx_bo *bo)
  * BO. */
 
 struct agx_bo *
-agx_bo_cache_fetch(struct agx_device *dev, size_t size, uint32_t flags,
-                   const bool dontwait)
+agx_bo_cache_fetch(struct agx_device *dev, size_t size, size_t align,
+                   uint32_t flags, const bool dontwait)
 {
    simple_mtx_lock(&dev->bo_cache.lock);
    struct list_head *bucket = agx_bucket(dev, size);
@@ -67,10 +63,8 @@ agx_bo_cache_fetch(struct agx_device *dev, size_t size, uint32_t flags,
       if (entry->size > 2 * size)
          continue;
 
-      /* If the oldest BO in the cache is busy, likely so is
-       * everything newer, so bail. */
-      if (!agx_bo_wait(entry, dontwait ? 0 : INT64_MAX))
-         break;
+      if (align > entry->align)
+         continue;
 
       /* This one works, use it */
       agx_bo_cache_remove_locked(dev, entry);
@@ -106,9 +100,8 @@ agx_bo_cache_evict_stale_bos(struct agx_device *dev, unsigned tv_sec)
 }
 
 static void
-agx_bo_cache_put_locked(struct agx_bo *bo)
+agx_bo_cache_put_locked(struct agx_device *dev, struct agx_bo *bo)
 {
-   struct agx_device *dev = bo->dev;
    struct list_head *bucket = agx_bucket(dev, bo->size);
    struct timespec time;
 
@@ -141,15 +134,13 @@ agx_bo_cache_put_locked(struct agx_bo *bo)
 
 /* Tries to add a BO to the cache. Returns if it was successful */
 static bool
-agx_bo_cache_put(struct agx_bo *bo)
+agx_bo_cache_put(struct agx_device *dev, struct agx_bo *bo)
 {
-   struct agx_device *dev = bo->dev;
-
    if (bo->flags & AGX_BO_SHARED) {
       return false;
    } else {
       simple_mtx_lock(&dev->bo_cache.lock);
-      agx_bo_cache_put_locked(bo);
+      agx_bo_cache_put_locked(dev, bo);
       simple_mtx_unlock(&dev->bo_cache.lock);
 
       return true;
@@ -180,8 +171,154 @@ agx_bo_reference(struct agx_bo *bo)
    }
 }
 
+struct label_stat {
+   const char *label;
+   uint32_t count;
+   size_t alloc_B;
+   size_t mapped_B;
+};
+
+static void
+account_bo(struct label_stat *stat, struct agx_bo *bo)
+{
+   stat->count++;
+   stat->alloc_B += bo->size;
+
+   if (bo->_map != NULL)
+      stat->mapped_B += bo->size;
+}
+
+static void
+print_size(FILE *fp, size_t size_B)
+{
+   if (size_B >= (1024 * 1024 * 1024)) {
+      fprintf(fp, "%.1f GiB", (double)size_B / (double)(1024 * 1024 * 1024));
+   } else if (size_B >= (1024 * 1024)) {
+      fprintf(fp, "%.1f MiB", (double)size_B / (double)(1024 * 1024));
+   } else if (size_B >= 1024) {
+      fprintf(fp, "%zu KiB", DIV_ROUND_UP(size_B, 1024));
+   } else {
+      fprintf(fp, "%zu B", size_B);
+   }
+}
+
+static void
+print_stat(FILE *fp, struct label_stat *stat)
+{
+   const char *BOLD = "\e[1m";
+   const char *RESET = "\e[0m";
+
+   fprintf(fp, "%s%s%s: ", BOLD, stat->label, RESET);
+   print_size(fp, stat->alloc_B);
+
+   if (stat->mapped_B) {
+      fprintf(fp, ", mapped ");
+      print_size(fp, stat->mapped_B);
+   }
+
+   fprintf(fp, ", %u BOs\n", stat->count);
+}
+
+static int
+compare_size(const void *a_, const void *b_)
+{
+   const struct label_stat *const *label_a = a_;
+   const struct label_stat *const *label_b = b_;
+
+   size_t a = (*label_a)->alloc_B;
+   size_t b = (*label_b)->alloc_B;
+
+   return (a > b) ? 1 : (a < b) ? -1 : 0;
+}
+
+static void
+agx_bo_dump_all(struct agx_device *dev)
+{
+   struct label_stat accum = {.label = "Total"};
+   struct hash_table *totals = _mesa_string_hash_table_create(NULL);
+   bool verbose = dev->debug & AGX_DBG_BODUMPVERBOSE;
+
+   if (verbose)
+      fprintf(stderr, "---\n");
+
+   for (uint32_t handle = 0; handle < dev->max_handle; handle++) {
+      struct agx_bo *bo = agx_lookup_bo(dev, handle);
+      if (!bo->size)
+         continue;
+
+      if (verbose) {
+         fprintf(stderr, "%u: %s %zu KiB\n", handle, bo->label,
+                 bo->size / 1024);
+      }
+
+      account_bo(&accum, bo);
+
+      assert(bo->label != NULL && "Everything must be labeled");
+
+      struct hash_entry *ent = _mesa_hash_table_search(totals, bo->label);
+      struct label_stat *ls;
+      if (ent != NULL) {
+         ls = ent->data;
+      } else {
+         ls = rzalloc(totals, struct label_stat);
+         ls->label = bo->label;
+         _mesa_hash_table_insert(totals, bo->label, ls);
+      }
+
+      account_bo(ls, bo);
+   }
+
+   if (verbose) {
+      fprintf(stderr, "\n");
+   }
+
+   unsigned nr_labels = _mesa_hash_table_num_entries(totals);
+   struct label_stat **stats =
+      rzalloc_array(totals, struct label_stat *, nr_labels);
+   unsigned i = 0;
+
+   hash_table_foreach(totals, ent) {
+      assert(i < nr_labels);
+      stats[i++] = ent->data;
+   }
+
+   assert(i == nr_labels);
+
+   /* Sort labels in ascending order of size */
+   qsort(stats, nr_labels, sizeof(struct label_stat *), compare_size);
+
+   for (i = 0; i < nr_labels; ++i) {
+      print_stat(stderr, stats[i]);
+   }
+
+   print_stat(stderr, &accum);
+
+   if (verbose)
+      fprintf(stderr, "---\n\n");
+   else
+      fprintf(stderr, "\n");
+
+   ralloc_free(totals);
+}
+
+static void
+agx_bo_dump_all_periodic(struct agx_device *dev)
+{
+   if (likely(!(dev->debug & (AGX_DBG_BODUMP | AGX_DBG_BODUMPVERBOSE))))
+      return;
+
+   static time_t agx_last_dumped_time = 0;
+
+   time_t now = time(NULL);
+   if (now == agx_last_dumped_time)
+      return;
+
+   agx_bo_dump_all(dev);
+   agx_last_dumped_time = now;
+}
+
 void
-agx_bo_unreference(struct agx_bo *bo)
+agx_bo_unreference(struct agx_device *dev, struct agx_bo *bo)
 {
    if (!bo)
       return;
@@ -190,38 +327,39 @@ agx_bo_unreference(struct agx_bo *bo)
    if (p_atomic_dec_return(&bo->refcnt))
       return;
 
-   struct agx_device *dev = bo->dev;
-
    pthread_mutex_lock(&dev->bo_map_lock);
 
    /* Someone might have imported this BO while we were waiting for the
     * lock, let's make sure it's still not referenced before freeing it.
     */
    if (p_atomic_read(&bo->refcnt) == 0) {
-      assert(!p_atomic_read_relaxed(&bo->writer_syncobj));
+      assert(!p_atomic_read_relaxed(&bo->writer));
 
       if (dev->debug & AGX_DBG_TRACE)
-         agxdecode_track_free(bo);
+         agxdecode_track_free(dev->agxdecode, bo);
 
-      if (!agx_bo_cache_put(bo))
+      if (!agx_bo_cache_put(dev, bo))
          agx_bo_free(dev, bo);
    }
+
+   agx_bo_dump_all_periodic(dev);
 
    pthread_mutex_unlock(&dev->bo_map_lock);
 }
 
 struct agx_bo *
-agx_bo_create(struct agx_device *dev, unsigned size, enum agx_bo_flags flags,
-              const char *label)
+agx_bo_create(struct agx_device *dev, size_t size, unsigned align,
+              enum agx_bo_flags flags, const char *label)
 {
    struct agx_bo *bo;
    assert(size > 0);
 
-   /* To maximize BO cache usage, don't allocate tiny BOs */
-   size = ALIGN_POT(size, 16384);
+   /* BOs are allocated in pages */
+   size = ALIGN_POT(size, (size_t)dev->params.vm_page_size);
+   align = MAX2(align, dev->params.vm_page_size);
 
    /* See if we have a BO already in the cache */
-   bo = agx_bo_cache_fetch(dev, size, flags, true);
+   bo = agx_bo_cache_fetch(dev, size, align, flags, true);
 
    /* Update stats based on the first attempt to fetch */
    if (bo != NULL)
@@ -234,12 +372,12 @@ agx_bo_create(struct agx_device *dev, unsigned size, enum agx_bo_flags flags,
     * flush the cache to make space for the new allocation.
     */
    if (!bo)
-      bo = agx_bo_alloc(dev, size, flags);
+      bo = dev->ops.bo_alloc(dev, size, align, flags);
    if (!bo)
-      bo = agx_bo_cache_fetch(dev, size, flags, false);
+      bo = agx_bo_cache_fetch(dev, size, align, flags, false);
    if (!bo) {
       agx_bo_cache_evict_all(dev);
-      bo = agx_bo_alloc(dev, size, flags);
+      bo = dev->ops.bo_alloc(dev, size, align, flags);
    }
 
    if (!bo) {
@@ -250,8 +388,11 @@ agx_bo_create(struct agx_device *dev, unsigned size, enum agx_bo_flags flags,
    bo->label = label;
    p_atomic_set(&bo->refcnt, 1);
 
-   if (dev->debug & AGX_DBG_TRACE)
-      agxdecode_track_alloc(bo);
+   if (dev->debug & AGX_DBG_TRACE) {
+      agx_bo_map(bo);
+      agxdecode_track_alloc(dev->agxdecode, bo);
+   }
 
+   agx_bo_dump_all_periodic(dev);
    return bo;
 }

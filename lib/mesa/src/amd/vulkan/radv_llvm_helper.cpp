@@ -1,34 +1,17 @@
 /*
  * Copyright © 2018 Red Hat.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 #include "radv_llvm_helper.h"
 #include "ac_llvm_util.h"
 
 #include <list>
 class radv_llvm_per_thread_info {
- public:
+public:
    radv_llvm_per_thread_info(enum radeon_family arg_family, enum ac_target_machine_options arg_tm_options,
                              unsigned arg_wave_size)
-       : family(arg_family), tm_options(arg_tm_options), wave_size(arg_wave_size), passes(NULL)
+       : family(arg_family), tm_options(arg_tm_options), wave_size(arg_wave_size), beo(NULL)
    {
    }
 
@@ -42,8 +25,8 @@ class radv_llvm_per_thread_info {
       if (!ac_init_llvm_compiler(&llvm_info, family, tm_options))
          return false;
 
-      passes = ac_create_llvm_passes(llvm_info.tm);
-      if (!passes)
+      beo = ac_create_backend_optimizer(llvm_info.tm);
+      if (!beo)
          return false;
 
       return true;
@@ -51,7 +34,7 @@ class radv_llvm_per_thread_info {
 
    bool compile_to_memory_buffer(LLVMModuleRef module, char **pelf_buffer, size_t *pelf_size)
    {
-      return ac_compile_module_to_elf(passes, module, pelf_buffer, pelf_size);
+      return ac_compile_module_to_elf(beo, module, pelf_buffer, pelf_size);
    }
 
    bool is_same(enum radeon_family arg_family, enum ac_target_machine_options arg_tm_options, unsigned arg_wave_size)
@@ -62,11 +45,11 @@ class radv_llvm_per_thread_info {
    }
    struct ac_llvm_compiler llvm_info;
 
- private:
+private:
    enum radeon_family family;
    enum ac_target_machine_options tm_options;
    unsigned wave_size;
-   struct ac_compiler_passes *passes;
+   struct ac_backend_optimizer *beo;
 };
 
 /* we have to store a linked list per thread due to the possibility of multiple gpus being required */
@@ -85,9 +68,9 @@ radv_compile_to_elf(struct ac_llvm_compiler *info, LLVMModuleRef module, char **
    }
 
    if (!thread_info) {
-      struct ac_compiler_passes *passes = ac_create_llvm_passes(info->tm);
-      bool ret = ac_compile_module_to_elf(passes, module, pelf_buffer, pelf_size);
-      ac_destroy_llvm_passes(passes);
+      struct ac_backend_optimizer *beo = ac_create_backend_optimizer(info->tm);
+      bool ret = ac_compile_module_to_elf(beo, module, pelf_buffer, pelf_size);
+      ac_destroy_backend_optimizer(beo);
       return ret;
    }
 

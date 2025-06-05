@@ -1,27 +1,7 @@
 /* -*- mesa-c++  -*-
- *
- * Copyright (c) 2022 Collabora LTD
- *
+ * Copyright 2022 Collabora LTD
  * Author: Gert Wollny <gert.wollny@collabora.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "sfn_shader_tess.h"
@@ -187,33 +167,14 @@ TESShader::do_scan_instruction(nir_instr *instr)
       break;
    case nir_intrinsic_store_output: {
       int driver_location = nir_intrinsic_base(intr);
-      int location = nir_intrinsic_io_semantics(intr).location;
-      auto semantic = r600_get_varying_semantic(location);
-      tgsi_semantic name = (tgsi_semantic)semantic.first;
-      unsigned sid = semantic.second;
+      auto location = static_cast<gl_varying_slot>(nir_intrinsic_io_semantics(intr).location);
       auto write_mask = nir_intrinsic_write_mask(intr);
 
       if (location == VARYING_SLOT_LAYER)
          write_mask = 4;
 
-      ShaderOutput output(driver_location, name, write_mask);
-      output.set_sid(sid);
+      ShaderOutput output(driver_location, write_mask, location);
 
-      switch (location) {
-      case VARYING_SLOT_PSIZ:
-      case VARYING_SLOT_POS:
-      case VARYING_SLOT_CLIP_VERTEX:
-      case VARYING_SLOT_EDGE: {
-         break;
-      }
-      case VARYING_SLOT_CLIP_DIST0:
-      case VARYING_SLOT_CLIP_DIST1:
-      case VARYING_SLOT_VIEWPORT:
-      case VARYING_SLOT_LAYER:
-      case VARYING_SLOT_VIEW_INDEX:
-      default:
-         output.set_is_param(true);
-      }
       add_output(output);
       break;
    }

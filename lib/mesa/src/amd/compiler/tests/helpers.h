@@ -1,25 +1,7 @@
 /*
  * Copyright © 2020 Valve Corporation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
+ * SPDX-License-Identifier: MIT
  */
 #ifndef ACO_TEST_HELPERS_H
 #define ACO_TEST_HELPERS_H
@@ -27,6 +9,8 @@
 #include "vulkan/vulkan.h"
 
 #include "framework.h"
+#include "ac_gpu_info.h"
+#include "nir_builder.h"
 #include <functional>
 
 enum QoShaderDeclType {
@@ -67,6 +51,7 @@ extern aco_shader_info info;
 extern std::unique_ptr<aco::Program> program;
 extern aco::Builder bld;
 extern aco::Temp inputs[16];
+extern nir_builder *nb;
 
 namespace aco {
 struct ra_test_policy;
@@ -77,18 +62,24 @@ void create_program(enum amd_gfx_level gfx_level, aco::Stage stage, unsigned wav
 bool setup_cs(const char* input_spec, enum amd_gfx_level gfx_level,
               enum radeon_family family = CHIP_UNKNOWN, const char* subvariant = "",
               unsigned wave_size = 64);
+bool
+setup_nir_cs(enum amd_gfx_level gfx_level, gl_shader_stage stage = MESA_SHADER_COMPUTE,
+             enum radeon_family family = CHIP_UNKNOWN, const char* subvariant = "");
 
-void finish_program(aco::Program* program, bool endpgm = true);
+void finish_program(aco::Program* program, bool endpgm = true, bool dominance = false);
 void finish_validator_test();
 void finish_opt_test();
 void finish_setup_reduce_temp_test();
-void finish_ra_test(aco::ra_test_policy, bool lower = false);
+void finish_lower_subdword_test();
+void finish_ra_test(aco::ra_test_policy);
 void finish_optimizer_postRA_test();
 void finish_to_hw_instr_test();
+void finish_schedule_vopd_test();
 void finish_waitcnt_test();
 void finish_insert_nops_test(bool endpgm = true);
 void finish_form_hard_clause_test();
 void finish_assembler_test();
+void finish_isel_test(enum ac_hw_stage hw_stage = AC_HW_COMPUTE_SHADER, unsigned wave_size = 64);
 
 void writeout(unsigned i, aco::Temp tmp = aco::Temp(0, aco::s1));
 void writeout(unsigned i, aco::Builder::Result res);
@@ -107,7 +98,9 @@ aco::Temp fsat(aco::Temp src, aco::Builder b = bld);
 aco::Temp fmin(aco::Temp src0, aco::Temp src1, aco::Builder b = bld);
 aco::Temp fmax(aco::Temp src0, aco::Temp src1, aco::Builder b = bld);
 aco::Temp ext_ushort(aco::Temp src, unsigned idx, aco::Builder b = bld);
+aco::Temp ext_sshort(aco::Temp src, unsigned idx, aco::Builder b = bld);
 aco::Temp ext_ubyte(aco::Temp src, unsigned idx, aco::Builder b = bld);
+aco::Temp ext_sbyte(aco::Temp src, unsigned idx, aco::Builder b = bld);
 void emit_divergent_if_else(aco::Program* prog, aco::Builder& b, aco::Operand cond,
                             std::function<void()> then, std::function<void()> els);
 

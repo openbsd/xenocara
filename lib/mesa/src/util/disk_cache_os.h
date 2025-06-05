@@ -130,6 +130,7 @@ struct disk_cache_put_job {
 char *
 disk_cache_generate_cache_dir(void *mem_ctx, const char *gpu_name,
                               const char *driver_id,
+                              const char *cache_dir_name_custom,
                               enum disk_cache_type cache_type);
 
 void
@@ -161,6 +162,9 @@ disk_cache_enabled(void);
 bool
 disk_cache_load_cache_index_foz(void *mem_ctx, struct disk_cache *cache);
 
+void
+disk_cache_touch_cache_user_marker(char *path);
+
 bool
 disk_cache_mmap_cache_index(void *mem_ctx, struct disk_cache *cache,
                             char *path);
@@ -177,6 +181,9 @@ disk_cache_db_write_item_to_disk(struct disk_cache_put_job *dc_job);
 
 bool
 disk_cache_db_load_cache_index(void *mem_ctx, struct disk_cache *cache);
+
+void
+disk_cache_delete_old_cache(void);
 
 #ifdef __cplusplus
 }

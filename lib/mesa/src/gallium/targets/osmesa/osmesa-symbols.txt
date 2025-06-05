@@ -332,6 +332,8 @@ glFramebufferTexture3D
 glFramebufferTexture3DEXT
 glFramebufferTextureLayer
 glFramebufferTextureLayerEXT
+glFramebufferTextureMultiviewOVR
+glFramebufferTextureMultisampleMultiviewOVR
 glFrontFace
 glFrustum
 glFrustumf
@@ -1021,6 +1023,8 @@ glTexStorage2D
 glTexStorage2DMultisample
 glTexStorage3D
 glTexStorage3DMultisample
+glTexStorageAttribs2DEXT
+glTexStorageAttribs3DEXT
 glTexSubImage1D
 glTexSubImage2D
 glTexSubImage3D

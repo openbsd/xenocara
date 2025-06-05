@@ -1,22 +1,5 @@
 # Copyright © 2017 Intel Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 subdir('program')
 subdir('main')
@@ -123,6 +106,7 @@ files_libmesa = files(
   'main/glthread_get.c',
   'main/glthread_list.c',
   'main/glthread_marshal.h',
+  'main/glthread_pixels.c',
   'main/glthread_shaderobj.c',
   'main/glthread_varray.c',
   'main/hash.c',
@@ -176,8 +160,6 @@ files_libmesa = files(
   'main/rastpos.h',
   'main/readpix.c',
   'main/readpix.h',
-  'main/remap.c',
-  'main/remap.h',
   'main/renderbuffer.c',
   'main/renderbuffer.h',
   'main/robustness.c',
@@ -194,6 +176,8 @@ files_libmesa = files(
   'main/shaderobj.h',
   'main/shared.c',
   'main/shared.h',
+  'main/spirv_capabilities.c',
+  'main/spirv_capabilities.h',
   'main/spirv_extensions.c',
   'main/spirv_extensions.h',
   'main/state.c',
@@ -352,6 +336,7 @@ files_libmesa = files(
   'state_tracker/st_nir_lower_fog.c',
   'state_tracker/st_nir_lower_position_invariant.c',
   'state_tracker/st_nir_lower_tex_src_plane.c',
+  'state_tracker/st_nir_unlower_io_to_vars.c',
   'state_tracker/st_pbo.c',
   'state_tracker/st_pbo_compute.c',
   'state_tracker/st_pbo.h',
@@ -439,7 +424,6 @@ files_libmesa += [
   main_marshal_generated_h,
   main_dispatch_h,
   ir_expression_operation_h,
-  main_remap_helper_h,
   sha1_h,
   main_unmarshal_table_c,
 ] + main_marshal_generated_c
@@ -459,12 +443,9 @@ endif
 _mesa_windows_args = []
 if with_platform_windows
   _mesa_windows_args += [
+    '-D_GLAPI_NO_EXPORTS',
     '-D_GDI32_',    # prevent gl* being declared __declspec(dllimport) in MS headers
   ]
-  if not with_shared_glapi
-    # prevent _glapi_* from being declared __declspec(dllimport)
-    _mesa_windows_args += '-D_GLAPI_NO_EXPORTS'
-  endif
 endif
 
 libmesa = static_library(
@@ -477,8 +458,7 @@ libmesa = static_library(
     inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux,
     inc_libmesa_asm, include_directories('main'),
   ],
-  link_with : [libglsl, libmesa_sse41],
-  dependencies : [idep_nir, idep_vtn, dep_vdpau, idep_mesautil],
+  link_with : [libmesa_sse41],
+  dependencies : [idep_libglsl, idep_nir, idep_vtn, dep_vdpau, idep_mesautil],
   build_by_default : false,
 )
-

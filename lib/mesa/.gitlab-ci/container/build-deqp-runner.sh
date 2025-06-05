@@ -1,56 +1,100 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2086 # we want word splitting
 
-set -ex
+# When changing this file, you need to bump the following
+# .gitlab-ci/image-tags.yml tags:
+# DEBIAN_TEST_ANDROID_TAG
+# DEBIAN_BASE_TAG
+# KERNEL_ROOTFS_TAG
 
-if [ -n "${DEQP_RUNNER_GIT_TAG}${DEQP_RUNNER_GIT_REV}" ]; then
-    # Build and install from source
-    DEQP_RUNNER_CARGO_ARGS="--git ${DEQP_RUNNER_GIT_URL:-https://gitlab.freedesktop.org/anholt/deqp-runner.git}"
+set -uex
 
-    if [ -n "${DEQP_RUNNER_GIT_TAG}" ]; then
-        DEQP_RUNNER_CARGO_ARGS="--tag ${DEQP_RUNNER_GIT_TAG} ${DEQP_RUNNER_CARGO_ARGS}"
-    else
-        DEQP_RUNNER_CARGO_ARGS="--rev ${DEQP_RUNNER_GIT_REV} ${DEQP_RUNNER_CARGO_ARGS}"
-    fi
+uncollapsed_section_start deqp-runner "Building deqp-runner"
 
-    DEQP_RUNNER_CARGO_ARGS="${DEQP_RUNNER_CARGO_ARGS} ${EXTRA_CARGO_ARGS}"
+DEQP_RUNNER_VERSION=0.20.3
+
+commits_to_backport=(
+)
+
+patch_files=(
+)
+
+DEQP_RUNNER_GIT_URL="${DEQP_RUNNER_GIT_URL:-https://gitlab.freedesktop.org/mesa/deqp-runner.git}"
+
+if [ -n "${DEQP_RUNNER_GIT_TAG:-}" ]; then
+    DEQP_RUNNER_GIT_CHECKOUT="$DEQP_RUNNER_GIT_TAG"
+elif [ -n "${DEQP_RUNNER_GIT_REV:-}" ]; then
+    DEQP_RUNNER_GIT_CHECKOUT="$DEQP_RUNNER_GIT_REV"
 else
-    # Install from package registry
-    DEQP_RUNNER_CARGO_ARGS="--version 0.16.0 ${EXTRA_CARGO_ARGS} -- deqp-runner"
+    DEQP_RUNNER_GIT_CHECKOUT="v$DEQP_RUNNER_VERSION"
 fi
 
-if [ -z "$ANDROID_NDK_HOME" ]; then
+BASE_PWD=$PWD
+
+mkdir -p /deqp-runner
+pushd /deqp-runner
+mkdir deqp-runner-git
+pushd deqp-runner-git
+git init
+git remote add origin "$DEQP_RUNNER_GIT_URL"
+git fetch --depth 1 origin "$DEQP_RUNNER_GIT_CHECKOUT"
+git checkout FETCH_HEAD
+
+for commit in "${commits_to_backport[@]}"
+do
+  PATCH_URL="https://gitlab.freedesktop.org/mesa/deqp-runner/-/commit/$commit.patch"
+  echo "Backport deqp-runner commit $commit from $PATCH_URL"
+  curl -L --retry 4 -f --retry-all-errors --retry-delay 60 $PATCH_URL | git am
+done
+
+for patch in "${patch_files[@]}"
+do
+  echo "Apply patch to deqp-runner from $patch"
+  git am "$BASE_PWD/.gitlab-ci/container/patches/$patch"
+done
+
+if [ -z "${RUST_TARGET:-}" ]; then
+    RUST_TARGET=""
+fi
+
+if [[ "$RUST_TARGET" != *-android ]]; then
+    # When CC (/usr/lib/ccache/gcc) variable is set, the rust compiler uses
+    # this variable when cross-compiling arm32 and build fails for zsys-sys.
+    # So unset the CC variable when cross-compiling for arm32.
+    SAVEDCC=${CC:-}
+    if [ "$RUST_TARGET" = "armv7-unknown-linux-gnueabihf" ]; then
+        unset CC
+    fi
     cargo install --locked  \
         -j ${FDO_CI_CONCURRENT:-4} \
         --root /usr/local \
-        ${DEQP_RUNNER_CARGO_ARGS}
+        ${EXTRA_CARGO_ARGS:-} \
+        --path .
+    CC=$SAVEDCC
 else
-    mkdir -p /deqp-runner
-    pushd /deqp-runner
-    git clone --branch v0.16.1 --depth 1 https://gitlab.freedesktop.org/anholt/deqp-runner.git deqp-runner-git
-    pushd deqp-runner-git
-
     cargo install --locked  \
         -j ${FDO_CI_CONCURRENT:-4} \
         --root /usr/local --version 2.10.0 \
         cargo-ndk
 
-    rustup target add x86_64-linux-android
-    RUSTFLAGS='-C target-feature=+crt-static' cargo ndk --target x86_64-linux-android build
+    rustup target add $RUST_TARGET
+    RUSTFLAGS='-C target-feature=+crt-static' cargo ndk --target $RUST_TARGET build --release
 
-    mv target/x86_64-linux-android/debug/deqp-runner /deqp-runner
+    mv target/$RUST_TARGET/release/deqp-runner /deqp-runner
 
     cargo uninstall --locked  \
         --root /usr/local \
         cargo-ndk
-
-    popd
-    rm -rf deqp-runner-git
-    popd
 fi
+
+popd
+rm -rf deqp-runner-git
+popd
 
 # remove unused test runners to shrink images for the Mesa CI build (not kernel,
 # which chooses its own deqp branch)
-if [ -z "${DEQP_RUNNER_GIT_TAG}${DEQP_RUNNER_GIT_REV}" ]; then
+if [ -z "${DEQP_RUNNER_GIT_TAG:-}${DEQP_RUNNER_GIT_REV:-}" ]; then
     rm -f /usr/local/bin/igt-runner
 fi
+
+section_end deqp-runner

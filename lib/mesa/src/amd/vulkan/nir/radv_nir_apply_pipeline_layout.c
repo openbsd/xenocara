@@ -1,33 +1,19 @@
 /*
  * Copyright © 2020 Valve Corporation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
+ * SPDX-License-Identifier: MIT
  */
+#include "ac_descriptors.h"
 #include "ac_shader_util.h"
 #include "nir.h"
 #include "nir_builder.h"
+#include "radv_descriptor_set.h"
+#include "radv_device.h"
 #include "radv_nir.h"
-#include "radv_private.h"
+#include "radv_physical_device.h"
 #include "radv_shader.h"
 #include "radv_shader_args.h"
+#include "sid.h"
 
 typedef struct {
    enum amd_gfx_level gfx_level;
@@ -78,8 +64,7 @@ visit_vulkan_resource_index(nir_builder *b, apply_layout_state *state, nir_intri
    unsigned stride;
 
    nir_def *set_ptr;
-   if (layout->binding[binding].type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC ||
-       layout->binding[binding].type == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC) {
+   if (vk_descriptor_type_is_dynamic(layout->binding[binding].type)) {
       unsigned idx = state->layout->set[desc_set].dynamic_offset_start + layout->binding[binding].dynamic_offset_offset;
       set_ptr = get_scalar_arg(b, 1, state->args->ac.push_constants);
       offset = state->layout->push_constant_size + idx * 16;
@@ -153,20 +138,11 @@ visit_load_vulkan_descriptor(nir_builder *b, apply_layout_state *state, nir_intr
 static nir_def *
 load_inline_buffer_descriptor(nir_builder *b, apply_layout_state *state, nir_def *rsrc)
 {
-   uint32_t desc_type = S_008F0C_DST_SEL_X(V_008F0C_SQ_SEL_X) | S_008F0C_DST_SEL_Y(V_008F0C_SQ_SEL_Y) |
-                        S_008F0C_DST_SEL_Z(V_008F0C_SQ_SEL_Z) | S_008F0C_DST_SEL_W(V_008F0C_SQ_SEL_W);
-   if (state->gfx_level >= GFX11) {
-      desc_type |= S_008F0C_FORMAT(V_008F0C_GFX11_FORMAT_32_FLOAT) | S_008F0C_OOB_SELECT(V_008F0C_OOB_SELECT_RAW);
-   } else if (state->gfx_level >= GFX10) {
-      desc_type |= S_008F0C_FORMAT(V_008F0C_GFX10_FORMAT_32_FLOAT) | S_008F0C_OOB_SELECT(V_008F0C_OOB_SELECT_RAW) |
-                   S_008F0C_RESOURCE_LEVEL(1);
-   } else {
-      desc_type |=
-         S_008F0C_NUM_FORMAT(V_008F0C_BUF_NUM_FORMAT_FLOAT) | S_008F0C_DATA_FORMAT(V_008F0C_BUF_DATA_FORMAT_32);
-   }
+   uint32_t desc[4];
 
-   return nir_vec4(b, rsrc, nir_imm_int(b, S_008F04_BASE_ADDRESS_HI(state->address32_hi)), nir_imm_int(b, 0xffffffff),
-                   nir_imm_int(b, desc_type));
+   ac_build_raw_buffer_descriptor(state->gfx_level, (uint64_t)state->address32_hi << 32, 0xffffffff, desc);
+
+   return nir_vec4(b, rsrc, nir_imm_int(b, desc[1]), nir_imm_int(b, desc[2]), nir_imm_int(b, desc[3]));
 }
 
 static nir_def *
@@ -211,8 +187,7 @@ visit_get_ssbo_size(nir_builder *b, apply_layout_state *state, nir_intrinsic_ins
       size = nir_channel(b, desc, 2);
    }
 
-   nir_def_rewrite_uses(&intrin->def, size);
-   nir_instr_remove(&intrin->instr);
+   nir_def_replace(&intrin->def, size);
 }
 
 static nir_def *
@@ -233,16 +208,14 @@ get_sampler_desc(nir_builder *b, apply_layout_state *state, nir_deref_instr *der
     * index or if all samplers in the array are the same. Note that indexing is forbidden with
     * embedded samplers.
     */
-   if (desc_type == AC_DESC_SAMPLER && binding->immutable_samplers_offset &&
-       (!indirect || binding->immutable_samplers_equal)) {
+   if (desc_type == AC_DESC_SAMPLER && binding->immutable_samplers_offset && !indirect) {
       unsigned constant_index = 0;
-      if (!binding->immutable_samplers_equal) {
-         while (deref->deref_type != nir_deref_type_var) {
-            assert(deref->deref_type == nir_deref_type_array);
-            unsigned array_size = MAX2(glsl_get_aoa_size(deref->type), 1);
-            constant_index += nir_src_as_uint(deref->arr.index) * array_size;
-            deref = nir_deref_instr_parent(deref);
-         }
+
+      while (deref->deref_type != nir_deref_type_var) {
+         assert(deref->deref_type == nir_deref_type_array);
+         unsigned array_size = MAX2(glsl_get_aoa_size(deref->type), 1);
+         constant_index += nir_src_as_uint(deref->arr.index) * array_size;
+         deref = nir_deref_instr_parent(deref);
       }
 
       uint32_t dword0_mask =
@@ -358,11 +331,80 @@ update_image_intrinsic(nir_builder *b, apply_layout_state *state, nir_intrinsic_
                                     nir_intrinsic_access(intrin) & ACCESS_NON_UNIFORM, NULL, !is_load);
 
    if (intrin->intrinsic == nir_intrinsic_image_deref_descriptor_amd) {
-      nir_def_rewrite_uses(&intrin->def, desc);
-      nir_instr_remove(&intrin->instr);
+      nir_def_replace(&intrin->def, desc);
    } else {
       nir_rewrite_image_intrinsic(intrin, desc, true);
    }
+}
+
+static bool
+can_increase_load_size(nir_intrinsic_instr *intrin, unsigned offset, unsigned old, unsigned new)
+{
+   /* Only increase the size of loads if doing so won't extend into a new page/cache-line. */
+   unsigned align_mul = MIN2(nir_intrinsic_align_mul(intrin), 64u);
+   unsigned end = (nir_intrinsic_align_offset(intrin) + offset + old) & (align_mul - 1);
+   return (new - old) <= (align_mul - end);
+}
+
+static nir_def *
+load_push_constant(nir_builder *b, apply_layout_state *state, nir_intrinsic_instr *intrin)
+{
+   unsigned base = nir_intrinsic_base(intrin);
+   unsigned bit_size = intrin->def.bit_size;
+   unsigned count = intrin->def.num_components * (bit_size / 32u);
+   assert(bit_size >= 32);
+
+   nir_def *addr = NULL;
+   nir_def *offset = NULL;
+   unsigned const_offset = -1;
+   if (nir_src_is_const(intrin->src[0]))
+      const_offset = (base + nir_src_as_uint(intrin->src[0])) / 4u;
+
+   const unsigned max_push_constant = sizeof(state->args->ac.inline_push_const_mask) * 8u;
+
+   nir_component_mask_t comps_read = nir_def_components_read(&intrin->def);
+
+   nir_def *data[NIR_MAX_VEC_COMPONENTS * 2];
+   unsigned num_loads = 0;
+   for (unsigned start = 0; start < count;) {
+      if (!(comps_read & BITFIELD64_BIT(start >> (bit_size == 64 ? 1 : 0)))) {
+         data[num_loads++] = nir_undef(b, 1, 32);
+         start += 1;
+         continue;
+      }
+
+      /* Try to use inline push constants when possible. */
+      unsigned inline_idx = const_offset + start;
+      if (const_offset != -1 && inline_idx < max_push_constant &&
+          (state->args->ac.inline_push_const_mask & BITFIELD64_BIT(inline_idx))) {
+         inline_idx = util_bitcount64(state->args->ac.inline_push_const_mask & BITFIELD64_MASK(inline_idx));
+         data[num_loads++] = get_scalar_arg(b, 1, state->args->ac.inline_push_consts[inline_idx]);
+         start += 1;
+         continue;
+      }
+
+      if (!state->args->ac.push_constants.used) {
+         /* Assume this is an inlined push constant load which was expanded to include dwords which are not inlined. */
+         assert(const_offset != -1);
+         data[num_loads++] = nir_undef(b, 1, 32);
+         start += 1;
+         continue;
+      }
+
+      if (!offset) {
+         addr = get_scalar_arg(b, 1, state->args->ac.push_constants);
+         addr = convert_pointer_to_64_bit(b, state, addr);
+         offset = nir_iadd_imm_nuw(b, intrin->src[0].ssa, base);
+      }
+      unsigned size = 1 << (util_last_bit(count - start) - 1); /* Round down to power of two. */
+      /* Try to round up to power of two instead. */
+      if (size < (count - start) && can_increase_load_size(intrin, start * 4, size, size * 2))
+         size *= 2;
+
+      data[num_loads++] = nir_load_smem_amd(b, size, addr, nir_iadd_imm_nuw(b, offset, start * 4));
+      start += size;
+   }
+   return nir_extract_bits(b, data, num_loads, 0, intrin->def.num_components, bit_size);
 }
 
 static void
@@ -405,6 +447,10 @@ apply_layout_to_intrin(nir_builder *b, apply_layout_state *state, nir_intrinsic_
    case nir_intrinsic_image_deref_descriptor_amd:
       update_image_intrinsic(b, state, intrin);
       break;
+   case nir_intrinsic_load_push_constant: {
+      nir_def_replace(&intrin->def, load_push_constant(b, state, intrin));
+      break;
+   }
    default:
       break;
    }
@@ -477,8 +523,7 @@ apply_layout_to_tex(nir_builder *b, apply_layout_state *state, nir_tex_instr *te
    }
 
    if (tex->op == nir_texop_descriptor_amd) {
-      nir_def_rewrite_uses(&tex->def, image);
-      nir_instr_remove(&tex->instr);
+      nir_def_replace(&tex->def, image);
       return;
    }
 
@@ -499,19 +544,20 @@ apply_layout_to_tex(nir_builder *b, apply_layout_state *state, nir_tex_instr *te
 }
 
 void
-radv_nir_apply_pipeline_layout(nir_shader *shader, struct radv_device *device, const struct radv_shader_info *info,
-                               const struct radv_shader_args *args, const struct radv_shader_layout *layout)
+radv_nir_apply_pipeline_layout(nir_shader *shader, struct radv_device *device, const struct radv_shader_stage *stage)
 {
+   const struct radv_physical_device *pdev = radv_device_physical(device);
+   const struct radv_instance *instance = radv_physical_device_instance(pdev);
+
    apply_layout_state state = {
-      .gfx_level = device->physical_device->rad_info.gfx_level,
-      .address32_hi = device->physical_device->rad_info.address32_hi,
-      .disable_aniso_single_level = device->instance->disable_aniso_single_level,
-      .has_image_load_dcc_bug = device->physical_device->rad_info.has_image_load_dcc_bug,
-      .disable_tg4_trunc_coord =
-         !device->physical_device->rad_info.conformant_trunc_coord && !device->disable_trunc_coord,
-      .args = args,
-      .info = info,
-      .layout = layout,
+      .gfx_level = pdev->info.gfx_level,
+      .address32_hi = pdev->info.address32_hi,
+      .disable_aniso_single_level = instance->drirc.disable_aniso_single_level,
+      .has_image_load_dcc_bug = pdev->info.has_image_load_dcc_bug,
+      .disable_tg4_trunc_coord = !pdev->info.conformant_trunc_coord && !device->disable_trunc_coord,
+      .args = &stage->args,
+      .info = &stage->info,
+      .layout = &stage->layout,
    };
 
    nir_builder b;
@@ -535,6 +581,6 @@ radv_nir_apply_pipeline_layout(nir_shader *shader, struct radv_device *device, c
          }
       }
 
-      nir_metadata_preserve(function->impl, nir_metadata_block_index | nir_metadata_dominance);
+      nir_metadata_preserve(function->impl, nir_metadata_control_flow);
    }
 }

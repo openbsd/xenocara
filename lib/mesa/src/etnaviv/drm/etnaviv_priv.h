@@ -39,6 +39,7 @@
 
 #include <xf86drm.h>
 
+#include "etna_core_info.h"
 #include "util/list.h"
 #include "util/log.h"
 #include "util/macros.h"
@@ -46,6 +47,7 @@
 #include "util/timespec.h"
 #include "util/u_atomic.h"
 #include "util/u_debug.h"
+#include "util/u_math.h"
 #include "util/vma.h"
 
 #include "etnaviv_drmif.h"
@@ -120,8 +122,7 @@ struct etna_bo {
 struct etna_gpu {
 	struct etna_device *dev;
 	uint32_t core;
-	uint32_t model;
-	uint32_t revision;
+	struct etna_core_info info;
 };
 
 struct etna_pipe {
@@ -183,8 +184,6 @@ struct etna_perfmon_signal
 	char name[64];
 };
 
-#define ALIGN(v,a) (((v) + (a) - 1) & ~((a) - 1))
-
 #define ETNA_DRM_MSGS 0x40
 extern int etna_mesa_debug;
 
@@ -212,7 +211,7 @@ extern int etna_mesa_debug;
 static inline void get_abs_timeout(struct drm_etnaviv_timespec *tv, uint64_t ns)
 {
 	struct timespec t;
-	clock_gettime(CLOCK_MONOTONIC, &t);
+	clock_gettime(ns > 200000000 ? CLOCK_MONOTONIC_COARSE : CLOCK_MONOTONIC, &t);
 	tv->tv_sec = t.tv_sec + ns / NSEC_PER_SEC;
 	tv->tv_nsec = t.tv_nsec + ns % NSEC_PER_SEC;
 	if (tv->tv_nsec >= NSEC_PER_SEC) {

@@ -88,7 +88,7 @@ panfrost_analyze_sysvals(struct panfrost_compiled_shader *ss)
  * good for the duration of the draw (transient), could last longer. Bounds are
  * not calculated.
  */
-mali_ptr
+uint64_t
 panfrost_get_index_buffer(struct panfrost_batch *batch,
                           const struct pipe_draw_info *info,
                           const struct pipe_draw_start_count_bias *draw)
@@ -99,7 +99,7 @@ panfrost_get_index_buffer(struct panfrost_batch *batch,
    if (!info->has_user_indices) {
       /* Only resources can be directly mapped */
       panfrost_batch_read_rsrc(batch, rsrc, PIPE_SHADER_VERTEX);
-      return rsrc->image.data.bo->ptr.gpu + offset;
+      return rsrc->image.data.base + offset;
    } else {
       /* Otherwise, we need to upload to transient memory */
       const uint8_t *ibuf8 = (const uint8_t *)info->index.user;
@@ -117,7 +117,7 @@ panfrost_get_index_buffer(struct panfrost_batch *batch,
  * these operations together because there are natural optimizations which
  * require them to be together. */
 
-mali_ptr
+uint64_t
 panfrost_get_index_buffer_bounded(struct panfrost_batch *batch,
                                   const struct pipe_draw_info *info,
                                   const struct pipe_draw_start_count_bias *draw,
@@ -140,7 +140,8 @@ panfrost_get_index_buffer_bounded(struct panfrost_batch *batch,
    } else if (!info->has_user_indices) {
       /* Check the cache */
       needs_indices = !panfrost_minmax_cache_get(
-         rsrc->index_cache, draw->start, draw->count, min_index, max_index);
+         rsrc->index_cache, info->index_size, draw->start, draw->count,
+         min_index, max_index);
    }
 
    if (needs_indices) {
@@ -148,7 +149,8 @@ panfrost_get_index_buffer_bounded(struct panfrost_batch *batch,
       u_vbuf_get_minmax_index(&ctx->base, info, draw, min_index, max_index);
 
       if (!info->has_user_indices)
-         panfrost_minmax_cache_add(rsrc->index_cache, draw->start, draw->count,
+         panfrost_minmax_cache_add(rsrc->index_cache, info->index_size,
+                                   draw->start, draw->count,
                                    *min_index, *max_index);
    }
 

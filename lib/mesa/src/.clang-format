@@ -57,11 +57,13 @@ ForEachMacros:
 
   - hash_table_foreach
   - hash_table_foreach_remove
+  - hash_table_u64_foreach
 
   - rb_tree_foreach
   - rb_tree_foreach_rev
   - rb_tree_foreach_rev_safe
   - rb_tree_foreach_safe
+  - uinterval_tree_foreach
 
   - set_foreach
   - set_foreach_remove
@@ -120,7 +122,9 @@ ForEachMacros:
   - nir_foreach_reg_decl
   - nir_foreach_reg_decl_safe
   - nir_foreach_reg_load
+  - nir_foreach_reg_load_safe
   - nir_foreach_reg_store
+  - nir_foreach_reg_store_safe
 
   - nir_foreach_if_use
   - nir_foreach_if_use_safe
@@ -149,6 +153,9 @@ ForEachMacros:
 
   - nir_foreach_function_impl
 
+  - nir_foreach_entrypoint
+  - nir_foreach_entrypoint_safe
+
   - nir_foreach_block_unstructured
   - nir_foreach_block_unstructured_safe
 
@@ -158,6 +165,9 @@ ForEachMacros:
   - nir_foreach_block_reverse
   - nir_foreach_block_reverse_safe
   - nir_foreach_block_safe
+
+  - nir_precomp_foreach_arg
+  - nir_precomp_foreach_variant_param
 
 # egl
   - egl_relax
@@ -182,15 +192,21 @@ ForEachMacros:
 # asahi
   - foreach_active
   - foreach_submitted
+  - hk_foreach_view
+  - hk_foreach_variant
   - AGX_BATCH_FOREACH_BO_HANDLE
   - agx_pack
+  - agx_push
   - agx_usc_pack
   - agx_ppp_push
+  - agx_ppp_push_merged
   - agx_foreach_block
+  - agx_foreach_block_safe
   - agx_foreach_block_from
   - agx_foreach_block_from_rev
   - agx_foreach_block_rev
   - agx_foreach_dest
+  - agx_foreach_dest_rev
   - agx_foreach_instr_global
   - agx_foreach_instr_global_rev
   - agx_foreach_instr_global_safe
@@ -203,115 +219,19 @@ ForEachMacros:
   - agx_foreach_instr_in_block_safe_rev
   - agx_foreach_non_phi_in_block_rev
   - agx_foreach_phi_in_block
+  - agx_foreach_phi_in_block_safe
   - agx_foreach_predecessor
   - agx_foreach_src
+  - agx_foreach_src_rev
   - agx_foreach_ssa_dest
+  - agx_foreach_ssa_dest_rev
   - agx_foreach_ssa_src
+  - agx_foreach_ssa_src_rev
   - agx_foreach_successor
+  - foreach_next_use
 
 # radv
   - PHASE
-
-# freedreno
-  - ir2_foreach_instr
-  - ir2_foreach_live_reg
-  - ir2_foreach_avail
-  - ir2_foreach_src
-  - foreach_two_lists
-  - foreach_sched_node
-  - foreach_src
-  - foreach_src_n
-  - foreach_dst
-  - foreach_dst_n
-  - ra_foreach_dst
-  - ra_foreach_src
-  - ra_foreach_src_rev
-  - foreach_ssa_use
-  - foreach_ssa_srcp_n
-  - foreach_ssa_srcp
-  - foreach_ssa_src_n
-  - foreach_ssa_src
-  - foreach_input_n
-  - foreach_input
-  - foreach_output_n
-  - foreach_output
-  - foreach_instr
-  - foreach_instr_rev
-  - foreach_instr_safe
-  - foreach_instr_from_safe
-  - foreach_block
-  - foreach_block_safe
-  - foreach_block_rev
-  - foreach_array
-  - foreach_array_safe
-  - foreach_name_n
-  - foreach_name
-  - foreach_def
-  - foreach_use
-  - foreach_interval
-  - foreach_interval_safe
-  - foreach_interval_rev
-  - foreach_interval_rev_safe
-  - foreach_batch
-  - foreach_line_in_section
-  - perf_time
-  - perf_time_ctx
-  - foreach_submit
-  - foreach_submit_safe
-
-# panfrost
-  - foreach_batch
-  - pan_pack
-  - pan_section_pack
-  - bi_foreach_block
-  - bi_foreach_block_from
-  - bi_foreach_block_from_rev
-  - bi_foreach_block_rev
-  - bi_foreach_clause_in_block
-  - bi_foreach_clause_in_block_from
-  - bi_foreach_clause_in_block_from_rev
-  - bi_foreach_clause_in_block_rev
-  - bi_foreach_clause_in_block_safe
-  - bi_foreach_dest
-  - bi_foreach_instr_and_src_in_tuple
-  - bi_foreach_instr_global
-  - bi_foreach_instr_global_rev
-  - bi_foreach_instr_global_rev_safe
-  - bi_foreach_instr_global_safe
-  - bi_foreach_instr_in_block
-  - bi_foreach_instr_in_block_from
-  - bi_foreach_instr_in_block_from_rev
-  - bi_foreach_instr_in_block_rev
-  - bi_foreach_instr_in_block_safe
-  - bi_foreach_instr_in_block_safe_rev
-  - bi_foreach_instr_in_clause
-  - bi_foreach_instr_in_clause_rev
-  - bi_foreach_instr_in_tuple
-  - bi_foreach_predecessor
-  - bi_foreach_src
-  - bi_foreach_ssa_src
-  - bi_foreach_successor
-  - mir_foreach_block
-  - mir_foreach_block_from
-  - mir_foreach_bundle_in_block
-  - mir_foreach_bundle_in_block_rev
-  - mir_foreach_instr_global
-  - mir_foreach_instr_global_safe
-  - mir_foreach_instr_in_block
-  - mir_foreach_instr_in_block_from
-  - mir_foreach_instr_in_block_from_rev
-  - mir_foreach_instr_in_block_rev
-  - mir_foreach_instr_in_block_safe
-  - mir_foreach_instr_in_block_safe_rev
-  - mir_foreach_instr_in_block_scheduled_rev
-  - mir_foreach_predecessor
-  - mir_foreach_src
-  - nodearray_dense_foreach
-  - nodearray_dense_foreach_64
-  - nodearray_sparse_foreach
-  - pan_foreach_instr_in_block_rev
-  - pan_foreach_predecessor
-  - pan_foreach_successor
 
 # Disable clang formatting by default. Drivers that use clang-format
 # inherit from this .clang-format file and re-enable formatting:

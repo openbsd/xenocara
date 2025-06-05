@@ -154,12 +154,9 @@ static void send_descriptors(SIRenderpassDataSource::TraceContext &ctx,
    sync_timestamp(ctx, device);
 }
 
-typedef void (*trace_payload_as_extra_func)(perfetto::protos::pbzero::GpuRenderStageEvent *, 
-                                            const void*);
-
 static void begin_event(struct si_ds_queue *queue, uint64_t ts_ns, enum si_ds_queue_stage stage_id)
 {
-   PERFETTO_LOG("begin event called - ts_ns=%lu", ts_ns);
+   PERFETTO_LOG("begin event called - ts_ns=%" PRIu64, ts_ns);
    uint32_t level = queue->stages[stage_id].level;
    /* If we haven't managed to calibrate the alignment between GPU and CPU
     * timestamps yet, then skip this trace, otherwise perfetto won't know
@@ -181,7 +178,7 @@ static void end_event(struct si_ds_queue *queue, uint64_t ts_ns, enum si_ds_queu
                       uint32_t submission_id, const char *app_event, const void* payload = nullptr,
                       trace_payload_as_extra_func payload_as_extra = nullptr)
 {
-   PERFETTO_LOG("end event called - ts_ns=%lu", ts_ns);
+   PERFETTO_LOG("end event called - ts_ns=%" PRIu64, ts_ns);
    struct si_ds_device *device = queue->device;
 
    /* If we haven't managed to calibrate the alignment between GPU and CPU
@@ -197,7 +194,7 @@ static void end_event(struct si_ds_queue *queue, uint64_t ts_ns, enum si_ds_queu
    uint32_t level = --queue->stages[stage_id].level;
    struct si_ds_stage *stage = &queue->stages[stage_id];
    uint64_t start_ns = stage->start_ns[level];
-   PERFETTO_LOG("end event called - start_ns=%lu ts_ns=%lu", start_ns, ts_ns);
+   PERFETTO_LOG("end event called - start_ns=%" PRIu64 " ts_ns=%" PRIu64, start_ns, ts_ns);
    if (!start_ns || start_ns > ts_ns)
       return;
 
@@ -237,7 +234,7 @@ static void end_event(struct si_ds_queue *queue, uint64_t ts_ns, enum si_ds_queu
       event->set_submission_id(submission_id);
 
       if (payload && payload_as_extra) {
-         payload_as_extra(event, payload);
+         payload_as_extra(event, payload, nullptr);
       }
    });
 
@@ -260,7 +257,8 @@ extern "C" {
 #define CREATE_DUAL_EVENT_CALLBACK(event_name, stage)                                             \
 void si_ds_begin_##event_name(struct si_ds_device *device, uint64_t ts_ns, uint16_t tp_idx,       \
                               const void *flush_data,                                             \
-                              const struct trace_si_begin_##event_name *payload)                  \
+                              const struct trace_si_begin_##event_name *payload,                  \
+                              const void *indirect_data)                                          \
 {                                                                                                 \
    const struct si_ds_flush_data *flush = (const struct si_ds_flush_data *) flush_data;           \
    begin_event(flush->queue, ts_ns, stage);                                                       \
@@ -268,7 +266,8 @@ void si_ds_begin_##event_name(struct si_ds_device *device, uint64_t ts_ns, uint1
                                                                                                   \
 void si_ds_end_##event_name(struct si_ds_device *device, uint64_t ts_ns, uint16_t tp_idx,         \
                             const void *flush_data,                                               \
-                            const struct trace_si_end_##event_name *payload)                      \
+                            const struct trace_si_end_##event_name *payload,                      \
+                            const void *indirect_data)                                            \
 {                                                                                                 \
    const struct si_ds_flush_data *flush =  (const struct si_ds_flush_data *) flush_data;          \
    end_event(flush->queue, ts_ns, stage, flush->submission_id, NULL, payload,                     \

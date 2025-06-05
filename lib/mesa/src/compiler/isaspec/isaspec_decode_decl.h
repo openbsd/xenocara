@@ -52,23 +52,6 @@ struct isa_enum {
 typedef uint64_t (*isa_expr_t)(struct decode_scope *scope);
 
 /**
- * Used by generated expr functions
- */
-uint64_t isa_decode_field(struct decode_scope *scope, const char *field_name);
-
-void isa_decode_bitset(void *out, const struct isa_bitset **bitsets, struct decode_scope *scope, bitmask_t val);
-
-/**
- * Used by generated decode functions
- */
-uint32_t isa_get_gpu_id(struct decode_scope *scope);
-
-/**
- * Allows to use gpu_id in expr functions
- */
-#define ISA_GPU_ID() isa_get_gpu_id(scope)
-
-/**
  * For bitset fields, there are some cases where we want to "remap" field
  * names, essentially allowing one to parameterize a nested bitset when
  * it resolves fields in an enclosing bitset.
@@ -102,6 +85,7 @@ struct isa_field {
 		TYPE_UOFFSET,  /* Like UINT but formated with + or omitted if ==0 */
 		TYPE_FLOAT,
 		TYPE_BOOL,
+		TYPE_BOOL_INV, /* Like BOOL but inverted */
 		TYPE_ENUM,
 
 		/* For fields that must be printed via a user-provided callback */

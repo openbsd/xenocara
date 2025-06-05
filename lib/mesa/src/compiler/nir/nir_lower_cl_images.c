@@ -84,8 +84,7 @@ nir_dedup_inline_samplers(nir_shader *nir)
    exec_list_make_empty(&inline_samplers);
 
    nir_shader_instructions_pass(nir, nir_dedup_inline_samplers_instr,
-                                nir_metadata_block_index |
-                                   nir_metadata_dominance,
+                                nir_metadata_control_flow,
                                 &inline_samplers);
 
    /* If we found any inline samplers in the instructions pass, they'll now be
@@ -161,6 +160,7 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
          assert(var->data.location > last_loc);
          last_loc = var->data.location;
          var->data.driver_location = num_samplers++;
+         var->data.binding = var->data.driver_location;
       } else {
          /* CL shouldn't have any sampled images */
          assert(!glsl_type_is_sampler(var->type));
@@ -171,12 +171,6 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
       BITSET_SET_RANGE(shader->info.samplers_used, 0, num_samplers - 1);
 
    nir_builder b = nir_builder_create(impl);
-
-   /* don't need any lowering if we can keep the derefs */
-   if (!lower_image_derefs && !lower_sampler_derefs) {
-      nir_metadata_preserve(impl, nir_metadata_all);
-      return false;
-   }
 
    bool progress = false;
    nir_foreach_block_reverse(block, impl) {
@@ -262,6 +256,18 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
             case nir_intrinsic_image_deref_atomic_swap:
             case nir_intrinsic_image_deref_size:
             case nir_intrinsic_image_deref_samples: {
+
+               /* CL_DEPTH image loads return a scalar value */
+               if (intrin->intrinsic == nir_intrinsic_image_deref_load &&
+                   intrin->def.num_components == 1) {
+                  b.cursor = nir_after_instr(&intrin->instr);
+                  intrin->num_components = 4;
+                  intrin->def.num_components = 4;
+                  nir_def *scalar = nir_channel(&b, &intrin->def, 0);
+                  nir_def_rewrite_uses_after(&intrin->def, scalar, scalar->parent_instr);
+                  progress = true;
+               }
+
                if (!lower_image_derefs)
                   break;
 
@@ -286,8 +292,7 @@ nir_lower_cl_images(nir_shader *shader, bool lower_image_derefs, bool lower_samp
    }
 
    if (progress) {
-      nir_metadata_preserve(impl, nir_metadata_block_index |
-                                     nir_metadata_dominance);
+      nir_metadata_preserve(impl, nir_metadata_control_flow);
    } else {
       nir_metadata_preserve(impl, nir_metadata_all);
    }

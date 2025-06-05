@@ -39,6 +39,26 @@ PERFETTO_TRACK_EVENT_STATIC_STORAGE();
 
 int util_perfetto_tracing_state;
 
+static uint64_t util_perfetto_unique_id = 1;
+
+static uint32_t
+clockid_to_perfetto_clock(UNUSED perfetto_clock_id clock)
+{
+#ifndef _WIN32
+   switch (clock) {
+      case CLOCK_REALTIME:         return perfetto::protos::pbzero::BUILTIN_CLOCK_REALTIME;
+      case CLOCK_REALTIME_COARSE:  return perfetto::protos::pbzero::BUILTIN_CLOCK_REALTIME_COARSE;
+      case CLOCK_MONOTONIC:        return perfetto::protos::pbzero::BUILTIN_CLOCK_MONOTONIC;
+      case CLOCK_MONOTONIC_COARSE: return perfetto::protos::pbzero::BUILTIN_CLOCK_MONOTONIC_COARSE;
+      case CLOCK_MONOTONIC_RAW:    return perfetto::protos::pbzero::BUILTIN_CLOCK_MONOTONIC_RAW;
+      case CLOCK_BOOTTIME:         return perfetto::protos::pbzero::BUILTIN_CLOCK_BOOTTIME;
+   }
+   return perfetto::protos::pbzero::BUILTIN_CLOCK_UNKNOWN;
+#else
+   return perfetto::protos::pbzero::BUILTIN_CLOCK_MONOTONIC; // perfetto always uses QueryPerformanceCounter & marks this as CLOCK_MONOTONIC on Windows
+#endif
+}
+
 static void
 util_perfetto_update_tracing_state(void)
 {
@@ -60,6 +80,59 @@ util_perfetto_trace_end(void)
    TRACE_EVENT_END(UTIL_PERFETTO_CATEGORY_DEFAULT_STR);
 
    util_perfetto_update_tracing_state();
+}
+
+void
+util_perfetto_trace_begin_flow(const char *fname, uint64_t id)
+{
+   TRACE_EVENT_BEGIN(
+      UTIL_PERFETTO_CATEGORY_DEFAULT_STR, nullptr, perfetto::Flow::ProcessScoped(id),
+      [&](perfetto::EventContext ctx) { ctx.event()->set_name(fname); });
+}
+
+void
+util_perfetto_trace_full_begin(const char *fname, uint64_t track_id, uint64_t id, perfetto_clock_id clock, uint64_t timestamp)
+{
+   TRACE_EVENT_BEGIN(
+      UTIL_PERFETTO_CATEGORY_DEFAULT_STR, nullptr, perfetto::Track(track_id),
+      perfetto::TraceTimestamp{clockid_to_perfetto_clock(clock), timestamp}, 
+      perfetto::Flow::ProcessScoped(id),
+      [&](perfetto::EventContext ctx) { ctx.event()->set_name(fname); });
+}
+
+uint64_t
+util_perfetto_new_track(const char *name)
+{
+   uint64_t track_id = util_perfetto_next_id();
+   auto track = perfetto::Track(track_id);
+   auto desc = track.Serialize();
+   desc.set_name(name);
+   perfetto::TrackEvent::SetTrackDescriptor(track, desc);
+   return track_id;
+}
+
+void
+util_perfetto_trace_full_end(const char *name, uint64_t track_id, perfetto_clock_id clock, uint64_t timestamp)
+{
+   TRACE_EVENT_END(
+      UTIL_PERFETTO_CATEGORY_DEFAULT_STR, 
+      perfetto::Track(track_id), 
+      perfetto::TraceTimestamp{clockid_to_perfetto_clock(clock), timestamp});
+
+   util_perfetto_update_tracing_state();
+}
+
+void
+util_perfetto_counter_set(const char *name, double value)
+{
+   TRACE_COUNTER(UTIL_PERFETTO_CATEGORY_DEFAULT_STR,
+                 perfetto::DynamicString(name), value);
+}
+
+uint64_t
+util_perfetto_next_id(void)
+{
+   return p_atomic_inc_return(&util_perfetto_unique_id);
 }
 
 class UtilPerfettoObserver : public perfetto::TrackEventSessionObserver {

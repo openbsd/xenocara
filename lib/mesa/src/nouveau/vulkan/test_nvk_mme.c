@@ -4,12 +4,12 @@
  */
 #include "nvk_mme.h"
 
-#include "nvk_cla097.h"
-#include "nvk_cla0c0.h"
-#include "nvk_clc397.h"
-#include "nvk_clc3c0.h"
-#include "nvk_clc597.h"
-#include "nvk_clc5c0.h"
+#include "nv_push_cla097.h"
+#include "nv_push_cla0c0.h"
+#include "nv_push_clc397.h"
+#include "nv_push_clc3c0.h"
+#include "nv_push_clc597.h"
+#include "nv_push_clc5c0.h"
 
 int main(int argc, char **argv)
 {
@@ -27,8 +27,8 @@ int main(int argc, char **argv)
    };
 
 //   nvk_test_build_all_mmes(&kepler);
-   nvk_test_build_all_mmes(&volta);
-   nvk_test_build_all_mmes(&turing);
+   nvk_test_all_mmes(&volta);
+   nvk_test_all_mmes(&turing);
 
    return 0;
 }

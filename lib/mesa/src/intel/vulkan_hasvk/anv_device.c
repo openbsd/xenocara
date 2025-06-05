@@ -54,11 +54,12 @@
 #include "vk_util.h"
 #include "vk_deferred_operation.h"
 #include "vk_drm_syncobj.h"
-#include "common/intel_defines.h"
+#include "common/i915/intel_defines.h"
+#include "common/intel_debug_identifier.h"
 #include "common/intel_uuid.h"
 #include "perf/intel_perf.h"
 
-#include "genxml/gen7_pack.h"
+#include "genxml/gen70_pack.h"
 #include "genxml/genX_bits.h"
 
 static const driOptionDescription anv_dri_options[] = {
@@ -66,16 +67,19 @@ static const driOptionDescription anv_dri_options[] = {
       DRI_CONF_ADAPTIVE_SYNC(true)
       DRI_CONF_VK_X11_OVERRIDE_MIN_IMAGE_COUNT(0)
       DRI_CONF_VK_X11_STRICT_IMAGE_COUNT(false)
+      DRI_CONF_VK_KHR_PRESENT_WAIT(false)
       DRI_CONF_VK_XWAYLAND_WAIT_READY(true)
       DRI_CONF_ANV_ASSUME_FULL_SUBGROUPS(0)
       DRI_CONF_ANV_SAMPLE_MASK_OUT_OPENGL_BEHAVIOUR(false)
       DRI_CONF_NO_16BIT(false)
+      DRI_CONF_HASVK_OVERRIDE_API_VERSION(false)
    DRI_CONF_SECTION_END
 
    DRI_CONF_SECTION_DEBUG
       DRI_CONF_ALWAYS_FLUSH_CACHE(false)
       DRI_CONF_VK_WSI_FORCE_BGRA8_UNORM_FIRST(false)
       DRI_CONF_VK_WSI_FORCE_SWAPCHAIN_TO_CURRENT_EXTENT(false)
+      DRI_CONF_VK_X11_IGNORE_SUBOPTIMAL(false)
       DRI_CONF_LIMIT_TRIG_INPUT_RANGE(false)
    DRI_CONF_SECTION_END
 
@@ -131,7 +135,7 @@ compiler_perf_log(UNUSED void *data, UNUSED unsigned *id, const char *fmt, ...)
 #define ANV_USE_WSI_PLATFORM
 #endif
 
-#ifdef ANDROID
+#ifdef ANDROID_STRICT
 #define ANV_API_VERSION VK_MAKE_VERSION(1, 1, VK_HEADER_VERSION)
 #else
 #define ANV_API_VERSION_1_3 VK_MAKE_VERSION(1, 3, VK_HEADER_VERSION)
@@ -141,7 +145,7 @@ compiler_perf_log(UNUSED void *data, UNUSED unsigned *id, const char *fmt, ...)
 VkResult anv_EnumerateInstanceVersion(
     uint32_t*                                   pApiVersion)
 {
-#ifdef ANDROID
+#ifdef ANDROID_STRICT
    *pApiVersion = ANV_API_VERSION;
 #else
    *pApiVersion = ANV_API_VERSION_1_3;
@@ -181,6 +185,9 @@ static const struct vk_instance_extension_table instance_extensions = {
    .EXT_direct_mode_display                  = true,
    .EXT_display_surface_counter              = true,
    .EXT_acquire_drm_display                  = true,
+#endif
+#ifndef VK_USE_PLATFORM_WIN32_KHR
+   .EXT_headless_surface                     = true,
 #endif
 };
 
@@ -226,10 +233,21 @@ get_device_extensions(const struct anv_physical_device *device,
       .KHR_multiview                         = true,
       .KHR_performance_query =
          !anv_use_relocations(device) && device->perf &&
-         (device->perf->i915_perf_version >= 3 ||
+         (intel_perf_has_hold_preemption(device->perf) ||
           INTEL_DEBUG(DEBUG_NO_OACONFIG)) &&
          device->use_call_secondary,
       .KHR_pipeline_executable_properties    = true,
+      /* Hide these behind dri configs for now since we cannot implement it reliably on
+       * all surfaces yet. There is no surface capability query for present wait/id,
+       * but the feature is useful enough to hide behind an opt-in mechanism for now.
+       * If the instance only enables surface extensions that unconditionally support present wait,
+       * we can also expose the extension that way. */
+      .KHR_present_id =
+         driQueryOptionb(&device->instance->dri_options, "vk_khr_present_wait") ||
+         wsi_common_vk_instance_supports_present_wait(&device->instance->vk),
+      .KHR_present_wait =
+         driQueryOptionb(&device->instance->dri_options, "vk_khr_present_wait") ||
+         wsi_common_vk_instance_supports_present_wait(&device->instance->vk),
       .KHR_push_descriptor                   = true,
       .KHR_relaxed_block_layout              = true,
       .KHR_sampler_mirror_clamp_to_edge      = true,
@@ -237,10 +255,12 @@ get_device_extensions(const struct anv_physical_device *device,
       .KHR_separate_depth_stencil_layouts    = true,
       .KHR_shader_clock                      = true,
       .KHR_shader_draw_parameters            = true,
+      .KHR_shader_expect_assume              = true,
       .KHR_shader_float16_int8               = device->info.ver >= 8 && !device->instance->no_16bit,
       .KHR_shader_float_controls             = true,
       .KHR_shader_integer_dot_product        = true,
       .KHR_shader_non_semantic_info          = true,
+      .KHR_shader_relaxed_extended_instruction = true,
       .KHR_shader_subgroup_extended_types    = device->info.ver >= 8,
       .KHR_shader_subgroup_uniform_control_flow = true,
       .KHR_shader_terminate_invocation       = true,
@@ -265,6 +285,7 @@ get_device_extensions(const struct anv_physical_device *device,
       .EXT_conditional_rendering             = device->info.verx10 >= 75,
       .EXT_custom_border_color               = device->info.ver >= 8,
       .EXT_depth_clamp_zero_one              = true,
+      .EXT_depth_clamp_control               = true,
       .EXT_depth_clip_control                = true,
       .EXT_depth_clip_enable                 = true,
 #ifdef VK_USE_PLATFORM_DISPLAY_KHR
@@ -307,6 +328,7 @@ get_device_extensions(const struct anv_physical_device *device,
       .EXT_shader_atomic_float               = true,
       .EXT_shader_demote_to_helper_invocation = true,
       .EXT_shader_module_identifier          = true,
+      .EXT_shader_replicated_composites      = true,
       .EXT_shader_subgroup_ballot            = true,
       .EXT_shader_subgroup_vote              = true,
       .EXT_shader_viewport_index_layer       = true,
@@ -316,7 +338,7 @@ get_device_extensions(const struct anv_physical_device *device,
       .EXT_transform_feedback                = true,
       .EXT_vertex_attribute_divisor          = true,
       .EXT_ycbcr_image_arrays                = true,
-#ifdef ANDROID
+#if DETECT_OS_ANDROID
       .ANDROID_external_memory_android_hardware_buffer = true,
       .ANDROID_native_buffer                 = true,
 #endif
@@ -324,7 +346,7 @@ get_device_extensions(const struct anv_physical_device *device,
       .GOOGLE_hlsl_functionality1            = true,
       .GOOGLE_user_type                      = true,
       .INTEL_performance_query               = device->perf &&
-                                               device->perf->i915_perf_version >= 3,
+                                               intel_perf_has_hold_preemption(device->perf),
       .INTEL_shader_integer_functions2       = device->info.ver >= 8,
       .EXT_multi_draw                        = true,
       .NV_compute_shader_derivatives         = true,
@@ -584,6 +606,9 @@ get_features(const struct anv_physical_device *pdevice,
       /* VK_EXT_shader_module_identifier */
       .shaderModuleIdentifier = true,
 
+      /* VK_EXT_shader_replicated_composites */
+      .shaderReplicatedComposites = true,
+
       /* VK_KHR_shader_subgroup_uniform_control_flow */
       .shaderSubgroupUniformControlFlow = true,
 
@@ -625,8 +650,23 @@ get_features(const struct anv_physical_device *pdevice,
       .primitiveTopologyListRestart = true,
       .primitiveTopologyPatchListRestart = true,
 
+      /* VK_EXT_depth_clamp_control */
+      .depthClampControl = true,
+
       /* VK_EXT_depth_clip_control */
       .depthClipControl = true,
+
+      /* VK_KHR_present_id */
+      .presentId = pdevice->vk.supported_extensions.KHR_present_id,
+
+      /* VK_KHR_present_wait */
+      .presentWait = pdevice->vk.supported_extensions.KHR_present_wait,
+
+      /* VK_KHR_shader_expect_assume */
+      .shaderExpectAssume = true,
+
+      /* VK_KHR_shader_relaxed_extended_instruction */
+      .shaderRelaxedExtendedInstruction = true,
    };
 
    /* We can't do image stores in vec4 shaders */
@@ -644,20 +684,588 @@ get_features(const struct anv_physical_device *pdevice,
       features->depthBounds = true;
 }
 
+
+#define MAX_PER_STAGE_DESCRIPTOR_UNIFORM_BUFFERS   64
+
+#define MAX_PER_STAGE_DESCRIPTOR_INPUT_ATTACHMENTS 64
+#define MAX_DESCRIPTOR_SET_INPUT_ATTACHMENTS       256
+
+#define MAX_CUSTOM_BORDER_COLORS                   4096
+
+static void
+get_properties_1_1(const struct anv_physical_device *pdevice,
+                   struct vk_properties *p)
+{
+   memcpy(p->deviceUUID, pdevice->device_uuid, VK_UUID_SIZE);
+   memcpy(p->driverUUID, pdevice->driver_uuid, VK_UUID_SIZE);
+   memset(p->deviceLUID, 0, VK_LUID_SIZE);
+   p->deviceNodeMask = 0;
+   p->deviceLUIDValid = false;
+
+   p->subgroupSize = ELK_SUBGROUP_SIZE;
+   VkShaderStageFlags scalar_stages = 0;
+   for (unsigned stage = 0; stage < MESA_SHADER_STAGES; stage++) {
+      if (pdevice->compiler->scalar_stage[stage])
+         scalar_stages |= mesa_to_vk_shader_stage(stage);
+   }
+   p->subgroupSupportedStages = scalar_stages;
+   p->subgroupSupportedOperations = VK_SUBGROUP_FEATURE_BASIC_BIT |
+                                    VK_SUBGROUP_FEATURE_VOTE_BIT |
+                                    VK_SUBGROUP_FEATURE_BALLOT_BIT |
+                                    VK_SUBGROUP_FEATURE_SHUFFLE_BIT |
+                                    VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT |
+                                    VK_SUBGROUP_FEATURE_QUAD_BIT;
+   if (pdevice->info.ver >= 8) {
+      /* TODO: There's no technical reason why these can't be made to
+       * work on gfx7 but they don't at the moment so it's best to leave
+       * the feature disabled than enabled and broken.
+       */
+      p->subgroupSupportedOperations |= VK_SUBGROUP_FEATURE_ARITHMETIC_BIT |
+                                        VK_SUBGROUP_FEATURE_CLUSTERED_BIT;
+   }
+   p->subgroupQuadOperationsInAllStages = pdevice->info.ver >= 8;
+
+   p->pointClippingBehavior      = VK_POINT_CLIPPING_BEHAVIOR_USER_CLIP_PLANES_ONLY;
+   p->maxMultiviewViewCount      = 16;
+   p->maxMultiviewInstanceIndex  = UINT32_MAX / 16;
+   p->protectedNoFault           = false;
+   /* This value doesn't matter for us today as our per-stage descriptors are
+    * the real limit.
+    */
+   p->maxPerSetDescriptors       = 1024;
+   p->maxMemoryAllocationSize    = MAX_MEMORY_ALLOCATION_SIZE;
+}
+
+static void
+get_properties_1_2(const struct anv_physical_device *pdevice,
+                   struct vk_properties *p)
+{
+   p->driverID = VK_DRIVER_ID_INTEL_OPEN_SOURCE_MESA;
+   memset(p->driverName, 0, sizeof(p->driverName));
+   snprintf(p->driverName, VK_MAX_DRIVER_NAME_SIZE,
+            "Intel open-source Mesa driver");
+   memset(p->driverInfo, 0, sizeof(p->driverInfo));
+   snprintf(p->driverInfo, VK_MAX_DRIVER_INFO_SIZE,
+            "Mesa " PACKAGE_VERSION MESA_GIT_SHA1);
+
+   /* Don't advertise conformance with a particular version if the hardware's
+    * support is incomplete/alpha.
+    */
+   if (pdevice->is_alpha) {
+      p->conformanceVersion = (VkConformanceVersion) {
+         .major = 0,
+         .minor = 0,
+         .subminor = 0,
+         .patch = 0,
+      };
+   }
+   else {
+      p->conformanceVersion = (VkConformanceVersion) {
+         .major = 1,
+         .minor = pdevice->use_softpin ? 3 : 2,
+         .subminor = 0,
+         .patch = 0,
+      };
+   }
+
+   p->denormBehaviorIndependence =
+      VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_ALL;
+   p->roundingModeIndependence =
+      VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE;
+
+   /* Broadwell does not support HF denorms and there are restrictions
+    * other gens. According to Kabylake's PRM:
+    *
+    * "math - Extended Math Function
+    * [...]
+    * Restriction : Half-float denorms are always retained."
+    */
+   p->shaderDenormFlushToZeroFloat16         = false;
+   p->shaderDenormPreserveFloat16            = pdevice->info.ver > 8;
+   p->shaderRoundingModeRTEFloat16           = true;
+   p->shaderRoundingModeRTZFloat16           = true;
+   p->shaderSignedZeroInfNanPreserveFloat16  = true;
+
+   p->shaderDenormFlushToZeroFloat32         = true;
+   p->shaderDenormPreserveFloat32            = pdevice->info.ver >= 8;
+   p->shaderRoundingModeRTEFloat32           = true;
+   p->shaderRoundingModeRTZFloat32           = true;
+   p->shaderSignedZeroInfNanPreserveFloat32  = true;
+
+   p->shaderDenormFlushToZeroFloat64         = true;
+   p->shaderDenormPreserveFloat64            = true;
+   p->shaderRoundingModeRTEFloat64           = true;
+   p->shaderRoundingModeRTZFloat64           = true;
+   p->shaderSignedZeroInfNanPreserveFloat64  = true;
+
+   /* It's a bit hard to exactly map our implementation to the limits
+    * described by Vulkan.  The bindless surface handle in the extended
+    * message descriptors is 20 bits and it's an index into the table of
+    * RENDER_SURFACE_STATE structs that starts at bindless surface base
+    * address.  This means that we can have at must 1M surface states
+    * allocated at any given time.  Since most image views take two
+    * descriptors, this means we have a limit of about 500K image views.
+    *
+    * However, since we allocate surface states at vkCreateImageView time,
+    * this means our limit is actually something on the order of 500K image
+    * views allocated at any time.  The actual limit describe by Vulkan, on
+    * the other hand, is a limit of how many you can have in a descriptor set.
+    * Assuming anyone using 1M descriptors will be using the same image view
+    * twice a bunch of times (or a bunch of null descriptors), we can safely
+    * advertise a larger limit here.
+    */
+   const unsigned max_bindless_views = 1 << 20;
+   p->maxUpdateAfterBindDescriptorsInAllPools            = max_bindless_views;
+   p->shaderUniformBufferArrayNonUniformIndexingNative   = false;
+   p->shaderSampledImageArrayNonUniformIndexingNative    = false;
+   p->shaderStorageBufferArrayNonUniformIndexingNative   = true;
+   p->shaderStorageImageArrayNonUniformIndexingNative    = false;
+   p->shaderInputAttachmentArrayNonUniformIndexingNative = false;
+   p->robustBufferAccessUpdateAfterBind                  = true;
+   p->quadDivergentImplicitLod                           = false;
+   p->maxPerStageDescriptorUpdateAfterBindSamplers       = max_bindless_views;
+   p->maxPerStageDescriptorUpdateAfterBindUniformBuffers = MAX_PER_STAGE_DESCRIPTOR_UNIFORM_BUFFERS;
+   p->maxPerStageDescriptorUpdateAfterBindStorageBuffers = UINT32_MAX;
+   p->maxPerStageDescriptorUpdateAfterBindSampledImages  = max_bindless_views;
+   p->maxPerStageDescriptorUpdateAfterBindStorageImages  = max_bindless_views;
+   p->maxPerStageDescriptorUpdateAfterBindInputAttachments = MAX_PER_STAGE_DESCRIPTOR_INPUT_ATTACHMENTS;
+   p->maxPerStageUpdateAfterBindResources                = UINT32_MAX;
+   p->maxDescriptorSetUpdateAfterBindSamplers            = max_bindless_views;
+   p->maxDescriptorSetUpdateAfterBindUniformBuffers      = 6 * MAX_PER_STAGE_DESCRIPTOR_UNIFORM_BUFFERS;
+   p->maxDescriptorSetUpdateAfterBindUniformBuffersDynamic = MAX_DYNAMIC_BUFFERS / 2;
+   p->maxDescriptorSetUpdateAfterBindStorageBuffers      = UINT32_MAX;
+   p->maxDescriptorSetUpdateAfterBindStorageBuffersDynamic = MAX_DYNAMIC_BUFFERS / 2;
+   p->maxDescriptorSetUpdateAfterBindSampledImages       = max_bindless_views;
+   p->maxDescriptorSetUpdateAfterBindStorageImages       = max_bindless_views;
+   p->maxDescriptorSetUpdateAfterBindInputAttachments    = MAX_DESCRIPTOR_SET_INPUT_ATTACHMENTS;
+
+   /* We support all of the depth resolve modes */
+   p->supportedDepthResolveModes    = VK_RESOLVE_MODE_SAMPLE_ZERO_BIT |
+                                      VK_RESOLVE_MODE_AVERAGE_BIT |
+                                      VK_RESOLVE_MODE_MIN_BIT |
+                                      VK_RESOLVE_MODE_MAX_BIT;
+   /* Average doesn't make sense for stencil so we don't support that */
+   p->supportedStencilResolveModes  = VK_RESOLVE_MODE_SAMPLE_ZERO_BIT;
+   if (pdevice->info.ver >= 8) {
+      /* The advanced stencil resolve modes currently require stencil
+       * sampling be supported by the hardware.
+       */
+      p->supportedStencilResolveModes |= VK_RESOLVE_MODE_MIN_BIT |
+                                         VK_RESOLVE_MODE_MAX_BIT;
+   }
+   p->independentResolveNone  = true;
+   p->independentResolve      = true;
+
+   p->filterMinmaxSingleComponentFormats  = false;
+   p->filterMinmaxImageComponentMapping   = false;
+
+   p->maxTimelineSemaphoreValueDifference = UINT64_MAX;
+
+   p->framebufferIntegerColorSampleCounts =
+      pdevice->info.ver == 7 ? VK_SAMPLE_COUNT_1_BIT : isl_device_get_sample_counts(&pdevice->isl_dev);
+}
+
+static void
+get_properties_1_3(const struct anv_physical_device *pdevice,
+                   struct vk_properties *p)
+{
+   p->minSubgroupSize = 8;
+   p->maxSubgroupSize = 32;
+   p->maxComputeWorkgroupSubgroups = pdevice->info.max_cs_workgroup_threads;
+   p->requiredSubgroupSizeStages = VK_SHADER_STAGE_COMPUTE_BIT;
+
+   p->maxInlineUniformBlockSize = MAX_INLINE_UNIFORM_BLOCK_SIZE;
+   p->maxPerStageDescriptorInlineUniformBlocks =
+      MAX_INLINE_UNIFORM_BLOCK_DESCRIPTORS;
+   p->maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks =
+      MAX_INLINE_UNIFORM_BLOCK_DESCRIPTORS;
+   p->maxDescriptorSetInlineUniformBlocks =
+      MAX_INLINE_UNIFORM_BLOCK_DESCRIPTORS;
+   p->maxDescriptorSetUpdateAfterBindInlineUniformBlocks =
+      MAX_INLINE_UNIFORM_BLOCK_DESCRIPTORS;
+   p->maxInlineUniformTotalSize = UINT16_MAX;
+
+   p->integerDotProduct8BitUnsignedAccelerated = false;
+   p->integerDotProduct8BitSignedAccelerated = false;
+   p->integerDotProduct8BitMixedSignednessAccelerated = false;
+   p->integerDotProduct4x8BitPackedUnsignedAccelerated = false;
+   p->integerDotProduct4x8BitPackedSignedAccelerated = false;
+   p->integerDotProduct4x8BitPackedMixedSignednessAccelerated = false;
+   p->integerDotProduct16BitUnsignedAccelerated = false;
+   p->integerDotProduct16BitSignedAccelerated = false;
+   p->integerDotProduct16BitMixedSignednessAccelerated = false;
+   p->integerDotProduct32BitUnsignedAccelerated = false;
+   p->integerDotProduct32BitSignedAccelerated = false;
+   p->integerDotProduct32BitMixedSignednessAccelerated = false;
+   p->integerDotProduct64BitUnsignedAccelerated = false;
+   p->integerDotProduct64BitSignedAccelerated = false;
+   p->integerDotProduct64BitMixedSignednessAccelerated = false;
+   p->integerDotProductAccumulatingSaturating8BitUnsignedAccelerated = false;
+   p->integerDotProductAccumulatingSaturating8BitSignedAccelerated = false;
+   p->integerDotProductAccumulatingSaturating8BitMixedSignednessAccelerated = false;
+   p->integerDotProductAccumulatingSaturating4x8BitPackedUnsignedAccelerated = false;
+   p->integerDotProductAccumulatingSaturating4x8BitPackedSignedAccelerated = false;
+   p->integerDotProductAccumulatingSaturating4x8BitPackedMixedSignednessAccelerated = false;
+   p->integerDotProductAccumulatingSaturating16BitUnsignedAccelerated = false;
+   p->integerDotProductAccumulatingSaturating16BitSignedAccelerated = false;
+   p->integerDotProductAccumulatingSaturating16BitMixedSignednessAccelerated = false;
+   p->integerDotProductAccumulatingSaturating32BitUnsignedAccelerated = false;
+   p->integerDotProductAccumulatingSaturating32BitSignedAccelerated = false;
+   p->integerDotProductAccumulatingSaturating32BitMixedSignednessAccelerated = false;
+   p->integerDotProductAccumulatingSaturating64BitUnsignedAccelerated = false;
+   p->integerDotProductAccumulatingSaturating64BitSignedAccelerated = false;
+   p->integerDotProductAccumulatingSaturating64BitMixedSignednessAccelerated = false;
+
+   /* From the SKL PRM Vol. 2d, docs for RENDER_SURFACE_STATE::Surface
+    * Base Address:
+    *
+    *    "For SURFTYPE_BUFFER non-rendertarget surfaces, this field
+    *    specifies the base address of the first element of the surface,
+    *    computed in software by adding the surface base address to the
+    *    byte offset of the element in the buffer. The base address must
+    *    be aligned to element size."
+    *
+    * The typed dataport messages require that things be texel aligned.
+    * Otherwise, we may just load/store the wrong data or, in the worst
+    * case, there may be hangs.
+    */
+   p->storageTexelBufferOffsetAlignmentBytes = 16;
+   p->storageTexelBufferOffsetSingleTexelAlignment = true;
+
+   /* The sampler, however, is much more forgiving and it can handle
+    * arbitrary byte alignment for linear and buffer surfaces.  It's
+    * hard to find a good PRM citation for this but years of empirical
+    * experience demonstrate that this is true.
+    */
+   p->uniformTexelBufferOffsetAlignmentBytes = 1;
+   p->uniformTexelBufferOffsetSingleTexelAlignment = true;
+
+   p->maxBufferSize = pdevice->isl_dev.max_buffer_size;
+}
+
+static void
+get_properties(const struct anv_physical_device *pdevice,
+               struct vk_properties *props)
+{
+   const struct intel_device_info *devinfo = &pdevice->info;
+
+   const uint32_t max_ssbos = pdevice->has_a64_buffer_access ? UINT16_MAX : 64;
+   const uint32_t max_textures = 128;
+   const uint32_t max_samplers =
+      pdevice->has_bindless_samplers ? UINT16_MAX :
+      (devinfo->verx10 >= 75) ? 128 : 16;
+   const uint32_t max_images = MAX_IMAGES;
+
+   /* If we can use bindless for everything, claim a high per-stage limit,
+    * otherwise use the binding table size, minus the slots reserved for
+    * render targets and one slot for the descriptor buffer. */
+   const uint32_t max_per_stage = MAX_BINDING_TABLE_SIZE - MAX_RTS - 1;
+
+   const uint32_t max_workgroup_size =
+      MIN2(1024, 32 * devinfo->max_cs_workgroup_threads);
+
+   VkSampleCountFlags sample_counts =
+      isl_device_get_sample_counts(&pdevice->isl_dev);
+
+   *props = (struct vk_properties) {
+#if DETECT_OS_ANDROID
+      .apiVersion = ANV_API_VERSION,
+#else
+      .apiVersion = (pdevice->use_softpin || pdevice->instance->report_vk_1_3) ? 
+         ANV_API_VERSION_1_3 : ANV_API_VERSION_1_2,
+#endif /* DETECT_OS_ANDROID */
+      .driverVersion = vk_get_driver_version(),
+      .vendorID = 0x8086,
+      .deviceID = pdevice->info.pci_device_id,
+      .deviceType = VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU,
+
+      /* Limits: */
+      .maxImageDimension1D                      = (1 << 14),
+      /* Gfx7 doesn't support 8xMSAA with depth/stencil images when their width
+       * is greater than 8192 pixels. */
+      .maxImageDimension2D                      = devinfo->ver == 7 ? (1 << 13) : (1 << 14),
+      .maxImageDimension3D                      = (1 << 11),
+      .maxImageDimensionCube                    = (1 << 14),
+      .maxImageArrayLayers                      = (1 << 11),
+      .maxTexelBufferElements                   = 128 * 1024 * 1024,
+      .maxUniformBufferRange                    = pdevice->compiler->indirect_ubos_use_sampler ? (1u << 27) : (1u << 30),
+      .maxStorageBufferRange                    = MIN2(pdevice->isl_dev.max_buffer_size, UINT32_MAX),
+      .maxPushConstantsSize                     = MAX_PUSH_CONSTANTS_SIZE,
+      .maxMemoryAllocationCount                 = UINT32_MAX,
+      .maxSamplerAllocationCount                = 64 * 1024,
+      .bufferImageGranularity                   = 1,
+      .sparseAddressSpaceSize                   = 0,
+      .maxBoundDescriptorSets                   = MAX_SETS,
+      .maxPerStageDescriptorSamplers            = max_samplers,
+      .maxPerStageDescriptorUniformBuffers      = MAX_PER_STAGE_DESCRIPTOR_UNIFORM_BUFFERS,
+      .maxPerStageDescriptorStorageBuffers      = max_ssbos,
+      .maxPerStageDescriptorSampledImages       = max_textures,
+      .maxPerStageDescriptorStorageImages       = max_images,
+      .maxPerStageDescriptorInputAttachments    = MAX_PER_STAGE_DESCRIPTOR_INPUT_ATTACHMENTS,
+      .maxPerStageResources                     = max_per_stage,
+      .maxDescriptorSetSamplers                 = 6 * max_samplers, /* number of stages * maxPerStageDescriptorSamplers */
+      .maxDescriptorSetUniformBuffers           = 6 * MAX_PER_STAGE_DESCRIPTOR_UNIFORM_BUFFERS,           /* number of stages * maxPerStageDescriptorUniformBuffers */
+      .maxDescriptorSetUniformBuffersDynamic    = MAX_DYNAMIC_BUFFERS / 2,
+      .maxDescriptorSetStorageBuffers           = 6 * max_ssbos,    /* number of stages * maxPerStageDescriptorStorageBuffers */
+      .maxDescriptorSetStorageBuffersDynamic    = MAX_DYNAMIC_BUFFERS / 2,
+      .maxDescriptorSetSampledImages            = 6 * max_textures, /* number of stages * maxPerStageDescriptorSampledImages */
+      .maxDescriptorSetStorageImages            = 6 * max_images,   /* number of stages * maxPerStageDescriptorStorageImages */
+      .maxDescriptorSetInputAttachments         = MAX_DESCRIPTOR_SET_INPUT_ATTACHMENTS,
+      .maxVertexInputAttributes                 = MAX_VES,
+      .maxVertexInputBindings                   = MAX_VBS,
+      /* Broadwell PRMs: Volume 2d: Command Reference: Structures:
+       *
+       * VERTEX_ELEMENT_STATE::Source Element Offset: [0,2047]
+       */
+      .maxVertexInputAttributeOffset            = 2047,
+      /* Broadwell PRMs: Volume 2d: Command Reference: Structures:
+       *
+       * VERTEX_BUFFER_STATE::Buffer Pitch: [0,2048]
+       *
+       * Skylake PRMs: Volume 2d: Command Reference: Structures:
+       *
+       * VERTEX_BUFFER_STATE::Buffer Pitch: [0,4095]
+       */
+      .maxVertexInputBindingStride              = devinfo->ver < 9 ? 2048 : 4095,
+      .maxVertexOutputComponents                = 128,
+      .maxTessellationGenerationLevel           = 64,
+      .maxTessellationPatchSize                 = 32,
+      .maxTessellationControlPerVertexInputComponents = 128,
+      .maxTessellationControlPerVertexOutputComponents = 128,
+      .maxTessellationControlPerPatchOutputComponents = 128,
+      .maxTessellationControlTotalOutputComponents = 2048,
+      .maxTessellationEvaluationInputComponents = 128,
+      .maxTessellationEvaluationOutputComponents = 128,
+      .maxGeometryShaderInvocations             = 32,
+      .maxGeometryInputComponents               = devinfo->ver >= 8 ? 128 : 64,
+      .maxGeometryOutputComponents              = 128,
+      .maxGeometryOutputVertices                = 256,
+      .maxGeometryTotalOutputComponents         = 1024,
+      .maxFragmentInputComponents               = 116, /* 128 components - (PSIZ, CLIP_DIST0, CLIP_DIST1) */
+      .maxFragmentOutputAttachments             = 8,
+      .maxFragmentDualSrcAttachments            = 1,
+      .maxFragmentCombinedOutputResources       = MAX_RTS + max_ssbos + max_images,
+      .maxComputeSharedMemorySize               = 64 * 1024,
+      .maxComputeWorkGroupCount                 = { 65535, 65535, 65535 },
+      .maxComputeWorkGroupInvocations           = max_workgroup_size,
+      .maxComputeWorkGroupSize = {
+         max_workgroup_size,
+         max_workgroup_size,
+         max_workgroup_size,
+      },
+      .subPixelPrecisionBits                    = 8,
+      .subTexelPrecisionBits                    = 8,
+      .mipmapPrecisionBits                      = 8,
+      .maxDrawIndexedIndexValue                 = UINT32_MAX,
+      .maxDrawIndirectCount                     = UINT32_MAX,
+      .maxSamplerLodBias                        = 16,
+      .maxSamplerAnisotropy                     = 16,
+      .maxViewports                             = MAX_VIEWPORTS,
+      .maxViewportDimensions                    = { (1 << 14), (1 << 14) },
+      .viewportBoundsRange                      = { INT16_MIN, INT16_MAX },
+      .viewportSubPixelBits                     = 13, /* We take a float? */
+      .minMemoryMapAlignment                    = 4096, /* A page */
+      /* The dataport requires texel alignment so we need to assume a worst
+       * case of R32G32B32A32 which is 16 bytes.
+       */
+      .minTexelBufferOffsetAlignment            = 16,
+      .minUniformBufferOffsetAlignment          = ANV_UBO_ALIGNMENT,
+      .minStorageBufferOffsetAlignment          = ANV_SSBO_ALIGNMENT,
+      .minTexelOffset                           = -8,
+      .maxTexelOffset                           = 7,
+      .minTexelGatherOffset                     = -32,
+      .maxTexelGatherOffset                     = 31,
+      .minInterpolationOffset                   = -0.5,
+      .maxInterpolationOffset                   = 0.4375,
+      .subPixelInterpolationOffsetBits          = 4,
+      .maxFramebufferWidth                      = (1 << 14),
+      .maxFramebufferHeight                     = (1 << 14),
+      .maxFramebufferLayers                     = (1 << 11),
+      .framebufferColorSampleCounts             = sample_counts,
+      .framebufferDepthSampleCounts             = sample_counts,
+      .framebufferStencilSampleCounts           = sample_counts,
+      .framebufferNoAttachmentsSampleCounts     = sample_counts,
+      .maxColorAttachments                      = MAX_RTS,
+      .sampledImageColorSampleCounts            = sample_counts,
+      /* Multisampling with SINT formats is not supported on gfx7 */
+      .sampledImageIntegerSampleCounts          = devinfo->ver == 7 ? VK_SAMPLE_COUNT_1_BIT : sample_counts,
+      .sampledImageDepthSampleCounts            = sample_counts,
+      .sampledImageStencilSampleCounts          = sample_counts,
+      .storageImageSampleCounts                 = VK_SAMPLE_COUNT_1_BIT,
+      .maxSampleMaskWords                       = 1,
+      .timestampComputeAndGraphics              = true,
+      .timestampPeriod                          = 1000000000.0 / devinfo->timestamp_frequency,
+      .maxClipDistances                         = 8,
+      .maxCullDistances                         = 8,
+      .maxCombinedClipAndCullDistances          = 8,
+      .discreteQueuePriorities                  = 2,
+      .pointSizeRange                           = { 0.125, 255.875 },
+      /* While SKL and up support much wider lines than we are setting here,
+       * in practice we run into conformance issues if we go past this limit.
+       * Since the Windows driver does the same, it's probably fair to assume
+       * that no one needs more than this.
+       */
+      .lineWidthRange                           = { 0.0, devinfo->ver >= 9 ? 8.0 : 7.9921875 },
+      .pointSizeGranularity                     = (1.0 / 8.0),
+      .lineWidthGranularity                     = (1.0 / 128.0),
+      .strictLines                              = false,
+      .standardSampleLocations                  = true,
+      .optimalBufferCopyOffsetAlignment         = 128,
+      .optimalBufferCopyRowPitchAlignment       = 128,
+      .nonCoherentAtomSize                      = 64,
+
+      /* Broadwell doesn't do sparse. */
+      .sparseResidencyStandard2DBlockShape = false,
+      .sparseResidencyStandard2DMultisampleBlockShape = false,
+      .sparseResidencyStandard3DBlockShape = false,
+      .sparseResidencyAlignedMipSize = false,
+      .sparseResidencyNonResidentStrict = false,
+   };
+
+   snprintf(props->deviceName, sizeof(props->deviceName),
+            "%s", pdevice->info.name);
+   memcpy(props->pipelineCacheUUID,
+          pdevice->pipeline_cache_uuid, VK_UUID_SIZE);
+
+   get_properties_1_1(pdevice, props);
+   get_properties_1_2(pdevice, props);
+   get_properties_1_3(pdevice, props);
+
+   /* VK_KHR_performance_query */
+   {
+      /* We could support this by spawning a shader to do the equation normalization. */
+      props->allowCommandBufferQueryCopies = false;
+   }
+
+   /* VK_KHR_push_descriptor */
+   {
+      props->maxPushDescriptors = MAX_PUSH_DESCRIPTORS;
+   }
+
+   /* VK_KHR_vertex_attribute_divisor */
+   {
+      /* We have to restrict this a bit for multiview */
+      props->maxVertexAttribDivisor = UINT32_MAX / 16;
+   }
+
+   /* VK_EXT_custom_border_color */
+   {
+      props->maxCustomBorderColorSamplers = MAX_CUSTOM_BORDER_COLORS;
+   }
+
+   /* VK_EXT_external_memory_host */
+   {
+      /* Userptr needs page aligned memory. */
+      props->minImportedHostPointerAlignment = 4096;
+   }
+
+   /* VK_EXT_line_rasterization */
+   {
+      /* In the Skylake PRM Vol. 7, subsection titled "GIQ (Diamond) Sampling
+       * Rules - Legacy Mode", it says the following:
+       *
+       *    "Note that the device divides a pixel into a 16x16 array of
+       *     subpixels, referenced by their upper left corners."
+       *
+       * This is the only known reference in the PRMs to the subpixel
+       * precision of line rasterization and a "16x16 array of subpixels"
+       * implies 4 subpixel precision bits. Empirical testing has shown that 4
+       * subpixel precision bits applies to all line rasterization types.
+       */
+      props->lineSubPixelPrecisionBits = 4;
+   }
+
+   /* VK_EXT_multi_draw */
+   {
+      props->maxMultiDrawCount = 2048;
+   }
+
+   /* VK_EXT_pci_bus_info */
+   {
+      props->pciDomain = pdevice->info.pci_domain;
+      props->pciBus = pdevice->info.pci_bus;
+      props->pciDevice = pdevice->info.pci_dev;
+      props->pciFunction = pdevice->info.pci_func;
+   }
+
+   /* VK_EXT_physical_device_drm */
+   {
+      props->drmHasPrimary = pdevice->has_master;
+      props->drmPrimaryMajor = pdevice->master_major;
+      props->drmPrimaryMinor = pdevice->master_minor;
+      props->drmHasRender = pdevice->has_local;
+      props->drmRenderMajor = pdevice->local_major;
+      props->drmRenderMinor = pdevice->local_minor;
+   }
+
+   /* VK_EXT_provoking_vertex */
+   {
+      props->provokingVertexModePerPipeline = true;
+      props->transformFeedbackPreservesTriangleFanProvokingVertex = false;
+   }
+
+   /* VK_EXT_robustness2 */
+   {
+      props->robustStorageBufferAccessSizeAlignment =
+         ANV_SSBO_BOUNDS_CHECK_ALIGNMENT;
+      props->robustUniformBufferAccessSizeAlignment =
+         ANV_UBO_ALIGNMENT;
+   }
+
+   /* VK_EXT_sample_locations */
+   {
+      props->sampleLocationSampleCounts =
+         isl_device_get_sample_counts(&pdevice->isl_dev);
+
+      /* See also anv_GetPhysicalDeviceMultisamplePropertiesEXT */
+      props->maxSampleLocationGridSize.width = 1;
+      props->maxSampleLocationGridSize.height = 1;
+
+      props->sampleLocationCoordinateRange[0] = 0;
+      props->sampleLocationCoordinateRange[1] = 0.9375;
+      props->sampleLocationSubPixelBits = 4;
+
+      props->variableSampleLocations = true;
+   }
+
+   /* VK_EXT_shader_module_identifier */
+   {
+      STATIC_ASSERT(sizeof(vk_shaderModuleIdentifierAlgorithmUUID) ==
+                    sizeof(props->shaderModuleIdentifierAlgorithmUUID));
+      memcpy(props->shaderModuleIdentifierAlgorithmUUID,
+             vk_shaderModuleIdentifierAlgorithmUUID,
+             sizeof(props->shaderModuleIdentifierAlgorithmUUID));
+   }
+
+   /* VK_EXT_transform_feedback */
+   {
+      props->maxTransformFeedbackStreams = MAX_XFB_STREAMS;
+      props->maxTransformFeedbackBuffers = MAX_XFB_BUFFERS;
+      props->maxTransformFeedbackBufferSize = (1ull << 32);
+      props->maxTransformFeedbackStreamDataSize = 128 * 4;
+      props->maxTransformFeedbackBufferDataSize = 128 * 4;
+      props->maxTransformFeedbackBufferDataStride = 2048;
+      props->transformFeedbackQueries = true;
+      props->transformFeedbackStreamsLinesTriangles = false;
+      props->transformFeedbackRasterizationStreamSelect = false;
+      /* This requires MI_MATH */
+      props->transformFeedbackDraw = pdevice->info.verx10 >= 75;
+   }
+
+   /* VK_ANDROID_native_buffer */
+#if DETECT_OS_ANDROID
+   {
+      props->sharedImage = VK_FALSE;
+   }
+#endif /* DETECT_OS_ANDROID */
+
+}
+
 static uint64_t
 anv_compute_sys_heap_size(struct anv_physical_device *device,
-                          uint64_t total_ram)
+                          uint64_t available_ram)
 {
-   /* We don't want to burn too much ram with the GPU.  If the user has 4GiB
-    * or less, we use at most half.  If they have more than 4GiB, we use 3/4.
-    */
-   uint64_t available_ram;
-   if (total_ram <= 4ull * 1024ull * 1024ull * 1024ull)
-      available_ram = total_ram / 2;
-   else
-      available_ram = total_ram * 3 / 4;
-
-   /* We also want to leave some padding for things we allocate in the driver,
+   /* We want to leave some padding for things we allocate in the driver,
     * so don't go over 3/4 of the GTT either.
     */
    available_ram = MIN2(available_ram, device->gtt_size * 3 / 4);
@@ -830,7 +1438,7 @@ anv_physical_device_init_disk_cache(struct anv_physical_device *device)
    _mesa_sha1_format(timestamp, device->driver_build_sha1);
 
    const uint64_t driver_flags =
-      brw_get_compiler_config_value(device->compiler);
+      elk_get_compiler_config_value(device->compiler);
    device->vk.disk_cache = disk_cache_create(renderer, timestamp, driver_flags);
 #endif
 }
@@ -874,12 +1482,12 @@ anv_override_engine_counts(int *gc_count, int *g_count, int *c_count)
    int gc_override = -1;
    int g_override = -1;
    int c_override = -1;
-   char *env = getenv("ANV_QUEUE_OVERRIDE");
+   const char *env_ = os_get_option("ANV_QUEUE_OVERRIDE");
 
-   if (env == NULL)
+   if (env_ == NULL)
       return;
 
-   env = strdup(env);
+   char *env = strdup(env_);
    char *save = NULL;
    char *next = strtok_r(env, ",", &save);
    while (next != NULL) {
@@ -983,7 +1591,7 @@ anv_physical_device_try_create(struct vk_instance *vk_instance,
    int fd;
    int master_fd = -1;
 
-   brw_process_intel_debug_variable();
+   process_intel_debug_variable();
 
    fd = open(path, O_RDWR | O_CLOEXEC);
    if (fd < 0) {
@@ -996,8 +1604,8 @@ anv_physical_device_try_create(struct vk_instance *vk_instance,
    }
 
    struct intel_device_info devinfo;
-   if (!intel_get_device_info_from_fd(fd, &devinfo)) {
-      result = vk_error(instance, VK_ERROR_INCOMPATIBLE_DRIVER);
+   if (!intel_get_device_info_from_fd(fd, &devinfo, 7, 8)) {
+      result = VK_ERROR_INCOMPATIBLE_DRIVER;
       goto fail_fd;
    }
 
@@ -1187,7 +1795,7 @@ anv_physical_device_try_create(struct vk_instance *vk_instance,
    device->always_flush_cache = INTEL_DEBUG(DEBUG_STALL) ||
       driQueryOptionb(&instance->dri_options, "always_flush_cache");
 
-   device->compiler = brw_compiler_create(NULL, &device->info);
+   device->compiler = elk_compiler_create(NULL, &device->info);
    if (device->compiler == NULL) {
       result = vk_error(instance, VK_ERROR_OUT_OF_HOST_MEMORY);
       goto fail_base;
@@ -1197,7 +1805,6 @@ anv_physical_device_try_create(struct vk_instance *vk_instance,
    device->compiler->constant_buffer_0_is_relative =
       device->info.ver < 8 || !device->info.has_context_isolation;
    device->compiler->supports_shader_constants = true;
-   device->compiler->indirect_ubos_use_sampler = device->info.ver < 12;
 
    isl_device_init(&device->isl_dev, &device->info);
 
@@ -1226,19 +1833,7 @@ anv_physical_device_try_create(struct vk_instance *vk_instance,
 
    anv_physical_device_init_perf(device, fd);
 
-   get_device_extensions(device, &device->vk.supported_extensions);
-   get_features(device, &device->vk.supported_features);
-
-   result = anv_init_wsi(device);
-   if (result != VK_SUCCESS)
-      goto fail_perf;
-
-   anv_measure_device_init(device);
-
-   anv_genX(&device->info, init_physical_device_state)(device);
-
-   *out = &device->vk;
-
+   /* Gather major/minor before WSI. */
    struct stat st;
 
    if (stat(primary_path, &st) == 0) {
@@ -1261,10 +1856,24 @@ anv_physical_device_try_create(struct vk_instance *vk_instance,
       device->local_minor = 0;
    }
 
+   get_device_extensions(device, &device->vk.supported_extensions);
+   get_features(device, &device->vk.supported_features);
+   get_properties(device, &device->vk.properties);
+
+   result = anv_init_wsi(device);
+   if (result != VK_SUCCESS)
+      goto fail_perf;
+
+   anv_measure_device_init(device);
+
+   anv_genX(&device->info, init_physical_device_state)(device);
+
+   *out = &device->vk;
+
    return VK_SUCCESS;
 
 fail_perf:
-   ralloc_free(device->perf);
+   intel_perf_free(device->perf);
    free(device->engine_info);
    anv_physical_device_free_disk_cache(device);
 fail_compiler:
@@ -1291,7 +1900,7 @@ anv_physical_device_destroy(struct vk_physical_device *vk_device)
    free(device->engine_info);
    anv_physical_device_free_disk_cache(device);
    ralloc_free(device->compiler);
-   ralloc_free(device->perf);
+   intel_perf_free(device->perf);
    close(device->local_fd);
    if (device->master_fd >= 0)
       close(device->master_fd);
@@ -1333,6 +1942,8 @@ anv_init_dri_options(struct anv_instance *instance)
             driQueryOptionf(&instance->dri_options, "lower_depth_range_rate");
     instance->no_16bit =
             driQueryOptionb(&instance->dri_options, "no_16bit");
+    instance->report_vk_1_3 =
+            driQueryOptionb(&instance->dri_options, "hasvk_report_vk_1_3_version");
 }
 
 VkResult anv_CreateInstance(
@@ -1396,663 +2007,6 @@ void anv_DestroyInstance(
 
    vk_instance_finish(&instance->vk);
    vk_free(&instance->vk.alloc, instance);
-}
-
-#define MAX_PER_STAGE_DESCRIPTOR_UNIFORM_BUFFERS   64
-
-#define MAX_PER_STAGE_DESCRIPTOR_INPUT_ATTACHMENTS 64
-#define MAX_DESCRIPTOR_SET_INPUT_ATTACHMENTS       256
-
-#define MAX_CUSTOM_BORDER_COLORS                   4096
-
-void anv_GetPhysicalDeviceProperties(
-    VkPhysicalDevice                            physicalDevice,
-    VkPhysicalDeviceProperties*                 pProperties)
-{
-   ANV_FROM_HANDLE(anv_physical_device, pdevice, physicalDevice);
-   const struct intel_device_info *devinfo = &pdevice->info;
-
-   const uint32_t max_ssbos = pdevice->has_a64_buffer_access ? UINT16_MAX : 64;
-   const uint32_t max_textures = 128;
-   const uint32_t max_samplers =
-      pdevice->has_bindless_samplers ? UINT16_MAX :
-      (devinfo->verx10 >= 75) ? 128 : 16;
-   const uint32_t max_images = MAX_IMAGES;
-
-   /* If we can use bindless for everything, claim a high per-stage limit,
-    * otherwise use the binding table size, minus the slots reserved for
-    * render targets and one slot for the descriptor buffer. */
-   const uint32_t max_per_stage = MAX_BINDING_TABLE_SIZE - MAX_RTS - 1;
-
-   const uint32_t max_workgroup_size =
-      MIN2(1024, 32 * devinfo->max_cs_workgroup_threads);
-
-   VkSampleCountFlags sample_counts =
-      isl_device_get_sample_counts(&pdevice->isl_dev);
-
-
-   VkPhysicalDeviceLimits limits = {
-      .maxImageDimension1D                      = (1 << 14),
-      /* Gfx7 doesn't support 8xMSAA with depth/stencil images when their width
-       * is greater than 8192 pixels. */
-      .maxImageDimension2D                      = devinfo->ver == 7 ? (1 << 13) : (1 << 14),
-      .maxImageDimension3D                      = (1 << 11),
-      .maxImageDimensionCube                    = (1 << 14),
-      .maxImageArrayLayers                      = (1 << 11),
-      .maxTexelBufferElements                   = 128 * 1024 * 1024,
-      .maxUniformBufferRange                    = pdevice->compiler->indirect_ubos_use_sampler ? (1u << 27) : (1u << 30),
-      .maxStorageBufferRange                    = MIN2(pdevice->isl_dev.max_buffer_size, UINT32_MAX),
-      .maxPushConstantsSize                     = MAX_PUSH_CONSTANTS_SIZE,
-      .maxMemoryAllocationCount                 = UINT32_MAX,
-      .maxSamplerAllocationCount                = 64 * 1024,
-      .bufferImageGranularity                   = 1,
-      .sparseAddressSpaceSize                   = 0,
-      .maxBoundDescriptorSets                   = MAX_SETS,
-      .maxPerStageDescriptorSamplers            = max_samplers,
-      .maxPerStageDescriptorUniformBuffers      = MAX_PER_STAGE_DESCRIPTOR_UNIFORM_BUFFERS,
-      .maxPerStageDescriptorStorageBuffers      = max_ssbos,
-      .maxPerStageDescriptorSampledImages       = max_textures,
-      .maxPerStageDescriptorStorageImages       = max_images,
-      .maxPerStageDescriptorInputAttachments    = MAX_PER_STAGE_DESCRIPTOR_INPUT_ATTACHMENTS,
-      .maxPerStageResources                     = max_per_stage,
-      .maxDescriptorSetSamplers                 = 6 * max_samplers, /* number of stages * maxPerStageDescriptorSamplers */
-      .maxDescriptorSetUniformBuffers           = 6 * MAX_PER_STAGE_DESCRIPTOR_UNIFORM_BUFFERS,           /* number of stages * maxPerStageDescriptorUniformBuffers */
-      .maxDescriptorSetUniformBuffersDynamic    = MAX_DYNAMIC_BUFFERS / 2,
-      .maxDescriptorSetStorageBuffers           = 6 * max_ssbos,    /* number of stages * maxPerStageDescriptorStorageBuffers */
-      .maxDescriptorSetStorageBuffersDynamic    = MAX_DYNAMIC_BUFFERS / 2,
-      .maxDescriptorSetSampledImages            = 6 * max_textures, /* number of stages * maxPerStageDescriptorSampledImages */
-      .maxDescriptorSetStorageImages            = 6 * max_images,   /* number of stages * maxPerStageDescriptorStorageImages */
-      .maxDescriptorSetInputAttachments         = MAX_DESCRIPTOR_SET_INPUT_ATTACHMENTS,
-      .maxVertexInputAttributes                 = MAX_VES,
-      .maxVertexInputBindings                   = MAX_VBS,
-      /* Broadwell PRMs: Volume 2d: Command Reference: Structures:
-       *
-       * VERTEX_ELEMENT_STATE::Source Element Offset: [0,2047]
-       */
-      .maxVertexInputAttributeOffset            = 2047,
-      /* Broadwell PRMs: Volume 2d: Command Reference: Structures:
-       *
-       * VERTEX_BUFFER_STATE::Buffer Pitch: [0,2048]
-       *
-       * Skylake PRMs: Volume 2d: Command Reference: Structures:
-       *
-       * VERTEX_BUFFER_STATE::Buffer Pitch: [0,4095]
-       */
-      .maxVertexInputBindingStride              = devinfo->ver < 9 ? 2048 : 4095,
-      .maxVertexOutputComponents                = 128,
-      .maxTessellationGenerationLevel           = 64,
-      .maxTessellationPatchSize                 = 32,
-      .maxTessellationControlPerVertexInputComponents = 128,
-      .maxTessellationControlPerVertexOutputComponents = 128,
-      .maxTessellationControlPerPatchOutputComponents = 128,
-      .maxTessellationControlTotalOutputComponents = 2048,
-      .maxTessellationEvaluationInputComponents = 128,
-      .maxTessellationEvaluationOutputComponents = 128,
-      .maxGeometryShaderInvocations             = 32,
-      .maxGeometryInputComponents               = devinfo->ver >= 8 ? 128 : 64,
-      .maxGeometryOutputComponents              = 128,
-      .maxGeometryOutputVertices                = 256,
-      .maxGeometryTotalOutputComponents         = 1024,
-      .maxFragmentInputComponents               = 116, /* 128 components - (PSIZ, CLIP_DIST0, CLIP_DIST1) */
-      .maxFragmentOutputAttachments             = 8,
-      .maxFragmentDualSrcAttachments            = 1,
-      .maxFragmentCombinedOutputResources       = MAX_RTS + max_ssbos + max_images,
-      .maxComputeSharedMemorySize               = 64 * 1024,
-      .maxComputeWorkGroupCount                 = { 65535, 65535, 65535 },
-      .maxComputeWorkGroupInvocations           = max_workgroup_size,
-      .maxComputeWorkGroupSize = {
-         max_workgroup_size,
-         max_workgroup_size,
-         max_workgroup_size,
-      },
-      .subPixelPrecisionBits                    = 8,
-      .subTexelPrecisionBits                    = 8,
-      .mipmapPrecisionBits                      = 8,
-      .maxDrawIndexedIndexValue                 = UINT32_MAX,
-      .maxDrawIndirectCount                     = UINT32_MAX,
-      .maxSamplerLodBias                        = 16,
-      .maxSamplerAnisotropy                     = 16,
-      .maxViewports                             = MAX_VIEWPORTS,
-      .maxViewportDimensions                    = { (1 << 14), (1 << 14) },
-      .viewportBoundsRange                      = { INT16_MIN, INT16_MAX },
-      .viewportSubPixelBits                     = 13, /* We take a float? */
-      .minMemoryMapAlignment                    = 4096, /* A page */
-      /* The dataport requires texel alignment so we need to assume a worst
-       * case of R32G32B32A32 which is 16 bytes.
-       */
-      .minTexelBufferOffsetAlignment            = 16,
-      .minUniformBufferOffsetAlignment          = ANV_UBO_ALIGNMENT,
-      .minStorageBufferOffsetAlignment          = ANV_SSBO_ALIGNMENT,
-      .minTexelOffset                           = -8,
-      .maxTexelOffset                           = 7,
-      .minTexelGatherOffset                     = -32,
-      .maxTexelGatherOffset                     = 31,
-      .minInterpolationOffset                   = -0.5,
-      .maxInterpolationOffset                   = 0.4375,
-      .subPixelInterpolationOffsetBits          = 4,
-      .maxFramebufferWidth                      = (1 << 14),
-      .maxFramebufferHeight                     = (1 << 14),
-      .maxFramebufferLayers                     = (1 << 11),
-      .framebufferColorSampleCounts             = sample_counts,
-      .framebufferDepthSampleCounts             = sample_counts,
-      .framebufferStencilSampleCounts           = sample_counts,
-      .framebufferNoAttachmentsSampleCounts     = sample_counts,
-      .maxColorAttachments                      = MAX_RTS,
-      .sampledImageColorSampleCounts            = sample_counts,
-      /* Multisampling with SINT formats is not supported on gfx7 */
-      .sampledImageIntegerSampleCounts          = devinfo->ver == 7 ? VK_SAMPLE_COUNT_1_BIT : sample_counts,
-      .sampledImageDepthSampleCounts            = sample_counts,
-      .sampledImageStencilSampleCounts          = sample_counts,
-      .storageImageSampleCounts                 = VK_SAMPLE_COUNT_1_BIT,
-      .maxSampleMaskWords                       = 1,
-      .timestampComputeAndGraphics              = true,
-      .timestampPeriod                          = 1000000000.0 / devinfo->timestamp_frequency,
-      .maxClipDistances                         = 8,
-      .maxCullDistances                         = 8,
-      .maxCombinedClipAndCullDistances          = 8,
-      .discreteQueuePriorities                  = 2,
-      .pointSizeRange                           = { 0.125, 255.875 },
-      /* While SKL and up support much wider lines than we are setting here,
-       * in practice we run into conformance issues if we go past this limit.
-       * Since the Windows driver does the same, it's probably fair to assume
-       * that no one needs more than this.
-       */
-      .lineWidthRange                           = { 0.0, devinfo->ver >= 9 ? 8.0 : 7.9921875 },
-      .pointSizeGranularity                     = (1.0 / 8.0),
-      .lineWidthGranularity                     = (1.0 / 128.0),
-      .strictLines                              = false,
-      .standardSampleLocations                  = true,
-      .optimalBufferCopyOffsetAlignment         = 128,
-      .optimalBufferCopyRowPitchAlignment       = 128,
-      .nonCoherentAtomSize                      = 64,
-   };
-
-   *pProperties = (VkPhysicalDeviceProperties) {
-#ifdef ANDROID
-      .apiVersion = ANV_API_VERSION,
-#else
-      .apiVersion = pdevice->use_softpin ? ANV_API_VERSION_1_3 : ANV_API_VERSION_1_2,
-#endif
-      .driverVersion = vk_get_driver_version(),
-      .vendorID = 0x8086,
-      .deviceID = pdevice->info.pci_device_id,
-      .deviceType = VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU,
-      .limits = limits,
-      .sparseProperties = {0}, /* Broadwell doesn't do sparse. */
-   };
-
-   snprintf(pProperties->deviceName, sizeof(pProperties->deviceName),
-            "%s", pdevice->info.name);
-   memcpy(pProperties->pipelineCacheUUID,
-          pdevice->pipeline_cache_uuid, VK_UUID_SIZE);
-}
-
-static void
-anv_get_physical_device_properties_1_1(struct anv_physical_device *pdevice,
-                                       VkPhysicalDeviceVulkan11Properties *p)
-{
-   assert(p->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES);
-
-   memcpy(p->deviceUUID, pdevice->device_uuid, VK_UUID_SIZE);
-   memcpy(p->driverUUID, pdevice->driver_uuid, VK_UUID_SIZE);
-   memset(p->deviceLUID, 0, VK_LUID_SIZE);
-   p->deviceNodeMask = 0;
-   p->deviceLUIDValid = false;
-
-   p->subgroupSize = BRW_SUBGROUP_SIZE;
-   VkShaderStageFlags scalar_stages = 0;
-   for (unsigned stage = 0; stage < MESA_SHADER_STAGES; stage++) {
-      if (pdevice->compiler->scalar_stage[stage])
-         scalar_stages |= mesa_to_vk_shader_stage(stage);
-   }
-   p->subgroupSupportedStages = scalar_stages;
-   p->subgroupSupportedOperations = VK_SUBGROUP_FEATURE_BASIC_BIT |
-                                    VK_SUBGROUP_FEATURE_VOTE_BIT |
-                                    VK_SUBGROUP_FEATURE_BALLOT_BIT |
-                                    VK_SUBGROUP_FEATURE_SHUFFLE_BIT |
-                                    VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT |
-                                    VK_SUBGROUP_FEATURE_QUAD_BIT;
-   if (pdevice->info.ver >= 8) {
-      /* TODO: There's no technical reason why these can't be made to
-       * work on gfx7 but they don't at the moment so it's best to leave
-       * the feature disabled than enabled and broken.
-       */
-      p->subgroupSupportedOperations |= VK_SUBGROUP_FEATURE_ARITHMETIC_BIT |
-                                        VK_SUBGROUP_FEATURE_CLUSTERED_BIT;
-   }
-   p->subgroupQuadOperationsInAllStages = pdevice->info.ver >= 8;
-
-   p->pointClippingBehavior      = VK_POINT_CLIPPING_BEHAVIOR_USER_CLIP_PLANES_ONLY;
-   p->maxMultiviewViewCount      = 16;
-   p->maxMultiviewInstanceIndex  = UINT32_MAX / 16;
-   p->protectedNoFault           = false;
-   /* This value doesn't matter for us today as our per-stage descriptors are
-    * the real limit.
-    */
-   p->maxPerSetDescriptors       = 1024;
-   p->maxMemoryAllocationSize    = MAX_MEMORY_ALLOCATION_SIZE;
-}
-
-static void
-anv_get_physical_device_properties_1_2(struct anv_physical_device *pdevice,
-                                       VkPhysicalDeviceVulkan12Properties *p)
-{
-   assert(p->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES);
-
-   p->driverID = VK_DRIVER_ID_INTEL_OPEN_SOURCE_MESA;
-   memset(p->driverName, 0, sizeof(p->driverName));
-   snprintf(p->driverName, VK_MAX_DRIVER_NAME_SIZE,
-            "Intel open-source Mesa driver");
-   memset(p->driverInfo, 0, sizeof(p->driverInfo));
-   snprintf(p->driverInfo, VK_MAX_DRIVER_INFO_SIZE,
-            "Mesa " PACKAGE_VERSION MESA_GIT_SHA1);
-
-   /* Don't advertise conformance with a particular version if the hardware's
-    * support is incomplete/alpha.
-    */
-   if (pdevice->is_alpha) {
-      p->conformanceVersion = (VkConformanceVersion) {
-         .major = 0,
-         .minor = 0,
-         .subminor = 0,
-         .patch = 0,
-      };
-   }
-   else {
-      p->conformanceVersion = (VkConformanceVersion) {
-         .major = 1,
-         .minor = pdevice->use_softpin ? 3 : 2,
-         .subminor = 0,
-         .patch = 0,
-      };
-   }
-
-   p->denormBehaviorIndependence =
-      VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_ALL;
-   p->roundingModeIndependence =
-      VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_NONE;
-
-   /* Broadwell does not support HF denorms and there are restrictions
-    * other gens. According to Kabylake's PRM:
-    *
-    * "math - Extended Math Function
-    * [...]
-    * Restriction : Half-float denorms are always retained."
-    */
-   p->shaderDenormFlushToZeroFloat16         = false;
-   p->shaderDenormPreserveFloat16            = pdevice->info.ver > 8;
-   p->shaderRoundingModeRTEFloat16           = true;
-   p->shaderRoundingModeRTZFloat16           = true;
-   p->shaderSignedZeroInfNanPreserveFloat16  = true;
-
-   p->shaderDenormFlushToZeroFloat32         = true;
-   p->shaderDenormPreserveFloat32            = pdevice->info.ver >= 8;
-   p->shaderRoundingModeRTEFloat32           = true;
-   p->shaderRoundingModeRTZFloat32           = true;
-   p->shaderSignedZeroInfNanPreserveFloat32  = true;
-
-   p->shaderDenormFlushToZeroFloat64         = true;
-   p->shaderDenormPreserveFloat64            = true;
-   p->shaderRoundingModeRTEFloat64           = true;
-   p->shaderRoundingModeRTZFloat64           = true;
-   p->shaderSignedZeroInfNanPreserveFloat64  = true;
-
-   /* It's a bit hard to exactly map our implementation to the limits
-    * described by Vulkan.  The bindless surface handle in the extended
-    * message descriptors is 20 bits and it's an index into the table of
-    * RENDER_SURFACE_STATE structs that starts at bindless surface base
-    * address.  This means that we can have at must 1M surface states
-    * allocated at any given time.  Since most image views take two
-    * descriptors, this means we have a limit of about 500K image views.
-    *
-    * However, since we allocate surface states at vkCreateImageView time,
-    * this means our limit is actually something on the order of 500K image
-    * views allocated at any time.  The actual limit describe by Vulkan, on
-    * the other hand, is a limit of how many you can have in a descriptor set.
-    * Assuming anyone using 1M descriptors will be using the same image view
-    * twice a bunch of times (or a bunch of null descriptors), we can safely
-    * advertise a larger limit here.
-    */
-   const unsigned max_bindless_views = 1 << 20;
-   p->maxUpdateAfterBindDescriptorsInAllPools            = max_bindless_views;
-   p->shaderUniformBufferArrayNonUniformIndexingNative   = false;
-   p->shaderSampledImageArrayNonUniformIndexingNative    = false;
-   p->shaderStorageBufferArrayNonUniformIndexingNative   = true;
-   p->shaderStorageImageArrayNonUniformIndexingNative    = false;
-   p->shaderInputAttachmentArrayNonUniformIndexingNative = false;
-   p->robustBufferAccessUpdateAfterBind                  = true;
-   p->quadDivergentImplicitLod                           = false;
-   p->maxPerStageDescriptorUpdateAfterBindSamplers       = max_bindless_views;
-   p->maxPerStageDescriptorUpdateAfterBindUniformBuffers = MAX_PER_STAGE_DESCRIPTOR_UNIFORM_BUFFERS;
-   p->maxPerStageDescriptorUpdateAfterBindStorageBuffers = UINT32_MAX;
-   p->maxPerStageDescriptorUpdateAfterBindSampledImages  = max_bindless_views;
-   p->maxPerStageDescriptorUpdateAfterBindStorageImages  = max_bindless_views;
-   p->maxPerStageDescriptorUpdateAfterBindInputAttachments = MAX_PER_STAGE_DESCRIPTOR_INPUT_ATTACHMENTS;
-   p->maxPerStageUpdateAfterBindResources                = UINT32_MAX;
-   p->maxDescriptorSetUpdateAfterBindSamplers            = max_bindless_views;
-   p->maxDescriptorSetUpdateAfterBindUniformBuffers      = 6 * MAX_PER_STAGE_DESCRIPTOR_UNIFORM_BUFFERS;
-   p->maxDescriptorSetUpdateAfterBindUniformBuffersDynamic = MAX_DYNAMIC_BUFFERS / 2;
-   p->maxDescriptorSetUpdateAfterBindStorageBuffers      = UINT32_MAX;
-   p->maxDescriptorSetUpdateAfterBindStorageBuffersDynamic = MAX_DYNAMIC_BUFFERS / 2;
-   p->maxDescriptorSetUpdateAfterBindSampledImages       = max_bindless_views;
-   p->maxDescriptorSetUpdateAfterBindStorageImages       = max_bindless_views;
-   p->maxDescriptorSetUpdateAfterBindInputAttachments    = MAX_DESCRIPTOR_SET_INPUT_ATTACHMENTS;
-
-   /* We support all of the depth resolve modes */
-   p->supportedDepthResolveModes    = VK_RESOLVE_MODE_SAMPLE_ZERO_BIT |
-                                      VK_RESOLVE_MODE_AVERAGE_BIT |
-                                      VK_RESOLVE_MODE_MIN_BIT |
-                                      VK_RESOLVE_MODE_MAX_BIT;
-   /* Average doesn't make sense for stencil so we don't support that */
-   p->supportedStencilResolveModes  = VK_RESOLVE_MODE_SAMPLE_ZERO_BIT;
-   if (pdevice->info.ver >= 8) {
-      /* The advanced stencil resolve modes currently require stencil
-       * sampling be supported by the hardware.
-       */
-      p->supportedStencilResolveModes |= VK_RESOLVE_MODE_MIN_BIT |
-                                         VK_RESOLVE_MODE_MAX_BIT;
-   }
-   p->independentResolveNone  = true;
-   p->independentResolve      = true;
-
-   p->filterMinmaxSingleComponentFormats  = false;
-   p->filterMinmaxImageComponentMapping   = false;
-
-   p->maxTimelineSemaphoreValueDifference = UINT64_MAX;
-
-   p->framebufferIntegerColorSampleCounts =
-      pdevice->info.ver == 7 ? VK_SAMPLE_COUNT_1_BIT : isl_device_get_sample_counts(&pdevice->isl_dev);
-}
-
-static void
-anv_get_physical_device_properties_1_3(struct anv_physical_device *pdevice,
-                                       VkPhysicalDeviceVulkan13Properties *p)
-{
-   assert(p->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES);
-
-   p->minSubgroupSize = 8;
-   p->maxSubgroupSize = 32;
-   p->maxComputeWorkgroupSubgroups = pdevice->info.max_cs_workgroup_threads;
-   p->requiredSubgroupSizeStages = VK_SHADER_STAGE_COMPUTE_BIT;
-
-   p->maxInlineUniformBlockSize = MAX_INLINE_UNIFORM_BLOCK_SIZE;
-   p->maxPerStageDescriptorInlineUniformBlocks =
-      MAX_INLINE_UNIFORM_BLOCK_DESCRIPTORS;
-   p->maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks =
-      MAX_INLINE_UNIFORM_BLOCK_DESCRIPTORS;
-   p->maxDescriptorSetInlineUniformBlocks =
-      MAX_INLINE_UNIFORM_BLOCK_DESCRIPTORS;
-   p->maxDescriptorSetUpdateAfterBindInlineUniformBlocks =
-      MAX_INLINE_UNIFORM_BLOCK_DESCRIPTORS;
-   p->maxInlineUniformTotalSize = UINT16_MAX;
-
-   p->integerDotProduct8BitUnsignedAccelerated = false;
-   p->integerDotProduct8BitSignedAccelerated = false;
-   p->integerDotProduct8BitMixedSignednessAccelerated = false;
-   p->integerDotProduct4x8BitPackedUnsignedAccelerated = false;
-   p->integerDotProduct4x8BitPackedSignedAccelerated = false;
-   p->integerDotProduct4x8BitPackedMixedSignednessAccelerated = false;
-   p->integerDotProduct16BitUnsignedAccelerated = false;
-   p->integerDotProduct16BitSignedAccelerated = false;
-   p->integerDotProduct16BitMixedSignednessAccelerated = false;
-   p->integerDotProduct32BitUnsignedAccelerated = false;
-   p->integerDotProduct32BitSignedAccelerated = false;
-   p->integerDotProduct32BitMixedSignednessAccelerated = false;
-   p->integerDotProduct64BitUnsignedAccelerated = false;
-   p->integerDotProduct64BitSignedAccelerated = false;
-   p->integerDotProduct64BitMixedSignednessAccelerated = false;
-   p->integerDotProductAccumulatingSaturating8BitUnsignedAccelerated = false;
-   p->integerDotProductAccumulatingSaturating8BitSignedAccelerated = false;
-   p->integerDotProductAccumulatingSaturating8BitMixedSignednessAccelerated = false;
-   p->integerDotProductAccumulatingSaturating4x8BitPackedUnsignedAccelerated = false;
-   p->integerDotProductAccumulatingSaturating4x8BitPackedSignedAccelerated = false;
-   p->integerDotProductAccumulatingSaturating4x8BitPackedMixedSignednessAccelerated = false;
-   p->integerDotProductAccumulatingSaturating16BitUnsignedAccelerated = false;
-   p->integerDotProductAccumulatingSaturating16BitSignedAccelerated = false;
-   p->integerDotProductAccumulatingSaturating16BitMixedSignednessAccelerated = false;
-   p->integerDotProductAccumulatingSaturating32BitUnsignedAccelerated = false;
-   p->integerDotProductAccumulatingSaturating32BitSignedAccelerated = false;
-   p->integerDotProductAccumulatingSaturating32BitMixedSignednessAccelerated = false;
-   p->integerDotProductAccumulatingSaturating64BitUnsignedAccelerated = false;
-   p->integerDotProductAccumulatingSaturating64BitSignedAccelerated = false;
-   p->integerDotProductAccumulatingSaturating64BitMixedSignednessAccelerated = false;
-
-   /* From the SKL PRM Vol. 2d, docs for RENDER_SURFACE_STATE::Surface
-    * Base Address:
-    *
-    *    "For SURFTYPE_BUFFER non-rendertarget surfaces, this field
-    *    specifies the base address of the first element of the surface,
-    *    computed in software by adding the surface base address to the
-    *    byte offset of the element in the buffer. The base address must
-    *    be aligned to element size."
-    *
-    * The typed dataport messages require that things be texel aligned.
-    * Otherwise, we may just load/store the wrong data or, in the worst
-    * case, there may be hangs.
-    */
-   p->storageTexelBufferOffsetAlignmentBytes = 16;
-   p->storageTexelBufferOffsetSingleTexelAlignment = true;
-
-   /* The sampler, however, is much more forgiving and it can handle
-    * arbitrary byte alignment for linear and buffer surfaces.  It's
-    * hard to find a good PRM citation for this but years of empirical
-    * experience demonstrate that this is true.
-    */
-   p->uniformTexelBufferOffsetAlignmentBytes = 1;
-   p->uniformTexelBufferOffsetSingleTexelAlignment = true;
-
-   p->maxBufferSize = pdevice->isl_dev.max_buffer_size;
-}
-
-void anv_GetPhysicalDeviceProperties2(
-    VkPhysicalDevice                            physicalDevice,
-    VkPhysicalDeviceProperties2*                pProperties)
-{
-   ANV_FROM_HANDLE(anv_physical_device, pdevice, physicalDevice);
-
-   anv_GetPhysicalDeviceProperties(physicalDevice, &pProperties->properties);
-
-   VkPhysicalDeviceVulkan11Properties core_1_1 = {
-      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES,
-   };
-   anv_get_physical_device_properties_1_1(pdevice, &core_1_1);
-
-   VkPhysicalDeviceVulkan12Properties core_1_2 = {
-      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES,
-   };
-   anv_get_physical_device_properties_1_2(pdevice, &core_1_2);
-
-   VkPhysicalDeviceVulkan13Properties core_1_3 = {
-      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES,
-   };
-   anv_get_physical_device_properties_1_3(pdevice, &core_1_3);
-
-   vk_foreach_struct(ext, pProperties->pNext) {
-      if (vk_get_physical_device_core_1_1_property_ext(ext, &core_1_1))
-         continue;
-      if (vk_get_physical_device_core_1_2_property_ext(ext, &core_1_2))
-         continue;
-      if (vk_get_physical_device_core_1_3_property_ext(ext, &core_1_3))
-         continue;
-
-      switch (ext->sType) {
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_PROPERTIES_EXT: {
-         VkPhysicalDeviceCustomBorderColorPropertiesEXT *properties =
-            (VkPhysicalDeviceCustomBorderColorPropertiesEXT *)ext;
-         properties->maxCustomBorderColorSamplers = MAX_CUSTOM_BORDER_COLORS;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRM_PROPERTIES_EXT: {
-         VkPhysicalDeviceDrmPropertiesEXT *props =
-            (VkPhysicalDeviceDrmPropertiesEXT *)ext;
-
-         props->hasPrimary = pdevice->has_master;
-         props->primaryMajor = pdevice->master_major;
-         props->primaryMinor = pdevice->master_minor;
-
-         props->hasRender = pdevice->has_local;
-         props->renderMajor = pdevice->local_major;
-         props->renderMinor = pdevice->local_minor;
-
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT: {
-         VkPhysicalDeviceExternalMemoryHostPropertiesEXT *props =
-            (VkPhysicalDeviceExternalMemoryHostPropertiesEXT *) ext;
-         /* Userptr needs page aligned memory. */
-         props->minImportedHostPointerAlignment = 4096;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_PROPERTIES_EXT: {
-         VkPhysicalDeviceLineRasterizationPropertiesEXT *props =
-            (VkPhysicalDeviceLineRasterizationPropertiesEXT *)ext;
-         /* In the Skylake PRM Vol. 7, subsection titled "GIQ (Diamond)
-          * Sampling Rules - Legacy Mode", it says the following:
-          *
-          *    "Note that the device divides a pixel into a 16x16 array of
-          *    subpixels, referenced by their upper left corners."
-          *
-          * This is the only known reference in the PRMs to the subpixel
-          * precision of line rasterization and a "16x16 array of subpixels"
-          * implies 4 subpixel precision bits.  Empirical testing has shown
-          * that 4 subpixel precision bits applies to all line rasterization
-          * types.
-          */
-         props->lineSubPixelPrecisionBits = 4;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES: {
-         VkPhysicalDeviceMaintenance4Properties *properties =
-            (VkPhysicalDeviceMaintenance4Properties *)ext;
-         properties->maxBufferSize = pdevice->isl_dev.max_buffer_size;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PCI_BUS_INFO_PROPERTIES_EXT: {
-         VkPhysicalDevicePCIBusInfoPropertiesEXT *properties =
-            (VkPhysicalDevicePCIBusInfoPropertiesEXT *)ext;
-         properties->pciDomain = pdevice->info.pci_domain;
-         properties->pciBus = pdevice->info.pci_bus;
-         properties->pciDevice = pdevice->info.pci_dev;
-         properties->pciFunction = pdevice->info.pci_func;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PERFORMANCE_QUERY_PROPERTIES_KHR: {
-         VkPhysicalDevicePerformanceQueryPropertiesKHR *properties =
-            (VkPhysicalDevicePerformanceQueryPropertiesKHR *)ext;
-         /* We could support this by spawning a shader to do the equation
-          * normalization.
-          */
-         properties->allowCommandBufferQueryCopies = false;
-         break;
-      }
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch"
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENTATION_PROPERTIES_ANDROID: {
-         VkPhysicalDevicePresentationPropertiesANDROID *props =
-            (VkPhysicalDevicePresentationPropertiesANDROID *)ext;
-         props->sharedImage = VK_FALSE;
-         break;
-      }
-#pragma GCC diagnostic pop
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROVOKING_VERTEX_PROPERTIES_EXT: {
-         VkPhysicalDeviceProvokingVertexPropertiesEXT *properties =
-            (VkPhysicalDeviceProvokingVertexPropertiesEXT *)ext;
-         properties->provokingVertexModePerPipeline = true;
-         properties->transformFeedbackPreservesTriangleFanProvokingVertex = false;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES_KHR: {
-         VkPhysicalDevicePushDescriptorPropertiesKHR *properties =
-            (VkPhysicalDevicePushDescriptorPropertiesKHR *) ext;
-         properties->maxPushDescriptors = MAX_PUSH_DESCRIPTORS;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT: {
-         VkPhysicalDeviceRobustness2PropertiesEXT *properties = (void *)ext;
-         properties->robustStorageBufferAccessSizeAlignment =
-            ANV_SSBO_BOUNDS_CHECK_ALIGNMENT;
-         properties->robustUniformBufferAccessSizeAlignment =
-            ANV_UBO_ALIGNMENT;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLE_LOCATIONS_PROPERTIES_EXT: {
-         VkPhysicalDeviceSampleLocationsPropertiesEXT *props =
-            (VkPhysicalDeviceSampleLocationsPropertiesEXT *)ext;
-
-         props->sampleLocationSampleCounts =
-            isl_device_get_sample_counts(&pdevice->isl_dev);
-
-         /* See also anv_GetPhysicalDeviceMultisamplePropertiesEXT */
-         props->maxSampleLocationGridSize.width = 1;
-         props->maxSampleLocationGridSize.height = 1;
-
-         props->sampleLocationCoordinateRange[0] = 0;
-         props->sampleLocationCoordinateRange[1] = 0.9375;
-         props->sampleLocationSubPixelBits = 4;
-
-         props->variableSampleLocations = true;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_PROPERTIES_EXT: {
-         VkPhysicalDeviceShaderModuleIdentifierPropertiesEXT *props =
-            (VkPhysicalDeviceShaderModuleIdentifierPropertiesEXT *)ext;
-         STATIC_ASSERT(sizeof(vk_shaderModuleIdentifierAlgorithmUUID) ==
-                       sizeof(props->shaderModuleIdentifierAlgorithmUUID));
-         memcpy(props->shaderModuleIdentifierAlgorithmUUID,
-                vk_shaderModuleIdentifierAlgorithmUUID,
-                sizeof(props->shaderModuleIdentifierAlgorithmUUID));
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_PROPERTIES_EXT: {
-         VkPhysicalDeviceTransformFeedbackPropertiesEXT *props =
-            (VkPhysicalDeviceTransformFeedbackPropertiesEXT *)ext;
-
-         props->maxTransformFeedbackStreams = MAX_XFB_STREAMS;
-         props->maxTransformFeedbackBuffers = MAX_XFB_BUFFERS;
-         props->maxTransformFeedbackBufferSize = (1ull << 32);
-         props->maxTransformFeedbackStreamDataSize = 128 * 4;
-         props->maxTransformFeedbackBufferDataSize = 128 * 4;
-         props->maxTransformFeedbackBufferDataStride = 2048;
-         props->transformFeedbackQueries = true;
-         props->transformFeedbackStreamsLinesTriangles = false;
-         props->transformFeedbackRasterizationStreamSelect = false;
-         /* This requires MI_MATH */
-         props->transformFeedbackDraw = pdevice->info.verx10 >= 75;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_PROPERTIES_EXT: {
-         VkPhysicalDeviceVertexAttributeDivisorPropertiesEXT *props =
-            (VkPhysicalDeviceVertexAttributeDivisorPropertiesEXT *)ext;
-         /* We have to restrict this a bit for multiview */
-         props->maxVertexAttribDivisor = UINT32_MAX / 16;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTI_DRAW_PROPERTIES_EXT: {
-         VkPhysicalDeviceMultiDrawPropertiesEXT *props = (VkPhysicalDeviceMultiDrawPropertiesEXT *)ext;
-         props->maxMultiDrawCount = 2048;
-         break;
-      }
-
-      default:
-         anv_debug_ignored_stype(ext->sType);
-         break;
-      }
-   }
 }
 
 static int
@@ -2121,7 +2075,7 @@ void anv_GetPhysicalDeviceQueueFamilyProperties2(
             }
 
             default:
-               anv_debug_ignored_stype(ext->sType);
+               vk_debug_ignored_stype(ext->sType);
             }
          }
       }
@@ -2223,7 +2177,7 @@ void anv_GetPhysicalDeviceMemoryProperties2(
          anv_get_memory_budget(physicalDevice, (void*)ext);
          break;
       default:
-         anv_debug_ignored_stype(ext->sType);
+         vk_debug_ignored_stype(ext->sType);
          break;
       }
    }
@@ -2245,32 +2199,10 @@ PFN_vkVoidFunction anv_GetInstanceProcAddr(
 PUBLIC
 VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_icdGetInstanceProcAddr(
     VkInstance                                  instance,
-    const char*                                 pName);
-
-PUBLIC
-VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_icdGetInstanceProcAddr(
-    VkInstance                                  instance,
     const char*                                 pName)
 {
    return anv_GetInstanceProcAddr(instance, pName);
 }
-
-/* With version 4+ of the loader interface the ICD should expose
- * vk_icdGetPhysicalDeviceProcAddr()
- */
-PUBLIC
-VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_icdGetPhysicalDeviceProcAddr(
-    VkInstance  _instance,
-    const char* pName);
-
-PFN_vkVoidFunction vk_icdGetPhysicalDeviceProcAddr(
-    VkInstance  _instance,
-    const char* pName)
-{
-   ANV_FROM_HANDLE(anv_instance, instance, _instance);
-   return vk_instance_get_physical_device_proc_addr(&instance->vk, pName);
-}
-
 static struct anv_state
 anv_state_pool_emit_data(struct anv_state_pool *pool, size_t size, size_t align, const void *p)
 {
@@ -2400,6 +2332,20 @@ decode_get_bo(void *v_batch, bool ppgtt, uint64_t address)
 }
 
 static VkResult anv_device_check_status(struct vk_device *vk_device);
+
+static VkResult anv_device_get_timestamp(struct vk_device *vk_device, uint64_t *timestamp)
+{
+   struct anv_device *device = container_of(vk_device, struct anv_device, vk);
+
+   if (!intel_gem_read_render_timestamp(device->fd,
+                                        device->info->kmd_type,
+                                        timestamp)) {
+      return vk_device_set_lost(&device->vk,
+                                "Failed to read the TIMESTAMP register: %m");
+   }
+
+   return VK_SUCCESS;
+}
 
 static VkResult
 anv_device_setup_context(struct anv_device *device,
@@ -2533,11 +2479,11 @@ VkResult anv_CreateDevice(
    if (INTEL_DEBUG(DEBUG_BATCH)) {
       const unsigned decode_flags = INTEL_BATCH_DECODE_DEFAULT_FLAGS;
 
-      intel_batch_decode_ctx_init(&device->decoder_ctx,
-                                  &physical_device->compiler->isa,
-                                  &physical_device->info,
-                                  stderr, decode_flags, NULL,
-                                  decode_get_bo, NULL, device);
+      intel_batch_decode_ctx_init_elk(&device->decoder_ctx,
+                                      &physical_device->compiler->isa,
+                                      &physical_device->info,
+                                      stderr, decode_flags, NULL,
+                                      decode_get_bo, NULL, device);
 
       device->decoder_ctx.dynamic_base = DYNAMIC_STATE_POOL_MIN_ADDRESS;
       device->decoder_ctx.surface_base = SURFACE_STATE_POOL_MIN_ADDRESS;
@@ -2556,6 +2502,7 @@ VkResult anv_CreateDevice(
 
    device->vk.command_buffer_ops = &anv_cmd_buffer_ops;
    device->vk.check_status = anv_device_check_status;
+   device->vk.get_timestamp = anv_device_get_timestamp;
    device->vk.create_sync_for_memory = anv_create_sync_for_memory;
    vk_device_set_drm_fd(&device->vk, device->fd);
 
@@ -3111,7 +3058,7 @@ VkResult anv_AllocateMemory(
             /* this isn't a real enum value,
              * so use conditional to avoid compiler warn
              */
-            anv_debug_ignored_stype(ext->sType);
+            vk_debug_ignored_stype(ext->sType);
          break;
       }
    }
@@ -3356,7 +3303,7 @@ void anv_FreeMemory(
 
    anv_device_release_bo(device, mem->bo);
 
-#if defined(ANDROID) && ANDROID_API_LEVEL >= 26
+#if DETECT_OS_ANDROID && ANDROID_API_LEVEL >= 26
    if (mem->ahw)
       AHardwareBuffer_release(mem->ahw);
 #endif
@@ -3718,7 +3665,7 @@ anv_get_buffer_memory_requirements(struct anv_device *device,
       }
 
       default:
-         anv_debug_ignored_stype(ext->sType);
+         vk_debug_ignored_stype(ext->sType);
          break;
       }
    }
@@ -3738,7 +3685,7 @@ void anv_GetBufferMemoryRequirements2(
                                       pMemoryRequirements);
 }
 
-void anv_GetDeviceBufferMemoryRequirementsKHR(
+void anv_GetDeviceBufferMemoryRequirements(
     VkDevice                                    _device,
     const VkDeviceBufferMemoryRequirements*     pInfo,
     VkMemoryRequirements2*                      pMemoryRequirements)
@@ -3867,31 +3814,6 @@ void anv_DestroySampler(
    vk_object_free(&device->vk, pAllocator, sampler);
 }
 
-static const VkTimeDomainEXT anv_time_domains[] = {
-   VK_TIME_DOMAIN_DEVICE_EXT,
-   VK_TIME_DOMAIN_CLOCK_MONOTONIC_EXT,
-#ifdef CLOCK_MONOTONIC_RAW
-   VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_EXT,
-#endif
-};
-
-VkResult anv_GetPhysicalDeviceCalibrateableTimeDomainsEXT(
-   VkPhysicalDevice                             physicalDevice,
-   uint32_t                                     *pTimeDomainCount,
-   VkTimeDomainEXT                              *pTimeDomains)
-{
-   int d;
-   VK_OUTARRAY_MAKE_TYPED(VkTimeDomainEXT, out, pTimeDomains, pTimeDomainCount);
-
-   for (d = 0; d < ARRAY_SIZE(anv_time_domains); d++) {
-      vk_outarray_append_typed(VkTimeDomainEXT, &out, i) {
-         *i = anv_time_domains[d];
-      }
-   }
-
-   return vk_outarray_status(&out);
-}
-
 static uint64_t
 anv_clock_gettime(clockid_t clock_id)
 {
@@ -3907,101 +3829,6 @@ anv_clock_gettime(clockid_t clock_id)
       return 0;
 
    return (uint64_t) current.tv_sec * 1000000000ULL + current.tv_nsec;
-}
-
-VkResult anv_GetCalibratedTimestampsEXT(
-   VkDevice                                     _device,
-   uint32_t                                     timestampCount,
-   const VkCalibratedTimestampInfoEXT           *pTimestampInfos,
-   uint64_t                                     *pTimestamps,
-   uint64_t                                     *pMaxDeviation)
-{
-   ANV_FROM_HANDLE(anv_device, device, _device);
-   uint64_t timestamp_frequency = device->info->timestamp_frequency;
-   int d;
-   uint64_t begin, end;
-   uint64_t max_clock_period = 0;
-
-#ifdef CLOCK_MONOTONIC_RAW
-   begin = anv_clock_gettime(CLOCK_MONOTONIC_RAW);
-#else
-   begin = anv_clock_gettime(CLOCK_MONOTONIC);
-#endif
-
-   for (d = 0; d < timestampCount; d++) {
-      switch (pTimestampInfos[d].timeDomain) {
-      case VK_TIME_DOMAIN_DEVICE_EXT:
-         if (!intel_gem_read_render_timestamp(device->fd,
-                                              device->info->kmd_type,
-                                              &pTimestamps[d])) {
-            return vk_device_set_lost(&device->vk, "Failed to read the "
-                                      "TIMESTAMP register: %m");
-         }
-         uint64_t device_period = DIV_ROUND_UP(1000000000, timestamp_frequency);
-         max_clock_period = MAX2(max_clock_period, device_period);
-         break;
-      case VK_TIME_DOMAIN_CLOCK_MONOTONIC_EXT:
-         pTimestamps[d] = anv_clock_gettime(CLOCK_MONOTONIC);
-         max_clock_period = MAX2(max_clock_period, 1);
-         break;
-
-#ifdef CLOCK_MONOTONIC_RAW
-      case VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_EXT:
-         pTimestamps[d] = begin;
-         break;
-#endif
-      default:
-         pTimestamps[d] = 0;
-         break;
-      }
-   }
-
-#ifdef CLOCK_MONOTONIC_RAW
-   end = anv_clock_gettime(CLOCK_MONOTONIC_RAW);
-#else
-   end = anv_clock_gettime(CLOCK_MONOTONIC);
-#endif
-
-    /*
-     * The maximum deviation is the sum of the interval over which we
-     * perform the sampling and the maximum period of any sampled
-     * clock. That's because the maximum skew between any two sampled
-     * clock edges is when the sampled clock with the largest period is
-     * sampled at the end of that period but right at the beginning of the
-     * sampling interval and some other clock is sampled right at the
-     * beginning of its sampling period and right at the end of the
-     * sampling interval. Let's assume the GPU has the longest clock
-     * period and that the application is sampling GPU and monotonic:
-     *
-     *                               s                 e
-     *			 w x y z 0 1 2 3 4 5 6 7 8 9 a b c d e f
-     *	Raw              -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-     *
-     *                               g
-     *		  0         1         2         3
-     *	GPU       -----_____-----_____-----_____-----_____
-     *
-     *                                                m
-     *					    x y z 0 1 2 3 4 5 6 7 8 9 a b c
-     *	Monotonic                           -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-     *
-     *	Interval                     <----------------->
-     *	Deviation           <-------------------------->
-     *
-     *		s  = read(raw)       2
-     *		g  = read(GPU)       1
-     *		m  = read(monotonic) 2
-     *		e  = read(raw)       b
-     *
-     * We round the sample interval up by one tick to cover sampling error
-     * in the interval clock
-     */
-
-   uint64_t sample_interval = end - begin + 1;
-
-   *pMaxDeviation = sample_interval + max_clock_period;
-
-   return VK_SUCCESS;
 }
 
 void anv_GetPhysicalDeviceMultisamplePropertiesEXT(
@@ -4025,58 +3852,5 @@ void anv_GetPhysicalDeviceMultisamplePropertiesEXT(
    pMultisampleProperties->maxSampleLocationGridSize = grid_size;
 
    vk_foreach_struct(ext, pMultisampleProperties->pNext)
-      anv_debug_ignored_stype(ext->sType);
-}
-
-/* vk_icd.h does not declare this function, so we declare it here to
- * suppress Wmissing-prototypes.
- */
-PUBLIC VKAPI_ATTR VkResult VKAPI_CALL
-vk_icdNegotiateLoaderICDInterfaceVersion(uint32_t* pSupportedVersion);
-
-PUBLIC VKAPI_ATTR VkResult VKAPI_CALL
-vk_icdNegotiateLoaderICDInterfaceVersion(uint32_t* pSupportedVersion)
-{
-   /* For the full details on loader interface versioning, see
-    * <https://github.com/KhronosGroup/Vulkan-LoaderAndValidationLayers/blob/master/loader/LoaderAndLayerInterface.md>.
-    * What follows is a condensed summary, to help you navigate the large and
-    * confusing official doc.
-    *
-    *   - Loader interface v0 is incompatible with later versions. We don't
-    *     support it.
-    *
-    *   - In loader interface v1:
-    *       - The first ICD entrypoint called by the loader is
-    *         vk_icdGetInstanceProcAddr(). The ICD must statically expose this
-    *         entrypoint.
-    *       - The ICD must statically expose no other Vulkan symbol unless it is
-    *         linked with -Bsymbolic.
-    *       - Each dispatchable Vulkan handle created by the ICD must be
-    *         a pointer to a struct whose first member is VK_LOADER_DATA. The
-    *         ICD must initialize VK_LOADER_DATA.loadMagic to ICD_LOADER_MAGIC.
-    *       - The loader implements vkCreate{PLATFORM}SurfaceKHR() and
-    *         vkDestroySurfaceKHR(). The ICD must be capable of working with
-    *         such loader-managed surfaces.
-    *
-    *    - Loader interface v2 differs from v1 in:
-    *       - The first ICD entrypoint called by the loader is
-    *         vk_icdNegotiateLoaderICDInterfaceVersion(). The ICD must
-    *         statically expose this entrypoint.
-    *
-    *    - Loader interface v3 differs from v2 in:
-    *        - The ICD must implement vkCreate{PLATFORM}SurfaceKHR(),
-    *          vkDestroySurfaceKHR(), and other API which uses VKSurfaceKHR,
-    *          because the loader no longer does so.
-    *
-    *    - Loader interface v4 differs from v3 in:
-    *        - The ICD must implement vk_icdGetPhysicalDeviceProcAddr().
-    *
-    *    - Loader interface v5 differs from v4 in:
-    *        - The ICD must support Vulkan API version 1.1 and must not return
-    *          VK_ERROR_INCOMPATIBLE_DRIVER from vkCreateInstance() unless a
-    *          Vulkan Loader with interface v4 or smaller is being used and the
-    *          application provides an API version that is greater than 1.0.
-    */
-   *pSupportedVersion = MIN2(*pSupportedVersion, 5u);
-   return VK_SUCCESS;
+      vk_debug_ignored_stype(ext->sType);
 }

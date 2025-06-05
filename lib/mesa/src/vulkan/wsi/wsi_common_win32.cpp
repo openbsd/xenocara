@@ -112,7 +112,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL
 wsi_GetPhysicalDeviceWin32PresentationSupportKHR(VkPhysicalDevice physicalDevice,
                                                  uint32_t queueFamilyIndex)
 {
-   return true;
+   VK_FROM_HANDLE(vk_physical_device, pdevice, physicalDevice);
+   struct wsi_device *wsi_device = pdevice->wsi_device;
+   return (wsi_device->queue_supports_blit & BITFIELD64_BIT(queueFamilyIndex)) != 0;
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL
@@ -207,15 +209,10 @@ wsi_win32_surface_get_capabilities(VkIcdSurfaceBase *surf,
 
    caps->supportedCompositeAlpha =
       VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR |
-      VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
+      VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR |
+      VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR;
 
-   caps->supportedUsageFlags =
-      VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-      VK_IMAGE_USAGE_SAMPLED_BIT |
-      VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-      VK_IMAGE_USAGE_STORAGE_BIT |
-      VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-      VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+   caps->supportedUsageFlags = wsi_caps_get_image_usage();
 
    VK_FROM_HANDLE(vk_physical_device, pdevice, wsi_device->pdevice);
    if (pdevice->supported_extensions.EXT_attachment_feedback_loop_layout)
@@ -755,6 +752,22 @@ wsi_win32_surface_create_swapchain_dxgi(
    ID3D12CommandQueue *queue =
       (ID3D12CommandQueue *)wsi->wsi->win32.get_d3d12_command_queue(device);
 
+   DXGI_ALPHA_MODE alpha_mode;
+   switch (create_info->compositeAlpha) {
+   case VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR:
+      alpha_mode = DXGI_ALPHA_MODE_IGNORE;
+      break;
+   case VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR:
+      alpha_mode = DXGI_ALPHA_MODE_PREMULTIPLIED;
+      break;
+   case VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR:
+      alpha_mode = DXGI_ALPHA_MODE_STRAIGHT;
+      break;
+   default:
+      alpha_mode = DXGI_ALPHA_MODE_UNSPECIFIED;
+      break;
+   }
+
    DXGI_SWAP_CHAIN_DESC1 desc = {
       create_info->imageExtent.width,
       create_info->imageExtent.height,
@@ -765,7 +778,7 @@ wsi_win32_surface_create_swapchain_dxgi(
       create_info->minImageCount,
       DXGI_SCALING_STRETCH,
       DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL,
-      DXGI_ALPHA_MODE_UNSPECIFIED,
+      alpha_mode,
       chain->base.present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR ?
          DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u
    };

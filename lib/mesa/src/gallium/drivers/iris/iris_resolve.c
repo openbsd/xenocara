@@ -250,6 +250,18 @@ iris_predraw_resolve_framebuffer(struct iris_context *ice,
 
          struct iris_resource *res = (void *) surf->base.texture;
 
+         /* Undocumented workaround:
+          *
+          * Disable auxiliary buffer if MSRT is bound as texture.
+          */
+         if (intel_device_info_is_dg2(devinfo) && res->surf.samples > 1 &&
+             nir->info.outputs_read != 0)
+            draw_aux_buffer_disabled[i] = true;
+
+         /* Xe2 can maintain compression if RT is bound as texture. */
+         if (devinfo->ver >= 20)
+            draw_aux_buffer_disabled[i] = false;
+
          enum isl_aux_usage aux_usage =
             iris_resource_render_aux_usage(ice, res, surf->view.format,
                                            surf->view.base_level,
@@ -500,8 +512,8 @@ iris_resolve_color(struct iris_context *ice,
    //DBG("%s to mt %p level %u layer %u\n", __func__, mt, level, layer);
 
    struct blorp_surf surf;
-   iris_blorp_surf_for_resource(&batch->screen->isl_dev, &surf,
-                                &res->base.b, res->aux.usage, level, true);
+   iris_blorp_surf_for_resource(batch, &surf, &res->base.b,
+                                res->aux.usage, level, true);
 
    iris_batch_maybe_flush(batch, 1500);
 
@@ -568,8 +580,8 @@ iris_mcs_exec(struct iris_context *ice,
    iris_batch_maybe_flush(batch, 1500);
 
    struct blorp_surf surf;
-   iris_blorp_surf_for_resource(&batch->screen->isl_dev, &surf,
-                                &res->base.b, res->aux.usage, 0, true);
+   iris_blorp_surf_for_resource(batch, &surf, &res->base.b,
+                                res->aux.usage, 0, true);
 
    /* MCS partial resolve will read from the MCS surface. */
    assert(res->aux.bo == res->bo);
@@ -583,6 +595,19 @@ iris_mcs_exec(struct iris_context *ice,
    if (op == ISL_AUX_OP_PARTIAL_RESOLVE) {
       blorp_mcs_partial_resolve(&blorp_batch, &surf, res->surf.format,
                                 start_layer, num_layers);
+   } else if (op == ISL_AUX_OP_FULL_RESOLVE) {
+      /* Simply copy compressed surface to uncompressed surface in order to do
+       * the full resolve.
+       */
+      struct blorp_surf src_surf, dst_surf;
+      iris_blorp_surf_for_resource(batch, &src_surf, &res->base.b,
+                                   res->aux.usage, 0, false);
+      iris_blorp_surf_for_resource(batch, &dst_surf, &res->base.b,
+                                   ISL_AUX_USAGE_NONE, 0, true);
+
+      blorp_copy(&blorp_batch, &src_surf, 0, 0, &dst_surf, 0, 0,
+                 0, 0, 0, 0, surf.surf->logical_level0_px.width,
+                 surf.surf->logical_level0_px.height);
    } else {
       assert(op == ISL_AUX_OP_AMBIGUATE);
       blorp_mcs_ambiguate(&blorp_batch, &surf, start_layer, num_layers);
@@ -650,8 +675,7 @@ iris_hiz_exec(struct iris_context *ice,
               struct iris_batch *batch,
               struct iris_resource *res,
               unsigned int level, unsigned int start_layer,
-              unsigned int num_layers, enum isl_aux_op op,
-              bool update_clear_depth)
+              unsigned int num_layers, enum isl_aux_op op)
 {
    ASSERTED const struct intel_device_info *devinfo = batch->screen->devinfo;
 
@@ -709,13 +733,11 @@ iris_hiz_exec(struct iris_context *ice,
    iris_batch_sync_region_start(batch);
 
    struct blorp_surf surf;
-   iris_blorp_surf_for_resource(&batch->screen->isl_dev, &surf,
-                                &res->base.b, res->aux.usage, level, true);
+   iris_blorp_surf_for_resource(batch, &surf, &res->base.b,
+                                res->aux.usage, level, true);
 
    struct blorp_batch blorp_batch;
-   enum blorp_batch_flags flags = 0;
-   flags |= update_clear_depth ? 0 : BLORP_BATCH_NO_UPDATE_CLEAR_COLOR;
-   blorp_batch_init(&ice->blorp, &blorp_batch, batch, flags);
+   blorp_batch_init(&ice->blorp, &blorp_batch, batch, 0);
    blorp_hiz_op(&blorp_batch, &surf, level, start_layer, num_layers, op);
    blorp_batch_finish(&blorp_batch);
 
@@ -889,7 +911,7 @@ iris_resource_prepare_access(struct iris_context *ice,
          } else if (isl_aux_usage_has_mcs(res->aux.usage)) {
             iris_mcs_exec(ice, batch, res, layer, 1, aux_op);
          } else if (isl_aux_usage_has_hiz(res->aux.usage)) {
-            iris_hiz_exec(ice, batch, res, level, layer, 1, aux_op, false);
+            iris_hiz_exec(ice, batch, res, level, layer, 1, aux_op);
          } else if (res->aux.usage == ISL_AUX_USAGE_STC_CCS) {
             unreachable("iris doesn't resolve STC_CCS resources");
          } else {
@@ -943,13 +965,7 @@ iris_resource_get_aux_state(const struct iris_resource *res,
                             uint32_t level, uint32_t layer)
 {
    iris_resource_check_level_layer(res, level, layer);
-
-   if (res->surf.usage & ISL_SURF_USAGE_DEPTH_BIT) {
-      assert(isl_aux_usage_has_hiz(res->aux.usage));
-   } else {
-      assert(res->surf.samples == 1 ||
-             res->surf.msaa_layout == ISL_MSAA_LAYOUT_ARRAY);
-   }
+   assert(res->aux.usage != ISL_AUX_USAGE_NONE);
 
    return res->aux.state[level][layer];
 }
@@ -969,8 +985,7 @@ iris_resource_set_aux_state(struct iris_context *ice,
       assert(iris_resource_level_has_hiz(devinfo, res, level) ||
              !isl_aux_state_has_valid_aux(aux_state));
    } else {
-      assert(res->surf.samples == 1 ||
-             res->surf.msaa_layout == ISL_MSAA_LAYOUT_ARRAY);
+      assert(res->aux.usage != ISL_AUX_USAGE_NONE);
    }
 
    for (unsigned a = 0; a < num_layers; a++) {
@@ -1138,19 +1153,13 @@ iris_resource_prepare_texture(struct iris_context *ice,
       clear_supported = false;
    }
 
-   /* On gfx11+, the sampler reads clear values stored in pixel form.  The
-    * location the sampler reads from is dependent on the bits-per-channel of
-    * the format.  Specifically, a pixel is read from the Raw Clear Color
-    * fields if the format is 32bpc.  Otherwise, it's read from the Converted
-    * Clear Color fields.  To avoid modifying the clear color, disable it if
-    * the new format points the sampler to an incompatible location.
-    *
-    * Note: although hardware looks at the bits-per-channel of the format, we
-    * only need to check the red channel's size here.  In the scope of formats
-    * supporting fast-clears, all 32bpc formats have 32-bit red channels and
-    * vice-versa.
+   /* With indirect clear colors, the sampler reads clear values stored in
+    * pixel form.  The location the sampler reads from is dependent on the
+    * bits-per-channel of the format.  Disable support for clear colors if the
+    * new format points the sampler to an incompatible location.  See
+    * isl_get_sampler_clear_field_offset() for more information.
     */
-   if (devinfo->ver >= 11 &&
+   if (res->aux.clear_color_bo &&
        isl_format_get_layout(res->surf.format)->channels.r.bits != 32 &&
        isl_format_get_layout(view_format)->channels.r.bits == 32) {
       clear_supported = false;
@@ -1197,6 +1206,51 @@ iris_render_formats_color_compatible(enum isl_format a, enum isl_format b,
    }
 
    return false;
+}
+
+void
+iris_resource_update_indirect_color(struct iris_batch *batch,
+                                    struct iris_resource *res)
+{
+   assert(res->aux.clear_color_bo);
+
+   uint32_t pixel[4] = {};
+   isl_color_value_pack(&res->aux.clear_color, res->surf.format, pixel);
+
+   iris_emit_pipe_control_write(batch, "update fast clear color (RG____)",
+                                PIPE_CONTROL_WRITE_IMMEDIATE,
+                                res->aux.clear_color_bo,
+                                res->aux.clear_color_offset,
+                                (uint64_t) res->aux.clear_color.u32[0] |
+                                (uint64_t) res->aux.clear_color.u32[1] << 32);
+
+   iris_emit_pipe_control_write(batch, "update fast clear color (__BA__)",
+                                PIPE_CONTROL_WRITE_IMMEDIATE,
+                                res->aux.clear_color_bo,
+                                res->aux.clear_color_offset + 8,
+                                (uint64_t) res->aux.clear_color.u32[2] |
+                                (uint64_t) res->aux.clear_color.u32[3] << 32);
+
+   iris_emit_pipe_control_write(batch, "update fast clear color (____PX)",
+                                PIPE_CONTROL_WRITE_IMMEDIATE,
+                                res->aux.clear_color_bo,
+                                res->aux.clear_color_offset + 16,
+                                (uint64_t) pixel[0] |
+                                (uint64_t) pixel[1] << 32);
+
+   /* From the ICL PRMs, Volume 9: Render Engine, State Caching :
+    *
+    *    "Any values referenced by pointers within the RENDER_SURFACE_STATE
+    *    [...] (e.g. Clear Color Pointer, [...]) are considered to be part of
+    *    that state and any changes to these referenced values requires an
+    *    invalidation of the L1 state cache to ensure the new values are being
+    *    used as part of the state. [...]"
+    *
+    * Invalidate the state cache as suggested.
+    */
+   iris_emit_pipe_control_flush(batch, "new clear color affects state cache",
+                                PIPE_CONTROL_FLUSH_ENABLE |
+                                PIPE_CONTROL_STATE_CACHE_INVALIDATE);
 }
 
 enum isl_aux_usage
@@ -1248,14 +1302,32 @@ iris_resource_prepare_render(struct iris_context *ice,
                              uint32_t start_layer, uint32_t layer_count,
                              enum isl_aux_usage aux_usage)
 {
-   /* If the resource's clear color is incompatible with render_format,
-    * replace it with one that is. This process keeps the aux buffer
-    * compatible with render_format and the resource's format.
+   /* Replace the resource's clear color with zero if:
+    *
+    * - The resource's clear color is incompatible with render_format. This
+    *   avoids corrupting current fast clear blocks and ensures any fast clear
+    *   blocks generated as a result of the render will be recoverable.
+    *
+    * - The clear color struct is uninitialized and potentially inconsistent
+    *   with itself. For non-32-bpc formats, the struct consists of different
+    *   fields for rendering and sampling. If rendering can generate
+    *   fast-cleared blocks, we want these to agree so that we can avoid
+    *   partially resolving prior to sampling. Images with modifiers can be
+    *   ignored. Either we will have already initialized their structs to
+    *   zero, or they will have already been consistent at the time of import
+    *   (as defined by drm_fourcc.h)
+    *
+    * The only aux usage which requires this process is FCV_CCS_E. Other aux
+    * usages share a subset of these restrictions and benefit from only some
+    * of the steps involved with changing the clear color. For now, just keep
+    * things simple and assume we have the worst case usage of FCV_CCS_E.
     */
    if (!iris_render_formats_color_compatible(render_format,
                                              res->surf.format,
                                              res->aux.clear_color,
-                                             res->aux.clear_color_unknown)) {
+                                             res->aux.clear_color_unknown) ||
+       (res->aux.clear_color_unknown && !res->mod_info &&
+        isl_format_get_layout(render_format)->channels.r.bits != 32)) {
 
       /* Remove references to the clear color with resolves. */
       iris_resource_prepare_access(ice, res, 0, INTEL_REMAINING_LEVELS, 0,
@@ -1268,28 +1340,8 @@ iris_resource_prepare_render(struct iris_context *ice,
 
       if (res->aux.clear_color_bo) {
          /* Update dwords used for rendering and sampling. */
-         iris_emit_pipe_control_write(&ice->batches[IRIS_BATCH_RENDER],
-                                      "zero fast clear color (RG____)",
-                                      PIPE_CONTROL_WRITE_IMMEDIATE,
-                                      res->aux.clear_color_bo,
-                                      res->aux.clear_color_offset, 0);
-
-         iris_emit_pipe_control_write(&ice->batches[IRIS_BATCH_RENDER],
-                                      "zero fast clear color (__BA__)",
-                                      PIPE_CONTROL_WRITE_IMMEDIATE,
-                                      res->aux.clear_color_bo,
-                                      res->aux.clear_color_offset + 8, 0);
-
-         iris_emit_pipe_control_write(&ice->batches[IRIS_BATCH_RENDER],
-                                      "zero fast clear color (____PX)",
-                                      PIPE_CONTROL_WRITE_IMMEDIATE,
-                                      res->aux.clear_color_bo,
-                                      res->aux.clear_color_offset + 16, 0);
-
-         iris_emit_pipe_control_flush(&ice->batches[IRIS_BATCH_RENDER],
-                                      "new clear color affects state cache",
-                                      PIPE_CONTROL_FLUSH_ENABLE |
-                                      PIPE_CONTROL_STATE_CACHE_INVALIDATE);
+         struct iris_batch *batch = &ice->batches[IRIS_BATCH_RENDER];
+         iris_resource_update_indirect_color(batch, res);
       } else {
          /* Flag surface states with inline clear colors as dirty. */
          ice->state.stage_dirty |= IRIS_ALL_STAGE_DIRTY_BINDINGS;

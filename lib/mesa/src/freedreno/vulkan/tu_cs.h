@@ -147,7 +147,15 @@ void
 tu_cs_set_writeable(struct tu_cs *cs, bool writeable);
 
 VkResult
-tu_cs_begin_sub_stream(struct tu_cs *cs, uint32_t size, struct tu_cs *sub_cs);
+tu_cs_begin_sub_stream_aligned(struct tu_cs *cs, uint32_t count,
+                               uint32_t size, struct tu_cs *sub_cs);
+
+static inline VkResult
+tu_cs_begin_sub_stream(struct tu_cs *cs, uint32_t size, struct tu_cs *sub_cs)
+{
+   return tu_cs_begin_sub_stream_aligned(cs, size, 1, sub_cs);
+}
+
 
 VkResult
 tu_cs_alloc(struct tu_cs *cs,
@@ -479,6 +487,12 @@ tu_cond_exec_end(struct tu_cs *cs)
       cs->cur = cs->cur - 3;
    }
 }
+
+uint64_t
+tu_cs_emit_data_nop(struct tu_cs *cs,
+                    const uint32_t *data,
+                    uint32_t size,
+                    uint32_t align);
 
 /* Temporary struct for tracking a register state to be written, used by
  * a6xx-pack.h and tu_cs_emit_regs()

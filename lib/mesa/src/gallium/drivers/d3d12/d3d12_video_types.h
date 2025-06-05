@@ -37,13 +37,10 @@
 #include <directx/d3d12video.h>
 #include <dxguids/dxguids.h>
 
-#if ((D3D12_SDK_VERSION < 611) || (D3D12_PREVIEW_SDK_VERSION < 711))
-using D3D12_FEATURE_DATA_VIDEO_ENCODER_SUPPORT1 = D3D12_FEATURE_DATA_VIDEO_ENCODER_SUPPORT;
-constexpr D3D12_FEATURE_VIDEO D3D12_FEATURE_VIDEO_ENCODER_SUPPORT1 = D3D12_FEATURE_VIDEO_ENCODER_SUPPORT;
-#endif
-
 #include <wrl/client.h>
 using Microsoft::WRL::ComPtr;
+
+#define D3D12_VIDEO_ANY_DECODER_ENABLED (VIDEO_CODEC_H264DEC || VIDEO_CODEC_H265DEC || VIDEO_CODEC_AV1DEC || VIDEO_CODEC_VP9DEC)
 
 #if !defined(_WIN32) || defined(_MSC_VER)
 inline D3D12_VIDEO_DECODER_HEAP_DESC
@@ -67,22 +64,12 @@ GetDesc(ID3D12VideoDecoderHeap *heap)
 */
 const bool D3D12_VIDEO_ENC_CBR_FORCE_VBV_EQUAL_BITRATE = debug_get_bool_option("D3D12_VIDEO_ENC_CBR_FORCE_VBV_EQUAL_BITRATE", false);
 
-// Allow encoder to continue the encoding session when aa slice mode
-// is requested but not supported.
-//
-// If setting this OS Env variable to true, the encoder will try to adjust to the closest slice
-// setting available and encode using that configuration anyway
-//
-const bool D3D12_VIDEO_ENC_FALLBACK_SLICE_CONFIG = debug_get_bool_option("D3D12_VIDEO_ENC_FALLBACK_SLICE_CONFIG", false);
-
-const bool D3D12_VIDEO_ENC_ASYNC = debug_get_bool_option("D3D12_VIDEO_ENC_ASYNC", true);
-
 /**
  * This indicates how many in-flight encode commands can happen before blocking on the next request
  */
-const uint64_t D3D12_VIDEO_ENC_ASYNC_DEPTH = debug_get_num_option("D3D12_VIDEO_ENC_ASYNC_DEPTH", 8);
+const size_t D3D12_VIDEO_ENC_ASYNC_DEPTH = static_cast<size_t>(debug_get_num_option("D3D12_VIDEO_ENC_ASYNC_DEPTH", 8));
 
-const uint64_t D3D12_VIDEO_ENC_METADATA_BUFFERS_COUNT = debug_get_num_option("D3D12_VIDEO_ENC_METADATA_BUFFERS_COUNT", 2 * D3D12_VIDEO_ENC_ASYNC_DEPTH);
+const size_t D3D12_VIDEO_ENC_METADATA_BUFFERS_COUNT = static_cast<size_t>(debug_get_num_option("D3D12_VIDEO_ENC_METADATA_BUFFERS_COUNT", 2 * D3D12_VIDEO_ENC_ASYNC_DEPTH));
 
 constexpr unsigned int D3D12_VIDEO_H264_MB_IN_PIXELS = 16;
 
@@ -140,12 +127,10 @@ struct d3d12_video_decode_output_conversion_arguments
 
 void
 d3d12_video_encoder_convert_from_d3d12_level_h264(D3D12_VIDEO_ENCODER_LEVELS_H264 level12,
-                                                  uint32_t &                      specLevel,
-                                                  uint32_t &                      constraint_set3_flag);
+                                                  uint32_t &                      specLevel);
 void
 d3d12_video_encoder_convert_from_d3d12_level_hevc(D3D12_VIDEO_ENCODER_LEVELS_HEVC level12,
                                                   uint32_t &                      specLevel);
-#if ((D3D12_SDK_VERSION >= 611) && (D3D12_PREVIEW_SDK_VERSION >= 712))
 void
 d3d12_video_encoder_convert_d3d12_to_spec_level_av1(D3D12_VIDEO_ENCODER_AV1_LEVELS   level12,
                                                     uint32_t &                      specLevel);
@@ -155,15 +140,12 @@ d3d12_video_encoder_convert_spec_to_d3d12_level_av1(uint32_t specLevel,
 void
 d3d12_video_encoder_convert_spec_to_d3d12_tier_av1(uint32_t specTier,
                                                    D3D12_VIDEO_ENCODER_AV1_TIER & tier12);           
-#endif                                                                                      
 D3D12_VIDEO_ENCODER_PROFILE_H264
 d3d12_video_encoder_convert_profile_to_d3d12_enc_profile_h264(enum pipe_video_profile profile);
 D3D12_VIDEO_ENCODER_PROFILE_HEVC
 d3d12_video_encoder_convert_profile_to_d3d12_enc_profile_hevc(enum pipe_video_profile profile);
-#if ((D3D12_SDK_VERSION >= 611) && (D3D12_PREVIEW_SDK_VERSION >= 712))
 D3D12_VIDEO_ENCODER_AV1_PROFILE
 d3d12_video_encoder_convert_profile_to_d3d12_enc_profile_av1(enum pipe_video_profile profile);
-#endif
 D3D12_VIDEO_ENCODER_CODEC
 d3d12_video_encoder_convert_codec_to_d3d12_enc_codec(enum pipe_video_profile profile);
 GUID
@@ -176,8 +158,27 @@ uint8_t
 d3d12_video_encoder_convert_12cusize_to_pixel_size_hevc(const D3D12_VIDEO_ENCODER_CODEC_CONFIGURATION_HEVC_CUSIZE& cuSize);
 uint8_t
 d3d12_video_encoder_convert_12tusize_to_pixel_size_hevc(const D3D12_VIDEO_ENCODER_CODEC_CONFIGURATION_HEVC_TUSIZE& TUSize);
+D3D12_VIDEO_ENCODER_CODEC_CONFIGURATION_SUPPORT
+ConvertHEVCSupportFromProfile(D3D12_VIDEO_ENCODER_PROFILE_HEVC profile, D3D12_VIDEO_ENCODER_CODEC_CONFIGURATION_SUPPORT_HEVC1* pSupport1);
+D3D12_VIDEO_ENCODER_PICTURE_CONTROL_CODEC_DATA
+ConvertHEVCPicParamsFromProfile(D3D12_VIDEO_ENCODER_PROFILE_HEVC profile, D3D12_VIDEO_ENCODER_PICTURE_CONTROL_CODEC_DATA_HEVC1* pPictureParams1);
 
 DEFINE_ENUM_FLAG_OPERATORS(pipe_enc_feature);
 DEFINE_ENUM_FLAG_OPERATORS(pipe_h265_enc_pred_direction);
+DEFINE_ENUM_FLAG_OPERATORS(codec_unit_location_flags);
+DEFINE_ENUM_FLAG_OPERATORS(pipe_video_feedback_encode_result_flags);
+DEFINE_ENUM_FLAG_OPERATORS(pipe_video_feedback_metadata_type);
 
+#define D3D12_VIDEO_ENC_H264_MAX_TEMPORAL_LAYERS 4
+#define D3D12_VIDEO_ENC_HEVC_MAX_TEMPORAL_LAYERS 4
+#define D3D12_VIDEO_ENC_AV1_MAX_TEMPORAL_LAYERS 1
+#define D3D12_VIDEO_ENC_MAX_RATE_CONTROL_TEMPORAL_LAYERS 4
+
+static_assert(D3D12_VIDEO_ENC_MAX_RATE_CONTROL_TEMPORAL_LAYERS >= D3D12_VIDEO_ENC_H264_MAX_TEMPORAL_LAYERS, "Increase size of D3D12_VIDEO_ENC_MAX_RATE_CONTROL_TEMPORAL_LAYERS");
+static_assert(D3D12_VIDEO_ENC_MAX_RATE_CONTROL_TEMPORAL_LAYERS >= D3D12_VIDEO_ENC_HEVC_MAX_TEMPORAL_LAYERS, "Increase size of D3D12_VIDEO_ENC_MAX_RATE_CONTROL_TEMPORAL_LAYERS");
+static_assert(D3D12_VIDEO_ENC_MAX_RATE_CONTROL_TEMPORAL_LAYERS >= D3D12_VIDEO_ENC_AV1_MAX_TEMPORAL_LAYERS, "Increase size of D3D12_VIDEO_ENC_MAX_RATE_CONTROL_TEMPORAL_LAYERS");
+
+static_assert(ARRAY_SIZE(pipe_h264_enc_picture_desc::rate_ctrl) >= D3D12_VIDEO_ENC_H264_MAX_TEMPORAL_LAYERS, "Increase size of pipe_h264_enc_picture_desc::rate_ctrl[] array");
+static_assert(ARRAY_SIZE(pipe_h265_enc_picture_desc::rc) >= D3D12_VIDEO_ENC_HEVC_MAX_TEMPORAL_LAYERS, "Increase size of pipe_h265_enc_picture_desc::rc[] array");
+static_assert(ARRAY_SIZE(pipe_av1_enc_picture_desc::rc) >= D3D12_VIDEO_ENC_AV1_MAX_TEMPORAL_LAYERS, "Increase size of pipe_h265_enc_picture_desc::rc[] array");
 #endif

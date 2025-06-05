@@ -1,22 +1,5 @@
 # Copyright © 2018 Valve Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 aco_depends = files('aco_opcodes.py')
 
@@ -59,13 +42,16 @@ libaco_files = files(
   'aco_ir.h',
   'aco_assembler.cpp',
   'aco_form_hard_clauses.cpp',
+  'aco_insert_delay_alu.cpp',
   'aco_insert_exec_mask.cpp',
   'aco_insert_NOPs.cpp',
   'aco_insert_waitcnt.cpp',
   'aco_reduce_assign.cpp',
   'aco_register_allocation.cpp',
   'aco_live_var_analysis.cpp',
+  'aco_lower_branches.cpp',
   'aco_lower_phis.cpp',
+  'aco_lower_subdword.cpp',
   'aco_lower_to_cssa.cpp',
   'aco_lower_to_hw_instr.cpp',
   'aco_optimizer.cpp',
@@ -74,7 +60,9 @@ libaco_files = files(
   'aco_print_asm.cpp',
   'aco_print_ir.cpp',
   'aco_reindex_ssa.cpp',
+  'aco_repair_ssa.cpp',
   'aco_scheduler.cpp',
+  'aco_scheduler_ilp.cpp',
   'aco_spill.cpp',
   'aco_ssa_elimination.cpp',
   'aco_statistics.cpp',

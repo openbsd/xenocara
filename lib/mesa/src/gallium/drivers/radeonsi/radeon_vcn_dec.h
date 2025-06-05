@@ -15,11 +15,18 @@
 #include "ac_vcn_dec.h"
 
 #define NUM_BUFFERS                                         4
+#define MAX_JPEG_INST                                       64
+
+#define RADEON_DEC_ERR(fmt, args...)                                                             \
+   do {                                                                                          \
+      dec->error = true;                                                                         \
+      fprintf(stderr, "EE %s:%d %s VCN - " fmt, __FILE__, __LINE__, __func__, ##args);           \
+   } while(0)
 
 struct rvcn_dec_dynamic_dpb_t2 {
    struct list_head list;
    uint8_t index;
-   struct rvid_buffer dpb;
+   struct pipe_video_buffer *vbuf;
 };
 
 struct jpeg_registers {
@@ -116,31 +123,35 @@ struct radeon_decoder {
    struct {
       enum {
          CODEC_8_BITS = 0,
-         CODEC_10_BITS
+         CODEC_10_BITS,
+         CODEC_12_BITS
       } bts;
       uint8_t index;
       unsigned ref_size;
+      unsigned num_refs;
       uint8_t ref_list[16];
    } ref_codec;
 
    struct list_head dpb_ref_list;
    struct list_head dpb_unref_list;
 
-   void (*send_cmd)(struct radeon_decoder *dec, struct pipe_video_buffer *target,
+   bool (*send_cmd)(struct radeon_decoder *dec, struct pipe_video_buffer *target,
                     struct pipe_picture_desc *picture);
    /* Additional contexts for mJPEG */
    struct radeon_cmdbuf *jcs;
    struct radeon_winsys_ctx **jctx;
    unsigned cb_idx;
    unsigned njctx;
-   struct pipe_fence_handle *prev_fence;
-   struct pipe_fence_handle *destroy_fence;
+
+   bool error;
+
+   struct pipe_context *ectx;
 };
 
-void send_cmd_dec(struct radeon_decoder *dec, struct pipe_video_buffer *target,
+bool send_cmd_dec(struct radeon_decoder *dec, struct pipe_video_buffer *target,
                   struct pipe_picture_desc *picture);
 
-void send_cmd_jpeg(struct radeon_decoder *dec, struct pipe_video_buffer *target,
+bool send_cmd_jpeg(struct radeon_decoder *dec, struct pipe_video_buffer *target,
                    struct pipe_picture_desc *picture);
 
 struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,

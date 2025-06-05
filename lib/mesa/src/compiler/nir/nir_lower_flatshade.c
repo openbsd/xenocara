@@ -25,25 +25,39 @@
 #include "nir_builder.h"
 
 static bool
-lower_input(nir_shader *shader, nir_variable *var)
+check_location(int location)
 {
-   if (var->data.interpolation == INTERP_MODE_NONE &&
-       (var->data.location == VARYING_SLOT_COL0 ||
-        var->data.location == VARYING_SLOT_COL1 ||
-        var->data.location == VARYING_SLOT_BFC0 ||
-        var->data.location == VARYING_SLOT_BFC1))
-      var->data.interpolation = INTERP_MODE_FLAT;
+   return location == VARYING_SLOT_COL0 ||
+          location == VARYING_SLOT_COL1 ||
+          location == VARYING_SLOT_BFC0 ||
+          location == VARYING_SLOT_BFC1;
+}
+
+static bool
+lower_input_io(nir_builder *b, nir_intrinsic_instr *intr, void *data)
+{
+   if (intr->intrinsic != nir_intrinsic_load_interpolated_input)
+      return false;;
+   nir_io_semantics sem = nir_intrinsic_io_semantics(intr);
+   if (!check_location(sem.location))
+      return false;
+   nir_def *interp = intr->src[0].ssa;
+   nir_intrinsic_instr *interp_intr = nir_instr_as_intrinsic(interp->parent_instr);
+   if (nir_intrinsic_interp_mode(interp_intr) != INTERP_MODE_NONE)
+      return false;
+   b->cursor = nir_before_instr(&intr->instr);
+   nir_def *load = nir_load_input(b, intr->num_components,
+                                  intr->def.bit_size, intr->src[1].ssa);
+   nir_intrinsic_instr *new_intr = nir_instr_as_intrinsic(load->parent_instr);
+   nir_intrinsic_copy_const_indices(new_intr, intr);
+   nir_def_replace(&intr->def, load);
    return true;
 }
 
 bool
 nir_lower_flatshade(nir_shader *shader)
 {
-   bool progress = false;
-
-   nir_foreach_shader_in_variable(var, shader) {
-      progress |= lower_input(shader, var);
-   }
-
-   return progress;
+   assert(shader->info.io_lowered);
+   return nir_shader_intrinsics_pass(shader, lower_input_io, nir_metadata_all,
+                                     NULL);
 }

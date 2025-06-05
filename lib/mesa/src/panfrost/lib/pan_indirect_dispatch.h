@@ -25,22 +25,56 @@
 #define __PAN_INDIRECT_DISPATCH_SHADERS_H__
 
 #include "genxml/gen_macros.h"
-#include "pan_scoreboard.h"
+#include "pan_jc.h"
 
-struct pan_device;
-struct pan_scoreboard;
+#include "panfrost/util/pan_ir.h"
+
+struct pan_jc;
 struct pan_pool;
 
+struct pan_indirect_dispatch_meta {
+   struct panfrost_ubo_push push;
+
+   unsigned gpu_id;
+
+   /* Renderer state descriptor. */
+   uint64_t rsd;
+
+   /* Thread storage descriptor. */
+   uint64_t tsd;
+
+   /* Shader binary pool. */
+   struct pan_pool *bin_pool;
+
+   /* Shader desc pool for any descriptor that can be re-used across
+    * indirect dispatch calls. Job descriptors are allocated from the pool
+    * passed to pan_indirect_dispatch_emit().
+    */
+   struct pan_pool *desc_pool;
+};
+
 struct pan_indirect_dispatch_info {
-   mali_ptr job;
-   mali_ptr indirect_dim;
-   mali_ptr num_wg_sysval[3];
+   uint64_t job;
+   uint64_t indirect_dim;
+   uint64_t num_wg_sysval[3];
 } PACKED;
 
-unsigned GENX(pan_indirect_dispatch_emit)(
-   struct pan_pool *pool, struct pan_scoreboard *scoreboard,
-   const struct pan_indirect_dispatch_info *dispatch_info);
+static inline void
+pan_indirect_dispatch_meta_init(struct pan_indirect_dispatch_meta *meta,
+                                unsigned gpu_id, struct pan_pool *bin_pool,
+                                struct pan_pool *desc_pool)
+{
+   memset(meta, 0, sizeof(*meta));
+   meta->gpu_id = gpu_id;
+   meta->bin_pool = bin_pool;
+   meta->desc_pool = desc_pool;
+}
 
-void GENX(pan_indirect_dispatch_cleanup)(struct panfrost_device *dev);
+#ifdef PAN_ARCH
+unsigned GENX(pan_indirect_dispatch_emit)(
+   struct pan_indirect_dispatch_meta *meta,
+   struct pan_pool *pool, struct pan_jc *jc,
+   const struct pan_indirect_dispatch_info *dispatch_info);
+#endif
 
 #endif

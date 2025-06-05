@@ -1,0 +1,75 @@
+include:
+  - local: 'src/gallium/drivers/r300/ci/gitlab-ci-inc.yml'
+
+.ondracka-generic:
+  extends:
+    - .b2c-x86_64-test-gl-manual # use debian-build-testing rather than debian-testing
+    - .r300-manual-rules
+  variables:
+    FDO_CI_CONCURRENT: 2
+    # 6.6.8 kernel with radeon driver.
+    B2C_KERNEL_URL: 'https://gitlab.freedesktop.org/ondracka/boot2container/-/wikis/uploads/1733cfc7cc114d08ec785044b24314f3/linux-x86_64'
+
+.ondracka-rv530:
+  extends:
+    - .ondracka-generic
+  tags:
+    - radeon:codename:RV530
+
+.ondracka-rv380:
+  extends:
+    - .ondracka-generic
+  tags:
+    - radeon:codename:RV380
+
+r300-rv530-deqp-gles2:
+  extends:
+    - .ondracka-rv530
+    - .b2c-deqp-test
+  variables:
+    DEQP_SUITE: r300-rv530
+    GPU_VERSION: r300-rv530-nohiz
+    # Only single process can use hiz at a time, and we have some issues
+    # there in depth stencil tests, so it brings flakes,
+    # see https://gitlab.freedesktop.org/mesa/mesa/-/issues/8093
+    RADEON_DEBUG: nohiz
+
+r300-rv530-nine:
+  extends:
+    - .ondracka-rv530
+    - .r300-nine-manual-rules
+  variables:
+    GTEST: "/NineTests/NineTests"
+    HWCI_TEST_SCRIPT: "/install/gtest-runner.sh"
+    HWCI_START_WESTON: 1
+    GPU_VERSION: r300-rv530-nohiz
+    FDO_CI_CONCURRENT: 1
+
+r300-rv380-deqp-gles2:
+  extends:
+    - .ondracka-rv380
+    - .b2c-deqp-test
+  variables:
+    DEQP_SUITE: r300-rv380
+    GPU_VERSION: r300-rv380
+
+r300-rv410-deqp-piglit:
+  extends:
+    - .ondracka-generic
+    - .b2c-deqp-test
+  tags:
+    - radeon:codename:RV410
+  variables:
+    DEQP_SUITE: r300-rv410
+    GPU_VERSION: r300-rv410
+    PIGLIT_PLATFORM: gbm
+
+r300-rv530-piglit:
+  extends:
+    - .ondracka-rv530
+    - .b2c-deqp-test
+  variables:
+    DEQP_SUITE: r300-piglit
+    PIGLIT_PLATFORM: gbm
+    RADEON_DEBUG: nohiz
+    GPU_VERSION: r300-rv530-nohiz

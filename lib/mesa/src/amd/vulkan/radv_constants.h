@@ -5,30 +5,16 @@
  * based in part on anv driver which is:
  * Copyright © 2015 Intel Corporation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #ifndef RADV_CONSTANTS_H
 #define RADV_CONSTANTS_H
 
 #define ATI_VENDOR_ID 0x1002
+#ifdef HAVE_AMDGPU_VIRTIO
+#define VIRTGPU_PCI_VENDOR_ID 0x1af4
+#endif
 
 #define MAX_VBS                        32
 #define MAX_VERTEX_ATTRIBS             32
@@ -44,7 +30,6 @@
 #define MAX_DYNAMIC_BUFFERS            (MAX_DYNAMIC_UNIFORM_BUFFERS + MAX_DYNAMIC_STORAGE_BUFFERS)
 #define MAX_SAMPLES_LOG2               4
 #define NUM_META_FS_KEYS               12
-#define RADV_MAX_DRM_DEVICES           8
 #define MAX_VIEWS                      8
 #define MAX_SO_STREAMS                 4
 #define MAX_SO_BUFFERS                 4
@@ -79,6 +64,8 @@
 #define RING_MS_SCRATCH          9
 #define RING_PS_ATTR             10
 #define RING_PS_SAMPLE_POSITIONS 11
+
+#define SI_GS_PER_ES 128
 
 /* max number of descriptor sets */
 #define MAX_SETS 32
@@ -121,7 +108,8 @@
 /* The spec requires this to be 32. */
 #define RADV_RT_HANDLE_SIZE 32
 
-#define RADV_MAX_HIT_ATTRIB_SIZE 32
+#define RADV_MAX_HIT_ATTRIB_SIZE   32
+#define RADV_MAX_HIT_ATTRIB_DWORDS (RADV_MAX_HIT_ATTRIB_SIZE / 4)
 
 #define RADV_SHADER_ALLOC_ALIGNMENT      256
 #define RADV_SHADER_ALLOC_MIN_ARENA_SIZE (256 * 1024)
@@ -163,7 +151,19 @@
 #define RADV_SHADER_QUERY_MS_PRIM_GEN_OFFSET      60
 #define RADV_SHADER_QUERY_TS_INVOCATION_OFFSET    64
 
+/* Size of the shader query buffer for generated/written primitive queries
+ * using SSBO atomics on GFX12.
+ */
+#define RADV_SHADER_QUERY_BUF_SIZE (RADV_SHADER_QUERY_PRIM_XFB_OFFSET(3) - RADV_SHADER_QUERY_PRIM_GEN_OFFSET(0) + 4)
+
 /* Number of samples for line smooth lowering (hw requirement). */
 #define RADV_NUM_SMOOTH_AA_SAMPLES 4
+
+/* Size of the temporary buffer allocated for transfer queue copy command workarounds.
+ * The size is chosen so that it can fit two lines of (1 << 14) blocks at 16 bpp.
+ */
+#define RADV_SDMA_TRANSFER_TEMP_BYTES (2 * (1 << 14) * 16)
+
+#define RADV_VERT_ATTRIB_MAX MAX2(VERT_ATTRIB_MAX, VERT_ATTRIB_GENERIC0 + MAX_VERTEX_ATTRIBS)
 
 #endif /* RADV_CONSTANTS_H */

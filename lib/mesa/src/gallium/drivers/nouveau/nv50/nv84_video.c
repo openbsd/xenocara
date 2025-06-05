@@ -152,11 +152,12 @@ nv84_decoder_begin_frame_h264(struct pipe_video_codec *decoder,
 {
 }
 
-static void
+static int
 nv84_decoder_end_frame_h264(struct pipe_video_codec *decoder,
                             struct pipe_video_buffer *target,
                             struct pipe_picture_desc *picture)
 {
+   return 0;
 }
 
 static void
@@ -203,7 +204,7 @@ nv84_decoder_begin_frame_mpeg12(struct pipe_video_codec *decoder,
    }
 }
 
-static void
+static int
 nv84_decoder_end_frame_mpeg12(struct pipe_video_codec *decoder,
                               struct pipe_video_buffer *target,
                               struct pipe_picture_desc *picture)
@@ -212,6 +213,7 @@ nv84_decoder_end_frame_mpeg12(struct pipe_video_codec *decoder,
          (struct nv84_decoder *)decoder,
          (struct pipe_mpeg12_picture_desc *)picture,
          (struct nv84_video_buffer *)target);
+   return 0;
 }
 
 static void
@@ -335,7 +337,7 @@ nv84_create_decoder(struct pipe_context *context,
          goto fail;
 
       ret = nouveau_pushbuf_create(screen, &nv50->base, dec->client, dec->bsp_channel,
-                                   4, 32 * 1024, true, &dec->bsp_pushbuf);
+                                   4, 32 * 1024, &dec->bsp_pushbuf);
       if (ret)
          goto fail;
 
@@ -350,7 +352,7 @@ nv84_create_decoder(struct pipe_context *context,
    if (ret)
       goto fail;
    ret = nouveau_pushbuf_create(screen, &nv50->base, dec->client, dec->vp_channel,
-                                4, 32 * 1024, true, &dec->vp_pushbuf);
+                                4, 32 * 1024, &dec->vp_pushbuf);
    if (ret)
       goto fail;
 

@@ -5,6 +5,7 @@ use crate::api::device::*;
 use crate::api::event::*;
 use crate::api::kernel::*;
 use crate::api::memory::*;
+use crate::api::platform;
 use crate::api::platform::*;
 use crate::api::program::*;
 use crate::api::queue::*;
@@ -14,120 +15,122 @@ use crate::api::util::*;
 use mesa_rust_util::ptr::*;
 use rusticl_opencl_gen::*;
 
+use std::ffi::c_char;
+use std::ffi::c_void;
 use std::ffi::CStr;
 use std::ptr;
 use std::sync::Arc;
 
 pub static DISPATCH: cl_icd_dispatch = cl_icd_dispatch {
-    clGetPlatformIDs: Some(cl_get_platform_ids),
-    clGetPlatformInfo: Some(cl_get_platform_info),
-    clGetDeviceIDs: Some(cl_get_device_ids),
-    clGetDeviceInfo: Some(cl_get_device_info),
-    clCreateContext: Some(cl_create_context),
-    clCreateContextFromType: Some(cl_create_context_from_type),
-    clRetainContext: Some(cl_retain_context),
-    clReleaseContext: Some(cl_release_context),
-    clGetContextInfo: Some(cl_get_context_info),
-    clCreateCommandQueue: Some(cl_create_command_queue),
-    clRetainCommandQueue: Some(cl_retain_command_queue),
-    clReleaseCommandQueue: Some(cl_release_command_queue),
-    clGetCommandQueueInfo: Some(cl_get_command_queue_info),
-    clSetCommandQueueProperty: None,
-    clCreateBuffer: Some(cl_create_buffer),
-    clCreateImage2D: Some(cl_create_image_2d),
-    clCreateImage3D: Some(cl_create_image_3d),
-    clRetainMemObject: Some(cl_retain_mem_object),
-    clReleaseMemObject: Some(cl_release_mem_object),
-    clGetSupportedImageFormats: Some(cl_get_supported_image_formats),
-    clGetMemObjectInfo: Some(cl_get_mem_object_info),
-    clGetImageInfo: Some(cl_get_image_info),
-    clCreateSampler: Some(cl_create_sampler),
-    clRetainSampler: Some(cl_retain_sampler),
-    clReleaseSampler: Some(cl_release_sampler),
-    clGetSamplerInfo: Some(cl_get_sampler_info),
-    clCreateProgramWithSource: Some(cl_create_program_with_source),
-    clCreateProgramWithBinary: Some(cl_create_program_with_binary),
-    clRetainProgram: Some(cl_retain_program),
-    clReleaseProgram: Some(cl_release_program),
-    clBuildProgram: Some(cl_build_program),
+    clGetPlatformIDs: Some(clGetPlatformIDs),
+    clGetPlatformInfo: Some(clGetPlatformInfo),
+    clGetDeviceIDs: Some(clGetDeviceIDs),
+    clGetDeviceInfo: Some(clGetDeviceInfo),
+    clCreateContext: Some(clCreateContext),
+    clCreateContextFromType: Some(clCreateContextFromType),
+    clRetainContext: Some(clRetainContext),
+    clReleaseContext: Some(clReleaseContext),
+    clGetContextInfo: Some(clGetContextInfo),
+    clCreateCommandQueue: Some(clCreateCommandQueue),
+    clRetainCommandQueue: Some(clRetainCommandQueue),
+    clReleaseCommandQueue: Some(clReleaseCommandQueue),
+    clGetCommandQueueInfo: Some(clGetCommandQueueInfo),
+    clSetCommandQueueProperty: Some(clSetCommandQueueProperty),
+    clCreateBuffer: Some(clCreateBuffer),
+    clCreateImage2D: Some(clCreateImage2D),
+    clCreateImage3D: Some(clCreateImage3D),
+    clRetainMemObject: Some(clRetainMemObject),
+    clReleaseMemObject: Some(clReleaseMemObject),
+    clGetSupportedImageFormats: Some(clGetSupportedImageFormats),
+    clGetMemObjectInfo: Some(clGetMemObjectInfo),
+    clGetImageInfo: Some(clGetImageInfo),
+    clCreateSampler: Some(clCreateSampler),
+    clRetainSampler: Some(clRetainSampler),
+    clReleaseSampler: Some(clReleaseSampler),
+    clGetSamplerInfo: Some(clGetSamplerInfo),
+    clCreateProgramWithSource: Some(clCreateProgramWithSource),
+    clCreateProgramWithBinary: Some(clCreateProgramWithBinary),
+    clRetainProgram: Some(clRetainProgram),
+    clReleaseProgram: Some(clReleaseProgram),
+    clBuildProgram: Some(clBuildProgram),
     clUnloadCompiler: None,
-    clGetProgramInfo: Some(cl_get_program_info),
-    clGetProgramBuildInfo: Some(cl_get_program_build_info),
-    clCreateKernel: Some(cl_create_kernel),
-    clCreateKernelsInProgram: Some(cl_create_kernels_in_program),
-    clRetainKernel: Some(cl_retain_kernel),
-    clReleaseKernel: Some(cl_release_kernel),
-    clSetKernelArg: Some(cl_set_kernel_arg),
-    clGetKernelInfo: Some(cl_get_kernel_info),
-    clGetKernelWorkGroupInfo: Some(cl_get_kernel_work_group_info),
-    clWaitForEvents: Some(cl_wait_for_events),
-    clGetEventInfo: Some(cl_get_event_info),
-    clRetainEvent: Some(cl_retain_event),
-    clReleaseEvent: Some(cl_release_event),
-    clGetEventProfilingInfo: Some(cl_get_event_profiling_info),
-    clFlush: Some(cl_flush),
-    clFinish: Some(cl_finish),
-    clEnqueueReadBuffer: Some(cl_enqueue_read_buffer),
-    clEnqueueWriteBuffer: Some(cl_enqueue_write_buffer),
-    clEnqueueCopyBuffer: Some(cl_enqueue_copy_buffer),
-    clEnqueueReadImage: Some(cl_enqueue_read_image),
-    clEnqueueWriteImage: Some(cl_enqueue_write_image),
-    clEnqueueCopyImage: Some(cl_enqueue_copy_image),
-    clEnqueueCopyImageToBuffer: Some(cl_enqueue_copy_image_to_buffer),
-    clEnqueueCopyBufferToImage: Some(cl_enqueue_copy_buffer_to_image),
-    clEnqueueMapBuffer: Some(cl_enqueue_map_buffer),
-    clEnqueueMapImage: Some(cl_enqueue_map_image),
-    clEnqueueUnmapMemObject: Some(cl_enqueue_unmap_mem_object),
-    clEnqueueNDRangeKernel: Some(cl_enqueue_ndrange_kernel),
-    clEnqueueTask: Some(cl_enqueue_task),
+    clGetProgramInfo: Some(clGetProgramInfo),
+    clGetProgramBuildInfo: Some(clGetProgramBuildInfo),
+    clCreateKernel: Some(clCreateKernel),
+    clCreateKernelsInProgram: Some(clCreateKernelsInProgram),
+    clRetainKernel: Some(clRetainKernel),
+    clReleaseKernel: Some(clReleaseKernel),
+    clSetKernelArg: Some(clSetKernelArg),
+    clGetKernelInfo: Some(clGetKernelInfo),
+    clGetKernelWorkGroupInfo: Some(clGetKernelWorkGroupInfo),
+    clWaitForEvents: Some(clWaitForEvents),
+    clGetEventInfo: Some(clGetEventInfo),
+    clRetainEvent: Some(clRetainEvent),
+    clReleaseEvent: Some(clReleaseEvent),
+    clGetEventProfilingInfo: Some(clGetEventProfilingInfo),
+    clFlush: Some(clFlush),
+    clFinish: Some(clFinish),
+    clEnqueueReadBuffer: Some(clEnqueueReadBuffer),
+    clEnqueueWriteBuffer: Some(clEnqueueWriteBuffer),
+    clEnqueueCopyBuffer: Some(clEnqueueCopyBuffer),
+    clEnqueueReadImage: Some(clEnqueueReadImage),
+    clEnqueueWriteImage: Some(clEnqueueWriteImage),
+    clEnqueueCopyImage: Some(clEnqueueCopyImage),
+    clEnqueueCopyImageToBuffer: Some(clEnqueueCopyImageToBuffer),
+    clEnqueueCopyBufferToImage: Some(clEnqueueCopyBufferToImage),
+    clEnqueueMapBuffer: Some(clEnqueueMapBuffer),
+    clEnqueueMapImage: Some(clEnqueueMapImage),
+    clEnqueueUnmapMemObject: Some(clEnqueueUnmapMemObject),
+    clEnqueueNDRangeKernel: Some(clEnqueueNDRangeKernel),
+    clEnqueueTask: Some(clEnqueueTask),
     clEnqueueNativeKernel: None,
-    clEnqueueMarker: Some(cl_enqueue_marker),
+    clEnqueueMarker: Some(clEnqueueMarker),
     clEnqueueWaitForEvents: None,
-    clEnqueueBarrier: Some(cl_enqueue_barrier),
-    clGetExtensionFunctionAddress: Some(cl_get_extension_function_address),
-    clCreateFromGLBuffer: None,
-    clCreateFromGLTexture2D: None,
-    clCreateFromGLTexture3D: None,
-    clCreateFromGLRenderbuffer: None,
-    clGetGLObjectInfo: None,
-    clGetGLTextureInfo: None,
-    clEnqueueAcquireGLObjects: None,
-    clEnqueueReleaseGLObjects: None,
-    clGetGLContextInfoKHR: None,
+    clEnqueueBarrier: Some(clEnqueueBarrier),
+    clGetExtensionFunctionAddress: Some(clGetExtensionFunctionAddress),
+    clCreateFromGLBuffer: Some(clCreateFromGLBuffer),
+    clCreateFromGLTexture2D: Some(clCreateFromGLTexture2D),
+    clCreateFromGLTexture3D: Some(clCreateFromGLTexture3D),
+    clCreateFromGLRenderbuffer: Some(clCreateFromGLRenderbuffer),
+    clGetGLObjectInfo: Some(clGetGLObjectInfo),
+    clGetGLTextureInfo: Some(clGetGLTextureInfo),
+    clEnqueueAcquireGLObjects: Some(clEnqueueAcquireGLObjects),
+    clEnqueueReleaseGLObjects: Some(clEnqueueReleaseGLObjects),
+    clGetGLContextInfoKHR: Some(clGetGLContextInfoKHR),
     clGetDeviceIDsFromD3D10KHR: ptr::null_mut(),
     clCreateFromD3D10BufferKHR: ptr::null_mut(),
     clCreateFromD3D10Texture2DKHR: ptr::null_mut(),
     clCreateFromD3D10Texture3DKHR: ptr::null_mut(),
     clEnqueueAcquireD3D10ObjectsKHR: ptr::null_mut(),
     clEnqueueReleaseD3D10ObjectsKHR: ptr::null_mut(),
-    clSetEventCallback: Some(cl_set_event_callback),
-    clCreateSubBuffer: Some(cl_create_sub_buffer),
-    clSetMemObjectDestructorCallback: Some(cl_set_mem_object_destructor_callback),
-    clCreateUserEvent: Some(cl_create_user_event),
-    clSetUserEventStatus: Some(cl_set_user_event_status),
-    clEnqueueReadBufferRect: Some(cl_enqueue_read_buffer_rect),
-    clEnqueueWriteBufferRect: Some(cl_enqueue_write_buffer_rect),
-    clEnqueueCopyBufferRect: Some(cl_enqueue_copy_buffer_rect),
+    clSetEventCallback: Some(clSetEventCallback),
+    clCreateSubBuffer: Some(clCreateSubBuffer),
+    clSetMemObjectDestructorCallback: Some(clSetMemObjectDestructorCallback),
+    clCreateUserEvent: Some(clCreateUserEvent),
+    clSetUserEventStatus: Some(clSetUserEventStatus),
+    clEnqueueReadBufferRect: Some(clEnqueueReadBufferRect),
+    clEnqueueWriteBufferRect: Some(clEnqueueWriteBufferRect),
+    clEnqueueCopyBufferRect: Some(clEnqueueCopyBufferRect),
     clCreateSubDevicesEXT: None,
     clRetainDeviceEXT: None,
     clReleaseDeviceEXT: None,
     clCreateEventFromGLsyncKHR: None,
-    clCreateSubDevices: None,
-    clRetainDevice: Some(cl_retain_device),
-    clReleaseDevice: Some(cl_release_device),
-    clCreateImage: Some(cl_create_image),
+    clCreateSubDevices: Some(clCreateSubDevices),
+    clRetainDevice: Some(clRetainDevice),
+    clReleaseDevice: Some(clReleaseDevice),
+    clCreateImage: Some(clCreateImage),
     clCreateProgramWithBuiltInKernels: None,
-    clCompileProgram: Some(cl_compile_program),
-    clLinkProgram: Some(cl_link_program),
-    clUnloadPlatformCompiler: Some(cl_unload_platform_compiler),
-    clGetKernelArgInfo: Some(cl_get_kernel_arg_info),
-    clEnqueueFillBuffer: Some(cl_enqueue_fill_buffer),
-    clEnqueueFillImage: Some(cl_enqueue_fill_image),
-    clEnqueueMigrateMemObjects: Some(cl_enqueue_migrate_mem_objects),
-    clEnqueueMarkerWithWaitList: Some(cl_enqueue_marker_with_wait_list),
-    clEnqueueBarrierWithWaitList: Some(cl_enqueue_barrier_with_wait_list),
-    clGetExtensionFunctionAddressForPlatform: Some(cl_get_extension_function_address_for_platform),
-    clCreateFromGLTexture: None,
+    clCompileProgram: Some(clCompileProgram),
+    clLinkProgram: Some(clLinkProgram),
+    clUnloadPlatformCompiler: Some(clUnloadPlatformCompiler),
+    clGetKernelArgInfo: Some(clGetKernelArgInfo),
+    clEnqueueFillBuffer: Some(clEnqueueFillBuffer),
+    clEnqueueFillImage: Some(clEnqueueFillImage),
+    clEnqueueMigrateMemObjects: Some(clEnqueueMigrateMemObjects),
+    clEnqueueMarkerWithWaitList: Some(clEnqueueMarkerWithWaitList),
+    clEnqueueBarrierWithWaitList: Some(clEnqueueBarrierWithWaitList),
+    clGetExtensionFunctionAddressForPlatform: Some(clGetExtensionFunctionAddressForPlatform),
+    clCreateFromGLTexture: Some(clCreateFromGLTexture),
     clGetDeviceIDsFromD3D11KHR: ptr::null_mut(),
     clCreateFromD3D11BufferKHR: ptr::null_mut(),
     clCreateFromD3D11Texture2DKHR: ptr::null_mut(),
@@ -142,58 +145,90 @@ pub static DISPATCH: cl_icd_dispatch = cl_icd_dispatch {
     clEnqueueAcquireEGLObjectsKHR: None,
     clEnqueueReleaseEGLObjectsKHR: None,
     clCreateEventFromEGLSyncKHR: None,
-    clCreateCommandQueueWithProperties: Some(cl_create_command_queue_with_properties),
-    clCreatePipe: Some(cl_create_pipe),
-    clGetPipeInfo: Some(cl_get_pipe_info),
-    clSVMAlloc: Some(cl_svm_alloc),
-    clSVMFree: Some(cl_svm_free),
-    clEnqueueSVMFree: Some(cl_enqueue_svm_free),
-    clEnqueueSVMMemcpy: Some(cl_enqueue_svm_memcpy),
-    clEnqueueSVMMemFill: Some(cl_enqueue_svm_mem_fill),
-    clEnqueueSVMMap: Some(cl_enqueue_svm_map),
-    clEnqueueSVMUnmap: Some(cl_enqueue_svm_unmap),
-    clCreateSamplerWithProperties: Some(cl_create_sampler_with_properties),
-    clSetKernelArgSVMPointer: Some(cl_set_kernel_arg_svm_pointer),
-    clSetKernelExecInfo: Some(cl_set_kernel_exec_info),
-    clGetKernelSubGroupInfoKHR: Some(cl_get_kernel_sub_group_info),
-    clCloneKernel: Some(cl_clone_kernel),
-    clCreateProgramWithIL: Some(cl_create_program_with_il),
-    clEnqueueSVMMigrateMem: Some(cl_enqueue_svm_migrate_mem),
-    clGetDeviceAndHostTimer: Some(cl_get_device_and_host_timer),
-    clGetHostTimer: Some(cl_get_host_timer),
-    clGetKernelSubGroupInfo: Some(cl_get_kernel_sub_group_info),
-    clSetDefaultDeviceCommandQueue: Some(cl_set_default_device_command_queue),
-    clSetProgramReleaseCallback: Some(cl_set_program_release_callback),
-    clSetProgramSpecializationConstant: Some(cl_set_program_specialization_constant),
-    clCreateBufferWithProperties: Some(cl_create_buffer_with_properties),
-    clCreateImageWithProperties: Some(cl_create_image_with_properties),
-    clSetContextDestructorCallback: Some(cl_set_context_destructor_callback),
+    clCreateCommandQueueWithProperties: Some(clCreateCommandQueueWithProperties),
+    clCreatePipe: Some(clCreatePipe),
+    clGetPipeInfo: Some(clGetPipeInfo),
+    clSVMAlloc: Some(clSVMAlloc),
+    clSVMFree: Some(clSVMFree),
+    clEnqueueSVMFree: Some(clEnqueueSVMFree),
+    clEnqueueSVMMemcpy: Some(clEnqueueSVMMemcpy),
+    clEnqueueSVMMemFill: Some(clEnqueueSVMMemFill),
+    clEnqueueSVMMap: Some(clEnqueueSVMMap),
+    clEnqueueSVMUnmap: Some(clEnqueueSVMUnmap),
+    clCreateSamplerWithProperties: Some(clCreateSamplerWithProperties),
+    clSetKernelArgSVMPointer: Some(clSetKernelArgSVMPointer),
+    clSetKernelExecInfo: Some(clSetKernelExecInfo),
+    clGetKernelSubGroupInfoKHR: Some(clGetKernelSubGroupInfo),
+    clCloneKernel: Some(clCloneKernel),
+    clCreateProgramWithIL: Some(clCreateProgramWithIL),
+    clEnqueueSVMMigrateMem: Some(clEnqueueSVMMigrateMem),
+    clGetDeviceAndHostTimer: Some(clGetDeviceAndHostTimer),
+    clGetHostTimer: Some(clGetHostTimer),
+    clGetKernelSubGroupInfo: Some(clGetKernelSubGroupInfo),
+    clSetDefaultDeviceCommandQueue: Some(clSetDefaultDeviceCommandQueue),
+    clSetProgramReleaseCallback: Some(clSetProgramReleaseCallback),
+    clSetProgramSpecializationConstant: Some(clSetProgramSpecializationConstant),
+    clCreateBufferWithProperties: Some(clCreateBufferWithProperties),
+    clCreateImageWithProperties: Some(clCreateImageWithProperties),
+    clSetContextDestructorCallback: Some(clSetContextDestructorCallback),
 };
 
 pub type CLError = cl_int;
 pub type CLResult<T> = Result<T, CLError>;
 
+#[derive(Clone, Copy, PartialEq)]
+#[repr(u32)]
+pub enum RusticlTypes {
+    // random number
+    Buffer = 0xec4cf9a9,
+    Context,
+    Device,
+    Event,
+    Image,
+    Kernel,
+    Program,
+    Queue,
+    Sampler,
+}
+
+impl RusticlTypes {
+    pub const fn u32(&self) -> u32 {
+        *self as u32
+    }
+
+    pub const fn from_u32(val: u32) -> Option<Self> {
+        let result = match val {
+            0xec4cf9a9 => Self::Buffer,
+            0xec4cf9aa => Self::Context,
+            0xec4cf9ab => Self::Device,
+            0xec4cf9ac => Self::Event,
+            0xec4cf9ad => Self::Image,
+            0xec4cf9ae => Self::Kernel,
+            0xec4cf9af => Self::Program,
+            0xec4cf9b0 => Self::Queue,
+            0xec4cf9b1 => Self::Sampler,
+            _ => return None,
+        };
+        debug_assert!(result.u32() == val);
+        Some(result)
+    }
+}
+
 #[repr(C)]
 pub struct CLObjectBase<const ERR: i32> {
     dispatch: &'static cl_icd_dispatch,
-    type_err: i32,
-}
-
-impl<const ERR: i32> Default for CLObjectBase<ERR> {
-    fn default() -> Self {
-        Self::new()
-    }
+    rusticl_type: u32,
 }
 
 impl<const ERR: i32> CLObjectBase<ERR> {
-    pub fn new() -> Self {
+    pub fn new(t: RusticlTypes) -> Self {
         Self {
             dispatch: &DISPATCH,
-            type_err: ERR,
+            rusticl_type: t.u32(),
         }
     }
 
-    pub fn check_ptr(ptr: *const Self) -> CLResult<()> {
+    pub fn check_ptr(ptr: *const Self) -> CLResult<RusticlTypes> {
         if ptr.is_null() {
             return Err(ERR);
         }
@@ -203,12 +238,16 @@ impl<const ERR: i32> CLObjectBase<ERR> {
                 return Err(ERR);
             }
 
-            if (*ptr).type_err != ERR {
+            let Some(ty) = RusticlTypes::from_u32((*ptr).rusticl_type) else {
                 return Err(ERR);
-            }
+            };
 
-            Ok(())
+            Ok(ty)
         }
+    }
+
+    pub fn get_type(&self) -> CLResult<RusticlTypes> {
+        RusticlTypes::from_u32(self.rusticl_type).ok_or(ERR)
     }
 }
 
@@ -219,40 +258,55 @@ pub trait ReferenceCountedAPIPointer<T, const ERR: i32> {
     // I can do the cast in the main trait implementation.  So we need to
     // implement that as part of the macro where we know the real type.
     fn from_ptr(ptr: *const T) -> Self;
+}
 
-    fn leak_ref(ptr: *mut Self, r: &std::sync::Arc<T>)
+pub trait BaseCLObject<'a, const ERR: i32, CL: ReferenceCountedAPIPointer<Self, ERR> + 'a>:
+    Sized
+{
+    fn ref_from_raw(obj: CL) -> CLResult<&'a Self> {
+        let obj = obj.get_ptr()?;
+        // SAFETY: `get_ptr` already checks if it's one of our pointers and not null
+        Ok(unsafe { &*obj })
+    }
+
+    fn refs_from_arr(objs: *const CL, count: u32) -> CLResult<Vec<&'a Self>>
     where
-        Self: Sized,
+        CL: Copy,
     {
-        if !ptr.is_null() {
-            unsafe {
-                ptr.write(Self::from_arc(r.clone()));
-            }
+        // CL spec requires validation for obj arrays, both values have to make sense
+        if objs.is_null() && count > 0 || !objs.is_null() && count == 0 {
+            return Err(CL_INVALID_VALUE);
         }
-    }
 
-    fn get_ref(&self) -> CLResult<&T> {
-        unsafe { Ok(self.get_ptr()?.as_ref().unwrap()) }
-    }
+        let mut res = Vec::new();
+        if objs.is_null() || count == 0 {
+            return Ok(res);
+        }
 
-    fn get_arc(&self) -> CLResult<Arc<T>> {
-        unsafe {
-            let ptr = self.get_ptr()?;
+        for i in 0..count as usize {
+            res.push(Self::ref_from_raw(unsafe { *objs.add(i) })?);
+        }
+        Ok(res)
+    }
+}
+
+pub trait ArcedCLObject<'a, const ERR: i32, CL: ReferenceCountedAPIPointer<Self, ERR> + 'a>:
+    Sized + BaseCLObject<'a, ERR, CL>
+{
+    /// Note: this operation increases the internal ref count as `ref_from_raw` is the better option
+    /// when an Arc is not needed.
+    fn arc_from_raw(ptr: CL) -> CLResult<Arc<Self>> {
+        let ptr = ptr.get_ptr()?;
+        // SAFETY: `get_ptr` already checks if it's one of our pointers.
+        Ok(unsafe {
             Arc::increment_strong_count(ptr);
-            Ok(Arc::from_raw(ptr))
-        }
+            Arc::from_raw(ptr)
+        })
     }
 
-    fn from_arc(arc: Arc<T>) -> Self
+    fn arcs_from_arr(objs: *const CL, count: u32) -> CLResult<Vec<Arc<Self>>>
     where
-        Self: Sized,
-    {
-        Self::from_ptr(Arc::into_raw(arc))
-    }
-
-    fn get_arc_vec_from_arr(objs: *const Self, count: u32) -> CLResult<Vec<Arc<T>>>
-    where
-        Self: Sized,
+        CL: Copy,
     {
         // CL spec requires validation for obj arrays, both values have to make sense
         if objs.is_null() && count > 0 || !objs.is_null() && count == 0 {
@@ -266,77 +320,79 @@ pub trait ReferenceCountedAPIPointer<T, const ERR: i32> {
 
         for i in 0..count as usize {
             unsafe {
-                res.push((*objs.add(i)).get_arc()?);
+                res.push(Self::arc_from_raw(*objs.add(i))?);
             }
         }
         Ok(res)
     }
 
-    fn get_ref_vec_from_arr<'a>(objs: *const Self, count: u32) -> CLResult<Vec<&'a T>>
-    where
-        Self: Sized + 'a,
-    {
-        // CL spec requires validation for obj arrays, both values have to make sense
-        if objs.is_null() && count > 0 || !objs.is_null() && count == 0 {
-            return Err(CL_INVALID_VALUE);
-        }
-
-        let mut res = Vec::new();
-        if objs.is_null() || count == 0 {
-            return Ok(res);
-        }
-
-        for i in 0..count as usize {
-            unsafe {
-                res.push((*objs.add(i)).get_ref()?);
-            }
-        }
-        Ok(res)
+    fn refcnt(ptr: CL) -> CLResult<u32> {
+        let ptr = ptr.get_ptr()?;
+        // SAFETY: `get_ptr` already checks if it's one of our pointers.
+        let arc = unsafe { Arc::from_raw(ptr) };
+        let res = Arc::strong_count(&arc);
+        // leak the arc again, so we don't reduce the refcount by dropping `arc`
+        let _ = Arc::into_raw(arc);
+        Ok(res as u32)
     }
 
-    fn retain(&self) -> CLResult<()> {
-        unsafe {
-            Arc::increment_strong_count(self.get_ptr()?);
-            Ok(())
-        }
+    fn into_cl(self: Arc<Self>) -> CL {
+        CL::from_ptr(Arc::into_raw(self))
     }
 
-    fn release(&self) -> CLResult<()> {
-        unsafe {
-            Arc::from_raw(self.get_ptr()?);
-            Ok(())
-        }
+    fn release(ptr: CL) -> CLResult<()> {
+        let ptr = ptr.get_ptr()?;
+        // SAFETY: `get_ptr` already checks if it's one of our pointers.
+        unsafe { Arc::decrement_strong_count(ptr) };
+        Ok(())
     }
 
-    fn refcnt(&self) -> CLResult<u32> {
-        Ok((Arc::strong_count(&self.get_arc()?) - 1) as u32)
+    fn retain(ptr: CL) -> CLResult<()> {
+        let ptr = ptr.get_ptr()?;
+        // SAFETY: `get_ptr` already checks if it's one of our pointers.
+        unsafe { Arc::increment_strong_count(ptr) };
+        Ok(())
     }
 }
 
 #[macro_export]
-macro_rules! impl_cl_type_trait {
-    ($cl: ident, $t: path, $err: ident) => {
+macro_rules! impl_cl_type_trait_base {
+    (@BASE $cl: ident, $t: ident, [$($types: ident),+], $err: ident, $($field:ident).+) => {
         impl $crate::api::icd::ReferenceCountedAPIPointer<$t, $err> for $cl {
             fn get_ptr(&self) -> CLResult<*const $t> {
                 type Base = $crate::api::icd::CLObjectBase<$err>;
-                Base::check_ptr(self.cast())?;
+                let t = Base::check_ptr(self.cast())?;
+                if ![$($crate::api::icd::RusticlTypes::$types),+].contains(&t) {
+                    return Err($err);
+                }
 
-                let offset = ::mesa_rust_util::offset_of!($t, base);
-                let mut obj_ptr: *const u8 = self.cast();
+                let offset = ::mesa_rust_util::offset_of!($t, $($field).+);
                 // SAFETY: We offset the pointer back from the ICD specified base type to our
                 //         internal type.
-                unsafe { obj_ptr = obj_ptr.sub(offset) }
-                Ok(obj_ptr.cast())
+                let obj_ptr: *const $t = unsafe { self.byte_sub(offset) }.cast();
+
+                // Check at compile-time that we indeed got the right path
+                unsafe { let _: &Base = &(*obj_ptr).$($field).+; }
+
+                Ok(obj_ptr)
             }
 
             fn from_ptr(ptr: *const $t) -> Self {
                 if ptr.is_null() {
                     return std::ptr::null_mut();
                 }
-                let offset = ::mesa_rust_util::offset_of!($t, base);
+                let offset = ::mesa_rust_util::offset_of!($t, $($field).+);
                 // SAFETY: The resulting pointer is safe as we simply offset into the ICD specified
                 //         base type.
-                unsafe { (ptr as *const u8).add(offset) as Self }
+                unsafe { ptr.byte_add(offset) as Self }
+            }
+        }
+
+        impl $crate::api::icd::BaseCLObject<'_, $err, $cl> for $t {}
+
+        impl $t {
+            fn _ensure_send_sync(&self) -> impl Send + Sync + '_ {
+                self
             }
         }
 
@@ -347,87 +403,128 @@ macro_rules! impl_cl_type_trait {
         impl std::cmp::Eq for $t {}
         impl std::cmp::PartialEq for $t {
             fn eq(&self, other: &Self) -> bool {
-                (self as *const Self) == (other as *const Self)
+                std::ptr::addr_eq(self, other)
             }
         }
 
         impl std::hash::Hash for $t {
             fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-                (self as *const Self).hash(state);
+                std::ptr::from_ref(self).hash(state);
             }
         }
+    };
+
+    ($cl: ident, $t: ident, [$($types: ident),+], $err: ident, $($field:ident).+) => {
+        $crate::impl_cl_type_trait_base!(@BASE $cl, $t, [$($types),+], $err, $($field).+);
+    };
+
+    ($cl: ident, $t: ident, [$($types: ident),+], $err: ident) => {
+        $crate::impl_cl_type_trait_base!($cl, $t, [$($types),+], $err, base);
+    };
+}
+
+#[macro_export]
+macro_rules! impl_cl_type_trait {
+    ($cl: ident, $t: ident, $err: ident, $($field:ident).+) => {
+        $crate::impl_cl_type_trait_base!(@BASE $cl, $t, [$t], $err, $($field).+);
+        impl $crate::api::icd::ArcedCLObject<'_, $err, $cl> for $t {}
+    };
+
+    ($cl: ident, $t: ident, $err: ident) => {
+        $crate::impl_cl_type_trait!($cl, $t, $err, base);
     };
 }
 
 // We need those functions exported
 
 #[no_mangle]
-extern "C" fn clGetPlatformInfo(
+unsafe extern "C" fn clGetPlatformInfo(
     platform: cl_platform_id,
     param_name: cl_platform_info,
     param_value_size: usize,
     param_value: *mut ::std::ffi::c_void,
     param_value_size_ret: *mut usize,
 ) -> cl_int {
-    cl_get_platform_info(
-        platform,
-        param_name,
-        param_value_size,
-        param_value,
-        param_value_size_ret,
-    )
+    unsafe {
+        platform::clGetPlatformInfo(
+            platform,
+            param_name,
+            param_value_size,
+            param_value,
+            param_value_size_ret,
+        )
+    }
 }
 
 #[no_mangle]
-extern "C" fn clGetExtensionFunctionAddress(
-    function_name: *const ::std::os::raw::c_char,
-) -> *mut ::std::ffi::c_void {
-    cl_get_extension_function_address(function_name)
-}
-
-#[no_mangle]
-extern "C" fn clIcdGetPlatformIDsKHR(
+unsafe extern "C" fn clIcdGetPlatformIDsKHR(
     num_entries: cl_uint,
     platforms: *mut cl_platform_id,
     num_platforms: *mut cl_uint,
 ) -> cl_int {
-    cl_get_platform_ids(num_entries, platforms, num_platforms)
+    unsafe { clGetPlatformIDs(num_entries, platforms, num_platforms) }
 }
 
-extern "C" fn cl_get_extension_function_address(
-    function_name: *const ::std::os::raw::c_char,
-) -> *mut ::std::ffi::c_void {
+macro_rules! cl_ext_func {
+    ($func:ident: $api_type:ident) => {{
+        let _func: $api_type = Some($func);
+        $func as *mut ::std::ffi::c_void
+    }};
+}
+
+#[rustfmt::skip]
+#[no_mangle]
+extern "C" fn clGetExtensionFunctionAddress(
+    function_name: *const c_char,
+) -> *mut c_void {
     if function_name.is_null() {
         return ptr::null_mut();
     }
     match unsafe { CStr::from_ptr(function_name) }.to_str().unwrap() {
         // cl_khr_create_command_queue
-        "clCreateCommandQueueWithPropertiesKHR" => {
-            cl_create_command_queue_with_properties as *mut ::std::ffi::c_void
-        }
+        "clCreateCommandQueueWithPropertiesKHR" => cl_ext_func!(clCreateCommandQueueWithProperties: clCreateCommandQueueWithPropertiesKHR_fn),
 
         // cl_khr_icd
-        "clGetPlatformInfo" => cl_get_platform_info as *mut ::std::ffi::c_void,
-        "clIcdGetPlatformIDsKHR" => cl_get_platform_ids as *mut ::std::ffi::c_void,
+        "clGetPlatformInfo" => cl_ext_func!(clGetPlatformInfo: clGetPlatformInfo_fn),
+        "clIcdGetPlatformIDsKHR" => cl_ext_func!(clIcdGetPlatformIDsKHR: clIcdGetPlatformIDsKHR_fn),
 
         // cl_khr_il_program
-        "clCreateProgramWithILKHR" => cl_create_program_with_il as *mut ::std::ffi::c_void,
+        "clCreateProgramWithILKHR" => cl_ext_func!(clCreateProgramWithIL: clCreateProgramWithILKHR_fn),
+
+        // cl_khr_gl_sharing
+        "clCreateFromGLBuffer" => cl_ext_func!(clCreateFromGLBuffer: clCreateFromGLBuffer_fn),
+        "clCreateFromGLRenderbuffer" => cl_ext_func!(clCreateFromGLRenderbuffer: clCreateFromGLRenderbuffer_fn),
+        "clCreateFromGLTexture" => cl_ext_func!(clCreateFromGLTexture: clCreateFromGLTexture_fn),
+        "clCreateFromGLTexture2D" => cl_ext_func!(clCreateFromGLTexture2D: clCreateFromGLTexture2D_fn),
+        "clCreateFromGLTexture3D" => cl_ext_func!(clCreateFromGLTexture3D: clCreateFromGLTexture3D_fn),
+        "clEnqueueAcquireGLObjects" => cl_ext_func!(clEnqueueAcquireGLObjects: clEnqueueAcquireGLObjects_fn),
+        "clEnqueueReleaseGLObjects" => cl_ext_func!(clEnqueueReleaseGLObjects: clEnqueueReleaseGLObjects_fn),
+        "clGetGLContextInfoKHR" => cl_ext_func!(clGetGLContextInfoKHR: clGetGLContextInfoKHR_fn),
+        "clGetGLObjectInfo" => cl_ext_func!(clGetGLObjectInfo: clGetGLObjectInfo_fn),
+        "clGetGLTextureInfo" => cl_ext_func!(clGetGLTextureInfo: clGetGLTextureInfo_fn),
+
+        // cl_khr_suggested_local_work_size
+        "clGetKernelSuggestedLocalWorkSizeKHR" => cl_ext_func!(clGetKernelSuggestedLocalWorkSizeKHR: clGetKernelSuggestedLocalWorkSizeKHR_fn),
 
         // cl_arm_shared_virtual_memory
-        "clEnqueueSVMFreeARM" => cl_enqueue_svm_free_arm as *mut ::std::ffi::c_void,
-        "clEnqueueSVMMapARM" => cl_enqueue_svm_map_arm as *mut ::std::ffi::c_void,
-        "clEnqueueSVMMemcpyARM" => cl_enqueue_svm_memcpy_arm as *mut ::std::ffi::c_void,
-        "clEnqueueSVMMemFillARM" => cl_enqueue_svm_mem_fill_arm as *mut ::std::ffi::c_void,
-        "clEnqueueSVMUnmapARM" => cl_enqueue_svm_unmap_arm as *mut ::std::ffi::c_void,
-        "clSetKernelArgSVMPointerARM" => cl_set_kernel_arg_svm_pointer as *mut ::std::ffi::c_void,
-        "clSetKernelExecInfoARM" => cl_set_kernel_exec_info as *mut ::std::ffi::c_void,
-        "clSVMAllocARM" => cl_svm_alloc as *mut ::std::ffi::c_void,
-        "clSVMFreeARM" => cl_svm_free as *mut ::std::ffi::c_void,
+        "clEnqueueSVMFreeARM" => cl_ext_func!(clEnqueueSVMFreeARM: clEnqueueSVMFreeARM_fn),
+        "clEnqueueSVMMapARM" => cl_ext_func!(clEnqueueSVMMapARM: clEnqueueSVMMapARM_fn),
+        "clEnqueueSVMMemcpyARM" => cl_ext_func!(clEnqueueSVMMemcpyARM: clEnqueueSVMMemcpyARM_fn),
+        "clEnqueueSVMMemFillARM" => cl_ext_func!(clEnqueueSVMMemFillARM: clEnqueueSVMMemFillARM_fn),
+        "clEnqueueSVMUnmapARM" => cl_ext_func!(clEnqueueSVMUnmapARM: clEnqueueSVMUnmapARM_fn),
+        "clSetKernelArgSVMPointerARM" => cl_ext_func!(clSetKernelArgSVMPointer: clSetKernelArgSVMPointerARM_fn),
+        "clSetKernelExecInfoARM" => cl_ext_func!(clSetKernelExecInfo: clSetKernelExecInfoARM_fn),
+        "clSVMAllocARM" => cl_ext_func!(clSVMAlloc: clSVMAllocARM_fn),
+        "clSVMFreeARM" => cl_ext_func!(clSVMFree: clSVMFreeARM_fn),
+
+        // DPCPP bug https://github.com/intel/llvm/issues/9964
+        "clSetProgramSpecializationConstant" => cl_ext_func!(clSetProgramSpecializationConstant: clSetProgramSpecializationConstant_fn),
+
         _ => ptr::null_mut(),
     }
 }
 
-extern "C" fn cl_link_program(
+extern "C" fn clLinkProgram(
     context: cl_context,
     num_devices: cl_uint,
     device_list: *const cl_device_id,
@@ -456,14 +553,14 @@ extern "C" fn cl_link_program(
     ptr
 }
 
-extern "C" fn cl_get_extension_function_address_for_platform(
+extern "C" fn clGetExtensionFunctionAddressForPlatform(
     _platform: cl_platform_id,
     function_name: *const ::std::os::raw::c_char,
 ) -> *mut ::std::os::raw::c_void {
-    cl_get_extension_function_address(function_name)
+    clGetExtensionFunctionAddress(function_name)
 }
 
-extern "C" fn cl_svm_alloc(
+extern "C" fn clSVMAlloc(
     context: cl_context,
     flags: cl_svm_mem_flags,
     size: usize,
@@ -472,11 +569,11 @@ extern "C" fn cl_svm_alloc(
     svm_alloc(context, flags, size, alignment).unwrap_or(ptr::null_mut())
 }
 
-extern "C" fn cl_svm_free(context: cl_context, svm_pointer: *mut ::std::os::raw::c_void) {
-    svm_free(context, svm_pointer).ok();
+extern "C" fn clSVMFree(context: cl_context, svm_pointer: *mut ::std::os::raw::c_void) {
+    svm_free(context, svm_pointer as usize).ok();
 }
 
-extern "C" fn cl_get_kernel_sub_group_info(
+unsafe extern "C" fn clGetKernelSubGroupInfo(
     kernel: cl_kernel,
     device: cl_device_id,
     param_name: cl_kernel_sub_group_info,
@@ -486,13 +583,15 @@ extern "C" fn cl_get_kernel_sub_group_info(
     param_value: *mut ::std::os::raw::c_void,
     param_value_size_ret: *mut usize,
 ) -> cl_int {
-    match kernel.get_info_obj(
-        (device, input_value_size, input_value, param_value_size),
-        param_name,
-        param_value_size,
-        param_value,
-        param_value_size_ret,
-    ) {
+    match unsafe {
+        kernel.get_info_obj(
+            (device, input_value_size, input_value, param_value_size),
+            param_name,
+            param_value_size,
+            param_value,
+            param_value_size_ret,
+        )
+    } {
         Ok(_) => CL_SUCCESS as cl_int,
         Err(e) => e,
     }

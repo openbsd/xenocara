@@ -303,7 +303,7 @@ typedef struct ruvd_enc_feedback_buffer_s {
    uint32_t feedback_data_size;
 } ruvd_enc_feedback_buffer_t;
 
-typedef void (*radeon_uvd_enc_get_buffer)(struct pipe_resource *resource, struct pb_buffer **handle,
+typedef void (*radeon_uvd_enc_get_buffer)(struct pipe_resource *resource, struct pb_buffer_lean **handle,
                                           struct radeon_surf **surface);
 
 struct pipe_video_codec *radeon_uvd_create_encoder(struct pipe_context *context,
@@ -313,39 +313,9 @@ struct pipe_video_codec *radeon_uvd_create_encoder(struct pipe_context *context,
 
 struct radeon_uvd_enc_pic {
    enum pipe_h2645_enc_picture_type picture_type;
-
-   unsigned frame_num;
-   unsigned pic_order_cnt;
-   unsigned pic_order_cnt_type;
-   unsigned crop_left;
-   unsigned crop_right;
-   unsigned crop_top;
-   unsigned crop_bottom;
-   unsigned general_tier_flag;
-   unsigned general_profile_idc;
-   unsigned general_level_idc;
-   unsigned max_poc;
-   unsigned log2_max_poc;
-   unsigned chroma_format_idc;
-   unsigned pic_width_in_luma_samples;
-   unsigned pic_height_in_luma_samples;
-   unsigned log2_diff_max_min_luma_coding_block_size;
-   unsigned log2_min_transform_block_size_minus2;
-   unsigned log2_diff_max_min_transform_block_size;
-   unsigned max_transform_hierarchy_depth_inter;
-   unsigned max_transform_hierarchy_depth_intra;
-   unsigned log2_parallel_merge_level_minus2;
-   unsigned bit_depth_luma_minus8;
-   unsigned bit_depth_chroma_minus8;
+   struct pipe_h265_enc_picture_desc *desc;
    unsigned nal_unit_type;
-   unsigned max_num_merge_cand;
-
-   bool not_referenced;
-   bool is_iframe;
-   bool is_even_frame;
-   bool sample_adaptive_offset_enabled_flag;
-   bool pcm_enabled_flag;
-   bool sps_temporal_mvp_enabled_flag;
+   unsigned temporal_id;
 
    ruvd_enc_task_info_t task_info;
    ruvd_enc_session_init_t session_init;
@@ -354,7 +324,7 @@ struct radeon_uvd_enc_pic {
    ruvd_enc_hevc_slice_control_t hevc_slice_ctrl;
    ruvd_enc_hevc_spec_misc_t hevc_spec_misc;
    ruvd_enc_rate_ctl_session_init_t rc_session_init;
-   ruvd_enc_rate_ctl_layer_init_t rc_layer_init;
+   ruvd_enc_rate_ctl_layer_init_t rc_layer_init[4];
    ruvd_enc_hevc_deblocking_filter_t hevc_deblock;
    ruvd_enc_rate_ctl_per_picture_t rc_per_pic;
    ruvd_enc_quality_params_t quality_params;
@@ -380,35 +350,48 @@ struct radeon_uvd_encoder {
 
    radeon_uvd_enc_get_buffer get_buffer;
 
-   struct pb_buffer *handle;
+   struct pb_buffer_lean *handle;
    struct radeon_surf *luma;
    struct radeon_surf *chroma;
+   struct pipe_video_buffer *source;
 
-   struct pb_buffer *bs_handle;
+   struct pb_buffer_lean *bs_handle;
    unsigned bs_size;
+   unsigned bs_offset;
 
-   unsigned cpb_num;
+   unsigned dpb_slots;
 
    struct rvid_buffer *si;
    struct rvid_buffer *fb;
-   struct rvid_buffer cpb;
+   struct rvid_buffer dpb;
    struct radeon_uvd_enc_pic enc_pic;
 
-   unsigned shifter;
-   unsigned bits_in_shifter;
-   unsigned num_zeros;
-   unsigned byte_index;
-   unsigned bits_output;
    uint32_t total_task_size;
    uint32_t *p_task_size;
 
-   bool emulation_prevention;
    bool need_feedback;
+   bool need_rate_control;
+   bool need_rc_per_pic;
+};
+
+struct ruvd_enc_output_unit_segment {
+   bool is_slice;
+   unsigned size;
+   unsigned offset;
+};
+
+struct ruvd_enc_feedback_data {
+   unsigned num_segments;
+   struct ruvd_enc_output_unit_segment segments[];
 };
 
 struct si_screen;
 
 void radeon_uvd_enc_1_1_init(struct radeon_uvd_encoder *enc);
 bool si_radeon_uvd_enc_supported(struct si_screen *sscreen);
+
+unsigned int radeon_uvd_enc_write_vps(struct radeon_uvd_encoder *enc, uint8_t *out);
+unsigned int radeon_uvd_enc_write_sps(struct radeon_uvd_encoder *enc, uint8_t *out);
+unsigned int radeon_uvd_enc_write_pps(struct radeon_uvd_encoder *enc, uint8_t *out);
 
 #endif // _RADEON_UVD_ENC_H

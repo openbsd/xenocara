@@ -2,25 +2,7 @@
  * Copyright © 2016 Red Hat.
  * Copyright © 2016 Bas Nieuwenhuizen
  * Copyright © 2021 Valve Corporation
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -59,8 +41,8 @@ fdl6_format_swiz(enum pipe_format format, bool has_z24uint_s8uint,
     * exceptions, called out below.
     */
    switch (format) {
-   case PIPE_FORMAT_R8G8_R8B8_UNORM:
-   case PIPE_FORMAT_G8R8_B8R8_UNORM:
+   case PIPE_FORMAT_G8B8_G8R8_UNORM:
+   case PIPE_FORMAT_B8G8_R8G8_UNORM:
    case PIPE_FORMAT_G8_B8R8_420_UNORM:
    case PIPE_FORMAT_G8_B8_R8_420_UNORM:
       /* These formats are currently only used for Vulkan, and border colors
@@ -210,9 +192,9 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
    uint32_t layer_size = fdl_layer_stride(layout, args->base_miplevel);
 
    enum a6xx_format texture_format =
-      fd6_texture_format(args->format, layout->tile_mode);
+      fd6_texture_format(args->format, layout->tile_mode, layout->is_mutable);
    enum a3xx_color_swap swap =
-      fd6_texture_swap(args->format, layout->tile_mode);
+      fd6_texture_swap(args->format, layout->tile_mode, layout->is_mutable);
    enum a6xx_tile_mode tile_mode = fdl_tile_mode(layout, args->base_miplevel);
 
    bool ubwc_enabled = fdl_ubwc_enabled(layout, args->base_miplevel);
@@ -244,6 +226,8 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
    view->format = args->format;
 
    memset(view->descriptor, 0, sizeof(view->descriptor));
+   
+   bool is_mutable = layout->is_mutable && tile_mode == TILE6_3;
 
    view->descriptor[0] =
       A6XX_TEX_CONST_0_TILE_MODE(tile_mode) |
@@ -253,7 +237,9 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
       A6XX_TEX_CONST_0_SWAP(swap) |
       fdl6_texswiz(args, has_z24uint_s8uint) |
       A6XX_TEX_CONST_0_MIPLVLS(args->level_count - 1);
-   view->descriptor[1] = A6XX_TEX_CONST_1_WIDTH(width) | A6XX_TEX_CONST_1_HEIGHT(height);
+   view->descriptor[1] =
+      A6XX_TEX_CONST_1_WIDTH(width) | A6XX_TEX_CONST_1_HEIGHT(height) |
+      COND(is_mutable, A6XX_TEX_CONST_1_MUTABLEEN);
    view->descriptor[2] =
       A6XX_TEX_CONST_2_PITCHALIGN(layout->pitchalign - 6) |
       A6XX_TEX_CONST_2_PITCH(pitch) |
@@ -340,7 +326,8 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
       A6XX_SP_PS_2D_SRC_INFO_SAMPLES(util_logbase2(layout->nr_samples)) |
       COND(samples_average, A6XX_SP_PS_2D_SRC_INFO_SAMPLES_AVERAGE) |
       A6XX_SP_PS_2D_SRC_INFO_UNK20 |
-      A6XX_SP_PS_2D_SRC_INFO_UNK22;
+      A6XX_SP_PS_2D_SRC_INFO_UNK22 |
+      COND(is_mutable, A6XX_SP_PS_2D_SRC_INFO_MUTABLEEN);
 
    view->SP_PS_2D_SRC_SIZE =
       A6XX_SP_PS_2D_SRC_SIZE_WIDTH(width) |
@@ -375,7 +362,7 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
       return;
 
    enum a3xx_color_swap color_swap =
-      fd6_color_swap(args->format, layout->tile_mode);
+      fd6_color_swap(args->format, layout->tile_mode, layout->is_mutable);
    enum a6xx_format blit_format = color_format;
 
    if (is_d24s8)
@@ -415,12 +402,15 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
       tile_mode == TILE6_LINEAR && args->base_miplevel != layout->mip_levels - 1;
 
    view->ubwc_enabled = ubwc_enabled;
+   view->is_mutable = layout->is_mutable;
+   view->color_swap = color_swap;
 
    view->RB_MRT_BUF_INFO =
       A6XX_RB_MRT_BUF_INFO_COLOR_TILE_MODE(tile_mode) |
       A6XX_RB_MRT_BUF_INFO_COLOR_FORMAT(color_format) |
       COND(args->chip >= A7XX && ubwc_enabled, A7XX_RB_MRT_BUF_INFO_LOSSLESSCOMPEN) |
-      A6XX_RB_MRT_BUF_INFO_COLOR_SWAP(color_swap);
+      A6XX_RB_MRT_BUF_INFO_COLOR_SWAP(color_swap) |
+      COND(is_mutable, A7XX_RB_MRT_BUF_INFO_MUTABLEEN);
 
    view->SP_FS_MRT_REG =
       A6XX_SP_FS_MRT_REG_COLOR_FORMAT(color_format) |
@@ -432,14 +422,16 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
       A6XX_RB_2D_DST_INFO_TILE_MODE(tile_mode) |
       A6XX_RB_2D_DST_INFO_COLOR_SWAP(color_swap) |
       COND(ubwc_enabled, A6XX_RB_2D_DST_INFO_FLAGS) |
-      COND(util_format_is_srgb(args->format), A6XX_RB_2D_DST_INFO_SRGB);
+      COND(util_format_is_srgb(args->format), A6XX_RB_2D_DST_INFO_SRGB) |
+      COND(is_mutable, A6XX_RB_2D_DST_INFO_MUTABLEEN);;
 
    view->RB_BLIT_DST_INFO =
       A6XX_RB_BLIT_DST_INFO_TILE_MODE(tile_mode) |
       A6XX_RB_BLIT_DST_INFO_SAMPLES(util_logbase2(layout->nr_samples)) |
       A6XX_RB_BLIT_DST_INFO_COLOR_FORMAT(blit_format) |
       A6XX_RB_BLIT_DST_INFO_COLOR_SWAP(color_swap) |
-      COND(ubwc_enabled, A6XX_RB_BLIT_DST_INFO_FLAGS);
+      COND(ubwc_enabled, A6XX_RB_BLIT_DST_INFO_FLAGS) |
+      COND(is_mutable, A6XX_RB_BLIT_DST_INFO_MUTABLEEN);
 }
 
 void
@@ -460,8 +452,8 @@ fdl6_buffer_view_init(uint32_t *descriptor, enum pipe_format format,
 
    descriptor[0] =
       A6XX_TEX_CONST_0_TILE_MODE(TILE6_LINEAR) |
-      A6XX_TEX_CONST_0_SWAP(fd6_texture_swap(format, TILE6_LINEAR)) |
-      A6XX_TEX_CONST_0_FMT(fd6_texture_format(format, TILE6_LINEAR)) |
+      A6XX_TEX_CONST_0_SWAP(fd6_texture_swap(format, TILE6_LINEAR, false)) |
+      A6XX_TEX_CONST_0_FMT(fd6_texture_format(format, TILE6_LINEAR, false)) |
       A6XX_TEX_CONST_0_MIPLVLS(0) | fdl6_texswiz(&args, false) |
       COND(util_format_is_srgb(format), A6XX_TEX_CONST_0_SRGB);
    descriptor[1] = A6XX_TEX_CONST_1_WIDTH(elements & ((1 << 15) - 1)) |

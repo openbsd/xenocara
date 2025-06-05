@@ -1,6 +1,5 @@
 ext_texture_env.*
-spec@arb_shader_image_load_store.invalid
-spec@arb_shader_image_load_store.max-size
+spec@arb_shader_image_load_store.*
 spec@arb_gpu_shader_fp64@execution@glsl-fs-loop-unroll-mul-fp64
 .*@execution@vs_in.*
 
@@ -30,6 +29,8 @@ spec@arb_shader_clock@execution@clock.*
 
 # These run OOM and migth hang?
 spec@arb_texture_buffer_object@texture-buffer-size-clamp.*
+spec@!opengl 1.1@streaming-texture-leak
+spec@arb_uniform_buffer_object@maxuniformblocksize.*
 
 # implicit modifier selection not currently supported
 spec@ext_image_dma_buf_import@ext_image_dma_buf_import-sample_yuyv

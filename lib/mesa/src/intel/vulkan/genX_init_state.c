@@ -31,9 +31,11 @@
 
 #include "vk_standard_sample_locations.h"
 
-#if GFX_VERx10 == 125 && ANV_SUPPORT_RT
+#if GFX_VERx10 >= 125 && ANV_SUPPORT_RT_GRL
 #include "grl/genX_grl.h"
 #endif
+
+#include "genX_mi_builder.h"
 
 #include "vk_util.h"
 #include "vk_format.h"
@@ -116,12 +118,19 @@ genX(emit_slice_hashing_state)(struct anv_device *device,
       p.SubsliceHashingTableEnableMask = true;
    }
 #elif GFX_VERx10 == 125
-   uint32_t ppipe_mask = 0;
+   /* Calculate the set of present pixel pipes, and another set of
+    * present pixel pipes with 2 dual subslices enabled, the latter
+    * will appear on the hashing table with twice the frequency of
+    * pixel pipes with a single dual subslice present.
+    */
+   uint32_t ppipe_mask1 = 0, ppipe_mask2 = 0;
    for (unsigned p = 0; p < ARRAY_SIZE(device->info->ppipe_subslices); p++) {
-      if (device->info->ppipe_subslices[p])
-         ppipe_mask |= (1u << p);
+      if (device->info->ppipe_subslices[p] > 0)
+         ppipe_mask1 |= (1u << p);
+      if (device->info->ppipe_subslices[p] > 1)
+         ppipe_mask2 |= (1u << p);
    }
-   assert(ppipe_mask);
+   assert(ppipe_mask1);
 
    if (!device->slice_hash.alloc_size) {
       unsigned size = GENX(SLICE_HASH_TABLE_length) * 4;
@@ -139,7 +148,8 @@ genX(emit_slice_hashing_state)(struct anv_device *device,
        * need to be initialized to the same value.
        */
       for (unsigned i = 0; i < 7; i++)
-         intel_compute_pixel_hash_table_nway(16, 16, ppipe_mask, table.Entry[i][0]);
+         intel_compute_pixel_hash_table_nway(16, 16, ppipe_mask1, ppipe_mask2,
+                                             table.Entry[i][0]);
 
       GENX(SLICE_HASH_TABLE_pack)(NULL, device->slice_hash.map, &table);
    }
@@ -150,21 +160,35 @@ genX(emit_slice_hashing_state)(struct anv_device *device,
    }
 
    /* TODO: Figure out FCV support for other platforms
-    * Testing indicates that FCV is broken on MTL, but works fine on DG2.
-    * Let's disable FCV on MTL for now till we figure out what's wrong.
+    * Testing indicates that FCV is broken gfx125.
+    * Let's disable FCV for now till we figure out what's wrong.
     *
     * Alternatively, it can be toggled off via drirc option 'anv_disable_fcv'.
     *
     * Ref: https://gitlab.freedesktop.org/mesa/mesa/-/issues/9987
+    * Ref: https://gitlab.freedesktop.org/mesa/mesa/-/issues/10318
+    * Ref: https://gitlab.freedesktop.org/mesa/mesa/-/issues/10795
+    * Ref: Internal issue 1480 about Unreal Engine 5.1
     */
    anv_batch_emit(batch, GENX(3DSTATE_3D_MODE), mode) {
       mode.SliceHashingTableEnable = true;
       mode.SliceHashingTableEnableMask = true;
-      mode.CrossSliceHashingMode = (util_bitcount(ppipe_mask) > 1 ?
+      mode.CrossSliceHashingMode = (util_bitcount(ppipe_mask1) > 1 ?
 				    hashing32x32 : NormalMode);
       mode.CrossSliceHashingModeMask = -1;
       mode.FastClearOptimizationEnable = !device->physical->disable_fcv;
       mode.FastClearOptimizationEnableMask = !device->physical->disable_fcv;
+   }
+#endif
+}
+
+static void
+state_system_mem_fence_address_emit(struct anv_device *device, struct anv_batch *batch)
+{
+#if GFX_VERx10 >= 200
+   struct anv_address addr = { .bo = device->mem_fence_bo };
+   anv_batch_emit(batch, GENX(STATE_SYSTEM_MEM_FENCE_ADDRESS), mem_fence_addr) {
+      mem_fence_addr.SystemMemoryFenceAddress = addr;
    }
 #endif
 }
@@ -211,6 +235,7 @@ init_common_queue_state(struct anv_queue *queue, struct anv_batch *batch)
     *  both the cases set Render Target Cache Flush Enable".
     */
    genx_batch_emit_pipe_control(batch, device->info,
+                                0,
                                 ANV_PIPE_CS_STALL_BIT |
                                 ANV_PIPE_RENDER_TARGET_CACHE_FLUSH_BIT);
 #endif
@@ -241,7 +266,8 @@ init_common_queue_state(struct anv_queue *queue, struct anv_batch *batch)
          (struct anv_address) { .offset =
          device->physical->va.dynamic_state_pool.addr,
       };
-      sba.DynamicStateBufferSize = device->physical->va.dynamic_state_pool.size / 4096;
+      sba.DynamicStateBufferSize = (device->physical->va.dynamic_state_pool.size +
+                                    device->physical->va.dynamic_visible_pool.size) / 4096;
       sba.DynamicStateMOCS = mocs;
       sba.DynamicStateBaseAddressModifyEnable = true;
       sba.DynamicStateBufferSizeModifyEnable = true;
@@ -261,45 +287,60 @@ init_common_queue_state(struct anv_queue *queue, struct anv_batch *batch)
       sba.InstructionBaseAddressModifyEnable = true;
       sba.InstructionBuffersizeModifyEnable = true;
 
+#if GFX_VER >= 11
+      sba.BindlessSamplerStateBaseAddress = ANV_NULL_ADDRESS;
+      sba.BindlessSamplerStateBufferSize = 0;
+      sba.BindlessSamplerStateMOCS = mocs;
+      sba.BindlessSamplerStateBaseAddressModifyEnable = true;
+#endif
+
       if (device->physical->indirect_descriptors) {
          sba.BindlessSurfaceStateBaseAddress =
             (struct anv_address) { .offset =
             device->physical->va.bindless_surface_state_pool.addr,
          };
          sba.BindlessSurfaceStateSize =
-            anv_physical_device_bindless_heap_size(device->physical) / ANV_SURFACE_STATE_SIZE - 1;
+            anv_physical_device_bindless_heap_size(device->physical, false) /
+            ANV_SURFACE_STATE_SIZE - 1;
          sba.BindlessSurfaceStateMOCS = mocs;
          sba.BindlessSurfaceStateBaseAddressModifyEnable = true;
-
-         sba.BindlessSamplerStateBaseAddress = (struct anv_address) { NULL, 0 };
-         sba.BindlessSamplerStateMOCS = mocs;
-         sba.BindlessSamplerStateBaseAddressModifyEnable = true;
-         sba.BindlessSamplerStateBufferSize = 0;
       } else {
          /* Bindless Surface State & Bindless Sampler State are aligned to the
           * same heap
           */
-         sba.BindlessSurfaceStateBaseAddress =
-            sba.BindlessSamplerStateBaseAddress =
-            (struct anv_address) { .offset = device->physical->va.binding_table_pool.addr, };
+         sba.BindlessSurfaceStateBaseAddress = (struct anv_address) {
+            .offset = device->physical->va.internal_surface_state_pool.addr,
+         };
          sba.BindlessSurfaceStateSize =
-            (device->physical->va.binding_table_pool.size +
-             device->physical->va.internal_surface_state_pool.size +
-             device->physical->va.descriptor_pool.size) - 1;
-         sba.BindlessSamplerStateBufferSize =
-            (device->physical->va.binding_table_pool.size +
-             device->physical->va.internal_surface_state_pool.size +
-             device->physical->va.descriptor_pool.size) / 4096 - 1;
-         sba.BindlessSurfaceStateMOCS = sba.BindlessSamplerStateMOCS = mocs;
-         sba.BindlessSurfaceStateBaseAddressModifyEnable =
-            sba.BindlessSamplerStateBaseAddressModifyEnable = true;
+            (device->physical->va.internal_surface_state_pool.size +
+             device->physical->va.bindless_surface_state_pool.size) - 1;
+         sba.BindlessSurfaceStateMOCS = mocs;
+         sba.BindlessSurfaceStateBaseAddressModifyEnable = true;
       }
 
 #if GFX_VERx10 >= 125
       sba.L1CacheControl = L1CC_WB;
 #endif
    }
+
+   /* Disable the POOL_ALLOC mechanism in HW. We found that this state can get
+    * corrupted (likely due to leaking from another context), the default
+    * value should be disabled. It doesn't cost anything to set it once at
+    * device initialization.
+    */
+#if GFX_VER >= 11 && GFX_VERx10 < 125
+   anv_batch_emit(batch, GENX(3DSTATE_BINDING_TABLE_POOL_ALLOC), btpa) {
+      btpa.MOCS = mocs;
+      btpa.BindingTablePoolEnable = false;
+   }
 #endif
+
+   struct mi_builder b;
+   mi_builder_init(&b, device->info, batch);
+
+   mi_store(&b, mi_reg64(ANV_BINDLESS_SURFACE_BASE_ADDR_REG),
+                mi_imm(device->physical->va.internal_surface_state_pool.addr));
+#endif /* GFX_VER >= 12 */
 
 #if GFX_VERx10 >= 125
    if (ANV_SUPPORT_RT && device->info->has_ray_tracing) {
@@ -320,36 +361,42 @@ init_common_queue_state(struct anv_queue *queue, struct anv_batch *batch)
              */
             .offset = device->btd_fifo_bo->offset,
          };
+#if INTEL_NEEDS_WA_14017794102 || INTEL_NEEDS_WA_14023061436
+         btd.BTDMidthreadpreemption = false;
+#endif
       }
    }
 #endif
+
+   state_system_mem_fence_address_emit(device, batch);
 }
+
+#if GFX_VER >= 20
+#define _3DSTATE_DRAWING_RECTANGLE GENX(3DSTATE_DRAWING_RECTANGLE_FAST)
+#else
+#define _3DSTATE_DRAWING_RECTANGLE GENX(3DSTATE_DRAWING_RECTANGLE)
+#endif
 
 static VkResult
 init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
 {
    struct anv_device *device = queue->device;
    UNUSED const struct intel_device_info *devinfo = queue->device->info;
-   uint32_t cmds[128];
-   struct anv_batch batch = {
-      .start = cmds,
-      .next = cmds,
-      .end = (void *) cmds + sizeof(cmds),
-   };
 
-   struct GENX(VERTEX_ELEMENT_STATE) empty_ve = {
-      .Valid = true,
-      .Component0Control = VFCOMP_STORE_0,
-      .Component1Control = VFCOMP_STORE_0,
-      .Component2Control = VFCOMP_STORE_0,
-      .Component3Control = VFCOMP_STORE_0,
-   };
-   GENX(VERTEX_ELEMENT_STATE_pack)(NULL, device->empty_vs_input, &empty_ve);
+   struct anv_async_submit *submit;
+   VkResult result = anv_async_submit_create(queue,
+                                             &device->batch_bo_pool,
+                                             is_companion_rcs_batch,
+                                             true, &submit);
+   if (result != VK_SUCCESS)
+      return result;
 
-   genX(emit_pipeline_select)(&batch, _3D);
+   struct anv_batch *batch = &submit->batch;
+
+   genX(emit_pipeline_select)(batch, _3D, device);
 
 #if GFX_VER == 9
-   anv_batch_write_reg(&batch, GENX(CACHE_MODE_1), cm1) {
+   anv_batch_write_reg(batch, GENX(CACHE_MODE_1), cm1) {
       cm1.FloatBlendOptimizationEnable = true;
       cm1.FloatBlendOptimizationEnableMask = true;
       cm1.MSCRAWHazardAvoidanceBit = true;
@@ -359,9 +406,9 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
    }
 #endif
 
-   anv_batch_emit(&batch, GENX(3DSTATE_AA_LINE_PARAMETERS), aa);
+   anv_batch_emit(batch, GENX(3DSTATE_AA_LINE_PARAMETERS), aa);
 
-   anv_batch_emit(&batch, GENX(3DSTATE_DRAWING_RECTANGLE), rect) {
+   anv_batch_emit(batch, _3DSTATE_DRAWING_RECTANGLE, rect) {
       rect.ClippedDrawingRectangleYMin = 0;
       rect.ClippedDrawingRectangleXMin = 0;
       rect.ClippedDrawingRectangleYMax = UINT16_MAX;
@@ -370,7 +417,7 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
       rect.DrawingRectangleOriginX = 0;
    }
 
-   anv_batch_emit(&batch, GENX(3DSTATE_WM_CHROMAKEY), ck);
+   anv_batch_emit(batch, GENX(3DSTATE_WM_CHROMAKEY), ck);
 
    /* SKL PRMs, Volume 2a: Command Reference: Instructions: 3DSTATE_WM_HZ_OP:
     *
@@ -379,7 +426,7 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
     *
     * Emit this before 3DSTATE_WM_HZ_OP below.
     */
-   anv_batch_emit(&batch, GENX(3DSTATE_RASTER), rast) {
+   anv_batch_emit(batch, GENX(3DSTATE_RASTER), rast) {
       rast.APIMode = DX101;
    }
 
@@ -391,7 +438,7 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
     *
     * Emit this before 3DSTATE_WM_HZ_OP below.
     */
-   anv_batch_emit(&batch, GENX(3DSTATE_MULTISAMPLE), ms);
+   anv_batch_emit(batch, GENX(3DSTATE_MULTISAMPLE), ms);
 
    /* The BDW+ docs describe how to use the 3DSTATE_WM_HZ_OP instruction in the
     * section titled, "Optimized Depth Buffer Clear and/or Stencil Buffer
@@ -401,9 +448,9 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
     * zeroed. Do it ourselves just in case. We've observed this to prevent a
     * number of GPU hangs on ICL.
     */
-   anv_batch_emit(&batch, GENX(3DSTATE_WM_HZ_OP), hzp);
+   anv_batch_emit(batch, GENX(3DSTATE_WM_HZ_OP), hzp);
 
-   genX(emit_sample_pattern)(&batch, NULL);
+   genX(emit_sample_pattern)(batch, NULL);
 
 #if GFX_VER == 11
    /* The default behavior of bit 5 "Headerless Message for Pre-emptable
@@ -411,7 +458,7 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
     * headerless sampler messages are not allowed for pre-emptable
     * contexts. Set the bit 5 to 1 to allow them.
     */
-   anv_batch_write_reg(&batch, GENX(SAMPLER_MODE), sm) {
+   anv_batch_write_reg(batch, GENX(SAMPLER_MODE), sm) {
       sm.HeaderlessMessageforPreemptableContexts = true;
       sm.HeaderlessMessageforPreemptableContextsMask = true;
    }
@@ -419,26 +466,26 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
    /* Bit 1 "Enabled Texel Offset Precision Fix" must be set in
     * HALF_SLICE_CHICKEN7 register.
     */
-   anv_batch_write_reg(&batch, GENX(HALF_SLICE_CHICKEN7), hsc7) {
+   anv_batch_write_reg(batch, GENX(HALF_SLICE_CHICKEN7), hsc7) {
       hsc7.EnabledTexelOffsetPrecisionFix = true;
       hsc7.EnabledTexelOffsetPrecisionFixMask = true;
    }
 
-   anv_batch_write_reg(&batch, GENX(TCCNTLREG), tcc) {
+   anv_batch_write_reg(batch, GENX(TCCNTLREG), tcc) {
       tcc.L3DataPartialWriteMergingEnable = true;
       tcc.ColorZPartialWriteMergingEnable = true;
       tcc.URBPartialWriteMergingEnable = true;
       tcc.TCDisable = true;
    }
 #endif
-   genX(emit_slice_hashing_state)(device, &batch);
+   genX(emit_slice_hashing_state)(device, batch);
 
 #if GFX_VER >= 11
    /* hardware specification recommends disabling repacking for
     * the compatibility with decompression mechanism in display controller.
     */
    if (device->info->disable_ccs_repack) {
-      anv_batch_write_reg(&batch, GENX(CACHE_MODE_0), cm0) {
+      anv_batch_write_reg(batch, GENX(CACHE_MODE_0), cm0) {
          cm0.DisableRepackingforCompression = true;
          cm0.DisableRepackingforCompressionMask = true;
       }
@@ -449,14 +496,9 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
     * to command buffer level preemption to avoid rendering
     * corruption.
     */
-   anv_batch_write_reg(&batch, GENX(CS_CHICKEN1), cc1) {
+   anv_batch_write_reg(batch, GENX(CS_CHICKEN1), cc1) {
       cc1.ReplayMode = MidcmdbufferPreemption;
       cc1.ReplayModeMask = true;
-
-#if GFX_VERx10 == 120
-      cc1.DisablePreemptionandHighPriorityPausingdueto3DPRIMITIVECommand = true;
-      cc1.DisablePreemptionandHighPriorityPausingdueto3DPRIMITIVECommandMask = true;
-#endif
    }
 
 #if INTEL_NEEDS_WA_1806527549
@@ -464,14 +506,14 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
     * depth buffer is D16_UNORM. We've found the WA to help with more depth
     * buffer configurations however, so we always disable it just to be safe.
     */
-   anv_batch_write_reg(&batch, GENX(HIZ_CHICKEN), reg) {
+   anv_batch_write_reg(batch, GENX(HIZ_CHICKEN), reg) {
       reg.HZDepthTestLEGEOptimizationDisable = true;
       reg.HZDepthTestLEGEOptimizationDisableMask = true;
    }
 #endif
 
 #if GFX_VER == 12
-   anv_batch_write_reg(&batch, GENX(FF_MODE2), reg) {
+   anv_batch_write_reg(batch, GENX(FF_MODE2), reg) {
       /* On Alchemist, the FF_MODE2 docs for the GS timer say:
        *
        *    "The timer value must be set to 224."
@@ -506,7 +548,7 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
     * We implement global disabling of the optimization here and we toggle it
     * in anv_image_ccs_op().
     */
-   anv_batch_write_reg(&batch, GENX(COMMON_SLICE_CHICKEN1), c1) {
+   anv_batch_write_reg(batch, GENX(COMMON_SLICE_CHICKEN1), c1) {
       c1.RCCRHWOOptimizationDisable = true;
       c1.RCCRHWOOptimizationDisableMask = true;
    }
@@ -521,7 +563,7 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
    /* Enable the new line drawing algorithm that produces higher quality
     * lines.
     */
-   anv_batch_write_reg(&batch, AA_LINE_QUALITY_REG, c3) {
+   anv_batch_write_reg(batch, AA_LINE_QUALITY_REG, c3) {
       c3.AALineQualityFix = true;
       c3.AALineQualityFixMask = true;
    }
@@ -531,14 +573,25 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
    if (device->info->has_aux_map) {
       uint64_t aux_base_addr = intel_aux_map_get_base(device->aux_map_ctx);
       assert(aux_base_addr % (32 * 1024) == 0);
-      anv_batch_emit(&batch, GENX(MI_LOAD_REGISTER_IMM), lri) {
+      anv_batch_emit(batch, GENX(MI_LOAD_REGISTER_IMM), lri) {
          lri.RegisterOffset = GENX(GFX_AUX_TABLE_BASE_ADDR_num);
          lri.DataDWord = aux_base_addr & 0xffffffff;
       }
-      anv_batch_emit(&batch, GENX(MI_LOAD_REGISTER_IMM), lri) {
+      anv_batch_emit(batch, GENX(MI_LOAD_REGISTER_IMM), lri) {
          lri.RegisterOffset = GENX(GFX_AUX_TABLE_BASE_ADDR_num) + 4;
          lri.DataDWord = aux_base_addr >> 32;
       }
+   }
+#endif
+
+#if GFX_VERx10 == 125
+   anv_batch_write_reg(batch, GENX(CHICKEN_RASTER_2), reg) {
+      reg.TBIMRBatchSizeOverride = true;
+      reg.TBIMROpenBatchEnable = true;
+      reg.TBIMRFastClip = true;
+      reg.TBIMRBatchSizeOverrideMask = true;
+      reg.TBIMROpenBatchEnableMask = true;
+      reg.TBIMRFastClipMask = true;
    }
 #endif
 
@@ -548,78 +601,131 @@ init_render_queue_state(struct anv_queue *queue, bool is_companion_rcs_batch)
     * This is only safe on kernels with context isolation support.
     */
    assert(device->physical->info.has_context_isolation);
-   anv_batch_write_reg(&batch, GENX(CS_DEBUG_MODE2), csdm2) {
+   anv_batch_write_reg(batch, GENX(CS_DEBUG_MODE2), csdm2) {
       csdm2.CONSTANT_BUFFERAddressOffsetDisable = true;
       csdm2.CONSTANT_BUFFERAddressOffsetDisableMask = true;
    }
 
-   init_common_queue_state(queue, &batch);
+   init_common_queue_state(queue, batch);
 
    /* Because 3DSTATE_CPS::CoarsePixelShadingStateArrayPointer is relative to
     * the dynamic state base address we need to emit this instruction after
     * STATE_BASE_ADDRESS in init_common_queue_state().
     */
-#if GFX_VER == 11
-   anv_batch_emit(&batch, GENX(3DSTATE_CPS), cps);
+#if GFX_VER >= 30
+   anv_batch_emit(batch, GENX(3DSTATE_COARSE_PIXEL), cps);
 #elif GFX_VER >= 12
-   anv_batch_emit(&batch, GENX(3DSTATE_CPS_POINTERS), cps) {
+   anv_batch_emit(batch, GENX(3DSTATE_CPS_POINTERS), cps) {
       assert(device->cps_states.alloc_size != 0);
       /* Offset 0 is the disabled state */
       cps.CoarsePixelShadingStateArrayPointer =
          device->cps_states.offset;
    }
+#elif GFX_VER == 11
+   anv_batch_emit(batch, GENX(3DSTATE_CPS), cps);
 #endif
 
 #if GFX_VERx10 >= 125
-   anv_batch_emit(&batch, GENX(STATE_COMPUTE_MODE), zero);
-   anv_batch_emit(&batch, GENX(3DSTATE_MESH_CONTROL), zero);
-   anv_batch_emit(&batch, GENX(3DSTATE_TASK_CONTROL), zero);
-   genx_batch_emit_pipe_control_write(&batch, device->info, NoWrite,
+   anv_batch_emit(batch, GENX(STATE_COMPUTE_MODE), cm) {
+#if GFX_VER >= 30
+      cm.EnableVariableRegisterSizeAllocation = true;
+#endif
+      cm.Mask1 = 0xffff;
+#if GFX_VERx10 >= 200
+      cm.Mask2 = 0xffff;
+#endif
+   }
+   anv_batch_emit(batch, GENX(3DSTATE_MESH_CONTROL), zero);
+   anv_batch_emit(batch, GENX(3DSTATE_TASK_CONTROL), zero);
+
+   /* We no longer required to explicitly flush or invalidate caches since the
+    * PIPELINE_SELECT is getting deprecated on Xe2+.
+    */
+#if GFX_VER < 20
+   genx_batch_emit_pipe_control_write(batch, device->info, _3D, NoWrite,
                                       ANV_NULL_ADDRESS,
                                       0,
                                       ANV_PIPE_FLUSH_BITS | ANV_PIPE_INVALIDATE_BITS);
-   genX(emit_pipeline_select)(&batch, GPGPU);
-   anv_batch_emit(&batch, GENX(CFE_STATE), cfe) {
+#endif
+
+   genX(emit_pipeline_select)(batch, GPGPU, device);
+   anv_batch_emit(batch, GENX(CFE_STATE), cfe) {
       cfe.MaximumNumberofThreads =
          devinfo->max_cs_threads * devinfo->subslice_total;
    }
-   genx_batch_emit_pipe_control_write(&batch, device->info, NoWrite,
+
+   /* We no longer required to explicitly flush or invalidate caches since the
+    * PIPELINE_SELECT is getting deprecated on Xe2+.
+    */
+#if GFX_VER < 20
+   genx_batch_emit_pipe_control_write(batch, device->info, _3D, NoWrite,
                                       ANV_NULL_ADDRESS,
                                       0,
                                       ANV_PIPE_FLUSH_BITS | ANV_PIPE_INVALIDATE_BITS);
-   genX(emit_pipeline_select)(&batch, _3D);
 #endif
 
-   anv_batch_emit(&batch, GENX(MI_BATCH_BUFFER_END), bbe);
+   genX(emit_pipeline_select)(batch, _3D, device);
+#endif
 
-   assert(batch.next <= batch.end);
+#if GFX_VER >= 20
+   anv_batch_emit(batch, GENX(3DSTATE_3D_MODE), p) {
+      p.DX10OGLBorderModeforYCRCB = true;
+      p.DX10OGLBorderModeforYCRCBMask = true;
+#if INTEL_NEEDS_WA_14019857787
+      p.EnableOOOreadsinRCPB = true;
+      p.EnableOOOreadsinRCPBMask = true;
+#endif
+   }
+#endif
 
-   return anv_queue_submit_simple_batch(queue, &batch, is_companion_rcs_batch);
+   anv_batch_emit(batch, GENX(MI_BATCH_BUFFER_END), bbe);
+
+   result = batch->status;
+   if (result != VK_SUCCESS) {
+      anv_async_submit_destroy(submit);
+      return result;
+   }
+
+   result = device->kmd_backend->queue_exec_async(submit, 0, NULL, 0, NULL);
+   if (result != VK_SUCCESS) {
+      anv_async_submit_destroy(submit);
+      return result;
+   }
+
+   if (is_companion_rcs_batch)
+      queue->init_companion_submit = submit;
+   else
+      queue->init_submit = submit;
+
+   return VK_SUCCESS;
 }
 
 static VkResult
 init_compute_queue_state(struct anv_queue *queue)
 {
-   UNUSED const struct intel_device_info *devinfo = queue->device->info;
-   uint32_t cmds[64];
-   struct anv_batch batch = {
-      .start = cmds,
-      .next = cmds,
-      .end = (void *) cmds + sizeof(cmds),
-   };
+   struct anv_device *device = queue->device;
+   UNUSED const struct intel_device_info *devinfo = device->info;
+   struct anv_async_submit *submit;
+   VkResult result = anv_async_submit_create(queue,
+                                             &device->batch_bo_pool,
+                                             false, true, &submit);
+   if (result != VK_SUCCESS)
+      return result;
 
-   genX(emit_pipeline_select)(&batch, GPGPU);
+   struct anv_batch *batch = &submit->batch;
+
+   genX(emit_pipeline_select)(batch, GPGPU, queue->device);
 
 #if GFX_VER == 12
    if (queue->device->info->has_aux_map) {
       uint64_t aux_base_addr =
          intel_aux_map_get_base(queue->device->aux_map_ctx);
       assert(aux_base_addr % (32 * 1024) == 0);
-      anv_batch_emit(&batch, GENX(MI_LOAD_REGISTER_IMM), lri) {
+      anv_batch_emit(batch, GENX(MI_LOAD_REGISTER_IMM), lri) {
          lri.RegisterOffset = GENX(COMPCS0_AUX_TABLE_BASE_ADDR_num);
          lri.DataDWord = aux_base_addr & 0xffffffff;
       }
-      anv_batch_emit(&batch, GENX(MI_LOAD_REGISTER_IMM), lri) {
+      anv_batch_emit(batch, GENX(MI_LOAD_REGISTER_IMM), lri) {
          lri.RegisterOffset = GENX(COMPCS0_AUX_TABLE_BASE_ADDR_num) + 4;
          lri.DataDWord = aux_base_addr >> 32;
       }
@@ -634,7 +740,7 @@ init_compute_queue_state(struct anv_queue *queue)
     */
    if (intel_needs_workaround(devinfo, 14015782607) &&
        queue->family->engine_class == INTEL_ENGINE_CLASS_COMPUTE) {
-      genx_batch_emit_pipe_control(&batch, devinfo,
+      genx_batch_emit_pipe_control(batch, devinfo, GPGPU,
                                    ANV_PIPE_CS_STALL_BIT |
                                    ANV_PIPE_UNTYPED_DATAPORT_CACHE_FLUSH_BIT |
                                    ANV_PIPE_HDC_PIPELINE_FLUSH_BIT);
@@ -647,7 +753,7 @@ init_compute_queue_state(struct anv_queue *queue)
    if (intel_device_info_is_atsm(devinfo) &&
        queue->family->engine_class == INTEL_ENGINE_CLASS_COMPUTE) {
       genx_batch_emit_pipe_control
-         (&batch, devinfo,
+         (batch, devinfo, GPGPU,
           ANV_PIPE_CS_STALL_BIT |
           ANV_PIPE_STATE_CACHE_INVALIDATE_BIT |
           ANV_PIPE_CONSTANT_CACHE_INVALIDATE_BIT |
@@ -657,39 +763,153 @@ init_compute_queue_state(struct anv_queue *queue)
           ANV_PIPE_HDC_PIPELINE_FLUSH_BIT);
    }
 
-   anv_batch_emit(&batch, GENX(STATE_COMPUTE_MODE), cm) {
-      cm.PixelAsyncComputeThreadLimit = 4;
+   anv_batch_emit(batch, GENX(STATE_COMPUTE_MODE), cm) {
+#if GFX_VER >= 30
+      cm.EnableVariableRegisterSizeAllocationMask = 1;
+      cm.EnableVariableRegisterSizeAllocation = true;
+#endif
+#if GFX_VER >= 20
+      cm.AsyncComputeThreadLimit = ACTL_Max8;
+      cm.ZPassAsyncComputeThreadLimit = ZPACTL_Max60;
+      cm.ZAsyncThrottlesettings = ZATS_DefertoAsyncComputeThreadLimit;
+      cm.AsyncComputeThreadLimitMask = 0x7;
+      cm.ZPassAsyncComputeThreadLimitMask = 0x7;
+      cm.ZAsyncThrottlesettingsMask = 0x3;
+#else
+      cm.PixelAsyncComputeThreadLimit = PACTL_Max24;
+      cm.ZPassAsyncComputeThreadLimit = ZPACTL_Max60;
       cm.PixelAsyncComputeThreadLimitMask = 0x7;
+      cm.ZPassAsyncComputeThreadLimitMask = 0x7;
+      if (intel_device_info_is_mtl_or_arl(devinfo)) {
+         cm.ZAsyncThrottlesettings = ZATS_DefertoPixelAsyncComputeThreadLimit;
+         cm.ZAsyncThrottlesettingsMask = 0x3;
+      }
+#endif
    }
 #endif
 
-   init_common_queue_state(queue, &batch);
+   init_common_queue_state(queue, batch);
 
 #if GFX_VERx10 >= 125
-   anv_batch_emit(&batch, GENX(CFE_STATE), cfe) {
+   anv_batch_emit(batch, GENX(CFE_STATE), cfe) {
       cfe.MaximumNumberofThreads =
          devinfo->max_cs_threads * devinfo->subslice_total;
    }
 #endif
 
-   anv_batch_emit(&batch, GENX(MI_BATCH_BUFFER_END), bbe);
+   anv_batch_emit(batch, GENX(MI_BATCH_BUFFER_END), bbe);
 
-   assert(batch.next <= batch.end);
+   result = batch->status;
+   if (result != VK_SUCCESS) {
+      anv_async_submit_destroy(submit);
+      return result;
+   }
 
-   return anv_queue_submit_simple_batch(queue, &batch,
-                                        false /* is_companion_rcs_batch */);
+   result = device->kmd_backend->queue_exec_async(submit, 0, NULL, 0, NULL);
+   if (result != VK_SUCCESS) {
+      anv_async_submit_destroy(submit);
+      return result;
+   }
+
+   queue->init_submit = submit;
+
+   return VK_SUCCESS;
+}
+
+static VkResult
+init_copy_video_queue_state(struct anv_queue *queue)
+{
+   struct anv_device *device = queue->device;
+   UNUSED const struct intel_device_info *devinfo = device->info;
+
+   struct anv_async_submit *submit;
+   VkResult result = anv_async_submit_create(queue,
+                                             &device->batch_bo_pool,
+                                             false, true, &submit);
+   if (result != VK_SUCCESS)
+      return result;
+
+   struct anv_batch *batch = &submit->batch;
+
+#if GFX_VER >= 12
+   if (devinfo->has_aux_map) {
+      uint64_t reg = GENX(VD0_AUX_TABLE_BASE_ADDR_num);
+
+      if (queue->family->engine_class == INTEL_ENGINE_CLASS_COPY) {
+#if GFX_VERx10 >= 125
+         reg = GENX(BCS_AUX_TABLE_BASE_ADDR_num);
+#endif
+      }
+
+      uint64_t aux_base_addr =
+         intel_aux_map_get_base(queue->device->aux_map_ctx);
+      assert(aux_base_addr % (32 * 1024) == 0);
+      anv_batch_emit(batch, GENX(MI_LOAD_REGISTER_IMM), lri) {
+         lri.RegisterOffset = reg;
+         lri.DataDWord = aux_base_addr & 0xffffffff;
+      }
+      anv_batch_emit(batch, GENX(MI_LOAD_REGISTER_IMM), lri) {
+         lri.RegisterOffset = reg + 4;
+         lri.DataDWord = aux_base_addr >> 32;
+      }
+   }
+#else
+   assert(!queue->device->info->has_aux_map);
+#endif
+
+   state_system_mem_fence_address_emit(device, batch);
+
+   if (batch->start != batch->next) {
+      anv_batch_emit(batch, GENX(MI_BATCH_BUFFER_END), bbe);
+
+      result = batch->status;
+      if (result != VK_SUCCESS) {
+         anv_async_submit_destroy(submit);
+         return result;
+      }
+
+      result = device->kmd_backend->queue_exec_async(submit, 0, NULL, 0, NULL);
+      if (result != VK_SUCCESS) {
+         anv_async_submit_destroy(submit);
+         return result;
+      }
+
+      queue->init_submit = submit;
+   } else {
+      anv_async_submit_destroy(submit);
+   }
+
+   return VK_SUCCESS;
 }
 
 void
 genX(init_physical_device_state)(ASSERTED struct anv_physical_device *pdevice)
 {
    assert(pdevice->info.verx10 == GFX_VERx10);
-#if GFX_VERx10 == 125 && ANV_SUPPORT_RT
+
+#if GFX_VERx10 >= 125 && ANV_SUPPORT_RT
+#if ANV_SUPPORT_RT_GRL
    genX(grl_load_rt_uuid)(pdevice->rt_uuid);
    pdevice->max_grl_scratch_size = genX(grl_max_scratch_size)();
+#else
+   STATIC_ASSERT(sizeof(ANV_RT_UUID_MACRO) == VK_UUID_SIZE);
+   memcpy(pdevice->rt_uuid, ANV_RT_UUID_MACRO, VK_UUID_SIZE);
+#endif
 #endif
 
    pdevice->cmd_emit_timestamp = genX(cmd_emit_timestamp);
+   pdevice->cmd_capture_data = genX(cmd_capture_data);
+
+   pdevice->gpgpu_pipeline_value = GPGPU;
+
+   struct GENX(VERTEX_ELEMENT_STATE) empty_ve = {
+      .Valid = true,
+      .Component0Control = VFCOMP_STORE_0,
+      .Component1Control = VFCOMP_STORE_0,
+      .Component2Control = VFCOMP_STORE_0,
+      .Component3Control = VFCOMP_STORE_0,
+   };
+   GENX(VERTEX_ELEMENT_STATE_pack)(NULL, pdevice->empty_vs_input, &empty_ve);
 }
 
 VkResult
@@ -717,9 +937,13 @@ genX(init_device_state)(struct anv_device *device)
          break;
       }
       case INTEL_ENGINE_CLASS_VIDEO:
-         res = VK_SUCCESS;
+         res = init_copy_video_queue_state(queue);
          break;
       case INTEL_ENGINE_CLASS_COPY:
+         res = init_copy_video_queue_state(queue);
+         if (res != VK_SUCCESS)
+            return res;
+
          /**
           * Execute RCS init batch by default on the companion RCS command buffer in
           * order to support MSAA copy/clear operations on copy queue.
@@ -732,6 +956,10 @@ genX(init_device_state)(struct anv_device *device)
       }
       if (res != VK_SUCCESS)
          return res;
+
+      if (!device->trtt.queue &&
+          queue->family->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
+         device->trtt.queue = queue;
    }
 
    return res;
@@ -753,7 +981,7 @@ genX(init_device_state)(struct anv_device *device)
 void
 genX(init_cps_device_state)(struct anv_device *device)
 {
-#if GFX_VER >= 12
+#if GFX_VER >= 12 && GFX_VER < 30
    void *cps_state_ptr = device->cps_states.map;
 
    /* Disabled CPS mode */
@@ -808,7 +1036,7 @@ genX(init_cps_device_state)(struct anv_device *device)
          }
       }
    }
-#endif /* GFX_VER >= 12 */
+#endif /* GFX_VER >= 12 && GFX_VER < 30 */
 }
 
 void
@@ -816,6 +1044,7 @@ genX(emit_l3_config)(struct anv_batch *batch,
                      const struct anv_device *device,
                      const struct intel_l3_config *cfg)
 {
+#if GFX_VER < 20
    UNUSED const struct intel_device_info *devinfo = device->info;
 
 #if GFX_VER >= 12
@@ -827,7 +1056,11 @@ genX(emit_l3_config)(struct anv_batch *batch,
 #endif
 
    anv_batch_write_reg(batch, L3_ALLOCATION_REG, l3cr) {
-      if (cfg == NULL) {
+      if (cfg == NULL || (GFX_VER >= 12 && cfg->n[INTEL_L3P_ALL] > 126)) {
+         assert(!cfg || !(cfg->n[INTEL_L3P_SLM] || cfg->n[INTEL_L3P_URB] ||
+                          cfg->n[INTEL_L3P_DC] || cfg->n[INTEL_L3P_RO] ||
+                          cfg->n[INTEL_L3P_IS] || cfg->n[INTEL_L3P_C] ||
+                          cfg->n[INTEL_L3P_T] || cfg->n[INTEL_L3P_TC]));
 #if GFX_VER >= 12
          l3cr.L3FullWayAllocationEnable = true;
 #else
@@ -854,6 +1087,7 @@ genX(emit_l3_config)(struct anv_batch *batch,
          l3cr.AllAllocation = cfg->n[INTEL_L3P_ALL];
       }
    }
+#endif /* GFX_VER < 20 */
 }
 
 void
@@ -935,9 +1169,21 @@ vk_to_intel_tex_filter(VkFilter filter, bool anisotropyEnable)
    default:
       unreachable("Invalid filter");
    case VK_FILTER_NEAREST:
-      return anisotropyEnable ? MAPFILTER_ANISOTROPIC : MAPFILTER_NEAREST;
+      return anisotropyEnable ?
+#if GFX_VER >= 30
+             MAPFILTER_ANISOTROPIC_FAST :
+#else
+             MAPFILTER_ANISOTROPIC :
+#endif
+             MAPFILTER_NEAREST;
    case VK_FILTER_LINEAR:
-      return anisotropyEnable ? MAPFILTER_ANISOTROPIC : MAPFILTER_LINEAR;
+      return anisotropyEnable ?
+#if GFX_VER >= 30
+             MAPFILTER_ANISOTROPIC_FAST :
+#else
+             MAPFILTER_ANISOTROPIC :
+#endif
+             MAPFILTER_LINEAR;
    }
 }
 
@@ -1011,15 +1257,36 @@ VkResult genX(CreateSampler)(
 
    uint32_t border_color_stride = 64;
    uint32_t border_color_offset;
+   void *border_color_ptr;
    if (sampler->vk.border_color <= VK_BORDER_COLOR_INT_OPAQUE_WHITE) {
       border_color_offset = device->border_colors.offset +
                             pCreateInfo->borderColor *
                             border_color_stride;
+      border_color_ptr = device->border_colors.map +
+                         pCreateInfo->borderColor * border_color_stride;
    } else {
       assert(vk_border_color_is_custom(sampler->vk.border_color));
-      sampler->custom_border_color =
-         anv_state_reserved_pool_alloc(&device->custom_border_colors);
+      if (pCreateInfo->flags & VK_SAMPLER_CREATE_DESCRIPTOR_BUFFER_CAPTURE_REPLAY_BIT_EXT) {
+         const VkOpaqueCaptureDescriptorDataCreateInfoEXT *opaque_info =
+            vk_find_struct_const(pCreateInfo->pNext,
+                                 OPAQUE_CAPTURE_DESCRIPTOR_DATA_CREATE_INFO_EXT);
+         if (opaque_info) {
+            uint32_t alloc_idx = *((const uint32_t *)opaque_info->opaqueCaptureDescriptorData);
+            sampler->custom_border_color =
+               anv_state_reserved_array_pool_alloc_index(&device->custom_border_colors, alloc_idx);
+         } else {
+            sampler->custom_border_color =
+               anv_state_reserved_array_pool_alloc(&device->custom_border_colors, true);
+         }
+      } else {
+         sampler->custom_border_color =
+            anv_state_reserved_array_pool_alloc(&device->custom_border_colors, false);
+      }
+      if (sampler->custom_border_color.alloc_size == 0)
+         return vk_error(device, VK_ERROR_OUT_OF_DEVICE_MEMORY);
+
       border_color_offset = sampler->custom_border_color.offset;
+      border_color_ptr = sampler->custom_border_color.map;
 
       union isl_color_value color = { .u32 = {
          sampler->vk.border_color_value.uint32[0],
@@ -1030,7 +1297,7 @@ VkResult genX(CreateSampler)(
 
       const struct anv_format *format_desc =
          sampler->vk.format != VK_FORMAT_UNDEFINED ?
-         anv_get_format(sampler->vk.format) : NULL;
+         anv_get_format(device->physical, sampler->vk.format) : NULL;
 
       if (format_desc && format_desc->n_planes == 1 &&
           !isl_swizzle_is_identity(format_desc->planes[0].swizzle)) {
@@ -1040,20 +1307,14 @@ VkResult genX(CreateSampler)(
          color = isl_color_value_swizzle(color, fmt_plane->swizzle, true);
       }
 
-      memcpy(sampler->custom_border_color.map, color.u32, sizeof(color));
+      memcpy(border_color_ptr, color.u32, sizeof(color));
    }
-
-   /* If we have bindless, allocate enough samplers.  We allocate 32 bytes
-    * for each sampler instead of 16 bytes because we want all bindless
-    * samplers to be 32-byte aligned so we don't have to use indirect
-    * sampler messages on them.
-    */
-   sampler->bindless_state =
-      anv_state_pool_alloc(&device->dynamic_state_pool,
-                           sampler->n_planes * 32, 32);
 
    const bool seamless_cube =
       !(pCreateInfo->flags & VK_SAMPLER_CREATE_NON_SEAMLESS_CUBE_MAP_BIT_EXT);
+
+   struct mesa_sha1 ctx;
+   _mesa_sha1_init(&ctx);
 
    for (unsigned p = 0; p < sampler->n_planes; p++) {
       const bool plane_has_chroma =
@@ -1074,7 +1335,7 @@ VkResult genX(CreateSampler)(
        *   "Mip Mode Filter must be set to MIPFILTER_NONE for Planar YUV surfaces."
        */
       enum isl_format plane0_isl_format = sampler->vk.ycbcr_conversion ?
-         anv_get_format(sampler->vk.format)->planes[0].isl_format :
+         anv_get_format(device->physical, sampler->vk.format)->planes[0].isl_format :
          ISL_FORMAT_UNSUPPORTED;
       const bool isl_format_is_planar_yuv =
          plane0_isl_format != ISL_FORMAT_UNSUPPORTED &&
@@ -1111,8 +1372,6 @@ VkResult genX(CreateSampler)(
                                         pCreateInfo->compareOp : VK_COMPARE_OP_NEVER],
          .CubeSurfaceControlMode = seamless_cube ? OVERRIDE : PROGRAMMED,
 
-         .BorderColorPointer = border_color_offset,
-
          .LODClampMagnificationMode = MIPNONE,
 
          .MaximumAnisotropy = vk_to_intel_max_anisotropy(pCreateInfo->maxAnisotropy),
@@ -1134,17 +1393,73 @@ VkResult genX(CreateSampler)(
             sampler->vk.reduction_mode != VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE,
       };
 
-      GENX(SAMPLER_STATE_pack)(NULL, sampler->state[p], &sampler_state);
+      /* Pack a version of the SAMPLER_STATE without the border color. We'll
+       * use it to store into the shader cache and also for hashing.
+       */
+      GENX(SAMPLER_STATE_pack)(NULL, sampler->state_no_bc[p], &sampler_state);
+      _mesa_sha1_update(&ctx, sampler->state_no_bc[p], sizeof(sampler->state_no_bc[p]));
 
-      if (sampler->bindless_state.map) {
-         memcpy(sampler->bindless_state.map + p * 32,
-                sampler->state[p], GENX(SAMPLER_STATE_length) * 4);
-      }
+      /* Put border color after the hashing, we don't want the allocation
+       * order of border colors to influence the hash. We just need th
+       * parameters to be hashed.
+       */
+      sampler_state.BorderColorPointer = border_color_offset;
+      GENX(SAMPLER_STATE_pack)(NULL, sampler->state[p], &sampler_state);
    }
+
+   /* If we have bindless, allocate enough samplers.  We allocate 32 bytes
+    * for each sampler instead of 16 bytes because we want all bindless
+    * samplers to be 32-byte aligned so we don't have to use indirect
+    * sampler messages on them.
+    */
+   sampler->bindless_state =
+      anv_state_pool_alloc(&device->dynamic_state_pool,
+                           sampler->n_planes * 32, 32);
+   if (sampler->bindless_state.map) {
+      memcpy(sampler->bindless_state.map, sampler->state,
+             sampler->n_planes * GENX(SAMPLER_STATE_length) * 4);
+   }
+
+   /* Hash the border color */
+   _mesa_sha1_update(&ctx, border_color_ptr,
+                     sizeof(union isl_color_value));
+
+   _mesa_sha1_final(&ctx, sampler->sha1);
 
    *pSampler = anv_sampler_to_handle(sampler);
 
    return VK_SUCCESS;
+}
+
+void
+genX(emit_embedded_sampler)(struct anv_device *device,
+                            struct anv_embedded_sampler *sampler,
+                            struct anv_pipeline_embedded_sampler_binding *binding)
+{
+   sampler->ref_cnt = 1;
+   memcpy(&sampler->key, &binding->key, sizeof(binding->key));
+
+   sampler->border_color_state =
+      anv_state_pool_alloc(&device->dynamic_state_pool,
+                           sizeof(struct gfx8_border_color), 64);
+   memcpy(sampler->border_color_state.map,
+          binding->key.color,
+          sizeof(binding->key.color));
+
+   sampler->sampler_state =
+      anv_state_pool_alloc(&device->dynamic_state_pool,
+                           ANV_SAMPLER_STATE_SIZE, 32);
+
+   struct GENX(SAMPLER_STATE) sampler_state = {
+      .BorderColorPointer = sampler->border_color_state.offset,
+   };
+   uint32_t dwords[GENX(SAMPLER_STATE_length)];
+   GENX(SAMPLER_STATE_pack)(NULL, dwords, &sampler_state);
+
+   for (uint32_t i = 0; i < GENX(SAMPLER_STATE_length); i++) {
+      ((uint32_t *)sampler->sampler_state.map)[i] =
+         dwords[i] | binding->key.sampler[i];
+   }
 }
 
 /* Wa_14015814527
@@ -1155,6 +1470,9 @@ VkResult genX(CreateSampler)(
 void
 genX(apply_task_urb_workaround)(struct anv_cmd_buffer *cmd_buffer)
 {
+   if (!anv_cmd_buffer_is_render_queue(cmd_buffer))
+      return;
+
 #if GFX_VERx10 >= 125
    const struct intel_device_info *devinfo = &cmd_buffer->device->physical->info;
 
@@ -1175,9 +1493,15 @@ genX(apply_task_urb_workaround)(struct anv_cmd_buffer *cmd_buffer)
       return;
 
    for (int i = 0; i <= MESA_SHADER_GEOMETRY; i++) {
+#if GFX_VER >= 12
+      anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_URB_ALLOC_VS), urb) {
+         urb._3DCommandSubOpcode += i;
+      }
+#else
       anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_URB_VS), urb) {
          urb._3DCommandSubOpcode += i;
       }
+#endif
    }
 
    anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_URB_ALLOC_MESH), zero);
@@ -1186,6 +1510,88 @@ genX(apply_task_urb_workaround)(struct anv_cmd_buffer *cmd_buffer)
    /* Issue 'nullprim' to commit the state. */
    genx_batch_emit_pipe_control_write
       (&cmd_buffer->batch, cmd_buffer->device->info,
+       cmd_buffer->state.current_pipeline,
        WriteImmediateData, cmd_buffer->device->workaround_address, 0, 0);
 #endif
+}
+
+VkResult
+genX(init_trtt_context_state)(struct anv_async_submit *submit)
+{
+#if GFX_VER >= 12
+   struct anv_queue *queue = submit->queue;
+   struct anv_device *device = queue->device;
+   struct anv_trtt *trtt = &device->trtt;
+   struct anv_batch *batch = &submit->batch;
+
+   assert((trtt->l3_addr & 0xFFF) == 0);
+   uint32_t l3_addr_low = (trtt->l3_addr & 0xFFFFF000) >> 12;
+   uint32_t l3_addr_high = (trtt->l3_addr >> 32) & 0xFFFF;
+
+   anv_batch_write_reg(batch, GENX(GFX_TRTT_INVAL), trtt_inval)
+      trtt_inval.InvalidTileDetectionValue = ANV_TRTT_L1_INVALID_TILE_VAL;
+   anv_batch_write_reg(batch, GENX(GFX_TRTT_NULL), trtt_null)
+      trtt_null.NullTileDetectionValue = ANV_TRTT_L1_NULL_TILE_VAL;
+   anv_batch_write_reg(batch, GENX(GFX_TRTT_L3_BASE_LOW), trtt_base_low)
+      trtt_base_low.TRVAL3PointerLowerAddress = l3_addr_low;
+   anv_batch_write_reg(batch, GENX(GFX_TRTT_L3_BASE_HIGH), trtt_base_high)
+      trtt_base_high.TRVAL3PointerUpperAddress = l3_addr_high;
+
+   anv_batch_write_reg(batch, GENX(BLT_TRTT_INVAL), trtt_inval)
+      trtt_inval.InvalidTileDetectionValue = ANV_TRTT_L1_INVALID_TILE_VAL;
+   anv_batch_write_reg(batch, GENX(BLT_TRTT_NULL), trtt_null)
+      trtt_null.NullTileDetectionValue = ANV_TRTT_L1_NULL_TILE_VAL;
+   anv_batch_write_reg(batch, GENX(BLT_TRTT_L3_BASE_LOW), trtt_base_low)
+      trtt_base_low.TRVAL3PointerLowerAddress = l3_addr_low;
+   anv_batch_write_reg(batch, GENX(BLT_TRTT_L3_BASE_HIGH), trtt_base_high)
+      trtt_base_high.TRVAL3PointerUpperAddress = l3_addr_high;
+
+   anv_batch_write_reg(batch, GENX(COMP_CTX0_TRTT_INVAL), trtt_inval)
+      trtt_inval.InvalidTileDetectionValue = ANV_TRTT_L1_INVALID_TILE_VAL;
+   anv_batch_write_reg(batch, GENX(COMP_CTX0_TRTT_NULL), trtt_null)
+      trtt_null.NullTileDetectionValue = ANV_TRTT_L1_NULL_TILE_VAL;
+   anv_batch_write_reg(batch, GENX(COMP_CTX0_TRTT_L3_BASE_LOW), trtt_base_low)
+      trtt_base_low.TRVAL3PointerLowerAddress = l3_addr_low;
+   anv_batch_write_reg(batch, GENX(COMP_CTX0_TRTT_L3_BASE_HIGH), trtt_base_high)
+      trtt_base_high.TRVAL3PointerUpperAddress = l3_addr_high;
+
+#if GFX_VER >= 20
+   uint32_t trva_base = device->physical->va.trtt.addr >> 44;
+   anv_batch_write_reg(batch, GENX(GFX_TRTT_VA_RANGE), trtt_va_range)
+      trtt_va_range.TRVABase = trva_base;
+   anv_batch_write_reg(batch, GENX(BLT_TRTT_VA_RANGE), trtt_va_range)
+      trtt_va_range.TRVABase = trva_base;
+   anv_batch_write_reg(batch, GENX(COMP_CTX0_TRTT_VA_RANGE), trtt_va_range)
+      trtt_va_range.TRVABase = trva_base;
+#else
+   anv_batch_write_reg(batch, GENX(GFX_TRTT_VA_RANGE), trtt_va_range) {
+      trtt_va_range.TRVAMaskValue = 0xF;
+      trtt_va_range.TRVADataValue = 0xF;
+   }
+   anv_batch_write_reg(batch, GENX(BLT_TRTT_VA_RANGE), trtt_va_range) {
+      trtt_va_range.TRVAMaskValue = 0xF;
+      trtt_va_range.TRVADataValue = 0xF;
+   }
+   anv_batch_write_reg(batch, GENX(COMP_CTX0_TRTT_VA_RANGE), trtt_va_range) {
+      trtt_va_range.TRVAMaskValue = 0xF;
+      trtt_va_range.TRVADataValue = 0xF;
+   }
+#endif
+
+   /* Enabling TR-TT needs to be done after setting up the other registers.
+    */
+   anv_batch_write_reg(batch, GENX(GFX_TRTT_CR), trtt_cr)
+      trtt_cr.TRTTEnable = true;
+   anv_batch_write_reg(batch, GENX(BLT_TRTT_CR), trtt_cr)
+      trtt_cr.TRTTEnable = true;
+   anv_batch_write_reg(batch, GENX(COMP_CTX0_TRTT_CR), trtt_cr)
+      trtt_cr.TRTTEnable = true;
+
+   if (queue->family->engine_class != INTEL_ENGINE_CLASS_COPY) {
+      genx_batch_emit_pipe_control(batch, device->info, _3D,
+                                   ANV_PIPE_CS_STALL_BIT |
+                                   ANV_PIPE_TLB_INVALIDATE_BIT);
+   }
+#endif
+   return VK_SUCCESS;
 }

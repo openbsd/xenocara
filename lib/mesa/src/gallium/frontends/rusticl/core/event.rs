@@ -4,14 +4,13 @@ use crate::core::context::*;
 use crate::core::queue::*;
 use crate::impl_cl_type_trait;
 
-use mesa_rust::pipe::context::*;
 use mesa_rust::pipe::query::*;
 use mesa_rust_gen::*;
 use mesa_rust_util::static_assert;
 use rusticl_opencl_gen::*;
 
 use std::collections::HashSet;
-use std::slice;
+use std::mem;
 use std::sync::Arc;
 use std::sync::Condvar;
 use std::sync::Mutex;
@@ -24,7 +23,7 @@ static_assert!(CL_RUNNING == 1);
 static_assert!(CL_SUBMITTED == 2);
 static_assert!(CL_QUEUED == 3);
 
-pub type EventSig = Box<dyn FnOnce(&Arc<Queue>, &PipeContext) -> CLResult<()>>;
+pub type EventSig = Box<dyn FnOnce(&Arc<Queue>, &QueueContext) -> CLResult<()> + Send + Sync>;
 
 pub enum EventTimes {
     Queued = CL_PROFILING_COMMAND_QUEUED as isize,
@@ -56,10 +55,6 @@ pub struct Event {
 
 impl_cl_type_trait!(cl_event, Event, CL_INVALID_EVENT);
 
-// TODO shouldn't be needed, but... uff C pointers are annoying
-unsafe impl Send for Event {}
-unsafe impl Sync for Event {}
-
 impl Event {
     pub fn new(
         queue: &Arc<Queue>,
@@ -68,9 +63,9 @@ impl Event {
         work: EventSig,
     ) -> Arc<Event> {
         Arc::new(Self {
-            base: CLObjectBase::new(),
-            context: queue.context.clone(),
-            queue: Some(queue.clone()),
+            base: CLObjectBase::new(RusticlTypes::Event),
+            context: Arc::clone(&queue.context),
+            queue: Some(Arc::clone(queue)),
             cmd_type: cmd_type,
             deps: deps,
             state: Mutex::new(EventMutState {
@@ -84,7 +79,7 @@ impl Event {
 
     pub fn new_user(context: Arc<Context>) -> Arc<Event> {
         Arc::new(Self {
-            base: CLObjectBase::new(),
+            base: CLObjectBase::new(RusticlTypes::Event),
             context: context,
             queue: None,
             cmd_type: CL_COMMAND_USER,
@@ -97,11 +92,6 @@ impl Event {
         })
     }
 
-    pub fn from_cl_arr(events: *const cl_event, num_events: u32) -> CLResult<Vec<Arc<Event>>> {
-        let s = unsafe { slice::from_raw_parts(events, num_events as usize) };
-        s.iter().map(|e| e.get_arc()).collect()
-    }
-
     fn state(&self) -> MutexGuard<EventMutState> {
         self.state.lock().unwrap()
     }
@@ -110,7 +100,7 @@ impl Event {
         self.state().status
     }
 
-    fn set_status(&self, lock: &mut MutexGuard<EventMutState>, new: cl_int) {
+    fn set_status(&self, mut lock: MutexGuard<EventMutState>, new: cl_int) {
         lock.status = new;
 
         // signal on completion or an error
@@ -118,16 +108,46 @@ impl Event {
             self.cv.notify_all();
         }
 
-        if [CL_COMPLETE, CL_RUNNING, CL_SUBMITTED].contains(&(new as u32)) {
-            if let Some(cbs) = lock.cbs.get_mut(new as usize) {
-                cbs.drain(..).for_each(|cb| cb.call(self, new));
-            }
+        // errors we treat as CL_COMPLETE
+        let cb_max = if new < 0 { CL_COMPLETE } else { new as u32 };
+
+        // there are only callbacks for those
+        if ![CL_COMPLETE, CL_RUNNING, CL_SUBMITTED].contains(&cb_max) {
+            return;
+        }
+
+        let mut cbs = Vec::new();
+        // Collect all cbs we need to call first. Technically it is not required to call them in
+        // order, but let's be nice to applications as it's for free
+        for idx in (cb_max..=CL_SUBMITTED).rev() {
+            cbs.extend(
+                // use mem::take as each callback is only supposed to be called exactly once
+                mem::take(&mut lock.cbs[idx as usize])
+                    .into_iter()
+                    // we need to save the status this cb was registered with
+                    .map(|cb| (idx as cl_int, cb)),
+            );
+        }
+
+        // applications might want to access the event in the callback, so drop the lock before
+        // calling into the callbacks.
+        drop(lock);
+
+        for (idx, cb) in cbs {
+            // from the CL spec:
+            //
+            // event_command_status is equal to the command_exec_callback_type used while
+            // registering the callback. [...] If the callback is called as the result of the
+            // command associated with event being abnormally terminated, an appropriate error code
+            // for the error that caused the termination will be passed to event_command_status
+            // instead.
+            let status = if new < 0 { new } else { idx };
+            cb.call(self, status);
         }
     }
 
     pub fn set_user_status(&self, status: cl_int) {
-        let mut lock = self.state();
-        self.set_status(&mut lock, status);
+        self.set_status(self.state(), status);
     }
 
     pub fn is_error(&self) -> bool {
@@ -173,10 +193,15 @@ impl Event {
     }
 
     pub(super) fn signal(&self) {
-        let mut lock = self.state();
-
-        self.set_status(&mut lock, CL_RUNNING as cl_int);
-        self.set_status(&mut lock, CL_COMPLETE as cl_int);
+        let state = self.state();
+        // we don't want to call signal on errored events, but if that still happens, handle it
+        // gracefully
+        debug_assert_eq!(state.status, CL_SUBMITTED as cl_int);
+        if state.status < 0 {
+            return;
+        }
+        self.set_status(state, CL_RUNNING as cl_int);
+        self.set_status(self.state(), CL_COMPLETE as cl_int);
     }
 
     pub fn wait(&self) -> cl_int {
@@ -187,6 +212,14 @@ impl Event {
                 .wait_timeout(lock, Duration::from_secs(1))
                 .unwrap()
                 .0;
+
+            if let Some(queue) = &self.queue {
+                // in case the queue worker thread exited abnormally we'll need to stop spinning on
+                // the cv here, because otherwise we'll end up spinning endlessly.
+                if queue.is_dead() {
+                    return CL_OUT_OF_HOST_MEMORY;
+                }
+            }
         }
         lock.status
     }
@@ -194,9 +227,9 @@ impl Event {
     // We always assume that work here simply submits stuff to the hardware even if it's just doing
     // sw emulation or nothing at all.
     // If anything requets waiting, we will update the status through fencing later.
-    pub fn call(&self, ctx: &PipeContext) {
+    pub fn call(&self, ctx: &QueueContext) -> cl_int {
         let mut lock = self.state();
-        let status = lock.status;
+        let mut status = lock.status;
         let queue = self.queue.as_ref().unwrap();
         let profiling_enabled = queue.is_profiling_enabled();
         if status == CL_QUEUED as cl_int {
@@ -206,7 +239,7 @@ impl Event {
             }
             let mut query_start = None;
             let mut query_end = None;
-            let new = lock.work.take().map_or(
+            status = lock.work.take().map_or(
                 // if there is no work
                 CL_SUBMITTED as cl_int,
                 |w| {
@@ -216,7 +249,7 @@ impl Event {
                     }
 
                     let res = w(queue, ctx).err().map_or(
-                        // if there is an error, negate it
+                        // return the error if there is one
                         CL_SUBMITTED as cl_int,
                         |e| e,
                     );
@@ -232,8 +265,9 @@ impl Event {
                 lock.time_start = query_start.unwrap().read_blocked();
                 lock.time_end = query_end.unwrap().read_blocked();
             }
-            self.set_status(&mut lock, new);
+            self.set_status(lock, status);
         }
+        status
     }
 
     fn deep_unflushed_deps_impl<'a>(&'a self, result: &mut HashSet<&'a Event>) {
@@ -267,6 +301,27 @@ impl Event {
             .iter()
             .filter_map(|e| e.queue.clone())
             .collect()
+    }
+}
+
+impl Drop for Event {
+    // implement drop in order to prevent stack overflows of long dependency chains.
+    //
+    // This abuses the fact that `Arc::into_inner` only succeeds when there is one strong reference
+    // so we turn a recursive drop chain into a drop list for events having no other references.
+    fn drop(&mut self) {
+        if self.deps.is_empty() {
+            return;
+        }
+
+        let mut deps_list = vec![mem::take(&mut self.deps)];
+        while let Some(deps) = deps_list.pop() {
+            for dep in deps {
+                if let Some(mut dep) = Arc::into_inner(dep) {
+                    deps_list.push(mem::take(&mut dep.deps));
+                }
+            }
+        }
     }
 }
 

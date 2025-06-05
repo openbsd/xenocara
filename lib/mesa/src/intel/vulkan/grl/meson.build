@@ -1,24 +1,5 @@
 # Copyright © 2021 Intel Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-fs = import('fs')
+# SPDX-License-Identifier: MIT
 
 grl_lib_files = [
   'gpu/libs/libraries.grl',
@@ -100,7 +81,8 @@ foreach grl_file : grl_grl_files
 endforeach
 
 grl_genX_libs = []
-foreach t : [['125', 'gfx125', 'dg2']]
+foreach t : [['125', 'gfx125', 'dg2'], ['200', 'gfx20', 'lnl'],
+             ['300', 'gfx30', 'ptl'], ]
   verX10 = t[0]
   genX_prefix = t[1]
   platform = t[2]
@@ -138,11 +120,9 @@ foreach t : [['125', 'gfx125', 'dg2']]
         '-DMAX_HW_SIMD_WIDTH=16', '-DMAX_WORKGROUP_SIZE=16',
         '-I' + join_paths(meson.current_source_dir(), 'gpu'),
         '-I' + join_paths(meson.current_source_dir(), 'include'),
-        '-include', 'opencl-c.h', # added to bypass build failure from clang15
-                                   # without modifying grl source code, remove
-                                   # if fixed there
       ],
-      env: ['MESA_SHADER_CACHE_DISABLE=true'],
+      env: ['MESA_SHADER_CACHE_DISABLE=true',
+            'MESA_SPIRV_LOG_LEVEL=error'],
       depends : dep_prog_intel_clc
     )
   endforeach
@@ -175,7 +155,7 @@ foreach t : [['125', 'gfx125', 'dg2']]
     ],
     dependencies : [
       dep_valgrind, idep_nir_headers, idep_vulkan_util_headers, idep_vulkan_wsi_headers,
-      idep_vulkan_runtime_headers, idep_anv_headers,
+      idep_vulkan_runtime_headers, idep_anv_headers, idep_genxml,
     ],
     gnu_symbol_visibility : 'hidden',
   )
@@ -200,6 +180,6 @@ libgrl = static_library(
 idep_grl = declare_dependency(
   link_with : libgrl,
   dependencies : libgrl_deps,
-  sources : grl_metakernel_h,
+  sources : [grl_metakernel_h, grl_cl_kernel_h],
   include_directories : include_directories('include', 'gpu'),
 )

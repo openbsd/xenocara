@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2017-2018 Rob Clark <robclark@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2017-2018 Rob Clark <robclark@freedesktop.org>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -50,7 +32,7 @@ byte_offset_to_address(struct ir3_context *ctx,
       nir_src *ssbo,
       struct ir3_instruction *byte_offset)
 {
-   struct ir3_block *b = ctx->block;
+   struct ir3_builder *b = &ctx->build;
 
    if (ctx->compiler->gen == 4) {
       uint32_t index = nir_src_as_uint(*ssbo);
@@ -70,7 +52,7 @@ static void
 emit_intrinsic_load_ssbo(struct ir3_context *ctx, nir_intrinsic_instr *intr,
                          struct ir3_instruction **dst)
 {
-   struct ir3_block *b = ctx->block;
+   struct ir3_builder *b = &ctx->build;
    struct ir3_instruction *ldgb, *src0, *src1, *byte_offset, *offset;
 
    struct ir3_instruction *ssbo = ir3_ssbo_to_ibo(ctx, intr->src[0]);
@@ -97,7 +79,7 @@ emit_intrinsic_load_ssbo(struct ir3_context *ctx, nir_intrinsic_instr *intr,
 static void
 emit_intrinsic_store_ssbo(struct ir3_context *ctx, nir_intrinsic_instr *intr)
 {
-   struct ir3_block *b = ctx->block;
+   struct ir3_builder *b = &ctx->build;
    struct ir3_instruction *stgb, *src0, *src1, *src2, *byte_offset, *offset;
    unsigned wrmask = nir_intrinsic_write_mask(intr);
    unsigned ncomp = ffs(~wrmask) - 1;
@@ -123,15 +105,12 @@ emit_intrinsic_store_ssbo(struct ir3_context *ctx, nir_intrinsic_instr *intr)
    stgb->barrier_class = IR3_BARRIER_BUFFER_W;
    stgb->barrier_conflict = IR3_BARRIER_BUFFER_R | IR3_BARRIER_BUFFER_W;
 
-   array_insert(b, b->keeps, stgb);
+   array_insert(ctx->block, ctx->block->keeps, stgb);
 }
 
 static struct ir3_instruction *
-emit_atomic(struct ir3_block *b,
-            nir_atomic_op op,
-            struct ir3_instruction *bo,
-            struct ir3_instruction *data,
-            struct ir3_instruction *offset,
+emit_atomic(struct ir3_builder *b, nir_atomic_op op, struct ir3_instruction *bo,
+            struct ir3_instruction *data, struct ir3_instruction *offset,
             struct ir3_instruction *byte_offset)
 {
    switch (op) {
@@ -185,7 +164,7 @@ emit_atomic(struct ir3_block *b,
 static struct ir3_instruction *
 emit_intrinsic_atomic_ssbo(struct ir3_context *ctx, nir_intrinsic_instr *intr)
 {
-   struct ir3_block *b = ctx->block;
+   struct ir3_builder *b = &ctx->build;
    nir_atomic_op op = nir_intrinsic_atomic_op(intr);
    type_t type = nir_atomic_op_type(op) == nir_type_int ? TYPE_S32 : TYPE_U32;
 
@@ -214,7 +193,7 @@ emit_intrinsic_atomic_ssbo(struct ir3_context *ctx, nir_intrinsic_instr *intr)
    atomic->barrier_conflict = IR3_BARRIER_BUFFER_R | IR3_BARRIER_BUFFER_W;
 
    /* even if nothing consume the result, we can't DCE the instruction: */
-   array_insert(b, b->keeps, atomic);
+   array_insert(ctx->block, ctx->block->keeps, atomic);
 
    return atomic;
 }
@@ -223,7 +202,7 @@ static struct ir3_instruction *
 get_image_offset(struct ir3_context *ctx, const nir_intrinsic_instr *instr,
                  struct ir3_instruction *const *coords, bool byteoff)
 {
-   struct ir3_block *b = ctx->block;
+   struct ir3_builder *b = &ctx->build;
    struct ir3_instruction *offset;
    unsigned index = nir_src_as_uint(instr->src[0]);
    unsigned ncoords = ir3_get_image_coords(instr, NULL);
@@ -236,7 +215,7 @@ get_image_offset(struct ir3_context *ctx, const nir_intrinsic_instr *instr,
       const struct ir3_const_state *const_state = ir3_const_state(ctx->so);
       assert(const_state->image_dims.mask & (1 << index));
 
-      cb = regid(const_state->offsets.image_dims, 0) +
+      cb = ir3_const_reg(const_state, IR3_CONST_ALLOC_IMAGE_DIMS, 0) +
          const_state->image_dims.off[index];
    } else {
       index += ctx->s->info.num_ssbos;
@@ -282,7 +261,7 @@ static void
 emit_intrinsic_load_image(struct ir3_context *ctx, nir_intrinsic_instr *intr,
                           struct ir3_instruction **dst)
 {
-   struct ir3_block *b = ctx->block;
+   struct ir3_builder *b = &ctx->build;
    struct ir3_instruction *const *coords = ir3_get_src(ctx, &intr->src[1]);
    struct ir3_instruction *ibo = ir3_image_to_ibo(ctx, intr->src[0]);
    struct ir3_instruction *offset = get_image_offset(ctx, intr, coords, true);
@@ -329,7 +308,7 @@ emit_intrinsic_load_image(struct ir3_context *ctx, nir_intrinsic_instr *intr,
 static void
 emit_intrinsic_store_image(struct ir3_context *ctx, nir_intrinsic_instr *intr)
 {
-   struct ir3_block *b = ctx->block;
+   struct ir3_builder *b = &ctx->build;
    struct ir3_instruction *stib, *offset;
    struct ir3_instruction *const *value = ir3_get_src(ctx, &intr->src[3]);
    struct ir3_instruction *const *coords = ir3_get_src(ctx, &intr->src[1]);
@@ -359,14 +338,14 @@ emit_intrinsic_store_image(struct ir3_context *ctx, nir_intrinsic_instr *intr)
    stib->barrier_class = IR3_BARRIER_IMAGE_W;
    stib->barrier_conflict = IR3_BARRIER_IMAGE_R | IR3_BARRIER_IMAGE_W;
 
-   array_insert(b, b->keeps, stib);
+   array_insert(ctx->block, ctx->block->keeps, stib);
 }
 
 /* src[] = { deref, coord, sample_index, value, compare }. const_index[] = {} */
 static struct ir3_instruction *
 emit_intrinsic_atomic_image(struct ir3_context *ctx, nir_intrinsic_instr *intr)
 {
-   struct ir3_block *b = ctx->block;
+   struct ir3_builder *b = &ctx->build;
    struct ir3_instruction *atomic, *src0, *src1, *src2;
    struct ir3_instruction *const *coords = ir3_get_src(ctx, &intr->src[1]);
    struct ir3_instruction *image = ir3_image_to_ibo(ctx, intr->src[0]);
@@ -393,7 +372,7 @@ emit_intrinsic_atomic_image(struct ir3_context *ctx, nir_intrinsic_instr *intr)
    atomic->barrier_conflict = IR3_BARRIER_IMAGE_R | IR3_BARRIER_IMAGE_W;
 
    /* even if nothing consume the result, we can't DCE the instruction: */
-   array_insert(b, b->keeps, atomic);
+   array_insert(ctx->block, ctx->block->keeps, atomic);
 
    return atomic;
 }

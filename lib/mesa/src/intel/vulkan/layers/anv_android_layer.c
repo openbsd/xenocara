@@ -23,11 +23,11 @@
 
 #include "anv_private.h"
 
-VKAPI_ATTR VkResult VKAPI_CALL
-android_CreateImageView(VkDevice _device,
-                        const VkImageViewCreateInfo *pCreateInfo,
-                        const VkAllocationCallbacks *pAllocator,
-                        VkImageView *pView)
+VkResult anv_android_CreateImageView(
+    VkDevice                                    _device,
+    const VkImageViewCreateInfo*                pCreateInfo,
+    const VkAllocationCallbacks*                pAllocator,
+    VkImageView*                                pView)
 {
    ANV_FROM_HANDLE(anv_device, device, _device);
    const struct util_format_description *fmt =
@@ -38,7 +38,8 @@ android_CreateImageView(VkDevice _device,
     * format.
     */
    if (fmt && fmt->layout == UTIL_FORMAT_LAYOUT_ASTC &&
-       device->info->verx10 >= 125) {
+       device->info->verx10 >= 125 &&
+       !(device->physical->has_astc_ldr || device->physical->emu_astc_ldr)) {
       return vk_errorf(device, VK_ERROR_OUT_OF_HOST_MEMORY,
                        "ASTC format not supported (%s).", __func__);
    }

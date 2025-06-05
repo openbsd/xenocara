@@ -25,8 +25,8 @@
 
 #include "wsi_common.h"
 #include "util/perf/cpu_trace.h"
-#include "vulkan/runtime/vk_object.h"
-#include "vulkan/runtime/vk_sync.h"
+#include "vk_object.h"
+#include "vk_sync.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +40,7 @@ struct wsi_swapchain;
 #define WSI_DEBUG_NOSHM       (1ull << 2)
 #define WSI_DEBUG_LINEAR      (1ull << 3)
 #define WSI_DEBUG_DXGI        (1ull << 4)
+#define WSI_DEBUG_NOWLTS      (1ull << 5)
 
 extern uint64_t WSI_DEBUG;
 
@@ -63,6 +64,7 @@ struct wsi_drm_image_params {
    struct wsi_base_image_params base;
 
    bool same_gpu;
+   bool explicit_sync;
 
    uint32_t num_modifier_lists;
    const uint32_t *num_modifiers;
@@ -84,6 +86,8 @@ struct wsi_image_info {
    VkImageFormatListCreateInfo format_list;
    VkImageDrmFormatModifierListCreateInfoEXT drm_mod_list;
 
+   enum wsi_image_type image_type;
+   bool explicit_sync;
    bool prime_use_linear_modifier;
 
    /* Not really part of VkImageCreateInfo but needed to figure out the
@@ -112,6 +116,21 @@ struct wsi_image_info {
                              struct wsi_image *image);
 };
 
+enum wsi_explicit_sync_timelines
+{
+   WSI_ES_ACQUIRE,
+   WSI_ES_RELEASE,
+
+   WSI_ES_COUNT,
+};
+
+struct wsi_image_explicit_sync_timeline {
+   VkSemaphore semaphore;
+   uint64_t timeline;
+   int fd;
+   uint32_t handle;
+};
+
 enum wsi_swapchain_blit_type {
    WSI_SWAPCHAIN_NO_BLIT,
    WSI_SWAPCHAIN_BUFFER_BLIT,
@@ -128,6 +147,13 @@ struct wsi_image {
       VkDeviceMemory memory;
       VkCommandBuffer *cmd_buffers;
    } blit;
+   /* Whether or not the image has been acquired
+    * on the CPU side via acquire_next_image.
+    */
+   bool acquired;
+   uint64_t present_serial;
+
+   struct wsi_image_explicit_sync_timeline explicit_sync[WSI_ES_COUNT];
 
 #ifndef _WIN32
    uint64_t drm_modifier;
@@ -158,6 +184,8 @@ struct wsi_swapchain {
 
    struct wsi_image_info image_info;
    uint32_t image_count;
+
+   uint64_t present_serial;
 
    struct {
       enum wsi_swapchain_blit_type type;
@@ -198,7 +226,7 @@ struct wsi_swapchain {
 };
 
 bool
-wsi_device_matches_drm_fd(const struct wsi_device *wsi, int drm_fd);
+wsi_device_matches_drm_fd(VkPhysicalDevice pdevice, int drm_fd);
 
 void
 wsi_wl_surface_destroy(VkIcdSurfaceBase *icd_surface, VkInstance _instance,
@@ -216,7 +244,7 @@ wsi_swapchain_init(const struct wsi_device *wsi,
                    const struct wsi_base_image_params *image_params,
                    const VkAllocationCallbacks *pAllocator);
 
-enum VkPresentModeKHR
+VkPresentModeKHR
 wsi_swapchain_get_present_mode(struct wsi_device *wsi,
                                const VkSwapchainCreateInfoKHR *pCreateInfo);
 
@@ -266,8 +294,7 @@ VkResult
 wsi_create_buffer_blit_context(const struct wsi_swapchain *chain,
                                const struct wsi_image_info *info,
                                struct wsi_image *image,
-                               VkExternalMemoryHandleTypeFlags handle_types,
-                               bool implicit_sync);
+                               VkExternalMemoryHandleTypeFlags handle_types);
 
 VkResult
 wsi_finish_create_blit_context(const struct wsi_swapchain *chain,
@@ -319,6 +346,26 @@ wsi_create_sync_for_dma_buf_wait(const struct wsi_swapchain *chain,
                                  const struct wsi_image *image,
                                  enum vk_sync_features sync_features,
                                  struct vk_sync **sync_out);
+VkResult
+wsi_create_sync_for_image_syncobj(const struct wsi_swapchain *chain,
+                                  const struct wsi_image *image,
+                                  enum vk_sync_features req_features,
+                                  struct vk_sync **sync_out);
+
+VkResult
+wsi_create_image_explicit_sync_drm(const struct wsi_swapchain *chain,
+                                   struct wsi_image *image);
+
+void
+wsi_destroy_image_explicit_sync_drm(const struct wsi_swapchain *chain,
+                                    struct wsi_image *image);
+
+VkResult
+wsi_drm_wait_for_explicit_sync_release(struct wsi_swapchain *chain,
+                                       uint32_t image_count,
+                                       struct wsi_image **images,
+                                       uint64_t rel_timeout_ns,
+                                       uint32_t *image_index);
 #endif
 
 struct wsi_interface {
@@ -370,6 +417,11 @@ VkResult wsi_win32_init_wsi(struct wsi_device *wsi_device,
                          VkPhysicalDevice physical_device);
 void wsi_win32_finish_wsi(struct wsi_device *wsi_device,
                        const VkAllocationCallbacks *alloc);
+VkResult wsi_metal_init_wsi(struct wsi_device *wsi_device,
+                           const VkAllocationCallbacks *alloc,
+                           VkPhysicalDevice physical_device);
+void wsi_metal_finish_wsi(struct wsi_device *wsi_device,
+                          const VkAllocationCallbacks *alloc);
 
 
 VkResult
@@ -394,11 +446,6 @@ void wsi_headless_finish_wsi(struct wsi_device *wsi_device,
 
 VK_DEFINE_NONDISP_HANDLE_CASTS(wsi_swapchain, base, VkSwapchainKHR,
                                VK_OBJECT_TYPE_SWAPCHAIN_KHR)
-
-#if defined(HAVE_PTHREAD) && !defined(_WIN32)
-bool
-wsi_init_pthread_cond_monotonic(pthread_cond_t *cond);
-#endif
 
 #ifdef __cplusplus
 }

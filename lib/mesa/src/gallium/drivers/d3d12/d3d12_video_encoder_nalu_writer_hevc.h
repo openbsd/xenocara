@@ -92,6 +92,17 @@ struct HEVCProfileTierLevel {
    uint8_t        general_interlaced_source_flag;
    uint8_t        general_non_packed_constraint_flag;
    uint8_t        general_frame_only_constraint_flag;
+   uint8_t        general_max_12bit_constraint_flag;
+   uint8_t        general_max_10bit_constraint_flag;
+   uint8_t        general_max_8bit_constraint_flag;
+   uint8_t        general_max_422chroma_constraint_flag;
+   uint8_t        general_max_420chroma_constraint_flag;
+   uint8_t        general_max_monochrome_constraint_flag;
+   uint8_t        general_intra_constraint_flag;
+   uint8_t        general_one_picture_only_constraint_flag;
+   uint8_t        general_lower_bit_rate_constraint_flag;
+   uint8_t        general_max_14bit_constraint_flag;
+   uint8_t        general_inbld_flag;
    uint8_t        general_level_idc;
    uint8_t        sub_layer_profile_present_flag[HEVC_MAX_SUB_LAYERS_NUM - 1];
    uint8_t        sub_layer_level_present_flag[HEVC_MAX_SUB_LAYERS_NUM - 1];
@@ -144,6 +155,48 @@ struct HEVCReferencePictureSet {
          uint8_t         used_by_curr_pic_s1_flag[HEVC_MAX_REF_PICS];
       };
    };
+};
+
+struct HEVCVideoUsabilityInfo {
+    uint8_t     aspect_ratio_info_present_flag;
+    uint8_t     aspect_ratio_idc;
+    int32_t     sar_width;
+    int32_t     sar_height;
+    uint8_t     overscan_info_present_flag;
+    uint8_t     overscan_appropriate_flag;
+    uint8_t     video_signal_type_present_flag;
+    uint8_t     video_format;
+    uint8_t     video_full_range_flag;
+    uint8_t     colour_description_present_flag;
+    uint8_t     colour_primaries;
+    uint8_t     transfer_characteristics;
+    uint8_t     matrix_coeffs;
+    uint8_t     chroma_loc_info_present_flag;
+    int32_t     chroma_sample_loc_type_top_field;
+    int32_t     chroma_sample_loc_type_bottom_field;
+    uint8_t     neutral_chroma_indication_flag;
+    uint8_t     field_seq_flag;
+    uint8_t     frame_field_info_present_flag;
+    uint8_t     default_display_window_flag;
+    int32_t     def_disp_win_left_offset;
+    int32_t     def_disp_win_right_offset;
+    int32_t     def_disp_win_top_offset;
+    int32_t     def_disp_win_bottom_offset;
+    uint8_t     timing_info_present_flag;
+    uint32_t    num_units_in_tick;
+    uint32_t    time_scale;
+    uint8_t     poc_proportional_to_timing_flag;
+    uint32_t    num_ticks_poc_diff_one_minus1;
+    uint8_t     hrd_parameters_present_flag;
+    uint8_t     bitstream_restriction_flag;
+    uint8_t     tiles_fixed_structure_flag;
+    uint8_t     motion_vectors_over_pic_boundaries_flag;
+    uint8_t     restricted_ref_pic_lists_flag;
+    uint32_t    min_spatial_segmentation_idc;
+    uint32_t    max_bytes_per_pic_denom;
+    uint32_t    max_bits_per_min_cu_denom;
+    uint32_t    log2_max_mv_length_horizontal;
+    uint32_t    log2_max_mv_length_vertical;
 };
 
 struct HevcSeqParameterSet {
@@ -200,8 +253,21 @@ struct HevcSeqParameterSet {
    uint8_t         sps_temporal_mvp_enabled_flag;
    uint8_t         strong_intra_smoothing_enabled_flag;
    uint8_t         vui_parameters_present_flag;
-   uint8_t         sps_extension_flag;
+   HEVCVideoUsabilityInfo vui;
+   uint8_t         sps_extension_present_flag;
    uint8_t         sps_extension_data_flag;
+   struct {
+      uint32_t sps_range_extension_flag;
+      uint32_t transform_skip_rotation_enabled_flag: 1;
+      uint32_t transform_skip_context_enabled_flag: 1;
+      uint32_t implicit_rdpcm_enabled_flag: 1;
+      uint32_t explicit_rdpcm_enabled_flag: 1;
+      uint32_t extended_precision_processing_flag: 1;
+      uint32_t intra_smoothing_disabled_flag: 1;
+      uint32_t high_precision_offsets_enabled_flag: 1;
+      uint32_t persistent_rice_adaptation_enabled_flag: 1;
+      uint32_t cabac_bypass_alignment_enabled_flag: 1;
+   } sps_range_extension;
 };
 
 struct HevcPicParameterSet {
@@ -243,8 +309,20 @@ struct HevcPicParameterSet {
    uint8_t         lists_modification_present_flag;
    uint8_t         log2_parallel_merge_level_minus2;
    uint8_t         slice_segment_header_extension_present_flag;
-   uint8_t         pps_extension_flag;
+   uint8_t         pps_extension_present_flag;
    uint8_t         pps_extension_data_flag;
+   struct {
+      uint8_t pps_range_extension_flag;
+      uint32_t log2_max_transform_skip_block_size_minus2;
+      uint32_t cross_component_prediction_enabled_flag: 1;
+      uint32_t chroma_qp_offset_list_enabled_flag: 1;
+      uint32_t diff_cu_chroma_qp_offset_depth;
+      uint32_t chroma_qp_offset_list_len_minus1;
+      int32_t cb_qp_offset_list[6];
+      int32_t cr_qp_offset_list[6];
+      uint32_t log2_sao_offset_scale_luma;
+      uint32_t log2_sao_offset_scale_chroma;
+   } pps_range_extension;
 };
 
 struct HevcVideoParameterSet {
@@ -273,6 +351,11 @@ struct HevcVideoParameterSet {
    uint8_t        cprms_present_flag[1024];
    uint8_t        vps_extension_flag;
    uint8_t        vps_extension_data_flag;
+};
+
+struct HevcAccessUnitDelimiter {
+   HEVCNaluHeader nalu;
+   uint8_t        pic_type;
 };
 
 class d3d12_video_nalu_writer_hevc
@@ -319,12 +402,17 @@ public:
                                  placingPositionStart,
                                  size_t &writtenBytes);
 
+   void write_aud(std::vector<uint8_t> &         headerBitstream,
+                  std::vector<uint8_t>::iterator placingPositionStart,
+                  D3D12_VIDEO_ENCODER_FRAME_TYPE_HEVC frameType,
+                  size_t &                       writtenBytes);
 private:
 
    // Writes from structure into bitstream with RBSP trailing but WITHOUT NAL unit wrap (eg. nal_idc_type, etc)
    uint32_t write_vps_bytes(d3d12_video_encoder_bitstream *pBitstream, HevcVideoParameterSet *pSPS);
    uint32_t write_sps_bytes(d3d12_video_encoder_bitstream *pBitstream, HevcSeqParameterSet *pSPS);
    uint32_t write_pps_bytes(d3d12_video_encoder_bitstream *pBitstream, HevcPicParameterSet *pPPS);
+   uint32_t write_aud_bytes(d3d12_video_encoder_bitstream *pBitstream, HevcAccessUnitDelimiter *pAUD);
 
    // Adds NALU wrapping into structures and ending NALU control bits
    uint32_t wrap_rbsp_into_nalu(d3d12_video_encoder_bitstream *pNALU, d3d12_video_encoder_bitstream *pRBSP, HEVCNaluHeader *pHeader);

@@ -1,25 +1,7 @@
 /*
  * Copyright © 2022 Google, Inc.
  * Copyright © 2022 Valve Corporation
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "util/macros.h"
@@ -195,7 +177,12 @@ handle_prefetch(uint32_t *dwords, uint32_t sizedwords)
 {
    struct prefetch_state rb_state = {};
    struct ib *ib1 = scan_cmdstream(&rb_state, 1, dwords, sizedwords);
+
    if (!ib1)
+      return;
+
+   /* If the gpu crashed in IB1, we can skip the rest: */
+   if (!options.ibs[2].rem)
       return;
 
    struct prefetch_state ib1_state = {};

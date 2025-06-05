@@ -1,24 +1,6 @@
 /*
  * Copyright © 2020 Google, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <err.h>
@@ -145,6 +127,30 @@ fixup_wrmask(struct ir3 *ir)
    }
 }
 
+/* Calculate the number of nops added before the last instruction by
+ * ir3_legalize.
+ */
+static unsigned
+calc_nops(struct ir3_block *block, struct ir3_instruction *last)
+{
+   unsigned nops = 0;
+
+   foreach_instr_rev (instr, &block->instr_list) {
+      if (instr == last)
+         continue;
+
+      if (instr->opc == OPC_NOP) {
+         nops += 1 + instr->repeat;
+      } else {
+         if (is_alu(instr))
+            nops += instr->nop;
+         break;
+      }
+   }
+
+   return nops;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -155,7 +161,7 @@ main(int argc, char **argv)
          .gpu_id = 630,
    };
 
-   c = ir3_compiler_create(NULL, &dev_id, &(struct ir3_compiler_options){});
+   c = ir3_compiler_create(NULL, &dev_id, fd_dev_info_raw(&dev_id), &(struct ir3_compiler_options){});
 
    for (int i = 0; i < ARRAY_SIZE(tests); i++) {
       const struct test *test = &tests[i];
@@ -177,13 +183,10 @@ main(int argc, char **argv)
          break;
       }
 
-      /* The delay calc is expecting the instr to not yet be added to the
-       * block, so remove it from the block so that it doesn't get counted
-       * in the distance from assigner:
-       */
-      list_delinit(&last->node);
+      int max_bary;
+      ir3_legalize(ir, shader->variants, &max_bary);
 
-      unsigned n = ir3_delay_calc(block, last, true);
+      unsigned n = calc_nops(block, last);
 
       if (n != test->expected_delay) {
          printf("%d: FAIL: Expected delay %u, but got %u, for:\n%s\n", i,

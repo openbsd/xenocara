@@ -81,7 +81,7 @@ void pvr_csb_init(struct pvr_device *device,
    csb->end = NULL;
    csb->relocation_mark = NULL;
 
-#if defined(DEBUG)
+#if MESA_DEBUG
    csb->relocation_mark_status = PVR_CSB_RELOCATION_MARK_UNINITIALIZED;
 #endif
 
@@ -104,7 +104,7 @@ void pvr_csb_init(struct pvr_device *device,
  */
 void pvr_csb_finish(struct pvr_csb *csb)
 {
-#if defined(DEBUG)
+#if MESA_DEBUG
    assert(csb->relocation_mark_status ==
              PVR_CSB_RELOCATION_MARK_UNINITIALIZED ||
           csb->relocation_mark_status == PVR_CSB_RELOCATION_MARK_CLEARED);
@@ -229,7 +229,7 @@ static bool pvr_csb_buffer_extend(struct pvr_csb *csb)
       PVR_DW_TO_BYTES(pvr_cmd_length(VDMCTRL_STREAM_LINK0) +
                       pvr_cmd_length(VDMCTRL_STREAM_LINK1));
    const uint8_t stream_reserved_space =
-      stream_link_space + PVRX(VDMCTRL_GUARD_SIZE_DEFAULT);
+      stream_link_space + ROGUE_VDMCTRL_GUARD_SIZE_DEFAULT;
    const uint32_t cache_line_size =
       rogue_get_slc_cache_line_size(&csb->device->pdevice->dev_info);
    size_t current_state_update_size = 0;
@@ -244,8 +244,8 @@ static bool pvr_csb_buffer_extend(struct pvr_csb *csb)
                  (pvr_cmd_length(CDMCTRL_STREAM_LINK0) +
                   pvr_cmd_length(CDMCTRL_STREAM_LINK1)));
 
-   STATIC_ASSERT(PVRX(VDMCTRL_GUARD_SIZE_DEFAULT) ==
-                 PVRX(CDMCTRL_GUARD_SIZE_DEFAULT));
+   STATIC_ASSERT(ROGUE_VDMCTRL_GUARD_SIZE_DEFAULT ==
+                 ROGUE_CDMCTRL_GUARD_SIZE_DEFAULT);
 
    result = pvr_bo_alloc(csb->device,
                          csb->device->heaps.general_heap,
@@ -272,7 +272,7 @@ static bool pvr_csb_buffer_extend(struct pvr_csb *csb)
 
       memcpy(new_buffer, csb->relocation_mark, current_state_update_size);
 
-#if defined(DEBUG)
+#if MESA_DEBUG
       assert(csb->relocation_mark_status == PVR_CSB_RELOCATION_MARK_SET);
       csb->relocation_mark_status = PVR_CSB_RELOCATION_MARK_SET_AND_CONSUMED;
       zero_after_move = true;
@@ -330,7 +330,7 @@ void *pvr_csb_alloc_dwords(struct pvr_csb *csb, uint32_t num_dwords)
       return p;
    }
 
-#if defined(DEBUG)
+#if MESA_DEBUG
    if (csb->relocation_mark_status == PVR_CSB_RELOCATION_MARK_CLEARED)
       mesa_logd_once("CS memory without relocation mark detected.");
 #endif
@@ -372,7 +372,7 @@ VkResult pvr_csb_copy(struct pvr_csb *csb_dst, struct pvr_csb *csb_src)
    const uint8_t stream_reserved_space =
       PVR_DW_TO_BYTES(pvr_cmd_length(VDMCTRL_STREAM_LINK0) +
                       pvr_cmd_length(VDMCTRL_STREAM_LINK1)) +
-      PVRX(VDMCTRL_GUARD_SIZE_DEFAULT);
+      ROGUE_VDMCTRL_GUARD_SIZE_DEFAULT;
    const uint32_t size =
       util_dynarray_num_elements(&csb_src->deferred_cs_mem, char);
    const uint8_t *start = util_dynarray_begin(&csb_src->deferred_cs_mem);

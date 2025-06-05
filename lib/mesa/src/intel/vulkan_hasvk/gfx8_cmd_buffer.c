@@ -137,7 +137,7 @@ want_depth_pma_fix(struct anv_cmd_buffer *cmd_buffer,
       return false;
 
    /* !(3DSTATE_WM::EDSC_Mode == EDSC_PREPS) */
-   const struct brw_wm_prog_data *wm_prog_data = get_wm_prog_data(pipeline);
+   const struct elk_wm_prog_data *wm_prog_data = get_wm_prog_data(pipeline);
    if (wm_prog_data->early_fragment_tests)
       return false;
 
@@ -240,8 +240,8 @@ genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
          .GlobalDepthOffsetEnableSolid       = dyn->rs.depth_bias.enable,
          .GlobalDepthOffsetEnableWireframe   = dyn->rs.depth_bias.enable,
          .GlobalDepthOffsetEnablePoint       = dyn->rs.depth_bias.enable,
-         .GlobalDepthOffsetConstant          = dyn->rs.depth_bias.constant,
-         .GlobalDepthOffsetScale             = dyn->rs.depth_bias.slope,
+         .GlobalDepthOffsetConstant          = dyn->rs.depth_bias.constant_factor,
+         .GlobalDepthOffsetScale             = dyn->rs.depth_bias.slope_factor,
          .GlobalDepthOffsetClamp             = dyn->rs.depth_bias.clamp,
       };
       GENX(3DSTATE_RASTER_pack)(NULL, raster_dw, &raster);

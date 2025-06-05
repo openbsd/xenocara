@@ -26,23 +26,37 @@ import argparse
 import os
 
 
+def resolve_libdir(libdir):
+    if os.path.isabs(libdir):
+        destdir = os.environ.get('DESTDIR')
+        if destdir:
+            return os.path.join(destdir, libdir[1:])
+        else:
+            return libdir
+    return os.path.join(os.environ['MESON_INSTALL_DESTDIR_PREFIX'], libdir)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('megadriver')
     parser.add_argument('libdir')
     parser.add_argument('drivers', nargs='+')
+    parser.add_argument('--megadriver-libdir')
+    parser.add_argument('--libname-suffix', required=True)
     args = parser.parse_args()
 
-    if os.path.isabs(args.libdir):
-        destdir = os.environ.get('DESTDIR')
-        if destdir:
-            to = os.path.join(destdir, args.libdir[1:])
-        else:
-            to = args.libdir
-    else:
-        to = os.path.join(os.environ['MESON_INSTALL_DESTDIR_PREFIX'], args.libdir)
+    # Not neccesarily at the end, there might be a version suffix, but let's
+    # make sure that the same suffix is in the megadriver lib name.
+    assert '.' + args.libname_suffix in args.megadriver
 
-    master = os.path.join(to, os.path.basename(args.megadriver))
+    to = resolve_libdir(args.libdir)
+    if args.megadriver_libdir:
+        md_to = resolve_libdir(args.megadriver_libdir)
+    else:
+        md_to = to
+
+    basename = os.path.basename(args.megadriver)
+    master = os.path.join(to, basename)
 
     if not os.path.exists(to):
         if os.path.lexists(to):
@@ -54,15 +68,18 @@ def main():
 
         if os.path.lexists(abs_driver):
             os.unlink(abs_driver)
-        print('installing {} to {}'.format(args.megadriver, abs_driver))
-        os.link(master, abs_driver)
+
+        symlink = os.path.relpath(os.path.join(md_to, basename), start=to)
+
+        print(f'Installing symlink pointing to {symlink} to {abs_driver}')
+        os.symlink(symlink, abs_driver)
 
         try:
             ret = os.getcwd()
             os.chdir(to)
 
             name, ext = os.path.splitext(driver)
-            while ext != '.so':
+            while ext != '.' + args.libname_suffix:
                 if os.path.lexists(name):
                     os.unlink(name)
                 os.symlink(driver, name)
@@ -70,10 +87,9 @@ def main():
         finally:
             os.chdir(ret)
 
-    # Remove meson-created master .so and symlinks
-    os.unlink(master)
+    # Remove meson-created symlinks
     name, ext = os.path.splitext(master)
-    while ext != '.so':
+    while ext != '.' + args.libname_suffix:
         if os.path.lexists(name):
             os.unlink(name)
         name, ext = os.path.splitext(name)

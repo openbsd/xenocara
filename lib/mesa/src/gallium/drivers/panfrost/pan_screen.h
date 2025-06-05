@@ -64,35 +64,27 @@ struct panfrost_vtable {
    void (*prepare_shader)(struct panfrost_compiled_shader *,
                           struct panfrost_pool *, bool);
 
-   /* Emits a thread local storage descriptor */
-   void (*emit_tls)(struct panfrost_batch *);
-
-   /* Emits a framebuffer descriptor */
-   void (*emit_fbd)(struct panfrost_batch *, const struct pan_fb_info *);
-
-   /* Emits a fragment job */
-   mali_ptr (*emit_fragment_job)(struct panfrost_batch *,
-                                 const struct pan_fb_info *);
-
    /* General destructor */
    void (*screen_destroy)(struct pipe_screen *);
 
-   /* Preload framebuffer */
-   void (*preload)(struct panfrost_batch *, struct pan_fb_info *);
+   /* Populate context vtable */
+   void (*context_populate_vtbl)(struct pipe_context *pipe);
 
-   /* Initialize a Gallium context */
-   void (*context_init)(struct pipe_context *pipe);
+   /* Initialize/cleanup a Gallium context */
+   int (*context_init)(struct panfrost_context *ctx);
+   void (*context_cleanup)(struct panfrost_context *ctx);
 
-   /* Device-dependent initialization of a panfrost_batch */
-   void (*init_batch)(struct panfrost_batch *batch);
+   /* Device-dependent initialization/cleanup of a panfrost_batch */
+   int (*init_batch)(struct panfrost_batch *batch);
+   void (*cleanup_batch)(struct panfrost_batch *batch);
+
+   /* Device-dependent submission of a panfrost_batch */
+   int (*submit_batch)(struct panfrost_batch *batch, struct pan_fb_info *fb);
 
    /* Get blend shader */
    struct pan_blend_shader_variant *(*get_blend_shader)(
-      const struct panfrost_device *, const struct pan_blend_state *,
+      struct pan_blend_shader_cache *cache, const struct pan_blend_state *,
       nir_alu_type, nir_alu_type, unsigned rt);
-
-   /* Initialize the polygon list */
-   void (*init_polygon_list)(struct panfrost_batch *);
 
    /* Shader compilation methods */
    const nir_shader_compiler_options *(*get_compiler_options)(void);
@@ -112,19 +104,37 @@ struct panfrost_vtable {
                      struct pan_image_slice_layout *slice,
                      struct panfrost_bo *metadata, unsigned metadata_offset,
                      unsigned level);
+
+   void (*emit_write_timestamp)(struct panfrost_batch *batch,
+                                struct panfrost_resource *dst, unsigned offset);
+
+   /* Select the tile size and calculate the color buffer allocation size */
+   void (*select_tile_size)(struct pan_fb_info *fb);
+
+   /* Run a compute shader to detile an MTK 16L32 image */
+   void (*mtk_detile)(struct panfrost_context *ctx, struct pipe_blit_info *info);
 };
 
 struct panfrost_screen {
    struct pipe_screen base;
    struct panfrost_device dev;
    struct {
-      struct panfrost_pool bin_pool;
-      struct panfrost_pool desc_pool;
-   } blitter;
+      struct panfrost_pool bin;
+      struct panfrost_pool desc;
+   } mempools;
 
+   char renderer_string[100];
    struct panfrost_vtable vtbl;
    struct disk_cache *disk_cache;
    unsigned max_afbc_packing_ratio;
+   bool force_afbc_packing;
+   int force_afrc_rate;
+
+   struct {
+      unsigned chunk_size;
+      unsigned initial_chunks;
+      unsigned max_chunks;
+   } csf_tiler_heap;
 };
 
 static inline struct panfrost_screen *
@@ -147,14 +157,13 @@ void panfrost_cmdstream_screen_init_v5(struct panfrost_screen *screen);
 void panfrost_cmdstream_screen_init_v6(struct panfrost_screen *screen);
 void panfrost_cmdstream_screen_init_v7(struct panfrost_screen *screen);
 void panfrost_cmdstream_screen_init_v9(struct panfrost_screen *screen);
+void panfrost_cmdstream_screen_init_v10(struct panfrost_screen *screen);
 
-#define perf_debug(dev, ...)                                                   \
+#define perf_debug(ctx, ...)                                                   \
    do {                                                                        \
-      if (unlikely((dev)->debug & PAN_DBG_PERF))                               \
+      if (unlikely(pan_device((ctx)->base.screen)->debug & PAN_DBG_PERF))      \
          mesa_logw(__VA_ARGS__);                                               \
+      util_debug_message(&ctx->base.debug, PERF_INFO, __VA_ARGS__);            \
    } while (0)
-
-#define perf_debug_ctx(ctx, ...)                                               \
-   perf_debug(pan_device((ctx)->base.screen), __VA_ARGS__);
 
 #endif /* PAN_SCREEN_H */

@@ -17,6 +17,8 @@
 # rules duplication manually
 .windows-build-rules:
   rules:
+    - !reference [.scheduled_pipeline-rules, rules]
+    - !reference [.test, rules]
     - !reference [.microsoft-farm-rules, rules]
     - !reference [.zink-common-rules, rules]
     - !reference [.vulkan-rules, rules]
@@ -38,6 +40,7 @@
 
 .glon12-test-rules:
   rules:
+    - !reference [.test, rules]
     - !reference [.microsoft-farm-rules, rules]
     - !reference [.gl-rules, rules]
     - changes: *d3d12_file_list
@@ -48,6 +51,7 @@
 
 .spirv2dxil-test-rules:
   rules:
+    - !reference [.test, rules]
     - !reference [.microsoft-farm-rules, rules]
     - !reference [.core-rules, rules]
     - changes: &spirv2dxil_file_list
@@ -58,6 +62,7 @@
 
 .dozen-test-rules:
   rules:
+    - !reference [.test, rules]
     - !reference [.microsoft-farm-rules, rules]
     - !reference [.vulkan-rules, rules]
     - changes:
@@ -66,3 +71,17 @@
     - changes:
       - src/microsoft/vulkan/*
       when: on_success
+
+.dozen-manual-rules:
+  stage: layered-backends-postmerge
+  extends: .no-auto-retry
+  rules:
+    - !reference [.test, rules]
+    - !reference [.microsoft-farm-manual-rules, rules]
+    - !reference [.vulkan-manual-rules, rules]
+    - changes:
+        *spirv2dxil_file_list
+      when: manual
+    - changes:
+      - src/microsoft/vulkan/*
+      when: manual

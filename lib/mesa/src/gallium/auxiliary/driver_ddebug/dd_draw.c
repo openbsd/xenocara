@@ -485,6 +485,8 @@ dd_dump_blit(struct dd_draw_state *dstate, struct pipe_blit_info *info, FILE *f)
    DUMP_M_ADDR(scissor_state, info, scissor);
    DUMP_M(uint, info, render_condition_enable);
 
+   DUMP_M(uint, info, swizzle_enable);
+
    if (info->render_condition_enable)
       dd_dump_render_condition(dstate, f);
 }
@@ -698,7 +700,7 @@ dd_dump_call(FILE *f, struct dd_draw_state *state, struct dd_call *call)
 static void
 dd_kill_process(void)
 {
-#if DETECT_OS_UNIX
+#if DETECT_OS_POSIX
    sync();
 #endif
    fprintf(stderr, "dd: Aborting the process...\n");

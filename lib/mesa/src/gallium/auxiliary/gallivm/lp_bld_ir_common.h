@@ -85,7 +85,6 @@ struct lp_exec_mask {
       bool switch_in_default;        /* if switch exec is currently in default */
       unsigned switch_pc;               /* when used points to default or endswitch-1 */
 
-      LLVMValueRef loop_limiter;
       LLVMBasicBlockRef loop_block;
       LLVMValueRef break_var;
       struct {
@@ -101,6 +100,8 @@ struct lp_exec_mask {
    int function_stack_size;
 };
 
+struct lp_build_mask_context;
+
 void lp_exec_mask_function_init(struct lp_exec_mask *mask, int function_idx);
 void lp_exec_mask_init(struct lp_exec_mask *mask, struct lp_build_context *bld);
 void lp_exec_mask_fini(struct lp_exec_mask *mask);
@@ -112,7 +113,8 @@ void lp_exec_mask_update(struct lp_exec_mask *mask);
 void lp_exec_bgnloop_post_phi(struct lp_exec_mask *mask);
 void lp_exec_bgnloop(struct lp_exec_mask *mask, bool load_mask);
 void lp_exec_endloop(struct gallivm_state *gallivm,
-                     struct lp_exec_mask *mask);
+                     struct lp_exec_mask *exec_mask,
+                     struct lp_build_mask_context *mask);
 void lp_exec_mask_cond_push(struct lp_exec_mask *mask,
                             LLVMValueRef val);
 void lp_exec_mask_cond_invert(struct lp_exec_mask *mask);

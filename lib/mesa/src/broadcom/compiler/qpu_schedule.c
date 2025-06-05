@@ -85,6 +85,7 @@ struct schedule_state {
         struct schedule_node *last_unif;
         struct schedule_node *last_rtop;
         struct schedule_node *last_unifa;
+        struct schedule_node *last_setmsf;
         enum direction dir;
         /* Estimated cycle when the current instruction would start. */
         uint32_t time;
@@ -200,11 +201,29 @@ tmu_write_is_sequence_terminator(uint32_t waddr)
 }
 
 static bool
-can_reorder_tmu_write(const struct v3d_device_info *devinfo, uint32_t waddr)
+is_tmu_sequence_terminator(struct qinst *inst)
 {
-        if (devinfo->ver < 40)
+        if (inst->qpu.type != V3D_QPU_INSTR_TYPE_ALU)
                 return false;
 
+        if (inst->qpu.alu.add.op != V3D_QPU_A_NOP) {
+                if (!inst->qpu.alu.add.magic_write)
+                        return false;
+                return tmu_write_is_sequence_terminator(inst->qpu.alu.add.waddr);
+        }
+
+        if (inst->qpu.alu.mul.op != V3D_QPU_M_NOP) {
+                if (!inst->qpu.alu.mul.magic_write)
+                        return false;
+                return tmu_write_is_sequence_terminator(inst->qpu.alu.mul.waddr);
+        }
+
+        return false;
+}
+
+static bool
+can_reorder_tmu_write(const struct v3d_device_info *devinfo, uint32_t waddr)
+{
         if (tmu_write_is_sequence_terminator(waddr))
                 return false;
 
@@ -267,8 +286,7 @@ process_waddr_deps(struct schedule_state *state, struct schedule_node *n,
                         break;
 
                 case V3D_QPU_WADDR_UNIFA:
-                        if (state->devinfo->ver >= 40)
-                                add_write_dep(state, &state->last_unifa, n);
+                        add_write_dep(state, &state->last_unifa, n);
                         break;
 
                 case V3D_QPU_WADDR_NOP:
@@ -382,11 +400,22 @@ calculate_deps(struct schedule_state *state, struct schedule_node *n)
 
         case V3D_QPU_A_MSF:
                 add_read_dep(state, state->last_tlb, n);
+                add_read_dep(state, state->last_setmsf, n);
                 break;
 
         case V3D_QPU_A_SETMSF:
+                add_write_dep(state, &state->last_setmsf, n);
+                add_write_dep(state, &state->last_tmu_write, n);
+                FALLTHROUGH;
         case V3D_QPU_A_SETREVF:
                 add_write_dep(state, &state->last_tlb, n);
+                break;
+
+        case V3D_QPU_A_BALLOT:
+        case V3D_QPU_A_BCASTF:
+        case V3D_QPU_A_ALLEQ:
+        case V3D_QPU_A_ALLFEQ:
+                add_read_dep(state, state->last_setmsf, n);
                 break;
 
         default:
@@ -660,7 +689,7 @@ writes_too_soon_after_write(const struct v3d_device_info *devinfo,
             v3d_qpu_writes_r4(devinfo, inst))
                 return true;
 
-        if (devinfo->ver <= 42)
+        if (devinfo->ver == 42)
            return false;
 
         /* Don't schedule anything that writes rf0 right after ldvary, since
@@ -854,13 +883,10 @@ qpu_compatible_peripheral_access(const struct v3d_device_info *devinfo,
         if (util_bitcount(a_peripherals) + util_bitcount(b_peripherals) <= 1)
                 return true;
 
-        if (devinfo->ver < 41)
-                return false;
-
         /* V3D 4.x can't do more than one peripheral access except in a
          * few cases:
          */
-        if (devinfo->ver <= 42) {
+        if (devinfo->ver == 42) {
                 /* WRTMUC signal with TMU register write (other than tmuc). */
                 if (a_peripherals == V3D_PERIPHERAL_TMU_WRTMUC_SIG &&
                     b_peripherals == V3D_PERIPHERAL_TMU_WRITE) {
@@ -940,13 +966,13 @@ qpu_raddrs_used(const struct v3d_qpu_instr *a,
 
         uint64_t raddrs_used = 0;
         if (v3d_qpu_uses_mux(a, V3D_QPU_MUX_A))
-                raddrs_used |= (1ll << a->raddr_a);
+                raddrs_used |= (UINT64_C(1) << a->raddr_a);
         if (!a->sig.small_imm_b && v3d_qpu_uses_mux(a, V3D_QPU_MUX_B))
-                raddrs_used |= (1ll << a->raddr_b);
+                raddrs_used |= (UINT64_C(1) << a->raddr_b);
         if (v3d_qpu_uses_mux(b, V3D_QPU_MUX_A))
-                raddrs_used |= (1ll << b->raddr_a);
+                raddrs_used |= (UINT64_C(1) << b->raddr_a);
         if (!b->sig.small_imm_b && v3d_qpu_uses_mux(b, V3D_QPU_MUX_B))
-                raddrs_used |= (1ll << b->raddr_b);
+                raddrs_used |= (UINT64_C(1) << b->raddr_b);
 
         return raddrs_used;
 }
@@ -984,7 +1010,7 @@ qpu_merge_raddrs(struct v3d_qpu_instr *result,
                         result->sig.small_imm_d) <= 1;
         }
 
-        assert(devinfo->ver <= 42);
+        assert(devinfo->ver == 42);
 
         uint64_t raddrs_used = qpu_raddrs_used(add_instr, mul_instr);
         int naddrs = util_bitcount64(raddrs_used);
@@ -1009,7 +1035,7 @@ qpu_merge_raddrs(struct v3d_qpu_instr *result,
                 return true;
 
         int raddr_a = ffsll(raddrs_used) - 1;
-        raddrs_used &= ~(1ll << raddr_a);
+        raddrs_used &= ~(UINT64_C(1) << raddr_a);
         result->raddr_a = raddr_a;
 
         if (!result->sig.small_imm_b) {
@@ -1499,7 +1525,7 @@ retry:
                          * as long as it is not the last delay slot.
                          */
                         if (inst->sig.ldvary) {
-                                if (c->devinfo->ver <= 42 &&
+                                if (c->devinfo->ver == 42 &&
                                     scoreboard->last_thrsw_tick + 2 >=
                                     scoreboard->tick - 1) {
                                         continue;
@@ -1528,6 +1554,7 @@ retry:
                          * this aspect in the compiler yet.
                          */
                         if (prev_inst->inst->qpu.sig.ldtmu &&
+                            is_tmu_sequence_terminator(n->inst) &&
                             !scoreboard->first_ldtmu_after_thrsw &&
                             (scoreboard->pending_ldtmu_count +
                              n->inst->ldtmu_count > 16 / c->threads)) {
@@ -1607,7 +1634,7 @@ update_scoreboard_for_magic_waddr(struct choose_scoreboard *scoreboard,
 {
         if (v3d_qpu_magic_waddr_is_sfu(waddr))
                 scoreboard->last_magic_sfu_write_tick = scoreboard->tick;
-        else if (devinfo->ver >= 40 && waddr == V3D_QPU_WADDR_UNIFA)
+        else if (waddr == V3D_QPU_WADDR_UNIFA)
                 scoreboard->last_unifa_write_tick = scoreboard->tick;
 }
 
@@ -1938,7 +1965,7 @@ qpu_inst_valid_in_thrend_slot(struct v3d_compile *c,
         if (slot > 0 && qinst->uniform != ~0)
                 return false;
 
-        if (c->devinfo->ver <= 42 && v3d_qpu_waits_vpm(inst))
+        if (c->devinfo->ver == 42 && v3d_qpu_waits_vpm(inst))
                 return false;
 
         if (inst->sig.ldvary)
@@ -1946,12 +1973,12 @@ qpu_inst_valid_in_thrend_slot(struct v3d_compile *c,
 
         if (inst->type == V3D_QPU_INSTR_TYPE_ALU) {
                 /* GFXH-1625: TMUWT not allowed in the final instruction. */
-                if (c->devinfo->ver <= 42 && slot == 2 &&
+                if (c->devinfo->ver == 42 && slot == 2 &&
                     inst->alu.add.op == V3D_QPU_A_TMUWT) {
                         return false;
                 }
 
-                if (c->devinfo->ver <= 42) {
+                if (c->devinfo->ver == 42) {
                         /* No writing physical registers at the end. */
                         bool add_is_nop = inst->alu.add.op == V3D_QPU_A_NOP;
                         bool mul_is_nop = inst->alu.mul.op == V3D_QPU_M_NOP;
@@ -1977,10 +2004,7 @@ qpu_inst_valid_in_thrend_slot(struct v3d_compile *c,
                         }
                 }
 
-                if (c->devinfo->ver < 40 && inst->alu.add.op == V3D_QPU_A_SETMSF)
-                        return false;
-
-                if (c->devinfo->ver <= 42) {
+                if (c->devinfo->ver == 42) {
                         /* RF0-2 might be overwritten during the delay slots by
                          * fragment shader setup.
                          */
@@ -2030,11 +2054,15 @@ qpu_inst_before_thrsw_valid_in_delay_slot(struct v3d_compile *c,
          * thread.  The simulator complains for safety, though it
          * would only occur for dead code in our case.
          */
-        if (slot > 0 && v3d_qpu_instr_is_legacy_sfu(&qinst->qpu))
-                return false;
+        if (slot > 0) {
+                if (c->devinfo->ver == 42 && v3d_qpu_instr_is_legacy_sfu(&qinst->qpu))
+                        return false;
+                if (c->devinfo->ver >= 71 && v3d_qpu_instr_is_sfu(&qinst->qpu))
+                        return false;
+        }
 
         if (qinst->qpu.sig.ldvary) {
-                if (c->devinfo->ver <= 42 && slot > 0)
+                if (c->devinfo->ver == 42 && slot > 0)
                         return false;
                 if (c->devinfo->ver >= 71 && slot == 2)
                         return false;
@@ -2475,7 +2503,7 @@ alu_reads_register(const struct v3d_device_info *devinfo,
         else
                 num_src = v3d_qpu_mul_op_num_src(inst->alu.mul.op);
 
-        if (devinfo->ver <= 42) {
+        if (devinfo->ver == 42) {
                 enum v3d_qpu_mux mux_a, mux_b;
                 if (add) {
                         mux_a = inst->alu.add.a.mux;
@@ -2639,7 +2667,7 @@ fixup_pipelined_ldvary(struct v3d_compile *c,
          * and flagging it for a fixup. In V3D 7.x this is limited only to the
          * second delay slot.
          */
-        assert((devinfo->ver <= 42 &&
+        assert((devinfo->ver == 42 &&
                 scoreboard->last_thrsw_tick + 2 < scoreboard->tick - 1) ||
                (devinfo->ver >= 71 &&
                 scoreboard->last_thrsw_tick + 2 != scoreboard->tick - 1));
@@ -2672,7 +2700,7 @@ fixup_pipelined_ldvary(struct v3d_compile *c,
          * ldvary write to r5/rf0 happens in the next instruction).
          */
         assert(!v3d_qpu_writes_r5(devinfo, inst));
-        assert(devinfo->ver <= 42 ||
+        assert(devinfo->ver == 42 ||
                (!v3d_qpu_writes_rf0_implicitly(devinfo, inst) &&
                 !v3d71_qpu_writes_waddr_explicitly(devinfo, inst, 0)));
 

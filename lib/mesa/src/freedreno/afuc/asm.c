@@ -1,24 +1,6 @@
 /*
- * Copyright (c) 2017 Rob Clark <robdclark@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2017 Rob Clark <robdclark@gmail.com>
+ * SPDX-License-Identifier: MIT
  */
 
 #include <assert.h>
@@ -45,7 +27,7 @@ struct encode_state {
 };
 
 static afuc_opc
-__instruction_case(struct encode_state *s, struct afuc_instr *instr)
+__instruction_case(struct encode_state *s, const struct afuc_instr *instr)
 {
    switch (instr->opc) {
 #define ALU(name) \
@@ -70,6 +52,7 @@ __instruction_case(struct encode_state *s, struct afuc_instr *instr)
    ALU(MIN)
    ALU(MAX)
    ALU(CMP)
+   ALU(BIC)
 #undef ALU
 
    default:
@@ -84,19 +67,40 @@ __instruction_case(struct encode_state *s, struct afuc_instr *instr)
 int gpuver;
 
 /* bit lame to hard-code max but fw sizes are small */
-static struct afuc_instr instructions[0x2000];
+static struct afuc_instr instructions[0x4000];
 static unsigned num_instructions;
+
+static unsigned instr_offset;
 
 static struct asm_label labels[0x512];
 static unsigned num_labels;
+
+static int outfd;
 
 struct afuc_instr *
 next_instr(afuc_opc opc)
 {
    struct afuc_instr *ai = &instructions[num_instructions++];
    assert(num_instructions < ARRAY_SIZE(instructions));
+   memset(ai, 0, sizeof(*ai));
+   instr_offset++;
    ai->opc = opc;
    return ai;
+}
+
+static void usage(void);
+
+void
+parse_version(struct afuc_instr *instr)
+{
+   if (gpuver != 0)
+      return;
+
+   int ret = afuc_util_init(afuc_get_fwid(instr->literal), &gpuver, false);
+   if (ret < 0) {
+      usage();
+      exit(1);
+   }
 }
 
 void
@@ -106,8 +110,25 @@ decl_label(const char *str)
 
    assert(num_labels < ARRAY_SIZE(labels));
 
-   label->offset = num_instructions;
+   label->offset = instr_offset;
    label->label = str;
+}
+
+void
+decl_jumptbl(void)
+{
+   struct afuc_instr *ai = &instructions[num_instructions++];
+   assert(num_instructions < ARRAY_SIZE(instructions));
+   ai->opc = OPC_JUMPTBL;
+   instr_offset += 0x80;
+}
+
+void
+align_instr(unsigned alignment)
+{
+   while (instr_offset % (alignment / 4) != 0) {
+      next_instr(OPC_NOP);
+   }
 }
 
 static int
@@ -128,6 +149,30 @@ resolve_label(const char *str)
 }
 
 static void
+emit_jumptable(int outfd)
+{
+   uint32_t jmptable[0x80] = {0};
+   int i;
+
+   for (i = 0; i < num_labels; i++) {
+      struct asm_label *label = &labels[i];
+      int id = afuc_pm4_id(label->label);
+
+      /* if it doesn't match a known PM4 packet-id, try to match UNKN%d: */
+      if (id < 0) {
+         if (sscanf(label->label, "UNKN%d", &id) != 1) {
+            /* if still not found, must not belong in jump-table: */
+            continue;
+         }
+      }
+
+      jmptable[id] = label->offset;
+   }
+
+   write(outfd, jmptable, sizeof(jmptable));
+}
+
+static void
 emit_instructions(int outfd)
 {
    int i;
@@ -135,12 +180,6 @@ emit_instructions(int outfd)
    struct encode_state s = {
       .gen = gpuver,
    };
-
-   /* there is an extra 0x00000000 which kernel strips off.. we could
-    * perhaps use it for versioning.
-    */
-   i = 0;
-   write(outfd, &i, 4);
 
    /* Expand some meta opcodes, and resolve branch targets */
    for (i = 0; i < num_instructions; i++) {
@@ -171,7 +210,8 @@ emit_instructions(int outfd)
          break;
 
       case OPC_CALL:
-      case OPC_PREEMPTLEAVE:
+      case OPC_BL:
+      case OPC_JUMPA:
          ai->literal = resolve_label(ai->label);
          break;
 
@@ -184,16 +224,15 @@ emit_instructions(int outfd)
          break;
       }
 
-      /* special case, 2nd dword is patched up w/ # of instructions
-       * (ie. offset of jmptbl)
-       */
-      if (i == 1) {
-         assert(ai->opc == OPC_RAW_LITERAL);
-         ai->literal &= ~0xffff;
-         ai->literal |= num_instructions;
+      if (ai->opc == OPC_JUMPTBL) {
+         emit_jumptable(outfd);
+         continue;
       }
 
       if (ai->opc == OPC_RAW_LITERAL) {
+         if (ai->label) {
+            ai->literal = afuc_nop_literal(resolve_label(ai->label), gpuver);
+         }
          write(outfd, &ai->literal, 4);
          continue;
       }
@@ -203,6 +242,19 @@ emit_instructions(int outfd)
    }
 }
 
+void next_section(void)
+{
+   /* Sections must be aligned to 32 bytes */
+   align_instr(32);
+
+   emit_instructions(outfd);
+
+   num_instructions = 0;
+   instr_offset = 0;
+   num_labels = 0;
+}
+
+
 unsigned
 parse_control_reg(const char *name)
 {
@@ -210,36 +262,18 @@ parse_control_reg(const char *name)
    return afuc_control_reg(name + 1);
 }
 
-static void
-emit_jumptable(int outfd)
+unsigned
+parse_sqe_reg(const char *name)
 {
-   uint32_t jmptable[0x80] = {0};
-   int i;
-
-   for (i = 0; i < num_labels; i++) {
-      struct asm_label *label = &labels[i];
-      int id = afuc_pm4_id(label->label);
-
-      /* if it doesn't match a known PM4 packet-id, try to match UNKN%d: */
-      if (id < 0) {
-         if (sscanf(label->label, "UNKN%d", &id) != 1) {
-            /* if still not found, must not belong in jump-table: */
-            continue;
-         }
-      }
-
-      jmptable[id] = label->offset;
-   }
-
-   write(outfd, jmptable, sizeof(jmptable));
+   /* skip leading "%" */
+   return afuc_sqe_reg(name + 1);
 }
 
 static void
 usage(void)
 {
    fprintf(stderr, "Usage:\n"
-                   "\tasm [-g GPUVER] filename.asm filename.fw\n"
-                   "\t\t-g - specify GPU version (5, etc)\n");
+                   "\tasm filename.asm filename.fw\n");
    exit(2);
 }
 
@@ -248,18 +282,7 @@ main(int argc, char **argv)
 {
    FILE *in;
    char *file, *outfile;
-   int c, ret, outfd;
-
-   /* Argument parsing: */
-   while ((c = getopt(argc, argv, "g:")) != -1) {
-      switch (c) {
-      case 'g':
-         gpuver = atoi(optarg);
-         break;
-      default:
-         usage();
-      }
-   }
+   int ret;
 
    if (optind >= (argc + 1)) {
       fprintf(stderr, "no file specified!\n");
@@ -283,19 +306,11 @@ main(int argc, char **argv)
 
    yyset_in(in);
 
-   /* if gpu version not specified, infer from filename: */
-   if (!gpuver) {
-      if (strstr(file, "a5")) {
-         gpuver = 5;
-      } else if (strstr(file, "a6")) {
-         gpuver = 6;
-      }
-   }
-
-   ret = afuc_util_init(gpuver, false);
-   if (ret < 0) {
-      usage();
-   }
+   /* there is an extra 0x00000000 which kernel strips off.. we could
+    * perhaps use it for versioning.
+    */
+   uint32_t zero = 0;
+   write(outfd, &zero, 4);
 
    ret = yyparse();
    if (ret) {
@@ -304,7 +319,6 @@ main(int argc, char **argv)
    }
 
    emit_instructions(outfd);
-   emit_jumptable(outfd);
 
    close(outfd);
 

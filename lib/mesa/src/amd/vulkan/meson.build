@@ -1,22 +1,5 @@
 # Copyright © 2017 Intel Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 radv_entrypoints_gen_command = [
   prog_python, '@INPUT0@', '--xml', '@INPUT1@', '--proto', '--weak',
@@ -32,10 +15,15 @@ radv_entrypoints_gen_command += [
   '--device-prefix', 'sqtt',
   '--device-prefix', 'rra',
   '--device-prefix', 'rmv',
+  '--device-prefix', 'ctx_roll',
 
   # Application layer entrypoints
   '--device-prefix', 'metro_exodus',
   '--device-prefix', 'rage2',
+  '--device-prefix', 'quantic_dream',
+
+  # Command buffer annotation layer entrypoints
+  '--device-prefix', 'annotate',
 ]
 
 radv_entrypoints = custom_target(
@@ -48,8 +36,10 @@ radv_entrypoints = custom_target(
 
 libradv_files = files(
   'bvh/bvh.h',
+  'layers/radv_ctx_roll_layer.c',
   'layers/radv_metro_exodus.c',
   'layers/radv_rage2.c',
+  'layers/radv_quantic_dream.c',
   'layers/radv_rmv_layer.c',
   'layers/radv_rra_layer.c',
   'layers/radv_sqtt_layer.c',
@@ -79,6 +69,7 @@ libradv_files = files(
   'nir/radv_nir_lower_cooperative_matrix.c',
   'nir/radv_nir_lower_fs_barycentric.c',
   'nir/radv_nir_lower_fs_intrinsics.c',
+  'nir/radv_nir_lower_hit_attrib_derefs.c',
   'nir/radv_nir_lower_intrinsics_early.c',
   'nir/radv_nir_lower_io.c',
   'nir/radv_nir_lower_poly_line_smooth.c',
@@ -87,6 +78,10 @@ libradv_files = files(
   'nir/radv_nir_lower_view_index.c',
   'nir/radv_nir_lower_viewport_to_zero.c',
   'nir/radv_nir_lower_vs_inputs.c',
+  'nir/radv_nir_opt_tid_function.c',
+  'nir/radv_nir_remap_color_attachment.c',
+  'nir/radv_nir_rt_common.c',
+  'nir/radv_nir_rt_shader.c',
   'winsys/null/radv_null_bo.c',
   'winsys/null/radv_null_bo.h',
   'winsys/null/radv_null_cs.c',
@@ -95,49 +90,84 @@ libradv_files = files(
   'winsys/null/radv_null_winsys_public.h',
   'radv_acceleration_structure.c',
   'radv_android.c',
+  'radv_android.h',
   'radv_buffer.c',
+  'radv_buffer.h',
+  'radv_buffer_view.c',
+  'radv_buffer_view.h',
   'radv_cmd_buffer.c',
+  'radv_cmd_buffer.h',
+  'radv_cp_dma.c',
+  'radv_cp_dma.h',
   'radv_cp_reg_shadowing.c',
+  'radv_cp_reg_shadowing.h',
+  'radv_cs.c',
   'radv_cs.h',
   'radv_debug.c',
   'radv_debug.h',
   'radv_device.c',
+  'radv_device.h',
   'radv_device_memory.c',
+  'radv_device_memory.h',
   'radv_descriptor_set.c',
   'radv_descriptor_set.h',
-  'radv_device_generated_commands.c',
+  'radv_dgc.c',
+  'radv_dgc.h',
   'radv_event.c',
+  'radv_event.h',
   'radv_formats.c',
+  'radv_formats.h',
   'radv_image.c',
+  'radv_image.h',
+  'radv_image_view.c',
+  'radv_image_view.h',
   'radv_instance.c',
+  'radv_instance.h',
   'radv_perfcounter.c',
   'radv_physical_device.c',
   'radv_pipeline.c',
+  'radv_pipeline.h',
+  'radv_pipeline_binary.c',
+  'radv_pipeline_binary.h',
   'radv_pipeline_cache.c',
+  'radv_pipeline_cache.h',
   'radv_pipeline_compute.c',
+  'radv_pipeline_compute.h',
   'radv_pipeline_graphics.c',
   'radv_pipeline_rt.c',
-  'radv_private.h',
+  'radv_pipeline_rt.h',
+  'radv_printf.c',
+  'radv_printf.h',
   'radv_queue.c',
+  'radv_queue.h',
   'radv_radeon_winsys.h',
   'radv_rmv.c',
+  'radv_rmv.h',
   'radv_rra.c',
-  'radv_rt_common.c',
-  'radv_rt_shader.c',
+  'radv_rra.h',
   'radv_sampler.c',
+  'radv_sampler.h',
   'radv_sdma.c',
+  'radv_sdma.h',
   'radv_shader.c',
   'radv_shader.h',
   'radv_shader_args.c',
   'radv_shader_args.h',
   'radv_shader_info.c',
+  'radv_shader_info.h',
+  'radv_shader_object.c',
+  'radv_shader_object.h',
   'radv_spm.c',
+  'radv_spm.h',
   'radv_sqtt.c',
+  'radv_sqtt.h',
   'radv_query.c',
+  'radv_query.h',
   'radv_video.c',
+  'radv_video.h',
+  'radv_video_enc.c',
   'radv_wsi.c',
-  'si_cmd_buffer.c',
-  'vk_format.h',
+  'radv_wsi.h',
 )
 
 if not with_platform_windows
@@ -146,29 +176,31 @@ if not with_platform_windows
     'winsys/amdgpu/radv_amdgpu_bo.h',
     'winsys/amdgpu/radv_amdgpu_cs.c',
     'winsys/amdgpu/radv_amdgpu_cs.h',
-    'winsys/amdgpu/radv_amdgpu_surface.c',
-    'winsys/amdgpu/radv_amdgpu_surface.h',
     'winsys/amdgpu/radv_amdgpu_winsys.c',
     'winsys/amdgpu/radv_amdgpu_winsys.h',
     'winsys/amdgpu/radv_amdgpu_winsys_public.h',
   )
 endif
 
-if with_llvm
+if amd_with_llvm
   libradv_files += files(
     'radv_llvm_helper.cpp',
     'radv_llvm_helper.h',
     'radv_nir_to_llvm.c',
+    'radv_nir_to_llvm.h',
   )
 endif
 
-subdir('radix_sort')
-libradv_files += radix_sort_files
-
 subdir('bvh')
+
+subdir('layers')
 
 radv_deps = []
 radv_flags = cc.get_supported_arguments(['-Wimplicit-fallthrough', '-Wshadow'])
+
+if with_amdgpu_virtio
+  radv_flags += '-DHAVE_AMDGPU_VIRTIO'
+endif
 
 if with_platform_x11
   radv_deps += dep_xcb_dri3
@@ -193,20 +225,20 @@ endif
 
 libvulkan_radeon = shared_library(
   'vulkan_radeon',
-  [libradv_files, radv_entrypoints, sha1_h, radix_sort_spv, bvh_spv],
+  [libradv_files, radv_entrypoints, sha1_h, radix_sort_spv, bvh_spv, radv_annotate_layer],
   vs_module_defs : vulkan_api_def,
   include_directories : [
-    inc_include, inc_src, inc_amd, inc_amd_common, inc_amd_common_llvm, inc_util,
+    inc_include, inc_src, inc_amd, inc_amd_common, inc_amd_common_llvm,
+    inc_util, inc_virtio_gpu
   ],
   link_with : [
     libamd_common, libamd_common_llvm, libamdgpu_addrlib,
   ],
   dependencies : [
-    dep_llvm, dep_libdrm_amdgpu, dep_thread, dep_elf, dep_dl, dep_m,
+    dep_llvm, dep_thread, dep_elf, dep_dl, dep_m,
     dep_valgrind, radv_deps, idep_aco,
     idep_mesautil, idep_nir, idep_vulkan_util, idep_vulkan_wsi,
     idep_vulkan_runtime, idep_amdgfxregs_h, idep_xmlconfig,
-    idep_vulkan_common_entrypoints_h, idep_vulkan_wsi_entrypoints_h
   ],
   c_args : [no_override_init_args, radv_flags, c_msvc_compat_args],
   cpp_args : [radv_flags, cpp_msvc_compat_args],
@@ -236,13 +268,13 @@ endif
 icd_lib_path = join_paths(get_option('prefix'), get_option('libdir'))
 icd_file_name = 'libvulkan_radeon.so'
 if with_platform_windows
-  icd_lib_path = join_paths(get_option('prefix'), get_option('bindir'))
+  icd_lib_path = import('fs').relative_to(get_option('bindir'), with_vulkan_icd_dir)
   icd_file_name = 'vulkan_radeon.dll'
 endif
 
 icd_command = [
   prog_python, '@INPUT0@',
-  '--api-version', '1.3', '--xml', '@INPUT1@',
+  '--api-version', '1.4', '--xml', '@INPUT1@',
   '--lib-path', join_paths(icd_lib_path, icd_file_name),
   '--out', '@OUTPUT@',
 ]
@@ -268,11 +300,40 @@ _dev_icd = custom_target(
   output : _dev_icdname,
   command : [
     prog_python, '@INPUT0@',
-    '--api-version', '1.3', '--xml', '@INPUT1@',
+    '--api-version', '1.4', '--xml', '@INPUT1@',
     '--lib-path', meson.current_build_dir() / icd_file_name,
     '--out', '@OUTPUT@',
   ],
   build_by_default : true,
 )
 
+devenv.append('VK_DRIVER_FILES', _dev_icd.full_path())
+# Deprecated: replaced by VK_DRIVER_FILES above
 devenv.append('VK_ICD_FILENAMES', _dev_icd.full_path())
+
+if with_tests
+  test(
+    'radv_tests',
+    executable(
+      'radv_tests',
+      files(
+        'nir/radv_nir_lower_hit_attrib_derefs.c',
+        'tests/radv_nir_lower_hit_attrib_derefs_tests.cpp',
+      ),
+      cpp_args : [cpp_msvc_compat_args],
+      gnu_symbol_visibility : 'hidden',
+      include_directories : [
+        inc_include,
+        inc_src,
+        inc_amd,
+        inc_amd_common,
+        inc_compiler,
+        inc_util,
+        include_directories('.'),
+      ],
+      dependencies : [dep_thread, idep_gtest, idep_nir, idep_mesautil],
+    ),
+    suite : ['compiler', 'nir'],
+    protocol : 'gtest',
+  )
+endif

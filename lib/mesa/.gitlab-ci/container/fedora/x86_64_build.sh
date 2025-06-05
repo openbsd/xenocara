@@ -6,6 +6,9 @@
 # FEDORA_X86_64_BUILD_TAG
 
 set -e
+
+. .gitlab-ci/setup-test-env.sh
+
 set -o xtrace
 
 
@@ -27,9 +30,11 @@ EPHEMERAL=(
 DEPS=(
     bindgen
     bison
+    cbindgen
     ccache
     clang-devel
     flex
+    flatbuffers-compiler
     gcc
     gcc-c++
     gettext
@@ -41,12 +46,11 @@ DEPS=(
     "pkgconfig(SPIRV-Tools)"
     "pkgconfig(dri2proto)"
     "pkgconfig(expat)"
+    "pkgconfig(flatbuffers)"
     "pkgconfig(glproto)"
     "pkgconfig(libclc)"
     "pkgconfig(libelf)"
     "pkgconfig(libglvnd)"
-    "pkgconfig(libomxil-bellagio)"
-    "pkgconfig(libselinux)"
     "pkgconfig(libva)"
     "pkgconfig(pciaccess)"
     "pkgconfig(vdpau)"
@@ -66,17 +70,22 @@ DEPS=(
     "pkgconfig(xfixes)"
     "pkgconfig(xrandr)"
     "pkgconfig(xshmfence)"
+    "pkgconfig(xtensor)"
     "pkgconfig(xxf86vm)"
     "pkgconfig(zlib)"
     procps-ng
     python-unversioned-command
     python3-devel
     python3-mako
+    python3-packaging
     python3-ply
+    python3-pycparser
+    python3-yaml
     rust-packaging
-    vulkan-headers
     spirv-tools-devel
     spirv-llvm-translator-devel
+    vulkan-headers
+    which
 )
 
 dnf install -y --setopt=install_weak_deps=False "${DEPS[@]}" "${EPHEMERAL[@]}"
@@ -96,8 +105,7 @@ tar -xvf $XORGMACROS_VERSION.tar.bz2 && rm $XORGMACROS_VERSION.tar.bz2
 cd $XORGMACROS_VERSION; ./configure; make install; cd ..
 rm -rf $XORGMACROS_VERSION
 
-# We need at least 1.2 for Rust's `debug_assertions`
-pip install meson==1.2.0
+. .gitlab-ci/container/install-meson.sh
 
 . .gitlab-ci/container/build-mold.sh
 

@@ -2,11 +2,17 @@
 # SPDX-License-Identifier: MIT
 
 option(
+  'split-debug',
+  type : 'feature',
+  value : 'disabled',
+  description : 'split debug information (-gsplit-dwarf compile flag) and debug information in the gdb index format (--gdb-index)',
+)
+option(
   'platforms',
   type : 'array',
   value : ['auto'],
   choices : [
-    'auto', 'x11', 'wayland', 'haiku', 'android', 'windows',
+    'auto', 'x11', 'wayland', 'haiku', 'android', 'windows', 'macos',
   ],
   description : 'window systems to support. If this is set to `auto`, all ' +
                 'platforms applicable will be enabled.'
@@ -31,16 +37,18 @@ option(
 )
 
 option(
-  'android-libbacktrace',
-  type : 'feature',
-  description : 'Use Android\'s libbacktrace',
+  'android-strict',
+  type : 'boolean',
+  value : true,
+  description : 'Enable strict Android compliance. Disabling may cause CTS ' +
+                'failures or other problems, but allows drivers to expose ' +
+                'capabilities that are normally hidden. Default: true'
 )
 
 option(
-  'dri3',
+  'android-libbacktrace',
   type : 'feature',
-  deprecated: {'true': 'enabled', 'false': 'disabled'},
-  description : 'enable support for dri3'
+  description : 'Use Android\'s libbacktrace',
 )
 
 option(
@@ -51,11 +59,11 @@ option(
 )
 
 option(
-  'dri-search-path',
-  type : 'string',
-  value : '',
-  description : 'Locations to search for dri drivers, passed as colon ' +
-                'separated list. Default: dri-drivers-path.'
+  'unversion-libgallium',
+  type : 'boolean',
+  value : false,
+  description : 'Do not include mesa version in libgallium DSO filename. ' +
+                'Do not enable unless you know what you are doing. Default: false'
 )
 
 option(
@@ -71,13 +79,14 @@ option(
   type : 'array',
   value : ['auto'],
   choices : [
-    'auto', 'kmsro', 'radeonsi', 'r300', 'r600', 'nouveau', 'freedreno',
+    'auto', 'radeonsi', 'r300', 'r600', 'nouveau', 'freedreno',
     'swrast', 'v3d', 'vc4', 'etnaviv', 'tegra', 'i915', 'svga', 'virgl',
     'panfrost', 'iris', 'lima', 'zink', 'd3d12', 'asahi', 'crocus', 'all',
+    'softpipe', 'llvmpipe',
   ],
   description : 'List of gallium drivers to build. If this is set to auto ' +
                 'all drivers applicable to the target OS/architecture ' +
-                'will be built'
+                'will be built.'
 )
 
 option(
@@ -99,22 +108,6 @@ option(
   type : 'string',
   value : '',
   description : 'path to put vdpau libraries. defaults to $libdir/vdpau.'
-)
-
-option(
-  'gallium-omx',
-  type : 'combo',
-  value : 'auto',
-  choices : ['auto', 'disabled', 'bellagio', 'tizonia'],
-  description : 'enable gallium omx frontend.',
-)
-
-option(
-  'omx-libs-path',
-  type : 'string',
-  value : '',
-  description : 'path to put omx libraries. defaults to omx-bellagio ' +
-                'pkg-config pluginsdir.'
 )
 
 option(
@@ -158,6 +151,7 @@ option(
   choices : ['icd', 'standalone', 'disabled'],
   value : 'disabled',
   description : 'build gallium "clover" OpenCL frontend.',
+  deprecated: true,
 )
 
 option(
@@ -168,19 +162,27 @@ option(
 )
 
 option(
-  'gallium-windows-dll-name',
+  'gallium-rusticl-enable-drivers',
+  type : 'array',
+  value : ['auto', 'asahi'],
+  description : 'List of gallium drivers for which rusticl will be enabled ' +
+                'by default',
+)
+
+option(
+  'gallium-wgl-dll-name',
   type : 'string',
   value : 'libgallium_wgl',
-  description : 'name of gallium megadriver DLL built for Windows. ' +
+  description : 'name of gallium wgl target DLL built for Windows. ' +
                 'defaults to libgallium_wgl.dll to match DRI',
 )
 
 option(
-  'opencl-spirv',
-  type : 'boolean',
-  value : false,
-  description : 'build gallium "clover" OpenCL frontend with SPIR-V ' +
-                'binary support.',
+  'gallium-d3d10-dll-name',
+  type : 'string',
+  value : 'libgallium_d3d10',
+  description : 'name of gallium d3d10 target DLL built for Windows. ' +
+                'defaults to libgallium_d3d10.dll to match DRI',
 )
 
 option(
@@ -189,13 +191,6 @@ option(
   value : [],
   choices : ['spirv', 'spirv64', 'all'],
   description : 'Link libclc SPIR-V statically.',
-)
-
-option(
-  'opencl-external-clang-headers',
-  type : 'feature',
-  description : 'Use system Clang headers at runtime for OpenCL kernel ' +
-                'compilation.',
 )
 
 option(
@@ -211,7 +206,8 @@ option(
   value : ['auto'],
   choices : ['auto', 'amd', 'broadcom', 'freedreno', 'intel', 'intel_hasvk',
              'panfrost', 'swrast', 'virtio', 'imagination-experimental',
-             'microsoft-experimental', 'nouveau-experimental', 'all'],
+             'microsoft-experimental', 'nouveau', 'asahi', 'gfxstream',
+             'all'],
   description : 'List of vulkan drivers to build. If this is set to auto ' +
                 'all drivers applicable to the target OS/architecture ' +
                 'will be built'
@@ -224,11 +220,17 @@ option(
   'freedreno-kmds',
   type : 'array',
   value : ['msm'],
-  choices : ['msm', 'kgsl', 'virtio'],
+  choices : ['msm', 'kgsl', 'virtio', 'wsl'],
   description : 'List of kernel-mode drivers to enable for freedreno ' +
                 'gallium and vulkan driver',
 )
 
+option(
+  'amdgpu-virtio',
+  type : 'boolean',
+  value : false,
+  description : 'use experimental virtio backend for radeonsi/radv',
+)
 option(
   'imagination-srv',
   type : 'boolean',
@@ -286,7 +288,10 @@ option(
   'vulkan-layers',
   type : 'array',
   value : [],
-  choices : ['device-select', 'intel-nullhw', 'overlay'],
+  choices : [
+    'device-select', 'intel-nullhw', 'overlay', 'screenshot', 
+    'vram-report-limit',
+  ],
   description : 'List of vulkan layers to build'
 )
 
@@ -351,8 +356,8 @@ option(
 
 option(
   'glvnd',
-  type : 'boolean',
-  value : false,
+  type : 'feature',
+  deprecated: {'true': 'enabled', 'false': 'disabled'},
   description : 'Enable GLVND support.'
 )
 
@@ -408,6 +413,24 @@ option(
 )
 
 option(
+  'amd-use-llvm',
+  type : 'boolean',
+  value : true,
+  description : 'Whether to use LLVM for the AMD drivers, if LLVM ' +
+                'is included.'
+)
+
+option (
+  'llvm-orcjit',
+  type : 'boolean',
+  value : false,
+  description: 'Build llvmpipe with LLVM ORCJIT support. Has no effect when ' +
+               'building for architectures without LLVM MCJIT support -- ' +
+               'ORCJIT is the only choice on such architectures and will ' +
+               'always be enabled.'
+)
+
+option(
   'valgrind',
   type : 'feature',
   deprecated: {'true': 'enabled', 'false': 'disabled'},
@@ -460,12 +483,24 @@ option(
 )
 
 option(
+  'html-docs',
+  type : 'feature',
+  value : 'disabled',
+  description : 'Build HTML documentation.'
+)
+
+option(
+  'html-docs-path',
+  type : 'string',
+  value : '',
+  description : 'Location to install HTML documentation. Default: $datadir/doc/mesa.'
+)
+
+option(
   'selinux',
   type : 'boolean',
-  value : false,
-  description : 'Build an SELinux-aware Mesa.  This currently disables ' +
-                'execmem support at runtime unless SELinux is configured ' +
-                'with allow_execmem.'
+  deprecated : true,
+  description : 'Does nothing, left here for a while to avoid build breakages.',
 )
 
 option(
@@ -583,6 +618,13 @@ option(
 )
 
 option(
+  'teflon',
+  type : 'boolean',
+  value : false,
+  description : 'Enable TensorFlow Lite delegate. Default: false'
+)
+
+option(
   'gpuvis',
   type : 'boolean',
   value : false,
@@ -617,27 +659,56 @@ option(
 option(
   'intel-clc',
   type : 'combo',
-  deprecated: {'true': 'enabled', 'false': 'disabled'},
-  value : 'disabled',
+  deprecated: {'true': 'enabled'},
+  value : 'auto',
   choices : [
-    'enabled', 'disabled', 'system',
+    'enabled', 'system', 'auto'
   ],
-  description : 'Build the intel-clc compiler (enables Vulkan Intel ' +
-                'Ray Tracing on supported hardware).'
+  description : 'Build the intel-clc compiler or use a system version.'
+)
+
+option(
+  'intel-bvh-grl',
+  type : 'boolean',
+  value : false,
+  description : 'Build the BVH structure using GRL.'
+)
+
+option(
+  'install-intel-clc',
+  type : 'boolean',
+  value : false,
+  description : 'Install the intel-clc compiler (if needed for cross builds).'
+)
+
+option(
+  'intel-rt',
+  type : 'feature',
+  deprecated: {'true': 'enabled', 'false': 'disabled'},
+  description : 'Build Ray Tracing on supported hardware.'
+)
+
+option(
+  'intel-elk',
+  type : 'boolean',
+  value : true,
+  description : 'Build ELK compiler (used for Gfx8 and earlier). ' +
+                'This is required for Crocus and Hasvk, and it is ' +
+                'optional for Iris and various developer tools.'
 )
 
 option(
   'video-codecs',
   type : 'array',
-  value : [],
+  value : ['all_free'],
   choices: [
-    'vc1dec', 'h264dec', 'h264enc', 'h265dec', 'h265enc'
+    'all', 'all_free', 'vc1dec', 'h264dec', 'h264enc', 'h265dec', 'h265enc', 'av1dec', 'av1enc', 'vp9dec'
   ],
-  description : 'List of patent encumbered codecs to build support for. ' +
+  description : 'List of codecs to build support for. ' +
                 'Distros might want to consult their legal department before ' +
                 'enabling these. This is used for all video APIs (vaapi, ' +
                 'vdpau, vulkan). Non-patent encumbered codecs will be ' +
-                'enabled by default.'
+                'enabled by default with the all_free default value.'
 )
 
 option(
@@ -646,6 +717,13 @@ option(
   value : 'auto',
   deprecated: {'true': 'enabled', 'false': 'disabled'},
   description : 'build gallium d3d12 with video support.',
+)
+
+option(
+  'gallium-d3d12-graphics',
+  type : 'feature',
+  value : 'auto',
+  description : 'build gallium d3d12 with graphics pipeline support.',
 )
 
 option(
@@ -675,9 +753,46 @@ option(
                 'Requires expat.'
 )
 
-option (
-  'intel-xe-kmd',
-  type : 'feature',
-  value : 'disabled',
-  description: 'Enable Intel Xe KMD support.'
+option(
+  'legacy-x11',
+  type : 'array',
+  value : ['none'],
+  description : 'Build legacy X11 support features.',
+  choices : [
+    'none', 'dri2'
+  ],
+)
+
+option(
+  'mesa-clc',
+  type : 'combo',
+  value : 'auto',
+  choices : [
+    'enabled', 'system', 'auto'
+  ],
+  description : 'Build the mesa-clc compiler or use a system version.'
+)
+
+option(
+  'install-mesa-clc',
+  type : 'boolean',
+  value : false,
+  description : 'Install the mesa-clc compiler (if needed for cross builds).'
+)
+
+option(
+  'precomp-compiler',
+  type : 'combo',
+  value : 'auto',
+  choices : [
+    'enabled', 'system', 'auto'
+  ],
+  description : 'Build drivers internal shader compilers or use a system version'
+)
+
+option(
+  'install-precomp-compiler',
+  type : 'boolean',
+  value : false,
+  description : 'Install the drivers internal shader compilers (if needed for cross builds).'
 )

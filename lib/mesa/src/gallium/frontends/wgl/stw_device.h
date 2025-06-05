@@ -55,7 +55,7 @@ struct stw_device
    bool screen_initialized;
    struct pipe_screen *screen;
 
-   /* Cache some PIPE_CAP_* */
+   /* Cache some pipe_caps.* */
    unsigned max_2d_length;
 
    struct pipe_frontend_screen *fscreen;
@@ -77,7 +77,7 @@ struct stw_device
    CRITICAL_SECTION fb_mutex;
    struct stw_framebuffer *fb_head;
    
-#ifdef DEBUG
+#if MESA_DEBUG
    unsigned long memdbg_no;
 #endif
 

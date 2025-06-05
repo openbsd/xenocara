@@ -1,24 +1,6 @@
 /*
  * Copyright © 2019 Google LLC
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <limits.h>
@@ -51,7 +33,7 @@ msm_ioctl_gem_new(int fd, unsigned long request, void *arg)
 {
    struct shim_fd *shim_fd = drm_shim_fd_lookup(fd);
    struct drm_msm_gem_new *create = arg;
-   size_t size = ALIGN(create->size, 4096);
+   size_t size = (size_t)align64(create->size, 4096);
 
    if (!size)
       return -EINVAL;
@@ -248,14 +230,24 @@ static const struct msm_device_info device_infos[] = {
       .gmem_size = 512 * 1024,
    },
    {
-      .gpu_id = 630,
-      .chip_id = CHIPID(6, 3, 0, 0xff),
-      .gmem_size = 1024 * 1024,
-   },
-   {
       .gpu_id = 660,
       .chip_id = CHIPID(6, 6, 0, 0xff),
       .gmem_size = 1024 * 1024 + 512 * 1024,
+   },
+   {
+      .gpu_id = 730,
+      .chip_id = 0x07030001,
+      .gmem_size = 2 * 1024 * 1024,
+   },
+   {
+      .gpu_id = 740,
+      .chip_id = 0x43050a01,
+      .gmem_size = 3 * 1024 * 1024,
+   },
+   {
+      .gpu_id = 750,
+      .chip_id = 0x43051401,
+      .gmem_size = 3 * 1024 * 1024,
    },
 };
 

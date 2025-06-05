@@ -85,7 +85,7 @@
 #define DETECT_ARCH_ARM 1
 #endif
 
-#if defined(__aarch64__) || defined(_M_ARM64)
+#if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
 #define DETECT_ARCH_AARCH64 1
 #endif
 
@@ -99,6 +99,25 @@
 
 #if defined(__hppa__)
 #define DETECT_ARCH_HPPA 1
+#endif
+
+#if defined(__riscv)
+#define DETECT_ARCH_RISCV 1
+#if __riscv_xlen == 64
+#define DETECT_ARCH_RISCV64 1
+#elif __riscv_xlen == 32
+#define DETECT_ARCH_RISCV32 1
+#else
+#error "detect_arch: unknown target riscv xlen"
+#endif
+#endif
+
+#if defined(__loongarch__)
+#ifdef __loongarch_lp64
+#define DETECT_ARCH_LOONGARCH64 1
+#else
+#error "detect_arch: unknown target loongarch base ABI type"
+#endif
 #endif
 
 #ifndef DETECT_ARCH_X86
@@ -143,6 +162,22 @@
 
 #ifndef DETECT_ARCH_HPPA
 #define DETECT_ARCH_HPPA 0
+#endif
+
+#ifndef DETECT_ARCH_RISCV
+#define DETECT_ARCH_RISCV 0
+#endif
+
+#ifndef DETECT_ARCH_RISCV32
+#define DETECT_ARCH_RISCV32 0
+#endif
+
+#ifndef DETECT_ARCH_RISCV64
+#define DETECT_ARCH_RISCV64 0
+#endif
+
+#ifndef DETECT_ARCH_LOONGARCH64
+#define DETECT_ARCH_LOONGARCH64 0
 #endif
 
 #endif /* UTIL_DETECT_ARCH_H_ */

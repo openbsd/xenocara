@@ -12,13 +12,20 @@ tu_entrypoints = custom_target(
     '--tmpl-prefix', 'tu', '--tmpl-param', 'chip CHIP',
     '--tmpl-variants', '<A6XX>', '<A7XX>',
     '--beta', with_vulkan_beta.to_string(),
+    '--device-prefix', 'tu_rmv',
   ],
   depend_files : vk_entrypoints_gen_depend_files,
 )
 
 
 libtu_files = files(
+  'bvh/tu_bvh.h',
+  'bvh/tu_build_interface.h',
+  'layers/tu_rmv_layer.cc',
+  'tu_acceleration_structure.cc',
   'tu_autotune.cc',
+  'tu_buffer.cc',
+  'tu_buffer_view.cc',
   'tu_clear_blit.cc',
   'tu_cmd_buffer.cc',
   'tu_cs_breadcrumbs.cc',
@@ -26,18 +33,25 @@ libtu_files = files(
   'tu_device.cc',
   'tu_descriptor_set.cc',
   'tu_dynamic_rendering.cc',
+  'tu_event.cc',
   'tu_formats.cc',
   'tu_image.cc',
   'tu_knl.cc',
   'tu_lrz.cc',
   'tu_nir_lower_multiview.cc',
+  'tu_nir_lower_ray_query.cc',
   'tu_pass.cc',
   'tu_pipeline.cc',
-  'tu_query.cc',
+  'tu_sampler.cc',
+  'tu_query_pool.cc',
+  'tu_queue.cc',
+  'tu_rmv.cc',
   'tu_shader.cc',
   'tu_suballoc.cc',
   'tu_util.cc',
 )
+
+subdir('bvh')
 
 libtu_includes = [
     inc_include,
@@ -45,6 +59,7 @@ libtu_includes = [
     inc_freedreno,
 ]
 
+tu_link_with = []
 tu_deps = []
 tu_flags = []
 
@@ -91,7 +106,11 @@ endif
 if freedreno_kmds.contains('virtio')
   tu_flags += '-DTU_HAS_VIRTIO'
   libtu_files += files('tu_knl_drm_virtio.cc', 'tu_knl_drm.cc')
-  libtu_includes += inc_virtio_gpu
+  libtu_includes += [
+    inc_virtio_gpu,
+    inc_virtio_vdrm,
+  ]
+  tu_link_with += libvdrm
   tu_deps += dep_libdrm
 endif
 
@@ -120,6 +139,7 @@ tu_cpp_args += cpp.get_supported_arguments([
   '-fno-rtti',
   '-Wno-address-of-temporary',
   '-Wno-array-bounds',
+  '-Wno-c++11-narrowing',
   '-Wno-c99-designator',
   '-Wno-class-memaccess',
   '-Wno-missing-braces',
@@ -129,29 +149,20 @@ tu_cpp_args += cpp.get_supported_arguments([
   '-Wno-sign-compare',
   '-Wno-switch',
   '-Wno-unused-function',
+  '-Wno-vla-cxx-extension',
   '-Wno-writable-strings',
   '-Wno-write-strings',
 ])
 
-# HACK compiler.get_supported_arguments()/has_argument() do not seem
-# to be reliable for cross builds (!?!) so just jam in some args we
-# need and hope for the best
-if meson.is_cross_build()
-  tu_cpp_args += '-Wno-array-bounds'
-  tu_cpp_args += '-Wno-c++11-narrowing'
-  tu_cpp_args += '-Wno-missing-braces'
-  tu_cpp_args += '-Wno-unused-function'
-  tu_cpp_args += '-Wno-writable-strings'
-endif
-
 libvulkan_freedreno = shared_library(
   'vulkan_freedreno',
-  [libtu_files, tu_entrypoints, tu_tracepoints, freedreno_xml_header_files, sha1_h, u_format_pack_h],
+  [libtu_files, tu_entrypoints, tu_tracepoints, freedreno_xml_header_files, sha1_h, u_format_pack_h, bvh_spv],
   include_directories : libtu_includes,
   link_with : [
     libfreedreno_ir3,
     libfreedreno_layout,
     libfreedreno_perfcntrs,
+    tu_link_with,
   ],
   dependencies : [
     idep_libfreedreno_common,
@@ -194,7 +205,7 @@ freedreno_icd = custom_target(
   output : 'freedreno_icd.@0@.json'.format(host_machine.cpu()),
   command : [
     prog_python, '@INPUT0@',
-    '--api-version', '1.1', '--xml', '@INPUT1@',
+    '--api-version', '1.4', '--xml', '@INPUT1@',
     '--lib-path', join_paths(get_option('prefix'), get_option('libdir'),
                              'libvulkan_freedreno.so'),
     '--out', '@OUTPUT@',
@@ -212,11 +223,13 @@ _dev_icd = custom_target(
   output : _dev_icdname,
   command : [
     prog_python, '@INPUT0@',
-    '--api-version', '1.1', '--xml', '@INPUT1@',
+    '--api-version', '1.4', '--xml', '@INPUT1@',
     '--lib-path', meson.current_build_dir() / 'libvulkan_freedreno.so',
     '--out', '@OUTPUT@',
   ],
   build_by_default : true,
 )
 
+devenv.append('VK_DRIVER_FILES', _dev_icd.full_path())
+# Deprecated: replaced by VK_DRIVER_FILES above
 devenv.append('VK_ICD_FILENAMES', _dev_icd.full_path())

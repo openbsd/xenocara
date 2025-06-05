@@ -29,7 +29,7 @@
 
 #include "draw_private.h"
 #include "draw_context.h"
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
 #include "draw_llvm.h"
 #endif
 
@@ -225,7 +225,7 @@ tgsi_gs_run(struct draw_geometry_shader *shader,
 }
 
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
 
 /*
  * Fetch the vertex attribute values for one primitive.
@@ -450,6 +450,32 @@ gs_flush(struct draw_geometry_shader *shader)
 
 
 static void
+increment_prim(struct draw_geometry_shader *shader)
+{
+   /* Primitive ID must be per-patch instead of per
+    * tessellation primitive. If we have patch lengths
+    * we use these to compute the primitive index.
+    * See patch_lengths in llvm_pipeline_generic for
+    * more info.
+    */
+   ++shader->fetched_prim_count;
+   if (shader->next_patch_length) {
+      shader->tess_prim_idx++;
+      if (shader->tess_prim_idx >= *shader->next_patch_length) {
+         ++shader->in_prim_idx;
+         ++shader->next_patch_length;
+         shader->tess_prim_idx = 0;
+      }
+   } else {
+      ++shader->in_prim_idx;
+   }
+
+   if (draw_gs_should_flush(shader))
+      gs_flush(shader);
+}
+
+
+static void
 gs_point(struct draw_geometry_shader *shader, int idx)
 {
    unsigned indices[1];
@@ -458,11 +484,8 @@ gs_point(struct draw_geometry_shader *shader, int idx)
 
    shader->fetch_inputs(shader, indices, 1,
                         shader->fetched_prim_count);
-   ++shader->in_prim_idx;
-   ++shader->fetched_prim_count;
 
-   if (draw_gs_should_flush(shader))
-      gs_flush(shader);
+   increment_prim(shader);
 }
 
 
@@ -476,11 +499,8 @@ gs_line(struct draw_geometry_shader *shader, int i0, int i1)
 
    shader->fetch_inputs(shader, indices, 2,
                         shader->fetched_prim_count);
-   ++shader->in_prim_idx;
-   ++shader->fetched_prim_count;
 
-   if (draw_gs_should_flush(shader))
-      gs_flush(shader);
+   increment_prim(shader);
 }
 
 
@@ -497,11 +517,8 @@ gs_line_adj(struct draw_geometry_shader *shader,
 
    shader->fetch_inputs(shader, indices, 4,
                         shader->fetched_prim_count);
-   ++shader->in_prim_idx;
-   ++shader->fetched_prim_count;
 
-   if (draw_gs_should_flush(shader))
-      gs_flush(shader);
+   increment_prim(shader);
 }
 
 
@@ -517,11 +534,8 @@ gs_tri(struct draw_geometry_shader *shader,
 
    shader->fetch_inputs(shader, indices, 3,
                         shader->fetched_prim_count);
-   ++shader->in_prim_idx;
-   ++shader->fetched_prim_count;
 
-   if (draw_gs_should_flush(shader))
-      gs_flush(shader);
+   increment_prim(shader);
 }
 
 
@@ -541,11 +555,8 @@ gs_tri_adj(struct draw_geometry_shader *shader,
 
    shader->fetch_inputs(shader, indices, 6,
                         shader->fetched_prim_count);
-   ++shader->in_prim_idx;
-   ++shader->fetched_prim_count;
 
-   if (draw_gs_should_flush(shader))
-      gs_flush(shader);
+   increment_prim(shader);
 }
 
 #define FUNC         gs_run
@@ -568,6 +579,7 @@ draw_geometry_shader_run(struct draw_geometry_shader *shader,
                          const struct draw_vertex_info *input_verts,
                          const struct draw_prim_info *input_prim,
                          const struct tgsi_shader_info *input_info,
+                         uint32_t *const *patch_lengths,
                          struct draw_vertex_info *output_verts,
                          struct draw_prim_info *output_prims)
 {
@@ -638,8 +650,9 @@ draw_geometry_shader_run(struct draw_geometry_shader *shader,
    shader->input_vertex_stride = input_stride;
    shader->input = input;
    shader->input_info = input_info;
+   shader->next_patch_length = patch_lengths ? *patch_lengths : NULL;
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (shader->draw->llvm) {
       for (int i = 0; i < shader->num_vertex_streams; i++) {
          shader->gs_output[i] = output_verts[i].verts;
@@ -776,13 +789,13 @@ struct draw_geometry_shader *
 draw_create_geometry_shader(struct draw_context *draw,
                             const struct pipe_shader_state *state)
 {
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    bool use_llvm = draw->llvm != NULL;
    struct llvm_geometry_shader *llvm_gs = NULL;
 #endif
    struct draw_geometry_shader *gs;
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (use_llvm) {
       llvm_gs = CALLOC_STRUCT(llvm_geometry_shader);
 
@@ -826,7 +839,7 @@ draw_create_geometry_shader(struct draw_context *draw,
    /* setup the defaults */
    gs->max_out_prims = 0;
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (use_llvm) {
       /* TODO: change the input array to handle the following
          vector length, instead of the currently hardcoded
@@ -886,7 +899,7 @@ draw_create_geometry_shader(struct draw_context *draw,
 
    gs->machine = draw->gs.tgsi.machine;
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (use_llvm) {
       int vector_size = gs->vector_length * sizeof(float);
       gs->gs_input = align_malloc(sizeof(struct draw_gs_inputs), 16);
@@ -949,7 +962,7 @@ draw_delete_geometry_shader(struct draw_context *draw,
    if (!dgs) {
       return;
    }
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (draw->llvm) {
       struct llvm_geometry_shader *shader = llvm_geometry_shader(dgs);
       struct draw_gs_llvm_variant_list_item *li, *next;
@@ -987,7 +1000,7 @@ draw_delete_geometry_shader(struct draw_context *draw,
 }
 
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
 void
 draw_gs_set_current_variant(struct draw_geometry_shader *shader,
                             struct draw_gs_llvm_variant *variant)
@@ -1007,4 +1020,5 @@ draw_geometry_shader_new_instance(struct draw_geometry_shader *gs)
       return;
 
    gs->in_prim_idx = 0;
+   gs->tess_prim_idx = 0;
 }

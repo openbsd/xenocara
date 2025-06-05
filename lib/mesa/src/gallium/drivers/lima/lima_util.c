@@ -29,7 +29,8 @@
 
 #include "util/u_debug.h"
 #include "util/u_memory.h"
-#include "util/u_box.h"
+#include "util/box.h"
+#include "pipe/p_state.h"
 
 #include "lima_util.h"
 #include "lima_parser.h"
@@ -39,24 +40,6 @@ struct lima_dump {
    FILE *fp;
    int id;
 };
-
-bool lima_get_absolute_timeout(uint64_t *timeout)
-{
-   struct timespec current;
-   uint64_t current_ns;
-
-   if (*timeout == OS_TIMEOUT_INFINITE)
-      return true;
-
-   if (clock_gettime(CLOCK_MONOTONIC, &current))
-      return false;
-
-   current_ns = ((uint64_t)current.tv_sec) * 1000000000ull;
-   current_ns += current.tv_nsec;
-   *timeout += current_ns;
-
-   return true;
-}
 
 static void
 lima_dump_blob(FILE *fp, void *data, int size, bool is_float)

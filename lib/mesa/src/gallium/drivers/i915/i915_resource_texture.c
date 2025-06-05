@@ -359,15 +359,16 @@ i915_texture_layout_2d(struct i915_texture *tex)
 {
    struct pipe_resource *pt = &tex->b;
    unsigned level;
-   unsigned width = util_next_power_of_two(pt->width0);
-   unsigned height = util_next_power_of_two(pt->height0);
-   unsigned nblocksy = util_format_get_nblocksy(pt->format, width);
+   unsigned width = pt->width0;
+   unsigned height = pt->height0;
+   unsigned nblocksy = 0;
    unsigned align_y = 2;
 
    if (util_format_is_compressed(pt->format))
       align_y = 1;
 
    tex->stride = align(util_format_get_stride(pt->format, width), 4);
+   nblocksy = align_nblocksy(pt->format, height, align_y);
    tex->total_nblocksy = 0;
 
    for (level = 0; level <= pt->last_level; level++) {
@@ -388,11 +389,16 @@ i915_texture_layout_3d(struct i915_texture *tex)
    struct pipe_resource *pt = &tex->b;
    unsigned level;
 
-   unsigned width = util_next_power_of_two(pt->width0);
-   unsigned height = util_next_power_of_two(pt->height0);
-   unsigned depth = util_next_power_of_two(pt->depth0);
-   unsigned nblocksy = util_format_get_nblocksy(pt->format, height);
+   unsigned width = pt->width0;
+   unsigned height = pt->height0;
+   unsigned depth = pt->depth0;
    unsigned stack_nblocksy = 0;
+   unsigned align_y = 2;
+
+   if (util_format_is_compressed(pt->format))
+      align_y = 1;
+
+   unsigned nblocksy = align_nblocksy(pt->format, height, align_y);
 
    /* Calculate the size of a single slice.
     */
@@ -402,20 +408,23 @@ i915_texture_layout_3d(struct i915_texture *tex)
     */
    for (level = 0; level <= MAX2(8, pt->last_level); level++) {
       i915_texture_set_level_info(tex, level, depth);
+      i915_texture_set_image_offset(tex, level, 0, 0, stack_nblocksy);
+
 
       stack_nblocksy += MAX2(2, nblocksy);
 
       width = u_minify(width, 1);
       height = u_minify(height, 1);
-      nblocksy = util_format_get_nblocksy(pt->format, height);
+      nblocksy = align_nblocksy(pt->format, height, align_y);
    }
 
    /* Fixup depth image_offsets:
     */
-   for (level = 0; level <= pt->last_level; level++) {
+   for (level = 0; level <= MAX2(8, pt->last_level); level++) {
       unsigned i;
-      for (i = 0; i < depth; i++)
-         i915_texture_set_image_offset(tex, level, i, 0, i * stack_nblocksy);
+      nblocksy = tex->image_offset[level][0].nblocksy;
+      for (i = 1; i < depth; i++)
+         i915_texture_set_image_offset(tex, level, i, 0, nblocksy + i * stack_nblocksy);
 
       depth = u_minify(depth, 1);
    }
@@ -424,7 +433,7 @@ i915_texture_layout_3d(struct i915_texture *tex)
     * remarkable how wasteful of memory the i915 texture layouts
     * are.  They are largely fixed in the i945.
     */
-   tex->total_nblocksy = stack_nblocksy * util_next_power_of_two(pt->depth0);
+   tex->total_nblocksy = stack_nblocksy * pt->depth0;
 }
 
 static bool
@@ -463,10 +472,10 @@ i945_texture_layout_2d(struct i915_texture *tex)
    unsigned level;
    unsigned x = 0;
    unsigned y = 0;
-   unsigned width = util_next_power_of_two(pt->width0);
-   unsigned height = util_next_power_of_two(pt->height0);
-   unsigned nblocksx = util_format_get_nblocksx(pt->format, width);
-   unsigned nblocksy = util_format_get_nblocksy(pt->format, height);
+   unsigned width = pt->width0;
+   unsigned height = pt->height0;
+   unsigned nblocksx = 0;
+   unsigned nblocksy = 0;
 
    if (util_format_is_compressed(pt->format)) {
       align_x = 1;
@@ -474,20 +483,8 @@ i945_texture_layout_2d(struct i915_texture *tex)
    }
 
    tex->stride = align(util_format_get_stride(pt->format, width), 4);
-
-   /* May need to adjust pitch to accommodate the placement of
-    * the 2nd mipmap level.  This occurs when the alignment
-    * constraints of mipmap placement push the right edge of the
-    * 2nd mipmap level out past the width of its parent.
-    */
-   if (pt->last_level > 0) {
-      unsigned mip1_nblocksx =
-         align_nblocksx(pt->format, u_minify(width, 1), align_x) +
-         util_format_get_nblocksx(pt->format, u_minify(width, 2));
-
-      if (mip1_nblocksx > nblocksx)
-         tex->stride = mip1_nblocksx * util_format_get_blocksize(pt->format);
-   }
+   nblocksx = align_nblocksx(pt->format, width, align_x);
+   nblocksy = align_nblocksy(pt->format, height, align_y);
 
    /* Pitch must be a whole number of dwords
     */
@@ -522,15 +519,22 @@ static void
 i945_texture_layout_3d(struct i915_texture *tex)
 {
    struct pipe_resource *pt = &tex->b;
-   unsigned width = util_next_power_of_two(pt->width0);
-   unsigned height = util_next_power_of_two(pt->height0);
-   unsigned depth = util_next_power_of_two(pt->depth0);
+   int align_x = 4, align_y = 2;
+   unsigned width = pt->width0;
+   unsigned height = pt->height0;
+   unsigned depth = pt->depth0;
+
    unsigned nblocksy = util_format_get_nblocksy(pt->format, height);
    unsigned pack_x_pitch, pack_x_nr;
    unsigned pack_y_pitch;
    unsigned level;
 
-   tex->stride = align(util_format_get_stride(pt->format, width), 4);
+   if (util_format_is_compressed(pt->format)) {
+      align_x = 1;
+      align_y = 1;
+   }
+
+   tex->stride = align(util_format_get_stride(pt->format, width), align_x);
    tex->total_nblocksy = 0;
 
    pack_y_pitch = MAX2(nblocksy, 2);
@@ -549,10 +553,17 @@ i945_texture_layout_3d(struct i915_texture *tex)
             i915_texture_set_image_offset(tex, level, q, x,
                                           y + tex->total_nblocksy);
             x += pack_x_pitch;
+            x = align(x, align_x);
+         }
+         if (x > width) {
+            tex->stride = util_format_get_stride(pt->format, x);
+            width = x;
          }
 
          x = 0;
          y += pack_y_pitch;
+         y = align(y, align_y);
+
       }
 
       tex->total_nblocksy += y;
@@ -569,10 +580,7 @@ i945_texture_layout_3d(struct i915_texture *tex)
          pack_y_pitch >>= 1;
       }
 
-      width = u_minify(width, 1);
-      height = u_minify(height, 1);
       depth = u_minify(depth, 1);
-      nblocksy = util_format_get_nblocksy(pt->format, height);
    }
 }
 

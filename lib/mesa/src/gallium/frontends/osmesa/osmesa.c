@@ -48,13 +48,20 @@
  * much nicer, new off-screen Gallium interface...
  */
 
+/**
+ * The following block is for avoid windows.h to be included
+ * and osmesa require APIENTRY to be defined
+ */
+#include "util/glheader.h"
+#ifndef APIENTRY
+#define APIENTRY GLAPIENTRY
+#endif
+#include "GL/osmesa.h"
 
 #include <stdio.h>
 #include <c11/threads.h>
 
 #include "state_tracker/st_context.h"
-
-#include "GL/osmesa.h"
 
 #include "glapi/glapi.h"  /* for OSMesaGetProcAddress below */
 
@@ -63,7 +70,7 @@
 #include "pipe/p_state.h"
 
 #include "util/u_atomic.h"
-#include "util/u_box.h"
+#include "util/box.h"
 #include "util/u_debug.h"
 #include "util/format/u_format.h"
 #include "util/u_inlines.h"
@@ -869,7 +876,7 @@ OSMesaGetIntegerv(GLint pname, GLint *value)
    case OSMESA_MAX_HEIGHT:
       {
          struct pipe_screen *screen = get_st_manager()->screen;
-         *value = screen->get_param(screen, PIPE_CAP_MAX_TEXTURE_2D_SIZE);
+         *value = screen->caps.max_texture_2d_size;
       }
       return;
    default:
@@ -984,7 +991,7 @@ OSMesaGetProcAddress(const char *funcName)
       if (strcmp(functions[i].Name, funcName) == 0)
          return functions[i].Function;
    }
-   return _glapi_get_proc_address(funcName);
+   return _mesa_glapi_get_proc_address(funcName);
 }
 
 

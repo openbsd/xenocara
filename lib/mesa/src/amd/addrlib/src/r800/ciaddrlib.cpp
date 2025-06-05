@@ -1,7 +1,7 @@
 /*
 ************************************************************************************************************************
 *
-*  Copyright (C) 2007-2022 Advanced Micro Devices, Inc.  All rights reserved.
+*  Copyright (C) 2007-2024 Advanced Micro Devices, Inc. All rights reserved.
 *  SPDX-License-Identifier: MIT
 *
 ***********************************************************************************************************************/
@@ -754,7 +754,7 @@ ADDR_E_RETURNCODE CiLib::HwlComputeSurfaceInfo(
 ****************************************************************************************************
 *   CiLib::HwlFmaskSurfaceInfo
 *   @brief
-*       Entry of r800's ComputeFmaskInfo
+*       Entry of CI's ComputeFmaskInfo
 *   @return
 *       ADDR_E_RETURNCODE
 ****************************************************************************************************

@@ -98,16 +98,17 @@ struct pipe_video_codec
    /**
     * Perform post-process effect
     */
-   void (*process_frame)(struct pipe_video_codec *codec,
+   int (*process_frame)(struct pipe_video_codec *codec,
                          struct pipe_video_buffer *source,
                          const struct pipe_vpp_desc *process_properties);
 
    /**
     * end decoding of the current frame
+    * returns 0 on success
     */
-   void (*end_frame)(struct pipe_video_codec *codec,
-                     struct pipe_video_buffer *target,
-                     struct pipe_picture_desc *picture);
+   int (*end_frame)(struct pipe_video_codec *codec,
+                    struct pipe_video_buffer *target,
+                    struct pipe_picture_desc *picture);
 
    /**
     * flush any outstanding command buffers to the hardware
@@ -118,35 +119,24 @@ struct pipe_video_codec
    /**
     * get encoder feedback
     */
-   void (*get_feedback)(struct pipe_video_codec *codec, void *feedback, unsigned *size);
+   void (*get_feedback)(struct pipe_video_codec *codec,
+                        void *feedback,
+                        unsigned *size,
+                        struct pipe_enc_feedback_metadata* metadata /* opt NULL */);
 
    /**
-    * Get decoder fence.
+    * Wait for fence.
     *
-    * Can be used to query the status of the previous decode job denoted by
+    * Can be used to query the status of the previous job denoted by
     * 'fence' given 'timeout'.
     *
     * A pointer to a fence pointer can be passed to the codecs before the
     * end_frame vfunc and the codec should then be responsible for allocating a
     * fence on command stream submission.
     */
-   int (*get_decoder_fence)(struct pipe_video_codec *codec,
-                            struct pipe_fence_handle *fence,
-                            uint64_t timeout);
-
-   /**
-    * Get processor fence.
-    *
-    * Can be used to query the status of the previous process job denoted by
-    * 'fence' given 'timeout'.
-    *
-    * A pointer to a fence pointer can be passed to the codecs before the
-    * end_frame vfunc and the codec should then be responsible for allocating a
-    * fence on command stream submission.
-    */
-   int (*get_processor_fence)(struct pipe_video_codec *codec,
-                              struct pipe_fence_handle *fence,
-                              uint64_t timeout);
+   int (*fence_wait)(struct pipe_video_codec *codec,
+                     struct pipe_fence_handle *fence,
+                     uint64_t timeout);
 
    /**
     * Destroy fence.
@@ -155,18 +145,27 @@ struct pipe_video_codec
                          struct pipe_fence_handle *fence);
 
    /**
-    * Update target buffer address.
+    * Gets the bitstream headers for a given pipe_picture_desc
+    * of an encode operation
     *
-    * Due to reallocation, target buffer address has changed, and the
-    * changed buffer will need to update to decoder so that when this buffer
-    * used as a reference frame, decoder can obtain its recorded information.
-    * Failed updating this buffer will miss reference frames and
-    * cause image corruption in the sebsequent output.
-    * If no target buffer change, this call is not necessary.
+    * User passes a buffer and its allocated size and
+    * driver writes the bitstream headers in the buffer,
+    * updating the size parameter as well.
+    *
+    * Returns 0 on success or an errno error code otherwise.
+    * such as ENOMEM if the buffer passed was not big enough
     */
-   void (*update_decoder_target)(struct pipe_video_codec *codec,
-                                 struct pipe_video_buffer *old,
-                                 struct pipe_video_buffer *updated);
+   int (*get_encode_headers)(struct pipe_video_codec *codec,
+                              struct pipe_picture_desc *picture,
+                              void* bitstream_buf,
+                              unsigned *size);
+
+   /**
+    * Creates a DPB buffer used for a single reconstructed picture.
+    */
+   struct pipe_video_buffer *(*create_dpb_buffer)(struct pipe_video_codec *codec,
+                                                  struct pipe_picture_desc *picture,
+                                                  const struct pipe_video_buffer *templat);
 };
 
 /**
@@ -181,6 +180,8 @@ struct pipe_video_buffer
    unsigned height;
    bool interlaced;
    unsigned bind;
+   unsigned flags;
+   bool contiguous_planes;
 
    /**
     * destroy this video buffer

@@ -62,7 +62,7 @@ nvc0_decoder_decode_bitstream(struct pipe_video_codec *decoder,
    assert(ret == 2);
 }
 
-static void
+static int
 nvc0_decoder_end_frame(struct pipe_video_codec *decoder,
                        struct pipe_video_buffer *video_target,
                        struct pipe_picture_desc *picture)
@@ -85,6 +85,7 @@ nvc0_decoder_end_frame(struct pipe_video_codec *decoder,
 
    nvc0_decoder_vp(dec, desc, target, comm_seq, vp_caps, is_ref, refs);
    nvc0_decoder_ppp(dec, desc, target, comm_seq);
+   return 0;
 }
 
 struct pipe_video_codec *
@@ -143,9 +144,9 @@ nvc0_create_decoder(struct pipe_context *context,
             data = &nvc0_args;
          } else {
             unsigned engine[] = {
-               NVE0_FIFO_ENGINE_BSP,
-               NVE0_FIFO_ENGINE_VP,
-               NVE0_FIFO_ENGINE_PPP
+               NOUVEAU_FIFO_ENGINE_BSP,
+               NOUVEAU_FIFO_ENGINE_VP,
+               NOUVEAU_FIFO_ENGINE_PPP
             };
 
             nve0_args.engine = engine[i];
@@ -159,7 +160,7 @@ nvc0_create_decoder(struct pipe_context *context,
 
          if (!ret)
             ret = nouveau_pushbuf_create(screen, &nvc0->base, nvc0->base.client, dec->channel[i],
-                                         4, 32 * 1024, true, &dec->pushbuf[i]);
+                                         4, 32 * 1024, &dec->pushbuf[i]);
          if (ret)
             break;
       }

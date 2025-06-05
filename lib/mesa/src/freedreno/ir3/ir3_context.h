@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2015-2018 Rob Clark <robclark@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2015-2018 Rob Clark <robclark@freedesktop.org>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -66,6 +48,7 @@ struct ir3_context {
    struct ir3_instruction **outputs;
 
    struct ir3_block *block;    /* the current block */
+   struct ir3_builder build;
    struct ir3_block *in_block; /* block created for shader inputs */
 
    nir_function_impl *impl;
@@ -102,17 +85,13 @@ struct ir3_context {
    /* Compute shader inputs: */
    struct ir3_instruction *local_invocation_id, *work_group_id;
 
+   struct ir3_instruction *frag_shading_rate;
+
    /* mapping from nir_register to defining instruction: */
    struct hash_table *def_ht;
 
    unsigned num_arrays;
 
-   /* Tracking for max level of flowcontrol (branchstack) needed
-    * by a5xx+:
-    */
-   unsigned stack, max_stack;
-
-   unsigned loop_id;
    unsigned loop_depth;
 
    /* a common pattern for indirect addressing is to request the
@@ -133,6 +112,7 @@ struct ir3_context {
    struct hash_table_u64 *addr1_ht;
 
    struct hash_table *sel_cond_conversions;
+   struct hash_table *predicate_conversions;
 
    /* last dst array, for indirect we need to insert a var-store.
     */
@@ -161,6 +141,8 @@ struct ir3_context {
 
    unsigned prefetch_limit;
 
+   bool has_relative_load_const_ir3;
+
    /* set if we encounter something we can't handle yet, so we
     * can bail cleanly and fallback to TGSI compiler f/e
     */
@@ -171,6 +153,9 @@ struct ir3_context_funcs {
    void (*emit_intrinsic_load_ssbo)(struct ir3_context *ctx,
                                     nir_intrinsic_instr *intr,
                                     struct ir3_instruction **dst);
+   void (*emit_intrinsic_load_uav)(struct ir3_context *ctx,
+                                   nir_intrinsic_instr *intr,
+                                   struct ir3_instruction **dst);
    void (*emit_intrinsic_store_ssbo)(struct ir3_context *ctx,
                                      nir_intrinsic_instr *intr);
    struct ir3_instruction *(*emit_intrinsic_atomic_ssbo)(
@@ -202,17 +187,33 @@ struct ir3_context *ir3_context_init(struct ir3_compiler *compiler,
                                      struct ir3_shader_variant *so);
 void ir3_context_free(struct ir3_context *ctx);
 
+static inline void
+ir3_context_set_block(struct ir3_context *ctx, struct ir3_block *block)
+{
+   ctx->block = block;
+   ctx->build = ir3_builder_at(ir3_before_terminator(block));
+}
+
 struct ir3_instruction **ir3_get_dst_ssa(struct ir3_context *ctx,
                                          nir_def *dst, unsigned n);
 struct ir3_instruction **ir3_get_def(struct ir3_context *ctx, nir_def *def,
                                      unsigned n);
-struct ir3_instruction *const *ir3_get_src(struct ir3_context *ctx,
-                                           nir_src *src);
+struct ir3_instruction *const *ir3_get_src_maybe_shared(struct ir3_context *ctx,
+                                                        nir_src *src);
+struct ir3_instruction *const *ir3_get_src_shared(struct ir3_context *ctx,
+                                                  nir_src *src, bool shared);
+
+static inline struct ir3_instruction *const *
+ir3_get_src(struct ir3_context *ctx, nir_src *src)
+{
+   return ir3_get_src_shared(ctx, src, false);
+}
+
 void ir3_put_def(struct ir3_context *ctx, nir_def *def);
-struct ir3_instruction *ir3_create_collect(struct ir3_block *block,
+struct ir3_instruction *ir3_create_collect(struct ir3_builder *build,
                                            struct ir3_instruction *const *arr,
                                            unsigned arrsz);
-void ir3_split_dest(struct ir3_block *block, struct ir3_instruction **dst,
+void ir3_split_dest(struct ir3_builder *build, struct ir3_instruction **dst,
                     struct ir3_instruction *src, unsigned base, unsigned n);
 void ir3_handle_bindless_cat6(struct ir3_instruction *instr, nir_src rsrc);
 void ir3_handle_nonuniform(struct ir3_instruction *instr,
@@ -221,10 +222,10 @@ void emit_intrinsic_image_size_tex(struct ir3_context *ctx,
                                    nir_intrinsic_instr *intr,
                                    struct ir3_instruction **dst);
 
-#define ir3_collect(block, ...)                                                \
+#define ir3_collect(build, ...)                                                \
    ({                                                                          \
       struct ir3_instruction *__arr[] = {__VA_ARGS__};                         \
-      ir3_create_collect(block, __arr, ARRAY_SIZE(__arr));                     \
+      ir3_create_collect(build, __arr, ARRAY_SIZE(__arr));                     \
    })
 
 NORETURN void ir3_context_error(struct ir3_context *ctx, const char *format,
@@ -251,6 +252,10 @@ struct ir3_instruction *ir3_create_array_load(struct ir3_context *ctx,
 void ir3_create_array_store(struct ir3_context *ctx, struct ir3_array *arr,
                             int n, struct ir3_instruction *src,
                             struct ir3_instruction *address);
+void ir3_lower_imm_offset(struct ir3_context *ctx, nir_intrinsic_instr *intr,
+                          nir_src *offset_src, unsigned imm_offset_bits,
+                          struct ir3_instruction **offset,
+                          unsigned *imm_offset);
 
 static inline type_t
 utype_for_size(unsigned bit_size)

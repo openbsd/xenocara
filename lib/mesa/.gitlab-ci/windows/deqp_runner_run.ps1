@@ -1,4 +1,4 @@
-# VK_ICD_FILENAMES environment variable is not used when running with
+# VK_DRIVER_FILES environment variable is not used when running with
 # elevated privileges. Add a key to the registry instead.
 $hkey_path = "HKLM:\SOFTWARE\Khronos\Vulkan\Drivers\"
 $hkey_name = Join-Path -Path $pwd -ChildPath "_install\share\vulkan\icd.d\dzn_icd.x86_64.json"
@@ -27,10 +27,11 @@ deqp-runner suite --suite $($suite) `
 $jobs
 $deqpstatus = $?
 
-$template = "See https://$($env:CI_PROJECT_ROOT_NAMESPACE).pages.freedesktop.org/-/$($env:CI_PROJECT_NAME)/-/jobs/$($env:CI_JOB_ID)/artifacts/results/{{testcase}}.xml"
+$template = "See $($env:ARTIFACTS_BASE_URL)/results/{{testcase}}.xml"
 deqp-runner junit --testsuite dEQP --results "$($results)/failures.csv" --output "$($results)/junit.xml" --limit 50 --template $template
 Copy-Item -Path "C:\deqp\testlog.css" -Destination $($results)
 Copy-Item -Path "C:\deqp\testlog.xsl" -Destination $($results)
+Remove-Item -Path "$($results)/*.shader_cache"
 
 if (!$deqpstatus) {
     Exit 1

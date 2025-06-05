@@ -1,4 +1,4 @@
-Mesa 23.3.5 Release Notes / 2024-02-01
+Mesa 23.3.5 Release Notes / 2024-01-31
 ======================================
 
 Mesa 23.3.5 is a bug fix release which fixes bugs found since the 23.3.4 release.

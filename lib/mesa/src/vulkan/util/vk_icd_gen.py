@@ -22,9 +22,9 @@
 
 import argparse
 import json
-import os.path
 import re
 import xml.etree.ElementTree as et
+
 
 def get_xml_patch_version(xml_file):
     xml = et.parse(xml_file)
@@ -34,9 +34,11 @@ def get_xml_patch_version(xml_file):
 
         name = d.find('.name')
         if name.text != 'VK_HEADER_VERSION':
-            continue;
+            continue
 
         return name.tail.strip()
+    assert False, f"Failed to find VK_HEADER_VERSION in {xml_file}"
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -78,7 +80,7 @@ if __name__ == '__main__':
     }
 
     if args.out:
-        with open(args.out, 'w') as f:
+        with open(args.out, 'w', encoding='utf-8') as f:
             json.dump(json_data, f, **json_params)
     else:
         print(json.dumps(json_data, **json_params))

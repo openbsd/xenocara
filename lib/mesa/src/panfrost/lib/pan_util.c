@@ -35,9 +35,8 @@ panfrost_translate_swizzle_4(const unsigned char swizzle[4])
    unsigned out = 0;
 
    for (unsigned i = 0; i < 4; ++i) {
-      unsigned translated =
-         (swizzle[i] > PIPE_SWIZZLE_1) ? PIPE_SWIZZLE_0 : swizzle[i];
-      out |= (translated << (3 * i));
+      assert(swizzle[i] <= PIPE_SWIZZLE_1);
+      out |= (swizzle[i] << (3 * i));
    }
 
    return out;
@@ -46,7 +45,10 @@ panfrost_translate_swizzle_4(const unsigned char swizzle[4])
 void
 panfrost_invert_swizzle(const unsigned char *in, unsigned char *out)
 {
-   /* First, default to all zeroes to prevent uninitialized junk */
+   /* First, default to all zeroes, both to prevent uninitialized junk
+      and to provide a known baseline so we can tell when components
+      have been modified
+    */
 
    for (unsigned c = 0; c < 4; ++c)
       out[c] = PIPE_SWIZZLE_0;
@@ -61,24 +63,9 @@ panfrost_invert_swizzle(const unsigned char *in, unsigned char *out)
       if (i > PIPE_SWIZZLE_W)
          continue;
 
-      /* Invert */
+      /* Invert (only if we haven't already applied) */
       unsigned idx = i - PIPE_SWIZZLE_X;
-      out[idx] = PIPE_SWIZZLE_X + c;
+      if (out[idx] == PIPE_SWIZZLE_0)
+         out[idx] = PIPE_SWIZZLE_X + c;
    }
-}
-
-/* Formats requiring blend shaders are stored raw in the tilebuffer and will
- * have 0 as their pixel format. Assumes dithering is set, I don't know of a
- * case when it makes sense to turn off dithering. */
-
-unsigned
-panfrost_format_to_bifrost_blend(const struct panfrost_device *dev,
-                                 enum pipe_format format, bool dithered)
-{
-   mali_pixel_format pixfmt =
-      (dev->arch >= 7)
-         ? panfrost_blendable_formats_v7[format].bifrost[dithered]
-         : panfrost_blendable_formats_v6[format].bifrost[dithered];
-
-   return pixfmt ?: dev->formats[format].hw;
 }

@@ -22,10 +22,26 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef BRW_PRIVATE_H
-#define BRW_PRIVATE_H
+#pragma once
 
 #include "brw_compiler.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* brw_fs_reg_allocate.cpp */
+void brw_fs_alloc_reg_sets(struct brw_compiler *compiler);
+
+/* brw_disasm.c */
+extern const char *const conditional_modifier[16];
+extern const char *const pred_ctrl_align16[16];
+
+#ifdef __cplusplus
+}
+#endif
+
+#ifdef __cplusplus
 
 #include <variant>
 
@@ -61,6 +77,8 @@ inline bool brw_simd_any_compiled(const brw_simd_selection_state &state)
    return brw_simd_first_compiled(state) >= 0;
 }
 
+unsigned brw_geometry_stage_dispatch_width(const struct intel_device_info *devinfo);
+
 bool brw_simd_should_compile(brw_simd_selection_state &state, unsigned simd);
 
 void brw_simd_mark_compiled(brw_simd_selection_state &state, unsigned simd, bool spilled);
@@ -73,4 +91,4 @@ int brw_simd_select_for_workgroup_size(const struct intel_device_info *devinfo,
 
 bool brw_should_print_shader(const nir_shader *shader, uint64_t debug_flag);
 
-#endif // BRW_PRIVATE_H
+#endif // __cplusplus

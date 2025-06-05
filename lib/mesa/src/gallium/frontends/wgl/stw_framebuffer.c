@@ -324,6 +324,11 @@ stw_framebuffer_create(HWND hWnd, const struct stw_pixelformat_info *pfi, enum s
       fb->winsys_framebuffer =
          stw_dev->stw_winsys->create_framebuffer(stw_dev->screen, hWnd, pfi->iPixelFormat);
 
+   if (fb->winsys_framebuffer && fb->winsys_framebuffer->set_latency) {
+      int latency = driQueryOptioni(&stw_dev->option_cache, "wgl_frame_latency");
+      fb->winsys_framebuffer->set_latency(fb->winsys_framebuffer, latency);
+   }
+
 #ifdef _GAMING_XBOX
    fb->prev_wndproc = (WNDPROC)SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)&stw_call_window_proc_xbox);
 #endif
@@ -730,13 +735,14 @@ wait_swap_interval(struct stw_framebuffer *fb, int interval)
 BOOL
 stw_framebuffer_swap_locked(HDC hdc, struct stw_framebuffer *fb)
 {
-   struct stw_context *ctx;
+   struct stw_context *ctx = stw_current_context();
    if (!(fb->pfi->pfd.dwFlags & PFD_DOUBLEBUFFER)) {
       stw_framebuffer_unlock(fb);
+      if (ctx)
+         stw_st_flush(ctx->st, fb->drawable, ST_FLUSH_END_OF_FRAME | ST_FLUSH_FRONT);
       return true;
    }
 
-   ctx = stw_current_context();
    if (ctx) {
       if (ctx->hud) {
          /* Display the HUD */
@@ -758,7 +764,7 @@ stw_framebuffer_swap_locked(HDC hdc, struct stw_framebuffer *fb)
       wait_swap_interval(fb, interval);
    }
 
-   return stw_st_swap_framebuffer_locked(hdc, ctx->st, fb->drawable);
+   return stw_st_swap_framebuffer_locked(hdc, fb->drawable);
 }
 
 BOOL APIENTRY

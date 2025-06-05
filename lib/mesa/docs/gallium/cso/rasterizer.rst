@@ -20,7 +20,7 @@ clamp_vertex_color
 
    D3D11: seems always disabled
 
-   Note the PIPE_CAP_VERTEX_COLOR_CLAMPED query indicates whether or not the
+   Note pipe_caps.vertex_color_clamped indicates whether or not the
    driver supports this control.  If it's not supported, gallium frontends may
    have to insert extra clamping code.
 
@@ -34,7 +34,7 @@ clamp_fragment_color
 
    D3D11: seems always disabled
 
-   Note the PIPE_CAP_FRAGMENT_COLOR_CLAMPED query indicates whether or not the
+   Note pipe_caps.fragment_color_clamped indicates whether or not the
    driver supports this control.  If it's not supported, gallium frontends may
    have to insert extra clamping code.
 
@@ -69,7 +69,7 @@ flatshade_first
      vertex. If the caller wishes to change the provoking vertex, they merely
      need to rotate the vertices themselves.
    * ``PIPE_PRIMITIVE_QUAD``, ``PIPE_PRIMITIVE_QUAD_STRIP``: The option only has
-     an effect if ``PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION`` is true.
+     an effect if ``pipe_caps.quads_follow_provoking_vertex_convention`` is true.
      If it is not, the provoking vertex is always the last vertex.
    * ``PIPE_PRIMITIVE_TRIANGLE_FAN``: When set, the provoking vertex is the
      second vertex, not the first. This permits each segment of the fan to have
@@ -84,8 +84,8 @@ light_twoside
    along with the front/back information to set the final vertex colors
    prior to rasterization.
 
-   The frontface vertex shader color output is marked with TGSI semantic
-   COLOR[0], and backface COLOR[1].
+   The front-face vertex shader color output is marked with TGSI semantic
+   COLOR[0], and back-face COLOR[1].
 
 front_ccw
     Indicates whether the window order of front-facing polygons is
@@ -157,16 +157,16 @@ Points
 ------
 
 sprite_coord_enable
-   The effect of this state depends on PIPE_CAP_TGSI_TEXCOORD !
+   The effect of this state depends on pipe_caps.tgsi_texcoord !
 
    Controls automatic texture coordinate generation for rendering sprite points.
 
-   If PIPE_CAP_TGSI_TEXCOORD is false:
+   If pipe_caps.tgsi_texcoord is false:
    When bit k in the sprite_coord_enable bitfield is set, then generic
    input k to the fragment shader will get an automatically computed
    texture coordinate.
 
-   If PIPE_CAP_TGSI_TEXCOORD is true:
+   If pipe_caps.tgsi_texcoord is true:
    The bitfield refers to inputs with TEXCOORD semantic instead of generic inputs.
 
    The texture coordinate will be of the form (s, t, 0, 1) where s varies
@@ -337,8 +337,8 @@ clip_plane_enable
 conservative_raster_mode
     The conservative rasterization mode.  For PIPE_CONSERVATIVE_RASTER_OFF,
     conservative rasterization is disabled.  For PIPE_CONSERVATIVE_RASTER_POST_SNAP
-    or PIPE_CONSERVATIVE_RASTER_PRE_SNAP, conservative rasterization is nabled.
-    When conservative rasterization is enabled, the polygon smooth, line mooth,
+    or PIPE_CONSERVATIVE_RASTER_PRE_SNAP, conservative rasterization is enabled.
+    When conservative rasterization is enabled, the polygon smooth, line smooth,
     point smooth and line stipple settings are ignored.
     With the post-snap mode, unlike the pre-snap mode, fragments are never
     generated for degenerate primitives.  Degenerate primitives, when rasterized,

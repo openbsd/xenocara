@@ -3,18 +3,35 @@
  * SPDX-License-Identifier: MIT
  */
 
-#ifndef __AGX_DEVICE_H
-#define __AGX_DEVICE_H
+#pragma once
 
+#include <stdint.h>
+#include <xf86drm.h>
+#include "util/ralloc.h"
 #include "util/simple_mtx.h"
 #include "util/sparse_array.h"
+#include "util/timespec.h"
+#include "util/u_printf.h"
 #include "util/vma.h"
 #include "agx_bo.h"
-#include "agx_formats.h"
+#include "agx_pack.h"
+#include "decode.h"
+#include "layout.h"
+#include "libagx_dgc.h"
+#include "unstable_asahi_drm.h"
+
+#include "vdrm.h"
+#include "virglrenderer_hw.h"
+
+#include "asahi_proto.h"
+
+// TODO: this is a lie right now
+static const uint64_t AGX_SUPPORTED_INCOMPAT_FEATURES =
+   DRM_ASAHI_FEAT_MANDATORY_ZS_COMPRESSION;
 
 enum agx_dbg {
    AGX_DBG_TRACE = BITFIELD_BIT(0),
-   AGX_DBG_DEQP = BITFIELD_BIT(1),
+   AGX_DBG_BODUMP = BITFIELD_BIT(1),
    AGX_DBG_NO16 = BITFIELD_BIT(2),
    AGX_DBG_DIRTY = BITFIELD_BIT(3),
    AGX_DBG_PRECOMPILE = BITFIELD_BIT(4),
@@ -30,26 +47,11 @@ enum agx_dbg {
    AGX_DBG_SMALLTILE = BITFIELD_BIT(14),
    AGX_DBG_NOMSAA = BITFIELD_BIT(15),
    AGX_DBG_NOSHADOW = BITFIELD_BIT(16),
-};
-
-/* Dummy partial declarations, pending real UAPI */
-enum drm_asahi_cmd_type { DRM_ASAHI_CMD_TYPE_PLACEHOLDER_FOR_DOWNSTREAM_UAPI };
-enum drm_asahi_sync_type { DRM_ASAHI_SYNC_SYNCOBJ };
-struct drm_asahi_sync {
-   uint32_t sync_type;
-   uint32_t handle;
-};
-struct drm_asahi_params_global {
-   uint64_t vm_page_size;
-   uint64_t vm_user_start;
-   uint64_t vm_user_end;
-   uint64_t vm_shader_start;
-   uint64_t vm_shader_end;
-   uint32_t chip_id;
-   uint32_t num_clusters_total;
-   uint32_t gpu_generation;
-   uint32_t gpu_variant;
-   uint32_t num_dies;
+   AGX_DBG_BODUMPVERBOSE = BITFIELD_BIT(17),
+   AGX_DBG_SCRATCH = BITFIELD_BIT(18),
+   AGX_DBG_NOSOFT = BITFIELD_BIT(19),
+   AGX_DBG_FEEDBACK = BITFIELD_BIT(20),
+   AGX_DBG_1QUEUE = BITFIELD_BIT(21),
 };
 
 /* How many power-of-two levels in the BO cache do we want? 2^14 minimum chosen
@@ -61,12 +63,54 @@ struct drm_asahi_params_global {
 /* Fencepost problem, hence the off-by-one */
 #define NR_BO_CACHE_BUCKETS (MAX_BO_CACHE_BUCKET - MIN_BO_CACHE_BUCKET + 1)
 
+/* Forward decl only, do not pull in all of NIR */
+struct nir_shader;
+
+#define BARRIER_RENDER  (1 << DRM_ASAHI_SUBQUEUE_RENDER)
+#define BARRIER_COMPUTE (1 << DRM_ASAHI_SUBQUEUE_COMPUTE)
+
+struct agx_submit_virt {
+   uint32_t vbo_res_id;
+   uint32_t extres_count;
+   struct asahi_ccmd_submit_res *extres;
+};
+
+typedef struct {
+   struct agx_bo *(*bo_alloc)(struct agx_device *dev, size_t size, size_t align,
+                              enum agx_bo_flags flags);
+   int (*bo_bind)(struct agx_device *dev, struct agx_bo *bo, uint64_t addr,
+                  size_t size_B, uint64_t offset_B, uint32_t flags,
+                  bool unbind);
+   void (*bo_mmap)(struct agx_device *dev, struct agx_bo *bo);
+   ssize_t (*get_params)(struct agx_device *dev, void *buf, size_t size);
+   int (*submit)(struct agx_device *dev, struct drm_asahi_submit *submit,
+                 struct agx_submit_virt *virt);
+   int (*bo_bind_object)(struct agx_device *dev, struct agx_bo *bo,
+                         uint32_t *object_handle, size_t size_B,
+                         uint64_t offset_B, uint32_t flags);
+   int (*bo_unbind_object)(struct agx_device *dev, uint32_t object_handle,
+                           uint32_t flags);
+
+} agx_device_ops_t;
+
 struct agx_device {
    uint32_t debug;
+
+   /* NIR library of AGX helpers/shaders. Immutable once created. */
+   const struct nir_shader *libagx;
+
+   /* Precompiled libagx binary table */
+   const uint32_t **libagx_programs;
 
    char name[64];
    struct drm_asahi_params_global params;
    uint64_t next_global_id, last_global_id;
+   bool is_virtio;
+   agx_device_ops_t ops;
+
+   /* vdrm device */
+   struct vdrm_device *vdrm;
+   uint32_t next_blob_id;
 
    /* Device handle */
    int fd;
@@ -74,7 +118,7 @@ struct agx_device {
    /* VM handle */
    uint32_t vm_id;
 
-   /* Queue handle */
+   /* Global queue handle */
    uint32_t queue_id;
 
    /* VMA heaps */
@@ -109,7 +153,54 @@ struct agx_device {
       /* Number of hits/misses for the BO cache */
       uint64_t hits, misses;
    } bo_cache;
+
+   struct agxdecode_ctx *agxdecode;
+
+   /* Prepacked USC Sampler word to bind the txf sampler, used for
+    * precompiled shaders on both drivers.
+    */
+   struct agx_usc_sampler_packed txf_sampler;
+
+   /* Simplified device selection */
+   enum agx_chip chip;
+
+   struct {
+      uint64_t num;
+      uint64_t den;
+   } timestamp_to_ns;
+
+   struct {
+      uint64_t num;
+      uint64_t den;
+   } user_timestamp_to_ns;
+
+   struct u_printf_ctx printf;
 };
+
+static inline void *
+agx_bo_map(struct agx_bo *bo)
+{
+   if (!bo->_map)
+      bo->dev->ops.bo_mmap(bo->dev, bo);
+
+   return bo->_map;
+}
+
+static inline bool
+agx_has_soft_fault(struct agx_device *dev)
+{
+   return (dev->params.feat_compat & DRM_ASAHI_FEAT_SOFT_FAULTS) &&
+          !(dev->debug & AGX_DBG_NOSOFT);
+}
+
+static uint32_t
+agx_usc_addr(struct agx_device *dev, uint64_t addr)
+{
+   assert(addr >= dev->shader_base);
+   assert((addr - dev->shader_base) <= UINT32_MAX);
+
+   return addr - dev->shader_base;
+}
 
 bool agx_open_device(void *memctx, struct agx_device *dev);
 
@@ -121,22 +212,45 @@ agx_lookup_bo(struct agx_device *dev, uint32_t handle)
    return util_sparse_array_get(&dev->bo_map, handle);
 }
 
-void agx_bo_mmap(struct agx_bo *bo);
-
 uint64_t agx_get_global_id(struct agx_device *dev);
 
-uint32_t agx_create_command_queue(struct agx_device *dev, uint32_t caps);
-
-int agx_submit_single(struct agx_device *dev, enum drm_asahi_cmd_type cmd_type,
-                      uint32_t barriers, struct drm_asahi_sync *in_syncs,
-                      unsigned in_sync_count, struct drm_asahi_sync *out_syncs,
-                      unsigned out_sync_count, void *cmdbuf,
-                      uint32_t result_handle, uint32_t result_off,
-                      uint32_t result_size);
+uint32_t agx_create_command_queue(struct agx_device *dev, uint32_t caps,
+                                  uint32_t priority);
+int agx_destroy_command_queue(struct agx_device *dev, uint32_t queue_id);
 
 int agx_import_sync_file(struct agx_device *dev, struct agx_bo *bo, int fd);
 int agx_export_sync_file(struct agx_device *dev, struct agx_bo *bo);
 
 void agx_debug_fault(struct agx_device *dev, uint64_t addr);
 
-#endif
+uint64_t agx_get_gpu_timestamp(struct agx_device *dev);
+
+static inline uint64_t
+agx_gpu_time_to_ns(struct agx_device *dev, uint64_t gpu_time)
+{
+   return (gpu_time * dev->timestamp_to_ns.num) / dev->timestamp_to_ns.den;
+}
+
+static inline uint64_t
+agx_gpu_timestamp_to_ns(struct agx_device *dev, uint64_t gpu_timestamp)
+{
+   return (gpu_timestamp * dev->user_timestamp_to_ns.num) /
+          dev->user_timestamp_to_ns.den;
+}
+
+void agx_get_device_uuid(const struct agx_device *dev, void *uuid);
+void agx_get_driver_uuid(void *uuid);
+unsigned agx_get_num_cores(const struct agx_device *dev);
+
+struct agx_device_key agx_gather_device_key(struct agx_device *dev);
+
+struct agx_va *agx_va_alloc(struct agx_device *dev, uint64_t size_B,
+                            uint64_t align_B, enum agx_va_flags flags,
+                            uint64_t fixed_va);
+void agx_va_free(struct agx_device *dev, struct agx_va *va);
+
+static inline bool
+agx_supports_timestamps(const struct agx_device *dev)
+{
+   return (dev->params.feat_compat & DRM_ASAHI_FEAT_USER_TIMESTAMPS);
+}

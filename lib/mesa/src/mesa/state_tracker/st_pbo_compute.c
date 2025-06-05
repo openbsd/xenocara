@@ -28,6 +28,7 @@
 #include "main/image.h"
 #include "main/pbo.h"
 
+#include "nir/pipe_nir.h"
 #include "state_tracker/st_nir.h"
 #include "state_tracker/st_format.h"
 #include "state_tracker/st_pbo.h"
@@ -48,7 +49,7 @@ struct pbo_spec_async_data {
    unsigned uses;
    struct util_queue_fence fence;
    nir_shader *nir;
-   struct pipe_shader_state *cs;
+   void *cs;
 };
 
 struct pbo_async_data {
@@ -94,6 +95,7 @@ get_convert_format(struct gl_context *ctx,
    struct st_context *st = st_context(ctx);
    GLint bpp = _mesa_bytes_per_pixel(format, type);
    if (_mesa_is_depth_format(format) ||
+       format == GL_STENCIL_INDEX ||
        format == GL_GREEN_INTEGER ||
        format == GL_BLUE_INTEGER) {
       switch (bpp) {
@@ -843,7 +845,7 @@ add_spec_data(struct pbo_async_data *async, struct pbo_data *pd)
    struct pbo_spec_async_data *spec;
    struct set_entry *entry = _mesa_set_search_or_add(&async->specialized, pd, &found);
    if (!found) {
-      spec = calloc(1, sizeof(struct pbo_async_data));
+      spec = calloc(1, sizeof(struct pbo_spec_async_data));
       util_queue_fence_init(&spec->fence);
       memcpy(spec->data, pd, sizeof(struct pbo_data));
       entry->key = spec;
@@ -930,6 +932,7 @@ download_texture_compute(struct st_context *st,
                .ir.nir = spec->nir,
             };
             cs = spec->cs = st_create_nir_shader(st, &state);
+            spec->nir = NULL;
          }
          cb.buffer_size = 2 * sizeof(uint32_t);
       } else if (!st->force_compute_based_texture_transfer && screen->driver_thread_add_job) {
@@ -941,12 +944,8 @@ download_texture_compute(struct st_context *st,
          if (!async->cs) {
             /* cs job not yet started */
             assert(async->nir && !async->cs);
-            struct pipe_compute_state state = {0};
-            state.ir_type = PIPE_SHADER_IR_NIR;
-            state.static_shared_mem = async->nir->info.shared_size;
-            state.prog = async->nir;
+            async->cs = pipe_shader_from_nir(pipe, async->nir);
             async->nir = NULL;
-            async->cs = pipe->create_compute_state(pipe, &state);
          }
          /* cs *may* be done */
          if (screen->is_parallel_shader_compilation_finished &&
@@ -956,12 +955,8 @@ download_texture_compute(struct st_context *st,
          if (spec->uses > SPEC_USES_THRESHOLD && util_queue_fence_is_signalled(&spec->fence)) {
             if (spec->created) {
                if (!spec->cs) {
-                  struct pipe_compute_state state = {0};
-                  state.ir_type = PIPE_SHADER_IR_NIR;
-                  state.static_shared_mem = spec->nir->info.shared_size;
-                  state.prog = spec->nir;
+                  spec->cs = pipe_shader_from_nir(pipe, spec->nir);
                   spec->nir = NULL;
-                  spec->cs = pipe->create_compute_state(pipe, &state);
                }
                if (screen->is_parallel_shader_compilation_finished &&
                    screen->is_parallel_shader_compilation_finished(screen, spec->cs, MESA_SHADER_COMPUTE)) {
@@ -993,6 +988,7 @@ download_texture_compute(struct st_context *st,
             .ir.nir = spec->nir,
          };
          cs = spec->cs = st_create_nir_shader(st, &state);
+         spec->nir = NULL;
          cb.buffer_size = 2 * sizeof(uint32_t);
       } else {
          nir_shader *nir = create_conversion_shader(st, view_target, num_components);
@@ -1269,6 +1265,10 @@ st_GetTexSubImage_shader(struct gl_context * ctx,
    if (src_format == PIPE_FORMAT_NONE)
       return false;
 
+   /* special case for stencil extraction */
+   if (format == GL_STENCIL_INDEX && util_format_is_depth_and_stencil(src_format))
+      src_format = PIPE_FORMAT_X24S8_UINT;
+
    if (texImage->_BaseFormat != _mesa_get_format_base_format(texImage->TexFormat)) {
       /* special handling for drivers that don't support these formats natively */
       if (texImage->_BaseFormat == GL_LUMINANCE)
@@ -1348,6 +1348,7 @@ st_pbo_compute_deinit(struct st_context *st)
          if (async->cs)
             st->pipe->delete_compute_state(st->pipe, async->cs);
          util_queue_fence_destroy(&async->fence);
+         ralloc_free(async->nir);
          ralloc_free(async->copy);
          set_foreach_remove(&async->specialized, se) {
             struct pbo_spec_async_data *spec = (void*)se->key;

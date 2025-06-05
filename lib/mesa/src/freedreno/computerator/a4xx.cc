@@ -207,7 +207,7 @@ cs_const_emit(struct fd_ringbuffer *ring, struct kernel *kernel,
    struct ir3_shader_variant *v = ir3_kernel->v;
 
    const struct ir3_const_state *const_state = ir3_const_state(v);
-   uint32_t base = const_state->offsets.immediate;
+   uint32_t base = const_state->allocs.max_const_offset_vec4;
    int size = DIV_ROUND_UP(const_state->immediates_count, 4);
 
    /* truncate size to avoid writing constants that shader
@@ -345,7 +345,8 @@ a4xx_init(struct fd_device *dev, const struct fd_dev_id *dev_id)
    };
 
    struct ir3_compiler_options compiler_options = {};
-   a4xx_backend->compiler = ir3_compiler_create(dev, dev_id, &compiler_options);
+   a4xx_backend->compiler =
+      ir3_compiler_create(dev, dev_id, fd_dev_info_raw(dev_id), &compiler_options);
    a4xx_backend->dev = dev;
 
    return &a4xx_backend->base;

@@ -61,11 +61,34 @@ v3d_pipe_flush(struct pipe_context *pctx, struct pipe_fence_handle **fence,
         v3d_flush(pctx);
 
         if (fence) {
+                int fd = -1;
+                /* Snapshot the last V3D rendering's out fence.  We'd rather
+                 * have another syncobj instead of a sync file, but this is all
+                 * we get. (HandleToFD/FDToHandle just gives you another syncobj
+                 * ID for the same syncobj).
+                 */
+                drmSyncobjExportSyncFile(v3d->fd, v3d->out_sync, &fd);
+                if (fd == -1) {
+                        fprintf(stderr, "export failed\n");
+                        *fence = NULL;
+                        return;
+                }
+
                 struct pipe_screen *screen = pctx->screen;
-                struct v3d_fence *f = v3d_fence_create(v3d);
+                struct v3d_fence *f = v3d_fence_create(v3d, fd);
                 screen->fence_reference(screen, fence, NULL);
                 *fence = (struct pipe_fence_handle *)f;
         }
+}
+
+/* We can't flush the texture cache within rendering a tile, so we have to
+ * flush all rendering to the kernel so that the next job reading from the
+ * tile gets a flushed cache.
+ */
+static void
+v3d_texture_barrier(struct pipe_context *pctx, unsigned int flags)
+{
+        v3d_flush(pctx);
 }
 
 static void
@@ -77,6 +100,7 @@ v3d_memory_barrier(struct pipe_context *pctx, unsigned int flags)
          * else we flush the job automatically when we needed.
          */
         const unsigned int flush_flags = PIPE_BARRIER_SHADER_BUFFER |
+                                         PIPE_BARRIER_GLOBAL_BUFFER |
                                          PIPE_BARRIER_IMAGE;
 
 	if (!(flags & flush_flags))
@@ -94,6 +118,7 @@ v3d_invalidate_resource(struct pipe_context *pctx, struct pipe_resource *prsc)
         struct v3d_resource *rsc = v3d_resource(prsc);
 
         rsc->initialized_buffers = 0;
+        rsc->invalidated = true;
 
         struct hash_entry *entry = _mesa_hash_table_search(v3d->write_jobs,
                                                            prsc);
@@ -101,8 +126,17 @@ v3d_invalidate_resource(struct pipe_context *pctx, struct pipe_resource *prsc)
                 return;
 
         struct v3d_job *job = entry->data;
-        if (job->key.zsbuf && job->key.zsbuf->texture == prsc)
+        if (job->key.zsbuf && job->key.zsbuf->texture == prsc) {
                 job->store &= ~(PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL);
+                return;
+        }
+
+        for (int i = 0; i < job->nr_cbufs; i++) {
+                if (job->cbufs[i] && job->cbufs[i]->texture == prsc) {
+                        job->store &= ~(PIPE_CLEAR_COLOR0 << i);
+                        return;
+                }
+        }
 }
 
 /**
@@ -264,6 +298,10 @@ v3d_context_destroy(struct pipe_context *pctx)
 
         v3d_flush(pctx);
 
+        util_dynarray_foreach(&v3d->global_buffers, struct pipe_resource *, res) {
+                pipe_resource_reference(res, NULL);
+        }
+
         if (v3d->blitter)
                 util_blitter_destroy(v3d->blitter);
 
@@ -292,6 +330,8 @@ v3d_context_destroy(struct pipe_context *pctx)
 
         v3d_program_fini(pctx);
 
+        v3d_fence_context_finish(v3d);
+
         ralloc_free(v3d);
 }
 
@@ -300,16 +340,11 @@ v3d_get_sample_position(struct pipe_context *pctx,
                         unsigned sample_count, unsigned sample_index,
                         float *xy)
 {
-        struct v3d_context *v3d = v3d_context(pctx);
-
         if (sample_count <= 1) {
                 xy[0] = 0.5;
                 xy[1] = 0.5;
         } else {
-                static const int xoffsets_v33[] = { 1, -3, 3, -1 };
-                static const int xoffsets_v42[] = { -1, 3, -3, 1 };
-                const int *xoffsets = (v3d->screen->devinfo.ver >= 42 ?
-                                       xoffsets_v42 : xoffsets_v33);
+                static const int xoffsets[] = { -1, 3, -3, 1 };
 
                 xy[0] = 0.5 + xoffsets[sample_index] * .125;
                 xy[1] = .125 + sample_index * .25;
@@ -369,6 +404,7 @@ v3d_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
         pctx->set_debug_callback = u_default_set_debug_callback;
         pctx->invalidate_resource = v3d_invalidate_resource;
         pctx->get_sample_position = v3d_get_sample_position;
+        pctx->texture_barrier = v3d_texture_barrier;
 
         v3d_X(devinfo, draw_init)(pctx);
         v3d_X(devinfo, state_init)(pctx);
@@ -390,6 +426,10 @@ v3d_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
                                               PIPE_BIND_CONSTANT_BUFFER,
                                               PIPE_USAGE_STREAM, 0);
 
+        ret = v3d_fence_context_init(v3d);
+        if (ret)
+                goto fail;
+
         v3d->blitter = util_blitter_create(pctx);
         if (!v3d->blitter)
                 goto fail;
@@ -399,6 +439,7 @@ v3d_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
 
         v3d->sample_mask = (1 << V3D_MAX_SAMPLES) - 1;
         v3d->active_queries = true;
+        util_dynarray_init(&v3d->global_buffers, v3d);
 
         return &v3d->base;
 

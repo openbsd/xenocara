@@ -43,7 +43,6 @@
 #include "gl_nir_link_varyings.h"
 #include "gl_nir_linker.h"
 #include "linker_util.h"
-#include "nir_gl_types.h"
 #include "string_to_uint_map.h"
 
 #define SAFE_MASK_FROM_INDEX(i) (((i) >= 32) ? ~0 : ((1 << (i)) - 1))
@@ -51,6 +50,7 @@
 /* Temporary storage for the set of attributes that need locations assigned. */
 struct temp_attr {
    unsigned slots;
+   unsigned original_idx;
    nir_variable *var;
 };
 
@@ -62,7 +62,10 @@ compare_attr(const void *a, const void *b)
    const struct temp_attr *const r = (const struct temp_attr *) b;
 
    /* Reversed because we want a descending order sort below. */
-   return r->slots - l->slots;
+   if (r->slots != l->slots)
+      return r->slots - l->slots;
+
+   return l->original_idx - r->original_idx;
 }
 
 /**
@@ -74,7 +77,7 @@ static const struct glsl_type *
 get_varying_type(const nir_variable *var, gl_shader_stage stage)
 {
    const struct glsl_type *type = var->type;
-   if (nir_is_arrayed_io(var, stage) || var->data.per_view) {
+   if (nir_is_arrayed_io(var, stage)) {
       assert(glsl_type_is_array(type));
       type = glsl_get_array_element(type);
    }
@@ -560,6 +563,107 @@ check_location_aliasing(struct explicit_location_info explicit_locations[][4],
    }
 
    return true;
+}
+
+static void
+resize_input_array(nir_shader *shader, struct gl_shader_program *prog,
+                   unsigned stage, unsigned num_vertices)
+{
+   nir_foreach_shader_in_variable(var, shader) {
+      if (!glsl_type_is_array(var->type) || var->data.patch)
+         continue;
+
+      unsigned size = glsl_array_size(var->type);
+
+      if (stage == MESA_SHADER_GEOMETRY) {
+         /* Generate a link error if the shader has declared this array with
+          * an incorrect size.
+          */
+         if (!var->data.implicit_sized_array &&
+             size != -1 && size != num_vertices) {
+            linker_error(prog, "size of array %s declared as %u, "
+                         "but number of input vertices is %u\n",
+                         var->name, size, num_vertices);
+            break;
+         }
+
+         /* Generate a link error if the shader attempts to access an input
+          * array using an index too large for its actual size assigned at
+          * link time.
+          */
+         if (var->data.max_array_access >= (int)num_vertices) {
+            linker_error(prog, "%s shader accesses element %i of "
+                         "%s, but only %i input vertices\n",
+                         _mesa_shader_stage_to_string(stage),
+                         var->data.max_array_access, var->name, num_vertices);
+            break;
+         }
+      }
+
+      var->type = glsl_array_type(var->type->fields.array, num_vertices, 0);
+      var->data.max_array_access = num_vertices - 1;
+   }
+
+   nir_fixup_deref_types(shader);
+}
+
+/**
+ * Resize tessellation evaluation per-vertex inputs to the size of
+ * tessellation control per-vertex outputs.
+ */
+void
+resize_tes_inputs(const struct gl_constants *consts,
+                  struct gl_shader_program *prog)
+{
+   if (prog->_LinkedShaders[MESA_SHADER_TESS_EVAL] == NULL)
+      return;
+
+   struct gl_linked_shader *tcs = prog->_LinkedShaders[MESA_SHADER_TESS_CTRL];
+   struct gl_linked_shader *tes = prog->_LinkedShaders[MESA_SHADER_TESS_EVAL];
+
+   /* If no control shader is present, then the TES inputs are statically
+    * sized to MaxPatchVertices; the actual size of the arrays won't be
+    * known until draw time.
+    */
+   const int num_vertices = tcs
+      ? tcs->Program->nir->info.tess.tcs_vertices_out
+      : consts->MaxPatchVertices;
+
+   resize_input_array(tes->Program->nir, prog, MESA_SHADER_TESS_EVAL,
+                      num_vertices);
+   if (tcs) {
+      /* Convert the gl_PatchVerticesIn system value into a constant, since
+       * the value is known at this point.
+       */
+      nir_variable *var =
+         nir_find_variable_with_location(tes->Program->nir,
+                                         nir_var_system_value,
+                                         SYSTEM_VALUE_VERTICES_IN);
+      if (var) {
+         var->data.location = 0;
+         var->data.explicit_location = false;
+         var->data.mode = nir_var_mem_constant;
+
+         nir_constant *val = rzalloc(var, nir_constant);
+         val->values[0].i32 = num_vertices;
+         var->constant_initializer = val;
+
+         nir_fixup_deref_modes(tes->Program->nir);
+      }
+   }
+}
+
+void
+set_geom_shader_input_array_size(struct gl_shader_program *prog)
+{
+   if (prog->_LinkedShaders[MESA_SHADER_GEOMETRY] == NULL)
+      return;
+
+   /* Set the size of geometry shader input arrays */
+   nir_shader *nir = prog->_LinkedShaders[MESA_SHADER_GEOMETRY]->Program->nir;
+   unsigned num_vertices =
+      mesa_vertices_per_prim(nir->info.gs.input_primitive);
+   resize_input_array(nir, prog, MESA_SHADER_GEOMETRY, num_vertices);
 }
 
 static bool
@@ -1239,6 +1343,7 @@ assign_attribute_or_color_locations(void *mem_ctx,
       }
       to_assign[num_attr].slots = slots;
       to_assign[num_attr].var = var;
+      to_assign[num_attr].original_idx = num_attr;
       num_attr++;
    }
 
@@ -1376,7 +1481,8 @@ static bool
 process_xfb_layout_qualifiers(void *mem_ctx, const struct gl_linked_shader *sh,
                               struct gl_shader_program *prog,
                               unsigned *num_xfb_decls,
-                              char ***varying_names)
+                              char ***varying_names,
+                              bool *compact_arrays)
 {
    bool has_xfb_qualifiers = false;
 
@@ -1391,6 +1497,7 @@ process_xfb_layout_qualifiers(void *mem_ctx, const struct gl_linked_shader *sh,
       }
    }
 
+   *compact_arrays = sh->Program->nir->options->compact_arrays;
    nir_foreach_shader_out_variable(var, sh->Program->nir) {
       /* From the ARB_enhanced_layouts spec:
        *
@@ -1413,6 +1520,7 @@ process_xfb_layout_qualifiers(void *mem_ctx, const struct gl_linked_shader *sh,
 
    if (*num_xfb_decls == 0)
       return has_xfb_qualifiers;
+
 
    unsigned i = 0;
    *varying_names = ralloc_array(mem_ctx, char *, *num_xfb_decls);
@@ -1455,7 +1563,7 @@ process_xfb_layout_qualifiers(void *mem_ctx, const struct gl_linked_shader *sh,
 static void
 xfb_decl_init(struct xfb_decl *xfb_decl, const struct gl_constants *consts,
               const struct gl_extensions *exts, const void *mem_ctx,
-              const char *input)
+              const char *input, bool compact_arrays)
 {
    /* We don't have to be pedantic about what is a valid GLSL variable name,
     * because any variable with an invalid name can't exist in the IR anyway.
@@ -1512,11 +1620,11 @@ xfb_decl_init(struct xfb_decl *xfb_decl, const struct gl_constants *consts,
     * class must behave specially to account for the fact that gl_ClipDistance
     * is converted from a float[8] to a vec4[2].
     */
-   if (consts->ShaderCompilerOptions[MESA_SHADER_VERTEX].LowerCombinedClipCullDistance &&
+   if (!compact_arrays &&
        strcmp(xfb_decl->var_name, "gl_ClipDistance") == 0) {
       xfb_decl->lowered_builtin_array_variable = clip_distance;
    }
-   if (consts->ShaderCompilerOptions[MESA_SHADER_VERTEX].LowerCombinedClipCullDistance &&
+   if (!compact_arrays &&
        strcmp(xfb_decl->var_name, "gl_CullDistance") == 0) {
       xfb_decl->lowered_builtin_array_variable = cull_distance;
    }
@@ -1586,11 +1694,11 @@ xfb_decl_assign_location(struct xfb_decl *xfb_decl,
       switch (xfb_decl->lowered_builtin_array_variable) {
       case clip_distance:
          actual_array_size = prog->last_vert_prog ?
-            prog->last_vert_prog->info.clip_distance_array_size : 0;
+            prog->last_vert_prog->nir->info.clip_distance_array_size : 0;
          break;
       case cull_distance:
          actual_array_size = prog->last_vert_prog ?
-            prog->last_vert_prog->info.cull_distance_array_size : 0;
+            prog->last_vert_prog->nir->info.cull_distance_array_size : 0;
          break;
       case none:
       default:
@@ -1989,10 +2097,10 @@ parse_xfb_decls(const struct gl_constants *consts,
                 const struct gl_extensions *exts,
                 struct gl_shader_program *prog,
                 const void *mem_ctx, unsigned num_names,
-                char **varying_names, struct xfb_decl *decls)
+                char **varying_names, struct xfb_decl *decls, bool compact_arrays)
 {
    for (unsigned i = 0; i < num_names; ++i) {
-      xfb_decl_init(&decls[i], consts, exts, mem_ctx, varying_names[i]);
+      xfb_decl_init(&decls[i], consts, exts, mem_ctx, varying_names[i], compact_arrays);
 
       if (!xfb_decl_is_varying(&decls[i]))
          continue;
@@ -2233,6 +2341,12 @@ struct match {
     * value 0.
     */
    unsigned generic_location;
+
+   /**
+    * Original index, used as a fallback sorting key to ensure
+    * a stable sort
+    */
+   unsigned original_index;
 };
 
 /**
@@ -2305,7 +2419,9 @@ varying_matches_match_comparator(const void *x_generic, const void *y_generic)
 
    if (x->packing_class != y->packing_class)
       return x->packing_class - y->packing_class;
-   return x->packing_order - y->packing_order;
+   if (x->packing_order != y->packing_order)
+      return x->packing_order - y->packing_order;
+   return x->original_index - y->original_index;
 }
 
 /**
@@ -2316,21 +2432,20 @@ static int
 varying_matches_xfb_comparator(const void *x_generic, const void *y_generic)
 {
    const struct match *x = (const struct match *) x_generic;
+   const struct match *y = (const struct match *) y_generic;
+   /* if both varying are used by transform feedback, sort them */
+   if (x->producer_var != NULL && x->producer_var->data.is_xfb_only) {
+      if (y->producer_var != NULL && y->producer_var->data.is_xfb_only)
+         return 0;
+      /* if x is varying and y is not, put y first */
+      return +1;
+   } else if (y->producer_var != NULL && y->producer_var->data.is_xfb_only) {
+      /* if y is varying and x is not, leave x first */
+      return -1;
+   }
 
-   if (x->producer_var != NULL && x->producer_var->data.is_xfb_only)
-      return varying_matches_match_comparator(x_generic, y_generic);
-
-   /* FIXME: When the comparator returns 0 it means the elements being
-    * compared are equivalent. However the qsort documentation says:
-    *
-    *    "The order of equivalent elements is undefined."
-    *
-    * In practice the sort ends up reversing the order of the varyings which
-    * means locations are also assigned in this reversed order and happens to
-    * be what we want. This is also whats happening in
-    * varying_matches_match_comparator().
-    */
-   return 0;
+   /* otherwise leave the order alone */
+   return x->original_index - y->original_index;
 }
 
 /**
@@ -2341,21 +2456,15 @@ static int
 varying_matches_not_xfb_comparator(const void *x_generic, const void *y_generic)
 {
    const struct match *x = (const struct match *) x_generic;
+   const struct match *y = (const struct match *) y_generic;
 
-   if (x->producer_var != NULL && !x->producer_var->data.is_xfb)
+   if ( (x->producer_var != NULL && !x->producer_var->data.is_xfb)
+        && (y->producer_var != NULL && !y->producer_var->data.is_xfb) )
+      /* if both are non-xfb, then sort them */
       return varying_matches_match_comparator(x_generic, y_generic);
 
-   /* FIXME: When the comparator returns 0 it means the elements being
-    * compared are equivalent. However the qsort documentation says:
-    *
-    *    "The order of equivalent elements is undefined."
-    *
-    * In practice the sort ends up reversing the order of the varyings which
-    * means locations are also assigned in this reversed order and happens to
-    * be what we want. This is also whats happening in
-    * varying_matches_match_comparator().
-    */
-   return 0;
+   /* otherwise, leave the order alone */
+   return x->original_index - y->original_index;
 }
 
 static bool
@@ -2640,19 +2749,22 @@ varying_matches_assign_locations(struct varying_matches *vm,
                                  struct gl_shader_program *prog,
                                  uint8_t components[], uint64_t reserved_slots)
 {
+   /* Establish the original order of the varying_matches array; our
+    * sorts will use this for sorting when the varyings do not have
+    * xfb qualifiers
+    */
+   for (unsigned i = 0; i < vm->num_matches; i++)
+      vm->matches[i].original_index = i;
+
    /* If packing has been disabled then we cannot safely sort the varyings by
     * class as it may mean we are using a version of OpenGL where
     * interpolation qualifiers are not guaranteed to be matching across
     * shaders, sorting in this case could result in mismatching shader
-    * interfaces.
-    * When packing is disabled the sort orders varyings used by transform
-    * feedback first, but also depends on *undefined behaviour* of qsort to
-    * reverse the order of the varyings. See: xfb_comparator().
+    * interfaces. So we sort only the varyings used by transform feedback.
     *
     * If packing is only disabled for xfb varyings (mutually exclusive with
     * disable_varying_packing), we then group varyings depending on if they
-    * are captured for transform feedback. The same *undefined behaviour* is
-    * taken advantage of.
+    * are captured for transform feedback.
     */
    if (vm->disable_varying_packing) {
       /* Only sort varyings that are only used by transform feedback. */
@@ -3275,7 +3387,7 @@ set_variable_io_mask(BITSET_WORD *bits, nir_variable *var, gl_shader_stage stage
    assert(var->data.location >= VARYING_SLOT_VAR0);
 
    const struct glsl_type *type = var->type;
-   if (nir_is_arrayed_io(var, stage) || var->data.per_view) {
+   if (nir_is_arrayed_io(var, stage)) {
       assert(glsl_type_is_array(type));
       type = glsl_get_array_element(type);
    }
@@ -3345,9 +3457,7 @@ replace_unused_interpolate_at_with_undef(nir_builder *b, nir_instr *instr,
             nir_def *undef =
                nir_undef(b, intrin->def.num_components,
                              intrin->def.bit_size);
-            nir_def_rewrite_uses(&intrin->def, undef);
-
-            nir_instr_remove(&intrin->instr);
+            nir_def_replace(&intrin->def, undef);
             return true;
          }
       }
@@ -3363,8 +3473,7 @@ fixup_vars_lowered_to_temp(nir_shader *shader, nir_variable_mode mode)
    if (mode == nir_var_shader_in && shader->info.stage == MESA_SHADER_FRAGMENT) {
       (void) nir_shader_instructions_pass(shader,
                                           replace_unused_interpolate_at_with_undef,
-                                          nir_metadata_block_index |
-                                          nir_metadata_dominance,
+                                          nir_metadata_control_flow,
                                           NULL);
    }
 
@@ -3427,7 +3536,7 @@ remove_unused_io_vars(nir_shader *producer, nir_shader *consumer,
          unsigned location = var->data.location - VARYING_SLOT_VAR0;
 
          const struct glsl_type *type = var->type;
-         if (nir_is_arrayed_io(var, shader->info.stage) || var->data.per_view) {
+         if (nir_is_arrayed_io(var, shader->info.stage)) {
             assert(glsl_type_is_array(type));
             type = glsl_get_array_element(type);
          }
@@ -3497,7 +3606,7 @@ remove_unused_varyings(nir_shader *producer, nir_shader *consumer,
          continue;
 
       const struct glsl_type *type = var->type;
-      if (nir_is_arrayed_io(var, producer->info.stage) || var->data.per_view) {
+      if (nir_is_arrayed_io(var, producer->info.stage)) {
          assert(glsl_type_is_array(type));
          type = glsl_get_array_element(type);
       }
@@ -3513,7 +3622,7 @@ remove_unused_varyings(nir_shader *producer, nir_shader *consumer,
          continue;
 
       const struct glsl_type *type = var->type;
-      if (nir_is_arrayed_io(var, consumer->info.stage) || var->data.per_view) {
+      if (nir_is_arrayed_io(var, consumer->info.stage)) {
          assert(glsl_type_is_array(type));
          type = glsl_get_array_element(type);
       }
@@ -3852,8 +3961,8 @@ link_shader_opts(struct varying_matches *vm,
     */
    if (producer->options->lower_to_scalar && !vm->disable_varying_packing &&
       !vm->disable_xfb_packing) {
-      NIR_PASS_V(producer, nir_lower_io_to_scalar_early, nir_var_shader_out);
-      NIR_PASS_V(consumer, nir_lower_io_to_scalar_early, nir_var_shader_in);
+      NIR_PASS(_, producer, nir_lower_io_to_scalar_early, nir_var_shader_out);
+      NIR_PASS(_, consumer, nir_lower_io_to_scalar_early, nir_var_shader_in);
    }
 
    gl_nir_opts(producer);
@@ -3862,12 +3971,12 @@ link_shader_opts(struct varying_matches *vm,
    if (nir_link_opt_varyings(producer, consumer))
       gl_nir_opts(consumer);
 
-   NIR_PASS_V(producer, nir_remove_dead_variables, nir_var_shader_out, NULL);
-   NIR_PASS_V(consumer, nir_remove_dead_variables, nir_var_shader_in, NULL);
+   NIR_PASS(_, producer, nir_remove_dead_variables, nir_var_shader_out, NULL);
+   NIR_PASS(_, consumer, nir_remove_dead_variables, nir_var_shader_in, NULL);
 
    if (remove_unused_varyings(producer, consumer, prog, mem_ctx)) {
-      NIR_PASS_V(producer, nir_lower_global_vars_to_local);
-      NIR_PASS_V(consumer, nir_lower_global_vars_to_local);
+      NIR_PASS(_, producer, nir_lower_global_vars_to_local);
+      NIR_PASS(_, consumer, nir_lower_global_vars_to_local);
 
       gl_nir_opts(producer);
       gl_nir_opts(consumer);
@@ -3876,9 +3985,9 @@ link_shader_opts(struct varying_matches *vm,
        * nir_compact_varyings() depends on all dead varyings being removed so
        * we need to call nir_remove_dead_variables() again here.
        */
-      NIR_PASS_V(producer, nir_remove_dead_variables, nir_var_shader_out,
+      NIR_PASS(_, producer, nir_remove_dead_variables, nir_var_shader_out,
                  NULL);
-      NIR_PASS_V(consumer, nir_remove_dead_variables, nir_var_shader_in,
+      NIR_PASS(_, consumer, nir_remove_dead_variables, nir_var_shader_in,
                  NULL);
    }
 
@@ -4038,7 +4147,7 @@ assign_final_varying_locations(const struct gl_constants *consts,
    if (consumer) {
       unsigned consumer_vertices = 0;
       if (consumer && consumer->Stage == MESA_SHADER_GEOMETRY)
-         consumer_vertices = prog->Geom.VerticesIn;
+         consumer_vertices = consumer->Program->nir->info.gs.vertices_in;
 
       gl_nir_lower_packed_varyings(consts, prog, mem_ctx, slots_used, components,
                                    nir_var_shader_in, consumer_vertices,
@@ -4159,6 +4268,7 @@ link_varyings(struct gl_shader_program *prog, unsigned first,
    bool has_xfb_qualifiers = false;
    unsigned num_xfb_decls = 0;
    char **varying_names = NULL;
+   bool compact_arrays = false;
    struct xfb_decl *xfb_decls = NULL;
 
    if (last > MESA_SHADER_FRAGMENT)
@@ -4178,7 +4288,8 @@ link_varyings(struct gl_shader_program *prog, unsigned first,
          has_xfb_qualifiers =
             process_xfb_layout_qualifiers(mem_ctx, prog->_LinkedShaders[i],
                                           prog, &num_xfb_decls,
-                                          &varying_names);
+                                          &varying_names,
+                                          &compact_arrays);
          break;
       }
    }
@@ -4206,7 +4317,7 @@ link_varyings(struct gl_shader_program *prog, unsigned first,
       xfb_decls = rzalloc_array(mem_ctx, struct xfb_decl,
                                       num_xfb_decls);
       if (!parse_xfb_decls(consts, exts, prog, mem_ctx, num_xfb_decls,
-                           varying_names, xfb_decls))
+                           varying_names, xfb_decls, compact_arrays))
          return false;
    }
 
@@ -4283,9 +4394,9 @@ link_varyings(struct gl_shader_program *prog, unsigned first,
 
    if (!prog->SeparateShader) {
       /* If not SSO remove unused varyings from the first/last stage */
-      NIR_PASS_V(prog->_LinkedShaders[first]->Program->nir,
+      NIR_PASS(_, prog->_LinkedShaders[first]->Program->nir,
                  nir_remove_dead_variables, nir_var_shader_in, NULL);
-      NIR_PASS_V(prog->_LinkedShaders[last]->Program->nir,
+      NIR_PASS(_, prog->_LinkedShaders[last]->Program->nir,
                  nir_remove_dead_variables, nir_var_shader_out, NULL);
    } else {
       /* Sort inputs / outputs into a canonical order.  This is necessary so
@@ -4391,44 +4502,7 @@ link_varyings(struct gl_shader_program *prog, unsigned first,
                              has_xfb_qualifiers, mem_ctx))
       return false;
 
-   return true;
-}
-
-/**
- * Store the gl_FragDepth layout in the gl_shader_program struct.
- */
-static void
-store_fragdepth_layout(struct gl_shader_program *prog)
-{
-   if (prog->_LinkedShaders[MESA_SHADER_FRAGMENT] == NULL) {
-      return;
-   }
-
-   nir_shader *nir = prog->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program->nir;
-   nir_foreach_shader_out_variable(var, nir) {
-      if (strcmp(var->name, "gl_FragDepth") == 0) {
-         switch (var->data.depth_layout) {
-         case nir_depth_layout_none:
-            prog->FragDepthLayout = FRAG_DEPTH_LAYOUT_NONE;
-            return;
-         case nir_depth_layout_any:
-            prog->FragDepthLayout = FRAG_DEPTH_LAYOUT_ANY;
-            return;
-         case nir_depth_layout_greater:
-            prog->FragDepthLayout = FRAG_DEPTH_LAYOUT_GREATER;
-            return;
-         case nir_depth_layout_less:
-            prog->FragDepthLayout = FRAG_DEPTH_LAYOUT_LESS;
-            return;
-         case nir_depth_layout_unchanged:
-            prog->FragDepthLayout = FRAG_DEPTH_LAYOUT_UNCHANGED;
-            return;
-         default:
-            assert(0);
-            return;
-         }
-      }
-   }
+   return prog->data->LinkStatus != LINKING_FAILURE;
 }
 
 bool
@@ -4463,8 +4537,6 @@ gl_nir_link_varyings(const struct gl_constants *consts,
    unsigned first, last;
 
    MESA_TRACE_FUNC();
-
-   store_fragdepth_layout(prog);
 
    first = MESA_SHADER_STAGES;
    last = 0;
@@ -4510,6 +4582,9 @@ gl_nir_link_varyings(const struct gl_constants *consts,
             break;
          }
       }
+
+      /* Lower IO and thoroughly optimize and compact varyings. */
+      gl_nir_lower_optimize_varyings(consts, prog, false);
    }
 
    ralloc_free(mem_ctx);

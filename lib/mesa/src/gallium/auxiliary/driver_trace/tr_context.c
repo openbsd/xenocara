@@ -145,6 +145,7 @@ trace_context_draw_vbo(struct pipe_context *_pipe,
 
 static void
 trace_context_draw_mesh_tasks(struct pipe_context *_pipe,
+                              unsigned drawid_offset,
                               const struct pipe_grid_info *info)
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
@@ -153,11 +154,12 @@ trace_context_draw_mesh_tasks(struct pipe_context *_pipe,
    trace_dump_call_begin("pipe_context", "draw_mesh_tasks");
 
    trace_dump_arg(ptr,  pipe);
+   trace_dump_arg(uint,  drawid_offset);
    trace_dump_arg(grid_info, info);
 
    trace_dump_trace_flush();
 
-   pipe->draw_mesh_tasks(pipe, info);
+   pipe->draw_mesh_tasks(pipe, drawid_offset, info);
 
    trace_dump_call_end();
 }
@@ -1238,8 +1240,6 @@ trace_context_set_sampler_views(struct pipe_context *_pipe,
 static void
 trace_context_set_vertex_buffers(struct pipe_context *_pipe,
                                  unsigned num_buffers,
-                                 unsigned unbind_num_trailing_slots,
-                                 bool take_ownership,
                                  const struct pipe_vertex_buffer *buffers)
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
@@ -1249,16 +1249,12 @@ trace_context_set_vertex_buffers(struct pipe_context *_pipe,
 
    trace_dump_arg(ptr, pipe);
    trace_dump_arg(uint, num_buffers);
-   trace_dump_arg(uint, unbind_num_trailing_slots);
-   trace_dump_arg(bool, take_ownership);
 
    trace_dump_arg_begin("buffers");
    trace_dump_struct_array(vertex_buffer, buffers, num_buffers);
    trace_dump_arg_end();
 
-   pipe->set_vertex_buffers(pipe, num_buffers,
-                            unbind_num_trailing_slots, take_ownership,
-                            buffers);
+   pipe->set_vertex_buffers(pipe, num_buffers, buffers);
 
    trace_dump_call_end();
 }
@@ -1315,7 +1311,8 @@ static void
 trace_context_set_stream_output_targets(struct pipe_context *_pipe,
                                         unsigned num_targets,
                                         struct pipe_stream_output_target **tgs,
-                                        const unsigned *offsets)
+                                        const unsigned *offsets,
+                                        enum mesa_prim output_prim)
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
@@ -1326,8 +1323,9 @@ trace_context_set_stream_output_targets(struct pipe_context *_pipe,
    trace_dump_arg(uint, num_targets);
    trace_dump_arg_array(ptr, tgs, num_targets);
    trace_dump_arg_array(uint, offsets, num_targets);
+   trace_dump_arg(uint, output_prim);
 
-   pipe->set_stream_output_targets(pipe, num_targets, tgs, offsets);
+   pipe->set_stream_output_targets(pipe, num_targets, tgs, offsets, output_prim);
 
    trace_dump_call_end();
 }
@@ -2240,6 +2238,23 @@ static void trace_context_launch_grid(struct pipe_context *_pipe,
    trace_dump_call_end();
 }
 
+static void trace_context_get_compute_state_info(struct pipe_context *_pipe, void *cso,
+                                                 struct pipe_compute_state_object_info *info)
+{
+   struct trace_context *tr_ctx = trace_context(_pipe);
+   struct pipe_context *pipe = tr_ctx->pipe;
+
+   trace_dump_call_begin("pipe_context", "get_compute_state_info");
+
+   trace_dump_arg(ptr, pipe);
+   trace_dump_arg(ptr, cso);
+
+   pipe->get_compute_state_info(pipe, cso, info);
+
+   trace_dump_ret(compute_state_object_info, info);
+   trace_dump_call_end();
+}
+
 static uint64_t trace_context_create_texture_handle(struct pipe_context *_pipe,
                                                     struct pipe_sampler_view *view,
                                                     const struct pipe_sampler_state *state)
@@ -2397,6 +2412,24 @@ trace_context_set_hw_atomic_buffers(struct pipe_context *_pipe,
    trace_dump_call_end();
 }
 
+static enum pipe_reset_status
+trace_context_get_device_reset_status(struct pipe_context *_pipe)
+{
+   struct trace_context *tr_ctx = trace_context(_pipe);
+   struct pipe_context *pipe = tr_ctx->pipe;
+   enum pipe_reset_status status;
+
+   trace_dump_call_begin("pipe_context", "get_device_reset_status");
+   trace_dump_arg(ptr, pipe);
+
+   status = pipe->get_device_reset_status(pipe);
+
+   trace_dump_ret(uint, status);
+   trace_dump_call_end();
+
+   return status;
+}
+
 struct pipe_context *
 trace_context_create(struct trace_screen *tr_scr,
                      struct pipe_context *pipe)
@@ -2524,6 +2557,7 @@ trace_context_create(struct trace_screen *tr_scr,
    TR_CTX_INIT(set_patch_vertices);
    TR_CTX_INIT(set_shader_buffers);
    TR_CTX_INIT(launch_grid);
+   TR_CTX_INIT(get_compute_state_info);
    TR_CTX_INIT(set_shader_images);
    TR_CTX_INIT(create_texture_handle);
    TR_CTX_INIT(delete_texture_handle);
@@ -2542,6 +2576,7 @@ trace_context_create(struct trace_screen *tr_scr,
    TR_CTX_INIT(set_debug_callback);
    TR_CTX_INIT(set_global_binding);
    TR_CTX_INIT(set_hw_atomic_buffers);
+   TR_CTX_INIT(get_device_reset_status);
 
 
 #undef TR_CTX_INIT

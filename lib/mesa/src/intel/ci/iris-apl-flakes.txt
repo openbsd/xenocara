@@ -12,7 +12,6 @@ dEQP-EGL.functional.render.*.rgba8888_pbuffer
 dEQP-EGL.functional.sharing.gles2.multithread.random_egl_sync.programs.link.7
 dEQP-EGL.functional.sharing.gles2.multithread.random.images.copyteximage2d.19
 dEQP-EGL.functional.sharing.gles2.multithread.random.images.copyteximage2d.6
-dEQP-EGL.functional.sharing.gles2.multithread.random.images.copytexsubimage2d.1
 dEQP-EGL.functional.sharing.gles2.multithread.simple.buffers.bufferdata_render
 dEQP-EGL.functional.sharing.gles2.multithread.simple.buffers.buffersubdata_render
 
@@ -21,3 +20,7 @@ dEQP-EGL.functional.sharing.gles2.multithread.simple.buffers.buffersubdata_rende
 # 2022-05-05 18:40:38.338548: [  830.144153] i915 0000:00:02.0: [drm] GPU HANG: ecode 9:1:87d79ffe, in deqp-gles31 [2571]
 dEQP-GLES31.functional.primitive_bounding_box.clear.scissored_clear_with_triangles
 dEQP-GLES31.functional.primitive_bounding_box.clear.scissored_clear_with_triangles_per_primitive_bbox
+
+# Nightly run expectations update
+KHR-Single-GL46.arrays_of_arrays_gl.ConstructorsAndUnsizedDeclConstructorSizing1
+

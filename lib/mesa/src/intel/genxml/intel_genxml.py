@@ -181,19 +181,21 @@ def sort_xml(xml: et.ElementTree) -> None:
 # (genxml_import.py uses GenXml.add_xml_imports, which relies on
 # `default_imports`.)
 default_imports = OrderedDict([
-    ('gen4.xml', ()),
-    ('gen45.xml', ('gen4.xml',)),
-    ('gen5.xml', ('gen45.xml',)),
-    ('gen6.xml', ('gen5.xml',)),
-    ('gen7.xml', ('gen6.xml',)),
-    ('gen75.xml', ('gen7.xml',)),
-    ('gen8.xml', ('gen75.xml',)),
-    ('gen9.xml', ('gen8.xml',)),
-    ('gen11.xml', ('gen9.xml',)),
-    ('gen12.xml', ('gen11.xml',)),
-    ('gen125.xml', ('gen12.xml',)),
-    ('gen20.xml', ('gen125.xml',)),
-    ('gen20_rt.xml', ('gen125_rt.xml',)),
+    ('gen40.xml', ()),
+    ('gen45.xml', ('gen40.xml',)),
+    ('gen50.xml', ('gen45.xml',)),
+    ('gen60.xml', ('gen50.xml',)),
+    ('gen70.xml', ('gen60.xml',)),
+    ('gen75.xml', ('gen70.xml',)),
+    ('gen80.xml', ('gen75.xml',)),
+    ('gen90.xml', ('gen80.xml',)),
+    ('gen110.xml', ('gen90.xml',)),
+    ('gen120.xml', ('gen110.xml',)),
+    ('gen125.xml', ('gen120.xml',)),
+    ('gen200.xml', ('gen125.xml',)),
+    ('gen200_rt.xml', ('gen125_rt.xml',)),
+    ('gen300.xml', ('gen200.xml',)),
+    ('gen300_rt.xml', ('gen200_rt.xml',)),
     ])
 known_genxml_files = list(default_imports.keys())
 
@@ -429,6 +431,23 @@ class GenXml(object):
                     # the requested engine types.
                     changed = True
                     continue
+            items.append(item)
+        if changed:
+            self.et.getroot()[:] = items
+
+    def filter_symbols(self, symbol_list):
+        symbols_allowed = {}
+        for sym in symbol_list:
+            symbols_allowed[sym] = sym
+
+        changed = False
+        items = []
+        for item in self.et.getroot():
+            if item.tag in ('instruction', 'struct', 'register') and \
+               item.attrib['name'] not in symbols_allowed:
+                # Drop the item from the tree
+                changed = True
+                continue
             items.append(item)
         if changed:
             self.et.getroot()[:] = items

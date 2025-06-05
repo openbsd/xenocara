@@ -1,25 +1,7 @@
 /*
- * Copyright (C) 2016 Rob Clark <robclark@freedesktop.org>
+ * Copyright © 2016 Rob Clark <robclark@freedesktop.org>
  * Copyright © 2018 Google, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -37,6 +19,7 @@
 #include "freedreno_state.h"
 
 #include "fd6_barrier.h"
+#include "fd6_blend.h"
 #include "fd6_blitter.h"
 #include "fd6_context.h"
 #include "fd6_draw.h"
@@ -224,7 +207,7 @@ get_program_state(struct fd_context *ctx, const struct pipe_draw_info *info)
          .gs = (struct ir3_shader_state *)ctx->prog.gs,
          .fs = (struct ir3_shader_state *)ctx->prog.fs,
          .clip_plane_enable = ctx->rasterizer->clip_plane_enable,
-         .patch_vertices = ctx->patch_vertices,
+         .patch_vertices = HAS_TESS_GS ? ctx->patch_vertices : 0,
    };
 
    /* Some gcc versions get confused about designated order, so workaround
@@ -234,6 +217,11 @@ get_program_state(struct fd_context *ctx, const struct pipe_draw_info *info)
    key.key.sample_shading = (ctx->min_samples > 1);
    key.key.msaa = (ctx->framebuffer.samples > 1);
    key.key.rasterflat = ctx->rasterizer->flatshade;
+
+   if (unlikely(ctx->screen->driconf.dual_color_blend_by_location)) {
+      struct fd6_blend_stateobj *blend = fd6_blend_stateobj(ctx->blend);
+      key.key.force_dual_color_blend = blend->use_dual_src_blend;
+   }
 
    if (PIPELINE == HAS_TESS_GS) {
       if (info->mode == MESA_PRIM_PATCHES) {
@@ -269,6 +257,7 @@ get_program_state(struct fd_context *ctx, const struct pipe_draw_info *info)
    return fd6_ctx->prog;
 }
 
+template <chip CHIP>
 static void
 flush_streamout(struct fd_context *ctx, struct fd6_emit *emit)
    assert_dt
@@ -280,8 +269,8 @@ flush_streamout(struct fd_context *ctx, struct fd6_emit *emit)
 
    for (unsigned i = 0; i < PIPE_MAX_SO_BUFFERS; i++) {
       if (emit->streamout_mask & (1 << i)) {
-         enum vgt_event_type evt = (enum vgt_event_type)(FLUSH_SO_0 + i);
-         fd6_event_write(ctx->batch, ring, evt, false);
+         enum fd_gpu_event evt = (enum fd_gpu_event)(FD_FLUSH_SO_0 + i);
+         fd6_event_write<CHIP>(ctx, ring, evt);
       }
    }
 }
@@ -457,7 +446,7 @@ draw_vbos(struct fd_context *ctx, const struct pipe_draw_info *info,
       ctx->batch->barrier |= FD6_WAIT_FOR_ME;
 
    if (ctx->batch->barrier)
-      fd6_barrier_flush(ctx->batch);
+      fd6_barrier_flush<CHIP>(ctx->batch);
 
    /* for debug after a lock up, write a unique counter value
     * to scratch7 for each draw, to make it easier to match up
@@ -473,10 +462,13 @@ draw_vbos(struct fd_context *ctx, const struct pipe_draw_info *info,
          draw_emit_xfb(ring, &draw0, info, indirect);
       } else {
          const struct ir3_const_state *const_state = ir3_const_state(emit.vs);
-         uint32_t dst_offset_dp = const_state->offsets.driver_param;
+         uint32_t dst_offset_dp =
+            const_state->allocs.consts[IR3_CONST_ALLOC_DRIVER_PARAMS].offset_vec4;
 
          /* If unused, pass 0 for DST_OFF: */
-         if (dst_offset_dp > emit.vs->constlen)
+         if (!ir3_const_can_upload(&const_state->allocs,
+                                   IR3_CONST_ALLOC_DRIVER_PARAMS,
+                                   emit.vs->constlen))
             dst_offset_dp = 0;
 
          draw_emit_indirect<DRAW>(ctx, ring, &draw0, info, indirect, index_offset, dst_offset_dp);
@@ -501,7 +493,7 @@ draw_vbos(struct fd_context *ctx, const struct pipe_draw_info *info,
          uint32_t last_index_start = ctx->last.index_start;
 
          for (unsigned i = 1; i < num_draws; i++) {
-            flush_streamout(ctx, &emit);
+            flush_streamout<CHIP>(ctx, &emit);
 
             fd6_vsc_update_sizes(ctx->batch, info, &draws[i]);
 
@@ -530,7 +522,7 @@ draw_vbos(struct fd_context *ctx, const struct pipe_draw_info *info,
 
    emit_marker6(ring, 7);
 
-   flush_streamout(ctx, &emit);
+   flush_streamout<CHIP>(ctx, &emit);
 
    fd_context_all_clean(ctx);
 }
@@ -681,7 +673,4 @@ fd6_draw_init(struct pipe_context *pctx)
    ctx->update_draw = fd6_update_draw<CHIP>;
    fd6_update_draw<CHIP>(ctx);
 }
-
-/* Teach the compiler about needed variants: */
-template void fd6_draw_init<A6XX>(struct pipe_context *pctx);
-template void fd6_draw_init<A7XX>(struct pipe_context *pctx);
+FD_GENX(fd6_draw_init);

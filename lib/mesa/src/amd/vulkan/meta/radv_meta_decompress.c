@@ -1,37 +1,14 @@
 /*
  * Copyright © 2016 Intel Corporation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <assert.h>
 #include <stdbool.h>
 
 #include "radv_meta.h"
-#include "radv_private.h"
 #include "sid.h"
-
-enum radv_depth_op {
-   DEPTH_DECOMPRESS,
-   DEPTH_RESUMMARIZE,
-};
 
 static nir_shader *
 build_expand_depth_stencil_compute_shader(struct radv_device *dev)
@@ -73,123 +50,49 @@ build_expand_depth_stencil_compute_shader(struct radv_device *dev)
    return b.shader;
 }
 
-static VkResult
-create_expand_depth_stencil_compute(struct radv_device *device)
-{
-   VkResult result = VK_SUCCESS;
-   nir_shader *cs = build_expand_depth_stencil_compute_shader(device);
-
-   VkDescriptorSetLayoutCreateInfo ds_create_info = {.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-                                                     .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR,
-                                                     .bindingCount = 2,
-                                                     .pBindings = (VkDescriptorSetLayoutBinding[]){
-                                                        {.binding = 0,
-                                                         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-                                                         .descriptorCount = 1,
-                                                         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-                                                         .pImmutableSamplers = NULL},
-                                                        {.binding = 1,
-                                                         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-                                                         .descriptorCount = 1,
-                                                         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-                                                         .pImmutableSamplers = NULL},
-                                                     }};
-
-   result = radv_CreateDescriptorSetLayout(radv_device_to_handle(device), &ds_create_info, &device->meta_state.alloc,
-                                           &device->meta_state.expand_depth_stencil_compute_ds_layout);
-   if (result != VK_SUCCESS)
-      goto cleanup;
-
-   VkPipelineLayoutCreateInfo pl_create_info = {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-      .setLayoutCount = 1,
-      .pSetLayouts = &device->meta_state.expand_depth_stencil_compute_ds_layout,
-      .pushConstantRangeCount = 0,
-      .pPushConstantRanges = NULL,
-   };
-
-   result = radv_CreatePipelineLayout(radv_device_to_handle(device), &pl_create_info, &device->meta_state.alloc,
-                                      &device->meta_state.expand_depth_stencil_compute_p_layout);
-   if (result != VK_SUCCESS)
-      goto cleanup;
-
-   /* compute shader */
-
-   VkPipelineShaderStageCreateInfo pipeline_shader_stage = {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-      .stage = VK_SHADER_STAGE_COMPUTE_BIT,
-      .module = vk_shader_module_handle_from_nir(cs),
-      .pName = "main",
-      .pSpecializationInfo = NULL,
-   };
-
-   VkComputePipelineCreateInfo vk_pipeline_info = {
-      .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
-      .stage = pipeline_shader_stage,
-      .flags = 0,
-      .layout = device->meta_state.expand_depth_stencil_compute_p_layout,
-   };
-
-   result = radv_CreateComputePipelines(radv_device_to_handle(device), device->meta_state.cache, 1, &vk_pipeline_info,
-                                        NULL, &device->meta_state.expand_depth_stencil_compute_pipeline);
-   if (result != VK_SUCCESS)
-      goto cleanup;
-
-cleanup:
-   ralloc_free(cs);
-   return result;
-}
+struct radv_htile_expand_key {
+   enum radv_meta_object_key_type type;
+   uint32_t samples;
+};
 
 static VkResult
-create_pipeline_layout(struct radv_device *device, VkPipelineLayout *layout)
+get_pipeline_gfx(struct radv_device *device, struct radv_image *image, VkPipeline *pipeline_out, VkPipelineLayout *layout_out)
 {
-   VkPipelineLayoutCreateInfo pl_create_info = {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-      .setLayoutCount = 0,
-      .pSetLayouts = NULL,
-      .pushConstantRangeCount = 0,
-      .pPushConstantRanges = NULL,
-   };
-
-   return radv_CreatePipelineLayout(radv_device_to_handle(device), &pl_create_info, &device->meta_state.alloc, layout);
-}
-
-static VkResult
-create_pipeline(struct radv_device *device, uint32_t samples, VkPipelineLayout layout, enum radv_depth_op op,
-                VkPipeline *pipeline)
-{
+   const uint32_t samples = image->vk.samples;
+   struct radv_htile_expand_key key;
    VkResult result;
-   VkDevice device_h = radv_device_to_handle(device);
 
-   mtx_lock(&device->meta_state.mtx);
-   if (*pipeline) {
-      mtx_unlock(&device->meta_state.mtx);
+   result = radv_meta_get_noop_pipeline_layout(device, layout_out);
+   if (result != VK_SUCCESS)
+      return result;
+
+   memset(&key, 0, sizeof(key));
+   key.type = RADV_META_OBJECT_KEY_HTILE_EXPAND_GFX;
+   key.samples = samples;
+
+   VkPipeline pipeline_from_cache = vk_meta_lookup_pipeline(&device->meta_state.device, &key, sizeof(key));
+   if (pipeline_from_cache != VK_NULL_HANDLE) {
+      *pipeline_out = pipeline_from_cache;
       return VK_SUCCESS;
    }
 
    nir_shader *vs_module = radv_meta_build_nir_vs_generate_vertices(device);
    nir_shader *fs_module = radv_meta_build_nir_fs_noop(device);
 
-   if (!vs_module || !fs_module) {
-      /* XXX: Need more accurate error */
-      result = VK_ERROR_OUT_OF_HOST_MEMORY;
-      goto cleanup;
-   }
-
    const VkPipelineSampleLocationsStateCreateInfoEXT sample_locs_create_info = {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_SAMPLE_LOCATIONS_STATE_CREATE_INFO_EXT,
       .sampleLocationsEnable = false,
    };
 
-   const VkPipelineRenderingCreateInfo rendering_create_info = {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-      .depthAttachmentFormat = VK_FORMAT_D32_SFLOAT_S8_UINT,
-      .stencilAttachmentFormat = VK_FORMAT_D32_SFLOAT_S8_UINT,
+   const VkGraphicsPipelineCreateInfoRADV radv_info = {
+      .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO_RADV,
+      .depth_compress_disable = true,
+      .stencil_compress_disable = true,
    };
 
    const VkGraphicsPipelineCreateInfo pipeline_create_info = {
       .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-      .pNext = &rendering_create_info,
+      .pNext = &radv_info,
       .stageCount = 2,
       .pStages =
          (VkPipelineShaderStageCreateInfo[]){
@@ -215,7 +118,7 @@ create_pipeline(struct radv_device *device, uint32_t samples, VkPipelineLayout l
       .pInputAssemblyState =
          &(VkPipelineInputAssemblyStateCreateInfo){
             .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-            .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+            .topology = VK_PRIMITIVE_TOPOLOGY_META_RECT_LIST_MESA,
             .primitiveRestartEnable = false,
          },
       .pViewportState =
@@ -269,128 +172,33 @@ create_pipeline(struct radv_device *device, uint32_t samples, VkPipelineLayout l
                   VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_EXT,
                },
          },
-      .layout = layout,
-      .renderPass = VK_NULL_HANDLE,
-      .subpass = 0,
+      .layout = *layout_out,
    };
 
-   struct radv_graphics_pipeline_create_info extra = {
-      .use_rectlist = true,
-      .depth_compress_disable = true,
-      .stencil_compress_disable = true,
-      .resummarize_enable = op == DEPTH_RESUMMARIZE,
-   };
+   struct vk_meta_rendering_info render = {
+       .depth_attachment_format = VK_FORMAT_D32_SFLOAT_S8_UINT,
+       .stencil_attachment_format = VK_FORMAT_D32_SFLOAT_S8_UINT,
+    };
 
-   result = radv_graphics_pipeline_create(device_h, device->meta_state.cache, &pipeline_create_info, &extra,
-                                          &device->meta_state.alloc, pipeline);
+   result = vk_meta_create_graphics_pipeline(&device->vk, &device->meta_state.device, &pipeline_create_info, &render,
+                                             &key, sizeof(key), pipeline_out);
 
-cleanup:
-   ralloc_free(fs_module);
    ralloc_free(vs_module);
-   mtx_unlock(&device->meta_state.mtx);
+   ralloc_free(fs_module);
+
    return result;
-}
-
-void
-radv_device_finish_meta_depth_decomp_state(struct radv_device *device)
-{
-   struct radv_meta_state *state = &device->meta_state;
-
-   for (uint32_t i = 0; i < ARRAY_SIZE(state->depth_decomp); ++i) {
-      radv_DestroyPipelineLayout(radv_device_to_handle(device), state->depth_decomp[i].p_layout, &state->alloc);
-
-      radv_DestroyPipeline(radv_device_to_handle(device), state->depth_decomp[i].decompress_pipeline, &state->alloc);
-      radv_DestroyPipeline(radv_device_to_handle(device), state->depth_decomp[i].resummarize_pipeline, &state->alloc);
-   }
-
-   radv_DestroyPipeline(radv_device_to_handle(device), state->expand_depth_stencil_compute_pipeline, &state->alloc);
-   radv_DestroyPipelineLayout(radv_device_to_handle(device), state->expand_depth_stencil_compute_p_layout,
-                              &state->alloc);
-   device->vk.dispatch_table.DestroyDescriptorSetLayout(radv_device_to_handle(device),
-                                                        state->expand_depth_stencil_compute_ds_layout, &state->alloc);
-}
-
-VkResult
-radv_device_init_meta_depth_decomp_state(struct radv_device *device, bool on_demand)
-{
-   struct radv_meta_state *state = &device->meta_state;
-   VkResult res = VK_SUCCESS;
-
-   for (uint32_t i = 0; i < ARRAY_SIZE(state->depth_decomp); ++i) {
-      uint32_t samples = 1 << i;
-
-      res = create_pipeline_layout(device, &state->depth_decomp[i].p_layout);
-      if (res != VK_SUCCESS)
-         return res;
-
-      if (on_demand)
-         continue;
-
-      res = create_pipeline(device, samples, state->depth_decomp[i].p_layout, DEPTH_DECOMPRESS,
-                            &state->depth_decomp[i].decompress_pipeline);
-      if (res != VK_SUCCESS)
-         return res;
-
-      res = create_pipeline(device, samples, state->depth_decomp[i].p_layout, DEPTH_RESUMMARIZE,
-                            &state->depth_decomp[i].resummarize_pipeline);
-      if (res != VK_SUCCESS)
-         return res;
-   }
-
-   return create_expand_depth_stencil_compute(device);
-}
-
-static VkPipeline *
-radv_get_depth_pipeline(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image,
-                        const VkImageSubresourceRange *subresourceRange, enum radv_depth_op op)
-{
-   struct radv_meta_state *state = &cmd_buffer->device->meta_state;
-   uint32_t samples = image->vk.samples;
-   uint32_t samples_log2 = ffs(samples) - 1;
-   VkPipeline *pipeline;
-
-   if (!state->depth_decomp[samples_log2].decompress_pipeline) {
-      VkResult ret;
-
-      ret = create_pipeline(cmd_buffer->device, samples, state->depth_decomp[samples_log2].p_layout, DEPTH_DECOMPRESS,
-                            &state->depth_decomp[samples_log2].decompress_pipeline);
-      if (ret != VK_SUCCESS) {
-         vk_command_buffer_set_error(&cmd_buffer->vk, ret);
-         return NULL;
-      }
-
-      ret = create_pipeline(cmd_buffer->device, samples, state->depth_decomp[samples_log2].p_layout, DEPTH_RESUMMARIZE,
-                            &state->depth_decomp[samples_log2].resummarize_pipeline);
-      if (ret != VK_SUCCESS) {
-         vk_command_buffer_set_error(&cmd_buffer->vk, ret);
-         return NULL;
-      }
-   }
-
-   switch (op) {
-   case DEPTH_DECOMPRESS:
-      pipeline = &state->depth_decomp[samples_log2].decompress_pipeline;
-      break;
-   case DEPTH_RESUMMARIZE:
-      pipeline = &state->depth_decomp[samples_log2].resummarize_pipeline;
-      break;
-   default:
-      unreachable("unknown operation");
-   }
-
-   return pipeline;
 }
 
 static void
 radv_process_depth_image_layer(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image,
                                const VkImageSubresourceRange *range, int level, int layer)
 {
-   struct radv_device *device = cmd_buffer->device;
+   struct radv_device *device = radv_cmd_buffer_device(cmd_buffer);
    struct radv_image_view iview;
    uint32_t width, height;
 
-   width = radv_minify(image->vk.extent.width, range->baseMipLevel + level);
-   height = radv_minify(image->vk.extent.height, range->baseMipLevel + level);
+   width = u_minify(image->vk.extent.width, range->baseMipLevel + level);
+   height = u_minify(image->vk.extent.height, range->baseMipLevel + level);
 
    radv_image_view_init(&iview, device,
                         &(VkImageViewCreateInfo){
@@ -407,7 +215,7 @@ radv_process_depth_image_layer(struct radv_cmd_buffer *cmd_buffer, struct radv_i
                                  .layerCount = 1,
                               },
                         },
-                        0, NULL);
+                        NULL);
 
    const VkRenderingAttachmentInfo depth_att = {
       .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -427,6 +235,7 @@ radv_process_depth_image_layer(struct radv_cmd_buffer *cmd_buffer, struct radv_i
 
    const VkRenderingInfo rendering_info = {
       .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+      .flags = VK_RENDERING_INPUT_ATTACHMENT_NO_CONCURRENT_WRITES_BIT_MESA,
       .renderArea = {.offset = {0, 0}, .extent = {width, height}},
       .layerCount = 1,
       .pDepthAttachment = &depth_att,
@@ -445,17 +254,24 @@ radv_process_depth_image_layer(struct radv_cmd_buffer *cmd_buffer, struct radv_i
 static void
 radv_process_depth_stencil(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image,
                            const VkImageSubresourceRange *subresourceRange,
-                           struct radv_sample_locations_state *sample_locs, enum radv_depth_op op)
+                           struct radv_sample_locations_state *sample_locs)
 {
+   struct radv_device *device = radv_cmd_buffer_device(cmd_buffer);
    struct radv_meta_saved_state saved_state;
    VkCommandBuffer cmd_buffer_h = radv_cmd_buffer_to_handle(cmd_buffer);
-   VkPipeline *pipeline;
+   VkPipelineLayout layout;
+   VkPipeline pipeline;
+   VkResult result;
+
+   result = get_pipeline_gfx(device, image, &pipeline, &layout);
+   if (result != VK_SUCCESS) {
+      vk_command_buffer_set_error(&cmd_buffer->vk, result);
+      return;
+   }
 
    radv_meta_save(&saved_state, cmd_buffer, RADV_META_SAVE_GRAPHICS_PIPELINE | RADV_META_SAVE_RENDER);
 
-   pipeline = radv_get_depth_pipeline(cmd_buffer, image, subresourceRange, op);
-
-   radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
+   radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
    if (sample_locs) {
       assert(image->vk.create_flags & VK_IMAGE_CREATE_SAMPLE_LOCATIONS_COMPATIBLE_DEPTH_BIT_EXT);
@@ -478,8 +294,8 @@ radv_process_depth_stencil(struct radv_cmd_buffer *cmd_buffer, struct radv_image
       if (!radv_htile_enabled(image, subresourceRange->baseMipLevel + l))
          continue;
 
-      uint32_t width = radv_minify(image->vk.extent.width, subresourceRange->baseMipLevel + l);
-      uint32_t height = radv_minify(image->vk.extent.height, subresourceRange->baseMipLevel + l);
+      uint32_t width = u_minify(image->vk.extent.width, subresourceRange->baseMipLevel + l);
+      uint32_t height = u_minify(image->vk.extent.height, subresourceRange->baseMipLevel + l);
 
       radv_CmdSetViewport(
          cmd_buffer_h, 0, 1,
@@ -499,23 +315,93 @@ radv_process_depth_stencil(struct radv_cmd_buffer *cmd_buffer, struct radv_image
    radv_meta_restore(&saved_state, cmd_buffer);
 }
 
+static VkResult
+get_pipeline_cs(struct radv_device *device, VkPipeline *pipeline_out, VkPipelineLayout *layout_out)
+{
+   enum radv_meta_object_key_type key = RADV_META_OBJECT_KEY_HTILE_EXPAND_CS;
+   VkResult result;
+
+   const VkDescriptorSetLayoutBinding bindings[] = {
+      {
+         .binding = 0,
+         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+         .descriptorCount = 1,
+         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+      },
+      {
+         .binding = 1,
+         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+         .descriptorCount = 1,
+         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+      },
+
+   };
+
+   const VkDescriptorSetLayoutCreateInfo desc_info = {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT,
+      .bindingCount = 2,
+      .pBindings = bindings,
+   };
+
+   result = vk_meta_get_pipeline_layout(&device->vk, &device->meta_state.device, &desc_info, NULL, &key, sizeof(key),
+                                        layout_out);
+   if (result != VK_SUCCESS)
+      return result;
+
+   VkPipeline pipeline_from_cache = vk_meta_lookup_pipeline(&device->meta_state.device, &key, sizeof(key));
+   if (pipeline_from_cache != VK_NULL_HANDLE) {
+      *pipeline_out = pipeline_from_cache;
+      return VK_SUCCESS;
+   }
+
+   nir_shader *cs = build_expand_depth_stencil_compute_shader(device);
+
+   const VkPipelineShaderStageCreateInfo stage_info = {
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+      .stage = VK_SHADER_STAGE_COMPUTE_BIT,
+      .module = vk_shader_module_handle_from_nir(cs),
+      .pName = "main",
+      .pSpecializationInfo = NULL,
+   };
+
+   const VkComputePipelineCreateInfo pipeline_info = {
+      .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+      .stage = stage_info,
+      .flags = 0,
+      .layout = *layout_out,
+   };
+
+   result = vk_meta_create_compute_pipeline(&device->vk, &device->meta_state.device, &pipeline_info, &key, sizeof(key),
+                                            pipeline_out);
+
+   ralloc_free(cs);
+   return result;
+}
+
 static void
 radv_expand_depth_stencil_compute(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image,
                                   const VkImageSubresourceRange *subresourceRange)
 {
+   struct radv_device *device = radv_cmd_buffer_device(cmd_buffer);
    struct radv_meta_saved_state saved_state;
    struct radv_image_view load_iview = {0};
    struct radv_image_view store_iview = {0};
-   struct radv_device *device = cmd_buffer->device;
+   VkPipelineLayout layout;
+   VkPipeline pipeline;
+   VkResult result;
 
    assert(radv_image_is_tc_compat_htile(image));
 
-   cmd_buffer->state.flush_bits |= radv_dst_access_flush(cmd_buffer, VK_ACCESS_2_SHADER_WRITE_BIT, image);
+   result = get_pipeline_cs(device, &pipeline, &layout);
+   if (result != VK_SUCCESS) {
+      vk_command_buffer_set_error(&cmd_buffer->vk, result);
+      return;
+   }
 
    radv_meta_save(&saved_state, cmd_buffer, RADV_META_SAVE_DESCRIPTORS | RADV_META_SAVE_COMPUTE_PIPELINE);
 
-   radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_COMPUTE,
-                        device->meta_state.expand_depth_stencil_compute_pipeline);
+   radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
 
    for (uint32_t l = 0; l < vk_image_subresource_level_count(&image->vk, subresourceRange); l++) {
       uint32_t width, height;
@@ -524,11 +410,11 @@ radv_expand_depth_stencil_compute(struct radv_cmd_buffer *cmd_buffer, struct rad
       if (!radv_htile_enabled(image, subresourceRange->baseMipLevel + l))
          continue;
 
-      width = radv_minify(image->vk.extent.width, subresourceRange->baseMipLevel + l);
-      height = radv_minify(image->vk.extent.height, subresourceRange->baseMipLevel + l);
+      width = u_minify(image->vk.extent.width, subresourceRange->baseMipLevel + l);
+      height = u_minify(image->vk.extent.height, subresourceRange->baseMipLevel + l);
 
       for (uint32_t s = 0; s < vk_image_subresource_layer_count(&image->vk, subresourceRange); s++) {
-         radv_image_view_init(&load_iview, cmd_buffer->device,
+         radv_image_view_init(&load_iview, device,
                               &(VkImageViewCreateInfo){
                                  .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
                                  .image = radv_image_to_handle(image),
@@ -540,8 +426,8 @@ radv_expand_depth_stencil_compute(struct radv_cmd_buffer *cmd_buffer, struct rad
                                                       .baseArrayLayer = subresourceRange->baseArrayLayer + s,
                                                       .layerCount = 1},
                               },
-                              0, &(struct radv_image_view_extra_create_info){.enable_compression = true});
-         radv_image_view_init(&store_iview, cmd_buffer->device,
+                              &(struct radv_image_view_extra_create_info){.enable_compression = true});
+         radv_image_view_init(&store_iview, device,
                               &(VkImageViewCreateInfo){
                                  .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
                                  .image = radv_image_to_handle(image),
@@ -553,12 +439,10 @@ radv_expand_depth_stencil_compute(struct radv_cmd_buffer *cmd_buffer, struct rad
                                                       .baseArrayLayer = subresourceRange->baseArrayLayer + s,
                                                       .layerCount = 1},
                               },
-                              0, &(struct radv_image_view_extra_create_info){.disable_compression = true});
+                              &(struct radv_image_view_extra_create_info){.disable_compression = true});
 
          radv_meta_push_descriptor_set(
-            cmd_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, device->meta_state.expand_depth_stencil_compute_p_layout,
-            0, /* set */
-            2, /* descriptorWriteCount */
+            cmd_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, layout, 0, 2,
             (VkWriteDescriptorSet[]){{.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                                       .dstBinding = 0,
                                       .dstArrayElement = 0,
@@ -595,12 +479,13 @@ radv_expand_depth_stencil_compute(struct radv_cmd_buffer *cmd_buffer, struct rad
    radv_meta_restore(&saved_state, cmd_buffer);
 
    cmd_buffer->state.flush_bits |= RADV_CMD_FLAG_CS_PARTIAL_FLUSH | RADV_CMD_FLAG_INV_VCACHE |
-                                   radv_src_access_flush(cmd_buffer, VK_ACCESS_2_SHADER_WRITE_BIT, image);
+                                   radv_src_access_flush(cmd_buffer, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+                                                         VK_ACCESS_2_SHADER_WRITE_BIT, 0, image, subresourceRange);
 
    /* Initialize the HTILE metadata as "fully expanded". */
-   uint32_t htile_value = radv_get_htile_initial_value(cmd_buffer->device, image);
+   uint32_t htile_value = radv_get_htile_initial_value(device, image);
 
-   cmd_buffer->state.flush_bits |= radv_clear_htile(cmd_buffer, image, subresourceRange, htile_value);
+   cmd_buffer->state.flush_bits |= radv_clear_htile(cmd_buffer, image, subresourceRange, htile_value, false);
 }
 
 void
@@ -614,22 +499,8 @@ radv_expand_depth_stencil(struct radv_cmd_buffer *cmd_buffer, struct radv_image 
    radv_describe_layout_transition(cmd_buffer, &barrier);
 
    if (cmd_buffer->qf == RADV_QUEUE_GENERAL) {
-      radv_process_depth_stencil(cmd_buffer, image, subresourceRange, sample_locs, DEPTH_DECOMPRESS);
+      radv_process_depth_stencil(cmd_buffer, image, subresourceRange, sample_locs);
    } else {
       radv_expand_depth_stencil_compute(cmd_buffer, image, subresourceRange);
    }
-}
-
-void
-radv_resummarize_depth_stencil(struct radv_cmd_buffer *cmd_buffer, struct radv_image *image,
-                               const VkImageSubresourceRange *subresourceRange,
-                               struct radv_sample_locations_state *sample_locs)
-{
-   struct radv_barrier_data barrier = {0};
-
-   barrier.layout_transitions.depth_stencil_resummarize = 1;
-   radv_describe_layout_transition(cmd_buffer, &barrier);
-
-   assert(cmd_buffer->qf == RADV_QUEUE_GENERAL);
-   radv_process_depth_stencil(cmd_buffer, image, subresourceRange, sample_locs, DEPTH_RESUMMARIZE);
 }

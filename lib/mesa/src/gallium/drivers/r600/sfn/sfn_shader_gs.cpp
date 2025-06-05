@@ -1,27 +1,7 @@
 /* -*- mesa-c++  -*-
- *
- * Copyright (c) 2022 Collabora LTD
- *
+ * Copyright 2022 Collabora LTD
  * Author: Gert Wollny <gert.wollny@collabora.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "sfn_shader_gs.h"
@@ -58,7 +38,7 @@ GeometryShader::do_scan_instruction(nir_instr *instr)
 bool
 GeometryShader::process_store_output(nir_intrinsic_instr *instr)
 {
-   auto location = nir_intrinsic_io_semantics(instr).location;
+   auto location = static_cast<gl_varying_slot>(nir_intrinsic_io_semantics(instr).location);
    auto index = nir_src_as_const_value(instr->src[1]);
    assert(index);
 
@@ -74,13 +54,11 @@ GeometryShader::process_store_output(nir_intrinsic_instr *instr)
        location == VARYING_SLOT_PSIZ || location == VARYING_SLOT_LAYER ||
        location == VARYING_SLOT_VIEWPORT || location == VARYING_SLOT_FOGC) {
 
-      auto semantic = r600_get_varying_semantic(location);
-      tgsi_semantic name = (tgsi_semantic)semantic.first;
       auto write_mask = nir_intrinsic_write_mask(instr);
-      ShaderOutput output(driver_location, name, write_mask);
+      ShaderOutput output(driver_location, write_mask, location);
 
-      if (!nir_intrinsic_io_semantics(instr).no_varying)
-         output.set_sid(semantic.second);
+      if (nir_intrinsic_io_semantics(instr).no_varying)
+         output.set_no_varying(true);
       if (nir_intrinsic_io_semantics(instr).location != VARYING_SLOT_CLIP_VERTEX)
          add_output(output);
 
@@ -107,7 +85,7 @@ GeometryShader::process_store_output(nir_intrinsic_instr *instr)
 bool
 GeometryShader::process_load_input(nir_intrinsic_instr *instr)
 {
-   auto location = nir_intrinsic_io_semantics(instr).location;
+   auto location = static_cast<gl_varying_slot>(nir_intrinsic_io_semantics(instr).location);
    auto index = nir_src_as_const_value(instr->src[1]);
    assert(index);
 
@@ -124,9 +102,7 @@ GeometryShader::process_load_input(nir_intrinsic_instr *instr)
 
       uint64_t bit = 1ull << location;
       if (!(bit & m_input_mask)) {
-         auto semantic = r600_get_varying_semantic(location);
-         ShaderInput input(driver_location, semantic.first);
-         input.set_sid(semantic.second);
+         ShaderInput input(driver_location, location);
          input.set_ring_offset(16 * driver_location);
          add_input(input);
          m_next_input_ring_offset += 16;

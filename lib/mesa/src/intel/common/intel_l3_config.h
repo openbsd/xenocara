@@ -48,6 +48,8 @@ enum intel_l3_partition {
    INTEL_L3P_C,
    /** Texture cache. */
    INTEL_L3P_T,
+   /** Unified tile cache. */
+   INTEL_L3P_TC,
    /** Number of supported L3 partitions. */
    INTEL_NUM_L3P
 };
@@ -90,6 +92,11 @@ unsigned
 intel_get_l3_config_urb_size(const struct intel_device_info *devinfo,
                              const struct intel_l3_config *cfg);
 
+unsigned
+intel_get_l3_partition_size(const struct intel_device_info *devinfo,
+                            const struct intel_l3_config *cfg,
+                            enum intel_l3_partition i);
+
 void intel_dump_l3_config(const struct intel_l3_config *cfg, FILE *fp);
 
 enum intel_urb_deref_block_size {
@@ -99,13 +106,32 @@ enum intel_urb_deref_block_size {
    INTEL_URB_DEREF_BLOCK_SIZE_MESH       = 3,
 };
 
+struct intel_urb_config {
+   unsigned size[5];
+   unsigned entries[5];
+   unsigned start[5];
+};
+
 void intel_get_urb_config(const struct intel_device_info *devinfo,
                           const struct intel_l3_config *l3_cfg,
                           bool tess_present, bool gs_present,
-                          const unsigned entry_size[4],
-                          unsigned entries[4], unsigned start[4],
+                          struct intel_urb_config *urb_cfg,
                           enum intel_urb_deref_block_size *deref_block_size,
                           bool *constrained);
+
+/* Returns if URB changed for given shader stage. */
+static inline bool
+intel_urb_setup_changed(const struct intel_urb_config *a,
+                        const struct intel_urb_config *b,
+                        gl_shader_stage stage)
+{
+   if (a->size[stage] != b->size[stage] ||
+       a->entries[stage] != b->entries[stage] ||
+       a->start[stage] != b->start[stage])
+      return true;
+
+   return false;
+}
 
 struct intel_mesh_urb_allocation {
    unsigned task_entries;

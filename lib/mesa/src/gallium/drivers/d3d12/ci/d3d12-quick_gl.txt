@@ -29,7 +29,6 @@ spec@!opengl 1.1@polygon-mode-offset@config 4: Expected white pixel on left edge
 spec@!opengl 1.1@polygon-mode-offset@config 4: Expected white pixel on right edge,Fail
 spec@!opengl 1.1@polygon-mode-offset@config 4: Expected white pixel on top edge,Fail
 spec@!opengl 1.1@polygon-offset,Fail
-spec@!opengl 1.1@vertex-fallbacks,Crash
 spec@!opengl 1.1@windowoverlap,Missing
 spec@!opengl 3.0@sampler-cube-shadow,Fail
 spec@!opengl 3.1@default-vao,Fail
@@ -42,17 +41,14 @@ spec@!opengl 3.2@gl-3.2-adj-prims line cull-back pv-last,Fail
 spec@!opengl 3.2@gl-3.2-adj-prims line cull-front pv-last,Fail
 spec@!opengl 3.2@gl-3.2-adj-prims pv-last,Fail
 spec@arb_draw_indirect@arb_draw_indirect-api-errors,Crash
-spec@arb_clear_texture@arb_clear_texture-integer,Fail
-spec@arb_explicit_attrib_location@overlapping-locations-input-attribs api,Crash
-spec@arb_explicit_attrib_location@overlapping-locations-input-attribs shader,Crash
 spec@arb_framebuffer_object@fbo-blit-scaled-linear,Fail
 spec@arb_get_program_binary@restore-sso-program,Fail
-spec@arb_point_sprite@arb_point_sprite-mipmap,Fail
 spec@arb_program_interface_query@arb_program_interface_query-getprogramresourceindex,Fail
 spec@arb_program_interface_query@arb_program_interface_query-getprogramresourceindex@'vs_input2' on GL_PROGRAM_INPUT,Fail
 spec@arb_program_interface_query@arb_program_interface_query-getprogramresourceindex@'vs_input2[1][0]' on GL_PROGRAM_INPUT,Fail
 spec@arb_sample_shading@arb_sample_shading-builtin-gl-sample-mask-mrt-alpha-to-coverage,Fail
 spec@arb_seamless_cube_map@arb_seamless_cubemap,Fail
+spec@arb_separate_shader_objects@rendezvous by location (5 stages),Crash
 spec@arb_shader_atomic_counters@semantics,Fail
 spec@arb_shader_atomic_counters@semantics@Tessellation control shader atomic built-in semantics,Fail
 spec@arb_texture_cube_map_array@arb_texture_cube_map_array-sampler-cube-array-shadow,Fail
@@ -147,10 +143,7 @@ spec@arb_texture_stencil8@texwrap formats@GL_STENCIL_INDEX8,Fail
 spec@arb_texture_stencil8@texwrap formats@GL_STENCIL_INDEX8- NPOT,Fail
 spec@arb_texture_stencil8@texwrap formats@GL_STENCIL_INDEX8- swizzled,Fail
 spec@arb_transform_feedback_instanced@draw-auto instanced,Fail
-spec@arb_vertex_attrib_64bit@arb_vertex_attrib_64bit-overlapping-locations api,Crash
-spec@arb_vertex_attrib_64bit@arb_vertex_attrib_64bit-overlapping-locations shader,Crash
 spec@arb_vertex_program@arb_vertex_program-matrix-property-bindings,Fail
-spec@ext_framebuffer_blit@fbo-blit-check-limits,Fail
 spec@ext_framebuffer_multisample@accuracy 16 srgb depthstencil,Fail
 spec@ext_framebuffer_multisample@accuracy 16 srgb depthstencil linear,Fail
 spec@ext_framebuffer_multisample@accuracy 16 srgb small depthstencil,Fail
@@ -174,8 +167,6 @@ spec@ext_framebuffer_multisample@sample-alpha-to-one 2,Fail
 spec@ext_framebuffer_multisample@sample-alpha-to-one 4,Fail
 spec@ext_framebuffer_multisample@sample-alpha-to-one 6,Fail
 spec@ext_framebuffer_multisample@sample-alpha-to-one 8,Fail
-spec@ext_texture_integer@fbo_integer_precision_clear,Fail
-spec@ext_texture_integer@fbo_integer_readpixels_sint_uint,Fail
 spec@ext_texture_integer@texwrap formats,Fail
 spec@ext_texture_integer@texwrap formats offset,Fail
 spec@ext_texture_integer@texwrap formats offset@GL_ALPHA16I_EXT,Fail
@@ -416,9 +407,11 @@ spec@nv_copy_depth_to_color@nv_copy_depth_to_color 0 0x223344ff,Fail
 spec@nv_copy_depth_to_color@nv_copy_depth_to_color 0 0x76356278,Fail
 spec@nv_copy_depth_to_color@nv_copy_depth_to_color 1 0x223344ff,Fail
 spec@nv_copy_depth_to_color@nv_copy_depth_to_color 1 0x76356278,Fail
-spec@nv_copy_image@nv_copy_image-formats,Crash
 wgl@wgl-multi-context-single-window,Fail
 
-# remove this after https://gitlab.freedesktop.org/mesa/piglit/-/merge_requests/843
-# is merged and piglit is updated
+# Should've been fixed by https://gitlab.freedesktop.org/mesa/piglit/-/merge_requests/843
+# but still seems to be failing.
 spec@arb_vertex_program@arb_vertex_program-property-bindings,Fail
+
+# This tests NaNs in a GLSL version where NaNs are undefined
+shaders@glsl-fs-fogscale@vs and fs,Fail

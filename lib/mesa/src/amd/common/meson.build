@@ -1,22 +1,5 @@
 # Copyright © 2017 Intel Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 amd_json_files = [
   # Generated:
@@ -30,11 +13,13 @@ amd_json_files = [
   '../registers/gfx103.json',
   '../registers/gfx11.json',
   '../registers/gfx115.json',
+  '../registers/gfx12.json',
 
   # Manually written:
   '../registers/pkt3.json',
   '../registers/gfx10-rsrc.json',
   '../registers/gfx11-rsrc.json',
+  '../registers/gfx12-rsrc.json',
   '../registers/registers-manually-defined.json',
 ]
 
@@ -58,7 +43,7 @@ gfx10_format_table_c = custom_target(
   'gfx10_format_table.c',
   input : files(
     'gfx10_format_table.py',
-    '../../util/format/u_format.csv', '../registers/gfx10-rsrc.json', '../registers/gfx11-rsrc.json'
+    '../../util/format/u_format.yaml', '../registers/gfx10-rsrc.json', '../registers/gfx11-rsrc.json'
   ),
   output : 'gfx10_format_table.c',
   command : [prog_python, '@INPUT@'],
@@ -69,16 +54,24 @@ gfx10_format_table_c = custom_target(
 amd_common_files = files(
   'ac_binary.c',
   'ac_binary.h',
+  'ac_cmdbuf.c',
+  'ac_cmdbuf.h',
   'ac_shader_args.c',
   'ac_shader_args.h',
   'ac_shader_util.c',
   'ac_shader_util.h',
+  'ac_gather_context_rolls.c',
   'ac_gpu_info.c',
   'ac_gpu_info.h',
   'ac_surface.c',
   'ac_surface.h',
   'ac_debug.c',
   'ac_debug.h',
+  'ac_descriptors.c',
+  'ac_descriptors.h',
+  'ac_formats.c',
+  'ac_formats.h',
+  'ac_linux_drm.h',
   'ac_shadowed_regs.c',
   'ac_shadowed_regs.h',
   'ac_spm.c',
@@ -89,25 +82,66 @@ amd_common_files = files(
   'ac_rgp.h',
   'ac_msgpack.c',
   'ac_msgpack.h',
-  'ac_nir.c',
-  'ac_nir.h',
-  'ac_nir_opt_outputs.c',
-  'ac_nir_cull.c',
-  'ac_nir_lower_esgs_io_to_mem.c',
-  'ac_nir_lower_global_access.c',
-  'ac_nir_lower_image_opcodes_cdna.c',
-  'ac_nir_lower_resinfo.c',
-  'ac_nir_lower_subdword_loads.c',
-  'ac_nir_lower_taskmesh_io_to_mem.c',
-  'ac_nir_lower_tess_io_to_mem.c',
-  'ac_nir_lower_tex.c',
-  'ac_nir_lower_ngg.c',
-  'ac_nir_lower_ps.c',
   'amd_family.c',
+  'ac_parse_ib.c',
   'ac_perfcounter.c',
   'ac_perfcounter.h',
+  'ac_pm4.c',
+  'ac_pm4.h',
   'ac_vcn_av1_default.h',
+  'ac_vcn_dec.c',
+  'ac_vcn_enc.c',
+  'ac_uvd_dec.c',
+  'nir/ac_nir.c',
+  'nir/ac_nir.h',
+  'nir/ac_nir_helpers.h',
+  'nir/ac_nir_opt_outputs.c',
+  'nir/ac_nir_cull.c',
+  'nir/ac_nir_create_gs_copy_shader.c',
+  'nir/ac_nir_lower_esgs_io_to_mem.c',
+  'nir/ac_nir_lower_global_access.c',
+  'nir/ac_nir_lower_image_opcodes_cdna.c',
+  'nir/ac_nir_lower_intrinsics_to_args.c',
+  'nir/ac_nir_lower_legacy_gs.c',
+  'nir/ac_nir_lower_legacy_vs.c',
+  'nir/ac_nir_lower_mem_access_bit_sizes.c',
+  'nir/ac_nir_lower_resinfo.c',
+  'nir/ac_nir_lower_taskmesh_io_to_mem.c',
+  'nir/ac_nir_lower_tess_io_to_mem.c',
+  'nir/ac_nir_lower_tex.c',
+  'nir/ac_nir_lower_ngg.c',
+  'nir/ac_nir_lower_ngg_gs.c',
+  'nir/ac_nir_lower_ngg_mesh.c',
+  'nir/ac_nir_lower_ps_early.c',
+  'nir/ac_nir_lower_ps_late.c',
+  'nir/ac_nir_lower_sin_cos.c',
+  'nir/ac_nir_meta.h',
+  'nir/ac_nir_meta_cs_blit.c',
+  'nir/ac_nir_meta_cs_clear_copy_buffer.c',
+  'nir/ac_nir_meta_ps_resolve.c',
+  'nir/ac_nir_opt_pack_half.c',
+  'nir/ac_nir_opt_shared_append.c',
+  'nir/ac_nir_prerast_utils.c',
 )
+
+if not with_platform_windows
+  amd_common_files += files(
+    'ac_linux_drm.c',
+  )
+endif
+
+link_with = []
+c_args = ['-DADDR_FASTCALL=']
+if with_amdgpu_virtio
+  c_args += ['-DHAVE_AMDGPU_VIRTIO', '-DENABLE_DRM_AMDGPU']
+  amd_common_files += files(
+    'virtio/amdgpu_virtio.c',
+    'virtio/amdgpu_virtio_bo.c',
+    'virtio/amdgpu_virtio_device.c',
+    'virtio/amdgpu_virtio_private.h',
+    'virtio/amdgpu_virtio_proto.h')
+  link_with += libvdrm
+endif
 
 if dep_elf.found()
   amd_common_files += files(
@@ -121,21 +155,22 @@ libamd_common = static_library(
   'amd_common',
   [amd_common_files, sid_tables_h, amdgfxregs_h, gfx10_format_table_c],
   include_directories : [
-    inc_include, inc_src, inc_amd,
+    inc_include, inc_src, inc_amd, inc_virtio_gpu,
   ],
-  dependencies : [
+  dependencies : [dep_llvm.partial_dependency(compile_args: true, includes: true)] + [
     dep_thread, dep_elf, dep_libdrm_amdgpu, dep_valgrind,
     idep_mesautil, idep_nir_headers, idep_nir
   ],
+  link_with: [ link_with ],
   gnu_symbol_visibility : 'hidden',
-  c_args : ['-DADDR_FASTCALL=']
+  c_args : c_args
 )
 
 idep_amdgfxregs_h = declare_dependency(sources : [amdgfxregs_h])
 
 executable(
-  'ac_parse_ib',
-  ['ac_parse_ib.c'],
+  'ac_ib_parser',
+  ['ac_ib_parser.c'],
   link_with: [libamd_common],
   include_directories : [
     inc_amd, inc_include, inc_src,
@@ -153,6 +188,7 @@ if with_tests and not with_platform_windows
       include_directories : [
         inc_amd, inc_include, inc_src,
       ],
+      c_args : cpp_args_addrlib,
       dependencies: [idep_amdgfxregs_h, dep_libdrm_amdgpu, idep_mesautil],
     ),
     suite: ['amd']
@@ -169,6 +205,7 @@ if with_tests and not with_platform_windows
         include_directories : [
           inc_amd, inc_include, inc_src,
         ],
+        c_args : cpp_args_addrlib,
         dependencies: [idep_amdgfxregs_h, dep_libdrm_amdgpu, idep_mesautil, dep_openmp],
       ),
       suite: ['amd']

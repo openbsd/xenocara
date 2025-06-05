@@ -23,7 +23,7 @@
 
 #include "nir.h"
 #include "nir_builder.h"
-#include "util/mesa-sha1.h"
+#include "util/mesa-blake3.h"
 #include <math.h>
 
 /** @file nir_opt_undef.c
@@ -48,8 +48,7 @@ opt_undef_csel(nir_builder *b, nir_alu_instr *instr)
       return false;
 
    for (int i = 1; i <= 2; i++) {
-      nir_instr *parent = instr->src[i].src.ssa->parent_instr;
-      if (parent->type != nir_instr_type_undef)
+      if (!nir_src_is_undef(instr->src[i].src))
          continue;
 
       b->cursor = nir_instr_remove(&instr->instr);
@@ -63,24 +62,49 @@ opt_undef_csel(nir_builder *b, nir_alu_instr *instr)
    return false;
 }
 
+static bool
+op_is_mov_or_vec_or_pack_or_unpack(nir_op op)
+{
+   switch (op) {
+   case nir_op_pack_32_2x16:
+   case nir_op_pack_32_2x16_split:
+   case nir_op_pack_32_4x8:
+   case nir_op_pack_32_4x8_split:
+   case nir_op_pack_64_2x32:
+   case nir_op_pack_64_2x32_split:
+   case nir_op_pack_64_4x16:
+   case nir_op_unpack_32_2x16:
+   case nir_op_unpack_32_2x16_split_x:
+   case nir_op_unpack_32_2x16_split_y:
+   case nir_op_unpack_32_4x8:
+   case nir_op_unpack_64_2x32:
+   case nir_op_unpack_64_2x32_split_x:
+   case nir_op_unpack_64_2x32_split_y:
+   case nir_op_unpack_64_4x16:
+      return true;
+   default:
+      return nir_op_is_vec_or_mov(op);
+   }
+}
+
 /**
  * Replace vecN(undef, undef, ...) with a single undef.
  */
 static bool
 opt_undef_vecN(nir_builder *b, nir_alu_instr *alu)
 {
-   if (!nir_op_is_vec_or_mov(alu->op))
+   if (!op_is_mov_or_vec_or_pack_or_unpack(alu->op))
       return false;
 
    for (unsigned i = 0; i < nir_op_infos[alu->op].num_inputs; i++) {
-      if (alu->src[i].src.ssa->parent_instr->type != nir_instr_type_undef)
+      if (!nir_src_is_undef(alu->src[i].src))
          return false;
    }
 
    b->cursor = nir_before_instr(&alu->instr);
    nir_def *undef = nir_undef(b, alu->def.num_components,
                               alu->def.bit_size);
-   nir_def_rewrite_uses(&alu->def, undef);
+   nir_def_replace(&alu->def, undef);
 
    return true;
 }
@@ -102,8 +126,7 @@ nir_get_undef_mask(nir_def *def)
    /* nir_op_mov of undef is handled by opt_undef_vecN() */
    if (nir_op_is_vec(alu->op)) {
       for (int i = 0; i < nir_op_infos[alu->op].num_inputs; i++) {
-         if (alu->src[i].src.ssa->parent_instr->type ==
-             nir_instr_type_undef) {
+         if (nir_src_is_undef(alu->src[i].src)) {
             undef |= BITSET_MASK(nir_ssa_alu_instr_src_components(alu, i)) << i;
          }
       }
@@ -126,6 +149,7 @@ opt_undef_store(nir_intrinsic_instr *intrin)
       break;
    case nir_intrinsic_store_output:
    case nir_intrinsic_store_per_vertex_output:
+   case nir_intrinsic_store_per_view_output:
    case nir_intrinsic_store_per_primitive_output:
    case nir_intrinsic_store_ssbo:
    case nir_intrinsic_store_shared:
@@ -183,15 +207,9 @@ visit_undef_use(nir_src *src, struct visit_info *info)
        */
       nir_alu_instr *alu = nir_instr_as_alu(instr);
 
-      /* Follow movs and vecs.
-       *
-       * Note that all vector component uses are followed and swizzles are
-       * ignored.
-       */
-      if (alu->op == nir_op_mov || nir_op_is_vec(alu->op)) {
-         nir_foreach_use_including_if(next_src, &alu->def) {
-            visit_undef_use(next_src, info);
-         }
+      /* opt_undef_vecN already copy propagated. */
+      if (op_is_mov_or_vec_or_pack_or_unpack(alu->op)) {
+         info->must_keep_undef = true;
          return;
       }
 
@@ -200,14 +218,6 @@ visit_undef_use(nir_src *src, struct visit_info *info)
       for (unsigned i = 0; i < num_srcs; i++) {
          if (&alu->src[i].src != src)
             continue;
-
-         if (nir_op_is_selection(alu->op) && i != 0) {
-            /* nir_opt_algebraic can eliminate a select opcode only if src0 is
-             * a constant. If the undef use is src1 or src2, it will be
-             * handled by opt_undef_csel.
-             */
-            continue;
-         }
 
          info->replace_undef_with_constant = true;
          if (nir_op_infos[alu->op].input_types[i] & nir_type_float &&
@@ -233,9 +243,13 @@ visit_undef_use(nir_src *src, struct visit_info *info)
  * to be eliminated by nir_opt_algebraic. 0 would not eliminate the FP opcode.
  */
 static bool
-replace_ssa_undef(nir_builder *b, nir_instr *instr,
-                  const struct undef_options *options)
+replace_ssa_undef(nir_builder *b, nir_instr *instr, void *data)
 {
+   if (instr->type != nir_instr_type_undef)
+      return false;
+
+   const struct undef_options *options = data;
+
    nir_undef_instr *undef = nir_instr_as_undef(instr);
    struct visit_info info = {0};
 
@@ -261,19 +275,14 @@ replace_ssa_undef(nir_builder *b, nir_instr *instr,
    if (undef->def.num_components > 1)
       replacement = nir_replicate(b, replacement, undef->def.num_components);
 
-   nir_def_rewrite_uses_after(&undef->def, replacement, &undef->instr);
-   nir_instr_remove(&undef->instr);
+   nir_def_replace(&undef->def, replacement);
    return true;
 }
 
 static bool
-nir_opt_undef_instr(nir_builder *b, nir_instr *instr, void *data)
+opt_undef_uses(nir_builder *b, nir_instr *instr, void *data)
 {
-   const struct undef_options *options = data;
-
-   if (instr->type == nir_instr_type_undef) {
-      return replace_ssa_undef(b, instr, options);
-   } else if (instr->type == nir_instr_type_alu) {
+   if (instr->type == nir_instr_type_alu) {
       nir_alu_instr *alu = nir_instr_as_alu(instr);
       return opt_undef_csel(b, alu) ||
              opt_undef_vecN(b, alu);
@@ -291,37 +300,45 @@ nir_opt_undef(nir_shader *shader)
    struct undef_options options = {0};
 
    /* Disallow the undef->NaN transformation only for those shaders where
-    * it's known to break rendering. These are shader source SHA1s printed by
+    * it's known to break rendering. These are shader source BLAKE3s printed by
     * nir_print_shader().
     */
-   uint32_t shader_sha1s[][SHA1_DIGEST_LENGTH32] = {
+   uint32_t shader_blake3s[][BLAKE3_OUT_LEN32] = {
       /* gputest/gimark */
-      {0x9a1af9e2, 0x68f185bf, 0x11fc1257, 0x1102e80b, 0x5ca350fa},
+      {0x582c214b, 0x25478275, 0xc9a835d2, 0x95c9b643, 0x69deae47, 0x213c7427, 0xa9da66a5, 0xac254ed2},
 
       /* Viewperf13/CATIA_car_01 */
-      {0x4746a4a4, 0xe3b27d27, 0xe6d2b0fb, 0xb7e9ceb3, 0x973e6152}, /* Taillights */
-      {0xc49cc90d, 0xd7208212, 0x726502ea, 0xe1fe62c0, 0xb62fbd1f}, /* Grill */
-      {0xde23f35b, 0xb6fa45ae, 0x96da7e6b, 0x5a6e4a60, 0xce0b6b31}, /* Headlights */
-      {0xdf36242c, 0x0705db59, 0xf1ddac9b, 0xcd1c8466, 0x4c73203b}, /* Rims */
+      {0x880dfa0f, 0x60e32201, 0xe3a89f59, 0xb1cc6f07, 0xcdbebe66, 0x20122aec, 0x83450d4e, 0x8f42843d}, /* Taillights */
+      {0x624e53bb, 0x8eb635ba, 0xb1e4ed9b, 0x651b0fec, 0x86fcf79a, 0xde0863fb, 0x09ce80c1, 0xd972e40f}, /* Grill */
+      {0x01a8db39, 0xfa175175, 0x621f7302, 0xfcde9177, 0x72d873bf, 0x048d38c1, 0xe669d2de, 0xaa6584af}, /* Headlights */
+      {0x32029770, 0xab295b41, 0x3f1daf07, 0x9dd9153e, 0xd598be73, 0xe555b2f3, 0x6e087eaf, 0x084d329c}, /* Rims */
 
       /* Viewperf13/CATIA_car_04 */
-      {0x631da72a, 0xc971e849, 0xd6489a15, 0xf7c8dddb, 0xe8efd982}, /* Headlights */
-      {0x85984b88, 0xd16b8fee, 0x0d49d97b, 0x5f6cc66e, 0xadcafad9}, /* Rims */
-      {0xad023488, 0x09930735, 0xb0567e58, 0x336dce36, 0xe3c1e448}, /* Tires */
-      {0xdcc4a549, 0x587873fa, 0xeed94361, 0x9a47cbff, 0x846d0167}, /* Windows */
-      {0xfa0074a2, 0xef868430, 0x87935a0c, 0x19bc96be, 0xb5b95c74}, /* Body */
+      {0x55207b90, 0x08fa2f8f, 0x9db62464, 0xadba6570, 0xb6d5d962, 0xf434bff5, 0x46a34d64, 0x021bfb45}, /* Headlights */
+      {0x83fbdd6a, 0x231b027e, 0x6f142248, 0x2b3045de, 0xd2a4f460, 0x59dfb8d8, 0x6dbc00f9, 0xcca13143}, /* Rims */
+      {0x88ed3a0a, 0xf128d384, 0x8161fdac, 0xd10cb257, 0x5e63db2d, 0x56798b6f, 0x881e81ee, 0xa4e937d4}, /* Tires */
+      {0xbf84697c, 0x3bc75bb6, 0x9d012175, 0x2dd90bcf, 0x0562f0ed, 0x5aa80e62, 0xb5793ae3, 0x9127bcab}, /* Windows */
+      {0x47a3eb4b, 0x136f676d, 0x94045ed3, 0x57b00972, 0x8cda7550, 0x88327fda, 0x37f7cf37, 0x66db05e3}, /* Body */
    };
 
-   for (unsigned i = 0; i < ARRAY_SIZE(shader_sha1s); i++) {
-      if (_mesa_printed_sha1_equal(shader->info.source_sha1, shader_sha1s[i])) {
+   for (unsigned i = 0; i < ARRAY_SIZE(shader_blake3s); i++) {
+      if (_mesa_printed_blake3_equal(shader->info.source_blake3, shader_blake3s[i])) {
          options.disallow_undef_to_nan = true;
          break;
       }
    }
 
-   return nir_shader_instructions_pass(shader,
-                                       nir_opt_undef_instr,
-                                       nir_metadata_block_index |
-                                       nir_metadata_dominance,
-                                       &options);
+   if (shader->info.use_legacy_math_rules)
+      options.disallow_undef_to_nan = true;
+
+   bool progress = nir_shader_instructions_pass(shader,
+                                                opt_undef_uses,
+                                                nir_metadata_control_flow,
+                                                &options);
+   progress |= nir_shader_instructions_pass(shader,
+                                            replace_ssa_undef,
+                                            nir_metadata_control_flow,
+                                            &options);
+
+   return progress;
 }

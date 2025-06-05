@@ -454,11 +454,12 @@ nouveau_decoder_decode_macroblock(struct pipe_video_codec *decoder,
    }
 }
 
-static void
+static int
 nouveau_decoder_end_frame(struct pipe_video_codec *decoder,
                           struct pipe_video_buffer *target,
                           struct pipe_picture_desc *picture)
 {
+   return 0;
 }
 
 static void
@@ -530,7 +531,7 @@ nouveau_create_decoder(struct pipe_context *context,
    ret = nouveau_client_new(screen->device, &dec->client);
    if (ret)
       goto fail;
-   ret = nouveau_pushbuf_create(screen, nouveau_context(context), dec->client, dec->chan, 2, 4096, 1, &dec->push);
+   ret = nouveau_pushbuf_create(screen, nouveau_context(context), dec->client, dec->chan, 2, 4096, &dec->push);
    if (ret)
       goto fail;
    ret = nouveau_bufctx_new(dec->client, NV31_VIDEO_BIND_COUNT, &dec->bufctx);

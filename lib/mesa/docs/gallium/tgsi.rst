@@ -398,7 +398,7 @@ used.
 
 .. opcode:: DDX, DDX_FINE - Derivative Relative To X
 
-   The fine variant is only used when ``PIPE_CAP_FS_FINE_DERIVATIVE`` is
+   The fine variant is only used when ``pipe_caps.fs_fine_derivative`` is
    advertised. When it is, the fine version guarantees one derivative per
    row while DDX is allowed to be the same for the entire 2x2 quad.
 
@@ -415,7 +415,7 @@ used.
 
 .. opcode:: DDY, DDY_FINE - Derivative Relative To Y
 
-   The fine variant is only used when ``PIPE_CAP_FS_FINE_DERIVATIVE`` is
+   The fine variant is only used when ``pipe_caps.fs_fine_derivative`` is
    advertised. When it is, the fine version guarantees one derivative per
    column while DDY is allowed to be the same for the entire 2x2 quad.
 
@@ -991,13 +991,13 @@ XXX doesn't look like most of the opcodes really belong here.
    texture coordinate delta at the following locations (-, +), (+, +), (+, -),
    (-, -), where the magnitude of the deltas are half a texel.
 
-   PIPE_CAP_TEXTURE_SM5 enhances this instruction to support shadow per-sample
+   pipe_caps.texture_sm5 enhances this instruction to support shadow per-sample
    depth compares, single component selection, and a non-constant offset. It
    doesn't allow support for the GL independent offset to get i0,j0. This would
    require another CAP is HW can do it natively. For now we lower that before
    TGSI.
 
-   PIPE_CAP_TGSI_TG4_COMPONENT_IN_SWIZZLE changes the encoding so that component
+   pipe_caps.tgsi_tg4_component_in_swizzle changes the encoding so that component
    is stored in the sampler source swizzle x.
 
    (without TGSI_TG4_COMPONENT_IN_SWIZZLE)
@@ -2508,7 +2508,7 @@ after lookup.
    width, height and depth values are for the mipmap level selected by the
    src_mip_level and are in the number of texels.  For 1d texture array width
    is in dst.x, array size is in dst.y and dst.z is 0. The number of mipmaps is
-   still in dst.w.  In contrast to d3d10 resinfo, there's no way in the tgsi
+   still in dst.w.  In contrast to d3d10 resinfo, there's no way in the TGSI
    instruction encoding to specify the return type (float/rcpfloat/uint), hence
    always using uint. Also, unlike the SAMPLE instructions, the swizzle on src1
    resinfo allowing swizzling dst values is ignored (due to the interaction
@@ -2653,7 +2653,7 @@ Bindless Opcodes
 ^^^^^^^^^^^^^^^^
 
 These opcodes are for working with bindless sampler or image handles and
-require PIPE_CAP_BINDLESS_TEXTURE.
+require pipe_caps.bindless_texture.
 
 .. opcode:: IMG2HND - Get a bindless handle for a image
 
@@ -3190,7 +3190,7 @@ When using this semantic, be sure to set the appropriate state in the
 TGSI_SEMANTIC_TEXCOORD
 """"""""""""""""""""""
 
-Only available if PIPE_CAP_TGSI_TEXCOORD is exposed !
+Only available if pipe_caps.tgsi_texcoord is exposed !
 
 Vertex shader outputs and fragment shader inputs may be labeled with
 this semantic to make them replaceable by sprite coordinates via the
@@ -3206,7 +3206,7 @@ The intended use case for this semantic is gl_TexCoord.
 TGSI_SEMANTIC_PCOORD
 """"""""""""""""""""
 
-Only available if PIPE_CAP_TGSI_TEXCOORD is exposed !
+Only available if pipe_caps.tgsi_texcoord is exposed !
 
 Fragment shader inputs may be labeled with TGSI_SEMANTIC_PCOORD to indicate
 that the register contains sprite coordinates in the form (x, y, 0, 1), if
@@ -3253,7 +3253,7 @@ TGSI_SEMANTIC_EDGEFLAG
 For vertex shaders, this semantic label indicates that an input or
 output is a boolean edge flag.  The register layout is [F, x, x, x]
 where F is 0.0 or 1.0 and x = don't care.  Normally, the vertex shader
-simply copies the edge flag input to the edgeflag output.
+simply copies the edge flag input to the edge flag output.
 
 Edge flags are used to control which lines or points are actually
 drawn when the polygon mode converts triangles/quads/polygons into
@@ -3265,7 +3265,8 @@ TGSI_SEMANTIC_STENCIL
 
 For fragment shaders, this semantic label indicates that an output
 is a writable stencil reference value. Only the Y component is writable.
-This allows the fragment shader to change the fragments stencilref value.
+This allows the fragment shader to change the fragments stencil reference
+value.
 
 
 TGSI_SEMANTIC_VIEWPORT_INDEX
@@ -3275,7 +3276,7 @@ For geometry shaders, this semantic label indicates that an output
 contains the index of the viewport (and scissor) to use.
 This is an integer value, and only the X component is used.
 
-If PIPE_CAP_VS_LAYER_VIEWPORT or PIPE_CAP_TES_LAYER_VIEWPORT is
+If pipe_caps.vs_layer_viewport or pipe_caps.tes_layer_viewport is
 supported, then this semantic label can also be used in vertex or
 tessellation evaluation shaders, respectively. Only the value written in the
 last vertex processing stage is used.
@@ -3289,7 +3290,7 @@ contains the layer value to use for the color and depth/stencil surfaces.
 This is an integer value, and only the X component is used.
 (Also known as rendertarget array index.)
 
-If PIPE_CAP_VS_LAYER_VIEWPORT or PIPE_CAP_TES_LAYER_VIEWPORT is
+If pipe_caps.vs_layer_viewport or pipe_caps.tes_layer_viewport is
 supported, then this semantic label can also be used in vertex or
 tessellation evaluation shaders, respectively. Only the value written in the
 last vertex processing stage is used.

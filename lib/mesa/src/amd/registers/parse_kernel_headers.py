@@ -66,6 +66,12 @@ gfx_levels = {
         'asic_reg/gc/gc_11_5_0_sh_mask.h',
         'soc21_enum.h',
     ],
+    'gfx12': [
+        [0x00001260, 0x0000A000, 0x0001C000, 0x02402C00, 0, 0], # IP_BASE GC_BASE
+        'asic_reg/gc/gc_12_0_0_offset.h',
+        'asic_reg/gc/gc_12_0_0_sh_mask.h',
+        'soc21_enum.h',
+    ],
 }
 
 # match: #define mmSDMA0_DEC_START                              0x0000
@@ -106,6 +112,7 @@ def register_filter(gfx_level, name, offset, already_added):
                name.startswith('SQ_THREAD') or
                name.startswith('GRBM_STATUS') or
                name.startswith('CP_CP'))) or
+             name.startswith('GCVM_L2_PROTECTION_FAULT_STATUS') or
              # Add registers in the 0x9000 range
              (group == 0x9 and
               (name in ['TA_CS_BC_BASE_ADDR', 'GB_ADDR_CONFIG', 'SPI_CONFIG_CNTL'] or
@@ -443,6 +450,23 @@ VRSHtileEncoding = {
  ]
 }
 
+BinningModeGfx11 = {
+ "entries": [
+  {"name": "BINNING_ALLOWED", "value": 0},
+  {"name": "FORCE_BINNING_ON", "value": 1},
+  {"name": "BINNING_ONE_PRIM_PER_BATCH", "value": 2},
+  {"name": "BINNING_DISABLED", "value": 3}
+ ]
+}
+
+BinningModeGfx115Plus = {
+ "entries": [
+  {"name": "BINNING_ALLOWED", "value": 0},
+  {"name": "FORCE_BINNING_ON", "value": 1},
+  {"name": "BINNING_DISABLED", "value": 3}
+ ]
+}
+
 missing_enums_all = {
   'FLOAT_MODE': {
     "entries": [
@@ -668,6 +692,11 @@ missing_enums_gfx11plus = {
   },
 }
 
+missing_enums_gfx115plus = {
+  **missing_enums_gfx11plus,
+  "BinningMode": BinningModeGfx115Plus,
+}
+
 enums_missing = {
   'gfx6': {
     **missing_enums_all,
@@ -703,9 +732,13 @@ enums_missing = {
   },
   'gfx11': {
     **missing_enums_gfx11plus,
+    "BinningMode": BinningModeGfx11,
   },
   'gfx115': {
-    **missing_enums_gfx11plus,
+    **missing_enums_gfx115plus,
+  },
+  'gfx12': {
+    **missing_enums_gfx115plus,
   },
 }
 
@@ -747,7 +780,7 @@ fields_missing = {
   },
   'gfx11': {
     "VGT_DRAW_PAYLOAD_CNTL": [["EN_VRS_RATE", 6, 6]],
-    # Only GFX1103_R2:
+    # Only Phoenix2:
     "CB_COLOR0_FDCC_CONTROL": [["DISABLE_OVERRIDE_INCONSISTENT_KEYS", 25, 25],
                                ["ENABLE_MAX_COMP_FRAG_OVERRIDE", 26, 26],
                                ["MAX_COMP_FRAGS", 27, 29]],

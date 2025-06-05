@@ -109,8 +109,6 @@ void genX(cmd_buffer_mark_image_written)(struct anv_cmd_buffer *cmd_buffer,
 
 void genX(cmd_emit_conditional_render_predicate)(struct anv_cmd_buffer *cmd_buffer);
 
-struct anv_state genX(cmd_buffer_ray_query_globals)(struct anv_cmd_buffer *cmd_buffer);
-
 void
 genX(emit_urb_setup)(struct anv_device *device, struct anv_batch *batch,
                      const struct intel_l3_config *l3_config,
@@ -135,6 +133,12 @@ void genX(cmd_emit_timestamp)(struct anv_batch *batch,
                               struct anv_device *device,
                               struct anv_address addr,
                               enum anv_timestamp_capture_type);
+
+void genX(cmd_capture_data)(struct anv_batch *batch,
+                            struct anv_device *device,
+                            struct anv_address dst_addr,
+                            struct anv_address src_addr,
+                            uint32_t size_B);
 
 void
 genX(rasterization_mode)(VkPolygonMode raster_mode,

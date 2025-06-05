@@ -150,9 +150,7 @@ can_move_intrinsic(nir_intrinsic_instr *instr, opt_preamble_ctx *ctx)
    case nir_intrinsic_load_push_constant:
    case nir_intrinsic_load_work_dim:
    case nir_intrinsic_load_num_workgroups:
-   case nir_intrinsic_load_workgroup_size:
    case nir_intrinsic_load_ray_launch_size:
-   case nir_intrinsic_load_ray_launch_size_addr_amd:
    case nir_intrinsic_load_sbt_base_amd:
    case nir_intrinsic_load_is_indexed_draw:
    case nir_intrinsic_load_viewport_scale:
@@ -174,6 +172,7 @@ can_move_intrinsic(nir_intrinsic_instr *instr, opt_preamble_ctx *ctx)
    case nir_intrinsic_load_line_width:
    case nir_intrinsic_load_aa_line_width:
    case nir_intrinsic_load_fb_layers_v3d:
+   case nir_intrinsic_load_fep_w_v3d:
    case nir_intrinsic_load_tcs_num_patches_amd:
    case nir_intrinsic_load_sample_positions_pan:
    case nir_intrinsic_load_pipeline_stat_query_enabled_amd:
@@ -183,9 +182,10 @@ can_move_intrinsic(nir_intrinsic_instr *instr, opt_preamble_ctx *ctx)
    case nir_intrinsic_load_cull_front_face_enabled_amd:
    case nir_intrinsic_load_cull_back_face_enabled_amd:
    case nir_intrinsic_load_cull_ccw_amd:
-   case nir_intrinsic_load_cull_small_primitives_enabled_amd:
+   case nir_intrinsic_load_cull_small_triangles_enabled_amd:
+   case nir_intrinsic_load_cull_small_lines_enabled_amd:
    case nir_intrinsic_load_cull_any_enabled_amd:
-   case nir_intrinsic_load_cull_small_prim_precision_amd:
+   case nir_intrinsic_load_cull_small_triangle_precision_amd:
    case nir_intrinsic_load_vbo_base_agx:
       return true;
 
@@ -199,6 +199,9 @@ can_move_intrinsic(nir_intrinsic_instr *instr, opt_preamble_ctx *ctx)
    case nir_intrinsic_load_subgroup_size:
    case nir_intrinsic_load_num_subgroups:
       return ctx->options->subgroup_size_uniform;
+
+   case nir_intrinsic_load_workgroup_size:
+      return ctx->options->load_workgroup_size_allowed;
 
    /* Intrinsics which can be moved if the sources can */
    case nir_intrinsic_load_ubo:
@@ -217,6 +220,9 @@ can_move_intrinsic(nir_intrinsic_instr *instr, opt_preamble_ctx *ctx)
    case nir_intrinsic_load_sample_pos_from_id:
    case nir_intrinsic_load_kernel_input:
    case nir_intrinsic_load_buffer_amd:
+   case nir_intrinsic_image_levels:
+   case nir_intrinsic_image_deref_levels:
+   case nir_intrinsic_bindless_image_levels:
    case nir_intrinsic_image_samples:
    case nir_intrinsic_image_deref_samples:
    case nir_intrinsic_bindless_image_samples:
@@ -230,6 +236,7 @@ can_move_intrinsic(nir_intrinsic_instr *instr, opt_preamble_ctx *ctx)
    case nir_intrinsic_masked_swizzle_amd:
    case nir_intrinsic_load_ssbo_address:
    case nir_intrinsic_bindless_resource_ir3:
+   case nir_intrinsic_load_const_ir3:
    case nir_intrinsic_load_constant_agx:
       return can_move_srcs(&instr->instr, ctx);
 
@@ -271,17 +278,9 @@ can_move_instr(nir_instr *instr, opt_preamble_ctx *ctx)
       }
       return can_move_srcs(instr, ctx);
    }
-   case nir_instr_type_alu: {
-      /* The preamble is presumably run with only one thread, so we can't run
-       * derivatives in it.
-       * TODO: Replace derivatives with 0 instead, if real apps hit this.
-       */
-      nir_alu_instr *alu = nir_instr_as_alu(instr);
-      if (nir_op_is_derivative(alu->op))
-         return false;
-      else
-         return can_move_srcs(instr, ctx);
-   }
+   case nir_instr_type_alu:
+      return can_move_srcs(instr, ctx);
+
    case nir_instr_type_intrinsic:
       return can_move_intrinsic(nir_instr_as_intrinsic(instr), ctx);
 
@@ -964,8 +963,7 @@ nir_opt_preamble(nir_shader *shader, const nir_opt_preamble_options *options,
    }
 
    nir_metadata_preserve(impl,
-                         nir_metadata_block_index |
-                            nir_metadata_dominance);
+                         nir_metadata_control_flow);
 
    ralloc_free(remap_table);
    free(ctx.states);

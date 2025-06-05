@@ -36,8 +36,6 @@
 #include "util/u_inlines.h"
 #include "util/u_transfer.h"
 #include "util/u_upload_mgr.h"
-#include "intel/compiler/brw_compiler.h"
-#include "intel/compiler/brw_eu_defines.h"
 #include "compiler/shader_info.h"
 #include "iris_context.h"
 #include "iris_defines.h"
@@ -67,7 +65,6 @@ iris_update_draw_info(struct iris_context *ice,
 {
    struct iris_screen *screen = (struct iris_screen *)ice->ctx.screen;
    const struct intel_device_info *devinfo = screen->devinfo;
-   const struct brw_compiler *compiler = screen->compiler;
 
    if (ice->state.prim_mode != info->mode) {
       ice->state.prim_mode = info->mode;
@@ -88,7 +85,7 @@ iris_update_draw_info(struct iris_context *ice,
       ice->state.dirty |= IRIS_DIRTY_VF_TOPOLOGY;
 
       /* MULTI_PATCH TCS needs this for key->input_vertices */
-      if (compiler->use_tcs_multi_patch)
+      if (iris_use_tcs_multi_patch(screen))
          ice->state.stage_dirty |= IRIS_STAGE_DIRTY_UNCOMPILED_TCS;
 
       /* Flag constants dirty for gl_PatchVerticesIn if needed. */
@@ -182,59 +179,6 @@ iris_update_draw_parameters(struct iris_context *ice,
 }
 
 static void
-iris_indirect_draw_vbo(struct iris_context *ice,
-                       const struct pipe_draw_info *dinfo,
-                       unsigned drawid_offset,
-                       const struct pipe_draw_indirect_info *dindirect,
-                       const struct pipe_draw_start_count_bias *draw)
-{
-   struct iris_batch *batch = &ice->batches[IRIS_BATCH_RENDER];
-   struct pipe_draw_info info = *dinfo;
-   struct pipe_draw_indirect_info indirect = *dindirect;
-
-   iris_emit_buffer_barrier_for(batch, iris_resource_bo(indirect.buffer),
-                                IRIS_DOMAIN_VF_READ);
-
-   if (indirect.indirect_draw_count) {
-      struct iris_bo *draw_count_bo =
-         iris_resource_bo(indirect.indirect_draw_count);
-      iris_emit_buffer_barrier_for(batch, draw_count_bo,
-                                   IRIS_DOMAIN_OTHER_READ);
-
-      if (ice->state.predicate == IRIS_PREDICATE_STATE_USE_BIT) {
-         /* Upload MI_PREDICATE_RESULT to GPR15.*/
-         batch->screen->vtbl.load_register_reg64(batch, CS_GPR(15), MI_PREDICATE_RESULT);
-      }
-   }
-
-   const uint64_t orig_dirty = ice->state.dirty;
-   const uint64_t orig_stage_dirty = ice->state.stage_dirty;
-
-   for (int i = 0; i < indirect.draw_count; i++) {
-      iris_batch_maybe_flush(batch, 1500);
-
-      iris_update_draw_parameters(ice, &info, drawid_offset + i, &indirect, draw);
-
-      batch->screen->vtbl.upload_render_state(ice, batch, &info, drawid_offset + i, &indirect, draw);
-
-      ice->state.dirty &= ~IRIS_ALL_DIRTY_FOR_RENDER;
-      ice->state.stage_dirty &= ~IRIS_ALL_STAGE_DIRTY_FOR_RENDER;
-
-      indirect.offset += indirect.stride;
-   }
-
-   if (indirect.indirect_draw_count &&
-       ice->state.predicate == IRIS_PREDICATE_STATE_USE_BIT) {
-      /* Restore MI_PREDICATE_RESULT. */
-      batch->screen->vtbl.load_register_reg64(batch, MI_PREDICATE_RESULT, CS_GPR(15));
-   }
-
-   /* Put this back for post-draw resolves, we'll clear it again after. */
-   ice->state.dirty = orig_dirty;
-   ice->state.stage_dirty = orig_stage_dirty;
-}
-
-static void
 iris_simple_draw_vbo(struct iris_context *ice,
                      const struct pipe_draw_info *draw,
                      unsigned drawid_offset,
@@ -248,6 +192,80 @@ iris_simple_draw_vbo(struct iris_context *ice,
    iris_update_draw_parameters(ice, draw, drawid_offset, indirect, sc);
 
    batch->screen->vtbl.upload_render_state(ice, batch, draw, drawid_offset, indirect, sc);
+}
+
+static inline bool
+iris_use_draw_indirect_generation(const struct iris_screen *screen,
+                                  const struct pipe_draw_indirect_info *dindirect)
+{
+   return dindirect != NULL &&
+          dindirect->draw_count >= screen->driconf.generated_indirect_threshold;
+}
+
+static void
+iris_indirect_draw_vbo(struct iris_context *ice,
+                       const struct pipe_draw_info *dinfo,
+                       unsigned drawid_offset,
+                       const struct pipe_draw_indirect_info *dindirect,
+                       const struct pipe_draw_start_count_bias *draw)
+{
+   struct iris_batch *batch = &ice->batches[IRIS_BATCH_RENDER];
+   struct iris_screen *screen = batch->screen;
+   struct pipe_draw_info info = *dinfo;
+   struct pipe_draw_indirect_info indirect = *dindirect;
+   const bool use_predicate =
+      ice->state.predicate == IRIS_PREDICATE_STATE_USE_BIT;
+
+   const uint64_t orig_dirty = ice->state.dirty;
+   const uint64_t orig_stage_dirty = ice->state.stage_dirty;
+
+   if (iris_execute_indirect_draw_supported(ice, &indirect, &info)) {
+      iris_batch_maybe_flush(batch, 1500);
+
+      iris_update_draw_parameters(ice, &info, drawid_offset, &indirect, draw);
+
+      screen->vtbl.upload_indirect_render_state(ice, &info, &indirect, draw);
+   } else if (iris_use_draw_indirect_generation(screen, &indirect)) {
+      iris_batch_maybe_flush(batch, 1500);
+
+      iris_update_draw_parameters(ice, &info, drawid_offset, &indirect, draw);
+
+      screen->vtbl.upload_indirect_shader_render_state(
+         ice, &info, &indirect, draw);
+   } else {
+      iris_emit_buffer_barrier_for(batch, iris_resource_bo(indirect.buffer),
+                                 IRIS_DOMAIN_VF_READ);
+
+      if (indirect.indirect_draw_count) {
+         struct iris_bo *draw_count_bo =
+            iris_resource_bo(indirect.indirect_draw_count);
+         iris_emit_buffer_barrier_for(batch, draw_count_bo,
+                                    IRIS_DOMAIN_OTHER_READ);
+      }
+
+      if (use_predicate) {
+         /* Upload MI_PREDICATE_RESULT to GPR15.*/
+         screen->vtbl.load_register_reg64(batch, CS_GPR(15), MI_PREDICATE_RESULT);
+      }
+
+      for (int i = 0; i < indirect.draw_count; i++) {
+         iris_simple_draw_vbo(ice, &info, drawid_offset + i, &indirect, draw);
+
+         ice->state.dirty &= ~IRIS_ALL_DIRTY_FOR_RENDER;
+         ice->state.stage_dirty &= ~IRIS_ALL_STAGE_DIRTY_FOR_RENDER;
+
+         indirect.offset += indirect.stride;
+      }
+
+      if (use_predicate) {
+         /* Restore MI_PREDICATE_RESULT. */
+         screen->vtbl.load_register_reg64(batch, MI_PREDICATE_RESULT, CS_GPR(15));
+      }
+   }
+
+   /* Put this back for post-draw resolves, we'll clear it again after. */
+   ice->state.dirty = orig_dirty;
+   ice->state.stage_dirty = orig_stage_dirty;
 }
 
 /**
@@ -289,7 +307,7 @@ iris_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info *info,
    iris_update_compiled_shaders(ice);
 
    if (ice->state.dirty & IRIS_DIRTY_RENDER_RESOLVES_AND_FLUSHES) {
-      bool draw_aux_buffer_disabled[BRW_MAX_DRAW_BUFFERS] = { };
+      bool draw_aux_buffer_disabled[IRIS_MAX_DRAW_BUFFERS] = { };
       for (gl_shader_stage stage = 0; stage < MESA_SHADER_COMPUTE; stage++) {
          if (ice->shaders.prog[stage])
             iris_predraw_resolve_inputs(ice, batch, draw_aux_buffer_disabled,
@@ -303,7 +321,19 @@ iris_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info *info,
          iris_predraw_flush_buffers(ice, batch, stage);
    }
 
-   iris_binder_reserve_3d(ice);
+   /* If we're going to use the generation shader, we need to allocate a
+    * binding table entry for it on <= Gfx9 because that platform does not
+    * have a null-rendertarget bit in the send message to the render cache,
+    * the EOT message might pollute later writes to the actual RT of the
+    * draws.
+    *
+    * The generation will call iris_binder_reserve_3d() after the generation
+    * draw call.
+    */
+   if (iris_use_draw_indirect_generation(screen, indirect) && devinfo->ver <= 9)
+      iris_binder_reserve_gen(ice);
+   else
+      iris_binder_reserve_3d(ice);
 
    batch->screen->vtbl.update_binder_address(batch, &ice->state.binder);
 
@@ -422,7 +452,7 @@ iris_launch_grid(struct pipe_context *ctx, const struct pipe_grid_info *grid)
    batch->screen->vtbl.update_binder_address(batch, &ice->state.binder);
 
    if (ice->state.compute_predicate) {
-      batch->screen->vtbl.load_register_mem64(batch, MI_PREDICATE_RESULT,
+      batch->screen->vtbl.load_register_mem32(batch, MI_PREDICATE_RESULT,
                                     ice->state.compute_predicate, 0);
       ice->state.compute_predicate = NULL;
    }

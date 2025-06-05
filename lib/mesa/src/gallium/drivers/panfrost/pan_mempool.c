@@ -52,8 +52,10 @@ panfrost_pool_alloc_backing(struct panfrost_pool *pool, size_t bo_sz)
     * flags to this function and keep the read/write,
     * fragment/vertex+tiler pools separate.
     */
-   struct panfrost_bo *bo = panfrost_bo_create(
-      pool->base.dev, bo_sz, pool->base.create_flags, pool->base.label);
+   struct panfrost_bo *bo =
+      panfrost_bo_create(pool->dev, bo_sz, pool->create_flags, pool->label);
+   if (!bo)
+      return NULL;
 
    if (pool->owned)
       util_dynarray_append(&pool->bos, struct panfrost_bo *, bo);
@@ -66,21 +68,28 @@ panfrost_pool_alloc_backing(struct panfrost_pool *pool, size_t bo_sz)
    return bo;
 }
 
-void
+int
 panfrost_pool_init(struct panfrost_pool *pool, void *memctx,
                    struct panfrost_device *dev, unsigned create_flags,
                    size_t slab_size, const char *label, bool prealloc,
                    bool owned)
 {
    memset(pool, 0, sizeof(*pool));
-   pan_pool_init(&pool->base, dev, create_flags, slab_size, label);
+   pan_pool_init(&pool->base, slab_size);
+   pool->dev = dev;
+   pool->create_flags = create_flags;
+   pool->label = label;
    pool->owned = owned;
 
    if (owned)
       util_dynarray_init(&pool->bos, memctx);
 
-   if (prealloc)
-      panfrost_pool_alloc_backing(pool, pool->base.slab_size);
+   if (prealloc) {
+      if (panfrost_pool_alloc_backing(pool, pool->base.slab_size) == NULL)
+         return -1;
+   }
+
+   return 0;
 }
 
 void
@@ -104,8 +113,8 @@ panfrost_pool_get_bo_handles(struct panfrost_pool *pool, uint32_t *handles)
 
    unsigned idx = 0;
    util_dynarray_foreach(&pool->bos, struct panfrost_bo *, bo) {
-      assert((*bo)->gem_handle > 0);
-      handles[idx++] = (*bo)->gem_handle;
+      assert(panfrost_bo_handle(*bo) > 0);
+      handles[idx++] = panfrost_bo_handle(*bo);
 
       /* Update the BO access flags so that panfrost_bo_wait() knows
        * about all pending accesses.
@@ -131,12 +140,17 @@ panfrost_pool_alloc_aligned(struct panfrost_pool *pool, size_t sz,
    unsigned offset = ALIGN_POT(pool->transient_offset, alignment);
 
 #ifdef PAN_DBG_OVERFLOW
-   if (unlikely(pool->base.dev->debug & PAN_DBG_OVERFLOW) &&
-       !(pool->base.create_flags & PAN_BO_INVISIBLE)) {
-      unsigned aligned = ALIGN_POT(sz, sysconf(_SC_PAGESIZE));
+   if (unlikely(pool->dev->debug & PAN_DBG_OVERFLOW) &&
+       !(pool->create_flags & PAN_BO_INVISIBLE)) {
+      long page_size = sysconf(_SC_PAGESIZE);
+      assert(page_size > 0 && util_is_power_of_two_nonzero(page_size));
+      unsigned aligned = ALIGN_POT(sz, page_size);
       unsigned bo_size = aligned + PAN_GUARD_SIZE;
 
       bo = panfrost_pool_alloc_backing(pool, bo_size);
+      if (!bo)
+         return (struct panfrost_ptr){0};
+
       memset(bo->ptr.cpu, 0xbb, bo_size);
 
       /* Place the object as close as possible to the protected
@@ -144,7 +158,7 @@ panfrost_pool_alloc_aligned(struct panfrost_pool *pool, size_t sz,
       offset = ROUND_DOWN_TO(aligned - sz, alignment);
 
       if (mprotect(bo->ptr.cpu + aligned, PAN_GUARD_SIZE, PROT_NONE) == -1)
-         perror("mprotect");
+         mesa_loge("mprotect failed: %s", strerror(errno));
 
       pool->transient_bo = NULL;
    }
@@ -154,6 +168,9 @@ panfrost_pool_alloc_aligned(struct panfrost_pool *pool, size_t sz,
    if (unlikely(bo == NULL || (offset + sz) >= pool->base.slab_size)) {
       bo = panfrost_pool_alloc_backing(
          pool, ALIGN_POT(MAX2(pool->base.slab_size, sz), 4096));
+      if (!bo)
+         return (struct panfrost_ptr){0};
+
       offset = 0;
    }
 

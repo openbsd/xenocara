@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2012-2018 Rob Clark <robclark@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2012-2018 Rob Clark <robclark@freedesktop.org>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -145,8 +127,21 @@ int fd_fence_wait(struct fd_fence *f);
 #define FD_BO_SCANOUT             BITSET_BIT(5)
 
 /* internal bo flags: */
-#define _FD_BO_VIRTIO_SHM         BITSET_BIT(6)
 #define _FD_BO_NOSYNC             BITSET_BIT(7) /* Avoid userspace fencing on control buffers */
+
+/* Additional flags hinting usage, only used for tracing.  Buffers without
+ * one of these flags set will be presumed to be driver internal.
+ */
+#define FD_BO_HINT_BUFFER         BITSET_BIT(8)
+#define FD_BO_HINT_IMAGE          BITSET_BIT(9)
+#define FD_BO_HINT_COMMAND        BITSET_BIT(10)
+#define _FD_BO_HINT_HEAP          BITSET_BIT(11)
+#define _FD_BO_HINTS              ( \
+   FD_BO_HINT_BUFFER | \
+   FD_BO_HINT_IMAGE | \
+   FD_BO_HINT_COMMAND | \
+   _FD_BO_HINT_HEAP | \
+   0)
 
 /*
  * bo access flags: (keep aligned to MSM_PREP_x)
@@ -302,6 +297,7 @@ void fd_bo_del_array(struct fd_bo **bos, int count);
 void fd_bo_del_list_nocache(struct list_head *list);
 int fd_bo_get_name(struct fd_bo *bo, uint32_t *name);
 uint32_t fd_bo_handle(struct fd_bo *bo);
+int fd_bo_dmabuf_drm(struct fd_bo *bo);
 int fd_bo_dmabuf(struct fd_bo *bo);
 uint32_t fd_bo_size(struct fd_bo *bo);
 void *fd_bo_map(struct fd_bo *bo);
@@ -309,6 +305,8 @@ void fd_bo_upload(struct fd_bo *bo, void *src, unsigned off, unsigned len);
 bool fd_bo_prefer_upload(struct fd_bo *bo, unsigned len);
 int fd_bo_cpu_prep(struct fd_bo *bo, struct fd_pipe *pipe, uint32_t op);
 bool fd_bo_is_cached(struct fd_bo *bo);
+void fd_bo_set_metadata(struct fd_bo *bo, void *metadata, uint32_t metadata_size);
+int fd_bo_get_metadata(struct fd_bo *bo, void *metadata, uint32_t metadata_size);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

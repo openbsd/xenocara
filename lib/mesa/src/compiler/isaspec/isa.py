@@ -288,8 +288,8 @@ class BitSet(object):
             if 'max' in gen.attrib:
                 self.gen_max = int(gen.attrib['max'])
 
-        if xml.find('meta') is not None:
-            self.meta = xml.find('meta').attrib
+        for meta in xml.findall('meta'):
+            self.meta.update(meta.attrib)
 
         # Collect up the match/dontcare/mask bitmasks for
         # this bitset case:
@@ -419,6 +419,9 @@ class BitSetEnumValue(object):
 
     def get_name(self):
         return self.name or self.displayname
+
+    def get_displayname(self):
+        return self.displayname or self.name
 
     def get_value(self):
         return self.value
@@ -561,7 +564,7 @@ class ISA(object):
 
         # Validate that all bitset fields have valid types, and in
         # the case of bitset type, the sizes match:
-        builtin_types = ['branch', 'absbranch', 'int', 'uint', 'hex', 'offset', 'uoffset', 'float', 'bool', 'enum', 'custom']
+        builtin_types = ['branch', 'absbranch', 'int', 'uint', 'hex', 'offset', 'uoffset', 'float', 'bool', 'bool_inv', 'enum', 'custom']
         for bitset_name, bitset in self.bitsets.items():
             if bitset.extends is not None:
                 assert bitset.extends in self.bitsets, "{} extends invalid type: {}".format(

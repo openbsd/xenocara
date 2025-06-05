@@ -32,7 +32,7 @@ e6 00 00 00 00 c1 91 06    MOV.i32 r1, core_id.w0
 00 00 00 00 00 c0 00 78    NOP.end 
 40 c4 c0 9c 01 c1 f0 00    ICMP_OR.u32.gt.m1 r1, ^r0, 0x1000000.b3, 0x0
 42 00 00 18 02 40 61 50    STORE.i32.slot0.reconverge @r0, ^r2, offset:0
-00 c9 8f 12 30 c0 a0 00    CLPER.i32.f1 r0, r0, 0x7060504.b0
+00 c9 8f 12 30 c0 a0 00    CLPER.i32.f1 r0, r0, 0x7060504.b00
 00 00 00 30 00 c7 90 00    S8_TO_S32 r7, r0.b3
 00 00 00 20 00 c6 90 00    S8_TO_S32 r6, r0.b2
 00 00 00 00 00 c4 90 00    S8_TO_S32 r4, r0.b0
@@ -242,3 +242,4 @@ c4 c0 40 10 71 c0 b6 00    LSHIFT_AND.v4i8 r0, 0x1000000.b3333, 0x0.b00, ^r0
 41 40 0b 40 00 c0 aa 00    HADD.v4s8.rhadd r0, ^r1, ^r0
 01 00 c0 80 01 c2 fa 00    ICMP_OR.v4s8.gt.m1 r2, r1, r0, 0x0
 40 41 42 00 01 c0 ba 00    MUX.v4i8 r0, ^r0, ^r1, ^r2
+c0 c0 00 00 04 82 6b 00    LEA_BUFFER.slot0 @r2:r3, 0x0, 0x0

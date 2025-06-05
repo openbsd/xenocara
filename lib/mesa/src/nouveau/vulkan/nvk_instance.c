@@ -10,65 +10,23 @@
 #include "vulkan/wsi/wsi_common.h"
 
 #include "util/build_id.h"
+#include "util/detect_os.h"
+#include "util/driconf.h"
 #include "util/mesa-sha1.h"
+#include "util/u_debug.h"
+
+#if DETECT_OS_ANDROID
+#include "util/u_gralloc/u_gralloc.h"
+#include "vk_android.h"
+#endif
 
 VKAPI_ATTR VkResult VKAPI_CALL
 nvk_EnumerateInstanceVersion(uint32_t *pApiVersion)
 {
-   *pApiVersion = VK_MAKE_VERSION(1, 0, VK_HEADER_VERSION);
-   return VK_SUCCESS;
-}
+   uint32_t version_override = vk_get_version_override();
+   *pApiVersion = version_override ? version_override :
+                  VK_MAKE_VERSION(1, 4, VK_HEADER_VERSION);
 
-/* vk_icd.h does not declare this function, so we declare it here to
- * suppress Wmissing-prototypes.
- */
-PUBLIC VKAPI_ATTR VkResult VKAPI_CALL
-vk_icdNegotiateLoaderICDInterfaceVersion(uint32_t* pSupportedVersion);
-
-PUBLIC VKAPI_ATTR VkResult VKAPI_CALL
-vk_icdNegotiateLoaderICDInterfaceVersion(uint32_t* pSupportedVersion)
-{
-   /* For the full details on loader interface versioning, see
-    * <https://github.com/KhronosGroup/Vulkan-LoaderAndValidationLayers/blob/master/loader/LoaderAndLayerInterface.md>.
-    * What follows is a condensed summary, to help you navigate the large and
-    * confusing official doc.
-    *
-    *   - Loader interface v0 is incompatible with later versions. We don't
-    *     support it.
-    *
-    *   - In loader interface v1:
-    *       - The first ICD entrypoint called by the loader is
-    *         vk_icdGetInstanceProcAddr(). The ICD must statically expose this
-    *         entrypoint.
-    *       - The ICD must statically expose no other Vulkan symbol unless it is
-    *         linked with -Bsymbolic.
-    *       - Each dispatchable Vulkan handle created by the ICD must be
-    *         a pointer to a struct whose first member is VK_LOADER_DATA. The
-    *         ICD must initialize VK_LOADER_DATA.loadMagic to ICD_LOADER_MAGIC.
-    *       - The loader implements vkCreate{PLATFORM}SurfaceKHR() and
-    *         vkDestroySurfaceKHR(). The ICD must be capable of working with
-    *         such loader-managed surfaces.
-    *
-    *    - Loader interface v2 differs from v1 in:
-    *       - The first ICD entrypoint called by the loader is
-    *         vk_icdNegotiateLoaderICDInterfaceVersion(). The ICD must
-    *         statically expose this entrypoint.
-    *
-    *    - Loader interface v3 differs from v2 in:
-    *        - The ICD must implement vkCreate{PLATFORM}SurfaceKHR(),
-    *          vkDestroySurfaceKHR(), and other API which uses VKSurfaceKHR,
-    *          because the loader no longer does so.
-    *
-    *    - Loader interface v4 differs from v3 in:
-    *        - The ICD must implement vk_icdGetPhysicalDeviceProcAddr().
-    *
-    *    - Loader interface v5 differs from v4 in:
-    *        - The ICD must support Vulkan API version 1.1 and must not return
-    *          VK_ERROR_INCOMPATIBLE_DRIVER from vkCreateInstance() unless a
-    *          Vulkan Loader with interface v4 or smaller is being used and the
-    *          application provides an API version that is greater than 1.0.
-    */
-   *pSupportedVersion = MIN2(*pSupportedVersion, 4u);
    return VK_SUCCESS;
 }
 
@@ -77,6 +35,8 @@ static const struct vk_instance_extension_table instance_extensions = {
    .KHR_get_surface_capabilities2 = true,
    .KHR_surface = true,
    .KHR_surface_protected_capabilities = true,
+   .EXT_surface_maintenance1 = true,
+   .EXT_swapchain_colorspace = true,
 #endif
 #ifdef VK_USE_PLATFORM_WAYLAND_KHR
    .KHR_wayland_surface = true,
@@ -89,6 +49,16 @@ static const struct vk_instance_extension_table instance_extensions = {
 #endif
 #ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT
    .EXT_acquire_xlib_display = true,
+#endif
+#ifdef VK_USE_PLATFORM_DISPLAY_KHR
+   .KHR_display = true,
+   .KHR_get_display_properties2 = true,
+   .EXT_direct_mode_display = true,
+   .EXT_display_surface_counter = true,
+   .EXT_acquire_drm_display = true,
+#endif
+#ifndef VK_USE_PLATFORM_WIN32_KHR
+   .EXT_headless_surface = true,
 #endif
    .KHR_device_group_creation = true,
    .KHR_external_fence_capabilities = true,
@@ -109,6 +79,57 @@ nvk_EnumerateInstanceExtensionProperties(const char *pLayerName,
 
    return vk_enumerate_instance_extension_properties(
       &instance_extensions, pPropertyCount, pProperties);
+}
+
+static void
+nvk_init_debug_flags(struct nvk_instance *instance)
+{
+   const struct debug_control flags[] = {
+      { "push_dump", NVK_DEBUG_PUSH_DUMP },
+      { "push", NVK_DEBUG_PUSH_DUMP },
+      { "push_sync", NVK_DEBUG_PUSH_SYNC },
+      { "zero_memory", NVK_DEBUG_ZERO_MEMORY },
+      { "vm", NVK_DEBUG_VM },
+      { "no_cbuf", NVK_DEBUG_NO_CBUF },
+      { "edb_bview", NVK_DEBUG_FORCE_EDB_BVIEW },
+      { "gart", NVK_DEBUG_FORCE_GART },
+      { NULL, 0 },
+   };
+
+   instance->debug_flags = parse_debug_string(getenv("NVK_DEBUG"), flags);
+}
+
+static const driOptionDescription nvk_dri_options[] = {
+   DRI_CONF_SECTION_PERFORMANCE
+      DRI_CONF_ADAPTIVE_SYNC(true)
+      DRI_CONF_VK_X11_OVERRIDE_MIN_IMAGE_COUNT(0)
+      DRI_CONF_VK_X11_STRICT_IMAGE_COUNT(false)
+      DRI_CONF_VK_X11_ENSURE_MIN_IMAGE_COUNT(false)
+      DRI_CONF_VK_KHR_PRESENT_WAIT(false)
+      DRI_CONF_VK_XWAYLAND_WAIT_READY(false)
+   DRI_CONF_SECTION_END
+
+   DRI_CONF_SECTION_DEBUG
+      DRI_CONF_FORCE_VK_VENDOR()
+      DRI_CONF_VK_WSI_FORCE_SWAPCHAIN_TO_CURRENT_EXTENT(false)
+      DRI_CONF_VK_X11_IGNORE_SUBOPTIMAL(false)
+      DRI_CONF_VK_ZERO_VRAM(false)
+   DRI_CONF_SECTION_END
+};
+
+static void
+nvk_init_dri_options(struct nvk_instance *instance)
+{
+   driParseOptionInfo(&instance->available_dri_options, nvk_dri_options, ARRAY_SIZE(nvk_dri_options));
+   driParseConfigFiles(&instance->dri_options, &instance->available_dri_options, 0, "nvk", NULL, NULL,
+                       instance->vk.app_info.app_name, instance->vk.app_info.app_version,
+                       instance->vk.app_info.engine_name, instance->vk.app_info.engine_version);
+
+   instance->force_vk_vendor =
+      driQueryOptioni(&instance->dri_options, "force_vk_vendor");
+
+   if (driQueryOptionb(&instance->dri_options, "vk_zero_vram"))
+      instance->debug_flags |= NVK_DEBUG_ZERO_MEMORY;
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL
@@ -140,6 +161,9 @@ nvk_CreateInstance(const VkInstanceCreateInfo *pCreateInfo,
    if (result != VK_SUCCESS)
       goto fail_alloc;
 
+   nvk_init_debug_flags(instance);
+   nvk_init_dri_options(instance);
+
    instance->vk.physical_devices.try_create_for_drm =
       nvk_create_drm_physical_device;
    instance->vk.physical_devices.destroy = nvk_physical_device_destroy;
@@ -162,6 +186,16 @@ nvk_CreateInstance(const VkInstanceCreateInfo *pCreateInfo,
    STATIC_ASSERT(sizeof(instance->driver_build_sha) == SHA1_DIGEST_LENGTH);
    memcpy(instance->driver_build_sha, build_id_data(note), SHA1_DIGEST_LENGTH);
 
+#if DETECT_OS_ANDROID
+   struct u_gralloc *u_gralloc = vk_android_init_ugralloc();
+
+   if (u_gralloc && u_gralloc_get_type(u_gralloc) == U_GRALLOC_TYPE_FALLBACK) {
+      mesa_logw(
+         "nvk: Gralloc is not supported. Android extensions are disabled.");
+      vk_android_destroy_ugralloc();
+   }
+#endif
+
    *pInstance = nvk_instance_to_handle(instance);
    return VK_SUCCESS;
 
@@ -181,6 +215,13 @@ nvk_DestroyInstance(VkInstance _instance,
 
    if (!instance)
       return;
+
+#if DETECT_OS_ANDROID
+   vk_android_destroy_ugralloc();
+#endif
+
+   driDestroyOptionCache(&instance->dri_options);
+   driDestroyOptionInfo(&instance->available_dri_options);
 
    vk_instance_finish(&instance->vk);
    vk_free(&instance->vk.alloc, instance);

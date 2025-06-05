@@ -25,26 +25,9 @@ struct ac_shader_abi {
    LLVMValueRef outputs[AC_LLVM_MAX_OUTPUTS * 4];
    bool is_16bit[AC_LLVM_MAX_OUTPUTS * 4];
 
-   /* These input registers sometimes need to be fixed up. */
-   LLVMValueRef vertex_id;
-   LLVMValueRef vs_rel_patch_id;
-   LLVMValueRef instance_id;
-
-   /* replaced registers when culling enabled */
-   LLVMValueRef vertex_id_replaced;
-   LLVMValueRef instance_id_replaced;
-   LLVMValueRef tes_u_replaced;
-   LLVMValueRef tes_v_replaced;
-   LLVMValueRef tes_rel_patch_id_replaced;
-   LLVMValueRef tes_patch_id_replaced;
-
-   /* Varying -> attribute number mapping. Also NIR-only */
-   unsigned fs_input_attr_indices[MAX_VARYING];
-
    LLVMValueRef (*load_tess_varyings)(struct ac_shader_abi *abi, LLVMTypeRef type,
-                                      LLVMValueRef vertex_index, LLVMValueRef param_index,
                                       unsigned driver_location, unsigned component,
-                                      unsigned num_components, bool load_inputs);
+                                      unsigned num_components);
 
    LLVMValueRef (*load_ubo)(struct ac_shader_abi *abi, LLVMValueRef index);
 
@@ -84,10 +67,6 @@ struct ac_shader_abi {
 
    /* Whether to inline the compute dispatch size in user sgprs. */
    bool load_grid_size_from_user_sgpr;
-
-   /* Whether to detect divergent textures/samplers index and apply
-    * waterfall to avoid incorrect rendering. */
-   bool use_waterfall_for_divergent_tex_samplers;
 
    /* Whether to disable anisotropic filtering. */
    bool disable_aniso_single_level;

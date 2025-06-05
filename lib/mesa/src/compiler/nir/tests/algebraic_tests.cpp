@@ -37,6 +37,8 @@ protected:
 
    void test_2src_op(nir_op op, int64_t src0, int64_t src1);
 
+   void require_one_alu(nir_op op);
+
    nir_variable *res_var;
 };
 
@@ -85,6 +87,18 @@ void algebraic_test_base::test_2src_op(nir_op op, int64_t src0, int64_t src1)
    test_op(op, nir_imm_int(b, src0), nir_imm_int(b, src1), NULL, NULL, desc);
 }
 
+void algebraic_test_base::require_one_alu(nir_op op)
+{
+   unsigned count = 0;
+   nir_foreach_instr(instr, nir_start_block(b->impl)) {
+      if (instr->type == nir_instr_type_alu) {
+         ASSERT_TRUE(nir_instr_as_alu(instr)->op == op);
+         ASSERT_EQ(count, 0);
+         count++;
+      }
+   }
+}
+
 class nir_opt_algebraic_test : public algebraic_test_base {
 protected:
    virtual void run_pass() {
@@ -96,6 +110,13 @@ class nir_opt_idiv_const_test : public algebraic_test_base {
 protected:
    virtual void run_pass() {
       nir_opt_idiv_const(b->shader, 8);
+   }
+};
+
+class nir_opt_mqsad_test : public algebraic_test_base {
+protected:
+   virtual void run_pass() {
+      nir_opt_mqsad(b->shader);
    }
 };
 
@@ -130,6 +151,90 @@ TEST_F(nir_opt_algebraic_test, irem_pow2_src2)
    test_2src_op(nir_op_irem, INT32_MAX, -4);
    test_2src_op(nir_op_irem, INT32_MIN, 4);
    test_2src_op(nir_op_irem, INT32_MIN, -4);
+}
+
+TEST_F(nir_opt_algebraic_test, msad)
+{
+   options.lower_bitfield_extract = true;
+   options.has_bfe = true;
+   options.has_msad = true;
+
+   nir_def *src0 = nir_load_var(b, nir_local_variable_create(b->impl, glsl_int_type(), "src0"));
+   nir_def *src1 = nir_load_var(b, nir_local_variable_create(b->impl, glsl_int_type(), "src1"));
+
+   /* This mimics the sequence created by vkd3d-proton. */
+   nir_def *res = NULL;
+   for (unsigned i = 0; i < 4; i++) {
+      nir_def *ref = nir_ubitfield_extract(b, src0, nir_imm_int(b, i * 8), nir_imm_int(b, 8));
+      nir_def *src = nir_ubitfield_extract(b, src1, nir_imm_int(b, i * 8), nir_imm_int(b, 8));
+      nir_def *is_ref_zero = nir_ieq_imm(b, ref, 0);
+      nir_def *abs_diff = nir_iabs(b, nir_isub(b, ref, src));
+      nir_def *masked_diff = nir_bcsel(b, is_ref_zero, nir_imm_int(b, 0), abs_diff);
+      if (res)
+         res = nir_iadd(b, res, masked_diff);
+      else
+         res = masked_diff;
+   }
+
+   nir_store_var(b, res_var, res, 0x1);
+
+   while (nir_opt_algebraic(b->shader)) {
+      nir_opt_constant_folding(b->shader);
+      nir_opt_dce(b->shader);
+   }
+
+   require_one_alu(nir_op_msad_4x8);
+}
+
+TEST_F(nir_opt_mqsad_test, mqsad)
+{
+   options.lower_bitfield_extract = true;
+   options.has_bfe = true;
+   options.has_msad = true;
+   options.has_shfr32 = true;
+
+   nir_def *ref = nir_load_var(b, nir_local_variable_create(b->impl, glsl_int_type(), "ref"));
+   nir_def *src = nir_load_var(b, nir_local_variable_create(b->impl, glsl_ivec_type(2), "src"));
+   nir_def *accum = nir_load_var(b, nir_local_variable_create(b->impl, glsl_ivec_type(4), "accum"));
+
+   nir_def *srcx = nir_channel(b, src, 0);
+   nir_def *srcy = nir_channel(b, src, 1);
+
+   nir_def *res[4];
+   for (unsigned i = 0; i < 4; i++) {
+      nir_def *src1 = srcx;
+      switch (i) {
+      case 0:
+         break;
+      case 1:
+         src1 = nir_bitfield_select(b, nir_imm_int(b, 0xff000000), nir_ishl_imm(b, srcy, 24),
+                                    nir_ushr_imm(b, srcx, 8));
+         break;
+      case 2:
+         src1 = nir_bitfield_select(b, nir_imm_int(b, 0xffff0000), nir_ishl_imm(b, srcy, 16),
+                                    nir_extract_u16(b, srcx, nir_imm_int(b, 1)));
+         break;
+      case 3:
+         src1 = nir_bitfield_select(b, nir_imm_int(b, 0xffffff00), nir_ishl_imm(b, srcy, 8),
+                                    nir_extract_u8_imm(b, srcx, 3));
+         break;
+      }
+
+      res[i] = nir_msad_4x8(b, ref, src1, nir_channel(b, accum, i));
+   }
+
+   nir_store_var(b, nir_local_variable_create(b->impl, glsl_ivec_type(4), "res"), nir_vec(b, res, 4), 0xf);
+
+   while (nir_opt_algebraic(b->shader)) {
+      nir_opt_constant_folding(b->shader);
+      nir_opt_dce(b->shader);
+   }
+
+   ASSERT_TRUE(nir_opt_mqsad(b->shader));
+   nir_copy_prop(b->shader);
+   nir_opt_dce(b->shader);
+
+   require_one_alu(nir_op_mqsad_4x8);
 }
 
 TEST_F(nir_opt_idiv_const_test, umod)

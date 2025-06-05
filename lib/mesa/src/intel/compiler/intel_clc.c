@@ -23,9 +23,13 @@
 
 #include "brw_compiler.h"
 #include "brw_kernel.h"
-#include "common/intel_disasm.h"
+#include "brw_nir.h"
+#include "elk/elk_nir.h"
+#include "compiler/brw_disasm.h"
 #include "compiler/clc/clc.h"
 #include "compiler/glsl_types.h"
+#include "compiler/nir/nir_serialize.h"
+#include "compiler/spirv/spirv_info.h"
 #include "dev/intel_debug.h"
 #include "util/build_id.h"
 #include "util/disk_cache.h"
@@ -87,7 +91,8 @@ compiler_log(void *data, unsigned *id, const char *fmt, ...)
 {
    va_list args;
    va_start(args, fmt);
-   vfprintf(stderr, fmt, args);
+   if (INTEL_DEBUG(DEBUG_CS))
+      vfprintf(stderr, fmt, args);
    va_end(args);
 }
 
@@ -109,6 +114,20 @@ print_u32_data(FILE *fp, const char *prefix, const char *arr_name,
          fprintf(fp,"\n   ");
 
       fprintf(fp, " 0x%08" PRIx32 ",", data[i]);
+   }
+   fprintf(fp, "\n};\n");
+}
+
+static void
+print_u8_data(FILE *fp, const char *prefix, const char *arr_name,
+               const uint8_t *data, size_t len)
+{
+   fprintf(fp, "static const uint8_t %s_%s[] = {", prefix, arr_name);
+   for (unsigned i = 0; i < len; i++) {
+      if (i % 16 == 0)
+         fprintf(fp,"\n   ");
+
+      fprintf(fp, " 0x%02" PRIx8 ",", data[i]);
    }
    fprintf(fp, "\n};\n");
 }
@@ -150,6 +169,9 @@ print_cs_prog_data_fields(FILE *fp, const char *prefix, const char *pad,
    PROG_DATA_FIELD("%u", base.const_data_offset);
    PROG_DATA_FIELD("%u", base.num_relocs);
    fprintf(fp, "%s.base.relocs = %s_relocs,\n", pad, prefix);
+   PROG_DATA_FIELD("%u", base.grf_used);
+   PROG_DATA_FIELD("%u", base.printf_info_count);
+   fprintf(fp, "%s.base.printf_info = (u_printf_info *)%s_printfs,\n", pad, prefix);
    assert(!cs_prog_data->base.has_ubo_pull);
    assert(cs_prog_data->base.dispatch_grf_start_reg == 0);
    assert(!cs_prog_data->base.use_alt_mode);
@@ -207,6 +229,28 @@ print_kernel(FILE *fp, const char *prefix,
                      kernel->prog_data.base.num_relocs *
                      sizeof(kernel->prog_data.base.relocs[0]));
 
+   fprintf(fp, "static const u_printf_info %s_printfs[] = {\n",
+           prefix);
+   for (unsigned i = 0; i < kernel->prog_data.base.printf_info_count; i++) {
+      const u_printf_info *printf_info = &kernel->prog_data.base.printf_info[i];
+      fprintf(fp, "   {\n");
+      fprintf(fp, "      .num_args = %"PRIu32",\n", printf_info->num_args);
+      fprintf(fp, "      .arg_sizes = (unsigned []) {\n");
+      for (unsigned a = 0; a < printf_info->num_args; a++)
+         fprintf(fp, "         %"PRIu32",\n", printf_info->arg_sizes[a]);
+      fprintf(fp, "      },\n");
+      fprintf(fp, "      .string_size = %"PRIu32",\n", printf_info->string_size);
+      fprintf(fp, "      .strings = (char []) {");
+      for (unsigned c = 0; c < printf_info->string_size; c++) {
+         if (c % 8 == 0 )
+            fprintf(fp, "\n         ");
+         fprintf(fp, "0x%02hhx, ", printf_info->strings[c]);
+      }
+      fprintf(fp, "\n      },\n");
+      fprintf(fp, "   },\n");
+   }
+   fprintf(fp, "};\n");
+
    /* Get rid of the pointers before we hash */
    struct brw_cs_prog_data cs_prog_data = kernel->prog_data;
    cs_prog_data.base.relocs = NULL;
@@ -231,7 +275,7 @@ print_kernel(FILE *fp, const char *prefix,
 
    fprintf(fp, "#if 0  /* BEGIN KERNEL ASSEMBLY */\n");
    fprintf(fp, "\n");
-   intel_disassemble(isa, kernel->code, 0, fp);
+   brw_disassemble_with_errors(isa, kernel->code, 0, fp);
    fprintf(fp, "\n");
    fprintf(fp, "#endif /* END KERNEL ASSEMBLY */\n");
    print_u32_data(fp, prefix, "code", kernel->code,
@@ -262,96 +306,271 @@ print_usage(char *exec_name, FILE *f)
 "Options:\n"
 "  -h  --help              Print this help.\n"
 "  -e, --entrypoint <name> Specify the entry-point name.\n"
+"  -L, --llvm17-wa         Enable LLVM 17 workarounds for opaque pointers"
 "  -p, --platform <name>   Specify the target platform name.\n"
 "      --prefix <prefix>   Prefix for variable names in generated C code.\n"
 "  -o, --out <filename>    Specify the output filename.\n"
 "  -i, --in <filename>     Specify one input filename. Accepted multiple times.\n"
 "  -s, --spv <filename>    Specify the output filename for spirv.\n"
+"  -n, --nir               Specify whether to output serialized NIR instead of ISA.\n"
+"  -g, --gfx-version <ver> Specify the Gfx version used for NIR output.\n"
+"  -t, --text <filename>   Specify the output filename for the parsed text\n"
 "  -v, --verbose           Print more information during compilation.\n"
+"  -M, --llvm-version      Print LLVM version.\n"
    , exec_name);
 }
 
 #define OPT_PREFIX 1000
 
-static uint32_t
-get_module_spirv_version(const uint32_t *spirv, size_t size)
+struct intel_clc_params {
+   char *entry_point;
+   char *platform;
+   char *outfile;
+   char *spv_outfile;
+   char *txt_outfile;
+   char *prefix;
+
+   unsigned gfx_version;
+
+   bool output_nir;
+   bool print_info;
+   bool llvm17_wa;
+
+   void *mem_ctx;
+
+   struct intel_device_info devinfo;
+};
+
+#include "compiler/spirv/nir_spirv.h"
+
+static int
+output_nir(const struct intel_clc_params *params, struct clc_binary *binary)
 {
-   assert(size >= 8);
-   assert(spirv[0] == SPIR_V_MAGIC_NUMBER);
-   return spirv[1];
+   const struct spirv_capabilities spirv_caps = {
+      .Addresses = true,
+      .Groups = true,
+      .StorageImageWriteWithoutFormat = true,
+      .Int8 = true,
+      .Int16 = true,
+      .Int64 = true,
+      .Int64Atomics = true,
+      .Kernel = true,
+      .Linkage = true, /* We receive linked kernel from clc */
+      .GenericPointer = true,
+      .GroupNonUniform = true,
+      .GroupNonUniformArithmetic = true,
+      .GroupNonUniformBallot = true,
+      .GroupNonUniformQuad = true,
+      .GroupNonUniformShuffle = true,
+      .GroupNonUniformVote = true,
+      .SubgroupDispatch = true,
+
+      .SubgroupShuffleINTEL = true,
+      .SubgroupBufferBlockIOINTEL = true,
+   };
+
+   struct spirv_to_nir_options spirv_options = {
+      .environment = NIR_SPIRV_OPENCL,
+      .capabilities = &spirv_caps,
+      .printf = true,
+      .shared_addr_format = nir_address_format_62bit_generic,
+      .global_addr_format = nir_address_format_62bit_generic,
+      .temp_addr_format = nir_address_format_62bit_generic,
+      .constant_addr_format = nir_address_format_64bit_global,
+      .create_library = true,
+   };
+
+   FILE *fp = params->outfile != NULL ?
+      fopen(params->outfile, "w") : stdout;
+   if (!fp) {
+      fprintf(stderr, "Failed to open %s\n", params->outfile);
+      return -1;
+   }
+
+   spirv_library_to_nir_builder(fp, binary->data, binary->size / 4,
+                                &spirv_options);
+
+   nir_shader *nir = params->gfx_version >= 9 ?
+      brw_nir_from_spirv(params->mem_ctx, params->gfx_version,
+                         binary->data, binary->size,
+                         params->llvm17_wa) :
+      elk_nir_from_spirv(params->mem_ctx, params->gfx_version,
+                         binary->data, binary->size,
+                         params->llvm17_wa);
+   if (!nir) {
+      fprintf(stderr, "Failed to generate NIR out of SPIRV\n");
+      fclose(fp);
+      return -1;
+   }
+
+   struct blob blob;
+   blob_init(&blob);
+   nir_serialize(&blob, nir, false /* strip */);
+   print_u8_data(fp, params->prefix, "nir", blob.data, blob.size);
+   blob_finish(&blob);
+
+   if (params->outfile)
+      fclose(fp);
+
+   return 0;
+}
+
+static int
+output_isa(const struct intel_clc_params *params, struct clc_binary *binary)
+{
+   struct brw_kernel kernel = {};
+   char *error_str;
+   int ret = 0;
+
+   struct brw_isa_info _isa, *isa = &_isa;
+   brw_init_isa_info(isa, &params->devinfo);
+
+   struct brw_compiler *compiler = brw_compiler_create(params->mem_ctx,
+                                                       &params->devinfo);
+   compiler->spilling_rate = 11;
+   compiler->shader_debug_log = compiler_log;
+   compiler->shader_perf_log = compiler_log;
+   struct disk_cache *disk_cache = get_disk_cache(compiler);
+
+   if (!brw_kernel_from_spirv(compiler, disk_cache, &kernel, NULL, params->mem_ctx,
+                              binary->data, binary->size,
+                              params->entry_point, &error_str)) {
+      fprintf(stderr, "Compile failed: %s\n", error_str);
+      ret = -1;
+      goto exit;
+   }
+
+   if (params->print_info) {
+      fprintf(stdout, "kernel info:\n");
+      fprintf(stdout, "   uses_barrier           : %u\n", kernel.prog_data.uses_barrier);
+      fprintf(stdout, "   uses_num_work_groups   : %u\n", kernel.prog_data.uses_num_work_groups);
+      fprintf(stdout, "   uses_inline_data       : %u\n", kernel.prog_data.uses_inline_data);
+      fprintf(stdout, "   local_size             : %ux%ux%u\n",
+              kernel.prog_data.local_size[0],
+              kernel.prog_data.local_size[1],
+              kernel.prog_data.local_size[2]);
+      fprintf(stdout, "   curb_read_length       : %u\n", kernel.prog_data.base.curb_read_length);
+      fprintf(stdout, "   total_scratch          : %u\n", kernel.prog_data.base.total_scratch);
+      fprintf(stdout, "   total_shared           : %u\n", kernel.prog_data.base.total_shared);
+      fprintf(stdout, "   program_size           : %u\n", kernel.prog_data.base.program_size);
+      fprintf(stdout, "   const_data_size        : %u\n", kernel.prog_data.base.const_data_size);
+      fprintf(stdout, "   uses_atomic_load_store : %u\n", kernel.prog_data.base.uses_atomic_load_store);
+      fprintf(stdout, "   dispatch_grf_start_reg : %u\n", kernel.prog_data.base.dispatch_grf_start_reg);
+   }
+
+   char *prefix = params->prefix;
+   char prefix_tmp[256];
+   if (prefix == NULL) {
+      bool is_pt_5 = (params->devinfo.verx10 % 10) == 5;
+      snprintf(prefix_tmp, sizeof(prefix_tmp), "gfx%d%s_clc_%s",
+               params->devinfo.ver, is_pt_5 ? "5" : "", params->entry_point);
+      prefix = prefix_tmp;
+   }
+
+   if (params->outfile != NULL) {
+      FILE *fp = fopen(params->outfile, "w");
+      print_kernel(fp, prefix, &kernel, isa);
+      fclose(fp);
+   } else {
+      print_kernel(stdout, prefix, &kernel, isa);
+   }
+
+exit:
+   disk_cache_destroy(disk_cache);
+   return ret;
 }
 
 static void
-set_module_spirv_version(uint32_t *spirv, size_t size, uint32_t version)
+print_llvm_version(FILE *out)
 {
-   assert(size >= 8);
-   assert(spirv[0] == SPIR_V_MAGIC_NUMBER);
-   spirv[1] = version;
+   fprintf(out, "%s\n", MESA_LLVM_VERSION_STRING);
 }
 
 int main(int argc, char **argv)
 {
-   brw_process_intel_debug_variable();
+   int exit_code = 0;
+
+   process_intel_debug_variable();
 
    static struct option long_options[] ={
-      {"help",       no_argument,         0, 'h'},
-      {"entrypoint", required_argument,   0, 'e'},
-      {"platform",   required_argument,   0, 'p'},
-      {"prefix",     required_argument,   0, OPT_PREFIX},
-      {"in",         required_argument,   0, 'i'},
-      {"out",        required_argument,   0, 'o'},
-      {"spv",        required_argument,   0, 's'},
-      {"verbose",    no_argument,         0, 'v'},
+      {"help",         no_argument,         0, 'h'},
+      {"entrypoint",   required_argument,   0, 'e'},
+      {"platform",     required_argument,   0, 'p'},
+      {"prefix",       required_argument,   0, OPT_PREFIX},
+      {"in",           required_argument,   0, 'i'},
+      {"out",          required_argument,   0, 'o'},
+      {"spv",          required_argument,   0, 's'},
+      {"text",         required_argument,   0, 't'},
+      {"gfx-version",  required_argument,   0, 'g'},
+      {"nir",          no_argument,         0, 'n'},
+      {"llvm17-wa",    no_argument,         0, 'L'},
+      {"llvm-version", no_argument,         0, 'M'},
+      {"verbose",      no_argument,         0, 'v'},
       {0, 0, 0, 0}
    };
 
-   char *entry_point = NULL, *platform = NULL, *outfile = NULL, *spv_outfile = NULL, *prefix = NULL;
+   struct intel_clc_params params = {};
+
    struct util_dynarray clang_args;
    struct util_dynarray input_files;
-   struct util_dynarray spirv_objs;
-   struct util_dynarray spirv_ptr_objs;
-   bool print_info = false;
 
-   void *mem_ctx = ralloc_context(NULL);
+   struct clc_binary spirv_obj = {0};
+   struct clc_parsed_spirv parsed_spirv_data = {0};
+   struct disk_cache *disk_cache = NULL;
 
-   util_dynarray_init(&clang_args, mem_ctx);
-   util_dynarray_init(&input_files, mem_ctx);
-   util_dynarray_init(&spirv_objs, mem_ctx);
-   util_dynarray_init(&spirv_ptr_objs, mem_ctx);
+   params.mem_ctx = ralloc_context(NULL);
+
+   util_dynarray_init(&clang_args, params.mem_ctx);
+   util_dynarray_init(&input_files, params.mem_ctx);
 
    int ch;
-   while ((ch = getopt_long(argc, argv, "he:p:s:i:o:v", long_options, NULL)) != -1)
+   while ((ch = getopt_long(argc, argv, "he:p:s:t:i:no:MLvg:", long_options, NULL)) != -1)
    {
       switch (ch)
       {
       case 'h':
          print_usage(argv[0], stdout);
-         return 0;
+         goto end;
       case 'e':
-         entry_point = optarg;
+         params.entry_point = optarg;
          break;
       case 'p':
-         platform = optarg;
+         params.platform = optarg;
          break;
       case 'o':
-         outfile = optarg;
+         params.outfile = optarg;
          break;
       case 'i':
          util_dynarray_append(&input_files, char *, optarg);
 	 break;
+      case 'n':
+         params.output_nir = true;
+         break;
       case 's':
-         spv_outfile = optarg;
+         params.spv_outfile = optarg;
+         break;
+      case 't':
+         params.txt_outfile = optarg;
          break;
       case 'v':
-         print_info = true;
+         params.print_info = true;
+         break;
+      case 'L':
+         params.llvm17_wa = true;
+         break;
+      case 'M':
+         print_llvm_version(stdout);
+         return EXIT_SUCCESS;
+      case 'g':
+         params.gfx_version = strtoul(optarg, NULL, 10);
          break;
       case OPT_PREFIX:
-         prefix = optarg;
+         params.prefix = optarg;
          break;
       default:
          fprintf(stderr, "Unrecognized option \"%s\".\n", optarg);
          print_usage(argv[0], stderr);
-         return 1;
+         goto fail;
       }
    }
 
@@ -362,39 +581,7 @@ int main(int argc, char **argv)
    if (util_dynarray_num_elements(&input_files, char *) == 0) {
       fprintf(stderr, "No input file(s).\n");
       print_usage(argv[0], stderr);
-      return -1;
-   }
-
-   if (platform == NULL) {
-      fprintf(stderr, "No target platform name specified.\n");
-      print_usage(argv[0], stderr);
-      return -1;
-   }
-
-   int pci_id = intel_device_name_to_pci_device_id(platform);
-   if (pci_id < 0) {
-      fprintf(stderr, "Invalid target platform name: %s\n", platform);
-      return -1;
-   }
-
-   struct intel_device_info _devinfo, *devinfo = &_devinfo;
-   if (!intel_get_device_info_from_pci_id(pci_id, devinfo)) {
-      fprintf(stderr, "Failed to get device information.\n");
-      return -1;
-   }
-
-   if (devinfo->verx10 < 125) {
-      fprintf(stderr, "Platform currently not supported.\n");
-      return -1;
-   }
-
-   struct brw_isa_info _isa, *isa = &_isa;
-   brw_init_isa_info(isa, devinfo);
-
-   if (entry_point == NULL) {
-      fprintf(stderr, "No entry-point name specified.\n");
-      print_usage(argv[0], stderr);
-      return -1;
+      goto fail;
    }
 
    struct clc_logger logger = {
@@ -408,23 +595,27 @@ int main(int argc, char **argv)
       int fd = open(*infile, O_RDONLY);
       if (fd < 0) {
          fprintf(stderr, "Failed to open %s\n", *infile);
-         ralloc_free(mem_ctx);
-         return 1;
+         goto fail;
       }
 
       off_t len = lseek(fd, 0, SEEK_END);
       size_t new_size = total_size + len;
-      all_inputs = reralloc_size(mem_ctx, all_inputs, new_size + 1);
+      all_inputs = reralloc_size(params.mem_ctx, all_inputs, new_size + 1);
       if (!all_inputs) {
          fprintf(stderr, "Failed to allocate memory\n");
-         ralloc_free(mem_ctx);
-         return 1;
+         goto fail;
       }
       lseek(fd, 0, SEEK_SET);
       read(fd, all_inputs + total_size, len);
       close(fd);
       total_size = new_size;
       all_inputs[total_size] = '\0';
+   }
+
+   if (params.txt_outfile) {
+      FILE *fp = fopen(params.txt_outfile, "w");
+      fwrite(all_inputs, total_size, 1, fp);
+      fclose(fp);
    }
 
    const char *allowed_spirv_extensions[] = {
@@ -451,135 +642,91 @@ int main(int argc, char **argv)
       .allowed_spirv_extensions = allowed_spirv_extensions,
    };
 
-   struct clc_binary *spirv_out =
-      util_dynarray_grow(&spirv_objs, struct clc_binary, 1);
-
-   if (!clc_compile_c_to_spirv(&clc_args, &logger, spirv_out)) {
-      ralloc_free(mem_ctx);
-      return 1;
+   if (!clc_compile_c_to_spirv(&clc_args, &logger, &spirv_obj, NULL)) {
+      goto fail;
    }
 
-   util_dynarray_foreach(&spirv_objs, struct clc_binary, p) {
-      util_dynarray_append(&spirv_ptr_objs, struct clc_binary *, p);
-   }
-
-   /* The SPIRV-Tools linker started checking that all modules have the same
-    * version. But SPIRV-LLVM-Translator picks the lower required version for
-    * each module it compiles. So we have to iterate over all of them and set
-    * the max found to make SPIRV-Tools link our modules.
-    *
-    * TODO: This is not the correct thing to do. We need SPIRV-LLVM-Translator
-    *       to pick a given SPIRV version given to it and have all the modules
-    *       at that version. We should remove this hack when this issue is
-    *       fixed :
-    *       https://github.com/KhronosGroup/SPIRV-LLVM-Translator/issues/1445
-    */
-   uint32_t max_spirv_version = 0;
-   util_dynarray_foreach(&spirv_ptr_objs, struct clc_binary *, module) {
-      max_spirv_version = MAX2(max_spirv_version,
-                               get_module_spirv_version((*module)->data,
-                                                        (*module)->size));
-   }
-
-   assert(max_spirv_version > 0);
-   util_dynarray_foreach(&spirv_ptr_objs, struct clc_binary *, module) {
-      set_module_spirv_version((*module)->data, (*module)->size,
-                               max_spirv_version);
-   }
-
-
-   struct clc_linker_args link_args = {
-      .in_objs = util_dynarray_begin(&spirv_ptr_objs),
-      .num_in_objs = util_dynarray_num_elements(&spirv_ptr_objs,
-                                                struct clc_binary *),
-      .create_library = true,
-   };
-   struct clc_binary final_spirv;
-   if (!clc_link_spirv(&link_args, &logger, &final_spirv)) {
-      ralloc_free(mem_ctx);
-      return 1;
-   }
-
-   if (spv_outfile) {
-      FILE *fp = fopen(spv_outfile, "w");
-      fwrite(final_spirv.data, final_spirv.size, 1, fp);
+   if (params.spv_outfile) {
+      FILE *fp = fopen(params.spv_outfile, "w");
+      fwrite(spirv_obj.data, spirv_obj.size, 1, fp);
       fclose(fp);
    }
 
-   struct clc_parsed_spirv parsed_spirv_data;
-   if (!clc_parse_spirv(&final_spirv, &logger, &parsed_spirv_data)) {
-      ralloc_free(mem_ctx);
-      return 1;
-   }
-
-   const struct clc_kernel_info *kernel_info = NULL;
-   for (unsigned i = 0; i < parsed_spirv_data.num_kernels; i++) {
-      if (strcmp(parsed_spirv_data.kernels[i].name, entry_point) == 0) {
-         kernel_info = &parsed_spirv_data.kernels[i];
-         break;
-      }
-   }
-   if (kernel_info == NULL) {
-      fprintf(stderr, "Kernel entrypoint %s not found\n", entry_point);
-      ralloc_free(mem_ctx);
-      return 1;
-   }
-
-   struct brw_kernel kernel = {};
-   char *error_str;
-
-   struct brw_compiler *compiler = brw_compiler_create(mem_ctx, devinfo);
-   compiler->shader_debug_log = compiler_log;
-   compiler->shader_perf_log = compiler_log;
-   struct disk_cache *disk_cache = get_disk_cache(compiler);
-
    glsl_type_singleton_init_or_ref();
 
-   if (!brw_kernel_from_spirv(compiler, disk_cache, &kernel, NULL, mem_ctx,
-                              final_spirv.data, final_spirv.size,
-                              entry_point, &error_str)) {
-      fprintf(stderr, "Compile failed: %s\n", error_str);
-      ralloc_free(mem_ctx);
-      return 1;
-   }
+   if (params.output_nir) {
+      if (params.gfx_version == 0) {
+         fprintf(stderr, "No target Gfx version specified.\n");
+         print_usage(argv[0], stderr);
+         goto fail;
+      }
 
-   if (print_info) {
-      fprintf(stdout, "kernel info:\n");
-      fprintf(stdout, "   uses_barrier           : %u\n", kernel.prog_data.uses_barrier);
-      fprintf(stdout, "   uses_num_work_groups   : %u\n", kernel.prog_data.uses_num_work_groups);
-      fprintf(stdout, "   uses_inline_data       : %u\n", kernel.prog_data.uses_inline_data);
-      fprintf(stdout, "   local_size             : %ux%ux%u\n",
-              kernel.prog_data.local_size[0],
-              kernel.prog_data.local_size[1],
-              kernel.prog_data.local_size[2]);
-      fprintf(stdout, "   curb_read_length       : %u\n", kernel.prog_data.base.curb_read_length);
-      fprintf(stdout, "   total_scratch          : %u\n", kernel.prog_data.base.total_scratch);
-      fprintf(stdout, "   total_shared           : %u\n", kernel.prog_data.base.total_shared);
-      fprintf(stdout, "   program_size           : %u\n", kernel.prog_data.base.program_size);
-      fprintf(stdout, "   const_data_size        : %u\n", kernel.prog_data.base.const_data_size);
-      fprintf(stdout, "   uses_atomic_load_store : %u\n", kernel.prog_data.base.uses_atomic_load_store);
-      fprintf(stdout, "   dispatch_grf_start_reg : %u\n", kernel.prog_data.base.dispatch_grf_start_reg);
+      exit_code = output_nir(&params, &spirv_obj);
+   } else {
+      if (params.platform == NULL) {
+         fprintf(stderr, "No target platform name specified.\n");
+         print_usage(argv[0], stderr);
+         goto fail;
+      }
+
+      int pci_id = intel_device_name_to_pci_device_id(params.platform);
+      if (pci_id < 0) {
+         fprintf(stderr, "Invalid target platform name: %s\n", params.platform);
+         goto fail;
+      }
+
+      if (!intel_get_device_info_for_build(pci_id, &params.devinfo)) {
+         fprintf(stderr, "Failed to get device information.\n");
+         goto fail;
+      }
+
+      if (params.devinfo.verx10 < 125) {
+         fprintf(stderr, "Platform currently not supported.\n");
+         goto fail;
+      }
+
+      if (params.gfx_version) {
+         fprintf(stderr, "WARNING: Ignorining unnecessary parameter for "
+                         "gfx version, using version based on platform.\n");
+         /* Keep going. */
+      }
+
+      if (params.entry_point == NULL) {
+         fprintf(stderr, "No entry-point name specified.\n");
+         print_usage(argv[0], stderr);
+         goto fail;
+      }
+
+      if (!clc_parse_spirv(&spirv_obj, &logger, &parsed_spirv_data))
+         goto fail;
+
+      const struct clc_kernel_info *kernel_info = NULL;
+      for (unsigned i = 0; i < parsed_spirv_data.num_kernels; i++) {
+         if (strcmp(parsed_spirv_data.kernels[i].name, params.entry_point) == 0) {
+            kernel_info = &parsed_spirv_data.kernels[i];
+            break;
+         }
+      }
+      if (kernel_info == NULL) {
+         fprintf(stderr, "Kernel entrypoint %s not found\n", params.entry_point);
+         goto fail;
+      }
+
+      exit_code = output_isa(&params, &spirv_obj);
    }
 
    glsl_type_singleton_decref();
 
-   char prefix_tmp[256];
-   if (prefix == NULL) {
-      bool is_pt_5 = (devinfo->verx10 % 10) == 5;
-      snprintf(prefix_tmp, sizeof(prefix_tmp), "gfx%d%s_clc_%s",
-               devinfo->ver, is_pt_5 ? "5" : "", entry_point);
-      prefix = prefix_tmp;
-   }
+   goto end;
 
-   if (outfile != NULL) {
-      FILE *fp = fopen(outfile, "w");
-      print_kernel(fp, prefix, &kernel, isa);
-      fclose(fp);
-   } else {
-      print_kernel(stdout, prefix, &kernel, isa);
-   }
+fail:
+   exit_code = 1;
 
-   ralloc_free(mem_ctx);
+end:
+   disk_cache_destroy(disk_cache);
+   clc_free_parsed_spirv(&parsed_spirv_data);
+   clc_free_spirv(&spirv_obj);
+   ralloc_free(params.mem_ctx);
 
-   return 0;
+   return exit_code;
 }

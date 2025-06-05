@@ -41,7 +41,6 @@
 struct vl_video_buffer
 {
    struct pipe_video_buffer base;
-   unsigned                 num_planes;
    struct pipe_resource     *resources[VL_NUM_COMPONENTS];
    struct pipe_sampler_view *sampler_view_planes[VL_NUM_COMPONENTS];
    struct pipe_sampler_view *sampler_view_components[VL_NUM_COMPONENTS];
@@ -62,6 +61,8 @@ vl_video_buffer_adjust_size(unsigned *width, unsigned *height, unsigned plane,
          *height = align(*height, 2) / 2;
       } else if (chroma_format == PIPE_VIDEO_CHROMA_FORMAT_422) {
          *width = align(*width, 2) / 2;
+      } else if (chroma_format == PIPE_VIDEO_CHROMA_FORMAT_440) {
+         *height = align(*height, 2) / 2;
       }
    }
 }

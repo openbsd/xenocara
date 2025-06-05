@@ -48,6 +48,8 @@ struct tu_subpass
    uint32_t resolve_count;
    bool resolve_depth_stencil;
 
+   bool legacy_dithering_enabled;
+
    bool feedback_loop_color;
    bool feedback_loop_ds;
 
@@ -61,6 +63,20 @@ struct tu_subpass
    struct tu_subpass_attachment *color_attachments;
    struct tu_subpass_attachment *resolve_attachments;
    struct tu_subpass_attachment depth_stencil_attachment;
+
+   uint32_t fsr_attachment;
+   VkExtent2D fsr_attachment_texel_size;
+
+   /*  When using dynamic rendering depth and stencil attachments may be
+    *  set to unused independently, so we need to track this bit of
+    *  information separately for each of them.
+    *
+    *  Due to VUID-vkCmdDraw-dynamicRenderingUnusedAttachments-08916 and
+    *  VUID-vkCmdDraw-dynamicRenderingUnusedAttachments-08917 we can set
+    *  these values at cmdBeginRendering() time.
+    */
+   bool depth_used;
+   bool stencil_used;
 
    VkSampleCountFlagBits samples;
 

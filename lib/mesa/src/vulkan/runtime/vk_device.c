@@ -35,6 +35,7 @@
 #include "util/hash_table.h"
 #include "util/perf/cpu_trace.h"
 #include "util/ralloc.h"
+#include "util/timespec.h"
 
 static enum vk_device_timeline_mode
 get_timeline_mode(struct vk_physical_device *physical_device)
@@ -127,7 +128,7 @@ vk_device_init(struct vk_device *device,
                           "%s not supported",
                           pCreateInfo->ppEnabledExtensionNames[i]);
 
-#ifdef ANDROID
+#ifdef ANDROID_STRICT
       if (!vk_android_allowed_device_extensions.extensions[idx])
          return vk_errorf(physical_device, VK_ERROR_EXTENSION_NOT_PRESENT,
                           "%s not supported",
@@ -150,6 +151,7 @@ vk_device_init(struct vk_device *device,
    list_inithead(&device->queues);
 
    device->drm_fd = -1;
+   device->mem_cache = NULL;
 
    device->timeline_mode = get_timeline_mode(physical_device);
 
@@ -164,8 +166,12 @@ vk_device_init(struct vk_device *device,
       break;
 
    case VK_DEVICE_TIMELINE_MODE_ASSISTED:
-      if (debug_get_bool_option("MESA_VK_ENABLE_SUBMIT_THREAD", false)) {
-         device->submit_mode = VK_QUEUE_SUBMIT_MODE_THREADED;
+      if (os_get_option("MESA_VK_ENABLE_SUBMIT_THREAD")) {
+         if (debug_get_bool_option("MESA_VK_ENABLE_SUBMIT_THREAD", false)) {
+            device->submit_mode = VK_QUEUE_SUBMIT_MODE_THREADED;
+         } else {
+            device->submit_mode = VK_QUEUE_SUBMIT_MODE_IMMEDIATE;
+         }
       } else {
          device->submit_mode = VK_QUEUE_SUBMIT_MODE_THREADED_ON_DEMAND;
       }
@@ -175,12 +181,46 @@ vk_device_init(struct vk_device *device,
       unreachable("Invalid timeline mode");
    }
 
-#ifdef ANDROID
+#if DETECT_OS_ANDROID
    mtx_init(&device->swapchain_private_mtx, mtx_plain);
    device->swapchain_private = NULL;
-#endif /* ANDROID */
+#endif /* DETECT_OS_ANDROID */
 
    simple_mtx_init(&device->trace_mtx, mtx_plain);
+
+   vk_foreach_struct_const (ext, pCreateInfo->pNext) {
+      switch (ext->sType) {
+      case VK_STRUCTURE_TYPE_DEVICE_PIPELINE_BINARY_INTERNAL_CACHE_CONTROL_KHR: {
+         const VkDevicePipelineBinaryInternalCacheControlKHR *cache_control = (const void *)ext;
+         if (cache_control->disableInternalCache)
+            device->disable_internal_cache = true;
+         break;
+      }
+      default:
+         break;
+      }
+   }
+
+   if (device->enabled_extensions.KHR_calibrated_timestamps ||
+       device->enabled_extensions.EXT_calibrated_timestamps) {
+      /* sorted by preference */
+      const VkTimeDomainKHR calibrate_domains[] = {
+         VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_KHR,
+         VK_TIME_DOMAIN_CLOCK_MONOTONIC_KHR,
+      };
+      for (uint32_t i = 0; i < ARRAY_SIZE(calibrate_domains); i++) {
+         const VkTimeDomainKHR domain = calibrate_domains[i];
+         uint64_t ts;
+         if (vk_device_get_timestamp(NULL, domain, &ts) == VK_SUCCESS) {
+            device->calibrate_time_domain = domain;
+            break;
+         }
+      }
+
+      assert(device->calibrate_time_domain != VK_TIME_DOMAIN_DEVICE_KHR);
+      device->device_time_domain_period =
+         (uint64_t)ceilf(device->physical->properties.timestampPeriod);
+   }
 
    return VK_SUCCESS;
 }
@@ -193,13 +233,13 @@ vk_device_finish(struct vk_device *device)
 
    vk_memory_trace_finish(device);
 
-#ifdef ANDROID
+#if DETECT_OS_ANDROID
    if (device->swapchain_private) {
       hash_table_foreach(device->swapchain_private, entry)
          util_sparse_array_finish(entry->data);
       ralloc_free(device->swapchain_private);
    }
-#endif /* ANDROID */
+#endif /* DETECT_OS_ANDROID */
 
    simple_mtx_destroy(&device->trace_mtx);
 
@@ -537,6 +577,90 @@ vk_common_DeviceWaitIdle(VkDevice _device)
    return VK_SUCCESS;
 }
 
+VkResult
+vk_device_get_timestamp(struct vk_device *device, VkTimeDomainKHR domain,
+                        uint64_t *timestamp)
+{
+   if (domain == VK_TIME_DOMAIN_DEVICE_KHR) {
+      assert(device && device->get_timestamp);
+      return device->get_timestamp(device, timestamp);
+   }
+
+   /* device is not used for host time domains */
+#ifndef _WIN32
+   clockid_t clockid;
+   struct timespec ts;
+
+   switch (domain) {
+   case VK_TIME_DOMAIN_CLOCK_MONOTONIC_KHR:
+      clockid = CLOCK_MONOTONIC;
+      break;
+   case VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_KHR:
+      /* The "RAW" clocks on Linux are called "FAST" on FreeBSD */
+#if defined(CLOCK_MONOTONIC_RAW)
+      clockid = CLOCK_MONOTONIC_RAW;
+      break;
+#elif defined(CLOCK_MONOTONIC_FAST)
+      clockid = CLOCK_MONOTONIC_FAST;
+      break;
+#else
+      FALLTHROUGH;
+#endif
+   default:
+      goto fail;
+   }
+
+   if (clock_gettime(clockid, &ts) < 0)
+      goto fail;
+
+   *timestamp = (uint64_t)ts.tv_sec * NSEC_PER_SEC + ts.tv_nsec;
+   return VK_SUCCESS;
+
+fail:
+#endif /* _WIN32 */
+   return VK_ERROR_FEATURE_NOT_PRESENT;
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL
+vk_common_GetCalibratedTimestampsKHR(
+   VkDevice _device, uint32_t timestampCount,
+   const VkCalibratedTimestampInfoKHR *pTimestampInfos, uint64_t *pTimestamps,
+   uint64_t *pMaxDeviation)
+{
+   VK_FROM_HANDLE(vk_device, device, _device);
+   uint64_t begin, end;
+   VkResult result;
+
+   /* collect timestamps as tight as possible */
+   result =
+      vk_device_get_timestamp(device, device->calibrate_time_domain, &begin);
+   for (uint32_t i = 0; i < timestampCount; i++) {
+      const VkTimeDomainKHR domain = pTimestampInfos[i].timeDomain;
+      if (domain == device->calibrate_time_domain)
+         pTimestamps[i] = begin;
+      else
+         result |= vk_device_get_timestamp(device, domain, &pTimestamps[i]);
+   }
+   result |=
+      vk_device_get_timestamp(device, device->calibrate_time_domain, &end);
+
+   if (result != VK_SUCCESS)
+      return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   uint64_t max_clock_period = 0;
+   for (uint32_t i = 0; i < timestampCount; i++) {
+      const VkTimeDomainKHR domain = pTimestampInfos[i].timeDomain;
+      const uint64_t period = domain == VK_TIME_DOMAIN_DEVICE_KHR
+         ? device->device_time_domain_period
+         : domain != device->calibrate_time_domain ? 1 : 0;
+      max_clock_period = MAX2(max_clock_period, period);
+   }
+
+   *pMaxDeviation = vk_time_max_deviation(begin, end, max_clock_period);
+
+   return VK_SUCCESS;
+}
+
 #ifndef _WIN32
 
 uint64_t
@@ -557,255 +681,3 @@ vk_clock_gettime(clockid_t clock_id)
 }
 
 #endif //!_WIN32
-
-#define CORE_RENAMED_PROPERTY(ext_property, core_property) \
-   memcpy(&properties->ext_property, &core->core_property, sizeof(core->core_property))
-
-#define CORE_PROPERTY(property) CORE_RENAMED_PROPERTY(property, property)
-
-bool
-vk_get_physical_device_core_1_1_property_ext(struct VkBaseOutStructure *ext,
-                                             const VkPhysicalDeviceVulkan11Properties *core)
-{
-   switch (ext->sType) {
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES: {
-      VkPhysicalDeviceIDProperties *properties = (void *)ext;
-      CORE_PROPERTY(deviceUUID);
-      CORE_PROPERTY(driverUUID);
-      CORE_PROPERTY(deviceLUID);
-      CORE_PROPERTY(deviceNodeMask);
-      CORE_PROPERTY(deviceLUIDValid);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES: {
-      VkPhysicalDeviceMaintenance3Properties *properties = (void *)ext;
-      CORE_PROPERTY(maxPerSetDescriptors);
-      CORE_PROPERTY(maxMemoryAllocationSize);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES: {
-      VkPhysicalDeviceMultiviewProperties *properties = (void *)ext;
-      CORE_PROPERTY(maxMultiviewViewCount);
-      CORE_PROPERTY(maxMultiviewInstanceIndex);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_POINT_CLIPPING_PROPERTIES: {
-      VkPhysicalDevicePointClippingProperties *properties = (void *) ext;
-      CORE_PROPERTY(pointClippingBehavior);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROTECTED_MEMORY_PROPERTIES: {
-      VkPhysicalDeviceProtectedMemoryProperties *properties = (void *)ext;
-      CORE_PROPERTY(protectedNoFault);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES: {
-      VkPhysicalDeviceSubgroupProperties *properties = (void *)ext;
-      CORE_PROPERTY(subgroupSize);
-      CORE_RENAMED_PROPERTY(supportedStages,
-                                    subgroupSupportedStages);
-      CORE_RENAMED_PROPERTY(supportedOperations,
-                                    subgroupSupportedOperations);
-      CORE_RENAMED_PROPERTY(quadOperationsInAllStages,
-                                    subgroupQuadOperationsInAllStages);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES:
-      vk_copy_struct_guts(ext, (void *)core, sizeof(*core));
-      return true;
-
-   default:
-      return false;
-   }
-}
-
-bool
-vk_get_physical_device_core_1_2_property_ext(struct VkBaseOutStructure *ext,
-                                             const VkPhysicalDeviceVulkan12Properties *core)
-{
-   switch (ext->sType) {
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_STENCIL_RESOLVE_PROPERTIES: {
-      VkPhysicalDeviceDepthStencilResolveProperties *properties = (void *)ext;
-      CORE_PROPERTY(supportedDepthResolveModes);
-      CORE_PROPERTY(supportedStencilResolveModes);
-      CORE_PROPERTY(independentResolveNone);
-      CORE_PROPERTY(independentResolve);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES: {
-      VkPhysicalDeviceDescriptorIndexingProperties *properties = (void *)ext;
-      CORE_PROPERTY(maxUpdateAfterBindDescriptorsInAllPools);
-      CORE_PROPERTY(shaderUniformBufferArrayNonUniformIndexingNative);
-      CORE_PROPERTY(shaderSampledImageArrayNonUniformIndexingNative);
-      CORE_PROPERTY(shaderStorageBufferArrayNonUniformIndexingNative);
-      CORE_PROPERTY(shaderStorageImageArrayNonUniformIndexingNative);
-      CORE_PROPERTY(shaderInputAttachmentArrayNonUniformIndexingNative);
-      CORE_PROPERTY(robustBufferAccessUpdateAfterBind);
-      CORE_PROPERTY(quadDivergentImplicitLod);
-      CORE_PROPERTY(maxPerStageDescriptorUpdateAfterBindSamplers);
-      CORE_PROPERTY(maxPerStageDescriptorUpdateAfterBindUniformBuffers);
-      CORE_PROPERTY(maxPerStageDescriptorUpdateAfterBindStorageBuffers);
-      CORE_PROPERTY(maxPerStageDescriptorUpdateAfterBindSampledImages);
-      CORE_PROPERTY(maxPerStageDescriptorUpdateAfterBindStorageImages);
-      CORE_PROPERTY(maxPerStageDescriptorUpdateAfterBindInputAttachments);
-      CORE_PROPERTY(maxPerStageUpdateAfterBindResources);
-      CORE_PROPERTY(maxDescriptorSetUpdateAfterBindSamplers);
-      CORE_PROPERTY(maxDescriptorSetUpdateAfterBindUniformBuffers);
-      CORE_PROPERTY(maxDescriptorSetUpdateAfterBindUniformBuffersDynamic);
-      CORE_PROPERTY(maxDescriptorSetUpdateAfterBindStorageBuffers);
-      CORE_PROPERTY(maxDescriptorSetUpdateAfterBindStorageBuffersDynamic);
-      CORE_PROPERTY(maxDescriptorSetUpdateAfterBindSampledImages);
-      CORE_PROPERTY(maxDescriptorSetUpdateAfterBindStorageImages);
-      CORE_PROPERTY(maxDescriptorSetUpdateAfterBindInputAttachments);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES: {
-      VkPhysicalDeviceDriverProperties *properties = (void *) ext;
-      CORE_PROPERTY(driverID);
-      CORE_PROPERTY(driverName);
-      CORE_PROPERTY(driverInfo);
-      CORE_PROPERTY(conformanceVersion);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_FILTER_MINMAX_PROPERTIES: {
-      VkPhysicalDeviceSamplerFilterMinmaxProperties *properties = (void *)ext;
-      CORE_PROPERTY(filterMinmaxImageComponentMapping);
-      CORE_PROPERTY(filterMinmaxSingleComponentFormats);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES : {
-      VkPhysicalDeviceFloatControlsProperties *properties = (void *)ext;
-      CORE_PROPERTY(denormBehaviorIndependence);
-      CORE_PROPERTY(roundingModeIndependence);
-      CORE_PROPERTY(shaderDenormFlushToZeroFloat16);
-      CORE_PROPERTY(shaderDenormPreserveFloat16);
-      CORE_PROPERTY(shaderRoundingModeRTEFloat16);
-      CORE_PROPERTY(shaderRoundingModeRTZFloat16);
-      CORE_PROPERTY(shaderSignedZeroInfNanPreserveFloat16);
-      CORE_PROPERTY(shaderDenormFlushToZeroFloat32);
-      CORE_PROPERTY(shaderDenormPreserveFloat32);
-      CORE_PROPERTY(shaderRoundingModeRTEFloat32);
-      CORE_PROPERTY(shaderRoundingModeRTZFloat32);
-      CORE_PROPERTY(shaderSignedZeroInfNanPreserveFloat32);
-      CORE_PROPERTY(shaderDenormFlushToZeroFloat64);
-      CORE_PROPERTY(shaderDenormPreserveFloat64);
-      CORE_PROPERTY(shaderRoundingModeRTEFloat64);
-      CORE_PROPERTY(shaderRoundingModeRTZFloat64);
-      CORE_PROPERTY(shaderSignedZeroInfNanPreserveFloat64);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES: {
-      VkPhysicalDeviceTimelineSemaphoreProperties *properties = (void *) ext;
-      CORE_PROPERTY(maxTimelineSemaphoreValueDifference);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES:
-      vk_copy_struct_guts(ext, (void *)core, sizeof(*core));
-      return true;
-
-   default:
-      return false;
-   }
-}
-
-bool
-vk_get_physical_device_core_1_3_property_ext(struct VkBaseOutStructure *ext,
-                                             const VkPhysicalDeviceVulkan13Properties *core)
-{
-   switch (ext->sType) {
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_PROPERTIES: {
-      VkPhysicalDeviceInlineUniformBlockProperties *properties = (void *)ext;
-      CORE_PROPERTY(maxInlineUniformBlockSize);
-      CORE_PROPERTY(maxPerStageDescriptorInlineUniformBlocks);
-      CORE_PROPERTY(maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks);
-      CORE_PROPERTY(maxDescriptorSetInlineUniformBlocks);
-      CORE_PROPERTY(maxDescriptorSetUpdateAfterBindInlineUniformBlocks);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES: {
-      VkPhysicalDeviceMaintenance4Properties *properties = (void *)ext;
-      CORE_PROPERTY(maxBufferSize);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES: {
-      VkPhysicalDeviceShaderIntegerDotProductProperties *properties = (void *)ext;
-
-#define IDP_PROPERTY(x) CORE_PROPERTY(integerDotProduct##x)
-      IDP_PROPERTY(8BitUnsignedAccelerated);
-      IDP_PROPERTY(8BitSignedAccelerated);
-      IDP_PROPERTY(8BitMixedSignednessAccelerated);
-      IDP_PROPERTY(4x8BitPackedUnsignedAccelerated);
-      IDP_PROPERTY(4x8BitPackedSignedAccelerated);
-      IDP_PROPERTY(4x8BitPackedMixedSignednessAccelerated);
-      IDP_PROPERTY(16BitUnsignedAccelerated);
-      IDP_PROPERTY(16BitSignedAccelerated);
-      IDP_PROPERTY(16BitMixedSignednessAccelerated);
-      IDP_PROPERTY(32BitUnsignedAccelerated);
-      IDP_PROPERTY(32BitSignedAccelerated);
-      IDP_PROPERTY(32BitMixedSignednessAccelerated);
-      IDP_PROPERTY(64BitUnsignedAccelerated);
-      IDP_PROPERTY(64BitSignedAccelerated);
-      IDP_PROPERTY(64BitMixedSignednessAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating8BitUnsignedAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating8BitSignedAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating8BitMixedSignednessAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating4x8BitPackedUnsignedAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating4x8BitPackedSignedAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating4x8BitPackedMixedSignednessAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating16BitUnsignedAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating16BitSignedAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating16BitMixedSignednessAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating32BitUnsignedAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating32BitSignedAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating32BitMixedSignednessAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating64BitUnsignedAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating64BitSignedAccelerated);
-      IDP_PROPERTY(AccumulatingSaturating64BitMixedSignednessAccelerated);
-#undef IDP_PROPERTY
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES: {
-      VkPhysicalDeviceSubgroupSizeControlProperties *properties = (void *)ext;
-      CORE_PROPERTY(minSubgroupSize);
-      CORE_PROPERTY(maxSubgroupSize);
-      CORE_PROPERTY(maxComputeWorkgroupSubgroups);
-      CORE_PROPERTY(requiredSubgroupSizeStages);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_PROPERTIES: {
-      VkPhysicalDeviceTexelBufferAlignmentProperties *properties = (void *)ext;
-      CORE_PROPERTY(storageTexelBufferOffsetAlignmentBytes);
-      CORE_PROPERTY(storageTexelBufferOffsetSingleTexelAlignment);
-      CORE_PROPERTY(uniformTexelBufferOffsetAlignmentBytes);
-      CORE_PROPERTY(uniformTexelBufferOffsetSingleTexelAlignment);
-      return true;
-   }
-
-   case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES:
-      vk_copy_struct_guts(ext, (void *)core, sizeof(*core));
-      return true;
-
-   default:
-      return false;
-   }
-}
-
-#undef CORE_RENAMED_PROPERTY
-#undef CORE_PROPERTY
-

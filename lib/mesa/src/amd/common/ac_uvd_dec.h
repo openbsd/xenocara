@@ -383,7 +383,7 @@ struct ruvd_msg {
          uint32_t dt_uv_surf_tile_config;
          // re-use dt_wa_chroma_top_offset as dt_ext_info for UV pitch in stoney
          uint32_t dt_wa_chroma_top_offset;
-         uint32_t dt_wa_chroma_bottom_offset;
+         uint32_t dt_wa_chroma_bottom_offset; /* gfx9: used as dt_swizzle_mode */
 
          uint32_t reserved[16];
 
@@ -405,5 +405,13 @@ struct ruvd_msg {
       } decode;
    } body;
 };
+
+struct ac_uvd_stream_handle {
+   uint32_t base;
+   uint32_t counter;
+};
+
+void ac_uvd_init_stream_handle(struct ac_uvd_stream_handle *handle);
+unsigned ac_uvd_alloc_stream_handle(struct ac_uvd_stream_handle *handle);
 
 #endif

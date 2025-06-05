@@ -26,6 +26,7 @@
  **************************************************************************/
 
 #include "util/vl_vlc.h"
+#include "util/u_handle_table.h"
 #include "va_private.h"
 
 #define AV1_REFS_PER_FRAME 7
@@ -114,11 +115,12 @@ static void tile_info(vlVaContext *context, VADecPictureParameterBufferAV1 *av1)
    }
 }
 
-void vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf)
+VAStatus vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf)
 {
    VADecPictureParameterBufferAV1 *av1 = buf->data;
    int i, j;
    bool use_lr;
+   vlVaSurface *surf;
 
    assert(buf->size >= sizeof(VADecPictureParameterBufferAV1) && buf->num_elements == 1);
 
@@ -134,8 +136,6 @@ void vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, 
    context->desc.av1.picture_parameter.seq_info_fields.enable_intra_edge_filter =
       av1->seq_info_fields.fields.enable_intra_edge_filter;
    context->desc.av1.picture_parameter.order_hint_bits_minus_1 = av1->order_hint_bits_minus_1;
-   context->desc.av1.picture_parameter.max_width = av1->frame_width_minus1 + 1;
-   context->desc.av1.picture_parameter.max_height = av1->frame_height_minus1 + 1;
    context->desc.av1.picture_parameter.seq_info_fields.enable_interintra_compound =
       av1->seq_info_fields.fields.enable_interintra_compound;
    context->desc.av1.picture_parameter.seq_info_fields.enable_masked_compound =
@@ -153,6 +153,10 @@ void vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, 
    context->desc.av1.picture_parameter.bit_depth_idx = av1->bit_depth_idx;
    context->desc.av1.picture_parameter.seq_info_fields.mono_chrome =
       av1->seq_info_fields.fields.mono_chrome;
+   context->desc.av1.picture_parameter.seq_info_fields.subsampling_x =
+      av1->seq_info_fields.fields.subsampling_x;
+   context->desc.av1.picture_parameter.seq_info_fields.subsampling_y =
+      av1->seq_info_fields.fields.subsampling_y;
 
    context->desc.av1.picture_parameter.pic_info_fields.showable_frame =
       av1->pic_info_fields.bits.showable_frame;
@@ -198,8 +202,19 @@ void vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, 
 
    context->desc.av1.picture_parameter.order_hint = av1->order_hint;
    context->desc.av1.picture_parameter.primary_ref_frame = av1->primary_ref_frame;
+
+   surf = handle_table_get(drv->htab, av1->current_frame);
+   if (!surf)
+      return VA_STATUS_ERROR_INVALID_SURFACE;
+
+   context->desc.av1.picture_parameter.max_width = surf->templat.width;
+   context->desc.av1.picture_parameter.max_height = surf->templat.height;
    context->desc.av1.picture_parameter.frame_width = av1->frame_width_minus1 + 1;
    context->desc.av1.picture_parameter.frame_height = av1->frame_height_minus1 + 1;
+
+   if (context->desc.av1.picture_parameter.frame_width > context->desc.av1.picture_parameter.max_width ||
+       context->desc.av1.picture_parameter.frame_height > context->desc.av1.picture_parameter.max_height)
+      return VA_STATUS_ERROR_INVALID_PARAMETER;
 
    context->desc.av1.picture_parameter.superres_scale_denominator =
       av1->superres_scale_denominator;
@@ -393,24 +408,36 @@ void vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, 
          vlVaGetReferenceFrame(drv, av1->ref_frame_map[i], &context->desc.av1.ref[i]);
    }
 
-  context->desc.av1.slice_parameter.slice_count = 0;
+   context->desc.av1.slice_parameter.slice_count = 0;
+
+   return VA_STATUS_SUCCESS;
 }
 
-void vlVaHandleSliceParameterBufferAV1(vlVaContext *context, vlVaBuffer *buf, unsigned num_slices)
+void vlVaHandleSliceParameterBufferAV1(vlVaContext *context, vlVaBuffer *buf)
 {
-   for (uint32_t buffer_idx = 0; buffer_idx < buf->num_elements; buffer_idx++) {
-      uint32_t slice_index =
-               /* slices obtained so far from vaRenderPicture in previous calls*/
-               num_slices +
-               /* current slice index processing this VASliceParameterBufferAV1 */
-               buffer_idx;
+   VASliceParameterBufferAV1 *av1 = buf->data;
 
-      VASliceParameterBufferAV1 *av1 = &(((VASliceParameterBufferAV1*)buf->data)[buffer_idx]);
+   for (uint32_t buffer_idx = 0; buffer_idx < buf->num_elements; buffer_idx++, av1++) {
+      uint32_t slice_index = context->desc.av1.slice_parameter.slice_count + buffer_idx;
+
+      const size_t max_pipe_av1_slices = ARRAY_SIZE(context->desc.av1.slice_parameter.slice_data_offset);
+      assert(slice_index < max_pipe_av1_slices);
+      if (slice_index >= max_pipe_av1_slices) {
+         static bool warn_once = true;
+         if (warn_once) {
+            fprintf(stderr, "Warning: Number of slices (%d) provided exceed driver's max supported (%d), stop handling remaining slices.\n",
+               slice_index + 1, (int)max_pipe_av1_slices);
+            warn_once = false;
+         }
+         return;
+      }
+
       context->desc.av1.slice_parameter.slice_data_size[slice_index] = av1->slice_data_size;
-      context->desc.av1.slice_parameter.slice_data_offset[slice_index] = av1->slice_data_offset;
+      context->desc.av1.slice_parameter.slice_data_offset[slice_index] =
+         context->slice_data_offset + av1->slice_data_offset;
       context->desc.av1.slice_parameter.slice_data_row[slice_index] = av1->tile_row;
       context->desc.av1.slice_parameter.slice_data_col[slice_index] = av1->tile_column;
       context->desc.av1.slice_parameter.slice_data_anchor_frame_idx[slice_index] = av1->anchor_frame_idx;
-      context->desc.av1.slice_parameter.slice_count = slice_index + 1;
    }
+   context->desc.av1.slice_parameter.slice_count += buf->num_elements;
 }

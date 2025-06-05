@@ -1,27 +1,7 @@
 /*
  * Copyright 2013 Advanced Micro Devices, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
  * Authors: Marek Olšák <maraeo@gmail.com>
- *
+ * SPDX-License-Identifier: MIT
  */
 
 #include "r600_pipe_common.h"
@@ -43,7 +23,7 @@
 #include <sys/utsname.h>
 #include <stdlib.h>
 
-#ifdef LLVM_AVAILABLE
+#if AMD_LLVM_AVAILABLE
 #include <llvm-c/TargetMachine.h>
 #endif
 
@@ -135,12 +115,25 @@ void r600_draw_rectangle(struct blitter_context *blitter,
 			 enum blitter_attrib_type type,
 			 const union blitter_attrib *attrib)
 {
-	struct r600_common_context *rctx =
-		(struct r600_common_context*)util_blitter_get_pipe(blitter);
+	struct r600_context *cctx =
+		(struct r600_context*)util_blitter_get_pipe(blitter);
+	struct r600_common_context *rctx = &cctx->b;
 	struct pipe_viewport_state viewport;
 	struct pipe_resource *buf = NULL;
 	unsigned offset = 0;
 	float *vb;
+
+	if (unlikely(MAX2(abs(x1), abs(x2)) > INT16_MAX ||
+		     MAX2(abs(y1), abs(y2)) > INT16_MAX)) {
+		/* Fallback when coordinates can't fit in int16. */
+		util_blitter_save_vertex_elements(cctx->blitter,
+						  cctx->vertex_fetch_shader.cso);
+		util_blitter_draw_rectangle(blitter, vertex_elements_cso, get_vs,
+					    x1, y1, x2, y2,
+					    depth, num_instances,
+					    type, attrib);
+		return;
+	}
 
 	rctx->b.bind_vertex_elements_state(&rctx->b, vertex_elements_cso);
 	rctx->b.bind_vs_state(&rctx->b, get_vs(blitter));
@@ -208,7 +201,7 @@ void r600_draw_rectangle(struct blitter_context *blitter,
 	vbuffer.buffer.resource = buf;
 	vbuffer.buffer_offset = offset;
 
-	rctx->b.set_vertex_buffers(&rctx->b, 1, 0, false, &vbuffer);
+	util_set_vertex_buffers(&rctx->b, 1, false, &vbuffer);
 	util_draw_arrays_instanced(&rctx->b, R600_PRIM_RECTANGLE_LIST, 0, 3,
 				   0, num_instances);
 	pipe_resource_reference(&buf, NULL);
@@ -352,7 +345,7 @@ static void r600_flush_from_st(struct pipe_context *ctx,
 
 	if (!radeon_emitted(&rctx->gfx.cs, rctx->initial_gfx_cs_size)) {
 		if (fence)
-			ws->fence_reference(&gfx_fence, rctx->last_gfx_fence);
+			ws->fence_reference(ws, &gfx_fence, rctx->last_gfx_fence);
 		if (!(flags & PIPE_FLUSH_DEFERRED))
 			ws->cs_sync_flush(&rctx->gfx.cs);
 	} else {
@@ -374,8 +367,8 @@ static void r600_flush_from_st(struct pipe_context *ctx,
 		struct r600_multi_fence *multi_fence =
 			CALLOC_STRUCT(r600_multi_fence);
 		if (!multi_fence) {
-			ws->fence_reference(&sdma_fence, NULL);
-			ws->fence_reference(&gfx_fence, NULL);
+			ws->fence_reference(ws, &sdma_fence, NULL);
+			ws->fence_reference(ws, &gfx_fence, NULL);
 			goto finish;
 		}
 
@@ -412,7 +405,7 @@ static void r600_flush_dma_ring(void *ctx, unsigned flags,
 
 	if (!radeon_emitted(cs, 0)) {
 		if (fence)
-			rctx->ws->fence_reference(fence, rctx->last_sdma_fence);
+			rctx->ws->fence_reference(rctx->ws, fence, rctx->last_sdma_fence);
 		return;
 	}
 
@@ -421,7 +414,7 @@ static void r600_flush_dma_ring(void *ctx, unsigned flags,
 
 	rctx->ws->cs_flush(cs, flags, &rctx->last_sdma_fence);
 	if (fence)
-		rctx->ws->fence_reference(fence, rctx->last_sdma_fence);
+		rctx->ws->fence_reference(rctx->ws, fence, rctx->last_sdma_fence);
 
 	if (check_vm) {
 		/* Use conservative timeout 800ms, after which we won't wait any
@@ -666,8 +659,8 @@ void r600_common_context_cleanup(struct r600_common_context *rctx)
 	slab_destroy_child(&rctx->pool_transfers_unsync);
 
 	u_suballocator_destroy(&rctx->allocator_zeroed_memory);
-	rctx->ws->fence_reference(&rctx->last_gfx_fence, NULL);
-	rctx->ws->fence_reference(&rctx->last_sdma_fence, NULL);
+	rctx->ws->fence_reference(rctx->ws, &rctx->last_gfx_fence, NULL);
+	rctx->ws->fence_reference(rctx->ws, &rctx->last_sdma_fence, NULL);
 	r600_resource_reference(&rctx->eop_bug_scratch, NULL);
 }
 
@@ -791,37 +784,6 @@ static const char* r600_get_name(struct pipe_screen* pscreen)
 	struct r600_common_screen *rscreen = (struct r600_common_screen*)pscreen;
 
 	return rscreen->renderer_string;
-}
-
-static float r600_get_paramf(struct pipe_screen* pscreen,
-			     enum pipe_capf param)
-{
-	switch (param) {
-	case PIPE_CAPF_MIN_LINE_WIDTH:
-	case PIPE_CAPF_MIN_LINE_WIDTH_AA:
-	case PIPE_CAPF_MIN_POINT_SIZE:
-	case PIPE_CAPF_MIN_POINT_SIZE_AA:
-		return 1;
-
-	case PIPE_CAPF_POINT_SIZE_GRANULARITY:
-	case PIPE_CAPF_LINE_WIDTH_GRANULARITY:
-		return 0.1;
-
-	case PIPE_CAPF_MAX_LINE_WIDTH:
-	case PIPE_CAPF_MAX_LINE_WIDTH_AA:
-	case PIPE_CAPF_MAX_POINT_SIZE:
-	case PIPE_CAPF_MAX_POINT_SIZE_AA:
-         return 8191.0f;
-	case PIPE_CAPF_MAX_TEXTURE_ANISOTROPY:
-		return 16.0f;
-	case PIPE_CAPF_MAX_TEXTURE_LOD_BIAS:
-		return 16.0f;
-    case PIPE_CAPF_MIN_CONSERVATIVE_RASTER_DILATE:
-    case PIPE_CAPF_MAX_CONSERVATIVE_RASTER_DILATE:
-    case PIPE_CAPF_CONSERVATIVE_RASTER_DILATE_GRANULARITY:
-        return 0.0f;
-	}
-	return 0.0f;
 }
 
 static int r600_get_video_param(struct pipe_screen *screen,
@@ -1034,7 +996,6 @@ static int r600_get_compute_param(struct pipe_screen *screen,
 		}
 		return sizeof(uint32_t);
 	case PIPE_COMPUTE_CAP_MAX_PRIVATE_SIZE:
-	case PIPE_COMPUTE_CAP_MAX_SUBGROUPS:
 		break; /* unused */
 	case PIPE_COMPUTE_CAP_SUBGROUP_SIZES:
 		if (ret) {
@@ -1048,6 +1009,8 @@ static int r600_get_compute_param(struct pipe_screen *screen,
 			*max_variable_threads_per_block = 0;
 		}
 		return sizeof(uint64_t);
+        case PIPE_COMPUTE_CAP_MAX_SUBGROUPS:
+           return 0;
 	}
 
         fprintf(stderr, "unknown PIPE_COMPUTE_CAP %d\n", param);
@@ -1071,8 +1034,8 @@ static void r600_fence_reference(struct pipe_screen *screen,
 	struct r600_multi_fence *rsrc = (struct r600_multi_fence *)src;
 
 	if (pipe_reference(&(*rdst)->reference, &rsrc->reference)) {
-		ws->fence_reference(&(*rdst)->gfx, NULL);
-		ws->fence_reference(&(*rdst)->sdma, NULL);
+		ws->fence_reference(ws, &(*rdst)->gfx, NULL);
+		ws->fence_reference(ws, &(*rdst)->sdma, NULL);
 		FREE(*rdst);
 	}
         *rdst = rsrc;
@@ -1271,7 +1234,7 @@ bool r600_common_screen_init(struct r600_common_screen *rscreen,
 
 	snprintf(rscreen->renderer_string, sizeof(rscreen->renderer_string),
 		 "%s (%sDRM %i.%i.%i%s"
-#ifdef LLVM_AVAILABLE
+#if AMD_LLVM_AVAILABLE
 		 ", LLVM " MESA_LLVM_VERSION_STRING
 #endif
 		 ")",
@@ -1285,7 +1248,6 @@ bool r600_common_screen_init(struct r600_common_screen *rscreen,
 	rscreen->b.get_disk_shader_cache = r600_get_disk_shader_cache;
 	rscreen->b.get_compute_param = r600_get_compute_param;
 	rscreen->b.get_screen_fd = r600_get_screen_fd;
-	rscreen->b.get_paramf = r600_get_paramf;
 	rscreen->b.get_timestamp = r600_get_timestamp;
 	rscreen->b.get_compiler_options = r600_get_compiler_options;
 	rscreen->b.fence_finish = r600_fence_finish;
@@ -1400,11 +1362,9 @@ bool r600_common_screen_init(struct r600_common_screen *rscreen,
 		 */
 		.max_unroll_iterations = 255,
 		.lower_interpolate_at = true,
-		.vectorize_io = true,
 		.has_umad24 = true,
 		.has_umul24 = true,
 		.has_fmulz = true,
-		.use_interpolated_input_intrinsics = true,
 		.has_fsub = true,
 		.has_isub = true,
 		.has_find_msb_rev = true,
@@ -1416,13 +1376,13 @@ bool r600_common_screen_init(struct r600_common_screen *rscreen,
 		.lower_ufind_msb = true,
 		.lower_to_scalar = true,
 		.lower_to_scalar_filter = r600_lower_to_scalar_instr_filter,
-		.linker_ignore_precision = true,
 		.lower_fpow = true,
 		.lower_int64_options = ~0,
 		.lower_cs_local_index_to_id = true,
 		.lower_uniforms_to_ubo = true,
 		.lower_image_offset_to_range_base = 1,
 		.vectorize_tess_levels = 1,
+		.io_options = nir_io_mediump_is_32bit,
 	};
 
 	rscreen->nir_options = nir_options;
@@ -1443,8 +1403,14 @@ bool r600_common_screen_init(struct r600_common_screen *rscreen,
 	}
 
 	if (rscreen->info.gfx_level < CAYMAN) {
-		rscreen->nir_options.lower_doubles_options = nir_lower_fp64_full_software;
 		rscreen->nir_options.lower_atomic_offset_to_range_base = true;
+
+		rscreen->nir_options.lower_doubles_options =
+			nir_lower_fp64_full_software |
+			nir_lower_dceil |
+			nir_lower_dsqrt |
+			nir_lower_drcp |
+			nir_lower_drsq;
 	} else {
 		rscreen->nir_options.lower_doubles_options =
 			nir_lower_ddiv |
@@ -1458,6 +1424,8 @@ bool r600_common_screen_init(struct r600_common_screen *rscreen,
 
         rscreen->nir_options_fs = rscreen->nir_options;
 	rscreen->nir_options_fs.lower_all_io_to_temps = true;
+	rscreen->nir_options.support_indirect_inputs = (uint8_t)BITFIELD_MASK(PIPE_SHADER_TYPES);
+	rscreen->nir_options.support_indirect_outputs = (uint8_t)BITFIELD_MASK(PIPE_SHADER_TYPES);
 
 	return true;
 }

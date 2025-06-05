@@ -128,8 +128,10 @@ lvp_physical_device_get_format_properties(struct lvp_physical_device *physical_d
                          VK_FORMAT_FEATURE_2_STORAGE_WRITE_WITHOUT_FORMAT_BIT;
    }
 
+   const struct vk_format_ycbcr_info *ycbcr_info =
+         vk_format_get_ycbcr_info(format);
    if (pscreen->is_format_supported(pscreen, pformat, PIPE_TEXTURE_2D, 0, 0,
-                                    PIPE_BIND_SAMPLER_VIEW)) {
+                                    PIPE_BIND_SAMPLER_VIEW) || ycbcr_info) {
       features |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_BIT;
       if (util_format_has_depth(util_format_description(pformat)))
          features |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_DEPTH_COMPARISON_BIT;
@@ -137,8 +139,6 @@ lvp_physical_device_get_format_properties(struct lvp_physical_device *physical_d
          features |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_LINEAR_BIT;
       if (lvp_is_filter_minmax_format_supported(format))
          features |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_MINMAX_BIT;
-      const struct vk_format_ycbcr_info *ycbcr_info =
-         vk_format_get_ycbcr_info(format);
       if (ycbcr_info) {
          if (ycbcr_info->n_planes > 1)
             features |= VK_FORMAT_FEATURE_DISJOINT_BIT;
@@ -162,9 +162,8 @@ lvp_physical_device_get_format_properties(struct lvp_physical_device *physical_d
    if (pscreen->is_format_supported(pscreen, pformat, PIPE_TEXTURE_2D, 0, 0,
                                     PIPE_BIND_RENDER_TARGET)) {
       features |= VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BIT;
-      /* SNORM blending on llvmpipe fails CTS - disable for now */
-      if (!util_format_is_snorm(pformat) &&
-          !util_format_is_pure_integer(pformat))
+      if (!util_format_is_pure_integer(pformat) &&
+          !(util_format_is_snorm(pformat) && !physical_device->snorm_blend))
          features |= VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BLEND_BIT;
    }
 
@@ -195,13 +194,34 @@ lvp_physical_device_get_format_properties(struct lvp_physical_device *physical_d
    }
    if ((pformat != PIPE_FORMAT_R9G9B9E5_FLOAT) &&
        util_format_get_nr_components(pformat) != 3 &&
-       !util_format_is_subsampled_422(pformat) &&
-       !util_format_is_yuv(pformat) &&
+       !ycbcr_info &&
        pformat != PIPE_FORMAT_R10G10B10A2_SNORM &&
        pformat != PIPE_FORMAT_B10G10R10A2_SNORM &&
        pformat != PIPE_FORMAT_B10G10R10A2_UNORM) {
       features |= (VK_FORMAT_FEATURE_2_BLIT_SRC_BIT |
                    VK_FORMAT_FEATURE_2_BLIT_DST_BIT);
+   }
+
+   switch (format) {
+   case VK_FORMAT_R32G32_SFLOAT:
+   case VK_FORMAT_R32G32B32_SFLOAT:
+   case VK_FORMAT_R32G32B32A32_SFLOAT:
+   case VK_FORMAT_R16G16_SFLOAT:
+   case VK_FORMAT_R16G16B16_SFLOAT:
+   case VK_FORMAT_R16G16B16A16_SFLOAT:
+   case VK_FORMAT_R16G16_SNORM:
+   case VK_FORMAT_R16G16_UNORM:
+   case VK_FORMAT_R16G16B16A16_SNORM:
+   case VK_FORMAT_R16G16B16A16_UNORM:
+   case VK_FORMAT_R8G8_SNORM:
+   case VK_FORMAT_R8G8_UNORM:
+   case VK_FORMAT_R8G8B8A8_SNORM:
+   case VK_FORMAT_R8G8B8A8_UNORM:
+   case VK_FORMAT_A2B10G10R10_UNORM_PACK32:
+      buffer_features |= VK_FORMAT_FEATURE_2_ACCELERATION_STRUCTURE_VERTEX_BUFFER_BIT_KHR;
+      break;
+   default:
+      break;
    }
 
    out_properties->linearTilingFeatures = features;
@@ -237,6 +257,34 @@ VKAPI_ATTR void VKAPI_CALL lvp_GetPhysicalDeviceFormatProperties2(
    VkSubpassResolvePerformanceQueryEXT *perf = (void*)vk_find_struct_const(pFormatProperties->pNext, SUBPASS_RESOLVE_PERFORMANCE_QUERY_EXT);
    if (perf)
       perf->optimal = VK_FALSE;
+
+#if DETECT_OS_LINUX
+   VkDrmFormatModifierPropertiesListEXT *modlist = (void*)vk_find_struct_const(pFormatProperties->pNext, DRM_FORMAT_MODIFIER_PROPERTIES_LIST_EXT);
+   if (modlist) {
+      modlist->drmFormatModifierCount = 0;
+      if (pFormatProperties->formatProperties.optimalTilingFeatures) {
+         modlist->drmFormatModifierCount = 1;
+         VkDrmFormatModifierPropertiesEXT *mods = &modlist->pDrmFormatModifierProperties[0];
+         if (mods) {
+            mods->drmFormatModifier = DRM_FORMAT_MOD_LINEAR;
+            mods->drmFormatModifierPlaneCount = util_format_get_num_planes(lvp_vk_format_to_pipe_format(format));
+            mods->drmFormatModifierTilingFeatures = pFormatProperties->formatProperties.optimalTilingFeatures;
+         }
+      }
+   }
+#endif
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL
+lvp_GetImageDrmFormatModifierPropertiesEXT(VkDevice _device, VkImage _image,
+                                           VkImageDrmFormatModifierPropertiesEXT *pProperties)
+{
+#if DETECT_OS_LINUX
+   pProperties->drmFormatModifier = DRM_FORMAT_MOD_LINEAR;
+   return VK_SUCCESS;
+#else
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+#endif
 }
 
 static VkResult lvp_get_image_format_properties(struct lvp_physical_device *physical_device,
@@ -256,6 +304,10 @@ static VkResult lvp_get_image_format_properties(struct lvp_physical_device *phys
       format_feature_flags = format_props.linearTilingFeatures;
    } else if (info->tiling == VK_IMAGE_TILING_OPTIMAL) {
       format_feature_flags = format_props.optimalTilingFeatures;
+   } else if (info->tiling == VK_IMAGE_TILING_DRM_FORMAT_MODIFIER_EXT) {
+      if (vk_format_get_plane_count (info->format) > 1)
+        goto unsupported;
+      format_feature_flags = format_props.optimalTilingFeatures;
    } else {
       unreachable("bad VkImageTiling");
    }
@@ -263,8 +315,8 @@ static VkResult lvp_get_image_format_properties(struct lvp_physical_device *phys
    if (format_feature_flags == 0)
       goto unsupported;
 
-   uint32_t max_2d_ext = physical_device->pscreen->get_param(physical_device->pscreen, PIPE_CAP_MAX_TEXTURE_2D_SIZE);
-   uint32_t max_layers = physical_device->pscreen->get_param(physical_device->pscreen, PIPE_CAP_MAX_TEXTURE_ARRAY_LAYERS);
+   uint32_t max_2d_ext = physical_device->pscreen->caps.max_texture_2d_size;
+   uint32_t max_layers = physical_device->pscreen->caps.max_texture_array_layers;
    switch (info->type) {
    default:
       unreachable("bad vkimage type\n");
@@ -293,7 +345,7 @@ static VkResult lvp_get_image_format_properties(struct lvp_physical_device *phys
    case VK_IMAGE_TYPE_3D:
       maxExtent.width = max_2d_ext;
       maxExtent.height = max_2d_ext;
-      maxExtent.depth = (1 << physical_device->pscreen->get_param(physical_device->pscreen, PIPE_CAP_MAX_TEXTURE_3D_LEVELS));
+      maxExtent.depth = (1 << physical_device->pscreen->caps.max_texture_3d_levels);
       maxMipLevels = util_logbase2(max_2d_ext) + 1;
       maxArraySize = 1;
       break;
@@ -415,12 +467,24 @@ VKAPI_ATTR VkResult VKAPI_CALL lvp_GetPhysicalDeviceImageFormatProperties2(
       }
    }
 
-   if (external_info && external_info->handleType != 0) {
+   if (external_info && external_info->handleType != 0 && external_props) {
       VkExternalMemoryFeatureFlagBits flags = 0;
       VkExternalMemoryHandleTypeFlags export_flags = 0;
       VkExternalMemoryHandleTypeFlags compat_flags = 0;
 
       switch (external_info->handleType) {
+#ifdef HAVE_LIBDRM
+      case VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT: {
+         int params = physical_device->pscreen->caps.dmabuf;
+         flags = VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT;
+         if (params & DRM_PRIME_CAP_EXPORT)
+            flags |= VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT;
+
+         export_flags = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
+         compat_flags = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
+         break;
+      }
+#endif
 #ifdef PIPE_MEMORY_FD
       case VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT:
          flags = VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT | VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT;
@@ -446,18 +510,20 @@ VKAPI_ATTR VkResult VKAPI_CALL lvp_GetPhysicalDeviceImageFormatProperties2(
    return VK_SUCCESS;
 }
 
-VKAPI_ATTR void VKAPI_CALL lvp_GetPhysicalDeviceSparseImageFormatProperties(
-    VkPhysicalDevice                            physicalDevice,
-    VkFormat                                    format,
-    VkImageType                                 type,
-    VkSampleCountFlagBits                       samples,
-    VkImageUsageFlags                           usage,
-    VkImageTiling                               tiling,
-    uint32_t*                                   pNumProperties,
-    VkSparseImageFormatProperties*              pProperties)
+static void
+fill_sparse_image_format_properties(struct lvp_physical_device *pdev, VkImageType type,
+                                    VkFormat format, VkSampleCountFlagBits samples,
+                                    VkSparseImageFormatProperties *prop)
 {
-   /* Sparse images are not yet supported. */
-   *pNumProperties = 0;
+   enum pipe_format pformat = vk_format_to_pipe_format(format);
+
+   prop->aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+   prop->flags = 0;
+   prop->imageGranularity = (VkExtent3D){
+      .width = util_format_get_tilesize(pformat, type + 1, samples, 0),
+      .height = util_format_get_tilesize(pformat, type + 1, samples, 1),
+      .depth = util_format_get_tilesize(pformat, type + 1, samples, 2),
+   };
 }
 
 VKAPI_ATTR void VKAPI_CALL lvp_GetPhysicalDeviceSparseImageFormatProperties2(
@@ -466,9 +532,97 @@ VKAPI_ATTR void VKAPI_CALL lvp_GetPhysicalDeviceSparseImageFormatProperties2(
         uint32_t                                   *pPropertyCount,
         VkSparseImageFormatProperties2             *pProperties)
 {
-        /* Sparse images are not yet supported. */
-        *pPropertyCount = 0;
+   LVP_FROM_HANDLE(lvp_physical_device, physical_device, physicalDevice);
+   VkResult result;
+
+   if (pFormatInfo->samples > VK_SAMPLE_COUNT_1_BIT) {
+      *pPropertyCount = 0;
+      return;
+   }
+   const VkPhysicalDeviceImageFormatInfo2 fmt_info = {
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2,
+      .format = pFormatInfo->format,
+      .type = pFormatInfo->type,
+      .tiling = pFormatInfo->tiling,
+      .usage = pFormatInfo->usage,
+      .flags = VK_IMAGE_CREATE_SPARSE_BINDING_BIT | VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT};
+
+   VkImageFormatProperties fmt_props;
+   result = lvp_get_image_format_properties(physical_device, &fmt_info,
+                                            &fmt_props);
+   if (result != VK_SUCCESS) {
+      *pPropertyCount = 0;
+      return;
+   }
+
+   VK_OUTARRAY_MAKE_TYPED(VkSparseImageFormatProperties2, out, pProperties, pPropertyCount);
+
+   vk_outarray_append_typed(VkSparseImageFormatProperties2, &out, prop)
+   {
+      fill_sparse_image_format_properties(physical_device, pFormatInfo->type, pFormatInfo->format,
+                                          pFormatInfo->samples, &prop->properties);
+   };
 }
+
+VKAPI_ATTR void VKAPI_CALL lvp_GetDeviceImageSparseMemoryRequirements(
+    VkDevice                                    _device,
+    const VkDeviceImageMemoryRequirements*      pInfo,
+    uint32_t*                                   pSparseMemoryRequirementCount,
+    VkSparseImageMemoryRequirements2*           pSparseMemoryRequirements)
+{
+   LVP_FROM_HANDLE(lvp_device, device, _device);
+
+   if (!(pInfo->pCreateInfo->flags & VK_IMAGE_CREATE_SPARSE_BINDING_BIT)) {
+      *pSparseMemoryRequirementCount = 0;
+      return;
+   }
+
+   VK_OUTARRAY_MAKE_TYPED(VkSparseImageMemoryRequirements2, out, pSparseMemoryRequirements,
+                          pSparseMemoryRequirementCount);
+
+   vk_outarray_append_typed(VkSparseImageMemoryRequirements2, &out, req)
+   {
+      fill_sparse_image_format_properties(device->physical_device, pInfo->pCreateInfo->imageType,
+                                          pInfo->pCreateInfo->format, pInfo->pCreateInfo->samples,
+                                          &req->memoryRequirements.formatProperties);
+
+      req->memoryRequirements.imageMipTailFirstLod = pInfo->pCreateInfo->mipLevels;
+      req->memoryRequirements.imageMipTailSize = 0;
+      req->memoryRequirements.imageMipTailOffset = 0;
+      req->memoryRequirements.imageMipTailStride = 0;
+   };
+}
+
+VKAPI_ATTR void VKAPI_CALL lvp_GetImageSparseMemoryRequirements2(
+   VkDevice                                    _device,
+   const VkImageSparseMemoryRequirementsInfo2* pInfo,
+   uint32_t* pSparseMemoryRequirementCount,
+   VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+{
+   LVP_FROM_HANDLE(lvp_device, device, _device);
+   LVP_FROM_HANDLE(lvp_image, image, pInfo->image);
+
+   if (!(image->vk.create_flags & VK_IMAGE_CREATE_SPARSE_BINDING_BIT)) {
+      *pSparseMemoryRequirementCount = 0;
+      return;
+   }
+
+   VK_OUTARRAY_MAKE_TYPED(VkSparseImageMemoryRequirements2, out, pSparseMemoryRequirements,
+                          pSparseMemoryRequirementCount);
+
+   vk_outarray_append_typed(VkSparseImageMemoryRequirements2, &out, req)
+   {
+      fill_sparse_image_format_properties(device->physical_device, image->vk.image_type,
+                                          image->vk.format, image->vk.samples,
+                                          &req->memoryRequirements.formatProperties);
+
+      req->memoryRequirements.imageMipTailFirstLod = image->vk.mip_levels;
+      req->memoryRequirements.imageMipTailSize = 0;
+      req->memoryRequirements.imageMipTailOffset = 0;
+      req->memoryRequirements.imageMipTailStride = 0;
+   };
+}
+
 
 VKAPI_ATTR void VKAPI_CALL lvp_GetPhysicalDeviceExternalBufferProperties(
    VkPhysicalDevice                            physicalDevice,
@@ -479,6 +633,19 @@ VKAPI_ATTR void VKAPI_CALL lvp_GetPhysicalDeviceExternalBufferProperties(
    VkExternalMemoryHandleTypeFlags export_flags = 0;
    VkExternalMemoryHandleTypeFlags compat_flags = 0;
    switch (pExternalBufferInfo->handleType) {
+#ifdef HAVE_LIBDRM
+      case VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT: {
+         LVP_FROM_HANDLE(lvp_physical_device, physical_device, physicalDevice);
+         int params = physical_device->pscreen->caps.dmabuf;
+         flags = VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT;
+         if (params & DRM_PRIME_CAP_EXPORT)
+            flags |= VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT;
+
+         export_flags = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
+         compat_flags = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
+         break;
+      }
+#endif
 #ifdef PIPE_MEMORY_FD
    case VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT:
       flags = VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT | VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT;

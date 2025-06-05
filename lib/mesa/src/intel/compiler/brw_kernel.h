@@ -21,8 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef BRW_KERNEL_H
-#define BRW_KERNEL_H
+#pragma once
 
 #include "brw_compiler.h"
 
@@ -70,5 +69,3 @@ brw_kernel_from_spirv(struct brw_compiler *compiler,
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-#endif /* BRW_KERNEL_H */

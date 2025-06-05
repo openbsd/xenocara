@@ -1,324 +1,448 @@
 /*
  * Copyright © 2021 Collabora Ltd.
+ * Copyright © 2024 Arm Ltd.
  *
- * Derived from tu_device.c which is:
+ * Derived from tu_image.c which is:
  * Copyright © 2016 Red Hat.
  * Copyright © 2016 Bas Nieuwenhuizen
  * Copyright © 2015 Intel Corporation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
+#include "vk_cmd_enqueue_entrypoints.h"
+#include "vk_common_entrypoints.h"
+
+#include "panvk_buffer.h"
+#include "panvk_cmd_alloc.h"
+#include "panvk_cmd_buffer.h"
+#include "panvk_device.h"
+#include "panvk_entrypoints.h"
+#include "panvk_instance.h"
+#include "panvk_macros.h"
+#include "panvk_physical_device.h"
+#include "panvk_priv_bo.h"
+#include "panvk_queue.h"
+#include "panvk_utrace.h"
+#include "panvk_utrace_perfetto.h"
+
+#include "genxml/decode.h"
 #include "genxml/gen_macros.h"
 
-#include "decode.h"
+#include "kmod/pan_kmod.h"
+#include "pan_props.h"
+#include "pan_samples.h"
 
-#include "panvk_cs.h"
-#include "panvk_private.h"
-
-#include "vk_drm_syncobj.h"
-
-static void
-panvk_queue_submit_batch(struct panvk_queue *queue, struct panvk_batch *batch,
-                         uint32_t *bos, unsigned nr_bos, uint32_t *in_fences,
-                         unsigned nr_in_fences)
+static void *
+panvk_kmod_zalloc(const struct pan_kmod_allocator *allocator, size_t size,
+                  bool transient)
 {
-   const struct panvk_device *dev = queue->device;
-   unsigned debug = dev->physical_device->instance->debug_flags;
-   const struct panfrost_device *pdev = &dev->physical_device->pdev;
-   int ret;
+   const VkAllocationCallbacks *vkalloc = allocator->priv;
 
-   /* Reset the batch if it's already been issued */
-   if (batch->issued) {
-      util_dynarray_foreach(&batch->jobs, void *, job)
-         memset((*job), 0, 4 * 4);
+   void *obj = vk_zalloc(vkalloc, size, 8,
+                         transient ? VK_SYSTEM_ALLOCATION_SCOPE_COMMAND
+                                   : VK_SYSTEM_ALLOCATION_SCOPE_DEVICE);
 
-      /* Reset the tiler before re-issuing the batch */
-      if (batch->tiler.descs.cpu) {
-         memcpy(batch->tiler.descs.cpu, batch->tiler.templ,
-                pan_size(TILER_CONTEXT) + pan_size(TILER_HEAP));
-      }
-   }
+   /* We force errno to -ENOMEM on host allocation failures so we can properly
+    * report it back as VK_ERROR_OUT_OF_HOST_MEMORY. */
+   if (!obj)
+      errno = -ENOMEM;
 
-   if (batch->scoreboard.first_job) {
-      struct drm_panfrost_submit submit = {
-         .bo_handles = (uintptr_t)bos,
-         .bo_handle_count = nr_bos,
-         .in_syncs = (uintptr_t)in_fences,
-         .in_sync_count = nr_in_fences,
-         .out_sync = queue->sync,
-         .jc = batch->scoreboard.first_job,
-      };
-
-      ret = drmIoctl(pdev->fd, DRM_IOCTL_PANFROST_SUBMIT, &submit);
-      assert(!ret);
-
-      if (debug & (PANVK_DEBUG_TRACE | PANVK_DEBUG_SYNC)) {
-         ret =
-            drmSyncobjWait(pdev->fd, &submit.out_sync, 1, INT64_MAX, 0, NULL);
-         assert(!ret);
-      }
-
-      if (debug & PANVK_DEBUG_TRACE)
-         pandecode_jc(pdev->decode_ctx, batch->scoreboard.first_job,
-                      pdev->gpu_id);
-
-      if (debug & PANVK_DEBUG_DUMP)
-         pandecode_dump_mappings(pdev->decode_ctx);
-   }
-
-   if (batch->fragment_job) {
-      struct drm_panfrost_submit submit = {
-         .bo_handles = (uintptr_t)bos,
-         .bo_handle_count = nr_bos,
-         .out_sync = queue->sync,
-         .jc = batch->fragment_job,
-         .requirements = PANFROST_JD_REQ_FS,
-      };
-
-      if (batch->scoreboard.first_job) {
-         submit.in_syncs = (uintptr_t)(&queue->sync);
-         submit.in_sync_count = 1;
-      } else {
-         submit.in_syncs = (uintptr_t)in_fences;
-         submit.in_sync_count = nr_in_fences;
-      }
-
-      ret = drmIoctl(pdev->fd, DRM_IOCTL_PANFROST_SUBMIT, &submit);
-      assert(!ret);
-      if (debug & (PANVK_DEBUG_TRACE | PANVK_DEBUG_SYNC)) {
-         ret =
-            drmSyncobjWait(pdev->fd, &submit.out_sync, 1, INT64_MAX, 0, NULL);
-         assert(!ret);
-      }
-
-      if (debug & PANVK_DEBUG_TRACE)
-         pandecode_jc(pdev->decode_ctx, batch->fragment_job, pdev->gpu_id);
-
-      if (debug & PANVK_DEBUG_DUMP)
-         pandecode_dump_mappings(pdev->decode_ctx);
-   }
-
-   if (debug & PANVK_DEBUG_TRACE)
-      pandecode_next_frame(pdev->decode_ctx);
-
-   batch->issued = true;
+   return obj;
 }
 
 static void
-panvk_queue_transfer_sync(struct panvk_queue *queue, uint32_t syncobj)
+panvk_kmod_free(const struct pan_kmod_allocator *allocator, void *data)
 {
-   const struct panfrost_device *pdev = &queue->device->physical_device->pdev;
-   int ret;
+   const VkAllocationCallbacks *vkalloc = allocator->priv;
 
-   struct drm_syncobj_handle handle = {
-      .handle = queue->sync,
-      .flags = DRM_SYNCOBJ_HANDLE_TO_FD_FLAGS_EXPORT_SYNC_FILE,
-      .fd = -1,
+   return vk_free(vkalloc, data);
+}
+
+static void
+panvk_device_init_mempools(struct panvk_device *dev)
+{
+   struct panvk_pool_properties rw_pool_props = {
+      .create_flags = 0,
+      .slab_size = 16 * 1024,
+      .label = "Device RW cached memory pool",
+      .owns_bos = false,
+      .needs_locking = true,
+      .prealloc = false,
    };
 
-   ret = drmIoctl(pdev->fd, DRM_IOCTL_SYNCOBJ_HANDLE_TO_FD, &handle);
-   assert(!ret);
-   assert(handle.fd >= 0);
+   panvk_pool_init(&dev->mempools.rw, dev, NULL, &rw_pool_props);
 
-   handle.handle = syncobj;
-   ret = drmIoctl(pdev->fd, DRM_IOCTL_SYNCOBJ_FD_TO_HANDLE, &handle);
-   assert(!ret);
+   struct panvk_pool_properties rw_nc_pool_props = {
+      .create_flags = PAN_ARCH <= 9 ? 0 : PAN_KMOD_BO_FLAG_GPU_UNCACHED,
+      .slab_size = 16 * 1024,
+      .label = "Device RW uncached memory pool",
+      .owns_bos = false,
+      .needs_locking = true,
+      .prealloc = false,
+   };
 
-   close(handle.fd);
+   panvk_pool_init(&dev->mempools.rw_nc, dev, NULL, &rw_nc_pool_props);
+
+   struct panvk_pool_properties exec_pool_props = {
+      .create_flags = PAN_KMOD_BO_FLAG_EXECUTABLE,
+      .slab_size = 16 * 1024,
+      .label = "Device executable memory pool (shaders)",
+      .owns_bos = false,
+      .needs_locking = true,
+      .prealloc = false,
+   };
+
+   panvk_pool_init(&dev->mempools.exec, dev, NULL, &exec_pool_props);
 }
 
 static void
-panvk_add_wait_event_syncobjs(struct panvk_batch *batch, uint32_t *in_fences,
-                              unsigned *nr_in_fences)
+panvk_device_cleanup_mempools(struct panvk_device *dev)
 {
-   util_dynarray_foreach(&batch->event_ops, struct panvk_event_op, op) {
-      switch (op->type) {
-      case PANVK_EVENT_OP_SET:
-         /* Nothing to do yet */
-         break;
-      case PANVK_EVENT_OP_RESET:
-         /* Nothing to do yet */
-         break;
-      case PANVK_EVENT_OP_WAIT:
-         in_fences[(*nr_in_fences)++] = op->event->syncobj;
-         break;
-      default:
-         unreachable("bad panvk_event_op type\n");
-      }
-   }
+   panvk_pool_cleanup(&dev->mempools.rw);
+   panvk_pool_cleanup(&dev->mempools.rw_nc);
+   panvk_pool_cleanup(&dev->mempools.exec);
 }
 
-static void
-panvk_signal_event_syncobjs(struct panvk_queue *queue,
-                            struct panvk_batch *batch)
+static VkResult
+panvk_meta_cmd_bind_map_buffer(struct vk_command_buffer *cmd,
+                               struct vk_meta_device *meta, VkBuffer buf,
+                               void **map_out)
 {
-   const struct panfrost_device *pdev = &queue->device->physical_device->pdev;
+   VK_FROM_HANDLE(panvk_buffer, buffer, buf);
+   struct panvk_cmd_buffer *cmdbuf =
+      container_of(cmd, struct panvk_cmd_buffer, vk);
+   struct panfrost_ptr mem =
+      panvk_cmd_alloc_dev_mem(cmdbuf, desc, buffer->vk.size, 64);
 
-   util_dynarray_foreach(&batch->event_ops, struct panvk_event_op, op) {
-      switch (op->type) {
-      case PANVK_EVENT_OP_SET: {
-         panvk_queue_transfer_sync(queue, op->event->syncobj);
-         break;
-      }
-      case PANVK_EVENT_OP_RESET: {
-         struct panvk_event *event = op->event;
+   if (!mem.gpu)
+      return VK_ERROR_OUT_OF_DEVICE_MEMORY;
 
-         struct drm_syncobj_array objs = {
-            .handles = (uint64_t)(uintptr_t)&event->syncobj,
-            .count_handles = 1};
-
-         int ret = drmIoctl(pdev->fd, DRM_IOCTL_SYNCOBJ_RESET, &objs);
-         assert(!ret);
-         break;
-      }
-      case PANVK_EVENT_OP_WAIT:
-         /* Nothing left to do */
-         break;
-      default:
-         unreachable("bad panvk_event_op type\n");
-      }
-   }
+   buffer->dev_addr = mem.gpu;
+   *map_out = mem.cpu;
+   return VK_SUCCESS;
 }
 
-VkResult
-panvk_per_arch(queue_submit)(struct vk_queue *vk_queue,
-                             struct vk_queue_submit *submit)
+static VkResult
+panvk_meta_init(struct panvk_device *device)
 {
-   struct panvk_queue *queue = container_of(vk_queue, struct panvk_queue, vk);
-   const struct panfrost_device *pdev = &queue->device->physical_device->pdev;
+   const struct vk_physical_device *pdev = device->vk.physical;
 
-   unsigned nr_semaphores = submit->wait_count + 1;
-   uint32_t semaphores[nr_semaphores];
+   VkResult result = vk_meta_device_init(&device->vk, &device->meta);
+   if (result != VK_SUCCESS)
+      return result;
 
-   semaphores[0] = queue->sync;
-   for (unsigned i = 0; i < submit->wait_count; i++) {
-      assert(vk_sync_type_is_drm_syncobj(submit->waits[i].sync->type));
-      struct vk_drm_syncobj *syncobj =
-         vk_sync_as_drm_syncobj(submit->waits[i].sync);
+   device->meta.use_stencil_export = true;
+   device->meta.use_rect_list_pipeline = true;
+   device->meta.max_bind_map_buffer_size_B = 64 * 1024;
+   device->meta.cmd_bind_map_buffer = panvk_meta_cmd_bind_map_buffer;
 
-      semaphores[i + 1] = syncobj->syncobj;
-   }
-
-   for (uint32_t j = 0; j < submit->command_buffer_count; ++j) {
-      struct panvk_cmd_buffer *cmdbuf =
-         container_of(submit->command_buffers[j], struct panvk_cmd_buffer, vk);
-
-      list_for_each_entry(struct panvk_batch, batch, &cmdbuf->batches, node) {
-         /* FIXME: should be done at the batch level */
-         unsigned nr_bos =
-            panvk_pool_num_bos(&cmdbuf->desc_pool) +
-            panvk_pool_num_bos(&cmdbuf->varying_pool) +
-            panvk_pool_num_bos(&cmdbuf->tls_pool) +
-            (batch->fb.info ? batch->fb.info->attachment_count : 0) +
-            (batch->blit.src ? 1 : 0) + (batch->blit.dst ? 1 : 0) +
-            (batch->scoreboard.first_tiler ? 1 : 0) + 1;
-         unsigned bo_idx = 0;
-         uint32_t bos[nr_bos];
-
-         panvk_pool_get_bo_handles(&cmdbuf->desc_pool, &bos[bo_idx]);
-         bo_idx += panvk_pool_num_bos(&cmdbuf->desc_pool);
-
-         panvk_pool_get_bo_handles(&cmdbuf->varying_pool, &bos[bo_idx]);
-         bo_idx += panvk_pool_num_bos(&cmdbuf->varying_pool);
-
-         panvk_pool_get_bo_handles(&cmdbuf->tls_pool, &bos[bo_idx]);
-         bo_idx += panvk_pool_num_bos(&cmdbuf->tls_pool);
-
-         if (batch->fb.info) {
-            for (unsigned i = 0; i < batch->fb.info->attachment_count; i++) {
-               const struct pan_image *image = pan_image_view_get_plane(
-                  &batch->fb.info->attachments[i].iview->pview, 0);
-               bos[bo_idx++] = image->data.bo->gem_handle;
-            }
-         }
-
-         if (batch->blit.src)
-            bos[bo_idx++] = batch->blit.src->gem_handle;
-
-         if (batch->blit.dst)
-            bos[bo_idx++] = batch->blit.dst->gem_handle;
-
-         if (batch->scoreboard.first_tiler)
-            bos[bo_idx++] = pdev->tiler_heap->gem_handle;
-
-         bos[bo_idx++] = pdev->sample_positions->gem_handle;
-         assert(bo_idx == nr_bos);
-
-         /* Merge identical BO entries. */
-         for (unsigned x = 0; x < nr_bos; x++) {
-            for (unsigned y = x + 1; y < nr_bos;) {
-               if (bos[x] == bos[y])
-                  bos[y] = bos[--nr_bos];
-               else
-                  y++;
-            }
-         }
-
-         unsigned nr_in_fences = 0;
-         unsigned max_wait_event_syncobjs = util_dynarray_num_elements(
-            &batch->event_ops, struct panvk_event_op);
-         uint32_t in_fences[nr_semaphores + max_wait_event_syncobjs];
-         memcpy(in_fences, semaphores, nr_semaphores * sizeof(*in_fences));
-         nr_in_fences += nr_semaphores;
-
-         panvk_add_wait_event_syncobjs(batch, in_fences, &nr_in_fences);
-
-         panvk_queue_submit_batch(queue, batch, bos, nr_bos, in_fences,
-                                  nr_in_fences);
-
-         panvk_signal_event_syncobjs(queue, batch);
-      }
-   }
-
-   /* Transfer the out fence to signal semaphores */
-   for (unsigned i = 0; i < submit->signal_count; i++) {
-      assert(vk_sync_type_is_drm_syncobj(submit->signals[i].sync->type));
-      struct vk_drm_syncobj *syncobj =
-         vk_sync_as_drm_syncobj(submit->signals[i].sync);
-
-      panvk_queue_transfer_sync(queue, syncobj->syncobj);
+   /* Assume a maximum of 1024 bytes per worgroup and choose the workgroup size
+    * accordingly. */
+   for (uint32_t i = 0;
+        i < ARRAY_SIZE(device->meta.buffer_access.optimal_wg_size); i++) {
+      device->meta.buffer_access.optimal_wg_size[i] =
+         MIN2(1024 >> i, pdev->properties.maxComputeWorkGroupSize[0]);
    }
 
    return VK_SUCCESS;
 }
 
+static void
+panvk_meta_cleanup(struct panvk_device *device)
+{
+   vk_meta_device_finish(&device->vk, &device->meta);
+}
+
+/* Always reserve the lower 32MB. */
+#define PANVK_VA_RESERVE_BOTTOM 0x2000000ull
+
+static enum pan_kmod_group_allow_priority_flags
+global_priority_to_group_allow_priority_flag(
+   VkQueueGlobalPriorityKHR priority)
+{
+   switch (priority) {
+   case VK_QUEUE_GLOBAL_PRIORITY_LOW_KHR:
+      return PAN_KMOD_GROUP_ALLOW_PRIORITY_LOW;
+   case VK_QUEUE_GLOBAL_PRIORITY_MEDIUM_KHR:
+      return PAN_KMOD_GROUP_ALLOW_PRIORITY_MEDIUM;
+   case VK_QUEUE_GLOBAL_PRIORITY_HIGH_KHR:
+      return PAN_KMOD_GROUP_ALLOW_PRIORITY_HIGH;
+   case VK_QUEUE_GLOBAL_PRIORITY_REALTIME_KHR:
+      return PAN_KMOD_GROUP_ALLOW_PRIORITY_REALTIME;
+   default:
+      unreachable("Invalid global priority");
+   }
+}
+
+static VkResult
+check_global_priority(const struct panvk_physical_device *phys_dev,
+                      const VkDeviceQueueCreateInfo *create_info)
+{
+   const VkDeviceQueueGlobalPriorityCreateInfoKHR *priority_info =
+      vk_find_struct_const(create_info->pNext,
+                           DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_KHR);
+   const VkQueueGlobalPriorityKHR priority =
+      priority_info ? priority_info->globalPriority
+                    : VK_QUEUE_GLOBAL_PRIORITY_MEDIUM_KHR;
+
+   enum pan_kmod_group_allow_priority_flags requested_prio =
+      global_priority_to_group_allow_priority_flag(priority);
+   enum pan_kmod_group_allow_priority_flags allowed_prio_mask =
+      phys_dev->kmod.props.allowed_group_priorities_mask;
+
+   if (requested_prio & allowed_prio_mask)
+      return VK_SUCCESS;
+
+   return VK_ERROR_NOT_PERMITTED_KHR;
+}
+
 VkResult
-panvk_per_arch(CreateSampler)(VkDevice _device,
-                              const VkSamplerCreateInfo *pCreateInfo,
+panvk_per_arch(create_device)(struct panvk_physical_device *physical_device,
+                              const VkDeviceCreateInfo *pCreateInfo,
                               const VkAllocationCallbacks *pAllocator,
-                              VkSampler *pSampler)
+                              VkDevice *pDevice)
 {
-   VK_FROM_HANDLE(panvk_device, device, _device);
-   struct panvk_sampler *sampler;
+   struct panvk_instance *instance =
+      to_panvk_instance(physical_device->vk.instance);
+   VkResult result;
+   struct panvk_device *device;
 
-   assert(pCreateInfo->sType == VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO);
+   device = vk_zalloc2(&instance->vk.alloc, pAllocator, sizeof(*device), 8,
+                       VK_SYSTEM_ALLOCATION_SCOPE_DEVICE);
+   if (!device)
+      return panvk_error(physical_device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   sampler = vk_object_alloc(&device->vk, pAllocator, sizeof(*sampler),
-                             VK_OBJECT_TYPE_SAMPLER);
-   if (!sampler)
-      return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
+   struct vk_device_dispatch_table dispatch_table;
 
-   STATIC_ASSERT(sizeof(sampler->desc) >= pan_size(SAMPLER));
-   panvk_per_arch(emit_sampler)(pCreateInfo, &sampler->desc);
-   *pSampler = panvk_sampler_to_handle(sampler);
 
+
+   if (PAN_ARCH <= 9) {
+      /* For secondary command buffer support, overwrite any command entrypoints
+       * in the main device-level dispatch table with
+       * vk_cmd_enqueue_unless_primary_Cmd*.
+       */
+      vk_device_dispatch_table_from_entrypoints(
+         &dispatch_table, &vk_cmd_enqueue_unless_primary_device_entrypoints, true);
+
+      /* Populate our primary cmd_dispatch table. */
+      vk_device_dispatch_table_from_entrypoints(
+         &device->cmd_dispatch, &panvk_per_arch(device_entrypoints), true);
+      vk_device_dispatch_table_from_entrypoints(&device->cmd_dispatch,
+                                                &panvk_device_entrypoints,
+                                                false);
+      vk_device_dispatch_table_from_entrypoints(&device->cmd_dispatch,
+		                                &vk_common_device_entrypoints,
+                                                false);
+   }
+
+   vk_device_dispatch_table_from_entrypoints(
+      &dispatch_table, &panvk_per_arch(device_entrypoints), PAN_ARCH > 9);
+   vk_device_dispatch_table_from_entrypoints(&dispatch_table,
+                                             &panvk_device_entrypoints, false);
+   vk_device_dispatch_table_from_entrypoints(&dispatch_table,
+                                             &wsi_device_entrypoints, false);
+
+   result = vk_device_init(&device->vk, &physical_device->vk, &dispatch_table,
+                           pCreateInfo, pAllocator);
+   if (result != VK_SUCCESS)
+      goto err_free_dev;
+
+   /* Must be done after vk_device_init() because this function memset(0) the
+    * whole struct.
+    */
+   device->vk.command_dispatch_table = &device->cmd_dispatch;
+   device->vk.command_buffer_ops = &panvk_per_arch(cmd_buffer_ops);
+   device->vk.shader_ops = &panvk_per_arch(device_shader_ops);
+#if PAN_ARCH >= 10
+   device->vk.check_status = panvk_per_arch(device_check_status);
+#endif
+
+   device->kmod.allocator = (struct pan_kmod_allocator){
+      .zalloc = panvk_kmod_zalloc,
+      .free = panvk_kmod_free,
+      .priv = &device->vk.alloc,
+   };
+   device->kmod.dev =
+      pan_kmod_dev_create(dup(physical_device->kmod.dev->fd),
+                          PAN_KMOD_DEV_FLAG_OWNS_FD, &device->kmod.allocator);
+
+   if (!device->kmod.dev) {
+      result = panvk_errorf(instance, VK_ERROR_OUT_OF_HOST_MEMORY,
+                            "cannot create device");
+      goto err_finish_dev;
+   }
+
+   if (instance->debug_flags &
+       (PANVK_DEBUG_TRACE | PANVK_DEBUG_SYNC | PANVK_DEBUG_DUMP))
+      device->debug.decode_ctx = pandecode_create_context(false);
+
+   /* 32bit address space, with the lower 32MB reserved. We clamp
+    * things so it matches kmod VA range limitations.
+    */
+   uint64_t user_va_start = panfrost_clamp_to_usable_va_range(
+      device->kmod.dev, PANVK_VA_RESERVE_BOTTOM);
+   uint64_t user_va_end =
+      panfrost_clamp_to_usable_va_range(device->kmod.dev, 1ull << 32);
+   uint32_t vm_flags = PAN_ARCH <= 7 ? PAN_KMOD_VM_FLAG_AUTO_VA : 0;
+
+   device->kmod.vm =
+      pan_kmod_vm_create(device->kmod.dev, vm_flags,
+                         user_va_start, user_va_end - user_va_start);
+
+   if (!device->kmod.vm) {
+      result = panvk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
+      goto err_destroy_kdev;
+   }
+
+   simple_mtx_init(&device->as.lock, mtx_plain);
+   util_vma_heap_init(&device->as.heap, user_va_start,
+                      user_va_end - user_va_start);
+
+   panvk_device_init_mempools(device);
+
+#if PAN_ARCH <= 9
+   result = panvk_priv_bo_create(
+      device, 128 * 1024 * 1024,
+      PAN_KMOD_BO_FLAG_NO_MMAP | PAN_KMOD_BO_FLAG_ALLOC_ON_FAULT,
+      VK_SYSTEM_ALLOCATION_SCOPE_DEVICE, &device->tiler_heap);
+   if (result != VK_SUCCESS)
+      goto err_free_priv_bos;
+#endif
+
+   result = panvk_priv_bo_create(
+      device, panfrost_sample_positions_buffer_size(), 0,
+      VK_SYSTEM_ALLOCATION_SCOPE_DEVICE, &device->sample_positions);
+   if (result != VK_SUCCESS)
+      goto err_free_priv_bos;
+
+   panfrost_upload_sample_positions(device->sample_positions->addr.host);
+
+#if PAN_ARCH >= 10
+   result = panvk_per_arch(init_tiler_oom)(device);
+   if (result != VK_SUCCESS)
+      goto err_free_priv_bos;
+#endif
+
+   vk_device_set_drm_fd(&device->vk, device->kmod.dev->fd);
+
+   result = panvk_meta_init(device);
+   if (result != VK_SUCCESS)
+      goto err_free_priv_bos;
+
+   for (unsigned i = 0; i < pCreateInfo->queueCreateInfoCount; i++) {
+      const VkDeviceQueueCreateInfo *queue_create =
+         &pCreateInfo->pQueueCreateInfos[i];
+
+      result = check_global_priority(physical_device, queue_create);
+      if (result != VK_SUCCESS)
+         goto err_finish_queues;
+
+      uint32_t qfi = queue_create->queueFamilyIndex;
+      device->queues[qfi] =
+         vk_zalloc(&device->vk.alloc,
+                  queue_create->queueCount * sizeof(struct panvk_queue), 8,
+                  VK_SYSTEM_ALLOCATION_SCOPE_DEVICE);
+      if (!device->queues[qfi]) {
+         result = panvk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
+         goto err_finish_queues;
+      }
+
+      for (unsigned q = 0; q < queue_create->queueCount; q++) {
+         result = panvk_per_arch(queue_init)(device, &device->queues[qfi][q], q,
+                                             queue_create);
+         if (result != VK_SUCCESS)
+            goto err_finish_queues;
+
+         device->queue_count[qfi]++;
+      }
+   }
+
+   panvk_per_arch(utrace_context_init)(device);
+#if PAN_ARCH >= 10
+   panvk_utrace_perfetto_init(device, PANVK_SUBQUEUE_COUNT);
+#else
+   panvk_utrace_perfetto_init(device, 2);
+#endif
+
+   *pDevice = panvk_device_to_handle(device);
    return VK_SUCCESS;
+
+err_finish_queues:
+   for (unsigned i = 0; i < PANVK_MAX_QUEUE_FAMILIES; i++) {
+      for (unsigned q = 0; q < device->queue_count[i]; q++)
+         panvk_per_arch(queue_finish)(&device->queues[i][q]);
+      if (device->queues[i])
+         vk_free(&device->vk.alloc, device->queues[i]);
+   }
+
+   panvk_meta_cleanup(device);
+
+err_free_priv_bos:
+   panvk_priv_bo_unref(device->tiler_oom.handlers_bo);
+   panvk_priv_bo_unref(device->sample_positions);
+   panvk_priv_bo_unref(device->tiler_heap);
+   panvk_device_cleanup_mempools(device);
+   pan_kmod_vm_destroy(device->kmod.vm);
+   util_vma_heap_finish(&device->as.heap);
+   simple_mtx_destroy(&device->as.lock);
+
+err_destroy_kdev:
+   pan_kmod_dev_destroy(device->kmod.dev);
+
+err_finish_dev:
+   vk_device_finish(&device->vk);
+
+err_free_dev:
+   vk_free(&device->vk.alloc, device);
+   return result;
+}
+
+void
+panvk_per_arch(destroy_device)(struct panvk_device *device,
+                               const VkAllocationCallbacks *pAllocator)
+{
+   if (!device)
+      return;
+
+   panvk_per_arch(utrace_context_fini)(device);
+
+   for (unsigned i = 0; i < PANVK_MAX_QUEUE_FAMILIES; i++) {
+      for (unsigned q = 0; q < device->queue_count[i]; q++)
+         panvk_per_arch(queue_finish)(&device->queues[i][q]);
+      if (device->queue_count[i])
+         vk_free(&device->vk.alloc, device->queues[i]);
+   }
+
+   panvk_meta_cleanup(device);
+   panvk_priv_bo_unref(device->tiler_oom.handlers_bo);
+   panvk_priv_bo_unref(device->tiler_heap);
+   panvk_priv_bo_unref(device->sample_positions);
+   panvk_device_cleanup_mempools(device);
+   pan_kmod_vm_destroy(device->kmod.vm);
+   util_vma_heap_finish(&device->as.heap);
+   simple_mtx_destroy(&device->as.lock);
+
+   if (device->debug.decode_ctx)
+      pandecode_destroy_context(device->debug.decode_ctx);
+
+   pan_kmod_dev_destroy(device->kmod.dev);
+   vk_device_finish(&device->vk);
+   vk_free(&device->vk.alloc, device);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+panvk_per_arch(GetRenderAreaGranularity)(VkDevice device,
+                                         VkRenderPass renderPass,
+                                         VkExtent2D *pGranularity)
+{
+   *pGranularity = (VkExtent2D){32, 32};
+}
+
+VKAPI_ATTR void VKAPI_CALL
+panvk_per_arch(GetRenderingAreaGranularityKHR)(
+   VkDevice _device, const VkRenderingAreaInfoKHR *pRenderingAreaInfo,
+   VkExtent2D *pGranularity)
+{
+   *pGranularity = (VkExtent2D){32, 32};
 }

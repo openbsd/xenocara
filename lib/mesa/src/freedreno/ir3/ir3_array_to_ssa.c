@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2021 Valve Corporation
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2021 Valve Corporation
+ * SPDX-License-Identifier: MIT
  */
 
 /* This pass lowers array accesses to SSA.
@@ -103,10 +85,8 @@ read_value_beginning(struct array_ctx *ctx, struct ir3_block *block,
    }
 
    unsigned flags = IR3_REG_ARRAY | (arr->half ? IR3_REG_HALF : 0);
-   struct ir3_instruction *phi =
-      ir3_instr_create(block, OPC_META_PHI, 1, block->predecessors_count);
-   list_del(&phi->node);
-   list_add(&phi->node, &block->instr_list);
+   struct ir3_instruction *phi = ir3_instr_create_at(
+      ir3_before_block(block), OPC_META_PHI, 1, block->predecessors_count);
 
    struct ir3_register *dst = __ssa_dst(phi);
    dst->flags |= flags;

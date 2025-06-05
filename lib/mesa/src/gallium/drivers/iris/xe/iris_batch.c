@@ -28,7 +28,9 @@
 
 #include "common/intel_gem.h"
 #include "common/intel_engine.h"
+#include "common/xe/intel_device_query.h"
 #include "common/xe/intel_engine.h"
+#include "common/xe/intel_queue.h"
 
 #include "drm-uapi/xe_drm.h"
 #include "drm-uapi/gpu_scheduler.h"
@@ -62,6 +64,20 @@ iris_xe_init_batch(struct iris_bufmgr *bufmgr,
    if (!instances)
       return false;
 
+   enum drm_sched_priority requested_priority = iris_context_priority_to_drm_sched_priority(priority);
+   enum drm_sched_priority allowed_priority = DRM_SCHED_PRIORITY_MIN;
+   if (requested_priority > DRM_SCHED_PRIORITY_MIN) {
+      struct drm_xe_query_config *config;
+
+      config = xe_device_query_alloc_fetch(iris_bufmgr_get_fd(bufmgr),
+                                           DRM_XE_DEVICE_QUERY_CONFIG, NULL);
+      if (config)
+         allowed_priority = config->info[DRM_XE_QUERY_CONFIG_MAX_EXEC_QUEUE_PRIORITY];
+      free(config);
+   }
+   if (requested_priority < allowed_priority)
+      allowed_priority = requested_priority;
+
    uint32_t count = 0;
    for (uint32_t i = 0; i < engines_info->num_engines; i++) {
       const struct intel_engine_class_instance engine = engines_info->engines[i];
@@ -72,26 +88,23 @@ iris_xe_init_batch(struct iris_bufmgr *bufmgr,
       instances[count].engine_instance = engine.engine_instance;
       instances[count++].gt_id = engine.gt_id;
    }
-
+   struct drm_xe_ext_set_property ext = {
+      .base.name = DRM_XE_EXEC_QUEUE_EXTENSION_SET_PROPERTY,
+      .property = DRM_XE_EXEC_QUEUE_SET_PROPERTY_PRIORITY,
+      .value = allowed_priority,
+   };
    struct drm_xe_exec_queue_create create = {
          .instances = (uintptr_t)instances,
          .vm_id = iris_bufmgr_get_global_vm_id(bufmgr),
          .width = 1,
          .num_placements = count,
-   };
-   struct drm_xe_exec_queue_set_property exec_queue_property = {
-      .property = XE_EXEC_QUEUE_SET_PROPERTY_PRIORITY,
-      .value = iris_context_priority_to_drm_sched_priority(priority),
+         .extensions = (uintptr_t)&ext,
    };
    int ret = intel_ioctl(iris_bufmgr_get_fd(bufmgr),
                          DRM_IOCTL_XE_EXEC_QUEUE_CREATE, &create);
    free(instances);
    if (ret)
       goto error_create_exec_queue;
-
-   exec_queue_property.exec_queue_id = create.exec_queue_id;
-   intel_ioctl(iris_bufmgr_get_fd(bufmgr), DRM_XE_EXEC_QUEUE_SET_PROPERTY,
-               &exec_queue_property);
 
    /* TODO: handle "protected" context/exec_queue */
    *exec_queue_id = create.exec_queue_id;
@@ -100,7 +113,8 @@ error_create_exec_queue:
 }
 
 static void
-iris_xe_map_intel_engine_class(const struct intel_query_engine_info *engines_info,
+iris_xe_map_intel_engine_class(struct iris_bufmgr *bufmgr,
+                               const struct intel_query_engine_info *engines_info,
                                enum intel_engine_class *engine_classes)
 {
    engine_classes[IRIS_BATCH_RENDER] = INTEL_ENGINE_CLASS_RENDER;
@@ -108,8 +122,7 @@ iris_xe_map_intel_engine_class(const struct intel_query_engine_info *engines_inf
    engine_classes[IRIS_BATCH_BLITTER] = INTEL_ENGINE_CLASS_COPY;
    STATIC_ASSERT(IRIS_BATCH_COUNT == 3);
 
-   if (debug_get_bool_option("INTEL_COMPUTE_CLASS", false) &&
-       intel_engines_count(engines_info, INTEL_ENGINE_CLASS_COMPUTE) > 0)
+   if (iris_bufmgr_compute_engine_supported(bufmgr))
       engine_classes[IRIS_BATCH_COMPUTE] = INTEL_ENGINE_CLASS_COMPUTE;
 }
 
@@ -125,7 +138,7 @@ void iris_xe_init_batches(struct iris_context *ice)
    assert(engines_info);
    if (!engines_info)
       return;
-   iris_xe_map_intel_engine_class(engines_info, engine_classes);
+   iris_xe_map_intel_engine_class(bufmgr, engines_info, engine_classes);
 
    iris_foreach_batch(ice, batch) {
       const enum iris_batch_name name = batch - &ice->batches[0];
@@ -139,7 +152,40 @@ void iris_xe_init_batches(struct iris_context *ice)
    free(engines_info);
 }
 
-void iris_xe_destroy_batch(struct iris_batch *batch)
+/*
+ * Wait for all previous DRM_IOCTL_XE_EXEC calls over the
+ * drm_xe_exec_queue in this iris_batch to complete.
+ **/
+static void
+iris_xe_wait_exec_queue_idle(struct iris_batch *batch)
+{
+   struct iris_bufmgr *bufmgr = batch->screen->bufmgr;
+   int fd = iris_bufmgr_get_fd(bufmgr);
+   uint32_t syncobj;
+   int ret = xe_queue_get_syncobj_for_idle(fd, batch->xe.exec_queue_id,
+                                           &syncobj);
+
+   if (ret) {
+      assert(iris_batch_is_banned(bufmgr, ret) == true);
+      return;
+   }
+
+   struct drm_syncobj_wait wait = {
+      .handles = (uintptr_t)&syncobj,
+      .count_handles = 1,
+      .timeout_nsec = INT64_MAX,
+   };
+   ret = intel_ioctl(fd, DRM_IOCTL_SYNCOBJ_WAIT, &wait);
+   assert(ret == 0);
+
+   struct drm_syncobj_destroy syncobj_destroy = {
+      .handle = syncobj,
+   };
+   intel_ioctl(fd, DRM_IOCTL_SYNCOBJ_DESTROY, &syncobj_destroy);
+}
+
+static void
+iris_xe_destroy_exec_queue(struct iris_batch *batch)
 {
    struct iris_screen *screen = batch->screen;
    struct iris_bufmgr *bufmgr = screen->bufmgr;
@@ -151,6 +197,15 @@ void iris_xe_destroy_batch(struct iris_batch *batch)
    ret = intel_ioctl(iris_bufmgr_get_fd(bufmgr), DRM_IOCTL_XE_EXEC_QUEUE_DESTROY,
                      &destroy);
    assert(ret == 0);
+}
+
+void iris_xe_destroy_batch(struct iris_batch *batch)
+{
+   /* Xe KMD don't refcount anything, so resources could be freed while they
+    * are still in use if we don't wait for exec_queue to be idle.
+    */
+   iris_xe_wait_exec_queue_idle(batch);
+   iris_xe_destroy_exec_queue(batch);
 }
 
 bool iris_xe_replace_batch(struct iris_batch *batch)
@@ -167,12 +222,12 @@ bool iris_xe_replace_batch(struct iris_batch *batch)
                                         INTEL_KMD_TYPE_XE);
    if (!engines_info)
       return false;
-   iris_xe_map_intel_engine_class(engines_info, engine_classes);
+   iris_xe_map_intel_engine_class(bufmgr, engines_info, engine_classes);
 
    ret = iris_xe_init_batch(bufmgr, engines_info, engine_classes[batch->name],
                             ice->priority, &new_exec_queue_id);
    if (ret) {
-      iris_xe_destroy_batch(batch);
+      iris_xe_destroy_exec_queue(batch);
       batch->xe.exec_queue_id = new_exec_queue_id;
       iris_lost_context_state(batch);
    }

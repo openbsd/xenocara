@@ -71,7 +71,7 @@ build_clear_shader(const struct vk_meta_clear_key *key)
          nir_load_deref(b, nir_build_deref_array_imm(b, push_arr, a));
 
       const struct glsl_type *out_type;
-      if (vk_format_is_int(key->render.color_attachment_formats[a]))
+      if (vk_format_is_sint(key->render.color_attachment_formats[a]))
          out_type = glsl_ivec4_type();
       else if (vk_format_is_uint(key->render.color_attachment_formats[a]))
          out_type = glsl_uvec4_type();
@@ -368,6 +368,9 @@ vk_meta_clear_rendering(struct vk_meta_device *meta,
 
       VK_FROM_HANDLE(vk_image_view, iview, att_info->imageView);
       render.color_attachment_formats[i] = iview->format;
+      render.color_attachment_write_masks[i] =
+         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+         VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
       assert(render.samples == 0 || render.samples == iview->image->samples);
       render.samples = MAX2(render.samples, iview->image->samples);
 
@@ -486,14 +489,17 @@ clear_image_level_layers(struct vk_command_buffer *cmd,
       vk_render.pColorAttachments = &vk_att;
       meta_render.color_attachment_count = 1;
       meta_render.color_attachment_formats[0] = format;
+      meta_render.color_attachment_write_masks[0] =
+         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+         VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
    }
 
-   if (image->aspects & VK_IMAGE_ASPECT_DEPTH_BIT) {
+   if (aspects & VK_IMAGE_ASPECT_DEPTH_BIT) {
       vk_render.pDepthAttachment = &vk_att;
       meta_render.depth_attachment_format = format;
    }
 
-   if (image->aspects & VK_IMAGE_ASPECT_STENCIL_BIT) {
+   if (aspects & VK_IMAGE_ASPECT_STENCIL_BIT) {
       vk_render.pStencilAttachment = &vk_att;
       meta_render.stencil_attachment_format = format;
    }

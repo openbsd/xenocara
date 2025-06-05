@@ -23,7 +23,6 @@
  */
 
 #include "pan_shader.h"
-#include "pan_device.h"
 #include "pan_format.h"
 
 #if PAN_ARCH <= 5
@@ -129,9 +128,7 @@ GENX(pan_shader_compile)(nir_shader *s, struct panfrost_compile_inputs *inputs,
       info->attribute_count = info->attributes_read_count;
 
 #if PAN_ARCH <= 5
-      bool vertex_id = BITSET_TEST(s->info.system_values_read,
-                                   SYSTEM_VALUE_VERTEX_ID_ZERO_BASE);
-      if (vertex_id)
+      if (info->midgard.vs.reads_raw_vertex_id)
          info->attribute_count = MAX2(info->attribute_count, PAN_VERTEX_ID + 1);
 
       bool instance_id =
@@ -168,8 +165,7 @@ GENX(pan_shader_compile)(nir_shader *s, struct panfrost_compile_inputs *inputs,
       /* List of reasons we need to execute frag shaders when things
        * are masked off */
 
-      info->fs.sidefx = s->info.writes_memory || s->info.fs.uses_discard ||
-                        s->info.fs.uses_demote;
+      info->fs.sidefx = s->info.writes_memory || s->info.fs.uses_discard;
 
       /* With suitable ZSA/blend, is early-z possible? */
       info->fs.can_early_z = !info->fs.sidefx && !info->fs.writes_depth &&
@@ -195,8 +191,8 @@ GENX(pan_shader_compile)(nir_shader *s, struct panfrost_compile_inputs *inputs,
          (s->info.inputs_read & (1 << VARYING_SLOT_FACE)) ||
          BITSET_TEST(s->info.system_values_read, SYSTEM_VALUE_FRONT_FACE);
 #if PAN_ARCH >= 9
-      info->varyings.output_count =
-         util_last_bit(s->info.outputs_read >> VARYING_SLOT_VAR0);
+      info->varyings.input_count =
+         util_last_bit(s->info.inputs_read >> VARYING_SLOT_VAR0);
 #endif
       break;
    default:

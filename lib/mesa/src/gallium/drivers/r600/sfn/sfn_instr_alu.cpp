@@ -1,27 +1,7 @@
 /* -*- mesa-c++  -*-
- *
- * Copyright (c) 2022 Collabora LTD
- *
+ * Copyright 2022 Collabora LTD
  * Author: Gert Wollny <gert.wollny@collabora.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "sfn_instr_alu.h"
@@ -1453,9 +1433,6 @@ static bool
 emit_alu_f2i32_or_u32_eg(const nir_alu_instr& alu, EAluOp opcode, Shader& shader);
 
 static bool
-emit_tex_fdd(const nir_alu_instr& alu, TexInstr::Opcode opcode, bool fine, Shader& shader);
-
-static bool
 emit_alu_cube(const nir_alu_instr& alu, Shader& shader);
 
 static bool
@@ -1880,17 +1857,7 @@ AluInstr::from_nir(nir_alu_instr *alu, Shader& shader)
    case nir_op_vec4:
       return emit_create_vec(*alu, 4, shader);
 
-   case nir_op_fddx:
-   case nir_op_fddx_coarse:
-      return emit_tex_fdd(*alu, TexInstr::get_gradient_h, false, shader);
-   case nir_op_fddx_fine:
-      return emit_tex_fdd(*alu, TexInstr::get_gradient_h, true, shader);
-   case nir_op_fddy:
-   case nir_op_fddy_coarse:
-      return emit_tex_fdd(*alu, TexInstr::get_gradient_v, false, shader);
-   case nir_op_fddy_fine:
-      return emit_tex_fdd(*alu, TexInstr::get_gradient_v, true, shader);
-   case nir_op_cube_amd:
+  case nir_op_cube_amd:
       return emit_alu_cube(*alu, shader);
    default:
       fprintf(stderr, "Unknown instruction '");
@@ -2101,6 +2068,14 @@ emit_alu_op2_64bit(const nir_alu_instr& alu,
 
    int num_emit0 = opcode == op2_mul_64 ? 3 : 1;
 
+   std::array<std::array<PRegister, 4>,2> tmp;
+   for (unsigned k = 0; k < alu.def.num_components; ++k) {
+      tmp[k][0] = shader.emit_load_to_register(value_factory.src64(alu.src[order[0]], k, 1), 0);
+      tmp[k][1] = shader.emit_load_to_register(value_factory.src64(alu.src[order[1]], k, 1), 1);
+      tmp[k][2] = shader.emit_load_to_register(value_factory.src64(alu.src[order[0]], k, 0), 2);
+      tmp[k][3] = shader.emit_load_to_register(value_factory.src64(alu.src[order[1]], k, 0), 3);
+   }
+
    assert(num_emit0 == 1 || alu.def.num_components == 1);
 
    for (unsigned k = 0; k < alu.def.num_components; ++k) {
@@ -2111,8 +2086,8 @@ emit_alu_op2_64bit(const nir_alu_instr& alu,
 
          ir = new AluInstr(opcode,
                            dest,
-                           value_factory.src64(alu.src[order[0]], k, 1),
-                           value_factory.src64(alu.src[order[1]], k, 1),
+                           tmp[k][0],
+                           tmp[k][1],
                            i < 2 ? AluInstr::write : AluInstr::empty);
          group->add_instruction(ir);
       }
@@ -2122,8 +2097,8 @@ emit_alu_op2_64bit(const nir_alu_instr& alu,
 
       ir = new AluInstr(opcode,
                         dest,
-                        value_factory.src64(alu.src[order[0]], k, 0),
-                        value_factory.src64(alu.src[order[1]], k, 0),
+                        tmp[k][2],
+                        tmp[k][3],
                         i == 1 ? AluInstr::write : AluInstr::empty);
       group->add_instruction(ir);
    }
@@ -2222,27 +2197,22 @@ static bool
 emit_alu_b2f64(const nir_alu_instr& alu, Shader& shader)
 {
    auto& value_factory = shader.value_factory();
-   auto group = new AluGroup();
-   AluInstr *ir = nullptr;
 
    for (unsigned i = 0; i < alu.def.num_components; ++i) {
-      ir = new AluInstr(op2_and_int,
+      auto ir = new AluInstr(op2_and_int,
                         value_factory.dest(alu.def, 2 * i, pin_group),
                         value_factory.src(alu.src[0], i),
                         value_factory.zero(),
                         {alu_write});
-      group->add_instruction(ir);
+      shader.emit_instruction(ir);
 
       ir = new AluInstr(op2_and_int,
                         value_factory.dest(alu.def, 2 * i + 1, pin_group),
                         value_factory.src(alu.src[0], i),
                         value_factory.literal(0x3ff00000),
                         {alu_write});
-      group->add_instruction(ir);
+      shader.emit_instruction(ir);
    }
-   if (ir)
-      ir->set_alu_flag(alu_last_instr);
-   shader.emit_instruction(group);
    return true;
 }
 
@@ -2999,46 +2969,6 @@ emit_alu_trans_op2_cayman(const nir_alu_instr& alu, EAluOp opcode, Shader& shade
       ir->set_alu_flag(alu_is_cayman_trans);
       shader.emit_instruction(ir);
    }
-   return true;
-}
-
-static bool
-emit_tex_fdd(const nir_alu_instr& alu, TexInstr::Opcode opcode, bool fine, Shader& shader)
-{
-   auto& value_factory = shader.value_factory();
-
-   int ncomp = alu.def.num_components;
-   RegisterVec4::Swizzle src_swz = {7, 7, 7, 7};
-   RegisterVec4::Swizzle tmp_swz = {7, 7, 7, 7};
-   for (auto i = 0; i < ncomp; ++i) {
-      src_swz[i] = alu.src[0].swizzle[i];
-      tmp_swz[i] = i;
-   }
-
-   auto src = value_factory.src_vec4(alu.src[0].src, pin_none, src_swz);
-
-   auto tmp = value_factory.temp_vec4(pin_group, tmp_swz);
-   AluInstr *mv = nullptr;
-   for (int i = 0; i < ncomp; ++i) {
-      mv = new AluInstr(op1_mov, tmp[i], src[i], AluInstr::write);
-      shader.emit_instruction(mv);
-   }
-   if (mv)
-      mv->set_alu_flag(alu_last_instr);
-
-   auto dst = value_factory.dest_vec4(alu.def, pin_group);
-   RegisterVec4::Swizzle dst_swz = {7, 7, 7, 7};
-   for (auto i = 0; i < ncomp; ++i) {
-      dst_swz[i] = i;
-   }
-
-   auto tex = new TexInstr(opcode, dst, dst_swz, tmp, R600_MAX_CONST_BUFFERS, nullptr);
-
-   if (fine)
-      tex->set_tex_flag(TexInstr::grad_fine);
-
-   shader.emit_instruction(tex);
-
    return true;
 }
 

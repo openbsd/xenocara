@@ -1,24 +1,7 @@
 /*
  * Copyright 2011 Joakim Sindholt <opensource@zhasha.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE. */
+ * SPDX-License-Identifier: MIT
+ */
 
 #include "adapter9.h"
 #include "device9ex.h"
@@ -29,6 +12,7 @@
 #include "util/u_math.h"
 #include "util/format/u_format.h"
 #include "util/u_dump.h"
+#include "nir.h"
 
 #include "pipe/p_screen.h"
 
@@ -37,8 +21,8 @@
 static bool
 has_sm3(struct pipe_screen *hal)
 {
-    return hal->get_param(hal, PIPE_CAP_FRAGMENT_SHADER_TEXTURE_LOD) &&
-           hal->get_param(hal, PIPE_CAP_FRAGMENT_SHADER_DERIVATIVES);
+    return hal->caps.fragment_shader_texture_lod &&
+           hal->caps.fragment_shader_derivatives;
 }
 
 HRESULT
@@ -54,13 +38,13 @@ NineAdapter9_ctor( struct NineAdapter9 *This,
     nine_dump_D3DADAPTER_IDENTIFIER9(DBG_CHANNEL, &pCTX->identifier);
 
     This->ctx = pCTX;
-    if (!hal->get_param(hal, PIPE_CAP_CLIP_HALFZ)) {
-        ERR("Driver doesn't support d3d9 coordinates\n");
-        return D3DERR_DRIVERINTERNALERROR;
-    }
-    if (This->ctx->ref &&
-        !This->ctx->ref->get_param(This->ctx->ref, PIPE_CAP_CLIP_HALFZ)) {
-        ERR("Warning: Sotware rendering driver doesn't support d3d9 coordinates\n");
+    if (!hal->caps.clip_halfz) {
+        WARN_ONCE("Driver doesn't natively support d3d9 coordinates\n");
+        const nir_shader_compiler_options *options = hal->get_compiler_options(hal, PIPE_SHADER_IR_NIR, PIPE_SHADER_VERTEX);
+        if(!options->compact_arrays){
+            ERR("Driver doesn't support emulating d3d9 coordinates\n");
+            return D3DERR_DRIVERINTERNALERROR;
+        }
     }
     /* Old cards had tricks to bypass some restrictions to implement
      * everything and fit tight the requirements: number of constants,
@@ -87,7 +71,7 @@ NineAdapter9_ctor( struct NineAdapter9 *This,
                               PIPE_SHADER_CAP_MAX_INPUTS) < 10 ||
         hal->get_shader_param(hal, PIPE_SHADER_FRAGMENT,
                               PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS) < 16) {
-        ERR("Your card is not supported by Gallium Nine. Minimum requirement "
+        ERR("Your device is not supported by Gallium Nine. Minimum requirement "
             "is >= r500, >= nv50, >= i965\n");
         return D3DERR_DRIVERINTERNALERROR;
     }
@@ -100,7 +84,7 @@ NineAdapter9_ctor( struct NineAdapter9 *This,
                               PIPE_SHADER_CAP_MAX_TEMPS) < 40 ||
         hal->get_shader_param(hal, PIPE_SHADER_FRAGMENT,
                               PIPE_SHADER_CAP_MAX_INPUTS) < 20) /* we don't pack inputs as much as we could */
-        ERR("Your card is at the limit of Gallium Nine requirements. Some games "
+        WARN_ONCE("Your device is at the limit of Gallium Nine requirements. Some games "
             "may run into issues because requirements are too tight\n");
     return D3D_OK;
 }
@@ -351,7 +335,7 @@ NineAdapter9_CheckDeviceFormat( struct NineAdapter9 *This,
     /* RESZ hack */
     if (CheckFormat == D3DFMT_RESZ && bind == PIPE_BIND_RENDER_TARGET &&
         RType == D3DRTYPE_SURFACE)
-        return screen->get_param(screen, PIPE_CAP_MULTISAMPLE_Z_RESOLVE) ?
+        return screen->caps.multisample_z_resolve ?
                D3D_OK : D3DERR_NOTAVAILABLE;
 
     /* ATOC hack */
@@ -577,10 +561,10 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
     }
 
 #define D3DPIPECAP(pcap, d3dcap) \
-    (screen->get_param(screen, PIPE_CAP_##pcap) ? (d3dcap) : 0)
+    (screen->caps.pcap ? (d3dcap) : 0)
 
 #define D3DNPIPECAP(pcap, d3dcap) \
-    (screen->get_param(screen, PIPE_CAP_##pcap) ? 0 : (d3dcap))
+    (screen->caps.pcap ? 0 : (d3dcap))
 
     pCaps->DeviceType = DeviceType;
 
@@ -641,20 +625,20 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
                                /*D3DPMISCCAPS_CLIPTLVERTS |*/
                                D3DPMISCCAPS_TSSARGTEMP |
                                D3DPMISCCAPS_BLENDOP |
-                               D3DPIPECAP(INDEP_BLEND_ENABLE, D3DPMISCCAPS_INDEPENDENTWRITEMASKS) |
+                               D3DPIPECAP(indep_blend_enable, D3DPMISCCAPS_INDEPENDENTWRITEMASKS) |
                                D3DPMISCCAPS_PERSTAGECONSTANT |
                                /*D3DPMISCCAPS_POSTBLENDSRGBCONVERT |*/ /* TODO: advertise if Ex and dx10 able card */
                                D3DPMISCCAPS_FOGANDSPECULARALPHA | /* Note: documentation of the flag is wrong */
-                               D3DPIPECAP(BLEND_EQUATION_SEPARATE, D3DPMISCCAPS_SEPARATEALPHABLEND) |
-                               D3DPIPECAP(MIXED_COLORBUFFER_FORMATS, D3DPMISCCAPS_MRTINDEPENDENTBITDEPTHS) |
+                               D3DPIPECAP(blend_equation_separate, D3DPMISCCAPS_SEPARATEALPHABLEND) |
+                               D3DPIPECAP(mixed_colorbuffer_formats, D3DPMISCCAPS_MRTINDEPENDENTBITDEPTHS) |
                                D3DPMISCCAPS_MRTPOSTPIXELSHADERBLENDING |
                                D3DPMISCCAPS_FOGVERTEXCLAMPED;
-    if (!screen->get_param(screen, PIPE_CAP_VS_WINDOW_SPACE_POSITION) &&
-        !screen->get_param(screen, PIPE_CAP_DEPTH_CLIP_DISABLE))
+    if (!screen->caps.vs_window_space_position &&
+        !screen->caps.depth_clip_disable)
         pCaps->PrimitiveMiscCaps |= D3DPMISCCAPS_CLIPTLVERTS;
 
     pCaps->RasterCaps =
-        D3DPIPECAP(ANISOTROPIC_FILTER, D3DPRASTERCAPS_ANISOTROPY) |
+        D3DPIPECAP(anisotropic_filter, D3DPRASTERCAPS_ANISOTROPY) |
         D3DPRASTERCAPS_COLORPERSPECTIVE |
         D3DPRASTERCAPS_DITHER |
         D3DPRASTERCAPS_DEPTHBIAS |
@@ -694,7 +678,7 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
                           D3DPBLENDCAPS_BOTHSRCALPHA |
                           D3DPBLENDCAPS_BOTHINVSRCALPHA |
                           D3DPBLENDCAPS_BLENDFACTOR |
-                          D3DPIPECAP(MAX_DUAL_SOURCE_RENDER_TARGETS,
+                          D3DPIPECAP(max_dual_source_render_targets,
                               D3DPBLENDCAPS_INVSRCCOLOR2 |
                               D3DPBLENDCAPS_SRCCOLOR2);
 
@@ -723,25 +707,25 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
         D3DPTEXTURECAPS_TEXREPEATNOTSCALEDBYSIZE |
         D3DPTEXTURECAPS_CUBEMAP |
         D3DPTEXTURECAPS_VOLUMEMAP |
-        D3DNPIPECAP(NPOT_TEXTURES, D3DPTEXTURECAPS_POW2) |
-        D3DNPIPECAP(NPOT_TEXTURES, D3DPTEXTURECAPS_NONPOW2CONDITIONAL) |
-        D3DNPIPECAP(NPOT_TEXTURES, D3DPTEXTURECAPS_CUBEMAP_POW2) |
-        D3DNPIPECAP(NPOT_TEXTURES, D3DPTEXTURECAPS_VOLUMEMAP_POW2) |
-        D3DPIPECAP(MAX_TEXTURE_2D_SIZE, D3DPTEXTURECAPS_MIPMAP) |
-        D3DPIPECAP(MAX_TEXTURE_3D_LEVELS, D3DPTEXTURECAPS_MIPVOLUMEMAP) |
-        D3DPIPECAP(MAX_TEXTURE_CUBE_LEVELS, D3DPTEXTURECAPS_MIPCUBEMAP);
+        D3DNPIPECAP(npot_textures, D3DPTEXTURECAPS_POW2) |
+        D3DNPIPECAP(npot_textures, D3DPTEXTURECAPS_NONPOW2CONDITIONAL) |
+        D3DNPIPECAP(npot_textures, D3DPTEXTURECAPS_CUBEMAP_POW2) |
+        D3DNPIPECAP(npot_textures, D3DPTEXTURECAPS_VOLUMEMAP_POW2) |
+        D3DPIPECAP(max_texture_2d_size, D3DPTEXTURECAPS_MIPMAP) |
+        D3DPIPECAP(max_texture_3d_levels, D3DPTEXTURECAPS_MIPVOLUMEMAP) |
+        D3DPIPECAP(max_texture_cube_levels, D3DPTEXTURECAPS_MIPCUBEMAP);
 
     pCaps->TextureFilterCaps =
         D3DPTFILTERCAPS_MINFPOINT |
         D3DPTFILTERCAPS_MINFLINEAR |
-        D3DPIPECAP(ANISOTROPIC_FILTER, D3DPTFILTERCAPS_MINFANISOTROPIC) |
+        D3DPIPECAP(anisotropic_filter, D3DPTFILTERCAPS_MINFANISOTROPIC) |
         /*D3DPTFILTERCAPS_MINFPYRAMIDALQUAD |*/
         /*D3DPTFILTERCAPS_MINFGAUSSIANQUAD |*/
         D3DPTFILTERCAPS_MIPFPOINT |
         D3DPTFILTERCAPS_MIPFLINEAR |
         D3DPTFILTERCAPS_MAGFPOINT |
         D3DPTFILTERCAPS_MAGFLINEAR |
-        D3DPIPECAP(ANISOTROPIC_FILTER, D3DPTFILTERCAPS_MAGFANISOTROPIC) |
+        D3DPIPECAP(anisotropic_filter, D3DPTFILTERCAPS_MAGFANISOTROPIC) |
         /*D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD |*/
         /*D3DPTFILTERCAPS_MAGFGAUSSIANQUAD*/0;
 
@@ -754,7 +738,7 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
         D3DPTADDRESSCAPS_WRAP |
         D3DPTADDRESSCAPS_MIRROR |
         D3DPTADDRESSCAPS_CLAMP |
-        D3DPIPECAP(TEXTURE_MIRROR_CLAMP, D3DPTADDRESSCAPS_MIRRORONCE);
+        D3DPIPECAP(texture_mirror_clamp, D3DPTADDRESSCAPS_MIRRORONCE);
 
     pCaps->VolumeTextureAddressCaps = pCaps->TextureAddressCaps;
 
@@ -764,21 +748,20 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
         D3DLINECAPS_TEXTURE |
         D3DLINECAPS_ZTEST |
         D3DLINECAPS_FOG;
-    if (screen->get_paramf(screen, PIPE_CAPF_MAX_LINE_WIDTH_AA) > 0.0) {
+    if (screen->caps.max_line_width_aa > 0.0) {
         pCaps->LineCaps |= D3DLINECAPS_ANTIALIAS;
     }
 
-    pCaps->MaxTextureWidth =screen->get_param(screen,
-                                              PIPE_CAP_MAX_TEXTURE_2D_SIZE);
+    pCaps->MaxTextureWidth =screen->caps.max_texture_2d_size;
     pCaps->MaxTextureHeight = pCaps->MaxTextureWidth;
     pCaps->MaxVolumeExtent =
-        1 << (screen->get_param(screen, PIPE_CAP_MAX_TEXTURE_3D_LEVELS) - 1);
+        1 << (screen->caps.max_texture_3d_levels - 1);
     /* XXX values from wine */
     pCaps->MaxTextureRepeat = 32768;
     pCaps->MaxTextureAspectRatio = pCaps->MaxTextureWidth;
 
     pCaps->MaxAnisotropy =
-        (DWORD)screen->get_paramf(screen, PIPE_CAPF_MAX_TEXTURE_ANISOTROPY);
+        (DWORD)screen->caps.max_texture_anisotropy;
 
     /* Values for GeForce 9600 GT */
     pCaps->MaxVertexW = 1e10f;
@@ -848,7 +831,7 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
     pCaps->MaxVertexBlendMatrices = 4; /* 1 vec4 BLENDWEIGHT/INDICES input */
     pCaps->MaxVertexBlendMatrixIndex = 8; /* D3DTS_WORLDMATRIX(0..8) */
 
-    pCaps->MaxPointSize = screen->get_paramf(screen, PIPE_CAPF_MAX_POINT_SIZE);
+    pCaps->MaxPointSize = screen->caps.max_point_size;
 
     pCaps->MaxPrimitiveCount = 0x555555; /* <- wine, really 0xFFFFFFFF; */
     pCaps->MaxVertexIndex = 0xFFFFFF; /* <- wine, really 0xFFFFFFFF */
@@ -857,8 +840,7 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
                  PIPE_SHADER_VERTEX, PIPE_SHADER_CAP_MAX_INPUTS),
              16);
 
-    pCaps->MaxStreamStride = screen->get_param(screen,
-            PIPE_CAP_MAX_VERTEX_ATTRIB_STRIDE);
+    pCaps->MaxStreamStride = screen->caps.max_vertex_attrib_stride;
 
     pCaps->VertexShaderVersion = D3DVS_VERSION(3,0);
 
@@ -902,7 +884,7 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
                        D3DDTCAPS_FLOAT16_4;
 
     pCaps->NumSimultaneousRTs =
-        screen->get_param(screen, PIPE_CAP_MAX_RENDER_TARGETS);
+        screen->caps.max_render_targets;
     if (pCaps->NumSimultaneousRTs > NINE_MAX_SIMULTANEOUS_RENDERTARGETS)
         pCaps->NumSimultaneousRTs = NINE_MAX_SIMULTANEOUS_RENDERTARGETS;
 

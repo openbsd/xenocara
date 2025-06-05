@@ -646,7 +646,7 @@ anv_get_image_format_features2(const struct intel_device_info *devinfo,
     * it for the list of shader storage extended formats [1]. Before that,
     * this applies to all VkFormats.
     *
-    * [1] : https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#features-shaderStorageImageExtendedFormats
+    * [1] : https://registry.khronos.org/vulkan/specs/latest/html/vkspec.html#features-shaderStorageImageExtendedFormats
     */
    if (flags & VK_FORMAT_FEATURE_2_STORAGE_WRITE_WITHOUT_FORMAT_BIT)
       flags |= VK_FORMAT_FEATURE_2_STORAGE_IMAGE_BIT;
@@ -940,7 +940,7 @@ void anv_GetPhysicalDeviceFormatProperties2(
          break;
       }
       default:
-         anv_debug_ignored_stype(ext->sType);
+         vk_debug_ignored_stype(ext->sType);
          break;
       }
    }
@@ -1199,10 +1199,11 @@ anv_get_image_format_properties(
       /* Nothing to check. */
    }
 
-   if (image_usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT) {
-      /* Ignore this flag because it was removed from the
-       * provisional_I_20150910 header.
-       */
+   if (view_usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT) {
+      if (!(format_feature_flags & (VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BIT |
+                                    VK_FORMAT_FEATURE_2_DEPTH_STENCIL_ATTACHMENT_BIT))) {
+         goto unsupported;
+      }
    }
 
    /* From the bspec section entitled "Surface Layout and Tiling",
@@ -1356,7 +1357,7 @@ VkResult anv_GetPhysicalDeviceImageFormatProperties2(
          from_wsi = true;
          break;
       default:
-         anv_debug_ignored_stype(s->sType);
+         vk_debug_ignored_stype(s->sType);
          break;
       }
    }
@@ -1374,7 +1375,7 @@ VkResult anv_GetPhysicalDeviceImageFormatProperties2(
          android_usage = (void *) s;
          break;
       default:
-         anv_debug_ignored_stype(s->sType);
+         vk_debug_ignored_stype(s->sType);
          break;
       }
    }

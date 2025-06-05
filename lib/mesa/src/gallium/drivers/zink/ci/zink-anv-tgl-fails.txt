@@ -1,86 +1,3 @@
-# "Fail, buffer content is not well preserved when age > 0 (Fail)"
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_clear_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_clear_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_clear_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_clear_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_render_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_render_even_clear_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_render_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_render_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_render_even_render_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_clear_render_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_clear_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_clear_even_clear_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_clear_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_clear_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_clear_even_render_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_clear_even_render_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_clear_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_render_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_render_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_render_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_render_even_render_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.no_resize.odd_render_render_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_clear_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_clear_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_clear_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_clear_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_render_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_render_even_clear_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_render_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_render_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_render_even_render_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_clear_render_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_clear_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_clear_even_clear_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_clear_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_clear_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_clear_even_render_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_clear_even_render_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_clear_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_render_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_render_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_render_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_render_even_render_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_after_swap.odd_render_render_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_clear_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_clear_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_clear_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_clear_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_render_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_render_even_clear_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_render_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_render_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_render_even_render_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_clear_render_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_clear_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_clear_even_clear_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_clear_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_clear_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_clear_even_render_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_clear_even_render_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_clear_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_even_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_render_even_clear_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_render_even_clear,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_render_even_none,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_render_even_render_render,Fail
-dEQP-EGL.functional.buffer_age.no_preserve.resize_before_swap.odd_render_render_even_render,Fail
-
 dEQP-EGL.functional.query_context.get_current_context.rgba8888_window,Crash
 
 wayland-dEQP-EGL.functional.resize.surface_size.grow,Fail
@@ -92,25 +9,15 @@ spec@egl_chromium_sync_control@conformance@eglGetSyncValuesCHROMIUM_ust_test,Fai
 spec@egl_chromium_sync_control@conformance@eglGetSyncValuesCHROMIUM_msc_and_sbc_test,Fail
 spec@egl_chromium_sync_control@conformance,Fail
 
-glx@glx_arb_create_context_es2_profile@invalid opengl es version,Fail
-glx@glx_arb_create_context_no_error@no error,Fail
-glx@glx_arb_create_context_robustness@invalid reset notification strategy,Fail
-
-# "Could not create initial indirect-rendering context."
-glx@glx_ext_import_context@free context,Fail
-glx@glx_ext_import_context@get context id,Fail
-
-glx@glx_ext_import_context@get current display,Fail
-glx@glx_ext_import_context@import context- multi process,Fail
-glx@glx_ext_import_context@import context- single process,Fail
-glx@glx_ext_import_context@imported context has same context id,Fail
-glx@glx_ext_import_context@make current- multi process,Fail
-glx@glx_ext_import_context@make current- single process,Fail
-glx@glx_ext_import_context@query context info,Fail
-
-# See also the EGL buffer age failures
-glx@glx-buffer-age,Fail
-glx@glx-buffer-age vblank_mode=0,Fail
+spec@ext_image_dma_buf_import@ext_image_dma_buf_import-export,Fail
+spec@ext_image_dma_buf_import@ext_image_dma_buf_import-refcount,Fail
+spec@ext_image_dma_buf_import@ext_image_dma_buf_import-sample_uyvy,Fail
+spec@ext_image_dma_buf_import@ext_image_dma_buf_import-sample_xrgb8888,Fail
+spec@ext_image_dma_buf_import@ext_image_dma_buf_import-sample_xyuv,Fail
+spec@ext_image_dma_buf_import@ext_image_dma_buf_import-sample_y410,Fail
+spec@ext_image_dma_buf_import@ext_image_dma_buf_import-sample_yvu420,Fail
+spec@ext_image_dma_buf_import@ext_image_dma_buf_import-sample_yvyu,Fail
+spec@ext_image_dma_buf_import@ext_image_dma_buf_import-transcode-nv12-as-r8-gr88,Fail
 
 glx@glx-swap-pixmap-bad,Fail
 
@@ -168,19 +75,13 @@ spec@!opengl 2.1@polygon-stipple-fs,Fail
 
 spec@!opengl 3.0@clearbuffer-depth-cs-probe,Fail
 
-spec@arb_arrays_of_arrays@execution@image_store@basic-imagestore-mixed-const-non-const-uniform-index,Fail
-spec@arb_arrays_of_arrays@execution@image_store@basic-imagestore-mixed-const-non-const-uniform-index2,Fail
-spec@arb_arrays_of_arrays@execution@image_store@basic-imagestore-non-const-uniform-index,Fail
-
 spec@arb_framebuffer_object@fbo-blit-scaled-linear,Fail
 
 
 spec@arb_gpu_shader_fp64@execution@arb_gpu_shader_fp64-tf-separate,Fail
-spec@arb_gpu_shader_fp64@execution@glsl-fs-loop-unroll-mul-fp64,Fail
+spec@arb_gpu_shader_fp64@execution@fs-function-inout-array,Crash
+spec@arb_gpu_shader_fp64@execution@glsl-fs-loop-unroll-mul-fp64,Crash
 spec@arb_gpu_shader_fp64@uniform_buffers@fs-ubo-load.indirect.3,Fail
-
-spec@arb_program_interface_query@arb_program_interface_query-getprogramresourceindex,Fail
-spec@arb_program_interface_query@arb_program_interface_query-getprogramresourceindex@'vs_input2[1][0]' on GL_PROGRAM_INPUT,Fail
 
 spec@arb_sample_locations@test,Fail
 spec@arb_sample_locations@test@MSAA: 1- X: 0- Y: 0- Grid: false,Fail
@@ -542,18 +443,10 @@ spec@arb_sample_shading@samplemask 8@sample mask_in_one,Fail
 
 spec@arb_shader_image_load_store@early-z,Fail
 spec@arb_shader_image_load_store@early-z@occlusion query test/early-z pass,Fail
-spec@arb_shader_image_load_store@host-mem-barrier,Fail
-spec@arb_shader_image_load_store@host-mem-barrier@Transform feedback/WaW/one bit barrier test/16x16,Fail
-spec@arb_shader_image_load_store@host-mem-barrier@Transform feedback/WaW/one bit barrier test/4x4,Fail
-spec@arb_shader_image_load_store@host-mem-barrier@Transform feedback/WaW/one bit barrier test/64x64,Fail
 
 spec@arb_shader_texture_lod@execution@arb_shader_texture_lod-texgradcube,Fail
 
 # "../src/gallium/drivers/zink/zink_compiler.c:2071: assign_producer_var_io: Assertion `*reserved < MAX_VARYING' failed."
-spec@arb_tessellation_shader@execution@variable-indexing@tes-both-input-array-float-index-rd,Crash
-spec@arb_tessellation_shader@execution@variable-indexing@tes-both-input-array-vec2-index-rd,Crash
-spec@arb_tessellation_shader@execution@variable-indexing@tes-both-input-array-vec3-index-rd,Crash
-spec@arb_tessellation_shader@execution@variable-indexing@tes-both-input-array-vec4-index-rd,Crash
 
 # "arb_texture_buffer_object-formats: ../src/gallium/drivers/zink/zink_context.c:807: create_bvci: Assertion `bvci.format' failed."
 spec@arb_texture_buffer_object@formats (vs- arb),Crash
@@ -626,13 +519,8 @@ spec@egl_khr_surfaceless_context@viewport,Fail
 
 spec@egl_mesa_configless_context@basic,Fail
 
-spec@ext_external_objects@vk-image-overwrite,Fail
 spec@ext_external_objects@vk-image-overwrite@RGB 10 A2 UINT optimal: Failed to initialize OpenGL FBO/RBO,Fail
 
-# Fails across most drivers, but it's a silly test.
-spec@ext_framebuffer_blit@fbo-blit-check-limits,Fail
-
-spec@ext_framebuffer_multisample@blit-mismatched-formats,Fail
 spec@ext_framebuffer_multisample@clip-and-scissor-blit 16 msaa,Fail
 spec@ext_framebuffer_multisample@enable-flag,Fail
 spec@ext_framebuffer_multisample@interpolation 16 centroid-deriv-disabled,Fail
@@ -662,9 +550,6 @@ spec@ext_transform_feedback@tessellation triangle_fan flat_first,Fail
 spec@ext_transform_feedback@tessellation quad_strip wireframe,Fail
 spec@ext_transform_feedback@tessellation quads wireframe,Fail
 
-spec@glsl-1.50@execution@primitive-id-no-gs-quad-strip,Fail
-spec@glsl-1.50@execution@primitive-id-no-gs-quads,Fail
-
 spec@khr_texture_compression_astc@miptree-gl srgb-fp,Fail
 spec@khr_texture_compression_astc@miptree-gl srgb-fp@sRGB decode full precision,Fail
 spec@khr_texture_compression_astc@miptree-gles srgb-fp,Fail
@@ -679,9 +564,121 @@ spec@arb_viewport_array@display-list,Fail
 glx@glx-multi-window-single-context,Fail
 spec@arb_timer_query@timestamp-get,Fail
 
-# SIGKILL
-spec@arb_gpu_shader_fp64@execution@arb_gpu_shader_fp64-fs-getuniformdv,Crash
-spec@arb_gpu_shader_fp64@execution@arb_gpu_shader_fp64-gs-getuniformdv,Crash
-spec@arb_gpu_shader_fp64@execution@arb_gpu_shader_fp64-vs-getuniformdv,Crash
+# glcts: ../../src/intel/vulkan/anv_sparse.c:970: vk_bind_to_anv_vm_bind: Assertion `vk_bind->memoryOffset + vk_bind->size <= anv_bind.bo->size' failed.
+# Also related to https://gitlab.freedesktop.org/mesa/mesa/-/issues/11073
+KHR-GL46.sparse_texture_clamp_tests.SparseTextureClampLookupColor,Crash
 
-spec@arb_fragment_layer_viewport@layer-no-gs,Fail
+# Error detected at x,y,z: expected [a] got [b]
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment,Fail
+
+KHR-GL46.sparse_texture2_tests.SparseTexture2Lookup,Fail
+
+# uprev Piglit in Mesa
+spec@arb_shader_storage_buffer_object@max-ssbo-size@fs,Crash
+spec@arb_shader_storage_buffer_object@max-ssbo-size@vs,Crash
+
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg8i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg16i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba16f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba16,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba32f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r32ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg32f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg8ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg8ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba32f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r11f_g11f_b10f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r8ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r32f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg32i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r32f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg16ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r11f_g11f_b10f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg8,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg16_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba16ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r16ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg16,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r16ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r16,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg16ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r16_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r16i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg16,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg8i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba8_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r16f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r8,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg32f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg32ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r8i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r16i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg16f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r8_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg32ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r16f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba16i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg8_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r8i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r8ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba16_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba16ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg8,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r16_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba8i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba8_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba8i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba16,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba32i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba32i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r8_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgb10_a2,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg16i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r32i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r8,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba8ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r32ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_r16,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba8ui,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rg8_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba8,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba8,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg16_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba16_snorm,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgba16f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_r32i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_array_rgba16i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg32i,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rg16f,Fail
+KHR-GL46.sparse_texture2_tests.SparseTexture2Commitment_texture_2d_multisample_rgb10_a2,Fail
+#glcts update
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_src_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_dst_x,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_src_dst_x,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_x,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_dst_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_dst_x,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_dst_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_src_x,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_src_dst_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_dst_y,Fail
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_mag_reverse_dst_x,Fail
+
+dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_out_of_bounds_min,Fail
+glx@glx_arb_sync_control@swapbuffersmsc-return,Fail
+glx@glx_arb_sync_control@swapbuffersmsc-divisor-zero,Fail
+glx@glx_arb_sync_control@swapbuffersmsc-return swap_interval 0,Fail
+glx@glx_arb_sync_control@swapbuffersmsc-return swap_interval 1,Fail
+
+# since hetzner migration
+spec@ovr_multiview@fb_blit_first_view_full,Fail
+spec@ovr_multiview@fb_blit_first_view_full_base1,Fail
+spec@ovr_multiview@fb_read_errors,Fail
+spec@ovr_multiview@fb_shader_mismatch_draw_errors_0_2,Fail
+spec@ovr_multiview@fb_shader_mismatch_draw_errors_1_2,Fail
+spec@ovr_multiview@fb_shader_mismatch_draw_errors_2_0,Fail
+spec@ovr_multiview@fb_shader_mismatch_draw_errors_2_1,Fail
+spec@ovr_multiview@fb_shader_mismatch_draw_errors_2_3,Fail
+spec@ovr_multiview@fb_shader_mismatch_draw_errors_3_2,Fail

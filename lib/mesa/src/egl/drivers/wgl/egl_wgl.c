@@ -269,8 +269,10 @@ wgl_initialize_impl(_EGLDisplay *disp, HDC hdc)
    disp->Extensions.MESA_query_driver = EGL_TRUE;
 
    /* Report back to EGL the bitmask of priorities supported */
-   disp->Extensions.IMG_context_priority = wgl_dpy->screen->get_param(
-      wgl_dpy->screen, PIPE_CAP_CONTEXT_PRIORITY_MASK);
+   disp->Extensions.IMG_context_priority = wgl_dpy->screen->caps.context_priority_mask;
+   disp->Extensions.NV_context_priority_realtime =
+      disp->Extensions.IMG_context_priority &
+      (1 << __EGL_CONTEXT_PRIORITY_REALTIME_BIT);
 
    disp->Extensions.EXT_pixel_format_float = EGL_TRUE;
 
@@ -506,7 +508,7 @@ wgl_destroy_surface(_EGLDisplay *disp, _EGLSurface *surf)
 static void
 wgl_gl_flush_get(_glapi_proc *glFlush)
 {
-   *glFlush = _glapi_get_proc_address("glFlush");
+   *glFlush = _mesa_glapi_get_proc_address("glFlush");
 }
 
 static void
@@ -593,7 +595,7 @@ wgl_make_current(_EGLDisplay *disp, _EGLSurface *dsurf, _EGLSurface *rsurf,
          rdraw = (old_rsurf) ? wgl_egl_surface(old_rsurf)->fb : NULL;
          cctx = (old_ctx) ? wgl_egl_context(old_ctx)->ctx : NULL;
 
-         /* undo the previous wgl_dpy->core->unbindContext */
+         /* undo the previous _eglBindContext */
          if (stw_make_current(ddraw, rdraw, cctx)) {
             return _eglError(egl_error, "eglMakeCurrent");
          }
@@ -612,7 +614,7 @@ wgl_make_current(_EGLDisplay *disp, _EGLSurface *dsurf, _EGLSurface *rsurf,
 
          _eglLog(_EGL_WARNING, "wgl: failed to rebind the previous context");
       } else {
-         /* wgl_dpy->core->bindContext succeeded, so take a reference on the
+         /* _eglBindContext succeeded, so take a reference on the
           * wgl_dpy. This prevents wgl_dpy from being reinitialized when a
           * EGLDisplay is terminated and then initialized again while a
           * context is still bound. See wgl_initialize() for a more in depth
@@ -1164,10 +1166,10 @@ wgl_interop_export_object(_EGLDisplay *disp, _EGLContext *ctx,
 static int
 wgl_interop_flush_objects(_EGLDisplay *disp, _EGLContext *ctx, unsigned count,
                           struct mesa_glinterop_export_in *objects,
-                          GLsync *sync)
+                          struct mesa_glinterop_flush_out *out)
 {
    struct wgl_egl_context *wgl_ctx = wgl_egl_context(ctx);
-   return stw_interop_flush_objects(wgl_ctx->ctx, count, objects, sync);
+   return stw_interop_flush_objects(wgl_ctx->ctx, count, objects, out);
 }
 
 struct _egl_driver _eglDriver = {

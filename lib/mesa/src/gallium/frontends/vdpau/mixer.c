@@ -147,7 +147,7 @@ vlVdpVideoMixerCreate(VdpDevice device,
       goto no_params;
    }
 
-   max_size = screen->get_param(screen, PIPE_CAP_MAX_TEXTURE_2D_SIZE);
+   max_size = screen->caps.max_texture_2d_size;
    if (vmixer->video_width < 48 || vmixer->video_width > max_size) {
       VDPAU_MSG(VDPAU_WARN, "[VDPAU] 48 < %u < %u not valid for width\n",
                 vmixer->video_width, max_size);
@@ -475,12 +475,17 @@ vlVdpVideoMixerUpdateDeinterlaceFilter(vlVdpVideoMixer *vmixer)
 
    /* create a new filter if requested */
    if (vmixer->deint.enabled && vmixer->chroma_format == PIPE_VIDEO_CHROMA_FORMAT_420) {
+      bool interlaced = pipe->screen->get_video_param(pipe->screen,
+                                                      PIPE_VIDEO_PROFILE_UNKNOWN,
+                                                      PIPE_VIDEO_ENTRYPOINT_BITSTREAM,
+                                                      PIPE_VIDEO_CAP_PREFERS_INTERLACED);
       vmixer->deint.filter = MALLOC(sizeof(struct vl_deint_filter));
       vmixer->deint.enabled = vl_deint_filter_init(vmixer->deint.filter, pipe,
             vmixer->video_width, vmixer->video_height,
-            vmixer->skip_chroma_deint, vmixer->deint.spatial);
+            vmixer->skip_chroma_deint, vmixer->deint.spatial, !interlaced);
       if (!vmixer->deint.enabled) {
          FREE(vmixer->deint.filter);
+         vmixer->deint.filter = NULL;
       }
    }
 }

@@ -1,24 +1,6 @@
 /*
  * Copyright © 2020 Google LLC
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "freedreno_layout.h"
@@ -30,7 +12,7 @@
 #include <stdio.h>
 
 bool
-fdl_test_layout(const struct testcase *testcase, int gpu_id)
+fdl_test_layout(const struct testcase *testcase, const struct fd_dev_id *dev_id)
 {
    struct fdl_layout layout = {
       .ubwc = testcase->layout.ubwc,
@@ -46,14 +28,15 @@ fdl_test_layout(const struct testcase *testcase, int gpu_id)
       max_size = u_minify(max_size, 1);
    }
 
-   if (gpu_id >= 600) {
-      fdl6_layout(&layout, testcase->format,
+   if (fd_dev_gen(dev_id) >= 6) {
+      const struct fd_dev_info *dev_info = fd_dev_info_raw(dev_id);
+      fdl6_layout(&layout, dev_info, testcase->format,
                   MAX2(testcase->layout.nr_samples, 1), testcase->layout.width0,
                   MAX2(testcase->layout.height0, 1),
                   MAX2(testcase->layout.depth0, 1), mip_levels,
-                  MAX2(testcase->array_size, 1), testcase->is_3d, NULL);
+                  MAX2(testcase->array_size, 1), testcase->is_3d, false, false, NULL);
    } else {
-      assert(gpu_id >= 500);
+      assert(fd_dev_gen(dev_id) >= 5);
       fdl5_layout(&layout, testcase->format,
                   MAX2(testcase->layout.nr_samples, 1), testcase->layout.width0,
                   MAX2(testcase->layout.height0, 1),
