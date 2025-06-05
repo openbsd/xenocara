@@ -82,6 +82,7 @@ static inline uint32_t ATTRIBUTE_PURE
 ${item.token_name}_${prop}(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return ${item.get_prop(prop, 30)};
    case 200: return ${item.get_prop(prop, 20)};
    case 125: return ${item.get_prop(prop, 12.5)};
    case 120: return ${item.get_prop(prop, 12)};
@@ -344,7 +345,7 @@ def main():
             assert field
             field.allowed = True
 
-    with open(pargs.output, 'w') as f:
+    with open(pargs.output, 'w', encoding='utf-8') as f:
         f.write(TEMPLATE.render(containers=containers, guard=pargs.cpp_guard))
 
 if __name__ == '__main__':

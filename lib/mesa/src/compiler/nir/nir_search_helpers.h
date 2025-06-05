@@ -29,6 +29,7 @@
 
 #include <math.h>
 #include "util/bitscan.h"
+#include "util/u_math.h"
 #include "nir.h"
 #include "nir_range_analysis.h"
 
@@ -121,6 +122,24 @@ is_nan(UNUSED struct hash_table *ht, const nir_alu_instr *instr,
 
    for (unsigned i = 0; i < num_components; i++) {
       if (!isnan(nir_src_comp_as_float(instr->src[src].src, swizzle[i])))
+         return false;
+   }
+
+   return true;
+}
+
+static inline bool
+is_negative_zero(UNUSED struct hash_table *ht, const nir_alu_instr *instr,
+       unsigned src, unsigned num_components, const uint8_t *swizzle)
+{
+   /* only constant srcs: */
+   if (!nir_src_is_const(instr->src[src].src))
+      return false;
+
+   for (unsigned i = 0; i < num_components; i++) {
+      union di tmp;
+      tmp.d = nir_src_comp_as_float(instr->src[src].src, swizzle[i]);
+      if (tmp.ui != 0x8000000000000000ull)
          return false;
    }
 
@@ -345,25 +364,73 @@ is_first_5_bits_uge_2(UNUSED struct hash_table *ht, const nir_alu_instr *instr,
    return true;
 }
 
+/**
+ * Is this a constant that could be either int16_t or uint16_t after applying
+ * a scale factor?
+ */
+static inline bool
+is_16_bits_with_scale(const nir_alu_instr *instr,
+                      unsigned src, unsigned num_components,
+                      const uint8_t *swizzle, int scale)
+{
+   /* only constant srcs: */
+   if (!nir_src_is_const(instr->src[src].src))
+      return false;
+
+   /* All elements must be representable as int16_t or uint16_t. */
+   bool must_be_signed = false;
+   bool must_be_unsigned = false;
+
+   for (unsigned i = 0; i < num_components; i++) {
+      const int64_t val =
+         scale * nir_src_comp_as_int(instr->src[src].src, swizzle[i]);
+
+      if (val > 0xffff || val < -0x8000)
+         return false;
+
+      if (val < 0) {
+         if (must_be_unsigned)
+            return false;
+
+         must_be_signed = true;
+      }
+
+      if (val > 0x7fff) {
+         if (must_be_signed)
+            return false;
+
+         must_be_unsigned = true;
+      }
+   }
+
+   return true;
+}
+
 /** Is this a constant that could be either int16_t or uint16_t? */
 static inline bool
 is_16_bits(UNUSED struct hash_table *ht, const nir_alu_instr *instr,
            unsigned src, unsigned num_components,
            const uint8_t *swizzle)
 {
-   /* only constant srcs: */
-   if (!nir_src_is_const(instr->src[src].src))
-      return false;
+   return is_16_bits_with_scale(instr, src, num_components, swizzle, 1);
+}
 
-   for (unsigned i = 0; i < num_components; i++) {
-      const int64_t val =
-         nir_src_comp_as_int(instr->src[src].src, swizzle[i]);
+/** Like is_16_bits, but could 2 times the constant fit in 16 bits? */
+static inline bool
+is_2x_16_bits(UNUSED struct hash_table *ht, const nir_alu_instr *instr,
+              unsigned src, unsigned num_components,
+              const uint8_t *swizzle)
+{
+   return is_16_bits_with_scale(instr, src, num_components, swizzle, 2);
+}
 
-      if (val > 0xffff || val < -0x8000)
-         return false;
-   }
-
-   return true;
+/** Like is_16_bits, but could -2 times the constant fit in 16 bits? */
+static inline bool
+is_neg2x_16_bits(UNUSED struct hash_table *ht, const nir_alu_instr *instr,
+                 unsigned src, unsigned num_components,
+                 const uint8_t *swizzle)
+{
+   return is_16_bits_with_scale(instr, src, num_components, swizzle, -2);
 }
 
 static inline bool
@@ -450,6 +517,12 @@ is_not_used_by_if(const nir_alu_instr *instr)
 }
 
 static inline bool
+is_only_used_by_if(const nir_alu_instr *instr)
+{
+   return nir_def_only_used_by_if(&instr->def);
+}
+
+static inline bool
 is_used_by_non_fsat(const nir_alu_instr *instr)
 {
    nir_foreach_use(src, &instr->def) {
@@ -469,23 +542,58 @@ is_used_by_non_fsat(const nir_alu_instr *instr)
 }
 
 static inline bool
-is_only_used_as_float(const nir_alu_instr *instr)
+is_only_used_as_float_impl(const nir_alu_instr *instr, unsigned depth)
 {
    nir_foreach_use(src, &instr->def) {
       const nir_instr *const user_instr = nir_src_parent_instr(src);
-      if (user_instr->type != nir_instr_type_alu)
+
+      if (user_instr->type != nir_instr_type_alu) {
+         if (user_instr->type == nir_instr_type_intrinsic) {
+            switch (nir_instr_as_intrinsic(user_instr)->intrinsic) {
+            case nir_intrinsic_ddx:
+            case nir_intrinsic_ddy:
+            case nir_intrinsic_ddx_fine:
+            case nir_intrinsic_ddy_fine:
+            case nir_intrinsic_ddx_coarse:
+            case nir_intrinsic_ddy_coarse:
+               continue;
+            default:
+               break;
+            }
+         }
          return false;
+      }
 
       const nir_alu_instr *const user_alu = nir_instr_as_alu(user_instr);
       assert(instr != user_alu);
 
       unsigned index = (nir_alu_src *)container_of(src, nir_alu_src, src) - user_alu->src;
+
+      /* bcsel acts like a move: if the bcsel is only used by float
+       * instructions, then the original value is (transitively) only used by
+       * float too.
+       *
+       * The unbounded recursion would terminate because use chains are acyclic
+       * in SSA. However, we limit the search depth regardless to avoid stack
+       * overflows in patholgical shaders and to reduce the worst-case time.
+       */
+      if (user_alu->op == nir_op_bcsel && index != 0 && depth < 8) {
+         if (is_only_used_as_float_impl(user_alu, depth + 1))
+            continue;
+      }
+
       nir_alu_type type = nir_op_infos[user_alu->op].input_types[index];
       if (nir_alu_type_get_base_type(type) != nir_type_float)
          return false;
    }
 
    return true;
+}
+
+static inline bool
+is_only_used_as_float(const nir_alu_instr *instr)
+{
+   return is_only_used_as_float_impl(instr, 0);
 }
 
 static inline bool
@@ -508,6 +616,42 @@ is_only_used_by_fadd(const nir_alu_instr *instr)
    }
 
    return true;
+}
+
+static inline bool
+is_only_used_by_alu_op(const nir_alu_instr *instr, nir_op op)
+{
+   nir_foreach_use(src, &instr->def) {
+      const nir_instr *const user_instr = nir_src_parent_instr(src);
+      if (user_instr->type != nir_instr_type_alu)
+         return false;
+
+      const nir_alu_instr *const user_alu = nir_instr_as_alu(user_instr);
+      assert(instr != user_alu);
+
+      if (user_alu->op != op)
+         return false;
+   }
+
+   return true;
+}
+
+static inline bool
+is_only_used_by_iadd(const nir_alu_instr *instr)
+{
+   return is_only_used_by_alu_op(instr, nir_op_iadd);
+}
+
+static inline bool
+is_only_used_by_iand(const nir_alu_instr *instr)
+{
+   return is_only_used_by_alu_op(instr, nir_op_iand);
+}
+
+static inline bool
+is_only_used_by_ior(const nir_alu_instr *instr)
+{
+   return is_only_used_by_alu_op(instr, nir_op_ior);
 }
 
 static inline bool
@@ -602,6 +746,51 @@ is_lower_half_negative_one(UNUSED struct hash_table *ht, const nir_alu_instr *in
    for (unsigned i = 0; i < num_components; i++) {
       uint64_t low_bits = u_bit_consecutive64(0, nir_src_bit_size(instr->src[src].src) / 2);
       if ((nir_src_comp_as_uint(instr->src[src].src, swizzle[i]) & low_bits) != low_bits)
+         return false;
+   }
+
+   return true;
+}
+
+/**
+ * Returns whether an operand is a constant bit-mask, meaning that it
+ * only has consecutive 1 bits starting from the LSB.
+ * Numbers whose MSB is 1 are excluded because they are not useful
+ * for the optimizations where this function is used.
+ */
+static inline bool
+is_const_bitmask(UNUSED struct hash_table *ht, const nir_alu_instr *instr,
+                 unsigned src, unsigned num_components,
+                 const uint8_t *swizzle)
+{
+   if (nir_src_as_const_value(instr->src[src].src) == NULL)
+      return false;
+
+   for (unsigned i = 0; i < num_components; i++) {
+      const unsigned bit_size = instr->src[src].src.ssa->bit_size;
+      const uint64_t c = nir_src_comp_as_uint(instr->src[src].src, swizzle[i]);
+      const unsigned num_bits = util_bitcount64(c);
+      if (c != BITFIELD64_MASK(num_bits) || num_bits == bit_size)
+         return false;
+   }
+
+   return true;
+}
+
+/**
+ * Returns whether the 5 LSBs of an operand are non-zero.
+ */
+static inline bool
+is_5lsb_not_zero(UNUSED struct hash_table *ht, const nir_alu_instr *instr,
+                 unsigned src, unsigned num_components,
+                 const uint8_t *swizzle)
+{
+   if (nir_src_as_const_value(instr->src[src].src) == NULL)
+      return false;
+
+   for (unsigned i = 0; i < num_components; i++) {
+      const uint64_t c = nir_src_comp_as_uint(instr->src[src].src, swizzle[i]);
+      if ((c & 0x1f) == 0)
          return false;
    }
 

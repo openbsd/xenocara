@@ -776,6 +776,22 @@ struct _mesa_glsl_parse_state {
     */
    bool KHR_blend_equation_advanced_enable;
    bool KHR_blend_equation_advanced_warn;
+   bool KHR_shader_subgroup_arithmetic_enable;
+   bool KHR_shader_subgroup_arithmetic_warn;
+   bool KHR_shader_subgroup_ballot_enable;
+   bool KHR_shader_subgroup_ballot_warn;
+   bool KHR_shader_subgroup_basic_enable;
+   bool KHR_shader_subgroup_basic_warn;
+   bool KHR_shader_subgroup_clustered_enable;
+   bool KHR_shader_subgroup_clustered_warn;
+   bool KHR_shader_subgroup_quad_enable;
+   bool KHR_shader_subgroup_quad_warn;
+   bool KHR_shader_subgroup_shuffle_enable;
+   bool KHR_shader_subgroup_shuffle_warn;
+   bool KHR_shader_subgroup_shuffle_relative_enable;
+   bool KHR_shader_subgroup_shuffle_relative_warn;
+   bool KHR_shader_subgroup_vote_enable;
+   bool KHR_shader_subgroup_vote_warn;
 
    /* OES extensions go here, sorted alphabetically.
     */
@@ -820,6 +836,8 @@ struct _mesa_glsl_parse_state {
     */
    bool AMD_conservative_depth_enable;
    bool AMD_conservative_depth_warn;
+   bool AMD_gpu_shader_half_float_enable;
+   bool AMD_gpu_shader_half_float_warn;
    bool AMD_gpu_shader_int64_enable;
    bool AMD_gpu_shader_int64_warn;
    bool AMD_shader_stencil_export_enable;
@@ -840,6 +858,8 @@ struct _mesa_glsl_parse_state {
    bool EXT_blend_func_extended_warn;
    bool EXT_clip_cull_distance_enable;
    bool EXT_clip_cull_distance_warn;
+   bool EXT_conservative_depth_enable;
+   bool EXT_conservative_depth_warn;
    bool EXT_demote_to_helper_invocation_enable;
    bool EXT_demote_to_helper_invocation_warn;
    bool EXT_draw_buffers_enable;
@@ -878,6 +898,8 @@ struct _mesa_glsl_parse_state {
    bool EXT_shader_io_blocks_warn;
    bool EXT_shader_samples_identical_enable;
    bool EXT_shader_samples_identical_warn;
+   bool EXT_shadow_samplers_enable;
+   bool EXT_shadow_samplers_warn;
    bool EXT_tessellation_point_size_enable;
    bool EXT_tessellation_point_size_warn;
    bool EXT_tessellation_shader_enable;
@@ -914,6 +936,10 @@ struct _mesa_glsl_parse_state {
    bool NV_shader_noperspective_interpolation_warn;
    bool NV_viewport_array2_enable;
    bool NV_viewport_array2_warn;
+   bool OVR_multiview_enable;
+   bool OVR_multiview_warn;
+   bool OVR_multiview2_enable;
+   bool OVR_multiview2_warn;
    /*@}*/
 
    /** Extensions supported by the OpenGL implementation. */
@@ -991,6 +1017,9 @@ struct _mesa_glsl_parse_state {
     * so we can check totals aren't too large.
     */
    unsigned clip_dist_size, cull_dist_size;
+
+   /* for OVR_multiview */
+   uint32_t view_mask;
 };
 
 # define YYLLOC_DEFAULT(Current, Rhs, N)                        \
@@ -1047,44 +1076,6 @@ extern bool _mesa_glsl_process_extension(const char *name, YYLTYPE *name_locp,
                                          YYLTYPE *behavior_locp,
                                          _mesa_glsl_parse_state *state);
 
-
-/**
- * \brief Can \c from be implicitly converted to \c desired
- *
- * \return True if the types are identical or if \c from type can be converted
- *         to \c desired according to Section 4.1.10 of the GLSL spec.
- *
- * \verbatim
- * From page 25 (31 of the pdf) of the GLSL 1.50 spec, Section 4.1.10
- * Implicit Conversions:
- *
- *     In some situations, an expression and its type will be implicitly
- *     converted to a different type. The following table shows all allowed
- *     implicit conversions:
- *
- *     Type of expression | Can be implicitly converted to
- *     --------------------------------------------------
- *     int                  float
- *     uint
- *
- *     ivec2                vec2
- *     uvec2
- *
- *     ivec3                vec3
- *     uvec3
- *
- *     ivec4                vec4
- *     uvec4
- *
- *     There are no implicit array or structure conversions. For example,
- *     an array of int cannot be implicitly converted to an array of float.
- *     There are no implicit conversions between signed and unsigned
- *     integers.
- * \endverbatim
- */
-extern bool _mesa_glsl_can_implicitly_convert(const glsl_type *from, const glsl_type *desired,
-                                              _mesa_glsl_parse_state *state);
-
 #endif /* __cplusplus */
 
 
@@ -1098,6 +1089,14 @@ extern "C" {
 struct glcpp_parser;
 struct _mesa_glsl_parse_state;
 
+struct gl_context;
+struct gl_shader;
+
+extern void
+_mesa_glsl_compile_shader(struct gl_context *ctx, struct gl_shader *shader,
+                          FILE *dump_ir_file, bool dump_ast, bool dump_hir,
+                          bool force_recompile);
+
 typedef void (*glcpp_extension_iterator)(
               struct _mesa_glsl_parse_state *state,
               void (*add_builtin_define)(struct glcpp_parser *, const char *, int),
@@ -1109,11 +1108,6 @@ extern int glcpp_preprocess(void *ctx, const char **shader, char **info_log,
                             glcpp_extension_iterator extensions,
                             struct _mesa_glsl_parse_state *state,
                             struct gl_context *gl_ctx);
-
-extern void
-_mesa_glsl_copy_symbols_from_table(struct exec_list *shader_ir,
-                                   struct glsl_symbol_table *src,
-                                   struct glsl_symbol_table *dest);
 
 #ifdef __cplusplus
 }

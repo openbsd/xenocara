@@ -26,6 +26,7 @@ struct amd_ip_info {
    uint8_t ver_minor;
    uint8_t ver_rev;
    uint8_t num_queues;
+   uint8_t num_instances;
    uint32_t ib_alignment;
    uint32_t ib_pad_dw_mask;
 };
@@ -84,6 +85,8 @@ struct radeon_info {
    bool has_clear_state;
    bool has_distributed_tess;
    bool has_dcc_constant_encode;
+   bool has_tc_compatible_htile;
+   bool has_etc_support;
    bool has_rbplus;     /* if RB+ registers exist */
    bool rbplus_allowed; /* if RB+ is allowed */
    bool has_load_ctx_reg_pkt;
@@ -96,10 +99,12 @@ struct radeon_info {
    bool has_small_prim_filter_sample_loc_bug;
    bool has_ls_vgpr_init_bug;
    bool has_pops_missed_overlap_bug;
+   bool has_null_index_buffer_clamping_bug;
    bool has_zero_index_buffer_bug;
    bool has_image_load_dcc_bug;
    bool has_two_planes_iterate256_bug;
    bool has_vgt_flush_ngg_legacy_bug;
+   bool has_prim_restart_sync_bug;
    bool has_cs_regalloc_hang_bug;
    bool has_async_compute_threadgroup_bug;
    bool has_async_compute_align32_bug;
@@ -111,25 +116,40 @@ struct radeon_info {
    bool has_sqtt_auto_flush_mode_bug;
    bool never_send_perfcounter_stop;
    bool discardable_allows_big_page;
+   bool has_ngg_fully_culled_bug;
+   bool has_ngg_passthru_no_msg;
    bool has_export_conflict_bug;
+   bool has_attr_ring_wait_bug;
    bool has_vrs_ds_export_bug;
    bool has_taskmesh_indirect0_bug;
-   bool has_set_pairs_packets;
    bool sdma_supports_sparse;      /* Whether SDMA can safely access sparse resources. */
    bool sdma_supports_compression; /* Whether SDMA supports DCC and HTILE. */
-
+   bool has_set_context_pairs;
+   bool has_set_context_pairs_packed;
+   bool has_set_sh_pairs;
+   bool has_set_sh_pairs_packed;
+   bool has_set_uconfig_pairs;
+   bool needs_llvm_wait_wa; /* True if the chip needs to workarounds based on s_waitcnt_deptr but
+                             * the LLVM version doesn't work with multiparts shaders.
+                             */
 
    /* conformant_trunc_coord is equal to TA_CNTL2.TRUNCATE_COORD_MODE, which exists since gfx11.
     *
     * If TA_CNTL2.TRUNCATE_COORD_MODE == 0, coordinate truncation is the same as gfx10 and older.
-    * If TA_CNTL2.TRUNCATE_COORD_MODE == 1, coordinate truncation is adjusted to be conformant
-    * if you also set TRUNC_COORD.
     *
-    * Behavior:
-    *    truncate_coord_xy = TRUNC_COORD &&
-    *                        ((xy_filter == Point && !gather) || !TA_CNTL2.TRUNCATE_COORD_MODE);
-    *    truncate_coord_z = TRUNC_COORD && (z_filter == Point || !TA_CNTL2.TRUNCATE_COORD_MODE);
-    *    truncate_coord_layer = TRUNC_COORD && !TA_CNTL2.TRUNCATE_COORD_MODE;
+    * If TA_CNTL2.TRUNCATE_COORD_MODE == 1, coordinate truncation is adjusted to be D3D9/GL/Vulkan
+    * conformant if you also set TRUNC_COORD. Coordinate truncation uses D3D10+ behaviour if
+    * TRUNC_COORD is unset.
+    *
+    * Behavior if TA_CNTL2.TRUNCATE_COORD_MODE == 1:
+    *    truncate_coord_xy = TRUNC_COORD && (xy_filter == Point && !gather);
+    *    truncate_coord_z = TRUNC_COORD && (z_filter == Point);
+    *    truncate_coord_layer = false;
+    *
+    * Behavior if TA_CNTL2.TRUNCATE_COORD_MODE == 0:
+    *    truncate_coord_xy = TRUNC_COORD;
+    *    truncate_coord_z = TRUNC_COORD;
+    *    truncate_coord_layer = TRUNC_COORD;
     *
     * AnisoPoint is treated as Point.
     */
@@ -141,6 +161,8 @@ struct radeon_info {
    bool use_display_dcc_unaligned;
    /* Allocate both aligned and unaligned DCC and use the retile blit. */
    bool use_display_dcc_with_retile_blit;
+   bool gfx12_supports_display_dcc;
+   bool gfx12_supports_dcc_write_compress_disable;
 
    /* Memory info. */
    uint32_t pte_fragment_size;
@@ -159,6 +181,8 @@ struct radeon_info {
    uint32_t max_tcc_blocks;
    uint32_t tcc_cache_line_size;
    bool tcc_rb_non_coherent; /* whether L2 inv is needed for render->texture transitions */
+   bool cp_sdma_ge_use_system_memory_scope;
+   bool cp_dma_use_L2;
    unsigned pc_lines;
    uint32_t lds_size_per_workgroup;
    uint32_t lds_alloc_granularity;
@@ -166,6 +190,7 @@ struct radeon_info {
 
    /* CP info. */
    bool gfx_ib_pad_with_type2;
+   bool has_cp_dma;
    uint32_t me_fw_version;
    uint32_t me_fw_feature;
    uint32_t mec_fw_version;
@@ -177,6 +202,9 @@ struct radeon_info {
    uint32_t uvd_fw_version;
    uint32_t vce_fw_version;
    uint32_t vce_harvest_config;
+   uint32_t vcn_dec_version;
+   uint32_t vcn_enc_major_version;
+   uint32_t vcn_enc_minor_version;
    struct video_caps_info {
       struct video_codec_cap {
          uint32_t valid;
@@ -189,6 +217,7 @@ struct radeon_info {
    } dec_caps, enc_caps;
 
    enum vcn_version vcn_ip_version;
+   enum sdma_version sdma_ip_version;
 
    /* Kernel & winsys capabilities. */
    uint32_t drm_major; /* version */
@@ -196,6 +225,7 @@ struct radeon_info {
    uint32_t drm_patchlevel;
    uint32_t max_submitted_ibs[AMD_NUM_IP_TYPES];
    bool is_amdgpu;
+   bool is_virtio;
    bool has_userptr;
    bool has_syncobj;
    bool has_timeline_syncobj;
@@ -212,7 +242,9 @@ struct radeon_info {
    /* Whether SR-IOV is enabled or amdgpu.mcbp=1 was set on the kernel command line. */
    bool register_shadowing_required;
    bool has_tmz_support;
+   bool has_trap_handler_support;
    bool kernel_has_modifiers;
+   bool use_userq;
 
    /* If the kernel driver uses CU reservation for high priority compute on gfx10+, it programs
     * a global CU mask in the hw that is AND'ed with CU_EN register fields set by userspace.
@@ -237,7 +269,7 @@ struct radeon_info {
    uint32_t max_se;             /* number of shader engines incl. disabled ones */
    uint32_t max_sa_per_se;      /* shader arrays per shader engine */
    uint32_t num_cu_per_sh;
-   uint32_t max_wave64_per_simd;
+   uint32_t max_waves_per_simd;
    uint32_t num_physical_sgprs_per_simd;
    uint32_t num_physical_wave64_vgprs_per_simd;
    uint32_t num_simd_per_compute_unit;
@@ -248,7 +280,16 @@ struct radeon_info {
    uint32_t max_vgpr_alloc;
    uint32_t wave64_vgpr_alloc_granularity;
    uint32_t max_scratch_waves;
-   uint32_t attribute_ring_size_per_se;
+   bool has_scratch_base_registers;
+
+   /* Pos, prim, and attribute rings. */
+   uint32_t attribute_ring_size_per_se;   /* GFX11+ */
+   uint32_t pos_ring_size_per_se;         /* GFX12+ */
+   uint32_t prim_ring_size_per_se;        /* GFX12+ */
+   uint32_t pos_ring_offset;              /* GFX12+ */
+   uint32_t prim_ring_offset;             /* GFX12+ */
+   uint32_t total_attribute_pos_prim_ring_size; /* GFX11+ */
+   bool has_attr_ring;
 
    /* Render backends (color + depth blocks). */
    uint32_t r300_num_gb_pipes;
@@ -281,10 +322,21 @@ struct radeon_info {
       uint32_t csa_alignment;
    } fw_based_mcbp;
    bool has_fw_based_shadowing;
+
+   /* Device supports hardware-accelerated raytracing using
+    * image_bvh*_intersect_ray instructions
+    */
+   bool has_image_bvh_intersect_ray;
 };
 
-bool ac_query_gpu_info(int fd, void *dev_p, struct radeon_info *info,
-                       bool require_pci_bus_info);
+enum ac_query_gpu_info_result {
+   AC_QUERY_GPU_INFO_SUCCESS,
+   AC_QUERY_GPU_INFO_FAIL,
+   AC_QUERY_GPU_INFO_UNIMPLEMENTED_HW,
+};
+
+enum ac_query_gpu_info_result ac_query_gpu_info(int fd, void *dev_p, struct radeon_info *info,
+                                                bool require_pci_bus_info);
 
 void ac_compute_driver_uuid(char *uuid, size_t size);
 
@@ -356,6 +408,8 @@ void ac_get_task_info(const struct radeon_info *info,
                       struct ac_task_info *task_info);
 
 uint32_t ac_memory_ops_per_clock(uint32_t vram_type);
+
+uint32_t ac_gfx103_get_cu_mask_ps(const struct radeon_info *info);
 
 #ifdef __cplusplus
 }

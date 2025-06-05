@@ -81,7 +81,7 @@
  *
  */
 
-#ifdef USE_LIBGLVND
+#if USE_LIBGLVND
 #define EGLAPI
 #undef PUBLIC
 #define PUBLIC
@@ -93,6 +93,7 @@
 #include <string.h>
 #include "c11/threads.h"
 #include "mapi/glapi/glapi.h"
+#include "util/detect_os.h"
 #include "util/macros.h"
 #include "util/perf/cpu_trace.h"
 #include "util/u_debug.h"
@@ -325,22 +326,15 @@ _eglSetFuncName(const char *funcName, _EGLDisplay *disp, EGLenum objectType,
                 _EGLResource *object)
 {
    _EGLThreadInfo *thr = _eglGetCurrentThread();
-   if (!_eglIsCurrentThreadDummy()) {
-      thr->CurrentFuncName = funcName;
-      thr->CurrentObjectLabel = NULL;
+   thr->CurrentFuncName = funcName;
+   thr->CurrentObjectLabel = NULL;
 
-      if (objectType == EGL_OBJECT_THREAD_KHR)
-         thr->CurrentObjectLabel = thr->Label;
-      else if (objectType == EGL_OBJECT_DISPLAY_KHR && disp)
-         thr->CurrentObjectLabel = disp->Label;
-      else if (object)
-         thr->CurrentObjectLabel = object->Label;
-
-      return;
-   }
-
-   _eglDebugReport(EGL_BAD_ALLOC, funcName, EGL_DEBUG_MSG_CRITICAL_KHR, NULL);
-   return;
+   if (objectType == EGL_OBJECT_THREAD_KHR)
+      thr->CurrentObjectLabel = thr->Label;
+   else if (objectType == EGL_OBJECT_DISPLAY_KHR && disp)
+      thr->CurrentObjectLabel = disp->Label;
+   else if (object)
+      thr->CurrentObjectLabel = object->Label;
 }
 
 #define _EGL_FUNC_START(disp, objectType, object)                              \
@@ -418,10 +412,12 @@ eglGetDisplay(EGLNativeDisplayType nativeDisplay)
    _EGLDisplay *disp;
    void *native_display_ptr;
 
+#if !DETECT_OS_ANDROID
    util_cpu_trace_init();
+#endif
    _EGL_FUNC_START(NULL, EGL_OBJECT_THREAD_KHR, NULL);
 
-   STATIC_ASSERT(sizeof(void *) == sizeof(nativeDisplay));
+   STATIC_ASSERT(sizeof(void *) >= sizeof(nativeDisplay));
    native_display_ptr = (void *)nativeDisplay;
 
    plat = _eglGetNativePlatform(native_display_ptr);
@@ -483,7 +479,9 @@ eglGetPlatformDisplayEXT(EGLenum platform, void *native_display,
    EGLAttrib *attrib_list;
    EGLDisplay disp;
 
+#if !DETECT_OS_ANDROID
    util_cpu_trace_init();
+#endif
    _EGL_FUNC_START(NULL, EGL_OBJECT_THREAD_KHR, NULL);
 
    if (_eglConvertIntsToAttribs(int_attribs, &attrib_list) != EGL_SUCCESS)
@@ -498,7 +496,9 @@ PUBLIC EGLDisplay EGLAPIENTRY
 eglGetPlatformDisplay(EGLenum platform, void *native_display,
                       const EGLAttrib *attrib_list)
 {
+#if !DETECT_OS_ANDROID
    util_cpu_trace_init();
+#endif
    _EGL_FUNC_START(NULL, EGL_OBJECT_THREAD_KHR, NULL);
    return _eglGetPlatformDisplayCommon(platform, native_display, attrib_list);
 }
@@ -553,12 +553,15 @@ _eglCreateExtensionsString(_EGLDisplay *disp)
    _EGL_CHECK_EXTENSION(ANGLE_sync_control_rate);
 
    _EGL_CHECK_EXTENSION(EXT_buffer_age);
+   _EGL_CHECK_EXTENSION(EXT_config_select_group);
    _EGL_CHECK_EXTENSION(EXT_create_context_robustness);
    _EGL_CHECK_EXTENSION(EXT_image_dma_buf_import);
    _EGL_CHECK_EXTENSION(EXT_image_dma_buf_import_modifiers);
+   _EGL_CHECK_EXTENSION(EXT_present_opaque);
    _EGL_CHECK_EXTENSION(EXT_protected_content);
    _EGL_CHECK_EXTENSION(EXT_protected_surface);
-   _EGL_CHECK_EXTENSION(EXT_present_opaque);
+   _EGL_CHECK_EXTENSION(EXT_query_reset_notification_strategy);
+   _EGL_CHECK_EXTENSION(EXT_surface_compression);
    _EGL_CHECK_EXTENSION(EXT_surface_CTA861_3_metadata);
    _EGL_CHECK_EXTENSION(EXT_surface_SMPTE2086_metadata);
    _EGL_CHECK_EXTENSION(EXT_swap_buffers_with_damage);
@@ -598,10 +601,12 @@ _eglCreateExtensionsString(_EGLDisplay *disp)
    _EGL_CHECK_EXTENSION(MESA_gl_interop);
    _EGL_CHECK_EXTENSION(MESA_image_dma_buf_export);
    _EGL_CHECK_EXTENSION(MESA_query_driver);
+   _EGL_CHECK_EXTENSION(MESA_x11_native_visual_id);
 
    _EGL_CHECK_EXTENSION(NOK_swap_region);
    _EGL_CHECK_EXTENSION(NOK_texture_from_pixmap);
 
+   _EGL_CHECK_EXTENSION(NV_context_priority_realtime);
    _EGL_CHECK_EXTENSION(NV_post_sub_buffer);
 
    _EGL_CHECK_EXTENSION(WL_bind_wayland_display);
@@ -647,18 +652,16 @@ _eglComputeVersion(_EGLDisplay *disp)
    if (disp->Extensions.KHR_fence_sync && disp->Extensions.KHR_cl_event2 &&
        disp->Extensions.KHR_wait_sync && disp->Extensions.KHR_image_base &&
        disp->Extensions.KHR_gl_texture_2D_image &&
-       disp->Extensions.KHR_gl_texture_3D_image &&
        disp->Extensions.KHR_gl_texture_cubemap_image &&
        disp->Extensions.KHR_gl_renderbuffer_image &&
        disp->Extensions.KHR_create_context &&
-       disp->Extensions.EXT_create_context_robustness &&
        disp->Extensions.KHR_get_all_proc_addresses &&
        disp->Extensions.KHR_gl_colorspace &&
        disp->Extensions.KHR_surfaceless_context)
       disp->Version = 15;
 
       /* For Android P and below limit the EGL version to 1.4 */
-#if defined(ANDROID) && ANDROID_API_LEVEL <= 28
+#if DETECT_OS_ANDROID && ANDROID_API_LEVEL <= 28
    disp->Version = 14;
 #endif
 }
@@ -672,6 +675,7 @@ eglInitialize(EGLDisplay dpy, EGLint *major, EGLint *minor)
 {
    _EGLDisplay *disp = _eglLockDisplay(dpy);
 
+   util_cpu_trace_init();
    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL);
 
    _eglDeviceRefreshList();
@@ -687,10 +691,10 @@ eglInitialize(EGLDisplay dpy, EGLint *major, EGLint *minor)
          _eglLog(_EGL_DEBUG,
                  "Found 'LIBGL_ALWAYS_SOFTWARE' set, will use a CPU renderer");
 
-      const char *env = getenv("MESA_LOADER_DRIVER_OVERRIDE");
+      const char *env = os_get_option("MESA_LOADER_DRIVER_OVERRIDE");
       disp->Options.Zink = env && !strcmp(env, "zink");
 
-      const char *gallium_hud_env = getenv("GALLIUM_HUD");
+      const char *gallium_hud_env = os_get_option("GALLIUM_HUD");
       disp->Options.GalliumHudWarn =
          gallium_hud_env && gallium_hud_env[0] != '\0';
 
@@ -705,7 +709,9 @@ eglInitialize(EGLDisplay dpy, EGLint *major, EGLint *minor)
             bool success = false;
             if (!disp->Options.Zink && !getenv("GALLIUM_DRIVER")) {
                disp->Options.Zink = EGL_TRUE;
+               disp->Options.FallbackZink = EGL_TRUE;
                success = _eglDriver.Initialize(disp);
+               disp->Options.FallbackZink = EGL_FALSE;
             }
             if (!success) {
                disp->Options.Zink = EGL_FALSE;
@@ -983,8 +989,10 @@ eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx)
        !draw_surf->ProtectedContent)
       RETURN_EGL_ERROR(disp, EGL_BAD_ACCESS, EGL_FALSE);
 
-   egl_relax (disp, &draw_surf->Resource, &read_surf->Resource,
-              &context->Resource) {
+   egl_relax (disp,
+              draw_surf ? &draw_surf->Resource : NULL,
+              read_surf ? &read_surf->Resource : NULL,
+              context ? &context->Resource : NULL) {
       ret = disp->Driver->MakeCurrent(disp, draw_surf, read_surf, context);
    }
 
@@ -1729,8 +1737,7 @@ eglGetError(void)
 {
    _EGLThreadInfo *t = _eglGetCurrentThread();
    EGLint e = t->LastError;
-   if (!_eglIsCurrentThreadDummy())
-      t->LastError = EGL_SUCCESS;
+   t->LastError = EGL_SUCCESS;
    return e;
 }
 
@@ -1757,8 +1764,6 @@ eglBindAPI(EGLenum api)
    _EGL_FUNC_START(NULL, EGL_OBJECT_THREAD_KHR, NULL);
 
    t = _eglGetCurrentThread();
-   if (_eglIsCurrentThreadDummy())
-      RETURN_EGL_ERROR(NULL, EGL_BAD_ALLOC, EGL_FALSE);
 
    if (!_eglIsApiValid(api))
       RETURN_EGL_ERROR(NULL, EGL_BAD_PARAMETER, EGL_FALSE);
@@ -1803,19 +1808,17 @@ PUBLIC EGLBoolean EGLAPIENTRY
 eglReleaseThread(void)
 {
    /* unbind current contexts */
-   if (!_eglIsCurrentThreadDummy()) {
-      _EGLThreadInfo *t = _eglGetCurrentThread();
-      _EGLContext *ctx = t->CurrentContext;
+   _EGLThreadInfo *t = _eglGetCurrentThread();
+   _EGLContext *ctx = t->CurrentContext;
 
-      _EGL_FUNC_START(NULL, EGL_OBJECT_THREAD_KHR, NULL);
+   _EGL_FUNC_START(NULL, EGL_OBJECT_THREAD_KHR, NULL);
 
-      if (ctx) {
-         _EGLDisplay *disp = ctx->Resource.Display;
+   if (ctx) {
+      _EGLDisplay *disp = ctx->Resource.Display;
 
-         u_rwlock_rdlock(&disp->TerminateLock);
-         (void)disp->Driver->MakeCurrent(disp, NULL, NULL, NULL);
-         u_rwlock_rdunlock(&disp->TerminateLock);
-      }
+      u_rwlock_rdlock(&disp->TerminateLock);
+      (void)disp->Driver->MakeCurrent(disp, NULL, NULL, NULL);
+      u_rwlock_rdunlock(&disp->TerminateLock);
    }
 
    _eglDestroyCurrentThread();
@@ -1842,7 +1845,7 @@ _eglCreateImageCommon(_EGLDisplay *disp, EGLContext ctx, EGLenum target,
    if (ctx != EGL_NO_CONTEXT && target == EGL_LINUX_DMA_BUF_EXT)
       RETURN_EGL_ERROR(disp, EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
 
-   egl_relax (disp, &context->Resource) {
+   egl_relax (disp, context ? &context->Resource : NULL) {
       img =
          disp->Driver->CreateImageKHR(disp, context, target, buffer, attr_list);
    }
@@ -2533,12 +2536,8 @@ eglLabelObjectKHR(EGLDisplay dpy, EGLenum objectType, EGLObjectKHR object,
    if (objectType == EGL_OBJECT_THREAD_KHR) {
       _EGLThreadInfo *t = _eglGetCurrentThread();
 
-      if (!_eglIsCurrentThreadDummy()) {
-         t->Label = label;
-         return EGL_SUCCESS;
-      }
-
-      RETURN_EGL_ERROR(NULL, EGL_BAD_ALLOC, EGL_BAD_ALLOC);
+      t->Label = label;
+      return EGL_SUCCESS;
    }
 
    disp = _eglLockDisplay(dpy);
@@ -2709,6 +2708,34 @@ eglQueryDmaBufModifiersEXT(EGLDisplay dpy, EGLint format, EGLint max_modifiers,
    RETURN_EGL_EVAL(disp, ret);
 }
 
+static EGLBoolean EGLAPIENTRY
+eglQuerySupportedCompressionRatesEXT(EGLDisplay dpy, EGLConfig config,
+                                     const EGLAttrib *attrib_list,
+                                     EGLint *rates, EGLint rate_size,
+                                     EGLint *num_rates)
+{
+   _EGLDisplay *disp = _eglLockDisplay(dpy);
+   _EGLConfig *conf = _eglLookupConfig(config, disp);
+   EGLBoolean ret = EGL_FALSE;
+
+   _EGL_FUNC_START(NULL, EGL_NONE, NULL);
+
+   _EGL_CHECK_DISPLAY(disp, EGL_FALSE);
+   _EGL_CHECK_CONFIG(disp, conf, EGL_FALSE);
+
+   egl_relax (disp) {
+      if (disp->Driver->QuerySupportedCompressionRatesEXT) {
+         ret = disp->Driver->QuerySupportedCompressionRatesEXT(
+            disp, conf, attrib_list, rates, rate_size, num_rates);
+      } else {
+         *num_rates = 0;
+         ret = EGL_TRUE;
+      }
+   }
+
+   RETURN_EGL_EVAL(disp, ret);
+}
+
 static void EGLAPIENTRY
 eglSetBlobCacheFuncsANDROID(EGLDisplay *dpy, EGLSetBlobFuncANDROID set,
                             EGLGetBlobFuncANDROID get)
@@ -2843,7 +2870,7 @@ eglGetProcAddress(const char *procname)
    }
 
    if (!ret)
-      ret = _glapi_get_proc_address(procname);
+      ret = _mesa_glapi_get_proc_address(procname);
 
    RETURN_EGL_SUCCESS(NULL, ret);
 }
@@ -2915,7 +2942,7 @@ MesaGLInteropEGLExportObject(EGLDisplay dpy, EGLContext context,
 PUBLIC int
 MesaGLInteropEGLFlushObjects(EGLDisplay dpy, EGLContext context, unsigned count,
                              struct mesa_glinterop_export_in *objects,
-                             GLsync *sync)
+                             struct mesa_glinterop_flush_out *out)
 {
    _EGLDisplay *disp;
    _EGLContext *ctx;
@@ -2926,8 +2953,7 @@ MesaGLInteropEGLFlushObjects(EGLDisplay dpy, EGLContext context, unsigned count,
       return ret;
 
    if (disp->Driver->GLInteropFlushObjects)
-      ret =
-         disp->Driver->GLInteropFlushObjects(disp, ctx, count, objects, sync);
+      ret = disp->Driver->GLInteropFlushObjects(disp, ctx, count, objects, out);
    else
       ret = MESA_GLINTEROP_UNSUPPORTED;
 

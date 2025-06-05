@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2025/06/05 14:18:45 jsg Exp $
 
 GFX=	200
 LIB=	isl_gfx${GFX}
@@ -8,12 +8,13 @@ NOPROFILE=
 SRCS=	isl_emit_cpb.c \
 	isl_emit_depth_stencil.c \
 	isl_surface_state.c \
-	isl_gfx12.c
+	isl_gfx20.c
 
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
+		-I${MESA_SRC}/src/intel/genxml \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \

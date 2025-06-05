@@ -905,6 +905,7 @@ _mesa_get_color_read_format(struct gl_context *ctx,
          return GL_RGB;
       case MESA_FORMAT_RG_FLOAT32:
       case MESA_FORMAT_RG_FLOAT16:
+      case MESA_FORMAT_RG_SNORM8:
       case MESA_FORMAT_RG_UNORM8:
          return GL_RG;
       case MESA_FORMAT_RG_SINT32:
@@ -969,16 +970,9 @@ _mesa_get_color_read_type(struct gl_context *ctx,
    }
    else {
       const mesa_format format = fb->_ColorReadBuffer->Format;
-      GLenum data_type;
-      GLuint comps;
-
-      _mesa_uncompressed_format_to_type_and_comps(format, &data_type, &comps);
-
-      return data_type;
+      return _mesa_uncompressed_format_to_type(format);
    }
 }
-
-
 /**
  * Returns the read renderbuffer for the specified format.
  */
@@ -1062,6 +1056,6 @@ _mesa_is_multisample_enabled(const struct gl_context *ctx)
 bool
 _mesa_is_alpha_test_enabled(const struct gl_context *ctx)
 {
-   bool buffer0_is_integer = ctx->DrawBuffer->_IntegerBuffers & 0x1;
+   bool buffer0_is_integer = ctx->DrawBuffer->_IntegerDrawBuffers & 0x1;
    return (ctx->Color.AlphaEnabled && !buffer0_is_integer);
 }

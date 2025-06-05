@@ -1,28 +1,10 @@
 /*
  * Copyright 2010 Jerome Glisse <glisse@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  * Authors:
  *      Jerome Glisse
+ * SPDX-License-Identifier: MIT
  */
+
 #include "r600_pipe.h"
 #include "r600d.h"
 #include "util/u_memory.h"
@@ -240,6 +222,16 @@ void r600_flush_emit(struct r600_context *rctx)
 		radeon_emit(cs, 0xffffffff);      /* CP_COHER_SIZE */
 		radeon_emit(cs, 0);               /* CP_COHER_BASE */
 		radeon_emit(cs, 0x0000000A);      /* POLL_INTERVAL */
+
+		/* PKT3_CLEAR_STATE below is required on cayman to set the gpu
+		 * in a deterministic state after a compute shader. Otherwise,
+		 * the graphic pipeline could fail in a non-deterministic way.
+		 * See https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/33973 */
+		if (unlikely(rctx->cayman_dealloc_state)) {
+			radeon_emit(cs, PKT3C(PKT3_CLEAR_STATE, 0, 0));
+			radeon_emit(cs, 0);
+			rctx->cayman_dealloc_state = false;
+		}
 	}
 
 	if (rctx->b.flags & R600_CONTEXT_START_PIPELINE_STATS) {
@@ -299,7 +291,7 @@ void r600_context_gfx_flush(void *context, unsigned flags,
 	/* Flush the CS. */
 	ws->cs_flush(cs, flags, &ctx->b.last_gfx_fence);
 	if (fence)
-		ws->fence_reference(fence, ctx->b.last_gfx_fence);
+		ws->fence_reference(ws, fence, ctx->b.last_gfx_fence);
 	ctx->b.num_gfx_cs_flushes++;
 
 	if (ctx->is_debug) {

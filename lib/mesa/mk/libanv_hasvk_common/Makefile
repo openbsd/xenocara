@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2024/04/02 10:42:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2025/06/05 14:18:40 jsg Exp $
 
 LIB=	anv_hasvk_common
 
@@ -41,6 +41,7 @@ SRCS+=	anv_entrypoints.c
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS} ${C_SSE2_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
+		-I${MESA_SRC}/src/intel/genxml \
 		-I${MESA_SRC}/src/intel/vulkan_hasvk \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \

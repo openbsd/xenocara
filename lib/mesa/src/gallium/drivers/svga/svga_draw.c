@@ -1,27 +1,9 @@
-/**********************************************************
- * Copyright 2008-2022 VMware, Inc.  All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- **********************************************************/
+/*
+ * Copyright (c) 2008-2024 Broadcom. All Rights Reserved.
+ * The term “Broadcom” refers to Broadcom Inc.
+ * and/or its subsidiaries.
+ * SPDX-License-Identifier: MIT
+ */
 
 #include "util/compiler.h"
 #include "util/u_inlines.h"
@@ -702,7 +684,7 @@ validate_vertex_buffers(struct svga_hwtnl *hwtnl,
 
       /* Set IA slot0 input buffer to the SO buffer */
       assert(vbuf_count == 1);
-      vbuffer_attrs[0].stride = svga->curr.velems->strides[0];
+      vbuffer_attrs[0].stride = svga->state.sw.need_swtnl ? hwtnl->cmd.vdecl[0].array.stride : svga->curr.velems->strides[0];
       vbuffer_attrs[0].offset = hwtnl->cmd.vbufs[0].buffer_offset;
       vbuffer_attrs[0].sid = 0;
       assert(so_vertex_count->buffer != NULL);
@@ -717,7 +699,7 @@ validate_vertex_buffers(struct svga_hwtnl *hwtnl,
          struct svga_buffer *sbuf =
             svga_buffer(hwtnl->cmd.vbufs[i].buffer.resource);
 
-         vbuffer_attrs[i].stride = svga->curr.velems->strides[i];
+         vbuffer_attrs[i].stride = svga->state.sw.need_swtnl ? hwtnl->cmd.vdecl[i].array.stride : svga->curr.velems->strides[i];
          vbuffer_attrs[i].offset = hwtnl->cmd.vbufs[i].buffer_offset;
          vbuffer_attrs[i].sid = 0;
 
@@ -1006,6 +988,7 @@ draw_vgpu10(struct svga_hwtnl *hwtnl,
    struct svga_context *svga = hwtnl->svga;
    struct svga_winsys_surface *indirect_handle;
    enum pipe_error ret;
+   bool is_instanced_draw = instance_count > 1 || start_instance > 0;
 
    assert(svga_have_vgpu10(svga));
    assert(hwtnl->cmd.prim_count == 0);
@@ -1096,7 +1079,7 @@ draw_vgpu10(struct svga_hwtnl *hwtnl,
                                                        indirect_handle,
                                                        indirect->offset);
       }
-      else if (instance_count > 1) {
+      else if (is_instanced_draw) {
          ret = SVGA3D_vgpu10_DrawIndexedInstanced(svga->swc,
                                                   vcount,
                                                   instance_count,
@@ -1139,7 +1122,7 @@ draw_vgpu10(struct svga_hwtnl *hwtnl,
                                                 indirect_handle,
                                                 indirect->offset);
       }
-      else if (instance_count > 1) {
+      else if (is_instanced_draw) {
          ret = SVGA3D_vgpu10_DrawInstanced(svga->swc,
                                            vcount,
                                            instance_count,
@@ -1376,7 +1359,7 @@ svga_hwtnl_prim(struct svga_hwtnl *hwtnl,
    else {
       /* batch up drawing commands */
       assert(indirect == NULL);
-#ifdef DEBUG
+#if MESA_DEBUG
       check_draw_params(hwtnl, range, min_index, max_index, ib);
       assert(start_instance == 0);
       assert(instance_count <= 1);

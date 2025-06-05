@@ -31,7 +31,7 @@
  */
 
 
-#ifdef GLX_DIRECT_RENDERING
+#if defined(GLX_DIRECT_RENDERING) && (!defined(GLX_USE_APPLEGL) || defined(GLX_USE_APPLE))
 
 #include <stdio.h>
 #include <X11/Xlibint.h>
@@ -41,6 +41,11 @@
 #include "dri2.h"
 #include "glxclient.h"
 #include "GL/glxext.h"
+
+#if defined(__APPLE__) || defined(__MACOSX)
+#include "apple/appledri.h"
+#include "apple/appledristr.h"
+#endif
 
 /* Allow the build to work with an older versions of dri2proto.h and
  * dri2tokens.h.
@@ -52,7 +57,11 @@
 #endif
 
 
+#if defined(__APPLE__) || defined(__MACOSX)
+static char dri2ExtensionName[] = APPLEDRINAME;
+#else
 static char dri2ExtensionName[] = DRI2_NAME;
+#endif
 static XExtensionInfo _dri2Info_data;
 static XExtensionInfo *dri2Info = &_dri2Info_data;
 static XEXT_GENERATE_CLOSE_DISPLAY (DRI2CloseDisplay, dri2Info)
@@ -87,6 +96,7 @@ static XEXT_GENERATE_FIND_DISPLAY (DRI2FindDisplay,
 static Bool
 DRI2WireToEvent(Display *dpy, XEvent *event, xEvent *wire)
 {
+#if defined(GLX_DIRECT_RENDERING) && (!defined(GLX_USE_APPLEGL) || defined(GLX_USE_APPLE))
    XExtDisplayInfo *info = DRI2FindDisplay(dpy);
    struct glx_drawable *glxDraw;
 
@@ -115,17 +125,17 @@ DRI2WireToEvent(Display *dpy, XEvent *event, xEvent *wire)
       aevent->drawable = awire->drawable;
       switch (awire->event_type) {
       case DRI2_EXCHANGE_COMPLETE:
-	 aevent->event_type = GLX_EXCHANGE_COMPLETE_INTEL;
-	 break;
+    aevent->event_type = GLX_EXCHANGE_COMPLETE_INTEL;
+    break;
       case DRI2_BLIT_COMPLETE:
-	 aevent->event_type = GLX_COPY_COMPLETE_INTEL;
-	 break;
+    aevent->event_type = GLX_COPY_COMPLETE_INTEL;
+    break;
       case DRI2_FLIP_COMPLETE:
-	 aevent->event_type = GLX_FLIP_COMPLETE_INTEL;
-	 break;
+    aevent->event_type = GLX_FLIP_COMPLETE_INTEL;
+    break;
       default:
-	 /* unknown swap completion type */
-	 return False;
+    /* unknown swap completion type */
+    return False;
       }
       aevent->ust = ((CARD64)awire->ust_hi << 32) | awire->ust_lo;
       aevent->msc = ((CARD64)awire->msc_hi << 32) | awire->msc_lo;
@@ -153,6 +163,7 @@ DRI2WireToEvent(Display *dpy, XEvent *event, xEvent *wire)
       /* client doesn't support server event */
       break;
    }
+#endif
 
    return False;
 }
@@ -180,25 +191,25 @@ static int
 DRI2Error(Display *display, xError *err, XExtCodes *codes, int *ret_code)
 {
     if (err->majorCode == codes->major_opcode &&
-	err->errorCode == BadDrawable &&
-	err->minorCode == X_DRI2CopyRegion)
-	return True;
+   err->errorCode == BadDrawable &&
+   err->minorCode == X_DRI2CopyRegion)
+   return True;
 
     /* If the X drawable was destroyed before the GLX drawable, the
      * DRI2 drawble will be gone by the time we call
      * DRI2DestroyDrawable.  So just ignore BadDrawable here. */
     if (err->majorCode == codes->major_opcode &&
-	err->errorCode == BadDrawable &&
-	err->minorCode == X_DRI2DestroyDrawable)
-	return True;
+   err->errorCode == BadDrawable &&
+   err->minorCode == X_DRI2DestroyDrawable)
+   return True;
 
     /* If the server is non-local DRI2Connect will raise BadRequest.
      * Swallow this so that DRI2Connect can signal this in its return code */
     if (err->majorCode == codes->major_opcode &&
         err->minorCode == X_DRI2Connect &&
         err->errorCode == BadRequest) {
-	*ret_code = False;
-	return True;
+   *ret_code = False;
+   return True;
     }
 
     return False;
@@ -207,6 +218,9 @@ DRI2Error(Display *display, xError *err, XExtCodes *codes, int *ret_code)
 Bool
 DRI2QueryExtension(Display * dpy, int *eventBase, int *errorBase)
 {
+#if defined(__APPLE__) || defined(__MACOSX)
+   return XAppleDRIQueryExtension(dpy, eventBase, errorBase);
+#else
    XExtDisplayInfo *info = DRI2FindDisplay(dpy);
 
    if (XextHasExtension(info)) {
@@ -216,11 +230,16 @@ DRI2QueryExtension(Display * dpy, int *eventBase, int *errorBase)
    }
 
    return False;
+#endif
 }
 
 Bool
 DRI2QueryVersion(Display * dpy, int *major, int *minor)
 {
+#if defined(__APPLE__) || defined(__MACOSX)
+  int patch;
+  return XAppleDRIQueryVersion(dpy, major, minor, &patch);
+#else
    XExtDisplayInfo *info = DRI2FindDisplay(dpy);
    xDRI2QueryVersionReply rep;
    xDRI2QueryVersionReq *req;
@@ -246,23 +265,24 @@ DRI2QueryVersion(Display * dpy, int *major, int *minor)
 
    switch (rep.minorVersion) {
    case 1:
-	   nevents = 0;
-	   break;
+      nevents = 0;
+      break;
    case 2:
-	   nevents = 1;
-	   break;
+      nevents = 1;
+      break;
    case 3:
    default:
-	   nevents = 2;
-	   break;
+      nevents = 2;
+      break;
    }
-	
+   
    for (i = 0; i < nevents; i++) {
        XESetWireToEvent (dpy, info->codes->first_event + i, DRI2WireToEvent);
        XESetEventToWire (dpy, info->codes->first_event + i, DRI2EventToWire);
    }
 
    return True;
+#endif
 }
 
 Bool

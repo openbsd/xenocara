@@ -217,6 +217,19 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *disp,
             break;
          }
 
+         /* The EGL_KHR_create_context spec says:
+          *     "If <config> does not support a client API context compatible
+          *     with the requested API major and minor version, context flags,
+          *     and context reset notification behavior (for client API types
+          *     where these attributes are supported), then an EGL_BAD_MATCH
+          *     error is generated."
+          */
+         if ((val & EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR) &&
+             !disp->RobustBufferAccess) {
+            err = EGL_BAD_MATCH;
+            break;
+         }
+
          ctx->Flags |= val;
          break;
 
@@ -263,6 +276,25 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *disp,
             break;
          }
 
+         /* The EGL 1.5 spec says:
+          *     "An EGL_BAD_MATCH error is generated if an OpenGL or OpenGL ES
+          *     context is requested with robust buffer access and with a
+          *     specified reset notification behavior, and the implementation
+          *     does not support that behavior."
+          *
+          * and the EGL_KHR_create_context spec says:
+          *     "If <config> does not support a client API context compatible
+          *     with the requested API major and minor version, context flags,
+          *     and context reset notification behavior (for client API types
+          *     where these attributes are supported), then an EGL_BAD_MATCH
+          *     error is generated."
+          */
+         if (val != EGL_NO_RESET_NOTIFICATION_KHR &&
+             !disp->Extensions.EXT_create_context_robustness) {
+            err = EGL_BAD_MATCH;
+            break;
+         }
+
          ctx->ResetNotificationStrategy = val;
          break;
 
@@ -288,6 +320,18 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *disp,
             break;
          }
 
+         /* The EGL_EXT_create_context_robustness spec says:
+          *
+          *     "EGL_BAD_CONFIG is generated if
+          *     [EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT] is set to EGL_TRUE and
+          *     no GL context supporting the GL_EXT_robustness extension and
+          *     robust access as described therein can be created."
+          */
+         if (val == EGL_TRUE && !disp->RobustBufferAccess) {
+            err = EGL_BAD_CONFIG;
+            break;
+         }
+
          if (val == EGL_TRUE)
             ctx->Flags |= EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR;
          break;
@@ -295,6 +339,17 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *disp,
       case EGL_CONTEXT_OPENGL_ROBUST_ACCESS:
          if (disp->Version < 15) {
             err = EGL_BAD_ATTRIBUTE;
+            break;
+         }
+
+         /* The EGL 1.5 spec says:
+          *     "An EGL_BAD_MATCH error is generated if an OpenGL or OpenGL ES
+          *     context is requested with robust buffer access, and the
+          *     implementation does not support the corresponding OpenGL or
+          *     OpenGL ES extension".
+          */
+         if (val == EGL_TRUE && !disp->RobustBufferAccess) {
+            err = EGL_BAD_MATCH;
             break;
          }
 
@@ -358,6 +413,12 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *disp,
             int bit;
 
             switch (val) {
+            case EGL_CONTEXT_PRIORITY_REALTIME_NV:
+               if (disp->Extensions.NV_context_priority_realtime)
+                  bit = __EGL_CONTEXT_PRIORITY_REALTIME_BIT;
+               else
+                  bit = -1;
+               break;
             case EGL_CONTEXT_PRIORITY_HIGH_IMG:
                bit = __EGL_CONTEXT_PRIORITY_HIGH_BIT;
                break;
@@ -737,6 +798,11 @@ _eglQueryContext(_EGLContext *c, EGLint attribute, EGLint *value)
          return _eglError(EGL_BAD_ATTRIBUTE, "eglQueryContext");
       *value = c->Protected;
       break;
+   case EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT:
+      if (!disp->Extensions.EXT_query_reset_notification_strategy)
+         return _eglError(EGL_BAD_ATTRIBUTE, "eglQueryContext");
+      *value = c->ResetNotificationStrategy;
+      break;
    default:
       return _eglError(EGL_BAD_ATTRIBUTE, "eglQueryContext");
    }
@@ -775,9 +841,6 @@ _eglCheckMakeCurrent(_EGLContext *ctx, _EGLSurface *draw, _EGLSurface *read)
 {
    _EGLThreadInfo *t = _eglGetCurrentThread();
    _EGLDisplay *disp;
-
-   if (_eglIsCurrentThreadDummy())
-      return _eglError(EGL_BAD_ALLOC, "eglMakeCurrent");
 
    /* this is easy */
    if (!ctx) {

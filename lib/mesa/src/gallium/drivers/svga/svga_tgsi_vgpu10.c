@@ -1,27 +1,9 @@
-/**********************************************************
- * Copyright 1998-2022 VMware, Inc.  All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- **********************************************************/
+/*
+ * Copyright (c) 1998-2024 Broadcom. All Rights Reserved.
+ * The term “Broadcom” refers to Broadcom Inc.
+ * and/or its subsidiaries.
+ * SPDX-License-Identifier: MIT
+ */
 
 /**
  * @file svga_tgsi_vgpu10.c
@@ -682,7 +664,7 @@ check_register_index(struct svga_shader_emitter_v10 *emit,
           (emit->unit == PIPE_SHADER_GEOMETRY &&
            index >= emit->max_gs_inputs) ||
           (emit->unit == PIPE_SHADER_FRAGMENT &&
-           index >= VGPU10_MAX_FS_INPUTS) ||
+           index >= VGPU10_MAX_PS_INPUTS) ||
           (emit->unit == PIPE_SHADER_TESS_CTRL &&
            index >= VGPU11_MAX_HS_INPUT_CONTROL_POINTS) ||
           (emit->unit == PIPE_SHADER_TESS_EVAL &&
@@ -705,7 +687,7 @@ check_register_index(struct svga_shader_emitter_v10 *emit,
           (emit->unit == PIPE_SHADER_GEOMETRY &&
            index >= VGPU10_MAX_GS_OUTPUTS) ||
           (emit->unit == PIPE_SHADER_FRAGMENT &&
-           index >= VGPU10_MAX_FS_OUTPUTS) ||
+           index >= VGPU10_MAX_PS_OUTPUTS) ||
           (emit->unit == PIPE_SHADER_TESS_CTRL &&
            index >= VGPU11_MAX_HS_OUTPUTS + 2) ||
           (emit->unit == PIPE_SHADER_TESS_EVAL &&
@@ -8895,7 +8877,7 @@ emit_tg4(struct svga_shader_emitter_v10 *emit,
    }
    else {
       /* Only a single channel is supported in SM4_1 and we report
-       * PIPE_CAP_MAX_TEXTURE_GATHER_COMPONENTS = 1.
+       * pipe_caps.max_texture_gather_components = 1.
        * Only the 0th component will be gathered.
        */
       switch (emit->key.tex[unit].swizzle_r) {
@@ -11208,7 +11190,7 @@ emit_instruction(struct svga_shader_emitter_v10 *emit,
       return emit_dtrunc(emit, inst);
 
    /* The following opcodes should never be seen here.  We return zero
-    * for PIPE_CAP_TGSI_DROUND_SUPPORTED.
+    * for pipe_caps.tgsi_dround_supported.
     */
    case TGSI_OPCODE_LDEXP:
    case TGSI_OPCODE_DSSG:
@@ -12816,7 +12798,7 @@ transform_fs_aapoint(struct svga_context *svga,
                      int aa_coord_index)
 {
    bool need_texcoord_semantic =
-      svga->pipe.screen->get_param(svga->pipe.screen, PIPE_CAP_TGSI_TEXCOORD);
+      svga->pipe.screen->caps.tgsi_texcoord;
 
    if (0) {
       debug_printf("Before tgsi_add_aa_point ------------------\n");

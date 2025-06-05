@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2025/06/05 14:18:40 jsg Exp $
 
 LIB=	compiler
 
@@ -16,6 +16,7 @@ CXXFLAGS+=	${CXX_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/compiler
 
 install:

@@ -1,28 +1,10 @@
 /*
  * Copyright 2010 Jerome Glisse <glisse@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  * Authors:
  *      Jerome Glisse
+ * SPDX-License-Identifier: MIT
  */
+
 #ifndef R600_PIPE_H
 #define R600_PIPE_H
 
@@ -75,7 +57,6 @@
 #define R600_MAX_USER_CONST_BUFFERS 15
 #define R600_MAX_DRIVER_CONST_BUFFERS 3
 #define R600_MAX_CONST_BUFFERS (R600_MAX_USER_CONST_BUFFERS + R600_MAX_DRIVER_CONST_BUFFERS)
-#define R600_MAX_HW_CONST_BUFFERS 16
 
 /* start driver buffers after user buffers */
 #define R600_BUFFER_INFO_CONST_BUFFER (R600_MAX_USER_CONST_BUFFERS)
@@ -293,6 +274,8 @@ struct r600_rasterizer_state {
 	unsigned			pa_su_sc_mode_cntl;
 	float				offset_units;
 	float				offset_scale;
+	float				line_width;
+	float				max_point_size;
 	bool				offset_enable;
 	bool				offset_units_unscaled;
 	bool				scissor_enable;
@@ -436,6 +419,7 @@ struct r600_fetch_shader {
 	unsigned			offset;
 	uint32_t                        buffer_mask;
 	unsigned                        strides[PIPE_MAX_ATTRIBS];
+	uint8_t				width_correction[PIPE_MAX_ATTRIBS];
 };
 
 struct r600_shader_state {
@@ -610,6 +594,7 @@ struct r600_context {
 	bool cmd_buf_is_compute;
 	struct pipe_resource *append_fence;
 	uint32_t append_fence_id;
+	bool cayman_dealloc_state;
 };
 
 static inline void r600_emit_command_buffer(struct radeon_cmdbuf *cs,

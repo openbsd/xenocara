@@ -205,7 +205,7 @@ draw_pt_init(struct draw_context *draw)
    if (!draw->pt.middle.general)
       return false;
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (draw->llvm) {
       draw->pt.middle.llvm = draw_pt_fetch_pipeline_or_emit_llvm(draw);
       draw->pt.middle.mesh = draw_pt_mesh_pipeline_or_emit(draw);
@@ -595,7 +595,7 @@ draw_vbo(struct draw_context *draw,
                                               draw->pt.vertex_element,
                                               draw->pt.nr_vertex_elements,
                                               use_info);
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (!draw->llvm)
 #endif
    {
@@ -619,8 +619,8 @@ draw_vbo(struct draw_context *draw,
     * the min_index/max_index hints given by gallium frontends.
     */
 
-   if (use_info->view_mask) {
-      u_foreach_bit(i, use_info->view_mask) {
+   if (draw->viewmask) {
+      u_foreach_bit(i, draw->viewmask) {
          draw->pt.user.viewid = i;
          draw_instances(draw, drawid_offset, use_info, use_draws, num_draws);
       }

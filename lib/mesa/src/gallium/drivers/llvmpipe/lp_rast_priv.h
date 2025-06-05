@@ -45,7 +45,7 @@
 /* If we crash in a jitted function, we can examine jit_line and jit_state
  * to get some info.  This is not thread-safe, however.
  */
-#ifdef DEBUG
+#if MESA_DEBUG && !THREAD_SANITIZER
 
 struct lp_rasterizer_task;
 extern int jit_line;
@@ -102,6 +102,9 @@ struct lp_rasterizer_task
 
    util_semaphore work_ready;
    util_semaphore work_done;
+#ifdef _WIN32
+   util_semaphore exited;
+#endif
 };
 
 
@@ -154,7 +157,7 @@ lp_rast_shade_quads_mask(struct lp_rasterizer_task *task,
 static inline uint8_t *
 lp_rast_get_color_block_pointer(struct lp_rasterizer_task *task,
                                 unsigned buf, unsigned x, unsigned y,
-                                unsigned layer)
+                                unsigned layer, unsigned view_index)
 {
    assert(x < task->scene->tiles_x * TILE_SIZE);
    assert(y < task->scene->tiles_y * TILE_SIZE);
@@ -175,9 +178,9 @@ lp_rast_get_color_block_pointer(struct lp_rasterizer_task *task,
                            py * task->scene->cbufs[buf].stride;
    uint8_t *color = task->color_tiles[buf] + pixel_offset;
 
-   if (layer) {
+   if (layer || view_index) {
       assert(layer <= task->scene->fb_max_layer);
-      color += layer * task->scene->cbufs[buf].layer_stride;
+      color += (layer + view_index) * task->scene->cbufs[buf].layer_stride;
    }
 
    assert(lp_check_alignment(color, llvmpipe_get_format_alignment(task->scene->fb.cbufs[buf]->format)));
@@ -191,7 +194,7 @@ lp_rast_get_color_block_pointer(struct lp_rasterizer_task *task,
  */
 static inline uint8_t *
 lp_rast_get_depth_block_pointer(struct lp_rasterizer_task *task,
-                                unsigned x, unsigned y, unsigned layer)
+                                unsigned x, unsigned y, unsigned layer, unsigned view_index)
 {
    assert(x < task->scene->tiles_x * TILE_SIZE);
    assert(y < task->scene->tiles_y * TILE_SIZE);
@@ -206,8 +209,8 @@ lp_rast_get_depth_block_pointer(struct lp_rasterizer_task *task,
                            py * task->scene->zsbuf.stride;
    uint8_t *depth = task->depth_tile + pixel_offset;
 
-   if (layer) {
-      depth += layer * task->scene->zsbuf.layer_stride;
+   if (layer || view_index) {
+      depth += (layer + view_index) * task->scene->zsbuf.layer_stride;
    }
 
    assert(lp_check_alignment(depth, llvmpipe_get_format_alignment(task->scene->fb.zsbuf->format)));
@@ -234,6 +237,7 @@ lp_rast_shade_quads_all(struct lp_rasterizer_task *task,
    uint8_t *depth = NULL;
    unsigned depth_stride = 0;
    unsigned depth_sample_stride = 0;
+   unsigned view_index = inputs->view_index;
 
    /* color buffer */
    for (unsigned i = 0; i < scene->fb.nr_cbufs; i++) {
@@ -241,7 +245,7 @@ lp_rast_shade_quads_all(struct lp_rasterizer_task *task,
          stride[i] = scene->cbufs[i].stride;
          sample_stride[i] = scene->cbufs[i].sample_stride;
          color[i] = lp_rast_get_color_block_pointer(task, i, x, y,
-                                                    inputs->layer + inputs->view_index);
+                                                    inputs->layer, view_index);
       } else {
          stride[i] = 0;
          sample_stride[i] = 0;
@@ -250,7 +254,7 @@ lp_rast_shade_quads_all(struct lp_rasterizer_task *task,
    }
 
    if (scene->zsbuf.map) {
-      depth = lp_rast_get_depth_block_pointer(task, x, y, inputs->layer + inputs->view_index);
+      depth = lp_rast_get_depth_block_pointer(task, x, y, inputs->layer, view_index);
       depth_sample_stride = scene->zsbuf.sample_stride;
       depth_stride = scene->zsbuf.stride;
    }

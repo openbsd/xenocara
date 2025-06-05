@@ -1,24 +1,7 @@
 /*
  * Copyright 2011 Joakim Sindholt <opensource@zhasha.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE. */
+ * SPDX-License-Identifier: MIT
+ */
 
 /* XXX: header order is slightly screwy here */
 #include "loader.h"
@@ -242,21 +225,21 @@ drm_create_adapter( int fd,
         return D3DERR_DRIVERINTERNALERROR;
     }
 
-    ctx->base.hal = pipe_loader_create_screen(ctx->dev);
+    ctx->base.hal = pipe_loader_create_screen(ctx->dev, false);
     if (!ctx->base.hal) {
         ERR("Unable to load requested driver.\n");
         drm_destroy(&ctx->base);
         return D3DERR_DRIVERINTERNALERROR;
     }
 
-    if (!ctx->base.hal->get_param(ctx->base.hal, PIPE_CAP_DMABUF)) {
+    if (!ctx->base.hal->caps.dmabuf) {
         ERR("The driver is not capable of dma-buf sharing."
             "Abandon to load nine state tracker\n");
         drm_destroy(&ctx->base);
         return D3DERR_DRIVERINTERNALERROR;
     }
 
-    /* Previously was set to PIPE_CAP_MAX_FRAMES_IN_FLIGHT,
+    /* Previously was set to pipe_caps.max_frames_in_flight,
      * but the change of value of this cap to 1 seems to cause
      * regressions. */
     ctx->base.throttling_value = 2;
@@ -302,7 +285,7 @@ drm_create_adapter( int fd,
     sw_rendering |= debug_get_bool_option("D3D_ALWAYS_SOFTWARE", false);
     /* wrap it to create a software screen that can share resources */
     if (sw_rendering && pipe_loader_sw_probe_wrapped(&ctx->swdev, ctx->base.hal))
-        ctx->base.ref = pipe_loader_create_screen(ctx->swdev);
+        ctx->base.ref = pipe_loader_create_screen(ctx->swdev, false);
     else {
         /* Use the hardware for sw rendering */
         ctx->swdev = ctx->dev;

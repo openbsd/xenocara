@@ -33,7 +33,16 @@
 #include "main/glthread.h"
 #include "main/context.h"
 #include "main/macros.h"
-#include "marshal_generated.h"
+#include "main/matrix.h"
+
+/* 32-bit signed integer clamped to 0..UINT16_MAX to compress parameters
+ * for glthread. All values < 0 and >= UINT16_MAX are expected to throw
+ * GL_INVALID_VALUE. Negative values are mapped to UINT16_MAX.
+ */
+typedef uint16_t GLpacked16i;
+
+/* 32-bit signed integer clamped to 16 bits. */
+typedef int16_t GLclamped16i;
 
 struct marshal_cmd_base
 {
@@ -41,16 +50,43 @@ struct marshal_cmd_base
     * Type of command.  See enum marshal_dispatch_cmd_id.
     */
    uint16_t cmd_id;
-
-   /**
-    * Number of uint64_t elements used by the command.
-    */
-   uint16_t cmd_size;
 };
+
+/* This must be included after "struct marshal_cmd_base" because it uses it. */
+#include "marshal_generated.h"
 
 typedef uint32_t (*_mesa_unmarshal_func)(struct gl_context *ctx,
                                          const void *restrict cmd);
 extern const _mesa_unmarshal_func _mesa_unmarshal_dispatch[NUM_DISPATCH_CMD];
+extern const char *_mesa_unmarshal_func_name[NUM_DISPATCH_CMD];
+
+struct marshal_cmd_DrawElementsUserBuf
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLindextype type;
+   uint16_t num_slots;
+   GLsizei count;
+   GLsizei instance_count;
+   GLint basevertex;
+   GLuint baseinstance;
+   GLuint drawid;
+   GLuint user_buffer_mask;
+   const GLvoid *indices;
+   struct gl_buffer_object *index_buffer;
+};
+
+struct marshal_cmd_DrawElementsUserBufPacked
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLindextype type;
+   uint16_t num_slots;
+   GLushort count;
+   GLuint user_buffer_mask;
+   GLuint indices;
+   struct gl_buffer_object *index_buffer;
+};
 
 static inline void *
 _mesa_glthread_allocate_command(struct gl_context *ctx,
@@ -70,29 +106,46 @@ _mesa_glthread_allocate_command(struct gl_context *ctx,
       (struct marshal_cmd_base *)&next->buffer[glthread->used];
    glthread->used += num_elements;
    cmd_base->cmd_id = cmd_id;
-   cmd_base->cmd_size = num_elements;
    return cmd_base;
+}
+
+static inline GLenum
+_mesa_decode_index_type(GLindextype type)
+{
+   return (GLenum)type.value + GL_UNSIGNED_BYTE - 1;
+}
+
+static inline struct marshal_cmd_base *
+_mesa_glthread_get_cmd(uint64_t *opaque_cmd)
+{
+   return (struct marshal_cmd_base*)opaque_cmd;
+}
+
+static inline uint64_t *
+_mesa_glthread_next_cmd(uint64_t *opaque_cmd, unsigned cmd_size)
+{
+   return opaque_cmd + cmd_size;
 }
 
 static inline bool
 _mesa_glthread_call_is_last(struct glthread_state *glthread,
-                            struct marshal_cmd_base *last)
+                            struct marshal_cmd_base *last, uint16_t num_slots)
 {
    return last &&
-          (uint64_t*)last + last->cmd_size ==
+          (uint64_t*)last + num_slots ==
           &glthread->next_batch->buffer[glthread->used];
 }
 
 static inline bool
-_mesa_glthread_has_no_pack_buffer(const struct gl_context *ctx)
+_mesa_glthread_has_pack_buffer(const struct gl_context *ctx)
 {
-   return ctx->GLThread.CurrentPixelPackBufferName == 0;
+   return ctx->GLThread.CurrentPixelPackBufferName != 0;
 }
 
 static inline bool
-_mesa_glthread_has_no_unpack_buffer(const struct gl_context *ctx)
+_mesa_glthread_has_unpack_buffer(const struct gl_context *ctx)
 {
-   return ctx->GLThread.CurrentPixelUnpackBufferName == 0;
+   return ctx->GLThread.CurrentPixelUnpackBufferName != 0;
 }
 
 static inline unsigned
@@ -399,19 +452,6 @@ _mesa_get_matrix_index(struct gl_context *ctx, GLenum mode)
    return M_DUMMY;
 }
 
-static inline bool
-_mesa_matrix_is_identity(const float *m)
-{
-   static float identity[16] = {
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1
-   };
-
-   return !memcmp(m, identity, sizeof(identity));
-}
-
 static inline void
 _mesa_glthread_Enable(struct gl_context *ctx, GLenum cap)
 {
@@ -707,6 +747,39 @@ _mesa_glthread_ListBase(struct gl_context *ctx, GLuint base)
 }
 
 static inline void
+_mesa_glthread_init_call_fence(int *last_batch_index_where_called)
+{
+   *last_batch_index_where_called = -1;
+}
+
+static inline void
+_mesa_glthread_fence_call(struct gl_context *ctx,
+                          int *last_batch_index_where_called)
+{
+   p_atomic_set(last_batch_index_where_called, ctx->GLThread.next);
+   /* Flush, so that the fenced call is last in the batch. */
+   _mesa_glthread_flush_batch(ctx);
+}
+
+static inline void
+_mesa_glthread_signal_call(int *last_batch_index_where_called, int batch_index)
+{
+   /* Atomically set this to -1 if it's equal to batch_index. */
+   p_atomic_cmpxchg(last_batch_index_where_called, batch_index, -1);
+}
+
+static inline void
+_mesa_glthread_wait_for_call(struct gl_context *ctx,
+                             int *last_batch_index_where_called)
+{
+   int batch = p_atomic_read(last_batch_index_where_called);
+   if (batch != -1) {
+      util_queue_fence_wait(&ctx->GLThread.batches[batch].fence);
+      assert(p_atomic_read(last_batch_index_where_called) == -1);
+   }
+}
+
+static inline void
 _mesa_glthread_CallList(struct gl_context *ctx, GLuint list)
 {
    if (ctx->GLThread.ListMode == GL_COMPILE)
@@ -716,11 +789,7 @@ _mesa_glthread_CallList(struct gl_context *ctx, GLuint list)
     * all display lists are up to date and the driver thread is not
     * modifiying them. We will be executing them in the application thread.
     */
-   int batch = p_atomic_read(&ctx->GLThread.LastDListChangeBatchIndex);
-   if (batch != -1) {
-      util_queue_fence_wait(&ctx->GLThread.batches[batch].fence);
-      p_atomic_set(&ctx->GLThread.LastDListChangeBatchIndex, -1);
-   }
+   _mesa_glthread_wait_for_call(ctx, &ctx->GLThread.LastDListChangeBatchIndex);
 
    if (!ctx->Shared->DisplayListsAffectGLThread)
       return;
@@ -748,11 +817,7 @@ _mesa_glthread_CallLists(struct gl_context *ctx, GLsizei n, GLenum type,
     * all display lists are up to date and the driver thread is not
     * modifiying them. We will be executing them in the application thread.
     */
-   int batch = p_atomic_read(&ctx->GLThread.LastDListChangeBatchIndex);
-   if (batch != -1) {
-      util_queue_fence_wait(&ctx->GLThread.batches[batch].fence);
-      p_atomic_set(&ctx->GLThread.LastDListChangeBatchIndex, -1);
-   }
+   _mesa_glthread_wait_for_call(ctx, &ctx->GLThread.LastDListChangeBatchIndex);
 
    /* Clear GL_COMPILE_AND_EXECUTE if needed. We only execute here. */
    unsigned saved_mode = ctx->GLThread.ListMode;
@@ -852,8 +917,7 @@ _mesa_glthread_EndList(struct gl_context *ctx)
    ctx->GLThread.ListMode = 0;
 
    /* Track the last display list change. */
-   p_atomic_set(&ctx->GLThread.LastDListChangeBatchIndex, ctx->GLThread.next);
-   _mesa_glthread_flush_batch(ctx);
+   _mesa_glthread_fence_call(ctx, &ctx->GLThread.LastDListChangeBatchIndex);
 }
 
 static inline void
@@ -863,8 +927,7 @@ _mesa_glthread_DeleteLists(struct gl_context *ctx, GLsizei range)
       return;
 
    /* Track the last display list change. */
-   p_atomic_set(&ctx->GLThread.LastDListChangeBatchIndex, ctx->GLThread.next);
-   _mesa_glthread_flush_batch(ctx);
+   _mesa_glthread_fence_call(ctx, &ctx->GLThread.LastDListChangeBatchIndex);
 }
 
 static inline void

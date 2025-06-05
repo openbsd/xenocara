@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2025/06/05 14:18:47 jsg Exp $
 
 LIB=	r300
 
@@ -38,6 +38,7 @@ SRCS=	r300_blit.c \
 	r500_fragprog.c \
 	r500_fragprog_emit.c \
 	r300_nir.c \
+	r500_nir_lower_fcsel.c \
 	radeon_code.c \
 	radeon_compiler.c \
 	radeon_compiler_util.c \
@@ -59,7 +60,6 @@ SRCS=	r300_blit.c \
 	radeon_program_tex.c \
 	radeon_regalloc.c \
 	radeon_remove_constants.c \
-	radeon_rename_regs.c \
 	radeon_variable.c \
 	radeon_vert_fc.c
 
@@ -75,6 +75,7 @@ CPPFLAGS+=	-DGALLIUM_R300 \
 		-I${MESA_SRC}/src/gallium/drivers \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir
 

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2025/06/05 14:18:42 jsg Exp $
 
 LIB=	i915
 
@@ -41,6 +41,7 @@ CPPFLAGS+=	-DGALLIUM_I915 \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir
 

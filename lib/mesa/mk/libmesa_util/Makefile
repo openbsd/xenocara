@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.10 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.11 2025/06/05 14:18:47 jsg Exp $
 
 LIB=	mesa_util
 
@@ -8,7 +8,9 @@ SRCS=	anon_file.c \
 	bitscan.c \
 	blob.c \
 	build_id.c \
+	cnd_monotonic.c \
 	compress.c \
+	thread_sched.c \
 	crc32.c \
 	dag.c \
 	disk_cache.c \
@@ -19,12 +21,14 @@ SRCS=	anon_file.c \
 	futex.c \
 	half_float.c \
 	hash_table.c \
+	helpers.c \
 	u_idalloc.c \
 	log.c \
 	memstream.c \
 	mesa-sha1.c \
 	mesa-blake3.c \
 	os_file.c \
+	os_file_notify.c \
 	os_memory_fd.c \
 	os_misc.c \
 	os_socket.c \
@@ -72,14 +76,32 @@ SRCS+=	u_debug_stack.c \
 	u_debug_symbol.c \
 	format_srgb.c
 
+SRCS+=	u_format.c \
+	u_format_bptc.c \
+	u_format_etc.c \
+	u_format_fxt1.c \
+	u_format_latc.c \
+	u_format_other.c \
+	u_format_rgtc.c \
+	u_format_s3tc.c \
+	u_format_tests.c \
+	u_format_unpack_neon.c \
+	u_format_yuv.c \
+	u_format_zs.c
+
+SRCS+=	u_format_table.c
+
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS}
 CXXFLAGS+=	${CXX_VIS_ARGS} -ffunction-sections -fdata-sections
 CPPFLAGS+=	-I${MESA_SRC}/src/util \
+		-I${MESA_SRC}/src/util/format \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/gallium/include \
-		-I${MESA_SRC}/src/gallium/auxiliary
+		-I${MESA_SRC}/src/gallium/auxiliary \
+		-I${MESA_SRC}/generated/src \
+		-I${MESA_SRC}/generated/src/util/format
 
 install:
 
@@ -89,7 +111,9 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/util
+.PATH: ${MESA_SRC}/src/util/format
 .PATH: ${MESA_SRC}/src/util/indices
 .PATH: ${MESA_SRC}/src/util/perf
 .PATH: ${MESA_SRC}/src/util/sha1
 .PATH: ${MESA_SRC}/generated/src/util
+.PATH: ${MESA_SRC}/generated/src/util/format

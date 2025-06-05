@@ -143,6 +143,16 @@ _legal_parameters(struct gl_context *ctx, GLenum target, GLenum internalformat,
       }
       break;
 
+   case GL_NUM_SURFACE_COMPRESSION_FIXED_RATES_EXT:
+   case GL_SURFACE_COMPRESSION_EXT:
+      if (!_mesa_has_EXT_texture_storage_compression(ctx)) {
+         _mesa_error(ctx, GL_INVALID_ENUM,
+                     "glGetInternalformativ(pname=%s)",
+                     _mesa_enum_to_string(pname));
+         return false;
+      }
+      break;
+
    case GL_NUM_VIRTUAL_PAGE_SIZES_ARB:
    case GL_VIRTUAL_PAGE_SIZE_X_ARB:
    case GL_VIRTUAL_PAGE_SIZE_Y_ARB:
@@ -320,6 +330,7 @@ _set_default_response(GLenum pname, GLint buffer[16])
    switch(pname) {
    case GL_SAMPLES:
    case GL_TILING_TYPES_EXT:
+   case GL_SURFACE_COMPRESSION_EXT:
       break;
 
    case GL_MAX_COMBINED_DIMENSIONS:
@@ -350,6 +361,7 @@ _set_default_response(GLenum pname, GLint buffer[16])
    case GL_VIRTUAL_PAGE_SIZE_X_ARB:
    case GL_VIRTUAL_PAGE_SIZE_Y_ARB:
    case GL_VIRTUAL_PAGE_SIZE_Z_ARB:
+   case GL_NUM_SURFACE_COMPRESSION_FIXED_RATES_EXT:
       buffer[0] = 0;
       break;
 
@@ -440,10 +452,6 @@ _is_target_supported(struct gl_context *ctx, GLenum target)
       break;
 
    case GL_TEXTURE_1D_ARRAY:
-      if (!_mesa_has_EXT_texture_array(ctx))
-         return false;
-      break;
-
    case GL_TEXTURE_2D_ARRAY:
       if (!_mesa_has_EXT_texture_array(ctx))
          return false;
@@ -470,15 +478,15 @@ _is_target_supported(struct gl_context *ctx, GLenum target)
       break;
 
    case GL_RENDERBUFFER:
-      if (!(_mesa_has_ARB_framebuffer_object(ctx) ||
-            _mesa_is_gles3(ctx)))
+      if (!_mesa_has_ARB_framebuffer_object(ctx) &&
+          !_mesa_is_gles3(ctx))
          return false;
       break;
 
    case GL_TEXTURE_2D_MULTISAMPLE:
    case GL_TEXTURE_2D_MULTISAMPLE_ARRAY:
-      if (!(_mesa_has_ARB_texture_multisample(ctx) ||
-            _mesa_is_gles31(ctx)))
+      if (!_mesa_has_ARB_texture_multisample(ctx) &&
+          !_mesa_is_gles31(ctx))
          return false;
       break;
 
@@ -514,6 +522,8 @@ _is_resource_supported(struct gl_context *ctx, GLenum target,
    case GL_COLOR_RENDERABLE:
    case GL_DEPTH_RENDERABLE:
    case GL_STENCIL_RENDERABLE:
+   case GL_NUM_SURFACE_COMPRESSION_FIXED_RATES_EXT:
+   case GL_SURFACE_COMPRESSION_EXT:
       return true;
    default:
       break;
@@ -875,29 +885,6 @@ _get_min_dimensions(GLenum pname)
    }
 }
 
-static bool
-_is_generic_compressed_format(const struct gl_context *ctx,
-                              GLenum intFormat)
-{
-   switch (intFormat) {
-   case GL_COMPRESSED_SRGB:
-   case GL_COMPRESSED_SRGB_ALPHA:
-   case GL_COMPRESSED_SLUMINANCE:
-   case GL_COMPRESSED_SLUMINANCE_ALPHA:
-      return _mesa_has_EXT_texture_sRGB(ctx);
-   case GL_COMPRESSED_RG:
-   case GL_COMPRESSED_RED:
-      return _mesa_is_gles(ctx) ?
-             _mesa_has_EXT_texture_rg(ctx) :
-             _mesa_has_ARB_texture_rg(ctx);
-   case GL_COMPRESSED_RGB:
-   case GL_COMPRESSED_RGBA:
-      return true;
-   default:
-      return false;
-   }
-}
-
 /*
  * Similar to teximage.c:check_multisample_target, but independent of the
  * dimensions.
@@ -925,8 +912,8 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    /* ARB_internalformat_query is also mandatory for ARB_internalformat_query2 */
-   if (!(_mesa_has_ARB_internalformat_query(ctx) ||
-         _mesa_is_gles3(ctx))) {
+   if (!_mesa_has_ARB_internalformat_query(ctx) &&
+       !_mesa_is_gles3(ctx)) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glGetInternalformativ");
       return;
    }
@@ -1030,6 +1017,14 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
          baseformat = _mesa_base_fbo_format(ctx, internalformat);
       }
 
+      /* If the internal format is unsupported, or if a particular component
+       * is not present in the format, 0 is written to params.
+       */
+      if (!st_QueryTextureFormatSupport(ctx, target, internalformat)) {
+         buffer[0] = GL_NONE;
+         break;
+      }
+
       /* Let the driver choose the texture format.
        *
        * Disclaimer: I am considering that drivers use for renderbuffers the
@@ -1112,6 +1107,12 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
       if (get_pname == 0)
          goto end;
 
+      /* if the resource is unsupported, zero is returned */
+      if (!st_QueryTextureFormatSupport(ctx, target, internalformat)) {
+         buffer[0] = 0;
+         break;
+      }
+
       _mesa_GetIntegerv(get_pname, buffer);
       break;
    }
@@ -1122,6 +1123,12 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
 
       if (!_mesa_is_array_texture(target))
          goto end;
+
+      /* if the resource is unsupported, zero is returned */
+      if (!st_QueryTextureFormatSupport(ctx, target, internalformat)) {
+         buffer[0] = 0;
+         break;
+      }
 
       _mesa_GetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, buffer);
       break;
@@ -1136,6 +1143,12 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
       };
       unsigned i;
       GLint current_value;
+
+      /* if the resource is unsupported, zero is returned */
+      if (!st_QueryTextureFormatSupport(ctx, target, internalformat)) {
+         buffer[0] = 0;
+         break;
+      }
 
       /* Combining the dimensions. Note that for array targets, this would
        * automatically include the value of MAX_LAYERS, as that value is
@@ -1481,21 +1494,14 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
    }
 
    case GL_IMAGE_PIXEL_TYPE: {
-      mesa_format image_format;
       GLenum datatype;
-      GLuint comps;
 
       if (!_mesa_has_ARB_shader_image_load_store(ctx) ||
           target == GL_RENDERBUFFER)
          goto end;
 
-      image_format = _mesa_get_shader_image_format(internalformat);
-      if (image_format == MESA_FORMAT_NONE)
-         goto end;
-
-      _mesa_uncompressed_format_to_type_and_comps(image_format, &datatype,
-                                                  &comps);
-      if (!datatype)
+      datatype = _mesa_get_shader_image_pixel_type(internalformat);
+      if (datatype == GL_NONE)
          goto end;
 
       buffer[0] = datatype;
@@ -1514,6 +1520,14 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
       int targetIndex = _mesa_tex_target_to_index(ctx, target);
       if (targetIndex < 0 || targetIndex == TEXTURE_BUFFER_INDEX)
          goto end;
+
+      /* If the resource is not supported for image textures,
+       * or if image textures are not supported, NONE is returned.
+       */
+      if (!st_QueryTextureFormatSupport(ctx, target, internalformat)) {
+         buffer[0] = GL_NONE;
+         break;
+      }
 
       /* From spec: "Equivalent to calling GetTexParameter with <value> set
        * to IMAGE_FORMAT_COMPATIBILITY_TYPE."
@@ -1597,7 +1611,7 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
          goto end;
 
       if (_mesa_is_compressed_format(ctx, internalformat) ||
-          _is_generic_compressed_format(ctx, internalformat))
+          _mesa_is_generic_compressed_format(ctx, internalformat))
          goto end;
 
       st_QueryInternalFormat(ctx, target, internalformat, pname,
@@ -1646,6 +1660,14 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
    case GL_VIRTUAL_PAGE_SIZE_Y_ARB:
    case GL_VIRTUAL_PAGE_SIZE_Z_ARB:
       st_QueryInternalFormat(ctx, target, internalformat, pname, buffer);
+      break;
+
+   case GL_NUM_SURFACE_COMPRESSION_FIXED_RATES_EXT:
+   case GL_SURFACE_COMPRESSION_EXT:
+      if (_mesa_has_EXT_texture_storage_compression(ctx)) {
+         st_QueryInternalFormat(ctx, target, internalformat, pname,
+                                buffer);
+      }
       break;
 
    default:

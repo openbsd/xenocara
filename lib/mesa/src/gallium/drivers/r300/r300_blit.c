@@ -1,24 +1,7 @@
 /*
  * Copyright 2009 Marek Olšák <maraeo@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE. */
+ * SPDX-License-Identifier: MIT
+ */
 
 #include "r300_context.h"
 #include "r300_emit.h"
@@ -69,7 +52,8 @@ static void r300_blitter_begin(struct r300_context* r300, enum r300_blitter_op o
     util_blitter_save_viewport(r300->blitter, &r300->viewport);
     util_blitter_save_scissor(r300->blitter, r300->scissor_state.state);
     util_blitter_save_sample_mask(r300->blitter, *(unsigned*)r300->sample_mask.state, 0);
-    util_blitter_save_vertex_buffer_slot(r300->blitter, r300->vertex_buffer);
+    util_blitter_save_vertex_buffers(r300->blitter, r300->vertex_buffer,
+                                     r300->nr_vertex_buffers);
     util_blitter_save_vertex_elements(r300->blitter, r300->velems);
 
     struct pipe_constant_buffer cb = {
@@ -685,7 +669,7 @@ static void r300_resource_copy_region(struct pipe_context *pipe,
     util_blitter_blit_generic(r300->blitter, dst_view, &dstbox,
                               src_view, src_box, src_width0, src_height0,
                               PIPE_MASK_RGBAZS, PIPE_TEX_FILTER_NEAREST, NULL,
-                              false, false, 0);
+                              false, false, 0, NULL);
     r300_blitter_end(r300);
 
     pipe_surface_reference(&dst_view, NULL);
@@ -703,6 +687,7 @@ static bool r300_is_simple_msaa_resolve(const struct pipe_blit_info *info)
            info->dst.resource->format == info->dst.format &&
            info->src.resource->format == info->src.format &&
            !info->scissor_enable &&
+           !info->swizzle_enable &&
            info->mask == PIPE_MASK_RGBA &&
            dst_width == info->src.resource->width0 &&
            dst_height == info->src.resource->height0 &&
@@ -807,7 +792,7 @@ static void r300_msaa_resolve(struct pipe_context *pipe,
     blit.src.box.z = 0;
 
     r300_blitter_begin(r300, R300_BLIT | R300_IGNORE_RENDER_COND);
-    util_blitter_blit(r300->blitter, &blit);
+    util_blitter_blit(r300->blitter, &blit, NULL);
     r300_blitter_end(r300);
 
     pipe_resource_reference(&tmp, NULL);
@@ -875,7 +860,7 @@ static void r300_blit(struct pipe_context *pipe,
 
     r300_blitter_begin(r300, R300_BLIT |
 		       (info.render_condition_enable ? 0 : R300_IGNORE_RENDER_COND));
-    util_blitter_blit(r300->blitter, &info);
+    util_blitter_blit(r300->blitter, &info, NULL);
     r300_blitter_end(r300);
 }
 

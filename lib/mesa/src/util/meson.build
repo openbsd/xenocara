@@ -1,22 +1,5 @@
 # Copyright © 2017 Intel Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 # inc_util only depends inc_include, this folder and nothing else under src
 # so we use include_directories('..') instead of inc_src to tell the fact
@@ -39,12 +22,16 @@ files_mesa_util = files(
   'blend.h',
   'blob.c',
   'blob.h',
+  'box.h',
   'build_id.c',
   'build_id.h',
+  'cnd_monotonic.c',
   'cnd_monotonic.h',
   'compiler.h',
   'compress.c',
   'compress.h',
+  'thread_sched.c',
+  'thread_sched.h',
   'crc32.c',
   'crc32.h',
   'dag.c',
@@ -69,6 +56,8 @@ files_mesa_util = files(
   'half_float.h',
   'hash_table.c',
   'hash_table.h',
+  'helpers.c',
+  'helpers.h',
   'hex.h',
   'u_idalloc.c',
   'u_idalloc.h',
@@ -81,9 +70,11 @@ files_mesa_util = files(
   'mesa-sha1.h',
   'mesa-blake3.c',
   'mesa-blake3.h',
+  'os_drm.h',
   'os_time.c',
   'os_time.h',
   'os_file.c',
+  'os_file_notify.c',
   'os_memory_fd.c',
   'os_misc.c',
   'os_misc.h',
@@ -164,6 +155,7 @@ files_mesa_util = files(
   'u_cpu_detect.h',
   'u_printf.c',
   'u_printf.h',
+  'u_tristate.h',
   'u_worklist.c',
   'u_worklist.h',
   'vl_vlc.h',
@@ -219,6 +211,10 @@ format_srgb = custom_target(
   capture : true,
 )
 
+# subdir format provide files_mesa_format
+subdir('format')
+files_mesa_util += files_mesa_format
+
 deps_for_libmesa_util = [
   dep_zlib,
   dep_clock,
@@ -231,7 +227,8 @@ deps_for_libmesa_util = [
   dep_unwind,
   dep_futex,
   idep_blake3,
-  idep_mesautilc11
+  idep_mesautilc11,
+  idep_mesautilformat,
 ]
 
 if with_platform_android
@@ -275,10 +272,6 @@ libmesa_util_sse41 = static_library(
   include_directories : [inc_util],
   gnu_symbol_visibility : 'hidden',
 )
-
-# subdir format provide files_mesa_format
-subdir('format')
-files_mesa_util += files_mesa_format
 
 _libmesa_util = static_library(
   'mesa_util',
@@ -338,6 +331,17 @@ glsl2spirv = files('glsl2spirv.py')
 
 devenv.set('DRIRC_CONFIGDIR', meson.current_source_dir())
 
+_libparson = static_library(
+  'parson',
+  ['parson.c', 'parson.h'],
+  gnu_symbol_visibility : 'hidden',
+  build_by_default : false,
+)
+
+idep_parson = declare_dependency(
+  link_with :  _libparson,
+)
+
 if with_tests
   # DRI_CONF macros use designated initializers (required for union
   # initializaiton), so we need c++2a since gtest forces us to use c++
@@ -381,6 +385,7 @@ if with_tests
     'tests/u_call_once_test.cpp',
     'tests/u_debug_stack_test.cpp',
     'tests/u_debug_test.cpp',
+    'tests/u_memstream_test.cpp',
     'tests/u_printf_test.cpp',
     'tests/u_qsort_test.cpp',
     'tests/vector_test.cpp',
@@ -408,6 +413,7 @@ if with_tests
     ),
     suite : ['util'],
     protocol : 'gtest',
+    is_parallel : false,
     timeout : 180,
   )
 

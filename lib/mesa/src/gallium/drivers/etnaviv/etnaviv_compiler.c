@@ -31,9 +31,11 @@
 #include "util/ralloc.h"
 
 struct etna_compiler *
-etna_compiler_create(const char *renderer, const struct etna_specs *specs)
+etna_compiler_create(const char *renderer, const struct etna_core_info *info)
 {
    struct etna_compiler *compiler = rzalloc(NULL, struct etna_compiler);
+   bool has_sign_floor_ceil = etna_core_has_feature(info, ETNA_FEATURE_HAS_SIGN_FLOOR_CEIL);
+   bool has_sin_cos_sqrt = etna_core_has_feature(info, ETNA_FEATURE_HAS_SQRT_TRIG);
 
    compiler->options = (nir_shader_compiler_options) {
       .has_texture_scaling = true,
@@ -49,7 +51,6 @@ etna_compiler_create(const char *renderer, const struct etna_specs *specs)
       .lower_mul_high = true,
       .lower_bitops = true,
       .lower_all_io_to_temps = true,
-      .vertex_id_zero_based = true,
       .lower_flrp32 = true,
       .lower_fmod = true,
       .lower_vector_cmp = true,
@@ -59,15 +60,14 @@ etna_compiler_create(const char *renderer, const struct etna_specs *specs)
       .lower_fdiv = true, /* !specs->has_new_transcendentals */
       .lower_extract_byte = true,
       .lower_extract_word = true,
-      .lower_fsign = !specs->has_sign_floor_ceil,
-      .lower_ffloor = !specs->has_sign_floor_ceil,
-      .lower_fceil = !specs->has_sign_floor_ceil,
-      .lower_fsqrt = !specs->has_sin_cos_sqrt,
-      .lower_sincos = !specs->has_sin_cos_sqrt,
-      .lower_uniforms_to_ubo = specs->halti >= 2,
+      .lower_fsign = !has_sign_floor_ceil,
+      .lower_ffloor = !has_sign_floor_ceil,
+      .lower_fceil = !has_sign_floor_ceil,
+      .lower_fsqrt = !has_sin_cos_sqrt,
+      .lower_sincos = !has_sin_cos_sqrt,
+      .lower_uniforms_to_ubo = info->halti >= 2,
       .force_indirect_unrolling = nir_var_all,
       .max_unroll_iterations = 32,
-      .vectorize_io = true,
       .lower_pack_32_2x16_split = true,
       .lower_pack_64_2x32_split = true,
       .lower_unpack_32_2x16_split = true,
@@ -76,6 +76,9 @@ etna_compiler_create(const char *renderer, const struct etna_specs *specs)
       .lower_ifind_msb = true,
       .lower_ufind_msb = true,
       .has_uclz = true,
+      .no_integers = info->halti < 2,
+      .support_indirect_inputs = (uint8_t)BITFIELD_MASK(PIPE_SHADER_TYPES),
+      .support_indirect_outputs = (uint8_t)BITFIELD_MASK(PIPE_SHADER_TYPES),
    };
 
    compiler->regs = etna_ra_setup(compiler);

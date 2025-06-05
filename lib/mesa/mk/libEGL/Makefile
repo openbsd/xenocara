@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.12 2023/11/02 04:53:30 jsg Exp $
+#	$OpenBSD: Makefile,v 1.13 2025/06/05 14:18:37 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -41,6 +41,8 @@ CPPFLAGS+=	-I${MESA_SRC}/src/egl/main \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/gallium/frontends/dri \
+		-I${MESA_SRC}/src/x11 \
+		-I${MESA_SRC}/generated/src \
 		-D_EGL_NATIVE_PLATFORM=_EGL_PLATFORM_X11 \
 		-DGALLIUM_SOFTPIPE
 
@@ -48,25 +50,24 @@ LDADD+= -Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 LDADD+= ${.CURDIR}/../libloader/${__objdir}/libloader.a \
+	${.CURDIR}/../libloader_x11/${__objdir}/libloader_x11.a \
+	${.CURDIR}/../libpipe_loader_dynamic/${__objdir}/libpipe_loader_dynamic.a \
 	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a
-.endif
-
-.if ${XENOCARA_BUILD_DRI3:L} == "yes"
-LDADD+= ${.CURDIR}/../libloader_dri3_helper/${__objdir}/libloader_dri3_helper.a
 .endif
 
 LDADD+= -L${.CURDIR}/../libgbm/${__objdir} -lgbm \
 	-L${.CURDIR}/../libglapi/${__objdir} -lglapi \
 	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
-	${.CURDIR}/../libmesa_format/${__objdir}/libmesa_format.a \
 	${.CURDIR}/../libmesa_util_sse41/${__objdir}/libmesa_util_sse41.a \
 	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
-	-Wl,--gc-sections \
+	-Wl,-Bsymbolic -Wl,--gc-sections \
 	-lz -lm -lpthread \
-	-L${X11BASE}/lib -lX11-xcb -lX11 -lxcb -lxcb-randr -lxcb-xfixes
+	-L${X11BASE}/lib -lX11-xcb -lX11 -lxcb -lxcb-randr \
+	-lxcb-xfixes -lxcb-shm
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-LDADD+= -ldrm -lxcb-dri2 -lexpat
+LDADD+= -ldrm -lxcb-dri2 -lexpat \
+	-L${.CURDIR}/../libgallium_dri/${__objdir} -lgallium_dri
 .endif
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
@@ -76,9 +77,6 @@ LDADD+= -lxcb-dri3 -lxcb-present -lxcb-sync -lxshmfence
 LDADD+= -Wl,--end-group
 
 obj: _xenocara_obj
-
-beforeinstall:
-	rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

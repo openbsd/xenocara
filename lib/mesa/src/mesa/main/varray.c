@@ -241,6 +241,11 @@ _mesa_vertex_attrib_binding(struct gl_context *ctx,
       }
 
       vao->NonDefaultStateMask |= array_bit | BITFIELD_BIT(bindingIndex);
+
+      if (attribIndex != bindingIndex)
+         vao->NonIdentityBufferAttribMapping |= array_bit;
+      else
+         vao->NonIdentityBufferAttribMapping &= ~array_bit;
    }
 }
 
@@ -299,10 +304,10 @@ _mesa_bind_vertex_buffer(struct gl_context *ctx,
 
       if (vao->Enabled & binding->_BoundArrays) {
          ctx->NewDriverState |= ST_NEW_VERTEX_ARRAYS;
-         /* Non-dynamic VAOs merge vertex buffers, which affects vertex elements.
-          * stride changes also require new vertex elements
+         /* The slow path merges vertex buffers, which affects vertex elements.
+          * Stride changes also require new vertex elements.
           */
-         if (!vao->IsDynamic || stride_changed)
+         if (!ctx->Const.UseVAOFastPath || stride_changed)
             ctx->Array.NewVertexElements = true;
       }
 
@@ -1118,8 +1123,10 @@ update_array(struct gl_context *ctx,
 
       if (vao->Enabled & VERT_BIT(attrib)) {
          ctx->NewDriverState |= ST_NEW_VERTEX_ARRAYS;
-         /* Non-dynamic VAOs merge vertex buffers, which affects vertex elements. */
-         if (!vao->IsDynamic)
+         /* The slow path merges vertex buffers, which affects vertex
+          * elements.
+          */
+         if (!ctx->Const.UseVAOFastPath)
             ctx->Array.NewVertexElements = true;
       }
 
@@ -1165,6 +1172,25 @@ _lookup_vao_and_vbo_dsa(struct gl_context *ctx,
    return true;
 }
 
+static bool
+error_check_vertex_pointer(struct gl_context *ctx, const char *caller,
+                           struct gl_vertex_array_object *vao,
+                           struct gl_buffer_object *vbo, GLint size,
+                           GLenum type, GLsizei stride, const GLvoid *ptr)
+{
+   GLenum format = GL_RGBA;
+   GLbitfield legalTypes = _mesa_is_gles1(ctx)
+      ? (BYTE_BIT | SHORT_BIT | FLOAT_BIT | FIXED_ES_BIT)
+      : (SHORT_BIT | INT_BIT | FLOAT_BIT |
+         DOUBLE_BIT | HALF_BIT |
+         UNSIGNED_INT_2_10_10_10_REV_BIT |
+         INT_2_10_10_10_REV_BIT);
+
+   return validate_array_and_format(ctx, caller, vao, vbo,
+                                    VERT_ATTRIB_POS, legalTypes, 2, 4, size,
+                                    type, stride, GL_FALSE, GL_FALSE, GL_FALSE,
+                                    format, ptr);
+}
 
 void GLAPIENTRY
 _mesa_VertexPointer_no_error(GLint size, GLenum type, GLsizei stride,
@@ -1183,23 +1209,13 @@ _mesa_VertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr)
 {
    GET_CURRENT_CONTEXT(ctx);
 
-   GLenum format = GL_RGBA;
-   GLbitfield legalTypes = _mesa_is_gles1(ctx)
-      ? (BYTE_BIT | SHORT_BIT | FLOAT_BIT | FIXED_ES_BIT)
-      : (SHORT_BIT | INT_BIT | FLOAT_BIT |
-         DOUBLE_BIT | HALF_BIT |
-         UNSIGNED_INT_2_10_10_10_REV_BIT |
-         INT_2_10_10_10_REV_BIT);
-
-   if (!validate_array_and_format(ctx, "glVertexPointer",
-                                  ctx->Array.VAO, ctx->Array.ArrayBufferObj,
-                                  VERT_ATTRIB_POS, legalTypes, 2, 4, size,
-                                  type, stride, GL_FALSE, GL_FALSE, GL_FALSE,
-                                  format, ptr))
+   if (!error_check_vertex_pointer(ctx, "glVertexPointer", ctx->Array.VAO,
+                                   ctx->Array.ArrayBufferObj, size, type,
+                                   stride, ptr))
       return;
 
    update_array(ctx, ctx->Array.VAO, ctx->Array.ArrayBufferObj,
-                VERT_ATTRIB_POS, format, 4, size, type, stride,
+                VERT_ATTRIB_POS, GL_RGBA, 4, size, type, stride,
                 GL_FALSE, GL_FALSE, GL_FALSE, ptr);
 }
 
@@ -1209,15 +1225,6 @@ _mesa_VertexArrayVertexOffsetEXT(GLuint vaobj, GLuint buffer, GLint size,
                                  GLenum type, GLsizei stride, GLintptr offset)
 {
    GET_CURRENT_CONTEXT(ctx);
-
-   GLenum format = GL_RGBA;
-   GLbitfield legalTypes = _mesa_is_gles1(ctx)
-      ? (BYTE_BIT | SHORT_BIT | FLOAT_BIT | FIXED_ES_BIT)
-      : (SHORT_BIT | INT_BIT | FLOAT_BIT |
-         DOUBLE_BIT | HALF_BIT |
-         UNSIGNED_INT_2_10_10_10_REV_BIT |
-         INT_2_10_10_10_REV_BIT);
-
    struct gl_vertex_array_object* vao;
    struct gl_buffer_object* vbo;
 
@@ -1226,18 +1233,35 @@ _mesa_VertexArrayVertexOffsetEXT(GLuint vaobj, GLuint buffer, GLint size,
                                 "glVertexArrayVertexOffsetEXT"))
       return;
 
-   if (!validate_array_and_format(ctx, "glVertexArrayVertexOffsetEXT",
-                                  vao, vbo,
-                                  VERT_ATTRIB_POS, legalTypes, 2, 4, size,
-                                  type, stride, GL_FALSE, GL_FALSE, GL_FALSE,
-                                  format, (void*) offset))
+   if (!error_check_vertex_pointer(ctx, "glVertexArrayVertexOffsetEXT", vao,
+                                   vbo, size, type, stride, (void*)offset))
       return;
 
    update_array(ctx, vao, vbo,
-                VERT_ATTRIB_POS, format, 4, size, type, stride,
+                VERT_ATTRIB_POS, GL_RGBA, 4, size, type, stride,
                 GL_FALSE, GL_FALSE, GL_FALSE, (void*) offset);
 }
 
+
+static bool
+error_check_normal_pointer(struct gl_context *ctx, const char *caller,
+                           struct gl_vertex_array_object *vao,
+                           struct gl_buffer_object *vbo, GLenum type,
+                           GLsizei stride, const GLvoid *ptr)
+{
+   GLenum format = GL_RGBA;
+   const GLbitfield legalTypes = _mesa_is_gles1(ctx)
+      ? (BYTE_BIT | SHORT_BIT | FLOAT_BIT | FIXED_ES_BIT)
+      : (BYTE_BIT | SHORT_BIT | INT_BIT |
+         HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
+         UNSIGNED_INT_2_10_10_10_REV_BIT |
+         INT_2_10_10_10_REV_BIT);
+
+   return validate_array_and_format(ctx, caller, vao, vbo,
+                                    VERT_ATTRIB_NORMAL, legalTypes, 3, 3, 3,
+                                    type, stride, GL_TRUE, GL_FALSE,
+                                    GL_FALSE, format, ptr);
+}
 
 void GLAPIENTRY
 _mesa_NormalPointer_no_error(GLenum type, GLsizei stride, const GLvoid *ptr )
@@ -1255,23 +1279,13 @@ _mesa_NormalPointer(GLenum type, GLsizei stride, const GLvoid *ptr )
 {
    GET_CURRENT_CONTEXT(ctx);
 
-   GLenum format = GL_RGBA;
-   const GLbitfield legalTypes = _mesa_is_gles1(ctx)
-      ? (BYTE_BIT | SHORT_BIT | FLOAT_BIT | FIXED_ES_BIT)
-      : (BYTE_BIT | SHORT_BIT | INT_BIT |
-         HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-         UNSIGNED_INT_2_10_10_10_REV_BIT |
-         INT_2_10_10_10_REV_BIT);
-
-   if (!validate_array_and_format(ctx, "glNormalPointer",
-                                  ctx->Array.VAO, ctx->Array.ArrayBufferObj,
-                                  VERT_ATTRIB_NORMAL, legalTypes, 3, 3, 3,
-                                  type, stride, GL_TRUE, GL_FALSE,
-                                  GL_FALSE, format, ptr))
-      return;
+   if (!error_check_normal_pointer(ctx, "glNormalPointer", ctx->Array.VAO,
+                                   ctx->Array.ArrayBufferObj, type, stride,
+                                   ptr))
+       return;
 
    update_array(ctx, ctx->Array.VAO, ctx->Array.ArrayBufferObj,
-                VERT_ATTRIB_NORMAL, format, 3, 3, type, stride, GL_TRUE,
+                VERT_ATTRIB_NORMAL, GL_RGBA, 3, 3, type, stride, GL_TRUE,
                 GL_FALSE, GL_FALSE, ptr);
 }
 
@@ -1281,32 +1295,20 @@ _mesa_VertexArrayNormalOffsetEXT(GLuint vaobj, GLuint buffer, GLenum type,
                                  GLsizei stride, GLintptr offset)
 {
    GET_CURRENT_CONTEXT(ctx);
-
-   GLenum format = GL_RGBA;
-   const GLbitfield legalTypes = _mesa_is_gles1(ctx)
-      ? (BYTE_BIT | SHORT_BIT | FLOAT_BIT | FIXED_ES_BIT)
-      : (BYTE_BIT | SHORT_BIT | INT_BIT |
-         HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-         UNSIGNED_INT_2_10_10_10_REV_BIT |
-         INT_2_10_10_10_REV_BIT);
-
    struct gl_vertex_array_object* vao;
    struct gl_buffer_object* vbo;
 
    if (!_lookup_vao_and_vbo_dsa(ctx, vaobj, buffer, offset,
                                 &vao, &vbo,
-                                "glNormalPointer"))
+                                "glVertexArrayNormalOffsetEXT"))
       return;
 
-   if (!validate_array_and_format(ctx, "glNormalPointer",
-                                  vao, vbo,
-                                  VERT_ATTRIB_NORMAL, legalTypes, 3, 3, 3,
-                                  type, stride, GL_TRUE, GL_FALSE,
-                                  GL_FALSE, format, (void*) offset))
-      return;
+   if (!error_check_normal_pointer(ctx, "glVertexArrayNormalOffsetEXT",
+                                   vao, vbo, type, stride, (void*)offset))
+       return;
 
    update_array(ctx, vao, vbo,
-                VERT_ATTRIB_NORMAL, format, 3, 3, type, stride, GL_TRUE,
+                VERT_ATTRIB_NORMAL, GL_RGBA, 3, 3, type, stride, GL_TRUE,
                 GL_FALSE, GL_FALSE, (void*) offset);
 }
 
@@ -3196,7 +3198,7 @@ vertex_array_vertex_buffer(struct gl_context *ctx,
    struct gl_buffer_object *current_buf =
       vao->BufferBinding[VERT_ATTRIB_GENERIC(bindingIndex)].BufferObj;
 
-   if (current_buf && buffer == current_buf->Name) {
+   if (_mesa_is_same_buffer_object(current_buf, buffer)) {
       vbo = current_buf;
    } else if (buffer != 0) {
       vbo = _mesa_lookup_bufferobj(ctx, buffer);
@@ -3416,7 +3418,7 @@ vertex_array_vertex_buffers(struct gl_context *ctx,
     *       their parameters are valid and no other error occurs."
     */
 
-   _mesa_HashLockMaybeLocked(ctx->Shared->BufferObjects,
+   _mesa_HashLockMaybeLocked(&ctx->Shared->BufferObjects,
                              ctx->BufferObjectsLocked);
 
    for (i = 0; i < count; i++) {
@@ -3457,7 +3459,7 @@ vertex_array_vertex_buffers(struct gl_context *ctx,
 
          if (buffers[i] == 0)
             vbo = NULL;
-         else if (binding->BufferObj && binding->BufferObj->Name == buffers[i])
+         else if (_mesa_is_same_buffer_object(binding->BufferObj, buffers[i]))
             vbo = binding->BufferObj;
          else {
             bool error;
@@ -3474,7 +3476,7 @@ vertex_array_vertex_buffers(struct gl_context *ctx,
                                vbo, offsets[i], strides[i], false, false);
    }
 
-   _mesa_HashUnlockMaybeLocked(ctx->Shared->BufferObjects,
+   _mesa_HashUnlockMaybeLocked(&ctx->Shared->BufferObjects,
                                ctx->BufferObjectsLocked);
 }
 
@@ -3545,18 +3547,18 @@ _mesa_BindVertexBuffers(GLuint first, GLsizei count, const GLuint *buffers,
 
 void
 _mesa_InternalBindVertexBuffers(struct gl_context *ctx,
-                                const struct glthread_attrib_binding *buffers,
-                                GLbitfield buffer_mask)
+                                struct gl_buffer_object **buffers,
+                                const int *offsets, GLbitfield buffer_mask)
 {
    struct gl_vertex_array_object *vao = ctx->Array.VAO;
    unsigned param_index = 0;
 
    while (buffer_mask) {
       unsigned i = u_bit_scan(&buffer_mask);
-      struct gl_buffer_object *buf = buffers[param_index].buffer;
+      struct gl_buffer_object *buf = buffers[param_index];
 
       /* The buffer reference is passed to _mesa_bind_vertex_buffer. */
-      _mesa_bind_vertex_buffer(ctx, vao, i, buf, buffers[param_index].offset,
+      _mesa_bind_vertex_buffer(ctx, vao, i, buf, offsets[param_index],
                                vao->BufferBinding[i].Stride, true, true);
       param_index++;
    }
@@ -4099,6 +4101,8 @@ init_array(struct gl_context *ctx,
    assert(index < ARRAY_SIZE(vao->BufferBinding));
    struct gl_vertex_buffer_binding *binding = &vao->BufferBinding[index];
 
+   vao->NonIdentityBufferAttribMapping &= ~BITFIELD_BIT(index);
+
    _mesa_set_vertex_format(&array->Format, size, type, GL_RGBA,
                            GL_FALSE, GL_FALSE, GL_FALSE);
    array->Stride = 0;
@@ -4165,12 +4169,12 @@ _mesa_init_varray(struct gl_context *ctx)
    _mesa_set_draw_vao(ctx, ctx->Array.VAO);
    ctx->Array.ActiveTexture = 0;   /* GL_ARB_multitexture */
 
-   ctx->Array.Objects = _mesa_NewHashTable();
+   _mesa_InitHashTable(&ctx->Array.Objects, ctx->Shared->ReuseGLNames);
 }
 
 
 /**
- * Callback for deleting an array object.  Called by _mesa_HashDeleteAll().
+ * Callback for deleting an array object.  Called by _mesa_DeleteHashTable().
  */
 static void
 delete_arrayobj_cb(void *data, void *userData)
@@ -4187,8 +4191,7 @@ delete_arrayobj_cb(void *data, void *userData)
 void
 _mesa_free_varray_data(struct gl_context *ctx)
 {
-   _mesa_HashDeleteAll(ctx->Array.Objects, delete_arrayobj_cb, ctx);
-   _mesa_DeleteHashTable(ctx->Array.Objects);
+   _mesa_DeinitHashTable(&ctx->Array.Objects, delete_arrayobj_cb, ctx);
 }
 
 void GLAPIENTRY

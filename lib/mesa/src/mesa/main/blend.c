@@ -1032,7 +1032,7 @@ _mesa_ColorMaski(GLuint buf, GLboolean red, GLboolean green,
 
    FLUSH_VERTICES(ctx, 0, GL_COLOR_BUFFER_BIT);
    ctx->NewDriverState |= ST_NEW_BLEND;
-   ctx->Color.ColorMask &= ~(0xf << (4 * buf));
+   ctx->Color.ColorMask &= ~(0xfu << (4 * buf));
    ctx->Color.ColorMask |= mask << (4 * buf);
    _mesa_update_allow_draw_out_of_order(ctx);
 }
@@ -1136,7 +1136,7 @@ _mesa_update_clamp_fragment_color(struct gl_context *ctx,
     * - there is an integer colorbuffer
     */
    if (!drawFb || !drawFb->_HasSNormOrFloatColorBuffer ||
-       drawFb->_IntegerBuffers)
+       drawFb->_IntegerDrawBuffers)
       clamp = GL_FALSE;
    else
       clamp = _mesa_get_clamp_fragment_color(ctx, drawFb);

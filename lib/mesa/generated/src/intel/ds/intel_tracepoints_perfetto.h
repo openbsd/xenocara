@@ -27,6 +27,7 @@
 
 #include <perfetto.h>
 
+#include "vulkan/vulkan_core.h"
 
 UNUSED static const char *intel_tracepoint_names[] = {
    "intel_begin_frame",
@@ -45,8 +46,12 @@ UNUSED static const char *intel_tracepoint_names[] = {
    "intel_end_render_pass",
    "intel_begin_blorp",
    "intel_end_blorp",
+   "intel_begin_write_buffer_marker",
+   "intel_end_write_buffer_marker",
    "intel_begin_generate_draws",
    "intel_end_generate_draws",
+   "intel_begin_generate_commands",
+   "intel_end_generate_commands",
    "intel_begin_query_clear_blorp",
    "intel_end_query_clear_blorp",
    "intel_begin_query_clear_cs",
@@ -81,26 +86,46 @@ UNUSED static const char *intel_tracepoint_names[] = {
    "intel_end_draw_mesh_indirect_count",
    "intel_begin_compute",
    "intel_end_compute",
+   "intel_begin_compute_indirect",
+   "intel_end_compute_indirect",
    "intel_begin_trace_copy",
    "intel_end_trace_copy",
    "intel_begin_trace_copy_cb",
    "intel_end_trace_copy_cb",
    "intel_begin_as_build",
    "intel_end_as_build",
+   "intel_begin_as_build_leaves",
+   "intel_end_as_build_leaves",
+   "intel_begin_as_morton_generate",
+   "intel_end_as_morton_generate",
+   "intel_begin_as_morton_sort",
+   "intel_end_as_morton_sort",
+   "intel_begin_as_lbvh_build_internal",
+   "intel_end_as_lbvh_build_internal",
+   "intel_begin_as_ploc_build_internal",
+   "intel_end_as_ploc_build_internal",
+   "intel_begin_as_encode",
+   "intel_end_as_encode",
+   "intel_begin_as_copy",
+   "intel_end_as_copy",
    "intel_begin_rays",
    "intel_end_rays",
    "intel_begin_stall",
    "intel_end_stall",
 };
 
+typedef void (*trace_payload_as_extra_func)(perfetto::protos::pbzero::GpuRenderStageEvent *, const void*, const void*);
+
 static void UNUSED
 trace_payload_as_extra_intel_begin_frame(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_frame *payload)
+                                     const struct trace_intel_begin_frame *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_frame(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_frame *payload)
+                                     const struct trace_intel_end_frame *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -116,23 +141,17 @@ trace_payload_as_extra_intel_end_frame(perfetto::protos::pbzero::GpuRenderStageE
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_queue_annotation(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_queue_annotation *payload)
+                                     const struct trace_intel_begin_queue_annotation *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_queue_annotation(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_queue_annotation *payload)
+                                     const struct trace_intel_end_queue_annotation *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
-   {
-      auto data = event->add_extra_data();
-      data->set_name("dummy");
-
-      sprintf(buf, "%hhu", payload->dummy);
-
-      data->set_value(buf);
-   }
    {
       auto data = event->add_extra_data();
       data->set_name("str");
@@ -145,12 +164,14 @@ trace_payload_as_extra_intel_end_queue_annotation(perfetto::protos::pbzero::GpuR
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_batch(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_batch *payload)
+                                     const struct trace_intel_begin_batch *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_batch(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_batch *payload)
+                                     const struct trace_intel_end_batch *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -166,12 +187,14 @@ trace_payload_as_extra_intel_end_batch(perfetto::protos::pbzero::GpuRenderStageE
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_cmd_buffer(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_cmd_buffer *payload)
+                                     const struct trace_intel_begin_cmd_buffer *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_cmd_buffer(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_cmd_buffer *payload)
+                                     const struct trace_intel_end_cmd_buffer *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -187,23 +210,17 @@ trace_payload_as_extra_intel_end_cmd_buffer(perfetto::protos::pbzero::GpuRenderS
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_cmd_buffer_annotation(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_cmd_buffer_annotation *payload)
+                                     const struct trace_intel_begin_cmd_buffer_annotation *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_cmd_buffer_annotation(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_cmd_buffer_annotation *payload)
+                                     const struct trace_intel_end_cmd_buffer_annotation *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
-   {
-      auto data = event->add_extra_data();
-      data->set_name("dummy");
-
-      sprintf(buf, "%hhu", payload->dummy);
-
-      data->set_value(buf);
-   }
    {
       auto data = event->add_extra_data();
       data->set_name("str");
@@ -216,22 +233,26 @@ trace_payload_as_extra_intel_end_cmd_buffer_annotation(perfetto::protos::pbzero:
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_xfb(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_xfb *payload)
+                                     const struct trace_intel_begin_xfb *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_xfb(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_xfb *payload)
+                                     const struct trace_intel_end_xfb *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_render_pass(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_render_pass *payload)
+                                     const struct trace_intel_begin_render_pass *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_render_pass(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_render_pass *payload)
+                                     const struct trace_intel_end_render_pass *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -271,12 +292,14 @@ trace_payload_as_extra_intel_end_render_pass(perfetto::protos::pbzero::GpuRender
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_blorp(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_blorp *payload)
+                                     const struct trace_intel_begin_blorp *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_blorp(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_blorp *payload)
+                                     const struct trace_intel_end_blorp *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -314,9 +337,9 @@ trace_payload_as_extra_intel_end_blorp(perfetto::protos::pbzero::GpuRenderStageE
    }
    {
       auto data = event->add_extra_data();
-      data->set_name("blorp_pipe");
+      data->set_name("shader_pipe");
 
-      sprintf(buf, "%s", blorp_shader_pipeline_to_name(payload->blorp_pipe));
+      sprintf(buf, "%s", blorp_shader_pipeline_to_name(payload->shader_pipe));
 
       data->set_value(buf);
    }
@@ -336,26 +359,62 @@ trace_payload_as_extra_intel_end_blorp(perfetto::protos::pbzero::GpuRenderStageE
 
       data->set_value(buf);
    }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("predicated");
+
+      sprintf(buf, "%hhu", payload->predicated);
+
+      data->set_value(buf);
+   }
 
 }
 static void UNUSED
+trace_payload_as_extra_intel_begin_write_buffer_marker(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_write_buffer_marker *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_write_buffer_marker(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_write_buffer_marker *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
 trace_payload_as_extra_intel_begin_generate_draws(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_generate_draws *payload)
+                                     const struct trace_intel_begin_generate_draws *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_generate_draws(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_generate_draws *payload)
+                                     const struct trace_intel_end_generate_draws *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_generate_commands(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_generate_commands *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_generate_commands(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_generate_commands *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_query_clear_blorp(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_query_clear_blorp *payload)
+                                     const struct trace_intel_begin_query_clear_blorp *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_query_clear_blorp(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_query_clear_blorp *payload)
+                                     const struct trace_intel_end_query_clear_blorp *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -371,12 +430,14 @@ trace_payload_as_extra_intel_end_query_clear_blorp(perfetto::protos::pbzero::Gpu
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_query_clear_cs(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_query_clear_cs *payload)
+                                     const struct trace_intel_begin_query_clear_cs *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_query_clear_cs(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_query_clear_cs *payload)
+                                     const struct trace_intel_end_query_clear_cs *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -392,12 +453,14 @@ trace_payload_as_extra_intel_end_query_clear_cs(perfetto::protos::pbzero::GpuRen
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_query_copy_cs(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_query_copy_cs *payload)
+                                     const struct trace_intel_begin_query_copy_cs *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_query_copy_cs(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_query_copy_cs *payload)
+                                     const struct trace_intel_end_query_copy_cs *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -413,12 +476,14 @@ trace_payload_as_extra_intel_end_query_copy_cs(perfetto::protos::pbzero::GpuRend
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_query_copy_shader(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_query_copy_shader *payload)
+                                     const struct trace_intel_begin_query_copy_shader *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_query_copy_shader(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_query_copy_shader *payload)
+                                     const struct trace_intel_end_query_copy_shader *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -434,12 +499,14 @@ trace_payload_as_extra_intel_end_query_copy_shader(perfetto::protos::pbzero::Gpu
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw *payload)
+                                     const struct trace_intel_begin_draw *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw *payload)
+                                     const struct trace_intel_end_draw *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -448,6 +515,22 @@ trace_payload_as_extra_intel_end_draw(perfetto::protos::pbzero::GpuRenderStageEv
       data->set_name("count");
 
       sprintf(buf, "%u", payload->count);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("vs_hash");
+
+      sprintf(buf, "%#x", payload->vs_hash);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("fs_hash");
+
+      sprintf(buf, "%#x", payload->fs_hash);
 
       data->set_value(buf);
    }
@@ -455,12 +538,14 @@ trace_payload_as_extra_intel_end_draw(perfetto::protos::pbzero::GpuRenderStageEv
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_multi(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_multi *payload)
+                                     const struct trace_intel_begin_draw_multi *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_multi(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_multi *payload)
+                                     const struct trace_intel_end_draw_multi *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -469,6 +554,22 @@ trace_payload_as_extra_intel_end_draw_multi(perfetto::protos::pbzero::GpuRenderS
       data->set_name("count");
 
       sprintf(buf, "%u", payload->count);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("vs_hash");
+
+      sprintf(buf, "%#x", payload->vs_hash);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("fs_hash");
+
+      sprintf(buf, "%#x", payload->fs_hash);
 
       data->set_value(buf);
    }
@@ -476,12 +577,14 @@ trace_payload_as_extra_intel_end_draw_multi(perfetto::protos::pbzero::GpuRenderS
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_indexed(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_indexed *payload)
+                                     const struct trace_intel_begin_draw_indexed *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_indexed(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_indexed *payload)
+                                     const struct trace_intel_end_draw_indexed *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -490,6 +593,22 @@ trace_payload_as_extra_intel_end_draw_indexed(perfetto::protos::pbzero::GpuRende
       data->set_name("count");
 
       sprintf(buf, "%u", payload->count);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("vs_hash");
+
+      sprintf(buf, "%#x", payload->vs_hash);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("fs_hash");
+
+      sprintf(buf, "%#x", payload->fs_hash);
 
       data->set_value(buf);
    }
@@ -497,12 +616,14 @@ trace_payload_as_extra_intel_end_draw_indexed(perfetto::protos::pbzero::GpuRende
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_indexed_multi(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_indexed_multi *payload)
+                                     const struct trace_intel_begin_draw_indexed_multi *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_indexed_multi(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_indexed_multi *payload)
+                                     const struct trace_intel_end_draw_indexed_multi *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -514,16 +635,34 @@ trace_payload_as_extra_intel_end_draw_indexed_multi(perfetto::protos::pbzero::Gp
 
       data->set_value(buf);
    }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("vs_hash");
+
+      sprintf(buf, "%#x", payload->vs_hash);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("fs_hash");
+
+      sprintf(buf, "%#x", payload->fs_hash);
+
+      data->set_value(buf);
+   }
 
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_indirect_byte_count(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_indirect_byte_count *payload)
+                                     const struct trace_intel_begin_draw_indirect_byte_count *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_indirect_byte_count(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_indirect_byte_count *payload)
+                                     const struct trace_intel_end_draw_indirect_byte_count *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -535,16 +674,34 @@ trace_payload_as_extra_intel_end_draw_indirect_byte_count(perfetto::protos::pbze
 
       data->set_value(buf);
    }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("vs_hash");
+
+      sprintf(buf, "%#x", payload->vs_hash);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("fs_hash");
+
+      sprintf(buf, "%#x", payload->fs_hash);
+
+      data->set_value(buf);
+   }
 
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_indirect(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_indirect *payload)
+                                     const struct trace_intel_begin_draw_indirect *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_indirect(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_indirect *payload)
+                                     const struct trace_intel_end_draw_indirect *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -553,6 +710,22 @@ trace_payload_as_extra_intel_end_draw_indirect(perfetto::protos::pbzero::GpuRend
       data->set_name("draw_count");
 
       sprintf(buf, "%u", payload->draw_count);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("vs_hash");
+
+      sprintf(buf, "%#x", payload->vs_hash);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("fs_hash");
+
+      sprintf(buf, "%#x", payload->fs_hash);
 
       data->set_value(buf);
    }
@@ -560,12 +733,14 @@ trace_payload_as_extra_intel_end_draw_indirect(perfetto::protos::pbzero::GpuRend
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_indexed_indirect(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_indexed_indirect *payload)
+                                     const struct trace_intel_begin_draw_indexed_indirect *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_indexed_indirect(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_indexed_indirect *payload)
+                                     const struct trace_intel_end_draw_indexed_indirect *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -577,24 +752,59 @@ trace_payload_as_extra_intel_end_draw_indexed_indirect(perfetto::protos::pbzero:
 
       data->set_value(buf);
    }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("vs_hash");
+
+      sprintf(buf, "%#x", payload->vs_hash);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("fs_hash");
+
+      sprintf(buf, "%#x", payload->fs_hash);
+
+      data->set_value(buf);
+   }
 
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_indirect_count(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_indirect_count *payload)
+                                     const struct trace_intel_begin_draw_indirect_count *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_indirect_count(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_indirect_count *payload)
+                                     const struct trace_intel_end_draw_indirect_count *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
    {
       auto data = event->add_extra_data();
-      data->set_name("max_draw_count");
+      data->set_name("draw_count");
 
-      sprintf(buf, "%u", payload->max_draw_count);
+      const uint32_t* __draw_count = (const uint32_t*)((uint8_t *)indirect_data + 0);
+      sprintf(buf, "%u", *__draw_count);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("vs_hash");
+
+      sprintf(buf, "%#x", payload->vs_hash);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("fs_hash");
+
+      sprintf(buf, "%#x", payload->fs_hash);
 
       data->set_value(buf);
    }
@@ -602,20 +812,39 @@ trace_payload_as_extra_intel_end_draw_indirect_count(perfetto::protos::pbzero::G
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_indexed_indirect_count(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_indexed_indirect_count *payload)
+                                     const struct trace_intel_begin_draw_indexed_indirect_count *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_indexed_indirect_count(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_indexed_indirect_count *payload)
+                                     const struct trace_intel_end_draw_indexed_indirect_count *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
    {
       auto data = event->add_extra_data();
-      data->set_name("max_draw_count");
+      data->set_name("draw_count");
 
-      sprintf(buf, "%u", payload->max_draw_count);
+      const uint32_t* __draw_count = (const uint32_t*)((uint8_t *)indirect_data + 0);
+      sprintf(buf, "%u", *__draw_count);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("vs_hash");
+
+      sprintf(buf, "%#x", payload->vs_hash);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("fs_hash");
+
+      sprintf(buf, "%#x", payload->fs_hash);
 
       data->set_value(buf);
    }
@@ -623,12 +852,14 @@ trace_payload_as_extra_intel_end_draw_indexed_indirect_count(perfetto::protos::p
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_mesh(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_mesh *payload)
+                                     const struct trace_intel_begin_draw_mesh *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_mesh(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_mesh *payload)
+                                     const struct trace_intel_end_draw_mesh *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -660,12 +891,14 @@ trace_payload_as_extra_intel_end_draw_mesh(perfetto::protos::pbzero::GpuRenderSt
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_mesh_indirect(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_mesh_indirect *payload)
+                                     const struct trace_intel_begin_draw_mesh_indirect *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_mesh_indirect(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_mesh_indirect *payload)
+                                     const struct trace_intel_end_draw_mesh_indirect *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -681,20 +914,23 @@ trace_payload_as_extra_intel_end_draw_mesh_indirect(perfetto::protos::pbzero::Gp
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw_mesh_indirect_count(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_draw_mesh_indirect_count *payload)
+                                     const struct trace_intel_begin_draw_mesh_indirect_count *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_draw_mesh_indirect_count(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_draw_mesh_indirect_count *payload)
+                                     const struct trace_intel_end_draw_mesh_indirect_count *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
    {
       auto data = event->add_extra_data();
-      data->set_name("max_draw_count");
+      data->set_name("draw_count");
 
-      sprintf(buf, "%u", payload->max_draw_count);
+      const uint32_t* __draw_count = (const uint32_t*)((uint8_t *)indirect_data + 0);
+      sprintf(buf, "%u", *__draw_count);
 
       data->set_value(buf);
    }
@@ -702,12 +938,14 @@ trace_payload_as_extra_intel_end_draw_mesh_indirect_count(perfetto::protos::pbze
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_compute(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_compute *payload)
+                                     const struct trace_intel_begin_compute *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_compute(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_compute *payload)
+                                     const struct trace_intel_end_compute *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -735,16 +973,58 @@ trace_payload_as_extra_intel_end_compute(perfetto::protos::pbzero::GpuRenderStag
 
       data->set_value(buf);
    }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("cs_hash");
+
+      sprintf(buf, "%#x", payload->cs_hash);
+
+      data->set_value(buf);
+   }
+
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_compute_indirect(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_compute_indirect *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_compute_indirect(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_compute_indirect *payload,
+                                     const void *indirect_data)
+{
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("size");
+
+      const VkDispatchIndirectCommand* __size = (const VkDispatchIndirectCommand*)((uint8_t *)indirect_data + 0);
+      sprintf(buf, "%ux%ux%u", __size->x, __size->y, __size->z);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("cs_hash");
+
+      sprintf(buf, "%#x", payload->cs_hash);
+
+      data->set_value(buf);
+   }
 
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_trace_copy(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_trace_copy *payload)
+                                     const struct trace_intel_begin_trace_copy *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_trace_copy(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_trace_copy *payload)
+                                     const struct trace_intel_end_trace_copy *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -760,12 +1040,14 @@ trace_payload_as_extra_intel_end_trace_copy(perfetto::protos::pbzero::GpuRenderS
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_trace_copy_cb(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_trace_copy_cb *payload)
+                                     const struct trace_intel_begin_trace_copy_cb *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_trace_copy_cb(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_trace_copy_cb *payload)
+                                     const struct trace_intel_end_trace_copy_cb *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -781,22 +1063,110 @@ trace_payload_as_extra_intel_end_trace_copy_cb(perfetto::protos::pbzero::GpuRend
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_as_build(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_as_build *payload)
+                                     const struct trace_intel_begin_as_build *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_as_build(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_as_build *payload)
+                                     const struct trace_intel_end_as_build *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_as_build_leaves(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_as_build_leaves *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_as_build_leaves(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_as_build_leaves *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_as_morton_generate(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_as_morton_generate *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_as_morton_generate(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_as_morton_generate *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_as_morton_sort(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_as_morton_sort *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_as_morton_sort(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_as_morton_sort *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_as_lbvh_build_internal(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_as_lbvh_build_internal *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_as_lbvh_build_internal(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_as_lbvh_build_internal *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_as_ploc_build_internal(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_as_ploc_build_internal *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_as_ploc_build_internal(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_as_ploc_build_internal *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_as_encode(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_as_encode *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_as_encode(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_as_encode *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_as_copy(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_as_copy *payload,
+                                     const void *indirect_data)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_as_copy(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_as_copy *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_rays(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_rays *payload)
+                                     const struct trace_intel_begin_rays *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_rays(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_rays *payload)
+                                     const struct trace_intel_end_rays *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -828,12 +1198,14 @@ trace_payload_as_extra_intel_end_rays(perfetto::protos::pbzero::GpuRenderStageEv
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_stall(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_stall *payload)
+                                     const struct trace_intel_begin_stall *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_intel_end_stall(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_stall *payload)
+                                     const struct trace_intel_end_stall *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -847,9 +1219,33 @@ trace_payload_as_extra_intel_end_stall(perfetto::protos::pbzero::GpuRenderStageE
    }
    {
       auto data = event->add_extra_data();
-      data->set_name("reason");
+      data->set_name("reason1");
 
-      sprintf(buf, "%s", payload->reason);
+      sprintf(buf, "%s", payload->reason1);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("reason2");
+
+      sprintf(buf, "%s", payload->reason2);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("reason3");
+
+      sprintf(buf, "%s", payload->reason3);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("reason4");
+
+      sprintf(buf, "%s", payload->reason4);
 
       data->set_value(buf);
    }

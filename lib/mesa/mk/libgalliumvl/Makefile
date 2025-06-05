@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2024/07/19 14:40:43 rsadowski Exp $
+#	$OpenBSD: Makefile,v 1.5 2025/06/05 14:18:42 jsg Exp $
 
 LIB=	galliumvl
 
@@ -12,6 +12,7 @@ SRCS=	vl_bicubic_filter.c \
 	vl_csc.c \
 	vl_decoder.c \
 	vl_deint_filter.c \
+	vl_deint_filter_cs.c \
 	vl_idct.c \
 	vl_matrix_filter.c \
 	vl_mc.c \
@@ -34,8 +35,12 @@ CXXFLAGS+=	${CXX_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/auxiliary/vl \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
+		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/loader \
-		-I${MESA_SRC}/src/util
+		-I${MESA_SRC}/src/util \
+		-I${MESA_SRC}/generated/src \
+		-I${MESA_SRC}/generated/src/compiler \
+		-I${MESA_SRC}/generated/src/compiler/nir
 
 install:
 

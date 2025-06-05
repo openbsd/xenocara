@@ -349,7 +349,7 @@ init_dri2_configs(int fd)
    unsigned last_start = 0;
 
    /* dlopen/dlsym to avoid linkage */
-   egl = dlopen("libEGL.so.1", RTLD_LAZY | RTLD_LOCAL);
+   egl = dlopen("libEGL.so", RTLD_LAZY | RTLD_LOCAL);
    if (!egl)
       return false;
 

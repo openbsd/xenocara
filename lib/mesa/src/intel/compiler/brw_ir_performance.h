@@ -22,21 +22,19 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef BRW_IR_PERFORMANCE_H
-#define BRW_IR_PERFORMANCE_H
+#pragma once
 
-class fs_visitor;
+#include "brw_ir_analysis.h"
+
+struct fs_visitor;
 
 namespace brw {
-   class vec4_visitor;
-
    /**
     * Various estimates of the performance of a shader based on static
     * analysis.
     */
    struct performance {
       performance(const fs_visitor *v);
-      performance(const vec4_visitor *v);
       ~performance();
 
       analysis_dependency_class
@@ -47,7 +45,7 @@ namespace brw {
       }
 
       bool
-      validate(const backend_shader *) const
+      validate(const fs_visitor *) const
       {
          return true;
       }
@@ -82,5 +80,3 @@ namespace brw {
       operator=(performance u);
    };
 }
-
-#endif

@@ -31,6 +31,31 @@
 extern "C" {
 #endif
 
+#define anv_drv_const_offset(field) \
+   (offsetof(struct anv_push_constants, field))
+#define anv_drv_const_size(field) \
+   (sizeof(((struct anv_push_constants *)0)->field))
+
+#define anv_load_driver_uniform(b, components, field)                   \
+   nir_load_push_constant(b, components,                                \
+                          anv_drv_const_size(field) * 8,                \
+                          nir_imm_int(b, 0),                            \
+                          .base = anv_drv_const_offset(field),          \
+                          .range = components * anv_drv_const_size(field))
+/* Use load_uniform for indexed values since load_push_constant requires that
+ * the offset source is dynamically uniform in the subgroup which we cannot
+ * guarantee.
+ */
+#define anv_load_driver_uniform_indexed(b, components, field, idx)      \
+   nir_load_uniform(b, components,                                      \
+                    anv_drv_const_size(field[0]) * 8,                   \
+                    nir_imul_imm(b, idx,                                \
+                                 anv_drv_const_size(field[0])),         \
+                    .base = anv_drv_const_offset(field),                \
+                    .range = anv_drv_const_size(field))
+
+
+
 /* This map is represent a mapping where the key is the NIR
  * nir_intrinsic_resource_intel::block index. It allows mapping bindless UBOs
  * accesses to descriptor entry.
@@ -94,9 +119,11 @@ void anv_nir_compute_push_layout(nir_shader *nir,
                                  struct brw_stage_prog_data *prog_data,
                                  struct anv_pipeline_bind_map *map,
                                  const struct anv_pipeline_push_map *push_map,
+                                 enum anv_descriptor_set_layout_type desc_type,
                                  void *mem_ctx);
 
-void anv_nir_validate_push_layout(struct brw_stage_prog_data *prog_data,
+void anv_nir_validate_push_layout(const struct anv_physical_device *pdevice,
+                                  struct brw_stage_prog_data *prog_data,
                                   struct anv_pipeline_bind_map *map);
 
 bool anv_nir_update_resource_intel_block(nir_shader *shader);

@@ -41,7 +41,6 @@
 #include "util/u_debug.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
-#include "util/u_prim.h"
 #include "tgsi/tgsi_dump.h"
 #include "tgsi/tgsi_exec.h"
 #include "tgsi/tgsi_info.h"
@@ -1169,7 +1168,7 @@ emit_fetch_gs_input(
       /*
        * A fixed 6 should do as well (which is what we allocate).
        */
-      int index_limit = u_vertices_per_prim(info->properties[TGSI_PROPERTY_GS_INPUT_PRIM]);
+      int index_limit = mesa_vertices_per_prim(info->properties[TGSI_PROPERTY_GS_INPUT_PRIM]);
       vertex_index = get_indirect_index(bld,
                                         reg->Register.File,
                                         reg->Dimension.Index,
@@ -3849,7 +3848,7 @@ atomic_emit(
       LLVMValueRef atom_res = lp_build_alloca(gallivm,
                                               uint_bld->vec_type, "");
 
-      LLVMValueRef ssbo_limit;
+      LLVMValueRef ssbo_limit = NULL;
       if (!is_shared) {
          ssbo_limit = LLVMBuildAShr(gallivm->builder, bld->ssbo_sizes[buf], lp_build_const_int32(gallivm, 2), "");
          ssbo_limit = lp_build_broadcast_scalar(uint_bld, ssbo_limit);
@@ -4269,7 +4268,7 @@ endloop_emit(
 {
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
 
-   lp_exec_endloop(bld_base->base.gallivm, &bld->exec_mask);
+   lp_exec_endloop(bld_base->base.gallivm, &bld->exec_mask, bld->mask);
 }
 
 static void

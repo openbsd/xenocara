@@ -57,6 +57,8 @@ lower_load_input_to_scalar(nir_builder *b, nir_intrinsic_instr *intr)
                    intr->def.bit_size);
       chan_intr->num_components = 1;
 
+      if (intr->name)
+         chan_intr->name = intr->name;
       nir_intrinsic_set_base(chan_intr, nir_intrinsic_base(intr));
       nir_intrinsic_set_component(chan_intr, (newc + newi) % 4);
       nir_intrinsic_set_dest_type(chan_intr, nir_intrinsic_dest_type(intr));
@@ -75,9 +77,7 @@ lower_load_input_to_scalar(nir_builder *b, nir_intrinsic_instr *intr)
       loads[i] = &chan_intr->def;
    }
 
-   nir_def_rewrite_uses(&intr->def,
-                        nir_vec(b, loads, intr->num_components));
-   nir_instr_remove(&intr->instr);
+   nir_def_replace(&intr->def, nir_vec(b, loads, intr->num_components));
 }
 
 static void
@@ -95,6 +95,8 @@ lower_load_to_scalar(nir_builder *b, nir_intrinsic_instr *intr)
                    intr->def.bit_size);
       chan_intr->num_components = 1;
 
+      if (intr->name)
+         chan_intr->name = intr->name;
       nir_intrinsic_set_align_offset(chan_intr,
                                      (nir_intrinsic_align_offset(intr) +
                                       i * (intr->def.bit_size / 8)) %
@@ -120,9 +122,7 @@ lower_load_to_scalar(nir_builder *b, nir_intrinsic_instr *intr)
       loads[i] = &chan_intr->def;
    }
 
-   nir_def_rewrite_uses(&intr->def,
-                        nir_vec(b, loads, intr->num_components));
-   nir_instr_remove(&intr->instr);
+   nir_def_replace(&intr->def, nir_vec(b, loads, intr->num_components));
 }
 
 static void
@@ -139,32 +139,59 @@ lower_store_output_to_scalar(nir_builder *b, nir_intrinsic_instr *intr)
       bool is_64bit = (nir_intrinsic_instr_src_type(intr, 0) & NIR_ALU_TYPE_SIZE_MASK) == 64;
       unsigned newi = is_64bit ? i * 2 : i;
       unsigned newc = nir_intrinsic_component(intr);
+      unsigned new_component = (newc + newi) % 4;
+      nir_io_semantics sem = nir_intrinsic_io_semantics(intr);
+      bool has_xfb = false;
+
+      if (nir_intrinsic_has_io_xfb(intr)) {
+         /* Find out which components are written via xfb. */
+         for (unsigned c = 0; c <= new_component; c++) {
+            nir_io_xfb xfb = c < 2 ? nir_intrinsic_io_xfb(intr) : nir_intrinsic_io_xfb2(intr);
+
+            if (new_component < c + xfb.out[c % 2].num_components) {
+               has_xfb = true;
+               break;
+            }
+         }
+      }
+
+      /* After scalarization, some channels might not write anywhere - i.e.
+       * they are not a sysval output, they don't feed the next shader, and
+       * they don't write xfb. Don't create such stores.
+       */
+      if ((sem.no_sysval_output ||
+           !nir_slot_is_sysval_output(sem.location, MESA_SHADER_NONE)) &&
+          (sem.no_varying ||
+           !nir_slot_is_varying(sem.location, MESA_SHADER_NONE)) &&
+          !has_xfb)
+         continue;
+
       nir_intrinsic_instr *chan_intr =
          nir_intrinsic_instr_create(b->shader, intr->intrinsic);
       chan_intr->num_components = 1;
 
+      if (intr->name)
+         chan_intr->name = intr->name;
       nir_intrinsic_set_base(chan_intr, nir_intrinsic_base(intr));
       nir_intrinsic_set_write_mask(chan_intr, 0x1);
-      nir_intrinsic_set_component(chan_intr, (newc + newi) % 4);
+      nir_intrinsic_set_component(chan_intr, new_component);
       nir_intrinsic_set_src_type(chan_intr, nir_intrinsic_src_type(intr));
       set_io_semantics(chan_intr, intr, i);
 
       if (nir_intrinsic_has_io_xfb(intr)) {
          /* Scalarize transform feedback info. */
-         unsigned component = nir_intrinsic_component(chan_intr);
-
-         for (unsigned c = 0; c <= component; c++) {
+         for (unsigned c = 0; c <= new_component; c++) {
             nir_io_xfb xfb = c < 2 ? nir_intrinsic_io_xfb(intr) : nir_intrinsic_io_xfb2(intr);
 
-            if (component < c + xfb.out[c % 2].num_components) {
+            if (new_component < c + xfb.out[c % 2].num_components) {
                nir_io_xfb scalar_xfb;
 
                memset(&scalar_xfb, 0, sizeof(scalar_xfb));
-               scalar_xfb.out[component % 2].num_components = is_64bit ? 2 : 1;
-               scalar_xfb.out[component % 2].buffer = xfb.out[c % 2].buffer;
-               scalar_xfb.out[component % 2].offset = xfb.out[c % 2].offset +
-                                                      component - c;
-               if (component < 2)
+               scalar_xfb.out[new_component % 2].num_components = is_64bit ? 2 : 1;
+               scalar_xfb.out[new_component % 2].buffer = xfb.out[c % 2].buffer;
+               scalar_xfb.out[new_component % 2].offset = xfb.out[c % 2].offset +
+                                                          new_component - c;
+               if (new_component < 2)
                   nir_intrinsic_set_io_xfb(chan_intr, scalar_xfb);
                else
                   nir_intrinsic_set_io_xfb2(chan_intr, scalar_xfb);
@@ -204,6 +231,8 @@ lower_store_to_scalar(nir_builder *b, nir_intrinsic_instr *intr)
          nir_intrinsic_instr_create(b->shader, intr->intrinsic);
       chan_intr->num_components = 1;
 
+      if (intr->name)
+         chan_intr->name = intr->name;
       nir_intrinsic_set_write_mask(chan_intr, 0x1);
       nir_intrinsic_set_align_offset(chan_intr,
                                      (nir_intrinsic_align_offset(intr) +
@@ -250,8 +279,10 @@ nir_lower_io_to_scalar_instr(nir_builder *b, nir_instr *instr, void *data)
       return false;
 
    if ((intr->intrinsic == nir_intrinsic_load_input ||
+        intr->intrinsic == nir_intrinsic_load_per_primitive_input ||
         intr->intrinsic == nir_intrinsic_load_per_vertex_input ||
-        intr->intrinsic == nir_intrinsic_load_interpolated_input) &&
+        intr->intrinsic == nir_intrinsic_load_interpolated_input ||
+        intr->intrinsic == nir_intrinsic_load_input_vertex) &&
        (state->mask & nir_var_shader_in) &&
        (!state->filter || state->filter(instr, state->filter_data))) {
       lower_load_input_to_scalar(b, intr);
@@ -259,7 +290,9 @@ nir_lower_io_to_scalar_instr(nir_builder *b, nir_instr *instr, void *data)
    }
 
    if ((intr->intrinsic == nir_intrinsic_load_output ||
-        intr->intrinsic == nir_intrinsic_load_per_vertex_output) &&
+        intr->intrinsic == nir_intrinsic_load_per_vertex_output ||
+        intr->intrinsic == nir_intrinsic_load_per_view_output ||
+        intr->intrinsic == nir_intrinsic_load_per_primitive_output) &&
        (state->mask & nir_var_shader_out) &&
        (!state->filter || state->filter(instr, state->filter_data))) {
       lower_load_input_to_scalar(b, intr);
@@ -276,7 +309,9 @@ nir_lower_io_to_scalar_instr(nir_builder *b, nir_instr *instr, void *data)
    }
 
    if ((intr->intrinsic == nir_intrinsic_store_output ||
-        intr->intrinsic == nir_intrinsic_store_per_vertex_output) &&
+        intr->intrinsic == nir_intrinsic_store_per_vertex_output ||
+        intr->intrinsic == nir_intrinsic_store_per_view_output ||
+        intr->intrinsic == nir_intrinsic_store_per_primitive_output) &&
        state->mask & nir_var_shader_out &&
        (!state->filter || state->filter(instr, state->filter_data))) {
       lower_store_output_to_scalar(b, intr);
@@ -304,8 +339,7 @@ nir_lower_io_to_scalar(nir_shader *shader, nir_variable_mode mask, nir_instr_fil
    };
    return nir_shader_instructions_pass(shader,
                                        nir_lower_io_to_scalar_instr,
-                                       nir_metadata_block_index |
-                                          nir_metadata_dominance,
+                                       nir_metadata_control_flow,
                                        &state);
 }
 
@@ -398,11 +432,7 @@ lower_load_to_scalar_early(nir_builder *b, nir_intrinsic_instr *intr,
       loads[i] = &chan_intr->def;
    }
 
-   nir_def_rewrite_uses(&intr->def,
-                        nir_vec(b, loads, intr->num_components));
-
-   /* Remove the old load intrinsic */
-   nir_instr_remove(&intr->instr);
+   nir_def_replace(&intr->def, nir_vec(b, loads, intr->num_components));
 }
 
 static void
@@ -553,8 +583,7 @@ nir_lower_io_to_scalar_early(nir_shader *shader, nir_variable_mode mask)
 
    bool progress = nir_shader_instructions_pass(shader,
                                                 nir_lower_io_to_scalar_early_instr,
-                                                nir_metadata_block_index |
-                                                   nir_metadata_dominance,
+                                                nir_metadata_control_flow,
                                                 &state);
 
    /* Remove old input from the shaders inputs list */

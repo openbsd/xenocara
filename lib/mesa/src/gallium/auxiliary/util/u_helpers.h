@@ -41,14 +41,12 @@ void util_set_vertex_buffers_mask(struct pipe_vertex_buffer *dst,
                                   uint32_t *enabled_buffers,
                                   const struct pipe_vertex_buffer *src,
                                   unsigned count,
-                                  unsigned unbind_num_trailing_slots,
                                   bool take_ownership);
 
 void util_set_vertex_buffers_count(struct pipe_vertex_buffer *dst,
                                    unsigned *dst_count,
                                    const struct pipe_vertex_buffer *src,
                                    unsigned count,
-                                   unsigned unbind_num_trailing_slots,
                                    bool take_ownership);
 
 void util_set_shader_buffers_mask(struct pipe_shader_buffer *dst,
@@ -69,7 +67,7 @@ util_lower_uint64_vertex_elements(const struct pipe_vertex_element **velems,
 
 /* Helper function to determine if the varying should contain the point
  * coordinates, given the sprite_coord_enable mask.  Requires
- * PIPE_CAP_TGSI_TEXCOORD to be enabled.
+ * pipe_caps.tgsi_texcoord to be enabled.
  */
 static inline bool
 util_varying_is_point_coord(gl_varying_slot slot, uint32_t sprite_coord_enable)
@@ -119,9 +117,6 @@ void util_throttle_memory_usage(struct pipe_context *pipe,
                                 struct util_throttle *t, uint64_t memory_size);
 void util_sw_query_memory_info(struct pipe_screen *pscreen,
                           struct pipe_memory_info *info);
-
-bool
-util_lower_clearsize_to_dword(const void *clearValue, int *clearValueSize, uint32_t *clamped);
 
 void
 util_init_pipe_vertex_state(struct pipe_screen *screen,

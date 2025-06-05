@@ -59,7 +59,7 @@
 #include <machine/cpu.h>
 #endif
 
-#if DETECT_OS_FREEBSD
+#if DETECT_OS_FREEBSD || DETECT_OS_OPENBSD
 #if __has_include(<sys/auxv.h>)
 #include <sys/auxv.h>
 #define HAVE_ELF_AUX_INFO
@@ -72,7 +72,7 @@
 #include <elf.h>
 #endif
 
-#if DETECT_OS_UNIX
+#if DETECT_OS_POSIX
 #include <unistd.h>
 #endif
 
@@ -139,6 +139,18 @@ check_os_altivec_support(void)
 #endif
 #if defined(__ALTIVEC__) && defined(__VSX__)
 /* Do nothing */
+#elif DETECT_OS_FREEBSD || (DETECT_OS_OPENBSD && HAVE_ELF_AUX_INFO) /* !__ALTIVEC__ || !__VSX__ */
+   unsigned long hwcap = 0;
+#ifdef HAVE_ELF_AUX_INFO
+   elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap));
+#elif DETECT_OS_FREEBSD
+   size_t len = sizeof(hwcap);
+   sysctlbyname("hw.cpu_features", &hwcap, &len, NULL, 0);
+#endif
+   if (hwcap & PPC_FEATURE_HAS_ALTIVEC)
+      util_cpu_caps.has_altivec = 1;
+   if (hwcap & PPC_FEATURE_HAS_VSX)
+      util_cpu_caps.has_vsx = 1;
 #elif DETECT_OS_APPLE || DETECT_OS_NETBSD || DETECT_OS_OPENBSD
 #ifdef HW_VECTORUNIT
    int sels[2] = {CTL_HW, HW_VECTORUNIT};
@@ -156,19 +168,7 @@ check_os_altivec_support(void)
          util_cpu_caps.has_altivec = 1;
       }
    }
-#elif DETECT_OS_FREEBSD /* !DETECT_OS_APPLE && !DETECT_OS_NETBSD && !DETECT_OS_OPENBSD */
-   unsigned long hwcap = 0;
-#ifdef HAVE_ELF_AUX_INFO
-   elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap));
-#else
-   size_t len = sizeof(hwcap);
-   sysctlbyname("hw.cpu_features", &hwcap, &len, NULL, 0);
-#endif
-   if (hwcap & PPC_FEATURE_HAS_ALTIVEC)
-      util_cpu_caps.has_altivec = 1;
-   if (hwcap & PPC_FEATURE_HAS_VSX)
-      util_cpu_caps.has_vsx = 1;
-#elif DETECT_OS_LINUX /* !DETECT_OS_FREEBSD */
+#elif DETECT_OS_LINUX /* !DETECT_OS_APPLE && !DETECT_OS_NETBSD && !DETECT_OS_OPENBSD */
 #if DETECT_ARCH_PPC_64
     Elf64_auxv_t aux;
 #else
@@ -198,7 +198,7 @@ check_os_altivec_support(void)
    } else {
       bool enable_altivec = true;    /* Default: enable  if available, and if not overridden */
       bool enable_vsx = true;
-#ifdef DEBUG
+#if MESA_DEBUG
       /* Disabling Altivec code generation is not the same as disabling VSX code generation,
        * which can be done simply by passing -mattr=-vsx to the LLVM compiler; cf.
        * lp_build_create_jit_compiler_for_module().
@@ -376,11 +376,12 @@ UTIL_ALIGN_STACK
 static inline bool
 sse2_has_daz(void)
 {
-   alignas(16) struct {
+   struct area_t {
       uint32_t pad1[7];
       uint32_t mxcsr_mask;
       uint32_t pad2[128-8];
-   } fxarea;
+   };
+   alignas(16) struct area_t fxarea;
 
    fxarea.mxcsr_mask = 0;
 #if DETECT_CC_GCC
@@ -409,7 +410,7 @@ check_os_arm_support(void)
     */
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
    util_cpu_caps.has_neon = 1;
-#elif DETECT_OS_FREEBSD && defined(HAVE_ELF_AUX_INFO)
+#elif (DETECT_OS_FREEBSD || DETECT_OS_OPENBSD) && defined(HAVE_ELF_AUX_INFO)
    unsigned long hwcap = 0;
    elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap));
    if (hwcap & HWCAP_NEON)
@@ -472,6 +473,31 @@ check_os_mips64_support(void)
 #endif /* DETECT_OS_LINUX */
 }
 #endif /* DETECT_ARCH_MIPS64 */
+
+#if DETECT_ARCH_LOONGARCH64
+static void
+check_os_loongarch64_support(void)
+{
+#if DETECT_OS_LINUX
+    Elf64_auxv_t aux;
+    int fd;
+
+    fd = open("/proc/self/auxv", O_RDONLY | O_CLOEXEC);
+    if (fd >= 0) {
+       while (read(fd, &aux, sizeof(Elf64_auxv_t)) == sizeof(Elf64_auxv_t)) {
+          if (aux.a_type == AT_HWCAP) {
+             uint64_t hwcap = aux.a_un.a_val;
+
+             util_cpu_caps.has_lsx = (hwcap >> 4) & 1;
+             util_cpu_caps.has_lasx = (hwcap >> 5) & 1;
+             break;
+          }
+       }
+       close (fd);
+    }
+#endif /* DETECT_OS_LINUX */
+}
+#endif /* DETECT_ARCH_LOONGARCH64 */
 
 
 static void
@@ -641,7 +667,7 @@ void check_cpu_caps_override(void)
    if (debug_get_bool_option("GALLIUM_NOSSE", false)) {
       util_cpu_caps.has_sse = 0;
    }
-#ifdef DEBUG
+#if MESA_DEBUG
    /* For simulating less capable machines */
    if (debug_get_bool_option("LP_FORCE_SSE2", false)) {
       util_cpu_caps.has_sse3 = 0;
@@ -739,7 +765,7 @@ _util_cpu_detect_once(void)
       GetSystemInfo(&system_info);
       available_cpus = MAX2(1, system_info.dwNumberOfProcessors);
    }
-#elif DETECT_OS_UNIX
+#elif DETECT_OS_POSIX
 #  if defined(HAS_SCHED_GETAFFINITY)
    {
       /* sched_setaffinity() can be used to further restrict the number of
@@ -807,7 +833,7 @@ _util_cpu_detect_once(void)
       total_cpus = ncpu;
    }
 #  endif /* DETECT_OS_BSD */
-#endif /* DETECT_OS_UNIX */
+#endif /* DETECT_OS_POSIX */
 
    util_cpu_caps.nr_cpus = MAX2(1, available_cpus);
    total_cpus = MAX2(total_cpus, util_cpu_caps.nr_cpus);
@@ -856,7 +882,6 @@ _util_cpu_detect_once(void)
          }
 
          /* general feature flags */
-         util_cpu_caps.has_mmx    = (regs2[3] >> 23) & 1; /* 0x0800000 */
          util_cpu_caps.has_sse    = (regs2[3] >> 25) & 1; /* 0x2000000 */
          util_cpu_caps.has_sse2   = (regs2[3] >> 26) & 1; /* 0x4000000 */
          util_cpu_caps.has_sse3   = (regs2[2] >>  0) & 1; /* 0x0000001 */
@@ -869,7 +894,6 @@ _util_cpu_detect_once(void)
                                     ((xgetbv() & 6) == 6);    // XMM & YMM
          util_cpu_caps.has_f16c   = ((regs2[2] >> 29) & 1) && util_cpu_caps.has_avx;
          util_cpu_caps.has_fma    = ((regs2[2] >> 12) & 1) && util_cpu_caps.has_avx;
-         util_cpu_caps.has_mmx2   = util_cpu_caps.has_sse; /* SSE cpus supports mmxext too */
 #if DETECT_ARCH_X86_64
          util_cpu_caps.has_daz = 1;
 #else
@@ -903,25 +927,7 @@ _util_cpu_detect_once(void)
          }
       }
 
-      if (regs[1] == 0x756e6547 && regs[2] == 0x6c65746e && regs[3] == 0x49656e69) {
-         /* GenuineIntel */
-         util_cpu_caps.has_intel = 1;
-      }
-
       cpuid(0x80000000, regs);
-
-      if (regs[0] >= 0x80000001) {
-
-         cpuid(0x80000001, regs2);
-
-         util_cpu_caps.has_mmx  |= (regs2[3] >> 23) & 1;
-         util_cpu_caps.has_mmx2 |= (regs2[3] >> 22) & 1;
-         util_cpu_caps.has_3dnow = (regs2[3] >> 31) & 1;
-         util_cpu_caps.has_3dnow_ext = (regs2[3] >> 30) & 1;
-
-         util_cpu_caps.has_xop = util_cpu_caps.has_avx &&
-                                 ((regs2[2] >> 11) & 1);
-      }
 
       if (regs[0] >= 0x80000006) {
          /* should we really do this if the clflush size above worked? */
@@ -946,6 +952,10 @@ _util_cpu_detect_once(void)
    check_os_mips64_support();
 #endif /* DETECT_ARCH_MIPS64 */
 
+#if DETECT_ARCH_LOONGARCH64
+   check_os_loongarch64_support();
+#endif /* DETECT_ARCH_LOONGARCH64 */
+
 #if DETECT_ARCH_S390
    util_cpu_caps.family = CPU_S390X;
 #endif
@@ -963,8 +973,6 @@ _util_cpu_detect_once(void)
       printf("util_cpu_caps.x86_cpu_type = %u\n", util_cpu_caps.x86_cpu_type);
       printf("util_cpu_caps.cacheline = %u\n", util_cpu_caps.cacheline);
 
-      printf("util_cpu_caps.has_mmx = %u\n", util_cpu_caps.has_mmx);
-      printf("util_cpu_caps.has_mmx2 = %u\n", util_cpu_caps.has_mmx2);
       printf("util_cpu_caps.has_sse = %u\n", util_cpu_caps.has_sse);
       printf("util_cpu_caps.has_sse2 = %u\n", util_cpu_caps.has_sse2);
       printf("util_cpu_caps.has_sse3 = %u\n", util_cpu_caps.has_sse3);
@@ -975,14 +983,13 @@ _util_cpu_detect_once(void)
       printf("util_cpu_caps.has_avx2 = %u\n", util_cpu_caps.has_avx2);
       printf("util_cpu_caps.has_f16c = %u\n", util_cpu_caps.has_f16c);
       printf("util_cpu_caps.has_popcnt = %u\n", util_cpu_caps.has_popcnt);
-      printf("util_cpu_caps.has_3dnow = %u\n", util_cpu_caps.has_3dnow);
-      printf("util_cpu_caps.has_3dnow_ext = %u\n", util_cpu_caps.has_3dnow_ext);
-      printf("util_cpu_caps.has_xop = %u\n", util_cpu_caps.has_xop);
       printf("util_cpu_caps.has_altivec = %u\n", util_cpu_caps.has_altivec);
       printf("util_cpu_caps.has_vsx = %u\n", util_cpu_caps.has_vsx);
       printf("util_cpu_caps.has_neon = %u\n", util_cpu_caps.has_neon);
       printf("util_cpu_caps.has_msa = %u\n", util_cpu_caps.has_msa);
       printf("util_cpu_caps.has_daz = %u\n", util_cpu_caps.has_daz);
+      printf("util_cpu_caps.has_lsx = %u\n", util_cpu_caps.has_lsx);
+      printf("util_cpu_caps.has_lasx = %u\n", util_cpu_caps.has_lasx);
       printf("util_cpu_caps.has_avx512f = %u\n", util_cpu_caps.has_avx512f);
       printf("util_cpu_caps.has_avx512dq = %u\n", util_cpu_caps.has_avx512dq);
       printf("util_cpu_caps.has_avx512ifma = %u\n", util_cpu_caps.has_avx512ifma);

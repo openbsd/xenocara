@@ -51,11 +51,9 @@
 #include "compiler/shader_info.h"
 #include "main/formats.h"       /* MESA_FORMAT_COUNT */
 #include "compiler/glsl/list.h"
-#include "compiler/glsl/ir_uniform.h"
 #include "util/u_idalloc.h"
 #include "util/simple_mtx.h"
 #include "util/u_dynarray.h"
-#include "util/mesa-sha1.h"
 #include "vbo/vbo.h"
 
 #include "pipe/p_state.h"
@@ -74,7 +72,6 @@ extern "C" {
  * \name Some forward type declarations
  */
 /*@{*/
-struct _mesa_HashTable;
 struct gl_attrib_node;
 struct gl_list_extensions;
 struct gl_meta_state;
@@ -766,15 +763,12 @@ struct gl_texture_image
    mesa_format TexFormat;         /**< The actual texture memory format */
 
    GLuint Border;		/**< 0 or 1 */
-   GLuint Width;		/**< = 2^WidthLog2 + 2*Border */
-   GLuint Height;		/**< = 2^HeightLog2 + 2*Border */
-   GLuint Depth;		/**< = 2^DepthLog2 + 2*Border */
+   GLuint Width;
+   GLuint Height;
+   GLuint Depth;
    GLuint Width2;		/**< = Width - 2*Border */
    GLuint Height2;		/**< = Height - 2*Border */
    GLuint Depth2;		/**< = Depth - 2*Border */
-   GLuint WidthLog2;		/**< = log2(Width2) */
-   GLuint HeightLog2;		/**< = log2(Height2) */
-   GLuint DepthLog2;		/**< = log2(Depth2) */
    GLuint MaxNumLevels;		/**< = maximum possible number of mipmap
                                        levels, computed from the dimensions */
 
@@ -895,6 +889,8 @@ struct gl_sampler_object
 
    uint8_t glclamp_mask; /**< mask of GL_CLAMP wraps active */
 
+   bool DeletePending; /**< true if sampler object is removed from the hash */
+
    /** GL_ARB_bindless_texture */
    bool HandleAllocated;
    struct util_dynarray Handles;
@@ -938,6 +934,7 @@ struct gl_texture_object
    GLboolean _IsFloat;         /**< GL_OES_float_texture */
    GLboolean _IsHalfFloat;     /**< GL_OES_half_float_texture */
    bool HandleAllocated;       /**< GL_ARB_bindless_texture */
+   bool DeletePending;         /**< true if texture object is removed from the hash */
 
    /* This should not be restored by glPopAttrib: */
    bool StencilSampling;       /**< Should we sample stencil instead of depth? */
@@ -973,6 +970,12 @@ struct gl_texture_object
    GLboolean IsSparse;
    GLint VirtualPageSizeIndex;
    GLint NumSparseLevels;
+
+   /** GL_EXT_texture_storage_compression */
+   GLint CompressionRate; /**< Fixed-rate compression bitrate */
+
+   /** GL_EXT_texture_compression_astc_decode_mode */
+   GLenum16 AstcDecodePrecision; /**< ASTC decoding precision */
 
    /* The texture must include at levels [0..lastLevel] once validated:
     */
@@ -1482,28 +1485,6 @@ struct gl_buffer_object
 
 
 /**
- * Client pixel packing/unpacking attributes
- */
-struct gl_pixelstore_attrib
-{
-   GLint Alignment;
-   GLint RowLength;
-   GLint SkipPixels;
-   GLint SkipRows;
-   GLint ImageHeight;
-   GLint SkipImages;
-   GLboolean SwapBytes;
-   GLboolean LsbFirst;
-   GLboolean Invert;        /**< GL_MESA_pack_invert */
-   GLint CompressedBlockWidth;   /**< GL_ARB_compressed_texture_pixel_storage */
-   GLint CompressedBlockHeight;
-   GLint CompressedBlockDepth;
-   GLint CompressedBlockSize;
-   struct gl_buffer_object *BufferObj; /**< GL_ARB_pixel_buffer_object */
-};
-
-
-/**
  * Enum for defining the mapping for the position/generic0 attribute.
  *
  * Do not change the order of the values as these are used as
@@ -1635,25 +1616,11 @@ struct gl_vertex_array_object
    GLboolean EverBound;
 
    /**
-    * Whether the VAO is changed by the application so often that some of
-    * the derived fields are not updated at all to decrease overhead.
-    * Also, interleaved arrays are not detected, because it's too expensive
-    * to do that before every draw call.
-    */
-   bool IsDynamic;
-
-   /**
     * Marked to true if the object is shared between contexts and immutable.
     * Then reference counting is done using atomics and thread safe.
     * Is used for dlist VAOs.
     */
    bool SharedAndImmutable;
-
-   /**
-    * Number of updates that were done by the application. This is used to
-    * decide whether the VAO is static or dynamic.
-    */
-   unsigned NumUpdates;
 
    /** Vertex attribute arrays */
    struct gl_array_attributes VertexAttrib[VERT_ATTRIB_MAX];
@@ -1669,6 +1636,12 @@ struct gl_vertex_array_object
 
    /** Mask of VERT_BIT_* values indicating which arrays are enabled */
    GLbitfield Enabled;
+
+   /**
+    * Mask of vertex attributes that have:
+    *    VertexAttrib[i].BufferBindingIndex != i.
+    */
+   GLbitfield NonIdentityBufferAttribMapping;
 
    /**
     * Mask indicating which VertexAttrib and BufferBinding structures have
@@ -1708,7 +1681,7 @@ struct gl_array_attrib
    struct gl_vertex_array_object DefaultVAOState;
 
    /** Array objects (GL_ARB_vertex_array_object) */
-   struct _mesa_HashTable *Objects;
+   struct _mesa_HashTable Objects;
 
    GLint ActiveTexture;		/**< Client Active Texture */
    GLuint LockFirst;            /**< GL_EXT_compiled_vertex_array */
@@ -1882,6 +1855,17 @@ struct gl_transform_feedback_object
    GLboolean EverBound; /**< Has this object been bound? */
 
    /**
+    * Primitive mode from glBeginTransformFeedback.
+    *
+    * The spec doesn't list the primitive mode as part of transform feedback
+    * objects, but it has to be because when transform feedback is resumed,
+    * all draws must be validated against the primitive type that transform
+    * feedback began with instead of whatever last transform feedback object
+    * happened to be used.
+    */
+   GLenum16 Mode;
+
+   /**
     * GLES: if Active is true, remaining number of primitives which can be
     * rendered without overflow.  This is necessary to track because GLES
     * requires us to generate INVALID_OPERATION if a call to glDrawArrays or
@@ -1941,7 +1925,7 @@ struct gl_transform_feedback_state
    struct gl_buffer_object *CurrentBuffer;
 
    /** The table of all transform feedback objects */
-   struct _mesa_HashTable *Objects;
+   struct _mesa_HashTable Objects;
 
    /** The current xform-fb object (GL_TRANSFORM_FEEDBACK_BINDING) */
    struct gl_transform_feedback_object *CurrentObject;
@@ -2073,7 +2057,7 @@ struct gl_perf_monitor_state
    GLuint NumGroups;
 
    /** The table of all performance monitors. */
-   struct _mesa_HashTable *Monitors;
+   struct _mesa_HashTable Monitors;
 };
 
 
@@ -2082,7 +2066,7 @@ struct gl_perf_monitor_state
  */
 struct gl_perf_query_state
 {
-   struct _mesa_HashTable *Objects; /**< The table of all performance query objects */
+   struct _mesa_HashTable Objects; /**< The table of all performance query objects */
 };
 
 
@@ -2328,7 +2312,7 @@ struct gl_pipeline_shader_state
    struct gl_pipeline_object *Default;
 
    /** Pipeline objects */
-   struct _mesa_HashTable *Objects;
+   struct _mesa_HashTable Objects;
 };
 
 /**
@@ -2359,7 +2343,7 @@ struct gl_query_object
  */
 struct gl_query_state
 {
-   struct _mesa_HashTable *QueryObjects;
+   struct _mesa_HashTable QueryObjects;
    struct gl_query_object *CurrentOcclusionObject; /* GL_ARB_occlusion_query */
    struct gl_query_object *CurrentTimerObject;     /* GL_EXT_timer_query */
 
@@ -2411,8 +2395,11 @@ struct gl_shared_state
    GLint RefCount;			   /**< Reference count */
    bool DisplayListsAffectGLThread;
 
-   struct _mesa_HashTable *DisplayList;	   /**< Display lists hash table */
-   struct _mesa_HashTable *TexObjects;	   /**< Texture objects hash table */
+   /* Whether the next glGen returns the lowest unused GL ID. */
+   bool ReuseGLNames;
+
+   struct _mesa_HashTable DisplayList;	   /**< Display lists hash table */
+   struct _mesa_HashTable TexObjects;	   /**< Texture objects hash table */
 
    /** Default texture objects (shared by all texture units) */
    struct gl_texture_object *DefaultTex[NUM_TEXTURE_TARGETS];
@@ -2435,16 +2422,16 @@ struct gl_shared_state
     * \name Vertex/geometry/fragment programs
     */
    /*@{*/
-   struct _mesa_HashTable *Programs; /**< All vertex/fragment programs */
+   struct _mesa_HashTable Programs; /**< All vertex/fragment programs */
    struct gl_program *DefaultVertexProgram;
    struct gl_program *DefaultFragmentProgram;
    /*@}*/
 
    /* GL_ATI_fragment_shader */
-   struct _mesa_HashTable *ATIShaders;
+   struct _mesa_HashTable ATIShaders;
    struct ati_fragment_shader *DefaultFragmentShader;
 
-   struct _mesa_HashTable *BufferObjects;
+   struct _mesa_HashTable BufferObjects;
 
    /* Buffer objects released by a different context than the one that
     * created them. Since the creating context holds one global buffer
@@ -2460,17 +2447,17 @@ struct gl_shared_state
    struct set *ZombieBufferObjects;
 
    /** Table of both gl_shader and gl_shader_program objects */
-   struct _mesa_HashTable *ShaderObjects;
+   struct _mesa_HashTable ShaderObjects;
 
    /* GL_EXT_framebuffer_object */
-   struct _mesa_HashTable *RenderBuffers;
-   struct _mesa_HashTable *FrameBuffers;
+   struct _mesa_HashTable RenderBuffers;
+   struct _mesa_HashTable FrameBuffers;
 
    /* GL_ARB_sync */
    struct set *SyncObjects;
 
    /** GL_ARB_sampler_objects */
-   struct _mesa_HashTable *SamplerObjects;
+   struct _mesa_HashTable SamplerObjects;
 
    /* GL_ARB_bindless_texture */
    struct hash_table_u64 *TextureHandles;
@@ -2485,10 +2472,10 @@ struct gl_shared_state
    simple_mtx_t ShaderIncludeMutex;
 
    /** EXT_external_objects */
-   struct _mesa_HashTable *MemoryObjects;
+   struct _mesa_HashTable MemoryObjects;
 
    /** EXT_semaphore */
-   struct _mesa_HashTable *SemaphoreObjects;
+   struct _mesa_HashTable SemaphoreObjects;
 
    /**
     * Whether at least one image has been imported or exported, excluding
@@ -2531,7 +2518,6 @@ struct gl_shared_state
  */
 struct gl_renderbuffer
 {
-   GLuint ClassID;        /**< Useful for drivers */
    GLuint Name;
    GLchar *Label;         /**< GL_KHR_debug */
    GLint RefCount;
@@ -2586,6 +2572,7 @@ struct gl_renderbuffer
    unsigned rtt_face, rtt_slice;
    bool rtt_layered; /**< whether glFramebufferTexture was called */
    unsigned rtt_nr_samples; /**< from FramebufferTexture2DMultisampleEXT */
+   unsigned rtt_numviews;
 };
 
 
@@ -2615,6 +2602,7 @@ struct gl_renderbuffer_attachment
    GLuint Zoffset;      /**< Slice for 3D textures,  or layer for both 1D
                          * and 2D array textures */
    GLboolean Layered;
+   GLsizei NumViews;
 };
 
 
@@ -2701,10 +2689,14 @@ struct gl_framebuffer
     */
    bool _HasAttachments;
 
-   GLbitfield _IntegerBuffers;  /**< Which color buffers are integer valued */
-   GLbitfield _BlendForceAlphaToOne;  /**< Which color buffers need blend factor adjustment */
-   GLbitfield _IsRGB;  /**< Which color buffers have an RGB base format? */
-   GLbitfield _FP32Buffers; /**< Which color buffers are FP32 */
+   GLbitfield _IntegerBuffers;  /**< Which color buffer attachments are integer valued */
+   GLbitfield _IntegerDrawBuffers;  /**< Which color draw buffers are integer valued */
+   GLbitfield _BlendForceAlphaToOne;  /**< Which color attachments need blend factor adjustment */
+   GLbitfield _BlendForceAlphaToOneDraw;  /**< Which color buffers need blend factor adjustment */
+   GLbitfield _IsRGB;  /**< Which color attachments have an RGB base format? */
+   GLbitfield _IsRGBDraw;  /**< Which color buffers have an RGB base format? */
+   GLbitfield _FP32Buffers; /**< Which color attachments are FP32 */
+   GLbitfield _FP32DrawBuffers; /**< Which color buffers are FP32 */
 
    /* ARB_color_buffer_float */
    GLboolean _AllColorBuffersFixedPoint; /* no integer, no float */

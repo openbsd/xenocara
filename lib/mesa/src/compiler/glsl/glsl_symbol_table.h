@@ -45,6 +45,9 @@ struct glsl_symbol_table {
    glsl_symbol_table();
    ~glsl_symbol_table();
 
+   glsl_symbol_table(const glsl_symbol_table &) = delete;
+   glsl_symbol_table & operator=(const glsl_symbol_table &) = delete;
+
    /* In 1.10, functions and variables have separate namespaces. */
    bool separate_function_namespace;
 
@@ -73,19 +76,12 @@ struct glsl_symbol_table {
    /*@}*/
 
    /**
-    * Add an function at global scope without checking for scoping conflicts.
-    */
-   void add_global_function(ir_function *f);
-
-   /**
     * \name Methods to get symbols from the table
     */
    /*@{*/
    ir_variable *get_variable(const char *name);
    const glsl_type *get_type(const char *name);
    ir_function *get_function(const char *name);
-   const glsl_type *get_interface(const char *name,
-                                  enum ir_variable_mode mode);
    int get_default_precision_qualifier(const char *type_name);
    /*@}*/
 
@@ -96,11 +92,6 @@ struct glsl_symbol_table {
     * available.
     */
    void disable_variable(const char *name);
-
-   /**
-    * Replaces the variable in the entry by the new variable.
-    */
-   void replace_variable(const char *name, ir_variable *v);
 
 private:
    symbol_table_entry *get_entry(const char *name);

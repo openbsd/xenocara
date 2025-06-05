@@ -26,7 +26,7 @@
 #ifndef VK_DISPATCH_TRAMPOLINES_H
 #define VK_DISPATCH_TRAMPOLINES_H
 
-#include "vulkan/util/vk_dispatch_table.h"
+#include "vk_dispatch_table.h"
 
 #ifdef __cplusplus
 extern "C" {

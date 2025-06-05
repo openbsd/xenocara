@@ -90,7 +90,7 @@ target_to_index(const struct gl_query_object *q)
        q->Target == GL_TRANSFORM_FEEDBACK_STREAM_OVERFLOW_ARB)
       return q->Stream;
 
-   /* Drivers with PIPE_CAP_QUERY_PIPELINE_STATISTICS_SINGLE = 0 ignore the
+   /* Drivers with pipe_caps.query_pipeline_statistics_single = 0 ignore the
     * index param so it should be useless; but radeonsi needs it in some cases,
     * so pass the correct value.
     */
@@ -585,7 +585,7 @@ create_queries(struct gl_context *ctx, GLenum target, GLsizei n, GLuint *ids,
       return;
    }
 
-   if (_mesa_HashFindFreeKeys(ctx->Query.QueryObjects, ids, n)) {
+   if (_mesa_HashFindFreeKeys(&ctx->Query.QueryObjects, ids, n)) {
       GLsizei i;
       for (i = 0; i < n; i++) {
          struct gl_query_object *q
@@ -598,7 +598,7 @@ create_queries(struct gl_context *ctx, GLenum target, GLsizei n, GLuint *ids,
             q->Target = target;
             q->EverBound = GL_TRUE;
          }
-         _mesa_HashInsertLocked(ctx->Query.QueryObjects, ids[i], q, true);
+         _mesa_HashInsertLocked(&ctx->Query.QueryObjects, ids[i], q);
       }
    }
 }
@@ -665,7 +665,7 @@ _mesa_DeleteQueries(GLsizei n, const GLuint *ids)
                q->Active = GL_FALSE;
                end_query(ctx, q);
             }
-            _mesa_HashRemoveLocked(ctx->Query.QueryObjects, ids[i]);
+            _mesa_HashRemoveLocked(&ctx->Query.QueryObjects, ids[i]);
             delete_query(ctx, q);
          }
       }
@@ -768,7 +768,7 @@ _mesa_BeginQueryIndexed(GLenum target, GLuint index, GLuint id)
             _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBeginQuery{Indexed}");
             return;
          }
-         _mesa_HashInsertLocked(ctx->Query.QueryObjects, id, q, false);
+         _mesa_HashInsertLocked(&ctx->Query.QueryObjects, id, q);
       }
    }
    else {
@@ -910,7 +910,7 @@ _mesa_QueryCounter(GLuint id, GLenum target)
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glQueryCounter");
          return;
       }
-      _mesa_HashInsertLocked(ctx->Query.QueryObjects, id, q, false);
+      _mesa_HashInsertLocked(&ctx->Query.QueryObjects, id, q);
    }
    else {
       if (q->Target && q->Target != GL_TIMESTAMP) {
@@ -1342,10 +1342,10 @@ _mesa_init_queryobj(struct gl_context *ctx)
 {
    struct pipe_screen *screen = ctx->pipe->screen;
 
-   ctx->Query.QueryObjects = _mesa_NewHashTable();
+   _mesa_InitHashTable(&ctx->Query.QueryObjects, ctx->Shared->ReuseGLNames);
    ctx->Query.CurrentOcclusionObject = NULL;
 
-   if (screen->get_param(screen, PIPE_CAP_OCCLUSION_QUERY))
+   if (screen->caps.occlusion_query)
       ctx->Const.QueryCounterBits.SamplesPassed = 64;
    else
       ctx->Const.QueryCounterBits.SamplesPassed = 0;
@@ -1355,8 +1355,8 @@ _mesa_init_queryobj(struct gl_context *ctx)
    ctx->Const.QueryCounterBits.PrimitivesGenerated = 64;
    ctx->Const.QueryCounterBits.PrimitivesWritten = 64;
 
-   if (screen->get_param(screen, PIPE_CAP_QUERY_PIPELINE_STATISTICS) ||
-       screen->get_param(screen, PIPE_CAP_QUERY_PIPELINE_STATISTICS_SINGLE)) {
+   if (screen->caps.query_pipeline_statistics ||
+       screen->caps.query_pipeline_statistics_single) {
       ctx->Const.QueryCounterBits.VerticesSubmitted = 64;
       ctx->Const.QueryCounterBits.PrimitivesSubmitted = 64;
       ctx->Const.QueryCounterBits.VsInvocations = 64;
@@ -1385,7 +1385,7 @@ _mesa_init_queryobj(struct gl_context *ctx)
 
 
 /**
- * Callback for deleting a query object.  Called by _mesa_HashDeleteAll().
+ * Callback for deleting a query object.  Called by _mesa_DeleteHashTable().
  */
 static void
 delete_queryobj_cb(void *data, void *userData)
@@ -1402,6 +1402,5 @@ delete_queryobj_cb(void *data, void *userData)
 void
 _mesa_free_queryobj_data(struct gl_context *ctx)
 {
-   _mesa_HashDeleteAll(ctx->Query.QueryObjects, delete_queryobj_cb, ctx);
-   _mesa_DeleteHashTable(ctx->Query.QueryObjects);
+   _mesa_DeinitHashTable(&ctx->Query.QueryObjects, delete_queryobj_cb, ctx);
 }

@@ -70,8 +70,8 @@ vtn_opencl_mangle(const char *in_name,
          if (address_space > 0)
             args_str += sprintf(args_str, "U3AS%d", address_space);
 
-         type = src_types[i]->deref->type;
-         base_type = src_types[i]->deref->base_type;
+         type = src_types[i]->pointed->type;
+         base_type = src_types[i]->pointed->base_type;
       }
 
       if (const_mask & (1 << i))
@@ -86,7 +86,7 @@ vtn_opencl_mangle(const char *in_name,
          bool substitution = false;
          for (unsigned j = 0; j < i; ++j) {
             const struct glsl_type *other_type = src_types[j]->base_type == vtn_base_type_pointer ?
-               src_types[j]->deref->type : src_types[j]->type;
+               src_types[j]->pointed->type : src_types[j]->type;
             if (type == other_type) {
                substitution = true;
                break;
@@ -154,6 +154,7 @@ static nir_function *mangle_and_find(struct vtn_builder *b,
          decl->params = ralloc_array(b->shader, nir_parameter, decl->num_params);
          for (unsigned i = 0; i < decl->num_params; i++) {
             decl->params[i] = found->params[i];
+            decl->params[i].name = ralloc_strdup(b->shader, found->params[i].name);
          }
          found = decl;
       }
@@ -266,6 +267,9 @@ nir_alu_op_for_opencl_opcode(struct vtn_builder *b,
    case OpenCLstd_Half_recip: return nir_op_frcp;
    /* uhm... */
    case OpenCLstd_UAbs: return nir_op_mov;
+   // we could do better
+   case OpenCLstd_FMin_common: return nir_op_fmin;
+   case OpenCLstd_FMax_common: return nir_op_fmax;
    default:
       vtn_fail("No NIR equivalent");
    }
@@ -386,7 +390,7 @@ static const char *remap_clc_opcode(enum OpenCLstd_Entrypoints opcode)
 static struct vtn_type *
 get_vtn_type_for_glsl_type(struct vtn_builder *b, const struct glsl_type *type)
 {
-   struct vtn_type *ret = rzalloc(b, struct vtn_type);
+   struct vtn_type *ret = vtn_zalloc(b, struct vtn_type);
    assert(glsl_type_is_vector_or_scalar(type));
    ret->type = type;
    ret->length = glsl_get_vector_elements(type);
@@ -397,13 +401,13 @@ get_vtn_type_for_glsl_type(struct vtn_builder *b, const struct glsl_type *type)
 static struct vtn_type *
 get_pointer_type(struct vtn_builder *b, struct vtn_type *t, SpvStorageClass storage_class)
 {
-   struct vtn_type *ret = rzalloc(b, struct vtn_type);
+   struct vtn_type *ret = vtn_zalloc(b, struct vtn_type);
    ret->type = nir_address_format_to_glsl_type(
             vtn_mode_to_address_format(
                b, vtn_storage_class_to_mode(b, storage_class, NULL, NULL)));
    ret->base_type = vtn_base_type_pointer;
    ret->storage_class = storage_class;
-   ret->deref = t;
+   ret->pointed = t;
    return ret;
 }
 
@@ -411,7 +415,7 @@ static struct vtn_type *
 get_signed_type(struct vtn_builder *b, struct vtn_type *t)
 {
    if (t->base_type == vtn_base_type_pointer) {
-      return get_pointer_type(b, get_signed_type(b, t->deref), t->storage_class);
+      return get_pointer_type(b, get_signed_type(b, t->pointed), t->storage_class);
    }
    return get_vtn_type_for_glsl_type(
       b, glsl_vector_type(glsl_signed_base_type_of(glsl_get_base_type(t->type)),
@@ -508,12 +512,25 @@ handle_special(struct vtn_builder *b, uint32_t opcode,
       return nir_cross3(nb, srcs[0], srcs[1]);
    case OpenCLstd_Fdim:
       return nir_fdim(nb, srcs[0], srcs[1]);
-   case OpenCLstd_Fmod:
-      if (nb->shader->options->lower_fmod)
-         break;
-      return nir_fmod(nb, srcs[0], srcs[1]);
-   case OpenCLstd_Mad:
-      return nir_fmad(nb, srcs[0], srcs[1], srcs[2]);
+   case OpenCLstd_Mad: {
+      /* The spec says mad is
+       *
+       *    Implemented either as a correctly rounded fma or as a multiply
+       *    followed by an add both of which are correctly rounded
+       *
+       * So lower to fmul+fadd if we have to, but fuse to an ffma if the backend
+       * supports that. This can be significantly faster.
+       */
+      bool lower =
+         ((nb->shader->options->lower_ffma16 && srcs[0]->bit_size == 16) ||
+          (nb->shader->options->lower_ffma32 && srcs[0]->bit_size == 32) ||
+          (nb->shader->options->lower_ffma64 && srcs[0]->bit_size == 64));
+
+      if (lower)
+         return nir_fmad(nb, srcs[0], srcs[1], srcs[2]);
+      else
+         return nir_ffma(nb, srcs[0], srcs[1], srcs[2]);
+   }
    case OpenCLstd_Maxmag:
       return nir_maxmag(nb, srcs[0], srcs[1]);
    case OpenCLstd_Minmag:
@@ -583,11 +600,11 @@ handle_core(struct vtn_builder *b, uint32_t opcode,
        */
       for (unsigned i = 0; i < num_srcs; ++i) {
          if (src_types[i]->base_type == vtn_base_type_pointer &&
-             src_types[i]->deref->base_type == vtn_base_type_vector &&
-             src_types[i]->deref->length == 3) {
+             src_types[i]->pointed->base_type == vtn_base_type_vector &&
+             src_types[i]->pointed->length == 3) {
             src_types[i] =
                get_pointer_type(b,
-                                get_vtn_type_for_glsl_type(b, glsl_replace_vector_type(src_types[i]->deref->type, 4)),
+                                get_vtn_type_for_glsl_type(b, glsl_replace_vector_type(src_types[i]->pointed->type, 4)),
                                 src_types[i]->storage_class);
          }
       }
@@ -644,7 +661,7 @@ _handle_v_load_store(struct vtn_builder *b, enum OpenCLstd_Entrypoints opcode,
    unsigned alignment = vec_aligned ? glsl_get_cl_alignment(type->type) :
                                       glsl_get_bit_size(type->type) / 8;
    enum glsl_base_type ptr_base_type =
-      glsl_get_base_type(p->pointer->type->type);
+      glsl_get_base_type(p->pointer->type->pointed->type);
    if (base_type != ptr_base_type) {
       vtn_fail_if(ptr_base_type != GLSL_TYPE_FLOAT16 ||
                   (base_type != GLSL_TYPE_FLOAT &&
@@ -730,8 +747,15 @@ vtn_add_printf_string(struct vtn_builder *b, uint32_t id, u_printf_info *info)
 {
    nir_deref_instr *deref = vtn_nir_deref(b, id);
 
-   while (deref && deref->deref_type != nir_deref_type_var)
-      deref = nir_deref_instr_parent(deref);
+   while (deref->deref_type != nir_deref_type_var) {
+      nir_scalar parent = nir_scalar_resolved(deref->parent.ssa, 0);
+      if (parent.def->parent_instr->type != nir_instr_type_deref) {
+         deref = NULL;
+         break;
+      }
+      vtn_assert(parent.comp == 0);
+      deref = nir_instr_as_deref(parent.def->parent_instr);
+   }
 
    vtn_fail_if(deref == NULL || !nir_deref_mode_is(deref, nir_var_mem_constant),
                "Printf string argument must be a pointer to a constant variable");
@@ -768,7 +792,7 @@ static void
 handle_printf(struct vtn_builder *b, uint32_t opcode,
               const uint32_t *w_src, unsigned num_srcs, const uint32_t *w_dest)
 {
-   if (!b->options->caps.printf) {
+   if (!b->options->printf) {
       vtn_push_nir_ssa(b, w_dest[1], nir_imm_int(&b->nb, -1));
       return;
    }
@@ -834,6 +858,8 @@ handle_printf(struct vtn_builder *b, uint32_t opcode,
    nir_def *fmt_idx = nir_imm_int(&b->nb, info_idx);
    nir_def *ret = nir_printf(&b->nb, fmt_idx, &deref_var->def);
    vtn_push_nir_ssa(b, w_dest[1], ret);
+
+   b->nb.shader->info.uses_printf = true;
 }
 
 static nir_def *
@@ -945,6 +971,8 @@ vtn_handle_opencl_instruction(struct vtn_builder *b, SpvOp ext_opcode,
    case OpenCLstd_Rint:
    case OpenCLstd_Half_divide:
    case OpenCLstd_Half_recip:
+   case OpenCLstd_FMin_common:
+   case OpenCLstd_FMax_common:
       handle_instr(b, ext_opcode, w + 5, count - 5, w + 1, handle_alu);
       return true;
    case OpenCLstd_SAbs_diff:

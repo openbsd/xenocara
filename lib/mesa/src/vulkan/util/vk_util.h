@@ -23,9 +23,11 @@
 #ifndef VK_UTIL_H
 #define VK_UTIL_H
 
+#include "compiler/shader_enums.h"
 #include "util/bitscan.h"
 #include "util/macros.h"
-#include "compiler/shader_enums.h"
+#include "c99_compat.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -109,13 +111,6 @@ vk_pnext_iterator_next(struct vk_pnext_iterator *iter)
         !__iter.done; __iter.done = true) \
       for (const VkBaseInStructure *__e = (VkBaseInStructure *)__iter.pos; \
            __e; __e = (VkBaseInStructure *)vk_pnext_iterator_next(&__iter))
-
-static inline void
-vk_copy_struct_guts(VkBaseOutStructure *dst, VkBaseInStructure *src, size_t struct_size)
-{
-   STATIC_ASSERT(sizeof(*dst) == sizeof(*src));
-   memcpy(dst + 1, src + 1, struct_size - sizeof(VkBaseOutStructure));
-}
 
 /**
  * A wrapper for a Vulkan output array. A Vulkan output array is one that
@@ -313,7 +308,9 @@ struct vk_pipeline_cache_header {
 
 #define typed_memcpy(dest, src, count) do { \
    STATIC_ASSERT(sizeof(*(src)) == sizeof(*(dest))); \
-   memcpy((dest), (src), (count) * sizeof(*(src))); \
+   if ((dest) != NULL && (src) != NULL && (count) > 0) { \
+       memcpy((dest), (src), (count) * sizeof(*(src))); \
+   } \
 } while (0)
 
 static inline gl_shader_stage
@@ -352,14 +349,14 @@ vk_spec_info_to_nir_spirv(const VkSpecializationInfo *spec_info,
 
 #define STACK_ARRAY_SIZE 8
 
-#ifdef __cplusplus
-#define STACK_ARRAY_ZERO_INIT {}
-#else
-#define STACK_ARRAY_ZERO_INIT {0}
-#endif
-
+/* Sometimes gcc may claim -Wmaybe-uninitialized for the stack array in some
+ * places it can't verify that when size is 0 nobody down the call chain reads
+ * the array. Please don't try to fix it by zero-initializing the array here
+ * since it's used in a lot of different places. An "if (size == 0) return;"
+ * may work for you.
+ */
 #define STACK_ARRAY(type, name, size) \
-   type _stack_##name[STACK_ARRAY_SIZE] = STACK_ARRAY_ZERO_INIT; \
+   type _stack_##name[STACK_ARRAY_SIZE]; \
    type *const name = \
      ((size) <= STACK_ARRAY_SIZE ? _stack_##name : (type *)malloc((size) * sizeof(type)))
 
@@ -367,14 +364,38 @@ vk_spec_info_to_nir_spirv(const VkSpecializationInfo *spec_info,
    if (name != _stack_##name) free(name)
 
 static inline uint8_t
-vk_index_type_to_bytes(enum VkIndexType type)
+vk_index_type_to_bytes(VkIndexType type)
 {
    switch (type) {
    case VK_INDEX_TYPE_NONE_KHR:  return 0;
-   case VK_INDEX_TYPE_UINT8_EXT: return 1;
+   case VK_INDEX_TYPE_UINT8_KHR: return 1;
    case VK_INDEX_TYPE_UINT16:    return 2;
    case VK_INDEX_TYPE_UINT32:    return 4;
    default:                      unreachable("Invalid index type");
+   }
+}
+
+static inline uint32_t
+vk_index_to_restart(VkIndexType type)
+{
+   switch (type) {
+   case VK_INDEX_TYPE_UINT8_KHR: return 0xff;
+   case VK_INDEX_TYPE_UINT16:    return 0xffff;
+   case VK_INDEX_TYPE_UINT32:    return 0xffffffff;
+   default:                      unreachable("unexpected index type");
+   }
+}
+
+static inline bool
+vk_descriptor_type_is_dynamic(VkDescriptorType type)
+{
+   switch (type) {
+   case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+   case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+      return true;
+
+   default:
+      return false;
    }
 }
 

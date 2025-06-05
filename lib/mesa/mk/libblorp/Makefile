@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2025/06/05 14:18:40 jsg Exp $
 
 LIB=	blorp
 
@@ -7,6 +7,9 @@ NOPROFILE=
 SRCS=	blorp.c \
 	blorp_blit.c \
 	blorp_clear.c
+
+SRCS+=	blorp_brw.c \
+	blorp_elk.c
 
 .include "../Makefile.inc"
 

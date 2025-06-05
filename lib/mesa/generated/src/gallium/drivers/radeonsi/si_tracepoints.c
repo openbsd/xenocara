@@ -63,14 +63,16 @@ si_gpu_tracepoint_config_variable(void)
 #define __print_si_begin_draw NULL
 #define __print_json_si_begin_draw NULL
 static const struct u_tracepoint __tp_si_begin_draw = {
-    ALIGN_POT(sizeof(struct trace_si_begin_draw), 8),   /* keep size 64b aligned */
     "si_begin_draw",
-    false,
+    ALIGN_POT(sizeof(struct trace_si_begin_draw), 8),   /* keep size 64b aligned */
+    0
+    ,
+    0,
     0,
     __print_si_begin_draw,
     __print_json_si_begin_draw,
 #ifdef HAVE_PERFETTO
-    (void (*)(void *pctx, uint64_t, uint16_t, const void *, const void *))si_ds_begin_draw,
+    (void (*)(void *pctx, uint64_t, uint16_t, const void *, const void *, const void *))si_ds_begin_draw,
 #endif
 };
 void __trace_si_begin_draw(
@@ -80,14 +82,18 @@ void __trace_si_begin_draw(
    struct trace_si_begin_draw entry;
    UNUSED struct trace_si_begin_draw *__entry =
       enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
-      (struct trace_si_begin_draw *)u_trace_append(ut, NULL, &__tp_si_begin_draw) :
+      (struct trace_si_begin_draw *)u_trace_appendv(ut, NULL, &__tp_si_begin_draw,
+                                                    0
+                                                    ,
+                                                    0, NULL, NULL
+                                                    ) :
       &entry;
 }
 
 /*
  * si_end_draw
  */
-static void __print_si_end_draw(FILE *out, const void *arg) {
+static void __print_si_end_draw(FILE *out, const void *arg, const void *indirect) {
    const struct trace_si_end_draw *__entry =
       (const struct trace_si_end_draw *)arg;
    fprintf(out, ""
@@ -97,7 +103,7 @@ static void __print_si_end_draw(FILE *out, const void *arg) {
    );
 }
 
-static void __print_json_si_end_draw(FILE *out, const void *arg) {
+static void __print_json_si_end_draw(FILE *out, const void *arg, const void *indirect) {
    const struct trace_si_end_draw *__entry =
       (const struct trace_si_end_draw *)arg;
    fprintf(out, ""
@@ -107,14 +113,16 @@ static void __print_json_si_end_draw(FILE *out, const void *arg) {
 }
 
 static const struct u_tracepoint __tp_si_end_draw = {
-    ALIGN_POT(sizeof(struct trace_si_end_draw), 8),   /* keep size 64b aligned */
     "si_end_draw",
-    true,
+    ALIGN_POT(sizeof(struct trace_si_end_draw), 8),   /* keep size 64b aligned */
+    0
+    ,
+    0,
     1,
     __print_si_end_draw,
     __print_json_si_end_draw,
 #ifdef HAVE_PERFETTO
-    (void (*)(void *pctx, uint64_t, uint16_t, const void *, const void *))si_ds_end_draw,
+    (void (*)(void *pctx, uint64_t, uint16_t, const void *, const void *, const void *))si_ds_end_draw,
 #endif
 };
 void __trace_si_end_draw(
@@ -125,7 +133,11 @@ void __trace_si_end_draw(
    struct trace_si_end_draw entry;
    UNUSED struct trace_si_end_draw *__entry =
       enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
-      (struct trace_si_end_draw *)u_trace_append(ut, NULL, &__tp_si_end_draw) :
+      (struct trace_si_end_draw *)u_trace_appendv(ut, NULL, &__tp_si_end_draw,
+                                                    0
+                                                    ,
+                                                    0, NULL, NULL
+                                                    ) :
       &entry;
    __entry->count = count;
 }
@@ -136,14 +148,16 @@ void __trace_si_end_draw(
 #define __print_si_begin_compute NULL
 #define __print_json_si_begin_compute NULL
 static const struct u_tracepoint __tp_si_begin_compute = {
-    ALIGN_POT(sizeof(struct trace_si_begin_compute), 8),   /* keep size 64b aligned */
     "si_begin_compute",
-    false,
+    ALIGN_POT(sizeof(struct trace_si_begin_compute), 8),   /* keep size 64b aligned */
+    0
+    ,
+    0,
     2,
     __print_si_begin_compute,
     __print_json_si_begin_compute,
 #ifdef HAVE_PERFETTO
-    (void (*)(void *pctx, uint64_t, uint16_t, const void *, const void *))si_ds_begin_compute,
+    (void (*)(void *pctx, uint64_t, uint16_t, const void *, const void *, const void *))si_ds_begin_compute,
 #endif
 };
 void __trace_si_begin_compute(
@@ -153,14 +167,18 @@ void __trace_si_begin_compute(
    struct trace_si_begin_compute entry;
    UNUSED struct trace_si_begin_compute *__entry =
       enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
-      (struct trace_si_begin_compute *)u_trace_append(ut, NULL, &__tp_si_begin_compute) :
+      (struct trace_si_begin_compute *)u_trace_appendv(ut, NULL, &__tp_si_begin_compute,
+                                                    0
+                                                    ,
+                                                    0, NULL, NULL
+                                                    ) :
       &entry;
 }
 
 /*
  * si_end_compute
  */
-static void __print_si_end_compute(FILE *out, const void *arg) {
+static void __print_si_end_compute(FILE *out, const void *arg, const void *indirect) {
    const struct trace_si_end_compute *__entry =
       (const struct trace_si_end_compute *)arg;
    fprintf(out, "group=%ux%ux%u\n"
@@ -170,7 +188,7 @@ static void __print_si_end_compute(FILE *out, const void *arg) {
    );
 }
 
-static void __print_json_si_end_compute(FILE *out, const void *arg) {
+static void __print_json_si_end_compute(FILE *out, const void *arg, const void *indirect) {
    const struct trace_si_end_compute *__entry =
       (const struct trace_si_end_compute *)arg;
    fprintf(out, "\"unstructured\": \"group=%ux%ux%u\""
@@ -181,14 +199,16 @@ static void __print_json_si_end_compute(FILE *out, const void *arg) {
 }
 
 static const struct u_tracepoint __tp_si_end_compute = {
-    ALIGN_POT(sizeof(struct trace_si_end_compute), 8),   /* keep size 64b aligned */
     "si_end_compute",
-    true,
+    ALIGN_POT(sizeof(struct trace_si_end_compute), 8),   /* keep size 64b aligned */
+    0
+    ,
+    0,
     3,
     __print_si_end_compute,
     __print_json_si_end_compute,
 #ifdef HAVE_PERFETTO
-    (void (*)(void *pctx, uint64_t, uint16_t, const void *, const void *))si_ds_end_compute,
+    (void (*)(void *pctx, uint64_t, uint16_t, const void *, const void *, const void *))si_ds_end_compute,
 #endif
 };
 void __trace_si_end_compute(
@@ -201,7 +221,11 @@ void __trace_si_end_compute(
    struct trace_si_end_compute entry;
    UNUSED struct trace_si_end_compute *__entry =
       enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
-      (struct trace_si_end_compute *)u_trace_append(ut, NULL, &__tp_si_end_compute) :
+      (struct trace_si_end_compute *)u_trace_appendv(ut, NULL, &__tp_si_end_compute,
+                                                    0
+                                                    ,
+                                                    0, NULL, NULL
+                                                    ) :
       &entry;
    __entry->group_x = group_x;
    __entry->group_y = group_y;

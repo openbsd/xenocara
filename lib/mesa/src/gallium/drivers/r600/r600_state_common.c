@@ -1,29 +1,11 @@
 /*
  * Copyright 2010 Red Hat Inc.
  *           2010 Jerome Glisse
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  * Authors: Dave Airlie <airlied@redhat.com>
  *          Jerome Glisse <jglisse@redhat.com>
+ * SPDX-License-Identifier: MIT
  */
+
 #include "r600_formats.h"
 #include "r600_shader.h"
 #include "r600d.h"
@@ -406,7 +388,21 @@ static void r600_bind_rs_state(struct pipe_context *ctx, void *state)
 		r600_mark_atom_dirty(rctx, &rctx->clip_misc_state.atom);
 	}
 
-	r600_viewport_set_rast_deps(&rctx->b, rs->scissor_enable, rs->clip_halfz);
+	if (r600_prim_is_lines(rctx->current_rast_prim))
+		r600_set_clip_discard_distance(&rctx->b, rs->line_width);
+	else if (rctx->current_rast_prim == MESA_PRIM_POINTS)
+		r600_set_clip_discard_distance(&rctx->b, rs->max_point_size);
+
+	if (rctx->b.scissor_enabled != rs->scissor_enable) {
+		rctx->b.scissor_enabled = rs->scissor_enable;
+		rctx->b.scissors.dirty_mask = (1 << R600_MAX_VIEWPORTS) - 1;
+		rctx->b.set_atom_dirty(&rctx->b, &rctx->b.scissors.atom, true);
+	}
+	if (rctx->b.clip_halfz != rs->clip_halfz) {
+		rctx->b.clip_halfz = rs->clip_halfz;
+		rctx->b.viewports.depth_range_dirty_mask = (1 << R600_MAX_VIEWPORTS) - 1;
+		rctx->b.set_atom_dirty(&rctx->b, &rctx->b.viewports.atom, true);
+	}
 
 	/* Re-emit PA_SC_LINE_STIPPLE. */
 	rctx->last_primitive_type = -1;
@@ -578,8 +574,6 @@ static void r600_bind_vertex_elements(struct pipe_context *ctx, void *state)
 
 static void r600_set_vertex_buffers(struct pipe_context *ctx,
 				    unsigned count,
-				    unsigned unbind_num_trailing_slots,
-				    bool take_ownership,
 				    const struct pipe_vertex_buffer *input)
 {
 	struct r600_context *rctx = (struct r600_context *)ctx;
@@ -591,47 +585,32 @@ static void r600_set_vertex_buffers(struct pipe_context *ctx,
 	uint32_t new_buffer_mask = 0;
 
 	/* Set vertex buffers. */
-	if (input) {
-		for (i = 0; i < count; i++) {
-			if (likely((input[i].buffer.resource != vb[i].buffer.resource) ||
-				   (vb[i].buffer_offset != input[i].buffer_offset) ||
-				   (vb[i].is_user_buffer != input[i].is_user_buffer))) {
-				if (input[i].buffer.resource) {
-					vb[i].buffer_offset = input[i].buffer_offset;
-					if (take_ownership) {
-						pipe_resource_reference(&vb[i].buffer.resource, NULL);
-						vb[i].buffer.resource = input[i].buffer.resource;
-					} else {
-						pipe_resource_reference(&vb[i].buffer.resource,
-									input[i].buffer.resource);
-					}
-					new_buffer_mask |= 1 << i;
-					r600_context_add_resource_size(ctx, input[i].buffer.resource);
-				} else {
-					pipe_resource_reference(&vb[i].buffer.resource, NULL);
-					disable_mask |= 1 << i;
-				}
-			} else if (input[i].buffer.resource) {
-				if (take_ownership) {
-					pipe_resource_reference(&vb[i].buffer.resource, NULL);
-					vb[i].buffer.resource = input[i].buffer.resource;
-				} else {
-					pipe_resource_reference(&vb[i].buffer.resource,
-								input[i].buffer.resource);
-				}
+	for (i = 0; i < count; i++) {
+		if (likely((input[i].buffer.resource != vb[i].buffer.resource) ||
+			   (vb[i].buffer_offset != input[i].buffer_offset) ||
+			   (vb[i].is_user_buffer != input[i].is_user_buffer))) {
+			if (input[i].buffer.resource) {
+				vb[i].buffer_offset = input[i].buffer_offset;
+				pipe_resource_reference(&vb[i].buffer.resource, NULL);
+				vb[i].buffer.resource = input[i].buffer.resource;
+				new_buffer_mask |= 1 << i;
+				r600_context_add_resource_size(ctx, input[i].buffer.resource);
+			} else {
+				pipe_resource_reference(&vb[i].buffer.resource, NULL);
+				disable_mask |= 1 << i;
 			}
-		}
-	} else {
-		for (i = 0; i < count; i++) {
+		} else if (input[i].buffer.resource) {
 			pipe_resource_reference(&vb[i].buffer.resource, NULL);
+			vb[i].buffer.resource = input[i].buffer.resource;
 		}
-		disable_mask = ((1ull << count) - 1);
 	}
 
-	for (i = 0; i < unbind_num_trailing_slots; i++) {
-		pipe_resource_reference(&vb[count + i].buffer.resource, NULL);
-	}
-	disable_mask |= ((1ull << unbind_num_trailing_slots) - 1) << count;
+	unsigned last_count = util_last_bit(rctx->vertex_buffer_state.enabled_mask);
+	for (; i < last_count; i++)
+		pipe_resource_reference(&vb[i].buffer.resource, NULL);
+
+	if (last_count > count)
+		disable_mask |= BITFIELD_RANGE(count, last_count - count);
 
 	rctx->vertex_buffer_state.enabled_mask &= ~disable_mask;
 	rctx->vertex_buffer_state.dirty_mask &= rctx->vertex_buffer_state.enabled_mask;
@@ -840,7 +819,6 @@ static inline void r600_shader_selector_key(const struct pipe_context *ctx,
 
 		if (rctx->ps_shader->current->shader.gs_prim_id_input && !rctx->gs_shader) {
 			key->vs.as_gs_a = true;
-			key->vs.prim_id_out = rctx->ps_shader->current->shader.input[rctx->ps_shader->current->shader.ps_prim_id_input].spi_sid;
 		}
 		key->vs.first_atomic_counter = r600_get_hw_atomic_count(ctx, PIPE_SHADER_VERTEX);
 		break;
@@ -2108,6 +2086,17 @@ void r600_emit_clip_misc_state(struct r600_context *rctx, struct r600_atom *atom
 {
 	struct radeon_cmdbuf *cs = &rctx->b.gfx.cs;
 	struct r600_clip_misc_state *state = &rctx->clip_misc_state;
+	unsigned clipdist_mask = state->clip_dist_write;
+	unsigned culldist_mask = state->cull_dist_write;
+
+	/* Clip distances on points have no effect, so need to be implemented
+	 * as cull distances. This applies for the clipvertex case as well.
+	 *
+	 * Setting this for primitives other than points should have no adverse
+	 * effects.
+	 */
+	clipdist_mask &= state->clip_plane_enable;
+	culldist_mask |= clipdist_mask;
 
 	radeon_set_context_reg(cs, R_028810_PA_CL_CLIP_CNTL,
 			       state->pa_cl_clip_cntl |
@@ -2115,8 +2104,8 @@ void r600_emit_clip_misc_state(struct r600_context *rctx, struct r600_atom *atom
                                S_028810_CLIP_DISABLE(state->clip_disable));
 	radeon_set_context_reg(cs, R_02881C_PA_CL_VS_OUT_CNTL,
 			       state->pa_cl_vs_out_cntl |
-			       (state->clip_plane_enable & state->clip_dist_write) |
-			       (state->cull_dist_write << 8));
+			       clipdist_mask |
+			       (culldist_mask << 8));
 	/* reuse needs to be set off if we write oViewport */
 	if (rctx->b.gfx_level >= EVERGREEN)
 		radeon_set_context_reg(cs, R_028AB4_VGT_REUSE_OFF,
@@ -2231,9 +2220,23 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 		return;
 	}
 
-	rctx->current_rast_prim = (rctx->gs_shader)? rctx->gs_shader->gs_output_prim
-		: (rctx->tes_shader)? rctx->tes_shader->info.properties[TGSI_PROPERTY_TES_PRIM_MODE]
+	const enum mesa_prim rast_prim = rctx->current_rast_prim;
+
+	rctx->current_rast_prim = rctx->gs_shader ? rctx->gs_shader->gs_output_prim
+		: rctx->tes_shader ? rctx->tes_shader->info.properties[TGSI_PROPERTY_TES_PRIM_MODE]
 		: info->mode;
+
+	if (rast_prim != rctx->current_rast_prim) {
+		if (rctx->current_rast_prim == MESA_PRIM_POINTS) {
+			r600_set_clip_discard_distance(&rctx->b, rctx->rasterizer->max_point_size);
+		} else if (r600_prim_is_lines(rctx->current_rast_prim)) {
+			r600_set_clip_discard_distance(&rctx->b, rctx->rasterizer->line_width);
+		} else if (rctx->current_rast_prim == R600_PRIM_RECTANGLE_LIST) {
+			/* Don't change the clip discard distance for rectangles. */
+		} else {
+			r600_set_clip_discard_distance(&rctx->b, 0);
+		}
+	}
 
 	if (rctx->b.gfx_level >= EVERGREEN) {
 		evergreen_emit_atomic_buffer_setup_count(rctx, NULL, combined_atomics, &atomic_used_mask);
@@ -2247,30 +2250,16 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 			struct pipe_resource *out_buffer = NULL;
 			unsigned out_offset;
 			void *ptr;
-			unsigned start, count;
+			const unsigned out_size = sizeof(uint16_t);
+			const unsigned start = 0;
+			const unsigned count = likely(!indirect) ?
+				draws[0].count :
+				indexbuf->width0 - index_offset;
+			const unsigned out_width = count * out_size;
 
-			if (likely(!indirect)) {
-				start = 0;
-				count = draws[0].count;
-			}
-			else {
-				/* Have to get start/count from indirect buffer, slow path ahead... */
-				struct r600_resource *indirect_resource = (struct r600_resource *)indirect->buffer;
-				unsigned *data = r600_buffer_map_sync_with_rings(&rctx->b, indirect_resource,
-					PIPE_MAP_READ);
-				if (data) {
-					data += indirect->offset / sizeof(unsigned);
-					start = data[2] * index_size;
-					count = data[0];
-				}
-				else {
-					start = 0;
-					count = 0;
-				}
-			}
-
-			u_upload_alloc(ctx->stream_uploader, start, count * 2,
+			u_upload_alloc(ctx->stream_uploader, start, out_width,
                                        256, &out_offset, &out_buffer, &ptr);
+
 			if (unlikely(!ptr))
 				return;
 
@@ -2279,7 +2268,7 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 
 			indexbuf = out_buffer;
 			index_offset = out_offset;
-			index_size = 2;
+			index_size = out_size;
 			has_user_indices = false;
 		}
 
@@ -2468,7 +2457,10 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
                                                                           RADEON_PRIO_INDEX_BUFFER));
 			}
 			else {
-				uint32_t max_size = (indexbuf->width0 - index_offset) / index_size;
+				const uint32_t max_size =
+					likely(indexbuf == info->index.resource) ?
+					(indexbuf->width0 - index_offset) / index_size :
+					info->index.resource->width0 - draws[0].start;
 
 				radeon_emit(cs, PKT3(EG_PKT3_INDEX_BASE, 1, 0));
 				radeon_emit(cs, va);
@@ -3150,6 +3142,26 @@ out_word4:
 
 	if (desc->colorspace == UTIL_FORMAT_COLORSPACE_SRGB && !is_srgb_valid)
 		return ~0;
+
+	if (unlikely(swizzle_view &&
+		     swizzle_view[0] >= PIPE_SWIZZLE_0 &&
+		     swizzle_view[1] >= PIPE_SWIZZLE_0 &&
+		     swizzle_view[2] >= PIPE_SWIZZLE_0 &&
+		     swizzle_view[3] >= PIPE_SWIZZLE_0)) {
+		switch (result) {
+		case FMT_32_32_32_32_FLOAT:
+		case FMT_32_32_FLOAT:
+			result = FMT_32_FLOAT;
+			break;
+		case FMT_16_16_16_16:
+		case FMT_16_16:
+			result = FMT_32;
+			break;
+		default:
+			break;
+		}
+	}
+
 	if (word4_p)
 		*word4_p = word4;
 	if (yuv_format_p)
@@ -3282,6 +3294,7 @@ uint32_t r600_colorformat_endian_swap(uint32_t colorformat, bool do_endian_swap)
 		case V_0280A0_COLOR_5_6_5:
 		case V_0280A0_COLOR_1_5_5_5:
 		case V_0280A0_COLOR_4_4_4_4:
+		case V_0280A0_COLOR_16_FLOAT:
 		case V_0280A0_COLOR_16:
 			return (do_endian_swap ? ENDIAN_8IN16 : ENDIAN_NONE);
 
@@ -3294,10 +3307,12 @@ uint32_t r600_colorformat_endian_swap(uint32_t colorformat, bool do_endian_swap)
 			 */
 			return ENDIAN_NONE;
 
+		case V_0280A0_COLOR_10_11_11_FLOAT:
 		case V_0280A0_COLOR_2_10_10_10:
 		case V_0280A0_COLOR_8_24:
 		case V_0280A0_COLOR_24_8:
 		case V_0280A0_COLOR_32_FLOAT:
+		case V_0280A0_COLOR_32:
 			return (do_endian_swap ? ENDIAN_8IN32 : ENDIAN_NONE);
 
 		case V_0280A0_COLOR_16_16_FLOAT:

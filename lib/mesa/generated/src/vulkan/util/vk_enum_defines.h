@@ -33,6 +33,7 @@
     #endif
 
     #define _VK_AMDX_shader_enqueue_number (135)
+    #define _VK_AMD_anti_lag_number (477)
     #define _VK_AMD_buffer_marker_number (180)
     #define _VK_AMD_device_coherent_memory_number (230)
     #define _VK_AMD_display_native_hdr_number (214)
@@ -58,7 +59,10 @@
     #define _VK_ANDROID_external_format_resolve_number (469)
     #define _VK_ANDROID_external_memory_android_hardware_buffer_number (130)
     #define _VK_ANDROID_native_buffer_number (11)
+    #define _VK_ARM_pipeline_opacity_micromap_number (597)
     #define _VK_ARM_rasterization_order_attachment_access_number (343)
+    #define _VK_ARM_render_pass_striped_number (425)
+    #define _VK_ARM_scheduling_controls_number (418)
     #define _VK_ARM_shader_core_builtins_number (498)
     #define _VK_ARM_shader_core_properties_number (416)
     #define _VK_EXT_4444_formats_number (341)
@@ -79,6 +83,7 @@
     #define _VK_EXT_debug_report_number (12)
     #define _VK_EXT_debug_utils_number (129)
     #define _VK_EXT_depth_bias_control_number (284)
+    #define _VK_EXT_depth_clamp_control_number (583)
     #define _VK_EXT_depth_clamp_zero_one_number (422)
     #define _VK_EXT_depth_clip_control_number (356)
     #define _VK_EXT_depth_clip_enable_number (103)
@@ -87,6 +92,7 @@
     #define _VK_EXT_descriptor_indexing_number (162)
     #define _VK_EXT_device_address_binding_report_number (355)
     #define _VK_EXT_device_fault_number (342)
+    #define _VK_EXT_device_generated_commands_number (573)
     #define _VK_EXT_device_memory_report_number (285)
     #define _VK_EXT_direct_mode_display_number (89)
     #define _VK_EXT_directfb_surface_number (347)
@@ -122,9 +128,12 @@
     #define _VK_EXT_image_view_min_lod_number (392)
     #define _VK_EXT_index_type_uint8_number (266)
     #define _VK_EXT_inline_uniform_block_number (139)
+    #define _VK_EXT_layer_settings_number (497)
     #define _VK_EXT_legacy_dithering_number (466)
+    #define _VK_EXT_legacy_vertex_attributes_number (496)
     #define _VK_EXT_line_rasterization_number (260)
     #define _VK_EXT_load_store_op_none_number (401)
+    #define _VK_EXT_map_memory_placed_number (273)
     #define _VK_EXT_memory_budget_number (238)
     #define _VK_EXT_memory_priority_number (239)
     #define _VK_EXT_mesh_shader_number (329)
@@ -146,6 +155,7 @@
     #define _VK_EXT_pipeline_protected_access_number (467)
     #define _VK_EXT_pipeline_robustness_number (69)
     #define _VK_EXT_post_depth_coverage_number (156)
+    #define _VK_EXT_present_mode_fifo_latest_ready_number (362)
     #define _VK_EXT_primitive_topology_list_restart_number (357)
     #define _VK_EXT_primitives_generated_query_number (383)
     #define _VK_EXT_private_data_number (296)
@@ -164,6 +174,7 @@
     #define _VK_EXT_shader_image_atomic_int64_number (235)
     #define _VK_EXT_shader_module_identifier_number (463)
     #define _VK_EXT_shader_object_number (483)
+    #define _VK_EXT_shader_replicated_composites_number (565)
     #define _VK_EXT_shader_stencil_export_number (141)
     #define _VK_EXT_shader_subgroup_ballot_number (65)
     #define _VK_EXT_shader_subgroup_vote_number (66)
@@ -182,9 +193,8 @@
     #define _VK_EXT_validation_features_number (248)
     #define _VK_EXT_validation_flags_number (62)
     #define _VK_EXT_vertex_attribute_divisor_number (191)
+    #define _VK_EXT_vertex_attribute_robustness_number (609)
     #define _VK_EXT_vertex_input_dynamic_state_number (353)
-    #define _VK_EXT_video_encode_h264_number (39)
-    #define _VK_EXT_video_encode_h265_number (40)
     #define _VK_EXT_ycbcr_2plane_444_formats_number (331)
     #define _VK_EXT_ycbcr_image_arrays_number (253)
     #define _VK_FUCHSIA_buffer_collection_number (367)
@@ -199,10 +209,12 @@
     #define _VK_GOOGLE_surfaceless_query_number (434)
     #define _VK_GOOGLE_user_type_number (290)
     #define _VK_HUAWEI_cluster_culling_shader_number (405)
+    #define _VK_HUAWEI_hdr_vivid_number (591)
     #define _VK_HUAWEI_invocation_mask_number (371)
     #define _VK_HUAWEI_subpass_shading_number (370)
     #define _VK_IMG_filter_cubic_number (16)
     #define _VK_IMG_format_pvrtc_number (55)
+    #define _VK_IMG_relaxed_line_rasterization_number (111)
     #define _VK_INTEL_performance_query_number (211)
     #define _VK_INTEL_shader_integer_functions2_number (210)
     #define _VK_KHR_16bit_storage_number (84)
@@ -211,11 +223,14 @@
     #define _VK_KHR_android_surface_number (9)
     #define _VK_KHR_bind_memory2_number (158)
     #define _VK_KHR_buffer_device_address_number (258)
+    #define _VK_KHR_calibrated_timestamps_number (544)
+    #define _VK_KHR_compute_shader_derivatives_number (512)
     #define _VK_KHR_cooperative_matrix_number (507)
     #define _VK_KHR_copy_commands2_number (338)
     #define _VK_KHR_create_renderpass2_number (110)
     #define _VK_KHR_dedicated_allocation_number (128)
     #define _VK_KHR_deferred_host_operations_number (269)
+    #define _VK_KHR_depth_clamp_zero_one_number (605)
     #define _VK_KHR_depth_stencil_resolve_number (200)
     #define _VK_KHR_descriptor_update_template_number (86)
     #define _VK_KHR_device_group_number (61)
@@ -225,6 +240,7 @@
     #define _VK_KHR_draw_indirect_count_number (170)
     #define _VK_KHR_driver_properties_number (197)
     #define _VK_KHR_dynamic_rendering_number (45)
+    #define _VK_KHR_dynamic_rendering_local_read_number (233)
     #define _VK_KHR_external_fence_number (114)
     #define _VK_KHR_external_fence_capabilities_number (113)
     #define _VK_KHR_external_fence_fd_number (116)
@@ -248,14 +264,21 @@
     #define _VK_KHR_image_format_list_number (148)
     #define _VK_KHR_imageless_framebuffer_number (109)
     #define _VK_KHR_incremental_present_number (85)
+    #define _VK_KHR_index_type_uint8_number (534)
+    #define _VK_KHR_line_rasterization_number (535)
+    #define _VK_KHR_load_store_op_none_number (527)
     #define _VK_KHR_maintenance1_number (70)
     #define _VK_KHR_maintenance2_number (118)
     #define _VK_KHR_maintenance3_number (169)
     #define _VK_KHR_maintenance4_number (414)
     #define _VK_KHR_maintenance5_number (471)
+    #define _VK_KHR_maintenance6_number (546)
+    #define _VK_KHR_maintenance7_number (563)
+    #define _VK_KHR_maintenance8_number (575)
     #define _VK_KHR_map_memory2_number (272)
     #define _VK_KHR_multiview_number (54)
     #define _VK_KHR_performance_query_number (117)
+    #define _VK_KHR_pipeline_binary_number (484)
     #define _VK_KHR_pipeline_executable_properties_number (270)
     #define _VK_KHR_pipeline_library_number (291)
     #define _VK_KHR_portability_enumeration_number (395)
@@ -274,11 +297,17 @@
     #define _VK_KHR_shader_atomic_int64_number (181)
     #define _VK_KHR_shader_clock_number (182)
     #define _VK_KHR_shader_draw_parameters_number (64)
+    #define _VK_KHR_shader_expect_assume_number (545)
     #define _VK_KHR_shader_float16_int8_number (83)
     #define _VK_KHR_shader_float_controls_number (198)
+    #define _VK_KHR_shader_float_controls2_number (529)
     #define _VK_KHR_shader_integer_dot_product_number (281)
+    #define _VK_KHR_shader_maximal_reconvergence_number (435)
     #define _VK_KHR_shader_non_semantic_info_number (294)
+    #define _VK_KHR_shader_quad_control_number (236)
+    #define _VK_KHR_shader_relaxed_extended_instruction_number (559)
     #define _VK_KHR_shader_subgroup_extended_types_number (176)
+    #define _VK_KHR_shader_subgroup_rotate_number (417)
     #define _VK_KHR_shader_subgroup_uniform_control_flow_number (324)
     #define _VK_KHR_shader_terminate_invocation_number (216)
     #define _VK_KHR_shared_presentable_image_number (112)
@@ -292,10 +321,17 @@
     #define _VK_KHR_timeline_semaphore_number (208)
     #define _VK_KHR_uniform_buffer_standard_layout_number (254)
     #define _VK_KHR_variable_pointers_number (121)
+    #define _VK_KHR_vertex_attribute_divisor_number (526)
+    #define _VK_KHR_video_decode_av1_number (513)
     #define _VK_KHR_video_decode_h264_number (41)
     #define _VK_KHR_video_decode_h265_number (188)
     #define _VK_KHR_video_decode_queue_number (25)
+    #define _VK_KHR_video_encode_av1_number (514)
+    #define _VK_KHR_video_encode_h264_number (39)
+    #define _VK_KHR_video_encode_h265_number (40)
+    #define _VK_KHR_video_encode_quantization_map_number (554)
     #define _VK_KHR_video_encode_queue_number (300)
+    #define _VK_KHR_video_maintenance1_number (516)
     #define _VK_KHR_video_queue_number (24)
     #define _VK_KHR_vulkan_memory_model_number (212)
     #define _VK_KHR_wayland_surface_number (7)
@@ -306,6 +342,7 @@
     #define _VK_KHR_xlib_surface_number (5)
     #define _VK_KHR_zero_initialize_workgroup_memory_number (326)
     #define _VK_LUNARG_direct_driver_loading_number (460)
+    #define _VK_MESA_image_alignment_control_number (576)
     #define _VK_MSFT_layered_driver_number (531)
     #define _VK_MVK_ios_surface_number (123)
     #define _VK_MVK_macos_surface_number (124)
@@ -315,11 +352,14 @@
     #define _VK_NVX_multiview_per_view_attributes_number (98)
     #define _VK_NV_acquire_winrt_display_number (346)
     #define _VK_NV_clip_space_w_scaling_number (88)
+    #define _VK_NV_command_buffer_inheritance_number (560)
     #define _VK_NV_compute_shader_derivatives_number (202)
     #define _VK_NV_cooperative_matrix_number (250)
+    #define _VK_NV_cooperative_matrix2_number (594)
     #define _VK_NV_copy_memory_indirect_number (427)
     #define _VK_NV_corner_sampled_image_number (51)
     #define _VK_NV_coverage_reduction_mode_number (251)
+    #define _VK_NV_cuda_kernel_launch_number (308)
     #define _VK_NV_dedicated_allocation_number (27)
     #define _VK_NV_dedicated_allocation_image_aliasing_number (241)
     #define _VK_NV_descriptor_pool_overallocation_number (547)
@@ -328,6 +368,7 @@
     #define _VK_NV_device_generated_commands_number (278)
     #define _VK_NV_device_generated_commands_compute_number (429)
     #define _VK_NV_displacement_micromap_number (398)
+    #define _VK_NV_display_stereo_number (552)
     #define _VK_NV_extended_sparse_address_space_number (493)
     #define _VK_NV_external_memory_number (57)
     #define _VK_NV_external_memory_capabilities_number (56)
@@ -347,13 +388,17 @@
     #define _VK_NV_memory_decompression_number (428)
     #define _VK_NV_mesh_shader_number (203)
     #define _VK_NV_optical_flow_number (465)
+    #define _VK_NV_per_stage_descriptor_set_number (517)
     #define _VK_NV_present_barrier_number (293)
+    #define _VK_NV_raw_access_chains_number (556)
     #define _VK_NV_ray_tracing_number (166)
     #define _VK_NV_ray_tracing_invocation_reorder_number (491)
     #define _VK_NV_ray_tracing_motion_blur_number (328)
+    #define _VK_NV_ray_tracing_validation_number (569)
     #define _VK_NV_representative_fragment_test_number (167)
     #define _VK_NV_sample_mask_override_coverage_number (95)
     #define _VK_NV_scissor_exclusive_number (206)
+    #define _VK_NV_shader_atomic_float16_vector_number (564)
     #define _VK_NV_shader_image_footprint_number (205)
     #define _VK_NV_shader_sm_builtins_number (155)
     #define _VK_NV_shader_subgroup_partitioned_number (199)
@@ -382,9 +427,9 @@
 
     #define VK_ALL_ACCELERATION_STRUCTURE_CREATE_FLAG_BITS_KHR 0xdu
     #define VK_ALL_ACCESS_FLAG_BITS 0xfffffffu
-            #define VK_ALL_ACQUIRE_PROFILING_LOCK_FLAG_BITS_KHR 0x0u
+                    #define VK_ALL_ACQUIRE_PROFILING_LOCK_FLAG_BITS_KHR 0x0u
     #define VK_ALL_ATTACHMENT_DESCRIPTION_FLAG_BITS 0x1u
-    #define VK_ALL_BUFFER_CREATE_FLAG_BITS 0x3fu
+    #define VK_ALL_BUFFER_CREATE_FLAG_BITS 0x7fu
     #define VK_ALL_BUFFER_USAGE_FLAG_BITS 0x7fbffffu
             #define VK_ALL_BUILD_ACCELERATION_STRUCTURE_FLAG_BITS_KHR 0xbffu
     #define VK_ALL_BUILD_MICROMAP_FLAG_BITS_EXT 0x7u
@@ -399,10 +444,10 @@
     #define VK_ALL_DEBUG_REPORT_FLAG_BITS_EXT 0x1fu
     #define VK_ALL_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_EXT 0x1111u
     #define VK_ALL_DEBUG_UTILS_MESSAGE_TYPE_FLAG_BITS_EXT 0xfu
-    #define VK_ALL_DEPENDENCY_FLAG_BITS 0xfu
+    #define VK_ALL_DEPENDENCY_FLAG_BITS 0x2fu
     #define VK_ALL_DESCRIPTOR_BINDING_FLAG_BITS 0xfu
     #define VK_ALL_DESCRIPTOR_POOL_CREATE_FLAG_BITS 0x1fu
-    #define VK_ALL_DESCRIPTOR_SET_LAYOUT_CREATE_FLAG_BITS 0xb7u
+    #define VK_ALL_DESCRIPTOR_SET_LAYOUT_CREATE_FLAG_BITS 0xf7u
     #define VK_ALL_DEVICE_ADDRESS_BINDING_FLAG_BITS_EXT 0x1u
     #define VK_ALL_DEVICE_DIAGNOSTICS_CONFIG_FLAG_BITS_NV 0xfu
     #define VK_ALL_DEVICE_GROUP_PRESENT_MODE_FLAG_BITS_KHR 0xfu
@@ -428,22 +473,26 @@
     #define VK_ALL_GEOMETRY_FLAG_BITS_KHR 0x3u
     #define VK_ALL_GEOMETRY_INSTANCE_FLAG_BITS_KHR 0x3fu
     #define VK_ALL_GRAPHICS_PIPELINE_LIBRARY_FLAG_BITS_EXT 0xfu
-    #define VK_ALL_HOST_IMAGE_COPY_FLAG_BITS_EXT 0x1u
+    #define VK_ALL_HOST_IMAGE_COPY_FLAG_BITS 0x1u
     #define VK_ALL_IMAGE_ASPECT_FLAG_BITS 0x7ffu
     #define VK_ALL_IMAGE_COMPRESSION_FIXED_RATE_FLAG_BITS_EXT 0xffffffu
     #define VK_ALL_IMAGE_COMPRESSION_FLAG_BITS_EXT 0x7u
 #ifdef VK_USE_PLATFORM_FUCHSIA
     #define VK_ALL_IMAGE_CONSTRAINTS_INFO_FLAG_BITS_FUCHSIA 0x1fu
 #endif
-    #define VK_ALL_IMAGE_CREATE_FLAG_BITS 0x7ffffu
-    #define VK_ALL_IMAGE_USAGE_FLAG_BITS 0x7cffffu
+    #define VK_ALL_IMAGE_CREATE_FLAG_BITS 0x17ffffu
+    #define VK_ALL_IMAGE_USAGE_FLAG_BITS 0x67cffffu
     #define VK_ALL_IMAGE_VIEW_CREATE_FLAG_BITS 0x7u
+    #define VK_ALL_INDIRECT_COMMANDS_INPUT_MODE_FLAG_BITS_EXT 0x3u
+    #define VK_ALL_INDIRECT_COMMANDS_LAYOUT_USAGE_FLAG_BITS_EXT 0x3u
     #define VK_ALL_INDIRECT_COMMANDS_LAYOUT_USAGE_FLAG_BITS_NV 0x7u
     #define VK_ALL_INDIRECT_STATE_FLAG_BITS_NV 0x1u
     #define VK_ALL_INSTANCE_CREATE_FLAG_BITS 0x1u
     #define VK_ALL_MEMORY_ALLOCATE_FLAG_BITS 0x7u
             #define VK_ALL_MEMORY_HEAP_FLAG_BITS 0x3u
+    #define VK_ALL_MEMORY_MAP_FLAG_BITS 0x1u
     #define VK_ALL_MEMORY_PROPERTY_FLAG_BITS 0x1ffu
+    #define VK_ALL_MEMORY_UNMAP_FLAG_BITS 0x1u
     #define VK_ALL_MICROMAP_CREATE_FLAG_BITS_EXT 0x1u
     #define VK_ALL_OPTICAL_FLOW_EXECUTE_FLAG_BITS_NV 0x1u
     #define VK_ALL_OPTICAL_FLOW_GRID_SIZE_FLAG_BITS_NV 0xfu
@@ -451,7 +500,7 @@
     #define VK_ALL_OPTICAL_FLOW_USAGE_FLAG_BITS_NV 0x1fu
     #define VK_ALL_PEER_MEMORY_FEATURE_FLAG_BITS 0xfu
     #define VK_ALL_PERFORMANCE_COUNTER_DESCRIPTION_FLAG_BITS_KHR 0x3u
-    #define VK_ALL_PIPELINE_CACHE_CREATE_FLAG_BITS 0x1u
+            #define VK_ALL_PIPELINE_CACHE_CREATE_FLAG_BITS 0x9u
     #define VK_ALL_PIPELINE_COLOR_BLEND_STATE_CREATE_FLAG_BITS 0x1u
     #define VK_ALL_PIPELINE_COMPILER_CONTROL_FLAG_BITS_AMD 0x0u
     #define VK_ALL_PIPELINE_CREATE_FLAG_BITS 0x7fffffffu
@@ -474,12 +523,12 @@
     #define VK_ALL_SEMAPHORE_IMPORT_FLAG_BITS 0x1u
     #define VK_ALL_SEMAPHORE_WAIT_FLAG_BITS 0x1u
     #define VK_ALL_SHADER_CORE_PROPERTIES_FLAG_BITS_AMD 0x0u
-    #define VK_ALL_SHADER_CREATE_FLAG_BITS_EXT 0x7fu
+    #define VK_ALL_SHADER_CREATE_FLAG_BITS_EXT 0xffu
     #define VK_ALL_SHADER_STAGE_FLAG_BITS 0x7fffffffu
     #define VK_ALL_SPARSE_IMAGE_FORMAT_FLAG_BITS 0x7u
     #define VK_ALL_SPARSE_MEMORY_BIND_FLAG_BITS 0x1u
     #define VK_ALL_STENCIL_FACE_FLAG_BITS 0x3u
-    #define VK_ALL_SUBGROUP_FEATURE_FLAG_BITS 0x1ffu
+    #define VK_ALL_SUBGROUP_FEATURE_FLAG_BITS 0x7ffu
     #define VK_ALL_SUBMIT_FLAG_BITS 0x1u
     #define VK_ALL_SUBPASS_DESCRIPTION_FLAG_BITS 0xffu
     #define VK_ALL_SURFACE_COUNTER_FLAG_BITS_EXT 0x1u
@@ -491,67 +540,88 @@
     #define VK_ALL_TOOL_PURPOSE_FLAG_BITS 0x7fu
     #define VK_ALL_VIDEO_CAPABILITY_FLAG_BITS_KHR 0x3u
     #define VK_ALL_VIDEO_CHROMA_SUBSAMPLING_FLAG_BITS_KHR 0xfu
-    #define VK_ALL_VIDEO_CODEC_OPERATION_FLAG_BITS_KHR 0x30003u
+    #define VK_ALL_VIDEO_CODEC_OPERATION_FLAG_BITS_KHR 0x70007u
     #define VK_ALL_VIDEO_CODING_CONTROL_FLAG_BITS_KHR 0x7u
     #define VK_ALL_VIDEO_COMPONENT_BIT_DEPTH_FLAG_BITS_KHR 0x15u
     #define VK_ALL_VIDEO_DECODE_CAPABILITY_FLAG_BITS_KHR 0x3u
     #define VK_ALL_VIDEO_DECODE_H264_PICTURE_LAYOUT_FLAG_BITS_KHR 0x3u
     #define VK_ALL_VIDEO_DECODE_USAGE_FLAG_BITS_KHR 0x7u
-    #define VK_ALL_VIDEO_SESSION_CREATE_FLAG_BITS_KHR 0x3u
+    #define VK_ALL_VIDEO_ENCODE_AV1_CAPABILITY_FLAG_BITS_KHR 0x1fu
+    #define VK_ALL_VIDEO_ENCODE_AV1_RATE_CONTROL_FLAG_BITS_KHR 0xfu
+    #define VK_ALL_VIDEO_ENCODE_AV1_STD_FLAG_BITS_KHR 0xfu
+    #define VK_ALL_VIDEO_ENCODE_AV1_SUPERBLOCK_SIZE_FLAG_BITS_KHR 0x3u
+    #define VK_ALL_VIDEO_ENCODE_CAPABILITY_FLAG_BITS_KHR 0xfu
+    #define VK_ALL_VIDEO_ENCODE_CONTENT_FLAG_BITS_KHR 0x7u
+    #define VK_ALL_VIDEO_ENCODE_FEEDBACK_FLAG_BITS_KHR 0x7u
+    #define VK_ALL_VIDEO_ENCODE_FLAG_BITS_KHR 0x3u
+    #define VK_ALL_VIDEO_ENCODE_H264_CAPABILITY_FLAG_BITS_KHR 0x3ffu
+    #define VK_ALL_VIDEO_ENCODE_H264_RATE_CONTROL_FLAG_BITS_KHR 0x1fu
+    #define VK_ALL_VIDEO_ENCODE_H264_STD_FLAG_BITS_KHR 0x1bffffu
+    #define VK_ALL_VIDEO_ENCODE_H265_CAPABILITY_FLAG_BITS_KHR 0x7ffu
+    #define VK_ALL_VIDEO_ENCODE_H265_CTB_SIZE_FLAG_BITS_KHR 0x7u
+    #define VK_ALL_VIDEO_ENCODE_H265_RATE_CONTROL_FLAG_BITS_KHR 0x1fu
+    #define VK_ALL_VIDEO_ENCODE_H265_STD_FLAG_BITS_KHR 0x1fffffu
+    #define VK_ALL_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_FLAG_BITS_KHR 0xfu
+    #define VK_ALL_VIDEO_ENCODE_RATE_CONTROL_MODE_FLAG_BITS_KHR 0x7u
+    #define VK_ALL_VIDEO_ENCODE_USAGE_FLAG_BITS_KHR 0xfu
+    #define VK_ALL_VIDEO_SESSION_CREATE_FLAG_BITS_KHR 0x1fu
+    #define VK_ALL_VIDEO_SESSION_PARAMETERS_CREATE_FLAG_BITS_KHR 0x1u
 
                     /* Redefine bitmask values of VkAccessFlagBits2 */
     #define VK_ACCESS_2_NONE (0x0ULL)
-    #define VK_ACCESS_2_NONE_KHR (0x0ULL)
     #define VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT (0x1ULL)
-    #define VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT_KHR (0x1ULL)
     #define VK_ACCESS_2_INDEX_READ_BIT (0x2ULL)
-    #define VK_ACCESS_2_INDEX_READ_BIT_KHR (0x2ULL)
     #define VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT (0x4ULL)
-    #define VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT_KHR (0x4ULL)
     #define VK_ACCESS_2_UNIFORM_READ_BIT (0x8ULL)
-    #define VK_ACCESS_2_UNIFORM_READ_BIT_KHR (0x8ULL)
     #define VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT (0x10ULL)
-    #define VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT_KHR (0x10ULL)
     #define VK_ACCESS_2_SHADER_READ_BIT (0x20ULL)
-    #define VK_ACCESS_2_SHADER_READ_BIT_KHR (0x20ULL)
     #define VK_ACCESS_2_SHADER_WRITE_BIT (0x40ULL)
-    #define VK_ACCESS_2_SHADER_WRITE_BIT_KHR (0x40ULL)
     #define VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT (0x80ULL)
-    #define VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT_KHR (0x80ULL)
     #define VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT (0x100ULL)
-    #define VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT_KHR (0x100ULL)
     #define VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT (0x200ULL)
-    #define VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT_KHR (0x200ULL)
     #define VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT (0x400ULL)
-    #define VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT_KHR (0x400ULL)
     #define VK_ACCESS_2_TRANSFER_READ_BIT (0x800ULL)
-    #define VK_ACCESS_2_TRANSFER_READ_BIT_KHR (0x800ULL)
     #define VK_ACCESS_2_TRANSFER_WRITE_BIT (0x1000ULL)
-    #define VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR (0x1000ULL)
     #define VK_ACCESS_2_HOST_READ_BIT (0x2000ULL)
-    #define VK_ACCESS_2_HOST_READ_BIT_KHR (0x2000ULL)
     #define VK_ACCESS_2_HOST_WRITE_BIT (0x4000ULL)
-    #define VK_ACCESS_2_HOST_WRITE_BIT_KHR (0x4000ULL)
     #define VK_ACCESS_2_MEMORY_READ_BIT (0x8000ULL)
-    #define VK_ACCESS_2_MEMORY_READ_BIT_KHR (0x8000ULL)
     #define VK_ACCESS_2_MEMORY_WRITE_BIT (0x10000ULL)
-    #define VK_ACCESS_2_MEMORY_WRITE_BIT_KHR (0x10000ULL)
     #define VK_ACCESS_2_SHADER_SAMPLED_READ_BIT (0x100000000ULL)
-    #define VK_ACCESS_2_SHADER_SAMPLED_READ_BIT_KHR (0x100000000ULL)
     #define VK_ACCESS_2_SHADER_STORAGE_READ_BIT (0x200000000ULL)
-    #define VK_ACCESS_2_SHADER_STORAGE_READ_BIT_KHR (0x200000000ULL)
     #define VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT (0x400000000ULL)
-    #define VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT_KHR (0x400000000ULL)
     #define VK_ACCESS_2_VIDEO_DECODE_READ_BIT_KHR (0x800000000ULL)
     #define VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR (0x1000000000ULL)
     #define VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR (0x2000000000ULL)
     #define VK_ACCESS_2_VIDEO_ENCODE_WRITE_BIT_KHR (0x4000000000ULL)
+    #define VK_ACCESS_2_NONE_KHR (0x0ULL)
+    #define VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT_KHR (0x1ULL)
+    #define VK_ACCESS_2_INDEX_READ_BIT_KHR (0x2ULL)
+    #define VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT_KHR (0x4ULL)
+    #define VK_ACCESS_2_UNIFORM_READ_BIT_KHR (0x8ULL)
+    #define VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT_KHR (0x10ULL)
+    #define VK_ACCESS_2_SHADER_READ_BIT_KHR (0x20ULL)
+    #define VK_ACCESS_2_SHADER_WRITE_BIT_KHR (0x40ULL)
+    #define VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT_KHR (0x80ULL)
+    #define VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT_KHR (0x100ULL)
+    #define VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT_KHR (0x200ULL)
+    #define VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT_KHR (0x400ULL)
+    #define VK_ACCESS_2_TRANSFER_READ_BIT_KHR (0x800ULL)
+    #define VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR (0x1000ULL)
+    #define VK_ACCESS_2_HOST_READ_BIT_KHR (0x2000ULL)
+    #define VK_ACCESS_2_HOST_WRITE_BIT_KHR (0x4000ULL)
+    #define VK_ACCESS_2_MEMORY_READ_BIT_KHR (0x8000ULL)
+    #define VK_ACCESS_2_MEMORY_WRITE_BIT_KHR (0x10000ULL)
+    #define VK_ACCESS_2_SHADER_SAMPLED_READ_BIT_KHR (0x100000000ULL)
+    #define VK_ACCESS_2_SHADER_STORAGE_READ_BIT_KHR (0x200000000ULL)
+    #define VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT_KHR (0x400000000ULL)
     #define VK_ACCESS_2_TRANSFORM_FEEDBACK_WRITE_BIT_EXT (0x2000000ULL)
     #define VK_ACCESS_2_TRANSFORM_FEEDBACK_COUNTER_READ_BIT_EXT (0x4000000ULL)
     #define VK_ACCESS_2_TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT_EXT (0x8000000ULL)
     #define VK_ACCESS_2_CONDITIONAL_RENDERING_READ_BIT_EXT (0x100000ULL)
     #define VK_ACCESS_2_COMMAND_PREPROCESS_READ_BIT_NV (0x20000ULL)
     #define VK_ACCESS_2_COMMAND_PREPROCESS_WRITE_BIT_NV (0x40000ULL)
+    #define VK_ACCESS_2_COMMAND_PREPROCESS_READ_BIT_EXT (0x20000ULL)
+    #define VK_ACCESS_2_COMMAND_PREPROCESS_WRITE_BIT_EXT (0x40000ULL)
     #define VK_ACCESS_2_FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT_KHR (0x800000ULL)
     #define VK_ACCESS_2_SHADING_RATE_IMAGE_READ_BIT_NV (0x800000ULL)
     #define VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR (0x200000ULL)
@@ -567,7 +637,20 @@
     #define VK_ACCESS_2_MICROMAP_WRITE_BIT_EXT (0x200000000000ULL)
     #define VK_ACCESS_2_OPTICAL_FLOW_READ_BIT_NV (0x40000000000ULL)
     #define VK_ACCESS_2_OPTICAL_FLOW_WRITE_BIT_NV (0x80000000000ULL)
-                                    /* Redefine bitmask values of VkBufferUsageFlagBits2KHR */
+    /* Redefine bitmask values of VkAccessFlagBits3KHR */
+    #define VK_ACCESS_3_NONE_KHR (0x0ULL)
+                                    /* Redefine bitmask values of VkBufferUsageFlagBits2 */
+    #define VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT (0x1ULL)
+    #define VK_BUFFER_USAGE_2_TRANSFER_DST_BIT (0x2ULL)
+    #define VK_BUFFER_USAGE_2_UNIFORM_TEXEL_BUFFER_BIT (0x4ULL)
+    #define VK_BUFFER_USAGE_2_STORAGE_TEXEL_BUFFER_BIT (0x8ULL)
+    #define VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT (0x10ULL)
+    #define VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT (0x20ULL)
+    #define VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT (0x40ULL)
+    #define VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT (0x80ULL)
+    #define VK_BUFFER_USAGE_2_INDIRECT_BUFFER_BIT (0x100ULL)
+    #define VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT (0x20000ULL)
+    #define VK_BUFFER_USAGE_2_EXECUTION_GRAPH_SCRATCH_BIT_AMDX (0x2000000ULL)
     #define VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR (0x1ULL)
     #define VK_BUFFER_USAGE_2_TRANSFER_DST_BIT_KHR (0x2ULL)
     #define VK_BUFFER_USAGE_2_UNIFORM_TEXEL_BUFFER_BIT_KHR (0x4ULL)
@@ -577,7 +660,6 @@
     #define VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT_KHR (0x40ULL)
     #define VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT_KHR (0x80ULL)
     #define VK_BUFFER_USAGE_2_INDIRECT_BUFFER_BIT_KHR (0x100ULL)
-    #define VK_BUFFER_USAGE_2_EXECUTION_GRAPH_SCRATCH_BIT_AMDX (0x2000000ULL)
     #define VK_BUFFER_USAGE_2_CONDITIONAL_RENDERING_BIT_EXT (0x200ULL)
     #define VK_BUFFER_USAGE_2_SHADER_BINDING_TABLE_BIT_KHR (0x400ULL)
     #define VK_BUFFER_USAGE_2_RAY_TRACING_BIT_NV (0x400ULL)
@@ -595,61 +677,36 @@
     #define VK_BUFFER_USAGE_2_PUSH_DESCRIPTORS_DESCRIPTOR_BUFFER_BIT_EXT (0x4000000ULL)
     #define VK_BUFFER_USAGE_2_MICROMAP_BUILD_INPUT_READ_ONLY_BIT_EXT (0x800000ULL)
     #define VK_BUFFER_USAGE_2_MICROMAP_STORAGE_BIT_EXT (0x1000000ULL)
+    #define VK_BUFFER_USAGE_2_PREPROCESS_BUFFER_BIT_EXT (0x80000000ULL)
                                                                                                                                                                                                                                                                                             /* Redefine bitmask values of VkFormatFeatureFlagBits2 */
     #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_BIT (0x1ULL)
-    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_BIT_KHR (0x1ULL)
     #define VK_FORMAT_FEATURE_2_STORAGE_IMAGE_BIT (0x2ULL)
-    #define VK_FORMAT_FEATURE_2_STORAGE_IMAGE_BIT_KHR (0x2ULL)
     #define VK_FORMAT_FEATURE_2_STORAGE_IMAGE_ATOMIC_BIT (0x4ULL)
-    #define VK_FORMAT_FEATURE_2_STORAGE_IMAGE_ATOMIC_BIT_KHR (0x4ULL)
     #define VK_FORMAT_FEATURE_2_UNIFORM_TEXEL_BUFFER_BIT (0x8ULL)
-    #define VK_FORMAT_FEATURE_2_UNIFORM_TEXEL_BUFFER_BIT_KHR (0x8ULL)
     #define VK_FORMAT_FEATURE_2_STORAGE_TEXEL_BUFFER_BIT (0x10ULL)
-    #define VK_FORMAT_FEATURE_2_STORAGE_TEXEL_BUFFER_BIT_KHR (0x10ULL)
     #define VK_FORMAT_FEATURE_2_STORAGE_TEXEL_BUFFER_ATOMIC_BIT (0x20ULL)
-    #define VK_FORMAT_FEATURE_2_STORAGE_TEXEL_BUFFER_ATOMIC_BIT_KHR (0x20ULL)
     #define VK_FORMAT_FEATURE_2_VERTEX_BUFFER_BIT (0x40ULL)
-    #define VK_FORMAT_FEATURE_2_VERTEX_BUFFER_BIT_KHR (0x40ULL)
     #define VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BIT (0x80ULL)
-    #define VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BIT_KHR (0x80ULL)
     #define VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BLEND_BIT (0x100ULL)
-    #define VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BLEND_BIT_KHR (0x100ULL)
     #define VK_FORMAT_FEATURE_2_DEPTH_STENCIL_ATTACHMENT_BIT (0x200ULL)
-    #define VK_FORMAT_FEATURE_2_DEPTH_STENCIL_ATTACHMENT_BIT_KHR (0x200ULL)
     #define VK_FORMAT_FEATURE_2_BLIT_SRC_BIT (0x400ULL)
-    #define VK_FORMAT_FEATURE_2_BLIT_SRC_BIT_KHR (0x400ULL)
     #define VK_FORMAT_FEATURE_2_BLIT_DST_BIT (0x800ULL)
-    #define VK_FORMAT_FEATURE_2_BLIT_DST_BIT_KHR (0x800ULL)
     #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_LINEAR_BIT (0x1000ULL)
-    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_LINEAR_BIT_KHR (0x1000ULL)
-    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_CUBIC_BIT (0x2000ULL)
-    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_CUBIC_BIT_EXT (0x2000ULL)
     #define VK_FORMAT_FEATURE_2_TRANSFER_SRC_BIT (0x4000ULL)
-    #define VK_FORMAT_FEATURE_2_TRANSFER_SRC_BIT_KHR (0x4000ULL)
     #define VK_FORMAT_FEATURE_2_TRANSFER_DST_BIT (0x8000ULL)
-    #define VK_FORMAT_FEATURE_2_TRANSFER_DST_BIT_KHR (0x8000ULL)
     #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_MINMAX_BIT (0x10000ULL)
-    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_MINMAX_BIT_KHR (0x10000ULL)
     #define VK_FORMAT_FEATURE_2_MIDPOINT_CHROMA_SAMPLES_BIT (0x20000ULL)
-    #define VK_FORMAT_FEATURE_2_MIDPOINT_CHROMA_SAMPLES_BIT_KHR (0x20000ULL)
     #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT (0x40000ULL)
-    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT_KHR (0x40000ULL)
     #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT (0x80000ULL)
-    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT_KHR (0x80000ULL)
     #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT (0x100000ULL)
-    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT_KHR (0x100000ULL)
     #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT (0x200000ULL)
-    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT_KHR (0x200000ULL)
     #define VK_FORMAT_FEATURE_2_DISJOINT_BIT (0x400000ULL)
-    #define VK_FORMAT_FEATURE_2_DISJOINT_BIT_KHR (0x400000ULL)
     #define VK_FORMAT_FEATURE_2_COSITED_CHROMA_SAMPLES_BIT (0x800000ULL)
-    #define VK_FORMAT_FEATURE_2_COSITED_CHROMA_SAMPLES_BIT_KHR (0x800000ULL)
     #define VK_FORMAT_FEATURE_2_STORAGE_READ_WITHOUT_FORMAT_BIT (0x80000000ULL)
-    #define VK_FORMAT_FEATURE_2_STORAGE_READ_WITHOUT_FORMAT_BIT_KHR (0x80000000ULL)
     #define VK_FORMAT_FEATURE_2_STORAGE_WRITE_WITHOUT_FORMAT_BIT (0x100000000ULL)
-    #define VK_FORMAT_FEATURE_2_STORAGE_WRITE_WITHOUT_FORMAT_BIT_KHR (0x100000000ULL)
     #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_DEPTH_COMPARISON_BIT (0x200000000ULL)
-    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_DEPTH_COMPARISON_BIT_KHR (0x200000000ULL)
+    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_CUBIC_BIT (0x2000ULL)
+    #define VK_FORMAT_FEATURE_2_HOST_IMAGE_TRANSFER_BIT (0x400000000000ULL)
     #define VK_FORMAT_FEATURE_2_VIDEO_DECODE_OUTPUT_BIT_KHR (0x2000000ULL)
     #define VK_FORMAT_FEATURE_2_VIDEO_DECODE_DPB_BIT_KHR (0x4000000ULL)
     #define VK_FORMAT_FEATURE_2_ACCELERATION_STRUCTURE_VERTEX_BUFFER_BIT_KHR (0x20000000ULL)
@@ -658,6 +715,33 @@
     #define VK_FORMAT_FEATURE_2_HOST_IMAGE_TRANSFER_BIT_EXT (0x400000000000ULL)
     #define VK_FORMAT_FEATURE_2_VIDEO_ENCODE_INPUT_BIT_KHR (0x8000000ULL)
     #define VK_FORMAT_FEATURE_2_VIDEO_ENCODE_DPB_BIT_KHR (0x10000000ULL)
+    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_BIT_KHR (0x1ULL)
+    #define VK_FORMAT_FEATURE_2_STORAGE_IMAGE_BIT_KHR (0x2ULL)
+    #define VK_FORMAT_FEATURE_2_STORAGE_IMAGE_ATOMIC_BIT_KHR (0x4ULL)
+    #define VK_FORMAT_FEATURE_2_UNIFORM_TEXEL_BUFFER_BIT_KHR (0x8ULL)
+    #define VK_FORMAT_FEATURE_2_STORAGE_TEXEL_BUFFER_BIT_KHR (0x10ULL)
+    #define VK_FORMAT_FEATURE_2_STORAGE_TEXEL_BUFFER_ATOMIC_BIT_KHR (0x20ULL)
+    #define VK_FORMAT_FEATURE_2_VERTEX_BUFFER_BIT_KHR (0x40ULL)
+    #define VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BIT_KHR (0x80ULL)
+    #define VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BLEND_BIT_KHR (0x100ULL)
+    #define VK_FORMAT_FEATURE_2_DEPTH_STENCIL_ATTACHMENT_BIT_KHR (0x200ULL)
+    #define VK_FORMAT_FEATURE_2_BLIT_SRC_BIT_KHR (0x400ULL)
+    #define VK_FORMAT_FEATURE_2_BLIT_DST_BIT_KHR (0x800ULL)
+    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_LINEAR_BIT_KHR (0x1000ULL)
+    #define VK_FORMAT_FEATURE_2_TRANSFER_SRC_BIT_KHR (0x4000ULL)
+    #define VK_FORMAT_FEATURE_2_TRANSFER_DST_BIT_KHR (0x8000ULL)
+    #define VK_FORMAT_FEATURE_2_MIDPOINT_CHROMA_SAMPLES_BIT_KHR (0x20000ULL)
+    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT_KHR (0x40000ULL)
+    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT_KHR (0x80000ULL)
+    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT_KHR (0x100000ULL)
+    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT_KHR (0x200000ULL)
+    #define VK_FORMAT_FEATURE_2_DISJOINT_BIT_KHR (0x400000ULL)
+    #define VK_FORMAT_FEATURE_2_COSITED_CHROMA_SAMPLES_BIT_KHR (0x800000ULL)
+    #define VK_FORMAT_FEATURE_2_STORAGE_READ_WITHOUT_FORMAT_BIT_KHR (0x80000000ULL)
+    #define VK_FORMAT_FEATURE_2_STORAGE_WRITE_WITHOUT_FORMAT_BIT_KHR (0x100000000ULL)
+    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_DEPTH_COMPARISON_BIT_KHR (0x200000000ULL)
+    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_MINMAX_BIT_KHR (0x10000ULL)
+    #define VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_CUBIC_BIT_EXT (0x2000ULL)
     #define VK_FORMAT_FEATURE_2_LINEAR_COLOR_ATTACHMENT_BIT_NV (0x4000000000ULL)
     #define VK_FORMAT_FEATURE_2_WEIGHT_IMAGE_BIT_QCOM (0x400000000ULL)
     #define VK_FORMAT_FEATURE_2_WEIGHT_SAMPLED_IMAGE_BIT_QCOM (0x800000000ULL)
@@ -666,9 +750,24 @@
     #define VK_FORMAT_FEATURE_2_OPTICAL_FLOW_IMAGE_BIT_NV (0x10000000000ULL)
     #define VK_FORMAT_FEATURE_2_OPTICAL_FLOW_VECTOR_BIT_NV (0x20000000000ULL)
     #define VK_FORMAT_FEATURE_2_OPTICAL_FLOW_COST_BIT_NV (0x40000000000ULL)
-                                                                                                                                            /* Redefine bitmask values of VkMemoryDecompressionMethodFlagBitsNV */
+    #define VK_FORMAT_FEATURE_2_VIDEO_ENCODE_QUANTIZATION_DELTA_MAP_BIT_KHR (0x2000000000000ULL)
+    #define VK_FORMAT_FEATURE_2_VIDEO_ENCODE_EMPHASIS_MAP_BIT_KHR (0x4000000000000ULL)
+                                                                                                                                                            /* Redefine bitmask values of VkMemoryDecompressionMethodFlagBitsNV */
     #define VK_MEMORY_DECOMPRESSION_METHOD_GDEFLATE_1_0_BIT_NV (0x1ULL)
-                                                                                                            /* Redefine bitmask values of VkPipelineCreateFlagBits2KHR */
+                                                                                            /* Redefine bitmask values of VkPhysicalDeviceSchedulingControlsFlagBitsARM */
+    #define VK_PHYSICAL_DEVICE_SCHEDULING_CONTROLS_SHADER_CORE_COUNT_ARM (0x1ULL)
+                                    /* Redefine bitmask values of VkPipelineCreateFlagBits2 */
+    #define VK_PIPELINE_CREATE_2_DISABLE_OPTIMIZATION_BIT (0x1ULL)
+    #define VK_PIPELINE_CREATE_2_ALLOW_DERIVATIVES_BIT (0x2ULL)
+    #define VK_PIPELINE_CREATE_2_DERIVATIVE_BIT (0x4ULL)
+    #define VK_PIPELINE_CREATE_2_VIEW_INDEX_FROM_DEVICE_INDEX_BIT (0x8ULL)
+    #define VK_PIPELINE_CREATE_2_DISPATCH_BASE_BIT (0x10ULL)
+    #define VK_PIPELINE_CREATE_2_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT (0x100ULL)
+    #define VK_PIPELINE_CREATE_2_EARLY_RETURN_ON_FAILURE_BIT (0x200ULL)
+    #define VK_PIPELINE_CREATE_2_NO_PROTECTED_ACCESS_BIT (0x8000000ULL)
+    #define VK_PIPELINE_CREATE_2_PROTECTED_ACCESS_ONLY_BIT (0x40000000ULL)
+    #define VK_PIPELINE_CREATE_2_EXECUTION_GRAPH_BIT_AMDX (0x100000000ULL)
+    #define VK_PIPELINE_CREATE_2_ENABLE_LEGACY_DITHERING_BIT_EXT (0x400000000ULL)
     #define VK_PIPELINE_CREATE_2_DISABLE_OPTIMIZATION_BIT_KHR (0x1ULL)
     #define VK_PIPELINE_CREATE_2_ALLOW_DERIVATIVES_BIT_KHR (0x2ULL)
     #define VK_PIPELINE_CREATE_2_DERIVATIVE_BIT_KHR (0x4ULL)
@@ -700,64 +799,68 @@
     #define VK_PIPELINE_CREATE_2_PROTECTED_ACCESS_ONLY_BIT_EXT (0x40000000ULL)
     #define VK_PIPELINE_CREATE_2_RAY_TRACING_DISPLACEMENT_MICROMAP_BIT_NV (0x10000000ULL)
     #define VK_PIPELINE_CREATE_2_DESCRIPTOR_BUFFER_BIT_EXT (0x20000000ULL)
+    #define VK_PIPELINE_CREATE_2_DISALLOW_OPACITY_MICROMAP_BIT_ARM (0x2000000000ULL)
+    #define VK_PIPELINE_CREATE_2_CAPTURE_DATA_BIT_KHR (0x80000000ULL)
+    #define VK_PIPELINE_CREATE_2_INDIRECT_BINDABLE_BIT_EXT (0x4000000000ULL)
                                             /* Redefine bitmask values of VkPipelineStageFlagBits2 */
     #define VK_PIPELINE_STAGE_2_NONE (0x0ULL)
-    #define VK_PIPELINE_STAGE_2_NONE_KHR (0x0ULL)
     #define VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT (0x1ULL)
-    #define VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT_KHR (0x1ULL)
     #define VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT (0x2ULL)
-    #define VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT_KHR (0x2ULL)
     #define VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT (0x4ULL)
-    #define VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT_KHR (0x4ULL)
     #define VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT (0x8ULL)
-    #define VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT_KHR (0x8ULL)
     #define VK_PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT (0x10ULL)
-    #define VK_PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT_KHR (0x10ULL)
     #define VK_PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT (0x20ULL)
-    #define VK_PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT_KHR (0x20ULL)
     #define VK_PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT (0x40ULL)
-    #define VK_PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT_KHR (0x40ULL)
     #define VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT (0x80ULL)
-    #define VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT_KHR (0x80ULL)
     #define VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT (0x100ULL)
-    #define VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT_KHR (0x100ULL)
     #define VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT (0x200ULL)
-    #define VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT_KHR (0x200ULL)
     #define VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT (0x400ULL)
-    #define VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR (0x400ULL)
     #define VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT (0x800ULL)
-    #define VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT_KHR (0x800ULL)
     #define VK_PIPELINE_STAGE_2_ALL_TRANSFER_BIT (0x1000ULL)
-    #define VK_PIPELINE_STAGE_2_ALL_TRANSFER_BIT_KHR (0x1000ULL)
     #define VK_PIPELINE_STAGE_2_TRANSFER_BIT (0x1000ULL)
-    #define VK_PIPELINE_STAGE_2_TRANSFER_BIT_KHR (0x1000ULL)
     #define VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT (0x2000ULL)
-    #define VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT_KHR (0x2000ULL)
     #define VK_PIPELINE_STAGE_2_HOST_BIT (0x4000ULL)
-    #define VK_PIPELINE_STAGE_2_HOST_BIT_KHR (0x4000ULL)
     #define VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT (0x8000ULL)
-    #define VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT_KHR (0x8000ULL)
     #define VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT (0x10000ULL)
-    #define VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT_KHR (0x10000ULL)
     #define VK_PIPELINE_STAGE_2_COPY_BIT (0x100000000ULL)
-    #define VK_PIPELINE_STAGE_2_COPY_BIT_KHR (0x100000000ULL)
     #define VK_PIPELINE_STAGE_2_RESOLVE_BIT (0x200000000ULL)
-    #define VK_PIPELINE_STAGE_2_RESOLVE_BIT_KHR (0x200000000ULL)
     #define VK_PIPELINE_STAGE_2_BLIT_BIT (0x400000000ULL)
-    #define VK_PIPELINE_STAGE_2_BLIT_BIT_KHR (0x400000000ULL)
     #define VK_PIPELINE_STAGE_2_CLEAR_BIT (0x800000000ULL)
-    #define VK_PIPELINE_STAGE_2_CLEAR_BIT_KHR (0x800000000ULL)
     #define VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT (0x1000000000ULL)
-    #define VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT_KHR (0x1000000000ULL)
     #define VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT (0x2000000000ULL)
-    #define VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT_KHR (0x2000000000ULL)
     #define VK_PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT (0x4000000000ULL)
-    #define VK_PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT_KHR (0x4000000000ULL)
     #define VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR (0x4000000ULL)
     #define VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR (0x8000000ULL)
+    #define VK_PIPELINE_STAGE_2_NONE_KHR (0x0ULL)
+    #define VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT_KHR (0x1ULL)
+    #define VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT_KHR (0x2ULL)
+    #define VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT_KHR (0x4ULL)
+    #define VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT_KHR (0x8ULL)
+    #define VK_PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT_KHR (0x10ULL)
+    #define VK_PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT_KHR (0x20ULL)
+    #define VK_PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT_KHR (0x40ULL)
+    #define VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT_KHR (0x80ULL)
+    #define VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT_KHR (0x100ULL)
+    #define VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT_KHR (0x200ULL)
+    #define VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR (0x400ULL)
+    #define VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT_KHR (0x800ULL)
+    #define VK_PIPELINE_STAGE_2_ALL_TRANSFER_BIT_KHR (0x1000ULL)
+    #define VK_PIPELINE_STAGE_2_TRANSFER_BIT_KHR (0x1000ULL)
+    #define VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT_KHR (0x2000ULL)
+    #define VK_PIPELINE_STAGE_2_HOST_BIT_KHR (0x4000ULL)
+    #define VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT_KHR (0x8000ULL)
+    #define VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT_KHR (0x10000ULL)
+    #define VK_PIPELINE_STAGE_2_COPY_BIT_KHR (0x100000000ULL)
+    #define VK_PIPELINE_STAGE_2_RESOLVE_BIT_KHR (0x200000000ULL)
+    #define VK_PIPELINE_STAGE_2_BLIT_BIT_KHR (0x400000000ULL)
+    #define VK_PIPELINE_STAGE_2_CLEAR_BIT_KHR (0x800000000ULL)
+    #define VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT_KHR (0x1000000000ULL)
+    #define VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT_KHR (0x2000000000ULL)
+    #define VK_PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT_KHR (0x4000000000ULL)
     #define VK_PIPELINE_STAGE_2_TRANSFORM_FEEDBACK_BIT_EXT (0x1000000ULL)
     #define VK_PIPELINE_STAGE_2_CONDITIONAL_RENDERING_BIT_EXT (0x40000ULL)
     #define VK_PIPELINE_STAGE_2_COMMAND_PREPROCESS_BIT_NV (0x20000ULL)
+    #define VK_PIPELINE_STAGE_2_COMMAND_PREPROCESS_BIT_EXT (0x20000ULL)
     #define VK_PIPELINE_STAGE_2_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR (0x400000ULL)
     #define VK_PIPELINE_STAGE_2_SHADING_RATE_IMAGE_BIT_NV (0x400000ULL)
     #define VK_PIPELINE_STAGE_2_ACCELERATION_STRUCTURE_BUILD_BIT_KHR (0x2000000ULL)
@@ -776,7 +879,7 @@
     #define VK_PIPELINE_STAGE_2_MICROMAP_BUILD_BIT_EXT (0x40000000ULL)
     #define VK_PIPELINE_STAGE_2_CLUSTER_CULLING_SHADER_BIT_HUAWEI (0x20000000000ULL)
     #define VK_PIPELINE_STAGE_2_OPTICAL_FLOW_BIT_NV (0x20000000ULL)
-                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                                                                                                                                                                                                        
     static inline VkFormatFeatureFlags
     vk_format_features2_to_features(VkFormatFeatureFlags2 features2)
     {

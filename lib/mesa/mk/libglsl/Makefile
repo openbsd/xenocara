@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.9 2025/06/05 14:18:42 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -15,15 +15,20 @@ SRCS=	ast_array_index.cpp \
 	builtin_functions.cpp \
 	builtin_types.cpp \
 	builtin_variables.cpp \
+	gl_nir_detect_function_recursion.c \
 	gl_nir_lower_atomics.c \
 	gl_nir_lower_images.c \
 	gl_nir_lower_blend_equation_advanced.c \
 	gl_nir_lower_buffers.c \
+	gl_nir_lower_discard_flow.c \
+	gl_nir_lower_named_interface_blocks.c \
 	gl_nir_lower_packed_varyings.c \
 	gl_nir_lower_samplers.c \
 	gl_nir_lower_samplers_as_deref.c \
 	gl_nir_lower_xfb_varying.c \
 	gl_nir_link_atomics.c \
+	gl_nir_link_functions.c \
+	gl_nir_link_interface_blocks.c \
 	gl_nir_link_uniform_blocks.c \
 	gl_nir_link_uniform_initializers.c \
 	gl_nir_link_uniforms.c \
@@ -35,38 +40,25 @@ SRCS=	ast_array_index.cpp \
 	glsl_symbol_table.cpp \
 	glsl_to_nir.cpp \
 	hir_field_selection.cpp \
-	ir_array_refcount.cpp \
 	ir_basic_block.cpp \
 	ir_builder.cpp \
 	ir_clone.cpp \
 	ir_constant_expression.cpp \
 	ir.cpp \
-	ir_equals.cpp \
 	ir_expression_flattening.cpp \
-	ir_function_can_inline.cpp \
 	ir_function_detect_recursion.cpp \
 	ir_function.cpp \
 	ir_hierarchical_visitor.cpp \
 	ir_hv_accept.cpp \
 	ir_print_visitor.cpp \
-	ir_reader.cpp \
 	ir_rvalue_visitor.cpp \
 	ir_validate.cpp \
 	ir_variable_refcount.cpp \
-	linker.cpp \
 	linker_util.cpp \
-	link_functions.cpp \
-	link_interface_blocks.cpp \
-	link_uniforms.cpp \
-	link_uniform_block_active_visitor.cpp \
-	link_uniform_blocks.cpp \
 	lower_builtins.cpp \
-	lower_discard_flow.cpp \
-	lower_distance.cpp \
 	lower_instructions.cpp \
 	lower_jumps.cpp \
 	lower_mat_op_to_vec.cpp \
-	lower_named_interface_blocks.cpp \
 	lower_packing_builtins.cpp \
 	lower_precision.cpp \
 	lower_subroutine.cpp \
@@ -75,8 +67,6 @@ SRCS=	ast_array_index.cpp \
 	opt_algebraic.cpp \
 	opt_dead_builtin_variables.cpp \
 	opt_dead_code.cpp \
-	opt_dead_code_local.cpp \
-	opt_dead_functions.cpp \
 	opt_flatten_nested_if_blocks.cpp \
 	opt_flip_matrices.cpp \
 	opt_function_inlining.cpp \
@@ -85,7 +75,6 @@ SRCS=	ast_array_index.cpp \
 	opt_rebalance_tree.cpp \
 	opt_tree_grafting.cpp \
 	propagate_invariance.cpp \
-	s_expression.cpp \
 	string_to_uint_map.cpp \
 	serialize.cpp \
 	shader_cache.cpp

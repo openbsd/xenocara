@@ -45,14 +45,15 @@
 #include <sys/sysmacros.h>
 #endif
 #include <GL/gl.h>
-#include <GL/internal/dri_interface.h>
-#include <GL/internal/mesa_interface.h>
+#include "mesa_interface.h"
 #include "loader.h"
 #include "util/libdrm.h"
 #include "util/os_file.h"
 #include "util/os_misc.h"
 #include "util/u_debug.h"
 #include "git_sha1.h"
+
+#include "drm-uapi/nouveau_drm.h"
 
 #define MAX_DRM_DEVICES 64
 
@@ -123,7 +124,7 @@ loader_get_kernel_driver_name(int fd)
 }
 
 bool
-iris_predicate(int fd)
+iris_predicate(int fd, const char *driver)
 {
    char *kernel_driver = loader_get_kernel_driver_name(fd);
    bool ret = kernel_driver && (strcmp(kernel_driver, "i915") == 0 ||
@@ -132,6 +133,37 @@ iris_predicate(int fd)
    free(kernel_driver);
    return ret;
 }
+
+/* choose zink or nouveau GL */
+bool
+nouveau_zink_predicate(int fd, const char *driver)
+{
+#if !defined(HAVE_NVK) || !defined(HAVE_ZINK)
+   if (!strcmp(driver, "zink"))
+      return false;
+   return true;
+#else
+
+   bool prefer_zink = false;
+
+   /* enable this once zink is up to speed.
+    * struct drm_nouveau_getparam r = { .param = NOUVEAU_GETPARAM_CHIPSET_ID };
+    * int ret = drmCommandWriteRead(fd, DRM_NOUVEAU_GETPARAM, &r, sizeof(r));
+    * if (ret == 0 && (r.value & ~0xf) >= 0x160)
+    *    prefer_zink = true;
+    */
+
+   prefer_zink = debug_get_bool_option("NOUVEAU_USE_ZINK", prefer_zink);
+
+   if (prefer_zink && !strcmp(driver, "zink"))
+      return true;
+
+   if (!prefer_zink && !strcmp(driver, "nouveau"))
+      return true;
+   return false;
+#endif
+}
+
 
 /**
  * Goes through all the platform devices whose driver is on the given list and
@@ -142,15 +174,45 @@ int
 loader_open_render_node_platform_device(const char * const drivers[],
                                         unsigned int n_drivers)
 {
+   unsigned int n_devices;
+   int *fds = loader_open_render_node_platform_devices(drivers, n_drivers, &n_devices);
+   int fd = -1;
+
+   if (n_devices > 0) {
+      fd = fds[0];
+      free(fds);
+   }
+
+   return fd;
+}
+
+/**
+ * Goes through all the platform devices whose driver is on the given list and
+ * try to open their render node. It returns an array with the fds of all the
+ * devices that it can open.
+ *
+ * Caller must close the returned fds and free the array.
+ */
+int *
+loader_open_render_node_platform_devices(const char * const drivers[],
+                                         unsigned int n_drivers,
+                                         unsigned int *n_devices)
+{
    drmDevicePtr devices[MAX_DRM_DEVICES], device;
    int num_devices, fd = -1;
    int i, j;
    bool found = false;
+   int *result;
 
    num_devices = drmGetDevices2(0, devices, MAX_DRM_DEVICES);
-   if (num_devices <= 0)
-      return -ENOENT;
+   if (num_devices <= 0) {
+      *n_devices = 0;
+      return NULL;
+   }
 
+   result = calloc(n_drivers, num_devices);
+
+   *n_devices = 0;
    for (i = 0; i < num_devices; i++) {
       device = devices[i];
 
@@ -174,22 +236,23 @@ loader_open_render_node_platform_device(const char * const drivers[],
                break;
             }
          }
-         if (!found) {
-            drmFreeVersion(version);
-            close(fd);
-            continue;
-         }
 
          drmFreeVersion(version);
-         break;
+
+         if (found)
+            result[(*n_devices)++] = fd;
+         else
+            close(fd);
       }
    }
    drmFreeDevices(devices, num_devices);
 
-   if (i == num_devices)
-      return -ENOENT;
+   if (*n_devices == 0) {
+      free(result);
+      return NULL;
+   }
 
-   return fd;
+   return result;
 }
 
 bool
@@ -643,7 +706,7 @@ loader_get_pci_driver(int fd)
       if (vendor_id != driver_map[i].vendor_id)
          continue;
 
-      if (driver_map[i].predicate && !driver_map[i].predicate(fd))
+      if (driver_map[i].predicate && !driver_map[i].predicate(fd, driver_map[i].driver))
          continue;
 
       if (driver_map[i].num_chips_ids == -1) {
@@ -700,23 +763,6 @@ loader_set_logger(loader_logger *logger)
    log_ = logger;
 }
 
-char *
-loader_get_extensions_name(const char *driver_name)
-{
-   char *name = NULL;
-
-   if (asprintf(&name, "%s_%s", __DRI_DRIVER_GET_EXTENSIONS, driver_name) < 0)
-      return NULL;
-
-   const size_t len = strlen(name);
-   for (size_t i = 0; i < len; i++) {
-      if (name[i] == '-')
-         name[i] = '_';
-   }
-
-   return name;
-}
-
 bool
 loader_bind_extensions(void *data,
                        const struct dri_extension_match *matches, size_t num_matches,
@@ -749,7 +795,7 @@ loader_bind_extensions(void *data,
       if (strcmp(match->name, __DRI_MESA) == 0) {
          const __DRImesaCoreExtension *mesa = (const __DRImesaCoreExtension *)*field;
          if (strcmp(mesa->version_string, MESA_INTERFACE_VERSION_STRING) != 0) {
-            log_(_LOADER_FATAL, "DRI driver not from this Mesa build ('%s' vs '%s')\n",
+            log_(_LOADER_FATAL, "libgallium not from this Mesa build (libgallium: '%s', loader: '%s')\n",
                  mesa->version_string, MESA_INTERFACE_VERSION_STRING);
             ret = false;
          }
@@ -782,7 +828,7 @@ loader_open_driver_lib(const char *driver_name,
    search_paths = NULL;
    if (__normal_user() && search_path_vars) {
       for (int i = 0; search_path_vars[i] != NULL; i++) {
-         search_paths = getenv(search_path_vars[i]);
+         search_paths = os_get_option(search_path_vars[i]);
          if (search_paths)
             break;
       }
@@ -800,11 +846,9 @@ loader_open_driver_lib(const char *driver_name,
          next = end;
 
       len = next - p;
-#if USE_ELF_TLS
       snprintf(path, sizeof(path), "%.*s/tls/%s%s.so", len,
                p, driver_name, lib_suffix);
       driver = dlopen(path, RTLD_NOW | RTLD_GLOBAL);
-#endif
       if (driver == NULL) {
          snprintf(path, sizeof(path), "%.*s/%s%s.so", len,
                   p, driver_name, lib_suffix);
@@ -832,51 +876,4 @@ loader_open_driver_lib(const char *driver_name,
    log_(_LOADER_DEBUG, "MESA-LOADER: dlopen(%s)\n", path);
 
    return driver;
-}
-
-/**
- * Opens a DRI driver using its driver name, returning the __DRIextension
- * entrypoints.
- *
- * \param driverName - a name like "i965", "radeon", "nouveau", etc.
- * \param out_driver - Address where the dlopen() return value will be stored.
- * \param search_path_vars - NULL-terminated list of env vars that can be used
- * to override the DEFAULT_DRIVER_DIR search path.
- */
-const struct __DRIextensionRec **
-loader_open_driver(const char *driver_name,
-                   void **out_driver_handle,
-                   const char **search_path_vars)
-{
-   char *get_extensions_name;
-   const struct __DRIextensionRec **extensions = NULL;
-   const struct __DRIextensionRec **(*get_extensions)(void);
-   void *driver = loader_open_driver_lib(driver_name, "_dri", search_path_vars,
-                                         DEFAULT_DRIVER_DIR, true);
-
-   if (!driver)
-      goto failed;
-
-   get_extensions_name = loader_get_extensions_name(driver_name);
-   if (get_extensions_name) {
-      get_extensions = dlsym(driver, get_extensions_name);
-      if (get_extensions) {
-         extensions = get_extensions();
-      } else {
-         log_(_LOADER_DEBUG, "MESA-LOADER: driver does not expose %s(): %s\n",
-              get_extensions_name, dlerror());
-      }
-      free(get_extensions_name);
-   }
-
-   if (extensions == NULL) {
-      log_(_LOADER_WARNING,
-           "MESA-LOADER: driver exports no extensions (%s)\n", dlerror());
-      dlclose(driver);
-      driver = NULL;
-   }
-
-failed:
-   *out_driver_handle = driver;
-   return extensions;
 }

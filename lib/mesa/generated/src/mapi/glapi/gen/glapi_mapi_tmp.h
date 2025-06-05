@@ -911,7 +911,7 @@ GLAPI void GLAPIENTRY GLAPI_PREFIX(GetObjectParameterivARB)(GLhandleARB obj, GLe
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawArraysInstanced)(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawArraysInstancedARB)(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawArraysInstancedEXT)(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
-GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstanced)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
+GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstanced)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstancedARB)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstancedEXT)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(BindFramebuffer)(GLenum target, GLuint framebuffer);
@@ -1101,9 +1101,9 @@ GLAPI void GLAPIENTRY GLAPI_PREFIX(GetnUniformuivARB)(GLuint program, GLint loca
 GLAPI void GLAPIENTRY GLAPI_PREFIX(GetnUniformuiv)(GLuint program, GLint location, GLsizei bufSize, GLuint *params);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(ReadnPixelsARB)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLvoid *data);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(ReadnPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLvoid *data);
-GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawArraysInstancedBaseInstance)(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance);
+GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawArraysInstancedBaseInstance)(GLenum mode, GLint first, GLsizei count, GLsizei instance_count, GLuint baseinstance);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstancedBaseInstance)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance);
-GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstancedBaseVertexBaseInstance)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance);
+GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstancedBaseVertexBaseInstance)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count, GLint basevertex, GLuint baseinstance);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawTransformFeedbackInstanced)(GLenum mode, GLuint id, GLsizei primcount);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawTransformFeedbackStreamInstanced)(GLenum mode, GLuint id, GLuint stream, GLsizei primcount);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(GetActiveAtomicCounterBufferiv)(GLuint program, GLuint bufferIndex, GLenum pname, GLint *params);
@@ -1311,6 +1311,10 @@ GLAPI void GLAPIENTRY GLAPI_PREFIX(BlendBarrier)(void);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(PrimitiveBoundingBox)(GLfloat minX, GLfloat minY, GLfloat minZ, GLfloat minW, GLfloat maxX, GLfloat maxY, GLfloat maxZ, GLfloat maxW);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(GetObjectLabelEXT)(GLenum type, GLuint object, GLsizei bufSize, GLsizei *length, GLchar *label);
 GLAPI void GLAPIENTRY GLAPI_PREFIX(LabelObjectEXT)(GLenum type, GLuint object, GLsizei length, const GLchar *label);
+GLAPI void GLAPIENTRY GLAPI_PREFIX(TexStorageAttribs2DEXT)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, const GLint *attrib_list);
+GLAPI void GLAPIENTRY GLAPI_PREFIX(TexStorageAttribs3DEXT)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, const GLint *attrib_list);
+GLAPI void GLAPIENTRY GLAPI_PREFIX(FramebufferTextureMultiviewOVR)(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint baseviewindex, GLsizei numviews);
+GLAPI void GLAPIENTRY GLAPI_PREFIX(FramebufferTextureMultisampleMultiviewOVR)(GLenum target, GLenum attachment, GLuint texture, GLint level, GLsizei samples, GLint baseviewindex, GLsizei numviews);
 #undef MAPI_TMP_DEFINES
 #endif /* MAPI_TMP_DEFINES */
 
@@ -7595,11 +7599,11 @@ GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawArraysInstancedEXT)(GLenum mode, GLint fi
    ((void (GLAPIENTRY *)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)) _func)(mode, first, count, primcount);
 }
 
-GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstanced)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
+GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstanced)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[660];
-   ((void (GLAPIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)) _func)(mode, count, type, indices, primcount);
+   ((void (GLAPIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count)) _func)(mode, count, type, indices, instance_count);
 }
 
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstancedARB)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
@@ -8925,11 +8929,11 @@ GLAPI void GLAPIENTRY GLAPI_PREFIX(ReadnPixels)(GLint x, GLint y, GLsizei width,
    ((void (GLAPIENTRY *)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLvoid *data)) _func)(x, y, width, height, format, type, bufSize, data);
 }
 
-GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawArraysInstancedBaseInstance)(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance)
+GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawArraysInstancedBaseInstance)(GLenum mode, GLint first, GLsizei count, GLsizei instance_count, GLuint baseinstance)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[861];
-   ((void (GLAPIENTRY *)(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance)) _func)(mode, first, count, primcount, baseinstance);
+   ((void (GLAPIENTRY *)(GLenum mode, GLint first, GLsizei count, GLsizei instance_count, GLuint baseinstance)) _func)(mode, first, count, instance_count, baseinstance);
 }
 
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstancedBaseInstance)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance)
@@ -8939,11 +8943,11 @@ GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstancedBaseInstance)(GLenum mod
    ((void (GLAPIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance)) _func)(mode, count, type, indices, primcount, baseinstance);
 }
 
-GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstancedBaseVertexBaseInstance)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance)
+GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawElementsInstancedBaseVertexBaseInstance)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count, GLint basevertex, GLuint baseinstance)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[863];
-   ((void (GLAPIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance)) _func)(mode, count, type, indices, primcount, basevertex, baseinstance);
+   ((void (GLAPIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count, GLint basevertex, GLuint baseinstance)) _func)(mode, count, type, indices, instance_count, basevertex, baseinstance);
 }
 
 GLAPI void GLAPIENTRY GLAPI_PREFIX(DrawTransformFeedbackInstanced)(GLenum mode, GLuint id, GLsizei primcount)
@@ -10393,6 +10397,34 @@ GLAPI void GLAPIENTRY GLAPI_PREFIX(LabelObjectEXT)(GLenum type, GLuint object, G
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1663];
    ((void (GLAPIENTRY *)(GLenum type, GLuint object, GLsizei length, const GLchar *label)) _func)(type, object, length, label);
+}
+
+GLAPI void GLAPIENTRY GLAPI_PREFIX(TexStorageAttribs2DEXT)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, const GLint *attrib_list)
+{
+   const struct _glapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1673];
+   ((void (GLAPIENTRY *)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, const GLint *attrib_list)) _func)(target, levels, internalFormat, width, height, attrib_list);
+}
+
+GLAPI void GLAPIENTRY GLAPI_PREFIX(TexStorageAttribs3DEXT)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, const GLint *attrib_list)
+{
+   const struct _glapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1674];
+   ((void (GLAPIENTRY *)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, const GLint *attrib_list)) _func)(target, levels, internalFormat, width, height, depth, attrib_list);
+}
+
+GLAPI void GLAPIENTRY GLAPI_PREFIX(FramebufferTextureMultiviewOVR)(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint baseviewindex, GLsizei numviews)
+{
+   const struct _glapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1675];
+   ((void (GLAPIENTRY *)(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint baseviewindex, GLsizei numviews)) _func)(target, attachment, texture, level, baseviewindex, numviews);
+}
+
+GLAPI void GLAPIENTRY GLAPI_PREFIX(FramebufferTextureMultisampleMultiviewOVR)(GLenum target, GLenum attachment, GLuint texture, GLint level, GLsizei samples, GLint baseviewindex, GLsizei numviews)
+{
+   const struct _glapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1677];
+   ((void (GLAPIENTRY *)(GLenum target, GLenum attachment, GLuint texture, GLint level, GLsizei samples, GLint baseviewindex, GLsizei numviews)) _func)(target, attachment, texture, level, samples, baseviewindex, numviews);
 }
 
 /* does not need public_entries */
@@ -14296,6 +14328,18 @@ STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetObjectLabelEXT))"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LabelObjectEXT))"\n"
 "\t"STUB_ASM_CODE("1663")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexStorageAttribs2DEXT))"\n"
+"\t"STUB_ASM_CODE("1673")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexStorageAttribs3DEXT))"\n"
+"\t"STUB_ASM_CODE("1674")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(FramebufferTextureMultiviewOVR))"\n"
+"\t"STUB_ASM_CODE("1675")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(FramebufferTextureMultisampleMultiviewOVR))"\n"
+"\t"STUB_ASM_CODE("1677")"\n"
 
 );
 #undef MAPI_TMP_STUB_ASM_GCC_NO_HIDDEN

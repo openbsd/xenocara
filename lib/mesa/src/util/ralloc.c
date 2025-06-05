@@ -264,6 +264,31 @@ ralloc_free(void *ptr)
    unsafe_free(info);
 }
 
+#ifndef NDEBUG
+static size_t
+ralloc_total_size_internal(const ralloc_header *info)
+{
+   /* Count the block itself. This requires NDEBUG for the statistic. */
+   unsigned sum = align64(info->size + sizeof(ralloc_header),
+                          alignof(ralloc_header));
+
+   /* Recursively count children */
+   ralloc_header *it = info->child;
+   while (it != NULL) {
+      sum += ralloc_total_size_internal(it);
+      it = it->next;
+   }
+
+   return sum;
+}
+
+size_t
+ralloc_total_size(const void *ptr)
+{
+   return ralloc_total_size_internal(get_header(ptr));
+}
+#endif
+
 static void
 unlink_block(ralloc_header *info)
 {
@@ -363,6 +388,18 @@ ralloc_set_destructor(const void *ptr, void(*destructor)(void *))
 {
    ralloc_header *info = get_header(ptr);
    info->destructor = destructor;
+}
+
+void *
+ralloc_memdup(const void *ctx, const void *mem, size_t n)
+{
+   void *ptr = ralloc_size(ctx, n);
+
+   if (unlikely(ptr == NULL))
+      return NULL;
+
+   memcpy(ptr, mem, n);
+   return ptr;
 }
 
 char *
@@ -803,23 +840,23 @@ create_slab(gc_ctx *ctx, unsigned bucket)
 }
 
 void *
-gc_alloc_size(gc_ctx *ctx, size_t size, size_t align)
+gc_alloc_size(gc_ctx *ctx, size_t size, size_t alignment)
 {
    assert(ctx);
-   assert(util_is_power_of_two_nonzero(align));
+   assert(util_is_power_of_two_nonzero_uintptr(alignment));
 
-   align = MAX2(align, alignof(gc_block_header));
+   alignment = MAX2(alignment, alignof(gc_block_header));
 
    /* Alignment will add at most align-alignof(gc_block_header) bytes of padding to the header, and
     * the IS_PADDING byte can only encode up to 127.
     */
-   assert((align - alignof(gc_block_header)) <= 127);
+   assert((alignment - alignof(gc_block_header)) <= 127);
 
    /* We can only align as high as the slab is. */
-   assert(align <= HEADER_ALIGN);
+   assert(alignment <= HEADER_ALIGN);
 
-   size_t header_size = align64(sizeof(gc_block_header), align);
-   size = align64(size, align);
+   size_t header_size = align64(sizeof(gc_block_header), alignment);
+   size = align64(size, alignment);
    size += header_size;
 
    gc_block_header *header = NULL;
@@ -846,14 +883,14 @@ gc_alloc_size(gc_ctx *ctx, size_t size, size_t align)
    if ((header_size - 1) != offsetof(gc_block_header, flags))
       ptr[-1] = IS_PADDING | (header_size - sizeof(gc_block_header));
 
-   assert(((uintptr_t)ptr & (align - 1)) == 0);
+   assert(((uintptr_t)ptr & (alignment - 1)) == 0);
    return ptr;
 }
 
 void *
-gc_zalloc_size(gc_ctx *ctx, size_t size, size_t align)
+gc_zalloc_size(gc_ctx *ctx, size_t size, size_t alignment)
 {
-   void *ptr = gc_alloc_size(ctx, size, align);
+   void *ptr = gc_alloc_size(ctx, size, alignment);
 
    if (likely(ptr))
       memset(ptr, 0, size);
@@ -964,7 +1001,6 @@ gc_sweep_end(gc_ctx *ctx)
  * other buffers.
  */
 
-#define MIN_LINEAR_BUFSIZE 2048
 #define SUBALLOC_ALIGNMENT 8
 #define LMAGIC_CONTEXT 0x87b9c7d3
 #define LMAGIC_NODE    0x87b910d3
@@ -976,6 +1012,8 @@ struct linear_ctx {
 #ifndef NDEBUG
    unsigned magic;   /* for debugging */
 #endif
+   unsigned min_buffer_size;
+
    unsigned offset;  /* points to the first unused byte in the latest buffer */
    unsigned size;    /* size of the latest buffer */
    void *latest;     /* the only buffer that has free space */
@@ -1021,9 +1059,9 @@ linear_alloc_child(linear_ctx *ctx, unsigned size)
    if (unlikely(ctx->offset + size > ctx->size)) {
       /* allocate a new node */
       unsigned node_size = size;
-      if (likely(node_size < MIN_LINEAR_BUFSIZE))
-         node_size = MIN_LINEAR_BUFSIZE;
-      
+      if (likely(node_size < ctx->min_buffer_size))
+         node_size = ctx->min_buffer_size;
+
       const unsigned canary_size = get_node_canary_size();
       const unsigned full_size = canary_size + node_size;
 
@@ -1071,19 +1109,33 @@ linear_alloc_child(linear_ctx *ctx, unsigned size)
 linear_ctx *
 linear_context(void *ralloc_ctx)
 {
+   const linear_opts opts = {0};
+   return linear_context_with_opts(ralloc_ctx, &opts);
+}
+
+linear_ctx *
+linear_context_with_opts(void *ralloc_ctx, const linear_opts *opts)
+{
    linear_ctx *ctx;
 
    if (unlikely(!ralloc_ctx))
       return NULL;
 
-   const unsigned size = MIN_LINEAR_BUFSIZE;
+   const unsigned default_min_buffer_size = 2048;
+   const unsigned min_buffer_size =
+      MAX2(ALIGN_POT(opts->min_buffer_size, default_min_buffer_size),
+           default_min_buffer_size);
+
+   const unsigned size = min_buffer_size;
    const unsigned canary_size = get_node_canary_size();
    const unsigned full_size =
-      sizeof(linear_ctx) + canary_size + size;                 
+      sizeof(linear_ctx) + canary_size + size;
 
    ctx = ralloc_size(ralloc_ctx, full_size);
    if (unlikely(!ctx))
       return NULL;
+
+   ctx->min_buffer_size = min_buffer_size;
 
    ctx->offset = 0;
    ctx->size = size;
@@ -1125,7 +1177,7 @@ ralloc_steal_linear_context(void *new_ralloc_ctx, linear_ctx *ctx)
 {
    if (unlikely(!ctx))
       return;
- 
+
    assert(ctx->magic == LMAGIC_CONTEXT);
 
    /* Linear context is also the ralloc parent of extra nodes. */

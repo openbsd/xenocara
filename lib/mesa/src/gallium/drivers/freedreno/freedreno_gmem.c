@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2012 Rob Clark <robclark@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2012 Rob Clark <robclark@freedesktop.org>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -333,9 +315,9 @@ gmem_stateobj_init(struct fd_screen *screen, struct gmem_key *key)
          tpp_x += 1;
    }
 
-#ifdef DEBUG
+#if MESA_DEBUG
    tpp_x = debug_get_num_option("TPP_X", tpp_x);
-   tpp_y = debug_get_num_option("TPP_Y", tpp_x);
+   tpp_y = debug_get_num_option("TPP_Y", tpp_y);
 #endif
 
    gmem->maxpw = tpp_x;
@@ -817,7 +799,7 @@ fd_gmem_render_tiles(struct fd_batch *batch)
 
    flush_ring(batch);
 
-   u_trace_flush(&batch->trace, NULL, false);
+   u_trace_flush(&batch->trace, NULL, U_TRACE_FRAME_UNKNOWN, false);
 }
 
 /* Determine a worst-case estimate (ie. assuming we don't eliminate an

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2024/04/02 10:42:14 jsg Exp $
+#	$OpenBSD: Makefile,v 1.9 2025/06/05 14:18:50 jsg Exp $
 
 LIB=	vulkan_intel
 
@@ -20,6 +20,8 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/generated/src \
+		-I${MESA_SRC}/generated/src/compiler \
+		-I${MESA_SRC}/generated/src/compiler/nir \
 		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
 		-I${MESA_SRC}/generated/src/intel/vulkan \
@@ -34,7 +36,7 @@ VKARCH=x86_64
 VKARCH=${MACHINE_ARCH}
 .endif
 
-install: beforeinstall
+install:
 	${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
 	    -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    lib${LIB}.so ${DESTDIR}${X11BASE}/lib
@@ -44,13 +46,11 @@ install: beforeinstall
 
 obj: _xenocara_obj
 
-beforeinstall:
-	rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la
-
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
 SLIBS=	libintel_compiler \
+	libintel_decoder \
 	libintel_dev \
 	libisl \
 	libisl_gfx40 \
@@ -64,13 +64,13 @@ SLIBS=	libintel_compiler \
 	libisl_gfx120 \
 	libisl_gfx125 \
 	libisl_gfx200 \
+	libisl_gfx300 \
 	libisl_tiled_memcpy \
 	libisl_tiled_memcpy_sse41 \
 	libblorp \
 	libvulkan_wsi \
 	libxmlconfig \
 	libmesa_util \
-	libmesa_format \
 	libmesa_util_sse41 \
 	libblake3 \
 	libmesa_util_c11 \
@@ -86,11 +86,12 @@ LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
 
 LDADD+=		-Wl,--whole-archive
 LDADD+=		${.CURDIR}/../libanv_common/${__objdir}/libanv_common.a
-.for gen in 90 110 120 125 200
+.for gen in 90 110 120 125 200 300
 LDADD+=		${.CURDIR}/../libanv_gen${gen}/${__objdir}/libanv_gen${gen}.a
 .endfor
 LDADD+=		${.CURDIR}/../libvulkan_wsi/${__objdir}/libvulkan_wsi.a
 LDADD+=		${.CURDIR}/../libvulkan_runtime/${__objdir}/libvulkan_runtime.a
+LDADD+=		${.CURDIR}/../libvulkan_instance/${__objdir}/libvulkan_instance.a
 LDADD+=		-Wl,--no-whole-archive
 
 .for slib in ${SLIBS}

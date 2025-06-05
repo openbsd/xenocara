@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.9 2025/06/05 14:18:41 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -112,7 +112,6 @@ SRCS=	cso_cache.c \
 	u_bitmask.c \
 	u_blitter.c \
 	u_cache.c \
-	u_compute.c \
 	u_debug_describe.c \
 	u_debug_flush.c \
 	u_debug_image.c \
@@ -179,7 +178,7 @@ SRCS+=	lp_bld_arit.c \
 	lp_bld_format_srgb.c \
 	lp_bld_format_yuv.c \
 	lp_bld_gather.c \
-	lp_bld_init.c \
+	lp_bld_init_common.c \
 	lp_bld_intr.c \
 	lp_bld_ir_common.c \
 	lp_bld_jit_sample.c \
@@ -190,6 +189,7 @@ SRCS+=	lp_bld_arit.c \
 	lp_bld_nir_aos.c \
 	lp_bld_nir_soa.c \
 	lp_bld_pack.c \
+	lp_bld_passmgr.c \
 	lp_bld_printf.c \
 	lp_bld_quad.c \
 	lp_bld_sample_aos.c \
@@ -208,6 +208,8 @@ SRCS+=	lp_bld_arit.c \
 	tessellator.cpp \
 	p_tessellator.cpp \
 	nir_to_tgsi_info.c
+
+SRCS+=	lp_bld_init.c
 
 LLVM_CXXFLAGS!=	llvm-config --cxxflags | sed 's/-std=[^ ]*//'
 CXXFLAGS+= ${LLVM_CXXFLAGS}
@@ -236,6 +238,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary/nir \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/src/util \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/gallium/auxiliary \
 		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir

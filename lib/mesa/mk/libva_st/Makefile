@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2024/07/23 08:22:36 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2025/06/05 14:18:50 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -38,7 +38,8 @@ CPPFLAGS+=	-DVA_DRIVER_INIT_FUNC=${VA_INIT}
 
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/frontends/va \
 		-I${MESA_SRC}/src/gallium/include \
-		-I${MESA_SRC}/src/gallium/auxiliary
+		-I${MESA_SRC}/src/gallium/auxiliary \
+		-I${MESA_SRC}/generated/src
 
 install:
 

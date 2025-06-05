@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2024/04/02 10:42:14 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2025/06/05 14:18:51 jsg Exp $
 
 LIB=	vulkan_util
 
@@ -18,6 +18,7 @@ CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/vulkan/util \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/util \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/vulkan/util \
 		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir \

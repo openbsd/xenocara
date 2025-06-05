@@ -73,9 +73,9 @@ _reference_shader(struct gl_context *ctx, struct gl_shader **ptr,
       if (p_atomic_dec_zero(&old->RefCount)) {
          if (old->Name != 0) {
             if (skip_locking)
-               _mesa_HashRemoveLocked(ctx->Shared->ShaderObjects, old->Name);
+               _mesa_HashRemoveLocked(&ctx->Shared->ShaderObjects, old->Name);
             else
-               _mesa_HashRemove(ctx->Shared->ShaderObjects, old->Name);
+               _mesa_HashRemove(&ctx->Shared->ShaderObjects, old->Name);
          }
          _mesa_delete_shader(ctx, old);
       }
@@ -134,6 +134,7 @@ _mesa_delete_shader(struct gl_context *ctx, struct gl_shader *sh)
    free((void *)sh->Source);
    free((void *)sh->FallbackSource);
    free(sh->Label);
+   ralloc_free(sh->nir);
    ralloc_free(sh);
 }
 
@@ -159,7 +160,7 @@ _mesa_lookup_shader(struct gl_context *ctx, GLuint name)
 {
    if (name) {
       struct gl_shader *sh = (struct gl_shader *)
-         _mesa_HashLookup(ctx->Shared->ShaderObjects, name);
+         _mesa_HashLookup(&ctx->Shared->ShaderObjects, name);
       /* Note that both gl_shader and gl_shader_program objects are kept
        * in the same hash table.  Check the object's type to be sure it's
        * what we're expecting.
@@ -185,7 +186,7 @@ _mesa_lookup_shader_err(struct gl_context *ctx, GLuint name, const char *caller)
    }
    else {
       struct gl_shader *sh = (struct gl_shader *)
-         _mesa_HashLookup(ctx->Shared->ShaderObjects, name);
+         _mesa_HashLookup(&ctx->Shared->ShaderObjects, name);
       if (!sh) {
          _mesa_error(ctx, GL_INVALID_VALUE, "%s", caller);
          return NULL;
@@ -258,11 +259,11 @@ _mesa_reference_shader_program_(struct gl_context *ctx,
       assert(old->RefCount > 0);
 
       if (p_atomic_dec_zero(&old->RefCount)) {
-         _mesa_HashLockMutex(ctx->Shared->ShaderObjects);
+         _mesa_HashLockMutex(&ctx->Shared->ShaderObjects);
          if (old->Name != 0)
-	         _mesa_HashRemoveLocked(ctx->Shared->ShaderObjects, old->Name);
+	         _mesa_HashRemoveLocked(&ctx->Shared->ShaderObjects, old->Name);
          _mesa_delete_shader_program(ctx, old);
-         _mesa_HashUnlockMutex(ctx->Shared->ShaderObjects);
+         _mesa_HashUnlockMutex(&ctx->Shared->ShaderObjects);
       }
 
       *ptr = NULL;
@@ -297,9 +298,6 @@ init_shader_program(struct gl_shader_program *prog)
    prog->AttributeBindings = string_to_uint_map_ctor();
    prog->FragDataBindings = string_to_uint_map_ctor();
    prog->FragDataIndexBindings = string_to_uint_map_ctor();
-
-   prog->Geom.UsesEndPrimitive = false;
-   prog->Geom.ActiveStreamMask = 0;
 
    prog->TransformFeedback.BufferMode = GL_INTERLEAVED_ATTRIBS;
 
@@ -345,11 +343,6 @@ _mesa_clear_shader_program_data(struct gl_context *ctx,
       ralloc_free(shProg->UniformRemapTable);
       shProg->NumUniformRemapTable = 0;
       shProg->UniformRemapTable = NULL;
-   }
-
-   if (shProg->UniformHash) {
-      string_to_uint_map_dtor(shProg->UniformHash);
-      shProg->UniformHash = NULL;
    }
 
    if (shProg->data)
@@ -432,7 +425,7 @@ _mesa_lookup_shader_program(struct gl_context *ctx, GLuint name)
    struct gl_shader_program *shProg;
    if (name) {
       shProg = (struct gl_shader_program *)
-         _mesa_HashLookup(ctx->Shared->ShaderObjects, name);
+         _mesa_HashLookup(&ctx->Shared->ShaderObjects, name);
       /* Note that both gl_shader and gl_shader_program objects are kept
        * in the same hash table.  Check the object's type to be sure it's
        * what we're expecting.
@@ -459,7 +452,7 @@ _mesa_lookup_shader_program_err_glthread(struct gl_context *ctx, GLuint name,
    }
    else {
       struct gl_shader_program *shProg = (struct gl_shader_program *)
-         _mesa_HashLookup(ctx->Shared->ShaderObjects, name);
+         _mesa_HashLookup(&ctx->Shared->ShaderObjects, name);
       if (!shProg) {
          _mesa_error_glthread_safe(ctx, GL_INVALID_VALUE, glthread,
                                    "%s", caller);

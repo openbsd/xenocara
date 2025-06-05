@@ -93,13 +93,17 @@ static void virgl_hw_res_destroy(struct virgl_drm_winsys *qdws,
       if (res->flink_name)
          _mesa_hash_table_remove_key(qdws->bo_names,
                                 (void *)(uintptr_t)res->flink_name);
-      mtx_unlock(&qdws->bo_handles_mutex);
       if (res->ptr)
          os_munmap(res->ptr, res->size);
 
       memset(&args, 0, sizeof(args));
       args.handle = res->bo_handle;
       drmIoctl(qdws->fd, DRM_IOCTL_GEM_CLOSE, &args);
+      /* We need to unlock the access to bo_handles after closing the GEM to
+       * avoid a race condition where another thread would not find the
+       * bo_handle leading to a call of DRM_IOCTL_GEM_OPEN which will return
+       * the same bo_handle as the one we are closing here. */
+      mtx_unlock(&qdws->bo_handles_mutex);
       FREE(res);
 }
 
@@ -478,6 +482,7 @@ virgl_drm_winsys_resource_get_storage_size(struct virgl_winsys *qws,
 static struct virgl_hw_res *
 virgl_drm_winsys_resource_create_handle(struct virgl_winsys *qws,
                                         struct winsys_handle *whandle,
+                                        UNUSED struct pipe_resource *templ,
                                         uint32_t *plane,
                                         uint32_t *stride,
                                         uint32_t *plane_offset,
@@ -754,24 +759,14 @@ static void virgl_drm_free_res_list(struct virgl_drm_cmd_buf *cbuf)
    FREE(cbuf->res_bo);
 }
 
-static bool virgl_drm_lookup_res(struct virgl_drm_cmd_buf *cbuf,
-                                 struct virgl_hw_res *res)
+static bool virgl_drm_res_is_added(struct virgl_drm_cmd_buf *cbuf,
+                                   struct virgl_hw_res *res)
 {
-   unsigned hash = res->res_handle & (sizeof(cbuf->is_handle_added)-1);
-   int i;
-
-   if (cbuf->is_handle_added[hash]) {
-      i = cbuf->reloc_indices_hashlist[hash];
+   for (int i = 0; i < cbuf->cres; i++) {
       if (cbuf->res_bo[i] == res)
          return true;
-
-      for (i = 0; i < cbuf->cres; i++) {
-         if (cbuf->res_bo[i] == res) {
-            cbuf->reloc_indices_hashlist[hash] = i;
-            return true;
-         }
-      }
    }
+
    return false;
 }
 
@@ -779,7 +774,9 @@ static void virgl_drm_add_res(struct virgl_drm_winsys *qdws,
                               struct virgl_drm_cmd_buf *cbuf,
                               struct virgl_hw_res *res)
 {
-   unsigned hash = res->res_handle & (sizeof(cbuf->is_handle_added)-1);
+   bool already_in_list = virgl_drm_res_is_added(cbuf, res);
+   if (unlikely(already_in_list))
+      return;
 
    if (cbuf->cres >= cbuf->nres) {
       unsigned new_nres = cbuf->nres + 256;
@@ -806,9 +803,6 @@ static void virgl_drm_add_res(struct virgl_drm_winsys *qdws,
    cbuf->res_bo[cbuf->cres] = NULL;
    virgl_drm_resource_reference(&qdws->base, &cbuf->res_bo[cbuf->cres], res);
    cbuf->res_hlist[cbuf->cres] = res->bo_handle;
-   cbuf->is_handle_added[hash] = true;
-
-   cbuf->reloc_indices_hashlist[hash] = cbuf->cres;
    p_atomic_inc(&res->num_cs_references);
    cbuf->cres++;
 }
@@ -827,8 +821,6 @@ static void virgl_drm_clear_res_list(struct virgl_drm_cmd_buf *cbuf)
    }
 
    cbuf->cres = 0;
-
-   memset(cbuf->is_handle_added, 0, sizeof(cbuf->is_handle_added));
 }
 
 static void virgl_drm_emit_res(struct virgl_winsys *qws,
@@ -837,13 +829,11 @@ static void virgl_drm_emit_res(struct virgl_winsys *qws,
 {
    struct virgl_drm_winsys *qdws = virgl_drm_winsys(qws);
    struct virgl_drm_cmd_buf *cbuf = virgl_drm_cmd_buf(_cbuf);
-   bool already_in_list = virgl_drm_lookup_res(cbuf, res);
 
    if (write_buf)
       cbuf->base.buf[cbuf->base.cdw++] = res->res_handle;
 
-   if (!already_in_list)
-      virgl_drm_add_res(qdws, cbuf, res);
+   virgl_drm_add_res(qdws, cbuf, res);
 }
 
 static bool virgl_drm_res_is_ref(struct virgl_winsys *qws,

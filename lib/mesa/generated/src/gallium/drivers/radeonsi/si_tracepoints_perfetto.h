@@ -35,14 +35,18 @@ UNUSED static const char *tracepoint_names[] = {
    "si_end_compute",
 };
 
+typedef void (*trace_payload_as_extra_func)(perfetto::protos::pbzero::GpuRenderStageEvent *, const void*, const void*);
+
 static void UNUSED
 trace_payload_as_extra_si_begin_draw(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_si_begin_draw *payload)
+                                     const struct trace_si_begin_draw *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_si_end_draw(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_si_end_draw *payload)
+                                     const struct trace_si_end_draw *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 
@@ -58,12 +62,14 @@ trace_payload_as_extra_si_end_draw(perfetto::protos::pbzero::GpuRenderStageEvent
 }
 static void UNUSED
 trace_payload_as_extra_si_begin_compute(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_si_begin_compute *payload)
+                                     const struct trace_si_begin_compute *payload,
+                                     const void *indirect_data)
 {
 }
 static void UNUSED
 trace_payload_as_extra_si_end_compute(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_si_end_compute *payload)
+                                     const struct trace_si_end_compute *payload,
+                                     const void *indirect_data)
 {
    char buf[128];
 

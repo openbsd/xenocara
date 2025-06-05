@@ -35,6 +35,7 @@
 
 #include <string.h>
 
+#include "cnd_monotonic.h"
 #include "simple_mtx.h"
 #include "util/futex.h"
 #include "util/list.h"
@@ -86,12 +87,12 @@ util_queue_fence_destroy(struct util_queue_fence *fence)
 static inline void
 util_queue_fence_signal(struct util_queue_fence *fence)
 {
-   uint32_t val = p_atomic_xchg(&fence->val, 0);
+   uint32_t val = (uint32_t)p_atomic_xchg(&fence->val, 0);
 
    assert(val != 0);
 
    if (val == 2)
-      futex_wake(&fence->val, INT_MAX);
+      futex_wake(&fence->val, INT32_MAX);
 }
 
 /**
@@ -106,7 +107,7 @@ util_queue_fence_reset(struct util_queue_fence *fence)
 #ifdef NDEBUG
    fence->val = 1;
 #else
-   uint32_t v = p_atomic_xchg(&fence->val, 1);
+   uint32_t v = (uint32_t)p_atomic_xchg(&fence->val, 1);
    assert(v == 0);
 #endif
 }
@@ -124,7 +125,7 @@ util_queue_fence_is_signalled(struct util_queue_fence *fence)
  */
 struct util_queue_fence {
    mtx_t mutex;
-   cnd_t cond;
+   struct u_cnd_monotonic cond;
    int signalled;
 };
 
@@ -138,6 +139,7 @@ void util_queue_fence_signal(struct util_queue_fence *fence);
  * \warning The caller must ensure that no other thread may currently be
  *          waiting (or about to wait) on the fence.
  */
+#if !THREAD_SANITIZER
 static inline void
 util_queue_fence_reset(struct util_queue_fence *fence)
 {
@@ -150,6 +152,23 @@ util_queue_fence_is_signalled(struct util_queue_fence *fence)
 {
    return fence->signalled != 0;
 }
+#else
+static inline void
+util_queue_fence_reset(struct util_queue_fence *fence)
+{
+   assert(fence->signalled);
+   fence->signalled = 0;
+}
+
+static inline bool
+util_queue_fence_is_signalled(struct util_queue_fence *fence)
+{
+   mtx_lock(&fence->mutex);
+   bool signalled = fence->signalled != 0;
+   mtx_unlock(&fence->mutex);
+   return signalled;
+}
+#endif
 #endif
 
 void

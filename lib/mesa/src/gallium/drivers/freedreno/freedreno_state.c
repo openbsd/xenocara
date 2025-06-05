@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2012 Rob Clark <robclark@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2012 Rob Clark <robclark@freedesktop.org>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -152,9 +134,9 @@ fd_set_constant_buffer(struct pipe_context *pctx, enum pipe_shader_type shader,
    util_copy_constant_buffer(&so->cb[index], cb, take_ownership);
 
    /* Note that gallium frontends can unbind constant buffers by
-    * passing NULL here.
+    * passing a NULL cb, or a cb with no buffer:
     */
-   if (unlikely(!cb)) {
+   if (!cb || !(cb->user_buffer || cb->buffer)) {
       so->enabled_mask &= ~(1 << index);
       return;
    }
@@ -459,10 +441,6 @@ fd_set_viewport_states(struct pipe_context *pctx, unsigned start_slot,
    for (unsigned i = 0; i < PIPE_MAX_VIEWPORTS; i++) {
       const struct pipe_viewport_state *vp = & ctx->viewport[i];
 
-      /* skip unused viewports: */
-      if (vp->scale[0] == 0)
-         continue;
-
       unsigned gx = fd_calc_guardband(vp->translate[0], vp->scale[0], is3x);
       unsigned gy = fd_calc_guardband(vp->translate[1], vp->scale[1], is3x);
 
@@ -472,9 +450,7 @@ fd_set_viewport_states(struct pipe_context *pctx, unsigned start_slot,
 }
 
 static void
-fd_set_vertex_buffers(struct pipe_context *pctx,
-                      unsigned count, unsigned unbind_num_trailing_slots,
-                      bool take_ownership,
+fd_set_vertex_buffers(struct pipe_context *pctx, unsigned count,
                       const struct pipe_vertex_buffer *vb) in_dt
 {
    struct fd_context *ctx = fd_context(pctx);
@@ -496,9 +472,8 @@ fd_set_vertex_buffers(struct pipe_context *pctx,
       }
    }
 
-   util_set_vertex_buffers_mask(so->vb, &so->enabled_mask, vb,
-                                count, unbind_num_trailing_slots,
-                                take_ownership);
+   util_set_vertex_buffers_mask(so->vb, &so->enabled_mask, vb, count,
+                                true);
    so->count = util_last_bit(so->enabled_mask);
 
    if (!vb)
@@ -678,7 +653,8 @@ fd_stream_output_target_destroy(struct pipe_context *pctx,
 static void
 fd_set_stream_output_targets(struct pipe_context *pctx, unsigned num_targets,
                              struct pipe_stream_output_target **targets,
-                             const unsigned *offsets) in_dt
+                             const unsigned *offsets,
+                             enum mesa_prim output_prim) in_dt
 {
    struct fd_context *ctx = fd_context(pctx);
    struct fd_streamout_stateobj *so = &ctx->streamout;

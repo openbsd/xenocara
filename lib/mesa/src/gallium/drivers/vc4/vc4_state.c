@@ -260,12 +260,12 @@ vc4_create_depth_stencil_alpha_state(struct pipe_context *pctx,
                         back_writemask_bits =
                                 tlb_stencil_setup_writemask(back->writemask);
 
-                        so->stencil_uniforms[0] |= (1 << 30);
+                        so->stencil_uniforms[0] |= (UINT32_C(1) << 30);
                         so->stencil_uniforms[1] =
                                 tlb_stencil_setup_bits(back, back_writemask_bits);
-                        so->stencil_uniforms[1] |= (2 << 30);
+                        so->stencil_uniforms[1] |= (UINT32_C(2) << 30);
                 } else {
-                        so->stencil_uniforms[0] |= (3 << 30);
+                        so->stencil_uniforms[0] |= (UINT32_C(3) << 30);
                 }
 
                 if (front_writemask_bits == 0xff ||
@@ -313,16 +313,13 @@ vc4_set_viewport_states(struct pipe_context *pctx,
 static void
 vc4_set_vertex_buffers(struct pipe_context *pctx,
                        unsigned count,
-                       unsigned unbind_num_trailing_slots,
-                       bool take_ownership,
                        const struct pipe_vertex_buffer *vb)
 {
         struct vc4_context *vc4 = vc4_context(pctx);
         struct vc4_vertexbuf_stateobj *so = &vc4->vertexbuf;
 
         util_set_vertex_buffers_mask(so->vb, &so->enabled_mask, vb,
-                                     count, unbind_num_trailing_slots,
-                                     take_ownership);
+                                     count, true);
         so->count = util_last_bit(so->enabled_mask);
 
         vc4->dirty |= VC4_DIRTY_VTXBUF;

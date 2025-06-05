@@ -860,7 +860,7 @@ static const VkFormat mesa_vk_format_class_16_bit_formats[] = {
    VK_FORMAT_R5G5B5A1_UNORM_PACK16,
    VK_FORMAT_B5G5R5A1_UNORM_PACK16,
    VK_FORMAT_A1R5G5B5_UNORM_PACK16,
-   VK_FORMAT_A1B5G5R5_UNORM_PACK16_KHR,
+   VK_FORMAT_A1B5G5R5_UNORM_PACK16,
    VK_FORMAT_R8G8_UNORM,
    VK_FORMAT_R8G8_SNORM,
    VK_FORMAT_R8G8_USCALED,
@@ -882,7 +882,7 @@ static const VkFormat mesa_vk_format_class_16_bit_formats[] = {
 };
 
 static const VkFormat mesa_vk_format_class_8_bit_alpha_formats[] = {
-   VK_FORMAT_A8_UNORM_KHR,
+   VK_FORMAT_A8_UNORM,
 };
 
 static const VkFormat mesa_vk_format_class_24_bit_formats[] = {
@@ -950,7 +950,7 @@ static const VkFormat mesa_vk_format_class_32_bit_formats[] = {
    VK_FORMAT_E5B9G9R9_UFLOAT_PACK32,
    VK_FORMAT_R10X6G10X6_UNORM_2PACK16,
    VK_FORMAT_R12X4G12X4_UNORM_2PACK16,
-   VK_FORMAT_R16G16_S10_5_NV,
+   VK_FORMAT_R16G16_SFIXED5_NV,
 };
 
 static const VkFormat mesa_vk_format_class_48_bit_formats[] = {

@@ -26,7 +26,6 @@
 #include "util/u_inlines.h"
 #include "util/u_transfer.h"
 
-#include "tgsi/tgsi_parse.h"
 #include "compiler/nir/nir.h"
 #include "compiler/nir/nir_serialize.h"
 #include "nir/tgsi_to_nir.h"
@@ -749,14 +748,6 @@ nvc0_cp_state_create(struct pipe_context *pipe,
    case PIPE_SHADER_IR_NIR:
       prog->nir = (nir_shader *)cso->prog;
       break;
-   case PIPE_SHADER_IR_NIR_SERIALIZED: {
-      struct blob_reader reader;
-      const struct pipe_binary_program_header *hdr = cso->prog;
-
-      blob_reader_init(&reader, hdr->blob, hdr->num_bytes);
-      prog->nir = nir_deserialize(NULL, pipe->screen->get_compiler_options(pipe->screen, PIPE_SHADER_IR_NIR, PIPE_SHADER_COMPUTE), &reader);
-      break;
-   }
    default:
       assert(!"unsupported IR!");
       free(prog);
@@ -1039,8 +1030,6 @@ nvc0_set_patch_vertices(struct pipe_context *pipe, uint8_t patch_vertices)
 static void
 nvc0_set_vertex_buffers(struct pipe_context *pipe,
                         unsigned count,
-                        unsigned unbind_num_trailing_slots,
-                        bool take_ownership,
                         const struct pipe_vertex_buffer *vb)
 {
     struct nvc0_context *nvc0 = nvc0_context(pipe);
@@ -1049,11 +1038,12 @@ nvc0_set_vertex_buffers(struct pipe_context *pipe,
     nouveau_bufctx_reset(nvc0->bufctx_3d, NVC0_BIND_3D_VTX);
     nvc0->dirty_3d |= NVC0_NEW_3D_ARRAYS;
 
+    unsigned last_count = nvc0->num_vtxbufs;
     util_set_vertex_buffers_count(nvc0->vtxbuf, &nvc0->num_vtxbufs, vb,
-                                  count, unbind_num_trailing_slots,
-                                  take_ownership);
+                                  count, true);
 
-    unsigned clear_mask = ~u_bit_consecutive(count, unbind_num_trailing_slots);
+    unsigned clear_mask =
+       last_count > count ? BITFIELD_RANGE(count, last_count - count) : 0;
     nvc0->vbo_user &= clear_mask;
     nvc0->constant_vbos &= clear_mask;
     nvc0->vtxbufs_coherent &= clear_mask;
@@ -1156,7 +1146,8 @@ static void
 nvc0_set_transform_feedback_targets(struct pipe_context *pipe,
                                     unsigned num_targets,
                                     struct pipe_stream_output_target **targets,
-                                    const unsigned *offsets)
+                                    const unsigned *offsets,
+                                    enum mesa_prim output_prim)
 {
    struct nvc0_context *nvc0 = nvc0_context(pipe);
    unsigned i;

@@ -1,27 +1,9 @@
-/**********************************************************
- * Copyright 2008-2023 VMware, Inc.  All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- **********************************************************/
+/*
+ * Copyright (c) 2008-2024 Broadcom. All Rights Reserved.
+ * The term “Broadcom” refers to Broadcom Inc.
+ * and/or its subsidiaries.
+ * SPDX-License-Identifier: MIT
+ */
 
 #ifndef SVGA_CONTEXT_H
 #define SVGA_CONTEXT_H
@@ -36,6 +18,7 @@
 #include "util/u_blitter.h"
 #include "util/list.h"
 
+#include "vm_basic_types.h"
 #include "svga_screen.h"
 #include "svga_state.h"
 #include "svga_winsys.h"
@@ -100,9 +83,9 @@ enum svga_hud {
 
 #define CONST0_UPLOAD_ALIGNMENT 256
 #define SVGA_MAX_UAVIEWS        SVGA3D_DX11_1_MAX_UAVIEWS
-#define SVGA_MAX_IMAGES         SVGA3D_MAX_UAVIEWS
-#define SVGA_MAX_SHADER_BUFFERS	SVGA3D_MAX_UAVIEWS
-#define SVGA_MAX_ATOMIC_BUFFERS	SVGA3D_MAX_UAVIEWS
+#define SVGA_MAX_IMAGES         SVGA3D_DX11_MAX_UAVIEWS
+#define SVGA_MAX_SHADER_BUFFERS SVGA3D_DX11_MAX_UAVIEWS
+#define SVGA_MAX_ATOMIC_BUFFERS SVGA3D_DX11_MAX_UAVIEWS
 
 enum svga_surface_state
 {
@@ -405,7 +388,7 @@ struct svga_hw_clear_state
    unsigned num_prescale;
 
    unsigned num_rendertargets;
-   struct pipe_surface *rtv[SVGA3D_MAX_RENDER_TARGETS];
+   struct pipe_surface *rtv[SVGA3D_DX_MAX_RENDER_TARGETS];
    struct pipe_surface *dsv;
 };
 
@@ -1057,7 +1040,7 @@ svga_get_time(struct svga_context *svga)
  * function call with an error value, the purpose is to trigger and test
  * retry path handling.
  */
-#ifdef DEBUG
+#if MESA_DEBUG
 
 /*
  * Optionally replace a function call with a PIPE_ERROR_OUT_OF_MEMORY

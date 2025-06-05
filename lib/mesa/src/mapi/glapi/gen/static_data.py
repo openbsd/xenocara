@@ -20,18 +20,12 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-
-"""The maximum entries of actual static data required by indirect GLX."""
-
-
-MAX_OFFSETS = 407
-
 """Table of functions that have ABI-mandated offsets in the dispatch table.
 
-The first MAX_OFFSETS entries are required by indirect GLX. The rest are
-required to preserve the glapi <> GL/GLES ABI. This is to be addressed shortly.
+The first 407 entries are required by indirect GLX. The rest can use any
+numbers and don't need this table at all, but that removal is TODO.
 
-This list will never change."""
+The first 407 entries will never change."""
 offsets = {
     "NewList": 0,
     "EndList": 1,
@@ -1704,6 +1698,13 @@ offsets = {
     "DrawArraysInstancedBaseInstanceDrawID": 1668,
     "DrawElementsInstancedBaseVertexBaseInstanceDrawID": 1669,
     "InternalInvalidateFramebufferAncillaryMESA": 1670,
+    "DrawElementsPacked": 1671,
+    "DrawElementsUserBufPacked": 1672,
+    "TexStorageAttribs2DEXT": 1673,
+    "TexStorageAttribs3DEXT": 1674,
+    "FramebufferTextureMultiviewOVR": 1675,
+    "NamedFramebufferTextureMultiviewOVR": 1676,
+    "FramebufferTextureMultisampleMultiviewOVR": 1677,
 }
 
 functions = [
@@ -2031,6 +2032,8 @@ functions = [
     "FramebufferTextureLayer",
     "FramebufferTextureLayerARB",
     "FramebufferTextureLayerEXT",
+    "FramebufferTextureMultisampleMultiviewOVR",
+    "FramebufferTextureMultiviewOVR",
     "FrontFace",
     "Frustum",
     "Frustumf",
@@ -2723,6 +2726,8 @@ functions = [
     "TexStorage2DMultisample",
     "TexStorage3D",
     "TexStorage3DMultisample",
+    "TexStorageAttribs2DEXT",
+    "TexStorageAttribs3DEXT",
     "TexSubImage1D",
     "TexSubImage2D",
     "TexSubImage3D",

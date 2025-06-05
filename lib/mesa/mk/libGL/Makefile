@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2023/04/06 10:23:44 jsg Exp $
+#	$OpenBSD: Makefile,v 1.10 2025/06/05 14:18:37 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -9,7 +9,6 @@ SRCS=	clientattrib.c \
 	compsize.c \
 	create_context.c \
 	dri_common.c \
-	dri_common_interop.c \
 	dri_common_query_renderer.c \
 	drisw_glx.c \
 	eval.c \
@@ -58,6 +57,12 @@ CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/glx \
 		-I${MESA_SRC}/src/loader \
 		-I${MESA_SRC}/src/mapi/glapi \
+		-I${MESA_SRC}/src/mesa \
+		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/src/gallium/auxiliary \
+		-I${MESA_SRC}/src/gallium/frontends/dri \
+		-I${MESA_SRC}/src/x11 \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/mapi/glapi/gen
 
 LDADD+=	-L${.CURDIR}/../libglapi/${__objdir} -lglapi \
@@ -65,31 +70,25 @@ LDADD+=	-L${.CURDIR}/../libglapi/${__objdir} -lglapi \
 	${.CURDIR}/../libglapi_static/${__objdir}/libglapi_static.a \
 	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
 	${.CURDIR}/../libloader/${__objdir}/libloader.a \
+	${.CURDIR}/../libloader_x11/${__objdir}/libloader_x11.a \
+	${.CURDIR}/../libpipe_loader_dynamic/${__objdir}/libpipe_loader_dynamic.a \
 	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a \
 	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
-	${.CURDIR}/../libmesa_format/${__objdir}/libmesa_format.a \
 	${.CURDIR}/../libmesa_util_sse41/${__objdir}/libmesa_util_sse41.a \
-	-Wl,--gc-sections
+	-Wl,-Bsymbolic -Wl,--gc-sections
+
+LDADD+=	-L${X11BASE}/lib -lexpat -lX11-xcb -lxcb-glx \
+	-lxcb-shm -lXxf86vm -lXext -lX11 -lxcb -lxcb-xfixes \
+	-ldrm -lm \
+	-L${.CURDIR}/../libgallium_dri/${__objdir} -lgallium_dri
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
-LDADD+=	${.CURDIR}/../libloader_dri3_helper/${__objdir}/libloader_dri3_helper.a
-.endif
-
-LDADD+=	-L${X11BASE}/lib -lz -lexpat -lXfixes -lX11-xcb -lxcb-glx \
-	-lxcb-dri2 -lxcb-shm -lXxf86vm -lXext -lX11 -lxcb \
-	-ldrm -lm -lpthread -lXau -lXdmcp
-
-.if ${XENOCARA_BUILD_DRI3:L} == "yes"
-LDADD+=	-lxcb-dri3 -lxcb-xfixes -lxcb-present -lxcb-sync -lxshmfence \
-	-lxcb-randr
+LDADD+=	-lxcb-dri3 -lxcb-present
 .endif
 
 LDADD+=	-Wl,--end-group
 
 obj: _xenocara_obj
-
-beforeinstall:
-	rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

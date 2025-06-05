@@ -307,16 +307,23 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_Translatef,
    DISPATCH_CMD_Viewport,
    DISPATCH_CMD_ColorPointer,
+   DISPATCH_CMD_ColorPointer_packed,
    DISPATCH_CMD_DisableClientState,
    DISPATCH_CMD_DrawArrays,
    DISPATCH_CMD_DrawElements,
    DISPATCH_CMD_EdgeFlagPointer,
+   DISPATCH_CMD_EdgeFlagPointer_packed,
    DISPATCH_CMD_EnableClientState,
    DISPATCH_CMD_IndexPointer,
+   DISPATCH_CMD_IndexPointer_packed,
    DISPATCH_CMD_InterleavedArrays,
+   DISPATCH_CMD_InterleavedArrays_packed,
    DISPATCH_CMD_NormalPointer,
+   DISPATCH_CMD_NormalPointer_packed,
    DISPATCH_CMD_TexCoordPointer,
+   DISPATCH_CMD_TexCoordPointer_packed,
    DISPATCH_CMD_VertexPointer,
+   DISPATCH_CMD_VertexPointer_packed,
    DISPATCH_CMD_PolygonOffset,
    DISPATCH_CMD_CopyTexImage1D,
    DISPATCH_CMD_CopyTexImage2D,
@@ -389,6 +396,7 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_FogCoordd,
    DISPATCH_CMD_FogCoorddv,
    DISPATCH_CMD_FogCoordPointer,
+   DISPATCH_CMD_FogCoordPointer_packed,
    DISPATCH_CMD_MultiDrawArrays,
    DISPATCH_CMD_MultiDrawElements,
    DISPATCH_CMD_PointParameterf,
@@ -412,6 +420,7 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_SecondaryColor3us,
    DISPATCH_CMD_SecondaryColor3usv,
    DISPATCH_CMD_SecondaryColorPointer,
+   DISPATCH_CMD_SecondaryColorPointer_packed,
    DISPATCH_CMD_WindowPos2d,
    DISPATCH_CMD_WindowPos2dv,
    DISPATCH_CMD_WindowPos2f,
@@ -510,6 +519,7 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_VertexAttrib4uiv,
    DISPATCH_CMD_VertexAttrib4usv,
    DISPATCH_CMD_VertexAttribPointer,
+   DISPATCH_CMD_VertexAttribPointer_packed,
    DISPATCH_CMD_UniformMatrix2x3fv,
    DISPATCH_CMD_UniformMatrix3x2fv,
    DISPATCH_CMD_UniformMatrix2x4fv,
@@ -546,6 +556,9 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_FramebufferRenderbuffer,
    DISPATCH_CMD_BlitFramebuffer,
    DISPATCH_CMD_GenerateMipmap,
+   DISPATCH_CMD_FramebufferTextureMultiviewOVR,
+   DISPATCH_CMD_NamedFramebufferTextureMultiviewOVR,
+   DISPATCH_CMD_FramebufferTextureMultisampleMultiviewOVR,
    DISPATCH_CMD_VertexAttribDivisor,
    DISPATCH_CMD_VertexArrayVertexAttribDivisorEXT,
    DISPATCH_CMD_FlushMappedBufferRange,
@@ -709,7 +722,9 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_VertexAttribL3dv,
    DISPATCH_CMD_VertexAttribL4dv,
    DISPATCH_CMD_VertexAttribLPointer,
+   DISPATCH_CMD_VertexAttribLPointer_packed,
    DISPATCH_CMD_VertexArrayVertexAttribLOffsetEXT,
+   DISPATCH_CMD_VertexArrayVertexAttribLOffsetEXT_packed,
    DISPATCH_CMD_ReleaseShaderCompiler,
    DISPATCH_CMD_ShaderBinary,
    DISPATCH_CMD_ClearDepthf,
@@ -732,9 +747,6 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_TexStorage1D,
    DISPATCH_CMD_TexStorage2D,
    DISPATCH_CMD_TexStorage3D,
-   DISPATCH_CMD_TextureStorage1DEXT,
-   DISPATCH_CMD_TextureStorage2DEXT,
-   DISPATCH_CMD_TextureStorage3DEXT,
    DISPATCH_CMD_PushDebugGroup,
    DISPATCH_CMD_PopDebugGroup,
    DISPATCH_CMD_ObjectLabel,
@@ -743,12 +755,14 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_CopyImageSubData,
    DISPATCH_CMD_TextureView,
    DISPATCH_CMD_BindVertexBuffer,
+   DISPATCH_CMD_BindVertexBuffer_packed,
    DISPATCH_CMD_VertexAttribFormat,
    DISPATCH_CMD_VertexAttribIFormat,
    DISPATCH_CMD_VertexAttribLFormat,
    DISPATCH_CMD_VertexAttribBinding,
    DISPATCH_CMD_VertexBindingDivisor,
    DISPATCH_CMD_VertexArrayBindVertexBufferEXT,
+   DISPATCH_CMD_VertexArrayBindVertexBufferEXT_packed,
    DISPATCH_CMD_VertexArrayVertexAttribFormatEXT,
    DISPATCH_CMD_VertexArrayVertexAttribIFormatEXT,
    DISPATCH_CMD_VertexArrayVertexAttribLFormatEXT,
@@ -844,6 +858,7 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_EnableVertexArrayAttrib,
    DISPATCH_CMD_VertexArrayElementBuffer,
    DISPATCH_CMD_VertexArrayVertexBuffer,
+   DISPATCH_CMD_VertexArrayVertexBuffer_packed,
    DISPATCH_CMD_VertexArrayVertexBuffers,
    DISPATCH_CMD_VertexArrayAttribFormat,
    DISPATCH_CMD_VertexArrayAttribIFormat,
@@ -897,11 +912,17 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_MaxShaderCompilerThreadsKHR,
    DISPATCH_CMD_SpecializeShaderARB,
    DISPATCH_CMD_ColorPointerEXT,
+   DISPATCH_CMD_ColorPointerEXT_packed,
    DISPATCH_CMD_EdgeFlagPointerEXT,
+   DISPATCH_CMD_EdgeFlagPointerEXT_packed,
    DISPATCH_CMD_IndexPointerEXT,
+   DISPATCH_CMD_IndexPointerEXT_packed,
    DISPATCH_CMD_NormalPointerEXT,
+   DISPATCH_CMD_NormalPointerEXT_packed,
    DISPATCH_CMD_TexCoordPointerEXT,
+   DISPATCH_CMD_TexCoordPointerEXT_packed,
    DISPATCH_CMD_VertexPointerEXT,
+   DISPATCH_CMD_VertexPointerEXT_packed,
    DISPATCH_CMD_LockArraysEXT,
    DISPATCH_CMD_UnlockArraysEXT,
    DISPATCH_CMD_ViewportArrayv,
@@ -1053,6 +1074,7 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_MultiTexGeniEXT,
    DISPATCH_CMD_MultiTexGenivEXT,
    DISPATCH_CMD_MultiTexCoordPointerEXT,
+   DISPATCH_CMD_MultiTexCoordPointerEXT_packed,
    DISPATCH_CMD_MatrixLoadTransposefEXT,
    DISPATCH_CMD_MatrixLoadTransposedEXT,
    DISPATCH_CMD_MatrixMultTransposefEXT,
@@ -1087,16 +1109,27 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_NamedRenderbufferStorageMultisampleEXT,
    DISPATCH_CMD_NamedCopyBufferSubDataEXT,
    DISPATCH_CMD_VertexArrayVertexOffsetEXT,
+   DISPATCH_CMD_VertexArrayVertexOffsetEXT_packed,
    DISPATCH_CMD_VertexArrayColorOffsetEXT,
+   DISPATCH_CMD_VertexArrayColorOffsetEXT_packed,
    DISPATCH_CMD_VertexArrayEdgeFlagOffsetEXT,
+   DISPATCH_CMD_VertexArrayEdgeFlagOffsetEXT_packed,
    DISPATCH_CMD_VertexArrayIndexOffsetEXT,
+   DISPATCH_CMD_VertexArrayIndexOffsetEXT_packed,
    DISPATCH_CMD_VertexArrayNormalOffsetEXT,
+   DISPATCH_CMD_VertexArrayNormalOffsetEXT_packed,
    DISPATCH_CMD_VertexArrayTexCoordOffsetEXT,
+   DISPATCH_CMD_VertexArrayTexCoordOffsetEXT_packed,
    DISPATCH_CMD_VertexArrayMultiTexCoordOffsetEXT,
+   DISPATCH_CMD_VertexArrayMultiTexCoordOffsetEXT_packed,
    DISPATCH_CMD_VertexArrayFogCoordOffsetEXT,
+   DISPATCH_CMD_VertexArrayFogCoordOffsetEXT_packed,
    DISPATCH_CMD_VertexArraySecondaryColorOffsetEXT,
+   DISPATCH_CMD_VertexArraySecondaryColorOffsetEXT_packed,
    DISPATCH_CMD_VertexArrayVertexAttribOffsetEXT,
+   DISPATCH_CMD_VertexArrayVertexAttribOffsetEXT_packed,
    DISPATCH_CMD_VertexArrayVertexAttribIOffsetEXT,
+   DISPATCH_CMD_VertexArrayVertexAttribIOffsetEXT_packed,
    DISPATCH_CMD_EnableVertexArrayEXT,
    DISPATCH_CMD_DisableVertexArrayEXT,
    DISPATCH_CMD_EnableVertexArrayAttribEXT,
@@ -1124,6 +1157,9 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_PolygonOffsetClampEXT,
    DISPATCH_CMD_WindowRectanglesEXT,
    DISPATCH_CMD_FramebufferFetchBarrierEXT,
+   DISPATCH_CMD_TextureStorage1DEXT,
+   DISPATCH_CMD_TextureStorage2DEXT,
+   DISPATCH_CMD_TextureStorage3DEXT,
    DISPATCH_CMD_RenderbufferStorageMultisampleAdvancedAMD,
    DISPATCH_CMD_NamedRenderbufferStorageMultisampleAdvancedAMD,
    DISPATCH_CMD_StencilFuncSeparateATI,
@@ -1133,10 +1169,12 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_InternalSetError,
    DISPATCH_CMD_DrawArraysUserBuf,
    DISPATCH_CMD_DrawElementsUserBuf,
+   DISPATCH_CMD_DrawElementsUserBufPacked,
    DISPATCH_CMD_MultiDrawArraysUserBuf,
    DISPATCH_CMD_MultiDrawElementsUserBuf,
    DISPATCH_CMD_DrawArraysInstancedBaseInstanceDrawID,
    DISPATCH_CMD_DrawElementsInstancedBaseVertexBaseInstanceDrawID,
+   DISPATCH_CMD_DrawElementsPacked,
    DISPATCH_CMD_InternalInvalidateFramebufferAncillaryMESA,
    DISPATCH_CMD_ClearColorIiEXT,
    DISPATCH_CMD_ClearColorIuiEXT,
@@ -1163,6 +1201,7 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_VertexAttribI4ubv,
    DISPATCH_CMD_VertexAttribI4usv,
    DISPATCH_CMD_VertexAttribIPointer,
+   DISPATCH_CMD_VertexAttribIPointer_packed,
    DISPATCH_CMD_Uniform1ui,
    DISPATCH_CMD_Uniform2ui,
    DISPATCH_CMD_Uniform3ui,
@@ -1186,6 +1225,7 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_FramebufferTexture,
    DISPATCH_CMD_PrimitiveRestartNV,
    DISPATCH_CMD_BindBufferOffsetEXT,
+   DISPATCH_CMD_BindBufferOffsetEXT_packed,
    DISPATCH_CMD_BindTransformFeedback,
    DISPATCH_CMD_DeleteTransformFeedbacks,
    DISPATCH_CMD_PauseTransformFeedback,
@@ -1306,6 +1346,7 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_DrawTexxOES,
    DISPATCH_CMD_DrawTexxvOES,
    DISPATCH_CMD_PointSizePointerOES,
+   DISPATCH_CMD_PointSizePointerOES_packed,
    DISPATCH_CMD_DiscardFramebufferEXT,
    DISPATCH_CMD_FramebufferTexture2DMultisampleEXT,
    DISPATCH_CMD_DepthRangeArrayfvOES,
@@ -1333,6 +1374,7 @@ uint32_t _mesa_unmarshal_Begin(struct gl_context *ctx, const struct marshal_cmd_
 void GLAPIENTRY _mesa_marshal_Begin(GLenum mode);
 struct marshal_cmd_Bitmap;
 uint32_t _mesa_unmarshal_Bitmap(struct gl_context *ctx, const struct marshal_cmd_Bitmap *restrict cmd);
+void GLAPIENTRY _mesa_marshal_Bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap);
 struct marshal_cmd_Color3b;
 uint32_t _mesa_unmarshal_Color3b(struct gl_context *ctx, const struct marshal_cmd_Color3b *restrict cmd);
 void GLAPIENTRY _mesa_marshal_Color3b(GLbyte red, GLbyte green, GLbyte blue);
@@ -1938,6 +1980,7 @@ struct marshal_cmd_ReadPixels;
 uint32_t _mesa_unmarshal_ReadPixels(struct gl_context *ctx, const struct marshal_cmd_ReadPixels *restrict cmd);
 struct marshal_cmd_DrawPixels;
 uint32_t _mesa_unmarshal_DrawPixels(struct gl_context *ctx, const struct marshal_cmd_DrawPixels *restrict cmd);
+void GLAPIENTRY _mesa_marshal_DrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
 struct marshal_cmd_GetIntegerv;
 uint32_t _mesa_unmarshal_GetIntegerv(struct gl_context *ctx, const struct marshal_cmd_GetIntegerv *restrict cmd);
 void GLAPIENTRY _mesa_marshal_GetIntegerv(GLenum pname, GLint *params);
@@ -1971,8 +2014,12 @@ struct marshal_cmd_Ortho;
 uint32_t _mesa_unmarshal_Ortho(struct gl_context *ctx, const struct marshal_cmd_Ortho *restrict cmd);
 struct marshal_cmd_PopMatrix;
 uint32_t _mesa_unmarshal_PopMatrix(struct gl_context *ctx, const struct marshal_cmd_PopMatrix *restrict cmd);
-struct marshal_cmd_PushMatrix;
+struct marshal_cmd_PushMatrix
+{
+   struct marshal_cmd_base cmd_base;
+};
 uint32_t _mesa_unmarshal_PushMatrix(struct gl_context *ctx, const struct marshal_cmd_PushMatrix *restrict cmd);
+void GLAPIENTRY _mesa_marshal_PushMatrix(void);
 struct marshal_cmd_Rotated;
 uint32_t _mesa_unmarshal_Rotated(struct gl_context *ctx, const struct marshal_cmd_Rotated *restrict cmd);
 struct marshal_cmd_Rotatef;
@@ -1989,29 +2036,52 @@ struct marshal_cmd_Viewport;
 uint32_t _mesa_unmarshal_Viewport(struct gl_context *ctx, const struct marshal_cmd_Viewport *restrict cmd);
 void GLAPIENTRY _mesa_marshal_ArrayElement(GLint i);
 struct marshal_cmd_ColorPointer;
+struct marshal_cmd_ColorPointer_packed;
 uint32_t _mesa_unmarshal_ColorPointer(struct gl_context *ctx, const struct marshal_cmd_ColorPointer *restrict cmd);
+uint32_t _mesa_unmarshal_ColorPointer_packed(struct gl_context *ctx, const struct marshal_cmd_ColorPointer_packed *restrict cmd);
 struct marshal_cmd_DisableClientState;
 uint32_t _mesa_unmarshal_DisableClientState(struct gl_context *ctx, const struct marshal_cmd_DisableClientState *restrict cmd);
 struct marshal_cmd_DrawArrays;
 uint32_t _mesa_unmarshal_DrawArrays(struct gl_context *ctx, const struct marshal_cmd_DrawArrays *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawArrays(GLenum mode, GLint first, GLsizei count);
-struct marshal_cmd_DrawElements;
+void GLAPIENTRY _mesa_marshal_DrawArrays_no_error(GLenum mode, GLint first, GLsizei count);
+struct marshal_cmd_DrawElements
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLindextype type;
+   GLsizei count;
+   const GLvoid * indices;
+};
 uint32_t _mesa_unmarshal_DrawElements(struct gl_context *ctx, const struct marshal_cmd_DrawElements *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
+void GLAPIENTRY _mesa_marshal_DrawElements_no_error(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
 struct marshal_cmd_EdgeFlagPointer;
+struct marshal_cmd_EdgeFlagPointer_packed;
 uint32_t _mesa_unmarshal_EdgeFlagPointer(struct gl_context *ctx, const struct marshal_cmd_EdgeFlagPointer *restrict cmd);
+uint32_t _mesa_unmarshal_EdgeFlagPointer_packed(struct gl_context *ctx, const struct marshal_cmd_EdgeFlagPointer_packed *restrict cmd);
 struct marshal_cmd_EnableClientState;
 uint32_t _mesa_unmarshal_EnableClientState(struct gl_context *ctx, const struct marshal_cmd_EnableClientState *restrict cmd);
 struct marshal_cmd_IndexPointer;
+struct marshal_cmd_IndexPointer_packed;
 uint32_t _mesa_unmarshal_IndexPointer(struct gl_context *ctx, const struct marshal_cmd_IndexPointer *restrict cmd);
+uint32_t _mesa_unmarshal_IndexPointer_packed(struct gl_context *ctx, const struct marshal_cmd_IndexPointer_packed *restrict cmd);
 struct marshal_cmd_InterleavedArrays;
+struct marshal_cmd_InterleavedArrays_packed;
 uint32_t _mesa_unmarshal_InterleavedArrays(struct gl_context *ctx, const struct marshal_cmd_InterleavedArrays *restrict cmd);
+uint32_t _mesa_unmarshal_InterleavedArrays_packed(struct gl_context *ctx, const struct marshal_cmd_InterleavedArrays_packed *restrict cmd);
 struct marshal_cmd_NormalPointer;
+struct marshal_cmd_NormalPointer_packed;
 uint32_t _mesa_unmarshal_NormalPointer(struct gl_context *ctx, const struct marshal_cmd_NormalPointer *restrict cmd);
+uint32_t _mesa_unmarshal_NormalPointer_packed(struct gl_context *ctx, const struct marshal_cmd_NormalPointer_packed *restrict cmd);
 struct marshal_cmd_TexCoordPointer;
+struct marshal_cmd_TexCoordPointer_packed;
 uint32_t _mesa_unmarshal_TexCoordPointer(struct gl_context *ctx, const struct marshal_cmd_TexCoordPointer *restrict cmd);
+uint32_t _mesa_unmarshal_TexCoordPointer_packed(struct gl_context *ctx, const struct marshal_cmd_TexCoordPointer_packed *restrict cmd);
 struct marshal_cmd_VertexPointer;
+struct marshal_cmd_VertexPointer_packed;
 uint32_t _mesa_unmarshal_VertexPointer(struct gl_context *ctx, const struct marshal_cmd_VertexPointer *restrict cmd);
+uint32_t _mesa_unmarshal_VertexPointer_packed(struct gl_context *ctx, const struct marshal_cmd_VertexPointer_packed *restrict cmd);
 struct marshal_cmd_PolygonOffset;
 uint32_t _mesa_unmarshal_PolygonOffset(struct gl_context *ctx, const struct marshal_cmd_PolygonOffset *restrict cmd);
 struct marshal_cmd_CopyTexImage1D;
@@ -2049,6 +2119,7 @@ uint32_t _mesa_unmarshal_BlendEquation(struct gl_context *ctx, const struct mars
 struct marshal_cmd_DrawRangeElements;
 uint32_t _mesa_unmarshal_DrawRangeElements(struct gl_context *ctx, const struct marshal_cmd_DrawRangeElements *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices);
+void GLAPIENTRY _mesa_marshal_DrawRangeElements_no_error(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices);
 struct marshal_cmd_TexImage3D;
 uint32_t _mesa_unmarshal_TexImage3D(struct gl_context *ctx, const struct marshal_cmd_TexImage3D *restrict cmd);
 struct marshal_cmd_TexSubImage3D;
@@ -2194,7 +2265,9 @@ struct marshal_cmd_FogCoorddv;
 uint32_t _mesa_unmarshal_FogCoorddv(struct gl_context *ctx, const struct marshal_cmd_FogCoorddv *restrict cmd);
 void GLAPIENTRY _mesa_marshal_FogCoorddv(const GLdouble *coord);
 struct marshal_cmd_FogCoordPointer;
+struct marshal_cmd_FogCoordPointer_packed;
 uint32_t _mesa_unmarshal_FogCoordPointer(struct gl_context *ctx, const struct marshal_cmd_FogCoordPointer *restrict cmd);
+uint32_t _mesa_unmarshal_FogCoordPointer_packed(struct gl_context *ctx, const struct marshal_cmd_FogCoordPointer_packed *restrict cmd);
 struct marshal_cmd_MultiDrawArrays;
 uint32_t _mesa_unmarshal_MultiDrawArrays(struct gl_context *ctx, const struct marshal_cmd_MultiDrawArrays *restrict cmd);
 void GLAPIENTRY _mesa_marshal_MultiDrawArrays(GLenum mode, const GLint *first, const GLsizei *count, GLsizei primcount);
@@ -2258,7 +2331,9 @@ struct marshal_cmd_SecondaryColor3usv;
 uint32_t _mesa_unmarshal_SecondaryColor3usv(struct gl_context *ctx, const struct marshal_cmd_SecondaryColor3usv *restrict cmd);
 void GLAPIENTRY _mesa_marshal_SecondaryColor3usv(const GLushort *v);
 struct marshal_cmd_SecondaryColorPointer;
+struct marshal_cmd_SecondaryColorPointer_packed;
 uint32_t _mesa_unmarshal_SecondaryColorPointer(struct gl_context *ctx, const struct marshal_cmd_SecondaryColorPointer *restrict cmd);
+uint32_t _mesa_unmarshal_SecondaryColorPointer_packed(struct gl_context *ctx, const struct marshal_cmd_SecondaryColorPointer_packed *restrict cmd);
 struct marshal_cmd_WindowPos2d;
 uint32_t _mesa_unmarshal_WindowPos2d(struct gl_context *ctx, const struct marshal_cmd_WindowPos2d *restrict cmd);
 struct marshal_cmd_WindowPos2dv;
@@ -2495,7 +2570,9 @@ struct marshal_cmd_VertexAttrib4usv;
 uint32_t _mesa_unmarshal_VertexAttrib4usv(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4usv *restrict cmd);
 void GLAPIENTRY _mesa_marshal_VertexAttrib4usv(GLuint index, const GLushort *v);
 struct marshal_cmd_VertexAttribPointer;
+struct marshal_cmd_VertexAttribPointer_packed;
 uint32_t _mesa_unmarshal_VertexAttribPointer(struct gl_context *ctx, const struct marshal_cmd_VertexAttribPointer *restrict cmd);
+uint32_t _mesa_unmarshal_VertexAttribPointer_packed(struct gl_context *ctx, const struct marshal_cmd_VertexAttribPointer_packed *restrict cmd);
 struct marshal_cmd_UniformMatrix2x3fv;
 uint32_t _mesa_unmarshal_UniformMatrix2x3fv(struct gl_context *ctx, const struct marshal_cmd_UniformMatrix2x3fv *restrict cmd);
 struct marshal_cmd_UniformMatrix3x2fv;
@@ -2538,12 +2615,21 @@ struct marshal_cmd_AttachObjectARB;
 uint32_t _mesa_unmarshal_AttachObjectARB(struct gl_context *ctx, const struct marshal_cmd_AttachObjectARB *restrict cmd);
 struct marshal_cmd_ClampColor;
 uint32_t _mesa_unmarshal_ClampColor(struct gl_context *ctx, const struct marshal_cmd_ClampColor *restrict cmd);
-struct marshal_cmd_DrawArraysInstanced;
+struct marshal_cmd_DrawArraysInstanced
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLint first;
+   GLsizei count;
+   GLsizei primcount;
+};
 uint32_t _mesa_unmarshal_DrawArraysInstanced(struct gl_context *ctx, const struct marshal_cmd_DrawArraysInstanced *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+void GLAPIENTRY _mesa_marshal_DrawArraysInstanced_no_error(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
 struct marshal_cmd_DrawElementsInstanced;
 uint32_t _mesa_unmarshal_DrawElementsInstanced(struct gl_context *ctx, const struct marshal_cmd_DrawElementsInstanced *restrict cmd);
-void GLAPIENTRY _mesa_marshal_DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
+void GLAPIENTRY _mesa_marshal_DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count);
+void GLAPIENTRY _mesa_marshal_DrawElementsInstanced_no_error(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count);
 struct marshal_cmd_BindRenderbuffer;
 uint32_t _mesa_unmarshal_BindRenderbuffer(struct gl_context *ctx, const struct marshal_cmd_BindRenderbuffer *restrict cmd);
 struct marshal_cmd_DeleteRenderbuffers;
@@ -2570,6 +2656,12 @@ struct marshal_cmd_BlitFramebuffer;
 uint32_t _mesa_unmarshal_BlitFramebuffer(struct gl_context *ctx, const struct marshal_cmd_BlitFramebuffer *restrict cmd);
 struct marshal_cmd_GenerateMipmap;
 uint32_t _mesa_unmarshal_GenerateMipmap(struct gl_context *ctx, const struct marshal_cmd_GenerateMipmap *restrict cmd);
+struct marshal_cmd_FramebufferTextureMultiviewOVR;
+uint32_t _mesa_unmarshal_FramebufferTextureMultiviewOVR(struct gl_context *ctx, const struct marshal_cmd_FramebufferTextureMultiviewOVR *restrict cmd);
+struct marshal_cmd_NamedFramebufferTextureMultiviewOVR;
+uint32_t _mesa_unmarshal_NamedFramebufferTextureMultiviewOVR(struct gl_context *ctx, const struct marshal_cmd_NamedFramebufferTextureMultiviewOVR *restrict cmd);
+struct marshal_cmd_FramebufferTextureMultisampleMultiviewOVR;
+uint32_t _mesa_unmarshal_FramebufferTextureMultisampleMultiviewOVR(struct gl_context *ctx, const struct marshal_cmd_FramebufferTextureMultisampleMultiviewOVR *restrict cmd);
 struct marshal_cmd_VertexAttribDivisor;
 uint32_t _mesa_unmarshal_VertexAttribDivisor(struct gl_context *ctx, const struct marshal_cmd_VertexAttribDivisor *restrict cmd);
 struct marshal_cmd_VertexArrayVertexAttribDivisorEXT;
@@ -2589,15 +2681,27 @@ uint32_t _mesa_unmarshal_CopyBufferSubData(struct gl_context *ctx, const struct 
 struct marshal_cmd_DrawElementsBaseVertex;
 uint32_t _mesa_unmarshal_DrawElementsBaseVertex(struct gl_context *ctx, const struct marshal_cmd_DrawElementsBaseVertex *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex);
+void GLAPIENTRY _mesa_marshal_DrawElementsBaseVertex_no_error(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex);
 struct marshal_cmd_DrawRangeElementsBaseVertex;
 uint32_t _mesa_unmarshal_DrawRangeElementsBaseVertex(struct gl_context *ctx, const struct marshal_cmd_DrawRangeElementsBaseVertex *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex);
+void GLAPIENTRY _mesa_marshal_DrawRangeElementsBaseVertex_no_error(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex);
 struct marshal_cmd_MultiDrawElementsBaseVertex;
 uint32_t _mesa_unmarshal_MultiDrawElementsBaseVertex(struct gl_context *ctx, const struct marshal_cmd_MultiDrawElementsBaseVertex *restrict cmd);
 void GLAPIENTRY _mesa_marshal_MultiDrawElementsBaseVertex(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, const GLint *basevertex);
-struct marshal_cmd_DrawElementsInstancedBaseVertex;
+struct marshal_cmd_DrawElementsInstancedBaseVertex
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLindextype type;
+   GLsizei count;
+   GLsizei primcount;
+   GLint basevertex;
+   const GLvoid * indices;
+};
 uint32_t _mesa_unmarshal_DrawElementsInstancedBaseVertex(struct gl_context *ctx, const struct marshal_cmd_DrawElementsInstancedBaseVertex *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawElementsInstancedBaseVertex(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex);
+void GLAPIENTRY _mesa_marshal_DrawElementsInstancedBaseVertex_no_error(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex);
 struct marshal_cmd_DeleteSync;
 uint32_t _mesa_unmarshal_DeleteSync(struct gl_context *ctx, const struct marshal_cmd_DeleteSync *restrict cmd);
 struct marshal_cmd_WaitSync;
@@ -2762,16 +2866,42 @@ struct marshal_cmd_PatchParameteri;
 uint32_t _mesa_unmarshal_PatchParameteri(struct gl_context *ctx, const struct marshal_cmd_PatchParameteri *restrict cmd);
 struct marshal_cmd_PatchParameterfv;
 uint32_t _mesa_unmarshal_PatchParameterfv(struct gl_context *ctx, const struct marshal_cmd_PatchParameterfv *restrict cmd);
-struct marshal_cmd_DrawArraysIndirect;
+struct marshal_cmd_DrawArraysIndirect
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   const GLvoid * indirect;
+};
 uint32_t _mesa_unmarshal_DrawArraysIndirect(struct gl_context *ctx, const struct marshal_cmd_DrawArraysIndirect *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawArraysIndirect(GLenum mode, const GLvoid *indirect);
-struct marshal_cmd_DrawElementsIndirect;
+struct marshal_cmd_DrawElementsIndirect
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLindextype type;
+   const GLvoid * indirect;
+};
 uint32_t _mesa_unmarshal_DrawElementsIndirect(struct gl_context *ctx, const struct marshal_cmd_DrawElementsIndirect *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawElementsIndirect(GLenum mode, GLenum type, const GLvoid *indirect);
-struct marshal_cmd_MultiDrawArraysIndirect;
+struct marshal_cmd_MultiDrawArraysIndirect
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLsizei primcount;
+   GLsizei stride;
+   const GLvoid * indirect;
+};
 uint32_t _mesa_unmarshal_MultiDrawArraysIndirect(struct gl_context *ctx, const struct marshal_cmd_MultiDrawArraysIndirect *restrict cmd);
 void GLAPIENTRY _mesa_marshal_MultiDrawArraysIndirect(GLenum mode, const GLvoid *indirect, GLsizei primcount, GLsizei stride);
-struct marshal_cmd_MultiDrawElementsIndirect;
+struct marshal_cmd_MultiDrawElementsIndirect
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLindextype type;
+   GLsizei primcount;
+   GLsizei stride;
+   const GLvoid * indirect;
+};
 uint32_t _mesa_unmarshal_MultiDrawElementsIndirect(struct gl_context *ctx, const struct marshal_cmd_MultiDrawElementsIndirect *restrict cmd);
 void GLAPIENTRY _mesa_marshal_MultiDrawElementsIndirect(GLenum mode, GLenum type, const GLvoid *indirect, GLsizei primcount, GLsizei stride);
 struct marshal_cmd_Uniform1d;
@@ -2949,9 +3079,13 @@ struct marshal_cmd_VertexAttribL4dv;
 uint32_t _mesa_unmarshal_VertexAttribL4dv(struct gl_context *ctx, const struct marshal_cmd_VertexAttribL4dv *restrict cmd);
 void GLAPIENTRY _mesa_marshal_VertexAttribL4dv(GLuint index, const GLdouble *v);
 struct marshal_cmd_VertexAttribLPointer;
+struct marshal_cmd_VertexAttribLPointer_packed;
 uint32_t _mesa_unmarshal_VertexAttribLPointer(struct gl_context *ctx, const struct marshal_cmd_VertexAttribLPointer *restrict cmd);
+uint32_t _mesa_unmarshal_VertexAttribLPointer_packed(struct gl_context *ctx, const struct marshal_cmd_VertexAttribLPointer_packed *restrict cmd);
 struct marshal_cmd_VertexArrayVertexAttribLOffsetEXT;
+struct marshal_cmd_VertexArrayVertexAttribLOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayVertexAttribLOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribLOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayVertexAttribLOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribLOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_ReleaseShaderCompiler;
 uint32_t _mesa_unmarshal_ReleaseShaderCompiler(struct gl_context *ctx, const struct marshal_cmd_ReleaseShaderCompiler *restrict cmd);
 struct marshal_cmd_ShaderBinary;
@@ -2978,13 +3112,25 @@ struct marshal_cmd_GetnCompressedTexImageARB;
 uint32_t _mesa_unmarshal_GetnCompressedTexImageARB(struct gl_context *ctx, const struct marshal_cmd_GetnCompressedTexImageARB *restrict cmd);
 struct marshal_cmd_DrawArraysInstancedBaseInstance;
 uint32_t _mesa_unmarshal_DrawArraysInstancedBaseInstance(struct gl_context *ctx, const struct marshal_cmd_DrawArraysInstancedBaseInstance *restrict cmd);
-void GLAPIENTRY _mesa_marshal_DrawArraysInstancedBaseInstance(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance);
-struct marshal_cmd_DrawElementsInstancedBaseInstance;
+void GLAPIENTRY _mesa_marshal_DrawArraysInstancedBaseInstance(GLenum mode, GLint first, GLsizei count, GLsizei instance_count, GLuint baseinstance);
+void GLAPIENTRY _mesa_marshal_DrawArraysInstancedBaseInstance_no_error(GLenum mode, GLint first, GLsizei count, GLsizei instance_count, GLuint baseinstance);
+struct marshal_cmd_DrawElementsInstancedBaseInstance
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLindextype type;
+   GLsizei count;
+   GLsizei primcount;
+   GLuint baseinstance;
+   const GLvoid * indices;
+};
 uint32_t _mesa_unmarshal_DrawElementsInstancedBaseInstance(struct gl_context *ctx, const struct marshal_cmd_DrawElementsInstancedBaseInstance *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawElementsInstancedBaseInstance(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance);
+void GLAPIENTRY _mesa_marshal_DrawElementsInstancedBaseInstance_no_error(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance);
 struct marshal_cmd_DrawElementsInstancedBaseVertexBaseInstance;
 uint32_t _mesa_unmarshal_DrawElementsInstancedBaseVertexBaseInstance(struct gl_context *ctx, const struct marshal_cmd_DrawElementsInstancedBaseVertexBaseInstance *restrict cmd);
-void GLAPIENTRY _mesa_marshal_DrawElementsInstancedBaseVertexBaseInstance(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance);
+void GLAPIENTRY _mesa_marshal_DrawElementsInstancedBaseVertexBaseInstance(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count, GLint basevertex, GLuint baseinstance);
+void GLAPIENTRY _mesa_marshal_DrawElementsInstancedBaseVertexBaseInstance_no_error(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count, GLint basevertex, GLuint baseinstance);
 struct marshal_cmd_DrawTransformFeedbackInstanced;
 uint32_t _mesa_unmarshal_DrawTransformFeedbackInstanced(struct gl_context *ctx, const struct marshal_cmd_DrawTransformFeedbackInstanced *restrict cmd);
 struct marshal_cmd_DrawTransformFeedbackStreamInstanced;
@@ -2999,12 +3145,6 @@ struct marshal_cmd_TexStorage2D;
 uint32_t _mesa_unmarshal_TexStorage2D(struct gl_context *ctx, const struct marshal_cmd_TexStorage2D *restrict cmd);
 struct marshal_cmd_TexStorage3D;
 uint32_t _mesa_unmarshal_TexStorage3D(struct gl_context *ctx, const struct marshal_cmd_TexStorage3D *restrict cmd);
-struct marshal_cmd_TextureStorage1DEXT;
-uint32_t _mesa_unmarshal_TextureStorage1DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureStorage1DEXT *restrict cmd);
-struct marshal_cmd_TextureStorage2DEXT;
-uint32_t _mesa_unmarshal_TextureStorage2DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureStorage2DEXT *restrict cmd);
-struct marshal_cmd_TextureStorage3DEXT;
-uint32_t _mesa_unmarshal_TextureStorage3DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureStorage3DEXT *restrict cmd);
 struct marshal_cmd_PushDebugGroup;
 uint32_t _mesa_unmarshal_PushDebugGroup(struct gl_context *ctx, const struct marshal_cmd_PushDebugGroup *restrict cmd);
 struct marshal_cmd_PopDebugGroup;
@@ -3020,7 +3160,9 @@ uint32_t _mesa_unmarshal_CopyImageSubData(struct gl_context *ctx, const struct m
 struct marshal_cmd_TextureView;
 uint32_t _mesa_unmarshal_TextureView(struct gl_context *ctx, const struct marshal_cmd_TextureView *restrict cmd);
 struct marshal_cmd_BindVertexBuffer;
+struct marshal_cmd_BindVertexBuffer_packed;
 uint32_t _mesa_unmarshal_BindVertexBuffer(struct gl_context *ctx, const struct marshal_cmd_BindVertexBuffer *restrict cmd);
+uint32_t _mesa_unmarshal_BindVertexBuffer_packed(struct gl_context *ctx, const struct marshal_cmd_BindVertexBuffer_packed *restrict cmd);
 struct marshal_cmd_VertexAttribFormat;
 uint32_t _mesa_unmarshal_VertexAttribFormat(struct gl_context *ctx, const struct marshal_cmd_VertexAttribFormat *restrict cmd);
 struct marshal_cmd_VertexAttribIFormat;
@@ -3032,7 +3174,9 @@ uint32_t _mesa_unmarshal_VertexAttribBinding(struct gl_context *ctx, const struc
 struct marshal_cmd_VertexBindingDivisor;
 uint32_t _mesa_unmarshal_VertexBindingDivisor(struct gl_context *ctx, const struct marshal_cmd_VertexBindingDivisor *restrict cmd);
 struct marshal_cmd_VertexArrayBindVertexBufferEXT;
+struct marshal_cmd_VertexArrayBindVertexBufferEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayBindVertexBufferEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayBindVertexBufferEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayBindVertexBufferEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayBindVertexBufferEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArrayVertexAttribFormatEXT;
 uint32_t _mesa_unmarshal_VertexArrayVertexAttribFormatEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribFormatEXT *restrict cmd);
 struct marshal_cmd_VertexArrayVertexAttribIFormatEXT;
@@ -3109,10 +3253,27 @@ uint32_t _mesa_unmarshal_VertexAttribL1ui64vARB(struct gl_context *ctx, const st
 void GLAPIENTRY _mesa_marshal_VertexAttribL1ui64vARB(GLuint index, const GLuint64EXT *v);
 struct marshal_cmd_DispatchComputeGroupSizeARB;
 uint32_t _mesa_unmarshal_DispatchComputeGroupSizeARB(struct gl_context *ctx, const struct marshal_cmd_DispatchComputeGroupSizeARB *restrict cmd);
-struct marshal_cmd_MultiDrawArraysIndirectCountARB;
+struct marshal_cmd_MultiDrawArraysIndirectCountARB
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLsizei maxdrawcount;
+   GLsizei stride;
+   GLintptr indirect;
+   GLintptr drawcount;
+};
 uint32_t _mesa_unmarshal_MultiDrawArraysIndirectCountARB(struct gl_context *ctx, const struct marshal_cmd_MultiDrawArraysIndirectCountARB *restrict cmd);
 void GLAPIENTRY _mesa_marshal_MultiDrawArraysIndirectCountARB(GLenum mode, GLintptr indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride);
-struct marshal_cmd_MultiDrawElementsIndirectCountARB;
+struct marshal_cmd_MultiDrawElementsIndirectCountARB
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLindextype type;
+   GLsizei maxdrawcount;
+   GLsizei stride;
+   GLintptr indirect;
+   GLintptr drawcount;
+};
 uint32_t _mesa_unmarshal_MultiDrawElementsIndirectCountARB(struct gl_context *ctx, const struct marshal_cmd_MultiDrawElementsIndirectCountARB *restrict cmd);
 void GLAPIENTRY _mesa_marshal_MultiDrawElementsIndirectCountARB(GLenum mode, GLenum type, GLintptr indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride);
 struct marshal_cmd_TexPageCommitmentARB;
@@ -3228,7 +3389,9 @@ uint32_t _mesa_unmarshal_EnableVertexArrayAttrib(struct gl_context *ctx, const s
 struct marshal_cmd_VertexArrayElementBuffer;
 uint32_t _mesa_unmarshal_VertexArrayElementBuffer(struct gl_context *ctx, const struct marshal_cmd_VertexArrayElementBuffer *restrict cmd);
 struct marshal_cmd_VertexArrayVertexBuffer;
+struct marshal_cmd_VertexArrayVertexBuffer_packed;
 uint32_t _mesa_unmarshal_VertexArrayVertexBuffer(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexBuffer *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayVertexBuffer_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexBuffer_packed *restrict cmd);
 struct marshal_cmd_VertexArrayVertexBuffers;
 uint32_t _mesa_unmarshal_VertexArrayVertexBuffers(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexBuffers *restrict cmd);
 struct marshal_cmd_VertexArrayAttribFormat;
@@ -3334,17 +3497,29 @@ uint32_t _mesa_unmarshal_MaxShaderCompilerThreadsKHR(struct gl_context *ctx, con
 struct marshal_cmd_SpecializeShaderARB;
 uint32_t _mesa_unmarshal_SpecializeShaderARB(struct gl_context *ctx, const struct marshal_cmd_SpecializeShaderARB *restrict cmd);
 struct marshal_cmd_ColorPointerEXT;
+struct marshal_cmd_ColorPointerEXT_packed;
 uint32_t _mesa_unmarshal_ColorPointerEXT(struct gl_context *ctx, const struct marshal_cmd_ColorPointerEXT *restrict cmd);
+uint32_t _mesa_unmarshal_ColorPointerEXT_packed(struct gl_context *ctx, const struct marshal_cmd_ColorPointerEXT_packed *restrict cmd);
 struct marshal_cmd_EdgeFlagPointerEXT;
+struct marshal_cmd_EdgeFlagPointerEXT_packed;
 uint32_t _mesa_unmarshal_EdgeFlagPointerEXT(struct gl_context *ctx, const struct marshal_cmd_EdgeFlagPointerEXT *restrict cmd);
+uint32_t _mesa_unmarshal_EdgeFlagPointerEXT_packed(struct gl_context *ctx, const struct marshal_cmd_EdgeFlagPointerEXT_packed *restrict cmd);
 struct marshal_cmd_IndexPointerEXT;
+struct marshal_cmd_IndexPointerEXT_packed;
 uint32_t _mesa_unmarshal_IndexPointerEXT(struct gl_context *ctx, const struct marshal_cmd_IndexPointerEXT *restrict cmd);
+uint32_t _mesa_unmarshal_IndexPointerEXT_packed(struct gl_context *ctx, const struct marshal_cmd_IndexPointerEXT_packed *restrict cmd);
 struct marshal_cmd_NormalPointerEXT;
+struct marshal_cmd_NormalPointerEXT_packed;
 uint32_t _mesa_unmarshal_NormalPointerEXT(struct gl_context *ctx, const struct marshal_cmd_NormalPointerEXT *restrict cmd);
+uint32_t _mesa_unmarshal_NormalPointerEXT_packed(struct gl_context *ctx, const struct marshal_cmd_NormalPointerEXT_packed *restrict cmd);
 struct marshal_cmd_TexCoordPointerEXT;
+struct marshal_cmd_TexCoordPointerEXT_packed;
 uint32_t _mesa_unmarshal_TexCoordPointerEXT(struct gl_context *ctx, const struct marshal_cmd_TexCoordPointerEXT *restrict cmd);
+uint32_t _mesa_unmarshal_TexCoordPointerEXT_packed(struct gl_context *ctx, const struct marshal_cmd_TexCoordPointerEXT_packed *restrict cmd);
 struct marshal_cmd_VertexPointerEXT;
+struct marshal_cmd_VertexPointerEXT_packed;
 uint32_t _mesa_unmarshal_VertexPointerEXT(struct gl_context *ctx, const struct marshal_cmd_VertexPointerEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexPointerEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexPointerEXT_packed *restrict cmd);
 struct marshal_cmd_LockArraysEXT;
 uint32_t _mesa_unmarshal_LockArraysEXT(struct gl_context *ctx, const struct marshal_cmd_LockArraysEXT *restrict cmd);
 struct marshal_cmd_UnlockArraysEXT;
@@ -3687,7 +3862,9 @@ uint32_t _mesa_unmarshal_MultiTexGeniEXT(struct gl_context *ctx, const struct ma
 struct marshal_cmd_MultiTexGenivEXT;
 uint32_t _mesa_unmarshal_MultiTexGenivEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGenivEXT *restrict cmd);
 struct marshal_cmd_MultiTexCoordPointerEXT;
+struct marshal_cmd_MultiTexCoordPointerEXT_packed;
 uint32_t _mesa_unmarshal_MultiTexCoordPointerEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexCoordPointerEXT *restrict cmd);
+uint32_t _mesa_unmarshal_MultiTexCoordPointerEXT_packed(struct gl_context *ctx, const struct marshal_cmd_MultiTexCoordPointerEXT_packed *restrict cmd);
 struct marshal_cmd_MatrixLoadTransposefEXT;
 uint32_t _mesa_unmarshal_MatrixLoadTransposefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoadTransposefEXT *restrict cmd);
 struct marshal_cmd_MatrixLoadTransposedEXT;
@@ -3757,27 +3934,49 @@ uint32_t _mesa_unmarshal_NamedRenderbufferStorageMultisampleEXT(struct gl_contex
 struct marshal_cmd_NamedCopyBufferSubDataEXT;
 uint32_t _mesa_unmarshal_NamedCopyBufferSubDataEXT(struct gl_context *ctx, const struct marshal_cmd_NamedCopyBufferSubDataEXT *restrict cmd);
 struct marshal_cmd_VertexArrayVertexOffsetEXT;
+struct marshal_cmd_VertexArrayVertexOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayVertexOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayVertexOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArrayColorOffsetEXT;
+struct marshal_cmd_VertexArrayColorOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayColorOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayColorOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayColorOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayColorOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArrayEdgeFlagOffsetEXT;
+struct marshal_cmd_VertexArrayEdgeFlagOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayEdgeFlagOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayEdgeFlagOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayEdgeFlagOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayEdgeFlagOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArrayIndexOffsetEXT;
+struct marshal_cmd_VertexArrayIndexOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayIndexOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayIndexOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayIndexOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayIndexOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArrayNormalOffsetEXT;
+struct marshal_cmd_VertexArrayNormalOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayNormalOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayNormalOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayNormalOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayNormalOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArrayTexCoordOffsetEXT;
+struct marshal_cmd_VertexArrayTexCoordOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayTexCoordOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayTexCoordOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayTexCoordOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayTexCoordOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArrayMultiTexCoordOffsetEXT;
+struct marshal_cmd_VertexArrayMultiTexCoordOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayMultiTexCoordOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayMultiTexCoordOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayMultiTexCoordOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayMultiTexCoordOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArrayFogCoordOffsetEXT;
+struct marshal_cmd_VertexArrayFogCoordOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayFogCoordOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayFogCoordOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayFogCoordOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayFogCoordOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArraySecondaryColorOffsetEXT;
+struct marshal_cmd_VertexArraySecondaryColorOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArraySecondaryColorOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArraySecondaryColorOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArraySecondaryColorOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArraySecondaryColorOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArrayVertexAttribOffsetEXT;
+struct marshal_cmd_VertexArrayVertexAttribOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayVertexAttribOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayVertexAttribOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_VertexArrayVertexAttribIOffsetEXT;
+struct marshal_cmd_VertexArrayVertexAttribIOffsetEXT_packed;
 uint32_t _mesa_unmarshal_VertexArrayVertexAttribIOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribIOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_VertexArrayVertexAttribIOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribIOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_EnableVertexArrayEXT;
 uint32_t _mesa_unmarshal_EnableVertexArrayEXT(struct gl_context *ctx, const struct marshal_cmd_EnableVertexArrayEXT *restrict cmd);
 struct marshal_cmd_DisableVertexArrayEXT;
@@ -3832,6 +4031,12 @@ struct marshal_cmd_WindowRectanglesEXT;
 uint32_t _mesa_unmarshal_WindowRectanglesEXT(struct gl_context *ctx, const struct marshal_cmd_WindowRectanglesEXT *restrict cmd);
 struct marshal_cmd_FramebufferFetchBarrierEXT;
 uint32_t _mesa_unmarshal_FramebufferFetchBarrierEXT(struct gl_context *ctx, const struct marshal_cmd_FramebufferFetchBarrierEXT *restrict cmd);
+struct marshal_cmd_TextureStorage1DEXT;
+uint32_t _mesa_unmarshal_TextureStorage1DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureStorage1DEXT *restrict cmd);
+struct marshal_cmd_TextureStorage2DEXT;
+uint32_t _mesa_unmarshal_TextureStorage2DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureStorage2DEXT *restrict cmd);
+struct marshal_cmd_TextureStorage3DEXT;
+uint32_t _mesa_unmarshal_TextureStorage3DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureStorage3DEXT *restrict cmd);
 struct marshal_cmd_RenderbufferStorageMultisampleAdvancedAMD;
 uint32_t _mesa_unmarshal_RenderbufferStorageMultisampleAdvancedAMD(struct gl_context *ctx, const struct marshal_cmd_RenderbufferStorageMultisampleAdvancedAMD *restrict cmd);
 struct marshal_cmd_NamedRenderbufferStorageMultisampleAdvancedAMD;
@@ -3853,7 +4058,10 @@ uint32_t _mesa_unmarshal_DrawArraysUserBuf(struct gl_context *ctx, const struct 
 void GLAPIENTRY _mesa_marshal_DrawArraysUserBuf(void);
 struct marshal_cmd_DrawElementsUserBuf;
 uint32_t _mesa_unmarshal_DrawElementsUserBuf(struct gl_context *ctx, const struct marshal_cmd_DrawElementsUserBuf *restrict cmd);
-void GLAPIENTRY _mesa_marshal_DrawElementsUserBuf(GLintptr indexBuf, GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instancecount, GLint basevertex, GLuint baseinstance);
+void GLAPIENTRY _mesa_marshal_DrawElementsUserBuf(const GLvoid *cmd);
+struct marshal_cmd_DrawElementsUserBufPacked;
+uint32_t _mesa_unmarshal_DrawElementsUserBufPacked(struct gl_context *ctx, const struct marshal_cmd_DrawElementsUserBufPacked *restrict cmd);
+void GLAPIENTRY _mesa_marshal_DrawElementsUserBufPacked(const GLvoid *cmd);
 struct marshal_cmd_MultiDrawArraysUserBuf;
 uint32_t _mesa_unmarshal_MultiDrawArraysUserBuf(struct gl_context *ctx, const struct marshal_cmd_MultiDrawArraysUserBuf *restrict cmd);
 void GLAPIENTRY _mesa_marshal_MultiDrawArraysUserBuf(void);
@@ -3863,9 +4071,30 @@ void GLAPIENTRY _mesa_marshal_MultiDrawElementsUserBuf(GLintptr indexBuf, GLenum
 struct marshal_cmd_DrawArraysInstancedBaseInstanceDrawID;
 uint32_t _mesa_unmarshal_DrawArraysInstancedBaseInstanceDrawID(struct gl_context *ctx, const struct marshal_cmd_DrawArraysInstancedBaseInstanceDrawID *restrict cmd);
 void GLAPIENTRY _mesa_marshal_DrawArraysInstancedBaseInstanceDrawID(void);
-struct marshal_cmd_DrawElementsInstancedBaseVertexBaseInstanceDrawID;
+struct marshal_cmd_DrawElementsInstancedBaseVertexBaseInstanceDrawID
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLindextype type;
+   GLsizei count;
+   GLsizei instance_count;
+   GLint basevertex;
+   GLuint baseinstance;
+   GLuint drawid;
+   const GLvoid * indices;
+};
 uint32_t _mesa_unmarshal_DrawElementsInstancedBaseVertexBaseInstanceDrawID(struct gl_context *ctx, const struct marshal_cmd_DrawElementsInstancedBaseVertexBaseInstanceDrawID *restrict cmd);
-void GLAPIENTRY _mesa_marshal_DrawElementsInstancedBaseVertexBaseInstanceDrawID(void);
+void GLAPIENTRY _mesa_marshal_DrawElementsInstancedBaseVertexBaseInstanceDrawID(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count, GLint basevertex, GLuint baseinstance, GLuint drawid);
+struct marshal_cmd_DrawElementsPacked
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum8 mode;
+   GLindextype type;
+   GLushort count;
+   GLushort indices;
+};
+uint32_t _mesa_unmarshal_DrawElementsPacked(struct gl_context *ctx, const struct marshal_cmd_DrawElementsPacked *restrict cmd);
+void GLAPIENTRY _mesa_marshal_DrawElementsPacked(GLenum mode, GLenum type, GLushort count, GLushort indices);
 struct marshal_cmd_InternalInvalidateFramebufferAncillaryMESA;
 uint32_t _mesa_unmarshal_InternalInvalidateFramebufferAncillaryMESA(struct gl_context *ctx, const struct marshal_cmd_InternalInvalidateFramebufferAncillaryMESA *restrict cmd);
 void GLAPIENTRY _mesa_marshal_InternalInvalidateFramebufferAncillaryMESA(void);
@@ -3938,7 +4167,9 @@ struct marshal_cmd_VertexAttribI4usv;
 uint32_t _mesa_unmarshal_VertexAttribI4usv(struct gl_context *ctx, const struct marshal_cmd_VertexAttribI4usv *restrict cmd);
 void GLAPIENTRY _mesa_marshal_VertexAttribI4usv(GLuint index, const GLushort *v);
 struct marshal_cmd_VertexAttribIPointer;
+struct marshal_cmd_VertexAttribIPointer_packed;
 uint32_t _mesa_unmarshal_VertexAttribIPointer(struct gl_context *ctx, const struct marshal_cmd_VertexAttribIPointer *restrict cmd);
+uint32_t _mesa_unmarshal_VertexAttribIPointer_packed(struct gl_context *ctx, const struct marshal_cmd_VertexAttribIPointer_packed *restrict cmd);
 struct marshal_cmd_Uniform1ui;
 uint32_t _mesa_unmarshal_Uniform1ui(struct gl_context *ctx, const struct marshal_cmd_Uniform1ui *restrict cmd);
 struct marshal_cmd_Uniform2ui;
@@ -3985,7 +4216,9 @@ struct marshal_cmd_PrimitiveRestartNV;
 uint32_t _mesa_unmarshal_PrimitiveRestartNV(struct gl_context *ctx, const struct marshal_cmd_PrimitiveRestartNV *restrict cmd);
 void GLAPIENTRY _mesa_marshal_PrimitiveRestartNV(void);
 struct marshal_cmd_BindBufferOffsetEXT;
+struct marshal_cmd_BindBufferOffsetEXT_packed;
 uint32_t _mesa_unmarshal_BindBufferOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_BindBufferOffsetEXT *restrict cmd);
+uint32_t _mesa_unmarshal_BindBufferOffsetEXT_packed(struct gl_context *ctx, const struct marshal_cmd_BindBufferOffsetEXT_packed *restrict cmd);
 struct marshal_cmd_BindTransformFeedback;
 uint32_t _mesa_unmarshal_BindTransformFeedback(struct gl_context *ctx, const struct marshal_cmd_BindTransformFeedback *restrict cmd);
 struct marshal_cmd_DeleteTransformFeedbacks;
@@ -4269,7 +4502,9 @@ uint32_t _mesa_unmarshal_DrawTexxOES(struct gl_context *ctx, const struct marsha
 struct marshal_cmd_DrawTexxvOES;
 uint32_t _mesa_unmarshal_DrawTexxvOES(struct gl_context *ctx, const struct marshal_cmd_DrawTexxvOES *restrict cmd);
 struct marshal_cmd_PointSizePointerOES;
+struct marshal_cmd_PointSizePointerOES_packed;
 uint32_t _mesa_unmarshal_PointSizePointerOES(struct gl_context *ctx, const struct marshal_cmd_PointSizePointerOES *restrict cmd);
+uint32_t _mesa_unmarshal_PointSizePointerOES_packed(struct gl_context *ctx, const struct marshal_cmd_PointSizePointerOES_packed *restrict cmd);
 struct marshal_cmd_DiscardFramebufferEXT;
 uint32_t _mesa_unmarshal_DiscardFramebufferEXT(struct gl_context *ctx, const struct marshal_cmd_DiscardFramebufferEXT *restrict cmd);
 struct marshal_cmd_FramebufferTexture2DMultisampleEXT;

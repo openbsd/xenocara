@@ -313,6 +313,11 @@ void *ralloc_parent(const void *ptr);
  */
 void ralloc_set_destructor(const void *ptr, void(*destructor)(void *));
 
+/**
+ * Duplicate memory, allocating the memory from the given context.
+ */
+void *ralloc_memdup(const void *ctx, const void *mem, size_t n) MALLOCLIKE;
+
 /// \defgroup array String Functions @{
 /**
  * Duplicate a string, allocating the memory from the given context.
@@ -478,6 +483,16 @@ bool ralloc_asprintf_append (char **str, const char *fmt, ...)
 bool ralloc_vasprintf_append(char **str, const char *fmt, va_list args);
 /// @}
 
+/**
+ * Estimate the memory usage in bytes of a ralloc context, recursively including
+ * all of its child counts. This is only available in debug builds as release
+ * builds do not track size information. It is providing as a aid for debugging
+ * memory bloat.
+ */
+#ifndef NDEBUG
+size_t ralloc_total_size(const void *ptr);
+#endif
+
 typedef struct gc_ctx gc_ctx;
 
 /**
@@ -498,8 +513,8 @@ gc_ctx *gc_context(const void *parent);
 #define gc_zalloc_zla(ctx, type, type2, count) \
    gc_zalloc_size(ctx, sizeof(type) + sizeof(type2) * (count), MAX2(alignof(type), alignof(type2)))
 
-void *gc_alloc_size(gc_ctx *ctx, size_t size, size_t align) MALLOCLIKE;
-void *gc_zalloc_size(gc_ctx *ctx, size_t size, size_t align) MALLOCLIKE;
+void *gc_alloc_size(gc_ctx *ctx, size_t size, size_t alignment) MALLOCLIKE;
+void *gc_zalloc_size(gc_ctx *ctx, size_t size, size_t alignment) MALLOCLIKE;
 void gc_free(void *ptr);
 gc_ctx *gc_get_context(void *ptr);
 
@@ -559,6 +574,13 @@ public:                                                                  \
       assert(p != NULL);                                                 \
       static_assert(HAS_TRIVIAL_DESTRUCTOR(TYPE));                       \
       return p;                                                          \
+   }                                                                     \
+   static void* operator new[](size_t size, linear_ctx *ctx)             \
+   {                                                                     \
+      void *p = ALLOC_FUNC(ctx, size);                                   \
+      assert(p != NULL);                                                 \
+      static_assert(HAS_TRIVIAL_DESTRUCTOR(TYPE));                       \
+      return p;                                                          \
    }
 
 #define DECLARE_LINEAR_ALLOC_CXX_OPERATORS(type) \
@@ -579,6 +601,10 @@ typedef struct linear_ctx linear_ctx;
  */
 void *linear_alloc_child(linear_ctx *ctx, unsigned size);
 
+typedef struct {
+   unsigned min_buffer_size;
+} linear_opts;
+
 /**
  * Allocate a linear context that will internally hold linear buffers.
  * Use it for all child node allocations.
@@ -586,6 +612,8 @@ void *linear_alloc_child(linear_ctx *ctx, unsigned size);
  * \param ralloc_ctx  ralloc context, must not be NULL
  */
 linear_ctx *linear_context(void *ralloc_ctx);
+
+linear_ctx *linear_context_with_opts(void *ralloc_ctx, const linear_opts *opts);
 
 /**
  * Same as linear_alloc_child, but also clears memory.

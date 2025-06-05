@@ -1067,7 +1067,11 @@ __glXInitialize(Display * dpy)
 #endif
 
 #ifndef GL_LIB_NAME
+#ifdef __OpenBSD__
+#define GL_LIB_NAME "libGL.so"
+#else
 #define GL_LIB_NAME "libGL.so.1"
+#endif
 #endif
 
    void *glhandle = dlopen(GL_LIB_NAME, RTLD_NOW | RTLD_GLOBAL);

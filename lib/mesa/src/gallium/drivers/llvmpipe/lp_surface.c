@@ -162,12 +162,13 @@ lp_blit(struct pipe_context *pipe,
       info.mask = PIPE_MASK_R;
    }
 
-   util_blitter_save_vertex_buffer_slot(lp->blitter, lp->vertex_buffer);
+   util_blitter_save_vertex_buffers(lp->blitter, lp->vertex_buffer,
+                                    lp->num_vertex_buffers);
    util_blitter_save_vertex_elements(lp->blitter, (void*)lp->velems);
    util_blitter_save_vertex_shader(lp->blitter, (void*)lp->vs);
    util_blitter_save_geometry_shader(lp->blitter, (void*)lp->gs);
    util_blitter_save_so_targets(lp->blitter, lp->num_so_targets,
-                     (struct pipe_stream_output_target**)lp->so_targets);
+                     (struct pipe_stream_output_target**)lp->so_targets, MESA_PRIM_UNKNOWN);
    util_blitter_save_rasterizer(lp->blitter, (void*)lp->rasterizer);
    util_blitter_save_viewport(lp->blitter, &lp->viewports[0]);
    util_blitter_save_scissor(lp->blitter, &lp->scissors[0]);
@@ -190,7 +191,12 @@ lp_blit(struct pipe_context *pipe,
    util_blitter_save_render_condition(lp->blitter, lp->render_cond_query,
                                       lp->render_cond_cond,
                                       lp->render_cond_mode);
-   util_blitter_blit(lp->blitter, &info);
+
+   void *render_cond_buffer = lp->render_cond_buffer;
+   if (!blit_info->render_condition_enable)
+      lp->render_cond_buffer = NULL;
+   util_blitter_blit(lp->blitter, &info, NULL);
+   lp->render_cond_buffer = render_cond_buffer;
 }
 
 

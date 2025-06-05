@@ -1,34 +1,26 @@
 /*
  * Copyright 2010 Jerome Glisse <glisse@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
+
 #ifndef R600_ASM_H
 #define R600_ASM_H
 
-#include "r600_pipe.h"
+#include "util/format/u_format.h"
+#include "util/list.h"
+#include "amd_family.h"
 #include "r600_isa.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define R600_ASM_ERR(fmt, args...) \
+	fprintf(stderr, "EE %s:%d %s - " fmt, __FILE__, __LINE__, __func__, ##args)
 
 struct r600_bytecode_alu_src {
 	unsigned			sel;
@@ -331,10 +323,6 @@ void r600_bytecode_alu_read(struct r600_bytecode *bc,
 int r600_load_ar(struct r600_bytecode *bc, bool for_src);
 
 int cm_bytecode_add_cf_end(struct r600_bytecode *bc);
-
-void *r600_create_vertex_fetch_shader(struct pipe_context *ctx,
-				      unsigned count,
-				      const struct pipe_vertex_element *elements);
 
 /* r700_asm.c */
 void r700_bytecode_cf_vtx_build(uint32_t *bytecode,

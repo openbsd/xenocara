@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2019 Google, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2019 Google, Inc.
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -31,7 +13,7 @@
 #include "ir3_compiler.h"
 #include "ir3_context.h"
 
-#ifdef DEBUG
+#if MESA_DEBUG
 #define SCHED_DEBUG (ir3_shader_debug & IR3_DBG_SCHEDMSGS)
 #else
 #define SCHED_DEBUG 0
@@ -52,6 +34,8 @@
          mesa_log_stream_destroy(stream);                                      \
       }                                                                        \
    } while (0)
+
+#define SCHED_DEBUG_DUMP_DEPTH 1
 
 /*
  * Post RA Instruction Scheduling
@@ -83,7 +67,6 @@ struct ir3_postsched_node {
 
    bool has_sy_src, has_ss_src;
 
-   unsigned delay;
    unsigned max_delay;
 };
 
@@ -104,6 +87,7 @@ has_ss_src(struct ir3_instruction *instr)
    return node->has_ss_src;
 }
 
+#ifndef NDEBUG
 static void
 sched_dag_validate_cb(const struct dag_node *node, void *data)
 {
@@ -111,6 +95,7 @@ sched_dag_validate_cb(const struct dag_node *node, void *data)
 
    ir3_print_instr(n->instr);
 }
+#endif
 
 static void
 schedule(struct ir3_postsched_ctx *ctx, struct ir3_instruction *instr)
@@ -165,24 +150,6 @@ schedule(struct ir3_postsched_ctx *ctx, struct ir3_instruction *instr)
    }
 }
 
-static void
-dump_state(struct ir3_postsched_ctx *ctx)
-{
-   if (!SCHED_DEBUG)
-      return;
-
-   foreach_sched_node (n, &ctx->dag->heads) {
-      di(n->instr, "maxdel=%3d    ", n->max_delay);
-
-      util_dynarray_foreach (&n->dag.edges, struct dag_edge, edge) {
-         struct ir3_postsched_node *child =
-            (struct ir3_postsched_node *)edge->child;
-
-         di(child->instr, " -> (%d parents) ", child->dag.parent_count);
-      }
-   }
-}
-
 static unsigned
 node_delay(struct ir3_postsched_ctx *ctx, struct ir3_postsched_node *n)
 {
@@ -203,6 +170,36 @@ node_delay_soft(struct ir3_postsched_ctx *ctx, struct ir3_postsched_node *n)
       delay = MAX2(delay, ctx->sy_delay);
 
    return delay;
+}
+
+static void
+dump_node(struct ir3_postsched_ctx *ctx, struct ir3_postsched_node *n,
+          int level)
+{
+   if (level > SCHED_DEBUG_DUMP_DEPTH)
+      return;
+
+   di(n->instr, "%*s%smaxdel=%d, node_delay=%d,node_delay_soft=%d, %d parents ",
+      level * 2, "", (level > 0 ? "-> " : ""), n->max_delay, node_delay(ctx, n),
+      node_delay_soft(ctx, n), n->dag.parent_count);
+
+   util_dynarray_foreach (&n->dag.edges, struct dag_edge, edge) {
+      struct ir3_postsched_node *child =
+         (struct ir3_postsched_node *)edge->child;
+
+      dump_node(ctx, child, level + 1);
+   }
+}
+
+static void
+dump_state(struct ir3_postsched_ctx *ctx)
+{
+   if (!SCHED_DEBUG)
+      return;
+
+   foreach_sched_node (n, &ctx->dag->heads) {
+      dump_node(ctx, n, 0);
+   }
 }
 
 /* find instruction to schedule: */
@@ -314,25 +311,6 @@ choose_instr(struct ir3_postsched_ctx *ctx)
       return chosen->instr;
    }
 
-   /* Next try to find a ready leader that can be scheduled without nop's,
-    * which in the case of things that need (sy)/(ss) could result in
-    * stalls.. but we've already decided there is not a better option.
-    */
-   foreach_sched_node (n, &ctx->dag->heads) {
-      unsigned d = node_delay(ctx, n);
-
-      if (d > 0)
-         continue;
-
-      if (!chosen || (chosen->max_delay < n->max_delay))
-         chosen = n;
-   }
-
-   if (chosen) {
-      di(chosen->instr, "csp: chose (hard ready)");
-      return chosen->instr;
-   }
-
    /* Otherwise choose leader with maximum cost:
     */
    foreach_sched_node (n, &ctx->dag->heads) {
@@ -362,23 +340,21 @@ struct ir3_postsched_deps_state {
     * Note, this table is twice as big as the # of regs, to deal with
     * half-precision regs.  The approach differs depending on whether
     * the half and full precision register files are "merged" (conflict,
-    * ie. a6xx+) in which case we consider each full precision dep
+    * ie. a6xx+) in which case we use "regs" for both full precision and half
+    * precision dependencies and consider each full precision dep
     * as two half-precision dependencies, vs older separate (non-
-    * conflicting) in which case the first half of the table is used
-    * for full precision and 2nd half for half-precision.
+    * conflicting) in which case the separate "half_regs" table is used for
+    * half-precision deps. See ir3_reg_file_offset().
     */
-   struct ir3_postsched_node *regs[2 * 256];
-   unsigned dst_n[2 * 256];
+   struct ir3_postsched_node *regs[2 * GPR_REG_SIZE];
+   unsigned dst_n[2 * GPR_REG_SIZE];
+   struct ir3_postsched_node *half_regs[GPR_REG_SIZE];
+   unsigned half_dst_n[GPR_REG_SIZE];
+   struct ir3_postsched_node *shared_regs[2 * SHARED_REG_SIZE];
+   unsigned shared_dst_n[2 * SHARED_REG_SIZE];
+   struct ir3_postsched_node *nongpr_regs[2 * NONGPR_REG_SIZE];
+   unsigned nongpr_dst_n[2 * NONGPR_REG_SIZE];
 };
-
-/* bounds checking read/write accessors, since OoB access to stuff on
- * the stack is gonna cause a bad day.
- */
-#define dep_reg(state, idx)                                                    \
-   *({                                                                         \
-      assert((idx) < ARRAY_SIZE((state)->regs));                               \
-      &(state)->regs[(idx)];                                                   \
-   })
 
 static void
 add_dep(struct ir3_postsched_deps_state *state,
@@ -399,28 +375,40 @@ add_dep(struct ir3_postsched_deps_state *state,
 
 static void
 add_single_reg_dep(struct ir3_postsched_deps_state *state,
-                   struct ir3_postsched_node *node, unsigned num, int src_n,
+                   struct ir3_postsched_node *node,
+                   struct ir3_postsched_node **dep_ptr,
+                   unsigned *dst_n_ptr, unsigned num, int src_n,
                    int dst_n)
 {
-   struct ir3_postsched_node *dep = dep_reg(state, num);
+   struct ir3_postsched_node *dep = *dep_ptr;
 
    unsigned d = 0;
    if (src_n >= 0 && dep && state->direction == F) {
+      struct ir3_compiler *compiler = state->ctx->ir->compiler;
       /* get the dst_n this corresponds to */
-      unsigned dst_n = state->dst_n[num];
-      unsigned d_soft = ir3_delayslots(dep->instr, node->instr, src_n, true);
-      d = ir3_delayslots_with_repeat(dep->instr, node->instr, dst_n, src_n);
-      node->delay = MAX2(node->delay, d_soft);
+      unsigned dst_n = *dst_n_ptr;
+      d = ir3_delayslots_with_repeat(compiler, dep->instr, node->instr, dst_n, src_n);
       if (is_sy_producer(dep->instr))
          node->has_sy_src = true;
-      if (is_ss_producer(dep->instr))
+      if (needs_ss(compiler, dep->instr, node->instr))
          node->has_ss_src = true;
+   }
+
+   if (src_n >= 0 && dep && state->direction == R) {
+      /* If node generates a WAR hazard (because it doesn't consume its sources
+       * immediately, dep needs (ss) to sync its dest. Even though this isn't a
+       * (ss) source (but rather a dest), the effect is exactly the same so we
+       * model it as such.
+       */
+      if (is_war_hazard_producer(node->instr)) {
+         dep->has_ss_src = true;
+      }
    }
 
    add_dep(state, dep, node, d);
    if (src_n < 0) {
-      dep_reg(state, num) = node;
-      state->dst_n[num] = dst_n;
+      *dep_ptr = node;
+      *dst_n_ptr = dst_n;
    }
 }
 
@@ -438,24 +426,36 @@ add_reg_dep(struct ir3_postsched_deps_state *state,
             struct ir3_postsched_node *node, const struct ir3_register *reg,
             unsigned num, int src_n, int dst_n)
 {
-   if (state->merged) {
-      /* Make sure that special registers like a0.x that are written as
-       * half-registers don't alias random full registers by pretending that
-       * they're full registers:
-       */
-      if ((reg->flags & IR3_REG_HALF) && !is_reg_special(reg)) {
-         /* single conflict in half-reg space: */
-         add_single_reg_dep(state, node, num, src_n, dst_n);
-      } else {
-         /* two conflicts in half-reg space: */
-         add_single_reg_dep(state, node, 2 * num + 0, src_n, dst_n);
-         add_single_reg_dep(state, node, 2 * num + 1, src_n, dst_n);
-      }
-   } else {
-      if (reg->flags & IR3_REG_HALF)
-         num += ARRAY_SIZE(state->regs) / 2;
-      add_single_reg_dep(state, node, num, src_n, dst_n);
+   struct ir3_postsched_node **regs;
+   unsigned *dst_n_ptr;
+   enum ir3_reg_file file;
+   unsigned size = reg_elem_size(reg);
+   unsigned offset = ir3_reg_file_offset(reg, num, state->merged, &file);
+   switch (file) {
+   case IR3_FILE_FULL:
+      assert(offset + size <= ARRAY_SIZE(state->regs));
+      regs = state->regs;
+      dst_n_ptr = state->dst_n;
+      break;
+   case IR3_FILE_HALF:
+      assert(offset + 1 <= ARRAY_SIZE(state->half_regs));
+      regs = state->half_regs;
+      dst_n_ptr = state->half_dst_n;
+      break;
+   case IR3_FILE_SHARED:
+      assert(offset + size <= ARRAY_SIZE(state->shared_regs));
+      regs = state->shared_regs;
+      dst_n_ptr = state->shared_dst_n;
+      break;
+   case IR3_FILE_NONGPR:
+      assert(offset + size <= ARRAY_SIZE(state->nongpr_regs));
+      regs = state->nongpr_regs;
+      dst_n_ptr = state->nongpr_dst_n;
+      break;
    }
+
+   for (unsigned i = 0; i < size; i++)
+      add_single_reg_dep(state, node, &regs[offset + i], &dst_n_ptr[offset + i], num, src_n, dst_n);
 }
 
 static void
@@ -475,7 +475,6 @@ calculate_deps(struct ir3_postsched_deps_state *state,
             add_reg_dep(state, node, reg, reg->array.base + j, i, -1);
          }
       } else {
-         assert(reg->wrmask >= 1);
          u_foreach_bit (b, reg->wrmask) {
             add_reg_dep(state, node, reg, reg->num + b, i, -1);
          }
@@ -487,6 +486,8 @@ calculate_deps(struct ir3_postsched_deps_state *state,
     */
    foreach_dst_n (reg, i, node->instr) {
       if (reg->wrmask == 0)
+         continue;
+      if (reg->flags & IR3_REG_RT)
          continue;
       if (reg->flags & IR3_REG_RELATIV) {
          /* mark the entire array as written: */
@@ -546,15 +547,30 @@ static void
 sched_dag_max_delay_cb(struct dag_node *node, void *state)
 {
    struct ir3_postsched_node *n = (struct ir3_postsched_node *)node;
+   struct ir3_postsched_ctx *ctx = state;
    uint32_t max_delay = 0;
 
    util_dynarray_foreach (&n->dag.edges, struct dag_edge, edge) {
       struct ir3_postsched_node *child =
          (struct ir3_postsched_node *)edge->child;
-      max_delay = MAX2(child->max_delay, max_delay);
+      unsigned delay = edge->data;
+      unsigned sy_delay = 0;
+      unsigned ss_delay = 0;
+
+      if (child->has_sy_src && is_sy_producer(n->instr)) {
+         sy_delay = soft_sy_delay(n->instr, ctx->block->shader);
+      }
+
+      if (child->has_ss_src &&
+          needs_ss(ctx->v->compiler, n->instr, child->instr)) {
+         ss_delay = soft_ss_delay(n->instr);
+      }
+
+      delay = MAX3(delay, sy_delay, ss_delay);
+      max_delay = MAX2(child->max_delay + delay, max_delay);
    }
 
-   n->max_delay = MAX2(n->max_delay, max_delay + n->delay);
+   n->max_delay = MAX2(n->max_delay, max_delay);
 }
 
 static void
@@ -629,10 +645,12 @@ sched_dag_init(struct ir3_postsched_ctx *ctx)
       }
    }
 
+#ifndef NDEBUG
    dag_validate(ctx->dag, sched_dag_validate_cb, NULL);
+#endif
 
    // TODO do we want to do this after reverse-dependencies?
-   dag_traverse_bottom_up(ctx->dag, sched_dag_max_delay_cb, NULL);
+   dag_traverse_bottom_up(ctx->dag, sched_dag_max_delay_cb, ctx);
 }
 
 static void
@@ -650,6 +668,12 @@ sched_block(struct ir3_postsched_ctx *ctx, struct ir3_block *block)
    ctx->sy_delay = 0;
    ctx->ss_delay = 0;
 
+   /* The terminator has to stay at the end. Instead of trying to set up
+    * dependencies to achieve this, it's easier to just remove it now and add it
+    * back after scheduling.
+    */
+   struct ir3_instruction *terminator = ir3_block_take_terminator(block);
+
    /* move all instructions to the unscheduled list, and
     * empty the block's instruction list (to which we will
     * be inserting).
@@ -663,8 +687,6 @@ sched_block(struct ir3_postsched_ctx *ctx, struct ir3_block *block)
    foreach_instr_safe (instr, &ctx->unscheduled_list) {
       switch (instr->opc) {
       case OPC_NOP:
-      case OPC_B:
-      case OPC_JUMP:
          list_delinit(&instr->node);
          break;
       default:
@@ -707,6 +729,9 @@ sched_block(struct ir3_postsched_ctx *ctx, struct ir3_block *block)
    }
 
    sched_dag_destroy(ctx);
+
+   if (terminator)
+      list_addtail(&terminator->node, &block->instr_list);
 }
 
 static bool

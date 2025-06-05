@@ -106,6 +106,10 @@ extern GLboolean
 _mesa_has_depth_float_channel(GLenum internalFormat);
 
 extern GLboolean
+_mesa_is_generic_compressed_format(const struct gl_context *ctx,
+                                   GLenum format);
+
+extern GLboolean
 _mesa_is_compressed_format(const struct gl_context *ctx, GLenum format);
 
 extern GLboolean
@@ -139,7 +143,7 @@ _mesa_es_error_check_format_and_type(const struct gl_context *ctx,
                                      unsigned dimensions);
 
 extern GLenum
-_mesa_gles_error_check_format_and_type(const struct gl_context *ctx,
+_mesa_gles_error_check_format_and_type(struct gl_context *ctx,
                                        GLenum format, GLenum type,
                                        GLenum internalFormat);
 extern GLint

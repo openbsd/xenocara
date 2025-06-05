@@ -166,17 +166,17 @@ __forceinline short _interlockedadd16(short volatile * _Addend, short _Value)
    ((void) p_atomic_fetch_add((_v), (_i)))
 
 #define p_atomic_add_return(_v, _i) (\
-   sizeof *(_v) == sizeof(char)    ? _interlockedadd8 ((char *)   (_v), (_i)) : \
-   sizeof *(_v) == sizeof(short)   ? _interlockedadd16((short *)  (_v), (_i)) : \
-   sizeof *(_v) == sizeof(long)    ? _interlockedadd  ((long *)   (_v), (_i)) : \
-   sizeof *(_v) == sizeof(__int64) ? _interlockedadd64((__int64 *)(_v), (_i)) : \
+   sizeof *(_v) == sizeof(char)    ? _interlockedadd8 ((char *)   (_v), (char) (_i)) : \
+   sizeof *(_v) == sizeof(short)   ? _interlockedadd16((short *)  (_v), (short) (_i)) : \
+   sizeof *(_v) == sizeof(long)    ? _interlockedadd  ((long *)   (_v), (long) (_i)) : \
+   sizeof *(_v) == sizeof(__int64) ? _interlockedadd64((__int64 *)(_v), (__int64) (_i)) : \
                                      (assert(!"should not get here"), 0))
 
 #define p_atomic_fetch_add(_v, _i) (\
-   sizeof *(_v) == sizeof(char)    ? _InterlockedExchangeAdd8 ((char *)   (_v), (_i)) : \
-   sizeof *(_v) == sizeof(short)   ? _InterlockedExchangeAdd16((short *)  (_v), (_i)) : \
-   sizeof *(_v) == sizeof(long)    ? _InterlockedExchangeAdd  ((long *)   (_v), (_i)) : \
-   sizeof *(_v) == sizeof(__int64) ? _interlockedexchangeadd64((__int64 *)(_v), (_i)) : \
+   sizeof *(_v) == sizeof(char)    ? _InterlockedExchangeAdd8 ((char *)   (_v), (char) (_i)) : \
+   sizeof *(_v) == sizeof(short)   ? _InterlockedExchangeAdd16((short *)  (_v), (short) (_i)) : \
+   sizeof *(_v) == sizeof(long)    ? _InterlockedExchangeAdd  ((long *)   (_v), (long) (_i)) : \
+   sizeof *(_v) == sizeof(__int64) ? _interlockedexchangeadd64((__int64 *)(_v), (__int64) (_i)) : \
                                      (assert(!"should not get here"), 0))
 
 #define p_atomic_cmpxchg(_v, _old, _new) (\
@@ -343,13 +343,27 @@ static inline uint64_t p_atomic_xchg_64(uint64_t *v, uint64_t i)
 /* On x86 we can have sizeof(uint64_t) = 8 and _Alignof(uint64_t) = 4. causing split locks. The
  * implementation does handle that correctly, but with an internal mutex. Extend the alignment to
  * avoid this.
+ * `p_atomic_int64_t` and `p_atomic_uint64_t` are used for casting any pointer to
+ * `p_atomic_int64_t *` and `p_atomic_uint64_t *`. That's for telling the compiler is accessing
+ * the 64 bits atomic in 8 byte aligned way to avoid clang `misaligned atomic operation` warning.
+ * To define 64 bits atomic memeber in struct type,
+ * use `alignas(8) int64_t $member` or `alignas(8) uint64_t $member` is enough.
  */
-#if  __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__) && defined(USE_GCC_ATOMIC_BUILTINS)
-typedef int64_t __attribute__((aligned(_Alignof(_Atomic(int64_t))))) p_atomic_int64_t;
-typedef uint64_t __attribute__((aligned(_Alignof(_Atomic(uint64_t))))) p_atomic_uint64_t;
+typedef struct {
+#ifndef __cplusplus
+   _Alignas(8)
 #else
-typedef int64_t p_atomic_int64_t;
-typedef uint64_t p_atomic_uint64_t;
+   alignas(8)
 #endif
+   int64_t value;
+} p_atomic_int64_t;
+typedef struct {
+#ifndef __cplusplus
+   _Alignas(8)
+#else
+   alignas(8)
+#endif
+   uint64_t value;
+} p_atomic_uint64_t;
 
 #endif /* U_ATOMIC_H */

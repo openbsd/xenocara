@@ -28,13 +28,15 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <xf86drm.h>
+#include "util/libdrm.h"
 
 #include "intel_device_info.h"
+#include "intel_hwconfig.h"
 #include "intel_wa.h"
 #include "i915/intel_device_info.h"
 #include "xe/intel_device_info.h"
 
+#include "common/intel_gem.h"
 #include "util/u_debug.h"
 #include "util/log.h"
 #include "util/macros.h"
@@ -72,6 +74,10 @@ static const struct {
    { "rpl", 0xa780 },
    { "dg2", 0x5690 },
    { "mtl", 0x7d60 },
+   { "arl", 0x7d67 },
+   { "lnl", 0x64a0 },
+   { "bmg", 0xe202 },
+   { "ptl", 0xb080 },
 };
 
 /**
@@ -98,6 +104,7 @@ static const struct intel_device_info intel_device_info_gfx3 = {
    .num_subslices = { 1, },
    .max_eus_per_subslice = 8,
    .num_thread_per_eu = 4,
+   .grf_size = 32,
    .timestamp_frequency = 12500000,
 };
 
@@ -109,6 +116,7 @@ static const struct intel_device_info intel_device_info_i965 = {
    .num_subslices = { 1, },
    .max_eus_per_subslice = 8,
    .num_thread_per_eu = 4,
+   .grf_size = 32,
    .max_vs_threads = 16,
    .max_gs_threads = 2,
    .max_wm_threads = 8 * 4,
@@ -130,6 +138,7 @@ static const struct intel_device_info intel_device_info_g4x = {
    .num_subslices = { 1, },
    .max_eus_per_subslice = 10,
    .num_thread_per_eu = 5,
+   .grf_size = 32,
    .max_vs_threads = 32,
    .max_gs_threads = 2,
    .max_wm_threads = 10 * 5,
@@ -150,6 +159,7 @@ static const struct intel_device_info intel_device_info_ilk = {
    .num_subslices = { 1, },
    .max_eus_per_subslice = 12,
    .num_thread_per_eu = 6,
+   .grf_size = 32,
    .max_vs_threads = 72,
    .max_gs_threads = 32,
    .max_wm_threads = 12 * 6,
@@ -173,6 +183,7 @@ static const struct intel_device_info intel_device_info_snb_gt1 = {
    .num_subslices = { 1, },
    .max_eus_per_subslice = 6,
    .num_thread_per_eu = 6, /* Not confirmed */
+   .grf_size = 32,
    .max_vs_threads = 24,
    .max_gs_threads = 21, /* conservative; 24 if rendering disabled. */
    .max_wm_threads = 40,
@@ -203,6 +214,7 @@ static const struct intel_device_info intel_device_info_snb_gt2 = {
    .num_subslices = { 1, },
    .max_eus_per_subslice = 12,
    .num_thread_per_eu = 6, /* Not confirmed */
+   .grf_size = 32,
    .max_vs_threads = 60,
    .max_gs_threads = 60,
    .max_wm_threads = 80,
@@ -228,6 +240,7 @@ static const struct intel_device_info intel_device_info_snb_gt2 = {
    .has_pln = true,                                 \
    .has_64bit_float = true,                         \
    .has_surface_tile_offset = true,                 \
+   .grf_size = 32,                                  \
    .timestamp_frequency = 12500000,                 \
    .max_constant_urb_size_kb = 16
 
@@ -424,6 +437,7 @@ static const struct intel_device_info intel_device_info_hsw_gt3 = {
    .supports_simd16_3src = true,                    \
    .has_surface_tile_offset = true,                 \
    .num_thread_per_eu = 7,                          \
+   .grf_size = 32,                                  \
    .max_vs_threads = 504,                           \
    .max_tcs_threads = 504,                          \
    .max_tes_threads = 504,                          \
@@ -614,7 +628,12 @@ static const struct intel_device_info intel_device_info_chv = {
    GFX8_FEATURES,                                   \
    GFX9_HW_INFO,                                    \
    .has_sample_with_hiz = true,                     \
-   .has_illegal_ccs_values = true
+   .has_illegal_ccs_values = true,                                    \
+   .cooperative_matrix_configurations = {                             \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 16, INTEL_CMAT_FLOAT16, INTEL_CMAT_FLOAT16, INTEL_CMAT_FLOAT32, INTEL_CMAT_FLOAT32 }, \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 32, INTEL_CMAT_SINT8, INTEL_CMAT_SINT8, INTEL_CMAT_SINT32, INTEL_CMAT_SINT32 },       \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 32, INTEL_CMAT_UINT8, INTEL_CMAT_UINT8, INTEL_CMAT_UINT32, INTEL_CMAT_UINT32 },       \
+   }
 
 static const struct intel_device_info intel_device_info_skl_gt1 = {
    GFX9_FEATURES, .gt = 1,
@@ -840,7 +859,12 @@ static const struct intel_device_info intel_device_info_cfl_gt3 = {
    .has_illegal_ccs_values = true,                    \
    .gt = _gt, .num_slices = _slices, .l3_banks = _l3, \
    .num_subslices = _subslices,                       \
-   .max_eus_per_subslice = 8
+   .max_eus_per_subslice = 8,                                         \
+   .cooperative_matrix_configurations = {                             \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 16, INTEL_CMAT_FLOAT16, INTEL_CMAT_FLOAT16, INTEL_CMAT_FLOAT32, INTEL_CMAT_FLOAT32 }, \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 32, INTEL_CMAT_SINT8, INTEL_CMAT_SINT8, INTEL_CMAT_SINT32, INTEL_CMAT_SINT32 },       \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 32, INTEL_CMAT_UINT8, INTEL_CMAT_UINT8, INTEL_CMAT_UINT32, INTEL_CMAT_UINT32 },       \
+   }
 
 #define GFX11_URB_MIN_MAX_ENTRIES                     \
    .min_entries = {                                   \
@@ -961,7 +985,23 @@ static const struct intel_device_info intel_device_info_ehl_2x4 = {
    .has_integer_dword_mul = false,                              \
    .gt = _gt, .num_slices = _slices, .l3_banks = _l3,           \
    .simulator_id = 22,                                          \
-   .max_eus_per_subslice = 16
+   .max_eus_per_subslice = 16,                                  \
+   /* BSpec 45101 (r51017) */                                   \
+   .pat = {                                                     \
+         /* CPU: WB, GPU: PAT 0 => WB, 2WAY */                  \
+         .cached_coherent = PAT_ENTRY(0, WB),                   \
+         /* CPU: WC, GPU: PAT 1 => WC */                        \
+         .scanout = PAT_ENTRY(1, WC),                           \
+         /* CPU: WB, GPU: PAT 0 => WB, 2WAY */                  \
+         .writeback_incoherent = PAT_ENTRY(0, WB),              \
+         /* CPU: WC, GPU: PAT 1 => WC */                        \
+         .writecombining = PAT_ENTRY(1, WC),                    \
+   },                                                           \
+   .cooperative_matrix_configurations = {                       \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 16, INTEL_CMAT_FLOAT16, INTEL_CMAT_FLOAT16, INTEL_CMAT_FLOAT32, INTEL_CMAT_FLOAT32 }, \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 32, INTEL_CMAT_SINT8, INTEL_CMAT_SINT8, INTEL_CMAT_SINT32, INTEL_CMAT_SINT32 },       \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 32, INTEL_CMAT_UINT8, INTEL_CMAT_UINT8, INTEL_CMAT_UINT32, INTEL_CMAT_UINT32 },       \
+   }
 
 #define dual_subslices(args...) { args, }
 
@@ -996,46 +1036,41 @@ static const struct intel_device_info intel_device_info_rkl_gt1 = {
 static const struct intel_device_info intel_device_info_adl_gt05 = {
    GFX12_GT05_FEATURES,
    .platform = INTEL_PLATFORM_ADL,
-   .display_ver = 13,
 };
 
 static const struct intel_device_info intel_device_info_adl_gt1 = {
    GFX12_GT_FEATURES(1),
    .platform = INTEL_PLATFORM_ADL,
-   .display_ver = 13,
 };
 
 static const struct intel_device_info intel_device_info_adl_n = {
    GFX12_GT_FEATURES(1),
    .platform = INTEL_PLATFORM_ADL,
-   .display_ver = 13,
+   .is_adl_n = true,
 };
 
 static const struct intel_device_info intel_device_info_adl_gt2 = {
    GFX12_GT_FEATURES(2),
    .platform = INTEL_PLATFORM_ADL,
-   .display_ver = 13,
 };
 
 static const struct intel_device_info intel_device_info_rpl = {
    GFX12_FEATURES(1, 1, 4),
    .num_subslices = dual_subslices(2),
    .platform = INTEL_PLATFORM_RPL,
-   .display_ver = 13,
 };
 
 static const struct intel_device_info intel_device_info_rpl_p = {
    GFX12_GT_FEATURES(2),
    .platform = INTEL_PLATFORM_RPL,
-   .display_ver = 13,
 };
 
-#define GFX12_DG1_SG1_FEATURES                  \
-   GFX12_GT_FEATURES(2),                        \
-   .platform = INTEL_PLATFORM_DG1,              \
-   .has_llc = false,                            \
-   .has_local_mem = true,                       \
-   .urb.size = 768,                             \
+#define GFX12_DG1_SG1_FEATURES                           \
+   GFX12_GT_FEATURES(2),                                 \
+   .platform = INTEL_PLATFORM_DG1,                       \
+   .has_llc = false,                                     \
+   .has_local_mem = true,                                \
+   .urb.size = 768,                                      \
    .simulator_id = 30
 
 static const struct intel_device_info intel_device_info_dg1 = {
@@ -1060,6 +1095,7 @@ static const struct intel_device_info intel_device_info_sg1 = {
 
 #define XEHP_FEATURES(_gt, _slices, _l3)                        \
    GFX8_FEATURES,                                               \
+   .needs_null_push_constant_tbimr_workaround = true,           \
    .has_64bit_float = false,                                    \
    .has_64bit_int = false,                                      \
    .has_integer_dword_mul = false,                              \
@@ -1085,18 +1121,33 @@ static const struct intel_device_info intel_device_info_sg1 = {
    .has_lsc = true,                                             \
    .has_local_mem = true,                                       \
    .has_aux_map = false,                                        \
-   .simulator_id = 29
+   .simulator_id = 29,                                          \
+   .cooperative_matrix_configurations = {                       \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 16, INTEL_CMAT_FLOAT16, INTEL_CMAT_FLOAT16, INTEL_CMAT_FLOAT32, INTEL_CMAT_FLOAT32 }, \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 32, INTEL_CMAT_SINT8, INTEL_CMAT_SINT8, INTEL_CMAT_SINT32, INTEL_CMAT_SINT32 },       \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 8, 32, INTEL_CMAT_UINT8, INTEL_CMAT_UINT8, INTEL_CMAT_UINT32, INTEL_CMAT_UINT32 },       \
+   }
 
 #define DG2_FEATURES                                            \
    /* (Sub)slice info comes from the kernel topology info */    \
    XEHP_FEATURES(0, 1, 0),                                      \
-   .display_ver = 13,                                           \
    .revision = 4, /* For offline compiler */                    \
-   .apply_hwconfig = true,                                      \
    .has_coarse_pixel_primitive_and_cb = true,                   \
    .has_mesh_shading = true,                                    \
    .has_ray_tracing = true,                                     \
-   .has_flat_ccs = true
+   .has_flat_ccs = true,                                        \
+   /* There is no PAT table for DG2, using TGL ones */          \
+   /* BSpec 45101 (r51017) */                                   \
+   .pat = {                                                     \
+         /* CPU: WB, GPU: PAT 0 => WB, 2WAY */                  \
+         .cached_coherent = PAT_ENTRY(0, WB),                   \
+         /* CPU: WC, GPU: PAT 1 => WC */                        \
+         .scanout = PAT_ENTRY(1, WC),                           \
+         /* CPU: WB, GPU: PAT 0 => WB, 2WAY */                  \
+         .writeback_incoherent = PAT_ENTRY(0, WB),              \
+         /* CPU: WC, GPU: PAT 1 => WC */                        \
+         .writecombining = PAT_ENTRY(1, WC),                    \
+   }
 
 static const struct intel_device_info intel_device_info_dg2_g10 = {
    DG2_FEATURES,
@@ -1128,27 +1179,98 @@ static const struct intel_device_info intel_device_info_atsm_g11 = {
    XEHP_FEATURES(0, 1, 0),                                      \
    .has_local_mem = false,                                      \
    .has_aux_map = true,                                         \
-   .apply_hwconfig = true,                                      \
    .has_64bit_float = true,                                     \
    .has_64bit_float_via_math_pipe = true,                       \
    .has_integer_dword_mul = false,                              \
    .has_coarse_pixel_primitive_and_cb = true,                   \
    .has_mesh_shading = true,                                    \
    .has_ray_tracing = true,                                     \
+   /* BSpec 45101 (r51017) */                                   \
    .pat = {                                                     \
-      .coherent = 3, /* 1-way coherent */                       \
-      .scanout = 3, /* 1-way coherent */                        \
-      .writeback = 0,                                           \
+         /* CPU: WB, GPU: PAT 3 => WB, 1WAY */                  \
+         .cached_coherent = PAT_ENTRY(3, WB),                   \
+         /* CPU: WC, GPU: PAT 1 => WC */                        \
+         .scanout = PAT_ENTRY(1, WC),                           \
+         /* CPU: WB, GPU: PAT 0 => WB, 0WAY */                  \
+         .writeback_incoherent = PAT_ENTRY(0, WB),              \
+         /* CPU: WC, GPU: PAT 1 => WC */                        \
+         .writecombining = PAT_ENTRY(1, WC),                    \
    }
 
-static const struct intel_device_info intel_device_info_mtl_m = {
+static const struct intel_device_info intel_device_info_mtl_u = {
    MTL_FEATURES,
-   .platform = INTEL_PLATFORM_MTL_M,
+   .platform = INTEL_PLATFORM_MTL_U,
 };
 
-static const struct intel_device_info intel_device_info_mtl_p = {
+static const struct intel_device_info intel_device_info_mtl_h = {
    MTL_FEATURES,
-   .platform = INTEL_PLATFORM_MTL_P,
+   .platform = INTEL_PLATFORM_MTL_H,
+};
+
+static const struct intel_device_info intel_device_info_arl_u = {
+   MTL_FEATURES,
+   .platform = INTEL_PLATFORM_ARL_U,
+};
+
+static const struct intel_device_info intel_device_info_arl_h = {
+   MTL_FEATURES,
+   .platform = INTEL_PLATFORM_ARL_H,
+};
+
+#define XE2_FEATURES                                            \
+   /* (Sub)slice info comes from the kernel topology info */    \
+   XEHP_FEATURES(0, 1, 0),                                      \
+   .ver = 20,                                                   \
+   .verx10 = 200,                                               \
+   .num_subslices = dual_subslices(1),                          \
+   .grf_size = 64,                                              \
+   .needs_null_push_constant_tbimr_workaround = false,          \
+   .has_64bit_float = true,                                     \
+   .has_64bit_int = true,                                       \
+   .has_integer_dword_mul = false,                              \
+   .has_coarse_pixel_primitive_and_cb = true,                   \
+   .has_mesh_shading = true,                                    \
+   .has_ray_tracing = true,                                     \
+   .has_indirect_unroll = true,                                 \
+   /* BSpec 71582 (r59285) */                                   \
+   .pat = {                                                     \
+      /* CPU: WB, GPU: PAT 1 => WB, 1WAY */                     \
+      .cached_coherent = PAT_ENTRY(1, WB),                      \
+      /* CPU: WC, GPU: PAT 6 => XD */                           \
+      .scanout = PAT_ENTRY(6, WC),                              \
+      /* CPU: WC, GPU: PAT 0 => WB */                           \
+      .writecombining = PAT_ENTRY(0, WC),                       \
+      /* CPU: WC, GPU: PAT 11 => XD, compressed */              \
+      .compressed = PAT_ENTRY(11, WC)                           \
+   },                                                           \
+   .cooperative_matrix_configurations = {                       \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 16, 16, INTEL_CMAT_FLOAT16, INTEL_CMAT_FLOAT16, INTEL_CMAT_FLOAT32, INTEL_CMAT_FLOAT32 }, \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 16, 32, INTEL_CMAT_SINT8, INTEL_CMAT_SINT8, INTEL_CMAT_SINT32, INTEL_CMAT_SINT32 },       \
+    { INTEL_CMAT_SCOPE_SUBGROUP, 8, 16, 32, INTEL_CMAT_UINT8, INTEL_CMAT_UINT8, INTEL_CMAT_UINT32, INTEL_CMAT_UINT32 },       \
+   },                                                           \
+   .has_flat_ccs = true
+
+static const struct intel_device_info intel_device_info_bmg = {
+   XE2_FEATURES,
+   .platform = INTEL_PLATFORM_BMG,
+   .has_local_mem = true,
+};
+
+static const struct intel_device_info intel_device_info_lnl = {
+   XE2_FEATURES,
+   .platform = INTEL_PLATFORM_LNL,
+   .has_local_mem = false,
+};
+
+#define XE3_FEATURES                                            \
+   XE2_FEATURES,                                                \
+   .ver = 30,                                                   \
+   .verx10 = 300
+
+static const struct intel_device_info intel_device_info_ptl = {
+   XE3_FEATURES,
+   .platform = INTEL_PLATFORM_PTL,
+   .has_local_mem = false,
 };
 
 void
@@ -1250,6 +1372,37 @@ intel_device_info_update_l3_banks(struct intel_device_info *devinfo)
    }
 }
 
+/* Returns the number of EUs of the first subslice enabled */
+uint32_t
+intel_device_info_get_eu_count_first_subslice(const struct intel_device_info *devinfo)
+{
+   uint32_t first_subslice, first_slice, offset, i;
+   uint32_t eu_count = 0;
+
+   first_slice = ffs(devinfo->slice_masks);
+   first_slice--;
+   offset = first_slice * devinfo->subslice_slice_stride;
+
+   for (i = 0; i < DIV_ROUND_UP(devinfo->max_subslices_per_slice, 8); i++) {
+      first_subslice = ffs(devinfo->subslice_masks[offset + i]);
+
+      if (first_subslice == 0)
+         continue;
+
+      break;
+   }
+
+   assert(first_subslice > 0);
+   first_subslice--;
+   offset = first_slice * devinfo->eu_slice_stride +
+            first_subslice * devinfo->eu_subslice_stride;
+   for (i = 0; i < DIV_ROUND_UP(devinfo->max_eus_per_subslice, 8); i++)
+      eu_count += __builtin_popcount(devinfo->eu_masks[offset + i]);
+
+   assert(eu_count > 0);
+   return eu_count;
+}
+
 /* Generate mask from the device data. */
 static void
 fill_masks(struct intel_device_info *devinfo)
@@ -1283,13 +1436,90 @@ intel_device_info_update_cs_workgroup_threads(struct intel_device_info *devinfo)
 }
 
 static bool
-intel_device_info_init_common(int pci_id,
+parse_force_probe_entry(int pci_id, const char *entry, bool *force_on,
+                        bool *force_off)
+{
+   const char *cp = entry;
+
+   bool negated = *cp == '!';
+   if (negated)
+      cp++;
+
+   if (*cp == '\0')
+      return false;
+
+   bool wildcard = *cp == '*';
+   long val = 0;
+
+   if (wildcard) {
+      cp++;
+   } else {
+      char *end;
+      val = strtol(cp, &end, 16);
+      if (end == cp)
+         return false;
+      cp = end;
+   }
+
+   if (*cp != '\0')
+      return false;
+
+   bool matched = wildcard || (long)pci_id == val;
+   if (matched) {
+      *force_on = !negated;
+      *force_off = negated;
+   }
+
+   return matched;
+}
+
+static void
+scan_for_force_probe(int pci_id, bool *force_on, bool *force_off)
+{
+   *force_on = false;
+   *force_off = false;
+
+   const char *env = getenv("INTEL_FORCE_PROBE");
+   if (env == NULL)
+      return;
+
+   size_t len = strlen(env);
+   if (len == 0)
+      return;
+
+   char *dup = strndup(env, len);
+   if (dup == NULL)
+      return;
+
+   for (char *entry = strtok(dup, ","); entry; entry = strtok(NULL, ","))
+      parse_force_probe_entry(pci_id, entry, force_on, force_off);
+
+   free(dup);
+   assert(!*force_on || !*force_off);
+}
+
+struct device_init_config {
+   bool require_force_probe;
+};
+
+/* Example PCI ID entry using FORCE_PROBE:
+ *
+ * CHIPSET(0x1234, foo, "FOO", "Intel(R) Graphics", FORCE_PROBE)
+ */
+#define FORCE_PROBE .require_force_probe = true
+
+static bool
+intel_device_info_init_common(int pci_id, bool building,
                               struct intel_device_info *devinfo)
 {
+   struct device_init_config device_config = { 0 };
    switch (pci_id) {
 #undef CHIPSET
-#define CHIPSET(id, family, fam_str, name) \
-      case id: *devinfo = intel_device_info_##family; break;
+#define CHIPSET(id, family, fam_str, name, ...)                         \
+      case id:                                                          \
+         *devinfo = intel_device_info_##family;                         \
+         device_config = *&(struct device_init_config) { __VA_ARGS__ }; \
+         break;
 #include "pci_ids/crocus_pci_ids.h"
 #include "pci_ids/iris_pci_ids.h"
 
@@ -1305,7 +1535,7 @@ intel_device_info_init_common(int pci_id,
 
    switch (pci_id) {
 #undef CHIPSET
-#define CHIPSET(_id, _family, _fam_str, _name) \
+#define CHIPSET(_id, _family, _fam_str, _name, ...) \
    case _id: \
       /* sizeof(str_literal) includes the null */ \
       STATIC_ASSERT(sizeof(_name) + sizeof(_fam_str) + 2 <= \
@@ -1316,6 +1546,29 @@ intel_device_info_init_common(int pci_id,
 #include "pci_ids/iris_pci_ids.h"
    default:
       strncpy(devinfo->name, "Intel Unknown", sizeof(devinfo->name));
+   }
+
+   bool force_on = false;
+   bool force_off = false;
+   if (building)
+      force_on = true;
+   else
+      scan_for_force_probe(pci_id, &force_on, &force_off);
+   devinfo->probe_forced = force_on;
+   if (force_off) {
+      mesa_logw("%s (0x%x) disabled with INTEL_FORCE_PROBE", devinfo->name,
+                pci_id);
+      return false;
+   } else if (device_config.require_force_probe) {
+      if (force_on) {
+         if (!building)
+            mesa_logw("Forcing probe of unsupported: %s (0x%x)", devinfo->name,
+                      pci_id);
+      } else {
+         mesa_loge("%s (0x%x) requires INTEL_FORCE_PROBE", devinfo->name,
+                   pci_id);
+         return false;
+      }
    }
 
    devinfo->pci_device_id = pci_id;
@@ -1345,6 +1598,7 @@ intel_device_info_init_common(int pci_id,
    case 11:
    case 12:
    case 20:
+   case 30:
       devinfo->max_wm_threads = 128 /* threads-per-PSD */
                               * devinfo->num_slices
                               * 8; /* subslices per slice */
@@ -1359,8 +1613,14 @@ intel_device_info_init_common(int pci_id,
    if (devinfo->verx10 == 0)
       devinfo->verx10 = devinfo->ver * 10;
 
-   if (devinfo->display_ver == 0)
-      devinfo->display_ver = devinfo->ver;
+   uint16_t major = devinfo->ver;
+   uint16_t minor = (devinfo->verx10 - (devinfo->ver * 10)) * 10;
+   /* When supported gfx_ip_ver will be overwritten by values read from KMD.
+    * This is a approximation for platforms that do not support GMD ID or
+    * when running offline tools.
+    * verx10 125 becomes GFX_IP_VER(12, 50) for example.
+    */
+   devinfo->gfx_ip_ver = GFX_IP_VER(major, minor);
 
    if (devinfo->has_mesh_shading) {
       /* Half of push constant space matches the size used in the simplest
@@ -1370,6 +1630,20 @@ intel_device_info_init_common(int pci_id,
             devinfo->max_constant_urb_size_kb / 2;
    }
 
+   /*
+    * Gfx 12.5 moved scratch to a surface and SURFTYPE_SCRATCH has this pitch
+    * restriction:
+    *
+    * BSpec 43862 (r52666)
+    * RENDER_SURFACE_STATE::Surface Pitch
+    *    For surfaces of type SURFTYPE_SCRATCH, valid range of pitch is:
+    *    [63,262143] -> [64B, 256KB]
+    *
+    * The pitch of the surface is the scratch size per thread and the surface
+    * should be large enough to accommodate every physical thread.
+    */
+   devinfo->max_scratch_size_per_thread = devinfo->verx10 >= 125 ?
+                                          (256 * 1024) : (2 * 1024 * 1024);
    intel_device_info_update_cs_workgroup_threads(devinfo);
 
    return true;
@@ -1381,6 +1655,9 @@ intel_device_info_apply_workarounds(struct intel_device_info *devinfo)
    if (intel_needs_workaround(devinfo, 18012660806))
       devinfo->urb.max_entries[MESA_SHADER_GEOMETRY] = 1536;
 
+   if (intel_needs_workaround(devinfo, 18040209780))
+      devinfo->max_gs_threads = 312;
+
    /* Fixes issues with:
     * dEQP-GLES31.functional.geometry_shading.layered.render_with_default_layer_cubemap
     * when running on GFX12 platforms with small EU count.
@@ -1390,11 +1667,11 @@ intel_device_info_apply_workarounds(struct intel_device_info *devinfo)
       devinfo->urb.max_entries[MESA_SHADER_GEOMETRY] = 1024;
 }
 
-bool
-intel_get_device_info_from_pci_id(int pci_id,
-                                  struct intel_device_info *devinfo)
+static bool
+intel_get_device_info_from_pci_id_common(int pci_id, bool building,
+                                         struct intel_device_info *devinfo)
 {
-   intel_device_info_init_common(pci_id, devinfo);
+   intel_device_info_init_common(pci_id, building, devinfo);
 
    /* This is a placeholder until a proper value is set. */
    devinfo->kmd_type = INTEL_KMD_TYPE_I915;
@@ -1406,23 +1683,45 @@ intel_get_device_info_from_pci_id(int pci_id,
 }
 
 bool
+intel_get_device_info_from_pci_id(int pci_id,
+                                  struct intel_device_info *devinfo)
+{
+   return intel_get_device_info_from_pci_id_common(pci_id, false, devinfo);
+}
+
+bool
+intel_get_device_info_for_build(int pci_id,
+                                struct intel_device_info *devinfo)
+{
+   return intel_get_device_info_from_pci_id_common(pci_id, true, devinfo);
+}
+
+bool
 intel_device_info_compute_system_memory(struct intel_device_info *devinfo, bool update)
 {
-   uint64_t total_phys;
-   if (!os_get_total_physical_memory(&total_phys))
-      return false;
+   if (!update) {
+      if (!os_get_total_physical_memory(&devinfo->mem.sram.mappable.size))
+         return false;
+   }
 
-   uint64_t available = 0;
-   os_get_available_system_memory(&available);
-
-   if (!update)
-      devinfo->mem.sram.mappable.size = total_phys;
-   else
-      assert(devinfo->mem.sram.mappable.size == total_phys);
-
-   devinfo->mem.sram.mappable.free = available;
+   os_get_available_system_memory(&devinfo->mem.sram.mappable.free);
 
    return true;
+}
+
+static void
+intel_device_info_adjust_memory(struct intel_device_info *devinfo)
+{
+   uint64_t available;
+
+   /* Applications running without elevated privileges don't report valid
+    * numbers for free sram
+    */
+   if (os_get_available_system_memory(&available)) {
+      devinfo->mem.sram.mappable.free = MIN3(devinfo->mem.sram.mappable.free,
+                                             devinfo->mem.sram.mappable.size,
+                                             available);
+   }
 }
 
 static void
@@ -1533,10 +1832,18 @@ static unsigned
 intel_device_info_calc_engine_prefetch(const struct intel_device_info *devinfo,
                                        enum intel_engine_class engine_class)
 {
-   if (devinfo->verx10 < 125)
-      return 512;
+   if (devinfo->verx10 >= 200) {
+      switch (engine_class) {
+      case INTEL_ENGINE_CLASS_RENDER:
+         return 4096;
+      case INTEL_ENGINE_CLASS_COMPUTE:
+         return 1024;
+      default:
+         return 512;
+      }
+   }
 
-   if (intel_device_info_is_mtl(devinfo)) {
+   if (intel_device_info_is_mtl_or_arl(devinfo)) {
       switch (engine_class) {
       case INTEL_ENGINE_CLASS_RENDER:
          return 2048;
@@ -1547,12 +1854,32 @@ intel_device_info_calc_engine_prefetch(const struct intel_device_info *devinfo,
       }
    }
 
-   return 1024;
+   /* DG2 */
+   if (devinfo->verx10 == 125)
+      return 1024;
+
+   /* Older than DG2/MTL */
+   return 512;
 }
 
 bool
-intel_get_device_info_from_fd(int fd, struct intel_device_info *devinfo)
+intel_get_device_info_from_fd(int fd, struct intel_device_info *devinfo, int min_ver, int max_ver)
 {
+   if (NULL != getenv("INTEL_STUB_GPU_JSON")) {
+      /* This call will succeed when shim-drm has been initialized with a
+       * serialized intel_device_info structure.
+       */
+      struct drm_intel_stub_devinfo arg = {
+         .addr = (uintptr_t)devinfo,
+         .size = sizeof(*devinfo),
+      };
+      if (0 == intel_ioctl(fd, DRM_IOCTL_INTEL_STUB_DEVINFO, &arg)) {
+         intel_device_info_init_was(devinfo);
+         intel_device_info_apply_workarounds(devinfo);
+         return true;
+      }
+   }
+
    /* Get PCI info.
     *
     * Some callers may already have a valid drm device which holds values of
@@ -1567,11 +1894,17 @@ intel_get_device_info_from_fd(int fd, struct intel_device_info *devinfo)
       mesa_loge("Failed to query drm device.");
       return false;
    }
-   if (!intel_device_info_init_common(
-          drmdev->deviceinfo.pci->device_id, devinfo)) {
+   if (!intel_device_info_init_common(drmdev->deviceinfo.pci->device_id,
+                                      false, devinfo)) {
       drmFreeDevice(&drmdev);
       return false;
    }
+   
+   if ((min_ver > 0 && devinfo->ver < min_ver) || (max_ver > 0 && devinfo->ver > max_ver)) {
+      drmFreeDevice(&drmdev);
+      return false;
+   }
+
    devinfo->pci_domain = drmdev->businfo.pci->domain;
    devinfo->pci_bus = drmdev->businfo.pci->bus;
    devinfo->pci_dev = drmdev->businfo.pci->dev;
@@ -1581,18 +1914,13 @@ intel_get_device_info_from_fd(int fd, struct intel_device_info *devinfo)
    drmFreeDevice(&drmdev);
    devinfo->no_hw = debug_get_bool_option("INTEL_NO_HW", false);
 
-   if (devinfo->ver == 10) {
-      mesa_loge("Gfx10 support is redacted.");
-      return false;
-   }
-
    devinfo->kmd_type = intel_get_kmd_type(fd);
    if (devinfo->kmd_type == INTEL_KMD_TYPE_INVALID) {
       mesa_loge("Unknown kernel mode driver");
       return false;
    }
 
-   /* remaining initializion queries the kernel for device info */
+   /* remaining initialization queries the kernel for device info */
    if (devinfo->no_hw) {
       /* Provide some sensible values for NO_HW. */
       devinfo->gtt_size =
@@ -1608,6 +1936,8 @@ intel_get_device_info_from_fd(int fd, struct intel_device_info *devinfo)
       break;
    case INTEL_KMD_TYPE_XE:
       ret = intel_device_info_xe_get_info_from_fd(fd, devinfo);
+      if (devinfo->verx10 < 200)
+         mesa_logw("Support for this platform is experimental with Xe KMD, bug reports may be ignored.");
       break;
    default:
       ret = false;
@@ -1624,6 +1954,8 @@ intel_get_device_info_from_fd(int fd, struct intel_device_info *devinfo)
       return false;
    }
 
+   intel_device_info_adjust_memory(devinfo);
+
    /* Gfx7 and older do not support EU/Subslice info */
    assert(devinfo->subslice_total >= 1 || devinfo->ver <= 7);
    devinfo->subslice_total = MAX2(devinfo->subslice_total, 1);
@@ -1637,6 +1969,8 @@ intel_get_device_info_from_fd(int fd, struct intel_device_info *devinfo)
 
    intel_device_info_init_was(devinfo);
    intel_device_info_apply_workarounds(devinfo);
+
+   intel_check_hwconfig_items(fd, devinfo);
 
    return true;
 }
@@ -1655,7 +1989,10 @@ bool intel_device_info_update_memory_info(struct intel_device_info *devinfo, int
    default:
       ret = false;
    }
-   return ret || intel_device_info_compute_system_memory(devinfo, true);
+
+   if (ret)
+      intel_device_info_adjust_memory(devinfo);
+   return ret;
 }
 
 void
@@ -1671,14 +2008,39 @@ intel_device_info_update_after_hwconfig(struct intel_device_info *devinfo)
 enum intel_wa_steppings
 intel_device_info_wa_stepping(struct intel_device_info *devinfo)
 {
-   if (intel_device_info_is_mtl(devinfo)) {
-      if (devinfo->revision < 4)
-         return INTEL_STEPPING_A0;
-      return INTEL_STEPPING_B0;
-   } else if (devinfo->platform == INTEL_PLATFORM_TGL) {
+   /* When adding platforms to this function, check to see if
+    * stepping-specific workarounds impact the compiler.
+    *
+    * If a stepping specific compiler workaround is required on a released
+    * platform, intel_device_info->revision must be added as a
+    * 'compiler_field' in intel_device_info.py
+    */
+
+   if (devinfo->platform == INTEL_PLATFORM_BMG) {
       switch (devinfo->revision) {
       case 0:
          return INTEL_STEPPING_A0;
+      case 1:
+         return INTEL_STEPPING_A1;
+      case 4:
+         return INTEL_STEPPING_B0;
+      default:
+         return INTEL_STEPPING_RELEASE;
+      }
+   } else if (devinfo->platform == INTEL_PLATFORM_LNL) {
+      switch (devinfo->revision) {
+      case 0:
+         return INTEL_STEPPING_A0;
+      case 1:
+         return INTEL_STEPPING_A1;
+      case 4:
+         return INTEL_STEPPING_B0;
+      default:
+         return INTEL_STEPPING_RELEASE;
+      }
+   } else if (devinfo->platform == INTEL_PLATFORM_TGL) {
+      /* TGL production steppings: B0 and C0 */
+      switch (devinfo->revision) {
       case 1:
          return INTEL_STEPPING_B0;
       case 3:
@@ -1690,4 +2052,39 @@ intel_device_info_wa_stepping(struct intel_device_info *devinfo)
 
    /* all other platforms support only released steppings */
    return INTEL_STEPPING_RELEASE;
+}
+
+uint32_t
+intel_device_info_get_max_slm_size(const struct intel_device_info *devinfo)
+{
+   uint32_t bytes = 0;
+
+   if (devinfo->verx10 >= 300) {
+      bytes = 128 * 1024;
+   } else if (devinfo->verx10 >= 200) {
+      bytes = intel_device_info_get_max_preferred_slm_size(devinfo);
+   } else {
+      bytes = 64 * 1024;
+   }
+
+   return bytes;
+}
+
+uint32_t
+intel_device_info_get_max_preferred_slm_size(const struct intel_device_info *devinfo)
+{
+   uint32_t k_bytes = 0;
+
+   if (devinfo->verx10 >= 300) {
+      k_bytes = 192;
+   } else if (devinfo->verx10 >= 200) {
+      if (intel_needs_workaround(devinfo, 16018610683))
+         k_bytes = 128;
+      else
+         k_bytes = 160;
+   } else {
+      k_bytes = 128;
+   }
+
+   return k_bytes * 1024;
 }

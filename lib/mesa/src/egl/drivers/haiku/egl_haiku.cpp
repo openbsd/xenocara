@@ -46,28 +46,16 @@
 #include "util/u_atomic.h"
 #include <mapi/glapi/glapi.h>
 
+#include "hgl/hgl_sw_winsys.h"
 #include "hgl_context.h"
-#include "hgl_sw_winsys.h"
+
+#include <Bitmap.h>
 
 extern "C" {
 #include "target-helpers/inline_sw_helper.h"
 }
 
-#define BGL_RGB           0
-#define BGL_INDEX         1
-#define BGL_SINGLE        0
-#define BGL_DOUBLE        2
-#define BGL_DIRECT        0
-#define BGL_INDIRECT      4
-#define BGL_ACCUM         8
-#define BGL_ALPHA         16
-#define BGL_DEPTH         32
-#define BGL_OVERLAY       64
-#define BGL_UNDERLAY      128
-#define BGL_STENCIL       512
-#define BGL_SHARE_CONTEXT 1024
-
-#ifdef DEBUG
+#if MESA_DEBUG
 #define TRACE(x...) printf("egl_haiku: " x)
 #define CALLED()    TRACE("CALLED: %s\n", __PRETTY_FUNCTION__)
 #else
@@ -120,7 +108,7 @@ haiku_create_window_surface(_EGLDisplay *disp, _EGLConfig *conf,
    }
 
    struct st_visual visual;
-   hgl_get_st_visual(&visual, BGL_DOUBLE | BGL_DEPTH);
+   hgl_get_st_visual(&visual, HGL_DOUBLE | HGL_DEPTH);
 
    wgl_surf->fb =
       hgl_create_st_framebuffer(hgl_dpy->disp, &visual, native_window);
@@ -128,6 +116,9 @@ haiku_create_window_surface(_EGLDisplay *disp, _EGLConfig *conf,
       free(wgl_surf);
       return NULL;
    }
+
+   // Unset and delete previously set bitmap if any.
+   delete ((BitmapHook *)native_window)->SetBitmap(NULL);
 
    return &wgl_surf->base;
 }
@@ -159,7 +150,7 @@ haiku_create_pbuffer_surface(_EGLDisplay *disp, _EGLConfig *conf,
    }
 
    struct st_visual visual;
-   hgl_get_st_visual(&visual, BGL_DOUBLE | BGL_DEPTH);
+   hgl_get_st_visual(&visual, HGL_DOUBLE | HGL_DEPTH);
 
    wgl_surf->fb = hgl_create_st_framebuffer(hgl_dpy->disp, &visual, NULL);
    if (!wgl_surf->fb) {
@@ -182,6 +173,13 @@ haiku_destroy_surface(_EGLDisplay *disp, _EGLSurface *surf)
       struct haiku_egl_surface *hgl_surf = haiku_egl_surface(surf);
       struct pipe_screen *screen = hgl_dpy->disp->fscreen->screen;
       screen->fence_reference(screen, &hgl_surf->throttle_fence, NULL);
+
+      // Unset bitmap to release ownership. Bitmap will be deleted later
+      // when destroying framebuffer.
+      BitmapHook *bitmapHook = (BitmapHook*)hgl_surf->fb->winsysContext;
+      if (bitmapHook != NULL)
+         bitmapHook->SetBitmap(NULL);
+
       hgl_destroy_st_framebuffer(hgl_surf->fb);
       free(surf);
    }
@@ -234,14 +232,16 @@ haiku_swap_buffers(_EGLDisplay *disp, _EGLSurface *surf)
    // flush back buffer and swap buffers if double buffering is used
    if (backBuffer != NULL) {
       screen->flush_frontbuffer(screen, st->pipe, backBuffer, 0, 0,
-                                buffer->winsysContext, NULL);
+                                buffer->winsysContext, 1, NULL);
       std::swap(frontBuffer, backBuffer);
       p_atomic_inc(&buffer->base.stamp);
    }
 
-   // XXX: right front / back if BGL_STEREO?
+   // XXX: right front / back if HGL_STEREO?
 
    update_size(buffer);
+
+   st_context_invalidate_state(st, ST_INVALIDATE_FB_STATE);
 
    return EGL_TRUE;
 }
@@ -333,7 +333,6 @@ static EGLBoolean
 haiku_initialize_impl(_EGLDisplay *disp, void *platformDisplay)
 {
    struct haiku_egl_display *hgl_dpy;
-   const char *err;
 
    hgl_dpy =
       (struct haiku_egl_display *)calloc(1, sizeof(struct haiku_egl_display));
@@ -360,8 +359,10 @@ haiku_initialize_impl(_EGLDisplay *disp, void *platformDisplay)
 
    /* Report back to EGL the bitmask of priorities supported */
    disp->Extensions.IMG_context_priority =
-      hgl_dpy->disp->fscreen->screen->get_param(hgl_dpy->disp->fscreen->screen,
-                                                PIPE_CAP_CONTEXT_PRIORITY_MASK);
+      hgl_dpy->disp->fscreen->screen->caps.context_priority_mask;
+   disp->Extensions.NV_context_priority_realtime =
+      disp->Extensions.IMG_context_priority &
+      (1 << __EGL_CONTEXT_PRIORITY_REALTIME_BIT);
 
    disp->Extensions.EXT_pixel_format_float = EGL_TRUE;
 
@@ -376,10 +377,6 @@ haiku_initialize_impl(_EGLDisplay *disp, void *platformDisplay)
    haiku_add_configs_for_visuals(disp);
 
    return EGL_TRUE;
-
-cleanup:
-   haiku_display_destroy(disp);
-   return _eglError(EGL_NOT_INITIALIZED, err);
 }
 
 static EGLBoolean
@@ -432,7 +429,7 @@ haiku_create_context(_EGLDisplay *disp, _EGLConfig *conf,
    struct haiku_egl_display *hgl_dpy = haiku_egl_display(disp);
 
    struct st_visual visual;
-   hgl_get_st_visual(&visual, BGL_DOUBLE | BGL_DEPTH);
+   hgl_get_st_visual(&visual, HGL_DOUBLE | HGL_DEPTH);
 
    struct haiku_egl_context *context =
       (struct haiku_egl_context *)calloc(1, sizeof(*context));

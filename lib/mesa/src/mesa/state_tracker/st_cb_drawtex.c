@@ -32,7 +32,6 @@
 #include "util/u_inlines.h"
 #include "pipe/p_shader_tokens.h"
 #include "util/u_draw_quad.h"
-#include "util/u_simple_shaders.h"
 #include "util/u_upload_mgr.h"
 
 #include "cso_cache/cso_context.h"
@@ -110,10 +109,8 @@ lookup_shader(struct st_context *st,
    }
 
    CachedShaders[i].handle =
-      st_nir_make_passthrough_shader(st, "st/drawtex VS",
-                                       MESA_SHADER_VERTEX,
-                                       num_attribs, inputs,
-                                       slots, NULL, 0);
+      st_nir_make_passthrough_vs(st, "st/drawtex VS", num_attribs, inputs,
+                                 slots, 0);
 
    NumCachedShaders++;
 
@@ -274,7 +271,7 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
    velems.count = numAttribs;
 
    cso_set_vertex_elements(cso, &velems);
-   cso_set_stream_outputs(cso, 0, NULL, NULL);
+   cso_set_stream_outputs(cso, 0, NULL, NULL, 0);
 
    /* viewport state: viewport matching window dims */
    {
@@ -297,13 +294,10 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
    }
 
    util_draw_vertex_buffer(pipe, cso, vbuffer,
-                           offset,  /* offset */
+                           offset, true,
                            MESA_PRIM_TRIANGLE_FAN,
                            4,  /* verts */
                            numAttribs); /* attribs/vert */
-   st->last_num_vbuffers = MAX2(st->last_num_vbuffers, 1);
-
-   pipe_resource_reference(&vbuffer, NULL);
 
    /* restore state */
    cso_restore_state(cso, 0);

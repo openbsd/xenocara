@@ -37,7 +37,6 @@
 #include "compiler/glsl/ir.h"
 #include "compiler/glsl/linker_util.h"
 #include "compiler/glsl/string_to_uint_map.h"
-#include "util/mesa-sha1.h"
 #include "c99_alloca.h"
 #include "api_exec_decl.h"
 
@@ -64,8 +63,11 @@ DECL_RESOURCE_FUNC(XFB, gl_transform_feedback_buffer);
 DECL_RESOURCE_FUNC(SUB, gl_subroutine_function);
 
 static GLenum
-mediump_to_highp_type(GLenum type)
+mediump_to_highp_type(struct gl_shader_program *shProg, GLenum type)
 {
+   if (!shProg->IsES)
+      return type;
+
    switch (type) {
    case GL_FLOAT16_NV:
       return GL_FLOAT;
@@ -1122,7 +1124,7 @@ program_resource_location(struct gl_program_resource *res, unsigned array_index)
          return -1;
       }
       return var->location +
-	     (array_index * var->type->without_array()->matrix_columns);
+	     (array_index * glsl_without_array(var->type)->matrix_columns);
    }
    case GL_PROGRAM_OUTPUT:
       if (RESOURCE_VAR(res)->location == -1)
@@ -1144,7 +1146,7 @@ program_resource_location(struct gl_program_resource *res, unsigned array_index)
       *     "A valid name cannot be a structure, an array of structures, or any
       *     portion of a single vector or a matrix."
       */
-      if (RESOURCE_UNI(res)->type->without_array()->is_struct())
+      if (glsl_type_is_struct(glsl_without_array(RESOURCE_UNI(res)->type)))
          return -1;
 
       /* From the GL_ARB_uniform_buffer_object spec:
@@ -1466,16 +1468,16 @@ _mesa_program_resource_prop(struct gl_shader_program *shProg,
       case GL_UNIFORM:
       case GL_BUFFER_VARIABLE:
          *val = RESOURCE_UNI(res)->type->gl_type;
-         *val = mediump_to_highp_type(*val);
+         *val = mediump_to_highp_type(shProg, *val);
          return 1;
       case GL_PROGRAM_INPUT:
       case GL_PROGRAM_OUTPUT:
          *val = RESOURCE_VAR(res)->type->gl_type;
-         *val = mediump_to_highp_type(*val);
+         *val = mediump_to_highp_type(shProg, *val);
          return 1;
       case GL_TRANSFORM_FEEDBACK_VARYING:
          *val = RESOURCE_XFV(res)->Type;
-         *val = mediump_to_highp_type(*val);
+         *val = mediump_to_highp_type(shProg, *val);
          return 1;
       default:
          goto invalid_operation;
@@ -2013,10 +2015,10 @@ validate_io(struct gl_program *producer, struct gl_program *consumer)
       if (consumer_is_array_stage) {
          if (consumer_interface_type) {
             /* the interface is the array; the underlying types should match */
-            if (consumer_interface_type->is_array() && !consumer_var->patch)
+            if (glsl_type_is_array(consumer_interface_type) && !consumer_var->patch)
                consumer_interface_type = consumer_interface_type->fields.array;
          } else {
-            if (consumer_type->is_array() && !consumer_var->patch)
+            if (glsl_type_is_array(consumer_type) && !consumer_var->patch)
                consumer_type = consumer_type->fields.array;
          }
       }
@@ -2024,10 +2026,10 @@ validate_io(struct gl_program *producer, struct gl_program *consumer)
       if (producer_is_array_stage) {
          if (producer_interface_type) {
             /* the interface is the array; the underlying types should match */
-            if (producer_interface_type->is_array() && !producer_var->patch)
+            if (glsl_type_is_array(producer_interface_type) && !producer_var->patch)
                producer_interface_type = producer_interface_type->fields.array;
          } else {
-            if (producer_type->is_array() && !producer_var->patch)
+            if (glsl_type_is_array(producer_type) && !producer_var->patch)
                producer_type = producer_type->fields.array;
          }
       }

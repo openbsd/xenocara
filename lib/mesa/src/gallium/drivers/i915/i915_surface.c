@@ -60,7 +60,8 @@ i915_util_blitter_save_states(struct i915_context *i915)
    util_blitter_save_viewport(i915->blitter, &i915->viewport);
    util_blitter_save_scissor(i915->blitter, &i915->scissor);
    util_blitter_save_vertex_elements(i915->blitter, i915->velems);
-   util_blitter_save_vertex_buffer_slot(i915->blitter, i915->vertex_buffers);
+   util_blitter_save_vertex_buffers(i915->blitter, i915->draw->pt.vertex_buffer,
+                                    i915->draw->pt.nr_vertex_buffers);
 
    util_blitter_save_framebuffer(i915->blitter, &i915->framebuffer);
 
@@ -118,7 +119,8 @@ i915_surface_copy_render(struct pipe_context *pipe, struct pipe_resource *dst,
 
    util_blitter_blit_generic(i915->blitter, dst_view, &dstbox, src_view,
                              src_box, src_width0, src_height0, PIPE_MASK_RGBAZS,
-                             PIPE_TEX_FILTER_NEAREST, NULL, false, false, 0);
+                             PIPE_TEX_FILTER_NEAREST, NULL, false, false, 0,
+                             NULL);
    return;
 
 fallback:
@@ -273,7 +275,7 @@ i915_blit(struct pipe_context *pipe, const struct pipe_blit_info *blit_info)
 
    i915_util_blitter_save_states(i915);
 
-   util_blitter_blit(i915->blitter, &info);
+   util_blitter_blit(i915->blitter, &info, NULL);
 }
 
 static void

@@ -164,7 +164,7 @@ util_is_power_of_two_nonzero(uint32_t v)
 #ifdef __POPCNT__
    return _mm_popcnt_u32(v) == 1;
 #else
-   return v != 0 && IS_POT(v);
+   return IS_POT_NONZERO(v);
 #endif
 }
 
@@ -176,7 +176,18 @@ util_is_power_of_two_nonzero(uint32_t v)
 static inline bool
 util_is_power_of_two_nonzero64(uint64_t v)
 {
-   return v != 0 && IS_POT(v);
+   return IS_POT_NONZERO(v);
+}
+
+/* Determine if an size_t/uintptr_t/intptr_t value is a power of two.
+ *
+ * \note
+ * Zero is \b not treated as a power of two.
+ */
+static inline bool
+util_is_power_of_two_nonzero_uintptr(uintptr_t v)
+{
+   return IS_POT_NONZERO(v);
 }
 
 /* For looping over a bitmask when you want to loop over consecutive bits
@@ -356,7 +367,7 @@ util_bitcount64(uint64_t n)
 #ifdef HAVE___BUILTIN_POPCOUNTLL
    return __builtin_popcountll(n);
 #else
-   return util_bitcount(n) + util_bitcount(n >> 32);
+   return util_bitcount((unsigned)n) + util_bitcount((unsigned)(n >> 32));
 #endif
 }
 
@@ -388,6 +399,7 @@ util_widen_mask(uint32_t mask, unsigned multiplier)
 enum util_popcnt {
    POPCNT_NO,
    POPCNT_YES,
+   POPCNT_INVALID,
 };
 
 /* Convenient function to select popcnt through a C++ template argument.

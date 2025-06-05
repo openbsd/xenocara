@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2021 Valve Corporation
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2021 Valve Corporation
+ * SPDX-License-Identifier: MIT
  */
 
 #ifndef _IR3_RA_H
@@ -28,7 +10,7 @@
 #include "ir3.h"
 #include "ir3_compiler.h"
 
-#ifdef DEBUG
+#if MESA_DEBUG
 #define RA_DEBUG (ir3_shader_debug & IR3_DBG_RAMSGS)
 #else
 #define RA_DEBUG 0
@@ -59,6 +41,8 @@ ra_physreg_to_num(physreg_t physreg, unsigned flags)
       physreg /= 2;
    if (flags & IR3_REG_SHARED)
       physreg += 48 * 4;
+   else if (flags & IR3_REG_PREDICATE)
+      physreg += REG_P0 * 4;
    return physreg;
 }
 
@@ -67,6 +51,8 @@ ra_num_to_physreg(unsigned num, unsigned flags)
 {
    if (flags & IR3_REG_SHARED)
       num -= 48 * 4;
+   else if (flags & IR3_REG_PREDICATE)
+      num -= REG_P0 * 4;
    if (!(flags & IR3_REG_HALF))
       num *= 2;
    return num;
@@ -87,7 +73,7 @@ ra_reg_get_physreg(const struct ir3_register *reg)
 static inline bool
 def_is_gpr(const struct ir3_register *reg)
 {
-   return reg_num(reg) != REG_A0 && reg_num(reg) != REG_P0;
+   return reg_num(reg) != REG_A0 && !(reg->flags & IR3_REG_PREDICATE);
 }
 
 /* Note: don't count undef as a source.
@@ -103,6 +89,12 @@ ra_reg_is_dst(const struct ir3_register *reg)
 {
    return (reg->flags & IR3_REG_SSA) && def_is_gpr(reg) &&
           ((reg->flags & IR3_REG_ARRAY) || reg->wrmask);
+}
+
+static inline bool
+ra_reg_is_predicate(const struct ir3_register *reg)
+{
+   return (reg->flags & IR3_REG_SSA) && (reg->flags & IR3_REG_PREDICATE);
 }
 
 /* Iterators for sources and destinations which:
@@ -133,6 +125,7 @@ ra_reg_is_dst(const struct ir3_register *reg)
 #define RA_HALF_SIZE     (4 * 48)
 #define RA_FULL_SIZE     (4 * 48 * 2)
 #define RA_SHARED_SIZE   (2 * 4 * 8)
+#define RA_SHARED_HALF_SIZE (4 * 8)
 #define RA_MAX_FILE_SIZE RA_FULL_SIZE
 
 struct ir3_liveness {
@@ -143,7 +136,17 @@ struct ir3_liveness {
    DECLARE_ARRAY(BITSET_WORD *, live_in);
 };
 
-struct ir3_liveness *ir3_calc_liveness(void *mem_ctx, struct ir3 *ir);
+typedef bool (*reg_filter_cb)(const struct ir3_register *);
+
+struct ir3_liveness *ir3_calc_liveness_for(void *mem_ctx, struct ir3 *ir,
+                                           reg_filter_cb filter_src,
+                                           reg_filter_cb filter_dst);
+
+static inline struct ir3_liveness *
+ir3_calc_liveness(void *mem_ctx, struct ir3 *ir)
+{
+   return ir3_calc_liveness_for(mem_ctx, ir, ra_reg_is_src, ra_reg_is_dst);
+}
 
 bool ir3_def_live_after(struct ir3_liveness *live, struct ir3_register *def,
                         struct ir3_instruction *instr);
@@ -154,9 +157,12 @@ void ir3_merge_regs(struct ir3_liveness *live, struct ir3 *ir);
 
 void ir3_force_merge(struct ir3_register *a, struct ir3_register *b,
                      int b_offset);
+void ir3_update_merge_sets_index(struct ir3_liveness *live, struct ir3 *ir);
+
+void ir3_index_instrs_for_merge_sets(struct ir3 *ir);
 
 struct ir3_pressure {
-   unsigned full, half, shared;
+   unsigned full, half, shared, shared_half;
 };
 
 void ir3_calc_pressure(struct ir3_shader_variant *v, struct ir3_liveness *live,
@@ -168,8 +174,10 @@ bool ir3_spill(struct ir3 *ir, struct ir3_shader_variant *v,
 
 bool ir3_lower_spill(struct ir3 *ir);
 
+void ir3_ra_shared(struct ir3_shader_variant *v, struct ir3_liveness **live);
+
 void ir3_ra_validate(struct ir3_shader_variant *v, unsigned full_size,
-                     unsigned half_size, unsigned block_count);
+                     unsigned half_size, unsigned block_count, bool shared_ra);
 
 void ir3_lower_copies(struct ir3_shader_variant *v);
 
@@ -280,5 +288,8 @@ void ir3_reg_interval_remove(struct ir3_reg_ctx *ctx,
 
 void ir3_reg_interval_remove_all(struct ir3_reg_ctx *ctx,
                                  struct ir3_reg_interval *interval);
+
+void ra_update_affinity(unsigned file_size, struct ir3_register *reg,
+                        physreg_t physreg);
 
 #endif

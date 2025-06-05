@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2022/09/02 05:46:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2025/06/05 14:18:42 jsg Exp $
 
 LIB=	glcpp
 
@@ -16,6 +16,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/compiler/glsl/glcpp \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/compiler/glsl/glcpp
 
 install:

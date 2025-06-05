@@ -186,7 +186,7 @@ struct loop_record
       /* also supported for the "function loop" */
       if(!this->execute_flag) {
          exec_list& list = this->loop ? this->loop->body_instructions : signature->body;
-         this->execute_flag = new(this->signature) ir_variable(glsl_type::bool_type, "execute_flag", ir_var_temporary);
+         this->execute_flag = new(this->signature) ir_variable(&glsl_type_builtin_bool, "execute_flag", ir_var_temporary);
          list.push_head(new(this->signature) ir_assignment(new(this->signature) ir_dereference_variable(execute_flag), new(this->signature) ir_constant(true)));
          list.push_head(this->execute_flag);
       }
@@ -199,38 +199,16 @@ struct function_record
    ir_function_signature* signature;
    ir_variable* return_flag; /* used to break out of all loops and then jump to the return instruction */
    ir_variable* return_value;
-   bool lower_return;
    unsigned nesting_depth;
 
-   function_record(ir_function_signature* p_signature = 0,
-                   bool lower_return = false)
+   function_record(ir_function_signature* p_signature = 0)
    {
       this->signature = p_signature;
       this->return_flag = 0;
       this->return_value = 0;
       this->nesting_depth = 0;
-      this->lower_return = lower_return;
    }
 
-   ir_variable* get_return_flag()
-   {
-      if(!this->return_flag) {
-         this->return_flag = new(this->signature) ir_variable(glsl_type::bool_type, "return_flag", ir_var_temporary);
-         this->signature->body.push_head(new(this->signature) ir_assignment(new(this->signature) ir_dereference_variable(return_flag), new(this->signature) ir_constant(false)));
-         this->signature->body.push_head(this->return_flag);
-      }
-      return this->return_flag;
-   }
-
-   ir_variable* get_return_value()
-   {
-      if(!this->return_value) {
-         assert(!this->signature->return_type->is_void());
-         return_value = new(this->signature) ir_variable(this->signature->return_type, "return_value", ir_var_temporary);
-         this->signature->body.push_head(this->return_value);
-      }
-      return this->return_value;
-   }
 };
 
 struct ir_lower_jumps_visitor : public ir_control_flow_visitor {
@@ -265,15 +243,11 @@ struct ir_lower_jumps_visitor : public ir_control_flow_visitor {
 
    bool pull_out_jumps;
    bool lower_continue;
-   bool lower_sub_return;
-   bool lower_main_return;
 
    ir_lower_jumps_visitor()
       : progress(false),
         pull_out_jumps(false),
-        lower_continue(false),
-        lower_sub_return(false),
-        lower_main_return(false)
+        lower_continue(false)
    {
    }
 
@@ -296,43 +270,6 @@ struct ir_lower_jumps_visitor : public ir_control_flow_visitor {
          move_ir->remove();
          inner_block->push_tail(move_ir);
       }
-   }
-
-   /**
-    * Insert the instructions necessary to lower a return statement,
-    * before the given return instruction.
-    */
-   void insert_lowered_return(ir_return *ir)
-   {
-      ir_variable* return_flag = this->function.get_return_flag();
-      if(!this->function.signature->return_type->is_void()) {
-         ir_variable* return_value = this->function.get_return_value();
-         ir->insert_before(
-            new(ir) ir_assignment(
-               new (ir) ir_dereference_variable(return_value),
-               ir->value));
-      }
-      ir->insert_before(
-         new(ir) ir_assignment(
-            new (ir) ir_dereference_variable(return_flag),
-            new (ir) ir_constant(true)));
-      this->loop.may_set_return_flag = true;
-   }
-
-   /**
-    * If the given instruction is a return, lower it to instructions
-    * that store the return value (if there is one), set the return
-    * flag, and then break.
-    *
-    * It is safe to pass NULL to this function.
-    */
-   void lower_return_unconditionally(ir_instruction *ir)
-   {
-      if (get_jump_strength(ir) != strength_return) {
-         return;
-      }
-      insert_lowered_return((ir_return*)ir);
-      ir->replace_with(new(ir) ir_loop_jump(ir_loop_jump::jump_break));
    }
 
    virtual void visit(class ir_loop_jump * ir)
@@ -400,9 +337,7 @@ struct ir_lower_jumps_visitor : public ir_control_flow_visitor {
             return strength_break;
          else
             return strength_continue;
-      } else if(ir->ir_type == ir_type_return)
-         return strength_return;
-      else
+      } else
          return strength_none;
    }
 
@@ -420,13 +355,6 @@ struct ir_lower_jumps_visitor : public ir_control_flow_visitor {
          break;
       case strength_break:
          lower = false;
-         break;
-      case strength_return:
-         /* never lower return at the end of a this->function */
-         if(this->function.nesting_depth == 0 && ir->get_next()->is_tail_sentinel())
-            lower = false;
-         else
-            lower = this->function.lower_return;
          break;
       }
       return lower;
@@ -515,7 +443,7 @@ retry: /* we get here if we put code after the if inside a branch */
             else if(jump_strengths[0] == strength_break)
                ir->insert_after(new(ir) ir_loop_jump(ir_loop_jump::jump_break));
             /* FINISHME: unify returns with identical expressions */
-            else if(jump_strengths[0] == strength_return && this->function.signature->return_type->is_void())
+            else if(jump_strengths[0] == strength_return && glsl_type_is_void(this->function.signature->return_type))
                ir->insert_after(new(ir) ir_return(NULL));
 	    else
 	       unify = false;
@@ -563,40 +491,9 @@ retry: /* we get here if we put code after the if inside a branch */
              */
             break;
 
-         if(jump_strengths[lower] == strength_return) {
-            /* To lower a return, we create a return flag (if the
-             * function doesn't have one already) and add instructions
-             * that: 1. store the return value (if this function has a
-             * non-void return) and 2. set the return flag
-             */
-            insert_lowered_return((ir_return*)jumps[lower]);
-            if(this->loop.loop) {
-               /* If we are in a loop, replace the return instruction
-                * with a break instruction, and then loop so that the
-                * break instruction can be lowered if necessary.
-                */
-               ir_loop_jump* lowered = 0;
-               lowered = new(ir) ir_loop_jump(ir_loop_jump::jump_break);
-               /* Note: we must update block_records and jumps to
-                * reflect the fact that the control path has been
-                * altered from a return to a break.
-                */
-               block_records[lower].min_strength = strength_break;
-               jumps[lower]->replace_with(lowered);
-               jumps[lower] = lowered;
-            } else {
-               /* If we are not in a loop, we then proceed as we would
-                * for a continue statement (set the execute flag to
-                * false to prevent the rest of the function from
-                * executing).
-                */
-               goto lower_continue;
-            }
-            this->progress = true;
-         } else if(jump_strengths[lower] == strength_break) {
+         if(jump_strengths[lower] == strength_break) {
             unreachable("no lowering of breaks any more");
          } else if(jump_strengths[lower] == strength_continue) {
-lower_continue:
             /* To lower a continue, we create an execute flag (if the
              * loop doesn't have one already) and replace the continue
              * with an instruction that clears it.
@@ -722,9 +619,10 @@ lower_continue:
              * any instructions that that are already wrapped in the
              * appropriate guard.
              */
-            ir_instruction* ir_after;
-            for(ir_after = (ir_instruction*)ir->get_next(); !ir_after->is_tail_sentinel();)
+            exec_node *node;
+            for(node = ir->get_next(); !node->is_tail_sentinel();)
             {
+               ir_instruction* ir_after = (ir_instruction*)node;
                ir_if* ir_if = ir_after->as_if();
                if(ir_if && ir_if->else_instructions.is_empty()) {
                   ir_dereference_variable* ir_if_cond_deref = ir_if->condition->as_dereference_variable();
@@ -736,7 +634,7 @@ lower_continue:
                      continue;
                   }
                }
-               ir_after = (ir_instruction*)ir_after->get_next();
+               node = ir_after->get_next();
 
                /* only set this if we find any unprotected instruction */
                this->progress = true;
@@ -796,12 +694,6 @@ lower_continue:
          ir_last->remove();
       }
 
-      /* If the loop ends in an unconditional return, and we are
-       * lowering returns, lower it.
-       */
-      if (this->function.lower_return)
-         lower_return_unconditionally(ir_last);
-
       if(body.min_strength >= strength_break) {
          /* FINISHME: If the min_strength of the loop body is
           * strength_break or strength_return, that means that it
@@ -846,7 +738,7 @@ lower_continue:
             /* In case the loop is embedded inside an if add a new return to
              * the return flag then branch and let a future pass tidy it up.
              */
-            if (this->function.signature->return_type->is_void())
+            if (glsl_type_is_void(this->function.signature->return_type))
                return_if->then_instructions.push_tail(new(ir) ir_return(NULL));
             else {
                assert(this->function.return_value);
@@ -869,15 +761,9 @@ lower_continue:
       assert(!this->function.signature);
       assert(!this->loop.loop);
 
-      bool lower_return;
-      if (strcmp(ir->function_name(), "main") == 0)
-         lower_return = lower_main_return;
-      else
-         lower_return = lower_sub_return;
-
       function_record saved_function = this->function;
       loop_record saved_loop = this->loop;
-      this->function = function_record(ir, lower_return);
+      this->function = function_record(ir);
       this->loop = loop_record(ir);
 
       assert(!this->loop.loop);
@@ -895,7 +781,7 @@ lower_continue:
        * If the body ended in a return of void, eliminate it because
        * it is redundant.
        */
-      if (ir->return_type->is_void() &&
+      if (glsl_type_is_void(ir->return_type) &&
           get_jump_strength((ir_instruction *) ir->body.get_tail())) {
          ir_jump *jump = (ir_jump *) ir->body.get_tail();
          assert (jump->ir_type == ir_type_return);
@@ -918,18 +804,16 @@ lower_continue:
 } /* anonymous namespace */
 
 bool
-do_lower_jumps(exec_list *instructions, bool pull_out_jumps, bool lower_sub_return, bool lower_main_return, bool lower_continue)
+do_lower_jumps(exec_list *instructions, bool pull_out_jumps, bool lower_continue)
 {
    ir_lower_jumps_visitor v;
    v.pull_out_jumps = pull_out_jumps;
    v.lower_continue = lower_continue;
-   v.lower_sub_return = lower_sub_return;
-   v.lower_main_return = lower_main_return;
 
    bool progress_ever = false;
    do {
       v.progress = false;
-      visit_exec_list(instructions, &v);
+      visit_exec_list_safe(instructions, &v);
       progress_ever = v.progress || progress_ever;
    } while (v.progress);
 

@@ -1,26 +1,7 @@
 /*
  * Copyright 2010 Red Hat Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  * Authors: Dave Airlie
+ * SPDX-License-Identifier: MIT
  */
 
 #include <stdio.h>
@@ -53,17 +34,18 @@ void r300_upload_index_buffer(struct r300_context *r300,
 void r300_resource_destroy(struct pipe_screen *screen,
                            struct pipe_resource *buf)
 {
+   struct r300_screen *rscreen = r300_screen(screen);
+
    if (buf->target == PIPE_BUFFER) {
       struct r300_resource *rbuf = r300_resource(buf);
 
       align_free(rbuf->malloced_buffer);
 
       if (rbuf->buf)
-         pb_reference(&rbuf->buf, NULL);
+         radeon_bo_reference(rscreen->rws, &rbuf->buf, NULL);
 
       FREE(rbuf);
    } else {
-      struct r300_screen *rscreen = r300_screen(screen);
       struct r300_resource* tex = (struct r300_resource*)buf;
 
       if (tex->tex.cmask_dwords) {
@@ -73,7 +55,7 @@ void r300_resource_destroy(struct pipe_screen *screen,
           }
           mtx_unlock(&rscreen->cmask_mutex);
       }
-      pb_reference(&tex->buf, NULL);
+      radeon_bo_reference(rscreen->rws, &tex->buf, NULL);
       FREE(tex);
    }
 }
@@ -113,7 +95,7 @@ r300_buffer_transfer_map( struct pipe_context *context,
         if (r300->rws->cs_is_buffer_referenced(&r300->cs, rbuf->buf, RADEON_USAGE_READWRITE) ||
             !r300->rws->buffer_wait(r300->rws, rbuf->buf, 0, RADEON_USAGE_READWRITE)) {
             unsigned i;
-            struct pb_buffer *new_buf;
+            struct pb_buffer_lean *new_buf;
 
             /* Create a new one in the same pipe_resource. */
             new_buf = r300->rws->buffer_create(r300->rws, rbuf->b.width0,
@@ -122,7 +104,7 @@ r300_buffer_transfer_map( struct pipe_context *context,
                                                RADEON_FLAG_NO_INTERPROCESS_SHARING);
             if (new_buf) {
                 /* Discard the old buffer. */
-                pb_reference(&rbuf->buf, NULL);
+                radeon_bo_reference(r300->rws, &rbuf->buf, NULL);
                 rbuf->buf = new_buf;
 
                 /* We changed the buffer, now we need to bind it where the old one was bound. */

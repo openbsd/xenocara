@@ -1927,14 +1927,14 @@ void __indirect_glFogfv(GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glFogfv_size(pname);
-    const GLuint cmdlen = 8 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat))) < 0) {
+    const GLuint cmdlen = 8 + safe_pad(compsize * 1 * sizeof(GLfloat));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLfloat)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_Fogfv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 8), (void *)(params), safe_mul(compsize, 1 * sizeof(GLfloat)));
+(void) memcpy((void *)(gc->pc + 8), (void *)(params), compsize * 1 * sizeof(GLfloat));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -1956,14 +1956,14 @@ void __indirect_glFogiv(GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glFogiv_size(pname);
-    const GLuint cmdlen = 8 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint))) < 0) {
+    const GLuint cmdlen = 8 + safe_pad(compsize * 1 * sizeof(GLint));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLint)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_Fogiv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 8), (void *)(params), safe_mul(compsize, 1 * sizeof(GLint)));
+(void) memcpy((void *)(gc->pc + 8), (void *)(params), compsize * 1 * sizeof(GLint));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2009,15 +2009,15 @@ void __indirect_glLightfv(GLenum light, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glLightfv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLfloat));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLfloat)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_Lightfv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&light), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLfloat)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLfloat));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2040,15 +2040,15 @@ void __indirect_glLightiv(GLenum light, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glLightiv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLint));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLint)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_Lightiv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&light), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLint)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLint));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2070,14 +2070,14 @@ void __indirect_glLightModelfv(GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glLightModelfv_size(pname);
-    const GLuint cmdlen = 8 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat))) < 0) {
+    const GLuint cmdlen = 8 + safe_pad(compsize * 1 * sizeof(GLfloat));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLfloat)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_LightModelfv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 8), (void *)(params), safe_mul(compsize, 1 * sizeof(GLfloat)));
+(void) memcpy((void *)(gc->pc + 8), (void *)(params), compsize * 1 * sizeof(GLfloat));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2099,14 +2099,14 @@ void __indirect_glLightModeliv(GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glLightModeliv_size(pname);
-    const GLuint cmdlen = 8 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint))) < 0) {
+    const GLuint cmdlen = 8 + safe_pad(compsize * 1 * sizeof(GLint));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLint)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_LightModeliv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 8), (void *)(params), safe_mul(compsize, 1 * sizeof(GLint)));
+(void) memcpy((void *)(gc->pc + 8), (void *)(params), compsize * 1 * sizeof(GLint));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2152,15 +2152,15 @@ void __indirect_glMaterialfv(GLenum face, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glMaterialfv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLfloat));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLfloat)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_Materialfv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&face), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLfloat)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLfloat));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2183,15 +2183,15 @@ void __indirect_glMaterialiv(GLenum face, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glMaterialiv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLint));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLint)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_Materialiv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&face), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLint)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLint));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2282,15 +2282,15 @@ void __indirect_glTexParameterfv(GLenum target, GLenum pname, const GLfloat *par
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexParameterfv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLfloat));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLfloat)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_TexParameterfv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&target), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLfloat)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLfloat));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2313,15 +2313,15 @@ void __indirect_glTexParameteriv(GLenum target, GLenum pname, const GLint *param
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexParameteriv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLint));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLint)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_TexParameteriv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&target), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLint)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLint));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2407,15 +2407,15 @@ void __indirect_glTexEnvfv(GLenum target, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexEnvfv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLfloat));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLfloat)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_TexEnvfv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&target), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLfloat)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLfloat));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2438,15 +2438,15 @@ void __indirect_glTexEnviv(GLenum target, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexEnviv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLint));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLint)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_TexEnviv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&target), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLint)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLint));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2469,15 +2469,15 @@ void __indirect_glTexGendv(GLenum coord, GLenum pname, const GLdouble *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexGendv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLdouble)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLdouble))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLdouble));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLdouble)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_TexGendv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&coord), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLdouble)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLdouble));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2500,15 +2500,15 @@ void __indirect_glTexGenfv(GLenum coord, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexGenfv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLfloat));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLfloat)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_TexGenfv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&coord), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLfloat)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLfloat));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -2531,15 +2531,15 @@ void __indirect_glTexGeniv(GLenum coord, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexGeniv_size(pname);
-    const GLuint cmdlen = 12 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint))) < 0) {
+    const GLuint cmdlen = 12 + safe_pad(compsize * 1 * sizeof(GLint));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLint)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_TexGeniv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&coord), 1 * sizeof(GLenum));
 (void) memcpy((void *)(gc->pc + 8), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 12), (void *)(params), safe_mul(compsize, 1 * sizeof(GLint)));
+(void) memcpy((void *)(gc->pc + 12), (void *)(params), compsize * 1 * sizeof(GLint));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -5941,14 +5941,14 @@ void __indirect_glPointParameterfv(GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glPointParameterfv_size(pname);
-    const GLuint cmdlen = 8 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLfloat))) < 0) {
+    const GLuint cmdlen = 8 + safe_pad(compsize * 1 * sizeof(GLfloat));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLfloat)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_PointParameterfv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 8), (void *)(params), safe_mul(compsize, 1 * sizeof(GLfloat)));
+(void) memcpy((void *)(gc->pc + 8), (void *)(params), compsize * 1 * sizeof(GLfloat));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -5970,14 +5970,14 @@ void __indirect_glPointParameteriv(GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glPointParameteriv_size(pname);
-    const GLuint cmdlen = 8 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint)));
-    if (0 + safe_pad(safe_mul(compsize, 1 * sizeof(GLint))) < 0) {
+    const GLuint cmdlen = 8 + safe_pad(compsize * 1 * sizeof(GLint));
+    if (0 + safe_pad(compsize * 1 * sizeof(GLint)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
 emit_header(gc->pc, X_GLrop_PointParameteriv, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-(void) memcpy((void *)(gc->pc + 8), (void *)(params), safe_mul(compsize, 1 * sizeof(GLint)));
+(void) memcpy((void *)(gc->pc + 8), (void *)(params), compsize * 1 * sizeof(GLint));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -6352,8 +6352,8 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 void __indirect_glDrawBuffers(GLsizei n, const GLenum *bufs)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
-    const GLuint cmdlen = 8 + safe_pad(safe_mul(n, 1 * sizeof(GLenum)));
-    if (0 + safe_pad(safe_mul(n, 1 * sizeof(GLenum))) < 0) {
+    const GLuint cmdlen = 8 + safe_pad(n * 1 * sizeof(GLenum));
+    if (0 + safe_pad(n * 1 * sizeof(GLenum)) < 0) {
         __glXSetError(gc, GL_INVALID_VALUE);
         return;
     }
@@ -6368,7 +6368,7 @@ if (cmdlen <= gc->maxSmallRenderCommandSize) {
     }
 emit_header(gc->pc, X_GLrop_DrawBuffers, cmdlen);
 (void) memcpy((void *)(gc->pc + 4), (void *)(&n), 1 * sizeof(GLsizei));
-(void) memcpy((void *)(gc->pc + 8), (void *)(bufs), safe_mul(n, 1 * sizeof(GLenum)));
+(void) memcpy((void *)(gc->pc + 8), (void *)(bufs), n * 1 * sizeof(GLenum));
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
@@ -6379,7 +6379,7 @@ GLubyte * const pc = __glXFlushRenderBuffer(gc, gc->pc);
 (void) memcpy((void *)(pc + 0), (void *)(&cmdlenLarge), 4);
 (void) memcpy((void *)(pc + 4), (void *)(&op), 4);
 (void) memcpy((void *)(pc + 8), (void *)(&n), 1 * sizeof(GLsizei));
-    __glXSendLargeCommand(gc, pc, 12, bufs, safe_mul(n, 1 * sizeof(GLenum)));
+    __glXSendLargeCommand(gc, pc, 12, bufs, n * 1 * sizeof(GLenum));
 }
     }
 }

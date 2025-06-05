@@ -111,7 +111,7 @@ void
 st_update_framebuffer_state( struct st_context *st )
 {
    struct gl_context *ctx = st->ctx;
-   struct pipe_framebuffer_state framebuffer;
+   struct pipe_framebuffer_state framebuffer = {0};
    struct gl_framebuffer *fb = st->ctx->DrawBuffer;
    struct gl_renderbuffer *rb;
    GLuint i;
@@ -146,6 +146,7 @@ st_update_framebuffer_state( struct st_context *st )
     */
    framebuffer.nr_cbufs = fb->_NumColorDrawBuffers;
 
+   unsigned num_multiview_layer = 0;
    for (i = 0; i < fb->_NumColorDrawBuffers; i++) {
       framebuffer.cbufs[i] = NULL;
       rb = fb->_ColorDrawBuffers[i];
@@ -156,6 +157,8 @@ st_update_framebuffer_state( struct st_context *st )
             /* rendering to a GL texture, may have to update surface */
 
             _mesa_update_renderbuffer_surface(ctx, rb);
+
+            num_multiview_layer = MAX2(num_multiview_layer, rb->rtt_numviews);
          }
 
          if (rb->surface) {
@@ -190,6 +193,7 @@ st_update_framebuffer_state( struct st_context *st )
       if (rb->is_rtt) {
          /* rendering to a GL texture, may have to update surface */
          _mesa_update_renderbuffer_surface(ctx, rb);
+         num_multiview_layer = MAX2(num_multiview_layer, rb->rtt_numviews);
       }
       if (rb->surface && rb->surface->context != ctx->pipe) {
          _mesa_regen_renderbuffer_surface(ctx, rb);
@@ -200,6 +204,8 @@ st_update_framebuffer_state( struct st_context *st )
    }
    else
       framebuffer.zsbuf = NULL;
+
+   framebuffer.viewmask = BITFIELD_MASK(num_multiview_layer);
 
 #ifndef NDEBUG
    /* Make sure the resource binding flags were set properly */

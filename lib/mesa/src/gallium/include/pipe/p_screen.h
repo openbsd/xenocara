@@ -66,6 +66,8 @@ struct driOptionCache;
 struct u_transfer_helper;
 struct pipe_screen;
 struct util_queue_fence;
+struct pipe_video_buffer;
+struct nir_shader;
 
 typedef struct pipe_vertex_state *
    (*pipe_create_vertex_state_func)(struct pipe_screen *screen,
@@ -88,6 +90,8 @@ typedef void (*pipe_driver_thread_func)(void *job, void *gdata, int thread_index
 struct pipe_screen {
    int refcnt;
    void *winsys_priv;
+
+   const struct pipe_caps caps;
 
    /**
     * Get the fd associated with the screen
@@ -130,20 +134,8 @@ struct pipe_screen {
    const char *(*get_cl_cts_version)(struct pipe_screen *);
 
    /**
-    * Query an integer-valued capability/parameter/limit
-    * \param param  one of PIPE_CAP_x
-    */
-   int (*get_param)(struct pipe_screen *, enum pipe_cap param);
-
-   /**
-    * Query a float-valued capability/parameter/limit
-    * \param param  one of PIPE_CAP_x
-    */
-   float (*get_paramf)(struct pipe_screen *, enum pipe_capf param);
-
-   /**
     * Query a per-shader-stage integer-valued capability/parameter/limit
-    * \param param  one of PIPE_CAP_x
+    * \param param  one of pipe_caps.x
     */
    int (*get_shader_param)(struct pipe_screen *, enum pipe_shader_type shader,
                            enum pipe_shader_cap param);
@@ -174,7 +166,7 @@ struct pipe_screen {
 
    /**
     * Get the sample pixel grid's size. This function requires
-    * PIPE_CAP_PROGRAMMABLE_SAMPLE_LOCATIONS to be callable.
+    * pipe_caps.programmable_sample_locations to be callable.
     *
     * \param sample_count - total number of samples
     * \param out_width - the width of the pixel grid
@@ -384,13 +376,15 @@ struct pipe_screen {
     * displayed, eg copy fake frontbuffer.
     * \param winsys_drawable_handle  an opaque handle that the calling context
     *                                gets out-of-band
-    * \param subbox an optional sub region to flush
+    * \param nboxes the number of sub regions to flush
+    * \param subbox an array of optional sub regions to flush
     */
    void (*flush_frontbuffer)(struct pipe_screen *screen,
                              struct pipe_context *ctx,
                              struct pipe_resource *resource,
                              unsigned level, unsigned layer,
                              void *winsys_drawable_handle,
+                             unsigned nboxes,
                              struct pipe_box *subbox);
 
    /** Set ptr = fence, with reference counting */
@@ -424,6 +418,15 @@ struct pipe_screen {
     */
    int (*fence_get_fd)(struct pipe_screen *screen,
                        struct pipe_fence_handle *fence);
+
+   /**
+    * Retrieves the Win32 shared handle from the fence.
+    * Note that Windows fences are pretty much all timeline semaphores,
+    * so a value is needed to denote the specific point on the timeline.
+    */
+   void* (*fence_get_win32_handle)(struct pipe_screen *screen,
+                                   struct pipe_fence_handle *fence,
+                                   uint64_t *fence_value);
 
    /**
     * Create a fence from an Win32 handle.
@@ -628,7 +631,7 @@ struct pipe_screen {
     * The driver may return a non-NULL string to trigger GLSL link failure
     * and logging of that message in the GLSL linker log.
     */
-   char *(*finalize_nir)(struct pipe_screen *screen, void *nir);
+   char *(*finalize_nir)(struct pipe_screen *screen, struct nir_shader *nir);
 
    /*Separated memory/resource allocations interfaces for Vulkan */
 
@@ -656,7 +659,8 @@ struct pipe_screen {
     */
    struct pipe_memory_allocation *(*allocate_memory_fd)(struct pipe_screen *screen,
                                                         uint64_t size,
-                                                        int *fd);
+                                                        int *fd,
+                                                        bool dmabuf);
 
    /**
     * Import memory from an fd-handle.
@@ -664,7 +668,8 @@ struct pipe_screen {
    bool (*import_memory_fd)(struct pipe_screen *screen,
                             int fd,
                             struct pipe_memory_allocation **pmem,
-                            uint64_t *size);
+                            uint64_t *size,
+                            bool dmabuf);
 
    /**
     * Free previously allocated fd-based memory.
@@ -678,6 +683,8 @@ struct pipe_screen {
    bool (*resource_bind_backing)(struct pipe_screen *screen,
                                  struct pipe_resource *pt,
                                  struct pipe_memory_allocation *pmem,
+                                 uint64_t fd_offset,
+                                 uint64_t size,
                                  uint64_t offset);
 
    /**
@@ -790,6 +797,55 @@ struct pipe_screen {
                                      uint32_t in_data_size,
                                      void *data,
                                      bool *need_export_dmabuf);
+
+   /**
+    * Get supported compression fixed rates (bits per component) for a format.
+    * If \p max is 0, the total number of supported rates for the supplied
+    * format is returned in \p count, with no modification to \p rates.
+    * Otherwise, \p rates is filled with upto \p max supported compression
+    * rates, and \p count with the number of values copied.
+    */
+   void (*query_compression_rates)(struct pipe_screen *screen,
+                                   enum pipe_format format, int max,
+                                   uint32_t *rates, int *count);
+
+   /**
+    * Get modifiers associated with a given compression fixed rate.
+    * If \p rate is PIPE_COMPRESSION_FIXED_RATE_DEFAULT, supported compression
+    * modifiers are returned in order of priority.
+    * If \p max is 0, the total number of supported modifiers for the supplied
+    * compression rate is returned in \p count, with no modification to \p
+    * modifiers. Otherwise, \p modifiers is filled with upto \p max supported
+    * modifiers, and \p count with the number of values copied.
+    */
+   void (*query_compression_modifiers)(struct pipe_screen *screen,
+                                       enum pipe_format format, uint32_t rate,
+                                       int max, uint64_t *modifiers, int *count);
+
+   /**
+    * Check if the given \p target buffer is supported as output (or input for
+    * encode) for this \p profile and \p entrypoint.
+    *
+    * If \p format is different from target->buffer_format this function
+    * checks if the \p target buffer can be converted to \p format as part
+    * of the given operation (eg. encoder accepts RGB input and converts
+    * it to YUV).
+    *
+    * \return true if the buffer is supported for given operation, false
+    *         otherwise.
+    */
+   bool (*is_video_target_buffer_supported)(struct pipe_screen *screen,
+                                            enum pipe_format format,
+                                            struct pipe_video_buffer *target,
+                                            enum pipe_video_profile profile,
+                                            enum pipe_video_entrypoint entrypoint);
+
+   /**
+    * pipe_screen is inherited by driver's screen but a simple cast to convert
+    * from the generic interface to the driver version won't work if dd_pipe
+    * is used.
+    */
+   struct pipe_screen* (*get_driver_pipe_screen)(struct pipe_screen *screen);
 };
 
 
@@ -797,6 +853,7 @@ struct pipe_screen {
  * Global configuration options for screen creation.
  */
 struct pipe_screen_config {
+   bool driver_name_is_inferred;
    struct driOptionCache *options;
    const struct driOptionCache *options_info;
 };

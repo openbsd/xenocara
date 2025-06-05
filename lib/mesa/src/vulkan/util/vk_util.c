@@ -63,7 +63,7 @@ uint32_t vk_get_version_override(void)
 
    int major = atoi(str);
    int minor = minor_str ? atoi(minor_str + 1) : 0;
-   int patch = patch_str ? atoi(patch_str + 1) : 0;
+   int patch = patch_str ? atoi(patch_str + 1) : VK_HEADER_VERSION;
 
    /* Do some basic version sanity checking */
    if (major < 1 || minor < 0 || patch < 0 || minor > 1023 || patch > 4095)
@@ -102,16 +102,16 @@ vk_spec_info_to_nir_spirv(const VkSpecializationInfo *spec_info,
       spec_entries[i].id = spec_info->pMapEntries[i].constantID;
       switch (entry.size) {
       case 8:
-         spec_entries[i].value.u64 = *(const uint64_t *)data;
+         memcpy(&spec_entries[i].value.u64, data, entry.size);
          break;
       case 4:
-         spec_entries[i].value.u32 = *(const uint32_t *)data;
+         memcpy(&spec_entries[i].value.u32, data, entry.size);
          break;
       case 2:
-         spec_entries[i].value.u16 = *(const uint16_t *)data;
+         memcpy(&spec_entries[i].value.u16, data, entry.size);
          break;
       case 1:
-         spec_entries[i].value.u8 = *(const uint8_t *)data;
+         memcpy(&spec_entries[i].value.u8, data, entry.size);
          break;
       case 0:
       default:

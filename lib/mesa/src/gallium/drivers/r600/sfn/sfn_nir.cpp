@@ -1,37 +1,18 @@
 /* -*- mesa-c++  -*-
- *
- * Copyright (c) 2019 Collabora LTD
- *
+ * Copyright 2019 Collabora LTD
  * Author: Gert Wollny <gert.wollny@collabora.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "sfn_nir.h"
 
+#include "../r600_asm.h"
 #include "../r600_pipe.h"
 #include "../r600_shader.h"
+
 #include "nir.h"
 #include "nir_builder.h"
 #include "nir_intrinsics.h"
-#include "r600_asm.h"
 #include "sfn_assembler.h"
 #include "sfn_debug.h"
 #include "sfn_instr_tex.h"
@@ -44,6 +25,7 @@
 #include "sfn_scheduler.h"
 #include "sfn_shader.h"
 #include "sfn_split_address_loads.h"
+#include "util/u_debug.h"
 #include "util/u_prim.h"
 
 #include <vector>
@@ -256,6 +238,7 @@ private:
          auto store = nir_store_output(b, clip_i, intr->src[1].ssa);
          nir_intrinsic_set_write_mask(store, 0xf);
          nir_intrinsic_set_base(store, clip_vertex_index);
+         nir_intrinsic_set_src_type(store, nir_type_float32);
          nir_io_semantics semantic = nir_intrinsic_io_semantics(intr);
          semantic.location = VARYING_SLOT_CLIP_DIST0 + i;
          semantic.no_varying = 1;
@@ -441,7 +424,7 @@ r600_nir_lower_atomics(nir_shader *shader)
    std::map<unsigned, nir_variable *> sorted_var;
 
    nir_foreach_variable_with_modes_safe(var, shader, nir_var_uniform) {
-      if (var->type->contains_atomic()) {
+      if (glsl_contains_atomic(var->type)) {
          sorted_var[(var->data.binding << 16) | var->data.offset] = var;
          exec_node_remove(&var->node);
       }
@@ -449,7 +432,7 @@ r600_nir_lower_atomics(nir_shader *shader)
 
    for (auto& [dummy, var] : sorted_var) {
       auto iindex = binding_offset.find(var->data.binding);
-      unsigned offset_update = var->type->atomic_size() / 4; /* ATOMIC_COUNTER_SIZE */
+      unsigned offset_update = glsl_atomic_size(var->type) / 4; /* ATOMIC_COUNTER_SIZE */
       if (iindex == binding_offset.end()) {
          var->data.index = 0;
          binding_offset[var->data.binding] = offset_update;
@@ -461,8 +444,7 @@ r600_nir_lower_atomics(nir_shader *shader)
    }
 
    return nir_shader_intrinsics_pass(shader, r600_lower_deref_instr,
-                                     nir_metadata_block_index | nir_metadata_dominance,
-                                     NULL);
+                                     nir_metadata_control_flow, NULL);
 }
 using r600::r600_lower_fs_out_to_vector;
 using r600::r600_lower_scratch_addresses;
@@ -641,11 +623,13 @@ optimize_once(nir_shader *shader)
    NIR_PASS(progress, shader, nir_copy_prop);
    NIR_PASS(progress, shader, nir_opt_dce);
    NIR_PASS(progress, shader, nir_opt_algebraic);
+   if (shader->options->has_bitfield_select)
+      NIR_PASS(progress, shader, nir_opt_generate_bfi);
    NIR_PASS(progress, shader, nir_opt_constant_folding);
    NIR_PASS(progress, shader, nir_opt_copy_prop_vars);
    NIR_PASS(progress, shader, nir_opt_remove_phis);
 
-   if (nir_opt_trivial_continues(shader)) {
+   if (nir_opt_loop(shader)) {
       progress = true;
       NIR_PASS(progress, shader, nir_copy_prop);
       NIR_PASS(progress, shader, nir_opt_dce);
@@ -697,31 +681,15 @@ r600_lower_to_scalar_instr_filter(const nir_instr *instr, const void *)
    case nir_op_fdot2:
    case nir_op_fdot3:
    case nir_op_fdot4:
-   case nir_op_fddx:
-   case nir_op_fddx_coarse:
-   case nir_op_fddx_fine:
-   case nir_op_fddy:
-   case nir_op_fddy_coarse:
-   case nir_op_fddy_fine:
       return nir_src_bit_size(alu->src[0].src) == 64;
    default:
       return true;
    }
 }
 
-class MallocPoolRelease {
-public:
-   MallocPoolRelease() { r600::init_pool(); }
-   ~MallocPoolRelease() { r600::release_pool(); }
-};
-
-extern "C" char *
-r600_finalize_nir(pipe_screen *screen, void *shader)
+void
+r600_finalize_nir_common(nir_shader *nir, enum amd_gfx_level gfx_level)
 {
-   r600_screen *rs = (r600_screen *)screen;
-
-   nir_shader *nir = (nir_shader *)shader;
-
    const int nir_lower_flrp_mask = 16 | 32 | 64;
 
    NIR_PASS_V(nir, nir_lower_flrp, nir_lower_flrp_mask, false);
@@ -729,7 +697,7 @@ r600_finalize_nir(pipe_screen *screen, void *shader)
    nir_lower_idiv_options idiv_options = {0};
    NIR_PASS_V(nir, nir_lower_idiv, &idiv_options);
 
-   NIR_PASS_V(nir, r600_nir_lower_trigen, rs->b.gfx_level);
+   NIR_PASS_V(nir, r600_nir_lower_trigen, gfx_level);
    NIR_PASS_V(nir, nir_lower_phis_to_scalar, false);
    NIR_PASS_V(nir, nir_lower_undef_to_zero);
 
@@ -748,39 +716,25 @@ r600_finalize_nir(pipe_screen *screen, void *shader)
    NIR_PASS_V(nir, r600_lower_shared_io);
    NIR_PASS_V(nir, r600_nir_lower_atomics);
 
-   if (rs->b.gfx_level == CAYMAN)
+   if (gfx_level == CAYMAN)
       NIR_PASS_V(nir, r600_legalize_image_load_store);
 
    while (optimize_once(nir))
       ;
-
-   return NULL;
 }
 
-int
-r600_shader_from_nir(struct r600_context *rctx,
-                     struct r600_pipe_shader *pipeshader,
-                     r600_shader_key *key)
+DEBUG_GET_ONCE_NUM_OPTION(skip_opt_start, "R600_SFN_SKIP_OPT_START", -1);
+DEBUG_GET_ONCE_NUM_OPTION(skip_opt_end, "R600_SFN_SKIP_OPT_END", -1);
+
+void
+r600_lower_and_optimize_nir(nir_shader *sh,
+                            const union r600_shader_key *key,
+                            enum amd_gfx_level gfx_level,
+                            struct pipe_stream_output_info *so_info)
 {
 
-   MallocPoolRelease pool_release;
-
-   struct r600_pipe_shader_selector *sel = pipeshader->selector;
-
-   bool lower_64bit =
-      (rctx->b.gfx_level < CAYMAN &&
-       (sel->nir->options->lower_int64_options ||
-        sel->nir->options->lower_doubles_options) &&
-       (sel->nir->info.bit_sizes_float | sel->nir->info.bit_sizes_int) & 64);
-
-   if (rctx->screen->b.debug_flags & DBG_PREOPT_IR) {
-      fprintf(stderr, "PRE-OPT-NIR-----------.------------------------------\n");
-      nir_print_shader(sel->nir, stderr);
-      fprintf(stderr, "END PRE-OPT-NIR--------------------------------------\n\n");
-   }
-
-   auto sh = nir_shader_clone(sel->nir, sel->nir);
    r600::sort_uniforms(sh);
+   NIR_PASS_V(sh, r600_nir_fix_kcache_indirect_access);
 
    while (optimize_once(sh))
       ;
@@ -803,8 +757,20 @@ r600_shader_from_nir(struct r600_context *rctx,
               nir_lower_io,
               io_modes,
               r600_glsl_type_size,
-              nir_lower_io_lower_64bit_to_32);
+              (nir_lower_io_options)
+              (nir_lower_io_lower_64bit_to_32 |
+               nir_lower_io_use_interpolated_input_intrinsics));
 
+   if (sh->info.stage == MESA_SHADER_VERTEX || sh->info.stage == MESA_SHADER_TESS_EVAL)
+      NIR_PASS(_, sh, nir_move_output_stores_to_end);
+
+   nir_shader_gather_info(sh, nir_shader_get_entrypoint(sh));
+
+   bool lower_64bit_io_to_vec2 = (sh->info.bit_sizes_float | sh->info.bit_sizes_int) & 64;
+   bool lower_64bit =
+      gfx_level < CAYMAN &&
+      (sh->options->lower_int64_options || sh->options->lower_doubles_options) &&
+      lower_64bit_io_to_vec2;
    if (sh->info.stage == MESA_SHADER_FRAGMENT)
       NIR_PASS_V(sh, r600_lower_fs_pos_input);
 
@@ -828,7 +794,7 @@ r600_shader_from_nir(struct r600_context *rctx,
 
 
    if (r600_is_last_vertex_stage(sh, *key))
-      r600_lower_clipvertex_to_clipdist(sh, sel->so);
+      r600_lower_clipvertex_to_clipdist(sh, *so_info);
 
    if (sh->info.stage == MESA_SHADER_TESS_CTRL ||
        sh->info.stage == MESA_SHADER_TESS_EVAL ||
@@ -851,9 +817,9 @@ r600_shader_from_nir(struct r600_context *rctx,
    NIR_PASS_V(sh, nir_lower_phis_to_scalar, false);
    NIR_PASS_V(sh, nir_lower_alu_to_scalar, r600_lower_to_scalar_instr_filter, NULL);
    NIR_PASS_V(sh, r600_nir_lower_int_tg4);
-   NIR_PASS_V(sh, r600::r600_nir_lower_tex_to_backend, rctx->b.gfx_level);
+   NIR_PASS_V(sh, r600::r600_nir_lower_tex_to_backend, gfx_level);
 
-   if ((sh->info.bit_sizes_float | sh->info.bit_sizes_int) & 64) {
+   if (lower_64bit_io_to_vec2) {
       NIR_PASS_V(sh, r600::r600_nir_split_64bit_io);
       NIR_PASS_V(sh, r600::r600_split_64bit_alu_and_phi);
       NIR_PASS_V(sh, nir_split_64bit_vec3_and_vec4);
@@ -866,7 +832,7 @@ r600_shader_from_nir(struct r600_context *rctx,
    if (lower_64bit)
       NIR_PASS_V(sh, r600::r600_nir_64_to_vec2);
 
-   if ((sh->info.bit_sizes_float | sh->info.bit_sizes_int) & 64)
+   if (lower_64bit_io_to_vec2)
       NIR_PASS_V(sh, r600::r600_split_64bit_uniforms_and_ubo);
 
    /* Lower to scalar to let some optimization work out better */
@@ -883,6 +849,7 @@ r600_shader_from_nir(struct r600_context *rctx,
               nir_lower_vars_to_scratch,
               nir_var_function_temp,
               40,
+              r600_get_natural_size_align_bytes,
               r600_get_natural_size_align_bytes);
 
    while (optimize_once(sh))
@@ -904,60 +871,29 @@ r600_shader_from_nir(struct r600_context *rctx,
    NIR_PASS_V(sh, nir_lower_bool_to_int32);
 
    NIR_PASS_V(sh, nir_lower_locals_to_regs, 32);
-   NIR_PASS_V(sh, nir_convert_from_ssa, true);
+   NIR_PASS_V(sh, nir_convert_from_ssa, true, false);
    NIR_PASS_V(sh, nir_opt_dce);
+}
 
-   if (rctx->screen->b.debug_flags & DBG_ALL_SHADERS) {
-      fprintf(stderr,
-              "-- NIR --------------------------------------------------------\n");
-      struct nir_function *func =
-         (struct nir_function *)exec_list_get_head(&sh->functions);
-      nir_index_ssa_defs(func->impl);
-      nir_print_shader(sh, stderr);
-      fprintf(stderr,
-              "-- END --------------------------------------------------------\n");
-   }
-
-   memset(&pipeshader->shader, 0, sizeof(r600_shader));
-   pipeshader->scratch_space_needed = sh->scratch_size;
-
-   if (sh->info.stage == MESA_SHADER_TESS_EVAL || sh->info.stage == MESA_SHADER_VERTEX ||
-       sh->info.stage == MESA_SHADER_GEOMETRY) {
-      pipeshader->shader.clip_dist_write |=
-         ((1 << sh->info.clip_distance_array_size) - 1);
-      pipeshader->shader.cull_dist_write = ((1 << sh->info.cull_distance_array_size) - 1)
-                                           << sh->info.clip_distance_array_size;
-      pipeshader->shader.cc_dist_mask =
-         (1 << (sh->info.cull_distance_array_size + sh->info.clip_distance_array_size)) -
-         1;
-   }
-   struct r600_shader *gs_shader = nullptr;
-   if (rctx->gs_shader)
-      gs_shader = &rctx->gs_shader->current->shader;
-   r600_screen *rscreen = rctx->screen;
-
-   r600::Shader *shader =
-      r600::Shader::translate_from_nir(sh, &sel->so, gs_shader, *key,
-                                       rctx->isa->hw_class, rscreen->b.family);
-
-   assert(shader);
-   if (!shader)
-      return -2;
-
-   pipeshader->enabled_stream_buffers_mask = shader->enabled_stream_buffers_mask();
-   pipeshader->selector->info.file_count[TGSI_FILE_HW_ATOMIC] +=
-      shader->atomic_file_count();
-   pipeshader->selector->info.writes_memory =
-      shader->has_flag(r600::Shader::sh_writes_memory);
-
+void
+r600_finalize_and_optimize_shader(r600::Shader *shader)
+{
    if (r600::sfn_log.has_debug_flag(r600::SfnLog::steps)) {
       std::cerr << "Shader after conversion from nir\n";
       shader->print(std::cerr);
    }
 
-   if (!r600::sfn_log.has_debug_flag(r600::SfnLog::noopt)) {
-      optimize(*shader);
+   auto sfn_skip_opt_start = debug_get_option_skip_opt_start();
+   auto sfn_skip_opt_end = debug_get_option_skip_opt_end();
+   bool skip_shader_opt_per_id = sfn_skip_opt_start >= 0 &&
+                                 sfn_skip_opt_start <= shader->shader_id() &&
+                                 sfn_skip_opt_end >= shader->shader_id();
 
+   bool skip_shader_opt = r600::sfn_log.has_debug_flag(r600::SfnLog::noopt) ||
+                          skip_shader_opt_per_id;
+
+   if (!skip_shader_opt) {
+      optimize(*shader);
       if (r600::sfn_log.has_debug_flag(r600::SfnLog::steps)) {
          std::cerr << "Shader after optimization\n";
          shader->print(std::cerr);
@@ -971,15 +907,18 @@ r600_shader_from_nir(struct r600_context *rctx,
       shader->print(std::cerr);
    }
    
-   if (!r600::sfn_log.has_debug_flag(r600::SfnLog::noopt)) {
+   if (!skip_shader_opt) {
       optimize(*shader);
-
       if (r600::sfn_log.has_debug_flag(r600::SfnLog::steps)) {
          std::cerr << "Shader after optimization\n";
          shader->print(std::cerr);
       }
    }
+}
 
+r600::Shader *
+r600_schedule_shader(r600::Shader *shader)
+{
    auto scheduled_shader = r600::schedule(shader);
    if (r600::sfn_log.has_debug_flag(r600::SfnLog::steps)) {
       std::cerr << "Shader after scheduling\n";
@@ -1000,7 +939,7 @@ r600_shader_from_nir(struct r600_context *rctx,
          R600_ERR("%s: Register allocation failed\n", __func__);
          /* For now crash if the shader could not be benerated */
          assert(0);
-         return -1;
+         return nullptr;
       } else if (r600::sfn_log.has_debug_flag(r600::SfnLog::merge) ||
                  r600::sfn_log.has_debug_flag(r600::SfnLog::steps)) {
          r600::sfn_log << "Shader after RA\n";
@@ -1008,54 +947,5 @@ r600_shader_from_nir(struct r600_context *rctx,
       }
    }
 
-   scheduled_shader->get_shader_info(&pipeshader->shader);
-   pipeshader->shader.uses_doubles = sh->info.bit_sizes_float & 64 ? 1 : 0;
-
-   r600_bytecode_init(&pipeshader->shader.bc,
-                      rscreen->b.gfx_level,
-                      rscreen->b.family,
-                      rscreen->has_compressed_msaa_texturing);
-
-   /* We already schedule the code with this in mind, no need to handle this
-    * in the backend assembler */
-   pipeshader->shader.bc.ar_handling = AR_HANDLE_NORMAL;
-   pipeshader->shader.bc.r6xx_nop_after_rel_dst = 0;
-
-   r600::sfn_log << r600::SfnLog::shader_info << "pipeshader->shader.processor_type = "
-                 << pipeshader->shader.processor_type << "\n";
-
-   pipeshader->shader.bc.type = pipeshader->shader.processor_type;
-   pipeshader->shader.bc.isa = rctx->isa;
-   pipeshader->shader.bc.ngpr = scheduled_shader->required_registers();
-
-   r600::Assembler afs(&pipeshader->shader, *key);
-   if (!afs.lower(scheduled_shader)) {
-      R600_ERR("%s: Lowering to assembly failed\n", __func__);
-
-      scheduled_shader->print(std::cerr);
-      /* For now crash if the shader could not be generated */
-      assert(0);
-      return -1;
-   }
-
-   if (sh->info.stage == MESA_SHADER_VERTEX) {
-      pipeshader->shader.vs_position_window_space =
-            sh->info.vs.window_space_position;
-   }
-
-   if (sh->info.stage == MESA_SHADER_FRAGMENT)
-      pipeshader->shader.ps_conservative_z =
-            sh->info.fs.depth_layout;
-
-   if (sh->info.stage == MESA_SHADER_GEOMETRY) {
-      r600::sfn_log << r600::SfnLog::shader_info
-                    << "Geometry shader, create copy shader\n";
-      generate_gs_copy_shader(rctx, pipeshader, &sel->so);
-      assert(pipeshader->gs_copy_shader);
-   } else {
-      r600::sfn_log << r600::SfnLog::shader_info << "This is not a Geometry shader\n";
-   }
-   ralloc_free(sh);
-
-   return 0;
+   return scheduled_shader;
 }

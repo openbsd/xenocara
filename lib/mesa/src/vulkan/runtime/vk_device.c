@@ -31,6 +31,7 @@
 #include "vk_sync.h"
 #include "vk_sync_timeline.h"
 #include "vk_util.h"
+#include "util/compiler.h"
 #include "util/u_debug.h"
 #include "util/hash_table.h"
 #include "util/perf/cpu_trace.h"

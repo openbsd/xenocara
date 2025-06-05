@@ -1,27 +1,9 @@
-/**********************************************************
- * Copyright 2009-2023 VMware, Inc.  All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- **********************************************************/
+/*
+ * Copyright (c) 2009-2024 Broadcom. All Rights Reserved.
+ * The term “Broadcom” refers to Broadcom Inc.
+ * and/or its subsidiaries.
+ * SPDX-License-Identifier: MIT
+ */
 
 /**
  * @file
@@ -39,6 +21,7 @@
 #include "pipe/p_state.h"
 
 #include "svga_winsys.h"
+#include "svga_surface.h"
 #include "pipebuffer/pb_buffer_fenced.h"
 #include "util/u_thread.h"
 #include <sys/types.h>
@@ -98,6 +81,8 @@ struct vmw_winsys_screen
 
    struct pb_fence_ops *fence_ops;
 
+   struct svga_winsys_context *swc;
+
 #ifdef VMX86_STATS
    /*
     * mksGuestStats TLS array; length must be power of two
@@ -120,6 +105,7 @@ struct vmw_winsys_screen
 
    bool force_coherent;
    bool cache_maps;
+   bool userspace_surface;
 };
 
 
@@ -127,6 +113,14 @@ static inline struct vmw_winsys_screen *
 vmw_winsys_screen(struct svga_winsys_screen *base)
 {
    return (struct vmw_winsys_screen *)base;
+}
+
+static inline bool
+vmw_has_userspace_surface(struct vmw_winsys_screen *vws)
+{
+   if (!vws->base.have_gb_objects || !vws->base.have_vgpu10)
+      return false;
+   return vws->userspace_surface;
 }
 
 /*  */

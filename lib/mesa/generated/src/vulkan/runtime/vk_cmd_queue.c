@@ -100,10 +100,12 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_EXECUTE_GENERATED_COMMANDS_NV",
    "VK_CMD_PREPROCESS_GENERATED_COMMANDS_NV",
    "VK_CMD_BIND_PIPELINE_SHADER_GROUP_NV",
-   "VK_CMD_PUSH_DESCRIPTOR_SET_KHR",
+   "VK_CMD_EXECUTE_GENERATED_COMMANDS_EXT",
+   "VK_CMD_PREPROCESS_GENERATED_COMMANDS_EXT",
+   "VK_CMD_PUSH_DESCRIPTOR_SET",
    "VK_CMD_SET_DEVICE_MASK",
    "VK_CMD_DISPATCH_BASE",
-   "VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE_KHR",
+   "VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE",
    "VK_CMD_SET_VIEWPORT_WSCALING_NV",
    "VK_CMD_SET_DISCARD_RECTANGLE_EXT",
    "VK_CMD_SET_DISCARD_RECTANGLE_ENABLE_EXT",
@@ -152,7 +154,7 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_SET_PERFORMANCE_MARKER_INTEL",
    "VK_CMD_SET_PERFORMANCE_STREAM_MARKER_INTEL",
    "VK_CMD_SET_PERFORMANCE_OVERRIDE_INTEL",
-   "VK_CMD_SET_LINE_STIPPLE_EXT",
+   "VK_CMD_SET_LINE_STIPPLE",
    "VK_CMD_BUILD_ACCELERATION_STRUCTURES_KHR",
    "VK_CMD_BUILD_ACCELERATION_STRUCTURES_INDIRECT_KHR",
    "VK_CMD_SET_CULL_MODE",
@@ -160,7 +162,7 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_SET_PRIMITIVE_TOPOLOGY",
    "VK_CMD_SET_VIEWPORT_WITH_COUNT",
    "VK_CMD_SET_SCISSOR_WITH_COUNT",
-   "VK_CMD_BIND_INDEX_BUFFER2_KHR",
+   "VK_CMD_BIND_INDEX_BUFFER2",
    "VK_CMD_BIND_VERTEX_BUFFERS2",
    "VK_CMD_SET_DEPTH_TEST_ENABLE",
    "VK_CMD_SET_DEPTH_WRITE_ENABLE",
@@ -224,6 +226,7 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_BEGIN_VIDEO_CODING_KHR",
    "VK_CMD_CONTROL_VIDEO_CODING_KHR",
    "VK_CMD_END_VIDEO_CODING_KHR",
+   "VK_CMD_ENCODE_VIDEO_KHR",
    "VK_CMD_DECOMPRESS_MEMORY_NV",
    "VK_CMD_DECOMPRESS_MEMORY_INDIRECT_COUNT_NV",
    "VK_CMD_CU_LAUNCH_KERNEL_NVX",
@@ -240,6 +243,15 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_OPTICAL_FLOW_EXECUTE_NV",
    "VK_CMD_SET_DEPTH_BIAS2_EXT",
    "VK_CMD_BIND_SHADERS_EXT",
+   "VK_CMD_BIND_DESCRIPTOR_SETS2",
+   "VK_CMD_PUSH_CONSTANTS2",
+   "VK_CMD_PUSH_DESCRIPTOR_SET2",
+   "VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE2",
+   "VK_CMD_SET_DESCRIPTOR_BUFFER_OFFSETS2_EXT",
+   "VK_CMD_BIND_DESCRIPTOR_BUFFER_EMBEDDED_SAMPLERS2_EXT",
+   "VK_CMD_SET_RENDERING_ATTACHMENT_LOCATIONS",
+   "VK_CMD_SET_RENDERING_INPUT_ATTACHMENT_INDICES",
+   "VK_CMD_SET_DEPTH_CLAMP_RANGE_EXT",
 };
 
 size_t vk_cmd_queue_type_sizes[] = {
@@ -361,13 +373,17 @@ size_t vk_cmd_queue_type_sizes[] = {
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_bind_pipeline_shader_group_nv) +
    sizeof(struct vk_cmd_queue_entry_base),
-   sizeof(struct vk_cmd_push_descriptor_set_khr) +
+   sizeof(struct vk_cmd_execute_generated_commands_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_preprocess_generated_commands_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_push_descriptor_set) +
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_set_device_mask) +
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_dispatch_base) +
    sizeof(struct vk_cmd_queue_entry_base),
-   sizeof(struct vk_cmd_push_descriptor_set_with_template_khr) +
+   sizeof(struct vk_cmd_push_descriptor_set_with_template) +
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_set_viewport_wscaling_nv) +
    sizeof(struct vk_cmd_queue_entry_base),
@@ -464,7 +480,7 @@ size_t vk_cmd_queue_type_sizes[] = {
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_set_performance_override_intel) +
    sizeof(struct vk_cmd_queue_entry_base),
-   sizeof(struct vk_cmd_set_line_stipple_ext) +
+   sizeof(struct vk_cmd_set_line_stipple) +
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_build_acceleration_structures_khr) +
    sizeof(struct vk_cmd_queue_entry_base),
@@ -480,7 +496,7 @@ size_t vk_cmd_queue_type_sizes[] = {
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_set_scissor_with_count) +
    sizeof(struct vk_cmd_queue_entry_base),
-   sizeof(struct vk_cmd_bind_index_buffer2_khr) +
+   sizeof(struct vk_cmd_bind_index_buffer2) +
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_bind_vertex_buffers2) +
    sizeof(struct vk_cmd_queue_entry_base),
@@ -608,6 +624,8 @@ size_t vk_cmd_queue_type_sizes[] = {
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_end_video_coding_khr) +
    sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_encode_video_khr) +
+   sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_decompress_memory_nv) +
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_decompress_memory_indirect_count_nv) +
@@ -638,6 +656,24 @@ size_t vk_cmd_queue_type_sizes[] = {
    sizeof(struct vk_cmd_set_depth_bias2_ext) +
    sizeof(struct vk_cmd_queue_entry_base),
    sizeof(struct vk_cmd_bind_shaders_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_descriptor_sets2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_push_constants2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_push_descriptor_set2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_push_descriptor_set_with_template2) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_descriptor_buffer_offsets2_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_bind_descriptor_buffer_embedded_samplers2_ext) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_rendering_attachment_locations) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_rendering_input_attachment_indices) +
+   sizeof(struct vk_cmd_queue_entry_base),
+   sizeof(struct vk_cmd_set_depth_clamp_range_ext) +
    sizeof(struct vk_cmd_queue_entry_base),
 };
 
@@ -729,7 +765,7 @@ VkResult vk_enqueue_cmd_set_viewport(struct vk_cmd_queue *queue
       cmd->u.set_viewport.viewports = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport.viewports) * (viewportCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_viewport.viewports == NULL) goto err;
 
-   memcpy(( VkViewport* )cmd->u.set_viewport.viewports, pViewports, sizeof(*cmd->u.set_viewport.viewports) * (viewportCount));
+   memcpy((void*)cmd->u.set_viewport.viewports, pViewports, sizeof(*cmd->u.set_viewport.viewports) * (viewportCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -771,7 +807,7 @@ VkResult vk_enqueue_cmd_set_scissor(struct vk_cmd_queue *queue
       cmd->u.set_scissor.scissors = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_scissor.scissors) * (scissorCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_scissor.scissors == NULL) goto err;
 
-   memcpy(( VkRect2D* )cmd->u.set_scissor.scissors, pScissors, sizeof(*cmd->u.set_scissor.scissors) * (scissorCount));
+   memcpy((void*)cmd->u.set_scissor.scissors, pScissors, sizeof(*cmd->u.set_scissor.scissors) * (scissorCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -1070,13 +1106,13 @@ VkResult vk_enqueue_cmd_bind_vertex_buffers(struct vk_cmd_queue *queue
       cmd->u.bind_vertex_buffers.buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers.buffers) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers.buffers == NULL) goto err;
 
-   memcpy(( VkBuffer* )cmd->u.bind_vertex_buffers.buffers, pBuffers, sizeof(*cmd->u.bind_vertex_buffers.buffers) * (bindingCount));
+   memcpy((void*)cmd->u.bind_vertex_buffers.buffers, pBuffers, sizeof(*cmd->u.bind_vertex_buffers.buffers) * (bindingCount));
    }   
    if (pOffsets) {
       cmd->u.bind_vertex_buffers.offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers.offsets) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers.offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers.offsets, pOffsets, sizeof(*cmd->u.bind_vertex_buffers.offsets) * (bindingCount));
+   memcpy((void*)cmd->u.bind_vertex_buffers.offsets, pOffsets, sizeof(*cmd->u.bind_vertex_buffers.offsets) * (bindingCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -1466,7 +1502,7 @@ VkResult vk_enqueue_cmd_copy_buffer(struct vk_cmd_queue *queue
       cmd->u.copy_buffer.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_buffer.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.copy_buffer.regions == NULL) goto err;
 
-   memcpy(( VkBufferCopy* )cmd->u.copy_buffer.regions, pRegions, sizeof(*cmd->u.copy_buffer.regions) * (regionCount));
+   memcpy((void*)cmd->u.copy_buffer.regions, pRegions, sizeof(*cmd->u.copy_buffer.regions) * (regionCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -1514,7 +1550,7 @@ VkResult vk_enqueue_cmd_copy_image(struct vk_cmd_queue *queue
       cmd->u.copy_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_image.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.copy_image.regions == NULL) goto err;
 
-   memcpy(( VkImageCopy* )cmd->u.copy_image.regions, pRegions, sizeof(*cmd->u.copy_image.regions) * (regionCount));
+   memcpy((void*)cmd->u.copy_image.regions, pRegions, sizeof(*cmd->u.copy_image.regions) * (regionCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -1563,7 +1599,7 @@ VkResult vk_enqueue_cmd_blit_image(struct vk_cmd_queue *queue
       cmd->u.blit_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.blit_image.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.blit_image.regions == NULL) goto err;
 
-   memcpy(( VkImageBlit* )cmd->u.blit_image.regions, pRegions, sizeof(*cmd->u.blit_image.regions) * (regionCount));
+   memcpy((void*)cmd->u.blit_image.regions, pRegions, sizeof(*cmd->u.blit_image.regions) * (regionCount));
    }   
    cmd->u.blit_image.filter = filter;
 
@@ -1610,7 +1646,7 @@ VkResult vk_enqueue_cmd_copy_buffer_to_image(struct vk_cmd_queue *queue
       cmd->u.copy_buffer_to_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_buffer_to_image.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.copy_buffer_to_image.regions == NULL) goto err;
 
-   memcpy(( VkBufferImageCopy* )cmd->u.copy_buffer_to_image.regions, pRegions, sizeof(*cmd->u.copy_buffer_to_image.regions) * (regionCount));
+   memcpy((void*)cmd->u.copy_buffer_to_image.regions, pRegions, sizeof(*cmd->u.copy_buffer_to_image.regions) * (regionCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -1656,7 +1692,7 @@ VkResult vk_enqueue_cmd_copy_image_to_buffer(struct vk_cmd_queue *queue
       cmd->u.copy_image_to_buffer.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_image_to_buffer.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.copy_image_to_buffer.regions == NULL) goto err;
 
-   memcpy(( VkBufferImageCopy* )cmd->u.copy_image_to_buffer.regions, pRegions, sizeof(*cmd->u.copy_image_to_buffer.regions) * (regionCount));
+   memcpy((void*)cmd->u.copy_image_to_buffer.regions, pRegions, sizeof(*cmd->u.copy_image_to_buffer.regions) * (regionCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -1736,7 +1772,7 @@ VkResult vk_enqueue_cmd_copy_memory_to_image_indirect_nv(struct vk_cmd_queue *qu
       cmd->u.copy_memory_to_image_indirect_nv.image_subresources = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_memory_to_image_indirect_nv.image_subresources) * (copyCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.copy_memory_to_image_indirect_nv.image_subresources == NULL) goto err;
 
-   memcpy(( VkImageSubresourceLayers* )cmd->u.copy_memory_to_image_indirect_nv.image_subresources, pImageSubresources, sizeof(*cmd->u.copy_memory_to_image_indirect_nv.image_subresources) * (copyCount));
+   memcpy((void*)cmd->u.copy_memory_to_image_indirect_nv.image_subresources, pImageSubresources, sizeof(*cmd->u.copy_memory_to_image_indirect_nv.image_subresources) * (copyCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -1780,7 +1816,7 @@ VkResult vk_enqueue_cmd_update_buffer(struct vk_cmd_queue *queue
       cmd->u.update_buffer.data = vk_zalloc(queue->alloc, 1 * (dataSize), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.update_buffer.data == NULL) goto err;
 
-   memcpy(( void* )cmd->u.update_buffer.data, pData, 1 * (dataSize));
+   memcpy((void*)cmd->u.update_buffer.data, pData, 1 * (dataSize));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -1861,9 +1897,10 @@ VkResult vk_enqueue_cmd_clear_color_image(struct vk_cmd_queue *queue
       if (cmd->u.clear_color_image.color == NULL) goto err;
 
       memcpy((void*)cmd->u.clear_color_image.color, pColor, sizeof(VkClearColorValue));
-   VkClearColorValue *tmp_dst1 = (void *) cmd->u.clear_color_image.color; (void) tmp_dst1;
-   VkClearColorValue *tmp_src1 = (void *) pColor; (void) tmp_src1;   
-      } else {
+      VkClearColorValue *tmp_dst1 = (void *) cmd->u.clear_color_image.color; (void) tmp_dst1;
+      VkClearColorValue *tmp_src1 = (void *) pColor; (void) tmp_src1;
+      
+   } else {
       cmd->u.clear_color_image.color = NULL;
    }   
    cmd->u.clear_color_image.range_count = rangeCount;
@@ -1871,7 +1908,7 @@ VkResult vk_enqueue_cmd_clear_color_image(struct vk_cmd_queue *queue
       cmd->u.clear_color_image.ranges = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_color_image.ranges) * (rangeCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.clear_color_image.ranges == NULL) goto err;
 
-   memcpy(( VkImageSubresourceRange* )cmd->u.clear_color_image.ranges, pRanges, sizeof(*cmd->u.clear_color_image.ranges) * (rangeCount));
+   memcpy((void*)cmd->u.clear_color_image.ranges, pRanges, sizeof(*cmd->u.clear_color_image.ranges) * (rangeCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -1918,9 +1955,10 @@ VkResult vk_enqueue_cmd_clear_depth_stencil_image(struct vk_cmd_queue *queue
       if (cmd->u.clear_depth_stencil_image.depth_stencil == NULL) goto err;
 
       memcpy((void*)cmd->u.clear_depth_stencil_image.depth_stencil, pDepthStencil, sizeof(VkClearDepthStencilValue));
-   VkClearDepthStencilValue *tmp_dst1 = (void *) cmd->u.clear_depth_stencil_image.depth_stencil; (void) tmp_dst1;
-   VkClearDepthStencilValue *tmp_src1 = (void *) pDepthStencil; (void) tmp_src1;   
-      } else {
+      VkClearDepthStencilValue *tmp_dst1 = (void *) cmd->u.clear_depth_stencil_image.depth_stencil; (void) tmp_dst1;
+      VkClearDepthStencilValue *tmp_src1 = (void *) pDepthStencil; (void) tmp_src1;
+      
+   } else {
       cmd->u.clear_depth_stencil_image.depth_stencil = NULL;
    }   
    cmd->u.clear_depth_stencil_image.range_count = rangeCount;
@@ -1928,7 +1966,7 @@ VkResult vk_enqueue_cmd_clear_depth_stencil_image(struct vk_cmd_queue *queue
       cmd->u.clear_depth_stencil_image.ranges = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_depth_stencil_image.ranges) * (rangeCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.clear_depth_stencil_image.ranges == NULL) goto err;
 
-   memcpy(( VkImageSubresourceRange* )cmd->u.clear_depth_stencil_image.ranges, pRanges, sizeof(*cmd->u.clear_depth_stencil_image.ranges) * (rangeCount));
+   memcpy((void*)cmd->u.clear_depth_stencil_image.ranges, pRanges, sizeof(*cmd->u.clear_depth_stencil_image.ranges) * (rangeCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -1971,14 +2009,14 @@ VkResult vk_enqueue_cmd_clear_attachments(struct vk_cmd_queue *queue
       cmd->u.clear_attachments.attachments = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_attachments.attachments) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.clear_attachments.attachments == NULL) goto err;
 
-   memcpy(( VkClearAttachment* )cmd->u.clear_attachments.attachments, pAttachments, sizeof(*cmd->u.clear_attachments.attachments) * (attachmentCount));
+   memcpy((void*)cmd->u.clear_attachments.attachments, pAttachments, sizeof(*cmd->u.clear_attachments.attachments) * (attachmentCount));
    }   
    cmd->u.clear_attachments.rect_count = rectCount;
    if (pRects) {
       cmd->u.clear_attachments.rects = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_attachments.rects) * (rectCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.clear_attachments.rects == NULL) goto err;
 
-   memcpy(( VkClearRect* )cmd->u.clear_attachments.rects, pRects, sizeof(*cmd->u.clear_attachments.rects) * (rectCount));
+   memcpy((void*)cmd->u.clear_attachments.rects, pRects, sizeof(*cmd->u.clear_attachments.rects) * (rectCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -2026,7 +2064,7 @@ VkResult vk_enqueue_cmd_resolve_image(struct vk_cmd_queue *queue
       cmd->u.resolve_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.resolve_image.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.resolve_image.regions == NULL) goto err;
 
-   memcpy(( VkImageResolve* )cmd->u.resolve_image.regions, pRegions, sizeof(*cmd->u.resolve_image.regions) * (regionCount));
+   memcpy((void*)cmd->u.resolve_image.regions, pRegions, sizeof(*cmd->u.resolve_image.regions) * (regionCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -2137,7 +2175,7 @@ VkResult vk_enqueue_cmd_wait_events(struct vk_cmd_queue *queue
       cmd->u.wait_events.events = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.events) * (eventCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events.events == NULL) goto err;
 
-   memcpy(( VkEvent* )cmd->u.wait_events.events, pEvents, sizeof(*cmd->u.wait_events.events) * (eventCount));
+   memcpy((void*)cmd->u.wait_events.events, pEvents, sizeof(*cmd->u.wait_events.events) * (eventCount));
    }   
    cmd->u.wait_events.src_stage_mask = srcStageMask;
    cmd->u.wait_events.dst_stage_mask = dstStageMask;
@@ -2146,21 +2184,21 @@ VkResult vk_enqueue_cmd_wait_events(struct vk_cmd_queue *queue
       cmd->u.wait_events.memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.memory_barriers) * (memoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events.memory_barriers == NULL) goto err;
 
-   memcpy(( VkMemoryBarrier* )cmd->u.wait_events.memory_barriers, pMemoryBarriers, sizeof(*cmd->u.wait_events.memory_barriers) * (memoryBarrierCount));
+   memcpy((void*)cmd->u.wait_events.memory_barriers, pMemoryBarriers, sizeof(*cmd->u.wait_events.memory_barriers) * (memoryBarrierCount));
    }   
    cmd->u.wait_events.buffer_memory_barrier_count = bufferMemoryBarrierCount;
    if (pBufferMemoryBarriers) {
       cmd->u.wait_events.buffer_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.buffer_memory_barriers) * (bufferMemoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events.buffer_memory_barriers == NULL) goto err;
 
-   memcpy(( VkBufferMemoryBarrier* )cmd->u.wait_events.buffer_memory_barriers, pBufferMemoryBarriers, sizeof(*cmd->u.wait_events.buffer_memory_barriers) * (bufferMemoryBarrierCount));
+   memcpy((void*)cmd->u.wait_events.buffer_memory_barriers, pBufferMemoryBarriers, sizeof(*cmd->u.wait_events.buffer_memory_barriers) * (bufferMemoryBarrierCount));
    }   
    cmd->u.wait_events.image_memory_barrier_count = imageMemoryBarrierCount;
    if (pImageMemoryBarriers) {
       cmd->u.wait_events.image_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.image_memory_barriers) * (imageMemoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events.image_memory_barriers == NULL) goto err;
 
-   memcpy(( VkImageMemoryBarrier* )cmd->u.wait_events.image_memory_barriers, pImageMemoryBarriers, sizeof(*cmd->u.wait_events.image_memory_barriers) * (imageMemoryBarrierCount));
+   memcpy((void*)cmd->u.wait_events.image_memory_barriers, pImageMemoryBarriers, sizeof(*cmd->u.wait_events.image_memory_barriers) * (imageMemoryBarrierCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -2212,21 +2250,21 @@ VkResult vk_enqueue_cmd_pipeline_barrier(struct vk_cmd_queue *queue
       cmd->u.pipeline_barrier.memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.pipeline_barrier.memory_barriers) * (memoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.pipeline_barrier.memory_barriers == NULL) goto err;
 
-   memcpy(( VkMemoryBarrier* )cmd->u.pipeline_barrier.memory_barriers, pMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.memory_barriers) * (memoryBarrierCount));
+   memcpy((void*)cmd->u.pipeline_barrier.memory_barriers, pMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.memory_barriers) * (memoryBarrierCount));
    }   
    cmd->u.pipeline_barrier.buffer_memory_barrier_count = bufferMemoryBarrierCount;
    if (pBufferMemoryBarriers) {
       cmd->u.pipeline_barrier.buffer_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.pipeline_barrier.buffer_memory_barriers) * (bufferMemoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.pipeline_barrier.buffer_memory_barriers == NULL) goto err;
 
-   memcpy(( VkBufferMemoryBarrier* )cmd->u.pipeline_barrier.buffer_memory_barriers, pBufferMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.buffer_memory_barriers) * (bufferMemoryBarrierCount));
+   memcpy((void*)cmd->u.pipeline_barrier.buffer_memory_barriers, pBufferMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.buffer_memory_barriers) * (bufferMemoryBarrierCount));
    }   
    cmd->u.pipeline_barrier.image_memory_barrier_count = imageMemoryBarrierCount;
    if (pImageMemoryBarriers) {
       cmd->u.pipeline_barrier.image_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.pipeline_barrier.image_memory_barriers) * (imageMemoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.pipeline_barrier.image_memory_barriers == NULL) goto err;
 
-   memcpy(( VkImageMemoryBarrier* )cmd->u.pipeline_barrier.image_memory_barriers, pImageMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.image_memory_barriers) * (imageMemoryBarrierCount));
+   memcpy((void*)cmd->u.pipeline_barrier.image_memory_barriers, pImageMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.image_memory_barriers) * (imageMemoryBarrierCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -2328,9 +2366,10 @@ VkResult vk_enqueue_cmd_begin_conditional_rendering_ext(struct vk_cmd_queue *que
       if (cmd->u.begin_conditional_rendering_ext.conditional_rendering_begin == NULL) goto err;
 
       memcpy((void*)cmd->u.begin_conditional_rendering_ext.conditional_rendering_begin, pConditionalRenderingBegin, sizeof(VkConditionalRenderingBeginInfoEXT));
-   VkConditionalRenderingBeginInfoEXT *tmp_dst1 = (void *) cmd->u.begin_conditional_rendering_ext.conditional_rendering_begin; (void) tmp_dst1;
-   VkConditionalRenderingBeginInfoEXT *tmp_src1 = (void *) pConditionalRenderingBegin; (void) tmp_src1;   
-      } else {
+      VkConditionalRenderingBeginInfoEXT *tmp_dst1 = (void *) cmd->u.begin_conditional_rendering_ext.conditional_rendering_begin; (void) tmp_dst1;
+      VkConditionalRenderingBeginInfoEXT *tmp_src1 = (void *) pConditionalRenderingBegin; (void) tmp_src1;
+      
+   } else {
       cmd->u.begin_conditional_rendering_ext.conditional_rendering_begin = NULL;
    }   
 
@@ -2507,7 +2546,7 @@ VkResult vk_enqueue_cmd_push_constants(struct vk_cmd_queue *queue
       cmd->u.push_constants.values = vk_zalloc(queue->alloc, 1 * (size), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.push_constants.values == NULL) goto err;
 
-   memcpy(( void* )cmd->u.push_constants.values, pValues, 1 * (size));
+   memcpy((void*)cmd->u.push_constants.values, pValues, 1 * (size));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -2549,115 +2588,142 @@ VkResult vk_enqueue_cmd_begin_render_pass(struct vk_cmd_queue *queue
       if (cmd->u.begin_render_pass.render_pass_begin == NULL) goto err;
 
       memcpy((void*)cmd->u.begin_render_pass.render_pass_begin, pRenderPassBegin, sizeof(VkRenderPassBeginInfo));
-   VkRenderPassBeginInfo *tmp_dst1 = (void *) cmd->u.begin_render_pass.render_pass_begin; (void) tmp_dst1;
-   VkRenderPassBeginInfo *tmp_src1 = (void *) pRenderPassBegin; (void) tmp_src1;   
-   
+      VkRenderPassBeginInfo *tmp_dst1 = (void *) cmd->u.begin_render_pass.render_pass_begin; (void) tmp_dst1;
+      VkRenderPassBeginInfo *tmp_src1 = (void *) pRenderPassBegin; (void) tmp_src1;
+      
       const VkBaseInStructure *pnext = tmp_dst1->pNext;
       if (pnext) {
          switch ((int32_t)pnext->sType) {
          
 
-      case VK_STRUCTURE_TYPE_DEVICE_GROUP_RENDER_PASS_BEGIN_INFO:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_DEVICE_GROUP_RENDER_PASS_BEGIN_INFO:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkDeviceGroupRenderPassBeginInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkDeviceGroupRenderPassBeginInfo));
-   VkDeviceGroupRenderPassBeginInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkDeviceGroupRenderPassBeginInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pDeviceRenderAreas) {
+      VkDeviceGroupRenderPassBeginInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkDeviceGroupRenderPassBeginInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pDeviceRenderAreas) {
    tmp_dst2->pDeviceRenderAreas = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pDeviceRenderAreas) * tmp_dst2->deviceRenderAreaCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pDeviceRenderAreas == NULL) goto err;
 
-   memcpy(( VkRect2D*  )tmp_dst2->pDeviceRenderAreas, tmp_src2->pDeviceRenderAreas, sizeof(*tmp_dst2->pDeviceRenderAreas) * tmp_dst2->deviceRenderAreaCount);
+   memcpy((void*)tmp_dst2->pDeviceRenderAreas, tmp_src2->pDeviceRenderAreas, sizeof(*tmp_dst2->pDeviceRenderAreas) * tmp_dst2->deviceRenderAreaCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_RENDER_PASS_SAMPLE_LOCATIONS_BEGIN_INFO_EXT:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_RENDER_PASS_SAMPLE_LOCATIONS_BEGIN_INFO_EXT:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderPassSampleLocationsBeginInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderPassSampleLocationsBeginInfoEXT));
-   VkRenderPassSampleLocationsBeginInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkRenderPassSampleLocationsBeginInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pAttachmentInitialSampleLocations) {
+      VkRenderPassSampleLocationsBeginInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderPassSampleLocationsBeginInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pAttachmentInitialSampleLocations) {
    tmp_dst2->pAttachmentInitialSampleLocations = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pAttachmentInitialSampleLocations) * tmp_dst2->attachmentInitialSampleLocationsCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pAttachmentInitialSampleLocations == NULL) goto err;
 
-   memcpy(( VkAttachmentSampleLocationsEXT* )tmp_dst2->pAttachmentInitialSampleLocations, tmp_src2->pAttachmentInitialSampleLocations, sizeof(*tmp_dst2->pAttachmentInitialSampleLocations) * tmp_dst2->attachmentInitialSampleLocationsCount);
+   memcpy((void*)tmp_dst2->pAttachmentInitialSampleLocations, tmp_src2->pAttachmentInitialSampleLocations, sizeof(*tmp_dst2->pAttachmentInitialSampleLocations) * tmp_dst2->attachmentInitialSampleLocationsCount);
 }
 if (tmp_src2->pPostSubpassSampleLocations) {
    tmp_dst2->pPostSubpassSampleLocations = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pPostSubpassSampleLocations) * tmp_dst2->postSubpassSampleLocationsCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pPostSubpassSampleLocations == NULL) goto err;
 
-   memcpy(( VkSubpassSampleLocationsEXT* )tmp_dst2->pPostSubpassSampleLocations, tmp_src2->pPostSubpassSampleLocations, sizeof(*tmp_dst2->pPostSubpassSampleLocations) * tmp_dst2->postSubpassSampleLocationsCount);
+   memcpy((void*)tmp_dst2->pPostSubpassSampleLocations, tmp_src2->pPostSubpassSampleLocations, sizeof(*tmp_dst2->pPostSubpassSampleLocations) * tmp_dst2->postSubpassSampleLocationsCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderPassAttachmentBeginInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderPassAttachmentBeginInfo));
-   VkRenderPassAttachmentBeginInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkRenderPassAttachmentBeginInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pAttachments) {
+      VkRenderPassAttachmentBeginInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderPassAttachmentBeginInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pAttachments) {
    tmp_dst2->pAttachments = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pAttachments) * tmp_dst2->attachmentCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pAttachments == NULL) goto err;
 
-   memcpy(( VkImageView* )tmp_dst2->pAttachments, tmp_src2->pAttachments, sizeof(*tmp_dst2->pAttachments) * tmp_dst2->attachmentCount);
+   memcpy((void*)tmp_dst2->pAttachments, tmp_src2->pAttachments, sizeof(*tmp_dst2->pAttachments) * tmp_dst2->attachmentCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_RENDER_PASS_TRANSFORM_BEGIN_INFO_QCOM:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_RENDER_PASS_TRANSFORM_BEGIN_INFO_QCOM:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderPassTransformBeginInfoQCOM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderPassTransformBeginInfoQCOM));
-   VkRenderPassTransformBeginInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkRenderPassTransformBeginInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      VkRenderPassTransformBeginInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderPassTransformBeginInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
       } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_MULTIVIEW_PER_VIEW_RENDER_AREAS_RENDER_PASS_BEGIN_INFO_QCOM:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_MULTIVIEW_PER_VIEW_RENDER_AREAS_RENDER_PASS_BEGIN_INFO_QCOM:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM));
-   VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pPerViewRenderAreas) {
+      VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pPerViewRenderAreas) {
    tmp_dst2->pPerViewRenderAreas = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pPerViewRenderAreas) * tmp_dst2->perViewRenderAreaCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pPerViewRenderAreas == NULL) goto err;
 
-   memcpy(( VkRect2D*  )tmp_dst2->pPerViewRenderAreas, tmp_src2->pPerViewRenderAreas, sizeof(*tmp_dst2->pPerViewRenderAreas) * tmp_dst2->perViewRenderAreaCount);
+   memcpy((void*)tmp_dst2->pPerViewRenderAreas, tmp_src2->pPerViewRenderAreas, sizeof(*tmp_dst2->pPerViewRenderAreas) * tmp_dst2->perViewRenderAreaCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_RENDER_PASS_STRIPE_BEGIN_INFO_ARM:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderPassStripeBeginInfoARM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderPassStripeBeginInfoARM));
+      VkRenderPassStripeBeginInfoARM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderPassStripeBeginInfoARM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pStripeInfos) {
+   tmp_dst2->pStripeInfos = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStripeInfos) * tmp_dst2->stripeInfoCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pStripeInfos == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pStripeInfos, tmp_src2->pStripeInfos, sizeof(*tmp_dst2->pStripeInfos) * tmp_dst2->stripeInfoCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
          break;
 
       
@@ -2667,8 +2733,9 @@ if (tmp_src2->pPostSubpassSampleLocations) {
    tmp_dst1->pClearValues = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pClearValues) * tmp_dst1->clearValueCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pClearValues == NULL) goto err;
 
-   memcpy(( VkClearValue*    )tmp_dst1->pClearValues, tmp_src1->pClearValues, sizeof(*tmp_dst1->pClearValues) * tmp_dst1->clearValueCount);
+   memcpy((void*)tmp_dst1->pClearValues, tmp_src1->pClearValues, sizeof(*tmp_dst1->pClearValues) * tmp_dst1->clearValueCount);
 }
+
    } else {
       cmd->u.begin_render_pass.render_pass_begin = NULL;
    }   
@@ -2765,7 +2832,7 @@ VkResult vk_enqueue_cmd_execute_commands(struct vk_cmd_queue *queue
       cmd->u.execute_commands.command_buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.execute_commands.command_buffers) * (commandBufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.execute_commands.command_buffers == NULL) goto err;
 
-   memcpy(( VkCommandBuffer* )cmd->u.execute_commands.command_buffers, pCommandBuffers, sizeof(*cmd->u.execute_commands.command_buffers) * (commandBufferCount));
+   memcpy((void*)cmd->u.execute_commands.command_buffers, pCommandBuffers, sizeof(*cmd->u.execute_commands.command_buffers) * (commandBufferCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -2805,9 +2872,10 @@ VkResult vk_enqueue_cmd_debug_marker_begin_ext(struct vk_cmd_queue *queue
       if (cmd->u.debug_marker_begin_ext.marker_info == NULL) goto err;
 
       memcpy((void*)cmd->u.debug_marker_begin_ext.marker_info, pMarkerInfo, sizeof(VkDebugMarkerMarkerInfoEXT));
-   VkDebugMarkerMarkerInfoEXT *tmp_dst1 = (void *) cmd->u.debug_marker_begin_ext.marker_info; (void) tmp_dst1;
-   VkDebugMarkerMarkerInfoEXT *tmp_src1 = (void *) pMarkerInfo; (void) tmp_src1;   
-      } else {
+      VkDebugMarkerMarkerInfoEXT *tmp_dst1 = (void *) cmd->u.debug_marker_begin_ext.marker_info; (void) tmp_dst1;
+      VkDebugMarkerMarkerInfoEXT *tmp_src1 = (void *) pMarkerInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.debug_marker_begin_ext.marker_info = NULL;
    }   
 
@@ -2874,9 +2942,10 @@ VkResult vk_enqueue_cmd_debug_marker_insert_ext(struct vk_cmd_queue *queue
       if (cmd->u.debug_marker_insert_ext.marker_info == NULL) goto err;
 
       memcpy((void*)cmd->u.debug_marker_insert_ext.marker_info, pMarkerInfo, sizeof(VkDebugMarkerMarkerInfoEXT));
-   VkDebugMarkerMarkerInfoEXT *tmp_dst1 = (void *) cmd->u.debug_marker_insert_ext.marker_info; (void) tmp_dst1;
-   VkDebugMarkerMarkerInfoEXT *tmp_src1 = (void *) pMarkerInfo; (void) tmp_src1;   
-      } else {
+      VkDebugMarkerMarkerInfoEXT *tmp_dst1 = (void *) cmd->u.debug_marker_insert_ext.marker_info; (void) tmp_dst1;
+      VkDebugMarkerMarkerInfoEXT *tmp_src1 = (void *) pMarkerInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.debug_marker_insert_ext.marker_info = NULL;
    }   
 
@@ -2920,14 +2989,15 @@ VkResult vk_enqueue_cmd_execute_generated_commands_nv(struct vk_cmd_queue *queue
       if (cmd->u.execute_generated_commands_nv.generated_commands_info == NULL) goto err;
 
       memcpy((void*)cmd->u.execute_generated_commands_nv.generated_commands_info, pGeneratedCommandsInfo, sizeof(VkGeneratedCommandsInfoNV));
-   VkGeneratedCommandsInfoNV *tmp_dst1 = (void *) cmd->u.execute_generated_commands_nv.generated_commands_info; (void) tmp_dst1;
-   VkGeneratedCommandsInfoNV *tmp_src1 = (void *) pGeneratedCommandsInfo; (void) tmp_src1;   
-   if (tmp_src1->pStreams) {
+      VkGeneratedCommandsInfoNV *tmp_dst1 = (void *) cmd->u.execute_generated_commands_nv.generated_commands_info; (void) tmp_dst1;
+      VkGeneratedCommandsInfoNV *tmp_src1 = (void *) pGeneratedCommandsInfo; (void) tmp_src1;
+      if (tmp_src1->pStreams) {
    tmp_dst1->pStreams = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pStreams) * tmp_dst1->streamCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pStreams == NULL) goto err;
 
-   memcpy(( VkIndirectCommandsStreamNV*  )tmp_dst1->pStreams, tmp_src1->pStreams, sizeof(*tmp_dst1->pStreams) * tmp_dst1->streamCount);
+   memcpy((void*)tmp_dst1->pStreams, tmp_src1->pStreams, sizeof(*tmp_dst1->pStreams) * tmp_dst1->streamCount);
 }
+
    } else {
       cmd->u.execute_generated_commands_nv.generated_commands_info = NULL;
    }   
@@ -2970,14 +3040,15 @@ VkResult vk_enqueue_cmd_preprocess_generated_commands_nv(struct vk_cmd_queue *qu
       if (cmd->u.preprocess_generated_commands_nv.generated_commands_info == NULL) goto err;
 
       memcpy((void*)cmd->u.preprocess_generated_commands_nv.generated_commands_info, pGeneratedCommandsInfo, sizeof(VkGeneratedCommandsInfoNV));
-   VkGeneratedCommandsInfoNV *tmp_dst1 = (void *) cmd->u.preprocess_generated_commands_nv.generated_commands_info; (void) tmp_dst1;
-   VkGeneratedCommandsInfoNV *tmp_src1 = (void *) pGeneratedCommandsInfo; (void) tmp_src1;   
-   if (tmp_src1->pStreams) {
+      VkGeneratedCommandsInfoNV *tmp_dst1 = (void *) cmd->u.preprocess_generated_commands_nv.generated_commands_info; (void) tmp_dst1;
+      VkGeneratedCommandsInfoNV *tmp_src1 = (void *) pGeneratedCommandsInfo; (void) tmp_src1;
+      if (tmp_src1->pStreams) {
    tmp_dst1->pStreams = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pStreams) * tmp_dst1->streamCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pStreams == NULL) goto err;
 
-   memcpy(( VkIndirectCommandsStreamNV*  )tmp_dst1->pStreams, tmp_src1->pStreams, sizeof(*tmp_dst1->pStreams) * tmp_dst1->streamCount);
+   memcpy((void*)tmp_dst1->pStreams, tmp_src1->pStreams, sizeof(*tmp_dst1->pStreams) * tmp_dst1->streamCount);
 }
+
    } else {
       cmd->u.preprocess_generated_commands_nv.generated_commands_info = NULL;
    }   
@@ -3024,14 +3095,196 @@ VkResult vk_enqueue_cmd_bind_pipeline_shader_group_nv(struct vk_cmd_queue *queue
 }
 
 static void
-vk_free_cmd_push_descriptor_set_khr(struct vk_cmd_queue *queue,
-                                    struct vk_cmd_queue_entry *cmd)
+vk_free_cmd_execute_generated_commands_ext(struct vk_cmd_queue *queue,
+                                           struct vk_cmd_queue_entry *cmd)
 {
    if (cmd->driver_free_cb)
       cmd->driver_free_cb(queue, cmd);
    else
       vk_free(queue->alloc, cmd->driver_data);
-   vk_free(queue->alloc, ( VkWriteDescriptorSet* )cmd->u.push_descriptor_set_khr.descriptor_writes);
+         vk_free(queue->alloc, ( VkGeneratedCommandsInfoEXT* )cmd->u.execute_generated_commands_ext.generated_commands_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_execute_generated_commands_ext(struct vk_cmd_queue *queue
+, VkBool32 isPreprocessed
+, const VkGeneratedCommandsInfoEXT* pGeneratedCommandsInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_EXECUTE_GENERATED_COMMANDS_EXT], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_EXECUTE_GENERATED_COMMANDS_EXT;
+      
+   cmd->u.execute_generated_commands_ext.is_preprocessed = isPreprocessed;
+   if (pGeneratedCommandsInfo) {
+      cmd->u.execute_generated_commands_ext.generated_commands_info = vk_zalloc(queue->alloc, sizeof(VkGeneratedCommandsInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.execute_generated_commands_ext.generated_commands_info == NULL) goto err;
+
+      memcpy((void*)cmd->u.execute_generated_commands_ext.generated_commands_info, pGeneratedCommandsInfo, sizeof(VkGeneratedCommandsInfoEXT));
+      VkGeneratedCommandsInfoEXT *tmp_dst1 = (void *) cmd->u.execute_generated_commands_ext.generated_commands_info; (void) tmp_dst1;
+      VkGeneratedCommandsInfoEXT *tmp_src1 = (void *) pGeneratedCommandsInfo; (void) tmp_src1;
+      
+      const VkBaseInStructure *pnext = tmp_dst1->pNext;
+      if (pnext) {
+         switch ((int32_t)pnext->sType) {
+         
+
+         case VK_STRUCTURE_TYPE_GENERATED_COMMANDS_PIPELINE_INFO_EXT:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkGeneratedCommandsPipelineInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkGeneratedCommandsPipelineInfoEXT));
+      VkGeneratedCommandsPipelineInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkGeneratedCommandsPipelineInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_GENERATED_COMMANDS_SHADER_INFO_EXT:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkGeneratedCommandsShaderInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkGeneratedCommandsShaderInfoEXT));
+      VkGeneratedCommandsShaderInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkGeneratedCommandsShaderInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pShaders) {
+   tmp_dst2->pShaders = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pShaders) * tmp_dst2->shaderCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pShaders == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pShaders, tmp_src2->pShaders, sizeof(*tmp_dst2->pShaders) * tmp_dst2->shaderCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+         }
+      }
+      
+   } else {
+      cmd->u.execute_generated_commands_ext.generated_commands_info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_execute_generated_commands_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_preprocess_generated_commands_ext(struct vk_cmd_queue *queue,
+                                              struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+         vk_free(queue->alloc, ( VkGeneratedCommandsInfoEXT* )cmd->u.preprocess_generated_commands_ext.generated_commands_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_preprocess_generated_commands_ext(struct vk_cmd_queue *queue
+, const VkGeneratedCommandsInfoEXT* pGeneratedCommandsInfo
+, VkCommandBuffer stateCommandBuffer
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_PREPROCESS_GENERATED_COMMANDS_EXT], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_PREPROCESS_GENERATED_COMMANDS_EXT;
+      
+   if (pGeneratedCommandsInfo) {
+      cmd->u.preprocess_generated_commands_ext.generated_commands_info = vk_zalloc(queue->alloc, sizeof(VkGeneratedCommandsInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.preprocess_generated_commands_ext.generated_commands_info == NULL) goto err;
+
+      memcpy((void*)cmd->u.preprocess_generated_commands_ext.generated_commands_info, pGeneratedCommandsInfo, sizeof(VkGeneratedCommandsInfoEXT));
+      VkGeneratedCommandsInfoEXT *tmp_dst1 = (void *) cmd->u.preprocess_generated_commands_ext.generated_commands_info; (void) tmp_dst1;
+      VkGeneratedCommandsInfoEXT *tmp_src1 = (void *) pGeneratedCommandsInfo; (void) tmp_src1;
+      
+      const VkBaseInStructure *pnext = tmp_dst1->pNext;
+      if (pnext) {
+         switch ((int32_t)pnext->sType) {
+         
+
+         case VK_STRUCTURE_TYPE_GENERATED_COMMANDS_PIPELINE_INFO_EXT:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkGeneratedCommandsPipelineInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkGeneratedCommandsPipelineInfoEXT));
+      VkGeneratedCommandsPipelineInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkGeneratedCommandsPipelineInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_GENERATED_COMMANDS_SHADER_INFO_EXT:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkGeneratedCommandsShaderInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkGeneratedCommandsShaderInfoEXT));
+      VkGeneratedCommandsShaderInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkGeneratedCommandsShaderInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pShaders) {
+   tmp_dst2->pShaders = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pShaders) * tmp_dst2->shaderCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pShaders == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pShaders, tmp_src2->pShaders, sizeof(*tmp_dst2->pShaders) * tmp_dst2->shaderCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+         }
+      }
+      
+   } else {
+      cmd->u.preprocess_generated_commands_ext.generated_commands_info = NULL;
+   }   
+   cmd->u.preprocess_generated_commands_ext.state_command_buffer = stateCommandBuffer;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_preprocess_generated_commands_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_push_descriptor_set(struct vk_cmd_queue *queue,
+                                struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkWriteDescriptorSet* )cmd->u.push_descriptor_set.descriptor_writes);
    vk_free(queue->alloc, cmd);
 }
 
@@ -3103,14 +3356,14 @@ VkResult vk_enqueue_cmd_dispatch_base(struct vk_cmd_queue *queue
 }
 
 static void
-vk_free_cmd_push_descriptor_set_with_template_khr(struct vk_cmd_queue *queue,
-                                                  struct vk_cmd_queue_entry *cmd)
+vk_free_cmd_push_descriptor_set_with_template(struct vk_cmd_queue *queue,
+                                              struct vk_cmd_queue_entry *cmd)
 {
    if (cmd->driver_free_cb)
       cmd->driver_free_cb(queue, cmd);
    else
       vk_free(queue->alloc, cmd->driver_data);
-         vk_free(queue->alloc, ( void* )cmd->u.push_descriptor_set_with_template_khr.data);
+         vk_free(queue->alloc, ( void* )cmd->u.push_descriptor_set_with_template.data);
 
    vk_free(queue->alloc, cmd);
 }
@@ -3146,7 +3399,7 @@ VkResult vk_enqueue_cmd_set_viewport_wscaling_nv(struct vk_cmd_queue *queue
       cmd->u.set_viewport_wscaling_nv.viewport_wscalings = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_wscaling_nv.viewport_wscalings) * (viewportCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_viewport_wscaling_nv.viewport_wscalings == NULL) goto err;
 
-   memcpy(( VkViewportWScalingNV* )cmd->u.set_viewport_wscaling_nv.viewport_wscalings, pViewportWScalings, sizeof(*cmd->u.set_viewport_wscaling_nv.viewport_wscalings) * (viewportCount));
+   memcpy((void*)cmd->u.set_viewport_wscaling_nv.viewport_wscalings, pViewportWScalings, sizeof(*cmd->u.set_viewport_wscaling_nv.viewport_wscalings) * (viewportCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -3188,7 +3441,7 @@ VkResult vk_enqueue_cmd_set_discard_rectangle_ext(struct vk_cmd_queue *queue
       cmd->u.set_discard_rectangle_ext.discard_rectangles = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_discard_rectangle_ext.discard_rectangles) * (discardRectangleCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_discard_rectangle_ext.discard_rectangles == NULL) goto err;
 
-   memcpy(( VkRect2D* )cmd->u.set_discard_rectangle_ext.discard_rectangles, pDiscardRectangles, sizeof(*cmd->u.set_discard_rectangle_ext.discard_rectangles) * (discardRectangleCount));
+   memcpy((void*)cmd->u.set_discard_rectangle_ext.discard_rectangles, pDiscardRectangles, sizeof(*cmd->u.set_discard_rectangle_ext.discard_rectangles) * (discardRectangleCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -3285,14 +3538,15 @@ VkResult vk_enqueue_cmd_set_sample_locations_ext(struct vk_cmd_queue *queue
       if (cmd->u.set_sample_locations_ext.sample_locations_info == NULL) goto err;
 
       memcpy((void*)cmd->u.set_sample_locations_ext.sample_locations_info, pSampleLocationsInfo, sizeof(VkSampleLocationsInfoEXT));
-   VkSampleLocationsInfoEXT *tmp_dst1 = (void *) cmd->u.set_sample_locations_ext.sample_locations_info; (void) tmp_dst1;
-   VkSampleLocationsInfoEXT *tmp_src1 = (void *) pSampleLocationsInfo; (void) tmp_src1;   
-   if (tmp_src1->pSampleLocations) {
+      VkSampleLocationsInfoEXT *tmp_dst1 = (void *) cmd->u.set_sample_locations_ext.sample_locations_info; (void) tmp_dst1;
+      VkSampleLocationsInfoEXT *tmp_src1 = (void *) pSampleLocationsInfo; (void) tmp_src1;
+      if (tmp_src1->pSampleLocations) {
    tmp_dst1->pSampleLocations = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pSampleLocations) * tmp_dst1->sampleLocationsCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pSampleLocations == NULL) goto err;
 
-   memcpy(( VkSampleLocationEXT* )tmp_dst1->pSampleLocations, tmp_src1->pSampleLocations, sizeof(*tmp_dst1->pSampleLocations) * tmp_dst1->sampleLocationsCount);
+   memcpy((void*)tmp_dst1->pSampleLocations, tmp_src1->pSampleLocations, sizeof(*tmp_dst1->pSampleLocations) * tmp_dst1->sampleLocationsCount);
 }
+
    } else {
       cmd->u.set_sample_locations_ext.sample_locations_info = NULL;
    }   
@@ -3334,9 +3588,10 @@ VkResult vk_enqueue_cmd_begin_debug_utils_label_ext(struct vk_cmd_queue *queue
       if (cmd->u.begin_debug_utils_label_ext.label_info == NULL) goto err;
 
       memcpy((void*)cmd->u.begin_debug_utils_label_ext.label_info, pLabelInfo, sizeof(VkDebugUtilsLabelEXT));
-   VkDebugUtilsLabelEXT *tmp_dst1 = (void *) cmd->u.begin_debug_utils_label_ext.label_info; (void) tmp_dst1;
-   VkDebugUtilsLabelEXT *tmp_src1 = (void *) pLabelInfo; (void) tmp_src1;   
-      } else {
+      VkDebugUtilsLabelEXT *tmp_dst1 = (void *) cmd->u.begin_debug_utils_label_ext.label_info; (void) tmp_dst1;
+      VkDebugUtilsLabelEXT *tmp_src1 = (void *) pLabelInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.begin_debug_utils_label_ext.label_info = NULL;
    }   
 
@@ -3403,9 +3658,10 @@ VkResult vk_enqueue_cmd_insert_debug_utils_label_ext(struct vk_cmd_queue *queue
       if (cmd->u.insert_debug_utils_label_ext.label_info == NULL) goto err;
 
       memcpy((void*)cmd->u.insert_debug_utils_label_ext.label_info, pLabelInfo, sizeof(VkDebugUtilsLabelEXT));
-   VkDebugUtilsLabelEXT *tmp_dst1 = (void *) cmd->u.insert_debug_utils_label_ext.label_info; (void) tmp_dst1;
-   VkDebugUtilsLabelEXT *tmp_src1 = (void *) pLabelInfo; (void) tmp_src1;   
-      } else {
+      VkDebugUtilsLabelEXT *tmp_dst1 = (void *) cmd->u.insert_debug_utils_label_ext.label_info; (void) tmp_dst1;
+      VkDebugUtilsLabelEXT *tmp_src1 = (void *) pLabelInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.insert_debug_utils_label_ext.label_info = NULL;
    }   
 
@@ -3484,115 +3740,142 @@ VkResult vk_enqueue_cmd_begin_render_pass2(struct vk_cmd_queue *queue
       if (cmd->u.begin_render_pass2.render_pass_begin == NULL) goto err;
 
       memcpy((void*)cmd->u.begin_render_pass2.render_pass_begin, pRenderPassBegin, sizeof(VkRenderPassBeginInfo));
-   VkRenderPassBeginInfo *tmp_dst1 = (void *) cmd->u.begin_render_pass2.render_pass_begin; (void) tmp_dst1;
-   VkRenderPassBeginInfo *tmp_src1 = (void *) pRenderPassBegin; (void) tmp_src1;   
-   
+      VkRenderPassBeginInfo *tmp_dst1 = (void *) cmd->u.begin_render_pass2.render_pass_begin; (void) tmp_dst1;
+      VkRenderPassBeginInfo *tmp_src1 = (void *) pRenderPassBegin; (void) tmp_src1;
+      
       const VkBaseInStructure *pnext = tmp_dst1->pNext;
       if (pnext) {
          switch ((int32_t)pnext->sType) {
          
 
-      case VK_STRUCTURE_TYPE_DEVICE_GROUP_RENDER_PASS_BEGIN_INFO:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_DEVICE_GROUP_RENDER_PASS_BEGIN_INFO:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkDeviceGroupRenderPassBeginInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkDeviceGroupRenderPassBeginInfo));
-   VkDeviceGroupRenderPassBeginInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkDeviceGroupRenderPassBeginInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pDeviceRenderAreas) {
+      VkDeviceGroupRenderPassBeginInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkDeviceGroupRenderPassBeginInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pDeviceRenderAreas) {
    tmp_dst2->pDeviceRenderAreas = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pDeviceRenderAreas) * tmp_dst2->deviceRenderAreaCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pDeviceRenderAreas == NULL) goto err;
 
-   memcpy(( VkRect2D*  )tmp_dst2->pDeviceRenderAreas, tmp_src2->pDeviceRenderAreas, sizeof(*tmp_dst2->pDeviceRenderAreas) * tmp_dst2->deviceRenderAreaCount);
+   memcpy((void*)tmp_dst2->pDeviceRenderAreas, tmp_src2->pDeviceRenderAreas, sizeof(*tmp_dst2->pDeviceRenderAreas) * tmp_dst2->deviceRenderAreaCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_RENDER_PASS_SAMPLE_LOCATIONS_BEGIN_INFO_EXT:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_RENDER_PASS_SAMPLE_LOCATIONS_BEGIN_INFO_EXT:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderPassSampleLocationsBeginInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderPassSampleLocationsBeginInfoEXT));
-   VkRenderPassSampleLocationsBeginInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkRenderPassSampleLocationsBeginInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pAttachmentInitialSampleLocations) {
+      VkRenderPassSampleLocationsBeginInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderPassSampleLocationsBeginInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pAttachmentInitialSampleLocations) {
    tmp_dst2->pAttachmentInitialSampleLocations = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pAttachmentInitialSampleLocations) * tmp_dst2->attachmentInitialSampleLocationsCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pAttachmentInitialSampleLocations == NULL) goto err;
 
-   memcpy(( VkAttachmentSampleLocationsEXT* )tmp_dst2->pAttachmentInitialSampleLocations, tmp_src2->pAttachmentInitialSampleLocations, sizeof(*tmp_dst2->pAttachmentInitialSampleLocations) * tmp_dst2->attachmentInitialSampleLocationsCount);
+   memcpy((void*)tmp_dst2->pAttachmentInitialSampleLocations, tmp_src2->pAttachmentInitialSampleLocations, sizeof(*tmp_dst2->pAttachmentInitialSampleLocations) * tmp_dst2->attachmentInitialSampleLocationsCount);
 }
 if (tmp_src2->pPostSubpassSampleLocations) {
    tmp_dst2->pPostSubpassSampleLocations = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pPostSubpassSampleLocations) * tmp_dst2->postSubpassSampleLocationsCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pPostSubpassSampleLocations == NULL) goto err;
 
-   memcpy(( VkSubpassSampleLocationsEXT* )tmp_dst2->pPostSubpassSampleLocations, tmp_src2->pPostSubpassSampleLocations, sizeof(*tmp_dst2->pPostSubpassSampleLocations) * tmp_dst2->postSubpassSampleLocationsCount);
+   memcpy((void*)tmp_dst2->pPostSubpassSampleLocations, tmp_src2->pPostSubpassSampleLocations, sizeof(*tmp_dst2->pPostSubpassSampleLocations) * tmp_dst2->postSubpassSampleLocationsCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderPassAttachmentBeginInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderPassAttachmentBeginInfo));
-   VkRenderPassAttachmentBeginInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkRenderPassAttachmentBeginInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pAttachments) {
+      VkRenderPassAttachmentBeginInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderPassAttachmentBeginInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pAttachments) {
    tmp_dst2->pAttachments = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pAttachments) * tmp_dst2->attachmentCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pAttachments == NULL) goto err;
 
-   memcpy(( VkImageView* )tmp_dst2->pAttachments, tmp_src2->pAttachments, sizeof(*tmp_dst2->pAttachments) * tmp_dst2->attachmentCount);
+   memcpy((void*)tmp_dst2->pAttachments, tmp_src2->pAttachments, sizeof(*tmp_dst2->pAttachments) * tmp_dst2->attachmentCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_RENDER_PASS_TRANSFORM_BEGIN_INFO_QCOM:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_RENDER_PASS_TRANSFORM_BEGIN_INFO_QCOM:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderPassTransformBeginInfoQCOM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderPassTransformBeginInfoQCOM));
-   VkRenderPassTransformBeginInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkRenderPassTransformBeginInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      VkRenderPassTransformBeginInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderPassTransformBeginInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
       } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_MULTIVIEW_PER_VIEW_RENDER_AREAS_RENDER_PASS_BEGIN_INFO_QCOM:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_MULTIVIEW_PER_VIEW_RENDER_AREAS_RENDER_PASS_BEGIN_INFO_QCOM:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM));
-   VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pPerViewRenderAreas) {
+      VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pPerViewRenderAreas) {
    tmp_dst2->pPerViewRenderAreas = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pPerViewRenderAreas) * tmp_dst2->perViewRenderAreaCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pPerViewRenderAreas == NULL) goto err;
 
-   memcpy(( VkRect2D*  )tmp_dst2->pPerViewRenderAreas, tmp_src2->pPerViewRenderAreas, sizeof(*tmp_dst2->pPerViewRenderAreas) * tmp_dst2->perViewRenderAreaCount);
+   memcpy((void*)tmp_dst2->pPerViewRenderAreas, tmp_src2->pPerViewRenderAreas, sizeof(*tmp_dst2->pPerViewRenderAreas) * tmp_dst2->perViewRenderAreaCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_RENDER_PASS_STRIPE_BEGIN_INFO_ARM:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderPassStripeBeginInfoARM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderPassStripeBeginInfoARM));
+      VkRenderPassStripeBeginInfoARM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderPassStripeBeginInfoARM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pStripeInfos) {
+   tmp_dst2->pStripeInfos = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStripeInfos) * tmp_dst2->stripeInfoCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pStripeInfos == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pStripeInfos, tmp_src2->pStripeInfos, sizeof(*tmp_dst2->pStripeInfos) * tmp_dst2->stripeInfoCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
          break;
 
       
@@ -3602,8 +3885,9 @@ if (tmp_src2->pPostSubpassSampleLocations) {
    tmp_dst1->pClearValues = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pClearValues) * tmp_dst1->clearValueCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pClearValues == NULL) goto err;
 
-   memcpy(( VkClearValue*    )tmp_dst1->pClearValues, tmp_src1->pClearValues, sizeof(*tmp_dst1->pClearValues) * tmp_dst1->clearValueCount);
+   memcpy((void*)tmp_dst1->pClearValues, tmp_src1->pClearValues, sizeof(*tmp_dst1->pClearValues) * tmp_dst1->clearValueCount);
 }
+
    } else {
       cmd->u.begin_render_pass2.render_pass_begin = NULL;
    }   
@@ -3612,9 +3896,10 @@ if (tmp_src2->pPostSubpassSampleLocations) {
       if (cmd->u.begin_render_pass2.subpass_begin_info == NULL) goto err;
 
       memcpy((void*)cmd->u.begin_render_pass2.subpass_begin_info, pSubpassBeginInfo, sizeof(VkSubpassBeginInfo));
-   VkSubpassBeginInfo *tmp_dst1 = (void *) cmd->u.begin_render_pass2.subpass_begin_info; (void) tmp_dst1;
-   VkSubpassBeginInfo *tmp_src1 = (void *) pSubpassBeginInfo; (void) tmp_src1;   
-      } else {
+      VkSubpassBeginInfo *tmp_dst1 = (void *) cmd->u.begin_render_pass2.subpass_begin_info; (void) tmp_dst1;
+      VkSubpassBeginInfo *tmp_src1 = (void *) pSubpassBeginInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.begin_render_pass2.subpass_begin_info = NULL;
    }   
 
@@ -3658,9 +3943,10 @@ VkResult vk_enqueue_cmd_next_subpass2(struct vk_cmd_queue *queue
       if (cmd->u.next_subpass2.subpass_begin_info == NULL) goto err;
 
       memcpy((void*)cmd->u.next_subpass2.subpass_begin_info, pSubpassBeginInfo, sizeof(VkSubpassBeginInfo));
-   VkSubpassBeginInfo *tmp_dst1 = (void *) cmd->u.next_subpass2.subpass_begin_info; (void) tmp_dst1;
-   VkSubpassBeginInfo *tmp_src1 = (void *) pSubpassBeginInfo; (void) tmp_src1;   
-      } else {
+      VkSubpassBeginInfo *tmp_dst1 = (void *) cmd->u.next_subpass2.subpass_begin_info; (void) tmp_dst1;
+      VkSubpassBeginInfo *tmp_src1 = (void *) pSubpassBeginInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.next_subpass2.subpass_begin_info = NULL;
    }   
    if (pSubpassEndInfo) {
@@ -3668,37 +3954,39 @@ VkResult vk_enqueue_cmd_next_subpass2(struct vk_cmd_queue *queue
       if (cmd->u.next_subpass2.subpass_end_info == NULL) goto err;
 
       memcpy((void*)cmd->u.next_subpass2.subpass_end_info, pSubpassEndInfo, sizeof(VkSubpassEndInfo));
-   VkSubpassEndInfo *tmp_dst1 = (void *) cmd->u.next_subpass2.subpass_end_info; (void) tmp_dst1;
-   VkSubpassEndInfo *tmp_src1 = (void *) pSubpassEndInfo; (void) tmp_src1;   
-   
+      VkSubpassEndInfo *tmp_dst1 = (void *) cmd->u.next_subpass2.subpass_end_info; (void) tmp_dst1;
+      VkSubpassEndInfo *tmp_src1 = (void *) pSubpassEndInfo; (void) tmp_src1;
+      
       const VkBaseInStructure *pnext = tmp_dst1->pNext;
       if (pnext) {
          switch ((int32_t)pnext->sType) {
          
 
-      case VK_STRUCTURE_TYPE_SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkSubpassFragmentDensityMapOffsetEndInfoQCOM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkSubpassFragmentDensityMapOffsetEndInfoQCOM));
-   VkSubpassFragmentDensityMapOffsetEndInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkSubpassFragmentDensityMapOffsetEndInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pFragmentDensityOffsets) {
+      VkSubpassFragmentDensityMapOffsetEndInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkSubpassFragmentDensityMapOffsetEndInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pFragmentDensityOffsets) {
    tmp_dst2->pFragmentDensityOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pFragmentDensityOffsets) * tmp_dst2->fragmentDensityOffsetCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pFragmentDensityOffsets == NULL) goto err;
 
-   memcpy(( VkOffset2D* )tmp_dst2->pFragmentDensityOffsets, tmp_src2->pFragmentDensityOffsets, sizeof(*tmp_dst2->pFragmentDensityOffsets) * tmp_dst2->fragmentDensityOffsetCount);
+   memcpy((void*)tmp_dst2->pFragmentDensityOffsets, tmp_src2->pFragmentDensityOffsets, sizeof(*tmp_dst2->pFragmentDensityOffsets) * tmp_dst2->fragmentDensityOffsetCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
          }
       }
-         } else {
+      
+   } else {
       cmd->u.next_subpass2.subpass_end_info = NULL;
    }   
 
@@ -3739,37 +4027,39 @@ VkResult vk_enqueue_cmd_end_render_pass2(struct vk_cmd_queue *queue
       if (cmd->u.end_render_pass2.subpass_end_info == NULL) goto err;
 
       memcpy((void*)cmd->u.end_render_pass2.subpass_end_info, pSubpassEndInfo, sizeof(VkSubpassEndInfo));
-   VkSubpassEndInfo *tmp_dst1 = (void *) cmd->u.end_render_pass2.subpass_end_info; (void) tmp_dst1;
-   VkSubpassEndInfo *tmp_src1 = (void *) pSubpassEndInfo; (void) tmp_src1;   
-   
+      VkSubpassEndInfo *tmp_dst1 = (void *) cmd->u.end_render_pass2.subpass_end_info; (void) tmp_dst1;
+      VkSubpassEndInfo *tmp_src1 = (void *) pSubpassEndInfo; (void) tmp_src1;
+      
       const VkBaseInStructure *pnext = tmp_dst1->pNext;
       if (pnext) {
          switch ((int32_t)pnext->sType) {
          
 
-      case VK_STRUCTURE_TYPE_SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkSubpassFragmentDensityMapOffsetEndInfoQCOM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkSubpassFragmentDensityMapOffsetEndInfoQCOM));
-   VkSubpassFragmentDensityMapOffsetEndInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkSubpassFragmentDensityMapOffsetEndInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pFragmentDensityOffsets) {
+      VkSubpassFragmentDensityMapOffsetEndInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkSubpassFragmentDensityMapOffsetEndInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pFragmentDensityOffsets) {
    tmp_dst2->pFragmentDensityOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pFragmentDensityOffsets) * tmp_dst2->fragmentDensityOffsetCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pFragmentDensityOffsets == NULL) goto err;
 
-   memcpy(( VkOffset2D* )tmp_dst2->pFragmentDensityOffsets, tmp_src2->pFragmentDensityOffsets, sizeof(*tmp_dst2->pFragmentDensityOffsets) * tmp_dst2->fragmentDensityOffsetCount);
+   memcpy((void*)tmp_dst2->pFragmentDensityOffsets, tmp_src2->pFragmentDensityOffsets, sizeof(*tmp_dst2->pFragmentDensityOffsets) * tmp_dst2->fragmentDensityOffsetCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
          }
       }
-         } else {
+      
+   } else {
       cmd->u.end_render_pass2.subpass_end_info = NULL;
    }   
 
@@ -3922,19 +4212,19 @@ VkResult vk_enqueue_cmd_bind_transform_feedback_buffers_ext(struct vk_cmd_queue 
       cmd->u.bind_transform_feedback_buffers_ext.buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.buffers) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_transform_feedback_buffers_ext.buffers == NULL) goto err;
 
-   memcpy(( VkBuffer* )cmd->u.bind_transform_feedback_buffers_ext.buffers, pBuffers, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.buffers) * (bindingCount));
+   memcpy((void*)cmd->u.bind_transform_feedback_buffers_ext.buffers, pBuffers, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.buffers) * (bindingCount));
    }   
    if (pOffsets) {
       cmd->u.bind_transform_feedback_buffers_ext.offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.offsets) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_transform_feedback_buffers_ext.offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_transform_feedback_buffers_ext.offsets, pOffsets, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.offsets) * (bindingCount));
+   memcpy((void*)cmd->u.bind_transform_feedback_buffers_ext.offsets, pOffsets, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.offsets) * (bindingCount));
    }   
    if (pSizes) {
       cmd->u.bind_transform_feedback_buffers_ext.sizes = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.sizes) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_transform_feedback_buffers_ext.sizes == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_transform_feedback_buffers_ext.sizes, pSizes, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.sizes) * (bindingCount));
+   memcpy((void*)cmd->u.bind_transform_feedback_buffers_ext.sizes, pSizes, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.sizes) * (bindingCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -3978,13 +4268,13 @@ VkResult vk_enqueue_cmd_begin_transform_feedback_ext(struct vk_cmd_queue *queue
       cmd->u.begin_transform_feedback_ext.counter_buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffers) * (counterBufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.begin_transform_feedback_ext.counter_buffers == NULL) goto err;
 
-   memcpy(( VkBuffer* )cmd->u.begin_transform_feedback_ext.counter_buffers, pCounterBuffers, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffers) * (counterBufferCount));
+   memcpy((void*)cmd->u.begin_transform_feedback_ext.counter_buffers, pCounterBuffers, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffers) * (counterBufferCount));
    }   
    if (pCounterBufferOffsets) {
       cmd->u.begin_transform_feedback_ext.counter_buffer_offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffer_offsets) * (counterBufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.begin_transform_feedback_ext.counter_buffer_offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.begin_transform_feedback_ext.counter_buffer_offsets, pCounterBufferOffsets, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffer_offsets) * (counterBufferCount));
+   memcpy((void*)cmd->u.begin_transform_feedback_ext.counter_buffer_offsets, pCounterBufferOffsets, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffer_offsets) * (counterBufferCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -4028,13 +4318,13 @@ VkResult vk_enqueue_cmd_end_transform_feedback_ext(struct vk_cmd_queue *queue
       cmd->u.end_transform_feedback_ext.counter_buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffers) * (counterBufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.end_transform_feedback_ext.counter_buffers == NULL) goto err;
 
-   memcpy(( VkBuffer* )cmd->u.end_transform_feedback_ext.counter_buffers, pCounterBuffers, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffers) * (counterBufferCount));
+   memcpy((void*)cmd->u.end_transform_feedback_ext.counter_buffers, pCounterBuffers, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffers) * (counterBufferCount));
    }   
    if (pCounterBufferOffsets) {
       cmd->u.end_transform_feedback_ext.counter_buffer_offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffer_offsets) * (counterBufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.end_transform_feedback_ext.counter_buffer_offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.end_transform_feedback_ext.counter_buffer_offsets, pCounterBufferOffsets, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffer_offsets) * (counterBufferCount));
+   memcpy((void*)cmd->u.end_transform_feedback_ext.counter_buffer_offsets, pCounterBufferOffsets, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffer_offsets) * (counterBufferCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -4180,7 +4470,7 @@ VkResult vk_enqueue_cmd_set_exclusive_scissor_nv(struct vk_cmd_queue *queue
       cmd->u.set_exclusive_scissor_nv.exclusive_scissors = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_exclusive_scissor_nv.exclusive_scissors) * (exclusiveScissorCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_exclusive_scissor_nv.exclusive_scissors == NULL) goto err;
 
-   memcpy(( VkRect2D* )cmd->u.set_exclusive_scissor_nv.exclusive_scissors, pExclusiveScissors, sizeof(*cmd->u.set_exclusive_scissor_nv.exclusive_scissors) * (exclusiveScissorCount));
+   memcpy((void*)cmd->u.set_exclusive_scissor_nv.exclusive_scissors, pExclusiveScissors, sizeof(*cmd->u.set_exclusive_scissor_nv.exclusive_scissors) * (exclusiveScissorCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -4222,7 +4512,7 @@ VkResult vk_enqueue_cmd_set_exclusive_scissor_enable_nv(struct vk_cmd_queue *que
       cmd->u.set_exclusive_scissor_enable_nv.exclusive_scissor_enables = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_exclusive_scissor_enable_nv.exclusive_scissor_enables) * (exclusiveScissorCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_exclusive_scissor_enable_nv.exclusive_scissor_enables == NULL) goto err;
 
-   memcpy(( VkBool32* )cmd->u.set_exclusive_scissor_enable_nv.exclusive_scissor_enables, pExclusiveScissorEnables, sizeof(*cmd->u.set_exclusive_scissor_enable_nv.exclusive_scissor_enables) * (exclusiveScissorCount));
+   memcpy((void*)cmd->u.set_exclusive_scissor_enable_nv.exclusive_scissor_enables, pExclusiveScissorEnables, sizeof(*cmd->u.set_exclusive_scissor_enable_nv.exclusive_scissor_enables) * (exclusiveScissorCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -4294,7 +4584,7 @@ VkResult vk_enqueue_cmd_set_viewport_shading_rate_palette_nv(struct vk_cmd_queue
       cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes) * (viewportCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes == NULL) goto err;
 
-   memcpy(( VkShadingRatePaletteNV* )cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes, pShadingRatePalettes, sizeof(*cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes) * (viewportCount));
+   memcpy((void*)cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes, pShadingRatePalettes, sizeof(*cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes) * (viewportCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -4336,7 +4626,7 @@ VkResult vk_enqueue_cmd_set_coarse_sample_order_nv(struct vk_cmd_queue *queue
       cmd->u.set_coarse_sample_order_nv.custom_sample_orders = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_coarse_sample_order_nv.custom_sample_orders) * (customSampleOrderCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_coarse_sample_order_nv.custom_sample_orders == NULL) goto err;
 
-   memcpy(( VkCoarseSampleOrderCustomNV* )cmd->u.set_coarse_sample_order_nv.custom_sample_orders, pCustomSampleOrders, sizeof(*cmd->u.set_coarse_sample_order_nv.custom_sample_orders) * (customSampleOrderCount));
+   memcpy((void*)cmd->u.set_coarse_sample_order_nv.custom_sample_orders, pCustomSampleOrders, sizeof(*cmd->u.set_coarse_sample_order_nv.custom_sample_orders) * (customSampleOrderCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -4644,9 +4934,10 @@ VkResult vk_enqueue_cmd_copy_acceleration_structure_khr(struct vk_cmd_queue *que
       if (cmd->u.copy_acceleration_structure_khr.info == NULL) goto err;
 
       memcpy((void*)cmd->u.copy_acceleration_structure_khr.info, pInfo, sizeof(VkCopyAccelerationStructureInfoKHR));
-   VkCopyAccelerationStructureInfoKHR *tmp_dst1 = (void *) cmd->u.copy_acceleration_structure_khr.info; (void) tmp_dst1;
-   VkCopyAccelerationStructureInfoKHR *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
-      } else {
+      VkCopyAccelerationStructureInfoKHR *tmp_dst1 = (void *) cmd->u.copy_acceleration_structure_khr.info; (void) tmp_dst1;
+      VkCopyAccelerationStructureInfoKHR *tmp_src1 = (void *) pInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.copy_acceleration_structure_khr.info = NULL;
    }   
 
@@ -4687,9 +4978,10 @@ VkResult vk_enqueue_cmd_copy_acceleration_structure_to_memory_khr(struct vk_cmd_
       if (cmd->u.copy_acceleration_structure_to_memory_khr.info == NULL) goto err;
 
       memcpy((void*)cmd->u.copy_acceleration_structure_to_memory_khr.info, pInfo, sizeof(VkCopyAccelerationStructureToMemoryInfoKHR));
-   VkCopyAccelerationStructureToMemoryInfoKHR *tmp_dst1 = (void *) cmd->u.copy_acceleration_structure_to_memory_khr.info; (void) tmp_dst1;
-   VkCopyAccelerationStructureToMemoryInfoKHR *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
-      } else {
+      VkCopyAccelerationStructureToMemoryInfoKHR *tmp_dst1 = (void *) cmd->u.copy_acceleration_structure_to_memory_khr.info; (void) tmp_dst1;
+      VkCopyAccelerationStructureToMemoryInfoKHR *tmp_src1 = (void *) pInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.copy_acceleration_structure_to_memory_khr.info = NULL;
    }   
 
@@ -4730,9 +5022,10 @@ VkResult vk_enqueue_cmd_copy_memory_to_acceleration_structure_khr(struct vk_cmd_
       if (cmd->u.copy_memory_to_acceleration_structure_khr.info == NULL) goto err;
 
       memcpy((void*)cmd->u.copy_memory_to_acceleration_structure_khr.info, pInfo, sizeof(VkCopyMemoryToAccelerationStructureInfoKHR));
-   VkCopyMemoryToAccelerationStructureInfoKHR *tmp_dst1 = (void *) cmd->u.copy_memory_to_acceleration_structure_khr.info; (void) tmp_dst1;
-   VkCopyMemoryToAccelerationStructureInfoKHR *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
-      } else {
+      VkCopyMemoryToAccelerationStructureInfoKHR *tmp_dst1 = (void *) cmd->u.copy_memory_to_acceleration_structure_khr.info; (void) tmp_dst1;
+      VkCopyMemoryToAccelerationStructureInfoKHR *tmp_src1 = (void *) pInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.copy_memory_to_acceleration_structure_khr.info = NULL;
    }   
 
@@ -4776,7 +5069,7 @@ VkResult vk_enqueue_cmd_write_acceleration_structures_properties_khr(struct vk_c
       cmd->u.write_acceleration_structures_properties_khr.acceleration_structures = vk_zalloc(queue->alloc, sizeof(*cmd->u.write_acceleration_structures_properties_khr.acceleration_structures) * (accelerationStructureCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.write_acceleration_structures_properties_khr.acceleration_structures == NULL) goto err;
 
-   memcpy(( VkAccelerationStructureKHR* )cmd->u.write_acceleration_structures_properties_khr.acceleration_structures, pAccelerationStructures, sizeof(*cmd->u.write_acceleration_structures_properties_khr.acceleration_structures) * (accelerationStructureCount));
+   memcpy((void*)cmd->u.write_acceleration_structures_properties_khr.acceleration_structures, pAccelerationStructures, sizeof(*cmd->u.write_acceleration_structures_properties_khr.acceleration_structures) * (accelerationStructureCount));
    }   
    cmd->u.write_acceleration_structures_properties_khr.query_type = queryType;
    cmd->u.write_acceleration_structures_properties_khr.query_pool = queryPool;
@@ -4822,7 +5115,7 @@ VkResult vk_enqueue_cmd_write_acceleration_structures_properties_nv(struct vk_cm
       cmd->u.write_acceleration_structures_properties_nv.acceleration_structures = vk_zalloc(queue->alloc, sizeof(*cmd->u.write_acceleration_structures_properties_nv.acceleration_structures) * (accelerationStructureCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.write_acceleration_structures_properties_nv.acceleration_structures == NULL) goto err;
 
-   memcpy(( VkAccelerationStructureNV* )cmd->u.write_acceleration_structures_properties_nv.acceleration_structures, pAccelerationStructures, sizeof(*cmd->u.write_acceleration_structures_properties_nv.acceleration_structures) * (accelerationStructureCount));
+   memcpy((void*)cmd->u.write_acceleration_structures_properties_nv.acceleration_structures, pAccelerationStructures, sizeof(*cmd->u.write_acceleration_structures_properties_nv.acceleration_structures) * (accelerationStructureCount));
    }   
    cmd->u.write_acceleration_structures_properties_nv.query_type = queryType;
    cmd->u.write_acceleration_structures_properties_nv.query_pool = queryPool;
@@ -4873,14 +5166,15 @@ VkResult vk_enqueue_cmd_build_acceleration_structure_nv(struct vk_cmd_queue *que
       if (cmd->u.build_acceleration_structure_nv.info == NULL) goto err;
 
       memcpy((void*)cmd->u.build_acceleration_structure_nv.info, pInfo, sizeof(VkAccelerationStructureInfoNV));
-   VkAccelerationStructureInfoNV *tmp_dst1 = (void *) cmd->u.build_acceleration_structure_nv.info; (void) tmp_dst1;
-   VkAccelerationStructureInfoNV *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
-   if (tmp_src1->pGeometries) {
+      VkAccelerationStructureInfoNV *tmp_dst1 = (void *) cmd->u.build_acceleration_structure_nv.info; (void) tmp_dst1;
+      VkAccelerationStructureInfoNV *tmp_src1 = (void *) pInfo; (void) tmp_src1;
+      if (tmp_src1->pGeometries) {
    tmp_dst1->pGeometries = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pGeometries) * tmp_dst1->geometryCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pGeometries == NULL) goto err;
 
-   memcpy(( VkGeometryNV* )tmp_dst1->pGeometries, tmp_src1->pGeometries, sizeof(*tmp_dst1->pGeometries) * tmp_dst1->geometryCount);
+   memcpy((void*)tmp_dst1->pGeometries, tmp_src1->pGeometries, sizeof(*tmp_dst1->pGeometries) * tmp_dst1->geometryCount);
 }
+
    } else {
       cmd->u.build_acceleration_structure_nv.info = NULL;
    }   
@@ -4941,9 +5235,10 @@ VkResult vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
       if (cmd->u.trace_rays_khr.raygen_shader_binding_table == NULL) goto err;
 
       memcpy((void*)cmd->u.trace_rays_khr.raygen_shader_binding_table, pRaygenShaderBindingTable, sizeof(VkStridedDeviceAddressRegionKHR));
-   VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_khr.raygen_shader_binding_table; (void) tmp_dst1;
-   VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pRaygenShaderBindingTable; (void) tmp_src1;   
-      } else {
+      VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_khr.raygen_shader_binding_table; (void) tmp_dst1;
+      VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pRaygenShaderBindingTable; (void) tmp_src1;
+      
+   } else {
       cmd->u.trace_rays_khr.raygen_shader_binding_table = NULL;
    }   
    if (pMissShaderBindingTable) {
@@ -4951,9 +5246,10 @@ VkResult vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
       if (cmd->u.trace_rays_khr.miss_shader_binding_table == NULL) goto err;
 
       memcpy((void*)cmd->u.trace_rays_khr.miss_shader_binding_table, pMissShaderBindingTable, sizeof(VkStridedDeviceAddressRegionKHR));
-   VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_khr.miss_shader_binding_table; (void) tmp_dst1;
-   VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pMissShaderBindingTable; (void) tmp_src1;   
-      } else {
+      VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_khr.miss_shader_binding_table; (void) tmp_dst1;
+      VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pMissShaderBindingTable; (void) tmp_src1;
+      
+   } else {
       cmd->u.trace_rays_khr.miss_shader_binding_table = NULL;
    }   
    if (pHitShaderBindingTable) {
@@ -4961,9 +5257,10 @@ VkResult vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
       if (cmd->u.trace_rays_khr.hit_shader_binding_table == NULL) goto err;
 
       memcpy((void*)cmd->u.trace_rays_khr.hit_shader_binding_table, pHitShaderBindingTable, sizeof(VkStridedDeviceAddressRegionKHR));
-   VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_khr.hit_shader_binding_table; (void) tmp_dst1;
-   VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pHitShaderBindingTable; (void) tmp_src1;   
-      } else {
+      VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_khr.hit_shader_binding_table; (void) tmp_dst1;
+      VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pHitShaderBindingTable; (void) tmp_src1;
+      
+   } else {
       cmd->u.trace_rays_khr.hit_shader_binding_table = NULL;
    }   
    if (pCallableShaderBindingTable) {
@@ -4971,9 +5268,10 @@ VkResult vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
       if (cmd->u.trace_rays_khr.callable_shader_binding_table == NULL) goto err;
 
       memcpy((void*)cmd->u.trace_rays_khr.callable_shader_binding_table, pCallableShaderBindingTable, sizeof(VkStridedDeviceAddressRegionKHR));
-   VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_khr.callable_shader_binding_table; (void) tmp_dst1;
-   VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pCallableShaderBindingTable; (void) tmp_src1;   
-      } else {
+      VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_khr.callable_shader_binding_table; (void) tmp_dst1;
+      VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pCallableShaderBindingTable; (void) tmp_src1;
+      
+   } else {
       cmd->u.trace_rays_khr.callable_shader_binding_table = NULL;
    }   
    cmd->u.trace_rays_khr.width = width;
@@ -5081,9 +5379,10 @@ VkResult vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
       if (cmd->u.trace_rays_indirect_khr.raygen_shader_binding_table == NULL) goto err;
 
       memcpy((void*)cmd->u.trace_rays_indirect_khr.raygen_shader_binding_table, pRaygenShaderBindingTable, sizeof(VkStridedDeviceAddressRegionKHR));
-   VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_indirect_khr.raygen_shader_binding_table; (void) tmp_dst1;
-   VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pRaygenShaderBindingTable; (void) tmp_src1;   
-      } else {
+      VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_indirect_khr.raygen_shader_binding_table; (void) tmp_dst1;
+      VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pRaygenShaderBindingTable; (void) tmp_src1;
+      
+   } else {
       cmd->u.trace_rays_indirect_khr.raygen_shader_binding_table = NULL;
    }   
    if (pMissShaderBindingTable) {
@@ -5091,9 +5390,10 @@ VkResult vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
       if (cmd->u.trace_rays_indirect_khr.miss_shader_binding_table == NULL) goto err;
 
       memcpy((void*)cmd->u.trace_rays_indirect_khr.miss_shader_binding_table, pMissShaderBindingTable, sizeof(VkStridedDeviceAddressRegionKHR));
-   VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_indirect_khr.miss_shader_binding_table; (void) tmp_dst1;
-   VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pMissShaderBindingTable; (void) tmp_src1;   
-      } else {
+      VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_indirect_khr.miss_shader_binding_table; (void) tmp_dst1;
+      VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pMissShaderBindingTable; (void) tmp_src1;
+      
+   } else {
       cmd->u.trace_rays_indirect_khr.miss_shader_binding_table = NULL;
    }   
    if (pHitShaderBindingTable) {
@@ -5101,9 +5401,10 @@ VkResult vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
       if (cmd->u.trace_rays_indirect_khr.hit_shader_binding_table == NULL) goto err;
 
       memcpy((void*)cmd->u.trace_rays_indirect_khr.hit_shader_binding_table, pHitShaderBindingTable, sizeof(VkStridedDeviceAddressRegionKHR));
-   VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_indirect_khr.hit_shader_binding_table; (void) tmp_dst1;
-   VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pHitShaderBindingTable; (void) tmp_src1;   
-      } else {
+      VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_indirect_khr.hit_shader_binding_table; (void) tmp_dst1;
+      VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pHitShaderBindingTable; (void) tmp_src1;
+      
+   } else {
       cmd->u.trace_rays_indirect_khr.hit_shader_binding_table = NULL;
    }   
    if (pCallableShaderBindingTable) {
@@ -5111,9 +5412,10 @@ VkResult vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
       if (cmd->u.trace_rays_indirect_khr.callable_shader_binding_table == NULL) goto err;
 
       memcpy((void*)cmd->u.trace_rays_indirect_khr.callable_shader_binding_table, pCallableShaderBindingTable, sizeof(VkStridedDeviceAddressRegionKHR));
-   VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_indirect_khr.callable_shader_binding_table; (void) tmp_dst1;
-   VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pCallableShaderBindingTable; (void) tmp_src1;   
-      } else {
+      VkStridedDeviceAddressRegionKHR *tmp_dst1 = (void *) cmd->u.trace_rays_indirect_khr.callable_shader_binding_table; (void) tmp_dst1;
+      VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pCallableShaderBindingTable; (void) tmp_src1;
+      
+   } else {
       cmd->u.trace_rays_indirect_khr.callable_shader_binding_table = NULL;
    }   
    cmd->u.trace_rays_indirect_khr.indirect_device_address = indirectDeviceAddress;
@@ -5226,8 +5528,8 @@ vk_free_cmd_set_performance_override_intel(struct vk_cmd_queue *queue,
 
 
 static void
-vk_free_cmd_set_line_stipple_ext(struct vk_cmd_queue *queue,
-                                 struct vk_cmd_queue_entry *cmd)
+vk_free_cmd_set_line_stipple(struct vk_cmd_queue *queue,
+                             struct vk_cmd_queue_entry *cmd)
 {
    if (cmd->driver_free_cb)
       cmd->driver_free_cb(queue, cmd);
@@ -5236,19 +5538,19 @@ vk_free_cmd_set_line_stipple_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-VkResult vk_enqueue_cmd_set_line_stipple_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_line_stipple(struct vk_cmd_queue *queue
 , uint32_t lineStippleFactor
 , uint16_t lineStipplePattern
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_LINE_STIPPLE_EXT], 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_LINE_STIPPLE], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
-   cmd->type = VK_CMD_SET_LINE_STIPPLE_EXT;
+   cmd->type = VK_CMD_SET_LINE_STIPPLE;
       
-   cmd->u.set_line_stipple_ext.line_stipple_factor = lineStippleFactor;
-   cmd->u.set_line_stipple_ext.line_stipple_pattern = lineStipplePattern;
+   cmd->u.set_line_stipple.line_stipple_factor = lineStippleFactor;
+   cmd->u.set_line_stipple.line_stipple_pattern = lineStipplePattern;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
    return VK_SUCCESS;
@@ -5268,40 +5570,6 @@ vk_free_cmd_build_acceleration_structures_khr(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-VkResult vk_enqueue_cmd_build_acceleration_structures_khr(struct vk_cmd_queue *queue
-, uint32_t infoCount
-, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos
-, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos
-)
-{
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BUILD_ACCELERATION_STRUCTURES_KHR], 8,
-                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
-
-   cmd->type = VK_CMD_BUILD_ACCELERATION_STRUCTURES_KHR;
-      
-   cmd->u.build_acceleration_structures_khr.info_count = infoCount;
-   if (pInfos) {
-      cmd->u.build_acceleration_structures_khr.infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_khr.infos) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (cmd->u.build_acceleration_structures_khr.infos == NULL) goto err;
-
-   memcpy(( VkAccelerationStructureBuildGeometryInfoKHR* )cmd->u.build_acceleration_structures_khr.infos, pInfos, sizeof(*cmd->u.build_acceleration_structures_khr.infos) * (infoCount));
-   }   
-   if (ppBuildRangeInfos) {
-      cmd->u.build_acceleration_structures_khr.pp_build_range_infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_khr.pp_build_range_infos) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (cmd->u.build_acceleration_structures_khr.pp_build_range_infos == NULL) goto err;
-
-   memcpy(( VkAccelerationStructureBuildRangeInfoKHR* * )cmd->u.build_acceleration_structures_khr.pp_build_range_infos, ppBuildRangeInfos, sizeof(*cmd->u.build_acceleration_structures_khr.pp_build_range_infos) * (infoCount));
-   }   
-
-   list_addtail(&cmd->cmd_link, &queue->cmds);
-   return VK_SUCCESS;
-
-err:
-   if (cmd)
-      vk_free_cmd_build_acceleration_structures_khr(queue, cmd);
-   return VK_ERROR_OUT_OF_HOST_MEMORY;
-}
 
 static void
 vk_free_cmd_build_acceleration_structures_indirect_khr(struct vk_cmd_queue *queue,
@@ -5337,25 +5605,25 @@ VkResult vk_enqueue_cmd_build_acceleration_structures_indirect_khr(struct vk_cmd
       cmd->u.build_acceleration_structures_indirect_khr.infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.infos) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_acceleration_structures_indirect_khr.infos == NULL) goto err;
 
-   memcpy(( VkAccelerationStructureBuildGeometryInfoKHR* )cmd->u.build_acceleration_structures_indirect_khr.infos, pInfos, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.infos) * (infoCount));
+   memcpy((void*)cmd->u.build_acceleration_structures_indirect_khr.infos, pInfos, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.infos) * (infoCount));
    }   
    if (pIndirectDeviceAddresses) {
       cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses == NULL) goto err;
 
-   memcpy(( VkDeviceAddress*             )cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses, pIndirectDeviceAddresses, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses) * (infoCount));
+   memcpy((void*)cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses, pIndirectDeviceAddresses, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses) * (infoCount));
    }   
    if (pIndirectStrides) {
       cmd->u.build_acceleration_structures_indirect_khr.indirect_strides = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_strides) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_acceleration_structures_indirect_khr.indirect_strides == NULL) goto err;
 
-   memcpy(( uint32_t*                    )cmd->u.build_acceleration_structures_indirect_khr.indirect_strides, pIndirectStrides, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_strides) * (infoCount));
+   memcpy((void*)cmd->u.build_acceleration_structures_indirect_khr.indirect_strides, pIndirectStrides, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_strides) * (infoCount));
    }   
    if (ppMaxPrimitiveCounts) {
       cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts == NULL) goto err;
 
-   memcpy(( uint32_t* *             )cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts, ppMaxPrimitiveCounts, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts) * (infoCount));
+   memcpy((void*)cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts, ppMaxPrimitiveCounts, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts) * (infoCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -5479,7 +5747,7 @@ VkResult vk_enqueue_cmd_set_viewport_with_count(struct vk_cmd_queue *queue
       cmd->u.set_viewport_with_count.viewports = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_with_count.viewports) * (viewportCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_viewport_with_count.viewports == NULL) goto err;
 
-   memcpy(( VkViewport* )cmd->u.set_viewport_with_count.viewports, pViewports, sizeof(*cmd->u.set_viewport_with_count.viewports) * (viewportCount));
+   memcpy((void*)cmd->u.set_viewport_with_count.viewports, pViewports, sizeof(*cmd->u.set_viewport_with_count.viewports) * (viewportCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -5519,7 +5787,7 @@ VkResult vk_enqueue_cmd_set_scissor_with_count(struct vk_cmd_queue *queue
       cmd->u.set_scissor_with_count.scissors = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_scissor_with_count.scissors) * (scissorCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_scissor_with_count.scissors == NULL) goto err;
 
-   memcpy(( VkRect2D* )cmd->u.set_scissor_with_count.scissors, pScissors, sizeof(*cmd->u.set_scissor_with_count.scissors) * (scissorCount));
+   memcpy((void*)cmd->u.set_scissor_with_count.scissors, pScissors, sizeof(*cmd->u.set_scissor_with_count.scissors) * (scissorCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -5532,8 +5800,8 @@ err:
 }
 
 static void
-vk_free_cmd_bind_index_buffer2_khr(struct vk_cmd_queue *queue,
-                                   struct vk_cmd_queue_entry *cmd)
+vk_free_cmd_bind_index_buffer2(struct vk_cmd_queue *queue,
+                               struct vk_cmd_queue_entry *cmd)
 {
    if (cmd->driver_free_cb)
       cmd->driver_free_cb(queue, cmd);
@@ -5542,23 +5810,23 @@ vk_free_cmd_bind_index_buffer2_khr(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-VkResult vk_enqueue_cmd_bind_index_buffer2_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_bind_index_buffer2(struct vk_cmd_queue *queue
 , VkBuffer buffer
 , VkDeviceSize offset
 , VkDeviceSize size
 , VkIndexType indexType
 )
 {
-   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_INDEX_BUFFER2_KHR], 8,
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_INDEX_BUFFER2], 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
-   cmd->type = VK_CMD_BIND_INDEX_BUFFER2_KHR;
+   cmd->type = VK_CMD_BIND_INDEX_BUFFER2;
       
-   cmd->u.bind_index_buffer2_khr.buffer = buffer;
-   cmd->u.bind_index_buffer2_khr.offset = offset;
-   cmd->u.bind_index_buffer2_khr.size = size;
-   cmd->u.bind_index_buffer2_khr.index_type = indexType;
+   cmd->u.bind_index_buffer2.buffer = buffer;
+   cmd->u.bind_index_buffer2.offset = offset;
+   cmd->u.bind_index_buffer2.size = size;
+   cmd->u.bind_index_buffer2.index_type = indexType;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
    return VK_SUCCESS;
@@ -5601,25 +5869,25 @@ VkResult vk_enqueue_cmd_bind_vertex_buffers2(struct vk_cmd_queue *queue
       cmd->u.bind_vertex_buffers2.buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.buffers) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers2.buffers == NULL) goto err;
 
-   memcpy(( VkBuffer* )cmd->u.bind_vertex_buffers2.buffers, pBuffers, sizeof(*cmd->u.bind_vertex_buffers2.buffers) * (bindingCount));
+   memcpy((void*)cmd->u.bind_vertex_buffers2.buffers, pBuffers, sizeof(*cmd->u.bind_vertex_buffers2.buffers) * (bindingCount));
    }   
    if (pOffsets) {
       cmd->u.bind_vertex_buffers2.offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.offsets) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers2.offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers2.offsets, pOffsets, sizeof(*cmd->u.bind_vertex_buffers2.offsets) * (bindingCount));
+   memcpy((void*)cmd->u.bind_vertex_buffers2.offsets, pOffsets, sizeof(*cmd->u.bind_vertex_buffers2.offsets) * (bindingCount));
    }   
    if (pSizes) {
       cmd->u.bind_vertex_buffers2.sizes = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.sizes) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers2.sizes == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers2.sizes, pSizes, sizeof(*cmd->u.bind_vertex_buffers2.sizes) * (bindingCount));
+   memcpy((void*)cmd->u.bind_vertex_buffers2.sizes, pSizes, sizeof(*cmd->u.bind_vertex_buffers2.sizes) * (bindingCount));
    }   
    if (pStrides) {
       cmd->u.bind_vertex_buffers2.strides = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.strides) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers2.strides == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers2.strides, pStrides, sizeof(*cmd->u.bind_vertex_buffers2.strides) * (bindingCount));
+   memcpy((void*)cmd->u.bind_vertex_buffers2.strides, pStrides, sizeof(*cmd->u.bind_vertex_buffers2.strides) * (bindingCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -6087,7 +6355,7 @@ VkResult vk_enqueue_cmd_set_sample_mask_ext(struct vk_cmd_queue *queue
       cmd->u.set_sample_mask_ext.sample_mask = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_sample_mask_ext.sample_mask) * ((samples + 31) / 32), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_sample_mask_ext.sample_mask == NULL) goto err;
 
-   memcpy(( VkSampleMask*    )cmd->u.set_sample_mask_ext.sample_mask, pSampleMask, sizeof(*cmd->u.set_sample_mask_ext.sample_mask) * ((samples + 31) / 32));
+   memcpy((void*)cmd->u.set_sample_mask_ext.sample_mask, pSampleMask, sizeof(*cmd->u.set_sample_mask_ext.sample_mask) * ((samples + 31) / 32));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -6213,7 +6481,7 @@ VkResult vk_enqueue_cmd_set_color_blend_enable_ext(struct vk_cmd_queue *queue
       cmd->u.set_color_blend_enable_ext.color_blend_enables = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_blend_enable_ext.color_blend_enables) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_color_blend_enable_ext.color_blend_enables == NULL) goto err;
 
-   memcpy(( VkBool32* )cmd->u.set_color_blend_enable_ext.color_blend_enables, pColorBlendEnables, sizeof(*cmd->u.set_color_blend_enable_ext.color_blend_enables) * (attachmentCount));
+   memcpy((void*)cmd->u.set_color_blend_enable_ext.color_blend_enables, pColorBlendEnables, sizeof(*cmd->u.set_color_blend_enable_ext.color_blend_enables) * (attachmentCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -6255,7 +6523,7 @@ VkResult vk_enqueue_cmd_set_color_blend_equation_ext(struct vk_cmd_queue *queue
       cmd->u.set_color_blend_equation_ext.color_blend_equations = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_blend_equation_ext.color_blend_equations) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_color_blend_equation_ext.color_blend_equations == NULL) goto err;
 
-   memcpy(( VkColorBlendEquationEXT* )cmd->u.set_color_blend_equation_ext.color_blend_equations, pColorBlendEquations, sizeof(*cmd->u.set_color_blend_equation_ext.color_blend_equations) * (attachmentCount));
+   memcpy((void*)cmd->u.set_color_blend_equation_ext.color_blend_equations, pColorBlendEquations, sizeof(*cmd->u.set_color_blend_equation_ext.color_blend_equations) * (attachmentCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -6297,7 +6565,7 @@ VkResult vk_enqueue_cmd_set_color_write_mask_ext(struct vk_cmd_queue *queue
       cmd->u.set_color_write_mask_ext.color_write_masks = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_write_mask_ext.color_write_masks) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_color_write_mask_ext.color_write_masks == NULL) goto err;
 
-   memcpy(( VkColorComponentFlags* )cmd->u.set_color_write_mask_ext.color_write_masks, pColorWriteMasks, sizeof(*cmd->u.set_color_write_mask_ext.color_write_masks) * (attachmentCount));
+   memcpy((void*)cmd->u.set_color_write_mask_ext.color_write_masks, pColorWriteMasks, sizeof(*cmd->u.set_color_write_mask_ext.color_write_masks) * (attachmentCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -6479,7 +6747,7 @@ VkResult vk_enqueue_cmd_set_color_blend_advanced_ext(struct vk_cmd_queue *queue
       cmd->u.set_color_blend_advanced_ext.color_blend_advanced = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_blend_advanced_ext.color_blend_advanced) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_color_blend_advanced_ext.color_blend_advanced == NULL) goto err;
 
-   memcpy(( VkColorBlendAdvancedEXT* )cmd->u.set_color_blend_advanced_ext.color_blend_advanced, pColorBlendAdvanced, sizeof(*cmd->u.set_color_blend_advanced_ext.color_blend_advanced) * (attachmentCount));
+   memcpy((void*)cmd->u.set_color_blend_advanced_ext.color_blend_advanced, pColorBlendAdvanced, sizeof(*cmd->u.set_color_blend_advanced_ext.color_blend_advanced) * (attachmentCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -6661,7 +6929,7 @@ VkResult vk_enqueue_cmd_set_viewport_swizzle_nv(struct vk_cmd_queue *queue
       cmd->u.set_viewport_swizzle_nv.viewport_swizzles = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_swizzle_nv.viewport_swizzles) * (viewportCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_viewport_swizzle_nv.viewport_swizzles == NULL) goto err;
 
-   memcpy(( VkViewportSwizzleNV* )cmd->u.set_viewport_swizzle_nv.viewport_swizzles, pViewportSwizzles, sizeof(*cmd->u.set_viewport_swizzle_nv.viewport_swizzles) * (viewportCount));
+   memcpy((void*)cmd->u.set_viewport_swizzle_nv.viewport_swizzles, pViewportSwizzles, sizeof(*cmd->u.set_viewport_swizzle_nv.viewport_swizzles) * (viewportCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -6813,7 +7081,7 @@ VkResult vk_enqueue_cmd_set_coverage_modulation_table_nv(struct vk_cmd_queue *qu
       cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table) * (coverageModulationTableCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table == NULL) goto err;
 
-   memcpy(( float* )cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table, pCoverageModulationTable, sizeof(*cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table) * (coverageModulationTableCount));
+   memcpy((void*)cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table, pCoverageModulationTable, sizeof(*cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table) * (coverageModulationTableCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -6938,14 +7206,15 @@ VkResult vk_enqueue_cmd_copy_buffer2(struct vk_cmd_queue *queue
       if (cmd->u.copy_buffer2.copy_buffer_info == NULL) goto err;
 
       memcpy((void*)cmd->u.copy_buffer2.copy_buffer_info, pCopyBufferInfo, sizeof(VkCopyBufferInfo2));
-   VkCopyBufferInfo2 *tmp_dst1 = (void *) cmd->u.copy_buffer2.copy_buffer_info; (void) tmp_dst1;
-   VkCopyBufferInfo2 *tmp_src1 = (void *) pCopyBufferInfo; (void) tmp_src1;   
-   if (tmp_src1->pRegions) {
+      VkCopyBufferInfo2 *tmp_dst1 = (void *) cmd->u.copy_buffer2.copy_buffer_info; (void) tmp_dst1;
+      VkCopyBufferInfo2 *tmp_src1 = (void *) pCopyBufferInfo; (void) tmp_src1;
+      if (tmp_src1->pRegions) {
    tmp_dst1->pRegions = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pRegions == NULL) goto err;
 
-   memcpy(( VkBufferCopy2* )tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
+   memcpy((void*)tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
 }
+
    } else {
       cmd->u.copy_buffer2.copy_buffer_info = NULL;
    }   
@@ -6988,14 +7257,15 @@ VkResult vk_enqueue_cmd_copy_image2(struct vk_cmd_queue *queue
       if (cmd->u.copy_image2.copy_image_info == NULL) goto err;
 
       memcpy((void*)cmd->u.copy_image2.copy_image_info, pCopyImageInfo, sizeof(VkCopyImageInfo2));
-   VkCopyImageInfo2 *tmp_dst1 = (void *) cmd->u.copy_image2.copy_image_info; (void) tmp_dst1;
-   VkCopyImageInfo2 *tmp_src1 = (void *) pCopyImageInfo; (void) tmp_src1;   
-   if (tmp_src1->pRegions) {
+      VkCopyImageInfo2 *tmp_dst1 = (void *) cmd->u.copy_image2.copy_image_info; (void) tmp_dst1;
+      VkCopyImageInfo2 *tmp_src1 = (void *) pCopyImageInfo; (void) tmp_src1;
+      if (tmp_src1->pRegions) {
    tmp_dst1->pRegions = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pRegions == NULL) goto err;
 
-   memcpy(( VkImageCopy2* )tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
+   memcpy((void*)tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
 }
+
    } else {
       cmd->u.copy_image2.copy_image_info = NULL;
    }   
@@ -7038,25 +7308,26 @@ VkResult vk_enqueue_cmd_blit_image2(struct vk_cmd_queue *queue
       if (cmd->u.blit_image2.blit_image_info == NULL) goto err;
 
       memcpy((void*)cmd->u.blit_image2.blit_image_info, pBlitImageInfo, sizeof(VkBlitImageInfo2));
-   VkBlitImageInfo2 *tmp_dst1 = (void *) cmd->u.blit_image2.blit_image_info; (void) tmp_dst1;
-   VkBlitImageInfo2 *tmp_src1 = (void *) pBlitImageInfo; (void) tmp_src1;   
-   
+      VkBlitImageInfo2 *tmp_dst1 = (void *) cmd->u.blit_image2.blit_image_info; (void) tmp_dst1;
+      VkBlitImageInfo2 *tmp_src1 = (void *) pBlitImageInfo; (void) tmp_src1;
+      
       const VkBaseInStructure *pnext = tmp_dst1->pNext;
       if (pnext) {
          switch ((int32_t)pnext->sType) {
          
 
-      case VK_STRUCTURE_TYPE_BLIT_IMAGE_CUBIC_WEIGHTS_INFO_QCOM:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_BLIT_IMAGE_CUBIC_WEIGHTS_INFO_QCOM:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkBlitImageCubicWeightsInfoQCOM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkBlitImageCubicWeightsInfoQCOM));
-   VkBlitImageCubicWeightsInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkBlitImageCubicWeightsInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      VkBlitImageCubicWeightsInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkBlitImageCubicWeightsInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
       } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
@@ -7066,8 +7337,9 @@ VkResult vk_enqueue_cmd_blit_image2(struct vk_cmd_queue *queue
    tmp_dst1->pRegions = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pRegions == NULL) goto err;
 
-   memcpy(( VkImageBlit2*  )tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
+   memcpy((void*)tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
 }
+
    } else {
       cmd->u.blit_image2.blit_image_info = NULL;
    }   
@@ -7110,14 +7382,15 @@ VkResult vk_enqueue_cmd_copy_buffer_to_image2(struct vk_cmd_queue *queue
       if (cmd->u.copy_buffer_to_image2.copy_buffer_to_image_info == NULL) goto err;
 
       memcpy((void*)cmd->u.copy_buffer_to_image2.copy_buffer_to_image_info, pCopyBufferToImageInfo, sizeof(VkCopyBufferToImageInfo2));
-   VkCopyBufferToImageInfo2 *tmp_dst1 = (void *) cmd->u.copy_buffer_to_image2.copy_buffer_to_image_info; (void) tmp_dst1;
-   VkCopyBufferToImageInfo2 *tmp_src1 = (void *) pCopyBufferToImageInfo; (void) tmp_src1;   
-   if (tmp_src1->pRegions) {
+      VkCopyBufferToImageInfo2 *tmp_dst1 = (void *) cmd->u.copy_buffer_to_image2.copy_buffer_to_image_info; (void) tmp_dst1;
+      VkCopyBufferToImageInfo2 *tmp_src1 = (void *) pCopyBufferToImageInfo; (void) tmp_src1;
+      if (tmp_src1->pRegions) {
    tmp_dst1->pRegions = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pRegions == NULL) goto err;
 
-   memcpy(( VkBufferImageCopy2* )tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
+   memcpy((void*)tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
 }
+
    } else {
       cmd->u.copy_buffer_to_image2.copy_buffer_to_image_info = NULL;
    }   
@@ -7160,14 +7433,15 @@ VkResult vk_enqueue_cmd_copy_image_to_buffer2(struct vk_cmd_queue *queue
       if (cmd->u.copy_image_to_buffer2.copy_image_to_buffer_info == NULL) goto err;
 
       memcpy((void*)cmd->u.copy_image_to_buffer2.copy_image_to_buffer_info, pCopyImageToBufferInfo, sizeof(VkCopyImageToBufferInfo2));
-   VkCopyImageToBufferInfo2 *tmp_dst1 = (void *) cmd->u.copy_image_to_buffer2.copy_image_to_buffer_info; (void) tmp_dst1;
-   VkCopyImageToBufferInfo2 *tmp_src1 = (void *) pCopyImageToBufferInfo; (void) tmp_src1;   
-   if (tmp_src1->pRegions) {
+      VkCopyImageToBufferInfo2 *tmp_dst1 = (void *) cmd->u.copy_image_to_buffer2.copy_image_to_buffer_info; (void) tmp_dst1;
+      VkCopyImageToBufferInfo2 *tmp_src1 = (void *) pCopyImageToBufferInfo; (void) tmp_src1;
+      if (tmp_src1->pRegions) {
    tmp_dst1->pRegions = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pRegions == NULL) goto err;
 
-   memcpy(( VkBufferImageCopy2*   )tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
+   memcpy((void*)tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
 }
+
    } else {
       cmd->u.copy_image_to_buffer2.copy_image_to_buffer_info = NULL;
    }   
@@ -7210,14 +7484,15 @@ VkResult vk_enqueue_cmd_resolve_image2(struct vk_cmd_queue *queue
       if (cmd->u.resolve_image2.resolve_image_info == NULL) goto err;
 
       memcpy((void*)cmd->u.resolve_image2.resolve_image_info, pResolveImageInfo, sizeof(VkResolveImageInfo2));
-   VkResolveImageInfo2 *tmp_dst1 = (void *) cmd->u.resolve_image2.resolve_image_info; (void) tmp_dst1;
-   VkResolveImageInfo2 *tmp_src1 = (void *) pResolveImageInfo; (void) tmp_src1;   
-   if (tmp_src1->pRegions) {
+      VkResolveImageInfo2 *tmp_dst1 = (void *) cmd->u.resolve_image2.resolve_image_info; (void) tmp_dst1;
+      VkResolveImageInfo2 *tmp_src1 = (void *) pResolveImageInfo; (void) tmp_src1;
+      if (tmp_src1->pRegions) {
    tmp_dst1->pRegions = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pRegions == NULL) goto err;
 
-   memcpy(( VkImageResolve2*   )tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
+   memcpy((void*)tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
 }
+
    } else {
       cmd->u.resolve_image2.resolve_image_info = NULL;
    }   
@@ -7260,9 +7535,10 @@ VkResult vk_enqueue_cmd_set_fragment_shading_rate_khr(struct vk_cmd_queue *queue
       if (cmd->u.set_fragment_shading_rate_khr.fragment_size == NULL) goto err;
 
       memcpy((void*)cmd->u.set_fragment_shading_rate_khr.fragment_size, pFragmentSize, sizeof(VkExtent2D));
-   VkExtent2D *tmp_dst1 = (void *) cmd->u.set_fragment_shading_rate_khr.fragment_size; (void) tmp_dst1;
-   VkExtent2D *tmp_src1 = (void *) pFragmentSize; (void) tmp_src1;   
-      } else {
+      VkExtent2D *tmp_dst1 = (void *) cmd->u.set_fragment_shading_rate_khr.fragment_size; (void) tmp_dst1;
+      VkExtent2D *tmp_src1 = (void *) pFragmentSize; (void) tmp_src1;
+      
+   } else {
       cmd->u.set_fragment_shading_rate_khr.fragment_size = NULL;
    }   
    memcpy(cmd->u.set_fragment_shading_rate_khr.combiner_ops, combinerOps,
@@ -7339,14 +7615,14 @@ VkResult vk_enqueue_cmd_set_vertex_input_ext(struct vk_cmd_queue *queue
       cmd->u.set_vertex_input_ext.vertex_binding_descriptions = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_vertex_input_ext.vertex_binding_descriptions) * (vertexBindingDescriptionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_vertex_input_ext.vertex_binding_descriptions == NULL) goto err;
 
-   memcpy(( VkVertexInputBindingDescription2EXT* )cmd->u.set_vertex_input_ext.vertex_binding_descriptions, pVertexBindingDescriptions, sizeof(*cmd->u.set_vertex_input_ext.vertex_binding_descriptions) * (vertexBindingDescriptionCount));
+   memcpy((void*)cmd->u.set_vertex_input_ext.vertex_binding_descriptions, pVertexBindingDescriptions, sizeof(*cmd->u.set_vertex_input_ext.vertex_binding_descriptions) * (vertexBindingDescriptionCount));
    }   
    cmd->u.set_vertex_input_ext.vertex_attribute_description_count = vertexAttributeDescriptionCount;
    if (pVertexAttributeDescriptions) {
       cmd->u.set_vertex_input_ext.vertex_attribute_descriptions = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_vertex_input_ext.vertex_attribute_descriptions) * (vertexAttributeDescriptionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_vertex_input_ext.vertex_attribute_descriptions == NULL) goto err;
 
-   memcpy(( VkVertexInputAttributeDescription2EXT* )cmd->u.set_vertex_input_ext.vertex_attribute_descriptions, pVertexAttributeDescriptions, sizeof(*cmd->u.set_vertex_input_ext.vertex_attribute_descriptions) * (vertexAttributeDescriptionCount));
+   memcpy((void*)cmd->u.set_vertex_input_ext.vertex_attribute_descriptions, pVertexAttributeDescriptions, sizeof(*cmd->u.set_vertex_input_ext.vertex_attribute_descriptions) * (vertexAttributeDescriptionCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -7386,7 +7662,7 @@ VkResult vk_enqueue_cmd_set_color_write_enable_ext(struct vk_cmd_queue *queue
       cmd->u.set_color_write_enable_ext.color_write_enables = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_write_enable_ext.color_write_enables) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_color_write_enable_ext.color_write_enables == NULL) goto err;
 
-   memcpy(( VkBool32*   )cmd->u.set_color_write_enable_ext.color_write_enables, pColorWriteEnables, sizeof(*cmd->u.set_color_write_enable_ext.color_write_enables) * (attachmentCount));
+   memcpy((void*)cmd->u.set_color_write_enable_ext.color_write_enables, pColorWriteEnables, sizeof(*cmd->u.set_color_write_enable_ext.color_write_enables) * (attachmentCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -7431,26 +7707,27 @@ VkResult vk_enqueue_cmd_set_event2(struct vk_cmd_queue *queue
       if (cmd->u.set_event2.dependency_info == NULL) goto err;
 
       memcpy((void*)cmd->u.set_event2.dependency_info, pDependencyInfo, sizeof(VkDependencyInfo));
-   VkDependencyInfo *tmp_dst1 = (void *) cmd->u.set_event2.dependency_info; (void) tmp_dst1;
-   VkDependencyInfo *tmp_src1 = (void *) pDependencyInfo; (void) tmp_src1;   
-   if (tmp_src1->pMemoryBarriers) {
+      VkDependencyInfo *tmp_dst1 = (void *) cmd->u.set_event2.dependency_info; (void) tmp_dst1;
+      VkDependencyInfo *tmp_src1 = (void *) pDependencyInfo; (void) tmp_src1;
+      if (tmp_src1->pMemoryBarriers) {
    tmp_dst1->pMemoryBarriers = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pMemoryBarriers) * tmp_dst1->memoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pMemoryBarriers == NULL) goto err;
 
-   memcpy(( VkMemoryBarrier2*             )tmp_dst1->pMemoryBarriers, tmp_src1->pMemoryBarriers, sizeof(*tmp_dst1->pMemoryBarriers) * tmp_dst1->memoryBarrierCount);
+   memcpy((void*)tmp_dst1->pMemoryBarriers, tmp_src1->pMemoryBarriers, sizeof(*tmp_dst1->pMemoryBarriers) * tmp_dst1->memoryBarrierCount);
 }
 if (tmp_src1->pBufferMemoryBarriers) {
    tmp_dst1->pBufferMemoryBarriers = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pBufferMemoryBarriers) * tmp_dst1->bufferMemoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pBufferMemoryBarriers == NULL) goto err;
 
-   memcpy(( VkBufferMemoryBarrier2* )tmp_dst1->pBufferMemoryBarriers, tmp_src1->pBufferMemoryBarriers, sizeof(*tmp_dst1->pBufferMemoryBarriers) * tmp_dst1->bufferMemoryBarrierCount);
+   memcpy((void*)tmp_dst1->pBufferMemoryBarriers, tmp_src1->pBufferMemoryBarriers, sizeof(*tmp_dst1->pBufferMemoryBarriers) * tmp_dst1->bufferMemoryBarrierCount);
 }
 if (tmp_src1->pImageMemoryBarriers) {
    tmp_dst1->pImageMemoryBarriers = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pImageMemoryBarriers) * tmp_dst1->imageMemoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pImageMemoryBarriers == NULL) goto err;
 
-   memcpy(( VkImageMemoryBarrier2*   )tmp_dst1->pImageMemoryBarriers, tmp_src1->pImageMemoryBarriers, sizeof(*tmp_dst1->pImageMemoryBarriers) * tmp_dst1->imageMemoryBarrierCount);
+   memcpy((void*)tmp_dst1->pImageMemoryBarriers, tmp_src1->pImageMemoryBarriers, sizeof(*tmp_dst1->pImageMemoryBarriers) * tmp_dst1->imageMemoryBarrierCount);
 }
+
    } else {
       cmd->u.set_event2.dependency_info = NULL;
    }   
@@ -7524,13 +7801,13 @@ VkResult vk_enqueue_cmd_wait_events2(struct vk_cmd_queue *queue
       cmd->u.wait_events2.events = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events2.events) * (eventCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events2.events == NULL) goto err;
 
-   memcpy(( VkEvent*                     )cmd->u.wait_events2.events, pEvents, sizeof(*cmd->u.wait_events2.events) * (eventCount));
+   memcpy((void*)cmd->u.wait_events2.events, pEvents, sizeof(*cmd->u.wait_events2.events) * (eventCount));
    }   
    if (pDependencyInfos) {
       cmd->u.wait_events2.dependency_infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events2.dependency_infos) * (eventCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events2.dependency_infos == NULL) goto err;
 
-   memcpy(( VkDependencyInfo*            )cmd->u.wait_events2.dependency_infos, pDependencyInfos, sizeof(*cmd->u.wait_events2.dependency_infos) * (eventCount));
+   memcpy((void*)cmd->u.wait_events2.dependency_infos, pDependencyInfos, sizeof(*cmd->u.wait_events2.dependency_infos) * (eventCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -7573,26 +7850,27 @@ VkResult vk_enqueue_cmd_pipeline_barrier2(struct vk_cmd_queue *queue
       if (cmd->u.pipeline_barrier2.dependency_info == NULL) goto err;
 
       memcpy((void*)cmd->u.pipeline_barrier2.dependency_info, pDependencyInfo, sizeof(VkDependencyInfo));
-   VkDependencyInfo *tmp_dst1 = (void *) cmd->u.pipeline_barrier2.dependency_info; (void) tmp_dst1;
-   VkDependencyInfo *tmp_src1 = (void *) pDependencyInfo; (void) tmp_src1;   
-   if (tmp_src1->pMemoryBarriers) {
+      VkDependencyInfo *tmp_dst1 = (void *) cmd->u.pipeline_barrier2.dependency_info; (void) tmp_dst1;
+      VkDependencyInfo *tmp_src1 = (void *) pDependencyInfo; (void) tmp_src1;
+      if (tmp_src1->pMemoryBarriers) {
    tmp_dst1->pMemoryBarriers = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pMemoryBarriers) * tmp_dst1->memoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pMemoryBarriers == NULL) goto err;
 
-   memcpy(( VkMemoryBarrier2*             )tmp_dst1->pMemoryBarriers, tmp_src1->pMemoryBarriers, sizeof(*tmp_dst1->pMemoryBarriers) * tmp_dst1->memoryBarrierCount);
+   memcpy((void*)tmp_dst1->pMemoryBarriers, tmp_src1->pMemoryBarriers, sizeof(*tmp_dst1->pMemoryBarriers) * tmp_dst1->memoryBarrierCount);
 }
 if (tmp_src1->pBufferMemoryBarriers) {
    tmp_dst1->pBufferMemoryBarriers = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pBufferMemoryBarriers) * tmp_dst1->bufferMemoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pBufferMemoryBarriers == NULL) goto err;
 
-   memcpy(( VkBufferMemoryBarrier2* )tmp_dst1->pBufferMemoryBarriers, tmp_src1->pBufferMemoryBarriers, sizeof(*tmp_dst1->pBufferMemoryBarriers) * tmp_dst1->bufferMemoryBarrierCount);
+   memcpy((void*)tmp_dst1->pBufferMemoryBarriers, tmp_src1->pBufferMemoryBarriers, sizeof(*tmp_dst1->pBufferMemoryBarriers) * tmp_dst1->bufferMemoryBarrierCount);
 }
 if (tmp_src1->pImageMemoryBarriers) {
    tmp_dst1->pImageMemoryBarriers = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pImageMemoryBarriers) * tmp_dst1->imageMemoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pImageMemoryBarriers == NULL) goto err;
 
-   memcpy(( VkImageMemoryBarrier2*   )tmp_dst1->pImageMemoryBarriers, tmp_src1->pImageMemoryBarriers, sizeof(*tmp_dst1->pImageMemoryBarriers) * tmp_dst1->imageMemoryBarrierCount);
+   memcpy((void*)tmp_dst1->pImageMemoryBarriers, tmp_src1->pImageMemoryBarriers, sizeof(*tmp_dst1->pImageMemoryBarriers) * tmp_dst1->imageMemoryBarrierCount);
 }
+
    } else {
       cmd->u.pipeline_barrier2.dependency_info = NULL;
    }   
@@ -7702,64 +7980,116 @@ VkResult vk_enqueue_cmd_decode_video_khr(struct vk_cmd_queue *queue
       if (cmd->u.decode_video_khr.decode_info == NULL) goto err;
 
       memcpy((void*)cmd->u.decode_video_khr.decode_info, pDecodeInfo, sizeof(VkVideoDecodeInfoKHR));
-   VkVideoDecodeInfoKHR *tmp_dst1 = (void *) cmd->u.decode_video_khr.decode_info; (void) tmp_dst1;
-   VkVideoDecodeInfoKHR *tmp_src1 = (void *) pDecodeInfo; (void) tmp_src1;   
-   
+      VkVideoDecodeInfoKHR *tmp_dst1 = (void *) cmd->u.decode_video_khr.decode_info; (void) tmp_dst1;
+      VkVideoDecodeInfoKHR *tmp_src1 = (void *) pDecodeInfo; (void) tmp_src1;
+      
       const VkBaseInStructure *pnext = tmp_dst1->pNext;
       if (pnext) {
          switch ((int32_t)pnext->sType) {
          
 
-      case VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PICTURE_INFO_KHR:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_VIDEO_INLINE_QUERY_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoInlineQueryInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoInlineQueryInfoKHR));
+      VkVideoInlineQueryInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoInlineQueryInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PICTURE_INFO_KHR:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoDecodeH264PictureInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoDecodeH264PictureInfoKHR));
-   VkVideoDecodeH264PictureInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkVideoDecodeH264PictureInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pStdPictureInfo) {
+      VkVideoDecodeH264PictureInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoDecodeH264PictureInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pStdPictureInfo) {
    tmp_dst2->pStdPictureInfo = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStdPictureInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pStdPictureInfo == NULL) goto err;
 
-   memcpy(( StdVideoDecodeH264PictureInfo*  )tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
+   memcpy((void*)tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
 }
 if (tmp_src2->pSliceOffsets) {
    tmp_dst2->pSliceOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pSliceOffsets) * tmp_dst2->sliceCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pSliceOffsets == NULL) goto err;
 
-   memcpy(( uint32_t*      )tmp_dst2->pSliceOffsets, tmp_src2->pSliceOffsets, sizeof(*tmp_dst2->pSliceOffsets) * tmp_dst2->sliceCount);
+   memcpy((void*)tmp_dst2->pSliceOffsets, tmp_src2->pSliceOffsets, sizeof(*tmp_dst2->pSliceOffsets) * tmp_dst2->sliceCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PICTURE_INFO_KHR:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PICTURE_INFO_KHR:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoDecodeH265PictureInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoDecodeH265PictureInfoKHR));
-   VkVideoDecodeH265PictureInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkVideoDecodeH265PictureInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pStdPictureInfo) {
+      VkVideoDecodeH265PictureInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoDecodeH265PictureInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pStdPictureInfo) {
    tmp_dst2->pStdPictureInfo = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStdPictureInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pStdPictureInfo == NULL) goto err;
 
-   memcpy(( StdVideoDecodeH265PictureInfo*       )tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
+   memcpy((void*)tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
 }
 if (tmp_src2->pSliceSegmentOffsets) {
    tmp_dst2->pSliceSegmentOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pSliceSegmentOffsets) * tmp_dst2->sliceSegmentCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pSliceSegmentOffsets == NULL) goto err;
 
-   memcpy(( uint32_t*    )tmp_dst2->pSliceSegmentOffsets, tmp_src2->pSliceSegmentOffsets, sizeof(*tmp_dst2->pSliceSegmentOffsets) * tmp_dst2->sliceSegmentCount);
+   memcpy((void*)tmp_dst2->pSliceSegmentOffsets, tmp_src2->pSliceSegmentOffsets, sizeof(*tmp_dst2->pSliceSegmentOffsets) * tmp_dst2->sliceSegmentCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_PICTURE_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoDecodeAV1PictureInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoDecodeAV1PictureInfoKHR));
+      VkVideoDecodeAV1PictureInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoDecodeAV1PictureInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pStdPictureInfo) {
+   tmp_dst2->pStdPictureInfo = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStdPictureInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pStdPictureInfo == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
+}
+if (tmp_src2->pTileOffsets) {
+   tmp_dst2->pTileOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pTileOffsets) * tmp_dst2->tileCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pTileOffsets == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pTileOffsets, tmp_src2->pTileOffsets, sizeof(*tmp_dst2->pTileOffsets) * tmp_dst2->tileCount);
+}
+if (tmp_src2->pTileSizes) {
+   tmp_dst2->pTileSizes = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pTileSizes) * tmp_dst2->tileCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pTileSizes == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pTileSizes, tmp_src2->pTileSizes, sizeof(*tmp_dst2->pTileSizes) * tmp_dst2->tileCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
          break;
 
       
@@ -7769,14 +8099,15 @@ if (tmp_src2->pSliceSegmentOffsets) {
    tmp_dst1->pSetupReferenceSlot = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pSetupReferenceSlot), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pSetupReferenceSlot == NULL) goto err;
 
-   memcpy(( VkVideoReferenceSlotInfoKHR* )tmp_dst1->pSetupReferenceSlot, tmp_src1->pSetupReferenceSlot, sizeof(*tmp_dst1->pSetupReferenceSlot));
+   memcpy((void*)tmp_dst1->pSetupReferenceSlot, tmp_src1->pSetupReferenceSlot, sizeof(*tmp_dst1->pSetupReferenceSlot));
 }
 if (tmp_src1->pReferenceSlots) {
    tmp_dst1->pReferenceSlots = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pReferenceSlots == NULL) goto err;
 
-   memcpy(( VkVideoReferenceSlotInfoKHR* )tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
+   memcpy((void*)tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
 }
+
    } else {
       cmd->u.decode_video_khr.decode_info = NULL;
    }   
@@ -7819,14 +8150,140 @@ VkResult vk_enqueue_cmd_begin_video_coding_khr(struct vk_cmd_queue *queue
       if (cmd->u.begin_video_coding_khr.begin_info == NULL) goto err;
 
       memcpy((void*)cmd->u.begin_video_coding_khr.begin_info, pBeginInfo, sizeof(VkVideoBeginCodingInfoKHR));
-   VkVideoBeginCodingInfoKHR *tmp_dst1 = (void *) cmd->u.begin_video_coding_khr.begin_info; (void) tmp_dst1;
-   VkVideoBeginCodingInfoKHR *tmp_src1 = (void *) pBeginInfo; (void) tmp_src1;   
-   if (tmp_src1->pReferenceSlots) {
+      VkVideoBeginCodingInfoKHR *tmp_dst1 = (void *) cmd->u.begin_video_coding_khr.begin_info; (void) tmp_dst1;
+      VkVideoBeginCodingInfoKHR *tmp_src1 = (void *) pBeginInfo; (void) tmp_src1;
+      
+      const VkBaseInStructure *pnext = tmp_dst1->pNext;
+      if (pnext) {
+         switch ((int32_t)pnext->sType) {
+         
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_RATE_CONTROL_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeRateControlInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeRateControlInfoKHR));
+      VkVideoEncodeRateControlInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeRateControlInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pLayers) {
+   tmp_dst2->pLayers = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pLayers) * tmp_dst2->layerCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pLayers == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pLayers, tmp_src2->pLayers, sizeof(*tmp_dst2->pLayers) * tmp_dst2->layerCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH264RateControlInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH264RateControlInfoKHR));
+      VkVideoEncodeH264RateControlInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeH264RateControlInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_GOP_REMAINING_FRAME_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH264GopRemainingFrameInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH264GopRemainingFrameInfoKHR));
+      VkVideoEncodeH264GopRemainingFrameInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeH264GopRemainingFrameInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_RATE_CONTROL_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH265RateControlInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH265RateControlInfoKHR));
+      VkVideoEncodeH265RateControlInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeH265RateControlInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_GOP_REMAINING_FRAME_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH265GopRemainingFrameInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH265GopRemainingFrameInfoKHR));
+      VkVideoEncodeH265GopRemainingFrameInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeH265GopRemainingFrameInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_AV1_RATE_CONTROL_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeAV1RateControlInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeAV1RateControlInfoKHR));
+      VkVideoEncodeAV1RateControlInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeAV1RateControlInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_AV1_GOP_REMAINING_FRAME_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeAV1GopRemainingFrameInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeAV1GopRemainingFrameInfoKHR));
+      VkVideoEncodeAV1GopRemainingFrameInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeAV1GopRemainingFrameInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+         }
+      }
+      if (tmp_src1->pReferenceSlots) {
    tmp_dst1->pReferenceSlots = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pReferenceSlots == NULL) goto err;
 
-   memcpy(( VkVideoReferenceSlotInfoKHR* )tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
+   memcpy((void*)tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
 }
+
    } else {
       cmd->u.begin_video_coding_khr.begin_info = NULL;
    }   
@@ -7868,9 +8325,103 @@ VkResult vk_enqueue_cmd_control_video_coding_khr(struct vk_cmd_queue *queue
       if (cmd->u.control_video_coding_khr.coding_control_info == NULL) goto err;
 
       memcpy((void*)cmd->u.control_video_coding_khr.coding_control_info, pCodingControlInfo, sizeof(VkVideoCodingControlInfoKHR));
-   VkVideoCodingControlInfoKHR *tmp_dst1 = (void *) cmd->u.control_video_coding_khr.coding_control_info; (void) tmp_dst1;
-   VkVideoCodingControlInfoKHR *tmp_src1 = (void *) pCodingControlInfo; (void) tmp_src1;   
+      VkVideoCodingControlInfoKHR *tmp_dst1 = (void *) cmd->u.control_video_coding_khr.coding_control_info; (void) tmp_dst1;
+      VkVideoCodingControlInfoKHR *tmp_src1 = (void *) pCodingControlInfo; (void) tmp_src1;
+      
+      const VkBaseInStructure *pnext = tmp_dst1->pNext;
+      if (pnext) {
+         switch ((int32_t)pnext->sType) {
+         
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_QUALITY_LEVEL_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeQualityLevelInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeQualityLevelInfoKHR));
+      VkVideoEncodeQualityLevelInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeQualityLevelInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
       } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_RATE_CONTROL_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeRateControlInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeRateControlInfoKHR));
+      VkVideoEncodeRateControlInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeRateControlInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pLayers) {
+   tmp_dst2->pLayers = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pLayers) * tmp_dst2->layerCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pLayers == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pLayers, tmp_src2->pLayers, sizeof(*tmp_dst2->pLayers) * tmp_dst2->layerCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH264RateControlInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH264RateControlInfoKHR));
+      VkVideoEncodeH264RateControlInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeH264RateControlInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_RATE_CONTROL_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH265RateControlInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH265RateControlInfoKHR));
+      VkVideoEncodeH265RateControlInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeH265RateControlInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_AV1_RATE_CONTROL_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeAV1RateControlInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeAV1RateControlInfoKHR));
+      VkVideoEncodeAV1RateControlInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeAV1RateControlInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+         }
+      }
+      
+   } else {
       cmd->u.control_video_coding_khr.coding_control_info = NULL;
    }   
 
@@ -7911,9 +8462,10 @@ VkResult vk_enqueue_cmd_end_video_coding_khr(struct vk_cmd_queue *queue
       if (cmd->u.end_video_coding_khr.end_coding_info == NULL) goto err;
 
       memcpy((void*)cmd->u.end_video_coding_khr.end_coding_info, pEndCodingInfo, sizeof(VkVideoEndCodingInfoKHR));
-   VkVideoEndCodingInfoKHR *tmp_dst1 = (void *) cmd->u.end_video_coding_khr.end_coding_info; (void) tmp_dst1;
-   VkVideoEndCodingInfoKHR *tmp_src1 = (void *) pEndCodingInfo; (void) tmp_src1;   
-      } else {
+      VkVideoEndCodingInfoKHR *tmp_dst1 = (void *) cmd->u.end_video_coding_khr.end_coding_info; (void) tmp_dst1;
+      VkVideoEndCodingInfoKHR *tmp_src1 = (void *) pEndCodingInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.end_video_coding_khr.end_coding_info = NULL;
    }   
 
@@ -7923,6 +8475,181 @@ VkResult vk_enqueue_cmd_end_video_coding_khr(struct vk_cmd_queue *queue
 err:
    if (cmd)
       vk_free_cmd_end_video_coding_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_encode_video_khr(struct vk_cmd_queue *queue,
+                             struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkVideoReferenceSlotInfoKHR* )cmd->u.encode_video_khr.encode_info->pSetupReferenceSlot);
+vk_free(queue->alloc, ( VkVideoReferenceSlotInfoKHR* )cmd->u.encode_video_khr.encode_info->pReferenceSlots);
+      vk_free(queue->alloc, ( VkVideoEncodeInfoKHR* )cmd->u.encode_video_khr.encode_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_encode_video_khr(struct vk_cmd_queue *queue
+, const VkVideoEncodeInfoKHR* pEncodeInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_ENCODE_VIDEO_KHR], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_ENCODE_VIDEO_KHR;
+      
+   if (pEncodeInfo) {
+      cmd->u.encode_video_khr.encode_info = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.encode_video_khr.encode_info == NULL) goto err;
+
+      memcpy((void*)cmd->u.encode_video_khr.encode_info, pEncodeInfo, sizeof(VkVideoEncodeInfoKHR));
+      VkVideoEncodeInfoKHR *tmp_dst1 = (void *) cmd->u.encode_video_khr.encode_info; (void) tmp_dst1;
+      VkVideoEncodeInfoKHR *tmp_src1 = (void *) pEncodeInfo; (void) tmp_src1;
+      
+      const VkBaseInStructure *pnext = tmp_dst1->pNext;
+      if (pnext) {
+         switch ((int32_t)pnext->sType) {
+         
+
+         case VK_STRUCTURE_TYPE_VIDEO_INLINE_QUERY_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoInlineQueryInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoInlineQueryInfoKHR));
+      VkVideoInlineQueryInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoInlineQueryInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_QUANTIZATION_MAP_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeQuantizationMapInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeQuantizationMapInfoKHR));
+      VkVideoEncodeQuantizationMapInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeQuantizationMapInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PICTURE_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH264PictureInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH264PictureInfoKHR));
+      VkVideoEncodeH264PictureInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeH264PictureInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pNaluSliceEntries) {
+   tmp_dst2->pNaluSliceEntries = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pNaluSliceEntries) * tmp_dst2->naluSliceEntryCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pNaluSliceEntries == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pNaluSliceEntries, tmp_src2->pNaluSliceEntries, sizeof(*tmp_dst2->pNaluSliceEntries) * tmp_dst2->naluSliceEntryCount);
+}
+if (tmp_src2->pStdPictureInfo) {
+   tmp_dst2->pStdPictureInfo = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStdPictureInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pStdPictureInfo == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PICTURE_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH265PictureInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH265PictureInfoKHR));
+      VkVideoEncodeH265PictureInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeH265PictureInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pNaluSliceSegmentEntries) {
+   tmp_dst2->pNaluSliceSegmentEntries = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pNaluSliceSegmentEntries) * tmp_dst2->naluSliceSegmentEntryCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pNaluSliceSegmentEntries == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pNaluSliceSegmentEntries, tmp_src2->pNaluSliceSegmentEntries, sizeof(*tmp_dst2->pNaluSliceSegmentEntries) * tmp_dst2->naluSliceSegmentEntryCount);
+}
+if (tmp_src2->pStdPictureInfo) {
+   tmp_dst2->pStdPictureInfo = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStdPictureInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pStdPictureInfo == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_AV1_PICTURE_INFO_KHR:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeAV1PictureInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeAV1PictureInfoKHR));
+      VkVideoEncodeAV1PictureInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkVideoEncodeAV1PictureInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pStdPictureInfo) {
+   tmp_dst2->pStdPictureInfo = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStdPictureInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pStdPictureInfo == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+         }
+      }
+      if (tmp_src1->pSetupReferenceSlot) {
+   tmp_dst1->pSetupReferenceSlot = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pSetupReferenceSlot), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pSetupReferenceSlot == NULL) goto err;
+
+   memcpy((void*)tmp_dst1->pSetupReferenceSlot, tmp_src1->pSetupReferenceSlot, sizeof(*tmp_dst1->pSetupReferenceSlot));
+}
+if (tmp_src1->pReferenceSlots) {
+   tmp_dst1->pReferenceSlots = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pReferenceSlots == NULL) goto err;
+
+   memcpy((void*)tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
+}
+
+   } else {
+      cmd->u.encode_video_khr.encode_info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_encode_video_khr(queue, cmd);
    return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
@@ -7954,7 +8681,7 @@ VkResult vk_enqueue_cmd_decompress_memory_nv(struct vk_cmd_queue *queue
       cmd->u.decompress_memory_nv.decompress_memory_regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.decompress_memory_nv.decompress_memory_regions) * (decompressRegionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.decompress_memory_nv.decompress_memory_regions == NULL) goto err;
 
-   memcpy(( VkDecompressMemoryRegionNV* )cmd->u.decompress_memory_nv.decompress_memory_regions, pDecompressMemoryRegions, sizeof(*cmd->u.decompress_memory_nv.decompress_memory_regions) * (decompressRegionCount));
+   memcpy((void*)cmd->u.decompress_memory_nv.decompress_memory_regions, pDecompressMemoryRegions, sizeof(*cmd->u.decompress_memory_nv.decompress_memory_regions) * (decompressRegionCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -8028,20 +8755,21 @@ VkResult vk_enqueue_cmd_cu_launch_kernel_nvx(struct vk_cmd_queue *queue
       if (cmd->u.cu_launch_kernel_nvx.launch_info == NULL) goto err;
 
       memcpy((void*)cmd->u.cu_launch_kernel_nvx.launch_info, pLaunchInfo, sizeof(VkCuLaunchInfoNVX));
-   VkCuLaunchInfoNVX *tmp_dst1 = (void *) cmd->u.cu_launch_kernel_nvx.launch_info; (void) tmp_dst1;
-   VkCuLaunchInfoNVX *tmp_src1 = (void *) pLaunchInfo; (void) tmp_src1;   
-   if (tmp_src1->pParams) {
+      VkCuLaunchInfoNVX *tmp_dst1 = (void *) cmd->u.cu_launch_kernel_nvx.launch_info; (void) tmp_dst1;
+      VkCuLaunchInfoNVX *tmp_src1 = (void *) pLaunchInfo; (void) tmp_src1;
+      if (tmp_src1->pParams) {
    tmp_dst1->pParams = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pParams) * tmp_dst1->paramCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pParams == NULL) goto err;
 
-   memcpy(( void*  *    )tmp_dst1->pParams, tmp_src1->pParams, sizeof(*tmp_dst1->pParams) * tmp_dst1->paramCount);
+   memcpy((void*)tmp_dst1->pParams, tmp_src1->pParams, sizeof(*tmp_dst1->pParams) * tmp_dst1->paramCount);
 }
 if (tmp_src1->pExtras) {
    tmp_dst1->pExtras = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pExtras) * tmp_dst1->extraCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pExtras == NULL) goto err;
 
-   memcpy(( void*  *    )tmp_dst1->pExtras, tmp_src1->pExtras, sizeof(*tmp_dst1->pExtras) * tmp_dst1->extraCount);
+   memcpy((void*)tmp_dst1->pExtras, tmp_src1->pExtras, sizeof(*tmp_dst1->pExtras) * tmp_dst1->extraCount);
 }
+
    } else {
       cmd->u.cu_launch_kernel_nvx.launch_info = NULL;
    }   
@@ -8083,7 +8811,7 @@ VkResult vk_enqueue_cmd_bind_descriptor_buffers_ext(struct vk_cmd_queue *queue
       cmd->u.bind_descriptor_buffers_ext.binding_infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_descriptor_buffers_ext.binding_infos) * (bufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_descriptor_buffers_ext.binding_infos == NULL) goto err;
 
-   memcpy(( VkDescriptorBufferBindingInfoEXT* )cmd->u.bind_descriptor_buffers_ext.binding_infos, pBindingInfos, sizeof(*cmd->u.bind_descriptor_buffers_ext.binding_infos) * (bufferCount));
+   memcpy((void*)cmd->u.bind_descriptor_buffers_ext.binding_infos, pBindingInfos, sizeof(*cmd->u.bind_descriptor_buffers_ext.binding_infos) * (bufferCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -8131,13 +8859,13 @@ VkResult vk_enqueue_cmd_set_descriptor_buffer_offsets_ext(struct vk_cmd_queue *q
       cmd->u.set_descriptor_buffer_offsets_ext.buffer_indices = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_descriptor_buffer_offsets_ext.buffer_indices) * (setCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_descriptor_buffer_offsets_ext.buffer_indices == NULL) goto err;
 
-   memcpy(( uint32_t* )cmd->u.set_descriptor_buffer_offsets_ext.buffer_indices, pBufferIndices, sizeof(*cmd->u.set_descriptor_buffer_offsets_ext.buffer_indices) * (setCount));
+   memcpy((void*)cmd->u.set_descriptor_buffer_offsets_ext.buffer_indices, pBufferIndices, sizeof(*cmd->u.set_descriptor_buffer_offsets_ext.buffer_indices) * (setCount));
    }   
    if (pOffsets) {
       cmd->u.set_descriptor_buffer_offsets_ext.offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_descriptor_buffer_offsets_ext.offsets) * (setCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_descriptor_buffer_offsets_ext.offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.set_descriptor_buffer_offsets_ext.offsets, pOffsets, sizeof(*cmd->u.set_descriptor_buffer_offsets_ext.offsets) * (setCount));
+   memcpy((void*)cmd->u.set_descriptor_buffer_offsets_ext.offsets, pOffsets, sizeof(*cmd->u.set_descriptor_buffer_offsets_ext.offsets) * (setCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -8212,112 +8940,140 @@ VkResult vk_enqueue_cmd_begin_rendering(struct vk_cmd_queue *queue
       if (cmd->u.begin_rendering.rendering_info == NULL) goto err;
 
       memcpy((void*)cmd->u.begin_rendering.rendering_info, pRenderingInfo, sizeof(VkRenderingInfo));
-   VkRenderingInfo *tmp_dst1 = (void *) cmd->u.begin_rendering.rendering_info; (void) tmp_dst1;
-   VkRenderingInfo *tmp_src1 = (void *) pRenderingInfo; (void) tmp_src1;   
-   
+      VkRenderingInfo *tmp_dst1 = (void *) cmd->u.begin_rendering.rendering_info; (void) tmp_dst1;
+      VkRenderingInfo *tmp_src1 = (void *) pRenderingInfo; (void) tmp_src1;
+      
       const VkBaseInStructure *pnext = tmp_dst1->pNext;
       if (pnext) {
          switch ((int32_t)pnext->sType) {
          
 
-      case VK_STRUCTURE_TYPE_DEVICE_GROUP_RENDER_PASS_BEGIN_INFO:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_DEVICE_GROUP_RENDER_PASS_BEGIN_INFO:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkDeviceGroupRenderPassBeginInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkDeviceGroupRenderPassBeginInfo));
-   VkDeviceGroupRenderPassBeginInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkDeviceGroupRenderPassBeginInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pDeviceRenderAreas) {
+      VkDeviceGroupRenderPassBeginInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkDeviceGroupRenderPassBeginInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pDeviceRenderAreas) {
    tmp_dst2->pDeviceRenderAreas = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pDeviceRenderAreas) * tmp_dst2->deviceRenderAreaCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pDeviceRenderAreas == NULL) goto err;
 
-   memcpy(( VkRect2D*  )tmp_dst2->pDeviceRenderAreas, tmp_src2->pDeviceRenderAreas, sizeof(*tmp_dst2->pDeviceRenderAreas) * tmp_dst2->deviceRenderAreaCount);
+   memcpy((void*)tmp_dst2->pDeviceRenderAreas, tmp_src2->pDeviceRenderAreas, sizeof(*tmp_dst2->pDeviceRenderAreas) * tmp_dst2->deviceRenderAreaCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_INFO_EXT:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_INFO_EXT:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkMultisampledRenderToSingleSampledInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkMultisampledRenderToSingleSampledInfoEXT));
-   VkMultisampledRenderToSingleSampledInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkMultisampledRenderToSingleSampledInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      VkMultisampledRenderToSingleSampledInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkMultisampledRenderToSingleSampledInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
       } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_RENDERING_FRAGMENT_SHADING_RATE_ATTACHMENT_INFO_KHR:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_RENDERING_FRAGMENT_SHADING_RATE_ATTACHMENT_INFO_KHR:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderingFragmentShadingRateAttachmentInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderingFragmentShadingRateAttachmentInfoKHR));
-   VkRenderingFragmentShadingRateAttachmentInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkRenderingFragmentShadingRateAttachmentInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      VkRenderingFragmentShadingRateAttachmentInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderingFragmentShadingRateAttachmentInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
       } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_RENDERING_FRAGMENT_DENSITY_MAP_ATTACHMENT_INFO_EXT:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_RENDERING_FRAGMENT_DENSITY_MAP_ATTACHMENT_INFO_EXT:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderingFragmentDensityMapAttachmentInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderingFragmentDensityMapAttachmentInfoEXT));
-   VkRenderingFragmentDensityMapAttachmentInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkRenderingFragmentDensityMapAttachmentInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      VkRenderingFragmentDensityMapAttachmentInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderingFragmentDensityMapAttachmentInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
       } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_MULTIVIEW_PER_VIEW_ATTRIBUTES_INFO_NVX:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_MULTIVIEW_PER_VIEW_ATTRIBUTES_INFO_NVX:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkMultiviewPerViewAttributesInfoNVX), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkMultiviewPerViewAttributesInfoNVX));
-   VkMultiviewPerViewAttributesInfoNVX *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkMultiviewPerViewAttributesInfoNVX *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      VkMultiviewPerViewAttributesInfoNVX *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkMultiviewPerViewAttributesInfoNVX *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
       } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
 
-      case VK_STRUCTURE_TYPE_MULTIVIEW_PER_VIEW_RENDER_AREAS_RENDER_PASS_BEGIN_INFO_QCOM:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_MULTIVIEW_PER_VIEW_RENDER_AREAS_RENDER_PASS_BEGIN_INFO_QCOM:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM));
-   VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   if (tmp_src2->pPerViewRenderAreas) {
+      VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pPerViewRenderAreas) {
    tmp_dst2->pPerViewRenderAreas = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pPerViewRenderAreas) * tmp_dst2->perViewRenderAreaCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pPerViewRenderAreas == NULL) goto err;
 
-   memcpy(( VkRect2D*  )tmp_dst2->pPerViewRenderAreas, tmp_src2->pPerViewRenderAreas, sizeof(*tmp_dst2->pPerViewRenderAreas) * tmp_dst2->perViewRenderAreaCount);
+   memcpy((void*)tmp_dst2->pPerViewRenderAreas, tmp_src2->pPerViewRenderAreas, sizeof(*tmp_dst2->pPerViewRenderAreas) * tmp_dst2->perViewRenderAreaCount);
 }
-   } else {
+
+      } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
+         break;
+
+      
+
+         case VK_STRUCTURE_TYPE_RENDER_PASS_STRIPE_BEGIN_INFO_ARM:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkRenderPassStripeBeginInfoARM), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkRenderPassStripeBeginInfoARM));
+      VkRenderPassStripeBeginInfoARM *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkRenderPassStripeBeginInfoARM *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pStripeInfos) {
+   tmp_dst2->pStripeInfos = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStripeInfos) * tmp_dst2->stripeInfoCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pStripeInfos == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pStripeInfos, tmp_src2->pStripeInfos, sizeof(*tmp_dst2->pStripeInfos) * tmp_dst2->stripeInfoCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
          break;
 
       
@@ -8327,20 +9083,21 @@ VkResult vk_enqueue_cmd_begin_rendering(struct vk_cmd_queue *queue
    tmp_dst1->pColorAttachments = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pColorAttachments) * tmp_dst1->colorAttachmentCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pColorAttachments == NULL) goto err;
 
-   memcpy(( VkRenderingAttachmentInfo*                )tmp_dst1->pColorAttachments, tmp_src1->pColorAttachments, sizeof(*tmp_dst1->pColorAttachments) * tmp_dst1->colorAttachmentCount);
+   memcpy((void*)tmp_dst1->pColorAttachments, tmp_src1->pColorAttachments, sizeof(*tmp_dst1->pColorAttachments) * tmp_dst1->colorAttachmentCount);
 }
 if (tmp_src1->pDepthAttachment) {
    tmp_dst1->pDepthAttachment = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pDepthAttachment), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pDepthAttachment == NULL) goto err;
 
-   memcpy(( VkRenderingAttachmentInfo*                           )tmp_dst1->pDepthAttachment, tmp_src1->pDepthAttachment, sizeof(*tmp_dst1->pDepthAttachment));
+   memcpy((void*)tmp_dst1->pDepthAttachment, tmp_src1->pDepthAttachment, sizeof(*tmp_dst1->pDepthAttachment));
 }
 if (tmp_src1->pStencilAttachment) {
    tmp_dst1->pStencilAttachment = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pStencilAttachment), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pStencilAttachment == NULL) goto err;
 
-   memcpy(( VkRenderingAttachmentInfo*                           )tmp_dst1->pStencilAttachment, tmp_src1->pStencilAttachment, sizeof(*tmp_dst1->pStencilAttachment));
+   memcpy((void*)tmp_dst1->pStencilAttachment, tmp_src1->pStencilAttachment, sizeof(*tmp_dst1->pStencilAttachment));
 }
+
    } else {
       cmd->u.begin_rendering.rendering_info = NULL;
    }   
@@ -8408,7 +9165,7 @@ VkResult vk_enqueue_cmd_build_micromaps_ext(struct vk_cmd_queue *queue
       cmd->u.build_micromaps_ext.infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_micromaps_ext.infos) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_micromaps_ext.infos == NULL) goto err;
 
-   memcpy(( VkMicromapBuildInfoEXT* )cmd->u.build_micromaps_ext.infos, pInfos, sizeof(*cmd->u.build_micromaps_ext.infos) * (infoCount));
+   memcpy((void*)cmd->u.build_micromaps_ext.infos, pInfos, sizeof(*cmd->u.build_micromaps_ext.infos) * (infoCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -8448,9 +9205,10 @@ VkResult vk_enqueue_cmd_copy_micromap_ext(struct vk_cmd_queue *queue
       if (cmd->u.copy_micromap_ext.info == NULL) goto err;
 
       memcpy((void*)cmd->u.copy_micromap_ext.info, pInfo, sizeof(VkCopyMicromapInfoEXT));
-   VkCopyMicromapInfoEXT *tmp_dst1 = (void *) cmd->u.copy_micromap_ext.info; (void) tmp_dst1;
-   VkCopyMicromapInfoEXT *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
-      } else {
+      VkCopyMicromapInfoEXT *tmp_dst1 = (void *) cmd->u.copy_micromap_ext.info; (void) tmp_dst1;
+      VkCopyMicromapInfoEXT *tmp_src1 = (void *) pInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.copy_micromap_ext.info = NULL;
    }   
 
@@ -8491,9 +9249,10 @@ VkResult vk_enqueue_cmd_copy_micromap_to_memory_ext(struct vk_cmd_queue *queue
       if (cmd->u.copy_micromap_to_memory_ext.info == NULL) goto err;
 
       memcpy((void*)cmd->u.copy_micromap_to_memory_ext.info, pInfo, sizeof(VkCopyMicromapToMemoryInfoEXT));
-   VkCopyMicromapToMemoryInfoEXT *tmp_dst1 = (void *) cmd->u.copy_micromap_to_memory_ext.info; (void) tmp_dst1;
-   VkCopyMicromapToMemoryInfoEXT *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
-      } else {
+      VkCopyMicromapToMemoryInfoEXT *tmp_dst1 = (void *) cmd->u.copy_micromap_to_memory_ext.info; (void) tmp_dst1;
+      VkCopyMicromapToMemoryInfoEXT *tmp_src1 = (void *) pInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.copy_micromap_to_memory_ext.info = NULL;
    }   
 
@@ -8534,9 +9293,10 @@ VkResult vk_enqueue_cmd_copy_memory_to_micromap_ext(struct vk_cmd_queue *queue
       if (cmd->u.copy_memory_to_micromap_ext.info == NULL) goto err;
 
       memcpy((void*)cmd->u.copy_memory_to_micromap_ext.info, pInfo, sizeof(VkCopyMemoryToMicromapInfoEXT));
-   VkCopyMemoryToMicromapInfoEXT *tmp_dst1 = (void *) cmd->u.copy_memory_to_micromap_ext.info; (void) tmp_dst1;
-   VkCopyMemoryToMicromapInfoEXT *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
-      } else {
+      VkCopyMemoryToMicromapInfoEXT *tmp_dst1 = (void *) cmd->u.copy_memory_to_micromap_ext.info; (void) tmp_dst1;
+      VkCopyMemoryToMicromapInfoEXT *tmp_src1 = (void *) pInfo; (void) tmp_src1;
+      
+   } else {
       cmd->u.copy_memory_to_micromap_ext.info = NULL;
    }   
 
@@ -8580,7 +9340,7 @@ VkResult vk_enqueue_cmd_write_micromaps_properties_ext(struct vk_cmd_queue *queu
       cmd->u.write_micromaps_properties_ext.micromaps = vk_zalloc(queue->alloc, sizeof(*cmd->u.write_micromaps_properties_ext.micromaps) * (micromapCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.write_micromaps_properties_ext.micromaps == NULL) goto err;
 
-   memcpy(( VkMicromapEXT* )cmd->u.write_micromaps_properties_ext.micromaps, pMicromaps, sizeof(*cmd->u.write_micromaps_properties_ext.micromaps) * (micromapCount));
+   memcpy((void*)cmd->u.write_micromaps_properties_ext.micromaps, pMicromaps, sizeof(*cmd->u.write_micromaps_properties_ext.micromaps) * (micromapCount));
    }   
    cmd->u.write_micromaps_properties_ext.query_type = queryType;
    cmd->u.write_micromaps_properties_ext.query_pool = queryPool;
@@ -8626,14 +9386,15 @@ VkResult vk_enqueue_cmd_optical_flow_execute_nv(struct vk_cmd_queue *queue
       if (cmd->u.optical_flow_execute_nv.execute_info == NULL) goto err;
 
       memcpy((void*)cmd->u.optical_flow_execute_nv.execute_info, pExecuteInfo, sizeof(VkOpticalFlowExecuteInfoNV));
-   VkOpticalFlowExecuteInfoNV *tmp_dst1 = (void *) cmd->u.optical_flow_execute_nv.execute_info; (void) tmp_dst1;
-   VkOpticalFlowExecuteInfoNV *tmp_src1 = (void *) pExecuteInfo; (void) tmp_src1;   
-   if (tmp_src1->pRegions) {
+      VkOpticalFlowExecuteInfoNV *tmp_dst1 = (void *) cmd->u.optical_flow_execute_nv.execute_info; (void) tmp_dst1;
+      VkOpticalFlowExecuteInfoNV *tmp_src1 = (void *) pExecuteInfo; (void) tmp_src1;
+      if (tmp_src1->pRegions) {
    tmp_dst1->pRegions = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pRegions == NULL) goto err;
 
-   memcpy(( VkRect2D*                  )tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
+   memcpy((void*)tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
 }
+
    } else {
       cmd->u.optical_flow_execute_nv.execute_info = NULL;
    }   
@@ -8675,31 +9436,33 @@ VkResult vk_enqueue_cmd_set_depth_bias2_ext(struct vk_cmd_queue *queue
       if (cmd->u.set_depth_bias2_ext.depth_bias_info == NULL) goto err;
 
       memcpy((void*)cmd->u.set_depth_bias2_ext.depth_bias_info, pDepthBiasInfo, sizeof(VkDepthBiasInfoEXT));
-   VkDepthBiasInfoEXT *tmp_dst1 = (void *) cmd->u.set_depth_bias2_ext.depth_bias_info; (void) tmp_dst1;
-   VkDepthBiasInfoEXT *tmp_src1 = (void *) pDepthBiasInfo; (void) tmp_src1;   
-   
+      VkDepthBiasInfoEXT *tmp_dst1 = (void *) cmd->u.set_depth_bias2_ext.depth_bias_info; (void) tmp_dst1;
+      VkDepthBiasInfoEXT *tmp_src1 = (void *) pDepthBiasInfo; (void) tmp_src1;
+      
       const VkBaseInStructure *pnext = tmp_dst1->pNext;
       if (pnext) {
          switch ((int32_t)pnext->sType) {
          
 
-      case VK_STRUCTURE_TYPE_DEPTH_BIAS_REPRESENTATION_INFO_EXT:
-         if (pnext) {
+         case VK_STRUCTURE_TYPE_DEPTH_BIAS_REPRESENTATION_INFO_EXT:
+            if (pnext) {
       tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkDepthBiasRepresentationInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkDepthBiasRepresentationInfoEXT));
-   VkDepthBiasRepresentationInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkDepthBiasRepresentationInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      VkDepthBiasRepresentationInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkDepthBiasRepresentationInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      
       } else {
       tmp_dst1->pNext = NULL;
-   }
+      }
          break;
 
       
          }
       }
-         } else {
+      
+   } else {
       cmd->u.set_depth_bias2_ext.depth_bias_info = NULL;
    }   
 
@@ -8742,13 +9505,13 @@ VkResult vk_enqueue_cmd_bind_shaders_ext(struct vk_cmd_queue *queue
       cmd->u.bind_shaders_ext.stages = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_shaders_ext.stages) * (stageCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_shaders_ext.stages == NULL) goto err;
 
-   memcpy(( VkShaderStageFlagBits* )cmd->u.bind_shaders_ext.stages, pStages, sizeof(*cmd->u.bind_shaders_ext.stages) * (stageCount));
+   memcpy((void*)cmd->u.bind_shaders_ext.stages, pStages, sizeof(*cmd->u.bind_shaders_ext.stages) * (stageCount));
    }   
    if (pShaders) {
       cmd->u.bind_shaders_ext.shaders = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_shaders_ext.shaders) * (stageCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_shaders_ext.shaders == NULL) goto err;
 
-   memcpy(( VkShaderEXT* )cmd->u.bind_shaders_ext.shaders, pShaders, sizeof(*cmd->u.bind_shaders_ext.shaders) * (stageCount));
+   memcpy((void*)cmd->u.bind_shaders_ext.shaders, pShaders, sizeof(*cmd->u.bind_shaders_ext.shaders) * (stageCount));
    }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
@@ -8757,6 +9520,478 @@ VkResult vk_enqueue_cmd_bind_shaders_ext(struct vk_cmd_queue *queue
 err:
    if (cmd)
       vk_free_cmd_bind_shaders_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_bind_descriptor_sets2(struct vk_cmd_queue *queue,
+                                  struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkDescriptorSet*                          )cmd->u.bind_descriptor_sets2.bind_descriptor_sets_info->pDescriptorSets);
+vk_free(queue->alloc, ( uint32_t*            )cmd->u.bind_descriptor_sets2.bind_descriptor_sets_info->pDynamicOffsets);
+      vk_free(queue->alloc, ( VkBindDescriptorSetsInfo*   )cmd->u.bind_descriptor_sets2.bind_descriptor_sets_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_bind_descriptor_sets2(struct vk_cmd_queue *queue
+, const VkBindDescriptorSetsInfo*   pBindDescriptorSetsInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_DESCRIPTOR_SETS2], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_BIND_DESCRIPTOR_SETS2;
+      
+   if (pBindDescriptorSetsInfo) {
+      cmd->u.bind_descriptor_sets2.bind_descriptor_sets_info = vk_zalloc(queue->alloc, sizeof(VkBindDescriptorSetsInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.bind_descriptor_sets2.bind_descriptor_sets_info == NULL) goto err;
+
+      memcpy((void*)cmd->u.bind_descriptor_sets2.bind_descriptor_sets_info, pBindDescriptorSetsInfo, sizeof(VkBindDescriptorSetsInfo));
+      VkBindDescriptorSetsInfo *tmp_dst1 = (void *) cmd->u.bind_descriptor_sets2.bind_descriptor_sets_info; (void) tmp_dst1;
+      VkBindDescriptorSetsInfo *tmp_src1 = (void *) pBindDescriptorSetsInfo; (void) tmp_src1;
+      
+      const VkBaseInStructure *pnext = tmp_dst1->pNext;
+      if (pnext) {
+         switch ((int32_t)pnext->sType) {
+         
+
+         case VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkPipelineLayoutCreateInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkPipelineLayoutCreateInfo));
+      VkPipelineLayoutCreateInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkPipelineLayoutCreateInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pSetLayouts) {
+   tmp_dst2->pSetLayouts = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pSetLayouts) * tmp_dst2->setLayoutCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pSetLayouts == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pSetLayouts, tmp_src2->pSetLayouts, sizeof(*tmp_dst2->pSetLayouts) * tmp_dst2->setLayoutCount);
+}
+if (tmp_src2->pPushConstantRanges) {
+   tmp_dst2->pPushConstantRanges = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pPushConstantRanges) * tmp_dst2->pushConstantRangeCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pPushConstantRanges == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pPushConstantRanges, tmp_src2->pPushConstantRanges, sizeof(*tmp_dst2->pPushConstantRanges) * tmp_dst2->pushConstantRangeCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+         }
+      }
+      if (tmp_src1->pDescriptorSets) {
+   tmp_dst1->pDescriptorSets = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pDescriptorSets) * tmp_dst1->descriptorSetCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pDescriptorSets == NULL) goto err;
+
+   memcpy((void*)tmp_dst1->pDescriptorSets, tmp_src1->pDescriptorSets, sizeof(*tmp_dst1->pDescriptorSets) * tmp_dst1->descriptorSetCount);
+}
+if (tmp_src1->pDynamicOffsets) {
+   tmp_dst1->pDynamicOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pDynamicOffsets) * tmp_dst1->dynamicOffsetCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pDynamicOffsets == NULL) goto err;
+
+   memcpy((void*)tmp_dst1->pDynamicOffsets, tmp_src1->pDynamicOffsets, sizeof(*tmp_dst1->pDynamicOffsets) * tmp_dst1->dynamicOffsetCount);
+}
+
+   } else {
+      cmd->u.bind_descriptor_sets2.bind_descriptor_sets_info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_bind_descriptor_sets2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_push_constants2(struct vk_cmd_queue *queue,
+                            struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( void*                                                      )cmd->u.push_constants2.push_constants_info->pValues);
+      vk_free(queue->alloc, ( VkPushConstantsInfo*        )cmd->u.push_constants2.push_constants_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+
+static void
+vk_free_cmd_push_descriptor_set2(struct vk_cmd_queue *queue,
+                                 struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkWriteDescriptorSet*                  )cmd->u.push_descriptor_set2.push_descriptor_set_info->pDescriptorWrites);
+      vk_free(queue->alloc, ( VkPushDescriptorSetInfo*    )cmd->u.push_descriptor_set2.push_descriptor_set_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+
+static void
+vk_free_cmd_push_descriptor_set_with_template2(struct vk_cmd_queue *queue,
+                                               struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( void*                                                                           )cmd->u.push_descriptor_set_with_template2.push_descriptor_set_with_template_info->pData);
+      vk_free(queue->alloc, ( VkPushDescriptorSetWithTemplateInfo* )cmd->u.push_descriptor_set_with_template2.push_descriptor_set_with_template_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+
+static void
+vk_free_cmd_set_descriptor_buffer_offsets2_ext(struct vk_cmd_queue *queue,
+                                               struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( uint32_t*                                                    )cmd->u.set_descriptor_buffer_offsets2_ext.set_descriptor_buffer_offsets_info->pBufferIndices);
+vk_free(queue->alloc, ( VkDeviceSize*                                                )cmd->u.set_descriptor_buffer_offsets2_ext.set_descriptor_buffer_offsets_info->pOffsets);
+      vk_free(queue->alloc, ( VkSetDescriptorBufferOffsetsInfoEXT* )cmd->u.set_descriptor_buffer_offsets2_ext.set_descriptor_buffer_offsets_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_descriptor_buffer_offsets2_ext(struct vk_cmd_queue *queue
+, const VkSetDescriptorBufferOffsetsInfoEXT* pSetDescriptorBufferOffsetsInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DESCRIPTOR_BUFFER_OFFSETS2_EXT], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_DESCRIPTOR_BUFFER_OFFSETS2_EXT;
+      
+   if (pSetDescriptorBufferOffsetsInfo) {
+      cmd->u.set_descriptor_buffer_offsets2_ext.set_descriptor_buffer_offsets_info = vk_zalloc(queue->alloc, sizeof(VkSetDescriptorBufferOffsetsInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.set_descriptor_buffer_offsets2_ext.set_descriptor_buffer_offsets_info == NULL) goto err;
+
+      memcpy((void*)cmd->u.set_descriptor_buffer_offsets2_ext.set_descriptor_buffer_offsets_info, pSetDescriptorBufferOffsetsInfo, sizeof(VkSetDescriptorBufferOffsetsInfoEXT));
+      VkSetDescriptorBufferOffsetsInfoEXT *tmp_dst1 = (void *) cmd->u.set_descriptor_buffer_offsets2_ext.set_descriptor_buffer_offsets_info; (void) tmp_dst1;
+      VkSetDescriptorBufferOffsetsInfoEXT *tmp_src1 = (void *) pSetDescriptorBufferOffsetsInfo; (void) tmp_src1;
+      
+      const VkBaseInStructure *pnext = tmp_dst1->pNext;
+      if (pnext) {
+         switch ((int32_t)pnext->sType) {
+         
+
+         case VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkPipelineLayoutCreateInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkPipelineLayoutCreateInfo));
+      VkPipelineLayoutCreateInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkPipelineLayoutCreateInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pSetLayouts) {
+   tmp_dst2->pSetLayouts = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pSetLayouts) * tmp_dst2->setLayoutCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pSetLayouts == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pSetLayouts, tmp_src2->pSetLayouts, sizeof(*tmp_dst2->pSetLayouts) * tmp_dst2->setLayoutCount);
+}
+if (tmp_src2->pPushConstantRanges) {
+   tmp_dst2->pPushConstantRanges = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pPushConstantRanges) * tmp_dst2->pushConstantRangeCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pPushConstantRanges == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pPushConstantRanges, tmp_src2->pPushConstantRanges, sizeof(*tmp_dst2->pPushConstantRanges) * tmp_dst2->pushConstantRangeCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+         }
+      }
+      if (tmp_src1->pBufferIndices) {
+   tmp_dst1->pBufferIndices = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pBufferIndices) * tmp_dst1->setCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pBufferIndices == NULL) goto err;
+
+   memcpy((void*)tmp_dst1->pBufferIndices, tmp_src1->pBufferIndices, sizeof(*tmp_dst1->pBufferIndices) * tmp_dst1->setCount);
+}
+if (tmp_src1->pOffsets) {
+   tmp_dst1->pOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pOffsets) * tmp_dst1->setCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pOffsets == NULL) goto err;
+
+   memcpy((void*)tmp_dst1->pOffsets, tmp_src1->pOffsets, sizeof(*tmp_dst1->pOffsets) * tmp_dst1->setCount);
+}
+
+   } else {
+      cmd->u.set_descriptor_buffer_offsets2_ext.set_descriptor_buffer_offsets_info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_descriptor_buffer_offsets2_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_bind_descriptor_buffer_embedded_samplers2_ext(struct vk_cmd_queue *queue,
+                                                          struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+         vk_free(queue->alloc, ( VkBindDescriptorBufferEmbeddedSamplersInfoEXT* )cmd->u.bind_descriptor_buffer_embedded_samplers2_ext.bind_descriptor_buffer_embedded_samplers_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_bind_descriptor_buffer_embedded_samplers2_ext(struct vk_cmd_queue *queue
+, const VkBindDescriptorBufferEmbeddedSamplersInfoEXT* pBindDescriptorBufferEmbeddedSamplersInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_BIND_DESCRIPTOR_BUFFER_EMBEDDED_SAMPLERS2_EXT], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_BIND_DESCRIPTOR_BUFFER_EMBEDDED_SAMPLERS2_EXT;
+      
+   if (pBindDescriptorBufferEmbeddedSamplersInfo) {
+      cmd->u.bind_descriptor_buffer_embedded_samplers2_ext.bind_descriptor_buffer_embedded_samplers_info = vk_zalloc(queue->alloc, sizeof(VkBindDescriptorBufferEmbeddedSamplersInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.bind_descriptor_buffer_embedded_samplers2_ext.bind_descriptor_buffer_embedded_samplers_info == NULL) goto err;
+
+      memcpy((void*)cmd->u.bind_descriptor_buffer_embedded_samplers2_ext.bind_descriptor_buffer_embedded_samplers_info, pBindDescriptorBufferEmbeddedSamplersInfo, sizeof(VkBindDescriptorBufferEmbeddedSamplersInfoEXT));
+      VkBindDescriptorBufferEmbeddedSamplersInfoEXT *tmp_dst1 = (void *) cmd->u.bind_descriptor_buffer_embedded_samplers2_ext.bind_descriptor_buffer_embedded_samplers_info; (void) tmp_dst1;
+      VkBindDescriptorBufferEmbeddedSamplersInfoEXT *tmp_src1 = (void *) pBindDescriptorBufferEmbeddedSamplersInfo; (void) tmp_src1;
+      
+      const VkBaseInStructure *pnext = tmp_dst1->pNext;
+      if (pnext) {
+         switch ((int32_t)pnext->sType) {
+         
+
+         case VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO:
+            if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkPipelineLayoutCreateInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkPipelineLayoutCreateInfo));
+      VkPipelineLayoutCreateInfo *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+      VkPipelineLayoutCreateInfo *tmp_src2 = (void *) pnext; (void) tmp_src2;
+      if (tmp_src2->pSetLayouts) {
+   tmp_dst2->pSetLayouts = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pSetLayouts) * tmp_dst2->setLayoutCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pSetLayouts == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pSetLayouts, tmp_src2->pSetLayouts, sizeof(*tmp_dst2->pSetLayouts) * tmp_dst2->setLayoutCount);
+}
+if (tmp_src2->pPushConstantRanges) {
+   tmp_dst2->pPushConstantRanges = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pPushConstantRanges) * tmp_dst2->pushConstantRangeCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pPushConstantRanges == NULL) goto err;
+
+   memcpy((void*)tmp_dst2->pPushConstantRanges, tmp_src2->pPushConstantRanges, sizeof(*tmp_dst2->pPushConstantRanges) * tmp_dst2->pushConstantRangeCount);
+}
+
+      } else {
+      tmp_dst1->pNext = NULL;
+      }
+         break;
+
+      
+         }
+      }
+      
+   } else {
+      cmd->u.bind_descriptor_buffer_embedded_samplers2_ext.bind_descriptor_buffer_embedded_samplers_info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_bind_descriptor_buffer_embedded_samplers2_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_set_rendering_attachment_locations(struct vk_cmd_queue *queue,
+                                               struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( uint32_t*           )cmd->u.set_rendering_attachment_locations.location_info->pColorAttachmentLocations);
+      vk_free(queue->alloc, ( VkRenderingAttachmentLocationInfo* )cmd->u.set_rendering_attachment_locations.location_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_rendering_attachment_locations(struct vk_cmd_queue *queue
+, const VkRenderingAttachmentLocationInfo* pLocationInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_RENDERING_ATTACHMENT_LOCATIONS], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_RENDERING_ATTACHMENT_LOCATIONS;
+      
+   if (pLocationInfo) {
+      cmd->u.set_rendering_attachment_locations.location_info = vk_zalloc(queue->alloc, sizeof(VkRenderingAttachmentLocationInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.set_rendering_attachment_locations.location_info == NULL) goto err;
+
+      memcpy((void*)cmd->u.set_rendering_attachment_locations.location_info, pLocationInfo, sizeof(VkRenderingAttachmentLocationInfo));
+      VkRenderingAttachmentLocationInfo *tmp_dst1 = (void *) cmd->u.set_rendering_attachment_locations.location_info; (void) tmp_dst1;
+      VkRenderingAttachmentLocationInfo *tmp_src1 = (void *) pLocationInfo; (void) tmp_src1;
+      if (tmp_src1->pColorAttachmentLocations) {
+   tmp_dst1->pColorAttachmentLocations = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pColorAttachmentLocations) * tmp_dst1->colorAttachmentCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pColorAttachmentLocations == NULL) goto err;
+
+   memcpy((void*)tmp_dst1->pColorAttachmentLocations, tmp_src1->pColorAttachmentLocations, sizeof(*tmp_dst1->pColorAttachmentLocations) * tmp_dst1->colorAttachmentCount);
+}
+
+   } else {
+      cmd->u.set_rendering_attachment_locations.location_info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_rendering_attachment_locations(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_set_rendering_input_attachment_indices(struct vk_cmd_queue *queue,
+                                                   struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( uint32_t*                 )cmd->u.set_rendering_input_attachment_indices.input_attachment_index_info->pColorAttachmentInputIndices);
+vk_free(queue->alloc, ( uint32_t*                                            )cmd->u.set_rendering_input_attachment_indices.input_attachment_index_info->pDepthInputAttachmentIndex);
+vk_free(queue->alloc, ( uint32_t*                                            )cmd->u.set_rendering_input_attachment_indices.input_attachment_index_info->pStencilInputAttachmentIndex);
+      vk_free(queue->alloc, ( VkRenderingInputAttachmentIndexInfo* )cmd->u.set_rendering_input_attachment_indices.input_attachment_index_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_rendering_input_attachment_indices(struct vk_cmd_queue *queue
+, const VkRenderingInputAttachmentIndexInfo* pInputAttachmentIndexInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_RENDERING_INPUT_ATTACHMENT_INDICES], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_RENDERING_INPUT_ATTACHMENT_INDICES;
+      
+   if (pInputAttachmentIndexInfo) {
+      cmd->u.set_rendering_input_attachment_indices.input_attachment_index_info = vk_zalloc(queue->alloc, sizeof(VkRenderingInputAttachmentIndexInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.set_rendering_input_attachment_indices.input_attachment_index_info == NULL) goto err;
+
+      memcpy((void*)cmd->u.set_rendering_input_attachment_indices.input_attachment_index_info, pInputAttachmentIndexInfo, sizeof(VkRenderingInputAttachmentIndexInfo));
+      VkRenderingInputAttachmentIndexInfo *tmp_dst1 = (void *) cmd->u.set_rendering_input_attachment_indices.input_attachment_index_info; (void) tmp_dst1;
+      VkRenderingInputAttachmentIndexInfo *tmp_src1 = (void *) pInputAttachmentIndexInfo; (void) tmp_src1;
+      if (tmp_src1->pColorAttachmentInputIndices) {
+   tmp_dst1->pColorAttachmentInputIndices = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pColorAttachmentInputIndices) * tmp_dst1->colorAttachmentCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pColorAttachmentInputIndices == NULL) goto err;
+
+   memcpy((void*)tmp_dst1->pColorAttachmentInputIndices, tmp_src1->pColorAttachmentInputIndices, sizeof(*tmp_dst1->pColorAttachmentInputIndices) * tmp_dst1->colorAttachmentCount);
+}
+if (tmp_src1->pDepthInputAttachmentIndex) {
+   tmp_dst1->pDepthInputAttachmentIndex = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pDepthInputAttachmentIndex), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pDepthInputAttachmentIndex == NULL) goto err;
+
+   memcpy((void*)tmp_dst1->pDepthInputAttachmentIndex, tmp_src1->pDepthInputAttachmentIndex, sizeof(*tmp_dst1->pDepthInputAttachmentIndex));
+}
+if (tmp_src1->pStencilInputAttachmentIndex) {
+   tmp_dst1->pStencilInputAttachmentIndex = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pStencilInputAttachmentIndex), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pStencilInputAttachmentIndex == NULL) goto err;
+
+   memcpy((void*)tmp_dst1->pStencilInputAttachmentIndex, tmp_src1->pStencilInputAttachmentIndex, sizeof(*tmp_dst1->pStencilInputAttachmentIndex));
+}
+
+   } else {
+      cmd->u.set_rendering_input_attachment_indices.input_attachment_index_info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_rendering_input_attachment_indices(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_set_depth_clamp_range_ext(struct vk_cmd_queue *queue,
+                                      struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+         vk_free(queue->alloc, ( VkDepthClampRangeEXT* )cmd->u.set_depth_clamp_range_ext.depth_clamp_range);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_depth_clamp_range_ext(struct vk_cmd_queue *queue
+, VkDepthClampModeEXT depthClampMode
+, const VkDepthClampRangeEXT* pDepthClampRange
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc, vk_cmd_queue_type_sizes[VK_CMD_SET_DEPTH_CLAMP_RANGE_EXT], 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_DEPTH_CLAMP_RANGE_EXT;
+      
+   cmd->u.set_depth_clamp_range_ext.depth_clamp_mode = depthClampMode;
+   if (pDepthClampRange) {
+      cmd->u.set_depth_clamp_range_ext.depth_clamp_range = vk_zalloc(queue->alloc, sizeof(VkDepthClampRangeEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.set_depth_clamp_range_ext.depth_clamp_range == NULL) goto err;
+
+      memcpy((void*)cmd->u.set_depth_clamp_range_ext.depth_clamp_range, pDepthClampRange, sizeof(VkDepthClampRangeEXT));
+      VkDepthClampRangeEXT *tmp_dst1 = (void *) cmd->u.set_depth_clamp_range_ext.depth_clamp_range; (void) tmp_dst1;
+      VkDepthClampRangeEXT *tmp_src1 = (void *) pDepthClampRange; (void) tmp_src1;
+      
+   } else {
+      cmd->u.set_depth_clamp_range_ext.depth_clamp_range = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_depth_clamp_range_ext(queue, cmd);
    return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
@@ -8950,8 +10185,14 @@ vk_free_queue(struct vk_cmd_queue *queue)
       case VK_CMD_BIND_PIPELINE_SHADER_GROUP_NV:
          vk_free_cmd_bind_pipeline_shader_group_nv(queue, cmd);
          break;
-      case VK_CMD_PUSH_DESCRIPTOR_SET_KHR:
-         vk_free_cmd_push_descriptor_set_khr(queue, cmd);
+      case VK_CMD_EXECUTE_GENERATED_COMMANDS_EXT:
+         vk_free_cmd_execute_generated_commands_ext(queue, cmd);
+         break;
+      case VK_CMD_PREPROCESS_GENERATED_COMMANDS_EXT:
+         vk_free_cmd_preprocess_generated_commands_ext(queue, cmd);
+         break;
+      case VK_CMD_PUSH_DESCRIPTOR_SET:
+         vk_free_cmd_push_descriptor_set(queue, cmd);
          break;
       case VK_CMD_SET_DEVICE_MASK:
          vk_free_cmd_set_device_mask(queue, cmd);
@@ -8959,8 +10200,8 @@ vk_free_queue(struct vk_cmd_queue *queue)
       case VK_CMD_DISPATCH_BASE:
          vk_free_cmd_dispatch_base(queue, cmd);
          break;
-      case VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE_KHR:
-         vk_free_cmd_push_descriptor_set_with_template_khr(queue, cmd);
+      case VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE:
+         vk_free_cmd_push_descriptor_set_with_template(queue, cmd);
          break;
       case VK_CMD_SET_VIEWPORT_WSCALING_NV:
          vk_free_cmd_set_viewport_wscaling_nv(queue, cmd);
@@ -9106,8 +10347,8 @@ vk_free_queue(struct vk_cmd_queue *queue)
       case VK_CMD_SET_PERFORMANCE_OVERRIDE_INTEL:
          vk_free_cmd_set_performance_override_intel(queue, cmd);
          break;
-      case VK_CMD_SET_LINE_STIPPLE_EXT:
-         vk_free_cmd_set_line_stipple_ext(queue, cmd);
+      case VK_CMD_SET_LINE_STIPPLE:
+         vk_free_cmd_set_line_stipple(queue, cmd);
          break;
       case VK_CMD_BUILD_ACCELERATION_STRUCTURES_KHR:
          vk_free_cmd_build_acceleration_structures_khr(queue, cmd);
@@ -9130,8 +10371,8 @@ vk_free_queue(struct vk_cmd_queue *queue)
       case VK_CMD_SET_SCISSOR_WITH_COUNT:
          vk_free_cmd_set_scissor_with_count(queue, cmd);
          break;
-      case VK_CMD_BIND_INDEX_BUFFER2_KHR:
-         vk_free_cmd_bind_index_buffer2_khr(queue, cmd);
+      case VK_CMD_BIND_INDEX_BUFFER2:
+         vk_free_cmd_bind_index_buffer2(queue, cmd);
          break;
       case VK_CMD_BIND_VERTEX_BUFFERS2:
          vk_free_cmd_bind_vertex_buffers2(queue, cmd);
@@ -9322,6 +10563,9 @@ vk_free_queue(struct vk_cmd_queue *queue)
       case VK_CMD_END_VIDEO_CODING_KHR:
          vk_free_cmd_end_video_coding_khr(queue, cmd);
          break;
+      case VK_CMD_ENCODE_VIDEO_KHR:
+         vk_free_cmd_encode_video_khr(queue, cmd);
+         break;
       case VK_CMD_DECOMPRESS_MEMORY_NV:
          vk_free_cmd_decompress_memory_nv(queue, cmd);
          break;
@@ -9369,6 +10613,33 @@ vk_free_queue(struct vk_cmd_queue *queue)
          break;
       case VK_CMD_BIND_SHADERS_EXT:
          vk_free_cmd_bind_shaders_ext(queue, cmd);
+         break;
+      case VK_CMD_BIND_DESCRIPTOR_SETS2:
+         vk_free_cmd_bind_descriptor_sets2(queue, cmd);
+         break;
+      case VK_CMD_PUSH_CONSTANTS2:
+         vk_free_cmd_push_constants2(queue, cmd);
+         break;
+      case VK_CMD_PUSH_DESCRIPTOR_SET2:
+         vk_free_cmd_push_descriptor_set2(queue, cmd);
+         break;
+      case VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE2:
+         vk_free_cmd_push_descriptor_set_with_template2(queue, cmd);
+         break;
+      case VK_CMD_SET_DESCRIPTOR_BUFFER_OFFSETS2_EXT:
+         vk_free_cmd_set_descriptor_buffer_offsets2_ext(queue, cmd);
+         break;
+      case VK_CMD_BIND_DESCRIPTOR_BUFFER_EMBEDDED_SAMPLERS2_EXT:
+         vk_free_cmd_bind_descriptor_buffer_embedded_samplers2_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_RENDERING_ATTACHMENT_LOCATIONS:
+         vk_free_cmd_set_rendering_attachment_locations(queue, cmd);
+         break;
+      case VK_CMD_SET_RENDERING_INPUT_ATTACHMENT_INDICES:
+         vk_free_cmd_set_rendering_input_attachment_indices(queue, cmd);
+         break;
+      case VK_CMD_SET_DEPTH_CLAMP_RANGE_EXT:
+         vk_free_cmd_set_depth_clamp_range_ext(queue, cmd);
          break;
       }
    }
@@ -9625,9 +10896,17 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
           disp->CmdBindPipelineShaderGroupNV(commandBuffer
              , cmd->u.bind_pipeline_shader_group_nv.pipeline_bind_point             , cmd->u.bind_pipeline_shader_group_nv.pipeline             , cmd->u.bind_pipeline_shader_group_nv.group_index          );
           break;
-      case VK_CMD_PUSH_DESCRIPTOR_SET_KHR:
-          disp->CmdPushDescriptorSetKHR(commandBuffer
-             , cmd->u.push_descriptor_set_khr.pipeline_bind_point             , cmd->u.push_descriptor_set_khr.layout             , cmd->u.push_descriptor_set_khr.set             , cmd->u.push_descriptor_set_khr.descriptor_write_count             , cmd->u.push_descriptor_set_khr.descriptor_writes          );
+      case VK_CMD_EXECUTE_GENERATED_COMMANDS_EXT:
+          disp->CmdExecuteGeneratedCommandsEXT(commandBuffer
+             , cmd->u.execute_generated_commands_ext.is_preprocessed             , cmd->u.execute_generated_commands_ext.generated_commands_info          );
+          break;
+      case VK_CMD_PREPROCESS_GENERATED_COMMANDS_EXT:
+          disp->CmdPreprocessGeneratedCommandsEXT(commandBuffer
+             , cmd->u.preprocess_generated_commands_ext.generated_commands_info             , cmd->u.preprocess_generated_commands_ext.state_command_buffer          );
+          break;
+      case VK_CMD_PUSH_DESCRIPTOR_SET:
+          disp->CmdPushDescriptorSet(commandBuffer
+             , cmd->u.push_descriptor_set.pipeline_bind_point             , cmd->u.push_descriptor_set.layout             , cmd->u.push_descriptor_set.set             , cmd->u.push_descriptor_set.descriptor_write_count             , cmd->u.push_descriptor_set.descriptor_writes          );
           break;
       case VK_CMD_SET_DEVICE_MASK:
           disp->CmdSetDeviceMask(commandBuffer
@@ -9637,9 +10916,9 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
           disp->CmdDispatchBase(commandBuffer
              , cmd->u.dispatch_base.base_group_x             , cmd->u.dispatch_base.base_group_y             , cmd->u.dispatch_base.base_group_z             , cmd->u.dispatch_base.group_count_x             , cmd->u.dispatch_base.group_count_y             , cmd->u.dispatch_base.group_count_z          );
           break;
-      case VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE_KHR:
-          disp->CmdPushDescriptorSetWithTemplateKHR(commandBuffer
-             , cmd->u.push_descriptor_set_with_template_khr.descriptor_update_template             , cmd->u.push_descriptor_set_with_template_khr.layout             , cmd->u.push_descriptor_set_with_template_khr.set             , cmd->u.push_descriptor_set_with_template_khr.data          );
+      case VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE:
+          disp->CmdPushDescriptorSetWithTemplate(commandBuffer
+             , cmd->u.push_descriptor_set_with_template.descriptor_update_template             , cmd->u.push_descriptor_set_with_template.layout             , cmd->u.push_descriptor_set_with_template.set             , cmd->u.push_descriptor_set_with_template.data          );
           break;
       case VK_CMD_SET_VIEWPORT_WSCALING_NV:
           disp->CmdSetViewportWScalingNV(commandBuffer
@@ -9833,9 +11112,9 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
           disp->CmdSetPerformanceOverrideINTEL(commandBuffer
              , cmd->u.set_performance_override_intel.override_info          );
           break;
-      case VK_CMD_SET_LINE_STIPPLE_EXT:
-          disp->CmdSetLineStippleEXT(commandBuffer
-             , cmd->u.set_line_stipple_ext.line_stipple_factor             , cmd->u.set_line_stipple_ext.line_stipple_pattern          );
+      case VK_CMD_SET_LINE_STIPPLE:
+          disp->CmdSetLineStipple(commandBuffer
+             , cmd->u.set_line_stipple.line_stipple_factor             , cmd->u.set_line_stipple.line_stipple_pattern          );
           break;
       case VK_CMD_BUILD_ACCELERATION_STRUCTURES_KHR:
           disp->CmdBuildAccelerationStructuresKHR(commandBuffer
@@ -9865,9 +11144,9 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
           disp->CmdSetScissorWithCount(commandBuffer
              , cmd->u.set_scissor_with_count.scissor_count             , cmd->u.set_scissor_with_count.scissors          );
           break;
-      case VK_CMD_BIND_INDEX_BUFFER2_KHR:
-          disp->CmdBindIndexBuffer2KHR(commandBuffer
-             , cmd->u.bind_index_buffer2_khr.buffer             , cmd->u.bind_index_buffer2_khr.offset             , cmd->u.bind_index_buffer2_khr.size             , cmd->u.bind_index_buffer2_khr.index_type          );
+      case VK_CMD_BIND_INDEX_BUFFER2:
+          disp->CmdBindIndexBuffer2(commandBuffer
+             , cmd->u.bind_index_buffer2.buffer             , cmd->u.bind_index_buffer2.offset             , cmd->u.bind_index_buffer2.size             , cmd->u.bind_index_buffer2.index_type          );
           break;
       case VK_CMD_BIND_VERTEX_BUFFERS2:
           disp->CmdBindVertexBuffers2(commandBuffer
@@ -10121,6 +11400,10 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
           disp->CmdEndVideoCodingKHR(commandBuffer
              , cmd->u.end_video_coding_khr.end_coding_info          );
           break;
+      case VK_CMD_ENCODE_VIDEO_KHR:
+          disp->CmdEncodeVideoKHR(commandBuffer
+             , cmd->u.encode_video_khr.encode_info          );
+          break;
       case VK_CMD_DECOMPRESS_MEMORY_NV:
           disp->CmdDecompressMemoryNV(commandBuffer
              , cmd->u.decompress_memory_nv.decompress_region_count             , cmd->u.decompress_memory_nv.decompress_memory_regions          );
@@ -10184,6 +11467,42 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
       case VK_CMD_BIND_SHADERS_EXT:
           disp->CmdBindShadersEXT(commandBuffer
              , cmd->u.bind_shaders_ext.stage_count             , cmd->u.bind_shaders_ext.stages             , cmd->u.bind_shaders_ext.shaders          );
+          break;
+      case VK_CMD_BIND_DESCRIPTOR_SETS2:
+          disp->CmdBindDescriptorSets2(commandBuffer
+             , cmd->u.bind_descriptor_sets2.bind_descriptor_sets_info          );
+          break;
+      case VK_CMD_PUSH_CONSTANTS2:
+          disp->CmdPushConstants2(commandBuffer
+             , cmd->u.push_constants2.push_constants_info          );
+          break;
+      case VK_CMD_PUSH_DESCRIPTOR_SET2:
+          disp->CmdPushDescriptorSet2(commandBuffer
+             , cmd->u.push_descriptor_set2.push_descriptor_set_info          );
+          break;
+      case VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE2:
+          disp->CmdPushDescriptorSetWithTemplate2(commandBuffer
+             , cmd->u.push_descriptor_set_with_template2.push_descriptor_set_with_template_info          );
+          break;
+      case VK_CMD_SET_DESCRIPTOR_BUFFER_OFFSETS2_EXT:
+          disp->CmdSetDescriptorBufferOffsets2EXT(commandBuffer
+             , cmd->u.set_descriptor_buffer_offsets2_ext.set_descriptor_buffer_offsets_info          );
+          break;
+      case VK_CMD_BIND_DESCRIPTOR_BUFFER_EMBEDDED_SAMPLERS2_EXT:
+          disp->CmdBindDescriptorBufferEmbeddedSamplers2EXT(commandBuffer
+             , cmd->u.bind_descriptor_buffer_embedded_samplers2_ext.bind_descriptor_buffer_embedded_samplers_info          );
+          break;
+      case VK_CMD_SET_RENDERING_ATTACHMENT_LOCATIONS:
+          disp->CmdSetRenderingAttachmentLocations(commandBuffer
+             , cmd->u.set_rendering_attachment_locations.location_info          );
+          break;
+      case VK_CMD_SET_RENDERING_INPUT_ATTACHMENT_INDICES:
+          disp->CmdSetRenderingInputAttachmentIndices(commandBuffer
+             , cmd->u.set_rendering_input_attachment_indices.input_attachment_index_info          );
+          break;
+      case VK_CMD_SET_DEPTH_CLAMP_RANGE_EXT:
+          disp->CmdSetDepthClampRangeEXT(commandBuffer
+             , cmd->u.set_depth_clamp_range_ext.depth_clamp_mode             , cmd->u.set_depth_clamp_range_ext.depth_clamp_range          );
           break;
       default: unreachable("Unsupported command");
       }
@@ -11986,10 +13305,21 @@ vk_cmd_enqueue_unless_primary_CmdBindPipelineShaderGroupNV(VkCommandBuffer comma
 
 
 
-/* vk_cmd_enqueue_CmdPushDescriptorSetKHR() is hand-typed in vk_cmd_enqueue.c */
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdExecuteGeneratedCommandsEXT(VkCommandBuffer commandBuffer, VkBool32 isPreprocessed, const VkGeneratedCommandsInfoEXT* pGeneratedCommandsInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_execute_generated_commands_ext(&cmd_buffer->cmd_queue,
+                                       isPreprocessed, pGeneratedCommandsInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
 
 VKAPI_ATTR void VKAPI_CALL
-vk_cmd_enqueue_unless_primary_CmdPushDescriptorSetKHR(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites)
+vk_cmd_enqueue_unless_primary_CmdExecuteGeneratedCommandsEXT(VkCommandBuffer commandBuffer, VkBool32 isPreprocessed, const VkGeneratedCommandsInfoEXT* pGeneratedCommandsInfo)
 {
     VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
@@ -11997,9 +13327,58 @@ vk_cmd_enqueue_unless_primary_CmdPushDescriptorSetKHR(VkCommandBuffer commandBuf
       const struct vk_device_dispatch_table *disp =
          cmd_buffer->base.device->command_dispatch_table;
 
-      disp->CmdPushDescriptorSetKHR(commandBuffer, pipelineBindPoint, layout, set, descriptorWriteCount, pDescriptorWrites);
+      disp->CmdExecuteGeneratedCommandsEXT(commandBuffer, isPreprocessed, pGeneratedCommandsInfo);
    } else {
-      vk_cmd_enqueue_CmdPushDescriptorSetKHR(commandBuffer, pipelineBindPoint, layout, set, descriptorWriteCount, pDescriptorWrites);
+      vk_cmd_enqueue_CmdExecuteGeneratedCommandsEXT(commandBuffer, isPreprocessed, pGeneratedCommandsInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdPreprocessGeneratedCommandsEXT(VkCommandBuffer commandBuffer, const VkGeneratedCommandsInfoEXT* pGeneratedCommandsInfo, VkCommandBuffer stateCommandBuffer)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_preprocess_generated_commands_ext(&cmd_buffer->cmd_queue,
+                                       pGeneratedCommandsInfo, stateCommandBuffer);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdPreprocessGeneratedCommandsEXT(VkCommandBuffer commandBuffer, const VkGeneratedCommandsInfoEXT* pGeneratedCommandsInfo, VkCommandBuffer stateCommandBuffer)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdPreprocessGeneratedCommandsEXT(commandBuffer, pGeneratedCommandsInfo, stateCommandBuffer);
+   } else {
+      vk_cmd_enqueue_CmdPreprocessGeneratedCommandsEXT(commandBuffer, pGeneratedCommandsInfo, stateCommandBuffer);
+   }
+}
+
+
+
+/* vk_cmd_enqueue_CmdPushDescriptorSet() is hand-typed in vk_cmd_enqueue.c */
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdPushDescriptorSet(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdPushDescriptorSet(commandBuffer, pipelineBindPoint, layout, set, descriptorWriteCount, pDescriptorWrites);
+   } else {
+      vk_cmd_enqueue_CmdPushDescriptorSet(commandBuffer, pipelineBindPoint, layout, set, descriptorWriteCount, pDescriptorWrites);
    }
 }
 
@@ -12062,7 +13441,25 @@ vk_cmd_enqueue_unless_primary_CmdDispatchBase(VkCommandBuffer commandBuffer, uin
       vk_cmd_enqueue_CmdDispatchBase(commandBuffer, baseGroupX, baseGroupY, baseGroupZ, groupCountX, groupCountY, groupCountZ);
    }
 }
-/* TODO: Generate vk_cmd_enqueue_CmdPushDescriptorSetWithTemplateKHR() */
+
+
+
+/* vk_cmd_enqueue_CmdPushDescriptorSetWithTemplate() is hand-typed in vk_cmd_enqueue.c */
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdPushDescriptorSetWithTemplate(VkCommandBuffer commandBuffer, VkDescriptorUpdateTemplate descriptorUpdateTemplate, VkPipelineLayout layout, uint32_t set, const void* pData)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdPushDescriptorSetWithTemplate(commandBuffer, descriptorUpdateTemplate, layout, set, pData);
+   } else {
+      vk_cmd_enqueue_CmdPushDescriptorSetWithTemplate(commandBuffer, descriptorUpdateTemplate, layout, set, pData);
+   }
+}
 
 
 
@@ -13419,20 +14816,20 @@ vk_cmd_enqueue_unless_primary_CmdSetRayTracingPipelineStackSizeKHR(VkCommandBuff
 
 
 VKAPI_ATTR void VKAPI_CALL
-vk_cmd_enqueue_CmdSetLineStippleEXT(VkCommandBuffer commandBuffer, uint32_t lineStippleFactor, uint16_t lineStipplePattern)
+vk_cmd_enqueue_CmdSetLineStipple(VkCommandBuffer commandBuffer, uint32_t lineStippleFactor, uint16_t lineStipplePattern)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
    if (vk_command_buffer_has_error(cmd_buffer))
       return;
-   VkResult result = vk_enqueue_cmd_set_line_stipple_ext(&cmd_buffer->cmd_queue,
+   VkResult result = vk_enqueue_cmd_set_line_stipple(&cmd_buffer->cmd_queue,
                                        lineStippleFactor, lineStipplePattern);
    if (unlikely(result != VK_SUCCESS))
       vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
-vk_cmd_enqueue_unless_primary_CmdSetLineStippleEXT(VkCommandBuffer commandBuffer, uint32_t lineStippleFactor, uint16_t lineStipplePattern)
+vk_cmd_enqueue_unless_primary_CmdSetLineStipple(VkCommandBuffer commandBuffer, uint32_t lineStippleFactor, uint16_t lineStipplePattern)
 {
     VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
@@ -13440,26 +14837,15 @@ vk_cmd_enqueue_unless_primary_CmdSetLineStippleEXT(VkCommandBuffer commandBuffer
       const struct vk_device_dispatch_table *disp =
          cmd_buffer->base.device->command_dispatch_table;
 
-      disp->CmdSetLineStippleEXT(commandBuffer, lineStippleFactor, lineStipplePattern);
+      disp->CmdSetLineStipple(commandBuffer, lineStippleFactor, lineStipplePattern);
    } else {
-      vk_cmd_enqueue_CmdSetLineStippleEXT(commandBuffer, lineStippleFactor, lineStipplePattern);
+      vk_cmd_enqueue_CmdSetLineStipple(commandBuffer, lineStippleFactor, lineStipplePattern);
    }
 }
 
 
 
-VKAPI_ATTR void VKAPI_CALL
-vk_cmd_enqueue_CmdBuildAccelerationStructuresKHR(VkCommandBuffer                                    commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos)
-{
-   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
-
-   if (vk_command_buffer_has_error(cmd_buffer))
-      return;
-   VkResult result = vk_enqueue_cmd_build_acceleration_structures_khr(&cmd_buffer->cmd_queue,
-                                       infoCount, pInfos, ppBuildRangeInfos);
-   if (unlikely(result != VK_SUCCESS))
-      vk_command_buffer_set_error(cmd_buffer, result);
-}
+/* vk_cmd_enqueue_CmdBuildAccelerationStructuresKHR() is hand-typed in vk_cmd_enqueue.c */
 
 VKAPI_ATTR void VKAPI_CALL
 vk_cmd_enqueue_unless_primary_CmdBuildAccelerationStructuresKHR(VkCommandBuffer                                    commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos)
@@ -13659,20 +15045,20 @@ vk_cmd_enqueue_unless_primary_CmdSetScissorWithCount(VkCommandBuffer commandBuff
 
 
 VKAPI_ATTR void VKAPI_CALL
-vk_cmd_enqueue_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType)
+vk_cmd_enqueue_CmdBindIndexBuffer2(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
    if (vk_command_buffer_has_error(cmd_buffer))
       return;
-   VkResult result = vk_enqueue_cmd_bind_index_buffer2_khr(&cmd_buffer->cmd_queue,
+   VkResult result = vk_enqueue_cmd_bind_index_buffer2(&cmd_buffer->cmd_queue,
                                        buffer, offset, size, indexType);
    if (unlikely(result != VK_SUCCESS))
       vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
-vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType)
+vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize size, VkIndexType indexType)
 {
     VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
@@ -13680,9 +15066,9 @@ vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer2KHR(VkCommandBuffer commandBuff
       const struct vk_device_dispatch_table *disp =
          cmd_buffer->base.device->command_dispatch_table;
 
-      disp->CmdBindIndexBuffer2KHR(commandBuffer, buffer, offset, size, indexType);
+      disp->CmdBindIndexBuffer2(commandBuffer, buffer, offset, size, indexType);
    } else {
-      vk_cmd_enqueue_CmdBindIndexBuffer2KHR(commandBuffer, buffer, offset, size, indexType);
+      vk_cmd_enqueue_CmdBindIndexBuffer2(commandBuffer, buffer, offset, size, indexType);
    }
 }
 
@@ -15579,6 +16965,36 @@ vk_cmd_enqueue_unless_primary_CmdEndVideoCodingKHR(VkCommandBuffer commandBuffer
 
 
 VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdEncodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoEncodeInfoKHR* pEncodeInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_encode_video_khr(&cmd_buffer->cmd_queue,
+                                       pEncodeInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoEncodeInfoKHR* pEncodeInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdEncodeVideoKHR(commandBuffer, pEncodeInfo);
+   } else {
+      vk_cmd_enqueue_CmdEncodeVideoKHR(commandBuffer, pEncodeInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
 vk_cmd_enqueue_CmdDecompressMemoryNV(VkCommandBuffer commandBuffer, uint32_t decompressRegionCount, const VkDecompressMemoryRegionNV* pDecompressMemoryRegions)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
@@ -16052,5 +17468,242 @@ vk_cmd_enqueue_unless_primary_CmdBindShadersEXT(VkCommandBuffer commandBuffer, u
       disp->CmdBindShadersEXT(commandBuffer, stageCount, pStages, pShaders);
    } else {
       vk_cmd_enqueue_CmdBindShadersEXT(commandBuffer, stageCount, pStages, pShaders);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdBindDescriptorSets2(VkCommandBuffer commandBuffer, const VkBindDescriptorSetsInfo*   pBindDescriptorSetsInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_descriptor_sets2(&cmd_buffer->cmd_queue,
+                                       pBindDescriptorSetsInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdBindDescriptorSets2(VkCommandBuffer commandBuffer, const VkBindDescriptorSetsInfo*   pBindDescriptorSetsInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdBindDescriptorSets2(commandBuffer, pBindDescriptorSetsInfo);
+   } else {
+      vk_cmd_enqueue_CmdBindDescriptorSets2(commandBuffer, pBindDescriptorSetsInfo);
+   }
+}
+
+
+
+/* vk_cmd_enqueue_CmdPushConstants2() is hand-typed in vk_cmd_enqueue.c */
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdPushConstants2(VkCommandBuffer commandBuffer, const VkPushConstantsInfo*        pPushConstantsInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdPushConstants2(commandBuffer, pPushConstantsInfo);
+   } else {
+      vk_cmd_enqueue_CmdPushConstants2(commandBuffer, pPushConstantsInfo);
+   }
+}
+
+
+
+/* vk_cmd_enqueue_CmdPushDescriptorSet2() is hand-typed in vk_cmd_enqueue.c */
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdPushDescriptorSet2(VkCommandBuffer commandBuffer, const VkPushDescriptorSetInfo*    pPushDescriptorSetInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdPushDescriptorSet2(commandBuffer, pPushDescriptorSetInfo);
+   } else {
+      vk_cmd_enqueue_CmdPushDescriptorSet2(commandBuffer, pPushDescriptorSetInfo);
+   }
+}
+
+
+
+/* vk_cmd_enqueue_CmdPushDescriptorSetWithTemplate2() is hand-typed in vk_cmd_enqueue.c */
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdPushDescriptorSetWithTemplate2(VkCommandBuffer commandBuffer, const VkPushDescriptorSetWithTemplateInfo* pPushDescriptorSetWithTemplateInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdPushDescriptorSetWithTemplate2(commandBuffer, pPushDescriptorSetWithTemplateInfo);
+   } else {
+      vk_cmd_enqueue_CmdPushDescriptorSetWithTemplate2(commandBuffer, pPushDescriptorSetWithTemplateInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetDescriptorBufferOffsets2EXT(VkCommandBuffer commandBuffer, const VkSetDescriptorBufferOffsetsInfoEXT* pSetDescriptorBufferOffsetsInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_descriptor_buffer_offsets2_ext(&cmd_buffer->cmd_queue,
+                                       pSetDescriptorBufferOffsetsInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsets2EXT(VkCommandBuffer commandBuffer, const VkSetDescriptorBufferOffsetsInfoEXT* pSetDescriptorBufferOffsetsInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetDescriptorBufferOffsets2EXT(commandBuffer, pSetDescriptorBufferOffsetsInfo);
+   } else {
+      vk_cmd_enqueue_CmdSetDescriptorBufferOffsets2EXT(commandBuffer, pSetDescriptorBufferOffsetsInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplers2EXT(VkCommandBuffer commandBuffer, const VkBindDescriptorBufferEmbeddedSamplersInfoEXT* pBindDescriptorBufferEmbeddedSamplersInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_descriptor_buffer_embedded_samplers2_ext(&cmd_buffer->cmd_queue,
+                                       pBindDescriptorBufferEmbeddedSamplersInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplers2EXT(VkCommandBuffer commandBuffer, const VkBindDescriptorBufferEmbeddedSamplersInfoEXT* pBindDescriptorBufferEmbeddedSamplersInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdBindDescriptorBufferEmbeddedSamplers2EXT(commandBuffer, pBindDescriptorBufferEmbeddedSamplersInfo);
+   } else {
+      vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplers2EXT(commandBuffer, pBindDescriptorBufferEmbeddedSamplersInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetRenderingAttachmentLocations(VkCommandBuffer commandBuffer, const VkRenderingAttachmentLocationInfo* pLocationInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_rendering_attachment_locations(&cmd_buffer->cmd_queue,
+                                       pLocationInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetRenderingAttachmentLocations(VkCommandBuffer commandBuffer, const VkRenderingAttachmentLocationInfo* pLocationInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetRenderingAttachmentLocations(commandBuffer, pLocationInfo);
+   } else {
+      vk_cmd_enqueue_CmdSetRenderingAttachmentLocations(commandBuffer, pLocationInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetRenderingInputAttachmentIndices(VkCommandBuffer commandBuffer, const VkRenderingInputAttachmentIndexInfo* pInputAttachmentIndexInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_rendering_input_attachment_indices(&cmd_buffer->cmd_queue,
+                                       pInputAttachmentIndexInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetRenderingInputAttachmentIndices(VkCommandBuffer commandBuffer, const VkRenderingInputAttachmentIndexInfo* pInputAttachmentIndexInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetRenderingInputAttachmentIndices(commandBuffer, pInputAttachmentIndexInfo);
+   } else {
+      vk_cmd_enqueue_CmdSetRenderingInputAttachmentIndices(commandBuffer, pInputAttachmentIndexInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetDepthClampRangeEXT(VkCommandBuffer commandBuffer, VkDepthClampModeEXT depthClampMode, const VkDepthClampRangeEXT* pDepthClampRange)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_clamp_range_ext(&cmd_buffer->cmd_queue,
+                                       depthClampMode, pDepthClampRange);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetDepthClampRangeEXT(VkCommandBuffer commandBuffer, VkDepthClampModeEXT depthClampMode, const VkDepthClampRangeEXT* pDepthClampRange)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetDepthClampRangeEXT(commandBuffer, depthClampMode, pDepthClampRange);
+   } else {
+      vk_cmd_enqueue_CmdSetDepthClampRangeEXT(commandBuffer, depthClampMode, pDepthClampRange);
    }
 }

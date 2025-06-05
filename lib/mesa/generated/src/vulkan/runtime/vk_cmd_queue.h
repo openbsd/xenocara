@@ -106,10 +106,12 @@ enum vk_cmd_type {
    VK_CMD_EXECUTE_GENERATED_COMMANDS_NV,
    VK_CMD_PREPROCESS_GENERATED_COMMANDS_NV,
    VK_CMD_BIND_PIPELINE_SHADER_GROUP_NV,
-   VK_CMD_PUSH_DESCRIPTOR_SET_KHR,
+   VK_CMD_EXECUTE_GENERATED_COMMANDS_EXT,
+   VK_CMD_PREPROCESS_GENERATED_COMMANDS_EXT,
+   VK_CMD_PUSH_DESCRIPTOR_SET,
    VK_CMD_SET_DEVICE_MASK,
    VK_CMD_DISPATCH_BASE,
-   VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE_KHR,
+   VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE,
    VK_CMD_SET_VIEWPORT_WSCALING_NV,
    VK_CMD_SET_DISCARD_RECTANGLE_EXT,
    VK_CMD_SET_DISCARD_RECTANGLE_ENABLE_EXT,
@@ -158,7 +160,7 @@ enum vk_cmd_type {
    VK_CMD_SET_PERFORMANCE_MARKER_INTEL,
    VK_CMD_SET_PERFORMANCE_STREAM_MARKER_INTEL,
    VK_CMD_SET_PERFORMANCE_OVERRIDE_INTEL,
-   VK_CMD_SET_LINE_STIPPLE_EXT,
+   VK_CMD_SET_LINE_STIPPLE,
    VK_CMD_BUILD_ACCELERATION_STRUCTURES_KHR,
    VK_CMD_BUILD_ACCELERATION_STRUCTURES_INDIRECT_KHR,
    VK_CMD_SET_CULL_MODE,
@@ -166,7 +168,7 @@ enum vk_cmd_type {
    VK_CMD_SET_PRIMITIVE_TOPOLOGY,
    VK_CMD_SET_VIEWPORT_WITH_COUNT,
    VK_CMD_SET_SCISSOR_WITH_COUNT,
-   VK_CMD_BIND_INDEX_BUFFER2_KHR,
+   VK_CMD_BIND_INDEX_BUFFER2,
    VK_CMD_BIND_VERTEX_BUFFERS2,
    VK_CMD_SET_DEPTH_TEST_ENABLE,
    VK_CMD_SET_DEPTH_WRITE_ENABLE,
@@ -230,6 +232,7 @@ enum vk_cmd_type {
    VK_CMD_BEGIN_VIDEO_CODING_KHR,
    VK_CMD_CONTROL_VIDEO_CODING_KHR,
    VK_CMD_END_VIDEO_CODING_KHR,
+   VK_CMD_ENCODE_VIDEO_KHR,
    VK_CMD_DECOMPRESS_MEMORY_NV,
    VK_CMD_DECOMPRESS_MEMORY_INDIRECT_COUNT_NV,
    VK_CMD_CU_LAUNCH_KERNEL_NVX,
@@ -246,6 +249,15 @@ enum vk_cmd_type {
    VK_CMD_OPTICAL_FLOW_EXECUTE_NV,
    VK_CMD_SET_DEPTH_BIAS2_EXT,
    VK_CMD_BIND_SHADERS_EXT,
+   VK_CMD_BIND_DESCRIPTOR_SETS2,
+   VK_CMD_PUSH_CONSTANTS2,
+   VK_CMD_PUSH_DESCRIPTOR_SET2,
+   VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE2,
+   VK_CMD_SET_DESCRIPTOR_BUFFER_OFFSETS2_EXT,
+   VK_CMD_BIND_DESCRIPTOR_BUFFER_EMBEDDED_SAMPLERS2_EXT,
+   VK_CMD_SET_RENDERING_ATTACHMENT_LOCATIONS,
+   VK_CMD_SET_RENDERING_INPUT_ATTACHMENT_INDICES,
+   VK_CMD_SET_DEPTH_CLAMP_RANGE_EXT,
 };
 
 extern const char *vk_cmd_queue_type_names[];
@@ -565,7 +577,15 @@ struct vk_cmd_bind_pipeline_shader_group_nv {
    VkPipeline pipeline;
    uint32_t group_index;
 };
-struct vk_cmd_push_descriptor_set_khr {
+struct vk_cmd_execute_generated_commands_ext {
+   VkBool32 is_preprocessed;
+   VkGeneratedCommandsInfoEXT* generated_commands_info;
+};
+struct vk_cmd_preprocess_generated_commands_ext {
+   VkGeneratedCommandsInfoEXT* generated_commands_info;
+   VkCommandBuffer state_command_buffer;
+};
+struct vk_cmd_push_descriptor_set {
    VkPipelineBindPoint pipeline_bind_point;
    VkPipelineLayout layout;
    uint32_t set;
@@ -583,7 +603,7 @@ struct vk_cmd_dispatch_base {
    uint32_t group_count_y;
    uint32_t group_count_z;
 };
-struct vk_cmd_push_descriptor_set_with_template_khr {
+struct vk_cmd_push_descriptor_set_with_template {
    VkDescriptorUpdateTemplate descriptor_update_template;
    VkPipelineLayout layout;
    uint32_t set;
@@ -838,7 +858,7 @@ struct vk_cmd_set_performance_stream_marker_intel {
 struct vk_cmd_set_performance_override_intel {
    VkPerformanceOverrideInfoINTEL* override_info;
 };
-struct vk_cmd_set_line_stipple_ext {
+struct vk_cmd_set_line_stipple {
    uint32_t line_stipple_factor;
    uint16_t line_stipple_pattern;
 };
@@ -871,7 +891,7 @@ struct vk_cmd_set_scissor_with_count {
    uint32_t scissor_count;
    VkRect2D* scissors;
 };
-struct vk_cmd_bind_index_buffer2_khr {
+struct vk_cmd_bind_index_buffer2 {
    VkBuffer buffer;
    VkDeviceSize offset;
    VkDeviceSize size;
@@ -1102,6 +1122,9 @@ struct vk_cmd_control_video_coding_khr {
 struct vk_cmd_end_video_coding_khr {
    VkVideoEndCodingInfoKHR* end_coding_info;
 };
+struct vk_cmd_encode_video_khr {
+   VkVideoEncodeInfoKHR* encode_info;
+};
 struct vk_cmd_decompress_memory_nv {
    uint32_t decompress_region_count;
    VkDecompressMemoryRegionNV* decompress_memory_regions;
@@ -1165,6 +1188,34 @@ struct vk_cmd_bind_shaders_ext {
    uint32_t stage_count;
    VkShaderStageFlagBits* stages;
    VkShaderEXT* shaders;
+};
+struct vk_cmd_bind_descriptor_sets2 {
+   VkBindDescriptorSetsInfo*   bind_descriptor_sets_info;
+};
+struct vk_cmd_push_constants2 {
+   VkPushConstantsInfo*        push_constants_info;
+};
+struct vk_cmd_push_descriptor_set2 {
+   VkPushDescriptorSetInfo*    push_descriptor_set_info;
+};
+struct vk_cmd_push_descriptor_set_with_template2 {
+   VkPushDescriptorSetWithTemplateInfo* push_descriptor_set_with_template_info;
+};
+struct vk_cmd_set_descriptor_buffer_offsets2_ext {
+   VkSetDescriptorBufferOffsetsInfoEXT* set_descriptor_buffer_offsets_info;
+};
+struct vk_cmd_bind_descriptor_buffer_embedded_samplers2_ext {
+   VkBindDescriptorBufferEmbeddedSamplersInfoEXT* bind_descriptor_buffer_embedded_samplers_info;
+};
+struct vk_cmd_set_rendering_attachment_locations {
+   VkRenderingAttachmentLocationInfo* location_info;
+};
+struct vk_cmd_set_rendering_input_attachment_indices {
+   VkRenderingInputAttachmentIndexInfo* input_attachment_index_info;
+};
+struct vk_cmd_set_depth_clamp_range_ext {
+   VkDepthClampModeEXT depth_clamp_mode;
+   VkDepthClampRangeEXT* depth_clamp_range;
 };
 
 struct vk_cmd_queue_entry;
@@ -1243,10 +1294,12 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_execute_generated_commands_nv execute_generated_commands_nv;
       struct vk_cmd_preprocess_generated_commands_nv preprocess_generated_commands_nv;
       struct vk_cmd_bind_pipeline_shader_group_nv bind_pipeline_shader_group_nv;
-      struct vk_cmd_push_descriptor_set_khr push_descriptor_set_khr;
+      struct vk_cmd_execute_generated_commands_ext execute_generated_commands_ext;
+      struct vk_cmd_preprocess_generated_commands_ext preprocess_generated_commands_ext;
+      struct vk_cmd_push_descriptor_set push_descriptor_set;
       struct vk_cmd_set_device_mask set_device_mask;
       struct vk_cmd_dispatch_base dispatch_base;
-      struct vk_cmd_push_descriptor_set_with_template_khr push_descriptor_set_with_template_khr;
+      struct vk_cmd_push_descriptor_set_with_template push_descriptor_set_with_template;
       struct vk_cmd_set_viewport_wscaling_nv set_viewport_wscaling_nv;
       struct vk_cmd_set_discard_rectangle_ext set_discard_rectangle_ext;
       struct vk_cmd_set_discard_rectangle_enable_ext set_discard_rectangle_enable_ext;
@@ -1294,7 +1347,7 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_set_performance_marker_intel set_performance_marker_intel;
       struct vk_cmd_set_performance_stream_marker_intel set_performance_stream_marker_intel;
       struct vk_cmd_set_performance_override_intel set_performance_override_intel;
-      struct vk_cmd_set_line_stipple_ext set_line_stipple_ext;
+      struct vk_cmd_set_line_stipple set_line_stipple;
       struct vk_cmd_build_acceleration_structures_khr build_acceleration_structures_khr;
       struct vk_cmd_build_acceleration_structures_indirect_khr build_acceleration_structures_indirect_khr;
       struct vk_cmd_set_cull_mode set_cull_mode;
@@ -1302,7 +1355,7 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_set_primitive_topology set_primitive_topology;
       struct vk_cmd_set_viewport_with_count set_viewport_with_count;
       struct vk_cmd_set_scissor_with_count set_scissor_with_count;
-      struct vk_cmd_bind_index_buffer2_khr bind_index_buffer2_khr;
+      struct vk_cmd_bind_index_buffer2 bind_index_buffer2;
       struct vk_cmd_bind_vertex_buffers2 bind_vertex_buffers2;
       struct vk_cmd_set_depth_test_enable set_depth_test_enable;
       struct vk_cmd_set_depth_write_enable set_depth_write_enable;
@@ -1366,6 +1419,7 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_begin_video_coding_khr begin_video_coding_khr;
       struct vk_cmd_control_video_coding_khr control_video_coding_khr;
       struct vk_cmd_end_video_coding_khr end_video_coding_khr;
+      struct vk_cmd_encode_video_khr encode_video_khr;
       struct vk_cmd_decompress_memory_nv decompress_memory_nv;
       struct vk_cmd_decompress_memory_indirect_count_nv decompress_memory_indirect_count_nv;
       struct vk_cmd_cu_launch_kernel_nvx cu_launch_kernel_nvx;
@@ -1381,6 +1435,15 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_optical_flow_execute_nv optical_flow_execute_nv;
       struct vk_cmd_set_depth_bias2_ext set_depth_bias2_ext;
       struct vk_cmd_bind_shaders_ext bind_shaders_ext;
+      struct vk_cmd_bind_descriptor_sets2 bind_descriptor_sets2;
+      struct vk_cmd_push_constants2 push_constants2;
+      struct vk_cmd_push_descriptor_set2 push_descriptor_set2;
+      struct vk_cmd_push_descriptor_set_with_template2 push_descriptor_set_with_template2;
+      struct vk_cmd_set_descriptor_buffer_offsets2_ext set_descriptor_buffer_offsets2_ext;
+      struct vk_cmd_bind_descriptor_buffer_embedded_samplers2_ext bind_descriptor_buffer_embedded_samplers2_ext;
+      struct vk_cmd_set_rendering_attachment_locations set_rendering_attachment_locations;
+      struct vk_cmd_set_rendering_input_attachment_indices set_rendering_input_attachment_indices;
+      struct vk_cmd_set_depth_clamp_range_ext set_depth_clamp_range_ext;
    } u;
 };
 
@@ -1740,6 +1803,16 @@ struct vk_cmd_queue_entry {
    , uint32_t groupIndex
   );
 
+  VkResult vk_enqueue_cmd_execute_generated_commands_ext(struct vk_cmd_queue *queue
+   , VkBool32 isPreprocessed
+   , const VkGeneratedCommandsInfoEXT* pGeneratedCommandsInfo
+  );
+
+  VkResult vk_enqueue_cmd_preprocess_generated_commands_ext(struct vk_cmd_queue *queue
+   , const VkGeneratedCommandsInfoEXT* pGeneratedCommandsInfo
+   , VkCommandBuffer stateCommandBuffer
+  );
+
   VkResult vk_enqueue_cmd_set_device_mask(struct vk_cmd_queue *queue
    , uint32_t deviceMask
   );
@@ -2040,15 +2113,9 @@ struct vk_cmd_queue_entry {
    , uint32_t pipelineStackSize
   );
 
-  VkResult vk_enqueue_cmd_set_line_stipple_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_line_stipple(struct vk_cmd_queue *queue
    , uint32_t lineStippleFactor
    , uint16_t lineStipplePattern
-  );
-
-  VkResult vk_enqueue_cmd_build_acceleration_structures_khr(struct vk_cmd_queue *queue
-   , uint32_t infoCount
-   , const VkAccelerationStructureBuildGeometryInfoKHR* pInfos
-   , const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos
   );
 
   VkResult vk_enqueue_cmd_build_acceleration_structures_indirect_khr(struct vk_cmd_queue *queue
@@ -2081,7 +2148,7 @@ struct vk_cmd_queue_entry {
    , const VkRect2D* pScissors
   );
 
-  VkResult vk_enqueue_cmd_bind_index_buffer2_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_bind_index_buffer2(struct vk_cmd_queue *queue
    , VkBuffer buffer
    , VkDeviceSize offset
    , VkDeviceSize size
@@ -2376,6 +2443,10 @@ struct vk_cmd_queue_entry {
    , const VkVideoEndCodingInfoKHR* pEndCodingInfo
   );
 
+  VkResult vk_enqueue_cmd_encode_video_khr(struct vk_cmd_queue *queue
+   , const VkVideoEncodeInfoKHR* pEncodeInfo
+  );
+
   VkResult vk_enqueue_cmd_decompress_memory_nv(struct vk_cmd_queue *queue
    , uint32_t decompressRegionCount
    , const VkDecompressMemoryRegionNV* pDecompressMemoryRegions
@@ -2456,6 +2527,31 @@ struct vk_cmd_queue_entry {
    , uint32_t stageCount
    , const VkShaderStageFlagBits* pStages
    , const VkShaderEXT* pShaders
+  );
+
+  VkResult vk_enqueue_cmd_bind_descriptor_sets2(struct vk_cmd_queue *queue
+   , const VkBindDescriptorSetsInfo*   pBindDescriptorSetsInfo
+  );
+
+  VkResult vk_enqueue_cmd_set_descriptor_buffer_offsets2_ext(struct vk_cmd_queue *queue
+   , const VkSetDescriptorBufferOffsetsInfoEXT* pSetDescriptorBufferOffsetsInfo
+  );
+
+  VkResult vk_enqueue_cmd_bind_descriptor_buffer_embedded_samplers2_ext(struct vk_cmd_queue *queue
+   , const VkBindDescriptorBufferEmbeddedSamplersInfoEXT* pBindDescriptorBufferEmbeddedSamplersInfo
+  );
+
+  VkResult vk_enqueue_cmd_set_rendering_attachment_locations(struct vk_cmd_queue *queue
+   , const VkRenderingAttachmentLocationInfo* pLocationInfo
+  );
+
+  VkResult vk_enqueue_cmd_set_rendering_input_attachment_indices(struct vk_cmd_queue *queue
+   , const VkRenderingInputAttachmentIndexInfo* pInputAttachmentIndexInfo
+  );
+
+  VkResult vk_enqueue_cmd_set_depth_clamp_range_ext(struct vk_cmd_queue *queue
+   , VkDepthClampModeEXT depthClampMode
+   , const VkDepthClampRangeEXT* pDepthClampRange
   );
 
 

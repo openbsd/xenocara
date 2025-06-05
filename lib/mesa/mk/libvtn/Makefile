@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2024/04/02 10:42:14 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2025/06/05 14:18:50 jsg Exp $
 
 LIB=	vtn
 
@@ -10,6 +10,7 @@ SRCS=	gl_spirv.c \
 	vtn_amd.c \
 	vtn_cfg.c \
 	vtn_cmat.c \
+	vtn_debug.c \
 	vtn_glsl450.c \
 	vtn_opencl.c \
 	vtn_structured_cfg.c \
@@ -25,6 +26,7 @@ CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/src/compiler/spirv \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-I${MESA_SRC}/generated/src/compiler/spirv

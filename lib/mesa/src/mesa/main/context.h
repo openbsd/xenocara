@@ -76,7 +76,8 @@ _mesa_initialize_context( struct gl_context *ctx,
                           bool no_error,
                           const struct gl_config *visual,
                           struct gl_context *share_list,
-                          const struct dd_function_table *driverFunctions);
+                          const struct dd_function_table *driverFunctions,
+                          const struct st_config_options *options);
 
 extern struct _glapi_table *
 _mesa_alloc_dispatch_table(bool glthread);
@@ -342,6 +343,34 @@ static inline bool
 _mesa_is_gles32(const struct gl_context *ctx)
 {
    return _mesa_is_gles2(ctx) && ctx->Version >= 32;
+}
+
+
+static inline bool
+_mesa_is_gles2_compatible(const struct gl_context *ctx)
+{
+   return _mesa_is_gles2(ctx) || _mesa_has_ARB_ES2_compatibility(ctx);
+}
+
+
+static inline bool
+_mesa_is_gles3_compatible(const struct gl_context *ctx)
+{
+   return _mesa_is_gles3(ctx) || _mesa_has_ARB_ES3_compatibility(ctx);
+}
+
+
+static inline bool
+_mesa_is_gles31_compatible(const struct gl_context *ctx)
+{
+   return _mesa_is_gles31(ctx) || _mesa_has_ARB_ES3_1_compatibility(ctx);
+}
+
+
+static inline bool
+_mesa_is_gles32_compatible(const struct gl_context *ctx)
+{
+   return _mesa_is_gles32(ctx) || _mesa_has_ARB_ES3_2_compatibility(ctx);
 }
 
 

@@ -30,7 +30,7 @@
 
 #include "util/glheader.h"
 #include "compiler/shader_enums.h"
-#include "util/mesa-sha1.h"
+#include "util/mesa-blake3.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -87,10 +87,6 @@ void
 _mesa_use_program(struct gl_context *ctx, gl_shader_stage stage,
                   struct gl_shader_program *shProg, struct gl_program *prog,
                   struct gl_pipeline_object *shTarget);
-
-extern void
-_mesa_copy_linked_program_data(const struct gl_shader_program *src,
-                               struct gl_linked_shader *dst_sh);
 
 extern bool
 _mesa_validate_shader_target(const struct gl_context *ctx, GLenum type);
@@ -178,11 +174,11 @@ _mesa_program_init_subroutine_defaults(struct gl_context *ctx,
 
 GLcharARB *
 _mesa_read_shader_source(const gl_shader_stage stage, const char *source,
-                         const uint8_t sha1[SHA1_DIGEST_LENGTH]);
+                         const blake3_hash blake3);
 
 void
 _mesa_dump_shader_source(const gl_shader_stage stage, const char *source,
-                         const uint8_t sha1[SHA1_DIGEST_LENGTH]);
+                         const blake3_hash blake3);
 
 void
 _mesa_init_shader_includes(struct gl_shared_state *shared);

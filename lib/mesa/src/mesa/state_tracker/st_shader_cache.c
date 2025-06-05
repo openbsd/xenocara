@@ -26,7 +26,6 @@
 #include "st_program.h"
 #include "st_shader_cache.h"
 #include "st_util.h"
-#include "compiler/glsl/program.h"
 #include "compiler/nir/nir.h"
 #include "compiler/nir/nir_serialize.h"
 #include "main/uniforms.h"
@@ -56,8 +55,7 @@ write_stream_out_to_cache(struct blob *blob,
 static void
 copy_blob_to_driver_cache_blob(struct blob *blob, struct gl_program *prog)
 {
-   prog->driver_cache_blob = ralloc_size(NULL, blob->size);
-   memcpy(prog->driver_cache_blob, blob->data, blob->size);
+   prog->driver_cache_blob = ralloc_memdup(NULL, blob->data, blob->size);
    prog->driver_cache_blob_size = blob->size;
 }
 
@@ -199,7 +197,7 @@ st_deserialise_nir_program(struct gl_context *ctx,
       }
    }
 
-   st_finalize_program(st, prog);
+   st_finalize_program(st, prog, false);
 }
 
 bool

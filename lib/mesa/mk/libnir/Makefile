@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.9 2025/06/05 14:18:47 jsg Exp $
 
 LIB=	nir
 
@@ -12,9 +12,12 @@ SRCS=	nir.c \
 	nir_deref.c \
 	nir_divergence_analysis.c \
 	nir_dominance.c \
+	nir_fixup_is_exported.c \
+	nir_format_convert.c \
 	nir_from_ssa.c \
 	nir_functions.c \
 	nir_gather_info.c \
+	nir_gather_tcs_info.c \
 	nir_gather_types.c \
 	nir_gather_xfb_info.c \
 	nir_group_loads.c \
@@ -36,6 +39,7 @@ SRCS=	nir.c \
 	nir_lower_bool_to_bitsize.c \
 	nir_lower_bool_to_float.c \
 	nir_lower_bool_to_int32.c \
+	nir_lower_calls_to_builtins.c \
 	nir_lower_cl_images.c \
 	nir_lower_clamp_color_outputs.c \
 	nir_lower_clip.c \
@@ -47,7 +51,6 @@ SRCS=	nir.c \
 	nir_lower_convert_alu_types.c \
 	nir_lower_variable_initializers.c \
 	nir_lower_discard_if.c \
-	nir_lower_discard_or_demote.c \
 	nir_lower_double_ops.c \
 	nir_lower_drawpixels.c \
 	nir_lower_fb_read.c \
@@ -100,12 +103,14 @@ SRCS=	nir.c \
 	nir_lower_robust_access.c \
 	nir_lower_samplers.c \
 	nir_lower_scratch.c \
+	nir_lower_scratch_to_var.c \
 	nir_lower_shader_calls.c \
 	nir_lower_single_sampled.c \
 	nir_lower_ssbo.c \
 	nir_lower_subgroups.c \
 	nir_lower_system_values.c \
 	nir_lower_task_shader.c \
+	nir_lower_terminate_to_demote.c \
 	nir_lower_tess_coord_z.c \
 	nir_lower_tex_shadow.c \
 	nir_lower_tex.c \
@@ -117,6 +122,7 @@ SRCS=	nir.c \
 	nir_lower_var_copies.c \
 	nir_lower_vec_to_regs.c \
 	nir_lower_vec3_to_vec4.c \
+	nir_lower_view_index_to_device_index.c \
 	nir_lower_viewport_transform.c \
 	nir_lower_wpos_center.c \
 	nir_lower_wpos_ytransform.c \
@@ -127,10 +133,13 @@ SRCS=	nir.c \
 	nir_lower_sysvals_to_varyings.c \
 	nir_metadata.c \
 	nir_mod_analysis.c \
+	nir_move_output_stores_to_end.c \
 	nir_move_vec_src_uses_to_dest.c \
 	nir_normalize_cubemap_coords.c \
 	nir_opt_access.c \
 	nir_opt_barriers.c \
+	nir_opt_call.c \
+	nir_opt_clip_cull_const.c \
 	nir_opt_combine_stores.c \
 	nir_opt_comparison_pre.c \
 	nir_opt_conditional_discard.c \
@@ -142,17 +151,22 @@ SRCS=	nir.c \
 	nir_opt_dead_cf.c \
 	nir_opt_dead_write_vars.c \
 	nir_opt_find_array_copies.c \
+	nir_opt_frag_coord_to_pixel_coord.c \
 	nir_opt_fragdepth.c \
 	nir_opt_gcm.c \
+	nir_opt_generate_bfi.c \
 	nir_opt_idiv_const.c \
 	nir_opt_if.c \
 	nir_opt_intrinsics.c \
 	nir_opt_large_constants.c \
+	nir_opt_licm.c \
 	nir_opt_load_store_vectorize.c \
+	nir_opt_loop.c \
 	nir_opt_loop_unroll.c \
 	nir_opt_memcpy.c \
 	nir_opt_move.c \
 	nir_opt_move_discards_to_top.c \
+	nir_opt_mqsad.c \
 	nir_opt_non_uniform_access.c \
 	nir_opt_offsets.c \
 	nir_opt_peephole_select.c \
@@ -162,14 +176,15 @@ SRCS=	nir.c \
 	nir_opt_reassociate_bfi.c \
 	nir_opt_rematerialize_compares.c \
 	nir_opt_remove_phis.c \
-	nir_opt_reuse_constants.c \
 	nir_opt_shrink_stores.c \
 	nir_opt_shrink_vectors.c \
 	nir_opt_sink.c \
-	nir_opt_trivial_continues.c \
 	nir_opt_undef.c \
 	nir_opt_uniform_atomics.c \
+	nir_opt_uniform_subgroup.c \
+	nir_opt_varyings.c \
 	nir_opt_vectorize.c \
+	nir_opt_vectorize_io.c \
 	nir_passthrough_gs.c \
 	nir_passthrough_tcs.c \
 	nir_phi_builder.c \
@@ -190,8 +205,10 @@ SRCS=	nir.c \
 	nir_sweep.c \
 	nir_to_lcssa.c \
 	nir_trivialize_registers.c \
+	nir_use_dominance.c \
 	nir_validate.c \
-	nir_worklist.c
+	nir_worklist.c \
+	nir_lower_atomics.c
 
 SRCS+=	spirv_info.c \
 	nir_opt_algebraic.c \
@@ -209,6 +226,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/mesa \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-I${MESA_SRC}/generated/src/compiler/spirv

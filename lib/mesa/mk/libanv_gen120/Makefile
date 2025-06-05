@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2024/04/02 10:42:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2025/06/05 14:18:39 jsg Exp $
 
 GEN=	120
 LIB=	anv_gen${GEN}
@@ -7,18 +7,24 @@ NOPROFILE=
 
 SRCS=	genX_blorp_exec.c \
 	genX_cmd_buffer.c \
+	genX_cmd_compute.c \
+	genX_cmd_draw.c \
+	genX_cmd_video.c \
+	genX_cmd_video_enc.c \
 	genX_gfx_state.c \
 	genX_gpu_memcpy.c \
 	genX_init_state.c \
+	genX_internal_kernels.c \
 	genX_pipeline.c \
 	genX_query.c \
-	genX_simple_shader.c \
-	genX_video.c
+	genX_simple_shader.c
 
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS} ${C_SSE2_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
+		-I${MESA_SRC}/src/intel/genxml \
+		-I${MESA_SRC}/src/intel/shaders \
 		-I${MESA_SRC}/src/intel/vulkan \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
@@ -31,6 +37,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \
 		-I${MESA_SRC}/generated/src/intel/ds \
+		-I${MESA_SRC}/generated/src/intel/shaders \
 		-I${MESA_SRC}/generated/src/intel/vulkan \
 		-I${MESA_SRC}/generated/src/util \
 		-I${MESA_SRC}/generated/src/vulkan/runtime \

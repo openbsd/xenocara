@@ -25,6 +25,10 @@
 #ifndef VK_PROPERTIES_H
 #define VK_PROPERTIES_H
 
+#if DETECT_OS_ANDROID
+#include "vulkan/vk_android_native_buffer.h"
+#endif /* DETECT_OS_ANDROID */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -205,6 +209,19 @@ struct vk_properties {
    VkBool32 polygonModePointSize;
    VkBool32 nonStrictSinglePixelWideLinesUseParallelogram;
    VkBool32 nonStrictWideLinesUseParallelogram;
+   VkBool32 blockTexelViewCompatibleMultipleLayers;
+   uint32_t maxCombinedImageSamplerDescriptorCount;
+   VkBool32 fragmentShadingRateClampCombinerInputs;
+   VkBool32 robustFragmentShadingRateAttachmentAccess;
+   VkBool32 separateDepthStencilAttachmentAccess;
+   uint32_t maxDescriptorSetTotalUniformBuffersDynamic;
+   uint32_t maxDescriptorSetTotalStorageBuffersDynamic;
+   uint32_t maxDescriptorSetTotalBuffersDynamic;
+   uint32_t maxDescriptorSetUpdateAfterBindTotalUniformBuffersDynamic;
+   uint32_t maxDescriptorSetUpdateAfterBindTotalStorageBuffersDynamic;
+   uint32_t maxDescriptorSetUpdateAfterBindTotalBuffersDynamic;
+   uint32_t layeredApiCount;
+   VkPhysicalDeviceLayeredApiPropertiesKHR* pLayeredApis;
    VkShaderFloatControlsIndependence denormBehaviorIndependence;
    VkShaderFloatControlsIndependence roundingModeIndependence;
    VkBool32 shaderSignedZeroInfNanPreserveFloat16;
@@ -222,6 +239,9 @@ struct vk_properties {
    VkBool32 shaderRoundingModeRTZFloat16;
    VkBool32 shaderRoundingModeRTZFloat32;
    VkBool32 shaderRoundingModeRTZFloat64;
+#if DETECT_OS_ANDROID
+   VkBool32 sharedImage;
+#endif /* DETECT_OS_ANDROID */
    VkDeviceSize minImportedHostPointerAlignment;
    float primitiveOverestimationSize;
    float maxExtraPrimitiveOverestimationSize;
@@ -273,6 +293,7 @@ struct vk_properties {
    uint32_t maxDescriptorSetUpdateAfterBindInputAttachments;
    uint64_t maxTimelineSemaphoreValueDifference;
    uint32_t maxVertexAttribDivisor;
+   VkBool32 supportsNonZeroFirstInstance;
    uint32_t pciDomain;
    uint32_t pciBus;
    uint32_t pciDevice;
@@ -291,6 +312,7 @@ struct vk_properties {
    VkBool32 transformFeedbackStreamsLinesTriangles;
    VkBool32 transformFeedbackRasterizationStreamSelect;
    VkBool32 transformFeedbackDraw;
+   VkBool32 meshAndTaskShaderDerivatives;
    VkQueueFlags supportedQueues;
    VkMemoryDecompressionMethodFlagsNV decompressionMethods;
    uint64_t maxDecompressionIndirectCount;
@@ -405,6 +427,18 @@ struct vk_properties {
    VkBool32 integerDotProductAccumulatingSaturating64BitUnsignedAccelerated;
    VkBool32 integerDotProductAccumulatingSaturating64BitSignedAccelerated;
    VkBool32 integerDotProductAccumulatingSaturating64BitMixedSignednessAccelerated;
+   VkBool32 dynamicRenderingLocalReadDepthStencilAttachments;
+   VkBool32 dynamicRenderingLocalReadMultisampledAttachments;
+   VkPipelineRobustnessBufferBehavior defaultRobustnessStorageBuffers;
+   VkPipelineRobustnessBufferBehavior defaultRobustnessUniformBuffers;
+   VkPipelineRobustnessBufferBehavior defaultRobustnessVertexInputs;
+   VkPipelineRobustnessImageBehavior defaultRobustnessImages;
+   uint32_t copySrcLayoutCount;
+   VkImageLayout* pCopySrcLayouts;
+   uint32_t copyDstLayoutCount;
+   VkImageLayout* pCopyDstLayouts;
+   uint8_t optimalTilingLayoutUUID[VK_UUID_SIZE];
+   VkBool32 identicalMemoryTypeRequirements;
    uint32_t maxCustomBorderColorSamplers;
    VkBool32 dynamicPrimitiveTopologyUnrestricted;
    VkDeviceSize robustStorageBufferAccessSizeAlignment;
@@ -427,12 +461,16 @@ struct vk_properties {
    VkBool32 fragmentShadingRateWithCustomSampleLocations;
    VkBool32 fragmentShadingRateStrictMultiplyCombiner;
    VkSampleCountFlagBits maxFragmentShadingRateInvocationCount;
-   uint32_t copySrcLayoutCount;
-   VkImageLayout* pCopySrcLayouts;
-   uint32_t copyDstLayoutCount;
-   VkImageLayout* pCopyDstLayouts;
-   uint8_t optimalTilingLayoutUUID[VK_UUID_SIZE];
-   VkBool32 identicalMemoryTypeRequirements;
+   VkBool32 nativeUnalignedPerformance;
+   uint32_t maxIndirectPipelineCount;
+   uint32_t maxIndirectShaderObjectCount;
+   uint32_t maxIndirectCommandsIndirectStride;
+   VkIndirectCommandsInputModeFlagsEXT supportedIndirectCommandsInputModes;
+   VkShaderStageFlags supportedIndirectCommandsShaderStages;
+   VkShaderStageFlags supportedIndirectCommandsShaderStagesPipelineBinding;
+   VkShaderStageFlags supportedIndirectCommandsShaderStagesShaderBinding;
+   VkBool32 deviceGeneratedCommandsTransformFeedback;
+   VkBool32 deviceGeneratedCommandsMultiDrawIndirectCount;
    VkBool32 provokingVertexModePerPipeline;
    VkBool32 transformFeedbackPreservesTriangleFanProvokingVertex;
    VkBool32 combinedImageSamplerDescriptorSingleArray;
@@ -476,16 +514,17 @@ struct vk_properties {
    int64_t drmRenderMajor;
    int64_t drmRenderMinor;
    VkBool32 triStripVertexOrderIndependentOfProvokingVertex;
+   VkBool32 pipelineBinaryInternalCache;
+   VkBool32 pipelineBinaryInternalCacheControl;
+   VkBool32 pipelineBinaryPrefersInternalCache;
+   VkBool32 pipelineBinaryPrecompiledInternalCache;
+   VkBool32 pipelineBinaryCompressedData;
    VkBool32 graphicsPipelineLibraryFastLinking;
    VkBool32 graphicsPipelineLibraryIndependentInterpolationDecoration;
    uint32_t maxCommandBufferNestingLevel;
    uint8_t shaderModuleIdentifierAlgorithmUUID[VK_UUID_SIZE];
    uint32_t maxOpacity2StateSubdivisionLevel;
    uint32_t maxOpacity4StateSubdivisionLevel;
-   VkPipelineRobustnessBufferBehaviorEXT defaultRobustnessStorageBuffers;
-   VkPipelineRobustnessBufferBehaviorEXT defaultRobustnessUniformBuffers;
-   VkPipelineRobustnessBufferBehaviorEXT defaultRobustnessVertexInputs;
-   VkPipelineRobustnessImageBehaviorEXT defaultRobustnessImages;
    uint32_t maxWeightFilterPhases;
    VkExtent2D maxWeightFilterDimension;
    VkExtent2D maxBlockMatchRegion;
@@ -518,7 +557,19 @@ struct vk_properties {
    VkBool32 shaderTileImageReadFromHelperInvocation;
    VkExtent2D maxBlockMatchWindow;
    VkLayeredDriverUnderlyingApiMSFT underlyingAPI;
+   VkPhysicalDeviceSchedulingControlsFlagsARM schedulingControlsFlags;
+   VkExtent2D renderPassStripeGranularity;
+   uint32_t maxRenderPassStripes;
+   VkDeviceSize minPlacedMemoryMapAlignment;
+   uint32_t supportedImageAlignmentMask;
+   uint32_t cooperativeMatrixWorkgroupScopeMaxWorkgroupSize;
+   uint32_t cooperativeMatrixFlexibleDimensionsMaxDimension;
+   uint32_t cooperativeMatrixWorkgroupScopeReservedSharedMemory;
 };
+
+void
+vk_set_physical_device_properties_struct(struct vk_properties *all_properties,
+                                         const VkBaseInStructure *pProperties);
 
 #ifdef __cplusplus
 }

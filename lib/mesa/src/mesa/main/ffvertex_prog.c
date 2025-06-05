@@ -296,10 +296,10 @@ struct tnl_program {
 
 static nir_variable *
 register_state_var(struct tnl_program *p,
-                   gl_state_index s0,
-                   gl_state_index s1,
-                   gl_state_index s2,
-                   gl_state_index s3,
+                   gl_state_index16 s0,
+                   gl_state_index16 s1,
+                   gl_state_index16 s2,
+                   gl_state_index16 s3,
                    const struct glsl_type *type)
 {
    gl_state_index16 tokens[STATE_LENGTH];
@@ -319,10 +319,10 @@ register_state_var(struct tnl_program *p,
 
 static nir_def *
 load_state_var(struct tnl_program *p,
-               gl_state_index s0,
-               gl_state_index s1,
-               gl_state_index s2,
-               gl_state_index s3,
+               gl_state_index16 s0,
+               gl_state_index16 s1,
+               gl_state_index16 s2,
+               gl_state_index16 s3,
                const struct glsl_type *type)
 {
    nir_variable *var = register_state_var(p, s0, s1, s2, s3, type);
@@ -331,10 +331,10 @@ load_state_var(struct tnl_program *p,
 
 static nir_def *
 load_state_vec4(struct tnl_program *p,
-                gl_state_index s0,
-                gl_state_index s1,
-                gl_state_index s2,
-                gl_state_index s3)
+                gl_state_index16 s0,
+                gl_state_index16 s1,
+                gl_state_index16 s2,
+                gl_state_index16 s3)
 {
    return load_state_var(p, s0, s1, s2, s3, glsl_vec4_type());
 }
@@ -348,22 +348,21 @@ load_state_mat4(struct tnl_program *p, nir_def *out[4],
 }
 
 static nir_def *
-load_input(struct tnl_program *p, gl_vert_attrib attr,
-           const struct glsl_type *type)
+load_input(struct tnl_program *p, gl_vert_attrib attr, unsigned num_components)
 {
    if (p->state->varying_vp_inputs & VERT_BIT(attr)) {
-      nir_variable *var = nir_get_variable_with_location(p->b->shader, nir_var_shader_in,
-                                                         attr, type);
-      p->b->shader->info.inputs_read |= (uint64_t)VERT_BIT(attr);
-      return nir_load_var(p->b, var);
-   } else
-      return load_state_var(p, STATE_CURRENT_ATTRIB, attr, 0, 0, type);
+      return nir_load_input(p->b, num_components, 32, nir_imm_int(p->b, 0),
+                            .io_semantics.location = attr);
+   } else {
+      return load_state_var(p, STATE_CURRENT_ATTRIB, attr, 0, 0,
+                            glsl_vector_type(GLSL_TYPE_FLOAT, num_components));
+   }
 }
 
 static nir_def *
 load_input_vec4(struct tnl_program *p, gl_vert_attrib attr)
 {
-   return load_input(p, attr, glsl_vec4_type());
+   return load_input(p, attr, 4);
 }
 
 static nir_variable *
@@ -377,12 +376,13 @@ register_output(struct tnl_program *p, gl_varying_slot slot,
 }
 
 static void
-store_output_vec4_masked(struct tnl_program *p, gl_varying_slot slot,
-                         nir_def *value, unsigned mask)
+store_output_vec4_masked(struct tnl_program *p, gl_varying_slot slot, nir_def *value,
+                         unsigned writemask)
 {
-   assert(mask <= 0xf);
-   nir_variable *var = register_output(p, slot, glsl_vec4_type());
-   nir_store_var(p->b, var, value, mask);
+   assert(writemask <= 0xf);
+   nir_store_output(p->b, value, nir_imm_int(p->b, 0),
+                    .write_mask = writemask,
+                    .io_semantics.location = slot);
 }
 
 static void
@@ -396,8 +396,7 @@ static void
 store_output_float(struct tnl_program *p, gl_varying_slot slot,
                    nir_def *value)
 {
-   nir_variable *var = register_output(p, slot, glsl_float_type());
-   nir_store_var(p->b, var, value, 0x1);
+   store_output_vec4_masked(p, slot, value, 0x1);
 }
 
 
@@ -499,13 +498,9 @@ get_transformed_normal(struct tnl_program *p)
        !p->state->need_eye_coords &&
        !p->state->normalize &&
        !(p->state->need_eye_coords == p->state->rescale_normals)) {
-      p->transformed_normal =
-         load_input(p, VERT_ATTRIB_NORMAL,
-                    glsl_vector_type(GLSL_TYPE_FLOAT, 3));
+      p->transformed_normal = load_input(p, VERT_ATTRIB_NORMAL, 3);
    } else if (!p->transformed_normal) {
-      nir_def *normal =
-         load_input(p, VERT_ATTRIB_NORMAL,
-                    glsl_vector_type(GLSL_TYPE_FLOAT, 3));
+      nir_def *normal = load_input(p, VERT_ATTRIB_NORMAL, 3);
 
       if (p->state->need_eye_coords) {
          nir_def *mvinv[4];
@@ -557,7 +552,7 @@ static void set_material_flags( struct tnl_program *p )
    p->color_materials = 0;
    p->materials = 0;
 
-   if (p->state->varying_vp_inputs & VERT_BIT_COLOR0) {
+   if (p->state->light_color_material_mask) {
       p->materials =
          p->color_materials = p->state->light_color_material_mask;
    }
@@ -1062,11 +1057,10 @@ static void build_fog( struct tnl_program *p )
       fog = nir_fabs(p->b, get_eye_position_z(p));
       break;
    case FDM_FROM_ARRAY:
-      fog = load_input(p, VERT_ATTRIB_FOG, glsl_float_type());
+      fog = load_input(p, VERT_ATTRIB_FOG, 1);
       break;
    default:
-      assert(!"Bad fog mode in build_fog()");
-      break;
+      unreachable("Bad fog mode in build_fog()");
    }
 
    store_output_float(p, VARYING_SLOT_FOGC, fog);
@@ -1272,8 +1266,7 @@ static void build_atten_pointsize( struct tnl_program *p )
  */
 static void build_array_pointsize( struct tnl_program *p )
 {
-   nir_def *val = load_input(p, VERT_ATTRIB_POINT_SIZE,
-                                 glsl_float_type());
+   nir_def *val = load_input(p, VERT_ATTRIB_POINT_SIZE, 1);
    store_output_float(p, VARYING_SLOT_PSIZ, val);
 }
 
@@ -1336,6 +1329,7 @@ create_new_program( const struct state_key *key,
    nir_shader *s = b.shader;
 
    s->info.separate_shader = true;
+   s->info.io_lowered = true;
 
    p.b = &b;
 
@@ -1344,7 +1338,7 @@ create_new_program( const struct state_key *key,
    nir_validate_shader(b.shader, "after generating ff-vertex shader");
 
    /* Emit the MVP position transformation */
-   NIR_PASS_V(b.shader, st_nir_lower_position_invariant, mvp_with_dp4, p.state_params);
+   NIR_PASS(_, b.shader, st_nir_lower_position_invariant, mvp_with_dp4, p.state_params);
 
    _mesa_add_separate_state_parameters(program, p.state_params);
    _mesa_free_parameter_list(p.state_params);

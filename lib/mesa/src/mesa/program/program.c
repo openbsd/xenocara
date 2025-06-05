@@ -251,6 +251,7 @@ _mesa_delete_program(struct gl_context *ctx, struct gl_program *prog)
    st_release_variants(st, prog);
 
    free(prog->serialized_nir);
+   free(prog->base_serialized_nir);
 
    if (prog == &_mesa_DummyProgram)
       return;
@@ -278,6 +279,14 @@ _mesa_delete_program(struct gl_context *ctx, struct gl_program *prog)
    ralloc_free(prog);
 }
 
+struct gl_program *
+_mesa_lookup_program_locked(struct gl_context *ctx, GLuint id)
+{
+   if (id)
+      return (struct gl_program *) _mesa_HashLookupLocked(&ctx->Shared->Programs, id);
+   else
+      return NULL;
+}
 
 /**
  * Return the gl_program object for a given ID.
@@ -288,7 +297,7 @@ struct gl_program *
 _mesa_lookup_program(struct gl_context *ctx, GLuint id)
 {
    if (id)
-      return (struct gl_program *) _mesa_HashLookup(ctx->Shared->Programs, id);
+      return (struct gl_program *) _mesa_HashLookup(&ctx->Shared->Programs, id);
    else
       return NULL;
 }
@@ -412,6 +421,9 @@ _mesa_add_separate_state_parameters(struct gl_program *prog,
                                     struct gl_program_parameter_list *state_params)
 {
    unsigned num_state_params = state_params->NumParameters;
+
+   if (num_state_params == 0)
+      return;
 
    /* All state parameters should be vec4s. */
    for (unsigned i = 0; i < num_state_params; i++) {

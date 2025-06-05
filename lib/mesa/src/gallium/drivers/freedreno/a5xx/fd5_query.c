@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2017 Rob Clark <robclark@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2017 Rob Clark <robclark@freedesktop.org>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -44,7 +26,7 @@ struct PACKED fd5_query_sample {
    uint64_t result;
    uint64_t stop;
 };
-DEFINE_CAST(fd_acc_query_sample, fd5_query_sample);
+FD_DEFINE_CAST(fd_acc_query_sample, fd5_query_sample);
 
 /* offset of a single field of an array of fd5_query_sample: */
 #define query_sample_idx(aq, idx, field)                                       \
@@ -65,7 +47,9 @@ DEFINE_CAST(fd_acc_query_sample, fd5_query_sample);
 
 static void
 occlusion_resume(struct fd_acc_query *aq, struct fd_batch *batch)
+   assert_dt
 {
+   struct fd_context *ctx = batch->ctx;
    struct fd_ringbuffer *ring = batch->draw;
 
    OUT_PKT4(ring, REG_A5XX_RB_SAMPLE_COUNT_CONTROL, 1);
@@ -79,12 +63,14 @@ occlusion_resume(struct fd_acc_query *aq, struct fd_batch *batch)
    fd5_event_write(batch, ring, ZPASS_DONE, false);
    fd_reset_wfi(batch);
 
-   fd5_context(batch->ctx)->samples_passed_queries++;
+   ctx->occlusion_queries_active++;
 }
 
 static void
 occlusion_pause(struct fd_acc_query *aq, struct fd_batch *batch)
+   assert_dt
 {
+   struct fd_context *ctx = batch->ctx;
    struct fd_ringbuffer *ring = batch->draw;
 
    OUT_PKT7(ring, CP_MEM_WRITE, 4);
@@ -120,7 +106,8 @@ occlusion_pause(struct fd_acc_query *aq, struct fd_batch *batch)
    OUT_RELOC(ring, query_sample(aq, stop));   /* srcB */
    OUT_RELOC(ring, query_sample(aq, start));  /* srcC */
 
-   fd5_context(batch->ctx)->samples_passed_queries--;
+   assert(ctx->occlusion_queries_active > 0);
+   ctx->occlusion_queries_active--;
 }
 
 static void

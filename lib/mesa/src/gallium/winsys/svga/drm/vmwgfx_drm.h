@@ -1,29 +1,9 @@
-/**************************************************************************
- *
- * Copyright © 2009-2022 VMware, Inc., Palo Alto, CA., USA
- * All Rights Reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sub license, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice (including the
- * next paragraph) shall be included in all copies or substantial portions
- * of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- **************************************************************************/
+/*
+ * Copyright (c) 2009-2024 Broadcom. All Rights Reserved.
+ * The term “Broadcom” refers to Broadcom Inc.
+ * and/or its subsidiaries.
+ * SPDX-License-Identifier: MIT
+ */
 
 #ifndef __VMWGFX_DRM_H__
 #define __VMWGFX_DRM_H__
@@ -98,6 +78,9 @@ extern "C" {
  *
  * DRM_VMW_PARAM_DEVICE_ID
  * PCI ID of the underlying SVGA device.
+ *
+ * DRM_VMW_PARAM_USER_SRF
+ * Userspace managed surface support is enabled.
  */
 
 #define DRM_VMW_PARAM_NUM_STREAMS      0
@@ -118,6 +101,7 @@ extern "C" {
 #define DRM_VMW_PARAM_SM5              15
 #define DRM_VMW_PARAM_GL43             16
 #define DRM_VMW_PARAM_DEVICE_ID        17
+#define DRM_VMW_PARAM_USER_SRF         18
 
 /**
  * enum drm_vmw_handle_type - handle type for ref ioctls

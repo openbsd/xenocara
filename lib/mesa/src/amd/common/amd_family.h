@@ -12,6 +12,8 @@
 extern "C" {
 #endif
 
+struct radeon_info;
+
 enum radeon_family
 {
    CHIP_UNKNOWN = 0,
@@ -117,9 +119,16 @@ enum radeon_family
    CHIP_NAVI31,         /* Radeon 7900 */
    CHIP_NAVI32,         /* Radeon 7800, 7700 */
    CHIP_NAVI33,         /* Radeon 7600, 7700S (mobile) */
-   CHIP_GFX1103_R1,
-   CHIP_GFX1103_R2,
+   CHIP_PHOENIX,        /* Ryzen Z1 Extreme, Ryzen 7040, Ryzen 8040 */
+   CHIP_PHOENIX2,       /* Ryzen Z1, Ryzen 8040 */
+   /* GFX11.5 (RDNA 3.5) */
    CHIP_GFX1150,
+   CHIP_GFX1151,
+   CHIP_GFX1152,
+   CHIP_GFX1153,
+   /* GFX12 (RDNA 4) */
+   CHIP_GFX1200,
+   CHIP_GFX1201,
    CHIP_LAST,
 };
 
@@ -141,6 +150,7 @@ enum amd_gfx_level
    GFX10_3,
    GFX11,
    GFX11_5,
+   GFX12,
 
    NUM_GFX_VERSIONS,
 };
@@ -157,6 +167,7 @@ enum amd_ip_type
    AMD_IP_VCN_ENC,
    AMD_IP_VCN_UNIFIED = AMD_IP_VCN_ENC,
    AMD_IP_VCN_JPEG,
+   AMD_IP_VPE,
    AMD_NUM_IP_TYPES,
 };
 
@@ -200,12 +211,53 @@ enum vcn_version{
    VCN_4_0_3,
    VCN_4_0_4,
    VCN_4_0_5,
+   VCN_4_0_6,
+
+   VCN_5_0_0,
+   VCN_5_0_1,
+};
+
+#define SDMA_VERSION_VALUE(major, minor) (((major) << 8) | (minor))
+
+enum sdma_version {
+   SDMA_UNKNOWN = 0,
+   /* GFX6 */
+   SDMA_1_0 = SDMA_VERSION_VALUE(1, 0),
+
+   /* GFX7 */
+   SDMA_2_0 = SDMA_VERSION_VALUE(2, 0),
+
+   /* GFX8 */
+   SDMA_2_4 = SDMA_VERSION_VALUE(2, 4),
+   SDMA_3_0 = SDMA_VERSION_VALUE(3, 0),
+   SDMA_3_1 = SDMA_VERSION_VALUE(3, 1),
+
+   /* GFX9 */
+   SDMA_4_0 = SDMA_VERSION_VALUE(4, 0),
+   SDMA_4_1 = SDMA_VERSION_VALUE(4, 1),
+   SDMA_4_2 = SDMA_VERSION_VALUE(4, 2),
+   SDMA_4_4 = SDMA_VERSION_VALUE(4, 4),
+
+   /* GFX10 */
+   SDMA_5_0 = SDMA_VERSION_VALUE(5, 0),
+
+   /* GFX10.3 */
+   SDMA_5_2 = SDMA_VERSION_VALUE(5, 2),
+
+   /* GFX11 */
+   SDMA_6_0 = SDMA_VERSION_VALUE(6, 0),
+
+   /* GFX11.5 */
+   SDMA_6_1 = SDMA_VERSION_VALUE(6, 1),
+
+   /* GFX12 */
+   SDMA_7_0 = SDMA_VERSION_VALUE(7, 0),
 };
 
 const char *ac_get_family_name(enum radeon_family family);
 enum amd_gfx_level ac_get_gfx_level(enum radeon_family family);
-unsigned ac_get_family_id(enum radeon_family family);
 const char *ac_get_llvm_processor_name(enum radeon_family family);
+const char *ac_get_ip_type_string(const struct radeon_info *info, enum amd_ip_type ip_type);
 
 #ifdef __cplusplus
 }

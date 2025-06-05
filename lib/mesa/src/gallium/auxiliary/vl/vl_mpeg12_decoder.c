@@ -594,7 +594,8 @@ vl_mpeg12_begin_frame(struct pipe_video_codec *decoder,
    struct vl_mpeg12_buffer *buf;
 
    struct pipe_resource *tex;
-   struct pipe_box rect = { 0, 0, 0, 1, 1, 1 };
+   struct pipe_box rect;
+   u_box_3d(0, 0, 0, 1, 1, 1, &rect);
 
    uint8_t intra_matrix[64];
    uint8_t non_intra_matrix[64];
@@ -745,7 +746,7 @@ vl_mpeg12_decode_bitstream(struct pipe_video_codec *decoder,
    vl_mpg12_bs_decode(&buf->bs, target, desc, num_buffers, buffers, sizes);
 }
 
-static void
+static int
 vl_mpeg12_end_frame(struct pipe_video_codec *decoder,
                     struct pipe_video_buffer *target,
                     struct pipe_picture_desc *picture)
@@ -794,7 +795,7 @@ vl_mpeg12_end_frame(struct pipe_video_codec *decoder,
          if (!ref_frames[j] || !ref_frames[j][i]) continue;
 
          vb[2] = vl_vb_get_mv(&buf->vertex_stream, j);
-         dec->context->set_vertex_buffers(dec->context, 3, 0, false, vb);
+         util_set_vertex_buffers(dec->context, 3, false, vb);
 
          vl_mc_render_ref(i ? &dec->mc_c : &dec->mc_y, &buf->mc[i], ref_frames[j][i]);
       }
@@ -805,7 +806,7 @@ vl_mpeg12_end_frame(struct pipe_video_codec *decoder,
       if (!buf->num_ycbcr_blocks[i]) continue;
 
       vb[1] = vl_vb_get_ycbcr(&buf->vertex_stream, i);
-      dec->context->set_vertex_buffers(dec->context, 2, 0, false, vb);
+      util_set_vertex_buffers(dec->context, 2, false, vb);
 
       vl_zscan_render(i ? &dec->zscan_c : & dec->zscan_y, &buf->zscan[i] , buf->num_ycbcr_blocks[i]);
 
@@ -824,7 +825,7 @@ vl_mpeg12_end_frame(struct pipe_video_codec *decoder,
          if (!buf->num_ycbcr_blocks[plane]) continue;
 
          vb[1] = vl_vb_get_ycbcr(&buf->vertex_stream, plane);
-         dec->context->set_vertex_buffers(dec->context, 2, 0, false, vb);
+         util_set_vertex_buffers(dec->context, 2, false, vb);
 
          if (dec->base.entrypoint <= PIPE_VIDEO_ENTRYPOINT_IDCT)
             vl_idct_prepare_stage2(i ? &dec->idct_c : &dec->idct_y, &buf->idct[plane]);
@@ -842,6 +843,7 @@ vl_mpeg12_end_frame(struct pipe_video_codec *decoder,
    dec->context->flush(dec->context, NULL, 0);
    ++dec->current_buffer;
    dec->current_buffer %= 4;
+   return 0;
 }
 
 static void
@@ -964,11 +966,8 @@ init_idct(struct vl_mpeg12_decoder *dec, const struct format_config* format_conf
 
    struct pipe_sampler_view *matrix = NULL;
 
-   nr_of_idct_render_targets = dec->context->screen->get_param
-   (
-      dec->context->screen, PIPE_CAP_MAX_RENDER_TARGETS
-   );
-   
+   nr_of_idct_render_targets = dec->context->screen->caps.max_render_targets;
+
    max_inst = dec->context->screen->get_shader_param
    (
       dec->context->screen, PIPE_SHADER_FRAGMENT, PIPE_SHADER_CAP_MAX_INSTRUCTIONS
@@ -1121,7 +1120,7 @@ vl_create_mpeg12_decoder(struct pipe_context *context,
 
    dec->base = *templat;
    dec->base.context = context;
-   dec->context = pipe_create_multimedia_context(context->screen);
+   dec->context = pipe_create_multimedia_context(context->screen, false);
 
    dec->base.destroy = vl_mpeg12_destroy;
    dec->base.begin_frame = vl_mpeg12_begin_frame;

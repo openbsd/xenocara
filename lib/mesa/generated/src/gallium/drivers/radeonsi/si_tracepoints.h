@@ -63,7 +63,8 @@ void si_ds_begin_draw(
    uint64_t ts_ns,
    uint16_t tp_idx,
    const void *flush_data,
-   const struct trace_si_begin_draw *payload);
+   const struct trace_si_begin_draw *payload,
+   const void *indirect_data);
 #endif
 void __trace_si_begin_draw(
        struct u_trace *ut
@@ -94,7 +95,8 @@ void si_ds_end_draw(
    uint64_t ts_ns,
    uint16_t tp_idx,
    const void *flush_data,
-   const struct trace_si_end_draw *payload);
+   const struct trace_si_end_draw *payload,
+   const void *indirect_data);
 #endif
 void __trace_si_end_draw(
        struct u_trace *ut
@@ -136,7 +138,8 @@ void si_ds_begin_compute(
    uint64_t ts_ns,
    uint16_t tp_idx,
    const void *flush_data,
-   const struct trace_si_begin_compute *payload);
+   const struct trace_si_begin_compute *payload,
+   const void *indirect_data);
 #endif
 void __trace_si_begin_compute(
        struct u_trace *ut
@@ -169,7 +172,8 @@ void si_ds_end_compute(
    uint64_t ts_ns,
    uint16_t tp_idx,
    const void *flush_data,
-   const struct trace_si_end_compute *payload);
+   const struct trace_si_end_compute *payload,
+   const void *indirect_data);
 #endif
 void __trace_si_end_compute(
        struct u_trace *ut

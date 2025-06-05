@@ -46,7 +46,7 @@
 #include "draw_tess.h"
 #include "draw_mesh.h"
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
 #include "gallivm/lp_bld_init.h"
 #include "gallivm/lp_bld_limits.h"
 #include "draw_llvm.h"
@@ -56,7 +56,7 @@
 bool
 draw_get_option_use_llvm(void)
 {
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    return debug_get_bool_option("DRAW_USE_LLVM", true);
 #else
    return false;
@@ -75,9 +75,9 @@ draw_create_context(struct pipe_context *pipe, void *context,
    if (!draw)
       goto err_out;
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (try_llvm && draw_get_option_use_llvm()) {
-      draw->llvm = draw_llvm_create(draw, (LLVMContextRef)context);
+      draw->llvm = draw_llvm_create(draw, (lp_context_ref *)context);
    }
 #endif
 
@@ -110,7 +110,7 @@ draw_create(struct pipe_context *pipe)
 }
 
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
 struct draw_context *
 draw_create_with_llvm_context(struct pipe_context *pipe,
                               void *context)
@@ -163,8 +163,8 @@ draw_init(struct draw_context *draw)
    if (!draw_gs_init(draw))
       return false;
 
-   draw->quads_always_flatshade_last = !draw->pipe->screen->get_param(
-      draw->pipe->screen, PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION);
+   draw->quads_always_flatshade_last =
+      !draw->pipe->screen->caps.quads_follow_provoking_vertex_convention;
 
    draw->floating_point_depth = false;
 
@@ -222,7 +222,7 @@ draw_destroy(struct draw_context *draw)
    draw_pt_destroy(draw);
    draw_vs_destroy(draw);
    draw_gs_destroy(draw);
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (draw->llvm)
       draw_llvm_destroy(draw->llvm);
 #endif
@@ -372,6 +372,12 @@ draw_set_clip_state(struct draw_context *draw,
    memcpy(&draw->plane[6], clip->ucp, sizeof(clip->ucp));
 }
 
+void
+draw_set_viewmask(struct draw_context *draw, uint8_t viewmask)
+{
+   draw->viewmask = viewmask;
+}
+
 
 /**
  * Set the draw module's viewport state.
@@ -405,15 +411,13 @@ draw_set_viewport_states(struct draw_context *draw,
 void
 draw_set_vertex_buffers(struct draw_context *draw,
                         unsigned count,
-                        unsigned unbind_num_trailing_slots,
                         const struct pipe_vertex_buffer *buffers)
 {
    assert(count <= PIPE_MAX_ATTRIBS);
 
    util_set_vertex_buffers_count(draw->pt.vertex_buffer,
                                  &draw->pt.nr_vertex_buffers,
-                                 buffers, count,
-                                 unbind_num_trailing_slots, false);
+                                 buffers, count, false);
 }
 
 
@@ -1083,7 +1087,7 @@ draw_set_samplers(struct draw_context *draw,
 
    draw->num_samplers[shader_stage] = num;
 
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (draw->llvm)
       draw_llvm_set_sampler_state(draw, shader_stage);
 #endif
@@ -1123,7 +1127,7 @@ draw_set_mapped_texture(struct draw_context *draw,
                         uint32_t img_stride[PIPE_MAX_TEXTURE_LEVELS],
                         uint32_t mip_offsets[PIPE_MAX_TEXTURE_LEVELS])
 {
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (draw->llvm)
       draw_llvm_set_mapped_texture(draw,
                                    shader_stage,
@@ -1146,7 +1150,7 @@ draw_set_mapped_image(struct draw_context *draw,
                       uint32_t num_samples,
                       uint32_t sample_stride)
 {
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (draw->llvm)
       draw_llvm_set_mapped_image(draw,
                                  shader_stage,
@@ -1186,7 +1190,7 @@ draw_get_shader_param_no_llvm(enum pipe_shader_type shader,
 int
 draw_get_shader_param(enum pipe_shader_type shader, enum pipe_shader_cap param)
 {
-#ifdef DRAW_LLVM_AVAILABLE
+#if DRAW_LLVM_AVAILABLE
    if (draw_get_option_use_llvm()) {
       switch(shader) {
       case PIPE_SHADER_VERTEX:
@@ -1267,7 +1271,10 @@ draw_stats_clipper_primitives(struct draw_context *draw,
 bool
 draw_will_inject_frontface(const struct draw_context *draw)
 {
-   unsigned reduced_prim = u_reduced_prim(draw->pt.prim);
+   /* The geometry shader can change the primitive type. */
+   enum mesa_prim prim = draw->gs.geometry_shader ?
+      draw->gs.geometry_shader->output_primitive : draw->pt.prim;
+   enum mesa_prim reduced_prim = u_reduced_prim(prim);
    const struct pipe_rasterizer_state *rast = draw->rasterizer;
 
    if (reduced_prim != MESA_PRIM_TRIANGLES) {

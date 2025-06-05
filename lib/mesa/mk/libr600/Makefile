@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2025/06/05 14:18:48 jsg Exp $
 
 LIB=	r600
 
@@ -16,6 +16,7 @@ SRCS=	compute_memory_pool.c \
 	r600_hw_context.c \
 	r600_isa.c \
 	r600_pipe.c \
+	r600_sfn.cpp \
 	r600_shader.c \
 	r600_state.c \
 	r600_state_common.c \

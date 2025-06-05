@@ -31,7 +31,7 @@
 /*
  * surface
  */
-static void __print_surface(FILE *out, const void *arg) {
+static void __print_surface(FILE *out, const void *arg, const void *indirect) {
    const struct trace_surface *__entry =
       (const struct trace_surface *)arg;
    fprintf(out, "%ux%u@%u, fmt=%s\n"
@@ -42,7 +42,7 @@ static void __print_surface(FILE *out, const void *arg) {
    );
 }
 
-static void __print_json_surface(FILE *out, const void *arg) {
+static void __print_json_surface(FILE *out, const void *arg, const void *indirect) {
    const struct trace_surface *__entry =
       (const struct trace_surface *)arg;
    fprintf(out, "\"unstructured\": \"%ux%u@%u, fmt=%s\""
@@ -54,9 +54,11 @@ static void __print_json_surface(FILE *out, const void *arg) {
 }
 
 static const struct u_tracepoint __tp_surface = {
-    ALIGN_POT(sizeof(struct trace_surface), 8),   /* keep size 64b aligned */
     "surface",
-    false,
+    ALIGN_POT(sizeof(struct trace_surface), 8),   /* keep size 64b aligned */
+    0
+    ,
+    0,
     0,
     __print_surface,
     __print_json_surface,
@@ -70,7 +72,11 @@ void __trace_surface(
    struct trace_surface entry;
    UNUSED struct trace_surface *__entry =
       enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
-      (struct trace_surface *)u_trace_append(ut, cs, &__tp_surface) :
+      (struct trace_surface *)u_trace_appendv(ut, cs, &__tp_surface,
+                                                    0
+                                                    ,
+                                                    0, NULL, NULL
+                                                    ) :
       &entry;
    __entry->width = psurf->width;
    __entry->height = psurf->height;
@@ -81,7 +87,7 @@ void __trace_surface(
 /*
  * framebuffer
  */
-static void __print_framebuffer(FILE *out, const void *arg) {
+static void __print_framebuffer(FILE *out, const void *arg, const void *indirect) {
    const struct trace_framebuffer *__entry =
       (const struct trace_framebuffer *)arg;
    fprintf(out, "%ux%ux%u@%u, nr_cbufs: %u\n"
@@ -93,7 +99,7 @@ static void __print_framebuffer(FILE *out, const void *arg) {
    );
 }
 
-static void __print_json_framebuffer(FILE *out, const void *arg) {
+static void __print_json_framebuffer(FILE *out, const void *arg, const void *indirect) {
    const struct trace_framebuffer *__entry =
       (const struct trace_framebuffer *)arg;
    fprintf(out, "\"unstructured\": \"%ux%ux%u@%u, nr_cbufs: %u\""
@@ -106,9 +112,11 @@ static void __print_json_framebuffer(FILE *out, const void *arg) {
 }
 
 static const struct u_tracepoint __tp_framebuffer = {
-    ALIGN_POT(sizeof(struct trace_framebuffer), 8),   /* keep size 64b aligned */
     "framebuffer",
-    false,
+    ALIGN_POT(sizeof(struct trace_framebuffer), 8),   /* keep size 64b aligned */
+    0
+    ,
+    0,
     1,
     __print_framebuffer,
     __print_json_framebuffer,
@@ -122,7 +130,11 @@ void __trace_framebuffer(
    struct trace_framebuffer entry;
    UNUSED struct trace_framebuffer *__entry =
       enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
-      (struct trace_framebuffer *)u_trace_append(ut, cs, &__tp_framebuffer) :
+      (struct trace_framebuffer *)u_trace_appendv(ut, cs, &__tp_framebuffer,
+                                                    0
+                                                    ,
+                                                    0, NULL, NULL
+                                                    ) :
       &entry;
    __entry->width = pfb->width;
    __entry->height = pfb->height;
@@ -134,7 +146,7 @@ void __trace_framebuffer(
 /*
  * grid_info
  */
-static void __print_grid_info(FILE *out, const void *arg) {
+static void __print_grid_info(FILE *out, const void *arg, const void *indirect) {
    const struct trace_grid_info *__entry =
       (const struct trace_grid_info *)arg;
    fprintf(out, "work_dim=%u, block=%ux%ux%u, grid=%ux%ux%u\n"
@@ -148,7 +160,7 @@ static void __print_grid_info(FILE *out, const void *arg) {
    );
 }
 
-static void __print_json_grid_info(FILE *out, const void *arg) {
+static void __print_json_grid_info(FILE *out, const void *arg, const void *indirect) {
    const struct trace_grid_info *__entry =
       (const struct trace_grid_info *)arg;
    fprintf(out, "\"unstructured\": \"work_dim=%u, block=%ux%ux%u, grid=%ux%ux%u\""
@@ -163,9 +175,11 @@ static void __print_json_grid_info(FILE *out, const void *arg) {
 }
 
 static const struct u_tracepoint __tp_grid_info = {
-    ALIGN_POT(sizeof(struct trace_grid_info), 8),   /* keep size 64b aligned */
     "grid_info",
-    false,
+    ALIGN_POT(sizeof(struct trace_grid_info), 8),   /* keep size 64b aligned */
+    0
+    ,
+    0,
     2,
     __print_grid_info,
     __print_json_grid_info,
@@ -179,7 +193,11 @@ void __trace_grid_info(
    struct trace_grid_info entry;
    UNUSED struct trace_grid_info *__entry =
       enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
-      (struct trace_grid_info *)u_trace_append(ut, cs, &__tp_grid_info) :
+      (struct trace_grid_info *)u_trace_appendv(ut, cs, &__tp_grid_info,
+                                                    0
+                                                    ,
+                                                    0, NULL, NULL
+                                                    ) :
       &entry;
    __entry->work_dim = pgrid->work_dim;
    __entry->block_x = pgrid->block[0];

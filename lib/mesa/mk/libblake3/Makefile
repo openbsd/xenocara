@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2024/09/15 10:56:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2025/06/05 14:18:40 jsg Exp $
 
 LIB=	blake3
 
@@ -20,7 +20,12 @@ SRCS+=	blake3_neon.c
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS}
-CPPFLAGS+=
+.if ${MACHINE_ARCH} == "i386"
+CPPFLAGS+=	-DBLAKE3_NO_SSE2 \
+		-DBLAKE3_NO_SSE41 \
+		-DBLAKE3_NO_AVX2 \
+		-DBLAKE3_NO_AVX512
+.endif
 
 install:
 

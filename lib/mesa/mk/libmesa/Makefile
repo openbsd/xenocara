@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2025/06/05 14:18:47 jsg Exp $
 
 LIB=	mesa
 
@@ -58,6 +58,7 @@ SRCS=	accum.c \
 	glthread_draw_unroll.c \
 	glthread_get.c \
 	glthread_list.c \
+	glthread_pixels.c \
 	glthread_shaderobj.c \
 	glthread_varray.c \
 	hash.c \
@@ -85,7 +86,6 @@ SRCS=	accum.c \
 	queryobj.c \
 	rastpos.c \
 	readpix.c \
-	remap.c \
 	renderbuffer.c \
 	robustness.c \
 	samplerobj.c \
@@ -95,6 +95,7 @@ SRCS=	accum.c \
 	shaderimage.c \
 	shaderobj.c \
 	shared.c \
+	spirv_capabilities.c \
 	spirv_extensions.c \
 	state.c \
 	stencil.c \
@@ -187,6 +188,7 @@ SRCS=	accum.c \
 	st_nir_lower_fog.c \
 	st_nir_lower_position_invariant.c \
 	st_nir_lower_tex_src_plane.c \
+	st_nir_unlower_io_to_vars.c \
 	st_pbo.c \
 	st_pbo_compute.c \
 	st_program.c \
@@ -233,6 +235,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/util \
+		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/mesa \

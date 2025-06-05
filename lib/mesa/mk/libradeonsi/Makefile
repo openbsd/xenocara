@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2025/06/05 14:18:48 jsg Exp $
 
 LIB=	radeonsi
 
@@ -6,6 +6,7 @@ NOPROFILE=
 
 SRCS=	gfx10_shader_ngg.c \
 	gfx11_query.c \
+	si_barrier.c \
 	si_blit.c \
 	si_buffer.c \
 	si_clear.c \
@@ -13,6 +14,7 @@ SRCS=	gfx10_shader_ngg.c \
 	si_compute_blit.c \
 	si_cp_dma.c \
 	si_cp_reg_shadowing.c \
+	si_cp_utils.c \
 	si_debug.c \
 	si_descriptors.c \
 	si_fence.c \
@@ -31,14 +33,8 @@ SRCS=	gfx10_shader_ngg.c \
 	si_shader.c \
 	si_shader_aco.c \
 	si_shader_info.c \
-	si_shader_llvm.c \
-	si_shader_llvm_gs.c \
-	si_shader_llvm_ps.c \
-	si_shader_llvm_tess.c \
-	si_shader_llvm_vs.c \
 	si_shader_nir.c \
 	si_shaderlib_nir.c \
-	si_shaderlib_tgsi.c \
 	si_sqtt.c \
 	si_state.c \
 	si_state_binning.c \
@@ -46,17 +42,17 @@ SRCS=	gfx10_shader_ngg.c \
 	si_state_shaders.cpp \
 	si_state_streamout.c \
 	si_state_viewport.c \
-	si_test_image_copy_region.c \
+	si_test_blit_perf.c \
 	si_test_dma_perf.c \
+	si_test_image_copy_region.c \
 	si_texture.c \
 	si_utrace.c \
 	si_uvd.c \
+	si_vpe.c \
 	radeon_uvd.c \
 	radeon_uvd_enc.c \
 	radeon_uvd_enc_1_1.c \
 	radeon_vce.c \
-	radeon_vce_40_2_2.c \
-	radeon_vce_50.c \
 	radeon_vce_52.c \
 	radeon_vcn.c \
 	radeon_vcn_dec.c \
@@ -66,10 +62,17 @@ SRCS=	gfx10_shader_ngg.c \
 	radeon_vcn_enc_2_0.c \
 	radeon_vcn_enc_3_0.c \
 	radeon_vcn_enc_4_0.c \
-	radeon_video.c
+	radeon_vcn_enc_5_0.c \
+	radeon_video.c \
+	radeon_bitstream.c
 
 SRCS+=	si_perfetto.cpp \
 	si_tracepoints.c
+
+SRCS+=	si_shader_llvm.c \
+	si_shader_llvm_gs.c \
+	si_shader_llvm_ps.c \
+	si_shader_llvm_tess.c
 
 .include "../Makefile.inc"
 
@@ -82,7 +85,9 @@ CPPFLAGS+=	-DGALLIUM_RADEONSI \
 		-I${MESA_SRC}/src/gallium/drivers \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/util \
+		-I${MESA_SRC}/src/amd \
 		-I${MESA_SRC}/src/amd/common \
+		-I${MESA_SRC}/src/amd/common/nir \
 		-I${MESA_SRC}/src/amd/compiler \
 		-I${MESA_SRC}/src/amd/llvm \
 		-I${MESA_SRC}/src/compiler \

@@ -1,8 +1,8 @@
-#	$OpenBSD: Makefile,v 1.9 2024/06/17 01:29:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.10 2025/06/05 14:18:38 jsg Exp $
 
 LIB=	OSMesa
 
-SRCS=	target.c \
+SRCS=	osmesa_target.c \
 	osmesa.c	# libosmesa_st
 
 .include "../Makefile.inc"
@@ -15,6 +15,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/gallium/drivers \
 		-I${MESA_SRC}/src/gallium/winsys \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/mapi/glapi \
 		-DGALLIUM_SOFTPIPE -DGALLIUM_LLVMPIPE
 
@@ -25,7 +26,6 @@ obj: _xenocara_obj
 
 SLIBS=	libmesa \
 	libmesa_util \
-	libmesa_format \
 	libmesa_util_sse41 \
 	libmesa_util_c11 \
 	libglsl \
@@ -62,9 +62,6 @@ LDADD+=	-Wl,--version-script ${MESA_SRC}/src/gallium/targets/osmesa/osmesa.sym
 LDADD+=	-lLLVM -lm -lz -lpthread
 LDADD+=	-L${X11BASE}/lib -ldrm
 LDADD+=	-Wl,--end-group
-
-beforeinstall:
-	rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la
 
 .PATH:	${MESA_SRC}/src/gallium/targets/osmesa
 .PATH:	${MESA_SRC}/src/gallium/frontends/osmesa

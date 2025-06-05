@@ -32,7 +32,9 @@
 #include "anv_private.h"
 #include "anv_measure.h"
 
-#include "genxml/gen9_pack.h"
+#include "common/intel_debug_identifier.h"
+
+#include "genxml/gen90_pack.h"
 #include "genxml/genX_bits.h"
 
 #include "util/perf/u_trace.h"
@@ -118,6 +120,10 @@ VkResult
 anv_reloc_list_add_bo_impl(struct anv_reloc_list *list,
                            struct anv_bo *target_bo)
 {
+   /* This can happen with sparse resources. */
+   if (!target_bo)
+      return VK_SUCCESS;
+
    uint32_t idx = target_bo->gem_handle;
    VkResult result = anv_reloc_list_grow_deps(list,
                                               (idx / BITSET_WORDBITS) + 1);
@@ -357,7 +363,8 @@ anv_batch_bo_link(struct anv_cmd_buffer *cmd_buffer,
    *map = intel_canonical_address(next_bbo->bo->offset + next_bbo_offset);
 
 #ifdef SUPPORT_INTEL_INTEGRATED_GPUS
-   if (cmd_buffer->device->physical->memory.need_flush)
+   if (cmd_buffer->device->physical->memory.need_flush &&
+       anv_bo_needs_host_cache_flush(prev_bbo->bo->alloc_flags))
       intel_flush_range(map, sizeof(uint64_t));
 #endif
 }
@@ -721,19 +728,47 @@ anv_cmd_buffer_alloc_binding_table(struct anv_cmd_buffer *cmd_buffer,
 }
 
 struct anv_state
-anv_cmd_buffer_alloc_surface_state(struct anv_cmd_buffer *cmd_buffer)
+anv_cmd_buffer_alloc_surface_states(struct anv_cmd_buffer *cmd_buffer,
+                                    uint32_t count)
 {
+   if (count == 0)
+      return ANV_STATE_NULL;
    struct isl_device *isl_dev = &cmd_buffer->device->isl_dev;
-   return anv_state_stream_alloc(&cmd_buffer->surface_state_stream,
-                                 isl_dev->ss.size, isl_dev->ss.align);
+   struct anv_state state =
+      anv_state_stream_alloc(&cmd_buffer->surface_state_stream,
+                             count * isl_dev->ss.size,
+                             isl_dev->ss.align);
+   if (state.map == NULL)
+      anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_DEVICE_MEMORY);
+   return state;
 }
 
 struct anv_state
 anv_cmd_buffer_alloc_dynamic_state(struct anv_cmd_buffer *cmd_buffer,
                                    uint32_t size, uint32_t alignment)
 {
-   return anv_state_stream_alloc(&cmd_buffer->dynamic_state_stream,
-                                 size, alignment);
+   if (size == 0)
+      return ANV_STATE_NULL;
+   struct anv_state state =
+      anv_state_stream_alloc(&cmd_buffer->dynamic_state_stream,
+                             size, alignment);
+   if (state.map == NULL)
+      anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_DEVICE_MEMORY);
+   return state;
+}
+
+struct anv_state
+anv_cmd_buffer_alloc_general_state(struct anv_cmd_buffer *cmd_buffer,
+                                   uint32_t size, uint32_t alignment)
+{
+   if (size == 0)
+      return ANV_STATE_NULL;
+   struct anv_state state =
+      anv_state_stream_alloc(&cmd_buffer->general_state_stream,
+                             size, alignment);
+   if (state.map == NULL)
+      anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_DEVICE_MEMORY);
+   return state;
 }
 
 /** Allocate space associated with a command buffer
@@ -753,6 +788,12 @@ anv_cmd_buffer_alloc_space(struct anv_cmd_buffer *cmd_buffer,
       struct anv_state state =
          anv_state_stream_alloc(&cmd_buffer->dynamic_state_stream,
                                 size, alignment);
+      if (state.map == NULL) {
+         anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_DEVICE_MEMORY);
+         return (struct anv_cmd_alloc) {
+            .address = ANV_NULL_ADDRESS,
+         };
+      }
 
       return (struct anv_cmd_alloc) {
          .address = anv_state_pool_state_address(
@@ -838,6 +879,7 @@ anv_cmd_buffer_init_batch_bo_chain(struct anv_cmd_buffer *cmd_buffer)
 
    cmd_buffer->batch.extend_cb = anv_cmd_buffer_chain_batch;
    cmd_buffer->batch.engine_class = cmd_buffer->queue_family->engine_class;
+   cmd_buffer->batch.trace = &cmd_buffer->trace;
 
    anv_batch_bo_start(batch_bo, &cmd_buffer->batch,
                       GFX9_MI_BATCH_BUFFER_START_length * 4);
@@ -1139,7 +1181,7 @@ anv_cmd_buffer_add_secondary(struct anv_cmd_buffer *primary,
          list_first_entry(&secondary->batch_bos, struct anv_batch_bo, link);
 
       anv_genX(primary->device->info, batch_emit_secondary_call)(
-         &primary->batch,
+         &primary->batch, primary->device,
          (struct anv_address) { .bo = first_bbo->bo },
          secondary->return_addr);
 
@@ -1209,15 +1251,13 @@ anv_cmd_buffer_exec_batch_debug(struct anv_queue *queue,
                                 uint32_t cmd_buffer_count,
                                 struct anv_cmd_buffer **cmd_buffers,
                                 struct anv_query_pool *perf_query_pool,
-                                uint32_t perf_query_pass,
-                                bool is_companion_rcs_cmd_buffer)
+                                uint32_t perf_query_pass)
 {
    if (!INTEL_DEBUG(DEBUG_BATCH | DEBUG_BATCH_STATS))
       return;
 
    struct anv_device *device = queue->device;
-   const bool has_perf_query = perf_query_pool && perf_query_pass >= 0 &&
-                               cmd_buffer_count;
+   const bool has_perf_query = perf_query_pool && cmd_buffer_count;
    uint64_t frame_id = device->debug_frame_desc->frame_id;
 
    if (!intel_debug_batch_in_range(device->debug_frame_desc->frame_id))
@@ -1238,13 +1278,8 @@ anv_cmd_buffer_exec_batch_debug(struct anv_queue *queue,
          }
       }
 
-      for (uint32_t i = 0; i < cmd_buffer_count; i++) {
-         struct anv_cmd_buffer *cmd_buffer =
-            is_companion_rcs_cmd_buffer ?
-            cmd_buffers[i]->companion_rcs_cmd_buffer :
-            cmd_buffers[i];
-         anv_print_batch(device, queue, cmd_buffer);
-      }
+      for (uint32_t i = 0; i < cmd_buffer_count; i++)
+         anv_print_batch(device, queue, cmd_buffers[i]);
    } else if (INTEL_DEBUG(DEBUG_BATCH)) {
       intel_print_batch(queue->decoder, device->trivial_batch_bo->map,
                         device->trivial_batch_bo->size,
@@ -1297,6 +1332,10 @@ anv_queue_exec_locked(struct anv_queue *queue,
       }
    }
 
+   if (perf_query_pool && device->perf_queue != queue)
+      debug_warn_once("Mismatch between queue that OA stream was open and "
+                      "queue were query will be executed.");
+
    result =
       device->kmd_backend->queue_exec_locked(
          queue,
@@ -1347,7 +1386,7 @@ anv_queue_submit_sparse_bind_locked(struct anv_queue *queue,
     * supposed to be used by applications that request sparse to be enabled
     * but don't actually *use* it.
     */
-   if (!device->physical->has_sparse) {
+   if (device->physical->sparse_type == ANV_SPARSE_TYPE_NOT_SUPPORTED) {
       if (INTEL_DEBUG(DEBUG_SPARSE))
          fprintf(stderr, "=== application submitting sparse operations: "
                "buffer_bind:%d image_opaque_bind:%d image_bind:%d\n",
@@ -1355,8 +1394,6 @@ anv_queue_submit_sparse_bind_locked(struct anv_queue *queue,
                submit->image_bind_count);
       return vk_queue_set_lost(&queue->vk, "Sparse binding not supported");
    }
-
-   device->using_sparse = true;
 
    assert(submit->command_buffer_count == 0);
 
@@ -1369,17 +1406,17 @@ anv_queue_submit_sparse_bind_locked(struct anv_queue *queue,
               submit->wait_count, submit->signal_count);
    }
 
-   /* TODO: make both the syncs and signals be passed as part of the vm_bind
-    * ioctl so they can be waited asynchronously. For now this doesn't matter
-    * as we're doing synchronous vm_bind, but later when we make it async this
-    * will make a difference.
-    */
-   result = vk_sync_wait_many(&device->vk, submit->wait_count, submit->waits,
-                              VK_SYNC_WAIT_COMPLETE, INT64_MAX);
-   if (result != VK_SUCCESS)
-      return vk_queue_set_lost(&queue->vk, "vk_sync_wait failed");
+   struct anv_sparse_submission sparse_submit = {
+      .queue = queue,
+      .binds = NULL,
+      .binds_len = 0,
+      .binds_capacity = 0,
+      .wait_count = submit->wait_count,
+      .signal_count = submit->signal_count,
+      .waits = submit->waits,
+      .signals = submit->signals,
+   };
 
-   /* Do the binds */
    for (uint32_t i = 0; i < submit->buffer_bind_count; i++) {
       VkSparseBufferMemoryBindInfo *bind_info = &submit->buffer_binds[i];
       ANV_FROM_HANDLE(anv_buffer, buffer, bind_info->buffer);
@@ -1387,29 +1424,11 @@ anv_queue_submit_sparse_bind_locked(struct anv_queue *queue,
       assert(anv_buffer_is_sparse(buffer));
 
       for (uint32_t j = 0; j < bind_info->bindCount; j++) {
-         result = anv_sparse_bind_resource_memory(device,
-                                                  &buffer->sparse_data,
-                                                  &bind_info->pBinds[j]);
+         result = anv_sparse_bind_buffer(device, buffer,
+                                         &bind_info->pBinds[j],
+                                         &sparse_submit);
          if (result != VK_SUCCESS)
-            return result;
-      }
-   }
-
-   for (uint32_t i = 0; i < submit->image_opaque_bind_count; i++) {
-      VkSparseImageOpaqueMemoryBindInfo *bind_info =
-         &submit->image_opaque_binds[i];
-      ANV_FROM_HANDLE(anv_image, image, bind_info->image);
-
-      assert(anv_image_is_sparse(image));
-      assert(!image->disjoint);
-      struct anv_sparse_binding_data *sparse_data =
-         &image->bindings[ANV_IMAGE_MEMORY_BINDING_MAIN].sparse_data;
-
-      for (uint32_t j = 0; j < bind_info->bindCount; j++) {
-         result = anv_sparse_bind_resource_memory(device, sparse_data,
-                                                  &bind_info->pBinds[j]);
-         if (result != VK_SUCCESS)
-            return result;
+            goto out_free_submit;
       }
    }
 
@@ -1422,20 +1441,34 @@ anv_queue_submit_sparse_bind_locked(struct anv_queue *queue,
 
       for (uint32_t j = 0; j < bind_info->bindCount; j++) {
          result = anv_sparse_bind_image_memory(queue, image,
-                                               &bind_info->pBinds[j]);
+                                               &bind_info->pBinds[j],
+                                               &sparse_submit);
          if (result != VK_SUCCESS)
-            return result;
+            goto out_free_submit;
       }
    }
 
-   for (uint32_t i = 0; i < submit->signal_count; i++) {
-      struct vk_sync_signal *s = &submit->signals[i];
-      result = vk_sync_signal(&device->vk, s->sync, s->signal_value);
-      if (result != VK_SUCCESS)
-         return vk_queue_set_lost(&queue->vk, "vk_sync_signal failed");
+   for (uint32_t i = 0; i < submit->image_opaque_bind_count; i++) {
+      VkSparseImageOpaqueMemoryBindInfo *bind_info =
+         &submit->image_opaque_binds[i];
+      ANV_FROM_HANDLE(anv_image, image, bind_info->image);
+
+      assert(anv_image_is_sparse(image));
+
+      for (uint32_t j = 0; j < bind_info->bindCount; j++) {
+         result = anv_sparse_bind_image_opaque(device, image,
+                                               &bind_info->pBinds[j],
+                                               &sparse_submit);
+         if (result != VK_SUCCESS)
+            goto out_free_submit;
+      }
    }
 
-   return VK_SUCCESS;
+   result = anv_sparse_bind(device, &sparse_submit);
+
+out_free_submit:
+   vk_free(&device->vk.alloc, sparse_submit.binds);
+   return result;
 }
 
 static VkResult
@@ -1444,6 +1477,24 @@ anv_queue_submit_cmd_buffers_locked(struct anv_queue *queue,
                                     struct anv_utrace_submit *utrace_submit)
 {
    VkResult result;
+
+   /* It's not safe to access submit->signals[] elements after submit because
+    * the elements might signal through the kernel before this function
+    * returns and another thread could wake up and destroy any of those
+    * elements.
+    *
+    * Build a list of anv_bo_sync elements here and put them in the signal
+    * state after without looking at any other element.
+    */
+   STACK_ARRAY(struct anv_bo_sync *, bo_signals, submit->signal_count);
+   uint32_t bo_signal_count = 0;
+   for (uint32_t i = 0; i < submit->signal_count; i++) {
+      if (!vk_sync_is_anv_bo_sync(submit->signals[i].sync))
+         continue;
+
+      bo_signals[bo_signal_count++] =
+         container_of(submit->signals[i].sync, struct anv_bo_sync, sync);
+   }
 
    if (submit->command_buffer_count == 0) {
       result = anv_queue_exec_locked(queue, submit->wait_count, submit->waits,
@@ -1454,7 +1505,7 @@ anv_queue_submit_cmd_buffers_locked(struct anv_queue *queue,
                                      0 /* perf_query_pass */,
                                      utrace_submit);
       if (result != VK_SUCCESS)
-         return result;
+         goto fail;
    } else {
       /* Everything's easier if we don't have to bother with container_of() */
       STATIC_ASSERT(offsetof(struct anv_cmd_buffer, vk) == 0);
@@ -1482,7 +1533,7 @@ anv_queue_submit_cmd_buffers_locked(struct anv_queue *queue,
             /* The next buffer cannot be chained, or we have reached the
              * last buffer, submit what have been chained so far.
              */
-            VkResult result =
+            result =
                anv_queue_exec_locked(queue,
                                      start == 0 ? submit->wait_count : 0,
                                      start == 0 ? submit->waits : NULL,
@@ -1493,7 +1544,7 @@ anv_queue_submit_cmd_buffers_locked(struct anv_queue *queue,
                                      submit->perf_pass_index,
                                      next == end ? utrace_submit : NULL);
             if (result != VK_SUCCESS)
-               return result;
+               goto fail;
             if (next < end) {
                start = next;
                perf_query_pool = cmd_buffers[start]->perf_query_pool;
@@ -1501,12 +1552,8 @@ anv_queue_submit_cmd_buffers_locked(struct anv_queue *queue,
          }
       }
    }
-   for (uint32_t i = 0; i < submit->signal_count; i++) {
-      if (!vk_sync_is_anv_bo_sync(submit->signals[i].sync))
-         continue;
-
-      struct anv_bo_sync *bo_sync =
-         container_of(submit->signals[i].sync, struct anv_bo_sync, sync);
+   for (uint32_t i = 0; i < bo_signal_count; i++) {
+      struct anv_bo_sync *bo_sync = bo_signals[i];
 
       /* Once the execbuf has returned, we need to set the fence state to
        * SUBMITTED.  We can't do this before calling execbuf because
@@ -1524,7 +1571,24 @@ anv_queue_submit_cmd_buffers_locked(struct anv_queue *queue,
 
    pthread_cond_broadcast(&queue->device->queue_submit);
 
-   return VK_SUCCESS;
+ fail:
+   STACK_ARRAY_FINISH(bo_signals);
+   return result;
+}
+
+static inline void
+anv_queue_free_initial_submission(struct anv_queue *queue)
+{
+   if (queue->init_submit &&
+       anv_async_submit_done(queue->init_submit)) {
+      anv_async_submit_destroy(queue->init_submit);
+      queue->init_submit = NULL;
+   }
+   if (queue->init_companion_submit &&
+       anv_async_submit_done(queue->init_companion_submit)) {
+      anv_async_submit_destroy(queue->init_companion_submit);
+      queue->init_companion_submit = NULL;
+   }
 }
 
 VkResult
@@ -1534,6 +1598,8 @@ anv_queue_submit(struct vk_queue *vk_queue,
    struct anv_queue *queue = container_of(vk_queue, struct anv_queue, vk);
    struct anv_device *device = queue->device;
    VkResult result;
+
+   anv_queue_free_initial_submission(queue);
 
    if (queue->device->info->no_hw) {
       for (uint32_t i = 0; i < submit->signal_count; i++) {
@@ -1576,59 +1642,7 @@ anv_queue_submit(struct vk_queue *vk_queue,
 
    pthread_mutex_unlock(&device->mutex);
 
-   intel_ds_device_process(&device->ds, true);
-
-   return result;
-}
-
-VkResult
-anv_queue_submit_simple_batch(struct anv_queue *queue,
-                              struct anv_batch *batch,
-                              bool is_companion_rcs_batch)
-{
-   struct anv_device *device = queue->device;
-   VkResult result = VK_SUCCESS;
-
-   if (anv_batch_has_error(batch))
-      return batch->status;
-
-   if (queue->device->info->no_hw)
-      return VK_SUCCESS;
-
-   /* This is only used by device init so we can assume the queue is empty and
-    * we aren't fighting with a submit thread.
-    */
-   assert(vk_queue_is_empty(&queue->vk));
-
-   uint32_t batch_size = align(batch->next - batch->start, 8);
-
-   struct anv_bo *batch_bo = NULL;
-   result = anv_bo_pool_alloc(&device->batch_bo_pool, batch_size, &batch_bo);
-   if (result != VK_SUCCESS)
-      return result;
-
-   memcpy(batch_bo->map, batch->start, batch_size);
-#ifdef SUPPORT_INTEL_INTEGRATED_GPUS
-   if (device->physical->memory.need_flush)
-      intel_flush_range(batch_bo->map, batch_size);
-#endif
-
-   if (INTEL_DEBUG(DEBUG_BATCH) &&
-       intel_debug_batch_in_range(device->debug_frame_desc->frame_id)) {
-      int render_queue_idx =
-         anv_get_first_render_queue_index(device->physical);
-      struct intel_batch_decode_ctx *ctx = is_companion_rcs_batch ?
-                                           &device->decoder[render_queue_idx] :
-                                           queue->decoder;
-      intel_print_batch(ctx, batch_bo->map, batch_bo->size, batch_bo->offset,
-                        false);
-   }
-
-   result = device->kmd_backend->execute_simple_batch(queue, batch_bo,
-                                                      batch_size,
-                                                      is_companion_rcs_batch);
-
-   anv_bo_pool_free(&device->batch_bo_pool, batch_bo);
+   intel_ds_device_process(&device->ds, false);
 
    return result;
 }
@@ -1650,4 +1664,157 @@ anv_cmd_buffer_clflush(struct anv_cmd_buffer **cmd_buffers,
 
    __builtin_ia32_mfence();
 #endif
+}
+
+static VkResult
+anv_async_submit_extend_batch(struct anv_batch *batch, uint32_t size,
+                              void *user_data)
+{
+   struct anv_async_submit *submit = user_data;
+
+   uint32_t alloc_size = 0;
+   util_dynarray_foreach(&submit->batch_bos, struct anv_bo *, bo)
+      alloc_size += (*bo)->size;
+   alloc_size = MAX2(alloc_size * 2, 8192);
+
+   struct anv_bo *bo;
+   VkResult result = anv_bo_pool_alloc(submit->bo_pool,
+                                       align(alloc_size, 4096),
+                                       &bo);
+   if (result != VK_SUCCESS)
+      return result;
+
+   util_dynarray_append(&submit->batch_bos, struct anv_bo *, bo);
+
+   batch->end += 4 * GFX9_MI_BATCH_BUFFER_START_length;
+
+   anv_batch_emit(batch, GFX9_MI_BATCH_BUFFER_START, bbs) {
+      bbs.DWordLength               = GFX9_MI_BATCH_BUFFER_START_length -
+                                      GFX9_MI_BATCH_BUFFER_START_length_bias;
+      bbs.SecondLevelBatchBuffer    = Firstlevelbatch;
+      bbs.AddressSpaceIndicator     = ASI_PPGTT;
+      bbs.BatchBufferStartAddress   = (struct anv_address) { bo, 0 };
+   }
+
+   anv_batch_set_storage(batch,
+                         (struct anv_address) { .bo = bo, },
+                         bo->map,
+                         bo->size - 4 * GFX9_MI_BATCH_BUFFER_START_length);
+
+   return VK_SUCCESS;
+}
+
+VkResult
+anv_async_submit_init(struct anv_async_submit *submit,
+                      struct anv_queue *queue,
+                      struct anv_bo_pool *bo_pool,
+                      bool use_companion_rcs,
+                      bool create_signal_sync)
+{
+   struct anv_device *device = queue->device;
+
+   memset(submit, 0, sizeof(*submit));
+
+   submit->use_companion_rcs = use_companion_rcs;
+   submit->queue = queue;
+   submit->bo_pool = bo_pool;
+
+   const bool uses_relocs = device->physical->uses_relocs;
+   VkResult result =
+      anv_reloc_list_init(&submit->relocs, &device->vk.alloc, uses_relocs);
+   if (result != VK_SUCCESS)
+      return result;
+
+   submit->batch = (struct anv_batch) {
+      .alloc = &device->vk.alloc,
+      .relocs = &submit->relocs,
+      .user_data = submit,
+      .extend_cb = anv_async_submit_extend_batch,
+   };
+
+   util_dynarray_init(&submit->batch_bos, NULL);
+
+   if (create_signal_sync) {
+      result = vk_sync_create(&device->vk,
+                              &device->physical->sync_syncobj_type,
+                              0, 0, &submit->signal.sync);
+      if (result != VK_SUCCESS) {
+         anv_reloc_list_finish(&submit->relocs);
+         util_dynarray_fini(&submit->batch_bos);
+         return result;
+      }
+      submit->owns_sync = true;
+   }
+
+   return VK_SUCCESS;
+}
+
+void
+anv_async_submit_fini(struct anv_async_submit *submit)
+{
+   struct anv_device *device = submit->queue->device;
+
+   if (submit->owns_sync)
+      vk_sync_destroy(&device->vk, submit->signal.sync);
+
+   util_dynarray_foreach(&submit->batch_bos, struct anv_bo *, bo)
+      anv_bo_pool_free(submit->bo_pool, *bo);
+   util_dynarray_fini(&submit->batch_bos);
+   anv_reloc_list_finish(&submit->relocs);
+}
+
+VkResult
+anv_async_submit_create(struct anv_queue *queue,
+                        struct anv_bo_pool *bo_pool,
+                        bool use_companion_rcs,
+                        bool create_signal_sync,
+                        struct anv_async_submit **out_submit)
+{
+   struct anv_device *device = queue->device;
+
+   *out_submit =
+      vk_alloc(&device->vk.alloc, sizeof(struct anv_async_submit), 8,
+               VK_SYSTEM_ALLOCATION_SCOPE_DEVICE);
+   if (*out_submit == NULL)
+      return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
+
+   VkResult result = anv_async_submit_init(*out_submit, queue,
+                                           bo_pool,
+                                           use_companion_rcs,
+                                           create_signal_sync);
+   if (result != VK_SUCCESS)
+      vk_free(&device->vk.alloc, *out_submit);
+
+   return result;
+}
+
+void
+anv_async_submit_destroy(struct anv_async_submit *submit)
+{
+   struct anv_device *device = submit->queue->device;
+   anv_async_submit_fini(submit);
+   vk_free(&device->vk.alloc, submit);
+}
+
+bool
+anv_async_submit_done(struct anv_async_submit *submit)
+{
+   struct anv_device *device = submit->queue->device;
+
+   return vk_sync_wait(&device->vk,
+                       submit->signal.sync,
+                       submit->signal.signal_value,
+                       VK_SYNC_WAIT_COMPLETE, 0) == VK_SUCCESS;
+}
+
+bool
+anv_async_submit_wait(struct anv_async_submit *submit)
+{
+   struct anv_device *device = submit->queue->device;
+
+   return vk_sync_wait(&device->vk,
+                       submit->signal.sync,
+                       submit->signal.signal_value,
+                       VK_SYNC_WAIT_COMPLETE,
+                       os_time_get_absolute_timeout(OS_TIMEOUT_INFINITE)) == VK_SUCCESS;
 }

@@ -117,7 +117,7 @@ struct gl_texture_object *
 _mesa_lookup_texture(struct gl_context *ctx, GLuint id)
 {
    return (struct gl_texture_object *)
-      _mesa_HashLookup(ctx->Shared->TexObjects, id);
+      _mesa_HashLookup(&ctx->Shared->TexObjects, id);
 }
 
 /**
@@ -143,7 +143,7 @@ struct gl_texture_object *
 _mesa_lookup_texture_locked(struct gl_context *ctx, GLuint id)
 {
    return (struct gl_texture_object *)
-      _mesa_HashLookupLocked(ctx->Shared->TexObjects, id);
+      _mesa_HashLookupLocked(&ctx->Shared->TexObjects, id);
 }
 
 /**
@@ -410,6 +410,8 @@ _mesa_initialize_texture_object( struct gl_context *ctx,
    obj->_BufferObjectFormat = _mesa_is_desktop_gl_compat(ctx)
       ? MESA_FORMAT_L_UNORM8 : MESA_FORMAT_R_UNORM8;
    obj->Attrib.ImageFormatCompatibilityType = GL_IMAGE_FORMAT_COMPATIBILITY_BY_SIZE;
+   obj->CompressionRate = GL_SURFACE_COMPRESSION_FIXED_RATE_NONE_EXT;
+   obj->AstcDecodePrecision = GL_RGBA16F;
 
    /* GL_ARB_bindless_texture */
    _mesa_init_texture_handles(obj);
@@ -1182,7 +1184,7 @@ _mesa_total_texture_memory(struct gl_context *ctx)
 {
    GLuint tgt, total = 0;
 
-   _mesa_HashWalk(ctx->Shared->TexObjects, count_tex_size, &total);
+   _mesa_HashWalk(&ctx->Shared->TexObjects, count_tex_size, &total);
 
    /* plus, the default texture objects */
    for (tgt = 0; tgt < NUM_TEXTURE_TARGETS; tgt++) {
@@ -1280,25 +1282,25 @@ create_textures(struct gl_context *ctx, GLenum target,
    /*
     * This must be atomic (generation and allocation of texture IDs)
     */
-   _mesa_HashLockMutex(ctx->Shared->TexObjects);
+   _mesa_HashLockMutex(&ctx->Shared->TexObjects);
 
-   _mesa_HashFindFreeKeys(ctx->Shared->TexObjects, textures, n);
+   _mesa_HashFindFreeKeys(&ctx->Shared->TexObjects, textures, n);
 
    /* Allocate new, empty texture objects */
    for (i = 0; i < n; i++) {
       struct gl_texture_object *texObj;
       texObj = _mesa_new_texture_object(ctx, textures[i], target);
       if (!texObj) {
-         _mesa_HashUnlockMutex(ctx->Shared->TexObjects);
+         _mesa_HashUnlockMutex(&ctx->Shared->TexObjects);
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "%s", caller);
          return;
       }
 
       /* insert into hash table */
-      _mesa_HashInsertLocked(ctx->Shared->TexObjects, texObj->Name, texObj, true);
+      _mesa_HashInsertLocked(&ctx->Shared->TexObjects, texObj->Name, texObj);
    }
 
-   _mesa_HashUnlockMutex(ctx->Shared->TexObjects);
+   _mesa_HashUnlockMutex(&ctx->Shared->TexObjects);
 }
 
 
@@ -1558,6 +1560,8 @@ delete_textures(struct gl_context *ctx, GLsizei n, const GLuint *textures)
              */
             _mesa_make_texture_handles_non_resident(ctx, delObj);
 
+            delObj->DeletePending = true;
+
             _mesa_unlock_texture(ctx, delObj);
 
             ctx->NewState |= _NEW_TEXTURE_OBJECT;
@@ -1566,7 +1570,7 @@ delete_textures(struct gl_context *ctx, GLsizei n, const GLuint *textures)
             /* The texture _name_ is now free for re-use.
              * Remove it from the hash table now.
              */
-            _mesa_HashRemove(ctx->Shared->TexObjects, delObj->Name);
+            _mesa_HashRemove(&ctx->Shared->TexObjects, delObj->Name);
 
             st_texture_release_all_sampler_views(st_context(ctx), delObj);
 
@@ -1761,9 +1765,13 @@ _mesa_lookup_or_create_texture(struct gl_context *ctx, GLenum target,
       /* Use a default texture object */
       newTexObj = ctx->Shared->DefaultTex[targetIndex];
    } else {
+      _mesa_HashLockMutex(&ctx->Shared->TexObjects);
+
       /* non-default texture object */
-      newTexObj = _mesa_lookup_texture(ctx, texName);
+      newTexObj = _mesa_lookup_texture_locked(ctx, texName);
       if (newTexObj) {
+         _mesa_HashUnlockMutex(&ctx->Shared->TexObjects);
+
          /* error checking */
          if (!no_error &&
              newTexObj->Target != 0 && newTexObj->Target != target) {
@@ -1781,6 +1789,7 @@ _mesa_lookup_or_create_texture(struct gl_context *ctx, GLenum target,
          if (!no_error && _mesa_is_desktop_gl_core(ctx)) {
             _mesa_error(ctx, GL_INVALID_OPERATION,
                         "%s(non-gen name)", caller);
+            _mesa_HashUnlockMutex(&ctx->Shared->TexObjects);
             return NULL;
          }
 
@@ -1788,11 +1797,13 @@ _mesa_lookup_or_create_texture(struct gl_context *ctx, GLenum target,
          newTexObj = _mesa_new_texture_object(ctx, texName, target);
          if (!newTexObj) {
             _mesa_error(ctx, GL_OUT_OF_MEMORY, "%s", caller);
+            _mesa_HashUnlockMutex(&ctx->Shared->TexObjects);
             return NULL;
          }
 
          /* and insert it into hash table */
-         _mesa_HashInsert(ctx->Shared->TexObjects, texName, newTexObj, false);
+         _mesa_HashInsertLocked(&ctx->Shared->TexObjects, texName, newTexObj);
+         _mesa_HashUnlockMutex(&ctx->Shared->TexObjects);
       }
    }
 
@@ -1975,7 +1986,7 @@ bind_textures(struct gl_context *ctx, GLuint first, GLsizei count,
        *       their parameters are valid and no other error occurs."
        */
 
-      _mesa_HashLockMutex(ctx->Shared->TexObjects);
+      _mesa_HashLockMutex(&ctx->Shared->TexObjects);
 
       for (i = 0; i < count; i++) {
          if (textures[i] != 0) {
@@ -1983,7 +1994,8 @@ bind_textures(struct gl_context *ctx, GLuint first, GLsizei count,
             struct gl_texture_object *current = texUnit->_Current;
             struct gl_texture_object *texObj;
 
-            if (current && current->Name == textures[i])
+            if (current && !current->DeletePending &&
+                current->Name == textures[i])
                texObj = current;
             else
                texObj = _mesa_lookup_texture_locked(ctx, textures[i]);
@@ -2007,7 +2019,7 @@ bind_textures(struct gl_context *ctx, GLuint first, GLsizei count,
          }
       }
 
-      _mesa_HashUnlockMutex(ctx->Shared->TexObjects);
+      _mesa_HashUnlockMutex(&ctx->Shared->TexObjects);
    } else {
       /* Unbind all textures in the range <first> through <first>+<count>-1 */
       for (i = 0; i < count; i++)

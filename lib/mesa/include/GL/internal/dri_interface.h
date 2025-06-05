@@ -31,7 +31,7 @@
  * between a DRI driver and driver loader.  Currently, the most common driver
  * loader is the XFree86 libGL.so.  However, other loaders do exist, and in
  * the future the server-side libglx.a will also be a loader.
- * 
+ *
  * \author Kevin E. Martin <kevin@precisioninsight.com>
  * \author Ian Romanick <idr@us.ibm.com>
  * \author Kristian Høgsberg <krh@redhat.com>
@@ -190,7 +190,7 @@ struct __DRItexBufferExtensionRec {
 
     /**
      * Method to override base texture image with the contents of a
-     * __DRIdrawable. 
+     * __DRIdrawable.
      *
      * For GLX_EXT_texture_from_pixmap with AIGLX.  Deprecated in favor of
      * setTexBuffer2 in version 2 of this interface.  Not used by post-2011 X.
@@ -441,7 +441,7 @@ struct __DRI2fenceExtensionRec {
 struct mesa_glinterop_device_info;
 struct mesa_glinterop_export_in;
 struct mesa_glinterop_export_out;
-typedef struct __GLsync *GLsync;
+struct mesa_glinterop_flush_out;
 
 struct __DRI2interopExtensionRec {
    __DRIextension base;
@@ -457,12 +457,12 @@ struct __DRI2interopExtensionRec {
 
    /**
     * Same as MesaGLInterop*FlushObjects.
-    * 
+    *
     * \since 2
     */
    int (*flush_objects)(__DRIcontext *ctx,
                         unsigned count, struct mesa_glinterop_export_in *objects,
-                        GLsync *sync);
+                        struct mesa_glinterop_flush_out *out);
 };
 
 
@@ -544,7 +544,7 @@ struct __DRIsystemTimeExtensionRec {
 
     /**
      * Get the media stream counter (MSC) rate.
-     * 
+     *
      * Matching the definition in GLX_OML_sync_control, this function returns
      * the rate of the "media stream counter".  In practical terms, this is
      * the frame refresh rate of the display.
@@ -759,7 +759,7 @@ struct __DRIuseInvalidateExtensionRec {
 #define __DRI_ATTRIB_MAX			54
 
 /* __DRI_ATTRIB_RENDER_TYPE */
-#define __DRI_ATTRIB_RGBA_BIT			0x01	
+#define __DRI_ATTRIB_RGBA_BIT			0x01
 #define __DRI_ATTRIB_COLOR_INDEX_BIT		0x02
 #define __DRI_ATTRIB_LUMINANCE_BIT		0x04
 #define __DRI_ATTRIB_FLOAT_BIT			0x08
@@ -798,7 +798,7 @@ struct __DRIuseInvalidateExtensionRec {
  * returns a reliable value.  The X server requires v1 and uses v2.
  */
 #define __DRI_CORE "DRI_Core"
-#define __DRI_CORE_VERSION 2
+#define __DRI_CORE_VERSION 3
 
 struct __DRIcoreExtensionRec {
     __DRIextension base;
@@ -857,12 +857,14 @@ struct __DRIcoreExtensionRec {
 
     /* Used by the X server. */
     int (*unbindContext)(__DRIcontext *ctx);
+
+    void (*swapBuffersWithDamage)(__DRIdrawable *drawable, int nrects, const int *rects);
 };
 
 /**
  * Stored version of some component (i.e., server-side DRI module, kernel-side
  * DRM, etc.).
- * 
+ *
  * \todo
  * There are several data structures that explicitly store a major version,
  * minor version, and patch level.  These structures should be modified to
@@ -879,7 +881,7 @@ struct __DRIversionRec {
 /**
  * Framebuffer information record.  Used by libGL to communicate information
  * about the framebuffer to the driver's \c __driCreateNewScreen function.
- * 
+ *
  * In XFree86, most of this information is derrived from data returned by
  * calling \c XF86DRIGetDeviceInfo.
  *
@@ -912,7 +914,7 @@ struct __DRIframebufferRec {
  * extension.  Version 1 is required by the X server, and version 3 is used.
  */
 #define __DRI_SWRAST "DRI_SWRast"
-#define __DRI_SWRAST_VERSION 4
+#define __DRI_SWRAST_VERSION 6
 
 struct __DRIswrastExtensionRec {
     __DRIextension base;
@@ -959,6 +961,22 @@ struct __DRIswrastExtensionRec {
                                     const __DRIextension **driver_extensions,
                                     const __DRIconfig ***driver_configs,
                                     void *loaderPrivate);
+   /**
+    * \since version 5
+   */
+   int (*queryBufferAge)(__DRIdrawable *drawable);
+
+   /**
+    * createNewScreen() with the driver extensions passed in and driver_name_is_inferred load flag.
+    *
+    * \since version 6
+    */
+   __DRIscreen *(*createNewScreen3)(int screen,
+                                    const __DRIextension **loader_extensions,
+                                    const __DRIextension **driver_extensions,
+                                    const __DRIconfig ***driver_configs,
+                                    bool driver_name_is_inferred,
+                                    void *loaderPrivate);
 
 };
 
@@ -970,6 +988,13 @@ typedef __DRIscreen *
                              const __DRIextension **extensions,
                              const __DRIextension **driver_extensions,
                              const __DRIconfig ***driver_configs,
+                             void *loaderPrivate);
+typedef __DRIscreen *
+(*__DRIcreateNewScreen3Func)(int screen, int fd,
+                             const __DRIextension **extensions,
+                             const __DRIextension **driver_extensions,
+                             const __DRIconfig ***driver_configs,
+                             bool driver_name_is_inferred,
                              void *loaderPrivate);
 
 typedef __DRIdrawable *
@@ -1106,7 +1131,7 @@ struct __DRIdri2LoaderExtensionRec {
  * constructors for DRI2.  The X server uses up to version 4.
  */
 #define __DRI_DRI2 "DRI_DRI2"
-#define __DRI_DRI2_VERSION 4
+#define __DRI_DRI2_VERSION 5
 
 #define __DRI_API_OPENGL	0	/**< OpenGL compatibility profile */
 #define __DRI_API_GLES		1	/**< OpenGL ES 1.x */
@@ -1225,6 +1250,13 @@ struct __DRIdri2ExtensionRec {
     * \since version 4
     */
    __DRIcreateNewScreen2Func            createNewScreen2;
+
+   /**
+    * createNewScreen with the driver's extension list passed in and driver_name_is_inferred load flag.
+    *
+    * \since version 5
+    */
+   __DRIcreateNewScreen3Func            createNewScreen3;
 };
 
 
@@ -1233,53 +1265,9 @@ struct __DRIdri2ExtensionRec {
  * extensions.
  */
 #define __DRI_IMAGE "DRI_IMAGE"
-#define __DRI_IMAGE_VERSION 20
+#define __DRI_IMAGE_VERSION 22
 
-/**
- * These formats correspond to the similarly named MESA_FORMAT_*
- * tokens, except in the native endian of the CPU.  For example, on
- * little endian __DRI_IMAGE_FORMAT_XRGB8888 corresponds to
- * MESA_FORMAT_XRGB8888, but MESA_FORMAT_XRGB8888_REV on big endian.
- *
- * __DRI_IMAGE_FORMAT_NONE is for images that aren't directly usable
- * by the driver (YUV planar formats) but serve as a base image for
- * creating sub-images for the different planes within the image.
- *
- * R8, GR88 and NONE should not be used with createImageFromName or
- * createImage, and are returned by query from sub images created with
- * createImageFromNames (NONE, see above) and fromPlane (R8 & GR88).
- */
-#define __DRI_IMAGE_FORMAT_RGB565       0x1001
-#define __DRI_IMAGE_FORMAT_XRGB8888     0x1002
-#define __DRI_IMAGE_FORMAT_ARGB8888     0x1003
-#define __DRI_IMAGE_FORMAT_ABGR8888     0x1004
-#define __DRI_IMAGE_FORMAT_XBGR8888     0x1005
-#define __DRI_IMAGE_FORMAT_R8           0x1006 /* Since version 5 */
-#define __DRI_IMAGE_FORMAT_GR88         0x1007
-#define __DRI_IMAGE_FORMAT_NONE         0x1008
-#define __DRI_IMAGE_FORMAT_XRGB2101010  0x1009
-#define __DRI_IMAGE_FORMAT_ARGB2101010  0x100a
-#define __DRI_IMAGE_FORMAT_SARGB8       0x100b
-#define __DRI_IMAGE_FORMAT_ARGB1555     0x100c
-#define __DRI_IMAGE_FORMAT_R16          0x100d
-#define __DRI_IMAGE_FORMAT_GR1616       0x100e
-#define __DRI_IMAGE_FORMAT_YUYV         0x100f
-#define __DRI_IMAGE_FORMAT_XBGR2101010  0x1010
-#define __DRI_IMAGE_FORMAT_ABGR2101010  0x1011
-#define __DRI_IMAGE_FORMAT_SABGR8       0x1012
-#define __DRI_IMAGE_FORMAT_UYVY         0x1013
-#define __DRI_IMAGE_FORMAT_XBGR16161616F 0x1014
-#define __DRI_IMAGE_FORMAT_ABGR16161616F 0x1015
-#define __DRI_IMAGE_FORMAT_SXRGB8       0x1016
-#define __DRI_IMAGE_FORMAT_ABGR16161616 0x1017
-#define __DRI_IMAGE_FORMAT_XBGR16161616 0x1018
-#define __DRI_IMAGE_FORMAT_ARGB4444	0x1019
-#define __DRI_IMAGE_FORMAT_XRGB4444	0x101a
-#define __DRI_IMAGE_FORMAT_ABGR4444	0x101b
-#define __DRI_IMAGE_FORMAT_XBGR4444	0x101c
-#define __DRI_IMAGE_FORMAT_XRGB1555	0x101d
-#define __DRI_IMAGE_FORMAT_ABGR1555	0x101e
-#define __DRI_IMAGE_FORMAT_XBGR1555	0x101f
+/* __DRI_IMAGE_FORMAT_* tokens are no longer exported */
 
 #define __DRI_IMAGE_USE_SHARE		0x0001
 #define __DRI_IMAGE_USE_SCANOUT		0x0002
@@ -1357,6 +1345,7 @@ struct __DRIdri2ExtensionRec {
 #define __DRI_IMAGE_ATTRIB_OFFSET 0x200A /* available in versions 13 */
 #define __DRI_IMAGE_ATTRIB_MODIFIER_LOWER 0x200B /* available in versions 14 */
 #define __DRI_IMAGE_ATTRIB_MODIFIER_UPPER 0x200C /* available in versions 14 */
+#define __DRI_IMAGE_ATTRIB_COMPRESSION_RATE 0x200D /* available in versions 22 */
 
 enum __DRIYUVColorSpace {
    __DRI_YUV_COLOR_SPACE_UNDEFINED = 0,
@@ -1375,6 +1364,24 @@ enum __DRIChromaSiting {
    __DRI_YUV_CHROMA_SITING_UNDEFINED = 0,
    __DRI_YUV_CHROMA_SITING_0 = 0x3284,
    __DRI_YUV_CHROMA_SITING_0_5 = 0x3285
+};
+
+enum __DRIFixedRateCompression {
+  __DRI_FIXED_RATE_COMPRESSION_NONE = 0x34B1,
+  __DRI_FIXED_RATE_COMPRESSION_DEFAULT = 0x34B2,
+
+  __DRI_FIXED_RATE_COMPRESSION_1BPC = 0x34B4,
+  __DRI_FIXED_RATE_COMPRESSION_2BPC = 0x34B5,
+  __DRI_FIXED_RATE_COMPRESSION_3BPC = 0x34B6,
+  __DRI_FIXED_RATE_COMPRESSION_4BPC = 0x34B7,
+  __DRI_FIXED_RATE_COMPRESSION_5BPC = 0x34B8,
+  __DRI_FIXED_RATE_COMPRESSION_6BPC = 0x34B9,
+  __DRI_FIXED_RATE_COMPRESSION_7BPC = 0x34BA,
+  __DRI_FIXED_RATE_COMPRESSION_8BPC = 0x34BB,
+  __DRI_FIXED_RATE_COMPRESSION_9BPC = 0x34BC,
+  __DRI_FIXED_RATE_COMPRESSION_10BPC = 0x34BD,
+  __DRI_FIXED_RATE_COMPRESSION_11BPC = 0x34BE,
+  __DRI_FIXED_RATE_COMPRESSION_12BPC = 0x34BF,
 };
 
 /**
@@ -1766,6 +1773,51 @@ struct __DRIimageExtensionRec {
     * \since 21
     */
    void (*setInFenceFd)(__DRIimage *image, int fd);
+
+   /*
+    * Query supported compression rates for a given format for
+    * EGL_EXT_surface_compression.
+    *
+    * \param config   Config for which to query the supported compression
+    *                 rates.
+    * \param max      Maximum number of rates that can be accomodated into
+    *                 \param rates. If zero, no rates are returned -
+    *                 instead, the driver returns the total number of
+    *                 supported compression rates in \param count.
+    * \param rates    Buffer to fill rates into.
+    * \param count    Count of rates returned, or, total number of
+    *                 supported rates in case \param max is zero.
+    *
+    * Returns true on success.
+    *
+    * \since 22
+    */
+   bool (*queryCompressionRates)(__DRIscreen *screen, const __DRIconfig *config,
+                                 int max, enum __DRIFixedRateCompression *rates,
+                                 int *count);
+
+   /*
+    * Query list of modifiers that are associated with given fixed-rate
+    * compression bitrate.
+    *
+    * \param format    The format to query
+    * \param rate      Compression rate to query for
+    * \param max       Maximum number of modifiers that can be accomodated in
+    *                  \param modifiers. If zero, no modifiers are returned -
+    *                  instead, the driver returns the total number of
+    *                  modifiers for \param format in \param count.
+    * \param modifiers Buffer to fill modifiers into.
+    * \param count     Count of the modifiers returned, or, total number of
+    *                  supported modifiers for \param fourcc in case
+    *                  \param max is zero.
+    *
+    * Returns true on success.
+    *
+    * \since 22
+    */
+   bool (*queryCompressionModifiers)(__DRIscreen *screen, uint32_t format,
+                                     enum __DRIFixedRateCompression rate,
+                                     int max, uint64_t *modifiers, int *count);
 };
 
 
@@ -2082,7 +2134,7 @@ struct __DRIimageLoaderExtensionRec {
  */
 
 #define __DRI_IMAGE_DRIVER           "DRI_IMAGE_DRIVER"
-#define __DRI_IMAGE_DRIVER_VERSION   1
+#define __DRI_IMAGE_DRIVER_VERSION   2
 
 struct __DRIimageDriverExtensionRec {
    __DRIextension               base;
@@ -2092,6 +2144,7 @@ struct __DRIimageDriverExtensionRec {
    __DRIcreateNewDrawableFunc           createNewDrawable;
    __DRIcreateContextAttribsFunc        createContextAttribs;
    __DRIgetAPIMaskFunc                  getAPIMask;
+   __DRIcreateNewScreen3Func            createNewScreen3;
 };
 
 /**

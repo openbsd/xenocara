@@ -34,46 +34,20 @@
 #include "stub.h"
 
 /*
- * Global variables, _glapi_get_context, and _glapi_get_dispatch are defined in
- * u_current.c.
+ * _mesa_glapi_Dispatch, _glapi_Context
+ * _mesa_glapi_tls_Dispatch, _mesa_glapi_tls_Context,
+ * _mesa_glapi_set_context, _mesa_glapi_get_context,
+ * _glapi_destroy_multithread, _glapi_check_multithread
+ * _mesa_glapi_set_dispatch, and _mesa_glapi_get_dispatch
+ * are defined in u_current.c.
  */
-
-#ifdef USE_ELF_TLS
-/* not used, but defined for compatibility */
-const struct _glapi_table *_glapi_Dispatch;
-const void *_glapi_Context;
-#endif /* USE_ELF_TLS */
-
-void
-_glapi_destroy_multithread(void)
-{
-   u_current_destroy();
-}
-
-void
-_glapi_check_multithread(void)
-{
-   u_current_init();
-}
-
-void
-_glapi_set_context(void *context)
-{
-   u_current_set_context((const void *) context);
-}
-
-void
-_glapi_set_dispatch(struct _glapi_table *dispatch)
-{
-   u_current_set_table((const struct _glapi_table *) dispatch);
-}
 
 /**
  * Return size of dispatch table struct as number of functions (or
  * slots).
  */
 unsigned int
-_glapi_get_dispatch_table_size(void)
+_mesa_glapi_get_dispatch_table_size(void)
 {
    return MAPI_TABLE_NUM_SLOTS;
 }
@@ -108,7 +82,7 @@ _glapi_get_stub(const char *name)
  * Return offset of entrypoint for named function within dispatch table.
  */
 int
-_glapi_get_proc_offset(const char *funcName)
+_mesa_glapi_get_proc_offset(const char *funcName)
 {
    const struct mapi_stub *stub = _glapi_get_stub(funcName);
    return (stub) ? stub_get_slot(stub) : -1;
@@ -120,7 +94,7 @@ _glapi_get_proc_offset(const char *funcName)
  * the fly with assembly language.
  */
 _glapi_proc
-_glapi_get_proc_address(const char *funcName)
+_mesa_glapi_get_proc_address(const char *funcName)
 {
    const struct mapi_stub *stub = _glapi_get_stub(funcName);
    return (stub) ? (_glapi_proc) stub_get_addr(stub) : NULL;

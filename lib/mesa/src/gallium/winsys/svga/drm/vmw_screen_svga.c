@@ -1,27 +1,9 @@
-/**********************************************************
- * Copyright 2009-2023 VMware, Inc.  All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- **********************************************************/
+/*
+ * Copyright (c) 2009-2024 Broadcom. All Rights Reserved.
+ * The term “Broadcom” refers to Broadcom Inc.
+ * and/or its subsidiaries.
+ * SPDX-License-Identifier: MIT
+ */
 
 /**
  * @file
@@ -38,13 +20,15 @@
 #include <sys/mman.h>
 
 #include "svga_cmd.h"
-#include "svga3d_caps.h"
+#include "svga3d_devcaps.h"
+#include "vmw_surf_defs.h"
 
 #include "c11/threads.h"
 #include "util/os_file.h"
 #include "util/u_inlines.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
+#include "util/u_bitmask.h"
 #include "pipebuffer/pb_buffer.h"
 #include "pipebuffer/pb_bufmgr.h"
 #include "svga_winsys.h"
@@ -57,7 +41,6 @@
 #include "vmw_shader.h"
 #include "vmw_query.h"
 #include "vmwgfx_drm.h"
-#include "svga3d_surfacedefs.h"
 #include "xf86drm.h"
 
 /**
@@ -127,8 +110,6 @@ static_assert(alignof(struct MKSGuestStatInfoEntry) == 32, "");
 
 static thread_local struct svga_winsys_stats_timeframe *mksstat_tls_global = NULL;
 
-#define ALIGN(x, power_of_two) (((x) + (power_of_two) - 1) & ~((power_of_two) - 1))
-
 static const size_t mksstat_area_size_info = sizeof(MKSGuestStatInfoEntry) * (SVGA_STATS_COUNT_MAX + SVGA_STATS_TIME_MAX);
 static const size_t mksstat_area_size_stat = sizeof(MKSGuestStatCounter) * SVGA_STATS_COUNT_MAX +
                                              sizeof(MKSGuestStatCounterTime) * SVGA_STATS_TIME_MAX;
@@ -137,8 +118,8 @@ size_t
 vmw_svga_winsys_stats_len(void)
 {
    const size_t pg_size = getpagesize();
-   const size_t area_size_stat_pg = ALIGN(mksstat_area_size_stat, pg_size);
-   const size_t area_size_info_pg = ALIGN(mksstat_area_size_info, pg_size);
+   const size_t area_size_stat_pg = align_uintptr(mksstat_area_size_stat, pg_size);
+   const size_t area_size_info_pg = align_uintptr(mksstat_area_size_info, pg_size);
    const size_t area_size_strs = vmw_svga_winsys_stats_names_len();
    const size_t area_size = area_size_stat_pg + area_size_info_pg + area_size_strs;
 
@@ -187,7 +168,7 @@ vmw_mksstat_get_pstat_time(uint8_t *page_addr, size_t page_size)
 static inline MKSGuestStatInfoEntry *
 vmw_mksstat_get_pinfo(uint8_t *page_addr, size_t page_size)
 {
-   const size_t area_size_stat_pg = ALIGN(mksstat_area_size_stat, page_size);
+   const size_t area_size_stat_pg = align_uintptr(mksstat_area_size_stat, page_size);
    return (MKSGuestStatInfoEntry *)(page_addr + area_size_stat_pg);
 }
 
@@ -203,8 +184,8 @@ vmw_mksstat_get_pinfo(uint8_t *page_addr, size_t page_size)
 static inline char *
 vmw_mksstat_get_pstrs(uint8_t *page_addr, const size_t page_size)
 {
-   const size_t area_size_info_pg = ALIGN(mksstat_area_size_info, page_size);
-   const size_t area_size_stat_pg = ALIGN(mksstat_area_size_stat, page_size);
+   const size_t area_size_info_pg = align_uintptr(mksstat_area_size_info, page_size);
+   const size_t area_size_stat_pg = align_uintptr(mksstat_area_size_stat, page_size);
    return (char *)(page_addr + area_size_info_pg + area_size_stat_pg);
 }
 
@@ -477,6 +458,38 @@ vmw_svga_winsys_fence_server_sync(struct svga_winsys_screen *sws,
    return sync_accumulate("vmwgfx", context_fd, fd);
 }
 
+static enum pipe_error
+vmw_svga_define_gb_surface_cmd(struct svga_winsys_screen *sws,
+                               struct svga_winsys_context *swc,
+                               uint32 sid,
+                               SVGA3dSurfaceAllFlags surfaceFlags,
+                               SVGA3dSurfaceFormat format,
+                               uint32 numMipLevels,
+                               uint32 multisampleCount,
+                               SVGA3dMSPattern multisamplePattern,
+                               SVGA3dMSQualityLevel qualityLevel,
+                               SVGA3dTextureFilter autogenFilter,
+                               SVGA3dSize size,
+                               uint32 arraySize,
+                               uint32 bufferByteStride)
+{
+   assert(arraySize > 0);
+   if (sws->have_sm5)
+      return SVGA3D_DefineGBSurface_v4(swc, sid, surfaceFlags, format,
+                                       numMipLevels, multisampleCount,
+                                       multisamplePattern, qualityLevel,
+                                       autogenFilter, size, arraySize,
+                                       bufferByteStride);
+   else if (sws->have_sm4_1)
+      return SVGA3D_DefineGBSurface_v3(swc, sid, surfaceFlags, format,
+                                       numMipLevels, multisampleCount,
+                                       multisamplePattern, qualityLevel,
+                                       autogenFilter, size, arraySize);
+   else
+      return SVGA3D_DefineGBSurface_v2(swc, sid, surfaceFlags, format,
+                                       numMipLevels, multisampleCount,
+                                       autogenFilter, size, arraySize);
+}
 
 static struct svga_winsys_surface *
 vmw_svga_winsys_surface_create(struct svga_winsys_screen *sws,
@@ -506,8 +519,8 @@ vmw_svga_winsys_surface_create(struct svga_winsys_screen *sws,
    p_atomic_set(&surface->validated, 0);
    surface->screen = vws;
    (void) mtx_init(&surface->mutex, mtx_plain);
-   surface->shared = !!(usage & SVGA_SURFACE_USAGE_SHARED);
-   provider = (surface->shared) ? vws->pools.dma_base : vws->pools.dma_fenced;
+   surface->nodiscard = !!(usage & SVGA_SURFACE_USAGE_SHARED);
+   provider = (surface->nodiscard) ? vws->pools.dma_base : vws->pools.dma_fenced;
 
    /*
     * When multisampling is not supported sample count received is 0,
@@ -525,10 +538,10 @@ vmw_svga_winsys_surface_create(struct svga_winsys_screen *sws,
     * Used for the backing buffer GB surfaces, and to approximate
     * when to flush on non-GB hosts.
     */
-   buffer_size = svga3dsurface_get_serialized_size_extended(format, size,
-                                                            numMipLevels,
-                                                            numLayers,
-                                                            num_samples);
+   buffer_size = vmw_surf_get_serialized_size_extended(format, size,
+                                                       numMipLevels,
+                                                       numLayers,
+                                                       num_samples);
    if (flags & SVGA3D_SURFACE_BIND_STREAM_OUTPUT)
       buffer_size += sizeof(SVGA3dDXSOState);
 
@@ -536,76 +549,66 @@ vmw_svga_winsys_surface_create(struct svga_winsys_screen *sws,
       goto no_sid;
    }
 
-   if (sws->have_gb_objects) {
-      SVGAGuestPtr ptr = {0,0};
+   if (vmw_has_userspace_surface(vws)) {
+      struct svga_winsys_context *swc = vws->swc;
+      struct pb_buffer *pb_buf;
 
-      /*
-       * If the backing buffer size is small enough, try to allocate a
-       * buffer out of the buffer cache. Otherwise, let the kernel allocate
-       * a suitable buffer for us.
-       */
-      if (buffer_size < VMW_TRY_CACHED_SIZE && !surface->shared) {
-         struct pb_buffer *pb_buf;
+      surface->sid = vmw_swc_surface_add_userspace_id(swc);
+      if (surface->sid == UTIL_BITMASK_INVALID_INDEX)
+         goto no_sid;
 
-         surface->size = buffer_size;
-         desc.pb_desc.alignment = 4096;
-         desc.pb_desc.usage = 0;
-         pb_buf = provider->create_buffer(provider, buffer_size, &desc.pb_desc);
-         surface->buf = vmw_svga_winsys_buffer_wrap(pb_buf);
-         if (surface->buf && !vmw_dma_bufmgr_region_ptr(pb_buf, &ptr))
-            assert(0);
+      if (vmw_svga_define_gb_surface_cmd(sws, swc, surface->sid, flags, format,
+          numMipLevels, sampleCount, multisample_pattern, quality_level,
+          SVGA3D_TEX_FILTER_NONE, size, numLayers, 0) != PIPE_OK) {
+            vmw_swc_surface_clear_userspace_id(swc, surface->sid);
+            goto no_sid;
       }
+
+      desc.pb_desc.alignment = 4096;
+      desc.pb_desc.usage = VMW_BUFFER_USAGE_SHARED;
+      surface->size = buffer_size;
+      pb_buf = provider->create_buffer(provider, surface->size,
+                                       &desc.pb_desc);
+      surface->buf = vmw_svga_winsys_buffer_wrap(pb_buf);
+
+      if (surface->buf == NULL) {
+         vmw_svga_winsys_userspace_surface_destroy(swc, surface->sid);
+         goto no_sid;
+      }
+
+      if (SVGA3D_BindGBSurface(swc, svga_winsys_surface(surface)) != PIPE_OK) {
+         vmw_svga_winsys_buffer_destroy(sws, surface->buf);
+         vmw_svga_winsys_userspace_surface_destroy(swc, surface->sid);
+         goto no_sid;
+      }
+
+      swc->flush(swc, NULL);
+   } else if (sws->have_gb_objects) {
+      struct pb_buffer *pb_buf;
 
       surface->sid = vmw_ioctl_gb_surface_create(vws, flags, format, usage,
                                                  size, numLayers,
-                                                 numMipLevels, sampleCount,
-                                                 ptr.gmrId,
+                                                 numMipLevels, sampleCount, 0,
                                                  multisample_pattern,
                                                  quality_level,
-                                                 surface->buf ? NULL :
                                                  &desc.region);
-
-      if (surface->sid == SVGA3D_INVALID_ID) {
-         if (surface->buf == NULL) {
-            goto no_sid;
-         } else {
-            /*
-             * Kernel refused to allocate a surface for us.
-             * Perhaps something was wrong with our buffer?
-             * This is really a guard against future new size requirements
-             * on the backing buffers.
-             */
-            vmw_svga_winsys_buffer_destroy(sws, surface->buf);
-            surface->buf = NULL;
-            surface->sid = vmw_ioctl_gb_surface_create(vws, flags, format, usage,
-                                                       size, numLayers,
-                                                       numMipLevels, sampleCount,
-                                                       0, multisample_pattern,
-                                                       quality_level,
-                                                       &desc.region);
-            if (surface->sid == SVGA3D_INVALID_ID)
-               goto no_sid;
-         }
-      }
+      if (surface->sid == SVGA3D_INVALID_ID)
+         goto no_sid;
 
       /*
-       * If the kernel created the buffer for us, wrap it into a
+       * The kernel created the buffer for us, wrap it into a
        * vmw_svga_winsys_buffer.
        */
+      surface->size = vmw_region_size(desc.region);
+      desc.pb_desc.alignment = 4096;
+      desc.pb_desc.usage = VMW_BUFFER_USAGE_SHARED;
+      pb_buf = provider->create_buffer(provider, surface->size,
+                                       &desc.pb_desc);
+      surface->buf = vmw_svga_winsys_buffer_wrap(pb_buf);
       if (surface->buf == NULL) {
-         struct pb_buffer *pb_buf;
-
-         surface->size = vmw_region_size(desc.region);
-         desc.pb_desc.alignment = 4096;
-         desc.pb_desc.usage = VMW_BUFFER_USAGE_SHARED;
-         pb_buf = provider->create_buffer(provider, surface->size,
-                                          &desc.pb_desc);
-         surface->buf = vmw_svga_winsys_buffer_wrap(pb_buf);
-         if (surface->buf == NULL) {
-            vmw_ioctl_region_destroy(desc.region);
-            vmw_ioctl_surface_destroy(vws, surface->sid);
-            goto no_sid;
-         }
+         vmw_ioctl_region_destroy(desc.region);
+         vmw_ioctl_surface_destroy(vws, surface->sid);
+         goto no_sid;
       }
    } else {
       /* Legacy surface only support 32-bit svga3d flags */
@@ -642,9 +645,9 @@ vmw_svga_winsys_surface_can_create(struct svga_winsys_screen *sws,
    struct vmw_winsys_screen *vws = vmw_winsys_screen(sws);
    uint32_t buffer_size;
 
-   buffer_size = svga3dsurface_get_serialized_size(format, size,
-                                                   numMipLevels,
-                                                   numLayers);
+   buffer_size = vmw_surf_get_serialized_size(format, size,
+                                              numMipLevels,
+                                              numLayers);
    if (numSamples > 1)
       buffer_size *= numSamples;
 

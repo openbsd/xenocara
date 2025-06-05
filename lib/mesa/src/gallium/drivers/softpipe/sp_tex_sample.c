@@ -2444,8 +2444,8 @@ img_filter_2d_ewa(const struct sp_sampler_view *sp_sview,
                const float weight = weightLut[qClamped];
 
                weight_buffer[buffer_next] = weight;
-               s_buffer[buffer_next] = u / ((float) width);
-               t_buffer[buffer_next] = v / ((float) height);
+               s_buffer[buffer_next] = (u + 0.5f) / width;
+               t_buffer[buffer_next] = (v + 0.5f) / height;
             
                buffer_next++;
                if (buffer_next == TGSI_QUAD_SIZE) {
@@ -3596,7 +3596,7 @@ softpipe_create_sampler_view(struct pipe_context *pipe,
       pipe_resource_reference(&view->texture, resource);
       view->context = pipe;
 
-#ifdef DEBUG
+#if MESA_DEBUG
      /*
       * This is possibly too lenient, but the primary reason is just
       * to catch gallium frontends which forget to initialize this, so

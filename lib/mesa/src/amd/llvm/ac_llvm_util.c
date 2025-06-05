@@ -34,6 +34,8 @@ static void ac_init_llvm_target(void)
       /* error messages prefix */
       "mesa",
       "-amdgpu-atomic-optimizations=true",
+      /* image_msaa_load currently doesn't work with LLVM + GFX12 */
+      "-amdgpu-enable-image-intrinsic-optimizer=false",
    };
 
    ac_reset_llvm_all_options_occurrences();
@@ -169,20 +171,9 @@ bool ac_init_llvm_compiler(struct ac_llvm_compiler *compiler, enum radeon_family
    if (!compiler->tm)
       return false;
 
-   if (tm_options & AC_TM_CREATE_LOW_OPT) {
-      compiler->low_opt_tm =
-         ac_create_target_machine(family, tm_options, LLVMCodeGenLevelLess, NULL);
-      if (!compiler->low_opt_tm)
-         goto fail;
-   }
-
-   compiler->target_library_info = ac_create_target_library_info(triple);
-   if (!compiler->target_library_info)
-      goto fail;
-
-   compiler->passmgr =
-      ac_create_passmgr(compiler->target_library_info, tm_options & AC_TM_CHECK_IR);
-   if (!compiler->passmgr)
+   compiler->meo =
+      ac_create_midend_optimizer(compiler->tm, tm_options & AC_TM_CHECK_IR);
+   if (!compiler->meo)
       goto fail;
 
    return true;
@@ -193,15 +184,13 @@ fail:
 
 void ac_destroy_llvm_compiler(struct ac_llvm_compiler *compiler)
 {
-   ac_destroy_llvm_passes(compiler->passes);
-   ac_destroy_llvm_passes(compiler->low_opt_passes);
+   /* delete the codegen pass managers */
+   ac_destroy_backend_optimizer(compiler->beo);
 
-   if (compiler->passmgr)
-      LLVMDisposePassManager(compiler->passmgr);
-   if (compiler->target_library_info)
-      ac_dispose_target_library_info(compiler->target_library_info);
-   if (compiler->low_opt_tm)
-      LLVMDisposeTargetMachine(compiler->low_opt_tm);
+   /* delete optimizer pass manager */
+   if (compiler->meo)
+      ac_destroy_midend_optimiser(compiler->meo);
+
    if (compiler->tm)
       LLVMDisposeTargetMachine(compiler->tm);
 }

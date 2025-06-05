@@ -240,6 +240,12 @@ do {                       \
 #  endif
 #endif
 
+#ifdef HAVE_FUNC_ATTRIBUTE_OPTIMIZE
+#define ATTRIBUTE_OPTIMIZE(flags) __attribute__((__optimize__((flags))))
+#else
+#define ATTRIBUTE_OPTIMIZE(flags)
+#endif
+
 #ifdef __cplusplus
 /**
  * Macro function that evaluates to true if T is a trivially
@@ -383,6 +389,9 @@ do {                       \
 
 /** Checks is a value is a power of two. Does not handle zero. */
 #define IS_POT(v) (((v) & ((v) - 1)) == 0)
+
+/** Checks is a value is a power of two. Zero handled. */
+#define IS_POT_NONZERO(v) ((v) != 0 && IS_POT(v))
 
 /** Set a single bit */
 #define BITFIELD_BIT(b)      (1u << (b))

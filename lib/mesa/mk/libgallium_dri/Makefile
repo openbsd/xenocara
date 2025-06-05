@@ -1,10 +1,10 @@
-#	$OpenBSD: Makefile,v 1.12 2024/07/19 14:41:46 rsadowski Exp $
+#	$OpenBSD: Makefile,v 1.13 2025/06/05 14:18:41 jsg Exp $
 
 LIB=	gallium_dri
 
 NOPROFILE=
 
-SRCS=	target.c
+SRCS=	dri_target.c
 
 GALLIUM_DRIVERS=	swrast kms_swrast
 
@@ -20,6 +20,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/winsys \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mesa/drivers/dri/common \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/util \
 		-I${MESA_SRC}/generated/src/gallium/drivers \
 		-DGALLIUM_SOFTPIPE
@@ -61,24 +62,22 @@ CPPFLAGS+=	-DGALLIUM_LLVMPIPE
 install:
 	${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
 	    -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    lib${LIB}.so ${DESTDIR}${X11BASE}/lib/modules/dri
-.for driver in ${GALLIUM_DRIVERS}
-	ln -f ${DESTDIR}${X11BASE}/lib/modules/dri/lib${LIB}.so \
-	    ${DESTDIR}${X11BASE}/lib/modules/dri/${driver}_dri.so
-.endfor
-	rm ${DESTDIR}${X11BASE}/lib/modules/dri/lib${LIB}.so
+	    lib${LIB}.so ${DESTDIR}${X11BASE}/lib
+#.for driver in ${GALLIUM_DRIVERS}
+#	ln -f ${DESTDIR}${X11BASE}/lib/modules/dri/lib${LIB}.so \
+#	    ${DESTDIR}${X11BASE}/lib/modules/dri/${driver}_dri.so
+#.endfor
+#	rm ${DESTDIR}${X11BASE}/lib/modules/dri/lib${LIB}.so
 
 obj: _xenocara_obj
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
-SLIBS=	libdri \
-	libmesa \
+SLIBS=	libmesa \
 	libglsl \
 	libglcpp \
 	libmesa_util \
-	libmesa_format \
 	libmesa_util_sse41 \
 	libblake3 \
 	libmesa_util_c11 \
@@ -88,6 +87,7 @@ SLIBS=	libdri \
 	libgallium \
 	libpipe_loader_static \
 	libloader \
+	libloader_x11 \
 	libxmlconfig \
 	libws_null \
 	libwsw \
@@ -127,7 +127,9 @@ SLIBS+= libamdgpuwinsys \
 	libradeonsi_gfx103 \
 	libradeonsi_gfx11 \
 	libradeonsi_gfx115 \
-	libradeonsi
+	libradeonsi_gfx12 \
+	libradeonsi \
+	libvpe
 .endif
 
 .if ${WITH_GALLIUM_I915} == "yes"
@@ -154,7 +156,10 @@ SLIBS+= libiris_gen80 \
 	libiris_gen120 \
 	libiris_gen125 \
 	libiris_gen200 \
+	libiris_gen300 \
 	libintel_compiler \
+	libintel_compiler_elk \
+	libintel_decoder \
 	libintel_dev \
 	libisl \
 	libisl_gfx40 \
@@ -168,6 +173,7 @@ SLIBS+= libiris_gen80 \
 	libisl_gfx120 \
 	libisl_gfx125 \
 	libisl_gfx200 \
+	libisl_gfx300 \
 	libisl_tiled_memcpy \
 	libisl_tiled_memcpy_sse41 \
 	libblorp \
@@ -183,6 +189,12 @@ SLIBS+=	libllvmpipe
 .endif
 
 LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
+
+LDADD+=		-Wl,--whole-archive
+LDADD+=		${.CURDIR}/../libdri/${__objdir}/libdri.a
+LDADD+=		${.CURDIR}/../libva_st/${__objdir}/libva_st.a
+LDADD+=		-Wl,--no-whole-archive
+
 .for slib in ${SLIBS}
 LDADD+=		${.CURDIR}/../${slib}/${__objdir}/${slib}.a
 .endfor
@@ -190,6 +202,9 @@ LDADD+=		${.CURDIR}/../${slib}/${__objdir}/${slib}.a
 LDADD+=		-L${.CURDIR}/../libglapi/${__objdir} -lglapi
 LDADD+=		-lelf -lLLVM -lexpat -lz -lm -lpthread
 LDADD+=		-L${X11BASE}/lib -ldrm
+LDADD+=		-lxcb -lxcb-randr -lxcb-sync -lxcb-present -lxshmfence
+LDADD+=		-lxcb-xfixes -lxcb-dri3
+LDADD+=		-lX11-xcb -lX11 -lxcb-dri2
 
 .if ${WITH_GALLIUM_I915} == "yes"
 LDADD+=		-ldrm_intel
@@ -204,7 +219,7 @@ LDADD+=		-ldrm_amdgpu
 .endif
 
 LDADD+=		${BUILD_ID_SHA1} -Wl,--gc-sections \
-		-Wl,--version-script ${MESA_SRC}/src/gallium/targets/dri/dri.sym
+		-Wl,--version-script ${MESA_SRC}/generated/src/gallium/targets/dri/dri.sym
 .if ${WITH_LD_DYNAMIC_LIST} == "yes"
 LDADD+=		-Wl,--dynamic-list ${MESA_SRC}/src/gallium/targets/dri.dyn
 .endif

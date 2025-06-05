@@ -1,27 +1,9 @@
-/**********************************************************
- * Copyright 2008-2022 VMware, Inc.  All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- **********************************************************/
+/*
+ * Copyright (c) 2008-2024 Broadcom. All Rights Reserved.
+ * The term “Broadcom” refers to Broadcom Inc.
+ * and/or its subsidiaries.
+ * SPDX-License-Identifier: MIT
+ */
 
 #include "util/format/u_format.h"
 #include "util/u_bitmask.h"
@@ -46,7 +28,7 @@ static unsigned
 svga_get_image_size_constant(const struct svga_context *svga, float **dest,
                              enum pipe_shader_type shader,
                              unsigned num_image_views,
-                             const struct svga_image_view images[PIPE_SHADER_TYPES][SVGA3D_MAX_UAVIEWS])
+                             const struct svga_image_view images[PIPE_SHADER_TYPES][SVGA_MAX_IMAGES])
 {
    uint32_t *dest_u = (uint32_t *) *dest;
 
@@ -428,7 +410,7 @@ emit_const_range(struct svga_context *svga,
           shader == PIPE_SHADER_FRAGMENT);
    assert(!svga_have_vgpu10(svga));
 
-#ifdef DEBUG
+#if MESA_DEBUG
    if (offset + count > SVGA3D_CONSTREG_MAX) {
       debug_printf("svga: too many constants (offset %u + count %u = %u (max = %u))\n",
                    offset, count, offset + count, SVGA3D_CONSTREG_MAX);

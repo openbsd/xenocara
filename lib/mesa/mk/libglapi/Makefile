@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2025/06/05 14:18:42 jsg Exp $
 
 LIB=	glapi
 
@@ -22,9 +22,6 @@ LDADD+=	-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group \
 	-Wl,--gc-sections -lpthread -lm -Wl,--end-group
 
 obj: _xenocara_obj
-
-beforeinstall:
-	rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

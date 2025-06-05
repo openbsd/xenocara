@@ -21,7 +21,9 @@
  * IN THE SOFTWARE.
  */
 
+#include "nir/pipe_nir.h"
 #include "util/format/u_format.h"
+#include "util/perf/cpu_trace.h"
 #include "util/u_surface.h"
 #include "util/u_blitter.h"
 #include "compiler/nir/nir_builder.h"
@@ -69,7 +71,7 @@ vc4_tile_blit(struct pipe_context *pctx, struct pipe_blit_info *info)
         assert ((is_color_blit && !(is_depth_blit || is_stencil_blit)) ||
                 (!is_color_blit && (is_depth_blit || is_stencil_blit)));
 
-        if (info->scissor_enable)
+        if (info->scissor_enable || info->swizzle_enable)
                 return;
 
         if (info->dst.box.x != info->src.box.x ||
@@ -194,7 +196,8 @@ vc4_blitter_save(struct vc4_context *vc4)
 {
         util_blitter_save_fragment_constant_buffer_slot(vc4->blitter,
                                                         vc4->constbuf[PIPE_SHADER_FRAGMENT].cb);
-        util_blitter_save_vertex_buffer_slot(vc4->blitter, vc4->vertexbuf.vb);
+        util_blitter_save_vertex_buffers(vc4->blitter, vc4->vertexbuf.vb,
+                                         vc4->vertexbuf.count);
         util_blitter_save_vertex_elements(vc4->blitter, vc4->vtx);
         util_blitter_save_vertex_shader(vc4->blitter, vc4->prog.bind_vs);
         util_blitter_save_rasterizer(vc4->blitter, vc4->rasterizer);
@@ -239,12 +242,7 @@ static void *vc4_get_yuv_vs(struct pipe_context *pctx)
 
    nir_store_var(&b, pos_out, nir_load_var(&b, pos_in), 0xf);
 
-   struct pipe_shader_state shader_tmpl = {
-           .type = PIPE_SHADER_IR_NIR,
-           .ir.nir = b.shader,
-   };
-
-   vc4->yuv_linear_blit_vs = pctx->create_vs_state(pctx, &shader_tmpl);
+   vc4->yuv_linear_blit_vs = pipe_shader_from_nir(pctx, b.shader);
 
    return vc4->yuv_linear_blit_vs;
 }
@@ -329,12 +327,7 @@ static void *vc4_get_yuv_fs(struct pipe_context *pctx, int cpp)
                  nir_unpack_unorm_4x8(&b, load),
                  0xf);
 
-   struct pipe_shader_state shader_tmpl = {
-           .type = PIPE_SHADER_IR_NIR,
-           .ir.nir = b.shader,
-   };
-
-   *cached_shader = pctx->create_fs_state(pctx, &shader_tmpl);
+   *cached_shader = pipe_shader_from_nir(pctx, b.shader);
 
    return *cached_shader;
 }
@@ -350,6 +343,8 @@ vc4_yuv_blit(struct pipe_context *pctx, struct pipe_blit_info *info)
         if (!(info->mask & PIPE_MASK_RGBA))
                 return;
 
+        if (info->swizzle_enable)
+                return;
         if (src->tiled)
                 return;
 
@@ -466,7 +461,7 @@ vc4_render_blit(struct pipe_context *ctx, struct pipe_blit_info *info)
         }
 
         vc4_blitter_save(vc4);
-        util_blitter_blit(vc4->blitter, info);
+        util_blitter_blit(vc4->blitter, info, NULL);
 
         info->mask = 0;
 }
@@ -536,7 +531,7 @@ vc4_stencil_blit(struct pipe_context *ctx, struct pipe_blit_info *info)
                                   PIPE_MASK_RGBA : PIPE_MASK_R,
                                   PIPE_TEX_FILTER_NEAREST,
                                   info->scissor_enable ? &info->scissor :  NULL,
-                                  info->alpha_blend, false, 0);
+                                  info->alpha_blend, false, 0, NULL);
 
         pipe_surface_reference(&dst_surf, NULL);
         pipe_sampler_view_reference(&src_view, NULL);
@@ -551,6 +546,8 @@ void
 vc4_blit(struct pipe_context *pctx, const struct pipe_blit_info *blit_info)
 {
         struct pipe_blit_info info = *blit_info;
+
+        MESA_TRACE_FUNC();
 
         vc4_yuv_blit(pctx, &info);
 

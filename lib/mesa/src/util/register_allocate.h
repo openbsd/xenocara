@@ -68,8 +68,6 @@ ra_add_transitive_reg_pair_conflict(struct ra_regs *regs,
 void ra_make_reg_conflicts_transitive(struct ra_regs *regs, unsigned int reg);
 void ra_class_add_reg(struct ra_class *c, unsigned int reg);
 struct ra_class *ra_get_class_from_index(struct ra_regs *regs, unsigned int c);
-void ra_set_num_conflicts(struct ra_regs *regs, unsigned int class_a,
-                          unsigned int class_b, unsigned int num_conflicts);
 void ra_set_finalize(struct ra_regs *regs, unsigned int **conflicts);
 
 void ra_set_serialize(const struct ra_regs *regs, struct blob *blob);
@@ -133,6 +131,8 @@ void ra_set_node_spill_cost(struct ra_graph *g, unsigned int n, float cost);
 int ra_get_best_spill_node(struct ra_graph *g);
 /** @} */
 
+float ra_debug_get_node_spill_cost(struct ra_graph *g, unsigned int n);
+float ra_debug_get_spill_benefit(struct ra_graph *g, unsigned int n);
 
 #ifdef __cplusplus
 }  // extern "C"

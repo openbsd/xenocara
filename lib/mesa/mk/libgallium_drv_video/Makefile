@@ -1,10 +1,10 @@
-#	$OpenBSD: Makefile,v 1.4 2024/07/25 00:18:21 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2025/06/05 14:18:41 jsg Exp $
 
 LIB=	gallium_drv_video
 
 NOPROFILE=
 
-SRCS=	target.c
+SRCS=	va_target.c
 
 .include "../Makefile.inc"
 
@@ -18,6 +18,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/winsys \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mesa/drivers/dri/common \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/util \
 		-I${MESA_SRC}/generated/src/gallium/drivers \
 		-DGALLIUM_SOFTPIPE
@@ -56,7 +57,6 @@ SLIBS+=	libdri \
 	libglsl \
 	libglcpp \
 	libmesa_util \
-	libmesa_format \
 	libmesa_util_sse41 \
 	libblake3 \
 	libmesa_util_c11 \
@@ -104,7 +104,9 @@ SLIBS+= libamdgpuwinsys \
 	libradeonsi_gfx103 \
 	libradeonsi_gfx11 \
 	libradeonsi_gfx115 \
-	libradeonsi
+	libradeonsi_gfx12 \
+	libradeonsi \
+	libvpe
 .endif
 
 .if ${WITH_LLVM} == "yes"
@@ -130,7 +132,7 @@ LDADD+=		-ldrm_amdgpu
 .endif
 
 LDADD+=		${BUILD_ID_SHA1} -Wl,--gc-sections \
-		-Wl,--version-script ${MESA_SRC}/src/gallium/targets/va/va.sym
+		-Wl,--version-script ${MESA_SRC}/generated/src/gallium/targets/va/va.sym
 .if ${WITH_LD_DYNAMIC_LIST} == "yes"
 LDADD+=		-Wl,--dynamic-list ${MESA_SRC}/src/gallium/targets/dri.dyn
 .endif

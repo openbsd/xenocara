@@ -55,6 +55,7 @@ glsl_type_add_to_function_params(const struct glsl_type *type,
       func->params[(*param_idx)++] = (nir_parameter) {
          .num_components = glsl_get_vector_elements(type),
          .bit_size = glsl_get_bit_size(type),
+         .type = type,
       };
    } else if (glsl_type_is_array_or_matrix(type)) {
       unsigned elems = glsl_get_length(type);
@@ -77,7 +78,10 @@ vtn_ssa_value_add_to_call_params(struct vtn_builder *b,
                                  nir_call_instr *call,
                                  unsigned *param_idx)
 {
-   if (glsl_type_is_vector_or_scalar(value->type)) {
+   if (glsl_type_is_cmat(value->type)) {
+      nir_deref_instr *src_deref = vtn_get_deref_for_ssa_value(b, value);
+      call->params[(*param_idx)++] = nir_src_for_ssa(&src_deref->def);
+   } else if (glsl_type_is_vector_or_scalar(value->type)) {
       call->params[(*param_idx)++] = nir_src_for_ssa(value->def);
    } else {
       unsigned elems = glsl_get_length(value->type);
@@ -88,17 +92,104 @@ vtn_ssa_value_add_to_call_params(struct vtn_builder *b,
    }
 }
 
+struct vtn_func_arg_info {
+   bool by_value;
+};
+
+static void
+function_parameter_decoration_cb(struct vtn_builder *b, struct vtn_value *val,
+                                 int member, const struct vtn_decoration *dec,
+                                 void *arg_info)
+{
+   struct vtn_func_arg_info *info = arg_info;
+
+   switch (dec->decoration) {
+   case SpvDecorationFuncParamAttr:
+      for (uint32_t i = 0; i < dec->num_operands; i++) {
+         uint32_t attr = dec->operands[i];
+         switch (attr) {
+         /* ignore for now */
+         case SpvFunctionParameterAttributeNoAlias:
+         case SpvFunctionParameterAttributeSext:
+         case SpvFunctionParameterAttributeZext:
+         case SpvFunctionParameterAttributeSret:
+         case SpvFunctionParameterAttributeNoCapture:
+         case SpvFunctionParameterAttributeNoWrite:
+            break;
+
+         case SpvFunctionParameterAttributeByVal:
+            info->by_value = true;
+            break;
+
+         default:
+            vtn_warn("Function parameter Decoration not handled: %s",
+                     spirv_functionparameterattribute_to_string(attr));
+            break;
+         }
+      }
+      break;
+
+   /* ignore for now */
+   case SpvDecorationAliased:
+   case SpvDecorationAliasedPointer:
+   case SpvDecorationAlignment:
+   case SpvDecorationRelaxedPrecision:
+   case SpvDecorationRestrict:
+   case SpvDecorationRestrictPointer:
+   case SpvDecorationVolatile:
+      break;
+
+   default:
+      vtn_warn("Function parameter Decoration not handled: %s",
+               spirv_decoration_to_string(dec->decoration));
+      break;
+   }
+}
+
 static void
 vtn_ssa_value_load_function_param(struct vtn_builder *b,
                                   struct vtn_ssa_value *value,
+                                  struct vtn_type *type,
+                                  struct vtn_func_arg_info *info,
                                   unsigned *param_idx)
 {
-   if (glsl_type_is_vector_or_scalar(value->type)) {
-      value->def = nir_load_param(&b->nb, (*param_idx)++);
+   if (glsl_type_is_cmat(value->type)) {
+      nir_variable *copy_var =
+         nir_local_variable_create(b->nb.impl, value->type, "cmat_param_by_value");
+
+      nir_def *param = nir_load_param(&b->nb, (*param_idx)++);
+      nir_deref_instr *copy = nir_build_deref_var(&b->nb, copy_var);
+      nir_cmat_copy(&b->nb, &copy->def, param);
+
+      value->is_variable = true;
+      value->var = copy_var;
+   } else if (glsl_type_is_vector_or_scalar(value->type)) {
+      /* if the parameter is passed by value, we need to create a local copy if it's a pointer */
+      if (info->by_value && type && type->base_type == vtn_base_type_pointer) {
+         struct vtn_type *pointee_type = type->pointed;
+
+         nir_variable *copy =
+            nir_local_variable_create(b->nb.impl, pointee_type->type, NULL);
+
+         nir_variable_mode mode;
+         vtn_storage_class_to_mode(b, type->storage_class, NULL, &mode);
+
+         nir_def *param = nir_load_param(&b->nb, (*param_idx)++);
+         nir_deref_instr *src = nir_build_deref_cast(&b->nb, param, mode, copy->type, 0);
+         nir_deref_instr *dst = nir_build_deref_var(&b->nb, copy);
+
+         nir_copy_deref(&b->nb, dst, src);
+
+         nir_deref_instr *load =
+            nir_build_deref_cast(&b->nb, &dst->def, nir_var_function_temp, type->type, 0);
+         value->def = &load->def;
+      } else {
+         value->def = nir_load_param(&b->nb, (*param_idx)++);
+      }
    } else {
       unsigned elems = glsl_get_length(value->type);
       for (unsigned i = 0; i < elems; i++)
-         vtn_ssa_value_load_function_param(b, value->elems[i], param_idx);
+         vtn_ssa_value_load_function_param(b, value->elems[i], NULL, info, param_idx);
    }
 }
 
@@ -165,6 +256,29 @@ function_decoration_cb(struct vtn_builder *b, struct vtn_value *val, int member,
    }
 }
 
+/*
+ * Usually, execution modes are per-shader and handled elsewhere. However, with
+ * create_library we will have modes per-nir_function. We can't represent all
+ * SPIR-V execution modes in nir_function, so this is lossy for multi-entrypoint
+ * SPIR-V. However, we do have workgroup_size in nir_function so we gather that
+ * here. If other execution modes are needed in the multi-entrypoint case, both
+ * nir_function and this callback will need to be extended suitably.
+ */
+static void
+function_execution_mode_cb(struct vtn_builder *b, struct vtn_value *func,
+                           const struct vtn_decoration *mode, void *data)
+{
+   nir_function *nir_func = data;
+
+   if (mode->exec_mode == SpvExecutionModeLocalSize) {
+      vtn_assert(b->shader->info.stage == MESA_SHADER_KERNEL);
+
+      nir_func->workgroup_size[0] = mode->operands[0];
+      nir_func->workgroup_size[1] = mode->operands[1];
+      nir_func->workgroup_size[2] = mode->operands[2];
+   }
+}
+
 bool
 vtn_cfg_handle_prepass_instruction(struct vtn_builder *b, SpvOp opcode,
                                    const uint32_t *w, unsigned count)
@@ -172,7 +286,7 @@ vtn_cfg_handle_prepass_instruction(struct vtn_builder *b, SpvOp opcode,
    switch (opcode) {
    case SpvOpFunction: {
       vtn_assert(b->func == NULL);
-      b->func = rzalloc(b, struct vtn_function);
+      b->func = vtn_zalloc(b, struct vtn_function);
 
       list_inithead(&b->func->body);
       b->func->linkage = SpvLinkageTypeMax;
@@ -193,6 +307,12 @@ vtn_cfg_handle_prepass_instruction(struct vtn_builder *b, SpvOp opcode,
       nir_function *func =
          nir_function_create(b->shader, ralloc_strdup(b->shader, val->name));
 
+      /* Execution modes are gathered per-function with create_library (here)
+       * but per shader with !create_library (elsewhere).
+       */
+      if (b->options->create_library)
+         vtn_foreach_execution_mode(b, val, function_execution_mode_cb, func);
+
       unsigned num_params = 0;
       for (unsigned i = 0; i < func_type->length; i++)
          num_params += glsl_type_count_function_params(func_type->params[i]->type);
@@ -203,9 +323,21 @@ vtn_cfg_handle_prepass_instruction(struct vtn_builder *b, SpvOp opcode,
 
       func->should_inline = b->func->control & SpvFunctionControlInlineMask;
       func->dont_inline = b->func->control & SpvFunctionControlDontInlineMask;
+      func->is_exported = b->func->linkage == SpvLinkageTypeExport;
+
+      /* This is a bit subtle: if we are compiling a non-library, we will have
+       * exactly one entrypoint. But in library mode, we can have 0, 1, or even
+       * multiple entrypoints. This is OK.
+       *
+       * So, we set is_entrypoint for libraries here (plumbing OpEntryPoint),
+       * but set is_entrypoint elsewhere for graphics shaders.
+       */
+      if (b->options->create_library) {
+         func->is_entrypoint = val->is_entrypoint;
+      }
 
       func->num_params = num_params;
-      func->params = ralloc_array(b->shader, nir_parameter, num_params);
+      func->params = rzalloc_array(b->shader, nir_parameter, num_params);
 
       unsigned idx = 0;
       if (func_type->return_type->base_type != vtn_base_type_void) {
@@ -215,6 +347,8 @@ vtn_cfg_handle_prepass_instruction(struct vtn_builder *b, SpvOp opcode,
          func->params[idx++] = (nir_parameter) {
             .num_components = nir_address_format_num_components(addr_format),
             .bit_size = nir_address_format_bit_size(addr_format),
+            .is_return = true,
+            .type = func_type->return_type->type,
          };
       }
 
@@ -261,16 +395,23 @@ vtn_cfg_handle_prepass_instruction(struct vtn_builder *b, SpvOp opcode,
 
    case SpvOpFunctionParameter: {
       vtn_assert(b->func_param_idx < b->func->nir_func->num_params);
+
+      struct vtn_func_arg_info arg_info = {0};
       struct vtn_type *type = vtn_get_type(b, w[1]);
-      struct vtn_ssa_value *value = vtn_create_ssa_value(b, type->type);
-      vtn_ssa_value_load_function_param(b, value, &b->func_param_idx);
-      vtn_push_ssa_value(b, w[2], value);
+      struct vtn_ssa_value *ssa = vtn_create_ssa_value(b, type->type);
+      struct vtn_value *val = vtn_untyped_value(b, w[2]);
+
+      b->func->nir_func->params[b->func_param_idx].name = ralloc_strdup(b->shader, val->name);
+
+      vtn_foreach_decoration(b, val, function_parameter_decoration_cb, &arg_info);
+      vtn_ssa_value_load_function_param(b, ssa, type, &arg_info, &b->func_param_idx);
+      vtn_push_ssa_value(b, w[2], ssa);
       break;
    }
 
    case SpvOpLabel: {
       vtn_assert(b->block == NULL);
-      b->block = rzalloc(b, struct vtn_block);
+      b->block = vtn_zalloc(b, struct vtn_block);
       b->block->label = w;
       vtn_push_value(b, w[1], vtn_value_type_block)->block = b->block;
 
@@ -366,7 +507,7 @@ vtn_parse_switch(struct vtn_builder *b,
       if (case_entry) {
          cse = case_entry->data;
       } else {
-         cse = rzalloc(b, struct vtn_case);
+         cse = vtn_zalloc(b, struct vtn_case);
          cse->block = case_block;
          cse->block->switch_case = cse;
          util_dynarray_init(&cse->values, b);
@@ -555,8 +696,7 @@ vtn_emit_cf_func_unstructured(struct vtn_builder *b, struct vtn_function *func,
             nir_goto(&b->nb, then_block->block);
          } else {
             vtn_add_unstructured_block(b, func, &work_list, else_block);
-            nir_goto_if(&b->nb, then_block->block, nir_src_for_ssa(cond),
-                                else_block->block);
+            nir_goto_if(&b->nb, then_block->block, cond, else_block->block);
          }
 
          break;
@@ -586,7 +726,7 @@ vtn_emit_cf_func_unstructured(struct vtn_builder *b, struct vtn_function *func,
             vtn_add_unstructured_block(b, func, &work_list, cse->block);
 
             /* add branching */
-            nir_goto_if(&b->nb, cse->block->block, nir_src_for_ssa(cond), e);
+            nir_goto_if(&b->nb, cse->block->block, cond, e);
             b->nb.cursor = nir_after_block(e);
          }
 

@@ -1,31 +1,14 @@
-/**********************************************************
- * Copyright 2008-2023 VMware, Inc.  All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- **********************************************************/
+/*
+ * Copyright (c) 2008-2024 Broadcom. All Rights Reserved.
+ * The term “Broadcom” refers to Broadcom Inc.
+ * and/or its subsidiaries.
+ * SPDX-License-Identifier: MIT
+ */
 
 #include "svga3d_reg.h"
-#include "svga3d_surfacedefs.h"
+#include "vmw_surf_defs.h"
 
+#include "include/svga3d_surfacedefs.h"
 #include "pipe/p_state.h"
 #include "pipe/p_defines.h"
 #include "util/u_thread.h"
@@ -440,13 +423,13 @@ svga_texture_transfer_map_direct(struct svga_context *svga,
           (tex->b.target == PIPE_TEXTURE_2D_ARRAY) ||
           (tex->b.target == PIPE_TEXTURE_CUBE_ARRAY)) {
          st->base.layer_stride =
-            svga3dsurface_get_image_offset(tex->key.format, baseLevelSize,
-                                           tex->b.last_level + 1, 1, 0);
+            vmw_surf_get_image_offset(tex->key.format, baseLevelSize,
+                                      tex->b.last_level + 1, 1, 0);
       }
 
-      offset = svga3dsurface_get_image_offset(tex->key.format, baseLevelSize,
-                                              tex->b.last_level + 1, /* numMips */
-                                              st->slice, level);
+      offset = vmw_surf_get_image_offset(tex->key.format, baseLevelSize,
+                                         tex->b.last_level + 1, /* numMips */
+                                         st->slice, level);
       if (level > 0) {
          assert(offset > 0);
       }
@@ -454,11 +437,11 @@ svga_texture_transfer_map_direct(struct svga_context *svga,
       mip_width = u_minify(tex->b.width0, level);
       mip_height = u_minify(tex->b.height0, level);
 
-      offset += svga3dsurface_get_pixel_offset(tex->key.format,
-                                               mip_width, mip_height,
-                                               st->box.x,
-                                               st->box.y,
-                                               st->box.z);
+      offset += vmw_surf_get_pixel_offset(tex->key.format,
+                                          mip_width, mip_height,
+                                          st->box.x,
+                                          st->box.y,
+                                          st->box.z);
 
       return (void *) (map + offset);
    }
@@ -1460,7 +1443,7 @@ svga_texture_transfer_map_upload(struct svga_context *svga,
    upload_size = st->base.layer_stride * st->base.box.depth;
    upload_size = align(upload_size, 16);
 
-#ifdef DEBUG
+#if MESA_DEBUG
    if (util_format_is_compressed(texture->format)) {
       unsigned blockw, blockh, bytesPerBlock;
 
@@ -1559,10 +1542,10 @@ svga_texture_device_format_has_alpha(struct pipe_resource *texture)
    /* the svga_texture() call below is invalid for PIPE_BUFFER resources */
    assert(texture->target != PIPE_BUFFER);
 
-   const struct svga3d_surface_desc *surf_desc =
-      svga3dsurface_get_desc(svga_texture(texture)->key.format);
+   const struct SVGA3dSurfaceDesc *surf_desc =
+      vmw_surf_get_desc(svga_texture(texture)->key.format);
 
-   enum svga3d_block_desc block_desc = surf_desc->block_desc;
+   enum SVGA3dBlockDesc block_desc = surf_desc->blockDesc;
 
    return !!((block_desc & SVGA3DBLOCKDESC_ALPHA) ||
              ((block_desc == SVGA3DBLOCKDESC_TYPELESS) &&

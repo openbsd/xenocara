@@ -53,7 +53,7 @@ isl_tiling_to_i915_tiling(enum isl_tiling tiling)
    case ISL_TILING_ICL_Ys:
    case ISL_TILING_4:
    case ISL_TILING_64:
-   case ISL_TILING_GFX12_CCS:
+   case ISL_TILING_64_XE2:
       return I915_TILING_NONE;
    }
 
@@ -190,6 +190,14 @@ uint32_t
 isl_drm_modifier_get_score(const struct intel_device_info *devinfo,
                            uint64_t modifier)
 {
+   /* We want to know the absence of the debug environment variable
+    * and don't want to provide a default value either, so we don't
+    * use debug_get_num_option() here.
+    */
+   const char *mod_str = getenv("INTEL_MODIFIER_OVERRIDE");
+   if (mod_str != NULL) {
+      return modifier == strtoul(mod_str, NULL, 0);
+   }
    /* FINISHME: Add gfx12 modifiers */
    switch (modifier) {
    default:
@@ -223,6 +231,14 @@ isl_drm_modifier_get_score(const struct intel_device_info *devinfo,
          return 0;
 
       return 4;
+   case I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS_CC:
+      if (devinfo->verx10 != 120)
+         return 0;
+
+      if (INTEL_DEBUG(DEBUG_NO_CCS) || INTEL_DEBUG(DEBUG_NO_FAST_CLEAR))
+         return 0;
+
+      return 5;
    case I915_FORMAT_MOD_4_TILED:
       /* Gfx12.5 introduces Tile4. */
       if (devinfo->verx10 < 125)
@@ -237,14 +253,30 @@ isl_drm_modifier_get_score(const struct intel_device_info *devinfo,
          return 0;
 
       return 4;
+   case I915_FORMAT_MOD_4_TILED_DG2_RC_CCS_CC:
+      if (!intel_device_info_is_dg2(devinfo))
+         return 0;
+
+      if (INTEL_DEBUG(DEBUG_NO_CCS) || INTEL_DEBUG(DEBUG_NO_FAST_CLEAR))
+         return 0;
+
+      return 5;
    case I915_FORMAT_MOD_4_TILED_MTL_RC_CCS:
-      if (!intel_device_info_is_mtl(devinfo))
+      if (!intel_device_info_is_mtl_or_arl(devinfo))
          return 0;
 
       if (INTEL_DEBUG(DEBUG_NO_CCS))
          return 0;
 
       return 4;
+   case I915_FORMAT_MOD_4_TILED_MTL_RC_CCS_CC:
+      if (!intel_device_info_is_mtl_or_arl(devinfo))
+         return 0;
+
+      if (INTEL_DEBUG(DEBUG_NO_CCS) || INTEL_DEBUG(DEBUG_NO_FAST_CLEAR))
+         return 0;
+
+      return 5;
    }
 }
 

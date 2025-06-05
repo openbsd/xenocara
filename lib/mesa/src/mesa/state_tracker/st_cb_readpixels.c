@@ -219,7 +219,7 @@ try_pbo_readpixels(struct st_context *st, struct gl_renderbuffer *rb,
    fb.width = surface->width;
    fb.height = surface->height;
    fb.samples = 1;
-   fb.layers = 1;
+   fb.layers = addr.depth;
    cso_set_framebuffer(cso, &fb);
 
    /* Any blend state would do. Set this just to prevent drivers having
@@ -285,7 +285,7 @@ blit_to_staging(struct st_context *st, struct gl_renderbuffer *rb,
 
    /* We are creating a texture of the size of the region being read back.
     * Need to check for NPOT texture support. */
-   if (!screen->get_param(screen, PIPE_CAP_NPOT_TEXTURES) &&
+   if (!screen->caps.npot_textures &&
        (!util_is_power_of_two_or_zero(width) ||
         !util_is_power_of_two_or_zero(height)))
       return NULL;
@@ -435,6 +435,9 @@ st_ReadPixels(struct gl_context *ctx, GLint x, GLint y,
    st_validate_state(st, ST_PIPELINE_UPDATE_FB_STATE_MASK);
    st_flush_bitmap_cache(st);
 
+   if (rb->TexImage && st->force_compute_based_texture_transfer)
+      goto fallback;
+
    if (!st->prefer_blit_based_texture_transfer) {
       goto fallback;
    }
@@ -565,5 +568,9 @@ st_ReadPixels(struct gl_context *ctx, GLint x, GLint y,
    return;
 
 fallback:
+   if (rb->TexImage && (st->allow_compute_based_texture_transfer || st->force_compute_based_texture_transfer)) {
+      if (st_GetTexSubImage_shader(ctx, x, y, 0, width, height, 1, format, type, pixels, rb->TexImage))
+         return;
+   }
    _mesa_readpixels(ctx, x, y, width, height, format, type, pack, pixels);
 }

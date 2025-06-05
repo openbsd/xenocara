@@ -26,7 +26,7 @@
 #include "nouveau_fence.h"
 #include "util/os_time.h"
 
-#if DETECT_OS_UNIX
+#if DETECT_OS_POSIX
 #include <sched.h>
 #endif
 
@@ -229,7 +229,7 @@ nouveau_fence_kick(struct nouveau_fence *fence)
    }
 
    if (fence->state < NOUVEAU_FENCE_STATE_FLUSHED) {
-      if (nouveau_pushbuf_kick(context->pushbuf, context->pushbuf->channel))
+      if (nouveau_pushbuf_kick(context->pushbuf))
          return false;
    }
 

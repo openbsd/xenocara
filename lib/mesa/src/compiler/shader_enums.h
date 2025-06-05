@@ -26,9 +26,14 @@
 #ifndef SHADER_ENUMS_H
 #define SHADER_ENUMS_H
 
-#include "util/macros.h"
-
+#ifndef __OPENCL_VERSION__
 #include <stdbool.h>
+#include "util/macros.h"
+#include "util/u_debug.h"
+#else
+#include "libcl/libcl.h"
+#define debug_printf(x, ...)
+#endif
 
 /* Project-wide (GL and Vulkan) maximum. */
 #define MAX_DRAW_BUFFERS 8
@@ -517,6 +522,7 @@ _mesa_varying_slot_in_fs(gl_varying_slot slot)
 #define VARYING_BIT_CULL_DIST0 BITFIELD64_BIT(VARYING_SLOT_CULL_DIST0)
 #define VARYING_BIT_CULL_DIST1 BITFIELD64_BIT(VARYING_SLOT_CULL_DIST1)
 #define VARYING_BIT_PRIMITIVE_ID BITFIELD64_BIT(VARYING_SLOT_PRIMITIVE_ID)
+#define VARYING_BIT_PRIMITIVE_COUNT BITFIELD64_BIT(VARYING_SLOT_PRIMITIVE_COUNT)
 #define VARYING_BIT_LAYER BITFIELD64_BIT(VARYING_SLOT_LAYER)
 #define VARYING_BIT_VIEWPORT BITFIELD64_BIT(VARYING_SLOT_VIEWPORT)
 #define VARYING_BIT_FACE BITFIELD64_BIT(VARYING_SLOT_FACE)
@@ -552,9 +558,8 @@ _mesa_varying_slot_in_fs(gl_varying_slot slot)
 /*@}*/
 
 /**
- * If the gl_register_file is PROGRAM_SYSTEM_VALUE, the register index will be
- * one of these values.  If a NIR variable's mode is nir_var_system_value, it
- * will be one of these values.
+ * If a NIR variable's mode is nir_var_system_value, it will be one of these
+ * values.
  */
 typedef enum
 {
@@ -775,13 +780,16 @@ typedef enum
     */
    /*@{*/
    SYSTEM_VALUE_FRAG_COORD,
+   SYSTEM_VALUE_PIXEL_COORD,
    SYSTEM_VALUE_POINT_COORD,
    SYSTEM_VALUE_LINE_COORD, /**< Coord along axis perpendicular to line */
    SYSTEM_VALUE_FRONT_FACE,
+   SYSTEM_VALUE_FRONT_FACE_FSIGN,
    SYSTEM_VALUE_SAMPLE_ID,
    SYSTEM_VALUE_SAMPLE_POS,
    SYSTEM_VALUE_SAMPLE_POS_OR_CENTER,
    SYSTEM_VALUE_SAMPLE_MASK_IN,
+   SYSTEM_VALUE_LAYER_ID,
    SYSTEM_VALUE_HELPER_INVOCATION,
    SYSTEM_VALUE_COLOR0,
    SYSTEM_VALUE_COLOR1,
@@ -810,6 +818,7 @@ typedef enum
    SYSTEM_VALUE_BASE_GLOBAL_INVOCATION_ID,
    SYSTEM_VALUE_GLOBAL_INVOCATION_INDEX,
    SYSTEM_VALUE_WORKGROUP_ID,
+   SYSTEM_VALUE_BASE_WORKGROUP_ID,
    SYSTEM_VALUE_WORKGROUP_INDEX,
    SYSTEM_VALUE_NUM_WORKGROUPS,
    SYSTEM_VALUE_WORKGROUP_SIZE,
@@ -860,7 +869,6 @@ typedef enum
    /*@{*/
    SYSTEM_VALUE_RAY_LAUNCH_ID,
    SYSTEM_VALUE_RAY_LAUNCH_SIZE,
-   SYSTEM_VALUE_RAY_LAUNCH_SIZE_ADDR_AMD,
    SYSTEM_VALUE_RAY_WORLD_ORIGIN,
    SYSTEM_VALUE_RAY_WORLD_DIRECTION,
    SYSTEM_VALUE_RAY_OBJECT_ORIGIN,
@@ -920,6 +928,12 @@ typedef enum
    SYSTEM_VALUE_SHADER_INDEX,
    SYSTEM_VALUE_COALESCED_INPUT_COUNT,
 
+   /* SPV_NV_shader_sm_builtins */
+   SYSTEM_VALUE_WARPS_PER_SM_NV,
+   SYSTEM_VALUE_SM_COUNT_NV,
+   SYSTEM_VALUE_WARP_ID_NV,
+   SYSTEM_VALUE_SM_ID_NV,
+
    SYSTEM_VALUE_MAX             /**< Number of values */
 } gl_system_value;
 
@@ -939,7 +953,6 @@ enum glsl_interp_mode
    INTERP_MODE_FLAT,
    INTERP_MODE_NOPERSPECTIVE,
    INTERP_MODE_EXPLICIT,
-   INTERP_MODE_COLOR, /**< glShadeModel determines the interp mode */
    INTERP_MODE_COUNT /**< Number of interpolation qualifiers */
 };
 
@@ -1122,6 +1135,35 @@ enum gl_access_qualifier
     * if MMU faults are suppressed for the load.
     */
    ACCESS_CAN_SPECULATE = (1 << 12),
+
+   /**
+    * Whether coherency with CP (command processor) or GE (geometry engine)
+    * is required.
+    */
+   ACCESS_CP_GE_COHERENT_AMD = (1 << 13),
+
+   /* Guarantee that an image_load is in bounds so we can skip robustness code
+    * on AGX, used for some internal shaders.
+    */
+   ACCESS_IN_BOUNDS_AGX = (1 << 14),
+
+   /**
+    * Disallow vectorization.
+    *
+    * On some hw (AMD), sparse buffer loads return 0 for all components if
+    * a sparse load starts on a non-resident page, crosses the page boundary,
+    * and ends on a resident page. Sometimes we want it to return 0 only for
+    * the portion of the load that's non-resident, and load values for
+    * the portion that's resident. The workaround is to scalarize such loads
+    * and disallow vectorization. This is used by an internal copy_buffer
+    * shader where the API wants to copy all bytes that are resident.
+    */
+   ACCESS_KEEP_SCALAR = (1 << 15),
+
+   /**
+    * Indicates that this load will use SMEM.
+    */
+   ACCESS_SMEM_AMD = (1 << 16),
 };
 
 /**
@@ -1163,6 +1205,27 @@ enum tess_primitive_mode
    TESS_PRIMITIVE_ISOLINES,
 };
 
+static inline void
+mesa_count_tess_level_components(const enum tess_primitive_mode mode,
+                                 unsigned *outer, unsigned *inner)
+{
+   switch (mode) {
+   case TESS_PRIMITIVE_ISOLINES:
+      *outer = 2;
+      *inner = 0;
+      break;
+   case TESS_PRIMITIVE_TRIANGLES:
+      *outer = 3;
+      *inner = 1;
+      break;
+   case TESS_PRIMITIVE_QUADS:
+   default:
+      *outer = 4;
+      *inner = 2;
+      break;
+   }
+}
+
 /**
  * Mesa primitive types for both GL and Vulkan:
  */
@@ -1189,9 +1252,154 @@ enum ENUM_PACKED mesa_prim
 };
 
 /**
- * Number of vertices per mesh shader primitive.
+ * Number of vertices per primitive as seen by a geometry or mesh shader.
  */
-unsigned num_mesh_vertices_per_primitive(unsigned prim);
+static inline unsigned
+mesa_vertices_per_prim(enum mesa_prim prim)
+{
+   switch(prim) {
+   case MESA_PRIM_POINTS:
+      return 1;
+   case MESA_PRIM_LINES:
+   case MESA_PRIM_LINE_LOOP:
+   case MESA_PRIM_LINE_STRIP:
+      return 2;
+   case MESA_PRIM_TRIANGLES:
+   case MESA_PRIM_TRIANGLE_STRIP:
+   case MESA_PRIM_TRIANGLE_FAN:
+      return 3;
+   case MESA_PRIM_LINES_ADJACENCY:
+   case MESA_PRIM_LINE_STRIP_ADJACENCY:
+      return 4;
+   case MESA_PRIM_TRIANGLES_ADJACENCY:
+   case MESA_PRIM_TRIANGLE_STRIP_ADJACENCY:
+      return 6;
+
+   case MESA_PRIM_QUADS:
+   case MESA_PRIM_QUAD_STRIP:
+      /* These won't be seen from geometry shaders but prim assembly might for
+       * prim id.
+       */
+      return 4;
+
+   /* The following primitives should never be used with geometry or mesh
+    * shaders and their size is undefined.
+    */
+   case MESA_PRIM_POLYGON:
+   default:
+      debug_printf("Unrecognized geometry or mesh shader primitive");
+      return 3;
+   }
+}
+
+/**
+ * Returns the number of decomposed primitives for the given
+ * vertex count.
+ * Parts of the pipline are invoked once for each triangle in
+ * triangle strip, triangle fans and triangles and once
+ * for each line in line strip, line loop, lines. Also
+ * statistics depend on knowing the exact number of decomposed
+ * primitives for a set of vertices.
+ */
+static inline unsigned
+u_decomposed_prims_for_vertices(enum mesa_prim primitive, int vertices)
+{
+   switch (primitive) {
+   case MESA_PRIM_POINTS:
+      return vertices;
+   case MESA_PRIM_LINES:
+      return vertices / 2;
+   case MESA_PRIM_LINE_LOOP:
+      return (vertices >= 2) ? vertices : 0;
+   case MESA_PRIM_LINE_STRIP:
+      return (vertices >= 2) ? vertices - 1 : 0;
+   case MESA_PRIM_TRIANGLES:
+      return vertices / 3;
+   case MESA_PRIM_TRIANGLE_STRIP:
+      return (vertices >= 3) ? vertices - 2 : 0;
+   case MESA_PRIM_TRIANGLE_FAN:
+      return (vertices >= 3) ? vertices - 2 : 0;
+   case MESA_PRIM_LINES_ADJACENCY:
+      return vertices / 4;
+   case MESA_PRIM_LINE_STRIP_ADJACENCY:
+      return (vertices >= 4) ? vertices - 3 : 0;
+   case MESA_PRIM_TRIANGLES_ADJACENCY:
+      return vertices / 6;
+   case MESA_PRIM_TRIANGLE_STRIP_ADJACENCY:
+      return (vertices >= 6) ? 1 + (vertices - 6) / 2 : 0;
+   case MESA_PRIM_QUADS:
+      return vertices / 4;
+   case MESA_PRIM_QUAD_STRIP:
+      return (vertices >= 4) ? (vertices - 2) / 2 : 0;
+   /* Polygons can't be decomposed
+    * because the number of their vertices isn't known so
+    * for them and whatever else we don't recognize just
+    * return 1 if the number of vertices is greater than
+    * or equal to 3 and zero otherwise */
+   case MESA_PRIM_POLYGON:
+   default:
+      debug_printf("Invalid decomposition primitive!\n");
+      return (vertices >= 3) ? 1 : 0;
+   }
+}
+
+/**
+ * Decompose a primitive that is a loop, a strip, or a fan.  Return the
+ * original primitive if it is already decomposed.
+ */
+static inline enum mesa_prim
+u_decomposed_prim(enum mesa_prim prim)
+{
+   switch (prim) {
+   case MESA_PRIM_LINE_LOOP:
+   case MESA_PRIM_LINE_STRIP:
+      return MESA_PRIM_LINES;
+   case MESA_PRIM_TRIANGLE_STRIP:
+   case MESA_PRIM_TRIANGLE_FAN:
+      return MESA_PRIM_TRIANGLES;
+   case MESA_PRIM_QUAD_STRIP:
+      return MESA_PRIM_QUADS;
+   case MESA_PRIM_LINE_STRIP_ADJACENCY:
+      return MESA_PRIM_LINES_ADJACENCY;
+   case MESA_PRIM_TRIANGLE_STRIP_ADJACENCY:
+      return MESA_PRIM_TRIANGLES_ADJACENCY;
+   default:
+      return prim;
+   }
+}
+
+/**
+ * Reduce a primitive to one of MESA_PRIM_POINTS, MESA_PRIM_LINES, and
+ * MESA_PRIM_TRIANGLES.
+ */
+static inline enum mesa_prim
+u_reduced_prim(enum mesa_prim prim)
+{
+   switch (prim) {
+   case MESA_PRIM_POINTS:
+      return MESA_PRIM_POINTS;
+   case MESA_PRIM_LINES:
+   case MESA_PRIM_LINE_LOOP:
+   case MESA_PRIM_LINE_STRIP:
+   case MESA_PRIM_LINES_ADJACENCY:
+   case MESA_PRIM_LINE_STRIP_ADJACENCY:
+      return MESA_PRIM_LINES;
+   default:
+      return MESA_PRIM_TRIANGLES;
+   }
+}
+
+static inline bool
+mesa_prim_has_adjacency(enum mesa_prim prim)
+{
+   static_assert(MESA_PRIM_LINE_STRIP_ADJACENCY == MESA_PRIM_LINES_ADJACENCY + 1, "");
+   static_assert(MESA_PRIM_TRIANGLES_ADJACENCY == MESA_PRIM_LINES_ADJACENCY + 2, "");
+   static_assert(MESA_PRIM_TRIANGLE_STRIP_ADJACENCY == MESA_PRIM_LINES_ADJACENCY + 3, "");
+
+   /* Adjacency primitives are together so we can do a simple comparison */
+   return prim >= MESA_PRIM_LINES_ADJACENCY &&
+          prim <= MESA_PRIM_TRIANGLE_STRIP_ADJACENCY;
+}
 
 /**
  * A compare function enum for use in compiler lowering passes.  This is in
@@ -1253,22 +1461,26 @@ enum gl_derivative_group {
 
 enum float_controls
 {
+   /* The order of these matters. For float_controls2, only the first 9 bits
+    * are used and stored per-instruction in nir_alu_instr::fp_fast_math.
+    * Any changes in this enum need to be synchronized with that.
+    */
    FLOAT_CONTROLS_DEFAULT_FLOAT_CONTROL_MODE = 0,
-   FLOAT_CONTROLS_DENORM_PRESERVE_FP16       = BITFIELD_BIT(0),
-   FLOAT_CONTROLS_DENORM_PRESERVE_FP32       = BITFIELD_BIT(1),
-   FLOAT_CONTROLS_DENORM_PRESERVE_FP64       = BITFIELD_BIT(2),
-   FLOAT_CONTROLS_DENORM_FLUSH_TO_ZERO_FP16  = BITFIELD_BIT(3),
-   FLOAT_CONTROLS_DENORM_FLUSH_TO_ZERO_FP32  = BITFIELD_BIT(4),
-   FLOAT_CONTROLS_DENORM_FLUSH_TO_ZERO_FP64  = BITFIELD_BIT(5),
-   FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE_FP16  = BITFIELD_BIT(6),
-   FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE_FP32  = BITFIELD_BIT(7),
-   FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE_FP64  = BITFIELD_BIT(8),
-   FLOAT_CONTROLS_INF_PRESERVE_FP16          = BITFIELD_BIT(9),
-   FLOAT_CONTROLS_INF_PRESERVE_FP32          = BITFIELD_BIT(10),
-   FLOAT_CONTROLS_INF_PRESERVE_FP64          = BITFIELD_BIT(11),
-   FLOAT_CONTROLS_NAN_PRESERVE_FP16          = BITFIELD_BIT(12),
-   FLOAT_CONTROLS_NAN_PRESERVE_FP32          = BITFIELD_BIT(13),
-   FLOAT_CONTROLS_NAN_PRESERVE_FP64          = BITFIELD_BIT(14),
+   FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE_FP16  = BITFIELD_BIT(0),
+   FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE_FP32  = BITFIELD_BIT(1),
+   FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE_FP64  = BITFIELD_BIT(2),
+   FLOAT_CONTROLS_INF_PRESERVE_FP16          = BITFIELD_BIT(3),
+   FLOAT_CONTROLS_INF_PRESERVE_FP32          = BITFIELD_BIT(4),
+   FLOAT_CONTROLS_INF_PRESERVE_FP64          = BITFIELD_BIT(5),
+   FLOAT_CONTROLS_NAN_PRESERVE_FP16          = BITFIELD_BIT(6),
+   FLOAT_CONTROLS_NAN_PRESERVE_FP32          = BITFIELD_BIT(7),
+   FLOAT_CONTROLS_NAN_PRESERVE_FP64          = BITFIELD_BIT(8),
+   FLOAT_CONTROLS_DENORM_PRESERVE_FP16       = BITFIELD_BIT(9),
+   FLOAT_CONTROLS_DENORM_PRESERVE_FP32       = BITFIELD_BIT(10),
+   FLOAT_CONTROLS_DENORM_PRESERVE_FP64       = BITFIELD_BIT(11),
+   FLOAT_CONTROLS_DENORM_FLUSH_TO_ZERO_FP16  = BITFIELD_BIT(12),
+   FLOAT_CONTROLS_DENORM_FLUSH_TO_ZERO_FP32  = BITFIELD_BIT(13),
+   FLOAT_CONTROLS_DENORM_FLUSH_TO_ZERO_FP64  = BITFIELD_BIT(14),
    FLOAT_CONTROLS_ROUNDING_MODE_RTE_FP16     = BITFIELD_BIT(15),
    FLOAT_CONTROLS_ROUNDING_MODE_RTE_FP32     = BITFIELD_BIT(16),
    FLOAT_CONTROLS_ROUNDING_MODE_RTE_FP64     = BITFIELD_BIT(17),
@@ -1289,6 +1501,21 @@ enum float_controls
    FLOAT_CONTROLS_SIGNED_ZERO_INF_NAN_PRESERVE_FP64 =
       FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE_FP64 |
       FLOAT_CONTROLS_INF_PRESERVE_FP64 |
+      FLOAT_CONTROLS_NAN_PRESERVE_FP64,
+   
+   FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE =
+      FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE_FP16 |
+      FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE_FP32 |
+      FLOAT_CONTROLS_SIGNED_ZERO_PRESERVE_FP64,
+
+   FLOAT_CONTROLS_INF_PRESERVE =
+      FLOAT_CONTROLS_INF_PRESERVE_FP16 |
+      FLOAT_CONTROLS_INF_PRESERVE_FP32 |
+      FLOAT_CONTROLS_INF_PRESERVE_FP64,
+
+   FLOAT_CONTROLS_NAN_PRESERVE =
+      FLOAT_CONTROLS_NAN_PRESERVE_FP16 |
+      FLOAT_CONTROLS_NAN_PRESERVE_FP32 |
       FLOAT_CONTROLS_NAN_PRESERVE_FP64,
 };
 
@@ -1377,6 +1604,7 @@ enum ENUM_PACKED gl_subgroup_size
     * also the subgroup size.  If any new values are added, they must respect
     * this invariant.
     */
+   SUBGROUP_SIZE_REQUIRE_4   = 4,   /**< VK_EXT_subgroup_size_control */
    SUBGROUP_SIZE_REQUIRE_8   = 8,   /**< VK_EXT_subgroup_size_control */
    SUBGROUP_SIZE_REQUIRE_16  = 16,  /**< VK_EXT_subgroup_size_control */
    SUBGROUP_SIZE_REQUIRE_32  = 32,  /**< VK_EXT_subgroup_size_control */
@@ -1396,6 +1624,20 @@ typedef enum {
 } mesa_scope;
 
 const char *mesa_scope_name(mesa_scope scope);
+
+/* This is defined here to be available to OpenCL */
+enum glsl_sampler_dim {
+   GLSL_SAMPLER_DIM_1D = 0,
+   GLSL_SAMPLER_DIM_2D,
+   GLSL_SAMPLER_DIM_3D,
+   GLSL_SAMPLER_DIM_CUBE,
+   GLSL_SAMPLER_DIM_RECT,
+   GLSL_SAMPLER_DIM_BUF,
+   GLSL_SAMPLER_DIM_EXTERNAL,
+   GLSL_SAMPLER_DIM_MS,
+   GLSL_SAMPLER_DIM_SUBPASS, /* for vulkan input attachments */
+   GLSL_SAMPLER_DIM_SUBPASS_MS, /* for multisampled vulkan input attachments */
+};
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -355,7 +355,7 @@ static const enum virgl_formats virgl_formats_conv_table[PIPE_FORMAT_COUNT] = {
    CONV_FORMAT(Y8_400_UNORM)
    CONV_FORMAT(Y8_U8_V8_444_UNORM)
    CONV_FORMAT(Y8_U8_V8_422_UNORM)
-   CONV_FORMAT(Y8_U8V8_422_UNORM)
+   CONV_FORMAT(NV16)
    CONV_FORMAT(Y8_UNORM)
    CONV_FORMAT(YVYU)
    CONV_FORMAT(Z16_UNORM_S8_UINT)
@@ -473,6 +473,18 @@ static const enum virgl_formats virgl_formats_conv_table[PIPE_FORMAT_COUNT] = {
    CONV_FORMAT(Y410)
    CONV_FORMAT(Y412)
    CONV_FORMAT(Y416)
+   CONV_FORMAT(NV15)
+   CONV_FORMAT(NV20)
+   CONV_FORMAT(Y8_U8_V8_440_UNORM)
+   CONV_FORMAT(R10_G10B10_420_UNORM)
+   CONV_FORMAT(R10_G10B10_422_UNORM)
+   CONV_FORMAT(X6G10_X6B10X6R10_420_UNORM)
+   CONV_FORMAT(X4G12_X4B12X4R12_420_UNORM)
+   CONV_FORMAT(X6R10_UNORM)
+   CONV_FORMAT(X6R10X6G10_UNORM)
+   CONV_FORMAT(X4R12_UNORM)
+   CONV_FORMAT(X4R12X4G12_UNORM)
+   CONV_FORMAT(R8_G8B8_422_UNORM)
 };
 #undef CONV_FORMAT
 
@@ -1108,7 +1120,7 @@ int virgl_encode_sampler_state(struct virgl_context *ctx,
       VIRGL_OBJ_SAMPLE_STATE_S0_COMPARE_MODE(state->compare_mode) |
       VIRGL_OBJ_SAMPLE_STATE_S0_COMPARE_FUNC(state->compare_func) |
       VIRGL_OBJ_SAMPLE_STATE_S0_SEAMLESS_CUBE_MAP(state->seamless_cube_map) |
-      VIRGL_OBJ_SAMPLE_STATE_S0_MAX_ANISOTROPY((int)(state->max_anisotropy));
+      VIRGL_OBJ_SAMPLE_STATE_S0_MAX_ANISOTROPY(state->max_anisotropy);
 
    virgl_encoder_write_dword(ctx->cbuf, tmp);
    virgl_encoder_write_dword(ctx->cbuf, fui(state->lod_bias));
@@ -1824,4 +1836,33 @@ void virgl_encode_end_frame(struct virgl_context *ctx,
    virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_END_FRAME, 0, 2));
    virgl_encoder_write_dword(ctx->cbuf, cdc->handle);
    virgl_encoder_write_dword(ctx->cbuf, buf->handle);
+}
+
+int virgl_encode_clear_surface(struct virgl_context *ctx,
+                               struct pipe_surface *surf,
+                               unsigned buffers,
+                               const union pipe_color_union *color,
+                               unsigned dstx, unsigned dsty,
+                               unsigned width, unsigned height,
+                               bool render_condition_enabled)
+{
+   int i;
+   uint32_t tmp;
+   virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_CLEAR_SURFACE, 0, VIRGL_CLEAR_SURFACE_SIZE));
+   
+   tmp = VIRGL_CLEAR_SURFACE_S0_RENDER_CONDITION(render_condition_enabled) |
+         VIRGL_CLEAR_SURFACE_S0_BUFFERS(buffers);
+
+   virgl_encoder_write_dword(ctx->cbuf, tmp);
+   virgl_encoder_write_dword(ctx->cbuf, virgl_surface(surf)->handle);
+
+   for (i = 0; i < 4; i++)
+      virgl_encoder_write_dword(ctx->cbuf, color->ui[i]);
+
+   virgl_encoder_write_dword(ctx->cbuf, dstx);
+   virgl_encoder_write_dword(ctx->cbuf, dsty);
+   virgl_encoder_write_dword(ctx->cbuf, width);
+   virgl_encoder_write_dword(ctx->cbuf, height);
+
+   return 0;
 }

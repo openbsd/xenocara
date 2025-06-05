@@ -48,16 +48,16 @@ void util_set_vertex_buffers_mask(struct pipe_vertex_buffer *dst,
                                   uint32_t *enabled_buffers,
                                   const struct pipe_vertex_buffer *src,
                                   unsigned count,
-                                  unsigned unbind_num_trailing_slots,
                                   bool take_ownership)
 {
-   unsigned i;
+   unsigned last_count = util_last_bit(*enabled_buffers);
    uint32_t bitmask = 0;
+   unsigned i = 0;
 
-   *enabled_buffers &= ~BITFIELD_MASK(count);
+   assert(!count || src);
 
    if (src) {
-      for (i = 0; i < count; i++) {
+      for (; i < count; i++) {
          if (src[i].buffer.resource)
             bitmask |= 1 << i;
 
@@ -69,17 +69,12 @@ void util_set_vertex_buffers_mask(struct pipe_vertex_buffer *dst,
 
       /* Copy over the other members of pipe_vertex_buffer. */
       memcpy(dst, src, count * sizeof(struct pipe_vertex_buffer));
-
-      *enabled_buffers |= bitmask;
-   }
-   else {
-      /* Unreference the buffers. */
-      for (i = 0; i < count; i++)
-         pipe_vertex_buffer_unreference(&dst[i]);
    }
 
-   for (i = 0; i < unbind_num_trailing_slots; i++)
-      pipe_vertex_buffer_unreference(&dst[count + i]);
+   *enabled_buffers = bitmask;
+
+   for (; i < last_count; i++)
+      pipe_vertex_buffer_unreference(&dst[i]);
 }
 
 /**
@@ -90,19 +85,16 @@ void util_set_vertex_buffers_count(struct pipe_vertex_buffer *dst,
                                    unsigned *dst_count,
                                    const struct pipe_vertex_buffer *src,
                                    unsigned count,
-                                   unsigned unbind_num_trailing_slots,
                                    bool take_ownership)
 {
-   unsigned i;
    uint32_t enabled_buffers = 0;
 
-   for (i = 0; i < *dst_count; i++) {
+   for (unsigned i = 0; i < *dst_count; i++) {
       if (dst[i].buffer.resource)
          enabled_buffers |= (1ull << i);
    }
 
-   util_set_vertex_buffers_mask(dst, &enabled_buffers, src,
-                                count, unbind_num_trailing_slots,
+   util_set_vertex_buffers_mask(dst, &enabled_buffers, src, count,
                                 take_ownership);
 
    *dst_count = util_last_bit(enabled_buffers);
@@ -476,44 +468,6 @@ util_sw_query_memory_info(struct pipe_screen *pscreen,
    info->total_staging_memory = size / 1024;
 }
 
-bool
-util_lower_clearsize_to_dword(const void *clearValue, int *clearValueSize, uint32_t *clamped)
-{
-   /* Reduce a large clear value size if possible. */
-   if (*clearValueSize > 4) {
-      bool clear_dword_duplicated = true;
-      const uint32_t *clear_value = clearValue;
-
-      /* See if we can lower large fills to dword fills. */
-      for (unsigned i = 1; i < *clearValueSize / 4; i++) {
-         if (clear_value[0] != clear_value[i]) {
-            clear_dword_duplicated = false;
-            break;
-         }
-      }
-      if (clear_dword_duplicated) {
-         *clamped = *clear_value;
-         *clearValueSize = 4;
-      }
-      return clear_dword_duplicated;
-   }
-
-   /* Expand a small clear value size. */
-   if (*clearValueSize <= 2) {
-      if (*clearValueSize == 1) {
-         *clamped = *(uint8_t *)clearValue;
-         *clamped |=
-            (*clamped << 8) | (*clamped << 16) | (*clamped << 24);
-      } else {
-         *clamped = *(uint16_t *)clearValue;
-         *clamped |= *clamped << 16;
-      }
-      *clearValueSize = 4;
-      return true;
-   }
-   return false;
-}
-
 void
 util_init_pipe_vertex_state(struct pipe_screen *screen,
                             struct pipe_vertex_buffer *buffer,
@@ -553,9 +507,9 @@ util_clamp_color(enum pipe_format format,
          continue;
 
       if (util_format_is_unorm(format))
-         clamp_color.ui[i] = _mesa_unorm_to_unorm(clamp_color.ui[i], bits, bits);
+         clamp_color.f[i] = SATURATE(clamp_color.f[i]);
       else if (util_format_is_snorm(format))
-         clamp_color.i[i] = _mesa_snorm_to_snorm(clamp_color.i[i], bits, bits);
+         clamp_color.f[i] = CLAMP(clamp_color.f[i], -1.0, 1.0);
       else if (util_format_is_pure_uint(format))
          clamp_color.ui[i] = _mesa_unsigned_to_unsigned(clamp_color.ui[i], bits);
       else if (util_format_is_pure_sint(format))

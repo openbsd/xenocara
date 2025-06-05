@@ -22,10 +22,10 @@ typedef long   int64_t;
 
 #include <stdint.h>
 
-typedef uint8_t  uchar;
-typedef uint16_t ushort;
-typedef uint32_t uint;
-typedef uint64_t ulong;
+typedef unsigned char	uchar;
+typedef unsigned short	ushort;
+typedef unsigned int	uint;
+typedef unsigned long	ulong;
 
 #define __constant
 #define __global

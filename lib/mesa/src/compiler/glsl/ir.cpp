@@ -31,7 +31,7 @@
 ir_rvalue::ir_rvalue(enum ir_node_type t)
    : ir_instruction(t)
 {
-   this->type = glsl_type::error_type;
+   this->type = &glsl_type_builtin_error;
 }
 
 bool ir_rvalue::is_zero() const
@@ -40,11 +40,6 @@ bool ir_rvalue::is_zero() const
 }
 
 bool ir_rvalue::is_one() const
-{
-   return false;
-}
-
-bool ir_rvalue::is_negative_one() const
 {
    return false;
 }
@@ -133,10 +128,10 @@ ir_assignment::whole_variable_written()
    if (v == NULL)
       return NULL;
 
-   if (v->type->is_scalar())
+   if (glsl_type_is_scalar(v->type))
       return v;
 
-   if (v->type->is_vector()) {
+   if (glsl_type_is_vector(v->type)) {
       const unsigned mask = (1U << v->type->vector_elements) - 1;
 
       if (mask != this->write_mask)
@@ -157,7 +152,7 @@ ir_assignment::ir_assignment(ir_dereference *lhs, ir_rvalue *rhs,
    this->lhs = lhs;
    this->write_mask = write_mask;
 
-   if (lhs->type->is_scalar() || lhs->type->is_vector())
+   if (glsl_type_is_scalar(lhs->type) || glsl_type_is_vector(lhs->type))
       assert(util_bitcount(write_mask) == this->rhs->type->vector_elements);
 }
 
@@ -173,9 +168,9 @@ ir_assignment::ir_assignment(ir_rvalue *lhs, ir_rvalue *rhs)
     *
     *     (assign (...) (xyz) (var_ref lhs) (var_ref rhs))
     */
-   if (rhs->type->is_vector())
+   if (glsl_type_is_vector(rhs->type))
       this->write_mask = (1U << rhs->type->vector_elements) - 1;
-   else if (rhs->type->is_scalar())
+   else if (glsl_type_is_scalar(rhs->type))
       this->write_mask = 1;
    else
       this->write_mask = 0;
@@ -255,6 +250,7 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
       this->type = op0->type;
       break;
 
+   case ir_unop_f162i:
    case ir_unop_f2i:
    case ir_unop_b2i:
    case ir_unop_u2i:
@@ -266,8 +262,7 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_subroutine_to_int:
    case ir_unop_i642i:
    case ir_unop_u642i:
-      this->type = glsl_type::get_instance(GLSL_TYPE_INT,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_INT, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_b2f:
@@ -279,47 +274,44 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_bitcast_u2f:
    case ir_unop_i642f:
    case ir_unop_u642f:
-      this->type = glsl_type::get_instance(GLSL_TYPE_FLOAT,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_FLOAT, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_f2f16:
    case ir_unop_f2fmp:
    case ir_unop_b2f16:
-      this->type = glsl_type::get_instance(GLSL_TYPE_FLOAT16,
-					   op0->type->vector_elements, 1);
+   case ir_unop_i2f16:
+   case ir_unop_u2f16:
+   case ir_unop_d2f16:
+   case ir_unop_i642f16:
+   case ir_unop_u642f16:
+      this->type = glsl_simple_type(GLSL_TYPE_FLOAT16, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_i2imp:
-      this->type = glsl_type::get_instance(GLSL_TYPE_INT16,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_INT16, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_i2i:
       if (op0->type->base_type == GLSL_TYPE_INT) {
-         this->type = glsl_type::get_instance(GLSL_TYPE_INT16,
-                                              op0->type->vector_elements, 1);
+         this->type = glsl_simple_type(GLSL_TYPE_INT16, op0->type->vector_elements, 1);
       } else {
          assert(op0->type->base_type == GLSL_TYPE_INT16);
-         this->type = glsl_type::get_instance(GLSL_TYPE_INT,
-                                              op0->type->vector_elements, 1);
+         this->type = glsl_simple_type(GLSL_TYPE_INT, op0->type->vector_elements, 1);
       }
       break;
 
    case ir_unop_u2u:
       if (op0->type->base_type == GLSL_TYPE_UINT) {
-         this->type = glsl_type::get_instance(GLSL_TYPE_UINT16,
-                                              op0->type->vector_elements, 1);
+         this->type = glsl_simple_type(GLSL_TYPE_UINT16, op0->type->vector_elements, 1);
       } else {
          assert(op0->type->base_type == GLSL_TYPE_UINT16);
-         this->type = glsl_type::get_instance(GLSL_TYPE_UINT,
-                                              op0->type->vector_elements, 1);
+         this->type = glsl_simple_type(GLSL_TYPE_UINT, op0->type->vector_elements, 1);
       }
       break;
 
    case ir_unop_u2ump:
-      this->type = glsl_type::get_instance(GLSL_TYPE_UINT16,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_UINT16, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_f2b:
@@ -327,55 +319,54 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_d2b:
    case ir_unop_f162b:
    case ir_unop_i642b:
-      this->type = glsl_type::get_instance(GLSL_TYPE_BOOL,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_BOOL, op0->type->vector_elements, 1);
       break;
 
+   case ir_unop_f162d:
    case ir_unop_f2d:
    case ir_unop_i2d:
    case ir_unop_u2d:
    case ir_unop_i642d:
    case ir_unop_u642d:
-      this->type = glsl_type::get_instance(GLSL_TYPE_DOUBLE,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_DOUBLE, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_i2u:
+   case ir_unop_f162u:
    case ir_unop_f2u:
    case ir_unop_d2u:
    case ir_unop_bitcast_f2u:
    case ir_unop_i642u:
    case ir_unop_u642u:
-      this->type = glsl_type::get_instance(GLSL_TYPE_UINT,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_UINT, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_i2i64:
    case ir_unop_u2i64:
    case ir_unop_b2i64:
+   case ir_unop_f162i64:
    case ir_unop_f2i64:
    case ir_unop_d2i64:
    case ir_unop_u642i64:
-      this->type = glsl_type::get_instance(GLSL_TYPE_INT64,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_INT64, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_i2u64:
    case ir_unop_u2u64:
+   case ir_unop_f162u64:
    case ir_unop_f2u64:
    case ir_unop_d2u64:
    case ir_unop_i642u64:
-      this->type = glsl_type::get_instance(GLSL_TYPE_UINT64,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_UINT64, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_unpack_double_2x32:
    case ir_unop_unpack_uint_2x32:
-      this->type = glsl_type::uvec2_type;
+      this->type = &glsl_type_builtin_uvec2;
       break;
 
    case ir_unop_unpack_int_2x32:
-      this->type = glsl_type::ivec2_type;
+      this->type = &glsl_type_builtin_ivec2;
       break;
 
    case ir_unop_pack_snorm_2x16:
@@ -383,35 +374,35 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_pack_unorm_2x16:
    case ir_unop_pack_unorm_4x8:
    case ir_unop_pack_half_2x16:
-      this->type = glsl_type::uint_type;
+      this->type = &glsl_type_builtin_uint;
       break;
 
    case ir_unop_pack_double_2x32:
-      this->type = glsl_type::double_type;
+      this->type = &glsl_type_builtin_double;
       break;
 
    case ir_unop_pack_int_2x32:
-      this->type = glsl_type::int64_t_type;
+      this->type = &glsl_type_builtin_int64_t;
       break;
 
    case ir_unop_pack_uint_2x32:
-      this->type = glsl_type::uint64_t_type;
+      this->type = &glsl_type_builtin_uint64_t;
       break;
 
    case ir_unop_unpack_snorm_2x16:
    case ir_unop_unpack_unorm_2x16:
    case ir_unop_unpack_half_2x16:
-      this->type = glsl_type::vec2_type;
+      this->type = &glsl_type_builtin_vec2;
       break;
 
    case ir_unop_unpack_snorm_4x8:
    case ir_unop_unpack_unorm_4x8:
-      this->type = glsl_type::vec4_type;
+      this->type = &glsl_type_builtin_vec4;
       break;
 
    case ir_unop_unpack_sampler_2x32:
    case ir_unop_unpack_image_2x32:
-      this->type = glsl_type::uvec2_type;
+      this->type = &glsl_type_builtin_uvec2;
       break;
 
    case ir_unop_pack_sampler_2x32:
@@ -423,29 +414,25 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
       this->type = op0->type;
       break;
    case ir_unop_frexp_exp:
-      this->type = glsl_type::get_instance(GLSL_TYPE_INT,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_INT, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_get_buffer_size:
    case ir_unop_ssbo_unsized_array_length:
    case ir_unop_implicitly_sized_array_length:
-      this->type = glsl_type::int_type;
+      this->type = &glsl_type_builtin_int;
       break;
 
    case ir_unop_bitcast_i642d:
    case ir_unop_bitcast_u642d:
-      this->type = glsl_type::get_instance(GLSL_TYPE_DOUBLE,
-                                           op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_DOUBLE, op0->type->vector_elements, 1);
       break;
 
    case ir_unop_bitcast_d2i64:
-      this->type = glsl_type::get_instance(GLSL_TYPE_INT64,
-                                           op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_INT64, op0->type->vector_elements, 1);
       break;
    case ir_unop_bitcast_d2u64:
-      this->type = glsl_type::get_instance(GLSL_TYPE_UINT64,
-                                           op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_UINT64, op0->type->vector_elements, 1);
       break;
 
    default:
@@ -474,7 +461,7 @@ ir_expression::ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1)
    switch (this->operation) {
    case ir_binop_all_equal:
    case ir_binop_any_nequal:
-      this->type = glsl_type::bool_type;
+      this->type = &glsl_type_builtin_bool;
       break;
 
    case ir_binop_add:
@@ -486,13 +473,13 @@ ir_expression::ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1)
    case ir_binop_div:
    case ir_binop_mod:
    case ir_binop_atan2:
-      if (op0->type->is_scalar()) {
+      if (glsl_type_is_scalar(op0->type)) {
 	 this->type = op1->type;
-      } else if (op1->type->is_scalar()) {
+      } else if (glsl_type_is_scalar(op1->type)) {
 	 this->type = op0->type;
       } else {
          if (this->operation == ir_binop_mul) {
-            this->type = glsl_type::get_mul_type(op0->type, op1->type);
+            this->type = glsl_get_mul_type(op0->type, op1->type);
          } else {
             assert(op0->type == op1->type);
             this->type = op0->type;
@@ -506,11 +493,11 @@ ir_expression::ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1)
    case ir_binop_bit_and:
    case ir_binop_bit_xor:
    case ir_binop_bit_or:
-       assert(!op0->type->is_matrix());
-       assert(!op1->type->is_matrix());
-      if (op0->type->is_scalar()) {
+       assert(!glsl_type_is_matrix(op0->type));
+       assert(!glsl_type_is_matrix(op1->type));
+      if (glsl_type_is_scalar(op0->type)) {
          this->type = op1->type;
-      } else if (op1->type->is_scalar()) {
+      } else if (glsl_type_is_scalar(op1->type)) {
          this->type = op0->type;
       } else {
           assert(op0->type->vector_elements == op1->type->vector_elements);
@@ -523,12 +510,11 @@ ir_expression::ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1)
    case ir_binop_gequal:
    case ir_binop_less:
       assert(op0->type == op1->type);
-      this->type = glsl_type::get_instance(GLSL_TYPE_BOOL,
-					   op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(GLSL_TYPE_BOOL, op0->type->vector_elements, 1);
       break;
 
    case ir_binop_dot:
-      this->type = op0->type->get_base_type();
+      this->type = glsl_get_base_glsl_type(op0->type);
       break;
 
    case ir_binop_imul_high:
@@ -577,17 +563,17 @@ ir_expression::ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1)
          unreachable("Invalid base type.");
       }
 
-      this->type = glsl_type::get_instance(base, op0->type->vector_elements, 1);
+      this->type = glsl_simple_type(base, op0->type->vector_elements, 1);
       break;
    }
 
    case ir_binop_vector_extract:
-      this->type = op0->type->get_scalar_type();
+      this->type = glsl_get_scalar_type(op0->type);
       break;
 
    default:
       assert(!"not reached: missing automatic type setup for ir_expression");
-      this->type = glsl_type::float_type;
+      this->type = &glsl_type_builtin_float;
    }
 }
 
@@ -622,7 +608,7 @@ ir_expression::ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1,
 
    default:
       assert(!"not reached: missing automatic type setup for ir_expression");
-      this->type = glsl_type::float_type;
+      this->type = &glsl_type_builtin_float;
    }
 }
 
@@ -668,16 +654,6 @@ depth_layout_string(ir_depth_layout layout)
    }
 }
 
-ir_expression_operation
-ir_expression::get_operator(const char *str)
-{
-   for (int op = 0; op <= int(ir_last_opcode); op++) {
-      if (strcmp(str, ir_expression_operation_strings[op]) == 0)
-	 return (ir_expression_operation) op;
-   }
-   return (ir_expression_operation) -1;
-}
-
 ir_variable *
 ir_expression::variable_referenced() const
 {
@@ -718,7 +694,7 @@ ir_constant::ir_constant(float16_t f16, unsigned vector_elements)
 {
    this->const_elements = NULL;
    assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_FLOAT16, vector_elements, 1);
+   this->type = glsl_simple_type(GLSL_TYPE_FLOAT16, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.f16[i] = f16.bits;
    }
@@ -732,7 +708,7 @@ ir_constant::ir_constant(float f, unsigned vector_elements)
 {
    this->const_elements = NULL;
    assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_FLOAT, vector_elements, 1);
+   this->type = glsl_simple_type(GLSL_TYPE_FLOAT, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.f[i] = f;
    }
@@ -746,7 +722,7 @@ ir_constant::ir_constant(double d, unsigned vector_elements)
 {
    this->const_elements = NULL;
    assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_DOUBLE, vector_elements, 1);
+   this->type = glsl_simple_type(GLSL_TYPE_DOUBLE, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.d[i] = d;
    }
@@ -760,7 +736,7 @@ ir_constant::ir_constant(int16_t i16, unsigned vector_elements)
 {
    this->const_elements = NULL;
    assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_INT16, vector_elements, 1);
+   this->type = glsl_simple_type(GLSL_TYPE_INT16, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.i16[i] = i16;
    }
@@ -774,7 +750,7 @@ ir_constant::ir_constant(uint16_t u16, unsigned vector_elements)
 {
    this->const_elements = NULL;
    assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_UINT16, vector_elements, 1);
+   this->type = glsl_simple_type(GLSL_TYPE_UINT16, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.u16[i] = u16;
    }
@@ -788,7 +764,7 @@ ir_constant::ir_constant(unsigned int u, unsigned vector_elements)
 {
    this->const_elements = NULL;
    assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_UINT, vector_elements, 1);
+   this->type = glsl_simple_type(GLSL_TYPE_UINT, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.u[i] = u;
    }
@@ -802,7 +778,7 @@ ir_constant::ir_constant(int integer, unsigned vector_elements)
 {
    this->const_elements = NULL;
    assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_INT, vector_elements, 1);
+   this->type = glsl_simple_type(GLSL_TYPE_INT, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.i[i] = integer;
    }
@@ -816,7 +792,7 @@ ir_constant::ir_constant(uint64_t u64, unsigned vector_elements)
 {
    this->const_elements = NULL;
    assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_UINT64, vector_elements, 1);
+   this->type = glsl_simple_type(GLSL_TYPE_UINT64, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.u64[i] = u64;
    }
@@ -830,7 +806,7 @@ ir_constant::ir_constant(int64_t int64, unsigned vector_elements)
 {
    this->const_elements = NULL;
    assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_INT64, vector_elements, 1);
+   this->type = glsl_simple_type(GLSL_TYPE_INT64, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.i64[i] = int64;
    }
@@ -844,7 +820,7 @@ ir_constant::ir_constant(bool b, unsigned vector_elements)
 {
    this->const_elements = NULL;
    assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_BOOL, vector_elements, 1);
+   this->type = glsl_simple_type(GLSL_TYPE_BOOL, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.b[i] = b;
    }
@@ -857,7 +833,7 @@ ir_constant::ir_constant(const ir_constant *c, unsigned i)
    : ir_rvalue(ir_type_constant)
 {
    this->const_elements = NULL;
-   this->type = c->type->get_base_type();
+   this->type = glsl_get_base_glsl_type(c->type);
 
    /* Section 5.11 (Out-of-Bounds Accesses) of the GLSL 4.60 spec says:
     *
@@ -892,15 +868,15 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
    this->const_elements = NULL;
    this->type = type;
 
-   assert(type->is_scalar() || type->is_vector() || type->is_matrix()
-	  || type->is_struct() || type->is_array());
+   assert(glsl_type_is_scalar(type) || glsl_type_is_vector(type) || glsl_type_is_matrix(type)
+	  || glsl_type_is_struct(type) || glsl_type_is_array(type));
 
    /* If the constant is a record, the types of each of the entries in
     * value_list must be a 1-for-1 match with the structure components.  Each
     * entry must also be a constant.  Just move the nodes from the value_list
     * to the list in the ir_constant.
     */
-   if (type->is_array() || type->is_struct()) {
+   if (glsl_type_is_array(type) || glsl_type_is_struct(type)) {
       this->const_elements = ralloc_array(this, ir_constant *, type->length);
       unsigned i = 0;
       foreach_in_list(ir_constant, value, value_list) {
@@ -922,8 +898,8 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
     * the components.  For matrices, the scalar fills the components of the
     * diagonal while the rest is filled with 0.
     */
-   if (value->type->is_scalar() && value->next->is_tail_sentinel()) {
-      if (type->is_matrix()) {
+   if (glsl_type_is_scalar(value->type) && value->next->is_tail_sentinel()) {
+      if (glsl_type_is_matrix(type)) {
 	 /* Matrix - fill diagonal (rest is already set to 0) */
          for (unsigned i = 0; i < type->matrix_columns; i++) {
             switch (type->base_type) {
@@ -948,33 +924,33 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
 	 switch (type->base_type) {
          case GLSL_TYPE_UINT16:
 	 case GLSL_TYPE_INT16:
-	    for (unsigned i = 0; i < type->components(); i++)
+	    for (unsigned i = 0; i < glsl_get_components(type); i++)
 	       this->value.u16[i] = value->value.u16[0];
 	    break;
 	 case GLSL_TYPE_UINT:
 	 case GLSL_TYPE_INT:
-	    for (unsigned i = 0; i < type->components(); i++)
+	    for (unsigned i = 0; i < glsl_get_components(type); i++)
 	       this->value.u[i] = value->value.u[0];
 	    break;
 	 case GLSL_TYPE_FLOAT:
-	    for (unsigned i = 0; i < type->components(); i++)
+	    for (unsigned i = 0; i < glsl_get_components(type); i++)
 	       this->value.f[i] = value->value.f[0];
 	    break;
 	 case GLSL_TYPE_FLOAT16:
-	    for (unsigned i = 0; i < type->components(); i++)
+	    for (unsigned i = 0; i < glsl_get_components(type); i++)
 	       this->value.f16[i] = value->value.f16[0];
 	    break;
 	 case GLSL_TYPE_DOUBLE:
-	    for (unsigned i = 0; i < type->components(); i++)
+	    for (unsigned i = 0; i < glsl_get_components(type); i++)
 	       this->value.d[i] = value->value.d[0];
 	    break;
 	 case GLSL_TYPE_UINT64:
 	 case GLSL_TYPE_INT64:
-	    for (unsigned i = 0; i < type->components(); i++)
+	    for (unsigned i = 0; i < glsl_get_components(type); i++)
 	       this->value.u64[i] = value->value.u64[0];
 	    break;
 	 case GLSL_TYPE_BOOL:
-	    for (unsigned i = 0; i < type->components(); i++)
+	    for (unsigned i = 0; i < glsl_get_components(type); i++)
 	       this->value.b[i] = value->value.b[0];
 	    break;
 	 case GLSL_TYPE_SAMPLER:
@@ -989,7 +965,7 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
       return;
    }
 
-   if (type->is_matrix() && value->type->is_matrix()) {
+   if (glsl_type_is_matrix(type) && glsl_type_is_matrix(value->type)) {
       assert(value->next->is_tail_sentinel());
 
       /* From section 5.4.2 of the GLSL 1.20 spec:
@@ -1022,7 +998,7 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
       assert(value->as_constant() != NULL);
       assert(!value->is_tail_sentinel());
 
-      for (unsigned j = 0; j < value->type->components(); j++) {
+      for (unsigned j = 0; j < glsl_get_components(value->type); j++) {
 	 switch (type->base_type) {
          case GLSL_TYPE_UINT16:
 	    this->value.u16[i] = value->get_uint16_component(j);
@@ -1061,11 +1037,11 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
 	 }
 
 	 i++;
-	 if (i >= type->components())
+	 if (i >= glsl_get_components(type))
 	    break;
       }
 
-      if (i >= type->components())
+      if (i >= glsl_get_components(type))
 	 break; /* avoid downcasting a list sentinel */
       value = (ir_constant *) value->next;
    }
@@ -1074,21 +1050,21 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
 ir_constant *
 ir_constant::zero(void *mem_ctx, const glsl_type *type)
 {
-   assert(type->is_scalar() || type->is_vector() || type->is_matrix()
-	  || type->is_struct() || type->is_array());
+   assert(glsl_type_is_scalar(type) || glsl_type_is_vector(type) || glsl_type_is_matrix(type)
+	  || glsl_type_is_struct(type) || glsl_type_is_array(type));
 
    ir_constant *c = new(mem_ctx) ir_constant;
    c->type = type;
    memset(&c->value, 0, sizeof(c->value));
 
-   if (type->is_array()) {
+   if (glsl_type_is_array(type)) {
       c->const_elements = ralloc_array(c, ir_constant *, type->length);
 
       for (unsigned i = 0; i < type->length; i++)
 	 c->const_elements[i] = ir_constant::zero(c, type->fields.array);
    }
 
-   if (type->is_struct()) {
+   if (glsl_type_is_struct(type)) {
       c->const_elements = ralloc_array(c, ir_constant *, type->length);
 
       for (unsigned i = 0; i < type->length; i++) {
@@ -1337,7 +1313,7 @@ ir_constant::get_uint64_component(unsigned i) const
 ir_constant *
 ir_constant::get_array_element(unsigned i) const
 {
-   assert(this->type->is_array());
+   assert(glsl_type_is_array(this->type));
 
    /* From page 35 (page 41 of the PDF) of the GLSL 1.20 spec:
     *
@@ -1360,7 +1336,7 @@ ir_constant::get_array_element(unsigned i) const
 ir_constant *
 ir_constant::get_record_field(int idx)
 {
-   assert(this->type->is_struct());
+   assert(glsl_type_is_struct(this->type));
    assert(idx >= 0 && (unsigned) idx < this->type->length);
 
    return const_elements[idx];
@@ -1382,8 +1358,8 @@ ir_constant::copy_offset(ir_constant *src, int offset)
    case GLSL_TYPE_UINT64:
    case GLSL_TYPE_INT64:
    case GLSL_TYPE_BOOL: {
-      unsigned int size = src->type->components();
-      assert (size <= this->type->components() - offset);
+      unsigned int size = glsl_get_components(src->type);
+      assert (size <= glsl_get_components(this->type) - offset);
       for (unsigned int i=0; i<size; i++) {
 	 switch (this->type->base_type) {
          case GLSL_TYPE_UINT16:
@@ -1443,9 +1419,9 @@ ir_constant::copy_offset(ir_constant *src, int offset)
 void
 ir_constant::copy_masked_offset(ir_constant *src, int offset, unsigned int mask)
 {
-   assert (!type->is_array() && !type->is_struct());
+   assert (!glsl_type_is_array(type) && !glsl_type_is_struct(type));
 
-   if (!type->is_vector() && !type->is_matrix()) {
+   if (!glsl_type_is_vector(type) && !glsl_type_is_matrix(type)) {
       offset = 0;
       mask = 1;
    }
@@ -1500,7 +1476,7 @@ ir_constant::has_value(const ir_constant *c) const
    if (this->type != c->type)
       return false;
 
-   if (this->type->is_array() || this->type->is_struct()) {
+   if (glsl_type_is_array(this->type) || glsl_type_is_struct(this->type)) {
       for (unsigned i = 0; i < this->type->length; i++) {
 	 if (!this->const_elements[i]->has_value(c->const_elements[i]))
 	    return false;
@@ -1508,7 +1484,7 @@ ir_constant::has_value(const ir_constant *c) const
       return true;
    }
 
-   for (unsigned i = 0; i < this->type->components(); i++) {
+   for (unsigned i = 0; i < glsl_get_components(this->type); i++) {
       switch (this->type->base_type) {
       case GLSL_TYPE_UINT16:
 	 if (this->value.u16[i] != c->value.u16[i])
@@ -1566,11 +1542,11 @@ ir_constant::has_value(const ir_constant *c) const
 bool
 ir_constant::is_value(float f, int i) const
 {
-   if (!this->type->is_scalar() && !this->type->is_vector())
+   if (!glsl_type_is_scalar(this->type) && !glsl_type_is_vector(this->type))
       return false;
 
    /* Only accept boolean values for 0/1. */
-   if (int(bool(i)) != i && this->type->is_boolean())
+   if (int(bool(i)) != i && glsl_type_is_boolean(this->type))
       return false;
 
    for (unsigned c = 0; c < this->type->vector_elements; c++) {
@@ -1642,21 +1618,6 @@ ir_constant::is_one() const
    return is_value(1.0, 1);
 }
 
-bool
-ir_constant::is_negative_one() const
-{
-   return is_value(-1.0, -1);
-}
-
-bool
-ir_constant::is_uint16_constant() const
-{
-   if (!type->is_integer_32())
-      return false;
-
-   return value.u[0] < (1 << 16);
-}
-
 ir_loop::ir_loop()
    : ir_instruction(ir_type_loop)
 {
@@ -1702,12 +1663,12 @@ ir_dereference_array::set_array(ir_rvalue *value)
 
    const glsl_type *const vt = this->array->type;
 
-   if (vt->is_array()) {
+   if (glsl_type_is_array(vt)) {
       type = vt->fields.array;
-   } else if (vt->is_matrix()) {
-      type = vt->column_type();
-   } else if (vt->is_vector()) {
-      type = vt->get_base_type();
+   } else if (glsl_type_is_matrix(vt)) {
+      type = glsl_get_column_type(vt);
+   } else if (glsl_type_is_vector(vt)) {
+      type = glsl_get_base_glsl_type(vt);
    }
 }
 
@@ -1719,8 +1680,8 @@ ir_dereference_record::ir_dereference_record(ir_rvalue *value,
    assert(value != NULL);
 
    this->record = value;
-   this->type = this->record->type->field_type(field);
-   this->field_idx = this->record->type->field_index(field);
+   this->type = glsl_get_field_type(this->record->type, field);
+   this->field_idx = glsl_get_field_index(this->record->type, field);
 }
 
 
@@ -1731,8 +1692,8 @@ ir_dereference_record::ir_dereference_record(ir_variable *var,
    void *ctx = ralloc_parent(var);
 
    this->record = new(ctx) ir_dereference_variable(var);
-   this->type = this->record->type->field_type(field);
-   this->field_idx = this->record->type->field_index(field);
+   this->type = glsl_get_field_type(this->record->type, field);
+   this->field_idx = glsl_get_field_index(this->record->type, field);
 }
 
 bool
@@ -1756,7 +1717,7 @@ ir_dereference::is_lvalue(const struct _mesa_glsl_parse_state *state) const
     *  "out" and "inout" function parameters."
     */
    if ((!state || state->has_bindless()) &&
-       (this->type->contains_sampler() || this->type->contains_image()))
+       (glsl_contains_sampler(this->type) || glsl_type_contains_image(this->type)))
       return true;
 
    /* From section 4.1.7 of the GLSL 4.40 spec:
@@ -1765,7 +1726,7 @@ ir_dereference::is_lvalue(const struct _mesa_glsl_parse_state *state) const
     *    be used as out or inout function parameters, nor can they be
     *    assigned into."
     */
-   if (this->type->contains_opaque())
+   if (glsl_contains_opaque(this->type))
       return false;
 
    return true;
@@ -1780,18 +1741,6 @@ const char *ir_texture::opcode_string()
    return tex_opcode_strs[op];
 }
 
-ir_texture_opcode
-ir_texture::get_opcode(const char *str)
-{
-   const int count = sizeof(tex_opcode_strs) / sizeof(tex_opcode_strs[0]);
-   for (int op = 0; op < count; op++) {
-      if (strcmp(str, tex_opcode_strs[op]) == 0)
-	 return (ir_texture_opcode) op;
-   }
-   return (ir_texture_opcode) -1;
-}
-
-
 void
 ir_texture::set_sampler(ir_dereference *sampler, const glsl_type *type)
 {
@@ -1802,10 +1751,10 @@ ir_texture::set_sampler(ir_dereference *sampler, const glsl_type *type)
    if (this->is_sparse) {
       /* code holds residency info */
       glsl_struct_field fields[2] = {
-         glsl_struct_field(glsl_type::int_type, "code"),
+         glsl_struct_field(&glsl_type_builtin_int, "code"),
          glsl_struct_field(type, "texel"),
       };
-      this->type = glsl_type::get_struct_instance(fields, 2, "struct");
+      this->type = glsl_struct_type(fields, 2, "struct", false /* packed */);
    } else
       this->type = type;
 
@@ -1814,10 +1763,10 @@ ir_texture::set_sampler(ir_dereference *sampler, const glsl_type *type)
       assert(type->base_type == GLSL_TYPE_INT);
    } else if (this->op == ir_lod) {
       assert(type->vector_elements == 2);
-      assert(type->is_float());
+      assert(glsl_type_is_float(type));
    } else if (this->op == ir_samples_identical) {
-      assert(type == glsl_type::bool_type);
-      assert(sampler->type->is_sampler());
+      assert(type == &glsl_type_builtin_bool);
+      assert(glsl_type_is_sampler(sampler->type));
       assert(sampler->type->sampler_dimensionality == GLSL_SAMPLER_DIM_MS);
    } else {
       assert(sampler->type->sampled_type == (int) type->base_type);
@@ -1868,7 +1817,7 @@ ir_swizzle::init_mask(const unsigned *comp, unsigned count)
     * (i.e., float, int, unsigned, or bool) of the vector being swizzled,
     * generate the type of the resulting value.
     */
-   type = glsl_type::get_instance(val->type->base_type, mask.num_components, 1);
+   type = glsl_simple_type(val->type->base_type, mask.num_components, 1);
 }
 
 ir_swizzle::ir_swizzle(ir_rvalue *val, unsigned x, unsigned y, unsigned z,
@@ -1889,8 +1838,7 @@ ir_swizzle::ir_swizzle(ir_rvalue *val, const unsigned *comp,
 ir_swizzle::ir_swizzle(ir_rvalue *val, ir_swizzle_mask mask)
    : ir_rvalue(ir_type_swizzle), val(val), mask(mask)
 {
-   this->type = glsl_type::get_instance(val->type->base_type,
-					mask.num_components, 1);
+   this->type = glsl_simple_type(val->type->base_type, mask.num_components, 1);
 }
 
 #define X 1
@@ -2050,7 +1998,8 @@ ir_variable::ir_variable(const struct glsl_type *type, const char *name,
    this->data.explicit_invariant = false;
    this->data.invariant = false;
    this->data.precise = false;
-   this->data.how_declared = ir_var_declared_normally;
+   this->data.how_declared =
+      mode == ir_var_temporary ? ir_var_hidden : ir_var_declared_normally;
    this->data.mode = mode;
    this->data.interpolation = INTERP_MODE_NONE;
    this->data.max_array_access = -1;
@@ -2077,10 +2026,10 @@ ir_variable::ir_variable(const struct glsl_type *type, const char *name,
    this->interface_type = NULL;
 
    if (type != NULL) {
-      if (type->is_interface())
+      if (glsl_type_is_interface(type))
          this->init_interface_type(type);
-      else if (type->without_array()->is_interface())
-         this->init_interface_type(type->without_array());
+      else if (glsl_type_is_interface(glsl_without_array(type)))
+         this->init_interface_type(glsl_without_array(type));
    }
 }
 
@@ -2102,13 +2051,6 @@ ir_variable::enable_extension_warning(const char *extension)
 
    assert(!"Should not get here.");
    this->data.warn_extension_index = 0;
-}
-
-const char *
-ir_variable::get_extension_warning() const
-{
-   return this->data.warn_extension_index == 0
-      ? NULL : warn_extension_table[this->data.warn_extension_index];
 }
 
 ir_function_signature::ir_function_signature(const glsl_type *return_type,
@@ -2222,15 +2164,23 @@ ir_function::has_user_signature()
 ir_rvalue *
 ir_rvalue::error_value(void *mem_ctx)
 {
-   ir_rvalue *v = new(mem_ctx) ir_rvalue(ir_type_unset);
+   ir_rvalue *v = new(mem_ctx) ir_rvalue(ir_type_error);
 
-   v->type = glsl_type::error_type;
+   v->type = &glsl_type_builtin_error;
    return v;
 }
 
 
 void
 visit_exec_list(exec_list *list, ir_visitor *visitor)
+{
+   foreach_in_list(ir_instruction, node, list) {
+      node->accept(visitor);
+   }
+}
+
+void
+visit_exec_list_safe(exec_list *list, ir_visitor *visitor)
 {
    foreach_in_list_safe(ir_instruction, node, list) {
       node->accept(visitor);
@@ -2257,7 +2207,7 @@ steal_memory(ir_instruction *ir, void *new_ctx)
     * visitor, so steal their values by hand.
     */
    if (constant != NULL &&
-       (constant->type->is_array() || constant->type->is_struct())) {
+       (glsl_type_is_array(constant->type) || glsl_type_is_struct(constant->type))) {
       for (unsigned int i = 0; i < constant->type->length; i++) {
          steal_memory(constant->const_elements[i], ir);
       }
@@ -2275,24 +2225,18 @@ reparent_ir(exec_list *list, void *mem_ctx)
    }
 }
 
-unsigned
-vertices_per_prim(GLenum prim)
+enum mesa_prim
+gl_to_mesa_prim(GLenum prim)
 {
-   switch (prim) {
-   case GL_POINTS:
-      return 1;
-   case GL_LINES:
-      return 2;
-   case GL_TRIANGLES:
-      return 3;
-   case GL_LINES_ADJACENCY:
-      return 4;
-   case GL_TRIANGLES_ADJACENCY:
-      return 6;
-   default:
-      assert(!"Bad primitive");
-      return 3;
-   }
+   STATIC_ASSERT(GL_POINTS                == MESA_PRIM_POINTS);
+   STATIC_ASSERT(GL_LINES                 == MESA_PRIM_LINES);
+   STATIC_ASSERT(GL_LINES_ADJACENCY       == MESA_PRIM_LINES_ADJACENCY);
+   STATIC_ASSERT(GL_LINE_STRIP            == MESA_PRIM_LINE_STRIP);
+   STATIC_ASSERT(GL_TRIANGLES             == MESA_PRIM_TRIANGLES);
+   STATIC_ASSERT(GL_TRIANGLES_ADJACENCY   == MESA_PRIM_TRIANGLES_ADJACENCY);
+   STATIC_ASSERT(GL_TRIANGLE_STRIP        == MESA_PRIM_TRIANGLE_STRIP);
+
+   return (enum mesa_prim)prim;
 }
 
 /**

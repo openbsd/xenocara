@@ -1,28 +1,12 @@
 /*
  * Copyright 2010 Jerome Glisse <glisse@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
+
 #include "r600_formats.h"
 #include "r600_shader.h"
 #include "r600_query.h"
+#include "r600d_common.h"
 #include "evergreend.h"
 
 #include "pipe/p_shader_tokens.h"
@@ -33,6 +17,8 @@
 #include "util/u_dual_blend.h"
 #include "evergreen_compute.h"
 #include "util/u_math.h"
+
+#include <assert.h>
 
 static inline unsigned evergreen_array_mode(unsigned mode)
 {
@@ -520,6 +506,7 @@ static void *evergreen_create_rs_state(struct pipe_context *ctx,
 		S_028810_DX_LINEAR_ATTR_CLIP_ENA(1) |
 		S_028810_DX_RASTERIZATION_KILL(state->rasterizer_discard);
 	rs->multisample_enable = state->multisample;
+	rs->line_width = state->line_width;
 
 	/* offset */
 	rs->offset_units = state->offset_units;
@@ -535,6 +522,7 @@ static void *evergreen_create_rs_state(struct pipe_context *ctx,
 		psize_min = state->point_size;
 		psize_max = state->point_size;
 	}
+	rs->max_point_size = psize_max;
 
 	spi_interp = S_0286D4_FLAT_SHADE_ENA(1);
 	spi_interp |= S_0286D4_PNT_SPRITE_ENA(1) |
@@ -566,10 +554,12 @@ static void *evergreen_create_rs_state(struct pipe_context *ctx,
 	if (rctx->b.gfx_level == CAYMAN) {
 		r600_store_context_reg(&rs->buffer, CM_R_028BE4_PA_SU_VTX_CNTL,
 				       S_028C08_PIX_CENTER_HALF(state->half_pixel_center) |
+				       S_028C08_ROUND_MODE(V_028C08_X_ROUND_TO_EVEN) |
 				       S_028C08_QUANT_MODE(V_028C08_X_1_256TH));
 	} else {
 		r600_store_context_reg(&rs->buffer, R_028C08_PA_SU_VTX_CNTL,
 				       S_028C08_PIX_CENTER_HALF(state->half_pixel_center) |
+				       S_028C08_ROUND_MODE(V_028C08_X_ROUND_TO_EVEN) |
 				       S_028C08_QUANT_MODE(V_028C08_X_1_256TH));
 	}
 
@@ -609,7 +599,8 @@ static void *evergreen_create_sampler_state(struct pipe_context *ctx,
 	 * MIP_FILTER will also be set to NONE. However, if more then one LOD is
 	 * configured, then the texture lookup seems to fail for some specific texture
 	 * formats. Forcing the number of LODs to one in this case fixes it. */
-	if (state->min_mip_filter == PIPE_TEX_MIPFILTER_NONE)
+	if (state->min_mip_filter == PIPE_TEX_MIPFILTER_NONE &&
+	    state->mag_img_filter == state->min_img_filter)
 		max_lod = state->min_lod;
 
 	ss->border_color_use = sampler_state_needs_border_color(state);
@@ -2043,7 +2034,7 @@ static void evergreen_emit_cb_misc_state(struct r600_context *rctx, struct r600_
 	struct r600_cb_misc_state *a = (struct r600_cb_misc_state*)atom;
 	unsigned fb_colormask = a->bound_cbufs_target_mask;
 	unsigned ps_colormask = a->ps_color_export_mask;
-	unsigned rat_colormask = evergreen_construct_rat_mask(rctx, a, a->nr_cbufs);
+	unsigned rat_colormask = evergreen_construct_rat_mask(rctx, a, a->nr_cbufs + (a->dual_src_blend ? 1 : 0));
 	radeon_set_context_reg_seq(cs, R_028238_CB_TARGET_MASK, 2);
 	radeon_emit(cs, (a->blend_colormask & fb_colormask) | rat_colormask); /* R_028238_CB_TARGET_MASK */
 	/* This must match the used export instructions exactly.
@@ -2134,7 +2125,8 @@ static void evergreen_emit_vertex_buffers(struct r600_context *rctx,
 {
 	struct radeon_cmdbuf *cs = &rctx->b.gfx.cs;
 	struct r600_fetch_shader *shader = (struct r600_fetch_shader*)rctx->vertex_fetch_shader.cso;
-	uint32_t dirty_mask = state->dirty_mask & shader->buffer_mask;
+	uint32_t buffer_mask = shader ? shader->buffer_mask : ~0;
+	uint32_t dirty_mask = state->dirty_mask & buffer_mask;
 
 	while (dirty_mask) {
 		struct pipe_vertex_buffer *vb;
@@ -2154,7 +2146,8 @@ static void evergreen_emit_vertex_buffers(struct r600_context *rctx,
 		radeon_emit(cs, PKT3(PKT3_SET_RESOURCE, 8, 0) | pkt_flags);
 		radeon_emit(cs, (resource_offset + buffer_index) * 8);
 		radeon_emit(cs, va); /* RESOURCEi_WORD0 */
-		radeon_emit(cs, rbuffer->b.b.width0 - vb->buffer_offset - 1); /* RESOURCEi_WORD1 */
+		radeon_emit(cs, rbuffer->b.b.width0 - vb->buffer_offset - 1 +
+			    (shader ? shader->width_correction[buffer_index] : 0)); /* RESOURCEi_WORD1 */
 		radeon_emit(cs, /* RESOURCEi_WORD2 */
 				 S_030008_ENDIAN_SWAP(r600_endian_swap(32)) |
 				 S_030008_STRIDE(stride) |
@@ -2173,7 +2166,7 @@ static void evergreen_emit_vertex_buffers(struct r600_context *rctx,
 		radeon_emit(cs, radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx, rbuffer,
 						      RADEON_USAGE_READ | RADEON_PRIO_VERTEX_BUFFER));
 	}
-	state->dirty_mask &= ~shader->buffer_mask;
+	state->dirty_mask &= ~buffer_mask;
 }
 
 static void evergreen_fs_emit_vertex_buffers(struct r600_context *rctx, struct r600_atom * atom)
@@ -2210,7 +2203,7 @@ static void evergreen_emit_constant_buffers(struct r600_context *rctx,
 
 		va = rbuffer->gpu_address + cb->buffer_offset;
 
-		if (buffer_index < R600_MAX_HW_CONST_BUFFERS) {
+		if (buffer_index < R600_MAX_ALU_CONST_BUFFERS) {
 			radeon_set_context_reg_flag(cs, reg_alu_constbuf_size + buffer_index * 4,
 						    DIV_ROUND_UP(cb->buffer_size, 256), pkt_flags);
 			radeon_set_context_reg_flag(cs, reg_alu_const_cache + buffer_index * 4, va >> 8,
@@ -3434,19 +3427,21 @@ void evergreen_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader
 	}
 
 	for (i = 0; i < rshader->ninput; i++) {
+		const gl_varying_slot varying_slot = rshader->input[i].varying_slot;
+
 		/* evergreen NUM_INTERP only contains values interpolated into the LDS,
 		   POSITION goes via GPRs from the SC so isn't counted */
-		if (rshader->input[i].name == TGSI_SEMANTIC_POSITION)
+		if (varying_slot == VARYING_SLOT_POS)
 			pos_index = i;
-		else if (rshader->input[i].name == TGSI_SEMANTIC_FACE) {
+		else if (varying_slot == VARYING_SLOT_FACE) {
 			if (face_index == -1)
 				face_index = i;
 		}
-		else if (rshader->input[i].name == TGSI_SEMANTIC_SAMPLEMASK) {
+		else if (rshader->input[i].system_value == SYSTEM_VALUE_SAMPLE_MASK_IN) {
 			if (face_index == -1)
 				face_index = i; /* lives in same register, same enable bit */
 		}
-		else if (rshader->input[i].name == TGSI_SEMANTIC_SAMPLEID) {
+		else if (rshader->input[i].system_value == SYSTEM_VALUE_SAMPLE_ID) {
 			fixed_pt_position_index = i;
 		}
 		else {
@@ -3473,18 +3468,18 @@ void evergreen_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader
 			tmp = S_028644_SEMANTIC(sid);
 
 			/* D3D 9 behaviour. GL is undefined */
-			if (rshader->input[i].name == TGSI_SEMANTIC_COLOR && rshader->input[i].sid == 0)
+			if (varying_slot == VARYING_SLOT_COL0)
 				tmp |= S_028644_DEFAULT_VAL(3);
 
-			if (rshader->input[i].name == TGSI_SEMANTIC_POSITION ||
+			if (varying_slot == VARYING_SLOT_POS ||
 				rshader->input[i].interpolate == TGSI_INTERPOLATE_CONSTANT ||
 				(rshader->input[i].interpolate == TGSI_INTERPOLATE_COLOR && flatshade)) {
 				tmp |= S_028644_FLAT_SHADE(1);
 			}
 
-			if (rshader->input[i].name == TGSI_SEMANTIC_PCOORD ||
-			    (rshader->input[i].name == TGSI_SEMANTIC_TEXCOORD &&
-			     (sprite_coord_enable & (1 << rshader->input[i].sid)))) {
+			if (varying_slot == VARYING_SLOT_PNTC ||
+			    (varying_slot >= VARYING_SLOT_TEX0 && varying_slot <= VARYING_SLOT_TEX7 &&
+			     (sprite_coord_enable & (1 << ((int)varying_slot - (int)VARYING_SLOT_TEX0))))) {
 				tmp |= S_028644_PT_SPRITE_TEX(1);
 			}
 
@@ -3495,13 +3490,25 @@ void evergreen_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader
 	r600_store_context_reg_seq(cb, R_028644_SPI_PS_INPUT_CNTL_0, num);
 	r600_store_array(cb, num, spi_ps_input_cntl);
 
+	exports_ps = 0;
 	for (i = 0; i < rshader->noutput; i++) {
-		if (rshader->output[i].name == TGSI_SEMANTIC_POSITION)
+		switch (rshader->output[i].frag_result) {
+		case FRAG_RESULT_DEPTH:
 			z_export = 1;
-		if (rshader->output[i].name == TGSI_SEMANTIC_STENCIL)
+			exports_ps |= 1;
+			break;
+		case FRAG_RESULT_STENCIL:
 			stencil_export = 1;
-		if (rshader->output[i].name == TGSI_SEMANTIC_SAMPLEMASK && msaa)
-			mask_export = 1;
+			exports_ps |= 1;
+			break;
+		case FRAG_RESULT_SAMPLE_MASK:
+			if (msaa)
+				mask_export = 1;
+			exports_ps |= 1;
+			break;
+		default:
+			break;
+		}
 	}
 	if (rshader->uses_kill)
 		db_shader_control |= S_02880C_KILL_ENABLE(1);
@@ -3528,14 +3535,6 @@ void evergreen_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader
 	case FRAG_DEPTH_LAYOUT_LESS:
 		db_shader_control |= S_02880C_CONSERVATIVE_Z_EXPORT(V_02880C_EXPORT_LESS_THAN_Z);
 		break;
-	}
-
-	exports_ps = 0;
-	for (i = 0; i < rshader->noutput; i++) {
-		if (rshader->output[i].name == TGSI_SEMANTIC_POSITION ||
-		    rshader->output[i].name == TGSI_SEMANTIC_STENCIL ||
-		    rshader->output[i].name == TGSI_SEMANTIC_SAMPLEMASK)
-			exports_ps |= 1;
 	}
 
 	num_cout = rshader->ps_export_highest + 1;
@@ -3685,14 +3684,16 @@ void evergreen_update_vs_state(struct pipe_context *ctx, struct r600_pipe_shader
 	struct r600_command_buffer *cb = &shader->command_buffer;
 	struct r600_shader *rshader = &shader->shader;
 	unsigned spi_vs_out_id[10] = {};
-	unsigned i, tmp, nparams = 0;
+	unsigned i;
 
 	for (i = 0; i < rshader->noutput; i++) {
-		if (rshader->output[i].spi_sid) {
-			tmp = rshader->output[i].spi_sid << ((nparams & 3) * 8);
-			spi_vs_out_id[nparams / 4] |= tmp;
-			nparams++;
-		}
+		const int param = rshader->output[i].export_param;
+		if (param < 0)
+			continue;
+		unsigned *const param_spi_vs_out_id = &spi_vs_out_id[param / 4];
+		const unsigned param_shift = (param & 3) * 8;
+		assert(!(*param_spi_vs_out_id & (0xFFu << param_shift)));
+		*param_spi_vs_out_id |= (unsigned)rshader->output[i].spi_sid << param_shift;
 	}
 
 	r600_init_command_buffer(cb, 32);
@@ -3702,15 +3703,8 @@ void evergreen_update_vs_state(struct pipe_context *ctx, struct r600_pipe_shader
 		r600_store_value(cb, spi_vs_out_id[i]);
 	}
 
-	/* Certain attributes (position, psize, etc.) don't count as params.
-	 * VS is required to export at least one param and r600_shader_from_tgsi()
-	 * takes care of adding a dummy export.
-	 */
-	if (nparams < 1)
-		nparams = 1;
-
 	r600_store_context_reg(cb, R_0286C4_SPI_VS_OUT_CONFIG,
-			       S_0286C4_VS_EXPORT_COUNT(nparams - 1));
+			       S_0286C4_VS_EXPORT_COUNT(rshader->highest_export_param));
 	r600_store_context_reg(cb, R_028860_SQ_PGM_RESOURCES_VS,
 			       S_028860_NUM_GPRS(rshader->bc.ngpr) |
 			       S_028860_DX10_CLAMP(1) |

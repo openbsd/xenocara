@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2023/01/31 03:29:36 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2025/06/05 14:18:37 jsg Exp $
 
 LIB=	GLESv2
 
@@ -12,12 +12,10 @@ CPPFLAGS+=	-DMAPI_MODE_BRIDGE \
 
 LDADD+= -L${.CURDIR}/../libglapi/${__objdir} -lglapi \
 	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
-	-L${X11BASE}/lib -ldrm -lm -lpthread
+	-L${X11BASE}/lib -ldrm -lm -lpthread \
+	-L${.CURDIR}/../libgallium_dri/${__objdir} -lgallium_dri
 
 obj: _xenocara_obj
-
-beforeinstall:
-	rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

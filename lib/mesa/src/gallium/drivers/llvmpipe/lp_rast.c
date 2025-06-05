@@ -54,7 +54,7 @@
 #include <windows.h>
 #endif
 
-#ifdef DEBUG
+#if MESA_DEBUG
 int jit_line = 0;
 const struct lp_rast_state *jit_state = NULL;
 const struct lp_rasterizer_task *jit_task = NULL;
@@ -168,7 +168,7 @@ lp_rast_clear_color(struct lp_rasterizer_task *task,
                     0,
                     task->width,
                     task->height,
-                    scene->fb_max_layer + 1,
+                    scene->cbufs[cbuf].layer_count,
                     &uc);
    }
 
@@ -317,6 +317,7 @@ lp_rast_shade_tile(struct lp_rasterizer_task *task,
 
    const struct lp_fragment_shader_variant *variant = state->variant;
 
+   unsigned view_index = inputs->view_index;
    /* render the whole 64x64 tile in 4x4 chunks */
    for (unsigned y = 0; y < task->height; y += 4){
       for (unsigned x = 0; x < task->width; x += 4) {
@@ -330,7 +331,7 @@ lp_rast_shade_tile(struct lp_rasterizer_task *task,
                sample_stride[i] = scene->cbufs[i].sample_stride;
                color[i] = lp_rast_get_color_block_pointer(task, i, tile_x + x,
                                           tile_y + y,
-                                          inputs->layer + inputs->view_index);
+                                          inputs->layer, view_index);
             } else {
                stride[i] = 0;
                sample_stride[i] = 0;
@@ -345,7 +346,7 @@ lp_rast_shade_tile(struct lp_rasterizer_task *task,
          if (scene->zsbuf.map) {
             depth = lp_rast_get_depth_block_pointer(task, tile_x + x,
                                            tile_y + y,
-                                           inputs->layer + inputs->view_index);
+                                           inputs->layer, view_index);
             depth_stride = scene->zsbuf.stride;
             depth_sample_stride = scene->zsbuf.sample_stride;
          }
@@ -432,12 +433,13 @@ lp_rast_shade_quads_mask_sample(struct lp_rasterizer_task *task,
    uint8_t *color[PIPE_MAX_COLOR_BUFS];
    unsigned stride[PIPE_MAX_COLOR_BUFS];
    unsigned sample_stride[PIPE_MAX_COLOR_BUFS];
+   unsigned view_index = inputs->view_index;
    for (unsigned i = 0; i < scene->fb.nr_cbufs; i++) {
       if (scene->fb.cbufs[i]) {
          stride[i] = scene->cbufs[i].stride;
          sample_stride[i] = scene->cbufs[i].sample_stride;
          color[i] = lp_rast_get_color_block_pointer(task, i, x, y,
-                                                    inputs->layer + inputs->view_index);
+                                                    inputs->layer, view_index);
       } else {
          stride[i] = 0;
          sample_stride[i] = 0;
@@ -452,7 +454,7 @@ lp_rast_shade_quads_mask_sample(struct lp_rasterizer_task *task,
    if (scene->zsbuf.map) {
       depth_stride = scene->zsbuf.stride;
       depth_sample_stride = scene->zsbuf.sample_stride;
-      depth = lp_rast_get_depth_block_pointer(task, x, y, inputs->layer + inputs->view_index);
+      depth = lp_rast_get_depth_block_pointer(task, x, y, inputs->layer, view_index);
    }
 
    assert(lp_check_alignment(state->jit_context.u8_blend_color, 16));
@@ -1005,7 +1007,7 @@ rasterize_bin(struct lp_rasterizer_task *task,
 
    lp_rast_tile_end(task);
 
-#ifdef DEBUG
+#if MESA_DEBUG
    /* Debug/Perf flags:
     */
    if (bin->head->count == 1) {
@@ -1218,7 +1220,7 @@ thread_function(void *init_data)
    }
 
 #ifdef _WIN32
-   util_semaphore_signal(&task->work_done);
+   util_semaphore_signal(&task->exited);
 #endif
 
    return 0;
@@ -1235,6 +1237,9 @@ create_rast_threads(struct lp_rasterizer *rast)
    for (unsigned i = 0; i < rast->num_threads; i++) {
       util_semaphore_init(&rast->tasks[i].work_ready, 0);
       util_semaphore_init(&rast->tasks[i].work_done, 0);
+#ifdef _WIN32
+      util_semaphore_init(&rast->tasks[i].exited, 0);
+#endif
       if (thrd_success != u_thread_create(rast->threads + i, thread_function,
                                             (void *) &rast->tasks[i])) {
          rast->num_threads = i; /* previous thread is max */
@@ -1328,7 +1333,7 @@ lp_rast_destroy(struct lp_rasterizer *rast)
       DWORD exit_code = STILL_ACTIVE;
       if (GetExitCodeThread(rast->threads[i].handle, &exit_code) &&
           exit_code == STILL_ACTIVE) {
-         util_semaphore_wait(&rast->tasks[i].work_done);
+         util_semaphore_wait(&rast->tasks[i].exited);
       }
 #else
       thrd_join(rast->threads[i], NULL);
@@ -1339,6 +1344,9 @@ lp_rast_destroy(struct lp_rasterizer *rast)
    for (unsigned i = 0; i < rast->num_threads; i++) {
       util_semaphore_destroy(&rast->tasks[i].work_ready);
       util_semaphore_destroy(&rast->tasks[i].work_done);
+#ifdef _WIN32
+      util_semaphore_destroy(&rast->tasks[i].exited);
+#endif
    }
    for (unsigned i = 0; i < MAX2(1, rast->num_threads); i++) {
       align_free(rast->tasks[i].thread_data.cache);

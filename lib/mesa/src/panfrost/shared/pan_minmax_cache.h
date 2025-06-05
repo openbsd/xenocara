@@ -27,7 +27,9 @@
 #ifndef H_PAN_MINMAX_CACHE
 #define H_PAN_MINMAX_CACHE
 
-#include "util/u_transfer.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
 
 #define PANFROST_MINMAX_SIZE 64
 
@@ -39,14 +41,17 @@ struct panfrost_minmax_cache {
 };
 
 bool panfrost_minmax_cache_get(struct panfrost_minmax_cache *cache,
+                               unsigned index_size,
                                unsigned start, unsigned count,
                                unsigned *min_index, unsigned *max_index);
 
 void panfrost_minmax_cache_add(struct panfrost_minmax_cache *cache,
+                               unsigned index_size,
                                unsigned start, unsigned count,
                                unsigned min_index, unsigned max_index);
 
 void panfrost_minmax_cache_invalidate(struct panfrost_minmax_cache *cache,
-                                      struct pipe_transfer *transfer);
+                                      unsigned index_size,
+                                      size_t offset, size_t size);
 
 #endif

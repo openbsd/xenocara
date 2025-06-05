@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2023/01/28 08:56:35 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2025/06/05 14:18:47 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -20,6 +20,7 @@ CPPFLAGS+=	-DDROP_PIPE_LOADER_MISC \
 		-I${MESA_SRC}/src/gallium/auxiliary/pipe-loader \
 		-I${MESA_SRC}/src/gallium/winsys \
 		-I${MESA_SRC}/src/loader \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/util
 
 install:

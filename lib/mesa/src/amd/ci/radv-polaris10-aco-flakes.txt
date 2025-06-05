@@ -1,1 +1,1 @@
-dEQP-VK.dynamic_rendering.basic.*
+dEQP-VK.pipeline.shader_object_unlinked_spirv.interface_matching.vector_length.out_uvec4_in_uvec2_loose_variable_vert_geom_out_frag_in

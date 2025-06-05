@@ -266,7 +266,7 @@ void GLAPIENTRY save_ProgramLocalParameter4fARB(GLenum target, GLuint index, GLf
 void GLAPIENTRY save_ProgramLocalParameter4fvARB(GLenum target, GLuint index, const GLfloat *params);
 void GLAPIENTRY save_ClampColor(GLenum target, GLenum clamp);
 void GLAPIENTRY save_DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
-void GLAPIENTRY save_DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
+void GLAPIENTRY save_DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count);
 void GLAPIENTRY save_BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 void GLAPIENTRY save_VertexAttribDivisor(GLuint index, GLuint divisor);
 void GLAPIENTRY save_UniformBlockBinding(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
@@ -365,9 +365,9 @@ void GLAPIENTRY save_ProgramUniformMatrix2x4fv(GLuint program, GLint location, G
 void GLAPIENTRY save_ProgramUniformMatrix4x2fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 void GLAPIENTRY save_ProgramUniformMatrix3x4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 void GLAPIENTRY save_ProgramUniformMatrix4x3fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
-void GLAPIENTRY save_DrawArraysInstancedBaseInstance(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance);
+void GLAPIENTRY save_DrawArraysInstancedBaseInstance(GLenum mode, GLint first, GLsizei count, GLsizei instance_count, GLuint baseinstance);
 void GLAPIENTRY save_DrawElementsInstancedBaseInstance(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance);
-void GLAPIENTRY save_DrawElementsInstancedBaseVertexBaseInstance(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance);
+void GLAPIENTRY save_DrawElementsInstancedBaseVertexBaseInstance(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instance_count, GLint basevertex, GLuint baseinstance);
 void GLAPIENTRY save_DrawTransformFeedbackInstanced(GLenum mode, GLuint id, GLsizei primcount);
 void GLAPIENTRY save_DrawTransformFeedbackStreamInstanced(GLenum mode, GLuint id, GLuint stream, GLsizei primcount);
 void GLAPIENTRY save_DispatchCompute(GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z);

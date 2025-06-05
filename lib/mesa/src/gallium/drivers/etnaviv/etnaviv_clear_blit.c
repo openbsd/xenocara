@@ -51,7 +51,8 @@ etna_blit_save_state(struct etna_context *ctx, bool render_cond)
 {
    util_blitter_save_fragment_constant_buffer_slot(ctx->blitter,
                                                    ctx->constant_buffer[PIPE_SHADER_FRAGMENT].cb);
-   util_blitter_save_vertex_buffer_slot(ctx->blitter, ctx->vertex_buffer.vb);
+   util_blitter_save_vertex_buffers(ctx->blitter, ctx->vertex_buffer.vb,
+                                    ctx->vertex_buffer.count);
    util_blitter_save_vertex_elements(ctx->blitter, ctx->vertex_elements);
    util_blitter_save_vertex_shader(ctx->blitter, ctx->shader.bind_vs);
    util_blitter_save_rasterizer(ctx->blitter, ctx->rasterizer);
@@ -73,7 +74,7 @@ etna_blit_save_state(struct etna_context *ctx, bool render_cond)
             ctx->cond_query, ctx->cond_cond, ctx->cond_mode);
 
    if (DBG_ENABLED(ETNA_DBG_DEQP))
-      util_blitter_save_so_targets(ctx->blitter, 0, NULL);
+      util_blitter_save_so_targets(ctx->blitter, 0, NULL, 0);
 }
 
 uint64_t
@@ -126,7 +127,7 @@ etna_blit(struct pipe_context *pctx, const struct pipe_blit_info *blit_info)
    }
 
    etna_blit_save_state(ctx, info.render_condition_enable);
-   util_blitter_blit(ctx->blitter, &info);
+   util_blitter_blit(ctx->blitter, &info, NULL);
 
 success:
    if (info.dst.resource->bind & PIPE_BIND_SAMPLER_VIEW)
@@ -228,9 +229,9 @@ etna_copy_resource(struct pipe_context *pctx, struct pipe_resource *dst,
 
       blit.src.level = blit.dst.level = level;
       blit.src.box.width = blit.dst.box.width =
-         MIN2(src_priv->levels[level].padded_width, dst_priv->levels[level].padded_width);
+         MIN2(src_priv->levels[level].width, dst_priv->levels[level].width);
       blit.src.box.height = blit.dst.box.height =
-         MIN2(src_priv->levels[level].padded_height, dst_priv->levels[level].padded_height);
+         MIN2(src_priv->levels[level].height, dst_priv->levels[level].height);
       unsigned depth = MIN2(src_priv->levels[level].depth, dst_priv->levels[level].depth);
       if (dst->array_size > 1) {
          assert(depth == 1); /* no array of 3d texture */

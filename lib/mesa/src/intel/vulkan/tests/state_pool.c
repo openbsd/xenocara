@@ -45,9 +45,17 @@ void state_pool_test(void)
    pthread_mutex_init(&device.mutex, NULL);
    anv_bo_cache_init(&device.bo_cache, &device);
 
-   const unsigned num_runs = 64;
+   const unsigned num_runs = 32;
+   const uint32_t _1Gb = 1024 * 1024 * 1024;
    for (unsigned i = 0; i < num_runs; i++) {
-      anv_state_pool_init(&state_pool, &device, "test", 4096, 0, 256);
+      anv_state_pool_init(&state_pool, &device,
+                          &(struct anv_state_pool_params) {
+                             .name         = "test",
+                             .base_address = 4096,
+                             .start_offset = 0,
+                             .block_size   = 256,
+                             .max_size     = _1Gb,
+                          });
 
       /* Grab one so a zero offset is impossible */
       anv_state_pool_alloc(&state_pool, 16, 16);

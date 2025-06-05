@@ -1,27 +1,9 @@
-/**********************************************************
- * Copyright 2009-2015 VMware, Inc.  All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- **********************************************************/
+/*
+ * Copyright (c) 2009-2024 Broadcom. All Rights Reserved.
+ * The term “Broadcom” refers to Broadcom Inc.
+ * and/or its subsidiaries.
+ * SPDX-License-Identifier: MIT
+ */
 
 /**
  * @file
@@ -43,7 +25,7 @@
 #include "vmw_fence.h"
 #include "xf86drm.h"
 #include "vmwgfx_drm.h"
-#include "svga3d_caps.h"
+#include "svga3d_devcaps.h"
 #include "svga3d_reg.h"
 
 #include "util/os_mman.h"
@@ -514,7 +496,7 @@ vmw_ioctl_command(struct vmw_winsys_screen *vws, int32_t cid,
    int ret;
    int argsize;
 
-#ifdef DEBUG
+#if MESA_DEBUG
    {
       static bool firsttime = true;
       static bool debug = false;
@@ -737,6 +719,7 @@ vmw_ioctl_syncforcpu(struct vmw_region *region,
                      bool allow_cs)
 {
    struct drm_vmw_synccpu_arg arg;
+   int ret;
 
    memset(&arg, 0, sizeof(arg));
    arg.op = drm_vmw_synccpu_grab;
@@ -749,7 +732,16 @@ vmw_ioctl_syncforcpu(struct vmw_region *region,
    if (allow_cs)
       arg.flags |= drm_vmw_synccpu_allow_cs;
 
-   return drmCommandWrite(region->drm_fd, DRM_VMW_SYNCCPU, &arg, sizeof(arg));
+   do {
+      ret = drmCommandWrite(region->drm_fd, DRM_VMW_SYNCCPU, &arg, sizeof(arg));
+      if (ret == -EBUSY)
+         usleep(1000);
+   } while (ret == -ERESTART || ret == -EBUSY);
+
+   if (ret)
+      vmw_error("%s Failed synccpu with error %s.\n", __func__, strerror(-ret));
+
+   return ret;
 }
 
 /**
@@ -910,6 +902,11 @@ vmw_ioctl_shader_destroy(struct vmw_winsys_screen *vws, uint32 shid)
 
 }
 
+struct svga_3d_compat_cap {
+	SVGA3dFifoCapsRecordHeader header;
+	SVGA3dFifoCapPair pairs[SVGA3D_DEVCAP_MAX];
+};
+
 static int
 vmw_ioctl_parse_caps(struct vmw_winsys_screen *vws,
 		     const uint32_t *cap_buffer)
@@ -924,9 +921,9 @@ vmw_ioctl_parse_caps(struct vmw_winsys_screen *vws,
       return 0;
    } else {
       const uint32 *capsBlock;
-      const SVGA3dCapsRecord *capsRecord = NULL;
+      const struct svga_3d_compat_cap *capsRecord = NULL;
       uint32 offset;
-      const SVGA3dCapPair *capArray;
+      const SVGA3dFifoCapPair *capArray;
       int numCaps, index;
 
       /*
@@ -934,11 +931,11 @@ vmw_ioctl_parse_caps(struct vmw_winsys_screen *vws,
        */
       capsBlock = cap_buffer;
       for (offset = 0; capsBlock[offset] != 0; offset += capsBlock[offset]) {
-	 const SVGA3dCapsRecord *record;
+	 const struct svga_3d_compat_cap *record;
 	 assert(offset < SVGA_FIFO_3D_CAPS_SIZE);
-	 record = (const SVGA3dCapsRecord *) (capsBlock + offset);
-	 if ((record->header.type >= SVGA3DCAPS_RECORD_DEVCAPS_MIN) &&
-	     (record->header.type <= SVGA3DCAPS_RECORD_DEVCAPS_MAX) &&
+	 record = (const struct svga_3d_compat_cap *) (capsBlock + offset);
+	 if ((record->header.type >= 0) &&
+	     (record->header.type <= SVGA3D_DEVCAP_MAX) &&
 	     (!capsRecord || (record->header.type > capsRecord->header.type))) {
 	    capsRecord = record;
 	 }
@@ -950,7 +947,7 @@ vmw_ioctl_parse_caps(struct vmw_winsys_screen *vws,
       /*
        * Calculate the number of caps from the size of the record.
        */
-      capArray = (const SVGA3dCapPair *) capsRecord->data;
+      capArray = (const SVGA3dFifoCapPair *) capsRecord->pairs;
       numCaps = (int) ((capsRecord->header.length * sizeof(uint32) -
 			sizeof capsRecord->header) / (2 * sizeof(uint32)));
 
@@ -1182,6 +1179,22 @@ vmw_ioctl_init(struct vmw_winsys_screen *vws)
       vws->ioctl.max_texture_size = VMW_MAX_DEFAULT_TEXTURE_SIZE;
 
       size = SVGA_FIFO_3D_CAPS_SIZE * sizeof(uint32_t);
+   }
+
+   /* Userspace surfaces are only supported on guest-backed hardware */
+   vws->userspace_surface = false;
+   getenv_val = getenv("VMW_SVGA_USERSPACE_SURFACE");
+   if (getenv_val && atoi(getenv_val)) {
+      assert(vws->base.have_gb_objects);
+      assert(vws->base.have_vgpu10);
+      memset(&gp_arg, 0, sizeof(gp_arg));
+      gp_arg.param = DRM_VMW_PARAM_USER_SRF;
+      ret = drmCommandWriteRead(vws->ioctl.drm_fd, DRM_VMW_GET_PARAM, &gp_arg,
+                                sizeof(gp_arg));
+      if (!ret && gp_arg.value == true) {
+         vws->userspace_surface = true;
+         debug_printf("Using userspace managed surfaces\n");
+      }
    }
 
    debug_printf("VGPU10 interface is %s.\n",

@@ -1,27 +1,8 @@
 /*
  * Copyright 2011 Adam Rak <adam.rak@streamnovation.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  * Authors:
  *      Adam Rak <adam.rak@streamnovation.com>
+ * SPDX-License-Identifier: MIT
  */
 
 #ifdef HAVE_OPENCL
@@ -863,6 +844,7 @@ static void compute_emit_cs(struct r600_context *rctx,
 		 */
 		radeon_emit(cs, PKT3C(PKT3_DEALLOC_STATE, 0, 0));
 		radeon_emit(cs, 0);
+		rctx->cayman_dealloc_state = true;
 	}
 	if (rctx->cs_shader_state.shader->ir_type == PIPE_SHADER_IR_TGSI ||
 	    rctx->cs_shader_state.shader->ir_type == PIPE_SHADER_IR_NIR)
@@ -1215,6 +1197,22 @@ void evergreen_init_atom_start_compute_cs(struct r600_context *rctx)
 	eg_store_loop_const(cb, R_03A200_SQ_LOOP_CONST_0 + (160 * 4), 0x1000FFF);
 }
 
+
+static void evergreen_get_compute_state_info(struct pipe_context *ctx, void *state,
+                                             struct pipe_compute_state_object_info *info)
+{
+	struct r600_context *rctx = (struct r600_context*)ctx;
+	struct r600_pipe_compute *shader = state;
+	
+	/* This is somehow copied from RadeonSI, but in thruth this not more
+	 * than an educated guess. */
+	uint8_t wave_size = r600_wavefront_size(rctx->b.screen->family);
+	info->private_memory = shader->sel->current->scratch_space_needed;
+	info->preferred_simd_size = wave_size;
+	info->simd_sizes = wave_size;
+	info->max_threads = 128;
+}
+
 void evergreen_init_compute_state_functions(struct r600_context *rctx)
 {
 	rctx->b.b.create_compute_state = evergreen_create_compute_state;
@@ -1224,7 +1222,7 @@ void evergreen_init_compute_state_functions(struct r600_context *rctx)
 	rctx->b.b.set_compute_resources = evergreen_set_compute_resources;
 	rctx->b.b.set_global_binding = evergreen_set_global_binding;
 	rctx->b.b.launch_grid = evergreen_launch_grid;
-
+	rctx->b.b.get_compute_state_info = evergreen_get_compute_state_info;
 }
 
 void *r600_compute_global_transfer_map(struct pipe_context *ctx,

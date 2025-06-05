@@ -99,7 +99,7 @@ real_types = (float_type, double_type)
 # This is used by most operations.
 constant_template_common = mako.template.Template("""\
    case ${op.get_enum_name()}:
-      for (unsigned c = 0; c < op[0]->type->components(); c++) {
+      for (unsigned c = 0; c < glsl_get_components(op[0]->type); c++) {
          switch (op[0]->type->base_type) {
     % for dst_type, src_types in op.signatures():
          case ${src_types[0].glsl_type}:
@@ -173,7 +173,7 @@ constant_template_vector_scalar_mixed = mako.template.Template("""\
 constant_template_mul = mako.template.Template("""\
    case ${op.get_enum_name()}:
       /* Check for equal types, or unequal types involving scalars */
-      if ((op[0]->type == op[1]->type && !op[0]->type->is_matrix())
+      if ((op[0]->type == op[1]->type && !glsl_type_is_matrix(op[0]->type))
           || op0_scalar || op1_scalar) {
          for (unsigned c = 0, c0 = 0, c1 = 0;
               c < components;
@@ -190,7 +190,7 @@ constant_template_mul = mako.template.Template("""\
             }
          }
       } else {
-         assert(op[0]->type->is_matrix() || op[1]->type->is_matrix());
+         assert(glsl_type_is_matrix(op[0]->type) || glsl_type_is_matrix(op[1]->type));
 
          /* Multiply an N-by-M matrix with an M-by-P matrix.  Since either
           * matrix can be a GLSL vector, either N or P can be 1.
@@ -201,14 +201,14 @@ constant_template_mul = mako.template.Template("""\
           * For mat*vec, the vector is treated as a column vector.  Since
           * matrix_columns is 1 for vectors, this just works.
           */
-         const unsigned n = op[0]->type->is_vector()
+         const unsigned n = glsl_type_is_vector(op[0]->type)
             ? 1 : op[0]->type->vector_elements;
          const unsigned m = op[1]->type->vector_elements;
          const unsigned p = op[1]->type->matrix_columns;
          for (unsigned j = 0; j < p; j++) {
             for (unsigned i = 0; i < n; i++) {
                for (unsigned k = 0; k < m; k++) {
-                  if (op[0]->type->is_double())
+                  if (glsl_type_is_double(op[0]->type))
                      data.d[i+n*j] += op[0]->value.d[i+n*k]*op[1]->value.d[k+m*j];
                   else
                      data.f[i+n*j] += op[0]->value.f[i+n*k]*op[1]->value.f[k+m*j];
@@ -304,11 +304,11 @@ constant_template_vector = mako.template.Template("""\
 # This template is for ir_triop_lrp.
 constant_template_lrp = mako.template.Template("""\
    case ${op.get_enum_name()}: {
-      assert(op[0]->type->is_float() || op[0]->type->is_double());
-      assert(op[1]->type->is_float() || op[1]->type->is_double());
-      assert(op[2]->type->is_float() || op[2]->type->is_double());
+      assert(glsl_type_is_float(op[0]->type) || glsl_type_is_double(op[0]->type));
+      assert(glsl_type_is_float(op[1]->type) || glsl_type_is_double(op[1]->type));
+      assert(glsl_type_is_float(op[2]->type) || glsl_type_is_double(op[2]->type));
 
-      unsigned c2_inc = op[2]->type->is_scalar() ? 0 : 1;
+      unsigned c2_inc = glsl_type_is_scalar(op[2]->type) ? 0 : 1;
       for (unsigned c = 0, c2 = 0; c < components; c2 += c2_inc, c++) {
          switch (return_type->base_type) {
     % for dst_type, src_types in op.signatures():
@@ -490,6 +490,16 @@ ir_expression_operation = [
    operation("f2f16", 1, source_types=(float_type,), dest_type=float_type, c_expression="{src0}"),
    operation("f2fmp", 1, source_types=(float_type,), dest_type=float_type, c_expression="{src0}"),
    operation("f162f", 1, source_types=(float_type,), dest_type=float_type, c_expression="{src0}"),
+   operation("u2f16", 1, source_types=(uint_type,), dest_type=float_type, c_expression="{src0}"),
+   operation("f162u", 1, source_types=(float_type,), dest_type=uint_type, c_expression="{src0}"),
+   operation("i2f16", 1, source_types=(int_type,), dest_type=float_type, c_expression="{src0}"),
+   operation("f162i", 1, source_types=(float_type,), dest_type=int_type, c_expression="{src0}"),
+   operation("d2f16", 1, source_types=(double_type,), dest_type=float_type, c_expression="{src0}"),
+   operation("f162d", 1, source_types=(float_type,), dest_type=double_type, c_expression="{src0}"),
+   operation("u642f16", 1, source_types=(uint64_type,), dest_type=float_type, c_expression="{src0}"),
+   operation("f162u64", 1, source_types=(float_type,), dest_type=uint64_type, c_expression="{src0}"),
+   operation("i642f16", 1, source_types=(int64_type,), dest_type=float_type, c_expression="{src0}"),
+   operation("f162i64", 1, source_types=(float_type,), dest_type=int64_type, c_expression="{src0}"),
    # int16<->int32 conversion.
    operation("i2i", 1, source_types=(int_type,), dest_type=int_type, c_expression="{src0}"),
    operation("i2imp", 1, source_types=(int_type,), dest_type=int_type, c_expression="{src0}"),
@@ -711,12 +721,6 @@ ir_expression_operation = [
    operation("max", 2, source_types=numeric_types, c_expression="MAX2({src0}, {src1})", flags=vector_scalar_operation),
 
    operation("pow", 2, source_types=(float_type,), c_expression="powf({src0}, {src1})"),
-
-   # Load a value the size of a given GLSL type from a uniform block.
-   #
-   # operand0 is the ir_constant uniform block index in the linked shader.
-   # operand1 is a byte offset within the uniform block.
-   operation("ubo_load", 2),
 
    # Multiplies a number by two to a power, part of ARB_gpu_shader5.
    operation("ldexp", 2,

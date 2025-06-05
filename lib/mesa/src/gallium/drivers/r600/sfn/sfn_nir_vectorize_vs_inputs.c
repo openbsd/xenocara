@@ -1,24 +1,6 @@
 /*
- * Copyright © 2018 Timothy Arceri
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * Copyright 2018 Timothy Arceri
+ * SPDX-License-Identifier: MIT
  */
 
 #include "nir.h"
@@ -66,7 +48,7 @@ r600_variable_can_rewrite(nir_variable *var)
    if (glsl_get_bit_size(glsl_without_array(var->type)) != 32)
       return false;
 
-   /* We only check VSand attribute imputs */
+   /* We only check VSand attribute inputs */
    return (var->data.location >= VERT_ATTRIB_GENERIC0 &&
            var->data.location <= VERT_ATTRIB_GENERIC15);
 }
@@ -165,10 +147,7 @@ r600_create_new_load(nir_builder *b,
    for (unsigned i = 0; i < old_num_comps; ++i)
       channels[i] = comp - var->data.location_frac + i;
    nir_def *load = nir_swizzle(b, &new_intr->def, channels, old_num_comps);
-   nir_def_rewrite_uses(&intr->def, load);
-
-   /* Remove the old load intrinsic */
-   nir_instr_remove(&intr->instr);
+   nir_def_replace(&intr->def, load);
 }
 
 static bool
@@ -440,7 +419,7 @@ r600_vectorize_io_impl(nir_function_impl *impl)
       r600_vectorize_block(&b, nir_start_block(impl), instr_set, updated_vars);
 
    if (progress) {
-      nir_metadata_preserve(impl, nir_metadata_block_index | nir_metadata_dominance);
+      nir_metadata_preserve(impl, nir_metadata_control_flow);
    } else {
       nir_metadata_preserve(impl, nir_metadata_all);
    }

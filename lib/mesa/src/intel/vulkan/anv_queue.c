@@ -30,6 +30,8 @@
 #include "i915/anv_queue.h"
 #include "xe/anv_queue.h"
 
+#include "vk_common_entrypoints.h"
+
 static VkResult
 anv_create_engine(struct anv_device *device,
                   struct anv_queue *queue,
@@ -89,7 +91,10 @@ anv_queue_init(struct anv_device *device, struct anv_queue *queue,
       return result;
    }
 
-   if (INTEL_DEBUG(DEBUG_SYNC)) {
+   /* Add a debug fence to wait on submissions if we're using the synchronized
+    * submission feature, shader-print feature, or BVH dump.
+    */
+   if (INTEL_DEBUG(DEBUG_SYNC | DEBUG_SHADER_PRINT | DEBUG_BVH_ANY)) {
       result = vk_sync_create(&device->vk,
                               &device->physical->sync_syncobj_type,
                               0, 0, &queue->sync);
@@ -116,6 +121,15 @@ anv_queue_init(struct anv_device *device, struct anv_queue *queue,
 void
 anv_queue_finish(struct anv_queue *queue)
 {
+   if (queue->init_submit) {
+      anv_async_submit_wait(queue->init_submit);
+      anv_async_submit_destroy(queue->init_submit);
+   }
+   if (queue->init_companion_submit) {
+      anv_async_submit_wait(queue->init_companion_submit);
+      anv_async_submit_destroy(queue->init_companion_submit);
+   }
+
    if (queue->sync)
       vk_sync_destroy(&queue->device->vk, queue->sync);
 
@@ -124,4 +138,31 @@ anv_queue_finish(struct anv_queue *queue)
 
    anv_destroy_engine(queue);
    vk_queue_finish(&queue->vk);
+}
+
+VkResult
+anv_QueueWaitIdle(VkQueue _queue)
+{
+   VK_FROM_HANDLE(anv_queue, queue, _queue);
+   struct anv_device *device = queue->device;
+
+   switch (device->info->kmd_type) {
+   case INTEL_KMD_TYPE_XE:
+      if (queue->vk.submit.mode != VK_QUEUE_SUBMIT_MODE_THREADED) {
+         int ret = anv_xe_wait_exec_queue_idle(device, queue->exec_queue_id);
+
+         if (ret == 0)
+            return VK_SUCCESS;
+         if (ret == -ECANCELED)
+            return VK_ERROR_DEVICE_LOST;
+         return vk_errorf(device, VK_ERROR_UNKNOWN, "anv_xe_wait_exec_queue_idle failed: %m");
+      }
+      FALLTHROUGH;
+   case INTEL_KMD_TYPE_I915:
+      return vk_common_QueueWaitIdle(_queue);
+   default:
+      unreachable("Missing");
+   }
+
+   return VK_SUCCESS;
 }

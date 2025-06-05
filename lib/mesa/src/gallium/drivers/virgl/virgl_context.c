@@ -21,7 +21,11 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <string.h>
+#ifndef _WIN32
 #include <libsync.h>
+#endif
+
 #include "pipe/p_shader_tokens.h"
 
 #include "compiler/nir/nir.h"
@@ -358,8 +362,7 @@ static struct pipe_surface *virgl_create_surface(struct pipe_context *ctx,
    if (!surf)
       return NULL;
 
-   assert(ctx->screen->get_param(ctx->screen,
-                                 PIPE_CAP_DEST_SURFACE_SRGB_CONTROL) ||
+   assert(ctx->screen->caps.dest_surface_srgb_control ||
           (util_format_is_srgb(templ->format) ==
            util_format_is_srgb(resource->format)));
 
@@ -565,8 +568,6 @@ static void virgl_bind_vertex_elements_state(struct pipe_context *ctx,
 
 static void virgl_set_vertex_buffers(struct pipe_context *ctx,
                                     unsigned num_buffers,
-                                     unsigned unbind_num_trailing_slots,
-                                     bool take_ownership,
                                     const struct pipe_vertex_buffer *buffers)
 {
    struct virgl_context *vctx = virgl_context(ctx);
@@ -574,8 +575,7 @@ static void virgl_set_vertex_buffers(struct pipe_context *ctx,
    util_set_vertex_buffers_count(vctx->vertex_buffer,
                                  &vctx->num_vertex_buffers,
                                  buffers, num_buffers,
-                                 unbind_num_trailing_slots,
-                                 take_ownership);
+                                 true);
 
    if (buffers) {
       for (unsigned i = 0; i < num_buffers; i++) {
@@ -594,7 +594,7 @@ static void virgl_hw_set_vertex_buffers(struct virgl_context *vctx)
    if (vctx->vertex_array_dirty) {
       const struct virgl_vertex_elements_state *ve = vctx->vertex_elements;
 
-      if (ve->num_bindings) {
+      if (ve && ve->num_bindings) {
          struct pipe_vertex_buffer vertex_buffers[PIPE_MAX_ATTRIBS];
          for (int i = 0; i < ve->num_bindings; ++i)
             vertex_buffers[i] = vctx->vertex_buffer[ve->binding_map[i]];
@@ -917,8 +917,53 @@ static void virgl_clear_render_target(struct pipe_context *ctx,
                                       unsigned width, unsigned height,
                                       bool render_condition_enabled)
 {
+   struct virgl_context *vctx = virgl_context(ctx);
+
+   virgl_encode_clear_surface(vctx, dst, PIPE_CLEAR_COLOR0, color,
+                             dstx, dsty, width, height, render_condition_enabled);
+
+   /* Mark as dirty, since we are updating the host side resource
+    * without going through the corresponding guest side resource, and
+    * hence the two will diverge.
+    */
+   virgl_resource_dirty(virgl_resource(dst->texture), dst->u.tex.level);
+}
+
+static void virgl_clear_depth_stencil(struct pipe_context *ctx,
+                                      struct pipe_surface *dst,
+                                      unsigned clear_flags,
+                                      double depth,
+                                      unsigned stencil,
+                                      unsigned dstx, unsigned dsty,
+                                      unsigned width, unsigned height,
+                                      bool render_condition_enabled)
+{
+   struct virgl_context *vctx = virgl_context(ctx);
+
+   union pipe_color_union color;
+   memcpy(color.ui, &depth, sizeof(double));
+   color.ui[3] = stencil;
+
+   virgl_encode_clear_surface(vctx, dst, clear_flags, &color,
+                             dstx, dsty, width, height, render_condition_enabled);
+
+   /* Mark as dirty, since we are updating the host side resource
+    * without going through the corresponding guest side resource, and
+    * hence the two will diverge.
+    */
+   virgl_resource_dirty(virgl_resource(dst->texture), dst->u.tex.level);
+}
+
+static void virgl_clear_render_target_stub(struct pipe_context *ctx,
+                                           struct pipe_surface *dst,
+                                           const union pipe_color_union *color,
+                                           unsigned dstx, unsigned dsty,
+                                           unsigned width, unsigned height,
+                                           bool render_condition_enabled)
+{
    if (virgl_debug & VIRGL_DEBUG_VERBOSE)
-      debug_printf("VIRGL: clear render target unsupported.\n");
+         debug_printf("VIRGL: clear depth stencil unsupported.\n");
+   return;
 }
 
 static void virgl_clear_texture(struct pipe_context *ctx,
@@ -960,7 +1005,7 @@ static void virgl_draw_vbo(struct pipe_context *ctx,
 
    struct virgl_context *vctx = virgl_context(ctx);
    struct virgl_screen *rs = virgl_screen(ctx->screen);
-   struct virgl_indexbuf ib = {};
+   struct virgl_indexbuf ib = { 0 };
    struct pipe_draw_info info = *dinfo;
 
    if (!indirect &&
@@ -1182,7 +1227,7 @@ static void virgl_bind_sampler_states(struct pipe_context *ctx,
                                      void **samplers)
 {
    struct virgl_context *vctx = virgl_context(ctx);
-   uint32_t handles[PIPE_MAX_SHADER_SAMPLER_VIEWS];
+   uint32_t handles[PIPE_MAX_SAMPLERS];
    int i;
    for (i = 0; i < num_samplers; i++) {
       handles[i] = (unsigned long)(samplers[i]);
@@ -1285,8 +1330,7 @@ static void virgl_blit(struct pipe_context *ctx,
    struct virgl_resource *dres = virgl_resource(blit->dst.resource);
    struct virgl_resource *sres = virgl_resource(blit->src.resource);
 
-   assert(ctx->screen->get_param(ctx->screen,
-                                 PIPE_CAP_DEST_SURFACE_SRGB_CONTROL) ||
+   assert(ctx->screen->caps.dest_surface_srgb_control ||
           (util_format_is_srgb(blit->dst.resource->format) ==
             util_format_is_srgb(blit->dst.format)));
 
@@ -1435,7 +1479,7 @@ static void *virgl_create_compute_state(struct pipe_context *ctx,
    uint32_t handle;
    const struct tgsi_token *ntt_tokens = NULL;
    const struct tgsi_token *tokens;
-   struct pipe_stream_output_info so_info = {};
+   struct pipe_stream_output_info so_info = { 0 };
    int ret;
 
    if (state->ir_type == PIPE_SHADER_IR_NIR) {
@@ -1699,7 +1743,13 @@ struct pipe_context *virgl_context_create(struct pipe_screen *pscreen,
    vctx->base.launch_grid = virgl_launch_grid;
 
    vctx->base.clear = virgl_clear;
-   vctx->base.clear_render_target = virgl_clear_render_target;
+   if (rs->caps.caps.v2.host_feature_check_version >= 21) {
+      vctx->base.clear_render_target = virgl_clear_render_target;
+      vctx->base.clear_depth_stencil = virgl_clear_depth_stencil;
+   } else {
+      // Stub is required by VL backend
+      vctx->base.clear_render_target = virgl_clear_render_target_stub;
+   }
    vctx->base.clear_texture = virgl_clear_texture;
    vctx->base.draw_vbo = virgl_draw_vbo;
    vctx->base.flush = virgl_flush_from_st;

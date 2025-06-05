@@ -41,7 +41,7 @@
  *   2000/02/23  - original version for Mesa 3.3 and XFree86 4.0
  *   2001/01/16  - added dispatch override feature for Mesa 3.5
  *   2002/06/28  - added _glapi_set_warning_func(), Mesa 4.1.
- *   2002/10/01  - _glapi_get_proc_address() will now generate new entrypoints
+ *   2002/10/01  - _mesa_glapi_get_proc_address() will now generate new entrypoints
  *                 itself (using offset ~0).  _glapi_add_entrypoint() can be
  *                 called afterward and it'll fill in the correct dispatch
  *                 offset.  This allows DRI libGL to avoid probing for DRI
@@ -50,7 +50,6 @@
 
 #include "c11/threads.h"
 #include "util/u_thread.h"
-#include "util/simple_mtx.h"
 #include "u_current.h"
 
 #ifndef MAPI_MODE_UTIL
@@ -73,116 +72,42 @@ extern void (*__glapi_noop_table[])(void);
  *
  * Depending on whether or not multithreading is support, and the type of
  * support available, several variables are used to store the current context
- * pointer and the current dispatch table pointer.  In the non-threaded case,
- * the variables \c _glapi_Dispatch and \c _glapi_Context are used for this
+ * pointer and the current dispatch table pointer. In the non-threaded case,
+ * the variables \c _mesa_glapi_Dispatch and \c _glapi_Context are used for this
  * purpose.
  *
- * In the "normal" threaded case, the variables \c _glapi_Dispatch and
- * \c _glapi_Context will be \c NULL if an application is detected as being
- * multithreaded.  Single-threaded applications will use \c _glapi_Dispatch
- * and \c _glapi_Context just like the case without any threading support.
- * When \c _glapi_Dispatch and \c _glapi_Context are \c NULL, the thread state
- * data \c _gl_DispatchTSD and \c ContextTSD are used.  Drivers and the
- * static dispatch functions access these variables via \c _glapi_get_dispatch
- * and \c _glapi_get_context.
- *
- * There is a race condition in setting \c _glapi_Dispatch to \c NULL.  It is
- * possible for the original thread to be setting it at the same instant a new
- * thread, perhaps running on a different processor, is clearing it.  Because
- * of that, \c ThreadSafe, which can only ever be changed to \c GL_TRUE, is
- * used to determine whether or not the application is multithreaded.
- *
- * In the TLS case, the variables \c _glapi_Dispatch and \c _glapi_Context are
- * hardcoded to \c NULL.  Instead the TLS variables \c _glapi_tls_Dispatch and
- * \c _glapi_tls_Context are used.  Having \c _glapi_Dispatch and
- * \c _glapi_Context be hardcoded to \c NULL maintains binary compatability
- * between TLS enabled loaders and non-TLS DRI drivers.
+ * In multi threaded case, The TLS variables \c _mesa_glapi_tls_Dispatch and
+ * \c _mesa_glapi_tls_Context are used. Having \c _mesa_glapi_Dispatch and \c _glapi_Context
+ * be hardcoded to \c NULL maintains binary compatability between TLS enabled
+ * loaders and non-TLS DRI drivers. When \c _mesa_glapi_Dispatch and \c _glapi_Context
+ * are \c NULL, the thread state data \c ContextTSD are used. Drivers and the
+ * static dispatch functions access these variables via \c _mesa_glapi_get_dispatch
+ * and \c _mesa_glapi_get_context.
  */
 /*@{*/
-#if defined(USE_ELF_TLS)
 
-__THREAD_INITIAL_EXEC struct _glapi_table *u_current_table
-    = (struct _glapi_table *) table_noop_array;
+__THREAD_INITIAL_EXEC struct _glapi_table *_mesa_glapi_tls_Dispatch
+   = (struct _glapi_table *) table_noop_array;
 
-__THREAD_INITIAL_EXEC void *u_current_context;
+__THREAD_INITIAL_EXEC void *_mesa_glapi_tls_Context;
 
-#else
+/* not used, but defined for compatibility */
+const struct _glapi_table *_mesa_glapi_Dispatch;
+const void *_glapi_Context;
 
-struct _glapi_table *u_current_table =
-   (struct _glapi_table *) table_noop_array;
-void *u_current_context;
-
-tss_t u_current_table_tsd;
-static tss_t u_current_context_tsd;
-static int ThreadSafe;
-
-#endif /* defined(USE_ELF_TLS) */
 /*@}*/
 
-
+/* not used, but defined for compatibility */
 void
-u_current_destroy(void)
+_glapi_destroy_multithread(void)
 {
-#if !defined(USE_ELF_TLS)
-   tss_delete(u_current_table_tsd);
-   tss_delete(u_current_context_tsd);
-#endif
 }
 
-
-#if !defined(USE_ELF_TLS)
-
-static void
-u_current_init_tsd(void)
-{
-   tss_create(&u_current_table_tsd, NULL);
-   tss_create(&u_current_context_tsd, NULL);
-}
-
-/**
- * Mutex for multithread check.
- */
-static simple_mtx_t ThreadCheckMutex = SIMPLE_MTX_INITIALIZER;
-
-static thrd_t knownID;
-
-/**
- * We should call this periodically from a function such as glXMakeCurrent
- * in order to test if multiple threads are being used.
- */
+/* not used, but defined for compatibility */
 void
-u_current_init(void)
-{
-   static int firstCall = 1;
-
-   if (ThreadSafe)
-      return;
-
-   simple_mtx_lock(&ThreadCheckMutex);
-   if (firstCall) {
-      u_current_init_tsd();
-
-      knownID = thrd_current();
-      firstCall = 0;
-   }
-   else if (!u_thread_is_self(knownID)) {
-      ThreadSafe = 1;
-      u_current_set_table(NULL);
-      u_current_set_context(NULL);
-   }
-   simple_mtx_unlock(&ThreadCheckMutex);
-}
-
-#else
-
-void
-u_current_init(void)
+_glapi_check_multithread(void)
 {
 }
-
-#endif
-
-
 
 /**
  * Set the current context pointer for this thread.
@@ -190,16 +115,9 @@ u_current_init(void)
  * void from the real context pointer type.
  */
 void
-u_current_set_context(const void *ptr)
+_mesa_glapi_set_context(void *ptr)
 {
-   u_current_init();
-
-#if defined(USE_ELF_TLS)
-   u_current_context = (void *) ptr;
-#else
-   tss_set(u_current_context_tsd, (void *) ptr);
-   u_current_context = (ThreadSafe) ? NULL : (void *) ptr;
-#endif
+   _mesa_glapi_tls_Context = ptr;
 }
 
 /**
@@ -208,18 +126,9 @@ u_current_set_context(const void *ptr)
  * void to the real context pointer type.
  */
 void *
-u_current_get_context_internal(void)
+_mesa_glapi_get_context(void)
 {
-#if defined(USE_ELF_TLS)
-   return u_current_context;
-#else
-   if (ThreadSafe)
-      return tss_get(u_current_context_tsd);
-   else if (!u_thread_is_self(knownID))
-      return NULL;
-   else
-      return u_current_context;
-#endif
+   return _mesa_glapi_tls_Context;
 }
 
 /**
@@ -228,37 +137,21 @@ u_current_get_context_internal(void)
  * table (__glapi_noop_table).
  */
 void
-u_current_set_table(const struct _glapi_table *tbl)
+_mesa_glapi_set_dispatch(struct _glapi_table *tbl)
 {
-   u_current_init();
-
    stub_init_once();
 
    if (!tbl)
-      tbl = (const struct _glapi_table *) table_noop_array;
+      tbl = (struct _glapi_table *) table_noop_array;
 
-#if defined(USE_ELF_TLS)
-   u_current_table = (struct _glapi_table *) tbl;
-#else
-   tss_set(u_current_table_tsd, (void *) tbl);
-   u_current_table = (ThreadSafe) ? NULL : (void *) tbl;
-#endif
+   _mesa_glapi_tls_Dispatch = tbl;
 }
 
 /**
  * Return pointer to current dispatch table for calling thread.
  */
 struct _glapi_table *
-u_current_get_table_internal(void)
+_mesa_glapi_get_dispatch(void)
 {
-#if defined(USE_ELF_TLS)
-   return u_current_table;
-#else
-   if (ThreadSafe)
-      return (struct _glapi_table *) tss_get(u_current_table_tsd);
-   else if (!u_thread_is_self(knownID))
-      return (struct _glapi_table *) table_noop_array;
-   else
-      return (struct _glapi_table *) u_current_table;
-#endif
+   return _mesa_glapi_tls_Dispatch;
 }

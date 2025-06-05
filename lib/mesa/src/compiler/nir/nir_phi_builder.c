@@ -95,12 +95,11 @@ nir_phi_builder_create(nir_function_impl *impl)
    pb->shader = impl->function->shader;
    pb->impl = impl;
 
-   assert(impl->valid_metadata & (nir_metadata_block_index |
-                                  nir_metadata_dominance));
+   assert(impl->valid_metadata & (nir_metadata_control_flow));
 
    pb->num_blocks = impl->num_blocks;
    pb->blocks = ralloc_array(pb, nir_block *, pb->num_blocks);
-   nir_foreach_block(block, impl) {
+   nir_foreach_block_unstructured(block, impl) {
       pb->blocks[block->index] = block;
    }
 
@@ -175,6 +174,10 @@ void
 nir_phi_builder_value_set_block_def(struct nir_phi_builder_value *val,
                                     nir_block *block, nir_def *def)
 {
+   if (def != NEEDS_PHI) {
+      assert(def->bit_size == val->bit_size);
+      assert(def->num_components == val->num_components);
+   }
    _mesa_hash_table_insert(&val->ht, INDEX_TO_KEY(block->index), def);
 }
 

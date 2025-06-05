@@ -1,24 +1,6 @@
 /*
- * Copyright (C) 2016 Rob Clark <robclark@freedesktop.org>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright © 2016 Rob Clark <robclark@freedesktop.org>
+ * SPDX-License-Identifier: MIT
  *
  * Authors:
  *    Rob Clark <robclark@freedesktop.org>
@@ -199,7 +181,7 @@ fd5_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth)
    OUT_RING(ring, A5XX_RB_MRT_BUF_INFO_COLOR_FORMAT(RB5_R16_UNORM) |
                      A5XX_RB_MRT_BUF_INFO_COLOR_TILE_MODE(TILE5_LINEAR) |
                      A5XX_RB_MRT_BUF_INFO_COLOR_SWAP(WZYX));
-   OUT_RING(ring, A5XX_RB_MRT_PITCH(zsbuf->lrz_pitch * 2));
+   OUT_RING(ring, A5XX_RB_MRT_PITCH(zsbuf->lrz_layout.lrz_pitch * 2));
    OUT_RING(ring, A5XX_RB_MRT_ARRAY_PITCH(fd_bo_size(zsbuf->lrz)));
    OUT_RELOC(ring, zsbuf->lrz, 0x1000, 0, 0);
 
@@ -219,8 +201,8 @@ fd5_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth)
    OUT_RING(ring, clear); /* RB_CLEAR_COLOR_DW0 */
 
    OUT_PKT4(ring, REG_A5XX_VSC_RESOLVE_CNTL, 2);
-   OUT_RING(ring, A5XX_VSC_RESOLVE_CNTL_X(zsbuf->lrz_width) |
-                     A5XX_VSC_RESOLVE_CNTL_Y(zsbuf->lrz_height));
+   OUT_RING(ring, A5XX_VSC_RESOLVE_CNTL_X(zsbuf->lrz_layout.lrz_pitch) |
+                     A5XX_VSC_RESOLVE_CNTL_Y(zsbuf->lrz_layout.lrz_height));
    OUT_RING(ring, 0x00000000); // XXX UNKNOWN_0CDE
 
    OUT_PKT4(ring, REG_A5XX_RB_CNTL, 1);
@@ -228,8 +210,8 @@ fd5_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth)
 
    OUT_PKT4(ring, REG_A5XX_RB_RESOLVE_CNTL_1, 2);
    OUT_RING(ring, A5XX_RB_RESOLVE_CNTL_1_X(0) | A5XX_RB_RESOLVE_CNTL_1_Y(0));
-   OUT_RING(ring, A5XX_RB_RESOLVE_CNTL_2_X(zsbuf->lrz_width - 1) |
-                     A5XX_RB_RESOLVE_CNTL_2_Y(zsbuf->lrz_height - 1));
+   OUT_RING(ring, A5XX_RB_RESOLVE_CNTL_2_X(zsbuf->lrz_layout.lrz_pitch - 1) |
+                     A5XX_RB_RESOLVE_CNTL_2_Y(zsbuf->lrz_layout.lrz_height - 1));
 
    fd5_emit_blit(batch, ring);
 }

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2025/06/05 14:18:43 jsg Exp $
 
 GEN=	110
 LIB=	iris_gen${GEN}
@@ -7,12 +7,15 @@ NOPROFILE=
 
 SRCS=	iris_blorp.c \
 	iris_query.c \
-	iris_state.c
+	iris_state.c \
+	iris_indirect_gen.c
 
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS} ${C_SSE2_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
+		-I${MESA_SRC}/src/intel/shaders \
+		-I${MESA_SRC}/src/intel/genxml \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
@@ -20,6 +23,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \
+		-I${MESA_SRC}/generated/src/intel/shaders \
 		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-DGFX_VERx10=${GEN}

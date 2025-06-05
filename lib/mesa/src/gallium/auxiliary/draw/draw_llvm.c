@@ -382,7 +382,7 @@ get_vertex_header_ptr_type(struct draw_llvm_variant *variant)
  * Create per-context LLVM info.
  */
 struct draw_llvm *
-draw_llvm_create(struct draw_context *draw, LLVMContextRef context)
+draw_llvm_create(struct draw_context *draw, lp_context_ref *context)
 {
    struct draw_llvm *llvm;
 
@@ -395,17 +395,14 @@ draw_llvm_create(struct draw_context *draw, LLVMContextRef context)
 
    llvm->draw = draw;
 
-   llvm->context = context;
-   if (!llvm->context) {
-      llvm->context = LLVMContextCreate();
-
-#if LLVM_VERSION_MAJOR == 15
-      LLVMContextSetOpaquePointers(llvm->context, false);
-#endif
-
-      llvm->context_owned = true;
+   if (context) {
+      llvm->context = *context;
+      llvm->context.owned = false;
    }
-   if (!llvm->context)
+   if (!llvm->context.ref) {
+      lp_context_create(&llvm->context);
+   }
+   if (!llvm->context.ref)
       goto fail;
 
    llvm->nr_variants = 0;
@@ -434,9 +431,7 @@ fail:
 void
 draw_llvm_destroy(struct draw_llvm *llvm)
 {
-   if (llvm->context_owned)
-      LLVMContextDispose(llvm->context);
-   llvm->context = NULL;
+   lp_context_destroy(&llvm->context);
 
    /* XXX free other draw_llvm data? */
    FREE(llvm);
@@ -510,7 +505,7 @@ draw_llvm_create_variant(struct draw_llvm *llvm,
       if (!cached.data_size)
          needs_caching = true;
    }
-   variant->gallivm = gallivm_create(module_name, llvm->context, &cached);
+   variant->gallivm = gallivm_create(module_name, &llvm->context, &cached);
 
    create_vs_jit_types(variant);
 
@@ -530,7 +525,7 @@ draw_llvm_create_variant(struct draw_llvm *llvm,
    gallivm_compile_module(variant->gallivm);
 
    variant->jit_func = (draw_jit_vert_func)
-         gallivm_jit_function(variant->gallivm, variant->function);
+         gallivm_jit_function(variant->gallivm, variant->function, variant->function_name);
 
    if (needs_caching)
       llvm->draw->disk_cache_insert_shader(llvm->draw->disk_cache_cookie,
@@ -596,6 +591,7 @@ generate_vs(struct draw_llvm_variant *variant,
       lp_jit_resources_constants(variant->gallivm, variant->resources_type, resources_ptr);
    LLVMValueRef ssbos_ptr =
       lp_jit_resources_ssbos(variant->gallivm, variant->resources_type, resources_ptr);
+   struct draw_llvm_variant_key *key = &variant->key;
 
    struct lp_build_tgsi_params params;
    memset(&params, 0, sizeof(params));
@@ -605,6 +601,7 @@ generate_vs(struct draw_llvm_variant *variant,
    params.consts_ptr = consts_ptr;
    params.system_values = system_values;
    params.inputs = inputs;
+   params.num_inputs = key->nr_vertex_elements;
    params.context_type = variant->context_type;
    params.context_ptr = context_ptr;
    params.resources_type = variant->resources_type;
@@ -613,9 +610,6 @@ generate_vs(struct draw_llvm_variant *variant,
    params.info = &llvm->draw->vs.vertex_shader->info;
    params.ssbo_ptr = ssbos_ptr;
    params.image = draw_image;
-   params.aniso_filter_table = lp_jit_resources_aniso_filter_table(variant->gallivm,
-                                                                   variant->resources_type,
-                                                                   resources_ptr);
 
    if (llvm->draw->vs.vertex_shader->state.ir.nir &&
        llvm->draw->vs.vertex_shader->state.type == PIPE_SHADER_IR_NIR) {
@@ -1146,7 +1140,7 @@ generate_clipmask(struct draw_llvm *llvm,
    LLVMValueRef zero, shift;
    LLVMValueRef pos_x, pos_y, pos_z, pos_w;
    LLVMValueRef cv_x, cv_y, cv_z, cv_w;
-   LLVMValueRef plane1, planes, plane_ptr, sum;
+   LLVMValueRef plane1, planes, plane_ptr;
    struct lp_type f32_type = vs_type;
    struct lp_type i32_type = lp_int_type(vs_type);
    const unsigned pos = llvm->draw->vs.position_output;
@@ -1287,6 +1281,7 @@ generate_clipmask(struct draw_llvm *llvm,
          } else {
             LLVMTypeRef vs_elem_type = lp_build_elem_type(gallivm, vs_type);
             LLVMTypeRef vs_type_llvm = lp_build_vec_type(gallivm, vs_type);
+            LLVMValueRef sum = NULL;
             indices[0] = lp_build_const_int32(gallivm, 0);
             indices[1] = lp_build_const_int32(gallivm, plane_idx);
 
@@ -1630,14 +1625,18 @@ draw_llvm_generate(struct draw_llvm *llvm, struct draw_llvm_variant *variant)
 
    variant_func = LLVMAddFunction(gallivm->module, func_name, func_type);
    variant->function = variant_func;
+   variant->function_name = MALLOC(strlen(func_name)+1);
+   strcpy(variant->function_name, func_name);
 
    LLVMSetFunctionCallConv(variant_func, LLVMCCallConv);
    for (i = 0; i < num_arg_types; ++i)
       if (LLVMGetTypeKind(arg_types[i]) == LLVMPointerTypeKind)
          lp_add_function_attr(variant_func, i + 1, LP_FUNC_ATTR_NOALIAS);
 
-   if (gallivm->cache && gallivm->cache->data_size)
+   if (gallivm->cache && gallivm->cache->data_size) {
+      gallivm_stub_func(gallivm, variant_func);
       return;
+   }
 
    context_ptr               = LLVMGetParam(variant_func, 0);
    resources_ptr             = LLVMGetParam(variant_func, 1);
@@ -2163,13 +2162,19 @@ draw_llvm_set_mapped_texture(struct draw_context *draw,
    jit_tex->first_level = first_level;
    jit_tex->last_level = last_level;
    jit_tex->base = base_ptr;
-   jit_tex->num_samples = num_samples;
-   jit_tex->sample_stride = sample_stride;
-
-   for (unsigned j = first_level; j <= last_level; j++) {
-      jit_tex->mip_offsets[j] = mip_offsets[j];
-      jit_tex->row_stride[j] = row_stride[j];
-      jit_tex->img_stride[j] = img_stride[j];
+   jit_tex->mip_offsets[0] = 0;
+   if (num_samples > 1) {
+      jit_tex->mip_offsets[0] = mip_offsets[0];
+      jit_tex->mip_offsets[LP_JIT_TEXTURE_SAMPLE_STRIDE] = sample_stride;
+      jit_tex->row_stride[0] = row_stride[0];
+      jit_tex->img_stride[0] = img_stride[0];
+      jit_tex->last_level = num_samples;
+   } else {
+      for (unsigned j = first_level; j <= last_level; j++) {
+         jit_tex->mip_offsets[j] = mip_offsets[j];
+         jit_tex->row_stride[j] = row_stride[j];
+         jit_tex->img_stride[j] = img_stride[j];
+      }
    }
 }
 
@@ -2218,7 +2223,6 @@ draw_llvm_set_sampler_state(struct draw_context *draw,
          jit_sam->min_lod = s->min_lod;
          jit_sam->max_lod = s->max_lod;
          jit_sam->lod_bias = s->lod_bias;
-         jit_sam->max_aniso = s->max_anisotropy;
          COPY_4V(jit_sam->border_color, s->border_color.f);
       }
    }
@@ -2241,6 +2245,8 @@ draw_llvm_destroy_variant(struct draw_llvm_variant *variant)
    variant->shader->variants_cached--;
    list_del(&variant->list_item_global.list);
    llvm->nr_variants--;
+   if(variant->function_name)
+      FREE(variant->function_name);
    FREE(variant);
 }
 
@@ -2350,6 +2356,8 @@ draw_gs_llvm_generate(struct draw_llvm *llvm,
    variant_func = LLVMAddFunction(gallivm->module, func_name, func_type);
 
    variant->function = variant_func;
+   variant->function_name = MALLOC(strlen(func_name)+1);
+   strcpy(variant->function_name, func_name);
 
    LLVMSetFunctionCallConv(variant_func, LLVMCCallConv);
 
@@ -2357,8 +2365,11 @@ draw_gs_llvm_generate(struct draw_llvm *llvm,
       if (LLVMGetTypeKind(arg_types[i]) == LLVMPointerTypeKind)
          lp_add_function_attr(variant_func, i + 1, LP_FUNC_ATTR_NOALIAS);
 
-   if (gallivm->cache && gallivm->cache->data_size)
+   if (gallivm->cache && gallivm->cache->data_size) {
+      gallivm_stub_func(gallivm, variant_func);
       return;
+   }
+
    context_ptr               = LLVMGetParam(variant_func, 0);
    resources_ptr             = LLVMGetParam(variant_func, 1);
    input_array               = LLVMGetParam(variant_func, 2);
@@ -2449,9 +2460,6 @@ draw_gs_llvm_generate(struct draw_llvm *llvm,
    params.ssbo_ptr = ssbos_ptr;
    params.image = image;
    params.gs_vertex_streams = variant->shader->base.num_vertex_streams;
-   params.aniso_filter_table = lp_jit_resources_aniso_filter_table(gallivm,
-                                                                   variant->resources_type,
-                                                                   resources_ptr);
 
    if (llvm->draw->gs.geometry_shader->state.type == PIPE_SHADER_IR_TGSI)
       lp_build_tgsi_soa(variant->gallivm,
@@ -2515,7 +2523,7 @@ draw_gs_llvm_create_variant(struct draw_llvm *llvm,
       if (!cached.data_size)
          needs_caching = true;
    }
-   variant->gallivm = gallivm_create(module_name, llvm->context, &cached);
+   variant->gallivm = gallivm_create(module_name, &llvm->context, &cached);
 
    create_gs_jit_types(variant);
 
@@ -2527,7 +2535,7 @@ draw_gs_llvm_create_variant(struct draw_llvm *llvm,
    gallivm_compile_module(variant->gallivm);
 
    variant->jit_func = (draw_gs_jit_func)
-         gallivm_jit_function(variant->gallivm, variant->function);
+         gallivm_jit_function(variant->gallivm, variant->function, variant->function_name);
 
    if (needs_caching)
       llvm->draw->disk_cache_insert_shader(llvm->draw->disk_cache_cookie,
@@ -2560,6 +2568,8 @@ draw_gs_llvm_destroy_variant(struct draw_gs_llvm_variant *variant)
    variant->shader->variants_cached--;
    list_del(&variant->list_item_global.list);
    llvm->nr_gs_variants--;
+   if(variant->function_name)
+      FREE(variant->function_name);
    FREE(variant);
 }
 
@@ -2933,6 +2943,8 @@ draw_tcs_llvm_generate(struct draw_llvm *llvm,
    variant_coro = LLVMAddFunction(gallivm->module, func_name_coro, coro_func_type);
 
    variant->function = variant_func;
+   variant->function_name = MALLOC(strlen(func_name)+1);
+   strcpy(variant->function_name, func_name);
    LLVMSetFunctionCallConv(variant_func, LLVMCCallConv);
 
    LLVMSetFunctionCallConv(variant_coro, LLVMCCallConv);
@@ -2946,8 +2958,12 @@ draw_tcs_llvm_generate(struct draw_llvm *llvm,
       }
    }
 
-   if (gallivm->cache && gallivm->cache->data_size)
+   if (gallivm->cache && gallivm->cache->data_size) {
+      gallivm_stub_func(gallivm, variant_func);
+      gallivm_stub_func(gallivm, variant_coro);
       return;
+   }
+
    resources_ptr               = LLVMGetParam(variant_func, 0);
    input_array               = LLVMGetParam(variant_func, 1);
    output_array              = LLVMGetParam(variant_func, 2);
@@ -3101,9 +3117,6 @@ draw_tcs_llvm_generate(struct draw_llvm *llvm,
       params.image = image;
       params.coro = &coro_info;
       params.tcs_iface = &tcs_iface.base;
-      params.aniso_filter_table = lp_jit_resources_aniso_filter_table(gallivm,
-                                                                      variant->resources_type,
-                                                                      resources_ptr);
 
       lp_build_nir_soa(variant->gallivm,
                        llvm->draw->tcs.tess_ctrl_shader->state.ir.nir,
@@ -3169,7 +3182,7 @@ draw_tcs_llvm_create_variant(struct draw_llvm *llvm,
          needs_caching = true;
    }
 
-   variant->gallivm = gallivm_create(module_name, llvm->context, &cached);
+   variant->gallivm = gallivm_create(module_name, &llvm->context, &cached);
 
    create_tcs_jit_types(variant);
 
@@ -3183,7 +3196,7 @@ draw_tcs_llvm_create_variant(struct draw_llvm *llvm,
    gallivm_compile_module(variant->gallivm);
 
    variant->jit_func = (draw_tcs_jit_func)
-      gallivm_jit_function(variant->gallivm, variant->function);
+      gallivm_jit_function(variant->gallivm, variant->function, variant->function_name);
 
    if (needs_caching)
       llvm->draw->disk_cache_insert_shader(llvm->draw->disk_cache_cookie,
@@ -3216,6 +3229,8 @@ draw_tcs_llvm_destroy_variant(struct draw_tcs_llvm_variant *variant)
    variant->shader->variants_cached--;
    list_del(&variant->list_item_global.list);
    llvm->nr_tcs_variants--;
+   if(variant->function_name)
+      FREE(variant->function_name);
    FREE(variant);
 }
 
@@ -3498,14 +3513,19 @@ draw_tes_llvm_generate(struct draw_llvm *llvm,
    variant_func = LLVMAddFunction(gallivm->module, func_name, func_type);
 
    variant->function = variant_func;
+   variant->function_name = MALLOC(strlen(func_name)+1);
+   strcpy(variant->function_name, func_name);
    LLVMSetFunctionCallConv(variant_func, LLVMCCallConv);
 
    for (i = 0; i < ARRAY_SIZE(arg_types); ++i)
       if (LLVMGetTypeKind(arg_types[i]) == LLVMPointerTypeKind)
          lp_add_function_attr(variant_func, i + 1, LP_FUNC_ATTR_NOALIAS);
 
-   if (gallivm->cache && gallivm->cache->data_size)
+   if (gallivm->cache && gallivm->cache->data_size) {
+      gallivm_stub_func(gallivm, variant_func);
       return;
+   }
+
    resources_ptr               = LLVMGetParam(variant_func, 0);
    input_array               = LLVMGetParam(variant_func, 1);
    io_ptr                    = LLVMGetParam(variant_func, 2);
@@ -3570,6 +3590,11 @@ draw_tes_llvm_generate(struct draw_llvm *llvm,
    system_values.vertices_in = lp_build_broadcast_scalar(&bldvec, patch_vertices_in);
 
    if (variant->key.primid_needed) {
+      /* In a fragment shader, it (gl_PrimitiveID) will contain the [...] value that would have been
+       * presented as input to the geometry shader had it been present.
+       * https://docs.vulkan.org/spec/latest/chapters/interfaces.html#interfaces-builtin-variables
+       * Store the primitive ID as-if the geometry shader did `gl_PrimitiveID = gl_PrimitiveIDIn`.
+       */
       int slot = variant->key.primid_output;
       for (unsigned i = 0; i < 4; i++) {
          outputs[slot][i] = lp_build_alloca(gallivm, lp_build_int_vec_type(gallivm, tes_type), "primid");
@@ -3621,7 +3646,6 @@ draw_tes_llvm_generate(struct draw_llvm *llvm,
       params.ssbo_ptr = ssbos_ptr;
       params.image = image;
       params.tes_iface = &tes_iface.base;
-      params.aniso_filter_table = lp_jit_resources_aniso_filter_table(gallivm, variant->resources_type, resources_ptr);
 
       lp_build_nir_soa(variant->gallivm,
                        llvm->draw->tes.tess_eval_shader->state.ir.nir,
@@ -3688,7 +3712,7 @@ draw_tes_llvm_create_variant(struct draw_llvm *llvm,
       if (!cached.data_size)
          needs_caching = true;
    }
-   variant->gallivm = gallivm_create(module_name, llvm->context, &cached);
+   variant->gallivm = gallivm_create(module_name, &llvm->context, &cached);
 
    create_tes_jit_types(variant);
 
@@ -3705,7 +3729,7 @@ draw_tes_llvm_create_variant(struct draw_llvm *llvm,
    gallivm_compile_module(variant->gallivm);
 
    variant->jit_func = (draw_tes_jit_func)
-      gallivm_jit_function(variant->gallivm, variant->function);
+      gallivm_jit_function(variant->gallivm, variant->function, variant->function_name);
 
    if (needs_caching)
       llvm->draw->disk_cache_insert_shader(llvm->draw->disk_cache_cookie,
@@ -3738,6 +3762,8 @@ draw_tes_llvm_destroy_variant(struct draw_tes_llvm_variant *variant)
    variant->shader->variants_cached--;
    list_del(&variant->list_item_global.list);
    llvm->nr_tes_variants--;
+   if(variant->function_name)
+      FREE(variant->function_name);
    FREE(variant);
 }
 

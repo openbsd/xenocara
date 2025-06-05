@@ -30,18 +30,12 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
 {
    switch(devinfo->platform) {
       case INTEL_PLATFORM_EHL:
-         switch(intel_device_info_wa_stepping(devinfo)) {
-            case INTEL_STEPPING_A0:
-               BITSET_SET(devinfo->workarounds, INTEL_WA_1806230709);
-               break;
-            default:
-               break;
-         }
          BITSET_SET(devinfo->workarounds, INTEL_WA_220579888);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_220981846);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1207137018);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1305770284);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1306055483);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1306463417);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1405543622);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406306137);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406614636);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406697149);
@@ -53,12 +47,15 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_1805811773);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1805992985);
          BITSET_SET(devinfo->workarounds, INTEL_WA_2201039848);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14010013414);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22010893396);
          break;
       case INTEL_PLATFORM_ICL:
          BITSET_SET(devinfo->workarounds, INTEL_WA_220579888);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_220981846);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1207137018);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1305770284);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1306055483);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1306463417);
@@ -66,11 +63,11 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406306137);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406614636);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406697149);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1406740894);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406756463);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406950495);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1407240128);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1407685933);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1408556878);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1408908852);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1604061319);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1604366864);
@@ -79,15 +76,15 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_1806068545);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1806230709);
          BITSET_SET(devinfo->workarounds, INTEL_WA_2201039848);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_2204296706);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010013414);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14018545335);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22010893396);
          break;
       case INTEL_PLATFORM_ADL:
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1207137018);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406337848);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1406606421);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1407528679);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1408224581);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1408264532);
@@ -95,8 +92,8 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_1409600907);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1508744258);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1604061319);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1605967699);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1606932921);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1607156449);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1607854226);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1607956946);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1806527549);
@@ -104,6 +101,7 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_1808121037);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1808850743);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1809626530);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_2201730850);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010013414);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010017096);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010755945);
@@ -114,35 +112,42 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014617373);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016074189);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14018126777);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14018545335);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019074860);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011107343);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011163337);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011448509);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_16011478345);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014912113);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18013889147);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18020603990);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_22011782311);
          break;
       case INTEL_PLATFORM_DG1:
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1207137018);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406337848);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1406606421);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1406583956);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1406600135);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1406600136);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1406600213);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1407528679);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1407552235);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1407876251);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1408224581);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1408264532);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1408767742);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1409392000);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1409600907);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1504617628);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1508744258);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1604061319);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1605967699);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1604601757);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1606932921);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1607446692);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1607610283);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1607794140);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1607854226);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1607956946);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1806527549);
@@ -150,6 +155,7 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_1808121037);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1808850743);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1809626530);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_2201730850);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010017096);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010755945);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010840176);
@@ -159,14 +165,12 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014617373);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016074189);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14018126777);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14018545335);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_16010655327);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019074860);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011107343);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011163337);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011448509);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_16011478345);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014912113);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
@@ -174,11 +178,11 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_18020603990);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022502561);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_22011782311);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22012751911);
          break;
       case INTEL_PLATFORM_RKL:
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1207137018);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406337848);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1406606421);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406609750);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1407528679);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1408264532);
@@ -194,6 +198,7 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_1808121037);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1808850743);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1809626530);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_2201730850);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010017096);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010755945);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010840176);
@@ -203,31 +208,22 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014617373);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016074189);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14018126777);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14018545335);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019074860);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011107343);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011163337);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011448509);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_16011478345);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014912113);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18013889147);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18020603990);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_22011782311);
          break;
       case INTEL_PLATFORM_RPL:
-         switch(intel_device_info_wa_stepping(devinfo)) {
-            case INTEL_STEPPING_A0:
-               BITSET_SET(devinfo->workarounds, INTEL_WA_22011186057);
-               break;
-            default:
-               break;
-         }
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1207137018);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406337848);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1406606421);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1407528679);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1408224581);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1408264532);
@@ -235,8 +231,8 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_1409600907);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1508744258);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1604061319);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1605967699);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1606932921);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1607156449);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1607854226);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1607956946);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1806527549);
@@ -244,6 +240,7 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_1808121037);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1808850743);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1809626530);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_2201730850);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010013414);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010017096);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010755945);
@@ -254,24 +251,25 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014617373);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016074189);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14018126777);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14018545335);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019074860);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011107343);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011163337);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011448509);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_16011478345);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014912113);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18013889147);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18020603990);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_22011782311);
          break;
       case INTEL_PLATFORM_TGL:
          switch(intel_device_info_wa_stepping(devinfo)) {
             case INTEL_STEPPING_A0:
+               BITSET_SET(devinfo->workarounds, INTEL_WA_1607794140);
+               break;
+            case INTEL_STEPPING_A1:
                BITSET_SET(devinfo->workarounds, INTEL_WA_1607794140);
                break;
             case INTEL_STEPPING_B0:
@@ -280,16 +278,23 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
             default:
                break;
          }
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1207137018);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1406337848);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1406606421);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1406583956);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1406600135);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1406600136);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1406600213);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1407528679);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1407552235);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1407876251);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1408224581);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1408264532);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1409392000);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1409600907);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1504617628);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1508744258);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1604061319);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_1605967699);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1604601757);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1606932921);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1607446692);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1607610283);
@@ -300,6 +305,7 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_1808121037);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1808850743);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1809626530);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_2201730850);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010017096);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010755945);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010840176);
@@ -309,14 +315,12 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014617373);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016074189);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14018126777);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14018545335);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_16010655327);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019074860);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011107343);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011163337);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011448509);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_16011478345);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014912113);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
@@ -324,9 +328,142 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_18020603990);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022502561);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_22011782311);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22012751911);
          break;
-      case INTEL_PLATFORM_DG2_G10:
+      case INTEL_PLATFORM_ARL_U:
+         switch(intel_device_info_wa_stepping(devinfo)) {
+            case INTEL_STEPPING_A0:
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14012437816);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14014414195);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14014595444);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14014851047);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14015055625);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14015420481);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14015782607);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14017240301);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14017245111);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16012775297);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16013063087);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16014390852);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16014538804);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18019110168);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18019816803);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18020335297);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_22012766191);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_22013689345);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_22014412737);
+               break;
+            case INTEL_STEPPING_A1:
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14012437816);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14014414195);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14014595444);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14014851047);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14015055625);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14015420481);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14015782607);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14017240301);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14017245111);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16012775297);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16013063087);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16014390852);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16014538804);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18019110168);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18019816803);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18020335297);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_22012766191);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_22013689345);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_22014412737);
+               break;
+            default:
+               break;
+         }
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1509820217);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014063774);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014176256);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015868140);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016407139);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016712196);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019074860);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019124575);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_15011116421);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16017463599);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16018063123);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18013179988);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18022330953);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18023881693);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22015614752);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018402687);
+         break;
+      case INTEL_PLATFORM_ATSM_G10:
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1509820217);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1809626530);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14010638130);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14010656390);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14010755945);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14011273609);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14012437816);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14012688258);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14013672992);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014063774);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014176256);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014414195);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014595444);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014851047);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015055625);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015420481);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015782607);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015868140);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015907227);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016407139);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016712196);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_15011116421);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011411144);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011627967);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011773973);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16012775297);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16013063087);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16014390852);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16014538804);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16017463599);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16018063123);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18012201914);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18013179988);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18019110168);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18019816803);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18020335297);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18022330953);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18023881693);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22011440098);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22012699309);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22012766191);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22013045878);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22013073587);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22013689345);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22014344549);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22014412737);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22015614752);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018402687);
+         break;
+      case INTEL_PLATFORM_ATSM_G11:
          BITSET_SET(devinfo->workarounds, INTEL_WA_1509820217);
          BITSET_SET(devinfo->workarounds, INTEL_WA_1809626530);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14010755945);
@@ -345,13 +482,69 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015782607);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015868140);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015907227);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016074189);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14016407139);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14016712196);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016896531);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14018545335);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14017987365);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_15011116421);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011411144);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011627967);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16011773973);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16012775297);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16013000631);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16013063087);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16014390852);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16014538804);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16018038193);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16018063123);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18012201914);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18019110168);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18019816803);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18020335297);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18022330953);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18023881693);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22011440098);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22012640676);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22012766191);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22013073587);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22013689345);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22014344549);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22014412737);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22015614752);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018402687);
+         break;
+      case INTEL_PLATFORM_DG2_G10:
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1509820217);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1809626530);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14010638130);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14010656390);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14010755945);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14011273609);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14012437816);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14012688258);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14013672992);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014063774);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014176256);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014414195);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014595444);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014851047);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015055625);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015420481);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015782607);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015868140);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015907227);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016407139);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016712196);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
          BITSET_SET(devinfo->workarounds, INTEL_WA_15011116421);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011411144);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011627967);
@@ -361,6 +554,7 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014390852);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014538804);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16017463599);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16018063123);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012201914);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
@@ -373,12 +567,14 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_18023881693);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22011440098);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22012699309);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22012766191);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22013045878);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22013073587);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22013689345);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22014344549);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22014412737);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22015614752);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018402687);
          break;
       case INTEL_PLATFORM_DG2_G11:
          BITSET_SET(devinfo->workarounds, INTEL_WA_1509820217);
@@ -394,13 +590,17 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014595444);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014851047);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015055625);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015420481);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015782607);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015868140);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015907227);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016074189);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016896531);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016407139);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016712196);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14017987365);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
          BITSET_SET(devinfo->workarounds, INTEL_WA_15011116421);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011411144);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011627967);
@@ -411,6 +611,8 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014390852);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014538804);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16018038193);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16018063123);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012201914);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18019110168);
@@ -420,11 +622,14 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18023881693);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22011440098);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_22012725308);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22012640676);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22012766191);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22013073587);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22013689345);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22014344549);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22014412737);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22015614752);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018402687);
          break;
       case INTEL_PLATFORM_DG2_G12:
          BITSET_SET(devinfo->workarounds, INTEL_WA_1509820217);
@@ -444,9 +649,11 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015420481);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015782607);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015907227);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016074189);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016407139);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016712196);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14018545335);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
          BITSET_SET(devinfo->workarounds, INTEL_WA_15011116421);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011411144);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16011627967);
@@ -456,6 +663,8 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014390852);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16014538804);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16017463599);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16018063123);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012201914);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18013179988);
@@ -467,105 +676,200 @@ void intel_device_info_init_was(struct intel_device_info *devinfo)
          BITSET_SET(devinfo->workarounds, INTEL_WA_18023881693);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22011440098);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22012699309);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22012766191);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22013045878);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22013073587);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22013689345);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22014344549);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22014412737);
          BITSET_SET(devinfo->workarounds, INTEL_WA_22015614752);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018402687);
          break;
-      case INTEL_PLATFORM_MTL_M:
-         switch(intel_device_info_wa_stepping(devinfo)) {
-            case INTEL_STEPPING_A0:
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14012437816);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14014097488);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14014414195);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14014595444);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14014851047);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14015055625);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14015420481);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14015782607);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14017240301);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14017245111);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16012775297);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16013063087);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16014390852);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16014538804);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16016015852);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_18019110168);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_18019816803);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_18020335297);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_22013689345);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_22014412737);
-               break;
-            default:
-               break;
-         }
+      case INTEL_PLATFORM_MTL_H:
          BITSET_SET(devinfo->workarounds, INTEL_WA_1509820217);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014063774);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014176256);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015868140);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016243945);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14016407139);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14016712196);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14018545335);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14019028097);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019074860);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019124575);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
          BITSET_SET(devinfo->workarounds, INTEL_WA_15011116421);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_16011627967);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16017463599);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16018063123);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18013179988);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022330953);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18023881693);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22015614752);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018402687);
          break;
-      case INTEL_PLATFORM_MTL_P:
-         switch(intel_device_info_wa_stepping(devinfo)) {
-            case INTEL_STEPPING_A0:
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14012437816);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14014595444);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14014851047);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14015055625);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14015420481);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14015782607);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14017240301);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_14017245111);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16012775297);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16013994831);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16014390852);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16014538804);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_16016015852);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_18012660806);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_18019110168);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_18019816803);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_18020335297);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_22013689345);
-               BITSET_SET(devinfo->workarounds, INTEL_WA_22014412737);
-               break;
-            default:
-               break;
-         }
+      case INTEL_PLATFORM_MTL_U:
          BITSET_SET(devinfo->workarounds, INTEL_WA_1509820217);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014063774);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14014176256);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015360517);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14015868140);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14016243945);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14016407139);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14016712196);
          BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14018545335);
-         BITSET_SET(devinfo->workarounds, INTEL_WA_14019028097);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019074860);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019124575);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
          BITSET_SET(devinfo->workarounds, INTEL_WA_15011116421);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16017463599);
          BITSET_SET(devinfo->workarounds, INTEL_WA_16018063123);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18013179988);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022330953);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
          BITSET_SET(devinfo->workarounds, INTEL_WA_18023881693);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22015614752);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018402687);
+         break;
+      case INTEL_PLATFORM_ARL_H:
+         BITSET_SET(devinfo->workarounds, INTEL_WA_1606932921);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014063774);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14014176256);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14015907227);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016407139);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016712196);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016829365);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14017468336);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019074860);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16017463599);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18013179988);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18022508906);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18023881693);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22015614752);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018402687);
+         break;
+      case INTEL_PLATFORM_BMG:
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14016407139);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14017715663);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14017794102);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018117913);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018283232);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018443005);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018471104);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019708328);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019857787);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14020375314);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14021821874);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14022215759);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14022483228);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14022484703);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14022954250);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16012383669);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16018610683);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16020916187);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16021021469);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16021232440);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16022013154);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18033639465);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18035690555);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18037648410);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18038669374);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18038825448);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18039014283);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18039438632);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18040209780);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22016140776);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22017182272);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018390030);
+         break;
+      case INTEL_PLATFORM_LNL:
+         switch(intel_device_info_wa_stepping(devinfo)) {
+            case INTEL_STEPPING_A0:
+               BITSET_SET(devinfo->workarounds, INTEL_WA_13010473643);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14019039974);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14019570772);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14019957668);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_15012495196);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16020183090);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16020916187);
+               break;
+            case INTEL_STEPPING_A1:
+               BITSET_SET(devinfo->workarounds, INTEL_WA_13010473643);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14019570772);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14019957668);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16020183090);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16020916187);
+               break;
+            default:
+               break;
+         }
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14017715663);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14017794102);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018117913);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018283232);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018443005);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018471104);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018813551);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14018912822);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019166699);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019708328);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14019857787);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14020375314);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14022215759);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14022484703);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16012383669);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16018610683);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16021021469);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16021232440);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16022013154);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16022973223);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18033639465);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18035690555);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18037648410);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18038825448);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18039014283);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18039438632);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22016140776);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22017182272);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22018390030);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22019537964);
+         break;
+      case INTEL_PLATFORM_PTL:
+         switch(intel_device_info_wa_stepping(devinfo)) {
+            case INTEL_STEPPING_A0:
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14021821874);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14022484703);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14022977266);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_15016637646);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16024792527);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18039014283);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18040209780);
+               break;
+            case INTEL_STEPPING_A1:
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14021821874);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14022484703);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_14022977266);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_15016637646);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_16024792527);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18039014283);
+               BITSET_SET(devinfo->workarounds, INTEL_WA_18040209780);
+               break;
+            default:
+               break;
+         }
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14022215759);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14022863161);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_14023061436);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_16025326720);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18035690555);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18037648410);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18038825448);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_18039438632);
+         BITSET_SET(devinfo->workarounds, INTEL_WA_22016140776);
          break;
       default:
          /* unsupported platform */

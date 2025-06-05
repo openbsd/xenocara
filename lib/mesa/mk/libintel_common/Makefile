@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2025/06/05 14:18:42 jsg Exp $
 
 LIB=	intel_common
 
@@ -6,12 +6,15 @@ NOPROFILE=
 
 SRCS=	i915_intel_engine.c \
 	i915_intel_gem.c \
+	intel_device_query.c \
 	xe_intel_engine.c \
 	xe_intel_gem.c \
+	intel_queue.c \
 	intel_aux_map.c \
-	intel_batch_decoder.c \
-	intel_decoder.c \
-	intel_disasm.c \
+	intel_bind_timeline.c \
+	intel_common.c \
+	intel_compute_slm.c \
+	intel_debug_identifier.c \
 	intel_engine.c \
 	intel_gem.c \
 	intel_l3_config.c \
@@ -49,6 +52,7 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/intel/common
+.PATH: ${MESA_SRC}/src/intel/common/xe
 
 CLEANFILES+=	i915_intel_engine.c \
 		i915_intel_gem.c \

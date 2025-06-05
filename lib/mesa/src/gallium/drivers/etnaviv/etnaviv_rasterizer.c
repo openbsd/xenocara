@@ -25,8 +25,6 @@
 #include "etnaviv_context.h"
 #include "etnaviv_screen.h"
 
-#include "hw/common.xml.h"
-
 #include "etnaviv_translate.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
@@ -52,11 +50,9 @@ etna_rasterizer_state_create(struct pipe_context *pctx,
                    translate_polygon_mode(so->fill_front) |
                    COND(so->point_quad_rasterization, VIVS_PA_CONFIG_POINT_SPRITE_ENABLE) |
                    COND(so->point_size_per_vertex, VIVS_PA_CONFIG_POINT_SIZE_ENABLE) |
-                   COND(VIV_FEATURE(ctx->screen, chipMinorFeatures1, WIDE_LINE), VIVS_PA_CONFIG_WIDE_LINE);
+                   COND(VIV_FEATURE(ctx->screen, ETNA_FEATURE_WIDE_LINE), VIVS_PA_CONFIG_WIDE_LINE);
    cs->PA_LINE_WIDTH = fui(so->line_width / 2.0f);
    cs->PA_POINT_SIZE = fui(so->point_size / 2.0f);
-   cs->SE_DEPTH_SCALE = fui(so->offset_scale);
-   cs->SE_DEPTH_BIAS = fui((so->offset_units / 65535.0f) * 2.0f);
    cs->SE_CONFIG = COND(so->line_last_pixel, VIVS_SE_CONFIG_LAST_PIXEL_ENABLE);
    /* XXX anything else? */
    /* XXX bottom_edge_rule */
@@ -70,6 +66,14 @@ etna_rasterizer_state_create(struct pipe_context *pctx,
 
    /* point size per vertex adds a vertex shader output */
    cs->point_size_per_vertex = so->point_size_per_vertex;
+
+   if (so->offset_tri || so->offset_line || so->offset_point) {
+      cs->SE_DEPTH_SCALE = fui(so->offset_scale);
+      cs->offset_units = so->offset_units * 2.0f;
+   } else {
+      cs->SE_DEPTH_SCALE = fui(0.0f);
+      cs->offset_units = 0.0f;
+   }
 
    assert(!so->clip_halfz); /* could be supported with shader magic, actually
                                D3D z is default on older gc */

@@ -1,25 +1,8 @@
 /*
  * Copyright 2008 Corbin Simpson <MostAwesomeDude@gmail.com>
  * Copyright 2009 Marek Olšák <maraeo@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * on the rights to use, copy, modify, merge, publish, distribute, sub
- * license, and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHOR(S) AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE. */
+ * SPDX-License-Identifier: MIT
+ */
 
 /* r300_emit: Functions for emitting state. */
 
@@ -229,9 +212,15 @@ void r300_emit_fs_constants(struct r300_context* r300, unsigned size, void *stat
     OUT_CS_REG_SEQ(R300_PFS_PARAM_0_X, count * 4);
     if (buf->remap_table){
         for (i = 0; i < count; i++) {
-            float *data = (float*)&buf->ptr[buf->remap_table[i]*4];
-            for (j = 0; j < 4; j++)
-                OUT_CS(pack_float24(data[j]));
+            for (j = 0; j < 4; j++) {
+                unsigned swz = buf->remap_table[i].swizzle[j];
+                unsigned index = buf->remap_table[i].index[j];
+                if (index == -1)
+                    OUT_CS(pack_float24(0.0f));
+                else {
+                    OUT_CS(pack_float24(*(float*)&buf->ptr[index * 4 + swz]));
+                }
+            }
         }
     } else {
         for (i = 0; i < count; i++)
@@ -294,7 +283,11 @@ void r500_emit_fs_constants(struct r300_context* r300, unsigned size, void *stat
     OUT_CS_ONE_REG(R500_GA_US_VECTOR_DATA, count * 4);
     if (buf->remap_table){
         for (unsigned i = 0; i < count; i++) {
-            uint32_t *data = &buf->ptr[buf->remap_table[i]*4];
+            uint32_t data[4] = {};
+            for (unsigned chan = 0; chan < 4; chan++){
+                if (buf->remap_table[i].swizzle[chan] != RC_SWIZZLE_UNUSED)
+                data[chan] = buf->ptr[buf->remap_table[i].index[chan] * 4 + buf->remap_table[i].swizzle[chan]];
+            }
             OUT_CS_TABLE(data, 4);
         }
     } else {
@@ -1179,9 +1172,14 @@ void r300_emit_vs_constants(struct r300_context* r300,
                    R500_PVS_CONST_START : R300_PVS_CONST_START) + buf->buffer_base);
         OUT_CS_ONE_REG(R300_VAP_PVS_UPLOAD_DATA, count * 4);
         if (buf->remap_table){
+            uint32_t *data = buf->ptr;
             for (i = 0; i < count; i++) {
-                uint32_t *data = &buf->ptr[buf->remap_table[i]*4];
-                OUT_CS_TABLE(data, 4);
+                uint32_t constant[4];
+                for (unsigned chan = 0; chan < 4; chan++) {
+                    constant[chan] = data[buf->remap_table[i].index[chan] * 4 +
+                                           buf->remap_table[i].swizzle[chan]];
+                }
+                OUT_CS_TABLE(constant, 4);
             }
         } else {
             OUT_CS_TABLE(buf->ptr, count * 4);

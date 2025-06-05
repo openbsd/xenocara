@@ -21,7 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "compiler/nir_types.h"
+#include "compiler/glsl_types.h"
 #include "nir.h"
 #include "nir_builder.h"
 #include "nir_deref.h"
@@ -138,7 +138,6 @@ nir_lower_var_copies(nir_shader *shader)
    shader->info.var_copies_lowered = true;
 
    return nir_shader_intrinsics_pass(shader, lower_var_copies_instr,
-                                       nir_metadata_block_index |
-                                          nir_metadata_dominance,
+                                       nir_metadata_control_flow,
                                        NULL);
 }

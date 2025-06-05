@@ -21,6 +21,7 @@
  * IN THE SOFTWARE.
  */
 
+#include "brw_eu.h"
 #include "brw_nir.h"
 #include "compiler/nir/nir.h"
 #include "util/u_dynarray.h"
@@ -33,10 +34,11 @@
  * having to issue expensive memory reads to pull the data.
  *
  * The 3DSTATE_CONSTANT_* mechanism can push data from up to 4 different
- * buffers, in GRF (256-bit/32-byte) units.
+ * buffers, in GRF sized units.  This was always 256 bits (32 bytes).
+ * Starting with Xe2, it is 512 bits (64 bytes).
  *
  * To do this, we examine NIR load_ubo intrinsics, recording the number of
- * loads at each offset.  We track offsets at a 32-byte granularity, so even
+ * loads at each offset.  We track offsets at a sizeof(GRF) granularity, so even
  * fields with a bit of padding between them tend to fall into contiguous
  * ranges.  We build a list of these ranges, tracking their "cost" (number
  * of registers required) and "benefit" (number of pull loads eliminated
@@ -94,7 +96,7 @@ struct ubo_block_info
 struct ubo_analysis_state
 {
    struct hash_table *blocks;
-   bool uses_regular_uniforms;
+   const struct intel_device_info *devinfo;
 };
 
 static struct ubo_block_info *
@@ -124,28 +126,15 @@ analyze_ubos_block(struct ubo_analysis_state *state, nir_block *block)
          continue;
 
       nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
-      switch (intrin->intrinsic) {
-      case nir_intrinsic_load_uniform:
-      case nir_intrinsic_image_deref_load:
-      case nir_intrinsic_image_deref_store:
-      case nir_intrinsic_image_deref_atomic:
-      case nir_intrinsic_image_deref_atomic_swap:
-      case nir_intrinsic_image_deref_size:
-         state->uses_regular_uniforms = true;
+      if (intrin->intrinsic != nir_intrinsic_load_ubo)
          continue;
-
-      case nir_intrinsic_load_ubo:
-         break; /* Fall through to the analysis below */
-
-      default:
-         continue; /* Not a uniform or UBO intrinsic */
-      }
 
       if (brw_nir_ubo_surface_index_is_pushable(intrin->src[0]) &&
           nir_src_is_const(intrin->src[1])) {
          const int block = brw_nir_ubo_surface_index_get_push_block(intrin->src[0]);
          const unsigned byte_offset = nir_src_as_uint(intrin->src[1]);
-         const int offset = byte_offset / 32;
+         const unsigned sizeof_GRF = REG_SIZE * reg_unit(state->devinfo);
+         const int offset = byte_offset / sizeof_GRF;
 
          /* Avoid shifting by larger than the width of our bitfield, as this
           * is undefined in C.  Even if we require multiple bits to represent
@@ -156,12 +145,13 @@ analyze_ubos_block(struct ubo_analysis_state *state, nir_block *block)
          if (offset >= 64)
             continue;
 
-         /* The value might span multiple 32-byte chunks. */
-         const int bytes = nir_intrinsic_dest_components(intrin) *
-                           (intrin->def.bit_size / 8);
-         const int start = ROUND_DOWN_TO(byte_offset, 32);
-         const int end = ALIGN(byte_offset + bytes, 32);
-         const int chunks = (end - start) / 32;
+         /* The value might span multiple sizeof(GRF) chunks. */
+         const unsigned num_components =
+            nir_def_last_component_read(&intrin->def) + 1;
+         const int bytes = num_components * (intrin->def.bit_size / 8);
+         const int start = ROUND_DOWN_TO(byte_offset, sizeof_GRF);
+         const int end = ALIGN(byte_offset + bytes, sizeof_GRF);
+         const int chunks = (end - start) / sizeof_GRF;
 
          /* TODO: should we count uses in loops as higher benefit? */
 
@@ -189,33 +179,15 @@ print_ubo_entry(FILE *file,
 void
 brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
                            nir_shader *nir,
-                           const struct brw_vs_prog_key *vs_key,
                            struct brw_ubo_range out_ranges[4])
 {
    void *mem_ctx = ralloc_context(NULL);
 
    struct ubo_analysis_state state = {
-      .uses_regular_uniforms = false,
       .blocks =
          _mesa_hash_table_create(mem_ctx, NULL, _mesa_key_pointer_equal),
+      .devinfo = compiler->devinfo,
    };
-
-   switch (nir->info.stage) {
-   case MESA_SHADER_VERTEX:
-      if (vs_key && vs_key->nr_userclip_plane_consts > 0)
-         state.uses_regular_uniforms = true;
-      break;
-
-   case MESA_SHADER_COMPUTE:
-      /* Compute shaders use push constants to get the subgroup ID so it's
-       * best to just assume some system values are pushed.
-       */
-      state.uses_regular_uniforms = true;
-      break;
-
-   default:
-      break;
-   }
 
    /* Walk the IR, recording how many times each UBO block/offset is used. */
    nir_foreach_function_impl(impl, nir) {
@@ -224,7 +196,9 @@ brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
       }
    }
 
-   /* Find ranges: a block, starting 32-byte offset, and length. */
+   /* Find ranges: a block, starting register-size aligned byte offset, and
+    * length.
+    */
    struct util_dynarray ranges;
    util_dynarray_init(&ranges, mem_ctx);
 
@@ -288,7 +262,7 @@ brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
 
    /* TODO: Consider combining ranges.
     *
-    * We can only push 3-4 ranges via 3DSTATE_CONSTANT_XS.  If there are
+    * We can only push 4 ranges via 3DSTATE_CONSTANT_XS.  If there are
     * more ranges, and two are close by with only a small hole, it may be
     * worth combining them.  The holes will waste register space, but the
     * benefit of removing pulls may outweigh that cost.
@@ -302,22 +276,37 @@ brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
 
    struct ubo_range_entry *entries = ranges.data;
 
-   /* Return the top 4 or so.  We drop by one if regular uniforms are in
-    * use, assuming one push buffer will be dedicated to those.  We may
-    * also only get 3 on Haswell if we can't write INSTPM.
+   /* Return the top 4, limited to the maximum number of push registers.
     *
-    * The backend may need to shrink these ranges to ensure that they
-    * don't exceed the maximum push constant limits.  It can simply drop
-    * the tail of the list, as that's the least valuable portion.  We
-    * unfortunately can't truncate it here, because we don't know what
-    * the backend is planning to do with regular uniforms.
+    * The Vulkan driver sets up additional non-UBO push constants, so it may
+    * need to shrink these ranges further (see anv_nir_compute_push_layout.c).
+    * The OpenGL driver treats legacy uniforms as a UBO, so this is enough.
+    *
+    * To limit further, simply drop the tail of the list, as that's the least
+    * valuable portion.
     */
-   const int max_ubos = (compiler->constant_buffer_0_is_relative ? 3 : 4) -
-                        state.uses_regular_uniforms;
+   const int max_ubos = 4;
    nr_entries = MIN2(nr_entries, max_ubos);
+
+   const unsigned max_push_regs = 64 / reg_unit(compiler->devinfo);
+   unsigned total_push_regs = 0;
+
+   for (unsigned i = 0; i < nr_entries; i++) {
+      if (total_push_regs + entries[i].range.length > max_push_regs)
+         entries[i].range.length = max_push_regs - total_push_regs;
+      total_push_regs += entries[i].range.length;
+   }
 
    for (int i = 0; i < nr_entries; i++) {
       out_ranges[i] = entries[i].range;
+
+      /* To this point, various values have been tracked in terms of the real
+       * hardware register sizes.  However, the rest of the compiler expects
+       * values in terms of pre-Xe2 256-bit registers. Scale start and length
+       * to account for this.
+       */
+      out_ranges[i].start *= reg_unit(compiler->devinfo);
+      out_ranges[i].length *= reg_unit(compiler->devinfo);
    }
    for (int i = nr_entries; i < 4; i++) {
       out_ranges[i].block = 0;

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:41 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2025/06/05 14:18:51 jsg Exp $
 
 LIB=	ws_null
 
@@ -10,7 +10,8 @@ SRCS=	null_sw_winsys.c
 
 CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
-		-I${MESA_SRC}/src/gallium/auxiliary
+		-I${MESA_SRC}/src/gallium/auxiliary \
+		-I${MESA_SRC}/generated/src
 
 install:
 

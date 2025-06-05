@@ -1,22 +1,5 @@
 # Copyright © 2017-2019 Intel Corporation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 inc_glx = include_directories('.')
 
@@ -33,7 +16,6 @@ files_libglx = files(
   'dri_common.c',
   'dri_common.h',
   'dri_common_query_renderer.c',
-  'dri_common_interop.c',
   'drisw_glx.c',
   'drisw_priv.h',
   'eval.c',
@@ -78,7 +60,7 @@ extra_deps_libgl = []
 extra_ld_args_libgl = []
 
 # dri2
-if with_dri_platform == 'drm' and dep_libdrm.found()
+if with_x11_dri2
   files_libglx += files(
     'dri2.c',
     'dri2_glx.c',
@@ -87,7 +69,7 @@ if with_dri_platform == 'drm' and dep_libdrm.found()
   )
 endif
 
-if with_dri3
+if with_dri_platform == 'drm'
   files_libglx += files('dri3_glx.c', 'dri3_priv.h')
 endif
 
@@ -122,38 +104,36 @@ else
   )
 endif
 
-if host_machine.system() != 'openbsd'
-  gl_lib_define = [
-    '-DGL_LIB_NAME="lib@0@.so.@1@"'.format(gl_lib_name, gl_lib_version.split('.')[0]),
-  ]
-else
-  gl_lib_define = [
-    '-DGL_LIB_NAME="lib@0@.so"'.format(gl_lib_name )
-  ]
+glx_gallium_link = [libpipe_loader_dynamic]
+if with_dri
+  glx_gallium_link += libgallium_dri
 endif
-
+if with_platform_windows
+  glx_gallium_link += libgallium_wgl
+endif
 libglx = static_library(
   'glx',
   [files_libglx, glx_generated],
-  include_directories : [inc_include, inc_src, inc_glapi, inc_loader],
+  include_directories : [inc_include, inc_src, inc_glapi, inc_loader, inc_loader_x11,
+                         inc_gallium, inc_mesa, inc_st_dri, inc_gallium_aux],
   c_args : [
-    gl_lib_define,
+    '-DGL_LIB_NAME="lib@0@.so.@1@"'.format(gl_lib_name, gl_lib_version.split('.')[0]),
   ],
   gnu_symbol_visibility : 'hidden',
   link_with : [
-    libloader, libloader_dri3_helper,
-    extra_libs_libglx,
+    libloader, libloader_x11,
+    extra_libs_libglx, glx_gallium_link
   ],
   dependencies : [
     idep_mesautil, idep_xmlconfig,
-    dep_libdrm, dep_dri2proto, dep_glproto, dep_x11, dep_glvnd, dep_xxf86vm, dep_xshmfence
+    dep_libdrm, dep_dri2proto, dep_glproto, dep_x11, dep_xext, dep_glvnd, dep_xxf86vm, dep_xshmfence, dep_xfixes,
   ],
 )
 
 libgl = shared_library(
   gl_lib_name,
   [],
-  link_with : [libglapi_static, libglapi],
+  link_with : [libglapi_static],
   link_whole : libglx,
   link_args : [ld_args_bsymbolic, ld_args_gc_sections, extra_ld_args_libgl],
   dependencies : [
@@ -165,7 +145,3 @@ libgl = shared_library(
   darwin_versions : '4.0.0',
   install : true,
 )
-
-if with_tests
-  subdir('tests')
-endif

@@ -10,20 +10,26 @@
 
 #include "amdgpu_bo.h"
 #include "util/u_memory.h"
+#include "ac_linux_drm.h"
 #include "drm-uapi/amdgpu_drm.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Smaller submits means the GPU gets busy sooner and there is less
  * waiting for buffers and fences. Proof:
  *   http://www.phoronix.com/scan.php?page=article&item=mesa-111-si&num=1
  */
-#define IB_MAX_SUBMIT_DWORDS (20 * 1024)
+#define IB_MAX_SUBMIT_BYTES (80 * 1024)
 
 struct amdgpu_ctx {
-   struct amdgpu_winsys *ws;
-   amdgpu_context_handle ctx;
-   amdgpu_bo_handle user_fence_bo;
+   struct pipe_reference reference;
+   uint32_t ctx_handle;
+   struct amdgpu_winsys *aws;
+   ac_drm_bo user_fence_bo;
+   uint32_t user_fence_bo_kms_handle;
    uint64_t *user_fence_cpu_address_base;
-   int refcount;
 
    /* If true, report lost contexts and skip command submission.
     * If false, terminate the process.
@@ -36,7 +42,6 @@ struct amdgpu_ctx {
 
 struct amdgpu_cs_buffer {
    struct amdgpu_winsys_bo *bo;
-   unsigned slab_real_idx; /* index of underlying real BO, used by slab buffers only */
    unsigned usage;
 };
 
@@ -47,11 +52,10 @@ enum ib_type {
 };
 
 struct amdgpu_ib {
-   struct radeon_cmdbuf *rcs; /* pointer to the driver-owned data */
-
    /* A buffer out of which new IBs are allocated. */
-   struct pb_buffer        *big_ib_buffer;
-   uint8_t                 *ib_mapped;
+   struct pb_buffer_lean   *big_buffer;
+   uint8_t                 *big_buffer_cpu_ptr;
+   uint64_t                gpu_address;
    unsigned                used_ib_space;
 
    /* The maximum seen size from cs_check_space. If the driver does
@@ -60,10 +64,13 @@ struct amdgpu_ib {
     */
    unsigned                max_check_space_size;
 
-   unsigned                max_ib_size;
+   unsigned                max_ib_bytes;
+   /* ptr_ib_size initially points to cs->csc->chunk_ib->ib_bytes.
+    * If in amdgpu_cs_check_space() ib chaining is required, then ptr_ib_size will point
+    * to indirect buffer packet size field.
+    */
    uint32_t                *ptr_ib_size;
-   bool                    ptr_ib_size_inside_ib;
-   enum ib_type            ib_type;
+   bool                    is_chained_ib;
 };
 
 struct amdgpu_fence_list {
@@ -72,32 +79,27 @@ struct amdgpu_fence_list {
    unsigned                    max;
 };
 
+struct amdgpu_buffer_list {
+   unsigned                    max_buffers;
+   unsigned                    num_buffers;
+   struct amdgpu_cs_buffer     *buffers;
+};
+
 struct amdgpu_cs_context {
-   struct drm_amdgpu_cs_chunk_ib ib[IB_NUM];
+   struct drm_amdgpu_cs_chunk_ib chunk_ib[IB_NUM];
    uint32_t                    *ib_main_addr; /* the beginning of IB before chaining */
 
-   struct amdgpu_winsys *ws;
+   struct amdgpu_winsys *aws;
 
    /* Buffers. */
-   unsigned                    max_real_buffers;
-   unsigned                    num_real_buffers;
-   struct amdgpu_cs_buffer     *real_buffers;
-
-   unsigned                    num_slab_buffers;
-   unsigned                    max_slab_buffers;
-   struct amdgpu_cs_buffer     *slab_buffers;
-
-   unsigned                    num_sparse_buffers;
-   unsigned                    max_sparse_buffers;
-   struct amdgpu_cs_buffer     *sparse_buffers;
-
+   struct amdgpu_buffer_list   buffer_lists[NUM_BO_LIST_TYPES];
    int16_t                     *buffer_indices_hashlist;
 
    struct amdgpu_winsys_bo     *last_added_bo;
-   unsigned                    last_added_bo_index;
    unsigned                    last_added_bo_usage;
 
-   struct amdgpu_fence_list    fence_dependencies;
+   struct amdgpu_seq_no_fences seq_no_dependencies;
+
    struct amdgpu_fence_list    syncobj_dependencies;
    struct amdgpu_fence_list    syncobj_to_signal;
 
@@ -114,8 +116,8 @@ struct amdgpu_cs_context {
 #define BUFFER_HASHLIST_SIZE 32768
 
 struct amdgpu_cs {
-   struct amdgpu_ib main; /* must be first because this is inherited */
-   struct amdgpu_winsys *ws;
+   struct amdgpu_ib main_ib; /* must be first because this is inherited */
+   struct amdgpu_winsys *aws;
    struct amdgpu_ctx *ctx;
 
    /*
@@ -123,6 +125,12 @@ struct amdgpu_cs {
     */
    struct drm_amdgpu_cs_chunk_fence fence_chunk;
    enum amd_ip_type ip_type;
+   unsigned queue_index;
+
+   /* Whether this queue uses amdgpu_winsys_bo::alt_fence instead of generating its own
+    * sequence numbers for synchronization.
+    */
+   bool uses_alt_fence;
 
    /* We flip between these two CS. While one is being consumed
     * by the kernel in another thread, the other one is being filled
@@ -149,20 +157,22 @@ struct amdgpu_cs {
 
    struct util_queue_fence flush_completed;
    struct pipe_fence_handle *next_fence;
-   struct pb_buffer *preamble_ib_bo;
+   struct pb_buffer_lean *preamble_ib_bo;
 
    struct drm_amdgpu_cs_chunk_cp_gfx_shadow mcbp_fw_shadow_chunk;
 };
 
 struct amdgpu_fence {
    struct pipe_reference reference;
-   /* If ctx == NULL, this fence is syncobj-based. */
    uint32_t syncobj;
 
-   struct amdgpu_winsys *ws;
+   struct amdgpu_winsys *aws;
+
+   /* The following field aren't set for imported fences. */
    struct amdgpu_ctx *ctx;  /* submission context */
-   struct amdgpu_cs_fence fence;
+   uint32_t ip_type;
    uint64_t *user_fence_cpu_address;
+   uint64_t seq_no;
 
    /* If the fence has been submitted. This is unsignalled for deferred fences
     * (cs->next_fence) and while an IB is still being submitted in the submit
@@ -170,20 +180,26 @@ struct amdgpu_fence {
    struct util_queue_fence submitted;
 
    volatile int signalled;              /* bool (int for atomicity) */
+   bool imported;
+   uint8_t queue_index;       /* for non-imported fences */
+   uint_seq_no queue_seq_no;  /* winsys-generated sequence number */
 };
 
-static inline bool amdgpu_fence_is_syncobj(struct amdgpu_fence *fence)
-{
-   return fence->ctx == NULL;
-}
+void amdgpu_fence_destroy(struct amdgpu_fence *fence);
 
-static inline void amdgpu_ctx_unref(struct amdgpu_ctx *ctx)
+static inline void amdgpu_ctx_reference(struct amdgpu_ctx **dst, struct amdgpu_ctx *src)
 {
-   if (p_atomic_dec_zero(&ctx->refcount)) {
-      amdgpu_cs_ctx_free(ctx->ctx);
-      amdgpu_bo_free(ctx->user_fence_bo);
-      FREE(ctx);
+   struct amdgpu_ctx *old_dst = *dst;
+
+   if (pipe_reference(old_dst ? &old_dst->reference : NULL,
+                      src ? &src->reference : NULL)) {
+      ac_drm_device *dev = old_dst->aws->dev;
+      ac_drm_bo_cpu_unmap(dev, old_dst->user_fence_bo);
+      ac_drm_bo_free(dev, old_dst->user_fence_bo);
+      ac_drm_cs_ctx_free(dev, old_dst->ctx_handle);
+      FREE(old_dst);
    }
+   *dst = src;
 }
 
 static inline void amdgpu_fence_reference(struct pipe_fence_handle **dst,
@@ -192,27 +208,37 @@ static inline void amdgpu_fence_reference(struct pipe_fence_handle **dst,
    struct amdgpu_fence **adst = (struct amdgpu_fence **)dst;
    struct amdgpu_fence *asrc = (struct amdgpu_fence *)src;
 
-   if (pipe_reference(&(*adst)->reference, &asrc->reference)) {
-      struct amdgpu_fence *fence = *adst;
+   if (pipe_reference(&(*adst)->reference, &asrc->reference))
+      amdgpu_fence_destroy(*adst);
 
-      if (amdgpu_fence_is_syncobj(fence))
-         amdgpu_cs_destroy_syncobj(fence->ws->dev, fence->syncobj);
-      else
-         amdgpu_ctx_unref(fence->ctx);
-
-      util_queue_fence_destroy(&fence->submitted);
-      FREE(fence);
-   }
    *adst = asrc;
 }
 
-int amdgpu_lookup_buffer_any_type(struct amdgpu_cs_context *cs, struct amdgpu_winsys_bo *bo);
+/* Same as amdgpu_fence_reference, but ignore the value in *dst. */
+static inline void amdgpu_fence_set_reference(struct pipe_fence_handle **dst,
+                                              struct pipe_fence_handle *src)
+{
+   *dst = src;
+   pipe_reference(NULL, &((struct amdgpu_fence *)src)->reference); /* only increment refcount */
+}
+
+/* Unreference dst, but don't assign anything. */
+static inline void amdgpu_fence_drop_reference(struct pipe_fence_handle *dst)
+{
+   struct amdgpu_fence *adst = (struct amdgpu_fence *)dst;
+
+   if (pipe_reference(&adst->reference, NULL)) /* only decrement refcount */
+      amdgpu_fence_destroy(adst);
+}
+
+struct amdgpu_cs_buffer *
+amdgpu_lookup_buffer_any_type(struct amdgpu_cs_context *cs, struct amdgpu_winsys_bo *bo);
 
 static inline struct amdgpu_cs *
 amdgpu_cs(struct radeon_cmdbuf *rcs)
 {
    struct amdgpu_cs *cs = (struct amdgpu_cs*)rcs->priv;
-   assert(!cs || cs->main.ib_type == IB_MAIN);
+   assert(cs);
    return cs;
 }
 
@@ -223,7 +249,14 @@ static inline bool
 amdgpu_bo_is_referenced_by_cs(struct amdgpu_cs *cs,
                               struct amdgpu_winsys_bo *bo)
 {
-   return amdgpu_lookup_buffer_any_type(cs->csc, bo) != -1;
+   return amdgpu_lookup_buffer_any_type(cs->csc, bo) != NULL;
+}
+
+static inline unsigned get_buf_list_idx(struct amdgpu_winsys_bo *bo)
+{
+   /* AMDGPU_BO_REAL_REUSABLE* maps to AMDGPU_BO_REAL. */
+   static_assert(ARRAY_SIZE(((struct amdgpu_cs_context*)NULL)->buffer_lists) == NUM_BO_LIST_TYPES, "");
+   return MIN2(bo->type, AMDGPU_BO_REAL);
 }
 
 static inline bool
@@ -231,26 +264,18 @@ amdgpu_bo_is_referenced_by_cs_with_usage(struct amdgpu_cs *cs,
                                          struct amdgpu_winsys_bo *bo,
                                          unsigned usage)
 {
-   int index;
-   struct amdgpu_cs_buffer *buffer;
+   struct amdgpu_cs_buffer *buffer = amdgpu_lookup_buffer_any_type(cs->csc, bo);
 
-   index = amdgpu_lookup_buffer_any_type(cs->csc, bo);
-   if (index == -1)
-      return false;
-
-   buffer = bo->bo ? &cs->csc->real_buffers[index] :
-            bo->base.usage & RADEON_FLAG_SPARSE ? &cs->csc->sparse_buffers[index] :
-            &cs->csc->slab_buffers[index];
-
-   return (buffer->usage & usage) != 0;
+   return buffer && (buffer->usage & usage) != 0;
 }
 
 bool amdgpu_fence_wait(struct pipe_fence_handle *fence, uint64_t timeout,
                        bool absolute);
-void amdgpu_add_fences(struct amdgpu_winsys_bo *bo,
-                       unsigned num_fences,
-                       struct pipe_fence_handle **fences);
 void amdgpu_cs_sync_flush(struct radeon_cmdbuf *rcs);
-void amdgpu_cs_init_functions(struct amdgpu_screen_winsys *ws);
+void amdgpu_cs_init_functions(struct amdgpu_screen_winsys *sws);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -50,3 +50,7 @@ void intel_oa_register_queries_acmgt2(struct intel_perf_config *perf);
 void intel_oa_register_queries_acmgt3(struct intel_perf_config *perf);
 void intel_oa_register_queries_mtlgt2(struct intel_perf_config *perf);
 void intel_oa_register_queries_mtlgt3(struct intel_perf_config *perf);
+void intel_oa_register_queries_arlgt1(struct intel_perf_config *perf);
+void intel_oa_register_queries_arlgt2(struct intel_perf_config *perf);
+void intel_oa_register_queries_lnl(struct intel_perf_config *perf);
+void intel_oa_register_queries_bmg(struct intel_perf_config *perf);

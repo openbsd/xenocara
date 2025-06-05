@@ -30,69 +30,12 @@
 #ifndef GFX125_GFX125_PACK_H
 #define GFX125_GFX125_PACK_H
 
+#ifndef __OPENCL_VERSION__
 #include <stdio.h>
-
 #include "util/bitpack_helpers.h"
-
-#ifndef __gen_validate_value
-#define __gen_validate_value(x)
-#endif
-
-#ifndef __intel_field_functions
-#define __intel_field_functions
-
-#ifdef NDEBUG
-#define NDEBUG_UNUSED __attribute__((unused))
+#include "genX_helpers.h"
 #else
-#define NDEBUG_UNUSED
-#endif
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t end)
-{
-   __gen_validate_value(v);
-#ifndef NDEBUG
-   uint64_t mask = (~0ull >> (64 - (end - start + 1))) << start;
-
-   assert((v & ~mask) == 0);
-#endif
-
-   return v;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_offset_nonzero(uint64_t v, uint32_t start, uint32_t end)
-{
-   assert(v != 0ull);
-   return __gen_offset(v, start, end);
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_address(__gen_user_data *data, void *location,
-              __gen_address_type address, uint32_t delta,
-              __attribute__((unused)) uint32_t start, uint32_t end)
-{
-   uint64_t addr_u64 = __gen_combine_address(data, location, address, delta);
-   if (end == 31) {
-      return addr_u64;
-   } else if (end < 63) {
-      const unsigned shift = 63 - end;
-      return (addr_u64 << shift) >> shift;
-   } else {
-      return addr_u64;
-   }
-}
-
-#ifndef __gen_address_type
-#error #define __gen_address_type before including this file
-#endif
-
-#ifndef __gen_user_data
-#error #define __gen_combine_address before including this file
-#endif
-
-#undef NDEBUG_UNUSED
-
+#include "genX_cl_helpers.h"
 #endif
 
 
@@ -292,6 +235,14 @@ enum GFX125_COMPONENT_ENABLES {
    CE_XYZW                              =     15,
 };
 
+enum GFX125_L1_CACHE_CONTROL {
+   L1CC_WBP                             =      0,
+   L1CC_UC                              =      1,
+   L1CC_WB                              =      2,
+   L1CC_WT                              =      3,
+   L1CC_WS                              =      4,
+};
+
 enum GFX125_PREF_SLM_ALLOCATION_SIZE {
    SLM_ENCODES_0K                       =      8,
    SLM_ENCODES_16K                      =      9,
@@ -301,6 +252,17 @@ enum GFX125_PREF_SLM_ALLOCATION_SIZE {
    SLM_ENCODES_128K                     =     13,
    SLM_ENCODES_192K                     =     14,
    SLM_ENCODES_256K                     =     15,
+};
+
+enum GFX125_STATE_SURFACE_TYPE {
+   SURFTYPE_1D                          =      0,
+   SURFTYPE_2D                          =      1,
+   SURFTYPE_3D                          =      2,
+   SURFTYPE_CUBE                        =      3,
+   SURFTYPE_BUFFER                      =      4,
+   SURFTYPE_RES5                        =      5,
+   SURFTYPE_SCRATCH                     =      6,
+   SURFTYPE_NULL                        =      7,
 };
 
 enum GFX125_ShaderChannelSelect {
@@ -698,6 +660,296 @@ GFX125_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_float(values->BlendConstantColorAlpha);
 }
 
+#define GFX125_INTERFACE_DESCRIPTOR_DATA_length      8
+struct GFX125_INTERFACE_DESCRIPTOR_DATA {
+   uint64_t                             KernelStartPointer;
+   bool                                 SoftwareExceptionEnable;
+   bool                                 MaskStackExceptionEnable;
+   bool                                 IllegalOpcodeExceptionEnable;
+   uint32_t                             FloatingPointMode;
+#define IEEE754                                  0
+#define Alternate                                1
+   bool                                 SingleProgramFlow;
+   uint32_t                             DenormMode;
+#define Ftz                                      0
+#define SetByKernel                              1
+   uint32_t                             ThreadPreemptionDisable;
+   uint32_t                             SamplerCount;
+#define Nosamplersused                           0
+#define Between1and4samplersused                 1
+#define Between5and8samplersused                 2
+#define Between9and12samplersused                3
+#define Between13and16samplersused               4
+   uint64_t                             SamplerStatePointer;
+   uint32_t                             BindingTableEntryCount;
+   uint64_t                             BindingTablePointer;
+   uint32_t                             NumberofThreadsinGPGPUThreadGroup;
+   uint32_t                             SharedLocalMemorySize;
+#define Encodes0K                                0
+#define Encodes1K                                1
+#define Encodes2K                                2
+#define Encodes4K                                3
+#define Encodes8K                                4
+#define Encodes16K                               5
+#define Encodes32K                               6
+#define Encodes64K                               7
+   bool                                 BarrierEnable;
+   uint32_t                             RoundingMode;
+#define RTNE                                     0
+#define RU                                       1
+#define RD                                       2
+#define RTZ                                      3
+   uint32_t                             ThreadGroupDispatchSize;
+#define TGsize8                                  0
+#define TGsize4                                  1
+#define TGsize2                                  2
+#define TGsize1                                  3
+   uint32_t                             NumberOfBarriers;
+#define BARRIER_SIZE_NONE                        0
+#define BARRIER_SIZE_B1                          1
+#define BARRIER_SIZE_B2                          2
+#define BARRIER_SIZE_B4                          3
+#define BARRIER_SIZE_B8                          4
+#define BARRIER_SIZE_B16                         5
+#define BARRIER_SIZE_B24                         6
+#define BARRIER_SIZE_B32                         7
+   uint32_t                             BTDMode;
+   uint32_t                             PreferredSLMAllocationSize;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *data,
+                                      __attribute__((unused)) void * restrict dst,
+                                      __attribute__((unused)) const struct GFX125_INTERFACE_DESCRIPTOR_DATA * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_offset(values->KernelStartPointer, 6, 31);
+
+   dw[1] = 0;
+
+   dw[2] =
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->MaskStackExceptionEnable, 11, 11) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->SingleProgramFlow, 18, 18) |
+      util_bitpack_uint(values->DenormMode, 19, 19) |
+      util_bitpack_uint(values->ThreadPreemptionDisable, 20, 20);
+
+   dw[3] =
+      util_bitpack_uint(values->SamplerCount, 2, 4) |
+      __gen_offset(values->SamplerStatePointer, 5, 31);
+
+   dw[4] =
+      util_bitpack_uint(values->BindingTableEntryCount, 0, 4) |
+      __gen_offset(values->BindingTablePointer, 5, 20);
+
+   dw[5] =
+      util_bitpack_uint(values->NumberofThreadsinGPGPUThreadGroup, 0, 9) |
+      util_bitpack_uint(values->SharedLocalMemorySize, 16, 20) |
+      util_bitpack_uint(values->BarrierEnable, 21, 21) |
+      util_bitpack_uint(values->RoundingMode, 22, 23) |
+      util_bitpack_uint(values->ThreadGroupDispatchSize, 26, 27) |
+      util_bitpack_uint(values->NumberOfBarriers, 28, 30) |
+      util_bitpack_uint(values->BTDMode, 31, 31);
+
+   dw[6] =
+      util_bitpack_uint(values->PreferredSLMAllocationSize, 0, 3);
+
+   dw[7] = 0;
+}
+
+#define GFX125_POSTSYNC_DATA_length            5
+struct GFX125_POSTSYNC_DATA {
+   uint32_t                             Operation;
+#define NoWrite                                  0
+#define WriteImmediateData                       1
+#define WriteTimestamp                           3
+   bool                                 HDCPipelineFlush;
+   bool                                 L3flush;
+   uint32_t                             MOCS;
+   __gen_address_type                   DestinationAddress;
+   uint64_t                             ImmediateData;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_POSTSYNC_DATA_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_POSTSYNC_DATA * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->Operation, 0, 1) |
+      util_bitpack_uint(values->HDCPipelineFlush, 2, 2) |
+      util_bitpack_uint(values->L3flush, 3, 3) |
+      util_bitpack_uint_nonzero(values->MOCS, 4, 10);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->DestinationAddress, 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   const uint64_t v3 =
+      util_bitpack_uint(values->ImmediateData, 0, 63);
+   dw[3] = v3;
+   dw[4] = v3 >> 32;
+}
+
+#define GFX125_COMPUTE_WALKER_BODY_length     38
+struct GFX125_COMPUTE_WALKER_BODY {
+   uint32_t                             IndirectDataLength;
+   bool                                 L3prefetchdisable;
+   uint32_t                             PartitionType;
+#define PartitionX                               1
+#define PartitionY                               2
+#define PartitionZ                               3
+   uint64_t                             IndirectDataStartAddress;
+   uint32_t                             MessageSIMD;
+#define SIMD8                                    0
+#define SIMD16                                   1
+#define SIMD32                                   2
+   uint32_t                             TileLayout;
+#define Linear                                   0
+#define TileY32bpe                               1
+#define TileY64bpe                               2
+#define TileY128bpe                              3
+   uint32_t                             WalkOrder;
+#define Walk012                                  0
+#define Walk021                                  1
+#define Walk102                                  2
+#define Walk120                                  3
+#define Walk201                                  4
+#define Walk210                                  5
+   bool                                 EmitInlineParameter;
+   uint32_t                             EmitLocal;
+#define EmitNone                                 0
+#define EmitX                                    1
+#define EmitXY                                   3
+#define EmitXYZ                                  7
+   bool                                 GenerateLocalID;
+   uint32_t                             SIMDSize;
+#define SIMD8                                    0
+#define SIMD16                                   1
+#define SIMD32                                   2
+   uint32_t                             ExecutionMask;
+   uint32_t                             LocalXMaximum;
+   uint32_t                             LocalYMaximum;
+   uint32_t                             LocalZMaximum;
+   uint32_t                             ThreadGroupIDXDimension;
+   uint32_t                             ThreadGroupIDYDimension;
+   uint32_t                             ThreadGroupIDZDimension;
+   uint32_t                             ThreadGroupIDStartingX;
+   uint32_t                             ThreadGroupIDStartingY;
+   uint32_t                             ThreadGroupIDStartingZ;
+   uint32_t                             PartitionID;
+   uint32_t                             PartitionSize;
+   uint32_t                             PreemptX;
+   uint32_t                             PreemptY;
+   uint32_t                             PreemptZ;
+   struct GFX125_INTERFACE_DESCRIPTOR_DATA InterfaceDescriptor;
+   struct GFX125_POSTSYNC_DATA          PostSync;
+   uint32_t                             InlineData[8];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_COMPUTE_WALKER_BODY_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_COMPUTE_WALKER_BODY * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] = 0;
+
+   dw[1] =
+      util_bitpack_uint(values->IndirectDataLength, 0, 16) |
+      util_bitpack_uint(values->L3prefetchdisable, 17, 17) |
+      util_bitpack_uint(values->PartitionType, 30, 31);
+
+   dw[2] =
+      __gen_offset(values->IndirectDataStartAddress, 6, 31);
+
+   dw[3] =
+      util_bitpack_uint(values->MessageSIMD, 17, 18) |
+      util_bitpack_uint(values->TileLayout, 19, 21) |
+      util_bitpack_uint(values->WalkOrder, 22, 24) |
+      util_bitpack_uint(values->EmitInlineParameter, 25, 25) |
+      util_bitpack_uint(values->EmitLocal, 26, 28) |
+      util_bitpack_uint(values->GenerateLocalID, 29, 29) |
+      util_bitpack_uint(values->SIMDSize, 30, 31);
+
+   dw[4] =
+      util_bitpack_uint(values->ExecutionMask, 0, 31);
+
+   dw[5] =
+      util_bitpack_uint(values->LocalXMaximum, 0, 9) |
+      util_bitpack_uint(values->LocalYMaximum, 10, 19) |
+      util_bitpack_uint(values->LocalZMaximum, 20, 29);
+
+   dw[6] =
+      util_bitpack_uint(values->ThreadGroupIDXDimension, 0, 31);
+
+   dw[7] =
+      util_bitpack_uint(values->ThreadGroupIDYDimension, 0, 31);
+
+   dw[8] =
+      util_bitpack_uint(values->ThreadGroupIDZDimension, 0, 31);
+
+   dw[9] =
+      util_bitpack_uint(values->ThreadGroupIDStartingX, 0, 31);
+
+   dw[10] =
+      util_bitpack_uint(values->ThreadGroupIDStartingY, 0, 31);
+
+   dw[11] =
+      util_bitpack_uint(values->ThreadGroupIDStartingZ, 0, 31);
+
+   dw[12] =
+      util_bitpack_uint(values->PartitionID, 0, 31);
+
+   dw[13] =
+      util_bitpack_uint(values->PartitionSize, 0, 31);
+
+   dw[14] =
+      util_bitpack_uint(values->PreemptX, 0, 31);
+
+   dw[15] =
+      util_bitpack_uint(values->PreemptY, 0, 31);
+
+   dw[16] =
+      util_bitpack_uint(values->PreemptZ, 0, 31);
+
+   GFX125_INTERFACE_DESCRIPTOR_DATA_pack(data, &dw[17], &values->InterfaceDescriptor);
+
+   GFX125_POSTSYNC_DATA_pack(data, &dw[25], &values->PostSync);
+
+   dw[30] =
+      util_bitpack_uint(values->InlineData[0], 0, 31);
+
+   dw[31] =
+      util_bitpack_uint(values->InlineData[1], 0, 31);
+
+   dw[32] =
+      util_bitpack_uint(values->InlineData[2], 0, 31);
+
+   dw[33] =
+      util_bitpack_uint(values->InlineData[3], 0, 31);
+
+   dw[34] =
+      util_bitpack_uint(values->InlineData[4], 0, 31);
+
+   dw[35] =
+      util_bitpack_uint(values->InlineData[5], 0, 31);
+
+   dw[36] =
+      util_bitpack_uint(values->InlineData[6], 0, 31);
+
+   dw[37] =
+      util_bitpack_uint(values->InlineData[7], 0, 31);
+}
+
 #define GFX125_CPS_STATE_length                8
 struct GFX125_CPS_STATE {
    float                                MinCPSizeX;
@@ -910,8 +1162,9 @@ struct GFX125_MEMORYADDRESSATTRIBUTES {
 #define InternalMediaStorage                     1
    uint32_t                             TiledResourceMode;
 #define TRMODE_NONE                              0
-#define TRMODE_TILEYF                            1
-#define TRMODE_TILEYS                            2
+#define TRMODE_TILES                             1
+#define TRMODE_TILEX                             2
+#define TRMODE_TILEF                             3
 };
 
 static inline __attribute__((always_inline)) void
@@ -1272,105 +1525,6 @@ GFX125_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused
       util_bitpack_uint(values->ISliceConcealmentMode, 31, 31);
 }
 
-#define GFX125_INTERFACE_DESCRIPTOR_DATA_length      8
-struct GFX125_INTERFACE_DESCRIPTOR_DATA {
-   uint64_t                             KernelStartPointer;
-   bool                                 SoftwareExceptionEnable;
-   bool                                 MaskStackExceptionEnable;
-   bool                                 IllegalOpcodeExceptionEnable;
-   uint32_t                             FloatingPointMode;
-#define IEEE754                                  0
-#define Alternate                                1
-   bool                                 SingleProgramFlow;
-   uint32_t                             DenormMode;
-#define Ftz                                      0
-#define SetByKernel                              1
-   uint32_t                             ThreadPreemptionDisable;
-   uint32_t                             SamplerCount;
-#define Nosamplersused                           0
-#define Between1and4samplersused                 1
-#define Between5and8samplersused                 2
-#define Between9and12samplersused                3
-#define Between13and16samplersused               4
-   uint64_t                             SamplerStatePointer;
-   uint32_t                             BindingTableEntryCount;
-   uint64_t                             BindingTablePointer;
-   uint32_t                             NumberofThreadsinGPGPUThreadGroup;
-   uint32_t                             SharedLocalMemorySize;
-#define Encodes0K                                0
-#define Encodes1K                                1
-#define Encodes2K                                2
-#define Encodes4K                                3
-#define Encodes8K                                4
-#define Encodes16K                               5
-#define Encodes32K                               6
-#define Encodes64K                               7
-   bool                                 BarrierEnable;
-   uint32_t                             RoundingMode;
-#define RTNE                                     0
-#define RU                                       1
-#define RD                                       2
-#define RTZ                                      3
-   uint32_t                             Threadgroupdispatchsize;
-#define TGsize8                                  0
-#define TGsize16                                 1
-   uint32_t                             NumberOfBarriers;
-#define BARRIER_SIZE_NONE                        0
-#define BARRIER_SIZE_B1                          1
-#define BARRIER_SIZE_B2                          2
-#define BARRIER_SIZE_B4                          3
-#define BARRIER_SIZE_B8                          4
-#define BARRIER_SIZE_B16                         5
-#define BARRIER_SIZE_B24                         6
-#define BARRIER_SIZE_B32                         7
-   uint32_t                             BTDMode;
-   uint32_t                             PreferredSLMAllocationSize;
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *data,
-                                      __attribute__((unused)) void * restrict dst,
-                                      __attribute__((unused)) const struct GFX125_INTERFACE_DESCRIPTOR_DATA * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      __gen_offset(values->KernelStartPointer, 6, 31);
-
-   dw[1] = 0;
-
-   dw[2] =
-      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
-      util_bitpack_uint(values->MaskStackExceptionEnable, 11, 11) |
-      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
-      util_bitpack_uint(values->SingleProgramFlow, 18, 18) |
-      util_bitpack_uint(values->DenormMode, 19, 19) |
-      util_bitpack_uint(values->ThreadPreemptionDisable, 20, 20);
-
-   dw[3] =
-      util_bitpack_uint(values->SamplerCount, 2, 4) |
-      __gen_offset(values->SamplerStatePointer, 5, 31);
-
-   dw[4] =
-      util_bitpack_uint(values->BindingTableEntryCount, 0, 4) |
-      __gen_offset(values->BindingTablePointer, 5, 20);
-
-   dw[5] =
-      util_bitpack_uint(values->NumberofThreadsinGPGPUThreadGroup, 0, 9) |
-      util_bitpack_uint(values->SharedLocalMemorySize, 16, 20) |
-      util_bitpack_uint(values->BarrierEnable, 21, 21) |
-      util_bitpack_uint(values->RoundingMode, 22, 23) |
-      util_bitpack_uint(values->Threadgroupdispatchsize, 27, 27) |
-      util_bitpack_uint(values->NumberOfBarriers, 28, 30) |
-      util_bitpack_uint(values->BTDMode, 31, 31);
-
-   dw[6] =
-      util_bitpack_uint(values->PreferredSLMAllocationSize, 0, 3);
-
-   dw[7] = 0;
-}
-
 #define GFX125_LUMA_FILTER_COEFFICIENTS_ARRAY_length      4
 struct GFX125_LUMA_FILTER_COEFFICIENTS_ARRAY {
    float                                Table0XFilterCoefficientn0;
@@ -1564,43 +1718,6 @@ GFX125_PALETTE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->Alpha, 24, 31);
 }
 
-#define GFX125_POSTSYNC_DATA_length            5
-struct GFX125_POSTSYNC_DATA {
-   uint32_t                             Operation;
-#define NoWrite                                  0
-#define WriteImmediateData                       1
-#define WriteTimestamp                           3
-   bool                                 HDCPipelineFlush;
-   bool                                 L3flush;
-   uint32_t                             MOCS;
-   __gen_address_type                   DestinationAddress;
-   uint64_t                             ImmediateData;
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_POSTSYNC_DATA_pack(__attribute__((unused)) __gen_user_data *data,
-                          __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GFX125_POSTSYNC_DATA * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      util_bitpack_uint(values->Operation, 0, 1) |
-      util_bitpack_uint(values->HDCPipelineFlush, 2, 2) |
-      util_bitpack_uint(values->L3flush, 3, 3) |
-      util_bitpack_uint_nonzero(values->MOCS, 4, 10);
-
-   const uint64_t v1_address =
-      __gen_address(data, &dw[1], values->DestinationAddress, 0, 0, 63);
-   dw[1] = v1_address;
-   dw[2] = v1_address >> 32;
-
-   const uint64_t v3 =
-      util_bitpack_uint(values->ImmediateData, 0, 63);
-   dw[3] = v3;
-   dw[4] = v3 >> 32;
-}
-
 #define GFX125_RENDER_SURFACE_STATE_length     16
 struct GFX125_RENDER_SURFACE_STATE {
    bool                                 CubeFaceEnablePositiveZ;
@@ -1635,15 +1752,7 @@ struct GFX125_RENDER_SURFACE_STATE {
 #define VALIGN_16                                3
    uint32_t                             SurfaceFormat;
    bool                                 SurfaceArray;
-   uint32_t                             SurfaceType;
-#define SURFTYPE_1D                              0
-#define SURFTYPE_2D                              1
-#define SURFTYPE_3D                              2
-#define SURFTYPE_CUBE                            3
-#define SURFTYPE_BUFFER                          4
-#define SURFTYPE_STRBUF                          5
-#define SURFTYPE_SCRATCH                         6
-#define SURFTYPE_NULL                            7
+   enum GFX125_STATE_SURFACE_TYPE       SurfaceType;
    uint32_t                             SurfaceQPitch;
    bool                                 SampleTapDiscardDisable;
    bool                                 DoubleFetchDisable;
@@ -1677,12 +1786,7 @@ struct GFX125_RENDER_SURFACE_STATE {
    uint32_t                             MIPCountLOD;
    uint32_t                             SurfaceMinLOD;
    uint32_t                             MipTailStartLOD;
-   uint32_t                             L1CacheControl;
-#define L1CC_WBP                                 0
-#define L1CC_UC                                  1
-#define L1CC_WB                                  2
-#define L1CC_WT                                  3
-#define L1CC_WS                                  4
+   enum GFX125_L1_CACHE_CONTROL         L1CacheControl;
    bool                                 EWADisableForCube;
    uint32_t                             YOffset;
    uint32_t                             XOffset;
@@ -5108,7 +5212,6 @@ struct GFX125_VDENC_SURFACE_STATE_FIELDS {
    bool                                 HalfPitchforChroma;
    uint32_t                             SurfacePitch;
    uint32_t                             ChromaDownsampleFilterControl;
-   uint32_t                             Format;
    uint32_t                             SurfaceFormat;
 #define VDENC_YUV422                             0
 #define VDENC_RGBA4444                           1
@@ -5141,8 +5244,7 @@ GFX125_VDENC_SURFACE_STATE_FIELDS_pack(__attribute__((unused)) __gen_user_data *
       util_bitpack_uint(values->HalfPitchforChroma, 2, 2) |
       util_bitpack_uint(values->SurfacePitch, 3, 19) |
       util_bitpack_uint(values->ChromaDownsampleFilterControl, 20, 22) |
-      util_bitpack_uint(values->Format, 27, 31) |
-      util_bitpack_uint(values->SurfaceFormat, 28, 31);
+      util_bitpack_uint(values->SurfaceFormat, 27, 31);
 
    dw[2] =
       util_bitpack_uint(values->YOffsetforUCb, 0, 14) |
@@ -5151,6 +5253,30 @@ GFX125_VDENC_SURFACE_STATE_FIELDS_pack(__attribute__((unused)) __gen_user_data *
    dw[3] =
       util_bitpack_uint(values->YOffsetforVCr, 0, 15) |
       util_bitpack_uint(values->XOffsetforVCr, 16, 28);
+}
+
+#define GFX125_VD_CONTROL_STATE_BODY_length      2
+struct GFX125_VD_CONTROL_STATE_BODY {
+   bool                                 PipelineInitialization;
+   bool                                 ScalableModePipeLock;
+   bool                                 ScalableModePipeUnlock;
+   bool                                 MemoryImplicitFlush;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VD_CONTROL_STATE_BODY_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_VD_CONTROL_STATE_BODY * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->PipelineInitialization, 0, 0);
+
+   dw[1] =
+      util_bitpack_uint(values->ScalableModePipeLock, 0, 0) |
+      util_bitpack_uint(values->ScalableModePipeUnlock, 1, 1) |
+      util_bitpack_uint(values->MemoryImplicitFlush, 2, 2);
 }
 
 #define GFX125_VERTEX_BUFFER_STATE_length      4
@@ -5344,6 +5470,7 @@ struct GFX125_3DPRIMITIVE {
    bool                                 UAVCoherencyRequired;
    bool                                 IndirectParameterEnable;
    uint32_t                             ExtendedParametersPresent;
+   uint32_t                             TBIMREnable;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
@@ -5376,6 +5503,7 @@ GFX125_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->UAVCoherencyRequired, 9, 9) |
       util_bitpack_uint(values->IndirectParameterEnable, 10, 10) |
       util_bitpack_uint(values->ExtendedParametersPresent, 11, 11) |
+      util_bitpack_uint(values->TBIMREnable, 13, 13) |
       util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
       util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
       util_bitpack_uint(values->CommandSubType, 27, 28) |
@@ -5418,6 +5546,7 @@ struct GFX125_3DPRIMITIVE_EXTENDED {
    bool                                 UAVCoherencyRequired;
    bool                                 IndirectParameterEnable;
    bool                                 ExtendedParametersPresent;
+   uint32_t                             TBIMREnable;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
@@ -5450,6 +5579,7 @@ GFX125_3DPRIMITIVE_EXTENDED_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->UAVCoherencyRequired, 9, 9) |
       util_bitpack_uint(values->IndirectParameterEnable, 10, 10) |
       util_bitpack_uint(values->ExtendedParametersPresent, 11, 11) |
+      util_bitpack_uint(values->TBIMREnable, 13, 13) |
       util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
       util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
       util_bitpack_uint(values->CommandSubType, 27, 28) |
@@ -8426,12 +8556,14 @@ struct GFX125_3DSTATE_PS {
 #define POSOFFSET_NONE                           0
 #define POSOFFSET_CENTROID                       2
 #define POSOFFSET_SAMPLE                         3
+   bool                                 DualSIMD8DispatchEnable;
    uint32_t                             RenderTargetResolveType;
 #define RESOLVE_DISABLED                         0
 #define RESOLVE_PARTIAL                          1
 #define FAST_CLEAR_0                             2
 #define RESOLVE_FULL                             3
    bool                                 RenderTargetFastClearEnable;
+   bool                                 OverlappingSubspansEnable;
    bool                                 PushConstantEnable;
    uint32_t                             MaximumNumberofThreadsPerPSD;
    uint32_t                             DispatchGRFStartRegisterForConstantSetupData2;
@@ -8483,8 +8615,10 @@ GFX125_3DSTATE_PS_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->_16PixelDispatchEnable, 1, 1) |
       util_bitpack_uint(values->_32PixelDispatchEnable, 2, 2) |
       util_bitpack_uint(values->PositionXYOffsetSelect, 3, 4) |
+      util_bitpack_uint(values->DualSIMD8DispatchEnable, 5, 5) |
       util_bitpack_uint(values->RenderTargetResolveType, 6, 7) |
       util_bitpack_uint(values->RenderTargetFastClearEnable, 8, 8) |
+      util_bitpack_uint(values->OverlappingSubspansEnable, 9, 9) |
       util_bitpack_uint(values->PushConstantEnable, 11, 11) |
       util_bitpack_uint(values->MaximumNumberofThreadsPerPSD, 23, 31);
 
@@ -10907,6 +11041,58 @@ GFX125_3DSTATE_TASK_SHADER_DATA_pack(__attribute__((unused)) __gen_user_data *da
       util_bitpack_uint(values->InlineData[7], 0, 31);
 }
 
+#define GFX125_3DSTATE_TBIMR_TILE_PASS_INFO_length      4
+#define GFX125_3DSTATE_TBIMR_TILE_PASS_INFO_length_bias      2
+#define GFX125_3DSTATE_TBIMR_TILE_PASS_INFO_header\
+   .DWordLength                         =      2,  \
+   ._3DCommandSubOpcode                 =    110,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_TBIMR_TILE_PASS_INFO {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             TileRectangleHeight;
+   uint32_t                             TileRectangleWidth;
+   uint32_t                             VerticalTileCount;
+   uint32_t                             HorizontalTileCount;
+   uint32_t                             WalkPattern;
+   uint32_t                             TileBoxCheck;
+   uint32_t                             TBIMRBatchSize;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_TBIMR_TILE_PASS_INFO_pack(__attribute__((unused)) __gen_user_data *data,
+                                         __attribute__((unused)) void * restrict dst,
+                                         __attribute__((unused)) const struct GFX125_3DSTATE_TBIMR_TILE_PASS_INFO * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->TileRectangleHeight, 0, 14) |
+      util_bitpack_uint(values->TileRectangleWidth, 16, 30);
+
+   dw[2] =
+      util_bitpack_uint(values->VerticalTileCount, 0, 15) |
+      util_bitpack_uint(values->HorizontalTileCount, 16, 31);
+
+   dw[3] =
+      util_bitpack_uint(values->WalkPattern, 0, 0) |
+      util_bitpack_uint(values->TileBoxCheck, 2, 2) |
+      util_bitpack_uint(values->TBIMRBatchSize, 3, 5);
+}
+
 #define GFX125_3DSTATE_TE_length               4
 #define GFX125_3DSTATE_TE_length_bias          2
 #define GFX125_3DSTATE_TE_header                \
@@ -11008,6 +11194,144 @@ GFX125_3DSTATE_TE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_float(values->MaximumTessellationFactorNotOdd);
 }
 
+#define GFX125_3DSTATE_URB_ALLOC_DS_length      3
+#define GFX125_3DSTATE_URB_ALLOC_DS_length_bias      2
+#define GFX125_3DSTATE_URB_ALLOC_DS_header      \
+   .DWordLength                         =      1,  \
+   ._3DCommandSubOpcode                 =     90,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_URB_ALLOC_DS {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             DSURBEntryAllocationSize;
+   uint32_t                             DSURBStartingAddressSlice0;
+   uint32_t                             DSURBStartingAddressSliceN;
+   uint32_t                             DSNumberofURBEntriesSlice0;
+   uint32_t                             DSNumberofURBEntriesSliceN;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_URB_ALLOC_DS_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_3DSTATE_URB_ALLOC_DS * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->DSURBEntryAllocationSize, 0, 9) |
+      util_bitpack_uint(values->DSURBStartingAddressSlice0, 10, 17) |
+      util_bitpack_uint(values->DSURBStartingAddressSliceN, 21, 28);
+
+   dw[2] =
+      util_bitpack_uint(values->DSNumberofURBEntriesSlice0, 0, 15) |
+      util_bitpack_uint(values->DSNumberofURBEntriesSliceN, 16, 31);
+}
+
+#define GFX125_3DSTATE_URB_ALLOC_GS_length      3
+#define GFX125_3DSTATE_URB_ALLOC_GS_length_bias      2
+#define GFX125_3DSTATE_URB_ALLOC_GS_header      \
+   .DWordLength                         =      1,  \
+   ._3DCommandSubOpcode                 =     91,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_URB_ALLOC_GS {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             GSURBEntryAllocationSize;
+   uint32_t                             GSURBStartingAddressSlice0;
+   uint32_t                             GSURBStartingAddressSliceN;
+   uint32_t                             GSNumberofURBEntriesSlice0;
+   uint32_t                             GSNumberofURBEntriesSliceN;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_URB_ALLOC_GS_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_3DSTATE_URB_ALLOC_GS * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->GSURBEntryAllocationSize, 0, 9) |
+      util_bitpack_uint(values->GSURBStartingAddressSlice0, 10, 17) |
+      util_bitpack_uint(values->GSURBStartingAddressSliceN, 21, 28);
+
+   dw[2] =
+      util_bitpack_uint(values->GSNumberofURBEntriesSlice0, 0, 15) |
+      util_bitpack_uint(values->GSNumberofURBEntriesSliceN, 16, 31);
+}
+
+#define GFX125_3DSTATE_URB_ALLOC_HS_length      3
+#define GFX125_3DSTATE_URB_ALLOC_HS_length_bias      2
+#define GFX125_3DSTATE_URB_ALLOC_HS_header      \
+   .DWordLength                         =      1,  \
+   ._3DCommandSubOpcode                 =     89,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_URB_ALLOC_HS {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             HSURBEntryAllocationSize;
+   uint32_t                             HSURBStartingAddressSlice0;
+   uint32_t                             HSURBStartingAddressSliceN;
+   uint32_t                             HSNumberofURBEntriesSlice0;
+   uint32_t                             HSNumberofURBEntriesSliceN;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_URB_ALLOC_HS_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_3DSTATE_URB_ALLOC_HS * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->HSURBEntryAllocationSize, 0, 9) |
+      util_bitpack_uint(values->HSURBStartingAddressSlice0, 10, 17) |
+      util_bitpack_uint(values->HSURBStartingAddressSliceN, 21, 28);
+
+   dw[2] =
+      util_bitpack_uint(values->HSNumberofURBEntriesSlice0, 0, 15) |
+      util_bitpack_uint(values->HSNumberofURBEntriesSliceN, 16, 31);
+}
+
 #define GFX125_3DSTATE_URB_ALLOC_MESH_length      3
 #define GFX125_3DSTATE_URB_ALLOC_MESH_length_bias      2
 #define GFX125_3DSTATE_URB_ALLOC_MESH_header    \
@@ -11098,6 +11422,52 @@ GFX125_3DSTATE_URB_ALLOC_TASK_pack(__attribute__((unused)) __gen_user_data *data
    dw[2] =
       util_bitpack_uint(values->TASKNumberofURBEntriesSlice0, 0, 15) |
       util_bitpack_uint(values->TASKNumberofURBEntriesSliceN, 16, 31);
+}
+
+#define GFX125_3DSTATE_URB_ALLOC_VS_length      3
+#define GFX125_3DSTATE_URB_ALLOC_VS_length_bias      2
+#define GFX125_3DSTATE_URB_ALLOC_VS_header      \
+   .DWordLength                         =      1,  \
+   ._3DCommandSubOpcode                 =     88,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_URB_ALLOC_VS {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             VSURBEntryAllocationSize;
+   uint32_t                             VSURBStartingAddressSlice0;
+   uint32_t                             VSURBStartingAddressSliceN;
+   uint32_t                             VSNumberofURBEntriesSlice0;
+   uint32_t                             VSNumberofURBEntriesSliceN;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_URB_ALLOC_VS_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_3DSTATE_URB_ALLOC_VS * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->VSURBEntryAllocationSize, 0, 9) |
+      util_bitpack_uint(values->VSURBStartingAddressSlice0, 10, 17) |
+      util_bitpack_uint(values->VSURBStartingAddressSliceN, 21, 28);
+
+   dw[2] =
+      util_bitpack_uint(values->VSNumberofURBEntriesSlice0, 0, 15) |
+      util_bitpack_uint(values->VSNumberofURBEntriesSliceN, 16, 31);
 }
 
 #define GFX125_3DSTATE_URB_CLEAR_length        2
@@ -12285,6 +12655,1642 @@ GFX125_3DSTATE_WM_HZ_OP_pack(__attribute__((unused)) __gen_user_data *data,
    dw[5] = 0;
 }
 
+#define GFX125_AVP_BSD_OBJECT_length           3
+#define GFX125_AVP_BSD_OBJECT_length_bias      2
+#define GFX125_AVP_BSD_OBJECT_header            \
+   .DWordLength                         =      1,  \
+   .SubOpcode                           =     32,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_AVP_BSD_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             TileIndirectBSDDataLength;
+   uint32_t                             TileIndirectDataStartAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX125_AVP_BSD_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->TileIndirectBSDDataLength, 0, 31);
+
+   dw[2] =
+      util_bitpack_uint(values->TileIndirectDataStartAddress, 0, 31);
+}
+
+#define GFX125_AVP_IND_OBJ_BASE_ADDR_STATE_length      6
+#define GFX125_AVP_IND_OBJ_BASE_ADDR_STATE_length_bias      2
+#define GFX125_AVP_IND_OBJ_BASE_ADDR_STATE_header\
+   .DWordLength                         =      4,  \
+   .SubOpcode                           =      3,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_AVP_IND_OBJ_BASE_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   AVPIndirectBitstreamObjectBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES AVPIndirectBitstreamObjectAddressAttributes;
+   __gen_address_type                   AVPIndirectBitstreamObjectAccessUpperBound;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_IND_OBJ_BASE_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                        __attribute__((unused)) void * restrict dst,
+                                        __attribute__((unused)) const struct GFX125_AVP_IND_OBJ_BASE_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->AVPIndirectBitstreamObjectBaseAddress, 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[3], &values->AVPIndirectBitstreamObjectAddressAttributes);
+
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->AVPIndirectBitstreamObjectAccessUpperBound, 0, 0, 63);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
+}
+
+#define GFX125_AVP_INLOOP_FILTER_STATE_length     15
+#define GFX125_AVP_INLOOP_FILTER_STATE_length_bias      2
+#define GFX125_AVP_INLOOP_FILTER_STATE_header   \
+   .DWordLength                         =     13,  \
+   .SubOpcode                           =     51,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_AVP_INLOOP_FILTER_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             LumaYDeblockerFilterLevelVertical;
+   uint32_t                             LumaYDeblockerFilterLevelHorizontal;
+   uint32_t                             ChromaUDeblockerFilterLevel;
+   uint32_t                             ChromaVDeblockerFilterLevel;
+   uint32_t                             DeblockerFilterSharpnessLevel;
+   bool                                 DeblockerFilterModeRefDeltaEnableFlag;
+   uint32_t                             DeblockerDeltaLFResolution;
+   bool                                 DeblockerFilterDeltaLFMultiFlag;
+   bool                                 DeblockerFilterDeltaLFPresentFlag;
+   int32_t                              DeblockerFilterRefDeltas0;
+   int32_t                              DeblockerFilterRefDeltas1;
+   int32_t                              DeblockerFilterRefDeltas2;
+   int32_t                              DeblockerFilterRefDeltas3;
+   int32_t                              DeblockerFilterRefDeltas4;
+   int32_t                              DeblockerFilterRefDeltas5;
+   int32_t                              DeblockerFilterRefDeltas6;
+   int32_t                              DeblockerFilterRefDeltas7;
+   int32_t                              DeblockerFilterModeDeltas0;
+   int32_t                              DeblockerFilterModeDeltas1;
+   uint32_t                             CDEFYStrength0;
+   uint32_t                             CDEFYStrength1;
+   uint32_t                             CDEFYStrength2;
+   uint32_t                             CDEFYStrength3;
+   uint32_t                             CDEFBits;
+   uint32_t                             CDEFFilterDmpaingFactorMinus3;
+   uint32_t                             CDEFYStrength4;
+   uint32_t                             CDEFYStrength5;
+   uint32_t                             CDEFYStrength6;
+   uint32_t                             CDEFYStrength7;
+   uint32_t                             CDEFUVStrength0;
+   uint32_t                             CDEFUVStrength1;
+   uint32_t                             CDEFUVStrength2;
+   uint32_t                             CDEFUVStrength3;
+   uint32_t                             CDEFUVStrength4;
+   uint32_t                             CDEFUVStrength5;
+   uint32_t                             CDEFUVStrength6;
+   uint32_t                             CDEFUVStrength7;
+   uint32_t                             SuperResUpscaledFrameWidthMinus1;
+   uint32_t                             SuperResDenom;
+   uint32_t                             FrameLoopRestorationFilterLumaY;
+   uint32_t                             FrameLoopRestorationFilterChromaU;
+   uint32_t                             FrameLoopRestorationFilterChromaV;
+   uint32_t                             LoopRestorationUnitSizeLumaY;
+   bool                                 UseSameLoopRestorationUnitSizeChromasUVFlag;
+   uint32_t                             LumaPlanex_step_qn;
+   uint32_t                             LumaPlanex0_qn;
+   uint32_t                             ChromaPlanex_step_qn;
+   uint32_t                             ChromaPlanex0_qn;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_INLOOP_FILTER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_AVP_INLOOP_FILTER_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->LumaYDeblockerFilterLevelVertical, 0, 5) |
+      util_bitpack_uint(values->LumaYDeblockerFilterLevelHorizontal, 6, 11) |
+      util_bitpack_uint(values->ChromaUDeblockerFilterLevel, 12, 17) |
+      util_bitpack_uint(values->ChromaVDeblockerFilterLevel, 18, 23) |
+      util_bitpack_uint(values->DeblockerFilterSharpnessLevel, 24, 26) |
+      util_bitpack_uint(values->DeblockerFilterModeRefDeltaEnableFlag, 27, 27) |
+      util_bitpack_uint(values->DeblockerDeltaLFResolution, 28, 29) |
+      util_bitpack_uint(values->DeblockerFilterDeltaLFMultiFlag, 30, 30) |
+      util_bitpack_uint(values->DeblockerFilterDeltaLFPresentFlag, 31, 31);
+
+   dw[2] =
+      util_bitpack_sint(values->DeblockerFilterRefDeltas0, 0, 6) |
+      util_bitpack_sint(values->DeblockerFilterRefDeltas1, 8, 14) |
+      util_bitpack_sint(values->DeblockerFilterRefDeltas2, 16, 22) |
+      util_bitpack_sint(values->DeblockerFilterRefDeltas3, 24, 30);
+
+   dw[3] =
+      util_bitpack_sint(values->DeblockerFilterRefDeltas4, 0, 6) |
+      util_bitpack_sint(values->DeblockerFilterRefDeltas5, 8, 14) |
+      util_bitpack_sint(values->DeblockerFilterRefDeltas6, 16, 22) |
+      util_bitpack_sint(values->DeblockerFilterRefDeltas7, 24, 30);
+
+   dw[4] =
+      util_bitpack_sint(values->DeblockerFilterModeDeltas0, 0, 6) |
+      util_bitpack_sint(values->DeblockerFilterModeDeltas1, 8, 14);
+
+   dw[5] =
+      util_bitpack_uint(values->CDEFYStrength0, 0, 5) |
+      util_bitpack_uint(values->CDEFYStrength1, 6, 11) |
+      util_bitpack_uint(values->CDEFYStrength2, 12, 17) |
+      util_bitpack_uint(values->CDEFYStrength3, 18, 23) |
+      util_bitpack_uint(values->CDEFBits, 28, 29) |
+      util_bitpack_uint(values->CDEFFilterDmpaingFactorMinus3, 30, 31);
+
+   dw[6] =
+      util_bitpack_uint(values->CDEFYStrength4, 0, 5) |
+      util_bitpack_uint(values->CDEFYStrength5, 6, 11) |
+      util_bitpack_uint(values->CDEFYStrength6, 12, 17) |
+      util_bitpack_uint(values->CDEFYStrength7, 18, 23);
+
+   dw[7] =
+      util_bitpack_uint(values->CDEFUVStrength0, 0, 5) |
+      util_bitpack_uint(values->CDEFUVStrength1, 6, 11) |
+      util_bitpack_uint(values->CDEFUVStrength2, 12, 17) |
+      util_bitpack_uint(values->CDEFUVStrength3, 18, 23);
+
+   dw[8] =
+      util_bitpack_uint(values->CDEFUVStrength4, 0, 5) |
+      util_bitpack_uint(values->CDEFUVStrength5, 6, 11) |
+      util_bitpack_uint(values->CDEFUVStrength6, 12, 17) |
+      util_bitpack_uint(values->CDEFUVStrength7, 18, 23);
+
+   dw[9] =
+      util_bitpack_uint(values->SuperResUpscaledFrameWidthMinus1, 0, 15) |
+      util_bitpack_uint(values->SuperResDenom, 16, 20);
+
+   dw[10] =
+      util_bitpack_uint(values->FrameLoopRestorationFilterLumaY, 0, 1) |
+      util_bitpack_uint(values->FrameLoopRestorationFilterChromaU, 2, 3) |
+      util_bitpack_uint(values->FrameLoopRestorationFilterChromaV, 4, 5) |
+      util_bitpack_uint(values->LoopRestorationUnitSizeLumaY, 8, 9) |
+      util_bitpack_uint(values->UseSameLoopRestorationUnitSizeChromasUVFlag, 10, 10);
+
+   dw[11] =
+      util_bitpack_uint(values->LumaPlanex_step_qn, 0, 15);
+
+   dw[12] =
+      util_bitpack_uint(values->LumaPlanex0_qn, 0, 31);
+
+   dw[13] =
+      util_bitpack_uint(values->ChromaPlanex_step_qn, 0, 15);
+
+   dw[14] =
+      util_bitpack_uint(values->ChromaPlanex0_qn, 0, 31);
+}
+
+#define GFX125_AVP_INTER_PRED_STATE_length     15
+#define GFX125_AVP_INTER_PRED_STATE_length_bias      2
+#define GFX125_AVP_INTER_PRED_STATE_header      \
+   .DWordLength                         =     13,  \
+   .SubOpcode                           =     18,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_AVP_INTER_PRED_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SavedOrderHints0[7];
+   uint32_t                             ActiveReferenceBitmask;
+   uint32_t                             SavedOrderHints1[7];
+   uint32_t                             SavedOrderHints2[7];
+   uint32_t                             SavedOrderHints3[7];
+   uint32_t                             SavedOrderHints4[7];
+   uint32_t                             SavedOrderHints5[7];
+   uint32_t                             SavedOrderHints6[7];
+   uint32_t                             SavedOrderHints7[7];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_INTER_PRED_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_AVP_INTER_PRED_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->SavedOrderHints0[0], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints0[1], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints0[2], 16, 23) |
+      util_bitpack_uint(values->SavedOrderHints0[3], 24, 31);
+
+   dw[2] =
+      util_bitpack_uint(values->SavedOrderHints0[4], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints0[5], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints0[6], 16, 23) |
+      util_bitpack_uint(values->ActiveReferenceBitmask, 24, 31);
+
+   dw[3] =
+      util_bitpack_uint(values->SavedOrderHints1[0], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints1[1], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints1[2], 16, 23) |
+      util_bitpack_uint(values->SavedOrderHints1[3], 24, 31);
+
+   dw[4] =
+      util_bitpack_uint(values->SavedOrderHints1[4], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints1[5], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints1[6], 16, 23);
+
+   dw[5] =
+      util_bitpack_uint(values->SavedOrderHints2[0], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints2[1], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints2[2], 16, 23) |
+      util_bitpack_uint(values->SavedOrderHints2[3], 24, 31);
+
+   dw[6] =
+      util_bitpack_uint(values->SavedOrderHints2[4], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints2[5], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints2[6], 16, 23);
+
+   dw[7] =
+      util_bitpack_uint(values->SavedOrderHints3[0], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints3[1], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints3[2], 16, 23) |
+      util_bitpack_uint(values->SavedOrderHints3[3], 24, 31);
+
+   dw[8] =
+      util_bitpack_uint(values->SavedOrderHints3[4], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints3[5], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints3[6], 16, 23);
+
+   dw[9] =
+      util_bitpack_uint(values->SavedOrderHints4[0], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints4[1], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints4[2], 16, 23) |
+      util_bitpack_uint(values->SavedOrderHints4[3], 24, 31);
+
+   dw[10] =
+      util_bitpack_uint(values->SavedOrderHints4[4], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints4[5], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints4[6], 16, 23);
+
+   dw[11] =
+      util_bitpack_uint(values->SavedOrderHints5[0], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints5[1], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints5[2], 16, 23) |
+      util_bitpack_uint(values->SavedOrderHints5[3], 24, 31);
+
+   dw[12] =
+      util_bitpack_uint(values->SavedOrderHints5[4], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints5[5], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints5[6], 16, 23);
+
+   dw[13] =
+      util_bitpack_uint(values->SavedOrderHints6[0], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints6[1], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints6[2], 16, 23) |
+      util_bitpack_uint(values->SavedOrderHints6[3], 24, 31);
+
+   dw[14] =
+      util_bitpack_uint(values->SavedOrderHints6[4], 0, 7) |
+      util_bitpack_uint(values->SavedOrderHints6[5], 8, 15) |
+      util_bitpack_uint(values->SavedOrderHints6[6], 16, 23);
+}
+
+#define GFX125_AVP_PIC_STATE_length           51
+#define GFX125_AVP_PIC_STATE_length_bias       2
+#define GFX125_AVP_PIC_STATE_header             \
+   .DWordLength                         =     49,  \
+   .SubOpcode                           =     48,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_AVP_PIC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             FrameWidth;
+   uint32_t                             FrameHeight;
+   uint32_t                             SequenceChromaSubSamplingFormat;
+#define SS_Monochrome                            0
+#define SS_420                                   1
+#define SS_422                                   2
+#define SS_444                                   3
+   uint32_t                             SequencePixelBitDepthIdc;
+#define SeqPix_8bit                              0
+#define SeqPix_10bit                             1
+#define SeqPix_12bit                             2
+   uint32_t                             SequenceSuperblockSizeUsed;
+#define _64x64                                   0
+#define _128x128                                 1
+   bool                                 SequenceEnableOrderHintFlag;
+   uint32_t                             SequenceOrderHintBitsMinus1;
+   bool                                 SequenceEnableFilterIntraFlag;
+   bool                                 SequenceEnableIntraEdgeFilterFlag;
+   bool                                 SequenceEnableDualFilterFlag;
+   bool                                 SequenceEnableInterIntraCompoundFlag;
+   bool                                 SequenceEnableMaskedCompoundFlag;
+   bool                                 SequenceEnableJointCompoundFlag;
+   bool                                 AllowScreenContentToolsFlag;
+   bool                                 ForceIntegerMVFlag;
+   bool                                 AllowWarpedMotionFlag;
+   bool                                 UseCDEFFilterFlag;
+   bool                                 UseSuperResFlag;
+   bool                                 FrameLevelLoopRestorationFilterEnable;
+   uint32_t                             FrameType;
+   bool                                 IntraOnlyFlag;
+   bool                                 ErrorResilientModeFlag;
+   bool                                 AllowIntraBCFlag;
+   uint32_t                             PrimaryReferenceFrameIdx;
+   bool                                 SegmentationEnableFlag;
+   bool                                 SegmentationUpdateMapFlag;
+   bool                                 SegmentationTemporalUpdateFlag;
+   bool                                 PreSkipSegmentIDFlag;
+   uint32_t                             LastActiveSegmentSegmentID;
+   bool                                 DeltaQPresentFlag;
+   uint32_t                             DeltaQRes;
+   bool                                 FrameCodedLosslessMode;
+   bool                                 SegmentMapisZeroFlag;
+   bool                                 SegmentIDBufferStreamInEnableFlag;
+   bool                                 SegmentIDBufferStreamOutEnableFlag;
+   uint32_t                             BaseQindex;
+   int32_t                              YdcdeltaQ;
+   int32_t                              UdcdeltaQ;
+   int32_t                              UacdeltaQ;
+   int32_t                              VdcdeltaQ;
+   int32_t                              VacdeltaQ;
+   bool                                 AllowHighPrecisionMV;
+   bool                                 FrameLevelReferenceModeSelect;
+   uint32_t                             McompFilterType;
+#define EightTap                                 0
+#define EightTapSmooth                           1
+#define EightTapSharp                            2
+#define Bilinear                                 3
+#define Switchable                               4
+   bool                                 MotionModeSwitchableFlag;
+   bool                                 UseReferenceFrameMVSetFlag;
+   uint32_t                             ReferenceFrameSignBias;
+   uint32_t                             CurrentFrameOrderHint;
+   bool                                 ReducedTxSetUsed;
+   uint32_t                             FrameTransformMode;
+   bool                                 SkipModePresentFlag;
+   uint32_t                             SkipModeFrame0;
+   uint32_t                             SkipModeFrame1;
+   uint32_t                             ReferenceFrameSide;
+   uint32_t                             GlobalMotionType1;
+   uint32_t                             GlobalMotionType2;
+   uint32_t                             GlobalMotionType3;
+   uint32_t                             GlobalMotionType4;
+   uint32_t                             GlobalMotionType5;
+   uint32_t                             GlobalMotionType6;
+   uint32_t                             GlobalMotionType7;
+   uint32_t                             FrameLevelGlobalMotionInvalidFlags;
+   uint32_t                             WarpParameters[42];
+   uint32_t                             ReferenceFrameIdx0;
+   uint32_t                             ReferenceFrameIdx1;
+   uint32_t                             ReferenceFrameIdx2;
+   uint32_t                             ReferenceFrameIdx3;
+   uint32_t                             ReferenceFrameIdx4;
+   uint32_t                             ReferenceFrameIdx5;
+   uint32_t                             ReferenceFrameIdx6;
+   uint32_t                             ReferenceFrameIdx7;
+   uint32_t                             IntraFrameWidthinPixelMinus1;
+   uint32_t                             IntraFrameHeightinPixelMinus1;
+   uint32_t                             LastFrameWidthinPixelMinus1;
+   uint32_t                             LastFrameHeightinPixelMinus1;
+   uint32_t                             Last2FrameWidthinPixelMinus1;
+   uint32_t                             Last2FrameHeightinPixelMinus1;
+   uint32_t                             Last3FrameWidthinPixelMinus1;
+   uint32_t                             Last3FrameHeightinPixelMinus1;
+   uint32_t                             GoldenFrameWidthinPixelMinus1;
+   uint32_t                             GoldenFrameHeightinPixelMinus1;
+   uint32_t                             BWDREFFrameWidthinPixelMinus1;
+   uint32_t                             BWDREFFrameHeightinPixelMinus1;
+   uint32_t                             ALTREF2FrameWidthinPixelMinus1;
+   uint32_t                             ALTREF2FrameHeightinPixelMinus1;
+   uint32_t                             ALTREFFrameWidthinPixelMinus1;
+   uint32_t                             ALTREFFrameHeightinPixelMinus1;
+   uint32_t                             VerticalScaleFactorForIntra;
+   uint32_t                             HorizontalScaleFactorForIntra;
+   uint32_t                             VerticalScaleFactorForLast;
+   uint32_t                             HorizontalScaleFactorForLast;
+   uint32_t                             VerticalScaleFactorForLast2;
+   uint32_t                             HorizontalScaleFactorForLast2;
+   uint32_t                             VerticalScaleFactorForLast3;
+   uint32_t                             HorizontalScaleFactorForLast3;
+   uint32_t                             VerticalScaleFactorForGolden;
+   uint32_t                             HorizontalScaleFactorForGolden;
+   uint32_t                             VerticalScaleFactorForBWDREF;
+   uint32_t                             HorizontalScaleFactorForBWDREF;
+   uint32_t                             VerticalScaleFactorForALTREF2;
+   uint32_t                             HorizontalScaleFactorForALTREF2;
+   uint32_t                             VerticalScaleFactorForALTREF;
+   uint32_t                             HorizontalScaleFactorForALTREF;
+   uint32_t                             ReferenceFrameOrderHint[8];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_AVP_PIC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->FrameWidth, 0, 13) |
+      util_bitpack_uint(values->FrameHeight, 16, 29);
+
+   dw[2] =
+      util_bitpack_uint(values->SequenceChromaSubSamplingFormat, 0, 1) |
+      util_bitpack_uint(values->SequencePixelBitDepthIdc, 3, 4) |
+      util_bitpack_uint(values->SequenceSuperblockSizeUsed, 7, 8) |
+      util_bitpack_uint(values->SequenceEnableOrderHintFlag, 9, 9) |
+      util_bitpack_uint(values->SequenceOrderHintBitsMinus1, 10, 12) |
+      util_bitpack_uint(values->SequenceEnableFilterIntraFlag, 16, 16) |
+      util_bitpack_uint(values->SequenceEnableIntraEdgeFilterFlag, 17, 17) |
+      util_bitpack_uint(values->SequenceEnableDualFilterFlag, 18, 18) |
+      util_bitpack_uint(values->SequenceEnableInterIntraCompoundFlag, 19, 19) |
+      util_bitpack_uint(values->SequenceEnableMaskedCompoundFlag, 20, 20) |
+      util_bitpack_uint(values->SequenceEnableJointCompoundFlag, 21, 21);
+
+   dw[3] =
+      util_bitpack_uint(values->AllowScreenContentToolsFlag, 0, 0) |
+      util_bitpack_uint(values->ForceIntegerMVFlag, 1, 1) |
+      util_bitpack_uint(values->AllowWarpedMotionFlag, 2, 2) |
+      util_bitpack_uint(values->UseCDEFFilterFlag, 4, 4) |
+      util_bitpack_uint(values->UseSuperResFlag, 5, 5) |
+      util_bitpack_uint(values->FrameLevelLoopRestorationFilterEnable, 6, 6) |
+      util_bitpack_uint(values->FrameType, 16, 17) |
+      util_bitpack_uint(values->IntraOnlyFlag, 19, 19) |
+      util_bitpack_uint(values->ErrorResilientModeFlag, 22, 22) |
+      util_bitpack_uint(values->AllowIntraBCFlag, 23, 23) |
+      util_bitpack_uint(values->PrimaryReferenceFrameIdx, 28, 30);
+
+   dw[4] =
+      util_bitpack_uint(values->SegmentationEnableFlag, 0, 0) |
+      util_bitpack_uint(values->SegmentationUpdateMapFlag, 1, 1) |
+      util_bitpack_uint(values->SegmentationTemporalUpdateFlag, 2, 2) |
+      util_bitpack_uint(values->PreSkipSegmentIDFlag, 3, 3) |
+      util_bitpack_uint(values->LastActiveSegmentSegmentID, 4, 6) |
+      util_bitpack_uint(values->DeltaQPresentFlag, 7, 7) |
+      util_bitpack_uint(values->DeltaQRes, 8, 9) |
+      util_bitpack_uint(values->FrameCodedLosslessMode, 10, 10) |
+      util_bitpack_uint(values->SegmentMapisZeroFlag, 11, 11) |
+      util_bitpack_uint(values->SegmentIDBufferStreamInEnableFlag, 12, 12) |
+      util_bitpack_uint(values->SegmentIDBufferStreamOutEnableFlag, 13, 13) |
+      util_bitpack_uint(values->BaseQindex, 16, 23) |
+      util_bitpack_sint(values->YdcdeltaQ, 24, 30);
+
+   dw[5] =
+      util_bitpack_sint(values->UdcdeltaQ, 0, 6) |
+      util_bitpack_sint(values->UacdeltaQ, 8, 14) |
+      util_bitpack_sint(values->VdcdeltaQ, 16, 22) |
+      util_bitpack_sint(values->VacdeltaQ, 24, 30);
+
+   dw[6] =
+      util_bitpack_uint(values->AllowHighPrecisionMV, 0, 0) |
+      util_bitpack_uint(values->FrameLevelReferenceModeSelect, 1, 1) |
+      util_bitpack_uint(values->McompFilterType, 2, 4) |
+      util_bitpack_uint(values->MotionModeSwitchableFlag, 6, 6) |
+      util_bitpack_uint(values->UseReferenceFrameMVSetFlag, 7, 7) |
+      util_bitpack_uint(values->ReferenceFrameSignBias, 8, 15) |
+      util_bitpack_uint(values->CurrentFrameOrderHint, 16, 23);
+
+   dw[7] =
+      util_bitpack_uint(values->ReducedTxSetUsed, 0, 0) |
+      util_bitpack_uint(values->FrameTransformMode, 1, 2) |
+      util_bitpack_uint(values->SkipModePresentFlag, 4, 4) |
+      util_bitpack_uint(values->SkipModeFrame0, 5, 7) |
+      util_bitpack_uint(values->SkipModeFrame1, 9, 11) |
+      util_bitpack_uint(values->ReferenceFrameSide, 24, 31);
+
+   dw[8] =
+      util_bitpack_uint(values->GlobalMotionType1, 3, 4) |
+      util_bitpack_uint(values->GlobalMotionType2, 6, 7) |
+      util_bitpack_uint(values->GlobalMotionType3, 9, 10) |
+      util_bitpack_uint(values->GlobalMotionType4, 12, 13) |
+      util_bitpack_uint(values->GlobalMotionType5, 15, 16) |
+      util_bitpack_uint(values->GlobalMotionType6, 18, 19) |
+      util_bitpack_uint(values->GlobalMotionType7, 21, 22) |
+      util_bitpack_uint(values->FrameLevelGlobalMotionInvalidFlags, 24, 31);
+
+   dw[9] =
+      util_bitpack_uint(values->WarpParameters[0], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[1], 16, 31);
+
+   dw[10] =
+      util_bitpack_uint(values->WarpParameters[2], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[3], 16, 31);
+
+   dw[11] =
+      util_bitpack_uint(values->WarpParameters[4], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[5], 16, 31);
+
+   dw[12] =
+      util_bitpack_uint(values->WarpParameters[6], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[7], 16, 31);
+
+   dw[13] =
+      util_bitpack_uint(values->WarpParameters[8], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[9], 16, 31);
+
+   dw[14] =
+      util_bitpack_uint(values->WarpParameters[10], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[11], 16, 31);
+
+   dw[15] =
+      util_bitpack_uint(values->WarpParameters[12], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[13], 16, 31);
+
+   dw[16] =
+      util_bitpack_uint(values->WarpParameters[14], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[15], 16, 31);
+
+   dw[17] =
+      util_bitpack_uint(values->WarpParameters[16], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[17], 16, 31);
+
+   dw[18] =
+      util_bitpack_uint(values->WarpParameters[18], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[19], 16, 31);
+
+   dw[19] =
+      util_bitpack_uint(values->WarpParameters[20], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[21], 16, 31);
+
+   dw[20] =
+      util_bitpack_uint(values->WarpParameters[22], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[23], 16, 31);
+
+   dw[21] =
+      util_bitpack_uint(values->WarpParameters[24], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[25], 16, 31);
+
+   dw[22] =
+      util_bitpack_uint(values->WarpParameters[26], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[27], 16, 31);
+
+   dw[23] =
+      util_bitpack_uint(values->WarpParameters[28], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[29], 16, 31);
+
+   dw[24] =
+      util_bitpack_uint(values->WarpParameters[30], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[31], 16, 31);
+
+   dw[25] =
+      util_bitpack_uint(values->WarpParameters[32], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[33], 16, 31);
+
+   dw[26] =
+      util_bitpack_uint(values->WarpParameters[34], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[35], 16, 31);
+
+   dw[27] =
+      util_bitpack_uint(values->WarpParameters[36], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[37], 16, 31);
+
+   dw[28] =
+      util_bitpack_uint(values->WarpParameters[38], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[39], 16, 31);
+
+   dw[29] =
+      util_bitpack_uint(values->WarpParameters[40], 0, 15) |
+      util_bitpack_uint(values->WarpParameters[41], 16, 31);
+
+   dw[30] =
+      util_bitpack_uint(values->ReferenceFrameIdx0, 0, 2) |
+      util_bitpack_uint(values->ReferenceFrameIdx1, 4, 6) |
+      util_bitpack_uint(values->ReferenceFrameIdx2, 8, 10) |
+      util_bitpack_uint(values->ReferenceFrameIdx3, 12, 14) |
+      util_bitpack_uint(values->ReferenceFrameIdx4, 16, 18) |
+      util_bitpack_uint(values->ReferenceFrameIdx5, 20, 22) |
+      util_bitpack_uint(values->ReferenceFrameIdx6, 24, 26) |
+      util_bitpack_uint(values->ReferenceFrameIdx7, 28, 30);
+
+   dw[31] =
+      util_bitpack_uint(values->IntraFrameWidthinPixelMinus1, 0, 15) |
+      util_bitpack_uint(values->IntraFrameHeightinPixelMinus1, 16, 31);
+
+   dw[32] =
+      util_bitpack_uint(values->LastFrameWidthinPixelMinus1, 0, 15) |
+      util_bitpack_uint(values->LastFrameHeightinPixelMinus1, 16, 31);
+
+   dw[33] =
+      util_bitpack_uint(values->Last2FrameWidthinPixelMinus1, 0, 15) |
+      util_bitpack_uint(values->Last2FrameHeightinPixelMinus1, 16, 31);
+
+   dw[34] =
+      util_bitpack_uint(values->Last3FrameWidthinPixelMinus1, 0, 15) |
+      util_bitpack_uint(values->Last3FrameHeightinPixelMinus1, 16, 31);
+
+   dw[35] =
+      util_bitpack_uint(values->GoldenFrameWidthinPixelMinus1, 0, 15) |
+      util_bitpack_uint(values->GoldenFrameHeightinPixelMinus1, 16, 31);
+
+   dw[36] =
+      util_bitpack_uint(values->BWDREFFrameWidthinPixelMinus1, 0, 15) |
+      util_bitpack_uint(values->BWDREFFrameHeightinPixelMinus1, 16, 31);
+
+   dw[37] =
+      util_bitpack_uint(values->ALTREF2FrameWidthinPixelMinus1, 0, 15) |
+      util_bitpack_uint(values->ALTREF2FrameHeightinPixelMinus1, 16, 31);
+
+   dw[38] =
+      util_bitpack_uint(values->ALTREFFrameWidthinPixelMinus1, 0, 15) |
+      util_bitpack_uint(values->ALTREFFrameHeightinPixelMinus1, 16, 31);
+
+   dw[39] =
+      util_bitpack_uint(values->VerticalScaleFactorForIntra, 0, 15) |
+      util_bitpack_uint(values->HorizontalScaleFactorForIntra, 16, 31);
+
+   dw[40] =
+      util_bitpack_uint(values->VerticalScaleFactorForLast, 0, 15) |
+      util_bitpack_uint(values->HorizontalScaleFactorForLast, 16, 31);
+
+   dw[41] =
+      util_bitpack_uint(values->VerticalScaleFactorForLast2, 0, 15) |
+      util_bitpack_uint(values->HorizontalScaleFactorForLast2, 16, 31);
+
+   dw[42] =
+      util_bitpack_uint(values->VerticalScaleFactorForLast3, 0, 15) |
+      util_bitpack_uint(values->HorizontalScaleFactorForLast3, 16, 31);
+
+   dw[43] =
+      util_bitpack_uint(values->VerticalScaleFactorForGolden, 0, 15) |
+      util_bitpack_uint(values->HorizontalScaleFactorForGolden, 16, 31);
+
+   dw[44] =
+      util_bitpack_uint(values->VerticalScaleFactorForBWDREF, 0, 15) |
+      util_bitpack_uint(values->HorizontalScaleFactorForBWDREF, 16, 31);
+
+   dw[45] =
+      util_bitpack_uint(values->VerticalScaleFactorForALTREF2, 0, 15) |
+      util_bitpack_uint(values->HorizontalScaleFactorForALTREF2, 16, 31);
+
+   dw[46] =
+      util_bitpack_uint(values->VerticalScaleFactorForALTREF, 0, 15) |
+      util_bitpack_uint(values->HorizontalScaleFactorForALTREF, 16, 31);
+
+   dw[47] =
+      util_bitpack_uint(values->ReferenceFrameOrderHint[0], 0, 7) |
+      util_bitpack_uint(values->ReferenceFrameOrderHint[1], 8, 15) |
+      util_bitpack_uint(values->ReferenceFrameOrderHint[2], 16, 23) |
+      util_bitpack_uint(values->ReferenceFrameOrderHint[3], 24, 31);
+
+   dw[48] =
+      util_bitpack_uint(values->ReferenceFrameOrderHint[4], 0, 7) |
+      util_bitpack_uint(values->ReferenceFrameOrderHint[5], 8, 15) |
+      util_bitpack_uint(values->ReferenceFrameOrderHint[6], 16, 23) |
+      util_bitpack_uint(values->ReferenceFrameOrderHint[7], 24, 31);
+
+   dw[49] = 0;
+
+   dw[50] = 0;
+}
+
+#define GFX125_AVP_PIPE_BUF_ADDR_STATE_length    188
+#define GFX125_AVP_PIPE_BUF_ADDR_STATE_length_bias      2
+#define GFX125_AVP_PIPE_BUF_ADDR_STATE_header   \
+   .DWordLength                         =    186,  \
+   .SubOpcode                           =      2,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_AVP_PIPE_BUF_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   ReferencePictureAddress[8];
+   struct GFX125_MEMORYADDRESSATTRIBUTES ReferencePictureAttributes;
+   __gen_address_type                   DecodedOutputFrameBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DecodedOutputFrameBufferAddressAttributes;
+   __gen_address_type                   IntraBCDecodedOutputFrameBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES IntraBCDecodedOutputFrameBufferAddressAttributes;
+   __gen_address_type                   CDFTablesInitializationBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CDFTablesInitializationBufferAddressAttributes;
+   __gen_address_type                   CDFTablesBackwardAdaptationBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CDFTablesBackwardAdaptationBufferAddressAttributes;
+   __gen_address_type                   AV1SegmentIDReadBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES AV1SegmentIDReadBufferAddressAttributes;
+   __gen_address_type                   AV1SegmentIDWriteBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES AV1SegmentIDWriteBufferAddressAttributes;
+   __gen_address_type                   CollocatedMVTemporalBufferAddress[8];
+   struct GFX125_MEMORYADDRESSATTRIBUTES CollocatedMVTemporalBufferAttributes;
+   __gen_address_type                   CurrentFrameMVWriteBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CurrentFrameMVWriteBufferAddressAttributes;
+   __gen_address_type                   BitstreamLineRowstoreBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES BitstreamLineRowstoreBufferAddressAttributes;
+   __gen_address_type                   BitstreamTileLineRowstoreBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES BitstreamTileLineRowstoreBufferAddressAttributes;
+   __gen_address_type                   IntraPredictionLineRowstoreBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES IntraPredictionLineRowstoreBufferAddressAttributes;
+   __gen_address_type                   IntraPredictionTileLineRowstoreBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES IntraPredictionTileLineRowstoreBufferAddressAttributes;
+   __gen_address_type                   SpatialMotionVectorLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SpatialMotionVectorLineBufferAddressAttributes;
+   __gen_address_type                   SpatialMotionVectorTileLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SpatialMotionVectorTileLineBufferAddressAttributes;
+   __gen_address_type                   LoopRestorationMetaTileColumnBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES LoopRestorationMetaTileColumnBufferAddressAttributes;
+   __gen_address_type                   LoopRestorationFilterTileLineYBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES LoopRestorationFilterTileLineYBufferAddressAttributes;
+   __gen_address_type                   LoopRestorationFilterTileLineUBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES LoopRestorationFilterTileLineUBufferAddressAttributes;
+   __gen_address_type                   LoopRestorationFilterTileLineVBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES LoopRestorationFilterTileLineVBufferAddressAttributes;
+   __gen_address_type                   DeblockerFilterLineYBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockerFilterLineYBufferAddressAttributes;
+   __gen_address_type                   DeblockerFilterLineUBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockerFilterLineUBufferAddressAttributes;
+   __gen_address_type                   DeblockerFilterLineVBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockerFilterLineVBufferAddressAttributes;
+   __gen_address_type                   DeblockerFilterTileLineYBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockerFilterTileLineYBufferAddressAttributes;
+   __gen_address_type                   DeblockerFilterTileLineUBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockerFilterTileLineUBufferAddressAttributes;
+   __gen_address_type                   DeblockerFilterTileLineVBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockerFilterTileLineVBufferAddressAttributes;
+   __gen_address_type                   DeblockerFilterTileColumnYBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockerFilterTileColumnYBufferAddressAttributes;
+   __gen_address_type                   DeblockerFilterTileColumnUBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockerFilterTileColumnUBufferAddressAttributes;
+   __gen_address_type                   DeblockerFilterTileColumnVBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockerFilterTileColumnVBufferAddressAttributes;
+   __gen_address_type                   CDEFFilterLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CDEFFilterLineBufferAddressAttributes;
+   __gen_address_type                   CDEFFilterTileLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CDEFFilterTileLineBufferAddressAttributes;
+   __gen_address_type                   CDEFFilterTileColumnBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CDEFFilterTileColumnBufferAddressAttributes;
+   __gen_address_type                   CDEFFilterMetaTileLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CDEFFilterMetaTileLineBufferAddressAttributes;
+   __gen_address_type                   CDEFFilterMetaTileColumnBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CDEFFilterMetaTileColumnBufferAddressAttributes;
+   __gen_address_type                   CDEFFilterTopLeftCornerBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CDEFFilterTopLeftCornerBufferAddressAttributes;
+   __gen_address_type                   SuperResTileColumnYBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SuperResTileColumnYBufferAddressAttributes;
+   __gen_address_type                   SuperResTileColumnUBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SuperResTileColumnUBufferAddressAttributes;
+   __gen_address_type                   SuperResTileColumnVBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SuperResTileColumnVBufferAddressAttributes;
+   __gen_address_type                   LoopRestorationFilterTileColumnYBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES LoopRestorationFilterTileColumnYBufferAddressAttributes;
+   __gen_address_type                   LoopRestorationFilterTileColumnUBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES LoopRestorationFilterTileColumnUBufferAddressAttributes;
+   __gen_address_type                   LoopRestorationFilterTileColumnVBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES LoopRestorationFilterTileColumnVBufferAddressAttributes;
+   __gen_address_type                   DecodedFrameStatusErrorBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DecodedFrameStatusErrorBufferAddressAttributes;
+   __gen_address_type                   DecodedBlockDataStreamoutBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DecodedBlockDataStreamoutBufferAddressAttributes;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_PIPE_BUF_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_AVP_PIPE_BUF_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->ReferencePictureAddress[0], 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   const uint64_t v3_address =
+      __gen_address(data, &dw[3], values->ReferencePictureAddress[1], 0, 0, 63);
+   dw[3] = v3_address;
+   dw[4] = v3_address >> 32;
+
+   const uint64_t v5_address =
+      __gen_address(data, &dw[5], values->ReferencePictureAddress[2], 0, 0, 63);
+   dw[5] = v5_address;
+   dw[6] = v5_address >> 32;
+
+   const uint64_t v7_address =
+      __gen_address(data, &dw[7], values->ReferencePictureAddress[3], 0, 0, 63);
+   dw[7] = v7_address;
+   dw[8] = v7_address >> 32;
+
+   const uint64_t v9_address =
+      __gen_address(data, &dw[9], values->ReferencePictureAddress[4], 0, 0, 63);
+   dw[9] = v9_address;
+   dw[10] = v9_address >> 32;
+
+   const uint64_t v11_address =
+      __gen_address(data, &dw[11], values->ReferencePictureAddress[5], 0, 0, 63);
+   dw[11] = v11_address;
+   dw[12] = v11_address >> 32;
+
+   const uint64_t v13_address =
+      __gen_address(data, &dw[13], values->ReferencePictureAddress[6], 0, 0, 63);
+   dw[13] = v13_address;
+   dw[14] = v13_address >> 32;
+
+   const uint64_t v15_address =
+      __gen_address(data, &dw[15], values->ReferencePictureAddress[7], 0, 0, 63);
+   dw[15] = v15_address;
+   dw[16] = v15_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[17], &values->ReferencePictureAttributes);
+
+   const uint64_t v18_address =
+      __gen_address(data, &dw[18], values->DecodedOutputFrameBufferAddress, 0, 0, 63);
+   dw[18] = v18_address;
+   dw[19] = v18_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[20], &values->DecodedOutputFrameBufferAddressAttributes);
+
+   dw[21] = 0;
+
+   dw[22] = 0;
+
+   dw[23] = 0;
+
+   const uint64_t v24_address =
+      __gen_address(data, &dw[24], values->IntraBCDecodedOutputFrameBufferAddress, 0, 0, 63);
+   dw[24] = v24_address;
+   dw[25] = v24_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[26], &values->IntraBCDecodedOutputFrameBufferAddressAttributes);
+
+   const uint64_t v27_address =
+      __gen_address(data, &dw[27], values->CDFTablesInitializationBufferAddress, 0, 0, 63);
+   dw[27] = v27_address;
+   dw[28] = v27_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[29], &values->CDFTablesInitializationBufferAddressAttributes);
+
+   const uint64_t v30_address =
+      __gen_address(data, &dw[30], values->CDFTablesBackwardAdaptationBufferAddress, 0, 0, 63);
+   dw[30] = v30_address;
+   dw[31] = v30_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[32], &values->CDFTablesBackwardAdaptationBufferAddressAttributes);
+
+   const uint64_t v33_address =
+      __gen_address(data, &dw[33], values->AV1SegmentIDReadBufferAddress, 0, 0, 63);
+   dw[33] = v33_address;
+   dw[34] = v33_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[35], &values->AV1SegmentIDReadBufferAddressAttributes);
+
+   const uint64_t v36_address =
+      __gen_address(data, &dw[36], values->AV1SegmentIDWriteBufferAddress, 0, 0, 63);
+   dw[36] = v36_address;
+   dw[37] = v36_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[38], &values->AV1SegmentIDWriteBufferAddressAttributes);
+
+   const uint64_t v39_address =
+      __gen_address(data, &dw[39], values->CollocatedMVTemporalBufferAddress[0], 0, 0, 63);
+   dw[39] = v39_address;
+   dw[40] = v39_address >> 32;
+
+   const uint64_t v41_address =
+      __gen_address(data, &dw[41], values->CollocatedMVTemporalBufferAddress[1], 0, 0, 63);
+   dw[41] = v41_address;
+   dw[42] = v41_address >> 32;
+
+   const uint64_t v43_address =
+      __gen_address(data, &dw[43], values->CollocatedMVTemporalBufferAddress[2], 0, 0, 63);
+   dw[43] = v43_address;
+   dw[44] = v43_address >> 32;
+
+   const uint64_t v45_address =
+      __gen_address(data, &dw[45], values->CollocatedMVTemporalBufferAddress[3], 0, 0, 63);
+   dw[45] = v45_address;
+   dw[46] = v45_address >> 32;
+
+   const uint64_t v47_address =
+      __gen_address(data, &dw[47], values->CollocatedMVTemporalBufferAddress[4], 0, 0, 63);
+   dw[47] = v47_address;
+   dw[48] = v47_address >> 32;
+
+   const uint64_t v49_address =
+      __gen_address(data, &dw[49], values->CollocatedMVTemporalBufferAddress[5], 0, 0, 63);
+   dw[49] = v49_address;
+   dw[50] = v49_address >> 32;
+
+   const uint64_t v51_address =
+      __gen_address(data, &dw[51], values->CollocatedMVTemporalBufferAddress[6], 0, 0, 63);
+   dw[51] = v51_address;
+   dw[52] = v51_address >> 32;
+
+   const uint64_t v53_address =
+      __gen_address(data, &dw[53], values->CollocatedMVTemporalBufferAddress[7], 0, 0, 63);
+   dw[53] = v53_address;
+   dw[54] = v53_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[55], &values->CollocatedMVTemporalBufferAttributes);
+
+   const uint64_t v56_address =
+      __gen_address(data, &dw[56], values->CurrentFrameMVWriteBufferAddress, 0, 0, 63);
+   dw[56] = v56_address;
+   dw[57] = v56_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[58], &values->CurrentFrameMVWriteBufferAddressAttributes);
+
+   dw[59] = 0;
+
+   dw[60] = 0;
+
+   dw[61] = 0;
+
+   const uint64_t v62_address =
+      __gen_address(data, &dw[62], values->BitstreamLineRowstoreBufferAddress, 0, 0, 63);
+   dw[62] = v62_address;
+   dw[63] = v62_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[64], &values->BitstreamLineRowstoreBufferAddressAttributes);
+
+   const uint64_t v65_address =
+      __gen_address(data, &dw[65], values->BitstreamTileLineRowstoreBufferAddress, 0, 0, 63);
+   dw[65] = v65_address;
+   dw[66] = v65_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[67], &values->BitstreamTileLineRowstoreBufferAddressAttributes);
+
+   const uint64_t v68_address =
+      __gen_address(data, &dw[68], values->IntraPredictionLineRowstoreBufferAddress, 0, 0, 63);
+   dw[68] = v68_address;
+   dw[69] = v68_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[70], &values->IntraPredictionLineRowstoreBufferAddressAttributes);
+
+   const uint64_t v71_address =
+      __gen_address(data, &dw[71], values->IntraPredictionTileLineRowstoreBufferAddress, 0, 0, 63);
+   dw[71] = v71_address;
+   dw[72] = v71_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[73], &values->IntraPredictionTileLineRowstoreBufferAddressAttributes);
+
+   const uint64_t v74_address =
+      __gen_address(data, &dw[74], values->SpatialMotionVectorLineBufferAddress, 0, 0, 63);
+   dw[74] = v74_address;
+   dw[75] = v74_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[76], &values->SpatialMotionVectorLineBufferAddressAttributes);
+
+   const uint64_t v77_address =
+      __gen_address(data, &dw[77], values->SpatialMotionVectorTileLineBufferAddress, 0, 0, 63);
+   dw[77] = v77_address;
+   dw[78] = v77_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[79], &values->SpatialMotionVectorTileLineBufferAddressAttributes);
+
+   const uint64_t v80_address =
+      __gen_address(data, &dw[80], values->LoopRestorationMetaTileColumnBufferAddress, 0, 0, 63);
+   dw[80] = v80_address;
+   dw[81] = v80_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[82], &values->LoopRestorationMetaTileColumnBufferAddressAttributes);
+
+   const uint64_t v83_address =
+      __gen_address(data, &dw[83], values->LoopRestorationFilterTileLineYBufferAddress, 0, 0, 63);
+   dw[83] = v83_address;
+   dw[84] = v83_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[85], &values->LoopRestorationFilterTileLineYBufferAddressAttributes);
+
+   const uint64_t v86_address =
+      __gen_address(data, &dw[86], values->LoopRestorationFilterTileLineUBufferAddress, 0, 0, 63);
+   dw[86] = v86_address;
+   dw[87] = v86_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[88], &values->LoopRestorationFilterTileLineUBufferAddressAttributes);
+
+   const uint64_t v89_address =
+      __gen_address(data, &dw[89], values->LoopRestorationFilterTileLineVBufferAddress, 0, 0, 63);
+   dw[89] = v89_address;
+   dw[90] = v89_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[91], &values->LoopRestorationFilterTileLineVBufferAddressAttributes);
+
+   const uint64_t v92_address =
+      __gen_address(data, &dw[92], values->DeblockerFilterLineYBufferAddress, 0, 0, 63);
+   dw[92] = v92_address;
+   dw[93] = v92_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[94], &values->DeblockerFilterLineYBufferAddressAttributes);
+
+   const uint64_t v95_address =
+      __gen_address(data, &dw[95], values->DeblockerFilterLineUBufferAddress, 0, 0, 63);
+   dw[95] = v95_address;
+   dw[96] = v95_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[97], &values->DeblockerFilterLineUBufferAddressAttributes);
+
+   const uint64_t v98_address =
+      __gen_address(data, &dw[98], values->DeblockerFilterLineVBufferAddress, 0, 0, 63);
+   dw[98] = v98_address;
+   dw[99] = v98_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[100], &values->DeblockerFilterLineVBufferAddressAttributes);
+
+   const uint64_t v101_address =
+      __gen_address(data, &dw[101], values->DeblockerFilterTileLineYBufferAddress, 0, 0, 63);
+   dw[101] = v101_address;
+   dw[102] = v101_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[103], &values->DeblockerFilterTileLineYBufferAddressAttributes);
+
+   const uint64_t v104_address =
+      __gen_address(data, &dw[104], values->DeblockerFilterTileLineUBufferAddress, 0, 0, 63);
+   dw[104] = v104_address;
+   dw[105] = v104_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[106], &values->DeblockerFilterTileLineUBufferAddressAttributes);
+
+   const uint64_t v107_address =
+      __gen_address(data, &dw[107], values->DeblockerFilterTileLineVBufferAddress, 0, 0, 63);
+   dw[107] = v107_address;
+   dw[108] = v107_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[109], &values->DeblockerFilterTileLineVBufferAddressAttributes);
+
+   const uint64_t v110_address =
+      __gen_address(data, &dw[110], values->DeblockerFilterTileColumnYBufferAddress, 0, 0, 63);
+   dw[110] = v110_address;
+   dw[111] = v110_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[112], &values->DeblockerFilterTileColumnYBufferAddressAttributes);
+
+   const uint64_t v113_address =
+      __gen_address(data, &dw[113], values->DeblockerFilterTileColumnUBufferAddress, 0, 0, 63);
+   dw[113] = v113_address;
+   dw[114] = v113_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[115], &values->DeblockerFilterTileColumnUBufferAddressAttributes);
+
+   const uint64_t v116_address =
+      __gen_address(data, &dw[116], values->DeblockerFilterTileColumnVBufferAddress, 0, 0, 63);
+   dw[116] = v116_address;
+   dw[117] = v116_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[118], &values->DeblockerFilterTileColumnVBufferAddressAttributes);
+
+   const uint64_t v119_address =
+      __gen_address(data, &dw[119], values->CDEFFilterLineBufferAddress, 0, 0, 63);
+   dw[119] = v119_address;
+   dw[120] = v119_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[121], &values->CDEFFilterLineBufferAddressAttributes);
+
+   dw[122] = 0;
+
+   dw[123] = 0;
+
+   dw[124] = 0;
+
+   dw[125] = 0;
+
+   dw[126] = 0;
+
+   dw[127] = 0;
+
+   const uint64_t v128_address =
+      __gen_address(data, &dw[128], values->CDEFFilterTileLineBufferAddress, 0, 0, 63);
+   dw[128] = v128_address;
+   dw[129] = v128_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[130], &values->CDEFFilterTileLineBufferAddressAttributes);
+
+   dw[131] = 0;
+
+   dw[132] = 0;
+
+   dw[133] = 0;
+
+   dw[134] = 0;
+
+   dw[135] = 0;
+
+   dw[136] = 0;
+
+   const uint64_t v137_address =
+      __gen_address(data, &dw[137], values->CDEFFilterTileColumnBufferAddress, 0, 0, 63);
+   dw[137] = v137_address;
+   dw[138] = v137_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[139], &values->CDEFFilterTileColumnBufferAddressAttributes);
+
+   const uint64_t v140_address =
+      __gen_address(data, &dw[140], values->CDEFFilterMetaTileLineBufferAddress, 0, 0, 63);
+   dw[140] = v140_address;
+   dw[141] = v140_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[142], &values->CDEFFilterMetaTileLineBufferAddressAttributes);
+
+   const uint64_t v143_address =
+      __gen_address(data, &dw[143], values->CDEFFilterMetaTileColumnBufferAddress, 0, 0, 63);
+   dw[143] = v143_address;
+   dw[144] = v143_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[145], &values->CDEFFilterMetaTileColumnBufferAddressAttributes);
+
+   const uint64_t v146_address =
+      __gen_address(data, &dw[146], values->CDEFFilterTopLeftCornerBufferAddress, 0, 0, 63);
+   dw[146] = v146_address;
+   dw[147] = v146_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[148], &values->CDEFFilterTopLeftCornerBufferAddressAttributes);
+
+   const uint64_t v149_address =
+      __gen_address(data, &dw[149], values->SuperResTileColumnYBufferAddress, 0, 0, 63);
+   dw[149] = v149_address;
+   dw[150] = v149_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[151], &values->SuperResTileColumnYBufferAddressAttributes);
+
+   const uint64_t v152_address =
+      __gen_address(data, &dw[152], values->SuperResTileColumnUBufferAddress, 0, 0, 63);
+   dw[152] = v152_address;
+   dw[153] = v152_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[154], &values->SuperResTileColumnUBufferAddressAttributes);
+
+   const uint64_t v155_address =
+      __gen_address(data, &dw[155], values->SuperResTileColumnVBufferAddress, 0, 0, 63);
+   dw[155] = v155_address;
+   dw[156] = v155_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[157], &values->SuperResTileColumnVBufferAddressAttributes);
+
+   const uint64_t v158_address =
+      __gen_address(data, &dw[158], values->LoopRestorationFilterTileColumnYBufferAddress, 0, 0, 63);
+   dw[158] = v158_address;
+   dw[159] = v158_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[160], &values->LoopRestorationFilterTileColumnYBufferAddressAttributes);
+
+   const uint64_t v161_address =
+      __gen_address(data, &dw[161], values->LoopRestorationFilterTileColumnUBufferAddress, 0, 0, 63);
+   dw[161] = v161_address;
+   dw[162] = v161_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[163], &values->LoopRestorationFilterTileColumnUBufferAddressAttributes);
+
+   const uint64_t v164_address =
+      __gen_address(data, &dw[164], values->LoopRestorationFilterTileColumnVBufferAddress, 0, 0, 63);
+   dw[164] = v164_address;
+   dw[165] = v164_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[166], &values->LoopRestorationFilterTileColumnVBufferAddressAttributes);
+
+   dw[167] = 0;
+
+   dw[168] = 0;
+
+   dw[169] = 0;
+
+   dw[170] = 0;
+
+   dw[171] = 0;
+
+   dw[172] = 0;
+
+   dw[173] = 0;
+
+   dw[174] = 0;
+
+   dw[175] = 0;
+
+   const uint64_t v176_address =
+      __gen_address(data, &dw[176], values->DecodedFrameStatusErrorBufferAddress, 0, 0, 63);
+   dw[176] = v176_address;
+   dw[177] = v176_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[178], &values->DecodedFrameStatusErrorBufferAddressAttributes);
+
+   const uint64_t v179_address =
+      __gen_address(data, &dw[179], values->DecodedBlockDataStreamoutBufferAddress, 0, 0, 63);
+   dw[179] = v179_address;
+   dw[180] = v179_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[181], &values->DecodedBlockDataStreamoutBufferAddressAttributes);
+
+   dw[182] = 0;
+
+   dw[183] = 0;
+
+   dw[184] = 0;
+
+   dw[185] = 0;
+
+   dw[186] = 0;
+
+   dw[187] = 0;
+}
+
+#define GFX125_AVP_PIPE_MODE_SELECT_length      6
+#define GFX125_AVP_PIPE_MODE_SELECT_length_bias      2
+#define GFX125_AVP_PIPE_MODE_SELECT_header      \
+   .DWordLength                         =      4,  \
+   .SubOpcode                           =      0,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3,  \
+   .CodecStandardSelect                 =      2
+
+struct GFX125_AVP_PIPE_MODE_SELECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 CodecSelect;
+#define Decode                                   0
+#define Encode                                   1
+   bool                                 PicStatusErrorReportEnable;
+   uint32_t                             CodecStandardSelect;
+   uint32_t                             MultiEngineMode;
+#define SingleEngineMode                         0
+#define LeftEngineMode                           1
+#define RightEngineMode                          2
+#define MiddleEngineMode                         3
+   uint32_t                             PipeWorkingMode;
+#define LegacySinglePipe                         0
+#define DecodeScalableMode                       3
+   uint32_t                             PicStatusErrorReportID;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_PIPE_MODE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_AVP_PIPE_MODE_SELECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->CodecSelect, 0, 0) |
+      util_bitpack_uint(values->PicStatusErrorReportEnable, 3, 3) |
+      util_bitpack_uint(values->CodecStandardSelect, 5, 7) |
+      util_bitpack_uint(values->MultiEngineMode, 13, 14) |
+      util_bitpack_uint(values->PipeWorkingMode, 15, 16);
+
+   dw[2] = 0;
+
+   dw[3] =
+      util_bitpack_uint(values->PicStatusErrorReportID, 0, 31);
+
+   dw[4] = 0;
+
+   dw[5] = 0;
+}
+
+#define GFX125_AVP_SEGMENT_STATE_length        4
+#define GFX125_AVP_SEGMENT_STATE_length_bias      2
+#define GFX125_AVP_SEGMENT_STATE_header         \
+   .DWordLength                         =      2,  \
+   .SubOpcode                           =     50,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_AVP_SEGMENT_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SegmentID;
+   uint32_t                             SegmentFeatureMask;
+   int32_t                              SegmentDeltaQindex;
+   bool                                 SegmentBlockSkipFlag;
+   bool                                 SegmentBlockGlobalMVFlag;
+   bool                                 SegmentLosslessFlag;
+   uint32_t                             SegmentLumaYQMLevel;
+   uint32_t                             SegmentChromaUQMLevel;
+   uint32_t                             SegmentChromaVQMLevel;
+   uint32_t                             SegmentDeltaLoopFilterLevelLumaVertical;
+   uint32_t                             SegmentDeltaLoopFilterLevelLumaHorizontal;
+   uint32_t                             SegmentDeltaLoopFilterLevelChromaU;
+   uint32_t                             SegmentDeltaLoopFilterLevelChromaV;
+   uint32_t                             SegmentReferenceFrame;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_SEGMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_AVP_SEGMENT_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->SegmentID, 0, 2);
+
+   dw[2] =
+      util_bitpack_uint(values->SegmentFeatureMask, 0, 7) |
+      util_bitpack_sint(values->SegmentDeltaQindex, 8, 16) |
+      util_bitpack_uint(values->SegmentBlockSkipFlag, 17, 17) |
+      util_bitpack_uint(values->SegmentBlockGlobalMVFlag, 18, 18) |
+      util_bitpack_uint(values->SegmentLosslessFlag, 19, 19) |
+      util_bitpack_uint(values->SegmentLumaYQMLevel, 20, 23) |
+      util_bitpack_uint(values->SegmentChromaUQMLevel, 24, 27) |
+      util_bitpack_uint(values->SegmentChromaVQMLevel, 28, 31);
+
+   dw[3] =
+      util_bitpack_uint(values->SegmentDeltaLoopFilterLevelLumaVertical, 0, 6) |
+      util_bitpack_uint(values->SegmentDeltaLoopFilterLevelLumaHorizontal, 7, 13) |
+      util_bitpack_uint(values->SegmentDeltaLoopFilterLevelChromaU, 14, 20) |
+      util_bitpack_uint(values->SegmentDeltaLoopFilterLevelChromaV, 21, 27) |
+      util_bitpack_uint(values->SegmentReferenceFrame, 28, 30);
+}
+
+#define GFX125_AVP_SURFACE_STATE_length        5
+#define GFX125_AVP_SURFACE_STATE_length_bias      2
+#define GFX125_AVP_SURFACE_STATE_header         \
+   .DWordLength                         =      3,  \
+   .SubOpcode                           =      1,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_AVP_SURFACE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SurfacePitchMinus1;
+   uint32_t                             SurfaceID;
+   uint32_t                             YOffsetforUCb;
+   uint32_t                             SurfaceFormat;
+#define AVP_PLANAR_420_8                         4
+#define AVP_P010                                 13
+   uint32_t                             DefaultAlphaValue;
+   uint32_t                             YOffsetforVCr;
+   bool                                 MemoryCompressionEnableforIntraFrame;
+   bool                                 MemoryCompressionEnableforLastFrame;
+   bool                                 MemoryCompressionEnableforLast2Frame;
+   bool                                 MemoryCompressionEnableforLast3Frame;
+   bool                                 MemoryCompressionEnableforGoldenFrame;
+   bool                                 MemoryCompressionEnableforBwdRefFrame;
+   bool                                 MemoryCompressionEnableforAltRef2Frame;
+   bool                                 MemoryCompressionEnableforAltRefFrame;
+   bool                                 CompressionTypeforIntraFrame;
+   bool                                 CompressionTypeforLastFrame;
+   bool                                 CompressionTypeforLast2Frame;
+   bool                                 CompressionTypeforLast3Frame;
+   bool                                 CompressionTypeforGoldenFrame;
+   bool                                 CompressionTypeforBwdRefFrame;
+   bool                                 CompressionTypeforAltRef2Frame;
+   bool                                 CompressionTypeforAltRefFrame;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_AVP_SURFACE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->SurfacePitchMinus1, 0, 15) |
+      util_bitpack_uint(values->SurfaceID, 28, 31);
+
+   dw[2] =
+      util_bitpack_uint(values->YOffsetforUCb, 0, 14) |
+      util_bitpack_uint(values->SurfaceFormat, 27, 31);
+
+   dw[3] =
+      util_bitpack_uint(values->DefaultAlphaValue, 0, 15) |
+      util_bitpack_uint(values->YOffsetforVCr, 16, 31);
+
+   dw[4] =
+      util_bitpack_uint(values->MemoryCompressionEnableforIntraFrame, 0, 0) |
+      util_bitpack_uint(values->MemoryCompressionEnableforLastFrame, 1, 1) |
+      util_bitpack_uint(values->MemoryCompressionEnableforLast2Frame, 2, 2) |
+      util_bitpack_uint(values->MemoryCompressionEnableforLast3Frame, 3, 3) |
+      util_bitpack_uint(values->MemoryCompressionEnableforGoldenFrame, 4, 4) |
+      util_bitpack_uint(values->MemoryCompressionEnableforBwdRefFrame, 5, 5) |
+      util_bitpack_uint(values->MemoryCompressionEnableforAltRef2Frame, 6, 6) |
+      util_bitpack_uint(values->MemoryCompressionEnableforAltRefFrame, 7, 7) |
+      util_bitpack_uint(values->CompressionTypeforIntraFrame, 8, 8) |
+      util_bitpack_uint(values->CompressionTypeforLastFrame, 9, 9) |
+      util_bitpack_uint(values->CompressionTypeforLast2Frame, 10, 10) |
+      util_bitpack_uint(values->CompressionTypeforLast3Frame, 11, 11) |
+      util_bitpack_uint(values->CompressionTypeforGoldenFrame, 12, 12) |
+      util_bitpack_uint(values->CompressionTypeforBwdRefFrame, 13, 13) |
+      util_bitpack_uint(values->CompressionTypeforAltRef2Frame, 14, 14) |
+      util_bitpack_uint(values->CompressionTypeforAltRefFrame, 15, 15);
+}
+
+#define GFX125_AVP_TILE_CODING_length          6
+#define GFX125_AVP_TILE_CODING_length_bias      2
+#define GFX125_AVP_TILE_CODING_header           \
+   .DWordLength                         =      4,  \
+   .SubOpcode                           =     21,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_AVP_TILE_CODING {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             FrameTileID;
+   uint32_t                             TGTileNum;
+   uint32_t                             TileGroupID;
+   uint32_t                             TileColumnPositioninSBUnit;
+   uint32_t                             TileRowPositioninSBUnit;
+   uint32_t                             TileWidthinSBMinus1;
+   uint32_t                             TileHeightinSBMinus1;
+   bool                                 IsLastTileofColumnFlag;
+   bool                                 IsLastTileofRowFlag;
+   bool                                 IsStartTileofTileGroupFlag;
+   bool                                 IsEndTileofTileGroupFlag;
+   bool                                 IsLastTileofFrameFlag;
+   bool                                 DisableCDFUpdateFlag;
+   bool                                 DisableFrameContextUpdateFlag;
+   uint32_t                             NumberofActiveBEPipes;
+   uint32_t                             NumofTileColumnsinFrameMinus1;
+   uint32_t                             NumofTileRowsinFrameMinus1;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_TILE_CODING_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX125_AVP_TILE_CODING * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->FrameTileID, 0, 11) |
+      util_bitpack_uint(values->TGTileNum, 12, 23) |
+      util_bitpack_uint(values->TileGroupID, 24, 31);
+
+   dw[2] =
+      util_bitpack_uint(values->TileColumnPositioninSBUnit, 0, 9) |
+      util_bitpack_uint(values->TileRowPositioninSBUnit, 16, 25);
+
+   dw[3] =
+      util_bitpack_uint(values->TileWidthinSBMinus1, 0, 5) |
+      util_bitpack_uint(values->TileHeightinSBMinus1, 16, 25);
+
+   dw[4] =
+      util_bitpack_uint(values->IsLastTileofColumnFlag, 25, 25) |
+      util_bitpack_uint(values->IsLastTileofRowFlag, 26, 26) |
+      util_bitpack_uint(values->IsStartTileofTileGroupFlag, 27, 27) |
+      util_bitpack_uint(values->IsEndTileofTileGroupFlag, 28, 28) |
+      util_bitpack_uint(values->IsLastTileofFrameFlag, 29, 29) |
+      util_bitpack_uint(values->DisableCDFUpdateFlag, 30, 30) |
+      util_bitpack_uint(values->DisableFrameContextUpdateFlag, 31, 31);
+
+   dw[5] =
+      util_bitpack_uint(values->NumberofActiveBEPipes, 0, 7) |
+      util_bitpack_uint(values->NumofTileColumnsinFrameMinus1, 12, 21) |
+      util_bitpack_uint(values->NumofTileRowsinFrameMinus1, 22, 31);
+}
+
+#define GFX125_AVP_VD_CONTROL_STATE_length      3
+#define GFX125_AVP_VD_CONTROL_STATE_length_bias      2
+#define GFX125_AVP_VD_CONTROL_STATE_header      \
+   .DWordLength                         =      1,  \
+   .SubOpcode                           =     10,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_AVP_VD_CONTROL_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_VD_CONTROL_STATE_BODY  VDControlState;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_AVP_VD_CONTROL_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_AVP_VD_CONTROL_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpcode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   GFX125_VD_CONTROL_STATE_BODY_pack(data, &dw[1], &values->VDControlState);
+}
+
 #define GFX125_CFE_STATE_length                6
 #define GFX125_CFE_STATE_length_bias           2
 #define GFX125_CFE_STATE_header                 \
@@ -12367,58 +14373,7 @@ struct GFX125_COMPUTE_WALKER {
    uint32_t                             ComputeCommandOpcode;
    uint32_t                             Pipeline;
    uint32_t                             CommandType;
-   uint32_t                             IndirectDataLength;
-   bool                                 L3prefetchdisable;
-   uint32_t                             PartitionType;
-#define WALKER_PARTITION_X                       1
-#define WALKER_PARTITION_Y                       2
-#define WALKER_PARTITION_Z                       3
-   uint64_t                             IndirectDataStartAddress;
-   uint32_t                             MessageSIMD;
-#define SIMD8                                    0
-#define SIMD16                                   1
-#define SIMD32                                   2
-   uint32_t                             TileLayout;
-#define Linear                                   0
-#define TileY32bpe                               1
-#define TileY64bpe                               2
-#define TileY128bpe                              3
-   uint32_t                             WalkOrder;
-#define Walk012                                  0
-#define Walk021                                  1
-#define Walk102                                  2
-#define Walk120                                  3
-#define Walk201                                  4
-#define Walk210                                  5
-   bool                                 EmitInlineParameter;
-   uint32_t                             EmitLocal;
-#define EmitNone                                 0
-#define EmitX                                    1
-#define EmitXY                                   3
-#define EmitXYZ                                  7
-   bool                                 GenerateLocalID;
-   uint32_t                             SIMDSize;
-#define SIMD8                                    0
-#define SIMD16                                   1
-#define SIMD32                                   2
-   uint32_t                             ExecutionMask;
-   uint32_t                             LocalXMaximum;
-   uint32_t                             LocalYMaximum;
-   uint32_t                             LocalZMaximum;
-   uint32_t                             ThreadGroupIDXDimension;
-   uint32_t                             ThreadGroupIDYDimension;
-   uint32_t                             ThreadGroupIDZDimension;
-   uint32_t                             ThreadGroupIDStartingX;
-   uint32_t                             ThreadGroupIDStartingY;
-   uint32_t                             ThreadGroupIDStartingZ;
-   uint32_t                             PartitionID;
-   uint32_t                             PartitionSize;
-   uint32_t                             PreemptX;
-   uint32_t                             PreemptY;
-   uint32_t                             PreemptZ;
-   struct GFX125_INTERFACE_DESCRIPTOR_DATA InterfaceDescriptor;
-   struct GFX125_POSTSYNC_DATA          PostSync;
-   uint32_t                             InlineData[8];
+   struct GFX125_COMPUTE_WALKER_BODY    body;
 };
 
 static inline __attribute__((always_inline)) void
@@ -12440,93 +14395,128 @@ GFX125_COMPUTE_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->Pipeline, 27, 28) |
       util_bitpack_uint(values->CommandType, 29, 31);
 
-   dw[1] = 0;
+   GFX125_COMPUTE_WALKER_BODY_pack(data, &dw[1], &values->body);
+}
 
-   dw[2] =
-      util_bitpack_uint(values->IndirectDataLength, 0, 16) |
-      util_bitpack_uint(values->L3prefetchdisable, 17, 17) |
-      util_bitpack_uint(values->PartitionType, 30, 31);
+#define GFX125_EXECUTE_INDIRECT_DISPATCH_length     44
+#define GFX125_EXECUTE_INDIRECT_DISPATCH_length_bias      2
+#define GFX125_EXECUTE_INDIRECT_DISPATCH_header \
+   .DWordLength                         =     42,  \
+   ._3DCommandSubOpcode                 =      1,  \
+   ._3DCommandOpcode                    =      4,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
 
-   dw[3] =
-      __gen_offset(values->IndirectDataStartAddress, 6, 31);
+struct GFX125_EXECUTE_INDIRECT_DISPATCH {
+   uint32_t                             DWordLength;
+   bool                                 PredicateEnable;
+   uint32_t                             MOCS;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             MaxCount;
+   bool                                 CountBufferIndirectEnable;
+   __gen_address_type                   CountBufferAddress;
+   __gen_address_type                   ArgumentBufferStartAddress;
+   struct GFX125_COMPUTE_WALKER_BODY    COMPUTE_WALKER_BODY;
+};
 
-   dw[4] =
-      util_bitpack_uint(values->MessageSIMD, 17, 18) |
-      util_bitpack_uint(values->TileLayout, 19, 21) |
-      util_bitpack_uint(values->WalkOrder, 22, 24) |
-      util_bitpack_uint(values->EmitInlineParameter, 25, 25) |
-      util_bitpack_uint(values->EmitLocal, 26, 28) |
-      util_bitpack_uint(values->GenerateLocalID, 29, 29) |
-      util_bitpack_uint(values->SIMDSize, 30, 31);
+static inline __attribute__((always_inline)) void
+GFX125_EXECUTE_INDIRECT_DISPATCH_pack(__attribute__((unused)) __gen_user_data *data,
+                                      __attribute__((unused)) void * restrict dst,
+                                      __attribute__((unused)) const struct GFX125_EXECUTE_INDIRECT_DISPATCH * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
 
-   dw[5] =
-      util_bitpack_uint(values->ExecutionMask, 0, 31);
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->PredicateEnable, 8, 8) |
+      util_bitpack_uint_nonzero(values->MOCS, 12, 15) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
-   dw[6] =
-      util_bitpack_uint(values->LocalXMaximum, 0, 9) |
-      util_bitpack_uint(values->LocalYMaximum, 10, 19) |
-      util_bitpack_uint(values->LocalZMaximum, 20, 29);
+   dw[1] =
+      util_bitpack_uint(values->MaxCount, 0, 31);
 
-   dw[7] =
-      util_bitpack_uint(values->ThreadGroupIDXDimension, 0, 31);
+   const uint64_t v2 =
+      util_bitpack_uint(values->CountBufferIndirectEnable, 0, 0);
+   const uint64_t v2_address =
+      __gen_address(data, &dw[2], values->CountBufferAddress, v2, 2, 63);
+   dw[2] = v2_address;
+   dw[3] = (v2_address >> 32) | (v2 >> 32);
 
-   dw[8] =
-      util_bitpack_uint(values->ThreadGroupIDYDimension, 0, 31);
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->ArgumentBufferStartAddress, 0, 2, 63);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
 
-   dw[9] =
-      util_bitpack_uint(values->ThreadGroupIDZDimension, 0, 31);
+   GFX125_COMPUTE_WALKER_BODY_pack(data, &dw[6], &values->COMPUTE_WALKER_BODY);
+}
 
-   dw[10] =
-      util_bitpack_uint(values->ThreadGroupIDStartingX, 0, 31);
+#define GFX125_EXECUTE_INDIRECT_DRAW_length      6
+#define GFX125_EXECUTE_INDIRECT_DRAW_length_bias      2
+#define GFX125_EXECUTE_INDIRECT_DRAW_header     \
+   .DWordLength                         =      4,  \
+   ._3DCommandSubOpcode                 =      0,  \
+   ._3DCommandOpcode                    =      4,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
 
-   dw[11] =
-      util_bitpack_uint(values->ThreadGroupIDStartingY, 0, 31);
+struct GFX125_EXECUTE_INDIRECT_DRAW {
+   uint32_t                             DWordLength;
+   bool                                 PredicateEnable;
+   uint32_t                             TBIMREnabled;
+   uint32_t                             ArgumentFormat;
+#define XI_DRAW                                  0
+#define XI_DRAWINDEXED                           1
+#define XI_MESH_3D                               2
+#define XI_MESH_1D                               3
+   uint32_t                             MOCS;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             MaxCount;
+   bool                                 CountBufferIndirectEnable;
+   __gen_address_type                   CountBufferAddress;
+   __gen_address_type                   ArgumentBufferStartAddress;
+};
 
-   dw[12] =
-      util_bitpack_uint(values->ThreadGroupIDStartingZ, 0, 31);
+static inline __attribute__((always_inline)) void
+GFX125_EXECUTE_INDIRECT_DRAW_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_EXECUTE_INDIRECT_DRAW * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
 
-   dw[13] =
-      util_bitpack_uint(values->PartitionID, 0, 31);
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->PredicateEnable, 8, 8) |
+      util_bitpack_uint(values->TBIMREnabled, 9, 9) |
+      util_bitpack_uint(values->ArgumentFormat, 10, 11) |
+      util_bitpack_uint_nonzero(values->MOCS, 12, 15) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
-   dw[14] =
-      util_bitpack_uint(values->PartitionSize, 0, 31);
+   dw[1] =
+      util_bitpack_uint(values->MaxCount, 0, 31);
 
-   dw[15] =
-      util_bitpack_uint(values->PreemptX, 0, 31);
+   const uint64_t v2 =
+      util_bitpack_uint(values->CountBufferIndirectEnable, 0, 0);
+   const uint64_t v2_address =
+      __gen_address(data, &dw[2], values->CountBufferAddress, v2, 2, 63);
+   dw[2] = v2_address;
+   dw[3] = (v2_address >> 32) | (v2 >> 32);
 
-   dw[16] =
-      util_bitpack_uint(values->PreemptY, 0, 31);
-
-   dw[17] =
-      util_bitpack_uint(values->PreemptZ, 0, 31);
-
-   GFX125_INTERFACE_DESCRIPTOR_DATA_pack(data, &dw[18], &values->InterfaceDescriptor);
-
-   GFX125_POSTSYNC_DATA_pack(data, &dw[26], &values->PostSync);
-
-   dw[31] =
-      util_bitpack_uint(values->InlineData[0], 0, 31);
-
-   dw[32] =
-      util_bitpack_uint(values->InlineData[1], 0, 31);
-
-   dw[33] =
-      util_bitpack_uint(values->InlineData[2], 0, 31);
-
-   dw[34] =
-      util_bitpack_uint(values->InlineData[3], 0, 31);
-
-   dw[35] =
-      util_bitpack_uint(values->InlineData[4], 0, 31);
-
-   dw[36] =
-      util_bitpack_uint(values->InlineData[5], 0, 31);
-
-   dw[37] =
-      util_bitpack_uint(values->InlineData[6], 0, 31);
-
-   dw[38] =
-      util_bitpack_uint(values->InlineData[7], 0, 31);
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->ArgumentBufferStartAddress, 0, 2, 63);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
 }
 
 #define GFX125_HCP_BSD_OBJECT_length           3
@@ -12572,6 +14562,7 @@ GFX125_HCP_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
 #define GFX125_HCP_FQM_STATE_length           34
 #define GFX125_HCP_FQM_STATE_length_bias       2
 #define GFX125_HCP_FQM_STATE_header             \
+   .DWordLength                         =     32,  \
    .SubOpcode                           =      5,  \
    .MediaCommandOpcode                  =      7,  \
    .Pipeline                            =      2,  \
@@ -12596,7 +14587,7 @@ struct GFX125_HCP_FQM_STATE {
 #define ChromaCb                                 1
 #define ChromaCr                                 2
    uint32_t                             FQMDCValue;
-   uint32_t                             QuantizerMatrix8x8[64];
+   uint32_t                             QuantizerMatrix8x8[128];
 };
 
 static inline __attribute__((always_inline)) void
@@ -12715,37 +14706,101 @@ GFX125_HCP_FQM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->QuantizerMatrix8x8[62], 16, 23) |
       util_bitpack_uint(values->QuantizerMatrix8x8[63], 24, 31);
 
-   dw[18] = 0;
+   dw[18] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[64], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[65], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[66], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[67], 24, 31);
 
-   dw[19] = 0;
+   dw[19] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[68], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[69], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[70], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[71], 24, 31);
 
-   dw[20] = 0;
+   dw[20] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[72], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[73], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[74], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[75], 24, 31);
 
-   dw[21] = 0;
+   dw[21] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[76], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[77], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[78], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[79], 24, 31);
 
-   dw[22] = 0;
+   dw[22] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[80], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[81], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[82], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[83], 24, 31);
 
-   dw[23] = 0;
+   dw[23] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[84], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[85], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[86], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[87], 24, 31);
 
-   dw[24] = 0;
+   dw[24] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[88], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[89], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[90], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[91], 24, 31);
 
-   dw[25] = 0;
+   dw[25] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[92], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[93], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[94], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[95], 24, 31);
 
-   dw[26] = 0;
+   dw[26] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[96], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[97], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[98], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[99], 24, 31);
 
-   dw[27] = 0;
+   dw[27] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[100], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[101], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[102], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[103], 24, 31);
 
-   dw[28] = 0;
+   dw[28] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[104], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[105], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[106], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[107], 24, 31);
 
-   dw[29] = 0;
+   dw[29] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[108], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[109], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[110], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[111], 24, 31);
 
-   dw[30] = 0;
+   dw[30] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[112], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[113], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[114], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[115], 24, 31);
 
-   dw[31] = 0;
+   dw[31] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[116], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[117], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[118], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[119], 24, 31);
 
-   dw[32] = 0;
+   dw[32] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[120], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[121], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[122], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[123], 24, 31);
 
-   dw[33] = 0;
+   dw[33] =
+      util_bitpack_uint(values->QuantizerMatrix8x8[124], 0, 7) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[125], 8, 15) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[126], 16, 23) |
+      util_bitpack_uint(values->QuantizerMatrix8x8[127], 24, 31);
 }
 
 #define GFX125_HCP_IND_OBJ_BASE_ADDR_STATE_length     29
@@ -14182,6 +16237,10 @@ struct GFX125_HCP_SLICE_STATE {
    uint32_t                             TransformSkipNumberofNonZeroCoeffsFactor1;
    uint32_t                             OriginalSliceStartCtbX;
    uint32_t                             OriginalSliceStartCtbY;
+   uint32_t                             SliceActCrQPoffset;
+   uint32_t                             SliceActCbQPoffset;
+   uint32_t                             SliceActYQPoffset;
+   uint32_t                             UseIntegerMVflag;
 };
 
 static inline __attribute__((always_inline)) void
@@ -14266,7 +16325,11 @@ GFX125_HCP_SLICE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->OriginalSliceStartCtbX, 0, 9) |
       util_bitpack_uint(values->OriginalSliceStartCtbY, 16, 25);
 
-   dw[12] = 0;
+   dw[12] =
+      util_bitpack_uint(values->SliceActCrQPoffset, 0, 5) |
+      util_bitpack_uint(values->SliceActCbQPoffset, 6, 11) |
+      util_bitpack_uint(values->SliceActYQPoffset, 12, 17) |
+      util_bitpack_uint(values->UseIntegerMVflag, 31, 31);
 }
 
 #define GFX125_HCP_SURFACE_STATE_length        5
@@ -20950,10 +23013,10 @@ GFX125_MFX_PIPE_MODE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[4] = 0;
 }
 
-#define GFX125_MFX_QM_STATE_length            34
+#define GFX125_MFX_QM_STATE_length            18
 #define GFX125_MFX_QM_STATE_length_bias        2
 #define GFX125_MFX_QM_STATE_header              \
-   .DWordLength                         =     32,  \
+   .DWordLength                         =     16,  \
    .SubOpcodeB                          =      7,  \
    .SubOpcodeA                          =      0,  \
    .MediaCommandOpcode                  =      0,  \
@@ -21097,38 +23160,6 @@ GFX125_MFX_QM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ForwardQuantizerMatrix[61], 8, 15) |
       util_bitpack_uint(values->ForwardQuantizerMatrix[62], 16, 23) |
       util_bitpack_uint(values->ForwardQuantizerMatrix[63], 24, 31);
-
-   dw[18] = 0;
-
-   dw[19] = 0;
-
-   dw[20] = 0;
-
-   dw[21] = 0;
-
-   dw[22] = 0;
-
-   dw[23] = 0;
-
-   dw[24] = 0;
-
-   dw[25] = 0;
-
-   dw[26] = 0;
-
-   dw[27] = 0;
-
-   dw[28] = 0;
-
-   dw[29] = 0;
-
-   dw[30] = 0;
-
-   dw[31] = 0;
-
-   dw[32] = 0;
-
-   dw[33] = 0;
 }
 
 #define GFX125_MFX_STATE_POINTER_length        2
@@ -21243,6 +23274,7 @@ struct GFX125_MFX_SURFACE_STATE {
    uint32_t                             Pipeline;
    uint32_t                             CommandType;
    uint32_t                             SurfaceID;
+#define MFX_ReferencePicture                     0
 #define MFX_SourceInputPicture                   4
 #define MFX_ReconstructedScaledReferencePicture  5
    float                                CrVCbUPixelOffsetVDirection;
@@ -23355,6 +25387,7 @@ struct GFX125_PIPELINE_SELECT {
 #define GPGPU                                    2
    bool                                 MediaSamplerDOPClockGateEnable;
    bool                                 ForceMediaAwake;
+   bool                                 SystolicModeEnable;
    uint32_t                             MaskBits;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -23373,6 +25406,7 @@ GFX125_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->PipelineSelection, 0, 1) |
       util_bitpack_uint(values->MediaSamplerDOPClockGateEnable, 4, 4) |
       util_bitpack_uint(values->ForceMediaAwake, 5, 5) |
+      util_bitpack_uint(values->SystolicModeEnable, 7, 7) |
       util_bitpack_uint(values->MaskBits, 8, 15) |
       util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
       util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
@@ -23437,6 +25471,7 @@ struct GFX125_PIPE_CONTROL {
    bool                                 ProtectedMemoryDisable;
    bool                                 TileCacheFlushEnable;
    bool                                 CommandCacheInvalidateEnable;
+   bool                                 L3FabricFlush;
    uint32_t                             TBIMRForceBatchClosure;
 #define NoBatchClosure                           0
 #define CloseBatch                               1
@@ -23493,6 +25528,7 @@ GFX125_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ProtectedMemoryDisable, 27, 27) |
       util_bitpack_uint(values->TileCacheFlushEnable, 28, 28) |
       util_bitpack_uint(values->CommandCacheInvalidateEnable, 29, 29) |
+      util_bitpack_uint(values->L3FabricFlush, 30, 30) |
       util_bitpack_uint(values->TBIMRForceBatchClosure, 31, 31);
 
    const uint64_t v2_address =
@@ -24211,10 +26247,15 @@ struct GFX125_STATE_COMPUTE_MODE {
 #define ZPACTL_Max64                             1
 #define ZPACTL_Max56                             2
 #define ZPACTL_Max48                             3
-   uint32_t                             ForceNonCoherent;
+   uint32_t                             ForceNonCoherentDG2;
 #define ForceDisabled                            0
 #define ForceCPUNonCoherent                      1
 #define ForceGPUNonCoherent                      2
+   uint32_t                             ZAsyncThrottlesettings;
+#define ZATS_DefertoPixelAsyncComputeThreadLimit 0
+#define ZATS_Max32                               1
+#define ZATS_Max40                               2
+#define ZATS_Max48                               3
    bool                                 FastClearDisabledonCompressedSurface;
    bool                                 DisableSLMReadMergeOptimization;
    uint32_t                             PixelAsyncComputeThreadLimit;
@@ -24230,7 +26271,9 @@ struct GFX125_STATE_COMPUTE_MODE {
    bool                                 DisableL1InvalidatefornonL1cacheableWrites;
    bool                                 LargeGRFMode;
    uint32_t                             ZPassAsyncComputeThreadLimitMask;
-   uint32_t                             ForceNonCoherentMask;
+   uint32_t                             Mask1;
+   uint32_t                             ForceNonCoherentDG2Mask;
+   uint32_t                             ZAsyncThrottlesettingsMask;
    bool                                 FastClearDisabledonCompressedSurfaceMask;
    bool                                 DisableSLMReadMergeOptimizationMask;
    uint32_t                             PixelAsyncComputeThreadLimitMask;
@@ -24255,7 +26298,8 @@ GFX125_STATE_COMPUTE_MODE_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[1] =
       util_bitpack_uint(values->ZPassAsyncComputeThreadLimit, 0, 2) |
-      util_bitpack_uint(values->ForceNonCoherent, 3, 4) |
+      util_bitpack_uint(values->ForceNonCoherentDG2, 3, 4) |
+      util_bitpack_uint(values->ZAsyncThrottlesettings, 3, 4) |
       util_bitpack_uint(values->FastClearDisabledonCompressedSurface, 5, 5) |
       util_bitpack_uint(values->DisableSLMReadMergeOptimization, 6, 6) |
       util_bitpack_uint(values->PixelAsyncComputeThreadLimit, 7, 9) |
@@ -24263,7 +26307,9 @@ GFX125_STATE_COMPUTE_MODE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->DisableL1InvalidatefornonL1cacheableWrites, 13, 13) |
       util_bitpack_uint(values->LargeGRFMode, 15, 15) |
       util_bitpack_uint(values->ZPassAsyncComputeThreadLimitMask, 16, 18) |
-      util_bitpack_uint(values->ForceNonCoherentMask, 19, 20) |
+      util_bitpack_uint(values->Mask1, 16, 31) |
+      util_bitpack_uint(values->ForceNonCoherentDG2Mask, 19, 20) |
+      util_bitpack_uint(values->ZAsyncThrottlesettingsMask, 19, 20) |
       util_bitpack_uint(values->FastClearDisabledonCompressedSurfaceMask, 21, 21) |
       util_bitpack_uint(values->DisableSLMReadMergeOptimizationMask, 22, 22) |
       util_bitpack_uint(values->PixelAsyncComputeThreadLimitMask, 23, 25) |
@@ -24310,10 +26356,463 @@ GFX125_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
    dw[2] = v1 >> 32;
 }
 
-#define GFX125_VDENC_CONST_QPT_STATE_length     62
+#define GFX125_VDENC_CMD1_length              31
+#define GFX125_VDENC_CMD1_length_bias          2
+#define GFX125_VDENC_CMD1_header                \
+   .DWordLength                         =     29,  \
+   .SubOpcodeB                          =     10,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpCode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_CMD1 {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpCode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             Values[30];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_CMD1_pack(__attribute__((unused)) __gen_user_data *data,
+                       __attribute__((unused)) void * restrict dst,
+                       __attribute__((unused)) const struct GFX125_VDENC_CMD1 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 22) |
+      util_bitpack_uint(values->MediaCommandOpCode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->Values[0], 0, 31);
+
+   dw[2] =
+      util_bitpack_uint(values->Values[1], 0, 31);
+
+   dw[3] =
+      util_bitpack_uint(values->Values[2], 0, 31);
+
+   dw[4] =
+      util_bitpack_uint(values->Values[3], 0, 31);
+
+   dw[5] =
+      util_bitpack_uint(values->Values[4], 0, 31);
+
+   dw[6] =
+      util_bitpack_uint(values->Values[5], 0, 31);
+
+   dw[7] =
+      util_bitpack_uint(values->Values[6], 0, 31);
+
+   dw[8] =
+      util_bitpack_uint(values->Values[7], 0, 31);
+
+   dw[9] =
+      util_bitpack_uint(values->Values[8], 0, 31);
+
+   dw[10] =
+      util_bitpack_uint(values->Values[9], 0, 31);
+
+   dw[11] =
+      util_bitpack_uint(values->Values[10], 0, 31);
+
+   dw[12] =
+      util_bitpack_uint(values->Values[11], 0, 31);
+
+   dw[13] =
+      util_bitpack_uint(values->Values[12], 0, 31);
+
+   dw[14] =
+      util_bitpack_uint(values->Values[13], 0, 31);
+
+   dw[15] =
+      util_bitpack_uint(values->Values[14], 0, 31);
+
+   dw[16] =
+      util_bitpack_uint(values->Values[15], 0, 31);
+
+   dw[17] =
+      util_bitpack_uint(values->Values[16], 0, 31);
+
+   dw[18] =
+      util_bitpack_uint(values->Values[17], 0, 31);
+
+   dw[19] =
+      util_bitpack_uint(values->Values[18], 0, 31);
+
+   dw[20] =
+      util_bitpack_uint(values->Values[19], 0, 31);
+
+   dw[21] =
+      util_bitpack_uint(values->Values[20], 0, 31);
+
+   dw[22] =
+      util_bitpack_uint(values->Values[21], 0, 31);
+
+   dw[23] =
+      util_bitpack_uint(values->Values[22], 0, 31);
+
+   dw[24] =
+      util_bitpack_uint(values->Values[23], 0, 31);
+
+   dw[25] =
+      util_bitpack_uint(values->Values[24], 0, 31);
+
+   dw[26] =
+      util_bitpack_uint(values->Values[25], 0, 31);
+
+   dw[27] =
+      util_bitpack_uint(values->Values[26], 0, 31);
+
+   dw[28] =
+      util_bitpack_uint(values->Values[27], 0, 31);
+
+   dw[29] =
+      util_bitpack_uint(values->Values[28], 0, 31);
+
+   dw[30] =
+      util_bitpack_uint(values->Values[29], 0, 31);
+}
+
+#define GFX125_VDENC_CMD2_length              51
+#define GFX125_VDENC_CMD2_length_bias          2
+#define GFX125_VDENC_CMD2_header                \
+   .DWordLength                         =     49,  \
+   .SubOpcodeB                          =      9,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpCode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_CMD2 {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpCode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             FrameWidthInPixelsMinusOne;
+   uint32_t                             Values1;
+   uint32_t                             FrameHeightInPixelsMinusOne;
+   uint32_t                             Values2;
+   uint32_t                             PictureType;
+   bool                                 TemporalMVPEnableFlag;
+   uint32_t                             LongTermReferenceFlagsL0;
+   uint32_t                             LongTermReferenceFlagsL1;
+   bool                                 TransformSkip;
+   uint32_t                             POCNumberForRefid0InL0;
+   uint32_t                             Values3;
+   uint32_t                             POCNumberForRefid0InL1;
+   uint32_t                             POCNumberForRefid1InL0;
+   uint32_t                             POCNumberForRefid1InL1;
+   uint32_t                             POCNumberForRefid2InL0;
+   uint32_t                             Values4;
+   uint32_t                             POCNumberForRefid2InL1;
+   uint32_t                             Values5;
+   bool                                 StreamInROIEnable;
+   uint32_t                             SubPelMode;
+   uint32_t                             NumRefIdxL0MinusOne;
+   uint32_t                             NumRefIdxL1MinusOne;
+   uint32_t                             Values6;
+   uint32_t                             Values7;
+   bool                                 SegmentationEnable;
+   bool                                 SegmentationMapTemporalPredictionEnable;
+   bool                                 TilingEnable;
+   bool                                 VDEncStreamInEnable;
+   bool                                 PAKOnlyMultiPassEnable;
+   uint32_t                             Values8;
+   uint32_t                             Values9;
+   uint32_t                             Values10;
+   uint32_t                             Values11;
+   uint32_t                             Values12;
+   uint32_t                             Values13;
+   uint32_t                             RoiQPAdjustmentForZone1Stage3;
+   uint32_t                             RoiQPAdjustmentForZone2Stage3;
+   uint32_t                             RoiQPAdjustmentForZone3Stage3;
+   uint32_t                             Values14;
+   uint32_t                             Values15;
+   uint32_t                             MinQp;
+   uint32_t                             Values16;
+   uint32_t                             MaxQp;
+   uint32_t                             Values17;
+   bool                                 TemporalMVEnableForIntegerSearch;
+   uint32_t                             Values18;
+   uint32_t                             Values19;
+   uint32_t                             Values20;
+   uint32_t                             IntraRefreshPos;
+   uint32_t                             Values21;
+   uint32_t                             IntraRefreshMBSizeMinusOne;
+   uint32_t                             IntraRefreshMode;
+   uint32_t                             QPAdjustmentForRollingI;
+   uint32_t                             Values22;
+   uint32_t                             Values23;
+   uint32_t                             QPForSeg0;
+   uint32_t                             Values24;
+   uint32_t                             QPForSeg1;
+   uint32_t                             QPForSeg2;
+   uint32_t                             QPForSeg3;
+   uint32_t                             QPForSeg4;
+   uint32_t                             Values25;
+   uint32_t                             QPForSeg5;
+   uint32_t                             QPForSeg6;
+   uint32_t                             QPForSeg7;
+   uint32_t                             RdQpLambda;
+   uint32_t                             Values26;
+   uint32_t                             SadQpLambda;
+   bool                                 VP9DynamicSliceEnable;
+   uint32_t                             QpPrimeYDc;
+   uint32_t                             Values27;
+   uint32_t                             QpPrimeYAc;
+   uint32_t                             Values28;
+   uint32_t                             Values29;
+   uint32_t                             Values30;
+   uint32_t                             Values31;
+   uint32_t                             Values32;
+   uint32_t                             Values33;
+   uint32_t                             Values34;
+   uint32_t                             Values35;
+   uint32_t                             IntraRefreshBoundaryRef0;
+   uint32_t                             IntraRefreshBoundaryRef1;
+   uint32_t                             IntraRefreshBoundaryRef2;
+   bool                                 TileReplayEnable;
+   uint32_t                             Values39;
+   uint32_t                             Values40;
+   uint32_t                             Values41;
+   uint32_t                             Values42;
+   uint32_t                             Values43;
+   uint32_t                             Values44;
+   uint32_t                             Values45;
+   uint32_t                             Values46;
+   uint32_t                             Values47;
+   uint32_t                             Values48;
+   uint32_t                             Values49;
+   uint32_t                             Values50;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_CMD2_pack(__attribute__((unused)) __gen_user_data *data,
+                       __attribute__((unused)) void * restrict dst,
+                       __attribute__((unused)) const struct GFX125_VDENC_CMD2 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 22) |
+      util_bitpack_uint(values->MediaCommandOpCode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->FrameWidthInPixelsMinusOne, 0, 15) |
+      util_bitpack_uint(values->Values1, 0, 31) |
+      util_bitpack_uint(values->FrameHeightInPixelsMinusOne, 16, 31);
+
+   dw[2] =
+      util_bitpack_uint(values->Values2, 0, 31) |
+      util_bitpack_uint(values->PictureType, 20, 21) |
+      util_bitpack_uint(values->TemporalMVPEnableFlag, 22, 22) |
+      util_bitpack_uint(values->LongTermReferenceFlagsL0, 24, 26) |
+      util_bitpack_uint(values->LongTermReferenceFlagsL1, 27, 27) |
+      util_bitpack_uint(values->TransformSkip, 30, 30);
+
+   dw[3] =
+      util_bitpack_uint(values->POCNumberForRefid0InL0, 0, 7) |
+      util_bitpack_uint(values->Values3, 0, 31) |
+      util_bitpack_uint(values->POCNumberForRefid0InL1, 8, 15) |
+      util_bitpack_uint(values->POCNumberForRefid1InL0, 16, 23) |
+      util_bitpack_uint(values->POCNumberForRefid1InL1, 24, 31);
+
+   dw[4] =
+      util_bitpack_uint(values->POCNumberForRefid2InL0, 0, 7) |
+      util_bitpack_uint(values->Values4, 0, 31) |
+      util_bitpack_uint(values->POCNumberForRefid2InL1, 8, 15);
+
+   dw[5] =
+      util_bitpack_uint(values->Values5, 0, 31) |
+      util_bitpack_uint(values->StreamInROIEnable, 8, 8) |
+      util_bitpack_uint(values->SubPelMode, 10, 11) |
+      util_bitpack_uint(values->NumRefIdxL0MinusOne, 24, 27) |
+      util_bitpack_uint(values->NumRefIdxL1MinusOne, 28, 31);
+
+   dw[6] =
+      util_bitpack_uint(values->Values6, 0, 31);
+
+   dw[7] =
+      util_bitpack_uint(values->Values7, 0, 31) |
+      util_bitpack_uint(values->SegmentationEnable, 4, 4) |
+      util_bitpack_uint(values->SegmentationMapTemporalPredictionEnable, 5, 5) |
+      util_bitpack_uint(values->TilingEnable, 7, 7) |
+      util_bitpack_uint(values->VDEncStreamInEnable, 9, 9) |
+      util_bitpack_uint(values->PAKOnlyMultiPassEnable, 16, 16);
+
+   dw[8] =
+      util_bitpack_uint(values->Values8, 0, 31);
+
+   dw[9] =
+      util_bitpack_uint(values->Values9, 0, 31);
+
+   dw[10] =
+      util_bitpack_uint(values->Values10, 0, 31);
+
+   dw[11] =
+      util_bitpack_uint(values->Values11, 0, 31);
+
+   dw[12] =
+      util_bitpack_uint(values->Values12, 0, 31);
+
+   dw[13] =
+      util_bitpack_uint(values->Values13, 0, 31) |
+      util_bitpack_uint(values->RoiQPAdjustmentForZone1Stage3, 4, 7) |
+      util_bitpack_uint(values->RoiQPAdjustmentForZone2Stage3, 8, 11) |
+      util_bitpack_uint(values->RoiQPAdjustmentForZone3Stage3, 12, 15);
+
+   dw[14] =
+      util_bitpack_uint(values->Values14, 0, 31);
+
+   dw[15] =
+      util_bitpack_uint(values->Values15, 0, 31);
+
+   dw[16] =
+      util_bitpack_uint(values->MinQp, 0, 7) |
+      util_bitpack_uint(values->Values16, 0, 31) |
+      util_bitpack_uint(values->MaxQp, 8, 15);
+
+   dw[17] =
+      util_bitpack_uint(values->Values17, 0, 31) |
+      util_bitpack_uint(values->TemporalMVEnableForIntegerSearch, 20, 20);
+
+   dw[18] =
+      util_bitpack_uint(values->Values18, 0, 31);
+
+   dw[19] =
+      util_bitpack_uint(values->Values19, 0, 31);
+
+   dw[20] =
+      util_bitpack_uint(values->Values20, 0, 31);
+
+   dw[21] =
+      util_bitpack_uint(values->IntraRefreshPos, 0, 8) |
+      util_bitpack_uint(values->Values21, 0, 31) |
+      util_bitpack_uint(values->IntraRefreshMBSizeMinusOne, 16, 23) |
+      util_bitpack_uint(values->IntraRefreshMode, 24, 24) |
+      util_bitpack_uint(values->QPAdjustmentForRollingI, 28, 31);
+
+   dw[22] =
+      util_bitpack_uint(values->Values22, 0, 31);
+
+   dw[23] =
+      util_bitpack_uint(values->Values23, 0, 31);
+
+   dw[24] =
+      util_bitpack_uint(values->QPForSeg0, 0, 7) |
+      util_bitpack_uint(values->Values24, 0, 31) |
+      util_bitpack_uint(values->QPForSeg1, 8, 15) |
+      util_bitpack_uint(values->QPForSeg2, 16, 23) |
+      util_bitpack_uint(values->QPForSeg3, 24, 31);
+
+   dw[25] =
+      util_bitpack_uint(values->QPForSeg4, 0, 7) |
+      util_bitpack_uint(values->Values25, 0, 31) |
+      util_bitpack_uint(values->QPForSeg5, 8, 15) |
+      util_bitpack_uint(values->QPForSeg6, 16, 23) |
+      util_bitpack_uint(values->QPForSeg7, 24, 31);
+
+   dw[26] =
+      util_bitpack_uint(values->RdQpLambda, 0, 15) |
+      util_bitpack_uint(values->Values26, 0, 31) |
+      util_bitpack_uint(values->SadQpLambda, 16, 24) |
+      util_bitpack_uint(values->VP9DynamicSliceEnable, 25, 25);
+
+   dw[27] =
+      util_bitpack_uint(values->QpPrimeYDc, 0, 7) |
+      util_bitpack_uint(values->Values27, 0, 31) |
+      util_bitpack_uint(values->QpPrimeYAc, 8, 15);
+
+   dw[28] =
+      util_bitpack_uint(values->Values28, 0, 31);
+
+   dw[29] =
+      util_bitpack_uint(values->Values29, 0, 31);
+
+   dw[30] =
+      util_bitpack_uint(values->Values30, 0, 31);
+
+   dw[31] =
+      util_bitpack_uint(values->Values31, 0, 31);
+
+   dw[32] =
+      util_bitpack_uint(values->Values32, 0, 31);
+
+   dw[33] =
+      util_bitpack_uint(values->Values33, 0, 31);
+
+   dw[34] =
+      util_bitpack_uint(values->Values34, 0, 31);
+
+   dw[35] =
+      util_bitpack_uint(values->Values35, 0, 31);
+
+   dw[36] =
+      util_bitpack_uint(values->IntraRefreshBoundaryRef0, 0, 8) |
+      util_bitpack_uint(values->IntraRefreshBoundaryRef1, 10, 18) |
+      util_bitpack_uint(values->IntraRefreshBoundaryRef2, 20, 28);
+
+   dw[37] =
+      util_bitpack_uint(values->TileReplayEnable, 27, 27);
+
+   dw[38] =
+      util_bitpack_uint(values->Values39, 0, 31);
+
+   dw[39] =
+      util_bitpack_uint(values->Values40, 0, 31);
+
+   dw[40] =
+      util_bitpack_uint(values->Values41, 0, 31);
+
+   dw[41] =
+      util_bitpack_uint(values->Values42, 0, 31);
+
+   dw[42] =
+      util_bitpack_uint(values->Values43, 0, 31);
+
+   dw[43] =
+      util_bitpack_uint(values->Values44, 0, 31);
+
+   dw[44] =
+      util_bitpack_uint(values->Values45, 0, 31);
+
+   dw[45] =
+      util_bitpack_uint(values->Values46, 0, 31);
+
+   dw[46] =
+      util_bitpack_uint(values->Values47, 0, 31);
+
+   dw[47] =
+      util_bitpack_uint(values->Values48, 0, 31);
+
+   dw[48] =
+      util_bitpack_uint(values->Values49, 0, 31);
+
+   dw[49] =
+      util_bitpack_uint(values->Values50, 0, 31);
+
+   dw[50] = 0;
+}
+
+#define GFX125_VDENC_CONST_QPT_STATE_length     61
 #define GFX125_VDENC_CONST_QPT_STATE_length_bias      2
 #define GFX125_VDENC_CONST_QPT_STATE_header     \
-   .DWordLength                         =     60,  \
+   .DWordLength                         =     59,  \
    .SubOpcodeB                          =      6,  \
    .SubOpcodeA                          =      0,  \
    .MediaCommandOpcode                  =      1,  \
@@ -24327,12 +26826,12 @@ struct GFX125_VDENC_CONST_QPT_STATE {
    uint32_t                             MediaCommandOpcode;
    uint32_t                             Pipeline;
    uint32_t                             CommandType;
-   uint32_t                             QPLambdaArrayIndexn;
-   uint32_t                             SkipThresholdArrayIndexn;
-   uint32_t                             SICForwardTransformCoeffThresholdMatrix0ArrayIndexn;
-   uint32_t                             SICForwardTransformCoeffThresholdMatrix135ArrayIndexn;
-   uint32_t                             SICForwardTransformCoeffThresholdMatrix2ArrayIndexn;
-   uint32_t                             SICForwardTransformCoeffThresholdMatrix46ArrayIndexn;
+   uint32_t                             QPLambdaArrayIndex[42];
+   uint32_t                             SkipThresholdArrayIndex[27];
+   uint32_t                             SICForwardTransformCoeffThresholdMatrix0ArrayIndex[27];
+   uint32_t                             SICForwardTransformCoeffThresholdMatrix135ArrayIndex[27];
+   uint32_t                             SICForwardTransformCoeffThresholdMatrix2ArrayIndex[27];
+   uint32_t                             SICForwardTransformCoeffThresholdMatrix46ArrayIndex[27];
 };
 
 static inline __attribute__((always_inline)) void
@@ -24351,138 +26850,343 @@ GFX125_VDENC_CONST_QPT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      util_bitpack_uint(values->QPLambdaArrayIndexn, 0, 7);
+      util_bitpack_uint(values->QPLambdaArrayIndex[0], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[1], 8, 15) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[2], 16, 23) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[3], 24, 31);
 
-   dw[2] = 0;
+   dw[2] =
+      util_bitpack_uint(values->QPLambdaArrayIndex[4], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[5], 8, 15) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[6], 16, 23) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[7], 24, 31);
 
-   dw[3] = 0;
+   dw[3] =
+      util_bitpack_uint(values->QPLambdaArrayIndex[8], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[9], 8, 15) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[10], 16, 23) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[11], 24, 31);
 
-   dw[4] = 0;
+   dw[4] =
+      util_bitpack_uint(values->QPLambdaArrayIndex[12], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[13], 8, 15) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[14], 16, 23) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[15], 24, 31);
 
-   dw[5] = 0;
+   dw[5] =
+      util_bitpack_uint(values->QPLambdaArrayIndex[16], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[17], 8, 15) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[18], 16, 23) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[19], 24, 31);
 
-   dw[6] = 0;
+   dw[6] =
+      util_bitpack_uint(values->QPLambdaArrayIndex[20], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[21], 8, 15) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[22], 16, 23) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[23], 24, 31);
 
-   dw[7] = 0;
+   dw[7] =
+      util_bitpack_uint(values->QPLambdaArrayIndex[24], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[25], 8, 15) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[26], 16, 23) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[27], 24, 31);
 
-   dw[8] = 0;
+   dw[8] =
+      util_bitpack_uint(values->QPLambdaArrayIndex[28], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[29], 8, 15) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[30], 16, 23) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[31], 24, 31);
 
-   dw[9] = 0;
+   dw[9] =
+      util_bitpack_uint(values->QPLambdaArrayIndex[32], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[33], 8, 15) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[34], 16, 23) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[35], 24, 31);
 
-   dw[10] = 0;
+   dw[10] =
+      util_bitpack_uint(values->QPLambdaArrayIndex[36], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[37], 8, 15) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[38], 16, 23) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[39], 24, 31);
 
-   dw[11] = 0;
+   dw[11] =
+      util_bitpack_uint(values->QPLambdaArrayIndex[40], 0, 7) |
+      util_bitpack_uint(values->QPLambdaArrayIndex[41], 8, 15);
 
    dw[12] =
-      util_bitpack_uint(values->SkipThresholdArrayIndexn, 0, 15);
+      util_bitpack_uint(values->SkipThresholdArrayIndex[0], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[1], 16, 31);
 
-   dw[13] = 0;
+   dw[13] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[2], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[3], 16, 31);
 
-   dw[14] = 0;
+   dw[14] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[4], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[5], 16, 31);
 
-   dw[15] = 0;
+   dw[15] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[6], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[7], 16, 31);
 
-   dw[16] = 0;
+   dw[16] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[8], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[9], 16, 31);
 
-   dw[17] = 0;
+   dw[17] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[10], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[11], 16, 31);
 
-   dw[18] = 0;
+   dw[18] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[12], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[13], 16, 31);
 
-   dw[19] = 0;
+   dw[19] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[14], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[15], 16, 31);
 
-   dw[20] = 0;
+   dw[20] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[16], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[17], 16, 31);
 
-   dw[21] = 0;
+   dw[21] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[18], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[19], 16, 31);
 
-   dw[22] = 0;
+   dw[22] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[20], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[21], 16, 31);
 
-   dw[23] = 0;
+   dw[23] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[22], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[23], 16, 31);
 
-   dw[24] = 0;
+   dw[24] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[24], 0, 15) |
+      util_bitpack_uint(values->SkipThresholdArrayIndex[25], 16, 31);
 
-   dw[25] = 0;
+   dw[25] =
+      util_bitpack_uint(values->SkipThresholdArrayIndex[26], 0, 15);
 
    dw[26] =
-      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndexn, 0, 15);
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[0], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[1], 16, 31);
 
-   dw[27] = 0;
+   dw[27] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[2], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[3], 16, 31);
 
-   dw[28] = 0;
+   dw[28] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[4], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[5], 16, 31);
 
-   dw[29] = 0;
+   dw[29] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[6], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[7], 16, 31);
 
-   dw[30] = 0;
+   dw[30] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[8], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[9], 16, 31);
 
-   dw[31] = 0;
+   dw[31] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[10], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[11], 16, 31);
 
-   dw[32] = 0;
+   dw[32] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[12], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[13], 16, 31);
 
-   dw[33] = 0;
+   dw[33] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[14], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[15], 16, 31);
 
-   dw[34] = 0;
+   dw[34] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[16], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[17], 16, 31);
 
-   dw[35] = 0;
+   dw[35] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[18], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[19], 16, 31);
 
-   dw[36] = 0;
+   dw[36] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[20], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[21], 16, 31);
 
-   dw[37] = 0;
+   dw[37] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[22], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[23], 16, 31);
 
-   dw[38] = 0;
+   dw[38] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[24], 0, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[25], 16, 31);
 
-   dw[39] = 0;
+   dw[39] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndex[26], 0, 15);
 
    dw[40] =
-      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndexn, 0, 7);
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[0], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[1], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[2], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[3], 24, 31);
 
-   dw[41] = 0;
+   dw[41] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[4], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[5], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[6], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[7], 24, 31);
 
-   dw[42] = 0;
+   dw[42] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[8], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[9], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[10], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[11], 24, 31);
 
-   dw[43] = 0;
+   dw[43] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[12], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[13], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[14], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[15], 24, 31);
 
-   dw[44] = 0;
+   dw[44] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[16], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[17], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[18], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[19], 24, 31);
 
-   dw[45] = 0;
+   dw[45] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[20], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[21], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[22], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[23], 24, 31);
 
-   dw[46] = 0;
+   dw[46] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[24], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[25], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndex[26], 16, 23);
 
    dw[47] =
-      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndexn, 0, 7);
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[0], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[1], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[2], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[3], 24, 31);
 
-   dw[48] = 0;
+   dw[48] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[4], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[5], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[6], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[7], 24, 31);
 
-   dw[49] = 0;
+   dw[49] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[8], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[9], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[10], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[11], 24, 31);
 
-   dw[50] = 0;
+   dw[50] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[12], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[13], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[14], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[15], 24, 31);
 
-   dw[51] = 0;
+   dw[51] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[16], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[17], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[18], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[19], 24, 31);
 
-   dw[52] = 0;
+   dw[52] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[20], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[21], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[22], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[23], 24, 31);
 
-   dw[53] = 0;
+   dw[53] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[24], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[25], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndex[26], 16, 23);
 
    dw[54] =
-      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndexn, 0, 7);
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[0], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[1], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[2], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[3], 24, 31);
 
-   dw[55] = 0;
+   dw[55] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[4], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[5], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[6], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[7], 24, 31);
 
-   dw[56] = 0;
+   dw[56] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[8], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[9], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[10], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[11], 24, 31);
 
-   dw[57] = 0;
+   dw[57] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[12], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[13], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[14], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[15], 24, 31);
 
-   dw[58] = 0;
+   dw[58] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[16], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[17], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[18], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[19], 24, 31);
 
-   dw[59] = 0;
+   dw[59] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[20], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[21], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[22], 16, 23) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[23], 24, 31);
 
-   dw[60] = 0;
-
-   dw[61] = 0;
+   dw[60] =
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[24], 0, 7) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[25], 8, 15) |
+      util_bitpack_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndex[26], 16, 23);
 }
 
-#define GFX125_VDENC_DS_REF_SURFACE_STATE_length      6
+#define GFX125_VDENC_CONTROL_STATE_length      2
+#define GFX125_VDENC_CONTROL_STATE_length_bias      2
+#define GFX125_VDENC_CONTROL_STATE_header       \
+   .DWordLength                         =      0,  \
+   .SubOpcode                           =     11,  \
+   .MediaCommandOpCode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_CONTROL_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpCode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 VdencInitialization;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_CONTROL_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_VDENC_CONTROL_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcode, 16, 22) |
+      util_bitpack_uint(values->MediaCommandOpCode, 23, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->VdencInitialization, 1, 1);
+}
+
+#define GFX125_VDENC_DS_REF_SURFACE_STATE_length     10
 #define GFX125_VDENC_DS_REF_SURFACE_STATE_length_bias      2
 #define GFX125_VDENC_DS_REF_SURFACE_STATE_header\
-   .DWordLength                         =      4,  \
+   .DWordLength                         =      8,  \
    .SubOpcodeB                          =      3,  \
    .SubOpcodeA                          =      0,  \
    .MediaCommandOpcode                  =      1,  \
@@ -24518,12 +27222,14 @@ GFX125_VDENC_DS_REF_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *
    dw[1] = 0;
 
    GFX125_VDENC_SURFACE_STATE_FIELDS_pack(data, &dw[2], &values->_8XSurfaceState);
+
+   GFX125_VDENC_SURFACE_STATE_FIELDS_pack(data, &dw[6], &values->_4XSurfaceState);
 }
 
-#define GFX125_VDENC_IMG_STATE_length         36
+#define GFX125_VDENC_IMG_STATE_length         35
 #define GFX125_VDENC_IMG_STATE_length_bias      2
 #define GFX125_VDENC_IMG_STATE_header           \
-   .DWordLength                         =     34,  \
+   .DWordLength                         =     33,  \
    .SubOpcodeB                          =      5,  \
    .SubOpcodeA                          =      0,  \
    .MediaCommandOpcode                  =      1,  \
@@ -24545,10 +27251,12 @@ struct GFX125_VDENC_IMG_STATE {
    bool                                 Transform8x8;
    uint32_t                             VDEncL1CachePriority;
    uint32_t                             LambdaValueforTrellis;
+   uint32_t                             BidirectionalWeight;
    bool                                 UnidirectionalMixDisable;
    uint32_t                             PictureWidth;
    uint32_t                             SubPelMode;
    bool                                 ForwardTransformSkipCheckEnable;
+   bool                                 BmeDisableForFbrMessage;
    bool                                 BlockBasedSkipEnable;
    uint32_t                             InterSADMeasureAdjustment;
 #define ISMA_None                                0
@@ -24594,7 +27302,7 @@ struct GFX125_VDENC_IMG_STATE {
    uint32_t                             RefIDCost;
    uint32_t                             ChromaIntraModeCost;
    struct GFX125_IMAGE_STATE_COST       MVCost;
-   uint32_t                             QpPrimeY;
+   int32_t                              QpPrimeY;
    uint32_t                             TargetSizeInWord;
    uint32_t                             AVCIntra4x4ModeMask;
    uint32_t                             AVCIntra8x8ModeMask;
@@ -24636,8 +27344,8 @@ struct GFX125_VDENC_IMG_STATE {
    uint32_t                             SadHaarThreshold0;
    uint32_t                             SadHaarThreshold1;
    uint32_t                             SadHaarThreshold2;
-   uint32_t                             MinQP;
    uint32_t                             MaxQP;
+   uint32_t                             MinQP;
    uint32_t                             MaxDeltaQP;
    bool                                 ROIEnable;
    bool                                 FwdPredictor0MVEnable;
@@ -24678,6 +27386,7 @@ GFX125_VDENC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->LambdaValueforTrellis, 16, 31);
 
    dw[2] =
+      util_bitpack_uint(values->BidirectionalWeight, 16, 21) |
       util_bitpack_uint(values->UnidirectionalMixDisable, 28, 28);
 
    dw[3] =
@@ -24686,6 +27395,7 @@ GFX125_VDENC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    dw[4] =
       util_bitpack_uint(values->SubPelMode, 12, 13) |
       util_bitpack_uint(values->ForwardTransformSkipCheckEnable, 17, 17) |
+      util_bitpack_uint(values->BmeDisableForFbrMessage, 18, 18) |
       util_bitpack_uint(values->BlockBasedSkipEnable, 19, 19) |
       util_bitpack_uint(values->InterSADMeasureAdjustment, 20, 21) |
       util_bitpack_uint(values->IntraSADMeasureAdjustment, 22, 23) |
@@ -24738,7 +27448,7 @@ GFX125_VDENC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX125_IMAGE_STATE_COST_pack(data, &dw[12], &values->MVCost);
 
    dw[14] =
-      util_bitpack_uint(values->QpPrimeY, 0, 7) |
+      util_bitpack_sint(values->QpPrimeY, 0, 7) |
       util_bitpack_uint(values->TargetSizeInWord, 24, 31);
 
    dw[15] = 0;
@@ -24813,8 +27523,8 @@ GFX125_VDENC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->SadHaarThreshold2, 16, 31);
 
    dw[33] =
-      util_bitpack_uint(values->MinQP, 0, 7) |
-      util_bitpack_uint(values->MaxQP, 8, 15) |
+      util_bitpack_uint(values->MaxQP, 0, 7) |
+      util_bitpack_uint(values->MinQP, 8, 15) |
       util_bitpack_uint(values->MaxDeltaQP, 24, 27);
 
    dw[34] =
@@ -24830,14 +27540,12 @@ GFX125_VDENC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->LongTermReferenceFrameFwdRef1Indicator, 12, 12) |
       util_bitpack_uint(values->LongTermReferenceFrameFwdRef0Indicator, 13, 13) |
       util_bitpack_uint(values->MidpointSadHaar, 16, 31);
-
-   dw[35] = 0;
 }
 
-#define GFX125_VDENC_PIPE_BUF_ADDR_STATE_length     38
+#define GFX125_VDENC_PIPE_BUF_ADDR_STATE_length     71
 #define GFX125_VDENC_PIPE_BUF_ADDR_STATE_length_bias      2
 #define GFX125_VDENC_PIPE_BUF_ADDR_STATE_header \
-   .DWordLength                         =     36,  \
+   .DWordLength                         =     69,  \
    .SubOpcodeB                          =      4,  \
    .SubOpcodeA                          =      0,  \
    .MediaCommandOpcode                  =      1,  \
@@ -24864,12 +27572,16 @@ struct GFX125_VDENC_PIPE_BUF_ADDR_STATE {
    struct GFX125_VDENC_PICTURE          VDEncStatisticsStreamOut;
    struct GFX125_VDENC_PICTURE          DSFWDREF04X;
    struct GFX125_VDENC_PICTURE          DSFWDREF14X;
+   struct GFX125_VDENC_PICTURE          VDEncCURecordStreamOutBuffer;
    struct GFX125_VDENC_PICTURE          VDEncLCUPAK_OBJ_CMDBuffer;
    struct GFX125_VDENC_PICTURE          ScaledReferenceSurface8X;
    struct GFX125_VDENC_PICTURE          ScaledReferenceSurface4X;
    struct GFX125_VDENC_PICTURE          VP9SegmentationMapStreamInBuffer;
    struct GFX125_VDENC_PICTURE          VP9SegmentationMapStreamOutBuffer;
-   uint32_t                             WeightsHistogramStreamOutOffset;
+   uint64_t                             WeightsHistogramStreamOutOffset;
+   struct GFX125_VDENC_PICTURE          VDEncTileRowStoreBuffer;
+   struct GFX125_VDENC_PICTURE          VDEncCumulativeCUCountStreamOutSurface;
+   struct GFX125_VDENC_PICTURE          VDEncPaletteModeStreamOutSurface;
 };
 
 static inline __attribute__((always_inline)) void
@@ -24916,17 +27628,58 @@ GFX125_VDENC_PIPE_BUF_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *d
    GFX125_VDENC_PICTURE_pack(data, &dw[34], &values->VDEncStatisticsStreamOut);
 
    GFX125_VDENC_PICTURE_pack(data, &dw[37], &values->DSFWDREF04X);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[40], &values->DSFWDREF14X);
+
+   dw[43] = 0;
+
+   dw[44] = 0;
+
+   dw[45] = 0;
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[46], &values->VDEncCURecordStreamOutBuffer);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[49], &values->VDEncLCUPAK_OBJ_CMDBuffer);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[52], &values->ScaledReferenceSurface8X);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[55], &values->ScaledReferenceSurface4X);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[58], &values->VP9SegmentationMapStreamInBuffer);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[61], &values->VP9SegmentationMapStreamOutBuffer);
+
+   const uint64_t v62 =
+      util_bitpack_uint(values->WeightsHistogramStreamOutOffset, 0, 95);
+   dw[62] = v62;
+   dw[63] = v62 >> 32;
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[65], &values->VDEncTileRowStoreBuffer);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[68], &values->VDEncCumulativeCUCountStreamOutSurface);
 }
 
-#define GFX125_VDENC_PIPE_MODE_SELECT_length      2
+#define GFX125_VDENC_PIPE_MODE_SELECT_length      6
 #define GFX125_VDENC_PIPE_MODE_SELECT_length_bias      2
 #define GFX125_VDENC_PIPE_MODE_SELECT_header    \
-   .DWordLength                         =      0,  \
+   .DWordLength                         =      4,  \
    .SubOpcodeB                          =      0,  \
    .SubOpcodeA                          =      0,  \
    .MediaCommandOpcode                  =      1,  \
    .Pipeline                            =      2,  \
-   .CommandType                         =      3
+   .CommandType                         =      3,  \
+   .PrimaryChannelSelectionForRGBEncoding =      1,  \
+   .FirstSecondaryChannelSelectionForRGBEncoding =      2,  \
+   .HMERegionPrefetchEnable             =      1,  \
+   .TopPrefetchEnableMode               =      1,  \
+   .LeftPrefetchAtWrapAround            =      1,  \
+   .HzShift32Minus1                     =      3,  \
+   .NumberofVerticalRequests            =     11,  \
+   .NumberofHorizontalRequests          =      2,  \
+   .SourceLumaPackedDataTLBPrefetchEnable =      1,  \
+   .SourceChromaTLBPrefetchEnable       =      1,  \
+   .HzShift32Minus1Src                  =      3,  \
+   .PrefetchOffsetforSource             =      4
 
 struct GFX125_VDENC_PIPE_MODE_SELECT {
    uint32_t                             DWordLength;
@@ -24954,6 +27707,12 @@ struct GFX125_VDENC_PIPE_MODE_SELECT {
 #define _420                                     1
 #define _444                                     3
    bool                                 OutputRangeControlAfterColorSpaceConversion;
+   bool                                 IsRandomAccess;
+   bool                                 RGBEncodingEnable;
+   uint32_t                             PrimaryChannelSelectionForRGBEncoding;
+   uint32_t                             FirstSecondaryChannelSelectionForRGBEncoding;
+   bool                                 TileReplayEnable;
+   uint32_t                             StreamingBufferConfig;
    bool                                 DisableSpeedModeFetchOptimization;
    bool                                 HMERegionPrefetchEnable;
    uint32_t                             TopPrefetchEnableMode;
@@ -25000,7 +27759,36 @@ GFX125_VDENC_PIPE_MODE_SELECT_pack(__attribute__((unused)) __gen_user_data *data
       util_bitpack_uint(values->BitDepth, 12, 14) |
       util_bitpack_uint(values->PAKChromaSubSamplingType, 15, 16) |
       util_bitpack_uint(values->OutputRangeControlAfterColorSpaceConversion, 17, 17) |
+      util_bitpack_uint(values->IsRandomAccess, 18, 18) |
+      util_bitpack_uint(values->RGBEncodingEnable, 20, 20) |
+      util_bitpack_uint(values->PrimaryChannelSelectionForRGBEncoding, 21, 22) |
+      util_bitpack_uint(values->FirstSecondaryChannelSelectionForRGBEncoding, 23, 24) |
+      util_bitpack_uint(values->TileReplayEnable, 25, 25) |
+      util_bitpack_uint(values->StreamingBufferConfig, 26, 27) |
       util_bitpack_uint(values->DisableSpeedModeFetchOptimization, 31, 31);
+
+   dw[2] =
+      util_bitpack_uint(values->HMERegionPrefetchEnable, 0, 0) |
+      util_bitpack_uint(values->TopPrefetchEnableMode, 1, 2) |
+      util_bitpack_uint(values->LeftPrefetchAtWrapAround, 3, 3) |
+      util_bitpack_uint(values->VerticalShift32Minus1, 4, 7) |
+      util_bitpack_uint(values->HzShift32Minus1, 8, 11) |
+      util_bitpack_uint(values->NumberofVerticalRequests, 16, 19) |
+      util_bitpack_uint(values->NumberofHorizontalRequests, 20, 23) |
+      util_bitpack_uint(values->PrefetchOffsetforReference, 24, 27);
+
+   dw[3] =
+      util_bitpack_uint(values->SourceLumaPackedDataTLBPrefetchEnable, 0, 0) |
+      util_bitpack_uint(values->SourceChromaTLBPrefetchEnable, 1, 1) |
+      util_bitpack_uint(values->VerticalShift32Minus1Src, 4, 7) |
+      util_bitpack_uint(values->HzShift32Minus1Src, 8, 11) |
+      util_bitpack_uint(values->NumberofVerticalRequestsforSource, 16, 19) |
+      util_bitpack_uint(values->NumberofHorizontalRequestforSource, 20, 23) |
+      util_bitpack_uint(values->PrefetchOffsetforSource, 24, 27);
+
+   dw[4] = 0;
+
+   dw[5] = 0;
 }
 
 #define GFX125_VDENC_REF_SURFACE_STATE_length      6
@@ -25083,10 +27871,10 @@ GFX125_VDENC_SRC_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *dat
    GFX125_VDENC_SURFACE_STATE_FIELDS_pack(data, &dw[2], &values->SurfaceState);
 }
 
-#define GFX125_VDENC_WALKER_STATE_length       2
+#define GFX125_VDENC_WALKER_STATE_length      27
 #define GFX125_VDENC_WALKER_STATE_length_bias      2
 #define GFX125_VDENC_WALKER_STATE_header        \
-   .DWordLength                         =      0,  \
+   .DWordLength                         =     25,  \
    .SubOpcodeB                          =      7,  \
    .SubOpcodeA                          =      0,  \
    .MediaCommandOpcode                  =      1,  \
@@ -25121,6 +27909,9 @@ struct GFX125_VDENC_WALKER_STATE {
    uint32_t                             TileStreamOutOffset;
    bool                                 TileLCUStreamOutOffsetEnable;
    uint32_t                             TileLCUStreamOutOffset;
+   bool                                 PaletteModeEnable;
+   uint32_t                             IBCControl;
+   uint32_t                             AdaptiveChannelThreshold;
 };
 
 static inline __attribute__((always_inline)) void
@@ -25142,9 +27933,80 @@ GFX125_VDENC_WALKER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->MBLCUStartYPosition, 0, 8) |
       util_bitpack_uint(values->MBLCUStartXPosition, 16, 24) |
       util_bitpack_uint(values->FirstSuperSlice, 28, 28);
+
+   dw[2] =
+      util_bitpack_uint(values->NextSliceMBStartYPosition, 0, 9) |
+      util_bitpack_uint(values->NextSliceMBLCUStartXPosition, 16, 25);
+
+   dw[3] =
+      util_bitpack_uint(values->Log2WeightDenominatorLuma, 0, 2) |
+      util_bitpack_uint(values->HEVCVP9Log2WeightDenominatorLuma, 4, 6) |
+      util_bitpack_uint(values->NumberofParallelEngines, 9, 10) |
+      util_bitpack_uint(values->TileNumber, 24, 31);
+
+   dw[4] =
+      util_bitpack_uint(values->TileStartCTBY, 0, 15) |
+      util_bitpack_uint(values->TileStartCTBX, 16, 31);
+
+   dw[5] =
+      util_bitpack_uint(values->TileWidth, 0, 15) |
+      util_bitpack_uint(values->TileHeight, 16, 31);
+
+   dw[6] =
+      util_bitpack_uint(values->TileStreamInOffsetEnable, 0, 0) |
+      util_bitpack_uint(values->TileStreamInOffset, 6, 31);
+
+   dw[7] =
+      util_bitpack_uint(values->TileRowStoreOffsetEnable, 0, 0) |
+      util_bitpack_uint(values->TileRowStoreOffset, 6, 31);
+
+   dw[8] =
+      util_bitpack_uint(values->TileStreamOutOffsetEnable, 0, 0) |
+      util_bitpack_uint(values->TileStreamOutOffset, 6, 31);
+
+   dw[9] =
+      util_bitpack_uint(values->TileLCUStreamOutOffsetEnable, 0, 0) |
+      util_bitpack_uint(values->TileLCUStreamOutOffset, 6, 31);
+
+   dw[10] = 0;
+
+   dw[11] = 0;
+
+   dw[12] =
+      util_bitpack_uint(values->PaletteModeEnable, 26, 26) |
+      util_bitpack_uint(values->IBCControl, 27, 28);
+
+   dw[13] = 0;
+
+   dw[14] = 0;
+
+   dw[15] = 0;
+
+   dw[16] =
+      util_bitpack_uint(values->AdaptiveChannelThreshold, 24, 27);
+
+   dw[17] = 0;
+
+   dw[18] = 0;
+
+   dw[19] = 0;
+
+   dw[20] = 0;
+
+   dw[21] = 0;
+
+   dw[22] = 0;
+
+   dw[23] = 0;
+
+   dw[24] = 0;
+
+   dw[25] = 0;
+
+   dw[26] = 0;
 }
 
-#define GFX125_VDENC_WEIGHTSOFFSETS_STATE_length      2
+#define GFX125_VDENC_WEIGHTSOFFSETS_STATE_length      3
 #define GFX125_VDENC_WEIGHTSOFFSETS_STATE_length_bias      2
 #define GFX125_VDENC_WEIGHTSOFFSETS_STATE_header\
    .DWordLength                         =      1,  \
@@ -25191,6 +28053,12 @@ GFX125_VDENC_WEIGHTSOFFSETS_STATE_pack(__attribute__((unused)) __gen_user_data *
       util_bitpack_sint(values->OffsetForwardReference0, 8, 15) |
       util_bitpack_sint(values->WeightsForwardReference1, 16, 23) |
       util_bitpack_sint(values->OffsetForwardReference1, 24, 31);
+
+   dw[2] =
+      util_bitpack_sint(values->WeightsForwardReference2, 0, 7) |
+      util_bitpack_sint(values->OffsetForwardReference2, 8, 15) |
+      util_bitpack_sint(values->HEVCVP9WeightsBackwardReference0, 16, 23) |
+      util_bitpack_sint(values->HEVCVP9OffsetBackwardReference0, 24, 31);
 }
 
 #define GFX125_VD_CONTROL_STATE_length         3
@@ -25258,9 +28126,11 @@ struct GFX125_VD_PIPELINE_FLUSH {
    bool                                 VDENCPipelineDone;
    bool                                 MFXPipelineDone;
    bool                                 VDCommandMessageParserDone;
+   bool                                 AVPPipelineDone;
    bool                                 HEVCPipelineCommandFlush;
    bool                                 VDENCPipelineCommandFlush;
    bool                                 MFXPipelineCommandFlush;
+   bool                                 AVPPipelineCommandFlush;
 };
 
 static inline __attribute__((always_inline)) void
@@ -25283,9 +28153,11 @@ GFX125_VD_PIPELINE_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->VDENCPipelineDone, 1, 1) |
       util_bitpack_uint(values->MFXPipelineDone, 3, 3) |
       util_bitpack_uint(values->VDCommandMessageParserDone, 4, 4) |
+      util_bitpack_uint(values->AVPPipelineDone, 5, 5) |
       util_bitpack_uint(values->HEVCPipelineCommandFlush, 16, 16) |
       util_bitpack_uint(values->VDENCPipelineCommandFlush, 17, 17) |
-      util_bitpack_uint(values->MFXPipelineCommandFlush, 19, 19);
+      util_bitpack_uint(values->MFXPipelineCommandFlush, 19, 19) |
+      util_bitpack_uint(values->AVPPipelineCommandFlush, 20, 20);
 }
 
 #define GFX125_XY_BLOCK_COPY_BLT_length       22
@@ -25667,6 +28539,25 @@ GFX125_XY_FAST_COLOR_BLT_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->DestinationArrayIndex, 21, 31);
 }
 
+#define GFX125_BCS_AUX_TABLE_BASE_ADDR_num 0x4240
+#define GFX125_BCS_AUX_TABLE_BASE_ADDR_length      2
+struct GFX125_BCS_AUX_TABLE_BASE_ADDR {
+   uint64_t                             Address;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_BCS_AUX_TABLE_BASE_ADDR_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_BCS_AUX_TABLE_BASE_ADDR * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      util_bitpack_uint(values->Address, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
 #define GFX125_BCS_CCS_AUX_INV_num        0x4248
 #define GFX125_BCS_CCS_AUX_INV_length          1
 struct GFX125_BCS_CCS_AUX_INV {
@@ -25705,6 +28596,110 @@ GFX125_BCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->BlitterIDLE, 1, 1) |
       util_bitpack_uint(values->GABIDLE, 2, 2) |
       util_bitpack_uint(values->BCSDone, 3, 3);
+}
+
+#define GFX125_BLT_TRTT_CR_num            0x4480
+#define GFX125_BLT_TRTT_CR_length              1
+struct GFX125_BLT_TRTT_CR {
+   bool                                 TRTTEnable;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_BLT_TRTT_CR_pack(__attribute__((unused)) __gen_user_data *data,
+                        __attribute__((unused)) void * restrict dst,
+                        __attribute__((unused)) const struct GFX125_BLT_TRTT_CR * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRTTEnable, 0, 0);
+}
+
+#define GFX125_BLT_TRTT_INVAL_num         0x4494
+#define GFX125_BLT_TRTT_INVAL_length           1
+struct GFX125_BLT_TRTT_INVAL {
+   uint32_t                             InvalidTileDetectionValue;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_BLT_TRTT_INVAL_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX125_BLT_TRTT_INVAL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->InvalidTileDetectionValue, 0, 31);
+}
+
+#define GFX125_BLT_TRTT_L3_BASE_HIGH_num  0x448c
+#define GFX125_BLT_TRTT_L3_BASE_HIGH_length      1
+struct GFX125_BLT_TRTT_L3_BASE_HIGH {
+   uint32_t                             TRVAL3PointerUpperAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_BLT_TRTT_L3_BASE_HIGH_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_BLT_TRTT_L3_BASE_HIGH * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRVAL3PointerUpperAddress, 0, 15);
+}
+
+#define GFX125_BLT_TRTT_L3_BASE_LOW_num   0x4488
+#define GFX125_BLT_TRTT_L3_BASE_LOW_length      1
+struct GFX125_BLT_TRTT_L3_BASE_LOW {
+   uint32_t                             TRVAL3PointerLowerAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_BLT_TRTT_L3_BASE_LOW_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_BLT_TRTT_L3_BASE_LOW * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRVAL3PointerLowerAddress, 12, 31);
+}
+
+#define GFX125_BLT_TRTT_NULL_num          0x4490
+#define GFX125_BLT_TRTT_NULL_length            1
+struct GFX125_BLT_TRTT_NULL {
+   uint32_t                             NullTileDetectionValue;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_BLT_TRTT_NULL_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_BLT_TRTT_NULL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->NullTileDetectionValue, 0, 31);
+}
+
+#define GFX125_BLT_TRTT_VA_RANGE_num      0x4484
+#define GFX125_BLT_TRTT_VA_RANGE_length        1
+struct GFX125_BLT_TRTT_VA_RANGE {
+   uint32_t                             TRVADataValue;
+   uint32_t                             TRVAMaskValue;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_BLT_TRTT_VA_RANGE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_BLT_TRTT_VA_RANGE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRVADataValue, 0, 3) |
+      util_bitpack_uint(values->TRVAMaskValue, 4, 7);
 }
 
 #define GFX125_CACHE_MODE_0_num           0x7000
@@ -25809,6 +28804,29 @@ GFX125_CACHE_MODE_1_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ColorCompressionDisableMask, 31, 31);
 }
 
+#define GFX125_CCS_INSTDONE_num           0x1206c
+#define GFX125_CCS_INSTDONE_length             1
+struct GFX125_CCS_INSTDONE {
+   bool                                 RingEnable;
+   bool                                 VFEDone;
+   bool                                 TSGDone;
+   bool                                 CSDone;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_CCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
+                         __attribute__((unused)) void * restrict dst,
+                         __attribute__((unused)) const struct GFX125_CCS_INSTDONE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->RingEnable, 0, 0) |
+      util_bitpack_uint(values->VFEDone, 16, 16) |
+      util_bitpack_uint(values->TSGDone, 17, 17) |
+      util_bitpack_uint(values->CSDone, 21, 21);
+}
+
 #define GFX125_CHICKEN_RASTER_1_num       0x6204
 #define GFX125_CHICKEN_RASTER_1_length         1
 struct GFX125_CHICKEN_RASTER_1 {
@@ -25826,6 +28844,33 @@ GFX125_CHICKEN_RASTER_1_pack(__attribute__((unused)) __gen_user_data *data,
    dw[0] =
       util_bitpack_uint(values->AALineQualityFix, 5, 5) |
       util_bitpack_uint(values->AALineQualityFixMask, 21, 21);
+}
+
+#define GFX125_CHICKEN_RASTER_2_num       0x6208
+#define GFX125_CHICKEN_RASTER_2_length         1
+struct GFX125_CHICKEN_RASTER_2 {
+   bool                                 TBIMRBatchSizeOverride;
+   bool                                 TBIMROpenBatchEnable;
+   bool                                 TBIMRFastClip;
+   bool                                 TBIMRBatchSizeOverrideMask;
+   bool                                 TBIMROpenBatchEnableMask;
+   bool                                 TBIMRFastClipMask;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_CHICKEN_RASTER_2_pack(__attribute__((unused)) __gen_user_data *data,
+                             __attribute__((unused)) void * restrict dst,
+                             __attribute__((unused)) const struct GFX125_CHICKEN_RASTER_2 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TBIMRBatchSizeOverride, 1, 1) |
+      util_bitpack_uint(values->TBIMROpenBatchEnable, 4, 4) |
+      util_bitpack_uint(values->TBIMRFastClip, 5, 5) |
+      util_bitpack_uint(values->TBIMRBatchSizeOverrideMask, 17, 17) |
+      util_bitpack_uint(values->TBIMROpenBatchEnableMask, 20, 20) |
+      util_bitpack_uint(values->TBIMRFastClipMask, 21, 21);
 }
 
 #define GFX125_CL_INVOCATION_COUNT_num    0x2338
@@ -25959,6 +29004,110 @@ GFX125_COMPCS0_CCS_AUX_INV_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->AuxInv, 0, 0);
 }
 
+#define GFX125_COMP_CTX0_TRTT_CR_num      0x4580
+#define GFX125_COMP_CTX0_TRTT_CR_length        1
+struct GFX125_COMP_CTX0_TRTT_CR {
+   bool                                 TRTTEnable;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_COMP_CTX0_TRTT_CR_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_COMP_CTX0_TRTT_CR * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRTTEnable, 0, 0);
+}
+
+#define GFX125_COMP_CTX0_TRTT_INVAL_num   0x4594
+#define GFX125_COMP_CTX0_TRTT_INVAL_length      1
+struct GFX125_COMP_CTX0_TRTT_INVAL {
+   uint32_t                             InvalidTileDetectionValue;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_COMP_CTX0_TRTT_INVAL_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_COMP_CTX0_TRTT_INVAL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->InvalidTileDetectionValue, 0, 31);
+}
+
+#define GFX125_COMP_CTX0_TRTT_L3_BASE_HIGH_num 0x458c
+#define GFX125_COMP_CTX0_TRTT_L3_BASE_HIGH_length      1
+struct GFX125_COMP_CTX0_TRTT_L3_BASE_HIGH {
+   uint32_t                             TRVAL3PointerUpperAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_COMP_CTX0_TRTT_L3_BASE_HIGH_pack(__attribute__((unused)) __gen_user_data *data,
+                                        __attribute__((unused)) void * restrict dst,
+                                        __attribute__((unused)) const struct GFX125_COMP_CTX0_TRTT_L3_BASE_HIGH * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRVAL3PointerUpperAddress, 0, 15);
+}
+
+#define GFX125_COMP_CTX0_TRTT_L3_BASE_LOW_num 0x4588
+#define GFX125_COMP_CTX0_TRTT_L3_BASE_LOW_length      1
+struct GFX125_COMP_CTX0_TRTT_L3_BASE_LOW {
+   uint32_t                             TRVAL3PointerLowerAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_COMP_CTX0_TRTT_L3_BASE_LOW_pack(__attribute__((unused)) __gen_user_data *data,
+                                       __attribute__((unused)) void * restrict dst,
+                                       __attribute__((unused)) const struct GFX125_COMP_CTX0_TRTT_L3_BASE_LOW * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRVAL3PointerLowerAddress, 12, 31);
+}
+
+#define GFX125_COMP_CTX0_TRTT_NULL_num    0x4590
+#define GFX125_COMP_CTX0_TRTT_NULL_length      1
+struct GFX125_COMP_CTX0_TRTT_NULL {
+   uint32_t                             NullTileDetectionValue;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_COMP_CTX0_TRTT_NULL_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_COMP_CTX0_TRTT_NULL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->NullTileDetectionValue, 0, 31);
+}
+
+#define GFX125_COMP_CTX0_TRTT_VA_RANGE_num 0x4584
+#define GFX125_COMP_CTX0_TRTT_VA_RANGE_length      1
+struct GFX125_COMP_CTX0_TRTT_VA_RANGE {
+   uint32_t                             TRVADataValue;
+   uint32_t                             TRVAMaskValue;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_COMP_CTX0_TRTT_VA_RANGE_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_COMP_CTX0_TRTT_VA_RANGE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRVADataValue, 0, 3) |
+      util_bitpack_uint(values->TRVAMaskValue, 4, 7);
+}
+
 #define GFX125_CS_CHICKEN1_num            0x2580
 #define GFX125_CS_CHICKEN1_length              1
 struct GFX125_CS_CHICKEN1 {
@@ -26072,6 +29221,83 @@ GFX125_FF_MODE2_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->GSTimerValue, 24, 31);
 }
 
+#define GFX125_GAM_DONE_num               0xcf68
+#define GFX125_GAM_DONE_length                 1
+struct GFX125_GAM_DONE {
+   bool                                 GFXTLB0Done;
+   bool                                 GFXTLB1Done;
+   bool                                 COMPTLB0Done;
+   bool                                 COMPTLB1Done;
+   bool                                 GUCTLBDone;
+   bool                                 KCRTLBDone;
+   bool                                 OACTLBDone;
+   bool                                 VDBOX0TLBDone;
+   bool                                 VDBOX2TLBDone;
+   bool                                 VEBOX0TLBDone;
+   bool                                 CMINGRESSDone;
+   bool                                 DataINGRESSDone;
+   bool                                 REQSTRMDone;
+   bool                                 STLBDone;
+   bool                                 BLTTLBDone;
+   bool                                 TLBHitARBCOMPDone;
+   bool                                 TLBHitARBMISCDone;
+   bool                                 TLBHitARBSTGDone;
+   bool                                 TLBHitGFXSTGDone;
+   bool                                 TLBMissARBGFXDone;
+   bool                                 TLBMissARBCOMPDone;
+   bool                                 TLBMissARBMISCDone;
+   bool                                 TLBMissARBSTGDone;
+   bool                                 TRTLBDone;
+   bool                                 WKRSDone;
+   bool                                 CCSDone;
+   bool                                 CTRLCOMMDone;
+   bool                                 FLWCTRLDone;
+   bool                                 DRTNDone;
+   bool                                 VEBOX1TBLDone;
+   bool                                 XBLDone;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_GAM_DONE_pack(__attribute__((unused)) __gen_user_data *data,
+                     __attribute__((unused)) void * restrict dst,
+                     __attribute__((unused)) const struct GFX125_GAM_DONE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->GFXTLB0Done, 0, 0) |
+      util_bitpack_uint(values->GFXTLB1Done, 1, 1) |
+      util_bitpack_uint(values->COMPTLB0Done, 2, 2) |
+      util_bitpack_uint(values->COMPTLB1Done, 3, 3) |
+      util_bitpack_uint(values->GUCTLBDone, 4, 4) |
+      util_bitpack_uint(values->KCRTLBDone, 5, 5) |
+      util_bitpack_uint(values->OACTLBDone, 6, 6) |
+      util_bitpack_uint(values->VDBOX0TLBDone, 7, 7) |
+      util_bitpack_uint(values->VDBOX2TLBDone, 8, 8) |
+      util_bitpack_uint(values->VEBOX0TLBDone, 9, 9) |
+      util_bitpack_uint(values->CMINGRESSDone, 10, 10) |
+      util_bitpack_uint(values->DataINGRESSDone, 11, 11) |
+      util_bitpack_uint(values->REQSTRMDone, 12, 12) |
+      util_bitpack_uint(values->STLBDone, 13, 13) |
+      util_bitpack_uint(values->BLTTLBDone, 14, 14) |
+      util_bitpack_uint(values->TLBHitARBCOMPDone, 15, 15) |
+      util_bitpack_uint(values->TLBHitARBMISCDone, 16, 16) |
+      util_bitpack_uint(values->TLBHitARBSTGDone, 17, 17) |
+      util_bitpack_uint(values->TLBHitGFXSTGDone, 18, 18) |
+      util_bitpack_uint(values->TLBMissARBGFXDone, 19, 19) |
+      util_bitpack_uint(values->TLBMissARBCOMPDone, 20, 20) |
+      util_bitpack_uint(values->TLBMissARBMISCDone, 21, 21) |
+      util_bitpack_uint(values->TLBMissARBSTGDone, 22, 22) |
+      util_bitpack_uint(values->TRTLBDone, 23, 23) |
+      util_bitpack_uint(values->WKRSDone, 24, 24) |
+      util_bitpack_uint(values->CCSDone, 25, 25) |
+      util_bitpack_uint(values->CTRLCOMMDone, 26, 26) |
+      util_bitpack_uint(values->FLWCTRLDone, 27, 27) |
+      util_bitpack_uint(values->DRTNDone, 28, 28) |
+      util_bitpack_uint(values->VEBOX1TBLDone, 29, 29) |
+      util_bitpack_uint(values->XBLDone, 30, 30);
+}
+
 #define GFX125_GFX_AUX_TABLE_BASE_ADDR_num 0x4200
 #define GFX125_GFX_AUX_TABLE_BASE_ADDR_length      2
 struct GFX125_GFX_AUX_TABLE_BASE_ADDR {
@@ -26106,6 +29332,110 @@ GFX125_GFX_CCS_AUX_INV_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[0] =
       util_bitpack_uint(values->AuxInv, 0, 0);
+}
+
+#define GFX125_GFX_TRTT_CR_num            0x4400
+#define GFX125_GFX_TRTT_CR_length              1
+struct GFX125_GFX_TRTT_CR {
+   bool                                 TRTTEnable;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_GFX_TRTT_CR_pack(__attribute__((unused)) __gen_user_data *data,
+                        __attribute__((unused)) void * restrict dst,
+                        __attribute__((unused)) const struct GFX125_GFX_TRTT_CR * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRTTEnable, 0, 0);
+}
+
+#define GFX125_GFX_TRTT_INVAL_num         0x4414
+#define GFX125_GFX_TRTT_INVAL_length           1
+struct GFX125_GFX_TRTT_INVAL {
+   uint32_t                             InvalidTileDetectionValue;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_GFX_TRTT_INVAL_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX125_GFX_TRTT_INVAL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->InvalidTileDetectionValue, 0, 31);
+}
+
+#define GFX125_GFX_TRTT_L3_BASE_HIGH_num  0x440c
+#define GFX125_GFX_TRTT_L3_BASE_HIGH_length      1
+struct GFX125_GFX_TRTT_L3_BASE_HIGH {
+   uint32_t                             TRVAL3PointerUpperAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_GFX_TRTT_L3_BASE_HIGH_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_GFX_TRTT_L3_BASE_HIGH * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRVAL3PointerUpperAddress, 0, 15);
+}
+
+#define GFX125_GFX_TRTT_L3_BASE_LOW_num   0x4408
+#define GFX125_GFX_TRTT_L3_BASE_LOW_length      1
+struct GFX125_GFX_TRTT_L3_BASE_LOW {
+   uint32_t                             TRVAL3PointerLowerAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_GFX_TRTT_L3_BASE_LOW_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_GFX_TRTT_L3_BASE_LOW * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRVAL3PointerLowerAddress, 12, 31);
+}
+
+#define GFX125_GFX_TRTT_NULL_num          0x4410
+#define GFX125_GFX_TRTT_NULL_length            1
+struct GFX125_GFX_TRTT_NULL {
+   uint32_t                             NullTileDetectionValue;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_GFX_TRTT_NULL_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_GFX_TRTT_NULL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->NullTileDetectionValue, 0, 31);
+}
+
+#define GFX125_GFX_TRTT_VA_RANGE_num      0x4404
+#define GFX125_GFX_TRTT_VA_RANGE_length        1
+struct GFX125_GFX_TRTT_VA_RANGE {
+   uint32_t                             TRVADataValue;
+   uint32_t                             TRVAMaskValue;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_GFX_TRTT_VA_RANGE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_GFX_TRTT_VA_RANGE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->TRVADataValue, 0, 3) |
+      util_bitpack_uint(values->TRVAMaskValue, 4, 7);
 }
 
 #define GFX125_GS_INVOCATION_COUNT_num    0x2328
@@ -26397,6 +29727,44 @@ GFX125_L3SQCREG5_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->CrossTilePartialWriteMergeEnable, 23, 23);
 }
 
+#define GFX125_MESH_INVOCATION_COUNT_num  0x26e0
+#define GFX125_MESH_INVOCATION_COUNT_length      2
+struct GFX125_MESH_INVOCATION_COUNT {
+   uint64_t                             MESHInvocationCounter;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MESH_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_MESH_INVOCATION_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      util_bitpack_uint(values->MESHInvocationCounter, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GFX125_MESH_PRIMITIVE_COUNT_num   0x26d8
+#define GFX125_MESH_PRIMITIVE_COUNT_length      2
+struct GFX125_MESH_PRIMITIVE_COUNT {
+   uint64_t                             MESHPrimitiveCounter;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MESH_PRIMITIVE_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_MESH_PRIMITIVE_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      util_bitpack_uint(values->MESHPrimitiveCounter, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
 #define GFX125_PS_INVOCATION_COUNT_num    0x2348
 #define GFX125_PS_INVOCATION_COUNT_length      2
 struct GFX125_PS_INVOCATION_COUNT {
@@ -26610,6 +29978,7 @@ struct GFX125_SC_INSTDONE {
    bool                                 GW3Done;
    bool                                 TDCDone;
    bool                                 SFBEDone;
+   bool                                 PSSDone;
    bool                                 AMFSDone;
 };
 
@@ -26643,6 +30012,7 @@ GFX125_SC_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->GW3Done, 23, 23) |
       util_bitpack_uint(values->TDCDone, 24, 24) |
       util_bitpack_uint(values->SFBEDone, 25, 25) |
+      util_bitpack_uint(values->PSSDone, 26, 26) |
       util_bitpack_uint(values->AMFSDone, 27, 27);
 }
 
@@ -26663,6 +30033,7 @@ struct GFX125_SC_INSTDONE_EXTRA {
    bool                                 GW6Done;
    bool                                 GW7Done;
    bool                                 TDC1Done;
+   bool                                 PSSDone;
 };
 
 static inline __attribute__((always_inline)) void
@@ -26686,7 +30057,8 @@ GFX125_SC_INSTDONE_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->GW5Done, 21, 21) |
       util_bitpack_uint(values->GW6Done, 22, 22) |
       util_bitpack_uint(values->GW7Done, 23, 23) |
-      util_bitpack_uint(values->TDC1Done, 24, 24);
+      util_bitpack_uint(values->TDC1Done, 24, 24) |
+      util_bitpack_uint(values->PSSDone, 26, 26);
 }
 
 #define GFX125_SC_INSTDONE_EXTRA2_num     0x7108
@@ -26953,6 +30325,25 @@ GFX125_SO_WRITE_OFFSET3_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->WriteOffset, 2, 31);
 }
 
+#define GFX125_TASK_INVOCATION_COUNT_num  0x26e8
+#define GFX125_TASK_INVOCATION_COUNT_length      2
+struct GFX125_TASK_INVOCATION_COUNT {
+   uint64_t                             TASKInvocationCounter;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_TASK_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_TASK_INVOCATION_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      util_bitpack_uint(values->TASKInvocationCounter, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
 #define GFX125_VCS_INSTDONE_num           0x1206c
 #define GFX125_VCS_INSTDONE_length             1
 struct GFX125_VCS_INSTDONE {
@@ -27028,6 +30419,42 @@ GFX125_VCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->Reserved, 29, 29) |
       util_bitpack_uint(values->VCSDone, 30, 30) |
       util_bitpack_uint(values->GACDone, 31, 31);
+}
+
+#define GFX125_VD0_AUX_TABLE_BASE_ADDR_num 0x4210
+#define GFX125_VD0_AUX_TABLE_BASE_ADDR_length      2
+struct GFX125_VD0_AUX_TABLE_BASE_ADDR {
+   uint64_t                             Address;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VD0_AUX_TABLE_BASE_ADDR_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_VD0_AUX_TABLE_BASE_ADDR * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      util_bitpack_uint(values->Address, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GFX125_VD0_CCS_AUX_INV_num        0x4218
+#define GFX125_VD0_CCS_AUX_INV_length          1
+struct GFX125_VD0_CCS_AUX_INV {
+   bool                                 AuxInv;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VD0_CCS_AUX_INV_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX125_VD0_CCS_AUX_INV * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->AuxInv, 0, 0);
 }
 
 #define GFX125_VS_INVOCATION_COUNT_num    0x2320

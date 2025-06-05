@@ -45,11 +45,17 @@
 #define PKT3_DISPATCH_INDIRECT                     0x16
 #define PKT3_ATOMIC_MEM                            0x1E
 #define   ATOMIC_OP(x)                                ((unsigned)((x)&0x7f) << 0)
-#define     TC_OP_ATOMIC_SUB_32                       0x10
-#define     TC_OP_ATOMIC_CMPSWAP_32                   0x48
+#define     TC_OP_ATOMIC_SUB_RTN_32                   16
+#define     TC_OP_ATOMIC_SUB_RTN_64                   48
+#define     TC_OP_ATOMIC_CMPSWAP_32                   72
+#define     TC_OP_ATOMIC_SUB_64                       112
+#define     TC_OP_ATOMIC_XOR_64                       119
 #define   ATOMIC_COMMAND(x)                           ((unsigned)((x)&0x3) << 8)
-#define   ATOMIC_COMMAND_SINGLE_PASS                  0x0
-#define   ATOMIC_COMMAND_LOOP                         0x1
+#define   ATOMIC_COMMAND_SEND_RTN                     0x0 /* only RTN opcodes */
+#define   ATOMIC_COMMAND_LOOP                         0x1 /* only RTN opcodes */
+#define   ATOMIC_COMMAND_WR_CONFIRM                   0x2 /* only non-RTN opcodes */
+#define   ATOMIC_COMMAND_SEND_NO_RTN                  0x3 /* only non-RTN opcodes */
+#define   ATOMIC_ENGINE_PFP                           (1 << 30)
 #define PKT3_OCCLUSION_QUERY                       0x1F /* GFX7+ */
 #define PKT3_SET_PREDICATION                       0x20
 #define   PREDICATION_DRAW_NOT_VISIBLE                (0 << 8)
@@ -116,6 +122,9 @@
 #define   WAIT_REG_MEM_PFP                            (1 << 8)
 #define PKT3_MEM_WRITE                             0x3D /* GFX6 only */
 #define PKT3_INDIRECT_BUFFER                       0x3F /* GFX6+ */
+#define   S_3F3_INHERIT_VMID_MQD_GFX(x)               (((unsigned)(x)&0x1) << 22) /* userqueue only */
+#define   S_3F3_VALID_COMPUTE(x)                      (((unsigned)(x)&0x1) << 23) /* userqueue only */
+#define   S_3F3_INHERIT_VMID_MQD_COMPUTE(x)           (((unsigned)(x)&0x1) << 30) /* userqueue only */
 #define PKT3_COPY_DATA                             0x40
 #define   COPY_DATA_SRC_SEL(x)                        ((x)&0xf)
 #define   COPY_DATA_REG                               0
@@ -245,8 +254,11 @@
 #define PKT3_INCREMENT_CE_COUNTER                  0x84
 #define PKT3_INCREMENT_DE_COUNTER                  0x85
 #define PKT3_WAIT_ON_CE_COUNTER                    0x86
+#define PKT3_HDP_FLUSH                             0x95
 #define PKT3_SET_SH_REG_INDEX                      0x9B
 #define PKT3_LOAD_CONTEXT_REG_INDEX                0x9F /* GFX8+ */
+#define PKT3_DISPATCH_DIRECT_INTERLEAVED           0xA7 /* GFX12+ */
+#define PKT3_DISPATCH_INDIRECT_INTERLEAVED         0xA8 /* GFX12+ */
 #define PKT3_DISPATCH_TASK_STATE_INIT              0xA9 /* Tells the HW about the task control buffer, GFX10.3+ */
 #define PKT3_DISPATCH_TASKMESH_DIRECT_ACE          0xAA /* Direct task + mesh shader dispatch [ACE side], GFX10.3+ */
 #define PKT3_DISPATCH_TASKMESH_INDIRECT_MULTI_ACE  0xAD /* Indirect task + mesh shader dispatch [ACE side], GFX10.3+ */
@@ -259,8 +271,7 @@
 #define PKT3_EVENT_WRITE_ZPASS                     0xB1 /* GFX11+ & PFP version >= 1458 */
 #define   EVENT_WRITE_ZPASS_PFP_VERSION               1458
 /* Use these on GFX11 with a high PFP firmware version (only dGPUs should have that, not APUs)
- * because they are the fastest SET packets there. Sadly, we'll need 2 different packet codepaths,
- * one for GFX11 dGPUs and the other one for GFX11 APUs.
+ * because they are the fastest SET packets there.
  *    SET_CONTEXT_REG_PAIRS_PACKED:
  *    SET_SH_REG_PAIRS_PACKED:
  *    SET_SH_REG_PAIRS_PACKED_N:
@@ -272,12 +283,22 @@
  *      - The SH_*_PACKED* variants require register shadowing to be enabled.
  *      - The *_N variant is identical to the non-N variant, but the maximum allowed "count" is 14
  *        and it's faster.
+ *
+ * Use these on GFX12 because they are the fastest SET packets there. The PACKED variants don't
+ * exist on GFX12.
+ *    SET_CONTEXT_REG_PAIRS:
+ *    SET_SH_REG_PAIRS:
+ *    SET_UCONFIG_REG_PAIRS:
+ *      Format: header, (offset, value)^n.
+ *      - Consecutive offsets must not be equal.
+ *      - RESET_FILTER_CAM must be set to 1.
  */
-#define PKT3_SET_CONTEXT_REG_PAIRS                 0xB8 /* GFX11+, don't use */
-#define PKT3_SET_CONTEXT_REG_PAIRS_PACKED          0xB9 /* GFX11+ */
-#define PKT3_SET_SH_REG_PAIRS                      0xBA /* GFX11+, don't use */
-#define PKT3_SET_SH_REG_PAIRS_PACKED               0xBB /* GFX11+ */
-#define PKT3_SET_SH_REG_PAIRS_PACKED_N             0xBD /* GFX11+ */
+#define PKT3_SET_CONTEXT_REG_PAIRS                 0xB8 /* GFX11+; only use on GFX12, not GFX11 */
+#define PKT3_SET_CONTEXT_REG_PAIRS_PACKED          0xB9 /* GFX11 dGPUs only */
+#define PKT3_SET_SH_REG_PAIRS                      0xBA /* GFX11+; only use on GFX12, not GFX11 */
+#define PKT3_SET_SH_REG_PAIRS_PACKED               0xBB /* GFX11 dGPUs only */
+#define PKT3_SET_SH_REG_PAIRS_PACKED_N             0xBD /* GFX11 dGPUs only */
+#define PKT3_SET_UCONFIG_REG_PAIRS                 0xBE /* GFX12+ */
 
 #define PKT_TYPE_S(x)         (((unsigned)(x)&0x3) << 30)
 #define PKT_TYPE_G(x)         (((x) >> 30) & 0x3)
@@ -295,6 +316,13 @@
 #define PKT3_RESET_FILTER_CAM_G(x) (((unsigned)(x) >> 2) & 0x1)
 #define PKT3(op, count, predicate)                                                                 \
    (PKT_TYPE_S(3) | PKT_COUNT_S(count) | PKT3_IT_OPCODE_S(op) | PKT3_PREDICATE(predicate))
+
+#define PKT3_PROTECTED_FENCE_SIGNAL                0xD0
+#define PKT3_FENCE_WAIT_MULTI                      0xD1
+#define   S_D10_ENGINE_SEL(x)                         ((x & 1) << 0)
+#define   S_D10_PREEMPTABLE(x)                        ((x & 1) << 1)
+#define   S_D10_CACHE_POLICY(x)                       ((x & 3) << 2)
+#define   S_D10_POLL_INTERVAL(x)                      ((x & 0xFFFF) << 16)
 
 #define PKT2_NOP_PAD PKT_TYPE_S(2)
 #define PKT3_NOP_PAD PKT3(PKT3_NOP, 0x3fff, 0) /* header-only version */
@@ -322,42 +350,52 @@
 #define SI_DMA_PACKET_NOP                  0xf
 
 /* CIK async DMA packets */
-#define CIK_SDMA_PACKET(op, sub_op, n)                                                             \
+#define SDMA_PACKET(op, sub_op, n)                                                                 \
    ((((unsigned)(n)&0xFFFF) << 16) | (((unsigned)(sub_op)&0xFF) << 8) |                            \
     (((unsigned)(op)&0xFF) << 0))
 /* CIK async DMA packet types */
-#define CIK_SDMA_OPCODE_NOP                        0x0
-#define CIK_SDMA_OPCODE_COPY                       0x1
-#define CIK_SDMA_COPY_SUB_OPCODE_LINEAR            0x0
-#define CIK_SDMA_COPY_SUB_OPCODE_TILED             0x1
-#define CIK_SDMA_COPY_SUB_OPCODE_SOA               0x3
-#define CIK_SDMA_COPY_SUB_OPCODE_LINEAR_SUB_WINDOW 0x4
-#define CIK_SDMA_COPY_SUB_OPCODE_TILED_SUB_WINDOW  0x5
-#define CIK_SDMA_COPY_SUB_OPCODE_T2T_SUB_WINDOW    0x6
-#define CIK_SDMA_OPCODE_WRITE                      0x2
+#define SDMA_OPCODE_NOP                            0x0
+#define SDMA_OPCODE_COPY                           0x1
+#define SDMA_COPY_SUB_OPCODE_LINEAR                0x0
+#define SDMA_COPY_SUB_OPCODE_TILED                 0x1
+#define SDMA_COPY_SUB_OPCODE_SOA                   0x3
+#define SDMA_COPY_SUB_OPCODE_LINEAR_SUB_WINDOW     0x4
+#define SDMA_COPY_SUB_OPCODE_TILED_SUB_WINDOW      0x5
+#define SDMA_COPY_SUB_OPCODE_T2T_SUB_WINDOW        0x6
+#define SDMA_OPCODE_WRITE                          0x2
 #define SDMA_WRITE_SUB_OPCODE_LINEAR               0x0
 #define SDMA_WRITE_SUB_OPCODE_TILED                0x1
-#define CIK_SDMA_OPCODE_INDIRECT_BUFFER            0x4
-#define CIK_SDMA_OPCODE_FENCE                      0x5
+#define SDMA_OPCODE_INDIRECT_BUFFER                0x4
+#define SDMA_OPCODE_FENCE                          0x5
 #define SDMA_FENCE_MTYPE_UC                        0x3
-#define CIK_SDMA_OPCODE_TRAP                       0x6
-#define CIK_SDMA_OPCODE_SEMAPHORE                  0x7
-#define CIK_SDMA_OPCODE_POLL_REGMEM                0x8
+#define SDMA_OPCODE_TRAP                           0x6
+#define SDMA_OPCODE_SEMAPHORE                      0x7
+#define SDMA_OPCODE_POLL_REGMEM                    0x8
 #define SDMA_POLL_MEM                              (1 << 31)
 #define SDMA_POLL_INTERVAL_160_CLK                 0xa
 #define SDMA_POLL_RETRY_INDEFINITELY               0xfff
-#define CIK_SDMA_OPCODE_CONSTANT_FILL              0xb
-#define CIK_SDMA_OPCODE_TIMESTAMP                  0xd
+#define SDMA_OPCODE_CONSTANT_FILL                  0xb
+#define SDMA_OPCODE_TIMESTAMP                      0xd
 #define SDMA_TS_SUB_OPCODE_SET_LOCAL_TIMESTAMP     0x0
 #define SDMA_TS_SUB_OPCODE_GET_LOCAL_TIMESTAMP     0x1
 #define SDMA_TS_SUB_OPCODE_GET_GLOBAL_TIMESTAMP    0x2
-#define CIK_SDMA_OPCODE_SRBM_WRITE                 0xe
-/* There is apparently an undocumented HW limitation that
-   prevents the HW from copying the last 255 bytes of (1 << 22) - 1 */
-#define CIK_SDMA_COPY_MAX_SIZE    0x3fff00   /* almost 4 MB*/
-#define GFX103_SDMA_COPY_MAX_SIZE 0x3fffff00 /* almost 1 GB */
+#define SDMA_OPCODE_SRBM_WRITE                     0xe
 
-#define SDMA_NOP_PAD CIK_SDMA_PACKET(CIK_SDMA_OPCODE_NOP, 0, 0) /* header-only version */
+/* There is apparently an undocumented HW limitation that
+ * prevents the HW from copying the last 255 bytes of (1 << 22) - 1
+ */
+#define SDMA_V2_0_COPY_MAX_BYTES 0x3fff00   /* almost 4 MB*/
+#define SDMA_V5_2_COPY_MAX_BYTES 0x3fffff00 /* almost 1 GB */
+
+#define SDMA_NOP_PAD SDMA_PACKET(SDMA_OPCODE_NOP, 0, 0) /* header-only version */
+
+/* SDMA DCC tilings for GFX12+ */
+#define SDMA_DCC_DATA_FORMAT(x) ((x) & 0x3f)
+#define SDMA_DCC_NUM_TYPE(x)    (((x) & 0x7) << 9)
+#define SDMA_DCC_READ_CM(x)     (((x) & 0x3) << 16) /* 0: bypass DCC, 2: decompress reads if PTE.D */
+#define SDMA_DCC_WRITE_CM(x)    (((x) & 0x3) << 18) /* 0: bypass DCC, 1: write compressed if PTE.D, 2: write uncompressed if PTE.D */
+#define SDMA_DCC_MAX_COM(x)     (((x) & 0x3) << 24)
+#define SDMA_DCC_MAX_UCOM(x)    (((x) & 0x1) << 26) /* 1: max uncompressed block size 256B */
 
 enum amd_cmp_class_flags
 {
@@ -372,5 +410,10 @@ enum amd_cmp_class_flags
    P_NORMAL = 1 << 8,    // Positive normal
    P_INFINITY = 1 << 9   // Positive infinity
 };
+
+/* Use the last bit of AMDGPU_GEM_CREATE_* flag as a virtio-only
+ * flag.
+ */
+#define AMDGPU_GEM_CREATE_VIRTIO_SHARED 1u << 31
 
 #endif /* _SID_H */

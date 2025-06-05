@@ -26,7 +26,7 @@
  * of UBO binding point 0. Simultaneously, remap existing UBO accesses by
  * increasing their binding point by 1.
  *
- * For PIPE_CAP_PACKED_UNIFORMS, dword_packed should be set to indicate that
+ * For pipe_caps.packed_uniforms, dword_packed should be set to indicate that
  * nir_intrinsic_load_uniform is in increments of dwords instead of vec4s.
  *
  * If load_vec4 is set, then nir_intrinsic_load_ubo_vec4 will be generated
@@ -78,13 +78,13 @@ nir_lower_uniforms_to_ubo_instr(nir_builder *b, nir_instr *instr, void *data)
          load_result = nir_load_ubo_vec4(b, intr->num_components, intr->def.bit_size,
                                          ubo_idx, uniform_offset, .base = nir_intrinsic_base(intr));
       } else {
-         /* For PIPE_CAP_PACKED_UNIFORMS, the uniforms are packed with the
+         /* For pipe_caps.packed_uniforms, the uniforms are packed with the
           * base/offset in dword units instead of vec4 units.
           */
          int multiplier = state->dword_packed ? 4 : 16;
          load_result = nir_load_ubo(b, intr->num_components, intr->def.bit_size,
                                     ubo_idx,
-                                    nir_iadd_imm(b, nir_imul_imm(b, uniform_offset, multiplier),
+                                    nir_iadd_imm(b, nir_amul_imm(b, uniform_offset, multiplier),
                                                  nir_intrinsic_base(intr) * multiplier));
          nir_intrinsic_instr *load = nir_instr_as_intrinsic(load_result->parent_instr);
 
@@ -108,9 +108,7 @@ nir_lower_uniforms_to_ubo_instr(nir_builder *b, nir_instr *instr, void *data)
          nir_intrinsic_set_range_base(load, nir_intrinsic_base(intr) * multiplier);
          nir_intrinsic_set_range(load, nir_intrinsic_range(intr) * multiplier);
       }
-      nir_def_rewrite_uses(&intr->def, load_result);
-
-      nir_instr_remove(&intr->instr);
+      nir_def_replace(&intr->def, load_result);
       return true;
    }
 
@@ -129,8 +127,7 @@ nir_lower_uniforms_to_ubo(nir_shader *shader, bool dword_packed, bool load_vec4)
 
    progress = nir_shader_instructions_pass(shader,
                                            nir_lower_uniforms_to_ubo_instr,
-                                           nir_metadata_block_index |
-                                              nir_metadata_dominance,
+                                           nir_metadata_control_flow,
                                            &state);
 
    if (progress) {

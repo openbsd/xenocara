@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2024/04/02 10:42:14 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2025/06/05 14:18:51 jsg Exp $
 
 LIB=	vulkan_runtime
 
@@ -6,7 +6,6 @@ NOPROFILE=
 
 SRCS=	vk_rmv_common.c \
 	vk_rmv_exporter.c \
-	vk_acceleration_structure.c \
 	vk_blend.c \
 	vk_buffer.c \
 	vk_buffer_view.c \
@@ -21,22 +20,15 @@ SRCS=	vk_rmv_common.c \
 	vk_descriptors.c \
 	vk_descriptor_update_template.c \
 	vk_device.c \
+	vk_device_generated_commands.c \
 	vk_device_memory.c \
 	vk_fence.c \
 	vk_framebuffer.c \
 	vk_graphics_state.c \
 	vk_image.c \
-	vk_instance.c \
 	vk_log.c \
-	vk_meta.c \
-	vk_meta_blit_resolve.c \
-	vk_meta_draw_rects.c \
-	vk_meta_clear.c \
-	vk_nir.c \
-	vk_nir_convert_ycbcr.c \
+	vk_meta_object_list.c \
 	vk_object.c \
-	vk_pipeline.c \
-	vk_pipeline_cache.c \
 	vk_physical_device.c \
 	vk_pipeline_layout.c \
 	vk_query_pool.c \
@@ -44,27 +36,41 @@ SRCS=	vk_rmv_common.c \
 	vk_render_pass.c \
 	vk_sampler.c \
 	vk_semaphore.c \
-	vk_shader_module.c \
 	vk_standard_sample_locations.c \
 	vk_sync.c \
 	vk_sync_binary.c \
 	vk_sync_dummy.c \
 	vk_sync_timeline.c \
-	vk_synchronization2.c \
-	vk_texcompress_etc2.c \
+	vk_synchronization.c \
 	vk_video.c \
 	vk_ycbcr_conversion.c
 
+SRCS+=	vk_meta.c \
+	vk_meta_blit_resolve.c \
+	vk_meta_clear.c \
+	vk_meta_copy_fill_update.c \
+	vk_meta_draw_rects.c \
+	vk_nir.c \
+	vk_nir_convert_ycbcr.c \
+	vk_pipeline.c \
+	vk_pipeline_cache.c \
+	vk_shader.c \
+	vk_shader_module.c \
+	vk_texcompress_etc2.c
+
 SRCS+=	vk_drm_syncobj.c \
-	vk_common_entrypoints.c \
-	vk_cmd_queue.c \
 	vk_cmd_enqueue_entrypoints.c \
+	vk_cmd_queue.c \
+	vk_common_entrypoints.c \
 	vk_dispatch_trampolines.c \
+	vk_format_info.c \
 	vk_physical_device_features.c \
 	vk_physical_device_properties.c \
-	vk_format_info.c
+	vk_physical_device_spirv_caps.c \
+	vk_synchronization_helpers.c
 
-SRCS+=	vk_texcompress_astc.c
+SRCS+=	vk_texcompress_astc.c \
+	vk_acceleration_structure.c
 
 .include "../Makefile.inc"
 
@@ -73,6 +79,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/vulkan/runtime \
 		-I${MESA_SRC}/src/vulkan/util \
 		-I${MESA_SRC}/src/util \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/compiler \

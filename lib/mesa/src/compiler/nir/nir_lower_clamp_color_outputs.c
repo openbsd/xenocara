@@ -25,13 +25,13 @@
 #include "nir_builder.h"
 
 static bool
-is_color_output(nir_shader *shader, nir_variable *out)
+is_color_output(nir_shader *shader, int location)
 {
    switch (shader->info.stage) {
    case MESA_SHADER_VERTEX:
    case MESA_SHADER_GEOMETRY:
    case MESA_SHADER_TESS_EVAL:
-      switch (out->data.location) {
+      switch (location) {
       case VARYING_SLOT_COL0:
       case VARYING_SLOT_COL1:
       case VARYING_SLOT_BFC0:
@@ -42,8 +42,8 @@ is_color_output(nir_shader *shader, nir_variable *out)
       }
       break;
    case MESA_SHADER_FRAGMENT:
-      return (out->data.location == FRAG_RESULT_COLOR ||
-              out->data.location >= FRAG_RESULT_DATA0);
+      return (location == FRAG_RESULT_COLOR ||
+              location >= FRAG_RESULT_DATA0);
    default:
       return false;
    }
@@ -52,40 +52,26 @@ is_color_output(nir_shader *shader, nir_variable *out)
 static bool
 lower_intrinsic(nir_builder *b, nir_intrinsic_instr *intr, nir_shader *shader)
 {
-   nir_variable *out = NULL;
-   nir_def *s;
+   int loc = -1;
 
    switch (intr->intrinsic) {
-   case nir_intrinsic_store_deref:
-      out = nir_intrinsic_get_var(intr, 0);
-      break;
    case nir_intrinsic_store_output:
-      /* already had i/o lowered.. lookup the matching output var: */
-      nir_foreach_shader_out_variable(var, shader) {
-         int drvloc = var->data.driver_location;
-         if (nir_intrinsic_base(intr) == drvloc) {
-            out = var;
-            break;
-         }
-      }
-      assume(out);
+   case nir_intrinsic_store_per_view_output:
+      loc = nir_intrinsic_io_semantics(intr).location;
       break;
    default:
       return false;
    }
 
-   if (out->data.mode != nir_var_shader_out)
-      return false;
-
-   if (is_color_output(shader, out)) {
+   if (is_color_output(shader, loc)) {
       b->cursor = nir_before_instr(&intr->instr);
-      int src = intr->intrinsic == nir_intrinsic_store_deref ? 1 : 0;
-      s = intr->src[src].ssa;
+      nir_def *s = intr->src[0].ssa;
       s = nir_fsat(b, s);
-      nir_src_rewrite(&intr->src[src], s);
+      nir_src_rewrite(&intr->src[0], s);
+      return true;
    }
 
-   return true;
+   return false;
 }
 
 static bool
@@ -99,8 +85,8 @@ lower_instr(nir_builder *b, nir_instr *instr, void *cb_data)
 bool
 nir_lower_clamp_color_outputs(nir_shader *shader)
 {
+   assert(shader->info.io_lowered);
    return nir_shader_instructions_pass(shader, lower_instr,
-                                       nir_metadata_block_index |
-                                          nir_metadata_dominance,
+                                       nir_metadata_control_flow,
                                        shader);
 }

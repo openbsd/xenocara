@@ -79,6 +79,8 @@ typedef void (*isl_emit_cpb_control_s_func)(const struct isl_device *dev, void *
          return isl_gfx125_##func;                                      \
       case 200:                                                         \
          return isl_gfx20_##func;                                       \
+      case 300:                                                         \
+         return isl_gfx30_##func;                                       \
       default:                                                          \
          assert(!"Unknown hardware generation");                        \
          return NULL;                                                   \
@@ -213,6 +215,11 @@ isl_extent3d_el_to_sa(enum isl_format fmt, struct isl_extent3d extent_el)
    };
 }
 
+bool
+_isl_surf_info_supports_ccs(const struct isl_device *dev,
+                            enum isl_format format,
+                            isl_surf_usage_flags_t usage);
+
 void
 _isl_memcpy_linear_to_tiled(uint32_t xt1, uint32_t xt2,
                             uint32_t yt1, uint32_t yt2,
@@ -294,6 +301,9 @@ _isl_notify_failure(const struct isl_surf_init_info *surf_info,
 #  include "isl_genX_priv.h"
 #  undef genX
 #  define genX(x) gfx20_##x
+#  include "isl_genX_priv.h"
+#  undef genX
+#  define genX(x) gfx30_##x
 #  include "isl_genX_priv.h"
 #  undef genX
 #endif

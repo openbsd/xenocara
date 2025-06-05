@@ -29,12 +29,14 @@
 
 #include "util/mesa-sha1.h"
 #include "util/os_time.h"
+#include "common/intel_compute_slm.h"
 #include "common/intel_l3_config.h"
-#include "common/intel_disasm.h"
 #include "common/intel_sample_positions.h"
+#include "compiler/brw_disasm.h"
 #include "anv_private.h"
 #include "compiler/brw_nir.h"
 #include "compiler/brw_nir_rt.h"
+#include "compiler/intel_nir.h"
 #include "anv_nir.h"
 #include "nir/nir_xfb_info.h"
 #include "spirv/nir_spirv.h"
@@ -44,169 +46,23 @@
 #include "vk_render_pass.h"
 #include "vk_util.h"
 
-struct lower_set_vtx_and_prim_count_state {
-   nir_variable *primitive_count;
-};
-
-static nir_variable *
-anv_nir_prim_count_store(nir_builder *b, nir_def *val)
-{
-   nir_variable *primitive_count =
-         nir_variable_create(b->shader,
-                             nir_var_shader_out,
-                             glsl_uint_type(),
-                             "gl_PrimitiveCountNV");
-   primitive_count->data.location = VARYING_SLOT_PRIMITIVE_COUNT;
-   primitive_count->data.interpolation = INTERP_MODE_NONE;
-
-   nir_def *local_invocation_index = nir_load_local_invocation_index(b);
-
-   nir_def *cmp = nir_ieq_imm(b, local_invocation_index, 0);
-   nir_if *if_stmt = nir_push_if(b, cmp);
-   {
-      nir_deref_instr *prim_count_deref = nir_build_deref_var(b, primitive_count);
-      nir_store_deref(b, prim_count_deref, val, 1);
-   }
-   nir_pop_if(b, if_stmt);
-
-   return primitive_count;
-}
-
-static bool
-anv_nir_lower_set_vtx_and_prim_count_instr(nir_builder *b,
-                                           nir_intrinsic_instr *intrin,
-                                           void *data)
-{
-   if (intrin->intrinsic != nir_intrinsic_set_vertex_and_primitive_count)
-      return false;
-
-   /* Detect some cases of invalid primitive count. They might lead to URB
-    * memory corruption, where workgroups overwrite each other output memory.
-    */
-   if (nir_src_is_const(intrin->src[1]) &&
-         nir_src_as_uint(intrin->src[1]) > b->shader->info.mesh.max_primitives_out) {
-      assert(!"number of primitives bigger than max specified");
-   }
-
-   struct lower_set_vtx_and_prim_count_state *state = data;
-   /* this intrinsic should show up only once */
-   assert(state->primitive_count == NULL);
-
-   b->cursor = nir_before_instr(&intrin->instr);
-
-   state->primitive_count = anv_nir_prim_count_store(b, intrin->src[1].ssa);
-
-   nir_instr_remove(&intrin->instr);
-
-   return true;
-}
-
-static bool
-anv_nir_lower_set_vtx_and_prim_count(nir_shader *nir)
-{
-   struct lower_set_vtx_and_prim_count_state state = { NULL, };
-
-   nir_shader_intrinsics_pass(nir, anv_nir_lower_set_vtx_and_prim_count_instr,
-                                nir_metadata_none,
-                                &state);
-
-   /* If we didn't find set_vertex_and_primitive_count, then we have to
-    * insert store of value 0 to primitive_count.
-    */
-   if (state.primitive_count == NULL) {
-      nir_builder b;
-      nir_function_impl *entrypoint = nir_shader_get_entrypoint(nir);
-      b = nir_builder_at(nir_before_impl(entrypoint));
-      nir_def *zero = nir_imm_int(&b, 0);
-      state.primitive_count = anv_nir_prim_count_store(&b, zero);
-   }
-
-   assert(state.primitive_count != NULL);
-   return true;
-}
-
 /* Eventually, this will become part of anv_CreateShader.  Unfortunately,
  * we can't do that yet because we don't have the ability to copy nir.
  */
 static nir_shader *
 anv_shader_stage_to_nir(struct anv_device *device,
+                        VkPipelineCreateFlags2KHR pipeline_flags,
                         const VkPipelineShaderStageCreateInfo *stage_info,
                         enum brw_robustness_flags robust_flags,
                         void *mem_ctx)
 {
    const struct anv_physical_device *pdevice = device->physical;
-   const struct anv_instance *instance = pdevice->instance;
    const struct brw_compiler *compiler = pdevice->compiler;
    gl_shader_stage stage = vk_to_mesa_shader_stage(stage_info->stage);
    const nir_shader_compiler_options *nir_options =
       compiler->nir_options[stage];
 
-   const bool rt_enabled = ANV_SUPPORT_RT && pdevice->info.has_ray_tracing;
    const struct spirv_to_nir_options spirv_options = {
-      .caps = {
-         .demote_to_helper_invocation = true,
-         .derivative_group = true,
-         .descriptor_array_dynamic_indexing = true,
-         .descriptor_array_non_uniform_indexing = true,
-         .descriptor_indexing = true,
-         .device_group = true,
-         .draw_parameters = true,
-         .float16 = true,
-         .float32_atomic_add = pdevice->info.has_lsc,
-         .float32_atomic_min_max = true,
-         .float64 = true,
-         .float64_atomic_min_max = pdevice->info.has_lsc,
-         .fragment_shader_sample_interlock = true,
-         .fragment_shader_pixel_interlock = true,
-         .geometry_streams = true,
-         /* When using Vulkan 1.3 or KHR_format_feature_flags2 is enabled, the
-          * read/write without format is per format, so just report true. It's
-          * up to the application to check.
-          */
-         .image_read_without_format =
-            pdevice->info.verx10 >= 125 ||
-            instance->vk.app_info.api_version >= VK_API_VERSION_1_3 ||
-            device->vk.enabled_extensions.KHR_format_feature_flags2,
-         .image_write_without_format = true,
-         .int8 = true,
-         .int16 = true,
-         .int64 = true,
-         .int64_atomics = true,
-         .integer_functions2 = true,
-         .mesh_shading = pdevice->vk.supported_extensions.EXT_mesh_shader,
-         .mesh_shading_nv = false,
-         .min_lod = true,
-         .multiview = true,
-         .physical_storage_buffer_address = true,
-         .post_depth_coverage = true,
-         .runtime_descriptor_array = true,
-         .float_controls = true,
-         .ray_cull_mask = rt_enabled,
-         .ray_query = rt_enabled,
-         .ray_tracing = rt_enabled,
-         .ray_tracing_position_fetch = rt_enabled,
-         .shader_clock = true,
-         .shader_viewport_index_layer = true,
-         .sparse_residency = pdevice->has_sparse,
-         .stencil_export = true,
-         .storage_8bit = true,
-         .storage_16bit = true,
-         .subgroup_arithmetic = true,
-         .subgroup_basic = true,
-         .subgroup_ballot = true,
-         .subgroup_dispatch = true,
-         .subgroup_quad = true,
-         .subgroup_uniform_control_flow = true,
-         .subgroup_shuffle = true,
-         .subgroup_vote = true,
-         .tessellation = true,
-         .transform_feedback = true,
-         .variable_pointers = true,
-         .vk_memory_model = true,
-         .vk_memory_model_device_scope = true,
-         .workgroup_memory_explicit_layout = true,
-         .fragment_shading_rate = pdevice->info.ver >= 11,
-      },
       .ubo_addr_format = anv_nir_ubo_addr_format(pdevice, robust_flags),
       .ssbo_addr_format = anv_nir_ssbo_addr_format(pdevice, robust_flags),
       .phys_ssbo_addr_format = nir_address_format_64bit_global,
@@ -224,7 +80,7 @@ anv_shader_stage_to_nir(struct anv_device *device,
 
    nir_shader *nir;
    VkResult result =
-      vk_pipeline_shader_stage_to_nir(&device->vk, stage_info,
+      vk_pipeline_shader_stage_to_nir(&device->vk, pipeline_flags, stage_info,
                                       &spirv_options, nir_options,
                                       mem_ctx, &nir);
    if (result != VK_SUCCESS)
@@ -326,25 +182,17 @@ void anv_DestroyPipeline(
    if (!pipeline)
       return;
 
+   ANV_RMV(resource_destroy, device, pipeline);
+
    switch (pipeline->type) {
+   case ANV_PIPELINE_GRAPHICS:
    case ANV_PIPELINE_GRAPHICS_LIB: {
-      struct anv_graphics_lib_pipeline *gfx_pipeline =
-         anv_pipeline_to_graphics_lib(pipeline);
+      struct anv_graphics_base_pipeline *gfx_pipeline =
+         anv_pipeline_to_graphics_base(pipeline);
 
-      for (unsigned s = 0; s < ARRAY_SIZE(gfx_pipeline->base.shaders); s++) {
-         if (gfx_pipeline->base.shaders[s])
-            anv_shader_bin_unref(device, gfx_pipeline->base.shaders[s]);
-      }
-      break;
-   }
-
-   case ANV_PIPELINE_GRAPHICS: {
-      struct anv_graphics_pipeline *gfx_pipeline =
-         anv_pipeline_to_graphics(pipeline);
-
-      for (unsigned s = 0; s < ARRAY_SIZE(gfx_pipeline->base.shaders); s++) {
-         if (gfx_pipeline->base.shaders[s])
-            anv_shader_bin_unref(device, gfx_pipeline->base.shaders[s]);
+      for (unsigned s = 0; s < ARRAY_SIZE(gfx_pipeline->shaders); s++) {
+         if (gfx_pipeline->shaders[s])
+            anv_shader_bin_unref(device, gfx_pipeline->shaders[s]);
       }
       break;
    }
@@ -381,6 +229,7 @@ void anv_DestroyPipeline(
 struct anv_pipeline_stage {
    gl_shader_stage stage;
 
+   VkPipelineCreateFlags2KHR pipeline_flags;
    struct vk_pipeline_robustness_state rstate;
 
    /* VkComputePipelineCreateInfo, VkGraphicsPipelineCreateInfo or
@@ -412,8 +261,6 @@ struct anv_pipeline_stage {
 
    enum brw_robustness_flags robust_flags;
 
-   struct anv_pipeline_binding surface_to_descriptor[256];
-   struct anv_pipeline_binding sampler_to_descriptor[256];
    struct anv_pipeline_bind_map bind_map;
 
    bool uses_bt_for_push_descs;
@@ -433,6 +280,29 @@ struct anv_pipeline_stage {
 
    struct anv_shader_bin *bin;
 };
+
+static void
+anv_stage_allocate_bind_map_tables(struct anv_pipeline *pipeline,
+                                   struct anv_pipeline_stage *stage,
+                                   void *mem_ctx)
+{
+   struct anv_pipeline_binding *surface_bindings =
+      brw_shader_stage_requires_bindless_resources(stage->stage) ? NULL :
+      rzalloc_array(mem_ctx, struct anv_pipeline_binding, 256);
+   struct anv_pipeline_binding *sampler_bindings =
+      brw_shader_stage_requires_bindless_resources(stage->stage) ? NULL :
+      rzalloc_array(mem_ctx, struct anv_pipeline_binding, 256);
+   struct anv_pipeline_embedded_sampler_binding *embedded_sampler_bindings =
+      rzalloc_array(mem_ctx, struct anv_pipeline_embedded_sampler_binding,
+                    anv_pipeline_sets_layout_embedded_sampler_count(
+                       &pipeline->layout));
+
+   stage->bind_map = (struct anv_pipeline_bind_map) {
+      .surface_to_descriptor = surface_bindings,
+      .sampler_to_descriptor = sampler_bindings,
+      .embedded_sampler_to_binding = embedded_sampler_bindings,
+   };
+}
 
 static enum brw_robustness_flags
 anv_get_robust_flags(const struct vk_pipeline_robustness_state *rstate)
@@ -571,7 +441,7 @@ populate_mesh_prog_key(struct anv_pipeline_stage *stage,
 static uint32_t
 rp_color_mask(const struct vk_render_pass_state *rp)
 {
-   if (rp == NULL || rp->attachment_aspects == VK_IMAGE_ASPECT_METADATA_BIT)
+   if (rp == NULL || !vk_render_pass_state_has_attachment_info(rp))
       return ((1u << MAX_RTS) - 1);
 
    uint32_t color_mask = 0;
@@ -590,7 +460,7 @@ populate_wm_prog_key(struct anv_pipeline_stage *stage,
                      const struct vk_multisample_state *ms,
                      const struct vk_fragment_shading_rate_state *fsr,
                      const struct vk_render_pass_state *rp,
-                     const enum brw_sometimes is_mesh)
+                     const enum intel_sometimes is_mesh)
 {
    const struct anv_device *device = pipeline->base.device;
 
@@ -634,14 +504,20 @@ populate_wm_prog_key(struct anv_pipeline_stage *stage,
        *
        * It's also required for the fragment output interface.
        */
-      key->alpha_to_coverage =
-         ms && ms->alpha_to_coverage_enable ? BRW_ALWAYS : BRW_NEVER;
       key->multisample_fbo =
-         ms && ms->rasterization_samples > 1 ? BRW_ALWAYS : BRW_NEVER;
+         BITSET_TEST(dynamic, MESA_VK_DYNAMIC_MS_RASTERIZATION_SAMPLES) ?
+         INTEL_SOMETIMES :
+         ms->rasterization_samples > 1 ? INTEL_ALWAYS : INTEL_NEVER;
       key->persample_interp =
-      (ms->sample_shading_enable &&
-       (ms->min_sample_shading * ms->rasterization_samples) > 1) ?
-      BRW_ALWAYS : BRW_NEVER;
+         BITSET_TEST(dynamic, MESA_VK_DYNAMIC_MS_RASTERIZATION_SAMPLES) ?
+         INTEL_SOMETIMES :
+         (ms->sample_shading_enable &&
+          (ms->min_sample_shading * ms->rasterization_samples) > 1) ?
+         INTEL_ALWAYS : INTEL_NEVER;
+      key->alpha_to_coverage =
+         BITSET_TEST(dynamic, MESA_VK_DYNAMIC_MS_ALPHA_TO_COVERAGE_ENABLE) ?
+         INTEL_SOMETIMES :
+         (ms->alpha_to_coverage_enable ? INTEL_ALWAYS : INTEL_NEVER);
 
       /* TODO: We should make this dynamic */
       if (device->physical->instance->sample_mask_out_opengl_behaviour)
@@ -651,9 +527,9 @@ populate_wm_prog_key(struct anv_pipeline_stage *stage,
       key->color_outputs_valid = (1u << MAX_RTS) - 1;
       key->nr_color_regions = MAX_RTS;
 
-      key->alpha_to_coverage = BRW_SOMETIMES;
-      key->multisample_fbo = BRW_SOMETIMES;
-      key->persample_interp = BRW_SOMETIMES;
+      key->alpha_to_coverage = INTEL_SOMETIMES;
+      key->multisample_fbo = INTEL_SOMETIMES;
+      key->persample_interp = INTEL_SOMETIMES;
    }
 
    key->mesh_input = is_mesh;
@@ -664,14 +540,9 @@ populate_wm_prog_key(struct anv_pipeline_stage *stage,
   key->coarse_pixel =
      device->vk.enabled_extensions.KHR_fragment_shading_rate &&
      pipeline_has_coarse_pixel(dynamic, ms, fsr);
-}
 
-static bool
-wm_prog_data_dynamic(const struct brw_wm_prog_data *prog_data)
-{
-   return prog_data->alpha_to_coverage == BRW_SOMETIMES ||
-          prog_data->coarse_pixel_dispatch == BRW_SOMETIMES ||
-          prog_data->persample_dispatch == BRW_SOMETIMES;
+  key->null_push_constant_tbimr_workaround =
+     device->info->needs_null_push_constant_tbimr_workaround;
 }
 
 static void
@@ -705,15 +576,10 @@ anv_stage_write_shader_hash(struct anv_pipeline_stage *stage,
                                      stage->pipeline_pNext,
                                      stage->info->pNext);
 
-   vk_pipeline_hash_shader_stage(stage->info, &stage->rstate, stage->shader_sha1);
+   vk_pipeline_hash_shader_stage(stage->pipeline_flags, stage->info,
+                                 &stage->rstate, stage->shader_sha1);
 
-   stage->robust_flags =
-      ((stage->rstate.storage_buffers !=
-        VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_DISABLED_EXT) ?
-       BRW_ROBUSTNESS_SSBO : 0) |
-      ((stage->rstate.uniform_buffers !=
-        VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_DISABLED_EXT) ?
-       BRW_ROBUSTNESS_UBO : 0);
+   stage->robust_flags = anv_get_robust_flags(&stage->rstate);
 
    /* Use lowest dword of source shader sha1 for shader hash. */
    stage->source_hash = ((uint32_t*)stage->shader_sha1)[0];
@@ -725,9 +591,9 @@ anv_graphics_pipeline_stage_fragment_dynamic(const struct anv_pipeline_stage *st
    if (stage->stage != MESA_SHADER_FRAGMENT)
       return false;
 
-   return stage->key.wm.persample_interp == BRW_SOMETIMES ||
-          stage->key.wm.multisample_fbo == BRW_SOMETIMES ||
-          stage->key.wm.alpha_to_coverage == BRW_SOMETIMES;
+   return stage->key.wm.persample_interp == INTEL_SOMETIMES ||
+          stage->key.wm.multisample_fbo == INTEL_SOMETIMES ||
+          stage->key.wm.alpha_to_coverage == INTEL_SOMETIMES;
 }
 
 static void
@@ -773,6 +639,9 @@ anv_pipeline_hash_graphics(struct anv_graphics_base_pipeline *pipeline,
    if (stages[MESA_SHADER_MESH].info || stages[MESA_SHADER_TASK].info) {
       const uint8_t afs = device->physical->instance->assume_full_subgroups;
       _mesa_sha1_update(&ctx, &afs, sizeof(afs));
+
+      const bool afs_shm = device->physical->instance->assume_full_subgroups_with_shared_memory;
+      _mesa_sha1_update(&ctx, &afs_shm, sizeof(afs_shm));
    }
 
    _mesa_sha1_final(&ctx, sha1_out);
@@ -791,6 +660,12 @@ anv_pipeline_hash_compute(struct anv_compute_pipeline *pipeline,
 
    const uint8_t afs = device->physical->instance->assume_full_subgroups;
    _mesa_sha1_update(&ctx, &afs, sizeof(afs));
+
+   const bool afswb = device->physical->instance->assume_full_subgroups_with_barrier;
+   _mesa_sha1_update(&ctx, &afswb, sizeof(afswb));
+
+   const bool afs_shm = device->physical->instance->assume_full_subgroups_with_shared_memory;
+   _mesa_sha1_update(&ctx, &afs_shm, sizeof(afs_shm));
 
    _mesa_sha1_update(&ctx, stage->shader_sha1,
                      sizeof(stage->shader_sha1));
@@ -838,7 +713,7 @@ anv_pipeline_hash_ray_tracing_combined_shader(struct anv_ray_tracing_pipeline *p
    _mesa_sha1_final(&ctx, sha1_out);
 }
 
-static nir_shader *
+static VkResult
 anv_pipeline_stage_get_nir(struct anv_pipeline *pipeline,
                            struct vk_pipeline_cache *cache,
                            void *mem_ctx,
@@ -848,25 +723,36 @@ anv_pipeline_stage_get_nir(struct anv_pipeline *pipeline,
       pipeline->device->physical->compiler;
    const nir_shader_compiler_options *nir_options =
       compiler->nir_options[stage->stage];
-   nir_shader *nir;
 
-   nir = anv_device_search_for_nir(pipeline->device, cache,
-                                   nir_options,
-                                   stage->shader_sha1,
-                                   mem_ctx);
-   if (nir) {
-      assert(nir->info.stage == stage->stage);
-      return nir;
+   stage->nir = anv_device_search_for_nir(pipeline->device, cache,
+                                          nir_options,
+                                          stage->shader_sha1,
+                                          mem_ctx);
+   if (stage->nir) {
+      assert(stage->nir->info.stage == stage->stage);
+      return VK_SUCCESS;
    }
 
-   nir = anv_shader_stage_to_nir(pipeline->device, stage->info,
-                                 stage->key.base.robust_flags, mem_ctx);
-   if (nir) {
-      anv_device_upload_nir(pipeline->device, cache, nir, stage->shader_sha1);
-      return nir;
+   /* VkPipelineShaderStageCreateInfo:
+    *
+    *    "If a pipeline is not found, pipeline compilation is not possible and
+    *     the implementation must fail as specified by
+    *     VK_PIPELINE_CREATE_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT."
+    */
+   if (vk_pipeline_shader_stage_has_identifier(stage->info))
+      return VK_PIPELINE_COMPILE_REQUIRED;
+
+   stage->nir = anv_shader_stage_to_nir(pipeline->device,
+                                        stage->pipeline_flags, stage->info,
+                                        stage->key.base.robust_flags, mem_ctx);
+   if (stage->nir) {
+      anv_device_upload_nir(pipeline->device, cache,
+                            stage->nir, stage->shader_sha1);
+      return VK_SUCCESS;
    }
 
-   return NULL;
+   return vk_errorf(&pipeline->device->vk, VK_ERROR_UNKNOWN,
+                    "Unable to load NIR");
 }
 
 static const struct vk_ycbcr_conversion_state *
@@ -920,7 +806,7 @@ anv_nir_compute_dynamic_push_bits(nir_shader *shader)
                continue;
 
             switch (nir_intrinsic_base(intrin)) {
-            case offsetof(struct anv_push_constants, gfx.tcs_input_vertices):
+            case anv_drv_const_offset(gfx.tcs_input_vertices):
                ret |= ANV_DYNAMIC_PUSH_INPUT_VERTICES;
                break;
 
@@ -933,6 +819,95 @@ anv_nir_compute_dynamic_push_bits(nir_shader *shader)
 
    return ret;
 }
+
+static void
+anv_fixup_subgroup_size(struct anv_device *device, struct shader_info *info)
+{
+   switch (info->stage) {
+   case MESA_SHADER_COMPUTE:
+   case MESA_SHADER_TASK:
+   case MESA_SHADER_MESH:
+      break;
+   default:
+      return;
+   }
+
+   unsigned local_size = info->workgroup_size[0] *
+                         info->workgroup_size[1] *
+                         info->workgroup_size[2];
+
+   /* Games don't always request full subgroups when they should,
+    * which can cause bugs, as they may expect bigger size of the
+    * subgroup than we choose for the execution.
+    */
+   if (device->physical->instance->assume_full_subgroups &&
+       info->uses_wide_subgroup_intrinsics &&
+       info->subgroup_size == SUBGROUP_SIZE_API_CONSTANT &&
+       local_size &&
+       local_size % BRW_SUBGROUP_SIZE == 0)
+      info->subgroup_size = SUBGROUP_SIZE_FULL_SUBGROUPS;
+
+   if (device->physical->instance->assume_full_subgroups_with_barrier &&
+       info->stage == MESA_SHADER_COMPUTE &&
+       device->info->verx10 <= 125 &&
+       info->uses_control_barrier &&
+       info->subgroup_size == SUBGROUP_SIZE_VARYING &&
+       local_size &&
+       local_size % BRW_SUBGROUP_SIZE == 0)
+      info->subgroup_size = SUBGROUP_SIZE_FULL_SUBGROUPS;
+
+   /* Similarly, sometimes games rely on the implicit synchronization of
+    * the shared memory accesses, and choosing smaller subgroups than the game
+    * expects will cause bugs. */
+   if (device->physical->instance->assume_full_subgroups_with_shared_memory &&
+       info->shared_size > 0 &&
+       info->subgroup_size == SUBGROUP_SIZE_VARYING &&
+       local_size &&
+       local_size % BRW_SUBGROUP_SIZE == 0)
+      info->subgroup_size = SUBGROUP_SIZE_FULL_SUBGROUPS;
+
+   /* If the client requests that we dispatch full subgroups but doesn't
+    * allow us to pick a subgroup size, we have to smash it to the API
+    * value of 32.  Performance will likely be terrible in this case but
+    * there's nothing we can do about that.  The client should have chosen
+    * a size.
+    */
+   if (info->subgroup_size == SUBGROUP_SIZE_FULL_SUBGROUPS)
+      info->subgroup_size =
+         device->physical->instance->assume_full_subgroups != 0 ?
+         device->physical->instance->assume_full_subgroups : BRW_SUBGROUP_SIZE;
+
+   /* Cooperative matrix extension requires that all invocations in a subgroup
+    * be active. As a result, when the application does not request a specific
+    * subgroup size, we must use SIMD32.
+    */
+   if (info->stage == MESA_SHADER_COMPUTE && info->cs.has_cooperative_matrix &&
+       info->subgroup_size < SUBGROUP_SIZE_REQUIRE_8) {
+      info->subgroup_size = BRW_SUBGROUP_SIZE;
+   }
+}
+
+/* #define DEBUG_PRINTF_EXAMPLE 0 */
+
+#if DEBUG_PRINTF_EXAMPLE
+static bool
+print_ubo_load(nir_builder *b,
+               nir_intrinsic_instr *intrin,
+               UNUSED void *cb_data)
+{
+   if (intrin->intrinsic != nir_intrinsic_load_uniform)
+      return false;
+
+   b->cursor = nir_after_instr(&intrin->instr);
+   nir_printf_fmt(b, true, 64,
+                  "uniform<= pos=%02.2fx%02.2f offset=0x%08x val=0x%08x\n",
+                  nir_channel(b, nir_load_frag_coord(b), 0),
+                  nir_channel(b, nir_load_frag_coord(b), 1),
+                  intrin->src[0].ssa,
+                  &intrin->def);
+   return true;
+}
+#endif
 
 static void
 anv_pipeline_lower_nir(struct anv_pipeline *pipeline,
@@ -960,7 +935,6 @@ anv_pipeline_lower_nir(struct anv_pipeline *pipeline,
    if (nir->info.stage == MESA_SHADER_MESH ||
          nir->info.stage == MESA_SHADER_TASK) {
       nir_lower_compute_system_values_options options = {
-            .lower_cs_local_id_to_index = true,
             .lower_workgroup_id_to_index = true,
             /* nir_lower_idiv generates expensive code */
             .shortcut_1d_workgroup_id = compiler->devinfo->verx10 >= 125,
@@ -977,6 +951,12 @@ anv_pipeline_lower_nir(struct anv_pipeline *pipeline,
                use_primitive_replication);
    }
 
+   if (nir->info.stage == MESA_SHADER_COMPUTE && nir->info.cs.has_cooperative_matrix) {
+      anv_fixup_subgroup_size(pipeline->device, &nir->info);
+      NIR_PASS(_, nir, brw_nir_lower_cmat, nir->info.subgroup_size);
+      NIR_PASS_V(nir, nir_lower_indirect_derefs, nir_var_function_temp, 16);
+   }
+
    /* The patch control points are delivered through a push constant when
     * dynamic.
     */
@@ -990,13 +970,10 @@ anv_pipeline_lower_nir(struct anv_pipeline *pipeline,
             &(struct brw_nir_lower_storage_image_opts) {
                /* Anv only supports Gfx9+ which has better defined typed read
                 * behavior. It allows us to only have to care about lowering
-                * loads/atomics.
+                * loads.
                 */
                .devinfo = compiler->devinfo,
                .lower_loads = true,
-               .lower_stores = false,
-               .lower_atomics = true,
-               .lower_get_size = false,
             });
 
    NIR_PASS(_, nir, nir_lower_explicit_io, nir_var_mem_global,
@@ -1035,15 +1012,10 @@ anv_pipeline_lower_nir(struct anv_pipeline *pipeline,
       NIR_PASS(progress, nir, nir_opt_dce);
    } while (progress);
 
-   /* Required for nir_divergence_analysis() which is needed for
-    * anv_nir_lower_ubo_loads.
-    */
-   NIR_PASS(_, nir, nir_convert_to_lcssa, true, true);
+   /* Needed for anv_nir_lower_ubo_loads. */
    nir_divergence_analysis(nir);
 
    NIR_PASS(_, nir, anv_nir_lower_ubo_loads);
-
-   NIR_PASS(_, nir, nir_opt_remove_phis);
 
    enum nir_lower_non_uniform_access_type lower_non_uniform_access_types =
       nir_lower_non_uniform_texture_access |
@@ -1067,8 +1039,8 @@ anv_pipeline_lower_nir(struct anv_pipeline *pipeline,
                   .callback = NULL,
                });
 
-      NIR_PASS(_, nir, brw_nir_lower_non_uniform_resource_intel);
-      NIR_PASS(_, nir, brw_nir_cleanup_resource_intel);
+      NIR_PASS(_, nir, intel_nir_lower_non_uniform_resource_intel);
+      NIR_PASS(_, nir, intel_nir_cleanup_resource_intel);
       NIR_PASS(_, nir, nir_opt_dce);
    }
 
@@ -1079,7 +1051,8 @@ anv_pipeline_lower_nir(struct anv_pipeline *pipeline,
    NIR_PASS_V(nir, anv_nir_compute_push_layout,
               pdevice, stage->key.base.robust_flags,
               anv_graphics_pipeline_stage_fragment_dynamic(stage),
-              prog_data, &stage->bind_map, &push_map, mem_ctx);
+              prog_data, &stage->bind_map, &push_map,
+              pipeline->layout.type, mem_ctx);
 
    NIR_PASS_V(nir, anv_nir_lower_resource_intel, pdevice,
               pipeline->layout.type);
@@ -1102,7 +1075,7 @@ anv_pipeline_lower_nir(struct anv_pipeline *pipeline,
          const unsigned chunk_size = 16;
          const unsigned shared_size = ALIGN(nir->info.shared_size, chunk_size);
          assert(shared_size <=
-                intel_calculate_slm_size(compiler->devinfo->ver, nir->info.shared_size));
+                intel_compute_slm_calculate_size(compiler->devinfo->ver, nir->info.shared_size));
 
          NIR_PASS(_, nir, nir_zero_initialize_shared_memory,
                   shared_size, chunk_size);
@@ -1110,13 +1083,23 @@ anv_pipeline_lower_nir(struct anv_pipeline *pipeline,
    }
 
    if (gl_shader_stage_is_compute(nir->info.stage) ||
-       gl_shader_stage_is_mesh(nir->info.stage))
-      NIR_PASS(_, nir, brw_nir_lower_cs_intrinsics);
+       gl_shader_stage_is_mesh(nir->info.stage)) {
+      NIR_PASS(_, nir, brw_nir_lower_cs_intrinsics, compiler->devinfo,
+               &stage->prog_data.cs);
+   }
 
    stage->push_desc_info.used_set_buffer =
       anv_nir_loads_push_desc_buffer(nir, layout, &stage->bind_map);
    stage->push_desc_info.fully_promoted_ubo_descriptors =
       anv_nir_push_desc_ubo_fully_promoted(nir, layout, &stage->bind_map);
+
+#if DEBUG_PRINTF_EXAMPLE
+   if (stage->stage == MESA_SHADER_FRAGMENT) {
+      nir_shader_intrinsics_pass(nir, print_ubo_load,
+                                 nir_metadata_none,
+                                 NULL);
+   }
+#endif
 
    stage->nir = nir;
 }
@@ -1135,7 +1118,8 @@ anv_pipeline_compile_vs(const struct brw_compiler *compiler,
                         void *mem_ctx,
                         struct anv_graphics_base_pipeline *pipeline,
                         struct anv_pipeline_stage *vs_stage,
-                        uint32_t view_mask)
+                        uint32_t view_mask,
+                        char **error_str)
 {
    /* When using Primitive Replication for multiview, each view gets its own
     * position slot.
@@ -1168,6 +1152,7 @@ anv_pipeline_compile_vs(const struct brw_compiler *compiler,
    };
 
    vs_stage->code = brw_compile_vs(compiler, &params);
+   *error_str = params.base.error_str;
 }
 
 static void
@@ -1238,7 +1223,8 @@ anv_pipeline_compile_tcs(const struct brw_compiler *compiler,
                          void *mem_ctx,
                          struct anv_device *device,
                          struct anv_pipeline_stage *tcs_stage,
-                         struct anv_pipeline_stage *prev_stage)
+                         struct anv_pipeline_stage *prev_stage,
+                         char **error_str)
 {
    tcs_stage->key.tcs.outputs_written =
       tcs_stage->nir->info.outputs_written;
@@ -1260,6 +1246,7 @@ anv_pipeline_compile_tcs(const struct brw_compiler *compiler,
    };
 
    tcs_stage->code = brw_compile_tcs(compiler, &params);
+   *error_str = params.base.error_str;
 }
 
 static void
@@ -1276,7 +1263,8 @@ anv_pipeline_compile_tes(const struct brw_compiler *compiler,
                          void *mem_ctx,
                          struct anv_device *device,
                          struct anv_pipeline_stage *tes_stage,
-                         struct anv_pipeline_stage *tcs_stage)
+                         struct anv_pipeline_stage *tcs_stage,
+                         char **error_str)
 {
    tes_stage->key.tes.inputs_read =
       tcs_stage->nir->info.outputs_written;
@@ -1299,6 +1287,7 @@ anv_pipeline_compile_tes(const struct brw_compiler *compiler,
    };
 
    tes_stage->code = brw_compile_tes(compiler, &params);
+   *error_str = params.base.error_str;
 }
 
 static void
@@ -1315,7 +1304,8 @@ anv_pipeline_compile_gs(const struct brw_compiler *compiler,
                         void *mem_ctx,
                         struct anv_device *device,
                         struct anv_pipeline_stage *gs_stage,
-                        struct anv_pipeline_stage *prev_stage)
+                        struct anv_pipeline_stage *prev_stage,
+                        char **error_str)
 {
    brw_compute_vue_map(compiler->devinfo,
                        &gs_stage->prog_data.gs.base.vue_map,
@@ -1337,6 +1327,7 @@ anv_pipeline_compile_gs(const struct brw_compiler *compiler,
    };
 
    gs_stage->code = brw_compile_gs(compiler, &params);
+   *error_str = params.base.error_str;
 }
 
 static void
@@ -1353,7 +1344,8 @@ static void
 anv_pipeline_compile_task(const struct brw_compiler *compiler,
                           void *mem_ctx,
                           struct anv_device *device,
-                          struct anv_pipeline_stage *task_stage)
+                          struct anv_pipeline_stage *task_stage,
+                          char **error_str)
 {
    task_stage->num_stats = 1;
 
@@ -1370,6 +1362,7 @@ anv_pipeline_compile_task(const struct brw_compiler *compiler,
    };
 
    task_stage->code = brw_compile_task(compiler, &params);
+   *error_str = params.base.error_str;
 }
 
 static void
@@ -1387,7 +1380,8 @@ anv_pipeline_compile_mesh(const struct brw_compiler *compiler,
                           void *mem_ctx,
                           struct anv_device *device,
                           struct anv_pipeline_stage *mesh_stage,
-                          struct anv_pipeline_stage *prev_stage)
+                          struct anv_pipeline_stage *prev_stage,
+                          char **error_str)
 {
    mesh_stage->num_stats = 1;
 
@@ -1409,6 +1403,7 @@ anv_pipeline_compile_mesh(const struct brw_compiler *compiler,
    }
 
    mesh_stage->code = brw_compile_mesh(compiler, &params);
+   *error_str = params.base.error_str;
 }
 
 static void
@@ -1417,23 +1412,13 @@ anv_pipeline_link_fs(const struct brw_compiler *compiler,
                      const struct vk_render_pass_state *rp)
 {
    /* Initially the valid outputs value is set to all possible render targets
-    * valid (see populate_wm_prog_key()), before we look at the shader
-    * variables. Here we look at the output variables of the shader an compute
-    * a correct number of render target outputs.
+    * valid (see populate_wm_prog_key()), because we're not looking at the
+    * shader code yet. Here we look at the output written to get a correct
+    * number of render target outputs.
     */
-   stage->key.wm.color_outputs_valid = 0;
-   nir_foreach_shader_out_variable_safe(var, stage->nir) {
-      if (var->data.location < FRAG_RESULT_DATA0)
-         continue;
-
-      const unsigned rt = var->data.location - FRAG_RESULT_DATA0;
-      const unsigned array_len =
-         glsl_type_is_array(var->type) ? glsl_get_length(var->type) : 1;
-      assert(rt + array_len <= MAX_RTS);
-
-      stage->key.wm.color_outputs_valid |= BITFIELD_RANGE(rt, array_len);
-   }
-   stage->key.wm.color_outputs_valid &= rp_color_mask(rp);
+   const uint64_t rt_mask =
+      stage->nir->info.outputs_written >> FRAG_RESULT_DATA0;
+   stage->key.wm.color_outputs_valid = rt_mask & rp_color_mask(rp);
    stage->key.wm.nr_color_regions =
       util_last_bit(stage->key.wm.color_outputs_valid);
 
@@ -1453,19 +1438,28 @@ anv_pipeline_link_fs(const struct brw_compiler *compiler,
             /* Setup a null render target */
             rt_bindings[rt] = (struct anv_pipeline_binding) {
                .set = ANV_DESCRIPTOR_SET_COLOR_ATTACHMENTS,
-               .index = UINT32_MAX,
+               .index = ANV_COLOR_OUTPUT_UNUSED,
                .binding = UINT32_MAX,
             };
          }
       }
       num_rt_bindings = stage->key.wm.nr_color_regions;
-   } else {
+   } else if (brw_nir_fs_needs_null_rt(
+                 compiler->devinfo, stage->nir,
+                 stage->key.wm.multisample_fbo != INTEL_NEVER,
+                 stage->key.wm.alpha_to_coverage != INTEL_NEVER)) {
+      /* Ensure the shader doesn't discard the writes */
+      stage->key.wm.color_outputs_valid = 0x1;
+      stage->key.wm.nr_color_regions = 1;
       /* Setup a null render target */
       rt_bindings[0] = (struct anv_pipeline_binding) {
          .set = ANV_DESCRIPTOR_SET_COLOR_ATTACHMENTS,
-         .index = UINT32_MAX,
+         .index = ANV_COLOR_OUTPUT_DISABLED,
+         .binding = UINT32_MAX,
       };
       num_rt_bindings = 1;
+   } else {
+      num_rt_bindings = 0;
    }
 
    assert(num_rt_bindings <= MAX_RTS);
@@ -1483,7 +1477,8 @@ anv_pipeline_compile_fs(const struct brw_compiler *compiler,
                         struct anv_pipeline_stage *prev_stage,
                         struct anv_graphics_base_pipeline *pipeline,
                         uint32_t view_mask,
-                        bool use_primitive_replication)
+                        bool use_primitive_replication,
+                        char **error_str)
 {
    /* When using Primitive Replication for multiview, each view gets its own
     * position slot.
@@ -1498,7 +1493,7 @@ anv_pipeline_compile_fs(const struct brw_compiler *compiler,
       fs_stage->key.wm.input_slots_valid =
          prev_stage->prog_data.vue.vue_map.slots_valid;
    } else {
-      struct brw_vue_map prev_vue_map;
+      struct intel_vue_map prev_vue_map;
       brw_compute_vue_map(compiler->devinfo,
                           &prev_vue_map,
                           fs_stage->nir->info.inputs_read,
@@ -1520,6 +1515,7 @@ anv_pipeline_compile_fs(const struct brw_compiler *compiler,
       .prog_data = &fs_stage->prog_data.wm,
 
       .allow_spilling = true,
+      .max_polygons = UCHAR_MAX,
    };
 
    if (prev_stage && prev_stage->stage == MESA_SHADER_MESH) {
@@ -1528,10 +1524,13 @@ anv_pipeline_compile_fs(const struct brw_compiler *compiler,
    }
 
    fs_stage->code = brw_compile_fs(compiler, &params);
+   *error_str = params.base.error_str;
 
-   fs_stage->num_stats = (uint32_t)fs_stage->prog_data.wm.dispatch_8 +
+   fs_stage->num_stats = (uint32_t)!!fs_stage->prog_data.wm.dispatch_multi +
+                         (uint32_t)fs_stage->prog_data.wm.dispatch_8 +
                          (uint32_t)fs_stage->prog_data.wm.dispatch_16 +
                          (uint32_t)fs_stage->prog_data.wm.dispatch_32;
+   assert(fs_stage->num_stats <= ARRAY_SIZE(fs_stage->stats));
 }
 
 static void
@@ -1576,14 +1575,17 @@ anv_pipeline_add_executable(struct anv_pipeline *pipeline,
                fprintf(stream, "Vulkan push constants and API params");
                break;
 
+            case ANV_DESCRIPTOR_SET_DESCRIPTORS_BUFFER:
+               fprintf(stream, "Descriptor buffer (desc buffer) for set %d (start=%dB)",
+                       stage->bind_map.push_ranges[i].index,
+                       stage->bind_map.push_ranges[i].start * 32);
+               break;
+
             case ANV_DESCRIPTOR_SET_DESCRIPTORS:
                fprintf(stream, "Descriptor buffer for set %d (start=%dB)",
                        stage->bind_map.push_ranges[i].index,
                        stage->bind_map.push_ranges[i].start * 32);
                break;
-
-            case ANV_DESCRIPTOR_SET_NUM_WORK_GROUPS:
-               unreachable("gl_NumWorkgroups is never pushed");
 
             case ANV_DESCRIPTOR_SET_COLOR_ATTACHMENTS:
                unreachable("Color attachments can't be pushed");
@@ -1603,8 +1605,8 @@ anv_pipeline_add_executable(struct anv_pipeline *pipeline,
       /* Creating this is far cheaper than it looks.  It's perfectly fine to
        * do it for every binary.
        */
-      intel_disassemble(&pipeline->device->physical->compiler->isa,
-                        stage->code, code_offset, stream);
+      brw_disassemble_with_errors(&pipeline->device->physical->compiler->isa,
+                                  stage->code, code_offset, stream);
 
       fclose(stream);
 
@@ -1639,7 +1641,8 @@ anv_pipeline_add_executables(struct anv_pipeline *pipeline,
          (const struct brw_wm_prog_data *)stage->bin->prog_data;
       struct brw_compile_stats *stats = stage->bin->stats;
 
-      if (wm_prog_data->dispatch_8) {
+      if (wm_prog_data->dispatch_8 ||
+          wm_prog_data->dispatch_multi) {
          anv_pipeline_add_executable(pipeline, stage, stats++, 0);
       }
 
@@ -1669,7 +1672,7 @@ anv_pipeline_account_shader(struct anv_pipeline *pipeline,
 
    if (shader->push_desc_info.used_set_buffer) {
       pipeline->use_push_descriptor_buffer |=
-         BITFIELD_BIT(mesa_to_vk_shader_stage(shader->stage));
+         mesa_to_vk_shader_stage(shader->stage);
    }
    if (shader->push_desc_info.used_descriptors &
        ~shader->push_desc_info.fully_promoted_ubo_descriptors)
@@ -1743,15 +1746,15 @@ anv_graphics_pipeline_init_keys(struct anv_graphics_base_pipeline *pipeline,
             state->rs == NULL ||
             !state->rs->rasterizer_discard_enable ||
             BITSET_TEST(state->dynamic, MESA_VK_DYNAMIC_RS_RASTERIZER_DISCARD_ENABLE);
-         enum brw_sometimes is_mesh = BRW_NEVER;
+         enum intel_sometimes is_mesh = INTEL_NEVER;
          if (device->vk.enabled_extensions.EXT_mesh_shader) {
             if (anv_pipeline_base_has_stage(pipeline, MESA_SHADER_VERTEX))
-               is_mesh = BRW_NEVER;
+               is_mesh = INTEL_NEVER;
             else if (anv_pipeline_base_has_stage(pipeline, MESA_SHADER_MESH))
-               is_mesh = BRW_ALWAYS;
+               is_mesh = INTEL_ALWAYS;
             else {
                assert(pipeline->base.type == ANV_PIPELINE_GRAPHICS_LIB);
-               is_mesh = BRW_SOMETIMES;
+               is_mesh = INTEL_SOMETIMES;
             }
          }
          populate_wm_prog_key(&stages[s],
@@ -1819,7 +1822,7 @@ anv_graphics_pipeline_load_cached_shaders(struct anv_graphics_base_pipeline *pip
                                           struct vk_pipeline_cache *cache,
                                           struct anv_pipeline_stage *stages,
                                           bool link_optimize,
-                                          VkPipelineCreationFeedbackEXT *pipeline_feedback)
+                                          VkPipelineCreationFeedback *pipeline_feedback)
 {
    struct anv_device *device = pipeline->base.device;
    unsigned cache_hits = 0, found = 0, imported = 0;
@@ -1863,6 +1866,7 @@ anv_graphics_pipeline_load_cached_shaders(struct anv_graphics_base_pipeline *pip
 
          stages[s].bin = stages[s].imported.bin;
          pipeline->shaders[s] = anv_shader_bin_ref(stages[s].imported.bin);
+         pipeline->source_hashes[s] = stages[s].source_hash;
          imported++;
       }
    }
@@ -1893,11 +1897,16 @@ anv_graphics_pipeline_load_cached_shaders(struct anv_graphics_base_pipeline *pip
        */
       assert(found < __builtin_popcount(pipeline->base.active_stages));
 
-      vk_perf(VK_LOG_OBJS(cache ? &cache->base :
-                                  &pipeline->base.device->vk.base),
-              "Found a partial pipeline in the cache.  This is "
-              "most likely caused by an incomplete pipeline cache "
-              "import or export");
+      /* With GPL, this might well happen if the app does an optimized
+       * link.
+       */
+      if (!pipeline->base.device->vk.enabled_extensions.EXT_graphics_pipeline_library) {
+         vk_perf(VK_LOG_OBJS(cache ? &cache->base :
+                             &pipeline->base.device->vk.base),
+                 "Found a partial pipeline in the cache.  This is "
+                 "most likely caused by an incomplete pipeline cache "
+                 "import or export");
+      }
 
       /* We're going to have to recompile anyway, so just throw away our
        * references to the shaders in the cache.  We'll get them out of the
@@ -1945,19 +1954,14 @@ anv_graphics_pipeline_load_nir(struct anv_graphics_base_pipeline *pipeline,
 
       assert(stages[s].stage == s);
 
-      stages[s].bind_map = (struct anv_pipeline_bind_map) {
-         .surface_to_descriptor = stages[s].surface_to_descriptor,
-         .sampler_to_descriptor = stages[s].sampler_to_descriptor
-      };
-
       /* Only use the create NIR from the pStages[] element if we don't have
        * an imported library for the same stage.
        */
       if (stages[s].imported.bin == NULL) {
-         stages[s].nir = anv_pipeline_stage_get_nir(&pipeline->base, cache,
-                                                    mem_ctx, &stages[s]);
-         if (stages[s].nir == NULL)
-            return vk_error(pipeline, VK_ERROR_UNKNOWN);
+         VkResult result = anv_pipeline_stage_get_nir(&pipeline->base, cache,
+                                                      mem_ctx, &stages[s]);
+         if (result != VK_SUCCESS)
+            return result;
       } else {
          stages[s].nir = need_clone ?
                          nir_shader_clone(mem_ctx, stages[s].imported.nir) :
@@ -1968,45 +1972,6 @@ anv_graphics_pipeline_load_nir(struct anv_graphics_base_pipeline *pipeline,
    }
 
    return VK_SUCCESS;
-}
-
-static void
-anv_fixup_subgroup_size(struct anv_device *device, struct shader_info *info)
-{
-   switch (info->stage) {
-   case MESA_SHADER_COMPUTE:
-   case MESA_SHADER_TASK:
-   case MESA_SHADER_MESH:
-      break;
-   default:
-      return;
-   }
-
-   unsigned local_size = info->workgroup_size[0] *
-                         info->workgroup_size[1] *
-                         info->workgroup_size[2];
-
-   /* Games don't always request full subgroups when they should,
-    * which can cause bugs, as they may expect bigger size of the
-    * subgroup than we choose for the execution.
-    */
-   if (device->physical->instance->assume_full_subgroups &&
-       info->uses_wide_subgroup_intrinsics &&
-       info->subgroup_size == SUBGROUP_SIZE_API_CONSTANT &&
-       local_size &&
-       local_size % BRW_SUBGROUP_SIZE == 0)
-      info->subgroup_size = SUBGROUP_SIZE_FULL_SUBGROUPS;
-
-   /* If the client requests that we dispatch full subgroups but doesn't
-    * allow us to pick a subgroup size, we have to smash it to the API
-    * value of 32.  Performance will likely be terrible in this case but
-    * there's nothing we can do about that.  The client should have chosen
-    * a size.
-    */
-   if (info->subgroup_size == SUBGROUP_SIZE_FULL_SUBGROUPS)
-      info->subgroup_size =
-         device->physical->instance->assume_full_subgroups != 0 ?
-         device->physical->instance->assume_full_subgroups : BRW_SUBGROUP_SIZE;
 }
 
 static void
@@ -2042,12 +2007,6 @@ anv_pipeline_nir_preprocess(struct anv_pipeline *pipeline,
    };
    brw_preprocess_nir(compiler, stage->nir, &opts);
 
-   if (stage->nir->info.stage == MESA_SHADER_MESH) {
-      NIR_PASS(_, stage->nir, anv_nir_lower_set_vtx_and_prim_count);
-      NIR_PASS(_, stage->nir, nir_opt_dce);
-      NIR_PASS(_, stage->nir, nir_remove_dead_variables, nir_var_shader_out, NULL);
-   }
-
    NIR_PASS(_, stage->nir, nir_opt_barrier_modes);
 
    nir_shader_gather_info(stage->nir, nir_shader_get_entrypoint(stage->nir));
@@ -2055,7 +2014,7 @@ anv_pipeline_nir_preprocess(struct anv_pipeline *pipeline,
 
 static void
 anv_fill_pipeline_creation_feedback(const struct anv_graphics_base_pipeline *pipeline,
-                                    VkPipelineCreationFeedbackEXT *pipeline_feedback,
+                                    VkPipelineCreationFeedback *pipeline_feedback,
                                     const VkGraphicsPipelineCreateInfo *info,
                                     struct anv_pipeline_stage *stages)
 {
@@ -2108,7 +2067,7 @@ static VkResult
 anv_graphics_pipeline_compile(struct anv_graphics_base_pipeline *pipeline,
                               struct anv_pipeline_stage *stages,
                               struct vk_pipeline_cache *cache,
-                              VkPipelineCreationFeedbackEXT *pipeline_feedback,
+                              VkPipelineCreationFeedback *pipeline_feedback,
                               const VkGraphicsPipelineCreateInfo *info,
                               const struct vk_graphics_pipeline_state *state)
 {
@@ -2133,6 +2092,7 @@ anv_graphics_pipeline_compile(struct anv_graphics_base_pipeline *pipeline,
          continue;
 
       stages[stage].stage = stage;
+      stages[stage].pipeline_flags = pipeline->base.flags;
       stages[stage].pipeline_pNext = info->pNext;
       stages[stage].info = &info->pStages[i];
       stages[stage].feedback_idx = shader_count++;
@@ -2199,9 +2159,9 @@ anv_graphics_pipeline_compile(struct anv_graphics_base_pipeline *pipeline,
                vk_perf(VK_LOG_OBJS(cache ? &cache->base :
                                    &pipeline->base.device->vk.base),
                        "Found all ISA shaders in the cache but not all NIR shaders.");
+            } else {
+               anv_graphics_lib_retain_shaders(pipeline, stages, false /* will_compile */);
             }
-
-            anv_graphics_lib_retain_shaders(pipeline, stages, false /* will_compile */);
          }
 
          if (result == VK_SUCCESS)
@@ -2251,6 +2211,8 @@ anv_graphics_pipeline_compile(struct anv_graphics_base_pipeline *pipeline,
       if (anv_graphics_pipeline_skip_shader_compile(pipeline, stages,
                                                     link_optimize, s))
          continue;
+
+      anv_stage_allocate_bind_map_tables(&pipeline->base, &stages[s], tmp_ctx);
 
       anv_pipeline_nir_preprocess(&pipeline->base, &stages[s]);
    }
@@ -2406,63 +2368,72 @@ anv_graphics_pipeline_compile(struct anv_graphics_base_pipeline *pipeline,
       int64_t stage_start = os_time_get_nano();
 
       void *stage_ctx = ralloc_context(NULL);
+      char *error_str = NULL;
 
       switch (s) {
       case MESA_SHADER_VERTEX:
          anv_pipeline_compile_vs(compiler, stage_ctx, pipeline,
-                                 stage, view_mask);
+                                 stage, view_mask, &error_str);
          break;
       case MESA_SHADER_TESS_CTRL:
          anv_pipeline_compile_tcs(compiler, stage_ctx, device,
-                                  stage, prev_stage);
+                                  stage, prev_stage, &error_str);
          break;
       case MESA_SHADER_TESS_EVAL:
          anv_pipeline_compile_tes(compiler, stage_ctx, device,
-                                  stage, prev_stage);
+                                  stage, prev_stage, &error_str);
          break;
       case MESA_SHADER_GEOMETRY:
          anv_pipeline_compile_gs(compiler, stage_ctx, device,
-                                 stage, prev_stage);
+                                 stage, prev_stage, &error_str);
          break;
       case MESA_SHADER_TASK:
          anv_pipeline_compile_task(compiler, stage_ctx, device,
-                                   stage);
+                                   stage, &error_str);
          break;
       case MESA_SHADER_MESH:
          anv_pipeline_compile_mesh(compiler, stage_ctx, device,
-                                   stage, prev_stage);
+                                   stage, prev_stage, &error_str);
          break;
       case MESA_SHADER_FRAGMENT:
          anv_pipeline_compile_fs(compiler, stage_ctx, device,
                                  stage, prev_stage, pipeline,
-                                 view_mask,
-                                 use_primitive_replication);
+                                 view_mask, use_primitive_replication,
+                                 &error_str);
          break;
       default:
          unreachable("Invalid graphics shader stage");
       }
       if (stage->code == NULL) {
+         if (error_str)
+            result = vk_errorf(pipeline, VK_ERROR_UNKNOWN, "%s", error_str);
+         else
+            result = vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
          ralloc_free(stage_ctx);
-         result = vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
          goto fail;
       }
 
-      anv_nir_validate_push_layout(&stage->prog_data.base,
+      anv_nir_validate_push_layout(device->physical, &stage->prog_data.base,
                                    &stage->bind_map);
 
+      struct anv_shader_upload_params upload_params = {
+         .stage               = s,
+         .key_data            = &stage->cache_key,
+         .key_size            = sizeof(stage->cache_key),
+         .kernel_data         = stage->code,
+         .kernel_size         = stage->prog_data.base.program_size,
+         .prog_data           = &stage->prog_data.base,
+         .prog_data_size      = brw_prog_data_size(s),
+         .stats               = stage->stats,
+         .num_stats           = stage->num_stats,
+         .xfb_info            = stage->nir->xfb_info,
+         .bind_map            = &stage->bind_map,
+         .push_desc_info      = &stage->push_desc_info,
+         .dynamic_push_values = stage->dynamic_push_values,
+      };
+
       stage->bin =
-         anv_device_upload_kernel(device, cache, s,
-                                  &stage->cache_key,
-                                  sizeof(stage->cache_key),
-                                  stage->code,
-                                  stage->prog_data.base.program_size,
-                                  &stage->prog_data.base,
-                                  brw_prog_data_size(s),
-                                  stage->stats, stage->num_stats,
-                                  stage->nir->xfb_info,
-                                  &stage->bind_map,
-                                  &stage->push_desc_info,
-                                  stage->dynamic_push_values);
+         anv_device_upload_kernel(device, cache, &upload_params);
       if (!stage->bin) {
          ralloc_free(stage_ctx);
          result = vk_error(pipeline, VK_ERROR_OUT_OF_HOST_MEMORY);
@@ -2555,6 +2526,7 @@ anv_pipeline_compile_cs(struct anv_compute_pipeline *pipeline,
    struct anv_pipeline_stage stage = {
       .stage = MESA_SHADER_COMPUTE,
       .info = &info->stage,
+      .pipeline_flags = pipeline->base.flags,
       .pipeline_pNext = info->pNext,
       .cache_key = {
          .stage = MESA_SHADER_COMPUTE,
@@ -2588,22 +2560,13 @@ anv_pipeline_compile_cs(struct anv_compute_pipeline *pipeline,
    if (stage.bin == NULL) {
       int64_t stage_start = os_time_get_nano();
 
-      stage.bind_map = (struct anv_pipeline_bind_map) {
-         .surface_to_descriptor = stage.surface_to_descriptor,
-         .sampler_to_descriptor = stage.sampler_to_descriptor
-      };
+      anv_stage_allocate_bind_map_tables(&pipeline->base, &stage, mem_ctx);
 
-      /* Set up a binding for the gl_NumWorkGroups */
-      stage.bind_map.surface_count = 1;
-      stage.bind_map.surface_to_descriptor[0] = (struct anv_pipeline_binding) {
-         .set = ANV_DESCRIPTOR_SET_NUM_WORK_GROUPS,
-         .binding = UINT32_MAX,
-      };
-
-      stage.nir = anv_pipeline_stage_get_nir(&pipeline->base, cache, mem_ctx, &stage);
-      if (stage.nir == NULL) {
+      VkResult result = anv_pipeline_stage_get_nir(&pipeline->base, cache,
+                                                   mem_ctx, &stage);
+      if (result != VK_SUCCESS) {
          ralloc_free(mem_ctx);
-         return vk_error(pipeline, VK_ERROR_UNKNOWN);
+         return result;
       }
 
       anv_pipeline_nir_preprocess(&pipeline->base, &stage);
@@ -2622,6 +2585,7 @@ anv_pipeline_compile_cs(struct anv_compute_pipeline *pipeline,
             .stats = stage.stats,
             .log_data = device,
             .mem_ctx = mem_ctx,
+            .source_hash = stage.source_hash,
          },
          .key = &stage.key.cs,
          .prog_data = &stage.prog_data.cs,
@@ -2629,29 +2593,36 @@ anv_pipeline_compile_cs(struct anv_compute_pipeline *pipeline,
 
       stage.code = brw_compile_cs(compiler, &params);
       if (stage.code == NULL) {
+         VkResult result;
+
+         if (params.base.error_str)
+            result = vk_errorf(pipeline, VK_ERROR_UNKNOWN, "%s", params.base.error_str);
+         else
+            result = vk_error(pipeline, VK_ERROR_OUT_OF_HOST_MEMORY);
+
          ralloc_free(mem_ctx);
-         return vk_error(pipeline, VK_ERROR_OUT_OF_HOST_MEMORY);
+         return result;
       }
 
-      anv_nir_validate_push_layout(&stage.prog_data.base, &stage.bind_map);
+      anv_nir_validate_push_layout(device->physical, &stage.prog_data.base,
+                                   &stage.bind_map);
 
-      if (!stage.prog_data.cs.uses_num_work_groups) {
-         assert(stage.bind_map.surface_to_descriptor[0].set ==
-                ANV_DESCRIPTOR_SET_NUM_WORK_GROUPS);
-         stage.bind_map.surface_to_descriptor[0].set = ANV_DESCRIPTOR_SET_NULL;
-      }
+      struct anv_shader_upload_params upload_params = {
+         .stage               = MESA_SHADER_COMPUTE,
+         .key_data            = &stage.cache_key,
+         .key_size            = sizeof(stage.cache_key),
+         .kernel_data         = stage.code,
+         .kernel_size         = stage.prog_data.base.program_size,
+         .prog_data           = &stage.prog_data.base,
+         .prog_data_size      = sizeof(stage.prog_data.cs),
+         .stats               = stage.stats,
+         .num_stats           = stage.num_stats,
+         .bind_map            = &stage.bind_map,
+         .push_desc_info      = &stage.push_desc_info,
+         .dynamic_push_values = stage.dynamic_push_values,
+      };
 
-      const unsigned code_size = stage.prog_data.base.program_size;
-      stage.bin = anv_device_upload_kernel(device, cache,
-                                     MESA_SHADER_COMPUTE,
-                                     &stage.cache_key, sizeof(stage.cache_key),
-                                     stage.code, code_size,
-                                     &stage.prog_data.base,
-                                     sizeof(stage.prog_data.cs),
-                                     stage.stats, stage.num_stats,
-                                     NULL, &stage.bind_map,
-                                     &stage.push_desc_info,
-                                     stage.dynamic_push_values);
+      stage.bin = anv_device_upload_kernel(device, cache, &upload_params);
       if (!stage.bin) {
          ralloc_free(mem_ctx);
          return vk_error(pipeline, VK_ERROR_OUT_OF_HOST_MEMORY);
@@ -2690,18 +2661,6 @@ anv_pipeline_compile_cs(struct anv_compute_pipeline *pipeline,
    return VK_SUCCESS;
 }
 
-static VkPipelineCreateFlags2KHR
-get_pipeline_flags(VkPipelineCreateFlags flags, const void *pNext)
-{
-   const VkPipelineCreateFlags2CreateInfoKHR *flags2 =
-      vk_find_struct_const(pNext, PIPELINE_CREATE_FLAGS_2_CREATE_INFO_KHR);
-
-   if (flags2)
-      return flags2->flags;
-
-   return (VkPipelineCreateFlags2KHR)flags;
-}
-
 static VkResult
 anv_compute_pipeline_create(struct anv_device *device,
                             struct vk_pipeline_cache *cache,
@@ -2721,8 +2680,7 @@ anv_compute_pipeline_create(struct anv_device *device,
 
    result = anv_pipeline_init(&pipeline->base, device,
                               ANV_PIPELINE_COMPUTE,
-                              get_pipeline_flags(pCreateInfo->flags,
-                                                 pCreateInfo->pNext),
+                              vk_compute_pipeline_create_flags(pCreateInfo),
                               pAllocator);
    if (result != VK_SUCCESS) {
       vk_free2(&device->vk.alloc, pAllocator, pipeline);
@@ -2747,6 +2705,8 @@ anv_compute_pipeline_create(struct anv_device *device,
 
    anv_genX(device->info, compute_pipeline_emit)(pipeline);
 
+   ANV_RMV(compute_pipeline_create, device, pipeline, false);
+
    *pPipeline = anv_pipeline_to_handle(&pipeline->base);
 
    return pipeline->base.batch.status;
@@ -2768,25 +2728,17 @@ VkResult anv_CreateComputePipelines(
    unsigned i;
    for (i = 0; i < count; i++) {
       const VkPipelineCreateFlags2KHR flags =
-         get_pipeline_flags(pCreateInfos[i].flags, pCreateInfos[i].pNext);
+         vk_compute_pipeline_create_flags(&pCreateInfos[i]);
       VkResult res = anv_compute_pipeline_create(device, pipeline_cache,
                                                  &pCreateInfos[i],
                                                  pAllocator, &pPipelines[i]);
 
-      if (res == VK_SUCCESS)
-         continue;
-
-      /* Bail out on the first error != VK_PIPELINE_COMPILE_REQUIRED as it
-       * is not obvious what error should be report upon 2 different failures.
-       * */
-      result = res;
-      if (res != VK_PIPELINE_COMPILE_REQUIRED)
-         break;
-
-      pPipelines[i] = VK_NULL_HANDLE;
-
-      if (flags & VK_PIPELINE_CREATE_2_EARLY_RETURN_ON_FAILURE_BIT_KHR)
-         break;
+      if (res != VK_SUCCESS) {
+         result = res;
+         if (flags & VK_PIPELINE_CREATE_2_EARLY_RETURN_ON_FAILURE_BIT_KHR)
+            break;
+         pPipelines[i] = VK_NULL_HANDLE;
+      }
    }
 
    for (; i < count; i++)
@@ -2871,11 +2823,6 @@ anv_graphics_pipeline_emit(struct anv_graphics_pipeline *pipeline,
       /* TODO(mesh): Mesh vs. Multiview with Instancing. */
    }
 
-   /* Store line mode and rasterization samples, these are used
-    * for dynamic primitive topology.
-    */
-   pipeline->rasterization_samples =
-      state->ms != NULL ? state->ms->rasterization_samples : 1;
 
    pipeline->dynamic_patch_control_points =
       anv_pipeline_has_stage(pipeline, MESA_SHADER_TESS_CTRL) &&
@@ -2883,42 +2830,48 @@ anv_graphics_pipeline_emit(struct anv_graphics_pipeline *pipeline,
       (pipeline->base.shaders[MESA_SHADER_TESS_CTRL]->dynamic_push_values &
        ANV_DYNAMIC_PUSH_INPUT_VERTICES);
 
-   if (pipeline->base.shaders[MESA_SHADER_FRAGMENT]) {
-      const struct brw_wm_prog_data *wm_prog_data = get_wm_prog_data(pipeline);
+   if (pipeline->base.shaders[MESA_SHADER_FRAGMENT] && state->ms) {
+      pipeline->sample_shading_enable = state->ms->sample_shading_enable;
+      pipeline->min_sample_shading = state->ms->min_sample_shading;
+   }
 
-      if (wm_prog_data_dynamic(wm_prog_data)) {
-         pipeline->fs_msaa_flags = BRW_WM_MSAA_FLAG_ENABLE_DYNAMIC;
+   /* Mark all color output as unused by default */
+   memset(pipeline->color_output_mapping,
+          ANV_COLOR_OUTPUT_UNUSED,
+          sizeof(pipeline->color_output_mapping));
 
-         assert(wm_prog_data->persample_dispatch == BRW_SOMETIMES);
-         if (state->ms && state->ms->rasterization_samples > 1) {
-            pipeline->fs_msaa_flags |= BRW_WM_MSAA_FLAG_MULTISAMPLE_FBO;
+   if (anv_pipeline_has_stage(pipeline, MESA_SHADER_FRAGMENT)) {
+      /* Count the number of color attachments in the binding table */
+      const struct anv_pipeline_bind_map *bind_map =
+         &pipeline->base.shaders[MESA_SHADER_FRAGMENT]->bind_map;
 
-            if (wm_prog_data->sample_shading) {
-               assert(wm_prog_data->persample_dispatch != BRW_NEVER);
-               pipeline->fs_msaa_flags |= BRW_WM_MSAA_FLAG_PERSAMPLE_DISPATCH;
-            }
-
-            if (state->ms->sample_shading_enable &&
-                (state->ms->min_sample_shading * state->ms->rasterization_samples) > 1) {
-               pipeline->fs_msaa_flags |= BRW_WM_MSAA_FLAG_PERSAMPLE_DISPATCH |
-                                          BRW_WM_MSAA_FLAG_PERSAMPLE_INTERP;
-            }
+      if (state->cal != NULL) {
+         /* Build a map of fragment color output to attachment */
+         uint8_t rt_to_att[MAX_RTS];
+         memset(rt_to_att, ANV_COLOR_OUTPUT_DISABLED, MAX_RTS);
+         for (uint32_t i = 0; i < MAX_RTS; i++) {
+            if (state->cal->color_map[i] != MESA_VK_ATTACHMENT_UNUSED)
+               rt_to_att[state->cal->color_map[i]] = i;
          }
 
-         if (state->ms && state->ms->alpha_to_coverage_enable)
-            pipeline->fs_msaa_flags |= BRW_WM_MSAA_FLAG_ALPHA_TO_COVERAGE;
+         /* For each fragment shader output if not unused apply the remapping
+          * to pipeline->color_output_mapping
+          */
+         unsigned i;
+         for (i = 0; i < MIN2(bind_map->surface_count, MAX_RTS); i++) {
+            if (bind_map->surface_to_descriptor[i].set !=
+                ANV_DESCRIPTOR_SET_COLOR_ATTACHMENTS)
+               break;
 
-         assert(wm_prog_data->coarse_pixel_dispatch != BRW_ALWAYS);
-         if (wm_prog_data->coarse_pixel_dispatch == BRW_SOMETIMES &&
-             !(pipeline->fs_msaa_flags & BRW_WM_MSAA_FLAG_PERSAMPLE_DISPATCH) &&
-             (!state->ms || !state->ms->sample_shading_enable)) {
-            pipeline->fs_msaa_flags |= BRW_WM_MSAA_FLAG_COARSE_PI_MSG |
-                                       BRW_WM_MSAA_FLAG_COARSE_RT_WRITES;
+            uint32_t index = bind_map->surface_to_descriptor[i].index;
+            if (index >= MAX_RTS) {
+               assert(index <= 0xff);
+               pipeline->color_output_mapping[i] = index;
+            } else {
+               pipeline->color_output_mapping[i] = rt_to_att[i];
+            }
          }
-      } else {
-         assert(wm_prog_data->alpha_to_coverage != BRW_SOMETIMES);
-         assert(wm_prog_data->coarse_pixel_dispatch != BRW_SOMETIMES);
-         assert(wm_prog_data->persample_dispatch != BRW_SOMETIMES);
+         pipeline->num_color_outputs = i;
       }
    }
 
@@ -2986,6 +2939,7 @@ anv_graphics_pipeline_import_lib(struct anv_graphics_base_pipeline *pipeline,
          continue;
 
       stages[s].stage = s;
+      stages[s].pipeline_flags = pipeline->base.flags;
       stages[s].feedback_idx = shader_count + lib->base.feedback_index[s];
       stages[s].robust_flags = lib->base.robust_flags[s];
 
@@ -2997,11 +2951,6 @@ anv_graphics_pipeline_import_lib(struct anv_graphics_base_pipeline *pipeline,
       stages[s].subgroup_size_type = lib->retained_shaders[s].subgroup_size_type;
       stages[s].imported.nir = lib->retained_shaders[s].nir;
       stages[s].imported.bin = lib->base.shaders[s];
-
-      stages[s].bind_map = (struct anv_pipeline_bind_map) {
-         .surface_to_descriptor = stages[s].surface_to_descriptor,
-         .sampler_to_descriptor = stages[s].sampler_to_descriptor
-      };
    }
 
    /* When not link optimizing, import the executables (shader descriptions
@@ -3038,8 +2987,8 @@ anv_graphics_lib_pipeline_create(struct anv_device *device,
                                  VkPipeline *pPipeline)
 {
    struct anv_pipeline_stage stages[ANV_GRAPHICS_SHADER_STAGE_COUNT] = {};
-   VkPipelineCreationFeedbackEXT pipeline_feedback = {
-      .flags = VK_PIPELINE_CREATION_FEEDBACK_VALID_BIT_EXT,
+   VkPipelineCreationFeedback pipeline_feedback = {
+      .flags = VK_PIPELINE_CREATION_FEEDBACK_VALID_BIT,
    };
    int64_t pipeline_start = os_time_get_nano();
 
@@ -3047,7 +2996,7 @@ anv_graphics_lib_pipeline_create(struct anv_device *device,
    VkResult result;
 
    const VkPipelineCreateFlags2KHR flags =
-      get_pipeline_flags(pCreateInfo->flags, pCreateInfo->pNext);
+      vk_graphics_pipeline_create_flags(pCreateInfo);
    assert(flags & VK_PIPELINE_CREATE_2_LIBRARY_BIT_KHR);
 
    const VkPipelineLibraryCreateInfoKHR *libs_info =
@@ -3064,7 +3013,7 @@ anv_graphics_lib_pipeline_create(struct anv_device *device,
                               pAllocator);
    if (result != VK_SUCCESS) {
       vk_free2(&device->vk.alloc, pAllocator, pipeline);
-      if (result == VK_PIPELINE_COMPILE_REQUIRED_EXT)
+      if (result == VK_PIPELINE_COMPILE_REQUIRED)
          *pPipeline = VK_NULL_HANDLE;
       return result;
    }
@@ -3090,7 +3039,8 @@ anv_graphics_lib_pipeline_create(struct anv_device *device,
 
    result = vk_graphics_pipeline_state_fill(&device->vk,
                                             &pipeline->state, pCreateInfo,
-                                            NULL /* sp_info */,
+                                            NULL /* driver_rp */,
+                                            0 /* driver_rp_flags */,
                                             &pipeline->all_state, NULL, 0, NULL);
    if (result != VK_SUCCESS) {
       anv_pipeline_finish(&pipeline->base.base, device);
@@ -3147,8 +3097,8 @@ anv_graphics_pipeline_create(struct anv_device *device,
                              VkPipeline *pPipeline)
 {
    struct anv_pipeline_stage stages[ANV_GRAPHICS_SHADER_STAGE_COUNT] = {};
-   VkPipelineCreationFeedbackEXT pipeline_feedback = {
-      .flags = VK_PIPELINE_CREATION_FEEDBACK_VALID_BIT_EXT,
+   VkPipelineCreationFeedback pipeline_feedback = {
+      .flags = VK_PIPELINE_CREATION_FEEDBACK_VALID_BIT,
    };
    int64_t pipeline_start = os_time_get_nano();
 
@@ -3156,7 +3106,7 @@ anv_graphics_pipeline_create(struct anv_device *device,
    VkResult result;
 
    const VkPipelineCreateFlags2KHR flags =
-      get_pipeline_flags(pCreateInfo->flags, pCreateInfo->pNext);
+      vk_graphics_pipeline_create_flags(pCreateInfo);
    assert((flags & VK_PIPELINE_CREATE_2_LIBRARY_BIT_KHR) == 0);
 
    const VkPipelineLibraryCreateInfoKHR *libs_info =
@@ -3206,7 +3156,8 @@ anv_graphics_pipeline_create(struct anv_device *device,
    }
 
    result = vk_graphics_pipeline_state_fill(&device->vk, &state, pCreateInfo,
-                                            NULL /* sp_info */,
+                                            NULL /* driver_rp */,
+                                            0 /* driver_rp_flags */,
                                             &all, NULL, 0, NULL);
    if (result != VK_SUCCESS) {
       anv_pipeline_finish(&pipeline->base.base, device);
@@ -3270,6 +3221,8 @@ anv_graphics_pipeline_create(struct anv_device *device,
    anv_fill_pipeline_creation_feedback(&pipeline->base, &pipeline_feedback,
                                        pCreateInfo, stages);
 
+   ANV_RMV(graphics_pipeline_create, device, pipeline, false);
+
    *pPipeline = anv_pipeline_to_handle(&pipeline->base.base);
 
    return pipeline->base.base.batch.status;
@@ -3293,7 +3246,7 @@ VkResult anv_CreateGraphicsPipelines(
       assert(pCreateInfos[i].sType == VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO);
 
       const VkPipelineCreateFlags2KHR flags =
-         get_pipeline_flags(pCreateInfos[i].flags, pCreateInfos[i].pNext);
+         vk_graphics_pipeline_create_flags(&pCreateInfos[i]);
       VkResult res;
       if (flags & VK_PIPELINE_CREATE_2_LIBRARY_BIT_KHR) {
          res = anv_graphics_lib_pipeline_create(device, pipeline_cache,
@@ -3307,20 +3260,12 @@ VkResult anv_CreateGraphicsPipelines(
                                             pAllocator, &pPipelines[i]);
       }
 
-      if (res == VK_SUCCESS)
-         continue;
-
-      /* Bail out on the first error != VK_PIPELINE_COMPILE_REQUIRED as it
-       * is not obvious what error should be report upon 2 different failures.
-       * */
-      result = res;
-      if (res != VK_PIPELINE_COMPILE_REQUIRED)
-         break;
-
-      pPipelines[i] = VK_NULL_HANDLE;
-
-      if (flags & VK_PIPELINE_CREATE_2_EARLY_RETURN_ON_FAILURE_BIT_KHR)
-         break;
+      if (res != VK_SUCCESS) {
+         result = res;
+         if (flags & VK_PIPELINE_CREATE_2_EARLY_RETURN_ON_FAILURE_BIT_KHR)
+            break;
+         pPipelines[i] = VK_NULL_HANDLE;
+      }
    }
 
    for (; i < count; i++)
@@ -3378,6 +3323,7 @@ compile_upload_rt_shader(struct anv_ray_tracing_pipeline *pipeline,
          .stats = stage->stats,
          .log_data = pipeline->base.device,
          .mem_ctx = mem_ctx,
+         .source_hash = stage->source_hash,
       },
       .key = &stage->key.bs,
       .prog_data = &stage->prog_data.bs,
@@ -3386,25 +3332,34 @@ compile_upload_rt_shader(struct anv_ray_tracing_pipeline *pipeline,
    };
 
    stage->code = brw_compile_bs(compiler, &params);
-   if (stage->code == NULL)
-      return vk_error(pipeline, VK_ERROR_OUT_OF_HOST_MEMORY);
+   if (stage->code == NULL) {
+      VkResult result;
 
-   /* Ray-tracing shaders don't have a "real" bind map */
-   struct anv_pipeline_bind_map empty_bind_map = {};
+      if (params.base.error_str)
+         result = vk_errorf(pipeline, VK_ERROR_UNKNOWN, "%s", params.base.error_str);
+      else
+         result = vk_error(pipeline, VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   const unsigned code_size = stage->prog_data.base.program_size;
+      return result;
+   }
+
+   struct anv_shader_upload_params upload_params = {
+      .stage               = stage->stage,
+      .key_data            = &stage->cache_key,
+      .key_size            = sizeof(stage->cache_key),
+      .kernel_data         = stage->code,
+      .kernel_size         = stage->prog_data.base.program_size,
+      .prog_data           = &stage->prog_data.base,
+      .prog_data_size      = brw_prog_data_size(stage->stage),
+      .stats               = stage->stats,
+      .num_stats           = 1,
+      .bind_map            = &stage->bind_map,
+      .push_desc_info      = &stage->push_desc_info,
+      .dynamic_push_values = stage->dynamic_push_values,
+   };
+
    stage->bin =
-      anv_device_upload_kernel(pipeline->base.device,
-                               cache,
-                               stage->stage,
-                               &stage->cache_key, sizeof(stage->cache_key),
-                               stage->code, code_size,
-                               &stage->prog_data.base,
-                               sizeof(stage->prog_data.bs),
-                               stage->stats, 1,
-                               NULL, &empty_bind_map,
-                               &stage->push_desc_info,
-                               stage->dynamic_push_values);
+      anv_device_upload_kernel(pipeline->base.device, cache, &upload_params);
    if (stage->bin == NULL)
       return vk_error(pipeline, VK_ERROR_OUT_OF_HOST_MEMORY);
 
@@ -3514,6 +3469,7 @@ anv_pipeline_init_ray_tracing_stages(struct anv_ray_tracing_pipeline *pipeline,
 
       stages[i] = (struct anv_pipeline_stage) {
          .stage = vk_to_mesa_shader_stage(sinfo->stage),
+         .pipeline_flags = pipeline->base.flags,
          .pipeline_pNext = info->pNext,
          .info = sinfo,
          .cache_key = {
@@ -3523,6 +3479,9 @@ anv_pipeline_init_ray_tracing_stages(struct anv_ray_tracing_pipeline *pipeline,
             .flags = VK_PIPELINE_CREATION_FEEDBACK_VALID_BIT,
          },
       };
+
+      anv_stage_allocate_bind_map_tables(&pipeline->base, &stages[i],
+                                         tmp_pipeline_ctx);
 
       pipeline->base.active_stages |= sinfo->stage;
 
@@ -3574,9 +3533,10 @@ static bool
 anv_ray_tracing_pipeline_load_cached_shaders(struct anv_ray_tracing_pipeline *pipeline,
                                              struct vk_pipeline_cache *cache,
                                              const VkRayTracingPipelineCreateInfoKHR *info,
-                                             struct anv_pipeline_stage *stages)
+                                             struct anv_pipeline_stage *stages,
+                                             VkPipelineCreationFeedback *pipeline_feedback)
 {
-   uint32_t shaders = 0, cache_hits = 0;
+   uint32_t shaders = 0, found = 0, cache_hits = 0;
    for (uint32_t i = 0; i < info->stageCount; i++) {
       if (stages[i].info == NULL)
          continue;
@@ -3596,13 +3556,20 @@ anv_ray_tracing_pipeline_load_cached_shaders(struct anv_ray_tracing_pipeline *pi
             VK_PIPELINE_CREATION_FEEDBACK_APPLICATION_PIPELINE_CACHE_HIT_BIT;
       }
 
-      if (stages[i].bin != NULL)
+      if (stages[i].bin != NULL) {
+         found++;
          anv_pipeline_add_executables(&pipeline->base, &stages[i]);
+      }
 
       stages[i].feedback.duration += os_time_get_nano() - stage_start;
    }
 
-   return cache_hits == shaders;
+   if (cache_hits == shaders) {
+      pipeline_feedback->flags |=
+         VK_PIPELINE_CREATION_FEEDBACK_APPLICATION_PIPELINE_CACHE_HIT_BIT;
+   }
+
+   return found == shaders;
 }
 
 static VkResult
@@ -3624,9 +3591,8 @@ anv_pipeline_compile_ray_tracing(struct anv_ray_tracing_pipeline *pipeline,
       (pipeline->base.flags & VK_PIPELINE_CREATE_CAPTURE_INTERNAL_REPRESENTATIONS_BIT_KHR);
 
    if (!skip_cache_lookup &&
-       anv_ray_tracing_pipeline_load_cached_shaders(pipeline, cache, info, stages)) {
-      pipeline_feedback.flags |=
-         VK_PIPELINE_CREATION_FEEDBACK_APPLICATION_PIPELINE_CACHE_HIT_BIT;
+       anv_ray_tracing_pipeline_load_cached_shaders(pipeline, cache, info, stages,
+                                                    &pipeline_feedback)) {
       goto done;
    }
 
@@ -3637,12 +3603,22 @@ anv_pipeline_compile_ray_tracing(struct anv_ray_tracing_pipeline *pipeline,
       if (stages[i].info == NULL)
          continue;
 
+      /* Intersection and any-hit need to fetch the nir always,
+       * so that they can be handled correctly below in the group section.
+       * For the other stages, if we found them in the cache, skip this part.
+       */
+      if (!(stages[i].stage == MESA_SHADER_INTERSECTION ||
+            stages[i].stage == MESA_SHADER_ANY_HIT) &&
+          stages[i].bin != NULL)
+         continue;
+
       int64_t stage_start = os_time_get_nano();
 
-      stages[i].nir = anv_pipeline_stage_get_nir(&pipeline->base, cache,
-                                                 tmp_pipeline_ctx, &stages[i]);
-      if (stages[i].nir == NULL)
-         return vk_error(pipeline, VK_ERROR_OUT_OF_HOST_MEMORY);
+      VkResult result = anv_pipeline_stage_get_nir(&pipeline->base, cache,
+                                                   tmp_pipeline_ctx,
+                                                   &stages[i]);
+      if (result != VK_SUCCESS)
+         return result;
 
       anv_pipeline_nir_preprocess(&pipeline->base, &stages[i]);
 
@@ -3797,6 +3773,8 @@ anv_device_init_rt_shaders(struct anv_device *device)
 
    bool cache_hit;
 
+   struct anv_push_descriptor_info empty_push_desc_info = {};
+   struct anv_pipeline_bind_map empty_bind_map = {};
    struct brw_rt_trampoline {
       char name[16];
       struct brw_cs_prog_key key;
@@ -3813,18 +3791,12 @@ anv_device_init_rt_shaders(struct anv_device *device)
       nir_shader *trampoline_nir =
          brw_nir_create_raygen_trampoline(device->physical->compiler, tmp_ctx);
 
-      trampoline_nir->info.subgroup_size = SUBGROUP_SIZE_REQUIRE_16;
+      if (device->info->ver >= 20)
+         trampoline_nir->info.subgroup_size = SUBGROUP_SIZE_REQUIRE_16;
+      else
+         trampoline_nir->info.subgroup_size = SUBGROUP_SIZE_REQUIRE_8;
 
-      struct anv_push_descriptor_info push_desc_info = {};
-      struct anv_pipeline_bind_map bind_map = {
-         .surface_count = 0,
-         .sampler_count = 0,
-      };
-      uint32_t dummy_params[4] = { 0, };
       struct brw_cs_prog_data trampoline_prog_data = {
-         .base.nr_params = 4,
-         .base.param = dummy_params,
-         .uses_inline_data = true,
          .uses_btd_stack_ids = true,
       };
       struct brw_compile_cs_params params = {
@@ -3839,17 +3811,21 @@ anv_device_init_rt_shaders(struct anv_device *device)
       const unsigned *tramp_data =
          brw_compile_cs(device->physical->compiler, &params);
 
+      struct anv_shader_upload_params upload_params = {
+         .stage               = MESA_SHADER_COMPUTE,
+         .key_data            = &trampoline_key,
+         .key_size            = sizeof(trampoline_key),
+         .kernel_data         = tramp_data,
+         .kernel_size         = trampoline_prog_data.base.program_size,
+         .prog_data           = &trampoline_prog_data.base,
+         .prog_data_size      = sizeof(trampoline_prog_data),
+         .bind_map            = &empty_bind_map,
+         .push_desc_info      = &empty_push_desc_info,
+      };
+
       device->rt_trampoline =
          anv_device_upload_kernel(device, device->internal_cache,
-                                  MESA_SHADER_COMPUTE,
-                                  &trampoline_key, sizeof(trampoline_key),
-                                  tramp_data,
-                                  trampoline_prog_data.base.program_size,
-                                  &trampoline_prog_data.base,
-                                  sizeof(trampoline_prog_data),
-                                  NULL, 0, NULL, &bind_map,
-                                  &push_desc_info,
-                                  0 /* dynamic_push_values */);
+                                  &upload_params);
 
       ralloc_free(tmp_ctx);
 
@@ -3879,11 +3855,6 @@ anv_device_init_rt_shaders(struct anv_device *device)
 
       NIR_PASS_V(trivial_return_nir, brw_nir_lower_rt_intrinsics, device->info);
 
-      struct anv_push_descriptor_info push_desc_info = {};
-      struct anv_pipeline_bind_map bind_map = {
-         .surface_count = 0,
-         .sampler_count = 0,
-      };
       struct brw_bs_prog_data return_prog_data = { 0, };
       struct brw_compile_bs_params params = {
          .base = {
@@ -3897,15 +3868,21 @@ anv_device_init_rt_shaders(struct anv_device *device)
       const unsigned *return_data =
          brw_compile_bs(device->physical->compiler, &params);
 
+      struct anv_shader_upload_params upload_params = {
+         .stage               = MESA_SHADER_CALLABLE,
+         .key_data            = &return_key,
+         .key_size            = sizeof(return_key),
+         .kernel_data         = return_data,
+         .kernel_size         = return_prog_data.base.program_size,
+         .prog_data           = &return_prog_data.base,
+         .prog_data_size      = sizeof(return_prog_data),
+         .bind_map            = &empty_bind_map,
+         .push_desc_info      = &empty_push_desc_info,
+      };
+
       device->rt_trivial_return =
          anv_device_upload_kernel(device, device->internal_cache,
-                                  MESA_SHADER_CALLABLE,
-                                  &return_key, sizeof(return_key),
-                                  return_data, return_prog_data.base.program_size,
-                                  &return_prog_data.base, sizeof(return_prog_data),
-                                  NULL, 0, NULL, &bind_map,
-                                  &push_desc_info,
-                                  0 /* dynamic_push_values */);
+                                  &upload_params);
 
       ralloc_free(tmp_ctx);
 
@@ -3989,8 +3966,7 @@ anv_ray_tracing_pipeline_create(
 
    result = anv_pipeline_init(&pipeline->base, device,
                               ANV_PIPELINE_RAY_TRACING,
-                              get_pipeline_flags(pCreateInfo->flags,
-                                                 pCreateInfo->pNext),
+                              vk_rt_pipeline_create_flags(pCreateInfo),
                               pAllocator);
    if (result != VK_SUCCESS) {
       vk_free2(&device->vk.alloc, pAllocator, pipeline);
@@ -4057,9 +4033,11 @@ anv_ray_tracing_pipeline_create(
    result = anv_pipeline_compile_ray_tracing(pipeline, tmp_ctx, stages,
                                              cache, pCreateInfo);
    if (result != VK_SUCCESS) {
+      for (uint32_t i = 0; i < pCreateInfo->stageCount; i++) {
+         if (stages[i].bin != NULL)
+            anv_shader_bin_unref(device, stages[i].bin);
+      }
       ralloc_free(tmp_ctx);
-      util_dynarray_foreach(&pipeline->shaders, struct anv_shader_bin *, shader)
-         anv_shader_bin_unref(device, *shader);
       anv_pipeline_finish(&pipeline->base, device);
       vk_free2(&device->vk.alloc, pAllocator, pipeline);
       return result;
@@ -4091,8 +4069,11 @@ anv_ray_tracing_pipeline_create(
                          pCreateInfo->pLibraryInfo->pLibraries[l]);
          struct anv_ray_tracing_pipeline *rt_library =
             anv_pipeline_to_ray_tracing(library);
-         for (uint32_t lg = 0; lg < rt_library->group_count; lg++)
-            pipeline->groups[g++] = rt_library->groups[lg];
+         for (uint32_t lg = 0; lg < rt_library->group_count; lg++) {
+            pipeline->groups[g] = rt_library->groups[lg];
+            pipeline->groups[g].imported = true;
+            g++;
+         }
 
          /* Account for shaders in the library. */
          util_dynarray_foreach(&rt_library->shaders,
@@ -4118,6 +4099,8 @@ anv_ray_tracing_pipeline_create(
 
    ralloc_free(tmp_ctx);
 
+   ANV_RMV(rt_pipeline_create, device, pipeline, false);
+
    *pPipeline = anv_pipeline_to_handle(&pipeline->base);
 
    return pipeline->base.batch.status;
@@ -4140,24 +4123,17 @@ anv_CreateRayTracingPipelinesKHR(
    unsigned i;
    for (i = 0; i < createInfoCount; i++) {
       const VkPipelineCreateFlags2KHR flags =
-         get_pipeline_flags(pCreateInfos[i].flags, pCreateInfos[i].pNext);
+         vk_rt_pipeline_create_flags(&pCreateInfos[i]);
       VkResult res = anv_ray_tracing_pipeline_create(_device, pipeline_cache,
                                                      &pCreateInfos[i],
                                                      pAllocator, &pPipelines[i]);
 
-      if (res == VK_SUCCESS)
-         continue;
-
-      /* Bail out on the first error as it is not obvious what error should be
-       * report upon 2 different failures. */
-      result = res;
-      if (result != VK_PIPELINE_COMPILE_REQUIRED)
-         break;
-
-      pPipelines[i] = VK_NULL_HANDLE;
-
-      if (flags & VK_PIPELINE_CREATE_2_EARLY_RETURN_ON_FAILURE_BIT_KHR)
-         break;
+      if (res != VK_SUCCESS) {
+         result = res;
+         if (flags & VK_PIPELINE_CREATE_2_EARLY_RETURN_ON_FAILURE_BIT_KHR)
+            break;
+         pPipelines[i] = VK_NULL_HANDLE;
+      }
    }
 
    for (; i < createInfoCount; i++)
@@ -4189,10 +4165,16 @@ VkResult anv_GetPipelineExecutablePropertiesKHR(
 
          unsigned simd_width = exe->stats.dispatch_width;
          if (stage == MESA_SHADER_FRAGMENT) {
-            WRITE_STR(props->name, "%s%d %s",
-                      simd_width ? "SIMD" : "vec",
-                      simd_width ? simd_width : 4,
-                      _mesa_shader_stage_to_string(stage));
+            if (exe->stats.max_polygons > 1)
+               WRITE_STR(props->name, "SIMD%dx%d %s",
+                         exe->stats.max_polygons,
+                         simd_width / exe->stats.max_polygons,
+                         _mesa_shader_stage_to_string(stage));
+            else
+               WRITE_STR(props->name, "%s%d %s",
+                         simd_width ? "SIMD" : "vec",
+                         simd_width ? simd_width : 4,
+                         _mesa_shader_stage_to_string(stage));
          } else {
             WRITE_STR(props->name, "%s", _mesa_shader_stage_to_string(stage));
          }
@@ -4237,7 +4219,7 @@ VkResult anv_GetPipelineExecutableStatisticsKHR(
    switch (pipeline->type) {
    case ANV_PIPELINE_GRAPHICS:
    case ANV_PIPELINE_GRAPHICS_LIB: {
-      prog_data = anv_pipeline_to_graphics(pipeline)->base.shaders[exe->stage]->prog_data;
+      prog_data = anv_pipeline_to_graphics_base(pipeline)->shaders[exe->stage]->prog_data;
       break;
    }
    case ANV_PIPELINE_COMPUTE: {
@@ -4371,6 +4353,13 @@ VkResult anv_GetPipelineExecutableStatisticsKHR(
                 "hash = 0x%08x. Hash generated from shader source.", hash);
       stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
       stat->value.u64 = hash;
+   }
+
+   vk_outarray_append_typed(VkPipelineExecutableStatisticKHR, &out, stat) {
+      WRITE_STR(stat->name, "Non SSA regs after NIR");
+      WRITE_STR(stat->description, "Non SSA regs after NIR translation to BRW.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.non_ssa_registers_after_nir;
    }
 
    return vk_outarray_status(&out);

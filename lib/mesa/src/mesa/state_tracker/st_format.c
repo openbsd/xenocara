@@ -256,7 +256,7 @@ static const struct format_mapping format_map[] = {
       { PIPE_FORMAT_R8G8B8A8_UNORM, DEFAULT_RGBA_FORMATS }
    },
    {
-      { GL_BGRA, 0 },
+      { GL_BGRA, GL_BGRA8_EXT, 0 },
       { DEFAULT_RGBA_FORMATS }
    },
    {
@@ -1328,11 +1328,31 @@ st_ChooseTextureFormat(struct gl_context *ctx, GLenum target,
    bool is_renderbuffer = false;
    enum pipe_texture_target pTarget;
 
+   if (ctx->Const.ForceDepthComponentTypeInt &&
+       internalFormat == GL_DEPTH_COMPONENT &&
+       type == GL_UNSIGNED_SHORT)
+      type = GL_UNSIGNED_INT;
+
    if (target == GL_RENDERBUFFER) {
       pTarget = PIPE_TEXTURE_2D;
       is_renderbuffer = true;
    } else {
       pTarget = gl_target_to_pipe(target);
+      if (internalFormat == format) {
+         if (internalFormat == GL_RGBA) {
+            /* with GL_RGBA, these are effectively aliases to required formats */
+            switch (type) {
+            case GL_UNSIGNED_SHORT_5_5_5_1:
+            case GL_UNSIGNED_SHORT_4_4_4_4:
+            case GL_UNSIGNED_INT_8_8_8_8:
+               is_renderbuffer = true;
+               break;
+            default: break;
+            }
+         } else if (internalFormat == GL_RGB && type == GL_UNSIGNED_SHORT_5_6_5) {
+            is_renderbuffer = true;
+         }
+      }
    }
 
    if (target == GL_TEXTURE_1D || target == GL_TEXTURE_1D_ARRAY) {
@@ -1351,7 +1371,9 @@ st_ChooseTextureFormat(struct gl_context *ctx, GLenum target,
    bindings = PIPE_BIND_SAMPLER_VIEW;
    if (_mesa_is_depth_or_stencil_format(internalFormat))
       bindings |= PIPE_BIND_DEPTH_STENCIL;
-   else if (is_renderbuffer || internalFormat == 3 || internalFormat == 4 ||
+   else if (is_renderbuffer)
+      bindings |= PIPE_BIND_RENDER_TARGET;
+   else if (internalFormat == 3 || internalFormat == 4 ||
             internalFormat == GL_RGB || internalFormat == GL_RGBA ||
             internalFormat == GL_RGBA2 ||
             internalFormat == GL_RGB4 || internalFormat == GL_RGBA4 ||
@@ -1507,6 +1529,85 @@ st_QuerySamplesForFormat(struct gl_context *ctx, GLenum target,
    return num_sample_counts;
 }
 
+/* check whether any texture can be allocated for a given format */
+bool
+st_QueryTextureFormatSupport(struct gl_context *ctx, GLenum target, GLenum internalFormat)
+{
+   struct st_context *st = st_context(ctx);
+
+   /* If an sRGB framebuffer is unsupported, sRGB formats behave like linear
+    * formats.
+    */
+   if (!ctx->Extensions.EXT_sRGB) {
+      internalFormat = _mesa_get_linear_internalformat(internalFormat);
+   }
+
+   /* multisample textures need >= 2 samples */
+   unsigned min_samples = target == GL_TEXTURE_2D_MULTISAMPLE ||
+                          target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY ? 1 : 0;
+   unsigned max_samples = min_samples ? 16 : 1;
+
+   /* compressed textures will be allocated as e.g., RGBA8, so check that instead */
+   enum pipe_format pf = st_choose_format(st, internalFormat, GL_NONE, GL_NONE,
+                                          PIPE_TEXTURE_2D, 0, 0, 0,
+                                          false, false);
+   if (util_format_is_compressed(pf)) {
+      enum pipe_format fmts[2] = {0};
+      pf = st_mesa_format_to_pipe_format(st, st_pipe_format_to_mesa_format(pf));
+      fmts[0] = pf;
+      for (unsigned i = max_samples; i > min_samples; i >>= 1) {
+         if (find_supported_format(st->screen, fmts, PIPE_TEXTURE_2D,
+                                   i, i, PIPE_BIND_SAMPLER_VIEW, false))
+            return true;
+      }
+      return false;
+   }
+   for (unsigned i = max_samples; i > min_samples; i >>= 1) {
+      if (st_choose_format(st, internalFormat, GL_NONE, GL_NONE,
+                           PIPE_TEXTURE_2D, i, i, PIPE_BIND_SAMPLER_VIEW,
+                           false, false))
+         return true;
+   }
+
+   return false;
+}
+
+
+/**
+ * Called via ctx->Driver.QueryInternalFormat().
+ */
+static size_t
+st_QueryCompressionRatesForFormat(struct gl_context *ctx, GLenum target,
+                                  GLenum internalFormat, GLint rates[16])
+{
+   struct st_context *st = st_context(ctx);
+   struct pipe_screen *screen = st->screen;
+   enum pipe_format format;
+   int num_rates = 0;
+   uint32_t pipe_rates[16];
+   unsigned bind;
+
+   (void) target;
+
+   if (!screen->query_compression_rates)
+      return 0;
+
+   if (_mesa_is_depth_or_stencil_format(internalFormat))
+      bind = PIPE_BIND_DEPTH_STENCIL;
+   else
+      bind = PIPE_BIND_RENDER_TARGET;
+
+   format = st_choose_format(st, internalFormat, GL_NONE, GL_NONE,
+                             PIPE_TEXTURE_2D, 1, 1, bind,
+                             false, false);
+   screen->query_compression_rates(screen, format, 16, pipe_rates, &num_rates);
+   for (int i = 0; i < num_rates; ++i) {
+      rates[i] = st_from_pipe_compression_rate(pipe_rates[i]);
+   }
+
+   return num_rates;
+}
+
 
 /**
  * ARB_internalformat_query2 driver hook.
@@ -1596,6 +1697,31 @@ st_QueryInternalFormat(struct gl_context *ctx, GLenum target,
                args[0], args[1], args[2]);
          }
       }
+      break;
+   }
+   case GL_SURFACE_COMPRESSION_EXT:
+      st_QueryCompressionRatesForFormat(ctx, target, internalFormat, params);
+      break;
+
+   case GL_NUM_SURFACE_COMPRESSION_FIXED_RATES_EXT: {
+      GLint rates[16];
+      size_t num_rates;
+      num_rates = st_QueryCompressionRatesForFormat(ctx, target, internalFormat,
+                                                    rates);
+      params[0] = (GLint) num_rates;
+      break;
+   }
+   case GL_FRAMEBUFFER_BLEND: {
+      if (target == GL_RENDERBUFFER)
+         target = GL_TEXTURE_2D;
+      enum pipe_texture_target ptarget = gl_target_to_pipe(target);
+      mesa_format format = st_ChooseTextureFormat(ctx, target, internalFormat, GL_NONE, GL_NONE);
+      enum pipe_format pformat = st_mesa_format_to_pipe_format(st, format);
+      struct pipe_screen *screen = st->screen;
+      bool supported = pformat != PIPE_FORMAT_NONE &&
+                       screen->is_format_supported(screen, pformat, ptarget, 0, 0,
+                                                   PIPE_BIND_BLENDABLE | PIPE_BIND_RENDER_TARGET);
+      params[0] = supported ? GL_FULL_SUPPORT : GL_NONE;
       break;
    }
    default:

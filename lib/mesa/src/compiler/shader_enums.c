@@ -28,6 +28,7 @@
 
 #include "shader_enums.h"
 #include "util/macros.h"
+#include "util/u_debug.h"
 
 #define ENUM(x) [x] = #x
 #define NAME(val) ((((val) < ARRAY_SIZE(names)) && names[(val)]) ? names[(val)] : "UNKNOWN")
@@ -326,12 +327,15 @@ gl_system_value_name(gl_system_value sysval)
      ENUM(SYSTEM_VALUE_DRAW_ID),
      ENUM(SYSTEM_VALUE_INVOCATION_ID),
      ENUM(SYSTEM_VALUE_FRAG_COORD),
+     ENUM(SYSTEM_VALUE_PIXEL_COORD),
      ENUM(SYSTEM_VALUE_POINT_COORD),
      ENUM(SYSTEM_VALUE_LINE_COORD),
      ENUM(SYSTEM_VALUE_FRONT_FACE),
+     ENUM(SYSTEM_VALUE_FRONT_FACE_FSIGN),
      ENUM(SYSTEM_VALUE_SAMPLE_ID),
      ENUM(SYSTEM_VALUE_SAMPLE_POS),
      ENUM(SYSTEM_VALUE_SAMPLE_MASK_IN),
+     ENUM(SYSTEM_VALUE_LAYER_ID),
      ENUM(SYSTEM_VALUE_HELPER_INVOCATION),
      ENUM(SYSTEM_VALUE_COLOR0),
      ENUM(SYSTEM_VALUE_COLOR1),
@@ -348,6 +352,7 @@ gl_system_value_name(gl_system_value sysval)
      ENUM(SYSTEM_VALUE_BASE_GLOBAL_INVOCATION_ID),
      ENUM(SYSTEM_VALUE_GLOBAL_INVOCATION_INDEX),
      ENUM(SYSTEM_VALUE_WORKGROUP_ID),
+     ENUM(SYSTEM_VALUE_BASE_WORKGROUP_ID),
      ENUM(SYSTEM_VALUE_NUM_WORKGROUPS),
      ENUM(SYSTEM_VALUE_WORKGROUP_SIZE),
      ENUM(SYSTEM_VALUE_GLOBAL_GROUP_SIZE),
@@ -366,7 +371,6 @@ gl_system_value_name(gl_system_value sysval)
      ENUM(SYSTEM_VALUE_BARYCENTRIC_PULL_MODEL),
      ENUM(SYSTEM_VALUE_RAY_LAUNCH_ID),
      ENUM(SYSTEM_VALUE_RAY_LAUNCH_SIZE),
-     ENUM(SYSTEM_VALUE_RAY_LAUNCH_SIZE_ADDR_AMD),
      ENUM(SYSTEM_VALUE_RAY_WORLD_ORIGIN),
      ENUM(SYSTEM_VALUE_RAY_WORLD_DIRECTION),
      ENUM(SYSTEM_VALUE_RAY_OBJECT_ORIGIN),
@@ -391,6 +395,10 @@ gl_system_value_name(gl_system_value sysval)
      ENUM(SYSTEM_VALUE_FRAG_INVOCATION_COUNT),
      ENUM(SYSTEM_VALUE_SHADER_INDEX),
      ENUM(SYSTEM_VALUE_COALESCED_INPUT_COUNT),
+     ENUM(SYSTEM_VALUE_WARPS_PER_SM_NV),
+     ENUM(SYSTEM_VALUE_SM_COUNT_NV),
+     ENUM(SYSTEM_VALUE_WARP_ID_NV),
+     ENUM(SYSTEM_VALUE_SM_ID_NV),
    };
    STATIC_ASSERT(ARRAY_SIZE(names) == SYSTEM_VALUE_MAX);
    return NAME(sysval);
@@ -405,7 +413,6 @@ glsl_interp_mode_name(enum glsl_interp_mode qual)
       ENUM(INTERP_MODE_FLAT),
       ENUM(INTERP_MODE_NOPERSPECTIVE),
       ENUM(INTERP_MODE_EXPLICIT),
-      ENUM(INTERP_MODE_COLOR),
    };
    STATIC_ASSERT(ARRAY_SIZE(names) == INTERP_MODE_COUNT);
    return NAME(qual);
@@ -430,21 +437,6 @@ gl_frag_result_name(gl_frag_result result)
    };
    STATIC_ASSERT(ARRAY_SIZE(names) == FRAG_RESULT_MAX);
    return NAME(result);
-}
-
-unsigned
-num_mesh_vertices_per_primitive(unsigned prim)
-{
-   switch (prim) {
-      case MESA_PRIM_POINTS:
-         return 1;
-      case MESA_PRIM_LINES:
-         return 2;
-      case MESA_PRIM_TRIANGLES:
-         return 3;
-      default:
-         unreachable("invalid mesh shader primitive type");
-   }
 }
 
 const char *

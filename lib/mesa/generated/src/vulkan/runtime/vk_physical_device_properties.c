@@ -154,8 +154,8 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
    pProperties->properties.sparseProperties.residencyAlignedMipSize = pdevice->properties.sparseResidencyAlignedMipSize;
    pProperties->properties.sparseProperties.residencyNonResidentStrict = pdevice->properties.sparseResidencyNonResidentStrict;
 
-   vk_foreach_struct(ext, pProperties) {
-      switch (ext->sType) {
+   vk_foreach_struct(ext, pProperties->pNext) {
+      switch ((int32_t)ext->sType) {
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_PROPERTIES_NV: {
          VkPhysicalDeviceDeviceGeneratedCommandsPropertiesNV *properties = (void *)ext;
          properties->maxGraphicsShaderGroupCount = pdevice->properties.maxGraphicsShaderGroupCount;
@@ -174,8 +174,8 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
          properties->maxMultiDrawCount = pdevice->properties.maxMultiDrawCount;
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES_KHR: {
-         VkPhysicalDevicePushDescriptorPropertiesKHR *properties = (void *)ext;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES: {
+         VkPhysicalDevicePushDescriptorProperties *properties = (void *)ext;
          properties->maxPushDescriptors = pdevice->properties.maxPushDescriptors;
          break;
       }
@@ -275,14 +275,48 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
          properties->maxBufferSize = pdevice->properties.maxBufferSize;
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_PROPERTIES_KHR: {
-         VkPhysicalDeviceMaintenance5PropertiesKHR *properties = (void *)ext;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_PROPERTIES: {
+         VkPhysicalDeviceMaintenance5Properties *properties = (void *)ext;
          properties->earlyFragmentMultisampleCoverageAfterSampleCounting = pdevice->properties.earlyFragmentMultisampleCoverageAfterSampleCounting;
          properties->earlyFragmentSampleMaskTestBeforeSampleCounting = pdevice->properties.earlyFragmentSampleMaskTestBeforeSampleCounting;
          properties->depthStencilSwizzleOneSupport = pdevice->properties.depthStencilSwizzleOneSupport;
          properties->polygonModePointSize = pdevice->properties.polygonModePointSize;
          properties->nonStrictSinglePixelWideLinesUseParallelogram = pdevice->properties.nonStrictSinglePixelWideLinesUseParallelogram;
          properties->nonStrictWideLinesUseParallelogram = pdevice->properties.nonStrictWideLinesUseParallelogram;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_6_PROPERTIES: {
+         VkPhysicalDeviceMaintenance6Properties *properties = (void *)ext;
+         properties->blockTexelViewCompatibleMultipleLayers = pdevice->properties.blockTexelViewCompatibleMultipleLayers;
+         properties->maxCombinedImageSamplerDescriptorCount = pdevice->properties.maxCombinedImageSamplerDescriptorCount;
+         properties->fragmentShadingRateClampCombinerInputs = pdevice->properties.fragmentShadingRateClampCombinerInputs;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_7_PROPERTIES_KHR: {
+         VkPhysicalDeviceMaintenance7PropertiesKHR *properties = (void *)ext;
+         properties->robustFragmentShadingRateAttachmentAccess = pdevice->properties.robustFragmentShadingRateAttachmentAccess;
+         properties->separateDepthStencilAttachmentAccess = pdevice->properties.separateDepthStencilAttachmentAccess;
+         properties->maxDescriptorSetTotalUniformBuffersDynamic = pdevice->properties.maxDescriptorSetTotalUniformBuffersDynamic;
+         properties->maxDescriptorSetTotalStorageBuffersDynamic = pdevice->properties.maxDescriptorSetTotalStorageBuffersDynamic;
+         properties->maxDescriptorSetTotalBuffersDynamic = pdevice->properties.maxDescriptorSetTotalBuffersDynamic;
+         properties->maxDescriptorSetUpdateAfterBindTotalUniformBuffersDynamic = pdevice->properties.maxDescriptorSetUpdateAfterBindTotalUniformBuffersDynamic;
+         properties->maxDescriptorSetUpdateAfterBindTotalStorageBuffersDynamic = pdevice->properties.maxDescriptorSetUpdateAfterBindTotalStorageBuffersDynamic;
+         properties->maxDescriptorSetUpdateAfterBindTotalBuffersDynamic = pdevice->properties.maxDescriptorSetUpdateAfterBindTotalBuffersDynamic;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LAYERED_API_PROPERTIES_LIST_KHR: {
+         VkPhysicalDeviceLayeredApiPropertiesListKHR *properties = (void *)ext;
+         
+         
+    if (properties->pLayeredApis != NULL) {
+        uint32_t count = MIN2(properties->layeredApiCount, pdevice->properties.layeredApiCount);
+        for (uint32_t i = 0; i < count; i++)
+            properties->pLayeredApis[i] = pdevice->properties.pLayeredApis[i];
+        properties->layeredApiCount = count;
+    } else {
+        properties->layeredApiCount = pdevice->properties.layeredApiCount;
+    }
+
          break;
       }
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES: {
@@ -306,6 +340,13 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
          properties->shaderRoundingModeRTZFloat64 = pdevice->properties.shaderRoundingModeRTZFloat64;
          break;
       }
+#if DETECT_OS_ANDROID
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENTATION_PROPERTIES_ANDROID: {
+         VkPhysicalDevicePresentationPropertiesANDROID *properties = (void *)ext;
+         properties->sharedImage = pdevice->properties.sharedImage;
+         break;
+      }
+#endif /* DETECT_OS_ANDROID */
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT: {
          VkPhysicalDeviceExternalMemoryHostPropertiesEXT *properties = (void *)ext;
          properties->minImportedHostPointerAlignment = pdevice->properties.minImportedHostPointerAlignment;
@@ -385,6 +426,12 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
          properties->maxVertexAttribDivisor = pdevice->properties.maxVertexAttribDivisor;
          break;
       }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_PROPERTIES: {
+         VkPhysicalDeviceVertexAttributeDivisorProperties *properties = (void *)ext;
+         properties->maxVertexAttribDivisor = pdevice->properties.maxVertexAttribDivisor;
+         properties->supportsNonZeroFirstInstance = pdevice->properties.supportsNonZeroFirstInstance;
+         break;
+      }
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PCI_BUS_INFO_PROPERTIES_EXT: {
          VkPhysicalDevicePCIBusInfoPropertiesEXT *properties = (void *)ext;
          properties->pciDomain = pdevice->properties.pciDomain;
@@ -413,6 +460,11 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
          properties->transformFeedbackStreamsLinesTriangles = pdevice->properties.transformFeedbackStreamsLinesTriangles;
          properties->transformFeedbackRasterizationStreamSelect = pdevice->properties.transformFeedbackRasterizationStreamSelect;
          properties->transformFeedbackDraw = pdevice->properties.transformFeedbackDraw;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_PROPERTIES_KHR: {
+         VkPhysicalDeviceComputeShaderDerivativesPropertiesKHR *properties = (void *)ext;
+         properties->meshAndTaskShaderDerivatives = pdevice->properties.meshAndTaskShaderDerivatives;
          break;
       }
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COPY_MEMORY_INDIRECT_PROPERTIES_NV: {
@@ -583,8 +635,8 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
          properties->indirectBufferOffsetAlignment = pdevice->properties.indirectBufferOffsetAlignment;
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_PROPERTIES_EXT: {
-         VkPhysicalDeviceLineRasterizationPropertiesEXT *properties = (void *)ext;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_PROPERTIES: {
+         VkPhysicalDeviceLineRasterizationProperties *properties = (void *)ext;
          properties->lineSubPixelPrecisionBits = pdevice->properties.lineSubPixelPrecisionBits;
          break;
       }
@@ -712,6 +764,53 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
          properties->maxBufferSize = pdevice->properties.maxBufferSize;
          break;
       }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_PROPERTIES: {
+         VkPhysicalDeviceVulkan14Properties *properties = (void *)ext;
+         properties->lineSubPixelPrecisionBits = pdevice->properties.lineSubPixelPrecisionBits;
+         properties->maxVertexAttribDivisor = pdevice->properties.maxVertexAttribDivisor;
+         properties->supportsNonZeroFirstInstance = pdevice->properties.supportsNonZeroFirstInstance;
+         properties->maxPushDescriptors = pdevice->properties.maxPushDescriptors;
+         properties->dynamicRenderingLocalReadDepthStencilAttachments = pdevice->properties.dynamicRenderingLocalReadDepthStencilAttachments;
+         properties->dynamicRenderingLocalReadMultisampledAttachments = pdevice->properties.dynamicRenderingLocalReadMultisampledAttachments;
+         properties->earlyFragmentMultisampleCoverageAfterSampleCounting = pdevice->properties.earlyFragmentMultisampleCoverageAfterSampleCounting;
+         properties->earlyFragmentSampleMaskTestBeforeSampleCounting = pdevice->properties.earlyFragmentSampleMaskTestBeforeSampleCounting;
+         properties->depthStencilSwizzleOneSupport = pdevice->properties.depthStencilSwizzleOneSupport;
+         properties->polygonModePointSize = pdevice->properties.polygonModePointSize;
+         properties->nonStrictSinglePixelWideLinesUseParallelogram = pdevice->properties.nonStrictSinglePixelWideLinesUseParallelogram;
+         properties->nonStrictWideLinesUseParallelogram = pdevice->properties.nonStrictWideLinesUseParallelogram;
+         properties->blockTexelViewCompatibleMultipleLayers = pdevice->properties.blockTexelViewCompatibleMultipleLayers;
+         properties->maxCombinedImageSamplerDescriptorCount = pdevice->properties.maxCombinedImageSamplerDescriptorCount;
+         properties->fragmentShadingRateClampCombinerInputs = pdevice->properties.fragmentShadingRateClampCombinerInputs;
+         properties->defaultRobustnessStorageBuffers = pdevice->properties.defaultRobustnessStorageBuffers;
+         properties->defaultRobustnessUniformBuffers = pdevice->properties.defaultRobustnessUniformBuffers;
+         properties->defaultRobustnessVertexInputs = pdevice->properties.defaultRobustnessVertexInputs;
+         properties->defaultRobustnessImages = pdevice->properties.defaultRobustnessImages;
+         
+         
+    if (properties->pCopySrcLayouts != NULL) {
+        uint32_t count = MIN2(properties->copySrcLayoutCount, pdevice->properties.copySrcLayoutCount);
+        for (uint32_t i = 0; i < count; i++)
+            properties->pCopySrcLayouts[i] = pdevice->properties.pCopySrcLayouts[i];
+        properties->copySrcLayoutCount = count;
+    } else {
+        properties->copySrcLayoutCount = pdevice->properties.copySrcLayoutCount;
+    }
+
+         
+         
+    if (properties->pCopyDstLayouts != NULL) {
+        uint32_t count = MIN2(properties->copyDstLayoutCount, pdevice->properties.copyDstLayoutCount);
+        for (uint32_t i = 0; i < count; i++)
+            properties->pCopyDstLayouts[i] = pdevice->properties.pCopyDstLayouts[i];
+        properties->copyDstLayoutCount = count;
+    } else {
+        properties->copyDstLayoutCount = pdevice->properties.copyDstLayoutCount;
+    }
+
+         memcpy(properties->optimalTilingLayoutUUID, pdevice->properties.optimalTilingLayoutUUID, sizeof(properties->optimalTilingLayoutUUID));
+         properties->identicalMemoryTypeRequirements = pdevice->properties.identicalMemoryTypeRequirements;
+         break;
+      }
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_PROPERTIES_EXT: {
          VkPhysicalDeviceCustomBorderColorPropertiesEXT *properties = (void *)ext;
          properties->maxCustomBorderColorSamplers = pdevice->properties.maxCustomBorderColorSamplers;
@@ -752,6 +851,55 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_PROPERTIES_NV: {
          VkPhysicalDeviceFragmentShadingRateEnumsPropertiesNV *properties = (void *)ext;
          properties->maxFragmentShadingRateInvocationCount = pdevice->properties.maxFragmentShadingRateInvocationCount;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LEGACY_VERTEX_ATTRIBUTES_PROPERTIES_EXT: {
+         VkPhysicalDeviceLegacyVertexAttributesPropertiesEXT *properties = (void *)ext;
+         properties->nativeUnalignedPerformance = pdevice->properties.nativeUnalignedPerformance;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_PROPERTIES_EXT: {
+         VkPhysicalDeviceDeviceGeneratedCommandsPropertiesEXT *properties = (void *)ext;
+         properties->maxIndirectPipelineCount = pdevice->properties.maxIndirectPipelineCount;
+         properties->maxIndirectShaderObjectCount = pdevice->properties.maxIndirectShaderObjectCount;
+         properties->maxIndirectSequenceCount = pdevice->properties.maxIndirectSequenceCount;
+         properties->maxIndirectCommandsTokenCount = pdevice->properties.maxIndirectCommandsTokenCount;
+         properties->maxIndirectCommandsTokenOffset = pdevice->properties.maxIndirectCommandsTokenOffset;
+         properties->maxIndirectCommandsIndirectStride = pdevice->properties.maxIndirectCommandsIndirectStride;
+         properties->supportedIndirectCommandsInputModes = pdevice->properties.supportedIndirectCommandsInputModes;
+         properties->supportedIndirectCommandsShaderStages = pdevice->properties.supportedIndirectCommandsShaderStages;
+         properties->supportedIndirectCommandsShaderStagesPipelineBinding = pdevice->properties.supportedIndirectCommandsShaderStagesPipelineBinding;
+         properties->supportedIndirectCommandsShaderStagesShaderBinding = pdevice->properties.supportedIndirectCommandsShaderStagesShaderBinding;
+         properties->deviceGeneratedCommandsTransformFeedback = pdevice->properties.deviceGeneratedCommandsTransformFeedback;
+         properties->deviceGeneratedCommandsMultiDrawIndirectCount = pdevice->properties.deviceGeneratedCommandsMultiDrawIndirectCount;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_IMAGE_COPY_PROPERTIES: {
+         VkPhysicalDeviceHostImageCopyProperties *properties = (void *)ext;
+         
+         
+    if (properties->pCopySrcLayouts != NULL) {
+        uint32_t count = MIN2(properties->copySrcLayoutCount, pdevice->properties.copySrcLayoutCount);
+        for (uint32_t i = 0; i < count; i++)
+            properties->pCopySrcLayouts[i] = pdevice->properties.pCopySrcLayouts[i];
+        properties->copySrcLayoutCount = count;
+    } else {
+        properties->copySrcLayoutCount = pdevice->properties.copySrcLayoutCount;
+    }
+
+         
+         
+    if (properties->pCopyDstLayouts != NULL) {
+        uint32_t count = MIN2(properties->copyDstLayoutCount, pdevice->properties.copyDstLayoutCount);
+        for (uint32_t i = 0; i < count; i++)
+            properties->pCopyDstLayouts[i] = pdevice->properties.pCopyDstLayouts[i];
+        properties->copyDstLayoutCount = count;
+    } else {
+        properties->copyDstLayoutCount = pdevice->properties.copyDstLayoutCount;
+    }
+
+         memcpy(properties->optimalTilingLayoutUUID, pdevice->properties.optimalTilingLayoutUUID, sizeof(properties->optimalTilingLayoutUUID));
+         properties->identicalMemoryTypeRequirements = pdevice->properties.identicalMemoryTypeRequirements;
          break;
       }
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROVOKING_VERTEX_PROPERTIES_EXT: {
@@ -851,6 +999,15 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
          properties->triStripVertexOrderIndependentOfProvokingVertex = pdevice->properties.triStripVertexOrderIndependentOfProvokingVertex;
          break;
       }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_BINARY_PROPERTIES_KHR: {
+         VkPhysicalDevicePipelineBinaryPropertiesKHR *properties = (void *)ext;
+         properties->pipelineBinaryInternalCache = pdevice->properties.pipelineBinaryInternalCache;
+         properties->pipelineBinaryInternalCacheControl = pdevice->properties.pipelineBinaryInternalCacheControl;
+         properties->pipelineBinaryPrefersInternalCache = pdevice->properties.pipelineBinaryPrefersInternalCache;
+         properties->pipelineBinaryPrecompiledInternalCache = pdevice->properties.pipelineBinaryPrecompiledInternalCache;
+         properties->pipelineBinaryCompressedData = pdevice->properties.pipelineBinaryCompressedData;
+         break;
+      }
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GRAPHICS_PIPELINE_LIBRARY_PROPERTIES_EXT: {
          VkPhysicalDeviceGraphicsPipelineLibraryPropertiesEXT *properties = (void *)ext;
          properties->graphicsPipelineLibraryFastLinking = pdevice->properties.graphicsPipelineLibraryFastLinking;
@@ -873,8 +1030,8 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
          properties->maxOpacity4StateSubdivisionLevel = pdevice->properties.maxOpacity4StateSubdivisionLevel;
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_PROPERTIES_EXT: {
-         VkPhysicalDevicePipelineRobustnessPropertiesEXT *properties = (void *)ext;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_PROPERTIES: {
+         VkPhysicalDevicePipelineRobustnessProperties *properties = (void *)ext;
          properties->defaultRobustnessStorageBuffers = pdevice->properties.defaultRobustnessStorageBuffers;
          properties->defaultRobustnessUniformBuffers = pdevice->properties.defaultRobustnessUniformBuffers;
          properties->defaultRobustnessVertexInputs = pdevice->properties.defaultRobustnessVertexInputs;
@@ -958,39 +1115,1163 @@ vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
          properties->underlyingAPI = pdevice->properties.underlyingAPI;
          break;
       }
-
-      /* Specialized propery handling defined in vk_physical_device_properties_gen.py */
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_IMAGE_COPY_PROPERTIES_EXT: {
-         VkPhysicalDeviceHostImageCopyPropertiesEXT *properties = (void *)ext;
-
-         if (properties->pCopySrcLayouts) {
-            uint32_t written_layout_count = MIN2(properties->copySrcLayoutCount,
-                                                 pdevice->properties.copySrcLayoutCount);
-            memcpy(properties->pCopySrcLayouts, pdevice->properties.pCopySrcLayouts,
-                   sizeof(VkImageLayout) * written_layout_count);
-            properties->copySrcLayoutCount = written_layout_count;
-         } else {
-            properties->copySrcLayoutCount = pdevice->properties.copySrcLayoutCount;
-         }
-
-         if (properties->pCopyDstLayouts) {
-            uint32_t written_layout_count = MIN2(properties->copyDstLayoutCount,
-                                                 pdevice->properties.copyDstLayoutCount);
-            memcpy(properties->pCopyDstLayouts, pdevice->properties.pCopyDstLayouts,
-                   sizeof(VkImageLayout) * written_layout_count);
-            properties->copyDstLayoutCount = written_layout_count;
-         } else {
-            properties->copyDstLayoutCount = pdevice->properties.copyDstLayoutCount;
-         }
-
-         memcpy(properties->optimalTilingLayoutUUID, pdevice->properties.optimalTilingLayoutUUID, VK_UUID_SIZE);
-         properties->identicalMemoryTypeRequirements = pdevice->properties.identicalMemoryTypeRequirements;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCHEDULING_CONTROLS_PROPERTIES_ARM: {
+         VkPhysicalDeviceSchedulingControlsPropertiesARM *properties = (void *)ext;
+         properties->schedulingControlsFlags = pdevice->properties.schedulingControlsFlags;
          break;
       }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RENDER_PASS_STRIPED_PROPERTIES_ARM: {
+         VkPhysicalDeviceRenderPassStripedPropertiesARM *properties = (void *)ext;
+         properties->renderPassStripeGranularity = pdevice->properties.renderPassStripeGranularity;
+         properties->maxRenderPassStripes = pdevice->properties.maxRenderPassStripes;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAP_MEMORY_PLACED_PROPERTIES_EXT: {
+         VkPhysicalDeviceMapMemoryPlacedPropertiesEXT *properties = (void *)ext;
+         properties->minPlacedMemoryMapAlignment = pdevice->properties.minPlacedMemoryMapAlignment;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_ALIGNMENT_CONTROL_PROPERTIES_MESA: {
+         VkPhysicalDeviceImageAlignmentControlPropertiesMESA *properties = (void *)ext;
+         properties->supportedImageAlignmentMask = pdevice->properties.supportedImageAlignmentMask;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_2_PROPERTIES_NV: {
+         VkPhysicalDeviceCooperativeMatrix2PropertiesNV *properties = (void *)ext;
+         properties->cooperativeMatrixWorkgroupScopeMaxWorkgroupSize = pdevice->properties.cooperativeMatrixWorkgroupScopeMaxWorkgroupSize;
+         properties->cooperativeMatrixFlexibleDimensionsMaxDimension = pdevice->properties.cooperativeMatrixFlexibleDimensionsMaxDimension;
+         properties->cooperativeMatrixWorkgroupScopeReservedSharedMemory = pdevice->properties.cooperativeMatrixWorkgroupScopeReservedSharedMemory;
+         break;
+      }
+
+      /* Specialized propery handling defined in vk_physical_device_properties_gen.py */
 
       default:
          break;
       }
    }
 }
+
+void
+vk_set_physical_device_properties_struct(struct vk_properties *all_properties,
+                                         const VkBaseInStructure *pProperties)
+{
+   switch ((int32_t)pProperties->sType) {
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2: {
+         const VkPhysicalDeviceProperties *properties = &((const VkPhysicalDeviceProperties2 *)pProperties)->properties;
+         all_properties->apiVersion = properties->apiVersion;
+         all_properties->driverVersion = properties->driverVersion;
+         all_properties->vendorID = properties->vendorID;
+         all_properties->deviceID = properties->deviceID;
+         all_properties->deviceType = properties->deviceType;
+         memcpy(all_properties->deviceName, properties->deviceName, sizeof(all_properties->deviceName));
+         memcpy(all_properties->pipelineCacheUUID, properties->pipelineCacheUUID, sizeof(all_properties->pipelineCacheUUID));
+         all_properties->maxImageDimension1D = properties->limits.maxImageDimension1D;
+         all_properties->maxImageDimension2D = properties->limits.maxImageDimension2D;
+         all_properties->maxImageDimension3D = properties->limits.maxImageDimension3D;
+         all_properties->maxImageDimensionCube = properties->limits.maxImageDimensionCube;
+         all_properties->maxImageArrayLayers = properties->limits.maxImageArrayLayers;
+         all_properties->maxTexelBufferElements = properties->limits.maxTexelBufferElements;
+         all_properties->maxUniformBufferRange = properties->limits.maxUniformBufferRange;
+         all_properties->maxStorageBufferRange = properties->limits.maxStorageBufferRange;
+         all_properties->maxPushConstantsSize = properties->limits.maxPushConstantsSize;
+         all_properties->maxMemoryAllocationCount = properties->limits.maxMemoryAllocationCount;
+         all_properties->maxSamplerAllocationCount = properties->limits.maxSamplerAllocationCount;
+         all_properties->bufferImageGranularity = properties->limits.bufferImageGranularity;
+         all_properties->sparseAddressSpaceSize = properties->limits.sparseAddressSpaceSize;
+         all_properties->maxBoundDescriptorSets = properties->limits.maxBoundDescriptorSets;
+         all_properties->maxPerStageDescriptorSamplers = properties->limits.maxPerStageDescriptorSamplers;
+         all_properties->maxPerStageDescriptorUniformBuffers = properties->limits.maxPerStageDescriptorUniformBuffers;
+         all_properties->maxPerStageDescriptorStorageBuffers = properties->limits.maxPerStageDescriptorStorageBuffers;
+         all_properties->maxPerStageDescriptorSampledImages = properties->limits.maxPerStageDescriptorSampledImages;
+         all_properties->maxPerStageDescriptorStorageImages = properties->limits.maxPerStageDescriptorStorageImages;
+         all_properties->maxPerStageDescriptorInputAttachments = properties->limits.maxPerStageDescriptorInputAttachments;
+         all_properties->maxPerStageResources = properties->limits.maxPerStageResources;
+         all_properties->maxDescriptorSetSamplers = properties->limits.maxDescriptorSetSamplers;
+         all_properties->maxDescriptorSetUniformBuffers = properties->limits.maxDescriptorSetUniformBuffers;
+         all_properties->maxDescriptorSetUniformBuffersDynamic = properties->limits.maxDescriptorSetUniformBuffersDynamic;
+         all_properties->maxDescriptorSetStorageBuffers = properties->limits.maxDescriptorSetStorageBuffers;
+         all_properties->maxDescriptorSetStorageBuffersDynamic = properties->limits.maxDescriptorSetStorageBuffersDynamic;
+         all_properties->maxDescriptorSetSampledImages = properties->limits.maxDescriptorSetSampledImages;
+         all_properties->maxDescriptorSetStorageImages = properties->limits.maxDescriptorSetStorageImages;
+         all_properties->maxDescriptorSetInputAttachments = properties->limits.maxDescriptorSetInputAttachments;
+         all_properties->maxVertexInputAttributes = properties->limits.maxVertexInputAttributes;
+         all_properties->maxVertexInputBindings = properties->limits.maxVertexInputBindings;
+         all_properties->maxVertexInputAttributeOffset = properties->limits.maxVertexInputAttributeOffset;
+         all_properties->maxVertexInputBindingStride = properties->limits.maxVertexInputBindingStride;
+         all_properties->maxVertexOutputComponents = properties->limits.maxVertexOutputComponents;
+         all_properties->maxTessellationGenerationLevel = properties->limits.maxTessellationGenerationLevel;
+         all_properties->maxTessellationPatchSize = properties->limits.maxTessellationPatchSize;
+         all_properties->maxTessellationControlPerVertexInputComponents = properties->limits.maxTessellationControlPerVertexInputComponents;
+         all_properties->maxTessellationControlPerVertexOutputComponents = properties->limits.maxTessellationControlPerVertexOutputComponents;
+         all_properties->maxTessellationControlPerPatchOutputComponents = properties->limits.maxTessellationControlPerPatchOutputComponents;
+         all_properties->maxTessellationControlTotalOutputComponents = properties->limits.maxTessellationControlTotalOutputComponents;
+         all_properties->maxTessellationEvaluationInputComponents = properties->limits.maxTessellationEvaluationInputComponents;
+         all_properties->maxTessellationEvaluationOutputComponents = properties->limits.maxTessellationEvaluationOutputComponents;
+         all_properties->maxGeometryShaderInvocations = properties->limits.maxGeometryShaderInvocations;
+         all_properties->maxGeometryInputComponents = properties->limits.maxGeometryInputComponents;
+         all_properties->maxGeometryOutputComponents = properties->limits.maxGeometryOutputComponents;
+         all_properties->maxGeometryOutputVertices = properties->limits.maxGeometryOutputVertices;
+         all_properties->maxGeometryTotalOutputComponents = properties->limits.maxGeometryTotalOutputComponents;
+         all_properties->maxFragmentInputComponents = properties->limits.maxFragmentInputComponents;
+         all_properties->maxFragmentOutputAttachments = properties->limits.maxFragmentOutputAttachments;
+         all_properties->maxFragmentDualSrcAttachments = properties->limits.maxFragmentDualSrcAttachments;
+         all_properties->maxFragmentCombinedOutputResources = properties->limits.maxFragmentCombinedOutputResources;
+         all_properties->maxComputeSharedMemorySize = properties->limits.maxComputeSharedMemorySize;
+         memcpy(all_properties->maxComputeWorkGroupCount, properties->limits.maxComputeWorkGroupCount, sizeof(all_properties->maxComputeWorkGroupCount));
+         all_properties->maxComputeWorkGroupInvocations = properties->limits.maxComputeWorkGroupInvocations;
+         memcpy(all_properties->maxComputeWorkGroupSize, properties->limits.maxComputeWorkGroupSize, sizeof(all_properties->maxComputeWorkGroupSize));
+         all_properties->subPixelPrecisionBits = properties->limits.subPixelPrecisionBits;
+         all_properties->subTexelPrecisionBits = properties->limits.subTexelPrecisionBits;
+         all_properties->mipmapPrecisionBits = properties->limits.mipmapPrecisionBits;
+         all_properties->maxDrawIndexedIndexValue = properties->limits.maxDrawIndexedIndexValue;
+         all_properties->maxDrawIndirectCount = properties->limits.maxDrawIndirectCount;
+         all_properties->maxSamplerLodBias = properties->limits.maxSamplerLodBias;
+         all_properties->maxSamplerAnisotropy = properties->limits.maxSamplerAnisotropy;
+         all_properties->maxViewports = properties->limits.maxViewports;
+         memcpy(all_properties->maxViewportDimensions, properties->limits.maxViewportDimensions, sizeof(all_properties->maxViewportDimensions));
+         memcpy(all_properties->viewportBoundsRange, properties->limits.viewportBoundsRange, sizeof(all_properties->viewportBoundsRange));
+         all_properties->viewportSubPixelBits = properties->limits.viewportSubPixelBits;
+         all_properties->minMemoryMapAlignment = properties->limits.minMemoryMapAlignment;
+         all_properties->minTexelBufferOffsetAlignment = properties->limits.minTexelBufferOffsetAlignment;
+         all_properties->minUniformBufferOffsetAlignment = properties->limits.minUniformBufferOffsetAlignment;
+         all_properties->minStorageBufferOffsetAlignment = properties->limits.minStorageBufferOffsetAlignment;
+         all_properties->minTexelOffset = properties->limits.minTexelOffset;
+         all_properties->maxTexelOffset = properties->limits.maxTexelOffset;
+         all_properties->minTexelGatherOffset = properties->limits.minTexelGatherOffset;
+         all_properties->maxTexelGatherOffset = properties->limits.maxTexelGatherOffset;
+         all_properties->minInterpolationOffset = properties->limits.minInterpolationOffset;
+         all_properties->maxInterpolationOffset = properties->limits.maxInterpolationOffset;
+         all_properties->subPixelInterpolationOffsetBits = properties->limits.subPixelInterpolationOffsetBits;
+         all_properties->maxFramebufferWidth = properties->limits.maxFramebufferWidth;
+         all_properties->maxFramebufferHeight = properties->limits.maxFramebufferHeight;
+         all_properties->maxFramebufferLayers = properties->limits.maxFramebufferLayers;
+         all_properties->framebufferColorSampleCounts = properties->limits.framebufferColorSampleCounts;
+         all_properties->framebufferDepthSampleCounts = properties->limits.framebufferDepthSampleCounts;
+         all_properties->framebufferStencilSampleCounts = properties->limits.framebufferStencilSampleCounts;
+         all_properties->framebufferNoAttachmentsSampleCounts = properties->limits.framebufferNoAttachmentsSampleCounts;
+         all_properties->maxColorAttachments = properties->limits.maxColorAttachments;
+         all_properties->sampledImageColorSampleCounts = properties->limits.sampledImageColorSampleCounts;
+         all_properties->sampledImageIntegerSampleCounts = properties->limits.sampledImageIntegerSampleCounts;
+         all_properties->sampledImageDepthSampleCounts = properties->limits.sampledImageDepthSampleCounts;
+         all_properties->sampledImageStencilSampleCounts = properties->limits.sampledImageStencilSampleCounts;
+         all_properties->storageImageSampleCounts = properties->limits.storageImageSampleCounts;
+         all_properties->maxSampleMaskWords = properties->limits.maxSampleMaskWords;
+         all_properties->timestampComputeAndGraphics = properties->limits.timestampComputeAndGraphics;
+         all_properties->timestampPeriod = properties->limits.timestampPeriod;
+         all_properties->maxClipDistances = properties->limits.maxClipDistances;
+         all_properties->maxCullDistances = properties->limits.maxCullDistances;
+         all_properties->maxCombinedClipAndCullDistances = properties->limits.maxCombinedClipAndCullDistances;
+         all_properties->discreteQueuePriorities = properties->limits.discreteQueuePriorities;
+         memcpy(all_properties->pointSizeRange, properties->limits.pointSizeRange, sizeof(all_properties->pointSizeRange));
+         memcpy(all_properties->lineWidthRange, properties->limits.lineWidthRange, sizeof(all_properties->lineWidthRange));
+         all_properties->pointSizeGranularity = properties->limits.pointSizeGranularity;
+         all_properties->lineWidthGranularity = properties->limits.lineWidthGranularity;
+         all_properties->strictLines = properties->limits.strictLines;
+         all_properties->standardSampleLocations = properties->limits.standardSampleLocations;
+         all_properties->optimalBufferCopyOffsetAlignment = properties->limits.optimalBufferCopyOffsetAlignment;
+         all_properties->optimalBufferCopyRowPitchAlignment = properties->limits.optimalBufferCopyRowPitchAlignment;
+         all_properties->nonCoherentAtomSize = properties->limits.nonCoherentAtomSize;
+         all_properties->sparseResidencyStandard2DBlockShape = properties->sparseProperties.residencyStandard2DBlockShape;
+         all_properties->sparseResidencyStandard2DMultisampleBlockShape = properties->sparseProperties.residencyStandard2DMultisampleBlockShape;
+         all_properties->sparseResidencyStandard3DBlockShape = properties->sparseProperties.residencyStandard3DBlockShape;
+         all_properties->sparseResidencyAlignedMipSize = properties->sparseProperties.residencyAlignedMipSize;
+         all_properties->sparseResidencyNonResidentStrict = properties->sparseProperties.residencyNonResidentStrict;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_PROPERTIES_NV: {
+         const VkPhysicalDeviceDeviceGeneratedCommandsPropertiesNV *properties = (const VkPhysicalDeviceDeviceGeneratedCommandsPropertiesNV *)pProperties;
+         all_properties->maxGraphicsShaderGroupCount = properties->maxGraphicsShaderGroupCount;
+         all_properties->maxIndirectSequenceCount = properties->maxIndirectSequenceCount;
+         all_properties->maxIndirectCommandsTokenCount = properties->maxIndirectCommandsTokenCount;
+         all_properties->maxIndirectCommandsStreamCount = properties->maxIndirectCommandsStreamCount;
+         all_properties->maxIndirectCommandsTokenOffset = properties->maxIndirectCommandsTokenOffset;
+         all_properties->maxIndirectCommandsStreamStride = properties->maxIndirectCommandsStreamStride;
+         all_properties->minSequencesCountBufferOffsetAlignment = properties->minSequencesCountBufferOffsetAlignment;
+         all_properties->minSequencesIndexBufferOffsetAlignment = properties->minSequencesIndexBufferOffsetAlignment;
+         all_properties->minIndirectCommandsBufferOffsetAlignment = properties->minIndirectCommandsBufferOffsetAlignment;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTI_DRAW_PROPERTIES_EXT: {
+         const VkPhysicalDeviceMultiDrawPropertiesEXT *properties = (const VkPhysicalDeviceMultiDrawPropertiesEXT *)pProperties;
+         all_properties->maxMultiDrawCount = properties->maxMultiDrawCount;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES: {
+         const VkPhysicalDevicePushDescriptorProperties *properties = (const VkPhysicalDevicePushDescriptorProperties *)pProperties;
+         all_properties->maxPushDescriptors = properties->maxPushDescriptors;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES: {
+         const VkPhysicalDeviceDriverProperties *properties = (const VkPhysicalDeviceDriverProperties *)pProperties;
+         all_properties->driverID = properties->driverID;
+         memcpy(all_properties->driverName, properties->driverName, sizeof(all_properties->driverName));
+         memcpy(all_properties->driverInfo, properties->driverInfo, sizeof(all_properties->driverInfo));
+         all_properties->conformanceVersion = properties->conformanceVersion;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES: {
+         const VkPhysicalDeviceIDProperties *properties = (const VkPhysicalDeviceIDProperties *)pProperties;
+         memcpy(all_properties->deviceUUID, properties->deviceUUID, sizeof(all_properties->deviceUUID));
+         memcpy(all_properties->driverUUID, properties->driverUUID, sizeof(all_properties->driverUUID));
+         memcpy(all_properties->deviceLUID, properties->deviceLUID, sizeof(all_properties->deviceLUID));
+         all_properties->deviceNodeMask = properties->deviceNodeMask;
+         all_properties->deviceLUIDValid = properties->deviceLUIDValid;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES: {
+         const VkPhysicalDeviceMultiviewProperties *properties = (const VkPhysicalDeviceMultiviewProperties *)pProperties;
+         all_properties->maxMultiviewViewCount = properties->maxMultiviewViewCount;
+         all_properties->maxMultiviewInstanceIndex = properties->maxMultiviewInstanceIndex;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DISCARD_RECTANGLE_PROPERTIES_EXT: {
+         const VkPhysicalDeviceDiscardRectanglePropertiesEXT *properties = (const VkPhysicalDeviceDiscardRectanglePropertiesEXT *)pProperties;
+         all_properties->maxDiscardRectangles = properties->maxDiscardRectangles;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_ATTRIBUTES_PROPERTIES_NVX: {
+         const VkPhysicalDeviceMultiviewPerViewAttributesPropertiesNVX *properties = (const VkPhysicalDeviceMultiviewPerViewAttributesPropertiesNVX *)pProperties;
+         all_properties->perViewPositionAllComponents = properties->perViewPositionAllComponents;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES: {
+         const VkPhysicalDeviceSubgroupProperties *properties = (const VkPhysicalDeviceSubgroupProperties *)pProperties;
+         all_properties->subgroupSize = properties->subgroupSize;
+         all_properties->subgroupSupportedStages = properties->supportedStages;
+         all_properties->subgroupSupportedOperations = properties->supportedOperations;
+         all_properties->subgroupQuadOperationsInAllStages = properties->quadOperationsInAllStages;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_POINT_CLIPPING_PROPERTIES: {
+         const VkPhysicalDevicePointClippingProperties *properties = (const VkPhysicalDevicePointClippingProperties *)pProperties;
+         all_properties->pointClippingBehavior = properties->pointClippingBehavior;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROTECTED_MEMORY_PROPERTIES: {
+         const VkPhysicalDeviceProtectedMemoryProperties *properties = (const VkPhysicalDeviceProtectedMemoryProperties *)pProperties;
+         all_properties->protectedNoFault = properties->protectedNoFault;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_FILTER_MINMAX_PROPERTIES: {
+         const VkPhysicalDeviceSamplerFilterMinmaxProperties *properties = (const VkPhysicalDeviceSamplerFilterMinmaxProperties *)pProperties;
+         all_properties->filterMinmaxSingleComponentFormats = properties->filterMinmaxSingleComponentFormats;
+         all_properties->filterMinmaxImageComponentMapping = properties->filterMinmaxImageComponentMapping;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLE_LOCATIONS_PROPERTIES_EXT: {
+         const VkPhysicalDeviceSampleLocationsPropertiesEXT *properties = (const VkPhysicalDeviceSampleLocationsPropertiesEXT *)pProperties;
+         all_properties->sampleLocationSampleCounts = properties->sampleLocationSampleCounts;
+         all_properties->maxSampleLocationGridSize = properties->maxSampleLocationGridSize;
+         memcpy(all_properties->sampleLocationCoordinateRange, properties->sampleLocationCoordinateRange, sizeof(all_properties->sampleLocationCoordinateRange));
+         all_properties->sampleLocationSubPixelBits = properties->sampleLocationSubPixelBits;
+         all_properties->variableSampleLocations = properties->variableSampleLocations;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BLEND_OPERATION_ADVANCED_PROPERTIES_EXT: {
+         const VkPhysicalDeviceBlendOperationAdvancedPropertiesEXT *properties = (const VkPhysicalDeviceBlendOperationAdvancedPropertiesEXT *)pProperties;
+         all_properties->advancedBlendMaxColorAttachments = properties->advancedBlendMaxColorAttachments;
+         all_properties->advancedBlendIndependentBlend = properties->advancedBlendIndependentBlend;
+         all_properties->advancedBlendNonPremultipliedSrcColor = properties->advancedBlendNonPremultipliedSrcColor;
+         all_properties->advancedBlendNonPremultipliedDstColor = properties->advancedBlendNonPremultipliedDstColor;
+         all_properties->advancedBlendCorrelatedOverlap = properties->advancedBlendCorrelatedOverlap;
+         all_properties->advancedBlendAllOperations = properties->advancedBlendAllOperations;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_PROPERTIES: {
+         const VkPhysicalDeviceInlineUniformBlockProperties *properties = (const VkPhysicalDeviceInlineUniformBlockProperties *)pProperties;
+         all_properties->maxInlineUniformBlockSize = properties->maxInlineUniformBlockSize;
+         all_properties->maxPerStageDescriptorInlineUniformBlocks = properties->maxPerStageDescriptorInlineUniformBlocks;
+         all_properties->maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks = properties->maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks;
+         all_properties->maxDescriptorSetInlineUniformBlocks = properties->maxDescriptorSetInlineUniformBlocks;
+         all_properties->maxDescriptorSetUpdateAfterBindInlineUniformBlocks = properties->maxDescriptorSetUpdateAfterBindInlineUniformBlocks;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES: {
+         const VkPhysicalDeviceMaintenance3Properties *properties = (const VkPhysicalDeviceMaintenance3Properties *)pProperties;
+         all_properties->maxPerSetDescriptors = properties->maxPerSetDescriptors;
+         all_properties->maxMemoryAllocationSize = properties->maxMemoryAllocationSize;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES: {
+         const VkPhysicalDeviceMaintenance4Properties *properties = (const VkPhysicalDeviceMaintenance4Properties *)pProperties;
+         all_properties->maxBufferSize = properties->maxBufferSize;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_PROPERTIES: {
+         const VkPhysicalDeviceMaintenance5Properties *properties = (const VkPhysicalDeviceMaintenance5Properties *)pProperties;
+         all_properties->earlyFragmentMultisampleCoverageAfterSampleCounting = properties->earlyFragmentMultisampleCoverageAfterSampleCounting;
+         all_properties->earlyFragmentSampleMaskTestBeforeSampleCounting = properties->earlyFragmentSampleMaskTestBeforeSampleCounting;
+         all_properties->depthStencilSwizzleOneSupport = properties->depthStencilSwizzleOneSupport;
+         all_properties->polygonModePointSize = properties->polygonModePointSize;
+         all_properties->nonStrictSinglePixelWideLinesUseParallelogram = properties->nonStrictSinglePixelWideLinesUseParallelogram;
+         all_properties->nonStrictWideLinesUseParallelogram = properties->nonStrictWideLinesUseParallelogram;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_6_PROPERTIES: {
+         const VkPhysicalDeviceMaintenance6Properties *properties = (const VkPhysicalDeviceMaintenance6Properties *)pProperties;
+         all_properties->blockTexelViewCompatibleMultipleLayers = properties->blockTexelViewCompatibleMultipleLayers;
+         all_properties->maxCombinedImageSamplerDescriptorCount = properties->maxCombinedImageSamplerDescriptorCount;
+         all_properties->fragmentShadingRateClampCombinerInputs = properties->fragmentShadingRateClampCombinerInputs;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_7_PROPERTIES_KHR: {
+         const VkPhysicalDeviceMaintenance7PropertiesKHR *properties = (const VkPhysicalDeviceMaintenance7PropertiesKHR *)pProperties;
+         all_properties->robustFragmentShadingRateAttachmentAccess = properties->robustFragmentShadingRateAttachmentAccess;
+         all_properties->separateDepthStencilAttachmentAccess = properties->separateDepthStencilAttachmentAccess;
+         all_properties->maxDescriptorSetTotalUniformBuffersDynamic = properties->maxDescriptorSetTotalUniformBuffersDynamic;
+         all_properties->maxDescriptorSetTotalStorageBuffersDynamic = properties->maxDescriptorSetTotalStorageBuffersDynamic;
+         all_properties->maxDescriptorSetTotalBuffersDynamic = properties->maxDescriptorSetTotalBuffersDynamic;
+         all_properties->maxDescriptorSetUpdateAfterBindTotalUniformBuffersDynamic = properties->maxDescriptorSetUpdateAfterBindTotalUniformBuffersDynamic;
+         all_properties->maxDescriptorSetUpdateAfterBindTotalStorageBuffersDynamic = properties->maxDescriptorSetUpdateAfterBindTotalStorageBuffersDynamic;
+         all_properties->maxDescriptorSetUpdateAfterBindTotalBuffersDynamic = properties->maxDescriptorSetUpdateAfterBindTotalBuffersDynamic;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LAYERED_API_PROPERTIES_LIST_KHR: {
+         const VkPhysicalDeviceLayeredApiPropertiesListKHR *properties = (const VkPhysicalDeviceLayeredApiPropertiesListKHR *)pProperties;
+         
+         
+    if (all_properties->pLayeredApis != NULL) {
+        uint32_t count = MIN2(all_properties->layeredApiCount, properties->layeredApiCount);
+        for (uint32_t i = 0; i < count; i++)
+            all_properties->pLayeredApis[i] = properties->pLayeredApis[i];
+        all_properties->layeredApiCount = count;
+    } else {
+        all_properties->layeredApiCount = properties->layeredApiCount;
+    }
+
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES: {
+         const VkPhysicalDeviceFloatControlsProperties *properties = (const VkPhysicalDeviceFloatControlsProperties *)pProperties;
+         all_properties->denormBehaviorIndependence = properties->denormBehaviorIndependence;
+         all_properties->roundingModeIndependence = properties->roundingModeIndependence;
+         all_properties->shaderSignedZeroInfNanPreserveFloat16 = properties->shaderSignedZeroInfNanPreserveFloat16;
+         all_properties->shaderSignedZeroInfNanPreserveFloat32 = properties->shaderSignedZeroInfNanPreserveFloat32;
+         all_properties->shaderSignedZeroInfNanPreserveFloat64 = properties->shaderSignedZeroInfNanPreserveFloat64;
+         all_properties->shaderDenormPreserveFloat16 = properties->shaderDenormPreserveFloat16;
+         all_properties->shaderDenormPreserveFloat32 = properties->shaderDenormPreserveFloat32;
+         all_properties->shaderDenormPreserveFloat64 = properties->shaderDenormPreserveFloat64;
+         all_properties->shaderDenormFlushToZeroFloat16 = properties->shaderDenormFlushToZeroFloat16;
+         all_properties->shaderDenormFlushToZeroFloat32 = properties->shaderDenormFlushToZeroFloat32;
+         all_properties->shaderDenormFlushToZeroFloat64 = properties->shaderDenormFlushToZeroFloat64;
+         all_properties->shaderRoundingModeRTEFloat16 = properties->shaderRoundingModeRTEFloat16;
+         all_properties->shaderRoundingModeRTEFloat32 = properties->shaderRoundingModeRTEFloat32;
+         all_properties->shaderRoundingModeRTEFloat64 = properties->shaderRoundingModeRTEFloat64;
+         all_properties->shaderRoundingModeRTZFloat16 = properties->shaderRoundingModeRTZFloat16;
+         all_properties->shaderRoundingModeRTZFloat32 = properties->shaderRoundingModeRTZFloat32;
+         all_properties->shaderRoundingModeRTZFloat64 = properties->shaderRoundingModeRTZFloat64;
+         break;
+      }
+#if DETECT_OS_ANDROID
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENTATION_PROPERTIES_ANDROID: {
+         const VkPhysicalDevicePresentationPropertiesANDROID *properties = (const VkPhysicalDevicePresentationPropertiesANDROID *)pProperties;
+         all_properties->sharedImage = properties->sharedImage;
+         break;
+      }
+#endif /* DETECT_OS_ANDROID */
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT: {
+         const VkPhysicalDeviceExternalMemoryHostPropertiesEXT *properties = (const VkPhysicalDeviceExternalMemoryHostPropertiesEXT *)pProperties;
+         all_properties->minImportedHostPointerAlignment = properties->minImportedHostPointerAlignment;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT: {
+         const VkPhysicalDeviceConservativeRasterizationPropertiesEXT *properties = (const VkPhysicalDeviceConservativeRasterizationPropertiesEXT *)pProperties;
+         all_properties->primitiveOverestimationSize = properties->primitiveOverestimationSize;
+         all_properties->maxExtraPrimitiveOverestimationSize = properties->maxExtraPrimitiveOverestimationSize;
+         all_properties->extraPrimitiveOverestimationSizeGranularity = properties->extraPrimitiveOverestimationSizeGranularity;
+         all_properties->primitiveUnderestimation = properties->primitiveUnderestimation;
+         all_properties->conservativePointAndLineRasterization = properties->conservativePointAndLineRasterization;
+         all_properties->degenerateTrianglesRasterized = properties->degenerateTrianglesRasterized;
+         all_properties->degenerateLinesRasterized = properties->degenerateLinesRasterized;
+         all_properties->fullyCoveredFragmentShaderInputVariable = properties->fullyCoveredFragmentShaderInputVariable;
+         all_properties->conservativeRasterizationPostDepthCoverage = properties->conservativeRasterizationPostDepthCoverage;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_AMD: {
+         const VkPhysicalDeviceShaderCorePropertiesAMD *properties = (const VkPhysicalDeviceShaderCorePropertiesAMD *)pProperties;
+         all_properties->shaderEngineCount = properties->shaderEngineCount;
+         all_properties->shaderArraysPerEngineCount = properties->shaderArraysPerEngineCount;
+         all_properties->computeUnitsPerShaderArray = properties->computeUnitsPerShaderArray;
+         all_properties->simdPerComputeUnit = properties->simdPerComputeUnit;
+         all_properties->wavefrontsPerSimd = properties->wavefrontsPerSimd;
+         all_properties->wavefrontSize = properties->wavefrontSize;
+         all_properties->sgprsPerSimd = properties->sgprsPerSimd;
+         all_properties->minSgprAllocation = properties->minSgprAllocation;
+         all_properties->maxSgprAllocation = properties->maxSgprAllocation;
+         all_properties->sgprAllocationGranularity = properties->sgprAllocationGranularity;
+         all_properties->vgprsPerSimd = properties->vgprsPerSimd;
+         all_properties->minVgprAllocation = properties->minVgprAllocation;
+         all_properties->maxVgprAllocation = properties->maxVgprAllocation;
+         all_properties->vgprAllocationGranularity = properties->vgprAllocationGranularity;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_2_AMD: {
+         const VkPhysicalDeviceShaderCoreProperties2AMD *properties = (const VkPhysicalDeviceShaderCoreProperties2AMD *)pProperties;
+         all_properties->shaderCoreFeatures = properties->shaderCoreFeatures;
+         all_properties->activeComputeUnitCount = properties->activeComputeUnitCount;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES: {
+         const VkPhysicalDeviceDescriptorIndexingProperties *properties = (const VkPhysicalDeviceDescriptorIndexingProperties *)pProperties;
+         all_properties->maxUpdateAfterBindDescriptorsInAllPools = properties->maxUpdateAfterBindDescriptorsInAllPools;
+         all_properties->shaderUniformBufferArrayNonUniformIndexingNative = properties->shaderUniformBufferArrayNonUniformIndexingNative;
+         all_properties->shaderSampledImageArrayNonUniformIndexingNative = properties->shaderSampledImageArrayNonUniformIndexingNative;
+         all_properties->shaderStorageBufferArrayNonUniformIndexingNative = properties->shaderStorageBufferArrayNonUniformIndexingNative;
+         all_properties->shaderStorageImageArrayNonUniformIndexingNative = properties->shaderStorageImageArrayNonUniformIndexingNative;
+         all_properties->shaderInputAttachmentArrayNonUniformIndexingNative = properties->shaderInputAttachmentArrayNonUniformIndexingNative;
+         all_properties->robustBufferAccessUpdateAfterBind = properties->robustBufferAccessUpdateAfterBind;
+         all_properties->quadDivergentImplicitLod = properties->quadDivergentImplicitLod;
+         all_properties->maxPerStageDescriptorUpdateAfterBindSamplers = properties->maxPerStageDescriptorUpdateAfterBindSamplers;
+         all_properties->maxPerStageDescriptorUpdateAfterBindUniformBuffers = properties->maxPerStageDescriptorUpdateAfterBindUniformBuffers;
+         all_properties->maxPerStageDescriptorUpdateAfterBindStorageBuffers = properties->maxPerStageDescriptorUpdateAfterBindStorageBuffers;
+         all_properties->maxPerStageDescriptorUpdateAfterBindSampledImages = properties->maxPerStageDescriptorUpdateAfterBindSampledImages;
+         all_properties->maxPerStageDescriptorUpdateAfterBindStorageImages = properties->maxPerStageDescriptorUpdateAfterBindStorageImages;
+         all_properties->maxPerStageDescriptorUpdateAfterBindInputAttachments = properties->maxPerStageDescriptorUpdateAfterBindInputAttachments;
+         all_properties->maxPerStageUpdateAfterBindResources = properties->maxPerStageUpdateAfterBindResources;
+         all_properties->maxDescriptorSetUpdateAfterBindSamplers = properties->maxDescriptorSetUpdateAfterBindSamplers;
+         all_properties->maxDescriptorSetUpdateAfterBindUniformBuffers = properties->maxDescriptorSetUpdateAfterBindUniformBuffers;
+         all_properties->maxDescriptorSetUpdateAfterBindUniformBuffersDynamic = properties->maxDescriptorSetUpdateAfterBindUniformBuffersDynamic;
+         all_properties->maxDescriptorSetUpdateAfterBindStorageBuffers = properties->maxDescriptorSetUpdateAfterBindStorageBuffers;
+         all_properties->maxDescriptorSetUpdateAfterBindStorageBuffersDynamic = properties->maxDescriptorSetUpdateAfterBindStorageBuffersDynamic;
+         all_properties->maxDescriptorSetUpdateAfterBindSampledImages = properties->maxDescriptorSetUpdateAfterBindSampledImages;
+         all_properties->maxDescriptorSetUpdateAfterBindStorageImages = properties->maxDescriptorSetUpdateAfterBindStorageImages;
+         all_properties->maxDescriptorSetUpdateAfterBindInputAttachments = properties->maxDescriptorSetUpdateAfterBindInputAttachments;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES: {
+         const VkPhysicalDeviceTimelineSemaphoreProperties *properties = (const VkPhysicalDeviceTimelineSemaphoreProperties *)pProperties;
+         all_properties->maxTimelineSemaphoreValueDifference = properties->maxTimelineSemaphoreValueDifference;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_PROPERTIES_EXT: {
+         const VkPhysicalDeviceVertexAttributeDivisorPropertiesEXT *properties = (const VkPhysicalDeviceVertexAttributeDivisorPropertiesEXT *)pProperties;
+         all_properties->maxVertexAttribDivisor = properties->maxVertexAttribDivisor;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_PROPERTIES: {
+         const VkPhysicalDeviceVertexAttributeDivisorProperties *properties = (const VkPhysicalDeviceVertexAttributeDivisorProperties *)pProperties;
+         all_properties->maxVertexAttribDivisor = properties->maxVertexAttribDivisor;
+         all_properties->supportsNonZeroFirstInstance = properties->supportsNonZeroFirstInstance;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PCI_BUS_INFO_PROPERTIES_EXT: {
+         const VkPhysicalDevicePCIBusInfoPropertiesEXT *properties = (const VkPhysicalDevicePCIBusInfoPropertiesEXT *)pProperties;
+         all_properties->pciDomain = properties->pciDomain;
+         all_properties->pciBus = properties->pciBus;
+         all_properties->pciDevice = properties->pciDevice;
+         all_properties->pciFunction = properties->pciFunction;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_STENCIL_RESOLVE_PROPERTIES: {
+         const VkPhysicalDeviceDepthStencilResolveProperties *properties = (const VkPhysicalDeviceDepthStencilResolveProperties *)pProperties;
+         all_properties->supportedDepthResolveModes = properties->supportedDepthResolveModes;
+         all_properties->supportedStencilResolveModes = properties->supportedStencilResolveModes;
+         all_properties->independentResolveNone = properties->independentResolveNone;
+         all_properties->independentResolve = properties->independentResolve;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_PROPERTIES_EXT: {
+         const VkPhysicalDeviceTransformFeedbackPropertiesEXT *properties = (const VkPhysicalDeviceTransformFeedbackPropertiesEXT *)pProperties;
+         all_properties->maxTransformFeedbackStreams = properties->maxTransformFeedbackStreams;
+         all_properties->maxTransformFeedbackBuffers = properties->maxTransformFeedbackBuffers;
+         all_properties->maxTransformFeedbackBufferSize = properties->maxTransformFeedbackBufferSize;
+         all_properties->maxTransformFeedbackStreamDataSize = properties->maxTransformFeedbackStreamDataSize;
+         all_properties->maxTransformFeedbackBufferDataSize = properties->maxTransformFeedbackBufferDataSize;
+         all_properties->maxTransformFeedbackBufferDataStride = properties->maxTransformFeedbackBufferDataStride;
+         all_properties->transformFeedbackQueries = properties->transformFeedbackQueries;
+         all_properties->transformFeedbackStreamsLinesTriangles = properties->transformFeedbackStreamsLinesTriangles;
+         all_properties->transformFeedbackRasterizationStreamSelect = properties->transformFeedbackRasterizationStreamSelect;
+         all_properties->transformFeedbackDraw = properties->transformFeedbackDraw;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_PROPERTIES_KHR: {
+         const VkPhysicalDeviceComputeShaderDerivativesPropertiesKHR *properties = (const VkPhysicalDeviceComputeShaderDerivativesPropertiesKHR *)pProperties;
+         all_properties->meshAndTaskShaderDerivatives = properties->meshAndTaskShaderDerivatives;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COPY_MEMORY_INDIRECT_PROPERTIES_NV: {
+         const VkPhysicalDeviceCopyMemoryIndirectPropertiesNV *properties = (const VkPhysicalDeviceCopyMemoryIndirectPropertiesNV *)pProperties;
+         all_properties->supportedQueues = properties->supportedQueues;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_DECOMPRESSION_PROPERTIES_NV: {
+         const VkPhysicalDeviceMemoryDecompressionPropertiesNV *properties = (const VkPhysicalDeviceMemoryDecompressionPropertiesNV *)pProperties;
+         all_properties->decompressionMethods = properties->decompressionMethods;
+         all_properties->maxDecompressionIndirectCount = properties->maxDecompressionIndirectCount;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADING_RATE_IMAGE_PROPERTIES_NV: {
+         const VkPhysicalDeviceShadingRateImagePropertiesNV *properties = (const VkPhysicalDeviceShadingRateImagePropertiesNV *)pProperties;
+         all_properties->shadingRateTexelSize = properties->shadingRateTexelSize;
+         all_properties->shadingRatePaletteSize = properties->shadingRatePaletteSize;
+         all_properties->shadingRateMaxCoarseSamples = properties->shadingRateMaxCoarseSamples;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_NV: {
+         const VkPhysicalDeviceMeshShaderPropertiesNV *properties = (const VkPhysicalDeviceMeshShaderPropertiesNV *)pProperties;
+         all_properties->maxDrawMeshTasksCount = properties->maxDrawMeshTasksCount;
+         all_properties->maxTaskWorkGroupInvocations = properties->maxTaskWorkGroupInvocations;
+         memcpy(all_properties->maxTaskWorkGroupSize, properties->maxTaskWorkGroupSize, sizeof(all_properties->maxTaskWorkGroupSize));
+         all_properties->maxTaskTotalMemorySize = properties->maxTaskTotalMemorySize;
+         all_properties->maxTaskOutputCount = properties->maxTaskOutputCount;
+         all_properties->maxMeshWorkGroupInvocations = properties->maxMeshWorkGroupInvocations;
+         memcpy(all_properties->maxMeshWorkGroupSize, properties->maxMeshWorkGroupSize, sizeof(all_properties->maxMeshWorkGroupSize));
+         all_properties->maxMeshTotalMemorySize = properties->maxMeshTotalMemorySize;
+         all_properties->maxMeshOutputVertices = properties->maxMeshOutputVertices;
+         all_properties->maxMeshOutputPrimitives = properties->maxMeshOutputPrimitives;
+         all_properties->maxMeshMultiviewViewCount = properties->maxMeshMultiviewViewCount;
+         all_properties->meshOutputPerVertexGranularity = properties->meshOutputPerVertexGranularity;
+         all_properties->meshOutputPerPrimitiveGranularity = properties->meshOutputPerPrimitiveGranularity;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_EXT: {
+         const VkPhysicalDeviceMeshShaderPropertiesEXT *properties = (const VkPhysicalDeviceMeshShaderPropertiesEXT *)pProperties;
+         all_properties->maxTaskWorkGroupTotalCount = properties->maxTaskWorkGroupTotalCount;
+         memcpy(all_properties->maxTaskWorkGroupCount, properties->maxTaskWorkGroupCount, sizeof(all_properties->maxTaskWorkGroupCount));
+         all_properties->maxTaskWorkGroupInvocations = properties->maxTaskWorkGroupInvocations;
+         memcpy(all_properties->maxTaskWorkGroupSize, properties->maxTaskWorkGroupSize, sizeof(all_properties->maxTaskWorkGroupSize));
+         all_properties->maxTaskPayloadSize = properties->maxTaskPayloadSize;
+         all_properties->maxTaskSharedMemorySize = properties->maxTaskSharedMemorySize;
+         all_properties->maxTaskPayloadAndSharedMemorySize = properties->maxTaskPayloadAndSharedMemorySize;
+         all_properties->maxMeshWorkGroupTotalCount = properties->maxMeshWorkGroupTotalCount;
+         memcpy(all_properties->maxMeshWorkGroupCount, properties->maxMeshWorkGroupCount, sizeof(all_properties->maxMeshWorkGroupCount));
+         all_properties->maxMeshWorkGroupInvocations = properties->maxMeshWorkGroupInvocations;
+         memcpy(all_properties->maxMeshWorkGroupSize, properties->maxMeshWorkGroupSize, sizeof(all_properties->maxMeshWorkGroupSize));
+         all_properties->maxMeshSharedMemorySize = properties->maxMeshSharedMemorySize;
+         all_properties->maxMeshPayloadAndSharedMemorySize = properties->maxMeshPayloadAndSharedMemorySize;
+         all_properties->maxMeshOutputMemorySize = properties->maxMeshOutputMemorySize;
+         all_properties->maxMeshPayloadAndOutputMemorySize = properties->maxMeshPayloadAndOutputMemorySize;
+         all_properties->maxMeshOutputComponents = properties->maxMeshOutputComponents;
+         all_properties->maxMeshOutputVertices = properties->maxMeshOutputVertices;
+         all_properties->maxMeshOutputPrimitives = properties->maxMeshOutputPrimitives;
+         all_properties->maxMeshOutputLayers = properties->maxMeshOutputLayers;
+         all_properties->maxMeshMultiviewViewCount = properties->maxMeshMultiviewViewCount;
+         all_properties->meshOutputPerVertexGranularity = properties->meshOutputPerVertexGranularity;
+         all_properties->meshOutputPerPrimitiveGranularity = properties->meshOutputPerPrimitiveGranularity;
+         all_properties->maxPreferredTaskWorkGroupInvocations = properties->maxPreferredTaskWorkGroupInvocations;
+         all_properties->maxPreferredMeshWorkGroupInvocations = properties->maxPreferredMeshWorkGroupInvocations;
+         all_properties->prefersLocalInvocationVertexOutput = properties->prefersLocalInvocationVertexOutput;
+         all_properties->prefersLocalInvocationPrimitiveOutput = properties->prefersLocalInvocationPrimitiveOutput;
+         all_properties->prefersCompactVertexOutput = properties->prefersCompactVertexOutput;
+         all_properties->prefersCompactPrimitiveOutput = properties->prefersCompactPrimitiveOutput;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR: {
+         const VkPhysicalDeviceAccelerationStructurePropertiesKHR *properties = (const VkPhysicalDeviceAccelerationStructurePropertiesKHR *)pProperties;
+         all_properties->maxGeometryCount = properties->maxGeometryCount;
+         all_properties->maxInstanceCount = properties->maxInstanceCount;
+         all_properties->maxPrimitiveCount = properties->maxPrimitiveCount;
+         all_properties->maxPerStageDescriptorAccelerationStructures = properties->maxPerStageDescriptorAccelerationStructures;
+         all_properties->maxPerStageDescriptorUpdateAfterBindAccelerationStructures = properties->maxPerStageDescriptorUpdateAfterBindAccelerationStructures;
+         all_properties->maxDescriptorSetAccelerationStructures = properties->maxDescriptorSetAccelerationStructures;
+         all_properties->maxDescriptorSetUpdateAfterBindAccelerationStructures = properties->maxDescriptorSetUpdateAfterBindAccelerationStructures;
+         all_properties->minAccelerationStructureScratchOffsetAlignment = properties->minAccelerationStructureScratchOffsetAlignment;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR: {
+         const VkPhysicalDeviceRayTracingPipelinePropertiesKHR *properties = (const VkPhysicalDeviceRayTracingPipelinePropertiesKHR *)pProperties;
+         all_properties->shaderGroupHandleSize = properties->shaderGroupHandleSize;
+         all_properties->maxRayRecursionDepth = properties->maxRayRecursionDepth;
+         all_properties->maxShaderGroupStride = properties->maxShaderGroupStride;
+         all_properties->shaderGroupBaseAlignment = properties->shaderGroupBaseAlignment;
+         all_properties->shaderGroupHandleCaptureReplaySize = properties->shaderGroupHandleCaptureReplaySize;
+         all_properties->maxRayDispatchInvocationCount = properties->maxRayDispatchInvocationCount;
+         all_properties->shaderGroupHandleAlignment = properties->shaderGroupHandleAlignment;
+         all_properties->maxRayHitAttributeSize = properties->maxRayHitAttributeSize;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_NV: {
+         const VkPhysicalDeviceRayTracingPropertiesNV *properties = (const VkPhysicalDeviceRayTracingPropertiesNV *)pProperties;
+         all_properties->shaderGroupHandleSize = properties->shaderGroupHandleSize;
+         all_properties->maxRecursionDepth = properties->maxRecursionDepth;
+         all_properties->maxShaderGroupStride = properties->maxShaderGroupStride;
+         all_properties->shaderGroupBaseAlignment = properties->shaderGroupBaseAlignment;
+         all_properties->maxGeometryCount = properties->maxGeometryCount;
+         all_properties->maxInstanceCount = properties->maxInstanceCount;
+         all_properties->maxTriangleCount = properties->maxTriangleCount;
+         all_properties->maxDescriptorSetAccelerationStructures = properties->maxDescriptorSetAccelerationStructures;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_PROPERTIES_EXT: {
+         const VkPhysicalDeviceFragmentDensityMapPropertiesEXT *properties = (const VkPhysicalDeviceFragmentDensityMapPropertiesEXT *)pProperties;
+         all_properties->minFragmentDensityTexelSize = properties->minFragmentDensityTexelSize;
+         all_properties->maxFragmentDensityTexelSize = properties->maxFragmentDensityTexelSize;
+         all_properties->fragmentDensityInvocations = properties->fragmentDensityInvocations;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_PROPERTIES_EXT: {
+         const VkPhysicalDeviceFragmentDensityMap2PropertiesEXT *properties = (const VkPhysicalDeviceFragmentDensityMap2PropertiesEXT *)pProperties;
+         all_properties->subsampledLoads = properties->subsampledLoads;
+         all_properties->subsampledCoarseReconstructionEarlyAccess = properties->subsampledCoarseReconstructionEarlyAccess;
+         all_properties->maxSubsampledArrayLayers = properties->maxSubsampledArrayLayers;
+         all_properties->maxDescriptorSetSubsampledSamplers = properties->maxDescriptorSetSubsampledSamplers;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_PROPERTIES_QCOM: {
+         const VkPhysicalDeviceFragmentDensityMapOffsetPropertiesQCOM *properties = (const VkPhysicalDeviceFragmentDensityMapOffsetPropertiesQCOM *)pProperties;
+         all_properties->fragmentDensityOffsetGranularity = properties->fragmentDensityOffsetGranularity;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_PROPERTIES_NV: {
+         const VkPhysicalDeviceCooperativeMatrixPropertiesNV *properties = (const VkPhysicalDeviceCooperativeMatrixPropertiesNV *)pProperties;
+         all_properties->cooperativeMatrixSupportedStages = properties->cooperativeMatrixSupportedStages;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PERFORMANCE_QUERY_PROPERTIES_KHR: {
+         const VkPhysicalDevicePerformanceQueryPropertiesKHR *properties = (const VkPhysicalDevicePerformanceQueryPropertiesKHR *)pProperties;
+         all_properties->allowCommandBufferQueryCopies = properties->allowCommandBufferQueryCopies;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SM_BUILTINS_PROPERTIES_NV: {
+         const VkPhysicalDeviceShaderSMBuiltinsPropertiesNV *properties = (const VkPhysicalDeviceShaderSMBuiltinsPropertiesNV *)pProperties;
+         all_properties->shaderSMCount = properties->shaderSMCount;
+         all_properties->shaderWarpsPerSM = properties->shaderWarpsPerSM;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_PROPERTIES: {
+         const VkPhysicalDeviceTexelBufferAlignmentProperties *properties = (const VkPhysicalDeviceTexelBufferAlignmentProperties *)pProperties;
+         all_properties->storageTexelBufferOffsetAlignmentBytes = properties->storageTexelBufferOffsetAlignmentBytes;
+         all_properties->storageTexelBufferOffsetSingleTexelAlignment = properties->storageTexelBufferOffsetSingleTexelAlignment;
+         all_properties->uniformTexelBufferOffsetAlignmentBytes = properties->uniformTexelBufferOffsetAlignmentBytes;
+         all_properties->uniformTexelBufferOffsetSingleTexelAlignment = properties->uniformTexelBufferOffsetSingleTexelAlignment;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES: {
+         const VkPhysicalDeviceSubgroupSizeControlProperties *properties = (const VkPhysicalDeviceSubgroupSizeControlProperties *)pProperties;
+         all_properties->minSubgroupSize = properties->minSubgroupSize;
+         all_properties->maxSubgroupSize = properties->maxSubgroupSize;
+         all_properties->maxComputeWorkgroupSubgroups = properties->maxComputeWorkgroupSubgroups;
+         all_properties->requiredSubgroupSizeStages = properties->requiredSubgroupSizeStages;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_SHADING_PROPERTIES_HUAWEI: {
+         const VkPhysicalDeviceSubpassShadingPropertiesHUAWEI *properties = (const VkPhysicalDeviceSubpassShadingPropertiesHUAWEI *)pProperties;
+         all_properties->maxSubpassShadingWorkgroupSizeAspectRatio = properties->maxSubpassShadingWorkgroupSizeAspectRatio;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CLUSTER_CULLING_SHADER_PROPERTIES_HUAWEI: {
+         const VkPhysicalDeviceClusterCullingShaderPropertiesHUAWEI *properties = (const VkPhysicalDeviceClusterCullingShaderPropertiesHUAWEI *)pProperties;
+         memcpy(all_properties->maxWorkGroupCount, properties->maxWorkGroupCount, sizeof(all_properties->maxWorkGroupCount));
+         memcpy(all_properties->maxWorkGroupSize, properties->maxWorkGroupSize, sizeof(all_properties->maxWorkGroupSize));
+         all_properties->maxOutputClusterCount = properties->maxOutputClusterCount;
+         all_properties->indirectBufferOffsetAlignment = properties->indirectBufferOffsetAlignment;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_PROPERTIES: {
+         const VkPhysicalDeviceLineRasterizationProperties *properties = (const VkPhysicalDeviceLineRasterizationProperties *)pProperties;
+         all_properties->lineSubPixelPrecisionBits = properties->lineSubPixelPrecisionBits;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES: {
+         const VkPhysicalDeviceVulkan11Properties *properties = (const VkPhysicalDeviceVulkan11Properties *)pProperties;
+         memcpy(all_properties->deviceUUID, properties->deviceUUID, sizeof(all_properties->deviceUUID));
+         memcpy(all_properties->driverUUID, properties->driverUUID, sizeof(all_properties->driverUUID));
+         memcpy(all_properties->deviceLUID, properties->deviceLUID, sizeof(all_properties->deviceLUID));
+         all_properties->deviceNodeMask = properties->deviceNodeMask;
+         all_properties->deviceLUIDValid = properties->deviceLUIDValid;
+         all_properties->subgroupSize = properties->subgroupSize;
+         all_properties->subgroupSupportedStages = properties->subgroupSupportedStages;
+         all_properties->subgroupSupportedOperations = properties->subgroupSupportedOperations;
+         all_properties->subgroupQuadOperationsInAllStages = properties->subgroupQuadOperationsInAllStages;
+         all_properties->pointClippingBehavior = properties->pointClippingBehavior;
+         all_properties->maxMultiviewViewCount = properties->maxMultiviewViewCount;
+         all_properties->maxMultiviewInstanceIndex = properties->maxMultiviewInstanceIndex;
+         all_properties->protectedNoFault = properties->protectedNoFault;
+         all_properties->maxPerSetDescriptors = properties->maxPerSetDescriptors;
+         all_properties->maxMemoryAllocationSize = properties->maxMemoryAllocationSize;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES: {
+         const VkPhysicalDeviceVulkan12Properties *properties = (const VkPhysicalDeviceVulkan12Properties *)pProperties;
+         all_properties->driverID = properties->driverID;
+         memcpy(all_properties->driverName, properties->driverName, sizeof(all_properties->driverName));
+         memcpy(all_properties->driverInfo, properties->driverInfo, sizeof(all_properties->driverInfo));
+         all_properties->conformanceVersion = properties->conformanceVersion;
+         all_properties->denormBehaviorIndependence = properties->denormBehaviorIndependence;
+         all_properties->roundingModeIndependence = properties->roundingModeIndependence;
+         all_properties->shaderSignedZeroInfNanPreserveFloat16 = properties->shaderSignedZeroInfNanPreserveFloat16;
+         all_properties->shaderSignedZeroInfNanPreserveFloat32 = properties->shaderSignedZeroInfNanPreserveFloat32;
+         all_properties->shaderSignedZeroInfNanPreserveFloat64 = properties->shaderSignedZeroInfNanPreserveFloat64;
+         all_properties->shaderDenormPreserveFloat16 = properties->shaderDenormPreserveFloat16;
+         all_properties->shaderDenormPreserveFloat32 = properties->shaderDenormPreserveFloat32;
+         all_properties->shaderDenormPreserveFloat64 = properties->shaderDenormPreserveFloat64;
+         all_properties->shaderDenormFlushToZeroFloat16 = properties->shaderDenormFlushToZeroFloat16;
+         all_properties->shaderDenormFlushToZeroFloat32 = properties->shaderDenormFlushToZeroFloat32;
+         all_properties->shaderDenormFlushToZeroFloat64 = properties->shaderDenormFlushToZeroFloat64;
+         all_properties->shaderRoundingModeRTEFloat16 = properties->shaderRoundingModeRTEFloat16;
+         all_properties->shaderRoundingModeRTEFloat32 = properties->shaderRoundingModeRTEFloat32;
+         all_properties->shaderRoundingModeRTEFloat64 = properties->shaderRoundingModeRTEFloat64;
+         all_properties->shaderRoundingModeRTZFloat16 = properties->shaderRoundingModeRTZFloat16;
+         all_properties->shaderRoundingModeRTZFloat32 = properties->shaderRoundingModeRTZFloat32;
+         all_properties->shaderRoundingModeRTZFloat64 = properties->shaderRoundingModeRTZFloat64;
+         all_properties->maxUpdateAfterBindDescriptorsInAllPools = properties->maxUpdateAfterBindDescriptorsInAllPools;
+         all_properties->shaderUniformBufferArrayNonUniformIndexingNative = properties->shaderUniformBufferArrayNonUniformIndexingNative;
+         all_properties->shaderSampledImageArrayNonUniformIndexingNative = properties->shaderSampledImageArrayNonUniformIndexingNative;
+         all_properties->shaderStorageBufferArrayNonUniformIndexingNative = properties->shaderStorageBufferArrayNonUniformIndexingNative;
+         all_properties->shaderStorageImageArrayNonUniformIndexingNative = properties->shaderStorageImageArrayNonUniformIndexingNative;
+         all_properties->shaderInputAttachmentArrayNonUniformIndexingNative = properties->shaderInputAttachmentArrayNonUniformIndexingNative;
+         all_properties->robustBufferAccessUpdateAfterBind = properties->robustBufferAccessUpdateAfterBind;
+         all_properties->quadDivergentImplicitLod = properties->quadDivergentImplicitLod;
+         all_properties->maxPerStageDescriptorUpdateAfterBindSamplers = properties->maxPerStageDescriptorUpdateAfterBindSamplers;
+         all_properties->maxPerStageDescriptorUpdateAfterBindUniformBuffers = properties->maxPerStageDescriptorUpdateAfterBindUniformBuffers;
+         all_properties->maxPerStageDescriptorUpdateAfterBindStorageBuffers = properties->maxPerStageDescriptorUpdateAfterBindStorageBuffers;
+         all_properties->maxPerStageDescriptorUpdateAfterBindSampledImages = properties->maxPerStageDescriptorUpdateAfterBindSampledImages;
+         all_properties->maxPerStageDescriptorUpdateAfterBindStorageImages = properties->maxPerStageDescriptorUpdateAfterBindStorageImages;
+         all_properties->maxPerStageDescriptorUpdateAfterBindInputAttachments = properties->maxPerStageDescriptorUpdateAfterBindInputAttachments;
+         all_properties->maxPerStageUpdateAfterBindResources = properties->maxPerStageUpdateAfterBindResources;
+         all_properties->maxDescriptorSetUpdateAfterBindSamplers = properties->maxDescriptorSetUpdateAfterBindSamplers;
+         all_properties->maxDescriptorSetUpdateAfterBindUniformBuffers = properties->maxDescriptorSetUpdateAfterBindUniformBuffers;
+         all_properties->maxDescriptorSetUpdateAfterBindUniformBuffersDynamic = properties->maxDescriptorSetUpdateAfterBindUniformBuffersDynamic;
+         all_properties->maxDescriptorSetUpdateAfterBindStorageBuffers = properties->maxDescriptorSetUpdateAfterBindStorageBuffers;
+         all_properties->maxDescriptorSetUpdateAfterBindStorageBuffersDynamic = properties->maxDescriptorSetUpdateAfterBindStorageBuffersDynamic;
+         all_properties->maxDescriptorSetUpdateAfterBindSampledImages = properties->maxDescriptorSetUpdateAfterBindSampledImages;
+         all_properties->maxDescriptorSetUpdateAfterBindStorageImages = properties->maxDescriptorSetUpdateAfterBindStorageImages;
+         all_properties->maxDescriptorSetUpdateAfterBindInputAttachments = properties->maxDescriptorSetUpdateAfterBindInputAttachments;
+         all_properties->supportedDepthResolveModes = properties->supportedDepthResolveModes;
+         all_properties->supportedStencilResolveModes = properties->supportedStencilResolveModes;
+         all_properties->independentResolveNone = properties->independentResolveNone;
+         all_properties->independentResolve = properties->independentResolve;
+         all_properties->filterMinmaxSingleComponentFormats = properties->filterMinmaxSingleComponentFormats;
+         all_properties->filterMinmaxImageComponentMapping = properties->filterMinmaxImageComponentMapping;
+         all_properties->maxTimelineSemaphoreValueDifference = properties->maxTimelineSemaphoreValueDifference;
+         all_properties->framebufferIntegerColorSampleCounts = properties->framebufferIntegerColorSampleCounts;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES: {
+         const VkPhysicalDeviceVulkan13Properties *properties = (const VkPhysicalDeviceVulkan13Properties *)pProperties;
+         all_properties->minSubgroupSize = properties->minSubgroupSize;
+         all_properties->maxSubgroupSize = properties->maxSubgroupSize;
+         all_properties->maxComputeWorkgroupSubgroups = properties->maxComputeWorkgroupSubgroups;
+         all_properties->requiredSubgroupSizeStages = properties->requiredSubgroupSizeStages;
+         all_properties->maxInlineUniformBlockSize = properties->maxInlineUniformBlockSize;
+         all_properties->maxPerStageDescriptorInlineUniformBlocks = properties->maxPerStageDescriptorInlineUniformBlocks;
+         all_properties->maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks = properties->maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks;
+         all_properties->maxDescriptorSetInlineUniformBlocks = properties->maxDescriptorSetInlineUniformBlocks;
+         all_properties->maxDescriptorSetUpdateAfterBindInlineUniformBlocks = properties->maxDescriptorSetUpdateAfterBindInlineUniformBlocks;
+         all_properties->maxInlineUniformTotalSize = properties->maxInlineUniformTotalSize;
+         all_properties->integerDotProduct8BitUnsignedAccelerated = properties->integerDotProduct8BitUnsignedAccelerated;
+         all_properties->integerDotProduct8BitSignedAccelerated = properties->integerDotProduct8BitSignedAccelerated;
+         all_properties->integerDotProduct8BitMixedSignednessAccelerated = properties->integerDotProduct8BitMixedSignednessAccelerated;
+         all_properties->integerDotProduct4x8BitPackedUnsignedAccelerated = properties->integerDotProduct4x8BitPackedUnsignedAccelerated;
+         all_properties->integerDotProduct4x8BitPackedSignedAccelerated = properties->integerDotProduct4x8BitPackedSignedAccelerated;
+         all_properties->integerDotProduct4x8BitPackedMixedSignednessAccelerated = properties->integerDotProduct4x8BitPackedMixedSignednessAccelerated;
+         all_properties->integerDotProduct16BitUnsignedAccelerated = properties->integerDotProduct16BitUnsignedAccelerated;
+         all_properties->integerDotProduct16BitSignedAccelerated = properties->integerDotProduct16BitSignedAccelerated;
+         all_properties->integerDotProduct16BitMixedSignednessAccelerated = properties->integerDotProduct16BitMixedSignednessAccelerated;
+         all_properties->integerDotProduct32BitUnsignedAccelerated = properties->integerDotProduct32BitUnsignedAccelerated;
+         all_properties->integerDotProduct32BitSignedAccelerated = properties->integerDotProduct32BitSignedAccelerated;
+         all_properties->integerDotProduct32BitMixedSignednessAccelerated = properties->integerDotProduct32BitMixedSignednessAccelerated;
+         all_properties->integerDotProduct64BitUnsignedAccelerated = properties->integerDotProduct64BitUnsignedAccelerated;
+         all_properties->integerDotProduct64BitSignedAccelerated = properties->integerDotProduct64BitSignedAccelerated;
+         all_properties->integerDotProduct64BitMixedSignednessAccelerated = properties->integerDotProduct64BitMixedSignednessAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating8BitUnsignedAccelerated = properties->integerDotProductAccumulatingSaturating8BitUnsignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating8BitSignedAccelerated = properties->integerDotProductAccumulatingSaturating8BitSignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating8BitMixedSignednessAccelerated = properties->integerDotProductAccumulatingSaturating8BitMixedSignednessAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating4x8BitPackedUnsignedAccelerated = properties->integerDotProductAccumulatingSaturating4x8BitPackedUnsignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating4x8BitPackedSignedAccelerated = properties->integerDotProductAccumulatingSaturating4x8BitPackedSignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating4x8BitPackedMixedSignednessAccelerated = properties->integerDotProductAccumulatingSaturating4x8BitPackedMixedSignednessAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating16BitUnsignedAccelerated = properties->integerDotProductAccumulatingSaturating16BitUnsignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating16BitSignedAccelerated = properties->integerDotProductAccumulatingSaturating16BitSignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating16BitMixedSignednessAccelerated = properties->integerDotProductAccumulatingSaturating16BitMixedSignednessAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating32BitUnsignedAccelerated = properties->integerDotProductAccumulatingSaturating32BitUnsignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating32BitSignedAccelerated = properties->integerDotProductAccumulatingSaturating32BitSignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating32BitMixedSignednessAccelerated = properties->integerDotProductAccumulatingSaturating32BitMixedSignednessAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating64BitUnsignedAccelerated = properties->integerDotProductAccumulatingSaturating64BitUnsignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating64BitSignedAccelerated = properties->integerDotProductAccumulatingSaturating64BitSignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating64BitMixedSignednessAccelerated = properties->integerDotProductAccumulatingSaturating64BitMixedSignednessAccelerated;
+         all_properties->storageTexelBufferOffsetAlignmentBytes = properties->storageTexelBufferOffsetAlignmentBytes;
+         all_properties->storageTexelBufferOffsetSingleTexelAlignment = properties->storageTexelBufferOffsetSingleTexelAlignment;
+         all_properties->uniformTexelBufferOffsetAlignmentBytes = properties->uniformTexelBufferOffsetAlignmentBytes;
+         all_properties->uniformTexelBufferOffsetSingleTexelAlignment = properties->uniformTexelBufferOffsetSingleTexelAlignment;
+         all_properties->maxBufferSize = properties->maxBufferSize;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_PROPERTIES: {
+         const VkPhysicalDeviceVulkan14Properties *properties = (const VkPhysicalDeviceVulkan14Properties *)pProperties;
+         all_properties->lineSubPixelPrecisionBits = properties->lineSubPixelPrecisionBits;
+         all_properties->maxVertexAttribDivisor = properties->maxVertexAttribDivisor;
+         all_properties->supportsNonZeroFirstInstance = properties->supportsNonZeroFirstInstance;
+         all_properties->maxPushDescriptors = properties->maxPushDescriptors;
+         all_properties->dynamicRenderingLocalReadDepthStencilAttachments = properties->dynamicRenderingLocalReadDepthStencilAttachments;
+         all_properties->dynamicRenderingLocalReadMultisampledAttachments = properties->dynamicRenderingLocalReadMultisampledAttachments;
+         all_properties->earlyFragmentMultisampleCoverageAfterSampleCounting = properties->earlyFragmentMultisampleCoverageAfterSampleCounting;
+         all_properties->earlyFragmentSampleMaskTestBeforeSampleCounting = properties->earlyFragmentSampleMaskTestBeforeSampleCounting;
+         all_properties->depthStencilSwizzleOneSupport = properties->depthStencilSwizzleOneSupport;
+         all_properties->polygonModePointSize = properties->polygonModePointSize;
+         all_properties->nonStrictSinglePixelWideLinesUseParallelogram = properties->nonStrictSinglePixelWideLinesUseParallelogram;
+         all_properties->nonStrictWideLinesUseParallelogram = properties->nonStrictWideLinesUseParallelogram;
+         all_properties->blockTexelViewCompatibleMultipleLayers = properties->blockTexelViewCompatibleMultipleLayers;
+         all_properties->maxCombinedImageSamplerDescriptorCount = properties->maxCombinedImageSamplerDescriptorCount;
+         all_properties->fragmentShadingRateClampCombinerInputs = properties->fragmentShadingRateClampCombinerInputs;
+         all_properties->defaultRobustnessStorageBuffers = properties->defaultRobustnessStorageBuffers;
+         all_properties->defaultRobustnessUniformBuffers = properties->defaultRobustnessUniformBuffers;
+         all_properties->defaultRobustnessVertexInputs = properties->defaultRobustnessVertexInputs;
+         all_properties->defaultRobustnessImages = properties->defaultRobustnessImages;
+         
+         
+    if (all_properties->pCopySrcLayouts != NULL) {
+        uint32_t count = MIN2(all_properties->copySrcLayoutCount, properties->copySrcLayoutCount);
+        for (uint32_t i = 0; i < count; i++)
+            all_properties->pCopySrcLayouts[i] = properties->pCopySrcLayouts[i];
+        all_properties->copySrcLayoutCount = count;
+    } else {
+        all_properties->copySrcLayoutCount = properties->copySrcLayoutCount;
+    }
+
+         
+         
+    if (all_properties->pCopyDstLayouts != NULL) {
+        uint32_t count = MIN2(all_properties->copyDstLayoutCount, properties->copyDstLayoutCount);
+        for (uint32_t i = 0; i < count; i++)
+            all_properties->pCopyDstLayouts[i] = properties->pCopyDstLayouts[i];
+        all_properties->copyDstLayoutCount = count;
+    } else {
+        all_properties->copyDstLayoutCount = properties->copyDstLayoutCount;
+    }
+
+         memcpy(all_properties->optimalTilingLayoutUUID, properties->optimalTilingLayoutUUID, sizeof(all_properties->optimalTilingLayoutUUID));
+         all_properties->identicalMemoryTypeRequirements = properties->identicalMemoryTypeRequirements;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_PROPERTIES_EXT: {
+         const VkPhysicalDeviceCustomBorderColorPropertiesEXT *properties = (const VkPhysicalDeviceCustomBorderColorPropertiesEXT *)pProperties;
+         all_properties->maxCustomBorderColorSamplers = properties->maxCustomBorderColorSamplers;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_PROPERTIES_EXT: {
+         const VkPhysicalDeviceExtendedDynamicState3PropertiesEXT *properties = (const VkPhysicalDeviceExtendedDynamicState3PropertiesEXT *)pProperties;
+         all_properties->dynamicPrimitiveTopologyUnrestricted = properties->dynamicPrimitiveTopologyUnrestricted;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT: {
+         const VkPhysicalDeviceRobustness2PropertiesEXT *properties = (const VkPhysicalDeviceRobustness2PropertiesEXT *)pProperties;
+         all_properties->robustStorageBufferAccessSizeAlignment = properties->robustStorageBufferAccessSizeAlignment;
+         all_properties->robustUniformBufferAccessSizeAlignment = properties->robustUniformBufferAccessSizeAlignment;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_PROPERTIES_KHR: {
+         const VkPhysicalDeviceFragmentShadingRatePropertiesKHR *properties = (const VkPhysicalDeviceFragmentShadingRatePropertiesKHR *)pProperties;
+         all_properties->minFragmentShadingRateAttachmentTexelSize = properties->minFragmentShadingRateAttachmentTexelSize;
+         all_properties->maxFragmentShadingRateAttachmentTexelSize = properties->maxFragmentShadingRateAttachmentTexelSize;
+         all_properties->maxFragmentShadingRateAttachmentTexelSizeAspectRatio = properties->maxFragmentShadingRateAttachmentTexelSizeAspectRatio;
+         all_properties->primitiveFragmentShadingRateWithMultipleViewports = properties->primitiveFragmentShadingRateWithMultipleViewports;
+         all_properties->layeredShadingRateAttachments = properties->layeredShadingRateAttachments;
+         all_properties->fragmentShadingRateNonTrivialCombinerOps = properties->fragmentShadingRateNonTrivialCombinerOps;
+         all_properties->maxFragmentSize = properties->maxFragmentSize;
+         all_properties->maxFragmentSizeAspectRatio = properties->maxFragmentSizeAspectRatio;
+         all_properties->maxFragmentShadingRateCoverageSamples = properties->maxFragmentShadingRateCoverageSamples;
+         all_properties->maxFragmentShadingRateRasterizationSamples = properties->maxFragmentShadingRateRasterizationSamples;
+         all_properties->fragmentShadingRateWithShaderDepthStencilWrites = properties->fragmentShadingRateWithShaderDepthStencilWrites;
+         all_properties->fragmentShadingRateWithSampleMask = properties->fragmentShadingRateWithSampleMask;
+         all_properties->fragmentShadingRateWithShaderSampleMask = properties->fragmentShadingRateWithShaderSampleMask;
+         all_properties->fragmentShadingRateWithConservativeRasterization = properties->fragmentShadingRateWithConservativeRasterization;
+         all_properties->fragmentShadingRateWithFragmentShaderInterlock = properties->fragmentShadingRateWithFragmentShaderInterlock;
+         all_properties->fragmentShadingRateWithCustomSampleLocations = properties->fragmentShadingRateWithCustomSampleLocations;
+         all_properties->fragmentShadingRateStrictMultiplyCombiner = properties->fragmentShadingRateStrictMultiplyCombiner;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_PROPERTIES_NV: {
+         const VkPhysicalDeviceFragmentShadingRateEnumsPropertiesNV *properties = (const VkPhysicalDeviceFragmentShadingRateEnumsPropertiesNV *)pProperties;
+         all_properties->maxFragmentShadingRateInvocationCount = properties->maxFragmentShadingRateInvocationCount;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LEGACY_VERTEX_ATTRIBUTES_PROPERTIES_EXT: {
+         const VkPhysicalDeviceLegacyVertexAttributesPropertiesEXT *properties = (const VkPhysicalDeviceLegacyVertexAttributesPropertiesEXT *)pProperties;
+         all_properties->nativeUnalignedPerformance = properties->nativeUnalignedPerformance;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_PROPERTIES_EXT: {
+         const VkPhysicalDeviceDeviceGeneratedCommandsPropertiesEXT *properties = (const VkPhysicalDeviceDeviceGeneratedCommandsPropertiesEXT *)pProperties;
+         all_properties->maxIndirectPipelineCount = properties->maxIndirectPipelineCount;
+         all_properties->maxIndirectShaderObjectCount = properties->maxIndirectShaderObjectCount;
+         all_properties->maxIndirectSequenceCount = properties->maxIndirectSequenceCount;
+         all_properties->maxIndirectCommandsTokenCount = properties->maxIndirectCommandsTokenCount;
+         all_properties->maxIndirectCommandsTokenOffset = properties->maxIndirectCommandsTokenOffset;
+         all_properties->maxIndirectCommandsIndirectStride = properties->maxIndirectCommandsIndirectStride;
+         all_properties->supportedIndirectCommandsInputModes = properties->supportedIndirectCommandsInputModes;
+         all_properties->supportedIndirectCommandsShaderStages = properties->supportedIndirectCommandsShaderStages;
+         all_properties->supportedIndirectCommandsShaderStagesPipelineBinding = properties->supportedIndirectCommandsShaderStagesPipelineBinding;
+         all_properties->supportedIndirectCommandsShaderStagesShaderBinding = properties->supportedIndirectCommandsShaderStagesShaderBinding;
+         all_properties->deviceGeneratedCommandsTransformFeedback = properties->deviceGeneratedCommandsTransformFeedback;
+         all_properties->deviceGeneratedCommandsMultiDrawIndirectCount = properties->deviceGeneratedCommandsMultiDrawIndirectCount;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_IMAGE_COPY_PROPERTIES: {
+         const VkPhysicalDeviceHostImageCopyProperties *properties = (const VkPhysicalDeviceHostImageCopyProperties *)pProperties;
+         
+         
+    if (all_properties->pCopySrcLayouts != NULL) {
+        uint32_t count = MIN2(all_properties->copySrcLayoutCount, properties->copySrcLayoutCount);
+        for (uint32_t i = 0; i < count; i++)
+            all_properties->pCopySrcLayouts[i] = properties->pCopySrcLayouts[i];
+        all_properties->copySrcLayoutCount = count;
+    } else {
+        all_properties->copySrcLayoutCount = properties->copySrcLayoutCount;
+    }
+
+         
+         
+    if (all_properties->pCopyDstLayouts != NULL) {
+        uint32_t count = MIN2(all_properties->copyDstLayoutCount, properties->copyDstLayoutCount);
+        for (uint32_t i = 0; i < count; i++)
+            all_properties->pCopyDstLayouts[i] = properties->pCopyDstLayouts[i];
+        all_properties->copyDstLayoutCount = count;
+    } else {
+        all_properties->copyDstLayoutCount = properties->copyDstLayoutCount;
+    }
+
+         memcpy(all_properties->optimalTilingLayoutUUID, properties->optimalTilingLayoutUUID, sizeof(all_properties->optimalTilingLayoutUUID));
+         all_properties->identicalMemoryTypeRequirements = properties->identicalMemoryTypeRequirements;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROVOKING_VERTEX_PROPERTIES_EXT: {
+         const VkPhysicalDeviceProvokingVertexPropertiesEXT *properties = (const VkPhysicalDeviceProvokingVertexPropertiesEXT *)pProperties;
+         all_properties->provokingVertexModePerPipeline = properties->provokingVertexModePerPipeline;
+         all_properties->transformFeedbackPreservesTriangleFanProvokingVertex = properties->transformFeedbackPreservesTriangleFanProvokingVertex;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT: {
+         const VkPhysicalDeviceDescriptorBufferPropertiesEXT *properties = (const VkPhysicalDeviceDescriptorBufferPropertiesEXT *)pProperties;
+         all_properties->combinedImageSamplerDescriptorSingleArray = properties->combinedImageSamplerDescriptorSingleArray;
+         all_properties->bufferlessPushDescriptors = properties->bufferlessPushDescriptors;
+         all_properties->allowSamplerImageViewPostSubmitCreation = properties->allowSamplerImageViewPostSubmitCreation;
+         all_properties->descriptorBufferOffsetAlignment = properties->descriptorBufferOffsetAlignment;
+         all_properties->maxDescriptorBufferBindings = properties->maxDescriptorBufferBindings;
+         all_properties->maxResourceDescriptorBufferBindings = properties->maxResourceDescriptorBufferBindings;
+         all_properties->maxSamplerDescriptorBufferBindings = properties->maxSamplerDescriptorBufferBindings;
+         all_properties->maxEmbeddedImmutableSamplerBindings = properties->maxEmbeddedImmutableSamplerBindings;
+         all_properties->maxEmbeddedImmutableSamplers = properties->maxEmbeddedImmutableSamplers;
+         all_properties->bufferCaptureReplayDescriptorDataSize = properties->bufferCaptureReplayDescriptorDataSize;
+         all_properties->imageCaptureReplayDescriptorDataSize = properties->imageCaptureReplayDescriptorDataSize;
+         all_properties->imageViewCaptureReplayDescriptorDataSize = properties->imageViewCaptureReplayDescriptorDataSize;
+         all_properties->samplerCaptureReplayDescriptorDataSize = properties->samplerCaptureReplayDescriptorDataSize;
+         all_properties->accelerationStructureCaptureReplayDescriptorDataSize = properties->accelerationStructureCaptureReplayDescriptorDataSize;
+         all_properties->samplerDescriptorSize = properties->samplerDescriptorSize;
+         all_properties->combinedImageSamplerDescriptorSize = properties->combinedImageSamplerDescriptorSize;
+         all_properties->sampledImageDescriptorSize = properties->sampledImageDescriptorSize;
+         all_properties->storageImageDescriptorSize = properties->storageImageDescriptorSize;
+         all_properties->uniformTexelBufferDescriptorSize = properties->uniformTexelBufferDescriptorSize;
+         all_properties->robustUniformTexelBufferDescriptorSize = properties->robustUniformTexelBufferDescriptorSize;
+         all_properties->storageTexelBufferDescriptorSize = properties->storageTexelBufferDescriptorSize;
+         all_properties->robustStorageTexelBufferDescriptorSize = properties->robustStorageTexelBufferDescriptorSize;
+         all_properties->uniformBufferDescriptorSize = properties->uniformBufferDescriptorSize;
+         all_properties->robustUniformBufferDescriptorSize = properties->robustUniformBufferDescriptorSize;
+         all_properties->storageBufferDescriptorSize = properties->storageBufferDescriptorSize;
+         all_properties->robustStorageBufferDescriptorSize = properties->robustStorageBufferDescriptorSize;
+         all_properties->inputAttachmentDescriptorSize = properties->inputAttachmentDescriptorSize;
+         all_properties->accelerationStructureDescriptorSize = properties->accelerationStructureDescriptorSize;
+         all_properties->maxSamplerDescriptorBufferRange = properties->maxSamplerDescriptorBufferRange;
+         all_properties->maxResourceDescriptorBufferRange = properties->maxResourceDescriptorBufferRange;
+         all_properties->samplerDescriptorBufferAddressSpaceSize = properties->samplerDescriptorBufferAddressSpaceSize;
+         all_properties->resourceDescriptorBufferAddressSpaceSize = properties->resourceDescriptorBufferAddressSpaceSize;
+         all_properties->descriptorBufferAddressSpaceSize = properties->descriptorBufferAddressSpaceSize;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_DENSITY_MAP_PROPERTIES_EXT: {
+         const VkPhysicalDeviceDescriptorBufferDensityMapPropertiesEXT *properties = (const VkPhysicalDeviceDescriptorBufferDensityMapPropertiesEXT *)pProperties;
+         all_properties->combinedImageSamplerDensityMapDescriptorSize = properties->combinedImageSamplerDensityMapDescriptorSize;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES: {
+         const VkPhysicalDeviceShaderIntegerDotProductProperties *properties = (const VkPhysicalDeviceShaderIntegerDotProductProperties *)pProperties;
+         all_properties->integerDotProduct8BitUnsignedAccelerated = properties->integerDotProduct8BitUnsignedAccelerated;
+         all_properties->integerDotProduct8BitSignedAccelerated = properties->integerDotProduct8BitSignedAccelerated;
+         all_properties->integerDotProduct8BitMixedSignednessAccelerated = properties->integerDotProduct8BitMixedSignednessAccelerated;
+         all_properties->integerDotProduct4x8BitPackedUnsignedAccelerated = properties->integerDotProduct4x8BitPackedUnsignedAccelerated;
+         all_properties->integerDotProduct4x8BitPackedSignedAccelerated = properties->integerDotProduct4x8BitPackedSignedAccelerated;
+         all_properties->integerDotProduct4x8BitPackedMixedSignednessAccelerated = properties->integerDotProduct4x8BitPackedMixedSignednessAccelerated;
+         all_properties->integerDotProduct16BitUnsignedAccelerated = properties->integerDotProduct16BitUnsignedAccelerated;
+         all_properties->integerDotProduct16BitSignedAccelerated = properties->integerDotProduct16BitSignedAccelerated;
+         all_properties->integerDotProduct16BitMixedSignednessAccelerated = properties->integerDotProduct16BitMixedSignednessAccelerated;
+         all_properties->integerDotProduct32BitUnsignedAccelerated = properties->integerDotProduct32BitUnsignedAccelerated;
+         all_properties->integerDotProduct32BitSignedAccelerated = properties->integerDotProduct32BitSignedAccelerated;
+         all_properties->integerDotProduct32BitMixedSignednessAccelerated = properties->integerDotProduct32BitMixedSignednessAccelerated;
+         all_properties->integerDotProduct64BitUnsignedAccelerated = properties->integerDotProduct64BitUnsignedAccelerated;
+         all_properties->integerDotProduct64BitSignedAccelerated = properties->integerDotProduct64BitSignedAccelerated;
+         all_properties->integerDotProduct64BitMixedSignednessAccelerated = properties->integerDotProduct64BitMixedSignednessAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating8BitUnsignedAccelerated = properties->integerDotProductAccumulatingSaturating8BitUnsignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating8BitSignedAccelerated = properties->integerDotProductAccumulatingSaturating8BitSignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating8BitMixedSignednessAccelerated = properties->integerDotProductAccumulatingSaturating8BitMixedSignednessAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating4x8BitPackedUnsignedAccelerated = properties->integerDotProductAccumulatingSaturating4x8BitPackedUnsignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating4x8BitPackedSignedAccelerated = properties->integerDotProductAccumulatingSaturating4x8BitPackedSignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating4x8BitPackedMixedSignednessAccelerated = properties->integerDotProductAccumulatingSaturating4x8BitPackedMixedSignednessAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating16BitUnsignedAccelerated = properties->integerDotProductAccumulatingSaturating16BitUnsignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating16BitSignedAccelerated = properties->integerDotProductAccumulatingSaturating16BitSignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating16BitMixedSignednessAccelerated = properties->integerDotProductAccumulatingSaturating16BitMixedSignednessAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating32BitUnsignedAccelerated = properties->integerDotProductAccumulatingSaturating32BitUnsignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating32BitSignedAccelerated = properties->integerDotProductAccumulatingSaturating32BitSignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating32BitMixedSignednessAccelerated = properties->integerDotProductAccumulatingSaturating32BitMixedSignednessAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating64BitUnsignedAccelerated = properties->integerDotProductAccumulatingSaturating64BitUnsignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating64BitSignedAccelerated = properties->integerDotProductAccumulatingSaturating64BitSignedAccelerated;
+         all_properties->integerDotProductAccumulatingSaturating64BitMixedSignednessAccelerated = properties->integerDotProductAccumulatingSaturating64BitMixedSignednessAccelerated;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRM_PROPERTIES_EXT: {
+         const VkPhysicalDeviceDrmPropertiesEXT *properties = (const VkPhysicalDeviceDrmPropertiesEXT *)pProperties;
+         all_properties->drmHasPrimary = properties->hasPrimary;
+         all_properties->drmHasRender = properties->hasRender;
+         all_properties->drmPrimaryMajor = properties->primaryMajor;
+         all_properties->drmPrimaryMinor = properties->primaryMinor;
+         all_properties->drmRenderMajor = properties->renderMajor;
+         all_properties->drmRenderMinor = properties->renderMinor;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_PROPERTIES_KHR: {
+         const VkPhysicalDeviceFragmentShaderBarycentricPropertiesKHR *properties = (const VkPhysicalDeviceFragmentShaderBarycentricPropertiesKHR *)pProperties;
+         all_properties->triStripVertexOrderIndependentOfProvokingVertex = properties->triStripVertexOrderIndependentOfProvokingVertex;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_BINARY_PROPERTIES_KHR: {
+         const VkPhysicalDevicePipelineBinaryPropertiesKHR *properties = (const VkPhysicalDevicePipelineBinaryPropertiesKHR *)pProperties;
+         all_properties->pipelineBinaryInternalCache = properties->pipelineBinaryInternalCache;
+         all_properties->pipelineBinaryInternalCacheControl = properties->pipelineBinaryInternalCacheControl;
+         all_properties->pipelineBinaryPrefersInternalCache = properties->pipelineBinaryPrefersInternalCache;
+         all_properties->pipelineBinaryPrecompiledInternalCache = properties->pipelineBinaryPrecompiledInternalCache;
+         all_properties->pipelineBinaryCompressedData = properties->pipelineBinaryCompressedData;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GRAPHICS_PIPELINE_LIBRARY_PROPERTIES_EXT: {
+         const VkPhysicalDeviceGraphicsPipelineLibraryPropertiesEXT *properties = (const VkPhysicalDeviceGraphicsPipelineLibraryPropertiesEXT *)pProperties;
+         all_properties->graphicsPipelineLibraryFastLinking = properties->graphicsPipelineLibraryFastLinking;
+         all_properties->graphicsPipelineLibraryIndependentInterpolationDecoration = properties->graphicsPipelineLibraryIndependentInterpolationDecoration;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_PROPERTIES_EXT: {
+         const VkPhysicalDeviceNestedCommandBufferPropertiesEXT *properties = (const VkPhysicalDeviceNestedCommandBufferPropertiesEXT *)pProperties;
+         all_properties->maxCommandBufferNestingLevel = properties->maxCommandBufferNestingLevel;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_PROPERTIES_EXT: {
+         const VkPhysicalDeviceShaderModuleIdentifierPropertiesEXT *properties = (const VkPhysicalDeviceShaderModuleIdentifierPropertiesEXT *)pProperties;
+         memcpy(all_properties->shaderModuleIdentifierAlgorithmUUID, properties->shaderModuleIdentifierAlgorithmUUID, sizeof(all_properties->shaderModuleIdentifierAlgorithmUUID));
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_PROPERTIES_EXT: {
+         const VkPhysicalDeviceOpacityMicromapPropertiesEXT *properties = (const VkPhysicalDeviceOpacityMicromapPropertiesEXT *)pProperties;
+         all_properties->maxOpacity2StateSubdivisionLevel = properties->maxOpacity2StateSubdivisionLevel;
+         all_properties->maxOpacity4StateSubdivisionLevel = properties->maxOpacity4StateSubdivisionLevel;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_PROPERTIES: {
+         const VkPhysicalDevicePipelineRobustnessProperties *properties = (const VkPhysicalDevicePipelineRobustnessProperties *)pProperties;
+         all_properties->defaultRobustnessStorageBuffers = properties->defaultRobustnessStorageBuffers;
+         all_properties->defaultRobustnessUniformBuffers = properties->defaultRobustnessUniformBuffers;
+         all_properties->defaultRobustnessVertexInputs = properties->defaultRobustnessVertexInputs;
+         all_properties->defaultRobustnessImages = properties->defaultRobustnessImages;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_PROCESSING_PROPERTIES_QCOM: {
+         const VkPhysicalDeviceImageProcessingPropertiesQCOM *properties = (const VkPhysicalDeviceImageProcessingPropertiesQCOM *)pProperties;
+         all_properties->maxWeightFilterPhases = properties->maxWeightFilterPhases;
+         all_properties->maxWeightFilterDimension = properties->maxWeightFilterDimension;
+         all_properties->maxBlockMatchRegion = properties->maxBlockMatchRegion;
+         all_properties->maxBoxFilterBlockSize = properties->maxBoxFilterBlockSize;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPTICAL_FLOW_PROPERTIES_NV: {
+         const VkPhysicalDeviceOpticalFlowPropertiesNV *properties = (const VkPhysicalDeviceOpticalFlowPropertiesNV *)pProperties;
+         all_properties->supportedOutputGridSizes = properties->supportedOutputGridSizes;
+         all_properties->supportedHintGridSizes = properties->supportedHintGridSizes;
+         all_properties->hintSupported = properties->hintSupported;
+         all_properties->costSupported = properties->costSupported;
+         all_properties->bidirectionalFlowSupported = properties->bidirectionalFlowSupported;
+         all_properties->globalFlowSupported = properties->globalFlowSupported;
+         all_properties->minWidth = properties->minWidth;
+         all_properties->minHeight = properties->minHeight;
+         all_properties->maxWidth = properties->maxWidth;
+         all_properties->maxHeight = properties->maxHeight;
+         all_properties->maxNumRegionsOfInterest = properties->maxNumRegionsOfInterest;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CORE_BUILTINS_PROPERTIES_ARM: {
+         const VkPhysicalDeviceShaderCoreBuiltinsPropertiesARM *properties = (const VkPhysicalDeviceShaderCoreBuiltinsPropertiesARM *)pProperties;
+         all_properties->shaderCoreMask = properties->shaderCoreMask;
+         all_properties->shaderCoreCount = properties->shaderCoreCount;
+         all_properties->shaderWarpsPerCore = properties->shaderWarpsPerCore;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_INVOCATION_REORDER_PROPERTIES_NV: {
+         const VkPhysicalDeviceRayTracingInvocationReorderPropertiesNV *properties = (const VkPhysicalDeviceRayTracingInvocationReorderPropertiesNV *)pProperties;
+         all_properties->rayTracingInvocationReorderReorderingHint = properties->rayTracingInvocationReorderReorderingHint;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_SPARSE_ADDRESS_SPACE_PROPERTIES_NV: {
+         const VkPhysicalDeviceExtendedSparseAddressSpacePropertiesNV *properties = (const VkPhysicalDeviceExtendedSparseAddressSpacePropertiesNV *)pProperties;
+         all_properties->extendedSparseAddressSpaceSize = properties->extendedSparseAddressSpaceSize;
+         all_properties->extendedSparseImageUsageFlags = properties->extendedSparseImageUsageFlags;
+         all_properties->extendedSparseBufferUsageFlags = properties->extendedSparseBufferUsageFlags;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_ARM: {
+         const VkPhysicalDeviceShaderCorePropertiesARM *properties = (const VkPhysicalDeviceShaderCorePropertiesARM *)pProperties;
+         all_properties->pixelRate = properties->pixelRate;
+         all_properties->texelRate = properties->texelRate;
+         all_properties->fmaRate = properties->fmaRate;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_PROPERTIES_EXT: {
+         const VkPhysicalDeviceShaderObjectPropertiesEXT *properties = (const VkPhysicalDeviceShaderObjectPropertiesEXT *)pProperties;
+         memcpy(all_properties->shaderBinaryUUID, properties->shaderBinaryUUID, sizeof(all_properties->shaderBinaryUUID));
+         all_properties->shaderBinaryVersion = properties->shaderBinaryVersion;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_TILE_IMAGE_PROPERTIES_EXT: {
+         const VkPhysicalDeviceShaderTileImagePropertiesEXT *properties = (const VkPhysicalDeviceShaderTileImagePropertiesEXT *)pProperties;
+         all_properties->shaderTileImageCoherentReadAccelerated = properties->shaderTileImageCoherentReadAccelerated;
+         all_properties->shaderTileImageReadSampleFromPixelRateInvocation = properties->shaderTileImageReadSampleFromPixelRateInvocation;
+         all_properties->shaderTileImageReadFromHelperInvocation = properties->shaderTileImageReadFromHelperInvocation;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_PROPERTIES_KHR: {
+         const VkPhysicalDeviceCooperativeMatrixPropertiesKHR *properties = (const VkPhysicalDeviceCooperativeMatrixPropertiesKHR *)pProperties;
+         all_properties->cooperativeMatrixSupportedStages = properties->cooperativeMatrixSupportedStages;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_PROCESSING_2_PROPERTIES_QCOM: {
+         const VkPhysicalDeviceImageProcessing2PropertiesQCOM *properties = (const VkPhysicalDeviceImageProcessing2PropertiesQCOM *)pProperties;
+         all_properties->maxBlockMatchWindow = properties->maxBlockMatchWindow;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LAYERED_DRIVER_PROPERTIES_MSFT: {
+         const VkPhysicalDeviceLayeredDriverPropertiesMSFT *properties = (const VkPhysicalDeviceLayeredDriverPropertiesMSFT *)pProperties;
+         all_properties->underlyingAPI = properties->underlyingAPI;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCHEDULING_CONTROLS_PROPERTIES_ARM: {
+         const VkPhysicalDeviceSchedulingControlsPropertiesARM *properties = (const VkPhysicalDeviceSchedulingControlsPropertiesARM *)pProperties;
+         all_properties->schedulingControlsFlags = properties->schedulingControlsFlags;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RENDER_PASS_STRIPED_PROPERTIES_ARM: {
+         const VkPhysicalDeviceRenderPassStripedPropertiesARM *properties = (const VkPhysicalDeviceRenderPassStripedPropertiesARM *)pProperties;
+         all_properties->renderPassStripeGranularity = properties->renderPassStripeGranularity;
+         all_properties->maxRenderPassStripes = properties->maxRenderPassStripes;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAP_MEMORY_PLACED_PROPERTIES_EXT: {
+         const VkPhysicalDeviceMapMemoryPlacedPropertiesEXT *properties = (const VkPhysicalDeviceMapMemoryPlacedPropertiesEXT *)pProperties;
+         all_properties->minPlacedMemoryMapAlignment = properties->minPlacedMemoryMapAlignment;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_ALIGNMENT_CONTROL_PROPERTIES_MESA: {
+         const VkPhysicalDeviceImageAlignmentControlPropertiesMESA *properties = (const VkPhysicalDeviceImageAlignmentControlPropertiesMESA *)pProperties;
+         all_properties->supportedImageAlignmentMask = properties->supportedImageAlignmentMask;
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_2_PROPERTIES_NV: {
+         const VkPhysicalDeviceCooperativeMatrix2PropertiesNV *properties = (const VkPhysicalDeviceCooperativeMatrix2PropertiesNV *)pProperties;
+         all_properties->cooperativeMatrixWorkgroupScopeMaxWorkgroupSize = properties->cooperativeMatrixWorkgroupScopeMaxWorkgroupSize;
+         all_properties->cooperativeMatrixFlexibleDimensionsMaxDimension = properties->cooperativeMatrixFlexibleDimensionsMaxDimension;
+         all_properties->cooperativeMatrixWorkgroupScopeReservedSharedMemory = properties->cooperativeMatrixWorkgroupScopeReservedSharedMemory;
+         break;
+      }
+
+      /* Don't assume anything with this struct type, and just copy things over */
+
+      default:
+         break;
+      }
+}
+

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.12 2024/07/25 06:54:05 jsg Exp $
+#	$OpenBSD: Makefile,v 1.13 2025/06/05 14:18:37 jsg Exp $
 
 .include "config.mk"
 
@@ -6,33 +6,32 @@ SUBDIR=		include pkgconfig \
 		libblake3 libcompiler libdri \
 		libgallium libgalliumvl \
 		libglapi_static libglcpp libglsl \
-		libloader \
-		libmesa libmesa_format \
+		libloader libloader_x11 libmesa \
 		libmesa_util libmesa_util_c11 \
-		libnir libpipe_loader_static libsoftpipe \
+		libnir libpipe_loader_dynamic libpipe_loader_static \
+		libsoftpipe \
 		libmesa_util_sse41 \
 		libswdri libswkmsdri \
 		libws_null libwsw libvtn libxmlconfig
-
-.if ${XENOCARA_BUILD_DRI3:L} == "yes" || make(obj)
-SUBDIR+=	libloader_dri3_helper
-.endif
 
 .if ${WITH_SSE41} == "yes" || make(obj)
 SUBDIR+=	libmesa_sse41
 .endif
 
 .if ${WITH_AMD_VK} == "yes" || ${WITH_GALLIUM_RADEONSI} == "yes" || make(obj)
-SUBDIR+=	libaddrlib libamd_common libamd_common_llvm libamdgpuwinsys
+SUBDIR+=	libaddrlib libamd_common libamd_common_llvm \
+		libamdgpuwinsys libvpe
 .endif
 
 .if ${WITH_GALLIUM_CROCUS} == "yes" || ${WITH_GALLIUM_IRIS} == "yes" || \
     ${WITH_INTEL_VK} == "yes" || make(obj)
-SUBDIR+=	libblorp libintel_common libintel_compiler libintel_dev \
+SUBDIR+=	libblorp libintel_common \
+		libintel_compiler libintel_compiler_elk \
+		libintel_decoder libintel_dev \
 		libintel-driver-ds \
 		libintel_perf libisl libisl_tiled_memcpy \
 		libisl_tiled_memcpy_sse41
-.for GFX in 40 50 60 70 75 80 90 110 120 125 200
+.for GFX in 40 50 60 70 75 80 90 110 120 125 200 300
 SUBDIR+=	libisl_gfx${GFX}
 .endfor
 .endif
@@ -43,7 +42,8 @@ SUBDIR+=	libradeonwinsys
 .endif
 
 .if ${WITH_AMD_VK} == "yes" || ${WITH_INTEL_VK} == "yes" || make(obj)
-SUBDIR+=	libvulkan_runtime libvulkan_util libvulkan_wsi
+SUBDIR+=	libvulkan_instance libvulkan_runtime \
+		libvulkan_util libvulkan_wsi
 .endif
 
 .if ${WITH_LLVM} == "yes" || make(obj)
@@ -57,7 +57,7 @@ SUBDIR+=	libvulkan_radeon
 
 .if ${WITH_INTEL_VK} == "yes" || make(obj)
 SUBDIR+=	libanv_common  libanv_hasvk_common
-.for GEN in 70 75 80 90 110 120 125 200
+.for GEN in 70 75 80 90 110 120 125 200 300
 SUBDIR+=	libanv_gen${GEN}
 .endfor
 SUBDIR+=	libvulkan_intel libvulkan_intel_hasvk
@@ -76,7 +76,7 @@ SUBDIR+=	libcrocus_per_hw_ver${GEN}
 
 .if ${WITH_GALLIUM_IRIS} == "yes" || make(obj)
 SUBDIR+=	libiris libiriswinsys
-.for GEN in 80 90 110 120 125 200
+.for GEN in 80 90 110 120 125 200 300
 SUBDIR+=	libiris_gen${GEN}
 .endfor
 .endif
@@ -90,19 +90,23 @@ SUBDIR+=	libr600
 .endif
 
 .if ${WITH_GALLIUM_RADEONSI} == "yes" || make(obj)
-.for GEN in 6 7 8 9 10 103 11 115
+.for GEN in 6 7 8 9 10 103 11 115 12
 SUBDIR+=	libradeonsi_gfx${GEN}
 .endfor
 SUBDIR+=	libradeonsi
 .endif
 
 # installed libs
-SUBDIR+=	libglapi libgbm libEGL libGL libGLESv1_CM libGLESv2 libOSMesa
-
-SUBDIR+=	libgallium_dri
+SUBDIR+=	libglapi
 
 .if ${WITH_GALLIUM_VA} == "yes" || make(obj)
 SUBDIR+=	libva_st libgallium_drv_video
 .endif
+
+SUBDIR+=	libgallium_dri
+SUBDIR+=	libgbm libdri_gbm
+SUBDIR+=	libEGL libGL libGLESv1_CM libGLESv2 libOSMesa
+
+SUBDIR+=	libdril_dri
 
 .include <bsd.subdir.mk>

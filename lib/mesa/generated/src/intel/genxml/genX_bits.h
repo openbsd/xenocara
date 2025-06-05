@@ -43,9 +43,6 @@ extern "C" {
 /* 3DSTATE_CLEAR_PARAMS */
 
 
-#ifndef GFX20_3DSTATE_CLEAR_PARAMS_length
-#define GFX20_3DSTATE_CLEAR_PARAMS_length  3
-#endif
 #ifndef GFX125_3DSTATE_CLEAR_PARAMS_length
 #define GFX125_3DSTATE_CLEAR_PARAMS_length  3
 #endif
@@ -78,7 +75,8 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_CLEAR_PARAMS_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
-   case 200: return 3;
+   case 300: return 0;
+   case 200: return 0;
    case 125: return 3;
    case 120: return 3;
    case 110: return 3;
@@ -100,6 +98,9 @@ _3DSTATE_CLEAR_PARAMS_length(const struct intel_device_info *devinfo)
 /* 3DSTATE_CPSIZE_CONTROL_BUFFER */
 
 
+#ifndef GFX30_3DSTATE_CPSIZE_CONTROL_BUFFER_length
+#define GFX30_3DSTATE_CPSIZE_CONTROL_BUFFER_length  8
+#endif
 #ifndef GFX20_3DSTATE_CPSIZE_CONTROL_BUFFER_length
 #define GFX20_3DSTATE_CPSIZE_CONTROL_BUFFER_length  8
 #endif
@@ -111,6 +112,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_CPSIZE_CONTROL_BUFFER_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 8;
    case 200: return 8;
    case 125: return 8;
    case 120: return 0;
@@ -133,6 +135,7 @@ _3DSTATE_CPSIZE_CONTROL_BUFFER_length(const struct intel_device_info *devinfo)
 /* 3DSTATE_CPSIZE_CONTROL_BUFFER::Surface Base Address */
 
 
+#define GFX30_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX20_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX125_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfaceBaseAddress_bits  64
 
@@ -140,6 +143,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_CPSIZE_CONTROL_BUFFER_SurfaceBaseAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 0;
@@ -159,6 +163,7 @@ _3DSTATE_CPSIZE_CONTROL_BUFFER_SurfaceBaseAddress_bits(const struct intel_device
 
 
 
+#define GFX30_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfaceBaseAddress_start  64
 #define GFX20_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfaceBaseAddress_start  64
 #define GFX125_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfaceBaseAddress_start  64
 
@@ -166,6 +171,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_CPSIZE_CONTROL_BUFFER_SurfaceBaseAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 0;
@@ -187,6 +193,7 @@ _3DSTATE_CPSIZE_CONTROL_BUFFER_SurfaceBaseAddress_start(const struct intel_devic
 /* 3DSTATE_CPSIZE_CONTROL_BUFFER::Surface Pitch */
 
 
+#define GFX30_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfacePitch_bits  17
 #define GFX20_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfacePitch_bits  17
 #define GFX125_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfacePitch_bits  17
 
@@ -194,6 +201,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_CPSIZE_CONTROL_BUFFER_SurfacePitch_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 17;
    case 200: return 17;
    case 125: return 17;
    case 120: return 0;
@@ -213,6 +221,7 @@ _3DSTATE_CPSIZE_CONTROL_BUFFER_SurfacePitch_bits(const struct intel_device_info 
 
 
 
+#define GFX30_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfacePitch_start  32
 #define GFX20_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfacePitch_start  32
 #define GFX125_3DSTATE_CPSIZE_CONTROL_BUFFER_SurfacePitch_start  32
 
@@ -220,6 +229,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_CPSIZE_CONTROL_BUFFER_SurfacePitch_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 32;
    case 200: return 32;
    case 125: return 32;
    case 120: return 0;
@@ -241,8 +251,11 @@ _3DSTATE_CPSIZE_CONTROL_BUFFER_SurfacePitch_start(const struct intel_device_info
 /* 3DSTATE_DEPTH_BUFFER */
 
 
+#ifndef GFX30_3DSTATE_DEPTH_BUFFER_length
+#define GFX30_3DSTATE_DEPTH_BUFFER_length  8
+#endif
 #ifndef GFX20_3DSTATE_DEPTH_BUFFER_length
-#define GFX20_3DSTATE_DEPTH_BUFFER_length  10
+#define GFX20_3DSTATE_DEPTH_BUFFER_length  8
 #endif
 #ifndef GFX125_3DSTATE_DEPTH_BUFFER_length
 #define GFX125_3DSTATE_DEPTH_BUFFER_length  10
@@ -282,7 +295,8 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_DEPTH_BUFFER_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
-   case 200: return 10;
+   case 300: return 8;
+   case 200: return 8;
    case 125: return 10;
    case 120: return 8;
    case 110: return 8;
@@ -304,6 +318,7 @@ _3DSTATE_DEPTH_BUFFER_length(const struct intel_device_info *devinfo)
 /* 3DSTATE_DEPTH_BUFFER::Surface Base Address */
 
 
+#define GFX30_3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX20_3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX125_3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX12_3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_bits  64
@@ -321,6 +336,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 64;
@@ -340,6 +356,7 @@ _3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_bits(const struct intel_device_info *de
 
 
 
+#define GFX30_3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_start  64
 #define GFX20_3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_start  64
 #define GFX125_3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_start  64
 #define GFX12_3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_start  64
@@ -357,6 +374,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 64;
@@ -378,6 +396,7 @@ _3DSTATE_DEPTH_BUFFER_SurfaceBaseAddress_start(const struct intel_device_info *d
 /* 3DSTATE_DEPTH_BUFFER::Surface Pitch */
 
 
+#define GFX30_3DSTATE_DEPTH_BUFFER_SurfacePitch_bits  18
 #define GFX20_3DSTATE_DEPTH_BUFFER_SurfacePitch_bits  18
 #define GFX125_3DSTATE_DEPTH_BUFFER_SurfacePitch_bits  18
 #define GFX12_3DSTATE_DEPTH_BUFFER_SurfacePitch_bits  18
@@ -395,6 +414,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_DEPTH_BUFFER_SurfacePitch_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 18;
    case 200: return 18;
    case 125: return 18;
    case 120: return 18;
@@ -414,6 +434,7 @@ _3DSTATE_DEPTH_BUFFER_SurfacePitch_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_3DSTATE_DEPTH_BUFFER_SurfacePitch_start  32
 #define GFX20_3DSTATE_DEPTH_BUFFER_SurfacePitch_start  32
 #define GFX125_3DSTATE_DEPTH_BUFFER_SurfacePitch_start  32
 #define GFX12_3DSTATE_DEPTH_BUFFER_SurfacePitch_start  32
@@ -431,6 +452,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_DEPTH_BUFFER_SurfacePitch_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 32;
    case 200: return 32;
    case 125: return 32;
    case 120: return 32;
@@ -452,6 +474,9 @@ _3DSTATE_DEPTH_BUFFER_SurfacePitch_start(const struct intel_device_info *devinfo
 /* 3DSTATE_HIER_DEPTH_BUFFER */
 
 
+#ifndef GFX30_3DSTATE_HIER_DEPTH_BUFFER_length
+#define GFX30_3DSTATE_HIER_DEPTH_BUFFER_length  5
+#endif
 #ifndef GFX20_3DSTATE_HIER_DEPTH_BUFFER_length
 #define GFX20_3DSTATE_HIER_DEPTH_BUFFER_length  5
 #endif
@@ -487,6 +512,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_HIER_DEPTH_BUFFER_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 5;
    case 200: return 5;
    case 125: return 5;
    case 120: return 5;
@@ -509,6 +535,7 @@ _3DSTATE_HIER_DEPTH_BUFFER_length(const struct intel_device_info *devinfo)
 /* 3DSTATE_HIER_DEPTH_BUFFER::Surface Base Address */
 
 
+#define GFX30_3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX20_3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX125_3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX12_3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_bits  64
@@ -524,6 +551,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 64;
@@ -543,6 +571,7 @@ _3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_bits(const struct intel_device_inf
 
 
 
+#define GFX30_3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_start  64
 #define GFX20_3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_start  64
 #define GFX125_3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_start  64
 #define GFX12_3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_start  64
@@ -558,6 +587,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 64;
@@ -579,6 +609,7 @@ _3DSTATE_HIER_DEPTH_BUFFER_SurfaceBaseAddress_start(const struct intel_device_in
 /* 3DSTATE_HIER_DEPTH_BUFFER::Surface Pitch */
 
 
+#define GFX30_3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_bits  17
 #define GFX20_3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_bits  17
 #define GFX125_3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_bits  17
 #define GFX12_3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_bits  17
@@ -594,6 +625,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 17;
    case 200: return 17;
    case 125: return 17;
    case 120: return 17;
@@ -613,6 +645,7 @@ _3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_bits(const struct intel_device_info *dev
 
 
 
+#define GFX30_3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_start  32
 #define GFX20_3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_start  32
 #define GFX125_3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_start  32
 #define GFX12_3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_start  32
@@ -628,6 +661,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 32;
    case 200: return 32;
    case 125: return 32;
    case 120: return 32;
@@ -649,6 +683,9 @@ _3DSTATE_HIER_DEPTH_BUFFER_SurfacePitch_start(const struct intel_device_info *de
 /* 3DSTATE_SO_BUFFER */
 
 
+#ifndef GFX30_3DSTATE_SO_BUFFER_length
+#define GFX30_3DSTATE_SO_BUFFER_length  8
+#endif
 #ifndef GFX20_3DSTATE_SO_BUFFER_length
 #define GFX20_3DSTATE_SO_BUFFER_length  8
 #endif
@@ -678,6 +715,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_SO_BUFFER_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 8;
    case 200: return 8;
    case 125: return 8;
    case 120: return 8;
@@ -700,6 +738,7 @@ _3DSTATE_SO_BUFFER_length(const struct intel_device_info *devinfo)
 /* 3DSTATE_SO_BUFFER::Stream Offset */
 
 
+#define GFX30_3DSTATE_SO_BUFFER_StreamOffset_bits  32
 #define GFX20_3DSTATE_SO_BUFFER_StreamOffset_bits  32
 #define GFX125_3DSTATE_SO_BUFFER_StreamOffset_bits  32
 #define GFX12_3DSTATE_SO_BUFFER_StreamOffset_bits  32
@@ -711,6 +750,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_SO_BUFFER_StreamOffset_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 32;
    case 200: return 32;
    case 125: return 32;
    case 120: return 32;
@@ -730,6 +770,7 @@ _3DSTATE_SO_BUFFER_StreamOffset_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_3DSTATE_SO_BUFFER_StreamOffset_start  224
 #define GFX20_3DSTATE_SO_BUFFER_StreamOffset_start  224
 #define GFX125_3DSTATE_SO_BUFFER_StreamOffset_start  224
 #define GFX12_3DSTATE_SO_BUFFER_StreamOffset_start  224
@@ -741,6 +782,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_SO_BUFFER_StreamOffset_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 224;
    case 200: return 224;
    case 125: return 224;
    case 120: return 224;
@@ -762,6 +804,7 @@ _3DSTATE_SO_BUFFER_StreamOffset_start(const struct intel_device_info *devinfo)
 /* 3DSTATE_SO_BUFFER::Surface Base Address */
 
 
+#define GFX30_3DSTATE_SO_BUFFER_SurfaceBaseAddress_bits  46
 #define GFX20_3DSTATE_SO_BUFFER_SurfaceBaseAddress_bits  46
 #define GFX125_3DSTATE_SO_BUFFER_SurfaceBaseAddress_bits  46
 #define GFX12_3DSTATE_SO_BUFFER_SurfaceBaseAddress_bits  46
@@ -775,6 +818,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_SO_BUFFER_SurfaceBaseAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 46;
    case 200: return 46;
    case 125: return 46;
    case 120: return 46;
@@ -794,6 +838,7 @@ _3DSTATE_SO_BUFFER_SurfaceBaseAddress_bits(const struct intel_device_info *devin
 
 
 
+#define GFX30_3DSTATE_SO_BUFFER_SurfaceBaseAddress_start  66
 #define GFX20_3DSTATE_SO_BUFFER_SurfaceBaseAddress_start  66
 #define GFX125_3DSTATE_SO_BUFFER_SurfaceBaseAddress_start  66
 #define GFX12_3DSTATE_SO_BUFFER_SurfaceBaseAddress_start  66
@@ -807,6 +852,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_SO_BUFFER_SurfaceBaseAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 66;
    case 200: return 66;
    case 125: return 66;
    case 120: return 66;
@@ -828,6 +874,9 @@ _3DSTATE_SO_BUFFER_SurfaceBaseAddress_start(const struct intel_device_info *devi
 /* 3DSTATE_STENCIL_BUFFER */
 
 
+#ifndef GFX30_3DSTATE_STENCIL_BUFFER_length
+#define GFX30_3DSTATE_STENCIL_BUFFER_length  8
+#endif
 #ifndef GFX20_3DSTATE_STENCIL_BUFFER_length
 #define GFX20_3DSTATE_STENCIL_BUFFER_length  8
 #endif
@@ -863,6 +912,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_STENCIL_BUFFER_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 8;
    case 200: return 8;
    case 125: return 8;
    case 120: return 8;
@@ -885,6 +935,7 @@ _3DSTATE_STENCIL_BUFFER_length(const struct intel_device_info *devinfo)
 /* 3DSTATE_STENCIL_BUFFER::Surface Base Address */
 
 
+#define GFX30_3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX20_3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX125_3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_bits  64
 #define GFX12_3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_bits  64
@@ -900,6 +951,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 64;
@@ -919,6 +971,7 @@ _3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_bits(const struct intel_device_info *
 
 
 
+#define GFX30_3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_start  64
 #define GFX20_3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_start  64
 #define GFX125_3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_start  64
 #define GFX12_3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_start  64
@@ -934,6 +987,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 64;
@@ -955,6 +1009,7 @@ _3DSTATE_STENCIL_BUFFER_SurfaceBaseAddress_start(const struct intel_device_info 
 /* 3DSTATE_STENCIL_BUFFER::Surface Pitch */
 
 
+#define GFX30_3DSTATE_STENCIL_BUFFER_SurfacePitch_bits  17
 #define GFX20_3DSTATE_STENCIL_BUFFER_SurfacePitch_bits  17
 #define GFX125_3DSTATE_STENCIL_BUFFER_SurfacePitch_bits  17
 #define GFX12_3DSTATE_STENCIL_BUFFER_SurfacePitch_bits  17
@@ -970,6 +1025,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_STENCIL_BUFFER_SurfacePitch_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 17;
    case 200: return 17;
    case 125: return 17;
    case 120: return 17;
@@ -989,6 +1045,7 @@ _3DSTATE_STENCIL_BUFFER_SurfacePitch_bits(const struct intel_device_info *devinf
 
 
 
+#define GFX30_3DSTATE_STENCIL_BUFFER_SurfacePitch_start  32
 #define GFX20_3DSTATE_STENCIL_BUFFER_SurfacePitch_start  32
 #define GFX125_3DSTATE_STENCIL_BUFFER_SurfacePitch_start  32
 #define GFX12_3DSTATE_STENCIL_BUFFER_SurfacePitch_start  32
@@ -1004,6 +1061,7 @@ static inline uint32_t ATTRIBUTE_PURE
 _3DSTATE_STENCIL_BUFFER_SurfacePitch_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 32;
    case 200: return 32;
    case 125: return 32;
    case 120: return 32;
@@ -1025,9 +1083,6 @@ _3DSTATE_STENCIL_BUFFER_SurfacePitch_start(const struct intel_device_info *devin
 /* CLEAR_COLOR */
 
 
-#ifndef GFX20_CLEAR_COLOR_length
-#define GFX20_CLEAR_COLOR_length  8
-#endif
 #ifndef GFX125_CLEAR_COLOR_length
 #define GFX125_CLEAR_COLOR_length  8
 #endif
@@ -1042,7 +1097,8 @@ static inline uint32_t ATTRIBUTE_PURE
 CLEAR_COLOR_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
-   case 200: return 8;
+   case 300: return 0;
+   case 200: return 0;
    case 125: return 8;
    case 120: return 8;
    case 110: return 8;
@@ -1078,6 +1134,7 @@ static inline uint32_t ATTRIBUTE_PURE
 CPS_STATE_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 0;
    case 200: return 8;
    case 125: return 8;
    case 120: return 8;
@@ -1100,6 +1157,9 @@ CPS_STATE_length(const struct intel_device_info *devinfo)
 /* MI_BATCH_BUFFER_START */
 
 
+#ifndef GFX30_MI_BATCH_BUFFER_START_length
+#define GFX30_MI_BATCH_BUFFER_START_length  3
+#endif
 #ifndef GFX20_MI_BATCH_BUFFER_START_length
 #define GFX20_MI_BATCH_BUFFER_START_length  3
 #endif
@@ -1132,6 +1192,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_BATCH_BUFFER_START_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 3;
    case 200: return 3;
    case 125: return 3;
    case 120: return 3;
@@ -1154,6 +1215,7 @@ MI_BATCH_BUFFER_START_length(const struct intel_device_info *devinfo)
 /* MI_BATCH_BUFFER_START::Batch Buffer Start Address */
 
 
+#define GFX30_MI_BATCH_BUFFER_START_BatchBufferStartAddress_bits  62
 #define GFX20_MI_BATCH_BUFFER_START_BatchBufferStartAddress_bits  62
 #define GFX125_MI_BATCH_BUFFER_START_BatchBufferStartAddress_bits  62
 #define GFX12_MI_BATCH_BUFFER_START_BatchBufferStartAddress_bits  62
@@ -1168,6 +1230,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_BATCH_BUFFER_START_BatchBufferStartAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 62;
    case 200: return 62;
    case 125: return 62;
    case 120: return 62;
@@ -1187,6 +1250,7 @@ MI_BATCH_BUFFER_START_BatchBufferStartAddress_bits(const struct intel_device_inf
 
 
 
+#define GFX30_MI_BATCH_BUFFER_START_BatchBufferStartAddress_start  34
 #define GFX20_MI_BATCH_BUFFER_START_BatchBufferStartAddress_start  34
 #define GFX125_MI_BATCH_BUFFER_START_BatchBufferStartAddress_start  34
 #define GFX12_MI_BATCH_BUFFER_START_BatchBufferStartAddress_start  34
@@ -1201,6 +1265,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_BATCH_BUFFER_START_BatchBufferStartAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 34;
    case 200: return 34;
    case 125: return 34;
    case 120: return 34;
@@ -1222,6 +1287,9 @@ MI_BATCH_BUFFER_START_BatchBufferStartAddress_start(const struct intel_device_in
 /* MI_REPORT_PERF_COUNT */
 
 
+#ifndef GFX30_MI_REPORT_PERF_COUNT_length
+#define GFX30_MI_REPORT_PERF_COUNT_length  4
+#endif
 #ifndef GFX20_MI_REPORT_PERF_COUNT_length
 #define GFX20_MI_REPORT_PERF_COUNT_length  4
 #endif
@@ -1251,6 +1319,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_REPORT_PERF_COUNT_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 4;
    case 200: return 4;
    case 125: return 4;
    case 120: return 4;
@@ -1273,6 +1342,7 @@ MI_REPORT_PERF_COUNT_length(const struct intel_device_info *devinfo)
 /* MI_REPORT_PERF_COUNT::Memory Address */
 
 
+#define GFX30_MI_REPORT_PERF_COUNT_MemoryAddress_bits  58
 #define GFX20_MI_REPORT_PERF_COUNT_MemoryAddress_bits  58
 #define GFX125_MI_REPORT_PERF_COUNT_MemoryAddress_bits  58
 #define GFX12_MI_REPORT_PERF_COUNT_MemoryAddress_bits  58
@@ -1286,6 +1356,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_REPORT_PERF_COUNT_MemoryAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 58;
    case 200: return 58;
    case 125: return 58;
    case 120: return 58;
@@ -1305,6 +1376,7 @@ MI_REPORT_PERF_COUNT_MemoryAddress_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_MI_REPORT_PERF_COUNT_MemoryAddress_start  38
 #define GFX20_MI_REPORT_PERF_COUNT_MemoryAddress_start  38
 #define GFX125_MI_REPORT_PERF_COUNT_MemoryAddress_start  38
 #define GFX12_MI_REPORT_PERF_COUNT_MemoryAddress_start  38
@@ -1318,6 +1390,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_REPORT_PERF_COUNT_MemoryAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 38;
    case 200: return 38;
    case 125: return 38;
    case 120: return 38;
@@ -1339,6 +1412,9 @@ MI_REPORT_PERF_COUNT_MemoryAddress_start(const struct intel_device_info *devinfo
 /* MI_STORE_DATA_IMM */
 
 
+#ifndef GFX30_MI_STORE_DATA_IMM_length
+#define GFX30_MI_STORE_DATA_IMM_length  4
+#endif
 #ifndef GFX20_MI_STORE_DATA_IMM_length
 #define GFX20_MI_STORE_DATA_IMM_length  4
 #endif
@@ -1380,6 +1456,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_STORE_DATA_IMM_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 4;
    case 200: return 4;
    case 125: return 4;
    case 120: return 4;
@@ -1402,6 +1479,7 @@ MI_STORE_DATA_IMM_length(const struct intel_device_info *devinfo)
 /* MI_STORE_DATA_IMM::Address */
 
 
+#define GFX30_MI_STORE_DATA_IMM_Address_bits  46
 #define GFX20_MI_STORE_DATA_IMM_Address_bits  46
 #define GFX125_MI_STORE_DATA_IMM_Address_bits  46
 #define GFX12_MI_STORE_DATA_IMM_Address_bits  46
@@ -1419,6 +1497,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_STORE_DATA_IMM_Address_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 46;
    case 200: return 46;
    case 125: return 46;
    case 120: return 46;
@@ -1438,6 +1517,7 @@ MI_STORE_DATA_IMM_Address_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_MI_STORE_DATA_IMM_Address_start  34
 #define GFX20_MI_STORE_DATA_IMM_Address_start  34
 #define GFX125_MI_STORE_DATA_IMM_Address_start  34
 #define GFX12_MI_STORE_DATA_IMM_Address_start  34
@@ -1455,6 +1535,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_STORE_DATA_IMM_Address_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 34;
    case 200: return 34;
    case 125: return 34;
    case 120: return 34;
@@ -1476,6 +1557,7 @@ MI_STORE_DATA_IMM_Address_start(const struct intel_device_info *devinfo)
 /* MI_STORE_DATA_IMM::Immediate Data */
 
 
+#define GFX30_MI_STORE_DATA_IMM_ImmediateData_bits  64
 #define GFX20_MI_STORE_DATA_IMM_ImmediateData_bits  64
 #define GFX125_MI_STORE_DATA_IMM_ImmediateData_bits  64
 #define GFX12_MI_STORE_DATA_IMM_ImmediateData_bits  64
@@ -1493,6 +1575,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_STORE_DATA_IMM_ImmediateData_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 64;
@@ -1512,6 +1595,7 @@ MI_STORE_DATA_IMM_ImmediateData_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_MI_STORE_DATA_IMM_ImmediateData_start  96
 #define GFX20_MI_STORE_DATA_IMM_ImmediateData_start  96
 #define GFX125_MI_STORE_DATA_IMM_ImmediateData_start  96
 #define GFX12_MI_STORE_DATA_IMM_ImmediateData_start  96
@@ -1529,6 +1613,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_STORE_DATA_IMM_ImmediateData_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 96;
    case 200: return 96;
    case 125: return 96;
    case 120: return 96;
@@ -1550,6 +1635,9 @@ MI_STORE_DATA_IMM_ImmediateData_start(const struct intel_device_info *devinfo)
 /* MI_STORE_REGISTER_MEM */
 
 
+#ifndef GFX30_MI_STORE_REGISTER_MEM_length
+#define GFX30_MI_STORE_REGISTER_MEM_length  4
+#endif
 #ifndef GFX20_MI_STORE_REGISTER_MEM_length
 #define GFX20_MI_STORE_REGISTER_MEM_length  4
 #endif
@@ -1591,6 +1679,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_STORE_REGISTER_MEM_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 4;
    case 200: return 4;
    case 125: return 4;
    case 120: return 4;
@@ -1613,6 +1702,7 @@ MI_STORE_REGISTER_MEM_length(const struct intel_device_info *devinfo)
 /* MI_STORE_REGISTER_MEM::Memory Address */
 
 
+#define GFX30_MI_STORE_REGISTER_MEM_MemoryAddress_bits  62
 #define GFX20_MI_STORE_REGISTER_MEM_MemoryAddress_bits  62
 #define GFX125_MI_STORE_REGISTER_MEM_MemoryAddress_bits  62
 #define GFX12_MI_STORE_REGISTER_MEM_MemoryAddress_bits  62
@@ -1630,6 +1720,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_STORE_REGISTER_MEM_MemoryAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 62;
    case 200: return 62;
    case 125: return 62;
    case 120: return 62;
@@ -1649,6 +1740,7 @@ MI_STORE_REGISTER_MEM_MemoryAddress_bits(const struct intel_device_info *devinfo
 
 
 
+#define GFX30_MI_STORE_REGISTER_MEM_MemoryAddress_start  66
 #define GFX20_MI_STORE_REGISTER_MEM_MemoryAddress_start  66
 #define GFX125_MI_STORE_REGISTER_MEM_MemoryAddress_start  66
 #define GFX12_MI_STORE_REGISTER_MEM_MemoryAddress_start  66
@@ -1666,6 +1758,7 @@ static inline uint32_t ATTRIBUTE_PURE
 MI_STORE_REGISTER_MEM_MemoryAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 66;
    case 200: return 66;
    case 125: return 66;
    case 120: return 66;
@@ -1687,6 +1780,9 @@ MI_STORE_REGISTER_MEM_MemoryAddress_start(const struct intel_device_info *devinf
 /* RENDER_SURFACE_STATE */
 
 
+#ifndef GFX30_RENDER_SURFACE_STATE_length
+#define GFX30_RENDER_SURFACE_STATE_length  16
+#endif
 #ifndef GFX20_RENDER_SURFACE_STATE_length
 #define GFX20_RENDER_SURFACE_STATE_length  16
 #endif
@@ -1728,6 +1824,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 16;
    case 200: return 16;
    case 125: return 16;
    case 120: return 16;
@@ -1760,6 +1857,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_AlphaClearColor_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 0;
    case 200: return 0;
    case 125: return 0;
    case 120: return 0;
@@ -1789,6 +1887,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_AlphaClearColor_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 0;
    case 200: return 0;
    case 125: return 0;
    case 120: return 0;
@@ -1810,6 +1909,7 @@ RENDER_SURFACE_STATE_AlphaClearColor_start(const struct intel_device_info *devin
 /* RENDER_SURFACE_STATE::Auxiliary Surface Base Address */
 
 
+#define GFX30_RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_bits  52
 #define GFX20_RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_bits  52
 #define GFX125_RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_bits  52
 #define GFX12_RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_bits  52
@@ -1823,6 +1923,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 52;
    case 200: return 52;
    case 125: return 52;
    case 120: return 52;
@@ -1842,6 +1943,7 @@ RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_bits(const struct intel_device_
 
 
 
+#define GFX30_RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_start  332
 #define GFX20_RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_start  332
 #define GFX125_RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_start  332
 #define GFX12_RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_start  332
@@ -1855,6 +1957,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 332;
    case 200: return 332;
    case 125: return 332;
    case 120: return 332;
@@ -1876,6 +1979,7 @@ RENDER_SURFACE_STATE_AuxiliarySurfaceBaseAddress_start(const struct intel_device
 /* RENDER_SURFACE_STATE::Auxiliary Surface Pitch */
 
 
+#define GFX30_RENDER_SURFACE_STATE_AuxiliarySurfacePitch_bits  10
 #define GFX20_RENDER_SURFACE_STATE_AuxiliarySurfacePitch_bits  10
 #define GFX125_RENDER_SURFACE_STATE_AuxiliarySurfacePitch_bits  10
 #define GFX12_RENDER_SURFACE_STATE_AuxiliarySurfacePitch_bits  9
@@ -1889,6 +1993,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_AuxiliarySurfacePitch_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 10;
    case 200: return 10;
    case 125: return 10;
    case 120: return 9;
@@ -1908,6 +2013,7 @@ RENDER_SURFACE_STATE_AuxiliarySurfacePitch_bits(const struct intel_device_info *
 
 
 
+#define GFX30_RENDER_SURFACE_STATE_AuxiliarySurfacePitch_start  195
 #define GFX20_RENDER_SURFACE_STATE_AuxiliarySurfacePitch_start  195
 #define GFX125_RENDER_SURFACE_STATE_AuxiliarySurfacePitch_start  195
 #define GFX12_RENDER_SURFACE_STATE_AuxiliarySurfacePitch_start  195
@@ -1921,6 +2027,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_AuxiliarySurfacePitch_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 195;
    case 200: return 195;
    case 125: return 195;
    case 120: return 195;
@@ -1952,6 +2059,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_BlueClearColor_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 0;
    case 200: return 0;
    case 125: return 0;
    case 120: return 0;
@@ -1981,6 +2089,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_BlueClearColor_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 0;
    case 200: return 0;
    case 125: return 0;
    case 120: return 0;
@@ -2002,7 +2111,6 @@ RENDER_SURFACE_STATE_BlueClearColor_start(const struct intel_device_info *devinf
 /* RENDER_SURFACE_STATE::Clear Value Address */
 
 
-#define GFX20_RENDER_SURFACE_STATE_ClearValueAddress_bits  42
 #define GFX125_RENDER_SURFACE_STATE_ClearValueAddress_bits  42
 #define GFX12_RENDER_SURFACE_STATE_ClearValueAddress_bits  42
 #define GFX11_RENDER_SURFACE_STATE_ClearValueAddress_bits  42
@@ -2011,7 +2119,8 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_ClearValueAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
-   case 200: return 42;
+   case 300: return 0;
+   case 200: return 0;
    case 125: return 42;
    case 120: return 42;
    case 110: return 42;
@@ -2030,7 +2139,6 @@ RENDER_SURFACE_STATE_ClearValueAddress_bits(const struct intel_device_info *devi
 
 
 
-#define GFX20_RENDER_SURFACE_STATE_ClearValueAddress_start  390
 #define GFX125_RENDER_SURFACE_STATE_ClearValueAddress_start  390
 #define GFX12_RENDER_SURFACE_STATE_ClearValueAddress_start  390
 #define GFX11_RENDER_SURFACE_STATE_ClearValueAddress_start  390
@@ -2039,7 +2147,8 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_ClearValueAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
-   case 200: return 390;
+   case 300: return 0;
+   case 200: return 0;
    case 125: return 390;
    case 120: return 390;
    case 110: return 390;
@@ -2060,6 +2169,7 @@ RENDER_SURFACE_STATE_ClearValueAddress_start(const struct intel_device_info *dev
 /* RENDER_SURFACE_STATE::Depth */
 
 
+#define GFX30_RENDER_SURFACE_STATE_Depth_bits  11
 #define GFX20_RENDER_SURFACE_STATE_Depth_bits  11
 #define GFX125_RENDER_SURFACE_STATE_Depth_bits  11
 #define GFX12_RENDER_SURFACE_STATE_Depth_bits  11
@@ -2077,6 +2187,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_Depth_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 11;
    case 200: return 11;
    case 125: return 11;
    case 120: return 11;
@@ -2096,6 +2207,7 @@ RENDER_SURFACE_STATE_Depth_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_RENDER_SURFACE_STATE_Depth_start  117
 #define GFX20_RENDER_SURFACE_STATE_Depth_start  117
 #define GFX125_RENDER_SURFACE_STATE_Depth_start  117
 #define GFX12_RENDER_SURFACE_STATE_Depth_start  117
@@ -2113,6 +2225,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_Depth_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 117;
    case 200: return 117;
    case 125: return 117;
    case 120: return 117;
@@ -2144,6 +2257,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_GreenClearColor_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 0;
    case 200: return 0;
    case 125: return 0;
    case 120: return 0;
@@ -2173,6 +2287,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_GreenClearColor_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 0;
    case 200: return 0;
    case 125: return 0;
    case 120: return 0;
@@ -2194,6 +2309,7 @@ RENDER_SURFACE_STATE_GreenClearColor_start(const struct intel_device_info *devin
 /* RENDER_SURFACE_STATE::Height */
 
 
+#define GFX30_RENDER_SURFACE_STATE_Height_bits  14
 #define GFX20_RENDER_SURFACE_STATE_Height_bits  14
 #define GFX125_RENDER_SURFACE_STATE_Height_bits  14
 #define GFX12_RENDER_SURFACE_STATE_Height_bits  14
@@ -2211,6 +2327,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_Height_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 14;
    case 200: return 14;
    case 125: return 14;
    case 120: return 14;
@@ -2230,6 +2347,7 @@ RENDER_SURFACE_STATE_Height_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_RENDER_SURFACE_STATE_Height_start  80
 #define GFX20_RENDER_SURFACE_STATE_Height_start  80
 #define GFX125_RENDER_SURFACE_STATE_Height_start  80
 #define GFX12_RENDER_SURFACE_STATE_Height_start  80
@@ -2247,6 +2365,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_Height_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 80;
    case 200: return 80;
    case 125: return 80;
    case 120: return 80;
@@ -2278,6 +2397,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_RedClearColor_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 0;
    case 200: return 0;
    case 125: return 0;
    case 120: return 0;
@@ -2307,6 +2427,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_RedClearColor_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 0;
    case 200: return 0;
    case 125: return 0;
    case 120: return 0;
@@ -2328,6 +2449,7 @@ RENDER_SURFACE_STATE_RedClearColor_start(const struct intel_device_info *devinfo
 /* RENDER_SURFACE_STATE::Render Target View Extent */
 
 
+#define GFX30_RENDER_SURFACE_STATE_RenderTargetViewExtent_bits  11
 #define GFX20_RENDER_SURFACE_STATE_RenderTargetViewExtent_bits  11
 #define GFX125_RENDER_SURFACE_STATE_RenderTargetViewExtent_bits  11
 #define GFX12_RENDER_SURFACE_STATE_RenderTargetViewExtent_bits  11
@@ -2345,6 +2467,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_RenderTargetViewExtent_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 11;
    case 200: return 11;
    case 125: return 11;
    case 120: return 11;
@@ -2364,6 +2487,7 @@ RENDER_SURFACE_STATE_RenderTargetViewExtent_bits(const struct intel_device_info 
 
 
 
+#define GFX30_RENDER_SURFACE_STATE_RenderTargetViewExtent_start  135
 #define GFX20_RENDER_SURFACE_STATE_RenderTargetViewExtent_start  135
 #define GFX125_RENDER_SURFACE_STATE_RenderTargetViewExtent_start  135
 #define GFX12_RENDER_SURFACE_STATE_RenderTargetViewExtent_start  135
@@ -2381,6 +2505,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_RenderTargetViewExtent_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 135;
    case 200: return 135;
    case 125: return 135;
    case 120: return 135;
@@ -2402,6 +2527,7 @@ RENDER_SURFACE_STATE_RenderTargetViewExtent_start(const struct intel_device_info
 /* RENDER_SURFACE_STATE::Surface Base Address */
 
 
+#define GFX30_RENDER_SURFACE_STATE_SurfaceBaseAddress_bits  64
 #define GFX20_RENDER_SURFACE_STATE_SurfaceBaseAddress_bits  64
 #define GFX125_RENDER_SURFACE_STATE_SurfaceBaseAddress_bits  64
 #define GFX12_RENDER_SURFACE_STATE_SurfaceBaseAddress_bits  64
@@ -2419,6 +2545,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_SurfaceBaseAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 64;
@@ -2438,6 +2565,7 @@ RENDER_SURFACE_STATE_SurfaceBaseAddress_bits(const struct intel_device_info *dev
 
 
 
+#define GFX30_RENDER_SURFACE_STATE_SurfaceBaseAddress_start  256
 #define GFX20_RENDER_SURFACE_STATE_SurfaceBaseAddress_start  256
 #define GFX125_RENDER_SURFACE_STATE_SurfaceBaseAddress_start  256
 #define GFX12_RENDER_SURFACE_STATE_SurfaceBaseAddress_start  256
@@ -2455,6 +2583,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_SurfaceBaseAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 256;
    case 200: return 256;
    case 125: return 256;
    case 120: return 256;
@@ -2476,6 +2605,7 @@ RENDER_SURFACE_STATE_SurfaceBaseAddress_start(const struct intel_device_info *de
 /* RENDER_SURFACE_STATE::Surface Pitch */
 
 
+#define GFX30_RENDER_SURFACE_STATE_SurfacePitch_bits  18
 #define GFX20_RENDER_SURFACE_STATE_SurfacePitch_bits  18
 #define GFX125_RENDER_SURFACE_STATE_SurfacePitch_bits  18
 #define GFX12_RENDER_SURFACE_STATE_SurfacePitch_bits  18
@@ -2493,6 +2623,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_SurfacePitch_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 18;
    case 200: return 18;
    case 125: return 18;
    case 120: return 18;
@@ -2512,6 +2643,7 @@ RENDER_SURFACE_STATE_SurfacePitch_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_RENDER_SURFACE_STATE_SurfacePitch_start  96
 #define GFX20_RENDER_SURFACE_STATE_SurfacePitch_start  96
 #define GFX125_RENDER_SURFACE_STATE_SurfacePitch_start  96
 #define GFX12_RENDER_SURFACE_STATE_SurfacePitch_start  96
@@ -2529,6 +2661,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_SurfacePitch_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 96;
    case 200: return 96;
    case 125: return 96;
    case 120: return 96;
@@ -2550,6 +2683,7 @@ RENDER_SURFACE_STATE_SurfacePitch_start(const struct intel_device_info *devinfo)
 /* RENDER_SURFACE_STATE::Surface Type */
 
 
+#define GFX30_RENDER_SURFACE_STATE_SurfaceType_bits  3
 #define GFX20_RENDER_SURFACE_STATE_SurfaceType_bits  3
 #define GFX125_RENDER_SURFACE_STATE_SurfaceType_bits  3
 #define GFX12_RENDER_SURFACE_STATE_SurfaceType_bits  3
@@ -2567,6 +2701,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_SurfaceType_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 3;
    case 200: return 3;
    case 125: return 3;
    case 120: return 3;
@@ -2586,6 +2721,7 @@ RENDER_SURFACE_STATE_SurfaceType_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_RENDER_SURFACE_STATE_SurfaceType_start  29
 #define GFX20_RENDER_SURFACE_STATE_SurfaceType_start  29
 #define GFX125_RENDER_SURFACE_STATE_SurfaceType_start  29
 #define GFX12_RENDER_SURFACE_STATE_SurfaceType_start  29
@@ -2603,6 +2739,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_SurfaceType_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 29;
    case 200: return 29;
    case 125: return 29;
    case 120: return 29;
@@ -2624,6 +2761,7 @@ RENDER_SURFACE_STATE_SurfaceType_start(const struct intel_device_info *devinfo)
 /* RENDER_SURFACE_STATE::Width */
 
 
+#define GFX30_RENDER_SURFACE_STATE_Width_bits  14
 #define GFX20_RENDER_SURFACE_STATE_Width_bits  14
 #define GFX125_RENDER_SURFACE_STATE_Width_bits  14
 #define GFX12_RENDER_SURFACE_STATE_Width_bits  14
@@ -2641,6 +2779,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_Width_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 14;
    case 200: return 14;
    case 125: return 14;
    case 120: return 14;
@@ -2660,6 +2799,7 @@ RENDER_SURFACE_STATE_Width_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_RENDER_SURFACE_STATE_Width_start  64
 #define GFX20_RENDER_SURFACE_STATE_Width_start  64
 #define GFX125_RENDER_SURFACE_STATE_Width_start  64
 #define GFX12_RENDER_SURFACE_STATE_Width_start  64
@@ -2677,6 +2817,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RENDER_SURFACE_STATE_Width_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 64;
@@ -2698,6 +2839,9 @@ RENDER_SURFACE_STATE_Width_start(const struct intel_device_info *devinfo)
 /* RT_DISPATCH_GLOBALS */
 
 
+#ifndef GFX30_RT_DISPATCH_GLOBALS_length
+#define GFX30_RT_DISPATCH_GLOBALS_length  20
+#endif
 #ifndef GFX20_RT_DISPATCH_GLOBALS_length
 #define GFX20_RT_DISPATCH_GLOBALS_length  20
 #endif
@@ -2709,6 +2853,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 20;
    case 200: return 20;
    case 125: return 20;
    case 120: return 0;
@@ -2731,6 +2876,7 @@ RT_DISPATCH_GLOBALS_length(const struct intel_device_info *devinfo)
 /* RT_DISPATCH_GLOBALS::Callable Group Table */
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_CallableGroupTable_bits  64
 #define GFX20_RT_DISPATCH_GLOBALS_CallableGroupTable_bits  64
 #define GFX125_RT_DISPATCH_GLOBALS_CallableGroupTable_bits  64
 
@@ -2738,6 +2884,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_CallableGroupTable_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 0;
@@ -2757,6 +2904,7 @@ RT_DISPATCH_GLOBALS_CallableGroupTable_bits(const struct intel_device_info *devi
 
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_CallableGroupTable_start  512
 #define GFX20_RT_DISPATCH_GLOBALS_CallableGroupTable_start  512
 #define GFX125_RT_DISPATCH_GLOBALS_CallableGroupTable_start  512
 
@@ -2764,6 +2912,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_CallableGroupTable_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 512;
    case 200: return 512;
    case 125: return 512;
    case 120: return 0;
@@ -2785,6 +2934,7 @@ RT_DISPATCH_GLOBALS_CallableGroupTable_start(const struct intel_device_info *dev
 /* RT_DISPATCH_GLOBALS::Hit Group Table */
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_HitGroupTable_bits  64
 #define GFX20_RT_DISPATCH_GLOBALS_HitGroupTable_bits  64
 #define GFX125_RT_DISPATCH_GLOBALS_HitGroupTable_bits  64
 
@@ -2792,6 +2942,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_HitGroupTable_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 0;
@@ -2811,6 +2962,7 @@ RT_DISPATCH_GLOBALS_HitGroupTable_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_HitGroupTable_start  256
 #define GFX20_RT_DISPATCH_GLOBALS_HitGroupTable_start  256
 #define GFX125_RT_DISPATCH_GLOBALS_HitGroupTable_start  256
 
@@ -2818,6 +2970,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_HitGroupTable_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 256;
    case 200: return 256;
    case 125: return 256;
    case 120: return 0;
@@ -2839,6 +2992,7 @@ RT_DISPATCH_GLOBALS_HitGroupTable_start(const struct intel_device_info *devinfo)
 /* RT_DISPATCH_GLOBALS::Launch Depth */
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_LaunchDepth_bits  32
 #define GFX20_RT_DISPATCH_GLOBALS_LaunchDepth_bits  32
 #define GFX125_RT_DISPATCH_GLOBALS_LaunchDepth_bits  32
 
@@ -2846,6 +3000,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_LaunchDepth_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 32;
    case 200: return 32;
    case 125: return 32;
    case 120: return 0;
@@ -2865,6 +3020,7 @@ RT_DISPATCH_GLOBALS_LaunchDepth_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_LaunchDepth_start  480
 #define GFX20_RT_DISPATCH_GLOBALS_LaunchDepth_start  480
 #define GFX125_RT_DISPATCH_GLOBALS_LaunchDepth_start  480
 
@@ -2872,6 +3028,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_LaunchDepth_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 480;
    case 200: return 480;
    case 125: return 480;
    case 120: return 0;
@@ -2893,6 +3050,7 @@ RT_DISPATCH_GLOBALS_LaunchDepth_start(const struct intel_device_info *devinfo)
 /* RT_DISPATCH_GLOBALS::Launch Height */
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_LaunchHeight_bits  32
 #define GFX20_RT_DISPATCH_GLOBALS_LaunchHeight_bits  32
 #define GFX125_RT_DISPATCH_GLOBALS_LaunchHeight_bits  32
 
@@ -2900,6 +3058,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_LaunchHeight_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 32;
    case 200: return 32;
    case 125: return 32;
    case 120: return 0;
@@ -2919,6 +3078,7 @@ RT_DISPATCH_GLOBALS_LaunchHeight_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_LaunchHeight_start  448
 #define GFX20_RT_DISPATCH_GLOBALS_LaunchHeight_start  448
 #define GFX125_RT_DISPATCH_GLOBALS_LaunchHeight_start  448
 
@@ -2926,6 +3086,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_LaunchHeight_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 448;
    case 200: return 448;
    case 125: return 448;
    case 120: return 0;
@@ -2947,6 +3108,7 @@ RT_DISPATCH_GLOBALS_LaunchHeight_start(const struct intel_device_info *devinfo)
 /* RT_DISPATCH_GLOBALS::Launch Width */
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_LaunchWidth_bits  32
 #define GFX20_RT_DISPATCH_GLOBALS_LaunchWidth_bits  32
 #define GFX125_RT_DISPATCH_GLOBALS_LaunchWidth_bits  32
 
@@ -2954,6 +3116,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_LaunchWidth_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 32;
    case 200: return 32;
    case 125: return 32;
    case 120: return 0;
@@ -2973,6 +3136,7 @@ RT_DISPATCH_GLOBALS_LaunchWidth_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_LaunchWidth_start  416
 #define GFX20_RT_DISPATCH_GLOBALS_LaunchWidth_start  416
 #define GFX125_RT_DISPATCH_GLOBALS_LaunchWidth_start  416
 
@@ -2980,6 +3144,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_LaunchWidth_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 416;
    case 200: return 416;
    case 125: return 416;
    case 120: return 0;
@@ -3001,6 +3166,7 @@ RT_DISPATCH_GLOBALS_LaunchWidth_start(const struct intel_device_info *devinfo)
 /* RT_DISPATCH_GLOBALS::Miss Group Table */
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_MissGroupTable_bits  64
 #define GFX20_RT_DISPATCH_GLOBALS_MissGroupTable_bits  64
 #define GFX125_RT_DISPATCH_GLOBALS_MissGroupTable_bits  64
 
@@ -3008,6 +3174,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_MissGroupTable_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 0;
@@ -3027,6 +3194,7 @@ RT_DISPATCH_GLOBALS_MissGroupTable_bits(const struct intel_device_info *devinfo)
 
 
 
+#define GFX30_RT_DISPATCH_GLOBALS_MissGroupTable_start  320
 #define GFX20_RT_DISPATCH_GLOBALS_MissGroupTable_start  320
 #define GFX125_RT_DISPATCH_GLOBALS_MissGroupTable_start  320
 
@@ -3034,6 +3202,7 @@ static inline uint32_t ATTRIBUTE_PURE
 RT_DISPATCH_GLOBALS_MissGroupTable_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 320;
    case 200: return 320;
    case 125: return 320;
    case 120: return 0;
@@ -3055,6 +3224,9 @@ RT_DISPATCH_GLOBALS_MissGroupTable_start(const struct intel_device_info *devinfo
 /* VERTEX_BUFFER_STATE */
 
 
+#ifndef GFX30_VERTEX_BUFFER_STATE_length
+#define GFX30_VERTEX_BUFFER_STATE_length  4
+#endif
 #ifndef GFX20_VERTEX_BUFFER_STATE_length
 #define GFX20_VERTEX_BUFFER_STATE_length  4
 #endif
@@ -3096,6 +3268,7 @@ static inline uint32_t ATTRIBUTE_PURE
 VERTEX_BUFFER_STATE_length(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 4;
    case 200: return 4;
    case 125: return 4;
    case 120: return 4;
@@ -3118,6 +3291,7 @@ VERTEX_BUFFER_STATE_length(const struct intel_device_info *devinfo)
 /* VERTEX_BUFFER_STATE::Buffer Starting Address */
 
 
+#define GFX30_VERTEX_BUFFER_STATE_BufferStartingAddress_bits  64
 #define GFX20_VERTEX_BUFFER_STATE_BufferStartingAddress_bits  64
 #define GFX125_VERTEX_BUFFER_STATE_BufferStartingAddress_bits  64
 #define GFX12_VERTEX_BUFFER_STATE_BufferStartingAddress_bits  64
@@ -3135,6 +3309,7 @@ static inline uint32_t ATTRIBUTE_PURE
 VERTEX_BUFFER_STATE_BufferStartingAddress_bits(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 64;
    case 200: return 64;
    case 125: return 64;
    case 120: return 64;
@@ -3154,6 +3329,7 @@ VERTEX_BUFFER_STATE_BufferStartingAddress_bits(const struct intel_device_info *d
 
 
 
+#define GFX30_VERTEX_BUFFER_STATE_BufferStartingAddress_start  32
 #define GFX20_VERTEX_BUFFER_STATE_BufferStartingAddress_start  32
 #define GFX125_VERTEX_BUFFER_STATE_BufferStartingAddress_start  32
 #define GFX12_VERTEX_BUFFER_STATE_BufferStartingAddress_start  32
@@ -3171,6 +3347,7 @@ static inline uint32_t ATTRIBUTE_PURE
 VERTEX_BUFFER_STATE_BufferStartingAddress_start(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
+   case 300: return 32;
    case 200: return 32;
    case 125: return 32;
    case 120: return 32;

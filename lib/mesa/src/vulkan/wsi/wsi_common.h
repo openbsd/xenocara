@@ -97,7 +97,7 @@ struct vk_instance;
 
 struct driOptionCache;
 
-#define VK_ICD_WSI_PLATFORM_MAX (VK_ICD_WSI_PLATFORM_HEADLESS + 1)
+#define VK_ICD_WSI_PLATFORM_MAX (VK_ICD_WSI_PLATFORM_METAL + 1)
 
 struct wsi_device {
    /* Allocator for the instance */
@@ -106,13 +106,16 @@ struct wsi_device {
    VkPhysicalDevice pdevice;
    VkPhysicalDeviceMemoryProperties memory_props;
    uint32_t queue_family_count;
+   uint64_t queue_supports_blit;
 
    VkPhysicalDeviceDrmPropertiesEXT drm_info;
    VkPhysicalDevicePCIBusInfoPropertiesEXT pci_bus_info;
 
    VkExternalSemaphoreHandleTypeFlags semaphore_export_handle_types;
+   VkExternalSemaphoreHandleTypeFlags timeline_semaphore_export_handle_types;
 
    bool has_import_memory_host;
+   bool has_timeline_semaphore;
 
    /** Indicates if wsi_image_create_info::scanout is supported
     *
@@ -159,6 +162,10 @@ struct wsi_device {
 
       /* adds an extra minImageCount when running under xwayland */
       bool extra_xwayland_image;
+
+      /* Never report VK_SUBOPTIMAL_KHR. Used to workaround
+       * games that cannot handle SUBOPTIMAL correctly. */
+      bool ignore_suboptimal;
    } x11;
 
    struct {
@@ -195,6 +202,11 @@ struct wsi_device {
     * to be able to synchronize with the WSI present semaphore being unsignalled.
     * This requires VK_KHR_timeline_semaphore. */
    bool khr_present_wait;
+
+   struct {
+      /* Don't use the commit-timing protocol for pacing */
+      bool disable_timestamps;
+   } wayland;
 
    /*
     * This sets the ownership for a WSI memory object:
@@ -253,7 +265,7 @@ struct wsi_device {
    WSI_CB(GetImageSubresourceLayout);
    WSI_CB(GetMemoryFdKHR);
    WSI_CB(GetPhysicalDeviceFormatProperties);
-   WSI_CB(GetPhysicalDeviceFormatProperties2KHR);
+   WSI_CB(GetPhysicalDeviceFormatProperties2);
    WSI_CB(GetPhysicalDeviceImageFormatProperties2);
    WSI_CB(GetSemaphoreFdKHR);
    WSI_CB(ResetFences);
@@ -261,7 +273,7 @@ struct wsi_device {
    WSI_CB(WaitForFences);
    WSI_CB(MapMemory);
    WSI_CB(UnmapMemory);
-   WSI_CB(WaitSemaphoresKHR);
+   WSI_CB(WaitSemaphores);
 #undef WSI_CB
 
     struct wsi_interface *                  wsi[VK_ICD_WSI_PLATFORM_MAX];
@@ -345,6 +357,12 @@ wsi_common_bind_swapchain_image(const struct wsi_device *wsi,
 
 bool
 wsi_common_vk_instance_supports_present_wait(const struct vk_instance *instance);
+
+VkImageUsageFlags
+wsi_caps_get_image_usage(void);
+
+bool
+wsi_device_supports_explicit_sync(struct wsi_device *device);
 
 #define wsi_common_vk_warn_once(warning) \
    do { \

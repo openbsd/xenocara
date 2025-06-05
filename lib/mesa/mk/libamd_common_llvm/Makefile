@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2024/04/02 10:42:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2025/06/05 14:18:38 jsg Exp $
 
 LIB=	amd_common_llvm
 
@@ -18,6 +18,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/amd \
 		-I${MESA_SRC}/src/amd/llvm \
 		-I${MESA_SRC}/src/amd/common \
+		-I${MESA_SRC}/src/amd/common/nir \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \

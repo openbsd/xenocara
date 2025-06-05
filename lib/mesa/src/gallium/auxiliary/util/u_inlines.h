@@ -39,7 +39,7 @@
 #include "util/u_debug_describe.h"
 #include "util/u_debug_refcnt.h"
 #include "util/u_atomic.h"
-#include "util/u_box.h"
+#include "util/box.h"
 #include "util/u_math.h"
 
 
@@ -79,13 +79,13 @@ pipe_reference_described(struct pipe_reference *dst,
    if (dst != src) {
       /* bump the src.count first */
       if (src) {
-         ASSERTED int count = p_atomic_inc_return(&src->count);
+         ASSERTED int64_t count = p_atomic_inc_return(&src->count);
          assert(count != 1); /* src had to be referenced */
          debug_reference(src, get_desc, 1);
       }
 
       if (dst) {
-         int count = p_atomic_dec_return(&dst->count);
+         int64_t count = p_atomic_dec_return(&dst->count);
          assert(count != -1); /* dst had to be referenced */
          debug_reference(dst, get_desc, -1);
          if (!count)
@@ -128,7 +128,8 @@ pipe_surface_release(struct pipe_context *pipe, struct pipe_surface **ptr)
 {
    struct pipe_surface *old = *ptr;
 
-   if (pipe_reference_described(&old->reference, NULL,
+   if (pipe_reference_described(old ? &old->reference : NULL,
+                                NULL,
                                 (debug_reference_descriptor)
                                 debug_describe_surface))
       pipe->surface_destroy(pipe, old);
@@ -170,7 +171,7 @@ pipe_resource_reference(struct pipe_resource **dst, struct pipe_resource *src)
 static inline void
 pipe_drop_resource_references(struct pipe_resource *dst, int num_refs)
 {
-   int count = p_atomic_add_return(&dst->reference.count, -num_refs);
+   int64_t count = p_atomic_add_return(&dst->reference.count, -num_refs);
 
    assert(count >= 0);
    /* Underflows shouldn't happen, but let's be safe. */
@@ -281,8 +282,8 @@ pipe_surface_reset(struct pipe_context *ctx, struct pipe_surface* ps,
 {
    pipe_resource_reference(&ps->texture, pt);
    ps->format = pt->format;
-   ps->width = u_minify(pt->width0, level);
-   ps->height = u_minify(pt->height0, level);
+   ps->width = (uint16_t)u_minify(pt->width0, level);
+   ps->height = (uint16_t)u_minify(pt->height0, level);
    ps->u.tex.level = level;
    ps->u.tex.first_layer = ps->u.tex.last_layer = layer;
    ps->context = ctx;
@@ -303,6 +304,7 @@ pipe_surface_equal(struct pipe_surface *s1, struct pipe_surface *s2)
 {
    return s1->texture == s2->texture &&
           s1->format == s2->format &&
+          s1->nr_samples == s2->nr_samples &&
           (s1->texture->target != PIPE_BUFFER ||
            (s1->u.buf.first_element == s2->u.buf.first_element &&
             s1->u.buf.last_element == s2->u.buf.last_element)) &&
@@ -362,7 +364,7 @@ pipe_buffer_create_const0(struct pipe_screen *screen,
    buffer.format = PIPE_FORMAT_R8_UNORM;
    buffer.bind = bind;
    buffer.usage = usage;
-   buffer.flags = screen->get_param(screen, PIPE_CAP_CONSTBUF0_FLAGS);
+   buffer.flags = screen->caps.constbuf0_flags;
    buffer.width0 = size;
    buffer.height0 = 1;
    buffer.depth0 = 1;
@@ -492,9 +494,7 @@ pipe_buffer_copy(struct pipe_context *pipe,
                  unsigned size)
 {
    struct pipe_box box;
-   /* only these fields are used */
-   box.x = (int)src_offset;
-   box.width = (int)size;
+   u_box_1d(src_offset, size, &box);
    pipe->resource_copy_region(pipe, dst, 0, dst_offset, 0, 0, src, 0, &box);
 }
 
@@ -904,19 +904,39 @@ util_writes_depth_stencil(const struct pipe_depth_stencil_alpha_state *zsa)
 }
 
 static inline struct pipe_context *
-pipe_create_multimedia_context(struct pipe_screen *screen)
+pipe_create_multimedia_context(struct pipe_screen *screen, bool compute_only)
 {
    unsigned flags = 0;
 
-   if (!screen->get_param(screen, PIPE_CAP_GRAPHICS))
+   if (!screen->caps.graphics && !screen->caps.compute)
+      flags |= PIPE_CONTEXT_MEDIA_ONLY;
+   else if (compute_only || !screen->caps.graphics)
       flags |= PIPE_CONTEXT_COMPUTE_ONLY;
 
    return screen->context_create(screen, NULL, flags);
 }
 
-static inline unsigned util_res_sample_count(struct pipe_resource *res)
+static inline unsigned util_res_sample_count(const struct pipe_resource *res)
 {
    return res->nr_samples > 0 ? res->nr_samples : 1;
+}
+
+static inline void
+util_set_vertex_buffers(struct pipe_context *pipe,
+                        unsigned num_buffers, bool take_ownership,
+                        const struct pipe_vertex_buffer *buffers)
+{
+   /* set_vertex_buffers requires that reference counts are incremented
+    * by the caller.
+    */
+   if (!take_ownership) {
+      for (unsigned i = 0; i < num_buffers; i++) {
+         if (!buffers[i].is_user_buffer && buffers[i].buffer.resource)
+            p_atomic_inc(&buffers[i].buffer.resource->reference.count);
+      }
+   }
+
+   pipe->set_vertex_buffers(pipe, num_buffers, buffers);
 }
 
 #ifdef __cplusplus

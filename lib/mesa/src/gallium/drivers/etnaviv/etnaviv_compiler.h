@@ -27,6 +27,7 @@
 #ifndef H_ETNAVIV_COMPILER
 #define H_ETNAVIV_COMPILER
 
+#include "etna_core_info.h"
 #include "etnaviv_context.h"
 #include "etnaviv_internal.h"
 #include "etnaviv_shader.h"
@@ -60,7 +61,8 @@ struct etna_compiler {
 struct etna_shader_inout {
    int reg; /* native register */
    int slot; /* nir: gl_varying_slot or gl_vert_attrib */
-   int num_components;
+   uint8_t interpolation;
+   uint8_t num_components;
 };
 
 struct etna_shader_io_file {
@@ -119,7 +121,7 @@ struct etna_shader_variant {
    uint32_t vs_load_balancing;
 
    /* special outputs (ps only) */
-   int ps_color_out_reg; /* color output register */
+   int ps_color_out_reg[PIPE_MAX_COLOR_BUFS]; /* color output register */
    int ps_depth_out_reg; /* depth output register */
 
    /* unknown input property (XX_INPUT_COUNT, field UNK8) */
@@ -136,6 +138,7 @@ struct etna_varying {
    uint32_t pa_attributes;
    uint8_t num_components;
    uint8_t use[4];
+   uint8_t semantic;
    uint8_t reg;
 };
 
@@ -147,7 +150,7 @@ struct etna_shader_link_info {
 };
 
 struct etna_compiler *
-etna_compiler_create(const char *renderer, const struct etna_specs *specs);
+etna_compiler_create(const char *renderer, const struct etna_core_info *info);
 
 void
 etna_compiler_destroy(const struct etna_compiler *compiler);

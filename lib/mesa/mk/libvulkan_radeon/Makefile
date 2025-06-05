@@ -1,11 +1,13 @@
-#	$OpenBSD: Makefile,v 1.14 2024/04/02 10:42:14 jsg Exp $
+#	$OpenBSD: Makefile,v 1.15 2025/06/05 14:18:51 jsg Exp $
 
 LIB=	vulkan_radeon
 
 NOPROFILE=
 
-SRCS=	radv_metro_exodus.c \
+SRCS=	radv_ctx_roll_layer.c \
+	radv_metro_exodus.c \
 	radv_rage2.c \
+	radv_quantic_dream.c \
 	radv_rmv_layer.c \
 	radv_rra_layer.c \
 	radv_sqtt_layer.c \
@@ -33,6 +35,7 @@ SRCS=	radv_metro_exodus.c \
 	radv_nir_lower_cooperative_matrix.c \
 	radv_nir_lower_fs_barycentric.c \
 	radv_nir_lower_fs_intrinsics.c \
+	radv_nir_lower_hit_attrib_derefs.c \
 	radv_nir_lower_intrinsics_early.c \
 	radv_nir_lower_io.c \
 	radv_nir_lower_poly_line_smooth.c \
@@ -41,63 +44,72 @@ SRCS=	radv_metro_exodus.c \
 	radv_nir_lower_view_index.c \
 	radv_nir_lower_viewport_to_zero.c \
 	radv_nir_lower_vs_inputs.c \
+	radv_nir_opt_tid_function.c \
+	radv_nir_remap_color_attachment.c \
+	radv_nir_rt_common.c \
+	radv_nir_rt_shader.c \
 	radv_null_bo.c \
 	radv_null_cs.c \
 	radv_null_winsys.c \
 	radv_acceleration_structure.c \
 	radv_android.c \
 	radv_buffer.c \
+	radv_buffer_view.c \
 	radv_cmd_buffer.c \
+	radv_cp_dma.c \
 	radv_cp_reg_shadowing.c \
+	radv_cs.c \
 	radv_debug.c \
 	radv_device.c \
 	radv_device_memory.c \
 	radv_descriptor_set.c \
-	radv_device_generated_commands.c \
+	radv_dgc.c \
 	radv_event.c \
 	radv_formats.c \
 	radv_image.c \
+	radv_image_view.c \
 	radv_instance.c \
 	radv_perfcounter.c \
 	radv_physical_device.c \
 	radv_pipeline.c \
+	radv_pipeline_binary.c \
 	radv_pipeline_cache.c \
 	radv_pipeline_compute.c \
 	radv_pipeline_graphics.c \
 	radv_pipeline_rt.c \
+	radv_printf.c \
 	radv_queue.c \
 	radv_rmv.c \
 	radv_rra.c \
-	radv_rt_common.c \
-	radv_rt_shader.c \
 	radv_sampler.c \
 	radv_sdma.c \
 	radv_shader.c \
 	radv_shader_args.c \
 	radv_shader_info.c \
+	radv_shader_object.c \
 	radv_spm.c \
 	radv_sqtt.c \
 	radv_query.c \
 	radv_video.c \
-	radv_wsi.c \
-	si_cmd_buffer.c
+	radv_video_enc.c \
+	radv_wsi.c
 
 SRCS+=	radv_amdgpu_bo.c \
 	radv_amdgpu_cs.c \
-	radv_amdgpu_surface.c \
 	radv_amdgpu_winsys.c
 
 # with_llvm
 SRCS+=	radv_llvm_helper.cpp \
 	radv_nir_to_llvm.c
 
-# from src/amd/vulkan/radix_sort/meson.build
+# from src/vulkan/runtime/radix_sort/meson.build
 SRCS+=	barrier.c \
 	util.c \
-	radix_sort_vk.c \
-	radv_radix_sort.c \
+	radix_sort_u64.c \
+	radix_sort_vk.c
 
-SRCS+=	radv_entrypoints.c
+SRCS+=	radv_entrypoints.c \
+	radv_annotate_layer.c
 
 .include "../Makefile.inc"
 
@@ -114,11 +126,13 @@ CPPFLAGS+=	-I${MESA_SRC}/src/amd/vulkan \
 		-I${MESA_SRC}/src/vulkan/util \
 		-I${MESA_SRC}/src/vulkan/wsi \
 		-I${MESA_SRC}/src/amd/common \
+		-I${MESA_SRC}/src/amd/common/nir \
 		-I${MESA_SRC}/src/amd/compiler \
 		-I${MESA_SRC}/src/amd/llvm \
 		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/src/mesa \
+		-I${MESA_SRC}/src/vulkan/runtime/bvh \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/util \
 		-I${MESA_SRC}/generated/src/compiler \
@@ -139,7 +153,7 @@ VKARCH=x86_64
 VKARCH=${MACHINE_ARCH}
 .endif
 
-install: beforeinstall
+install:
 	${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
 	    -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    lib${LIB}.so ${DESTDIR}${X11BASE}/lib
@@ -149,19 +163,14 @@ install: beforeinstall
 
 obj: _xenocara_obj
 
-beforeinstall:
-	rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la
-
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
 SLIBS=	libamd_common \
 	libamd_common_llvm \
 	libaddrlib \
-	libvulkan_wsi \
 	libxmlconfig \
 	libmesa_util \
-	libmesa_format \
 	libmesa_util_sse41 \
 	libblake3 \
 	libmesa_util_c11 \
@@ -176,6 +185,7 @@ LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
 LDADD+=		-Wl,--whole-archive
 LDADD+=		${.CURDIR}/../libvulkan_wsi/${__objdir}/libvulkan_wsi.a
 LDADD+=		${.CURDIR}/../libvulkan_runtime/${__objdir}/libvulkan_runtime.a
+LDADD+=		${.CURDIR}/../libvulkan_instance/${__objdir}/libvulkan_instance.a
 LDADD+=		-Wl,--no-whole-archive
 
 .for slib in ${SLIBS}
@@ -188,7 +198,7 @@ LDADD+=		-L${X11BASE}/lib -ldrm -ldrm_amdgpu \
 		-lX11 -lxcb-dri2 -lxcb-present -lxcb-xfixes -lxcb-sync \
 		-lxcb-randr -lxcb-shm -lxshmfence -lxcb-keysyms
 
-LDADD+=		${BUILD_ID_SHA1} -Wl,--gc-sections \
+LDADD+=		${BUILD_ID_SHA1} -Wl,-Bsymbolic -Wl,--gc-sections \
 		-Wl,--version-script ${MESA_SRC}/src/vulkan/vulkan.sym \
 		-Wl,--end-group
 
@@ -206,7 +216,8 @@ CLEANFILES+= lib${LIB}.so
 .PATH: ${MESA_SRC}/src/amd/vulkan/nir
 .PATH: ${MESA_SRC}/src/amd/vulkan/winsys/amdgpu
 .PATH: ${MESA_SRC}/src/amd/vulkan/winsys/null
-.PATH: ${MESA_SRC}/src/amd/vulkan/radix_sort
-.PATH: ${MESA_SRC}/src/amd/vulkan/radix_sort/common
-.PATH: ${MESA_SRC}/src/amd/vulkan/radix_sort/common/vk
+.PATH: ${MESA_SRC}/src/vulkan/runtime/radix_sort
+.PATH: ${MESA_SRC}/src/vulkan/runtime/radix_sort/common
+.PATH: ${MESA_SRC}/src/vulkan/runtime/radix_sort/common/vk
 .PATH: ${MESA_SRC}/generated/src/amd/vulkan
+.PATH: ${MESA_SRC}/generated/src/amd/vulkan/layers

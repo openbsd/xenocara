@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2023/11/02 04:53:31 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2025/06/05 14:18:41 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -18,11 +18,18 @@ SRCS+=	drisw.c \
 	dri2.c
 .endif
 
+SRCS+=	kopper_stubs.c
+
+.if ${XENOCARA_BUILD_DRI3:L} == "yes"
+SRCS+=	loader_dri3_helper.c
+.endif
+
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-DGALLIUM_SOFTPIPE \
 		-I${MESA_SRC}/src/gallium/frontends/dri \
+		-I${MESA_SRC}/src/loader \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mesa/drivers/dri/common \

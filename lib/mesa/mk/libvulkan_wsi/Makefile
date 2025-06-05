@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2023/11/02 04:53:32 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2025/06/05 14:18:51 jsg Exp $
 
 LIB=	vulkan_wsi
 
@@ -19,6 +19,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/vulkan/wsi \
 		-I${MESA_SRC}/src/vulkan/runtime \
 		-I${MESA_SRC}/src/vulkan/util \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
 		-I${MESA_SRC}/generated/src/vulkan/wsi \

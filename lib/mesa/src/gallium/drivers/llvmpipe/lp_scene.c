@@ -75,7 +75,7 @@ lp_scene_create(struct lp_setup_context *setup)
 
    (void) mtx_init(&scene->mutex, mtx_plain);
 
-#ifdef DEBUG
+#if MESA_DEBUG
    /* Do some scene limit sanity checks here */
    {
       size_t maxBins = TILES_X * TILES_Y;
@@ -178,8 +178,11 @@ init_scene_texture(struct lp_scene_surface *ssurf, struct pipe_surface *psurf)
                                          psurf->u.tex.level,
                                          psurf->u.tex.first_layer,
                                          LP_TEX_USAGE_READ_WRITE);
+      assert(ssurf->map);
       ssurf->format_bytes = util_format_get_blocksize(psurf->format);
       ssurf->nr_samples = util_res_sample_count(psurf->texture);
+      ssurf->base_layer = psurf->u.tex.first_layer;
+      ssurf->layer_count = psurf->u.tex.last_layer - psurf->u.tex.first_layer + 1;
    } else {
       struct llvmpipe_resource *lpr = llvmpipe_resource(psurf->texture);
       unsigned pixstride = util_format_get_blocksize(psurf->format);

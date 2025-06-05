@@ -29,11 +29,12 @@
 
 #include "isl/isl.h"
 
-struct brw_stage_prog_data;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct brw_compiler;
+struct elk_compiler;
 
 enum blorp_op {
    BLORP_OP_BLIT,
@@ -57,6 +58,17 @@ struct blorp_params;
 
 struct blorp_config {
    bool use_mesh_shading;
+   bool use_unrestricted_depth_range;
+   bool use_cached_dynamic_states;
+};
+
+enum blorp_dynamic_state {
+   BLORP_DYNAMIC_STATE_BLEND,
+   BLORP_DYNAMIC_STATE_CC_VIEWPORT,
+   BLORP_DYNAMIC_STATE_COLOR_CALC,
+   BLORP_DYNAMIC_STATE_SAMPLER,
+
+   BLORP_DYNAMIC_STATE_COUNT,
 };
 
 struct blorp_context {
@@ -64,7 +76,14 @@ struct blorp_context {
 
    const struct isl_device *isl_dev;
 
-   const struct brw_compiler *compiler;
+   struct blorp_compiler *compiler;
+
+   bool enable_tbimr;
+
+   void (*upload_dynamic_state)(struct blorp_context *context,
+                                const void *data, uint32_t size,
+                                uint32_t alignment,
+                                enum blorp_dynamic_state name);
 
    bool (*lookup_shader)(struct blorp_batch *batch,
                          const void *key, uint32_t key_size,
@@ -73,7 +92,7 @@ struct blorp_context {
                          uint32_t stage,
                          const void *key, uint32_t key_size,
                          const void *kernel, uint32_t kernel_size,
-                         const struct brw_stage_prog_data *prog_data,
+                         const void *prog_data,
                          uint32_t prog_data_size,
                          uint32_t *kernel_out, void *prog_data_out);
    void (*exec)(struct blorp_batch *batch, const struct blorp_params *params);
@@ -81,9 +100,16 @@ struct blorp_context {
    struct blorp_config config;
 };
 
-void blorp_init(struct blorp_context *blorp, void *driver_ctx,
-                struct isl_device *isl_dev, const struct blorp_config *config);
+void blorp_init_brw(struct blorp_context *blorp, void *driver_ctx,
+                    struct isl_device *isl_dev, const struct brw_compiler *brw,
+                    const struct blorp_config *config);
+
+void blorp_init_elk(struct blorp_context *blorp, void *driver_ctx,
+                    struct isl_device *isl_dev, const struct elk_compiler *brw,
+                    const struct blorp_config *config);
+
 void blorp_finish(struct blorp_context *blorp);
+
 
 enum blorp_batch_flags {
    /**
@@ -92,26 +118,21 @@ enum blorp_batch_flags {
     * and stencil images passed in will match what is currently set in the
     * hardware.
     */
-   BLORP_BATCH_NO_EMIT_DEPTH_STENCIL = (1 << 0),
+   BLORP_BATCH_NO_EMIT_DEPTH_STENCIL = BITFIELD_BIT(0),
 
    /* This flag indicates that the blorp call should be predicated. */
-   BLORP_BATCH_PREDICATE_ENABLE      = (1 << 1),
-
-   /* This flag indicates that blorp should *not* update the indirect clear
-    * color buffer.
-    */
-   BLORP_BATCH_NO_UPDATE_CLEAR_COLOR = (1 << 2),
+   BLORP_BATCH_PREDICATE_ENABLE      = BITFIELD_BIT(1),
 
    /* This flag indicates that blorp should use a compute program for the
     * operation.
     */
-   BLORP_BATCH_USE_COMPUTE = (1 << 3),
+   BLORP_BATCH_USE_COMPUTE           = BITFIELD_BIT(2),
 
    /** Use the hardware blitter to perform any operations in this batch */
-   BLORP_BATCH_USE_BLITTER = (1 << 4),
+   BLORP_BATCH_USE_BLITTER           = BITFIELD_BIT(3),
 
-   /** Need a PSS Stall Sync, Wa_18019816803. */
-   BLORP_BATCH_NEED_PSS_STALL_SYNC = (1 << 5),
+   /** Wa_18038825448 */
+   BLORP_BATCH_FORCE_CPS_DEPENDENCY  = BITFIELD_BIT(4),
 };
 
 struct blorp_batch {
@@ -123,6 +144,25 @@ struct blorp_batch {
 void blorp_batch_init(struct blorp_context *blorp, struct blorp_batch *batch,
                       void *driver_batch, enum blorp_batch_flags flags);
 void blorp_batch_finish(struct blorp_batch *batch);
+
+static inline isl_surf_usage_flags_t
+blorp_batch_isl_copy_usage(const struct blorp_batch *batch, bool is_dest,
+                           bool _protected)
+{
+   isl_surf_usage_flags_t usage;
+
+   if (batch->flags & BLORP_BATCH_USE_COMPUTE)
+      usage = is_dest ? ISL_SURF_USAGE_STORAGE_BIT : ISL_SURF_USAGE_TEXTURE_BIT;
+   else if (batch->flags & BLORP_BATCH_USE_BLITTER)
+      usage = is_dest ? ISL_SURF_USAGE_BLITTER_DST_BIT : ISL_SURF_USAGE_BLITTER_SRC_BIT;
+   else
+      usage = is_dest ? ISL_SURF_USAGE_RENDER_TARGET_BIT : ISL_SURF_USAGE_TEXTURE_BIT;
+
+   if (_protected)
+      usage |= ISL_SURF_USAGE_PROTECTED_BIT;
+
+   return usage;
+}
 
 struct blorp_address {
    void *buffer;
@@ -192,6 +232,9 @@ blorp_blit(struct blorp_batch *batch,
            enum blorp_filter filter,
            bool mirror_x, bool mirror_y);
 
+enum isl_format
+blorp_copy_get_color_format(const struct isl_device *isl_dev,
+                            enum isl_format surf_format);
 void
 blorp_copy_get_formats(const struct isl_device *isl_dev,
                        const struct isl_surf *src_surf,
@@ -269,12 +312,7 @@ blorp_clear_depth_stencil(struct blorp_batch *batch,
                           uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1,
                           bool clear_depth, float depth_value,
                           uint8_t stencil_mask, uint8_t stencil_value);
-bool
-blorp_can_hiz_clear_depth(const struct intel_device_info *devinfo,
-                          const struct isl_surf *surf,
-                          enum isl_aux_usage aux_usage,
-                          uint32_t level, uint32_t layer,
-                          uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1);
+
 void
 blorp_hiz_clear_depth_stencil(struct blorp_batch *batch,
                               const struct blorp_surf *depth,

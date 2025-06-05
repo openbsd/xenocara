@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2024/04/02 10:42:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2025/06/05 14:18:38 jsg Exp $
 
 LIB=	anv_common
 
@@ -10,23 +10,31 @@ SRCS=	i915_anv_batch_chain.c \
 	i915_anv_gem.c \
 	i915_anv_kmd_backend.c \
 	anv_queue.c \
+	anv_android_layer.c \
 	anv_doom64.c \
 	anv_hitman3.c \
-	anv_android_layer.c \
+	anv_rmv_layer.c \
 	xe_anv_batch_chain.c \
 	xe_anv_kmd_backend.c \
 	xe_anv_device.c \
 	xe_anv_queue.c \
 	anv_allocator.c \
+	anv_astc_emu.c \
 	anv_batch_chain.c \
 	anv_blorp.c \
 	anv_bo_sync.c \
+	anv_buffer.c \
+	anv_buffer_view.c \
 	anv_cmd_buffer.c \
 	anv_descriptor_set.c \
 	anv_device.c \
+	anv_event.c \
 	anv_formats.c \
 	anv_image.c \
+	anv_image_host_copy.c \
+	anv_image_view.c \
 	anv_internal_kernels.c \
+	anv_instance.c \
 	anv_kmd_backend.c \
 	anv_measure.c \
 	anv_mesh_perprim_wa.c \
@@ -38,11 +46,13 @@ SRCS=	i915_anv_batch_chain.c \
 	anv_nir_lower_resource_intel.c \
 	anv_nir_push_descriptor_analysis.c \
 	anv_perf.c \
+	anv_physical_device.c \
 	anv_pipeline.c \
 	anv_pipeline_cache.c \
 	anv_queue.c \
+	anv_rmv.c \
+	anv_sampler.c \
 	anv_sparse.c \
-	anv_astc_emu.c \
 	anv_util.c \
 	anv_utrace.c \
 	anv_va.c \
@@ -76,6 +86,8 @@ xe_anv_queue.c:
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS} ${C_SSE2_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
+		-I${MESA_SRC}/src/intel/genxml \
+		-I${MESA_SRC}/src/intel/shaders \
 		-I${MESA_SRC}/src/intel/vulkan \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \

@@ -24,6 +24,7 @@
 #include "compiler/glsl_types.h"
 #include "ir.h"
 #include "glsl_parser_extras.h"
+#include "linker_util.h"
 #include "main/errors.h"
 
 typedef enum {
@@ -31,6 +32,18 @@ typedef enum {
    PARAMETER_LIST_EXACT_MATCH,
    PARAMETER_LIST_INEXACT_MATCH /*< Match requires implicit conversion. */
 } parameter_list_match_t;
+
+static inline const glsl_type *
+get_param_type(const ir_instruction *inst)
+{
+   const ir_variable *var = inst->as_variable();
+   if (var)
+      return var->type;
+
+   const ir_rvalue *rvalue = inst->as_rvalue();
+   assert(rvalue != NULL);
+   return rvalue->type;
+}
 
 /**
  * \brief Check if two parameter lists match.
@@ -40,7 +53,8 @@ typedef enum {
  * \see matching_signature()
  */
 static parameter_list_match_t
-parameter_lists_match(_mesa_glsl_parse_state *state,
+parameter_lists_match(bool has_implicit_conversions,
+                      bool has_implicit_int_to_uint_conversion,
                       const exec_list *list_a, const exec_list *list_b)
 {
    const exec_node *node_a = list_a->get_head_raw();
@@ -60,12 +74,15 @@ parameter_lists_match(_mesa_glsl_parse_state *state,
       if (node_b->is_tail_sentinel())
 	 return PARAMETER_LIST_NO_MATCH;
 
+      const ir_instruction *inst_a = (const ir_instruction *) node_a;
+      const ir_instruction *inst_b = (const ir_instruction *) node_b;
 
-      const ir_variable *const param = (ir_variable *) node_a;
-      const ir_rvalue *const actual = (ir_rvalue *) node_b;
+      const ir_variable *const param = inst_a->as_variable();
+      assert(param != NULL);
+      const glsl_type *actual_type = get_param_type(inst_b);
 
-      if (param->type == actual->type)
-	 continue;
+      if (param->type == actual_type)
+         continue;
 
       /* Try to find an implicit conversion from actual to param. */
       inexact_match = true;
@@ -84,12 +101,16 @@ parameter_lists_match(_mesa_glsl_parse_state *state,
       case ir_var_const_in:
       case ir_var_function_in:
          if (param->data.implicit_conversion_prohibited ||
-             !_mesa_glsl_can_implicitly_convert(actual->type, param->type, state))
+             !_mesa_glsl_can_implicitly_convert(actual_type, param->type,
+                                                has_implicit_conversions,
+                                                has_implicit_int_to_uint_conversion))
             return PARAMETER_LIST_NO_MATCH;
 	 break;
 
       case ir_var_function_out:
-	 if (!_mesa_glsl_can_implicitly_convert(param->type, actual->type, state))
+	 if (!_mesa_glsl_can_implicitly_convert(param->type, actual_type,
+                                                has_implicit_conversions,
+                                                has_implicit_int_to_uint_conversion))
 	    return PARAMETER_LIST_NO_MATCH;
 	 break;
 
@@ -150,13 +171,13 @@ get_parameter_match_type(const ir_variable *param,
    if (from_type == to_type)
       return PARAMETER_EXACT_MATCH;
 
-   if (to_type->is_double()) {
-      if (from_type->is_float())
+   if (glsl_type_is_double(to_type)) {
+      if (glsl_type_is_float(from_type))
          return PARAMETER_FLOAT_TO_DOUBLE;
       return PARAMETER_INT_TO_DOUBLE;
    }
 
-   if (to_type->is_float())
+   if (glsl_type_is_float(to_type))
       return PARAMETER_INT_TO_FLOAT;
 
    /* int -> uint and any other oddball conversions */
@@ -260,8 +281,8 @@ is_best_inexact_overload(const exec_list *actual_parameters,
 static ir_function_signature *
 choose_best_inexact_overload(_mesa_glsl_parse_state *state,
                              const exec_list *actual_parameters,
-                             ir_function_signature **matches,
-                             int num_matches)
+                             ir_function_signature **matches, int num_matches,
+                             bool has_choose_best_inexact_overload)
 {
    if (num_matches == 0)
       return NULL;
@@ -269,14 +290,7 @@ choose_best_inexact_overload(_mesa_glsl_parse_state *state,
    if (num_matches == 1)
       return *matches;
 
-   /* Without GLSL 4.0, ARB_gpu_shader5, or MESA_shader_integer_functions,
-    * there is no overload resolution among multiple inexact matches. Note
-    * that state may be NULL here if called from the linker; in that case we
-    * assume everything supported in any GLSL version is available.
-    */
-   if (!state || state->is_version(400, 0) || state->ARB_gpu_shader5_enable ||
-       state->MESA_shader_integer_functions_enable ||
-       state->EXT_shader_implicit_conversions_enable) {
+   if (has_choose_best_inexact_overload) {
       for (ir_function_signature **sig = matches; sig < matches + num_matches; sig++) {
          if (is_best_inexact_overload(actual_parameters, matches, num_matches, *sig))
             return *sig;
@@ -290,16 +304,21 @@ choose_best_inexact_overload(_mesa_glsl_parse_state *state,
 ir_function_signature *
 ir_function::matching_signature(_mesa_glsl_parse_state *state,
                                 const exec_list *actual_parameters,
+                                bool has_implicit_conversions,
+                                bool has_implicit_int_to_uint_conversion,
                                 bool allow_builtins)
 {
    bool is_exact;
-   return matching_signature(state, actual_parameters, allow_builtins,
-                             &is_exact);
+   return matching_signature(state, actual_parameters, has_implicit_conversions,
+                             has_implicit_int_to_uint_conversion,
+                             allow_builtins, &is_exact);
 }
 
 ir_function_signature *
 ir_function::matching_signature(_mesa_glsl_parse_state *state,
                                 const exec_list *actual_parameters,
+                                bool has_implicit_conversions,
+                                bool has_implicit_int_to_uint_conversion,
                                 bool allow_builtins,
                                 bool *is_exact)
 {
@@ -324,7 +343,9 @@ ir_function::matching_signature(_mesa_glsl_parse_state *state,
                                 !sig->is_builtin_available(state)))
          continue;
 
-      switch (parameter_lists_match(state, & sig->parameters, actual_parameters)) {
+      switch (parameter_lists_match(has_implicit_conversions,
+                                    has_implicit_int_to_uint_conversion,
+                                    &sig->parameters, actual_parameters)) {
       case PARAMETER_LIST_EXACT_MATCH:
          *is_exact = true;
          free(inexact_matches);
@@ -363,7 +384,8 @@ ir_function::matching_signature(_mesa_glsl_parse_state *state,
    *is_exact = false;
 
    match = choose_best_inexact_overload(state, actual_parameters,
-                                        inexact_matches, num_inexact_matches);
+                                        inexact_matches, num_inexact_matches,
+                                        has_implicit_int_to_uint_conversion);
 
    free(inexact_matches);
    return match;
@@ -379,13 +401,13 @@ parameter_lists_match_exact(const exec_list *list_a, const exec_list *list_b)
    for (/* empty */
 	; !node_a->is_tail_sentinel() && !node_b->is_tail_sentinel()
 	; node_a = node_a->next, node_b = node_b->next) {
-      ir_variable *a = (ir_variable *) node_a;
-      ir_variable *b = (ir_variable *) node_b;
+      ir_instruction *inst_a = (ir_instruction *) node_a;
+      ir_instruction *inst_b = (ir_instruction *) node_b;
 
       /* If the types of the parameters do not match, the parameters lists
        * are different.
        */
-      if (a->type != b->type)
+      if (get_param_type (inst_a) != get_param_type (inst_b))
          return false;
    }
 

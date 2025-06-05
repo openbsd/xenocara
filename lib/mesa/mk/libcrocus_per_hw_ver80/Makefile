@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2024/04/02 10:42:13 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2025/06/05 14:18:41 jsg Exp $
 
 GEN=	80
 LIB=	crocus_per_hw_ver${GEN}
@@ -14,6 +14,7 @@ SRCS=	crocus_blorp.c \
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS} ${C_SSE2_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
+		-I${MESA_SRC}/src/intel/genxml \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \

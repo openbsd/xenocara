@@ -77,12 +77,6 @@
  */
 #define LP_MAX_TGSI_NESTING 80
 
-/**
- * Maximum iterations before loop termination
- * Shared between every loop in a TGSI shader
- */
-#define LP_MAX_TGSI_LOOP_ITERATIONS 65535
-
 static inline bool
 lp_has_fp16(void)
 {
@@ -118,8 +112,6 @@ gallivm_get_shader_param(enum pipe_shader_cap param)
       return LP_MAX_TGSI_TEMPS;
    case PIPE_SHADER_CAP_CONT_SUPPORTED:
       return 1;
-   case PIPE_SHADER_CAP_INDIRECT_INPUT_ADDR:
-   case PIPE_SHADER_CAP_INDIRECT_OUTPUT_ADDR:
    case PIPE_SHADER_CAP_INDIRECT_TEMP_ADDR:
    case PIPE_SHADER_CAP_INDIRECT_CONST_ADDR:
       return 1;

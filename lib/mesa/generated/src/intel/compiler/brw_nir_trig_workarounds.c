@@ -27,6 +27,10 @@ static const nir_search_value_union brw_nir_apply_trig_workarounds_values[] = {
       false,
       false,
       false,
+      false,
+      false,
+      false,
+      false,
       nir_op_fsin,
       -1, 0,
       { 0 },
@@ -46,6 +50,10 @@ static const nir_search_value_union brw_nir_apply_trig_workarounds_values[] = {
       false,
       false,
       false,
+      false,
+      false,
+      false,
+      false,
       nir_op_fsin,
       -1, 0,
       { 2 },
@@ -53,10 +61,14 @@ static const nir_search_value_union brw_nir_apply_trig_workarounds_values[] = {
    } },
    { .constant = {
       { nir_search_value_constant, -1 },
-      nir_type_float, { 0x3fefffc115df6556 /* 0.99997 */ },
+      nir_type_float, { 0x3fefffc115df6556ull /* 0.99997 */ },
    } },
    { .expression = {
       { nir_search_value_expression, -1 },
+      false,
+      false,
+      false,
+      false,
       false,
       false,
       false,
@@ -73,6 +85,10 @@ static const nir_search_value_union brw_nir_apply_trig_workarounds_values[] = {
       false,
       false,
       false,
+      false,
+      false,
+      false,
+      false,
       nir_op_fcos,
       -1, 0,
       { 0 },
@@ -85,6 +101,10 @@ static const nir_search_value_union brw_nir_apply_trig_workarounds_values[] = {
       false,
       false,
       false,
+      false,
+      false,
+      false,
+      false,
       nir_op_fcos,
       -1, 0,
       { 2 },
@@ -93,6 +113,10 @@ static const nir_search_value_union brw_nir_apply_trig_workarounds_values[] = {
    /* replace1_1 -> 4 in the cache */
    { .expression = {
       { nir_search_value_expression, -1 },
+      false,
+      false,
+      false,
+      false,
       false,
       false,
       false,
@@ -159,8 +183,9 @@ static const nir_algebraic_table brw_nir_apply_trig_workarounds_table = {
 };
 
 bool
-brw_nir_apply_trig_workarounds(nir_shader *shader)
-{
+brw_nir_apply_trig_workarounds(
+   nir_shader *shader
+) {
    bool progress = false;
    bool condition_flags[1];
    const nir_shader_compiler_options *options = shader->options;
@@ -206,6 +231,10 @@ static const nir_search_value_union brw_nir_limit_trig_input_range_workaround_va
       false,
       false,
       false,
+      false,
+      false,
+      false,
+      false,
       nir_op_fsin,
       -1, 0,
       { 0 },
@@ -222,10 +251,14 @@ static const nir_search_value_union brw_nir_limit_trig_input_range_workaround_va
    } },
    { .constant = {
       { nir_search_value_constant, -1 },
-      nir_type_float, { 0x401921fb54442d18 /* 6.283185307179586 */ },
+      nir_type_float, { 0x401921fb54442d18ull /* 6.283185307179586 */ },
    } },
    { .expression = {
       { nir_search_value_expression, -1 },
+      false,
+      false,
+      false,
+      false,
       false,
       false,
       false,
@@ -236,6 +269,10 @@ static const nir_search_value_union brw_nir_limit_trig_input_range_workaround_va
    } },
    { .expression = {
       { nir_search_value_expression, -1 },
+      false,
+      false,
+      false,
+      false,
       false,
       false,
       false,
@@ -252,6 +289,10 @@ static const nir_search_value_union brw_nir_limit_trig_input_range_workaround_va
       false,
       false,
       false,
+      false,
+      false,
+      false,
+      false,
       nir_op_fcos,
       -1, 0,
       { 0 },
@@ -263,6 +304,10 @@ static const nir_search_value_union brw_nir_limit_trig_input_range_workaround_va
    /* replace3_0 -> 4 in the cache */
    { .expression = {
       { nir_search_value_expression, -1 },
+      false,
+      false,
+      false,
+      false,
       false,
       false,
       false,
@@ -329,8 +374,9 @@ static const nir_algebraic_table brw_nir_limit_trig_input_range_workaround_table
 };
 
 bool
-brw_nir_limit_trig_input_range_workaround(nir_shader *shader)
-{
+brw_nir_limit_trig_input_range_workaround(
+   nir_shader *shader
+) {
    bool progress = false;
    bool condition_flags[1];
    const nir_shader_compiler_options *options = shader->options;
