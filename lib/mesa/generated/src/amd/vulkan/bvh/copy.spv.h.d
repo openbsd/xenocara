@@ -1,0 +1,1 @@
+src/amd/vulkan/bvh/copy.spv.h: ../src/amd/vulkan/bvh/copy.comp ../src/amd/vulkan/bvh/build_helpers.h ../src/amd/vulkan/bvh/build_interface.h ../src/amd/vulkan/bvh/bvh.h ../src/vulkan/runtime/bvh/vk_build_helpers.h ../src/vulkan/runtime/bvh/vk_bvh.h

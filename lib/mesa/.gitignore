@@ -1,6 +1,8 @@
+.cache
 .vscode*
 *.pyc
 *.pyo
 *.out
 **/obj
 /build
+.venv/

@@ -1,0 +1,1 @@
+src/amd/vulkan/bvh/update.spv.h: ../src/amd/vulkan/bvh/update.comp ../src/amd/vulkan/bvh/build_helpers.h ../src/amd/vulkan/bvh/build_interface.h ../src/amd/vulkan/bvh/bvh.h ../src/vulkan/runtime/bvh/vk_build_helpers.h ../src/vulkan/runtime/bvh/vk_bvh.h

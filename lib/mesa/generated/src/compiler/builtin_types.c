@@ -204,6 +204,8 @@ const char glsl_type_builtin_names[] =
    "vtexture1D\0"
    "vtexture2D\0"
    "vtexture3D\0"
+   "vtexture2DMS\0"
+   "vtexture2DMSArray\0"
    "vtexture1DArray\0"
    "vtexture2DArray\0"
    "vtextureBuffer\0"
@@ -266,6 +268,8 @@ const char glsl_type_builtin_names[] =
    "vimage1D\0"
    "vimage2D\0"
    "vimage3D\0"
+   "vimage2DMS\0"
+   "vimage2DMSArray\0"
    "vimage1DArray\0"
    "vimage2DArray\0"
    "subpassInput\0"
@@ -2312,6 +2316,32 @@ const struct glsl_type glsl_type_builtin_vtexture3D = {
           .has_builtin_name = 1,
 };
 
+const struct glsl_type glsl_type_builtin_vtexture2DMS = {
+                    .gl_type = GL_SAMPLER_2D_MULTISAMPLE,
+          .base_type = GLSL_TYPE_TEXTURE,
+          .sampler_dimensionality = GLSL_SAMPLER_DIM_MS,
+          .sampler_shadow = 0,
+          .sampler_array = 0,
+          .sampled_type = GLSL_TYPE_VOID,
+          .vector_elements = 1,
+          .matrix_columns = 1,
+          .name_id = 1982,
+          .has_builtin_name = 1,
+};
+
+const struct glsl_type glsl_type_builtin_vtexture2DMSArray = {
+                    .gl_type = GL_SAMPLER_2D_MULTISAMPLE_ARRAY,
+          .base_type = GLSL_TYPE_TEXTURE,
+          .sampler_dimensionality = GLSL_SAMPLER_DIM_MS,
+          .sampler_shadow = 0,
+          .sampler_array = 1,
+          .sampled_type = GLSL_TYPE_VOID,
+          .vector_elements = 1,
+          .matrix_columns = 1,
+          .name_id = 1995,
+          .has_builtin_name = 1,
+};
+
 const struct glsl_type glsl_type_builtin_vtexture1DArray = {
                     .gl_type = GL_SAMPLER_1D_ARRAY,
           .base_type = GLSL_TYPE_TEXTURE,
@@ -2321,7 +2351,7 @@ const struct glsl_type glsl_type_builtin_vtexture1DArray = {
           .sampled_type = GLSL_TYPE_VOID,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 1982,
+          .name_id = 2013,
           .has_builtin_name = 1,
 };
 
@@ -2334,7 +2364,7 @@ const struct glsl_type glsl_type_builtin_vtexture2DArray = {
           .sampled_type = GLSL_TYPE_VOID,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 1998,
+          .name_id = 2029,
           .has_builtin_name = 1,
 };
 
@@ -2347,7 +2377,7 @@ const struct glsl_type glsl_type_builtin_vtextureBuffer = {
           .sampled_type = GLSL_TYPE_VOID,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2014,
+          .name_id = 2045,
           .has_builtin_name = 1,
 };
 
@@ -2360,7 +2390,7 @@ const struct glsl_type glsl_type_builtin_image1D = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2029,
+          .name_id = 2060,
           .has_builtin_name = 1,
 };
 
@@ -2373,7 +2403,7 @@ const struct glsl_type glsl_type_builtin_image2D = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2037,
+          .name_id = 2068,
           .has_builtin_name = 1,
 };
 
@@ -2386,7 +2416,7 @@ const struct glsl_type glsl_type_builtin_image3D = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2045,
+          .name_id = 2076,
           .has_builtin_name = 1,
 };
 
@@ -2399,7 +2429,7 @@ const struct glsl_type glsl_type_builtin_image2DRect = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2053,
+          .name_id = 2084,
           .has_builtin_name = 1,
 };
 
@@ -2412,7 +2442,7 @@ const struct glsl_type glsl_type_builtin_imageCube = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2065,
+          .name_id = 2096,
           .has_builtin_name = 1,
 };
 
@@ -2425,7 +2455,7 @@ const struct glsl_type glsl_type_builtin_imageBuffer = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2075,
+          .name_id = 2106,
           .has_builtin_name = 1,
 };
 
@@ -2438,7 +2468,7 @@ const struct glsl_type glsl_type_builtin_image1DArray = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2087,
+          .name_id = 2118,
           .has_builtin_name = 1,
 };
 
@@ -2451,7 +2481,7 @@ const struct glsl_type glsl_type_builtin_image2DArray = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2100,
+          .name_id = 2131,
           .has_builtin_name = 1,
 };
 
@@ -2464,7 +2494,7 @@ const struct glsl_type glsl_type_builtin_imageCubeArray = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2113,
+          .name_id = 2144,
           .has_builtin_name = 1,
 };
 
@@ -2477,7 +2507,7 @@ const struct glsl_type glsl_type_builtin_image2DMS = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2128,
+          .name_id = 2159,
           .has_builtin_name = 1,
 };
 
@@ -2490,7 +2520,7 @@ const struct glsl_type glsl_type_builtin_image2DMSArray = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2138,
+          .name_id = 2169,
           .has_builtin_name = 1,
 };
 
@@ -2503,7 +2533,7 @@ const struct glsl_type glsl_type_builtin_iimage1D = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2153,
+          .name_id = 2184,
           .has_builtin_name = 1,
 };
 
@@ -2516,7 +2546,7 @@ const struct glsl_type glsl_type_builtin_iimage2D = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2162,
+          .name_id = 2193,
           .has_builtin_name = 1,
 };
 
@@ -2529,7 +2559,7 @@ const struct glsl_type glsl_type_builtin_iimage3D = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2171,
+          .name_id = 2202,
           .has_builtin_name = 1,
 };
 
@@ -2542,7 +2572,7 @@ const struct glsl_type glsl_type_builtin_iimage2DRect = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2180,
+          .name_id = 2211,
           .has_builtin_name = 1,
 };
 
@@ -2555,7 +2585,7 @@ const struct glsl_type glsl_type_builtin_iimageCube = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2193,
+          .name_id = 2224,
           .has_builtin_name = 1,
 };
 
@@ -2568,7 +2598,7 @@ const struct glsl_type glsl_type_builtin_iimageBuffer = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2204,
+          .name_id = 2235,
           .has_builtin_name = 1,
 };
 
@@ -2581,7 +2611,7 @@ const struct glsl_type glsl_type_builtin_iimage1DArray = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2217,
+          .name_id = 2248,
           .has_builtin_name = 1,
 };
 
@@ -2594,7 +2624,7 @@ const struct glsl_type glsl_type_builtin_iimage2DArray = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2231,
+          .name_id = 2262,
           .has_builtin_name = 1,
 };
 
@@ -2607,7 +2637,7 @@ const struct glsl_type glsl_type_builtin_iimageCubeArray = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2245,
+          .name_id = 2276,
           .has_builtin_name = 1,
 };
 
@@ -2620,7 +2650,7 @@ const struct glsl_type glsl_type_builtin_iimage2DMS = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2261,
+          .name_id = 2292,
           .has_builtin_name = 1,
 };
 
@@ -2633,7 +2663,7 @@ const struct glsl_type glsl_type_builtin_iimage2DMSArray = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2272,
+          .name_id = 2303,
           .has_builtin_name = 1,
 };
 
@@ -2646,7 +2676,7 @@ const struct glsl_type glsl_type_builtin_uimage1D = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2288,
+          .name_id = 2319,
           .has_builtin_name = 1,
 };
 
@@ -2659,7 +2689,7 @@ const struct glsl_type glsl_type_builtin_uimage2D = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2297,
+          .name_id = 2328,
           .has_builtin_name = 1,
 };
 
@@ -2672,7 +2702,7 @@ const struct glsl_type glsl_type_builtin_uimage3D = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2306,
+          .name_id = 2337,
           .has_builtin_name = 1,
 };
 
@@ -2685,7 +2715,7 @@ const struct glsl_type glsl_type_builtin_uimage2DRect = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2315,
+          .name_id = 2346,
           .has_builtin_name = 1,
 };
 
@@ -2698,7 +2728,7 @@ const struct glsl_type glsl_type_builtin_uimageCube = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2328,
+          .name_id = 2359,
           .has_builtin_name = 1,
 };
 
@@ -2711,7 +2741,7 @@ const struct glsl_type glsl_type_builtin_uimageBuffer = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2339,
+          .name_id = 2370,
           .has_builtin_name = 1,
 };
 
@@ -2724,7 +2754,7 @@ const struct glsl_type glsl_type_builtin_uimage1DArray = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2352,
+          .name_id = 2383,
           .has_builtin_name = 1,
 };
 
@@ -2737,7 +2767,7 @@ const struct glsl_type glsl_type_builtin_uimage2DArray = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2366,
+          .name_id = 2397,
           .has_builtin_name = 1,
 };
 
@@ -2750,7 +2780,7 @@ const struct glsl_type glsl_type_builtin_uimageCubeArray = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2380,
+          .name_id = 2411,
           .has_builtin_name = 1,
 };
 
@@ -2763,7 +2793,7 @@ const struct glsl_type glsl_type_builtin_uimage2DMS = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2396,
+          .name_id = 2427,
           .has_builtin_name = 1,
 };
 
@@ -2776,7 +2806,7 @@ const struct glsl_type glsl_type_builtin_uimage2DMSArray = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2407,
+          .name_id = 2438,
           .has_builtin_name = 1,
 };
 
@@ -2789,7 +2819,7 @@ const struct glsl_type glsl_type_builtin_i64image1D = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2423,
+          .name_id = 2454,
           .has_builtin_name = 1,
 };
 
@@ -2802,7 +2832,7 @@ const struct glsl_type glsl_type_builtin_i64image2D = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2434,
+          .name_id = 2465,
           .has_builtin_name = 1,
 };
 
@@ -2815,7 +2845,7 @@ const struct glsl_type glsl_type_builtin_i64image3D = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2445,
+          .name_id = 2476,
           .has_builtin_name = 1,
 };
 
@@ -2828,7 +2858,7 @@ const struct glsl_type glsl_type_builtin_i64image2DRect = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2456,
+          .name_id = 2487,
           .has_builtin_name = 1,
 };
 
@@ -2841,7 +2871,7 @@ const struct glsl_type glsl_type_builtin_i64imageCube = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2471,
+          .name_id = 2502,
           .has_builtin_name = 1,
 };
 
@@ -2854,7 +2884,7 @@ const struct glsl_type glsl_type_builtin_i64imageBuffer = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2484,
+          .name_id = 2515,
           .has_builtin_name = 1,
 };
 
@@ -2867,7 +2897,7 @@ const struct glsl_type glsl_type_builtin_i64image1DArray = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2499,
+          .name_id = 2530,
           .has_builtin_name = 1,
 };
 
@@ -2880,7 +2910,7 @@ const struct glsl_type glsl_type_builtin_i64image2DArray = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2515,
+          .name_id = 2546,
           .has_builtin_name = 1,
 };
 
@@ -2893,7 +2923,7 @@ const struct glsl_type glsl_type_builtin_i64imageCubeArray = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2531,
+          .name_id = 2562,
           .has_builtin_name = 1,
 };
 
@@ -2906,7 +2936,7 @@ const struct glsl_type glsl_type_builtin_i64image2DMS = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2549,
+          .name_id = 2580,
           .has_builtin_name = 1,
 };
 
@@ -2919,7 +2949,7 @@ const struct glsl_type glsl_type_builtin_i64image2DMSArray = {
           .sampled_type = GLSL_TYPE_INT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2562,
+          .name_id = 2593,
           .has_builtin_name = 1,
 };
 
@@ -2932,7 +2962,7 @@ const struct glsl_type glsl_type_builtin_u64image1D = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2580,
+          .name_id = 2611,
           .has_builtin_name = 1,
 };
 
@@ -2945,7 +2975,7 @@ const struct glsl_type glsl_type_builtin_u64image2D = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2591,
+          .name_id = 2622,
           .has_builtin_name = 1,
 };
 
@@ -2958,7 +2988,7 @@ const struct glsl_type glsl_type_builtin_u64image3D = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2602,
+          .name_id = 2633,
           .has_builtin_name = 1,
 };
 
@@ -2971,7 +3001,7 @@ const struct glsl_type glsl_type_builtin_u64image2DRect = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2613,
+          .name_id = 2644,
           .has_builtin_name = 1,
 };
 
@@ -2984,7 +3014,7 @@ const struct glsl_type glsl_type_builtin_u64imageCube = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2628,
+          .name_id = 2659,
           .has_builtin_name = 1,
 };
 
@@ -2997,7 +3027,7 @@ const struct glsl_type glsl_type_builtin_u64imageBuffer = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2641,
+          .name_id = 2672,
           .has_builtin_name = 1,
 };
 
@@ -3010,7 +3040,7 @@ const struct glsl_type glsl_type_builtin_u64image1DArray = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2656,
+          .name_id = 2687,
           .has_builtin_name = 1,
 };
 
@@ -3023,7 +3053,7 @@ const struct glsl_type glsl_type_builtin_u64image2DArray = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2672,
+          .name_id = 2703,
           .has_builtin_name = 1,
 };
 
@@ -3036,7 +3066,7 @@ const struct glsl_type glsl_type_builtin_u64imageCubeArray = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2688,
+          .name_id = 2719,
           .has_builtin_name = 1,
 };
 
@@ -3049,7 +3079,7 @@ const struct glsl_type glsl_type_builtin_u64image2DMS = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2706,
+          .name_id = 2737,
           .has_builtin_name = 1,
 };
 
@@ -3062,7 +3092,7 @@ const struct glsl_type glsl_type_builtin_u64image2DMSArray = {
           .sampled_type = GLSL_TYPE_UINT64,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2719,
+          .name_id = 2750,
           .has_builtin_name = 1,
 };
 
@@ -3075,7 +3105,7 @@ const struct glsl_type glsl_type_builtin_vbuffer = {
           .sampled_type = GLSL_TYPE_VOID,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2737,
+          .name_id = 2768,
           .has_builtin_name = 1,
 };
 
@@ -3088,7 +3118,7 @@ const struct glsl_type glsl_type_builtin_vimage1D = {
           .sampled_type = GLSL_TYPE_VOID,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2745,
+          .name_id = 2776,
           .has_builtin_name = 1,
 };
 
@@ -3101,7 +3131,7 @@ const struct glsl_type glsl_type_builtin_vimage2D = {
           .sampled_type = GLSL_TYPE_VOID,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2754,
+          .name_id = 2785,
           .has_builtin_name = 1,
 };
 
@@ -3114,7 +3144,33 @@ const struct glsl_type glsl_type_builtin_vimage3D = {
           .sampled_type = GLSL_TYPE_VOID,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2763,
+          .name_id = 2794,
+          .has_builtin_name = 1,
+};
+
+const struct glsl_type glsl_type_builtin_vimage2DMS = {
+                    .gl_type = GL_IMAGE_2D_MULTISAMPLE,
+          .base_type = GLSL_TYPE_IMAGE,
+          .sampler_dimensionality = GLSL_SAMPLER_DIM_MS,
+          .sampler_shadow = 0,
+          .sampler_array = 0,
+          .sampled_type = GLSL_TYPE_VOID,
+          .vector_elements = 1,
+          .matrix_columns = 1,
+          .name_id = 2803,
+          .has_builtin_name = 1,
+};
+
+const struct glsl_type glsl_type_builtin_vimage2DMSArray = {
+                    .gl_type = GL_IMAGE_2D_MULTISAMPLE_ARRAY,
+          .base_type = GLSL_TYPE_IMAGE,
+          .sampler_dimensionality = GLSL_SAMPLER_DIM_MS,
+          .sampler_shadow = 0,
+          .sampler_array = 1,
+          .sampled_type = GLSL_TYPE_VOID,
+          .vector_elements = 1,
+          .matrix_columns = 1,
+          .name_id = 2814,
           .has_builtin_name = 1,
 };
 
@@ -3127,7 +3183,7 @@ const struct glsl_type glsl_type_builtin_vimage1DArray = {
           .sampled_type = GLSL_TYPE_VOID,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2772,
+          .name_id = 2830,
           .has_builtin_name = 1,
 };
 
@@ -3140,7 +3196,7 @@ const struct glsl_type glsl_type_builtin_vimage2DArray = {
           .sampled_type = GLSL_TYPE_VOID,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2786,
+          .name_id = 2844,
           .has_builtin_name = 1,
 };
 
@@ -3153,7 +3209,7 @@ const struct glsl_type glsl_type_builtin_subpassInput = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2800,
+          .name_id = 2858,
           .has_builtin_name = 1,
 };
 
@@ -3166,7 +3222,7 @@ const struct glsl_type glsl_type_builtin_subpassInputMS = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2813,
+          .name_id = 2871,
           .has_builtin_name = 1,
 };
 
@@ -3179,7 +3235,7 @@ const struct glsl_type glsl_type_builtin_isubpassInput = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2828,
+          .name_id = 2886,
           .has_builtin_name = 1,
 };
 
@@ -3192,7 +3248,7 @@ const struct glsl_type glsl_type_builtin_isubpassInputMS = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2842,
+          .name_id = 2900,
           .has_builtin_name = 1,
 };
 
@@ -3205,7 +3261,7 @@ const struct glsl_type glsl_type_builtin_usubpassInput = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2858,
+          .name_id = 2916,
           .has_builtin_name = 1,
 };
 
@@ -3218,7 +3274,7 @@ const struct glsl_type glsl_type_builtin_usubpassInputMS = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2872,
+          .name_id = 2930,
           .has_builtin_name = 1,
 };
 
@@ -3231,7 +3287,7 @@ const struct glsl_type glsl_type_builtin_textureSubpassInput = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2888,
+          .name_id = 2946,
           .has_builtin_name = 1,
 };
 
@@ -3244,7 +3300,7 @@ const struct glsl_type glsl_type_builtin_textureSubpassInputMS = {
           .sampled_type = GLSL_TYPE_FLOAT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2908,
+          .name_id = 2966,
           .has_builtin_name = 1,
 };
 
@@ -3257,7 +3313,7 @@ const struct glsl_type glsl_type_builtin_itextureSubpassInput = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2930,
+          .name_id = 2988,
           .has_builtin_name = 1,
 };
 
@@ -3270,7 +3326,7 @@ const struct glsl_type glsl_type_builtin_itextureSubpassInputMS = {
           .sampled_type = GLSL_TYPE_INT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2951,
+          .name_id = 3009,
           .has_builtin_name = 1,
 };
 
@@ -3283,7 +3339,7 @@ const struct glsl_type glsl_type_builtin_utextureSubpassInput = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2974,
+          .name_id = 3032,
           .has_builtin_name = 1,
 };
 
@@ -3296,7 +3352,7 @@ const struct glsl_type glsl_type_builtin_utextureSubpassInputMS = {
           .sampled_type = GLSL_TYPE_UINT,
           .vector_elements = 1,
           .matrix_columns = 1,
-          .name_id = 2995,
+          .name_id = 3053,
           .has_builtin_name = 1,
 };
 

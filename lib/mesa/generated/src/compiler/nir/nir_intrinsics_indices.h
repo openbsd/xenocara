@@ -338,30 +338,6 @@ nir_intrinsic_has_cluster_size(const nir_intrinsic_instr *instr)
 }
 
 
-static inline bool
-nir_intrinsic_include_helpers(const nir_intrinsic_instr *instr)
-{
-   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
-   assert(info->index_map[NIR_INTRINSIC_INCLUDE_HELPERS] > 0);
-   return (bool)instr->const_index[info->index_map[NIR_INTRINSIC_INCLUDE_HELPERS] - 1];
-}
-
-static inline void
-nir_intrinsic_set_include_helpers(nir_intrinsic_instr *instr, bool val)
-{
-   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
-   assert(info->index_map[NIR_INTRINSIC_INCLUDE_HELPERS] > 0);
-   instr->const_index[info->index_map[NIR_INTRINSIC_INCLUDE_HELPERS] - 1] = val;
-}
-
-static inline bool
-nir_intrinsic_has_include_helpers(const nir_intrinsic_instr *instr)
-{
-   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
-   return info->index_map[NIR_INTRINSIC_INCLUDE_HELPERS] > 0;
-}
-
-
 static inline unsigned
 nir_intrinsic_param_idx(const nir_intrinsic_instr *instr)
 {
@@ -978,7 +954,6 @@ nir_intrinsic_set_io_semantics(nir_intrinsic_instr *instr, struct nir_io_semanti
 {
    const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
    assert(info->index_map[NIR_INTRINSIC_IO_SEMANTICS] > 0);
-   val._pad = 0; /* clear padding bits */
    STATIC_ASSERT(sizeof(instr->const_index[0]) == sizeof(val));
    memcpy(&instr->const_index[info->index_map[NIR_INTRINSIC_IO_SEMANTICS] - 1], &val, sizeof(val));
 }
@@ -1576,6 +1551,78 @@ nir_intrinsic_has_alu_op(const nir_intrinsic_instr *instr)
 {
    const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
    return info->index_map[NIR_INTRINSIC_ALU_OP] > 0;
+}
+
+
+static inline unsigned
+nir_intrinsic_systolic_depth(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_SYSTOLIC_DEPTH] > 0);
+   return (unsigned)instr->const_index[info->index_map[NIR_INTRINSIC_SYSTOLIC_DEPTH] - 1];
+}
+
+static inline void
+nir_intrinsic_set_systolic_depth(nir_intrinsic_instr *instr, unsigned val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_SYSTOLIC_DEPTH] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_SYSTOLIC_DEPTH] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_systolic_depth(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_SYSTOLIC_DEPTH] > 0;
+}
+
+
+static inline unsigned
+nir_intrinsic_repeat_count(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_REPEAT_COUNT] > 0);
+   return (unsigned)instr->const_index[info->index_map[NIR_INTRINSIC_REPEAT_COUNT] - 1];
+}
+
+static inline void
+nir_intrinsic_set_repeat_count(nir_intrinsic_instr *instr, unsigned val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_REPEAT_COUNT] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_REPEAT_COUNT] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_repeat_count(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_REPEAT_COUNT] > 0;
+}
+
+
+static inline bool
+nir_intrinsic_explicit_coord(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_EXPLICIT_COORD] > 0);
+   return (bool)instr->const_index[info->index_map[NIR_INTRINSIC_EXPLICIT_COORD] - 1];
+}
+
+static inline void
+nir_intrinsic_set_explicit_coord(nir_intrinsic_instr *instr, bool val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_EXPLICIT_COORD] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_EXPLICIT_COORD] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_explicit_coord(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_EXPLICIT_COORD] > 0;
 }
 
 #endif /* _NIR_INTRINSICS_INDICES_ */
