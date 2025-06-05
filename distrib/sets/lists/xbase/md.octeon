@@ -111,11 +111,12 @@
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/include/xorg
+./usr/X11R6/lib/gbm/dri_gbm.so
 ./usr/X11R6/lib/libEGL.a
 ./usr/X11R6/lib/libEGL.so.2.0
 ./usr/X11R6/lib/libEGL_p.a
 ./usr/X11R6/lib/libGL.a
-./usr/X11R6/lib/libGL.so.19.1
+./usr/X11R6/lib/libGL.so.19.2
 ./usr/X11R6/lib/libGLESv1_CM.a
 ./usr/X11R6/lib/libGLESv1_CM.so.3.0
 ./usr/X11R6/lib/libGLESv1_CM_p.a
@@ -129,7 +130,7 @@
 ./usr/X11R6/lib/libGLw.a
 ./usr/X11R6/lib/libGLw.so.6.0
 ./usr/X11R6/lib/libOSMesa.a
-./usr/X11R6/lib/libOSMesa.so.13.0
+./usr/X11R6/lib/libOSMesa.so.13.1
 ./usr/X11R6/lib/libOSMesa_p.a
 ./usr/X11R6/lib/libdrm.a
 ./usr/X11R6/lib/libdrm.so.7.13
@@ -142,11 +143,12 @@
 ./usr/X11R6/lib/libdrm_radeon_p.a
 ./usr/X11R6/lib/libepoxy.a
 ./usr/X11R6/lib/libepoxy.so.4.1
+./usr/X11R6/lib/libgallium_dri.so
 ./usr/X11R6/lib/libgbm.a
 ./usr/X11R6/lib/libgbm.so.0.6
 ./usr/X11R6/lib/libgbm_p.a
 ./usr/X11R6/lib/libglapi.a
-./usr/X11R6/lib/libglapi.so.1.0
+./usr/X11R6/lib/libglapi.so.2.0
 ./usr/X11R6/lib/libglapi_p.a
 ./usr/X11R6/lib/libva-drm.la
 ./usr/X11R6/lib/libva-drm.so.2.22

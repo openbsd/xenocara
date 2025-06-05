@@ -4,6 +4,7 @@
 ./usr/X11R6/bin/gtf
 ./usr/X11R6/include/libsync.h
 ./usr/X11R6/lib/modules/dri/kms_swrast_dri.so
+./usr/X11R6/lib/modules/dri/libdril_dri.so
 ./usr/X11R6/lib/modules/dri/r300_dri.so
 ./usr/X11R6/lib/modules/dri/r600_dri.so
 ./usr/X11R6/lib/modules/dri/r600_drv_video.so
