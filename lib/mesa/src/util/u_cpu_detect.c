@@ -62,7 +62,7 @@
 #if DETECT_OS_FREEBSD || DETECT_OS_OPENBSD
 #if __has_include(<sys/auxv.h>)
 #include <sys/auxv.h>
-#define HAVE_ELF_AUX_INFO
+#define HAVE_ELF_AUX_INFO 1
 #endif
 #endif
 
