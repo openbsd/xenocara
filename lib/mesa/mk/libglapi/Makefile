@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2025/06/05 14:18:42 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2025/06/06 09:04:09 jsg Exp $
 
 LIB=	glapi
 
@@ -20,6 +20,8 @@ LDADD+=	-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group \
 	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
 	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
 	-Wl,--gc-sections -lpthread -lm -Wl,--end-group
+
+NOPROFILE=
 
 obj: _xenocara_obj
 

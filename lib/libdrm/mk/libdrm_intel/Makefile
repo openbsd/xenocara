@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2023/02/27 12:46:20 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2025/06/06 09:04:09 jsg Exp $
 
 LIB=	drm_intel
 
@@ -15,6 +15,8 @@ CPPFLAGS+=	-I${DRM_SRC}/intel \
 
 LDADD+=	-L${.CURDIR}/../libdrm/${__objdir} -ldrm \
 	-L${X11BASE}/lib -lpciaccess
+
+NOPROFILE=
 
 obj: _xenocara_obj
 

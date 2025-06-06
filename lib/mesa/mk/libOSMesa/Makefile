@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.10 2025/06/05 14:18:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.11 2025/06/06 09:04:09 jsg Exp $
 
 LIB=	OSMesa
 
@@ -18,6 +18,8 @@ CPPFLAGS+=	-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/mapi/glapi \
 		-DGALLIUM_SOFTPIPE -DGALLIUM_LLVMPIPE
+
+NOPROFILE=
 
 obj: _xenocara_obj
 

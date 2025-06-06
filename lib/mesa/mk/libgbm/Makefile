@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.11 2025/06/05 14:18:42 jsg Exp $
+#	$OpenBSD: Makefile,v 1.12 2025/06/06 09:04:09 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -35,6 +35,8 @@ LDADD+= -L${X11BASE}/lib -ldrm \
 .endif
 
 LDADD+=	-Wl,--end-group
+
+NOPROFILE=
 
 obj: _xenocara_obj
 

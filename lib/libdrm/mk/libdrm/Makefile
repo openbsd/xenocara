@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2021/02/11 10:34:51 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2025/06/06 09:04:09 jsg Exp $
 
 LIB=	drm
 
@@ -7,6 +7,8 @@ SRCS=	xf86drm.c \
 	xf86drmMode.c \
 	xf86drmRandom.c \
 	xf86drmSL.c
+
+NOPROFILE=
 
 obj: _xenocara_obj
 

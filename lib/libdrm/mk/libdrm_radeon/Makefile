@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2021/02/11 10:34:51 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2025/06/06 09:04:09 jsg Exp $
 
 LIB=	drm_radeon
 
@@ -14,6 +14,8 @@ SRCS=	radeon_bo.c \
 CPPFLAGS+=	-I${DRM_SRC}/radeon
 
 LDADD+=	-L${.CURDIR}/../libdrm/${__objdir} -ldrm
+
+NOPROFILE=
 
 obj: _xenocara_obj
 
