@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.13 2025/06/05 14:18:41 jsg Exp $
+#	$OpenBSD: Makefile,v 1.14 2025/06/07 09:07:04 jsg Exp $
 
 LIB=	gallium_dri
 
@@ -192,7 +192,9 @@ LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
 
 LDADD+=		-Wl,--whole-archive
 LDADD+=		${.CURDIR}/../libdri/${__objdir}/libdri.a
+.if ${WITH_GALLIUM_VA} == "yes"
 LDADD+=		${.CURDIR}/../libva_st/${__objdir}/libva_st.a
+.endif
 LDADD+=		-Wl,--no-whole-archive
 
 .for slib in ${SLIBS}
