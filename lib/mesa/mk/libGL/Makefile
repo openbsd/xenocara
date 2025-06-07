@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.11 2025/06/06 09:04:08 jsg Exp $
+#	$OpenBSD: Makefile,v 1.12 2025/06/07 08:49:51 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -79,7 +79,7 @@ LDADD+=	-L${.CURDIR}/../libglapi/${__objdir} -lglapi \
 
 LDADD+=	-L${X11BASE}/lib -lexpat -lX11-xcb -lxcb-glx \
 	-lxcb-shm -lXxf86vm -lXext -lX11 -lxcb -lxcb-xfixes \
-	-ldrm -lm \
+	-ldrm -lm -lXfixes -lxcb-dri2 \
 	-L${.CURDIR}/../libgallium_dri/${__objdir} -lgallium_dri
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
