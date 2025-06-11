@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.15 2025/06/05 14:18:51 jsg Exp $
+#	$OpenBSD: Makefile,v 1.16 2025/06/11 13:08:26 jsg Exp $
 
 LIB=	vulkan_radeon
 
@@ -101,12 +101,6 @@ SRCS+=	radv_amdgpu_bo.c \
 # with_llvm
 SRCS+=	radv_llvm_helper.cpp \
 	radv_nir_to_llvm.c
-
-# from src/vulkan/runtime/radix_sort/meson.build
-SRCS+=	barrier.c \
-	util.c \
-	radix_sort_u64.c \
-	radix_sort_vk.c
 
 SRCS+=	radv_entrypoints.c \
 	radv_annotate_layer.c
@@ -216,8 +210,5 @@ CLEANFILES+= lib${LIB}.so
 .PATH: ${MESA_SRC}/src/amd/vulkan/nir
 .PATH: ${MESA_SRC}/src/amd/vulkan/winsys/amdgpu
 .PATH: ${MESA_SRC}/src/amd/vulkan/winsys/null
-.PATH: ${MESA_SRC}/src/vulkan/runtime/radix_sort
-.PATH: ${MESA_SRC}/src/vulkan/runtime/radix_sort/common
-.PATH: ${MESA_SRC}/src/vulkan/runtime/radix_sort/common/vk
 .PATH: ${MESA_SRC}/generated/src/amd/vulkan
 .PATH: ${MESA_SRC}/generated/src/amd/vulkan/layers

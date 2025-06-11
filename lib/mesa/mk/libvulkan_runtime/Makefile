@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2025/06/05 14:18:51 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2025/06/11 13:08:26 jsg Exp $
 
 LIB=	vulkan_runtime
 
@@ -72,6 +72,12 @@ SRCS+=	vk_drm_syncobj.c \
 SRCS+=	vk_texcompress_astc.c \
 	vk_acceleration_structure.c
 
+# from src/vulkan/runtime/radix_sort/meson.build
+SRCS+=	barrier.c \
+	util.c \
+	radix_sort_u64.c \
+	radix_sort_vk.c
+
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS}
@@ -95,5 +101,8 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/vulkan/runtime
+.PATH: ${MESA_SRC}/src/vulkan/runtime/radix_sort
+.PATH: ${MESA_SRC}/src/vulkan/runtime/radix_sort/common
+.PATH: ${MESA_SRC}/src/vulkan/runtime/radix_sort/common/vk
 .PATH: ${MESA_SRC}/src/vulkan/runtime/rmv
 .PATH: ${MESA_SRC}/generated/src/vulkan/runtime
