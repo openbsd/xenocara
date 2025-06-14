@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: titlestack.pl,v 1.29 2019/09/20 00:50:10 tom Exp $
+# $XTermId: titlestack.pl,v 1.35 2024/11/29 01:09:46 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2019 by Thomas E. Dickey
+# Copyright 2019,2024 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -48,17 +48,22 @@ our $target = "";
 
 our $encoding = lc( langinfo( CODESET() ) );
 our $wm_name;
-our ( $opt_b, $opt_g, $opt_v, $opt_8 );
+our ( $opt_b, $opt_c, $opt_g, $opt_l, $opt_s, $opt_v, $opt_8 );
 
 our @titlestack;    # stack of title-strings, using current encoding
 our @item_stack;    # selector used when doing a push
 our @mode_stack;    # titleModes in effect when titlestack was loaded
 our $SP;            # stack-pointer
+our $SQ = 10;       # stack-limit
 our $TM;            # current titleModes, in various combinations
+our @cmd_buffer;    # command-input
+our $cmd_index;     # current index in $cmd_buffer[]
+our $log_fp;        # logging-output
 
 our $utf8_sample = 0;
 
 our $CSI = "\x1b[";
+our $DCS = "\x1bP";
 our $OSC = "\x1b]";
 our $ST  = "\x1b\\";
 
@@ -160,6 +165,39 @@ sub get_reply($) {
     return $reply;
 }
 
+sub get_level() {
+    my $reply = &get_reply( sprintf( "%s#S", $CSI ) );
+    if ( index( $reply, $CSI ) == 0 ) {
+        $reply = substr( $reply, length($CSI) );
+        if ( $reply =~ /^\d+;\d+#S$/ ) {
+            $reply =~ s/#S//;
+            my @params = split /;/, $reply;
+            $SP = $params[0];
+            $SQ = $params[1];
+        }
+    }
+}
+
+sub get_titlemodes() {
+    my $reply  = &get_reply( sprintf( "%s\$q>t%s", $DCS, $ST ) );
+    my $prefix = "${DCS}1\$r";
+    my $p      = index( $reply, $prefix );
+    my $q      = index( $reply, $ST );
+    my $r      = length($reply) - length($ST);
+    if ( $p == 0 and $q == $r ) {
+        $reply = substr( $reply, 0, $q );
+        $reply = substr( $reply, length($prefix) );
+        if ( $reply =~ /^>(\d;)*\dt$/ ) {
+            $reply =~ s/^.(.+).$/$1/;
+            my @modes = split /;/, $reply;
+            $TM = 0;
+            for my $n ( 0 .. $#modes ) {
+                $TM += ( 1 << $n ) if ( $modes[$n] != 0 );
+            }
+        }
+    }
+}
+
 sub get_title($) {
     my $icon   = shift;
     my $reply  = &get_reply( sprintf( "%s%dt", $CSI, $icon ? 20 : 21 ) );
@@ -197,6 +235,57 @@ sub raw() {
 
 sub cooked() {
     ReadMode 'normal';
+}
+
+sub get_cmd() {
+    my $result;
+    select( undef, undef, undef, $opt_s );
+    if ( $cmd_index <= $#cmd_buffer ) {
+        $result = $cmd_buffer[ $cmd_index++ ];
+    }
+    else {
+        $result = "q";
+    }
+    return $result;
+}
+
+sub get_char() {
+    my $result;
+    if ($opt_c) {
+        $result = &get_cmd();
+        if ( index( $result, "char:" ) == 0 ) {
+            $result = substr( $result, 5 );
+        }
+        else {
+            $result = "q";
+        }
+    }
+    else {
+        $result = ReadKey 0;
+    }
+    printf $log_fp "char:%s\n", $result if ($opt_l);
+    return $result;
+}
+
+sub get_line() {
+    my $result;
+    if ($opt_c) {
+        $result = &get_cmd();
+        if ( index( $result, "line:" ) == 0 ) {
+            $result = substr( $result, 5 );
+        }
+        else {
+            $result = "";
+        }
+    }
+    else {
+        &cooked;
+        $result = ReadLine 0;
+        chomp $result;
+        &raw;
+    }
+    printf $log_fp "line:%s\n", $result if ($opt_l);
+    return $result;
 }
 
 sub read_cmd($) {
@@ -249,7 +338,7 @@ sub get_tmode($) {
     my $help   = 0;
     my $result = "?";
     while ( $result !~ /^[0123]$/ ) {
-        $result = ReadKey 0;
+        $result = &get_char;
         if ( $result eq "q" ) {
             $result = -1;
             last;
@@ -291,7 +380,7 @@ sub get_selector() {
     my $help   = 0;
     printf "\t:";
     while ( $result !~ /^[012]$/ ) {
-        $result = ReadKey 0;
+        $result = &get_char;
         if ( $result eq "q" ) {
             $result = -1;
             last;
@@ -360,6 +449,15 @@ sub set_titlemode($) {
     }
     if ( $opts ne "" ) {
         &send_command( sprintf( "%s>%s%s", $CSI, $opts, $set ? "t" : "T" ) );
+    }
+
+    if ($opt_l) {
+        my $save = $TM;
+        &get_titlemodes;
+
+        if ( $TM != $save ) {
+            printf $log_fp "note: expected title-modes $save, got $TM\n";
+        }
     }
 }
 
@@ -435,13 +533,12 @@ sub set_titletext() {
                   . $gap
                   . $u_chars;
             }
+            &cooked;
             printf "%s\r\n", $text;
+            &raw;
         }
         else {
-            &cooked;
-            $text = ReadLine 0;
-            chomp $text;
-            &raw;
+            $text = &get_line;
         }
         $titlestack[$SP] = $text;
         $item_stack[$SP] = $opt;
@@ -509,7 +606,10 @@ Usage: $0 [options]
 Options:
   -8      use 8-bit controls
   -b      use BEL rather than ST for terminating strings
+  -c FILE read commands from this file.
   -g      generate title-strings rather than prompting
+  -l FILE log commands to this file.
+  -s SECS sleep this long each time a command is read from file
   -v      verbose
 EOF
       ;
@@ -517,11 +617,26 @@ EOF
 }
 
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-&getopts('bgv8') || &main::HELP_MESSAGE;
+&getopts('bc:gl:s:v8') || &main::HELP_MESSAGE;
+
+if ($opt_c) {
+    open( my $cmd_fp, "<", $opt_c ) || &main::HELP_MESSAGE;
+    @cmd_buffer = <$cmd_fp>;
+    close $cmd_fp;
+    chomp @cmd_buffer;
+    $cmd_index = 0;
+}
+
+if ($opt_l) {
+    open( $log_fp, ">", $opt_l ) || &main::HELP_MESSAGE;
+}
+
+$opt_s = "1" unless ( defined($opt_s) and ( $opt_s =~ /^(\d*\.)?\d+$/ ) );
 
 $ST = "\007" if ($opt_b);
 
-$titlestack[ $SP = 0 ] = "unknown";
+$SP              = 0;
+$titlestack[$SP] = "unknown";
 $item_stack[$SP] = 0;
 $mode_stack[$SP] = $TM = 0;
 
@@ -534,6 +649,7 @@ if ($opt_8) {
     else {
         printf STDERR "\x1b G";
         $CSI = "\x9b";
+        $DCS = "\x90";
         $OSC = "\x9d";
         $ST  = "\x9c";
     }
@@ -542,12 +658,14 @@ if ($opt_8) {
 &get_WM_NAME;
 
 &raw;
+&get_titlemodes;
+&get_level;
 &raw;
 while (1) {
     my $cmd;
 
-    printf "\r\nCommand (? for help):";
-    $cmd = ReadKey 0;
+    printf "\r\n[$SP:$SQ] Command (? for help):";
+    $cmd = &get_char;
     if ( not $cmd ) {
         sleep 1;
     }
@@ -562,9 +680,7 @@ while (1) {
     }
     elsif ( $cmd eq "#" ) {
         printf " ...comment\r\n\t#";
-        &cooked;
-        ReadLine 0;
-        &raw;
+        &get_line;
     }
     elsif ( $cmd eq "!" ) {
         printf " ...shell\r\n";

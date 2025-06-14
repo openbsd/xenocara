@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.1099 2024/10/14 16:00:49 tom Exp $ */
+/* $XTermId: misc.c,v 1.1112 2025/04/02 23:09:26 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -172,7 +172,7 @@ Sleep(int msec)
 
     select_timeout.tv_sec = 0;
     select_timeout.tv_usec = msec * 1000;
-    select(0, 0, 0, 0, &select_timeout);
+    select(0, NULL, NULL, NULL, &select_timeout);
 }
 
 static void
@@ -282,7 +282,7 @@ setXUrgency(XtermWidget xw, Bool enable)
 
     if (screen->bellIsUrgent) {
 	XWMHints *h = XGetWMHints(screen->display, VShellWindow(xw));
-	if (h != 0) {
+	if (h != NULL) {
 	    if (enable && !(screen->select & FOCUS)) {
 		h->flags |= XUrgencyHint;
 	    } else {
@@ -404,7 +404,7 @@ mergeExposeEvents(XEvent *target)
 	XExposeEvent *q = (XExposeEvent *) (&next_event);
 
 	XtAppNextEvent(app_con, &next_event);
-	TRACE_EVENT("pending", &next_event, (String *) 0, 0);
+	TRACE_EVENT("pending", &next_event, (String *) 0, NULL);
 
 	/*
 	 * If either window is contained within the other, merge the events.
@@ -459,7 +459,7 @@ mergeConfigureEvents(XEvent *target)
 	XConfigureEvent *q = (XConfigureEvent *) (&next_event);
 
 	XtAppNextEvent(app_con, &next_event);
-	TRACE_EVENT("pending", &next_event, (String *) 0, 0);
+	TRACE_EVENT("pending", &next_event, (String *) 0, NULL);
 
 	if (p->window == q->window) {
 	    TRACE(("pending Configure...merged\n"));
@@ -512,7 +512,7 @@ mergeButtonEvents(XEvent *target)
 	XButtonEvent *q = (XButtonEvent *) (&next_event);
 
 	XtAppNextEvent(app_con, &next_event);
-	TRACE_EVENT("pending", &next_event, (String *) 0, 0);
+	TRACE_EVENT("pending", &next_event, (String *) 0, NULL);
 
 	if (p->window == q->window) {
 	    TRACE(("pending ButtonEvent...merged\n"));
@@ -546,7 +546,7 @@ xtermAppPending(void)
 
     while (result && XtAppPeekEvent(app_con, &this_event)) {
 	found = True;
-	TRACE_EVENT("pending", &this_event, (String *) 0, 0);
+	TRACE_EVENT("pending", &this_event, (String *) 0, NULL);
 	if (this_event.type == Expose) {
 	    result = mergeExposeEvents(&this_event);
 	} else if (this_event.type == ConfigureNotify) {
@@ -708,12 +708,12 @@ make_hidden_cursor(XtermWidget xw)
      * server insists on drawing _something_.
      */
     TRACE(("Ask for nil2 font\n"));
-    if ((fn = xtermLoadQueryFont(xw, "nil2")) == 0) {
+    if ((fn = xtermLoadQueryFont(xw, "nil2")) == NULL) {
 	TRACE(("...Ask for fixed font\n"));
 	fn = xtermLoadQueryFont(xw, DEFFONT);
     }
 
-    if (fn != None) {
+    if (fn != NULL) {
 	/* a space character seems to work as a cursor (dots are not needed) */
 	c = XCreateGlyphCursor(dpy, fn->fid, fn->fid, 'X', ' ', &dummy, &dummy);
 	XFreeFont(dpy, fn);
@@ -738,7 +738,7 @@ init_colored_cursor(Display *dpy)
     static const char pattern[] = "xtermXXXXXXXXXX";
     char *env = getenv("XCURSOR_THEME");
 
-    xterm_cursor_theme = 0;
+    xterm_cursor_theme = NULL;
     /*
      * The environment variable overrides a (possible) resource Xcursor.theme
      */
@@ -759,11 +759,11 @@ init_colored_cursor(Display *dpy)
 
 	TRACE(("init_colored_cursor will make an empty Xcursor theme\n"));
 
-	if ((tmp_dir = getenv("TMPDIR")) == 0) {
+	if ((tmp_dir = getenv("TMPDIR")) == NULL) {
 	    tmp_dir = P_tmpdir;
 	}
 	needed = strlen(tmp_dir) + 4 + strlen(theme) + strlen(pattern);
-	if ((filename = malloc(needed)) != 0) {
+	if ((filename = malloc(needed)) != NULL) {
 	    sprintf(filename, "%s/%s", tmp_dir, pattern);
 
 #ifdef HAVE_MKDTEMP
@@ -781,14 +781,14 @@ init_colored_cursor(Display *dpy)
 	     * search path away from home.  We are setting up the complete
 	     * theme just in case the library ever acquires a maintainer.
 	     */
-	    if (xterm_cursor_theme != 0) {
+	    if (xterm_cursor_theme != NULL) {
 		char *leaf = xterm_cursor_theme + strlen(xterm_cursor_theme);
 		FILE *fp;
 
 		strcat(leaf, "/");
 		strcat(leaf, theme);
 
-		if ((fp = fopen(xterm_cursor_theme, "w")) != 0) {
+		if ((fp = fopen(xterm_cursor_theme, "w")) != NULL) {
 		    fprintf(fp, "[Icon Theme]\n");
 		    fclose(fp);
 		    *leaf = '\0';
@@ -814,7 +814,7 @@ void
 cleanup_colored_cursor(void)
 {
 #ifdef HAVE_LIB_XCURSOR
-    if (xterm_cursor_theme != 0) {
+    if (xterm_cursor_theme != NULL) {
 	char *my_path = getenv("XCURSOR_PATH");
 	struct stat sb;
 	if (!IsEmpty(my_path)
@@ -1069,7 +1069,7 @@ HandleStringEvent(Widget w GCC_UNUSED,
 	    value *= 16;
 	    if (c >= '0' && c <= '9')
 		value += (unsigned) (c - '0');
-	    else if ((xxxxxx = (strchr) (abcdef, c)) != 0)
+	    else if ((xxxxxx = (strchr) (abcdef, c)) != NULL)
 		value += (unsigned) (xxxxxx - abcdef) + 10;
 	    else
 		break;
@@ -1136,7 +1136,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	} else {
 	    xtermWarning("Cannot exec-xterm given \"%s\"\n", ProgramName);
 	}
-	if (child_exe == 0)
+	if (child_exe == NULL)
 	    return;
     }
 
@@ -1159,7 +1159,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	    unsigned myargc = *nparams + 1;
 	    char **myargv = TypeMallocN(char *, myargc + 1);
 
-	    if (myargv != 0) {
+	    if (myargv != NULL) {
 		unsigned n = 0;
 
 		myargv[n++] = child_exe;
@@ -1168,7 +1168,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 		    myargv[n++] = (char *) *params++;
 		}
 
-		myargv[n] = 0;
+		myargv[n] = NULL;
 		execv(child_exe, myargv);
 	    }
 
@@ -1621,7 +1621,7 @@ dabbrev_prev_word(XtermWidget xw, CELL *cell, LineData **ld)
     char *abword;
     int c;
     char *ab_end = (xw->work.dabbrev_data + MAX_DABBREV - 1);
-    char *result = 0;
+    char *result = NULL;
 
     abword = ab_end;
     *abword = '\0';		/* end of string marker */
@@ -1638,7 +1638,7 @@ dabbrev_prev_word(XtermWidget xw, CELL *cell, LineData **ld)
 	result = abword;
     }
 
-    if (result != 0) {
+    if (result != NULL) {
 	while ((c = dabbrev_prev_char(screen, cell, ld)) >= 0 &&
 	       !IS_WORD_CONSTITUENT(c)) {
 	    ;			/* skip preceding spaces */
@@ -1655,7 +1655,7 @@ dabbrev_expand(XtermWidget xw)
     int pty = screen->respond;	/* file descriptor of pty */
 
     static CELL cell;
-    static char *dabbrev_hint = 0, *lastexpansion = 0;
+    static char *dabbrev_hint = NULL, *lastexpansion = NULL;
     static unsigned int expansions;
 
     char *expansion;
@@ -1670,14 +1670,14 @@ dabbrev_expand(XtermWidget xw)
 
 	free(dabbrev_hint);
 
-	if ((dabbrev_hint = dabbrev_prev_word(xw, &cell, &ld)) != 0) {
+	if ((dabbrev_hint = dabbrev_prev_word(xw, &cell, &ld)) != NULL) {
 
 	    free(lastexpansion);
 
-	    if ((lastexpansion = strdup(dabbrev_hint)) != 0) {
+	    if ((lastexpansion = strdup(dabbrev_hint)) != NULL) {
 
 		/* make own copy */
-		if ((dabbrev_hint = strdup(dabbrev_hint)) != 0) {
+		if ((dabbrev_hint = strdup(dabbrev_hint)) != NULL) {
 		    screen->dabbrev_working = True;
 		    /* we are in the middle of dabbrev process */
 		}
@@ -1689,17 +1689,17 @@ dabbrev_expand(XtermWidget xw)
 	}
 	if (!screen->dabbrev_working) {
 	    free(lastexpansion);
-	    lastexpansion = 0;
+	    lastexpansion = NULL;
 	    return result;
 	}
     }
 
-    if (dabbrev_hint == 0)
+    if (dabbrev_hint == NULL)
 	return result;
 
     hint_len = strlen(dabbrev_hint);
     for (;;) {
-	if ((expansion = dabbrev_prev_word(xw, &cell, &ld)) == 0) {
+	if ((expansion = dabbrev_prev_word(xw, &cell, &ld)) == NULL) {
 	    if (expansions >= 2) {
 		expansions = 0;
 		cell.col = screen->cur_col;
@@ -1714,12 +1714,12 @@ dabbrev_expand(XtermWidget xw)
 	    break;
     }
 
-    if (expansion != 0) {
+    if (expansion != NULL) {
 	Char *copybuffer;
 	size_t del_cnt = strlen(lastexpansion) - hint_len;
 	size_t buf_cnt = del_cnt + strlen(expansion) - hint_len;
 
-	if ((copybuffer = TypeMallocN(Char, buf_cnt)) != 0) {
+	if ((copybuffer = TypeMallocN(Char, buf_cnt)) != NULL) {
 	    /* delete previous expansion */
 	    memset(copybuffer, screen->dabbrev_erase_char, del_cnt);
 	    memmove(copybuffer + del_cnt,
@@ -1732,7 +1732,7 @@ dabbrev_expand(XtermWidget xw)
 
 	    free(lastexpansion);
 
-	    if ((lastexpansion = strdup(expansion)) != 0) {
+	    if ((lastexpansion = strdup(expansion)) != NULL) {
 		result = 1;
 		expansions++;
 	    }
@@ -1752,7 +1752,7 @@ HandleDabbrevExpand(Widget w,
     XtermWidget xw;
 
     TRACE(("Handle dabbrev-expand for %p\n", (void *) w));
-    if ((xw = getXtermWidget(w)) != 0) {
+    if ((xw = getXtermWidget(w)) != NULL) {
 	if (!dabbrev_expand(xw))
 	    Bell(xw, XkbBI_TerminalBell, 0);
     }
@@ -1817,7 +1817,7 @@ xtermIsIconified(XtermWidget xw)
 	int actual_format_return = 0;
 	unsigned long nitems_return = 0;
 	unsigned long bytes_after_return = 0;
-	unsigned char *prop_return = 0;
+	unsigned char *prop_return = NULL;
 	long long_length = 1024;
 	Atom requested_type = XA_ATOM;
 	Atom is_hidden = CachedInternAtom(dpy, "_NET_WM_STATE_HIDDEN");
@@ -1838,7 +1838,7 @@ xtermIsIconified(XtermWidget xw)
 			    &nitems_return,
 			    &bytes_after_return,
 			    &prop_return)) {
-	    if (prop_return != 0
+	    if (prop_return != NULL
 		&& actual_return_type == requested_type
 		&& actual_format_return == 32) {
 		unsigned long n;
@@ -1870,7 +1870,7 @@ HandleDeIconify(Widget w,
 {
     XtermWidget xw;
 
-    if ((xw = getXtermWidget(w)) != 0) {
+    if ((xw = getXtermWidget(w)) != NULL) {
 	xtermDeiconify(xw);
     }
 }
@@ -1884,7 +1884,7 @@ HandleIconify(Widget w,
 {
     XtermWidget xw;
 
-    if ((xw = getXtermWidget(w)) != 0) {
+    if ((xw = getXtermWidget(w)) != NULL) {
 	xtermIconify(xw);
     }
 }
@@ -2051,7 +2051,7 @@ HandleMaximize(Widget w,
 {
     XtermWidget xw;
 
-    if ((xw = getXtermWidget(w)) != 0) {
+    if ((xw = getXtermWidget(w)) != NULL) {
 	RequestMaximize(xw, 1);
     }
 }
@@ -2065,7 +2065,7 @@ HandleRestoreSize(Widget w,
 {
     XtermWidget xw;
 
-    if ((xw = getXtermWidget(w)) != 0) {
+    if ((xw = getXtermWidget(w)) != NULL) {
 	RequestMaximize(xw, 0);
     }
 }
@@ -2359,7 +2359,7 @@ StartLogExec(TScreen *screen)
 	}
     }
 
-    if (shell == 0) {
+    if (shell == NULL) {
 	static char dummy[] = "/bin/sh";
 	shell = dummy;
     }
@@ -2523,7 +2523,7 @@ FlushLog(XtermWidget xw)
 	size_t i;
 
 	cp = VTbuffer->next;
-	if (screen->logstart != 0
+	if (screen->logstart != NULL
 	    && (i = (size_t) (cp - screen->logstart)) > 0) {
 	    IGNORE_RC(write(screen->logfd, screen->logstart, i));
 	}
@@ -2581,13 +2581,13 @@ rgb masks (%04lx/%04lx/%04lx)\n"
     Display *dpy = screen->display;
     XVisualInfo myTemplate;
 
-    if (xw->visInfo == 0 && xw->numVisuals == 0) {
+    if (xw->visInfo == NULL && xw->numVisuals == 0) {
 	myTemplate.visualid = XVisualIDFromVisual(DefaultVisual(dpy,
 								XDefaultScreen(dpy)));
 	xw->visInfo = XGetVisualInfo(dpy, (long) VisualIDMask,
 				     &myTemplate, &xw->numVisuals);
 
-	if ((xw->visInfo != 0) && (xw->numVisuals > 0)) {
+	if ((xw->visInfo != NULL) && (xw->numVisuals > 0)) {
 	    XVisualInfo *vi = xw->visInfo;
 	    xw->rgb_widths[0] = maskToWidth(vi->red_mask);
 	    xw->rgb_widths[1] = maskToWidth(vi->green_mask);
@@ -2622,7 +2622,7 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 		   xw->rgb_widths[2]));
 	}
     }
-    return (xw->visInfo != 0) && (xw->numVisuals > 0) ? xw->visInfo : NULL;
+    return (xw->visInfo != NULL) && (xw->numVisuals > 0) ? xw->visInfo : NULL;
 #undef MYFMT
 #undef MYARG
 }
@@ -2676,14 +2676,14 @@ loadColorTable(XtermWidget xw, unsigned length)
 {
     Colormap cmap = xw->core.colormap;
     TScreen *screen = TScreenOf(xw);
-    Boolean result = (screen->cmap_data != 0);
+    Boolean result = (screen->cmap_data != NULL);
 
     if (!result
 	&& length != 0
 	&& length < MAX_COLORTABLE) {
 	screen->cmap_data = TypeMallocN(XColor, (size_t) length);
 
-	if (screen->cmap_data != 0) {
+	if (screen->cmap_data != NULL) {
 	    unsigned i;
 	    unsigned shift;
 
@@ -2807,7 +2807,7 @@ allocateClosestRGB(XtermWidget xw, XColor *def)
 	if (loadColorTable(xw, cmap_size)) {
 	    char *tried = TypeCallocN(char, (size_t) cmap_size);
 
-	    if (tried != 0) {
+	    if (tried != NULL) {
 		unsigned attempts;
 
 		/*
@@ -3058,8 +3058,8 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
 	    color = (int) (strtol) (buf, &next, 10);
 	    if (!PartS2L(buf, next) || (color < 0))
 		break;		/* no number at all */
-	    if (next != 0) {
-		if (strchr(";", *next) == 0)
+	    if (next != NULL) {
+		if (strchr(";", *next) == NULL)
 		    break;	/* unexpected delimiter */
 		++next;
 	    }
@@ -3332,8 +3332,6 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 	    PDATA('7', CUT_BUFFER7),
     };
     char target_used[XtNumber(table)];
-    char select_code[XtNumber(table) + 1];
-    String select_args[XtNumber(table) + 1];
 
     const char *base = buf;
     Cardinal j;
@@ -3347,6 +3345,8 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
     }
 
     if (*buf == ';') {
+	char select_code[XtNumber(table) + 1];
+	String select_args[XtNumber(table) + 1];
 
 	*buf++ = '\0';
 	if (*base == '\0')
@@ -3417,10 +3417,6 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 
 /***====================================================================***/
 
-#define IsSetUtf8Title(xw) (IsTitleMode(xw, tmSetUtf8) \
-			 || (xw->screen.utf8_title) \
-			 || (xw->screen.c1_printable))
-
 static Bool
 xtermIsPrintable(XtermWidget xw, Char **bufp, Char *last)
 {
@@ -3464,32 +3460,6 @@ xtermIsPrintable(XtermWidget xw, Char **bufp, Char *last)
 }
 
 /***====================================================================***/
-
-/*
- * Enum corresponding to the actual OSC codes rather than the internal
- * array indices.  Compare with TermColors.
- */
-typedef enum {
-    OSC_TEXT_FG = 10
-    ,OSC_TEXT_BG
-    ,OSC_TEXT_CURSOR
-    ,OSC_MOUSE_FG
-    ,OSC_MOUSE_BG
-#if OPT_TEK4014
-    ,OSC_TEK_FG = 15
-    ,OSC_TEK_BG
-#endif
-#if OPT_HIGHLIGHT_COLOR
-    ,OSC_HIGHLIGHT_BG = 17
-#endif
-#if OPT_TEK4014
-    ,OSC_TEK_CURSOR = 18
-#endif
-#if OPT_HIGHLIGHT_COLOR
-    ,OSC_HIGHLIGHT_FG = 19
-#endif
-    ,OSC_NCOLORS
-} OscTextColors;
 
 /*
  * Map codes to OSC controls that can reset colors.
@@ -3707,7 +3677,7 @@ ChangeColorsRequest(XtermWidget xw,
 		if (names != NULL) {
 		    *names++ = '\0';
 		}
-		if (thisName != 0) {
+		if (thisName != NULL) {
 		    if (!strcmp(thisName, "?")) {
 			if (ReportColorRequest(xw, ndx, final))
 			    ++queried;
@@ -3753,8 +3723,8 @@ ResetColorsRequest(XtermWidget xw,
 	newColors.which = 0;
 	newColors.names[ndx] = NULL;
 
-	if (thisName != 0
-	    && xw->work.oldColors->names[ndx] != 0
+	if (thisName != NULL
+	    && xw->work.oldColors->names[ndx] != NULL
 	    && strcmp(thisName, xw->work.oldColors->names[ndx])) {
 	    AllocateTermColor(xw, &newColors, ndx, thisName, False);
 
@@ -3818,7 +3788,7 @@ QueryFontRequest(XtermWidget xw, String buf, int final)
 	Bool success = True;
 	int num;
 	String base = buf + 1;
-	const char *name = 0;
+	const char *name = NULL;
 
 	num = ParseShiftedFont(xw, buf, &buf);
 	if (num < 0
@@ -3831,7 +3801,7 @@ QueryFontRequest(XtermWidget xw, String buf, int final)
 		name = getFaceName(xw, False);
 	    } else
 #endif
-	    if ((name = screen->MenuFontName(num)) == 0) {
+	    if ((name = screen->MenuFontName(num)) == NULL) {
 		success = False;
 	    }
 	}
@@ -3909,7 +3879,7 @@ ChangeFontRequest(XtermWidget xw, String buf)
 		     * But if there is, simply overwrite the font entry.
 		     */
 		    if (*buf == '\0') {
-			if ((buf = screen->MenuFontName(num)) == 0) {
+			if ((buf = screen->MenuFontName(num)) == NULL) {
 			    success = False;
 			}
 		    }
@@ -3921,7 +3891,7 @@ ChangeFontRequest(XtermWidget xw, String buf)
 	name = x_strtrim(buf);
 	if (screen->EscapeFontName()) {
 	    FREE_STRING(screen->EscapeFontName());
-	    screen->EscapeFontName() = 0;
+	    screen->EscapeFontName() = NULL;
 	}
 	if (success && !IsEmpty(name)) {
 #if OPT_RENDERFONT
@@ -3972,6 +3942,7 @@ report_allowed_ops(XtermWidget xw, int final)
     CASE(allowTcapOps);
     CASE(allowTitleOps);
     CASE(allowWindowOps);
+    (void) delimiter;
 #undef CASE
 
     unparseputc1(xw, final);
@@ -3995,7 +3966,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     int mode;
     Char *cp;
     int state = 0;
-    char *buf = 0;
+    char *buf = NULL;
     char temp[20];
 #if OPT_ISO_COLORS
     int ansi_colors = 0;
@@ -4553,7 +4524,7 @@ parse_decdld(ANSI *params, const char *string)
 
 	    ch = CharOf(ch - 0x3f);
 	    for (n = 0; n < 6; ++n) {
-		bits[row + n][col] = CharOf((ch & (1 << n)) ? '*' : '.');
+		bits[row + n][col] = CharOf((ch & xBIT(n)) ? '*' : '.');
 	    }
 	    col += 1;
 	    prior = True;
@@ -4893,10 +4864,8 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		sprintf(reply, "%d%s%s",
 			(screen->vtXX_level ?
 			 screen->vtXX_level : 1) + 60,
-			(screen->vtXX_level >= 2)
-			? (screen->control_eight_bits
-			   ? ";0" : ";1")
-			: "",
+			(screen->control_eight_bits
+			 ? ";0" : ";1"),
 			cp);
 	    } else if (!strcmp(cp, "r")) {	/* DECSTBM */
 		TRACE(("DECRQSS -> DECSTBM\n"));
@@ -5005,24 +4974,78 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    } else
 #endif
 #if OPT_MOD_FKEYS
-	    if (*cp == '>' && !strcmp(skip_params(1 + cp), "m")) {	/* XTQMODKEYS */
+	    if (*cp == '>' && !strcmp(skip_params(1 + cp), "f")) {	/* XTQFMTKEYS */
 		++cp;
 		okay = True;
 		ival = parse_int_param(&cp);
-#define GET_MOD_FKEYS(field) xw->keyboard.modify_now.field
-#define FMT_MOD_FKEYS(field) sprintf(reply, ">%d;%dm", ival, GET_MOD_FKEYS(field))
+
+#define GET_FMT_FKEYS(field) xw->keyboard.format_now.field
+#define FMT_FMT_FKEYS(field) sprintf(reply, ">%d;%dm", ival, GET_FMT_FKEYS(field))
+
 		switch (ival) {
-		case 0:
+		case modifyKeyboard:
+		    FMT_FMT_FKEYS(allow_keys);
+		    break;
+		case modifyCursorKeys:
+		    FMT_FMT_FKEYS(cursor_keys);
+		    break;
+		case modifyFunctionKeys:
+		    FMT_FMT_FKEYS(function_keys);
+		    break;
+		case modifyKeypadKeys:
+		    FMT_FMT_FKEYS(keypad_keys);
+		    break;
+		case modifyModifierKeys:
+		    FMT_FMT_FKEYS(modify_keys);
+		    break;
+		case modifyOtherKeys:
+		    FMT_FMT_FKEYS(other_keys);
+		    break;
+		case modifySpecialKeys:
+		    FMT_FMT_FKEYS(special_keys);
+		    break;
+		default:
+		    okay = False;
+		    break;
+		}
+	    } else if (*cp == '>' && !strcmp(skip_params(1 + cp), "m")) {	/* XTQMODKEYS */
+		++cp;
+		okay = True;
+		ival = parse_int_param(&cp);
+
+#define GET_IGN_FKEYS(field) xw->keyboard.ignore_now.field
+#define GET_MOD_FKEYS(field) xw->keyboard.modify_now.field
+#define FMT_MOD_FKEYS(field) { \
+		if (GET_IGN_FKEYS(field)) \
+		    sprintf(reply, ">%d;%d:%dm", ival, \
+			    GET_MOD_FKEYS(field), \
+			    GET_IGN_FKEYS(field)); \
+		else \
+		    sprintf(reply, ">%d;%dm", ival, \
+			    GET_MOD_FKEYS(field)); \
+		} while (0);
+
+		switch (ival) {
+		case modifyKeyboard:
 		    FMT_MOD_FKEYS(allow_keys);
 		    break;
-		case 1:
+		case modifyCursorKeys:
 		    FMT_MOD_FKEYS(cursor_keys);
 		    break;
-		case 2:
+		case modifyFunctionKeys:
 		    FMT_MOD_FKEYS(function_keys);
 		    break;
-		case 4:
+		case modifyKeypadKeys:
+		    FMT_MOD_FKEYS(keypad_keys);
+		    break;
+		case modifyModifierKeys:
+		    FMT_MOD_FKEYS(modify_keys);
+		    break;
+		case modifyOtherKeys:
 		    FMT_MOD_FKEYS(other_keys);
+		    break;
+		case modifySpecialKeys:
+		    FMT_MOD_FKEYS(special_keys);
 		    break;
 		default:
 		    okay = False;
@@ -5030,7 +5053,44 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		}
 	    } else
 #endif
-	    {
+		/*
+		 * This query returns the settings assuming the default value
+		 * of DEF_TITLE_MODES, which is zero.  Someone could in
+		 * principle alter that (so that some states could only be
+		 * reached by removing rather than consistently by setting),
+		 * but the default value could be discovered by resetting the
+		 * title modes, querying the resulting reset state.
+		 */
+	    if (*cp == '>' && !strcmp(skip_params(1 + cp), "t")) {	/* XTSMTITLE */
+		char buffer[80];
+		int n;
+
+		++cp;
+		okay = True;
+		ival = parse_int_param(&cp);
+		*buffer = '\0';
+		if (ival == -1) {	/* DEFAULT */
+		    for (n = 0; n <= MAX_TITLEMODE; ++n) {
+			int check = xBIT(n);
+			char *s = buffer + strlen(buffer);
+			if (s != buffer)
+			    *s++ = ';';
+			sprintf(s, "%d",
+				((check & screen->title_modes) != 0
+				 ? 1
+				 : 0));
+		    }
+		} else if (ival >= 0 && ival <= MAX_TITLEMODE) {
+		    sprintf(buffer, "%d",
+			    ((xBIT(ival) & screen->title_modes) != 0
+			     ? 1
+			     : 0));
+		} else {
+		    okay = False;
+		}
+		if (okay)
+		    sprintf(reply, ">%st", buffer);
+	    } else {
 		okay = False;
 	    }
 
@@ -5113,6 +5173,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			} else {
 			    XKeyEvent event;
 			    memset(&event, 0, sizeof(event));
+			    event.type = KeyPress;
 			    event.state = state;
 			    Input(xw, &event, False);
 			}
@@ -5139,7 +5200,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		Boolean first = True;
 		okay = True;
 		while (*cp != '\0' && okay) {
-		    const char *parsed = 0;
+		    const char *parsed = NULL;
 		    const char *tmp;
 		    char *name = x_decode_hex(cp, &parsed);
 		    char *value;
@@ -5153,7 +5214,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			break;	/* ignore improbable resource */
 		    }
 		    TRACE(("query-feature '%s'\n", name));
-		    if ((value = vt100ResourceToString(xw, name)) != 0) {
+		    if ((value = vt100ResourceToString(xw, name)) != NULL) {
 			okay = True;	/* valid */
 		    } else {
 			okay = False;	/* invalid */
@@ -5169,7 +5230,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    for (tmp = cp; tmp != parsed; ++tmp)
 			unparseputc(xw, *tmp);
 
-		    if (value != 0) {
+		    if (value != NULL) {
 			unparseputc1(xw, '=');
 			result = x_encode_hex(value);
 			unparseputs(xw, result);
@@ -5789,7 +5850,7 @@ x_find_icon(char **work, int *state, const char *filename, const char *suffix)
 {
     const char *prefix = PIXMAP_ROOTDIR;
     const char *larger = "_48x48";
-    char *result = 0;
+    char *result = NULL;
 
     if (*state >= 0) {
 	if ((*state & 1) == 0)
@@ -5813,7 +5874,7 @@ x_find_icon(char **work, int *state, const char *filename, const char *suffix)
 	FreeAndNull(*work);
 	length = 3 + strlen(prefix) + strlen(filename) + strlen(larger) +
 	    strlen(suffix);
-	if ((result = malloc(length)) != 0) {
+	if ((result = malloc(length)) != NULL) {
 	    sprintf(result, "%s%s%s%s", prefix, filename, larger, suffix);
 	    *work = result;
 	}
@@ -5828,7 +5889,7 @@ x_find_icon(char **work, int *state, const char *filename, const char *suffix)
 static const XPM_DATA *
 built_in_xpm(const XPM_DATA * table, Cardinal length, const char *find)
 {
-    const XPM_DATA *result = 0;
+    const XPM_DATA *result = NULL;
     if (!IsEmpty(find)) {
 	Cardinal n;
 	for (n = 0; n < length; ++n) {
@@ -5843,10 +5904,10 @@ built_in_xpm(const XPM_DATA * table, Cardinal length, const char *find)
 	 * As a fallback, check if the icon name matches without the lengths,
 	 * which are all _HHxWW format.
 	 */
-	if (result == 0) {
+	if (result == NULL) {
 	    const char *base = table[0].name;
 	    const char *last = strchr(base, '_');
-	    if (last != 0
+	    if (last != NULL
 		&& !x_strncasecmp(find, base, (unsigned) (last - base))) {
 		result = table + length - 1;
 		ReportIcons(("use builtin-icon %s\n", table[0].name));
@@ -5886,7 +5947,7 @@ xtermLoadIcon(XtermWidget xw, const char *icon_hint)
     Display *dpy = XtDisplay(xw);
     Pixmap myIcon = 0;
     Pixmap myMask = 0;
-    char *workname = 0;
+    char *workname = NULL;
     ICON_HINT hint = eHintDefault;
 #include <builtin_icons.h>
 
@@ -5901,7 +5962,7 @@ xtermLoadIcon(XtermWidget xw, const char *icon_hint)
 
     if (hint == eHintSearch) {
 	int state = 0;
-	while (x_find_icon(&workname, &state, icon_hint, ".xpm") != 0) {
+	while (x_find_icon(&workname, &state, icon_hint, ".xpm") != NULL) {
 	    Pixmap resIcon = 0;
 	    Pixmap shapemask = 0;
 	    XpmAttributes attributes;
@@ -5941,15 +6002,15 @@ xtermLoadIcon(XtermWidget xw, const char *icon_hint)
     if (myIcon == 0 && hint != eHintNone) {
 	char **data;
 #if OPT_BUILTIN_XPMS
-	const XPM_DATA *myData = 0;
+	const XPM_DATA *myData = NULL;
 	myData = BuiltInXPM(mini_xterm_xpms);
-	if (myData == 0)
+	if (myData == NULL)
 	    myData = BuiltInXPM(filled_xterm_xpms);
-	if (myData == 0)
+	if (myData == NULL)
 	    myData = BuiltInXPM(xterm_color_xpms);
-	if (myData == 0)
+	if (myData == NULL)
 	    myData = BuiltInXPM(xterm_xpms);
-	if (myData == 0)
+	if (myData == NULL)
 	    myData = &mini_xterm_xpms[XtNumber(mini_xterm_xpms) - 1];
 	data = (char **) myData->data;
 #else
@@ -5958,7 +6019,7 @@ xtermLoadIcon(XtermWidget xw, const char *icon_hint)
 	if (XpmCreatePixmapFromData(dpy,
 				    DefaultRootWindow(dpy),
 				    data,
-				    &myIcon, &myMask, 0) == 0) {
+				    &myIcon, &myMask, NULL) == 0) {
 	    ReportIcons(("loaded built-in pixmap icon\n"));
 	} else {
 	    myIcon = 0;
@@ -6013,7 +6074,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
     /*
      * Ignore empty or too-long requests.
      */
-    if (value == 0 || strlen(value) > 1000)
+    if (value == NULL || strlen(value) > 1000)
 	return;
 
     if (IsTitleMode(xw, tmSetBase16)) {
@@ -6022,7 +6083,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 
 	/* this allocates a new string, if no error is detected */
 	value = x_decode_hex(value, &temp);
-	if (value == 0 || *temp != '\0') {
+	if (value == NULL || *temp != '\0') {
 	    free(value);
 	    return;
 	}
@@ -6126,7 +6187,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	for (n = 0; c1[n] != '\0'; ++n) {
 	    if (c1[n] > 127) {
 		Char *converted;
-		if ((converted = TypeMallocN(Char, 1 + (6 * limit))) != 0) {
+		if ((converted = TypeMallocN(Char, 1 + (6 * limit))) != NULL) {
 		    Char *temp = converted;
 		    while (*c1 != 0) {
 			temp = convertToUTF8(temp, *c1++);
@@ -6146,13 +6207,13 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 #if OPT_SAME_NAME
     /* If the attribute isn't going to change, then don't bother... */
     if (resource.sameName) {
-	char *buf = 0;
+	char *buf = NULL;
 	XtSetArg(args[0], my_attr, &buf);
 	XtGetValues(top, args, 1);
 	TRACE(("...comparing resource{%s} to new value{%s}\n",
 	       NonNull(buf),
 	       NonNull(value)));
-	if (buf != 0 && strcmp(value, buf) == 0)
+	if (buf != NULL && strcmp(value, buf) == 0)
 	    changed = False;
     }
 #endif /* OPT_SAME_NAME */
@@ -6183,7 +6244,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 		    long long_length = 1024;
 		    unsigned long nitems = 0;
 		    unsigned long bytes_after = 0;
-		    unsigned char *prop = 0;
+		    unsigned char *prop = NULL;
 
 		    if (xtermGetWinProp(dpy,
 					VShellWindow(xw),
@@ -6198,7 +6259,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 					&prop)) {
 			if (actual_type == requested_type
 			    && actual_format == 8
-			    && prop != 0
+			    && prop != NULL
 			    && nitems == strlen(value)
 			    && memcmp(value, prop, nitems) == 0) {
 			    changed = False;
@@ -6292,7 +6353,7 @@ ReverseOldColors(XtermWidget xw)
 		pOld->names[TEXT_CURSOR] = NULL;
 	    }
 	    if (pOld->names[TEXT_BG]) {
-		if ((tmpName = x_strdup(pOld->names[TEXT_BG])) != 0) {
+		if ((tmpName = x_strdup(pOld->names[TEXT_BG])) != NULL) {
 		    pOld->names[TEXT_CURSOR] = tmpName;
 		}
 	    }
@@ -6336,7 +6397,7 @@ AllocateTermColor(XtermWidget xw,
 	}
 
 	if (result
-	    && (newName = x_strdup(name)) != 0) {
+	    && (newName = x_strdup(name)) != NULL) {
 	    if (COLOR_DEFINED(pNew, ndx)) {
 		free(pNew->names[ndx]);
 	    }
@@ -6546,10 +6607,10 @@ validProgram(const char *pathname)
 
     if (!IsEmpty(pathname)
 	&& *pathname == '/'
-	&& strstr(pathname, "/..") == 0
+	&& strstr(pathname, "/..") == NULL
 	&& stat(pathname, &sb) == 0
 	&& (sb.st_mode & S_IFMT) == S_IFREG
-	&& (sb.st_mode & S_IXOTH) != 0) {
+	&& access(pathname, F_OK | X_OK) == 0) {
 	result = True;
     }
     return result;
@@ -6575,8 +6636,8 @@ xtermFindShell(char *leaf, Bool warning)
 	size_t need = PATH_MAX;
 	size_t used = strlen(result) + 2;
 	char *buffer = malloc(used + need);
-	if (buffer != 0) {
-	    if (getcwd(buffer, need) != 0) {
+	if (buffer != NULL) {
+	    if (getcwd(buffer, need) != NULL) {
 		sprintf(buffer + strlen(buffer), "/%s", result);
 		result = buffer;
 		allocated = True;
@@ -6584,10 +6645,10 @@ xtermFindShell(char *leaf, Bool warning)
 		free(buffer);
 	    }
 	}
-    } else if (*result != '\0' && strchr("+/-", *result) == 0) {
+    } else if (*result != '\0' && strchr("+/-", *result) == NULL) {
 	/* find it in $PATH */
-	if ((s = s0 = x_getenv("PATH")) != 0) {
-	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 2)) != 0) {
+	if ((s = s0 = x_getenv("PATH")) != NULL) {
+	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 2)) != NULL) {
 		Bool found = False;
 		while (*s != '\0') {
 		    strcpy(tmp, s);
@@ -6621,10 +6682,10 @@ xtermFindShell(char *leaf, Bool warning)
 	    xtermWarning("No absolute path found for shell: %s\n", result);
 	if (allocated)
 	    free(result);
-	result = 0;
+	result = NULL;
     }
     /* be consistent, so that caller can always free the result */
-    if (result != 0 && !allocated)
+    if (result != NULL && !allocated)
 	result = x_strdup(result);
     return result;
 }
@@ -6702,7 +6763,7 @@ findEnv(const char *var, int *lengthp)
 void
 xtermSetenv(const char *var, const char *value)
 {
-    if (value != 0) {
+    if (value != NULL) {
 #ifdef HAVE_PUTENV
 	char *both = malloc(2 + strlen(var) + strlen(value));
 	TRACE(("xtermSetenv(%s=%s)\n", var, value));
@@ -6810,7 +6871,7 @@ xt_error(String message)
     /*
      * Check for the obvious - Xt does a poor job of reporting this.
      */
-    if (x_getenv("DISPLAY") == 0) {
+    if (x_getenv("DISPLAY") == NULL) {
 	xtermWarning("DISPLAY is not set\n");
     }
     exit(ERROR_MISC);
@@ -6888,10 +6949,10 @@ set_tek_visibility(Bool on)
 
     if (on) {
 	if (!TEK4014_SHOWN(xw)) {
-	    if (tekWidget == 0) {
+	    if (tekWidget == NULL) {
 		TekInit();	/* will exit on failure */
 	    }
-	    if (tekWidget != 0) {
+	    if (tekWidget != NULL) {
 		Widget tekParent = SHELL_OF(tekWidget);
 		resource.notMapped = False;
 		XtRealizeWidget(tekParent);
@@ -7010,21 +7071,21 @@ cmp_resources(const void *a, const void *b)
 }
 
 XrmOptionDescRec *
-sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
+sortedOptDescs(const XrmOptionDescRec * descs, Cardinal res_count)
 {
-    static XrmOptionDescRec *res_array = 0;
+    static XrmOptionDescRec *res_array = NULL;
 
 #ifdef NO_LEAKS
-    if (descs == 0) {
+    if (descs == NULL) {
 	FreeAndNull(res_array);
     } else
 #endif
-    if (res_array == 0) {
+    if (res_array == NULL) {
 	Cardinal j;
 
 	/* make a sorted index to 'resources' */
 	res_array = TypeCallocN(XrmOptionDescRec, res_count);
-	if (res_array != 0) {
+	if (res_array != NULL) {
 	    for (j = 0; j < res_count; j++)
 		res_array[j] = descs[j];
 	    qsort(res_array, (size_t) res_count, sizeof(*res_array), cmp_resources);
@@ -7042,19 +7103,19 @@ sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
 OptionHelp *
 sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 {
-    static OptionHelp *opt_array = 0;
+    static OptionHelp *opt_array = NULL;
 
 #ifdef NO_LEAKS
-    if (descs == 0 && opt_array != 0) {
+    if (descs == NULL && opt_array != NULL) {
 	sortedOptDescs(descs, numDescs);
 	FreeAndNull(opt_array);
-	return 0;
-    } else if (options == 0 || descs == 0) {
-	return 0;
+	return NULL;
+    } else if (options == NULL || descs == NULL) {
+	return NULL;
     }
 #endif
 
-    if (opt_array == 0) {
+    if (opt_array == NULL) {
 	size_t opt_count, j;
 #if OPT_TRACE
 	Cardinal k;
@@ -7067,7 +7128,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 #endif
 
 	/* count 'options' and make a sorted index to it */
-	for (opt_count = 0; options[opt_count].opt != 0; ++opt_count) {
+	for (opt_count = 0; options[opt_count].opt != NULL; ++opt_count) {
 	    ;
 	}
 	opt_array = TypeCallocN(OptionHelp, opt_count + 1);
@@ -7093,10 +7154,10 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 		    sprintf(temp, "%.*s",
 			    (int) sizeof(temp) - 2,
 			    opt_array[j].desc);
-		    if (x_strindex(temp, "inhibit") != 0)
+		    if (x_strindex(temp, "inhibit") != NULL)
 			code = -code;
 		    if (code != 0
-			&& res_array[k].value != 0
+			&& res_array[k].value != NULL
 			&& !strcmp(name, res_array[k].option + 1)) {
 			if (((code < 0) && !strcmp(value, "on"))
 			    || ((code > 0) && !strcmp(value, "off"))
@@ -7129,8 +7190,8 @@ xtermEnvLocale(void)
 {
     static String result;
 
-    if (result == 0) {
-	if ((result = x_nonempty(setlocale(LC_CTYPE, 0))) == 0) {
+    if (result == NULL) {
+	if ((result = x_nonempty(setlocale(LC_CTYPE, NULL))) == NULL) {
 	    result = x_strdup("C");
 	} else {
 	    result = x_strdup(result);
@@ -7145,7 +7206,7 @@ xtermEnvEncoding(void)
 {
     static char *result;
 
-    if (result == 0) {
+    if (result == NULL) {
 #ifdef HAVE_LANGINFO_CODESET
 	result = nl_langinfo(CODESET);
 #else
@@ -7205,10 +7266,10 @@ getXtermWidget(Widget w)
 {
     XtermWidget xw;
 
-    if (w == 0) {
+    if (w == NULL) {
 	xw = (XtermWidget) CURRENT_EMU();
 	if (!IsXtermWidget(xw)) {
-	    xw = 0;
+	    xw = NULL;
 	}
     } else if (IsXtermWidget(w)) {
 	xw = (XtermWidget) w;
@@ -7226,7 +7287,7 @@ static void
 trace_1_SM(const char *tag, String name)
 {
     Arg args[1];
-    char *buf = 0;
+    char *buf = NULL;
 
     XtSetArg(args[0], name, &buf);
     XtGetValues(toplevel, args, 1);
@@ -7397,7 +7458,7 @@ static char *
 formatFontParam(char *result, XtermWidget xw, const FontParams * parameter)
 {
     sprintf(result, "%s*%s:", ProgramName, parameter->name);
-    if (xw != None) {
+    if (xw != NULL) {
 	char *next = result + strlen(result);
 	switch (parameter->type) {
 	case B_ARG:
@@ -7471,7 +7532,7 @@ findFontParams(int argc, char **argv)
 		break;
 
 	    if (value) {
-		formatFontParam(expect, None, fontParams + my_param);
+		formatFontParam(expect, NULL, fontParams + my_param);
 	    } else {
 		strcpy(expect, "-xrm");
 	    }
@@ -7531,7 +7592,7 @@ xtermUpdateRestartCommand(XtermWidget xw)
 {
     if (resource.sessionMgt) {
 	Arg args[1];
-	char **argv = 0;
+	char **argv = NULL;
 
 	XtSetArg(args[0], XtNrestartCommand, &argv);
 	XtGetValues(toplevel, args, 1);
@@ -7913,6 +7974,19 @@ xtermFreeTitle(SaveTitle * item)
 }
 
 #if OPT_XTERM_SGR
+void
+xtermReportTitleStack(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    char reply[100];
+
+    sprintf(reply, "%d;%d", screen->saved_titles.used, MAX_SAVED_TITLES);
+    unparseputc1(xw, ANSI_CSI);
+    unparseputs(xw, reply);
+    unparseputc(xw, '#');
+    unparseputc(xw, 'S');
+    unparse_end(xw);
+}
 
 #if OPT_TRACE
 static char *
@@ -8002,47 +8076,47 @@ xtermReportSGR(XtermWidget xw, XTermRect *value)
 {
     TScreen *screen = TScreenOf(xw);
     char reply[BUFSIZ];
-    CellData working;
+    size_t cell_size = CellDataSize(screen);
+    CellData *working = calloc(1, cell_size);
     int row, col;
     Boolean first = True;
 
-    TRACE(("xtermReportSGR %d,%d - %d,%d\n",
-	   value->top, value->left,
-	   value->bottom, value->right));
+    if (working == NULL)
+	return;
 
-    memset(&working, 0, sizeof(working));
     for (row = value->top - 1; row < value->bottom; ++row) {
 	LineData *ld = getLineData(screen, row);
-	if (ld == 0)
+	if (ld == NULL)
 	    continue;
 	for (col = value->left - 1; col < value->right; ++col) {
 	    if (first) {
 		first = False;
-		saveCellData(screen, &working, 0, ld, NULL, col);
+		saveCellData(screen, working, 0, ld, NULL, col);
 	    }
-	    working.attribs &= ld->attribs[col];
+	    working->attribs &= ld->attribs[col];
 #if OPT_ISO_COLORS
-	    if (working.attribs & FG_COLOR
-		&& GetCellColorFG(working.color)
+	    if (working->attribs & FG_COLOR
+		&& GetCellColorFG(working->color)
 		!= GetCellColorFG(ld->color[col])) {
-		IAttrClr(working.attribs, FG_COLOR);
+		IAttrClr(working->attribs, FG_COLOR);
 	    }
-	    if (working.attribs & BG_COLOR
-		&& GetCellColorBG(working.color)
+	    if (working->attribs & BG_COLOR
+		&& GetCellColorBG(working->color)
 		!= GetCellColorBG(ld->color[col])) {
-		IAttrClr(working.attribs, BG_COLOR);
+		IAttrClr(working->attribs, BG_COLOR);
 	    }
 #endif
 	}
     }
     xtermFormatSGR(xw, reply,
-		   working.attribs,
-		   GetCellColorFG(working.color),
-		   GetCellColorBG(working.color));
+		   working->attribs,
+		   GetCellColorFG(working->color),
+		   GetCellColorBG(working->color));
     unparseputc1(xw, ANSI_CSI);
     unparseputs(xw, reply);
     unparseputc(xw, 'm');
     unparse_end(xw);
+    free(working);
 }
 
 void

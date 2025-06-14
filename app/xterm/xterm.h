@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.952 2024/09/30 08:03:20 tom Exp $ */
+/* $XTermId: xterm.h,v 1.964 2025/04/08 07:36:09 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -267,6 +267,7 @@ extern void free();
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#undef HAVE_UNISTD_H
 #endif
 
 #ifdef HAVE_SYS_WAIT_H
@@ -403,7 +404,7 @@ extern char **environ;
 #define Maybe		2
 
 #define ALLOC_STRING(name) \
-	if (name != 0) \
+	if (name != NULL) \
 	    name = x_strdup(name)
 #define FREE_STRING(name) \
 	    free_string(name)
@@ -485,6 +486,7 @@ extern char **environ;
 #define XtNcolorAttrMode	"colorAttrMode"
 #define XtNcolorBDMode		"colorBDMode"
 #define XtNcolorBLMode		"colorBLMode"
+#define XtNcolorEvents		"colorEvents"
 #define XtNcolorITMode		"colorITMode"
 #define XtNcolorInnerBorder	"colorInnerBorder"
 #define XtNcolorMode		"colorMode"
@@ -538,7 +540,13 @@ extern char **environ;
 #define XtNforceBoxChars	"forceBoxChars"
 #define XtNforcePackedFont	"forcePackedFont"
 #define XtNforceXftHeight	"forceXftHeight"
+#define XtNformatCursorKeys	"formatCursorKeys"
+#define XtNformatFunctionKeys	"formatFunctionKeys"
+#define XtNformatKeypadKeys	"formatKeypadKeys"
+#define XtNformatModifierKeys	"formatModifierKeys"
 #define XtNformatOtherKeys	"formatOtherKeys"
+#define XtNformatSpecialKeys	"formatSpecialKeys"
+#define XtNformatStringKeys	"formatStringKeys"
 #define XtNfreeBoldBox		"freeBoldBox"
 #define XtNfullscreen		"fullscreen"
 #define XtNhighlightColor	"highlightColor"
@@ -594,7 +602,9 @@ extern char **environ;
 #define XtNmodifyFunctionKeys	"modifyFunctionKeys"
 #define XtNmodifyKeyboard	"modifyKeyboard"
 #define XtNmodifyKeypadKeys	"modifyKeypadKeys"
+#define XtNmodifyModifierKeys	"modifyModifierKeys"
 #define XtNmodifyOtherKeys	"modifyOtherKeys"
+#define XtNmodifySpecialKeys	"modifySpecialKeys"
 #define XtNmodifyStringKeys	"modifyStringKeys"
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
@@ -620,6 +630,7 @@ extern char **environ;
 #define XtNprintModeOnXError	"printModeOnXError"
 #define XtNprintOptsImmediate	"printOptsImmediate"
 #define XtNprintOptsOnXError	"printOptsOnXError"
+#define XtNprintRawChars	"printRawChars"
 #define XtNprinterAutoClose	"printerAutoClose"
 #define XtNprinterCommand	"printerCommand"
 #define XtNprinterControlMode	"printerControlMode"
@@ -753,6 +764,7 @@ extern char **environ;
 #define XtCChecksumExtension	"ChecksumExtension"
 #define XtCCjkWidth		"CjkWidth"
 #define XtCColorAttrMode	"ColorAttrMode"
+#define XtCColorEvents		"ColorEvents"
 #define XtCColorInnerBorder	"ColorInnerBorder"
 #define XtCColorMode		"ColorMode"
 #define XtCColumn		"Column"
@@ -803,7 +815,13 @@ extern char **environ;
 #define XtCForceBoxChars	"ForceBoxChars"
 #define XtCForcePackedFont	"ForcePackedFont"
 #define XtCForceXftHeight	"ForceXftHeight"
+#define XtCFormatCursorKeys	"FormatCursorKeys"
+#define XtCFormatFunctionKeys	"FormatFunctionKeys"
+#define XtCFormatKeypadKeys	"FormatKeypadKeys"
+#define XtCFormatModifierKeys	"FormatModifierKeys"
 #define XtCFormatOtherKeys	"FormatOtherKeys"
+#define XtCFormatSpecialKeys	"FormatSpecialKeys"
+#define XtCFormatStringKeys	"FormatStringKeys"
 #define XtCFreeBoldBox		"FreeBoldBox"
 #define XtCFullscreen		"Fullscreen"
 #define XtCHighlightColorMode	"HighlightColorMode"
@@ -854,7 +872,9 @@ extern char **environ;
 #define XtCModifyFunctionKeys	"ModifyFunctionKeys"
 #define XtCModifyKeyboard	"ModifyKeyboard"
 #define XtCModifyKeypadKeys	"ModifyKeypadKeys"
+#define XtCModifyModifierKeys	"ModifyModifierKeys"
 #define XtCModifyOtherKeys	"ModifyOtherKeys"
+#define XtCModifySpecialKeys	"ModifySpecialKeys"
 #define XtCModifyStringKeys	"ModifyStringKeys"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
@@ -876,6 +896,7 @@ extern char **environ;
 #define XtCPrintModeOnXError	"PrintModeOnXError"
 #define XtCPrintOptsImmediate	"PrintOptsImmediate"
 #define XtCPrintOptsOnXError	"PrintOptsOnXError"
+#define XtCPrintRawChars	"PrintRawChars"
 #define XtCPrinterAutoClose	"PrinterAutoClose"
 #define XtCPrinterCommand	"PrinterCommand"
 #define XtCPrinterControlMode	"PrinterControlMode"
@@ -1041,7 +1062,7 @@ extern void HandleSelectStart          PROTO_XT_ACTIONS_ARGS;
 extern void HandleStartExtend          PROTO_XT_ACTIONS_ARGS;
 extern void ResizeSelection (TScreen * /* screen */, int /* rows */, int /* cols */);
 extern void ScrollSelection (TScreen * /* screen */, int /* amount */,  Bool /* always */);
-extern void TrackMouse (XtermWidget /* xw */, int /* func */, CELL * /* start */, int /* firstrow */, int /* lastrow */);
+extern void TrackMouse (XtermWidget /* xw */, int /* func */, const CELL * /* start */, int /* firstrow */, int /* lastrow */);
 extern void ViButton                   PROTO_XT_ACTIONS_ARGS;
 
 extern void UnmapSelections (XtermWidget /* xw */);
@@ -1301,7 +1322,7 @@ extern String xtermEnvLocale (void);
 extern Widget xtermOpenApplication (XtAppContext * /* app_context_return */, String /* application_class */, XrmOptionDescRec */* options */, Cardinal /* num_options */, int * /* argc_in_out */, char **/* argv_in_out */, String * /* fallback_resources */, WidgetClass /* widget_class */, ArgList /* args */, Cardinal /* num_args */);
 extern Window WMFrameWindow (XtermWidget /* xw */);
 extern XtInputMask xtermAppPending (void);
-extern XrmOptionDescRec * sortedOptDescs (XrmOptionDescRec *, Cardinal);
+extern XrmOptionDescRec * sortedOptDescs (const XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget (Widget /* w */);
 extern XVisualInfo *getVisualInfo (XtermWidget /* xw */);
 extern char *udk_lookup (XtermWidget /* xw */, int /* keycode */, int * /* len */);
@@ -1381,6 +1402,7 @@ extern void xtermWarning (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 extern Boolean xtermPopTitle(TScreen * /* screen */, int /* which */, SaveTitle * /* item */);
 extern void xtermPushTitle(TScreen * /* screen */, int /* which */, SaveTitle * /* item */);
 extern void xtermFreeTitle(SaveTitle *item);
+extern void xtermReportTitleStack(XtermWidget /* xw */);
 
 #if OPT_DABBREV
 extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;
@@ -1574,7 +1596,7 @@ extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned /* n */);
 extern void ScrnDeleteCol (XtermWidget /* xw */, unsigned /* n */);
 extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf /* sb */, int /* n */, int /* last */, unsigned /* where */);
 extern void ScrnDisownSelection (XtermWidget /* xw */);
-extern void ScrnFillRectangle (XtermWidget /* xw */, XTermRect *,  int ,  unsigned /* flags */, Bool /* keepColors */);
+extern void ScrnFillRectangle (XtermWidget /* xw */, XTermRect *,  int /* value */,  DECNRCM_codes /* charset */, unsigned /* flags */, Bool /* keepColors */);
 extern void ScrnInsertChar (XtermWidget /* xw */, unsigned /* n */);
 extern void ScrnInsertCol (XtermWidget /* xw */, unsigned /* n */);
 extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf /* sb */, int /* last */, int /* where */, unsigned /* n */);
@@ -1911,6 +1933,7 @@ unsigned visual_width(const IChar * /* str */, Cardinal /* len */);
 
 #define UIntSet(dst,bits) dst = dst | (unsigned) (bits)
 #define UIntClr(dst,bits) dst = dst & (unsigned) ~(bits)
+#define SIntClr(dst,bits) dst = (int) ((unsigned) dst & (unsigned) ~(bits))
 
 #ifdef __cplusplus
 	}

@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.93 2023/09/21 08:17:56 tom Exp $ */
+/* $XTermId: cursor.c,v 1.96 2025/01/04 00:58:54 tom Exp $ */
 
 /*
- * Copyright 2002-2022,2023 by Thomas E. Dickey
+ * Copyright 2002-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -171,7 +171,9 @@ CursorBack(XtermWidget xw, int n)
 		}
 	    }
 	    ld = NULL;		/* try a reverse-wrap */
-	    --row;
+	    if (--row <= 0) {
+		row = (top == 0) ? bottom : screen->max_row;
+	    }
 	}
 	if (ld == NULL) {
 	    ld = getLineData(screen, ROW2INX(screen, row));
@@ -427,8 +429,8 @@ CursorSave(XtermWidget xw)
  *	https://github.com/mattiase/wraptest
  *
  * states
- *	The LCF is saved/restored by the Save/Restore Cursor (DECSC/DECRC)      
- *	control sequences.  The DECAWM flag is not included in the state        
+ *	The LCF is saved/restored by the Save/Restore Cursor (DECSC/DECRC)
+ *	control sequences.  The DECAWM flag is not included in the state
  *	managed by these operations.
  *
  * DEC 070 does mention the ANSI color text extension saying that it, too, is
@@ -557,7 +559,7 @@ set_cur_row(TScreen *screen, int value)
 {
     TRACE(("set_cur_row %d vs %d\n", value, screen ? LastRowNumber(screen) : -1));
 
-    assert(screen != 0);
+    assert(screen != NULL);
     assert(value >= 0);
     assert(value <= LastRowNumber(screen));
     if_STATUS_LINE(screen, {
@@ -572,7 +574,7 @@ set_cur_col(TScreen *screen, int value)
 {
     TRACE(("set_cur_col %d vs %d\n", value, screen ? screen->max_col : -1));
 
-    assert(screen != 0);
+    assert(screen != NULL);
     assert(value >= 0);
     assert(value <= screen->max_col);
     screen->cur_col = value;

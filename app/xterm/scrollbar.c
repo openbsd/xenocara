@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.215 2023/11/12 22:08:19 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.216 2024/12/01 20:27:00 tom Exp $ */
 
 /*
- * Copyright 2000-2021,2023 by Thomas E. Dickey
+ * Copyright 2000-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -256,8 +256,8 @@ CreateScrollBar(XtermWidget xw, int x, int y, int height)
 
     result = XtCreateWidget("scrollbar", scrollbarWidgetClass,
 			    (Widget) xw, args, XtNumber(args));
-    XtAddCallback(result, XtNscrollProc, ScrollTextUpDownBy, 0);
-    XtAddCallback(result, XtNjumpProc, ScrollTextTo, 0);
+    XtAddCallback(result, XtNscrollProc, ScrollTextUpDownBy, NULL);
+    XtAddCallback(result, XtNjumpProc, ScrollTextTo, NULL);
     return (result);
 }
 
@@ -266,7 +266,7 @@ ScrollBarReverseVideo(Widget scrollWidget)
 {
     XtermWidget xw = getXtermWidget(scrollWidget);
 
-    if (xw != 0) {
+    if (xw != NULL) {
 	SbInfo *sb = &(TScreenOf(xw)->fullVwin.sb_info);
 	Arg args[4];
 	Cardinal nargs = XtNumber(args);
@@ -312,7 +312,7 @@ ScrollBarDrawThumb(XtermWidget xw, int mode)
 {
     TScreen *screen = TScreenOf(xw);
 
-    if (screen->scrollWidget != 0) {
+    if (screen->scrollWidget != NULL) {
 	int thumbTop, thumbHeight, totalHeight;
 
 #if USE_DOUBLE_BUFFER
@@ -345,7 +345,7 @@ ResizeScrollBar(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
-    if (screen->scrollWidget != 0) {
+    if (screen->scrollWidget != NULL) {
 	int height = screen->fullVwin.height + screen->border * 2;
 	int width = screen->scrollWidget->core.width;
 	int ypos = -ScrollBarBorder(xw);
@@ -465,7 +465,7 @@ ScrollBarOn(XtermWidget xw, Bool init)
 
     TRACE(("ScrollBarOn(init %s)\n", BtoS(init)));
     if (init) {			/* then create it only */
-	if (screen->scrollWidget == 0) {
+	if (screen->scrollWidget == NULL) {
 	    /* make it a dummy size and resize later */
 	    screen->scrollWidget = CreateScrollBar(xw,
 						   -ScrollBarBorder(xw),
@@ -565,7 +565,7 @@ ScrollTextTo(
 {
     XtermWidget xw = getXtermWidget(scrollbarWidget);
 
-    if (xw != 0) {
+    if (xw != NULL) {
 	float *topPercent = (float *) call_data;
 	TScreen *screen = TScreenOf(xw);
 	int thumbTop;		/* relative to first saved line */
@@ -591,7 +591,7 @@ ScrollTextUpDownBy(
 {
     XtermWidget xw = getXtermWidget(scrollbarWidget);
 
-    if (xw != 0) {
+    if (xw != NULL) {
 	long pixels = (long) call_data;
 
 	TScreen *screen = TScreenOf(xw);
@@ -695,7 +695,7 @@ AmountToScroll(Widget w, String *params, Cardinal nparams)
     long result = 0;
     XtermWidget xw;
 
-    if ((xw = getXtermWidget(w)) != 0) {
+    if ((xw = getXtermWidget(w)) != NULL) {
 	TScreen *screen = TScreenOf(xw);
 	if (nparams <= 2
 	    || screen->send_mouse_pos == MOUSE_OFF) {
@@ -711,8 +711,8 @@ AlternateScroll(Widget w, long amount)
     XtermWidget xw;
     TScreen *screen;
 
-    if ((xw = getXtermWidget(w)) != 0 &&
-	(screen = TScreenOf(xw)) != 0 &&
+    if ((xw = getXtermWidget(w)) != NULL &&
+	(screen = TScreenOf(xw)) != NULL &&
 	screen->alternateScroll && screen->whichBuf) {
 	ANSI reply;
 
@@ -746,8 +746,8 @@ HandleScrollTo(
     XtermWidget xw;
     TScreen *screen;
 
-    if ((xw = getXtermWidget(w)) != 0 &&
-	(screen = TScreenOf(xw)) != 0 &&
+    if ((xw = getXtermWidget(w)) != NULL &&
+	(screen = TScreenOf(xw)) != NULL &&
 	*nparams > 0) {
 	long amount;
 	int value;
@@ -836,7 +836,7 @@ have_xkb(Display *dpy)
 			if (xkb->names->vmods[n] != 0) {
 			    char *modStr = XGetAtomName(xkb->dpy,
 							xkb->names->vmods[n]);
-			    if (modStr != 0) {
+			    if (modStr != NULL) {
 				XkbVirtualModsToReal(xkb,
 						     (unsigned) (1 << n),
 						     &mask);
@@ -1013,7 +1013,7 @@ HandleScrollLock(Widget w,
 {
     XtermWidget xw;
 
-    if ((xw = getXtermWidget(w)) != 0) {
+    if ((xw = getXtermWidget(w)) != NULL) {
 	TScreen *screen = TScreenOf(xw);
 
 	if (screen->allowScrollLock) {

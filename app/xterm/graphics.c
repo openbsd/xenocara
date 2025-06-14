@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.135 2024/05/11 09:49:08 tom Exp $ */
+/* $XTermId: graphics.c,v 1.138 2025/04/03 10:23:04 tom Exp $ */
 
 /*
- * Copyright 2013-2023,2024 by Thomas E. Dickey
+ * Copyright 2013-2024,2025 by Thomas E. Dickey
  * Copyright 2013-2022,2023 by Ross Combs
  *
  *                         All Rights Reserved
@@ -771,7 +771,7 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
     TRACE(("get_new_graphic %d,%d type %d\n", charrow, charcol, type));
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getInactiveSlot(screen, ii))) {
+	if ((graphic = getInactiveSlot(screen, ii)) != NULL) {
 	    TRACE(("using fresh graphic index %u as id %u\n",
 		   ii, next_graphic_id));
 	    break;
@@ -832,7 +832,7 @@ get_new_or_matching_graphic(XtermWidget xw,
 	       charrow, charcol,
 	       actual_width, actual_height,
 	       bufferid, type));
-	if ((graphic = getActiveSlot(ii))) {
+	if ((graphic = getActiveSlot(ii)) != NULL) {
 	    if (graphic->type == type &&
 		graphic->bufferid == bufferid &&
 		graphic->charrow == charrow &&
@@ -850,7 +850,7 @@ get_new_or_matching_graphic(XtermWidget xw,
     }
 
     /* if no match get a new graphic */
-    if ((graphic = get_new_graphic(xw, charrow, charcol, type))) {
+    if ((graphic = get_new_graphic(xw, charrow, charcol, type)) != NULL) {
 	graphic->actual_width = actual_width;
 	graphic->actual_height = actual_height;
 	TRACE(("no match; created graphic at %d,%d %dx%d bufferid=%d type=%u\n",
@@ -1577,7 +1577,7 @@ refresh_graphics(XtermWidget xw,
 	graphics_gc = XCreateGC(display, drawable, GCGraphicsExposures, &xgcv);
 	last_color = null_color;
 	gc_color = null_color;
-	if (graphics_gc == None) {
+	if (graphics_gc == NULL) {
 	    TRACE(("unable to allocate GC for graphics refresh\n"));
 	    valid_graphics = -1;
 	} else {
@@ -1801,7 +1801,7 @@ scroll_displayed_graphics(XtermWidget xw, int rows)
     }
 }
 
-void
+static void
 pixelarea_clear_displayed_graphics(TScreen const *screen,
 				   int winx,
 				   int winy,

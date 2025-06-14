@@ -11,5 +11,5 @@
 static struct {
   int replacement;
   int base;
-  int comb; 
+  int comb;
 } precompositions[] = {

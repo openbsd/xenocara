@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.h,v 1.30 2016/12/22 23:48:38 tom Exp $ */
+/* $XTermId: xstrings.h,v 1.31 2024/12/01 20:27:00 tom Exp $ */
 
 /*
- * Copyright 2000-2015,2016 by Thomas E. Dickey
+ * Copyright 2000-2016,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -37,7 +37,7 @@
 #include <X11/Intrinsic.h>
 #include <pwd.h>
 
-#define OkPasswd(p) ((p)->pw_name != 0 && (p)->pw_name[0] != 0)
+#define OkPasswd(p) ((p)->pw_name != NULL && (p)->pw_name[0] != 0)
 
 extern Boolean x_getpwnam(const char * /* name */, struct passwd * /* result */);
 extern Boolean x_getpwuid(uid_t /* uid */, struct passwd * /* result */);

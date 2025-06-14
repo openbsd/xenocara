@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.80 2023/05/09 08:13:56 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.81 2024/12/01 20:27:00 tom Exp $ */
 
 /*
- * Copyright 2000-2022,2023 by Thomas E. Dickey
+ * Copyright 2000-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -62,7 +62,7 @@ x_appendargv(char **target, char **source)
 {
     if (target && source) {
 	target += x_countargv(target);
-	while ((*target++ = *source++) != 0) ;
+	while ((*target++ = *source++) != NULL) ;
     }
 }
 
@@ -95,7 +95,7 @@ x_countargv(char **argv)
 char *
 x_decode_hex(const char *source, const char **next)
 {
-    char *result = 0;
+    char *result = NULL;
     int pass;
     size_t j, k;
 
@@ -112,7 +112,7 @@ x_decode_hex(const char *source, const char **next)
 		result[k] = '\0';
 	    } else {
 		result = malloc(++j);
-		if (result == 0)
+		if (result == NULL)
 		    break;	/* not enough memory */
 	    }
 	} else {
@@ -132,7 +132,7 @@ x_encode_hex(const char *source)
     size_t need = (strlen(source) * 2) + 1;
     char *result = malloc(need);
 
-    if (result != 0) {
+    if (result != NULL) {
 	unsigned j, k;
 	result[0] = '\0';
 	for (j = k = 0; source[j] != '\0'; ++j) {
@@ -233,7 +233,7 @@ x_getpwnam(const char *name, struct passwd *result)
     struct passwd *ptr = getpwnam(name);
     Boolean code;
 
-    if (ptr != 0 && OkPasswd(ptr)) {
+    if (ptr != NULL && OkPasswd(ptr)) {
 	code = True;
 	alloc_pw(result, ptr);
     } else {
@@ -253,7 +253,7 @@ x_getpwuid(uid_t uid, struct passwd *result)
     struct passwd *ptr = getpwuid((uid_t) uid);
     Boolean code;
 
-    if (ptr != 0 && OkPasswd(ptr)) {
+    if (ptr != NULL && OkPasswd(ptr)) {
 	code = True;
 	alloc_pw(result, ptr);
     } else {
@@ -286,13 +286,13 @@ x_hex2int(int c)
 String
 x_nonempty(String s)
 {
-    if (s != 0) {
+    if (s != NULL) {
 	if (*s == '\0') {
-	    s = 0;
+	    s = NULL;
 	} else {
 	    s = x_skip_blanks(s);
 	    if (*s == '\0')
-		s = 0;
+		s = NULL;
 	}
     }
     return s;
@@ -328,13 +328,13 @@ skip_blanks(const char *s)
 char **
 x_splitargs(const char *command)
 {
-    char **result = 0;
+    char **result = NULL;
 
-    if (command != 0) {
+    if (command != NULL) {
 	const char *first = skip_blanks(command);
 	char *blob = x_strdup(first);
 
-	if (blob != 0) {
+	if (blob != NULL) {
 	    int pass;
 
 	    for (pass = 0; pass < 2; ++pass) {
@@ -384,7 +384,7 @@ x_splitargs(const char *command)
 void
 x_freeargs(char **argv)
 {
-    if (argv != 0) {
+    if (argv != NULL) {
 	free(*argv);
 	free(argv);
     }
@@ -434,11 +434,11 @@ x_strncasecmp(const char *s1, const char *s2, unsigned n)
 char *
 x_strdup(const char *s)
 {
-    char *result = 0;
+    char *result = NULL;
 
-    if (s != 0) {
+    if (s != NULL) {
 	char *t = malloc(strlen(s) + 5);
-	if (t != 0) {
+	if (t != NULL) {
 	    strcpy(t, s);
 	}
 	result = t;
@@ -476,7 +476,7 @@ x_strtrim(const char *source)
 	result = x_strdup("");
     } else {
 	char *t = x_strdup(source);
-	if (t != 0) {
+	if (t != NULL) {
 	    char *s = t;
 	    char *d = s;
 	    while (IsSpace(CharOf(*s)))
@@ -508,7 +508,7 @@ x_strrtrim(const char *source)
 	result = x_strdup("");
     } else {
 	char *t = x_strdup(source);
-	if (t != 0) {
+	if (t != NULL) {
 	    if (*t != '\0') {
 		char *s = t + strlen(t);
 		while (s != t && IsSpace(CharOf(s[-1]))) {

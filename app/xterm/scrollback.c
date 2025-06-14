@@ -1,7 +1,7 @@
-/* $XTermId: scrollback.c,v 1.23 2022/03/09 00:38:51 tom Exp $ */
+/* $XTermId: scrollback.c,v 1.24 2024/12/01 20:27:00 tom Exp $ */
 
 /*
- * Copyright 2009-2020,2022 by Thomas E. Dickey
+ * Copyright 2009-2022,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -44,7 +44,7 @@
 LineData *
 getScrollback(TScreen *screen, int row)
 {
-    LineData *result = 0;
+    LineData *result = NULL;
 
     if (screen->saved_fifo > 0 && REAL_ROW(screen, row) >= 0) {
 	unsigned which = ROW2FIFO(screen, row);
@@ -64,10 +64,10 @@ getScrollback(TScreen *screen, int row)
 LineData *
 addScrollback(TScreen *screen)
 {
-    ScrnBuf where = 0;
+    ScrnBuf where = NULL;
     unsigned ncols = (unsigned) MaxCols(screen);
 
-    if (screen->saveBuf_index != 0 && screen->savelines != 0) {
+    if (screen->saveBuf_index != NULL && screen->savelines != 0) {
 	unsigned which;
 	Char *block;
 
@@ -84,7 +84,7 @@ addScrollback(TScreen *screen)
 	     * setupLineData uses the attribs as the first address used from the
 	     * data block.
 	     */
-	    if (prior->attribs != 0) {
+	    if (prior->attribs != NULL) {
 		TRACE(("...freeing prior FIFO data in slot %d: %p->%p\n",
 		       which, (void *) prior, (void *) prior->attribs));
 		FreeAndNull(prior->attribs);
@@ -118,7 +118,7 @@ deleteScrollback(TScreen *screen)
      * setupLineData uses the attribs as the first address used from the
      * data block.
      */
-    if (prior->attribs != 0) {
+    if (prior->attribs != NULL) {
 	TRACE(("...freeing prior FIFO data in slot %d: %p->%p\n",
 	       which, (void *) prior, (void *) prior->attribs));
 	FreeAndNull(prior->attribs);

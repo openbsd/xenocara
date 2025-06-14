@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: modify-keys.pl,v 1.92 2022/11/24 12:43:26 tom Exp $
+# $XTermId: modify-keys.pl,v 1.94 2025/03/06 01:11:52 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2019-2020,2022 by Thomas E. Dickey
+# Copyright 2019-2022,2025 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -59,7 +59,10 @@ use Getopt::Std;
 
 $| = 1;
 
-our ( $opt_d, $opt_h, $opt_k, $opt_K, $opt_l, $opt_m, $opt_o, $opt_u, $opt_v );
+our (
+    $opt_d, $opt_h, $opt_k, $opt_K, $opt_l,
+    $opt_m, $opt_M, $opt_o, $opt_u, $opt_v
+);
 
 our $REPORT;
 our @headers;
@@ -78,8 +81,9 @@ our @symMap;      # index into symCache from keyNames
 our %keysUsed;    # report derived from @symMap, etc.
 our %linkUsed;    # check for uniqueness of html anchor-names
 
-our $MAXMODS = 8; # maximum for modifier-param
-our %Shifted;     # map keycode to shifted-keycode seen by xterm
+our $modify_mods;
+our $MAXMODS = 8;    # maximum for modifier-param
+our %Shifted;        # map keycode to shifted-keycode seen by xterm
 
 # imitate /usr/include/X11/X.h
 our $ShiftMask   = 1;
@@ -134,7 +138,7 @@ sub codeOf($) {
 # macros from <X11/Xutil.h>
 
 sub IsKeypadKey($) {
-    my $code = &codeOf( $_[0] );
+    my $code   = &codeOf( $_[0] );
     my $result = ( ( $code >= &codeOf("XK_KP_Space") )
           and ( $code <= &codeOf("XK_KP_Equal") ) ) ? 1 : 0;
     return $result;
@@ -211,6 +215,20 @@ sub IsSpecialKey($) {
     return $result;
 }
 
+sub IsOrdinaryKey($) {
+    my $code   = shift;
+    my $result = 1;
+    $result = 0
+      if ( &IsFunctionKey($code)
+        or &IsEditFunctionKey($code)
+        or &IsKeypadKey($code)
+        or &IsCursorKey($code)
+        or &IsPFKey($code)
+        or &IsMiscFunctionKey($code)
+        or &IsPrivateKeypadKey($code) );
+    return $result;
+}
+
 sub VisibleChar($) {
     my $ch     = shift;
     my $ord    = ord $ch;
@@ -280,13 +298,23 @@ sub TypeOf($) {
     return $result;
 }
 
-sub KeyToS($$) {
+sub KeyToS($$$) {
     my $code   = &codeOf( $_[0] );
-    my $state  = $_[1];
+    my $mode   = $_[1];
+    my $state  = $_[2];
     my $result = "";
 
-    $code = &codeOf( $Shifted{ $_[0] } ) if ( &IsShift( $_[0], $state ) );
+    $code = &codeOf( $Shifted{ $_[0] } )
+      if ( ( $modify_mods & ( $state - 1 ) & 1 ) == 0
+        and &IsShift( $_[0], $state ) );
     my $type = &TypeOf( &toCode($code) );
+    if (    $mode == 1
+        and $type eq "other"
+        and ( $modify_mods & ( $state - 1 ) ) != 0 )
+    {
+        # TODO - can this be improved using xkb groups?
+        $state = 1 + ( ( $state - 1 ) & ~$modify_mods ) if ( $state <= 5 );
+    }
 
     if ( $type ne "other" ) {
         $result = ( $type eq "special" ) ? "-ignore-" : "?";
@@ -387,7 +415,7 @@ sub IsEditFunctionKey($) {
 }
 
 sub IS_CTRL($) {
-    my $code = &codeOf( $_[0] );
+    my $code   = &codeOf( $_[0] );
     my $result = ( $code < 32 || ( $code >= 0x7f && $code <= 0x9f ) );
     return $result;
 }
@@ -514,6 +542,22 @@ sub allowedCharModifiers($$) {
         #                                  TScreenOf(xw)->alt_sends_esc, kd);
         #       }
     }
+    elsif ( $other_key >= 2 ) {
+
+        # For an ordinary key, if the state has only one modified bit set
+        # and if that is in the modify-modifiers mask, then disable the
+        # use of modifiers for sending the key as an escape sequence.
+        if ( &IsOrdinaryKey($code) and ( $modify_mods & $state ) != 0 ) {
+            my $check = $state;
+            while ( $check != 0 ) {
+                if ( ( $check & 1 ) != 0 ) {
+                    $result = 0 if ( $check == 1 );
+                    last;
+                }
+                $check >>= 1;
+            }
+        }
+    }
     return $result;
 }
 
@@ -532,14 +576,8 @@ sub ModifyOtherKeys($$$$) {
 
         # xterm filters out bare modifiers (ignore)
     }
-    elsif (&IsFunctionKey($code)
-        or &IsEditFunctionKey($code)
-        or &IsKeypadKey($code)
-        or &IsCursorKey($code)
-        or &IsPFKey($code)
-        or &IsMiscFunctionKey($code)
-        or &IsPrivateKeypadKey($code) )
-    {
+    elsif ( &IsOrdinaryKey($code) == 0 ) {
+
         # Exclude the keys already covered by a modifier.
     }
     elsif ( $state > 0 ) {
@@ -689,7 +727,7 @@ sub ShowOtherKeys($$$) {
     for my $c ( 0 .. length($show) - 1 ) {
         my $rc = substr( $show, $c, 1 );
         if ( $rc eq "*" ) {
-            $result[$c] = &KeyToS( &toCode($code), $c + 1 );
+            $result[$c] = &KeyToS( &toCode($code), $mode, $c + 1 );
         }
         elsif ( $type eq "other" or ( $type eq "special" and $code < 256 ) ) {
             my $map   = $code;
@@ -804,10 +842,10 @@ sub safe_html($) {
         if ( length($text) == 1 ) {
             my $s = "";
             for my $n ( 0 .. length($text) - 1 ) {
-                my $ch = substr( $text, $n, 1 );
+                my $ch  = substr( $text, $n, 1 );
                 my $ord = ord($ch);
                 $s .= sprintf( "&#%d;", $ord ) if ( $ord >= 128 );
-                $s .= $ch if ( $ord < 128 );
+                $s .= $ch                      if ( $ord < 128 );
             }
             $text = $s;
         }
@@ -1075,7 +1113,7 @@ sub do_keysymdef() {
         my $name = $value;
         $name =~ s/^#define\s+//;
         $value = $name;
-        $name =~ s/\s.*//;
+        $name  =~ s/\s.*//;
         $value =~ s/^[^\s]+\s+//;
         my $note = $value;
         $value =~ s/\s.*//;
@@ -1093,9 +1131,9 @@ sub do_keysymdef() {
                 $uniCodes{$value} = hex $code;
             }
         }
-        $lenSyms        = length($name) if ( length($name) > $lenSyms );
-        $value          = lc $value;
-        $keySyms{$name} = $value;
+        $lenSyms          = length($name) if ( length($name) > $lenSyms );
+        $value            = lc $value;
+        $keySyms{$name}   = $value;
         $keyCodes{$value} = $name unless ( $keyCodes{$value} );
         printf "keySyms{$name} = '$value', keyCodes{$value} = $name\n"
           if ($opt_d);
@@ -1128,25 +1166,26 @@ sub do_xkbcomp() {
           . "| xkbcomp - -C -o -" );
     my $state = -1;
     my $type  = {};
+    printf "<pre>DUMP do_xkbcomp\n" if ($opt_v);
     for my $n ( 0 .. $#data ) {
-        if ( $data[$n] =~ /static.*\bkeyNames\[.*{/ ) {
+        if ( $data[$n] =~ /static.*\bkeyNames\[.*{/ ) {    # }
             $state = 0;
             next;
         }
-        if ( $data[$n] =~ /static.*\bsymCache\[.*{/ ) {
+        if ( $data[$n] =~ /static.*\bsymCache\[.*{/ ) {    # }
             $state = 1;
             next;
         }
-        if ( $data[$n] =~ /static.*\bsymMap\[.*{/ ) {
+        if ( $data[$n] =~ /static.*\bsymMap\[.*{/ ) {      # }
             $state = 2;
             next;
         }
-        if ( $data[$n] =~ /static.*\bdflt_types\[.*{/ ) {
+        if ( $data[$n] =~ /static.*\bdflt_types\[.*{/ ) {    # }
             $state = 3;
             next;
         }
         if ( $state >= 0 ) {
-            if ( $data[$n] =~ /^\s*};/ ) {
+            if ( $data[$n] =~ /^\s*};/ ) {                   # {
                 printf "# %s\n", $data[$n] if ($opt_d);
                 $state = -1;
                 next;
@@ -1161,7 +1200,7 @@ sub do_xkbcomp() {
             while ( $text =~ /^.*".*".*$/ ) {
                 $text =~ s/^[^"]*//;
                 $name = $text;
-                $name =~ s/"\s+}.*//;
+                $name =~ s/"\s+}.*//;    #{
                 $name =~ s/"//g;
                 $keyNames[ $#keyNames + 1 ] = $name;
                 printf "keyNames[%d] = '%s'\n", $#keyNames,
@@ -1192,21 +1231,21 @@ sub do_xkbcomp() {
             my $code;
             while ( $text =~ /[{].*[}]/ ) {
                 my %obj;
-                $text =~ s/^[^{]*[{]\s*//;
+                $text =~ s/^[^{]*[{]\s*//;    # }}
                 $code = $text;
                 $code =~ s/[^[[:alnum:]].*//;
                 $text =~ s/[[:alnum:]]+\s*,\s*//;
-                $obj{TYPE} = $code;    # KeyType
+                $obj{TYPE} = $code;           # KeyType
                 my %tmp = %{ $keyTypes[$code] };
                 $tmp{USED} += 1;
                 $keyTypes[$code] = \%tmp;
                 $code = $text;
                 $code =~ s/[^[[:alnum:]].*//;
                 $text =~ s/[[:alnum:]]+\s*,\s*//;
-                $obj{USED} = hex $code;    # 0/1 for used/unused
+                $obj{USED} = hex $code;       # 0/1 for used/unused
                 $code = $text;
                 $code =~ s/[^[[:alnum:]].*//;
-                $obj{CODE} = $code;        # index in symCache[]
+                $obj{CODE} = $code;           # index in symCache[]
                 $text =~ s/[[:alnum:]]+\s*//;
                 $symMap[ $#symMap + 1 ] = \%obj;
                 printf "symMap[%d] = {%d,%d,%d}\n", $#symMap, $obj{TYPE},
@@ -1217,7 +1256,7 @@ sub do_xkbcomp() {
 
         # parse data in "dflt_types[]"
         elsif ( $state == 3 ) {
-            my $text = &trim( $data[$n] );
+            my $text = &trim( $data[$n] );    #{
             if ( $text =~ /^\s*[}](,)?$/ ) {
                 $type->{USED}               = 0;
                 $keyTypes[ $#keyTypes + 1 ] = $type;
@@ -1237,6 +1276,7 @@ sub do_xkbcomp() {
             }
         }
     }
+    printf "</pre>\n" if ($opt_v);
     &begin_table("Summary from xkbcomp");
     &print_data( \@nolinks, 5, sprintf( "%d", $#keyNames + 1 ), 0, "keyNames" );
     &print_data( \@nolinks, 5, sprintf( "%d", $#keyTypes + 1 ), 0, "keyTypes" );
@@ -1259,7 +1299,7 @@ sub report_keysymdef() {
     @sortCodes = sort @sortCodes;
     for my $c ( 0 .. $#sortCodes ) {
         my $code = sprintf( "0x%04x", hex $sortCodes[$c] );
-        my $sym = $keyCodes{$code};
+        my $sym  = $keyCodes{$code};
         &print_data( \@nolinks, 9, $code, -8, &TypeOf($code), 0, $sym );
     }
     &end_table;
@@ -1280,15 +1320,22 @@ sub report_key_types() {
     &end_table;
 }
 
+sub TitleN($) {
+    my $result = sprintf( "Mode %d", shift );
+    $result .= ":$modify_mods" if ( $modify_mods != 0 );
+    return $result;
+}
+
 sub report_modified_keys() {
     my @codes = sort keys %keysUsed;
     my $width = 14;
     &begin_table("Other modifiable keycodes");
     &print_head(
-        0,       "Code",   0,       "Symbol", 0,       "Actual",
-        -$width, "Mode 0", -$width, "Mode 1", -$width, "Mode 2"
+        0,       "Code",   0,       "Symbol",   0,       "Actual",
+        -$width, "Mode 0", -$width, &TitleN(1), -$width, &TitleN(2)
     );
     $width = 0 if ($opt_h);
+
     for my $c ( 0 .. $#codes ) {
         next unless ( $codes[$c] ne "" );
         my @links;
@@ -1296,9 +1343,9 @@ sub report_modified_keys() {
         $links[0] = &link_data( "summary", "detailed", 1, $sym );
         &print_data(
             \@links,
-            6,   $codes[$c],                         #
-            -20, $keysUsed{ $codes[$c] },            #
-            -6,  sprintf( "%d", hex $codes[$c] ),    #
+            6,       $codes[$c],                         #
+            -20,     $keysUsed{ $codes[$c] },            #
+            -6,      sprintf( "%d", hex $codes[$c] ),    #
             -$width, &CheckOtherKey( $codes[$c], 0 ),    #
             -$width, &CheckOtherKey( $codes[$c], 1 ),    #
             -$width, &CheckOtherKey( $codes[$c], 2 )
@@ -1332,10 +1379,11 @@ sub report_otherkey_escapes() {
     my $width = 14;
     &begin_table("Other modified-key escapes");
     &print_head(
-        0,       "Code",   0,       "Symbol", 0,       "Actual",
-        -$width, "Mode 0", -$width, "Mode 1", -$width, "Mode 2"
+        0,       "Code",   0,       "Symbol",   0,       "Actual",
+        -$width, "Mode 0", -$width, &TitleN(1), -$width, &TitleN(2)
     );
     $width = 0 if ($opt_h);
+
     for my $c ( 0 .. $#codes ) {
         next unless ( $codes[$c] ne "" );
         my $level0 = &CheckOtherKey( $codes[$c], 0 );
@@ -1348,23 +1396,23 @@ sub report_otherkey_escapes() {
         my $sym = $keysUsed{ $codes[$c] };
         $links[0] = &link_data( "detailed", "symmap", 1, $sym );
         &print_data(
-            \@links,    #
-            -6,  $codes[$c],                         #
-            -20, $keysUsed{ $codes[$c] },            #
-            -6,  sprintf( "%d", hex $codes[$c] ),    #
-            -$width, $level0,                        #
-            -$width, $level1,                        #
+            \@links,                                     #
+            -6,      $codes[$c],                         #
+            -20,     $keysUsed{ $codes[$c] },            #
+            -6,      sprintf( "%d", hex $codes[$c] ),    #
+            -$width, $level0,                            #
+            -$width, $level1,                            #
             -$width, $level2
         );
 
         for my $r ( 0 .. $#level0 ) {
             &print_data(
-                \@nolinks,                           #
-                -6,  &ParamToQ( $r + 1 ),            #
-                -20, "",                             #
-                -6,  "",                             #
-                -$width, &safe_html( $level0[$r] ),  #
-                -$width, &safe_html( $level1[$r] ),  #
+                \@nolinks,                             #
+                -6,      &ParamToQ( $r + 1 ),          #
+                -20,     "",                           #
+                -6,      "",                           #
+                -$width, &safe_html( $level0[$r] ),    #
+                -$width, &safe_html( $level1[$r] ),    #
                 -$width, &safe_html( $level2[$r] )
             );
         }
@@ -1375,10 +1423,10 @@ sub report_otherkey_escapes() {
 sub report_keys_used() {
     &begin_table("Key map");
     &print_head(
-        5, "Type",                                   #
-        0, "Level",                                  #
-        0, "Name",                                   #
-        6, "Code",                                   #
+        5, "Type",     #
+        0, "Level",    #
+        0, "Name",     #
+        6, "Code",     #
         0,
         "Symbol"
     );
@@ -1396,10 +1444,10 @@ sub report_keys_used() {
         $links[0] = &link_data( "symmap", "summary", 4, $sym );
         &print_data(
             \@links,
-            5, sprintf( "%d",   $obj{TYPE} ),     #
-            5, sprintf( "1/%d", $type{SIZE} ),    #
-            -4, $keyNames[$m],                    #
-            6,  $code,                            #
+            5,  sprintf( "%d",   $obj{TYPE} ),     #
+            5,  sprintf( "1/%d", $type{SIZE} ),    #
+            -4, $keyNames[$m],                     #
+            6,  $code,                             #
             0,  $sym
         );
 
@@ -1409,9 +1457,9 @@ sub report_keys_used() {
         for my $t ( 1 .. $type{SIZE} - 1 ) {
             $sym = $symCache[ $obj{CODE} + $t ];
             if ( $keySyms{$sym} ) {
-                $code = $keySyms{$sym};
+                $code            = $keySyms{$sym};
                 $keysUsed{$code} = $sym;
-                $links[0] = &link_data( "symmap", "summary", 4, $sym );
+                $links[0]        = &link_data( "symmap", "summary", 4, $sym );
             }
             else {
                 $code  = "";
@@ -1450,9 +1498,9 @@ sub report_keys_used() {
 sub KeyClasses($) {
     my $hex   = shift;
     my $alias = &IsControlAlias( $hex, $ControlMask ) ? "alias" : "";
-    my $cntrl = &IS_CTRL($hex) ? "cntrl" : "";
-    my $ctl_i = &IsControlInput($hex) ? "ctl_i" : "";
-    my $ctl_o = &IsControlOutput($hex) ? "ctl_o" : "";
+    my $cntrl = &IS_CTRL($hex)                        ? "cntrl" : "";
+    my $ctl_i = &IsControlInput($hex)                 ? "ctl_i" : "";
+    my $ctl_o = &IsControlOutput($hex)                ? "ctl_o" : "";
     my $this  = sprintf( "%-5s %-5s %-5s %-5s %-8s",
         $alias, $cntrl, $ctl_i, $ctl_o, &TypeOf($hex) );
 }
@@ -1498,6 +1546,7 @@ Options:
   -K      dump keycode-classes
   -l XXX  use XXX for Xkb layout (default $xkb_layout)
   -m XXX  use XXX for Xkb model (default $xkb_model)
+  -M XXX  show modified modifiers for Mode 2
   -o XXX  write report to the file XXX.
   -u      use CSI u format for escapes
   -v      verbose
@@ -1512,8 +1561,10 @@ binmode( STDOUT, ":utf8" );
 &do_localectl(0);
 
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-&getopts('dhKkl:m:o:uv') || &main::HELP_MESSAGE;
-$opt_v = 1 if ($opt_d);
+&getopts('dhKkl:m:M:o:uv') || &main::HELP_MESSAGE;
+$opt_v       = 1      if ($opt_d);
+$modify_mods = $opt_M if ($opt_M);
+$modify_mods = 0 unless ($opt_M);
 
 &begin_report;
 

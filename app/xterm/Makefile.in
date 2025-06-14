@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.260 2022/02/21 18:30:44 tom Exp $
+## $XTermId: Makefile.in,v 1.267 2025/03/14 00:34:57 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2020,2022 by Thomas E. Dickey
+# Copyright 1997-2023,2025 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -113,13 +113,13 @@ AUTO_SOURCE	= \
 
           SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
 	  	  data.c doublechr.c fontutils.c input.c \
-		  linedata.c main.c menu.c misc.c \
+		  keysym2ucs.c linedata.c main.c menu.c misc.c \
 		  print.c ptydata.c scrollback.c \
 		  screen.c scrollbar.c tabs.c util.c version.c xstrings.c \
 		  xtermcap.c VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button$o cachedGCs$o charproc$o charsets$o cursor$o \
 	  	  data$o doublechr$o fontutils$o input$o \
-		  linedata$o main$o menu$o misc$o \
+		  keysym2ucs$o linedata$o main$o menu$o misc$o \
 		  print$o ptydata$o scrollback$o \
 		  screen$o scrollbar$o tabs$o util$o version$o xstrings$o \
 		  xtermcap$o VTPrsTbl$o $(EXTRAOBJ)
@@ -153,7 +153,7 @@ all :	$(PROGRAMS)
 	@$(AWK) 'BEGIN{printf "/* vile:cmode */\n";}/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
 
 .man.$(manext) :
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS) $* $* $(pixmapdir)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $* $*
 
 @NROFF_NOTE@.$(manext).txt :
 @NROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | nroff -man | col -bx" >$@
@@ -194,10 +194,10 @@ $(OBJS1) : xterm.h ptyx.h fontutils.h menu.h xtermcfg.h
 main$o resize$o screen$o : xterm_io.h
 
 xterm$x : $(OBJS1)
-	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(LIBS) $(EXTRA_LOADFLAGS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS1) $(LIBS) $(EXTRA_LOADFLAGS)
 
 resize$x : $(OBJS2)
-	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(LIBS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS2) $(LIBS)
 
 256colres.h :
 	-$(RM) $@
@@ -212,6 +212,8 @@ graphics_regis$o : $(VTPARSE_H)
 graphics_sixel$o : $(VTPARSE_H)
 misc$o : $(VTPARSE_H)
 VTPrsTbl$o : $(VTPARSE_H)
+
+charsets$o : charsets.h
 
 charproc$o \
 graphics$o \
@@ -322,11 +324,8 @@ install-full :: $(MANDIR)
 			$(SHELL) ./minstall \"$(INSTALL_DATA)\" \
 				$(srcdir)/\$$source.man  \
 				$(MANDIR)/\$$target.$(manext) \
-				$(appsdir) \
-				$(CLASS) \
 				\$$source \
-				\$$target \
-				$(pixmapdir); \
+				\$$target; \
 		done"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then \
 		source=$(actual_xterm).$(manext); \
@@ -394,7 +393,7 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_pixmapdir@install-full :: $(PIXMAPDIR)
 @no_pixmapdir@	@ECHO_CC@ACTUAL_XTERM=$(actual_xterm) $(SHELL) -c '\
 @no_pixmapdir@		h=$(PIXMAPDIR); \
-@no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
+@no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_*x*.xpm; \
 @no_pixmapdir@		do \
 @no_pixmapdir@			l=`basename $$n`; \
 @no_pixmapdir@			r=`echo "$$l" | sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
@@ -423,7 +422,9 @@ SET_TERMINFO = @SET_TERMINFO@
 
 @no_ticprog@install-full \
 @no_ticprog@install-ti :: $(TERMINFO_DIR)
-@no_ticprog@	@$(SHELL) -c "$(SET_TERMINFO) $(srcdir)/run-tic.sh $(srcdir)/terminfo"
+@no_ticprog@	@echo "Installing $(srcdir)/terminfo"
+@no_ticprog@	@$(SHELL) -c "chmod +x ./run-tic.sh"
+@no_ticprog@	@$(SHELL) -c "$(SET_TERMINFO) ./run-tic.sh $(srcdir)/terminfo"
 @no_ticprog@	@echo 'Completed installation of terminfo description.'
 
 install-full \
@@ -566,7 +567,7 @@ sources : $(AUTO_SOURCE)
 
 distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
-	-$(RM) df-install minstall
+	-$(RM) df-install minstall run-tic.sh
 
 distclean \
 docs-clean ::

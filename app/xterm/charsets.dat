@@ -1,6 +1,6 @@
-# $XTermId: charsets.dat,v 1.35 2024/10/03 21:56:53 tom Exp $
+# $XTermId: charsets.dat,v 1.36 2025/04/08 22:40:55 tom Exp $
 
-# Copyright 2023,2024 by Thomas E. Dickey
+# Copyright 2023-2024,2025 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -56,7 +56,7 @@ map_ASCII
 	A0	UNDEF	1B
 	FF	UNDEF	10000
 
-map_DEC_Spec_Graphic
+map_DEC_Spec_Graphic_VT52
 	5F	UNDEF	10000
 	60	U+0020	14	# nbsp, treat as blank
 	61	U+0020	78	# reserved, treat as blank
@@ -89,6 +89,40 @@ map_DEC_Spec_Graphic
 	7C	U+2087	87	# subscript 7
 	7D	U+2088	A3	# subscript 8
 	7E	U+2089	B7	# subscript 9
+
+map_DEC_Spec_Graphic
+	5F	UNDEF	10000
+	60	U+25c6	14	# black diamond
+	61	U+2592	78	# medium shade
+	62	U+2409	0A	# symbol for horizontal tabulation
+	63	U+240C	0D	# symbol for form feed
+	64	U+240D	0E	# symbol for carriage return
+	65	U+240A	0B	# symbol for line feed
+	66	U+00B0	B0	# degree sign
+	67	U+00B1	B1	# plus-minus sign
+	68	U+2424	15	# symbol for newline
+	69	U+240B	0C	# symbol for vertical tabulation
+	6A	U+2518	16	# box drawings light up and left
+	6B	U+2510	17	# box drawings light down and left
+	6C	U+250C	18	# box drawings light down and right
+	6D	U+2514	19	# box drawings light up and right
+	6E	U+253C	1A	# box drawings light vertical and horizontal
+	6F	U+23BA	1B	# box drawings scan 1
+	70	U+23BB	1C	# box drawings scan 3
+	71	U+2500	1D	# box drawings light horizontal
+	72	U+23BC	1E	# box drawings scan 7
+	73	U+23BD	1F	# box drawings scan 9
+	74	U+251C	80	# box drawings light vertical and right
+	75	U+2524	81	# box drawings light vertical and left
+	76	U+2534	82	# box drawings light up and horizontal
+	77	U+252C	83	# box drawings light down and horizontal
+	78	U+2502	84	# box drawings light vertical
+	79	U+2264	85	# less-than or equal to
+	7A	U+2265	86	# greater-than or equal to
+	7B	U+03C0	C6	# greek small letter pi
+	7C	U+2260	87	# not equal to
+	7D	U+00A3	A3	# pound sign
+	7E	U+00B7	B7	# middle dot
 
 map_ISO_Latin_1
 
@@ -1389,7 +1423,7 @@ map_NRCS_Hebrew
 
 # VT520/VT525 manual p 4-35 explains "SCS" as Serbo-Croatian.  The remaining
 # "S" may be Slovene.  With that clue, choose ISO-IR-141, which provides a
-# chart with names of suitable replacement characters. 
+# chart with names of suitable replacement characters.
 map_NRCS_Serbo_Croatian
 	40	U+017D		# LATIN CAPITAL LETTER Z WITH CARON
 	5B	U+0160		# LATIN CAPITAL LETTER S WITH CARON

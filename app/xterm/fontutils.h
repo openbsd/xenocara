@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.149 2024/09/01 22:40:13 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.150 2024/12/01 19:48:57 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2024 by Thomas E. Dickey
@@ -78,7 +78,7 @@ extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 #define GetItalicFont(screen, which) 0
 #endif
 
-#define FirstItemOf(vector) ((vector) ? (vector)[0] : 0)
+#define FirstItemOf(vector) ((vector) ? (vector)[0] : NULL)
 #define CurrentXftFont(xw)  ((xw)->work.fonts.xft.list_n[0])
 #define DefaultFontN(xw)    ((xw)->work.fonts.x11.list_n[0])
 #define DefaultFontB(xw)    ((xw)->work.fonts.x11.list_b[0])
@@ -90,12 +90,12 @@ extern char *xtermSpecialFont (XTermDraw * /* params */);
 #endif
 
 #define FontLacksMetrics(font) \
-	((font)->fs != 0 \
-	 && ((font)->fs->per_char == 0))
+	((font)->fs != NULL \
+	 && ((font)->fs->per_char == NULL))
 
 #define FontIsIncomplete(font) \
-	((font)->fs != 0 \
-	 && (font)->fs->per_char != 0 \
+	((font)->fs != NULL \
+	 && (font)->fs->per_char != NULL \
 	 && !(font)->fs->all_chars_exist)
 
 #if OPT_BOX_CHARS

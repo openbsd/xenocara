@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2023,2024 by Thomas E. Dickey                              *
+ * Copyright 1997-2024,2025 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2653 2024/10/24 08:21:09 tom Exp $
+  $XTermId: xterm.log.html,v 1.2696 2025/05/18 23:49:07 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -50,7 +50,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2023,2024 by <a href=
+  <p>Copyright &copy; 1997-2024,2025 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
 
   <hr>
@@ -70,6 +70,14 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_399">Patch #399 - 2025/05/18</a></li>
+
+    <li><a href="#xterm_398">Patch #398 - 2025/04/11</a></li>
+
+    <li><a href="#xterm_397">Patch #397 - 2025/01/05</a></li>
+
+    <li><a href="#xterm_396">Patch #396 - 2024/12/02</a></li>
+
     <li><a href="#xterm_395">Patch #395 - 2024/10/24</a></li>
 
     <li><a href="#xterm_394">Patch #394 - 2024/09/02</a></li>
@@ -1066,6 +1074,165 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_399" id="xterm_399">Patch #399 -
+  2025/05/18</a></h1>
+
+  <ul>
+    <li>add configure check for <tt>inline</tt>, for c89
+    support.</li>
+
+    <li>further improve integration between UTF-8 and
+    <tt>allowC1Printable</tt> (report by Matthieu Herrb).</li>
+
+    <li>modify one of the missing-character checks to prefer Xft's
+    check over the check for missing line-drawing characters
+    (Debian #1084794).</li>
+
+    <li>align terminfo building blocks in terminfo to correspond to
+    recent refactoring/trimming in ncurses.</li>
+
+    <li>revise a limit-check in selection to fix a regression in
+    <a href="#xterm-398">patch #398</a> (Debian #1105738).</li>
+
+    <li>modify configure check for Xft to work around recent change
+    to fontconfig's pkg-config file (Gentoo #953864).</li>
+  </ul>
+
+  <h1><a name="xterm_398" id="xterm_398">Patch #398 -
+  2025/04/11</a></h1>
+
+  <ul>
+    <li>modify <tt>DECFRA</tt> and <tt>DECRQCRA</tt> to handle NRCS
+    and ISO character set mappings.</li>
+
+    <li>ensure that the cursor GC is updated when switching between
+    normal and italic fonts (report/testcase by Peter
+    Fabinski).</li>
+
+    <li>reduce overflow in scaling of ReGIS coordinates
+    (report/testcase by Robert L Masterson).</li>
+
+    <li>improve permissions-check for valid shell program.</li>
+
+    <li>extend <em>modifyOtherKeys</em> and
+    <em>formatOtherKeys</em> to the various categories of special
+    keys, i.e., cursor-keys, function-keys, keypad-keys,
+    modifier-keys and (other) special-keys.
+      <ul>
+        <li>review/extend <tt>convmap.pl</tt> to handle all of the
+        X11 keysym definitions in <tt>keysym2ucs</tt>.</li>
+
+        <li>keysyms which do not correspond to Unicode character
+        codes are mapped to Unicode private use areas in the BMP
+        and plane 15.</li>
+
+        <li>add/extend control sequences for the new format- and
+        modify-resources.</li>
+      </ul>
+    </li>
+
+    <li>fix copy/paste error in configure script for default value
+    of <tt>--enable-block-select</tt> (report by Vincent
+    Lef&egrave;vre).</li>
+
+    <li>revise <tt>keysym2ucs.c</tt>, to provide mapping to/from
+    the Unicode private use area for non-character keysyms. Also
+    remove redundant items from <tt>keysym.map</tt>.</li>
+
+    <li>improve <tt>modifyOtherKeys</tt>, by providing the UCS
+    value for keys which have no single-byte representation (Debian
+    #1093056).</li>
+
+    <li>add two extensions to <tt>modifyOtherKeys</tt>:
+      <ul>
+        <li>setting <tt>modifyOtherKeys</tt> to 3 makes all
+        keyboard input send escape sequences, using parameter 1
+        where no modifiers are given.</li>
+
+        <li>a subparameter can be added to the <tt>XTMODKEYS</tt>
+        control sequence, telling xterm to factor-out the
+        corresponding modifier mask from available parameters in
+        the <tt>modifyOtherKeys</tt> feature.</li>
+      </ul>
+    </li>
+
+    <li>add items <tt>ColumnMode</tt> and <tt>StatusLine</tt> to
+    <tt>disallowWindowOps</tt>, for <tt>DECCOLM</tt>,
+    <tt>DECANM</tt> and <tt>DECSASD</tt>, <tt>DECSSDT</tt>
+    respectively (report by Sami Farin).</li>
+
+    <li>fix several minor issues reported by Coverity.</li>
+
+    <li>add <tt>ColorEvents</tt> resource to provide a way for
+    applications to send a client message which can modify the
+    default foreground and background colors (adapted from patch by
+    Claes N&auml;st&eacute;n).</li>
+
+    <li>add special case for displaying an error for <tt>CAN</tt>
+    (cancel) when emulating VT100 (prompted by discussion with
+    Thomas Wolff).</li>
+
+    <li>correct the size of a <tt>CellData</tt> buffer in
+    <tt>xtermReportSGR</tt> seen in ASAN2 (report by Sami
+    Farin).</li>
+  </ul>
+
+  <h1><a name="xterm_397" id="xterm_397">Patch #397 -
+  2025/01/05</a></h1>
+
+  <ul>
+    <li>add resource <tt>printRawChars</tt> to allow bypassing
+    check in <a href="#xterm_389">patch #389</a> which omits
+    Unicode non-characters from printing (request by Adam
+    Saponara).</li>
+
+    <li>add visible-effect for <tt>SUB</tt>, per DEC 070 page
+    5-132.</li>
+
+    <li>correct a limit-check in private mode <tt>1045</tt>.</li>
+
+    <li>add optional feature for block-selection, bound to
+    meta-button-one (patch by Adam Saponara).</li>
+
+    <li>if started as a VT52, identify the terminal as a real VT52
+    rather than VT52 emulated by VT100.</li>
+
+    <li>amend change to VT52 cursor-addressing per DEC 070 (mintty
+    #1299).</li>
+
+    <li>correct <tt>ctlseqs.ms</tt> suffix for
+    <tt>XTTITLEPOS</tt></li>
+  </ul>
+
+  <h1><a name="xterm_396" id="xterm_396">Patch #396 -
+  2024/12/02</a></h1>
+
+  <ul>
+    <li>fix stricter warnings provided by upcoming gcc 15, as well
+    as NetBSD lint.</li>
+
+    <li>modify title-stack test script, adding logging and
+    command-replay options. Improved the script with new controls:
+      <ul>
+        <li>add <tt>XTTITLEPOS</tt> query to get position in
+        title-stack.</li>
+
+        <li>add <tt>DECRQSS</tt> for <tt>XTSMTITLE</tt>.</li>
+      </ul>
+    </li>
+
+    <li>correct cursor-addressing limit for VT52 mode (report by
+    Serguei Fichel).</li>
+
+    <li>amend change in <a href="#xterm_395">patch #395</a> for
+    7-bit parsing to allow UTF-8 titles (report by Dmytro
+    Bagril).</li>
+
+    <li>portability fixes for configure script, from ncurses</li>
+
+    <li>update config.guess, config.sub</li>
   </ul>
 
   <h1><a name="xterm_395" id="xterm_395">Patch #395 -

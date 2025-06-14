@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.402 2024/05/11 17:24:20 tom Exp $
+dnl $XTermId: configure.in,v 1.405 2025/05/18 22:27:35 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2023,2024 by Thomas E. Dickey
+dnl Copyright 1997-2024,2025 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -53,6 +53,7 @@ case "$host_os" in
 esac
 
 CF_PROG_CC
+AC_C_INLINE
 AC_PROG_CPP
 AC_PROG_AWK
 AC_PROG_INSTALL
@@ -550,6 +551,18 @@ CF_ARG_DISABLE(blink-cursor,
 AC_MSG_RESULT($enable_blink_curs)
 test "$enable_blink_curs" = no && AC_DEFINE(OPT_BLINK_CURS,0,[Define to 0 to disable support for blinking cursor])
 
+AC_MSG_CHECKING(if you want support for block-selection)
+CF_ARG_ENABLE(block-select,
+	[  --enable-block-select   meta-button1 begins block-selection],
+	[enable_block_select=yes],
+	[enable_block_select=no])
+AC_MSG_RESULT($enable_block_select)
+if test "$enable_block_select" = yes ; then
+	AC_DEFINE(OPT_BLOCK_SELECT,1,[Define to 1 to allow block-selections])
+else
+	AC_DEFINE(OPT_BLOCK_SELECT,0,[Define to 0 to disallow block-selections])
+fi
+
 AC_MSG_CHECKING(if you want to ignore Linux's broken palette-strings)
 
 case $host_os in
@@ -568,7 +581,7 @@ AC_MSG_RESULT($enable_broken_osc)
 if test "$enable_broken_osc" = yes ; then
 	AC_DEFINE(OPT_BROKEN_OSC,1,[Define to 1 to allow broken Linux OSC-strings])
 else
-	AC_DEFINE(OPT_BROKEN_OSC,0,[Define to 0 to allow broken Linux OSC-strings])
+	AC_DEFINE(OPT_BROKEN_OSC,0,[Define to 0 to disallow broken Linux OSC-strings])
 fi
 
 AC_MSG_CHECKING(if you want to allow broken string-terminators)

@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.152 2024/09/30 08:11:57 tom Exp $ */
+/* $XTermId: resize.c,v 1.154 2025/03/08 13:21:57 tom Exp $ */
 
 /*
- * Copyright 2003-2023,2024 by Thomas E. Dickey
+ * Copyright 2003-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -142,18 +142,18 @@ static const char *const getsize[EMULATIONS] =
 #if defined(USE_STRUCT_WINSIZE)
 static const char *const getwsize[EMULATIONS] =
 {				/* size in pixels */
-    0,
+    NULL,
     ESCAPE("[14t"),
 };
 #endif /* USE_STRUCT_WINSIZE */
 static const char *const restore[EMULATIONS] =
 {
     ESCAPE("8"),
-    0,
+    NULL,
 };
 static const char *const setsize[EMULATIONS] =
 {
-    0,
+    NULL,
     ESCAPE("[8;%s;%st"),
 };
 
@@ -182,7 +182,7 @@ static FILE *ttyfp;
 #if defined(USE_STRUCT_WINSIZE)
 static const char *wsize[EMULATIONS] =
 {
-    0,
+    NULL,
     ESCAPE("[4;%hd;%hdt"),
 };
 #endif /* USE_STRUCT_WINSIZE */
@@ -445,7 +445,7 @@ main(int argc, char **argv ENVP_ARG)
     }
     tty = fileno(ttyfp);
 #ifdef USE_TERMCAP
-    if ((env = x_getenv("TERM")) == 0) {
+    if ((env = x_getenv("TERM")) == NULL) {
 	env = x_strdup(DFT_TERMTYPE);
 	if (SHELL_BOURNE == shell_type) {
 	    setname = "TERM=" DFT_TERMTYPE ";\nexport TERM;\n";
@@ -459,7 +459,7 @@ main(int argc, char **argv ENVP_ARG)
     }
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
-    if (x_getenv("TERM") == 0) {
+    if (x_getenv("TERM") == NULL) {
 	if (SHELL_BOURNE == shell_type) {
 	    setname = "TERM=" DFT_TERMTYPE ";\nexport TERM;\n";
 	} else {
@@ -513,7 +513,7 @@ main(int argc, char **argv ENVP_ARG)
 				   strlen(argv[0]) +
 				   strlen(argv[1]) +
 				   1);
-	if (tmpbuf == 0) {
+	if (tmpbuf == NULL) {
 	    fprintf(stderr, "%s: Cannot query size\n", myname);
 	    onintr(0);
 	} else {
@@ -587,7 +587,7 @@ main(int argc, char **argv ENVP_ARG)
 	i = (int) (ptr - termcap) + 3;
 	strncpy(newtc, termcap, (size_t) i);
 	sprintf(newtc + i, "%d", cols);
-	if ((ptr = strchr(ptr, ':')) != 0)
+	if ((ptr = strchr(ptr, ':')) != NULL)
 	    strcat(newtc, ptr);
 
 	/* now do lines */
@@ -599,7 +599,7 @@ main(int argc, char **argv ENVP_ARG)
 	i = (int) (ptr - newtc) + 3;
 	strncpy(termcap, newtc, (size_t) i);
 	sprintf(termcap + i, "%d", rows);
-	if ((ptr = strchr(ptr, ':')) != 0)
+	if ((ptr = strchr(ptr, ':')) != NULL)
 	    strcat(termcap, ptr);
     }
 #endif /* USE_TERMCAP */

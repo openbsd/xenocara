@@ -1,9 +1,9 @@
 /*
- * $XTermId: charsets.h,v 1.34 2024/10/03 22:01:16 tom Exp $
+ * $XTermId: charsets.h,v 1.36 2025/04/08 22:42:06 tom Exp $
  */
 
 /*
- * Copyright 2023,2024 by Thomas E. Dickey
+ * Copyright 2023-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -97,7 +97,7 @@
 	    default: dft; break; \
 	}
 
-#define map_DEC_Spec_Graphic(code) \
+#define map_DEC_Spec_Graphic_VT52(code) \
 	begin_CODEPAGE(94) \
 	switch (code) { \
 	    XXX(0x5F, UNDEF) \
@@ -135,7 +135,7 @@
 	} \
 	end_CODEPAGE()
 
-#define unmap_DEC_Spec_Graphic(code,dft) \
+#define unmap_DEC_Spec_Graphic_VT52(code,dft) \
 	switch (code) { \
 	    MAP(0x5F, 0x10000) \
 	    MAP(0x60, 0x14)	/* nbsp, treat as blank */ \
@@ -169,6 +169,81 @@
 	    MAP(0x7C, 0x87)	/* subscript 7 */ \
 	    MAP(0x7D, 0xA3)	/* subscript 8 */ \
 	    MAP(0x7E, 0xB7)	/* subscript 9 */ \
+	    default: dft; break; \
+	}
+
+#define map_DEC_Spec_Graphic(code) \
+	begin_CODEPAGE(94) \
+	switch (code) { \
+	    XXX(0x5F, UNDEF) \
+	    UNI(0x60, 0x25c6)	/* black diamond */ \
+	    UNI(0x61, 0x2592)	/* medium shade */ \
+	    UNI(0x62, 0x2409)	/* symbol for horizontal tabulation */ \
+	    UNI(0x63, 0x240C)	/* symbol for form feed */ \
+	    UNI(0x64, 0x240D)	/* symbol for carriage return */ \
+	    UNI(0x65, 0x240A)	/* symbol for line feed */ \
+	    UNI(0x66, 0x00B0)	/* degree sign */ \
+	    UNI(0x67, 0x00B1)	/* plus-minus sign */ \
+	    UNI(0x68, 0x2424)	/* symbol for newline */ \
+	    UNI(0x69, 0x240B)	/* symbol for vertical tabulation */ \
+	    UNI(0x6A, 0x2518)	/* box drawings light up and left */ \
+	    UNI(0x6B, 0x2510)	/* box drawings light down and left */ \
+	    UNI(0x6C, 0x250C)	/* box drawings light down and right */ \
+	    UNI(0x6D, 0x2514)	/* box drawings light up and right */ \
+	    UNI(0x6E, 0x253C)	/* box drawings light vertical and horizontal */ \
+	    UNI(0x6F, 0x23BA)	/* box drawings scan 1 */ \
+	    UNI(0x70, 0x23BB)	/* box drawings scan 3 */ \
+	    UNI(0x71, 0x2500)	/* box drawings light horizontal */ \
+	    UNI(0x72, 0x23BC)	/* box drawings scan 7 */ \
+	    UNI(0x73, 0x23BD)	/* box drawings scan 9 */ \
+	    UNI(0x74, 0x251C)	/* box drawings light vertical and right */ \
+	    UNI(0x75, 0x2524)	/* box drawings light vertical and left */ \
+	    UNI(0x76, 0x2534)	/* box drawings light up and horizontal */ \
+	    UNI(0x77, 0x252C)	/* box drawings light down and horizontal */ \
+	    UNI(0x78, 0x2502)	/* box drawings light vertical */ \
+	    UNI(0x79, 0x2264)	/* less-than or equal to */ \
+	    UNI(0x7A, 0x2265)	/* greater-than or equal to */ \
+	    UNI(0x7B, 0x03C0)	/* greek small letter pi */ \
+	    UNI(0x7C, 0x2260)	/* not equal to */ \
+	    UNI(0x7D, 0x00A3)	/* pound sign */ \
+	    UNI(0x7E, 0x00B7)	/* middle dot */ \
+	} \
+	end_CODEPAGE()
+
+#define unmap_DEC_Spec_Graphic(code,dft) \
+	switch (code) { \
+	    MAP(0x5F, 0x10000) \
+	    MAP(0x60, 0x14)	/* black diamond */ \
+	    MAP(0x61, 0x78)	/* medium shade */ \
+	    MAP(0x62, 0x0A)	/* symbol for horizontal tabulation */ \
+	    MAP(0x63, 0x0D)	/* symbol for form feed */ \
+	    MAP(0x64, 0x0E)	/* symbol for carriage return */ \
+	    MAP(0x65, 0x0B)	/* symbol for line feed */ \
+	    MAP(0x66, 0xB0)	/* degree sign */ \
+	    MAP(0x67, 0xB1)	/* plus-minus sign */ \
+	    MAP(0x68, 0x15)	/* symbol for newline */ \
+	    MAP(0x69, 0x0C)	/* symbol for vertical tabulation */ \
+	    MAP(0x6A, 0x16)	/* box drawings light up and left */ \
+	    MAP(0x6B, 0x17)	/* box drawings light down and left */ \
+	    MAP(0x6C, 0x18)	/* box drawings light down and right */ \
+	    MAP(0x6D, 0x19)	/* box drawings light up and right */ \
+	    MAP(0x6E, 0x1A)	/* box drawings light vertical and horizontal */ \
+	    MAP(0x6F, 0x1B)	/* box drawings scan 1 */ \
+	    MAP(0x70, 0x1C)	/* box drawings scan 3 */ \
+	    MAP(0x71, 0x1D)	/* box drawings light horizontal */ \
+	    MAP(0x72, 0x1E)	/* box drawings scan 7 */ \
+	    MAP(0x73, 0x1F)	/* box drawings scan 9 */ \
+	    MAP(0x74, 0x80)	/* box drawings light vertical and right */ \
+	    MAP(0x75, 0x81)	/* box drawings light vertical and left */ \
+	    MAP(0x76, 0x82)	/* box drawings light up and horizontal */ \
+	    MAP(0x77, 0x83)	/* box drawings light down and horizontal */ \
+	    MAP(0x78, 0x84)	/* box drawings light vertical */ \
+	    MAP(0x79, 0x85)	/* less-than or equal to */ \
+	    MAP(0x7A, 0x86)	/* greater-than or equal to */ \
+	    MAP(0x7B, 0xC6)	/* greek small letter pi */ \
+	    MAP(0x7C, 0x87)	/* not equal to */ \
+	    MAP(0x7D, 0xA3)	/* pound sign */ \
+	    MAP(0x7E, 0xB7)	/* middle dot */ \
 	    default: dft; break; \
 	}
 
@@ -2352,7 +2427,7 @@
 /*
  * VT520/VT525 manual p 4-35 explains "SCS" as Serbo-Croatian.  The remaining
  * "S" may be Slovene.  With that clue, choose ISO-IR-141, which provides a
- * chart with names of suitable replacement characters. 
+ * chart with names of suitable replacement characters.
  */
 #define map_NRCS_Serbo_Croatian(code) \
 	switch (code) { \

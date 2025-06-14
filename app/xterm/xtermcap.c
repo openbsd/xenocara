@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.62 2024/10/23 21:14:15 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.66 2025/04/18 20:27:53 tom Exp $ */
 
 /*
- * Copyright 2007-2023,2024 by Thomas E. Dickey
+ * Copyright 2007-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -59,8 +59,8 @@
 #define SHIFT (MOD_NONE + MOD_SHIFT)
 
 typedef struct {
-    const char *tc;
-    const char *ti;
+    const char tc[3];
+    const char ti[8];
     int code;
     unsigned param;		/* see xtermStateToParam() */
 } TCAPINFO;
@@ -225,7 +225,7 @@ loadTermcapStrings(TScreen *screen)
 {
     Boolean result = True;
 
-    if (screen->tcap_fkeys == 0) {
+    if (screen->tcap_fkeys == NULL) {
 	Cardinal want = XtNumber(table);
 	Cardinal have;
 #if !USE_TERMINFO
@@ -233,7 +233,7 @@ loadTermcapStrings(TScreen *screen)
 #endif
 
 	TRACE(("loadTermcapStrings\n"));
-	if ((screen->tcap_fkeys = TypeCallocN(char *, want)) != 0) {
+	if ((screen->tcap_fkeys = TypeCallocN(char *, want)) != NULL) {
 
 	    for (have = 0; have < want; ++have) {
 		char name[80];
@@ -244,7 +244,7 @@ loadTermcapStrings(TScreen *screen)
 #else
 		fkey = tgetstr(strcpy(name, table[have].tc), &area);
 #endif
-		if (fkey != 0 && fkey != NO_STRING) {
+		if (fkey != NULL && fkey != NO_STRING) {
 		    screen->tcap_fkeys[have] = x_strdup(fkey);
 		} else {
 		    screen->tcap_fkeys[have] = NO_STRING;
@@ -557,8 +557,8 @@ get_tcap_erase(XtermWidget xw)
 #endif
 
     if (fkey == NO_STRING)
-	fkey = 0;
-    if (fkey != 0)
+	fkey = NULL;
+    if (fkey != NULL)
 	fkey = x_strdup(fkey);
     return fkey;
 }
@@ -578,7 +578,7 @@ isLegalTcapName(const char *name)
 	result = True;
 	while (*name != '\0') {
 	    if (++length < 32 && isgraph(CharOf(*name))) {
-		if (strchr("\\|,:'\"", *name) != 0) {
+		if (strchr("\\|,:'\"", *name) != NULL) {
 		    result = False;
 		    break;
 		}
@@ -611,7 +611,7 @@ set_termcap(XtermWidget xw, const char *name)
 	const char *temp;
 	char *value;
 
-	if ((value = x_decode_hex(name, &temp)) != 0) {
+	if ((value = x_decode_hex(name, &temp)) != NULL) {
 	    if (*temp == '\0' && isLegalTcapName(value)) {
 		if (TcapInit(buffer, value)) {
 		    TRACE(("...set_termcap(%s)\n", NonNull(value)));
@@ -635,7 +635,7 @@ free_termcap(XtermWidget xw)
 #if OPT_TCAP_FKEYS
     TScreen *screen = TScreenOf(xw);
 
-    if (screen->tcap_fkeys != 0) {
+    if (screen->tcap_fkeys != NULL) {
 	Cardinal want = XtNumber(table);
 	Cardinal have;
 

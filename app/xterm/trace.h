@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.96 2024/09/01 22:42:54 tom Exp $ */
+/* $XTermId: trace.h,v 1.98 2025/04/03 23:47:09 tom Exp $ */
 
 /*
- * Copyright 1997-2022,2024 by Thomas E. Dickey
+ * Copyright 1997-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -75,6 +75,7 @@ extern	const char * visibleIChars(const IChar * /* buf */, size_t /* len */);
 extern	const char * visibleUChar(unsigned);
 extern	const char * visibleDblChrset(unsigned /* chrset */);
 extern	const char * visibleEventType (int);
+extern	const char * visibleFont(XFontStruct * /* fs */);
 extern	const char * visibleMappingMode (int);
 extern	const char * visibleNotifyDetail(int /* code */);
 extern	const char * visibleNotifyMode (int /* code */);
@@ -92,7 +93,7 @@ extern	void	TraceArgv(const char * /* tag */, char ** /* argv */);
 
 extern	const	char *trace_who;
 #undef  TRACE_CHILD
-#define TRACE_CHILD int tracing_child = (trace_who = "child") != 0; (void) tracing_child
+#define TRACE_CHILD int tracing_child = (trace_who = "child") != NULL; (void) tracing_child
 
 extern	void	TraceEvent(const char *, XEvent *, String *, const Cardinal *);
 #undef  TRACE_EVENT

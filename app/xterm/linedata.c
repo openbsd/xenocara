@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.106 2023/12/31 20:12:06 tom Exp $ */
+/* $XTermId: linedata.c,v 1.108 2025/01/07 21:31:10 tom Exp $ */
 
 /*
- * Copyright 2009-2022,2023 by Thomas E. Dickey
+ * Copyright 2009-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -44,14 +44,14 @@
 LineData *
 getLineData(TScreen *screen, int row)
 {
-    LineData *result = 0;
+    LineData *result = NULL;
     ScrnBuf buffer;
     int max_row = LastRowNumber(screen);
 
     if (row >= 0) {
 	buffer = screen->visbuf;
     } else {
-	buffer = 0;
+	buffer = NULL;
 	result = getScrollback(screen, row);
     }
     if (row >= 0 && row <= max_row) {
@@ -152,11 +152,6 @@ copyLineData(LineData *dst, CLineData *src)
     screen->lineExtra = 0; \
     screen->cellExtra = 0
 #endif
-
-/*
- * CellData size depends on the "combiningChars" resource.
- */
-#define CellDataSize(screen) (SizeOfCellData + screen->cellExtra)
 
 #define CellDataAddr(screen, data, cell) \
 	( (CellData *)(void *) ((char *)data + (cell * CellDataSize(screen))) )

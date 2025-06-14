@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.85 2023/10/22 10:34:12 tom Exp $ */
+/* $XTermId: main.h,v 1.86 2025/02/03 00:37:06 tom Exp $ */
 
 /*
- * Copyright 2000-2022,2023 by Thomas E. Dickey
+ * Copyright 2000-2023,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -117,6 +117,10 @@
 
 #ifndef DEF_ALLOW_WINDOW
 #define DEF_ALLOW_WINDOW	False
+#endif
+
+#ifndef DEF_COLOR_EVENTS
+#define DEF_COLOR_EVENTS	""
 #endif
 
 #ifndef DEF_DISALLOWED_COLOR

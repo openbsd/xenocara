@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.377 2024/09/30 07:53:29 tom Exp $ */
+/* $XTermId: menu.c,v 1.378 2024/12/01 19:58:52 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -488,7 +488,7 @@ static const MenuHeader menu_names[] = {
 #if OPT_TEK4014
     DATA( tekMenu),
 #endif
-    { NULL, 0, 0 },
+    { NULL, NULL, 0 },
 };
 #undef DATA
 /* *INDENT-ON* */
@@ -516,7 +516,7 @@ static MenuList *
 select_menu(Widget w, MenuIndex num)
 {
 #if OPT_TEK4014 && OPT_TOOLBAR
-    while (w != 0) {
+    while (w != NULL) {
 	if (w == tekshellwidget) {
 	    return &tek_shell[num];
 	}
@@ -699,12 +699,12 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
     TRACE(("created popupShell(%s) widget %p, window %#lx\n",
 	   data->internal_name, (void *) list->w, XtWindow(list->w)));
 #endif
-    if (list->w != 0) {
+    if (list->w != NULL) {
 	Boolean *unused = unusedEntries(xw, num);
 	Cardinal n;
 #if OPT_TOOLBAR
 	Boolean useLocale = !strcmp(resource.menuLocale, "");
-	XtErrorMsgHandler warningHandler = 0;
+	XtErrorMsgHandler warningHandler = NULL;
 	if (!useLocale)
 	    warningHandler = XtAppSetWarningMsgHandler(app_con, ignoreWarning);
 #endif
@@ -787,12 +787,12 @@ domenu(Widget w,
 	return False;
     }
 
-    if ((mw = obtain_menu(w, me)) == 0
+    if ((mw = obtain_menu(w, me)) == NULL
 	|| sizeof_menu(w, me) == 0) {
 	mw = create_menu(w, xw, me);
-	created = (mw != 0);
+	created = (mw != NULL);
     }
-    if (mw == 0)
+    if (mw == NULL)
 	return False;
 
     TRACE(("domenu(%s) %s\n", params[0], created ? "create" : "update"));
@@ -1197,7 +1197,7 @@ do_print(Widget gw GCC_UNUSED,
 	 XtPointer closure GCC_UNUSED,
 	 XtPointer data GCC_UNUSED)
 {
-    xtermPrintScreen(term, True, getPrinterFlags(term, NULL, 0));
+    xtermPrintScreen(term, True, getPrinterFlags(term, NULL, NULL));
 }
 
 static void
@@ -2149,7 +2149,7 @@ HandleWriteNow(Widget w,
 	       String *params GCC_UNUSED,
 	       Cardinal *param_count GCC_UNUSED)
 {
-    do_write_now(w, 0, 0);
+    do_write_now(w, NULL, NULL);
 }
 
 void
@@ -2936,7 +2936,7 @@ HandleSetTekText(Widget w,
 		 Cardinal *param_count)
 {
     XtermWidget xw = term;
-    void (*proc) PROTO_XT_CALLBACK_ARGS = 0;
+    void (*proc) PROTO_XT_CALLBACK_ARGS = NULL;
 
     switch (*param_count) {
     case 0:
@@ -3012,7 +3012,7 @@ InitPopup(Widget gw,
     Cardinal count = 1;
 
     params[0] = (char *) closure;
-    params[1] = 0;
+    params[1] = NULL;
     TRACE(("InitPopup(%s)\n", params[0]));
 
     domenu(gw, (XEvent *) 0, params, &count);
@@ -3024,7 +3024,7 @@ static Dimension
 SetupShell(Widget *menus, MenuList * shell, int n, int m)
 {
     char temp[80];
-    char *external_name = 0;
+    char *external_name = NULL;
     Dimension button_height;
     Dimension button_border;
     char *saveLocale = xtermSetLocale(LC_CTYPE, resource.menuLocale);
@@ -3053,7 +3053,7 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
 					 *menus,
 					 XtNfromHoriz, ((m >= 0)
 							? shell[m].b
-							: 0),
+							: NULL),
 					 XtNmenuName, menu_names[n].internal_name,
 					 XtNlabel, external_name,
 					 (XtPointer) 0);
@@ -3172,7 +3172,7 @@ repairSizeHints(void)
 }
 
 #if OPT_TOOLBAR
-#define INIT_POPUP(s, n) InitPopup(s[n].w, menu_names[n].internal_name, 0)
+#define INIT_POPUP(s, n) InitPopup(s[n].w, menu_names[n].internal_name, NULL)
 
 static Bool
 InitWidgetMenu(Widget shell)
@@ -3180,7 +3180,7 @@ InitWidgetMenu(Widget shell)
     Bool result = False;
 
     TRACE(("InitWidgetMenu(%p)\n", (void *) shell));
-    if (term != 0) {
+    if (term != NULL) {
 	if (shell == toplevel) {	/* vt100 */
 	    if (!term->init_menu) {
 		INIT_POPUP(vt_shell, mainMenu);
@@ -3223,7 +3223,7 @@ toolbar_info(Widget w)
 static void
 hide_toolbar(Widget w)
 {
-    if (w != 0) {
+    if (w != NULL) {
 	TbInfo *info = toolbar_info(w);
 
 	TRACE(("hiding toolbar\n"));
@@ -3231,7 +3231,7 @@ hide_toolbar(Widget w)
 		      XtNfromVert, (Widget) 0,
 		      (XtPointer) 0);
 
-	if (info->menu_bar != 0) {
+	if (info->menu_bar != NULL) {
 	    repairSizeHints();
 	    XtUnmanageChild(info->menu_bar);
 	    if (XtIsRealized(info->menu_bar)) {
@@ -3245,11 +3245,11 @@ hide_toolbar(Widget w)
 static void
 show_toolbar(Widget w)
 {
-    if (w != 0) {
+    if (w != NULL) {
 	TbInfo *info = toolbar_info(w);
 
 	TRACE(("showing toolbar\n"));
-	if (info->menu_bar != 0) {
+	if (info->menu_bar != NULL) {
 	    XtVaSetValues(w,
 			  XtNfromVert, info->menu_bar,
 			  (XtPointer) 0);
@@ -3767,7 +3767,7 @@ do_allowBoldFonts(Widget w,
 		  XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = getXtermWidget(w);
-    if (xw != 0) {
+    if (xw != NULL) {
 	ToggleFlag(TScreenOf(xw)->allowBoldFonts);
 	update_menu_allowBoldFonts();
 	Redraw();
@@ -3915,7 +3915,7 @@ do_allowColorOps(Widget w,
 		 XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = getXtermWidget(w);
-    if (xw != 0) {
+    if (xw != NULL) {
 	ToggleFlag(TScreenOf(xw)->allowColorOps);
 	update_menu_allowColorOps();
     }
@@ -3927,7 +3927,7 @@ do_allowFontOps(Widget w,
 		XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = getXtermWidget(w);
-    if (xw != 0) {
+    if (xw != NULL) {
 	ToggleFlag(TScreenOf(xw)->allowFontOps);
 	update_menu_allowFontOps();
     }
@@ -3939,7 +3939,7 @@ do_allowMouseOps(Widget w,
 		 XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = getXtermWidget(w);
-    if (xw != 0) {
+    if (xw != NULL) {
 	ToggleFlag(TScreenOf(xw)->allowMouseOps);
 	update_menu_allowMouseOps();
     }
@@ -3951,7 +3951,7 @@ do_allowTcapOps(Widget w,
 		XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = getXtermWidget(w);
-    if (xw != 0) {
+    if (xw != NULL) {
 	ToggleFlag(TScreenOf(xw)->allowTcapOps);
 	update_menu_allowTcapOps();
     }
@@ -3963,7 +3963,7 @@ do_allowTitleOps(Widget w,
 		 XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = getXtermWidget(w);
-    if (xw != 0) {
+    if (xw != NULL) {
 	ToggleFlag(TScreenOf(xw)->allowTitleOps);
 	update_menu_allowTitleOps();
     }
@@ -3975,7 +3975,7 @@ do_allowWindowOps(Widget w,
 		  XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = getXtermWidget(w);
-    if (xw != 0) {
+    if (xw != NULL) {
 	ToggleFlag(TScreenOf(xw)->allowWindowOps);
 	update_menu_allowWindowOps();
     }

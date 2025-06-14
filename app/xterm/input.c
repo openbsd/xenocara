@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.373 2024/09/30 07:48:35 tom Exp $ */
+/* $XTermId: input.c,v 1.387 2025/04/02 00:30:06 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -88,13 +88,25 @@
 #include <fontutils.h>
 #include <xstrings.h>
 #include <xtermcap.h>
+#include <keysym2ucs.h>
+
+#if OPT_NUM_LOCK
+#define AltOrMeta(xw) ((xw)->work.meta_mods | (xw)->work.alt_mods)
+#else
+#define AltOrMeta(xw) 0
+#endif
 
 /*
  * Xutil.h has no macro to check for the complete set of function- and
  * modifier-keys that might be returned.  Fake it.
+ *
+ * The XK_ISO_xxx symbols (starting at 0xfe01) were introduced for the
+ * X Keyboard Extension (XKB) in X11R6.  There also were 3270 terminal
+ * symbols (starting at 0xfd01), but those are less used.  We do not count
+ * those here, but make provision for them in keysym2ucs, just in case.
  */
 #ifdef XK_ISO_Lock
-#define IsPredefinedKey(n) ((n) >= XK_ISO_Lock && (n) <= XK_Delete)
+#define IsPredefinedKey(n) (((n) >= XK_ISO_Lock && (n) <= XK_Delete) || ((n) >= 0x10000000))
 #else
 #define IsPredefinedKey(n) ((n) >= XK_BackSpace && (n) <= XK_Delete)
 #endif
@@ -109,17 +121,26 @@
 #define IsPrivateKeypadKey(k) (0)
 #endif
 
+#define IsOrdinaryKey(xwidget, key_data) \
+	(!((key_data)->is_fkey \
+	 || IsEditFunctionKey(xwidget, (key_data)->keysym) \
+	 || IsKeypadKey((key_data)->keysym) \
+	 || IsCursorKey((key_data)->keysym) \
+	 || IsPFKey((key_data)->keysym) \
+	 || IsMiscFunctionKey((key_data)->keysym) \
+	 || IsPrivateKeypadKey((key_data)->keysym)))
+
 #define IsBackarrowToggle(keyboard, keysym, state) \
 	((((keyboard->flags & MODE_DECBKM) == 0) \
 	    ^ ((state & ControlMask) != 0)) \
 	&& (keysym == XK_BackSpace))
 
 #define MAP(from, to) case from: result = to; break
-#define Masked(value,mask) ((value) & (unsigned) (~(mask)))
+#define Masked(value,mask) ((unsigned) (value) & (unsigned) (~(mask)))
 
 #define KEYSYM_FMT "0x%04lX"	/* simplify matching <X11/keysymdef.h> */
 
-#define TEK4014_GIN(tw) (tw != 0 && TekScreenOf(tw)->TekGIN)
+#define TEK4014_GIN(tw) (tw != NULL && TekScreenOf(tw)->TekGIN)
 
 typedef struct {
     KeySym keysym;
@@ -301,6 +322,65 @@ IsControlAlias(KEY_DATA * kd)
     return result;
 }
 
+#if OPT_TRACE
+static const char *
+visibleModkeyModes(ModkeyModes value)
+{
+    const char *result = NULL;
+    switch (value) {
+	CASETYPE(modifyCursorKeys);
+	CASETYPE(modifyKeyboard);
+	CASETYPE(modifyFunctionKeys);
+	CASETYPE(modifyKeypadKeys);
+	CASETYPE(modifyOtherKeys);
+	CASETYPE(modifyStringKeys);
+	CASETYPE(modifyModifierKeys);
+	CASETYPE(modifySpecialKeys);
+    }
+    return result;
+}
+#else
+#define visibleModkeyModes(value) ""
+#endif
+
+static ModkeyModes
+TypeOfKeysym(XtermWidget xw, KEY_DATA * key_data)
+{
+    ModkeyModes result;
+    if (IsCursorKey(key_data->keysym)) {
+	TRACE2(("type: IsCursorKey\n"));
+	result = modifyCursorKeys;
+    } else if (IsEditKeypad(xw, key_data->keysym)) {
+	TRACE2(("type: IsEditKeypad\n"));
+	result = modifyCursorKeys;
+    } else if (IsFunctionKey(key_data->keysym)) {
+	TRACE2(("type: IsFunctionKey\n"));	/* F1-F12 */
+	result = modifyFunctionKeys;
+    } else if (IsKeypadKey(key_data->keysym)) {
+	TRACE2(("type: IsKeypadKey\n"));
+	result = modifyKeypadKeys;
+    } else if (IsModifierKey(key_data->keysym)) {
+	TRACE2(("type: IsModifierKey\n"));
+	result = modifyModifierKeys;
+    } else if (IsMiscFunctionKey(key_data->keysym)) {
+	TRACE2(("type: IsMiscFunctionKey\n"));
+	result = modifyFunctionKeys;
+    } else if (IsPFKey(key_data->keysym)) {
+	TRACE2(("type: IsPFKey\n"));
+	result = modifyFunctionKeys;
+    } else if (IsPrivateKeypadKey(key_data->keysym)) {
+	TRACE2(("type: IsPrivateKeypadKey\n"));
+	result = modifySpecialKeys;
+    } else if (IsPredefinedKey(key_data->keysym)) {
+	TRACE2(("type: IsPredefinedKey\n"));
+	result = modifySpecialKeys;
+    } else {
+	TRACE2(("type: IsOrdinaryKey: %d\n", IsOrdinaryKey(xw, key_data)));
+	result = modifyOtherKeys;
+    }
+    return result;
+}
+
 /*
  * If we are in the non-VT220/VT52 keyboard state, allow modifiers to add a
  * parameter to the function-key control sequences.
@@ -343,12 +423,14 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 	    result = LegacyAllows(8);
 	}
     }
-    if (xw->keyboard.modify_now.other_keys != 0) {
+    if (xw->keyboard.modify_now.other_keys != mokNone) {
 	result = True;
     }
     return result;
 }
+#endif /* OPT_MOD_FKEYS */
 
+#if OPT_MOD_FKEYS || OPT_TCAP_FKEYS
 /*
 * Modifier codes:
 *       None                  1
@@ -421,7 +503,7 @@ xtermStateToParam(XtermWidget xw, unsigned state)
 	/* UIntClr(state, xw->work.meta_mods); */
     }
     if (modify_parm == MOD_NONE)
-	modify_parm = 0;
+	modify_parm = !xw->work.min_mod;
 #else
     (void) xw;
     (void) state;
@@ -433,10 +515,12 @@ xtermStateToParam(XtermWidget xw, unsigned state)
 	   MODIFIER_NAME(modify_parm, MOD_META)));
     return modify_parm;
 }
+#endif /* OPT_TCAP_FKEYS */
 
 #define computeMaskedModifier(xw, state, mask) \
 	xtermStateToParam(xw, Masked(state, mask))
 
+#if OPT_MOD_FKEYS
 #if OPT_NUM_LOCK
 static unsigned
 filterAltMeta(unsigned result, unsigned mask, Bool enable, KEY_DATA * kd)
@@ -478,31 +562,28 @@ filterAltMeta(unsigned result, unsigned mask, Bool enable, KEY_DATA * kd)
  * interpreting modifyOtherKeys due to pre-existing associations with some
  * modifiers.
  */
-static unsigned
-allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
+static int
+allowedCharModifiers(XtermWidget xw, int state, KEY_DATA * kd)
 {
-#if OPT_NUM_LOCK
-    unsigned a_or_m = (state & (xw->work.meta_mods | xw->work.alt_mods));
-#else
-    unsigned a_or_m = 0;
-#endif
     /*
      * Start by limiting the result to the modifiers we might want to use.
      */
-    unsigned result = (state & (ControlMask
-				| ShiftMask
-				| a_or_m));
+    int result = (state >= 0
+		  ? (int) ((unsigned) state & (ControlMask |
+					       ShiftMask |
+					       AltOrMeta(xw)))
+		  : -1);
 
     /*
      * If modifyOtherKeys is off or medium (0 or 1), moderate its effects by
      * excluding the common cases for modifiers.
      */
-    if (xw->keyboard.modify_now.other_keys <= 1) {
+    if (xw->keyboard.modify_now.other_keys <= mokUser) {
 	if (IsControlInput(kd)
 	    && Masked(result, ControlMask) == 0) {
 	    /* These keys are already associated with the control-key */
-	    if (xw->keyboard.modify_now.other_keys == 0) {
-		UIntClr(result, ControlMask);
+	    if (xw->keyboard.modify_now.other_keys == mokNone) {
+		SIntClr(result, ControlMask);
 	    }
 	} else if (kd->keysym == XK_Tab || kd->keysym == XK_Return) {
 	    /* EMPTY */ ;
@@ -513,20 +594,39 @@ allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
 	    }
 	} else if (!IsControlOutput(kd) && !IsPredefinedKey(kd->keysym)) {
 	    /* Printable keys are already associated with the shift-key */
-	    if (!(result & ControlMask)) {
-		UIntClr(result, ShiftMask);
+	    if (!((unsigned) result & ControlMask)) {
+		SIntClr(result, ShiftMask);
 	    }
 	}
 #if OPT_NUM_LOCK
-	result = filterAltMeta(result,
-			       xw->work.meta_mods,
-			       TScreenOf(xw)->meta_sends_esc, kd);
+	result = (int) filterAltMeta((unsigned) result,
+				     xw->work.meta_mods,
+				     TScreenOf(xw)->meta_sends_esc, kd);
 	if (TScreenOf(xw)->alt_is_not_meta) {
-	    result = filterAltMeta(result,
-				   xw->work.alt_mods,
-				   TScreenOf(xw)->alt_sends_esc, kd);
+	    result = (int) filterAltMeta((unsigned) result,
+					 xw->work.alt_mods,
+					 TScreenOf(xw)->alt_sends_esc, kd);
 	}
 #endif
+    }
+    /*
+     * For an ordinary key, if the state has only one modified bit set and if
+     * that is in the modify-modifiers mask, then disable the use of modifiers
+     * for sending the key as an escape sequence.
+     */
+    if (result != 0 &&
+	xw->keyboard.modify_now.other_keys > mokNone &&
+	(state & xw->keyboard.ignore_now.other_keys) != 0 &&
+	IsOrdinaryKey(xw, kd)) {
+	unsigned check = (unsigned) state;
+	while (check != 0) {
+	    if ((check & 1) != 0) {
+		if (check == 1)
+		    result = 0;
+		break;
+	    }
+	    check >>= 1;
+	}
     }
     TRACE(("...allowedCharModifiers(state=%u" FMT_MODIFIER_NAMES
 	   ", ch=" KEYSYM_FMT ") ->"
@@ -542,7 +642,7 @@ allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
  */
 static Bool
 ModifyOtherKeys(XtermWidget xw,
-		unsigned state,
+		int state,
 		KEY_DATA * kd,
 		unsigned modify_parm)
 {
@@ -552,27 +652,21 @@ ModifyOtherKeys(XtermWidget xw,
     /*
      * Exclude the keys already covered by a modifier.
      */
-    if (kd->is_fkey
-	|| IsEditFunctionKey(xw, kd->keysym)
-	|| IsKeypadKey(kd->keysym)
-	|| IsCursorKey(kd->keysym)
-	|| IsPFKey(kd->keysym)
-	|| IsMiscFunctionKey(kd->keysym)
-	|| IsPrivateKeypadKey(kd->keysym)) {
+    if (!IsOrdinaryKey(xw, kd)) {
 	result = False;
-    } else if (modify_parm != 0) {
+    } else if (modify_parm >= (unsigned) xw->work.min_mod) {
 	if (IsBackarrowToggle(keyboard, kd->keysym, state)) {
 	    kd->keysym = XK_Delete;
-	    UIntClr(state, ControlMask);
+	    SIntClr(state, ControlMask);
 	}
 	if (!IsPredefinedKey(kd->keysym)) {
 	    state = allowedCharModifiers(xw, state, kd);
 	}
-	if (state != 0) {
+	if (state >= xw->work.min_mod) {
 	    switch (keyboard->modify_now.other_keys) {
 	    default:
 		break;
-	    case 1:
+	    case mokUser:
 		switch (kd->keysym) {
 		case XK_BackSpace:
 		case XK_Delete:
@@ -615,7 +709,7 @@ ModifyOtherKeys(XtermWidget xw,
 			result = True;
 		    break;
 		case XK_Delete:
-		    result = (xtermStateToParam(xw, state) != 0);
+		    result = (xtermStateToParam(xw, (unsigned) state) != 0);
 		    break;
 #ifdef XK_ISO_Left_Tab
 		case XK_ISO_Left_Tab:
@@ -638,6 +732,9 @@ ModifyOtherKeys(XtermWidget xw,
 		    }
 		    break;
 		}
+		break;
+	    case 3:
+		result = True;
 		break;
 	    }
 	}
@@ -666,6 +763,8 @@ modifyOtherKey(ANSI *reply, int input_char, unsigned modify_parm, int format_key
 
     if (input_char >= 0) {
 	reply->a_type = ANSI_CSI;
+	if (!modify_parm)
+	    modify_parm = 1;
 	if (format_keys) {
 	    APPEND_PARM(input_char);
 	    APPEND_PARM(modify_parm);
@@ -686,16 +785,16 @@ static void
 modifyCursorKey(ANSI *reply, int modify, unsigned *modify_parm)
 {
     if (*modify_parm != 0) {
-	if (modify < 0) {
+	if (modify == mfkNone) {
 	    *modify_parm = 0;
 	}
-	if (modify > 0) {
+	if (modify >= mfkControl) {
 	    reply->a_type = ANSI_CSI;	/* SS3 should not have params */
 	}
-	if (modify > 1 && reply->a_nparam == 0) {
+	if (modify >= mfkParam && reply->a_nparam == 0) {
 	    APPEND_PARM(1);	/* force modifier to 2nd param */
 	}
-	if (modify > 2) {
+	if (modify >= mfkPrivate) {
 	    reply->a_pintro = '>';	/* mark this as "private" */
 	}
     }
@@ -819,7 +918,8 @@ lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent *event)
 
     (void) screen;
 
-    TRACE(("%s %#x\n", visibleEventType(event->type), event->keycode));
+    TRACE(("lookupKeyData %s keycode 0x%04X\n",
+	   visibleEventType(event->type), event->keycode));
 
     kd->keysym = 0;
     kd->is_fkey = False;
@@ -830,9 +930,11 @@ lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent *event)
 	if (kd->keysym != XK_BackSpace) {
 	    kd->nbytes = 0;
 	    kd->strbuf[0] = 0;
-	} else {
+	} else if (kd->keysym > 0) {
 	    kd->nbytes = 1;
 	    kd->strbuf[0] = 8;
+	} else {
+	    result = False;
 	}
     } else
 #endif
@@ -860,10 +962,12 @@ lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent *event)
 	    if (status_return == XLookupBoth
 		&& kd->nbytes <= 1
 		&& !IsPredefinedKey(kd->keysym)
-		&& (keyboard->modify_now.other_keys > 1)
+		&& (keyboard->modify_now.other_keys > mokUser)
 		&& !IsControlInput(kd)) {
 		kd->nbytes = 1;
 		kd->strbuf[0] = (char) kd->keysym;
+	    } else if (kd->keysym <= 0) {
+		result = False;
 	    }
 #endif /* OPT_MOD_FKEYS */
 	} else
@@ -874,6 +978,8 @@ lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent *event)
 	    kd->nbytes = XLookupString(event,
 				       kd->strbuf, (int) sizeof(kd->strbuf),
 				       &(kd->keysym), &compose_status);
+	    if (kd->keysym <= 0)
+		result = False;
 	}
 	kd->is_fkey = IsFunctionKey(kd->keysym);
     }
@@ -897,8 +1003,13 @@ Input(XtermWidget xw,
     unsigned modify_parm = 0;
     int keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
     unsigned evt_state = event->state;
-    unsigned mod_state;
     KEY_DATA kd;
+#if OPT_MOD_FKEYS
+    ModkeyModes keysymType;
+    int mod_state;
+    KEY_DATA kd_unmodified;
+    Boolean use_unmodified = False;
+#endif
 
     /* Ignore characters typed at the keyboard */
     if (keyboard->flags & MODE_KAM)
@@ -906,11 +1017,27 @@ Input(XtermWidget xw,
 
     lookupKeyData(&kd, xw, event);
 
+#if OPT_MOD_FKEYS
+    SET_MIN_MOD(xw, keyboard->modify_now.other_keys);
+    kd_unmodified = kd;
+    keysymType = TypeOfKeysym(xw, &kd);
+    if (keyboard->modify_now.other_keys >= mokUser) {
+	XKeyEvent event2 = *event;
+	event2.state &= (unsigned) ~(keyboard->ignore_now.other_keys);
+	if (lookupKeyData(&kd_unmodified, xw, &event2)) {
+	    TRACE(("may use unmodified 0x%04lX vs 0x%04lX\n",
+		   kd_unmodified.keysym,
+		   kd.keysym));
+	    use_unmodified = True;
+	}
+    }
+#endif
+
     memset(&reply, 0, sizeof(reply));
 
     TRACE(("Input(%d,%d) keysym "
 	   KEYSYM_FMT
-	   ", %d:'%s'%s" FMT_MODIFIER_NAMES "%s%s%s%s%s%s\n",
+	   ", %d:'%s'%s" FMT_MODIFIER_NAMES "%s%s%s%s%s%s: %s\n",
 	   screen->cur_row, screen->cur_col,
 	   kd.keysym,
 	   kd.nbytes,
@@ -925,7 +1052,40 @@ Input(XtermWidget xw,
 	   IsPFKey(kd.keysym) ? " PFKey" : "",
 	   kd.is_fkey ? " FKey" : "",
 	   IsMiscFunctionKey(kd.keysym) ? " MiscFKey" : "",
-	   IsEditFunctionKey(xw, kd.keysym) ? " EditFkey" : ""));
+	   IsEditFunctionKey(xw, kd.keysym) ? " EditFkey" : "",
+	   visibleModkeyModes(keysymType)));
+
+    /*
+     * The extended mode for cursor/function/keypad keys bypasses other checks.
+     */
+#if OPT_MOD_FKEYS
+#define CHECK(res,mod) \
+	   ((keysymType == res \
+	   && keyboard->modify_now.mod >= mfkExtended))
+    if (CHECK(modifyCursorKeys, cursor_keys)
+	|| CHECK(modifyFunctionKeys, function_keys)
+	|| CHECK(modifyKeypadKeys, keypad_keys)
+	|| CHECK(modifyModifierKeys, modify_keys)
+	|| CHECK(modifySpecialKeys, special_keys)) {
+	int input_char = (int) keysym2ucs(kd_unmodified.keysym);
+	int format = (keysymType == modifyCursorKeys
+		      ? keyboard->format_now.cursor_keys
+		      : (keysymType == modifyFunctionKeys
+			 ? keyboard->format_now.function_keys
+			 : (keysymType == modifyKeypadKeys
+			    ? keyboard->format_now.keypad_keys
+			    : (keysymType == modifyModifierKeys
+			       ? keyboard->format_now.modify_keys
+			       : keyboard->format_now.special_keys))));
+	modify_parm = xtermStateToParam(xw, evt_state);
+	if (modifyOtherKey(&reply, input_char, modify_parm, format)) {
+	    unparseseq(xw, &reply);
+	    unparse_end(xw);
+	}
+	return;
+    }
+#undef CHECK
+#endif
 
 #if OPT_SUNPC_KBD
     /*
@@ -989,7 +1149,7 @@ Input(XtermWidget xw,
      * Check for this special case so we have data when handling the
      * modifyOtherKeys resource.
      */
-    if (keyboard->modify_now.other_keys > 1) {
+    if (keyboard->modify_now.other_keys > mokUser) {
 	if (IsTabKey(kd.keysym) && kd.nbytes == 0) {
 	    kd.nbytes = 1;
 	    kd.strbuf[0] = '\t';
@@ -1047,6 +1207,16 @@ Input(XtermWidget xw,
     }
 #endif
 
+#if OPT_TRACE
+#define TRACE_FK(prefix) \
+	if ((kd.keysym >= XK_Fn(1) && kd.keysym <= XK_Fn(24))) \
+	    TRACE((prefix " XK_F%ld\n", kd.keysym - XK_Fn(1) + 1)); \
+	else \
+	    TRACE((prefix " keysym %04X\n", (unsigned) kd.keysym))
+#else
+#define TRACE_FK(prefix)	/* nothing */
+#endif
+
     /*
      * Use the control- and shift-modifiers to obtain more function keys than
      * the keyboard provides.  We can do this if there is no conflicting use of
@@ -1068,18 +1238,18 @@ Input(XtermWidget xw,
 	if (keyboard->type == keyboardIsVT220
 	    || keyboard->type == keyboardIsLegacy) {
 
-	    TRACE(("...map XK_F%ld", kd.keysym - XK_Fn(1) + 1));
+	    TRACE_FK("...map");
 	    if (evt_state & ControlMask) {
 		kd.keysym += (KeySym) xw->misc.ctrl_fkeys;
 		UIntClr(evt_state, ControlMask);
 	    }
-	    TRACE((" to XK_F%ld\n", kd.keysym - XK_Fn(1) + 1));
+	    TRACE_FK(" to");
 
 	}
 #if OPT_MOD_FKEYS
-	else if (keyboard->modify_now.function_keys < 0) {
+	else if (keyboard->modify_now.function_keys == mfkNone) {
 
-	    TRACE(("...map XK_F%ld", kd.keysym - XK_Fn(1) + 1));
+	    TRACE_FK("...map");
 	    if (evt_state & ShiftMask) {
 		kd.keysym += (KeySym) (xw->misc.ctrl_fkeys * 1);
 		UIntClr(evt_state, ShiftMask);
@@ -1088,7 +1258,7 @@ Input(XtermWidget xw,
 		kd.keysym += (KeySym) (xw->misc.ctrl_fkeys * 2);
 		UIntClr(evt_state, ControlMask);
 	    }
-	    TRACE((" to XK_F%ld\n", kd.keysym - XK_Fn(1) + 1));
+	    TRACE_FK(" to");
 
 	}
 	/*
@@ -1126,6 +1296,7 @@ Input(XtermWidget xw,
 	break;
     }
 
+#if OPT_MOD_FKEYS
     if (reply.a_final) {
 	/*
 	 * The key symbol matches one of the variants.  Most of those are
@@ -1140,21 +1311,23 @@ Input(XtermWidget xw,
 			&modify_parm);
 	MODIFIER_PARM;
 	unparseseq(xw, &reply);
-    } else if (((kd.is_fkey
-		 || IsMiscFunctionKey(kd.keysym)
-		 || IsEditFunctionKey(xw, kd.keysym))
+    } else
+#endif /* OPT_MOD_FKEYS */
+	if (((kd.is_fkey
+	      || IsMiscFunctionKey(kd.keysym)
+	      || IsEditFunctionKey(xw, kd.keysym))
 #if OPT_MOD_FKEYS
-		&& !ModifyOtherKeys(xw, evt_state, &kd, modify_parm)
+	     && !ModifyOtherKeys(xw, (int) evt_state, &kd, modify_parm)
 #endif
-	       ) || (kd.keysym == XK_Delete
-		     && ((modify_parm != 0)
-			 || !xtermDeleteIsDEL(xw)))) {
+	    ) || (kd.keysym == XK_Delete
+		  && ((modify_parm != 0)
+		      || !xtermDeleteIsDEL(xw)))) {
 	dec_code = decfuncvalue(&kd);
 	if ((evt_state & ShiftMask)
 #if OPT_SUNPC_KBD
 	    && keyboard->type == keyboardIsVT220
 #endif
-	    && ((string = (Char *) udk_lookup(xw, dec_code, &kd.nbytes)) != 0)) {
+	    && ((string = (Char *) udk_lookup(xw, dec_code, &kd.nbytes)) != NULL)) {
 	    /* UIntClr(evt_state, ShiftMask); */
 	    while (kd.nbytes-- > 0)
 		unparseputc(xw, CharOf(*string++));
@@ -1181,9 +1354,10 @@ Input(XtermWidget xw,
 		reply.a_nparam = 0;
 		reply.a_final = 'Z';
 #if OPT_MOD_FKEYS
-		if (keyboard->modify_now.other_keys > 1
+		if (keyboard->modify_now.other_keys > mokUser
 		    && computeMaskedModifier(xw, evt_state, ShiftMask))
-		    modifyOtherKey(&reply, '\t', modify_parm, keyboard->format_keys);
+		    modifyOtherKey(&reply, '\t', modify_parm,
+				   keyboard->format_now.other_keys);
 #endif
 	    } else
 #endif /* XK_ISO_Left_Tab */
@@ -1247,12 +1421,15 @@ Input(XtermWidget xw,
 	}
 #endif
 #if OPT_MOD_FKEYS
-	if ((keyboard->modify_now.other_keys > 0)
-	    && ModifyOtherKeys(xw, evt_state, &kd, modify_parm)
-	    && (mod_state = allowedCharModifiers(xw, evt_state, &kd)) != 0) {
+	mod_state = (int) evt_state;
+	if ((keyboard->modify_now.other_keys > mokNone)
+	    && ModifyOtherKeys(xw, mod_state, &kd, modify_parm)
+	    && (mod_state = allowedCharModifiers(xw, mod_state, &kd)) >= xw->work.min_mod) {
 	    int input_char;
 
-	    evt_state = mod_state;
+	    if (use_unmodified)
+		kd.keysym = kd_unmodified.keysym;
+	    evt_state = (unsigned) mod_state;
 
 	    modify_parm = xtermStateToParam(xw, evt_state);
 
@@ -1268,9 +1445,22 @@ Input(XtermWidget xw,
 			  : ((kd.nbytes == 1)
 			     ? CharOf(kd.strbuf[0])
 			     : -1));
+	    /*
+	     * If we failed to find an 8-bit (Latin1 or ASCII) value, use the
+	     * UCS value corresponding to the keysym.
+	     */
+	    if (input_char == -1) {
+		long codepoint = keysym2ucs(kd.keysym);
+		if (codepoint > 0x7E) {
+		    TRACE(("...using keysym2ucs(%#lx) = U+%04lX\n",
+			   kd.keysym, codepoint));
+		    input_char = (int) codepoint;
+		}
+	    }
 
 	    TRACE(("...modifyOtherKeys %d;%d\n", modify_parm, input_char));
-	    if (modifyOtherKey(&reply, input_char, modify_parm, keyboard->format_keys)) {
+	    if (modifyOtherKey(&reply, input_char, modify_parm,
+			       keyboard->format_now.other_keys)) {
 		unparseseq(xw, &reply);
 	    } else {
 		Bell(xw, XkbBI_MinorError, 0);
@@ -1773,7 +1963,7 @@ keyCanInsert(const char *parse)
  * Strip the entire action, to avoid matching it.
  */
 static char *
-stripAction(char *base, char *last)
+stripAction(const char *base, char *last)
 {
     while (last != base) {
 	if (*--last == '\n') {
@@ -1784,7 +1974,7 @@ stripAction(char *base, char *last)
 }
 
 static char *
-stripBlanks(char *base, char *last)
+stripBlanks(const char *base, char *last)
 {
     while (last != base) {
 	int ch = CharOf(last[-1]);
@@ -1802,12 +1992,12 @@ stripBlanks(char *base, char *last)
 static char *
 stripTranslations(const char *s, Bool onlyInsert)
 {
-    char *dst = 0;
+    char *dst = NULL;
 
-    if (s != 0) {
+    if (s != NULL) {
 	dst = TypeMallocN(char, strlen(s) + 1);
 
-	if (dst != 0) {
+	if (dst != NULL) {
 	    int state = 0;
 	    int prv = 0;
 	    char *d = dst;
@@ -1819,7 +2009,7 @@ stripTranslations(const char *s, Bool onlyInsert)
 		    if (d != dst)
 			*d++ = (char) ch;
 		    state = 0;
-		} else if (strchr(":!#", ch) != 0) {
+		} else if (strchr(":!#", ch) != NULL) {
 		    d = stripBlanks(dst, d);
 		    if (onlyInsert && (ch == ':') && !keyCanInsert(s)) {
 			d = stripAction(dst, d);
@@ -1865,16 +2055,17 @@ TranslationsUseKeyword(Widget w, char **cache, const char *keyword, Bool onlyIns
     char *copy;
     char *test;
 
-    if ((test = stripTranslations(keyword, onlyInsert)) != 0) {
-	if (*cache == 0) {
-	    String data = 0;
+    if ((test = stripTranslations(keyword, onlyInsert)) != NULL) {
+	if (*cache == NULL) {
+	    String data = NULL;
 	    getKeymapResources(w, "vt100", "VT100", XtRString, &data, sizeof(data));
-	    if (data != 0 && (copy = stripTranslations(data, onlyInsert)) != 0) {
+	    if (data != NULL
+		&& (copy = stripTranslations(data, onlyInsert)) != NULL) {
 		*cache = copy;
 	    }
 	}
 
-	if (*cache != 0) {
+	if (*cache != NULL) {
 	    char *p = *cache;
 	    int state = 0;
 	    int now = ' ';
@@ -1937,7 +2128,7 @@ addTranslation(XtermWidget xw, const char *fromString, const char *toString)
     if (!xtermHasTranslation(xw, fromString, False)) {
 	xw->keyboard.extra_translations
 	    = TypeRealloc(char, need, xw->keyboard.extra_translations);
-	if ((xw->keyboard.extra_translations) != 0) {
+	if ((xw->keyboard.extra_translations) != NULL) {
 	    TRACE(("adding %s: %s\n", fromString, toString));
 	    if (have)
 		strcat(xw->keyboard.extra_translations, " \\n\\");
@@ -1970,7 +2161,7 @@ VTInitModifiers(XtermWidget xw)
     KeySym keysym;
     int min_keycode, max_keycode, keysyms_per_keycode = 0;
 
-    if (keymap != 0) {
+    if (keymap != NULL) {
 	KeySym *theMap;
 	int keycode_count;
 
@@ -1983,7 +2174,7 @@ VTInitModifiers(XtermWidget xw)
 				     keycode_count,
 				     &keysyms_per_keycode);
 
-	if (theMap != 0) {
+	if (theMap != NULL) {
 	    int i, j, k, l;
 	    unsigned long mask;
 
@@ -2073,5 +2264,69 @@ VTInitModifiers(XtermWidget xw)
 
 	XFreeModifiermap(keymap);
     }
+#if OPT_TRACE
+    /*
+     * Dump a summary of the coverage of the various IsXXX macros.
+     */
+    {
+	/* *INDENT-OFF* */
+	static const struct {
+	    const char *name;
+	    KeySym lo;
+	    KeySym hi;
+	} other_files[] = {
+	    { "DECkeysym.h  (DEC)",   0x1000FEB0, 0x1000FF00 },
+	    { "HPkeysym.h   (hp)",    0x1000FF48, 0x1000FF77 },
+	    { "HPkeysym.h   (osf)",   0x1004FF02, 0x1004FFFF },
+	    { "Sunkeysym.h  (Sun)",   0x1005FF00, 0x1005FF7D },
+	    { "XF86keysym.h (all)",   0x10080001, 0x1008FFFF },
+	    { "XF86keysym.h (used)",  0x1008FE01, 0x1008FFB8 },
+	    { "XF86keysym.h (evdev)", 0x10081000, 0x10081FFF },
+	    { "ap_keysym.h  (ap)",    0x1000FF00, 0x1000FFA9 },
+	};
+	/* *INDENT-ON* */
+
+	size_t nn;
+	KeySym lo = 0xfe00;
+	KeySym hi = 0xffff;
+	unsigned covered = 0;
+
+	for (keysym = lo; keysym <= hi; ++keysym) {
+	    if (IsCursorKey(keysym)
+		|| IsEditFunctionKey(xw, keysym)
+		|| IsFunctionKey(keysym)
+		|| IsKeypadKey(keysym)
+		|| IsModifierKey(keysym)
+		|| IsMiscFunctionKey(keysym)
+		|| IsPFKey(keysym)) {
+		unsigned long result = (unsigned long) keysym - 0x1d00;
+		/* this is the same as keysym2ucs(keysym) */
+		++covered;
+		TRACE(("%#lx -> U+%04lx %-8s%-8s%-8s%-8s%-8s%-8s%-8s\n",
+		       keysym,
+		       result,
+		       IsCursorKey(keysym) ? "cursor" : "",
+		       IsEditFunctionKey(xw, keysym) ? "editing" : "",
+		       IsFunctionKey(keysym) ? "fkey" : "",
+		       IsKeypadKey(keysym) ? "keypad" : "",
+		       IsModifierKey(keysym) ? "modify" : "",
+		       IsMiscFunctionKey(keysym) ? "fkey" : "",
+		       IsPFKey(keysym) ? "fkey" : ""));
+	    }
+	}
+	TRACE(("%u keysyms are used in %lu slots (%#lx to %#lx)\n",
+	       covered, hi + 1 - lo, lo, hi));
+	TRACE(("Other files, keysym limits\n"));
+	for (nn = 0; nn < XtNumber(other_files); ++nn) {
+	    TRACE(("%s:\n", other_files[nn].name));
+	    TRACE(("\tlo %#lx -> %#lx\n",
+		   other_files[nn].lo,
+		   keysym2ucs(other_files[nn].lo)));
+	    TRACE(("\thi %#lx -> %#lx\n",
+		   other_files[nn].hi,
+		   keysym2ucs(other_files[nn].hi)));
+	}
+    }
+#endif
 }
 #endif /* OPT_NUM_LOCK */

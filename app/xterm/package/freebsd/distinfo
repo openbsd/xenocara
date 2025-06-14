@@ -1,3 +1,5 @@
-TIMESTAMP = 1593990998
-SHA256 (xterm-357.tgz) = a2fbe692f7d9324f6db8820ace7ec4696e838d3053edb45d13801fd684dabdc3
-SIZE (xterm-357.tgz) = 1422256
+TIMESTAMP = 1733129732
+SHA256 (xterm-396.tgz) = a1f6be14857a31c87722605ff7b4e7c8bb82ff4dce859abac85c085548e87153
+SIZE (xterm-396.tgz) = 1585022
+SHA256 (bsd-xterm-icons-1.tgz) = fcf51dce0e23e9911a16ed7f2ce835bb6ff2ada65f023c29fdd8abda2795bf7c
+SIZE (bsd-xterm-icons-1.tgz) = 22718

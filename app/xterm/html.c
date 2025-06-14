@@ -1,7 +1,7 @@
-/* $XTermId: html.c,v 1.23 2021/09/19 18:30:48 tom Exp $ */
+/* $XTermId: html.c,v 1.24 2024/12/01 20:27:00 tom Exp $ */
 
 /*
- * Copyright 2018-2020,2021	Thomas E. Dickey
+ * Copyright 2018-2021,2024	Thomas E. Dickey
  * Copyright 2015,2018		Jens Schweikhardt
  *
  * All Rights Reserved
@@ -56,7 +56,7 @@ xtermDumpHtml(XtermWidget xw)
     TRACE(("xtermDumpHtml...\n"));
     saveLocale = xtermSetLocale(LC_NUMERIC, "C");
     fp = create_printfile(xw, ".xhtml");
-    if (fp != 0) {
+    if (fp != NULL) {
 	dumpHtmlHeader(xw, fp);
 	dumpHtmlScreen(xw, fp);
 	dumpHtmlFooter(xw, fp);
@@ -144,7 +144,7 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
     LineData *ld = getLineData(s, inx);
     int col;
 
-    if (ld == 0)
+    if (ld == NULL)
 	return;
 
     for (col = 0; col < MaxCols(s); col++) {

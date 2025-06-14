@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.40 2024/08/11 23:05:42 tom Exp $
+-- $XTermId: THANKS,v 1.41 2025/02/08 00:48:06 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -56,6 +56,7 @@ Christian Biere
 Christian Weisgerber
 Chuck Blake
 Chuck Silvers
+Claes Nästén
 Colum Paget
 D Roland Walker
 Dan Church

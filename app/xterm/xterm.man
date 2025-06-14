@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.908 2024/09/30 07:57:01 tom Exp $
+.\" $XTermId: xterm.man,v 1.916 2025/04/01 23:06:38 tom Exp $
 .\"
-.\" Copyright 1996-2023,2024 by Thomas E. Dickey
+.\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1935,6 +1935,10 @@ with the \fImeta\fP modifier to the \fBclear\-saved\-lines\fP action.
 scroll\-lock
 assigns a key\-binding to the \fBscroll\-lock()\fP action.
 .TP
+block\-select
+an optional (compile-time) feature for supporting rectangular selections.
+By default, this is bound to \fIMeta button one\fP.
+.TP
 select
 assigns mouse- and keypress-combinations
 to actions which manipulate the selection.
@@ -2912,6 +2916,62 @@ Specifies whether characters with the blink attribute should be displayed in
 color.
 Note that setting \fBcolorMode\fR off disables all colors, including this.
 The default is \*(``false\*(''.
+.TP
+.B "colorEvents\fP (class\fB ColorEvents\fP)"
+Specifies OSC control codes that can be processed from client messages with
+the type \fBXTERM_CONTROL\fR.
+These events may be generated using the X protocol SendEvent request.
+The resource value is a comma separated list of codes allowed.
+The default is the empty string, disallowing all processing.
+.IP
+The names are listed below.
+\fI\*N\fP ignores capitalization, but
+they are shown in mixed-case for clarity.
+Either a name or a number can be used.
+.RS
+.TP 5
+TEXT_FG (10)
+text foreground
+.TP 5
+TEXT_BG (11)
+text background
+.TP 5
+TEXT_CURSOR (12)
+text cursor
+.TP 5
+MOUSE_FG (13)
+mouse foreground
+.TP 5
+MOUSE_BG (14)
+mouse background
+.TP 5
+TEK_FG (15)
+tektronix foreground
+.TP 5
+TEK_BG (16)
+tektronix background
+.TP 5
+HIGHLIGHT_BG (17)
+highlight background
+.TP 5
+TEK_CURSOR (18)
+tektronix cursor
+.TP 5
+HIGHLIGHT_FG (19)
+highlight foreground
+.RE
+.IP
+For example, if messages for the text color are enabled, e.g.,
+by setting the resource to
+.NS
+text_fg, text_bg
+.NE
+.IP
+the text foreground color can be set to black
+by sending a message with this content:
+.NS
+10;#000000
+.NE
 .TP 8
 .B "colorIT\fP (class\fB ColorIT\fP)"
 This specifies the color to use to display italic characters if
@@ -3332,6 +3392,10 @@ Where a number can be used
 as an alternative, it is given in parentheses after the name.
 .RS
 .TP 5
+ColumnMode
+Enable (or disable) switching between 80 and 132 columns.
+This is in addition to the \fBc132\fP resource.
+.TP 5
 GetChecksum
 Report checksum of characters in a rectangular region.
 .TP 5
@@ -3406,6 +3470,9 @@ Resize the \fI\*n\fP window to given size in pixels.
 .TP 5
 SetXprop
 Set X property on top-level window.
+.TP 5
+StatusLine
+Resize window to provide a VT320-style status line.
 .RE
 .TP 8
 .B "dynamicColors\fP (class\fB DynamicColors\fP)"
@@ -3821,6 +3888,30 @@ that would normally appear in the text color change color.
 The default
 is \*(``XtDefaultForeground\*(''.
 .TP 8
+.B "formatCursorKeys\fP (class\fB FormatCursorKeys\fP)"
+When \fBmodifyCursorKeys\fP is 4 or greater,
+use modified form as in \fBformatOtherKeys\fP,
+for cursor-keys instead of the conventional form.
+The default is \*(``0\*(''.
+.TP 8
+.B "formatFunctionKeys\fP (class\fB FormatFunctionKeys\fP)"
+When \fBmodifyFunctionKeys\fP is 4 or greater,
+use modified form as in \fBformatOtherKeys\fP,
+for function-keys instead of the conventional form.
+The default is \*(``0\*(''.
+.TP 8
+.B "formatKeypadKeys\fP (class\fB FormatKeypadKeys\fP)"
+When \fBmodifyKeypadKeys\fP is 4 or greater,
+use modified form as in \fBformatOtherKeys\fP,
+for numeric keypad-keys instead of the conventional form.
+The default is \*(``0\*(''.
+.TP 8
+.B "formatModifierKeys\fP (class\fB FormatModifierKeys\fP)"
+When \fBmodifyModifierKeys\fP is 4 or greater,
+use modified form as in \fBformatOtherKeys\fP,
+for modifier-keys instead of the conventional form.
+The default is \*(``0\*(''.
+.TP 8
 .B "formatOtherKeys\fP (class\fB FormatOtherKeys\fP)"
 Overrides the format of the escape sequence used to report modified keys
 with the \fBmodifyOtherKeys\fP resource.
@@ -3832,6 +3923,12 @@ send modified keys as parameters for function-key 27 (default).
 1
 send modified keys as parameters for CSI\ u.
 .RE
+.TP 8
+.B "formatSpecialKeys\fP (class\fB FormatSpecialKeys\fP)"
+When \fBmodifySpecialKeys\fP is 4 or greater,
+use modified form as in \fBformatOtherKeys\fP,
+for special keys instead of the conventional form.
+The default is \*(``0\*(''.
 .TP 8
 .B "freeBoldBox\fP (class\fB FreeBoldBox\fP)"
 Specifies whether \fI\*n\fP should assume the bounding boxes for
@@ -4080,7 +4177,7 @@ to ensure that it is taller.
 The default is \*(``10\*('' (percent).
 .TP 8
 .B "limitFontWidth\fP (class\fB LimitFontWidth\fP)"
-When looking for fallback fonts, \fI\*n\fP checks to see that the
+When looking for fallback fonts, \fI\*n\fP checks to see that
 the character to be displayed is the same width as the primary font.
 If a character extends outside the font's bounding box,
 \fI\*n\fP will clip it, to fit.
@@ -4336,6 +4433,16 @@ from the system's character tables.
 Tells how to handle the special case where
 Control-, Shift-, Alt- or Meta-modifiers are used to add a parameter to
 the escape sequence returned by a cursor-key.
+X11 cursor keys are the four keys with arrow symbols:
+.NS
+Left Right Up Down
+.NE
+.IP
+as well as some commonly found on an \*(``editing keypad\*(''
+.NS
+Home Prior Page_Up Next Page_Down End Begin
+.NE
+.IP
 The default is \*(``2\*('':
 .RS
 .TP 5
@@ -4354,6 +4461,10 @@ otherwise be the first.
 .TP 5
 3
 marks the sequence with a \*(``>\*('' to hint that it is private.
+.TP 5
+4
+changes the format to match \fBmodifyOtherKeys\fP\ 3,
+sending an escape sequence according to \fBformatCursorKeys\fP.
 .RE
 .TP 8
 .B "modifyFunctionKeys\fP (class\fB ModifyFunctionKeys\fP)"
@@ -4380,6 +4491,10 @@ otherwise be the first.
 .TP 5
 3
 marks the sequence with a \*(``>\*('' to hint that it is private.
+.TP 5
+4
+changes the format to match \fBmodifyOtherKeys\fP\ 3,
+sending an escape sequence according to \fBformatFunctionKeys\fP.
 .RE
 .IP
 If \fBmodifyFunctionKeys\fP is zero,
@@ -4429,8 +4544,18 @@ overrides use of Shift-modifier for UDK.
 allows modification of other special keys
 .RE
 .TP 8
+.B "modifyKeypadKeys\fP (class\fB ModifyKeypadKeys\fP)"
+Like \fBmodifyCursorKeys\fP \*(``4\*('', tells \fI\*n\fP to construct an
+escape sequence for \fInumeric keypad\fP keys.
+The default is \*(``0\*(''.
+.TP 8
+.B "modifyModifierKeys\fP (class\fB ModifyModifierKeys\fP)"
+Like \fBmodifyCursorKeys\fP \*(``4\*('', tells \fI\*n\fP to construct an
+escape sequence for \fImodifier\fP (e.g., \*(``shift\*('') keys.
+The default is \*(``0\*(''.
+.TP 8
 .B "modifyOtherKeys\fP (class\fB ModifyOtherKeys\fP)"
-Like \fBmodifyCursorKeys\fP, tells \fI\*n\fP to construct an
+Like \fBmodifyCursorKeys\fP \*(``4\*('', tells \fI\*n\fP to construct an
 escape sequence for \fIordinary\fP (i.e., \*(``other\*('') keys
 (such as \*(``2\*('') when modified by
 Shift-, Control-, Alt- or Meta-modifiers.
@@ -4438,12 +4563,6 @@ This feature does not apply to \fIspecial keys\fP,
 i.e., cursor-, keypad-,  function- or control-keys
 which are labeled on your keyboard.
 Those have key symbols which XKB identifies uniquely.
-.IP
-For example, this feature does not apply to \fIspecial\fP
-control-keys
-(e.g., Escape, Tab, Enter, Backspace)
-Other control keys (e.g., Control-I, Control-M, Control-H) may
-send escape sequences when this feature is enabled.
 .IP
 The default is \*(``0\*('':
 .RS
@@ -4469,6 +4588,9 @@ enables this feature for keys including the exceptions listed.
 \fI\*N\fP ignores the special cases built into the X11 library.
 Any shifted (modified) ordinary key sends an escape sequence.
 The Alt- and Meta- modifiers cause \fI\*n\fP to send escape sequences.
+.TP 5
+3
+extends the feature to send unmodified keys as escape sequences.
 .RE
 .IP
 The \fI\*N\fP FAQ has an extended discussion of this feature, with examples:
@@ -4476,6 +4598,12 @@ The \fI\*N\fP FAQ has an extended discussion of this feature, with examples:
 .RS
 https://invisible\-island.net/xterm/modified\-keys.html
 .RE
+.TP 8
+.B "modifySpecialKeys\fP (class\fB ModifySpecialKeys\fP)"
+Like \fBmodifyCursorKeys\fP \*(``4\*('', tells \fI\*n\fP to construct an
+escape sequence for \fIspecial\fP keys
+(e.g., \*(``escape\*('' not in the other categories).
+The default is \*(``0\*(''.
 .TP 8
 .B "multiClickTime\fP (class\fB MultiClickTime\fP)"
 Specifies the maximum time in milliseconds between multi-click select
@@ -4879,6 +5007,9 @@ The resource value is interpreted the same as in \fBprintOptsImmediate\fP.
 .IP
 The default is \*(``9\*('', which selects the current visible screen
 plus saved lines, with no special case for the alternated screen.
+.TP 8
+.B "printRawChars\fP (class \fBPrintRawChars\fP)"
+If \*(``true\*('', \fI\*n\fR allows Unicode non-characters to be printed.
 .TP 8
 .B "printerAutoClose\fP (class\fB PrinterAutoClose\fP)"
 If \*(``true\*('', \fI\*n\fR will close the printer (a pipe) when the
@@ -6903,12 +7034,29 @@ Reset DECCKM and DECKPAM per resources
 .BR appcursorDefault " and"
 .BR appkeypadDefault .
 .bP
-Reset the key-modifier modes to the values set by resources
-.BR formatOtherKeys ,
+Reset key-format and key-modifier modes to the values set by resources,
+i.e.,
+.sp
+.RS 8
+.BR formatCursorKeys ,
+.BR formatFunctionKeys ,
+.BR formatKeypadKeys ,
+.BR formatModifierKeys ,
+.BR formatOtherKeys ", and"
+.BR formatSpecialKeys .
+.RE
+.IP
+as well as
+.sp
+.RS 8
 .BR modifyCursorKeys ,
 .BR modifyFunctionKeys ,
-.BR modifyKeyboard ", and"
-.BR modifyOtherKeys .
+.BR modifyKeyboard ,
+.BR modifyKeypadKeys ,
+.BR modifyModifierKeys ,
+.BR modifyOtherKeys ", and"
+.BR modifySpecialKeys .
+.RE
 .bP
 Reset origin mode (DECOM).
 .bP
@@ -7893,6 +8041,11 @@ without affecting the selection mode.
 This action begins text selection at the current pointer location.
 See
 the section on \fBPOINTER USAGE\fP for information on making selections.
+.IP
+If \fI\*n\fR is configured to support block-selection,
+this action accepts a parameter \*(``block\*(''
+which initiates a block-selection
+rather than the default character-oriented selection.
 .TP 8
 .B "send\-signal(\fIsigname\fP)"
 This action sends the signal named by \fIsigname\fP
@@ -8245,6 +8398,7 @@ These are for the \fIvt100\fP widget:
            !Lock Ctrl <Btn1Down>:\fBpopup\-menu\fP(mainMenu) \\n\\\&
  !Lock Ctrl @Num_Lock <Btn1Down>:\fBpopup\-menu\fP(mainMenu) \\n\\\&
      ! @Num_Lock Ctrl <Btn1Down>:\fBpopup\-menu\fP(mainMenu) \\n\\\&
+                 Meta <Btn1Down>:\fBselect\-start\fP(block) \\n\\\&
                 ~Meta <Btn1Down>:\fBselect\-start\fP() \\n\\\&
               ~Meta <Btn1Motion>:\fBselect\-extend\fP() \\n\\\&
                 !Ctrl <Btn2Down>:\fBpopup\-menu\fP(vtMenu) \\n\\\&

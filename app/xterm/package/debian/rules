@@ -6,6 +6,12 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+SHELL = /bin/bash
+DPKG_EXPORT_BUILDFLAGS = 1
+export DEB_BUILD_MAINT_OPTIONS := hardening=+all qa=+bug reproducible=+all
+
+include /usr/share/dpkg/buildflags.mk
+
 # These are used for cross-compiling and for saving the configure script
 # from having to guess our platform (since we know it already)
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -25,10 +31,6 @@ PKG_DESKTOP	:= /usr/share/applications
 DSTDIR		:= $(CURDIR)/debian/$(PACKAGE)
 MY_DESKTOP	:= $(DSTDIR)/usr/share/applications
 
-CPPFLAGS	:= $(shell dpkg-buildflags --get CPPFLAGS)
-CFLAGS		:= $(shell dpkg-buildflags --get CFLAGS)
-LDFLAGS		:= $(shell dpkg-buildflags --get LDFLAGS)
-
 ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
 DEBOP=--enable-debug
 else
@@ -44,48 +46,51 @@ ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
         INSTALL_PROGRAM += -s
 endif
 
+configure_flags = \
+	--host=$(DEB_HOST_GNU_TYPE) \
+	--build=$(DEB_BUILD_GNU_TYPE) \
+	--program-suffix=$(PKG_SUFFIX) \
+	--prefix=/usr \
+	--libexecdir=\$${prefix}/lib \
+	--mandir=\$${prefix}/share/man \
+	--sysconfdir=/etc/$(PACKAGE) \
+	--localstatedir=/var \
+	--libdir=/etc/$(PACKAGE) \
+	--with-app-class=$(PKG_CLASS) \
+	--without-xterm-symlink \
+	--disable-imake \
+	--enable-dabbrev \
+	--enable-dec-locator \
+	--enable-exec-xterm \
+	--enable-hp-fkeys \
+	--enable-load-vt-fonts \
+	--enable-logfile-exec \
+	--enable-logging \
+	--enable-mini-luit \
+	--enable-regis-graphics \
+	--enable-sco-fkeys \
+	--enable-status-line \
+	--enable-toolbar \
+	--enable-xmc-glitch \
+	--with-app-defaults=$(PKG_APPDEFAULTS) \
+	--with-icondir=\$${prefix}/share/icons \
+	--with-pixmapdir=\$${prefix}/share/pixmaps \
+	--with-own-terminfo=\$${prefix}/share/terminfo \
+	--with-icon-theme \
+	--with-terminal-type=xterm-new \
+	--with-utempter \
+	--with-icon-name=mini.xterm \
+	--with-xpm ${DEBOP}
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
 
-	CPPFLAGS="$(CPPFLAGS)" \
-	CFLAGS="$(CFLAGS)" \
-	LDFLAGS="$(LDFLAGS)" \
-	./configure \
-		--host=$(DEB_HOST_GNU_TYPE) \
-		--build=$(DEB_BUILD_GNU_TYPE) \
-		--program-suffix=$(PKG_SUFFIX) \
-		--prefix=/usr \
-		--libexecdir=\$${prefix}/lib \
-		--mandir=\$${prefix}/share/man \
-		--sysconfdir=/etc/$(PACKAGE) \
-		--localstatedir=/var \
-		--libdir=/etc/$(PACKAGE) \
-		--with-app-class=$(PKG_CLASS) \
-		--without-xterm-symlink \
-		--disable-imake \
-		--enable-dabbrev \
-		--enable-dec-locator \
-		--enable-exec-xterm \
-		--enable-hp-fkeys \
-		--enable-load-vt-fonts \
-		--enable-logfile-exec \
-		--enable-logging \
-		--enable-mini-luit \
-		--enable-regis-graphics \
-		--enable-sco-fkeys \
-		--enable-status-line \
-		--enable-toolbar \
-		--enable-xmc-glitch \
-		--with-app-defaults=$(PKG_APPDEFAULTS) \
-		--with-icondir=\$${prefix}/share/icons \
-		--with-pixmapdir=\$${prefix}/share/pixmaps \
-		--with-own-terminfo=\$${prefix}/share/terminfo \
-		--with-icon-theme \
-		--with-terminal-type=xterm-new \
-		--with-utempter \
-		--with-icon-name=mini.xterm \
-		--with-xpm ${DEBOP}
+	# Update config.guess, config.sub
+	dh_update_autotools_config
+
+	# Configure xterm-dev
+	dh_auto_configure -- $(configure_flags)
 
 	touch configure-stamp
 

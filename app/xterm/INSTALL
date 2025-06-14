@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.189 2022/01/30 22:46:59 tom Exp $
+-- $XTermId: INSTALL,v 1.196 2025/01/03 00:54:45 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2021,2022 by Thomas E. Dickey
+-- Copyright 1997-2024,2025 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -32,7 +32,7 @@
 Xterm was originally built as part of the X Window System source tree, using
 imake to generate a Makefile from Imakefile.
 
-An example Imakefile is provided for legacy use.
+An example Imakefile is provided for legacy use (with xmkmf).
 
 The preferred method uses the configure script to generate a Makefile from
 Makefile.in
@@ -163,6 +163,12 @@ The options (in alphabetic order):
 	not shown.  This makes it simpler to read a build log and see the
 	actual warning messages.
 
+  --disable-exec-selection disable "exec-formatted" and "exec-selection" actions
+
+	Do not compile-in code for the "exec-formatted" and "exec-selection"
+	actions, which allow the user to run programs to process the results
+	of selecting text.
+
   --disable-fifo-lines    enable FIFO-storage for saved-lines
 
 	(this option is deprecrated)
@@ -191,14 +197,6 @@ The options (in alphabetic order):
 
   	Do not compile-in code to handle multi-byte characters.  This is
 	related to, but not identical with the input method logic.
-
-  --disable-imake         disable use of imake for definitions
-
-  	Do not attempt to use imake to determine compiler options.
-
-	The main.c file has many ifdef's which rely on obscure combinations
-	known only to imake.  The configure script implements only a
-	portion of the tests needed to supplant imake.
 
   --disable-initial-erase disable setup for stty erase
 
@@ -291,6 +289,13 @@ The options (in alphabetic order):
 	(e.g., X11R5) do not perform the geometry computation correctly,
 	leaving the right scrollbar incorrectly positioned after changing
 	the font size.
+
+  --disable-readline-mouse enable support for mouse in readline applications
+
+	Do not compile-in code to support readline with mouse.
+
+	(The "paste64" feature, which fits xterm's protocol better, is
+	configured by default).
 
   --disable-rpath-hack    don't add rpath options for additional libraries
 
@@ -407,6 +412,11 @@ The options (in alphabetic order):
 
 	This sets the default resource value, which is shown in the manpage.
 
+  --enable-block-select   allow block-selections
+
+	Compile-in code to support block selections, which are normally bound
+	to meta-button1.
+
   --enable-broken-osc     allow broken Linux OSC-strings
 
 	Compile-in code to accommodate scripts that write Linux's malformed
@@ -470,6 +480,14 @@ The options (in alphabetic order):
 
   	Compile-in code to support HP-style function keys.
 
+  --enable-imake          enable use of imake for definitions
+
+  	Attempt to use imake to determine compiler options.
+
+	The main.c file has many ifdef's which rely on obscure combinations
+	known only to imake.  The configure script implements only a
+	portion of the tests needed to supplant imake.
+
   --enable-load-vt-fonts  enable load-vt-fonts() action
 
   	Compile-in code that allows user to define load different VT-font
@@ -509,26 +527,16 @@ The options (in alphabetic order):
 	with the X.org "modular" build, whose compiler options are unrelated to
 	imake or older versions of any libraries that it may distribute.  In
 	this case, the configure script needs some help.  Use this option to
-	enable or disable NARROW proto (and disable imake with the
-	--disable-imake option) to match the whims of X.org hackers.
+	enable or disable NARROW proto (and do not enable imake with the
+	--enable-imake option) to match the whims of X.org hackers.
 
 	For instance
 
-		configure --disable-imake --disable-narrowproto
+		configure --disable-narrowproto
 
   --enable-pty-erase      set default ptyInitialErase resource (default: false)
 
 	This sets the default resource value, which is shown in the manpage.
-
-  --enable-readline-mouse enable support for mouse in readline applications
-
-	Compile-in code to support predecessor to bracketed paste mode, i.e.,
-	provide functions for setting/getting the selection data.  Essentially
-	this puts xterm into a mode that sends special function-key strings to
-	bracket the data.
-
-	(The "paste64" feature, which fits xterm's protocol better, is
-	configured by default).
 
   --enable-regis-graphics enable support for ReGIS graphics
 
@@ -670,7 +678,7 @@ The options (in alphabetic order):
 
 	Override options provided by xft-config or freetype-config.
 
-  --with-icon-name=NAME override icon name (default: xterm-color)
+  --with-icon-name[=NAME] override icon name (default: xterm-color)
 
 	xterm comes with a choice of icons:
 
@@ -681,7 +689,7 @@ The options (in alphabetic order):
 		small sizes.  This is used for window decoration, e.g., the
 		icon at the upper left corner in many window managers.
 
-  --with-icon-symlink=NAME create symbolic links to icon name (default: NONE)
+  --with-icon-symlink[=NAME] create symbolic links to icon name (default: NONE)
 
 	This is a workaround for certain systems which translate icon names
 	containing "xterm", e.g., "xterm-color" into the single icon "xterm".
@@ -715,7 +723,7 @@ The options (in alphabetic order):
 	By default, the option is disabled; it is useful only for the
 	--with-icon-theme option.
 
-  --with-icon-theme=XXX   install icons into desktop theme (hicolor)
+  --with-icon-theme[=XXX] install icons into desktop theme (hicolor)
 
 	Install png and svg icons into the given desktop theme and customize
 	the .desktop files to use that theme.  If no theme name is given,
@@ -743,7 +751,7 @@ The options (in alphabetic order):
 
   	Look for, compile and link with the neXT Athena widget library.
 
-  --with-own-terminfo=P   set default $TERMINFO (default: from environment)
+  --with-own-terminfo[=P] set default $TERMINFO (default: from environment)
 
   	Modify the generated Makefile to set the target for the 'install-ti'
 	rule to point to the given directory.
@@ -788,7 +796,7 @@ The options (in alphabetic order):
 	cross-compiling, etc.  This option lets the package builder specify
 	the file used for permissions reference.
 
-  --with-setuid=XXX       use the given setuid user
+  --with-setuid[=XXX]     use the given setuid user
 
 	Install xterm setuid'd to the given user.  If no parameter value
 	is given, assume it is root.
@@ -796,7 +804,7 @@ The options (in alphabetic order):
 	See also --with-utmp-setgid and --with-utempter, which manipulate
 	the setgid group.
 
-  --with-tty-group=XXX    use XXX for the tty-group
+  --with-tty-group[=XXX]  use XXX for the tty-group
 
 	If xterm is installed setuid'd to root, change the group of the tty
 	device to the given value on startup.  Three cases are possible:
@@ -815,10 +823,26 @@ The options (in alphabetic order):
 	If xterm is not installed setuid'd to root, this option is not needed,
 	since it cannot change the tty device's ownership.
 
+  --with-utmp-path        use XXX rather than auto for utmp path
+
+	The pathname for the "utmp" file is documented in the manual page.
+	Because this is system-dependent, and xterm may be built on a machine
+	which has no desktop, that file may be absent (and the configure script
+	may give incorrect information).  Use this option to override the value
+	that the configure script uses.
+
   --with-valgrind         test: use valgrind
 
 	Activate the --disable-leaks option, and ensure that "-g" is added to
 	CFLAGS.
+
+  --with-wtmp-path        use XXX rather than auto for wtmp path
+
+	The pathname for the "wtmp" file is documented in the manual page. 
+	Because this is system-dependent, and xterm may be built on a machine
+	which has no desktop, that file may be absent (and the configure script
+	may give incorrect information).  Use this option to override the value
+	that the configure script uses.
 
   --without-xinerama      do not use Xinerama extension for multiple screens
 
@@ -827,14 +851,14 @@ The options (in alphabetic order):
 	(or do not want the extra library dependency), use this option to
 	suppress it.
 
-  --with-xpm=DIR          use Xpm library for colored icon, may specify path
+  --with-xpm[=DIR]        use Xpm library for colored icon, may specify path
 
 	Use Xpm library to show colored icon in window decoration, e.g.,
 	title area.
 
 	Use --without-xpm to suppress this feature.
 
-  --with-xterm-symlink=XXX  make symbolic link to installed xterm
+  --with-xterm-symlink[=XXX]  make symbolic link to installed xterm
 
 	If any of the configure options to modify the program name i.e.,
 	--program-prefix, --program-suffix or --program-transform-name
@@ -879,7 +903,7 @@ The options (in alphabetic order):
 	On systems with Unix98 pty's, xterm can use this library when
 	available so it need not be installed set-uid.
 
-  --with-utmp-setgid=XXX  use setgid for access to utmp
+  --with-utmp-setgid[=XXX] use setgid for access to utmp
 
 	The option value specifies a group to use when installing.
 	xterm will be installed with setgid privilege to this group.

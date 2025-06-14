@@ -1,10 +1,10 @@
-# $XTermId: terminfo,v 1.209 2024/02/11 23:35:48 tom Exp $
+# $XTermId: terminfo,v 1.210 2025/05/16 08:24:47 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2023,2024 by Thomas E. Dickey
+# Copyright 1996-2024,2025 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -130,6 +130,9 @@
 # respectively.
 #
 xterm-new|modern xterm terminal emulator,
+	rv=\E\\[>41;[1-6][0-9][0-9];0c,
+	xr=\EP>\\|XTerm\\(([1-9][0-9]+)
+	   \\)\E\\\\,
 	use=dec+sl,
 	use=ecma+index,
 	use=xterm+keypad,
@@ -1173,10 +1176,10 @@ bracketed+paste|xterm bracketed paste,
 # The response is a DSR sequence identifying the version: DCS > | text ST
 # For example:
 #	^[P>|XTerm(354)^[\
+# This generic building-block matches ncurses.
 report+version|Report xterm name and version (XTVERSION).,
 	XR=\E[>0q,
-	xr=\EP>\\|XTerm\\([1-9][0-9]+\\)
-	   \E\\\\,
+	xr=\EP>\\|[\s-~]+\E\\\\,
 	use=report+da2,
 
 # Vim uses RV to denote the secondary device attributes.  Xterm documents the
@@ -1186,9 +1189,10 @@ report+version|Report xterm name and version (XTVERSION).,
 # Other terminals may provide useful responses, though few are documented.
 #
 # Since patch #280 2012/06/24, xterm by default reports itself as a VT420.
+# This generic building-block matches ncurses.
 report+da2|report secondary device attributes (DA2),
 	RV=\E[>c,
-	rv=\E\\[41;[1-6][0-9][0-9];0c,
+	rv=\E\\[>[0-9]+;[0-9]+;[0-9]+c,
 
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
 xterm-basic|modern xterm terminal emulator - common,
@@ -2239,7 +2243,7 @@ xterm+256color2|xterm 256-color feature,
 		m,
 	use=xterm+256color,
 xterm-256color|xterm with 256 colors,
-	use=xterm+256color2,
+	use=xterm+256color,
 	use=xterm+osc104,
 	use=xterm-new,
 xterm-88color|xterm with 88 colors,

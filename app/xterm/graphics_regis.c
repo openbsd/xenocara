@@ -1,7 +1,7 @@
-/* $XTermId: graphics_regis.c,v 1.150 2024/09/01 22:49:10 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.157 2025/04/03 09:53:05 tom Exp $ */
 
 /*
- * Copyright 2014-2023,2024 by Thomas E. Dickey
+ * Copyright 2014-2024,2025 by Thomas E. Dickey
  * Copyright 2014-2022,2023 by Ross Combs
  *
  *                         All Rights Reserved
@@ -255,33 +255,19 @@ static RegisParseState persistent_state;
 #define MAX2(X, Y) ( (X) > (Y) ? (X) : (Y) )
 #define MAX3(X, Y, Z) ( MAX2(MAX2((X), (Y)), MAX2((Y), (Z))) )
 
-#define ROT_LEFT_N(V, N) ( (((V) << ((N) & 3U )) & 255U) | \
-			   ((V) >> (8U - ((N) & 3U))) )
 #define ROT_LEFT(V) ( (((V) << 1U) & 255U) | ((V) >> 7U) )
 
 /* convert user coordinates to absolute pixel coordinates */
-#define SCALE_XCOORD(C, X, S) ( ( (X) * ((C)->width  - 1) ) / ( (C)->x_div * (S) ) )
-#define SCALE_YCOORD(C, Y, S) ( ( (Y) * ((C)->height - 1) ) / ( (C)->y_div * (S) ) )
-#define TRANSLATE_XCOORD(C, X, S) SCALE_XCOORD((C), (X) - (C)->x_off * (S), (S) )
-#define TRANSLATE_YCOORD(C, Y, S) SCALE_YCOORD((C), (Y) - (C)->y_off * (S), (S) )
-
-#if 0
-/* convert absolute pixel coordinate to user coordinates */
-#define SCALE_XPIX(C, X, S) ( ( (X) * ((C)->x_div * (S) ) ) / ((C)->width  - 1) )
-#define SCALE_YPIX(C, Y, S) ( ( (Y) * ((C)->y_div * (S) ) ) / ((C)->height - 1) )
-#define TRANSLATE_XPIX(C, X, S) ( SCALE_XPIX((C), (X), (S) ) + (C)->x_off * (S) )
-#define TRANSLATE_YPIX(C, Y, S) ( SCALE_YPIX((C), (Y), (S) ) + (C)->y_off * (S) )
-#endif
+#define SCALE_XCOORD(C, X, S) (int) ( ( (long)(X) * (long)((C)->width  - 1) ) / ( (long)(C)->x_div * (long)(S) ) )
+#define SCALE_YCOORD(C, Y, S) (int) ( ( (long)(Y) * (long)((C)->height - 1) ) / ( (long)(C)->y_div * (long)(S) ) )
+#define TRANSLATE_XCOORD(C, X, S) SCALE_XCOORD((C), (X) - ((C)->x_off * (S)), (S) )
+#define TRANSLATE_YCOORD(C, Y, S) SCALE_YCOORD((C), (Y) - ((C)->y_off * (S)), (S) )
 
 #define READ_PIXEL(C, X, Y) read_pixel((C)->destination_graphic, (X), (Y))
 #define DRAW_PIXEL(C, X, Y, COL) draw_solid_pixel((C)->destination_graphic, (X), (Y), (COL))
 #define DRAW_ALL(C, COL) \
     draw_solid_rectangle((C)->destination_graphic, 0, 0, (C)->width, (C)->height, (COL))
 
-static unsigned get_shade_character_pixel(Char const *pixels,
-					  unsigned w, unsigned h,
-					  unsigned smaxf, unsigned scale,
-					  int slant_dx, int px, int py);
 static void get_bitmap_of_character(RegisGraphicsContext const *context,
 				    int ch, unsigned maxw, unsigned maxh,
 				    Char *pixels,
@@ -431,6 +417,30 @@ shade_pattern_to_pixel(RegisGraphicsContext *context, unsigned dim, int ref,
     } else {
 	TRACE(("ERROR: shading requested, but there is no reference axis\n"));
     }
+}
+
+#define ROT_SHEAR_SCALE 8192
+#define SIGNED_UNSIGNED_MOD(VAL, BASE) ( (((VAL) % (int) (BASE)) + (int) (BASE)) % (int) (BASE) )
+
+static unsigned
+get_shade_character_pixel(Char const *pixels, unsigned w, unsigned h,
+			  unsigned smaxf, unsigned scale, int slant_dx,
+			  int px, int py)
+{
+    unsigned wx, wy;
+    unsigned fx, fy;
+
+    wx = (unsigned) SIGNED_UNSIGNED_MOD(px -
+					(slant_dx * SIGNED_UNSIGNED_MOD(py, smaxf))
+					/ ROT_SHEAR_SCALE, smaxf);
+    wy = (unsigned) SIGNED_UNSIGNED_MOD(py, smaxf);
+
+    fx = (wx * scale) >> SCALE_FIXED_POINT;
+    fy = (wy * scale) >> SCALE_FIXED_POINT;
+    if (fx < w && fy < h) {
+	return (unsigned) pixels[fy * w + fx];
+    }
+    return 0U;
 }
 
 static void
@@ -1377,6 +1387,9 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
 #endif
 
     assert(n > 2);		/* need at least 4 points P[0]..P[n] */
+#ifdef __CPPCHECK__
+    memset(m, 0, sizeof(m));	/* work around false-positive */
+#endif
 
 #ifdef DEBUG_SPLINE_POINTS
     {
@@ -1948,7 +1961,7 @@ find_best_xft_font_size(XtermWidget xw,
 	    XftPattern *match;
 	    XftResult status;
 
-	    if ((pat = XftNameParse(fontname))) {
+	    if ((pat = XftNameParse(fontname)) != NULL) {
 #ifdef DEBUG_FONT_SIZE_SEARCH
 		TRACE(("trying targeth=%g\n", targeth / 10.0));
 #endif
@@ -1961,7 +1974,7 @@ find_best_xft_font_size(XtermWidget xw,
 				NULL);
 		if ((match = XftFontMatch(display,
 					  XScreenNumberOfScreen(screen),
-					  pat, &status))) {
+					  pat, &status)) != NULL) {
 		    font = XftFontOpenPattern(display, match);
 		    maybeXftCache(xw, font);
 		}
@@ -2093,9 +2106,7 @@ find_best_xft_font_size(XtermWidget xw,
 	    cp->xmin = *xmin;
 	    cp->ymin = *ymin;
 	}
-	if (cp != NULL) {
-	    cp->font_data = font;
-	}
+	cp->font_data = font;
 	return font;
     }
 }
@@ -2425,30 +2436,6 @@ get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
 	    for (xx = 0U; xx < *w; xx++)
 		pixels[yy * *w + xx] = '\1';
     }
-}
-
-#define ROT_SHEAR_SCALE 8192
-#define SIGNED_UNSIGNED_MOD(VAL, BASE) ( (((VAL) % (int) (BASE)) + (int) (BASE)) % (int) (BASE) )
-
-static unsigned
-get_shade_character_pixel(Char const *pixels, unsigned w, unsigned h,
-			  unsigned smaxf, unsigned scale, int slant_dx,
-			  int px, int py)
-{
-    unsigned wx, wy;
-    unsigned fx, fy;
-
-    wx = (unsigned) SIGNED_UNSIGNED_MOD(px -
-					(slant_dx * SIGNED_UNSIGNED_MOD(py, smaxf))
-					/ ROT_SHEAR_SCALE, smaxf);
-    wy = (unsigned) SIGNED_UNSIGNED_MOD(py, smaxf);
-
-    fx = (wx * scale) >> SCALE_FIXED_POINT;
-    fy = (wy * scale) >> SCALE_FIXED_POINT;
-    if (fx < w && fy < h) {
-	return (unsigned) pixels[fy * w + fx];
-    }
-    return 0U;
 }
 
 static void
@@ -3856,7 +3843,7 @@ load_regis_raw_extent(char const *extent, int *relx, int *rely,
     char const *ypart;
 
     xpart = extent;
-    if ((ypart = strchr(extent, ','))) {
+    if ((ypart = strchr(extent, ',')) != NULL) {
 	ypart++;
     } else {
 	ypart = "";

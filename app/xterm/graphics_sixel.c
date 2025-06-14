@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.62 2024/07/01 21:19:30 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.63 2024/12/01 15:41:40 tom Exp $ */
 
 /*
  * Copyright 2014-2023,2024 by Thomas E. Dickey
@@ -539,7 +539,7 @@ parse_sixel_char(char cp)
 {
     /* s_* variables are static state, defined above */
 
-    if (cp == '\0' || isspace(cp)) {
+    if (cp == '\0' || isspace(CharOf(cp))) {
 	if (s_repeating && cp == '\0') {
 	    TRACE(("DATA_ERROR: sixel data string terminated in the middle of a repeat operator\n"));
 	    s_repeating = False;
@@ -548,7 +548,7 @@ parse_sixel_char(char cp)
 	return;
     }
 
-    if (isdigit(cp)) {
+    if (isdigit(CharOf(cp))) {
 	if (s_accumulator == -1)
 	    s_accumulator = 0;
 	s_accumulator *= 10;

@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.927 2024/09/30 08:03:20 tom Exp $ */
+/* $XTermId: main.c,v 1.933 2025/03/08 13:03:19 tom Exp $ */
 
 /*
- * Copyright 2002-2023,2024 by Thomas E. Dickey
+ * Copyright 2002-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1695,32 +1695,32 @@ parseArg(int *num, char **argv, char **valuep)
     };
 #undef DATA
     /* *INDENT-ON* */
-    XrmOptionDescRec *result = 0;
+    XrmOptionDescRec *result = NULL;
     Cardinal inlist;
     Cardinal limit = XtNumber(optionDescList) + XtNumber(opTable);
     int atbest = -1;
-    int best = -1;
-    int test;
     Boolean exact = False;
     int ambiguous1 = -1;
     int ambiguous2 = -1;
     char *option;
-    char *value;
 
 #define ITEM(n) ((Cardinal)(n) < XtNumber(optionDescList) \
 		 ? &optionDescList[n] \
 		 : &opTable[(Cardinal)(n) - XtNumber(optionDescList)])
 
-    if ((option = argv[*num]) != 0) {
+    if ((option = argv[*num]) != NULL) {
 	Boolean need_value;
 	Boolean have_value = False;
+	int best = -1;
+	char *value;
 
 	TRACE(("parseArg %s\n", option));
-	if ((value = argv[(*num) + 1]) != 0) {
+	if ((value = argv[(*num) + 1]) != NULL) {
 	    have_value = (Boolean) !isOption(value);
 	}
 	for (inlist = 0; inlist < limit; ++inlist) {
 	    XrmOptionDescRec *check = ITEM(inlist);
+	    int test;
 
 	    test = matchArg(check, option);
 	    if (test < 0)
@@ -1743,7 +1743,7 @@ parseArg(int *num, char **argv, char **valuep)
 
 	    need_value = (Boolean) (test > 0 && countArg(check) > 0);
 
-	    if (need_value && value != 0) {
+	    if (need_value && value != NULL) {
 		;
 	    } else if (need_value ^ have_value) {
 		TRACE(("...skipping, need %d vs have %d\n", need_value, have_value));
@@ -1775,7 +1775,7 @@ parseArg(int *num, char **argv, char **valuep)
 	}
     }
 
-    *valuep = 0;
+    *valuep = NULL;
     if (atbest >= 0) {
 	result = ITEM(atbest);
 	if (!exact) {
@@ -1784,10 +1784,10 @@ parseArg(int *num, char **argv, char **valuep)
 			     ITEM(ambiguous1)->option,
 			     ITEM(ambiguous2)->option);
 	    } else if (strlen(option) > strlen(result->option)) {
-		result = 0;
+		result = NULL;
 	    }
 	}
-	if (result != 0) {
+	if (result != NULL) {
 	    TRACE(("...result %s\n", result->option));
 	    /* expand abbreviations */
 	    if (result->argKind != XrmoptionStickyArg) {
@@ -1914,6 +1914,42 @@ DeleteWindow(Widget w,
 
 /* ARGSUSED */
 static void
+xtermColorEvents(Widget w GCC_UNUSED,
+		 XEvent *event,
+		 String *params GCC_UNUSED,
+		 Cardinal *num_params GCC_UNUSED)
+{
+    if (event->xclient.format == 8) {
+#define BSIZE sizeof(event->xclient.data.b)
+	/*
+	 * The OSC must begin with a number (which is enabled in our table),
+	 * not contain "?" (which would force a query/response), and have a
+	 * single parameter after the number, separated by a ";".
+	 */
+	int code;
+	char param;
+	char *source = event->xclient.data.b;
+
+	source[BSIZE - 1] = '\0';
+
+	if (sscanf(source, "%d;%c", &code, &param) == 2
+	    && code > 0
+	    && code < OSC_NCOLORS
+	    && TScreenOf(term)->color_events[code]
+	    && strchr(source, '?') == NULL) {
+	    TRACE(("xtermColorEvents code %d: %s\n", code, source));
+	    do_osc(term, (Char *) source, strlen(source), 1 /* final */ );
+	} else {
+	    TRACE(("xtermColorEvents ignore %s\n", source));
+	}
+    } else {
+	TRACE(("xtermColorEvents invalid format %d, expected 8\n",
+	       event->xclient.format));
+    }
+}
+
+/* ARGSUSED */
+static void
 KeyboardMapping(Widget w GCC_UNUSED,
 		XEvent *event,
 		String *params GCC_UNUSED,
@@ -1929,6 +1965,7 @@ KeyboardMapping(Widget w GCC_UNUSED,
 static XtActionsRec actionProcs[] =
 {
     {"DeleteWindow", DeleteWindow},
+    {"ColorEvents", xtermColorEvents},
     {"KeyboardMapping", KeyboardMapping},
 };
 
@@ -1977,7 +2014,7 @@ my_pty_id(char *device)
 	if (PTYCHARLEN < len)
 	    leaf = leaf + (len - PTYCHARLEN);
     }
-    TRACE(("my_pty_id  (%s) -> '%s'\n", device, leaf));
+    TRACE(("my_pty_id  (%s) -> '%s'\n", NonNull(device), NonNull(leaf)));
     return leaf;
 }
 
@@ -2186,7 +2223,7 @@ complex_command(char **args)
     Boolean result = False;
     if (x_countargv(args) == 1) {
 	char *check = xtermFindShell(args[0], False);
-	if (check == 0) {
+	if (check == NULL) {
 	    result = True;
 	} else {
 	    free(check);
@@ -2292,12 +2329,14 @@ lookup_baudrate(const char *value)
     };
 #undef DATA
     unsigned result = 0;
-    long check;
-    char *next;
+
     if (x_toupper(*value) == 'B')
 	value++;
+
     if (isdigit(CharOf(*value))) {
-	check = strtol(value, &next, 10);
+	char *next;
+	long check = strtol(value, &next, 10);
+
 	if (FullS2L(value, next) && (check > 0)) {
 	    Cardinal n;
 	    for (n = 0; n < XtNumber(speeds); ++n) {
@@ -2339,21 +2378,16 @@ get_tty_erase(int fd, int default_erase, const char *tag)
 int
 get_tty_lnext(int fd, int default_lnext, const char *tag)
 {
-    int result = default_lnext;
-    int rc;
-
 #ifdef TERMIO_STRUCT
     TERMIO_STRUCT my_tio;
-    rc = ttyGetAttr(fd, &my_tio);
-    if (rc == 0)
-	result = my_tio.c_cc[VLNEXT];
+    int rc = ttyGetAttr(fd, &my_tio);
+    int result = (rc == 0) ? my_tio.c_cc[VLNEXT] : default_lnext;
 #elif defined(HAS_LTCHARS)
     struct ltchars my_ltc;
-    rc = ioctl(fd, TIOCGLTC, (char *) &my_ltc);
-    if (rc == 0)
-	result = my_ltc.t_lnextc;
+    int rc = ioctl(fd, TIOCGLTC, (char *) &my_ltc);
+    int result = (rc == 0) ? my_ltc.t_lnextc : default_lnext;
 #else
-    result = XTERM_LNEXT;
+    int result = XTERM_LNEXT;
 #endif /* TERMIO_STRUCT */
     TRACE(("%s lnext:%d (from %s)\n", (rc == 0) ? "OK" : "FAIL", result, tag));
     (void) tag;
@@ -2437,23 +2471,24 @@ main(int argc, char *argv[]ENVP_ARG)
     TRACE_ARGV("Before XtOpenApplication", argv);
     restart_params = 0;
     if (argc > 1) {
-	XrmOptionDescRec *option_ptr;
-	char *option_value;
 	int n;
 	Bool quit = False;
 
 	for (n = 1; n < argc; n++) {
-	    if ((option_ptr = parseArg(&n, argv, &option_value)) == 0) {
-		if (argv[n] == 0) {
+	    XrmOptionDescRec *option_ptr;
+	    char *option_value;
+
+	    if ((option_ptr = parseArg(&n, argv, &option_value)) == NULL) {
+		if (argv[n] == NULL) {
 		    break;
 		} else if (isOption(argv[n])) {
 		    Syntax(argv[n]);
-		} else if (explicit_shname != 0) {
+		} else if (explicit_shname != NULL) {
 		    xtermWarning("Explicit shell already was %s\n", explicit_shname);
 		    Syntax(argv[n]);
 		}
 		explicit_shname = xtermFindShell(argv[n], True);
-		if (explicit_shname == 0)
+		if (explicit_shname == NULL)
 		    exit(0);
 		TRACE(("...explicit shell %s\n", explicit_shname));
 		restart_params = (argc - n);
@@ -2478,7 +2513,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    } else if (!strcmp(option_ptr->option, "-class")) {
 		NeedParam(option_ptr, option_value);
 		free(my_class);
-		if ((my_class = x_strdup(option_value)) == 0) {
+		if ((my_class = x_strdup(option_value)) == NULL) {
 		    Help();
 		    quit = True;
 		}
@@ -2908,18 +2943,24 @@ main(int argc, char *argv[]ENVP_ARG)
 	    char *encoding_opt[4];
 	    encoding_opt[0] = x_strdup("-encoding");
 	    encoding_opt[1] = term->misc.locale_str;
-	    encoding_opt[2] = 0;
+	    encoding_opt[2] = NULL;
 	    x_appendargv(command_to_exec_with_luit, encoding_opt);
 	}
 	command_length_with_luit = x_countargv(command_to_exec_with_luit);
 	if (count_exec) {
-	    static char *fixup_shell[] =
-	    {(char *) "sh", (char *) "-c", 0};
 	    char *delimiter[2];
 	    delimiter[0] = x_strdup("--");
-	    delimiter[1] = 0;
+	    delimiter[1] = NULL;
 	    x_appendargv(command_to_exec_with_luit, delimiter);
 	    if (complex_command(command_to_exec)) {
+		static char shell_name[] = "sh";
+		static char c_option[] = "-c";
+		static char *fixup_shell[] =
+		{
+		    shell_name,
+		    c_option,
+		    NULL
+		};
 		x_appendargv(command_to_exec_with_luit, fixup_shell);
 	    }
 	    x_appendargv(command_to_exec_with_luit, command_to_exec);
@@ -3191,7 +3232,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
 #elif defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME) && defined(HAVE_GRANTPT_PTY_ISATTY)
     if ((*pty = posix_openpt(O_RDWR)) >= 0) {
 	char *name = ptsname(*pty);
-	if (name != 0) {
+	if (name != NULL) {
 	    strcpy(ttydev, name);
 	    result = 0;
 	}
@@ -3285,10 +3326,10 @@ get_pty(int *pty, char *from GCC_UNUSED)
 #endif
 
     TRACE(("get_pty(ttydev=%s, ptydev=%s) %s fd=%d\n",
-	   ttydev != 0 ? ttydev : "?",
-	   ptydev != 0 ? ptydev : "?",
+	   ttydev != NULL ? ttydev : "?",
+	   ptydev != NULL ? ptydev : "?",
 	   result ? "FAIL" : "OK",
-	   pty != 0 ? *pty : -1));
+	   pty != NULL ? *pty : -1));
     return result;
 }
 
@@ -3298,7 +3339,7 @@ set_pty_permissions(uid_t uid, unsigned gid, unsigned mode)
 #ifdef USE_TTY_GROUP
     struct group *ttygrp;
 
-    if ((ttygrp = getgrnam(TTY_GROUP_NAME)) != 0) {
+    if ((ttygrp = getgrnam(TTY_GROUP_NAME)) != NULL) {
 	gid = (unsigned) ttygrp->gr_gid;
 	mode &= 0660U;
     }
@@ -3433,7 +3474,7 @@ static const char *const tekterm[] =
     "tek4013",			/* 4012 with APL character set support */
     "tek4010",			/* small screen, upper-case only */
     "dumb",
-    0
+    NULL
 };
 #endif
 
@@ -3455,7 +3496,7 @@ static const char *const vtterm[] =
     "vt100",
     "ansi",
     "dumb",
-    0
+    NULL
 };
 
 /* ARGSUSED */
@@ -3704,7 +3745,7 @@ find_utmp(struct UTMP_STR *tofind)
 #if defined(__digital__) && defined(__unix__) && (defined(OSMAJORVERSION) && OSMAJORVERSION < 5)
 	working.ut_type = 0;
 #endif
-	if ((result = call_getutid(&working)) == 0)
+	if ((result = call_getutid(&working)) == NULL)
 	    break;
 	copy_filled(limited.ut_line, result->ut_line, sizeof(result->ut_line));
 	if (!memcmp(limited.ut_line, tofind->ut_line, sizeof(limited.ut_line)))
@@ -3763,14 +3804,15 @@ findValidShell(const char *haystack, const char *needle)
     int result = -1;
     int count = -1;
     const char *s, *t;
-    size_t have;
     size_t want = strlen(needle);
 
     TRACE(("findValidShell:\n%s\n", NonNull(haystack)));
 
-    for (s = haystack; (s != 0) && (*s != '\0'); s = t) {
+    for (s = haystack; (s != NULL) && (*s != '\0'); s = t) {
+	size_t have;
+
 	++count;
-	if ((t = strchr(s, '\n')) == 0) {
+	if ((t = strchr(s, '\n')) == NULL) {
 	    t = s + strlen(s);
 	}
 	have = (size_t) (t - s);
@@ -3778,12 +3820,12 @@ findValidShell(const char *haystack, const char *needle)
 	if ((have >= want) && (*s != '#')) {
 	    char *p = (char *) malloc(have + 1);
 
-	    if (p != 0) {
+	    if (p != NULL) {
 		char *q;
 
 		memcpy(p, s, have);
 		p[have] = '\0';
-		if ((q = x_strtrim(p)) != 0) {
+		if ((q = x_strtrim(p)) != NULL) {
 		    TRACE(("...test %s\n", q));
 		    if (!strcmp(q, needle)) {
 			result = count;
@@ -3825,7 +3867,7 @@ validShell(const char *pathname)
 	int count = -1;
 
 	TRACE(("validShell:getusershell\n"));
-	while ((q = getusershell()) != 0) {
+	while ((q = getusershell()) != NULL) {
 	    ++count;
 	    TRACE(("...test \"%s\"\n", q));
 	    if (!strcmp(q, pathname)) {
@@ -3974,7 +4016,8 @@ xtermTrimEnv(void)
 			xtermUnsetenv(my_var);
 			free(my_var);
 			/* When removing an entry, check the same slot again. */
-			j--;
+			if (j != 0)
+			    j--;
 		    }
 		    break;
 		}
@@ -3983,7 +4026,8 @@ xtermTrimEnv(void)
 		if (table[k].trim) {
 		    xtermUnsetenv(table[k].name);
 		    /* When removing an entry, check the same slot again. */
-		    j--;
+		    if (j != 0)
+			j--;
 		}
 		break;
 	    }
@@ -4000,7 +4044,6 @@ static int
 spawnXTerm(XtermWidget xw, unsigned line_speed)
 {
     TScreen *screen = TScreenOf(xw);
-    Cardinal nn;
 #if OPT_PTY_HANDSHAKE
     Bool got_handshake_size = False;
     handshake_t handshake;
@@ -4016,6 +4059,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
     char *newtc;
 
 #ifdef TERMIO_STRUCT
+    Cardinal nn;
     TERMIO_STRUCT tio;
 #ifdef TIOCLSET
     unsigned lmode;
@@ -4036,7 +4080,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #endif /* sony */
 #endif /* TERMIO_STRUCT */
 
-    char *shell_path = 0;
+    char *shell_path = NULL;
     char *shname, *shname_minus;
     int i;
 #if USE_NO_DEV_TTY
@@ -4115,7 +4159,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    ttyfd = -1;
 	    errno = ENXIO;
 	}
-	shell_path = 0;
+	shell_path = NULL;
 	memset(&pw, 0, sizeof(pw));
 #if OPT_PTY_HANDSHAKE
 	got_handshake_size = False;
@@ -4318,7 +4362,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
     } else if (ok_termcap) {
 	char *s = get_tcap_erase(xw);
 	TRACE(("...extracting initial_erase value from termcap\n"));
-	if (s != 0) {
+	if (s != NULL) {
 	    char *save = s;
 	    initial_erase = decode_keyvalue(&s, True);
 	    setInitialErase = True;
@@ -4423,7 +4467,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #endif
 	    unlockpt(screen->respond);
 	    TRACE_GET_TTYSIZE(screen->respond, "after unlockpt");
-	    if ((pty_name = ptsname(screen->respond)) == 0) {
+	    if ((pty_name = ptsname(screen->respond)) == NULL) {
 		SysError(ERROR_PTSNAME);
 	    } else if ((ptyfd = open(pty_name, O_RDWR)) < 0) {
 		SysError(ERROR_OPPTSNAME);
@@ -4593,7 +4637,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		/* use the same tty name that everyone else will use
 		 * (from ttyname)
 		 */
-		if ((ptr = ttyname(ttyfd)) != 0) {
+		if ((ptr = ttyname(ttyfd)) != NULL) {
 		    free(ttydev);
 		    ttydev = x_strdup(ptr);
 		}
@@ -4628,7 +4672,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		tio.c_iflag |= ICRNL;
 #if OPT_WIDE_CHARS && defined(IUTF8)
 #if OPT_LUIT_PROG
-		if (command_to_exec_with_luit == 0)
+		if (command_to_exec_with_luit == NULL)
 #endif
 		    if (screen->utf8_mode)
 			tio.c_iflag |= IUTF8;
@@ -4977,11 +5021,11 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    /* position to entry in utmp file */
 	    /* Test return value: beware of entries left behind: PSz 9 Mar 00 */
 	    utret = find_utmp(&utmp);
-	    if (utret == 0) {
+	    if (utret == NULL) {
 		(void) call_setutent();
 		init_utmp(USER_PROCESS, &utmp);
 		utret = find_utmp(&utmp);
-		if (utret == 0) {
+		if (utret == NULL) {
 		    (void) call_setutent();
 		}
 	    }
@@ -5329,7 +5373,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	     */
 	    if (validProgram(explicit_shname)) {
 		shell_path = explicit_shname;
-	    } else if (shell_path == 0) {
+	    } else if (shell_path == NULL) {
 		/* this could happen if the explicit shname lost a race */
 		shell_path = resetShell(shell_path);
 	    }
@@ -5360,7 +5404,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		free(myShell);
 		TRACE_ARGV("spawning command", command_to_exec);
 		execvp(*command_to_exec, command_to_exec);
-		if (command_to_exec[1] == 0)
+		if (command_to_exec[1] == NULL)
 		    execlp(shell_path, shname, "-c", command_to_exec[0],
 			   (void *) 0);
 		xtermPerror("Can't execvp %s", *command_to_exec);
@@ -5370,7 +5414,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-	    if ((shname_minus = (char *) malloc(strlen(shname) + 2)) != 0) {
+	    if ((shname_minus = (char *) malloc(strlen(shname) + 2)) != NULL) {
 		(void) strcpy(shname_minus, "-");
 		(void) strcat(shname_minus, shname);
 	    } else {
@@ -5608,7 +5652,7 @@ Exit(int n)
 	/*
 	 * We could use getutline() if we didn't support old systems.
 	 */
-	while ((utptr = find_utmp(&utmp)) != 0) {
+	while ((utptr = find_utmp(&utmp)) != NULL) {
 	    if (utptr->ut_pid == screen->pid) {
 		utptr->ut_type = DEAD_PROCESS;
 #if defined(HAVE_UTMP_UT_XTIME)
@@ -5732,7 +5776,7 @@ Exit(int n)
 	    XtDestroyWidget(toplevel);
 	    TRACE(("destroyed top-level widget\n"));
 	}
-	sortedOpts(0, 0, 0);
+	sortedOpts(NULL, NULL, 0);
 	noleaks_charproc();
 	noleaks_ptydata();
 #if OPT_GRAPHICS
@@ -5797,13 +5841,13 @@ resize_termcap(XtermWidget xw)
 			     ? MaxRows(screen)
 			     : MaxCols(screen)));
 	temp += strlen(temp);
-	if ((ptr1 = strchr(ptr1, ':')) != 0 && (ptr1 < ptr2)) {
+	if ((ptr1 = strchr(ptr1, ':')) != NULL && (ptr1 < ptr2)) {
 	    strncpy(temp, ptr1, i = (size_t) (ptr2 - ptr1));
 	    temp += i;
 	    sprintf(temp, "%d", (li_first
 				 ? MaxCols(screen)
 				 : MaxRows(screen)));
-	    if ((ptr2 = strchr(ptr2, ':')) != 0) {
+	    if ((ptr2 = strchr(ptr2, ':')) != NULL) {
 		strcat(temp, ptr2);
 	    }
 	}

@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1130 2024/09/30 08:03:20 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1141 2025/04/01 22:27:18 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -315,7 +315,7 @@ typedef const Char *UString;
 typedef Char *UString;
 #endif
 
-#define IsEmpty(s) ((s) == 0 || *(s) == '\0')
+#define IsEmpty(s) ((s) == NULL || *(s) == '\0')
 #define IsSpace(c) ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
 
 /*
@@ -323,7 +323,7 @@ typedef Char *UString;
  * "PartS2L" when more data may follow in the string.
  */
 #define FullS2L(s,d) (PartS2L(s,d) && (*(d) == '\0'))
-#define PartS2L(s,d) (isdigit(CharOf(*(s))) && (d) != (s) && (d) != 0)
+#define PartS2L(s,d) (isdigit(CharOf(*(s))) && (d) != (s) && (d) != NULL)
 
 #define CASETYPE(name) case name: result = #name; break
 
@@ -517,6 +517,10 @@ typedef enum {
 
 #ifndef OPT_BLINK_TEXT
 #define OPT_BLINK_TEXT  OPT_BLINK_CURS /* true if xterm has blinking text capability */
+#endif
+
+#ifndef OPT_BLOCK_SELECT
+#define OPT_BLOCK_SELECT 0 /* true if block-select is supported */
 #endif
 
 #ifndef OPT_BOX_CHARS
@@ -971,6 +975,32 @@ typedef enum {
 } TermColors;
 
 /*
+ * Enum corresponding to the actual OSC codes rather than the internal
+ * array indices.  Compare with TermColors.
+ */
+typedef enum {
+    OSC_TEXT_FG = 10
+    ,OSC_TEXT_BG
+    ,OSC_TEXT_CURSOR
+    ,OSC_MOUSE_FG
+    ,OSC_MOUSE_BG
+#if OPT_TEK4014
+    ,OSC_TEK_FG = 15
+    ,OSC_TEK_BG
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    ,OSC_HIGHLIGHT_BG = 17
+#endif
+#if OPT_TEK4014
+    ,OSC_TEK_CURSOR = 18
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    ,OSC_HIGHLIGHT_FG = 19
+#endif
+    ,OSC_NCOLORS
+} OscTextColors;
+
+/*
  * Definitions for exec-formatted and insert-formatted actions.
  */
 typedef void (*FormatSelect) (Widget, char *, char *, CELL *, CELL *);
@@ -995,12 +1025,20 @@ typedef enum {
     tmSetBase16 = 1		/* set title using hex-string */
     , tmGetBase16 = 2		/* get title using hex-string */
 #if OPT_WIDE_CHARS
+#define MAX_TITLEMODE 3
     , tmSetUtf8 = 4		/* like utf8Title, but controllable */
     , tmGetUtf8 = 8		/* retrieve title encoded as UTF-8 */
+#else
+#define MAX_TITLEMODE 1
 #endif
 } TitleModes;
 
+#define ValidTitleMode(code) ((code) >= 0 && (code) <= MAX_TITLEMODE)
 #define IsTitleMode(xw,mode) (((xw)->screen.title_modes & mode) != 0)
+
+#define IsSetUtf8Title(xw) (IsTitleMode(xw, tmSetUtf8) \
+			 || ((xw)->screen.utf8_title) \
+			 || ((xw)->screen.c1_printable))
 
 #include <xcharmouse.h>
 
@@ -1432,6 +1470,8 @@ typedef enum {
     , ewSetSelection
     , ewGetChecksum
     , ewSetChecksum
+    , ewStatusLine
+    , ewColumnMode
     /* get the size of the array... */
     , ewLAST
 } WindowOps;
@@ -1823,7 +1863,7 @@ typedef unsigned CellColor;
 #define isSameCColor(p,q)	((p) == (q))
 #endif
 
-#define BITS2MASK(b)		((1 << b) - 1)
+#define BITS2MASK(b)		(xBIT(b) - 1)
 
 #define COLOR_MASK		BITS2MASK(COLOR_BITS)
 
@@ -1945,6 +1985,11 @@ typedef struct {
  */
 #define SizeOfLineData  offsetof(LineData, combData)
 #define SizeOfCellData  offsetof(CellData, combData)
+
+/*
+ * CellData size depends on the "combiningChars" resource.
+ */
+#define CellDataSize(screen) (SizeOfCellData + screen->cellExtra)
 
 	/*
 	 * A "row" is the index within the visible part of the screen, and an
@@ -2596,6 +2641,9 @@ typedef struct {
 	String		disallowedWinOps;
 	char		disallow_win_ops[ewLAST];
 
+	char		color_events[1+OSC_NCOLORS]; /* ok OSC codes	*/
+	char *		colorEvents;	/* initial color-event codes	*/
+
 	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/
 #ifdef ALLOWLOGGING
@@ -2627,6 +2675,7 @@ typedef struct {
 
 	PrinterState	printer_state;	/* actual printer state		*/
 	PrinterFlags	printer_flags;	/* working copy of printer flags */
+	Boolean		print_rawchars;	/* true to ignore printer check	*/
 #if OPT_PRINT_ON_EXIT
 	Boolean		write_error;
 #endif
@@ -2973,6 +3022,11 @@ typedef struct {
 	int		firstValidRow;	/* Valid rows for selection clipping */
 	int		lastValidRow;	/* " " */
 
+#if OPT_BLOCK_SELECT
+	int		lastSelectWasBlock;
+	int		blockSelecting;	/* non-zero if block selection */
+#endif
+
 	Boolean		selectToBuffer;	/* copy selection to buffer	*/
 	InternalSelect	internal_select;
 
@@ -3223,7 +3277,36 @@ typedef struct
     int keypad_keys;		/* how to handle keypad key-modifiers */
     int other_keys;		/* how to handle other key-modifiers */
     int string_keys;		/* how to handle string() modifiers */
+    int modify_keys;		/* how to handle modifier key-modifiers */
+    int special_keys;		/* how to handle special key-modifiers */
 } TModify;
+
+typedef enum {
+    mfkNone = -1		/* disable the feature */
+    , mfkOriginal = 0		/* original/obsolete format */
+    , mfkControl  = 1		/* prefix modified controls with CSI */
+    , mfkParam    = 2		/* modifier parameter is second */
+    , mfkPrivate  = 3		/* mark this as a private control */
+    , mfkExtended = 4		/* modify all special keys */
+} MfkModes;			/* also modifyCursorKeys, modifyKeypadKeys */
+
+typedef enum {
+    mokNone = 0			/* disable the feature */
+    , mokUser     = 1		/* user-friendly modified-keys */
+    , mokProgram  = 2		/* program-friendly modified-keys */
+    , mokExtended = 3		/* modify all ordinary keys */
+} MokModes;			/* modifyOtherKeys */
+
+typedef enum {
+    modifyKeyboard = 0		/* mode */
+    , modifyCursorKeys   = 1	/* keysym parameterized mode */
+    , modifyFunctionKeys = 2	/* keysym parameterized mode */
+    , modifyKeypadKeys   = 3	/* keysym non-parameterized mode */
+    , modifyOtherKeys    = 4	/* keysym semi-parameterized mode */
+    , modifyStringKeys   = 5	/* reserved */
+    , modifyModifierKeys = 6	/* used by Xutf8LookupString, etc */
+    , modifySpecialKeys  = 7	/* other special/non-parameterized keysyms */
+} ModkeyModes;
 
 typedef struct
 {
@@ -3242,7 +3325,10 @@ typedef struct
 #if OPT_MOD_FKEYS
     TModify modify_now;		/* current modifier value */
     TModify modify_1st;		/* original modifier value, for resets */
-    int format_keys;		/* format of modifyOtherKeys */
+    TModify format_now;		/* current formatter value */
+    TModify format_1st;		/* original formatter value, for resets */
+    TModify ignore_now;		/* limit modifiers used in modifyXxxKeys */
+    TModify ignore_1st;		/* original limit on modifiers */
 #endif
 } TKeyboard;
 
@@ -3344,6 +3430,8 @@ typedef struct _Work {
 	char *str;
 	int len;
     } user_keys[MAX_UDK];
+#define SET_MIN_MOD(xw, value) xw->work.min_mod = (value >= 3) ? 0 : 1
+    int min_mod;		/* zero for modifying control-keys */
 #define MAX_POINTER (XC_num_glyphs/2)
     Cursor pointer_cursors[MAX_POINTER]; /* saved cursors	*/
 #ifndef NO_ACTIVE_ICON
@@ -3716,7 +3804,7 @@ typedef struct {
 
 #endif /* NO_ACTIVE_ICON */
 
-#define okFont(font) ((font) != 0 && (font)->fid != 0)
+#define okFont(font) ((font) != NULL && (font)->fid != 0)
 
 /*
  * Macro to check if we are iconified; do not use render for that case.

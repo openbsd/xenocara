@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2014-2023,2024 Thomas Dickey <dickey@invisible-island.net> -->
+<!-- Copyright 2014-2024,2025 Thomas Dickey <dickey@invisible-island.net> -->
 <component type="desktop">
   <id>xterm.desktop</id>
   <metadata_license>CC-BY-3.0</metadata_license>
@@ -35,7 +35,7 @@
     <keyword>terminal</keyword>
   </keywords>
   <releases>
-    <release version="395" date="2024-10-24"/>
+    <release version="399" date="2025-05-18"/>
   </releases>
   <url type="homepage">https://invisible-island.net/xterm/</url>
   <update_contact>dickey@invisible-island.net</update_contact>

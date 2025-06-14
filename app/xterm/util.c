@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.955 2024/09/01 22:51:57 tom Exp $ */
+/* $XTermId: util.c,v 1.958 2025/05/17 00:41:45 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -517,7 +517,7 @@ scrollInMargins(XtermWidget xw, int amount, int top)
 	if (amount != 0) {
 	    for (row = top; row <= screen->bot_marg; ++row) {
 		LineData *ld;
-		if ((ld = getLineData(screen, row + amount)) != 0) {
+		if ((ld = getLineData(screen, row + amount)) != NULL) {
 		    if (left > 0) {
 			if (ld->charData[left] == HIDDEN_CHAR) {
 			    Clear1Cell(ld, left - 1);
@@ -537,8 +537,8 @@ scrollInMargins(XtermWidget xw, int amount, int top)
 
     if (amount > 0) {
 	for (row = top; row <= screen->bot_marg - amount; ++row) {
-	    if ((src = getLineData(screen, row + amount)) != 0
-		&& (dst = getLineData(screen, row)) != 0) {
+	    if ((src = getLineData(screen, row + amount)) != NULL
+		&& (dst = getLineData(screen, row)) != NULL) {
 		CopyCells(screen, src, dst, left, length, False);
 	    }
 	}
@@ -548,8 +548,8 @@ scrollInMargins(XtermWidget xw, int amount, int top)
 	}
     } else if (amount < 0) {
 	for (row = screen->bot_marg; row >= top - amount; --row) {
-	    if ((src = getLineData(screen, row + amount)) != 0
-		&& (dst = getLineData(screen, row)) != 0) {
+	    if ((src = getLineData(screen, row + amount)) != NULL
+		&& (dst = getLineData(screen, row)) != NULL) {
 		CopyCells(screen, src, dst, left, length, True);
 	    }
 	}
@@ -1022,7 +1022,7 @@ showZIconBeep(XtermWidget xw, const char *name)
 	} else {
 	    char *marker = strstr(format, "%s");
 	    char *result = newname;
-	    if (marker != 0) {
+	    if (marker != NULL) {
 		size_t skip = (size_t) (marker - format);
 		if (skip) {
 		    strncpy(result, format, skip);
@@ -1062,7 +1062,7 @@ resetZIconBeep(XtermWidget xw)
 		char *marker = strstr(format, "%s");
 		Boolean found = False;
 
-		if (marker != 0) {
+		if (marker != NULL) {
 		    if (marker == format
 			|| !strncmp(icon_name, format, (size_t) (marker - format))) {
 			found = True;
@@ -1102,7 +1102,7 @@ WriteText(XtermWidget xw, Cardinal offset, Cardinal length)
     IChar *str = xw->work.write_text + offset;
     TScreen *screen = TScreenOf(xw);
     XTermDraw params;
-    CLineData *ld = 0;
+    CLineData *ld = NULL;
     unsigned attr_flags = xw->flags;
     CellColor fg_bg = xtermColorPair(xw);
     unsigned cells = visual_width(str, length);
@@ -1143,7 +1143,7 @@ WriteText(XtermWidget xw, Cardinal offset, Cardinal length)
     }
 
     if (AddToVisible(xw)
-	&& ((ld = getLineData(screen, screen->cur_row))) != 0) {
+	&& ((ld = getLineData(screen, screen->cur_row))) != NULL) {
 	unsigned test;
 
 	if (screen->cursor_state)
@@ -1454,7 +1454,7 @@ InsertChar(XtermWidget xw, unsigned n)
     if (screen->cur_col < left || screen->cur_col > right) {
 	n = 0;
     } else if (AddToVisible(xw)
-	       && (ld = getLineData(screen, screen->cur_row)) != 0) {
+	       && (ld = getLineData(screen, screen->cur_row)) != NULL) {
 	int col = right + 1 - (int) n;
 
 	/*
@@ -1537,7 +1537,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 	n = limit;
 
     if (AddToVisible(xw)
-	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
+	&& (ld = getLineData(screen, screen->cur_row)) != NULL) {
 	int col = right + 1 - (int) n;
 
 	/*
@@ -1737,7 +1737,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
     ResetWrap(screen);
 
     if (AddToVisible(xw)
-	&& (ld = getLineData(screen, row)) != 0) {
+	&& (ld = getLineData(screen, row)) != NULL) {
 
 	ClearCurBackground(xw,
 			   INX2ROW(screen, row),
@@ -2015,7 +2015,7 @@ row_has_data(TScreen *screen, int row)
     Boolean result = False;
     CLineData *ld;
 
-    if ((ld = getLineData(screen, row)) != 0) {
+    if ((ld = getLineData(screen, row)) != NULL) {
 	int col;
 
 	for (col = 0; col < screen->max_col; ++col) {
@@ -2231,7 +2231,7 @@ horizontal_copy_area(XtermWidget xw,
     TScreen *screen = TScreenOf(xw);
     CLineData *ld;
 
-    if ((ld = getLineData(screen, screen->cur_row)) != 0) {
+    if ((ld = getLineData(screen, screen->cur_row)) != NULL) {
 	int src_x = LineCursorX(screen, ld, firstchar);
 	int src_y = CursorY(screen, screen->cur_row);
 
@@ -2277,7 +2277,7 @@ vertical_copy_area(XtermWidget xw,
 		CLineData *ld;
 		int mapped = amount + row + screen->topline;
 
-		if ((ld = getLineData(screen, mapped)) != 0) {
+		if ((ld = getLineData(screen, mapped)) != NULL) {
 		    ShowWrapMarks(xw, row, ld);
 		}
 	    }
@@ -2387,7 +2387,7 @@ xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
     Drawable draw = VDrawable(screen);
     GC gc;
 
-    if ((gc = vwin->border_gc) != 0) {
+    if ((gc = vwin->border_gc) != NULL) {
 	int vmark1 = screen->border;
 	int vmark2 = vwin->height + vmark1;
 	int hmark1 = OriginX(screen);
@@ -3002,7 +3002,7 @@ getWideXftFont(XTermDraw * params,
 {
     TScreen *screen = TScreenOf(params->xw);
     int fontnum = screen->menu_font_number;
-    XTermXftFonts *result = 0;
+    XTermXftFonts *result = NULL;
 
 #if OPT_WIDE_ATTRS
     if ((attr_flags & ATR_ITALIC)
@@ -3018,7 +3018,7 @@ getWideXftFont(XTermDraw * params,
 	    result = XFT_DATA(fWItal);
 	}
     }
-    if (result != 0) {
+    if (result != NULL) {
 	;			/* skip the other tests */
     } else
 #endif
@@ -3058,7 +3058,7 @@ getNormXftFont(XTermDraw * params,
     if (CSET_DOUBLE(params->real_chrset)) {
 	result = xterm_DoubleFT(params, params->real_chrset, attr_flags);
     }
-    if (result != 0) {
+    if (result != NULL) {
 	;			/* found a usable double-sized font */
     } else
 #endif
@@ -3138,8 +3138,8 @@ xtermXftDrawString(XTermDraw * params,
 	XTermXftFonts *wdata = getWideXftFont(params, attr_flags);
 	XftFont *wfont = XftFp(wdata);
 	Cardinal src, dst;
-	XftFont *lastFont = 0;
-	XftFont *currFont = 0;
+	XftFont *lastFont = NULL;
+	XftFont *currFont = NULL;
 	Cardinal start = 0;
 	int charWidth;
 	int fwidth = FontWidth(screen);
@@ -3167,7 +3167,7 @@ xtermXftDrawString(XTermDraw * params,
 	    ncells += charWidth;
 
 	    if (lastFont != currFont) {
-		if ((lastFont != 0) && really) {
+		if ((lastFont != NULL) && really) {
 		    XftDrawCharSpec(screen->renderDraw,
 				    color,
 				    lastFont,
@@ -3597,7 +3597,7 @@ drawClippedXftString(XTermDraw * params,
 		       text,
 		       len,
 		       True);
-    XftDrawSetClip(screen->renderDraw, 0);
+    XftDrawSetClip(screen->renderDraw, NULL);
     return ncells;
 }
 #endif
@@ -3712,7 +3712,7 @@ fakeDoubleChars(const XTermDraw * params,
     unsigned need = 2 * len;
     IChar *temp = TypeMallocN(IChar, need);
 
-    if (temp != 0) {
+    if (temp != NULL) {
 	unsigned n = 0;
 	XTermDraw recur = *params;
 
@@ -4001,7 +4001,7 @@ drawXtermText(const XTermDraw * params,
 #endif
 
 #if OPT_WIDE_CHARS
-    if (text == 0)
+    if (text == NULL)
 	return 0;
 #endif
     TRACE(("DRAWTEXT%c[%4d,%4d] (%d)%3d:%s\n",
@@ -4039,7 +4039,7 @@ drawXtermText(const XTermDraw * params,
 	} else
 #endif
 	    if ((!IsIcon(screen) && screen->font_doublesize)
-		&& (gc2 = xterm_DoubleGC(&recur, gc, &inx)) != 0) {
+		&& (gc2 = xterm_DoubleGC(&recur, gc, &inx)) != NULL) {
 	    /* draw actual double-sized characters */
 	    XFontStruct *fs = getDoubleFont(screen, inx)->fs;
 	    XRectangle rect, *rp = &rect;
@@ -4226,7 +4226,7 @@ drawXtermText(const XTermDraw * params,
 #if OPT_WIDE_CHARS
 		int needed = forceDbl ? 2 : ch_width;
 		XTermXftFonts *currData = pickXftData(needed, ndata, wdata);
-		XftFont *tempFont = 0;
+		XftFont *tempFont = NULL;
 #define CURR_TEMP (tempFont ? tempFont : XftFp(currData))
 
 		if (xtermIsInternalCs(ch) || ch == 0) {
@@ -4258,7 +4258,9 @@ drawXtermText(const XTermDraw * params,
 			unsigned part = ucs2dec(screen, ch);
 			if (xtermIsInternalCs(part)) {
 			    if (screen->force_box_chars
-				|| screen->broken_box_chars) {
+				|| xtermXftMissing(recur.xw,
+						   currData, 0,
+						   XftFp(currData), ch)) {
 				SetMissing("case 2");
 				ch = part;
 			    }
@@ -4720,8 +4722,8 @@ drawXtermText(const XTermDraw * params,
 	 */
 	useBoldFont = ((recur.attr_flags & BOLDATTR(screen)) != 0);
 	if (useBoldFont) {
-	    XTermFonts *norm = 0;
-	    XTermFonts *bold = 0;
+	    XTermFonts *norm = NULL;
+	    XTermFonts *bold = NULL;
 	    Bool noBold, noNorm;
 
 	    (void) norm;
@@ -4901,7 +4903,7 @@ drawXtermText(const XTermDraw * params,
 void
 allocXtermChars(ScrnPtr *buffer, Cardinal length)
 {
-    if (*buffer == 0) {
+    if (*buffer == NULL) {
 	*buffer = (ScrnPtr) XtMalloc(length);
     } else {
 	*buffer = (ScrnPtr) XtRealloc((char *) *buffer, length);
@@ -5408,7 +5410,7 @@ getXtermCell(TScreen *screen, int row, int col)
 {
     CLineData *ld = getLineData(screen, row);
 
-    return ((ld && (col < (int) ld->lineSize))
+    return ((ld && (col >= 0) && (col < (int) ld->lineSize))
 	    ? ld->charData[col]
 	    : (unsigned) ' ');
 }
@@ -5923,11 +5925,11 @@ discardRenderDraw(TScreen *screen)
 char *
 xtermSetLocale(int category, String after)
 {
-    char *before = x_strdup(setlocale(category, 0));
+    char *before = x_strdup(setlocale(category, NULL));
 
     (void) setlocale(category, after);
     TRACE(("before setlocale :%s\n", NonNull(before)));
-    TRACE(("updated locale   :%s\n", NonNull(setlocale(category, 0))));
+    TRACE(("updated locale   :%s\n", NonNull(setlocale(category, NULL))));
     return before;
 }
 
@@ -5936,5 +5938,5 @@ xtermResetLocale(int category, char *before)
 {
     (void) setlocale(category, before);
     free(before);
-    TRACE(("restored locale  :%s\n", NonNull(setlocale(category, 0))));
+    TRACE(("restored locale  :%s\n", NonNull(setlocale(category, NULL))));
 }

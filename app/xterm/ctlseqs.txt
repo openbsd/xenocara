@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2024)
-               updated for XTerm Patch #395 (2024/10/14)
+                    invisible-island.net (2006-2025)
+               updated for XTerm Patch #398 (2025/03/30)
 
 
 
@@ -493,7 +493,9 @@ DCS $ q Pt ST
             * |     -> DECSNLS
             , |     -> DECAC (VT525 only)
             , }     -> DECATC (VT525 only)
+            > Pm f  -> XTQFMTKEYS (xterm)
             > Pm m  -> XTQMODKEYS (xterm)
+            > Pm t  -> XTSMTITLE (xterm)
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
           r  ST for invalid requests.
@@ -526,6 +528,7 @@ DCS + Q Pt ST
           provides control sequences for querying the state directly:
 
           o   XTQALLOWED
+          o   XTQFMTKEYS
           o   XTQMODKEYS
 
 
@@ -646,6 +649,13 @@ CSI # R   Report the current entry on the palette stack, and the number
 
 CSI Ps S  Scroll up Ps lines (default = 1) (SU), VT420, ECMA-48.
 
+CSI # S   Report position on title-stack (XTTITLEPOS), xterm.
+          Response is the same format, with parameters:
+            CSI Pn; Pm # S
+          where
+            Pn is the current index into the title stack
+            Pm is the maximum index for the title stack
+
 CSI ? Pi ; Pa ; Pv S
           Set or request graphics attribute (XTSMGRAPHICS), xterm.  If
           configured to support either Sixel Graphics or ReGIS Graphics,
@@ -713,6 +723,9 @@ CSI > Pm T
           Normally, "reset" disables the feature.  It is possible to
           disable the ability to reset features by compiling a different
           default for the title modes into xterm.
+
+          If no parameters are given, all title mode features are reset
+          to the initial (compiled-in) default.
 
             Ps = 0  -> Do not set window/icon labels using hexadecimal.
             Ps = 1  -> Do not query window/icon labels using
@@ -822,11 +835,66 @@ CSI Ps ; Ps f
           Horizontal and Vertical Position [row;column] (default =
           [1,1]) (HVP).
 
+CSI > Pp ; Pv f
+CSI > Pp f
+          Set/reset key format options (XTFMTKEYS), xterm.  Set or reset
+          resource-values used by xterm to decide how to format escape
+          sequences holding information about the modifiers pressed with
+          a given key.
+
+          The first parameter Pp identifies the resource to set/reset.
+          The second parameter Pv is the value to assign to the
+          resource.
+
+          If the second parameter is omitted, the resource is reset to
+          its initial value.  Value 5  is reserved for input via the
+          string action.
+
+            Pp = 0  -> formatKeyboard.
+            Pp = 1  -> formatCursorKeys.
+            Pp = 2  -> formatFunctionKeys.
+            Pp = 3  -> formatKeypadKeys.
+            Pp = 4  -> formatOtherKeys.
+            Pp = 6  -> formatModifierKeys.
+            Pp = 7  -> formatSpecialKeys.
+
+          If no parameters are given, all resources are reset to their
+          initial values.  See Alt and Meta Keys for more details on the
+          formatOtherKeys feature.
+
 CSI Ps g  Tab Clear (TBC).  ECMA-48 defines additional codes, but the
           VT100 user manual notes that it ignores other codes.  DEC's
           later terminals (and xterm) do the same, for compatibility.
             Ps = 0  -> Clear Current Column (default).
             Ps = 3  -> Clear All.
+
+CSI ? Pp g
+          Query key modifier options (XTQFMTKEYS), xterm.
+
+          The parameter Pp identifies the resource to query.
+
+            Pp = 0  -> formatKeyboard.
+            Pp = 1  -> formatCursorKeys.
+            Pp = 2  -> formatFunctionKeys.
+            Pp = 3  -> formatKeypadKeys.
+            Pp = 4  -> formatOtherKeys.
+            Pp = 6  -> formatModifierKeys.
+            Pp = 7  -> formatSpecialKeys.
+
+          XTerm's response can be used to restore this state, because it
+          is formatted as an XTFMTKEYS control, i.e.,
+
+            CSI > Pp f
+
+          where
+
+            Pp = 0  -> formatKeyboard.
+            Pp = 1  -> formatCursorKeys.
+            Pp = 2  -> formatFunctionKeys.
+            Pp = 3  -> formatKeypadKeys.
+            Pp = 4  -> formatOtherKeys.
+            Pp = 6  -> formatModifierKeys.
+            Pp = 7  -> formatSpecialKeys.
 
 CSI Pm h  Set Mode (SM).
             Ps = 2  -> Keyboard Action Mode (KAM).
@@ -1254,16 +1322,20 @@ CSI > Pp m
           resource.
 
           If the second parameter is omitted, the resource is reset to
-          its initial value.  Values 3  and 5  are reserved for keypad-
-          keys and string-keys.
+          its initial value.  Value 5  is reserved for input via the
+          string action.
 
             Pp = 0  -> modifyKeyboard.
             Pp = 1  -> modifyCursorKeys.
             Pp = 2  -> modifyFunctionKeys.
+            Pp = 3  -> modifyKeypadKeys.
             Pp = 4  -> modifyOtherKeys.
+            Pp = 6  -> modifyModifierKeys.
+            Pp = 7  -> modifySpecialKeys.
 
           If no parameters are given, all resources are reset to their
-          initial values.
+          initial values.  See Alt and Meta Keys for more details on the
+          modifyOtherKeys feature.
 
 CSI ? Pp m
           Query key modifier options (XTQMODKEYS), xterm.
@@ -1273,7 +1345,10 @@ CSI ? Pp m
             Pp = 0  -> modifyKeyboard.
             Pp = 1  -> modifyCursorKeys.
             Pp = 2  -> modifyFunctionKeys.
+            Pp = 3  -> modifyKeypadKeys.
             Pp = 4  -> modifyOtherKeys.
+            Pp = 6  -> modifyModifierKeys.
+            Pp = 7  -> modifySpecialKeys.
 
           XTerm's response can be used to restore this state, because it
           is formatted as an XTMODKEYS control, i.e.,
@@ -1285,7 +1360,10 @@ CSI ? Pp m
             Pp = 0  -> modifyKeyboard.
             Pp = 1  -> modifyCursorKeys.
             Pp = 2  -> modifyFunctionKeys.
+            Pp = 3  -> modifyKeypadKeys.
             Pp = 4  -> modifyOtherKeys.
+            Pp = 6  -> modifyModifierKeys.
+            Pp = 7  -> modifySpecialKeys.
 
 CSI Ps n  Device Status Report (DSR).
             Ps = 5  -> Status Report.
@@ -1319,7 +1397,10 @@ CSI > Ps n
             Ps = 0  -> modifyKeyboard.
             Ps = 1  -> modifyCursorKeys.
             Ps = 2  -> modifyFunctionKeys.
+            Ps = 3  -> modifyKeypadKeys.
             Ps = 4  -> modifyOtherKeys.
+            Ps = 6  -> modifyModifierKeys.
+            Ps = 7  -> modifySpecialKeys.
 
           If the parameter is omitted, modifyFunctionKeys is disabled.
           When modifyFunctionKeys is disabled, xterm uses the modifier
@@ -1613,6 +1694,9 @@ CSI > Pm t
             Ps = 3  -> Query window/icon labels using UTF-8.  (See
           discussion of Title Modes)
 
+          If no parameters are given, title mode features are set to the
+          initial (compiled-in) default.
+
 CSI Ps SP t
           Set warning-bell volume (DECSWBV), VT520.
             Ps = 0  or 1  -> off.
@@ -1701,13 +1785,13 @@ CSI Ps * x
           Modes 0  and 1  are the stream modes of the DECCARA and
           DECRARA controls.  There are several aspects to stream versus
           rectangle modes:
-          1. In both stream and rectangle modes, the row- and column-
+          1) In both stream and rectangle modes, the row- and column-
           positions are affected by Origin Mode.
-          2. In rectangle mode, cells outside the row- and column-
+          2) In rectangle mode, cells outside the row- and column-
           positions are unaffected.  In stream mode, the row- and
           column-positions are the starting and ending cells, with
           wrapping which ignores Origin Mode.
-          3. In stream mode, those controls affect only cells where a
+          3) In stream mode, those controls affect only cells where a
           character was drawn.  In rectangle mode, cells where no
           character was drawn are first filled in with a space.
 
@@ -2022,7 +2106,7 @@ OSC Ps ; Pt ST
 
             Ps = 2 2  -> Change pointer cursor shape to Pt.  The
           parameter Pt sets the pointerShape resource.  If Pt is empty,
-          or does not match any of the standard names, n  uses the
+          or does not match any of the standard names, xterm uses the
           resource's default "xterm" shape.
 
             Ps = 4 6  -> Change Log File to Pt.  The parameter Pt sets
@@ -2209,32 +2293,6 @@ o   prefix a key with the ESC  character.
 
 o   shift the key from codes 0-127 to 128-255 by adding 128.
 
-When modifyOtherKeys is set, ordinary keys may be sent as escape
-sequences:
-
-o   When modifyOtherKeys is set to 1, only the alt- and meta-modifiers
-    apply.  For example, alt-Tab sends CSI 2 7 ; 3 ; 9 ~ (the second
-    parameter is "3" for alt, and the third parameter is the ASCII value
-    of tab, "9").
-
-o   When modifyOtherKeys is set to 2, all of the modifiers apply.  For
-    example, shift-Tab sends CSI 2 7 ; 2 ; 9 ~ rather than CSI Z (the
-    second parameter is "2" for shift).
-
-The formatOtherKeys resource tells n  to change the format of the escape
-sequences sent when modifyOtherKeys applies.  When modifyOtherKeys is
-set to 1, for example alt-Tab sends CSI 9 ; 3 u (changing the order of
-parameters).  One drawback to this format is that applications may
-confuse it with CSI u  (restore-cursor).
-
-The xterm FAQ sections
-
-   How can my program distinguish control-I from tab?
-
-   XTerm - "Other" Modified Keys
-
-go into greater detail on this topic.
-
 The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
 This assumes altIsNotMeta is set:
@@ -2259,6 +2317,105 @@ This assumes altIsNotMeta is set:
        Alt+Meta-x | ON             | ON              | ESC  x
        -----------+----------------+-----------------+------------
 
+
+When modifyOtherKeys is set, ordinary keys may be sent as escape
+sequences:
+
+o   When modifyOtherKeys is set to 1, the usual shift- and control-
+    modifiers work as expected, but other modifiers (such as alt- and
+    meta-modifiers) cause ordinary keys to be encoded as if they were
+    function-keys.  For example, alt-Tab sends CSI 2 7 ; 3 ; 9 ~ (the
+    second parameter is "3" for alt, and the third parameter is the
+    ASCII value of tab, "9").
+
+    Ordinary characters can have non-ASCII values.  XTerm uses the X11
+    libraries to obtain the character encoding used for a given keysym
+    (key symbol).  The X11 keysymdef.h header lists 2104 predefined key
+    symbols, as well as documenting how arbitrary Unicode values are
+    represented.  The other *keysym.h headers add 480 symbols.
+
+o   When modifyOtherKeys is set to 2, all of the modifiers apply.  For
+    example, shift-Tab sends CSI 2 7 ; 2 ; 9 ~ rather than CSI Z (the
+    second parameter is "2" for shift).
+
+o   If modifyOtherKeys is set to 3, unmodified keys also are sent as
+    escape sequences.  For example, space sends CSI 2 7 ; 1 ; 3 2 ~
+
+There are a few variations available; they can be set statically with
+resource values or dynamically using control sequences:
+
+o   The formatOtherKeys resource tells xterm to change the format of the
+    escape sequences sent when modifyOtherKeys applies.  When
+    modifyOtherKeys is set to 1, for example alt-Tab sends CSI 9 ; 3 u
+    (changing the order of parameters).  One drawback to this format is
+    that applications may confuse it with CSI u  (restore-cursor).
+
+    The resource value can be updated with a corresponding control
+    sequence.
+
+o   The modifyOtherKeys resource can be updated via a corresponding
+    control sequence.  The control sequence accepts a single
+    subparameter, which is interpreted as a mask of modifier bits to
+    factor out of the parameter encoding of the escape sequence.  For
+    example CSI > 4 : 1  m factors out the shift modifier.
+
+Some of the predefined key symbols can be automatically derived, or are
+duplicates.  That leaves about half of the key symbols which xterm may
+encounter.  Most of these are non-character key symbols which may be
+assigned to positions on a keyboard.
+
+o   The most common non-character key symbols are in the range 0xfd00 to
+    0xffff.  XTerm maps them to the Unicode BMP private use area
+    beginning at U+E001.  These account for about a quarter (329) of the
+    non-character symbols.
+
+o   The other non-character key symbols are vendor/platform specific.
+    Those use codes above 0x10000000.  XTerm maps them to the Unicode
+    BMP private use area beginning at U+F0000.
+
+o   The remaining non-Unicode values are characters used in the DEC
+    Technical character set.  XTerm maps them to the Unicode BMP private
+    use area beginning at U+EEEE.
+
+XTerm has additional resource settings (and control sequences) to send
+these non-character symbols as escape sequences.  The Xutil.h header
+defines some of the macros which xterm uses for categorizing these non-
+character symbols:
+
+IsKeypadKey(keysym)
+          is used for the numeric keypad (see modifyKeypadKeys and
+          formatKeypadKeys).
+
+IsPrivateKeypadKey(keysym)
+          is unused.
+
+IsCursorKey(keysym)
+          is used for the cursor keys, including Home and End (see
+          modifyCursorKeys and formatCursorKeys).  XTerm makes a special
+          check for the PC keyboard's editing keypad, which is not
+          handled by the Xutil.h macros.
+
+IsPFKey(keysym)
+
+IsFunctionKey(keysym)
+
+IsMiscFunctionKey(keysym)
+          are used for function keys (see modifyFunctionKeys and
+          formatFunctionKeys).
+
+IsModifierKey(keysym)
+          is used for modifier keys (see modifyModifierKeys and
+          formatModifierKeys).
+
+These macros account for 162 of the 329 non-Unicode values in the BMP.
+
+The xterm FAQ sections
+
+   How can my program distinguish control-I from tab?
+
+   XTerm - "Other" Modified Keys
+
+go into greater detail on this topic.
 
 
 PC-Style Function Keys
@@ -3243,7 +3400,11 @@ ESC Y Ps Ps
           Move the cursor to given row and column.
 
 ESC Z     Identify.
-            -> ESC  /  Z  ("I am a VT52.").
+            -> ESC  /  Z  ("I am a VT52 emulated by VT100.").
+          or
+            -> ESC  /  K  ("I am a VT52.").
+          depending on whether xterm is started as a VT52 by setting the
+          decTerminalID resource to "52" or not.
 
 
 Further reading

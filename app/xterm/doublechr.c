@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.109 2024/09/01 22:49:10 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.110 2024/12/01 19:38:29 tom Exp $ */
 
 /*
  * Copyright 1997-2022,2024 by Thomas E. Dickey
@@ -61,7 +61,7 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
      * Ignore repetition.
      */
     if (!IsLeftRightMode(xw)
-	&& (ld = getLineData(screen, currow)) != 0) {
+	&& (ld = getLineData(screen, currow)) != NULL) {
 	unsigned oldChrSet = GetLineDblCS(ld);
 
 	if (oldChrSet != newChrSet) {
@@ -156,7 +156,7 @@ xterm_ResetDouble(XtermWidget xw)
     for (row = 0; row < screen->max_row; ++row) {
 	LineData *ld;
 
-	if ((ld = getLineData(screen, ROW2INX(screen, row))) != 0) {
+	if ((ld = getLineData(screen, ROW2INX(screen, row))) != NULL) {
 	    code = GetLineDblCS(ld);
 	    if (code != CSET_SWL) {
 		SetLineDblCS(ld, CSET_SWL);
@@ -180,7 +180,7 @@ discard_font(XtermWidget xw, int n)
     XTermFonts *data = getDoubleFont(screen, n);
 
     TRACE(("discard_font chrset=%d %s\n", data->chrset,
-	   (data->fn != 0) ? data->fn : "<no-name>"));
+	   (data->fn != NULL) ? data->fn : "<no-name>"));
 
     data->chrset = 0;
     data->flags = 0;
@@ -261,20 +261,19 @@ xterm_DoubleGC(XTermDraw * params, GC old_gc, int *inxp)
     TScreen *screen = TScreenOf(params->xw);
     VTwin *cgsWin = WhichVWin(screen);
     char *name;
-    GC result = 0;
+    GC result = NULL;
 
-    if ((name = xtermSpecialFont(params))
-	!= 0) {
+    if ((name = xtermSpecialFont(params)) != NULL) {
 	CgsEnum cgsId = WhichCgsId(params->attr_flags);
 	Boolean found = False;
-	XTermFonts *data = 0;
+	XTermFonts *data = NULL;
 	int n;
 
 	if ((n = xterm_Double_index(params)) >= 0) {
 	    data = getDoubleFont(screen, n);
-	    if (data->fn != 0) {
+	    if (data->fn != NULL) {
 		if (!strcmp(data->fn, name)
-		    && data->fs != 0) {
+		    && data->fs != NULL) {
 		    found = True;
 		    FreeAndNull(name);
 		} else {
@@ -302,7 +301,7 @@ xterm_DoubleGC(XTermDraw * params, GC old_gc, int *inxp)
 		/* Retry with * in resolutions */
 		local.draw_flags |= NORESOLUTION;
 		nname = xtermSpecialFont(&local);
-		if (nname != 0) {
+		if (nname != NULL) {
 		    found = (Boolean) xtermOpenFont(params->xw, nname, &temp,
 						    NULL, False);
 		    free(nname);

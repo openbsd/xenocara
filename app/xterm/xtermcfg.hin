@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.233 2024/07/05 23:37:42 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.235 2025/05/18 22:28:12 tom Exp $ */
 
 /*
- * Copyright 1997-2023,2024 by Thomas E. Dickey
+ * Copyright 1997-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -155,6 +155,7 @@
 #undef OPT_AIX_COLORS		/* CF_ARG_DISABLE(16-color) */
 #undef OPT_BLINK_CURS		/* CF_ARG_DISABLE(blink-cursor) */
 #undef OPT_BLINK_TEXT		/* CF_ARG_DISABLE(blink-text) */
+#undef OPT_BLOCK_SELECT		/* CF_ARG_ENABLE(block-select) */
 #undef OPT_BOX_CHARS		/* CF_ARG_DISABLE(boxchars) */
 #undef OPT_BROKEN_OSC		/* CF_ARG_ENABLE(broken-osc) */
 #undef OPT_BROKEN_ST		/* CF_ARG_DISABLE(broken-st) */
@@ -230,6 +231,7 @@
 #undef XRENDERFONT		/* CF_X_FREETYPE */
 #undef cc_t			/* CF_TYPE_CC_T */
 #undef gid_t			/* AC_TYPE_UID_T */
+#undef inline			/* AC_C_INLINE */
 #undef mode_t			/* AC_TYPE_MODE_T */
 #undef nfds_t			/* CF_TYPE_NFDS_T */
 #undef off_t			/* AC_TYPE_OFF_T */

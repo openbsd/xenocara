@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.178 2024/09/30 08:11:40 tom Exp $ */
+/* $XTermId: print.c,v 1.180 2025/01/05 20:36:49 tom Exp $ */
 
 /*
- * Copyright 1997-2023,2024 by Thomas E. Dickey
+ * Copyright 1997-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -81,10 +81,10 @@ static void
 closePrinter(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
-    if (SPS.fp != 0) {
+    if (SPS.fp != NULL) {
 	if (SPS.toFile) {
 	    fclose(SPS.fp);
-	    SPS.fp = 0;
+	    SPS.fp = NULL;
 	} else if (xtermHasPrinter(xw) != 0) {
 
 	    DEBUG_MSG("closePrinter\n");
@@ -93,7 +93,7 @@ closePrinter(XtermWidget xw)
 	    while (nonblocking_wait() > 0) {
 		;
 	    }
-	    SPS.fp = 0;
+	    SPS.fp = NULL;
 	    SPS.isOpen = False;
 	    TRACE(("closed printer\n"));
 	    DEBUG_MSG("...closePrinter (done)\n");
@@ -107,7 +107,7 @@ printCursorLine(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("printCursorLine\n"));
-    printLine(xw, screen->cur_row, '\n', getPrinterFlags(xw, NULL, 0));
+    printLine(xw, screen->cur_row, '\n', getPrinterFlags(xw, NULL, NULL));
 }
 
 /*
@@ -133,7 +133,7 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags *p)
 #endif
 
     ld = getLineData(screen, inx);
-    if (ld == 0)
+    if (ld == NULL)
 	return;
 
     TRACE(("printLine(row=%d/%d, top=%d:%d, chr=%d):%s\n",
@@ -346,7 +346,7 @@ static void
 send_CharSet(XtermWidget xw, LineData *ld)
 {
 #if OPT_DEC_CHRSET
-    const char *msg = 0;
+    const char *msg = NULL;
 
     switch (GetLineDblCS(ld)) {
     case CSET_SWL:
@@ -362,7 +362,7 @@ send_CharSet(XtermWidget xw, LineData *ld)
 	msg = "\033#6";
 	break;
     }
-    if (msg != 0)
+    if (msg != NULL)
 	stringToPrinter(xw, msg);
 #else
     (void) xw;
@@ -398,16 +398,18 @@ charToPrinter(XtermWidget xw, unsigned chr)
 {
     TScreen *screen = TScreenOf(xw);
 
+    if (!screen->print_rawchars) {
 #if OPT_WIDE_CHARS
-    if (screen->wide_chars && screen->utf8_mode) {
-	if (chr == UCS_REPL) {
-	    stringToPrinter(xw, screen->default_string);
-	    return;
+	if (screen->wide_chars && screen->utf8_mode) {
+	    if (chr == UCS_REPL) {
+		stringToPrinter(xw, screen->default_string);
+		return;
+	    }
 	}
-    }
 #endif
-    if (is_NON_CHAR(chr))
-	return;
+	if (is_NON_CHAR(chr))
+	    return;
+    }
 
     if (!SPS.isOpen && (SPS.toFile || xtermHasPrinter(xw))) {
 	switch (SPS.toFile) {
@@ -443,10 +445,10 @@ charToPrinter(XtermWidget xw, unsigned chr)
 			exit(ERROR_MISC);
 
 		    SPS.fp = popen(SPS.printer_command, "w");
-		    if (SPS.fp != 0) {
+		    if (SPS.fp != NULL) {
 			FILE *input;
 			DEBUG_MSG("charToPrinter: opened pipe to printer\n");
-			if ((input = fdopen(my_pipe[0], "r")) != 0) {
+			if ((input = fdopen(my_pipe[0], "r")) != NULL) {
 			    clearerr(input);
 
 			    for (;;) {
@@ -475,7 +477,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 		    exit(0);
 		} else {
 		    close(my_pipe[0]);	/* won't read from printer */
-		    if ((SPS.fp = fdopen(my_pipe[1], "w")) != 0) {
+		    if ((SPS.fp = fdopen(my_pipe[1], "w")) != NULL) {
 			DEBUG_MSG("charToPrinter: opened printer in parent\n");
 			TRACE(("opened printer from pid %d/%d\n",
 			       (int) getpid(), (int) my_pid));
@@ -493,7 +495,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 	}
 	SPS.isOpen = True;
     }
-    if (SPS.fp != 0) {
+    if (SPS.fp != NULL) {
 #if OPT_WIDE_CHARS
 	if (chr > 127) {
 	    Char temp[10];
@@ -545,18 +547,18 @@ xtermMediaControl(XtermWidget xw, int param, int private_seq)
 	    break;
 	case 10:		/* VT320 */
 	    /* print whole screen, across sessions */
-	    xtermPrintScreen(xw, False, getPrinterFlags(xw, NULL, 0));
+	    xtermPrintScreen(xw, False, getPrinterFlags(xw, NULL, NULL));
 	    break;
 	case 11:		/* VT320 */
 	    /* print all pages in current session */
-	    xtermPrintEverything(xw, getPrinterFlags(xw, NULL, 0));
+	    xtermPrintEverything(xw, getPrinterFlags(xw, NULL, NULL));
 	    break;
 	}
     } else {
 	switch (param) {
 	case -1:
 	case 0:
-	    xtermPrintScreen(xw, True, getPrinterFlags(xw, NULL, 0));
+	    xtermPrintScreen(xw, True, getPrinterFlags(xw, NULL, NULL));
 	    break;
 	case 4:
 	    setPrinterControlMode(xw, 0);	/* printer controller mode off */
@@ -589,8 +591,8 @@ xtermAutoPrint(XtermWidget xw, unsigned chr)
 
     if (SPS.printer_controlmode == 1) {
 	TRACE(("AutoPrint %d\n", chr));
-	printLine(xw, screen->cursorp.row, chr, getPrinterFlags(xw, NULL, 0));
-	if (SPS.fp != 0)
+	printLine(xw, screen->cursorp.row, chr, getPrinterFlags(xw, NULL, NULL));
+	if (SPS.fp != NULL)
 	    fflush(SPS.fp);
     }
 }
@@ -689,7 +691,7 @@ xtermHasPrinter(XtermWidget xw)
 	if (argv) {
 	    if (argv[0]) {
 		char *myShell = xtermFindShell(argv[0], False);
-		if (myShell == 0) {
+		if (myShell == NULL) {
 		    xtermWarning("No program found for printerCommand: %s\n", SPS.printer_command);
 		    SPS.printer_command = x_strdup("");
 		} else {
@@ -773,7 +775,7 @@ getPrinterFlags(XtermWidget xw, String *params, Cardinal *param_count)
     result->print_attributes = SPS.print_attributes;
     result->print_everything = SPS.print_everything;
 
-    if (param_count != 0 && *param_count != 0) {
+    if (param_count != NULL && *param_count != 0) {
 	Cardinal j;
 	unsigned k;
 	for (j = 0; j < *param_count; ++j) {
@@ -805,11 +807,11 @@ xtermPrintImmediately(XtermWidget xw, String filename, int opts, int attrs)
     PrinterState save_state = screen->printer_state;
     char *my_filename = malloc(TIMESTAMP_LEN + strlen(filename));
 
-    if (my_filename != 0) {
+    if (my_filename != NULL) {
 	mode_t save_umask = umask(0177);
 
 	timestamp_filename(my_filename, filename);
-	SPS.fp = 0;
+	SPS.fp = NULL;
 	SPS.isOpen = False;
 	SPS.toFile = True;
 	SPS.printer_command = my_filename;
@@ -818,7 +820,7 @@ xtermPrintImmediately(XtermWidget xw, String filename, int opts, int attrs)
 	SPS.printer_newline = True;
 	SPS.print_attributes = attrs;
 	SPS.print_everything = opts;
-	xtermPrintEverything(xw, getPrinterFlags(xw, NULL, 0));
+	xtermPrintEverything(xw, getPrinterFlags(xw, NULL, NULL));
 
 	umask(save_umask);
 	screen->printer_state = save_state;

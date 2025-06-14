@@ -1,17 +1,48 @@
-# $XTermId: xterm.spec,v 1.174 2024/09/11 07:48:16 tom Exp $
+# $XTermId: xterm.spec,v 1.180 2025/04/15 20:33:49 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 395
+Version: 399
 Release: 1
 License: X11
 Group: User Interface/X
 Source: https://invisible-island.net/archives/xterm/xterm-%{version}.tgz
 URL: https://invisible-island.net/xterm/
 Provides: x-terminal-emulator >= %{version}
+
+# Using "find-xterm-fonts" gives these package names:
+#
+# fedora:
+#     xorg-x11-fonts-misc
+# mageia:
+#     x11-font-adobe-75dpi
+#     x11-font-misc-misc
+# opensuse:
+#     efont-unicode-bitmap-fonts
+#     xorg-x11-fonts-core
+#     xorg-x11-fonts-legacy
+
+# Library dependencies (chiefly Xft and Xpm) are similar across my test
+# machines for mageia/fedora/opensuse, but package names vary:
+#
+# fedora:
+#     libXft            libXft-devel
+#     libXpm            libXpm-devel
+#     libutempter       libutempter-devel
+#     ncurses-libs      ncurses-devel
+# mageia
+#     lib64xft2         lib64xft-devel
+#     lib64xpm4         lib64xpm-devel
+#     lib64utempter0    lib64utempter-devel
+#     lib64ncurses6     lib64ncurses-devel
+# opensuse
+#     libXft2           libXft-devel
+#     libXpm4           libXpm-devel
+#     libutempter0      utempter-devel
+#     libncurses6       ncurses-devel
 
 # This part (the build-requires) would be useful if the various distributions
 # had provided stable package-naming, or virtual packages to cover transitions. 

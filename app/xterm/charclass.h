@@ -1,9 +1,9 @@
-/* $XTermId: charclass.h,v 1.9 2023/01/04 09:28:05 tom Exp $ */
+/* $XTermId: charclass.h,v 1.10 2024/12/01 23:50:21 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charclass.h,v 1.3 2006/02/13 01:14:58 dickey Exp $ */
 
 /*
- * Copyright 2006-2020,2023 by Thomas E. Dickey
+ * Copyright 2006-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -50,7 +50,7 @@ typedef enum {
 } Classes;
 
 extern void init_classtab(void);
-/* initialise the table. needs calling before either of the 
+/* initialise the table. needs calling before either of the
    others. */
 
 extern int SetCharacterClassRange(int low, int high, int value);

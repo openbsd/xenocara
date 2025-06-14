@@ -1,7 +1,7 @@
-/* $XTermId: charsets.c,v 1.129 2024/10/03 22:21:32 tom Exp $ */
+/* $XTermId: charsets.c,v 1.130 2025/02/05 23:11:49 tom Exp $ */
 
 /*
- * Copyright 1998-2023,2024 by Thomas E. Dickey
+ * Copyright 1998-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -655,11 +655,9 @@ xtermCharSetDec(XtermWidget xw, IChar chr, DECNRCM_codes cs)
 		break;
 
 	    case nrc_British:
-		if (chr >= 0xa0 && chr < 0xff) {
-		    if (chr == 0x23)
-			chr = 0xA3;
-		    result = (int) chr;
-		}
+		if (chr == 0x23)
+		    chr = XK_sterling;
+		result = (int) chr;
 		break;
 
 	    case nrc_DEC_Cyrillic:

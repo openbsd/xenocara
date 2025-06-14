@@ -1,18 +1,18 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #395 - 2024/10/24
+                            Patch #399 - 2025/05/18
 
-     * add DECRQSS response for DECSTGLT, i.e., ANSI SGR color.
-     * add Russian and SCS NRCS character set mappings.
-     * remove obsolete code for OS390 and VMS.
-     * minor fixes to work with vttest 20240929's 7-bit parsing test.
-     * improve  DECRPM  responses  for  unsupported modes; those which are
-       valid  for  a  given DEC terminal are reported as permanently reset
-       rather than unknown.
-     * add JIS-Roman and JIS-Katakana character sets, for VT382.
-     * fix  typo  in  ctlseqs.ms note about function key vs DSR (report by
-       Michael Thomas Greer).
-     * formatting fixes for ctlseqs.ms (report by Mark Manning).
-     * update tables in wcwidth.c based on Unicode 16.0.0
+     * add configure check for inline, for c89 support.
+     * further  improve  integration  between  UTF-8  and allowC1Printable
+       (report by Matthieu Herrb).
+     * modify  one  of  the missing-character checks to prefer Xft's check
+       over   the   check  for  missing  line-drawing  characters  (Debian
+       #1084794).
+     * align  terminfo building blocks in terminfo to correspond to recent
+       refactoring/trimming in ncurses.
+     * revise a limit-check in selection to fix a regression in patch #398
+       (Debian #1105738).
+     * modify  configure  check  for  Xft  to work around recent change to
+       fontconfig's pkg-config file (Gentoo #953864).
 

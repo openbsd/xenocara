@@ -1,5 +1,4 @@
-# $XTermId: Makefile,v 1.116 2024/09/11 07:48:16 tom Exp $
-# $FreeBSD: head/x11/xterm/Makefile 492827 2019-02-13 06:43:36Z ehaupt $
+# $XTermId: Makefile,v 1.121 2025/04/15 20:33:49 tom Exp $
 
 # This is adapted from the FreeBSD port, installing as "xterm-dev" with
 # separate resource- and manpage files.
@@ -7,84 +6,84 @@
 # and "make makesum".
 
 PORTNAME=	xterm
-PORTVERSION=	395
+DISTVERSION=	399
 CATEGORIES=	x11
-MASTER_SITES=	ftp://ftp.invisible-island.net/xterm/:src1 \
+MASTER_SITES=	https://invisible-island.net/archives/xterm/:src1 \
 		https://invisible-mirror.net/archives/xterm/:src1
 PKGNAMESUFFIX=	-dev
 DISTFILES=	${DISTNAME}${EXTRACT_SUFX}:src1
 
 MAINTAINER=	ehaupt@FreeBSD.org
 COMMENT=	Terminal emulator for the X Window System
+WWW=		https://invisible-island.net/xterm/
 
 LICENSE=	MIT
 LICENSE_FILE=	${WRKSRC}/COPYING
 
-USES=		cpe ncurses tar:tgz
-USE_XORG=	xft xmu xt x11 xpm ice
+LIB_DEPENDS+=	libfontconfig.so:x11-fonts/fontconfig
 
-GNU_CONFIGURE=	yes
+USES=			cpe localbase ncurses tar:tgz xorg
+CPE_VENDOR=		invisible-island
+USE_XORG=		ice x11 xext xft xmu xpm xt
+GNU_CONFIGURE=		yes
+CONFIGURE_ARGS+=	--enable-narrowproto \
+			--with-utempter
 
-CPE_VENDOR=	invisible-island
+CPPFLAGS+=	-DPIXMAP_ROOTDIR=${LOCALBASE}/share/pixmaps
 
-CONFIGURE_ARGS+=	--with-utempter --enable-narrowproto
+CONFLICTS=	x11iraf
 
-CONFLICTS=	x11iraf-[0-9]*
+OPTIONS_DEFINE=		256COLOR DABBREV DECTERM GNOME LOGGING LUIT PCRE2 REGIS \
+			SCRNDUMP SIXEL TOOLBAR WCHAR XINERAMA
+OPTIONS_DEFAULT=	256COLOR LUIT SIXEL WCHAR XAW
+OPTIONS_SINGLE=		ATHENA
+OPTIONS_SINGLE_ATHENA=	NEXTAW XAW XAW3D XAW3DXFT
 
-CPPFLAGS+=	-I${LOCALBASE}/include
-LIBS+=		-L${LOCALBASE}/lib
-
-ICONVERSION=	1
-
-OPTIONS_DEFINE=	WCHAR LUIT DECTERM PCRE DABBREV 256COLOR SIXEL GNOME LOGGING \
-		SCRNDUMP REGIS TOOLBAR XINERAMA
-OPTIONS_RADIO=	3D
-OPTIONS_RADIO_3D=	XAW3D XAW3DXFT NEXTAW
-
+256COLOR_DESC=	Enable 256-color support
 DABBREV_DESC=	Enable support for dabbrev-expand
 DECTERM_DESC=	Enable DECterm Locator support
-LUIT_DESC=	Use LUIT for locale conversion from/to UTF-8
-SIXEL_DESC=	Enable Sixel graphics support
-REGIS_DESC=	Enable ReGIS graphics support
-WCHAR_DESC=	Enable wide-character support
-256COLOR_DESC=	Enable 256-color support
 LOGGING_DESC=	Enable logging terminal I/O to a file
-XAW3D_DESC=	Link with Xaw 3d library
-XAW3DXFT_DESC=	Link with Xaw 3d xft (extended fonts) library
+LUIT_DESC=	Use LUIT for locale convertion from/to UTF-8
 NEXTAW_DESC=	Link with neXT Athena library
+PCRE2_DESC=	${PCRE_DESC} version 2
+REGIS_DESC=	Enable ReGIS graphics support
 SCRNDUMP_DESC=	Enable XHTML and SVG screen dumps
+SIXEL_DESC=	Enable Sixel graphics support
 TOOLBAR_DESC=	Enable pulldown menus with a toolbar
-
-OPTIONS_DEFAULT=WCHAR LUIT 256COLOR
+WCHAR_DESC=	Enable wide-character support
+XAW3DXFT_DESC=	Link with Xaw 3d xft (extended fonts) library
+XAW3D_DESC=	Link with Xaw 3d library
+XAW_DESC=	Link with Xaw library
 
 256COLOR_CONFIGURE_ENABLE=	256-color
-LUIT_BUILD_DEPENDS=		luit:x11/luit
-LUIT_CONFIGURE_ENABLE=		luit
-LUIT_IMPLIES=			WCHAR
-WCHAR_CONFIGURE_ENABLE=		wide-chars
-WCHAR_VARS=			PKGMESSAGE="${PKGDIR}/pkg-message.wchar"
-DECTERM_CONFIGURE_ENABLE=	dec-locator
-PCRE_CONFIGURE_WITH=		pcre
-PCRE_LIB_DEPENDS=		libpcre.so:devel/pcre
 DABBREV_CONFIGURE_ENABLE=	dabbrev
-SIXEL_CONFIGURE_ENABLE=		sixel-graphics
-REGIS_CONFIGURE_ENABLE=		regis-graphics
+DECTERM_CONFIGURE_ENABLE=	dec-locator
 GNOME_USES=			desktop-file-utils
 LOGGING_CONFIGURE_ENABLE=	logging
-SCRNDUMP_CONFIGURE_ENABLE=	screen-dumps
-XAW3D_CONFIGURE_WITH=		Xaw3d
-XAW3D_LIB_DEPENDS=		libXaw3d.so:x11-toolkits/Xaw3d
-XAW3DXFT_CONFIGURE_WITH=	Xaw3dxft
-XAW3DXFT_LIB_DEPENDS=		libXaw3dxft.so:x11-toolkits/libxaw3dxft
-NEXTAW_CONFIGURE_WITH=		neXtaw
+LUIT_IMPLIES=			WCHAR
+LUIT_BUILD_DEPENDS=		luit:x11/luit
+LUIT_RUN_DEPENDS=		luit:x11/luit
+LUIT_CONFIGURE_ENABLE=		luit
 NEXTAW_LIB_DEPENDS=		libneXtaw.so:x11-toolkits/neXtaw
+NEXTAW_CONFIGURE_WITH=		neXtaw
+PCRE2_LIB_DEPENDS=		libpcre2-8.so:devel/pcre2
+PCRE2_CONFIGURE_WITH=		pcre2
+REGIS_CONFIGURE_ENABLE=		regis-graphics
+SCRNDUMP_CONFIGURE_ENABLE=	screen-dumps
+SIXEL_CONFIGURE_ENABLE=		sixel-graphics
 TOOLBAR_CONFIGURE_ENABLE=	toolbar
 WCHAR_LIB_DEPENDS=		libfreetype.so:print/freetype2
+WCHAR_CONFIGURE_ENABLE=		wide-chars
+WCHAR_VARS=			PKGMESSAGE="${PKGDIR}/pkg-message.wchar"
+XAW3DXFT_LIB_DEPENDS=		libXaw3dxft.so:x11-toolkits/libxaw3dxft
+XAW3DXFT_CONFIGURE_WITH=	Xaw3dxft
+XAW3D_LIB_DEPENDS=		libXaw3d.so:x11-toolkits/Xaw3d
+XAW3D_CONFIGURE_WITH=		Xaw3d
+XAW_USE=			XORG=xaw
 XINERAMA_USE=			XORG=xinerama,xorgproto
 XINERAMA_CONFIGURE_OFF=		--without-xinerama
 
 PKG_CLASS=	XTermDev
-LIB_DEPENDS+=	libfontconfig.so:x11-fonts/fontconfig
 
 .include <bsd.port.options.mk>
 
@@ -94,9 +93,11 @@ CONFIGURE_ARGS+=	--program-suffix=${PKGNAMESUFFIX} --with-app-class=${PKG_CLASS}
 USE_XORG+=	xaw
 .endif
 
+#ICONVERSION=	1
+#
 #post-extract:
-#	@${CP} ${WRKDIR}/bsd-xterm-icons-1/*.png \
-#		${WRKDIR}/bsd-xterm-icons-1/*.xpm \
+#	@${CP} ${WRKDIR}/bsd-xterm-icons-${ICONVERSION}/*.png \
+#		${WRKDIR}/bsd-xterm-icons-${ICONVERSION}/*.xpm \
 #			${WRKSRC}/icons/
 
 post-install:

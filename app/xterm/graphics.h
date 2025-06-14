@@ -1,8 +1,8 @@
-/* $XTermId: graphics.h,v 1.32 2023/09/28 00:24:13 tom Exp $ */
+/* $XTermId: graphics.h,v 1.33 2025/04/03 10:22:55 tom Exp $ */
 
 /*
+ * Copyright 2013-2023,2025 by Thomas E. Dickey
  * Copyright 2013-2022,2023 by Ross Combs
- * Copyright 2013-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -100,7 +100,6 @@ extern void fetch_color_register(Graphic */* graphic */, unsigned /* color */, C
 extern void update_color_register(Graphic */* graphic */, unsigned /* color */, int /* r */, int /* g */, int /* b */);
 extern RegisterNum find_color_register(ColorRegister const */* color_registers */, int /* r */, int /* g */, int /* b */);
 extern void chararea_clear_displayed_graphics(TScreen const */* screen */, int /* leftcol */, int /* toprow */, int /* ncols */, int /* nrows */);
-extern void pixelarea_clear_displayed_graphics(TScreen const */* screen */, int /* winx */, int /* winy */, int /* w */, int /* h */);
 extern void refresh_displayed_graphics(XtermWidget /* xw */, int /* leftcol */, int /* toprow */, int /* ncols */, int /* nrows */);
 extern void refresh_modified_displayed_graphics(XtermWidget /* xw */);
 extern void reset_displayed_graphics(TScreen const */* screen */);
@@ -125,7 +124,6 @@ extern void noleaks_graphics(Display */* dpy */);
 #define update_color_register(graphic, color, r, g, b) /* nothing */
 #define find_color_register(color_registers, r, g, b) /* nothing */
 #define chararea_clear_displayed_graphics(screen, leftcol, toprow, ncols, nrows) /* nothing */
-#define pixelarea_clear_displayed_graphics(screen, winx, winy, w, h) /* nothing */
 #define refresh_displayed_graphics(xw, leftcol, toprow, ncols, nrows) /* nothing */
 #define refresh_modified_displayed_graphics(xw) /* nothing */
 #define reset_displayed_graphics(screen) /* nothing */

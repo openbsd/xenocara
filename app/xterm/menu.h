@@ -1,7 +1,7 @@
-/* $XTermId: menu.h,v 1.146 2021/03/21 20:03:03 tom Exp $ */
+/* $XTermId: menu.h,v 1.147 2024/12/01 23:38:29 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -61,7 +61,7 @@
 
 #include <xterm.h>
 
-#ifndef OPT_MENU_KEEPCLIPBOARD 
+#ifndef OPT_MENU_KEEPCLIPBOARD
 #define OPT_MENU_KEEPCLIPBOARD 0	/* useful for debugging */
 #endif
 

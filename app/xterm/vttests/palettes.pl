@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: palettes.pl,v 1.26 2020/07/01 20:13:58 tom Exp $
+# $XTermId: palettes.pl,v 1.27 2023/08/28 19:56:54 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2020 by Thomas E. Dickey
+# Copyright 2020,2023 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -49,7 +49,7 @@ select(STDOUT);
 $| = 1;
 
 our (
-    $opt_a, $opt_b, $opt_d, $opt_g, $opt_i,
+    $opt_a, $opt_b, $opt_d, $opt_g, $opt_i, $opt_p,
     $opt_s, $opt_T, $opt_v, $opt_x, $opt_8
 );
 
@@ -1003,7 +1003,10 @@ sub show_themes($) {
     my @themes = @{ $_[0] };
     for my $n ( 0 .. $#themes ) {
         &show_colors( $themes[$n] );
-        sleep $opt_s if ( ( $n != $#themes ) and &isatty );
+        printf STDERR "\033[11i" if ( &isatty and $opt_p );
+        if ( ( $n != $#themes ) and &isatty ) {
+            sleep $opt_s;
+        }
     }
 }
 
@@ -1018,6 +1021,7 @@ Options:
   -d FILE dump palette to file after setting colors
   -g      ask terminal for its default background color
   -i      assume terminal colors are reversed, i.e., white-on-black
+  -p      print screen to SVG after each update
   -s SECS sleep this long between changes
   -T TERM override "xterm-256color" for TPUT
   -x TPUT use TPUT program rather than hardcoded escapes
@@ -1034,7 +1038,7 @@ EOF
 }
 
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-&getopts('abd:gis:T:x:v8') || &main::HELP_MESSAGE;
+&getopts('abd:gips:T:x:v8') || &main::HELP_MESSAGE;
 
 &main::HELP_MESSAGE if ( $opt_a and ( $#ARGV >= 0 ) );
 

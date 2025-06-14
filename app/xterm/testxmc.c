@@ -1,7 +1,7 @@
-/* $XTermId: testxmc.c,v 1.54 2020/11/08 20:12:21 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.55 2024/12/01 20:27:00 tom Exp $ */
 
 /*
- * Copyright 1997-2019,2020 by Thomas E. Dickey
+ * Copyright 1997-2020,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -99,7 +99,7 @@ Mark_XMC(XtermWidget xw, int param)
     unsigned my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
     unsigned whichone = 0;
 
-    if (glitch == 0) {
+    if (glitch == NULL) {
 	unsigned len = screen->xmc_glitch;
 	glitch = TypeMallocN(IChar, len);
 	if (glitch == NULL) {

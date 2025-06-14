@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.161 2024/09/30 07:55:25 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.163 2024/12/01 23:48:07 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -624,7 +624,7 @@ writePtyData(int f, IChar *d, size_t len)
 void
 noleaks_ptydata(void)
 {
-    if (VTbuffer != 0) {
+    if (VTbuffer != NULL) {
 #if OPT_WIDE_CHARS
 	free(VTbuffer->write_buf);
 #endif
@@ -775,10 +775,10 @@ test_utf8_convert(void)
     memset(bucket, 0, sizeof(bucket));
     for (c_in = 0; c_in < limit; ++c_in) {
 	memset(buffer, 0, sizeof(buffer));
-	if ((result = convertToUTF8(buffer, c_in)) == 0) {
+	if ((result = convertToUTF8(buffer, c_in)) == NULL) {
 	    TRACE(("conversion of U+%04X to UTF-8 failed\n", c_in));
 	} else {
-	    if ((result = convertFromUTF8(buffer, &c_out)) == 0) {
+	    if ((result = convertFromUTF8(buffer, &c_out)) == NULL) {
 		TRACE(("conversion of U+%04X from UTF-8 failed\n", c_in));
 	    } else if (c_in != c_out) {
 		TRACE(("conversion of U+%04X to/from UTF-8 gave U+%04X\n",
@@ -906,10 +906,10 @@ do_range(const char *source)
 		Char *result;
 
 		memset(buffer, 0, sizeof(buffer));
-		if ((result = next = convertToUTF8(buffer, c_in)) == 0) {
+		if ((result = next = convertToUTF8(buffer, c_in)) == NULL) {
 		    fprintf(stderr,
 			    "conversion of U+%04X to UTF-8 failed\n", c_in);
-		} else if ((result = convertFromUTF8(buffer, &c_out)) == 0) {
+		} else if ((result = convertFromUTF8(buffer, &c_out)) == NULL) {
 		    fprintf(stderr,
 			    "conversion of U+%04X from UTF-8 failed\n", c_in);
 		    total_errs++;
