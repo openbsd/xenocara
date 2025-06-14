@@ -32,11 +32,11 @@
  * This doesn't implement pageflipping yet.
  */
 
-#ifdef HAVE_DIX_CONFIG_H
 #include "dix-config.h"
-#endif
 
+#include <errno.h>
 #include <time.h>
+
 #include "list.h"
 #include "xf86.h"
 #include "driver.h"
@@ -206,7 +206,7 @@ ms_dri2_create_buffer2(ScreenPtr screen, DrawablePtr drawable,
     if (buffer->name == -1) {
         xf86DrvMsg(scrn->scrnIndex, X_ERROR,
                    "Failed to get DRI2 name for pixmap\n");
-        screen->DestroyPixmap(pixmap);
+        dixDestroyPixmap(pixmap, 0);
         free(private);
         free(buffer);
         return NULL;
@@ -245,8 +245,7 @@ static void ms_dri2_destroy_buffer2(ScreenPtr unused, DrawablePtr unused2,
     if (buffer->driverPrivate) {
         ms_dri2_buffer_private_ptr private = buffer->driverPrivate;
         if (--private->refcnt == 0) {
-            ScreenPtr screen = private->pixmap->drawable.pScreen;
-            screen->DestroyPixmap(private->pixmap);
+            dixDestroyPixmap(private->pixmap, 0);
             free(private);
             free(buffer);
         }
@@ -316,7 +315,7 @@ ms_dri2_copy_region2(ScreenPtr screen, DrawablePtr drawable, RegionPtr pRegion,
      * callback chain so we know that will happen before the client
      * tries to render again.
      */
-    gc->ops->CopyArea(src, dst, gc,
+    (void) gc->ops->CopyArea(src, dst, gc,
                       0, 0,
                       drawable->width, drawable->height,
                       off_x, off_y);
@@ -521,7 +520,7 @@ update_front(DrawablePtr draw, DRI2BufferPtr front)
 
     front->name = name;
 
-    (*screen->DestroyPixmap) (priv->pixmap);
+    dixDestroyPixmap(priv->pixmap, 0);
     front->pitch = pixmap->devKind;
     front->cpp = pixmap->drawable.bitsPerPixel / 8;
     priv->pixmap = pixmap;
@@ -546,10 +545,8 @@ can_exchange(ScrnInfoPtr scrn, DrawablePtr draw,
         drmmode_crtc_private_ptr drmmode_crtc = config->crtc[i]->driver_private;
 
         /* Don't do pageflipping if CRTCs are rotated. */
-#ifdef GLAMOR_HAS_GBM
         if (drmmode_crtc->rotate_bo.gbm)
             return FALSE;
-#endif
 
         if (xf86_crtc_on(config->crtc[i]))
             num_crtcs_on++;

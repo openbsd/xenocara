@@ -70,7 +70,7 @@ xf86RotateCrtcRedisplay(xf86CrtcPtr crtc, PixmapPtr dst_pixmap,
     if (!dst)
         return;
 
-    if (transform_src) {
+	    if (transform_src) {
         error = SetPictureTransform(src, &crtc->crtc_to_framebuffer);
         if (error)
             return;
@@ -207,7 +207,7 @@ xf86RotateRedisplay(ScreenPtr pScreen)
 
                 /* update damaged region */
                 if (RegionNotEmpty(&crtc_damage))
-                    xf86RotateCrtcRedisplay(crtc, crtc->rotatedPixmap,
+					   xf86RotateCrtcRedisplay(crtc, crtc->rotatedPixmap,
                                             &pScreen->root->drawable,
                                             &crtc_damage, TRUE);
 

@@ -95,11 +95,11 @@ typedef struct {
 
     struct gbm_device *gbm;
 
-#if defined(CONFIG_UDEV_KMS)
+#ifdef CONFIG_UDEV_KMS
     struct udev_monitor *uevent_monitor;
     InputHandlerProc uevent_handler;
 #endif
-#if defined(CONFIG_KEVENT_KMS)
+#ifdef CONFIG_KEVENT_KMS
     InputHandlerProc kevent_handler;
 #endif
     drmEventContext event_context;
@@ -224,6 +224,8 @@ typedef struct {
     /** @} */
 
     uint64_t next_msc;
+
+    int cursor_width, cursor_height;
 
     Bool need_modeset;
     struct xorg_list mode_list;

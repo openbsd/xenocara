@@ -917,7 +917,6 @@ extern _X_EXPORT void
                          DrawableRec *src_drawable, RegionPtr region,
                          Bool transform_src);
 
-
 /*
  * Clean up any rotation data, used when a crtc is turned off
  * as well as when rotation is disabled.

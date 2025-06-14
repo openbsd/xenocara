@@ -32,12 +32,14 @@
  *
  */
 
-#ifdef HAVE_DIX_CONFIG_H
 #include "dix-config.h"
-#endif
 
+#include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <X11/extensions/randr.h>
+#include <X11/extensions/Xv.h>
+
 #include "xf86.h"
 #include "xf86Priv.h"
 #include "xf86_OSproc.h"
@@ -46,7 +48,6 @@
 #include "mipointer.h"
 #include "mipointrst.h"
 #include "micmap.h"
-#include <X11/extensions/randr.h>
 #include "fb.h"
 #include "edid.h"
 #include "xf86i2c.h"
@@ -54,7 +55,6 @@
 #include "miscstruct.h"
 #include "dixstruct.h"
 #include "xf86xv.h"
-#include <X11/extensions/Xv.h>
 #include <xorg-config.h>
 #ifdef XSERVER_PLATFORM_BUS
 #include "xf86platformBus.h"
@@ -160,21 +160,23 @@ int ms_entity_index = -1;
 static MODULESETUPPROTO(Setup);
 
 static XF86ModuleVersionInfo VersRec = {
-    "modesetting",
-    MODULEVENDORSTRING,
-    MODINFOSTRING1,
-    MODINFOSTRING2,
-    XORG_VERSION_CURRENT,
-    XORG_VERSION_MAJOR,
-    XORG_VERSION_MINOR,
-    XORG_VERSION_PATCH,
-    ABI_CLASS_VIDEODRV,
-    ABI_VIDEODRV_VERSION,
-    MOD_CLASS_VIDEODRV,
-    {0, 0, 0, 0}
+    .modname      = "modesetting",
+    .vendor       = MODULEVENDORSTRING,
+    ._modinfo1_   = MODINFOSTRING1,
+    ._modinfo2_   = MODINFOSTRING2,
+    .xf86version  = XORG_VERSION_CURRENT,
+    .majorversion = XORG_VERSION_MAJOR,
+    .minorversion = XORG_VERSION_MINOR,
+    .patchlevel   = XORG_VERSION_PATCH,
+    .abiclass     = ABI_CLASS_VIDEODRV,
+    .abiversion   = ABI_VIDEODRV_VERSION,
+    .moduleclass  = MOD_CLASS_VIDEODRV,
 };
 
-_X_EXPORT XF86ModuleData modesettingModuleData = { &VersRec, Setup, NULL };
+_X_EXPORT XF86ModuleData modesettingModuleData = {
+    .vers = &VersRec,
+    .setup = Setup
+};
 
 static void *
 Setup(void *module, void *opts, int *errmaj, int *errmin)
@@ -398,7 +400,7 @@ ms_setup_entity(ScrnInfoPtr scrn, int entity_num)
     xf86SetEntityInstanceForScreen(scrn, entity_num, xf86GetNumEntityInstances(entity_num) - 1);
 
     if (!pPriv->ptr)
-        pPriv->ptr = xnfcalloc(sizeof(modesettingEntRec), 1);
+        pPriv->ptr = XNFcallocarray(1, sizeof(modesettingEntRec));
 }
 
 #ifdef XSERVER_LIBPCIACCESS
@@ -517,46 +519,69 @@ GetRec(ScrnInfoPtr pScrn)
     if (pScrn->driverPrivate)
         return TRUE;
 
-    pScrn->driverPrivate = xnfcalloc(sizeof(modesettingRec), 1);
+    pScrn->driverPrivate = XNFcallocarray(1, sizeof(modesettingRec));
 
     return TRUE;
 }
 
-static void
-rotate_clip(PixmapPtr pixmap, BoxPtr rect, drmModeClip *clip, Rotation rotation)
+static int
+rotate_clip(PixmapPtr pixmap, xf86CrtcPtr crtc, BoxPtr rect, drmModeClip *clip,
+            Rotation rotation, int x, int y)
 {
-    int w = pixmap->drawable.width;
-    int h = pixmap->drawable.height;
+    int w, h;
+    int x1, y1, x2, y2;
 
-    if (rotation == RR_Rotate_90) {
-	/* Rotate 90 degrees counter clockwise */
-        clip->x1 = rect->y1;
-	clip->x2 = rect->y2;
-	clip->y1 = w - rect->x2;
-	clip->y2 = w - rect->x1;
-    } else if (rotation == RR_Rotate_180) {
-	/* Rotate 180 degrees */
-        clip->x1 = w - rect->x2;
-	clip->x2 = w - rect->x1;
-	clip->y1 = h - rect->y2;
-	clip->y2 = h - rect->y1;
-    } else if (rotation == RR_Rotate_270) {
-	/* Rotate 90 degrees clockwise */
-        clip->x1 = h - rect->y2;
-	clip->x2 = h - rect->y1;
-	clip->y1 = rect->x1;
-	clip->y2 = rect->x2;
+    if (rotation == RR_Rotate_90 || rotation == RR_Rotate_270) {
+	/* width and height are swapped if rotated 90 or 270 degrees */
+        w = pixmap->drawable.height;
+        h = pixmap->drawable.width;
     } else {
-	clip->x1 = rect->x1;
-	clip->x2 = rect->x2;
-	clip->y1 = rect->y1;
-	clip->y2 = rect->y2;
+        w = pixmap->drawable.width;
+        h = pixmap->drawable.height;
     }
+
+    /* check if the given rect covers any area in FB of the crtc */
+    if (rect->x2 > crtc->x && rect->x1 < crtc->x + w &&
+        rect->y2 > crtc->y && rect->y1 < crtc->y + h) {
+        /* new coordinate of the partial rect on the crtc area
+         * + x/y offsets in the framebuffer */
+        x1 = max(rect->x1 - crtc->x, 0) + x;
+        y1 = max(rect->y1 - crtc->y, 0) + y;
+        x2 = min(rect->x2 - crtc->x, w) + x;
+        y2 = min(rect->y2 - crtc->y, h) + y;
+
+        /* coordinate transposing/inversion and offset adjustment */
+        if (rotation == RR_Rotate_90) {
+            clip->x1 = y1;
+            clip->y1 = w - x2;
+            clip->x2 = y2;
+            clip->y2 = w - x1;
+        } else if (rotation == RR_Rotate_180) {
+            clip->x1 = w - x2;
+            clip->y1 = h - y2;
+            clip->x2 = w - x1;
+            clip->y2 = h - y1;
+        } else if (rotation == RR_Rotate_270) {
+            clip->x1 = h - y2;
+            clip->y1 = x1;
+            clip->x2 = h - y1;;
+            clip->y2 = x2;
+        } else {
+            clip->x1 = x1;
+            clip->y1 = y1;
+            clip->x2 = x2;
+            clip->y2 = y2;
+        }
+    } else {
+        return -1;
+    }
+
+    return 0;
 }
 
 static int
 dispatch_damages(ScrnInfoPtr scrn, xf86CrtcPtr crtc, RegionPtr dirty,
-                 PixmapPtr pixmap, DamagePtr damage, int fb_id)
+                 PixmapPtr pixmap, DamagePtr damage, int fb_id, int x, int y)
 {
     modesettingPtr ms = modesettingPTR(scrn);
     unsigned num_cliprects = REGION_NUM_RECTS(dirty);
@@ -569,20 +594,30 @@ dispatch_damages(ScrnInfoPtr scrn, xf86CrtcPtr crtc, RegionPtr dirty,
         drmModeClip *clip = xallocarray(num_cliprects, sizeof(drmModeClip));
         BoxPtr rect = REGION_RECTS(dirty);
         int i;
+        int c = 0;
 
         if (!clip)
             return -ENOMEM;
 
-        /* Rotate and copy rects into clips */
-        for (i = 0; i < num_cliprects; i++, rect++)
-	    rotate_clip(pixmap, rect, &clip[i], crtc->rotation);
+        /* Create clips for the given rects in case the rect covers any
+         * area in the FB.
+         */
+        for (i = 0; i < num_cliprects; i++, rect++) {
+            if (rotate_clip(pixmap, crtc, rect, &clip[c], crtc->rotation, x, y) < 0)
+                continue;
+
+            c++;
+        }
+
+        if (!c)
+            return 0;
 
         /* TODO query connector property to see if this is needed */
-        ret = drmModeDirtyFB(ms->fd, fb_id, clip, num_cliprects);
+        ret = drmModeDirtyFB(ms->fd, fb_id, clip, c);
 
         /* if we're swamping it with work, try one at a time */
         if (ret == -EINVAL) {
-            for (i = 0; i < num_cliprects; i++) {
+            for (i = 0; i < c; i++) {
                 if ((ret = drmModeDirtyFB(ms->fd, fb_id, &clip[i], 1)) < 0)
                     break;
             }
@@ -595,18 +630,17 @@ dispatch_damages(ScrnInfoPtr scrn, xf86CrtcPtr crtc, RegionPtr dirty,
         }
 
         free(clip);
-        if (damage)
-            DamageEmpty(damage);
     }
     return ret;
 }
 
 static int
 dispatch_dirty_region(ScrnInfoPtr scrn, xf86CrtcPtr crtc,
-                      PixmapPtr pixmap, DamagePtr damage, int fb_id)
+                      PixmapPtr pixmap, DamagePtr damage,
+                      int fb_id, int x, int y)
 {
     return dispatch_damages(scrn, crtc, DamageRegion(damage),
-                            pixmap, damage, fb_id);
+                            pixmap, damage, fb_id, x, y);
 }
 
 static void
@@ -638,7 +672,7 @@ ms_tearfree_update_damages(ScreenPtr pScreen)
             /* Just notify the kernel of the damages if TearFree isn't used */
             dispatch_damages(scrn, crtc, &region,
                              pScreen->GetScreenPixmap(pScreen),
-                             NULL, ms->drmmode.fb_id);
+                             NULL, ms->drmmode.fb_id, 0, 0);
         }
     }
     DamageEmpty(ms->damage);
@@ -679,7 +713,7 @@ ms_tearfree_do_flips(ScreenPtr pScreen)
         if (ms_do_tearfree_flip(pScreen, crtc)) {
             dispatch_damages(scrn, crtc, &trf->buf[trf->back_idx ^ 1].dmg,
                              trf->buf[trf->back_idx ^ 1].px, NULL,
-                             trf->buf[trf->back_idx ^ 1].fb_id);
+                             trf->buf[trf->back_idx ^ 1].fb_id, 0, 0);
             RegionEmpty(&trf->buf[trf->back_idx ^ 1].dmg);
         }
     }
@@ -698,6 +732,8 @@ dispatch_dirty(ScreenPtr pScreen)
 
     for (c = 0; c < xf86_config->num_crtc; c++) {
         xf86CrtcPtr crtc = xf86_config->crtc[c];
+        PixmapPtr pmap;
+
         drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 
         if (!drmmode_crtc)
@@ -705,14 +741,16 @@ dispatch_dirty(ScreenPtr pScreen)
 
 	drmmode_crtc_get_fb_id(crtc, &fb_id, &x, &y);
 
-        ret = dispatch_dirty_region(scrn, crtc, pixmap, ms->damage, fb_id);
+        if (crtc->rotatedPixmap)
+            pmap = crtc->rotatedPixmap;
+        else
+            pmap = pixmap;
+
+        ret = dispatch_dirty_region(scrn, crtc, pmap, ms->damage, fb_id, x, y);
         if (ret == -EINVAL || ret == -ENOSYS) {
-            ms->dirty_enabled = FALSE;
             DamageUnregister(ms->damage);
             DamageDestroy(ms->damage);
             ms->damage = NULL;
-            xf86DrvMsg(scrn->scrnIndex, X_INFO,
-                       "Disabling kernel dirty updates, not required.\n");
             return;
         }
     }
@@ -726,7 +764,7 @@ dispatch_dirty_pixmap(ScrnInfoPtr scrn, xf86CrtcPtr crtc, PixmapPtr ppix)
     DamagePtr damage = ppriv->secondary_damage;
     int fb_id = ppriv->fb_id;
 
-    dispatch_dirty_region(scrn, crtc, ppix, damage, fb_id);
+    dispatch_dirty_region(scrn, crtc, ppix, damage, fb_id, 0, 0);
 }
 
 static void
@@ -991,7 +1029,7 @@ ms_unwrap_property_requests(ScrnInfoPtr scrn)
 }
 
 static void
-FreeRec(ScrnInfoPtr pScrn)
+FreeScreen(ScrnInfoPtr pScrn)
 {
     modesettingPtr ms;
 
@@ -1109,16 +1147,21 @@ msShouldDoubleShadow(ScrnInfoPtr pScrn, modesettingPtr ms)
 {
     Bool ret = FALSE, asked;
     int from;
-    drmVersionPtr v = drmGetVersion(ms->fd);
+    drmVersionPtr v;
 
     if (!ms->drmmode.shadow_enable)
         return FALSE;
 
-    if (!strcmp(v->name, "mgag200") ||
-        !strcmp(v->name, "ast")) /* XXX || rn50 */
-        ret = TRUE;
+    if ((v = drmGetVersion(ms->fd))) {
+        if (!strcmp(v->name, "mgag200") ||
+            !strcmp(v->name, "ast")) /* XXX || rn50 */
+            ret = TRUE;
 
-    drmFreeVersion(v);
+        drmFreeVersion(v);
+    }
+    else
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                   "Failed to query DRM version.\n");
 
     asked = xf86GetOptValBool(ms->drmmode.Options, OPTION_DOUBLE_SHADOW, &ret);
 
@@ -1301,15 +1344,15 @@ PreInit(ScrnInfoPtr pScrn, int flags)
         ms->drmmode.sw_cursor = TRUE;
     }
 
-    ms->cursor_width = 64;
-    ms->cursor_height = 64;
+    ms->max_cursor_width = 64;
+    ms->max_cursor_height = 64;
     ret = drmGetCap(ms->fd, DRM_CAP_CURSOR_WIDTH, &value);
     if (!ret) {
-        ms->cursor_width = value;
+        ms->max_cursor_width = value;
     }
     ret = drmGetCap(ms->fd, DRM_CAP_CURSOR_HEIGHT, &value);
     if (!ret) {
-        ms->cursor_height = value;
+        ms->max_cursor_height = value;
     }
 
     try_enable_glamor(pScrn);
@@ -1572,7 +1615,6 @@ msEnableSharedPixmapFlipping(RRCrtcPtr crtc, PixmapPtr front, PixmapPtr back)
     ScreenPtr screen = crtc->pScreen;
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     modesettingPtr ms = modesettingPTR(scrn);
-    EntityInfoPtr pEnt = ms->pEnt;
     xf86CrtcPtr xf86Crtc = crtc->devPrivate;
 
     if (!xf86Crtc)
@@ -1587,9 +1629,9 @@ msEnableSharedPixmapFlipping(RRCrtcPtr crtc, PixmapPtr front, PixmapPtr back)
         return FALSE;
 
 #ifdef XSERVER_PLATFORM_BUS
-    if (pEnt->location.type == BUS_PLATFORM) {
-        char *syspath =
-            xf86_platform_device_odev_attributes(pEnt->location.id.plat)->
+    if (ms->pEnt->location.type == BUS_PLATFORM) {
+        const char *syspath =
+            xf86_platform_device_odev_attributes(ms->pEnt->location.id.plat)->
             syspath;
 
         /* Not supported for devices using USB transport due to misbehaved
@@ -2044,7 +2086,7 @@ ScreenInit(ScreenPtr pScreen, int argc, char **argv)
 
     /* Need to extend HWcursor support to handle mask interleave */
     if (!ms->drmmode.sw_cursor)
-        xf86_cursors_init(pScreen, ms->cursor_width, ms->cursor_height,
+        xf86_cursors_init(pScreen, ms->max_cursor_width, ms->max_cursor_height,
                           HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_64 |
                           HARDWARE_CURSOR_UPDATE_UNHIDDEN |
                           HARDWARE_CURSOR_ARGB);
@@ -2176,12 +2218,6 @@ AdjustFrame(ScrnInfoPtr pScrn, int x, int y)
     modesettingPtr ms = modesettingPTR(pScrn);
 
     drmmode_adjust_frame(pScrn, &ms->drmmode, x, y);
-}
-
-static void
-FreeScreen(ScrnInfoPtr pScrn)
-{
-    FreeRec(pScrn);
 }
 
 static void
