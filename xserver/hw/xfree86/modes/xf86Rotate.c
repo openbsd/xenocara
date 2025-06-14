@@ -39,13 +39,13 @@
 #include "X11/extensions/dpmsconst.h"
 #include "X11/Xatom.h"
 
-void
-xf86RotateCrtcRedisplay(xf86CrtcPtr crtc, PixmapPtr dst_pixmap,
-                        DrawableRec *src_drawable, RegionPtr region,
-                        Bool transform_src)
+static void
+xf86RotateCrtcRedisplay(xf86CrtcPtr crtc, RegionPtr region)
 {
     ScrnInfoPtr scrn = crtc->scrn;
     ScreenPtr screen = scrn->pScreen;
+    WindowPtr root = screen->root;
+    PixmapPtr dst_pixmap = crtc->rotatedPixmap;
     PictFormatPtr format = PictureWindowFormat(screen->root);
     int error;
     PicturePtr src, dst;
@@ -57,7 +57,7 @@ xf86RotateCrtcRedisplay(xf86CrtcPtr crtc, PixmapPtr dst_pixmap,
         return;
 
     src = CreatePicture(None,
-                        src_drawable,
+                        &root->drawable,
                         format,
                         CPSubwindowMode,
                         &include_inferiors, serverClient, &error);
@@ -70,11 +70,9 @@ xf86RotateCrtcRedisplay(xf86CrtcPtr crtc, PixmapPtr dst_pixmap,
     if (!dst)
         return;
 
-	    if (transform_src) {
-        error = SetPictureTransform(src, &crtc->crtc_to_framebuffer);
-        if (error)
-            return;
-    }
+    error = SetPictureTransform(src, &crtc->crtc_to_framebuffer);
+    if (error)
+        return;
     if (crtc->transform_in_use && crtc->filter)
         SetPicturePictFilter(src, crtc->filter, crtc->params, crtc->nparams);
 
@@ -207,9 +205,7 @@ xf86RotateRedisplay(ScreenPtr pScreen)
 
                 /* update damaged region */
                 if (RegionNotEmpty(&crtc_damage))
-					   xf86RotateCrtcRedisplay(crtc, crtc->rotatedPixmap,
-                                            &pScreen->root->drawable,
-                                            &crtc_damage, TRUE);
+                    xf86RotateCrtcRedisplay(crtc, &crtc_damage);
 
                 RegionUninit(&crtc_damage);
             }
