@@ -62,7 +62,7 @@
 #if DETECT_OS_FREEBSD || DETECT_OS_OPENBSD
 #if __has_include(<sys/auxv.h>)
 #include <sys/auxv.h>
-#define HAVE_ELF_AUX_INFO 1
+#define HAVE_ELF_AUX_INFO
 #endif
 #endif
 
@@ -139,7 +139,7 @@ check_os_altivec_support(void)
 #endif
 #if defined(__ALTIVEC__) && defined(__VSX__)
 /* Do nothing */
-#elif DETECT_OS_FREEBSD || (DETECT_OS_OPENBSD && HAVE_ELF_AUX_INFO) /* !__ALTIVEC__ || !__VSX__ */
+#elif DETECT_OS_FREEBSD || (DETECT_OS_OPENBSD && defined(HAVE_ELF_AUX_INFO)) /* !__ALTIVEC__ || !__VSX__ */
    unsigned long hwcap = 0;
 #ifdef HAVE_ELF_AUX_INFO
    elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap));
