@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.539 2025/05/24 17:57:03 matthieu Exp $
+# $OpenBSD: MODULES,v 1.540 2025/06/17 14:26:39 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -198,4 +198,5 @@ util/gccmakedep			1.0.4
 util/macros			1.20.2
 util/makedepend			1.0.9
 
-xserver				21.1.16
+xserver				21.1.17		needs-update
+
