@@ -2149,7 +2149,8 @@ xf86RandR14ProviderSetProperty(ScreenPtr pScreen,
     /* If we don't have any property handler, then we don't care what the
      * user is setting properties to.
      */
-    if (config->provider_funcs->set_property == NULL)
+    if (config->provider_funcs == NULL ||
+        config->provider_funcs->set_property == NULL)
         return TRUE;
 
     /*
@@ -2167,7 +2168,8 @@ xf86RandR14ProviderGetProperty(ScreenPtr pScreen,
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
 
-    if (config->provider_funcs->get_property == NULL)
+    if (config->provider_funcs == NULL ||
+        config->provider_funcs->get_property == NULL)
         return TRUE;
 
     /* Should be safe even w/o vtSema */

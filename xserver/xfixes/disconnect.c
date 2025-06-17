@@ -67,6 +67,7 @@ ProcXFixesSetClientDisconnectMode(ClientPtr client)
     ClientDisconnectPtr pDisconnect = GetClientDisconnect(client);
 
     REQUEST(xXFixesSetClientDisconnectModeReq);
+    REQUEST_SIZE_MATCH(xXFixesSetClientDisconnectModeReq);
 
     pDisconnect->disconnect_mode = stuff->disconnect_mode;
 
@@ -80,7 +81,7 @@ SProcXFixesSetClientDisconnectMode(ClientPtr client)
 
     swaps(&stuff->length);
 
-    REQUEST_AT_LEAST_SIZE(xXFixesSetClientDisconnectModeReq);
+    REQUEST_SIZE_MATCH(xXFixesSetClientDisconnectModeReq);
 
     swapl(&stuff->disconnect_mode);
 
