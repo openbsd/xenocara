@@ -675,15 +675,6 @@ lp_set_module_stack_alignment_override(LLVMModuleRef MRef, unsigned align)
 #endif
 }
 
-extern "C" void
-lp_set_module_branch_protection(LLVMModuleRef MRef)
-{
-   /* Enable standard (bti+pac-ret) branch protection */
-   llvm::Module *M = llvm::unwrap(MRef);
-   M->addModuleFlag(llvm::Module::Override, "branch-target-enforcement", 1);
-   M->addModuleFlag(llvm::Module::Override, "sign-return-address", 1);
-}
-
 using namespace llvm;
 
 class GallivmRunAtExitForStaticDestructors : public SDNode

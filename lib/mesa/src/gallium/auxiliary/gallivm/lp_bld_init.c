@@ -234,10 +234,6 @@ init_gallivm_state(struct gallivm_state *gallivm, const char *name,
    lp_set_module_stack_alignment_override(gallivm->module, 4);
 #endif
 
-#if DETECT_ARCH_AARCH64
-   lp_set_module_branch_protection(gallivm->module);
-#endif
-
    gallivm->builder = LLVMCreateBuilderInContext(gallivm->context);
    if (!gallivm->builder)
       goto fail;
@@ -404,6 +400,16 @@ gallivm_compile_module(struct gallivm_state *gallivm)
                    "[-mcpu=<-mcpu option>] ",
                    "[-mattr=<-mattr option(s)>]");
    }
+
+#if DETECT_ARCH_AARCH64
+   LLVMValueRef func = LLVMGetFirstFunction(gallivm->module);
+
+   while (func) {
+      LLVMAddTargetDependentFunctionAttr(func, "branch-target-enforcement", "true");
+      LLVMAddTargetDependentFunctionAttr(func, "sign-return-address", "non-leaf");
+      func = LLVMGetNextFunction(func);
+   }
+#endif
 
    lp_passmgr_run(gallivm->passmgr,
                   gallivm->module,
