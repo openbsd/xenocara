@@ -1864,6 +1864,12 @@ at startup.  By default, the server will attempt to enable all connected
 monitors.
 (RandR 1.2-supporting drivers only)
 .TP 7
+.BI "Option \*qDisable\*q \*q" bool \*q
+This optional entry specifies whether the monitor should be turned off
+at startup.  By default, the server will attempt to enable all connected
+monitors.
+(RandR 1.2-supporting drivers only)
+.TP 7
 .BI "Option \*qDefaultModes\*q \*q" bool \*q
 This optional entry specifies whether the server should add supported default
 modes to the list of modes offered on this monitor. By default, the server

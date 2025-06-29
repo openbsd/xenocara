@@ -326,7 +326,7 @@ values will yield a still more detailed debug output.
 .TP 8
 .B "\-xkbrules \fIrule\fP"
 .TP 8
-.B "\-xkbvariant \fIvariant\fp"
+.B "\-xkbvariant \fIvariant\fP"
 These options configure the xkeyboard extension to load
 a particular keyboard map as the X server starts.  The behavior is similar
 to the \fIsetxkbmap\fP(1) program.
@@ -385,7 +385,7 @@ window, in both the generic case and for particular programs.
 \fIXWin -multiwindow\fP produces for each top-level X-window.
 .br
 * To change the style that is associated to the \fIWindows\fP window that
-\fXWin I-multiwindow\fP produces for each top-level X window.
+\fIXWin -multiwindow\fP produces for each top-level X window.
 .PP
 The format of the \fI.XWinrc\fP file is given in the XWinrc(5) manual page.
 

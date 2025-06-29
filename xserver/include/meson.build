@@ -174,6 +174,8 @@ conf_data.set('HAVE_STRLCAT', cc.has_function('strlcat', dependencies: libbsd_de
 conf_data.set('HAVE_STRLCPY', cc.has_function('strlcpy', dependencies: libbsd_dep) ? '1' : false)
 conf_data.set('HAVE_STRNCASECMP', cc.has_function('strncasecmp') ? '1' : false)
 conf_data.set('HAVE_STRNDUP', cc.has_function('strndup') and cc.has_header_symbol('string.h', 'strndup') ? '1' : false)
+# HAVE_STRUCT_SOCKADDR_STORAGE is used by xtrans >= 1.6
+conf_data.set('HAVE_STRUCT_SOCKADDR_STORAGE', cc.has_type('struct sockaddr_storage', prefix: '#include <sys/socket.h>') ? '1' : false)
 conf_data.set('HAVE_TIMINGSAFE_MEMCMP', cc.has_function('timingsafe_memcmp') ? '1' : false)
 conf_data.set('HAVE_VASPRINTF', cc.has_function('vasprintf') ? '1' : false)
 conf_data.set('HAVE_VSNPRINTF', cc.has_function('vsnprintf') ? '1' : false)

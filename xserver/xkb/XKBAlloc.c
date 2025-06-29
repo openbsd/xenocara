@@ -194,8 +194,10 @@ XkbAllocNames(XkbDescPtr xkb, unsigned which, int nTotalRG, int nTotalAliases)
                 free(prev_radio_groups);
             }
         }
-        if (names->radio_groups == NULL)
+        if (names->radio_groups == NULL) {
+            names->num_rg = 0;
             return BadAlloc;
+        }
         names->num_rg = nTotalRG;
     }
     return Success;

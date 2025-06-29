@@ -729,7 +729,7 @@ DeliverStateNotifyEvent(DeviceIntPtr dev, WindowPtr win)
         evcount += ((nval - 3) + 6)/6;
     }
 
-    BUG_RETURN(evcount <= ARRAY_SIZE(sev));
+    BUG_RETURN(evcount > ARRAY_SIZE(sev));
 
     FixDeviceStateNotify(dev, ev, k, b, v, first);
 

@@ -1485,6 +1485,30 @@ ReattachToOldMaster(DeviceIntPtr dev)
 }
 
 /**
+ * Return the current master keyboard or, if we're temporarily detached, the one
+ * we've been attached to previously.
+ */
+static DeviceIntPtr
+CurrentOrOldMasterKeyboard(DeviceIntPtr dev)
+{
+    DeviceIntPtr kbd = GetMaster(dev, MASTER_KEYBOARD);
+
+    if (kbd)
+        return kbd;
+
+    if (dev->saved_master_id) {
+        dixLookupDevice(&kbd, dev->saved_master_id, serverClient, DixUseAccess);
+        if (!kbd)
+            return NULL;
+        /* if dev is a pointer the saved master is a master pointer,
+         * we want the keybard */
+        return GetMaster(kbd, MASTER_KEYBOARD);
+    }
+
+    return NULL;
+}
+
+/**
  * Update touch records when an explicit grab is activated. Any touches owned by
  * the grabbing client are updated so the listener state reflects the new grab.
  */
@@ -1711,6 +1735,10 @@ ActivateKeyboardGrab(DeviceIntPtr keybd, GrabPtr grab, TimeStamp time,
     GrabInfoPtr grabinfo = &keybd->deviceGrab;
     GrabPtr oldgrab = grabinfo->grab;
     WindowPtr oldWin;
+    DeviceIntPtr master_keyboard = CurrentOrOldMasterKeyboard(keybd);
+
+    if (!master_keyboard)
+        master_keyboard = inputInfo.keyboard;
 
     /* slave devices need to float for the duration of the grab. */
     if (grab->grabtype == XI2 && keybd->enabled &&
@@ -1726,7 +1754,7 @@ ActivateKeyboardGrab(DeviceIntPtr keybd, GrabPtr grab, TimeStamp time,
     else
         oldWin = keybd->spriteInfo->sprite->win;
     if (oldWin == FollowKeyboardWin)
-        oldWin = keybd->focus->win;
+        oldWin = master_keyboard->focus->win;
     if (keybd->valuator)
         keybd->valuator->motionHintWindow = NullWindow;
     if (oldWin &&
@@ -1757,6 +1785,10 @@ DeactivateKeyboardGrab(DeviceIntPtr keybd)
     WindowPtr focusWin;
     Bool wasImplicit = (keybd->deviceGrab.fromPassiveGrab &&
                         keybd->deviceGrab.implicitGrab);
+    DeviceIntPtr master_keyboard = CurrentOrOldMasterKeyboard(keybd);
+
+    if (!master_keyboard)
+        master_keyboard = inputInfo.keyboard;
 
     if (keybd->valuator)
         keybd->valuator->motionHintWindow = NullWindow;
@@ -1777,7 +1809,7 @@ DeactivateKeyboardGrab(DeviceIntPtr keybd)
         focusWin = NullWindow;
 
     if (focusWin == FollowKeyboardWin)
-        focusWin = inputInfo.keyboard->focus->win;
+        focusWin = master_keyboard->focus->win;
 
     DoFocusEvents(keybd, grab->window, focusWin, NotifyUngrab);
 

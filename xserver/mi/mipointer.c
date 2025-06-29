@@ -200,6 +200,8 @@ miPointerDisplayCursor(DeviceIntPtr pDev, ScreenPtr pScreen, CursorPtr pCursor)
         return FALSE;
 
     pPointer = MIPOINTER(pDev);
+    if (!pPointer)
+        return FALSE;
 
     pPointer->pCursor = pCursor;
     pPointer->pScreen = pScreen;
@@ -222,6 +224,8 @@ miPointerConstrainCursor(DeviceIntPtr pDev, ScreenPtr pScreen, BoxPtr pBox)
     miPointerPtr pPointer;
 
     pPointer = MIPOINTER(pDev);
+    if (!pPointer)
+        return;
 
     pPointer->limits = *pBox;
     pPointer->confined = PointerConfinedToScreen(pDev);
@@ -272,6 +276,9 @@ miPointerSetCursorPosition(DeviceIntPtr pDev, ScreenPtr pScreen,
 {
     SetupScreen(pScreen);
     miPointerPtr pPointer = MIPOINTER(pDev);
+
+    if (!pPointer)
+        return TRUE;
 
     pPointer->generateEvent = generateEvent;
 
@@ -379,6 +386,8 @@ miPointerWarpCursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
     BOOL changedScreen = FALSE;
 
     pPointer = MIPOINTER(pDev);
+    if (!pPointer)
+        return;
 
     if (pPointer->pScreen != pScreen) {
         mieqSwitchScreen(pDev, pScreen, TRUE);
@@ -504,6 +513,9 @@ miPointerInvalidateSprite(DeviceIntPtr pDev)
     miPointerPtr pPointer;
 
     pPointer = MIPOINTER(pDev);
+    if (!pPointer)
+        return;
+
     pPointer->pSpriteCursor = (CursorPtr) 1;
 }
 
@@ -522,6 +534,8 @@ miPointerSetScreen(DeviceIntPtr pDev, int screen_no, int x, int y)
     miPointerPtr pPointer;
 
     pPointer = MIPOINTER(pDev);
+    if (!pPointer)
+        return;
 
     pScreen = screenInfo.screens[screen_no];
     mieqSwitchScreen(pDev, pScreen, FALSE);
@@ -566,6 +580,8 @@ miPointerMoveNoEvent(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
     SetupScreen(pScreen);
 
     pPointer = MIPOINTER(pDev);
+    if (!pPointer)
+        return;
 
     /* Hack: We mustn't call into ->MoveCursor for anything but the
      * VCP, as this may cause a non-HW rendered cursor to be rendered while
@@ -718,8 +734,15 @@ miPointerSetPosition(DeviceIntPtr pDev, int mode, double *screenx,
 void
 miPointerGetPosition(DeviceIntPtr pDev, int *x, int *y)
 {
-    *x = MIPOINTER(pDev)->x;
-    *y = MIPOINTER(pDev)->y;
+    miPointerPtr pPointer = MIPOINTER(pDev);
+    if (pPointer) {
+        *x = pPointer->x;
+        *y = pPointer->y;
+    }
+    else {
+        *x = 0;
+        *y = 0;
+    }
 }
 
 /**
