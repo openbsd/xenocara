@@ -45,6 +45,7 @@
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
 #endif
+#include <pwd.h>
 #include <string.h>
 #include <locale.h>
 
@@ -378,6 +379,19 @@ main (int argc, char **argv)
 	    return 1;
 	}
 	systemOnly = FcTrue;
+    }
+
+    /* If started as root, priv-drop to _fc-cache */
+    if (getuid() == 0) {
+        struct passwd *pw;
+
+        pw = getpwnam("_fc-cache");
+        if (!pw)
+            errx(1, "no _fc-cache user to revoke to");
+        if (setgroups(1, &pw->pw_gid) == -1 ||
+            setresgid(pw->pw_gid, pw->pw_gid, pw->pw_gid) == -1 ||
+            setresuid(pw->pw_uid, pw->pw_uid, pw->pw_uid) == -1)
+                err(1, "unable to revoke privs");
     }
 
     if (pledge("stdio rpath wpath cpath flock", NULL) == -1)

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2018/07/09 21:20:56 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2025/07/13 08:19:24 bentley Exp $
 
 afterinstall:
 .for fdir in 100dpi 75dpi OTF TTF Type1 cyrillic misc
@@ -13,16 +13,25 @@ afterinstall:
 	chmod 644 ${DESTDIR}/usr/X11R6/lib/X11/fonts/${fdir}/fonts.scale
 .endfor
 	if test -z "$(DESTDIR)"; then \
+		chown ${BUILDUSER}:${WOBJGROUP} \
+		   ${DESTDIR}/var/cache/fontconfig; \
 		echo "fc-cache -s -v ${DESTDIR}/usr/X11R6/lib/X11/fonts";\
-		fc-cache -s -v ${DESTDIR}/usr/X11R6/lib/X11/fonts ;\
+		su ${BUILDUSER} -c \
+		   "fc-cache -s -v ${DESTDIR}/usr/X11R6/lib/X11/fonts" ;\
+		chown -R _fc-cache:_fc-cache \
+		   ${DESTDIR}/var/cache/fontconfig; \
 		chmod 644 ${DESTDIR}/var/cache/fontconfig/*; \
 	else \
 		echo "truncating font directories mtimes"; \
 		find "${DESTDIR}/usr/X11R6/lib/X11/fonts" -type d \
 		   -exec perl -e 'utime+(stat)[8,9],$$_ for @ARGV' {} + ;  \
+		chown ${BUILDUSER}:${WOBJGROUP} \
+		   ${DESTDIR}/var/cache/fontconfig; \
 		echo "fc-cache -y ${DESTDIR} -s -v /usr/X11R6/lib/X11/fonts";\
-		fc-cache -y ${DESTDIR} -s -v /usr/X11R6/lib/X11/fonts;\
-		chown root:wheel ${DESTDIR}/var/cache/fontconfig/*; \
+		su ${BUILDUSER} -c \
+		   "fc-cache -y ${DESTDIR} -s -v /usr/X11R6/lib/X11/fonts" ;\
+		chown -R _fc-cache:_fc-cache \
+		   ${DESTDIR}/var/cache/fontconfig/; \
 		chmod 644 ${DESTDIR}/var/cache/fontconfig/*; \
 	fi
 
