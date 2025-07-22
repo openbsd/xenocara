@@ -352,9 +352,6 @@ radv_postprocess_nir(struct radv_device *device, const struct radv_graphics_stat
          NIR_PASS(_, stage->nir, nir_opt_shrink_stores, !instance->drirc.disable_shrink_image_store);
 
          constant_fold_for_push_const = true;
-
-         /* Gather info again, to update whether 8/16-bit are used. */
-         nir_shader_gather_info(stage->nir, nir_shader_get_entrypoint(stage->nir));
       }
    }
 
@@ -533,7 +530,7 @@ radv_postprocess_nir(struct radv_device *device, const struct radv_graphics_stat
 
    NIR_PASS(_, stage->nir, nir_lower_fp16_casts, nir_lower_fp16_split_fp64);
 
-   if (stage->nir->info.bit_sizes_int & (8 | 16)) {
+   if (ac_nir_might_lower_bit_size(stage->nir)) {
       if (gfx_level >= GFX8)
          nir_divergence_analysis(stage->nir);
 

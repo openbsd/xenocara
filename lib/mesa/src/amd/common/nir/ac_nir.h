@@ -397,6 +397,9 @@ unsigned
 ac_nir_lower_bit_size_callback(const nir_instr *instr, void *data);
 
 bool
+ac_nir_might_lower_bit_size(const nir_shader *shader);
+
+bool
 ac_nir_mem_vectorize_callback(unsigned align_mul, unsigned align_offset, unsigned bit_size,
                               unsigned num_components, int64_t hole_size,
                               nir_intrinsic_instr *low, nir_intrinsic_instr *high, void *data);

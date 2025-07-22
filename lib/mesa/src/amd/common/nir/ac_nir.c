@@ -340,11 +340,9 @@ ac_nir_optimize_uniform_atomics(nir_shader *nir)
    return progress;
 }
 
-unsigned
-ac_nir_lower_bit_size_callback(const nir_instr *instr, void *data)
+static unsigned
+lower_bit_size_callback(const nir_instr *instr, enum amd_gfx_level chip, bool divergence_known)
 {
-   enum amd_gfx_level chip = *(enum amd_gfx_level *)data;
-
    if (instr->type != nir_instr_type_alu)
       return 0;
    nir_alu_instr *alu = nir_instr_as_alu(instr);
@@ -374,10 +372,10 @@ ac_nir_lower_bit_size_callback(const nir_instr *instr, void *data)
       case nir_op_isign:
       case nir_op_uadd_sat:
       case nir_op_usub_sat:
-         return (bit_size == 8 || !(chip >= GFX8 && alu->def.divergent)) ? 32 : 0;
+         return (!divergence_known || bit_size == 8 || !(chip >= GFX8 && alu->def.divergent)) ? 32 : 0;
       case nir_op_iadd_sat:
       case nir_op_isub_sat:
-         return bit_size == 8 || !alu->def.divergent ? 32 : 0;
+         return !divergence_known || bit_size == 8 || !alu->def.divergent ? 32 : 0;
 
       default:
          return 0;
@@ -399,13 +397,35 @@ ac_nir_lower_bit_size_callback(const nir_instr *instr, void *data)
       case nir_op_uge:
       case nir_op_bitz:
       case nir_op_bitnz:
-         return (bit_size == 8 || !(chip >= GFX8 && alu->def.divergent)) ? 32 : 0;
+         return (!divergence_known || bit_size == 8 || !(chip >= GFX8 && alu->def.divergent)) ? 32 : 0;
       default:
          return 0;
       }
    }
 
    return 0;
+}
+
+unsigned
+ac_nir_lower_bit_size_callback(const nir_instr *instr, void *data)
+{
+   enum amd_gfx_level chip = *(enum amd_gfx_level *)data;
+   return lower_bit_size_callback(instr, chip, true);
+}
+
+bool
+ac_nir_might_lower_bit_size(const nir_shader *shader)
+{
+   nir_foreach_function_impl(impl, shader) {
+      nir_foreach_block(block, impl) {
+         nir_foreach_instr(instr, block) {
+            if (lower_bit_size_callback(instr, CLASS_UNKNOWN, false))
+               return true;
+         }
+      }
+   }
+
+   return false;
 }
 
 static unsigned
