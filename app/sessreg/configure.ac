@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([sessreg], [1.1.3],
+AC_INIT([sessreg], [1.1.4],
 	[https://gitlab.freedesktop.org/xorg/app/sessreg/-/issues], [sessreg])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])

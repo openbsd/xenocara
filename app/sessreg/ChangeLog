@@ -1,3 +1,67 @@
+commit 7505588d95f48dda4507b8057a8c9a1344f30652
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 18 09:47:46 2025 -0700
+
+    sessreg 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 92185f8b7ca6c6d993741d3df1deac1771b424db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 27 09:59:13 2025 -0700
+
+    man pages: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    mandoc: man1/sessreg.1:25:15: WARNING: cannot parse date, using it verbatim: TH sessreg 1.1.3
+    mandoc: man1/sessreg.1:45:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: man1/sessreg.1:58:2: WARNING: skipping paragraph macro: PP after SH
+    an.tmac:man1/sessreg.1:61: style: blank line in input
+    an.tmac:man1/sessreg.1:63: style: blank line in input
+    an.tmac:man1/sessreg.1:67: style: blank line in input
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/sessreg/-/merge_requests/9>
+
+commit afbb56ba279c67047881c0f4c02f4fe25f1485ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 29 16:43:35 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/sessreg/-/merge_requests/8>
+
+commit 7570020a7dd3ec216338bdf5e9df1336c9291d54
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 22 16:14:22 2025 -0700
+
+    Add --help and --version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/sessreg/-/merge_requests/7>
+
+commit 1ec7950be999790300d6a0e8ec464871b66af56a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 27 18:27:51 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/sessreg/-/merge_requests/6>
+
+commit 498db3a831ac76b487cfec86492ebc54e0e25bb4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 08:55:47 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 1649c040f8123b96a9a5f1784555d433b07d09e6
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 29 10:51:07 2022 -0700
@@ -1051,7 +1115,7 @@ Date:   Mon Oct 3 17:18:44 2005 +0000
         wtmpx/lastlogs Set version string in man page
 
 commit 26e33eae6ff593878b1402ef6d5596dc1f7c7fe3
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Tue Sep 27 18:07:40 2005 +0000
 
     Add ChangeLog so autogen.sh will run.

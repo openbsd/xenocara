@@ -125,7 +125,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -136,11 +135,9 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
-EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
-GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -238,7 +235,7 @@ top_srcdir = @top_srcdir@
 appmandir = $(APP_MAN_DIR)
 appman_PRE = sessreg.man
 appman_DATA = $(appman_PRE:man=$(APP_MAN_SUFFIX))
-EXTRA_DIST = $(appman_PRE) filenames.sed.c
+EXTRA_DIST = $(appman_PRE) filenames.sed.c extract.sed
 CLEANFILES = $(appman_DATA) filenames.sed
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir)
@@ -453,10 +450,10 @@ uninstall-am: uninstall-appmanDATA
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am uninstall uninstall-am uninstall-appmanDATA
 
-filenames.sed: filenames.sed.c
+filenames.sed: filenames.sed.c extract.sed 
 	$(AM_V_GEN)$(CPP) -P $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	    $(AM_CPPFLAGS) $(CPPFLAGS) $(srcdir)/filenames.sed.c | \
-	    $(SED) -n -e '/s|__/ p' -e '/^\/__/ p' > $@
+	    $(SED) -n -f $(srcdir)/extract.sed > $@
 
 sessreg.$(APP_MAN_SUFFIX): filenames.sed
 

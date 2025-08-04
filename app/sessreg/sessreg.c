@@ -26,7 +26,7 @@
  */
 
 /*
- * Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, Oracle and/or its affiliates.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -277,10 +277,19 @@ main (int argc, char **argv)
 			dflag++;
 			break;
 		case 'V':
-			printf("%s\n", PACKAGE_STRING);
+			puts(PACKAGE_STRING);
 			exit (0);
+                case '-':
+			if (strcmp(*argv, "-help") == 0) {
+				usage (0);
+			}
+			if (strcmp(*argv, "-version") == 0) {
+				puts (PACKAGE_STRING);
+				exit (0);
+			}
+			/* fallthrough */
 		default:
-			fprintf (stderr, "%s: unrecognized option '%s'\n",
+			fprintf (stderr, "%s: unrecognized option '-%s'\n",
 				 program_name, argv[0]);
 			usage (1);
 		}
