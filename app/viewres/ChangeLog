@@ -1,3 +1,92 @@
+commit 68a1dae8c40523c4ecbae10cedd992c78f02e3b4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 18 15:24:41 2025 -0700
+
+    viewres 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5621770476ab03d8edcefe30faa1d30caa1a35dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 29 18:24:36 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/viewres/-/merge_requests/9>
+
+commit 787fb5a0fbbbb9b79da11229e2ef129a8b87b082
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 2 12:29:55 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/viewres/-/merge_requests/8>
+
+commit 0a46aaef59f23cf5215ea904be45c4c90a992b13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 8 13:08:50 2024 -0800
+
+    Use intptr_t instead of long for casting between pointers and integers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/viewres/-/merge_requests/7>
+
+commit eaa66119167744aa651aa510c39eb2f5508c9a45
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 8 13:05:38 2024 -0800
+
+    Add unused attribute to unused callback arguments
+    
+    Clears up 18 warnings from clang of the form:
+    viewres.c:447:36: warning: unused parameter 'gw' [-Wunused-parameter]
+    variable_labeltype_callback(Widget gw,
+                                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/viewres/-/merge_requests/7>
+
+commit 04e6897d7566fbef810d3d33d17d61c4895da356
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 8 12:50:04 2024 -0800
+
+    Declare usage() as noreturn
+    
+    Clears clang warning:
+    viewres.c:239:1: warning: function 'usage' could be declared with
+     attribute 'noreturn' [-Wmissing-noreturn]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/viewres/-/merge_requests/7>
+
+commit ebdc1504bc0be8c53a148934d0c50cb21f9373b1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 9 18:14:53 2023 -0800
+
+    Add -help and -version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c0e96db7bc9ac9052154430fe726c96745fa387
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 9 18:09:20 2023 -0800
+
+    Print which argument was unknown before giving usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b21bf3702bb2548eee4bd44f48e4259c09ad487
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b2b611960b5f11740cb3ca66c6dcd0a3688a82ae
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 15 09:53:33 2022 -0700
@@ -646,7 +735,7 @@ Date:   Sun Jul 17 20:11:01 2005 +0000
     fix rules to work with non-GNU make and outside of $srcdir
 
 commit ce1447d0a8b2a7fc3a36f11eed69cd14be397ffe
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 29 19:22:16 2005 +0000
 
     Build system for viewres

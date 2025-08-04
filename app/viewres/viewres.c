@@ -29,8 +29,14 @@ in this Software without prior written authorization from the X Consortium.
  */
 /* $XFree86: xc/programs/viewres/viewres.c,v 1.6 2003/05/27 22:26:58 tsi Exp $ */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <X11/Xfuncproto.h>
 #include <X11/StringDefs.h>
 #include <X11/IntrinsicP.h>
 #include <X11/Xaw/Cardinals.h>
@@ -100,6 +106,8 @@ static const char *help_message[] = {
     "-top name        object to be top of tree",
     "-variable        show variable name instead of class name",
     "-vertical        list the tree vertically",
+    "-help            print this message",
+    "-version         print version info",
     NULL
 };
 
@@ -228,8 +236,8 @@ static Arg true_args[1] = {{ XtNstate, (XtArgVal) TRUE }};
 /*
  * routines
  */
-static void
-usage(void)
+_X_NORETURN static void
+usage(int exitval)
 {
     fprintf(stderr, "usage:  %s [-options...]\n", ProgramName);
     fprintf(stderr, "\nwhere options include:\n");
@@ -237,7 +245,7 @@ usage(void)
         fprintf(stderr, "    %s\n", *cpp);
     }
     fprintf(stderr, "\n");
-    exit(1);
+    exit(exitval);
 }
 
 static XmuWidgetNode *
@@ -437,20 +445,20 @@ add_subtree_to_selected_list(XmuWidgetNode *node, Boolean updatewidget)
 
 /* ARGSUSED */
 static void
-variable_labeltype_callback(Widget gw,
+variable_labeltype_callback(_X_UNUSED Widget gw,
                             XtPointer closure,       /* TRUE or FALSE */
-                            XtPointer data)
+                            _X_UNUSED XtPointer data)
 {
-    set_labeltype_menu((Boolean) (long) closure, True);
+    set_labeltype_menu((Boolean) (intptr_t) closure, True);
 }
 
 /* ARGSUSED */
 static void
-gravity_callback(Widget gw,
+gravity_callback(_X_UNUSED Widget gw,
                  XtPointer closure,  /* TRUE or FALSE */
-                 XtPointer data)
+                 _X_UNUSED XtPointer data)
 {
-    set_orientation_menu((XtGravity) (long) closure, True);
+    set_orientation_menu((XtGravity) (intptr_t) closure, True);
 }
 
 static Boolean
@@ -560,9 +568,9 @@ do_resources(XmuWidgetNode *node, Boolean op, Boolean updatewidget)
 static void
 show_resources_callback(Widget gw,         /* menu or toggle button */
                         XtPointer closure, /* BOOL_OFF, BOOL_ON, BOOL_TOGGLE */
-                        XtPointer data)    /* undefined */
+                        _X_UNUSED XtPointer data)    /* undefined */
 {
-    int op = (long) closure;
+    int op = (int) (intptr_t) closure;
     XmuWidgetNode *node = widget_to_node(gw);
 
     if (node) {
@@ -587,13 +595,13 @@ show_resources_callback(Widget gw,         /* menu or toggle button */
 static void
 select_callback(Widget gw,         /* entry widget */
                 XtPointer closure, /* TRUE or FALSE */
-                XtPointer data)    /* undefined */
+                _X_UNUSED XtPointer data)    /* undefined */
 {
     int i;
     int nselected = selected_list.n_elements;
     XmuWidgetNode *node;
 
-    switch ((long) closure) {
+    switch ((intptr_t) closure) {
     case SELECT_NOTHING:       /* clear selection_list */
         remove_nodes_from_selected_list(0, nselected, True);
         break;
@@ -710,12 +718,12 @@ select_callback(Widget gw,         /* entry widget */
 
 /* ARGSUSED */
 static void
-toggle_callback(Widget gw,
+toggle_callback(_X_UNUSED Widget gw,
                 XtPointer closure,   /* XmuWidgetNode for this widget */
                 XtPointer data)      /* on or off */
 {
     XmuWidgetNode *node = (XmuWidgetNode *) closure;
-    Boolean selected = (Boolean) (long) data;
+    Boolean selected = (Boolean) (intptr_t) data;
 
     if (selected) {
         add_to_selected_list(node, FALSE);
@@ -732,9 +740,9 @@ toggle_callback(Widget gw,
  */
 /* ARGSUSED */
 static void
-panner_callback(Widget gw,         /* panner widget */
-                XtPointer closure, /* porthole widget */
-                XtPointer data)    /* report */
+panner_callback(_X_UNUSED Widget gw,         /* panner widget */
+                _X_UNUSED XtPointer closure, /* porthole widget */
+                XtPointer data)              /* report */
 {
     XawPannerReport *rep = (XawPannerReport *) data;
     Arg args[2];
@@ -749,7 +757,7 @@ panner_callback(Widget gw,         /* panner widget */
 
 /* ARGSUSED */
 static void
-porthole_callback(Widget gw,            /* porthole widget */
+porthole_callback(_X_UNUSED Widget gw,  /* porthole widget */
                   XtPointer closure,    /* panner widget */
                   XtPointer data)       /* report */
 {
@@ -891,12 +899,34 @@ main(int argc, char *argv[])
 
     XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+        const char *argn = argv[n];
+        /* accept single or double dash for -help & -version */
+        if (argn[0] == '-' && argn[1] == '-') {
+            argn++;
+        }
+        if (strcmp(argn, "-help") == 0) {
+            usage(0);
+        }
+        if (strcmp(argn, "-version") == 0) {
+            puts(PACKAGE_STRING);
+            exit(0);
+        }
+    }
+
     toplevel = XtAppInitialize(&app_con, "Viewres",
                                Options, XtNumber(Options),
                                &argc, argv, (String *) fallback_resources,
                                (ArgList) NULL, ZERO);
-    if (argc != 1)
-        usage();
+    if (argc != 1) {
+        fputs("Unknown argument(s):", stderr);
+        for (int n = 1; n < argc; n++) {
+            fprintf(stderr, " %s", argv[n]);
+        }
+        fputs("\n\n", stderr);
+        usage(1);
+    }
 
     initialize_widgetnode_list(&selected_list.elements,
                                &selected_list.max_elements, 10);
@@ -1076,14 +1106,15 @@ main(int argc, char *argv[])
 
 /* ARGSUSED */
 static void
-ActionQuit(Widget w, XEvent *event, String *params, Cardinal *num_params)
+ActionQuit(_X_UNUSED Widget w, _X_UNUSED XEvent *event,
+           _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     exit(0);
 }
 
 /* ARGSUSED */
 static void
-ActionSetLableType(Widget w, XEvent *event,
+ActionSetLableType(Widget w, _X_UNUSED XEvent *event,
                    String *params, Cardinal *num_params)
 {
     const char *cmd;
@@ -1122,7 +1153,7 @@ ActionSetLableType(Widget w, XEvent *event,
 
 /* ARGSUSED */
 static void
-ActionSetOrientation(Widget w, XEvent *event,
+ActionSetOrientation(Widget w, _X_UNUSED XEvent *event,
                      String *params, Cardinal *num_params)
 {
     XtGravity newgrav = ForgetGravity;
@@ -1199,12 +1230,13 @@ do_single_arg(Widget w, String *params, Cardinal nparams,
     /*
      * use any old widget
      */
-    (*proc) (w, (XtPointer) (long) obj, (XtPointer) NULL);
+    (*proc) (w, (XtPointer) (intptr_t) obj, (XtPointer) NULL);
 }
 
 /* ARGSUSED */
 static void
-ActionSelect(Widget w, XEvent *event, String *params, Cardinal *num_params)
+ActionSelect(Widget w, _X_UNUSED XEvent *event,
+             String *params, Cardinal *num_params)
 {
     do_single_arg(w, params, *num_params, select_nametable,
                   (int) XtNumber(select_nametable), select_callback);
@@ -1212,7 +1244,7 @@ ActionSelect(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 /* ARGSUSED */
 static void
-ActionResources(Widget w, XEvent *event,
+ActionResources(Widget w, _X_UNUSED XEvent *event,
                 String *params, Cardinal *num_params)
 {
     if (*num_params == 0) {

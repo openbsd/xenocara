@@ -32,16 +32,16 @@
 viewres - graphical class browser for Xt
 .SH SYNOPSIS
 .B "viewres"
-[-option ...]
+[\fI-option\fP ...]
 .SH DESCRIPTION
 .PP
-The \fIviewres\fP program displays a tree showing the widget class hierarchy of
+The \fBviewres\fP program displays a tree showing the widget class hierarchy of
 the Athena Widget Set.  Each node in the tree can be expanded to show the
 resources that the corresponding class adds (i.e. does not inherit from its
 parent) when a widget is created.  This application allows the user to visually
 examine the structure and inherited resources for the Athena Widget Set.
 .SH OPTIONS
-\fIViewres\fP accepts all of the standard toolkit command line options as
+\fBViewres\fP accepts all of the standard toolkit command line options as
 well as the following:
 .TP 8
 .B \-top \fIname\fP
@@ -58,6 +58,12 @@ share the same name (such as \fIText\fP).
 .B \-vertical
 This option indicates that the tree should be displayed top to bottom
 rather left to right.
+.TP 8
+.B \-help
+This option indicates that \fBviewres\fP should print a usage message and exit.
+.TP 8
+.B \-version
+This option indicates that \fBviewres\fP should print version info and exit.
 .SH "VIEW MENU"
 The way in which the tree is displayed may be changed through the
 entries in the \fBView\fP menu:
@@ -143,7 +149,7 @@ The following application actions are provided:
 .TP 8
 .B "Quit()"
 .br
-This action causes \fIviewres\fP to exit.
+This action causes \fBviewres\fP to exit.
 .TP 8
 .B "SetLabelType(\fItype\fP)"
 This action sets the node labels to display the widget \fIvariable\fP or
@@ -206,8 +212,13 @@ Viewres viewres
 .fi
 .ft
 .sp
-where \fIvariable-name\fP is the widget variable name of each node.
+\fPwhere \fIvariable-name\fP is the widget variable name of each node.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xrdb(__appmansuffix__), listres(__appmansuffix__), editres(__appmansuffix__), appres(__appmansuffix__), appropriate widget documents
+.BR X (__miscmansuffix__),
+.BR xrdb (__appmansuffix__),
+.BR listres (__appmansuffix__),
+.BR editres (__appmansuffix__),
+.BR appres (__appmansuffix__),
+appropriate widget documents
 .SH AUTHOR
 Jim Fulton, MIT X Consortium

@@ -23,8 +23,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([viewres], [1.0.7],
-        [https://gitlab.freedesktop.org/xorg/app/viewres/~/issues], [viewres])
+AC_INIT([viewres], [1.0.8],
+        [https://gitlab.freedesktop.org/xorg/app/viewres/-/issues], [viewres])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
@@ -37,7 +37,7 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-PKG_CHECK_MODULES(VIEWRES, xaw7 xmu xt)
+PKG_CHECK_MODULES(VIEWRES, [xaw7 xmu xt xproto >= 7.0.22])
 
 xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
 AC_ARG_WITH(appdefaultdir,
