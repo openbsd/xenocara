@@ -57,8 +57,8 @@ in this Software without prior written authorization from The Open Group.
  *
  ***********************************************************************/
 
-#ifndef _UTIL_
-#define _UTIL_
+#ifndef UTIL_H
+#define UTIL_H
 
 #include "twm.h"
 
@@ -77,6 +77,7 @@ extern void LocateStandardColormaps(void);
 extern void GetColor(int kind, Pixel *what, const char *name);
 extern void GetColorValue(int kind, XColor *what, const char *name);
 extern void GetFont(MyFont *font);
+extern void DestroyFont(MyFont *font);
 extern int MyFont_TextWidth(MyFont *font, const char *string, int len);
 extern void MyFont_DrawImageString(Display *dpy, Drawable d, MyFont *font,
                                    GC gc, int x, int y, const char *string,
@@ -110,4 +111,4 @@ extern int HotX, HotY;
 #define XkbBI_MajorError        2
 #endif
 
-#endif                          /* _UTIL_ */
+#endif /* UTIL_H */

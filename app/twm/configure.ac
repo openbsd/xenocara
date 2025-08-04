@@ -21,8 +21,8 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
-AC_PREREQ([2.60])
-AC_INIT([twm], [1.0.12],
+AC_PREREQ([2.64])
+AC_INIT([twm], [1.0.13.1],
         [https://gitlab.freedesktop.org/xorg/app/twm/issues], [twm])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -44,7 +44,7 @@ if test ! -f "$srcdir/gram.c"; then
       AC_MSG_ERROR([yacc not found - unable to compile gram.y])
    fi
 fi
-AC_PROG_LEX
+m4_version_prereq([2.70], [AC_PROG_LEX(noyywrap)], [AC_PROG_LEX])
 
 AC_CHECK_FUNCS([mkstemp])
 

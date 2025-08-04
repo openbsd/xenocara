@@ -67,6 +67,7 @@ static XtInputId iceInputId;
 static char *twm_clientId;
 static TWMWinConfigEntry *winConfigHead = NULL;
 static Bool sent_save_done = 0;
+static SmProp *props[5];
 
 #define SAVEFILE_VERSION 2
 
@@ -213,10 +214,10 @@ read_counted_string(FILE *file, char **stringp)
     if (read_byte(file, &len) == 0)
         return 0;
     if (len == 0) {
-        data = 0;
+        data = NULL;
     }
     else {
-        data = malloc((unsigned) len + 1);
+        data = (char *) malloc((unsigned) len + 1);
         if (!data)
             return 0;
         if (fread(data, (int) sizeof(char), (int) len, file) != len) {
@@ -275,6 +276,7 @@ WriteWinConfigEntry(FILE *configFile, TwmWindow *theWindow,
 {
     char **wm_command;
     int wm_command_count;
+    unsigned udummy = 0;
 
     if (!write_counted_string(configFile, clientId))
         return 0;
@@ -283,9 +285,9 @@ WriteWinConfigEntry(FILE *configFile, TwmWindow *theWindow,
         return 0;
 
     if (!windowRole) {
-        if (!write_counted_string(configFile, theWindow->class.res_name))
+        if (!write_counted_string(configFile, theWindow->xclass.res_name))
             return 0;
-        if (!write_counted_string(configFile, theWindow->class.res_class))
+        if (!write_counted_string(configFile, theWindow->xclass.res_class))
             return 0;
         if (theWindow->nameChanged) {
             /*
@@ -330,9 +332,10 @@ WriteWinConfigEntry(FILE *configFile, TwmWindow *theWindow,
 
     if (theWindow->icon_w) {
         int icon_x, icon_y;
+        Window wdummy = None;
 
-        XGetGeometry(dpy, theWindow->icon_w, &JunkRoot, &icon_x,
-                     &icon_y, &JunkWidth, &JunkHeight, &JunkBW, &JunkDepth);
+        XGetGeometry(dpy, theWindow->icon_w, &wdummy, &icon_x,
+                     &icon_y, &udummy, &udummy, &udummy, &udummy);
 
         if (!write_short(configFile, (short) icon_x))
             return 0;
@@ -366,15 +369,15 @@ ReadWinConfigEntry(FILE *configFile, unsigned short version,
     unsigned char byte;
     int i;
 
-    *pentry = entry = malloc(sizeof(TWMWinConfigEntry));
+    *pentry = entry = (TWMWinConfigEntry *) malloc(sizeof(TWMWinConfigEntry));
     if (!*pentry)
         return 0;
 
     entry->tag = 0;
     entry->client_id = NULL;
     entry->window_role = NULL;
-    entry->class.res_name = NULL;
-    entry->class.res_class = NULL;
+    entry->xclass.res_name = NULL;
+    entry->xclass.res_class = NULL;
     entry->wm_name = NULL;
     entry->wm_command = NULL;
     entry->wm_command_count = 0;
@@ -386,9 +389,9 @@ ReadWinConfigEntry(FILE *configFile, unsigned short version,
         goto give_up;
 
     if (!entry->window_role) {
-        if (!read_counted_string(configFile, &entry->class.res_name))
+        if (!read_counted_string(configFile, &entry->xclass.res_name))
             goto give_up;
-        if (!read_counted_string(configFile, &entry->class.res_class))
+        if (!read_counted_string(configFile, &entry->xclass.res_class))
             goto give_up;
         if (!read_counted_string(configFile, &entry->wm_name))
             goto give_up;
@@ -400,8 +403,8 @@ ReadWinConfigEntry(FILE *configFile, unsigned short version,
         if (entry->wm_command_count == 0)
             entry->wm_command = NULL;
         else {
-            entry->wm_command = malloc((size_t) entry->wm_command_count *
-                                       sizeof(char *));
+            entry->wm_command = (char **)
+                malloc((size_t) entry->wm_command_count * sizeof(char *));
 
             if (!entry->wm_command)
                 goto give_up;
@@ -458,10 +461,10 @@ ReadWinConfigEntry(FILE *configFile, unsigned short version,
         free(entry->client_id);
     if (entry->window_role)
         free(entry->window_role);
-    if (entry->class.res_name)
-        free(entry->class.res_name);
-    if (entry->class.res_class)
-        free(entry->class.res_class);
+    if (entry->xclass.res_name)
+        free(entry->xclass.res_name);
+    if (entry->xclass.res_class)
+        free(entry->xclass.res_class);
     if (entry->wm_name)
         free(entry->wm_name);
     if (entry->wm_command_count && entry->wm_command) {
@@ -555,10 +558,10 @@ GetWindowConfig(TwmWindow *theWindow,
                  * changed in the previous session.
                  */
 
-                if (strcmp(theWindow->class.res_name,
-                           ptr->class.res_name) == 0 &&
-                    strcmp(theWindow->class.res_class,
-                           ptr->class.res_class) == 0 &&
+                if (strcmp(theWindow->xclass.res_name,
+                           ptr->xclass.res_name) == 0 &&
+                    strcmp(theWindow->xclass.res_class,
+                           ptr->xclass.res_class) == 0 &&
                     (ptr->wm_name == NULL ||
                      strcmp(theWindow->name, ptr->wm_name) == 0)) {
                     if (clientId) {
@@ -674,8 +677,6 @@ SaveYourselfPhase2CB(SmcConn smcConn2, SmPointer clientData _X_UNUSED)
     const char *path;
     char *filename = NULL;
     Bool success = False;
-    SmProp prop1, prop2, prop3, *props[3];
-    SmPropValue prop1val, prop2val, prop3val;
     char discardCommand[80];
     int numVals, i;
     static int first_time = 1;
@@ -686,36 +687,38 @@ SaveYourselfPhase2CB(SmcConn smcConn2, SmPointer clientData _X_UNUSED)
 
     if (first_time) {
         char userId[20];
-        char hint = SmRestartIfRunning;
+        char *hint;
 
-        prop1.name = strdup(SmProgram);
-        prop1.type = strdup(SmARRAY8);
-        prop1.num_vals = 1;
-        prop1.vals = &prop1val;
-        prop1val.value = Argv[0];
-        prop1val.length = (int) strlen(Argv[0]);
+        props[0] = (SmProp *) calloc(1, sizeof(SmProp));
+        props[0]->name = strdup(SmProgram);
+        props[0]->type = strdup(SmARRAY8);
+        props[0]->num_vals = 1;
+        props[0]->vals = (SmPropValue *) calloc(1, sizeof(SmPropValue));
+        props[0]->vals[0].value = strdup(Argv[0]);
+        props[0]->vals[0].length = (int) strlen(Argv[0]);
 
         snprintf(userId, sizeof(userId), "%ld", (long) getuid());
-        prop2.name = strdup(SmUserID);
-        prop2.type = strdup(SmARRAY8);
-        prop2.num_vals = 1;
-        prop2.vals = &prop2val;
-        prop2val.value = (SmPointer) userId;
-        prop2val.length = (int) strlen(userId);
 
-        prop3.name = strdup(SmRestartStyleHint);
-        prop3.type = strdup(SmCARD8);
-        prop3.num_vals = 1;
-        prop3.vals = &prop3val;
-        prop3val.value = (SmPointer) & hint;
-        prop3val.length = 1;
+        props[1] = (SmProp *) calloc(1, sizeof(SmProp));
+        props[1]->name = strdup(SmUserID);
+        props[1]->type = strdup(SmARRAY8);
+        props[1]->num_vals = 1;
+        props[1]->vals = (SmPropValue *) calloc(1, sizeof(SmPropValue));
+        props[1]->vals[0].value = strdup(userId);
+        props[1]->vals[0].length = (int) strlen(userId);
 
-        props[0] = &prop1;
-        props[1] = &prop2;
-        props[2] = &prop3;
+        hint = (char *) malloc(1);
+        hint[0] = SmRestartIfRunning;
+
+        props[2] = (SmProp *) calloc(1, sizeof(SmProp));
+        props[2]->name = strdup(SmRestartStyleHint);
+        props[2]->type = strdup(SmCARD8);
+        props[2]->num_vals = 1;
+        props[2]->vals = (SmPropValue *) calloc(1, sizeof(SmPropValue));
+        props[2]->vals[0].value = hint;
+        props[2]->vals[0].length = 1;
 
         SmcSetProperties(smcConn2, 3, props);
-
         first_time = 0;
     }
 
@@ -768,12 +771,12 @@ SaveYourselfPhase2CB(SmcConn smcConn2, SmPointer clientData _X_UNUSED)
         }
     }
 
-    prop1.name = strdup(SmRestartCommand);
-    prop1.type = strdup(SmLISTofARRAY8);
+    props[3] = (SmProp *) calloc(1, sizeof(SmProp));
+    props[3]->name = strdup(SmRestartCommand);
+    props[3]->type = strdup(SmLISTofARRAY8);
+    props[3]->vals = (SmPropValue *) calloc((size_t)(Argc + 4), sizeof(SmPropValue));
 
-    prop1.vals = malloc((size_t) (Argc + 4) * sizeof(SmPropValue));
-
-    if (!prop1.vals) {
+    if (!props[3]->vals) {
         success = False;
         goto bad;
     }
@@ -786,38 +789,36 @@ SaveYourselfPhase2CB(SmcConn smcConn2, SmPointer clientData _X_UNUSED)
             i++;
         }
         else {
-            prop1.vals[numVals].value = (SmPointer) Argv[i];
-            prop1.vals[numVals++].length = (int) strlen(Argv[i]);
+            props[3]->vals[numVals].value = (SmPointer) strdup(Argv[i]);
+            props[3]->vals[numVals++].length = (int) strlen(Argv[i]);
         }
     }
 
-    prop1.vals[numVals].value = strdup("-clientId");
-    prop1.vals[numVals++].length = 9;
+    props[3]->vals[numVals].value = strdup("-clientId");
+    props[3]->vals[numVals++].length = 9;
 
-    prop1.vals[numVals].value = strdup(twm_clientId);
-    prop1.vals[numVals++].length = (int) strlen(twm_clientId);
+    props[3]->vals[numVals].value = strdup(twm_clientId);
+    props[3]->vals[numVals++].length = (int) strlen(twm_clientId);
 
-    prop1.vals[numVals].value = strdup("-restore");
-    prop1.vals[numVals++].length = 8;
+    props[3]->vals[numVals].value = strdup("-restore");
+    props[3]->vals[numVals++].length = 8;
 
-    prop1.vals[numVals].value = strdup(filename);
-    prop1.vals[numVals++].length = (int) strlen(filename);
+    props[3]->vals[numVals].value = strdup(filename);
+    props[3]->vals[numVals++].length = (int) strlen(filename);
 
-    prop1.num_vals = numVals;
+    props[3]->num_vals = numVals;
 
     snprintf(discardCommand, sizeof(discardCommand), "rm %s", filename);
-    prop2.name = strdup(SmDiscardCommand);
-    prop2.type = strdup(SmARRAY8);
-    prop2.num_vals = 1;
-    prop2.vals = &prop2val;
-    prop2val.value = (SmPointer) discardCommand;
-    prop2val.length = (int) strlen(discardCommand);
 
-    props[0] = &prop1;
-    props[1] = &prop2;
+    props[4] = (SmProp *) calloc(1, sizeof(SmProp));
+    props[4]->name = strdup(SmDiscardCommand);
+    props[4]->type = strdup(SmARRAY8);
+    props[4]->num_vals = 1;
+    props[4]->vals = (SmPropValue *) calloc(1, sizeof(SmPropValue));
+    props[4]->vals[0].value = strdup(discardCommand);
+    props[4]->vals[0].length = (int) strlen(discardCommand);
 
-    SmcSetProperties(smcConn2, 2, props);
-    free(prop1.vals);
+    SmcSetProperties(smcConn2, 2, props + 3);
 
  bad:
     SmcSaveYourselfDone(smcConn2, success);
@@ -845,7 +846,7 @@ SaveYourselfCB(SmcConn smcConn2,
         sent_save_done = 0;
 }
 
-static void
+static _X_NORETURN void
 DieCB(SmcConn smcConn2, SmPointer clientData _X_UNUSED)
 {
     SmcCloseConnection(smcConn2, 0, NULL);
@@ -878,7 +879,7 @@ ProcessIceMsgProc(XtPointer client_data, int *source _X_UNUSED,
 }
 
 void
-ConnectToSessionManager(char *previous_id)
+ConnectToSessionManager(char *previous_id, XtAppContext appContext)
 {
     char errorMsg[256];
     unsigned long mask;
@@ -917,4 +918,15 @@ ConnectToSessionManager(char *previous_id)
                                IceConnectionNumber(iceConn),
                                (XtPointer) XtInputReadMask,
                                ProcessIceMsgProc, (XtPointer) iceConn);
+}
+
+void
+DestroySession(void)
+{
+    int i;
+    for (i = 0; i < 5; ++i) {
+        if (props[i]) {
+            SmFreeProperty(props[i]);
+        }
+    }
 }

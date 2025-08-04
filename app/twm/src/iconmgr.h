@@ -31,8 +31,8 @@ in this Software without prior written authorization from The Open Group.
  *
  ***********************************************************************/
 
-#ifndef _ICONMGR_
-#define _ICONMGR_
+#ifndef ICONMGR_H
+#define ICONMGR_H
 
 #include "twm.h"
 
@@ -87,4 +87,4 @@ extern void PackIconManager(IconMgr *ip);
 extern void RemoveIconManager(TwmWindow *tmp_win);
 extern void SortIconManager(IconMgr *ip);
 
-#endif                          /* _ICONMGR_ */
+#endif /* ICONMGR_H */

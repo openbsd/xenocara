@@ -57,10 +57,27 @@ in this Software without prior written authorization from The Open Group.
  *
  **********************************************************************/
 
-#ifndef _PARSE_
-#define _PARSE_
+#ifndef PARSE_H
+#define PARSE_H
 
 #include "list.h"
+#include "gram.h"
+
+/*
+ * POSIX does not say where yyparse() is declared.  bison puts it in its
+ * generated header, while byacc does not.  This chunk helps with portability.
+ */
+#if !(defined(YYDEBUG) && defined(YY_YY_GRAM_H_INCLUDED)) && !defined(YYBYACC)
+extern int yyparse(void);
+#endif
+
+/*
+ * Some versions of byacc and flex declare yylex().  This chunk fixes that.
+ */
+#if !defined(YY_DECL)
+#define YY_DECL int yylex (void)
+YY_DECL;
+#endif
 
 extern void assign_var_savecolor(void);
 extern int do_single_keyword(int keyword);
@@ -149,4 +166,4 @@ extern int mods;
 #define D_EAST                  3
 #define D_WEST                  4
 
-#endif                          /* _PARSE_ */
+#endif /* PARSE_H */

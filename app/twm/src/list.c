@@ -61,7 +61,7 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include "twm.h"
 #include "screen.h"
-#include "gram.h"
+#include "parse.h"
 #include "util.h"
 
 struct name_list_struct {
@@ -90,7 +90,7 @@ AddToList(name_list ** list_head, char *name, char *ptr)
     if (!list_head)
         return;                 /* ignore empty inserts */
 
-    nptr = malloc(sizeof(name_list));
+    nptr = (name_list *) malloc(sizeof(name_list));
     if (nptr == NULL) {
         parseWarning("unable to allocate %lu bytes for name_list",
                      (unsigned long) sizeof(name_list));
@@ -111,10 +111,10 @@ AddToList(name_list ** list_head, char *name, char *ptr)
  *
  *      \param list   a pointer to the head of a list
  *      \param name   a pointer to the name to look for
- *  \param class  a pointer to the class to look for
+ *  \param xclass  a pointer to the class to look for
  */
 char *
-LookInList(name_list * list_head, const char *name, XClassHint *class)
+LookInList(name_list * list_head, const char *name, XClassHint *xclass)
 {
     name_list *nptr;
 
@@ -123,15 +123,15 @@ LookInList(name_list * list_head, const char *name, XClassHint *class)
         if (strcmp(name, nptr->name) == 0)
             return (nptr->ptr);
 
-    if (class) {
+    if (xclass) {
         /* look for the res_name next */
         for (nptr = list_head; nptr != NULL; nptr = nptr->next)
-            if (strcmp(class->res_name, nptr->name) == 0)
+            if (strcmp(xclass->res_name, nptr->name) == 0)
                 return (nptr->ptr);
 
         /* finally look for the res_class */
         for (nptr = list_head; nptr != NULL; nptr = nptr->next)
-            if (strcmp(class->res_class, nptr->name) == 0)
+            if (strcmp(xclass->res_class, nptr->name) == 0)
                 return (nptr->ptr);
     }
     return (NULL);
@@ -151,11 +151,11 @@ LookInNameList(name_list * list_head, const char *name)
  *
  *  \param      list  a pointer to the head of a list
  *  \param      name  a pointer to the name to look for
- *  \param      class a pointer to the class to look for
+ *  \param      xclass a pointer to the class to look for
  *      \param[out] ptr   fill in the list value if the name was found
  */
 int
-GetColorFromList(name_list * list_head, const char *name, XClassHint *class,
+GetColorFromList(name_list * list_head, const char *name, XClassHint *xclass,
                  Pixel *ptr)
 {
     int save;
@@ -170,9 +170,9 @@ GetColorFromList(name_list * list_head, const char *name, XClassHint *class,
             return (TRUE);
         }
 
-    if (class) {
+    if (xclass) {
         for (nptr = list_head; nptr != NULL; nptr = nptr->next)
-            if (strcmp(class->res_name, nptr->name) == 0) {
+            if (strcmp(xclass->res_name, nptr->name) == 0) {
                 save = Scr->FirstTime;
                 Scr->FirstTime = TRUE;
                 GetColor(Scr->Monochrome, ptr, nptr->ptr);
@@ -181,7 +181,7 @@ GetColorFromList(name_list * list_head, const char *name, XClassHint *class,
             }
 
         for (nptr = list_head; nptr != NULL; nptr = nptr->next)
-            if (strcmp(class->res_class, nptr->name) == 0) {
+            if (strcmp(xclass->res_class, nptr->name) == 0) {
                 save = Scr->FirstTime;
                 Scr->FirstTime = TRUE;
                 GetColor(Scr->Monochrome, ptr, nptr->ptr);

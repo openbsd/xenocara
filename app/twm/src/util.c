@@ -59,7 +59,7 @@ in this Software without prior written authorization from The Open Group.
 
 #include "twm.h"
 #include "util.h"
-#include "gram.h"
+#include "parse.h"
 #include "screen.h"
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
@@ -96,7 +96,7 @@ MoveOutline(Window root, int x, int y, int width, int height, int bw, int th)
     int xl, xr, yt, yb, xinnerl, xinnerr, yinnert, yinnerb;
     int xthird, ythird;
     XSegment outline[18];
-    register XSegment *r;
+    XSegment *r;
 
     if (x == lastx && y == lasty && width == lastWidth && height == lastHeight
         && lastBW == bw && th == lastTH)
@@ -209,6 +209,8 @@ Zoom(Window wf, Window wt)
     long dx, dy, dw, dh;
     long z;
     int j;
+    unsigned udummy = 0;
+    Window wdummy = None;
 
     if (!Scr->DoZoom || Scr->ZoomCount < 1)
         return;
@@ -216,8 +218,8 @@ Zoom(Window wf, Window wt)
     if (wf == None || wt == None)
         return;
 
-    XGetGeometry(dpy, wf, &JunkRoot, &fx, &fy, &fw, &fh, &JunkBW, &JunkDepth);
-    XGetGeometry(dpy, wt, &JunkRoot, &tx, &ty, &tw, &th, &JunkBW, &JunkDepth);
+    XGetGeometry(dpy, wf, &wdummy, &fx, &fy, &fw, &fh, &udummy, &udummy);
+    XGetGeometry(dpy, wt, &wdummy, &tx, &ty, &tw, &th, &udummy, &udummy);
 
     dx = ((long) (tx - fx));    /* going from -> to */
     dy = ((long) (ty - fy));    /* going from -> to */
@@ -257,7 +259,7 @@ ExpandFilename(const char *name)
     if (name[0] != '~')
         return strdup(name);
 
-    newname = malloc((size_t) HomeLen + strlen(name) + 2);
+    newname = (char *) malloc((size_t) HomeLen + strlen(name) + 2);
     if (!newname) {
         twmWarning("unable to allocate %lu bytes to expand filename %s/%s",
                    (unsigned long) HomeLen + (unsigned long) strlen(name) + 2,
@@ -278,10 +280,14 @@ ExpandFilename(const char *name)
 void
 GetUnknownIcon(const char *name)
 {
+    int dummy = 0;
+    unsigned udummy = 0;
+    Window wdummy = None;
+
     if ((Scr->UnknownPm = GetBitmap(name)) != None) {
-        XGetGeometry(dpy, Scr->UnknownPm, &JunkRoot, &JunkX, &JunkY,
+        XGetGeometry(dpy, Scr->UnknownPm, &wdummy, &dummy, &dummy,
                      (unsigned int *) &Scr->UnknownWidth,
-                     (unsigned int *) &Scr->UnknownHeight, &JunkBW, &JunkDepth);
+                     (unsigned int *) &Scr->UnknownHeight, &udummy, &udummy);
     }
 }
 
@@ -352,7 +358,8 @@ FindBitmap(const char *name, unsigned *widthp, unsigned *heightp)
         /*
          * Attempt to find icon in old IconDirectory (now obsolete)
          */
-        bigname = malloc(strlen(name) + strlen(Scr->IconDirectory) + 2);
+        bigname = (char *)
+            malloc(strlen(name) + strlen(Scr->IconDirectory) + 2);
         if (!bigname) {
             twmWarning("unable to allocate memory for \"%s/%s\"",
                        Scr->IconDirectory, name);
@@ -375,7 +382,9 @@ FindBitmap(const char *name, unsigned *widthp, unsigned *heightp)
 Pixmap
 GetBitmap(const char *name)
 {
-    return FindBitmap(name, &JunkWidth, &JunkHeight);
+    unsigned udummy = 0;
+
+    return FindBitmap(name, &udummy, &udummy);
 }
 
 void
@@ -391,7 +400,7 @@ InsertRGBColormap(Atom a, XStandardColormap *maps, int nmaps, Bool replace)
     }
 
     if (!sc) {                  /* no existing, allocate new */
-        sc = malloc(sizeof(StdCmap));
+        sc = (StdCmap *) malloc(sizeof(StdCmap));
         if (!sc) {
             twmWarning("unable to allocate %lu bytes for StdCmap",
                        (unsigned long) sizeof(StdCmap));
@@ -478,10 +487,8 @@ GetColor(int kind, Pixel *what, const char *name)
     Status stat = 0;
     Colormap cmap = Scr->TwmRoot.cmaps.cwins[0]->colormap->c;
 
-#ifndef TOM
     if (!Scr->FirstTime)
         return;
-#endif
 
     if (Scr->Monochrome != kind)
         return;
@@ -553,10 +560,8 @@ GetColorValue(int kind, XColor *what, const char *name)
     XColor junkcolor;
     Colormap cmap = Scr->TwmRoot.cmaps.cwins[0]->colormap->c;
 
-#ifndef TOM
     if (!Scr->FirstTime)
         return;
-#endif
 
     if (Scr->Monochrome != kind)
         return;
@@ -583,7 +588,7 @@ FindFontSet(MyFont *font, const char *fontname)
         int ascent;
         int descent;
         int fnum;
-        register int i;
+        int i;
 
         if (font->fontset != NULL) {
             XFreeFontSet(dpy, font->fontset);
@@ -602,6 +607,7 @@ FindFontSet(MyFont *font, const char *fontname)
                 twmVerbose("font for charset %s is lacking.",
                            missing_charset_list_return[i]);
             }
+            XFreeStringList(missing_charset_list_return);
         }
 
         font_extents = XExtentsOfFontSet(font->fontset);
@@ -664,6 +670,24 @@ GetFont(MyFont *font)
             twmError("unable to open %s \"%s\" or \"%s\"",
                      what, font->name, deffontname);
         }
+    }
+}
+
+void
+DestroyFont(MyFont *font)
+{
+    if (!font) {
+        return;
+    }
+
+    if (font->fontset) {
+        XFreeFontSet(dpy, font->fontset);
+        font->fontset = NULL;
+    }
+
+    if (font->font) {
+        XFreeFont(dpy, font->font);
+        font->font = NULL;
     }
 }
 
@@ -915,11 +939,11 @@ CreateDotPixmap(unsigned *widthp, unsigned *heightp)
     if (!(h & 1))
         h--;
     *widthp = *heightp = (unsigned int) h;
-    if (Scr->tbpm.delete == None) {
+    if (Scr->tbpm.remove == None) {
         GC gc;
         Pixmap pix;
 
-        pix = Scr->tbpm.delete =
+        pix = Scr->tbpm.remove =
             XCreatePixmap(dpy, Scr->Root, (unsigned) h, (unsigned) h, 1);
         gc = XCreateGC(dpy, pix, 0L, NULL);
         XSetLineAttributes(dpy, gc, (unsigned) h, LineSolid, CapRound,
@@ -930,7 +954,7 @@ CreateDotPixmap(unsigned *widthp, unsigned *heightp)
         XDrawLine(dpy, pix, gc, h / 2, h / 2, h / 2, h / 2);
         XFreeGC(dpy, gc);
     }
-    return Scr->tbpm.delete;
+    return Scr->tbpm.remove;
 }
 
 #define questionmark_width 8

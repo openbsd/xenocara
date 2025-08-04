@@ -24,25 +24,37 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
+.TH TWM 1 __xorgversion__
+.ie n .ds CW R
+.el   \{
+.ie \n(.g .ds CW CR
+.el       .ds CW CW
+.\}
 .de Ex
 .RS +7
 .PP
 .nf
-.ft CW
+.ft \*(CW
 ..
 .de Ee
 .fi
 .ft R
 .RE
 ..
-.ie \n(.g .ds `` \(lq
-.el       .ds `` ``
-.ie \n(.g .ds '' \(rq
-.el       .ds '' ''
-.TH TWM 1 __xorgversion__
+.ie \n(.g \{\
+.ds `` \(lq
+.ds '' \(rq
+.\}
+.el \{\
+.ie t .ds `` ``
+.el   .ds `` ""
+.ie t .ds '' ''
+.el   .ds '' ""
+.\}
 .SH NAME
-twm \- Tab Window Manager for the X Window System
-.SH SYNTAX
+twm \-
+Tab Window Manager for the X Window System
+.SH SYNOPSIS
 \fBtwm \fP[ \fIoptions\fP ]
 .SH DESCRIPTION
 \fITwm\fP is a window manager for the X Window System.
@@ -1263,8 +1275,23 @@ variable.
 This function warps the pointer to the next column in the current icon
 manager, wrapping to the beginning of the next row if necessary.
 .IP "\fBf.fullzoom\fP" 8
-This function resizes the selected window to the full size of the display or
-else restores the original size if the window was already zoomed.
+This function resizes the selected window to the full size of the display,
+or restores the original size if the window was already zoomed.
+.IP
+In some cases \fBf.fullzoom\fP may maximize to
+full size of display after a single mouse click,
+but require two mouse clicks instead of a single mouse click
+to restore the original window size.
+When single mouse clicks are desired to both maximize and restore,
+an alternative is to define a function
+.RS 5
+.Ex 0
+Function "FullZoom" { f.fullzoom f.winrefresh }
+.Ee
+.RE
+.IP
+and invoke that by using \fBf.function "FullZoom"\fP instead of
+invoking \fBf.fullzoom\fP.
 .IP "\fBf.function\fP \fIstring\fP" 8
 This function executes the user-defined function whose name is specified
 by the argument \fIstring\fP.
@@ -1502,6 +1529,20 @@ Using the \fBf.upiconmgr\fP, \fBf.downiconmgr\fP
 \fBf.lefticonmgr\fP, and
 \fBf.righticonmgr\fP functions,
 the input focus can be changed between windows directly from the keyboard.
+.SH "ENVIRONMENT"
+.IP "DISPLAY" 8
+This variable is used to determine which X server to use.
+It is also set
+during \fBf.exec\fP so that programs come up on the proper screen.
+.IP "HOME" 8
+This variable is used as the prefix for files that begin with a tilde and
+for locating the \fItwm\fP startup file.
+.SH FILES
+.nf
+.I $HOME/.twmrc.<screen number>
+.I $HOME/.twmrc
+.I __datadir__/X11/twm/system.twmrc
+.fi
 .SH BUGS
 The resource manager should have been used instead of all of the window
 lists.
@@ -1515,27 +1556,12 @@ If \fBIconifyByUnmapping\fP is on and windows are listed in
 \fBIconManagerDontShow\fP but not in \fBDontIconifyByUnmapping\fP,
 they may be lost if they are iconified and no bindings to
 \fBf.menu "TwmWindows"\fP or \fBf.warpto\fP are setup.
-.SH FILES
-.nf
-.I $HOME/.twmrc.<screen number>
-.I $HOME/.twmrc
-.I __datadir__/X11/twm/system.twmrc
-.fi
-.SH "ENVIRONMENT VARIABLES"
-.IP "DISPLAY" 8
-This variable is used to determine which X server to use.
-It is also set
-during \fBf.exec\fP so that programs come up on the proper screen.
-.IP "HOME" 8
-This variable is used as the prefix for files that begin with a tilde and
-for locating the \fItwm\fP startup file.
-.SH "SEE ALSO"
-.PP
-\fBX\fP(__miscmansuffix__),
-\fBXserver\fP(__appmansuffix__),
-\fBxdm\fP(__appmansuffix__),
-\fBxrdb\fP(__appmansuffix__)
 .SH AUTHORS
 Tom LaStrange, Solbourne Computer; Jim Fulton, MIT X Consortium;
 Steve Pitschke, Stardent Computer; Keith Packard, MIT X Consortium;
 Dave Sternlicht, MIT X Consortium; Dave Payne, Apple Computer.
+.SH "SEE ALSO"
+\fBX\fP(__miscmansuffix__),
+\fBXserver\fP(__appmansuffix__),
+\fBxdm\fP(__appmansuffix__),
+\fBxrdb\fP(__appmansuffix__)

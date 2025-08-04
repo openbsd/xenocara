@@ -70,7 +70,6 @@ in this Software without prior written authorization from The Open Group.
 #include "events.h"
 #include "util.h"
 #include "parse.h"
-#include "gram.h"
 #include "screen.h"
 #include "menus.h"
 #include "iconmgr.h"
@@ -78,7 +77,6 @@ in this Software without prior written authorization from The Open Group.
 #include "icons.h"
 #include "session.h"
 #include <X11/Xmu/CharSet.h>
-#include "version.h"
 #include <X11/extensions/sync.h>
 #include <X11/SM/SMlib.h>
 
@@ -133,7 +131,6 @@ void
 InitMenus(void)
 {
     int i, j, k;
-    FuncKey *key;
 
     for (i = 0; i < MAX_BUTTONS + 1; i++)
         for (j = 0; j < NUM_CONTEXTS; j++)
@@ -144,18 +141,21 @@ InitMenus(void)
 
     Scr->DefaultFunction.func = 0;
     Scr->WindowFunction.func = 0;
+}
 
-    if (FirstScreen) {
-        for (key = Scr->FuncKeyRoot.next; key != NULL;) {
-            FuncKey *tmp = key;
+void
+InitMenusFirst(void)
+{
+    FuncKey *key;
 
-            free(key->name);
-            key = key->next;
-            free(tmp);
-        }
-        Scr->FuncKeyRoot.next = NULL;
+    for (key = Scr->FuncKeyRoot.next; key != NULL;) {
+        FuncKey *tmp = key;
+
+        free(key->name);
+        key = key->next;
+        free(tmp);
     }
-
+    Scr->FuncKeyRoot.next = NULL;
 }
 
 /**
@@ -192,7 +192,7 @@ AddFuncKey(char *name, int cont, int mods2, int func, char *win_name,
     }
 
     if (tmp == NULL) {
-        tmp = malloc(sizeof(FuncKey));
+        tmp = (FuncKey *) malloc(sizeof(FuncKey));
         tmp->next = Scr->FuncKeyRoot.next;
         Scr->FuncKeyRoot.next = tmp;
     }
@@ -213,7 +213,7 @@ int
 CreateTitleButton(const char *name, int func, const char *action,
                   MenuRoot *menuroot, Bool rightside, Bool append)
 {
-    TitleButton *tb = malloc(sizeof(TitleButton));
+    TitleButton *tb = (TitleButton *) malloc(sizeof(TitleButton));
 
     if (!tb) {
         twmWarning("unable to allocate %lu bytes for title button",
@@ -252,7 +252,7 @@ CreateTitleButton(const char *name, int func, const char *action,
         Scr->TBInfo.head = tb;
     }
     else if (append && rightside) {     /* 3 */
-        register TitleButton *t;
+        TitleButton *t;
 
         /* SUPPRESS 530 */
         for (t = Scr->TBInfo.head; t->next; t = t->next);
@@ -260,7 +260,7 @@ CreateTitleButton(const char *name, int func, const char *action,
         tb->next = NULL;
     }
     else {                      /* 2 */
-        register TitleButton *t, *prev = NULL;
+        TitleButton *t, *prev = NULL;
 
         for (t = Scr->TBInfo.head; t && !t->rightside; t = t->next) {
             prev = t;
@@ -467,6 +467,8 @@ UpdateMenu(void)
     int done;
     MenuItem *badItem = NULL;
     XPointer context_data;
+    unsigned udummy = 0;
+    Window wdummy = None;
 
     fromMenu = TRUE;
 
@@ -504,8 +506,8 @@ UpdateMenu(void)
             continue;
 
         done = FALSE;
-        XQueryPointer(dpy, ActiveMenu->w, &JunkRoot, &JunkChild,
-                      &x_root, &y_root, &x, &y, &JunkMask);
+        XQueryPointer(dpy, ActiveMenu->w, &wdummy, &wdummy,
+                      &x_root, &y_root, &x, &y, &udummy);
 
         /* if we haven't received the enter notify yet, wait */
         if (!ActiveMenu->entered)
@@ -602,7 +604,7 @@ NewMenuRoot(const char *name)
 
 #define UNUSED_PIXEL ((unsigned long) (~0))     /* more than 24 bits */
 
-    tmp = malloc(sizeof(MenuRoot));
+    tmp = (MenuRoot *) malloc(sizeof(MenuRoot));
     tmp->hi_fore = UNUSED_PIXEL;
     tmp->hi_back = UNUSED_PIXEL;
     tmp->name = name;
@@ -661,7 +663,7 @@ AddToMenu(MenuRoot *menu, const char *item, const char *action,
             item, action ? action : "<null>", sub, func);
 #endif
 
-    tmp = malloc(sizeof(MenuItem));
+    tmp = (MenuItem *) malloc(sizeof(MenuItem));
     tmp->root = menu;
 
     if (menu->first == NULL) {
@@ -951,7 +953,7 @@ PopUpMenu(MenuRoot *menu, int x, int y, Bool center)
         if (WindowNameCount != 0) {
             int i;
 
-            WindowNames =
+            WindowNames = (TwmWindow **)
                 malloc(sizeof(TwmWindow *) * (size_t) WindowNameCount);
             WindowNames[0] = Scr->TwmRoot.next;
 
@@ -1101,8 +1103,8 @@ belongs_to_twm_window(TwmWindow *t, Window w)
         return True;
 
     if (t && t->titlebuttons) {
-        register TBWindow *tbw;
-        register int nb = Scr->TBInfo.nleft + Scr->TBInfo.nright;
+        TBWindow *tbw;
+        int nb = Scr->TBInfo.nleft + Scr->TBInfo.nright;
 
         for (tbw = t->titlebuttons; nb > 0; tbw++, nb--) {
             if (tbw->window == w)
@@ -1117,42 +1119,21 @@ resizeFromCenter(Window w, TwmWindow *tmp_win)
 {
     int lastx, lasty, bw2;
     XEvent event;
+    int dummy = 0;
+    unsigned udummy = 0;
+    Window wdummy = None;
 
-#if 0
-    int namelen;
-    int width, height;
-
-    namelen = strlen(tmp_win->name);
-#endif
     bw2 = tmp_win->frame_bw * 2;
     AddingW = tmp_win->attr.width + bw2;
     AddingH = tmp_win->attr.height + tmp_win->title_height + bw2;
-#if 0
-    width = (SIZE_HINDENT + MyFont_TextWidth(&Scr->SizeFont,
-                                             tmp_win->name, namelen));
-    height = Scr->SizeFont.height + SIZE_VINDENT * 2;
-#endif
-    XGetGeometry(dpy, w, &JunkRoot, &origDragX, &origDragY,
+    XGetGeometry(dpy, w, &wdummy, &origDragX, &origDragY,
                  (unsigned int *) &DragWidth, (unsigned int *) &DragHeight,
-                 &JunkBW, &JunkDepth);
+                 &udummy, &udummy);
     XWarpPointer(dpy, None, w, 0, 0, 0, 0, DragWidth / 2, DragHeight / 2);
-    XQueryPointer(dpy, Scr->Root, &JunkRoot,
-                  &JunkChild, &JunkX, &JunkY, &AddingX, &AddingY, &JunkMask);
-#if 0
-    Scr->SizeStringOffset = width + MyFont_TextWidth(&Scr->SizeFont, ": ", 2);
-    XResizeWindow(dpy, Scr->SizeWindow, Scr->SizeStringOffset +
-                  Scr->SizeStringWidth, height);
-    MyFont_DrawImageString(dpy, Scr->SizeWindow, &Scr->SizeFont, Scr->NormalGC,
-                           width, SIZE_VINDENT + Scr->SizeFont.ascent, ": ", 2);
-#endif
+    XQueryPointer(dpy, Scr->Root, &wdummy,
+                  &wdummy, &dummy, &dummy, &AddingX, &AddingY, &udummy);
     lastx = -10000;
     lasty = -10000;
-#if 0
-    MoveOutline(Scr->Root,
-                origDragX - JunkBW, origDragY - JunkBW,
-                DragWidth * JunkBW, DragHeight * JunkBW,
-                tmp_win->frame_bw, tmp_win->title_height);
-#endif
     MenuStartResize(tmp_win, origDragX, origDragY, DragWidth, DragHeight);
     while (TRUE) {
         XMaskEvent(dpy, ButtonPressMask | PointerMotionMask, &event);
@@ -1183,8 +1164,8 @@ resizeFromCenter(Window w, TwmWindow *tmp_win)
          * using multiple GXxor lines so that we don't need to
          * grab the server.
          */
-        XQueryPointer(dpy, Scr->Root, &JunkRoot, &JunkChild,
-                      &JunkX, &JunkY, &AddingX, &AddingY, &JunkMask);
+        XQueryPointer(dpy, Scr->Root, &wdummy, &wdummy,
+                      &dummy, &dummy, &AddingX, &AddingY, &udummy);
 
         if (lastx != AddingX || lasty != AddingY) {
             MenuDoResize(AddingX, AddingY, tmp_win);
@@ -1239,6 +1220,10 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
     int do_next_action = TRUE;
     int moving_icon = FALSE;
     Bool fromtitlebar = False;
+    unsigned bw = 0;
+    int dummy = 0;
+    unsigned udummy = 0;
+    Window wdummy = None;
 
     RootFunction = 0;
     if (Cancel)
@@ -1492,16 +1477,16 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
             XTranslateCoordinates(dpy, w, tmp_win->frame,
                                   eventp->xbutton.x,
                                   eventp->xbutton.y,
-                                  &DragX, &DragY, &JunkChild);
+                                  &DragX, &DragY, &wdummy);
 
             w = tmp_win->frame;
         }
 
         DragWindow = None;
 
-        XGetGeometry(dpy, w, &JunkRoot, &origDragX, &origDragY,
+        XGetGeometry(dpy, w, &wdummy, &origDragX, &origDragY,
                      (unsigned int *) &DragWidth, (unsigned int *) &DragHeight,
-                     &JunkBW, &JunkDepth);
+                     &bw, &udummy);
 
         origX = eventp->xbutton.x_root;
         origY = eventp->xbutton.y_root;
@@ -1520,12 +1505,12 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
             ConstMoveDir = MOVE_NONE;
             ConstMoveX =
                 (int) ((unsigned) eventp->xbutton.x_root - (unsigned) DragX -
-                       JunkBW);
+                       bw);
             ConstMoveY =
                 (int) ((unsigned) eventp->xbutton.y_root - (unsigned) DragY -
-                       JunkBW);
-            width = (int) ((unsigned) DragWidth + 2 * JunkBW);
-            height = (int) ((unsigned) DragHeight + 2 * JunkBW);
+                       bw);
+            width = (int) ((unsigned) DragWidth + 2 * bw);
+            height = (int) ((unsigned) DragHeight + 2 * bw);
             ConstMoveXL = ConstMoveX + width / 3;
             ConstMoveXR = ConstMoveX + 2 * (width / 3);
             ConstMoveYT = ConstMoveY + height / 3;
@@ -1534,8 +1519,8 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
             XWarpPointer(dpy, None, w,
                          0, 0, 0, 0, DragWidth / 2, DragHeight / 2);
 
-            XQueryPointer(dpy, w, &JunkRoot, &JunkChild,
-                          &JunkX, &JunkY, &DragX, &DragY, &JunkMask);
+            XQueryPointer(dpy, w, &wdummy, &wdummy,
+                          &dummy, &dummy, &DragX, &DragY, &udummy);
         }
         last_time = eventp->xbutton.time;
 
@@ -1549,10 +1534,10 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
                  * MoveOutline's below.
                  */
                 MoveOutline(rootw,
-                            (int) ((unsigned) origDragX - JunkBW),
-                            (int) ((unsigned) origDragY - JunkBW),
-                            (int) ((unsigned) DragWidth + 2 * JunkBW),
-                            (int) ((unsigned) DragHeight + 2 * JunkBW),
+                            (int) ((unsigned) origDragX - bw),
+                            (int) ((unsigned) origDragY - bw),
+                            (int) ((unsigned) DragWidth + 2 * bw),
+                            (int) ((unsigned) DragHeight + 2 * bw),
                             tmp_win->frame_bw,
                             moving_icon ? 0 : tmp_win->title_height);
                 /*
@@ -1620,7 +1605,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
                 CurrentDragY = origY = Event.xbutton.y_root;
 
                 XTranslateCoordinates(dpy, rootw, tmp_win->frame,
-                                      origX, origY, &DragX, &DragY, &JunkChild);
+                                      origX, origY, &DragX, &DragY, &wdummy);
                 continue;
             }
 
@@ -1649,9 +1634,9 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
             if (Event.type != MotionNotify)
                 continue;
 
-            XQueryPointer(dpy, rootw, &(eventp->xmotion.root), &JunkChild,
+            XQueryPointer(dpy, rootw, &(eventp->xmotion.root), &wdummy,
                           &(eventp->xmotion.x_root), &(eventp->xmotion.y_root),
-                          &JunkX, &JunkY, &JunkMask);
+                          &dummy, &dummy, &udummy);
 
             if (DragWindow == None &&
                 abs(eventp->xmotion.x_root - origX) < Scr->MoveDelta &&
@@ -1675,20 +1660,20 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
                         eventp->xmotion.y_root > ConstMoveYB)
                         ConstMoveDir = MOVE_VERT;
 
-                    XQueryPointer(dpy, DragWindow, &JunkRoot, &JunkChild,
-                                  &JunkX, &JunkY, &DragX, &DragY, &JunkMask);
+                    XQueryPointer(dpy, DragWindow, &wdummy, &wdummy,
+                                  &dummy, &dummy, &DragX, &DragY, &udummy);
                     break;
 
                 case MOVE_VERT:
                     ConstMoveY =
                         (int) ((unsigned) eventp->xmotion.y_root -
-                               (unsigned) DragY - JunkBW);
+                               (unsigned) DragY - bw);
                     break;
 
                 case MOVE_HORIZ:
                     ConstMoveX =
                         (int) ((unsigned) eventp->xmotion.x_root -
-                               (unsigned) DragX - JunkBW);
+                               (unsigned) DragX - bw);
                     break;
                 }
 
@@ -1697,8 +1682,8 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
 
                     xl = ConstMoveX;
                     yt = ConstMoveY;
-                    w2 = (int) ((unsigned) DragWidth + 2 * JunkBW);
-                    h = (int) ((unsigned) DragHeight + 2 * JunkBW);
+                    w2 = (int) ((unsigned) DragWidth + 2 * bw);
+                    h = (int) ((unsigned) DragHeight + 2 * bw);
 
                     if (Scr->DontMoveOff && MoveFunction != F_FORCEMOVE) {
                         int xr = xl + w2;
@@ -1729,16 +1714,16 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
 
                 if (!menuFromFrameOrWindowOrTitlebar) {
                     xl = (int) ((unsigned) eventp->xmotion.x_root -
-                                (unsigned) DragX - JunkBW);
+                                (unsigned) DragX - bw);
                     yt = (int) ((unsigned) eventp->xmotion.y_root -
-                                (unsigned) DragY - JunkBW);
+                                (unsigned) DragY - bw);
                 }
                 else {
                     xl = (int) (eventp->xmotion.x_root - (DragWidth / 2));
                     yt = (int) (eventp->xmotion.y_root - (DragHeight / 2));
                 }
-                w2 = (int) ((unsigned) DragWidth + 2 * JunkBW);
-                h = (int) ((unsigned) DragHeight + 2 * JunkBW);
+                w2 = (int) ((unsigned) DragWidth + 2 * bw);
+                h = (int) ((unsigned) DragHeight + 2 * bw);
 
                 if (Scr->DontMoveOff && MoveFunction != F_FORCEMOVE) {
                     int xr = xl + w2;
@@ -1996,7 +1981,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
     case F_WARPPREV:
     case F_WARPNEXT:
     {
-        register TwmWindow *t;
+        TwmWindow *t;
         TwmWindow *of, *l, *n;
         int c = 0;
 
@@ -2042,7 +2027,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
 
     case F_WARPTO:
     {
-        register TwmWindow *t;
+        TwmWindow *t;
         int len;
 
         len = (int) strlen(action);
@@ -2054,13 +2039,13 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
         }
         if (!t) {
             for (t = Scr->TwmRoot.next; t != NULL; t = t->next) {
-                if (!strncmp(action, t->class.res_name, (size_t) len))
+                if (!strncmp(action, t->xclass.res_name, (size_t) len))
                     if (WarpThere(t))
                         break;
             }
             if (!t) {
                 for (t = Scr->TwmRoot.next; t != NULL; t = t->next) {
-                    if (!strncmp(action, t->class.res_class, (size_t) len))
+                    if (!strncmp(action, t->xclass.res_class, (size_t) len))
                         if (WarpThere(t))
                             break;
                 }
@@ -2322,7 +2307,7 @@ Execute(const char *s)
     colon = strrchr(ds, ':');
     if (colon) {                /* if host[:]:dpy */
         size_t need = sizeof(display_eqls) + strlen(ds) + 10;
-        char *update = malloc(need);
+        char *update = (char *) malloc(need);
 
         if (update != NULL) {
             char *dot1;
@@ -2346,10 +2331,10 @@ Execute(const char *s)
 
     if (restorevar) {
         size_t need = sizeof(display_eqls) + strlen(oldDisplay);
-        char *update = malloc(need);
+        char *update = (char *) malloc(need);
 
         if (update != NULL) {
-            (void) snprintf(update, need, "%s%s", display_eqls, oldDisplay);
+            strcat(strcpy(update, display_eqls), oldDisplay);
             cache_env(main_display);
             putenv(update);
         }
@@ -2408,7 +2393,7 @@ DeIconify(TwmWindow *tmp_win)
     if (tmp_win->list)
         XUnmapWindow(dpy, tmp_win->list->icon);
     if ((Scr->WarpCursor ||
-         LookInList(Scr->WarpCursorL, tmp_win->full_name, &tmp_win->class)) &&
+         LookInList(Scr->WarpCursorL, tmp_win->full_name, &tmp_win->xclass)) &&
         tmp_win->icon)
         WarpToWindow(tmp_win);
     tmp_win->icon = FALSE;
@@ -2541,21 +2526,23 @@ Identify(TwmWindow *t)
     Window junk;
     int px, py, dummy;
     unsigned udummy;
+    Window wdummy = None;
 
     n = 0;
-    snprintf(Info[n++], INFO_SIZE, "Twm version:  %s", Version);
+    snprintf(Info[n++], INFO_SIZE, "Twm version:  %s, Release %s",
+             XVENDORNAME, APP_VERSION);
     Info[n++][0] = '\0';
 
     if (t) {
-        XGetGeometry(dpy, t->w, &JunkRoot, &JunkX, &JunkY,
+        XGetGeometry(dpy, t->w, &wdummy, &dummy, &dummy,
                      &wwidth, &wheight, &bw, &depth);
         (void) XTranslateCoordinates(dpy, t->w, Scr->Root, 0, 0, &x, &y, &junk);
         snprintf(Info[n++], INFO_SIZE,
                  "Name             = \"%s\"", t->full_name);
         snprintf(Info[n++], INFO_SIZE,
-                 "Class.res_name   = \"%s\"", t->class.res_name);
+                 "Class.res_name   = \"%s\"", t->xclass.res_name);
         snprintf(Info[n++], INFO_SIZE,
-                 "Class.res_class  = \"%s\"", t->class.res_class);
+                 "Class.res_class  = \"%s\"", t->xclass.res_class);
         Info[n++][0] = '\0';
         snprintf(Info[n++], INFO_SIZE,
                  "Geometry/root    = %ux%u+%d+%d", wwidth, wheight, x, y);
@@ -2586,7 +2573,7 @@ Identify(TwmWindow *t)
         XUnmapWindow(dpy, Scr->InfoWindow);
 
     width += 10;                /* some padding */
-    if (XQueryPointer(dpy, Scr->Root, &JunkRoot, &JunkChild, &px, &py,
+    if (XQueryPointer(dpy, Scr->Root, &wdummy, &wdummy, &px, &py,
                       &dummy, &dummy, &udummy)) {
         px -= (width / 2);
         py -= (height / 3);
@@ -2697,7 +2684,7 @@ BumpWindowColormap(TwmWindow *tmp, int inc)
         return;
 
     if (inc && tmp->cmaps.number_cwins > 0) {
-        cwins =
+        cwins = (ColormapWindow **)
             malloc(sizeof(ColormapWindow *) * (size_t) tmp->cmaps.number_cwins);
         if (cwins) {
             int i;
@@ -2873,6 +2860,7 @@ static void
 send_clientmessage(Window w, Atom a, Time timestamp)
 {
     XClientMessageEvent ev;
+    memset(&ev, '\0', sizeof(ev));
 
     ev.type = ClientMessage;
     ev.window = w;

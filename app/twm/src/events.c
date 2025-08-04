@@ -66,11 +66,9 @@ in this Software without prior written authorization from The Open Group.
 #include "events.h"
 #include "resize.h"
 #include "parse.h"
-#include "gram.h"
 #include "util.h"
 #include "screen.h"
 #include "icons.h"
-#include "version.h"
 
 #ifdef HAVE_XRANDR
 #include <X11/extensions/Xrandr.h>
@@ -344,7 +342,7 @@ DispatchEvent(void)
  * handle X events
  */
 void
-HandleEvents(void)
+HandleEvents(XtAppContext appContext)
 {
     while (TRUE) {
         if (enter_flag && !QLength(dpy)) {
@@ -391,7 +389,11 @@ HandleColormapNotify(void)
 
     cmap = cwin->colormap;
 
+#if defined(__cplusplus) || defined(c_plusplus)
+    if (cevent->c_new) {
+#else
     if (cevent->new) {
+#endif
         if (XFindContext(dpy, cevent->colormap, ColormapContext,
                          &context_data) == XCNOENT)
             cwin->colormap = CreateTwmColormap(cevent->colormap);
@@ -631,7 +633,7 @@ HandleKeyPress(void)
                     for (Tmp_win = Scr->TwmRoot.next; Tmp_win != NULL;
                          Tmp_win = Tmp_win->next) {
                         if (!strncmp
-                            (key->win_name, Tmp_win->class.res_name,
+                            (key->win_name, Tmp_win->xclass.res_name,
                              (size_t) len)) {
                             matched = TRUE;
                             ExecuteFunction(key->func, key->action,
@@ -646,7 +648,7 @@ HandleKeyPress(void)
                     for (Tmp_win = Scr->TwmRoot.next; Tmp_win != NULL;
                          Tmp_win = Tmp_win->next) {
                         if (!strncmp
-                            (key->win_name, Tmp_win->class.res_class,
+                            (key->win_name, Tmp_win->xclass.res_class,
                              (size_t) len)) {
                             matched = TRUE;
                             ExecuteFunction(key->func, key->action,
@@ -735,6 +737,9 @@ HandlePropertyNotify(void)
     char *name = NULL;
     XSetWindowAttributes attributes;    /* attributes for create windows */
     Pixmap pm;
+    int dummy = 0;
+    unsigned udummy = 0;
+    Window wdummy = None;
 
     /* watch for standard colormap changes */
     if (Event.xproperty.window == Scr->Root) {
@@ -821,9 +826,9 @@ HandlePropertyNotify(void)
                // to a default icon */
             int icon_x = 0, icon_y = 0;
 
-            XGetGeometry(dpy, Tmp_win->icon_w, &JunkRoot,
+            XGetGeometry(dpy, Tmp_win->icon_w, &wdummy,
                          &icon_x, &icon_y,
-                         &JunkWidth, &JunkHeight, &JunkBW, &JunkDepth);
+                         &udummy, &udummy, &udummy, &udummy);
             XSelectInput(dpy, Tmp_win->icon_w, None);
             XDeleteContext(dpy, Tmp_win->icon_w, TwmContext);
             XDeleteContext(dpy, Tmp_win->icon_w, ScreenContext);
@@ -841,9 +846,9 @@ HandlePropertyNotify(void)
                  * Try to find out where it is; if we succeed, move the new
                  * window to where the old one is.
                  */
-                if (XGetGeometry(dpy, Tmp_win->icon_w, &JunkRoot, &icon_x,
-                                 &icon_y, &JunkWidth, &JunkHeight, &JunkBW,
-                                 &JunkDepth)) {
+                if (XGetGeometry(dpy, Tmp_win->icon_w, &wdummy, &icon_x,
+                                 &icon_y, &udummy, &udummy, &udummy,
+                                 &udummy)) {
                     /*
                      * Move the new icon window to where the old one was.
                      */
@@ -899,11 +904,11 @@ HandlePropertyNotify(void)
             (Tmp_win->wmhints->flags & IconPixmapHint)) {
             unsigned long valuemask;    /* mask for create windows */
 
-            if (!XGetGeometry(dpy, Tmp_win->wmhints->icon_pixmap, &JunkRoot,
-                              &JunkX, &JunkY,
+            if (!XGetGeometry(dpy, Tmp_win->wmhints->icon_pixmap, &wdummy,
+                              &dummy, &dummy,
                               (unsigned int *) &Tmp_win->icon_width,
-                              (unsigned int *) &Tmp_win->icon_height, &JunkBW,
-                              &JunkDepth)) {
+                              (unsigned int *) &Tmp_win->icon_height, &udummy,
+                              &udummy)) {
                 return;
             }
 
@@ -1016,15 +1021,19 @@ RedoIconName(void)
 void
 HandleClientMessage(void)
 {
+    int dummy = 0;
+    unsigned udummy = 0;
+    Window wdummy = None;
+
     if (Event.xclient.message_type == _XA_WM_CHANGE_STATE) {
         if (Tmp_win != NULL) {
             if (Event.xclient.data.l[0] == IconicState && !Tmp_win->icon) {
                 XEvent button;
 
-                XQueryPointer(dpy, Scr->Root, &JunkRoot, &JunkChild,
+                XQueryPointer(dpy, Scr->Root, &wdummy, &wdummy,
                               &(button.xmotion.x_root),
                               &(button.xmotion.y_root),
-                              &JunkX, &JunkY, &JunkMask);
+                              &dummy, &dummy, &udummy);
 
                 ExecuteFunction(F_ICONIFY, NULLSTR, Event.xany.window,
                                 Tmp_win, &button, FRAME, FALSE);
@@ -1094,12 +1103,12 @@ HandleExpose(void)
         else if (Tmp_win->titlebuttons) {
             int i;
             Window w = Event.xany.window;
-            register TBWindow *tbw;
+            TBWindow *tbw;
             int nb = Scr->TBInfo.nleft + Scr->TBInfo.nright;
 
             for (i = 0, tbw = Tmp_win->titlebuttons; i < nb; i++, tbw++) {
                 if (w == tbw->window) {
-                    register TitleButton *tb = tbw->info;
+                    TitleButton *tb = tbw->info;
 
                     FB(Tmp_win->title.fore, Tmp_win->title.back);
                     XCopyPlane(dpy, tb->bitmap, w, Scr->NormalGC,
@@ -1225,8 +1234,8 @@ HandleDestroyNotify(void)
      *     2.  name
      *     3.  icon_name
      *     4.  wmhints
-     *     5.  class.res_name
-     *     6.  class.res_class
+     *     5.  xclass.res_name
+     *     6.  xclass.res_class
      *     7.  list
      *     8.  iconmgrp
      *     9.  cwins
@@ -1251,10 +1260,12 @@ HandleDestroyNotify(void)
     free_window_names(Tmp_win, True, True, True);       /* 1, 2, 3 */
     if (Tmp_win->wmhints)       /* 4 */
         XFree(Tmp_win->wmhints);
-    if (Tmp_win->class.res_name && Tmp_win->class.res_name != NoName)   /* 5 */
-        XFree(Tmp_win->class.res_name);
-    if (Tmp_win->class.res_class && Tmp_win->class.res_class != NoName) /* 6 */
-        XFree(Tmp_win->class.res_class);
+    if (Tmp_win->xclass.res_name &&
+        Tmp_win->xclass.res_name != NoName)     /* 5 */
+        XFree(Tmp_win->xclass.res_name);
+    if (Tmp_win->xclass.res_class &&
+        Tmp_win->xclass.res_class != NoName)    /* 6 */
+        XFree(Tmp_win->xclass.res_class);
     free_cwins(Tmp_win);        /* 9 */
     if (Tmp_win->titlebuttons)  /* 10 */
         free(Tmp_win->titlebuttons);
@@ -1466,12 +1477,14 @@ void
 HandleMotionNotify(void)
 {
     XPointer context_data;
+    unsigned udummy = 0;
+    Window wdummy = None;
 
     if (ResizeWindow != (Window) 0) {
         XQueryPointer(dpy, Event.xany.window,
-                      &(Event.xmotion.root), &JunkChild,
+                      &(Event.xmotion.root), &wdummy,
                       &(Event.xmotion.x_root), &(Event.xmotion.y_root),
-                      &(Event.xmotion.x), &(Event.xmotion.y), &JunkMask);
+                      &(Event.xmotion.x), &(Event.xmotion.y), &udummy);
 
         /* Set WindowMoved appropriately so that f.deltastop will
            work with resize as well as move. */
@@ -1697,6 +1710,8 @@ HandleButtonPress(void)
 {
     unsigned int modifier;
     Cursor cur;
+    int dummy = 0;
+    Window wdummy = None;
 
     /* too much code relies on this assumption */
     if (Event.xbutton.button > MAX_BUTTONS)
@@ -1748,8 +1763,8 @@ HandleButtonPress(void)
 
     /* check the title bar buttons */
     if (Tmp_win && Tmp_win->title_height && Tmp_win->titlebuttons) {
-        register int i;
-        register TBWindow *tbw;
+        int i;
+        TBWindow *tbw;
         int nb = Scr->TBInfo.nleft + Scr->TBInfo.nright;
 
         for (i = 0, tbw = Tmp_win->titlebuttons; i < nb; i++, tbw++) {
@@ -1782,13 +1797,17 @@ HandleButtonPress(void)
         if (Tmp_win->list && RootFunction != 0 &&
             (Event.xany.window == Tmp_win->list->w ||
              Event.xany.window == Tmp_win->list->icon)) {
+            int x = 0;
+            int y = 0;
+
             Tmp_win = Tmp_win->list->iconmgr->twm_win;
+
             XTranslateCoordinates(dpy, Event.xany.window, Tmp_win->w,
                                   Event.xbutton.x, Event.xbutton.y,
-                                  &JunkX, &JunkY, &JunkChild);
+                                  &x, &y, &wdummy);
 
-            Event.xbutton.x = JunkX;
-            Event.xbutton.y = JunkY - Tmp_win->title_height;
+            Event.xbutton.x = x;
+            Event.xbutton.y = y - Tmp_win->title_height;
             Event.xany.window = Tmp_win->w;
 
             Context = C_WINDOW;
@@ -1844,11 +1863,13 @@ HandleButtonPress(void)
              * inside of a client that was getting button press events.
              */
             XPointer context_data;
+            int x = 0;
+            int y = 0;
 
             XTranslateCoordinates(dpy, Scr->Root, Scr->Root,
                                   Event.xbutton.x,
                                   Event.xbutton.y,
-                                  &JunkX, &JunkY, &Event.xany.window);
+                                  &dummy, &dummy, &Event.xany.window);
 
             if (Event.xany.window == 0 ||
                 (XFindContext(dpy, Event.xany.window, TwmContext,
@@ -1863,10 +1884,10 @@ HandleButtonPress(void)
 
             XTranslateCoordinates(dpy, Scr->Root, Event.xany.window,
                                   Event.xbutton.x,
-                                  Event.xbutton.y, &JunkX, &JunkY, &JunkChild);
+                                  Event.xbutton.y, &x, &y, &wdummy);
 
-            Event.xbutton.x = JunkX;
-            Event.xbutton.y = JunkY;
+            Event.xbutton.x = x;
+            Event.xbutton.y = y;
 
             Context = C_WINDOW;
         }
@@ -2510,7 +2531,7 @@ InstallWindowColormaps(int type, TwmWindow *tmp)
 
     state = CM_INSTALLED;
 
-    for (i = n = 0; i < number_cwins; i++) {
+    for (i = 0; i < number_cwins; i++) {
         cwin = cwins[i];
         cmap = cwin->colormap;
         cmap->state |= CM_INSTALLABLE;

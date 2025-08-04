@@ -66,15 +66,11 @@ in this Software without prior written authorization from The Open Group.
 #include "screen.h"
 #include "menus.h"
 #include "util.h"
-#include "gram.h"
 #include "parse.h"
 
 #include <X11/Xatom.h>
 #include <X11/extensions/sync.h>
 
-#ifndef SYSTEM_INIT_FILE
-#define SYSTEM_INIT_FILE "/usr/lib/X11/twm/system.twmrc"
-#endif
 #define BUF_LEN 300
 
 static FILE *twmrc;
@@ -201,7 +197,7 @@ ParseTwmrc(char *filename)
             break;
 
         case 3:                /* system.twmrc */
-            cp = SYSTEM_INIT_FILE;
+            cp = DATADIR "/X11/twm/system.twmrc";
             break;
         }
 
@@ -602,7 +598,7 @@ static int numkeywords = (sizeof(keytable) / sizeof(keytable[0]));
 int
 parse_keyword(char *s, int *nump)
 {
-    register int lower = 0, upper = numkeywords - 1;
+    int lower = 0, upper = numkeywords - 1;
 
     XmuCopyISOLatin1Lowered(s, s);
     while (lower <= upper) {
@@ -747,6 +743,11 @@ do_single_keyword(int keyword)
 int
 do_string_keyword(int keyword, char *s)
 {
+    unsigned width = 0;
+    unsigned height = 0;
+    unsigned mask = 0;
+    int dummy = 0;
+
     switch (keyword) {
     case kws_UsePPosition:
     {
@@ -797,20 +798,18 @@ do_string_keyword(int keyword, char *s)
         return 1;
 
     case kws_MaxWindowSize:
-        JunkMask =
-            (unsigned) XParseGeometry(s, &JunkX, &JunkY, &JunkWidth,
-                                      &JunkHeight);
-        if ((JunkMask & (WidthValue | HeightValue)) !=
+        mask = (unsigned) XParseGeometry(s, &dummy, &dummy, &width, &height);
+        if ((mask & (WidthValue | HeightValue)) !=
             (WidthValue | HeightValue)) {
             parseWarning("bad MaxWindowSize \"%s\"", s);
             return 0;
         }
-        if (JunkWidth <= 0 || JunkHeight <= 0) {
+        if (width <= 0 || height <= 0) {
             parseWarning("MaxWindowSize \"%s\" must be positive", s);
             return 0;
         }
-        Scr->MaxWindowWidth = (int) JunkWidth;
-        Scr->MaxWindowHeight = (int) JunkHeight;
+        Scr->MaxWindowWidth = (int) width;
+        Scr->MaxWindowHeight = (int) height;
         return 1;
     }
 
@@ -1034,7 +1033,7 @@ do_var_savecolor(int key)
     Cptr cptrav, cpnew;
 
     if (!chead) {
-        chead = malloc(sizeof(Cnode));
+        chead = (Cnode *) malloc(sizeof(Cnode));
         chead->i = key;
         chead->next = NULL;
     }
@@ -1043,7 +1042,7 @@ do_var_savecolor(int key)
         while (cptrav->next != NULL) {
             cptrav = cptrav->next;
         }
-        cpnew = malloc(sizeof(Cnode));
+        cpnew = (Cnode *) malloc(sizeof(Cnode));
         cpnew->i = key;
         cpnew->next = NULL;
         cptrav->next = cpnew;
@@ -1152,7 +1151,7 @@ do_squeeze_entry(name_list ** list, char *name, int justify, int num, int denom)
     if (HasShape) {
         SqueezeInfo *sinfo;
 
-        sinfo = malloc(sizeof(SqueezeInfo));
+        sinfo = (SqueezeInfo *) malloc(sizeof(SqueezeInfo));
 
         if (!sinfo) {
             parseWarning("unable to allocate %lu bytes for squeeze info",

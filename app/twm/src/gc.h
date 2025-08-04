@@ -57,9 +57,9 @@ in this Software without prior written authorization from The Open Group.
  *
  **********************************************************************/
 
-#ifndef _GC_
-#define _GC_
+#ifndef GC_H
+#define GC_H
 
 extern void CreateGCs(void);
 
-#endif                          /* _GC_ */
+#endif /* GC_H */

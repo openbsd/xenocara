@@ -57,8 +57,8 @@ in this Software without prior written authorization from The Open Group.
  *
  ***********************************************************************/
 
-#ifndef _MENUS_
-#define _MENUS_
+#ifndef MENUS_H
+#define MENUS_H
 
 #include "twm.h"
 
@@ -161,6 +161,7 @@ extern int MenuDepth;
 #define COLORMAP_DEFAULT "default"
 
 extern void InitMenus(void);
+extern void InitMenusFirst(void);
 extern Bool AddFuncKey(char *name, int cont, int mods, int func, char *win_name,
                        char *action);
 extern int CreateTitleButton(const char *name, int func, const char *action,
@@ -191,4 +192,4 @@ extern void SendDeleteWindowMessage(TwmWindow *tmp, Time timestamp);
 extern void SendSaveYourselfMessage(TwmWindow *tmp, Time timestamp);
 extern void SendTakeFocusMessage(TwmWindow *tmp, Time timestamp);
 
-#endif                          /* _MENUS_ */
+#endif /* MENUS_H */

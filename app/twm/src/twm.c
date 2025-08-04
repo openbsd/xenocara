@@ -72,7 +72,6 @@ in this Software without prior written authorization from The Open Group.
 #include "menus.h"
 #include "events.h"
 #include "util.h"
-#include "gram.h"
 #include "screen.h"
 #include "parse.h"
 #include "session.h"
@@ -84,24 +83,17 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/extensions/sync.h>
 #include <X11/Xlocale.h>
 
-#ifdef XPRINT
-#include <X11/extensions/Print.h>
-#endif                          /* XPRINT */
-
 #ifdef HAVE_XRANDR
 #include <X11/extensions/Xrandr.h>
 #endif
 
 static void InitVariables(void);
 
-XtAppContext appContext;        /* Xt application context */
-XtSignalId si;
+static XtSignalId si;
 
 Display *dpy = NULL;            /* which display are we talking to */
 Window ResizeWindow;            /* the window we are resizing */
 
-int MultiScreen = TRUE;         /* try for more than one screen? */
-int NoPrintscreens = False;     /* ignore special handling of print screens? */
 int NumScreens;                 /* number of screens in ScreenList */
 int HasShape;                   /* server supports shape extension? */
 
@@ -116,7 +108,6 @@ int SyncEventBase, SyncErrorBase;
 ScreenInfo **ScreenList;        /* structures for each screen */
 ScreenInfo *Scr = NULL;         /* the cur and prev screens */
 int PreviousScreen;             /* last screen that we were on */
-int FirstScreen;                /* TRUE ==> first screen of display */
 int message_level = 1;          /* controls error messages */
 static int RedirectError;       /* TRUE ==> another window manager running */
 static int TwmErrorHandler(Display *dpy, XErrorEvent *event);   /* for setting RedirectError */
@@ -124,7 +115,6 @@ static int CatchRedirectError(Display *dpy, XErrorEvent *event);        /* for e
 static void sigHandler(int);
 char Info[INFO_LINES][INFO_SIZE];       /* info strings to print */
 int InfoLines;
-static char *InitFile = NULL;
 
 Cursor UpperLeftCursor;         /* upper Left corner cursor */
 Cursor RightButt;
@@ -147,12 +137,6 @@ int ParseError;                 /* error parsing the .twmrc file */
 
 int HandlingEvents = FALSE;     /* are we handling events yet? */
 
-Window JunkRoot;                /* junk window */
-Window JunkChild;               /* junk window */
-int JunkX;                      /* junk variable */
-int JunkY;                      /* junk variable */
-unsigned int JunkWidth, JunkHeight, JunkBW, JunkDepth, JunkMask;
-
 char *ProgramName;
 int Argc;
 char **Argv;
@@ -166,7 +150,7 @@ Atom TwmAtoms[11];
 Bool use_fontset;               /* use XFontSet-related functions or not */
 
 /* don't change the order of these strings */
-static char *atom_names[11] = {
+static const char *atom_names[11] = {
     "_MIT_PRIORITY_COLORS",
     "WM_CHANGE_STATE",
     "WM_STATE",
@@ -180,52 +164,10 @@ static char *atom_names[11] = {
     "WM_WINDOW_ROLE"
 };
 
-#ifdef XPRINT
-/* |hasExtension()| and |IsPrintScreen()| have been stolen from
- * xc/programs/xdpyinfo/xdpyinfo.c */
-static Bool
-hasExtension(Display *dpy2, char *extname)
-{
-    int num_extensions, i;
-    char **extensions;
-
-    extensions = XListExtensions(dpy2, &num_extensions);
-    for (i = 0; i < num_extensions &&
-         (strcmp(extensions[i], extname) != 0); i++);
-    XFreeExtensionList(extensions);
-    return i != num_extensions;
-}
-
-static Bool
-IsPrintScreen(Screen *s)
-{
-    Display *dpy2 = XDisplayOfScreen(s);
-
-    /* Check whether this is a screen of a print DDX */
-    if (hasExtension(dpy2, XP_PRINTNAME)) {
-        Screen **pscreens;
-        int pscrcount;
-        int i;
-
-        pscreens = XpQueryScreens(dpy2, &pscrcount);
-        for (i = 0; (i < pscrcount) && pscreens; i++) {
-            if (s == pscreens[i]) {
-                return True;
-            }
-        }
-        XFree(pscreens);
-    }
-    return False;
-}
-#endif                          /* XPRINT */
-
-static void
+static _X_NORETURN void
 usage(void)
 {
     fprintf(stderr, "usage:  %s [-display dpy] [-f file] [-s] [-q] [-v] [-V]"
-#ifdef XPRINT
-            " [-noprint]"
-#endif                          /* XPRINT */
             " [-clientId id] [-restore file]\n", ProgramName);
     exit(EXIT_FAILURE);
 }
@@ -266,6 +208,9 @@ main(int argc, char *argv[])
     char *restore_filename = NULL;
     char *client_id = NULL;
     char *loc;
+    int MultiScreen = TRUE;         /* try for more than one screen? */
+    char *InitFile = NULL;
+    XtAppContext appContext;        /* Xt application context */
 
     ProgramName = argv[0];
     Argc = argc;
@@ -289,13 +234,6 @@ main(int argc, char *argv[])
                     usage();
                 MultiScreen = FALSE;
                 continue;
-#ifdef XPRINT
-            case 'n':          /* -noprint */
-                if (!brief_opt(argv[i], "noprint"))
-                    usage();
-                NoPrintscreens = True;
-                continue;
-#endif                          /* XPRINT */
             case 'f':          /* -file twmrcfilename */
                 if (!brief_opt(argv[i], "file"))
                     usage();
@@ -378,7 +316,7 @@ main(int argc, char *argv[])
 
     si = XtAppAddSignal(appContext, Done, NULL);
 
-    if (!(dpy = XtOpenDisplay(appContext, display_name, "twm", "twm",
+    if (!(dpy = XtOpenDisplay(appContext, display_name, APP_NAME, APP_CLASS,
                               NULL, 0, &zero, NULL))) {
         twmError("unable to open display \"%s\"", XDisplayName(display_name));
     }
@@ -401,7 +339,8 @@ main(int argc, char *argv[])
     ScreenContext = XUniqueContext();
     ColormapContext = XUniqueContext();
 
-    (void) XInternAtoms(dpy, atom_names, sizeof TwmAtoms / sizeof TwmAtoms[0],
+    (void) XInternAtoms(dpy, (char **) atom_names,
+                        sizeof TwmAtoms / sizeof TwmAtoms[0],
                         False, TwmAtoms);
 
     /* Set up the per-screen global information. */
@@ -419,22 +358,15 @@ main(int argc, char *argv[])
     InfoLines = 0;
 
     /* for simplicity, always allocate NumScreens ScreenInfo struct pointers */
-    ScreenList = calloc((size_t) NumScreens, sizeof(ScreenInfo *));
+    ScreenList = (ScreenInfo **)
+        calloc((size_t) NumScreens, sizeof(ScreenInfo *));
     if (ScreenList == NULL) {
         twmError("Unable to allocate memory for screen list, exiting");
     }
     numManaged = 0;
     PreviousScreen = DefaultScreen(dpy);
-    FirstScreen = TRUE;
     for (scrnum = firstscrn; scrnum <= lastscrn; scrnum++) {
-#ifdef XPRINT
-        /* Ignore print screens to avoid that users accidentally warp on a
-         * print screen (which are not visible on video displays) */
-        if ((!NoPrintscreens) && IsPrintScreen(XScreenOfDisplay(dpy, scrnum))) {
-            twmWarning("skipping print screen %d", scrnum);
-            continue;
-        }
-#endif                          /* XPRINT */
+        Bool FirstScreen = scrnum == firstscrn;
 
         /* Make sure property priority colors is empty */
         XChangeProperty(dpy, RootWindow(dpy, scrnum), _XA_MIT_PRIORITY_COLORS,
@@ -462,7 +394,7 @@ main(int argc, char *argv[])
         numManaged++;
 
         /* Note:  ScreenInfo struct is calloc'ed to initialize to zero. */
-        Scr = ScreenList[scrnum] = calloc(1, sizeof(ScreenInfo));
+        Scr = ScreenList[scrnum] = (ScreenInfo *) calloc(1, sizeof(ScreenInfo));
         if (Scr == NULL) {
             twmWarning
                 ("unable to allocate memory for ScreenInfo structure for screen %d.",
@@ -510,7 +442,8 @@ main(int argc, char *argv[])
         XSaveContext(dpy, Scr->Root, ScreenContext, (XPointer) Scr);
 
         Scr->TwmRoot.cmaps.number_cwins = 1;
-        Scr->TwmRoot.cmaps.cwins = malloc(sizeof(ColormapWindow *));
+        Scr->TwmRoot.cmaps.cwins = (ColormapWindow **)
+            malloc(sizeof(ColormapWindow *));
         Scr->TwmRoot.cmaps.cwins[0] =
             CreateColormapWindow(Scr->Root, True, False);
         Scr->TwmRoot.cmaps.cwins[0]->visibility = VisibilityPartiallyObscured;
@@ -542,7 +475,11 @@ main(int argc, char *argv[])
 
         if (DisplayCells(dpy, scrnum) < 3)
             Scr->Monochrome = MONOCHROME;
+#if defined(__cplusplus) || defined(c_plusplus)
+        else if (DefaultVisual(dpy, scrnum)->c_class == GrayScale)
+#else
         else if (DefaultVisual(dpy, scrnum)->class == GrayScale)
+#endif
             Scr->Monochrome = GRAYSCALE;
         else
             Scr->Monochrome = COLOR;
@@ -590,10 +527,12 @@ main(int argc, char *argv[])
         Scr->tbpm.resize = None;
         Scr->tbpm.question = None;
         Scr->tbpm.menu = None;
-        Scr->tbpm.delete = None;
+        Scr->tbpm.remove = None;
 
         InitVariables();
         InitMenus();
+        if (FirstScreen)
+            InitMenusFirst();
 
         /* Parse it once for each screen. */
         ParseTwmrc(InitFile);
@@ -615,9 +554,6 @@ main(int argc, char *argv[])
 
         XGrabServer(dpy);
         XSync(dpy, 0);
-
-        JunkX = 0;
-        JunkY = 0;
 
         XQueryTree(dpy, Scr->Root, &root, &parent, &children, &nchildren);
         CreateIconManagers();
@@ -694,24 +630,22 @@ main(int argc, char *argv[])
 
         XUngrabServer(dpy);
 
-        FirstScreen = FALSE;
         Scr->FirstTime = FALSE;
     }                           /* for */
 
     if (numManaged == 0) {
         if (MultiScreen && NumScreens > 0) {
-            twmError("unable to find any unmanaged %sscreens.\n",
-                     NoPrintscreens ? "" : "video ");
+            twmError("unable to find any unmanaged video screens.\n");
         }
         exit(EXIT_FAILURE);
     }
 
-    (void) ConnectToSessionManager(client_id);
+    (void) ConnectToSessionManager(client_id, appContext);
 
     RestartPreviousState = False;
     HandlingEvents = TRUE;
     InitEvents();
-    HandleEvents();
+    HandleEvents(appContext);
     exit(EXIT_SUCCESS);
 }
 
@@ -879,15 +813,37 @@ CreateFonts(void)
     Scr->HaveFonts = TRUE;
 }
 
+static void
+DestroyFonts(void)
+{
+    int i;
+    for (i = 0; i < NumScreens; ++i) {
+        ScreenInfo *scr = ScreenList[i];
+
+        if (!scr) {
+            continue;
+        }
+
+        DestroyFont(&scr->TitleBarFont);
+        DestroyFont(&scr->MenuFont);
+        DestroyFont(&scr->IconFont);
+        DestroyFont(&scr->SizeFont);
+        DestroyFont(&scr->IconManagerFont);
+        DestroyFont(&scr->DefaultFont);
+    }
+}
+
 void
 RestoreWithdrawnLocation(TwmWindow *tmp)
 {
     int gravx, gravy;
     unsigned int bw;
     XWindowChanges xwc;
+    unsigned udummy = 0;
+    Window wdummy = None;
 
-    if (XGetGeometry(dpy, tmp->w, &JunkRoot, &xwc.x, &xwc.y,
-                     &JunkWidth, &JunkHeight, &bw, &JunkDepth)) {
+    if (XGetGeometry(dpy, tmp->w, &wdummy, &xwc.x, &xwc.y,
+                     &udummy, &udummy, &bw, &udummy)) {
         unsigned mask;
 
         GetGravityOffsets(tmp, &gravx, &gravy);
@@ -967,8 +923,11 @@ Done(XtPointer client_data _X_UNUSED, XtSignalId *si2 _X_UNUSED)
 {
     if (dpy) {
         Reborder(CurrentTime);
+        DestroyFonts();
         XCloseDisplay(dpy);
     }
+
+    DestroySession();
     exit(EXIT_SUCCESS);
 }
 

@@ -66,12 +66,13 @@ in this Software without prior written authorization from The Open Group.
 
 /* #include <stdio.h> */ /* lex already includes stdio.h */
 #include "twm.h"
-#include "gram.h"
 #include "list.h"
 #include "parse.h"
 
 #ifdef FLEX_SCANNER
+#if (YY_FLEX_MINOR_VERSION == 5) && (YY_FLEX_SUBMINOR_VERSION < 20)
 int yylineno;
+#endif
 
 #undef YY_INPUT
 #define YY_INPUT(buf,result,size) ((result) = doinput((buf),(size)))
@@ -139,7 +140,7 @@ number                          [0-9]+
 
 #ifndef yywrap
 int
-yywrap()
+yywrap(void)
 {
     return (1);
 }

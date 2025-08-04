@@ -73,26 +73,25 @@ CreateIconManagers(void)
     }
 
     for (p = &Scr->iconmgr; p != NULL; p = p->next) {
-        int mask = XParseGeometry(p->geometry, &JunkX, &JunkY,
+        int x = 0;
+        int y = 0;
+        int mask = XParseGeometry(p->geometry, &x, &y,
                                   (unsigned int *) &p->width,
                                   (unsigned int *) &p->height);
 
         if (mask & XNegative)
-            JunkX = Scr->MyDisplayWidth - p->width -
-                (2 * Scr->BorderWidth) + JunkX;
+            x += Scr->MyDisplayWidth - p->width - (2 * Scr->BorderWidth);
 
         if (mask & YNegative)
-            JunkY = Scr->MyDisplayHeight - p->height -
-                (2 * Scr->BorderWidth) + JunkY;
+            y += Scr->MyDisplayHeight - p->height - (2 * Scr->BorderWidth);
 
         background = Scr->IconManagerC.back;
         GetColorFromList(Scr->IconManagerBL, p->name, (XClassHint *) NULL,
                          &background);
 
-        p->w = XCreateSimpleWindow(dpy, Scr->Root,
-                                   JunkX, JunkY, (unsigned) p->width,
-                                   (unsigned) p->height, 1, Scr->Black,
-                                   background);
+        p->w = XCreateSimpleWindow(dpy, Scr->Root, x, y,
+                                   (unsigned) p->width, (unsigned) p->height,
+                                   1, Scr->Black, background);
 
         snprintf(str, sizeof(str), "%s Icon Manager", p->name);
         snprintf(str1, sizeof(str1), "%s Icons", p->name);
@@ -134,7 +133,7 @@ AllocateIconManager(char *name, char *icon_name, char *geom, int columns)
     if (Scr->NoIconManagers)
         return NULL;
 
-    p = malloc(sizeof(IconMgr));
+    p = (IconMgr *) malloc(sizeof(IconMgr));
     p->name = name;
     p->icon_name = icon_name;
     p->geometry = geom;
@@ -362,16 +361,16 @@ AddIconManager(TwmWindow *tmp_win)
     if (tmp_win->iconmgr || tmp_win->transient || Scr->NoIconManagers)
         return NULL;
 
-    if (LookInList(Scr->IconMgrNoShow, tmp_win->full_name, &tmp_win->class))
+    if (LookInList(Scr->IconMgrNoShow, tmp_win->full_name, &tmp_win->xclass))
         return NULL;
     if (Scr->IconManagerDontShow &&
-        !LookInList(Scr->IconMgrShow, tmp_win->full_name, &tmp_win->class))
+        !LookInList(Scr->IconMgrShow, tmp_win->full_name, &tmp_win->xclass))
         return NULL;
     if ((ip = (IconMgr *) LookInList(Scr->IconMgrs, tmp_win->full_name,
-                                     &tmp_win->class)) == NULL)
+                                     &tmp_win->xclass)) == NULL)
         ip = &Scr->iconmgr;
 
-    tmp = malloc(sizeof(WList));
+    tmp = (WList *) malloc(sizeof(WList));
     tmp->iconmgr = ip;
     tmp->next = NULL;
     tmp->active = FALSE;
@@ -385,12 +384,12 @@ AddIconManager(TwmWindow *tmp_win)
     tmp->back = Scr->IconManagerC.back;
     tmp->highlight = Scr->IconManagerHighlight;
 
-    GetColorFromList(Scr->IconManagerFL, tmp_win->full_name, &tmp_win->class,
+    GetColorFromList(Scr->IconManagerFL, tmp_win->full_name, &tmp_win->xclass,
                      &tmp->fore);
-    GetColorFromList(Scr->IconManagerBL, tmp_win->full_name, &tmp_win->class,
+    GetColorFromList(Scr->IconManagerBL, tmp_win->full_name, &tmp_win->xclass,
                      &tmp->back);
     GetColorFromList(Scr->IconManagerHighlightL, tmp_win->full_name,
-                     &tmp_win->class, &tmp->highlight);
+                     &tmp_win->xclass, &tmp->highlight);
 
     h = Scr->IconManagerFont.height + 10;
     if (h < (siconify_height + 4))

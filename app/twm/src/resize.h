@@ -57,8 +57,8 @@ in this Software without prior written authorization from The Open Group.
  *
  **********************************************************************/
 
-#ifndef _RESIZE_
-#define _RESIZE_
+#ifndef RESIZE_H
+#define RESIZE_H
 
 #include "twm.h"
 
@@ -77,4 +77,4 @@ extern void SetupFrame(TwmWindow *tmp_win, int x, int y, int w, int h, int bw,
 extern void SetupWindow(TwmWindow *tmp_win, int x, int y, int w, int h, int bw);
 extern void StartResize(XEvent *evp, TwmWindow *tmp_win, Bool fromtitlebar);
 
-#endif                          /* _RESIZE_ */
+#endif /* RESIZE_H */

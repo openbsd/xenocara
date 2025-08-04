@@ -354,8 +354,8 @@ MenuDoResize(int x_root, int y_root, TwmWindow *tmp_win)
  * move the rubberband around.  This is called for each motion event when
  * we are resizing
  *
- *  \param x_root  the X corrdinate in the root window
- *  \param y_root  the Y corrdinate in the root window
+ *  \param x_root  the X coordinate in the root window
+ *  \param y_root  the Y coordinate in the root window
  *  \param tmp_win the current twm window
  */
 void

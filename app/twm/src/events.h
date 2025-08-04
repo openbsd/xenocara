@@ -57,8 +57,8 @@ in this Software without prior written authorization from The Open Group.
  *
  ***********************************************************************/
 
-#ifndef _EVENTS_
-#define _EVENTS_
+#ifndef EVENTS_H
+#define EVENTS_H
 
 #include "screen.h"
 #include "twm.h"
@@ -76,7 +76,7 @@ extern Bool StashEventTime(XEvent *ev);
 extern Window WindowOfEvent(XEvent *e);
 extern Bool DispatchEvent2(void);
 extern Bool DispatchEvent(void);
-extern void HandleEvents(void);
+extern void HandleEvents(XtAppContext) _X_NORETURN;
 extern void HandleColormapNotify(void);
 extern void HandleVisibilityNotify(void);
 extern void HandleKeyPress(void);
@@ -127,4 +127,4 @@ extern unsigned int mods_used;
 
 extern int MovedFromKeyPress;
 
-#endif                          /* _EVENTS_ */
+#endif /* EVENTS_H */

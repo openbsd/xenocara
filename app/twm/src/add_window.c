@@ -122,7 +122,7 @@ GetGravityOffsets(TwmWindow *tmp, int *xp, int *yp)
         {  0,  0 },                     /* StaticGravity */
     };
     /* *INDENT-ON* */
-    register int g = ((tmp->hints.flags & PWinGravity)
+    int g = ((tmp->hints.flags & PWinGravity)
                       ? tmp->hints.win_gravity : NorthWestGravity);
 
     if (g < ForgetGravity || g > StaticGravity) {
@@ -162,13 +162,16 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
     Bool width_ever_changed_by_user;
     Bool height_ever_changed_by_user;
     char *name;
+    int dummy = 0;
+    unsigned udummy = 0;
+    Window wdummy = None;
 
 #ifdef DEBUG
     fprintf(stderr, "AddWindow: w = 0x%lx\n", (unsigned long) w);
 #endif
 
     /* allocate space for the twm window */
-    tmp_win = calloc(1, sizeof(TwmWindow));
+    tmp_win = (TwmWindow *) calloc(1, sizeof(TwmWindow));
     if (tmp_win == NULL) {
         twmWarning("Unable to allocate memory to manage window ID %lx.", w);
         return NULL;
@@ -185,8 +188,8 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
 
     if (!I18N_FetchName(dpy, tmp_win->w, &name))
         name = NULL;
-    tmp_win->class = NoClass;
-    XGetClassHint(dpy, tmp_win->w, &tmp_win->class);
+    tmp_win->xclass = NoClass;
+    XGetClassHint(dpy, tmp_win->w, &tmp_win->xclass);
     FetchWmProtocols(tmp_win);
     FetchWmColormapWindows(tmp_win);
 
@@ -260,44 +263,44 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
     tmp_win->transient = (short) Transient(tmp_win->w, &tmp_win->transientfor);
 
     tmp_win->nameChanged = 0;
-    if (tmp_win->class.res_name == NULL)
-        tmp_win->class.res_name = NoName;
-    if (tmp_win->class.res_class == NULL)
-        tmp_win->class.res_class = NoName;
+    if (tmp_win->xclass.res_name == NULL)
+        tmp_win->xclass.res_name = NoName;
+    if (tmp_win->xclass.res_class == NULL)
+        tmp_win->xclass.res_class = NoName;
 
     tmp_win->full_name = strdup(tmp_win->name);
     namelen = (int) strlen(tmp_win->name);
 
     tmp_win->highlight = Scr->Highlight &&
         (!short_lookup LookInList(Scr->NoHighlight, tmp_win->full_name,
-                                  &tmp_win->class));
+                                  &tmp_win->xclass));
 
     tmp_win->stackmode = Scr->StackMode &&
         (!short_lookup LookInList(Scr->NoStackModeL, tmp_win->full_name,
-                                  &tmp_win->class));
+                                  &tmp_win->xclass));
 
     tmp_win->titlehighlight = Scr->TitleHighlight &&
         (!short_lookup LookInList(Scr->NoTitleHighlight, tmp_win->full_name,
-                                  &tmp_win->class));
+                                  &tmp_win->xclass));
 
     tmp_win->auto_raise = short_lookup LookInList(Scr->AutoRaise,
                                                   tmp_win->full_name,
-                                                  &tmp_win->class);
+                                                  &tmp_win->xclass);
     if (tmp_win->auto_raise)
         Scr->NumAutoRaises++;
     if (Scr->IconifyByUnmapping) {
         tmp_win->iconify_by_unmapping = iconm ? FALSE :
             !short_lookup LookInList(Scr->DontIconify, tmp_win->full_name,
-                                     &tmp_win->class);
+                                     &tmp_win->xclass);
     }
     else {
         tmp_win->iconify_by_unmapping = Scr->IconifyByUnmapping;
     }
     tmp_win->iconify_by_unmapping |=
         short_lookup LookInList(Scr->IconifyByUn, tmp_win->full_name,
-                                &tmp_win->class);
+                                &tmp_win->xclass);
 
-    if (LookInList(Scr->WindowRingL, tmp_win->full_name, &tmp_win->class)) {
+    if (LookInList(Scr->WindowRingL, tmp_win->full_name, &tmp_win->xclass)) {
         if (Scr->Ring) {
             tmp_win->ring.next = Scr->Ring->ring.next;
             if (Scr->Ring->ring.next->ring.prev)
@@ -320,10 +323,10 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
      */
     if (HasShape) {
         if (!LookInList(Scr->DontSqueezeTitleL, tmp_win->full_name,
-                        &tmp_win->class)) {
+                        &tmp_win->xclass)) {
             tmp_win->squeeze_info = (SqueezeInfo *)
                 LookInList(Scr->SqueezeTitleL, tmp_win->full_name,
-                           &tmp_win->class);
+                           &tmp_win->xclass);
             if (!tmp_win->squeeze_info) {
                 static SqueezeInfo default_squeeze = { J_LEFT, 0, 0 };
                 if (Scr->SqueezeTitle)
@@ -345,18 +348,18 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
     tmp_win->title_height = Scr->TitleHeight + tmp_win->frame_bw;
     if (Scr->NoTitlebar)
         tmp_win->title_height = 0;
-    if (LookInList(Scr->MakeTitle, tmp_win->full_name, &tmp_win->class))
+    if (LookInList(Scr->MakeTitle, tmp_win->full_name, &tmp_win->xclass))
         tmp_win->title_height = Scr->TitleHeight + tmp_win->frame_bw;
-    if (LookInList(Scr->NoTitle, tmp_win->full_name, &tmp_win->class))
+    if (LookInList(Scr->NoTitle, tmp_win->full_name, &tmp_win->xclass))
         tmp_win->title_height = 0;
 
     /* if it is a transient window, don't put a title on it */
     if (tmp_win->transient && !Scr->DecorateTransients)
         tmp_win->title_height = 0;
 
-    if (LookInList(Scr->StartIconified, tmp_win->full_name, &tmp_win->class)) {
+    if (LookInList(Scr->StartIconified, tmp_win->full_name, &tmp_win->xclass)) {
         if (!tmp_win->wmhints) {
-            tmp_win->wmhints = malloc(sizeof(XWMHints));
+            tmp_win->wmhints = (XWMHints *) malloc(sizeof(XWMHints));
             tmp_win->wmhints->flags = 0;
         }
         tmp_win->wmhints->initial_state = IconicState;
@@ -432,29 +435,30 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
                  */
                 while (TRUE) {
                     int stat;
+                    Window root = None;
+                    unsigned mask = 0;
 
                     XUngrabServer(dpy);
                     XSync(dpy, 0);
                     XGrabServer(dpy);
 
-                    JunkMask = 0;
-                    if (!XQueryPointer(dpy, Scr->Root, &JunkRoot,
-                                       &JunkChild, &JunkX, &JunkY,
-                                       &AddingX, &AddingY, &JunkMask))
-                        JunkMask = 0;
+                    if (!XQueryPointer(dpy, Scr->Root, &root,
+                                       &wdummy, &dummy, &dummy,
+                                       &AddingX, &AddingY, &mask))
+                        mask = 0;
 
-                    JunkMask &= (Button1Mask | Button2Mask | Button3Mask |
+                    mask &= (Button1Mask | Button2Mask | Button3Mask |
                                  Button4Mask | Button5Mask);
 
                     /*
                      * watch out for changing screens
                      */
                     if (firsttime) {
-                        if (JunkRoot != Scr->Root) {
-                            register int scrnum;
+                        if (root != Scr->Root) {
+                            int scrnum;
 
                             for (scrnum = 0; scrnum < NumScreens; scrnum++) {
-                                if (JunkRoot == RootWindow(dpy, scrnum))
+                                if (root == RootWindow(dpy, scrnum))
                                     break;
                             }
 
@@ -467,7 +471,7 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
                     /*
                      * wait for buttons to come up; yuck
                      */
-                    if (JunkMask != 0)
+                    if (mask != 0)
                         continue;
 
                     /*
@@ -566,9 +570,9 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
                         continue;
                     }
 
-                    XQueryPointer(dpy, Scr->Root, &JunkRoot, &JunkChild,
-                                  &JunkX, &JunkY, &AddingX, &AddingY,
-                                  &JunkMask);
+                    XQueryPointer(dpy, Scr->Root, &wdummy, &wdummy,
+                                  &dummy, &dummy, &AddingX, &AddingY,
+                                  &udummy);
 
                     if (Scr->DontMoveOff) {
                         int AddingR, AddingB;
@@ -661,9 +665,9 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
                          * using multiple GXxor lines so that we don't need to
                          * grab the server.
                          */
-                        XQueryPointer(dpy, Scr->Root, &JunkRoot, &JunkChild,
-                                      &JunkX, &JunkY, &AddingX, &AddingY,
-                                      &JunkMask);
+                        XQueryPointer(dpy, Scr->Root, &wdummy, &wdummy,
+                                      &dummy, &dummy, &AddingX, &AddingY,
+                                      &udummy);
 
                         if (lastx != AddingX || lasty != AddingY) {
                             DoResize(AddingX, AddingY, tmp_win);
@@ -764,8 +768,8 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
      * reparented, so we'll get a DestroyNotify for it.  We won't have
      * gotten one for anything up to here, however.
      */
-    if (XGetGeometry(dpy, tmp_win->w, &JunkRoot, &JunkX, &JunkY,
-                     &JunkWidth, &JunkHeight, &JunkBW, &JunkDepth) == 0) {
+    if (XGetGeometry(dpy, tmp_win->w, &wdummy, &dummy, &dummy,
+                     &udummy, &udummy, &udummy, &udummy) == 0) {
         free(tmp_win);
         XUngrabServer(dpy);
         return (NULL);
@@ -789,22 +793,22 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
     tmp_win->iconc.fore = Scr->IconC.fore;
     tmp_win->iconc.back = Scr->IconC.back;
 
-    GetColorFromList(Scr->BorderColorL, tmp_win->full_name, &tmp_win->class,
-                     &tmp_win->border);
-    GetColorFromList(Scr->IconBorderColorL, tmp_win->full_name, &tmp_win->class,
-                     &tmp_win->icon_border);
+    GetColorFromList(Scr->BorderColorL, tmp_win->full_name,
+                     &tmp_win->xclass, &tmp_win->border);
+    GetColorFromList(Scr->IconBorderColorL, tmp_win->full_name,
+                     &tmp_win->xclass, &tmp_win->icon_border);
     GetColorFromList(Scr->BorderTileForegroundL, tmp_win->full_name,
-                     &tmp_win->class, &tmp_win->border_tile.fore);
+                     &tmp_win->xclass, &tmp_win->border_tile.fore);
     GetColorFromList(Scr->BorderTileBackgroundL, tmp_win->full_name,
-                     &tmp_win->class, &tmp_win->border_tile.back);
-    GetColorFromList(Scr->TitleForegroundL, tmp_win->full_name, &tmp_win->class,
-                     &tmp_win->title.fore);
-    GetColorFromList(Scr->TitleBackgroundL, tmp_win->full_name, &tmp_win->class,
-                     &tmp_win->title.back);
-    GetColorFromList(Scr->IconForegroundL, tmp_win->full_name, &tmp_win->class,
-                     &tmp_win->iconc.fore);
-    GetColorFromList(Scr->IconBackgroundL, tmp_win->full_name, &tmp_win->class,
-                     &tmp_win->iconc.back);
+                     &tmp_win->xclass, &tmp_win->border_tile.back);
+    GetColorFromList(Scr->TitleForegroundL, tmp_win->full_name,
+                     &tmp_win->xclass, &tmp_win->title.fore);
+    GetColorFromList(Scr->TitleBackgroundL, tmp_win->full_name,
+                     &tmp_win->xclass, &tmp_win->title.back);
+    GetColorFromList(Scr->IconForegroundL, tmp_win->full_name,
+                     &tmp_win->xclass, &tmp_win->iconc.fore);
+    GetColorFromList(Scr->IconBackgroundL, tmp_win->full_name,
+                     &tmp_win->xclass, &tmp_win->iconc.back);
 
     /* create windows */
 
@@ -1030,7 +1034,7 @@ GrabButtons(TwmWindow *tmp_win)
         for (j = 0; j < MOD_SIZE; j++) {
             if (Scr->Mouse[i][C_WINDOW][j].func != 0) {
                 /* twm used to do this grab on the application main window,
-                 * tmp_win->w . This was not ICCCM complient and was changed.
+                 * tmp_win->w . This was not ICCCM compliant and was changed.
                  */
                 XGrabButton(dpy, (unsigned) i, (unsigned) j, tmp_win->frame,
                             True, ButtonPressMask | ButtonReleaseMask,
@@ -1213,13 +1217,13 @@ ComputeWindowTitleOffsets(TwmWindow *tmp_win, int width, Bool squeeze)
  * of the frame window.
  */
 void
-ComputeTitleLocation(register TwmWindow *tmp)
+ComputeTitleLocation(TwmWindow *tmp)
 {
     tmp->title_x = -tmp->frame_bw;
     tmp->title_y = -tmp->frame_bw;
 
     if (tmp->squeeze_info) {
-        register SqueezeInfo *si = tmp->squeeze_info;
+        SqueezeInfo *si = tmp->squeeze_info;
         int basex;
         int maxwidth = tmp->frame_width;
         int tw = tmp->title_width;
@@ -1300,7 +1304,8 @@ CreateWindowTitlebarButtons(TwmWindow *tmp_win)
     tmp_win->titlebuttons = NULL;
     nb = Scr->TBInfo.nleft + Scr->TBInfo.nright;
     if (nb > 0) {
-        tmp_win->titlebuttons = malloc((size_t) nb * sizeof(TBWindow));
+        tmp_win->titlebuttons = (TBWindow *)
+            malloc((size_t) nb * sizeof(TBWindow));
         if (!tmp_win->titlebuttons) {
             twmWarning("unable to allocate %d titlebuttons", nb);
         }
@@ -1346,15 +1351,18 @@ CreateWindowTitlebarButtons(TwmWindow *tmp_win)
 void
 SetHighlightPixmap(char *filename)
 {
-    Pixmap pm = GetBitmap(filename);
+    unsigned width = 0;
+    unsigned height = 0;
+
+    Pixmap pm = FindBitmap(filename, &width, &height);
 
     if (pm) {
         if (Scr->hilitePm) {
             XFreePixmap(dpy, Scr->hilitePm);
         }
         Scr->hilitePm = pm;
-        Scr->hilite_pm_width = (int) JunkWidth;
-        Scr->hilite_pm_height = (int) JunkHeight;
+        Scr->hilite_pm_width = (int) width;
+        Scr->hilite_pm_height = (int) height;
     }
 }
 
@@ -1366,8 +1374,8 @@ FetchWmProtocols(TwmWindow *tmp)
     int n;
 
     if (XGetWMProtocols(dpy, tmp->w, &protocols, &n)) {
-        register int i;
-        register Atom *ap;
+        int i;
+        Atom *ap;
 
         for (i = 0, ap = protocols; i < n; i++, ap++) {
             if (*ap == _XA_WM_TAKE_FOCUS)
@@ -1388,7 +1396,7 @@ CreateTwmColormap(Colormap c)
 {
     TwmColormap *cmap;
 
-    cmap = malloc(sizeof(TwmColormap));
+    cmap = (TwmColormap *) calloc(1, sizeof(TwmColormap));
     if (!cmap || XSaveContext(dpy, c, ColormapContext, (XPointer) cmap)) {
         if (cmap)
             free(cmap);
@@ -1409,7 +1417,7 @@ CreateColormapWindow(Window w, Bool creating_parent, Bool property_window)
     TwmColormap *cmap;
     XWindowAttributes attributes;
 
-    cwin = malloc(sizeof(ColormapWindow));
+    cwin = (ColormapWindow *) malloc(sizeof(ColormapWindow));
     if (cwin) {
         if (!XGetWindowAttributes(dpy, w, &attributes) ||
             XSaveContext(dpy, w, ColormapContext, (XPointer) cwin)) {
@@ -1460,7 +1468,7 @@ CreateColormapWindow(Window w, Bool creating_parent, Bool property_window)
 void
 FetchWmColormapWindows(TwmWindow *tmp)
 {
-    register int i, j;
+    int i, j;
     Window *cmap_windows = NULL;
     Bool can_free_cmap_windows = False;
     int number_cmap_windows = 0;
@@ -1490,7 +1498,7 @@ FetchWmColormapWindows(TwmWindow *tmp)
                 break;
         }
         if (i == number_cmap_windows) { /* not in list */
-            Window *new_cmap_windows =
+            Window *new_cmap_windows = (Window *)
                 malloc(sizeof(Window) * (size_t) (number_cmap_windows + 1));
 
             if (!new_cmap_windows) {
@@ -1509,7 +1517,8 @@ FetchWmColormapWindows(TwmWindow *tmp)
             number_cmap_windows++;
         }
 
-        cwins = malloc(sizeof(ColormapWindow *) * (size_t) number_cmap_windows);
+        cwins = (ColormapWindow **)
+            malloc(sizeof(ColormapWindow *) * (size_t) number_cmap_windows);
         if (cwins) {
             for (i = 0; i < number_cmap_windows; i++) {
 
@@ -1558,7 +1567,7 @@ FetchWmColormapWindows(TwmWindow *tmp)
 
         number_cmap_windows = 1;
 
-        cwins = malloc(sizeof(ColormapWindow *));
+        cwins = (ColormapWindow **) malloc(sizeof(ColormapWindow *));
         if (XFindContext(dpy, tmp->w, ColormapContext, (XPointer *) &cwins[0])
             == XCNOENT) {
             cwins[0] =
@@ -1578,7 +1587,7 @@ FetchWmColormapWindows(TwmWindow *tmp)
     tmp->cmaps.cwins = cwins;
     tmp->cmaps.number_cwins = number_cmap_windows;
     if (number_cmap_windows > 1)
-        tmp->cmaps.scoreboard =
+        tmp->cmaps.scoreboard = (char *)
             calloc(1, ColormapsScoreboardLength(&tmp->cmaps));
 
     if (previously_installed)

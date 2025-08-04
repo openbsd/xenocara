@@ -23,14 +23,14 @@
  * dealings in this Software without prior written authorization from the
  * XFree86 Project.
  */
-#ifndef _SESSION_H
-#define _SESSION_H
+#ifndef SESSION_H
+#define SESSION_H
 
 #include "twm.h"
 
 #include <X11/SM/SMlib.h>
 
-extern void ConnectToSessionManager(char *previous_id);
+extern void ConnectToSessionManager(char *previous_id, XtAppContext appContext);
 extern int GetWindowConfig(TwmWindow *theWindow, short *x, short *y,
                            unsigned short *width, unsigned short *height,
                            Bool *iconified, Bool *icon_info_present,
@@ -38,7 +38,8 @@ extern int GetWindowConfig(TwmWindow *theWindow, short *x, short *y,
                            Bool *width_ever_changed_by_user,
                            Bool *height_ever_changed_by_user);
 extern void ReadWinConfigFile(char *filename);
+extern void DestroySession(void);
 
 extern SmcConn smcConn;
 
-#endif
+#endif /* SESSION_H */

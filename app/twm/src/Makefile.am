@@ -28,14 +28,10 @@ rcdir = ${datadir}/X11/twm
 dist_rc_DATA = system.twmrc
 
 AM_CPPFLAGS =							\
-	-DAPP_NAME=\"twm\"					\
-	-DAPP_CLASS=\"twm\"					\
 	-DAPP_VERSION=\"$(VERSION)\"				\
-	-DXVENDORNAME=\"The\ X.Org\ Foundation\"		\
-	-DXORG_RELEASE=\"Release\ $(VERSION)\"			\
-	-DSYSTEM_INIT_FILE=\"${rcdir}/system.twmrc\"
+	-DDATADIR=\"${datadir}\"
 
-AM_CFLAGS = $(TWM_CFLAGS) $(XRANDR_CFLAGS)
+AM_CFLAGS = $(TWM_CFLAGS) $(XRANDR_CFLAGS) $(CWARNFLAGS)
 twm_LDADD = $(TWM_LIBS)   $(XRANDR_LIBS)
 
 twm_SOURCES =		\
@@ -47,6 +43,7 @@ twm_SOURCES =		\
 	events.h	\
 	gc.c		\
 	gc.h		\
+	gen_deftwmrc.sh \
 	iconmgr.c	\
 	iconmgr.h	\
 	icons.c		\
@@ -66,22 +63,12 @@ twm_SOURCES =		\
 	twm.h		\
 	util.c		\
 	util.h		\
-	version.c	\
-	version.h	\
 	gram.y		\
 	lex.l
 
 BUILT_SOURCES = gram.h deftwmrc.c
 
 deftwmrc.c:  system.twmrc
-	$(AM_V_at)rm -f $@ ;							\
-	echo '/* ' >>$@ ;							\
-	echo ' * This file is generated automatically from the default' >>$@ ;	\
-	echo ' * twm bindings file system.twmrc by the twm Makefile.' >>$@ ;	\
-	echo ' */' >>$@ ;							\
-	echo '' >>$@ ;								\
-	echo 'const unsigned char *defTwmrc[] = {' >>$@ ;				\
-	$(SED) -f ${srcdir}/deftwmrc.sed < ${srcdir}/system.twmrc >>$@ ;	\
-	echo '    (const unsigned char *) 0 };' >>$@
+	sh $(srcdir)/gen_deftwmrc.sh $@ ${.CURDIR}/system.twmrc
 
-EXTRA_DIST = deftwmrc.sed siconify.bm
+EXTRA_DIST = siconify.bm

@@ -1,3 +1,1045 @@
+commit f371718ef3dd134094c4789156f6f2165fc57095
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 5 15:33:09 2025 -0400
+
+    twm 1.0.13.1
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 94c68072e366e673429201cc1033cbfa637be650
+Author: Stefan Dirsch <sndirsch@suse.com>
+Date:   Mon May 5 13:12:12 2025 +0200
+
+    twm 1.0.13
+    
+    Hi Thomas
+    
+    Thanks a lot for the update! Unfortunately I'm afraid the release needs to be
+    redone as release 1.0.13.1, since src/gen_deftwmrc.sh is missing from the
+    tarball (I think it's missing in src/Makefile.am:twm_SOURCES) and even if it
+    would be included it's likely not executable, so should be made executable
+    during build before executed or executed via 'sh'.
+    
+    I'm attaching a workaround patch.
+    
+    Stefan
+    
+    On Sun, May 04, 2025 at 10:21:44AM -0400, Thomas Dickey wrote:
+    > Alan Coopersmith (3):
+    >       gitlab CI: stop requiring Signed-off-by in commits
+    >       Remove "All rights reserved" from Oracle copyright notices
+    >       configure: pass noyywrap to AC_PROG_LEX if using autoconf 2.70 or later
+    >
+    > Thomas E. Dickey (11):
+    >       include "gram.h" only from "parse.h"
+    >       amend yylineno change
+    >       improve declaration of yylex()
+    >       improve portability for bison/byacc
+    >       build-fix
+    >       compiler-warning fixes
+    >       cleanup manpage-format
+    >       code-cleanup
+    >       spelling-fixes found by codespell
+    >       issue 5: modify manpage as suggested in issue about f.fullzoom
+    >       twm 1.0.13
+    >
+    > Tim Wiederhake (49):
+    >       Fix include guard names
+    >       Remove disabled code
+    >       Remove always-true ifndef TOM
+    >       Remove support for xprint
+    >       Remove unused typedef SigProc
+    >       Remove write to never-read variable in InstallWindowColormaps
+    >       Enable compiler warnings
+    >       Silence uninitialized variable warning
+    >       Silence old-style function definition warning in yywrap
+    >       Make atom_names const correct
+    >       Remove redundant declaration of yylineno
+    >       Remove redundant declaration of yyparse
+    >       Remove redundant declaration of yylex
+    >       Replace GCC_PRINTFLIKE with _X_ATTRIBUTE_PRINTF
+    >       Replace GCC_NORETURN with _X_NORETURN
+    >       Remove now unused NoPrintscreens variable
+    >       Split up InitMenus
+    >       Make MultiScreen a local variable
+    >       Make InitFile a local variable
+    >       Make appContext a local variable
+    >       Make FirstScreen a local variable
+    >       Make XtSignalId si static
+    >       Rework dummy variable usage in AddWindow
+    >       Rework dummy variable usage in SetHighlightPixmap
+    >       Rework dummy variable usage in HandleButtonPress
+    >       Rework dummy variable usage in CreateIconManagers
+    >       Rework dummy variable usage in do_string_keyword
+    >       Rework dummy variable usage in IconUp
+    >       Rework dummy variable usage in ExecuteFunction
+    >       Remove global variables JunkRoot, JunkChild
+    >       Remove global variables JunkX, JunkY
+    >       Remove global variables JunkWidth, JunkHeight, JunkBW, JunkDepth, JunkMask
+    >       Remove storage specifier 'register'
+    >       Rename field 'delete' to 'remove' in TitlebarPixmaps
+    >       Rename field 'class' to 'xclass' in TWMWinConfigEntry
+    >       Rename field 'class' to 'xclass' in TwmWindow
+    >       Rename argument 'class' to 'xclass' in LookInList
+    >       Rename argument 'class' to 'xclass' in GetColorFromList
+    >       Rename variable 'new' to 'entry' in splitEntry
+    >       Accomodate different field names when compiling with c++
+    >       Add explicit cast after memory allocation
+    >       Simplify default twmrc generation
+    >       Remove version.c and version.h
+    >       Provide defaults for externally defined symbols
+    >       Add meson as alternative build system
+    >       Add meson builds to CI
+    >       Fix memory leak in SaveYourselfPhase2CB
+    >       Fix memory leak in FindFontSet
+    >       Fix read from uninitialized data
+    >
+    > git tag: twm-1.0.13
+    >
+    > https://xorg.freedesktop.org/archive/individual/app/twm-1.0.13.tar.gz
+    > SHA256: 74ee5391104170f8b98b7af622c8f646e86cc30cce023970946a4c3435dd3cbe  twm-1.0.13.tar.gz
+    > SHA512: 88e272b3074346c1829f2adad532bfbcb82c5beadac32c8268ad6ed13370bb8556b23bc71b5bfee0f7344abc10881e60f48ce6faf958c0b4171ebbb79bbcce90  twm-1.0.13.tar.gz
+    > PGP:  https://xorg.freedesktop.org/archive/individual/app/twm-1.0.13.tar.gz.sig
+    >
+    > https://xorg.freedesktop.org/archive/individual/app/twm-1.0.13.tar.xz
+    > SHA256: 966c4df15757645943a916c1beee4ff4065b44fde00cf01f8477d8c1d0cba2b6  twm-1.0.13.tar.xz
+    > SHA512: bab61865b798869d64fdf6e65ac9affee7ae0acf5523e4dc36e5fc65664ed83fb6ba8f1f7f495c29340e9e3dd00a386a81dcccfa11fc7adf3edda505db2f52b9  twm-1.0.13.tar.xz
+    > PGP:  https://xorg.freedesktop.org/archive/individual/app/twm-1.0.13.tar.xz.sig
+    >
+    > --
+    > Thomas E. Dickey <dickey@invisible-island.net>
+    > https://invisible-island.net
+    
+    Public Key available
+    ------------------------------------------------------
+    Stefan Dirsch (Res. & Dev.)   SUSE Software Solutions Germany GmbH
+    Tel: 0911-740 53 0            Frankenstraße 146
+    FAX: 0911-740 53 479          D-90461 Nürnberg
+    http://www.suse.de            Germany
+    ----------------------------------------------------------------
+    Geschäftsführer: Ivo Totev, Andrew Myers, Andrew McDonald, Boudien Moerman
+    (HRB 36809, AG Nürnberg)
+    ----------------------------------------------------------------
+    
+    >From 68dc6f91963d4798880c5f574fdb8a1fd3b1b0b6 Mon Sep 17 00:00:00 2001
+    From: Stefan Dirsch <sndirsch@suse.de>
+    Date: Mon, 5 May 2025 12:48:29 +0200
+    Subject: [PATCH] src/gen_deftwmrc.sh is not executable, so run it with sh ...
+
+commit 901bfcf0c8a504220ee0dd258a199c1d882b79a6
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 4 10:17:28 2025 -0400
+
+    twm 1.0.13
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a69a46acba5d27f1e4f0afaa47341785c3f2c7c1
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 4 09:43:58 2025 -0400
+
+    issue 5: modify manpage as suggested in issue about f.fullzoom
+    
+    The click on the title bar immediately following maximize window doesn't work
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d33ce0b190aba3eab66b170d94247865c5e55e96
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 27 19:29:07 2025 -0400
+
+    spelling-fixes found by codespell
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 400b594bd95b410fa703bda714167f0386718579
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 27 19:13:32 2025 -0400
+
+    code-cleanup
+    
+    reduces stricter compiler-warnings from gcc15
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 2602cf2852dccbfc47be42850627f14695d55e5e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 27 18:50:21 2025 -0400
+
+    cleanup manpage-format
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit daf8a89c6c5b7d91dc907d1c93fcd440e88a1e8b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Sep 15 12:51:04 2024 -0400
+
+    compiler-warning fixes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5cb04d85053011b905b43831f401ef2d8e5cb3fb
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Sep 15 11:20:04 2024 -0400
+
+    build-fix
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 64edeaaa4c7492d090b4069de2eae5f411ff1cd4
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Mar 16 13:07:19 2024 +0100
+
+    Fix read from uninitialized data
+    
+      Syscall param writev(vector[0]) points to uninitialised byte(s)
+         at 0x4B836C0: writev (writev.c:26)
+         by 0x4C74FBF: ??? (in /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0)
+         by 0x4C753B0: xcb_writev (in /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0)
+         by 0x48B2A24: _XSend (in /usr/lib/x86_64-linux-gnu/libX11.so.6.4.0)
+         by 0x48B3088: _XReply (in /usr/lib/x86_64-linux-gnu/libX11.so.6.4.0)
+         by 0x48AE6FE: XSync (in /usr/lib/x86_64-linux-gnu/libX11.so.6.4.0)
+         by 0x11C523: HandleEnterNotify (events.c:2112)
+         by 0x117847: DispatchEvent (events.c:335)
+         by 0x117921: HandleEvents (events.c:363)
+         by 0x12FCBD: main (twm.c:648)
+       Address 0x5036874 is 148 bytes inside a block of size 16,384 alloc'd
+         at 0x48459F3: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+         by 0x48A23AA: XOpenDisplay (in /usr/lib/x86_64-linux-gnu/libX11.so.6.4.0)
+         by 0x49E5A12: XtOpenDisplay (in /usr/lib/x86_64-linux-gnu/libXt.so.6.0.0)
+         by 0x12EB45: main (twm.c:319)
+       Uninitialised value was created by a stack allocation
+         at 0x12828E: send_clientmessage (menus.c:2861)
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/twm/-/merge_requests/29>
+
+commit a62500505d57a4dc2c77bbbd7d0bfb832a5aa857
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Mar 16 13:07:19 2024 +0100
+
+    Fix memory leak in FindFontSet
+    
+    Valgrind results before:
+    
+      definitely lost: 800 bytes in 23 blocks
+      indirectly lost: 872 bytes in 6 blocks
+        possibly lost: 0 bytes in 0 blocks
+      still reachable: 991,316 bytes in 1,795 blocks
+           suppressed: 0 bytes in 0 blocks
+    
+    Valgrind results after:
+    
+      definitely lost: 200 bytes in 17 blocks
+      indirectly lost: 0 bytes in 0 blocks
+        possibly lost: 0 bytes in 0 blocks
+      still reachable: 918,812 bytes in 994 blocks
+           suppressed: 0 bytes in 0 blocks
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/twm/-/merge_requests/29>
+
+commit e60c2914c354d4725d170e4fe4f14456caccd3cc
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Mar 16 13:07:19 2024 +0100
+
+    Fix memory leak in SaveYourselfPhase2CB
+    
+    Valgrind results before:
+    
+      definitely lost: 981 bytes in 37 blocks
+      indirectly lost: 872 bytes in 6 blocks
+        possibly lost: 0 bytes in 0 blocks
+      still reachable: 991,316 bytes in 1,795 blocks
+           suppressed: 0 bytes in 0 blocks
+    
+    Valgrind results after:
+    
+      definitely lost: 800 bytes in 23 blocks
+      indirectly lost: 872 bytes in 6 blocks
+        possibly lost: 0 bytes in 0 blocks
+      still reachable: 991,316 bytes in 1,795 blocks
+           suppressed: 0 bytes in 0 blocks
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/twm/-/merge_requests/29>
+
+commit 79b0987e63daff97ce9ee1dce883df13668a80c6
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sun Mar 10 21:43:28 2024 +0100
+
+    Add meson builds to CI
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 1ffcb516954add31a225d38675adad1df8fa5d21
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sun Mar 3 12:55:11 2024 +0100
+
+    Add meson as alternative build system
+    
+    Add a note to the readme file to clarify that the default build system is still
+    automake.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 451e1b036d3dd0fddcf54733b5616169ed5ad570
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sun Mar 3 12:55:11 2024 +0100
+
+    Provide defaults for externally defined symbols
+    
+    AM_CPPFLAGS defines several symbols that do not have to be there. By providing
+    default values in twm.h, this list can be reduced in size while still allowing
+    to override these values.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit b603079e08f085a6b23f2fdf3f7eef9ccec86424
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sun Mar 3 12:55:11 2024 +0100
+
+    Remove version.c and version.h
+    
+    These files define only a single variable that is used in only one place.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 9b9c0087c906193e5ac549f8203713fd4eedbf2a
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sun Mar 3 12:55:11 2024 +0100
+
+    Simplify default twmrc generation
+    
+    The logic to generate deftwmrc.c is currently split between Makefile.am and
+    deftwmrc.sed. Consolidate into a single script.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 73c4cf88f3bf4094fd12cffec0147b957ad1e9c6
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 5 05:24:05 2024 -0500
+
+    improve portability for bison/byacc
+    
+    Provide declaration of yyparse(), and alternate declaration of yylex().
+    This works with bison and byacc, as well as different versions of flex.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c2833e0c97f491a1acc87abe09adcd2b3f937688
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 5 04:17:19 2024 -0500
+
+    improve declaration of yylex()
+    
+    Replace the extern declaration of yylex() in gram.y with a
+    definition/use in parse.h, improving portability.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit cebd6e2bab56c12d48ed3aa3c562bf9661595394
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 5 04:10:29 2024 -0500
+
+    amend yylineno change
+    
+    A recent change removed the declaration of yylineno from lex.l,
+    making the program depend on the version of flex.
+    
+    Restore the declaration with an ifdef.
+    Also, remove unused declaration in parse.c
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4b01408715cd10e3bf02eb1e87531917a09c2645
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 5 03:43:57 2024 -0500
+
+    include "gram.h" only from "parse.h"
+    
+    all of the users of (generated) gram.h rely upon (custom) parse.h,
+    and the order of those headers affects portability.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 365a94b62df6144ad016e587f3756d974b6e2018
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Dec 30 20:49:48 2023 +0100
+
+    Add explicit cast after memory allocation
+    
+    Still valid c, but now also valid c++.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 7fe0acdb259c7dd9f3b6214ba16f272da81beadb
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Dec 30 20:49:48 2023 +0100
+
+    Accomodate different field names when compiling with c++
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit abd6ec6e468a067ea072fee9e8ba0303c1e95a2e
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Dec 30 20:49:48 2023 +0100
+
+    Rename variable 'new' to 'entry' in splitEntry
+    
+    'new' is a keyword in c++. Its usage confuses some tools that work
+    with c and c++ source code.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit ea79e73344dfa09a6ed3dd34c4f1383add924b12
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Dec 30 20:49:48 2023 +0100
+
+    Rename argument 'class' to 'xclass' in GetColorFromList
+    
+    'class' is a keyword in c++. Its usage confuses some tools that work
+    with c and c++ source code.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 7ef32a37be9e293fde3c2a18e043a2d4bc9d1eed
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Dec 30 20:49:48 2023 +0100
+
+    Rename argument 'class' to 'xclass' in LookInList
+    
+    'class' is a keyword in c++. Its usage confuses some tools that work
+    with c and c++ source code.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit f63f0a7416793f42030f56a79930b3f76c82a24d
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Dec 30 20:49:48 2023 +0100
+
+    Rename field 'class' to 'xclass' in TwmWindow
+    
+    'class' is a keyword in c++. Its usage confuses some tools that work
+    with c and c++ source code.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 6e5c29e60d0acfeba32829f4aba7d6e7697ca8d1
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Dec 30 20:49:48 2023 +0100
+
+    Rename field 'class' to 'xclass' in TWMWinConfigEntry
+    
+    'class' is a keyword in c++. Its usage confuses some tools that work
+    with c and c++ source code.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 878117d8c70564983afddfb2bb26daa71f25b8c1
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Dec 30 20:49:48 2023 +0100
+
+    Rename field 'delete' to 'remove' in TitlebarPixmaps
+    
+    'delete' is a keyword in c++. Its usage confuses some tools that work
+    with c and c++ source code.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit a0a4604cab350eb6a8bd3cc56cfb35d534fa344b
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Dec 30 20:49:48 2023 +0100
+
+    Remove storage specifier 'register'
+    
+    'register' is an optimization hint to the compiler that is generally
+    not necessary and needlessly prevents using a c++ compiler to compile
+    twm.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 783b31821d87ea551457f4700f796a51f359cfd1
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Remove global variables JunkWidth, JunkHeight, JunkBW, JunkDepth, JunkMask
+    
+    Replace with a local variable following the naming scheme from
+    Identify() in src/menus.c.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit c5a63751f8b4eab72794e56365ead929023f2b94
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Remove global variables JunkX, JunkY
+    
+    Replace with a local variable following the naming scheme from
+    Identify() in src/menus.c.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 6ea386bd98a737a9f54e2ca4216adf45868fd6e4
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Remove global variables JunkRoot, JunkChild
+    
+    Replace with a local variable following the naming scheme from
+    Identify() in src/menus.c.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 08b916e7ab8ea54ee6c38c485f11c9d6da898355
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Rework dummy variable usage in ExecuteFunction
+    
+    twm defines several "junk" variables to use with functions like
+    XQueryPointer or XGetGeometry. In some instances, the returned
+    values are actually used, which makes the code confusing and hard
+    to reason about. Use dedicated variables in those cases.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 7b24db53fc606a94067d90e8c64d8e7c8c75c12b
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Rework dummy variable usage in IconUp
+    
+    twm defines several "junk" variables to use with functions like
+    XQueryPointer or XGetGeometry. In some instances, the returned
+    values are actually used, which makes the code confusing and hard
+    to reason about. Use dedicated variables in those cases.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 24bfa418612288c4847bcfe088aba05ce402d1d2
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Rework dummy variable usage in do_string_keyword
+    
+    twm defines several "junk" variables to use with functions like
+    XQueryPointer or XGetGeometry. In some instances, the returned
+    values are actually used, which makes the code confusing and hard
+    to reason about. Use dedicated variables in those cases.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 9ad7b060e055f08ff39ee569f1cf40c7ac56e321
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Rework dummy variable usage in CreateIconManagers
+    
+    twm defines several "junk" variables to use with functions like
+    XQueryPointer or XGetGeometry. In some instances, the returned
+    values are actually used, which makes the code confusing and hard
+    to reason about. Use dedicated variables in those cases.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit b9f33162eaad31988e3595ddcd3efd97ee2da0aa
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Rework dummy variable usage in HandleButtonPress
+    
+    twm defines several "junk" variables to use with functions like
+    XQueryPointer or XGetGeometry. In some instances, the returned
+    values are actually used, which makes the code confusing and hard
+    to reason about. Use dedicated variables in those cases.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit f6fb5b536cd2a96ef1ac26599fd48ef89a628a77
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Rework dummy variable usage in SetHighlightPixmap
+    
+    twm defines several "junk" variables to use with functions like
+    XQueryPointer or XGetGeometry. In some instances, the returned
+    values are actually used, which makes the code confusing and hard
+    to reason about. Use dedicated variables in those cases.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 895e0e6630eea3cea07d4e4f47f0264ea5263c8e
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Rework dummy variable usage in AddWindow
+    
+    twm defines several "junk" variables to use with functions like
+    XQueryPointer or XGetGeometry. In some instances, the returned
+    values are actually used, which makes the code confusing and hard
+    to reason about. Use dedicated variables in those cases.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 0182535025b0864d6e0cf165ab14756bfbe6d015
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Make XtSignalId si static
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 81cb173c5001f28ad178e9a9f59f521a13e66e92
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Make FirstScreen a local variable
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit cf9a35db8381f9b809465306aec3bcfe3bc1dc0d
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Make appContext a local variable
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit d812d0884c926be4088a4e636807509e05d77a5f
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Make InitFile a local variable
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit b8fe4a7270502dd9242bd5585b67f3afbdbbbadb
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Make MultiScreen a local variable
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 90058211800fd45ee7cc8408278d3b200bdfd2e5
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Split up InitMenus
+    
+    Preparation for the removal of FirstScreen: Separate code that is
+    executed for all screens from code that is executed for only the
+    first screen.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 9e42567818fe26ed97e05cccc0f9b74a2f523ce6
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Sat Jan 20 16:07:00 2024 +0100
+
+    Remove now unused NoPrintscreens variable
+    
+    Support for xprint was removed in commit 0ce52bc9ed.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit d3c1ede2480af93cc4cfefb8ba48798e6a4af8ea
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 1 12:22:46 2024 +0100
+
+    Replace GCC_NORETURN with _X_NORETURN
+    
+    This silences all "function might be candidate for attribute 'noreturn'"
+    warnings. Add to HandleEvent as well, as that function never returns.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 16ed4f51c297ab20c62273fb16e5346ec72f01d7
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 1 12:22:46 2024 +0100
+
+    Replace GCC_PRINTFLIKE with _X_ATTRIBUTE_PRINTF
+    
+    This silences all "function '...' might be a candidate for 'gnu_printf'
+    format attribute" warnings.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit dd6121dd4d9218b29f1544d244c2622f6a502a18
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 1 12:22:46 2024 +0100
+
+    Remove redundant declaration of yylex
+    
+    yylex is already declared in (the generated) lex.c. This silences
+    a "redundant redeclaration of 'yylex'" warning.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 3a4cc8b4b2baeb6b2e043c25495aede08a649641
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 1 12:22:46 2024 +0100
+
+    Remove redundant declaration of yyparse
+    
+    yyparse is already declared in (the generated) gram.h. This silences
+    a "redundant redeclaration of 'yyparse'" warning.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit d26411efbc69e5350d9ae7cebbdb2e91738e3b8e
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 1 12:22:46 2024 +0100
+
+    Remove redundant declaration of yylineno
+    
+    yylineno is already declared in (the generated) gram.h. This silences
+    a "redundant redeclaration of 'yylineno'" warning.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit f810178b1fae09be1ac15e223a84ddf2031eb93f
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 1 12:22:46 2024 +0100
+
+    Make atom_names const correct
+    
+    Silence some "initialization discards 'const' qualifier from pointer
+    target type" warnings.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit c7eeb055125892fdea94491e57bc26fa61258a71
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 1 12:22:46 2024 +0100
+
+    Silence old-style function definition warning in yywrap
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 3cd3dd5b0b7cfe3888ae6f805a8f4c59f034834e
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 1 12:22:46 2024 +0100
+
+    Silence uninitialized variable warning
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit baec4a82269adb3b07e5f60f410f104150331dbf
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Mon Jan 1 12:22:46 2024 +0100
+
+    Enable compiler warnings
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 5c3051ed5ef6475c84ada998e9c4344107e800c7
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Wed Dec 27 23:08:57 2023 +0100
+
+    Remove write to never-read variable in InstallWindowColormaps
+    
+    The variable `n` is written to every iteration of the loop, but never
+    read. It is overwritten (and read) in the next loop though. Remove the
+    dead store.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 87a9086d4bce707d60ee6a024933686dee54fc6a
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Wed Dec 27 23:08:57 2023 +0100
+
+    Remove unused typedef SigProc
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 0ce52bc9ed32d7b6d1a588e5c0813fa1327bc690
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Wed Dec 27 23:08:57 2023 +0100
+
+    Remove support for xprint
+    
+    xprint is deprecated and was removed from xorg in 2008.
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit f426fa565397b4df53f3f534d3c2bc7bc5857f59
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Wed Dec 27 23:08:57 2023 +0100
+
+    Remove always-true ifndef TOM
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 9f68ff072905dba3197deae8d8b275bbacd3f728
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Wed Dec 27 23:08:57 2023 +0100
+
+    Remove disabled code
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit a752fdad02f5eba89c53a53e4a212cf31cbf4670
+Author: Tim Wiederhake <twied@gmx.net>
+Date:   Wed Dec 27 23:08:57 2023 +0100
+
+    Fix include guard names
+    
+    Names that begin with an underscore ('_') are reserved. Follow the usual
+    practice of naming the include guard of file "foo.h" "FOO_H", as is already
+    done in "icons.h".
+    
+    Signed-off-by: Tim Wiederhake <twied@gmx.net>
+
+commit 98316f44c03edaa55bf75c4ba2b3b9e3ec16efc6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 2 14:45:19 2023 -0800
+
+    configure: pass noyywrap to AC_PROG_LEX if using autoconf 2.70 or later
+    
+    Raises minimum autoconf version from 2.60 to 2.64 for m4_version_prereq
+    
+    Clears autoconf warning:
+    configure.ac:47: warning: AC_PROG_LEX without either yywrap or noyywrap is obsolete
+    ./lib/autoconf/programs.m4:743: _AC_PROG_LEX is expanded from...
+    ./lib/autoconf/programs.m4:736: AC_PROG_LEX is expanded from...
+    configure.ac:47: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ce1fc38396864c89110339601398678b995676aa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 08:56:55 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77fc71cb17a0bca168737c48ed836a7ae2c6f74a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3e1b80abc029e186a41acaddbb79c0a0e9a2f4ee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 11:35:15 2022 -0700
+
+    twm 1.0.12
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 216d28095911507db38d8b15eaedd87fb3faa6d1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 11:09:26 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1ec1f06dafe5510426ba2d3396d65acfd49b347b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 12:10:01 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 12ae76feef16024a0911b0e61e64266b449599e7
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jun 21 13:04:21 2020 -0400
+
+    quiet a misleading warning in grammar
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 58a64fd73dd7a840fadebbc81126282cf3979b30
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jun 21 12:15:01 2020 -0400
+
+    issue #8: twm displays all windows as "Untitled"
+    
+    adapt the suggestion to use XFetchName to work around a system whose locale
+    support is broken, but rather than break existing configurations, use that
+    call as a fallback when the existing/working calls fail.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a754e9f5c5735787a8e22839824a33546a9c43ef
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jun 21 11:37:21 2020 -0400
+
+    mention newer behavior of -q/-v options
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a4b14ca34b68f5a6a496aec53dafd4ee06222f83
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jun 21 11:31:27 2020 -0400
+
+    X11R5 change lost the update for yylineno needed to make parse messages
+    useful; a subsequent X11R6 change made the behavior a little worse.
+    This change repairs that old damage.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ebaf16b08d739e798b36a0bc2ff139d068612d4d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jun 21 09:47:58 2020 -0400
+
+    include twm.h in header files which rely upon its definitions
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 68703413c5d6d800f0f79d08ad51a86dc53713ce
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jun 21 09:25:49 2020 -0400
+
+    indent lex/yacc files using xxx-indent (twm-indent uses GNU indent, which
+    does not handle those files).
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8a43400ccf2b23f60d1101ea4d348058e7ad3c36
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jun 21 09:18:27 2020 -0400
+
+    add/use new function parseWarning, which honors -v/-q options
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fc19a82a10dc797605d6cb5d9028685644c6db3d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jun 20 05:28:14 2020 -0400
+
+    make the "-V" version print less cluttered (and more like most programs)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d2690bc70d707b7a3a49839787d20eabc138e391
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Jun 19 20:27:03 2020 -0400
+
+    use new warning-message functions in the remaining places where suitable,
+    since -q option can be used to silence those if wanted
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 248be9688c23f249f1ecf1860f6f4cb09e56fab2
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Jun 19 20:23:42 2020 -0400
+
+    add/use functions to make warning messages more consistently use the program name as a prefix
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a9d6701d977700b18e31a70cc7982431bc702095
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Jun 18 18:34:59 2020 -0400
+
+    fix the cppcheck style- and format-warnings
+    also bump version to 1.0.11.1, reflecting ongoing work since release
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d2b4f0598086d4dd5caf3cdc218d0f97c37229ac
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Jun 18 04:22:11 2020 -0400
+
+    remove clutter not needed with Xorg
+
+commit 54461320a78cb69b2a5fa3c3d27dd69d9cdd31da
+Merge: b356cd5 46e7ae0
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jun 17 16:54:32 2020 -0400
+
+    Merge branch 'master' into dickey
+
+commit 46e7ae05d6fdd700364cb48e27f57e249e958f95
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jun 17 16:50:52 2020 -0400
+
+    allow most options to be long/abbreviatable for consistency,
+    and document (except for the print-extension) all of the options
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8f1b54ee608af86d448a9981257fa58727dfe6fc
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jun 17 15:56:04 2020 -0400
+
+    add "-V" version-message
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 2741e9b381570f362732061dbca7835c8c185e9b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jun 17 15:27:52 2020 -0400
+
+    eliminate some unnecessary(?) goto statements
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 49e2c2127743e702154bc4efc040be7bfaaf6433
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jun 17 15:07:37 2020 -0400
+
+    adapted/updated patch from Debian #956434
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit b356cd5684a2e6a3a8987390ceb99c67c2a91b5e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jun 17 15:07:37 2020 -0400
+
+    adapted/updated patch from Debian #956434
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit b6311b0699992036e81a1ed58906114fc517ae7d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jun 16 20:42:13 2020 -0400
+
+    updated patch to work with code, reflect a change made in 2016...
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 60bbd1b24a640e26a3f71f8eb35b5c031642a5e5
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jun 16 20:25:31 2020 -0400
+
+    use Debian's package-files as starting point for test-packages
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 08f44086320c6bc5f2c7eb6457a0d53192832805
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jun 16 18:36:50 2020 -0400
+
+    eliminate a fixed-size buffer in Execute() function.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ac802fe10221ef3c6426ac1ebf4a250f189d1228
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jun 15 20:05:53 2020 -0400
+
+    issue #1: twm random window placement handles large windows poorly
+    
+    report/patch by Preston Crow for improved window placement
+    (reindented to fit with current sources)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
 commit c2859ef3eb3b9ab2747d74c7a5d0235f8622d23e
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sun Jun 14 16:54:53 2020 -0700

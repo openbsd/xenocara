@@ -92,8 +92,8 @@ am_twm_OBJECTS = add_window.$(OBJEXT) cursor.$(OBJEXT) \
 	deftwmrc.$(OBJEXT) events.$(OBJEXT) gc.$(OBJEXT) \
 	iconmgr.$(OBJEXT) icons.$(OBJEXT) list.$(OBJEXT) \
 	menus.$(OBJEXT) parse.$(OBJEXT) resize.$(OBJEXT) \
-	session.$(OBJEXT) twm.$(OBJEXT) util.$(OBJEXT) \
-	version.$(OBJEXT) gram.$(OBJEXT) lex.$(OBJEXT)
+	session.$(OBJEXT) twm.$(OBJEXT) util.$(OBJEXT) gram.$(OBJEXT) \
+	lex.$(OBJEXT)
 twm_OBJECTS = $(am_twm_OBJECTS)
 am__DEPENDENCIES_1 =
 twm_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
@@ -194,7 +194,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -205,11 +204,9 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
-EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
-GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -312,14 +309,10 @@ AM_YFLAGS = -d
 rcdir = ${datadir}/X11/twm
 dist_rc_DATA = system.twmrc
 AM_CPPFLAGS = \
-	-DAPP_NAME=\"twm\"					\
-	-DAPP_CLASS=\"twm\"					\
 	-DAPP_VERSION=\"$(VERSION)\"				\
-	-DXVENDORNAME=\"The\ X.Org\ Foundation\"		\
-	-DXORG_RELEASE=\"Release\ $(VERSION)\"			\
-	-DSYSTEM_INIT_FILE=\"${rcdir}/system.twmrc\"
+	-DDATADIR=\"${datadir}\"
 
-AM_CFLAGS = $(TWM_CFLAGS) $(XRANDR_CFLAGS)
+AM_CFLAGS = $(TWM_CFLAGS) $(XRANDR_CFLAGS) $(CWARNFLAGS)
 twm_LDADD = $(TWM_LIBS)   $(XRANDR_LIBS)
 twm_SOURCES = \
 	add_window.c	\
@@ -330,6 +323,7 @@ twm_SOURCES = \
 	events.h	\
 	gc.c		\
 	gc.h		\
+	gen_deftwmrc.sh \
 	iconmgr.c	\
 	iconmgr.h	\
 	icons.c		\
@@ -349,13 +343,11 @@ twm_SOURCES = \
 	twm.h		\
 	util.c		\
 	util.h		\
-	version.c	\
-	version.h	\
 	gram.y		\
 	lex.l
 
 BUILT_SOURCES = gram.h deftwmrc.c
-EXTRA_DIST = deftwmrc.sed siconify.bm
+EXTRA_DIST = siconify.bm
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -460,7 +452,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/session.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/twm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -729,15 +720,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_rcDATA
 
 
 deftwmrc.c:  system.twmrc
-	$(AM_V_at)rm -f $@ ;							\
-	echo '/* ' >>$@ ;							\
-	echo ' * This file is generated automatically from the default' >>$@ ;	\
-	echo ' * twm bindings file system.twmrc by the twm Makefile.' >>$@ ;	\
-	echo ' */' >>$@ ;							\
-	echo '' >>$@ ;								\
-	echo 'const unsigned char *defTwmrc[] = {' >>$@ ;				\
-	$(SED) -f ${srcdir}/deftwmrc.sed < ${srcdir}/system.twmrc >>$@ ;	\
-	echo '    (const unsigned char *) 0 };' >>$@
+	sh $(srcdir)/gen_deftwmrc.sh $@ ${.CURDIR}/system.twmrc
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

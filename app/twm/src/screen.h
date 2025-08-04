@@ -31,8 +31,8 @@ in this Software without prior written authorization from The Open Group.
  *
  ***********************************************************************/
 
-#ifndef _SCREEN_
-#define _SCREEN_
+#ifndef SCREEN_H
+#define SCREEN_H
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -56,7 +56,7 @@ typedef struct _TitlebarPixmaps {
     Pixmap resize;
     Pixmap question;
     Pixmap menu;
-    Pixmap delete;
+    Pixmap remove;
 } TitlebarPixmaps;
 
 typedef struct ScreenInfo {
@@ -251,11 +251,9 @@ typedef struct ScreenInfo {
     FuncKey FuncKeyRoot;
 } ScreenInfo;
 
-extern int MultiScreen;
 extern int NumScreens;
 extern ScreenInfo **ScreenList;
 extern ScreenInfo *Scr;
-extern int FirstScreen;
 
 #define PPOS_OFF 0
 #define PPOS_ON 1
@@ -263,4 +261,4 @@ extern int FirstScreen;
 /* may eventually want an option for having the PPosition be the initial
    location for the drag lines */
 
-#endif                          /* _SCREEN_ */
+#endif /* SCREEN_H */

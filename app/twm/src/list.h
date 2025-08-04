@@ -57,8 +57,8 @@ in this Software without prior written authorization from The Open Group.
  *
  **********************************************************************/
 
-#ifndef _LIST_
-#define _LIST_
+#ifndef LIST_H
+#define LIST_H
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -70,9 +70,9 @@ extern void AddToList(name_list ** list_head, char *name, char *ptr);
 extern void FreeList(name_list ** list);
 
 extern int GetColorFromList(name_list * list_head, const char *name,
-                            XClassHint *class, Pixel *ptr);
+                            XClassHint *xclass, Pixel *ptr);
 extern char *LookInList(name_list * list_head, const char *name,
-                        XClassHint *class);
+                        XClassHint *xclass);
 extern char *LookInNameList(name_list * list_head, const char *name);
 
-#endif                          /* _LIST_ */
+#endif /* LIST_H */

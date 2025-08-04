@@ -58,8 +58,8 @@ from The Open Group.
  * 10-Oct-90 David M. Sternlicht        Storing saved colors on root
  ***********************************************************************/
 
-#ifndef _TWM_
-#define _TWM_
+#ifndef TWM_H
+#define TWM_H
 /* *INDENT-OFF* */
 
 #ifdef HAVE_CONFIG_H
@@ -74,16 +74,24 @@ from The Open Group.
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
 
-#ifndef GCC_PRINTFLIKE
-#if defined(GCC_PRINTF) && !defined(printf)
-#define GCC_PRINTFLIKE(fmt,var) __attribute__((format(printf,fmt,var)))
-#else
-#define GCC_PRINTFLIKE(fmt,var) /*nothing*/
-#endif
+#ifndef APP_NAME
+#define APP_NAME "twm"
 #endif
 
-#ifndef GCC_NORETURN
-#define GCC_NORETURN _X_NORETURN
+#ifndef APP_CLASS
+#define APP_CLASS "twm"
+#endif
+
+#ifndef APP_VERSION
+#define APP_VERSION "unknown"
+#endif
+
+#ifndef DATADIR
+#define DATADIR "/usr/local/share"
+#endif
+
+#ifndef XVENDORNAME
+#define XVENDORNAME "The X.Org Foundation"
 #endif
 
 #ifndef WithdrawnState
@@ -91,8 +99,6 @@ from The Open Group.
 #endif
 
 #define PIXEL_ALREADY_TYPEDEFED /* for Xmu/Drawing.h */
-
-typedef void (*SigProc) (int);  /* type of function returned by signal() */
 
 #define BW 2                    /* border width */
 #define BW2 4                   /* border width  * 2 */
@@ -261,7 +267,7 @@ typedef struct TwmWindow {
     XSizeHints hints;           /* normal hints */
     XWMHints *wmhints;          /* WM hints */
     Window group;               /* group ID */
-    XClassHint class;
+    XClassHint xclass;
     struct WList *list;
     /***********************************************************************
      * color definitions per window
@@ -317,7 +323,7 @@ typedef struct TWMWinConfigEntry {
     int tag;
     char *client_id;
     char *window_role;
-    XClassHint class;
+    XClassHint xclass;
     char *wm_name;
     int wm_command_count;
     char **wm_command;
@@ -357,7 +363,6 @@ extern void
 ComputeWindowTitleOffsets(TwmWindow *tmp_win, int width, Bool squeeze);
 extern char *ProgramName;
 extern Display *dpy;
-extern XtAppContext appContext;
 extern Window ResizeWindow;     /* the window we are resizing */
 extern int HasShape;            /* this server supports Shape extension */
 extern int HasSync;             /* this server supports SYNC extension */
@@ -387,11 +392,6 @@ extern int ParseError;
 
 extern int HandlingEvents;
 
-extern Window JunkRoot;
-extern Window JunkChild;
-extern int JunkX;
-extern int JunkY;
-extern unsigned int JunkWidth, JunkHeight, JunkBW, JunkDepth, JunkMask;
 extern XGCValues Gcv;
 extern int InfoLines;
 extern char Info[][INFO_SIZE];
@@ -404,10 +404,10 @@ NewBitmapCursor(Cursor *cp, char *source, char *mask);
 extern Pixmap
 CreateMenuIcon(int height, unsigned int *widthp, unsigned int *heightp);
 
-extern void twmError(const char *, ...) GCC_PRINTFLIKE(1,2) GCC_NORETURN;
-extern void twmWarning(const char *, ...) GCC_PRINTFLIKE(1,2);
-extern void twmVerbose(const char *, ...) GCC_PRINTFLIKE(1,2);
-extern void twmMessage(const char *, ...) GCC_PRINTFLIKE(1,2);
+extern void twmError(const char *, ...) _X_ATTRIBUTE_PRINTF(1,2) _X_NORETURN;
+extern void twmWarning(const char *, ...) _X_ATTRIBUTE_PRINTF(1,2);
+extern void twmVerbose(const char *, ...) _X_ATTRIBUTE_PRINTF(1,2);
+extern void twmMessage(const char *, ...) _X_ATTRIBUTE_PRINTF(1,2);
 
 extern Bool ErrorOccurred;
 extern XErrorEvent LastErrorEvent;
@@ -418,12 +418,7 @@ extern Bool RestartPreviousState;
 extern Bool
 GetWMState(Window w, int *statep, Window *iwp);
 
-extern int
-yyparse(void);
-extern int
-yylex(void);
-
-extern void parseWarning(const char *, ...) GCC_PRINTFLIKE(1,2);
+extern void parseWarning(const char *, ...) _X_ATTRIBUTE_PRINTF(1,2);
 
 extern Atom TwmAtoms[];
 
@@ -451,4 +446,4 @@ extern int XrandrErrorBase;
 #define _XA_WM_WINDOW_ROLE              TwmAtoms[10]
 
 /* *INDENT-ON* */
-#endif                          /* _TWM_ */
+#endif /* TWM_H */

@@ -21,3 +21,8 @@ For patch submission instructions, see:
 
   https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 
+To build, run:
+  ./autogen.sh
+  make
+
+The meson based build system is experimental.

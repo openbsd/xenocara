@@ -57,8 +57,8 @@ in this Software without prior written authorization from The Open Group.
  *
  **********************************************************************/
 
-#ifndef _ADD_WINDOW_
-#define _ADD_WINDOW_
+#ifndef ADD_WINDOW_H
+#define ADD_WINDOW_H
 
 #include "iconmgr.h"
 
@@ -82,4 +82,4 @@ extern int AddingY;
 extern int AddingW;
 extern int AddingH;
 
-#endif                          /* _ADD_WINDOW_ */
+#endif /* ADD_WINDOW_H */

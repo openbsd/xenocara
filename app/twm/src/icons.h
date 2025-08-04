@@ -25,7 +25,7 @@ in this Software without prior written authorization from The Open Group.
 
 /**********************************************************************
  *
- * Icon releated definitions
+ * Icon related definitions
  *
  * 10-Apr-89 Tom LaStrange        Initial Version.
  *
@@ -57,4 +57,4 @@ extern void AddIconRegion(char *geom, int grav1, int grav2,
                           int stepx, int stepy);
 extern void CreateIconWindow(TwmWindow *tmp_win, int def_x, int def_y);
 
-#endif                          /* ICONS_H */
+#endif /* ICONS_H */

@@ -149,6 +149,8 @@ NewBitmapCursor(Cursor *cp, char *source, char *mask)
     int sx, sy, mx, my;
     unsigned int sw, sh, mw, mh;
     Pixmap spm, mpm;
+    unsigned udummy = 0;
+    Window wdummy = None;
 
     spm = GetBitmap(source);
     if ((hotx = HotX) < 0)
@@ -159,8 +161,8 @@ NewBitmapCursor(Cursor *cp, char *source, char *mask)
 
     /* make sure they are the same size */
 
-    XGetGeometry(dpy, spm, &JunkRoot, &sx, &sy, &sw, &sh, &JunkBW, &JunkDepth);
-    XGetGeometry(dpy, mpm, &JunkRoot, &mx, &my, &mw, &mh, &JunkBW, &JunkDepth);
+    XGetGeometry(dpy, spm, &wdummy, &sx, &sy, &sw, &sh, &udummy, &udummy);
+    XGetGeometry(dpy, mpm, &wdummy, &mx, &my, &mw, &mh, &udummy, &udummy);
     if (sw != mw || sh != mh) {
         twmWarning("cursor bitmaps \"%s\" and \"%s\" not the same size\n",
                    source, mask);

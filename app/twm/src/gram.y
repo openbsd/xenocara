@@ -100,7 +100,6 @@ static int color;
 int mods = 0;
 unsigned int mods_used = (ShiftMask | ControlMask | Mod1Mask);
 
-extern int yylineno;
 static void yyerror(const char *s);
 
 %}
@@ -542,7 +541,7 @@ win_entries     : /* Empty */
                 ;
 
 win_entry       : string                { if (Scr->FirstTime)
-                                            AddToList(list, $1, 0);
+                                            AddToList(list, $1, NULL);
                                         }
                 ;
 
@@ -666,9 +665,9 @@ yyerror(const char *s)
 static void
 RemoveDQuote(char *str)
 {
-    register char *i, *o;
-    register int n;
-    register int count;
+    char *i, *o;
+    int n;
+    int count;
 
     for (i = str + 1, o = str; *i && *i != '\"'; o++) {
         if (*i == '\\') {
