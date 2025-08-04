@@ -73,6 +73,11 @@ int main (int argc, char *argv[]) {
   /* parse the command line */
     for (int i = 1; i < argc; ++i) {
 	char **argPtr = NULL;
+	const char *argn = argv[i];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
 	if (!strcmp (argv[i], "-display"))
 	    argPtr = &dpyName;
 	else if (!strcmp (argv[i], "nscreens"))
@@ -83,8 +88,11 @@ int main (int argc, char *argv[]) {
 	} else if (!strcmp (argv[i], "options")) {
 	    func = OPTIONS;
 	    argPtr = &funcArg;
-	} else if (!strcmp (argv[i], "-version")) {
+	} else if (!strcmp (argn, "-version")) {
 	    puts(PACKAGE_STRING);
+	    return 0;
+	} else if (!strcmp (argn, "-help")) {
+	    printUsage ();
 	    return 0;
 	} else {
 	    fprintf (stderr, "%s: unrecognized argument '%s'\n",

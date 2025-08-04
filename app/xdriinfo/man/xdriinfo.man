@@ -1,19 +1,22 @@
-.\" $XFree86$
-.TH xdriinfo 1 __vendorversion__
+.TH xdriinfo 1 2025-03-24 __vendorversion__
 .SH NAME
 xdriinfo \- query configuration information of DRI drivers
 .SH SYNOPSIS
 .B xdriinfo
-[\-display \fIdisplayname\fP] [-version] [command]
+[\fB\-display\fP \fIdisplayname\fP] [\fB\-help\fP|\fB\-version\fP] [\fIcommand\fP]
 .SH DESCRIPTION
-\fIxdriinfo\fP can be used to query configuration information of
-direct rendering drivers. If no command argument is specified it lists
+\fBxdriinfo\fP can be used to query configuration information of
+direct rendering drivers.
+If no command argument is specified it lists
 the names of the direct rendering drivers for all screens.
 .PP
 Valid options are:
 .TP
 .B -display
 Specifies X server to connect to.
+.TP
+.B -help
+Print the program usage and exit.
 .TP
 .B -version
 Print the program version and exit.
@@ -27,20 +30,20 @@ Print the number of screens.
 Print the name of the direct rendering driver for \fIscreen\fP.
 .TP
 .B options \fIscreen|driver\fP
-Print the XML document describing the configuration options of a
-driver. The driver can be specified directly by \fIdriver\fP name or
-indirectly by \fIscreen\fP number. If the driver name is specified
-directly then no X connection is needed.
+Print the XML document describing the configuration options of a driver.
+The driver can be specified directly by \fIdriver\fP name or
+indirectly by \fIscreen\fP number.
+If the driver name is specified directly then no X connection is needed.
 .SH ENVIRONMENT
 .TP
 .B DISPLAY
 The default display.
 .SH "SEE ALSO"
-.IR X (__miscmansuffix__),
-.IR xdpyinfo (__appmansuffix__),
-.IR xwininfo (__appmansuffix__),
-.IR xvinfo (__appmansuffix__),
-.IR glxinfo (__appmansuffix__),
-.IR xprop (__appmansuffix__)
+.BR X (__miscmansuffix__),
+.BR xdpyinfo (__appmansuffix__),
+.BR xwininfo (__appmansuffix__),
+.BR xvinfo (__appmansuffix__),
+.BR glxinfo (__appmansuffix__),
+.BR xprop (__appmansuffix__)
 .SH AUTHOR
 Felix Kuehling

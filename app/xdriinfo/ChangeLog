@@ -1,3 +1,41 @@
+commit 7079631b641a654d94526924e9ebc358a79f859e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 26 16:33:17 2025 -0700
+
+    xdriinfo 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 82b670aa081490b58eceb92a9578a82b0bec49ec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 24 18:32:42 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xdriinfo/-/merge_requests/5>
+
+commit 3923dbb0bd3d01f535a162803a9a9b3fb9bec0bb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 24 18:25:56 2025 -0700
+
+    Add -help option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xdriinfo/-/merge_requests/5>
+
+commit 84891e3b6761c567cfb6ccdec378b3714fb6fa9a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 8 14:36:24 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xdriinfo/-/merge_requests/4>
+
 commit 149e46f06a661bd51f3a247dd41a49b553fdca65
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Dec 19 18:33:43 2022 -0800
