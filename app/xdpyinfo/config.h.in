@@ -3,11 +3,11 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
-
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
@@ -72,6 +72,9 @@
 /* Define to 1 if you have the <X11/extensions/XKB.h> header file. */
 #undef HAVE_X11_EXTENSIONS_XKB_H
 
+/* Define to 1 if you have the <X11/extensions/Xpresent.h> header file. */
+#undef HAVE_X11_EXTENSIONS_XPRESENT_H
+
 /* Define to 1 if you have the <X11/extensions/Xrender.h> header file. */
 #undef HAVE_X11_EXTENSIONS_XRENDER_H
 
@@ -114,7 +117,9 @@
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
 
 /* Version number of package */

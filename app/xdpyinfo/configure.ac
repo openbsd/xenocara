@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xdpyinfo], [1.3.4],
+AC_INIT([xdpyinfo], [1.4.0],
 	[https://gitlab.freedesktop.org/xorg/app/xdpyinfo/-/issues], [xdpyinfo])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -136,6 +136,12 @@ PKG_CHECK_MODULES(DPY_XTST, xtst,
 	[SAVE_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS $DPY_XTST_CFLAGS $DPY_X11_CFLAGS"
 	AC_CHECK_HEADERS([X11/extensions/record.h],,,[#include <X11/Xlib.h>])
+	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
+
+PKG_CHECK_MODULES(DPY_XPRESENT, [xpresent xrandr >= 1.2],
+	[SAVE_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS $DPY_XPRESENT_CFLAGS $DPY_X11_CFLAGS"
+	AC_CHECK_HEADERS([X11/extensions/Xpresent.h],,,[#include <X11/Xlib.h>])
 	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
 
 dnl Allow checking code with lint, sparse, etc.

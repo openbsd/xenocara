@@ -1,3 +1,103 @@
+commit 7fe49a22498b9438a15d5d9fdef55d5d832b1672
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 26 16:19:13 2025 -0700
+
+    xdpyinfo 1.4.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1a18e2bed4a514483f2db8bd20a2a806913e1236
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 26 16:17:08 2025 -0700
+
+    Fix alignment of -help description in -help output
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 032913e1f136d356bca485114674a7185786517c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 20 17:28:33 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xdpyinfo.1:25:16: WARNING: cannot parse date, using it verbatim: TH xdpyinfo 1.3.4
+    mandoc: xdpyinfo.1:35:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xdpyinfo.1:60:2: WARNING: skipping paragraph macro: PP empty
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xdpyinfo/-/merge_requests/16>
+
+commit e7a8a6808d59c1421472130387397f9b284bb4fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 23 16:45:48 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xdpyinfo/-/merge_requests/15>
+
+commit 638506d9280ab6c1efebba81e8988cbe46e9d5d9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 23 16:36:30 2025 -0700
+
+    Add -help option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xdpyinfo/-/merge_requests/15>
+
+commit eba6d3990d9b2de2a869d0c336ecb53f50d3460c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 8 12:51:22 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xdpyinfo/-/merge_requests/14>
+
+commit f579f7e654be0792294a299a32cc0d6f80d74e7e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 14:36:31 2024 -0700
+
+    Present: add per-crtc capabilities to -ext output
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xdpyinfo/-/merge_requests/13>
+
+commit 998281c7a865da06d9c6fb832484a20d9f9e5e21
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 14:17:08 2024 -0700
+
+    Present: add -ext present that prints version & screen capabilities
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xdpyinfo/-/merge_requests/13>
+
+commit 4755b7bacdb77cd0bb47e8be83372e4dfa135bfe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 13:35:11 2024 -0700
+
+    XFree86-DGA: -ext all shoudn't exit on XF86DGAClientNotLocal error
+    
+    Allows xdpyinfo -ext all to run to completion on remote display,
+    instead of aborting partway through the extension list.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xdpyinfo/-/merge_requests/13>
+
+commit d14333b852377f1e43ee2fe0fc737453e6dfccd9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 13 15:18:27 2023 -0700
+
+    gitlab CI: Update to latest CI templates & Debian stable release
+    
+    Current template fails to rebuild the CI container with the current
+    Debian stable release (a new release since the last update)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ea4083ccb2a5ce4252acabeb2eb7bf49f7be25e0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 27 16:58:51 2023 -0700
@@ -1071,7 +1171,7 @@ Date:   Fri Jul 8 04:54:09 2005 +0000
         build)
 
 commit d99fbcde4c892e8d84e02b40ed3f5862a731e9c2
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 19:56:47 2005 +0000
 
     Add buildsystem for xdpyinfo
@@ -1107,7 +1207,7 @@ Date:   Thu Sep 2 05:50:38 2004 +0000
         libXaw.
 
 commit a667763d5b733f5ae2d8a3ca7e1e99d3deed2830
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Aug 16 16:36:15 2004 +0000
 
     As discussed and agreed on on the release-wranglers meeting of August 16,

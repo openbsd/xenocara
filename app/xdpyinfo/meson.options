@@ -1,0 +1,27 @@
+option(
+  'dga',
+  type: 'feature',
+  value : 'enabled',
+  description: 'Enable XFree86-DGA support (default is enabled)',
+)
+
+option(
+  'dmx',
+  type: 'feature',
+  value : 'disabled',
+  description: 'Enable DMX support (default is disabled)',
+)
+
+option(
+  'xf86misc',
+  type: 'feature',
+  value : 'disabled',
+  description: 'Enable XFree86-Misc support (default is disabled)',
+)
+
+option(
+  'xinerama',
+  type: 'feature',
+  value : 'enabled',
+  description: 'Enable Xinerama support (default is enabled)',
+)

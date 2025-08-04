@@ -22,18 +22,17 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.TH XDPYINFO 1 __xorgversion__
+.TH XDPYINFO 1 2025-03-23 __xorgversion__
 .SH NAME
 xdpyinfo \- display information utility for X
 .SH SYNOPSIS
-.B "xdpyinfo"
-[\-display \fIdisplayname\fP]
-[\-queryExtensions]
-[\-ext \fIextension-name\fP]
-[-version]
+.nf
+\fBxdpyinfo\fR [\fB\-display\fR \fIdisplayname\fP] [\fB\-queryExtensions\fR] \
+[\fB\-ext\fR \fIextension-name\fP]
+         [\fB\-help\fR | \fB\-version\fR]
+.fi
 .SH DESCRIPTION
-.PP
-.I Xdpyinfo
+.B Xdpyinfo
 is a utility for displaying information about an X server.  It is used to
 examine the
 capabilities of a server, the predefined values for various parameters used
@@ -48,25 +47,27 @@ to be loaded, which can be slow and can consume significant server resources.
 .PP
 Detailed information about a particular extension is displayed with the
 \fB\-ext\fP \fIextensionName\fP option.  If \fIextensionName\fP is
-\fBall\fP, information about all extensions supported by both \fIxdpyinfo\fP
+\fBall\fP, information about all extensions supported by both \fBxdpyinfo\fP
 and the server is displayed.
 .PP
-If \fB-version\fP is specified, xdpyinfo prints its version and exits, without
-contacting the X server.
-.SH ENVIRONMENT
+If \fB\-help\fP is specified, \fBxdpyinfo\fP prints its usage message and exits,
+without contacting the X server.
 .PP
+If \fB\-version\fP is specified, \fBxdpyinfo\fP prints its version and exits,
+without contacting the X server.
+.SH ENVIRONMENT
 .TP 8
 .B DISPLAY
 To get the default host, display number, and screen.
 .SH "SEE ALSO"
-.IR X (__miscmansuffix__),
-.IR xprop (__appmansuffix__),
-.IR xrdb (__appmansuffix__),
-.IR xwininfo (__appmansuffix__),
-.IR xrandr (__appmansuffix__),
-.IR xdriinfo (__appmansuffix__),
-.IR xvinfo (__appmansuffix__),
-.IR glxinfo (__appmansuffix__)
+.BR X (__miscmansuffix__),
+.BR xprop (__appmansuffix__),
+.BR xrdb (__appmansuffix__),
+.BR xwininfo (__appmansuffix__),
+.BR xrandr (__appmansuffix__),
+.BR xdriinfo (__appmansuffix__),
+.BR xvinfo (__appmansuffix__),
+.BR glxinfo (__appmansuffix__)
 .SH AUTHOR
 Jim Fulton, MIT X Consortium
 .br

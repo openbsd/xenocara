@@ -35,7 +35,8 @@ AM_CFLAGS = \
 	$(DPY_XCOMPOSITE_CFLAGS) \
 	$(DPY_XINERAMA_CFLAGS) \
 	$(DPY_DMX_CFLAGS) \
-	$(DPY_XTST_CFLAGS)
+	$(DPY_XTST_CFLAGS) \
+	$(DPY_XPRESENT_CFLAGS)
 
 xdpyinfo_LDADD = \
 	$(XDPYINFO_LIBS) \
@@ -49,7 +50,9 @@ xdpyinfo_LDADD = \
 	$(DPY_XCOMPOSITE_LIBS) \
 	$(DPY_XINERAMA_LIBS) \
 	$(DPY_DMX_LIBS) \
-	$(DPY_XTST_LIBS)
+	$(DPY_XTST_LIBS) \
+	$(DPY_XPRESENT_LIBS)
+
 
 xdpyinfo_SOURCES =	\
         xdpyinfo.c
@@ -74,4 +77,4 @@ lint:
 	$(LINT) $(ALL_LINT_FLAGS) $(AM_CFLAGS) $(xdpyinfo_SOURCES)
 endif LINT
 
-EXTRA_DIST = README.md
+EXTRA_DIST = README.md meson.build meson.options

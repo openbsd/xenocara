@@ -76,6 +76,10 @@ in this Software without prior written authorization from The Open Group.
 #  define DMX
 # endif
 
+# if HAVE_X11_EXTENSIONS_XPRESENT_H
+#  define PRESENT
+# endif
+
 #endif
 
 #ifdef WIN32
@@ -137,6 +141,10 @@ in this Software without prior written authorization from The Open Group.
 #ifdef DMX
 #include <X11/extensions/dmxext.h>
 #endif
+#ifdef PRESENT
+#include <X11/extensions/Xpresent.h>
+#include <X11/extensions/Xrandr.h>
+#endif
 #include <X11/Xos.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -144,14 +152,12 @@ in this Software without prior written authorization from The Open Group.
 static char *ProgramName;
 static Bool queryExtensions = False;
 
-#if defined(XF86MISC) || defined(XFreeXDGA)
+#if defined(XF86MISC)
 static int
 silent_errors(_X_UNUSED Display *dpy, _X_UNUSED XErrorEvent *ev)
 {
     return 0;
 }
-
-static int (*old_handler)(Display *, XErrorEvent *) = NULL;
 #endif
 
 static int print_event_mask(char *buf, int lastcol, int indent, long mask);
@@ -708,10 +714,35 @@ print_shape_info(Display *dpy, const char *extname)
 
 #ifdef XFreeXDGA
 static int
+catch_dga_errors(Display *dpy, XErrorEvent *event)
+{
+    char error_name[128];
+    char request_name[128];
+    char code[64];
+
+    XGetErrorText(dpy, event->error_code, error_name, sizeof(error_name));
+    if (event->request_code < 128) {
+        snprintf(code, sizeof(code), "%d", event->request_code);
+        XGetErrorDatabaseText(dpy, "XRequest", code, "",
+                              request_name, sizeof(request_name));
+    } else {
+        snprintf(code, sizeof(code), "%s.%d", "XFree86-DGA", event->minor_code);
+        XGetErrorDatabaseText(dpy, "XRequest", code, "",
+                              request_name, sizeof(request_name));
+    }
+
+    printf("  DGA: %s returned error: %s\n", request_name, error_name);
+    return 0;
+}
+
+static int
 print_dga_info(Display *dpy, const char *extname)
 {
     unsigned int offset;
     int majorrev, minorrev, width, bank, ram, flags;
+    XErrorHandler old_handler;
+
+    old_handler = XSetErrorHandler(catch_dga_errors);
 
     if (!XF86DGAQueryVersion(dpy, &majorrev, &minorrev))
 	return 0;
@@ -723,8 +754,6 @@ print_dga_info(Display *dpy, const char *extname)
 	printf("  DGA not available on screen %d.\n", DefaultScreen(dpy));
 	return 1;
     }
-
-    old_handler = XSetErrorHandler(silent_errors);
 
     if (!XF86DGAGetVideoLL(dpy, DefaultScreen(dpy), &offset,
 			    &width, &bank, &ram))
@@ -869,6 +898,7 @@ static int
 print_XF86Misc_info(Display *dpy, const char *extname)
 {
     int majorrev, minorrev;
+    XErrorHandler old_handler;
 
     if (!XF86MiscQueryVersion(dpy, &majorrev, &minorrev))
 	return 0;
@@ -1326,6 +1356,118 @@ static int print_dmx_info(Display *dpy, const char *extname)
 
 #endif /* DMX */
 
+
+#ifdef PRESENT
+static inline void print_present_capabilities(uint32_t capabilities)
+{
+    if (capabilities == PresentCapabilityNone) {
+        fputs("PresentCapabilityNone", stdout);
+    }
+    else {
+        int count = 0;
+
+        if (capabilities & PresentCapabilityAsync) {
+            fputs("PresentCapabilityAsync", stdout);
+            count++;
+            capabilities &= ~PresentCapabilityAsync;
+        }
+        if (capabilities & PresentCapabilityFence) {
+            if (count)
+                fputs(" | ", stdout);
+            fputs("PresentCapabilityFence", stdout);
+            count++;
+            capabilities &= ~PresentCapabilityFence;
+        }
+        if (capabilities & PresentCapabilityUST) {
+            if (count)
+                fputs(" | ", stdout);
+            fputs("PresentCapabilityUST", stdout);
+            count++;
+            capabilities &= ~PresentCapabilityUST;
+        }
+#ifdef PresentCapabilityAsyncMayTear /* added in xorgproto-2023.1 */
+        if (capabilities & PresentCapabilityAsyncMayTear) {
+            if (count)
+                fputs(" | ", stdout);
+            fputs("PresentCapabilityAsyncMayTear", stdout);
+            count++;
+            capabilities &= ~PresentCapabilityAsyncMayTear;
+        }
+#endif
+#ifdef PresentCapabilitySyncobj /* added in xorgproto-2024.1 */
+        if (capabilities & PresentCapabilitySyncobj) {
+            if (count)
+                fputs(" | ", stdout);
+            fputs("PresentCapabilitySyncobj", stdout);
+            count++;
+            capabilities &= ~PresentCapabilitySyncobj;
+        }
+#endif
+        /* Are there any bits left we didn't recognize? */
+        if (capabilities != 0) {
+            for (unsigned int b = 0; b < 32; b++) {
+                uint32_t m = 1U << b;
+
+                if (capabilities & m) {
+                    if (count)
+                        fputs(" | ", stdout);
+                    printf("PresentCapabilityUnknownBit%d", b);
+                    capabilities &= ~m;
+                }
+            }
+        }
+    }
+}
+
+
+static int print_present_info(Display *dpy, const char *extname)
+{
+    int                  opcode, event_base, error_base;
+    int                  major_version, minor_version;
+    Bool                 query_crtcs = False;
+
+    if (!XPresentQueryExtension(dpy, &opcode, &event_base, &error_base)
+        || !XPresentQueryVersion(dpy, &major_version, &minor_version))
+        return 0;
+    print_standard_extension_info(dpy, extname, major_version, minor_version);
+
+    if (XRRQueryExtension (dpy, &event_base, &error_base)) {
+        int rr_major, rr_minor;
+
+        if (XRRQueryVersion (dpy, &rr_major, &rr_minor) &&
+            (rr_major == 1) && (rr_minor >= 2)) {
+            query_crtcs = True;
+        }
+    }
+
+    for (int i = 0; i < ScreenCount (dpy); i++) {
+        Window screen_root = RootWindow(dpy, i);
+        uint32_t capabilities = XPresentQueryCapabilities(dpy, screen_root);
+
+        printf("  screen #%d capabilities: 0x%x (", i, capabilities);
+        print_present_capabilities(capabilities);
+        puts(")");
+
+        if (query_crtcs) {
+            XRRScreenResources *res = XRRGetScreenResources (dpy, screen_root);
+
+            if (res != NULL) {
+                for (int c = 0; c < res->ncrtc; c++) {
+                    capabilities = XPresentQueryCapabilities(dpy, res->crtcs[c]);
+                    printf("    crtc 0x%lx capabilities: 0x%x (",
+                           res->crtcs[c], capabilities);
+                    print_present_capabilities(capabilities);
+                    puts(")");
+                }
+                XRRFreeScreenResources(res);
+            }
+        }
+    }
+
+    return 1;
+}
+#endif /* XPRESENT */
+
 /* utilities to manage the list of recognized extensions */
 
 
@@ -1378,6 +1520,9 @@ static ExtensionPrintInfo known_extensions[] =
 #endif
 #ifdef DMX
     {"DMX", print_dmx_info, False},
+#endif
+#ifdef PRESENT
+    {"Present", print_present_info, False},
 #endif
     /* add new extensions here */
 };
@@ -1443,17 +1588,18 @@ print_marked_extensions(Display *dpy)
 }
 
 static void _X_NORETURN
-usage(void)
+usage(int exitstatus)
 {
     fprintf (stderr, "usage:  %s [options]\n%s", ProgramName,
              "-display displayname\tserver to query\n"
+             "-help\t\t\tprint program usage and exit\n"
              "-version\t\tprint program version and exit\n"
              "-queryExtensions\tprint info returned by XQueryExtension\n"
              "-ext all\t\tprint detailed info for all supported extensions\n"
              "-ext extension-name\tprint detailed info for extension-name if one of:\n     ");
     print_known_extensions(stderr);
     fprintf (stderr, "\n");
-    exit (1);
+    exit (exitstatus);
 }
 
 int
@@ -1472,7 +1618,7 @@ main(int argc, char *argv[])
 	    if (++i >= argc) {
 		fprintf (stderr, "%s: -display requires an argument\n",
 			 ProgramName);
-		usage ();
+		usage (EXIT_FAILURE);
 	    }
 	    displayname = argv[i];
 	} else if (!strncmp("-queryExtensions", arg, len)) {
@@ -1481,16 +1627,20 @@ main(int argc, char *argv[])
 	    if (++i >= argc) {
 		fprintf (stderr, "%s: -ext requires an argument\n",
 			 ProgramName);
-		usage ();
+		usage (EXIT_FAILURE);
 	    }
 	    mark_extension_for_printing(argv[i]);
-        } else if (!strncmp("-version", arg, len)) {
+        } else if (!strncmp("-version", arg, len) ||
+                   !strncmp("--version", arg, len)) {
             printf("%s\n", PACKAGE_STRING);
-            exit (0);
+            exit (EXIT_SUCCESS);
+        } else if (!strncmp("-help", arg, len) ||
+                   !strncmp("--help", arg, len)) {
+            usage (EXIT_SUCCESS);
 	} else {
 	    fprintf (stderr, "%s: unrecognized argument '%s'\n",
 		     ProgramName, arg);
-	    usage ();
+	    usage (EXIT_FAILURE);
 	}
     }
 
@@ -1498,7 +1648,7 @@ main(int argc, char *argv[])
     if (!dpy) {
 	fprintf (stderr, "%s:  unable to open display \"%s\".\n",
 		 ProgramName, XDisplayName (displayname));
-	exit (1);
+	exit (EXIT_FAILURE);
     }
 
     print_display_info (dpy);
@@ -1509,5 +1659,5 @@ main(int argc, char *argv[])
     print_marked_extensions(dpy);
 
     XCloseDisplay (dpy);
-    exit (0);
+    exit (EXIT_SUCCESS);
 }
