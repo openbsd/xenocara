@@ -1159,6 +1159,8 @@ main (int argc, char *argv[])
     char *restore_filename = NULL;
     char *client_id = NULL;
     int i, zero = 0;
+    const char * const usage =
+        "usage:  %s [-clientId id] [-restore file] [-debug] [-version]\n";
 
     Argc = argc;
     Argv = argv;
@@ -1194,6 +1196,17 @@ main (int argc, char *argv[])
 	      case 'v':
 		puts (PACKAGE_STRING);
 		exit (0);
+
+            case '-':
+                if (strcmp(argv[i], "--help") == 0) {
+                    fprintf (stdout, usage, argv[0]);
+                    exit (0);
+                }
+                if (strcmp(argv[i], "--version") == 0) {
+                    puts (PACKAGE_STRING);
+                    exit (0);
+                }
+                break;
 	    }
 	}
 
@@ -1201,9 +1214,7 @@ main (int argc, char *argv[])
 
     usage:
 
-	fprintf (stderr,
-	    "usage:  %s [-clientId id] [-restore file] [-debug] [-version]\n",
-		 argv[0]);
+	fprintf (stderr, usage, argv[0]);
 	exit (1);
     }
 

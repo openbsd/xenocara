@@ -1,3 +1,66 @@
+commit 363cea2a5cd9884db9cdeb614c8fbd9aa216c79c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 18 15:14:39 2025 -0700
+
+    smproxy 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 24c8912e22a8b01454ddf06bb5421da7ed772cd2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 27 10:31:18 2025 -0700
+
+    man pages: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    mandoc: smproxy.1:25:15: WARNING: cannot parse date, using it verbatim: TH smproxy 1.0.7
+    mandoc: smproxy.1:45:2: WARNING: skipping paragraph macro: br before sp
+    mandoc: smproxy.1:49:2: WARNING: skipping paragraph macro: br before sp
+    mandoc: smproxy.1:55:2: WARNING: skipping paragraph macro: br before sp
+    mandoc: smproxy.1:58:2: WARNING: skipping paragraph macro: br before sp
+    mandoc: smproxy.1:42:2: WARNING: skipping paragraph macro: PP after SH
+    an.tmac:smproxy.1:75: style: blank line in input
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/smproxy/-/merge_requests/6>
+
+commit 33e87568a4939126f22b04cf11d3fbd2fa6fa21a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 29 17:07:49 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/smproxy/-/merge_requests/5>
+
+commit f7dadf82fc6d3465aab58eeec3b703a7c666200a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 22 16:32:10 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/smproxy/-/merge_requests/5>
+
+commit 16a6c58d0cde64a32f3c17a64649799f629ac6f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 2 11:42:44 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/smproxy/-/merge_requests/4>
+
+commit d5652ea6df2007cff03f5d8edb6fb1b9a0599ba9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 36db00ecdce06709d7590f338eda7e2e7d96839a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 15 09:40:43 2022 -0700
@@ -639,7 +702,7 @@ Date:   Sat Jul 16 21:59:14 2005 +0000
         against tempfile race conditions in many places)
 
 commit 05ef9ba24d0b1b5c17e04036d03770a44efd6b78
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 17:25:57 2005 +0000
 
     Build system for smproxy
