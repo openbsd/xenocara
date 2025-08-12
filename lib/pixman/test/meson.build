@@ -30,6 +30,7 @@ tests = [
   'radial-invalid',
   'pdf-op-test',
   'region-test',
+  'region-fractional-test',
   'combiner-test',
   'scaling-crash-test',
   'alpha-loop',
@@ -51,6 +52,7 @@ tests = [
   'scaling-test',
   'composite',
   'tolerance-test',
+  'neg-stride-test',
 ]
 
 # Remove/update this once thread-test.c supports threading methods
@@ -67,20 +69,13 @@ progs = [
   'affine-bench',
 ]
 
-libtestutils = static_library(
-  'testutils',
-  ['utils.c', 'utils-prng.c', config_h],
-  dependencies : [dep_openmp, dep_m, dep_png, idep_pixman],
-)
-
 foreach t : tests
   test(
     t,
     executable(
       t,
       [t + '.c', config_h],
-      link_with : libtestutils,
-      dependencies : [dep_threads, dep_openmp, idep_pixman],
+      dependencies : [libtestutils_dep, idep_pixman, dep_threads, dep_openmp, dep_png],
     ),
     timeout : 120,
     is_parallel : true,
@@ -91,7 +86,7 @@ foreach p : progs
   executable(
     p,
     p + '.c',
-    link_with : libtestutils,
-    dependencies : [dep_openmp, idep_pixman],
+    dependencies : [idep_pixman, libtestutils_dep, dep_openmp],
   )
 endforeach
+

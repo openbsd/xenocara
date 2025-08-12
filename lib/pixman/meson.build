@@ -21,10 +21,10 @@
 project(
   'pixman',
   ['c'],
-  version : '0.42.2',
+  version : '0.46.4',
   license : 'MIT',
-  meson_version : '>= 0.52.0',
-  default_options : ['c_std=gnu99', 'buildtype=debugoptimized'],
+  meson_version : '>= 1.3.0',
+  default_options : ['c_std=gnu99,c99', 'buildtype=debugoptimized'],
 )
 
 config = configuration_data()
@@ -243,6 +243,41 @@ if not use_vmx.disabled()
   endif
 endif
 
+if cc.compiles('''
+    __asm__ (
+    ".func meson_test"
+    ".endfunc"
+    );''',
+    name : 'test for ASM .func directive')
+    config.set('ASM_HAVE_FUNC_DIRECTIVE', 1)    
+endif
+
+if cc.compiles('''
+    __asm__ (
+    ".syntax unified\n"
+    );''',
+    name : 'test for ASM .syntax unified directive')
+    config.set('ASM_HAVE_SYNTAX_UNIFIED', 1)
+endif
+
+if cc.links('''
+    #include <stdint.h>
+
+    __asm__ (
+        "   .global _testlabel\n"
+        "_testlabel:\n"
+    );
+
+    int testlabel();
+    int main(int argc, char* argv[]) {
+        return testlabel();
+    }''',
+    name : 'test for ASM leading underscore')
+    config.set('ASM_LEADING_UNDERSCORE', 1)    
+endif
+
+
+
 if have_vmx
   config.set10('USE_VMX', true)
 elif use_vmx.enabled()
@@ -297,52 +332,11 @@ elif use_a64neon.enabled()
   error('A64 NEON Support unavailable, but required')
 endif
 
-use_iwmmxt = get_option('iwmmxt')
-have_iwmmxt = false
-iwmmxt_flags = ['-flax-vector-conversions', '-Winline']
-if not use_iwmmxt.disabled()
-  if get_option('iwmmxt2')
-    iwmmxt_flags += '-march=iwmmxt2'
-  else
-    iwmmxt_flags += '-march=iwmmxt'
-  endif
-
-  if host_machine.cpu_family() == 'arm'
-    if cc.compiles('''
-        #ifndef __IWMMXT__
-        #error "IWMMXT not enabled (with -march=iwmmxt)"
-        #endif
-        #if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8))
-        #error "Need GCC >= 4.8 for IWMMXT intrinsics"
-        #endif
-        #include <mmintrin.h>
-        int main () {
-          union {
-            __m64 v;
-            char c[8];
-          } a = { .c = {1, 2, 3, 4, 5, 6, 7, 8} };
-          int b = 4;
-          __m64 c = _mm_srli_si64 (a.v, b);
-        }
-        ''',
-        args : iwmmxt_flags,
-        name : 'IWMMXT Intrinsic Support')
-      have_iwmmxt = true
-    endif
-  endif
-endif
-
-if have_iwmmxt
-  config.set10('USE_ARM_IWMMXT', true)
-elif use_iwmmxt.enabled()
-  error('IWMMXT Support unavailable, but required')
-endif
-
 use_mips_dspr2 = get_option('mips-dspr2')
 have_mips_dspr2 = false
 mips_dspr2_flags = ['-mdspr2']
 if not use_mips_dspr2.disabled()
-  if host_machine.cpu_family() == 'mips32'
+  if host_machine.cpu_family().startswith('mips')
     if cc.compiles('''
         #if !(defined(__mips__) &&  __mips_isa_rev >= 2)
         #error MIPS DSPr2 is currently only available on MIPS32r2 platforms.
@@ -358,7 +352,7 @@ if not use_mips_dspr2.disabled()
             );
             return c;
         }''',
-        args : mipds_dspr2_flags,
+        args : mips_dspr2_flags,
         name : 'DSPr2 Intrinsic Support')
       have_mips_dspr2 = true
     endif
@@ -369,6 +363,46 @@ if have_mips_dspr2
   config.set10('USE_MIPS_DSPR2', true)
 elif use_mips_dspr2.enabled()
   error('MIPS DSPr2 Support unavailable, but required')
+endif
+
+use_rvv = get_option('rvv')
+have_rvv = false
+rvv_flags = ['-march=rv64gcv1p0']
+if not use_rvv.disabled()
+  if host_machine.cpu_family() == 'riscv64'
+    if cc.compiles('''
+        #include <riscv_vector.h>
+        #include <asm/hwprobe.h>
+        #include <linux/version.h>
+        #include <sys/auxv.h>
+        #include <sys/syscall.h>
+        #include <unistd.h>
+
+        #if defined(__riscv_v) && __riscv_v < 1000000
+        #error "Minimum supported RVV is 1.0"
+        #endif
+        #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 5, 0)
+        #error "Minimum supported kernel is 6.5.0"
+        #endif
+        int main() {
+            struct riscv_hwprobe pair = {RISCV_HWPROBE_KEY_IMA_EXT_0, 0};
+            long result = sys_riscv_hwprobe (&pair, 1, 0, 0, 0);
+            vfloat32m1_t tmp1; /* added in gcc-13 */
+            vfloat32m1x4_t tmp2; /* added in gcc-14 */
+            return 0;
+        }
+      ''',
+      args : rvv_flags,
+      name : 'RISC-V Vector Intrinsic Support')
+      have_rvv = true
+    endif
+  endif
+endif
+
+if have_rvv
+  config.set10('USE_RVV', true)
+elif use_rvv.enabled()
+  error('RISC-V Vector Support unavailable, but required')
 endif
 
 use_gnu_asm = get_option('gnu-inline-asm')
@@ -398,12 +432,6 @@ if cc.get_id() != 'msvc'
   dep_openmp = dependency('openmp', required : get_option('openmp'))
   if dep_openmp.found()
     config.set10('USE_OPENMP', true)
-  elif meson.version().version_compare('<0.51.0')
-  # In versions of meson before 0.51 the openmp dependency can still
-  # inject arguments in the the auto case when it is not found, the
-  # detection does work correctly in that case however, so we just
-  # replace dep_openmp with null_dep to work around this.
-    dep_openmp = null_dep
   endif
 else
   # the MSVC implementation of openmp is not compliant enough for our
@@ -412,8 +440,8 @@ else
   dep_openmp = null_dep
 endif
 
-dep_gtk = dependency('gtk+-3.0', required : get_option('gtk'))
-dep_glib = dependency('glib-2.0', required : get_option('gtk'))
+dep_gtk = dependency('gtk+-3.0', required : get_option('gtk').enabled() and get_option('demos').enabled())
+dep_glib = dependency('glib-2.0', required : get_option('gtk').enabled() and get_option('demos').enabled())
 
 dep_png = null_dep
 if not get_option('libpng').disabled()
@@ -457,6 +485,9 @@ if dep_threads.found() and cc.has_header('pthread.h')
   else
     pthreads_found = true
   endif
+else
+  # Avoid linking with -pthread if we don't actually have pthreads
+  dep_threads = null_dep
 endif
 
 if pthreads_found
@@ -522,6 +553,15 @@ if cc.links('''
   config.set('TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR', 1)
 endif
 
+if cc.links('''
+    static int x = 1;
+    static void __attribute__((destructor)) destructor_function () { x = 0; }
+    int main (void) { return x; }
+    ''',
+    name : '__attribute__((destructor))')
+  config.set('TOOLCHAIN_SUPPORTS_ATTRIBUTE_DESTRUCTOR', 1)
+endif
+
 if cc.links(
     ' __float128 a = 1.0Q, b = 2.0Q; int main (void) { return a + b; }',
     name : 'Has float128 support')
@@ -559,9 +599,16 @@ add_project_arguments('-DHAVE_CONFIG_H', language : ['c'])
 
 subdir('pixman')
 
+if not get_option('tests').disabled() or not get_option('demos').disabled()
+  subdir('test/utils')
+endif
+
+if not get_option('demos').disabled()
+  subdir('demos')
+endif
+
 if not get_option('tests').disabled()
   subdir('test')
-  subdir('demos')
 endif
 
 pkg = import('pkgconfig')

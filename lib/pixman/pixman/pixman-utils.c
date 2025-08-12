@@ -23,7 +23,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <pixman-config.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -238,7 +238,7 @@ _pixman_iter_init_bits_stride (pixman_iter_t *iter, const pixman_iter_info_t *in
 
 pixman_bool_t
 pixman_region16_copy_from_region32 (pixman_region16_t *dst,
-                                    pixman_region32_t *src)
+                                    const pixman_region32_t *src)
 {
     int n_boxes, i;
     pixman_box32_t *boxes32;
@@ -268,7 +268,7 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 
 pixman_bool_t
 pixman_region32_copy_from_region16 (pixman_region32_t *dst,
-                                    pixman_region16_t *src)
+                                    const pixman_region16_t *src)
 {
     int n_boxes, i;
     pixman_box16_t *boxes16;
@@ -292,6 +292,43 @@ pixman_region32_copy_from_region16 (pixman_region32_t *dst,
 	boxes32[i].y1 = boxes16[i].y1;
 	boxes32[i].x2 = boxes16[i].x2;
 	boxes32[i].y2 = boxes16[i].y2;
+    }
+
+    pixman_region32_fini (dst);
+    retval = pixman_region32_init_rects (dst, boxes32, n_boxes);
+
+    if (boxes32 != tmp_boxes)
+	free (boxes32);
+
+    return retval;
+}
+
+pixman_bool_t
+pixman_region32_copy_from_region64f (pixman_region32_t *dst,
+                                     const pixman_region64f_t *src)
+{
+    int n_boxes, i;
+    pixman_box64f_t *boxes64f;
+    pixman_box32_t *boxes32;
+    pixman_box32_t tmp_boxes[N_TMP_BOXES];
+    pixman_bool_t retval;
+
+    boxes64f = pixman_region64f_rectangles (src, &n_boxes);
+
+    if (n_boxes > N_TMP_BOXES)
+	boxes32 = pixman_malloc_ab (n_boxes, sizeof (pixman_box32_t));
+    else
+	boxes32 = tmp_boxes;
+
+    if (!boxes32)
+	return FALSE;
+
+    for (i = 0; i < n_boxes; ++i)
+    {
+	boxes32[i].x1 = boxes64f[i].x1;
+	boxes32[i].y1 = boxes64f[i].y1;
+	boxes32[i].x2 = boxes64f[i].x2;
+	boxes32[i].y2 = boxes64f[i].y2;
     }
 
     pixman_region32_fini (dst);

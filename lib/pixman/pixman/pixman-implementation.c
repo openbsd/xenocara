@@ -22,7 +22,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <pixman-config.h>
 #endif
 #include <stdlib.h>
 #include "pixman-private.h"
@@ -399,6 +399,7 @@ _pixman_choose_implementation (void)
     imp = _pixman_arm_get_implementations (imp);
     imp = _pixman_ppc_get_implementations (imp);
     imp = _pixman_mips_get_implementations (imp);
+    imp = _pixman_riscv_get_implementations (imp);
 
     imp = _pixman_implementation_create_noop (imp);
 

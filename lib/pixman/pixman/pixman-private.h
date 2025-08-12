@@ -615,7 +615,7 @@ _pixman_implementation_create_fast_path (pixman_implementation_t *fallback);
 pixman_implementation_t *
 _pixman_implementation_create_noop (pixman_implementation_t *fallback);
 
-#if defined USE_X86_MMX || defined USE_ARM_IWMMXT || defined USE_LOONGSON_MMI
+#if defined USE_X86_MMX || defined USE_LOONGSON_MMI
 pixman_implementation_t *
 _pixman_implementation_create_mmx (pixman_implementation_t *fallback);
 #endif
@@ -655,6 +655,11 @@ pixman_implementation_t *
 _pixman_implementation_create_vmx (pixman_implementation_t *fallback);
 #endif
 
+#ifdef USE_RVV
+pixman_implementation_t *
+_pixman_implementation_create_rvv (pixman_implementation_t *fallback);
+#endif
+
 pixman_bool_t
 _pixman_implementation_disabled (const char *name);
 
@@ -669,6 +674,9 @@ _pixman_ppc_get_implementations (pixman_implementation_t *imp);
 
 pixman_implementation_t *
 _pixman_mips_get_implementations (pixman_implementation_t *imp);
+
+pixman_implementation_t *
+_pixman_riscv_get_implementations (pixman_implementation_t *imp);
 
 pixman_implementation_t *
 _pixman_choose_implementation (void);
@@ -820,7 +828,25 @@ get_implementation (void)
  * of the ABI.
  */
 PIXMAN_EXPORT pixman_implementation_t *
+_pixman_internal_only_get_reference_implementation (void);
+
+/* This function is exported for the sake of the test suite and not part
+ * of the ABI.
+ */
+PIXMAN_EXPORT pixman_implementation_t *
 _pixman_internal_only_get_implementation (void);
+
+/* This function is exported for the sake of the test suite and not part
+ * of the ABI.
+ */
+PIXMAN_EXPORT pixman_fast_path_t *
+_pixman_implementation_get_reference_fast_path (void);
+
+/* This function is exported for the sake of the test suite and not part
+ * of the ABI.
+ */
+PIXMAN_EXPORT int
+_pixman_implementation_get_reference_fast_path_size ();
 
 /* Memory allocation helpers */
 void *
@@ -856,11 +882,15 @@ pixman_contract_from_float (uint32_t     *dst,
 /* Region Helpers */
 pixman_bool_t
 pixman_region32_copy_from_region16 (pixman_region32_t *dst,
-                                    pixman_region16_t *src);
+                                    const pixman_region16_t *src);
+
+pixman_bool_t
+pixman_region32_copy_from_region64f (pixman_region32_t *dst,
+                                     const pixman_region64f_t *src);
 
 pixman_bool_t
 pixman_region16_copy_from_region32 (pixman_region16_t *dst,
-                                    pixman_region32_t *src);
+                                    const pixman_region32_t *src);
 
 /* Doubly linked lists */
 typedef struct pixman_link_t pixman_link_t;
@@ -1050,27 +1080,8 @@ float pixman_unorm_to_float (uint16_t u, int n_bits);
  * Various debugging code
  */
 
-#undef DEBUG
-
 #define COMPILE_TIME_ASSERT(x)						\
     do { typedef int compile_time_assertion [(x)?1:-1]; } while (0)
-
-/* Turn on debugging depending on what type of release this is
- */
-#if (((PIXMAN_VERSION_MICRO % 2) == 0) && ((PIXMAN_VERSION_MINOR % 2) == 1))
-
-/* Debugging gets turned on for development releases because these
- * are the things that end up in bleeding edge distributions such
- * as Rawhide etc.
- *
- * For performance reasons we don't turn it on for stable releases or
- * random git checkouts. (Random git checkouts are often used for
- * performance work).
- */
-
-#    define DEBUG
-
-#endif
 
 void
 _pixman_log_error (const char *function, const char *message);

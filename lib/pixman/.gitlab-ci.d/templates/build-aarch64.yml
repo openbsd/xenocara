@@ -1,0 +1,37 @@
+spec:
+  inputs:
+    # For descriptions see build.yml.
+    target:
+    toolchain:
+      type: array
+      default: [gnu, llvm]
+    qemu_cpu:
+      default: ""
+    enable_gnu_coverage:
+      type: boolean
+      default: true
+    job_name_prefix:
+      default: ""
+    job_name_suffix:
+      default: ""
+    allow_failure:
+      type: boolean
+      default: false
+    retry:
+      type: number
+      default: 1
+---
+
+include:
+  - local: .gitlab-ci.d/templates/build.yml
+    inputs:
+      target: $[[ inputs.target ]]
+      toolchain: $[[ inputs.toolchain ]]
+      qemu_cpu: $[[ inputs.qemu_cpu ]]
+      enable_gnu_coverage: $[[ inputs.enable_gnu_coverage ]]
+      job_name_prefix: $[[ inputs.job_name_prefix ]]
+      job_name_suffix: $[[ inputs.job_name_suffix ]]
+      allow_failure: $[[ inputs.allow_failure ]]
+      retry: $[[ inputs.retry ]]
+      runner_tags: [aarch64]
+      docker_job: docker:aarch64

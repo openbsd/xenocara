@@ -21,7 +21,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <pixman-config.h>
 #endif
 
 #include <stdlib.h>
@@ -567,7 +567,7 @@ _pixman_image_validate (pixman_image_t *image)
 
 PIXMAN_EXPORT pixman_bool_t
 pixman_image_set_clip_region32 (pixman_image_t *   image,
-                                pixman_region32_t *region)
+                                const pixman_region32_t *region)
 {
     image_common_t *common = (image_common_t *)image;
     pixman_bool_t result;
@@ -591,7 +591,7 @@ pixman_image_set_clip_region32 (pixman_image_t *   image,
 
 PIXMAN_EXPORT pixman_bool_t
 pixman_image_set_clip_region (pixman_image_t *   image,
-                              pixman_region16_t *region)
+                              const pixman_region16_t *region)
 {
     image_common_t *common = (image_common_t *)image;
     pixman_bool_t result;
@@ -599,6 +599,30 @@ pixman_image_set_clip_region (pixman_image_t *   image,
     if (region)
     {
 	if ((result = pixman_region32_copy_from_region16 (&common->clip_region, region)))
+	    image->common.have_clip_region = TRUE;
+    }
+    else
+    {
+	_pixman_image_reset_clip_region (image);
+
+	result = TRUE;
+    }
+
+    image_property_changed (image);
+
+    return result;
+}
+
+PIXMAN_EXPORT pixman_bool_t
+pixman_image_set_clip_region64f (pixman_image_t *   image,
+                                 const pixman_region64f_t *region)
+{
+    image_common_t *common = (image_common_t *)image;
+    pixman_bool_t result;
+
+    if (region)
+    {
+	if ((result = pixman_region32_copy_from_region64f (&common->clip_region, region)))
 	    image->common.have_clip_region = TRUE;
     }
     else

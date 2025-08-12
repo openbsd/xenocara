@@ -1,0 +1,35 @@
+# Docker build stage
+#
+# It builds a multi-arch image for all required architectures. Each image can be
+# later easily used with properly configured Docker (which uses binfmt and QEMU
+# underneath).
+
+include:
+  - local: .gitlab-ci.d/templates/docker.yml
+    inputs:
+      runner_tags: [aarch64]
+      job_name_suffix: ":aarch64"
+      targets:
+        - linux-arm-v5
+        - linux-arm-v7
+        - linux-arm64-v8
+        - windows-arm64-v8
+  - local: .gitlab-ci.d/templates/docker.yml
+    inputs:
+      runner_tags: [kvm]
+      job_name_suffix: ":kvm"
+      targets:
+        - linux-mips64le
+        - linux-mipsel
+        - linux-ppc64le
+        - linux-riscv64
+  - local: .gitlab-ci.d/templates/docker.yml
+    inputs:
+      targets:
+        - linux-386
+        - linux-amd64
+        - linux-mips
+        - linux-ppc
+        - linux-ppc64
+        - windows-686
+        - windows-amd64

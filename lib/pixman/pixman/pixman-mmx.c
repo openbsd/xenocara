@@ -30,10 +30,10 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <pixman-config.h>
 #endif
 
-#if defined USE_X86_MMX || defined USE_ARM_IWMMXT || defined USE_LOONGSON_MMI
+#if defined USE_X86_MMX || defined USE_LOONGSON_MMI
 
 #ifdef USE_LOONGSON_MMI
 #include <loongson-mmintrin.h>
@@ -50,17 +50,8 @@
 #define CHECKPOINT()
 #endif
 
-#if defined USE_ARM_IWMMXT && __GNUC__ == 4 && __GNUC_MINOR__ < 8
-/* Empty the multimedia state. For some reason, ARM's mmintrin.h doesn't provide this.  */
-extern __inline void __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-_mm_empty (void)
-{
-
-}
-#endif
-
 #ifdef USE_X86_MMX
-# if (defined(__SUNPRO_C) || defined(_MSC_VER) || defined(_WIN64))
+# if (defined(__SSE2__) || defined(__SUNPRO_C) || defined(_MSC_VER) || defined(_WIN64))
 #  include <xmmintrin.h>
 # else
 /* We have to compile with -msse to use xmmintrin.h, but that causes SSE
@@ -103,7 +94,7 @@ _mm_mulhi_pu16 (__m64 __A, __m64 __B)
 # endif
 #endif
 
-#ifndef _MSC_VER
+#ifndef _MM_SHUFFLE
 #define _MM_SHUFFLE(fp3,fp2,fp1,fp0) \
  (((fp3) << 6) | ((fp2) << 4) | ((fp1) << 2) | (fp0))
 #endif
@@ -138,7 +129,11 @@ _mm_mulhi_pu16 (__m64 __A, __m64 __B)
  * If __m64 is a double datatype, then define USE_M64_DOUBLE.
  */
 #ifdef _MSC_VER
-# define M64_MEMBER m64_u64
+# ifdef __clang__
+#  define USE_CVT_INTRINSICS
+# else
+#  define M64_MEMBER m64_u64
+# endif
 #elif defined(__ICC)
 # define USE_CVT_INTRINSICS
 #elif defined(USE_LOONGSON_MMI)
@@ -391,13 +386,6 @@ static force_inline __m64 ldq_u(__m64 *p)
     __m64 r;
     memcpy(&r, p, sizeof(__m64));
     return r;
-#elif defined USE_ARM_IWMMXT
-    int align = (uintptr_t)p & 7;
-    __m64 *aligned_p;
-    if (align == 0)
-	return *p;
-    aligned_p = (__m64 *)((uintptr_t)p & ~7);
-    return (__m64) _mm_align_si64 (aligned_p[0], aligned_p[1], align);
 #else
     struct __una_u64 { __m64 x __attribute__((packed)); };
     const struct __una_u64 *ptr = (const struct __una_u64 *) p;
@@ -656,13 +644,8 @@ pack_4xpacked565 (__m64 a, __m64 b)
     t1 = _mm_or_si64 (t1, g1);
 
     t0 = shift(t0, -5);
-#ifdef USE_ARM_IWMMXT
-    t1 = shift(t1, -5);
-    return _mm_packs_pu32 (t0, t1);
-#else
     t1 = shift(t1, -5 + 16);
     return _mm_shuffle_pi16 (_mm_or_si64 (t0, t1), _MM_SHUFFLE (3, 1, 2, 0));
-#endif
 }
 
 #ifndef _MSC_VER
@@ -4150,4 +4133,4 @@ _pixman_implementation_create_mmx (pixman_implementation_t *fallback)
     return imp;
 }
 
-#endif /* USE_X86_MMX || USE_ARM_IWMMXT || USE_LOONGSON_MMI */
+#endif /* USE_X86_MMX || USE_LOONGSON_MMI */

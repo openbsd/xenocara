@@ -1,0 +1,10 @@
+prefix=@prefix@
+includedir=${prefix}/include
+libdir=${prefix}/lib
+
+Name: Pixman
+Description: The pixman library (version 1)
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lpixman-1
+Libs.private: -lm -lpthread
+Cflags: -I${includedir}/pixman-1
