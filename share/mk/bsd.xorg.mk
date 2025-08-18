@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.68 2024/12/22 12:28:35 sthen Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.69 2025/08/18 08:22:22 ajacoutot Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -19,7 +19,7 @@
 .include "${.CURDIR}/../Makefile.inc"
 .endif
 
-AUTOMAKE_VERSION=	1.12
+AUTOMAKE_VERSION=	1.13
 AUTOCONF_VERSION=	2.71
 PYTHON_VERSION=		3.12
 
