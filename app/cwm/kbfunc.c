@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.175 2024/04/10 19:38:22 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.176 2025/08/20 23:44:06 job Exp $
  */
 
 #include <sys/types.h>
@@ -319,6 +319,13 @@ kbfunc_client_snap(void *ctx, struct cargs *cargs)
 			cc->geom.y = area.y + area.h - cc->geom.h -
 			    (cc->bwidth * 2);
 			flags &= ~CWM_DOWN;
+		}
+		if (flags & CWM_CENTER) {
+			cc->geom.x = area.x +
+			    (area.w - cc->geom.w - cc->bwidth) / 2;
+			cc->geom.y = area.y +
+			    (area.h - cc->geom.h - cc->bwidth) / 2;
+			flags &= ~CWM_CENTER;
 		}
 	}
 	client_move(cc);
