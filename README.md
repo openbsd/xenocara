@@ -72,7 +72,7 @@ However if you start modifying things in the automake build
 system used by many packages, you will need to have the following
 GNU autotools packages installed:
 
-- automake 1.12 (devel/automake/1.12)
+- automake 1.13 (devel/automake/1.13)
 - autoconf 2.71 (devel/autoconf/2.71)
 - metaauto (devel/metaauto)
 - libtool (devel/libtool)
@@ -189,4 +189,4 @@ dump will be in the current directory where startx was executed.
 See also http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging
 
 --
-$OpenBSD: README.md,v 1.2 2024/07/22 19:36:31 rsadowski Exp $
+$OpenBSD: README.md,v 1.3 2025/08/30 11:56:24 matthieu Exp $
