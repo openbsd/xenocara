@@ -1,0 +1,24 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2025/09/17 14:48:30 ajacoutot Exp $
+
+CONFIGURE_ARGS=	--disable-shared \
+		--disable-tests \
+		--disable-tools
+
+.if ${MACHINE_ARCH} == "aarch64" || ${MACHINE_ARCH} == "amd64" || \
+    ${MACHINE_ARCH} == "powerpc64"
+CONFIGURE_ARGS +=	--enable-hardware-optimizations
+.else
+CONFIGURE_ARGS +=	--disable-hardware-optimizations
+.endif
+
+# Enable VSX to prevent #error "This code requires VSX..." in
+# powerpc/filter_vsx_intrinsics.c
+.if ${MACHINE_ARCH} == "powerpc64"
+CFLAGS +=	-mvsx
+.endif
+
+# libpng is in ports; for xenocara it is bundled as part of libfreetype and
+# other components, so don't install anything
+realinstall:
+
+.include <bsd.xorg.mk>
