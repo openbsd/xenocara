@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.60 2025/03/09 15:12:54 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.61 2025/09/17 15:19:09 robert Exp $
 
 .include <bsd.own.mk>
 
@@ -16,7 +16,7 @@ SUBDIR=	include
 DEBUG?=
 
 LIB=	freetype
-LDADD=	-lz
+LDADD=	-lm -lz ${.OBJDIR}/../libpng/.libs/libpng16.a
 
 SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 	ftcid.c ftfstype.c ftgasp.c ftglyph.c ftgxval.c ftotval.c \
@@ -27,6 +27,7 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 	type42.c winfnt.c
 
 CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/builds/unix -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY=1 -DFT_CONFIG_CONFIG_H='<ftconfig.h>'
+CPPFLAGS+= -I${.CURDIR}/../libpng -I${.OBJDIR}/../libpng
 
 .if ${COMPILER_VERSION} != "gcc3"
 CFLAGS+= -fvisibility=hidden -std=gnu99 -Wall  -Wdeclaration-after-statement  -Werror=implicit-function-declaration  -Werror=undef  -Wextra  -Winit-self  -Winline  -Winvalid-pch  -Wmissing-declarations  -Wmissing-format-attribute  -Wmissing-prototypes  -Wnested-externs  -Wno-attributes  -Wno-long-long  -Wno-missing-field-initializers  -Wno-unused-parameter  -Wold-style-definition  -Wpacked  -Wpointer-arith  -Wshadow  -Wsign-compare  -Wstrict-aliasing=2  -Wstrict-prototypes  -Wwrite-strings

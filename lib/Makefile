@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.47 2024/07/19 14:42:33 rsadowski Exp $
+# $OpenBSD: Makefile,v 1.48 2025/09/17 15:19:09 robert Exp $
 
 .include <bsd.xconf.mk>
 
@@ -35,11 +35,12 @@ XCB_LIBS= \
 	xcb-util-wm \
 	xcb-util-xrm
 
-SUBDIR= freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
-	libX11  libXext  libXrender libXft libfontenc \
+# libpng needs to be built first as freetype depends on it
+SUBDIR= libpng freetype fontconfig libxtrans libXau libXdmcp \
+	${XCB_LIBS} libX11 libXext libXrender libXft libfontenc \
 	libICE libSM libXt \
 	libXmu libXpm libXaw libXfixes libXcomposite \
-	libXdamage libXcursor libXfont2  \
+	libXdamage libXcursor libXfont2 \
 	libXi libXinerama libxkbfile \
 	libXrandr libXpresent libXRes libXScrnSaver \
 	libXtst libXv libXvMC libXxf86dga libXxf86vm \
