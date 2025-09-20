@@ -1,4 +1,6 @@
-# $OpenBSD: Makefile,v 1.1 2025/08/12 16:39:28 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2025/09/20 21:53:54 aoyama Exp $
+
+.include <bsd.own.mk>
 
 PACKAGE_VERSION = 0.46.4
 LIB = pixman-1
@@ -46,8 +48,14 @@ CPPFLAGS += \
 	-DHAVE_CONFIG_H \
 	-I${_SRCDIR}
 
+.if ${COMPILER_VERSION} != "gcc3"
 CFLAGS += -std=gnu99 -fno-strict-aliasing -fvisibility=hidden -ftrapping-math \
 	-Wall -Winvalid-pch -Winline -Wundef -Wno-unused-local-typedefs
+.else
+# some options cause errors on gcc3
+CFLAGS += -std=gnu99 -fno-strict-aliasing -ftrapping-math \
+	-Wall -Winline -Wundef
+.endif
 
 .if ${MACHINE_ARCH} == "amd64" || ${MACHINE_ARCH} == "i386"
 SRCS += \

@@ -15,7 +15,11 @@
 
 #define HAVE_ALARM 1
 
+#if defined(__GNUC__) && __GNUC__ < 4
+#undef HAVE_BUILTIN_CLZ		/* gcc3 doesn't have __builtin_clz */
+#else
 #define HAVE_BUILTIN_CLZ 1
+#endif
 
 #define HAVE_FEDIVBYZERO 1
 
