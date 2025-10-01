@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.61 2025/09/17 15:19:09 robert Exp $
+#	$OpenBSD: Makefile,v 1.62 2025/10/01 05:03:58 miod Exp $
 
 .include <bsd.own.mk>
 
@@ -31,9 +31,10 @@ CPPFLAGS+= -I${.CURDIR}/../libpng -I${.OBJDIR}/../libpng
 
 .if ${COMPILER_VERSION} != "gcc3"
 CFLAGS+= -fvisibility=hidden -std=gnu99 -Wall  -Wdeclaration-after-statement  -Werror=implicit-function-declaration  -Werror=undef  -Wextra  -Winit-self  -Winline  -Winvalid-pch  -Wmissing-declarations  -Wmissing-format-attribute  -Wmissing-prototypes  -Wnested-externs  -Wno-attributes  -Wno-long-long  -Wno-missing-field-initializers  -Wno-unused-parameter  -Wold-style-definition  -Wpacked  -Wpointer-arith  -Wshadow  -Wsign-compare  -Wstrict-aliasing=2  -Wstrict-prototypes  -Wwrite-strings
-PICFLAG= -fPIC
 VERSION_SCRIPT= ${.CURDIR}/Symbols.map
 .endif
+
+PICFLAG= -fPIC
 
 CLEANFILES+=	freetype-config freetype2.pc
 
