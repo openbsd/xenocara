@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2025/09/17 14:48:30 ajacoutot Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2025/10/01 02:52:43 gkoehler Exp $
 
 CONFIGURE_ARGS=	--disable-shared \
 		--disable-tests \
@@ -15,6 +15,7 @@ CONFIGURE_ARGS +=	--disable-hardware-optimizations
 # powerpc/filter_vsx_intrinsics.c
 .if ${MACHINE_ARCH} == "powerpc64"
 CFLAGS +=	-mvsx
+CONFIGURE_ARGS +=	--cache-file=/dev/null
 .endif
 
 # libpng is in ports; for xenocara it is bundled as part of libfreetype and
