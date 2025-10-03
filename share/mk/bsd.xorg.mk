@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.69 2025/08/18 08:22:22 ajacoutot Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.70 2025/10/03 05:55:33 miod Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -42,7 +42,7 @@ INSTALL_DATA = \
 	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m ${SHAREMODE}
 
 # Autoconf cache
-_cache= --cache-file=${XOBJDIR}/xorg-config.cache.${MACHINE}
+_cache?= --cache-file=${XOBJDIR}/xorg-config.cache.${MACHINE}
 
 CFLAGS+=	$(COPTS)
 
@@ -150,8 +150,11 @@ autoreconf:
 	find ${_SRCDIR} \( -name 'config.sub' -o -name 'config.guess' \
 		-o -name 'install-sh' \) -exec chmod 0644 {} +
 
+.if !target(beforeconfigure)
+beforeconfigure:
+.endif
 .if !target(config.status)
-config.status:
+config.status: beforeconfigure
 	${CONFIGURE_ENV} PATH=$(XENOCARA_PATH) \
 		exec sh ${_SRCDIR}/configure --prefix=${X11BASE} \
 		--sysconfdir=/etc \
