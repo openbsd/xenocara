@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2025/10/01 02:52:43 gkoehler Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2025/10/03 05:57:09 miod Exp $
 
 CONFIGURE_ARGS=	--disable-shared \
 		--disable-tests \
@@ -15,8 +15,23 @@ CONFIGURE_ARGS +=	--disable-hardware-optimizations
 # powerpc/filter_vsx_intrinsics.c
 .if ${MACHINE_ARCH} == "powerpc64"
 CFLAGS +=	-mvsx
-CONFIGURE_ARGS +=	--cache-file=/dev/null
 .endif
+
+# This PICFLAG override should match lib/freetype/Makefile
+PICFLAG=	-fPIC
+
+CFLAGS +=	${PICFLAG}
+
+# Because we change CFLAGS, we can not use the regular autoconf cache;
+# build a local copy without the modified settings
+beforeconfigure:
+	if test -f ${XOBJDIR}/xorg-config.cache.${MACHINE}; then \
+		grep -v ac_cv_env_CFLAGS \
+		    ${XOBJDIR}/xorg-config.cache.${MACHINE} > \
+		    ${.OBJDIR}/xorg-config.cache.${MACHINE}; \
+	fi
+
+_cache= --cache-file=${.OBJDIR}/xorg-config.cache.${MACHINE}
 
 # libpng is in ports; for xenocara it is bundled as part of libfreetype and
 # other components, so don't install anything
