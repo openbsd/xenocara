@@ -1,13 +1,24 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2025/06/30 14:10:09 miod Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2025/10/03 05:58:49 miod Exp $
 .include <bsd.xconf.mk>
 
 SHARED_LIBS=	Xfont2 3.0
 
 CONFIGURE_ARGS+= --disable-fc --with-xmlto=no --disable-devel-docs
 
-.if ${MACHINE_CPU} == "mips64"
+.if ${MACHINE_CPU} == "mips64"	# {
 CFLAGS+=	-O1
-CONFIGURE_ARGS+= --cache-file=/dev/null
-.endif
+
+# Because we change CFLAGS, we can not use the regular autoconf cache;
+# build a local copy without the modified settings
+beforeconfigure:
+	if test -f ${XOBJDIR}/xorg-config.cache.${MACHINE}; then \
+		grep -v ac_cv_env_CFLAGS \
+		    ${XOBJDIR}/xorg-config.cache.${MACHINE} > \
+		    ${.OBJDIR}/xorg-config.cache.${MACHINE}; \
+	fi
+
+_cache= --cache-file=${.OBJDIR}/xorg-config.cache.${MACHINE}
+
+.endif				# }
 
 .include <bsd.xorg.mk>
