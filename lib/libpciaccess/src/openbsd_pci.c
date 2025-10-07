@@ -831,6 +831,8 @@ pci_device_vgaarb_fini(void)
 int
 pci_device_vgaarb_set_target(struct pci_device *dev)
 {
+	if (pci_sys == NULL)
+		return -1;
 	pci_sys->vga_target = dev;
 	return (0);
 }
@@ -838,8 +840,13 @@ pci_device_vgaarb_set_target(struct pci_device *dev)
 int
 pci_device_vgaarb_lock(void)
 {
-	struct pci_device *dev = pci_sys->vga_target;
+	struct pci_device *dev;
 	struct pci_vga pv;
+
+	if (pci_sys == NULL)
+		return -1;
+
+	dev = pci_sys->vga_target;
 
 	if (dev == NULL)
 		return -1;
@@ -857,8 +864,13 @@ pci_device_vgaarb_lock(void)
 int
 pci_device_vgaarb_unlock(void)
 {
-	struct pci_device *dev = pci_sys->vga_target;
+	struct pci_device *dev;
 	struct pci_vga pv;
+
+	if (pci_sys == NULL)
+		return -1;
+
+	dev = pci_sys->vga_target;
 
 	if (dev == NULL)
 		return -1;
@@ -877,6 +889,9 @@ int
 pci_device_vgaarb_get_info(struct pci_device *dev, int *vga_count,
     int *rsrc_decodes)
 {
+	if (pci_sys == NULL)
+		return -1;
+
 	*vga_count = pci_sys->vga_count;
 
 	if (dev)
@@ -888,7 +903,12 @@ pci_device_vgaarb_get_info(struct pci_device *dev, int *vga_count,
 int
 pci_device_vgaarb_decodes(int rsrc_decodes)
 {
-	struct pci_device *dev = pci_sys->vga_target;
+	struct pci_device *dev;
+
+	if (pci_sys == NULL)
+		return -1;
+
+	dev = pci_sys->vga_target;
 
 	if (dev == NULL)
 		return -1;
