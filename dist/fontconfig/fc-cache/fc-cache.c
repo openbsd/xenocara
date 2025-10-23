@@ -394,7 +394,7 @@ main (int argc, char **argv)
                 err(1, "unable to revoke privs");
     }
 
-    if (pledge("stdio rpath wpath cpath flock", NULL) == -1)
+    if (pledge("stdio rpath wpath cpath fattr flock", NULL) == -2)
         err(1, "pledge");
 
     if (systemOnly)
