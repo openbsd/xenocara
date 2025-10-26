@@ -27,7 +27,7 @@ AC_PREREQ([2.60])
 # version.  This version number will be substituted into Xft.h
 # Please bump the minor library number at each release as well.
 #
-AC_INIT([libXft], [2.3.8],
+AC_INIT([libXft], [2.3.9],
         [https://gitlab.freedesktop.org/xorg/lib/libXft/issues], [libXft])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -64,7 +64,7 @@ AC_SUBST([XFT_LT_VERSION])
 #
 # Check for Xrender
 #
-PKG_CHECK_MODULES(XRENDER, xrender >= 0.8.2 x11)
+PKG_CHECK_MODULES(XRENDER, xrender >= 0.8.2 x11 xproto >= 7.0.22)
 
 # Check freetype configuration
 PKG_CHECK_MODULES(FREETYPE, freetype2 >= 2.1.6)

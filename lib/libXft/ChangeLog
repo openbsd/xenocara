@@ -1,3 +1,112 @@
+commit f4805c8645914cbdcfd42e71051ba3f8fc664ef5
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 20 10:55:00 2025 -0400
+
+    libXft 2.3.9
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 518aaa65d549414eb883041470c5df2c8576482f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 20 10:30:07 2025 -0400
+
+    libXft 2.3.9
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 53d103562593be70680ca54d03db8c779de7e330
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 16 20:05:22 2025 -0400
+
+    manpage formatting-fixes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a074c10e1b396d26e729080ce50a18f6a22de6ad
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 21 11:15:56 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxft/-/merge_requests/33>
+
+commit e787bf2f9e3a9eafc36eb668d060f8fed1283a44
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 18 10:32:33 2024 -0700
+
+    Require xproto >= 7.0.22 for _X_UNUSED
+    
+    Since _X_UNUSED is only used in source code, not exported headers,
+    the version requirement is only set in configure.ac, not xft.pc.
+    
+    Fixes: 4dadf0e ("quiet unused-parameter warnings with _X_UNUSED")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxft/-/merge_requests/32>
+
+commit 7cf945b13ee80a7c108e674559e5eb7013ce5d36
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 18 09:46:21 2024 -0700
+
+    Remove support for building with pre-C89 versions of C
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxft/-/merge_requests/32>
+
+commit ded7011adeff9ca9d32c9dc69cc33a54cc7d97cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 18 09:43:09 2024 -0700
+
+    Remove support for building with pre-X11R7 versions of X
+    
+    Other parts of the code already required later versions of X, so this
+    is just cleaning out #ifdef cases that can never be hit anymore.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxft/-/merge_requests/32>
+
+commit fc54d4238a5a6db180f6090a535d173f88060117
+Author: Peter Harris <pharris2@rocketsoftware.com>
+Date:   Thu Aug 15 10:55:18 2024 -0400
+
+    fix potential buffer overrun in _XftGlyphDefault
+    
+    Initialize `nmissing` so that XftFontCheckGlyph does not write past the end
+    of the `missing` array if a glyph is missing.
+    
+    Signed-off-by: Peter Harris <pharris2@rocketsoftware.com>
+
+commit e736f48ba2fd4263ca6f692e27916a914447af4e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Apr 6 20:36:17 2024 -0400
+
+    issue 21: remove redundant/out-of-place prototype for XftNameUnparse
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4e4210c86019b42c3819cc18b59f86752fcd8b13
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 1 04:04:37 2023 -0400
+
+    build-fix for older versions of freetype2: FT_HAS_SVG was added late in 2021
+
+commit be61145144f61674d1c3e6130fabf3a63d9c6529
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 30 20:19:04 2023 -0400
+
+    issue 19: Problem loading "SourceCodePro-Regular" font in Fedora
+    
+    Ignore face flag FT_FACE_FLAG_COLOR if FT_FACE_FLAG_SVG is set,
+    allowing adobe-source-code-pro font to work.
+    
+    This bug was introduced by a change in freetype2 #1151,
+            62bc04f4c5b4369cc493ff24b1de27aabd79e0c6
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
 commit c532908f5fdd3aee9d88d9704aedbe3be82c7ce5
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Mon Apr 17 15:23:49 2023 -0400

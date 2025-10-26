@@ -849,7 +849,11 @@ XftFontOpenInfo (Display	*dpy,
     if (!(face->face_flags & FT_FACE_FLAG_SCALABLE))
 	antialias = FcFalse;
 
+#ifdef FT_HAS_SVG
+    color = (FT_HAS_COLOR(face) && !FT_HAS_SVG(face)) ? FcTrue : FcFalse;
+#else
     color = FT_HAS_COLOR(face) ? FcTrue : FcFalse;
+#endif
 
     /*
      * Find the appropriate picture format

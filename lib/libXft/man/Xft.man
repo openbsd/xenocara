@@ -1,5 +1,5 @@
 '\" t
-.\" Copyright © 2022 Thomas E. Dickey
+.\" Copyright © 2022,2025 Thomas E. Dickey
 .\" Copyright © 2000 Keith Packard
 .\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
@@ -25,9 +25,8 @@
 .el    .ta 0.5i 1.0i 1.5i 2.0i
 ..
 .de PS
-.sp
 .ns
-.TP \\$1
+.TP
 .na
 .nf
 .ie n  .ta 0.8i 3.0i
@@ -64,13 +63,22 @@
 .ie n  .IP \(bu 4
 .el    .IP \(bu 2
 ..
-.ie \n(.g .ds `` \(lq
-.el       .ds `` ``
-.ie \n(.g .ds '' \(rq
-.el       .ds '' ''
+.ie \n(.g \{\
+.ds `` \(lq
+.ds '' \(rq
+.\}
+.el \{\
+.ie t .ds `` ``
+.el   .ds `` ""
+.ie t .ds '' ''
+.el   .ds '' ""
+.\}
 .TH Xft __libmansuffix__ __vendorversion__ "X Version 11"
 .SH NAME
-Xft \- X FreeType interface library
+Xft \-
+X FreeType interface library
+.SH SYNOPSIS
+.B #include <X11/Xft/Xft.h>
 .SH DESCRIPTION
 .B Xft
 is a simple library which draws text and graphics:
@@ -83,8 +91,6 @@ converts font glyphs using the FreeType rasterizer, and
 displays the converted font data using the X Rendering Extension.
 .PP
 This manual page barely scratches the surface of this library.
-.SH "HEADER FILE"
-.B #include <X11/Xft/Xft.h>
 .SH CONSTANTS
 .TP
 .B XFT_MAJOR
@@ -131,7 +137,7 @@ version constants might be used:
 .SH "DATA TYPES"
 Xft datatypes follow a naming convention,
 prefixing all names with \*(``Xft\*(''
-.SS From Xlib...
+.SS "From Xlib..."
 Xlib datatypes do not follow a naming convention.
 They are documented in
 .IR "Xlib \- C Language Interface" .
@@ -175,7 +181,7 @@ Xlib maintains a rectangle which tells it the extent of this union.
 .B Visual
 Declared in \fI<X11/Xutil.h>\fP,
 this structure contains information about the possible color mapping.
-.SS From XRender...
+.SS "From XRender..."
 The X Render Extension library
 datatypes are inspired by Xlib,
 but lack the corresponding documentation.
@@ -192,7 +198,7 @@ uses these names:
 Picture,
 XGlyphInfo,
 XRenderColor.
-.SS From Fontconfig...
+.SS "From Fontconfig..."
 Fontconfig datatypes follow a naming convention,
 prefixing all names with \*(``Fc\*('' which are documented in
 .IR "Fontconfig Developers Reference" .
@@ -208,7 +214,7 @@ FcEndian,
 FcFontSet,
 FcPattern, and
 FcResult.
-.SS From FreeType 2...
+.SS "From FreeType 2..."
 FreeType 2 datatypes follow a naming convention,
 prefixing all names with \*(``FT_\*('' which are documented in
 .IR "FreeType API Reference" .
@@ -253,7 +259,7 @@ or
 .BR XftFontOpenPattern ().
 .BR XftFontCopy ()
 is used to duplicate
-.BR XftFont s,
+.BR XftFont "s,"
 and
 .BR XftFontClose ()
 is used to mark an
@@ -577,7 +583,7 @@ XFT_MAX_UNREF_FONTS
 This is the maximum number of unreferenced fonts
 (default: 16).
 .TP 5
-XFT_TRACK_MEM_USAGE	
+XFT_TRACK_MEM_USAGE
 (trackmemusage).
 When true,
 .B Xft
@@ -666,6 +672,7 @@ True if the display supports X Render extension
 (default: result from
 .BR XftDefaultHasRender ()).
 .RE
+.sp
 .PS
 \fBFcBool\fP \fBXftInit\fP (
 	\fB_Xconst char\fP	*\fIconfig\fP);
@@ -736,7 +743,6 @@ Example:
 This opens the \*(``charter\*('' font at 12 points.
 The point size is automatically converted to the correct pixel size based
 on the resolution of the monitor.
-.PP
 .PS
 \fBXftFont\fP *\fBXftFontOpenName\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -750,7 +756,6 @@ does, except that it takes a Fontconfig pattern string (which is passed to
 the Fontconfig library's
 .BR FcNameParse ()
 function).
-.PP
 .PS
 \fBXftFont\fP *\fBXftFontOpenXlfd\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -765,7 +770,6 @@ Description (XLFD),
 and uses the
 .BR XftXlfdParse ()
 function.
-.PP
 .PS
 \fBFcPattern\fP *\fBXftFontMatch\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -895,7 +899,6 @@ consisting of eight-bit characters when drawn with
 .IR font ,
 storing them in
 .IR extents .
-.PP
 .PS
 \fBvoid\fP \fBXftTextExtents16\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -915,7 +918,6 @@ consisting of sixteen-bit characters when drawn with
 .IR font ,
 storing them in
 .IR extents .
-.PP
 .PS
 \fBvoid\fP \fBXftTextExtents32\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -935,7 +937,6 @@ consisting of thirty-two-bit characters when drawn with
 .IR font ,
 storing them in
 .IR extents .
-.PP
 .PS
 \fBvoid\fP \fBXftTextExtentsUtf8\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -955,7 +956,6 @@ when drawn with
 .IR font ,
 storing them in
 .IR extents .
-.PP
 .PS
 \fBvoid\fR \fBXftTextExtentsUtf16\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -980,7 +980,6 @@ The endianness of
 .I string
 must be specified in
 .IR endian .
-.PP
 .PS
 \fBvoid\fP \fBXftGlyphExtents\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -1093,7 +1092,7 @@ If
 .BR XAllocColor ()
 succeeds
 .BR XftColorAllocValue ()
-stores that pixel value in the 
+stores that pixel value in the
 .B XRenderColor
 referenced by
 .I result
@@ -1105,6 +1104,7 @@ fails,
 .BR XftColorAllocValue ()
 returns False and does not modify the result.
 .RE
+.sp
 .PS
 \fBvoid\fP \fBXftColorFree\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -1142,7 +1142,6 @@ and
 .I colormap
 on
 .IR display .
-.PP
 .PS
 \fBXftDraw\fP *\fBXftDrawCreateBitmap\fP (
 	\fBDisplay\fP	*\fIdpy\fB,\fR
@@ -1152,7 +1151,6 @@ on
 behaves as
 .BR XftDrawCreate (),
 except that it uses an X pixmap of color depth 1 instead of an X drawable.
-.PP
 .PS
 \fBXftDraw *\fP \fBXftDrawCreateAlpha\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -1165,7 +1163,6 @@ behaves as
 except that it uses an X pixmap of color depth
 .I depth
 instead of an X drawable.
-.PP
 .PS
 \fBvoid\fP \fBXftDrawChange\fP (
 	\fBXftDraw\fP	*\fIdraw\fP,
@@ -1178,7 +1175,6 @@ draw object
 .I draw
 from its current value to
 .IR drawable .
-.PP
 .PS
 \fBDisplay\fP *\fBXftDrawDisplay\fP (
 	\fBXftDraw\fP	*\fIdraw\fP);
@@ -1188,7 +1184,6 @@ returns a pointer to the display associated with the
 .B Xft
 draw object
 .IR draw .
-.PP
 .PS
 \fBDrawable\fP \fBXftDrawDrawable\fP (
 	\fBXftDraw\fP	*\fIdraw\fP);
@@ -1198,7 +1193,6 @@ returns the X drawable associated with the
 .B Xft
 draw object
 .IR draw .
-.PP
 .PS
 \fBColormap\fP \fBXftDrawColormap\fP (
 	\fBXftDraw\fP	*\fIdraw\fP);
@@ -1208,7 +1202,6 @@ returns the colormap associated with the
 .B Xft
 draw object
 .IR draw .
-.PP
 .PS
 \fBVisual\fR *\fBXftDrawVisual\fP (
 	\fBXftDraw\fP	*\fIdraw\fP);
@@ -1218,7 +1211,6 @@ returns a pointer to the visual associated with the
 .B Xft
 draw object
 .IR draw .
-.PP
 .PS
 \fBPicture\fP \fBXftDrawPicture\fP (
 	\fBXftDraw\fP	*\fIdraw\fP);
@@ -1229,9 +1221,8 @@ returns the picture associated with the
 draw object
 .IR draw .
 .IP
-If the the X server does not support the X Rendering Extension, 0 is
+If the X server does not support the X Rendering Extension, 0 is
 returned.
-.PP
 .PS
 \fBPicture\fP \fBXftDrawSrcPicture\fP (
 	\fBXftDraw\fP	*\fIdraw\fP,
@@ -1508,6 +1499,7 @@ Otherwise,
 .B Xft
 provides an analogous feature using Xlib.
 .RE
+.sp
 .PS
 \fBvoid\fP \fBXftGlyphFontSpecRender\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -1569,7 +1561,7 @@ and
 parameters are used as described in the documentation for the X Render library.
 .RE
 .\" *************************************************************************
-.SS Manipulating patterns
+.SS "Manipulating patterns"
 .PS
 \fBFcFontSet\fP *\fBXftListFonts\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -1628,7 +1620,7 @@ copies the string and returns
 otherwise it returns
 .BR FcFalse .
 .\" *************************************************************************
-.SS Manipulating Font data
+.SS "Manipulating Font data"
 .PS
 \fBvoid\fP \fBXftFontLoadGlyphs\fP (
 	\fBDisplay\fP	*\fIdpy\fP,
@@ -1745,11 +1737,11 @@ additional font-matching and opening (verbose)
 .TP 5
 4
 shows details about the
-.B XRenderPictFormat   
+.B XRenderPictFormat
 which will be used.
 .TP 5
 8
-shows the string which 
+shows the string which
 .BR XftDrawString8 ()
 will draw.
 .TP 5
@@ -1800,7 +1792,7 @@ about specific fonts.
 .TP
 .B XftFontSet
 contains a list of
-.BR XftPattern s.
+.BR XftPattern "s."
 Internally,
 .B Xft
 uses this data structure to hold sets of fonts.
@@ -1810,9 +1802,9 @@ returns the results of listing fonts in this format.
 .TP
 .B XftObjectSet
 holds a set of names and is used to specify which fields from fonts are
-placed in the the list of returned patterns when listing fonts.
+placed in the list of returned patterns when listing fonts.
 .\" .SS "Xft 1.x Functions"
-.SH AUTHOR
+.SH AUTHORS
 Keith Packard
 .br
 Thomas E. Dickey (performance improvements)
