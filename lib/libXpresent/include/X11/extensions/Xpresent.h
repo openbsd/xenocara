@@ -33,10 +33,10 @@
 #include <X11/extensions/sync.h>
 
 /*
- * This revision number also appears in configure.ac, they have
+ * This revision number also appears in configure.ac & meson.build, they have
  * to be manually synchronized
  */
-#define PRESENT_REVISION	0
+#define PRESENT_REVISION	2
 #define PRESENT_VERSION	((PRESENT_MAJOR * 10000) + (PRESENT_MINOR * 100) + (PRESENT_REVISION))
 
 /**

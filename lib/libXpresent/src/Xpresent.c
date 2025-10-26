@@ -136,6 +136,8 @@ XPresentWireToCookie(Display	                *dpy,
         xPresentConfigureNotify *proto = (xPresentConfigureNotify *) ge;
         XPresentConfigureNotifyEvent *ce = malloc (sizeof (XPresentConfigureNotifyEvent));
         cookie->data = ce;
+        if (ce == NULL)
+            break;
 
         ce->type = cookie->type;
         ce->serial = cookie->serial;
@@ -162,6 +164,8 @@ XPresentWireToCookie(Display	                *dpy,
         xPresentCompleteNotify *proto = (xPresentCompleteNotify *) ge;
         XPresentCompleteNotifyEvent *ce = malloc (sizeof (XPresentCompleteNotifyEvent));
         cookie->data = ce;
+        if (ce == NULL)
+            break;
 
         ce->type = cookie->type;
         ce->serial = cookie->serial;
@@ -184,6 +188,8 @@ XPresentWireToCookie(Display	                *dpy,
         xPresentIdleNotify *proto = (xPresentIdleNotify *) ge;
         XPresentIdleNotifyEvent *ce = malloc (sizeof (XPresentIdleNotifyEvent));
         cookie->data = ce;
+        if (ce == NULL)
+            break;
 
         ce->type = cookie->type;
         ce->serial = cookie->serial;
@@ -209,6 +215,8 @@ XPresentWireToCookie(Display	                *dpy,
         XPresentNotify *XNotify = (XPresentNotify *) (re + 1);
         int i;
         cookie->data = re;
+        if (re == NULL)
+            break;
 
         re->type = cookie->type;
         re->serial = cookie->serial;

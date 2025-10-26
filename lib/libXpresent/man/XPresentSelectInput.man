@@ -25,7 +25,7 @@
 .ns
 .TP \\$1
 ..
-.TH XPresentSelectInput __libmansuffix__ __xorgversion__
+.TH XPresentSelectInput __libmansuffix__ 2022-08-27 __xorgversion__
 .SH NAME
 XPresentSelectInput \- select X Present Extension events to receive
 .SH SYNTAX

@@ -1,12 +1,13 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-libdir=@libdir@
 includedir=@includedir@
+libdir=@libdir@
 
 Name: Xpresent
-Description: X Present  Library
+Description: X Present Library
+URL: https://gitlab.freedesktop.org/xorg/lib/libxpresent/
 Version: @PACKAGE_VERSION@
 Requires: xproto presentproto >= @PRESENTEXT_VERSION@
 Requires.private: x11 xext xfixes xrandr
-Cflags: -I${includedir}
 Libs: -L${libdir} -lXpresent
+Cflags: -I${includedir}

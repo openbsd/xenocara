@@ -25,8 +25,7 @@
 .ns
 .TP \\$1
 ..
-.TH XPRESENT __libmansuffix__ __xorgversion__
-
+.TH XPRESENT __libmansuffix__ 2022-08-27 __xorgversion__
 .SH NAME
 Xpresent \- X Present Extension
 .SH SYNTAX
@@ -52,18 +51,23 @@ The Present extension provides a way for applications to update their
 window contents from a pixmap in a well defined fashion, synchronizing
 with the display refresh and potentially using a more efficient
 mechanism than copying the contents of the source pixmap.
+.PP
 The
 .B XPresentQueryExtension
 function checks if the X server specified by \fIdpy\fP supports the X Present
-extension.  If the server does not support the extension, it returns False.
-If the server does support the extension, it returns True, and sets the
-values of \fImajor_opcode_return\fP, \fIevent_base_return\fP, and
+extension.
+If the server does not support the extension, it returns
+.BR False .
+If the server does support the extension, it returns
+.BR True ,
+and sets the values of \fImajor_opcode_return\fP, \fIevent_base_return\fP, and
 \fIerror_base_return\fP if the pointers are not NULL.
 .PP
-Clients must call the 
+Clients must call the
 .B XPresentQueryExtension
 function to verify the server supports the extension before calling any other
 function for this extension.
+.PP
 The
 .B XPresentQueryVersion
 function sets the values pointed to by \fImajor_version_return\fP and

@@ -1,3 +1,65 @@
+commit 4d92149372461bf575e8a09b1064a2884c38c3aa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 7 18:02:44 2025 -0700
+
+    libXpresent 1.0.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9fbeb01854303efcef7facd676c3d206feb5b419
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 15 12:15:58 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    and fix warnings raised by `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpresent/-/merge_requests/8>
+
+commit a155b75589c5fdf173069dc8c21f70d46178578e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 16 12:07:43 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpresent/-/merge_requests/7>
+
+commit a329f664330407480ecb4505c79dca5eab06dcff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 26 14:38:01 2024 -0700
+
+    XPresentWireToCookie: avoid writing to NULL pointer if malloc() fails
+    
+    Fixes 3 -Wanalyzer-possible-null-dereference warnings from gcc 14.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpresent/-/merge_requests/6>
+
+commit 6bbbcf9218bbc686389387142978f90a3917c39a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 6 16:28:46 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:47: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:47: You should run autoupdate.
+    m4/libtool.m4:100: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:47: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 37507b5f44332accfb1064ee69a4f6a833994747
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 17 15:17:59 2022 -0700

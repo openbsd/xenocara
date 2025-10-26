@@ -25,7 +25,7 @@
 .ns
 .TP \\$1
 ..
-.TH XPresentNotifyMSC __libmansuffix__ __xorgversion__
+.TH XPresentNotifyMSC __libmansuffix__ 2022-08-27 __xorgversion__
 .SH NAME
 XPresentNotifyMSC \- X Present Extension
 .SH SYNTAX
@@ -52,7 +52,8 @@ event and request.
 .PP
 If \fItarget-msc\fP is greater than the current Media Stream Counter (msc)
 for \fIwindow\fP, the event will be delivered at (or after) the \fItarget-msc\fP
-field. Otherwise, the event delivery will occur after the next
+field.
+Otherwise, the event delivery will occur after the next
 field where msc % \fIdivisor\fP == \fIremainder\fP.
 .PP
 If \fIwindow\fP is destroyed before the event is delivered, then
@@ -61,7 +62,6 @@ the event delivery will not be completed.
 .BR Xpresent (__libmansuffix__),
 .BR XPresentPixmap (__libmansuffix__),
 .BR XPresentQueryCapabilities (__libmansuffix__),
-.BR XPresentSelectInput
-(__libmansuffix__)
+.BR XPresentSelectInput (__libmansuffix__)
 .SH AUTHORS
 Keith Packard, Intel

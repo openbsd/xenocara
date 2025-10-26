@@ -25,7 +25,7 @@
 .ns
 .TP \\$1
 ..
-.TH XPresentQueryCapabilities __libmansuffix__ __xorgversion__
+.TH XPresentQueryCapabilities __libmansuffix__ 2022-08-27 __xorgversion__
 .SH NAME
 XPresentQueryCapabilities \- query capabilities of a CRTC
 .SH SYNTAX
@@ -36,34 +36,33 @@ uint32_t XPresentQueryCapabilities \^(\^Display *\fIdisplay\fP,	XID \fItarget\fP
 .fi
 .SH DESCRIPTION
 .B XPresentQueryCapabilities
-returns a bitmask of the supported capabilities for the target CRTC.  If
-\fItarget\fP is a CRTC, then it is used as the target CRTC.  If
-\fItarget\fP is a WINDOW, then the target CRTC is selected by the
+returns a bitmask of the supported capabilities for the target CRTC.
+If \fItarget\fP is a CRTC, then it is used as the target CRTC.
+If \fItarget\fP is a WINDOW, then the target CRTC is selected by the
 X server from among the CRTCs on the screen specified by the window.
 .PP
 \fBPresentCapabilityAsync\fP means that the target device can flip
-the scanout buffer mid-frame instead of waiting for a vertical
-blank interval. The precise latency between the flip request
-and the actual scanout transition is not defined by this
-specification, but is intended to be no more than a few
+the scanout buffer mid-frame instead of waiting for a vertical blank interval.
+The precise latency between the flip request and the actual scanout transition
+is not defined by this specification, but is intended to be no more than a few
 scanlines.
 .PP
-\fBPresentCapabilityFence\fP means that the target device can take
-advantage of SyncFences in the \fBPresent\fP operations to improve
-GPU throughput. The driver must operate correctly in the
-absence of fences, but may have reduced performance. Using
-fences for drivers not advertising this capability should have
+\fBPresentCapabilityFence\fP means that the target device can take advantage
+of SyncFences in the \fBPresent\fP operations to improve GPU throughput.
+The driver must operate correctly in the absence of fences,
+but may have reduced performance.
+Using fences for drivers not advertising this capability should have
 no performance impact.
 .PP
 \fBPresentCapabilityUST\fP means that the target device can scanout
 the image at an arbitrary UST time value, and is not driven by
-a periodic scanout timer. Applications specifying UST times for
+a periodic scanout timer.
+Applications specifying UST times for
 .BR XPresentPixmap (__libmansuffix__)
-can expect that their image will appear to
-the user within a short amount of time from that specified in
-the request. The precise accuracy of the scanout time is not
-defined by the extension, but is expected to be on the order
-of milliseconds or less.
+can expect that their image will appear to the user within
+a short amount of time from that specified in the request.
+The precise accuracy of the scanout time is not defined by the extension,
+but is expected to be on the order of milliseconds or less.
 .SH SEE ALSO
 .BR Xpresent (__libmansuffix__),
 .BR XPresentNotifyMSC (__libmansuffix__),
