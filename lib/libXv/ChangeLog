@@ -1,3 +1,83 @@
+commit e1cde54538060c4fd3a3d02e3d2e2b7e5da7bff9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 13 18:13:04 2024 -0800
+
+    libXv 1.0.13
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fba7bf352678db2938f5a7b173d2a8823595ef3b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 21 11:27:44 2024 -0700
+
+    XvQueryAdaptors: avoid NULL deref if length is 0, but num_adaptors is not
+    
+    Found by gcc 14.1:
+    Xv.c: In function ‘XvQueryAdaptors’:
+    Xv.c:222:31: warning: dereference of NULL ‘<unknown>’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+      222 |         pa->type = (char) u.pa->type;
+          |                           ~~~~^~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxv/-/merge_requests/7>
+
+commit 506cebe7bffb19f9310565b82231a08cc8e77ece
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 21 11:22:29 2024 -0700
+
+    XvQueryEncodings: avoid NULL deref if length is 0, but num_encodings is not
+    
+    Found by gcc 14.1:
+    Xv.c: In function ‘XvQueryEncodings’:
+    Xv.c:387:31: warning: dereference of NULL ‘<unknown>’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+      387 |         pe->encoding_id = u.pe->encoding;
+          |                           ~~~~^~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxv/-/merge_requests/7>
+
+commit dd8c77a0c0d62ab88cf96ac507562469a7bcbc5a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 21 11:10:44 2024 -0700
+
+    Use calloc instead of malloc and manual loops to zero array contents
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxv/-/merge_requests/7>
+
+commit b022c9cf7004fe6f794c4c00dd519a2e4c74eca0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 8 16:16:56 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:34: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:34: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:34: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 750312d8b28378b057afb0aceb4f3d3eee86cd13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:34:02 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit d419928942dbf1897c9627475aa4a2828a81240f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Dec 4 15:43:12 2022 -0800
@@ -1075,7 +1155,7 @@ Date:   Sat Jul 2 06:35:03 2005 +0000
     Add appropriate lib*_CFLAGS to Makefile.am's -- fixes build problems
 
 commit 9064f83cdb11b1515fec1c9f33bd7397ad7f492b
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:09:12 2005 +0000
 
     xtrap.pc.in: s/Xfixes/XTrap/ xi.pc.in: s/Xt/Xi/ Xv/src/Makefile.am: remove
@@ -1101,13 +1181,13 @@ Date:   Tue Jun 21 15:41:36 2005 +0000
         src/Makefile.am
 
 commit ea1bfd2bef80ed33740916dfc8118ca8ac94a0eb
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 20:30:01 2005 +0000
 
     - Add Xv man pages
 
 commit 3e71b1e06264f84428e04264b740a634cd7a5499
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 19:55:32 2005 +0000
 
     - Add Xv to symlink.sh

@@ -192,6 +192,10 @@ XvQueryAdaptors(
         }
         _XRead(dpy, buffer, (long) size);
     }
+    else if (rep.num_adaptors != 0) {
+        status = XvBadReply;
+        goto out;
+    }
 
     /* GET INPUT ADAPTORS */
 
@@ -204,21 +208,12 @@ XvQueryAdaptors(
     u.buffer = buffer;
     end = buffer + size;
 
-    size = rep.num_adaptors * sizeof(XvAdaptorInfo);
-    if ((pas = Xmalloc(size)) == NULL) {
+    if ((pas = Xcalloc(rep.num_adaptors, sizeof(XvAdaptorInfo))) == NULL) {
         status = XvBadAlloc;
         goto out;
     }
 
     /* INIT ADAPTOR FIELDS */
-
-    pa = pas;
-    for (unsigned int ii = 0; ii < rep.num_adaptors; ii++) {
-        pa->num_adaptors = 0;
-        pa->name = (char *) NULL;
-        pa->formats = (XvFormat *) NULL;
-        pa++;
-    }
 
     pa = pas;
     for (unsigned int ii = 0; ii < rep.num_adaptors; ii++) {
@@ -255,8 +250,7 @@ XvQueryAdaptors(
 
         /* GET FORMATS */
 
-        size = pa->num_formats * sizeof(XvFormat);
-        if ((pfs = Xmalloc(size)) == NULL) {
+        if ((pfs = Xcalloc(pa->num_formats, sizeof(XvFormat))) == NULL) {
             status = XvBadAlloc;
             goto out;
         }
@@ -367,6 +361,10 @@ XvQueryEncodings(
         }
         _XRead(dpy, buffer, (long) size);
     }
+    else if (rep.num_encodings != 0) {
+        status = XvBadReply;
+        goto out;
+    }
 
     /* GET ENCODINGS */
 
@@ -379,20 +377,12 @@ XvQueryEncodings(
     u.buffer = buffer;
     end = buffer + size;
 
-    size = rep.num_encodings * sizeof(XvEncodingInfo);
-    if ((pes = Xmalloc(size)) == NULL) {
+    if ((pes = Xcalloc(rep.num_encodings, sizeof(XvEncodingInfo))) == NULL) {
         status = XvBadAlloc;
         goto out;
     }
 
     /* INITIALIZE THE ENCODING POINTER */
-
-    pe = pes;
-    for (unsigned int jj = 0; jj < rep.num_encodings; jj++) {
-        pe->name = (char *) NULL;
-        pe->num_encodings = 0;
-        pe++;
-    }
 
     pe = pes;
     for (unsigned int jj = 0; jj < rep.num_encodings; jj++) {
@@ -934,7 +924,7 @@ XvListImageFormats(Display *dpy, XvPortID port, int *num)
 
     if (rep.num_formats) {
         if (rep.num_formats < (INT_MAX / sizeof(XvImageFormatValues)))
-            ret = Xmalloc(rep.num_formats * sizeof(XvImageFormatValues));
+            ret = Xcalloc(rep.num_formats, sizeof(XvImageFormatValues));
 
         if (ret != NULL) {
             for (unsigned int i = 0; i < rep.num_formats; i++) {
