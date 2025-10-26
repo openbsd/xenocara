@@ -1,12 +1,13 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-libdir=@libdir@
 includedir=@includedir@
+libdir=@libdir@
 
 Name: XRes
 Description: X Resource Information Extension Library
+URL: https://gitlab.freedesktop.org/xorg/lib/libxres/
 Version: @VERSION@
 Requires: xproto
-Requires.private: x11 xext
-Cflags: -I${includedir}
+Requires.private: x11 >= 1.6, xext
 Libs: -L${libdir} -lXRes
+Cflags: -I${includedir}

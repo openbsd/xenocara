@@ -29,7 +29,7 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so XRes version l.n.m corresponds to protocol version l.n
 #
-AC_INIT([libXres], [1.2.2],
+AC_INIT([libXres], [1.2.3],
         [https://gitlab.freedesktop.org/xorg/lib/libxres/-/issues], [libXres])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -38,7 +38,7 @@ AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -48,7 +48,7 @@ XORG_DEFAULT_OPTIONS
 XORG_CHECK_MALLOC_ZERO
 
 # Obtain compiler/linker options for dependencies
-PKG_CHECK_MODULES(XRES, [x11 >= 1.6] xext xextproto [resourceproto >= 1.2.0])
+PKG_CHECK_MODULES(XRES, [x11 >= 1.6] xproto xext xextproto [resourceproto >= 1.2.0])
 
 AC_CONFIG_FILES([Makefile
 		src/Makefile

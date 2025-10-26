@@ -1,3 +1,91 @@
+commit 30c789e5065f7af7d6a03c09e3ceb073ed810bdd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 7 18:18:28 2025 -0700
+
+    libXRes 1.2.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 460d11002d20683420fdb0d09ab3c7a0cccd74f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 15 14:39:32 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    and fix warnings raised by `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxres/-/merge_requests/8>
+
+commit 2aa5b0fe4b9d12e6f2a184e6cca39bd262880617
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 21 17:24:28 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxres/-/merge_requests/7>
+
+commit 934a300481b4f9a7450509015bec2e13a635be47
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 17 11:52:24 2025 -0800
+
+    xres.pc: list minimum version of 1.6 for libX11 dependency
+    
+    If someone is statically linking, they need a minimum version of
+    libX11 1.6 for the _XEatDataWords calls.
+    
+    Fixes: ae0ddaa ("Remove fallback for _XEatDataWords, require libX11 1.6 for it")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxres/-/merge_requests/7>
+
+commit 523afb636d30d0a8b19bd9edf984b35f0981fcc2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 17 11:40:10 2025 -0800
+
+    configure: add xproto to pkg-config dependencies list
+    
+    Required for <X11/Xfuncproto.h> header
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxres/-/merge_requests/7>
+
+commit 860f84072e864832d3a94c365241fe619967b63a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:41: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:41: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:41: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1474c2f9b18b158222eb923a14169f261a52aaaf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:29:59 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f77165c819b05af27d9878efe8526a157f569b1a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Dec 4 15:17:26 2022 -0800
@@ -320,7 +408,7 @@ Date:   Mon Apr 23 18:57:48 2012 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 01fc6f81f0a2935741dd1114aa3fa267d8be9095
-Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä <erkki.seppala@vincit.fi>
 Date:   Wed Dec 15 13:48:09 2010 +0200
 
     Implemented second part of XResource extension v1.2: XResQueryResourceBytes
@@ -331,7 +419,7 @@ Date:   Wed Dec 15 13:48:09 2010 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 0f38938a27df1f865dcdda35f4d2ef191092ba42
-Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä <erkki.seppala@vincit.fi>
 Date:   Mon Nov 29 12:43:51 2010 +0200
 
     Implemented first part of XResource extension v1.2: XResQueryClientIds
@@ -837,7 +925,7 @@ Date:   Sat Jul 9 06:03:13 2005 +0000
     Add .cvsignore files Switch _la_CFLAGS for AM_CFLAGS to clean up directory
 
 commit c1ed34d39740625d52eca7f2c5bf5c6797f28097
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 22 22:46:38 2005 +0000
 
     Apply these patches from Theo van Klaveren:
@@ -846,13 +934,13 @@ Date:   Wed Jun 22 22:46:38 2005 +0000
     to make the libraries distcheck.
 
 commit 2dbb8e41c6accaf9d86f3fdadfed5aea330da1fd
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jun 14 17:31:59 2005 +0000
 
     XRes/src/Makefile.am: Add $(top_srcdir)/include to INCLUDES
 
 commit a30727351e6cdeb7ff2ffa0bddad8c3a1be9eda0
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jun 7 18:51:23 2005 +0000
 
     - symlink.sh: Move XRes.h from proto/Resource to

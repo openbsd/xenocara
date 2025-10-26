@@ -25,7 +25,7 @@
 .\" or other dealings in this Software without prior written authorization
 .\" from the XFree86 Project.
 .\"
-.TH XRes __libmansuffix__ __vendorversion__
+.TH XRes __libmansuffix__ 2009-10-08 __vendorversion__
 .SH NAME
 XRes \- X-Resource extension client library
 .SH SYNOPSIS
@@ -37,33 +37,33 @@ typedef struct {
 	XID	resource_base;
 	XID	resource_mask;
 } XResClient;
-
+.sp
 typedef struct {
 	Atom	resource_type;
 	unsigned int	count;
 } XResType;
-.fi
-.HP
-Bool XResQueryExtension(Display *\fIdpy\fP,
-int *\fIevent_base_return\fP, int *\fIerror_base_return\fP\^);
-.HP
-Status XResQueryVersion(Display *\fIdpy\fP, int *\fImajor_version_return\fP,
-int *\fIminor_version_return\fP\^);
-.HP
-Status XResQueryClients(Display *\fIdpy\fP, int *\fInum_clients\fP,
-XResClient **\fIclients\fP\^);
-.HP
-Status XResQueryClientResources(Display *\fIdpy\fP, XID \fIxid\fP,
-int *\fInum_types\fP, XResType **\fItypes\fP\^);
-.HP
-Status XResQueryClientPixmapBytes(Display *\fIdpy\fP, XID \fIxid\fP,
-unsigned long *\fIbytes\fP\^);
+.sp
 .PP
+Bool XResQueryExtension(Display *\fIdpy\fP,
+    int *\fIevent_base_return\fP, int *\fIerror_base_return\fP\^);
+.PP
+Status XResQueryVersion(Display *\fIdpy\fP,
+    int *\fImajor_version_return\fP, int *\fIminor_version_return\fP\^);
+.PP
+Status XResQueryClients(Display *\fIdpy\fP,
+    int *\fInum_clients\fP, XResClient **\fIclients\fP\^);
+.PP
+Status XResQueryClientResources(Display *\fIdpy\fP, XID \fIxid\fP,
+    int *\fInum_types\fP, XResType **\fItypes\fP\^);
+.PP
+Status XResQueryClientPixmapBytes(Display *\fIdpy\fP, XID \fIxid\fP,
+    unsigned long *\fIbytes\fP\^);
+.fi
 .SH DESCRIPTION
 .B X-Resource
-is an extension that allows a client to query the X
-server about its usage of various resources.  It should not be confused
-with the X resource database access functions.
+is an extension that allows a client to query the X server about its
+usage of various resources.
+It should not be confused with the X resource database access functions.
 .PP
 .B XResQueryExtension
 returns
@@ -84,12 +84,11 @@ if the request succeeded; the values of the major and minor protocol
 versions supported by the server are returned in
 .I major_version_return
 and
-.I minor_version_return .
-.PP
+.IR minor_version_return .
 .PP
 .B XResQueryClients
-fills a list of clients of the given display. For each client it
-returns in the
+fills a list of clients of the given display.
+For each client it returns in the
 .I XResClient
 structure a mask and a base value of the resources used by these
 clients.
@@ -101,7 +100,7 @@ on failure.
 .PP
 .B XResQueryClientResources
 fills a list of
-XResType
+.B XResType
 structures, indicating for each resource type allocated by the client its
 name (as an Atom) and the number of resources of this type allocated.
 Returns
@@ -128,10 +127,11 @@ will return
 .I BadValue
 if passed an illegal client identifier.
 .SH "SEE ALSO"
-X(__miscmansuffix__)
+.BR X (__miscmansuffix__)
 .SH AUTHOR
 Mark Vojkovich, originally for The XFree86 Project Inc.
 .SH STABILITY
-This API is considered as experimental. The XRes library major
-revision may be incremented whenever incompatible changes are done to
-the API without notice. Use with care.
+This API is considered as experimental.
+The XRes library major revision may be incremented whenever incompatible changes
+are done to the API without notice.
+Use with care.
