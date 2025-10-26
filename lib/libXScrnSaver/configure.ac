@@ -22,7 +22,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXScrnSaver], [1.2.4],
+AC_INIT([libXScrnSaver], [1.2.5],
         [https://gitlab.freedesktop.org/xorg/lib/libxscrnsaver/-/issues],
         [libXScrnSaver])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -32,7 +32,7 @@ AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],

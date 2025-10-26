@@ -1,3 +1,67 @@
+commit 60c957ba8a727d01b376da0142aef7e18aa86fe1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 7 18:41:51 2025 -0700
+
+    libXScrnSaver 1.2.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 737ff69e5370eaeff83c05cf94e6b199776ec216
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 15 14:58:11 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    and fix warnings raised by `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxscrnsaver/-/merge_requests/7>
+
+commit 0d70de3201a000fe9b0d4a04d1c424df8e7e543f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 17 15:48:19 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxscrnsaver/-/merge_requests/6>
+
+commit 9b4e000c6c4ae213a3e52345751d885543f17929
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:35: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:35: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:35: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 42169536d9b331041aa0cbb1a75b0b9417d127e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:30:17 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 34f3f72b88c0a0a10d618e9dfbc88474ae5ce880
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Dec 4 15:36:44 2022 -0800
@@ -588,7 +652,7 @@ Date:   Thu Jul 13 14:58:47 2006 -0700
     renamed: .cvsignore -> .gitignore
 
 commit a183fb1a70d48155b67d98fb4e4aaca825842f12
-Author: Fredrik Höglund  <fredrik@kde.org>
+Author: Fredrik Höglund <fredrik@kde.org>
 Date:   Fri Mar 31 18:43:09 2006 +0000
 
     Update the package version number to 1.1. Require scrnsaverproto >= 1.1.
@@ -728,7 +792,7 @@ Date:   Sat Jul 9 06:04:32 2005 +0000
     Add .cvsignore files
 
 commit 3817722549db9a2377f034b0af5768f8c36bbf62
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 22 22:46:39 2005 +0000
 
     Apply these patches from Theo van Klaveren:
@@ -753,7 +817,7 @@ Date:   Tue Jun 21 15:41:36 2005 +0000
         src/Makefile.am
 
 commit 21286ccdf3418566b424a9f086289994ac0877f1
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jun 10 19:57:07 2005 +0000
 
     Build system for XScrnSaver

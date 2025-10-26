@@ -25,7 +25,7 @@
 .\" or other dealings in this Software without prior written authorization
 .\" from the XFree86 Project.
 .\"
-.TH XScreenSaver __libmansuffix__ __vendorversion__
+.TH XScreenSaver __libmansuffix__ 2013-02-08 __vendorversion__
 .SH NAME
 XScreenSaver \- X11 Screen Saver extension client library
 .SH SYNOPSIS
@@ -42,7 +42,7 @@ typedef struct {
     unsigned long eventMask;      /\(** events */
 .br
 } XScreenSaverInfo;
-
+.sp
 typedef struct {
     int type;               /\(** of event */
     unsigned long serial;   /\(** # of last request processed by server */
@@ -56,47 +56,39 @@ typedef struct {
     Time time;              /\(** event timestamp */
 .br
 } XScreenSaverNotifyEvent;
-.fi
-.HP
-Bool XScreenSaverQueryExtension(Display *\fIdpy\fP,
-int *\fIevent_base_return\fP, int *\fIerror_base_return\fP\^);
-.HP
-Status XScreenSaverQueryVersion(Display *\fIdpy\fP,
-int *\fImajor_version_return\fP, int *\fIminor_version_return\fP\^);
-.HP
-XScreenSaverInfo *XScreenSaverAllocInfo(\^void\^);
-.HP
-Status XScreenSaverQueryInfo(\^Display *\fIdpy\fP, Drawable \fIdrawable\fP,
-XScreenSaverInfo *\fIsaver_info\fP\^);
-.HP
-void XScreenSaverSelectInput(Display *\fIdpy\fP, Drawable \fIdrawable\fP,
-unsigned long \fImask\fp\^);
-.HP
-void XScreenSaverSetAttributes(Display *\fIdpy\fP, Drawable \fIdrawable\fP,
-int \fIx\fP,
-int \fIy\fP,
-unsigned int \fIwidth\fP,
-unsigned int \fIheight\fP,
-unsigned int \fIborder_width\fP,
-int \fIdepth\fP,
-unsigned int \fIclass\fP,
-Visual *\fIvisual\fP,
-unsigned long \fIvaluemask\fP,
-XSetWindowAttributes *\fIattributes\fP\^);
-.HP
-void XScreenSaverUnsetAttributes(Display *\fIdpy\fP,
-Drawable \fIdrawable\fP\^);
-.HP
-void XScreenSaverRegister(Display *\fIdpy\fP, int \fIscreen\fP,
-XID \fIxid\fP, Atom \fItype\fP\^);
-.HP
-Status XScreenSaverUnregister(Display *\fIdpy\fP, int \fIscreen\fP\^);
-.HP
-Status XScreenSaverGetRegistered(Display *\fIdpy\fP, int \fIscreen\fP,
-XID *\fIxid\fP, Atom *\fItype\fP\^);
-.HP
-void XScreenSaverSuspend(Display *\fIdpy\fP, Bool \fIsuspend\fP\^);
+.sp
 .PP
+Bool XScreenSaverQueryExtension(Display *\fIdpy\fP,
+    int *\fIevent_base_return\fP, int *\fIerror_base_return\fP\^);
+.PP
+Status XScreenSaverQueryVersion(Display *\fIdpy\fP,
+    int *\fImajor_version_return\fP, int *\fIminor_version_return\fP\^);
+.PP
+XScreenSaverInfo *XScreenSaverAllocInfo(\^void\^);
+.PP
+Status XScreenSaverQueryInfo(\^Display *\fIdpy\fP, Drawable \fIdrawable\fP,
+    XScreenSaverInfo *\fIsaver_info\fP\^);
+.PP
+void XScreenSaverSelectInput(Display *\fIdpy\fP, Drawable \fIdrawable\fP,
+    unsigned long \fImask\fP\^);
+.PP
+void XScreenSaverSetAttributes(Display *\fIdpy\fP, Drawable \fIdrawable\fP,
+    int \fIx\fP, int \fIy\fP, unsigned int \fIwidth\fP, unsigned int \fIheight\fP,
+    unsigned int \fIborder_width\fP, int \fIdepth\fP, unsigned int \fIclass\fP,
+    Visual *\fIvisual\fP, unsigned long \fIvaluemask\fP,
+    XSetWindowAttributes *\fIattributes\fP\^);
+.PP
+void XScreenSaverUnsetAttributes(Display *\fIdpy\fP, Drawable \fIdrawable\fP\^);
+.PP
+void XScreenSaverRegister(Display *\fIdpy\fP, int \fIscreen\fP, XID \fIxid\fP, Atom \fItype\fP\^);
+.PP
+Status XScreenSaverUnregister(Display *\fIdpy\fP, int \fIscreen\fP\^);
+.PP
+Status XScreenSaverGetRegistered(Display *\fIdpy\fP, int \fIscreen\fP,
+    XID *\fIxid\fP, Atom *\fItype\fP\^);
+.PP
+void XScreenSaverSuspend(Display *\fIdpy\fP, Bool \fIsuspend\fP\^);
+.fi
 .SH DESCRIPTION
 The X Window System provides support for changing the image on a
 display screen after a user-settable period of inactivity to avoid
@@ -152,14 +144,14 @@ if the request succeeded; the values of the major and minor protocol
 versions supported by the server are returned in
 .I major_version_return
 and
-.I minor_version_return .
+.IR minor_version_return .
 .PP
 .B XScreenSaverAllocInfo
 allocates and returns an \fBXScreenSaverInfo\fP structure
 for use in calls to \fBXScreenSaverQueryInfo\fP.
 All fields in the structure are initialized to zero.
 If insufficient memory is available, NULL is returned.
-The results of this routine can be released using \fIXFree\fP.
+The results of this routine can be released using \fBXFree\fP.
 .PP
 .B XScreenSaverQueryInfo
 returns information about the current state of the
@@ -172,9 +164,8 @@ The \fIstate\fP field specifies whether or not the screen saver is currently
 active and how the \fItil-or-since\fP value should be interpreted:
 .TP 4
 .I Off
-The screen is not currently being saved; \fItil-or-since\fP
-specifies the number of milliseconds until the screen saver is expected to
-activate.
+The screen is not currently being saved; \fItil-or-since\fP specifies
+the number of milliseconds until the screen saver is expected to activate.
 .TP 4
 .I On
 The screen is currently being saved; \fItil-or-since\fP specifies
@@ -207,8 +198,7 @@ events this client has requested using \fBScreenSaverSelectInput\fP.
 .B XScreenSaverSelectInput
 asks that events related to
 the screen saver be generated for this client.
-If
-no bits are set in \fIevent-mask\fP, then no events will be generated.
+If no bits are set in \fIevent-mask\fP, then no events will be generated.
 Otherwise, any combination of the following bits may be set:
 .TP 8
 .B ScreenSaverNotify
@@ -247,16 +237,15 @@ If no errors are generated by this request, any previous screen saver
 window attributes set by this client are released.
 .br
 When the screen saver next activates and the server is not grabbed by
-another client, the screen saver window is
-created, if necessary, and set to the specified attributes and events
-are generated as usual.
+another client, the screen saver window is created, if necessary,
+and set to the specified attributes and events are generated as usual.
 The colormap associated with the screen saver window is installed.
 Finally, the screen saver window is mapped.
 .br
 The window remains mapped and at the top of the stacking order
 until the screen saver is deactivated in response to activity on
 any of the user input devices, a \fBForceScreenSaver\fP request with
-a value of Reset, or any request that would cause the window to be
+a value of \fBReset\fP, or any request that would cause the window to be
 unmapped.
 .br
 If the screen saver activates while the server is grabbed by another
@@ -266,7 +255,7 @@ to deactivate the internal saver and activate the external saver.
 .br
 If the screen saver client's connection to the server is broken
 while the screen saver is activated and the client's close down mode has not
-been RetainPermanent or RetainTemporary, the current screen saver
+been \fBRetainPermanent\fP or \fBRetainTemporary\fP, the current screen saver
 is deactivated and the internal screen saver is immediately activated.
 .br
 When the screen saver deactivates, the screen saver window's colormap
@@ -311,49 +300,50 @@ is 'True', and restarts the timer if \fIsuspend\fP is 'False'.
 This function should be used by applications that don't want the
 screensaver or DPMS to become activated while they're for example in
 the process of playing a media sequence, or are otherwise continuously
-presenting visual information to the user while in a non-interactive
-state. This function is not intended to be called by an external
+presenting visual information to the user while in a non-interactive state.
+This function is not intended to be called by an external
 screensaver application.
 .br
 If \fBXScreenSaverSuspend\fP is called multiple times with \fIsuspend\fP
 set to 'True', it must be called an equal number of times with
 \fIsuspend\fP set to 'False' in order for the screensaver timer to be
-restarted. This request has no affect if a client tries to resume the
+restarted.
+This request has no affect if a client tries to resume the
 screensaver without first having suspended it.
 \fBXScreenSaverSuspend\fP can thus not be used by one client to resume
 the screensaver if it's been suspended by another client.
 .br
 If a client that has suspended the screensaver becomes disconnected from
 the X server, the screensaver timer will automatically be restarted, unless
-it's still suspended by another client. Suspending the screensaver timer
-doesn't prevent the screensaver from being forcibly activated with the
-\fBForceScreenSaver\fP request, or a DPMS mode from being set with the
-\fBDPMSForceLevel\fP request.
+it's still suspended by another client.
+Suspending the screensaver timer doesn't prevent the screensaver from being
+forcibly activated with the \fBForceScreenSaver\fP request,
+or a DPMS mode from being set with the \fBDPMSForceLevel\fP request.
 .br
 \fBXScreenSaverSuspend\fP also doesn't deactivate the screensaver or DPMS
 if either is active at the time the request to suspend them is received by
-the X server. But once they've been deactivated, they won't automatically
-be activated again, until the client has canceled the suspension.
+the X server.
+But once they've been deactivated, they won't automatically be activated again,
+until the client has canceled the suspension.
 .SH "ERRORS"
-.B XScreenSaverSelectInput,
-.B XScreenSaverQueryInfo,
-.B XScreenSaverSetAttributes
+.BR XScreenSaverSelectInput ,
+.BR XScreenSaverQueryInfo ,
+.BR XScreenSaverSetAttributes ,
 and
 .B XScreenSaverUnsetAttributes
 will generate a
-.I BadDrawable
+.B BadDrawable
 error if \fIdrawable\fP is not a valid drawable identifier.
-If any undefined bits are set in \fIevent-mask\fP,
-a BadValue error is generated by
-.B XScreenSaverSelectInput .
-.PP
+If any undefined bits are set in \fIevent-mask\fP, a
+.B BadValue
+error is generated by
+.BR XScreenSaverSelectInput .
 .SH AVAILABILITY
 \fBXScreenSaverSuspend\fP is available in version 1.1 and later versions
-of the X Screen Saver Extension. Version 1.1 was first released with
-X11R7.1.
-.PP
+of the X Screen Saver Extension.
+Version 1.1 was first released with X11R7.1.
 .SH "SEE ALSO"
-X(__miscmansuffix__)
+.BR X (__miscmansuffix__)
 .SH AUTHORS
 Jim Fulton and Keith Packard.
 .SH STABILITY
