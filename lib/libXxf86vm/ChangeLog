@@ -1,3 +1,62 @@
+commit 4f7497ee3b0deb0418ce48dcd862fd6c23e20064
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 13 18:20:17 2024 -0800
+
+    libXxf86vm 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1c93aceb217b6db55328506c271ccdded3a5a307
+Author: Peter Williams <peter@newton.cx>
+Date:   Mon Oct 14 10:54:23 2024 -0400
+
+    Add -no-undefined flag to LDFLAGS to fix Windows builds
+    
+    Closes #2
+    Patch originally from:
+    https://github.com/conda-forge/xorg-libxxf86vm-feedstock/commit/7c758477ff
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxxf86vm/-/merge_requests/7>
+
+commit 546c0e93adc535dfaaa66277928887c8dc1f8e13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 17 14:19:53 2024 -0800
+
+    Add X.Org's standard C warning flags to AM_CFLAGS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cfda59347e3a04415340a99f925a9cd85c0531b2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 8 16:30:15 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:14: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:14: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:14: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 396b42b2bfa698cae9349f35836abda9d45ae5ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:36:20 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 7fe2d41f164d3015216c1079cc7fbce1eea90c98
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Sep 26 17:48:52 2022 -0700
@@ -779,7 +838,7 @@ Date:   Thu Oct 13 01:20:52 2005 +0000
         that document multiple functions.
 
 commit 72995528798d388422e6e09ee26a0edaffadb779
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Sep 26 20:55:17 2005 +0000
 
     Simple whitespace change to change ownership of ,v file on server. Required
@@ -812,7 +871,7 @@ Date:   Fri Jul 1 16:16:15 2005 +0000
     spell freedesktop.org correctly
 
 commit a26154988a9367521a15e0876939d8ff7810cd81
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jun 10 22:38:47 2005 +0000
 
     Apply patch from Jeff Smith (whydoubt@yahoo.com):
