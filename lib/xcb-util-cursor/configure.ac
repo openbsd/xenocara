@@ -1,6 +1,6 @@
 dnl XCB_UTIL_M4_WITH_INCLUDE_PATH requires Autoconf >= 2.62
 AC_PREREQ(2.62)
-AC_INIT([xcb-util-cursor],[0.1.5],
+AC_INIT([xcb-util-cursor],[0.1.6],
         [https://gitlab.freedesktop.org/xorg/lib/libxcb-cursor/-/issues])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
@@ -26,13 +26,13 @@ PKG_CHECK_MODULES(XCB_RENDER, xcb-render)
 PKG_CHECK_MODULES(XCB_RENDERUTIL, xcb-renderutil)
 PKG_CHECK_MODULES(XCB_IMAGE, xcb-image)
 
-DEF_CURSORPATH="~/.icons:/usr/share/icons:/usr/share/pixmaps:/usr/X11R6/lib/X11/icons"
+DEF_CURSORPATH="~/.local/share/icons:~/.icons:${datadir}/icons:${datadir}/pixmaps"
 AC_ARG_WITH(cursorpath,
 	AS_HELP_STRING([--with-cursorpath=<paths>],
 		[Set default search path for cursors]),
 	[XCURSORPATH="$withval"],
 	[XCURSORPATH="$DEF_CURSORPATH"])
-AC_DEFINE_UNQUOTED([XCURSORPATH], ["$XCURSORPATH"])
+AC_SUBST(XCURSORPATH)
 
 AC_CONFIG_FILES([Makefile
 	cursor/Makefile cursor/xcb-cursor.pc

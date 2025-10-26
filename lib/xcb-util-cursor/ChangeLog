@@ -1,3 +1,60 @@
+commit 7b0fa99aa13084a9bf7be4180066f6a74b0adef1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 1 15:41:12 2025 -0700
+
+    xcb-util-cursor 0.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b7938aa581654efe05a306394a0e589aefb3235a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 2 14:22:18 2025 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxcb-cursor/-/merge_requests/10>
+
+commit 4929f6051658ba5424b41703a1fb63f9db896065
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 7 11:22:25 2024 -0700
+
+    Update submodule URL from anongit to gitlab
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxcb-cursor/-/merge_requests/8>
+
+commit d28a3227eb9e4bdeeb4dd93017c298808bbe62ee
+Author: Uli Schlachter <psychon@znc.in>
+Date:   Sun May 5 15:36:13 2024 +0200
+
+    Copy default search path from libXcursor
+    
+    In 2018, the default search path was changed in libXcursor in commit
+    2263c196cb0d. Specifically, ~/.local/share/icons was added. This was
+    never copied to xcb-util-cursor. Additionally, libXcursor configures its
+    search path based on e.g. --prefix instead of hardcoding /usr.
+    
+    This commit brings this library in sync with libXcursor's behaviour.
+    
+    Since the default value now contains ${datadir}, we have to get that
+    expanded. The previous approach only did one step of expansion,
+    resulting in ${datarootdir}. Thus, the -DXCURSORPATH compiler argument
+    now needs to be generated in Makefile.am to ensure recursive
+    substitution.
+    
+    This was tested with "make V=1" which showed the following in its output
+    for a run without any flags passed to configure:
+    
+      "-DXCURSORPATH=\"~/.local/share/icons:~/.icons:/usr/local/share/icons:/usr/local/share/pixmaps\""
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/lib/libxcb-cursor/-/issues/12
+    Signed-off-by: Uli Schlachter <psychon@znc.in>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxcb-cursor/-/merge_requests/7>
+
 commit c393b71fff76fe8627d0e95c53e756615f84d7a3
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Oct 19 13:30:26 2023 -0700

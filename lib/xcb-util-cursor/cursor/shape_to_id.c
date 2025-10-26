@@ -1,4 +1,4 @@
-/* ANSI-C code produced by gperf version 3.1 */
+/* ANSI-C code produced by gperf version 3.3 */
 /* Command-line: gperf --includes --struct-type --language=ANSI-C --switch=1 /share/OpenBSD/xenocara/lib/xcb-util-cursor/cursor/shape_to_id.gperf  */
 /* Computed positions: -k'1-2,4,$' */
 
@@ -86,10 +86,20 @@ hash (register const char *str, register size_t len)
     {
       default:
         hval += asso_values[(unsigned char)str[3]];
+#if (defined __cplusplus && (__cplusplus >= 201703L || (__cplusplus >= 201103L && defined __clang__ && __clang_major__ + (__clang_minor__ >= 9) > 3))) || (defined __STDC_VERSION__ && __STDC_VERSION__ >= 202000L && ((defined __GNUC__ && __GNUC__ >= 10) || (defined __clang__ && __clang_major__ >= 9)))
+      [[fallthrough]];
+#elif (defined __GNUC__ && __GNUC__ >= 7) || (defined __clang__ && __clang_major__ >= 10)
+      __attribute__ ((__fallthrough__));
+#endif
       /*FALLTHROUGH*/
       case 3:
       case 2:
         hval += asso_values[(unsigned char)str[1]];
+#if (defined __cplusplus && (__cplusplus >= 201703L || (__cplusplus >= 201103L && defined __clang__ && __clang_major__ + (__clang_minor__ >= 9) > 3))) || (defined __STDC_VERSION__ && __STDC_VERSION__ >= 202000L && ((defined __GNUC__ && __GNUC__ >= 10) || (defined __clang__ && __clang_major__ >= 9)))
+      [[fallthrough]];
+#elif (defined __GNUC__ && __GNUC__ >= 7) || (defined __clang__ && __clang_major__ >= 10)
+      __attribute__ ((__fallthrough__));
+#endif
       /*FALLTHROUGH*/
       case 1:
         hval += asso_values[(unsigned char)str[0]];
@@ -101,6 +111,10 @@ hash (register const char *str, register size_t len)
 struct shape_mapping *
 in_word_set (register const char *str, register size_t len)
 {
+#if (defined __GNUC__ && __GNUC__ + (__GNUC_MINOR__ >= 6) > 4) || (defined __clang__ && __clang_major__ >= 3)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
   static struct shape_mapping wordlist[] =
     {
 #line 67 "/share/OpenBSD/xenocara/lib/xcb-util-cursor/cursor/shape_to_id.gperf"
@@ -258,6 +272,9 @@ in_word_set (register const char *str, register size_t len)
 #line 28 "/share/OpenBSD/xenocara/lib/xcb-util-cursor/cursor/shape_to_id.gperf"
       {"draped_box",24}
     };
+#if (defined __GNUC__ && __GNUC__ + (__GNUC_MINOR__ >= 6) > 4) || (defined __clang__ && __clang_major__ >= 3)
+#pragma GCC diagnostic pop
+#endif
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
@@ -501,7 +518,7 @@ in_word_set (register const char *str, register size_t len)
                 resword = &wordlist[76];
                 goto compare;
             }
-          return 0;
+          return (struct shape_mapping *) 0;
         compare:
           {
             register const char *s = resword->name;
@@ -511,7 +528,7 @@ in_word_set (register const char *str, register size_t len)
           }
         }
     }
-  return 0;
+  return (struct shape_mapping *) 0;
 }
 #line 81 "/share/OpenBSD/xenocara/lib/xcb-util-cursor/cursor/shape_to_id.gperf"
 

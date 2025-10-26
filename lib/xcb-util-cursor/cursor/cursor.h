@@ -77,26 +77,26 @@ struct xcb_cursor_context_t {
  * contains a magic number, a version number and a
  * table of contents which has type and offset information
  * for the remaining tables in the file.
- *  
+ *
  * File minor versions increment for compatible changes
  * File major versions increment for incompatible changes (never, we hope)
- *      
+ *
  * Chunks of the same type are always upward compatible.  Incompatible
  * changes are made with new chunk types; the old data can remain under
  * the old type.  Upward compatible changes can add header data as the
  * header lengths are specified in the file.
- *      
- *  File:   
+ *
+ *  File:
  *      FileHeader
  *      LISTofChunk
- *      
+ *
  *  FileHeader:
  *      CARD32          magic       magic number
  *      CARD32          header      bytes in file header
  *      CARD32          version     file version
  *      CARD32          ntoc        number of toc entries
  *      LISTofFileToc   toc         table of contents
- *      
+ *
  *  FileToc:
  *      CARD32          type        entry type
  *      CARD32          subtype     entry subtype (size for images)

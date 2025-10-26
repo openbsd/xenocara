@@ -1,7 +1,7 @@
-/** 
+/**
 @file
 @brief XCB Utility functions
- 
+
 These routines are used to facilitate the use of XCB in programs.
 */
 

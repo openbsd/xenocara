@@ -5,7 +5,7 @@ lib_LTLIBRARIES = libxcb-cursor.la
 
 xcbinclude_HEADERS = xcb_cursor.h
 
-AM_CFLAGS = $(CWARNFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) -DXCURSORPATH=\"$(XCURSORPATH)\"
 
 libxcb_cursor_la_SOURCES = cursor.c shape_to_id.c load_cursor.c parse_cursor_file.c
 libxcb_cursor_la_CPPFLAGS = $(XCB_CFLAGS) $(XPROTO_CFLAGS) $(XCB_RENDER_CFLAGS) $(XCB_RENDERUTIL_CFLAGS) $(XCB_IMAGE_CFLAGS)
