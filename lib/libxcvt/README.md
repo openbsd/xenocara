@@ -11,7 +11,7 @@ replacement to the version provided by the `Xorg` server.
 An example output is:
 
 ```
-$ $ cvt --verbose 1920 1200 75
+$ cvt --verbose 1920 1200 75
 # 1920x1200 74.93 Hz (CVT 2.30MA) hsync: 94.04 kHz; pclk: 245.25 MHz
 Modeline "1920x1200_75.00"  245.25  1920 2064 2264 2608  1200 1203 1209 1255 -hsync +vsync
 ```

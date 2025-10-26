@@ -22,11 +22,13 @@ include:
     {% for d in distributions %}
       - '/templates/{{d.name}}.yml'
     {% endfor %}
+  - template: Security/SAST.gitlab-ci.yml
 
 stages:
   - sanity check
   - prep
   - build
+  - test
 
 variables:
   FDO_UPSTREAM_REPO: xorg/lib/libxcvt

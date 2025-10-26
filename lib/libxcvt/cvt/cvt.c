@@ -30,7 +30,7 @@
 
 #include <libxcvt/libxcvt.h>
 
-bool
+static bool
 cvt_is_standard(int hdisplay, int vdisplay, float vrefresh, bool reduced, bool verbose)
 {
     bool is_cvt = true;

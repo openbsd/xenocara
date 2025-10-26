@@ -79,8 +79,8 @@ libxcvt_gen_mode_info(int hdisplay, int vdisplay, float vrefresh, bool reduced, 
     /* 2) character cell horizontal granularity (pixels) - default 8 */
 #define CVT_H_GRANULARITY 8
 
-    /* 4) Minimum vertical porch (lines) - default 3 */
-#define CVT_MIN_V_PORCH 3
+    /* 4) Minimum vertical front porch (lines) - default 3 */
+#define CVT_MIN_V_PORCH_RND 3
 
     /* 4) Minimum number of vertical back porch lines - default 6 */
 #define CVT_MIN_V_BPORCH 6
@@ -161,16 +161,16 @@ libxcvt_gen_mode_info(int hdisplay, int vdisplay, float vrefresh, bool reduced, 
 
         float hblank_percentage;
         int vsync_and_back_porch, vback_porch;
-        int hblank;
+        int hblank, hsync_w;
 
         /* 8. Estimated Horizontal period */
         hperiod = ((float) (1000000.0 / vfield_rate - CVT_MIN_VSYNC_BP)) /
-            (vdisplay_rnd + 2 * vmargin + CVT_MIN_V_PORCH + interlace);
+            (vdisplay_rnd + 2 * vmargin + CVT_MIN_V_PORCH_RND + interlace);
 
         /* 9. Find number of lines in sync + backporch */
         if (((int) (CVT_MIN_VSYNC_BP / hperiod) + 1) <
-            (vsync + CVT_MIN_V_PORCH))
-            vsync_and_back_porch = vsync + CVT_MIN_V_PORCH;
+            (vsync + CVT_MIN_V_BPORCH))
+            vsync_and_back_porch = vsync + CVT_MIN_V_BPORCH;
         else
             vsync_and_back_porch = (int) (CVT_MIN_VSYNC_BP / hperiod) + 1;
 
@@ -181,7 +181,7 @@ libxcvt_gen_mode_info(int hdisplay, int vdisplay, float vrefresh, bool reduced, 
         /* 11. Find total number of lines in vertical field */
         mode_info->vtotal =
             vdisplay_rnd + 2 * vmargin + vsync_and_back_porch + interlace +
-            CVT_MIN_V_PORCH;
+            CVT_MIN_V_PORCH_RND;
 
         /* 5) Definition of Horizontal blanking time limitation */
         /* Gradient (%/kHz) - default 600 */
@@ -216,13 +216,12 @@ libxcvt_gen_mode_info(int hdisplay, int vdisplay, float vrefresh, bool reduced, 
         /* Fill in HSync values */
         mode_info->hsync_end = mode_info->hdisplay + hblank / 2;
 
-        mode_info->hsync_start = mode_info->hsync_end -
-            (mode_info->htotal * CVT_HSYNC_PERCENTAGE) / 100;
-        mode_info->hsync_start += CVT_H_GRANULARITY -
-            mode_info->hsync_start % CVT_H_GRANULARITY;
+        hsync_w = (mode_info->htotal * CVT_HSYNC_PERCENTAGE) / 100;
+        hsync_w -= hsync_w % CVT_H_GRANULARITY;
+        mode_info->hsync_start = mode_info->hsync_end - hsync_w;
 
         /* Fill in vsync values */
-        mode_info->vsync_start = mode_info->vdisplay + CVT_MIN_V_PORCH;
+        mode_info->vsync_start = mode_info->vdisplay + CVT_MIN_V_PORCH_RND;
         mode_info->vsync_end = mode_info->vsync_start + vsync;
 
     }

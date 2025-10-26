@@ -18,11 +18,13 @@ include:
     file:
       - '/templates/ci-fairy.yml'
       - '/templates/fedora.yml'
+  - template: Security/SAST.gitlab-ci.yml
 
 stages:
   - sanity check
   - prep
   - build
+  - test
 
 variables:
   FDO_UPSTREAM_REPO: xorg/lib/libxcvt
@@ -91,7 +93,7 @@ check-merge-request:
 .fedora.34:
   variables:
     FDO_DISTRIBUTION_VERSION: '34'
-    FDO_DISTRIBUTION_TAG: '2021-07-26.0'
+    FDO_DISTRIBUTION_TAG: '2022-08-03.0'
 
 prep-fedora-34:
   extends:
