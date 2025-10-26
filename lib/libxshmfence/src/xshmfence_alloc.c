@@ -73,13 +73,22 @@ int
 xshmfence_alloc_shm(void)
 {
 	char	template[] = SHMDIR "/shmfd-XXXXXX";
-	int	fd;
+	int	fd = -1;
 #ifndef HAVE_MKOSTEMP
 	int	flags;
 #endif
 
 #if HAVE_MEMFD_CREATE
-	fd = memfd_create("xshmfence", MFD_CLOEXEC|MFD_ALLOW_SEALING);
+	static int disable_memfd = -1;
+
+	if (disable_memfd == -1) {
+		const char *val = getenv("XSHMFENCE_NO_MEMFD");
+		disable_memfd = val ? !!atoi(val) : 0;
+	}
+
+	if (disable_memfd <= 0)
+		fd = memfd_create("xshmfence", MFD_CLOEXEC|MFD_ALLOW_SEALING);
+
 	if (fd < 0)
 #endif
 #ifdef SHM_ANON

@@ -23,20 +23,22 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([libxshmfence], [1.3.2],
+AC_INIT([libxshmfence], [1.3.3],
         [https://gitlab.freedesktop.org/xorg/lib/libxshmfence/-/issues],
         [libxshmfence])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
+# Set common system defines for POSIX extensions, such as _GNU_SOURCE
+# Must be called before any macros that run the compiler (like LT_INIT
+# or XORG_DEFAULT_OPTIONS) to avoid autoconf errors.
 AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-xz])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS, XORG_WITH_LINT
 m4_ifndef([XORG_MACROS_VERSION],
@@ -108,7 +110,7 @@ AC_CHECK_DECLS([__NR_memfd_create], [], [], [[#include <asm/unistd.h>]])
 
 AC_CHECK_HEADERS([sys/memfd.h], [AC_DEFINE([HAVE_MEMFD_H], 1, [Has sys/memfd.h header])])
 
-AC_ARG_ENABLE(visibility,     AC_HELP_STRING([--enable-visibility], [Enable symbol visibility (default: auto)]),
+AC_ARG_ENABLE(visibility,     AS_HELP_STRING([--enable-visibility], [Enable symbol visibility (default: auto)]),
 				[SYMBOL_VISIBILITY=$enableval],
 				[SYMBOL_VISIBILITY=auto])
 
@@ -128,15 +130,15 @@ if test x$SYMBOL_VISIBILITY != xno; then
 	fi
     fi
     if test x$have_visibility != xno; then
-	AC_TRY_COMPILE(
-	    [#include <X11/Xfuncproto.h>
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+           [[#include <X11/Xfuncproto.h>
 	     extern _X_HIDDEN int hidden_int;
 	     extern _X_EXPORT int public_int;
 	     extern _X_HIDDEN int hidden_int_func(void);
-	     extern _X_EXPORT int public_int_func(void);],
-	    [],
-	    have_visibility=yes,
-	    have_visibility=no)
+	     extern _X_EXPORT int public_int_func(void);]],
+            [[]])],
+           [have_visibility=yes],
+           [have_visibility=no])
     fi
     AC_MSG_RESULT([$have_visibility])
     if test x$have_visibility != xno; then
