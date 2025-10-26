@@ -25,8 +25,7 @@
 .ns
 .TP \\$1
 ..
-.TH XFIXES __libmansuffix__ __xorgversion__
-
+.TH XFIXES __libmansuffix__ 2008-05-19 __xorgversion__
 .SH NAME
 XFixes \- Augmented versions of core protocol requests
 .SH SYNTAX
@@ -55,21 +54,28 @@ Specifies which window.
 Specifies the save set operation (SetModeInsert/SetModeDelete).
 .IP \fItarget\fP 1i
 Specifies the target when executing the save set
-(SaveSetNearest/SaveSetRoot).  In SaveSetNearest mode, the save set member
-window will be reparented to the nearest window not owned by the save set
-client.  In SaveSetRoot mode, the save set member window will be reparented
-to the root window.
+.RB ( SaveSetNearest / SaveSetRoot ).
+In
+.B SaveSetNearest
+mode, the save set member window will be reparented to the
+nearest window not owned by the save set client.
+In
+.B SaveSetRoot
+mode, the save set member window will be reparented to the root window.
 .IP \fImap\fP 1i
-Specifies the map mode (SaveSetMap/SaveSetUnmap) which selects whether the
+Specifies the map mode
+.RB ( SaveSetMap / SaveSetUnmap )
+which selects whether the
 save setmember window will be mapped or unmapped during save set processing.
 .SH DESCRIPTION
 .B Xfixes
-is a simple library designed to interface the X Fixes
-Extension.  This extension provides application with work arounds for
+is a simple library designed to interface the X Fixes Extension.
+This extension provides application with work arounds for
 various limitations in the core protocol.
 .SH RESTRICTIONS
 .B Xfixes
 will remain upward compatible after the 1.0 release.
 .SH AUTHORS
-Keith Packard, member of the XFree86 Project, Inc. and
-HP, Owen Taylor, member of the Gnome Foundation and Redhat, Inc.
+Keith Packard, member of the XFree86 Project, Inc. and HP;
+.br
+Owen Taylor, member of the Gnome Foundation and Redhat, Inc.

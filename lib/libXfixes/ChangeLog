@@ -1,3 +1,36 @@
+commit 70d5b0e37f8a759f3dbc218f22954347ceed094a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 1 16:11:31 2025 -0700
+
+    libXfixes 6.0.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 109430d6ef31fb83872f30e51a1d9ed911442dbf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 14 11:03:13 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    and fix warnings raised by `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfixes/-/merge_requests/7>
+
+commit f50dd4df16163da731ad9f251cc98b9ccd0e7455
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 16 09:21:32 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfixes/-/merge_requests/6>
+
 commit c1cab28e27dd1c5a81394965248b57e490ccf2ca
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 9 13:27:07 2023 -0700
@@ -890,32 +923,32 @@ Date:   Thu May 19 00:10:08 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit 1406e1cbe2cf76e6e056377af831f9fdf710e487
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue May 17 17:02:24 2005 +0000
 
     Conditionally include config.h in xc/lib/Xdamage and xc/lib/Xfixes
 
 commit 03d31637787906378bc2809758b6dbfe79ea55ad
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue May 17 16:11:26 2005 +0000
 
     Remove rest of half-removed if statement
     remove irrelevant entries
 
 commit 7d85687a6d8319ac1a48e0294228632ffbefdc8a
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue May 17 15:22:23 2005 +0000
 
     And here
 
 commit 8424a78dff9a51f7f6ccbfe111a78242867ccdf4
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue May 17 15:21:58 2005 +0000
 
     Check in Makefile.am here
 
 commit 23a209b91fd011539c6d9a9447860dac4e12eae9
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue May 17 15:21:14 2005 +0000
 
     Really check in the build system for Xfixes
