@@ -23,7 +23,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.70])
-AC_INIT([libXt], [1.3.0],
+AC_INIT([libXt], [1.3.1],
 	[https://gitlab.freedesktop.org/xorg/lib/libxt/-/issues/], [libXt])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])

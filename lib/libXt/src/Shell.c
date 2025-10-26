@@ -93,6 +93,10 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xmu/Editres.h>
 #endif
 
+#ifdef WIN32
+#include <process.h>		/* for getpid() */
+#endif
+
 /***************************************************************************
  *
  * Note: per the Xt spec, the Shell geometry management assumes in
@@ -1002,10 +1006,10 @@ _XtShellColormap(Widget widget, int closure, XrmValue *value)
 static void
 _XtShellAncestorSensitive(Widget widget, int closure, XrmValue *value)
 {
-    static Boolean true = True;
+    static Boolean true_value = True;
 
     if (widget->core.parent == NULL)
-        value->addr = (XPointer) (&true);
+        value->addr = (XPointer) (&true_value);
     else
         _XtCopyFromParent(widget, closure, value);
 }

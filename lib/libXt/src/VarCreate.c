@@ -58,10 +58,6 @@ in this Software without prior written authorization from The Open Group.
 #include "VarargsI.h"
 #include "CreateI.h"
 
-#if (defined(SUNSHLIB) || defined(AIXSHLIB)) && defined(SHAREDCODE)
-#define XtToolkitInitialize _XtToolkitInitialize
-#endif                          /* (SUNSHLIB || AIXSHLIB) && SHAREDCODE */
-
 static Widget
 _XtVaCreateWidget(String name,
                   WidgetClass widget_class,
@@ -334,8 +330,6 @@ _XtVaAppInitialize(XtAppContext *app_context_return,
                                 applicationShellWidgetClass, var_args);
 }
 
-#if !((defined(SUNSHLIB) || defined(AIXSHLIB)) && defined(SHAREDCODE))
-
 /*
  * If not used as a shared library, we still need a front end to
  * _XtVaOpenApplication and to _XtVaAppInitialize.
@@ -384,5 +378,3 @@ XtVaAppInitialize(XtAppContext *app_context_return,
     va_end(var);
     return code;
 }
-
-#endif                          /* !((SUNSHLIB || AIXSHLIB) && SHAREDCODE) */

@@ -54,10 +54,8 @@ typedef struct _WidgetClassRec *CoreWidgetClass;
 typedef struct _WidgetRec *CoreWidget;
 externalref WidgetClass coreWidgetClass;
 
-#ifndef VMS
 externalref WidgetClass widgetClass;
 
-#endif
 
 _XFUNCPROTOEND
 

@@ -881,7 +881,8 @@ dump_widget_tree(Widget w, int indent)
 void
 _XtResourceConfigurationEH(Widget w,
                            XtPointer client_data _X_UNUSED,
-                           XEvent *event)
+                           XEvent *event,
+                           Boolean *continue_to_dispatch _X_UNUSED)
 {
     Atom actual_type;
     int actual_format;

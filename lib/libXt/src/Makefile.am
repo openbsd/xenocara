@@ -67,8 +67,7 @@ libXt_la_SOURCES = \
 	VarCreate.c \
 	VarGet.c \
 	Varargs.c \
-	Vendor.c \
-	sharedlib.c
+	Vendor.c
 
 DISTCLEANFILES = StringDefs.c
 

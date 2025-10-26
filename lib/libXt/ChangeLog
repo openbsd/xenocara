@@ -1,3 +1,187 @@
+commit 1dfcfa8dcc3958749849438a802d66728ccf3115
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Nov 16 23:34:24 2024 -0500
+
+    libXt 1.3.1
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxt/-/merge_requests/71>
+
+commit cbbe13a9e0fd5908288e617b56f41ca1a66d9a0e
+Author: Mohamed Akram <mohd.akram@outlook.com>
+Date:   Thu May 23 00:34:07 2024 +0400
+
+    Improve linking with widget libraries on macOS
+    
+    This allows getting rid of the vendor shell hack in libXaw and libXaw3d
+    by using a coalesced weak reference.
+
+commit a938ec5ca1923759327b7b80861d8382b3686a1b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 14:12:30 2024 -0800
+
+    unifdef AIXSHLIB & SUNSHLIB
+    
+    AIXSHLIB was only set in the Imake configs for AIX versions < 5
+    SUNSHLIB was only set in the Imake configs for SunOS versions < 5
+    Neither has ever been set in the autoconf configs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3605d8a673cad8e0684245255fe8b26f07780d82
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 13:41:07 2024 -0800
+
+    unifdef __EMX__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a80844c38fb63103e114a2ed77cd7c734271917
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 13:37:47 2024 -0800
+
+    unifdef VMS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 83316566121745b6e1a0c3f4dbce06241ee29ecd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 13:34:19 2024 -0800
+
+    unifdef USG
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b51706a073ca1f7f43d6fab1710e16a08ffd108c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 13:19:36 2024 -0800
+
+    unifdef MOTOROLA
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 481268a77f1e8d568a0b9b42279df753e21818df
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 13:18:08 2024 -0800
+
+    unifdef AIXV3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8c48c1e04723b1df9998794b0f33083d73ea5204
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 13:16:09 2024 -0800
+
+    unifdef __osf__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ae35984780c7587fff7029ef5655f9ce6c4acc66
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 13:14:29 2024 -0800
+
+    unifdef hpux
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0f4d2e4db54161e6e763248bee1446080c38d284
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 13:10:46 2024 -0800
+
+    unifdef sgi
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bb8362516dc4ccf210c27b0069e58276a826c999
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 11 13:09:04 2024 -0800
+
+    unifdef ultrix
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e52dfe7dfb9a414c6b2e1e7898ca135ab7dd185a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 12 14:35:16 2023 -0500
+
+    quiet a couple of unused-parameter warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a1ccbde53f96442d2421ad0bcdc25f1615b62786
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 12 14:24:55 2023 -0500
+
+    eliminate an unnecessary cast
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 2a8924da5a32bd80369578257fb633f26964423e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 12 14:16:49 2023 -0500
+
+    Add continue_to_dispatch parameter to _XtResourceConfigurationEH()
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit f294d8ed4b22c8d683c577cd6c9f35f62d6760ba
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 12 13:19:42 2023 -0500
+
+    remove substitution for EXEEXT_FOR_BUILD, not defined in automake
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 56875344b2a62845b8a494830bfb0a5f6ed2d3d6
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 12 05:33:05 2023 -0500
+
+    issue #20: c23 boolean conflict
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 2fa6dcbc1779b60e9f30d83c723bc39da0a0c281
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 18 10:48:43 2023 -0700
+
+    README.md: update & correct links to O'Reilly X Toolkit books
+    
+    Fix volume 5 link to point to volume 5, not 4.
+    Fix volume 4 3rd edition link to point to 3rd ed. not 2nd.
+    Update links to drop "www." from hostname to avoid a redirect.
+    
+    Reported-by: consolers on #xorg-devel IRC
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5eb27c36cab875713702cd1e8e1c40372ceaa7f3
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Aug 14 19:53:50 2023 -0400
+
+    issue #19: include <process.h> on Windows for getpid()
+    
+    submitted by Billy O'Neal
+    
+    This problem was first detected in
+    https://github.com/microsoft/vcpkg/pull/33088
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 17c53aba93fce36c9180b9de002cd6aacf15813b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat May 27 09:29:33 2023 -0400
+
+    issue #18: cross-build issue in util
+    
+    Modify link rule for utils/makestrs to use $(CC_FOR_BUILD) directly,
+    avoiding libtool flags added when cross-compiling the library.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 84fa033e9f7f1567f6174bf5e18cb7fb37914aa7
+Author: Thomas E. Dickey <dickey@his.com>
+Date:   Sat May 27 00:34:15 2023 +0000
+
+    issue #17: avoid _Static_assert from c++
+
 commit 64fca6a2d7cf4fee28ca2277ca6a8b7b32aee66e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 9 13:42:31 2023 -0700
@@ -3891,7 +4075,7 @@ Date:   Sat Mar 27 16:30:02 2010 -0400
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit e3bce11a8ea7e0175a6f08367bace9b0eb2b898a
-Author: Rémi Cardona  <remi@gentoo.org>
+Author: Rémi Cardona <remi@gentoo.org>
 Date:   Mon Mar 15 22:59:04 2010 +0100
 
     libXt 1.0.8
@@ -3940,7 +4124,7 @@ Date:   Mon Dec 7 22:28:53 2009 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit 345633dc9c79b32a1b391dfb4dfedf87ae9e291b
-Author: Rémi Cardona  <remi@gentoo.org>
+Author: Rémi Cardona <remi@gentoo.org>
 Date:   Mon Nov 9 12:26:17 2009 +0100
 
     Don't install makestrs on the system
@@ -4622,7 +4806,7 @@ Date:   Thu Jun 30 12:23:32 2005 +0000
     Add -no-undefined to linker command to build shared library on cygwin too
 
 commit 64b2b98096c6a5b2ac3af59796e07601eee4e28a
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 20 21:47:20 2005 +0000
 
     - Make Xt install its internal files in /usr/include/X11, both in the
@@ -4683,13 +4867,13 @@ Date:   Thu May 19 00:10:08 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit c7fe09644945e3725c0b67b84cd24d8475cea184
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed May 18 19:34:25 2005 +0000
 
     Also include include/X11
 
 commit 605a76dcc93e277e1b26841a0225b7e0fb851b76
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed May 18 15:38:31 2005 +0000
 
     - conditionally include config.h in xc/lib/Xt sources

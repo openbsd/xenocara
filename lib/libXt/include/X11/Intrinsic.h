@@ -98,13 +98,8 @@ typedef char *String;
 
 #include <stddef.h>
 
-#ifdef VMS
-#define externalref globalref
-#define externaldef(psect) globaldef {"psect"} noshare
-#else
 #define externalref extern
 #define externaldef(psect)
-#endif /* VMS */
 
 #ifndef FALSE
 #define FALSE 0
@@ -174,7 +169,7 @@ typedef unsigned short	Dimension;  /* Size in pixels			*/
 typedef short		Position;   /* Offset from 0 coordinate		*/
 
 typedef void*		XtPointer;
-#if __STDC_VERSION__ >= 201112L
+#if __STDC_VERSION__ >= 201112L && !defined(__cplusplus)
 _Static_assert(sizeof(XtArgVal) >= sizeof(XtPointer), "XtArgVal too small");
 _Static_assert(sizeof(XtArgVal) >= sizeof(long), "XtArgVal too small");
 #endif

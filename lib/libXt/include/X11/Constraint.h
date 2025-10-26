@@ -52,9 +52,7 @@ _XFUNCPROTOBEGIN
 
 typedef struct _ConstraintClassRec *ConstraintWidgetClass;
 
-#ifndef VMS
 externalref WidgetClass constraintWidgetClass;
-#endif
 
 _XFUNCPROTOEND
 

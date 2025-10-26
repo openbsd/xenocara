@@ -666,7 +666,7 @@ _XtCreatePopupShell(String name,
 
 #ifndef X_NO_RESOURCE_CONFIGURATION_MANAGEMENT
     XtAddEventHandler(widget, (EventMask) PropertyChangeMask, FALSE,
-                      (XtEventHandler) _XtResourceConfigurationEH, NULL);
+                      _XtResourceConfigurationEH, NULL);
 #endif
     return (widget);
 }
@@ -716,7 +716,7 @@ _XtAppCreateShell(String name,
 
 #ifndef X_NO_RESOURCE_CONFIGURATION_MANAGEMENT
     XtAddEventHandler(shell, (EventMask) PropertyChangeMask, FALSE,
-                      (XtEventHandler) _XtResourceConfigurationEH, NULL);
+                      _XtResourceConfigurationEH, NULL);
 #endif
 
     return shell;

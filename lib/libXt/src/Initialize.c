@@ -90,31 +90,6 @@ in this Software without prior written authorization from The Open Group.
 
 #include <stdlib.h>
 
-#if (defined(SUNSHLIB) || defined(AIXSHLIB)) && defined(SHAREDCODE)
-/*
- * If used as a shared library, generate code under a different name so that
- * the stub routines in sharedlib.c get loaded into the application binary.
- */
-#define XtToolkitInitialize _XtToolkitInitialize
-#define XtOpenApplication _XtOpenApplication
-#define XtAppInitialize _XtAppInitialize
-#define XtInitialize _XtInitialize
-#endif                          /* (SUNSHLIB || AIXSHLIB) && SHAREDCODE */
-
-/*
- * hpux
- * Hand-patched versions of HP-UX prior to version 7.0 can usefully add
- * -DUSE_UNAME in the appropriate config file to get long hostnames.
- */
-
-#ifdef USG
-#define USE_UNAME
-#endif
-
-#ifdef USE_UNAME
-#include <sys/utsname.h>
-#endif
-
 /* some unspecified magic number of expected search levels for Xrm */
 #define SEARCH_LIST_SIZE 1000
 
@@ -162,40 +137,14 @@ static XrmOptionDescRec const opTable[] = {
 static void
 GetHostname(char *buf, int maxlen)
 {
-#ifdef USE_UNAME
-    int len;
-    struct utsname name;
-
-    if (maxlen <= 0 || buf == NULL)
-        return;
-
-    uname(&name);
-    len = strlen(name.nodename);
-    if (len >= maxlen)
-        len = maxlen;
-    (void) strncpy(buf, name.nodename, len - 1);
-    buf[len - 1] = '\0';
-#else
     if (maxlen <= 0 || buf == NULL)
         return;
 
     buf[0] = '\0';
     (void) gethostname(buf, (size_t) maxlen);
     buf[maxlen - 1] = '\0';
-#endif
 }
 
-#ifdef SUNSHLIB
-void
-_XtInherit(void)
-{
-    extern void __XtInherit();
-
-    __XtInherit();
-}
-
-#define _XtInherit __XtInherit
-#endif
 
 #if defined (WIN32) || defined(__CYGWIN__)
 /*

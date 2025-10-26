@@ -53,9 +53,7 @@ _XFUNCPROTOBEGIN
 typedef struct _ObjectRec *Object;
 typedef struct _ObjectClassRec *ObjectClass;
 
-#ifndef VMS
 externalref WidgetClass objectClass;
-#endif
 
 _XFUNCPROTOEND
 

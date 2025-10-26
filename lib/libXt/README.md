@@ -12,27 +12,32 @@ and the O'Reilly X Toolkit books, which they have made freely available online:
  - X Series Volume 4: X Toolkit Intrinsics Programming Manual,
    1st Edition (1990, covers X11R3)
 
-   https://www.archive.org/details/xtoolkitintrsin20400nyemiss
+   https://archive.org/details/xtoolkitintrsin20400nyemiss
 
  - X Series Volume 4: X Toolkit Intrinsics Programming Manual,
    2nd Edition (1990, covers X11R4)
 
-   https://www.archive.org/details/xtoolkitintrinsi04nyemiss
+   https://archive.org/details/xtoolkitintrinsi04nyemiss
 
  - X Series Volume 4: X Toolkit Intrinsics Programming Manual,
    Motif Edition (1990, covers X11R4/Motif 1.1)
 
-   https://www.archive.org/details/xtoolktintrmotif04nyemiss
+   https://archive.org/details/xtoolktintrmotif04nyemiss
 
  - X Series Volume 4: X Toolkit Intrinsics Programming Manual,
-   3rd Edition (1993, covers X11R5)
+   3rd Edition (1993, covers X11R5/Motif 1.2)
 
-   https://www.archive.org/details/xtoolkitintrinsic04nyemiss
+   https://archive.org/details/xtoolkitintrinsi0000nyea
 
  - X Series Volume 5: X Toolkit Intrinsics Reference Manual
    (1990, covers X11R4)
 
-   https://www.archive.org/details/xtoolkitintrinsi04nyemiss
+   https://archive.org/details/xtoolkitintrirefman05oreimiss
+
+ - X Series Volume 5: X Toolkit Intrinsics Reference Manual
+   (1994, covers X11R4 and X11R5)
+
+   https://archive.org/details/xtoolkitintrinsi05flan
 
 ----------------------------------------------------------------------------
 

@@ -64,7 +64,7 @@ typedef struct {
     XtIntPtr	xrm_default_type; /* Default representation type quark	*/
     XtPointer	xrm_default_addr; /* Default resource address		*/
 } XrmResource, *XrmResourceList;
-#if __STDC_VERSION__ >= 201112L
+#if __STDC_VERSION__ >= 201112L && !defined(__cplusplus)
 _Static_assert(XtOffsetOf(XrmResource, xrm_default_addr) ==
                    XtOffsetOf(XtResource, default_addr),
                "Field offset mismatch");

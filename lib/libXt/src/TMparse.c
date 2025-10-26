@@ -1076,7 +1076,7 @@ ParseTable(register String str, Opaque closure, EventPtr event, Boolean *error)
 }
 
 static String
-ParseButton(String str, Opaque closure, EventPtr event, Boolean *error)
+ParseButton(String str, Opaque closure _X_UNUSED, EventPtr event, Boolean *error)
 {
     String start = str;
     char buttonStr[7];

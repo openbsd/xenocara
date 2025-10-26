@@ -68,7 +68,8 @@ _XFUNCPROTOBEGIN
 extern void _XtResourceConfigurationEH(
 	Widget 		/* w */,
 	XtPointer 	/* client_data */,
-	XEvent * 	/* event */
+	XEvent * 	/* event */,
+	Boolean *	/* continue_to_dispatch */
 );
 
 _XFUNCPROTOEND

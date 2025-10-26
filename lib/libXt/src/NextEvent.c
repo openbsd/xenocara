@@ -88,7 +88,7 @@ static SignalEventRec *freeSignalRecs;
  */
 
 #ifndef NEEDS_NTPD_FIXUP
-#if defined(sun) || defined(MOTOROLA) || (defined(__osf__) && defined(__alpha))
+#ifdef sun
 #define NEEDS_NTPD_FIXUP 1
 #else
 #define NEEDS_NTPD_FIXUP 0

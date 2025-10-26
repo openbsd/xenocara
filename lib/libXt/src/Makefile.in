@@ -104,7 +104,7 @@ am_libXt_la_OBJECTS = ActionHook.lo Alloc.lo ArgList.lo Callback.lo \
 	RectObj.lo ResConfig.lo Resources.lo Selection.lo SetSens.lo \
 	SetValues.lo SetWMCW.lo Shell.lo TMaction.lo TMgrab.lo \
 	TMkey.lo TMparse.lo TMprint.lo TMstate.lo Threads.lo \
-	VarCreate.lo VarGet.lo Varargs.lo Vendor.lo sharedlib.lo
+	VarCreate.lo VarGet.lo Varargs.lo Vendor.lo
 nodist_libXt_la_OBJECTS = StringDefs.lo
 libXt_la_OBJECTS = $(am_libXt_la_OBJECTS) $(nodist_libXt_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -387,8 +387,7 @@ libXt_la_SOURCES = \
 	VarCreate.c \
 	VarGet.c \
 	Varargs.c \
-	Vendor.c \
-	sharedlib.c
+	Vendor.c
 
 DISTCLEANFILES = StringDefs.c
 libXt_la_LIBADD = @XT_LIBS@
@@ -539,7 +538,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VarGet.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Varargs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Vendor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sharedlib.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

@@ -82,6 +82,9 @@ DllMain(unsigned long mod_handle, unsigned long flag, void *routine)
 #endif
 
 /* *INDENT-OFF* */
+#if defined(__APPLE__)
+__attribute__((weak))
+#endif
 externaldef(vendorshellclassrec)
 VendorShellClassRec vendorShellClassRec = {
     {
@@ -137,7 +140,8 @@ VendorShellClassRec vendorShellClassRec = {
 };
 /* *INDENT-ON* */
 
-#if !defined(AIXSHLIB) || !defined(SHAREDCODE)
+#if defined(__APPLE__)
+__attribute__((weak))
+#endif
 externaldef(vendorshellwidgetclass)
 WidgetClass vendorShellWidgetClass = (WidgetClass) (&vendorShellClassRec);
-#endif

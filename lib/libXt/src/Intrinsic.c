@@ -78,9 +78,7 @@ in this Software without prior written authorization from The Open Group.
 #ifndef NO_IDENTIFY_WINDOWS
 #include <X11/Xatom.h>
 #endif
-#ifndef VMS
 #include <sys/stat.h>
-#endif                          /* VMS */
 #ifdef WIN32
 #include <direct.h>             /* for _getdrives() */
 #endif
@@ -964,7 +962,6 @@ AccessFile(char *path, char *pathbuf, int len_pathbuf, char **pathret)
 static Boolean
 TestFile(String path)
 {
-#ifndef VMS
     int ret = 0;
     struct stat status;
 
@@ -987,9 +984,6 @@ TestFile(String path)
            (status.st_mode & S_IFMT) != S_IFDIR);       /* not a directory */
 #endif                          /* X_NOT_POSIX else */
     return (Boolean) ret;
-#else                           /* VMS */
-    return TRUE;                /* Who knows what to do here? */
-#endif                          /* VMS */
 }
 
 /* return of TRUE = resolved string fit, FALSE = didn't fit.  Not
@@ -1170,37 +1164,12 @@ static String
 ExtractLocaleName(String lang)
 {
 
-#if defined(hpux) || defined(CSRG_BASED) || defined(sun) || defined(SVR4) || defined(sgi) || defined(__osf__) || defined(AIXV3) || defined(ultrix) || defined(WIN32) || defined (linux)
-#ifdef hpux
-/*
- * We need to discriminated between HPUX 9 and HPUX 10. The equivalent
- * code in Xlib in SetLocale.c does include locale.h via X11/Xlocale.h.
- */
-#include <locale.h>
-#ifndef _LastCategory
-    /* HPUX 9 and earlier */
-#define SKIPCOUNT 2
-#define STARTCHAR ':'
-#define ENDCHAR ';'
-#else
-    /* HPUX 10 */
-#define ENDCHAR ' '
-#endif
-#else
-#ifdef ultrix
-#define SKIPCOUNT 2
-#define STARTCHAR '\001'
-#define ENDCHAR '\001'
-#else
+#if defined(CSRG_BASED) || defined(sun) || defined(SVR4) || defined(WIN32) || defined (linux)
 #ifdef WIN32
 #define SKIPCOUNT 1
 #define STARTCHAR '='
 #define ENDCHAR ';'
 #define WHITEFILL
-#else
-#if defined(__osf__) || (defined(AIXV3) && !defined(AIXV4))
-#define STARTCHAR ' '
-#define ENDCHAR ' '
 #else
 #if defined(linux)
 #define STARTSTR "LC_CTYPE="
@@ -1209,9 +1178,6 @@ ExtractLocaleName(String lang)
 #if !defined(sun) || defined(SVR4)
 #define STARTCHAR '/'
 #define ENDCHAR '/'
-#endif
-#endif
-#endif
 #endif
 #endif
 #endif
@@ -1402,14 +1368,12 @@ XtResolvePathname(Display *dpy,
     LOCK_PROCESS;
     pd = _XtGetPerDisplay(dpy);
     if (path == NULL) {
-#ifndef VMS
         if (defaultPath == NULL) {
             defaultPath = getenv("XFILESEARCHPATH");
             if (defaultPath == NULL)
                 defaultPath = impl_default;
         }
         path = defaultPath;
-#endif                          /* VMS */
     }
 
     if (path == NULL)

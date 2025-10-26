@@ -96,7 +96,7 @@ _XtCountVaList(va_list var, int *total_count, int *typed_count)
  *   returns the list.
  */
 XtVarArgsList
-XtVaCreateArgsList(XtPointer unused, ...)
+XtVaCreateArgsList(XtPointer unused _X_UNUSED, ...)
 {
     va_list var;
     XtTypedArgList avlist;

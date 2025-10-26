@@ -1171,7 +1171,7 @@ ReqTimedOut(XtPointer closure, XtIntervalId *id _X_UNUSED)
     }
 
     /* change event handlers for straggler events */
-    if (info->proc == (XtEventHandler) HandleSelectionReplies) {
+    if (info->proc == HandleSelectionReplies) {
         XtRemoveEventHandler(info->widget, (EventMask) 0,
                              TRUE, info->proc, (XtPointer) info);
         XtAddEventHandler(info->widget, (EventMask) 0, TRUE,

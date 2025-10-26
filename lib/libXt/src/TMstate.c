@@ -83,11 +83,7 @@ static StatePtr NewState(TMParseStateTree, TMShortCard, TMShortCard);
 
 static String XtNtranslationError = "translationError";
 
-#ifndef __EMX__
 TMGlobalRec _XtGlobalTM;        /* initialized to zero K&R */
-#else
-TMGlobalRec _XtGlobalTM = { 0 };
-#endif
 
 #define MatchIncomingEvent(tmEvent, typeMatch, modMatch) \
   (typeMatch->eventType == tmEvent->event.eventType && \

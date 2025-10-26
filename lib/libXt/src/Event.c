@@ -1319,10 +1319,7 @@ DispatchEvent(XEvent *event, Widget widget)
 
 typedef enum _GrabType { pass, ignore, remap } GrabType;
 
-#if !defined(AIXV3) || !defined(AIXSHLIB)
-static                          /* AIX shared libraries are broken */
-#endif
-Boolean
+static Boolean
 _XtDefaultDispatcher(XEvent *event)
 {
     register Widget widget;
