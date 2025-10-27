@@ -29,7 +29,7 @@ synaptics_drv_la_LDFLAGS = -module -avoid-version
 synaptics_drv_ladir = @inputdir@
 
 AM_CPPFLAGS = -I$(top_srcdir)/include
-AM_CFLAGS = $(XORG_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XORG_CFLAGS)
 
 synaptics_drv_la_SOURCES = \
 	synaptics.c \

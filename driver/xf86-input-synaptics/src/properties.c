@@ -97,17 +97,16 @@ Atom prop_product_id = 0;
 Atom prop_device_node = 0;
 
 static Atom
-InitTypedAtom(DeviceIntPtr dev, char *name, Atom type, int format, int nvalues,
-              int *values)
+InitTypedAtom(DeviceIntPtr dev, const char *name, Atom type, int format,
+              int nvalues, int *values)
 {
-    int i;
     Atom atom;
     uint8_t val_8[9];           /* we never have more than 9 values in an atom */
     uint16_t val_16[9];
     uint32_t val_32[9];
     pointer converted;
 
-    for (i = 0; i < nvalues; i++) {
+    for (int i = 0; i < nvalues; i++) {
         switch (format) {
         case 8:
             val_8[i] = values[i];
@@ -142,13 +141,14 @@ InitTypedAtom(DeviceIntPtr dev, char *name, Atom type, int format, int nvalues,
 }
 
 static Atom
-InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
+InitAtom(DeviceIntPtr dev, const char *name, int format,
+         int nvalues, int *values)
 {
     return InitTypedAtom(dev, name, XA_INTEGER, format, nvalues, values);
 }
 
 static Atom
-InitFloatAtom(DeviceIntPtr dev, char *name, int nvalues, float *values)
+InitFloatAtom(DeviceIntPtr dev, const char *name, int nvalues, float *values)
 {
     Atom atom;
 
@@ -631,7 +631,6 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->locked_drag_time = *(INT32 *) prop->data;
     }
     else if (property == prop_tapaction) {
-        int i;
         CARD8 *action;
 
         if (prop->size > MAX_TAP || prop->format != 8 ||
@@ -640,11 +639,10 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
 
         action = (CARD8 *) prop->data;
 
-        for (i = 0; i < MAX_TAP; i++)
+        for (int i = 0; i < MAX_TAP; i++)
             para->tap_action[i] = action[i];
     }
     else if (property == prop_clickaction) {
-        int i;
         CARD8 *action;
 
         if (prop->size > MAX_CLICK || prop->format != 8 ||
@@ -653,7 +651,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
 
         action = (CARD8 *) prop->data;
 
-        for (i = 0; i < MAX_CLICK; i++)
+        for (int i = 0; i < MAX_CLICK; i++)
             para->click_action[i] = action[i];
     }
     else if (property == prop_circscroll) {

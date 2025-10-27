@@ -1,3 +1,247 @@
+commit 9220a1b16d1336298612ece5bcd832ec93e6f1e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 5 10:46:04 2025 -0800
+
+    xf86-input-synaptics 1.10.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3d1486dbe9dd0c35e746baea306894075392008c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 4 16:19:31 2024 -0800
+
+    Variable scope reductions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/merge_requests/20>
+
+commit ca05a6034eeeb179874c0c43ba5e70d6111804ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 4 13:47:53 2024 -0800
+
+    Use snprintf instead of sprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/merge_requests/20>
+
+commit 2a60fb4fb4d87df00710d3f8457f265c5729c4ab
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Tue Feb 20 12:47:08 2024 +0100
+
+    descriptive warning message instead of BUG_WARN() anymore
+    
+    Since current xserver mainline dropped BUG_WARN() macro from os.h and
+    we only use it twice, it's trivial to just print the warning directly
+    and at that point make it a bit more descriptive.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/merge_requests/12>
+
+commit a0becc7957046ad87b36f568dd0102445f6362fc
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Tue Feb 20 11:04:40 2024 +0100
+
+    fix FTBS against recent xorg server tree
+    
+    Recent xserver master moved out the BUG_*() macros from os.h,
+    causing FTBS on xf86-input-synaptics:
+    
+    > synaptics.c: In function 'clickpad_guess_clickfingers':
+    > synaptics.c:2638:5: error: implicit declaration of function 'BUG_RETURN_VAL' [-Werror=implicit-function-declaration]
+    > 2638 |     BUG_RETURN_VAL(hw->num_mt_mask > sizeof(close_point) * 8, 0);
+    
+    Since that macro is only used once, and that particular case deserves some
+    more expressive error message anyways, it's trivial doing an explicit
+    error printout here, instead of having to support the BUG_* macros as
+    official module API on xserver side forever.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Reported-By: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/merge_requests/12>
+
+commit 89900bcf4df0fa9c205ea25a4f060907a95f454d
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Tue Feb 20 16:21:11 2024 +0100
+
+    eventcomm: fix possible buffer overflow
+    
+    eventcomm.c: In function 'EventAutoDevProbe':
+    eventcomm.c:1045:32: warning: '%s' directive writing up to 255 bytes into a region of size 53 [-Wformat-overflow=]
+     1045 |             sprintf(fname, "%s/%s", DEV_INPUT_EVENT, namelist[i]->d_name);
+          |                                ^~
+    eventcomm.c:1045:13: note: 'sprintf' output between 12 and 267 bytes into a destination of size 64
+     1045 |             sprintf(fname, "%s/%s", DEV_INPUT_EVENT, namelist[i]->d_name);
+          |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/merge_requests/15>
+
+commit 373139dd06a8e824cf98b8ca166b6f587a8c5368
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Mon Jun 10 11:14:18 2024 +0200
+
+    drop compat with ancient Linux kernel
+    
+    linux-2.6.30 was released 15 years ago - doesn't seem to be necessary
+    to still support such ancient kernels.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+
+commit 64407e809dd7a75516acd3178aa77db7dc04e19d
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Tue May 14 11:07:52 2024 +0200
+
+    bump minimal xorg version to 1.18
+    
+    1.18 was released a decade ago, so it seems reasonable stop supporting
+    older ones.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/merge_requests/18>
+
+commit 6330833fd10f97a6721470ceb037a224aa720b8f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 12 14:42:27 2024 -0700
+
+    Take care of -Wempty-body warning from call to empty PS2DBG macro
+    
+    ps2comm.c: In function ‘ps2_synaptics_get_packet’:
+    ps2comm.c:477:49: warning: suggest braces around empty body in an ‘else’ statement [-Wempty-body]
+      477 |                 PS2DBG("faked reset received\n");
+          |
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/merge_requests/17>
+
+commit 7e68eb70ca5139d5b4c8a07791323866308530a0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 12 14:39:01 2024 -0700
+
+    Clear 9 of 9 -Wimplicit-fallthrough warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/merge_requests/17>
+
+commit dbc772982ec15b0132fa41f64221087bb149e78f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 12 14:31:35 2024 -0700
+
+    Quiet -Wredundant-decls from xorg/os.h fallbacks for timingsafe_memcmp
+    
+    The Xorg headers provide their own version of timingsafe_memcmp for
+    platforms that don't have them in libc yet, but rely on configure to
+    set HAVE_* defines to determine if they should be defined in the headers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/merge_requests/17>
+
+commit e3f6c5c6420f9e372a63ae7a7a74cb2cea868156
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 12 14:25:29 2024 -0700
+
+    Fix -Wold-style-declaration warning
+    
+    synaptics.c:143:1: warning: ‘static’ is not at beginning of declaration [-Wold-style-declaration]
+      143 | const static struct {
+          | ^~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/merge_requests/17>
+
+commit d21c533fd5b5a4aa47618b47dc4aa79fecd8d961
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 12 14:21:12 2024 -0700
+
+    Raise minimum supported Xserver version from 1.12 to 1.15
+    
+    Drops support for ABI_XINPUT_VERSION < 20, including removing support
+    for driver-side coordinate scaling, since the X server handles it now.
+    
+    Xserver 1.15 was released in Dec. 2013.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 46d05329624e09050a6bfa76c0dae0963d0712c9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 5 17:10:41 2024 -0800
+
+    Handle a -Wstrict-prototypes/-Wold-style-definition pair of warnings
+    
+    synclient.c:196:1: warning: function declaration isn’t a prototype [-Wstrict-prototypes]
+      196 | dp_init()
+          | ^~~~~~~
+    synclient.c: In function ‘dp_init’:
+    synclient.c:196:1: warning: old-style function definition [-Wold-style-definition]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a9bf2939f0a6536a792515d6fda29a7c754274c6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 5 17:08:13 2024 -0800
+
+    Handle 5 -Wmissing-prototypes warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f52912d06279d4c32e5031d1416f2f273bb42116
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 5 17:01:50 2024 -0800
+
+    Fix 185 -Wdiscarded-qualifiers warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 13a26918d848bc8feeaaf59293f793c2af1ce52e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 5 16:55:03 2024 -0800
+
+    Add X.Org's standard C warning flags to AM_CFLAGS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8cdcdd12795ee66a19ce4ca4b6630f1f4bb83b32
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 2 15:03:41 2023 -0800
+
+    configure: updates to quiet obsolete macro warnings
+    
+    Clears autoconf warnings:
+    
+    configure.ac:38: warning: The macro 'AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:38: You should run autoupdate.
+    aclocal.m4:3515: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:38: the top level
+    configure.ac:68: warning: The macro 'AC_HELP_STRING' is obsolete.
+    configure.ac:68: You should run autoupdate.
+    ./lib/autoconf/general.m4:204: AC_HELP_STRING is expanded from...
+    configure.ac:68: the top level
+    configure.ac:78: warning: The macro 'AC_HELP_STRING' is obsolete.
+    configure.ac:78: You should run autoupdate.
+    ./lib/autoconf/general.m4:204: AC_HELP_STRING is expanded from...
+    configure.ac:78: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    libtoolize: Consider adding '-I m4' to ACLOCAL_AMFLAGS in Makefile.am.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f642d1700ca6579f025008c04f02453219b93084
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 1 12:13:46 2023 -0700
+
+    gitlab CI: ensure libtool is installed in build container
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8970519bf9f56bf8afe8ac6ca7f996f825721474
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit bf3c0cb38ad5dba43f0454e655e0448712cb412e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 10 16:32:38 2022 -0700
@@ -2564,7 +2808,7 @@ Date:   Mon Apr 16 11:39:44 2012 +0800
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 50124d3ddf9bbc4be6734b47a273dbd46b4db0ba
-Author: Pierre Lulé  <pierre@lule.fr>
+Author: Pierre Lulé <pierre@lule.fr>
 Date:   Mon Apr 16 12:01:56 2012 +0200
 
     Stop coasting when two-finger scroll begins
@@ -2630,7 +2874,7 @@ Date:   Mon Apr 2 11:23:05 2012 -0700
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 5a1612d4496b51682c9043aa064025c545249de6
-Author: Pierre Lulé  <pierre@lule.fr>
+Author: Pierre Lulé <pierre@lule.fr>
 Date:   Wed Mar 28 00:13:30 2012 +0200
 
     Fix coasting speed
@@ -4495,7 +4739,7 @@ Date:   Fri May 27 11:11:44 2011 -0500
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 6eb829e07e455a8a04dabae7f257dd42a9b8bcdf
-Author: Diego Elio Pettenò  <flameeyes@gmail.com>
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
 Date:   Wed May 25 18:16:22 2011 +0200
 
     build: apply the distcheck tricks used in xf86-input-evdev
@@ -4510,7 +4754,7 @@ Date:   Wed May 25 18:16:22 2011 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit dac624ad2b3a67ab93c11d8ee0a91b217fc1afe6
-Author: Diego Elio Pettenò  <flameeyes@gmail.com>
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
 Date:   Wed May 25 16:10:49 2011 +0200
 
     build: create object files following the sources' structure.
@@ -4585,7 +4829,7 @@ Date:   Tue May 17 08:08:08 2011 +0200
     to the list.
 
 commit 0c0e3e3df6af54777e47550e555e76c787f6f0a4
-Author: Diego Elio Pettenò  <flameeyes@gmail.com>
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
 Date:   Sat May 14 03:34:26 2011 +0200
 
     README: fix typos.
@@ -4593,7 +4837,7 @@ Date:   Sat May 14 03:34:26 2011 +0200
     Signed-off-by: Christoph Brill <egore911@egore911.de>
 
 commit d27b4e560ccf61b94f067156c6d5c1e3d3e5e1eb
-Author: Diego Elio Pettenò  <flameeyes@gmail.com>
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
 Date:   Sat May 14 03:30:15 2011 +0200
 
     build: install documentation as part of make install.
@@ -4601,7 +4845,7 @@ Date:   Sat May 14 03:30:15 2011 +0200
     Signed-off-by: Christoph Brill <egore911@egore911.de>
 
 commit 39afe69ad7d2258d4043044d1283bd6e311e48da
-Author: Diego Elio Pettenò  <flameeyes@gmail.com>
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
 Date:   Sat May 14 03:14:56 2011 +0200
 
     build: collapse all Makefile.am files into a single non-recursive one.
@@ -4614,7 +4858,7 @@ Date:   Sat May 14 03:14:56 2011 +0200
     Signed-off-by: Christoph Brill <egore911@egore911.de>
 
 commit 4005df66072ceac175ea71427deb16176262f197
-Author: Diego Elio Pettenò  <flameeyes@gmail.com>
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
 Date:   Sat May 14 03:00:02 2011 +0200
 
     build: sort building of tools, ensure that cross-pkg-config works.
@@ -4627,7 +4871,7 @@ Date:   Sat May 14 03:00:02 2011 +0200
     Signed-off-by: Christoph Brill <egore911@egore911.de>
 
 commit 4d4c4d0ff5a381a5d574845cf72673f9fee43734
-Author: Diego Elio Pettenò  <flameeyes@gmail.com>
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
 Date:   Sat May 14 02:43:58 2011 +0200
 
     build: report a fatal error if XORG_DRIVER_CHECK_EXT is undefined.

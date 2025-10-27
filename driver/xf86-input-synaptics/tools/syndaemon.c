@@ -310,7 +310,7 @@ struct xrecord_callback_results {
 };
 
 /* test if the xrecord extension is found */
-Bool
+static Bool
 check_xrecord(Display * display)
 {
 
@@ -331,7 +331,7 @@ check_xrecord(Display * display)
 }
 
 /* called by XRecordProcessReplies() */
-void
+static void
 xrecord_callback(XPointer closure, XRecordInterceptData * recorded_data)
 {
 
@@ -405,7 +405,7 @@ is_modifier_pressed(const struct xrecord_callback_results *cbres)
     return 0;
 }
 
-void
+static void
 record_main_loop(Display * display, double idle_time)
 {
 

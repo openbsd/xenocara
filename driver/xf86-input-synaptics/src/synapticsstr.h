@@ -24,18 +24,6 @@
 
 #include "synproto.h"
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 18
-#define LogMessageVerbSigSafe xf86MsgVerb
-#endif
-
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) > 19
-#define NO_DRIVER_SCALING 1
-#elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 19 && GET_ABI_MINOR(ABI_XINPUT_VERSION) >= 2
-/* as of 19.2, the server takes device resolution into account when scaling
-   relative events from abs device, so we must not scale in synaptics. */
-#define NO_DRIVER_SCALING 1
-#endif
-
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
 #define HAVE_THREADED_INPUT 1
 #endif
@@ -295,10 +283,6 @@ struct _SynapticsPrivateRec {
     int prev_z;                 /* previous z value, for palm detection */
     int prevFingers;            /* previous numFingers, for transition detection */
     int avg_width;              /* weighted average of previous fingerWidth values */
-#ifndef NO_DRIVER_SCALING
-    double horiz_coeff;         /* normalization factor for x coordinates */
-    double vert_coeff;          /* normalization factor for y coordinates */
-#endif
 
     int minx, maxx, miny, maxy; /* min/max dimensions as detected */
     int minp, maxp, minw, maxw; /* min/max pressure and finger width as detected */
@@ -330,5 +314,9 @@ struct _SynapticsPrivateRec {
     int *open_slots;            /* Array of currently open touch slots */
     int num_active_touches;     /* Number of active touches on device */
 };
+
+void InitDeviceProperties(InputInfoPtr pInfo);
+int SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
+                BOOL checkonly);
 
 #endif                          /* _SYNAPTICSSTR_H_ */

@@ -23,19 +23,19 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-synaptics],
-        [1.9.2],
-        [https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/issues],
+        [1.10.0],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics/-/issues],
         [xf86-input-synaptics])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_AUX_DIR(.)
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
-AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
+LT_INIT([disable-static])
 
 # Initialize X.Org macros 1.13 or later for XORG_ENABLE_UNIT_TESTS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -47,13 +47,18 @@ XORG_ENABLE_UNIT_TESTS
 # Checks for libraries.
 AC_CHECK_LIB([m], [rint])
 
+# Checks for library functions
+# We don't use timingsafe_memcmp, but check to quiet -Wredundant-decls warning
+# from xorg/os.h which will otherwise redefine it.
+AC_CHECK_FUNCS([timingsafe_memcmp])
+
 # Store the list of server defined optional extensions in REQUIRED_MODULES
 m4_ifndef([XORG_DRIVER_CHECK_EXT],
           [m4_fatal([must install xorg-server development files before running autoconf/autogen])])
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 
 # Obtain compiler/linker options for the Synaptics driver dependencies
-PKG_CHECK_MODULES(XORG, [inputproto >= 2.1.99.3] [xorg-server >= 1.12] xproto inputproto $REQUIRED_MODULES)
+PKG_CHECK_MODULES(XORG, [inputproto >= 2.1.99.3] [xorg-server >= 1.18] xproto inputproto $REQUIRED_MODULES)
 
 # X Server SDK location is required to install Synaptics header files
 # This location is also relayed in the xorg-synaptics.pc file
@@ -65,7 +70,7 @@ AC_SUBST([sdkdir])
 # -----------------------------------------------------------------------------
 # Define a configure option for an alternate input module directory
 AC_ARG_WITH(xorg-module-dir,
-            AC_HELP_STRING([--with-xorg-module-dir=DIR],
+            AS_HELP_STRING([--with-xorg-module-dir=DIR],
                            [Default xorg module directory [[default=$libdir/xorg/modules]]]),
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
@@ -75,7 +80,7 @@ AC_SUBST(inputdir)
 # Define a configure option for an alternate X Server configuration directory
 sysconfigdir=`$PKG_CONFIG --variable=sysconfigdir xorg-server`
 AC_ARG_WITH(xorg-conf-dir,
-            AC_HELP_STRING([--with-xorg-conf-dir=DIR],
+            AS_HELP_STRING([--with-xorg-conf-dir=DIR],
                            [Default xorg.conf.d directory [[default=from $PKG_CONFIG xorg-server]]]),
             [configdir="$withval"],
             [configdir="$sysconfigdir"])

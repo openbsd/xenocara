@@ -79,13 +79,11 @@ SynapticsHwStateAlloc(SynapticsPrivate * priv)
 void
 SynapticsHwStateFree(struct SynapticsHwState **hw)
 {
-    int i;
-
     if (!*hw)
         return;
 
     free((*hw)->slot_state);
-    for (i = 0; i < (*hw)->num_mt_mask; i++)
+    for (int i = 0; i < (*hw)->num_mt_mask; i++)
         valuator_mask_free(&(*hw)->mt_mask[i]);
     free((*hw)->mt_mask);
 
@@ -97,8 +95,6 @@ void
 SynapticsCopyHwState(struct SynapticsHwState *dst,
                      const struct SynapticsHwState *src)
 {
-    int i;
-
     dst->millis = src->millis;
     dst->x = src->x;
     dst->y = src->y;
@@ -113,7 +109,7 @@ SynapticsCopyHwState(struct SynapticsHwState *dst,
     dst->down = src->down;
     memcpy(dst->multi, src->multi, sizeof(dst->multi));
     dst->middle = src->middle & BTN_EMULATED_FLAG ? 0 : src->middle;
-    for (i = 0; i < dst->num_mt_mask && i < src->num_mt_mask; i++)
+    for (int i = 0; i < dst->num_mt_mask && i < src->num_mt_mask; i++)
         valuator_mask_copy(dst->mt_mask[i], src->mt_mask[i]);
     memcpy(dst->slot_state, src->slot_state,
            dst->num_mt_mask * sizeof(enum SynapticsSlotState));
@@ -145,13 +141,10 @@ SynapticsResetHwState(struct SynapticsHwState *hw)
 void
 SynapticsResetTouchHwState(struct SynapticsHwState *hw, Bool set_slot_empty)
 {
-    int i;
 
-    for (i = 0; i < hw->num_mt_mask; i++) {
-        int j;
-
+    for (int i = 0; i < hw->num_mt_mask; i++) {
         /* Leave x and y valuators in case we need to restart touch */
-        for (j = 2; j < valuator_mask_num_valuators(hw->mt_mask[i]); j++)
+        for (int j = 2; j < valuator_mask_num_valuators(hw->mt_mask[i]); j++)
             valuator_mask_unset(hw->mt_mask[i], j);
 
         switch (hw->slot_state[i]) {

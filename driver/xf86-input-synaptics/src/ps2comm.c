@@ -78,7 +78,7 @@
 #ifdef DEBUG
 #define PS2DBG(...) ErrorF(__VA_ARGS__)
 #else
-#define PS2DBG(...)
+#define PS2DBG(...) do { } while (0)
 #endif
 
 /*****************************************************************************
@@ -137,14 +137,12 @@ ps2_putbyte(int fd, byte b)
 static Bool
 ps2_special_cmd(int fd, byte cmd)
 {
-    int i;
-
     /* initialize with 'inert' command */
     if (!ps2_putbyte(fd, PS2_CMD_SET_SCALING_1_1))
         return FALSE;
 
     /* send 4x 2-bits with set resolution command */
-    for (i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
         if (!ps2_putbyte(fd, PS2_CMD_SET_RESOLUTION) ||
             !ps2_putbyte(fd, (cmd >> 6) & 0x3))
             return FALSE;
@@ -313,9 +311,7 @@ static Bool
 ps2_query_is_synaptics(InputInfoPtr pInfo, int fd,
                        struct PS2SynapticsHwInfo *synhw)
 {
-    int i;
-
-    for (i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++) {
         if (ps2_synaptics_disable_device(fd))
             break;
     }
@@ -462,10 +458,9 @@ ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
 {
     int count = 0;
     int c;
-    unsigned char u;
 
     while ((c = XisbRead(comm->buffer)) >= 0) {
-        u = (unsigned char) c;
+        unsigned char u = (unsigned char) c;
 
         /* test if there is a reset sequence received */
         if ((c == 0x00) && (comm->lastByte == 0xAA)) {
@@ -491,9 +486,7 @@ ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
            so we throw away the first byte in the packet. */
         if (comm->protoBufTail >= 6) {
             if (!ps2_packet_ok(synhw, comm)) {
-                int i;
-
-                for (i = 0; i < comm->protoBufTail - 1; i++)
+                for (int i = 0; i < comm->protoBufTail - 1; i++)
                     comm->protoBuf[i] = comm->protoBuf[i + 1];
                 comm->protoBufTail--;
                 comm->outOfSync++;
@@ -530,7 +523,7 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
     SynapticsParameters *para = &priv->synpara;
     struct PS2SynapticsHwInfo *synhw;
     int newabs;
-    int w, i;
+    int w;
 
     synhw = (struct PS2SynapticsHwInfo *) priv->proto_data;
     if (!synhw) {
@@ -547,7 +540,7 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
     /* Handle normal packets */
     hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = 0;
     hw->left = hw->right = hw->up = hw->down = hw->middle = FALSE;
-    for (i = 0; i < 8; i++)
+    for (int i = 0; i < 8; i++)
         hw->multi[i] = FALSE;
 
     if (newabs) {               /* newer protos... */

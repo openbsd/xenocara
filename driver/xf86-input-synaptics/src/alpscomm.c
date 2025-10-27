@@ -151,7 +151,6 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
 {
     int x = 0, y = 0, z = 0;
     int left = 0, right = 0, middle = 0;
-    int i;
 
     hw->millis = GetTimeInMillis();
 
@@ -168,7 +167,7 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
     /* Handle normal packets */
     hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = 0;
     hw->left = hw->right = hw->up = hw->down = hw->middle = FALSE;
-    for (i = 0; i < 8; i++)
+    for (int i = 0; i < 8; i++)
         hw->multi[i] = FALSE;
 
     if (z > 0) {

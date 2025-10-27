@@ -178,9 +178,7 @@ UninitializeTouch(InputInfoPtr pInfo)
         return;
 
     if (proto_data->last_mt_vals) {
-        int i;
-
-        for (i = 0; i < priv->num_slots; i++)
+        for (int i = 0; i < priv->num_slots; i++)
             valuator_mask_free(&proto_data->last_mt_vals[i]);
         free(proto_data->last_mt_vals);
         proto_data->last_mt_vals = NULL;
@@ -195,7 +193,6 @@ InitializeTouch(InputInfoPtr pInfo)
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct eventcomm_proto_data *proto_data =
         (struct eventcomm_proto_data *) priv->proto_data;
-    int i;
 
     if (!priv->has_touch)
         return;
@@ -211,9 +208,7 @@ InitializeTouch(InputInfoPtr pInfo)
         return;
     }
 
-    for (i = 0; i < priv->num_slots; i++) {
-        int j;
-
+    for (int i = 0; i < priv->num_slots; i++) {
         proto_data->last_mt_vals[i] = valuator_mask_new(4 + priv->num_mt_axes);
         if (!proto_data->last_mt_vals[i]) {
             xf86IDrvMsg(pInfo, X_WARNING,
@@ -226,7 +221,7 @@ InitializeTouch(InputInfoPtr pInfo)
          * and Y. */
         valuator_mask_set(proto_data->last_mt_vals[i], 0, 0);
         valuator_mask_set(proto_data->last_mt_vals[i], 1, 0);
-        for (j = 0; j < priv->num_mt_axes; j++)
+        for (int j = 0; j < priv->num_mt_axes; j++)
             valuator_mask_set(proto_data->last_mt_vals[i], 4 + j, 0);
     }
 }
@@ -421,10 +416,8 @@ event_get_abs(struct libevdev *evdev, int code,
     /* We don't trust a zero fuzz as it probably is just a lazy value */
     if (fuzz && abs->fuzz > 0)
         *fuzz = abs->fuzz;
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)
     if (res)
         *res = abs->resolution;
-#endif
 
     return 0;
 }
@@ -588,9 +581,7 @@ SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
 static Bool
 EventTouchSlotPreviouslyOpen(SynapticsPrivate * priv, int slot)
 {
-    int i;
-
-    for (i = 0; i < priv->num_active_touches; i++)
+    for (int i = 0; i < priv->num_active_touches; i++)
         if (priv->open_slots[i] == slot)
             return TRUE;
 
@@ -839,7 +830,6 @@ event_query_touch(InputInfoPtr pInfo)
     SynapticsParameters *para = &priv->synpara;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
     struct libevdev *dev = proto_data->evdev;
-    int axis;
 
     priv->max_touches = 0;
     priv->num_mt_axes = 0;
@@ -864,7 +854,7 @@ event_query_touch(InputInfoPtr pInfo)
 
 
     if (libevdev_has_event_code(dev, EV_ABS, ABS_MT_SLOT)) {
-        for (axis = ABS_MT_SLOT + 1; axis <= ABS_MT_MAX; axis++) {
+        for (int axis = ABS_MT_SLOT + 1; axis <= ABS_MT_MAX; axis++) {
             if (!libevdev_has_event_code(dev, EV_ABS, axis))
                 continue;
 
@@ -914,7 +904,7 @@ event_query_touch(InputInfoPtr pInfo)
             priv->has_mt_palm_detect = TRUE;
 
         axnum = 0;
-        for (axis = ABS_MT_SLOT + 1; axis <= ABS_MT_MAX; axis++) {
+        for (int axis = ABS_MT_SLOT + 1; axis <= ABS_MT_MAX; axis++) {
             int axis_idx = axis - ABS_MT_TOUCH_MAJOR;
 
             if (!libevdev_has_event_code(dev, EV_ABS, axis))
@@ -964,12 +954,11 @@ EventReadDevDimensions(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
-    int i;
 
     proto_data = EventProtoDataAlloc(pInfo->fd);
     priv->proto_data = proto_data;
 
-    for (i = 0; i < ABS_MT_CNT; i++)
+    for (int i = 0; i < ABS_MT_CNT; i++)
         proto_data->axis_map[i] = -1;
     proto_data->cur_slot = -1;
 
@@ -1035,14 +1024,14 @@ EventAutoDevProbe(InputInfoPtr pInfo, const char *device)
     }
 
     while (i--) {
-        char fname[64];
-        int fd = -1;
-
         if (!touchpad_found) {
+            int fd = -1;
             int rc;
             struct libevdev *evdev;
+            char fname[PATH_MAX];
 
-            sprintf(fname, "%s/%s", DEV_INPUT_EVENT, namelist[i]->d_name);
+            snprintf(fname, sizeof(fname), "%s/%s",
+                     DEV_INPUT_EVENT, namelist[i]->d_name);
             SYSCALL(fd = open(fname, O_RDONLY));
             if (fd < 0)
                 continue;
