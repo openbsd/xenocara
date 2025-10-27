@@ -1,3 +1,157 @@
+commit 15cbd2daff2883bd60c3b14aaebced2849189a50
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 13 16:36:11 2024 -0800
+
+    xf86-input-keyboard 2.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c2a8e59f086319260d43ede962de71844541233
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 14 11:33:37 2024 -0700
+
+    Move sizeof to second argument in calloc calls
+    
+    Clears -Wcalloc-transposed-args warnings from gcc 14.1, such as:
+    
+    kbd.c: In function ‘KbdPreInit’:
+    kbd.c:160:32: warning: ‘calloc’ sizes specified with ‘sizeof’ in the
+     earlier argument and not in the later argument [-Wcalloc-transposed-args]
+      160 |     if (!(pKbd = calloc(sizeof(KbdDevRec), 1))) {
+          |                                ^~~~~~~~~
+    kbd.c:160:32: note: earlier argument should specify number of elements,
+     later size of each element
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-keyboard/-/merge_requests/14>
+
+commit 8f6fd12607b2b8b5a11b8fb0fc8570434cc106c5
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Thu May 23 20:00:42 2024 +0200
+
+    drop compat for XINPUT < 18
+    
+    Relying on xserver >= 1.18, which has XINPUT 22.1.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-keyboard/-/merge_requests/11>
+
+commit 3507c28114d215196846e62f8da50e8d147ec5e1
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Tue May 14 11:03:42 2024 +0200
+
+    bump minimal xorg version to 1.18
+    
+    1.18 was released a decade ago, so it seems reasonable stop supporting
+    older ones.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-keyboard/-/merge_requests/11>
+
+commit 5f76f920d5dfbf4e0a0860db3183828a59e0ccef
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Fri May 24 13:03:17 2024 +0200
+
+    gitlab CI: fix FreeBSD build
+    
+    On FreeBSD need to make sure, all pkg-config pathes are searched in the
+    correct order.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-keyboard/-/merge_requests/11>
+
+commit d6d6a3c8b1109abda4639e05a5886a0c528a5ea3
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Fri May 24 12:50:15 2024 +0200
+
+    gitlab CI: install libepoll-shim
+    
+    Since MR #1559, the Xserver needs libepoll-shim on FreeBSD.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-keyboard/-/merge_requests/11>
+
+commit e93624c28144830656ce0a652196b24db832cb2d
+Author: nia <nia@NetBSD.org>
+Date:   Fri May 3 13:13:43 2024 +0200
+
+    bsd: Add some missing special keys from Japanese keyboards
+    
+    From Yasushi Oshima.
+    
+    Signed-off-by: Nia Alarie <nia@NetBSD.org>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-keyboard/-/merge_requests/9>
+
+commit f92191b93698de37303e0d2e97523b8e6c1e5684
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 3 12:19:09 2024 -0700
+
+    gitlab CI: install xorgproto from git before building the Xserver
+    
+    Xserver git is now failing to build due to:
+    Dependency presentproto found: NO found 1.3 but need: '>= 1.4'
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-input-keyboard/-/merge_requests/10>
+
+commit 40ef7d9e24987eb6708d822d0ea070db8c2b40b9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 18 17:42:42 2024 -0700
+
+    sun_kbd.c: #include <sys/kbio.h> directly
+    
+    It's needed for the definitions of the KIO* ioctls used in this file,
+    but is currently being indirectly included via xf86_OSlib.h.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f3510885b26683f98fe8b1fb285a748f1ba7fb5a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 2 11:07:35 2023 -0800
+
+    configure.ac: updates to quiet obsolete macro warnings
+    
+    Clears autoconf warnings:
+    configure.ac:38: warning: The macro 'AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:38: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:38: the top level
+    configure.ac:51: warning: The macro 'AC_HELP_STRING' is obsolete.
+    configure.ac:51: You should run autoupdate.
+    ./lib/autoconf/general.m4:204: AC_HELP_STRING is expanded from...
+    configure.ac:51: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ced00875062dce0d18d09c101991c580511f21f6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 2 11:14:00 2023 -0800
+
+    gitlab CI: update to latest ci-templates & FreeBSD 14.0
+    
+    Needed to avoid "Failed to unpack image" errors in the container-prep
+    job since FreeBSD 13.0 images are no longer available for download
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7812c11c90e2d3800a56a4834cdf5c616633653b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:06:53 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd257556040c2918074e3219b56dbe320d921f1b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit c0c98ec2072a78cee53e52b3ec3b03527b276403
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 10 16:19:50 2022 -0700
@@ -608,7 +762,7 @@ Date:   Thu May 24 21:36:17 2012 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit dd6f110c4568dc0922bae47530906b01396e2d41
-Author: François Tigeot  <ftigeot@wolfpond.org>
+Author: François Tigeot <ftigeot@wolfpond.org>
 Date:   Sat May 5 13:12:10 2012 +0200
 
     Recognize DragonFly as a BSD system.
@@ -1827,7 +1981,7 @@ Date:   Tue Aug 19 10:20:47 2008 -0400
     Remove XFree86-Misc leftovers.
 
 commit 80b04aa649f5e65294439264b6bbb0dc90c22a7c
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Thu Jul 24 16:39:02 2008 -0400
 
     Move atKeynames.h and xf86CommonSpecialKey() here.
@@ -2238,7 +2392,7 @@ Date:   Thu Aug 18 09:03:39 2005 +0000
     Update autogen.sh to one that does objdir != srcdir.
 
 commit ea7e6dfb03714a48edfb04053ac49f71f553872d
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Aug 10 14:07:23 2005 +0000
 
     Don\'t lose existing CFLAGS in all the input drivers and some of the video

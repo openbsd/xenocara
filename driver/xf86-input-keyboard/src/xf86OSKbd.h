@@ -29,10 +29,6 @@
 
 #include "xf86Xinput.h"
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 18
-#define LogMessageVerbSigSafe xf86MsgVerb
-#endif
-
 Bool ATScancode(InputInfoPtr pInfo, int *scanCode);
 
 /* Public interface to OS-specific keyboard support. */

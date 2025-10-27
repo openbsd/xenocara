@@ -157,7 +157,7 @@ KbdPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     xf86CollectInputOptions(pInfo, defaults);
     xf86ProcessCommonOptions(pInfo, pInfo->options); 
 
-    if (!(pKbd = calloc(sizeof(KbdDevRec), 1))) {
+    if (!(pKbd = calloc(1, sizeof(KbdDevRec)))) {
         rc = BadAlloc;
         goto out;
     }
