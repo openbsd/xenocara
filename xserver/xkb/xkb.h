@@ -1,6 +1,8 @@
 #ifndef _XKB_H
 #define _XKB_H
 
+extern RESTYPE RT_XKBCLIENT;
+
 extern int ProcXkbUseExtension(ClientPtr client);
 extern int ProcXkbSelectEvents(ClientPtr client);
 extern int ProcXkbBell(ClientPtr client);
