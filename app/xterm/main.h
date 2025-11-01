@@ -144,7 +144,11 @@
 #endif
 
 #ifndef DEF_DISALLOWED_WINDOW
+#if OPT_PASTE64
 #define DEF_DISALLOWED_WINDOW	"GetIconTitle,GetWinTitle,SetXprop,SetSelection,GetSelection,GetChecksum"
+#else
+#define DEF_DISALLOWED_WINDOW	"GetIconTitle,GetWinTitle,SetXprop,GetChecksum"
+#endif
 #endif
 
 #if OPT_BLINK_TEXT
