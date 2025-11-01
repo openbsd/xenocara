@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile,v 1.39 2024/06/04 08:13:08 matthieu Exp $
+# $OpenBSD: Makefile,v 1.40 2025/11/01 10:18:19 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR= bdftopcf mkfontscale \
 	appres beforelight bitmap editres fonttosfnt \
-	iceauth ico listres luit oclock \
+	iceauth ico listres oclock \
 	rgb sessreg setxkbmap \
 	smproxy twm viewres x11perf xauth xbacklight xbiff xcalc \
 	xclipboard xclock xcmsdb xcompmgr xconsole  \
