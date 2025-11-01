@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1112 2025/04/02 23:09:26 tom Exp $ */
+/* $XTermId: misc.c,v 1.1125 2025/10/19 18:41:26 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -130,6 +130,10 @@
 
 static Boolean xtermAllocColor(XtermWidget, XColor *, const char *);
 static Cursor make_hidden_cursor(XtermWidget);
+
+#if OPT_SET_XPROP
+static void ChangeXprop(char *);
+#endif
 
 #if OPT_EXEC_XTERM
 /* Like readlink(2), but returns a malloc()ed buffer, or NULL on
@@ -2608,9 +2612,9 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 			   (vi->class == TrueColor
 			    || vi->class == DirectColor));
 
-	    if (resource.reportColors) {
+	    if_OPT_REPORT_COLORS({
 		printf(MYFMT, MYARG);
-	    }
+	    });
 	    TRACE((MYFMT, MYARG));
 	    TRACE(("...shifts %u/%u/%u\n",
 		   xw->rgb_shifts[0],
@@ -3101,18 +3105,20 @@ xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
     size_t have = strlen(spec);
 
     if (have == 0 || have > MAX_U_STRING) {
-	if (resource.reportColors) {
+	if_OPT_REPORT_COLORS({
 	    printf("color  (ignored, length %lu)\n", (unsigned long) have);
-	}
+	});
     } else if (XParseColor(screen->display, cmap, spec, def)) {
+#if OPT_REPORT_COLORS
 	XColor save_def = *def;
-	if (resource.reportColors) {
+#endif
+	if_OPT_REPORT_COLORS({
 	    printf("color  %04x/%04x/%04x = \"%s\"\n",
 		   def->red, def->green, def->blue,
 		   spec);
-	}
+	});
 	if (allocateBestRGB(xw, def)) {
-	    if (resource.reportColors) {
+	    if_OPT_REPORT_COLORS({
 		if (def->red != save_def.red ||
 		    def->green != save_def.green ||
 		    def->blue != save_def.blue) {
@@ -3120,7 +3126,7 @@ xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
 			   def->red, def->green, def->blue,
 			   spec);
 		}
-	    }
+	    });
 	    TRACE(("xtermAllocColor -> %x/%x/%x\n",
 		   def->red, def->green, def->blue));
 	    result = True;
@@ -3482,11 +3488,18 @@ typedef enum {
     ,OSC_Unused_30 = 30		/* Konsole (unused) */
     ,OSC_Unused_31 = 31		/* Konsole (unused) */
     ,OSC_NewLogFile = 46
+#if OPT_SHIFT_FONTS
     ,OSC_FontOps = 50
+#endif
     ,OSC_Unused_51		/* Emacs (unused) */
+#if OPT_PASTE64
     ,OSC_SelectionData = 52
+#endif
+#if OPT_QUERY_ALLOW
     ,OSC_AllowedOps = 60
     ,OSC_DisallowedOps = 61
+    ,OSC_AllowableOps = 62
+#endif
 } OscMiscOps;
 
 static Bool
@@ -3920,6 +3933,7 @@ ChangeFontRequest(XtermWidget xw, String buf)
 
 /***====================================================================***/
 
+#if OPT_QUERY_ALLOW
 static void
 report_allowed_ops(XtermWidget xw, int final)
 {
@@ -3932,7 +3946,7 @@ report_allowed_ops(XtermWidget xw, int final)
 #define CASE(name) \
     if (screen->name) { \
 	unparseputc(xw, delimiter); \
-	unparseputs(xw, #name); \
+	unparseputs(xw, XtN##name); \
 	delimiter = ','; \
     }
     CASE(allowColorOps);
@@ -3956,6 +3970,16 @@ report_disallowed_ops(XtermWidget xw, char *value, int final)
     unparse_disallowed_ops(xw, value);
     unparseputc1(xw, final);
 }
+
+static void
+report_allowable_ops(XtermWidget xw, char *value, int final)
+{
+    unparseputc1(xw, ANSI_OSC);
+    unparseputn(xw, OSC_AllowableOps);
+    unparse_allowable_ops(xw, value);
+    unparseputc1(xw, final);
+}
+#endif /* OPT_QUERY_ALLOW */
 
 /***====================================================================***/
 
@@ -4045,11 +4069,17 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      */
     if (xw->work.palette_changed) {
 	switch (mode) {
+#if OPT_QUERY_ALLOW
 	case OSC_AllowedOps:
 	case OSC_DisallowedOps:
+#endif
+#if OPT_SHIFT_FONTS
 	case OSC_FontOps:
+#endif
 	case OSC_NewLogFile:
+#if OPT_PASTE64
 	case OSC_SelectionData:
+#endif
 	case OSC_Unused_30:
 	case OSC_Unused_31:
 	case OSC_Unused_51:
@@ -4069,7 +4099,9 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      * a special case.
      */
     switch (mode) {
+#if OPT_SHIFT_FONTS
     case OSC_FontOps:
+#endif
 #if OPT_ISO_COLORS
     case OSC_Reset(OSC_SetAnsiColor):
     case OSC_Reset(OSC_GetAnsiColors):
@@ -4081,6 +4113,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     case OSC_Reset(OSC_TEXT_CURSOR):
     case OSC_Reset(OSC_MOUSE_FG):
     case OSC_Reset(OSC_MOUSE_BG):
+#endif
 #if OPT_HIGHLIGHT_COLOR
     case OSC_Reset(OSC_HIGHLIGHT_BG):
     case OSC_Reset(OSC_HIGHLIGHT_FG):
@@ -4090,10 +4123,12 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     case OSC_Reset(OSC_TEK_BG):
     case OSC_Reset(OSC_TEK_CURSOR):
 #endif
+#if OPT_QUERY_ALLOW
     case OSC_AllowedOps:
+#endif
+    case OSC_Unused_30:
 	need_data = False;
 	break;
-#endif
     default:
 	break;
     }
@@ -4137,10 +4172,13 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	ChangeTitle(xw, buf);
 	break;
 
+#if OPT_SET_XPROP
     case OSC_X_Property:	/* change X property */
 	if (AllowWindowOps(xw, ewSetXprop))
 	    ChangeXprop(buf);
 	break;
+#endif
+
 #if OPT_ISO_COLORS
     case OSC_GetAnsiColors:
 	ansi_colors = NUM_ANSI_COLORS;
@@ -4272,15 +4310,15 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	break;
 #endif /* ALLOWLOGGING */
 
-    case OSC_FontOps:
 #if OPT_SHIFT_FONTS
+    case OSC_FontOps:
 	if (*buf == '?') {
 	    QueryFontRequest(xw, buf, final);
 	} else if (xw->misc.shift_fonts) {
 	    ChangeFontRequest(xw, buf);
 	}
-#endif /* OPT_SHIFT_FONTS */
 	break;
+#endif /* OPT_SHIFT_FONTS */
 
 #if OPT_PASTE64
     case OSC_SelectionData:
@@ -4288,6 +4326,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	break;
 #endif
 
+#if OPT_QUERY_ALLOW
     case OSC_AllowedOps:	/* XTQALLOWED */
 	report_allowed_ops(xw, final);
 	break;
@@ -4295,6 +4334,11 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     case OSC_DisallowedOps:	/* XTQDISALLOWED */
 	report_disallowed_ops(xw, buf, final);
 	break;
+
+    case OSC_AllowableOps:	/* XTQALLOWABLE */
+	report_allowable_ops(xw, buf, final);
+	break;
+#endif
 
     case OSC_Unused_30:
     case OSC_Unused_31:
@@ -4549,7 +4593,7 @@ skip_params(const char *cp)
     return cp;
 }
 
-#if OPT_MOD_FKEYS || OPT_DEC_RECTOPS || (OPT_VT525_COLORS && OPT_ISO_COLORS)
+#if OPT_MOD_FKEYS || OPT_DEC_RECTOPS || (OPT_VT525_COLORS && OPT_ISO_COLORS) || OPT_TITLE_MODES
 static int
 parse_int_param(const char **cp)
 {
@@ -4831,7 +4875,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 #if OPT_VT525_COLORS && OPT_ISO_COLORS
     const char *cp2;
 #endif
-#if (OPT_VT525_COLORS && OPT_ISO_COLORS) || OPT_MOD_FKEYS
+#if (OPT_VT525_COLORS && OPT_ISO_COLORS) || OPT_MOD_FKEYS || OPT_TITLE_MODES
     int ival;
 #endif
 
@@ -5023,7 +5067,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		else \
 		    sprintf(reply, ">%d;%dm", ival, \
 			    GET_MOD_FKEYS(field)); \
-		} while (0);
+		} while (0)
 
 		switch (ival) {
 		case modifyKeyboard:
@@ -5053,6 +5097,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		}
 	    } else
 #endif
+#if OPT_TITLE_MODES
 		/*
 		 * This query returns the settings assuming the default value
 		 * of DEF_TITLE_MODES, which is zero.  Someone could in
@@ -5090,7 +5135,9 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		}
 		if (okay)
 		    sprintf(reply, ">%st", buffer);
-	    } else {
+	    } else
+#endif /* OPT_TITLE_MODES */
+	    {
 		okay = False;
 	    }
 
@@ -6113,6 +6160,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
      */
     titleIsUTF8 = isValidUTF8((Char *) value);
     if (IsSetUtf8Title(xw) && titleIsUTF8) {
+	TScreen *screen = TScreenOf(xw);
 	char *testc = malloc(strlen(value) + 1);
 	Char *nextc = (Char *) value;
 	Boolean ok8bit = True;
@@ -6128,7 +6176,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 		nextc = convertFromUTF8(nextc, &ch);
 		if (ch > 255) {
 		    ok8bit = False;
-		} else if (!IsLatin1(ch)) {
+		} else if (!IsLatin1(screen, ch)) {
 		    ch = OnlyLatin1(ch);
 		}
 		*lastc++ = (Char) ch;
@@ -6307,7 +6355,8 @@ ChangeTitle(XtermWidget xw, char *name)
 
 #define Strlen(s) strlen((const char *)(s))
 
-void
+#if OPT_SET_XPROP
+static void
 ChangeXprop(char *buf)
 {
     Display *dpy = XtDisplay(toplevel);
@@ -6330,6 +6379,7 @@ ChangeXprop(char *buf)
 	XSetTextProperty(dpy, w, &text_prop, aprop);
     }
 }
+#endif /* OPT_SET_XPROP */
 
 /***====================================================================***/
 
@@ -6785,7 +6835,7 @@ xtermSetenv(const char *var, const char *value)
 	    if (need > have) {
 		char **newenv;
 		newenv = TypeMallocN(char *, need);
-		if (newenv == 0) {
+		if (newenv == NULL) {
 		    xtermWarning("Cannot increase environment\n");
 		    return;
 		}
@@ -6799,7 +6849,7 @@ xtermSetenv(const char *var, const char *value)
 	}
 
 	environ[found] = malloc(2 + len + strlen(value));
-	if (environ[found] == 0) {
+	if (environ[found] == NULL) {
 	    xtermWarning("Cannot allocate environment %s\n", var);
 	    return;
 	}
@@ -6819,7 +6869,7 @@ xtermUnsetenv(const char *var)
 	int ignore;
 	int item = findEnv(var, &ignore);
 	if (item >= 0) {
-	    while ((environ[item] = environ[item + 1]) != 0) {
+	    while ((environ[item] = environ[item + 1]) != NULL) {
 		++item;
 	    }
 	}
@@ -7245,9 +7295,9 @@ xtermEnvUTF8(void)
 	    for (n = 0; locale[n] != 0; ++n) {
 		locale[n] = x_toupper(locale[n]);
 	    }
-	    if (strstr(locale, "UTF-8") != 0)
+	    if (strstr(locale, "UTF-8") != NULL)
 		result = True;
-	    else if (strstr(locale, "UTF8") != 0)
+	    else if (strstr(locale, "UTF8") != NULL)
 		result = True;
 	    free(locale);
 	}
@@ -7889,6 +7939,7 @@ xtermSetWinSize(XtermWidget xw)
 	}
 }
 
+#if OPT_TITLE_MODES
 static void
 xtermInitTitle(TScreen *screen, int which)
 {
@@ -7972,6 +8023,7 @@ xtermFreeTitle(SaveTitle * item)
     FreeAndNull(item->iconName);
     FreeAndNull(item->windowName);
 }
+#endif /* OPT_TITLE_MODES */
 
 #if OPT_XTERM_SGR
 void

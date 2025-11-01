@@ -1,18 +1,25 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #399 - 2025/05/18
+                            Patch #403 - 2025/10/19
 
-     * add configure check for inline, for c89 support.
-     * further  improve  integration  between  UTF-8  and allowC1Printable
-       (report by Matthieu Herrb).
-     * modify  one  of  the missing-character checks to prefer Xft's check
-       over   the   check  for  missing  line-drawing  characters  (Debian
-       #1084794).
-     * align  terminfo building blocks in terminfo to correspond to recent
-       refactoring/trimming in ncurses.
-     * revise a limit-check in selection to fix a regression in patch #398
-       (Debian #1105738).
-     * modify  configure  check  for  Xft  to work around recent change to
-       fontconfig's pkg-config file (Gentoo #953864).
+     * modify  a  special  case  which gives the expected width of Latin-1
+       characters  to  account  for  the allowC1Printable resource (Debian
+       #1110771).
+     * modify  run-tic.in  to use ncurses tic's -o option in preference to
+       the TERMINFO environment variable.
+     * adjust   limits   for   built-in  line-drawing  characters  (Debian
+       #1109472).
+     * add  note  in  manpage  regarding environment variables which xterm
+       removes (report by Ben Collver).
+     * modify  resources  eightBitSelectTypes and utf8SelectTypes to match
+       names ignoring case.
+     * improve  manpage  description  of  comma-separated  resource values
+       (prompted by discussion with István Kopft).
+     * change  default value for disallowedWindowOps resource (prompted by
+       discussion with István Kopft).
+     * fix  a  mismatched  pointer  in  free  in error-handling of a table
+       lookup of resource initialization (report/patch by István Kopft).
+     * update tables in wcwidth.c based on Unicode 17.0.0
+     * update config.guess, config.sub
 

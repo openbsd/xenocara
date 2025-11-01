@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.387 2025/04/02 00:30:06 tom Exp $ */
+/* $XTermId: input.c,v 1.388 2025/06/23 19:53:25 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1240,7 +1240,9 @@ Input(XtermWidget xw,
 
 	    TRACE_FK("...map");
 	    if (evt_state & ControlMask) {
+#if OPT_SUNPC_KBD
 		kd.keysym += (KeySym) xw->misc.ctrl_fkeys;
+#endif
 		UIntClr(evt_state, ControlMask);
 	    }
 	    TRACE_FK(" to");

@@ -1,9 +1,8 @@
-/* $XTermId: menu.h,v 1.147 2024/12/01 23:38:29 tom Exp $ */
+/* $XTermId: menu.h,v 1.149 2025/06/23 20:23:21 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2024 by Thomas E. Dickey
- *
- *                         All Rights Reserved
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1989  X Consortium
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -28,31 +27,6 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- *
- *
- * Copyright 1989  X Consortium
- *
- * Permission to use, copy, modify, distribute, and sell this software and its
- * documentation for any purpose is hereby granted without fee, provided that
- * the above copyright notice appear in all copies and that both that
- * copyright notice and this permission notice appear in supporting
- * documentation.
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
- * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
- *
- * Except as contained in this notice, the name of the X Consortium shall
- * not be used in advertising or otherwise to promote the sale, use or
- * other dealings in this Software without prior written authorization
- * from the X Consortium.
  */
 
 #ifndef included_menu_h
@@ -425,6 +399,8 @@ extern void update_delete_del(void);
 
 #if OPT_SUNPC_KBD
 extern void update_sun_kbd(void);
+#else
+#define update_sun_kbd() /* nothing */
 #endif
 
 #if OPT_HP_FUNC_KEYS

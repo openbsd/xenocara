@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.196 2025/01/03 00:54:45 tom Exp $
+-- $XTermId: INSTALL,v 1.197 2025/09/01 00:22:09 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2024,2025 by Thomas E. Dickey
 --
@@ -857,6 +857,19 @@ The options (in alphabetic order):
 	title area.
 
 	Use --without-xpm to suppress this feature.
+
+  --with-xterm-kbs=XXX
+	Configure xterm's terminfo entries to use either BS (^H, i.e., ASCII
+	backspace) or DEL (^?, or 127).  XXX can be BS (or bs, 8) or DEL
+	(or del, 127).  If XXX is "auto", the configure script chooses BS or
+	DEL according to platform defaults.
+
+	During installation, the makefile and scripts modifies the "xterm+kbs"
+	terminfo entry to use this setting.
+
+	This option also defines the compiled-in default for the erase key.
+	However that is normally overridden if the ptyInitialErase resource
+	is set, or by the terminfo entry.
 
   --with-xterm-symlink[=XXX]  make symbolic link to installed xterm
 

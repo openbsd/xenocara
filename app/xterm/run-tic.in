@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: run-tic.in,v 1.1 2022/10/02 21:42:36 tom Exp $
+# $XTermId: run-tic.in,v 1.6 2025/10/19 23:24:32 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2006-2021,2022 by Thomas E. Dickey
+# Copyright 2006-2022,2025 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -49,14 +49,14 @@ need_ncurses() {
 
 use_ncurses6() {
 	VER=`infocmp6 -V 2>/dev/null`
-	test -n "$VER" && INFOCMP_PROG=infocmp6
+	[ -n "$VER" ] && INFOCMP_PROG=infocmp6
 	VER=`tic6 -V 2>/dev/null`
-	test -n "$VER" && TIC_PROG=tic6
-	test -z "$VER" && need_ncurses
+	[ -n "$VER" ] && TIC_PROG=tic6
+	[ -z "$VER" ] && need_ncurses
 }
 
 MYTEMP=`mktemp -d 2>/dev/null`
-if test -z "$MYTEMP"
+if [ -z "$MYTEMP" ]
 then
 	MYTEMP=${TMPDIR:-/tmp}/run-tic$$
 fi
@@ -66,7 +66,7 @@ trap "rm -rf $MYTEMP" 0
 
 STDERR=$MYTEMP/run-tic$$.log
 VER=`tic -V 2>/dev/null`
-OPT=
+OPT=""
 
 TIC_PROG=tic
 INFOCMP_PROG=infocmp
@@ -105,15 +105,15 @@ case "x$VER" in
 fake|test 32-bit numbers,
 $expect
 EOF
-		TERMINFO="$MYTEMP" $TIC_PROG $OPT "$MYTEMP"/fake.ti 2>/dev/null
-		check=`TERMINFO="$MYTEMP" TERM=fake $INFOCMP_PROG -1 fake 2>/dev/null |grep "$expect"`
-		test "x$check" = "x$expect" || BIG=no
+		$TIC_PROG "$OPT" -o"$MYTEMP" "$MYTEMP"/fake.ti 2>/dev/null
+		check=`$INFOCMP_PROG "-A$MYTEMP" -1 fake 2>/dev/null |grep "$expect"`
+		[ "$check" = "$expect" ] || BIG=no
 		;;
 	*)
 		BIG=no
 		;;
 	esac
-	if test "$BIG" = no
+	if [ "$BIG" = no ]
 	then
 		# Trim out the SGR 1006 feature, to keep "xterm-nrc" smaller
 		# than 4096 bytes.
@@ -122,14 +122,41 @@ EOF
 		sed -e 's/use=xterm+sm+1006,//' -e '/^[	 ][	 ]*$/d' "$PASS1" >"$PASS2"
 		set "$PASS2"
 	fi
+	[ -n "$TERMINFO" ] && OPT="${OPT}o$TERMINFO"
 	;;
 esac
+PASS3=$MYTEMP/terminfo.src
+@AWK@ 'BEGIN{
+	state = 0;
+	if ( "@XTERM_KBS@" == "BS" ) {
+		want = "^H";
+	} else {
+		want = "^?";
+	}
+}
+/^xterm[+]kbs/{
+	state = 1;
+	print;
+	next;
+}
+(state == 1){
+	if ( index($0,"	") <= 0 ) {
+		state = 0;
+		print;
+		next;
+	}
+	sub("^#","");
+	if (index($0,want) <= 0) {
+		sub("^","#");
+	}
+}
+{ print; }' < "$PASS2" > "$PASS3"
 
 echo "** $TIC_PROG $OPT $PASS1"
-$TIC_PROG $OPT "$PASS2" 2>"$STDERR"
+$TIC_PROG $OPT "$PASS3" 2>"$STDERR"
 RET=$?
 
-sed -e "s%$PASS2%$PASS1%" "$STDERR" | \
+sed -e "s%$PASS3%$PASS1%" "$STDERR" | \
 @FGREP@ -v 'Unknown Capability' | \
 @FGREP@ -v 'Capability is not recognized:' | \
 @FGREP@ -v 'tic: Warning near line ' >&2

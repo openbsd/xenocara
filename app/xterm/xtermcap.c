@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.66 2025/04/18 20:27:53 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.67 2025/10/12 23:34:22 tom Exp $ */
 
 /*
  * Copyright 2007-2024,2025 by Thomas E. Dickey
@@ -332,7 +332,7 @@ lookupTcapByName(const char *name)
 	    }
 	}
     }
-
+#if OPT_TRACE
     if (result >= 0) {
 	TRACE(("lookupTcapByName(%s) tc=%s, ti=%s code %#x, param %#x\n",
 	       name,
@@ -343,6 +343,7 @@ lookupTcapByName(const char *name)
     } else {
 	TRACE(("lookupTcapByName(%s) FAIL\n", name));
     }
+#endif /* OPT_TRACE */
     return result;
 }
 

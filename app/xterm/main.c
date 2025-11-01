@@ -1,9 +1,8 @@
-/* $XTermId: main.c,v 1.933 2025/03/08 13:03:19 tom Exp $ */
+/* $XTermId: main.c,v 1.940 2025/10/08 08:22:03 tom Exp $ */
 
 /*
  * Copyright 2002-2024,2025 by Thomas E. Dickey
- *
- *                         All Rights Reserved
+ * Copyright 1987, 1988  X Consortium
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -28,29 +27,9 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- *
- * Copyright 1987, 1988  X Consortium
- *
- * Permission to use, copy, modify, distribute, and sell this software and its
- * documentation for any purpose is hereby granted without fee, provided that
- * the above copyright notice appear in all copies and that both that
- * copyright notice and this permission notice appear in supporting
- * documentation.
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
- * OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * Except as contained in this notice, the name of the X Consortium shall not be
- * used in advertising or otherwise to promote the sale, use or other dealings
- * in this Software without prior written authorization from the X Consortium.
- *
+ */
+
+/*
  * Copyright 1987, 1988 by Digital Equipment Corporation, Maynard.
  *
  *                         All Rights Reserved
@@ -3906,9 +3885,9 @@ validShell(const char *pathname)
 	    && (sb.st_mode & S_IFMT) == S_IFREG
 	    && ((size_t) sb.st_size > 0)
 	    && ((size_t) sb.st_size < (((size_t) ~0) - 2))
-	    && (blob = calloc((size_t) sb.st_size + 2, sizeof(char))) != 0) {
+	    && (blob = calloc((size_t) sb.st_size + 2, sizeof(char))) != NULL) {
 
-	    if ((fp = fopen(ok_shells, "r")) != 0) {
+	    if ((fp = fopen(ok_shells, "r")) != NULL) {
 		rc = fread(blob, sizeof(char), (size_t) sb.st_size, fp);
 		fclose(fp);
 
@@ -3936,6 +3915,49 @@ resetShell(char *oldPath)
     if (!IsEmpty(envPath))
 	xtermSetenv("SHELL", newPath);
     return newPath;
+}
+
+/*
+ * Malware tampers with the terminal database.  Let's discourage that.
+ */
+static void
+xtermTrimEnvPath(const char *name)
+{
+    if (getuid() == 0) {
+	xtermUnsetenv(name);
+    } else {
+	char *value = getenv(name);
+	if (value != NULL) {
+	    char *copyPath = x_strdup(value);
+	    char *editPath = x_strdup(value);
+	    if (copyPath != NULL && editPath != NULL) {
+		char *source = copyPath;
+		char *item;
+		Bool concat = False;
+		*editPath = '\0';
+		while ((item = strtok(source, ":")) != NULL) {
+		    if (access(item, W_OK) == 0) {
+			TRACE(("found writable item in %s: %s\n", name, item));
+		    } else {
+			if (concat)
+			    strcat(editPath, ":");
+			strcat(editPath, item);
+			concat = True;
+		    }
+		    source = NULL;
+		}
+		if (strcmp(editPath, copyPath)) {
+		    if (*editPath)
+			xtermSetenv(name, editPath);
+		    else
+			xtermUnsetenv(name);
+		} else {
+		    free(editPath);
+		}
+		free(copyPath);
+	    }
+	}
+    }
 }
 
 /*
@@ -3980,22 +4002,35 @@ xtermTrimEnv(void)
 	TRIM(0, XCURSOR_PATH),
 	KEEP(0, MC_XDG_OPEN),
 	KEEP(0, TERM_INGRES),
+	TRIM(1, ALACRITTY_),
 	TRIM(1, COLORFGBG),
 	TRIM(1, COLORTERM),
 	TRIM(1, GIO_LAUNCHED_),
+	TRIM(1, GHOSTTY_),
+	TRIM(1, GTK_),
+	TRIM(1, ITERM_),
 	TRIM(1, ITERM2_),
+	TRIM(1, KITTY_),
+	TRIM(1, KONSOLE_),
+	TRIM(1, LC_TERMINAL),
 	TRIM(1, MC_),
 	TRIM(1, MINTTY_),
+	TRIM(1, MOSH_),
 	TRIM(1, PUTTY),
 	TRIM(1, RXVT_),
-	TRIM(1, TERM_),
+	TRIM(1, TERM_),		/* e.g., TERM_PROGRAM */
+	TRIM(1, TERMINAL_),	/* e.g., TERMINAL_NAME */
 	TRIM(1, URXVT_),
 	TRIM(1, VTE_),
+	TRIM(1, WT_SESSION),
+	TRIM(1, WT_PROFILE),
 	TRIM(1, XTERM_),
+	TRIM(1, ZUTTY_),
     };
 #undef TRIM
     /* *INDENT-ON* */
     Cardinal j, k;
+    int trimmed = 0;
 
     for (j = 0; environ[j] != NULL; ++j) {
 	char *equals = strchr(environ[j], '=');
@@ -4013,6 +4048,7 @@ xtermTrimEnv(void)
 		    if (table[k].trim &&
 			(my_var = x_strdup(environ[j])) != NULL) {
 			my_var[dstlen] = '\0';
+			trimmed++;
 			xtermUnsetenv(my_var);
 			free(my_var);
 			/* When removing an entry, check the same slot again. */
@@ -4024,6 +4060,7 @@ xtermTrimEnv(void)
 	    } else if (dstlen == srclen &&
 		       !strncmp(environ[j], table[k].name, srclen)) {
 		if (table[k].trim) {
+		    trimmed++;
 		    xtermUnsetenv(table[k].name);
 		    /* When removing an entry, check the same slot again. */
 		    if (j != 0)
@@ -4032,6 +4069,12 @@ xtermTrimEnv(void)
 		break;
 	    }
 	}
+    }
+    if (trimmed) {
+	TRACE(("%d environment variables trimmed\n", trimmed));
+	xtermTrimEnvPath("TERMINFO");
+	xtermTrimEnvPath("TERMINFO_DIRS");
+	xtermTrimEnvPath("TERMPATH");
     }
 }
 

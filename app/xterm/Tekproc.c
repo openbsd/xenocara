@@ -1,9 +1,8 @@
-/* $XTermId: Tekproc.c,v 1.255 2025/05/18 20:50:21 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.256 2025/06/08 23:03:23 tom Exp $ */
 
 /*
  * Copyright 2001-2024,2025 by Thomas E. Dickey
- *
- *                         All Rights Reserved
+ * Copyright 1988  X Consortium
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -28,28 +27,6 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- *
- * Copyright 1988  X Consortium
- *
- * Permission to use, copy, modify, distribute, and sell this software and its
- * documentation for any purpose is hereby granted without fee, provided that
- * the above copyright notice appear in all copies and that both that
- * copyright notice and this permission notice appear in supporting
- * documentation.
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
- * OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * Except as contained in this notice, the name of the X Consortium shall not be
- * used in advertising or otherwise to promote the sale, use or other dealings
- * in this Software without prior written authorization from the X Consortium.
  *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *

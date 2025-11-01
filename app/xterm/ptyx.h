@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1141 2025/04/01 22:27:18 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1156 2025/08/31 21:55:50 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -571,6 +571,10 @@ typedef enum {
 #define OPT_DEC_RECTOPS 1 /* true if xterm is configured for VT420 rectangles */
 #endif
 
+#ifndef OPT_SET_XPROP
+#define OPT_SET_XPROP 1 /* true if xterm can set X properties */
+#endif
+
 #ifndef OPT_SGR2_HASH
 #define OPT_SGR2_HASH 1 /* true if xterm hashes color-lookups for faint color */
 #endif
@@ -707,6 +711,10 @@ typedef enum {
 #define OPT_PRINT_COLORS 1 /* true if we print color information */
 #endif
 
+#ifndef OPT_QUERY_ALLOW
+#define OPT_QUERY_ALLOW	1 /* report allowed/disallowed features */
+#endif
+
 #ifndef OPT_READLINE
 #define OPT_READLINE	0 /* mouse-click/paste support for readline */
 #endif
@@ -799,6 +807,10 @@ typedef enum {
 #define OPT_TEK4014     1 /* true if we're using tek4014 emulation */
 #endif
 
+#ifndef OPT_TITLE_MODES
+#define OPT_TITLE_MODES 1 /* true if we provide title-stack */
+#endif
+
 #ifndef OPT_TOOLBAR
 #define OPT_TOOLBAR	0 /* true if xterm supports toolbar menus */
 #endif
@@ -835,10 +847,6 @@ typedef enum {
 #define OPT_WIDER_ICHAR 1 /* true if xterm uses 32-bits for wide-chars */
 #endif
 
-#ifndef OPT_XMC_GLITCH
-#define OPT_XMC_GLITCH	0 /* true if xterm supports xmc (magic cookie glitch) */
-#endif
-
 #ifndef OPT_XRES_QUERY
 #define OPT_XRES_QUERY	1 /* true for resource query */
 #endif
@@ -849,6 +857,20 @@ typedef enum {
 
 #ifndef OPT_ZICONBEEP
 #define OPT_ZICONBEEP   1 /* true if xterm supports "-ziconbeep" option */
+#endif
+
+/***====================================================================***/
+
+#ifndef EXP_BOGUS_FG
+#define EXP_BOGUS_FG	0 /* an alternative color model for cursor-color */
+#endif
+
+#ifndef EXP_C2_CONTROLS
+#define EXP_C2_CONTROLS 0 /* demonstrate an encoding blunder by Unicode.org */
+#endif
+
+#ifndef EXP_XMC_GLITCH
+#define EXP_XMC_GLITCH	0 /* true if xterm supports xmc (magic cookie glitch) */
 #endif
 
 /***====================================================================***/
@@ -1461,17 +1483,27 @@ typedef enum {
 #endif
     , ewGetIconTitle = 20
     , ewGetWinTitle = 21
+#if OPT_TITLE_MODES
     , ewPushTitle = 22
     , ewPopTitle = 23
+#endif
     /* these do not fit into that scheme, which is why we use an array */
     , ewSetWinLines
+    , ewColumnMode
+#if OPT_SET_XPROP
     , ewSetXprop
+#endif
+#if OPT_PASTE64
     , ewGetSelection
     , ewSetSelection
+#endif
+#if OPT_DEC_RECTOPS
     , ewGetChecksum
     , ewSetChecksum
+#endif
+#if OPT_STATUS_LINE
     , ewStatusLine
-    , ewColumnMode
+#endif
     /* get the size of the array... */
     , ewLAST
 } WindowOps;
@@ -1599,6 +1631,12 @@ typedef enum {
 #define if_OPT_DIRECT_COLOR2_else(cond, test, stmt) \
 	if_OPT_DIRECT_COLOR2(cond, test, stmt else)
 
+#if OPT_REPORT_COLORS
+#define if_OPT_REPORT_COLORS(stmt) if (resource.reportColors) stmt
+#else
+#define if_OPT_REPORT_COLORS(stmt) /* nothing */
+#endif
+
 #define COLOR_RES_NAME(root) "color" root
 
 #if OPT_COLOR_CLASS
@@ -1682,7 +1720,10 @@ typedef enum {
 
 #define CONTROL(a) ((a) & 037)
 
-#define XTERM_ERASE CONTROL('H')
+#ifndef XTERM_ERASE
+#define XTERM_ERASE ANSI_BS
+#endif
+
 #define XTERM_LNEXT CONTROL('V')
 
 /***====================================================================***/
@@ -1717,12 +1758,12 @@ typedef enum {
 
 /***====================================================================***/
 
-#if OPT_XMC_GLITCH
-#define if_OPT_XMC_GLITCH(screen, code) if(screen->xmc_glitch) code
+#if EXP_XMC_GLITCH
+#define if_EXP_XMC_GLITCH(screen, code) if(screen->xmc_glitch) code
 #define XMC_GLITCH 1	/* the character we'll show */
 #define XMC_FLAGS (INVERSE|UNDERLINE|BOLD|BLINK)
 #else
-#define if_OPT_XMC_GLITCH(screen, code) /* nothing */
+#define if_EXP_XMC_GLITCH(screen, code) /* nothing */
 #endif
 
 /***====================================================================***/
@@ -2828,7 +2869,9 @@ typedef struct {
 
 	int		title_modes;	/* control set/get of titles	*/
 	int		title_modes0;	/* ...initial value         	*/
+#if OPT_TITLE_MODES
 	SavedTitles	saved_titles;
+#endif
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/
@@ -2954,7 +2997,7 @@ typedef struct {
 	DECNRCM_codes	vt52_save_gsets[NUM_GSETS2];
 #endif
 	/* Testing */
-#if OPT_XMC_GLITCH
+#if EXP_XMC_GLITCH
 	unsigned	xmc_glitch;	/* # of spaces to pad on SGR's	*/
 	IAttr		xmc_attributes;	/* attrs that make a glitch	*/
 	Boolean		xmc_inline;	/* SGR's propagate only to eol	*/

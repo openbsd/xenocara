@@ -1,11 +1,8 @@
 .\"#! troff -ms $1		-*- Nroff -*-
-.\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.736 2025/03/30 21:12:29 tom Exp $
-.\"
-.\"
+.\" $XTermId: ctlseqs.ms,v 1.741 2025/06/22 20:29:42 tom Exp $
+.\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
-.\"
-.\"                         All Rights Reserved
+.\" Copyright 1991, 1994 X Consortium
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the
@@ -30,47 +27,21 @@
 .\" holders shall not be used in advertising or otherwise to promote the
 .\" sale, use or other dealings in this Software without prior written
 .\" authorization.
-.\"
-.\"
-.\" Copyright 1991, 1994 X Consortium
-.\"
-.\" Permission is hereby granted, free of charge, to any person obtaining
-.\" a copy of this software and associated documentation files (the
-.\" "Software"), to deal in the Software without restriction, including
-.\" without limitation the rights to use, copy, modify, merge, publish,
-.\" distribute, sublicense, and/or sell copies of the Software, and to
-.\" permit persons to whom the Software is furnished to do so, subject to
-.\" the following conditions:
-.\"
-.\" The above copyright notice and this permission notice shall be
-.\" included in all copies or substantial portions of the Software.
-.\"
-.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-.\" IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
-.\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-.\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-.\" OTHER DEALINGS IN THE SOFTWARE.
-.\"
-.\" Except as contained in this notice, the name of the X Consortium shall
-.\" not be used in advertising or otherwise to promote the sale, use or
-.\" other dealings in this Software without prior written authorization
-.\" from the X Consortium.
-.\"
+.\" ---------------------------------------------------------------------------
 .\" X Window System is a trademark of X Consortium, Inc.
 .\"
 .\" Originally written by Edward Moy, University of California,
 .\" Berkeley, edmoy@violet.berkeley.edu, for the X.V10R4 xterm.
 .\" The X Consortium staff has since updated it for X11.
 .\" Updated by Thomas E. Dickey for XFree86 3.2 - XFree86 4.3, and afterward.
-.\"
+.\" ---------------------------------------------------------------------------
+.\" "XTerm Control Sequences" document
 .\" Run this file through troff and use the -ms macro package.
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #398
-.ds RF 2025/03/30
+.ds LF Patch #401
+.ds RF 2025/06/22
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1061,9 +1032,14 @@ Request Termcap/Terminfo String (XTGETTCAP), \fI\*(xt\fP.
 The string following the \*(``q\*('' is a list of names
 encoded in hexadecimal (2 digits per character)
 separated by \*;
-which correspond to termcap or terminfo key names.
+which correspond to termcap or terminfo
+capability names for special keyboard keys.
+A terminal description will include other capabilities,
+e.g., for cursor movement,
+which are intentionally not part of this interface.
 .br
-A few special features are also recognized, which are not key names:
+A few more terminal capabilities are recognized,
+which are not names of special keys:
 .RS
 .bP
 \fICo\fP for termcap colors (or \fIcolors\fP for terminfo colors),
@@ -1075,6 +1051,16 @@ and
 .br
 Only a terminfo name is provided,
 since termcap applications cannot use this information.
+.RE
+.sP
+These capabilities fall into two categories:
+.RS
+.bP
+Terminal capabilities which may be dynamically adjusted in \fI\*(xt\fP
+so they do not necessarily match a terminal description.
+.bP
+The name of the terminal description,
+which an application can use to obtain the static set of capabilities.
 .RE
 .sP
 \fI\*(xt\fP responds with
@@ -2965,7 +2951,7 @@ then the selection is cleared.
   \*(Os\*6\*0\*s\*;\*(Pt\*s\*(ST
 .sP
 where \*(Pt is a comma-separated list
-of the \fIallowed\fP optional runtime features,
+of the \fIallowed\fP optional runtime feature categories,
 i.e., zero or more of these resource names:
 .iP
   \fBallowColorOps\fR
@@ -2976,16 +2962,31 @@ i.e., zero or more of these resource names:
   \fBallowTitleOps\fR
   \fBallowWindowOps\fR
 .sP
+Except for \fBallowPasteControls\fP,
+those resources can be enabled or disabled at runtime using menus.
+They cannot be changed using control sequences.
+.sP
   \*(Ps = \*6\*1 \(-> Query disallowed features (XTQDISALLOWED).
-The second parameter (i.e., the main feature)
+The second parameter (i.e., the main feature category)
 must be one of the resource names returned by \*(Os\*6\*0.
 \fI\*(XT\fP replies with
 .sP
   \*(Os\*6\*1\*s\*;\*(Pt\*s\*(ST
 .sP
 where \*(Pt is a comma-separated list
-of the optional runtime features which would be disallowed
+of the optional runtime feature subcategories which would be disallowed
 if the main feature is disabled.
+.sP
+  \*(Ps = \*6\*2 \(-> Query allowable features (XTQALLOWABLE).
+The second parameter (i.e., the main feature category)
+must be one of the resource names that might be returned by \*(Os\*6\*0.
+\fI\*(XT\fP replies with
+.sP
+  \*(Os\*6\*2\*s\*;\*(Pt\*s\*(ST
+.sP
+where \*(Pt is a comma-separated list
+of the optional runtime feature subcategories which correspond to
+the main feature category.
 .sP
   \*(Ps = \*1\*0\*4\*;\fIc\fP \(-> Reset Color Number \fIc\fP.  It is reset to
 the color specified by the corresponding X resource.

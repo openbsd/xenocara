@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.540 2025/04/20 21:59:55 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.549 2025/09/28 20:56:33 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -210,17 +210,51 @@ done
 ifelse($2,,LIBS,[$2])="$cf_add_libs"
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_LIB_AFTER version: 3 updated: 2013/07/09 21:27:22
+dnl CF_ADD_LIB_AFTER version: 4 updated: 2025/06/14 06:46:23
 dnl ----------------
 dnl Add a given library after another, e.g., following the one it satisfies a
 dnl dependency for.
 dnl
 dnl $1 = the first library
 dnl $2 = its dependency
+dnl $3 = variable to update (default $LIBS)
 AC_DEFUN([CF_ADD_LIB_AFTER],[
-CF_VERBOSE(...before $LIBS)
-LIBS=`echo "$LIBS" | sed -e "s/[[ 	]][[ 	]]*/ /g" -e "s%$1 %$1 $2 %" -e 's%  % %g'`
-CF_VERBOSE(...after  $LIBS)
+cf_add_libs="[$]ifelse($3,,LIBS,[$3])"
+CF_VERBOSE(...before $cf_add_libs)
+for cf_add_1lib in $2; do
+	# filter duplicates
+	cf_found_2lib=no
+	for cf_add_2lib in $cf_add_libs; do
+		if test "x$cf_add_1lib" = "x$cf_add_2lib"; then
+			cf_found_2lib=yes
+			break
+		fi
+	done
+	# if not a duplicate, find the dependent library
+	if test "$cf_found_2lib" = no
+	then
+		cf_found_2lib=no
+		cf_add_2libs=
+		for cf_add_2lib in $cf_add_libs
+		do
+			test -n "$cf_add_2libs" && cf_add_2libs="$cf_add_2libs "
+			cf_add_2libs="$cf_add_2libs$cf_add_2lib"
+			if test "x$cf_add_2lib" = "x$1"
+			then
+				cf_found_2lib=yes
+				cf_add_2libs="$cf_add_2libs $cf_add_1lib"
+			fi
+		done
+		if test "$cf_found_2lib" = yes
+		then
+			cf_add_libs="$cf_add_2libs"
+		else
+			CF_VERBOSE(...missed $1)
+		fi
+	fi
+done
+CF_VERBOSE(...after  $cf_add_libs)
+ifelse($3,,LIBS,[$3])="$cf_add_libs"
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_APPEND_CFLAGS version: 3 updated: 2021/09/05 17:25:40
@@ -264,7 +298,7 @@ dnl Allow user to enable a normally-off option.
 AC_DEFUN([CF_ARG_ENABLE],
 [CF_ARG_OPTION($1,[$2],[$3],[$4],no)])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ARG_OPTION version: 5 updated: 2015/05/10 19:52:14
+dnl CF_ARG_OPTION version: 6 updated: 2025/08/05 04:09:09
 dnl -------------
 dnl Restricted form of AC_ARG_ENABLE that ensures user doesn't give bogus
 dnl values.
@@ -273,7 +307,7 @@ dnl Parameters:
 dnl $1 = option name
 dnl $2 = help-string
 dnl $3 = action to perform if option is not default
-dnl $4 = action if perform if option is default
+dnl $4 = action to perform if option is default
 dnl $5 = default option value (either 'yes' or 'no')
 AC_DEFUN([CF_ARG_OPTION],
 [AC_ARG_ENABLE([$1],[$2],[test "$enableval" != ifelse([$5],no,yes,no) && enableval=ifelse([$5],no,no,yes)
@@ -627,6 +661,11 @@ esac
 
 ])
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_DIRNAME version: 5 updated: 2020/12/31 20:19:42
+dnl ----------
+dnl "dirname" is not portable, so we fake it with a shell script.
+AC_DEFUN([CF_DIRNAME],[$1=`echo "$2" | sed -e 's%/[[^/]]*$%%'`])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_DISABLE_DESKTOP version: 2 updated: 2011/04/22 05:17:37
 dnl ------------------
@@ -2495,6 +2534,34 @@ else
 fi
 AC_SUBST(GROFF_NOTE)
 AC_SUBST(NROFF_NOTE)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_PROG_INSTALL version: 12 updated: 2025/09/28 16:56:33
+dnl ---------------
+dnl Force $INSTALL to be an absolute-path.  Otherwise, edit_man.sh and the
+dnl misc/tabset install won't work properly.  Usually this happens only when
+dnl using the fallback mkinstalldirs script
+AC_DEFUN([CF_PROG_INSTALL],
+[AC_PROG_INSTALL
+AC_REQUIRE([CF_GLOB_FULLPATH])dnl
+if test "x$INSTALL" = "x./install-sh -c"; then
+	if test -f /usr/sbin/install ; then
+		case "$host_os" in
+		(linux*gnu|linux*gnuabi64|linux*gnuabin32|linux*gnuabielfv*|linux*gnueabi|linux*gnueabihf|linux*gnux32|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys|mingw*|linux*uclibc)
+			INSTALL=/usr/sbin/install 
+			;;
+		esac
+	fi
+fi
+case x$INSTALL in
+(x$GLOB_FULLPATH_POSIX|x$GLOB_FULLPATH_OTHER)
+	;;
+(*)
+	CF_DIRNAME(cf_dir,$INSTALL)
+	test -z "$cf_dir" && cf_dir=.
+	INSTALL="`cd \"$cf_dir\" && pwd`"/"`echo "$INSTALL" | sed -e 's%^.*/%%'`"
+	;;
+esac
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_PROG_LINT version: 7 updated: 2024/11/30 14:37:45
@@ -4837,6 +4904,58 @@ fi
 AC_SUBST(ICON_SUFFIX)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_WITH_XTERM_KBS version: 2 updated: 2025/08/27 20:35:59
+dnl -----------------
+dnl Configure-option with platform-defaults for the "xterm+kbs" building block
+dnl in the terminfo file.
+dnl
+dnl The terminfo "kbs" value corresponds to "stty erase", and is conventionally
+dnl assigned to the key which has
+dnl
+dnl		a "Backspace" label and/or
+dnl		a backarrow symbol.
+dnl
+dnl See XTerm FAQ "Why doesn't my delete key work?"
+dnl		https://invisible-island.net/xterm/xterm.faq.html#xterm_erase
+AC_DEFUN([CF_WITH_XTERM_KBS],[
+case $host_os in
+(linux*gnu|linux*gnuabi64|linux*gnuabin32|linux*gnuabielfv*|linux*gnueabi|linux*gnueabihf|linux*gnux32|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys|mingw*|linux*uclibc|linux*musl|openbsd*|darwin*)
+	want_xterm_kbs=DEL
+	;;
+(*)
+	want_xterm_kbs=BS
+	;;
+esac
+
+AC_MSG_CHECKING(if xterm backspace-key sends BS or DEL)
+AC_ARG_WITH(xterm-kbs,
+	[[  --with-xterm-kbs[=XXX]  specify if xterm backspace-key sends BS or DEL]],
+	[with_xterm_kbs=$withval],
+	[with_xterm_kbs=auto])
+case x$with_xterm_kbs in
+(xyes|xno|xBS|xbs|x8)
+	with_xterm_kbs=BS
+	;;
+(xDEL|xdel|x127)
+	with_xterm_kbs=DEL
+	;;
+(xauto)
+	with_xterm_kbs=$want_xterm_kbs
+	;;
+(*)
+	with_xterm_kbs=$withval
+	;;
+esac
+AC_MSG_RESULT($with_xterm_kbs)
+XTERM_KBS=$with_xterm_kbs
+AC_SUBST(XTERM_KBS)
+
+if test "x$with_xterm_kbs" != "x$want_xterm_kbs"
+then
+	AC_MSG_WARN([expected --with-xterm-kbs=$want_xterm_kbs for $host_os, have $with_xterm_kbs])
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_XBOOL_RESULT version: 3 updated: 2015/04/12 15:39:00
 dnl ---------------
 dnl Translate an autoconf boolean yes/no into X11's booleans, e.g., True/False.
@@ -4963,7 +5082,7 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 68 updated: 2024/11/09 18:07:29
+dnl CF_XOPEN_SOURCE version: 69 updated: 2025/07/26 14:09:49
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -5023,7 +5142,7 @@ case "$host_os" in
 	cf_xopen_source="-D_SGI_SOURCE"
 	cf_XOPEN_SOURCE=
 	;;
-(linux*gnu|linux*gnuabi64|linux*gnuabin32|linux*gnueabi|linux*gnueabihf|linux*gnux32|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys|mingw*|linux*uclibc)
+(linux*gnu|linux*gnuabi64|linux*gnuabin32|linux*gnuabielfv*|linux*gnueabi|linux*gnueabihf|linux*gnux32|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys|mingw*|linux*uclibc)
 	CF_GNU_SOURCE($cf_XOPEN_SOURCE)
 	;;
 linux*musl)
@@ -5122,7 +5241,7 @@ fi
 fi # cf_cv_posix_visible
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA version: 25 updated: 2023/01/11 04:05:23
+dnl CF_X_ATHENA version: 26 updated: 2025/06/14 06:46:23
 dnl -----------
 dnl Check for Xaw (Athena) libraries
 dnl
@@ -5192,8 +5311,6 @@ if test "$PKG_CONFIG" != none ; then
 			CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 			AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 
-			CF_TRIM_X_LIBS
-
 AC_CACHE_CHECK(for usable $cf_x_athena/Xmu package,cf_cv_xaw_compat,[
 AC_TRY_LINK([
 $ac_includes_default
@@ -5219,7 +5336,6 @@ int check = XmuCompareISOLatin1("big", "small");
 						],[
 							CF_ADD_LIB_AFTER($cf_first_lib,-lXmu)
 						])
-					CF_TRIM_X_LIBS
 					;;
 				esac
 			fi

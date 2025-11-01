@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.672 2025/05/15 23:19:08 tom Exp $ */
+/* $XTermId: button.c,v 1.674 2025/10/08 21:58:31 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1838,7 +1838,7 @@ sameItem(const char *actual, const char *wanted)
     size_t need = strlen(wanted);
 
     if (have != 0 && have <= need) {
-	if (!strncmp(actual, wanted, have)) {
+	if (!x_strncasecmp(actual, wanted, (unsigned) have)) {
 	    TRACE(("...matched \"%s\"\n", wanted));
 	    result = True;
 	}

@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.86 2025/02/03 00:37:06 tom Exp $ */
+/* $XTermId: main.h,v 1.87 2025/09/20 12:56:23 tom Exp $ */
 
 /*
  * Copyright 2000-2023,2025 by Thomas E. Dickey
@@ -144,7 +144,7 @@
 #endif
 
 #ifndef DEF_DISALLOWED_WINDOW
-#define DEF_DISALLOWED_WINDOW	"20,21,SetXprop,SetSelection"
+#define DEF_DISALLOWED_WINDOW	"GetIconTitle,GetWinTitle,SetXprop,SetSelection,GetSelection,GetChecksum"
 #endif
 
 #if OPT_BLINK_TEXT

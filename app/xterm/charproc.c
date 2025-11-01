@@ -1,9 +1,8 @@
-/* $XTermId: charproc.c,v 1.2073 2025/05/18 20:50:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2100 2025/10/19 23:23:40 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
- *
- *                         All Rights Reserved
+ * Copyright 1988  X Consortium
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -28,30 +27,6 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- *
- *
- * Copyright 1988  X Consortium
- *
- * Permission to use, copy, modify, distribute, and sell this software and its
- * documentation for any purpose is hereby granted without fee, provided that
- * the above copyright notice appear in all copies and that both that
- * copyright notice and this permission notice appear in supporting
- * documentation.
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
- * OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * Except as contained in this notice, the name of the X Consortium shall not be
- * used in advertising or otherwise to promote the sale, use or other dealings
- * in this Software without prior written authorization from the X Consortium.
- *
  */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -304,7 +279,6 @@ static XtActionsRec actionsList[] = {
     { "set-scroll-on-tty-output", HandleScrollTtyOutput },
     { "set-scrollbar",		HandleScrollbar },
     { "set-select",		HandleSetSelect },
-    { "set-sun-keyboard",	HandleSunKeyboard },
     { "set-titeInhibit",	HandleTiteInhibit },
     { "set-visual-bell",	HandleSetVisualBell },
     { "set-vt-font",		HandleSetFont },
@@ -399,6 +373,9 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_SIXEL_GRAPHICS
     { "set-sixel-scrolling",	HandleSixelScrolling },
+#endif
+#if OPT_SUNPC_KBD
+    { "set-sun-keyboard",	HandleSunKeyboard },
 #endif
 #if OPT_SUN_FUNC_KEYS
     { "set-sun-function-keys",	HandleSunFunctionKeys },
@@ -836,7 +813,7 @@ static XtResource xterm_resources[] =
 #endif
 
     /* these are used only for testing ncurses, not in the manual page */
-#if OPT_XMC_GLITCH
+#if EXP_XMC_GLITCH
     Bres(XtNxmcInline, XtCXmcInline, screen.xmc_inline, False),
     Bres(XtNxmcMoveSGR, XtCXmcMoveSGR, screen.move_sgr_ok, True),
     Ires(XtNxmcAttributes, XtCXmcAttributes, screen.xmc_attributes, 1),
@@ -997,7 +974,7 @@ xtermAddInput(Widget w)
 }
 
 #if OPT_ISO_COLORS
-#ifdef EXP_BOGUS_FG
+#if EXP_BOGUS_FG
 static Bool
 CheckBogusForeground(TScreen *screen, const char *tag)
 {
@@ -1067,7 +1044,7 @@ SGR_Foreground(XtermWidget xw, int color)
     setCgsFore(xw, WhichVWin(screen), gcBold, fg);
     setCgsBack(xw, WhichVWin(screen), gcBoldReverse, fg);
 
-#ifdef EXP_BOGUS_FG
+#if EXP_BOGUS_FG
     /*
      * If we've just turned off the foreground color, check for blank cells
      * which have no background color, but do have foreground color.  This
@@ -1794,7 +1771,7 @@ static DECNRCM_codes
 current_charset(TScreen *screen, int value)
 {
     DECNRCM_codes result = nrc_ASCII;
-    if (IsLatin1(value)) {
+    if (IsLatin1(screen, value)) {
 	if (screen->curss != 0) {
 	    result = screen->gsets[screen->curss];
 	} else if (value >= 0x80) {
@@ -3333,7 +3310,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		       visibleVTparse(sp->nextstate)));
 	    } else
 #endif
-	    if (sp->parsestate != ansi_table)
+#if EXP_C2_CONTROLS
+	    if (sp->parsestate != ansi_table && sp->parsestate != sos_table)
+#endif
 		sp->nextstate = CASE_IGNORE;
 	}
 
@@ -3944,7 +3923,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_CUP:
 	    TRACE(("CASE_CUP - cursor position\n"));
-	    if_OPT_XMC_GLITCH(screen, {
+	    if_EXP_XMC_GLITCH(screen, {
 		Jump_XMC(xw);
 	    });
 	    CursorSet(screen, one_if_default(0) - 1, one_if_default(1) - 1, xw->flags);
@@ -4147,11 +4126,23 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			break;
 		    }
 		} else {
+		    /*
+		     * xterm reports all supported extensions.  Others differ.
+		     *
+		     * These codes are listed in DEC 070 as constants used for
+		     * VT420 terminal identification.  However the actual
+		     * terminal (and VT510/VT520) differ in both documentation
+		     * and hardware.
+		     */
 		    reply.a_param[count++] = (ParmType) (60
 							 + screen->display_da1
 							 / 100);
 		    reply.a_param[count++] = 1;		/* 132-columns */
 		    reply.a_param[count++] = 2;		/* printer */
+		    /*
+		     * VT420/VT510/VT520 manuals do not list ReGIS or SIXEL.
+		     * As an extension, xterm provides them with decGraphicsID.
+		     */
 #if OPT_REGIS_GRAPHICS
 		    if (optRegisGraphics(screen)) {
 			reply.a_param[count++] = 3;	/* ReGIS graphics */
@@ -4162,6 +4153,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			reply.a_param[count++] = 4;	/* sixel graphics */
 		    }
 #endif
+		    /*
+		     * VT420 manual's example shows 6.
+		     * VT510 manual example of Level 4 omits 6.
+		     * VT520 manual's example omits 6, 8 and 15 with a comment
+		     * stating those are not reported explicitly at Level 5.
+		     */
 		    reply.a_param[count++] = 6;		/* selective-erase */
 #if OPT_SUNPC_KBD
 		    if (xw->keyboard.type == keyboardIsVT220)
@@ -4169,15 +4166,30 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			reply.a_param[count++] = 8;	/* user-defined-keys */
 		    reply.a_param[count++] = 9;		/* national replacement charsets */
 		    reply.a_param[count++] = 15;	/* technical characters */
+#if OPT_DEC_LOCATOR
 		    reply.a_param[count++] = 16;	/* locator port */
-		    if (screen->display_da1 >= 400) {
+#endif
+		    /*
+		     * DEC 070 says 17 is supported in Level 3; VT320 manual
+		     * does not document it, but shows it in an example.
+		     */
+		    if (screen->display_da1 >= 300) {
 			reply.a_param[count++] = 17;	/* terminal state interrogation */
+		    }
+		    if (screen->display_da1 >= 400) {
 			reply.a_param[count++] = 18;	/* windowing extension */
 			reply.a_param[count++] = 21;	/* horizontal scrolling */
 		    }
+		    /*
+		     * DEC 070 lists 22 as a Level 4 extension.
+		     */
 		    if_OPT_ISO_COLORS(screen, {
 			reply.a_param[count++] = 22;	/* ANSI color, VT525 */
 		    });
+		    /*
+		     * DEC 070 lists 28 and 29 as VT420 extensions.
+		     * They do not appear in the VT420 manual.
+		     */
 		    reply.a_param[count++] = 28;	/* rectangular editing */
 #if OPT_DEC_LOCATOR
 		    reply.a_param[count++] = 29;	/* ANSI text locator */
@@ -4293,7 +4305,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		int op = GetParam(item);
 		int skip;
 
-		if_OPT_XMC_GLITCH(screen, {
+		if_EXP_XMC_GLITCH(screen, {
 		    Mark_XMC(xw, op);
 		});
 		TRACE(("CASE_SGR %d\n", op));
@@ -5641,7 +5653,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 */
 		if (nparam > 0
 		    && ((value >= 256 && CharWidth(screen, value) > 0)
-			|| IsLatin1(value))) {
+			|| IsLatin1(screen, value))) {
 		    xtermParseRect(xw, ParamPair(1), &myRect);
 		    ScrnFillRectangle(xw, &myRect,
 				      value, current_charset(screen, value),
@@ -5986,23 +5998,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 #endif
 
-	case CASE_DECSASD:
 #if OPT_STATUS_LINE
+	case CASE_DECSASD:
 	    if (screen->vtXX_level >= 2) {
 		handle_DECSASD(xw, zero_if_default(0));
 	    }
-#endif
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECSSDT:
-#if OPT_STATUS_LINE
 	    if (screen->vtXX_level >= 2) {
 		handle_DECSSDT(xw, zero_if_default(0));
 	    }
-#endif
 	    ResetState(sp);
 	    break;
+#endif
 
 #if OPT_XTERM_SGR		/* most are related, all use csi_hash_table[] */
 	case CASE_CSI_HASH_STATE:
@@ -6011,15 +6021,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    sp->parsestate = csi_hash_table;
 	    break;
 
-	case CASE_XTERM_CHECKSUM:
 #if OPT_DEC_RECTOPS
+	case CASE_XTERM_CHECKSUM:
 	    if (screen->vtXX_level >= 4 && AllowWindowOps(xw, ewSetChecksum)) {
 		TRACE(("CASE_XTERM_CHECKSUM\n"));
 		screen->checksum_ext = zero_if_default(0);
 	    }
-#endif
 	    ResetState(sp);
 	    break;
+#endif
 
 	case CASE_XTERM_PUSH_SGR:
 	    TRACE(("CASE_XTERM_PUSH_SGR\n"));
@@ -6995,7 +7005,7 @@ dotext(XtermWidget xw,
 	}
     }
 
-    if_OPT_XMC_GLITCH(screen, {
+    if_EXP_XMC_GLITCH(screen, {
 	Cardinal n;
 	if (charset != '?') {
 	    for (n = 0; n < len; n++) {
@@ -7996,6 +8006,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
+#if !OPT_SHIFT_FONTS
+	case srm_DECHEBM:	/* ignore */
+#endif
 	default:
 	    TRACE(("DATA_ERROR: unknown private code %d\n", code));
 	    break;
@@ -8337,6 +8350,9 @@ savemodes(XtermWidget xw)
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
+#if !OPT_SHIFT_FONTS
+	case srm_DECHEBM:	/* ignore */
+#endif
 	default:
 	    break;
 	}
@@ -8773,6 +8789,9 @@ restoremodes(XtermWidget xw)
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
+#if !OPT_SHIFT_FONTS
+	case srm_DECHEBM:	/* ignore */
+#endif
 	default:
 	    break;
 	}
@@ -9055,8 +9074,8 @@ window_ops(XtermWidget xw)
 		       win_attrs.y, win_attrs.x));
 		if (!discount_frame_extents(xw, &result_y, &result_x)) {
 		    TRACE(("...cancelled translation\n"));
-		    result_y = win_attrs.y;
-		    result_x = win_attrs.x;
+		    result_y = win_attrs.y + win_attrs.border_width;
+		    result_x = win_attrs.x + win_attrs.border_width;
 		}
 		break;
 	    }
@@ -9184,6 +9203,7 @@ window_ops(XtermWidget xw)
 	       ? "window title" \
 	       : "no titles")))
 
+#if OPT_TITLE_MODES
     case ewPushTitle:		/* save the window's title(s) on stack */
 	if (AllowWindowOps(xw, ewPushTitle)) {
 	    SaveTitle item;
@@ -9234,6 +9254,7 @@ window_ops(XtermWidget xw)
 	    }
 	}
 	break;
+#endif /* OPT_TITLE_MODES */
 
     default:			/* DECSLPP (24, 25, 36, 48, 72, 144) */
 	if (AllowWindowOps(xw, ewSetWinLines)) {
@@ -10191,22 +10212,24 @@ ParseList(const char **source)
 static void
 set_flags_from_list(char *target,
 		    const char *source,
-		    const FlagList * list)
+		    const FlagList * list,
+		    Bool allowNumber)
 {
     Cardinal n;
 
     while (!IsEmpty(source)) {
-	char *next = ParseList(&source);
+	char *next_start = ParseList(&source);
+	char *next = next_start;
 	Boolean found = False;
-	char flag = 1;
+	Boolean flag = True;
 
 	if (next == NULL)
 	    break;
 	if (*next == '~') {
-	    flag = 0;
+	    flag = False;
 	    next++;
 	}
-	if (isdigit(CharOf(*next))) {
+	if (allowNumber && isdigit(CharOf(*next))) {
 	    char *temp;
 	    int value = (int) strtol(next, &temp, 0);
 	    if (!FullS2L(next, temp)) {
@@ -10216,7 +10239,8 @@ set_flags_from_list(char *target,
 		    if (list[n].code == value) {
 			target[value] = flag;
 			found = True;
-			TRACE(("...found %s (%d)\n", list[n].name, value));
+			TRACE(("...set %s (%d) %s\n",
+			       list[n].name, value, BtoS(flag)));
 			break;
 		    }
 		}
@@ -10227,14 +10251,15 @@ set_flags_from_list(char *target,
 		    int value = list[n].code;
 		    target[value] = flag;
 		    found = True;
-		    TRACE(("...found %s (%d)\n", list[n].name, value));
+		    TRACE(("...set %s (%d) %s\n",
+			   list[n].name, value, BtoS(flag)));
 		}
 	    }
 	}
 	if (!found) {
 	    xtermWarning("Unrecognized keyword: %s\n", next);
 	}
-	free(next);
+	free(next_start);
     }
 }
 
@@ -10512,18 +10537,28 @@ static const FlagList tblWindowOps[] =
 #endif
     ,DATA(GetIconTitle)
     ,DATA(GetWinTitle)
+#if OPT_TITLE_MODES
     ,DATA(PushTitle)
     ,DATA(PopTitle)
+#endif
 /* this item uses all remaining numbers in the sequence */
     ,DATA(SetWinLines)
 /* starting at this point, numbers do not apply */
-    ,DATA(SetXprop)
-    ,DATA(GetSelection)
-    ,DATA(SetSelection)
+    ,DATA(ColumnMode)
+#if OPT_DEC_RECTOPS
     ,DATA(GetChecksum)
     ,DATA(SetChecksum)
+#endif
+#if OPT_PASTE64
+    ,DATA(GetSelection)
+    ,DATA(SetSelection)
+#endif
+#if OPT_SET_XPROP
+    ,DATA(SetXprop)
+#endif
+#if OPT_STATUS_LINE
     ,DATA(StatusLine)
-    ,DATA(ColumnMode)
+#endif
     ,DATA_END
 };
 #undef DATA
@@ -10552,37 +10587,47 @@ static const FlagList tblColorEvents[] =
 };
 #undef DATA
 
+#if OPT_QUERY_ALLOW
+
+#define DATA(mixed, plain, flags) \
+	{ mixed, \
+	  offsetof(TScreen, plain), \
+	  sizeof(((TScreen*)0)->plain), \
+	  flags }
+/* *INDENT-OFF* */
+static const struct {
+    const char *     name;
+    size_t           offset;
+    size_t           length;
+    const FlagList * codes;
+} allow_categories[] = {
+    DATA(XtNallowColorOps,      disallow_color_ops, tblColorOps),
+    DATA(XtNallowFontOps,       disallow_font_ops,  tblFontOps),
+    DATA(XtNallowMouseOps,      disallow_mouse_ops, tblMouseOps),
+    DATA(XtNallowPasteControls, disallow_paste_ops, tblPasteOps),
+    DATA(XtNallowTcapOps,       disallow_tcap_ops,  tblTcapOps),
+    DATA("allowWinOps",         disallow_win_ops,   tblWindowOps),
+    DATA(XtNallowWindowOps,     disallow_win_ops,   tblWindowOps),
+};
+/* *INDENT-ON* */
+#undef DATA
+
 void
 unparse_disallowed_ops(XtermWidget xw, char *value)
 {
     TScreen *screen = TScreenOf(xw);
-#define DATA(mixed, plain, flags) { #mixed, offsetof(TScreen, plain), sizeof(screen->plain), flags }
-    /* *INDENT-OFF* */
-    static const struct {
-	const char *	name;
-	size_t		offset;
-	size_t		length;
-	const FlagList *codes;
-    } table[] = {
-	DATA(allowColorOps,	 disallow_color_ops, tblColorOps),
-	DATA(allowFontOps,	 disallow_font_ops,  tblFontOps),
-	DATA(allowMouseOps,	 disallow_mouse_ops, tblMouseOps),
-	DATA(allowPasteControls, disallow_paste_ops, tblPasteOps),
-	DATA(allowTcapOps,	 disallow_tcap_ops,  tblTcapOps),
-	DATA(allowWinOps,	 disallow_win_ops,   tblWindowOps),
-    };
-    /* *INDENT-ON* */
-#undef DATA
     Cardinal j, k, jk;
     char delim = ';';
 
-    for (j = 0; j < XtNumber(table); ++j) {
-	if (!x_strcasecmp(value, table[j].name)) {
-	    const char *flags = (char *) screen + table[j].offset;
+    TRACE(("unparse_disallowed_ops(%s)\n", value));
+    for (j = 0; j < XtNumber(allow_categories); ++j) {
+	if (!x_strcasecmp(value, allow_categories[j].name)) {
+	    const char *flags = (char *) screen + allow_categories[j].offset;
 
-	    for (k = 0; k < table[j].length; ++k) {
+	    TRACE(("...found table\n"));
+	    for (k = 0; k < allow_categories[j].length; ++k) {
 		if (flags[k]) {
-		    const FlagList *codes = table[j].codes;
+		    const FlagList *codes = allow_categories[j].codes;
 		    Boolean found = False;
 
 		    unparseputc(xw, delim);
@@ -10602,6 +10647,28 @@ unparse_disallowed_ops(XtermWidget xw, char *value)
 	}
     }
 }
+
+void
+unparse_allowable_ops(XtermWidget xw, char *value)
+{
+    Cardinal j, k;
+    char delim = ';';
+
+    TRACE(("unparse_allowable_ops(%s)\n", value));
+    for (j = 0; j < XtNumber(allow_categories); ++j) {
+	if (!x_strcasecmp(value, allow_categories[j].name)) {
+	    const FlagList *codes = allow_categories[j].codes;
+
+	    for (k = 0; codes[k].name; ++k) {
+		unparseputc(xw, delim);
+		unparseputs(xw, codes[k].name);
+		delim = ',';
+	    }
+	    break;
+	}
+    }
+}
+#endif /* OPT_QUERY_ALLOW */
 
 /* ARGSUSED */
 static void
@@ -10808,7 +10875,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.c132);
     init_Bres(screen.curses);
     init_Bres(screen.hp_ll_bc);
-#if OPT_XMC_GLITCH
+#if EXP_XMC_GLITCH
     init_Ires(screen.xmc_glitch);
     init_Ires(screen.xmc_attributes);
     init_Bres(screen.xmc_inline);
@@ -11035,37 +11102,43 @@ VTInitialize(Widget wrequest,
 
     set_flags_from_list(screen->disallow_color_ops,
 			screen->disallowedColorOps,
-			tblColorOps);
+			tblColorOps,
+			False);
 
     init_Sres(screen.disallowedFontOps);
 
     set_flags_from_list(screen->disallow_font_ops,
 			screen->disallowedFontOps,
-			tblFontOps);
+			tblFontOps,
+			False);
 
     init_Sres(screen.disallowedMouseOps);
 
     set_flags_from_list(screen->disallow_mouse_ops,
 			screen->disallowedMouseOps,
-			tblMouseOps);
+			tblMouseOps,
+			False);
 
     init_Sres(screen.disallowedPasteOps);
 
     set_flags_from_list(screen->disallow_paste_ops,
 			screen->disallowedPasteOps,
-			tblPasteOps);
+			tblPasteOps,
+			False);
 
     init_Sres(screen.disallowedTcapOps);
 
     set_flags_from_list(screen->disallow_tcap_ops,
 			screen->disallowedTcapOps,
-			tblTcapOps);
+			tblTcapOps,
+			False);
 
     init_Sres(screen.disallowedWinOps);
 
     set_flags_from_list(screen->disallow_win_ops,
 			screen->disallowedWinOps,
-			tblWindowOps);
+			tblWindowOps,
+			True);
 
     init_Sres(screen.default_string);
     init_Sres(screen.eightbit_select_types);
@@ -11077,7 +11150,7 @@ VTInitialize(Widget wrequest,
     screen->allowPasteControls = screen->allowPasteControl0;
     screen->allowSendEvents = screen->allowSendEvent0;
     screen->allowColorOps = screen->allowColorOp0;
-    screen->allowFontOps = False;
+    screen->allowFontOps = screen->allowFontOp0;
     screen->allowMouseOps = screen->allowMouseOp0;
     screen->allowTcapOps = screen->allowTcapOp0;
     screen->allowTitleOps = screen->allowTitleOp0;
@@ -11086,7 +11159,8 @@ VTInitialize(Widget wrequest,
     if (!IsEmpty(screen->colorEvents)) {
 	set_flags_from_list(screen->color_events,
 			    screen->colorEvents,
-			    tblColorEvents);
+			    tblColorEvents,
+			    False);
     }
 #if OPT_SCROLL_LOCK
     screen->allowScrollLock = screen->allowScrollLock0;
@@ -11994,8 +12068,10 @@ VTDestroy(Widget w GCC_UNUSED)
 	deleteScrollback(screen);
     }
 
+#if OPT_TITLE_MODES
     for (n = 0; n < MAX_SAVED_TITLES; ++n)
 	xtermFreeTitle(&screen->saved_titles.data[n]);
+#endif
 
 #if OPT_STATUS_LINE
     free(screen->status_fmt);
@@ -13488,7 +13564,7 @@ ShowCursor(XtermWidget xw)
 	base = ' ';
     }
 #if OPT_ISO_COLORS
-#ifdef EXP_BOGUS_FG
+#if EXP_BOGUS_FG
     /*
      * If the cursor happens to be on blanks, and we have not set both
      * foreground and background color, do not treat it as a colored cell.
@@ -13870,7 +13946,7 @@ HideCursor(XtermWidget xw)
     if (base == 0) {
 	base = ' ';
     }
-#ifdef EXP_BOGUS_FG
+#if EXP_BOGUS_FG
     /*
      * If the cursor happens to be on blanks, and we have not set both
      * foreground and background color, do not treat it as a colored cell.
@@ -14250,7 +14326,9 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 
 	/* reset the mouse mode */
 	screen->send_mouse_pos = MOUSE_OFF;
+#if OPT_FOCUS_EVENT
 	screen->send_focus_pos = OFF;
+#endif
 	screen->extend_coords = 0;
 	screen->waitingForTrackInfo = False;
 	screen->eventMode = NORMAL;
@@ -14800,14 +14878,10 @@ set_cursor_gcs(XtermWidget xw)
 	setCgsFore(xw, win, gcVTcursFilled, xx);
 	setCgsBack(xw, win, gcVTcursFilled, fg);
 
-	if (screen->always_highlight) {
-	    /* both GC's use the same color */
-	    setCgsFore(xw, win, gcVTcursReverse, bg);
-	    setCgsBack(xw, win, gcVTcursReverse, cc);
-	} else {
-	    setCgsFore(xw, win, gcVTcursReverse, bg);
-	    setCgsBack(xw, win, gcVTcursReverse, cc);
-	}
+	/* both GC's use the same color */
+	setCgsFore(xw, win, gcVTcursReverse, bg);
+	setCgsBack(xw, win, gcVTcursReverse, cc);
+
 	set_cursor_outline_gc(xw, screen->always_highlight, fg, bg, cc);
 	changed = True;
 	FreeMarkGCs(xw);

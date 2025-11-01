@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2025)
-               updated for XTerm Patch #398 (2025/03/30)
+               updated for XTerm Patch #401 (2025/06/22)
 
 
 
@@ -546,9 +546,12 @@ DCS + q Pt ST
           Request Termcap/Terminfo String (XTGETTCAP), xterm.  The
           string following the "q" is a list of names encoded in
           hexadecimal (2 digits per character) separated by ; which
-          correspond to termcap or terminfo key names.
-          A few special features are also recognized, which are not key
-          names:
+          correspond to termcap or terminfo capability names for special
+          keyboard keys.  A terminal description will include other
+          capabilities, e.g., for cursor movement, which are
+          intentionally not part of this interface.
+          A few more terminal capabilities are recognized, which are not
+          names of special keys:
 
           o   Co for termcap colors (or colors for terminfo colors), and
 
@@ -557,6 +560,15 @@ DCS + q Pt ST
           o   RGB for the ncurses direct-color extension.
               Only a terminfo name is provided, since termcap
               applications cannot use this information.
+
+          These capabilities fall into two categories:
+
+          o   Terminal capabilities which may be dynamically adjusted in
+              xterm so they do not necessarily match a terminal
+              description.
+
+          o   The name of the terminal description, which an application
+              can use to obtain the static set of capabilities.
 
           xterm responds with
           DCS 1 + r Pt ST for valid requests, adding to Pt an = , and
@@ -2164,7 +2176,8 @@ OSC Ps ; Pt ST
             OSC 6 0  ; Pt ST
 
           where Pt is a comma-separated list of the allowed optional
-          runtime features, i.e., zero or more of these resource names:
+          runtime feature categories, i.e., zero or more of these
+          resource names:
 
             allowColorOps
             allowFontOps
@@ -2174,15 +2187,31 @@ OSC Ps ; Pt ST
             allowTitleOps
             allowWindowOps
 
+          Except for allowPasteControls, those resources can be enabled
+          or disabled at runtime using menus.  They cannot be changed
+          using control sequences.
+
             Ps = 6 1  -> Query disallowed features (XTQDISALLOWED).  The
-          second parameter (i.e., the main feature) must be one of the
-          resource names returned by OSC 6 0 .  XTerm replies with
+          second parameter (i.e., the main feature category) must be one
+          of the resource names returned by OSC 6 0 .  XTerm replies
+          with
 
             OSC 6 1  ; Pt ST
 
           where Pt is a comma-separated list of the optional runtime
-          features which would be disallowed if the main feature is
-          disabled.
+          feature subcategories which would be disallowed if the main
+          feature is disabled.
+
+            Ps = 6 2  -> Query allowable features (XTQALLOWABLE).  The
+          second parameter (i.e., the main feature category) must be one
+          of the resource names that might be returned by OSC 6 0 .
+          XTerm replies with
+
+            OSC 6 2  ; Pt ST
+
+          where Pt is a comma-separated list of the optional runtime
+          feature subcategories which correspond to the main feature
+          category.
 
             Ps = 1 0 4 ; c -> Reset Color Number c.  It is reset to the
           color specified by the corresponding X resource.  Any number
@@ -3763,44 +3792,44 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
         be used in termcap for vi(1), for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while the SCOSC/SCORC  pair  was  added  in  1995  by  XFree86  (and
+    while  the  SCOSC/SCORC  pair  was  added  in  1995  by XFree86 (and
     documented long afterwards).
 
-    The  SCO  ANSI  console  terminal  descriptions  did  not  use these
-    controls (they used the VT100-compatible SC/RC  pair).   SCOSC/SCORC
-    were  an artifact of DOS 2.00 (January 1983), by Microsoft and later
+    The SCO  ANSI  console  terminal  descriptions  did  not  use  these
+    controls  (they  used the VT100-compatible SC/RC pair).  SCOSC/SCORC
+    were an artifact of DOS 2.00 (January 1983), by Microsoft and  later
     supported by SCO and other vendors.
 
-    The SCOSC/SCORC pair is considered a private mode because the  final
+    The  SCOSC/SCORC pair is considered a private mode because the final
     characters (s  and u ) fall in the range from "`" to "~" (octal 0140
-    to octal 0176).  Other private control sequences can be  constructed
+    to  octal 0176).  Other private control sequences can be constructed
     by using octets 074 to 077 (characters "<", "=", ">", or "?") at the
     beginning  of  the  parameter  string.   The  XTSAVE  and  XTRESTORE
     controls use "?") in this manner.
 
     Because  the  XTSAVE  and  XTRESTORE  controls  are  private,  other
-    terminals may behave differently.  For example, DEC  (a  contributor
-    to  the  early xterm as well as a manufacturer of terminals) used an
-    incompatible private control in one of its terminals more than  five
+    terminals  may  behave differently.  For example, DEC (a contributor
+    to the early xterm as well as a manufacturer of terminals)  used  an
+    incompatible  private control in one of its terminals more than five
     years later (for the VT420 PCTerm, announced in February 1992).
 
-    In  that  model  of  the  VT420, CSI ? Pm ; Pc r selects the PC TERM
-    emulation mode.  When this mode is enabled, the keyboard sends  scan
-    codes  rather than characters (analogous to X keyboard events).  The
-    first parameter of this private control enables or disables PC  TERM
+    In that model of the VT420, CSI ? Pm ; Pc  r  selects  the  PC  TERM
+    emulation  mode.  When this mode is enabled, the keyboard sends scan
+    codes rather than characters (analogous to X keyboard events).   The
+    first  parameter of this private control enables or disables PC TERM
     mode, while the second selects a character set.  An ambiguity arises
     if an application omits the second parameter.  In that special case,
-    it  cannot  be  distinguished from XTRESTORE.  DEC did not take this
+    it cannot be distinguished from XTRESTORE.  DEC did  not  take  this
     into account when designing the feature.
 
-    If there were potential users, xterm could  accommodate  this  by  a
-    resource  setting.   In  retrospect (thirty years later), there have
-    been no uses of PC TERM, while the XTRESTORE  feature  is  still  in
+    If  there  were  potential  users, xterm could accommodate this by a
+    resource setting.  In retrospect (thirty years  later),  there  have
+    been  no  uses  of  PC TERM, while the XTRESTORE feature is still in
     use.
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground and background colors 8-15, but  does  not  specify  what
-    those  colors  are.  That is implied by the description's mention of
+    foreground  and  background  colors  8-15, but does not specify what
+    those colors are.  That is implied by the description's  mention  of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -3810,7 +3839,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the  reader  to  assume that the mapping is hard-coded.  The control
-    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
-    (as  done  in  other instances by xterm) chosen to not conflict with
+    the reader to assume that the mapping is  hard-coded.   The  control
+    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
+    (as done in other instances by xterm) chosen to  not  conflict  with
     current or future standards.

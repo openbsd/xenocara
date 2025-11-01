@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.138 2025/04/03 10:23:04 tom Exp $ */
+/* $XTermId: graphics.c,v 1.139 2025/09/07 22:38:41 tom Exp $ */
 
 /*
  * Copyright 2013-2024,2025 by Thomas E. Dickey
@@ -1028,31 +1028,35 @@ void
 hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 {
     int hs;
-    const double lv = l / MAX_PCT;
-    const double sv = s / MAX_PCT;
+    const double lv = l / MAX_PCT;	/* scale to [0..1] */
+    const double sv = s / MAX_PCT;	/* scale to [0..1] */
     double c, x, m, c2;
     double r1, g1, b1;
 
-    h = h - 120;		/* Rotate so that blue is at 0 degrees  */
-    while (h < 0)
-	h += 360;		/* Normalize to 0 to 360, */
-    while (h >= 360)
-	h -= 360;
-    hs = ((h + 59) / 60) % 6;
-
-    if (s == 0) {
+    if (s == 0) {		/* the achromatic case */
 	*r = *g = *b = (short) l;
 	return;
     }
 
-    c2 = (2.0 * lv) - 1.0;
+    h = h - 120;		/* Rotate so that blue is at 0 degrees  */
+    while (h < 0)
+	h += 360;		/* Normalize to [0..360) */
+    while (h >= 360)
+	h -= 360;
+
+    hs = (h % 120) - 60;	/* compute abs((h % 120) - 60) */
+    if (hs < 0)
+	hs = -hs;
+
+    c2 = (2.0 * lv) - 1.0;	/* compute abs((2 * lv) - 1) */
     if (c2 < 0.0)
 	c2 = -c2;
+
     c = (1.0 - c2) * sv;
-    x = (hs & 1) ? c : 0.0;
+    x = ((60 - hs) / 60.) * c;
     m = lv - 0.5 * c;
 
-    switch (hs) {
+    switch (h / 60) {		/* result in six intervals */
     case 0:
 	r1 = c;
 	g1 = x;

@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.235 2025/05/18 22:28:12 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.237 2025/08/31 21:55:14 tom Exp $ */
 
 /*
  * Copyright 1997-2024,2025 by Thomas E. Dickey
@@ -57,7 +57,7 @@
 #define DEF_ALT_SENDS_ESC False	/* CF_ARG_ENABLE(alt-sends-esc) */
 #define DEF_BACKARO_BS True		/* CF_ARG_DISABLE(backarrow-key) */
 #define DEF_BACKARO_ERASE True	/* CF_ARG_ENABLE(backarrow-is-erase) */
-#define DEF_INITIAL_ERASE False	/* CF_ARG_DISABLE(initial-erase) */
+#define DEF_INITIAL_ERASE True	/* CF_ARG_DISABLE(initial-erase) */
 #define DEF_META_SENDS_ESC False	/* CF_ARG_ENABLE(meta-sends-esc) */
 /* #undef DFT_COLORMODE */		/* AC_ARG_WITH(default-color-mode) */
 #define DFT_DECID "100"		/* AC_ARG_WITH(default-terminal-id) */
@@ -147,7 +147,7 @@
 #define HAVE_XKBKEYCODETOKEYSYM 1	/* AC_CHECK_FUNCS(XkbKeycodeToKeysym) */
 #define HAVE_XKBQUERYEXTENSION 1	/* AC_CHECK_FUNCS(XkbQueryExtension) */
 #define HAVE_XKB_BELL_EXT 1	/* CF_XKB_BELL_EXT */
-/* #undef LUIT_PATH */		/* CF_ARG_ENABLE(luit) */
+#define LUIT_PATH "/usr/X11R6/bin/luit"		/* CF_ARG_ENABLE(luit) */
 /* #undef NO_ACTIVE_ICON */		/* CF_ARG_DISABLE(active-icon) */
 /* #undef NO_LEAKS */			/* CF_ARG_DISABLE(leaks) */
 #define OPT_256_COLORS 1		/* CF_ARG_ENABLE(256-color) */
@@ -205,7 +205,7 @@
 /* #undef OPT_WIDER_ICHAR */		/* CF_ARG_ENABLE(16bit-chars) */
 /* #undef OPT_WIDE_ATTRS */		/* CF_ARG_DISABLE(wide-attrs) */
 #define OPT_WIDE_CHARS 1		/* CF_ARG_DISABLE(wide-chars) */
-/* #undef OPT_XMC_GLITCH */		/* CF_ARG_ENABLE(xmc-glitch) */
+/* #undef EXP_XMC_GLITCH */		/* CF_ARG_ENABLE(xmc-glitch) */
 /* #undef OPT_ZICONBEEP */		/* CF_ARG_DISABLE(ziconbeep) */
 /* #undef OWN_TERMINFO_DIR */		/* AC_ARG_WITH(own-terminfo) */
 /* #undef OWN_TERMINFO_ENV */		/* AC_ARG_ENABLE(env-terminfo) */
@@ -226,9 +226,10 @@
 #define USE_TERMINFO 1		/* CF_FUNC_TGETENT */
 #define USE_TTY_GROUP 1		/* CF_TTY_GROUP */
 /* #undef USE_UTEMPTER */		/* CF_UTEMPTER */
-#define USE_UTMP_SETGID 1		/* AC_ARG_WITH(utmp-setgid) */
+#define USE_UTMP_SETGID True		/* AC_ARG_WITH(utmp-setgid) */
 /* #undef UTMPX_FOR_UTMP */		/* CF_UTMP */
 #define XRENDERFONT 1		/* CF_X_FREETYPE */
+#define XTERM_ERASE ANSI_DEL		/* CF_WITH_XTERM_KBS */
 /* #undef cc_t */			/* CF_TYPE_CC_T */
 /* #undef gid_t */			/* AC_TYPE_UID_T */
 /* #undef inline */			/* AC_C_INLINE */

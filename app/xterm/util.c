@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.958 2025/05/17 00:41:45 tom Exp $ */
+/* $XTermId: util.c,v 1.961 2025/06/22 18:22:34 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -4254,16 +4254,34 @@ drawXtermText(const XTermDraw * params,
 		     * line-drawing character.  Translate it back to our
 		     * box-code if Xft tells us that the glyph is missing.
 		     */
+#define IsDecLineDrawing(ch) \
+	    ((ch != 0) && \
+	    strchr(\
+		"\013"	/* box drawings light up and left             */ \
+	    	"\014"	/* box drawings light down and left           */ \
+		"\015"	/* box drawings light down and right          */ \
+		"\016"	/* box drawings light up and right            */ \
+		"\017"	/* box drawings light vertical and horizontal */ \
+		"\022"	/* box drawings light horizontal              */ \
+		"\025"	/* box drawings light vertical and right      */ \
+		"\026"	/* box drawings light vertical and left       */ \
+		"\027"	/* box drawings light up and horizontal       */ \
+		"\030"	/* box drawings light down and horizontal     */ \
+		"\031",	/* box drawings light vertical                */ \
+		CharOf(ch)) != NULL)
+
 		    if_OPT_WIDE_CHARS(screen, {
 			unsigned part = ucs2dec(screen, ch);
-			if (xtermIsInternalCs(part)) {
-			    if (screen->force_box_chars
-				|| xtermXftMissing(recur.xw,
-						   currData, 0,
-						   XftFp(currData), ch)) {
-				SetMissing("case 2");
-				ch = part;
-			    }
+			if (xtermIsDecGraphic(part)
+			    && IsDecLineDrawing(part)
+			    && (screen->force_box_chars
+				|| screen->broken_box_chars)) {
+			    SetMissing("case 2");
+			    ch = part;
+			}
+			if (xtermIsDecTechnical(part)) {
+			    SetMissing("case 2a");
+			    ch = part;
 			}
 			if (!missing && xtermXftMissing(recur.xw,
 							currData, 0,

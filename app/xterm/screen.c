@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.660 2025/04/10 23:48:40 tom Exp $ */
+/* $XTermId: screen.c,v 1.662 2025/08/17 09:51:15 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -920,6 +920,8 @@ ScrnWriteText(XtermWidget xw,
 	return;
 
     ld = getLineData(screen, screen->cur_row);
+    if (ld == NULL)
+	return;
 
     if_OPT_DEC_RECTOPS(seens = ld->charSeen + screen->cur_col);
     chars = ld->charData + screen->cur_col;
@@ -1028,7 +1030,7 @@ ScrnWriteText(XtermWidget xw,
 				      screen->cur_row,
 				      (int) real_width, 1);
 
-    if_OPT_XMC_GLITCH(screen, {
+    if_EXP_XMC_GLITCH(screen, {
 	Resolve_XMC(xw);
     });
 

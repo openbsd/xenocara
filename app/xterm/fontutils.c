@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.790 2025/04/06 23:33:58 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.795 2025/10/17 21:34:04 tom Exp $ */
 
 /*
  * Copyright 1998-2024,2025 by Thomas E. Dickey
@@ -1277,7 +1277,7 @@ reportXPerChar(XFontStruct *fs)
 			item->ascent,
 			item->descent));
 	    } else {
-		TRACE(("\t\t\t%d: cell missing\n", ch));
+		TRACE2(("\t\t\t%d: cell missing\n", ch));
 	    }
 	}
 	ReportFonts("\t\tPer-character: %d/%d\n", valid, total);
@@ -2509,7 +2509,7 @@ xtermSetCursorBox(TScreen *screen)
 #if OPT_RENDERFONT
 
 #define CACHE_XFT(data) if (XftFp(data) != NULL) {\
-	    int err = checkXftWidth(xw, data);\
+	    int err = checkXftWidth(xw, data, fontsLoaded++);\
 	    TRACE(("Xft metrics %s[%d] = %d (%d,%d)%s advance %d, actual %d%s%s\n",\
 		#data,\
 		fontnum,\
@@ -2740,8 +2740,9 @@ slowXftMissing(XtermWidget xw, XftFont *font, unsigned wc)
 }
 
 static int
-checkXftWidth(XtermWidget xw, XTermXftFonts *data)
+checkXftWidth(XtermWidget xw, XTermXftFonts *data, int fontsLoaded)
 {
+    TScreen *screen = TScreenOf(xw);
     FcChar32 c;
     FcChar32 last = xtermXftLastChar(XftFp(data));
     Dimension limit = (Dimension) XftFp(data)->max_advance_width;
@@ -2750,7 +2751,16 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *data)
     int failed = 0;
 #if OPT_WIDE_CHARS
     Cardinal n;
+    /*
+     * The "VT100 line-drawing" characters happen to be all "ambiguous
+     * width" in Unicode's scheme.  That means that they could be twice as
+     * wide as the Latin-1 characters.
+     */
+    Dimension check = (Dimension) (limit + 1) / 2;
 #endif
+
+    (void) fontsLoaded;
+    (void) screen;
 
     data->font_info.min_width = 0;
     data->font_info.max_width = limit;
@@ -2759,41 +2769,62 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *data)
     /*
      * Check if the line-drawing characters are all provided in the font.
      * If so, take that into account for the cell-widths.
+     *
+     * As a special case, allow for glyphs 1-31 to "work" if this is the normal
+     * font.  Otherwise, require all of the Unicode points for line-drawing to
+     * be present for line-drawing.
      */
-    for (n = 0; n < XtNumber(unicode_boxes) - 1; ++n) {
-	if (!checkedXftWidth(XtDisplay(xw),
-			     data,
-			     limit,
-			     &width2, unicode_boxes[n].code)) {
-	    width2 = 0;
-	    TRACE(("font omits U+%04X line-drawing symbol\n",
-		   unicode_boxes[n].code));
-	    break;
+    if (!fontsLoaded || !(screen->fnt_boxes & 1)) {
+	for (n = 0; n < XtNumber(unicode_boxes) - 1; ++n) {
+	    if (!checkedXftWidth(XtDisplay(xw),
+				 data,
+				 limit,
+				 &width2, unicode_boxes[n].code)) {
+		width2 = 0;
+		TRACE(("font omits U+%04X line-drawing symbol\n",
+		       unicode_boxes[n].code));
+		break;
+	    }
+	}
+	if (width2 == 0) {
+	    UIntSet(screen->fnt_boxes, 1);
+	    for (n = 0; n < XtNumber(unicode_boxes) - 1; ++n) {
+		unsigned ucs = unicode_boxes[n].code;
+		unsigned dec = ucs2dec(screen, ucs);
+		if ((ucs != dec)
+		    && !checkedXftWidth(XtDisplay(xw),
+					data,
+					limit,
+					&width2, dec)) {
+		    UIntClr(screen->fnt_boxes, 1);
+		    TRACE(("missing graphics character #%d, U+%04X\n",
+			   dec, ucs));
+		    break;
+		}
+	    }
+	    if (width2 != 0)
+		check = limit;
+	}
+
+	if (width2 > 0) {
+	    TRACE(("font provides VT100-style line-drawing\n"));
+#define FC_ERR(n) (1.2 * (n))
+	    if (width2 > FC_ERR(check)) {
+		TRACE(("width of line-drawing characters is %d, greater than %.1f\n",
+		       width2, FC_ERR(check)));
+		TRACE(("line-drawing characters appear to be double-width (ignore)\n"));
+		setBrokenBoxChars(xw, True);
+	    } else if (width2 > width) {
+		width = width2;
+	    }
+	} else {
+	    TRACE(("font does NOT provide VT100-style line-drawing\n"));
+	    setBrokenBoxChars(xw, True);
 	}
     }
 #else
     (void) width2;
 #endif
-
-    if (width2 > 0) {
-	Dimension check = (Dimension) (limit + 1) / 2;
-	TRACE(("font provides VT100-style line-drawing\n"));
-	/*
-	 * The "VT100 line-drawing" characters happen to be all "ambiguous
-	 * width" in Unicode's scheme.  That means that they could be twice as
-	 * wide as the Latin-1 characters.
-	 */
-#define FC_ERR(n) (1.2 * (n))
-	if (width2 > FC_ERR(check)) {
-	    TRACE(("line-drawing characters appear to be double-width (ignore)\n"));
-	    setBrokenBoxChars(xw, True);
-	} else if (width2 > width) {
-	    width = width2;
-	}
-    } else {
-	TRACE(("font does NOT provide VT100-style line-drawing\n"));
-	setBrokenBoxChars(xw, True);
-    }
 
     /*
      * For each printable code, ask what its width is.  Given the maximum width
@@ -2802,7 +2833,7 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *data)
      * Ignore control characters - their extent information is misleading.
      */
     for (c = 32; c < 256; ++c) {
-	if (CharWidth(TScreenOf(xw), c) <= 0)
+	if (CharWidth(screen, c) <= 0)
 	    continue;
 	if (FcCharSetHasChar(XftFp(data)->charset, c)) {
 	    (void) checkedXftWidth(XtDisplay(xw),
@@ -3106,9 +3137,13 @@ linedrawing_gaps(XtermWidget xw, XTermXftFonts *data)
 	unsigned code = unicode_boxes[n].code;
 
 	if (xtermXftMissing(xw, data, 0, XftFp(data), code)) {
-	    TRACE(("Xft glyph U+%04X is missing\n", code));
-	    broken = True;
-	    break;
+	    unsigned dec = ucs2dec(screen, code);
+	    if (xtermXftMissing(xw, data, 0, XftFp(data), dec)) {
+		TRACE(("Xft glyph U+%04X is missing\n", code));
+		broken = True;
+		break;
+	    }
+	    code = dec;
 	}
 
 	if (FT_Load_Char(face, code, FT_LOAD_RENDER) == 0) {
@@ -3212,8 +3247,11 @@ linedrawing_gaps(XtermWidget xw, XTermXftFonts *data)
 		}
 		break;
 	    }
-	    if (broken)
-		break;
+	    if (broken) {
+		if (code >= 32)
+		    break;
+		broken = False;
+	    }
 	}
     }
     XftUnlockFace(XftFp(data));
@@ -3456,6 +3494,7 @@ xtermComputeFontInfo(XtermWidget xw,
     int i, j, width, height;
 #if OPT_RENDERFONT
     int fontnum = screen->menu_font_number;
+    int fontsLoaded = 0;
 #endif
     int failed = 0;
 
@@ -3570,6 +3609,7 @@ xtermComputeFontInfo(XtermWidget xw,
 	    freeall_DoubleFT(xw);
 #endif
 	    if ((pat = XftNameParse(face_name)) != NULL) {
+
 #define OPEN_XFT(data, tag) xtermOpenXft(xw, data, 0, face_name, data->pattern, tag)
 		norm->pattern = XftPatternDuplicate(pat);
 		XftPatternBuild(norm->pattern,
@@ -3867,8 +3907,6 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
     xtermSetCursorBox(screen);
 }
 
-#if OPT_BOX_CHARS || OPT_REPORT_FONTS
-
 /*
  * Returns true if the given character is missing from the specified font.
  */
@@ -3906,7 +3944,6 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
     }
     return result;
 }
-#endif
 
 #if OPT_BOX_CHARS || OPT_WIDE_CHARS
 /*
@@ -3926,8 +3963,8 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
  * ...since we'll scale the values anyway.
  */
 #define Scale_XY(n,d,f) ((int)(n) * ((int)(f))) / (d)
-#define SCALED_X(n) Scale_XY(n, BOX_WIDE, font_width)
-#define SCALED_Y(n) Scale_XY(n, BOX_HIGH, font_height)
+#define SCALED_X(n) (Scale_XY(n, BOX_WIDE, font_width) - 1)
+#define SCALED_Y(n) (Scale_XY(n, BOX_HIGH, font_height) - 1)
 #define SCALE_X(n) n = SCALED_X(n)
 #define SCALE_Y(n) n = SCALED_Y(n)
 

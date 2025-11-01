@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.180 2025/01/05 20:36:49 tom Exp $ */
+/* $XTermId: print.c,v 1.181 2025/10/12 23:39:37 tom Exp $ */
 
 /*
  * Copyright 1997-2024,2025 by Thomas E. Dickey
@@ -477,6 +477,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 		    exit(0);
 		} else {
 		    close(my_pipe[0]);	/* won't read from printer */
+#if OPT_TRACE
 		    if ((SPS.fp = fdopen(my_pipe[1], "w")) != NULL) {
 			DEBUG_MSG("charToPrinter: opened printer in parent\n");
 			TRACE(("opened printer from pid %d/%d\n",
@@ -485,6 +486,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 			TRACE(("failed to open printer:%s\n", strerror(errno)));
 			DEBUG_MSG("charToPrinter: could not open in parent\n");
 		    }
+#endif /* OPT_TRACE */
 		}
 	    }
 	    break;

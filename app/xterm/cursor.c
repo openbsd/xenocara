@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.96 2025/01/04 00:58:54 tom Exp $ */
+/* $XTermId: cursor.c,v 1.97 2025/08/24 17:56:01 tom Exp $ */
 
 /*
  * Copyright 2002-2024,2025 by Thomas E. Dickey
@@ -159,29 +159,20 @@ CursorBack(XtermWidget xw, int n)
 		col = right;
 		if (row == top)
 		    row = bottom + 1;
-	    } else {
-		if (!rev) {
-		    col = left;
-		    break;
-		}
-		if (row <= top) {
-		    col = left;
-		    row = top;
-		    break;
-		}
+	    } else if (!rev) {
+		col = left;
+		break;
 	    }
 	    ld = NULL;		/* try a reverse-wrap */
-	    if (--row <= 0) {
-		row = (top == 0) ? bottom : screen->max_row;
-	    }
+	    --row;
 	}
 	if (ld == NULL) {
 	    ld = getLineData(screen, ROW2INX(screen, row));
-	    if (ld == NULL)
-		break;		/* should not happen */
+	    assert(ld != NULL);
 	    if (row != screen->cur_row) {
 		if (!rev2 && !LineTstWrapped(ld)) {
-		    ++row;	/* reverse-wrap failed */
+		    if (row < bottom)
+			++row;	/* reverse-wrap failed */
 		    col = left;
 		    break;
 		}
@@ -189,8 +180,9 @@ CursorBack(XtermWidget xw, int n)
 	    }
 	}
 
-	if (--count <= 0)
+	if (--count <= 0) {
 	    break;
+	}
 	--col;
     }
     set_cur_row(screen, row);
@@ -242,8 +234,7 @@ CursorDown(TScreen *screen, int n)
 	   screen->max_row : screen->bot_marg);
     if (next > max)
 	next = max;
-    if (next > screen->max_row)
-	next = screen->max_row;
+    assert (next <= screen->max_row);
 
     set_cur_row(screen, next);
     ResetWrap(screen);
@@ -264,8 +255,7 @@ CursorUp(TScreen *screen, int n)
 	   : screen->top_marg);
     if (next < min)
 	next = min;
-    if (next < 0)
-	next = 0;
+    assert(next >= 0);
 
     set_cur_row(screen, next);
     ResetWrap(screen);
@@ -534,8 +524,7 @@ CursorCol(XtermWidget xw)
     int result = screen->cur_col;
     if (xw->flags & ORIGIN) {
 	result -= ScrnLeftMargin(xw);
-	if (result < 0)
-	    result = 0;
+	assert(result >= 0);
     }
     return result;
 }
@@ -547,8 +536,7 @@ CursorRow(XtermWidget xw)
     int result = screen->cur_row;
     if (xw->flags & ORIGIN) {
 	result -= screen->top_marg;
-	if (result < 0)
-	    result = 0;
+	assert(result >= 0);
     }
     return result;
 }

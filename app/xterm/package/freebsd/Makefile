@@ -1,4 +1,4 @@
-# $XTermId: Makefile,v 1.121 2025/04/15 20:33:49 tom Exp $
+# $XTermId: Makefile,v 1.126 2025/09/13 13:19:52 tom Exp $
 
 # This is adapted from the FreeBSD port, installing as "xterm-dev" with
 # separate resource- and manpage files.
@@ -6,7 +6,7 @@
 # and "make makesum".
 
 PORTNAME=	xterm
-DISTVERSION=	399
+DISTVERSION=	403
 CATEGORIES=	x11
 MASTER_SITES=	https://invisible-island.net/archives/xterm/:src1 \
 		https://invisible-mirror.net/archives/xterm/:src1
@@ -43,7 +43,7 @@ OPTIONS_SINGLE_ATHENA=	NEXTAW XAW XAW3D XAW3DXFT
 DABBREV_DESC=	Enable support for dabbrev-expand
 DECTERM_DESC=	Enable DECterm Locator support
 LOGGING_DESC=	Enable logging terminal I/O to a file
-LUIT_DESC=	Use LUIT for locale convertion from/to UTF-8
+LUIT_DESC=	Use LUIT for locale conversion from/to UTF-8
 NEXTAW_DESC=	Link with neXT Athena library
 PCRE2_DESC=	${PCRE_DESC} version 2
 REGIS_DESC=	Enable ReGIS graphics support

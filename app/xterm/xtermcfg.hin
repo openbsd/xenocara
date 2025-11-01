@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.235 2025/05/18 22:28:12 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.237 2025/08/31 21:55:14 tom Exp $ */
 
 /*
  * Copyright 1997-2024,2025 by Thomas E. Dickey
@@ -205,7 +205,7 @@
 #undef OPT_WIDER_ICHAR		/* CF_ARG_ENABLE(16bit-chars) */
 #undef OPT_WIDE_ATTRS		/* CF_ARG_DISABLE(wide-attrs) */
 #undef OPT_WIDE_CHARS		/* CF_ARG_DISABLE(wide-chars) */
-#undef OPT_XMC_GLITCH		/* CF_ARG_ENABLE(xmc-glitch) */
+#undef EXP_XMC_GLITCH		/* CF_ARG_ENABLE(xmc-glitch) */
 #undef OPT_ZICONBEEP		/* CF_ARG_DISABLE(ziconbeep) */
 #undef OWN_TERMINFO_DIR		/* AC_ARG_WITH(own-terminfo) */
 #undef OWN_TERMINFO_ENV		/* AC_ARG_ENABLE(env-terminfo) */
@@ -229,6 +229,7 @@
 #undef USE_UTMP_SETGID		/* AC_ARG_WITH(utmp-setgid) */
 #undef UTMPX_FOR_UTMP		/* CF_UTMP */
 #undef XRENDERFONT		/* CF_X_FREETYPE */
+#undef XTERM_ERASE		/* CF_WITH_XTERM_KBS */
 #undef cc_t			/* CF_TYPE_CC_T */
 #undef gid_t			/* AC_TYPE_UID_T */
 #undef inline			/* AC_C_INLINE */

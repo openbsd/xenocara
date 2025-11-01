@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.150 2024/12/01 19:48:57 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.152 2025/10/19 18:39:15 tom Exp $ */
 
 /*
- * Copyright 1998-2022,2024 by Thomas E. Dickey
+ * Copyright 1998-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -122,7 +122,7 @@ extern char *xtermSpecialFont (XTermDraw * /* params */);
 	 (CheckedKnownMissing(font, ch) \
 	  ? ( (font)->known_missing[(Char)(ch)] > 1) \
 	  : ( ( ( FontIsIncomplete(font) \
-	         || ( (ch) < MaxUChar && !IsLatin1(ch) ) ) \
+	         || ( (ch) < MaxUChar && !IsLatin1(screen, ch) ) ) \
 	       && xtermMissingChar(ch, font) ) \
 	     || ForceBoxChars(screen, ch) ) )
 #else
@@ -140,8 +140,8 @@ extern void xtermDrawBoxChar (XTermDraw * /* params */, unsigned /* ch */, GC /*
 	  (fontList)[fNorm].fs->per_char != NULL)) \
 	 ? &((fontList)[fNorm]) \
 	 : &((fontList)[(which)]))
-extern Bool xtermMissingChar (unsigned /* ch */, XTermFonts */* font */);
 #endif
+extern Bool xtermMissingChar (unsigned /* ch */, XTermFonts */* font */);
 
 #if OPT_LOAD_VTFONTS
 extern void HandleLoadVTFonts PROTO_XT_ACTIONS_ARGS;

@@ -1,11 +1,11 @@
-# $XTermId: xterm.spec,v 1.180 2025/04/15 20:33:49 tom Exp $
+# $XTermId: xterm.spec,v 1.201 2025/10/20 00:05:24 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 399
+Version: 403
 Release: 1
 License: X11
 Group: User Interface/X
@@ -127,7 +127,6 @@ for the program and its resource class, to avoid conflict with other packages.
 %setup -q -n xterm-%{version}
 
 %build
-CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 %configure \
         --target %{_target_platform} \
         --prefix=%{_prefix} \
@@ -269,6 +268,9 @@ fi
 %{_pixmapsdir}/*.xpm
 
 %changelog
+
+* Sun Oct 19 2025 Thomas E. Dickey
+- testing xterm-dev 403-5
 
 * Fri Nov 25 2022 Thomas E. Dickey
 - Fedora 37 has no xorg-x11-docs

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.964 2025/04/08 07:36:09 tom Exp $ */
+/* $XTermId: xterm.h,v 1.971 2025/10/19 20:01:38 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -158,11 +158,9 @@
 #endif
 
 #if defined(__OpenBSD__)
-#define USE_UTMP_SETGID True
 #define DEFDELETE_DEL True
 #define DEF_BACKARO_ERASE True
 #define DEF_INITIAL_ERASE True
-#define SIG_ATOMIC_T volatile sig_atomic_t
 #endif
 
 #if defined(__SCO__) || defined(__UNIXWARE__)
@@ -1077,7 +1075,7 @@ extern void InitLocatorFilter (XtermWidget /* w */);
 #if OPT_FOCUS_EVENT
 extern void SendFocusButton(XtermWidget /* xw */, XFocusChangeEvent * /* event */);
 #else
-#define SendFocusBotton(xw, event) /* nothing */
+#define SendFocusButton(xw, event) /* nothing */
 #endif
 
 #if OPT_PASTE64
@@ -1095,20 +1093,25 @@ extern void ReadLineButton             PROTO_XT_ACTIONS_ARGS;
 extern void report_char_class(XtermWidget);
 #endif
 
-#define IsAscii1(n)  (((n) >= 32 && (n) <= 126))
+#define IsAscii1(n)          (((n) >= 32 && (n) <= 126))
+#if OPT_C1_PRINT
+#define Upper8Bits(screen)   (((screen)->c1_printable) ? 128 : 160)
+#else
+#define Upper8Bits(screen)   (160)
+#endif
 
 #if OPT_WIDE_CHARS
 #define WideCells(n) (((IChar)(n) >= first_widechar) ? my_wcwidth((wchar_t) (n)) : 1)
 #define isWideFrg(n) (((n) == HIDDEN_CHAR) || (WideCells((n)) == 2))
 #define isWide(n)    (((IChar)(n) >= first_widechar) && isWideFrg(n))
 #define CharWidth(screen, n) (((n) < 256) \
-			      ? (IsLatin1(n) ? 1 : 0) \
+			      ? (IsLatin1(screen, n) ? 1 : 0) \
 			      : my_wcwidth((wchar_t) (n)))
-#define IsLatin1(n)  (IsAscii1(n) || ((n) >= 160 && (n) <= 255))
+#define IsLatin1(screen, n)  (IsAscii1(n) || ((n) >= Upper8Bits(screen) && (n) <= 255))
 #else
 #define WideCells(n) 1
-#define CharWidth(screen, n) (IsLatin1(n) ? 1 : 0)
-#define IsLatin1(n)  (IsAscii1(n) || ((n) >= 160))
+#define CharWidth(screen, n) (IsLatin1(screen, n) ? 1 : 0)
+#define IsLatin1(screen, n)  (IsAscii1(n) || ((n) >= Upper8Bits(screen)))
 #endif
 
 /* cachedCgs.c */
@@ -1159,7 +1162,6 @@ extern void restoreCharsets (TScreen * /* screen */, const DECNRCM_codes * /* so
 extern void saveCharsets (TScreen * /* screen */, DECNRCM_codes * /* target */);
 extern void set_max_col(TScreen * /* screen */, int /* cols */);
 extern void set_max_row(TScreen * /* screen */, int /* rows */);
-extern void unparse_disallowed_ops (XtermWidget /* xw */, char * /* value */);
 extern void unparse_end (XtermWidget /* xw */);
 extern void unparseputc (XtermWidget /* xw */, int /* c */);
 extern void unparseputc1 (XtermWidget /* xw */, int /* c */);
@@ -1186,6 +1188,11 @@ extern TInput *lookupTInput (XtermWidget /* xw */, Widget /* w */);
 extern void SGR_Background (XtermWidget /* xw */, int /* color */);
 extern void SGR_Foreground (XtermWidget /* xw */, int /* color */);
 extern void setExtendedColors (XtermWidget /* xw */);
+#endif
+
+#if OPT_QUERY_ALLOW
+extern void unparse_disallowed_ops (XtermWidget /* xw */, char * /* value */);
+extern void unparse_allowable_ops (XtermWidget /* xw */, char * /* value */);
 #endif
 
 #ifdef NO_LEAKS
@@ -1346,7 +1353,6 @@ extern void Bell (XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void ChangeGroup(XtermWidget /* xw */, const char * /* attribute */, char * /* value */);
 extern void ChangeIconName (XtermWidget /* xw */, char * /* name */);
 extern void ChangeTitle (XtermWidget /* xw */, char * /* name */);
-extern void ChangeXprop (char * /* name */);
 extern GCC_NORETURN void Cleanup (int /* code */);
 extern void HandleBellPropertyChange   PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleEightBitKeyPressed   PROTO_XT_ACTIONS_ARGS;
@@ -1915,7 +1921,7 @@ extern void addXtermCombining (TScreen * /* screen */, int /* row */, int /* col
 extern void allocXtermChars(ScrnPtr * /* buffer */, Cardinal /* length */);
 #endif
 
-#if OPT_XMC_GLITCH
+#if EXP_XMC_GLITCH
 extern void Mark_XMC (XtermWidget /* xw */, int /* param */);
 extern void Jump_XMC (XtermWidget /* xw */);
 extern void Resolve_XMC (XtermWidget /* xw */);

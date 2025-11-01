@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-399
+MANIFEST for xterm, version xterm-403
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -154,6 +154,7 @@ package/debian/postinst         post-install script for update-alternatives
 package/debian/prerm            pre-remove script for update-alternatives
 package/debian/rules            build-script
 package/debian/watch            build-script
+package/debian/xterm-dev.doc-base.ctlseqs  register ctlseqs with doc-base
 package/debian/xterm-dev.docs   build-script
 package/debian/xterm-dev.lintian-overrides  ignore useless warnings from lintian
 package/debian/xterm-dev.menu   Debian menu-file for xterm-dev package.
@@ -223,7 +224,8 @@ vttests/other-sgr.sh            demonstrate non-VTxx SGRs
 vttests/palettes.pl             Demonstrate how to set palette colors using xterm's control sequences.
 vttests/paste64.pl              script to test base64-selection option
 vttests/pointer-shapes.sh       exercise xterm's pointer-shape control
-vttests/print-vt-chars.pl       demo-script
+vttests/print-vt-chars.pl       print GL and GR with the same charset
+vttests/query-allowed.pl        demonstrate OSC 60, 61, and 62
 vttests/query-color.pl          demonstrate OSC 4
 vttests/query-dynamic.pl        demonstrate OSC 10 to OSC 19
 vttests/query-fonts.pl          script to demo/test font-querying

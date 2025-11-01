@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.405 2025/05/18 22:27:35 tom Exp $
+dnl $XTermId: configure.in,v 1.408 2025/10/08 08:17:07 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -56,7 +56,7 @@ CF_PROG_CC
 AC_C_INLINE
 AC_PROG_CPP
 AC_PROG_AWK
-AC_PROG_INSTALL
+CF_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_PROGRAM
 CF_PROG_LINT
@@ -341,6 +341,7 @@ if test "x$cf_cv_lib_tgetent" != xno || test "x$cf_cv_lib_part_tgetent" != xno ;
 	esac
 fi
 
+###############################################################################
 CF_HELP_MESSAGE(Terminal Configuration:)
 
 AC_MSG_CHECKING(for default terminal-id)
@@ -371,6 +372,9 @@ AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM",[default terminal-type])
 AC_SUBST(default_TERM)
 
 ###############################################################################
+CF_WITH_XTERM_KBS
+AC_DEFINE_UNQUOTED(XTERM_ERASE, ANSI_$with_xterm_kbs, [Define default erase character to ANSI_BS or ANSI_DEL])
+
 AC_MSG_CHECKING(if backarrow-key should be BS)
 CF_ARG_DISABLE(backarrow-key,
 	[  --enable-backarrow-key  set default backarrowKey resource (default: true)],
@@ -1169,7 +1173,7 @@ CF_ARG_ENABLE(xmc-glitch,
 	[enable_xmc=no])
 AC_MSG_RESULT($enable_xmc)
 if test "$enable_xmc" = yes ; then
-	AC_DEFINE(OPT_XMC_GLITCH,1,[Define to 1 to enable xmc magic-cookie emulation])
+	AC_DEFINE(EXP_XMC_GLITCH,1,[Define to 1 to enable xmc magic-cookie emulation])
 	EXTRASRCS="$EXTRASRCS testxmc.c"
 	EXTRAOBJS="$EXTRAOBJS testxmc.o"
 fi
