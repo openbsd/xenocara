@@ -87,7 +87,6 @@
 ./usr/X11R6/bin/iceauth
 ./usr/X11R6/bin/ico
 ./usr/X11R6/bin/listres
-./usr/X11R6/bin/luit
 ./usr/X11R6/bin/makedepend
 ./usr/X11R6/bin/mkfontdir
 ./usr/X11R6/bin/mkfontscale
