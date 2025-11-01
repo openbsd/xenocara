@@ -147,7 +147,7 @@
 #define HAVE_XKBKEYCODETOKEYSYM 1	/* AC_CHECK_FUNCS(XkbKeycodeToKeysym) */
 #define HAVE_XKBQUERYEXTENSION 1	/* AC_CHECK_FUNCS(XkbQueryExtension) */
 #define HAVE_XKB_BELL_EXT 1	/* CF_XKB_BELL_EXT */
-#define LUIT_PATH "/usr/X11R6/bin/luit"		/* CF_ARG_ENABLE(luit) */
+/* #undef LUIT_PATH */		/* CF_ARG_ENABLE(luit) */
 /* #undef NO_ACTIVE_ICON */		/* CF_ARG_DISABLE(active-icon) */
 /* #undef NO_LEAKS */			/* CF_ARG_DISABLE(leaks) */
 #define OPT_256_COLORS 1		/* CF_ARG_ENABLE(256-color) */
@@ -178,7 +178,7 @@
 /* #undef OPT_INPUT_METHOD */		/* CF_ARG_DISABLE(input-method) */
 /* #undef OPT_ISO_COLORS */		/* CF_ARG_DISABLE(ansi-color) */
 /* #undef OPT_LOAD_VTFONTS */		/* CF_ARG_ENABLE(load-vt-fonts) */
-#define OPT_LUIT_PROG 1		/* CF_ARG_ENABLE(luit) */
+#define OPT_LUIT_PROG 0		/* CF_ARG_ENABLE(luit) */
 /* #undef OPT_MAXIMIZE */		/* CF_ARG_DISABLE(maximize) */
 /* #undef OPT_MINI_LUIT */		/* CF_ARG_ENABLE(mini-luit) */
 /* #undef OPT_NUM_LOCK */		/* CF_ARG_DISABLE(num-lock) */
