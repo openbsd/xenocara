@@ -276,7 +276,8 @@
 ! Enable UTF-8 mode since OpenBSD does not support any other multibyte
 ! locales.  Even for people using the C/POSIX locale for everything,
 ! that's safer and more usable than the upstream default of "medium".
-*locale: UTF-8
+*locale: true
+*utf8:	 true
 
 ! Normalization by default violates the principle of least surprise
 ! and also breaks cut and paste of filenames, so disable it.
