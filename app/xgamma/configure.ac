@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xgamma], [1.0.7],
+AC_INIT([xgamma], [1.0.8],
         [https://gitlab.freedesktop.org/xorg/app/xgamma/-/issues], [xgamma])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])

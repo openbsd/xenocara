@@ -52,7 +52,7 @@ static int EventBase, ErrorBase;
 #define GAMMA_MAX 10.0f
 
 static void _X_NORETURN
-Syntax(const char *errmsg)
+Syntax(const char *errmsg, int exitstatus)
 {
     if (errmsg != NULL)
         fprintf (stderr, "%s: %s\n\n", ProgramName, errmsg);
@@ -68,7 +68,7 @@ Syntax(const char *errmsg)
              "    -ggamma f.f             Green Gamma Value\n"
              "    -bgamma f.f             Blue Gamma Value\n\n"
              "If no gamma is specified, returns the current setting\n");
-    exit (1);
+    exit (exitstatus);
 }
 
 
@@ -116,81 +116,93 @@ main(int argc, char *argv[])
 
 	if (arg[0] == '-') {
 	    if (isabbreviation ("-display", arg, 1)) {
-		if (++i >= argc) Syntax ("-display requires an argument");
+		if (++i >= argc)
+		    Syntax ("-display requires an argument", EXIT_FAILURE);
 		displayname = argv[i];
 		continue;
 	    } else if (isabbreviation ("-quiet", arg, 1)) {
 		quiet = True;
 		continue;
-	    } else if (isabbreviation ("-version", arg, 1)) {
+	    } else if (isabbreviation ("-version", arg, 1) ||
+		       !strcmp("--version", arg)) {
 		puts(PACKAGE_STRING);
-		exit(0);
+		exit(EXIT_SUCCESS);
+	    } else if (isabbreviation ("-help", arg, 1) ||
+		       !strcmp("--help", arg)) {
+		Syntax(NULL, EXIT_SUCCESS);
 	    } else if (isabbreviation ("-screen", arg, 1)) {
-		if (++i >= argc) Syntax ("-screen requires an argument");
+		if (++i >= argc)
+		    Syntax ("-screen requires an argument", EXIT_FAILURE);
 		screen = atoi(argv[i]);
 		continue;
 	    } else if (isabbreviation ("-gamma", arg, 2)) {
-		if (++i >= argc) Syntax ("-gamma requires an argument");
+		if (++i >= argc)
+		    Syntax ("-gamma requires an argument", EXIT_FAILURE);
 		if ((rgam >= 0.0f) || (ggam >= 0.0f) || (bgam >= 0.0f))
-		    Syntax ("-gamma cannot be used with -rgamma, -ggamma, or -bgamma");
+		    Syntax ("-gamma cannot be used with -rgamma, -ggamma, or -bgamma", EXIT_FAILURE);
 		gam = strtof(argv[i], NULL);
 		if ((gam < GAMMA_MIN) || (gam > GAMMA_MAX)) {
 		    fprintf(stderr,
 			    "Gamma values must be between %6.3f and %6.3f\n",
 			    (double)GAMMA_MIN, (double)GAMMA_MAX);
-		    exit(1);
+		    exit(EXIT_FAILURE);
 		}
 		continue;
 	    } else if (isabbreviation ("-rgamma", arg, 2)) {
-		if (++i >= argc) Syntax ("-rgamma requires an argument");
-		if (gam >= 0.0f) Syntax ("cannot set both -gamma and -rgamma");
+		if (++i >= argc)
+		    Syntax ("-rgamma requires an argument", EXIT_FAILURE);
+		if (gam >= 0.0f)
+		    Syntax ("cannot set both -gamma and -rgamma", EXIT_FAILURE);
 		rgam = strtof(argv[i], NULL);
 		if ((rgam < GAMMA_MIN) || (rgam > GAMMA_MAX)) {
 		    fprintf(stderr,
 			    "Gamma values must be between %6.3f and %6.3f\n",
 			    (double)GAMMA_MIN, (double)GAMMA_MAX);
-		    exit(1);
+		    exit(EXIT_FAILURE);
 		}
 		continue;
 	    } else if (isabbreviation ("-ggamma", arg, 2)) {
-		if (++i >= argc) Syntax ("-ggamma requires an argument");
-		if (gam >= 0.0f) Syntax ("cannot set both -gamma and -ggamma");
+		if (++i >= argc)
+		    Syntax ("-ggamma requires an argument", EXIT_FAILURE);
+		if (gam >= 0.0f)
+		    Syntax ("cannot set both -gamma and -ggamma", EXIT_FAILURE);
 		ggam = strtof(argv[i], NULL);
 		if ((ggam < GAMMA_MIN) || (ggam > GAMMA_MAX)) {
 		    fprintf(stderr,
 			    "Gamma values must be between %6.3f and %6.3f\n",
 			    (double)GAMMA_MIN, (double)GAMMA_MAX);
-		    exit(1);
+		    exit(EXIT_FAILURE);
 		}
 		continue;
 	    } else if (isabbreviation ("-bgamma", arg, 2)) {
-		if (++i >= argc) Syntax ("-bgamma requires an argument");
-		if (gam >= 0.0f) Syntax ("cannot set both -gamma and -bgamma");
+		if (++i >= argc)
+		    Syntax ("-bgamma requires an argument", EXIT_FAILURE);
+		if (gam >= 0.0f)
+		    Syntax ("cannot set both -gamma and -bgamma", EXIT_FAILURE);
 		bgam = strtof(argv[i], NULL);
 		if ((bgam < GAMMA_MIN) || (bgam > GAMMA_MAX)) {
 		    fprintf(stderr,
 			    "Gamma values must be between %6.3f and %6.3f\n",
 			    (double)GAMMA_MIN, (double)GAMMA_MAX);
-		    exit(1);
+		    exit(EXIT_FAILURE);
 		}
 		continue;
 	    } else {
-		if (!isabbreviation ("-help", arg, 1))
-		    fprintf (stderr, "%s: unrecognized argument %s\n\n",
-			     ProgramName, arg);
-		Syntax (NULL);
+		fprintf (stderr, "%s: unrecognized argument %s\n\n",
+			 ProgramName, arg);
+		Syntax (NULL, EXIT_FAILURE);
 	    }
 	} else {
 	    fprintf (stderr, "%s: unrecognized argument %s\n\n",
 		     ProgramName, arg);
-	    Syntax (NULL);
+	    Syntax (NULL, EXIT_FAILURE);
 	}
     }
 
     if ((dpy = XOpenDisplay(displayname)) == NULL) {
 	fprintf (stderr, "%s:  unable to open display '%s'\n",
 		 ProgramName, XDisplayName (displayname));
-	exit(1);
+	exit(EXIT_FAILURE);
     } else if (screen == -1)
 	screen = DefaultScreen(dpy);
 
@@ -232,7 +244,7 @@ main(int argc, char *argv[])
 	if (bgam >= 0.0f) gamma.blue = bgam;
     } else {
 	/* Not changing gamma, all done */
-	ret = 0;
+	ret = EXIT_SUCCESS;
 	goto finish;
     }
 
@@ -243,7 +255,7 @@ main(int argc, char *argv[])
 	if (!XF86VidModeGetGamma(dpy, screen, &gamma)) {
 	    fprintf(stderr, "Unable to query gamma correction\n");
 	} else {
-	    ret = 0; /* Success! */
+	    ret = EXIT_SUCCESS; /* Success! */
 	    if (!quiet) {
 		fprintf(stderr, "<- Red %6.3f, Green %6.3f, Blue %6.3f\n",
 			(double)gamma.red, (double)gamma.green,

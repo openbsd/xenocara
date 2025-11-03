@@ -1,3 +1,82 @@
+commit 043b52064c27bb3871aaabf0d95c8d7bfddc55b9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 27 15:54:53 2025 -0700
+
+    xgamma 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 641cab89e289355717957a7917830b27f1ebb42a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 10:54:15 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xgamma.1:21:5: STYLE: lower case character in document title: TH xgamma
+    mandoc: xgamma.1:21:14: WARNING: cannot parse date, using it verbatim: TH xgamma 1.0.7
+    mandoc: xgamma.1:30:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xgamma.1:46:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xgamma.1:50:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xgamma.1:55:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xgamma.1:60:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xgamma.1:64:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xgamma.1:68:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xgamma.1:74:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xgamma.1:78:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xgamma.1:82:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xgamma.1:87:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xgamma.1:92:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xgamma/-/merge_requests/7>
+
+commit 7e4a0980fd40a9b0d01ced90874bde5f1ff1bc95
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 25 18:53:23 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xgamma/-/merge_requests/6>
+
+commit b3eb34ad72c60eb61d15e6d3ad0abafff091beb3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 25 18:48:24 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xgamma/-/merge_requests/6>
+
+commit f5d2187c454ec6e77a5ce3387e711cd6f492383d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 25 18:46:20 2025 -0700
+
+    xgamma -help should exit(0) not (1)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xgamma/-/merge_requests/6>
+
+commit cae5df00374ad05af5d908225bd87267998d48be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 9 13:32:56 2025 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xgamma/-/merge_requests/5>
+
+commit 8b65c5e57e9cb6bd174faab84319920ceb0403fc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3ceaba0a042c51b3b85ac619a9e34297bcdc322d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Dec 3 13:56:43 2022 -0800
@@ -533,7 +612,7 @@ Date:   Wed Jul 20 19:31:56 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 0e0ad15de21add08bffc4379bde7cb0cf7e77b74
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 18:19:11 2005 +0000
 
     Build system for xgamma
