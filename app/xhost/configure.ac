@@ -2,7 +2,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xhost], [1.0.9],
+AC_INIT([xhost], [1.0.10],
         [https://gitlab.freedesktop.org/xorg/app/xhost/-/issues], [xhost])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -43,7 +43,7 @@ case $host_os in
 esac
 
 # Checks for library functions.
-AC_CHECK_FUNCS([inet_aton])
+AC_CHECK_FUNCS([getaddrinfo getnameinfo])
 
 # Internationalization & localization support
 AC_SEARCH_LIBS([gettext], [intl], [USE_GETTEXT="yes"], [USE_GETTEXT="no"])

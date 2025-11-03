@@ -119,6 +119,10 @@ extern int getdomainname(char *name, size_t len);
 #endif
 #endif
 
+#if defined(IPv6) && !defined(AF_INET6)
+#error "Cannot build IPv6 support without AF_INET6"
+#endif
+
 #ifdef USE_GETTEXT
 # include <locale.h>	/* setlocale()  */
 # include <libintl.h>	/* gettext(), textdomain(), etc. */
@@ -138,7 +142,7 @@ static volatile int nameserver_timedout;
 static char *ProgramName;
 
 #ifdef NEEDSOCKETS
-static int 
+static int
 XFamily(int af)
 {
     unsigned int i;
@@ -153,7 +157,7 @@ XFamily(int af)
 #endif
 #ifdef	AF_INET
         { AF_INET, FamilyInternet },
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
         { AF_INET6, FamilyInternet6 },
 #endif
 #endif
@@ -185,7 +189,7 @@ main(int argc, char *argv[])
     XHostAddress *list;
     Bool enabled = False;
     Display *dpy;
- 
+
 #ifdef USE_GETTEXT
     const char *domaindir;
 
@@ -214,8 +218,8 @@ main(int argc, char *argv[])
     }
 
     XSetErrorHandler(local_xerror);
- 
- 
+
+
     if (argc == 1) {
 	sethostent(1);		/* don't close the data base each time */
 	list = XListHosts(dpy, &nhosts, &enabled);
@@ -271,11 +275,11 @@ main(int argc, char *argv[])
 	}
 	exit(0);
     }
- 
+
     for (i = 1; i < argc; i++) {
 	arg = argv[i];
 	if (*arg == '-') {
-	    
+
 	    if (!argv[i][1] && ((i+1) == argc)) {
 		printf (gettext("access control enabled, only authorized clients can connect\n"));
 		XEnableAccessControl(dpy);
@@ -307,7 +311,7 @@ main(int argc, char *argv[])
     exit(nfailed);
 }
 
- 
+
 
 /*
  * change_host - edit the list of hosts that may connect to the server;
@@ -317,23 +321,17 @@ main(int argc, char *argv[])
  * address.
  */
 
-static int 
+static int
 change_host(Display *dpy, char *name, Bool add)
 {
     XHostAddress ha;
     char *lname;
     size_t namelen, i;
     int family = FamilyWild;
-#ifdef K5AUTH
-    krb5_principal princ;
-    krb5_data kbuf;
-#endif
 #ifdef NEEDSOCKETS
     static struct in_addr addr;	/* so we can point at it */
-#if defined(IPv6) && defined(AF_INET6)
+#ifdef IPv6
     static struct in6_addr addr6; /* so we can point at it */
-#else
-    struct hostent *hp;
 #endif
 #endif
     char *cp;
@@ -361,7 +359,7 @@ change_host(Display *dpy, char *name, Bool add)
 #endif
     }
     else if (!strncmp("inet6:", lname, 6)) {
-#if defined(TCPCONN) && defined(IPv6) && defined(AF_INET6)
+#if defined(TCPCONN) && defined(IPv6)
 	family = FamilyInternet6;
 	name += 6;
 #else
@@ -373,7 +371,7 @@ change_host(Display *dpy, char *name, Bool add)
 #ifdef ACCEPT_INETV6 /* Allow inetv6 as an alias for inet6 for compatibility
 			with original X11 over IPv6 draft. */
     else if (!strncmp("inetv6:", lname, 7)) {
-#if defined(TCPCONN) && defined(IPv6) && defined(AF_INET6)
+#if defined(TCPCONN) && defined(IPv6)
 	family = FamilyInternet6;
 	name += 7;
 #else
@@ -464,6 +462,8 @@ change_host(Display *dpy, char *name, Bool add)
 
 #ifdef K5AUTH
     if (family == FamilyKrb5Principal) {
+	krb5_principal princ;
+	krb5_data kbuf;
 	krb5_error_code retval;
 
 	retval = krb5_parse_name(name, &princ);
@@ -506,7 +506,7 @@ change_host(Display *dpy, char *name, Bool add)
 	(cp = strchr(name, '@'))) {
         char *netname = name;
 #ifdef SECURE_RPC
-	static char username[MAXNETNAMELEN];
+	static char username[MAXNETNAMELEN + 1];
 
 	if (!cp[1]) {
 	    struct passwd *pwd;
@@ -544,12 +544,7 @@ change_host(Display *dpy, char *name, Bool add)
      * First see if inet_aton/inet_addr can grok the name; if so, then use it.
      */
     if (((family == FamilyWild) || (family == FamilyInternet)) &&
-#ifdef HAVE_INET_ATON
-	(inet_aton (name, &addr) != 0)
-#else
-	((addr.s_addr = inet_addr(name)) != -1)
-#endif
-        ) {
+	(inet_pton (AF_INET, name, &addr) == 1)) {
 	ha.family = FamilyInternet;
 	ha.length = sizeof(addr.s_addr);
 	ha.address = (char *) &addr.s_addr;
@@ -561,16 +556,16 @@ change_host(Display *dpy, char *name, Bool add)
 	    printf ("%s %s\n", name, remove_msg);
 	}
 	return 1;
-    } 
-#if defined(IPv6) && defined(AF_INET6)
+    }
+#ifdef IPv6
     /*
      * Check to see if inet_pton() can grok it as an IPv6 address
      */
     else if (((family == FamilyWild) || (family == FamilyInternet6)) &&
 	     (inet_pton(AF_INET6, name, &addr6.s6_addr) == 1)) {
 	ha.family = FamilyInternet6;
-	ha.length = sizeof(addr6.s6_addr);		
-	ha.address = (char *) &addr6.s6_addr; 
+	ha.length = sizeof(addr6.s6_addr);
+	ha.address = (char *) &addr6.s6_addr;
 	if (add) {
 	    XAddHost (dpy, &ha);
 	    printf ("%s %s\n", name, add_msg);
@@ -579,39 +574,60 @@ change_host(Display *dpy, char *name, Bool add)
 	    printf ("%s %s\n", name, remove_msg);
 	}
 	return 1;
-    } else {
+    }
+#endif
+#ifdef HAVE_GETADDRINFO
+    else {
     /*
-     * Is it in the namespace?  
+     * Is it in the namespace?
      *
      * If no family was specified, use both Internet v4 & v6 addresses.
      * Otherwise, use only addresses matching specified family.
      */
 	struct addrinfo *addresses;
 	struct addrinfo *a;
+	struct addrinfo hints = {
+#  ifdef IPv6
+	    .ai_family = AF_UNSPEC
+#  else
+	    .ai_family = AF_INET
+#  endif
+	};
+
 	Bool didit = False;
 
-	if (getaddrinfo(name, NULL, NULL, &addresses) != 0)
+	if (getaddrinfo(name, NULL, &hints, &addresses) != 0)
 	    return 0;
 
 	for (a = addresses; a != NULL; a = a->ai_next) {
 	    if ( ((a->ai_family == AF_INET) && (family != FamilyInternet6))
-	      || ((a->ai_family == AF_INET6) && (family != FamilyInternet)) ) {
+#ifdef IPv6
+	      || ((a->ai_family == AF_INET6) && (family != FamilyInternet))
+#endif
+                ) {
+#ifdef DEBUG
 		char ad[INET6_ADDRSTRLEN];
+#endif
 		ha.family = XFamily(a->ai_family);
+#ifdef IPv6
 		if (a->ai_family == AF_INET6) {
 		    ha.address = (char *)
 		      &((struct sockaddr_in6 *) a->ai_addr)->sin6_addr;
-		    ha.length = 
+		    ha.length =
 		      sizeof (((struct sockaddr_in6 *) a->ai_addr)->sin6_addr);
-		} else {
+		} else
+#endif
+		{
 		    ha.address = (char *)
 		      &((struct sockaddr_in *) a->ai_addr)->sin_addr;
-		    ha.length = 
+		    ha.length =
 		      sizeof (((struct sockaddr_in *) a->ai_addr)->sin_addr);
 		}
+#ifdef DEBUG
 		inet_ntop(a->ai_family, ha.address, ad, sizeof(ad));
-	/* printf("Family: %d\nLength: %d\n", a->ai_family, ha.length); */
-		/* printf("Address: %s\n", ad); */
+                printf("Family: %d\nLength: %d\n", a->ai_family, ha.length);
+		printf("Address: %s\n", ad);
+#endif
 
 		if (add) {
 		    XAddHost (dpy, &ha);
@@ -638,14 +654,17 @@ change_host(Display *dpy, char *name, Bool add)
 	freeaddrinfo(addresses);
 	return 1;
     }
-#else /* !IPv6 */
+#else /* !HAVE_GETADDRINFO */
     /*
      * Is it in the namespace?
      */
-    else if (((hp = gethostbyname(name)) == (struct hostent *)NULL)
+    else {
+	struct hostent *hp = gethostbyname(name);
+
+	if ((hp == (struct hostent *)NULL)
 	     || hp->h_addrtype != AF_INET) {
-	return 0;
-    } else {
+	    return 0;
+	}
 	ha.family = XFamily(hp->h_addrtype);
 	ha.length = hp->h_length;
 #ifdef h_addr			/* new 4.3bsd version of gethostent */
@@ -673,7 +692,7 @@ change_host(Display *dpy, char *name, Bool add)
 	printf ("%s %s\n", name, add ? add_msg : remove_msg);
 	return 1;
     }
-#endif /* IPv6 */
+#endif /* HAVE_GETADDRINFO */
 #else /* NEEDSOCKETS */
     return 0;
 #endif /* NEEDSOCKETS */
@@ -690,22 +709,17 @@ change_host(Display *dpy, char *name, Bool add)
 static const char *
 get_hostname(XHostAddress *ha)
 {
-#if defined(TCPCONN) && (!defined(IPv6) || !defined(AF_INET6))
-    static struct hostent *hp = NULL;
-#endif
-#ifdef K5AUTH
-    krb5_principal princ;
-    krb5_data kbuf;
-    char *kname;
-    static char kname_out[255];
-#endif
 #ifdef SIGALRM
     struct sigaction sa;
 #endif
 
 #ifdef TCPCONN
-#if defined(IPv6) && defined(AF_INET6)
-    if ((ha->family == FamilyInternet) || (ha->family == FamilyInternet6)) {
+#ifdef HAVE_GETNAMEINFO
+    if ((ha->family == FamilyInternet)
+#ifdef IPv6
+        || (ha->family == FamilyInternet6)
+#endif
+        ) {
 	struct sockaddr_storage saddr;
 	static char inetname[NI_MAXHOST];
 	unsigned int saddrlen;
@@ -723,7 +737,9 @@ get_hostname(XHostAddress *ha)
 		return "";
 	    memcpy(&sin->sin_addr, ha->address, sizeof(sin->sin_addr));
 	    saddrlen = sizeof(struct sockaddr_in);
-	} else {
+	}
+#ifdef IPv6
+	else {
 	    struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &saddr;
 #ifdef SIN6_LEN
 	    sin6->sin6_len = sizeof(struct sockaddr_in6);
@@ -735,12 +751,13 @@ get_hostname(XHostAddress *ha)
 	    memcpy(&sin6->sin6_addr, ha->address, sizeof(sin6->sin6_addr));
 	    saddrlen = sizeof(struct sockaddr_in6);
 	}
+#endif
 
 	/* gethostbyaddr can take a LONG time if the host does not exist.
 	   Assume that if it does not respond in NAMESERVER_TIMEOUT seconds
 	   that something is wrong and do not make the user wait.
 	   gethostbyaddr will continue after a signal, so we have to
-	   jump out of it. 
+	   jump out of it.
 	   */
 #ifdef SIGALRM
 	memset(&sa, 0, sizeof sa);
@@ -757,15 +774,17 @@ get_hostname(XHostAddress *ha)
 	if (nameserver_timedout || inetname[0] == '\0')
 	    inet_ntop(((struct sockaddr *)&saddr)->sa_family, ha->address,
 		inetname, sizeof(inetname));
-	return inetname;	      
+	return inetname;
     }
 #else
     if (ha->family == FamilyInternet) {
+	static struct hostent *hp = NULL;
+
 	/* gethostbyaddr can take a LONG time if the host does not exist.
 	   Assume that if it does not respond in NAMESERVER_TIMEOUT seconds
 	   that something is wrong and do not make the user wait.
 	   gethostbyaddr will continue after a signal, so we have to
-	   jump out of it. 
+	   jump out of it.
 	   */
 #ifdef SIGALRM
 	memset(&sa, 0, sizeof sa);
@@ -813,6 +832,11 @@ get_hostname(XHostAddress *ha)
     }
 #ifdef K5AUTH
     if (ha->family == FamilyKrb5Principal) {
+	krb5_principal princ;
+	krb5_data kbuf;
+	char *kname;
+	static char kname_out[255];
+
 	kbuf.data = ha->address;
 	kbuf.length = ha->length;
 	XauKrb5Decode(kbuf, &princ);
@@ -869,21 +893,21 @@ nameserver_lost(_X_UNUSED int sig)
  * that an X_GetHosts request for an unknown address format was received, just
  * return, otherwise print the normal error message and continue.
  */
-static int 
+static int
 local_xerror(Display *dpy, XErrorEvent *rep)
 {
     if ((rep->error_code == BadAccess) && (rep->request_code == X_ChangeHosts)) {
-	fprintf (stderr, 
+	fprintf (stderr,
 		 gettext("%s:  must be on local machine to add or remove hosts.\n"),
 		 ProgramName);
 	return 1;
-    } else if ((rep->error_code == BadAccess) && 
+    } else if ((rep->error_code == BadAccess) &&
 	       (rep->request_code == X_SetAccessControl)) {
-	fprintf (stderr, 
+	fprintf (stderr,
 		 gettext("%s:  must be on local machine to enable or disable access control.\n"),
 		 ProgramName);
 	return 1;
-    } else if ((rep->error_code == BadValue) && 
+    } else if ((rep->error_code == BadValue) &&
 	       (rep->request_code == X_ListHosts)) {
 	return 1;
     }

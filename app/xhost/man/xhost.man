@@ -1,4 +1,4 @@
-.\" Copyright (c) 2004, Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 2004, 2023, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -135,24 +135,28 @@ and a trailing at-sign (e.g., "nis:pat@").
 For backward compatibility with pre-R6 \fIxhost\fP,
 names that contain an at-sign (@) are assumed to be in the nis family.
 Otherwise they are assumed to be Internet addresses. If compiled to support
-IPv6, then all IPv4 and IPv6 addresses returned by getaddrinfo(__libmansuffix__) are added to
-the access list in the appropriate inet or inet6 family.
+IPv6, then all IPv4 and IPv6 addresses returned by
+.BR getaddrinfo (__libmansuffix__)
+are added to the access list in the appropriate inet or inet6 family.
 .PP
 The local family specifies all the local connections at once. However,
 the server interpreted address "si:localuser:\fIusername\fP" can be
 used to specify a single local user. (See the
-\fIXsecurity\fP(__miscmansuffix__) manual page for more details.)
+.BR Xsecurity (__miscmansuffix__)
+manual page for more details.)
 .PP
 Server interpreted addresses consist of a case-sensitive type tag and a
 string representing a given value, separated by a colon.  For example,
 "si:hostname:almas" is a server interpreted address of type \fIhostname\fP,
 with a value of \fIalmas\fP.   For more information on the available forms
-of server interpreted addresses, see the \fIXsecurity\fP(__miscmansuffix__)
+of server interpreted addresses, see the
+.BR Xsecurity (__miscmansuffix__)
 manual page.
 .PP
 The initial access control list for display number \fBn\fP
 may be set by the file \fI/etc/X\fBn\fI.hosts\fR, where
-\fBn\fP is the display number of the server.  See \fIXserver\fP(__appmansuffix__)
+\fBn\fP is the display number of the server.  See
+.BR Xserver (__appmansuffix__)
 for details.
 .SH DIAGNOSTICS
 For each name added to the access control list,
@@ -162,7 +166,12 @@ For each name removed from the access control list,
 a line of the form "\fIname\fP being removed from access control list"
 is printed.
 .SH "SEE ALSO"
-X(__miscmansuffix__), Xsecurity(__miscmansuffix__), Xserver(__appmansuffix__), xdm(__appmansuffix__), xauth(__appmansuffix__), getaddrinfo(__libmansuffix__)
+.BR X (__miscmansuffix__),
+.BR Xsecurity (__miscmansuffix__),
+.BR Xserver (__appmansuffix__),
+.BR xdm (__appmansuffix__),
+.BR xauth (__appmansuffix__),
+.BR getaddrinfo (__libmansuffix__)
 .SH ENVIRONMENT
 .TP 8
 .B DISPLAY

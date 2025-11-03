@@ -1,3 +1,124 @@
+commit 77d2a98c23f590091ded0caf4f09637f6094dcd6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 2 10:45:56 2025 -0800
+
+    xhost 1.0.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0e8b7532056577e97195da5e40889d11e03f46e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 12 14:19:36 2025 -0800
+
+    if getaddrinfo() is available, use it, even if IPv6 support is disabled
+    
+    Support for using getaddrinfo() was originally added to support IPv6,
+    and only used if IPv6 support was enabled.  Two decades later, support
+    for getaddrinfo() is ubiquitous and OS'es have marked gethostbyname()
+    as deprecated, so use the modern interface whenever we can now.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xhost/-/merge_requests/9>
+
+commit c78f8729f826cb7fd433ae2c24a767b1eafa206c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 12 13:50:16 2025 -0800
+
+    Simplify ifdefs for IPv6 support
+    
+    Instead of checking for AF_INET6 at every ifdef, just check once for it
+    and report that IPv6 support is not available, instead of silently not
+    building support for it that configure said we were going to build.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xhost/-/merge_requests/9>
+
+commit 3e894cb8ef08be24f100477c4beff77048b1fae1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 12 14:34:24 2025 -0800
+
+    reduce scope of #ifdef'ed variables to reduce #ifdefs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xhost/-/merge_requests/9>
+
+commit 8a4bbef5d4b29d3f836094d2a8c7ce24e345b301
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 12 14:22:02 2025 -0800
+
+    Clear trailing whitespace from lines in files
+    
+    Performed with: perl -i -p -e 's{\s+$}{\n}' `git ls-files`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xhost/-/merge_requests/9>
+
+commit f274c3f0ba6b100ac8717cce79dd8043094eba68
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 28 10:34:49 2024 +1000
+
+    Replace inet_addr()/inet_aton() with a call to inet_pton()
+    
+    We unconditionally require inet_pton() for our IPv6 check so let's use
+    the same call for the IPv4 check too. This removes the need for
+    inet_aton() which is labelled as deprecated because it doesn't support
+    IPv6.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xhost/-/merge_requests/8>
+
+commit b1a7317da58136686983c1a50e7f7d3a731dde02
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 2 18:03:41 2024 -0700
+
+    user2netname expects a MAXNETNAMELEN + 1 buffer, so give it one
+    
+    Found by gcc 13.2 on Solaris 11.4:
+    
+    xhost.c: In function ‘change_host’:
+    xhost.c:522:18: warning: ‘user2netname’ accessing 256 bytes in a region of
+     size 255 [-Wstringop-overflow=]
+      522 |             if (!user2netname(username, pwd->pw_uid, domainname)) {
+          |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    xhost.c:522:18: note: referencing argument 1 of type ‘char[256]’
+    In file included from /usr/include/rpc/rpc.h:35,
+                     from xhost.c:98:
+    /usr/include/rpc/auth.h:316:12: note: in a call to function ‘user2netname’
+      316 | extern int user2netname(char [MAXNETNAMELEN + 1], const uid_t, const char *);
+          |            ^~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xhost/-/merge_requests/7>
+
+commit d768e28a42b9187a2007361d6de263303f60bd4e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 18 10:09:08 2023 -0700
+
+    xhost.man: Use .BR markup for all references to other man pages
+    
+    Some were marked in italic instead of bold, some not marked up at all.
+    
+    Closes: #1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0431b0f650122c8cc4b83021a9ca21b0a1644950
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 08:59:50 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b031dee66e8dcd14045bce2f0853df62b5455666
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f9a30c707c14fc1ab75f7cc90c9c1eb6fcec3b6d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Dec 12 15:41:52 2022 -0800
@@ -870,7 +991,7 @@ Date:   Wed Jul 20 19:31:57 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 8b783444a5341f4698027d3a66650c179bc8fa2e
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 21:12:45 2005 +0000
 
     Add autogen.sh for xhost
