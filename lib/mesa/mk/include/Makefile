@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2023/01/28 08:56:33 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2025/11/03 04:48:24 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -20,7 +20,6 @@ GL_FILES=	gl.h \
 		glext.h \
 		glx.h \
 		glxext.h \
-		osmesa.h \
 		internal/dri_interface.h
 EGL_FILES=	egl.h \
 		eglext.h \

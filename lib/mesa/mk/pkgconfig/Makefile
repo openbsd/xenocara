@@ -1,6 +1,6 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:41 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2025/11/03 04:48:25 jsg Exp $
 
-PC_FILES= dri.pc egl.pc gbm.pc gl.pc glesv1_cm.pc glesv2.pc osmesa.pc
+PC_FILES= dri.pc egl.pc gbm.pc gl.pc glesv1_cm.pc glesv2.pc
 CLEANFILES+=${PC_FILES}
 
 all: ${PC_FILES}
@@ -23,9 +23,6 @@ glesv1_cm.pc:
 
 glesv2.pc:
 	/bin/sh ${.CURDIR}/gen_glesv2.sh -c ${.CURDIR} -o ${.OBJDIR}
-
-osmesa.pc:
-	/bin/sh ${.CURDIR}/gen_osmesa.sh -c ${.CURDIR} -o ${.OBJDIR}
 
 install:
 .for PC in ${PC_FILES}
