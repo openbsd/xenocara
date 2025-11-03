@@ -177,7 +177,7 @@ will be used.
 .TP 25
 XSERVERRC
 This variable should contain the location of an xserver file. If unset,
-.I $(HOME)/.xinitrc
+.I $(HOME)/.xserverrc
 or
 .I __xinitdir__/xserverrc
 will be used.

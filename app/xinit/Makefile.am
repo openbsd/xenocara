@@ -34,36 +34,13 @@ xinit_LDADD = $(XINIT_LIBS)
 xinit_SOURCES =	\
         xinit.c
 
-include $(top_srcdir)/cpprules.in
-
 xinitrcdir = $(XINITDIR)
-
-PROGCPPDEFS = \
-	-DXRDB=@XRDB@ \
-	-DXMODMAP=@XMODMAP@ \
-	-DTWM=@TWM@ \
-	-DXCLOCK=@XCLOCK@ \
-	-DXTERM=@XTERM@ \
-	-DXSERVER=@XSERVER@ \
-	-DXAUTH=@XAUTH@ \
-	-DXINIT=@XINIT@ \
-	-DWM=@WM@ \
-	-DXCONSOLE=@XCONSOLE@
-
-CPP_FILES_FLAGS = \
-	-DXINITDIR=$(XINITDIR) $(PROGCPPDEFS) -DLIBDIR=$(libdir) \
-	-DSHELL_CMD=$(SHELL_CMD) $(STARTX_COOKIE_FLAGS) \
-	-D__libexecdir__="$(libexecdir)" \
-	-D__bindir__="$(bindir)" \
-	-DBUNDLE_ID_PREFIX="$(bundleidprefix)"
-
 xinitrc_DATA = xinitrc
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = xinitrc startx
 
-EXTRA_DIST = xinitrc.cpp startx.cpp \
-		autogen.sh README.md
+EXTRA_DIST = autogen.sh README.md
 
 .PHONY: ChangeLog INSTALL
 

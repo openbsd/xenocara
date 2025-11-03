@@ -1,3 +1,13 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2015/06/20 10:12:39 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2025/11/03 09:58:18 matthieu Exp $
+
+CONFIGURE_ARGS+= --with-twm=${X11BASE}/bin/fvwm
+CONFIGURE_ARGS+= --with-xauth=${X11BASE}/bin/xauth
+CONFIGURE_ARGS+= --with-xclock=${X11BASE}/bin/xclock
+CONFIGURE_ARGS+= --with-xconsole=${X11BASE}/bin/xconsole
+CONFIGURE_ARGS+= --with-xinit=${X11BASE}/bin/xinit
+CONFIGURE_ARGS+= --with-xmodmap=${X11BASE}/bin/xmodmap
+CONFIGURE_ARGS+= --with-xrdb=${X11BASE}/bin/xrdb
+CONFIGURE_ARGS+= --with-xserver=${X11BASE}/bin/Xorg
+CONFIGURE_ARGS+= --with-xterm=${X11BASE}/bin/xterm
 
 .include <bsd.xorg.mk>

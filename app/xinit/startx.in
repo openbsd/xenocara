@@ -1,0 +1,352 @@
+#!@SHELL_CMD@
+
+#
+# This is just a sample implementation of a slightly less primitive
+# interface than xinit.  It looks for XINITRC and XSERVERRC environment
+# variables, then user .xinitrc and .xserverrc files, and then system
+# xinitrc and xserverrc files, else lets xinit choose its default.
+# The system xinitrc should probably do things like check for
+# .Xresources files and merge them in, start up a window manager, and
+# pop a clock and several xterms.
+#
+# Site administrators are STRONGLY urged to write nicer versions.
+#
+
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
+xinitdir="@XINITDIR@"
+xterm="@XTERM@"
+xserver="@XSERVER@"
+xinit="@XINIT@"
+bundle_id_prefix="@bundleidprefix@"
+xauth="@XAUTH@"
+bindir="@bindir@"
+libexecdir="@libexecdir@"
+mk_cookie="@MCOOKIE@"
+has_cookie_maker="@HAS_COOKIE_MAKER@"
+
+unset SESSION_MANAGER
+
+if [ "$(uname -s)" = "Darwin" ] ; then
+
+    # Check for /usr/bin/X11 and BINDIR in the path, if not add them.
+    # This allows startx to be placed in a place like /usr/bin or /usr/local/bin
+    # and people may use X without changing their PATH.
+    # Note that we put our own bin directory at the front of the path, and
+    # the standard system path at the back, since if you are using the Xorg
+    # server there's a pretty good chance you want to bias the Xorg clients
+    # over the old system's clients.
+
+    case $PATH in
+        *:$bindir | *:$bindir:* | $bindir:*) ;;
+        *) PATH="$bindir:$PATH" ;;
+    esac
+
+    # Now the "old" compiled path
+    oldbindir=/usr/X11R6/bin
+
+    if [ -d "$oldbindir" ] ; then
+        case $PATH in
+            *:$oldbindir | *:$oldbindir:* | $oldbindir:*) ;;
+            *) PATH="$PATH:$oldbindir" ;;
+        esac
+    fi
+
+    # Bourne shell does not automatically export modified environment variables
+    # so export the new PATH just in case the user changes the shell
+    export PATH
+fi
+
+userclientrc="$HOME/.xinitrc"
+[ -f "${XINITRC}" ] && userclientrc="${XINITRC}"
+sysclientrc="@XINITDIR@/xinitrc"
+
+userserverrc="$HOME/.xserverrc"
+[ -f "${XSERVERRC}" ] && userserverrc="${XSERVERRC}"
+sysserverrc="$xinitdir/xserverrc"
+defaultclient="$xterm"
+defaultserver="$xserver"
+defaultclientargs=""
+defaultserverargs=""
+defaultdisplay=""
+clientargs=""
+serverargs=""
+vtarg=""
+
+
+if [ "$(uname -s)" = "Darwin" ] ; then
+
+    if [ "$X11_PREFS_DOMAIN" = "" ] ; then
+        export X11_PREFS_DOMAIN="$bundle_id_prefix"".X11"
+    fi
+
+    # Initialize defaults (this will cut down on "safe" error messages)
+    if ! defaults read $X11_PREFS_DOMAIN cache_fonts > /dev/null 2>&1 ; then
+        defaults write $X11_PREFS_DOMAIN cache_fonts -bool true
+    fi
+
+    if ! defaults read $X11_PREFS_DOMAIN no_auth > /dev/null 2>&1 ; then
+        defaults write $X11_PREFS_DOMAIN no_auth -bool false
+    fi
+
+    if ! defaults read $X11_PREFS_DOMAIN nolisten_tcp > /dev/null 2>&1 ; then
+        defaults write $X11_PREFS_DOMAIN nolisten_tcp -bool true
+    fi
+
+    if ! defaults read $X11_PREFS_DOMAIN enable_iglx > /dev/null 2>&1 ; then
+        defaults write $X11_PREFS_DOMAIN enable_iglx -bool false
+    fi
+
+    # First, start caching fonts
+    if [ "$(defaults read $X11_PREFS_DOMAIN cache_fonts)" = 1 ] ; then
+        if [ -x "$bindir"/font_cache ] ; then
+            "$bindir"/font_cache
+        elif [ -x "$bindir"/font_cache.sh ] ; then
+            "$bindir"/font_cache.sh
+        elif [ -x "$bindir"/fc-cache ] ; then
+            "$bindir"/fc-cache
+        fi
+    fi
+
+    if [ -x "$libexecdir"/privileged_startx ] ; then
+	# Don't push this into the background because it can cause
+	# a race to create /tmp/.X11-unix
+	"$libexecdir"/privileged_startx
+    fi
+
+    if [ "$(defaults read $X11_PREFS_DOMAIN no_auth)" = 0 ] ; then
+        enable_xauth=1
+    else
+        enable_xauth=0
+    fi
+
+    if [ "$(defaults read $X11_PREFS_DOMAIN nolisten_tcp)" = 1 ] ; then
+        defaultserverargs="$defaultserverargs -nolisten tcp"
+    else
+        defaultserverargs="$defaultserverargs -listen tcp"
+    fi
+
+    if [ "$(defaults read $X11_PREFS_DOMAIN enable_iglx)" = 1 ] ; then
+        defaultserverargs="$defaultserverargs +iglx +extension GLX"
+    else
+        defaultserverargs="$defaultserverargs -iglx"
+    fi
+
+    # The second check is the real one.  The first is to hopefully avoid
+    # needless syslog spamming.
+    if defaults read $X11_PREFS_DOMAIN 2> /dev/null | grep -q 'dpi' && defaults read $X11_PREFS_DOMAIN dpi > /dev/null 2>&1 ; then
+        defaultserverargs="$defaultserverargs -dpi $(defaults read $X11_PREFS_DOMAIN dpi)"
+    fi
+
+else
+    enable_xauth=1
+fi
+
+# Automatically determine an unused $DISPLAY
+d=0
+while true ; do
+    [ -e "/tmp/.X$d-lock" -o -S "/tmp/.X11-unix/X$d" ] || break
+    d=$(($d + 1))
+done
+defaultdisplay=":$d"
+unset d
+
+whoseargs="client"
+while [ "$1" != "" ]; do
+    case "$1" in
+    # '' required to prevent cpp from treating "/*" as a C comment.
+    /''*|\./''*)
+	if [ "$whoseargs" = "client" ]; then
+	    if [ "$client" = "" ] && [ "$clientargs" = "" ]; then
+		client="$1"
+	    else
+		clientargs="$clientargs $1"
+	    fi
+	else
+	    if [ "$server" = "" ] && [ "$serverargs" = "" ]; then
+		server="$1"
+	    else
+		serverargs="$serverargs $1"
+	    fi
+	fi
+	;;
+    --)
+	whoseargs="server"
+	;;
+    *)
+	if [ "$whoseargs" = "client" ]; then
+	    clientargs="$clientargs $1"
+	else
+	    # display must be the FIRST server argument
+	    if [ "$serverargs" = "" ] && \
+		 expr "$1" : ':[0-9][0-9]*$' > /dev/null 2>&1; then
+		display="$1"
+	    else
+		serverargs="$serverargs $1"
+	    fi
+	fi
+	;;
+    esac
+    shift
+done
+
+# process client arguments
+if [ "$client" = "" ]; then
+    client="$defaultclient"
+
+    # For compatibility reasons, only use startxrc if there were no client command line arguments
+    if [ "$clientargs" = "" ]; then
+        if [ -f "$userclientrc" ]; then
+            client="$userclientrc"
+        elif [ -f "$sysclientrc" ]; then
+            client="$sysclientrc"
+        fi
+    fi
+fi
+
+# if no client arguments, use defaults
+if [ "$clientargs" = "" ]; then
+    clientargs="$defaultclientargs"
+fi
+
+# process server arguments
+if [ "$server" = "" ]; then
+    server="$defaultserver"
+
+if [ "$(uname -s)" = "Linux" ] ; then
+    # When starting the defaultserver start X on the current tty to avoid
+    # the startx session being seen as inactive:
+    # "https://bugzilla.redhat.com/show_bug.cgi?id=806491"
+    tty=$(tty)
+    if expr "$tty" : '/dev/tty[0-9][0-9]*$' > /dev/null; then
+        tty_num="${tty#/dev/tty}"
+        vtarg="vt$tty_num -keeptty"
+    fi
+fi
+
+    # For compatibility reasons, only use xserverrc if there were no server command line arguments
+    if [ "$serverargs" = "" ] && [ "$display" = "" ]; then
+	if [ -f "$userserverrc" ]; then
+	    server="$userserverrc"
+	elif [ -f "$sysserverrc" ]; then
+	    server="$sysserverrc"
+	fi
+    fi
+fi
+
+# if no server arguments, use defaults
+if [ "$serverargs" = "" ]; then
+    serverargs="$defaultserverargs"
+fi
+
+# if no vt is specified add vtarg (which may be empty)
+have_vtarg="no"
+for i in $serverargs; do
+    if expr "$i" : 'vt[0-9][0-9]*$' > /dev/null; then
+        have_vtarg="yes"
+    fi
+done
+if [ "$have_vtarg" = "no" ]; then
+    serverargs="$serverargs $vtarg"
+fi
+
+# if no display, use default
+if [ "$display" = "" ]; then
+    display="$defaultdisplay"
+fi
+
+if [ "$enable_xauth" = 1 ] ; then
+    if [ "$XAUTHORITY" = "" ]; then
+        XAUTHORITY="$HOME/.Xauthority"
+        export XAUTHORITY
+    fi
+
+    removelist=
+
+    # set up default Xauth info for this machine
+    hostname="$(uname -n)"
+
+    authdisplay=${display:-:0}
+    if [ -n "$has_cookie_maker" ] && [ -n "$mk_cookie" ] ; then
+        mcookie=$($mk_cookie)
+    else
+        if [ -r /dev/urandom ]; then
+            mcookie=$(dd if=/dev/urandom bs=16 count=1 2>/dev/null | hexdump -e \"%08x\")
+        else
+            mcookie=$(dd if=/dev/random bs=16 count=1 2>/dev/null | hexdump -e \"%08x\")
+        fi
+    fi
+    if [ "$mcookie" = "" ]; then
+        echo "Couldn't create cookie"
+        exit 1
+    fi
+    dummy=0
+
+    # create a file with auth information for the server. ':0' is a dummy.
+    xserverauthfile=$(mktemp ${HOME}/.serverauth.XXXXXXXXXX)
+    trap "rm -f '$xserverauthfile'" HUP INT QUIT ILL TRAP BUS TERM
+    xauth -q -f "$xserverauthfile" << EOF
+add :$dummy . $mcookie
+EOF
+
+    case "$(uname -s)" in
+    CYGWIN*|Darwin)
+        xserverauthfilequoted=$(echo ${xserverauthfile} | sed "s/'/'\\\\''/g")
+        serverargs=${serverargs}" -auth '"${xserverauthfilequoted}"'"
+        ;;
+    *)
+        serverargs=${serverargs}" -auth "${xserverauthfile}
+        ;;
+    esac
+
+    # now add the same credentials to the client authority file
+    # if '$displayname' already exists do not overwrite it as another
+    # server may need it. Add them to the '$xserverauthfile' instead.
+    for displayname in $authdisplay $hostname$authdisplay; do
+        authcookie=$(xauth list "$displayname" \
+        | sed -n 's/.*'"$displayname"'[[:space:]*].*[[:space:]*]//p' 2>/dev/null);
+        if [ "z${authcookie}" = "z" ] ; then
+            "$xauth" -q << EOF
+add $displayname . $mcookie
+EOF
+        removelist="$displayname $removelist"
+        else
+            dummy=$(($dummy+1));
+            "$xauth" -q -f "$xserverauthfile" << EOF
+add :$dummy . $authcookie
+EOF
+        fi
+    done
+fi
+
+case "$(uname -s)" in
+CYGWIN_NT*|Darwin)
+    eval "$xinit" \"$client\" $clientargs -- \"$server\" $display $serverargs
+    ;;
+*)
+    "$xinit" "$client" $clientargs -- "$server" $display $serverargs
+    ;;
+esac
+retval=$?
+
+if [ "$enable_xauth" = 1 ] ; then
+    if [ "$removelist" != "" ]; then
+        "$xauth" remove $removelist
+    fi
+    if [ "$xserverauthfile" != "" ]; then
+        rm -f "$xserverauthfile"
+    fi
+fi
+
+# various machines need special cleaning up
+if [ "$(uname -s)" = "Linux" ]; then
+    if command -v deallocvt > /dev/null 2>&1; then
+        deallocvt
+    fi
+fi
+
+if [ "$(uname -s)" = "SunOS" ]; then
+    kbd_mode -a
+fi
+
+exit $retval

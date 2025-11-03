@@ -22,10 +22,11 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xinit], [1.4.2],
+AC_INIT([xinit], [1.4.4],
         [https://gitlab.freedesktop.org/xorg/app/xinit/-/issues], [xinit])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-xz])
@@ -137,8 +138,11 @@ AC_SUBST([launchagentxserver])
 AM_CONDITIONAL(LAUNCHD, [test "x$LAUNCHD" = "xyes"])
 AM_CONDITIONAL(LAUNCHAGENT_XSERVER, [test "x$launchagentxserver" != "xno"])
 
+# Checks for library functions.
+AC_CHECK_FUNCS([asprintf])
+
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XINIT, x11 xproto >= 7.0.17)
+PKG_CHECK_MODULES(XINIT, x11 xproto >= 7.0.22)
 
 case $host_os in
     *bsd*)
@@ -165,9 +169,11 @@ if test "x$MCOOKIE" = x ; then
     fi
 fi
 if test "x$MCOOKIE" != x ; then
-	STARTX_COOKIE_FLAGS='-DHAS_COOKIE_MAKER -DMK_COOKIE="$(MCOOKIE)"'
+	HAS_COOKIE_MAKER=true
 	AC_MSG_NOTICE([startx will depend on "$MCOOKIE" to generate xauth cookies])
 fi
+AC_SUBST(HAS_COOKIE_MAKER)
+AC_SUBST(MCOOKIE)
 AC_SUBST(STARTX_COOKIE_FLAGS)
 
 # Additional substitutions in startx, xinitrc & man pages
@@ -210,5 +216,7 @@ AC_CONFIG_FILES([Makefile
 	man/Makefile
 	launchd/Makefile
 	launchd/privileged_startx/Makefile
-	launchd/user_startx/Makefile])
+	launchd/user_startx/Makefile
+	startx
+	xinitrc])
 AC_OUTPUT

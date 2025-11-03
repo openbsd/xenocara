@@ -31,8 +31,10 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xlib.h>
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
+#include <X11/Xfuncproto.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include <signal.h>
@@ -58,8 +60,8 @@ in this Software without prior written authorization from The Open Group.
 #define SHELL "sh"
 #endif
 
-const char *bindir = BINDIR;
-const char * const server_names[] = {
+static const char *bindir = BINDIR;
+static const char * const server_names[] = {
 #ifdef __APPLE__
     "Xquartz     Mac OSX Quartz displays.",
 #else
@@ -74,18 +76,17 @@ const char * const server_names[] = {
     "Xnest       X server nested in a window on another X server",
     "Xephyr      kdrive-based nested X server",
     "Xvnc        X server accessed over VNC's RFB protocol",
-    "Xdmx        Distributed Multi-head X server",
     NULL};
 
 #ifndef XINITRC
 #define XINITRC ".xinitrc"
 #endif
-char xinitrcbuf[256];
+static char xinitrcbuf[256];
 
 #ifndef XSERVERRC
 #define XSERVERRC ".xserverrc"
 #endif
-char xserverrcbuf[256];
+static char xserverrcbuf[256];
 
 #define TRUE 1
 #define FALSE 0
@@ -100,10 +101,10 @@ static char **client = clientargv + 2;        /* make sure room for sh .xinitrc 
 static char *displayNum = NULL;
 static char *program = NULL;
 static Display *xd = NULL;            /* server connection */
-int status;
-pid_t serverpid = -1;
-pid_t clientpid = -1;
-volatile int gotSignal = 0;
+static int status;
+static pid_t serverpid = -1;
+static pid_t clientpid = -1;
+static volatile int gotSignal = 0;
 
 static void Execute(char **vec);
 static Bool waitforserver(void);
@@ -127,7 +128,7 @@ sigCatch(int sig)
 }
 
 static void
-sigIgnore(int sig)
+sigIgnore(_X_UNUSED int sig)
 {
 }
 
@@ -151,7 +152,7 @@ main(int argc, char *argv[])
     register char **ptr;
     pid_t pid;
     int client_given = 0, server_given = 0;
-    int start_of_client_args, start_of_server_args;
+    ptrdiff_t start_of_client_args, start_of_server_args;
     struct sigaction sa, si;
 #ifdef __APPLE__
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
@@ -313,11 +314,6 @@ main(int argc, char *argv[])
     signal(SIGPIPE, SIG_IGN);
 
     shutdown();
-
-    if (gotSignal != 0) {
-        Errorx("unexpected signal %d", gotSignal);
-        exit(EXIT_FAILURE);
-    }
 
     if (serverpid < 0)
         Fatalx("server error");
@@ -488,9 +484,12 @@ setWindowPath(void)
     const char *windowpath;
     char *newwindowpath;
     unsigned long num;
+#ifndef HAVE_ASPRINTF
     char nums[10];
     int numn;
     size_t len;
+#endif
+
     prop = XInternAtom(xd, "XFree86_VT", False);
     if (prop == None) {
         Errorx("Unable to intern XFree86_VT atom");
@@ -534,6 +533,15 @@ setWindowPath(void)
     }
     XFree(buf);
     windowpath = getenv("WINDOWPATH");
+#ifdef HAVE_ASPRINTF
+    if (!windowpath) {
+        if (asprintf(&newwindowpath, "%lu", num) < 0)
+            return;
+    } else {
+        if (asprintf(&newwindowpath, "%s:%lu", windowpath, num) < 0)
+            return;
+    }
+#else
     numn = snprintf(nums, sizeof(nums), "%lu", num);
     if (!windowpath) {
         len = numn + 1;
@@ -549,6 +557,7 @@ setWindowPath(void)
         snprintf(newwindowpath, len, "%s:%s",
                  windowpath, nums);
     }
+#endif /* HAVE_ASPRINTF */
     if (setenv("WINDOWPATH", newwindowpath, TRUE) == -1)
         Error("unable to set WINDOWPATH");
 
@@ -584,7 +593,7 @@ startClient(char *client_argv[])
 static jmp_buf close_env;
 
 static int
-ignorexio(Display *dpy)
+ignorexio(_X_UNUSED Display *dpy)
 {
     Errorx("connection to X server lost");
     longjmp(close_env, 1);

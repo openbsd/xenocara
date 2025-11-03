@@ -54,7 +54,7 @@ for dir in /tmp/.ICE-unix /tmp/.X11-unix /tmp/.font-unix ; do
 		# Use mktemp rather than mkdir to avoid possible security issue
 		# if $dir exists and is a symlink (ie protect against a race
 		# against the above check)
-		if ${MKTEMP} -d ${dir} >& /dev/null ; then
+		if ${MKTEMP} -d ${dir} > /dev/null 2>&1 ; then
 			chmod 1777 $dir
 			chown root:wheel $dir
 			success=1

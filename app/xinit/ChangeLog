@@ -1,3 +1,202 @@
+commit cfa71d44248562f22f2d92732c5e493e89061569
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 9 13:37:26 2025 -0700
+
+    xinit 1.4.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 39769df60a20892c923a99113feee35e2e35b01b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 23 15:43:19 2025 -0800
+
+    quote variable assignments & expansions in startx & xinitrc
+    
+    Handle values that may contain spaces
+    
+    Reported-by: Peter Tribble <peter.tribble@gmail.com> in #23
+    Fixes: b8517b6 ("Modernized shell scripts")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/22>
+
+commit fc9d432a6133465e7a6d128d6992a930a8e46267
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 23 15:32:57 2025 -0800
+
+    Generate startx & xinitrc with configure substitutions instead of cpp
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/22>
+
+commit 0af6f38f7c7f68fccae9baa282d626f3ddbb229b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 23 14:44:09 2025 -0800
+
+    Add missing / at the beginning of /dev/urandom
+    
+    Reported-by: Peter Tribble <peter.tribble@gmail.com> in #23
+    Fixes: b8517b6 ("Modernized shell scripts")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/22>
+
+commit 79d1a902f93fe75e31c0bfb95e949293e6213992
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 5 10:20:39 2025 -0800
+
+    xinit 1.4.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ad6378928dd1eec2a3e159f92b53b68ce3884ba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 7 10:27:28 2024 -0800
+
+    Use asprintf() if available
+    
+    If we can use it, then we avoid a couple of clang warnings:
+    xinit.c:534:20: warning: implicit conversion changes signedness:
+     'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+            len = numn + 1;
+                ~ ~~~~~^~~
+    xinit.c:540:40: warning: implicit conversion changes signedness:
+     'int' to 'unsigned long' [-Wsign-conversion]
+            len = strlen(windowpath) + 1 + numn + 1;
+                                         ~ ^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/20>
+
+commit 0420d0b58b34217e496caa7dfa904bd833c00133
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 7 10:03:33 2024 -0800
+
+    Use ptrdiff_t to store results of pointer subtraction
+    
+    Clears warnings from clang of:
+    xinit.c:174:34: warning: implicit conversion loses integer precision:
+     'long' to 'int' [-Wshorten-64-to-32]
+        start_of_client_args = (cptr - client);
+                             ~  ~~~~~^~~~~~~~
+    xinit.c:203:34: warning: implicit conversion loses integer precision:
+     'long' to 'int' [-Wshorten-64-to-32]
+        start_of_server_args = (sptr - server);
+                             ~  ~~~~~^~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/20>
+
+commit 35de4b9d29a78e0f95539c0540b8b173cae71766
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 7 09:55:49 2024 -0800
+
+    Clear -Wunused-parameter warnings from clang
+    
+    Add _X_UNUSED to parameters required by callback definitions which we
+    don't acutally use.
+    
+    Clears clang warnings of:
+    
+    xinit.c:129:15: warning: unused parameter 'sig' [-Wunused-parameter]
+    sigIgnore(int sig)
+                  ^
+    xinit.c:581:20: warning: unused parameter 'dpy' [-Wunused-parameter]
+    ignorexio(Display *dpy)
+                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/20>
+
+commit 8a9c76dd35d5f824669ea2c7268cd7b4684c8687
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 7 09:50:10 2024 -0800
+
+    Mark global variables as static since there's only one source file
+    
+    Clears 8 warnings from clang of the form:
+    
+    xinit.c:61:13: warning: no previous extern declaration for non-static
+     variable 'bindir' [-Wmissing-variable-declarations]
+    const char *bindir = BINDIR;
+                ^
+    xinit.c:61:7: note: declare 'static' if the variable is not intended
+     to be used outside of this translation unit
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/20>
+
+commit 2f62c78b5714c95d03c0b1271b9b83b550af50b3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 27 16:45:36 2024 -0700
+
+    Remove Xdmx from suggested Xserver list
+    
+    It's not included in the xorg-server-21.x releases.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/19>
+
+commit 8252e334c5cc381d5a32bc4d3d47bae1bfc94fe0
+Author: jopamo <p@1g4.org>
+Date:   Tue Jun 25 20:06:53 2024 -0400
+
+    add closing quote to /dev/random mcookie hex
+    
+    Fixes: b8517b6 ("Modernized shell scripts")
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/18>
+
+commit 671da781805728fdea68efa5609906f6e0d0a3fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 16 11:52:00 2024 -0700
+
+    Reindent startx after !6
+    
+    Converting cpp-level ifdefs to shell-level ifs left confusing indentation
+    levels, this fixes that.
+    
+    Fixes: b8517b6 ("Modernized shell scripts")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/17>
+
+commit b8517b646839969548e5c1f1ac0045f0254da774
+Author: Marc Pervaz Boocha <mboocha@sudomsg.xyz>
+Date:   Wed Nov 17 22:43:35 2021 +0530
+
+    Modernized shell scripts
+    
+    Fixes #14
+    Makes Progress to #15
+    
+    Signed-off-by: Marc Pervaz Boocha <mboocha@sudomsg.xyz>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xinit/-/merge_requests/6>
+
+commit 354d1386d18631630447f47e6f2fd7f93e55feab
+Author: Geert Hendrickx <geert@hendrickx.be>
+Date:   Sun Jun 16 18:17:21 2024 +0000
+
+    Don't exit with failure on SIGTERM regardless.
+
+commit 0fb9f76d3f0205298b0d98c5b0a9a09c4e418388
+Author: ayekat <takeya@bluewin.ch>
+Date:   Thu Jan 12 22:06:50 2023 +0100
+
+    startx: Assign XSERVERRC to correct userserverrc
+    
+    Also fix same mistake in the startx manpage.
+    
+    Signed-off-by: ayekat <takeya@bluewin.ch>
+
+commit 3172dc7e15b7a249555ca12e24f4a787164a7f8a
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Wed Jan 11 21:33:11 2023 -0800
+
+    darwin: Remove bashism from 10-tmpdirs script
+    
+    possible bashism in 10-tmpdirs line 57 (should be >word 2>&1):
+                    if ${MKTEMP} -d ${dir} >& /dev/null ; then
+    
+    Fixes: https://github.com/XQuartz/XQuartz/issues/316
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
 commit f9786fb5a7e526035699f3d4d6661468ab20e689
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Dec 3 14:05:44 2022 -0800
@@ -1471,7 +1670,7 @@ Date:   Thu Oct 22 12:34:15 2009 -0400
     when the structure of the component changes. Do not edit defaults.
 
 commit d243b9943879ec2790d65785805aefdfbb64a378
-Author: Rémi Cardona  <remi@gentoo.org>
+Author: Rémi Cardona <remi@gentoo.org>
 Date:   Sat Nov 14 14:51:59 2009 +0100
 
     xinit 1.2.0
@@ -1517,7 +1716,7 @@ Date:   Fri Oct 16 20:27:17 2009 -0700
     Tested-by: Jon TURNEY <jon.turney@dronecode.org.uk>
 
 commit c2a5751175b11d3206805468aae1ddecd02c4a98
-Author: Rémi Cardona  <remi@gentoo.org>
+Author: Rémi Cardona <remi@gentoo.org>
 Date:   Sat Oct 3 11:50:12 2009 +0200
 
     make XINITDIR configurable at build-time, default is unchanged
@@ -2501,7 +2700,7 @@ Date:   Sat Jul 16 23:29:38 2005 +0000
         correctly
 
 commit d731a249d0c1c7f9eb77828c0d6e79cfdaf75589
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 21:12:01 2005 +0000
 
     Build system for xinit
