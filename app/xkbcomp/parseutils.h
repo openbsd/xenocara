@@ -68,12 +68,12 @@ extern ExprDef *ExprCreateBinary(unsigned /* op */ ,
                                  ExprDef *      /* right */
     );
 
-extern KeycodeDef *KeycodeCreate(char * /* name */ ,
+extern KeycodeDef *KeycodeCreate(const char * /* name */ ,
                                  ExprDef *      /* value */
     );
 
-extern KeyAliasDef *KeyAliasCreate(char * /* alias */ ,
-                                   char *       /* real */
+extern KeyAliasDef *KeyAliasCreate(const char * /* alias */ ,
+                                   const char * /* real */
     );
 
 extern VModDef *VModCreate(Atom /* name */ ,

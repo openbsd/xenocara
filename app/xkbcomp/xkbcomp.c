@@ -24,6 +24,7 @@
 
  ********************************************************/
 
+#include "utils.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <X11/keysym.h>
@@ -33,10 +34,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 /* end BR */
-
-#if defined(sgi)
-#include <malloc.h>
-#endif
 
 #define	DEBUG_VAR debugFlags
 #include "xkbcomp.h"
@@ -70,7 +67,9 @@
 #define	INPUT_XKB	1
 #define	INPUT_XKM	2
 
+#ifdef DEBUG
 unsigned int debugFlags;
+#endif
 
 static const char *fileTypeExt[] = {
     "XXX",
@@ -81,12 +80,12 @@ static const char *fileTypeExt[] = {
 };
 
 static unsigned inputFormat, outputFormat;
-char *rootDir;
+static const char *rootDir;
 static char *inputFile;
-static char *inputMap;
+static const char *inputMap;
 static char *outputFile;
-static char *inDpyName;
-static char *outDpyName;
+static const char *inDpyName;
+static const char *outDpyName;
 static Display *inDpy;
 static Display *outDpy;
 static Bool showImplicit = False;
@@ -96,10 +95,10 @@ static Bool xkblist = False;
 unsigned warningLevel = 5;
 unsigned verboseLevel = 0;
 unsigned dirsToStrip = 0;
-unsigned optionalParts = 0;
-static char *preErrorMsg = NULL;
-static char *postErrorMsg = NULL;
-static char *errorPrefix = NULL;
+static unsigned optionalParts = 0;
+static const char *preErrorMsg = NULL;
+static const char *postErrorMsg = NULL;
+static const char *errorPrefix = NULL;
 static unsigned int device_id = XkbUseCoreKbd;
 
 /***====================================================================***/
@@ -178,7 +177,7 @@ Usage(int argc, char *argv[])
 /***====================================================================***/
 
 static void
-setVerboseFlags(char *str)
+setVerboseFlags(const char *str)
 {
     for (; *str; str++)
     {
@@ -214,7 +213,7 @@ setVerboseFlags(char *str)
 static Bool
 parseArgs(int argc, char *argv[])
 {
-    register int i, tmp;
+    int i, tmp;
 
     i = strlen(argv[0]);
     tmp = strlen("xkblist");
@@ -465,8 +464,7 @@ parseArgs(int argc, char *argv[])
             }
             else
             {
-                char *tmp2;
-                for (tmp2 = argv[i]; (*tmp2 != '\0'); tmp2++)
+                for (const char *tmp2 = argv[i]; (*tmp2 != '\0'); tmp2++)
                 {
                     switch (*tmp2)
                     {
@@ -567,7 +565,7 @@ parseArgs(int argc, char *argv[])
         }
         else if (strncmp(argv[i], "-v", 2) == 0)
         {
-            char *str;
+            const char *str;
             if (argv[i][2] != '\0')
                 str = &argv[i][2];
             else if ((i < (argc - 1)) && (argv[i + 1][0] != '-'))
@@ -760,20 +758,25 @@ parseArgs(int argc, char *argv[])
     }
     else if ((!outputFile) && (inputFile) && (strcmp(inputFile, "-") == 0))
     {
-        int len = strlen("stdin") + strlen(fileTypeExt[outputFormat]) + 2;
-        outputFile = uTypedCalloc(len, char);
-        if (outputFile == NULL)
+#ifdef HAVE_ASPRINTF
+        if (asprintf(&outputFile, "stdin.%s", fileTypeExt[outputFormat]) < 0)
+#else
+        size_t len = strlen("stdin") + strlen(fileTypeExt[outputFormat]) + 2;
+        outputFile = calloc(len, sizeof(char));
+        if (outputFile != NULL)
+            snprintf(outputFile, len, "stdin.%s", fileTypeExt[outputFormat]);
+        else
+#endif
         {
             WSGO("Cannot allocate space for output file name\n");
             ACTION("Exiting\n");
             exit(1);
         }
-        snprintf(outputFile, len, "stdin.%s", fileTypeExt[outputFormat]);
     }
     else if ((outputFile == NULL) && (inputFile != NULL))
     {
         int len;
-        char *base, *ext;
+        const char *base, *ext;
 
         if (inputMap == NULL)
         {
@@ -787,7 +790,7 @@ parseArgs(int argc, char *argv[])
             base = inputMap;
 
         len = strlen(base) + strlen(fileTypeExt[outputFormat]) + 2;
-        outputFile = uTypedCalloc(len, char);
+        outputFile = calloc(len, sizeof(char));
         if (outputFile == NULL)
         {
             WSGO("Cannot allocate space for output file name\n");
@@ -806,14 +809,15 @@ parseArgs(int argc, char *argv[])
     else if (outputFile == NULL)
     {
         int len;
-        char *ch, *name, buf[128];
+        char *ch, buf[128];
+        const char *name = buf;
         if (inDpyName[0] == ':')
-            snprintf(name = buf, sizeof(buf), "server%s", inDpyName);
+            snprintf(buf, sizeof(buf), "server%s", inDpyName);
         else
             name = inDpyName;
 
         len = strlen(name) + strlen(fileTypeExt[outputFormat]) + 2;
-        outputFile = uTypedCalloc(len, char);
+        outputFile = calloc(len, sizeof(char));
         if (outputFile == NULL)
         {
             WSGO("Cannot allocate space for output file name\n");
@@ -848,7 +852,7 @@ parseArgs(int argc, char *argv[])
 }
 
 static Display *
-GetDisplay(char *program, char *dpyName)
+GetDisplay(const char *program, const char *dpyName)
 {
     int mjr, mnr, error;
     Display *dpy;
@@ -904,7 +908,9 @@ main(int argc, char *argv[])
     Status status;
 
     scan_set_file(stdin);
+#ifdef DEBUG
     uSetDebugFile(NullString);
+#endif
     uSetErrorFile(NullString);
 
     XkbInitIncludePath();
@@ -1022,7 +1028,7 @@ main(int argc, char *argv[])
                     }
                 }
             }
-            bzero((char *) &result, sizeof(result));
+            bzero(&result, sizeof(result));
             result.type = mapToUse->type;
             if ((result.xkb = XkbAllocKeyboard()) == NULL)
             {
@@ -1066,7 +1072,7 @@ main(int argc, char *argv[])
         else if (inputFormat == INPUT_XKM) /* parse xkm file */
         {
             unsigned tmp;
-            bzero((char *) &result, sizeof(result));
+            bzero(&result, sizeof(result));
             if ((result.xkb = XkbAllocKeyboard()) == NULL)
             {
                 WSGO("Cannot allocate keyboard description\n");
@@ -1088,7 +1094,7 @@ main(int argc, char *argv[])
     }
     else if (inDpy != NULL)
     {
-        bzero((char *) &result, sizeof(result));
+        bzero(&result, sizeof(result));
         result.type = XkmKeymapFile;
         result.xkb = XkbGetMap(inDpy, XkbAllMapComponentsMask, device_id);
         if (result.xkb == NULL)

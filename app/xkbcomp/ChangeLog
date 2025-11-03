@@ -1,3 +1,396 @@
+commit e26102f28f08e5432b1ad44bbaef7f32aff199f6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 3 14:23:58 2024 -0800
+
+    xkbcomp 1.4.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ff32f542c94f1b30ba2ba58193adb3774a5c50e6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 7 11:09:44 2023 -0700
+
+    GenerateListing: close outFile before returning
+    
+    Found by Oracle Parfait static analyzer:
+    
+    Error: File Leak
+       File Leak [file-ptr-leak]:
+          Leaked File outFile
+            at line 497 of app/xkbcomp/listing.c in function 'GenerateListing'.
+              outFile initialized at line 432 with fopen
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1f1ea56ca22a85164c4362650b004e202f4007fd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 13:13:21 2023 -0800
+
+    configure: raise minimum autoconf requirement to 2.70
+    
+    Needed for builds on NetBSD to work correctly, since it depends on
+    AC_USE_SYSTEM_EXTENSIONS defining _OPENBSD_SOURCE to expose the
+    prototype for reallocarray() in the system headers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ce2c46869ced346839eb7e0c3f83170025495c6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 27 09:02:26 2023 -0800
+
+    xkbcomp.h: include config.h before any other headers
+    
+    Ensures flags set by AC_USE_SYSTEM_EXTENSIONS are correctly
+    propogated when including system headers.
+    
+    Closes: #22 xkbcomp from git compile error
+    Fixes: 81e46ca ("Use asprintf() if the platform supports it")
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 772470d0e4fef8e0a3d6eaf4c563fa7b1f6d6d19
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 11 15:32:03 2022 -0800
+
+    Replace calloc(strlen())+strcpy() pairs with strdup() calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6db8fd556e2562e9a0a821c0d6fd4f7cdcf6266c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 11 15:18:26 2022 -0800
+
+    Mark more pointers as const
+    
+    Some suggested by cppcheck, others by manual code inspection
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 299c9762b1dbe53f3297c54e5526aeae767d1a10
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 11 10:24:13 2022 -0800
+
+    Use unsigned ints when shifting to create bitmasks
+    
+    symbols.c:1057:28: portability: Shifting signed 32-bit value by 31 bits
+      is implementation-defined behaviour. See condition at line 1049.
+      [shiftTooManyBitsSigned]
+            radio_groups |= (1 << (tmp.uval - 1));
+                               ^
+    symbols.c:1049:41: note: Assuming that condition 'tmp.uval>32' is not redundant
+            if ((tmp.uval < 1) || (tmp.uval > XkbMaxRadioGroups))
+                                            ^
+    symbols.c:1057:28: note: Shift
+            radio_groups |= (1 << (tmp.uval - 1));
+                               ^
+    symbols.c:1057:28: warning: Either the condition 'tmp.uval>32' is redundant
+      or there is signed integer overflow for expression '1<<(tmp.uval-1)'.
+      [integerOverflowCond]
+            radio_groups |= (1 << (tmp.uval - 1));
+                               ^
+    symbols.c:1049:41: note: Assuming that condition 'tmp.uval>32' is not redundant
+            if ((tmp.uval < 1) || (tmp.uval > XkbMaxRadioGroups))
+                                            ^
+    symbols.c:1057:28: note: Integer overflow
+            radio_groups |= (1 << (tmp.uval - 1));
+                               ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e4cba31313b44e40efcc0c260a33c3ec83e4b772
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 11 10:20:05 2022 -0800
+
+    Stop building more unused functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3e486c4578f3f6a81fc0f9afba6551dfa8c7b63b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 11 10:02:13 2022 -0800
+
+    Only build debug infrastructure if DEBUG is defined
+    
+    It's only used when DEBUG is defined, so don't build it when
+    we're not using it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a3bbf780252e55bb1dcab717289ef09e00d11223
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 11 09:55:55 2022 -0800
+
+    Remove unused "no indent" (NOI) debug functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0493c7216dd39baeb420583be71af095576dbf74
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 11 09:50:55 2022 -0800
+
+    Mark more functions and variables static
+    
+    Stop exporting things that aren't used outside the file
+    that defines them.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4119707089b5c14f53bd5ff0b86ee7e575ac9316
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 11 09:22:57 2022 -0800
+
+    XkbAddDirectoryToPath: don't leak existing paths on realloc() failure
+    
+    Found by cppcheck:
+    
+    xkbpath.c:217:9: error: Common realloc mistake: 'includePath' nulled
+      but not freed upon failure [memleakOnRealloc]
+            includePath = (char **) realloc(includePath, szPath * sizeof(char *));
+            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d22aac7bb50ff1f7588f78ec25e9fb62a7b2e5e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 11 09:17:56 2022 -0800
+
+    FindKeypadVMod: check xkb is not NULL before dereference, not after
+    
+    As found by cppcheck:
+    
+    vmod.c:232:26: warning: Either the condition 'xkb' is redundant or there
+      is possible null pointer dereference: xkb. [nullPointerRedundantCheck]
+        name = XkbInternAtom(xkb->dpy, "NumLock", False);
+                             ^
+    vmod.c:233:10: note: Assuming that condition 'xkb' is not redundant
+        if ((xkb) && LookupVModIndex((XPointer) xkb, None, name, TypeInt, &rtrn))
+             ^
+    vmod.c:232:26: note: Null pointer dereference
+        name = XkbInternAtom(xkb->dpy, "NumLock", False);
+                             ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c7a5d1468c75adb2139d2c2facc73854f13b5ba3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 11 08:57:56 2022 -0800
+
+    Remove #ifdef sgi sections
+    
+    They just included an additional malloc.h header, but SGI Irix
+    has been unsupported for a decade now.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e6821a8a7b16e5a8e4c478c9544798fae59a21d1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 16:20:58 2022 -0800
+
+    Handle -Wstringop-truncation warning in HandleOverlayDef()
+    
+    In function ‘HandleOverlayDef’,
+        inlined from ‘HandleSectionBody’ at geometry.c:2778:18,
+        inlined from ‘HandleSectionDef’ at geometry.c:2818:10,
+        inlined from ‘HandleGeometryFile’ at geometry.c:2864:18:
+    geometry.c:2573:9: warning: ‘strncpy’ output may be truncated copying
+     4 bytes from a string of length 4 [-Wstringop-truncation]
+     2573 |         strncpy(key->over, keyDef->over, XkbKeyNameLength);
+          |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    geometry.c:2574:9: warning: ‘strncpy’ output may be truncated copying
+     4 bytes from a string of length 4 [-Wstringop-truncation]
+     2574 |         strncpy(key->under, keyDef->under, XkbKeyNameLength);
+          |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 81e46cab5f4bdd69fa0a644dba86f6902cece175
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 16:10:01 2022 -0800
+
+    Use asprintf() if the platform supports it
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a1551b78e9ac0e2075ca241c0e8ae361758f26b4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 15:39:39 2022 -0800
+
+    Replace && with & for bitwise comparison
+    
+    Clears up gcc warning:
+    
+    keytypes.c: In function ‘SetPreserve’:
+    keytypes.c:757:26: warning: promoted ~unsigned is always non-zero
+      [-Wsign-compare]
+             || (new.preVMods && (~new.indexVMods)))
+                              ^~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e4e821d5083072e796d6489ddcacf895a43c66f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 15:37:56 2022 -0800
+
+    Fix 106 missing-field-initializers warnings in misc.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1fb639c97fc28b8ed66b5553eafbbeed07e4cb09
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 15:33:17 2022 -0800
+
+    Replace malloc()+bzero() pairs with calloc() calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8e58b7949ab96180d60fb13f7820d6cc01c228ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 15:21:49 2022 -0800
+
+    Remove unnecessary casts from bzero() calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bdbfa354dd4d93657104ccd7c9e892ed45197dd8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 15:16:05 2022 -0800
+
+    Remove unnecessary casts from memcpy() calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f1757a005f471044da3f8e946a091b067996d270
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 14:30:21 2022 -0800
+
+    Replace Opaque with direct usage of void *
+    
+    Only one use was left after deleting the *alloc/free() wrappers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5655379ce89ab55f25a536972aaa310480de9432
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 14:23:11 2022 -0800
+
+    Remove unnecessary checks for NULL pointers before calling free()
+    
+    Not needed in C89 and later
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2ac6a7f029d8855fbb4e8024aab0511727ac3a67
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 14:10:32 2022 -0800
+
+    Replace uFree() with direct free() calls
+    
+    All these wrappers did was mess with types and add a test for
+    NULL pointers that isn't needed in C89 and later.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8d85bd1e2f9473958b235caf7af9913b518f73dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 14:07:18 2022 -0800
+
+    Replace uTypedRecalloc() with direct recallocarray() calls
+    
+    Retains uRecalloc() as a fallback for platforms without recallocarray()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e02e32f71f6c24fcc69bdaf58f6f9e973a017896
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 13:49:56 2022 -0800
+
+    Replace uTypedRealloc() with direct reallocarray() calls
+    
+    Falls back to realloc() if platform doesn't offer reallocarray().
+    Also removes uRealloc() since it had no other uses.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 75af06f5f8ffc41fabd100253aad222cb4ab8662
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 13:44:17 2022 -0800
+
+    Replace uCalloc() and uTypedCalloc() with direct calloc() calls
+    
+    All these wrappers did was mess with types.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 265ea3a77418df2744575f1168f89a33f01e72d4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 13:39:10 2022 -0800
+
+    Replace uAlloc() and uTypedAlloc() with direct malloc() calls
+    
+    All these wrappers did was mess with types.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 81e51cf1ff494131827df487a0f538c3b07e0407
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 13:34:09 2022 -0800
+
+    Delete unused uTmpAlloc/uTmpFree wrappers around alloca()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77b1efa1c83ad64d49d1e9c085d2a496580ce6f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 13:26:39 2022 -0800
+
+    Use C99 struct initializers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 64761ee9424f755b84ab0ce02d13eda32d215a14
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 11:38:04 2022 -0800
+
+    Variable scope reductions
+    
+    Some found by cppcheck, some found by manual code inspection
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9737af15196380a1687d18a17d297ee17b45a83f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 11:03:40 2022 -0800
+
+    Remove register keyword from variable declarations
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b67c058e2ccc27472b238a6b5dc5e4cd20f6d2bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 10 09:08:33 2022 -0800
+
+    Eliminate 20 -Wimplicit-fallthrough warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 634f60a9b25b5d03c78e90574adce3e38f378333
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 931c469b2b91603c5c196abf65a39c7dab8609d7
+Author: Leandro Nini <drfiemost@email.it>
+Date:   Sat Dec 10 07:49:56 2022 +0000
+
+    Avoid possibly dereferencing null pointer
+    
+    This addresses issue #21
+    
+    Signed-off-by: Leandro Nini <drfiemost@email.it>
+
 commit 7bac6a25bb44d39710f1b2b5fdad56d7f4c01c39
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Dec 7 17:53:16 2022 -0800
@@ -169,7 +562,7 @@ Date:   Thu Nov 5 14:24:24 2020 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit a0a4f112c5858ac2b932247dba2d85061bb59145
-Author: Miroslav Koškár < <mk@mkoskar.com>
+Author: Miroslav Koškár <mk@mkoskar.com>
 Date:   Mon Jul 6 07:48:48 2020 +0200
 
     Fix lockdevbtn to be XkbSA_LockDeviceBtn action
@@ -265,7 +658,7 @@ Date:   Sat Feb 15 17:34:41 2014 +0100
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 9edd61b91a02bda31fc6edd2c32c553e872b6ea2
-Author: Miroslav Koškár < <mk@mkoskar.com>
+Author: Miroslav Koškár <mk@mkoskar.com>
 Date:   Fri Jan 18 20:01:01 2019 +0100
 
     Fix invalid error report on F_Accel field
@@ -1956,7 +2349,7 @@ Date:   Fri Oct 14 00:25:46 2005 +0000
     Use sed to fill in variables in man page
 
 commit 8c0d310c1acccc424dae29554a5075f9b339e95f
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Thu Sep 1 19:37:02 2005 +0000
 
     Define DFLT_XKB_CONFIG_ROOT to $(datadir)/X11/xkb so we look in the right
@@ -1997,13 +2390,13 @@ Date:   Wed Jul 20 19:31:57 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 8335e5fa471e25675c6a369ec2348883953fcdd0
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Sat Jul 16 20:56:47 2005 +0000
 
     Add xkbcomp data to symlink.sh. Some fixes to xkbcomp/Makefile.am
 
 commit d7b3354575f31caa9044b6c5f7aee4f010f6192a
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 15 18:02:35 2005 +0000
 
     Build system for xkbcomp
