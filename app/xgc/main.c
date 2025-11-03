@@ -35,6 +35,10 @@ from the X Consortium.
 ** Contains the bare minimum necessary to oversee the whole operation.
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Form.h>
@@ -284,6 +288,13 @@ main(int argc, char *argv[])
     {XtNborderWidth, (XtArgVal) 0}
   };
 
+  static const char * const usage =
+    "Usage: xgc [-options ...]\n"
+    "\n"
+    "where options include all standard toolkit options plus:\n"
+    "    -help       Print usage message and exit\n"
+    "    -version    Print version and exit\n";
+
   int i;			/* counter */
 
   /* Open the pipe */
@@ -297,9 +308,36 @@ main(int argc, char *argv[])
 
   XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
 
+  /* Handle args that don't require opening a display */
+  for (int a = 1; a < argc; a++) {
+    const char *argn = argv[a];
+    /* accept single or double dash for -help & -version */
+    if (argn[0] == '-' && argn[1] == '-') {
+      argn++;
+    }
+    if (strcmp(argn, "-help") == 0) {
+      fputs(usage, stdout);
+      exit(EXIT_SUCCESS);
+    }
+    if (strcmp(argn, "-version") == 0) {
+      puts(PACKAGE_STRING);
+      exit(EXIT_SUCCESS);
+    }
+  }
+
   bigdaddy = XtAppInitialize(&appcontext, "Xgc", (XrmOptionDescList) NULL,
 			     (Cardinal) 0, &argc, argv, (String *) NULL,
 			     shellargs, XtNumber(shellargs));
+  if (argc > 1) {
+    fputs("Unrecognized argument(s):", stderr);
+    for (int a = 1; a < argc; a++) {
+      fprintf(stderr, " %s", argv[a]);
+    }
+    fputs("\n\n", stderr);
+    fputs(usage, stderr);
+    exit(EXIT_FAILURE);
+  }
+
   X.dpy = XtDisplay(bigdaddy);
   XtAppAddActions(appcontext, actions, XtNumber(actions));
   XtOverrideTranslations

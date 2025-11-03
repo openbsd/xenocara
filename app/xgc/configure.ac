@@ -21,8 +21,8 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
-AC_PREREQ([2.60])
-AC_INIT([xgc], [1.0.6],
+AC_PREREQ([2.64])
+AC_INIT([xgc], [1.0.7],
         [https://gitlab.freedesktop.org/xorg/app/xgc/-/issues], [xgc])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -36,7 +36,7 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AC_PROG_LEX
+m4_version_prereq([2.70], [AC_PROG_LEX(noyywrap)], [AC_PROG_LEX])
 AC_PROG_YACC
 AC_PATH_PROG([YACC_INST], $YACC)
 if ! test -f "$srcdir/gram.c"; then
@@ -52,6 +52,9 @@ AC_ARG_WITH(appdefaultdir,
 	  [specify directory for app-defaults files (default is autodetected)]),
 	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
+
+# Checks for library functions.
+AC_CHECK_FUNCS([lrand48])
 
 AC_CONFIG_FILES([
 	Makefile

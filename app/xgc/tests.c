@@ -2,6 +2,10 @@
 **
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/Xaw/AsciiText.h>
@@ -10,18 +14,13 @@
 #include <stdlib.h>
 #include <math.h>
 #include "xgc.h"
-#ifdef SVR4
-#define SYSV
-#endif
-#if !defined(SYSV) && !defined(QNX4)
 #include <sys/resource.h>
-#endif
 
 #ifndef PI
 #define PI 3.14159265
 #endif
 
-#ifdef SYSV
+#ifdef HAVE_LRAND48
 #define random lrand48
 #endif
 
@@ -39,13 +38,10 @@
 static long
 timer(int flag)
 {
-#if !defined(SYSV)
   static struct timeval starttime;  /* starting time for gettimeofday() */
   struct timeval endtime;           /* ending time for gettimeofday() */
-#if !defined(__UNIXOS2__) && !defined(QNX4)
   static struct rusage startusage;  /* starting time for getrusage() */
   struct rusage endusage;           /* ending time for getrusage() */
-#endif
   struct timezone tz;               /* to make gettimeofday() happy */
 
   long elapsedtime;                 /* how long since we started the timer */
@@ -53,21 +49,16 @@ timer(int flag)
   switch (flag) {
     case StartTimer:                       /* store initial values */
       gettimeofday(&starttime,&tz);
-#if !defined(__UNIXOS2__) && !defined(QNX4)
       getrusage(RUSAGE_SELF,&startusage);
-#endif
       return((long) NULL);
     case EndTimer:
       gettimeofday(&endtime,&tz);          /* store final values */
-#if !defined(__UNIXOS2__) && !defined(QNX4)
       getrusage(RUSAGE_SELF,&endusage);
-#endif
 
   /* all the following line does is use the formula
      elapsed time = ending time - starting time, but there are three
      different timers and two different units of time, ack... */
 
-#if !defined(__UNIXOS2__) && !defined(QNX4)
       elapsedtime = (long) ((long)
 	((endtime.tv_sec - endusage.ru_utime.tv_sec - endusage.ru_stime.tv_sec
 	 - starttime.tv_sec + startusage.ru_utime.tv_sec
@@ -75,30 +66,13 @@ timer(int flag)
       ((endtime.tv_usec - endusage.ru_utime.tv_usec - endusage.ru_stime.tv_usec
 	 - starttime.tv_usec + startusage.ru_utime.tv_usec
 	 + startusage.ru_stime.tv_usec));
-#else
-      elapsedtime = (long)( ((long)endtime.tv_sec-(long)starttime.tv_sec)*1000000
-			   +((long)endtime.tv_usec-(long)starttime.tv_usec));
-#endif
+
       return(elapsedtime);
 
     default:
       fprintf(stderr,"Invalid flag in timer()\n");
       return((long) NULL);
     }
-#else
-  static time_t starttime;
-
-  switch (flag) {
-    case StartTimer:
-      time(&starttime);
-      return((long) NULL);
-    case EndTimer:
-      return( (time(NULL) - starttime) * 1000000);
-    default:
-      fprintf(stderr,"Invalid flag in timer()\n");
-      return((long) NULL);
-    }
-#endif
 }
 
 
