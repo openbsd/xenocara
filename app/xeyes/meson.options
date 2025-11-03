@@ -1,0 +1,13 @@
+option(
+  'xrender',
+  type: 'feature',
+  value : 'auto',
+  description: 'Use Xrender for rendering (default is auto)',
+)
+
+option(
+  'present',
+  type: 'feature',
+  value : 'auto',
+  description: 'Use Present for updates (default is auto)',
+)

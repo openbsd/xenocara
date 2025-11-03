@@ -33,7 +33,7 @@ xeyes_SOURCES =	\
         transform.h \
         xeyes.c
 
-EXTRA_DIST = eyes.bit eyesmask.bit README.md
+EXTRA_DIST = eyes.bit eyesmask.bit README.md meson.build meson.options
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

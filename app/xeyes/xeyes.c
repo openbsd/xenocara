@@ -89,7 +89,8 @@ static Atom wm_delete_window;
 
 /*ARGSUSED*/
 static void
-quit(Widget w, XEvent *event, String *params, Cardinal *num_params)
+quit(Widget w, XEvent *event,
+     _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     if (event->type == ClientMessage &&
 	event->xclient.data.l[0] != wm_delete_window) {

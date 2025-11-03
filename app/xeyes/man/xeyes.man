@@ -1,56 +1,59 @@
-.TH XEYES 1 __xorgversion__
+.TH XEYES 1 2023-05-28 __xorgversion__
 .SH NAME
 xeyes \- a follow the mouse X demo
 .SH SYNOPSIS
 .B xeyes
 [-option ...]
 .SH DESCRIPTION
-.I Xeyes
+.B Xeyes
 watches what you do and reports to the Boss.
 .SH OPTIONS
 .TP 8
-.B \-fg \fIforeground color\fB
+.B \-fg \fIforeground_color\fB
 choose a different color for the pupil of the eyes.
 .TP 8
-.B \-bg \fIbackground color\fB
+.B \-bg \fIbackground_color\fB
 choose a different color for the background.
 .TP 8
-.B \-outline \fIoutline color\fB
+.B \-outline \fIoutline_color\fB
 choose a different color for the outline of the eyes.
 .TP 8
-.B \-center \fIcenter color\fB
+.B \-center \fIcenter_color\fB
 choose a different color for the center of the eyes.
 .TP 8
-.B \-backing \fI{ WhenMapped Always NotUseful }\fB
+.B \-backing WhenMapped\fP | \fBAlways\fP | \fBNotUseful\fP
 selects an appropriate level of backing store.
 .TP 8
 .B \-geometry \fIgeometry\fB
-define the initial window geometry; see \fIX(__miscmansuffix__)\fP.
+define the initial window geometry; see
+.BR X (__miscmansuffix__).
 .TP 8
 .B \-display \fIdisplay\fB
-specify the display to use; see \fIX(__miscmansuffix__)\fP.
+specify the display to use; see
+.BR X (__miscmansuffix__).
 .TP 8
-.B \-bd \fIborder color\fB
+.B \-bd \fIborder_color\fB
 choose a different color for the window border.
 .TP 8
-.B \-bw \fIborder width\fB
+.B \-bw \fIborder_width\fB
 choose a different width for the window border.
 .TP 8
 .B \-shape
 uses the SHAPE extension to shape the window.  This is the default.
 .TP 8
-.B \+shape
+.B +shape
 disables use of the SHAPE extension to shape the window.
 .TP 8
 .B \-render
 uses Xrender to draw anti-aliased eyes.
-This is the default if \fIxeyes\fP has been compiled with Xrender support.
+This is the default if \fBxeyes\fP has been compiled with Xrender support.
 .TP 8
-.B \+render
+.B +render
 disables Xrender and draws traditional eyes.
 .TP 8
 .B \-distance
-uses an alternative mapping, as if the eyes were set back from the screen, thus following the mouse more precisely.
+uses an alternative mapping, as if the eyes were set back from the screen,
+thus following the mouse more precisely.
 .TP 8
 .B \-biblicallyAccurate
 renders the eyes as if they belonged to a biblically accurate angel.
@@ -61,7 +64,8 @@ print a usage message and exit.
 .B \-version
 print the version number and exit.
 .SH "SEE ALSO"
-X(__miscmansuffix__), X Toolkit documentation
+.BR X (__miscmansuffix__),
+X Toolkit documentation
 .SH AUTHOR
 Keith Packard, MIT X Consortium
 .br

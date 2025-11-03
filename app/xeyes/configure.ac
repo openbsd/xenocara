@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xeyes], [1.3.0],
+AC_INIT([xeyes], [1.3.1],
         [https://gitlab.freedesktop.org/xorg/app/xeyes/-/issues], [xeyes])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -38,7 +38,7 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XEYES, [xi >= 1.7 x11 xt xext xmu xproto >= 7.0.17])
+PKG_CHECK_MODULES(XEYES, [xi >= 1.7 x11 xt xext xmu xproto >= 7.0.22])
 
 dnl Optional dependencies
 AC_ARG_WITH(xrender, AS_HELP_STRING([--with-xrender],[Use Xrender for rendering (Default is YES)]),use_xrender="$withval",use_xrender="try")

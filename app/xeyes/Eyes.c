@@ -39,6 +39,7 @@ from the X Consortium.
 # include "config.h"
 #endif
 
+# include <X11/Xfuncproto.h>
 # include <X11/Xos.h>
 # include <stdio.h>
 # include <X11/IntrinsicP.h>
@@ -129,7 +130,7 @@ static EyeLayout layout_biblical[] = {
 
 static EyeConfiguration *EyesConfigure(Boolean biblically_accurate)
 {
-	EyeConfiguration *c = calloc(sizeof(EyeConfiguration), 1);
+	EyeConfiguration *c = calloc(1, sizeof(EyeConfiguration));
 	assert(c != NULL);
 
 	if (biblically_accurate) {
@@ -248,14 +249,14 @@ static void MakePresentData(EyesWidget w) {
         xcb_create_pixmap(xt_xcb(w),
                           w->core.depth,
                           w->eyes.back_buffer = xcb_generate_id(xt_xcb(w)),
-                          XtWindow(w),
+                          (xcb_drawable_t) XtWindow(w),
                           w->core.width,
                           w->core.height);
     }
     if (!w->eyes.back_damage) {
         xcb_damage_create(xt_xcb(w),
                           w->eyes.back_damage = xcb_generate_id(xt_xcb(w)),
-                          w->eyes.back_buffer,
+                          (xcb_drawable_t) w->eyes.back_buffer,
                           XCB_DAMAGE_REPORT_LEVEL_NON_EMPTY);
         xcb_xfixes_create_region(xt_xcb(w),
                                  w->eyes.back_region = xcb_generate_id(xt_xcb(w)),
@@ -270,8 +271,8 @@ static void UpdatePresent(EyesWidget w) {
                             None,
                             w->eyes.back_region);
         xcb_present_pixmap(xt_xcb(w),
-                           XtWindow(w),
-                           w->eyes.back_buffer,
+                           (xcb_window_t) XtWindow(w),
+                           (xcb_pixmap_t) w->eyes.back_buffer,
                            0,
                            None,
                            w->eyes.back_region,
@@ -295,7 +296,9 @@ static void UpdatePresent(EyesWidget w) {
 
 static void draw_it_core(EyesWidget w);
 
-static void EyesGeneric(Widget w, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
+static void EyesGeneric(Widget w, _X_UNUSED XtPointer closure,
+                        _X_UNUSED XEvent *event,
+                        _X_UNUSED Boolean *continue_to_dispatch)
 {
         draw_it_core((EyesWidget) w);
 }
@@ -392,10 +395,10 @@ static int has_xi2(Display *dpy)
 
 /* ARGSUSED */
 static void Initialize (
-    Widget greq,
+    _X_UNUSED Widget greq,
     Widget gnew,
-    ArgList args,
-    Cardinal *num_args)
+    _X_UNUSED ArgList args,
+    _X_UNUSED Cardinal *num_args)
 {
     EyesWidget w = (EyesWidget)gnew;
     XtGCMask	valuemask;
@@ -406,7 +409,7 @@ static void Initialize (
 #endif
 
     EyeConfiguration *config = EyesConfigure(w->eyes.biblically_accurate);
-    TPoint *pupils = calloc(sizeof(TPoint), config->count);
+    TPoint *pupils = calloc(config->count, sizeof(TPoint));
     assert(pupils != NULL);
     for (int j = 0; j < config->count; j++) {
         pupils[j].x = TPOINT_NONE;
@@ -608,7 +611,7 @@ static TPoint computePupil (
 	cy = layout->y; dy = mouse.y - cy;
 	if (dx == 0 && dy == 0);
 	else {
-		angle = atan2 ((double) dy, (double) dx);
+		angle = atan2 (dy, dx);
 		cosa = cos (angle);
 		sina = sin (angle);
 		dist = BALL_DIST;
@@ -648,7 +651,7 @@ static TPoint computePupil (
 		    if (dist > BALL_DIST)
 			dist = BALL_DIST;
 		}
-		if (dist > hypot ((double) dx, (double) dy)) {
+		if (dist > hypot (dx, dy)) {
 			cx += dx;
 			cy += dy;
 		} else {
@@ -784,7 +787,7 @@ static void draw_it_core(EyesWidget w)
 /* ARGSUSED */
 static void draw_it (
      XtPointer client_data,
-     XtIntervalId *id)		/* unused */
+     _X_UNUSED XtIntervalId *id)		/* unused */
 {
         EyesWidget	w = (EyesWidget)client_data;
 
@@ -818,7 +821,7 @@ static void Resize (Widget gw)
 #ifdef PRESENT
         if (w->eyes.back_buffer) {
                 xcb_free_pixmap(xt_xcb(w),
-                                w->eyes.back_buffer);
+                                (xcb_pixmap_t) w->eyes.back_buffer);
                 w->eyes.back_buffer = None;
                 xcb_damage_destroy(xt_xcb(w),
                                    w->eyes.back_damage);
@@ -913,8 +916,8 @@ static void Destroy (Widget gw)
 /* ARGSUSED */
 static void Redisplay(
      Widget gw,
-     XEvent *event,
-     Region region)
+     _X_UNUSED XEvent *event,
+     _X_UNUSED Region region)
 {
     EyesWidget	w;
 
@@ -923,16 +926,16 @@ static void Redisplay(
         w->eyes.pupils[i].x = TPOINT_NONE;
         w->eyes.pupils[i].y = TPOINT_NONE;
     }
-    (void) repaint_window ((EyesWidget)gw);
+    repaint_window (w);
 }
 
 /* ARGSUSED */
 static Boolean SetValues (
-    Widget current,
-    Widget request,
-    Widget new,
-    ArgList args,
-    Cardinal *num_args)
+    _X_UNUSED Widget current,
+    _X_UNUSED Widget request,
+    _X_UNUSED Widget new,
+    _X_UNUSED ArgList args,
+    _X_UNUSED Cardinal *num_args)
 {
     return( FALSE );
 }
