@@ -726,6 +726,8 @@ static void add_master_func(void *res, XID id, void *devid)
 
 
     pbd = AllocBarrierDevice();
+    if (!pbd)
+        return;
     pbd->deviceid = *deviceid;
 
     input_lock();

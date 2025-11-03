@@ -177,25 +177,59 @@ glamor_glyph_add(struct glamor_glyph_atlas *atlas, DrawablePtr glyph_draw)
     return TRUE;
 }
 
-static const glamor_facet glamor_facet_composite_glyphs_130 = {
+static const glamor_facet glamor_facet_composite_glyphs_es300 = {
     .name = "composite_glyphs",
     .version = 130,
-    .vs_vars = ("attribute vec4 primitive;\n"
-                "attribute vec2 source;\n"
-                "varying vec2 glyph_pos;\n"),
+    .fs_extensions = ("#extension GL_EXT_blend_func_extended : enable\n"),
+    .vs_vars = ("in vec4 primitive;\n"
+                "in vec2 source;\n"
+                "out vec2 glyph_pos;\n"),
     .vs_exec = ("       vec2 pos = primitive.zw * vec2(gl_VertexID&1, (gl_VertexID&2)>>1);\n"
                 GLAMOR_POS(gl_Position, (primitive.xy + pos))
                 "       glyph_pos = (source + pos) * ATLAS_DIM_INV;\n"),
-    .fs_vars = ("varying vec2 glyph_pos;\n"
+    .fs_vars = ("in vec2 glyph_pos;\n"
                 "out vec4 color0;\n"
                 "out vec4 color1;\n"),
-    .fs_exec = ("       vec4 mask = texture2D(atlas, glyph_pos);\n"),
+    .fs_exec = ("       vec4 mask = texture(atlas, glyph_pos);\n"),
+    .source_name = "source",
+    .locations = glamor_program_location_atlas,
+};
+
+static const glamor_facet glamor_facet_composite_glyphs_130 = {
+    .name = "composite_glyphs",
+    .version = 130,
+    .vs_vars = ("in vec4 primitive;\n"
+                "in vec2 source;\n"
+                "out vec2 glyph_pos;\n"),
+    .vs_exec = ("       vec2 pos = primitive.zw * vec2(gl_VertexID&1, (gl_VertexID&2)>>1);\n"
+                GLAMOR_POS(gl_Position, (primitive.xy + pos))
+                "       glyph_pos = (source + pos) * ATLAS_DIM_INV;\n"),
+    .fs_vars = ("in vec2 glyph_pos;\n"
+                "out vec4 color0;\n"
+                "out vec4 color1;\n"),
+    .fs_exec = ("       vec4 mask = texture(atlas, glyph_pos);\n"),
     .source_name = "source",
     .locations = glamor_program_location_atlas,
 };
 
 static const glamor_facet glamor_facet_composite_glyphs_120 = {
     .name = "composite_glyphs",
+    .vs_vars = ("attribute vec2 primitive;\n"
+                "attribute vec2 source;\n"
+                "varying vec2 glyph_pos;\n"),
+    .vs_exec = ("       vec2 pos = vec2(0,0);\n"
+                GLAMOR_POS(gl_Position, primitive.xy)
+                "       glyph_pos = source.xy * ATLAS_DIM_INV;\n"),
+    .fs_vars = ("varying vec2 glyph_pos;\n"),
+    .fs_exec = ("       vec4 mask = texture2D(atlas, glyph_pos);\n"),
+    .source_name = "source",
+    .locations = glamor_program_location_atlas,
+};
+
+static const glamor_facet glamor_facet_composite_glyphs_gles2 = {
+    .name = "composite_glyphs",
+    .version = 100,
+    .fs_extensions = ("#extension GL_EXT_blend_func_extended : enable\n"),
     .vs_vars = ("attribute vec2 primitive;\n"
                 "attribute vec2 source;\n"
                 "varying vec2 glyph_pos;\n"),
@@ -437,12 +471,16 @@ glamor_composite_glyphs(CARD8 op,
                         if (glamor_glsl_has_ints(glamor_priv))
                             prog = glamor_setup_program_render(op, src, glyph_pict, dst,
                                                                glyphs_program,
-                                                               &glamor_facet_composite_glyphs_130,
+                                                               glamor_priv->is_gles ?
+                                                                   &glamor_facet_composite_glyphs_es300 :
+                                                                   &glamor_facet_composite_glyphs_130,
                                                                glamor_priv->glyph_defines);
                         else
                             prog = glamor_setup_program_render(op, src, glyph_pict, dst,
                                                                glyphs_program,
-                                                               &glamor_facet_composite_glyphs_120,
+                                                               glamor_priv->has_dual_blend ?
+                                                                   &glamor_facet_composite_glyphs_gles2 :
+                                                                   &glamor_facet_composite_glyphs_120,
                                                                glamor_priv->glyph_defines);
                         if (!prog)
                             goto bail_one;

@@ -189,5 +189,8 @@ EXTRA_DIST = \
 	scripts/xephyr-glamor-piglit.sh \
 	scripts/xinit-piglit-session.sh \
 	scripts/run-piglit.sh \
+	scripts/xephyr-glamor-gles2-piglit.sh \
+	bugs/meson.build \
+	bugs/bug1354.c \
 	$(NULL)
 

@@ -1385,6 +1385,7 @@ RetrieveTouchDeliveryData(DeviceIntPtr dev, TouchPointInfoPtr ti,
             else
                 evtype = GetXI2Type(ev->any.type);
 
+            BUG_RETURN_VAL(!wOtherInputMasks(*win), FALSE);
             nt_list_for_each_entry(iclients,
                                    wOtherInputMasks(*win)->inputClients, next)
                 if (xi2mask_isset(iclients->xi2mask, dev, evtype))
@@ -1399,6 +1400,7 @@ RetrieveTouchDeliveryData(DeviceIntPtr dev, TouchPointInfoPtr ti,
             int xi_type = GetXIType(TouchGetPointerEventType(ev));
             Mask xi_filter = event_get_filter_from_type(dev, xi_type);
 
+            BUG_RETURN_VAL(!wOtherInputMasks(*win), FALSE);
             nt_list_for_each_entry(iclients,
                                    wOtherInputMasks(*win)->inputClients, next)
                 if (iclients->mask[dev->id] & xi_filter)
@@ -2288,6 +2290,7 @@ RetrieveGestureDeliveryData(DeviceIntPtr dev, InternalEvent *ev, GestureListener
            listener->type == GESTURE_LISTENER_REGULAR */
         evtype = GetXI2Type(ev->any.type);
 
+        BUG_RETURN_VAL(!wOtherInputMasks(*win), FALSE);
         nt_list_for_each_entry(iclients, wOtherInputMasks(*win)->inputClients, next)
             if (xi2mask_isset(iclients->xi2mask, dev, evtype))
                 break;
@@ -3232,13 +3235,18 @@ DeviceEventSuppressForWindow(WindowPtr pWin, ClientPtr client, Mask mask,
             inputMasks->dontPropagateMask[maskndx] = mask;
     }
     else {
-        if (!inputMasks)
-            AddExtensionClient(pWin, client, 0, 0);
-        inputMasks = wOtherInputMasks(pWin);
+        if (!inputMasks) {
+            int ret = AddExtensionClient(pWin, client, 0, 0);
+
+            if (ret != Success)
+                return ret;
+            inputMasks = wOtherInputMasks(pWin);
+            BUG_RETURN_VAL(!inputMasks, BadAlloc);
+        }
         inputMasks->dontPropagateMask[maskndx] = mask;
     }
     RecalculateDeviceDeliverableEvents(pWin);
-    if (ShouldFreeInputMasks(pWin, FALSE))
+    if (inputMasks && ShouldFreeInputMasks(pWin, FALSE))
         FreeResource(inputMasks->inputClients->resource, RT_NONE);
     return Success;
 }
@@ -3333,6 +3341,7 @@ XISetEventMask(DeviceIntPtr dev, WindowPtr win, ClientPtr client,
     if (len && !others) {
         if (AddExtensionClient(win, client, 0, 0) != Success)
             return BadAlloc;
+        BUG_RETURN_VAL(!wOtherInputMasks(win), BadAlloc);
         others = wOtherInputMasks(win)->inputClients;
     }
 

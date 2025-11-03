@@ -230,6 +230,7 @@ GestureAddRegularListener(DeviceIntPtr dev, GestureInfoPtr gi, WindowPtr win, In
         return;
 
     inputMasks = wOtherInputMasks(win);
+    BUG_RETURN(!inputMasks);
 
     if (mask & EVENT_XI2_MASK) {
         nt_list_for_each_entry(iclients, inputMasks->inputClients, next) {

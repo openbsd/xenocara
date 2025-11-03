@@ -48,6 +48,8 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
+#include <assert.h>
+
 #include <X11/X.h>
 #include <X11/Xproto.h>
 #include "misc.h"
@@ -95,6 +97,8 @@ CopySwap32Write(ClientPtr pClient, int size, CARD32 *pbuf)
     CARD32 *from, *to, *fromLast, *toLast;
     CARD32 tmpbuf[1];
 
+    assert((bufsize % sizeof(CARD32)) == 0);
+
     /* Allocate as big a buffer as we can... */
     while (!(pbufT = malloc(bufsize))) {
         bufsize >>= 1;
@@ -141,6 +145,8 @@ CopySwap16Write(ClientPtr pClient, int size, short *pbuf)
     short *pbufT;
     short *from, *to, *fromLast, *toLast;
     short tmpbuf[2];
+
+    assert((bufsize % sizeof(short)) == 0);
 
     /* Allocate as big a buffer as we can... */
     while (!(pbufT = malloc(bufsize))) {

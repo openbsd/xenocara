@@ -27,7 +27,7 @@
 
 static const glamor_facet glamor_facet_poly_lines = {
     .name = "poly_lines",
-    .vs_vars = "attribute vec2 primitive;\n",
+    .vs_vars = "in vec2 primitive;\n",
     .vs_exec = ("       vec2 pos = vec2(0.0,0.0);\n"
                 GLAMOR_POS(gl_Position, primitive.xy)),
 };

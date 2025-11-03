@@ -49,6 +49,24 @@
     "precision mediump float;\n"  \
     "#endif\n"
 
+#define GLAMOR_DEFAULT_POINT_SIZE  \
+    "#ifdef GL_ES\n"              \
+    "       gl_PointSize = 1.0;\n"  \
+    "#endif\n"
+
+#define GLAMOR_COMPAT_DEFINES_VS  \
+    "#define in attribute\n" \
+    "#define out varying\n"  \
+
+#define GLAMOR_COMPAT_DEFINES_FS  \
+    "#if __VERSION__ < 130\n" \
+    "#define in varying\n"  \
+    "#define frag_color gl_FragColor\n" \
+    "#define texture texture2D\n" \
+    "#else\n" \
+    "out vec4 frag_color;\n" \
+    "#endif\n"
+
 #include "glyphstr.h"
 
 #include "glamor_debug.h"
@@ -175,6 +193,13 @@ struct glamor_format {
      * just before upload)
      */
     Bool rendering_supported;
+    /**
+     * Whether image with this depth is framebuffer-complete in GL.
+     * This flag is set on GL ES when rendering is supported without
+     * conversion, but reading from framebuffer can bring some caveats
+     * like different format combination or incomplete framebuffer.
+     */
+    Bool texture_only;
 };
 
 struct glamor_saved_procs {
@@ -216,10 +241,12 @@ typedef struct glamor_screen_private {
     Bool has_dual_blend;
     Bool has_clear_texture;
     Bool has_texture_swizzle;
+    Bool has_rg;
     Bool is_core_profile;
     Bool can_copyplane;
     Bool use_gpu_shader4;
     int max_fbo_size;
+    Bool enable_gradient_shader;
 
     /**
      * Stores information about supported formats. Note, that this list contains all
@@ -309,6 +336,7 @@ typedef struct glamor_screen_private {
     int flags;
     ScreenPtr screen;
     int dri3_enabled;
+    char *glvnd_vendor;
 
     Bool suppress_gl_out_of_memory_logging;
     Bool logged_any_fbo_allocation_failure;
@@ -601,7 +629,7 @@ Bool glamor_get_drawable_location(const DrawablePtr drawable);
 void glamor_get_drawable_deltas(DrawablePtr drawable, PixmapPtr pixmap,
                                 int *x, int *y);
 GLint glamor_compile_glsl_prog(GLenum type, const char *source);
-void glamor_link_glsl_prog(ScreenPtr screen, GLint prog,
+Bool glamor_link_glsl_prog(ScreenPtr screen, GLint prog,
                            const char *format, ...) _X_ATTRIBUTE_PRINTF(3,4);
 void glamor_get_color_4f_from_pixel(PixmapPtr pixmap,
                                     unsigned long fg_pixel, GLfloat *color);
@@ -657,7 +685,7 @@ void glamor_trapezoids(CARD8 op,
                        int ntrap, xTrapezoid *traps);
 
 /* glamor_gradient.c */
-void glamor_init_gradient_shader(ScreenPtr screen);
+Bool glamor_init_gradient_shader(ScreenPtr screen);
 PicturePtr glamor_generate_linear_gradient_picture(ScreenPtr screen,
                                                    PicturePtr src_picture,
                                                    int x_source, int y_source,
@@ -892,6 +920,9 @@ typedef struct {
     RegionRec clip;
     PixmapPtr src_pix[3];       /* y, u, v for planar */
     int src_pix_w, src_pix_h;
+    /* Port optimization */
+    int prev_fmt;
+    glamor_program xv_prog;
 } glamor_port_private;
 
 extern XvAttributeRec glamor_xv_attributes[];
@@ -930,7 +961,5 @@ void glamor_xv_render(glamor_port_private *port_priv, int id);
 #endif
 
 #include "glamor_font.h"
-
-#define GLAMOR_MIN_ALU_INSTRUCTIONS 128 /* Minimum required number of native ALU instructions */
 
 #endif                          /* GLAMOR_PRIV_H */

@@ -319,6 +319,10 @@ ProcXTestFakeInput(ClientPtr client)
             return BadAccess;
 
         dev = GetXTestDevice(dev);
+
+        /* This can only happen if we passed a slave to GetXTestDevice() */
+        if (!dev)
+            return BadAccess;
     }
 
 

@@ -781,6 +781,7 @@ DeviceFocusEvent(DeviceIntPtr dev, int type, int mode, int detail,
     len = sizeof(xXIFocusInEvent) + btlen * 4;
 
     xi2event = calloc(1, len);
+    BUG_RETURN(xi2event == NULL);
     xi2event->type = GenericEvent;
     xi2event->extension = IReqCode;
     xi2event->evtype = type;

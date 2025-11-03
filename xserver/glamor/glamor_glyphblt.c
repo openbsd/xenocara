@@ -32,8 +32,9 @@
 
 static const glamor_facet glamor_facet_poly_glyph_blt = {
     .name = "poly_glyph_blt",
-    .vs_vars = "attribute vec2 primitive;\n",
+    .vs_vars = "in vec2 primitive;\n",
     .vs_exec = ("       vec2 pos = vec2(0,0);\n"
+                GLAMOR_DEFAULT_POINT_SIZE
                 GLAMOR_POS(gl_Position, primitive)),
 };
 

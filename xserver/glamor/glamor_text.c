@@ -221,9 +221,9 @@ glamor_text(DrawablePtr drawable, GCPtr gc,
 }
 
 static const char vs_vars_text[] =
-    "attribute vec4 primitive;\n"
-    "attribute vec2 source;\n"
-    "varying vec2 glyph_pos;\n";
+    "in vec4 primitive;\n"
+    "in vec2 source;\n"
+    "out vec2 glyph_pos;\n";
 
 static const char vs_exec_text[] =
     "       vec2 pos = primitive.zw * vec2(gl_VertexID&1, (gl_VertexID&2)>>1);\n"
@@ -231,7 +231,7 @@ static const char vs_exec_text[] =
     "       glyph_pos = source + pos;\n";
 
 static const char fs_vars_text[] =
-    "varying vec2 glyph_pos;\n";
+    "in vec2 glyph_pos;\n";
 
 static const char fs_exec_text[] =
     "       ivec2 itile_texture = ivec2(glyph_pos);\n"
@@ -257,9 +257,9 @@ static const char fs_exec_te[] =
     "       uint texel = texelFetch(font, itile_texture, 0).x;\n"
     "       uint bit = (texel >> x) & uint(1);\n"
     "       if (bit == uint(0))\n"
-    "               gl_FragColor = bg;\n"
+    "               frag_color = bg;\n"
     "       else\n"
-    "               gl_FragColor = fg;\n";
+    "               frag_color = fg;\n";
 
 static const glamor_facet glamor_facet_poly_text = {
     .name = "poly_text",
@@ -361,7 +361,7 @@ use_image_solid(PixmapPtr pixmap, GCPtr gc, glamor_program *prog, void *arg)
 
 static const glamor_facet glamor_facet_image_fill = {
     .name = "solid",
-    .fs_exec = "       gl_FragColor = fg;\n",
+    .fs_exec = "       frag_color = fg;\n",
     .locations = glamor_program_location_fg,
     .use = use_image_solid,
 };

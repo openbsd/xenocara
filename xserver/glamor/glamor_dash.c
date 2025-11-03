@@ -27,8 +27,8 @@
 #include "glamor_prepare.h"
 
 static const char dash_vs_vars[] =
-    "attribute vec3 primitive;\n"
-    "varying float dash_offset;\n";
+    "in vec3 primitive;\n"
+    "out float dash_offset;\n";
 
 static const char dash_vs_exec[] =
     "       dash_offset = primitive.z / dash_length;\n"
@@ -36,20 +36,20 @@ static const char dash_vs_exec[] =
     GLAMOR_POS(gl_Position, primitive.xy);
 
 static const char dash_fs_vars[] =
-    "varying float dash_offset;\n";
+    "in float dash_offset;\n";
 
 static const char on_off_fs_exec[] =
-    "       float pattern = texture2D(dash, vec2(dash_offset, 0.5)).w;\n"
+    "       float pattern = texture(dash, vec2(dash_offset, 0.5)).w;\n"
     "       if (pattern == 0.0)\n"
     "               discard;\n";
 
 /* XXX deal with stippled double dashed lines once we have stippling support */
 static const char double_fs_exec[] =
-    "       float pattern = texture2D(dash, vec2(dash_offset, 0.5)).w;\n"
+    "       float pattern = texture(dash, vec2(dash_offset, 0.5)).w;\n"
     "       if (pattern == 0.0)\n"
-    "               gl_FragColor = bg;\n"
+    "               frag_color = bg;\n"
     "       else\n"
-    "               gl_FragColor = fg;\n";
+    "               frag_color = fg;\n";
 
 
 static const glamor_facet glamor_facet_on_off_dash_lines = {

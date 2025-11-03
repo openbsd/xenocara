@@ -760,6 +760,8 @@ TouchAddRegularListener(DeviceIntPtr dev, TouchPointInfoPtr ti,
     inputMasks = wOtherInputMasks(win);
 
     if (mask & EVENT_XI2_MASK) {
+        BUG_RETURN_VAL(!inputMasks, FALSE);
+
         nt_list_for_each_entry(iclients, inputMasks->inputClients, next) {
             if (!xi2mask_isset(iclients->xi2mask, dev, evtype))
                 continue;
@@ -776,6 +778,8 @@ TouchAddRegularListener(DeviceIntPtr dev, TouchPointInfoPtr ti,
     if (mask & EVENT_XI1_MASK) {
         int xitype = GetXIType(TouchGetPointerEventType(ev));
         Mask xi_filter = event_get_filter_from_type(dev, xitype);
+
+        BUG_RETURN_VAL(!inputMasks, FALSE);
 
         nt_list_for_each_entry(iclients, inputMasks->inputClients, next) {
             if (!(iclients->mask[dev->id] & xi_filter))

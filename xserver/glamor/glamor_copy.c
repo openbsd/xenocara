@@ -49,10 +49,10 @@ use_copyarea(PixmapPtr dst, GCPtr gc, glamor_program *prog, void *arg)
 
 static const glamor_facet glamor_facet_copyarea = {
     "copy_area",
-    .vs_vars = "attribute vec2 primitive;\n",
+    .vs_vars = "in vec2 primitive;\n",
     .vs_exec = (GLAMOR_POS(gl_Position, primitive.xy)
                 "       fill_pos = (fill_offset + primitive.xy) * fill_size_inv;\n"),
-    .fs_exec = "       gl_FragColor = texture2D(sampler, fill_pos);\n",
+    .fs_exec = "       frag_color = texture(sampler, fill_pos);\n",
     .locations = glamor_program_location_fillsamp | glamor_program_location_fillpos,
     .use = use_copyarea,
 };
@@ -141,14 +141,14 @@ use_copyplane(PixmapPtr dst, GCPtr gc, glamor_program *prog, void *arg)
 static const glamor_facet glamor_facet_copyplane = {
     "copy_plane",
     .version = 130,
-    .vs_vars = "attribute vec2 primitive;\n",
+    .vs_vars = "in vec2 primitive;\n",
     .vs_exec = (GLAMOR_POS(gl_Position, (primitive.xy))
                 "       fill_pos = (fill_offset + primitive.xy) * fill_size_inv;\n"),
-    .fs_exec = ("       uvec4 bits = uvec4(round(texture2D(sampler, fill_pos) * bitmul));\n"
+    .fs_exec = ("       uvec4 bits = uvec4(round(texture(sampler, fill_pos) * bitmul));\n"
                 "       if ((bits & bitplane) != uvec4(0,0,0,0))\n"
-                "               gl_FragColor = fg;\n"
+                "               frag_color = fg;\n"
                 "       else\n"
-                "               gl_FragColor = bg;\n"),
+                "               frag_color = bg;\n"),
     .locations = glamor_program_location_fillsamp|glamor_program_location_fillpos|glamor_program_location_fg|glamor_program_location_bg|glamor_program_location_bitplane,
     .use = use_copyplane,
 };

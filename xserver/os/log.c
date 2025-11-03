@@ -834,7 +834,7 @@ LogVHdrMessageVerb(MessageType type, int verb, const char *msg_format,
     if (size - len == 1)
         buf[len - 1] = '\n';
 
-    newline = (buf[len - 1] == '\n');
+    newline = (len > 0 && buf[len - 1] == '\n');
     LogSWrite(verb, buf, len, newline);
 }
 

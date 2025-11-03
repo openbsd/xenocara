@@ -210,7 +210,7 @@ ShmInitScreenPriv(ScreenPtr pScreen)
     ShmScrPrivateRec *screen_priv = ShmGetScreenPriv(pScreen);
 
     if (!screen_priv) {
-        screen_priv = calloc(1, sizeof(ShmScrPrivateRec));
+        screen_priv = XNFcallocarray(1, sizeof(ShmScrPrivateRec));
         screen_priv->CloseScreen = pScreen->CloseScreen;
         dixSetPrivate(&pScreen->devPrivates, shmScrPrivateKey, screen_priv);
         pScreen->CloseScreen = ShmCloseScreen;

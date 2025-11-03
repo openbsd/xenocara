@@ -616,8 +616,8 @@ ProcListProperties(ClientPtr client)
     if (numProps) {
         client->pSwapReplyFunc = (ReplySwapPtr) Swap32Write;
         WriteSwappedDataToClient(client, numProps * sizeof(Atom), pAtoms);
-        free(pAtoms);
     }
+    free(pAtoms);
     return Success;
 }
 

@@ -28,8 +28,8 @@ static const glamor_facet glamor_facet_polyfillrect_130 = {
     .name = "poly_fill_rect",
     .version = 130,
     .source_name = "size",
-    .vs_vars = "attribute vec2 primitive;\n"
-               "attribute vec2 size;\n",
+    .vs_vars = "in vec2 primitive;\n"
+               "in vec2 size;\n",
     .vs_exec = ("       vec2 pos = size * vec2(gl_VertexID&1, (gl_VertexID&2)>>1);\n"
                 GLAMOR_POS(gl_Position, (primitive.xy + pos))),
 };

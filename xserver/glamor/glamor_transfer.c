@@ -36,8 +36,8 @@ glamor_upload_boxes(PixmapPtr pixmap, BoxPtr in_boxes, int in_nbox,
     glamor_screen_private       *glamor_priv = glamor_get_screen_private(screen);
     glamor_pixmap_private       *priv = glamor_get_pixmap_private(pixmap);
     int                         box_index;
-    int                         bytes_per_pixel = pixmap->drawable.bitsPerPixel >> 3;
     const struct glamor_format *f = glamor_format_for_pixmap(pixmap);
+    int                         bytes_per_pixel = PICT_FORMAT_BPP(f->render_format) >> 3;
 
     glamor_make_current(glamor_priv);
 
@@ -136,8 +136,8 @@ glamor_download_boxes(PixmapPtr pixmap, BoxPtr in_boxes, int in_nbox,
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
     glamor_pixmap_private *priv = glamor_get_pixmap_private(pixmap);
     int box_index;
-    int bytes_per_pixel = pixmap->drawable.bitsPerPixel >> 3;
     const struct glamor_format *f = glamor_format_for_pixmap(pixmap);
+    int bytes_per_pixel = PICT_FORMAT_BPP(f->render_format) >> 3;
 
     glamor_make_current(glamor_priv);
 

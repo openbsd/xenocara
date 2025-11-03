@@ -31,8 +31,9 @@
 
 static const glamor_facet glamor_facet_point = {
     .name = "poly_point",
-    .vs_vars = "attribute vec2 primitive;\n",
-    .vs_exec = GLAMOR_POS(gl_Position, primitive),
+    .vs_vars = "in vec2 primitive;\n",
+    .vs_exec = (GLAMOR_DEFAULT_POINT_SIZE
+                GLAMOR_POS(gl_Position, primitive)),
 };
 
 static Bool

@@ -29,7 +29,7 @@ glamor_program  fill_spans_progs[4];
 static const glamor_facet glamor_facet_fillspans_130 = {
     .name = "fill_spans",
     .version = 130,
-    .vs_vars =  "attribute vec3 primitive;\n",
+    .vs_vars =  "in vec3 primitive;\n",
     .vs_exec = ("       vec2 pos = vec2(primitive.z,1) * vec2(gl_VertexID&1, (gl_VertexID&2)>>1);\n"
                 GLAMOR_POS(gl_Position, (primitive.xy + pos))),
 };

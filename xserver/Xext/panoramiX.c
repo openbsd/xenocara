@@ -747,8 +747,8 @@ PanoramiXMaybeAddDepth(DepthPtr pDepth)
 
     j = PanoramiXNumDepths;
     PanoramiXNumDepths++;
-    PanoramiXDepths = reallocarray(PanoramiXDepths,
-                                   PanoramiXNumDepths, sizeof(DepthRec));
+    PanoramiXDepths = XNFreallocarray(PanoramiXDepths,
+                                      PanoramiXNumDepths, sizeof(DepthRec));
     PanoramiXDepths[j].depth = pDepth->depth;
     PanoramiXDepths[j].numVids = 0;
     PanoramiXDepths[j].vids = NULL;
@@ -820,11 +820,11 @@ PanoramiXConsolidate(void)
     for (i = 0; i < pScreen->numVisuals; i++)
         PanoramiXMaybeAddVisual(pVisual++);
 
-    root = malloc(sizeof(PanoramiXRes));
+    root = XNFcallocarray(1, sizeof(PanoramiXRes));
     root->type = XRT_WINDOW;
-    defmap = malloc(sizeof(PanoramiXRes));
+    defmap = XNFcallocarray(1, sizeof(PanoramiXRes));
     defmap->type = XRT_COLORMAP;
-    saver = malloc(sizeof(PanoramiXRes));
+    saver = XNFcallocarray(1, sizeof(PanoramiXRes));
     saver->type = XRT_WINDOW;
 
     FOR_NSCREENS(i) {
