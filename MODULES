@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.546 2025/11/01 15:42:44 matthieu Exp $
+# $OpenBSD: MODULES,v 1.547 2025/11/03 10:44:02 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -36,14 +36,14 @@ app/xdpyinfo		1.4.0
 app/xdriinfo		1.0.8
 app/xedit		1.2.4
 app/xev			1.2.6
-app/xeyes		1.3.1		needs-update
+app/xeyes		1.3.1
 app/xf86dga		1.0.3
 app/xfd			1.1.4
 app/xfontsel		1.1.1
-app/xgamma		1.0.8		needs-update
-app/xgc			1.0.7		needs-update
-app/xhost		1.0.10		needs-update
-app/xinit		1.4.4		needs-update
+app/xgamma		1.0.8
+app/xgc			1.0.7
+app/xhost		1.0.10
+app/xinit		1.4.4
 app/xinput		1.6.4
 app/xkbcomp		1.4.7		reverted
 app/xkbevd		1.1.6
@@ -198,4 +198,4 @@ util/gccmakedep			1.0.4
 util/macros			1.20.2
 util/makedepend			1.0.9
 
-xserver				21.1.20		needs-update
+xserver				21.1.20
