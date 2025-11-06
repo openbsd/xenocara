@@ -192,7 +192,7 @@ sparcPromClose(void)
 {
 }
 
-char *
+const char *
 sparcDriverName(void)
 {
 	switch (sbusInfo.devId) {
