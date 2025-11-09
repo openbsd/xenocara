@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2025/09/20 21:53:54 aoyama Exp $
+# $OpenBSD: Makefile,v 1.3 2025/11/09 15:54:47 matthieu Exp $
 
 .include <bsd.own.mk>
 
@@ -48,14 +48,8 @@ CPPFLAGS += \
 	-DHAVE_CONFIG_H \
 	-I${_SRCDIR}
 
-.if ${COMPILER_VERSION} != "gcc3"
 CFLAGS += -std=gnu99 -fno-strict-aliasing -fvisibility=hidden -ftrapping-math \
 	-Wall -Winvalid-pch -Winline -Wundef -Wno-unused-local-typedefs
-.else
-# some options cause errors on gcc3
-CFLAGS += -std=gnu99 -fno-strict-aliasing -ftrapping-math \
-	-Wall -Winline -Wundef
-.endif
 
 .if ${MACHINE_ARCH} == "amd64" || ${MACHINE_ARCH} == "i386"
 SRCS += \
