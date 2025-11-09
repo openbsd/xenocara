@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.62 2025/10/01 05:03:58 miod Exp $
+#	$OpenBSD: Makefile,v 1.63 2025/11/09 15:54:17 matthieu Exp $
 
 .include <bsd.own.mk>
 
@@ -29,10 +29,8 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/builds/unix -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY=1 -DFT_CONFIG_CONFIG_H='<ftconfig.h>'
 CPPFLAGS+= -I${.CURDIR}/../libpng -I${.OBJDIR}/../libpng
 
-.if ${COMPILER_VERSION} != "gcc3"
 CFLAGS+= -fvisibility=hidden -std=gnu99 -Wall  -Wdeclaration-after-statement  -Werror=implicit-function-declaration  -Werror=undef  -Wextra  -Winit-self  -Winline  -Winvalid-pch  -Wmissing-declarations  -Wmissing-format-attribute  -Wmissing-prototypes  -Wnested-externs  -Wno-attributes  -Wno-long-long  -Wno-missing-field-initializers  -Wno-unused-parameter  -Wold-style-definition  -Wpacked  -Wpointer-arith  -Wshadow  -Wsign-compare  -Wstrict-aliasing=2  -Wstrict-prototypes  -Wwrite-strings
 VERSION_SCRIPT= ${.CURDIR}/Symbols.map
-.endif
 
 PICFLAG= -fPIC
 
