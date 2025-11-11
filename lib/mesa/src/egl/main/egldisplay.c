@@ -141,6 +141,9 @@ _eglNativePlatformDetectNativeDisplay(void *nativeDisplay)
        * wl_object's first element points to the interfacetype. */
       if (first_pointer == &wl_display_interface)
          return _EGL_PLATFORM_WAYLAND;
+#else
+      if (getenv("WAYLAND_DISPLAY") || getenv("WAYLAND_SOCKET"))
+         return _EGL_PLATFORM_WAYLAND;
 #endif
 
 #ifdef HAVE_DRM_PLATFORM
