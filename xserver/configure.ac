@@ -1312,6 +1312,7 @@ if test "x$DRI2" = xyes; then
 	case $host_os in
 	openbsd*)
         	XORG_SYS_LIBS="-lpthread"
+		GLX_SYS_LIBS="${GLX_SYS_LIBS} -lpthread"
         	;;
 	esac
 fi
