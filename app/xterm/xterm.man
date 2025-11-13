@@ -9532,7 +9532,9 @@ Prevents cursor from blinking.
 .B deleteIsDEL: true
 The Delete key generates \fB^?\fP. 
 .TP 8
-.B locale: UTF-8
+.B locale: true
+.TP 8
+.B utf8: true
 Always handle UTF-8 characters correctly, even when running with a
 POSIX locale.  This is safe on OpenBSD because no other multibyte locale
 is supported, and because ASCII is a subset of UTF-8.  It is not only
