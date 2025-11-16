@@ -1,7 +1,7 @@
-#	$OpenBSD: Makefile,v 1.1 2013/03/09 14:34:46 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2025/11/16 16:43:35 matthieu Exp $
 
 FONTCONFIG = ${.CURDIR}/../../../dist/fontconfig
-INCS = fcfreetype.h fcprivate.h  fontconfig.h
+INCS = fcfreetype.h fcprivate.h
 
 obj: _xenocara_obj
 
@@ -16,5 +16,6 @@ install:
                 echo "\tinstalling $$i"; \
                 eval "$$j"; \
         done
+	${INSTALL_DATA} fontconfig.h ${DESTDIR}${INCSDIR}/fontconfig
 
 .include <bsd.xorg.mk>

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fontconfig 2.14.0\n"
 "Report-Msgid-Bugs-To: https://gitlab.freedesktop.org/fontconfig/fontconfig/"
 "issues/new\n"
-"POT-Creation-Date: 2023-12-22 22:56+0900\n"
+"POT-Creation-Date: 2022-10-01 10:16+0200\n"
 "PO-Revision-Date: 2022-10-01 10:53+0200\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(none)>\n"
@@ -27,8 +27,8 @@ msgid ""
 "[dirs]\n"
 msgstr ""
 "გამოყენება: %s [-EfrsvVh] [-y SYSROOT] [--error-on-no-fonts] [--force|--"
-"really-force] [--sysroot=SYSROOT] [--system-only] [--verbose] [--version] [--"
-"help] [საქაღალდეები]\n"
+"really-force] [--sysroot=SYSROOT] [--system-only] [--verbose] [--version] "
+"[--help] [საქაღალდეები]\n"
 
 #: fc-cache/fc-cache.c:110
 #, c-format
@@ -54,8 +54,8 @@ msgstr "  -E, --error-on-no-fonts  შეცდომა, თუ საქაღ
 msgid ""
 "  -f, --force              scan directories with apparently valid caches\n"
 msgstr ""
-"  -f, --force              საქაღალდეების სკანირება იმის მიუხედავად, რომ მათი "
-"ქეში სწორია\n"
+"  -f, --force              საქაღალდეების სკანირება იმის მიუხედავად, რომ "
+"მათი ქეში სწორია\n"
 
 #: fc-cache/fc-cache.c:119
 #, c-format
@@ -325,8 +325,8 @@ msgid ""
 "usage: %s [-vbqVh] [-f FORMAT] [--verbose] [--brief] [--format=FORMAT] [--"
 "quiet] [--version] [--help] [pattern] {element ...} \n"
 msgstr ""
-"გამოყენება: %s [-vbqVh] [-f ფორმატი] [--verbose] [--brief] [--format=ფორატი] "
-"[--quiet] [--version] [--help] [pattern] {element ...} \n"
+"გამოყენება: %s [-vbqVh] [-f ფორმატი] [--verbose] [--brief] [--"
+"format=ფორატი] [--quiet] [--version] [--help] [pattern] {element ...} \n"
 
 #: fc-list/fc-list.c:86
 #, c-format
@@ -398,8 +398,8 @@ msgid ""
 "usage: %s [-savbVh] [-f FORMAT] [--sort] [--all] [--verbose] [--brief] [--"
 "format=FORMAT] [--version] [--help] [pattern] {element...}\n"
 msgstr ""
-"გამოყენება: %s [-savbVh] [-f ფორმატი] [--sort] [--all] [--verbose] [--brief] "
-"[--format=ფორმატი] [--version] [--help] [შაბლონი] {ელემენტი...}\n"
+"გამოყენება: %s [-savbVh] [-f ფორმატი] [--sort] [--all] [--verbose] [--"
+"brief] [--format=ფორმატი] [--version] [--help] [შაბლონი] {ელემენტი...}\n"
 
 #: fc-match/fc-match.c:88
 #, c-format
@@ -627,7 +627,8 @@ msgstr ""
 #: fc-validate/fc-validate.c:102
 #, c-format
 msgid "  -l LANG    (lang)         set LANG instead of current locale\n"
-msgstr "  -l LANG    (lang)         მიმდინარე ენის მაგიერ LANG-ის გამოყენება\n"
+msgstr ""
+"  -l LANG    (lang)         მიმდინარე ენის მაგიერ LANG-ის გამოყენება\n"
 
 #: fc-validate/fc-validate.c:103
 #, c-format
@@ -654,6 +655,6 @@ msgstr "%s:%d აკლია %d გლიფი, რომ დააკმა�
 msgid "%s:%d Satisfy the coverage for %s language\n"
 msgstr "%s:%d აკმაყოფილებს დაფარვას ენისთვის: %s\n"
 
-#: src/fccfg.c:3244
+#: src/fccfg.c:3243
 msgid "No description"
 msgstr "აღწერის გარეშე"

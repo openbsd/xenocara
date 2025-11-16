@@ -1,8 +1,17 @@
-#	$OpenBSD: Makefile,v 1.7 2025/01/04 15:22:55 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.8 2025/11/16 16:43:35 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 
-MAN = FcAtomicCreate.3 \
+MAN =	fc-cache.1 \
+	fc-cat.1 \
+	fc-conflist.1 \
+	fc-list.1 \
+	fc-match.1 \
+	fc-pattern.1 \
+	fc-query.1 \
+	fc-scan.1 \
+	fc-validate.1 \
+	FcAtomicCreate.3 \
 	FcAtomicDeleteNew.3 \
 	FcAtomicDestroy.3 \
 	FcAtomicLock.3 \
@@ -39,6 +48,8 @@ MAN = FcAtomicCreate.3 \
 	FcCharSetSubtract.3 \
 	FcCharSetSubtractCount.3 \
 	FcCharSetUnion.3 \
+	FcConfigAcceptFilter.3 \
+	FcConfigAcceptFont.3 \
 	FcConfigAppFontAddDir.3 \
 	FcConfigAppFontAddFile.3 \
 	FcConfigAppFontClear.3 \
@@ -53,6 +64,7 @@ MAN = FcAtomicCreate.3 \
 	FcConfigGetConfigDirs.3 \
 	FcConfigGetConfigFiles.3 \
 	FcConfigGetCurrent.3 \
+	FcConfigGetDefaultLangs.3 \
 	FcConfigGetFilename.3 \
 	FcConfigGetFontDirs.3 \
 	FcConfigGetFonts.3 \
@@ -60,8 +72,11 @@ MAN = FcAtomicCreate.3 \
 	FcConfigGetSysRoot.3 \
 	FcConfigHome.3 \
 	FcConfigParseAndLoad.3 \
+	FcConfigPreferAppFont.3 \
 	FcConfigReference.3 \
 	FcConfigSetCurrent.3 \
+	FcConfigSetDefaultSubstitute.3 \
+	FcConfigSetFontSetFilter.3  \
 	FcConfigSetRescanInterval.3 \
 	FcConfigSetSysRoot.3 \
 	FcConfigSubstitute.3 \
@@ -206,218 +221,19 @@ MAN = FcAtomicCreate.3 \
 
 PDF_FILES = fontconfig-devel.pdf fontconfig-user.pdf
 TXT_FILES = fontconfig-devel.txt fontconfig-user.txt
-HTML_DEVEL_FILES = \
-	fcatomiccreate.html \
-	fcatomicdeletenew.html \
-	fcatomicdestroy.html \
-	fcatomiclock.html \
-	fcatomicnewfile.html \
-	fcatomicorigfile.html \
-	fcatomicreplaceorig.html \
-	fcatomicunlock.html \
-	fcblanksadd.html \
-	fcblankscreate.html \
-	fcblanksdestroy.html \
-	fcblanksismember.html \
-	fccachecopyset.html \
-	fccachecreatetagfile.html \
-	fccachedir.html \
-	fccachenumfont.html \
-	fccachenumsubdir.html \
-	fccachesubdir.html \
-	fccharsetaddchar.html \
-	fccharsetcopy.html \
-	fccharsetcount.html \
-	fccharsetcoverage.html \
-	fccharsetcreate.html \
-	fccharsetdelchar.html \
-	fccharsetdestroy.html \
-	fccharsetequal.html \
-	fccharsetfirstpage.html \
-	fccharsethaschar.html \
-	fccharsetintersect.html \
-	fccharsetintersectcount.html \
-	fccharsetissubset.html \
-	fccharsetmerge.html \
-	fccharsetnew.html \
-	fccharsetnextpage.html \
-	fccharsetsubtract.html \
-	fccharsetsubtractcount.html \
-	fccharsetunion.html \
-	fcconfigappfontadddir.html \
-	fcconfigappfontaddfile.html \
-	fcconfigappfontclear.html \
-	fcconfigbuildfonts.html \
-	fcconfigcreate.html \
-	fcconfigdestroy.html \
-	fcconfigenablehome.html \
-	fcconfigfilename.html \
-	fcconfiggetblanks.html \
-	fcconfiggetcache.html \
-	fcconfiggetcachedirs.html \
-	fcconfiggetconfigdirs.html \
-	fcconfiggetconfigfiles.html \
-	fcconfiggetcurrent.html \
-	fcconfiggetfilename.html \
-	fcconfiggetfontdirs.html \
-	fcconfiggetfonts.html \
-	fcconfiggetrescaninterval.html \
-	fcconfiggetsysroot.html \
-	fcconfighome.html \
-	fcconfigparseandload.html \
-	fcconfigreference.html \
-	fcconfigsetcurrent.html \
-	fcconfigsetrescaninterval.html \
-	fcconfigsetsysroot.html \
-	fcconfigsubstitute.html \
-	fcconfigsubstitutewithpat.html \
-	fcconfiguptodate.html \
-	fcdefaultsubstitute.html \
-	fcdircacheclean.html \
-	fcdircacheload.html \
-	fcdircacheloadfile.html \
-	fcdircacheread.html \
-	fcdircacherescan.html \
-	fcdircacheunlink.html \
-	fcdircacheunload.html \
-	fcdircachevalid.html \
-	fcdirsave.html \
-	fcdirscan.html \
-	fcfileisdir.html \
-	fcfilescan.html \
-	fcfini.html \
-	fcfontlist.html \
-	fcfontmatch.html \
-	fcfontrenderprepare.html \
-	fcfontsetadd.html \
-	fcfontsetcreate.html \
-	fcfontsetdestroy.html \
-	fcfontsetlist.html \
-	fcfontsetmatch.html \
-	fcfontsetprint.html \
-	fcfontsetsort.html \
-	fcfontsetsortdestroy.html \
-	fcfontsort.html \
-	fcfreetypecharindex.html \
-	fcfreetypecharset.html \
-	fcfreetypecharsetandspacing.html \
-	fcfreetypequery.html \
-	fcfreetypequeryface.html \
-	fcgetdefaultlangs.html \
-	fcgetlangs.html \
-	fcgetversion.html \
-	fcinit.html \
-	fcinitbringuptodate.html \
-	fcinitloadconfig.html \
-	fcinitloadconfigandfonts.html \
-	fcinitreinitialize.html \
-	fcislower.html \
-	fcisupper.html \
-	fclanggetcharset.html \
-	fclangnormalize.html \
-	fclangsetadd.html \
-	fclangsetcompare.html \
-	fclangsetcontains.html \
-	fclangsetcopy.html \
-	fclangsetcreate.html \
-	fclangsetdel.html \
-	fclangsetdestroy.html \
-	fclangsetequal.html \
-	fclangsetgetlangs.html \
-	fclangsethash.html \
-	fclangsethaslang.html \
-	fclangsetsubtract.html \
-	fclangsetunion.html \
-	fcmatrixcopy.html \
-	fcmatrixequal.html \
-	fcmatrixinit.html \
-	fcmatrixmultiply.html \
-	fcmatrixrotate.html \
-	fcmatrixscale.html \
-	fcmatrixshear.html \
-	fcnameconstant.html \
-	fcnamegetconstant.html \
-	fcnamegetconstantfor.html \
-	fcnamegetobjecttype.html \
-	fcnameparse.html \
-	fcnameregisterconstants.html \
-	fcnameregisterobjecttypes.html \
-	fcnameunparse.html \
-	fcnameunregisterconstants.html \
-	fcnameunregisterobjecttypes.html \
-	fcobjectsetadd.html \
-	fcobjectsetbuild.html \
-	fcobjectsetcreate.html \
-	fcobjectsetdestroy.html \
-	fcpatternadd-type.html \
-	fcpatternadd.html \
-	fcpatternaddweak.html \
-	fcpatternbuild.html \
-	fcpatterncreate.html \
-	fcpatterndel.html \
-	fcpatterndestroy.html \
-	fcpatternduplicate.html \
-	fcpatternequal.html \
-	fcpatternequalsubset.html \
-	fcpatternfilter.html \
-	fcpatternformat.html \
-	fcpatternget-type.html \
-	fcpatternget.html \
-	fcpatternhash.html \
-	fcpatternprint.html \
-	fcpatternreference.html \
-	fcpatternremove.html \
-	fcstrbasename.html \
-	fcstrbuildfilename.html \
-	fcstrcmp.html \
-	fcstrcmpignorecase.html \
-	fcstrcopy.html \
-	fcstrcopyfilename.html \
-	fcstrdirname.html \
-	fcstrdowncase.html \
-	fcstrfree.html \
-	fcstrlistcreate.html \
-	fcstrlistdone.html \
-	fcstrlistfirst.html \
-	fcstrlistnext.html \
-	fcstrplus.html \
-	fcstrsetadd.html \
-	fcstrsetaddfilename.html \
-	fcstrsetcreate.html \
-	fcstrsetdel.html \
-	fcstrsetdestroy.html \
-	fcstrsetequal.html \
-	fcstrsetmember.html \
-	fcstrstr.html \
-	fcstrstrignorecase.html \
-	fctolower.html \
-	fcucs4toutf8.html \
-	fcutf16len.html \
-	fcutf16toucs4.html \
-	fcutf8len.html \
-	fcutf8toucs4.html \
-	fcvaluedestroy.html \
-	fcvalueequal.html \
-	fcvalueprint.html \
-	fcvaluesave.html \
-	x19.html \
-	x31.html
+HTML_FILES = fontconfig-devel.html fontconfig-user.html
 
-HTML_USER_FILES = fontconfig-user.html
 
 afterinstall:
-	@for f in ${PDF_FILES} ${TXT_FILES} ${HTML_USER_FILES}; do \
+	@for f in ${PDF_FILES} ${TXT_FILES} ${HTML_FILES}; do \
 		echo "installing $$f" ; \
-		${INSTALL_DATA} ${FONTCONFIG}/doc/$$f \
+		${INSTALL_DATA} ${.CURDIR}/$$f \
 		  ${DESTDIR}${X11BASE}/share/doc/fontconfig ; \
-	done
-	@for f in ${HTML_DEVEL_FILES}; do \
-		echo "installing $$f" ; \
-		${INSTALL_DATA} ${FONTCONFIG}/doc/fontconfig-devel/$$f \
-		  ${DESTDIR}${X11BASE}/share/doc/fontconfig/fontconfig-devel ; \
 	done
 
 .PATH: ${FONTCONFIG}/doc
+
+YESMAN=
 
 .include <bsd.prog.mk>
 .include <bsd.xorg.mk>

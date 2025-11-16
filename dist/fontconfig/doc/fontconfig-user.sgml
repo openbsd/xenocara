@@ -1,4 +1,5 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!ENTITY cacheversion SYSTEM "cache-version.sgml">
 <!ENTITY version SYSTEM "version.sgml">
 <!ENTITY confdir SYSTEM "confdir.sgml">
 ]>
@@ -101,15 +102,15 @@ fullname        String  Font full names (often includes style)
 fullnamelang    String  Languages corresponding to each fullname
 slant           Int     Italic, oblique or roman
 weight          Int     Light, medium, demibold, bold or black
-size            Double  Point size
 width           Int     Condensed, normal or expanded
+size            Double  Point size
 aspect          Double  Stretches glyphs horizontally before hinting
 pixelsize       Double  Pixel size
 spacing         Int     Proportional, dual-width, monospace or charcell
 foundry         String  Font foundry name
 antialias       Bool    Whether glyphs can be antialiased
-hinting         Bool    Whether the rasterizer should use hinting
 hintstyle       Int     Automatic hinting style
+hinting         Bool    Whether the rasterizer should use hinting
 verticallayout  Bool    Use vertical layout
 autohint        Bool    Use autohinter instead of normal hinter
 globaladvance   Bool    Use font global advance data (deprecated)
@@ -118,14 +119,12 @@ index           Int     The index of the font within the file
 ftface          FT_Face Use the specified FreeType face object
 rasterizer      String  Which rasterizer is in use (deprecated)
 outline         Bool    Whether the glyphs are outlines
-scalable        Bool    Whether glyphs can be scaled
-color           Bool    Whether any glyphs have color
-scale           Double  Scale factor for point->pixel conversions
-                        (deprecated)
+scalable        Bool    Whether the glyphs are outlines or have color
 dpi             Double  Target dots per inch
 rgba            Int     unknown, rgb, bgr, vrgb, vbgr,
                         none - subpixel geometry
-lcdfilter       Int     Type of LCD filter
+scale           Double  Scale factor for point->pixel conversions
+                        (deprecated)
 minspace        Bool    Eliminate leading from line spacing
 charset         CharSet Unicode chars encoded by the font
 lang            String  List of RFC-3066-style languages this
@@ -136,13 +135,23 @@ fontformat      String  String name of the font format
 embolden        Bool    Rasterizer should synthetically embolden the font
 embeddedbitmap  Bool    Use the embedded bitmap instead of the outline
 decorative      Bool    Whether the style is a decorative variant
-fontfeatures    String  List of the feature tags in OpenType to be enabled
+lcdfilter       Int     Type of LCD filter
 namelang        String  Language name to be used for the default value of
                         familylang, stylelang, and fullnamelang
+fontfeatures    String  List of the feature tags in OpenType to be enabled
 prgname         String  String  Name of the running program
 postscriptname  String  Font family name in PostScript
+color           Bool    Whether any glyphs have color
+symbol          Bool    Whether font uses MS symbol-font encoding
+fontvariations  String  comma-separated string of axes in variable font
+variable        Bool    Wheter font is Variable Font
 fonthashint     Bool    Whether the font has hinting
 order           Int     Order number of the font
+desktop         String  Current desktop name
+namedinstance   Bool    Whether font is a named instance
+fontwarapper    String  The font wrapper format, current values are WOFF, WOFF2,
+                        SFNT for any other SFNT font, and CFF for standalone
+                        CFF fonts.
     </programlisting>
   </refsect2>
   <refsect2>
@@ -330,7 +339,7 @@ a directory in the users home directory.  If 'prefix' is set to "xdg", the value
 The default directory is ``$XDG_CACHE_HOME/fontconfig'' and it contains the cache files
 named ``<literal>&lt;hash value&gt;</literal>-<literal>&lt;architecture&gt;</literal>.cache-<literal>&lt;version&gt;</literal>'',
 where <literal>&lt;version&gt;</literal> is the fontconfig cache file
-version number (currently 8).
+version number (currently &cacheversion;).
   </para></refsect2>
   <refsect2><title><literal>&lt;include ignore_missing="no" prefix="default"&gt;</literal></title><para>
 This element contains the name of an additional configuration file or
@@ -379,18 +388,21 @@ Fontconfig will validate all of the configuration files and directories and
 automatically rebuild the internal datastructures when this interval passes.
   </para></refsect2>
   <refsect2><title><literal>&lt;selectfont&gt;</literal></title><para>
-This element is used to black/white list fonts from being listed or matched
-against.  It holds acceptfont and rejectfont elements.
+This element is used to deny/allow list fonts from being listed or matched
+against.  It holds acceptfont and rejectfont elements.  This list is applied
+only once when caches is loaded.  So if you want to filter out by some patterns,
+patterns is evaluated with something in cache only.
+In other words, target patterns except "scan" won't takes any effects.
   </para></refsect2>
   <refsect2><title><literal>&lt;acceptfont&gt;</literal></title><para>
-Fonts matched by an acceptfont element are "whitelisted"; such fonts are
+Fonts matched by an acceptfont element are "allowlisted"; such fonts are
 explicitly included in the set of fonts used to resolve list and match
-requests; including them in this list protects them from being "blacklisted"
+requests; including them in this list protects them from being "denylisted"
 by a rejectfont element.  Acceptfont elements include glob and pattern
 elements which are used to match fonts.
   </para></refsect2>
   <refsect2><title><literal>&lt;rejectfont&gt;</literal></title><para>
-Fonts matched by an rejectfont element are "blacklisted"; such fonts are
+Fonts matched by an rejectfont element are "denylisted"; such fonts are
 excluded from the set of fonts used to resolve list and match requests as if
 they didn't exist in the system.  Rejectfont elements include glob and
 pattern elements which are used to match fonts.
@@ -671,7 +683,7 @@ This is an example of a system-wide configuration file
       &lt;family&gt;Arial&lt;/family&gt;
     &lt;/prefer&gt;
     &lt;default&gt;
-      &lt;family&gt;sans&lt;/family&gt;
+      &lt;family&gt;sans-serif&lt;/family&gt;
     &lt;/default&gt;
   &lt;/alias&gt;
   &lt;alias&gt;
@@ -696,7 +708,7 @@ This is an example of a system-wide configuration file
     &lt;/prefer&gt;
   &lt;/alias&gt;
   &lt;alias&gt;
-    &lt;family&gt;sans&lt;/family&gt;
+    &lt;family&gt;sans-serif&lt;/family&gt;
     &lt;prefer&gt;
       &lt;family&gt;Arial&lt;/family&gt;
     &lt;/prefer&gt;

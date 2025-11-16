@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.4 2023/07/03 13:18:53 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.5 2025/11/16 16:43:35 matthieu Exp $
 
 X11BASE ?=	/usr/X11R6
 
@@ -10,7 +10,7 @@ CFLAGS +=	--std=c99 -Wall -Wpointer-arith -Wstrict-prototypes \
 		-Wmissing-prototypes -Wmissing-declarations \
 		-Wnested-externs -fno-strict-aliasing
 CFLAGS +=	-DHAVE_CONFIG_H
-CFLAGS +=	-I${FONTCONFIG} \
+CFLAGS +=	-I${.CURDIR}/.. -I${FONTCONFIG} \
 		-I${X11BASE}/include -I${X11BASE}/include/freetype2 \
 		-I${.CURDIR}/../src -I${FONTCONFIG}/src \
 		-I${.CURDIR}/../common \
@@ -24,3 +24,6 @@ CFLAGS +=	-DHAVE_INTEL_ATOMIC_PRIMITIVES=1
 .endif
 
 NOPROFILE =
+.ifndef YESMAN
+NOMAN=
+.endif

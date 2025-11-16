@@ -26,7 +26,6 @@ NULL =
 EXTRA_DIST =			\
 	$(BUILT_DOCS)		\
 	$(DOC_FUNCS_FNCS)	\
-	$(HTML_DIR)/*		\
 	$(SGML_FILES)		\
 	$(check_SCRIPTS)	\
 	confdir.sgml.in		\
@@ -67,6 +66,7 @@ SUFFIXES =	\
 	$(NULL)
 TESTS =				\
 	check-missing-doc	\
+	check-whitespace-in-args	\
 	$(NULL)
 TESTS_ENVIRONMENT = \
 	top_srcdir=${top_srcdir}; export top_srcdir; \
@@ -90,6 +90,7 @@ DOC_FUNCS_FNCS =		\
 	fcfontset.fncs		\
 	fcformat.fncs		\
 	fcfreetype.fncs		\
+	fcfontations.fncs	\
 	fcinit.fncs		\
 	fclangset.fncs		\
 	fcmatrix.fncs		\
@@ -121,6 +122,7 @@ BUILT_DOCS =		\
 	$(NULL)
 DOCS_DEPS =			\
 	$(DOC_FUNCS_SGML)	\
+	cache-version.sgml	\
 	confdir.sgml		\
 	version.sgml		\
 	$(NULL)
@@ -129,8 +131,8 @@ TXT_FILES = $(SGML_FILES:.sgml=.txt)
 PDF_FILES = $(SGML_FILES:.sgml=.pdf)
 HTML_FILES =			\
 	fontconfig-user.html	\
+	fontconfig-devel.html	\
 	$(NULL)
-HTML_DIR = fontconfig-devel
 #
 noinst_PROGRAMS =	\
 	$(NULL)
@@ -140,6 +142,9 @@ noinst_SCRIPTS =		\
 ##
 check_SCRIPTS =			\
 	check-missing-doc	\
+	check-missing-doc.py	\
+	check-whitespace-in-args	\
+	check-whitespace-in-args.py	\
 	$(NULL)
 #
 man3_MANS =		\
@@ -155,15 +160,10 @@ doc_DATA =		\
 	$(HTML_FILES)	\
 	$(NULL)
 #
-htmldocdir = $(docdir)/$(HTML_DIR)
-htmldoc_DATA =		\
-	$(NULL)
-
 if USEDOCBOOK
 BUILT_SOURCES +=		\
 	$(LOCAL_SGML_FILES)	\
 	$(NULL)
-htmldoc_DATA += $(HTML_DIR)/*
 
 ##
 .fncs.sgml:
@@ -179,7 +179,7 @@ htmldoc_DATA += $(HTML_DIR)/*
 	$(AM_V_GEN) $(RM) $@; \
 	$(DOC2HTML) -u $*.sgml > $@
 ##
-fonts-conf.5: local-fontconfig-user.sgml version.sgml confdir.sgml
+fonts-conf.5: local-fontconfig-user.sgml cache-version.sgml version.sgml confdir.sgml
 	$(AM_V_GEN) $(RM) $@; \
 	$(DOC2MAN) local-fontconfig-user.sgml && \
 	$(RM) manpage.*
@@ -199,10 +199,6 @@ $(DOC_FUNCS_SGML): $(DOC_FUNCS_FNCS) $(srcdir)/edit-sgml.py $(srcdir)/func.sgml
 $(TXT_FILES): $(DOCS_DEPS)
 $(PDF_FILES): $(DOCS_DEPS)
 $(HTML_FILES): $(DOCS_DEPS)
-$(HTML_DIR)/*: $(HTML_DIR)
-$(HTML_DIR): local-fontconfig-devel.sgml $(DOCS_DEPS)
-	$(AM_V_GEN) $(RM) -r $@; \
-	$(DOC2HTML) -V '%use-id-as-filename%' -o $@ local-fontconfig-devel.sgml
 local-fontconfig-user.sgml: $(srcdir)/fontconfig-user.sgml
 	$(AM_V_GEN) $(LN_S) $(srcdir)/fontconfig-user.sgml $@;	\
 	[ ! -f $(builddir)/fontconfig-user.sgml ] && cp -a $(srcdir)/fontconfig-user.sgml $(builddir)/fontconfig-user.sgml || :
@@ -210,14 +206,13 @@ local-fontconfig-devel.sgml: $(srcdir)/fontconfig-devel.sgml
 	$(AM_V_GEN) $(LN_S) $(srcdir)/fontconfig-devel.sgml $@;	\
 	[ ! -f $(builddir)/fontconfig-devel.sgml ] && cp -a $(srcdir)/fontconfig-devel.sgml $(builddir)/fontconfig-devel.sgml || :
 #
-all-local: $(BUILT_DOCS) $(HTML_DIR)/*
+all-local: $(BUILT_DOCS)
 clean-local:
-	$(RM) -r $(HTML_DIR) devel-man
+	$(RM) -r devel-man
 	[ "x$(builddir)" != "x$(srcdir)" ] && $(RM) $(builddir)/*.sgml || :
 dist-local-check-docs-enabled:
 	@true
 else
-htmldoc_DATA += $(srcdir)/$(HTML_DIR)/*
 .fncs.sgml:
 	$(AM_V_GEN) $(RM) $@; \
 	touch -r $< $@

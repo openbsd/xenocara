@@ -64,7 +64,7 @@ manpage.1: manpage.sgml
       <command>&dhpackage;</command>
 
       <arg><option>-cEfrsvVh</option></arg>
-      <arg><option>--chroot <replacable>root</replacable></option></arg>
+      <arg><option>--chroot <replaceable>root</replaceable></option></arg>
       <arg><option>--error-on-no-fonts</option></arg>
       <arg><option>--force</option></arg>
       <arg><option>--really-force</option></arg>
@@ -119,11 +119,11 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><option>-c <replacable>root</replacable></option>
-	  <option>--chroot <replacable>root</replacable></option>
+        <term><option>-c <replaceable>root</replaceable></option>
+	  <option>--chroot <replaceable>root</replaceable></option>
 	</term>
 	<listitem>
-	  <para>Change root directory into <replacable>root</replacable> 
+	  <para>Change root directory into <replaceable>root</replaceable> 
 	    before starting.</para>
 	</listitem>
         <term><option>-f</option>
@@ -226,8 +226,7 @@ manpage.1: manpage.sgml
       <command>fc-scan</command>(1)
     </para>
 
-    <para>The fontconfig user's guide, in HTML format:
-      <filename>/usr/share/doc/fontconfig/fontconfig-user.html</filename>.</para>
+    <para><ulink url="https://fontconfig.pages.freedesktop.org/fontconfig/fontconfig-user.html">The fontconfig user's guide</ulink></para>
 
  </refsect1>
   <refsect1>

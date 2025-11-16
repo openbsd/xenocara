@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.18 2025/01/04 15:22:55 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.19 2025/11/16 16:43:35 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -75,14 +75,20 @@ AVAIL_FILES =				\
 	80-delicious.conf		\
 	90-synthetic.conf
 
-all cleandir:
+all: README
+
+cleandir:
+
+README: ${FONTCONFIG}/conf.d/README.in
+	sed -e 's,@TEMPLATEDIR@,${CONFAVAILDIR},' \
+		< ${FONTCONFIG}/conf.d/README.in > README
 
 install:
 	@for i in ${AVAIL_FILES}; do				\
 	   echo ${INSTALL_DATA} $$i ${DESTDIR}${CONFAVAILDIR}; \
 	   ${INSTALL_DATA} ${FONTCONFIG}/conf.d/$$i ${DESTDIR}${CONFAVAILDIR};	\
 	done
-	${INSTALL_DATA} ${FONTCONFIG}/conf.d/README ${DESTDIR}/${CONFIGDIR}
+	${INSTALL_DATA} README ${DESTDIR}/${CONFIGDIR}
 	@(echo cd ${DESTDIR}${CONFIGDIR};			\
 	  cd ${DESTDIR}${CONFIGDIR};				\
 	  for i in ${CONF_LINKS}; do				\
@@ -93,7 +99,7 @@ install:
 	    chown -h ${BINOWN}:${BINGRP} $$i;			\
 	  done)
 
-NOOBJ=
+obj:_xenocara_obj
 
 .include <bsd.own.mk>
 .include <bsd.xorg.mk>

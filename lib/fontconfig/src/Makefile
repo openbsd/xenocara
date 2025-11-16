@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.11 2021/11/11 08:46:46 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.12 2025/11/16 16:43:35 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -40,12 +40,12 @@ CFLAGS +=	-DFC_CACHEDIR='"$(FC_CACHEDIR)"' \
 		-DFONTCONFIG_PATH='"$(BASECONFIGDIR)"' \
 		-DFC_TEMPLATEDIR='"$(BASECONFIGDIR)/conf.avail"' \
 		-DCONFIGDIR='"$(BASECONFIGDIR)/conf.d"' \
-		-I.
+		-I. -I${.CURDIR}/../fc-lang
 
 LDADD =	-L${X11BASE}/lib -lfreetype -lexpat -lz
 
 PUBLIC_FILES = \
-	$(FONTCONFIG)/fontconfig/fontconfig.h \
+	${.CURDIR}/../fontconfig/fontconfig.h \
 	$(FONTCONFIG)/src/fcdeprecate.h \
 	$(FONTCONFIG)/fontconfig/fcprivate.h
 

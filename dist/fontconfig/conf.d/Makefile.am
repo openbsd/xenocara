@@ -52,6 +52,8 @@ CONF_LINKS = \
 	80-delicious.conf \
 	90-synthetic.conf
 
+CONF_LINKS += 70-$(PREFERRED_BITMAP).conf
+
 EXTRA_DIST = $(template_DATA) $(DOC_SOURCES)
 CLEANFILES = $(DOC_FILES)
 
@@ -87,6 +89,7 @@ template_DATA =				\
 	40-nonlatin.conf		\
 	45-generic.conf			\
 	45-latin.conf			\
+	48-guessfamily.conf		\
 	48-spacing.conf			\
 	49-sansserif.conf		\
 	50-user.conf			\
@@ -98,6 +101,8 @@ template_DATA =				\
 	65-nonlatin.conf		\
 	69-unifont.conf			\
 	70-no-bitmaps.conf		\
+	70-no-bitmaps-and-emoji.conf	\
+	70-no-bitmaps-except-emoji.conf	\
 	70-yes-bitmaps.conf		\
 	80-delicious.conf		\
 	90-synthetic.conf
