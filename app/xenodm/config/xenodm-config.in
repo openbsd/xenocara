@@ -1,4 +1,4 @@
-! $OpenBSD: xenodm-config.in,v 1.5 2018/11/03 18:04:45 matthieu Exp $
+! $OpenBSD: xenodm-config.in,v 1.6 2025/11/16 18:33:14 matthieu Exp $
 !
 DisplayManager.authDir:	@XENODMXAUTHDIR@
 DisplayManager.errorLogFile:	@XENODMLOGDIR@/xenodm.log
@@ -19,3 +19,6 @@ DisplayManager._0.startup:	@XENODMSCRIPTDIR@/GiveConsole
 DisplayManager._0.reset:	@XENODMSCRIPTDIR@/TakeConsole
 
 DisplayManager.*.authName:	MIT-MAGIC-COOKIE-1
+
+! Set by setusercontext(); don't reset it
+DisplayManager.exportList:	XDG_RUNTIME_DIR
