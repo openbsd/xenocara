@@ -181,7 +181,7 @@
 /* #undef HAVE_SOLARIS_ATOMIC_OPS */
 
 /* Have C99 stdatomic atomic primitives */
-#define HAVE_STDATOMIC_PRIMITIVES 1
+/* #undef HAVE_STDATOMIC_PRIMITIVES 1 */
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
