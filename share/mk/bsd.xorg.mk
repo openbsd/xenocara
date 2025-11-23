@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.70 2025/10/03 05:55:33 miod Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.71 2025/11/23 13:18:55 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -21,7 +21,7 @@
 
 AUTOMAKE_VERSION=	1.13
 AUTOCONF_VERSION=	2.71
-PYTHON_VERSION=		3.12
+PYTHON_VERSION=		3.13
 
 # Where source lives
 XSRCDIR?=		/usr/xenocara
