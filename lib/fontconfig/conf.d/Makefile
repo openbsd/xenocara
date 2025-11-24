@@ -1,12 +1,9 @@
-#	$OpenBSD: Makefile,v 1.19 2025/11/16 16:43:35 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.20 2025/11/24 21:14:56 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
 CONFAVAILDIR=	/etc/fonts/conf.avail
 CONFAVAILREL=	../conf.avail
-
-DOC_FILES= \
-	README
 
 CONF_LINKS = \
 	10-hinting-slight.conf \
@@ -33,6 +30,8 @@ CONF_LINKS = \
 	90-synthetic.conf
 
 AVAIL_FILES =				\
+	05-reset-dirs-sample.conf	\
+	09-autohint-if-no-hinting.conf	\
 	10-autohint.conf		\
 	10-hinting-full.conf		\
 	10-hinting-medium.conf		\
@@ -61,15 +60,17 @@ AVAIL_FILES =				\
 	45-latin.conf			\
 	48-spacing.conf			\
 	49-sansserif.conf		\
-	59-latin-obsd.conf		\
 	50-user.conf			\
 	51-local.conf			\
+	59-latin-obsd.conf		\
 	60-generic.conf			\
 	60-latin.conf			\
 	65-fonts-persian.conf		\
 	65-khmer.conf			\
 	65-nonlatin.conf		\
 	69-unifont.conf			\
+	70-no-bitmaps-and-emoji.conf	\
+	70-no-bitmaps-except-emoji.conf	\
 	70-no-bitmaps.conf		\
 	70-yes-bitmaps.conf		\
 	80-delicious.conf		\
@@ -77,7 +78,10 @@ AVAIL_FILES =				\
 
 all: README
 
-cleandir:
+cleandir: clean
+
+clean:
+	rm -f README
 
 README: ${FONTCONFIG}/conf.d/README.in
 	sed -e 's,@TEMPLATEDIR@,${CONFAVAILDIR},' \
@@ -88,6 +92,8 @@ install:
 	   echo ${INSTALL_DATA} $$i ${DESTDIR}${CONFAVAILDIR}; \
 	   ${INSTALL_DATA} ${FONTCONFIG}/conf.d/$$i ${DESTDIR}${CONFAVAILDIR};	\
 	done
+	${INSTALL_DATA} ${.CURDIR}/35-lang-normalize.conf \
+		${DESTDIR}/${CONFAVAILDIR}
 	${INSTALL_DATA} README ${DESTDIR}/${CONFIGDIR}
 	@(echo cd ${DESTDIR}${CONFIGDIR};			\
 	  cd ${DESTDIR}${CONFIGDIR};				\
