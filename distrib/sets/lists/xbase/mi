@@ -8,6 +8,8 @@
 ./etc/X11/xsm
 ./etc/fonts
 ./etc/fonts/conf.avail
+./etc/fonts/conf.avail/05-reset-dirs-sample.conf
+./etc/fonts/conf.avail/09-autohint-if-no-hinting.conf
 ./etc/fonts/conf.avail/10-autohint.conf
 ./etc/fonts/conf.avail/10-hinting-full.conf
 ./etc/fonts/conf.avail/10-hinting-medium.conf
@@ -34,6 +36,7 @@
 ./etc/fonts/conf.avail/30-lucida-aliases.conf
 ./etc/fonts/conf.avail/30-metric-aliases.conf
 ./etc/fonts/conf.avail/31-nonmst.conf
+./etc/fonts/conf.avail/35-lang-normalize.conf
 ./etc/fonts/conf.avail/40-nonlatin.conf
 ./etc/fonts/conf.avail/42-luxi-mono.conf
 ./etc/fonts/conf.avail/45-generic.conf
@@ -49,6 +52,8 @@
 ./etc/fonts/conf.avail/65-khmer.conf
 ./etc/fonts/conf.avail/65-nonlatin.conf
 ./etc/fonts/conf.avail/69-unifont.conf
+./etc/fonts/conf.avail/70-no-bitmaps-and-emoji.conf
+./etc/fonts/conf.avail/70-no-bitmaps-except-emoji.conf
 ./etc/fonts/conf.avail/70-no-bitmaps.conf
 ./etc/fonts/conf.avail/70-yes-bitmaps.conf
 ./etc/fonts/conf.avail/80-delicious.conf
