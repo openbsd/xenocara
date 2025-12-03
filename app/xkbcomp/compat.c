@@ -299,6 +299,8 @@ ResolveStateAndPredicate(const ExprDef *expr,
     {
         char *pred_txt =
             XkbAtomText(NULL, expr->value.action.name, XkbMessage);
+        if (!pred_txt || !expr->value.action.args)
+            goto leave;
         if (uStrCaseCmp(pred_txt, "noneof") == 0)
             *pred_rtrn = XkbSI_NoneOf;
         else if (uStrCaseCmp(pred_txt, "anyofornone") == 0)
@@ -311,7 +313,8 @@ ResolveStateAndPredicate(const ExprDef *expr,
             *pred_rtrn = XkbSI_Exactly;
         else
         {
-            ERROR("Illegal modifier predicate \"%s\"\n", pred_txt);
+leave:      ERROR("Illegal modifier predicate \"%s\"\n",
+                  (pred_txt ? pred_txt : "(none)"));
             ACTION("Ignored\n");
             return False;
         }

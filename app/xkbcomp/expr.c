@@ -136,16 +136,20 @@ ExprResolveLhs(const ExprDef *expr, ExprResult *elem_rtrn,
         elem_rtrn->str = NULL;
         field_rtrn->str = XkbAtomGetString(NULL, expr->value.str);
         *index_rtrn = NULL;
-        return True;
+        return (field_rtrn->str != NULL);
     case ExprFieldRef:
         elem_rtrn->str = XkbAtomGetString(NULL, expr->value.field.element);
         field_rtrn->str = XkbAtomGetString(NULL, expr->value.field.field);
         *index_rtrn = NULL;
-        return True;
+        return (elem_rtrn->str != NULL && field_rtrn->str != NULL);
     case ExprArrayRef:
         elem_rtrn->str = XkbAtomGetString(NULL, expr->value.array.element);
         field_rtrn->str = XkbAtomGetString(NULL, expr->value.array.field);
         *index_rtrn = expr->value.array.entry;
+        if (expr->value.array.element != None && elem_rtrn->str == NULL)
+            return False;
+        if (field_rtrn->str == NULL)
+            return False;
         return True;
     }
     WSGO("Unexpected operator %d in ResolveLhs\n", expr->op);
@@ -439,7 +443,7 @@ ExprResolveBoolean(const ExprDef *expr, ExprResult *val_rtrn,
         return ok;
     case OpInvert:
     case OpNot:
-        ok = ExprResolveBoolean(expr, val_rtrn, lookup, lookupPriv);
+        ok = ExprResolveBoolean(expr->value.child, val_rtrn, lookup, lookupPriv);
         if (ok)
             val_rtrn->uval = !val_rtrn->uval;
         return ok;
