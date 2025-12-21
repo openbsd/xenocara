@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.548 2025/12/03 06:35:12 matthieu Exp $
+# $OpenBSD: MODULES,v 1.549 2025/12/21 17:10:39 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -190,7 +190,7 @@ lib/xcb-util-renderutil		0.3.10
 lib/xcb-util-wm			0.4.2
 
 proto/xcb-proto			1.17.0
-proto/xorgproto			2024.1
+proto/xorgproto			2025.1		needs-updatex
 
 util/cf				1.0.4
 util/gccmakedep			1.0.4
