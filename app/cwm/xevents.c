@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.150 2020/03/24 14:47:29 okan Exp $
+ * $OpenBSD: xevents.c,v 1.151 2026/01/05 14:46:59 okan Exp $
  */
 
 /*
@@ -68,8 +68,11 @@ void		(*xev_handlers[LASTEvent])(XEvent *) = {
 			[Expose] = xev_handle_expose,
 };
 
-static KeySym modkeys[] = { XK_Alt_L, XK_Alt_R, XK_Super_L, XK_Super_R,
-			    XK_Control_L, XK_Control_R, XK_ISO_Level3_Shift };
+static KeySym modkeys[] = { XK_Control_L, XK_Control_R,
+			    XK_Alt_L, XK_Alt_R,
+			    XK_Meta_L, XK_Meta_R,
+			    XK_Super_L, XK_Super_R,
+			    XK_ISO_Level3_Shift };
 
 static void
 xev_handle_maprequest(XEvent *ee)
