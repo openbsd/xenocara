@@ -1,5 +1,5 @@
 
-# $OpenBSD: 3RDPARTY,v 1.454 2025/12/21 17:10:39 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.455 2026/01/14 07:01:51 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.13.3
@@ -84,8 +84,8 @@ Maintainer:	Ingo Buerk
 Archive Site:	https://github.com/Airblader/xcb-util-xrm
 
 Package:	libpng
-Version:	1.6.52 (synced with ports)
-Current Vers:	1.6.52
+Version:	1.6.54 (synced with ports)
+Current Vers:	1.6.54
 Comment:	Statically bundled into libfreetype, not installed
 Maintainer:	Cosmin Truta
 Archive Site:	https://downloads.sourceforge.net/sourceforge/libpng/
