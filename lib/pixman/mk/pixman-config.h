@@ -81,8 +81,10 @@
 #define USE_VMX 1
 #endif
 
+#ifndef __ASSEMBLER__
 #include <endian.h>
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define WORDS_BIGENDIAN 1
+#endif
 #endif
