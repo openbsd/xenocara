@@ -88,9 +88,9 @@ host_triplet = @host@
 @X_PRIVSEP_TRUE@am__append_7 = $(PRIVSEP_SRCS)
 @SPECIAL_DTRACE_OBJECTS_TRUE@noinst_PROGRAMS = os.O$(EXEEXT)
 subdir = os
-DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	timingsafe_memcmp.c strcasecmp.c strlcat.c strlcpy.c strndup.c \
-	strcasestr.c reallocarray.c $(top_srcdir)/depcomp
+DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am strlcat.c \
+	strcasecmp.c timingsafe_memcmp.c strcasestr.c strlcpy.c \
+	strndup.c reallocarray.c $(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \

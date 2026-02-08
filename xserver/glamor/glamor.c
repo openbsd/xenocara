@@ -941,7 +941,6 @@ glamor_close_screen(ScreenPtr screen)
     glamor_priv = glamor_get_screen_private(screen);
     glamor_sync_close(screen);
     glamor_composite_glyphs_fini(screen);
-    glamor_set_glvnd_vendor(screen, NULL);
     screen->CloseScreen = glamor_priv->saved_procs.close_screen;
 
     screen->CreateGC = glamor_priv->saved_procs.create_gc;
@@ -972,31 +971,6 @@ void
 glamor_fini(ScreenPtr screen)
 {
     /* Do nothing currently. */
-}
-
-void
-glamor_set_glvnd_vendor(ScreenPtr screen, const char *vendor_name)
-{
-    glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
-
-    if (!glamor_priv)
-        return;
-
-    if (glamor_priv->glvnd_vendor)
-        free(glamor_priv->glvnd_vendor);
-
-    glamor_priv->glvnd_vendor = xnfstrdup(vendor_name);
-}
-
-const char *
-glamor_get_glvnd_vendor(ScreenPtr screen)
-{
-    glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
-
-    if (!glamor_priv)
-        return NULL;
-
-    return glamor_priv->glvnd_vendor;
 }
 
 void

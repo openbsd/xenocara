@@ -336,7 +336,6 @@ typedef struct glamor_screen_private {
     int flags;
     ScreenPtr screen;
     int dri3_enabled;
-    char *glvnd_vendor;
 
     Bool suppress_gl_out_of_memory_logging;
     Bool logged_any_fbo_allocation_failure;

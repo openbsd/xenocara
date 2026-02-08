@@ -79,12 +79,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@GLX_TRUE@am__append_1 = -I$(top_srcdir)/glx
-@GLX_TRUE@am__append_2 = \
-@GLX_TRUE@	glamor_glx_provider.c \
-@GLX_TRUE@	glamor_glx_provider.h
-
-@XV_TRUE@am__append_3 = \
+@XV_TRUE@am__append_1 = \
 @XV_TRUE@	glamor_xv.c
 
 subdir = glamor
@@ -124,10 +119,8 @@ am__libglamor_la_SOURCES_DIST = glamor.c glamor_context.h \
 	glamor_priv.h glamor_pixmap.c glamor_largepixmap.c \
 	glamor_picture.c glamor_vbo.c glamor_window.c glamor_fbo.c \
 	glamor_compositerects.c glamor_utils.c glamor_utils.h \
-	glamor_sync.c glamor.h glamor_glx_provider.c \
-	glamor_glx_provider.h glamor_xv.c
-@GLX_TRUE@am__objects_1 = glamor_glx_provider.lo
-@XV_TRUE@am__objects_2 = glamor_xv.lo
+	glamor_sync.c glamor.h glamor_xv.c
+@XV_TRUE@am__objects_1 = glamor_xv.lo
 am_libglamor_la_OBJECTS = glamor.lo glamor_copy.lo glamor_core.lo \
 	glamor_dash.lo glamor_font.lo glamor_glx.lo \
 	glamor_composite_glyphs.lo glamor_image.lo glamor_lines.lo \
@@ -139,7 +132,7 @@ am_libglamor_la_OBJECTS = glamor.lo glamor_copy.lo glamor_core.lo \
 	glamor_pixmap.lo glamor_largepixmap.lo glamor_picture.lo \
 	glamor_vbo.lo glamor_window.lo glamor_fbo.lo \
 	glamor_compositerects.lo glamor_utils.lo glamor_sync.lo \
-	$(am__objects_1) $(am__objects_2)
+	$(am__objects_1)
 libglamor_la_OBJECTS = $(am_libglamor_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -569,8 +562,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libglamor.la libglamor_egl_stubs.la
 libglamor_la_LIBADD = $(GLAMOR_LIBS)
-AM_CFLAGS = $(CWARNFLAGS) $(DIX_CFLAGS) $(GLAMOR_CFLAGS) \
-	$(am__append_1)
+AM_CFLAGS = $(CWARNFLAGS) $(DIX_CFLAGS) $(GLAMOR_CFLAGS)
 libglamor_la_SOURCES = glamor.c glamor_context.h glamor_copy.c \
 	glamor_core.c glamor_dash.c glamor_debug.h glamor_font.c \
 	glamor_font.h glamor_glx.c glamor_composite_glyphs.c \
@@ -584,7 +576,7 @@ libglamor_la_SOURCES = glamor.c glamor_context.h glamor_copy.c \
 	glamor_pixmap.c glamor_largepixmap.c glamor_picture.c \
 	glamor_vbo.c glamor_window.c glamor_fbo.c \
 	glamor_compositerects.c glamor_utils.c glamor_utils.h \
-	glamor_sync.c glamor.h $(am__append_2) $(am__append_3)
+	glamor_sync.c glamor.h $(am__append_1)
 libglamor_egl_stubs_la_SOURCES = \
 	glamor_egl_stubs.c \
 	glamor_egl_ext.h \
@@ -660,7 +652,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_fbo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_font.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_glx.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_glx_provider.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_glyphblt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_gradient.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_image.Plo@am__quote@

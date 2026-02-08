@@ -49,13 +49,6 @@ libglamor_la_SOURCES = \
 	glamor_sync.c \
 	glamor.h
 
-if GLX
-AM_CFLAGS += -I$(top_srcdir)/glx
-libglamor_la_SOURCES += \
-	glamor_glx_provider.c \
-	glamor_glx_provider.h
-endif
-
 if XV
 libglamor_la_SOURCES += \
 	glamor_xv.c

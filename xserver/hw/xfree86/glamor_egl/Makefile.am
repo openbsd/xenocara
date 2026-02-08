@@ -33,7 +33,6 @@ libglamoregl_la_LDFLAGS = \
 	$()
 
 libglamoregl_la_LIBADD = \
-	$(top_builddir)/glx/libglx.la \
 	$(top_builddir)/glamor/libglamor.la \
 	$()
 

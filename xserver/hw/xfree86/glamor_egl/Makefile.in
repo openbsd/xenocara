@@ -149,8 +149,7 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(moduledir)"
 LTLIBRARIES = $(module_LTLIBRARIES)
-libglamoregl_la_DEPENDENCIES = $(top_builddir)/glx/libglx.la \
-	$(top_builddir)/glamor/libglamor.la
+libglamoregl_la_DEPENDENCIES = $(top_builddir)/glamor/libglamor.la
 am_libglamoregl_la_OBJECTS = glamor_egl.lo glamor_eglmodule.lo \
 	glamor_xf86_xv.lo
 libglamoregl_la_OBJECTS = $(am_libglamoregl_la_OBJECTS)
@@ -564,7 +563,6 @@ libglamoregl_la_LDFLAGS = \
 	$()
 
 libglamoregl_la_LIBADD = \
-	$(top_builddir)/glx/libglx.la \
 	$(top_builddir)/glamor/libglamor.la \
 	$()
 
