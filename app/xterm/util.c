@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.961 2025/06/22 18:22:34 tom Exp $ */
+/* $XTermId: util.c,v 1.968 2025/12/21 22:07:19 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1145,6 +1145,8 @@ WriteText(XtermWidget xw, Cardinal offset, Cardinal length)
     if (AddToVisible(xw)
 	&& ((ld = getLineData(screen, screen->cur_row))) != NULL) {
 	unsigned test;
+	Char *sizes;
+	Cardinal i;
 
 	if (screen->cursor_state)
 	    HideCursor(xw);
@@ -1189,11 +1191,17 @@ WriteText(XtermWidget xw, Cardinal offset, Cardinal length)
 	params.real_chrset = CSET_SWL;
 	params.on_wide     = 0;
 
+	sizes = calloc(length, 1);
+	for (i = 0; i < length; ++i) {
+	    SelectSize(ld, screen->cur_col + (int) i, str[i], sizes[i]);
+	}
+
 	drawXtermText(&params,
 		      currentGC,
 		      LineCursorX(screen, ld, screen->cur_col),
 		      CursorY(screen, screen->cur_row),
-		      str, length);
+		      str, sizes, length);
+	free(sizes);
 
 	resetXtermGC(xw, attr_flags, False);
     }
@@ -3286,6 +3294,7 @@ ucs_workaround(XTermDraw * params,
 
 	if (eqv != (IChar) ch) {
 	    int width = CharWidth(screen, ch);
+	    Char size = 1;
 
 	    do {
 		drawXtermText(params,
@@ -3293,7 +3302,7 @@ ucs_workaround(XTermDraw * params,
 			      x,
 			      y,
 			      &eqv,
-			      1);
+			      &size, 1);
 		x += FontWidth(screen);
 		eqv = BAD_ASCII;
 	    } while (width-- > 1);
@@ -3715,6 +3724,7 @@ fakeDoubleChars(const XTermDraw * params,
     if (temp != NULL) {
 	unsigned n = 0;
 	XTermDraw recur = *params;
+	Char size = 2;
 
 	recur.this_chrset = CSET_SWL;
 
@@ -3726,7 +3736,7 @@ fakeDoubleChars(const XTermDraw * params,
 			  gc,
 			  x, y,
 			  temp,
-			  n);
+			  &size, n);
 	free(temp);
     }
     return x;
@@ -3976,6 +3986,7 @@ drawXtermText(const XTermDraw * params,
 	      int start_x,
 	      int start_y,
 	      const IChar *text,
+	      const Char *size,
 	      Cardinal len)
 {
     XTermDraw recur = *params;
@@ -4009,6 +4020,7 @@ drawXtermText(const XTermDraw * params,
 	   y, x, recur.this_chrset, len,
 	   visibleIChars(text, len)));
 
+    assert(size != NULL);
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(recur.this_chrset)) {
 	/* We could try drawing double-size characters in the icon, but
@@ -4029,7 +4041,7 @@ drawXtermText(const XTermDraw * params,
 				     gc,
 				     x, y,
 				     text,
-				     len);
+				     size, len);
 		x += (next - x) * 2;
 	    } else {
 		x = fakeDoubleChars(&recur,
@@ -4051,7 +4063,7 @@ drawXtermText(const XTermDraw * params,
 	    recur.draw_flags |= DOUBLEWFONT;
 
 	    for (nlen = 0; nlen < len; ++nlen) {
-		int ch_width = CharWidth(screen, text[nlen]);
+		int ch_width = SelectedSize(size[nlen]);
 		if (ch_width > 1)
 		    ncells += (ch_width - 1);
 	    }
@@ -4111,7 +4123,7 @@ drawXtermText(const XTermDraw * params,
 					     gc2,
 					     x, y,
 					     text++,
-					     1);
+					     size++, 1);
 		    x += (next - x) * 2;
 		}
 	    } else {
@@ -4122,7 +4134,7 @@ drawXtermText(const XTermDraw * params,
 				     gc2,
 				     x, y,
 				     text,
-				     len);
+				     size, len);
 		x += (next - x) * 2;
 	    }
 
@@ -4221,7 +4233,7 @@ drawXtermText(const XTermDraw * params,
 		Boolean replace = False;
 		Boolean missing = False;
 		unsigned ch = (unsigned) text[last];
-		int ch_width = CharWidth(screen, ch);
+		int ch_width = SelectedSize(size[last]);
 		int filler = 0;
 #if OPT_WIDE_CHARS
 		int needed = forceDbl ? 2 : ch_width;
@@ -4481,7 +4493,7 @@ drawXtermText(const XTermDraw * params,
 	    recur.draw_flags |= (NOBACKGROUND | CHARBYCHAR);
 	    x = drawXtermText(&recur,
 			      gc, x + adj, y,
-			      text++, 1) - adj;
+			      text++, size++, 1) - adj;
 	}
 
 	TRACE(("DrewText [%4d,%4d] @%d\n", y, x, __LINE__));
@@ -4529,13 +4541,14 @@ drawXtermText(const XTermDraw * params,
 				      gc,
 				      x, y,
 				      text + first,
+				      size + first,
 				      (unsigned) (last - first));
 		}
 		first = last + 1;
 		drewBoxes = True;
 		continue;
 	    }
-	    ch_width = CharWidth(screen, ch);
+	    ch_width = SelectedSize(size[last]);
 	    isMissing =
 		IsXtermMissingChar(screen, ch,
 				   ((recur.on_wide || ch_width > 1)
@@ -4574,6 +4587,7 @@ drawXtermText(const XTermDraw * params,
 				      gc,
 				      x, y,
 				      text + first,
+				      size + first,
 				      (unsigned) (last - first));
 		}
 #if OPT_WIDE_CHARS
@@ -4604,6 +4618,7 @@ drawXtermText(const XTermDraw * params,
 				     gc,
 				     x, y,
 				     text + first,
+				     size + first,
 				     (unsigned) (1 + last - first));
 		x += (ch_width * FontWidth(screen));
 		first = last + 1;
@@ -4615,6 +4630,7 @@ drawXtermText(const XTermDraw * params,
 	    return x;
 	}
 	text += first;
+	size += first;
 	len = (Cardinal) (last - first);
 	recur.draw_flags |= NOTRANSLATION;
 	if (drewBoxes) {
@@ -4623,7 +4639,7 @@ drawXtermText(const XTermDraw * params,
 			      x,
 			      y,
 			      text,
-			      len);
+			      size, len);
 	    TRACE(("DrewText [%4d,%4d] @%d\n", y, x, __LINE__));
 	    return x;
 	}
@@ -4722,7 +4738,7 @@ drawXtermText(const XTermDraw * params,
 	    IChar ch = mapped[src];
 
 	    if (ch != HIDDEN_CHAR) {
-		int ch_width = CharWidth(screen, ch);
+		int ch_width = SelectedSize(size[src]);
 		if (!needWide
 		    && !IsIcon(screen)
 		    && ((recur.on_wide || ch_width > 1)
@@ -5461,16 +5477,89 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 {
     if (ch != 0) {
 	LineData *ld = getLineData(screen, row);
-	size_t off;
 
-	TRACE(("addXtermCombining %d,%d U+%04X (%d)\n",
-	       row, col, ch, CharWidth(screen, ch)));
+	if (ld != NULL) {
+	    size_t off;
 
-	for_each_combData(off, ld) {
-	    if (!ld->combData[off][col]) {
-		ld->combData[off][col] = (CharData) ch;
-		break;
+#if OPT_EMOJI_WIDTH
+	    int valid = True;
+	    int base_col = (screen->char_was_written
+			    ? screen->last_written_col
+			    : screen->cur_col);
+	    wchar_t base = (wchar_t) (ld->charData[base_col] == HIDDEN_CHAR
+				      ? ld->charData[--base_col]
+				      : ld->charData[base_col]);
+	    int expect = CharWidth(screen, base);
+	    int actual = expect;
+
+	    TRACE(("addXtermCombining base %d,%d U+%04X width %d\n",
+		   row, base_col, base, expect));
+
+	    /* VS15/VS16 are used only for Emoji characters */
+	    if (ch == UCS_VS15) {
+		if ((valid = mk_is_emoji(base)))
+		    actual = 1;
+	    } else if (ch == UCS_VS16) {
+		if ((valid = mk_is_emoji(base)))
+		    actual = 2;
 	    }
+
+	    if (valid) {
+		valid = False;
+
+		TRACE(("...add combining %d,%d U+%04X width %d\n",
+		       row, col, ch, actual));
+
+		for_each_combData(off, ld) {
+		    if (!ld->combData[off][col]) {
+			ld->combData[off][col] = (CharData) ch;
+			valid = True;
+			break;
+		    }
+		}
+
+		if (valid && screen->char_was_written && (expect != actual)) {
+		    ++col;	/* point to the second half */
+		    if (expect > actual) {
+			TRACE(("...shrink base\n"));
+			ld->charData[col] = ' ';
+			IAttrClr(ld->attribs[col], CHARDRAWN);
+			/* adjust the next-column value */
+			col = screen->cur_col;
+			set_cur_col(screen, --col);
+		    } else if (expect < actual) {
+			if (screen->cur_col < screen->max_col) {
+			    TRACE(("...increase base\n"));
+			    ld->attribs[col] = ld->attribs[col - 1];
+			    if_OPT_ISO_COLORS(screen, {
+				ld->color[col] = ld->color[col - 1];
+			    });
+			    TRACE(("...put filler in column %d\n", col));
+			    /* extend the current cell per VS16 */
+			    ld->charData[col] = VS16_FILLER;
+			    IAttrSet(ld->attribs[col], CHARDRAWN);
+			    /* adjust the next-column value */
+			    col = screen->cur_col;
+			    set_cur_col(screen, ++col);
+			} else {
+			    TRACE(("...disallow wrapping of base\n"));
+			    /* disallow wrapping via VS16 */
+			    ld->charData[col] = ' ';
+			    IAttrClr(ld->attribs[col], CHARDRAWN);
+			}
+		    }
+		}
+	    }
+#else
+	    TRACE(("addXtermCombining %d,%d U+%04X (%d)\n",
+		   row, col, ch, CharWidth(screen, ch)));
+	    for_each_combData(off, ld) {
+		if (!ld->combData[off][col]) {
+		    ld->combData[off][col] = (CharData) ch;
+		    break;
+		}
+	    }
+#endif
 	}
     }
 }
@@ -5654,7 +5743,7 @@ decode_keyboard_type(XtermWidget xw, XTERM_RESOURCE * rp)
 #undef FLAG
 }
 
-#if OPT_WIDE_CHARS
+#if OPT_SYS_WCWIDTH
 #if defined(HAVE_WCHAR_H) && defined(HAVE_WCWIDTH)
 /*
  * If xterm is running in a UTF-8 locale, it is still possible to encounter

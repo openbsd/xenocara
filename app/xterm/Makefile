@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.39 2025/06/14 12:33:57 matthieu Exp $
+# $OpenBSD: Makefile,v 1.40 2026/02/08 09:42:33 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -14,6 +14,7 @@ CPPFLAGS+=	-I. -I${.CURDIR} -I${X11BASE}/include \
 		-DHAVE_CONFIG_H -DUTMP \
 		-DDEF_ALLOW_FONT=False -DDEF_ALLOW_TCAP=False \
 		-DDEF_ALLOW_WINDOW=False -DDEF_ALLOW_MOUSE=False \
+		-DDEF_CURSOR_BLINK=\"never\" -DMKTEMP_PATTERN=\"XXXXXXXXXX\" \
 		-DOPT_PRINT_ON_EXIT=0
 LDADD+=		-L${X11BASE}/lib -lXaw -lXpm -lXt -lSM -lICE -lXmu \
 		-lXft -lXrender -lXinerama -lX11 -lxcb -lXext -lXau -lXdmcp \

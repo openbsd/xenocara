@@ -1,9 +1,9 @@
-/* $XTermId: wcwidth.h,v 1.14 2017/06/18 17:56:35 tom Exp $ */
+/* $XTermId: wcwidth.h,v 1.19 2025/12/19 01:37:00 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.h,v 1.5 2005/05/03 00:38:25 dickey Exp $ */
 
 /*
- * Copyright 2000-2005,2017 by Thomas E. Dickey
+ * Copyright 2000-2017,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -36,12 +36,18 @@
 
 #include <stddef.h>
 
-extern void mk_wcwidth_init(int mode);
+typedef enum {
+    WcUnknown = 0
+    ,WcSoftHyphen = 1		/* soft-hyphen is spacing, e.g., Latin-1 */
+    ,WcPrivateFullwidth = 2	/* private-use codes can be fullwidth in CJK */
+    ,WcEmojiFullwidth = 4	/* Emojis are fullwidth */
+} WcModes;
 
-extern int mk_wcswidth(const wchar_t * pwcs, size_t n);
-extern int mk_wcswidth_cjk(const wchar_t * pwcs, size_t n);
+extern int mk_wcwidth_init(int mode);
+
 extern int mk_wcwidth(wchar_t ucs);
 extern int mk_wcwidth_cjk(wchar_t ucs);
-extern int wcswidth_cjk(const wchar_t * pwcs, size_t n);
+
+extern int mk_is_emoji(wchar_t ucs);
 
 #endif /* included_wcwidth_h */

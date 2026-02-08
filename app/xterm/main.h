@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.87 2025/09/20 12:56:23 tom Exp $ */
+/* $XTermId: main.h,v 1.91 2025/11/16 22:09:02 tom Exp $ */
 
 /*
  * Copyright 2000-2023,2025 by Thomas E. Dickey
@@ -123,6 +123,10 @@
 #define DEF_COLOR_EVENTS	""
 #endif
 
+#ifndef DEF_CURSOR_BLINK
+#define DEF_CURSOR_BLINK	"false"
+#endif
+
 #ifndef DEF_DISALLOWED_COLOR
 #define DEF_DISALLOWED_COLOR	"SetColor,GetColor,GetAnsiColor"
 #endif
@@ -144,12 +148,31 @@
 #endif
 
 #ifndef DEF_DISALLOWED_WINDOW
-#if OPT_PASTE64
-#define DEF_DISALLOWED_WINDOW	"GetIconTitle,GetWinTitle,SetXprop,SetSelection,GetSelection,GetChecksum"
+
+#if OPT_DEC_RECTOPS
+#define DISALLOWED_DEC_RECTOPS	",GetChecksum"
 #else
-#define DEF_DISALLOWED_WINDOW	"GetIconTitle,GetWinTitle,SetXprop,GetChecksum"
+#define DISALLOWED_DEC_RECTOPS	""
 #endif
+
+#if OPT_PASTE64
+#define DISALLOWED_PASTE64	",SetSelection,GetSelection"
+#else
+#define DISALLOWED_PASTE64	""
 #endif
+
+#if OPT_SET_XPROP
+#define DISALLOWED_SET_XPROP	",SetXprop"
+#else
+#define DISALLOWED_SET_XPROP	""
+#endif
+
+#define DEF_DISALLOWED_WINDOW	"GetIconTitle,GetWinTitle" \
+ 				DISALLOWED_DEC_RECTOPS \
+				DISALLOWED_PASTE64 \
+				DISALLOWED_SET_XPROP
+
+#endif /* DEF_DISALLOWED_WINDOW */
 
 #if OPT_BLINK_TEXT
 #define DEFBLINKASBOLD		False
@@ -302,5 +325,9 @@
  * See lib/Xt/Resources.c
  */
 #define MAXRESOURCES            400
+
+#ifndef MKTEMP_PATTERN
+#define MKTEMP_PATTERN		"XXXXXX"
+#endif
 
 #endif /* included_main_h */

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.941 2025/09/25 00:22:37 tom Exp $
+.\" $XTermId: xterm.man,v 1.942 2025/12/19 09:26:59 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\" Copyright 1989  X Consortium
@@ -583,6 +583,16 @@ name to be the basename of the program being executed if neither \fI\-T\fP
 nor \fI\-n\fP are given on the command line.
 .IP
 \fBNOTE:\fP This must be the \fBlast option\fP on the command line.
+.TP 8
+.B "\-emoji_width"
+Set the \fBemojiWidth\fP resource to \*(``true\*(''.
+When turned on, Unicode variation selectors VS15 and VS16 are interpreted,
+overriding the number of cells for the immediately preceding Emoji
+character.
+The default is \*(``false\*(''
+.TP 8
+.B "+emoji_width"
+Reset the \fBemojiWidth\fP resource.
 .TP 8
 .BI \-en " encoding"
 This option determines the encoding on which \fI\*n\fP runs.
@@ -3677,6 +3687,12 @@ Override \fI\*n\fP's default selection target list
 (see \fBSELECT/PASTE\fP) for selections in normal (ISO-8859-1) mode.
 The default is an empty string, i.e., \*(``\*('',
 which does not override anything.
+.TP 8
+.B "emojiWidth\fP (class\fB EmojiWidth\fP)"
+Specifies whether to interpret Unicode variation selectors VS15 and VS16.
+Those override the character width of the immediately preceding character,
+if it is an Emoji, to one or two cells, respectively.
+The default is \*(``false\*(''.
 .TP 8
 .B "eraseSavedLines\fP (class\fB EraseSavedLines\fP)"
 Specifies whether or not to allow

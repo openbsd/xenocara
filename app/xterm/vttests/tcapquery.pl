@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: tcapquery.pl,v 1.29 2019/04/29 23:27:57 tom Exp $
+# $XTermId: tcapquery.pl,v 1.32 2025/11/30 16:32:18 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2004-2018,2019 by Thomas E. Dickey
+# Copyright 2004-2019,2025 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -46,37 +46,6 @@ our (
 
 our @query_params;
 our @query_result;
-
-$Getopt::Std::STANDARD_HELP_VERSION = 1;
-&getopts('abcefikmqt:x:X') || die(
-    "Usage: $0 [options]\n
-Options:\n
-  -a      (same as -c -e -f -k -m)
-  -b      use both terminfo and termcap (default is termcap)
-  -c      cursor-keys
-  -e      editing keypad-keys
-  -f      function-keys
-  -i      use terminfo rather than termcap names
-  -k      numeric keypad-keys
-  -m      miscellaneous (none of -c, -e, -f, -k)
-  -q      quicker results by merging queries
-  -t NAME use given NAME for \$TERM, set that in xterm's tcap keyboard
-  -x KEY  extended cursor/editing key (terminfo only)
-  -X      test all extended cursor- and/or editing-keys (terminfo)
-"
-);
-
-if (
-    not(   defined($opt_c)
-        or defined($opt_e)
-        or defined($opt_f)
-        or defined($opt_k)
-        or defined($opt_m)
-        or defined($opt_x) )
-  )
-{
-    $opt_a = 1;
-}
 
 sub no_reply($) {
     open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
@@ -130,68 +99,83 @@ sub add_param($) {
     $query_params[ $#query_params + 1 ] = &hexified( $_[0] );
 }
 
+sub decode_param($) {
+    my $reply = shift;
+    my $n;
+    my $count  = 0;
+    my $state  = 0;
+    my $error  = "?";
+    my $result = "";
+
+    for ( $n = 0 ; $n < length($reply) ; ) {
+        my $c = substr( $reply, $n, 1 );
+
+        if ( $c eq ';' ) {
+            $n += 1;
+            printf "%d%s\t%s\n", $count, $error, $result
+              if ( $result ne "" );
+            $result = "";
+            $state  = 0;
+            $error  = "?";
+            $count++;
+        }
+        elsif ( $c eq '=' ) {
+            $error = ""
+              if (  $count <= $#query_params
+                and &hexified($result) eq $query_params[$count] );
+            $n += 1;
+            $result .= $c;
+            $state = 1;
+        }
+        elsif ( $c =~ /[[:punct:]]/ ) {
+            $n += 1;
+            $result .= $c;
+        }
+        else {
+            my $k = hex substr( $reply, $n, 2 );
+            if ( $k == 0x1b ) {
+                $result .= "\\E";
+            }
+            elsif ( $k == 0x7f ) {
+                $result .= "^?";
+            }
+            elsif ( $k == 32 ) {
+                $result .= "\\s";
+            }
+            elsif ( $k < 32 ) {
+                $result .= sprintf( "^%c", $k + 64 );
+            }
+            elsif ( $k > 128 ) {
+                $result .= sprintf( "\\%03o", $k );
+            }
+            else {
+                $result .= chr($k);
+            }
+            $n += 2;
+        }
+    }
+    $result = sprintf( "%d%s\t%s", $count, $error, $result )
+      if ( $result ne "" );
+    return $result;
+}
+
 sub finish_query() {
     my $reply = &get_reply( "\x1bP+q" . join( ';', @query_params ) . "\x1b\\" );
 
     return unless defined $reply;
-    if ( $reply =~ /\x1bP1\+r[[:xdigit:]]+=[[:xdigit:]]*.*/ ) {
+    if ( $reply =~ /\x1bP1\+r[[:xdigit:]]+(=[[:xdigit:]]*)?.*/ ) {
         my $n;
 
         $reply =~ s/^\x1bP1\+r//;
         $reply =~ s/\x1b\\//;
 
-        my $result = "";
-        my $count  = 0;
-        my $state  = 0;
-        my $error  = "?";
-        for ( $n = 0 ; $n < length($reply) ; ) {
-            my $c = substr( $reply, $n, 1 );
-
-            if ( $c eq ';' ) {
-                $n += 1;
-                printf "%d%s\t%s\n", $count, $error, $result
-                  if ( $result ne "" );
-                $result = "";
-                $state  = 0;
-                $error  = "?";
-                $count++;
-            }
-            elsif ( $c eq '=' ) {
-                $error = ""
-                  if (  $count <= $#query_params
-                    and &hexified($result) eq $query_params[$count] );
-                $n += 1;
-                $result .= $c;
-                $state = 1;
-            }
-            elsif ( $c =~ /[[:punct:]]/ ) {
-                $n += 1;
-                $result .= $c;
-            }
-            else {
-                my $k = hex substr( $reply, $n, 2 );
-                if ( $k == 0x1b ) {
-                    $result .= "\\E";
-                }
-                elsif ( $k == 0x7f ) {
-                    $result .= "^?";
-                }
-                elsif ( $k == 32 ) {
-                    $result .= "\\s";
-                }
-                elsif ( $k < 32 ) {
-                    $result .= sprintf( "^%c", $k + 64 );
-                }
-                elsif ( $k > 128 ) {
-                    $result .= sprintf( "\\%03o", $k );
-                }
-                else {
-                    $result .= chr($k);
-                }
-                $n += 2;
-            }
-        }
-        printf "%d%s\t%s\n", $count, $error, $result if ( $result ne "" );
+        my $result = &decode_param($reply);
+        printf "%s\n", $result if ( $result ne "" );
+    }
+    elsif ( $reply =~ /\x1bP0\+r\x1b/ ) {
+        my $params = join( ';', @query_params );
+        my $result = &decode_param($params);
+        printf "->%s\t%s\n", $result, "<error>";
     }
 }
 
@@ -219,9 +203,50 @@ sub query_extended($) {
     }
 }
 
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+&getopts('abcefikmqt:x:X') || die(
+    "Usage: $0 [options] [capabilities]\n
+Options:\n
+  -a      (same as -c -e -f -k -m)
+  -b      use both terminfo and termcap (default is termcap)
+  -c      cursor-keys
+  -e      editing keypad-keys
+  -f      function-keys
+  -i      use terminfo rather than termcap names
+  -k      numeric keypad-keys
+  -m      miscellaneous (none of -c, -e, -f, -k)
+  -q      quicker results by merging queries
+  -t NAME use given NAME for \$TERM, set that in xterm's tcap keyboard
+  -x KEY  extended cursor/editing key (terminfo only)
+  -X      test all extended cursor- and/or editing-keys (terminfo)
+"
+);
+
 &begin_query if ($opt_q);
 
-&query_tcap( "TN", "name" );
+our $total_tested = 0;
+
+for my $pnum ( 0 .. $#ARGV ) {
+    &begin_query unless ($opt_q);
+    &add_param( $ARGV[$pnum] );
+    &finish_query unless ($opt_q);
+    ++$total_tested;
+}
+
+if (
+    $total_tested == 0
+    and not( defined($opt_c)
+        or defined($opt_e)
+        or defined($opt_f)
+        or defined($opt_k)
+        or defined($opt_m)
+        or defined($opt_x) )
+  )
+{
+    $opt_a = 1;
+}
+
+&query_tcap( "TN", "name" ) unless ( $total_tested > 0 );
 if ( defined($opt_t) ) {
     printf "Setting TERM=%s\n", $opt_t;
     &modify_tcap($opt_t);

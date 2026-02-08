@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.674 2025/10/08 21:58:31 tom Exp $ */
+/* $XTermId: button.c,v 1.680 2025/12/04 09:22:53 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -166,6 +166,7 @@ extern String _XtPrintXlations(Widget w,
 
 #define IsBtnEvent(event) ((event)->type == ButtonPress || (event)->type == ButtonRelease)
 #define IsKeyEvent(event) ((event)->type == KeyPress    || (event)->type == KeyRelease)
+#define IsMovEvent(event) ((event)->type == MotionNotify)
 
 #define	Coordinate(s,c)	((c)->row * MaxCols(s) + (c)->col)
 
@@ -642,7 +643,7 @@ InterpretEvent(XtermWidget xw, XEvent *event)
 
     if (IsBtnEvent(event)) {
 	result = InterpretButton(xw, (XButtonEvent *) event);
-    } else if (event->type == MotionNotify) {
+    } else if (IsMovEvent(event)) {
 	unsigned state = event->xmotion.state;
 	int button = MotionButton(state);
 
@@ -661,78 +662,120 @@ InterpretEvent(XtermWidget xw, XEvent *event)
 #define OverrideButton(event) InterpretButton(xw, event)
 
 /*
+ * Origin[XY] is the upper left of the VT100 window.
+ * Limits[XY] is the lower right of the VT100 window.
+ */
+#define LimitsY(screen) (OriginY(screen) + Height(screen))
+#define LimitsX(screen) (OriginX(screen) + Width(screen))
+
+static Bool
+ValidMouseEvent(XtermWidget xw, XEvent *event)
+{
+    TScreen *screen = TScreenOf(xw);
+    int xpos = -1;
+    int ypos = -1;
+    Bool result = False;
+
+    if (IsBtnEvent(event)) {
+	xpos = ((XButtonEvent *) event)->x;
+	ypos = ((XButtonEvent *) event)->y;
+    } else if (IsMovEvent(event)) {
+	xpos = ((XMotionEvent *) event)->x;
+	ypos = ((XMotionEvent *) event)->y;
+    }
+
+    if (xpos >= OriginX(screen) && ypos >= OriginY(screen)) {
+	if ((ypos < LimitsY(screen)) &&
+	    (xpos < LimitsX(screen))) {
+	    result = True;
+	}
+    }
+
+    return result;
+}
+
+static Bool
+ValidButtonEvent(XtermWidget xw, XButtonEvent *event)
+{
+    return ValidMouseEvent(xw, (XEvent *) event);
+}
+
+/*
  * Returns true if we handled the event here, and nothing more is needed.
  */
 Bool
 SendMousePosition(XtermWidget xw, XEvent *event)
 {
-    XButtonEvent *my_event = (XButtonEvent *) event;
     Bool result = False;
 
-    switch (okSendMousePos(xw)) {
-    case MOUSE_OFF:
-	/* If send_mouse_pos mode isn't on, we shouldn't be here */
-	break;
+    if (ValidMouseEvent(xw, event)) {
+	XButtonEvent *my_event = (XButtonEvent *) event;
 
-    case BTN_EVENT_MOUSE:
-    case ANY_EVENT_MOUSE:
-	if (!OverrideEvent(event)) {
-	    /* xterm extension for motion reporting. June 1998 */
-	    /* EditorButton() will distinguish between the modes */
-	    switch (event->type) {
-	    case MotionNotify:
-		my_event->button = 0;
-		/* FALLTHRU */
-	    case ButtonPress:
-		/* FALLTHRU */
-	    case ButtonRelease:
-		EditorButton(xw, my_event);
-		result = True;
-		break;
-	    }
-	}
-	break;
+	switch (okSendMousePos(xw)) {
+	case MOUSE_OFF:
+	    /* If send_mouse_pos mode isn't on, we shouldn't be here */
+	    break;
 
-    case X10_MOUSE:		/* X10 compatibility sequences */
-	if (IsBtnEvent(event)) {
-	    if (!OverrideButton(my_event)) {
-		if (my_event->type == ButtonPress)
+	case BTN_EVENT_MOUSE:
+	case ANY_EVENT_MOUSE:
+	    if (!OverrideEvent(event)) {
+		/* xterm extension for motion reporting. June 1998 */
+		/* EditorButton() will distinguish between the modes */
+		switch (event->type) {
+		case MotionNotify:
+		    my_event->button = 0;
+		    /* FALLTHRU */
+		case ButtonPress:
+		    /* FALLTHRU */
+		case ButtonRelease:
 		    EditorButton(xw, my_event);
-		result = True;
-	    }
-	}
-	break;
-
-    case VT200_HIGHLIGHT_MOUSE:	/* DEC vt200 hilite tracking */
-	if (IsBtnEvent(event)) {
-	    if (!OverrideButton(my_event)) {
-		if (my_event->type == ButtonPress &&
-		    my_event->button == Button1) {
-		    TrackDown(xw, my_event);
-		} else {
-		    EditorButton(xw, my_event);
+		    result = True;
+		    break;
 		}
-		result = True;
 	    }
-	}
-	break;
+	    break;
 
-    case VT200_MOUSE:		/* DEC vt200 compatible */
-	if (IsBtnEvent(event)) {
-	    if (!OverrideButton(my_event)) {
-		EditorButton(xw, my_event);
-		result = True;
+	case X10_MOUSE:	/* X10 compatibility sequences */
+	    if (IsBtnEvent(event)) {
+		if (!OverrideButton(my_event)) {
+		    if (my_event->type == ButtonPress)
+			EditorButton(xw, my_event);
+		    result = True;
+		}
 	    }
-	}
-	break;
+	    break;
 
-    case DEC_LOCATOR:
+	case VT200_HIGHLIGHT_MOUSE:	/* DEC vt200 hilite tracking */
+	    if (IsBtnEvent(event)) {
+		if (!OverrideButton(my_event)) {
+		    if (my_event->type == ButtonPress &&
+			my_event->button == Button1) {
+			TrackDown(xw, my_event);
+		    } else {
+			EditorButton(xw, my_event);
+		    }
+		    result = True;
+		}
+	    }
+	    break;
+
+	case VT200_MOUSE:	/* DEC vt200 compatible */
+	    if (IsBtnEvent(event)) {
+		if (!OverrideButton(my_event)) {
+		    EditorButton(xw, my_event);
+		    result = True;
+		}
+	    }
+	    break;
+
+	case DEC_LOCATOR:
 #if OPT_DEC_LOCATOR
-	if (IsBtnEvent(event) || event->type == MotionNotify) {
-	    result = SendLocatorPosition(xw, my_event);
-	}
+	    if (IsBtnEvent(event) || IsMovEvent(event)) {
+		result = SendLocatorPosition(xw, my_event);
+	    }
 #endif /* OPT_DEC_LOCATOR */
-	break;
+	    break;
+	}
     }
     return result;
 }
@@ -741,26 +784,26 @@ SendMousePosition(XtermWidget xw, XEvent *event)
 
 #define	LocatorCoords( row, col, x, y, oor )			\
     if( screen->locator_pixels ) {				\
-	(oor)=False; (row) = (y)+1; (col) = (x)+1;		\
+	(oor) = False; (row) = (y) + 1; (col) = (x) + 1;	\
 	/* Limit to screen dimensions */			\
-	if ((row) < 1) (row) = 1,(oor)=True;			\
-	else if ((row) > screen->border*2+Height(screen))	\
-	    (row) = screen->border*2+Height(screen),(oor)=True;	\
-	if ((col) < 1) (col) = 1,(oor)=True;			\
-	else if ((col) > OriginX(screen)*2+Width(screen))	\
-	    (col) = OriginX(screen)*2+Width(screen),(oor)=True;	\
+	if ((row) < 1) (row) = 1, (oor) = True;			\
+	else if ((row) > LimitsY(screen))			\
+	    (row) = LimitsY(screen), (oor) = True;		\
+	if ((col) < 1) (col) = 1, (oor) = True;			\
+	else if ((col) > LimitsX(screen))			\
+	    (col) = LimitsX(screen), (oor) = True;		\
     } else {							\
-	(oor)=False;						\
+	(oor) = False;						\
 	/* Compute character position of mouse pointer */	\
-	(row) = ((y) - screen->border) / FontHeight(screen);	\
+	(row) = ((y) - OriginY(screen)) / FontHeight(screen);	\
 	(col) = ((x) - OriginX(screen)) / FontWidth(screen);	\
 	/* Limit to screen dimensions */			\
-	if ((row) < 0) (row) = 0,(oor)=True;			\
+	if ((row) < 0) (row) = 0, (oor) = True;			\
 	else if ((row) > screen->max_row)			\
-	    (row) = screen->max_row,(oor)=True;			\
-	if ((col) < 0) (col) = 0,(oor)=True;			\
+	    (row) = screen->max_row, (oor) = True;		\
+	if ((col) < 0) (col) = 0, (oor) = True;			\
 	else if ((col) > screen->max_col)			\
-	    (col) = screen->max_col,(oor)=True;			\
+	    (col) = screen->max_col, (oor) = True;		\
 	(row)++; (col)++;					\
     }
 
@@ -773,6 +816,9 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
     Bool oor;
     int button;
     unsigned state;
+
+    if (!ValidButtonEvent(xw, event))
+	return (False);
 
     /* Make sure the event is an appropriate type */
     if (IsBtnEvent(event)) {
@@ -789,7 +835,7 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
 	 !(screen->locator_events & LOC_BTNS_UP)))
 	return (True);
 
-    if (event->type == MotionNotify) {
+    if (IsMovEvent(event)) {
 	CheckLocatorPosition(xw, event);
 	return (True);
     }
@@ -1027,8 +1073,8 @@ InitLocatorFilter(XtermWidget xw)
      *  3. make sure top and left are less than bottom and right, resp.
      */
     if (screen->locator_pixels) {
-	rx = OriginX(screen) * 2 + Width(screen);
-	ry = screen->border * 2 + Height(screen);
+	rx = LimitsX(screen);
+	ry = LimitsY(screen);
     } else {
 	rx = screen->max_col;
 	ry = screen->max_row;
@@ -1098,6 +1144,9 @@ CheckLocatorPosition(XtermWidget xw, XButtonEvent *event)
     TScreen *screen = TScreenOf(xw);
     int row, col;
     Bool oor;
+
+    if (!ValidButtonEvent(xw, event))
+	return;
 
     LocatorCoords(row, col, event->x, event->y, oor);
 
@@ -1178,6 +1227,9 @@ static int
 isDoubleClick3(XtermWidget xw, TScreen *screen, XButtonEvent *event)
 {
     int delta;
+
+    if (!ValidButtonEvent(xw, event))
+	return 0;
 
     if (event->type != ButtonRelease
 	|| OverrideButton(event)
@@ -1290,7 +1342,7 @@ rowOnCurrentLine(TScreen *screen,
 static int
 eventRow(TScreen *screen, XEvent *event)	/* must be XButtonEvent */
 {
-    return (event->xbutton.y - screen->border) / FontHeight(screen);
+    return (event->xbutton.y - OriginY(screen)) / FontHeight(screen);
 }
 
 static int
@@ -1379,12 +1431,12 @@ DiredButton(Widget w,
 	TScreen *screen = TScreenOf(xw);
 
 	if (IsBtnEvent(event)
-	    && (event->xbutton.y >= screen->border)
+	    && (event->xbutton.y >= OriginY(screen))
 	    && (event->xbutton.x >= OriginX(screen))) {
 	    Char Line[6];
 	    unsigned line, col;
 
-	    line = (unsigned) ((event->xbutton.y - screen->border)
+	    line = (unsigned) ((event->xbutton.y - OriginY(screen))
 			       / FontHeight(screen));
 	    col = (unsigned) ((event->xbutton.x - OriginX(screen))
 			      / FontWidth(screen));
@@ -1431,7 +1483,7 @@ ReadLineButton(Widget w,
 	    if (delta > screen->multiClickTime)
 		goto finish;	/* All this work for this... */
 	}
-	line = (event->xbutton.y - screen->border) / FontHeight(screen);
+	line = (event->xbutton.y - OriginY(screen)) / FontHeight(screen);
 	if (!rowOnCurrentLine(screen, line, &ldelta))
 	    goto finish;
 	/* Correct by half a width - we are acting on a boundary, not on a cell. */
@@ -1471,7 +1523,7 @@ ViButton(Widget w,
 	    int line;
 
 	    line = screen->cur_row -
-		((event->xbutton.y - screen->border) / FontHeight(screen));
+		((event->xbutton.y - OriginY(screen)) / FontHeight(screen));
 
 	    if (line != 0) {
 		Char Line[6];
@@ -1617,7 +1669,7 @@ HandlePointerMotion(Widget w,
     (void) num_params;
     if ((xw = getXtermWidget(w)) != NULL) {
 	TRACE(("HandlePointerMotion\n"));
-	if (event->type == MotionNotify)
+	if (IsMovEvent(event))
 	    (void) SendMousePosition(xw, event);
     }
 }
@@ -2942,6 +2994,7 @@ do_select_start(XtermWidget xw,
 
     if (SendMousePosition(xw, event))
 	return;
+
     screen->selectUnit = EvalSelectUnit(xw,
 					event->xbutton.time,
 					Select_CHAR,
@@ -3008,6 +3061,9 @@ TrackDown(XtermWidget xw, XButtonEvent *event)
 {
     TScreen *screen = TScreenOf(xw);
     CELL cell;
+
+    if (!ValidButtonEvent(xw, event))
+	return;
 
     screen->selectUnit = EvalSelectUnit(xw,
 					event->time,
@@ -3449,7 +3505,7 @@ PointToCELL(TScreen *screen,
    Columns are clipped between to be 0 or greater, but are not clipped to some
        maximum value. */
 {
-    cell->row = (y - screen->border) / FontHeight(screen);
+    cell->row = (y - OriginY(screen)) / FontHeight(screen);
     if (cell->row < screen->firstValidRow)
 	cell->row = screen->firstValidRow;
     else if (cell->row > screen->lastValidRow)
@@ -3974,7 +4030,7 @@ cellToColumn(TScreen *screen, CELL *cell)
 	if ((ld = GET_LINEDATA(screen, row)) == NULL)
 	    break;
 	if ((adj = LastTextCol(screen, ld, row++)) < 0)
-	col += adj;
+	    col += adj;
     }
 #if OPT_DEC_CHRSET
     if (ld == NULL)
@@ -5329,7 +5385,7 @@ BtnCode(XtermWidget xw, XButtonEvent *event, int button)
 {
     int result = (int) (32 + (KeyState(xw, event->state) << 2));
 
-    if (event->type == MotionNotify)
+    if (IsMovEvent(event))
 	result += 32;
 
     if (button < 0) {
@@ -5419,6 +5475,9 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
     unsigned count = 0;
     Boolean changed = True;
 
+    if (!ValidButtonEvent(xw, event))
+	return;
+
     /* If button event, get button # adjusted for DEC compatibility */
     button = (int) (event->button - 1);
     if (button >= 3)
@@ -5445,27 +5504,16 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	col = event->x - OriginX(screen);
     } else {
 	/* Compute character position of mouse pointer */
-	row = (event->y - screen->border) / FontHeight(screen);
+	row = (event->y - OriginY(screen)) / FontHeight(screen);
 	col = (event->x - OriginX(screen)) / FontWidth(screen);
+    }
 
-	/* Limit to screen dimensions */
-	if (row < 0)
-	    row = 0;
-	else if (row > screen->max_row)
-	    row = screen->max_row;
-
-	if (col < 0)
-	    col = 0;
-	else if (col > screen->max_col)
-	    col = screen->max_col;
-
-	if (mouse_limit > 0) {
-	    /* Limit to representable mouse dimensions */
-	    if (row > mouse_limit)
-		row = mouse_limit;
-	    if (col > mouse_limit)
-		col = mouse_limit;
-	}
+    if (mouse_limit > 0) {
+	/* Limit to representable mouse dimensions */
+	if (row > mouse_limit)
+	    row = mouse_limit;
+	if (col > mouse_limit)
+	    col = mouse_limit;
     }
 
     /* Build key sequence starting with \E[M */
@@ -5734,6 +5782,9 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
     char *result = NULL;
 
     TRACE(("getDataFromScreen %s\n", method));
+
+    if (!ValidMouseEvent(xw, event))
+	return result;
 
     memset(scp, 0, sizeof(*scp));
 

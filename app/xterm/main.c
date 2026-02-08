@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.940 2025/10/08 08:22:03 tom Exp $ */
+/* $XTermId: main.c,v 1.942 2025/12/19 01:09:45 tom Exp $ */
 
 /*
  * Copyright 2002-2024,2025 by Thomas E. Dickey
@@ -1147,10 +1147,16 @@ OPTS("+pob",		NO_ARG(XtNpopOnBell),			"off"),
 #if OPT_WIDE_CHARS
 OPTS("-wc",		NO_ARG(XtNwideChars),			"on"),
 OPTS("+wc",		NO_ARG(XtNwideChars),			"off"),
+#endif
+#if OPT_SYS_WCWIDTH
 OPTS("-mk_width",	NO_ARG(XtNmkWidth),			"on"),
 OPTS("+mk_width",	NO_ARG(XtNmkWidth),			"off"),
 OPTS("-cjk_width",	NO_ARG(XtNcjkWidth),			"on"),
 OPTS("+cjk_width",	NO_ARG(XtNcjkWidth),			"off"),
+#if OPT_EMOJI_WIDTH
+OPTS("-emoji_width",	NO_ARG(XtNemojiWidth),			"on"),
+OPTS("+emoji_width",	NO_ARG(XtNemojiWidth),			"off"),
+#endif
 #endif
 OPTS("-wf",		NO_ARG(XtNwaitForMap),			"on"),
 OPTS("+wf",		NO_ARG(XtNwaitForMap),			"off"),
@@ -1347,8 +1353,13 @@ static OptionHelp xtermOptions[] = {
 #endif
 #if OPT_WIDE_CHARS
 { "-/+wc",                 "turn on/off wide-character mode" },
+#endif
+#if OPT_SYS_WCWIDTH
 { "-/+mk_width",           "turn on/off simple width convention" },
 { "-/+cjk_width",          "turn on/off legacy CJK width convention" },
+#if OPT_EMOJI_WIDTH
+{ "-/+emoji_width",        "turn on/off Emoji VS15/VS16 width convention" },
+#endif
 #endif
 { "-/+wf",                 "turn on/off wait for map before command exec" },
 { "-e command args ...",   "command to execute" },

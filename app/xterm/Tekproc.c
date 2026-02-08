@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.256 2025/06/08 23:03:23 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.257 2025/11/16 20:11:01 tom Exp $ */
 
 /*
  * Copyright 2001-2024,2025 by Thomas E. Dickey

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.662 2025/08/17 09:51:15 tom Exp $ */
+/* $XTermId: screen.c,v 1.665 2025/12/12 01:19:35 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1562,6 +1562,7 @@ ScrnRefresh(XtermWidget xw,
     TScreen *screen = TScreenOf(xw);
     XTermDraw params;
     CLineData *ld;
+    Char *sizes;
     int y = toprow * FontHeight(screen) + screen->border;
     int row;
     int maxrow = toprow + nrows - 1;
@@ -1580,6 +1581,10 @@ ScrnRefresh(XtermWidget xw,
 	   nrows, ncols,
 	   force ? " force" : ""));
 
+    if (ncols <= 0 || nrows <= 0) {
+	TRACE(("...nothing to refresh\n"));
+	return;
+    }
 #if OPT_STATUS_LINE
     if (!recurse && (maxrow == screen->max_row) && IsStatusShown(screen)) {
 	TRACE(("...allow a row for status-line\n"));
@@ -1596,6 +1601,7 @@ ScrnRefresh(XtermWidget xw,
 	&& screen->cursorp.row <= ROW2INX(screen, maxrow))
 	screen->cursor_state = OFF;
 
+    sizes = calloc((size_t) (leftcol + ncols + 1), 1);
     for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
 #if OPT_ISO_COLORS
 	CellColor *fb = NULL;
@@ -1651,6 +1657,11 @@ ScrnRefresh(XtermWidget xw,
 
 	chars = ld->charData;
 	attrs = ld->attribs;
+
+	for (col = leftcol; col <= maxcol; ++col) {
+	    SelectSize(ld, col, chars[col], sizes[col]);
+	}
+	col = leftcol;
 
 	if_OPT_WIDE_CHARS(screen, {
 	    /* This fixes an infinite recursion bug, that leads
@@ -1830,11 +1841,13 @@ ScrnRefresh(XtermWidget xw,
 		x = drawXtermText(&params,
 				  gc, x, y,
 				  &chars[lastind],
+				  &sizes[lastind],
 				  (unsigned) (col - lastind));
 
 		if_OPT_WIDE_CHARS(screen, {
 		    int i;
 		    size_t off;
+		    Char combining = 0;
 
 		    params.draw_flags = NOBACKGROUND;
 
@@ -1842,17 +1855,20 @@ ScrnRefresh(XtermWidget xw,
 			IChar *com_off = ld->combData[off];
 
 			for (i = lastind; i < col; i++) {
-			    int my_x = LineCursorX(screen, ld, i);
-			    IChar base = chars[i];
+			    if (com_off[i] != 0) {
+				int my_x;
 
-			    if ((params.on_wide = isWide((int) base)) != 0)
-				my_x = LineCursorX(screen, ld, i - 1);
+				params.on_wide = SelectedSize(sizes[i]) > 1;
+				if (params.on_wide)
+				    my_x = LineCursorX(screen, ld, i - 1);
+				else
+				    my_x = LineCursorX(screen, ld, i);
 
-			    if (com_off[i] != 0)
 				drawXtermText(&params,
 					      gc, my_x, y,
 					      com_off + i,
-					      1);
+					      &combining, 1);
+			    }
 			}
 		    }
 		});
@@ -1905,11 +1921,13 @@ ScrnRefresh(XtermWidget xw,
 	drawXtermText(&params,
 		      gc, x, y,
 		      &chars[lastind],
+		      &sizes[lastind],
 		      (unsigned) (col - lastind));
 
 	if_OPT_WIDE_CHARS(screen, {
 	    int i;
 	    size_t off;
+	    Char combining = 0;
 
 	    params.draw_flags = NOBACKGROUND;
 
@@ -1917,17 +1935,19 @@ ScrnRefresh(XtermWidget xw,
 		IChar *com_off = ld->combData[off];
 
 		for (i = lastind; i < col; i++) {
-		    int my_x = LineCursorX(screen, ld, i);
-		    int base = (int) chars[i];
+		    int my_x;
 
-		    if ((params.on_wide = isWide(base)) != 0)
+		    params.on_wide = SelectedSize(sizes[i]) > 1;
+		    if (params.on_wide)
 			my_x = LineCursorX(screen, ld, i - 1);
+		    else
+			my_x = LineCursorX(screen, ld, i);
 
 		    if (com_off[i] != 0)
 			drawXtermText(&params,
 				      gc, my_x, y,
 				      com_off + i,
-				      1);
+				      &combining, 1);
 		}
 	    }
 	});
@@ -1960,6 +1980,8 @@ ScrnRefresh(XtermWidget xw,
     }
 #endif
     recurse--;
+
+    free(sizes);
 
     TRACE((TRACE_R " ScrnRefresh\n"));
     return;

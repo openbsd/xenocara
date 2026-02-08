@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.67 2025/10/12 23:34:22 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.68 2025/11/30 18:43:34 tom Exp $ */
 
 /*
  * Copyright 2007-2024,2025 by Thomas E. Dickey
@@ -156,6 +156,7 @@ static const TCAPINFO table[] = {
 	DATA(	"Fq",	"kf62",		-62,		0	),
 	DATA(	"Fr",	"kf63",		-63,		0	),
 
+	DATA(	"@8",	"kent",		XK_KP_Enter,	0	),
 	DATA(	"K1",	"ka1",		XK_KP_Home,	0	),
 	DATA(	"K4",	"kc1",		XK_KP_End,	0	),
 	DATA(	"K3",	"ka3",		XK_KP_Prior,	0	),
@@ -186,9 +187,10 @@ static const TCAPINFO table[] = {
 # endif
 	DATA(	"TN",	"name",		XK_TCAPNAME,	0	),
 #if USE_EXTENDED_NAMES
+#define BASE "k"
 #define DEXT(name, parm, code) DATA("", name, code, parm)
-#define D1ST(name, parm, code) DEXT("k" #name, parm, code)
-#define DMOD(name, parm, code) DEXT("k" #name #parm, parm, code)
+#define D1ST(name, parm, code) DEXT(BASE #name, parm, code)
+#define DMOD(name, parm, code) DEXT(BASE #name #parm, parm, code)
 
 #define DGRP(name, code) \
 	D1ST(name, 2, code), \
@@ -202,7 +204,7 @@ static const TCAPINFO table[] = {
 	/* the terminfo codes here are ncurses extensions */
 	/* ignore the termcap names, which are empty */
 	DATA(	"",	"kUP",		XK_Up,		SHIFT	),
-	DATA(	"",	"kDN",		XK_Up,		SHIFT	),
+	DATA(	"",	"kDN",		XK_Down,	SHIFT	),
 
 	DGRP(DN,   XK_Down),
 	DGRP(LFT,  XK_Left),
@@ -214,6 +216,29 @@ static const TCAPINFO table[] = {
 	DGRP(IC,   XK_Insert),
 	DGRP(NXT,  XK_Next),
 	DGRP(PRV,  XK_Prior),
+
+	/* all of the numeric-keypad could be used with modifiers (i.e., DGRP),
+	 * but applications would not use the suffix 2-8 code, because that
+	 * would give two-digits.
+	 */
+#undef BASE
+#define BASE "kp"
+	DATA(	"",	"kp1",		XK_KP_1,	0	),
+	DATA(	"",	"kp2",		XK_KP_2,	0	),
+	DATA(	"",	"kp3",		XK_KP_3,	0	),
+	DATA(	"",	"kp4",		XK_KP_4,	0	),
+	DATA(	"",	"kp5",		XK_KP_5,	0	),
+	DATA(	"",	"kp6",		XK_KP_6,	0	),
+	DATA(	"",	"kp7",		XK_KP_7,	0	),
+	DATA(	"",	"kp8",		XK_KP_8,	0	),
+	DATA(	"",	"kp9",		XK_KP_9,	0	),
+	DGRP(ADD,  XK_KP_Add),
+	DGRP(CMA,  XK_KP_Separator),
+	DGRP(DIV,  XK_KP_Divide),
+	DGRP(DOT,  XK_KP_Decimal),
+	DGRP(MUL,  XK_KP_Multiply),
+	DGRP(SUB,  XK_KP_Subtract),
+	DGRP(ZRO,  XK_KP_0),
 #endif
 };
 #undef DATA

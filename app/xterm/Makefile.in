@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.267 2025/03/14 00:34:57 tom Exp $
+## $XTermId: Makefile.in,v 1.269 2025/11/20 00:25:51 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -549,10 +549,10 @@ check : $(TEST_PROGRAMS)
 	@ $(SHELL) -c 'echo "** executing test_charclass"; \
 		./test_charclass'
 	@ $(SHELL) -c 'echo "** executing test_wcwidth"; \
-		for range in 32-126 160-0xff00 0x10000-0x11000; \
+		for range in 32-126 160-0xff00 0x10000-0x11000 -t; \
 		do echo ".. range $$range"; \
-		./test_wcwidth -s $$range; \
-		./test_wcwidth -s $$range -w; \
+		./test_wcwidth -m $$range; \
+		./test_wcwidth -m $$range -s -w; \
 	done'
 	@ $(SHELL) -c 'echo "** executing test_ptydata"; \
 		./test_ptydata -a'

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.247 2025/04/03 23:47:19 tom Exp $ */
+/* $XTermId: trace.c,v 1.248 2025/12/18 21:55:04 tom Exp $ */
 
 /*
  * Copyright 1997-2024,2025 by Thomas E. Dickey
@@ -698,7 +698,9 @@ TraceScreen(XtermWidget xw, int whichBuf)
 		    int ch = (int) ld->charData[col];
 		    if (ch < ' ')
 			ch = ' ';
-		    if (ch >= 127)
+		    if (ch == HIDDEN_CHAR)
+			ch = '?';
+		    else if (ch >= 127)
 			ch = '#';
 		    TRACE(("%c", ch));
 		}

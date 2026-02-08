@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2100 2025/10/19 23:23:40 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2109 2025/12/19 01:43:46 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -563,7 +563,7 @@ static XtResource xterm_resources[] =
 
 #if OPT_BLINK_CURS
     Bres(XtNcursorBlinkXOR, XtCCursorBlinkXOR, screen.cursor_blink_xor, True),
-    Sres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink_s, "never"),
+    Sres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink_s, DEF_CURSOR_BLINK),
 #endif
     Bres(XtNcursorUnderLine, XtCCursorUnderLine, screen.cursor_underline, False),
     Bres(XtNcursorBar, XtCCursorBar, screen.cursor_bar, False),
@@ -780,22 +780,27 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_WIDE_CHARS
-    Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, False),
-    Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
     Bres(XtNprecompose, XtCPrecompose, screen.normalized_c, True),
     Bres(XtNutf8Latin1, XtCUtf8Latin1, screen.utf8_latin1, False),
     Bres(XtNutf8Weblike, XtCUtf8Weblike, screen.utf8_weblike, False),
     Bres(XtNvt100Graphics, XtCVT100Graphics, screen.vt100_graphics, True),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, False),
     Ires(XtNcombiningChars, XtCCombiningChars, screen.max_combining, 2),
-    Ires(XtNmkSamplePass, XtCMkSamplePass, misc.mk_samplepass, 655),
-    Ires(XtNmkSampleSize, XtCMkSampleSize, misc.mk_samplesize, 65536),
     Sres(XtNutf8, XtCUtf8, screen.utf8_mode_s, "default"),
     Sres(XtNutf8Fonts, XtCUtf8Fonts, screen.utf8_fonts_s, "default"),
     Sres(XtNutf8Title, XtCUtf8Title, screen.utf8_title_s, "default"),
     Sres(XtNwideBoldFont, XtCWideBoldFont, misc.default_font.f_wb, DEFWIDEBOLDFONT),
     Sres(XtNwideFont, XtCWideFont, misc.default_font.f_w, DEFWIDEFONT),
     Sres(XtNutf8SelectTypes, XtCUtf8SelectTypes, screen.utf8_select_types, NULL),
+#endif
+#if OPT_SYS_WCWIDTH
+    Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, False),
+    Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
+    Ires(XtNmkSamplePass, XtCMkSamplePass, misc.mk_samplepass, 655),
+    Ires(XtNmkSampleSize, XtCMkSampleSize, misc.mk_samplesize, 65536),
+#if OPT_EMOJI_WIDTH
+    Bres(XtNemojiWidth, XtCEmojiWidth, misc.emoji_width, False),
+#endif
 #endif
 
 #if OPT_LUIT_PROG
@@ -6031,7 +6036,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 #endif
 
-	case CASE_XTERM_PUSH_SGR:
+	case CASE_XTERM_PUSH_SGR:	/* XTPUSHSGR */
 	    TRACE(("CASE_XTERM_PUSH_SGR\n"));
 	    value = 0;
 	    if (nparam == 0 || (nparam == 1 && GetParam(0) == DEFAULT)) {
@@ -6056,20 +6061,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_REPORT_SGR:
+	case CASE_XTERM_REPORT_SGR:	/* XTREPORTSGR */
 	    TRACE(("CASE_XTERM_REPORT_SGR\n"));
 	    xtermParseRect(xw, ParamPair(0), &myRect);
 	    xtermReportSGR(xw, &myRect);
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_POP_SGR:
+	case CASE_XTERM_POP_SGR:	/* XTPOPSGR */
 	    TRACE(("CASE_XTERM_POP_SGR\n"));
 	    xtermPopSGR(xw);
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_PUSH_COLORS:
+	case CASE_XTERM_PUSH_COLORS:	/* XTPUSHCOLORS */
 	    TRACE(("CASE_XTERM_PUSH_COLORS\n"));
 	    if (nparam == 0) {
 		xtermPushColors(xw, DEFAULT);
@@ -6081,7 +6086,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_POP_COLORS:
+	case CASE_XTERM_POP_COLORS:	/* XTPOPCOLORS */
 	    TRACE(("CASE_XTERM_POP_COLORS\n"));
 	    if (nparam == 0) {
 		xtermPopColors(xw, DEFAULT);
@@ -6093,13 +6098,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_REPORT_COLORS:
+	case CASE_XTERM_REPORT_COLORS:		/* XTREPORTCOLORS */
 	    TRACE(("CASE_XTERM_REPORT_COLORS\n"));
 	    xtermReportColors(xw);
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_TITLE_STACK:
+	case CASE_XTERM_TITLE_STACK:	/* XTTITLEPOS */
 	    xtermReportTitleStack(xw);
 	    ResetState(sp);
 	    break;
@@ -11595,6 +11600,8 @@ VTInitialize(Widget wrequest,
 
     init_Bres(screen.vt100_graphics);
     init_Bres(screen.wide_chars);
+
+#if OPT_SYS_WCWIDTH
     init_Bres(misc.mk_width);
     init_Bres(misc.cjk_width);
 
@@ -11610,6 +11617,10 @@ VTInitialize(Widget wrequest,
 	wnew->misc.mk_samplepass = wnew->misc.mk_samplesize;
     if (wnew->misc.mk_samplepass < 0)
 	wnew->misc.mk_samplepass = 0;
+#if OPT_EMOJI_WIDTH
+    init_Bres(misc.emoji_width);
+#endif
+#endif /* OPT_SYS_WCWIDTH */
 
     if (TScreenOf(request)->utf8_mode) {
 	TRACE(("setting wide_chars on\n"));
@@ -11618,7 +11629,7 @@ VTInitialize(Widget wrequest,
 	TRACE(("setting utf8_mode to 0\n"));
 	screen->utf8_mode = uFalse;
     }
-    mk_wcwidth_init(screen->utf8_mode);
+    XTermWcInit(screen->utf8_mode, wnew->misc.emoji_width);
     TRACE(("initialized UTF-8 mode to %d\n", screen->utf8_mode));
 
 #if OPT_MINI_LUIT
@@ -13495,6 +13506,7 @@ ShowCursor(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     XTermDraw params;
     IChar base;
+    Char size;
     unsigned flags;
     CellColor fg_bg = initCColor;
     GC currentGC;
@@ -13563,6 +13575,9 @@ ShowCursor(XtermWidget xw)
     if (base == 0) {
 	base = ' ';
     }
+
+    SelectSize(ld, cursor_col, base, size);
+
 #if OPT_ISO_COLORS
 #if EXP_BOGUS_FG
     /*
@@ -13844,7 +13859,7 @@ ShowCursor(XtermWidget xw)
 
 	    drawXtermText(&params,
 			  currentGC, x, y,
-			  &base, 1);
+			  &base, &size, 1);
 
 #if OPT_WIDE_CHARS
 	    if_OPT_WIDE_CHARS(screen, {
@@ -13852,14 +13867,15 @@ ShowCursor(XtermWidget xw)
 
 		/* *INDENT-EQLS* */
 		params.draw_flags = NOBACKGROUND;
-		params.on_wide    = isWide((int) base);
+		params.on_wide    = SelectedSize(size) > 1;
 
 		for_each_combData(off, ld) {
 		    if (!(ld->combData[off][my_col]))
 			break;
+		    size = 0;
 		    drawXtermText(&params,
 				  currentGC, x, y,
-				  ld->combData[off] + my_col, 1);
+				  ld->combData[off] + my_col, &size, 1);
 		}
 	    });
 #endif
@@ -13894,6 +13910,7 @@ HideCursor(XtermWidget xw)
     GC currentGC;
     int x, y;
     IChar base;
+    Char size;
     unsigned flags;
     CellColor fg_bg = initCColor;
     Bool in_selection;
@@ -13946,12 +13963,15 @@ HideCursor(XtermWidget xw)
     if (base == 0) {
 	base = ' ';
     }
+
+    SelectSize(ld, cursor_col, base, size);
+
+#if OPT_ISO_COLORS
 #if EXP_BOGUS_FG
     /*
      * If the cursor happens to be on blanks, and we have not set both
      * foreground and background color, do not treat it as a colored cell.
      */
-#if OPT_ISO_COLORS
     if (base == ' ') {
 	if ((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR) {
 	    TRACE(("HideCursor - do not treat as a colored cell\n"));
@@ -14022,7 +14042,7 @@ HideCursor(XtermWidget xw)
 
     drawXtermText(&params,
 		  currentGC, x, y,
-		  &base, 1);
+		  &base, &size, 1);
 
 #if OPT_WIDE_CHARS
     if_OPT_WIDE_CHARS(screen, {
@@ -14030,14 +14050,15 @@ HideCursor(XtermWidget xw)
 
 	/* *INDENT-EQLS* */
 	params.draw_flags  = NOBACKGROUND;
-	params.on_wide     = isWide((int) base);
+	params.on_wide     = SelectedSize(size) > 1;
 
 	for_each_combData(off, ld) {
 	    if (!(ld->combData[off][my_col]))
 		break;
+	    size = 0;
 	    drawXtermText(&params,
 			  currentGC, x, y,
-			  ld->combData[off] + my_col, 1);
+			  ld->combData[off] + my_col, &size, 1);
 	}
     });
 #endif

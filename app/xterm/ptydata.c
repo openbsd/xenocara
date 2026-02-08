@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.163 2024/12/01 23:48:07 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.167 2025/12/19 01:42:24 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -342,7 +342,7 @@ switchPtyData(TScreen *screen, int flag)
     if (screen->utf8_mode != flag) {
 	screen->utf8_mode = flag;
 	screen->utf8_inparse = (Boolean) (flag != 0);
-	mk_wcwidth_init(screen->utf8_mode);
+	XTermWcInit(screen->utf8_mode, term->misc.emoji_width);
 
 	TRACE(("turning UTF-8 mode %s\n", BtoS(flag)));
 	update_font_utf8_mode();
@@ -671,10 +671,10 @@ v_write(int f, const Char *data, size_t len)
     (void) len;
 }
 
-void
+int
 mk_wcwidth_init(int mode)
 {
-    (void) mode;
+    return mode;
 }
 
 void

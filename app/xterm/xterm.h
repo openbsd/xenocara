@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.971 2025/10/19 20:01:38 tom Exp $ */
+/* $XTermId: xterm.h,v 1.981 2025/12/21 22:08:07 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -158,9 +158,11 @@
 #endif
 
 #if defined(__OpenBSD__)
-#define DEFDELETE_DEL True
+#define DEFDELETE_DEL     True
 #define DEF_BACKARO_ERASE True
 #define DEF_INITIAL_ERASE True
+#define SIG_ATOMIC_T      volatile sig_atomic_t
+#define USE_UTMP_SETGID   True
 #endif
 
 #if defined(__SCO__) || defined(__UNIXWARE__)
@@ -520,6 +522,7 @@ extern char **environ;
 #define XtNeightBitMeta		"eightBitMeta"
 #define XtNeightBitOutput	"eightBitOutput"
 #define XtNeightBitSelectTypes	"eightBitSelectTypes"
+#define XtNemojiWidth		"emojiWidth"
 #define XtNeraseSavedLines	"eraseSavedLines"
 #define XtNfaceName		"faceName"
 #define XtNfaceNameDoublesize	"faceNameDoublesize"
@@ -795,6 +798,7 @@ extern char **environ;
 #define XtCEightBitMeta		"EightBitMeta"
 #define XtCEightBitOutput	"EightBitOutput"
 #define XtCEightBitSelectTypes	"EightBitSelectTypes"
+#define XtCEmojiWidth		"EmojiWidth"
 #define XtCEraseSavedLines	"EraseSavedLines"
 #define XtCFaceName		"FaceName"
 #define XtCFaceNameDoublesize	"FaceNameDoublesize"
@@ -1113,6 +1117,48 @@ extern void report_char_class(XtermWidget);
 #define CharWidth(screen, n) (IsLatin1(screen, n) ? 1 : 0)
 #define IsLatin1(screen, n)  (IsAscii1(n) || ((n) >= Upper8Bits(screen)))
 #endif
+
+#if OPT_EMOJI_WIDTH
+
+#define VS16_FILLER	' '	/* FIXME: should be HIDDEN_CHAR */
+
+#define XTermWcInit(utf8,emoji) \
+	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \
+			| WcPrivateFullwidth \
+			| ((emoji) ? WcEmojiFullwidth : WcUnknown))
+
+#define SelectedSize(n) (((n) >= 1 && (n) <= 2) ? (n) : 0)
+
+#define SelectSize(ld, col, source, target) \
+    target = (Char) (source ? CharWidth(screen, source) : 1); \
+    if_OPT_WIDE_CHARS(screen, { \
+	size_t off; \
+	for_each_combData(off, ld) { \
+	    CharData part; \
+	    if (!(part = ld->combData[off][col])) \
+		break; \
+	    if (part == UCS_VS15) { \
+		target = 1; \
+		break; \
+	    } else if (part == UCS_VS16) { \
+		target = 2; \
+		break; \
+	    } \
+	} \
+    })
+
+#else
+
+#define XTermWcInit(utf8,emoji) \
+	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \
+			| WcPrivateFullwidth)
+
+#define SelectedSize(n) (((n) >= 1 && (n) <= 2) ? (n) : 0)
+
+#define SelectSize(ld, col, source, target) \
+    target = (Char) (source ? CharWidth(screen, source) : 1)
+
+#endif /* OPT_EMOJI_WIDTH */
 
 /* cachedCgs.c */
 extern CgsEnum getCgsId(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
@@ -1734,7 +1780,7 @@ extern char * xtermSetLocale (int /* category */, String /* after */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
-extern int drawXtermText (const XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, Cardinal /* len */);
+extern int drawXtermText (const XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, const Char * /* size */, Cardinal /* len */);
 extern int extendedBoolean (const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget /* xw */, ScrnColors * /* pNew */);
 extern void ClearLine (XtermWidget /* xw */);
@@ -1750,7 +1796,6 @@ extern void RevScroll (XtermWidget /* xw */, int /* amount */);
 extern void ReverseVideo (XtermWidget /* xw */);
 extern void WriteText (XtermWidget /* xw */, Cardinal /* offset */, Cardinal /* len */);
 extern void decode_keyboard_type (XtermWidget /* xw */, struct XTERM_RESOURCE * /* rp */);
-extern void decode_wcwidth (XtermWidget /* xw */);
 extern void do_cd_xtra_scroll (XtermWidget /* xw */, int /* param */);
 extern void do_erase_display (XtermWidget /* xw */, int /* param */, int /* mode */);
 extern void do_erase_char (XtermWidget /* xw */, int /* param */, int /* mode */);
@@ -1876,6 +1921,12 @@ extern void discardRenderDraw(TScreen * /* screen */);
 #define getXtermFG(xw, flags, color) getXtermForeground(xw, flags, color)
 #define getXtermBG(xw, flags, color) getXtermBackground(xw, flags, color)
 
+#if OPT_SYS_WCWIDTH
+extern void decode_wcwidth (XtermWidget /* xw */);
+#else
+#define decode_wcwidth(xw) my_wcwidth = &mk_wcwidth
+#endif
+
 #if OPT_ZICONBEEP
 extern void initZIconBeep(void);
 extern void resetZIconBeep(XtermWidget /* xw */);
@@ -1940,6 +1991,9 @@ unsigned visual_width(const IChar * /* str */, Cardinal /* len */);
 #define UIntSet(dst,bits) dst = dst | (unsigned) (bits)
 #define UIntClr(dst,bits) dst = dst & (unsigned) ~(bits)
 #define SIntClr(dst,bits) dst = (int) ((unsigned) dst & (unsigned) ~(bits))
+
+#define IAttrSet(dst,bits) dst = dst | (IAttr) (bits)
+#define IAttrClr(dst,bits) dst = dst & (IAttr) ~(bits)
 
 #ifdef __cplusplus
 	}

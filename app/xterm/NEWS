@@ -1,25 +1,10 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #403 - 2025/10/19
+                            Patch #406 - 2025/12/21
 
-     * modify  a  special  case  which gives the expected width of Latin-1
-       characters  to  account  for  the allowC1Printable resource (Debian
-       #1110771).
-     * modify  run-tic.in  to use ncurses tic's -o option in preference to
-       the TERMINFO environment variable.
-     * adjust   limits   for   built-in  line-drawing  characters  (Debian
-       #1109472).
-     * add  note  in  manpage  regarding environment variables which xterm
-       removes (report by Ben Collver).
-     * modify  resources  eightBitSelectTypes and utf8SelectTypes to match
-       names ignoring case.
-     * improve  manpage  description  of  comma-separated  resource values
-       (prompted by discussion with István Kopft).
-     * change  default value for disallowedWindowOps resource (prompted by
-       discussion with István Kopft).
-     * fix  a  mismatched  pointer  in  free  in error-handling of a table
-       lookup of resource initialization (report/patch by István Kopft).
-     * update tables in wcwidth.c based on Unicode 17.0.0
-     * update config.guess, config.sub
+     * add   option   -emoji_width   and   resource  emojiWidth  to  allow
+       enabling/disabling  VS15/VS16  feature  introduced  in  patch  #404
+       (Debian #1123509). Also, work around display issues by changing the
+       filler character for VS16.
 

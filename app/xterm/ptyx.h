@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1156 2025/08/31 21:55:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1162 2025/12/19 01:15:26 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -410,6 +410,8 @@ typedef struct {
 #define MAX_U_STRING	65535u		/* string-length */
 
 /* constants used for utf8 mode */
+#define UCS_VS15	0xfe0e
+#define UCS_VS16	0xfe0f
 #define UCS_REPL	0xfffd
 #define UCS_LIMIT	0x80000000U	/* both limit and flag for non-UCS */
 
@@ -454,11 +456,11 @@ typedef struct {
 	Char		a_radix[NPARAM]; /* Parameters			*/
 } ANSI;
 
-#define TEK_FONT_LARGE 0
-#define TEK_FONT_2 1
-#define TEK_FONT_3 2
-#define TEK_FONT_SMALL 3
-#define	TEKNUMFONTS 4
+#define TEK_FONT_LARGE  0
+#define TEK_FONT_2      1
+#define TEK_FONT_3      2
+#define TEK_FONT_SMALL  3
+#define TEKNUMFONTS     4
 
 /* Actually there are 5 types of lines, but four are non-solid lines */
 #define	TEKNUMLINES	4
@@ -569,6 +571,10 @@ typedef enum {
 
 #ifndef OPT_DEC_RECTOPS
 #define OPT_DEC_RECTOPS 1 /* true if xterm is configured for VT420 rectangles */
+#endif
+
+#ifndef OPT_EMOJI_WIDTH
+#define OPT_EMOJI_WIDTH 1 /* true if xterm supports VS15/VS16 Emoji width */
 #endif
 
 #ifndef OPT_SET_XPROP
@@ -793,6 +799,10 @@ typedef enum {
 
 #ifndef OPT_SUNPC_KBD
 #define OPT_SUNPC_KBD	1 /* true if xterm supports Sun/PC keyboard map */
+#endif
+
+#ifndef OPT_SYS_WCWIDTH
+#define OPT_SYS_WCWIDTH	1 /* true if system has usable width */
 #endif
 
 #ifndef OPT_TCAP_FKEYS
@@ -3382,11 +3392,17 @@ typedef struct _Misc {
     VTFontNames default_font;
     char *geo_metry;
     char *T_geometry;
-#if OPT_WIDE_CHARS
+#if OPT_WIDE_CHARS && OPT_SYS_WCWIDTH
     Boolean cjk_width;		/* true for built-in CJK wcwidth() */
-    Boolean mk_width;		/* true for simpler built-in wcwidth() */
+    Boolean mk_width;		/* true for built-in wcwidth() */
     int mk_samplesize;
     int mk_samplepass;
+#if OPT_EMOJI_WIDTH
+    Boolean emoji_width;	/* true for Emoji VS15/VS16 wcwidth() */
+#endif
+#else
+#undef  OPT_SYS_WCWIDTH
+#define OPT_SYS_WCWIDTH 0
 #endif
 #if OPT_LUIT_PROG
     Boolean callfilter;		/* true to invoke luit */

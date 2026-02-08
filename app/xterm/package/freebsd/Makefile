@@ -1,4 +1,4 @@
-# $XTermId: Makefile,v 1.126 2025/09/13 13:19:52 tom Exp $
+# $XTermId: Makefile,v 1.129 2025/12/17 08:45:47 tom Exp $
 
 # This is adapted from the FreeBSD port, installing as "xterm-dev" with
 # separate resource- and manpage files.
@@ -6,7 +6,7 @@
 # and "make makesum".
 
 PORTNAME=	xterm
-DISTVERSION=	403
+DISTVERSION=	406
 CATEGORIES=	x11
 MASTER_SITES=	https://invisible-island.net/archives/xterm/:src1 \
 		https://invisible-mirror.net/archives/xterm/:src1
