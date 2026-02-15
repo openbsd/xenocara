@@ -29,17 +29,18 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so Xdamage version l.n.m corresponds to protocol version l.n
 #
-AC_INIT(libXdamage, [1.1.6],
+AC_INIT(libXdamage, [1.1.7],
         [https://gitlab.freedesktop.org/xorg/lib/libxdamage/-/issues],
         [libXdamage])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIRS([m4])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Require X.Org macros 1.8 or later
 m4_ifndef([XORG_MACROS_VERSION],

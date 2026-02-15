@@ -1,3 +1,59 @@
+commit 4ff0f0e76c974faf920e476abccc65a4990a637c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 25 14:59:17 2026 -0800
+
+    libXdamage 1.1.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3cc0a1a91230aef1ff9e92f6ff50fd7ca2e3de0b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1319ae5cfbde5b75e23383baa5e00cc23513448c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 15 13:22:05 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxdamage/-/merge_requests/5>
+
+commit 2d1aae42f0497b198f79b9e791856343d14503b1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:42: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:42: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:42: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 1f20df4fd7c132f55e924dc5ec3f270cd54704d0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Dec 4 15:09:13 2022 -0800
@@ -686,13 +742,13 @@ Date:   Thu May 19 00:10:07 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit 4b9f6d209d2833afb58c2f2e648907f460d1be95
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue May 17 17:02:24 2005 +0000
 
     Conditionally include config.h in xc/lib/Xdamage and xc/lib/Xfixes
 
 commit daa2ab8a2deff5730713c38322be53ed8facae74
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue May 17 16:47:59 2005 +0000
 
     Add Xdamage build system
