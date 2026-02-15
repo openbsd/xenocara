@@ -1,0 +1,3 @@
+option('docs', type: 'feature', description: 'Build documentation')
+option('lib_man_suffix', type : 'string', value : '3',
+       description : 'Suffix for library man pages')

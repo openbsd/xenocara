@@ -31,17 +31,18 @@ AC_PREREQ([2.60])
 # that 'revision' number appears in Xcomposite.h and has to be manually
 # synchronized.
 #
-AC_INIT(libXcomposite, [0.4.6],
+AC_INIT(libXcomposite, [0.4.7],
 	[https://gitlab.freedesktop.org/xorg/lib/libxcomposite/-/issues],
 	[libXcomposite])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIRS([m4])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],

@@ -1,12 +1,13 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-libdir=@libdir@
 includedir=@includedir@
+libdir=@libdir@
 
 Name: Xcomposite
 Description: X Composite Extension Library
+URL: https://gitlab.freedesktop.org/xorg/lib/libxcomposite/
 Version: @PACKAGE_VERSION@
 Requires: xproto compositeproto >= @COMPOSITEEXT_VERSION@
 Requires.private: x11 xfixes
-Cflags: -I${includedir}
 Libs: -L${libdir} -lXcomposite
+Cflags: -I${includedir}

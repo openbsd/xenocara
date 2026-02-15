@@ -1,3 +1,69 @@
+commit a6d5d773e2a4e5a11b58f3a894f2085686baa6f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 25 14:25:04 2026 -0800
+
+    libXcomposite 0.4.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0d3cb61bda8c22f2cbd9134e9225080460f2974
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f796f0a862849765ac5b6b5e861ea548b421b8f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 21 18:16:30 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxcomposite/-/merge_requests/5>
+
+commit af3df13591f172aa4b0e74101574ca29ff879ba6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:44: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:44: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:44: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c09e80171064e2c1c82d5912f4e725c6172b2911
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:22:14 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit cecff847395deb553b6331f31776f9cbfc809add
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Dec 4 14:04:06 2022 -0800
@@ -750,7 +816,7 @@ Date:   Mon Jul 11 22:28:03 2005 +0000
     Require modular X library. Unify dependency _CFLAGS/_LIBS
 
 commit 7098e81fd4d933ca922431280579049396466d23
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu Jul 7 18:25:28 2005 +0000
 
     Add build sytem for Xcomposite
@@ -767,7 +833,7 @@ Date:   Sun Jul 3 07:00:56 2005 +0000
         <X11/fonts/foo.h>.
 
 commit 6a5a9a284a8e0e76aed1302ccb5c423c12b66eac
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue May 17 16:47:58 2005 +0000
 
     Add Xdamage build system
