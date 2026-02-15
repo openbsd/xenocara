@@ -1,12 +1,13 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-libdir=@libdir@
 includedir=@includedir@
+libdir=@libdir@
 
 Name: Xrandr
 Description: X RandR Library
+URL: https://gitlab.freedesktop.org/xorg/lib/libxrandr/
 Version: @VERSION@
 Requires: xproto randrproto >= @RANDR_VERSION@
 Requires.private: x11 xext xrender
-Cflags: -I${includedir}
 Libs: -L${libdir} -lXrandr
+Cflags: -I${includedir}

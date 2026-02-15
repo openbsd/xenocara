@@ -23,10 +23,9 @@
 .ns
 .TP \\$1
 ..
-.TH XRANDR __libmansuffix__ __vendorversion__
-
+.TH XRANDR __libmansuffix__ 2011-03-31 __vendorversion__
 .SH NAME
- Xrandr \- X Resize, Rotate and Reflection extension.
+Xrandr \- X Resize, Rotate and Reflection extension.
 .SH SYNTAX
 \&#include <X11/extensions/Xrandr.h>
 .nf
@@ -134,31 +133,26 @@ Specifies the screen configuration being used.
 Specifies the array of supported sizes.
 .IP \fIrate\fP 1i
 Specifies the refresh rate in Hz.
-
 .SH DATATYPES
-
-.PP
-.B Rotations/Reflections
-.PP
+.SS Rotations/Reflections
 Can be any of:
 .nf
 \&#define RR_Rotate_0             1
 \&#define RR_Rotate_90            2
 \&#define RR_Rotate_180           4
 \&#define RR_Rotate_270           8
-
+.sp
 /\(** new in 1.0 protocol, to allow reflection of screen */
 /\(** reflection is applied after rotation */
-
+.sp
 \&#define RR_Reflect_X            16
 \&#define RR_Reflect_Y            32
-
-
+.sp
 typedef struct {
     int	width, height;
     int	mwidth, mheight;
 } XRRScreenSize;
-
+.sp
 typedef struct {
     int type;				/\(** event base */
     unsigned long serial;	/\(** # of last request processed by server */
@@ -181,60 +175,60 @@ typedef struct {
 The
 .B XRRScreenSize
 structure contains a possible root size in pixels and in millimeters.
-
+.PP
 A
 .B XRRScreenChangeNotifyEvent
 is sent to a client that has requested notification whenever the screen
 configuration is changed. A client can perform this request by calling
 \fBXRRSelectInput\fP, passing the display, the root window, and the
 \fBRRScreenChangeNotifyMask\fP mask.
-
+.PP
 .B XRRScreenConfiguration
 is an opaque data type containing the configuration information
 for a screen.
-
-.B Timestamps
-.PP
+.SS Timestamps
 Time stamps are included and must be used to ensure the client is playing
 with a full deck: the screen may change properties
 on the fly and this ensures its knowledge of the configuration is up to date.
 This is to help issues when screens may become hot-pluggable in the future.
-
 .SH DESCRIPTION
 .B Xrandr
-is a simple library designed to interface the X Resize and Rotate
-Extension.  This allows clients to change the size and rotation of the
+is a simple library designed to interface the X Resize and Rotate Extension.
+This allows clients to change the size and rotation of the
 root window of a screen, along with the ability to reflect the screen
-about either axis (if supported by the implementation).  Rotation and
-reflection may be implemented by software and may result in slower
+about either axis (if supported by the implementation).
+Rotation and reflection may be implemented by software and may result in slower
 performance if rotation and reflection are implemented in this fashion
 (as are all implementations as of October 2002).
 .PP
 The Xrandr library does some minimal caching to avoid roundtrips to
-provide clients frequently used information.  See "The X Resize and
-Rotate Extension" for a detailed description; also note that depth
-switching, as described in the document is not implemented, and may
-(or may not) ever be implemented, as display memory is growing rapidly,
+provide clients frequently used information.
+See "The X Resize and Rotate Extension" for a detailed description;
+also note that depth switching, as described in the document is not implemented,
+and may (or may not) ever be implemented, as display memory is growing rapidly,
 and toolkits are already beginning to support migration, mitigating the
-need for depth switching.  If it is implemented in the future, we
-expect to do so via an upward compatible extension to the
-current library/protocol; functionality described here should continue
-to work.
+need for depth switching.
+If it is implemented in the future, we expect to do so via
+an upward compatible extension to the current library/protocol;
+functionality described here should continue to work.
 .PP
-Rotation and reflection and how they interact can be confusing.  In
-Randr, the coordinate system is rotated in a counter-clockwise
-direction relative to the normal orientation.  Reflection is along the
-window system coordinate system, not the physical screen X and Y axis,
-so that rotation and reflection do not interact.  The other way to
-consider reflection is to treat it as specified in the "normal"
-orientation, before rotation.
+Rotation and reflection and how they interact can be confusing.
+In Randr, the coordinate system is rotated in a counter-clockwise
+direction relative to the normal orientation.
+Reflection is along the window system coordinate system,
+not the physical screen X and Y axis,
+so that rotation and reflection do not interact.
+The other way to consider reflection is to treat it as specified in
+the "normal" orientation, before rotation.
 .PP
 The
 .B XRRScreenChangeNotify
 event is sent to clients that ask to be informed whenever the root window
-configuration changes.  Configuration changes may include resolution,
-physical size, subpixel order (see XRender(3)), and rotation.  Note
-that changes to any or all of these could occur due to external events
+configuration changes.
+Configuration changes may include resolution, physical size, subpixel order (see
+.BR XRender (3)),
+and rotation.
+Note that changes to any or all of these could occur due to external events
 (user control in the X server, a different monitor/flat panel display
 being hot-plugged) and is not only the result of a protocol/library
 request to the X server.
@@ -258,7 +252,6 @@ we did not want to change display structure data behind the back of toolkits,
 as in multithreaded clients, various race conditions might occur.
 Toolkits should provide clients some mechanism for notification of
 screen change, of course.
-
 .SH FUNCTIONS
 There are two classes of interfaces: those which can be safely called
 even if RandR is not implemented on a screen (to make common idioms not
@@ -272,9 +265,9 @@ rotation/reflection of the screen.
 .PP
 .B XRRSizes
 returns the size and a pointer to the current sizes supported by
-the specified screen.  The first size specified is the default size
-of the server. If RandR is not supported, it returns 0 for
-the number of sizes.
+the specified screen.
+The first size specified is the default size of the server.
+If RandR is not supported, it returns 0 for the number of sizes.
 .PP
 .B XRRRates
 returns a pointer to the rates supported by the specified size.
@@ -304,45 +297,46 @@ be used (or a
 .B BadValue
 error is returned).
 The \fItimestamp\fP is used by the server to make sure the client
-has up to date configuration information. Status is returned
-to indicate success or failure; a client must refresh its configuration
-information if it fails and try the call again (by calling
+has up to date configuration information.
+Status is returned to indicate success or failure;
+a client must refresh its configuration information if it fails
+and try the call again (by calling
 \fBXRRGetScreenInfo\fP).
 .PP
 .B XRRSetScreenConfigAndRate
 is like
 .B XRRSetScreenConfig
-but also sets the refresh rate. If specified rate is not supported a
+but also sets the refresh rate.
+If specified \fIrate\fP is not supported a
 .B BadValue
 error is returned.
 .PP
-.B XRRConfigRotations,
-.B XRRConfigSizes,
-.B XRRConfigCurrentConfiguration,
-.B XRRConfigTimes,
-.B XRRConfigRates,
+.BR XRRConfigRotations ,
+.BR XRRConfigSizes ,
+.BR XRRConfigCurrentConfiguration ,
+.BR XRRConfigTimes ,
+.BR XRRConfigRates ,
 and
 .B XRRConfigCurrentRate
 are used to get specific configuration information out of a screen
 configuration.
 .PP
 .B XRRGetScreenInfo
-returns a screen configuration for later use; the information is
-private to the library.
+returns a screen configuration for later use;
+the information is private to the library.
 Call
 .B XRRFreeScreenConfigInfo
 to free this information when you are finished with it.
 It forces a round trip to the server.
-
+.PP
 Other functions include:
 .B XRRQueryExtension
 which returns the event and error base codes,
-.B XRRQueryVersion
-, which returns the current version of the extension (this information
+.BR XRRQueryVersion ,
+which returns the current version of the extension (this information
 is cached by the library).
 .SH RESTRICTIONS
 .B Xrandr
-will remain upward compatible after the current 1.0 release.
+will remain upward compatible since the 1.0 release.
 .SH AUTHOR
 Jim Gettys, and Keith Packard, HP.
-
