@@ -194,14 +194,13 @@ print_scanline (unsigned int width,
 		const char *chars)
 {
     unsigned const char *dp = data;
-    int row, column;
     static unsigned const char masktable[] = {
 	0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
     int padded = ((width & 7) != 0);
 
-    for (row = 0; row < height; row++) {
-	for (column = 0; column < width; column++) {
-	    int i = (column & 7);
+    for (unsigned int row = 0; row < height; row++) {
+	for (unsigned int column = 0; column < width; column++) {
+	    unsigned int i = (column & 7);
 
 	    if (*dp & masktable[i]) {
 		putchar (chars[1]);

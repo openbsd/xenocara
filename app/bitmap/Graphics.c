@@ -427,10 +427,11 @@ BWDrawCircle(Widget w,
 	BWDrawPoint(w, origin_x, origin_y, value);
     }
     else {
-	BWDrawPoint(w, origin_x - (Position) floor(radius), origin_y, value);
-	BWDrawPoint(w, origin_x + (Position) floor(radius), origin_y, value);
-	BWDrawPoint(w, origin_x, origin_y - (Position) floor(radius), value);
-	BWDrawPoint(w, origin_x, origin_y + (Position) floor(radius), value);
+        delta =floor(radius);
+	BWDrawPoint(w, origin_x - delta, origin_y, value);
+	BWDrawPoint(w, origin_x + delta, origin_y, value);
+	BWDrawPoint(w, origin_x, origin_y - delta, value);
+	BWDrawPoint(w, origin_x, origin_y + delta, value);
     }
     half = radius / sqrt(2.0);
     for(i = 1; (int)i <= (int)half; i++) {
@@ -453,17 +454,20 @@ BWDrawFilledCircle(Widget w,
 		   Position origin_x, Position origin_y,
 		   Position point_x, Position point_y, int value)
 {
-    register Position i, j, delta;
+    register Position i, j, delta, rad;
     Dimension dx, dy;
     double radius;
 
     dx = abs(point_x - origin_x);
     dy = abs(point_y - origin_y);
     radius = sqrt((double) ((int)dx * (int)dx + (int)dy * (int)dy));
-    for(j = origin_x - (Position) floor(radius);
-	j <= origin_x + (Position) floor(radius); j++)
-	BWDrawPoint(w, j, origin_y, value);
-    for(i = 1; i <= (Position) floor(radius); i++) {
+    rad=floor(radius);
+    for(j = origin_x - rad ;
+	j <= origin_x + rad;
+	j++)
+                BWDrawPoint(w, j, origin_y, value);
+
+    for(i = 1; i <= rad; i++) {
 	delta = sqrt(radius * radius - i * i);
 	for(j = origin_x - delta; j <= origin_x + delta; j++) {
 	    BWDrawPoint(w, j, origin_y - i, value);
@@ -601,6 +605,13 @@ BWFloodFill(Widget w, Position x, Position y, int value)
 			      min(BW->bitmap.hot.y, BW->bitmap.mark.to_y))))
 
 void
+BWUpAction(Widget w, _X_UNUSED XEvent *event,
+           _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWUp(w);
+}
+
+void
 BWUp(Widget w)
 {
     BitmapWidget BW = (BitmapWidget) w;
@@ -644,6 +655,13 @@ BWUp(Widget w)
 		     (BW->bitmap.hot.y - 1 + BW->bitmap.image->height) %
 		     BW->bitmap.image->height);
 
+}
+
+void
+BWDownAction(Widget w, _X_UNUSED XEvent *event,
+             _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWDown(w);
 }
 
 void
@@ -691,6 +709,13 @@ BWDown(Widget w)
 }
 
 void
+BWLeftAction(Widget w, _X_UNUSED XEvent *event,
+             _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWLeft(w);
+}
+
+void
 BWLeft(Widget w)
 {
     BitmapWidget BW = (BitmapWidget) w;
@@ -733,6 +758,13 @@ BWLeft(Widget w)
 		     (BW->bitmap.hot.x - 1 + BW->bitmap.image->width) %
 		     BW->bitmap.image->width,
 		     BW->bitmap.hot.y);
+}
+
+void
+BWRightAction(Widget w, _X_UNUSED XEvent *event,
+              _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWRight(w);
 }
 
 void
@@ -782,6 +814,13 @@ BWRight(Widget w)
 /* void TransferImageData(); */
 
 void
+BWFoldAction(Widget w, _X_UNUSED XEvent *event,
+       _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWFold(w);
+}
+
+void
 BWFold(Widget w)
 {
     BitmapWidget BW = (BitmapWidget) w;
@@ -827,6 +866,13 @@ BWFold(Widget w)
 
 
 void
+BWClearAction(Widget w, _X_UNUSED XEvent *event,
+              _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWClear(w);
+}
+
+void
 BWClear(Widget w)
 {
     BitmapWidget BW = (BitmapWidget) w;
@@ -843,6 +889,13 @@ BWClear(Widget w)
     for (i = 0; i < length; i++)
 	BW->bitmap.image->data[i] = 0;
 
+}
+
+void
+BWSetAction(Widget w, _X_UNUSED XEvent *event,
+            _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWSet(w);
 }
 
 void
@@ -865,13 +918,21 @@ BWSet(Widget w)
 }
 
 void
-BWRedraw(Widget w)
+BWRedraw(Widget w, _X_UNUSED XEvent *event,
+         _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     BitmapWidget BW = (BitmapWidget) w;
 
     XClearArea(XtDisplay(BW), XtWindow(BW),
 	       0, 0, BW->core.width, BW->core.height,
 	       True);
+}
+
+void
+BWInvertAction(Widget w, _X_UNUSED XEvent *event,
+               _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWInvert(w);
 }
 
 void
@@ -890,6 +951,13 @@ BWInvert(Widget w)
 
     for (i = 0; i < length; i++)
 	BW->bitmap.image->data[i] ^= 255;
+}
+
+void
+BWFlipHorizAction(Widget w, _X_UNUSED XEvent *event,
+                  _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWFlipHoriz(w);
 }
 
 void
@@ -934,6 +1002,13 @@ BWFlipHoriz(Widget w)
 }
 
 void
+BWFlipVertAction(Widget w, _X_UNUSED XEvent *event,
+                 _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWFlipVert(w);
+}
+
+void
 BWFlipVert(Widget w)
 {
     BitmapWidget BW = (BitmapWidget) w;
@@ -974,6 +1049,13 @@ BWFlipVert(Widget w)
 		     BW->bitmap.hot.y);
 }
 
+
+void
+BWRotateRightAction(Widget w, _X_UNUSED XEvent *event,
+                    _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWRotateRight(w);
+}
 
 void
 BWRotateRight(Widget w)
@@ -1055,6 +1137,13 @@ BWRotateRight(Widget w)
 	    BWSetHotSpot(w, hot.x, hot.y);
     }
 
+}
+
+void
+BWRotateLeftAction(Widget w, _X_UNUSED XEvent *event,
+                    _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWRotateLeft(w);
 }
 
 void
@@ -1378,6 +1467,13 @@ BWRedrawMark(Widget w)
 }
 
 void
+BWStoreToBufferAction(Widget w, _X_UNUSED XEvent *event,
+                      _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWStoreToBuffer(w);
+}
+
+void
 BWStoreToBuffer(Widget w)
 {
     BitmapWidget BW = (BitmapWidget) w;
@@ -1458,6 +1554,13 @@ BWMarkAll(Widget w)
   BitmapWidget BW = (BitmapWidget) w;
 
   BWMark(w, 0, 0, BW->bitmap.image->width - 1, BW->bitmap.image->height - 1);
+}
+
+void
+BWUndoAction(Widget w, _X_UNUSED XEvent *event,
+             _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWUndo(w);
 }
 
 void

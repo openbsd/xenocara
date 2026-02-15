@@ -1,3 +1,230 @@
+commit 9fe123f47fb88d6fdadb765f1783666be28031ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 24 15:17:45 2026 -0800
+
+    bitmap 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7bd85d314ebc927b4e71d41848420376b33718cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/bitmap/-/merge_requests/14>
+
+commit e98dd780fb2ae4611237637474cd739c8e00f7f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 8 17:49:42 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/bitmap/-/merge_requests/13>
+
+commit 33db0dfa08af20586ed5a1a7eeb57e2d6cfd53b0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 27 17:40:25 2025 -0700
+
+    Partial Revert of "Fix warning: initialization discards ‘const’ qualifier..."
+    
+    This reverts most of commit 30c82fedf832d2ae69a953b750acc7d8d19ccd13.
+    These changes are not necessary when building with libXt 1.2.0 and later
+    due to the -D_CONST_X_STRING in Makefile.am
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/bitmap/-/merge_requests/12>
+
+commit 75f8ab6b1f6a5e6a0a9894f5cf316805bf0b4e55
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 27 17:32:00 2025 -0700
+
+    Partial Revert of "fix: warning: assignment discards ‘const’ qualifier..."
+    
+    This reverts much of commit 16d3040e49ab3d2ce4ec91f0bd6d60d6315fe3e4.
+    These changes are not necessary when building with libXt 1.2.0 and later
+    due to the -D_CONST_X_STRING in Makefile.am
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/bitmap/-/merge_requests/12>
+
+commit 59386837b8484f557bc4c67b576d65593ec6ad7b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 26 13:15:36 2025 -0700
+
+    Clear 10 of 15 -Wsign-compare warnings from gcc 15.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/bitmap/-/merge_requests/11>
+
+commit f46943f5495e3c345e0ba6573e4d68ce230609f6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 26 13:00:18 2025 -0700
+
+    StripFilename: avoid calling strrchr on NULL filename
+    
+    Found by gcc 15.1:
+    Bitmap.c: In function ‘StripFilename’:
+    Bitmap.c:674:25: warning: use of NULL ‘filename’ where non-null expected
+     [CWE-476] [-Wanalyzer-null-argument]
+      674 |     const char *begin = strrchr(filename, '/');
+          |                         ^~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/bitmap/-/merge_requests/11>
+
+commit 7284fd3c7a69d81fb72f496af3c44f505d8e1763
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 26 12:10:18 2025 -0700
+
+    Handle -Wcast-function-type warnings for functions used as XtActionProcs
+    
+    Fixes 19 warnings from gcc 15.1 of the form:
+    
+    Bitmap.c:125:32: warning: cast between incompatible function types
+     from ‘void (*)(struct _WidgetRec *)’
+     to ‘void (*)(struct _WidgetRec *, XEvent *, const char **, Cardinal *)’
+       {aka ‘void (*)(struct _WidgetRec *, union _XEvent *, const char **,
+        unsigned int *)’} [-Wcast-function-type]
+      125 | #define __C(A,B)  {(char *)(A),(XtActionProc)(B)}
+          |                                ^
+    Bitmap.c:133:3: note: in expansion of macro ‘__C’
+      133 |   __C("abort",              BWAbort),
+          |   ^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/bitmap/-/merge_requests/11>
+
+commit e6823baf329bf67e280ca5d2a37ba7be8886bed5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 26 10:51:28 2025 -0700
+
+    LoseSelection: second argument should be pointer, not raw value
+    
+    Found by gcc 15.1:
+    
+    CutPaste.c: In function ‘BWGrabSelection’:
+    CutPaste.c:143:47: warning: cast between incompatible function types
+     from ‘void (*)(struct _WidgetRec *, Atom)’
+       {aka ‘void (*)(struct _WidgetRec *, long unsigned int)’}
+     to ‘void (*)(struct _WidgetRec *, Atom *)’
+       {aka ‘void (*)(struct _WidgetRec *, long unsigned int *)’}
+     [-Wcast-function-type]
+      143 |                               (XtLoseSelectionProc)LoseSelection,
+          |                               ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/bitmap/-/merge_requests/11>
+
+commit 9d15d9bda6c1107341c1a8a9aca66372c4b69569
+Author: Walter Harms <wharms@bfs.de>
+Date:   Wed Jul 9 21:46:34 2025 +0200
+
+    FIX const warning
+    
+    Fix last const warning by cast, not good by no more warnings at least.
+
+commit 7900a7e09339d122b977046a0e456db81f16c81b
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Jul 6 13:30:22 2025 +0200
+
+    Fix Shadow warning
+    
+    after cleanup const warnings a shadow warning was left.
+    'filename' was used twice. filename in main() is now myfilename.
+
+commit 3124c475512492e19d114516795fd1d2a1394f91
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Jun 29 23:07:48 2025 +0200
+
+    FIX warning: assignment discards ‘const’ qualifier from pointer target type
+    
+    rewrite FixEntry() to use XtVaSetValues() in place of XtSetArg()
+    that makes array and counter useless
+
+commit b0777ccf75ede5270534054887c299efa5adaa39
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Jun 29 21:17:03 2025 +0200
+
+    FIX:  warning: cast from function call of type ‘double’ to non-matching type ‘short int’
+    
+    add a helper rad and let the compiler do its job
+
+commit 9a19c5812760c49bc7c51220233d251e4a178996
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Jun 29 21:08:33 2025 +0200
+
+    FIX: warning: cast from function call of type ‘double’ to non-matching type ‘short int’
+    
+     calculate floor(radius) once and do not cast same idee as a few lines
+     below.
+
+commit 53112755779d802fb44efe909e81962ad00cc51c
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Jun 29 21:04:06 2025 +0200
+
+    FIX an other const warning
+
+commit 16d3040e49ab3d2ce4ec91f0bd6d60d6315fe3e4
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat Jun 28 22:30:26 2025 +0200
+
+    fix: warning: assignment discards ‘const’ qualifier from pointer target type
+    
+    fix a pile of const warnings with casting. actualy this should be fixed
+    in Xt itself.
+
+commit 30c82fedf832d2ae69a953b750acc7d8d19ccd13
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Jun 27 23:00:29 2025 +0200
+
+    Fix warning: initialization discards ‘const’ qualifier from pointer target type
+    
+    change structure definition to fit reality
+
+commit 3f7f3a229e2c24dd900fc57c9a58afdaa75476d4
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Jun 27 22:44:07 2025 +0200
+
+    make return obvious
+    
+    no memory return immediately
+    saves one indention
+
+commit c4c40734b879db0a7f4e63f80cbd4baa7619c14a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 26 10:13:28 2025 -0700
+
+    man pages: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    mandoc: man1/bitmap.1:29:85: STYLE: input text line longer than 80 bytes: bitmap, bmtoa, atobm...
+    mandoc: man1/bitmap.1:612:2: WARNING: skipping paragraph macro: br after sp
+    mandoc: man1/bitmap.1:618:2: STYLE: fill mode already enabled, skipping: fi
+    an.tmac:man1/bitmap.1:616: style: 4 leading space(s) on input line
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/bitmap/-/merge_requests/10>
+
+commit 01314294795f5c1145caa778db28eba552d5abbc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 29 14:50:21 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/bitmap/-/merge_requests/9>
+
 commit 8330c04c89b5983a4c8a32a78a812343dba8ac05
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Feb 3 09:55:48 2024 -0800

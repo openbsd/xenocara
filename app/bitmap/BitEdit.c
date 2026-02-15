@@ -73,27 +73,31 @@ where options include all standard toolkit options plus:\n\
 \n\
 The default WIDTHxHEIGHT is 16x16.\n";
 
+#define __C(A,B,C,D)   {(char *)A,(char *)B,C,(XPointer)D}
+
 static XrmOptionDescRec options[] = {
-  { "-axes",	    "*bitmap.axes",	    XrmoptionNoArg,	"True"},
-  { "+axes",	    "*bitmap.axes",	    XrmoptionNoArg,	"False"},
-  { "-basename",    "*bitmap.basename",	    XrmoptionSepArg,	NULL},
-  { "-dashed",	    "*bitmap.dashed",	    XrmoptionNoArg,	"True"},
-  { "+dashed",	    "*bitmap.dashed",	    XrmoptionNoArg,	"False"},
-  { "-dashes",	    "*bitmap.dashes",	    XrmoptionSepArg,	NULL},
-  { "-fr",	    "*bitmap.frame",	    XrmoptionSepArg,	NULL},
-  { "-gt",	    "*bitmap.gridTolerance",XrmoptionSepArg,	NULL},
-  { "-grid",	    "*bitmap.grid",	    XrmoptionNoArg,	"True"},
-  { "+grid",	    "*bitmap.grid",	    XrmoptionNoArg,	"False"},
-  { "-hl",	    "*bitmap.highlight",    XrmoptionSepArg,	NULL},
-  { "-proportional","*bitmap.proportional", XrmoptionNoArg,	"True"},
-  { "+proportional","*bitmap.proportional", XrmoptionNoArg,	"False"},
-  { "-size",	    "*bitmap.size",	    XrmoptionSepArg,	NULL},
-  { "-sh",	    "*bitmap.squareHeight", XrmoptionSepArg,	NULL},
-  { "-sw",	    "*bitmap.squareWidth",  XrmoptionSepArg,	NULL},
-  { "-stipple",	    "*bitmap.stipple",	    XrmoptionSepArg,	NULL},
-  { "-stippled",    "*bitmap.stippled",	    XrmoptionNoArg,	"True"},
-  { "+stippled",    "*bitmap.stippled",	    XrmoptionNoArg,	"False"},
+  __C( "-axes",	    "*bitmap.axes",	    XrmoptionNoArg,	"True"),
+  __C( "+axes",	    "*bitmap.axes",	    XrmoptionNoArg,	"False"),
+  __C( "-basename",    "*bitmap.basename",	    XrmoptionSepArg,	NULL),
+  __C( "-dashed",	    "*bitmap.dashed",	    XrmoptionNoArg,	"True"),
+  __C( "+dashed",	    "*bitmap.dashed",	    XrmoptionNoArg,	"False"),
+  __C( "-dashes",	    "*bitmap.dashes",	    XrmoptionSepArg,	NULL),
+  __C( "-fr",	    "*bitmap.frame",	    XrmoptionSepArg,	NULL),
+  __C( "-gt",	    "*bitmap.gridTolerance",XrmoptionSepArg,	NULL),
+  __C( "-grid",	    "*bitmap.grid",	    XrmoptionNoArg,	"True"),
+  __C( "+grid",	    "*bitmap.grid",	    XrmoptionNoArg,	"False"),
+  __C( "-hl",	    "*bitmap.highlight",    XrmoptionSepArg,	NULL),
+  __C( "-proportional","*bitmap.proportional", XrmoptionNoArg,	"True"),
+  __C( "+proportional","*bitmap.proportional", XrmoptionNoArg,	"False"),
+  __C( "-size",	    "*bitmap.size",	    XrmoptionSepArg,	NULL),
+  __C( "-sh",	    "*bitmap.squareHeight", XrmoptionSepArg,	NULL),
+  __C( "-sw",	    "*bitmap.squareWidth",  XrmoptionSepArg,	NULL),
+  __C( "-stipple",	    "*bitmap.stipple",	    XrmoptionSepArg,	NULL),
+  __C( "-stippled",    "*bitmap.stippled",	    XrmoptionNoArg,	"True"),
+  __C( "+stippled",    "*bitmap.stippled",	    XrmoptionNoArg,	"False"),
 };
+
+#undef   __C
 
 typedef struct {
   int             id;
@@ -229,7 +233,8 @@ static Boolean image_visible = False;
 static Pixmap check_mark;
 static Dialog input_dialog, error_dialog, qsave_dialog;
 static Time btime;
-static char *filename = NULL, *base_name = NULL, *format;
+static char *filename = NULL, *base_name = NULL;
+static char  *format;
 static char message[80];
 
 
@@ -338,64 +343,57 @@ FixUp(void)
 static void
 FixEntry(Widget w, int *id)
 {
-    int n;
-    Arg wargs[2];
     Time dummy = 0;
-
-    n = 0;
 
     switch (*id) {
 
     case Image:
-	XtSetArg(wargs[n], XtNleftBitmap,
-		 image_visible ? check_mark : None); n++;
-	break;
+      XtVaSetValues(w,  XtNleftBitmap,
+		    image_visible ? check_mark : None,NULL);
+	return;
 
     case Grid:
-	XtSetArg(wargs[n], XtNleftBitmap,
-		 BWQueryGrid(bitmap_widget) ? check_mark : None); n++;
-	break;
+      XtVaSetValues(w,  XtNleftBitmap,
+		    BWQueryGrid(bitmap_widget) ? check_mark : None,NULL);
+	return;
 
     case Dashed:
-	XtSetArg(wargs[n], XtNleftBitmap,
-		 BWQueryDashed(bitmap_widget) ? check_mark : None); n++;
-	break;
+    XtVaSetValues(w,  XtNleftBitmap,
+		 BWQueryDashed(bitmap_widget) ? check_mark : None,NULL);
+	return;
 
     case Axes:
-	XtSetArg(wargs[n], XtNleftBitmap,
-		 BWQueryAxes(bitmap_widget) ? check_mark : None); n++;
-	break;
+    XtVaSetValues(w,  XtNleftBitmap,
+		 BWQueryAxes(bitmap_widget) ? check_mark : None,NULL);
+	return;
 
     case Stippled:
-	XtSetArg(wargs[n], XtNleftBitmap,
-		 BWQueryStippled(bitmap_widget) ? check_mark : None); n++;
-	break;
+        XtVaSetValues(w,  XtNleftBitmap,
+		 BWQueryStippled(bitmap_widget) ? check_mark : None,NULL);
+	return;
 
     case Proportional:
-	XtSetArg(wargs[n], XtNleftBitmap,
-		 BWQueryProportional(bitmap_widget) ? check_mark : None); n++;
-	break;
+        XtVaSetValues(w,  XtNleftBitmap,
+		      BWQueryProportional(bitmap_widget) ? check_mark : None,NULL);
+	return;
 
     case Zoom:
-	XtSetArg(wargs[n], XtNleftBitmap,
-		 BWQueryZooming(bitmap_widget) ? check_mark : None); n++;
-	break;
+        XtVaSetValues(w,  XtNleftBitmap,
+		 BWQueryZooming(bitmap_widget) ? check_mark : None,NULL);
+	return;
 
     case Copy:
     case Cut:
-	XtSetArg(wargs[n], XtNsensitive, BWQueryMarked(bitmap_widget)); n++;
-	break;
+      XtVaSetValues(w,  XtNsensitive, BWQueryMarked(bitmap_widget),NULL );
+	return;
 
     case Paste:
-	XtSetArg(wargs[n], XtNsensitive,
-		 BWQuerySelection(bitmap_widget, dummy)); n++;
-	break;
+      XtVaSetValues(w,  XtNsensitive, BWQuerySelection(bitmap_widget, dummy),NULL );
+	return;
 
     default:
 	return;
     }
-
-    XtSetValues(w, wargs, n);
 }
 
 /* ARGSUSED */
@@ -404,11 +402,9 @@ void FixMenu(Widget w,
 	     String *params,
 	     Cardinal *num_params)
 {
-    int i;
-
     btime = event->xbutton.time;
 
-    for (i = 0; i < XtNumber(edit_menu); i++)
+    for (Cardinal i = 0; i < XtNumber(edit_menu); i++)
 	FixEntry(edit_menu[i].widget, &edit_menu[i].id);
 }
 
@@ -886,7 +882,7 @@ void DoSaveAs(void)
 void DoResize(void)
 {
   Dimension width, height;
-  format = "";
+  format = (char *)"";
  RetryResize:
   if (PopupDialog(input_dialog, "Resize to WIDTHxHEIGHT:",
 		  format, &format, XtGrabExclusive) == Okay) {
@@ -909,7 +905,7 @@ void DoRescale(void)
 {
   Dimension width, height;
 
-  format = "";
+  format = (char *)"";
  RetryRescale:
   if (PopupDialog(input_dialog, "Rescale to WIDTHxHEIGHT:",
 		  format, &format, XtGrabExclusive) == Okay) {
@@ -975,12 +971,12 @@ void DoQuit(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 int main(int argc, char *argv[])
 {
-    int i, n;
+    Cardinal i, n;
     Arg wargs[2];
     Widget w;
     Widget radio_group = NULL;
     XtPointer radio_data = NULL;
-    const char *filename = NULL;
+    const char *myfilename = NULL;
 
     /* Handle args that don't require opening a display */
     for (int a = 1; a < argc; a++) {
@@ -1004,7 +1000,7 @@ int main(int argc, char *argv[])
 
     if (argc > 1) {
 	if ((argv[argc - 1][0] != '-') && (argv[argc - 1][0] != '+')) {
-	    filename = argv[--argc];
+	    myfilename = argv[--argc];
 	}
 	if (argc > 1) {
 	    fputs("Unknown argument(s):", stderr);
@@ -1100,14 +1096,14 @@ int main(int argc, char *argv[])
 
 	if (buttons[i].id == Point) {
 	    radio_group = buttons[i].widget;
-	    radio_data  = buttons[i].name;
+	    radio_data  = (char *)buttons[i].name;
 	}
     }
     bitmap_widget = XtCreateManagedWidget("bitmap", bitmapWidgetClass,
 					  pane_widget, NULL, 0);
     XtRealizeWidget(top_widget);
-    if (filename != NULL)
-        BWReadFile(bitmap_widget, filename, NULL);
+    if (myfilename != NULL)
+        BWReadFile(bitmap_widget, myfilename, NULL);
 
     wm_delete_window = XInternAtom(XtDisplay(top_widget), "WM_DELETE_WINDOW",
 				   False);

@@ -72,11 +72,11 @@ Boolean DEBUG;
 
 static XtResource resources[] = {
 {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
-     Offset(foreground_pixel), XtRString, XtDefaultForeground},
+     Offset(foreground_pixel), XtRString, (char *)XtDefaultForeground},
 {XtNhighlight, XtCHighlight, XtRPixel, sizeof(Pixel),
-     Offset(highlight_pixel), XtRString, XtDefaultForeground},
+     Offset(highlight_pixel), XtRString, (char *)XtDefaultForeground},
 {XtNframe, XtCFrame, XtRPixel, sizeof(Pixel),
-     Offset(frame_pixel), XtRString, XtDefaultForeground},
+     Offset(frame_pixel), XtRString, (char *)XtDefaultForeground},
 {XtNgridTolerance, XtCGridTolerance, XtRDimension, sizeof(Dimension),
      Offset(grid_tolerance), XtRImmediate, (XtPointer) DefaultGridTolerance},
 {XtNsize, XtCSize, XtRString, sizeof(String),
@@ -122,32 +122,31 @@ static XtResource resources[] = {
 };
 #undef Offset
 
-
 static XtActionsRec actions[] =
 {
-{"mark",               (XtActionProc)BWTMark},
-{"mark-all",           (XtActionProc)BWTMarkAll},
-{"unmark",             (XtActionProc)BWTUnmark},
-{"paste",              (XtActionProc)BWTPaste},
-{"bw-debug",           (XtActionProc)BWDebug},
-{"abort",              (XtActionProc)BWAbort},
-{"store-to-buffer",    (XtActionProc)BWStoreToBuffer},
-{"change-notify",      (XtActionProc)BWChangeNotify},
-{"set-changed",        (XtActionProc)BWSetChanged},
-{"up",                 (XtActionProc)BWUp},
-{"down",               (XtActionProc)BWDown},
-{"left",               (XtActionProc)BWLeft},
-{"right",              (XtActionProc)BWRight},
-{"fold",               (XtActionProc)BWFold},
-{"flip-horiz",         (XtActionProc)BWFlipHoriz},
-{"flip-vert",          (XtActionProc)BWFlipVert},
-{"rotate-right",       (XtActionProc)BWRotateRight},
-{"rotate-left",        (XtActionProc)BWRotateLeft},
-{"set",                (XtActionProc)BWSet},
-{"clear",              (XtActionProc)BWClear},
-{"invert",             (XtActionProc)BWInvert},
-{"undo",               (XtActionProc)BWUndo},
-{"redraw",             (XtActionProc)BWRedraw},
+{"mark",               BWTMark},
+{"mark-all",           BWTMarkAll},
+{"unmark",             BWTUnmark},
+{"paste",              BWTPaste},
+{"bw-debug",           BWDebug},
+{"abort",              BWAbort},
+{"store-to-buffer",    BWStoreToBufferAction},
+{"change-notify",      BWChangeNotifyAction},
+{"set-changed",        BWSetChangedAction},
+{"up",                 BWUpAction},
+{"down",               BWDownAction},
+{"left",               BWLeftAction},
+{"right",              BWRightAction},
+{"fold",               BWFoldAction},
+{"flip-horiz",         BWFlipHorizAction},
+{"flip-vert",          BWFlipVertAction},
+{"rotate-right",       BWRotateRightAction},
+{"rotate-left",        BWRotateLeftAction},
+{"set",                BWSetAction},
+{"clear",              BWClearAction},
+{"invert",             BWInvertAction},
+{"undo",               BWUndoAction},
+{"redraw",             BWRedraw},
 };
 
 static char translations1[] =
@@ -503,6 +502,13 @@ BWGetImage(Widget w, XEvent *event, String *params, Cardinal *num_params)
 #endif
 
 void
+BWChangeNotifyAction(Widget w, _X_UNUSED XEvent *event,
+                     _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWChangeNotify(w);
+}
+
+void
 BWChangeNotify(Widget w)
 {
     BitmapWidget BW = (BitmapWidget) w;
@@ -517,6 +523,13 @@ BWNotify(Widget w, XtActionProc proc)
     BitmapWidget BW = (BitmapWidget) w;
 
     BW->bitmap.notify = proc;
+}
+
+void
+BWSetChangedAction(Widget w, _X_UNUSED XEvent *event,
+                   _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
+{
+    BWSetChanged(w);
 }
 
 void
@@ -655,12 +668,12 @@ BWPutImage(BitmapWidget w, Display *display, Drawable drawable, GC gc,
 static char *
 StripFilename(_Xconst _XtString filename)
 {
-    const char *begin = strrchr(filename, '/');
-    const char *end;
-    char *result;
-    int length;
-
     if (filename) {
+	const char *begin = strrchr(filename, '/');
+	const char *end;
+	char *result;
+	int length;
+
 	begin = (begin ? begin + 1 : filename);
 	end = strchr(begin, '.'); /* change to strrchr to allow longer names */
 	length = (end ? (end - begin) : strlen (begin));

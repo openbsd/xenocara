@@ -106,9 +106,8 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
     }
 }
 
-/* ARGSUSED */
 static void
-LoseSelection(Widget w, Atom selection)
+LoseSelection(Widget w, _X_UNUSED Atom *selection)
 {
     BitmapWidget BW = (BitmapWidget) w;
 
@@ -140,7 +139,7 @@ BWGrabSelection(Widget w, Time btime)
 
     BW->bitmap.selection.own = XtOwnSelection(w, XA_PRIMARY, btime,
 					      ConvertSelection,
-					      (XtLoseSelectionProc)LoseSelection,
+					      LoseSelection,
 					      SelectionDone);
 	if (DEBUG && BW->bitmap.selection.own)
 	    fprintf(stderr, "Own the selection\n");

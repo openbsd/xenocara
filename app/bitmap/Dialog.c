@@ -71,9 +71,8 @@ static void
 SetSelected(Widget w, XtPointer clientData, XtPointer callData) /* ARGSUSED */
 {
     String name = (String)clientData;
-    int i;
 
-    for (i = 0; i < XtNumber(dialog_buttons); i++)
+    for (Cardinal i = 0; i < XtNumber(dialog_buttons); i++)
 	if (!strcmp(dialog_buttons[i].name, name))
 	    selected |= dialog_buttons[i].flag;
 }
@@ -87,9 +86,8 @@ SetDialogButton(Widget w,	/* not used */
 {
   char button_name[80];
   XtPointer dummy = NULL;
-  int i;
 
-  for (i = 0; i < *argc; i++) {
+  for (Cardinal i = 0; i < *argc; i++) {
     XmuCopyISOLatin1Lowered (button_name, argv[i]);
     SetSelected(w, button_name, dummy);
   }
@@ -100,13 +98,14 @@ static Boolean firstTime = True;
 Dialog
 CreateDialog(Widget top_widget, String name, unsigned long options)
 {
-    int i;
     Dialog popup;
 
     popup = (Dialog) XtMalloc(sizeof(_Dialog));
 
-    if (popup) {
-        if (firstTime) {
+    if (! popup)
+      return NULL;
+
+     if (firstTime) {
 	  XtAddActions(actions_table, XtNumber(actions_table));
 	  firstTime = False;
 	}
@@ -118,16 +117,13 @@ CreateDialog(Widget top_widget, String name, unsigned long options)
 						     dialogWidgetClass,
 						     popup->shell_widget,
 						     NULL, 0);
-	for (i = 0; i < XtNumber(dialog_buttons); i++)
+	for (Cardinal i = 0; i < XtNumber(dialog_buttons); i++)
 	    if (options & dialog_buttons[i].flag)
 		XawDialogAddButton(popup->dialog_widget,
 				   dialog_buttons[i].name,
-				   SetSelected, dialog_buttons[i].name);
+				   SetSelected, (XtPointer)dialog_buttons[i].name);
 	popup->options = options;
 	return popup;
-    }
-    else
-	return NULL;
 }
 
 void

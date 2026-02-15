@@ -274,10 +274,28 @@ extern void BWTMarkAll ( Widget w, XEvent *event, String *params, Cardinal *num_
 extern void BWTUnmark ( Widget w, XEvent *event, String *params, Cardinal *num_params );
 extern void BWTPaste ( Widget w, XEvent *event, String *params, Cardinal *num_params );
 extern void BWDebug ( Widget w, XEvent *event, String *params, Cardinal *num_params );
-extern void BWAbort ( Widget w );
+extern void BWAbort ( Widget w, XEvent *event, String *params, Cardinal *num_params );
 extern Boolean BWRemoveRequest ( Widget w );
-extern void BWRedraw ( Widget w );
+extern void BWRedraw ( Widget w, XEvent *event, String *params, Cardinal *num_params );
 extern Pixmap BWGetPixmap( Widget w );
+
+
+extern void BWUpAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWDownAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWLeftAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWRightAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWRotateRightAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWRotateLeftAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWStoreToBufferAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWUndoAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWSetChangedAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWFoldAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWClearAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWSetAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWInvertAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWFlipHorizAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWFlipVertAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
+extern void BWChangeNotifyAction ( Widget w, XEvent *event, String *params, Cardinal *num_params );
 
 #endif /* _Bitmap_h */
 

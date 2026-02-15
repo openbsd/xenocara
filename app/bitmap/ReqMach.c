@@ -55,9 +55,7 @@ from The Open Group.
 static BWRequestRec *
 FindRequest(BWRequest name)
 {
-    int i;
-
-    for (i = 0; i < bitmapClassRec.bitmap_class.num_requests; i++)
+    for (Cardinal i = 0; i < bitmapClassRec.bitmap_class.num_requests; i++)
 	if (!strcmp(name, bitmapClassRec.bitmap_class.requests[i].name))
 	    return &bitmapClassRec.bitmap_class.requests[i];
 
@@ -155,7 +153,7 @@ TrappingLoop(BitmapWidget BW)
 	}
 }
 /*
- * Terimantes the current request and continues with next request if con = TRUE
+ * Terminates the current request and continues with next request if cont = TRUE
  * Returns TRUE if there is any number of requests left on the stack.
  */
 Boolean
@@ -190,10 +188,11 @@ BWTerminateRequest(Widget w, Boolean cont)
 }
 
 /*
- * Simple interface to BWTerminateRequest that takes only a widget.
+ * XtActionProc interface to BWTerminateRequest.
  */
 void
-BWAbort(Widget w)
+BWAbort(Widget w, _X_UNUSED XEvent *event,
+        _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     BWTerminateRequest(w, True);
 }

@@ -1,3 +1,4 @@
+'\" t
 .\" Copyright 1993, 1998  The Open Group
 .\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
@@ -25,7 +26,8 @@
 .\"
 .TH BITMAP 1 __xorgversion__
 .SH NAME
-bitmap, bmtoa, atobm \- bitmap editor and converter utilities for the X Window System
+bitmap, bmtoa, atobm
+\- bitmap editor and converter utilities for the X Window System
 .SH SYNOPSIS
 .B bitmap
 [
@@ -60,17 +62,18 @@ bitmap, bmtoa, atobm \- bitmap editor and converter utilities for the X Window S
 .I filename
 ]
 .SH DESCRIPTION
-The \fIbitmap\fP program is a rudimentary tool for creating or editing
+The \fBbitmap\fP program is a rudimentary tool for creating or editing
 rectangular images made up of 1's and 0's.  Bitmaps are used in X for
 defining clipping regions, cursor shapes, icon shapes, and tile and
 stipple patterns.
 .PP
-The \fIbmtoa\fP and \fIatobm\fP filters convert \fIbitmap\fP files (FILE
+The \fBbmtoa\fP and \fBatobm\fP filters convert \fIbitmap\fP files (FILE
 FORMAT) to and from ASCII strings.  They are most commonly used to
 quickly print out bitmaps and to generate versions for including in text.
 .SH COMMAND LINE OPTIONS
-\fIBitmap\fP supports the standard X Toolkit command line arguments
-(see \fIX\fP(__miscmansuffix__)).  The following additional arguments are supported as well.
+\fBBitmap\fP supports the standard X Toolkit command line arguments
+(see \fBX\fP(__miscmansuffix__)).
+The following additional arguments are supported as well.
 .TP 4
 .B \-size\fI WIDTHxHEIGHT\fP
 Specifies size of the grid in squares.
@@ -98,10 +101,11 @@ Turns on or off dashing for the frame and grid lines.
 Turns on or off stippling of highlighted squares.
 .TP 4
 .B \-proportional, +proportional
-Turns proportional mode on or off.  If proportional mode is on,
-square width is equal to square height.  If proportional mode is
-off,\fI bitmap\fP will use the smaller square dimension, if they
-were initially different.
+Turns proportional mode on or off.
+If proportional mode is on, square width is equal to square height.
+If proportional mode is off,
+\fBbitmap\fP will use the smaller square dimension,
+if they were initially different.
 .TP 4
 .B \-dashes\fI filename\fP
 Specifies the bitmap to be used as a stipple for dashing.
@@ -117,14 +121,14 @@ Specifies the color used for the frame and grid lines.
 .TP 4
 .B filename
 Specifies the bitmap to be initially loaded into the program.
-If the file does not exist,\fI bitmap\fP will assume it is a new file.
+If the file does not exist, \fBbitmap\fP will assume it is a new file.
 .TP 4
 .B basename
 Specifies the basename to be used in the C code output file.
-If it is different than the basename in the working file,\fI bitmap\fP
+If it is different than the basename in the working file, \fBbitmap\fP
 will change it when saving the file.
 .PP
-\fIBmtoa\fP accepts the following option:
+\fBBmtoa\fP accepts the following option:
 .TP 4
 .B \-chars \fIcc\fP
 This option specifies the pair of characters to use in the string version
@@ -132,7 +136,7 @@ of the bitmap.  The first character is used for 0 bits and the second character
 is used for 1 bits.  The default is to use dashes (\-) for 0's and sharp signs
 (#) for 1's.
 .PP
-\fIAtobm\fP accepts the following options:
+\fBAtobm\fP accepts the following options:
 .TP 4
 .B \-chars \fIcc\fP
 This option specifies the pair of characters to use when converting string
@@ -161,7 +165,7 @@ Prints a usage message and exits.
 .B \-version
 Prints version info and exits.
 .SH USAGE
-\fIBitmap\fP displays grid in which each square represents a single
+\fBBitmap\fP displays grid in which each square represents a single
 bit in the picture being edited.  Actual size of the bitmap image, as
 it would appear normally and inverted, can be obtained by pressing\fB
 Meta-I\fP key.  You are free to move the image popup out of the way to
@@ -327,12 +331,12 @@ system and frequency of mouse motion events.
 This command will change the grid squares underneath the mouse pointer if
 a mouse button is being pressed down.  If you drag the mouse button
 continuously, it will make sure that the line is continuous.  If your system
-is slow or\fI bitmap\fP receives very few mouse motion events, it might
+is slow or \fBbitmap\fP receives very few mouse motion events, it might
 behave quite strangely.
 .TP 4
 .B Line
 This command will change the grid squares in a line between two squares.
-Once you press a mouse button in the grid window,\fI bitmap\fP will
+Once you press a mouse button in the grid window, \fBbitmap\fP will
 highlight the line from the square where the mouse button was initially
 pressed to the square where the mouse pointer is located.  By releasing the
 mouse button you will cause the change to take effect, and the highlighted
@@ -340,7 +344,7 @@ line will disappear.
 .TP 4
 .B Rectangle
 This command will change the grid squares in a rectangle between two squares.
-Once you press a mouse button in the grid window,\fI bitmap\fP will
+Once you press a mouse button in the grid window, \fBbitmap\fP will
 highlight the rectangle from the square where the mouse button was initially
 pressed to the square where the mouse pointer is located.  By releasing the
 mouse button you will cause the change to take effect, and the highlighted
@@ -352,7 +356,7 @@ rectangle will be filled rather than outlined.
 .TP 4
 .B Circle
 This command will change the grid squares in a circle between two squares.
-Once you press a mouse button in the grid window,\fI bitmap\fP will
+Once you press a mouse button in the grid window, \fBbitmap\fP will
 highlight the circle from the square where the mouse button was initially
 pressed to the square where the mouse pointer is located.  By releasing the
 mouse button you will cause the change to take effect, and the highlighted
@@ -515,7 +519,7 @@ same) bitmap application.  If you attempt to do this without a visible
 highlighted image area, the bitmap will fall back to the internal cut
 and paste buffer and paste whatever was there stored at the moment.
 .SH WIDGETS
-Below is the widget structure of the \fIbitmap\fP
+Below is the widget structure of the \fBbitmap\fP
 application.  Indentation indicates hierarchical structure.  The
 widget class name is given first, followed by the widget instance
 name.  All widgets except the bitmap widget are from the standard
@@ -606,13 +610,10 @@ in the #ifdef COLOR section of the file you read with xrdb:
 .sp 1
 *customization:                 \-color
 .sp 1
-.br
 This will cause bitmap to pick up the colors in the app-defaults color
 customization file:
-.sp 1
-    __apploaddir__/Bitmap-color
-.sp 1
-.fi
+.IP
+__apploaddir__/Bitmap\-color
 .SH BITMAP WIDGET
 Bitmap widget is a stand-alone widget for editing raster images.  It
 is not designed to edit large images, although it may be used in that

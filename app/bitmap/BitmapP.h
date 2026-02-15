@@ -65,7 +65,7 @@ typedef void (*RemoveProc)(Widget w, BWStatus *, XtPointer);
 
 /**********/
 struct _BWRequestRec {
-  char         *name;
+  _Xconst char         *name;
   int           status_size;
   EngageProc    engage;
   XtPointer     engage_client_data;
