@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2019/05/10 11:44:39 schwarze Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2026/02/15 10:02:42 matthieu Exp $
 
-SHARED_LIBS=	Xmu 11.0 Xmuu 6.0
+SHARED_LIBS=	Xmu 11.1 Xmuu 6.0
 
 CONFIGURE_ARGS+=	--without-xsltproc --without-fop --without-xmlto
 

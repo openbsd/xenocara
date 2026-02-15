@@ -36,4 +36,7 @@ void _XEditResCheckMessages
  Boolean		*cont
 );
 
+#define HAVE_EDITRES_CLEANUP
+void _XEditResCleanup(void);
+
 _XFUNCPROTOEND

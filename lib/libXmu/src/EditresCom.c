@@ -120,12 +120,9 @@ typedef struct _Globals {
     SVErrorInfo error_info;
     ProtocolStream stream;
     ProtocolStream *command_stream;	/* command stream */
-#if defined(LONG64) || defined(WORD64)
-    unsigned long base_address;
-#endif
 } Globals;
 
-#define CURRENT_PROTOCOL_VERSION 5L
+#define CURRENT_PROTOCOL_VERSION 6L
 
 #define streq(a,b) (strcmp((a), (b)) == 0)
 
@@ -174,6 +171,7 @@ static _Xconst char *VerifyWidget(Widget, WidgetInfo*);
  * External
  */
 void _XEditResCheckMessages(Widget, XtPointer, XEvent*, Boolean*);
+void _XEditResCleanup(void);
 
 /*
  * Initialization
@@ -234,7 +232,7 @@ _XEditResCheckMessages(Widget w, XtPointer data, XEvent *event, Boolean *cont)
 	    || (c_event->format != EDITRES_SEND_EVENT_FORMAT))
 	    return;
 
-	time = c_event->data.l[0];
+	time = XtLastTimestampProcessed(dpy);
 	res_comm = c_event->data.l[1];
 	ident = (ResIdent) c_event->data.l[2];
 	if (c_event->data.l[3] != CURRENT_PROTOCOL_VERSION)
@@ -249,6 +247,22 @@ _XEditResCheckMessages(Widget w, XtPointer data, XEvent *event, Boolean *cont)
 	XtGetSelectionValue(w, res_comm, res_editor_command,
 			    GetCommand, (XtPointer)(long)ident, time);
     }
+}
+
+/*
+ * Function:
+ *	_XEditResCleanup
+ *
+ * Description:
+ *	Free the protocol stream.
+ */
+void
+_XEditResCleanup(void)
+{
+    _XEditResFreeStream(&globals.stream);
+    _XEditResFreeStream(globals.command_stream);
+    memset(&globals.stream, 0, sizeof globals.stream);
+    globals.command_stream = NULL;
 }
 
 /*
@@ -499,9 +513,6 @@ ExecuteCommand(Widget w, Atom sel, ResIdent ident, EditresEvent *event)
     switch(event->any_event.type)
     {
     case SendWidgetTree:
-#if defined(LONG64) || defined(WORD64)
-	globals.base_address = (unsigned long)w & 0xFFFFFFFF00000000;
-#endif
 	func = DumpWidgets;
 	break;
     case SetValues:
@@ -895,7 +906,7 @@ VerifyWidget(Widget w, WidgetInfo *info)
     Widget top;
     register int count;
     register Widget parent;
-    register unsigned long *child;
+    CARD64 *child;
 
     for (top = w; XtParent(top) != NULL; top = XtParent(top))
 	;
@@ -906,17 +917,16 @@ VerifyWidget(Widget w, WidgetInfo *info)
 
     while (True)
     {
-	if (!IsChild(top, parent, (Widget) *child))
+	if (!IsChild(top, parent, ID2WIDGET(*child)))
 	    return ("This widget no longer exists in the client.");
 
 	if (++count == info->num_widgets)
 	    break;
 
-	parent = (Widget)*child++;
+	parent = ID2WIDGET(*child++);
     }
 
-    info->real_widget = (Widget)*child;
-
+    info->real_widget = ID2WIDGET(*child);
     return (NULL);
 }
 
@@ -1147,7 +1157,7 @@ DumpChildren(Widget w, ProtocolStream *stream, unsigned short *count)
 {
     int i, num_children;
     Widget *children;
-    unsigned long window;
+    CARD64 window;
     String c_class;
 
     (*count)++;
@@ -1171,7 +1181,7 @@ DumpChildren(Widget w, ProtocolStream *stream, unsigned short *count)
     else
 	window = EDITRES_IS_OBJECT;
 
-    _XEditResPut32(stream, window);		/* Insert window id */
+    _XEditResPut64(stream, window);		/* Insert window id */
 
     /*
      * Find children and recurse
@@ -1607,25 +1617,25 @@ static void
 InsertWidget(ProtocolStream *stream, Widget w)
 {
     Widget temp;
-    unsigned long *widget_list;
+    CARD64 *widget_list;
     register int i, num_widgets;
 
     for (temp = w, i = 0; temp != NULL; temp = XtParent(temp), i++)
 	;
 
     num_widgets = i;
-    widget_list = (unsigned long *)XtMalloc(sizeof(unsigned long) * num_widgets);
+    widget_list = (CARD64 *)XtMalloc(sizeof(*widget_list) * num_widgets);
 
     /*
      * Put the widgets into the list
      * make sure that they are inserted in the list from parent -> child
      */
     for (i--, temp = w; temp != NULL; temp = XtParent(temp), i--)
-    widget_list[i] = (unsigned long)temp;
+    widget_list[i] = (CARD64)(uintptr_t)temp;
 
     _XEditResPut16(stream, num_widgets);	/* insert number of widgets */
     for (i = 0; i < num_widgets; i++)		/* insert Widgets themselves */
-	_XEditResPut32(stream, widget_list[i]);
+	_XEditResPut64(stream, widget_list[i]);
 
     XtFree((char *)widget_list);
 }
@@ -1724,6 +1734,26 @@ _XEditResPut32(ProtocolStream *stream, unsigned long value)
 
 /*
  * Function:
+ *	_XEditResPut64
+ *
+ * Arguments:
+ *	stream - stream to insert string into
+ *	value  - value to insert
+ *
+ * Description:
+ *	Inserts a 64 bit integer into the protocol stream.
+ */
+void
+_XEditResPut64(ProtocolStream *stream, CARD64 value)
+{
+    int i;
+
+    for (i = 7; i >= 0; i--)
+	_XEditResPut8(stream, (value >> (XER_NBBY * i)) & BYTE_MASK);
+}
+
+/*
+ * Function:
  *	_XEditResPutWidgetInfo
  *
  * Parameters:
@@ -1740,7 +1770,7 @@ _XEditResPutWidgetInfo(ProtocolStream *stream, WidgetInfo *info)
 
     _XEditResPut16(stream, info->num_widgets);
     for (i = 0; i < info->num_widgets; i++)
-	_XEditResPut32(stream, info->ids[i]);
+	_XEditResPut64(stream, info->ids[i]);
 }
 
 /************************************************************
@@ -1768,6 +1798,26 @@ _XEditResResetStream(ProtocolStream *stream)
 	stream->top = stream->real_top + HEADER_SIZE;
 	stream->current = stream->top + stream->size;
     }
+}
+
+/*
+ * Function:
+ *	_XEditResFreeStream
+ *
+ * Parameters:
+ *	stream - stream to free
+ *
+ * Description:
+ *	Free the memory allocated to the stream.
+ */
+void
+_XEditResFreeStream(ProtocolStream *stream)
+{
+    if (!stream->real_top)
+	return;
+
+    XtFree((XtPointer)stream->real_top);
+    stream->real_top = NULL;
 }
 
 /*
@@ -1888,6 +1938,32 @@ _XEditResGet32(ProtocolStream *stream, unsigned long *value)
     return (True);
 }
 
+/*
+ * Function:
+ *	_XEditResGet64
+ *
+ * Parameters:
+ *	stream - protocol stream
+ *	value  - pointer to return value
+ *
+ * Description:
+ *	Retrieves an unsigned 64 bit value from the protocol stream.
+ *
+ * Returns:
+ *	True if successful
+ */
+Bool
+_XEditResGet64(ProtocolStream *stream, CARD64 *value)
+{
+    unsigned long temp1, temp2;
+
+    if (!(_XEditResGet32(stream, &temp1) && _XEditResGet32(stream, &temp2)))
+	return (False);
+
+    *value = ((CARD64)temp1 << (XER_NBBY * 4)) + temp2;
+    return (True);
+}
+
 /* Function:
  *	_XEditResGetString8
  *
@@ -1949,19 +2025,16 @@ _XEditResGetWidgetInfo(ProtocolStream *stream, WidgetInfo *info)
     if (!_XEditResGet16(stream, &info->num_widgets))
 	return (False);
 
-    info->ids = (unsigned long *)XtMalloc(sizeof(long) * info->num_widgets);
+    info->ids = (CARD64 *)XtMalloc(sizeof(*info->ids) * info->num_widgets);
 
     for (i = 0; i < info->num_widgets; i++)
     {
-	if (!_XEditResGet32(stream, info->ids + i))
+	if (!_XEditResGet64(stream, info->ids + i))
 	{
 	    XtFree((char *)info->ids);
 	    info->ids = NULL;
 	    return (False);
 	}
-#if defined(LONG64) || defined(WORD64)
-	info->ids[i] |= globals.base_address;
-#endif
     }
     return (True);
 }

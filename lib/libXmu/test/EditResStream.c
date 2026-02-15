@@ -37,9 +37,10 @@ test_EditResStream(void)
     unsigned char c;
     unsigned short s;
     unsigned long l;
+    CARD64 l64;
     Bool res;
     char *str;
-    unsigned long ids[] = { 1, 10, 0xbabe, 0xbabeface, 0xffffffff };
+    CARD64 ids[] = { 1, 10, 0xbabe, 0xbabeface, 0xffffffff };
     WidgetInfo i = {
         .num_widgets = sizeof(ids) / sizeof(ids[0]),
         .ids = ids,
@@ -54,6 +55,7 @@ test_EditResStream(void)
     _XEditResPut16(&ps, 0xface);
     _XEditResPut32(&ps, 32);
     _XEditResPut32(&ps, 0xbabeface);
+    _XEditResPut64(&ps, 0xdeadbabefacecafe);
     _XEditResPutString8(&ps, test_string);
     _XEditResPutWidgetInfo(&ps, &i);
 
@@ -85,6 +87,11 @@ test_EditResStream(void)
     g_assert_cmpint(res, ==, True);
     g_assert_cmpint(l, ==, 0xbabeface);
 
+    memset(&l64, 0x0f, sizeof(l64));
+    res = _XEditResGet64(&ps, &l64);
+    g_assert_cmpint(res, ==, True);
+    g_assert_cmpint(l64, ==, 0xdeadbabefacecafe);
+
     res = _XEditResGetString8(&ps, &str);
     g_assert_cmpint(res, ==, True);
     g_assert_cmpstr(str, ==, test_string);
@@ -96,6 +103,7 @@ test_EditResStream(void)
     g_assert_cmpmem(ids, sizeof(ids), out.ids, out.num_widgets * sizeof(long));
     XtFree((char *) out.ids);
     out.ids = NULL;
+    _XEditResFreeStream(&ps);
 }
 
 int

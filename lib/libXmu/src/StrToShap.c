@@ -32,7 +32,6 @@ in this Software without prior written authorization from The Open Group.
 #include "Converters.h"
 #include "CharSet.h"
 
-/* ARGSUSED */
 #define	done(type, value) \
 	{							\
 	    if (toVal->addr != NULL) {				\

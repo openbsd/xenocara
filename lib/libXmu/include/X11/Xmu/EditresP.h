@@ -52,8 +52,8 @@ in this Software without prior written authorization from The Open Group.
 	Card16:		16-bit unsigned integer
 	Card32:		32-bit unsigned integer
 	Int16:		16-bit signed integer
-	Window:		32-bit value
-	Widget:		32-bit value
+	Window:		64-bit unsigned value
+	Widget:		64-bit unsigned value
 	String8:        ListOfCard8
 
 	[a][b][c] represent an exclusive list of choices.
@@ -265,8 +265,10 @@ in this Software without prior written authorization from The Open Group.
 
 ************************************************************/
 
+#include <stdint.h>
 #include <X11/Intrinsic.h>
 #include <X11/Xfuncproto.h>
+#include <X11/Xmd.h>
 
 #define XER_NBBY 8		/* number of bits in a byte */
 #define BYTE_MASK 255
@@ -290,6 +292,7 @@ in this Software without prior written authorization from The Open Group.
 #define EDITRES_COMM_ATOM    "EditresComm"
 #define EDITRES_CLIENT_VALUE "EditresClientVal"
 #define EDITRES_PROTOCOL_ATOM "EditresProtocol"
+#define ID2WIDGET(X) ((Widget)(void *)(uintptr_t)((X)))
 
 typedef enum {
   SendWidgetTree = 0,
@@ -318,7 +321,7 @@ typedef enum {
 
 typedef struct _WidgetInfo {
     unsigned short num_widgets;
-  unsigned long *ids;
+    CARD64 *ids;
     Widget real_widget;
 } WidgetInfo;
 
@@ -356,6 +359,13 @@ void _XEditResPut32
  unsigned long		value
  );
 
+void _XEditResPut64
+(
+ ProtocolStream		*stream,
+ CARD64				value
+ );
+
+
 void _XEditResPutWidgetInfo
 (
  ProtocolStream		*stream,
@@ -365,6 +375,11 @@ void _XEditResPutWidgetInfo
 void _XEditResResetStream
 (
  ProtocolStream		*stream
+ );
+
+void _XEditResFreeStream
+(
+ ProtocolStream 	*stream
  );
 
 Bool _XEditResGet8
@@ -389,6 +404,12 @@ Bool _XEditResGet32
 (
  ProtocolStream		*stream,
  unsigned long		*value
+ );
+
+Bool _XEditResGet64
+(
+ ProtocolStream		*stream,
+ CARD64				*value
  );
 
 Bool _XEditResGetString8
