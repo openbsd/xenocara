@@ -1,3 +1,82 @@
+commit cc4ac9cf36fdf3815381b791e47a90b8aebc7e78
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 25 15:37:23 2026 -0800
+
+    libXinerama 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2ea91065efaebf24c00c1a1043da9d79c0ebea92
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc22c2f60c3862482562955116d5455263b443dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 14 11:32:27 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    and fix warnings raised by `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxinerama/-/merge_requests/6>
+
+commit 2344df8f821f9becc8aaa6af939b535b51d4a332
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 16 11:04:43 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxinerama/-/merge_requests/5>
+
+commit 51c28095951676a5896437c4c3aa40fb1972bad2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:34: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:34: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:34: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d23d26669ef6eec36952660bec5b3db8eb025f6b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:27:13 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 71dfee64feb84f907016940263b235a61c9e8960
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 28 19:11:15 2022 -0700
@@ -741,7 +820,7 @@ Date:   Tue Jun 21 15:41:36 2005 +0000
         src/Makefile.am
 
 commit 2a6c0aa8f36dad9ff49385ef15c3dfc2529483b8
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jun 10 19:33:53 2005 +0000
 
     util/modular/modularizelibrary.sh: use rm -f instead of rm in one place

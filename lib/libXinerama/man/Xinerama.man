@@ -1,5 +1,6 @@
+.\" SPDX-License-Identifier: MIT
 .\"
-.\" Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 2007, 2025, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -25,7 +26,7 @@
 .ns
 .TP \\$1
 ..
-.TH XINERAMA __libmansuffix__ __vendorversion__
+.TH XINERAMA __libmansuffix__ 2008-05-19 __vendorversion__
 .SH NAME
 Xinerama \- API for Xinerama extension to X11 Protocol
 .SH SYNOPSIS
@@ -62,62 +63,72 @@ Returns the number of entries in the returned XineramaScreenInfo array.
 is a simple library designed to interface the Xinerama Extension for
 retrieving information about physical output devices which may be combined
 into a single logical X screen.
-
 .SH FUNCTIONS
-
 .SS \fBXineramaQueryExtension()\fR
-
-.LP
-The XineramaQueryExtension function queries the Xserver to determine the
-availability of the Xinerama Extension. If the extension is available, the
-return value is True, and event_base_return and error_base_return are set to
-the base event number and base error number for the extension, respectively.
-Otherwise, the return value is False, and the values of event_base_return and
-error_base_return are undefined.
+The
+.B XineramaQueryExtension
+function queries the Xserver to determine the
+availability of the Xinerama Extension.
+If the extension is available, the return value is
+.BR True ,
+and
+.I event_base_return
+and
+.I error_base_return
+are set to the base event number and base error number for the extension,
+respectively.
+Otherwise, the return value is
+.BR False ,
+and the values of
+.I event_base_return
+and
+.I error_base_return
+are undefined.
 .sp
-
 .SS \fBXineramaQueryVersion()\fR
-
-.LP
-The XineramaQueryVersion function returns the version of the Xinerama extension
-implemented by the Xserver. The version is returned in major_version_return
-and minor_version_return. The major version will be incremented for protocol
-incompatible changes, and the minor version will be incremented for small,
-upwardly compatible changes.
+The
+.B XineramaQueryVersion
+function returns the version of the Xinerama extension
+implemented by the Xserver.
+The version is returned in
+.I major_version_return
+and
+.IR minor_version_return .
+The major version will be incremented for protocol incompatible changes, and
+the minor version will be incremented for small, upwardly compatible changes.
 .LP
 If the Xinerama library is compatible with the version returned by the
-server, it returns nonzero. If the server does not support the
-XINERAMA extension, or if there was an error during communications
-with the server, or if the server and library protocol versions are
-incompatible, it returns zero.
+server, it returns nonzero.
+If the server does not support the XINERAMA extension,
+or if there was an error during communications with the server,
+or if the server and library protocol versions are incompatible,
+it returns zero.
 .sp
-
 .SS \fBXineramaIsActive()\fR
-
-.LP
-The XineramaIsActive function returns a Boolean operator used to determine if
-Xinerama is activated on the screen. Returns True for active and False for
-not active.
+The
+.B XineramaIsActive
+function returns a Boolean value used to determine if
+Xinerama is activated on the screen.
+Returns
+.B True
+for active and
+.B False
+for not active.
 .sp
-
 .SS \fBXineramaQueryScreens()\fR
-
-.LP
 The \fBXineramaQueryScreens()\fR function returns info about each
-individual output device within the Xinerama Screen.  The integer
-pointed to by the \fInumber\fR argument is updated to the number of
+individual output device within the Xinerama Screen.
+The integer pointed to by the \fInumber\fR argument is updated to the number of
 output devices listed in the returned array of \fIXineramaScreenInfo\fR
-structures.  \fBXineramaQueryScreens()\fR returns NULL and sets \fInumber\fR
+structures.
+\fBXineramaQueryScreens()\fR returns NULL and sets \fInumber\fR
 to 0 if Xinerama is not active.
-
-The pointer returned should be released with XFree(__libmansuffix__)
+.LP
+The pointer returned should be released with
+.BR XFree (__libmansuffix__)
 when no longer needed.
 .sp
-
 .SH NOTE
 The original API provided for interacting with the XINERAMA extension used
-function names beginning with \fIXPanoramiX\fR.   That API is now deprecated
-and this API should be used instead in new software.
-
-
-
+function names beginning with \fIXPanoramiX\fR.
+That API is now deprecated and this API should be used instead in new software.
