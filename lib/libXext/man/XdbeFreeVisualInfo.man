@@ -23,26 +23,29 @@
 .\" dealing in this Software without prior written authorization from the
 .\" Hewlett-Packard Company.
 .\"
-.TH XdbeFreeVisualInfo __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH XdbeFreeVisualInfo __libmansuffix__ 1996-03-11 __xorgversion__
 .SH NAME
 XdbeFreeVisualInfo - frees information returned by
 .B XdbeGetVisualInfo().
 .SH SYNOPSIS
+.nf
 \&#include <X11/extensions/Xdbe.h>
-
+.sp
 void XdbeFreeVisualInfo(
     XdbeScreenVisualInfo *visual_info)
+.fi
 .SH DESCRIPTION
-This function frees the list of XdbeScreenVisualInfo returned by the function
-.B XdbeGetVisualInfo().
+This function frees the list of
+.B XdbeScreenVisualInfo
+returned by the function
+.BR XdbeGetVisualInfo (__libmansuffix__).
 .SH SEE ALSO
-DBE,
-.I XdbeAllocateBackBufferName(),
-.I XdbeBeginIdiom(),
-.I XdbeDeallocateBackBufferName(),
-.I XdbeEndIdiom(),
-.I XdbeGetBackBufferAttributes(),
-.I XdbeGetVisualInfo(),
-.I XdbeQueryExtension(),
-.I XdbeSwapBuffers().
-
+.BR DBE (__libmansuffix__),
+.BR XdbeAllocateBackBufferName (__libmansuffix__),
+.BR XdbeBeginIdiom (__libmansuffix__),
+.BR XdbeDeallocateBackBufferName (__libmansuffix__),
+.BR XdbeEndIdiom (__libmansuffix__),
+.BR XdbeGetBackBufferAttributes (__libmansuffix__),
+.BR XdbeGetVisualInfo (__libmansuffix__),
+.BR XdbeQueryExtension (__libmansuffix__),
+.BR XdbeSwapBuffers (__libmansuffix__).

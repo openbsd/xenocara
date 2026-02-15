@@ -46,14 +46,11 @@
 .\"
 .\" X Window System is a trademark of The Open Group.
 .\"
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.TH XShm __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH XShm __libmansuffix__ 2010-07-22 __xorgversion__
 .SH NAME
 XShmQueryExtension, XShmQueryVersion, XShmPixmapFormat, XShmAttach, XShmDetach
-XShmCreateImage, XShmPutImage, XShmGetImage, XShmCreatePixmap, XShmGetEventBase - X Shared Memory extension functions
+XShmCreateImage, XShmPutImage, XShmGetImage, XShmCreatePixmap, XShmGetEventBase
+- X Shared Memory extension functions
 .SH SYNTAX
 .nf
 .LP
@@ -80,7 +77,6 @@ Bool XShmAttach(
 Bool XShmDetach(
 	Display *display;
 	XShmSegmentInfo *shminfo);
-
 .LP
 XImage *XShmCreateImage (
 	Display *display;
@@ -116,13 +112,12 @@ Pixmap XShmCreatePixmap(
 .LP
 Status XShmGetEventBase(
 	Display *display);
-.LP
-
 .fi
 .SH STRUCTURES
 .nf
 .ta 3i
 \fIEvents:\fP
+.sp
 typedef struct {
     int type;               /\&* of event */
     unsigned long serial;   /\&* # of last request processed by server*/
@@ -136,63 +131,72 @@ typedef struct {
 } XShmCompletionEvent;
 .LP
 \fIa structure of type XShmSegmentInfo :\fP
-
+.sp
 typedef struct {
     ShmSeg shmseg;      /\&* resource id */
     int shmid;          /\&* kernel id */
     char *shmaddr;      /\&* address in client */
     Bool readOnly;      /\&* how the server should attach it */
 } XShmSegmentInfo;
-
 .SH DESCRIPTION
-.PP
-.PP
-.ZN XShmQueryExtension
+.B XShmQueryExtension
 checks to see if the shared memory extensions are available for the
 specified display.
 .PP
-.ZN XShmQueryVersion
-returns the version numbers of the extension implementation. Shared
-memory pixmaps are supported if the pixmaps argument returns true.
+.B XShmQueryVersion
+returns the version numbers of the extension implementation.
+Shared memory pixmaps are supported if the
+.I pixmaps
+argument returns true.
 .PP
-.ZN XShmAttach
-tells the server to attach to your shared memory segment. If all goes
-well, you will get a non-zero status, back and your XImage is ready
-for use.
+.B XShmAttach
+tells the server to attach to your shared memory segment.
+If all goes well, you will get a non-zero status back,
+and your XImage is ready for use.
 .PP
-.ZN XShmDetach
+.B XShmDetach
 tells the server to detach from your shared memory segment.
 .PP
-.ZN XShmPutImage
-combines an image in memory with a shape of the specified drawable. If
-XYBitmap format is used, the depth must be one, or a ``BadMatch''
-error results. The foreground pixel in the GC defines the source for
-the one bits in the image, and the background pixel defines the source
-for the zero bits. For XYPixmap and ZPixmap, the depth must match the
-depth of the drawable, or a ``BadMatch'' error results.
+.B XShmPutImage
+combines an image in memory with a shape of the specified drawable.
+If XYBitmap format is used, the depth must be one, or a
+.B BadMatch
+error results.
+The foreground pixel in the GC defines the source for the one bits in the image,
+and the background pixel defines the source for the zero bits.
+For XYPixmap and ZPixmap, the depth must match the
+depth of the drawable, or a
+.B BadMatch
+error results.
 .PP
-.ZN XShmGetImage
-reads image data into a shared memory XImage where display is the
-display of interest, drawable is the source drawable, image is the
-destination XImage, x and y are offsets within the drawable, and
-plane_mask defines which planes are to be read.
+.B XShmGetImage
+reads image data into a shared memory XImage where
+.I display
+is the display of interest,
+.I drawable
+is the source drawable,
+.I image
+is the destination XImage,
+.IR x " and " y
+are offsets within the drawable, and
+.I plane_mask
+defines which planes are to be read.
 .PP
-.ZN XShmCreateImage
+.B XShmCreateImage
 allocates the memory needed for an XImage structure for the specified
 display but does not allocate space for the image itself.
 .PP
-.ZN XShmPixmapFormat
-gets the format for the server. If your application can deal with the
-server pixmap data format, a shared memory segment and shminfo
-structure are created.
+.B XShmPixmapFormat
+gets the format for the server.
+If your application can deal with the server pixmap data format,
+a shared memory segment and shminfo structure are created.
 .PP
-.ZN XShmCreatePixmap
+.B XShmCreatePixmap
 points to a pixmap which you can manipulate in all of the usual ways,
 with the added bonus of being able to edit its contents directly
 through the shared memory segment.
 .PP
-.ZN XShmGetEventBase
+.B XShmGetEventBase
 gets the completion event value.
-.PP
 .SH SEE ALSO
-\fIMIT-SHM - The MIT Shared Memory Extension \fP
+\fIMIT-SHM - The MIT Shared Memory Extension\fP

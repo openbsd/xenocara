@@ -23,13 +23,12 @@
 .\" dealing in this Software without prior written authorization from the
 .\" X Consortium.
 .\"
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.TH XSHAPE __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH XSHAPE __libmansuffix__ 1994-04-17 __xorgversion__
 .SH NAME
-XShapeQueryExtension, XShapeQueryVersion, XShapeCombineRegion, XShapeCombineRectangles, XShapeCombineMask, XShapeCombineShape, XShapeOffsetShape, XShapeQueryExtents, XShapeSelectInput, XShapeInputSelected, XShapeGetRectangles \- X nonrectangular shape functions
+XShapeQueryExtension, XShapeQueryVersion, XShapeCombineRegion,
+XShapeCombineRectangles, XShapeCombineMask, XShapeCombineShape,
+XShapeOffsetShape, XShapeQueryExtents, XShapeSelectInput, XShapeInputSelected,
+XShapeGetRectangles \- X nonrectangular shape functions
 .SH SYNTAX
 .nf
 .LP
@@ -145,27 +144,27 @@ windows to the X Window System.
 Operations:
 .RS
 .nf
-.ZN ShapeSet
-.ZN ShapeUnion
-.ZN ShapeIntersect
-.ZN ShapeSubtract
-.ZN ShapeInvert
+.B ShapeSet
+.B ShapeUnion
+.B ShapeIntersect
+.B ShapeSubtract
+.B ShapeInvert
 .fi
 .RE
 .sp
 Shape Kinds:
 .RS
 .nf
-.ZN ShapeBounding
-.ZN ShapeClip
+.B ShapeBounding
+.B ShapeClip
 .fi
 .RE
 .sp
 Event defines:
 .RS
 .nf
-.ZN ShapeNotifyMask
-.ZN ShapeNotify
+.B ShapeNotifyMask
+.B ShapeNotify
 .fi
 .RE
 .SH BUGS

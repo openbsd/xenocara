@@ -29,15 +29,14 @@
 .\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 .\" DEALINGS IN THE SOFTWARE.
 .\"
-.TH DPMSCapable __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH DPMSCapable __libmansuffix__ 2005-06-28 __xorgversion__
 .SH NAME
 DPMSCapable \- returns the DPMS capability of the X server
 .SH SYNOPSIS
-.PP
 .nf
 \fBcc\fR [ \fIflag\fR \&.\&.\&. ] \fIfile\fR \&.\&.\&. -\fBlXext\fR [ \fIlibrary\fR \&.\&.\&. ]
 \&#include <X11/extensions/dpms.h>
-.HP
+.sp
 .BR "Bool DPMSCapable" " ( Display *\fIdisplay\fP\^ );"
 .if n .ti +5n
 .if t .ti +.5i
@@ -46,20 +45,19 @@ DPMSCapable \- returns the DPMS capability of the X server
 .I display
 Specifies the connection to the X server
 .SH DESCRIPTION
-.LP
 The
-.I DPMSCapable
+.B DPMSCapable
 function returns the Display Power Management Signaling (DPMS) capability of
 the X server, either TRUE \^(capable of DPMS\^) or FALSE \^(incapable of
 DPMS\^).
 .SH "RETURN VALUES"
 .TP 15
-True
+.B True
 The
-.I DPMSCapable
+.B DPMSCapable
 function returns True if the X server is capable of DPMS.
 .TP 15
-False
+.B False
 The
-.I DPMSCapable
+.B DPMSCapable
 function returns True if the X server is incapable of DPMS.

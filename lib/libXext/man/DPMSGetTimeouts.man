@@ -31,71 +31,64 @@
 .\"
 .\" X Window System is a trademark of The Open Group.
 .\"
-.TH DPMSGetTimeouts __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH DPMSGetTimeouts __libmansuffix__ 2005-06-28 __xorgversion__
 .SH NAME
 DPMSGetTimeouts \- retrieves the timeout values used by the X server for DPMS
 timings
 .SH SYNOPSIS
-.PP
 .nf
 \fBcc\fR [ \fIflag\fR \&.\&.\&. ] \fIfile\fR \&.\&.\&. -\fBlXext\fR [ \fIlibrary\fR \&.\&.\&. ]
 \&#include <X11/extensions/dpms.h>
-.HP
-.B Bool DPMSGetTimeouts
-(
-.br
+.sp
+.B Bool DPMSGetTimeouts  (
       Display *\fIdisplay\fP\^,
-.br
       CARD16 *\fIstandby\fP\^,
-.br
       CARD16 *\fIsuspend\fP\^,
-.br
       CARD16 *\fIoff\fP\^
 );
 .if n .ti +5n
 .if t .ti +.5i
 .SH ARGUMENTS
-.TP
+.TP 15
 .I display
 Specifies the connection to the X server
-.TP
+.TP 15
 .I standby
 Specifies the current standby timeout in seconds
-.TP
+.TP 15
 .I suspend
 Specifies the current suspend timeout in seconds
-.TP
+.TP 15
 .I off
 Specifies the current off timeout in seconds
 .SH DESCRIPTION
-.LP
 The
-.I DPMSGetTimeouts
+.B DPMSGetTimeouts
 function retrieves the timeout values used by the X server for DPMS timings.
 .LP
 The value
 .I standby
-is the amount of time of inactivity in seconds before standby mode is invoked. A
-value of zero indicates that this mode has been disabled.
+is the amount of time of inactivity in seconds before standby mode is invoked.
+A value of zero indicates that this mode has been disabled.
 .LP
 The value \fIsuspend\fP is the amount of time of inactivity in seconds before
-the second level of power savings is invoked.  A value of zero indicates that
-this mode has been disabled.
+the second level of power savings is invoked.
+A value of zero indicates that this mode has been disabled.
 .LP
 The value \fIoff\fP is the amount of time of inactivity in seconds before the
-third and final level of power savings is invoked. A value of zero indicates
-that this mode has been disabled.
+third and final level of power savings is invoked.
+A value of zero indicates that this mode has been disabled.
 .SH "RETURN VALUES"
 .TP 15
-TRUE
+.B TRUE
 The
 .I DPMSGetTimeouts
 function returns TRUE when values are returned.
 .TP 15
-FALSE
+.B FALSE
 The
 .I DPMSGetTimeouts
-function returns FALSE when no values returned.
+function returns FALSE when no values are returned.
 .SH "SEE ALSO"
 .BR DPMSCapable (__libmansuffix__),
 .BR DPMSInfo (__libmansuffix__),

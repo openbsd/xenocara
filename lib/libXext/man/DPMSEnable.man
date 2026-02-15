@@ -31,15 +31,14 @@
 .\"
 .\" X Window System is a trademark of The Open Group.
 .\"
-.TH DPMSEnable __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH DPMSEnable __libmansuffix__ 2005-06-28 __xorgversion__
 .SH NAME
 DPMSEnable \- enables DPMS on the specified display
 .SH SYNOPSIS
-.PP
 .nf
 \fBcc\fR [ \fIflag\fR \&.\&.\&. ] \fIfile\fR \&.\&.\&. -\fBlXext\fR [ \fIlibrary\fR \&.\&.\&. ]
 \&#include <X11/extensions/dpms.h>
-.HP
+.sp
 .BR "Status DPMSEnable" " ( Display *\fIdisplay\fP\^ );"
 .if n .ti +5n
 .if t .ti +.5i
@@ -48,27 +47,27 @@ DPMSEnable \- enables DPMS on the specified display
 .I display
 Specifies the connection to the X server
 .SH DESCRIPTION
-.LP
 The
-.I DPMSEnable
+.B DPMSEnable
 function enables Display Power Management Signaling (DPMS) on the specified
-.I display.
-When DPMS is enabled, DPMS will use the currently saved timeout values. It will
-trigger the appropriate DPMS power level based on the timeout values. Refer to
-.I DPMSSetTimeouts.
+.IR display .
+When DPMS is enabled, DPMS will use the currently saved timeout values.
+It will trigger the appropriate DPMS power level based on the timeout values.
+Refer to
+.BR DPMSSetTimeouts (__libmansuffix__).
 All physical screens are affected by
-.I DPMSEnable
+.B DPMSEnable
 at the same time.
-
+.PP
 If
-.I DPMSEnable
+.B DPMSEnable
 is invoked on a display which has DPMS already enabled, or on a display which
 does not support DPMS, no change is made and no error is returned.
 .SH "RETURN VALUES"
 .TP 15
-TRUE
+.B TRUE
 The
-.I DPMSEnable
+.B DPMSEnable
 function always returns TRUE.
 .SH "SEE ALSO"
 .BR DPMSCapable (__libmansuffix__),

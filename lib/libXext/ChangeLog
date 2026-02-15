@@ -1,3 +1,100 @@
+commit 2a694ba264ccdb205909909abfe8b136f9156ebe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 25 15:18:14 2026 -0800
+
+    libXext 1.3.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 61229eec6a94f0221bf0ac674b297c752cf92a10
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5ce2a6127889834082147dbcdd47731b7986961b
+Author: Foad S. Farimani <f.s.farimani@gmail.com>
+Date:   Wed Sep 17 00:30:07 2025 +0200
+
+    Fix HWND pointer casting errors on MinGW-w64
+    
+    - Use uintptr_t for safe pointer-to-integer conversion of HWND
+    - Fix Data32 call to pass address of tmp variable instead of casting integer to pointer
+    - Resolves compilation errors with -Werror=int-to-pointer-cast on Windows cross-compilation
+    
+    Fixes build errors when cross-compiling with MinGW-w64 where HWND is a pointer
+    type and direct casting between pointer and long of different sizes fails.
+    
+    Signed-off-by: Dr. Foad S. Farimani <f.s.farimani@gmail.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxext/-/merge_requests/15>
+
+commit a43b0df438b1cfb6516695aac4dad2436c0b4c60
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 13 18:05:04 2025 -0700
+
+    man pages: Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    and fix warnings raised by `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxext/-/merge_requests/14>
+
+commit 23eeaa46152fb91a0601571f989c0d625bfc9994
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 19 11:07:35 2025 -0700
+
+    Xevi.man: Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxext/-/merge_requests/13>
+
+commit 176618709afa156df4e121d136110a8f39c6f797
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Date:   Sat Apr 12 13:59:11 2025 +0000
+
+    Xevi.3: Some editorial changes for this man page [Debian bug #1050884]
+    
+    Originally from https://bugs.debian.org/1050884
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxext/-/merge_requests/13>
+
+commit 424b67ad03fafdb0d6caf2e9bf5a103e9717e71f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 19 12:03:52 2024 -0800
+
+    unifdef NULL_NOT_ZERO
+    
+    I can't find any evidence this was ever defined, should only have
+    been needed for odd-ball pre-C89 compilers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f6dff7d9285cf5b328d1163e102eeb1234450aa1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 19 11:56:59 2024 -0800
+
+    unifdef ATTSHAREDLIB
+    
+    Was only defined for SGI Irix platforms in the imake configs,
+    has never been defined since the conversion to autoconf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3826a58d190c2d8093d3586cb33867668cbb4553
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Feb 4 13:39:32 2024 -0800

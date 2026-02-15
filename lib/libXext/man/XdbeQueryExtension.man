@@ -23,39 +23,43 @@
 .\" dealing in this Software without prior written authorization from the
 .\" Hewlett-Packard Company.
 .\"
-.TH XdbeQueryExtension __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH XdbeQueryExtension __libmansuffix__ 1996-03-11 __xorgversion__
 .SH NAME
 XdbeQueryExtension - returns the version of DBE supported by the server.
 .SH SYNOPSIS
+.nf
 \&#include <X11/extensions/Xdbe.h>
-
+.sp
 Status XdbeQueryExtension(
     Display *dpy,
     int     *major_version_return,
     int     *minor_version_return)
+.fi
 .SH DESCRIPTION
 Sets
 .I major_version_return
 and
 .I minor_version_return
 to the major and minor
-DBE protocol version supported by the server.  If the DBE library is
-compatible with the version returned by the server, this function returns
-non-zero.  If
+DBE protocol version supported by the server.
+If the DBE library is compatible with the version returned by the server,
+this function returns non-zero.
+If
 .I dpy
-does not support the DBE extension, or if there was an error
-during communication with the server, or if the server and library protocol
-versions are incompatible, this function returns zero.  No other Xdbe functions
-may be called before this function.  If a client violates this rule, the
-effects of all subsequent Xdbe calls that it makes are undefined.
+does not support the DBE extension,
+or if there was an error during communication with the server,
+or if the server and library protocol versions are incompatible,
+this function returns zero.
+No other Xdbe functions may be called before this function.
+If a client violates this rule,
+the effects of all subsequent Xdbe calls that it makes are undefined.
 .SH SEE ALSO
-DBE,
-.I XdbeAllocateBackBufferName(),
-.I XdbeBeginIdiom(),
-.I XdbeDeallocateBackBufferName(),
-.I XdbeEndIdiom(),
-.I XdbeFreeVisualInfo(),
-.I XdbeGetBackBufferAttributes(),
-.I XdbeGetVisualInfo(),
-.I XdbeSwapBuffers().
-
+.BR DBE (__libmansuffix__),
+.BR XdbeAllocateBackBufferName (__libmansuffix__),
+.BR XdbeBeginIdiom (__libmansuffix__),
+.BR XdbeDeallocateBackBufferName (__libmansuffix__),
+.BR XdbeEndIdiom (__libmansuffix__),
+.BR XdbeFreeVisualInfo (__libmansuffix__),
+.BR XdbeGetBackBufferAttributes (__libmansuffix__),
+.BR XdbeGetVisualInfo (__libmansuffix__),
+.BR XdbeSwapBuffers (__libmansuffix__).

@@ -31,54 +31,53 @@
 .\"
 .\" X Window System is a trademark of The Open Group.
 .\"
-.TH DPMSInfo __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH DPMSInfo __libmansuffix__ 2005-06-28 __xorgversion__
 .SH NAME
 DPMSInfo \- returns information about the current DPMS state
 .SH SYNOPSIS
-.PP
 .nf
 \fBcc\fR [ \fIflag\fR \&.\&.\&. ] \fIfile\fR \&.\&.\&. -\fBlXext\fR [ \fIlibrary\fR \&.\&.\&. ]
 \&#include <X11/extensions/dpms.h>
-.HP
-.B Status DPMSInfo
-(
-.br
+.sp
+.B Status DPMSInfo (
       Display \fI*display\fP\^,
-.br
       CARD16 \fI*power_level\fP\^,
-.br
       BOOL \fI*state\fP\^
 );
 .if n .ti +5n
 .if t .ti +.5i
 .SH ARGUMENTS
-.TP
+.TP 15
 .I display
 Specifies the connection to the X server
-.TP
+.TP 15
 .I power_level
 Specifies the current power level
-.TP
+.TP 15
 .I state
 Specifies the current DPMS state
 .SH DESCRIPTION
-.LP
 The
-.I DPMSInfo
+.B DPMSInfo
 function returns information about the current Display Power Management
-Signaling (DPMS) state. The \fIstate\fP
-return parameter indicates whether or not DPMS is enabled \^(TRUE\^) or
-disabled \^(FALSE\^). The \fIpower_level\fP return parameter indicates the
-current power level \^(one of DPMSModeOn, DPMSModeStandby, DPMSModeSuspend, or
-DPMSModeOff.\^)
+Signaling (DPMS) state.
+The \fIstate\fP return parameter indicates whether or not DPMS is
+enabled \^(TRUE\^) or disabled \^(FALSE\^).
+The \fIpower_level\fP return parameter indicates the
+current power level \^(one of
+.BR DPMSModeOn ,
+.BR DPMSModeStandby ,
+.BR DPMSModeSuspend ,
+or
+.BR DPMSModeOff .\^)
 .SH "RETURN VALUES"
 .TP 15
-TRUE
+.B TRUE
 The
 .I DPMSInfo
 function returns TRUE, if values are returned.
 .TP 15
-FALSE
+.B FALSE
 The
 .I DPMSInfo
 function returns FALSE, if no values are returned.

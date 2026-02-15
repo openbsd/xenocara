@@ -31,47 +31,57 @@
 .\"
 .\" X Window System is a trademark of The Open Group.
 .\"
-.TH DPMSForceLevel __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH DPMSForceLevel __libmansuffix__ 2005-06-28 __xorgversion__
 .SH NAME
 DPMSForceLevel \- forces a DPMS capable display into the
 specified power level
 .SH SYNOPSIS
-.PP
 .nf
 \fBcc\fR [ \fIflag\fR \&.\&.\&. ] \fIfile\fR \&.\&.\&. -\fBlXext\fR [ \fIlibrary\fR \&.\&.\&. ]
 \&#include <X11/extensions/dpms.h>
-.HP
+.sp
 .BR "Status DPMSForceLevel" " ( Display \fI*display\fP\^, CARD16 \fIlevel\fP\^ );"
 .if n .ti +5n
 .if t .ti +.5i
 .SH ARGUMENTS
-.TP
+.TP 15
 .I display
 Specifies the connection to the X server
-.TP
+.TP 15
 .I level
 Specifies the level to force power to
 .SH DESCRIPTION
-.LP
 The
-.I DPMSForceLevel
-function forces a DPMS capable display into the specified power level.  The
-\fIlevel\fP must be one of following four states: DPMSModeOn, DPMSModeStandby,
-DPMSModeSuspend, or DPMSModeOff. Values other than these will result in a
-BadValue error.  If DPMS
-is disabled on the display, trying to set the power level on the display will
-result in a BadMatch
+.B DPMSForceLevel
+function forces a DPMS capable display into the specified power level.
+The \fIlevel\fP must be one of following four states:
+.BR DPMSModeOn ,
+.BR DPMSModeStandby ,
+.BR DPMSModeSuspend ,
+or
+.BR DPMSModeOff .
+Values other than these will result in a
+.B BadValue
+error.
+If DPMS is disabled on the display,
+trying to set the power level on the display will result in a
+.B BadMatch
 protocol error.
 .SH "RETURN VALUES"
 .TP 15
-TRUE
+.B TRUE
 The
 .I DPMSForceLevel
 function always returns TRUE.
 .SH ERRORS
 .TP 15
-BadValue
-A level other than DPMSModeOn, DPMSModeStandby, DPMSModeSuspend, or DPMSModeOff
+.SM BadValue
+A level other than
+.BR DPMSModeOn ,
+.BR DPMSModeStandby ,
+.BR DPMSModeSuspend ,
+or
+.B DPMSModeOff
 was specified.
 .TP 15
 .SM BadMatch

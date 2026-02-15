@@ -29,15 +29,14 @@
 .\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 .\" DEALINGS IN THE SOFTWARE.
 .\"
-.TH DPMSDisable __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH DPMSDisable __libmansuffix__ 2005-06-28 __xorgversion__
 .SH NAME
 DPMSDisable \- disables DPMS on the specified display
 .SH SYNOPSIS
-.PP
 .nf
 \fBcc\fR [ \fIflag\fR \&.\&.\&. ] \fIfile\fR \&.\&.\&. -\fBlXext\fR [ \fIlibrary\fR \&.\&.\&. ]
 \&#include <X11/extensions/dpms.h>
-.HP
+.sp
 .BR "Status DPMSDisable" " ( Display \fI*display\fP\^ );"
 .if n .ti +5n
 .if t .ti +.5i
@@ -46,19 +45,20 @@ DPMSDisable \- disables DPMS on the specified display
 .I display
 Specifies the connection to the X server
 .SH DESCRIPTION
-.LP
 The
-.I DPMSDisable
+.B DPMSDisable
 function disables Display Power Management Signaling (DPMS) on the specified
-display.  When disabled, DPMS sets the display to DPMSModeOn.  If
-.I DPMSDisable
+.IR display .
+When disabled, DPMS sets the display to DPMSModeOn.
+If
+.B DPMSDisable
 is invoked on a display with DPMS already disabled or on a display which does
 not support DPMS, no change is made and no error is returned.
 .SH "RETURN VALUES"
 .TP 15
-TRUE
+.B TRUE
 The
-.I DPMSDisable
+.B DPMSDisable
 function always returns TRUE.
 .SH "SEE ALSO"
 .BR DPMSCapable (__libmansuffix__),

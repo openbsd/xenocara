@@ -22,21 +22,16 @@
 .\"
 .\" X Window System is a trademark of The Open Group.
 .\"
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.TH XCUP __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH XcupGetReservedColormapEntries __libmansuffix__ 2005-01-22 __xorgversion__
 .SH NAME
 XcupGetReservedColormapEntries \- list colormap entries reserved by the system
 .SH SYNOPSIS
-.PP
 .nf
 \fBcc\fR [ \fIflag\fR \&.\&.\&. ] \fIfile\fR \&.\&.\&. -\fBlXext\fR [ \fIlibrary\fR \&.\&.\&. ]
 \&#include <X11/extensions/Xcup.h>
-.HP
+.sp
 Status \fBXcupGetReservedColormapEntries\fP\^(\^Display *\fIdisplay\fP\^,
-int \fIscreen\fP\^, XColor **\fIcolors_out\fP\^, int *\fIncolors\fP\^);
+    int \fIscreen\fP\^, XColor **\fIcolors_out\fP\^, int *\fIncolors\fP\^);
 .if n .ti +5n
 .if t .ti +.5i
 .SH ARGUMENTS
@@ -49,22 +44,23 @@ Returns the values reserved by the server.
 .IP \fIncolors\fP 1i
 Returns the number of items in \fIcolors_out\fP.
 .SH DESCRIPTION
-.LP
 The
-.ZN XcupGetReservedColormapEntries
+.B XcupGetReservedColormapEntries
 function returns a list of colormap entries (pixels) that are reserved
-by the system. This list will, at a minimum, contain entries for the
-BlackPixel and WhitePixel of the specified screen. Use
-.ZN XFree
+by the system.
+This list will, at a minimum, contain entries for the
+BlackPixel and WhitePixel of the specified screen.
+Use
+.B XFree
 to free
 .I colors_out.
 .LP
 To minimize colormap flash, an application which installs its own private
 colormap should query the special colors by calling
-.ZN XCupGetReservedColormapEntries ,
+.BR XCupGetReservedColormapEntries ,
 and can then store those entries (in the
 proper location) in its private colormap using
-.ZN XCupStoreColors .
+.BR XCupStoreColors .
 .SH "SEE ALSO"
 .BR XcupQueryVersion (3Xext),
 .BR XcupStoreColors (3Xext),

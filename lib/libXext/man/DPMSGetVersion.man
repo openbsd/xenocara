@@ -31,56 +31,51 @@
 .\"
 .\" X Window System is a trademark of The Open Group.
 .\"
-.TH DPMSGetVersion __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH DPMSGetVersion __libmansuffix__ 2005-09-24 __xorgversion__
 .SH NAME
 DPMSGetVersion \- returns the version of the DPMS extension implemented by
 the X server
 .SH SYNOPSIS
-.PP
 .nf
 \fBcc\fR [ \fIflag\fR \&.\&.\&. ] \fIfile\fR \&.\&.\&. -\fBlXext\fR [ \fIlibrary\fR \&.\&.\&. ]
 \&#include <X11/extensions/dpms.h>
-.HP
-.B Status DPMSGetVersion
-(
-.br
+.sp
+.B Status DPMSGetVersion (
       Display *\fIdisplay\fP\^,
-.br
       int *\fImajor_version\fP\^,
-.br
       int *\fIminor_version\fP\^
 );
 .if n .ti +5n
 .if t .ti +.5i
 .SH ARGUMENTS
-.TP
+.TP 15
 .I display
 Specifies the connection to the X server
-.TP
+.TP 15
 .I major_version
 Specifies the return location for the extension major version
-.TP
+.TP 15
 .I minor_version
 Specifies the return location for the extension minor version
 .SH DESCRIPTION
-.LP
 The
-.I DPMSGetVersion
+.B DPMSGetVersion
 function returns the version of the Display Power Management Signaling (DPMS)
-extension implemented by the X server.  It returns a major and minor version
-number. The major version number will be incremented for protocol incompatible
-changes, and the minor version number will be incremented for small, upward
-compatible changes.
+extension implemented by the X server.
+It returns a major and minor version number.
+The major version number will be incremented for protocol incompatible changes,
+and the minor version number will be incremented for small, upward compatible
+changes.
 .SH "RETURN VALUES"
 .TP 15
-TRUE
+.B TRUE
 The
-.I DPMSGetVersion
+.B DPMSGetVersion
 function returns TRUE when the extension is supported and values are returned.
 .TP 15
-FALSE
+.B FALSE
 The
-.I DPMSGetVersion
+.B DPMSGetVersion
 function returns FALSE when the extension is not supported.
 .SH "SEE ALSO"
 .BR DPMSCapable (__libmansuffix__),

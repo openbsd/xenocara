@@ -32,10 +32,6 @@
 .\" this document.  This documentation is provided "as is"
 .\" without express or implied warranty.
 .\"
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
 .de EX
 .nf
 .ft CW
@@ -44,24 +40,26 @@
 .ft
 .fi
 ..
-.TH XMBUF __libmansuffix__ __xorgversion__ "X FUNCTIONS"
+.TH XMBUF __libmansuffix__ 1994-04-17 __xorgversion__
 .SH NAME
-XmbufQueryExtension, XmbufGetVersion, XmbufCreateBuffers, XmbufDestroyBuffers, XmbufDisplayBuffers, XmbufGetWindowAttributes, XmbufChangeWindowAttributes, XmbufGetBufferAttributes, XmbufChangeBufferAttributes, XmbufGetScreenInfo, XmbufCreateStereoWindow - X multibuffering functions
+XmbufQueryExtension, XmbufGetVersion, XmbufCreateBuffers, XmbufDestroyBuffers,
+XmbufDisplayBuffers, XmbufGetWindowAttributes, XmbufChangeWindowAttributes,
+XmbufGetBufferAttributes, XmbufChangeBufferAttributes, XmbufGetScreenInfo,
+XmbufCreateStereoWindow - X multibuffering functions
 .SH SYNTAX
 .EX
 \&#include <X11/extensions/multibuf.h>
-
+.sp
 Bool XmbufQueryExtension(
-    Display *dpy,
     Display *dpy,
     int *event_base_return,
     int *error_base_return);
-
+.sp
 Status XmbufGetVersion(
     Display *dpy,
     int *major_version_return,
     int *minor_version_return);
-
+.sp
 int XmbufCreateBuffers(
     Display *dpy,
     Window window,
@@ -69,40 +67,40 @@ int XmbufCreateBuffers(
     int update_action,
     int update_hint,
     Multibuffer *buffers_update);
-
+.sp
 void XmbufDestroyBuffers(
     Display *dpy,
     Window window);
-
+.sp
 void XmbufDisplayBuffers(
     Display *dpy,
     int count,
     Multibuffer *buffers,
     int min_delay,
     int max_delay);
-
+.sp
 Status XmbufGetWindowAttributes(
     Display *dpy,
     Window window,
     XmbufWindowAttributes *attributes);
-
+.sp
 void XmbufChangeWindowAttributes(
     Display *dpy,
     Window window,
     unsigned long valuemask,
     XmbufSetWindowAttributes *attributes);
-
+.sp
 Status XmbufGetBufferAttributes(
     Display *dpy,
     Multibuffer buffer,
     XmbufBufferAttributes *attributes);
-
+.sp
 void XmbufChangeBufferAttributes(
     Display *dpy,
     Multibuffer buffer,
     unsigned long valuemask,
     XmbufSetBufferAttributes *attributes);
-
+.sp
 Status XmbufGetScreenInfo(
     Display *dpy,
     Drawable drawable,
@@ -110,7 +108,7 @@ Status XmbufGetScreenInfo(
     XmbufBufferInfo **mono_info_return,
     int *nstereo_return,
     XmbufBufferInfo **stereo_info_return);
-
+.sp
 Window XmbufCreateStereoWindow(
     Display *dpy,
     Window parent,
@@ -138,7 +136,7 @@ typedef struct {
     Multibuffer buffer; /\&* buffer of event */
     int state;  /\&* see Clobbered constants above */
 } XmbufClobberNotifyEvent;
-
+.sp
 typedef struct {
     int type;   /\&* of event */
     unsigned long serial;       /\&* # of last request processed by server */
@@ -147,9 +145,8 @@ typedef struct {
     Multibuffer buffer; /\&* buffer of event */
 } XmbufUpdateNotifyEvent;
 .EE
-
+.PP
 \fIPer-window attributes that can be got:\fP
-
 .EX
 typedef struct {
     int displayed_index;	/\&* which buffer is being displayed */
@@ -160,17 +157,15 @@ typedef struct {
     Multibuffer *buffers;	/\&* Buffers */
 } XmbufWindowAttributes;
 .EE
-
+.PP
 \fIPer-window attributes that can be set:\fP
-
 .EX
 typedef struct {
     int update_hint;	/\&* Frequent, Intermittent, Static */
 } XmbufSetWindowAttributes;
 .EE
-
+.PP
 \fIPer-buffer attributes that can be got:\fP
-
 .EX
 typedef struct {
     Window window;	/\&* which window this belongs to */
@@ -179,17 +174,15 @@ typedef struct {
     int side;	/\&* Mono, Left, Right */
 } XmbufBufferAttributes;
 .EE
-
+.PP
 \fIPer-buffer attributes that can be set:\fP
-
 .EX
 typedef struct {
     unsigned long event_mask;	/\&* events that have been selected */
 } XmbufSetBufferAttributes;
 .EE
-
+.PP
 \fIPer-screen buffer info (there will be lists of them):\fP
-
 .EX
 typedef struct {
     VisualID visualid;	/\&* visual usable at this depth */
@@ -202,160 +195,194 @@ The application programming library for the
 \fIX11 Double-Buffering, Multi-Buffering, and Stereo Extension\fP
 contains the interfaces described below.
 With the exception of
-.ZN XmbufQueryExtension ,
+.BR XmbufQueryExtension ,
 if any of these routines are
 called with a display that does not support the extension, the
 ExtensionErrorHandler (which can be set with
-.ZN XSetExtensionErrorHandler
+.B XSetExtensionErrorHandler
 and functions the same way as
-.ZN XSetErrorHandler )
+.BR XSetErrorHandler )
 will be called and the function will then return.
 .PP
-.ZN XmbufQueryExtension
+.B XmbufQueryExtension
 returns
-.ZN True
-if the multibuffering/stereo
-extension is available on the
-given display.  If the extension exists, the value of the first event
+.B True
+if the multibuffering/stereo extension is available on the given display.
+If the extension exists, the value of the first event
 code (which should be added to the event type constants
-.ZN MultibufferClobberNotify
+.B MultibufferClobberNotify
 and
-.ZN MultibufferUpdateNotify
-to get the actual
-values) is stored into event_base_return and the value of the first
-error code (which should be added to the error type constant
-.ZN MultibufferBadBuffer
-to get the actual value) is stored into error_base_return.
+.B MultibufferUpdateNotify
+to get the actual values) is stored into
+.I event_base_return
+and the value of the first error code
+(which should be added to the error type constant
+.B MultibufferBadBuffer
+to get the actual value) is stored into
+.IR error_base_return .
 .PP
-.ZN XmbufGetVersion
+.B XmbufGetVersion
 gets the major and minor version numbers of the extension.
 The return
 value is zero if an error occurs or non-zero if no error happens.
 .PP
-.ZN XmbufCreateBuffers
-requests that "count" buffers be
-created with the given update_action
-and update_hint and be associated with the indicated window.  The
-number of buffers created is returned (zero if an error occurred)
-and buffers_update is filled in with that many Multibuffer identifiers.
+.B XmbufCreateBuffers
+requests that
+.I count
+buffers be created with the given
+.I update_action
+and
+.I update_hint
+and be associated with the indicated
+.IR window .
+The number of buffers created is returned (zero if an error occurred)
+and
+.I buffers_update
+is filled in with that many Multibuffer identifiers.
 .PP
-.ZN XmbufDestroyBuffers
-destroys the buffers associated
-with the given window.
+.B XmbufDestroyBuffers
+destroys the buffers associated with the given
+.IR window .
 .PP
-.ZN XmbufDisplayBuffers
-displays the indicated buffers their
-appropriate windows within
-max_delay milliseconds after min_delay milliseconds have passed.
+.B XmbufDisplayBuffers
+displays the indicated buffers their appropriate windows within
+.I max_delay
+milliseconds after
+.I min_delay
+milliseconds have passed.
 No two buffers may be associated with the same window or else a Match
 error is generated.
 .PP
-.ZN XmbufGetWindowAttributes
-gets the multibuffering attributes that apply
-to all buffers associated
-with the given window.
-The list of buffers returns may be freed with
-.ZN XFree .
+.B XmbufGetWindowAttributes
+gets the multibuffering attributes that apply to all buffers associated
+with the given
+.IR window .
+The list of
+.I attributes
+returned may be freed with
+.BR XFree .
 Returns non-zero on success and zero if an error occurs.
 .PP
-.ZN XmbufChangeWindowAttributes
+.B XmbufChangeWindowAttributes
 sets the multibuffering attributes
 that apply to all buffers associated
-with the given window.  This is currently limited to the update_hint.
+with the given window.
+This is currently limited to the
+.IR update_hint .
 .PP
-.ZN XmbufGetBufferAttributes
+.B XmbufGetBufferAttributes
 gets the attributes for the indicated buffer.
-Returns non-zero on
-success and zero if an error occurs.
+Returns non-zero on success and zero if an error occurs.
 .PP
-.ZN XmbufChangeBufferAttributes
-sets the attributes for the indicated buffer.
-This is currently limited to the event_mask.
+.B XmbufChangeBufferAttributes
+sets the
+.I attributes
+for the indicated
+.IR buffer .
+This is currently limited to the
+.IR event_mask .
 .PP
-.ZN XmbufGetScreenInfo
-gets the parameters controlling how
-mono and stereo windows may be
-created on the screen of the given drawable.  The numbers of sets of
-visual and depths are returned in nmono_return and nstereo_return.  If
-nmono_return is greater than zero, then mono_info_return is set to the
-address of an array of
-.ZN XmbufBufferInfo
+.B XmbufGetScreenInfo
+gets the parameters controlling how mono and stereo windows may be
+created on the screen of the given
+.IR drawable .
+The numbers of sets of visual and depths are returned in
+.I nmono_return
+and
+.IR nstereo_return .
+If
+.I nmono_return
+is greater than zero, then
+.I mono_info_return
+is set to the address of an array of
+.B XmbufBufferInfo
 structures describing the
-various visuals and depths that may be used.  Otherwise,
-mono_info_return is set to NULL.  Similarly, stereo_info_return is set
-according to nstereo_return.  The storage returned in mono_info_return
-and stereo_info_return may be released by
-.ZN XFree .
-If no errors are
-encountered, non-zero will be returned.
+various visuals and depths that may be used.
+Otherwise,
+.I mono_info_return
+is set to NULL.
+Similarly,
+.I stereo_info_return
+is set according to
+.IR nstereo_return .
+The storage returned in
+.I mono_info_return
+and
+.I stereo_info_return
+may be released by
+.BR XFree .
+If no errors are encountered, non-zero will be returned.
 .PP
-.ZN XmbufCreateStereoWindow
+.B XmbufCreateStereoWindow
 creates a stereo window in the same way that
-.ZN XCreateWindow
-creates a mono window.  The buffer ids for the left and right buffers are
-returned in left_return and right_return, respectively.  If an
-extension error handler that returns is installed,
-.ZN None
+.B XCreateWindow
+creates a mono window.
+The buffer ids for the left and right buffers are returned in
+.I left_return
+and
+.IR right_return ,
+respectively.
+If an extension error handler that returns is installed,
+.B None
 will be returned if the extension is not available on this display.
 .SH PREDEFINED VALUES
-.sp
 Update_action field:
 .RS
 .nf
-.ZN MultibufferUpdateActionUndefined
-.ZN MultibufferUpdateActionBackground
-.ZN MultibufferUpdateActionUntouched
-.ZN MultibufferUpdateActionCopied
+.B MultibufferUpdateActionUndefined
+.B MultibufferUpdateActionBackground
+.B MultibufferUpdateActionUntouched
+.B MultibufferUpdateActionCopied
 .fi
 .RE
 .sp
 Update_hint field:
 .RS
 .nf
-.ZN MultibufferUpdateHintFrequent
-.ZN MultibufferUpdateHintIntermittent
-.ZN MultibufferUpdateHintStatic
+.B MultibufferUpdateHintFrequent
+.B MultibufferUpdateHintIntermittent
+.B MultibufferUpdateHintStatic
 .fi
 .RE
 .sp
 Valuemask fields:
 .RS
 .nf
-.ZN MultibufferWindowUpdateHint
-.ZN MultibufferBufferEventMask
+.B MultibufferWindowUpdateHint
+.B MultibufferBufferEventMask
 .fi
 .RE
 .sp
 Mono vs. stereo and left vs. right:
 .RS
 .nf
-.ZN MultibufferModeMono
-.ZN MultibufferModeStereo
-.ZN MultibufferSideMono
-.ZN MultibufferSideLeft
-.ZN MultibufferSideRight
+.B MultibufferModeMono
+.B MultibufferModeStereo
+.B MultibufferSideMono
+.B MultibufferSideLeft
+.B MultibufferSideRight
 .fi
 .RE
 .sp
 Clobber state:
 .RS
 .nf
-.ZN MultibufferUnclobbered
-.ZN MultibufferPartiallyClobbered
-.ZN MultibufferFullyClobbered
+.B MultibufferUnclobbered
+.B MultibufferPartiallyClobbered
+.B MultibufferFullyClobbered
 .fi
 .RE
 .sp
 Event stuff:
 .RS
 .nf
-.ZN MultibufferClobberNotifyMask
-.ZN MultibufferUpdateNotifyMask
-.ZN MultibufferClobberNotify
-.ZN MultibufferUpdateNotify
-.ZN MultibufferNumberEvents
-.ZN MultibufferBadBuffer
-.ZN MultibufferNumberErrors
+.B MultibufferClobberNotifyMask
+.B MultibufferUpdateNotifyMask
+.B MultibufferClobberNotify
+.B MultibufferUpdateNotify
+.B MultibufferNumberEvents
+.B MultibufferBadBuffer
+.B MultibufferNumberErrors
 .fi
 .RE
 .SH BUGS
