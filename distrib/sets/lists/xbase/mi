@@ -268,7 +268,7 @@
 ./usr/X11R6/lib/libXinerama.so.6.0
 ./usr/X11R6/lib/libXmu.a
 ./usr/X11R6/lib/libXmu.la
-./usr/X11R6/lib/libXmu.so.11.0
+./usr/X11R6/lib/libXmu.so.11.1
 ./usr/X11R6/lib/libXmuu.a
 ./usr/X11R6/lib/libXmuu.la
 ./usr/X11R6/lib/libXmuu.so.6.0
