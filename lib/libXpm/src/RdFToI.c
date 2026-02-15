@@ -44,10 +44,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#else
-#ifdef FOR_MSW
-#include <fcntl.h>
-#endif
 #endif
 
 LFUNC(OpenReadFile, int, (const char *filename, xpmData *mdata));

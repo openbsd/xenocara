@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXpm], [3.5.17],
+AC_INIT([libXpm], [3.5.18],
         [https://gitlab.freedesktop.org/xorg/lib/libxpm/-/issues/], [libXpm])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])

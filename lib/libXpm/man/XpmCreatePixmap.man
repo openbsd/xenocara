@@ -43,24 +43,23 @@ XpmCreatePixmap \- create a pixmap
 
 .SH ARGUMENTS
 
-.IP \fIdisplay\fP li
+.IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
-.IP \fId\fP li
+.IP \fId\fP 1i
 Specifies which screen the pixmap is created on.
-.IP \fIbuffer\fP li
+.IP \fIbuffer\fP 1i
 Specifies the location of the buffer.
-.IP \fIpixmap_return\fP li
+.IP \fIpixmap_return\fP 1i
 Returns the pixmap which is created if the color None.
-.IP \fIshapemask_return\fP li
+.IP \fIshapemask_return\fP 1i
 Returns the shape mask pixmap which is created if the color None is used.
-.IP \fIattributes\fP li
+.IP \fIattributes\fP 1i
 Specifies the location of a structure to get and store information.
-.IP \fIimage\fP li
+.IP \fIimage\fP 1i
 Specifies the XpmImage.
 
 .SH DESCRIPTION
 .SS XpmCreatePixmapFromData
-.PP
 To create a Pixmap from an XPM data, use
 .BR XpmCreatePixmapFromData ().
 The
@@ -76,11 +75,10 @@ and
 .I shapemask_return
 if not NULL, and finally destroys the created images using
 .BR XDestroyImage (__libmansuffix__).
-Do not forget to free the returned pixmaps, the colors, and possibly the data
-returned into the XpmAttributes structure when done.
+Do not forget to free the returned pixmaps, the colors,
+and possibly the data returned into the XpmAttributes structure when done.
 
 .SS XpmCreatePixmapFromBuffer
-.PP
 To create a Pixmap from an XPM buffer, use
 .BR XpmCreatePixmapFromBuffer ().
 The
@@ -93,12 +91,11 @@ instead of
 .BR XpmReadFileToImage (__libmansuffix__).
 
 .SS XpmCreatePixmapFromXpmImage
-.PP
 .BR XpmCreatePixmapFromXpmImage ()
 creates X images calling
 .BR XpmCreateImageFromXpmImage (__libmansuffix__)
-with the given XpmImage and XpmAttributes, then it creates the related pixmaps
-which are returned to
+with the given XpmImage and XpmAttributes,
+then it creates the related pixmaps which are returned to
 .I pixmap_return
 and
 .I shapemask_return

@@ -32,11 +32,6 @@
 *  Developed by Arnaud Le Hors                                                *
 \*****************************************************************************/
 
-/*
- * The code related to AMIGA has been added by
- * Lorens Younes (d93-hyo@nada.kth.se) 4/96
- */
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -50,12 +45,6 @@
 #endif
 
 #include "fcntl.h"
-
-#ifdef FOR_MSW
-#define O_WRONLY _O_WRONLY
-#define O_CREAT  _O_CREAT
-#define O_TRUNC  _O_TRUNC
-#endif
 
 /* MS Windows define a function called WriteFile @#%#&!!! */
 LFUNC(xpmWriteFile, int, (FILE *file, XpmImage *image, const char *name,
@@ -124,11 +113,7 @@ XpmWriteFileFromXpmImage(
 #ifdef VMS
 	name = filename;
 #else
-	if (!(name = strrchr(filename, '/'))
-#ifdef AMIGA
-	    && !(name = strrchr(filename, ':'))
-#endif
-     )
+	if (!(name = strrchr(filename, '/')))
 	    name = filename;
 	else
 	    name++;

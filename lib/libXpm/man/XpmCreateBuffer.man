@@ -24,7 +24,7 @@
 .hw XImage
 .TH XpmCreateBuffer __libmansuffix__ __xorgversion__ "libXpm functions"
 .SH NAME
-XpmCreateBuffer  \- create an XPM Buffer
+XpmCreateBuffer \- create an XPM Buffer
 
 .SH SYNOPSIS
 .nf
@@ -41,23 +41,24 @@ XpmCreateBuffer  \- create an XPM Buffer
 
 .SH ARGUMENTS
 
-.IP \fIdisplay\fP li
+.IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
-.IP \fIbuffer_return\fP li
+.IP \fIbuffer_return\fP 1i
 Returns the buffer which is created.
-.IP \fIimage\fP li
+.IP \fIimage\fP 1i
 Specifies the image.
-.IP \fIshapeimage\fP li
+.IP \fIshapeimage\fP 1i
 Specifies the shape mask image.
-.IP \fIattributes\fP li
-Specifies the location of a structure containing information (or NULL).
-.IP \fIinfo\fP li
-Specifies the location of a structure to get possible information (or NULL).
+.IP \fIattributes\fP 1i
+Specifies the location of a structure containing information
+(or NULL).
+.IP \fIinfo\fP 1i
+Specifies the location of a structure to get possible information
+(or NULL).
 
 .SH DESCRIPTION
 
 .SS XpmCreateBufferFromPixmap
-.PP
 .BR XpmCreateBufferFromPixmap ()
 creates an XPM buffer from a Pixmap.
 The
@@ -77,7 +78,8 @@ As a convenience, the
 and
 .BR XpmWriteFileFromBuffer (__libmansuffix__)
 functions are provided to copy a file to a buffer
-and to write a file from a buffer. Thus for instance one may decide to use
+and to write a file from a buffer.
+Thus for instance one may decide to use
 .BR XpmCreateBufferFromPixmap (),
 .BR XpmWriteFileFromBuffer (__libmansuffix__),
 and
@@ -88,7 +90,6 @@ On some systems this may lead to a performance improvement, since the
 processing will be performed in memory, but it uses more memory.
 
 .SS XpmCreateBufferFromImage
-.PP
 The
 .BR XpmCreateBufferFromImage ()
 function works as
@@ -99,7 +100,6 @@ The caller should free the buffer using
 when finished.
 
 .SS XpmCreateBufferFromXpmImage.
-.PP
 To create an XPM buffer from an XpmImage, use
 .BR XpmCreateBufferFromXpmImage ().
 The
@@ -107,7 +107,7 @@ The
 function writes out the given image to a single block malloc’ed buffer
 in XPM format.
 If insufficient working storage is allocated, it returns
-.BR XpmNoMemory,
+.BR XpmNoMemory ,
 and returns
 .B XpmSuccess
 on success.
@@ -119,8 +119,8 @@ The caller should free the buffer using
 .BR XpmFree (__libmansuffix__)
 when finished.
 
-.SH "SEE ALSO"
-.ad l
+.SH SEE ALSO
+.na
 .nh
 .BR XpmFree (__libmansuffix__),
 .BR XpmWriteFileFromBuffer (__libmansuffix__),

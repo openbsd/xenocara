@@ -46,28 +46,27 @@ XpmRead \- read an XPM file
 .fi
 
 .SH ARGUMENTS
-.IP   \fIdisplay\fP li
+.IP   \fIdisplay\fP 1i
 Specifies the connection to the X server.
-.IP   \fIfilename\fP li
+.IP   \fIfilename\fP 1i
 Specifies the file name to use.
-.IP   \fIimage_return\fP li
+.IP   \fIimage_return\fP 1i
 Returns the image which is created.
-.IP   \fIshapeimage_return\fP li
+.IP   \fIshapeimage_return\fP 1i
 Returns the shape mask image which is created if the color None is used.
-.IP   \fIattributes\fP li
+.IP   \fIattributes\fP 1i
 Specifies the location of a structure to get and store information (or NULL).
-.IP   \fIbuffer_return\fP li
+.IP   \fIbuffer_return\fP 1i
 Returns the buffer created.
-.IP   \fIdata_return\fP li
+.IP   \fIdata_return\fP 1i
 Returns the data array created.
-.IP   \fIimage\fP li
+.IP   \fIimage\fP 1i
 Specifies the image structure location.
-.IP   \fIinfo\fP li
+.IP   \fIinfo\fP 1i
 Specifies the location of a structure to store possible information (or NULL).
 
 .SH DESCRIPTION
 .SS XpmReadFileToImage
-.PP
 The
 .BR XpmReadFileToImage ()
 function reads in a file in the XPM format.
@@ -81,9 +80,11 @@ If the passed XpmAttributes structure pointer is not NULL,
 .BR XpmReadFileToImage ()
 looks for the following attributes:
 XpmVisual, XpmColormap, XpmDepth, XpmColorSymbols, XpmExactColors, XpmCloseness,
-XpmRGBCloseness, XpmAllocCloseColors, XpmReturnPixels, XpmReturnAllocPixels, XpmAllocColor,
-XpmFreeColors, XpmColorClosure, XpmReturnExtensions, XpmReturnColorTable, XpmBitmapFormat,
-sets the XpmSize, the XpmCharsPerPixel, and possibly the XpmHotspot attributes when returning.
+XpmRGBCloseness, XpmAllocCloseColors, XpmReturnPixels, XpmReturnAllocPixels,
+XpmAllocColor, XpmFreeColors, XpmColorClosure, XpmReturnExtensions,
+XpmReturnColorTable, XpmBitmapFormat,
+sets the XpmSize, the XpmCharsPerPixel,
+and possibly the XpmHotspot attributes when returning.
 As a backward compatibility feature,
 .BR XpmReadFileToImage ()
 also looks for the XpmReturnInfos attributes.
@@ -105,16 +106,16 @@ the XpmColorKey
 attribute, which has the value XPM_MONO, XPM_GRAY4, XPM_GRAY, or XPM_COLOR.
 If the XpmColorKey attribute is not set it is determined by examining the type
 of visual.
-If no default value exists for the specified visual, it first looks for
-other defaults nearer to the monochrome visual type
+If no default value exists for the specified visual,
+it first looks for other defaults nearer to the monochrome visual type
 and secondly nearer to the color visual type.
-If the color which is found is not valid (cannot be parsed), it looks for
-another default one according to the same algorithm.
-If allocating a color fails, and the closeness attribute is set, it tries to
-find a color already in the colormap that is closest
+If the color which is found is not valid (cannot be parsed),
+it looks for another default one according to the same algorithm.
+If allocating a color fails, and the closeness attribute is set,
+it tries to find a color already in the colormap that is closest
 to the desired color, and uses that.
-If the alloc_close_colors attribute is set to False, the found close color is
-not allocated but it is used anyway.
+If the alloc_close_colors attribute is set to False,
+the found close color is not allocated but it is used anyway.
 This is especially useful for applications which use a private colormap
 containing read/write cells and have complete control over the colormap.
 On the other hand, since in such a case there is no guarantee that the color
@@ -168,8 +169,9 @@ and possibly the data returned into the XpmAttributes using
 In addition, on systems which support such features
 .BR XpmReadFileToImage ()
 deals with compressed files by forking an uncompress or gzip process and
-reading from the piped result. It assumes that the specified file is
-compressed if the given file name ends by ’.Z’ or ’.gz’.
+reading from the piped result.
+It assumes that the specified file is compressed if the given file name
+ends with ’.Z’ or ’.gz’.
 In case the file name does not end so,
 .BR XpmReadFileToImage ()
 looks for the given file name assuming it is not a compressed file.
@@ -200,7 +202,6 @@ are not used, and possibly the data returned into the XpmAttributes using
 .BR XpmFreeAttributes (__libmansuffix__).
 
 .SS XpmReadFileToBuffer
-.PP
 .BR XpmReadFileToBuffer ()
 allocates and fills a buffer from a file.
 .BR XpmReadFileToBuffer ()
@@ -232,7 +233,6 @@ On some systems this may lead to a performance improvement,
 since the parsing will be performed in memory, but it uses more memory.
 
 .SS XpmReadFileToData
-.PP
 .BR XpmReadFileToData ()
 returns
 .B XpmOpenFailed
@@ -250,7 +250,6 @@ should be freed with
 when done.
 
 .SS XpmReadFileToXpmImage
-.PP
 The
 .BR XpmReadFileToXpmImage ()
 function reads in a file in the XPM format.

@@ -1,3 +1,208 @@
+commit 5b7e903025a8e162a3ee97c64304b1c55211094e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 25 16:05:09 2026 -0800
+
+    libXpm 3.5.18
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5549ac11b483ec86e1c79cd1e077998bcc98cdd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 10070a4e998c1a223dec437847c38dc27dbe85d4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 30 11:26:54 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/29>
+
+commit 5679dd6b7d3b33e921ecb47fa526397619be8ced
+Author: Zayd Rajab <zaydr@amazon.com>
+Date:   Tue Aug 19 23:42:14 2025 +0000
+
+    tests: poll for stable compressed output
+    
+    libXpm runs the compressor via a double fork. The previous fixed sleep
+    could race on slow or busy runners, yielding 'gzip: stdin: unexpected
+    end of file'.
+    
+    Replace the fixed sleep with wait_for_stable_file(): poll the output
+    path every 10 ms until it exists and stops changing (mtime/size stable
+    for 200 ms), with a 10s timeout (configurable).
+    
+    Signed-off-by: Zayd Rajab <zaydr@amazon.com>
+
+commit 7ce39592bce4d57fa3cd07e4ee1aab3b47cd0436
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 22 16:23:12 2025 -0700
+
+    man pages: adjust line breaks in source files
+    
+    Clears warnings of the form:
+    mandoc: sxpm.1:72:83: STYLE: input text line longer than 80 bytes:
+     Read from the file \...
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/26>
+
+commit 60ee362e7cfda17d617aa0a61b37211a95c5e615
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 22 15:43:07 2025 -0700
+
+    man pages: remove .PP after .SH or .SS lines
+    
+    Fixes warnings of the form:
+    mandoc: XpmMisc.3:65:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: XpmRead.3:70:2: WARNING: skipping paragraph macro: PP after SS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/26>
+
+commit 3ba5d81356c010d11253946e6a76ae335a9f69f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 19 12:29:38 2025 -0700
+
+    man pages: ensure .BR macro has multiple arguments
+    
+    Fixes these warnings:
+    an.tmac:man/XpmCreateImage.3:87: style: .BR expects at least 2 arguments, got 1
+    an.tmac:man/XpmCreateXpmImage.3:103: style: .BR expects at least 2 arguments, got 1
+    an.tmac:man/XpmMisc.3:74: style: .BR expects at least 2 arguments, got 1
+    an.tmac:man/XpmWrite.3:153: style: .BR expects at least 2 arguments, got 1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/26>
+
+commit 3aa8a1e47521f2b56be0bf03eae36528ac8d3e64
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 19 12:26:40 2025 -0700
+
+    man pages: make indentation arguments to .IP be numeric
+    
+    Fixes warnings of the form:
+    troff:man/XpmMisc.3:49: warning: expected numeric expression, got 'l'
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/26>
+
+commit 854c23a771c798e0185125c2f734571b9666b5ce
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Date:   Sat Apr 12 20:17:09 2025 +0000
+
+    XpmCreateBuffer.3: editorial changes for this man page [Debian bug #1102886]
+    
+    Originally from https://bugs.debian.org/1102886
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/26>
+
+commit b7309b497b592beb23c841b6ccad324a3d3cc2d4
+Author: Peter Harris <pharris2@rocketsoftware.com>
+Date:   Mon Nov 11 10:55:50 2024 -0800
+
+    Fix build with current Windows headers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/25>
+
+commit 28039296f726832f77d214df396175b47871a0dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 11 10:03:10 2024 -0800
+
+    Use _stricmp() instead of strcasecmp() on Windows
+    
+    v2: Exclude include of <strings.h> as well
+    
+    Fixes: 73b69d7 ("Remove xpmstrcasecmp fallback for strcasecmp")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/25>
+
+commit bdb6c75fd667e43ce228f1a32e930a0f2966f29d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 19 14:53:05 2024 -0800
+
+    Remove xpmstrdup fallback for strdup
+    
+    It has never been used in the autoconf builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 73b69d794d98e0ccfada48836c4b28280353180f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 19 14:48:46 2024 -0800
+
+    Remove xpmstrcasecmp fallback for strcasecmp
+    
+    It was only ever used when FOR_MSW was defined, never in the autoconf builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b30fd0918f8d99aa718ede3da30f9d29f87063e1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 19 14:37:23 2024 -0800
+
+    Remove ancient port to 16-bit Windows without X11 libraries
+    
+    Removes all the "FOR_MSW" code added back in 1994, which hasn't been
+    buildable in the automake builds.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0224b43072c5ce42ec4f3280e6f6022a2e5380c6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 19 13:45:35 2024 -0800
+
+    Remove ancient Amiga support
+    
+    There was no way to build this in the automake files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b72af4edce48e40fedd441f72df0d2338fd448c5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 19 13:51:05 2024 -0800
+
+    unifdef VAX11C
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 02702c20e70da35ea8a842bc79c8eaec66db0e6c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 19 13:28:36 2024 -0800
+
+    unifdef sequent
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b4e217761e6a2bb7111290d77baf7f44d256351a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 14:56:45 2024 -0800
+
+    Remove outdated ifdef checks for including stdint.h
+    
+    Assumes all platforms have provided C99 required headers in the 25 years
+    since the C99 standard was finalized.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a154f12b6e56f131bd5880fc96f11615ff940b29
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 3 08:43:57 2023 -0700

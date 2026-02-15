@@ -37,24 +37,6 @@
 #endif
 #include "XpmI.h"
 
-#ifdef NEED_STRDUP
-/*
- * in case strdup is not provided by the system here is one
- * which does the trick
- */
-char *
-xpmstrdup(char *s1)
-{
-    char *s2;
-    size_t l = strlen(s1) + 1;
-
-    if (s2 = (char *) XpmMalloc(l))
-	strcpy(s2, s1);
-    return s2;
-}
-
-#endif
-
 unsigned int
 xpmatoui(
     register char	*p,

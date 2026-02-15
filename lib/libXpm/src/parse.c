@@ -33,11 +33,6 @@
 *  Developed by Arnaud Le Hors                                                *
 \*****************************************************************************/
 
-/*
- * The code related to FOR_MSW has been added by
- * HeDu (hedu@cul-ipn.uni-kiel.de) 4/94
- */
-
 /* October 2004, source code review by Thomas Biege <thomas@suse.de> */
 
 #ifdef HAVE_CONFIG_H
@@ -419,17 +414,8 @@ ParsePixels(
     if ((height > 0 && width >= UINT_MAX / height) ||
 	width * height >= UINT_MAX / sizeof(unsigned int))
 	return XpmNoMemory;
-#ifndef FOR_MSW
-    iptr2 = (unsigned int *) XpmMalloc(sizeof(unsigned int) * width * height);
-#else
 
-    /*
-     * special treatment to trick DOS malloc(size_t) where size_t is 16 bit!!
-     * XpmMalloc is defined to longMalloc(long) and checks the 16 bit boundary
-     */
-    iptr2 = (unsigned int *)
-	XpmMalloc((long) sizeof(unsigned int) * (long) width * (long) height);
-#endif
+    iptr2 = (unsigned int *) XpmMalloc(sizeof(unsigned int) * width * height);
     if (!iptr2)
 	return (XpmNoMemory);
 

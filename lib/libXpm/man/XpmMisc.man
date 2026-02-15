@@ -46,23 +46,22 @@ XpmMisc \- xpm misc functions to free used memory and handle errors
 .fi
 .SH ARGUMENTS
 
-.IP \fIimage\fP li
+.IP \fIimage\fP 1i
 Specifies the structure to free
-.IP \fIinfo\fP li
+.IP \fIinfo\fP 1i
 Specifies the structure to free
-.IP \fIptr\fP li
+.IP \fIptr\fP 1i
 Specifies the data to free
-.IP \fIerrorcode\fP li
+.IP \fIerrorcode\fP 1i
 Specifies the XPM error
-.IP \fIextensions\fP li
+.IP \fIextensions\fP 1i
 Specifies the array to free
-.IP \fInextensions\fP li
+.IP \fInextensions\fP 1i
 Specifies the number of extensions
-.IP \fIattributes\fP li
+.IP \fIattributes\fP 1i
 Specifies the structure to free
 
 .SH DESCRIPTION
-.PP
 To free possible data stored into an XpmImage structure use
 .BR XpmFreeXpmImage ().
 The
@@ -71,7 +70,7 @@ function frees the structure members which are not NULL,
 but not the structure itself.
 .PP
 To free possible data stored into an XpmInfo structure use
-.BR XpmFreeXpmInfo().
+.BR XpmFreeXpmInfo ().
 .PP
 To free data possibly stored into an array of XpmExtension use
 .BR XpmFreeExtensions ().

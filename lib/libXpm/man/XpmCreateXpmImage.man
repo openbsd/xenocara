@@ -45,26 +45,26 @@ XpmCreateXpmImage \- create an Xpm image
 
 .SH ARGUMENTS
 
-.IP \fIdata\fP  li
+.IP \fIdata\fP  1i
 Specifies the location of the data.
-.IP \fIimage\fP li
+.IP \fIimage\fP 1i
 Specifies the image structure location.
-.IP \fIinfo\fP li
-Specifies the location of an XpmInfo structure to get and store information (or NULL).
-.IP \fIdisplay\fP li
+.IP \fIinfo\fP 1i
+Specifies the location of an XpmInfo structure to get and store information
+(or NULL).
+.IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
-.IP \fIimage\fP li
+.IP \fIimage\fP 1i
 Specifies the X image used as the source.
-.IP \fIshapeimage\fP li
+.IP \fIshapeimage\fP 1i
 Specifies the shape mask image, if any.
-.IP \fIxpmimage\fP li
+.IP \fIxpmimage\fP 1i
 Specifies the XPM image which is created.
-.IP \fIattributes\fP li
+.IP \fIattributes\fP 1i
 Specifies the location of a structure containing information (or NULL).
 
 .SH DESCRIPTION
 .SS XpmCreateXpmImageFromBuffer
-.PP
 To create an XpmImage from an XPM buffer, use
 .BR XpmCreateXpmImageFromBuffer ().
 The
@@ -80,8 +80,9 @@ If the passed XpmInfo structure pointer is not NULL,
 .BR XpmCreateXpmImageFromBuffer ()
 looks for the following attributes: XpmReturnComments and XpmReturnExtensions,
 and sets possibly the XpmHotspot attribute when returning.
-As specified in the table (page 28), if the data related to the attributes XpmReturnComments and
-XpmReturnExtensions cannot be returned as requested because of insufficient memory storage,
+As specified in the table (page 28),
+if the data related to the attributes XpmReturnComments and XpmReturnExtensions
+cannot be returned as requested because of insufficient memory storage,
 .BR XpmCreateXpmImageFromBuffer ()
 will change the valuemask to mention this and will try to continue.
 So the caller should check on this before accessing requested data.
@@ -90,17 +91,16 @@ Note: The valuemask of the passed XpmInfo structure must be set to some valid
 value, at least zero, otherwise unpredictable errors can occur.
 
 .SS XpmCreateXpmImageFromData
-.PP
 To create an XpmImage from an XPM data, use
 .BR XpmCreateXpmImageFromData ().
 .BR XpmCreateXpmImageFromData ()
-fills in the given XpmImage structure from the given data. If the data does not
-contain valid XPM data, it returns
+fills in the given XpmImage structure from the given data.
+If the data does not contain valid XPM data, it returns
 .BR XpmFileInvalid .
 If insufficient working storage is allocated, it returns
 .BR XpmNoMemory .
 On success it returns
-.BR XpmSuccess.
+.BR XpmSuccess .
 If the passed XpmInfo structure pointer is not NULL,
 .BR XpmCreateXpmImageFromData ()
 looks for the following attributes:
@@ -116,7 +116,6 @@ Note: The valuemask of the passed XpmInfo structure must be set to some valid
 value, at least zero, otherwise unpredictable errors can occur.
 
 .SS XpmCreateXpmImageFromImage
-.PP
 To create an XpmImage from an XImage, use
 .BR XpmCreateXpmImageFromImage ().
 From the given X images and XpmAttributes if not NULL,
@@ -125,7 +124,6 @@ creates an XpmImage following the same mechanism as
 .BR XpmWriteFileFromImage (__libmansuffix__).
 
 .SS XpmCreateXpmImageFromPixmap
-.PP
 To create an XpmImage from a Pixmap, use
 .BR XpmCreateXpmImageFromPixmap ().
 From the given pixmaps and XpmAttributes if not NULL,

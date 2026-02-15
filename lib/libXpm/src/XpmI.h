@@ -34,11 +34,6 @@
 *  Developed by Arnaud Le Hors                                                *
 \*****************************************************************************/
 
-/*
- * The code related to FOR_MSW has been added by
- * HeDu (hedu@cul-ipn.uni-kiel.de) 4/94
- */
-
 #ifndef XPMI_h
 #define XPMI_h
 
@@ -52,18 +47,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-/* stdio.h doesn't declare popen on a Sequent DYNIX OS */
-#ifdef sequent
-extern FILE *popen();
+#include <string.h>
+#if !defined(_MSC_VER)
+#include <strings.h>
 #endif
 
-#ifdef FOR_MSW
-#include "simx.h"
-#else
 #include <X11/Xos.h>
 #include <X11/Xfuncs.h>
 #include <X11/Xmd.h>
-#endif
 
 #ifdef VMS
 #include <unixio.h>
@@ -79,21 +70,11 @@ extern FILE *popen();
  */
 #define XpmFree(ptr) free(ptr)
 
-#ifndef FOR_MSW
 #define XpmMalloc(size) malloc((size))
 #define XpmRealloc(ptr, size) realloc((ptr), (size))
 #define XpmCalloc(nelem, elsize) calloc((nelem), (elsize))
-#else
-/* checks for mallocs bigger than 64K */
-#define XpmMalloc(size) boundCheckingMalloc((long)(size))/* in simx.[ch] */
-#define XpmRealloc(ptr, size) boundCheckingRealloc((ptr),(long)(size))
-#define XpmCalloc(nelem, elsize) \
-		boundCheckingCalloc((long)(nelem),(long) (elsize))
-#endif
 
-#if defined(SCO) || defined(__USLC__)
 #include <stdint.h>	/* For SIZE_MAX */
-#endif
 #include <limits.h>
 #ifndef SIZE_MAX
 # ifdef ULONG_MAX
@@ -194,7 +175,6 @@ HFUNC(xpmSetInfo, void, (XpmInfo *info, XpmAttributes *attributes));
 HFUNC(xpmSetAttributes, void, (XpmAttributes *attributes, XpmImage *image,
 			      XpmInfo *info));
 
-#if !defined(FOR_MSW) && !defined(AMIGA)
 HFUNC(xpmCreatePixmapFromImage, int, (Display *display, Drawable d,
 				      XImage *ximage, Pixmap *pixmap_return));
 
@@ -202,7 +182,6 @@ HFUNC(xpmCreateImageFromPixmap, void, (Display *display, Pixmap pixmap,
 				      XImage **ximage_return,
 				      unsigned int *width,
 				      unsigned int *height));
-#endif
 
 /* structures and functions related to hastable code */
 
@@ -265,11 +244,7 @@ HFUNC(xpmReadRgbNames, int, (const char *rgb_fname, xpmRgbName *rgbn));
 HFUNC(xpmGetRgbName, char *, (xpmRgbName *rgbn, int rgbn_max,
 			     int red, int green, int blue));
 HFUNC(xpmFreeRgbNames, void, (xpmRgbName *rgbn, int rgbn_max));
-#ifdef FOR_MSW
-HFUNC(xpmGetRGBfromName,int, (char *name, int *r, int *g, int *b));
-#endif
 
-#ifndef AMIGA
 HFUNC(xpm_xynormalizeimagebits, void, (register unsigned char *bp,
 				      register XImage *img));
 HFUNC(xpm_znormalizeimagebits, void, (register unsigned char *bp,
@@ -317,23 +292,6 @@ HFUNC(xpm_znormalizeimagebits, void, (register unsigned char *bp,
 #define ZINDEX8(x, y, img) ((y) * img->bytes_per_line) + (x)
 
 #define ZINDEX1(x, y, img) ((y) * img->bytes_per_line) + ((x) >> 3)
-#endif /* not AMIGA */
-
-#ifdef NEED_STRDUP
-HFUNC(xpmstrdup, char *, (char *s1));
-#else
-#undef xpmstrdup
-#define xpmstrdup strdup
-#include <string.h>
-#endif
-
-#ifdef NEED_STRCASECMP
-HFUNC(xpmstrcasecmp, int, (char *s1, char *s2));
-#else
-#undef xpmstrcasecmp
-#define xpmstrcasecmp strcasecmp
-#include <strings.h>
-#endif
 
 HFUNC(xpmatoui, unsigned int,
      (char *p, unsigned int l, unsigned int *ui_return));

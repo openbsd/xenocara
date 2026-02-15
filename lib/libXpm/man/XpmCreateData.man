@@ -41,24 +41,23 @@ XpmCreateData \- create an Data structure
 
 .SH ARGUMENTS
 
-.IP \fIdisplay\fP li
+.IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
-.IP \fIdata_return\fP li
+.IP \fIdata_return\fP 1i
 Returns the data which is created.
-.IP \fIpixmap\fP li
+.IP \fIpixmap\fP 1i
 Specifies the pixmap.
-.IP \fIshapemask\fP li
+.IP \fIshapemask\fP 1i
 Specifies the shape mask pixmap.
-.IP \fIattributes\fP li
+.IP \fIattributes\fP 1i
 Specifies the location of a structure containing information (or NULL).
-.IP \fIinfo\fP li
+.IP \fIinfo\fP 1i
 Specifies the location of a structure to get information.
-.IP \fIimage\fP li
+.IP \fIimage\fP 1i
 Specifies the image
 
 .SH DESCRIPTION
 .SS XpmCreateDataFromImage
-.PP
 In some cases, one may want to create an XPM data from an XImage, to do so use
 .BR XpmCreateDataFromImage ().
 The
@@ -72,7 +71,6 @@ It is the caller’s responsibility to free the data, using
 when finished.
 
 .SS XpmCreateDataFromPixmap
-.PP
 .BR XpmCreateDataFromPixmap ()
 creates an XPM data from a Pixmap.
 The
@@ -89,12 +87,12 @@ returns the same errors as
 .BR XpmCreateDataFromImage ().
 
 .SS XpmCreateDataFromXpmImage
-.PP
 .BR XpmCreateDataFromXpmImage ()
 creates an XPM data from an XpmImage.
 The
 .BR XpmCreateDataFromXpmImage ()
-function writes out the given image to a single block malloc’ed data in XPM format.
+function writes out the given image to
+a single block malloc’ed data in XPM format.
 If insufficient working storage is allocated, it returns
 .BR XpmNoMemory ,
 and returns

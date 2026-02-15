@@ -33,11 +33,6 @@
 \*****************************************************************************/
 
 /*
- * The code related to FOR_MSW has been added by
- * HeDu (hedu@cul-ipn.uni-kiel.de) 4/94
- */
-
-/*
  * Part of this code has been taken from the ppmtoxpm.c file written by Mark
  * W. Snitily but has been modified for my special need
  */
@@ -48,8 +43,6 @@
 #include "XpmI.h"
 #include <ctype.h>
 
-#ifndef FOR_MSW				/* normal part first, MSW part at
-					 * the end, (huge ifdef!) */
 /*
  * Read a rgb text file.  It stores the rgb values (0->65535)
  * and the rgb mnemonics (malloc'ed) into the "rgbn" array.  Returns the
@@ -154,134 +147,3 @@ xpmFreeRgbNames(
     for (i = 0, rgb = rgbn; i < rgbn_max; i++, rgb++)
 	XpmFree(rgb->name);
 }
-
-#else					/* here comes the MSW part, the
-					 * second part of the  huge ifdef */
-
-#include "rgbtab.h"			/* hard coded rgb.txt table */
-
-int
-xpmReadRgbNames(
-    const char	*rgb_fname,
-    xpmRgbName	 rgbn[])
-{
-    /*
-     * check for consistency???
-     * table has to be sorted for calls on strcasecmp
-     */
-    return (numTheRGBRecords);
-}
-
-/*
- * MSW rgb values are made from 3 BYTEs, this is different from X XColor.red,
- * which has something like #0303 for one color
- */
-char *
-xpmGetRgbName(
-    xpmRgbName rgbn[],		/* rgb mnemonics from rgb text file
-				 * not used */
-    int		rgbn_max,	/* not used */
-    int		red, 		/* rgb values */
-    int		green,
-    int		blue)
-
-{
-    int i;
-    unsigned long rgbVal;
-
-    i = 0;
-    while (i < numTheRGBRecords) {
-	rgbVal = theRGBRecords[i].rgb;
-	if (GetRValue(rgbVal) == red &&
-	    GetGValue(rgbVal) == green &&
-	    GetBValue(rgbVal) == blue)
-	    return (theRGBRecords[i].name);
-	i++;
-    }
-    return (NULL);
-}
-
-/* used in XParseColor in simx.c */
-int
-xpmGetRGBfromName(
-    char	*inname,
-    int		*r,
-    int		*g,
-    int		*b)
-{
-    int left, right, middle;
-    int cmp;
-    unsigned long rgbVal;
-    char *name;
-    char *grey, *p;
-
-    name = xpmstrdup(inname);
-
-    /*
-     * the table in rgbtab.c has no names with spaces, and no grey, but a
-     * lot of gray
-     */
-    /* so first extract ' ' */
-    while (p = strchr(name, ' ')) {
-	while (*(p)) {			/* till eof of string */
-	    *p = *(p + 1);		/* copy to the left */
-	    p++;
-	}
-    }
-    /* fold to lower case */
-    p = name;
-    while (*p) {
-	*p = tolower(*p);
-	p++;
-    }
-
-    /*
-     * substitute Grey with Gray, else rgbtab.h would have more than 100
-     * 'duplicate' entries
-     */
-    if (grey = strstr(name, "grey"))
-	grey[2] = 'a';
-
-    /* binary search */
-    left = 0;
-    right = numTheRGBRecords - 1;
-    do {
-	middle = (left + right) / 2;
-	cmp = xpmstrcasecmp(name, theRGBRecords[middle].name);
-	if (cmp == 0) {
-	    rgbVal = theRGBRecords[middle].rgb;
-	    *r = GetRValue(rgbVal);
-	    *g = GetGValue(rgbVal);
-	    *b = GetBValue(rgbVal);
-	    free(name);
-	    return (1);
-	} else if (cmp < 0) {
-	    right = middle - 1;
-	} else {			/* > 0 */
-	    left = middle + 1;
-	}
-    } while (left <= right);
-
-    /*
-     * I don't like to run in a ColorInvalid error and to see no pixmap at
-     * all, so simply return a red pixel. Should be wrapped in an #ifdef
-     * HeDu
-     */
-
-    *r = 255;
-    *g = 0;
-    *b = 0;				/* red error pixel */
-
-    free(name);
-    return (1);
-}
-
-void
-xpmFreeRgbNames(
-    xpmRgbName	rgbn[],
-    int		rgbn_max)
-{
-    /* nothing to do */
-}
-
-#endif					/* MSW part */

@@ -32,16 +32,6 @@
 *  Developed by Arnaud Le Hors                                                *
 \*****************************************************************************/
 
-/*
- * The code related to FOR_MSW has been added by
- * HeDu (hedu@cul-ipn.uni-kiel.de) 4/94
- */
-
-/*
- * The code related to AMIGA has been added by
- * Lorens Younes (d93-hyo@nada.kth.se) 4/96
- */
-
 /* October 2004, source code review by Thomas Biege <thomas@suse.de> */
 
 #ifdef HAVE_CONFIG_H
@@ -81,8 +71,6 @@ LFUNC(storeMaskPixel, int, (Pixel pixel, PixelsMap *pmap,
 typedef int (*storeFuncPtr)(Pixel pixel, PixelsMap *pmap,
 			    unsigned int *index_return);
 
-#ifndef FOR_MSW
-# ifndef AMIGA
 LFUNC(GetImagePixels, int, (XImage *image, unsigned int width,
 			    unsigned int height, PixelsMap *pmap));
 
@@ -98,16 +86,7 @@ LFUNC(GetImagePixels8, int, (XImage *image, unsigned int width,
 LFUNC(GetImagePixels1, int, (XImage *image, unsigned int width,
 			     unsigned int height, PixelsMap *pmap,
 			     storeFuncPtr storeFunc));
-# else /* AMIGA */
-LFUNC(AGetImagePixels, int, (XImage *image, unsigned int width,
-			     unsigned int height, PixelsMap *pmap,
-			     storeFuncPtr storeFunc));
-# endif/* AMIGA */
-#else  /* ndef FOR_MSW */
-LFUNC(MSWGetImagePixels, int, (Display *d, XImage *image, unsigned int width,
-			       unsigned int height, PixelsMap *pmap,
-			       storeFuncPtr storeFunc));
-#endif
+
 LFUNC(ScanTransparentColor, int, (XpmColor *color, unsigned int cpp,
 				  XpmAttributes *attributes));
 
@@ -255,18 +234,8 @@ XpmCreateXpmImageFromImage(
      * scan shape mask if any
      */
     if (shapeimage) {
-#ifndef FOR_MSW
-# ifndef AMIGA
 	ErrorStatus = GetImagePixels1(shapeimage, width, height, &pmap,
 				      storeMaskPixel);
-# else
-	ErrorStatus = AGetImagePixels(shapeimage, width, height, &pmap,
-				      storeMaskPixel);
-# endif
-#else
-	ErrorStatus = MSWGetImagePixels(display, shapeimage, width, height,
-					&pmap, storeMaskPixel);
-#endif
 	if (ErrorStatus != XpmSuccess)
 	    RETURN(ErrorStatus);
     }
@@ -280,8 +249,6 @@ XpmCreateXpmImageFromImage(
      */
 
     if (image) {
-#ifndef FOR_MSW
-# ifndef AMIGA
 	if (((image->bits_per_pixel | image->depth) == 1)  &&
 	    (image->byte_order == image->bitmap_bit_order))
 	    ErrorStatus = GetImagePixels1(image, width, height, &pmap,
@@ -295,14 +262,6 @@ XpmCreateXpmImageFromImage(
 		ErrorStatus = GetImagePixels32(image, width, height, &pmap);
 	} else
 	    ErrorStatus = GetImagePixels(image, width, height, &pmap);
-# else
-	ErrorStatus = AGetImagePixels(image, width, height, &pmap,
-				      storePixel);
-# endif
-#else
-	ErrorStatus = MSWGetImagePixels(display, image, width, height, &pmap,
-					storePixel);
-#endif
 	if (ErrorStatus != XpmSuccess)
 	    RETURN(ErrorStatus);
     }
@@ -403,13 +362,13 @@ ScanTransparentColor(
 /* end 3.2 bc */
 	for (key = 1; key <= NKEYS; key++) {
 	    if ((s = mask_defaults[key])) {
-		defaults[key] = (char *) xpmstrdup(s);
+		defaults[key] = strdup(s);
 		if (!defaults[key])
 		    return (XpmNoMemory);
 	    }
 	}
     } else {
-	color->c_color = (char *) xpmstrdup(TRANSPARENT_COLOR);
+	color->c_color = strdup(TRANSPARENT_COLOR);
 	if (!color->c_color)
 	    return (XpmNoMemory);
     }
@@ -430,11 +389,7 @@ ScanOtherColors(
     Colormap colormap;
     char *rgb_fname;
 
-#ifndef FOR_MSW
     xpmRgbName rgbn[MAX_RGBNAMES];
-#else
-    xpmRgbName *rgbn = NULL;
-#endif
     int rgbn_max = 0;
     unsigned int i, j, c, i2;
     XpmColor *color;
@@ -486,14 +441,9 @@ ScanOtherColors(
     }
     XQueryColors(display, colormap, xcolors, ncolors);
 
-#ifndef FOR_MSW
     /* read the rgb file if any was specified */
     if (rgb_fname)
 	rgbn_max = xpmReadRgbNames(attributes->rgb_fname, rgbn);
-#else
-    /* FOR_MSW: rgb names and values are hardcoded in rgbtab.h */
-    rgbn_max = xpmReadRgbNames(NULL, NULL);
-#endif
 
     if (attributes && attributes->valuemask & XpmColorTable) {
 	colorTable = attributes->colorTable;
@@ -541,7 +491,7 @@ ScanOtherColors(
 		found = True;
 		for (key = 1; key <= NKEYS; key++) {
 		    if ((s = adefaults[key]))
-			defaults[key] = (char *) xpmstrdup(s);
+			defaults[key] = strdup(s);
 		}
 	    }
 	}
@@ -552,18 +502,13 @@ ScanOtherColors(
 		colorname = xpmGetRgbName(rgbn, rgbn_max, xcolor->red,
 					  xcolor->green, xcolor->blue);
 	    if (colorname)
-		color->c_color = (char *) xpmstrdup(colorname);
+		color->c_color = strdup(colorname);
 	    else {
 		/* at last store the rgb value */
 		char buf[BUFSIZ];
-#ifndef FOR_MSW
 		sprintf(buf, "#%04X%04X%04X",
 			xcolor->red, xcolor->green, xcolor->blue);
-#else
-		sprintf(buf, "#%02x%02x%02x",
-			xcolor->red, xcolor->green, xcolor->blue);
-#endif
-		color->c_color = (char *) xpmstrdup(buf);
+		color->c_color = strdup(buf);
 	    }
 	    if (!color->c_color) {
 		XpmFree(xcolors);
@@ -578,8 +523,6 @@ ScanOtherColors(
     return (XpmSuccess);
 }
 
-#ifndef FOR_MSW
-# ifndef AMIGA
 /*
  * The functions below are written from X11R5 MIT's code (XImUtil.c)
  *
@@ -903,84 +846,6 @@ GetImagePixels1(
     return (XpmSuccess);
 }
 
-# else /* AMIGA */
-
-#define CLEAN_UP(status) \
-do {\
-    if (pixels) XpmFree (pixels);\
-    if (tmp_img) FreeXImage (tmp_img);\
-    return (status);\
-} while(0)
-
-static int
-AGetImagePixels (
-    XImage        *image,
-    unsigned int   width,
-    unsigned int   height,
-    PixelsMap     *pmap,
-    int          (*storeFunc) (Pixel, PixelsMap *, unsigned int *))
-{
-    unsigned int   *iptr;
-    unsigned int    x, y;
-    unsigned char  *pixels;
-    XImage         *tmp_img;
-
-    pixels = XpmMalloc ((((width+15)>>4)<<4)*sizeof (*pixels));
-    if (pixels == NULL)
-	return XpmNoMemory;
-
-    tmp_img = AllocXImage ((((width+15)>>4)<<4), 1, image->rp->BitMap->Depth);
-    if (tmp_img == NULL)
-	CLEAN_UP (XpmNoMemory);
-
-    iptr = pmap->pixelindex;
-    for (y = 0; y < height; ++y)
-    {
-	ReadPixelLine8 (image->rp, 0, y, width, pixels, tmp_img->rp);
-	for (x = 0; x < width; ++x, ++iptr)
-	{
-	    if ((*storeFunc) (pixels[x], pmap, iptr))
-		CLEAN_UP (XpmNoMemory);
-	}
-    }
-
-    CLEAN_UP (XpmSuccess);
-}
-
-#undef CLEAN_UP
-
-# endif/* AMIGA */
-#else  /* ndef FOR_MSW */
-static int
-MSWGetImagePixels(
-    Display	 *display,
-    XImage	 *image,
-    unsigned int  width,
-    unsigned int  height,
-    PixelsMap	 *pmap,
-    int		(*storeFunc) (Pixel, PixelsMap*, unsigned int *))
-{
-    unsigned int *iptr;
-    unsigned int x, y;
-    Pixel pixel;
-
-    iptr = pmap->pixelindex;
-
-    SelectObject(*display, image->bitmap);
-    for (y = 0; y < height; y++) {
-	for (x = 0; x < width; x++, iptr++) {
-	    pixel = GetPixel(*display, x, y);
-	    if ((*storeFunc) (pixel, pmap, iptr))
-		return (XpmNoMemory);
-	}
-    }
-    return (XpmSuccess);
-}
-
-#endif
-
-#ifndef FOR_MSW
-# ifndef AMIGA
 int
 XpmCreateXpmImageFromPixmap(
     Display		*display,
@@ -1019,6 +884,3 @@ XpmCreateXpmImageFromPixmap(
 
     return (ErrorStatus);
 }
-
-# endif/* not AMIGA */
-#endif /* ndef FOR_MSW */

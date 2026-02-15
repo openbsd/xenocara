@@ -32,28 +32,19 @@
 *  Developed by Arnaud Le Hors                                                *
 \*****************************************************************************/
 
-/*
- * The code related to FOR_MSW has been added by
- * HeDu (hedu@cul-ipn.uni-kiel.de) 4/94
- */
-
 /* October 2004, source code review by Thomas Biege <thomas@suse.de> */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include <sys/stat.h> // before XpmI.h, which may rewrite stat (etc) via Xwindows.h
 #include "XpmI.h"
-#include <sys/stat.h>
-#if !defined(FOR_MSW) && !defined(WIN32)
+#ifndef WIN32
 #include <unistd.h>
 #endif
-#ifndef VAX11C
 #include <fcntl.h>
-#endif
-#if defined(FOR_MSW) || defined(WIN32)
+#ifdef WIN32
 #include <io.h>
-#define stat _stat
-#define fstat _fstat
 #define fdopen _fdopen
 #define O_RDONLY _O_RDONLY
 #endif
@@ -71,11 +62,7 @@ XpmReadFileToBuffer(
 
     *buffer_return = NULL;
 
-#ifndef VAX11C
     fd = open(filename, O_RDONLY | O_CLOEXEC);
-#else
-    fd = open(filename, O_RDONLY, NULL);
-#endif
     if (fd < 0)
 	return XpmOpenFailed;
 

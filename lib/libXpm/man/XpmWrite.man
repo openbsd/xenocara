@@ -44,28 +44,27 @@ XpmWrite \- write an XPM file
 .fi
 
 .SH ARGUMENTS
-.IP \fIdisplay\fP li
+.IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
-.IP \fIfilename\fP li
+.IP \fIfilename\fP 1i
 Specifies the file name to use.
-.IP \fIpixmap\fP li
+.IP \fIpixmap\fP 1i
 Specifies the pixmap.
-.IP \fIshapemask\fP li
+.IP \fIshapemask\fP 1i
 Specifies the shape mask pixmap.
-.IP \fIattributes\fP li
+.IP \fIattributes\fP 1i
 Specifies the location of a structure containing information (or NULL).
-.IP \fIdata\fP li
+.IP \fIdata\fP 1i
 Specifies the data array to read.
-.IP \fIimage\fP li
+.IP \fIimage\fP 1i
 Specifies the image.
-.IP \fIinfo\fP li
+.IP \fIinfo\fP 1i
 Specifies the location of a structure to get information from (or NULL).
-.IP \fIbuffer\fP li
+.IP \fIbuffer\fP 1i
 Specifies the buffer to read.
 
 .SH DESCRIPTION
 .SS XpmWriteFileFromImage
-.PP
 The
 .BR XpmWriteFileFromImage ()
 function writes an
@@ -85,18 +84,20 @@ XpmColormap, XpmHotspot, XpmCharsPerPixel, XpmRgbFilename, and XpmExtensions.
 As a backward compatibility feature,
 .BR XpmWriteFileFromImage ()
 also looks for the XpmInfos attributes.
-If the filename contains an extension such as “.xpm”, in order to get a valid C
-variable name, the dot character is
+If the filename contains an extension such as “.xpm”,
+in order to get a valid C variable name, the dot character is
 replaced by an underscore ’_’ when writing out.
-As a backward compatibility feature, if the XpmInfos attributes are defined it writes out possible stored
+As a backward compatibility feature,
+if the XpmInfos attributes are defined it writes out possible stored
 information such as comments, color defaults and symbol.
 Finally, if the XpmRgbFilenameattribute is defined,
 .BR XpmWriteFileFromImage ()
 searches for color names in
 this file and if found writes them out instead of the rgb values.
 .PP
-In addition on systems which support such features if the given file name ends
-by ’.Z’ or ’.gz’ it is assumed to be a compressed file. Then,
+In addition on systems which support such features
+if the given file name ends with ’.Z’ or ’.gz’
+it is assumed to be a compressed file. Then,
 .BR XpmWriteFileFromImage ()
 writes to a piped compress or gzip process.
 And if instead of a file name, NULL is passed to
@@ -104,7 +105,6 @@ And if instead of a file name, NULL is passed to
 it writes to the standard output.
 
 .SS XpmWriteFileFromPixmap
-.PP
 To write out a Pixmap to an XPM file, use
 .BR XpmWriteFileFromPixmap ().
 .PP
@@ -112,7 +112,8 @@ If the passed XpmAttributes structure pointer is not NULL,
 .BR XpmWriteFileFromPixmap ()
 looks for the following attributes: XpmSize.
 If they are not defined it performs an XGetGeometry operation.
-Then it uses XGetImage to get from the given pixmaps the related X images which are passed to
+Then it uses XGetImage to get from the given pixmaps
+the related X images which are passed to
 .BR XpmWriteFileFromImage ().
 Finally
 .BR XpmWriteFileFromPixmap ()
@@ -123,7 +124,6 @@ function returns the same errors as
 .BR XpmWriteFileFromImage ().
 
 .SS XpmWriteFileFromData
-.PP
 .BR XpmWriteFileFromData ()
 writes an XPM data array to an XPM file.
 .PP
@@ -137,7 +137,6 @@ if this is not a valid XPM data, and
 otherwise.
 
 .SS XpmWriteFileFromXpmImage
-.PP
 To write out an XpmImage to an XPM file, use
 .BR XpmWriteFileFromXpmImage ().
 The
@@ -150,12 +149,13 @@ If insufficient working storage is allocated, it returns
 If no error occurs then it returns
 .BR XpmSuccess .
 If the passed XpmInfo structure pointer is not NULL,
-.BR XpmWriteFileFromXpmImage()
+.BR XpmWriteFileFromXpmImage ()
 looks for the following attributes:
 XpmComments, XpmExtensions, and XpmHotspot,
 and writes the related information out as well.
-In addition on systems which support such features if the given file name ends
-by ’.Z’ or ’.gz’ it is assumed to be a compressed file. Then,
+In addition on systems which support such features
+if the given file name ends with ’.Z’ or ’.gz’
+it is assumed to be a compressed file. Then,
 .BR XpmWriteFileFromXpmImage ()
 writes to a piped compress or gzip process.
 And if instead of a file name, NULL is passed to
@@ -163,7 +163,6 @@ And if instead of a file name, NULL is passed to
 it writes to the standard output.
 
 .SS XpmWriteFileFromBuffer
-.PP
 .BR XpmWriteFileFromBuffer ()
 writes a XPM buffer to a file.
 .BR XpmWriteFileFromBuffer ()

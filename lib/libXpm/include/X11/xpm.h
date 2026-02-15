@@ -32,16 +32,6 @@
 *  Developed by Arnaud Le Hors                                                *
 \*****************************************************************************/
 
-/*
- * The code related to FOR_MSW has been added by
- * HeDu (hedu@cul-ipn.uni-kiel.de) 4/94
- */
-
-/*
- * The code related to AMIGA has been added by
- * Lorens Younes (d93-hyo@nada.kth.se) 4/96
- */
-
 #ifndef XPM_h
 #define XPM_h
 
@@ -64,20 +54,9 @@
 
 #ifndef XPM_NUMBERS
 
-#ifdef FOR_MSW
-# define SYSV			/* uses memcpy string.h etc. */
-# include <malloc.h>
-# include "simx.h"		/* defines some X stuff using MSW types */
-#define NEED_STRCASECMP		/* at least for MSVC++ */
-#else /* FOR_MSW */
-# ifdef AMIGA
-#  include "amigax.h"
-# else /* not AMIGA */
-#  include <X11/Xfuncproto.h>
-#  include <X11/Xlib.h>
-#  include <X11/Xutil.h>
-# endif /* not AMIGA */
-#endif /* FOR_MSW */
+# include <X11/Xfuncproto.h>
+# include <X11/Xlib.h>
+# include <X11/Xutil.h>
 
 /* let's define Pixel if it is not done yet */
 #if ! defined(_XtIntrinsic_h) && ! defined(PIXEL_ALREADY_TYPEDEFED)
@@ -256,12 +235,7 @@ typedef struct {
 #define XpmReturnComments  XpmComments
 
 /* XpmAttributes mask_pixel value when there is no mask */
-#ifndef FOR_MSW
 #define XpmUndefPixel 0x80000000
-#else
-/* int is only 16 bit for MSW */
-#define XpmUndefPixel 0x8000
-#endif
 
 /*
  * color keys for visual type, they must fit along with the number key of
@@ -291,10 +265,6 @@ typedef struct {
 
 _XFUNCPROTOBEGIN
 
-/* FOR_MSW, all ..Pixmap.. are excluded, only the ..XImage.. are used */
-/* Same for Amiga! */
-
-#if !defined(FOR_MSW) && !defined(AMIGA)
     FUNC(XpmCreatePixmapFromData, int, (Display *display,
 					Drawable d,
 					char **data,
@@ -320,7 +290,6 @@ _XFUNCPROTOBEGIN
 				       Pixmap pixmap,
 				       Pixmap shapemask,
 				       XpmAttributes *attributes));
-#endif
 
     FUNC(XpmCreateImageFromData, int, (Display *display,
 				       char **data,
@@ -351,7 +320,7 @@ _XFUNCPROTOBEGIN
 					 XImage **image_return,
 					 XImage **shapemask_return,
 					 XpmAttributes *attributes));
-#if !defined(FOR_MSW) && !defined(AMIGA)
+
     FUNC(XpmCreatePixmapFromBuffer, int, (Display *display,
 					  Drawable d,
 					  char *buffer,
@@ -370,7 +339,7 @@ _XFUNCPROTOBEGIN
 					  Pixmap pixmap,
 					  Pixmap shapemask,
 					  XpmAttributes *attributes));
-#endif
+
     FUNC(XpmReadFileToBuffer, int, (const char *filename, char **buffer_return));
     FUNC(XpmWriteFileFromBuffer, int, (const char *filename, char *buffer));
 
@@ -395,14 +364,14 @@ _XFUNCPROTOBEGIN
     FUNC(XpmWriteFileFromXpmImage, int, (const char *filename,
 					 XpmImage *image,
 					 XpmInfo *info));
-#if !defined(FOR_MSW) && !defined(AMIGA)
+
     FUNC(XpmCreatePixmapFromXpmImage, int, (Display *display,
 					    Drawable d,
 					    XpmImage *image,
 					    Pixmap *pixmap_return,
 					    Pixmap *shapemask_return,
 					    XpmAttributes *attributes));
-#endif
+
     FUNC(XpmCreateImageFromXpmImage, int, (Display *display,
 					   XpmImage *image,
 					   XImage **image_return,
@@ -414,13 +383,13 @@ _XFUNCPROTOBEGIN
 					   XImage *shapeimage,
 					   XpmImage *xpmimage,
 					   XpmAttributes *attributes));
-#if !defined(FOR_MSW) && !defined(AMIGA)
+
     FUNC(XpmCreateXpmImageFromPixmap, int, (Display *display,
 					    Pixmap pixmap,
 					    Pixmap shapemask,
 					    XpmImage *xpmimage,
 					    XpmAttributes *attributes));
-#endif
+
     FUNC(XpmCreateDataFromXpmImage, int, (char ***data_return,
 					  XpmImage *image,
 					  XpmInfo *info));

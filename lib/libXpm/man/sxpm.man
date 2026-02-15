@@ -46,12 +46,12 @@ sxpm \- Show an XPM (X PixMap) file and/or convert XPM 1 or 2 files to XPM 3.
 [\|\fB-rgb\fR filename\|]
 [\|\fB-v\fR\|]
 .SH DESCRIPTION
-.PP
 The \fIsxpm\fP program can be used to view any XPM (version 1, 2, or 3) file
-and/or to convert a file from XPM1 or XPM2 to XPM version 3. If \fIsxpm\fP is
-run with any dummy option specified, the usage is displayed. If no geometry is
-specified, the show window will have the size of the read pixmap. Pressing the
-key Q in the window will quit the program.
+and/or to convert a file from XPM1 or XPM2 to XPM version 3.
+If \fIsxpm\fP is run with any dummy option specified, the usage is displayed.
+If no geometry is specified,
+the show window will have the size of the read pixmap.
+Pressing the key Q in the window will quit the program.
 .SH OPTIONS
 .TP 8
 .B \-d \fIdisplay\fP
@@ -70,7 +70,8 @@ Set icon to pixmap created from the file \fIfilename\fP.
 Show the plaid pixmap which is stored as data\fP.
 .TP 8
 .B \fIfilename\fP
-Read from the file \fIfilename\fP and from standard input if \fIfilename\fP is '-'.
+Read from the file \fIfilename\fP or
+from standard input if \fIfilename\fP is '-'.
 If no input is specified sxpm reads from standard input.
 .TP 8
 .B \-o \fIfilename\fP
@@ -96,7 +97,8 @@ Use a private colormap.
 Try to use "close colors" before reverting to other visuals.
 .TP 8
 .B \-nod
-Do not display the pixmap in a window.  (Useful when using as converter)
+Do not display the pixmap in a window.
+(Useful when using as converter)
 .TP 8
 .B \-nom
 Do not use the clipmask if there is any.

@@ -46,6 +46,47 @@
 #define g_assert_no_errno(n) g_assert_cmpint(n, >=, 0)
 #endif
 
+/* Tunables for the compression-finish wait */
+#define XPM_STABLE_USEC    (200 * 1000)          /* 200 ms */
+#define XPM_TIMEOUT_USEC   (10 * G_USEC_PER_SEC) /* 10 s   */
+#define XPM_POLL_USEC      (10 * 1000)           /* 10 ms  */
+
+/* ------------------------------------------------------------------------- */
+/* Wait until PATH exists and has not changed for STABLE_USEC microseconds.
+ * We watch both mtime and size because some filesystems only tick mtime
+ * at 1s resolution. Fail the test after TIMEOUT_USEC microseconds.
+ */
+static void
+wait_for_stable_file(const gchar *path, gint64 stable_usec, gint64 timeout_usec)
+{
+        const gint64 poll_interval = XPM_POLL_USEC;
+        gint64 now = g_get_monotonic_time();
+        const gint64 deadline = now + timeout_usec;
+        gboolean seen = FALSE;
+        struct stat st;
+        off_t last_size = -1;
+        time_t last_mtime = 0;
+        gint64 last_change = now; /* monotonic time of last observed change */
+
+        for (;;) {
+                now = g_get_monotonic_time();
+                if (now >= deadline)
+                        g_error("Timeout waiting for %s to be created and become stable", path);
+
+		if (g_stat(path, &st) == 0) {
+                        if (!seen || st.st_size != last_size || st.st_mtime != last_mtime) {
+                                last_size   = st.st_size;
+                                last_mtime  = st.st_mtime;
+                                last_change = now;
+                                seen = TRUE;
+                        }
+                        if (seen && (now - last_change) >= stable_usec)
+                                return; /* stable long enough */
+                }
+                g_usleep(poll_interval);
+        }
+}
+
 /*
  * Check if a filename ends in ".Z" or ".gz"
  */
@@ -95,11 +136,10 @@ test_WFFXI_helper(const gchar *newfilepath, XpmImage *imageA, XpmInfo *infoA)
     g_assert_cmpint(status, ==, XpmSuccess);
 
     if (is_compressed(newfilepath)) {
-         /* Wait a moment for the compression command to finish writing,
-          * since OpenWriteFile() does a double fork so we can't just wait
-          * for the child command to exit.
+         /* OpenWriteFile() double-forks; wait for the compressor to finish
+          * and for the output file to stop changing before we read it back.
           */
-         usleep(10000);
+         wait_for_stable_file(newfilepath, XPM_STABLE_USEC, XPM_TIMEOUT_USEC);
     }
 
     status = XpmReadFileToXpmImage(newfilepath, &imageB, &infoB);
@@ -189,11 +229,10 @@ test_WFFXD_helper(const gchar *newfilepath, char **dataA)
     g_assert_cmpint(status, ==, XpmSuccess);
 
     if (is_compressed(newfilepath)) {
-         /* Wait a moment for the compression command to finish writing,
-          * since OpenWriteFile() does a double fork so we can't just wait
-          * for the child command to exit.
+         /* OpenWriteFile() double-forks; wait for the compressor to finish
+          * and for the output file to stop changing before we read it back.
           */
-         usleep(10000);
+         wait_for_stable_file(newfilepath, XPM_STABLE_USEC, XPM_TIMEOUT_USEC);
     }
 
     status = XpmReadFileToData(newfilepath, &dataB);

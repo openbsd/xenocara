@@ -43,23 +43,22 @@ XpmCreateImage \- create an XImage from an XPM
 
 .SH ARGUMENTS
 
-.IP \fIdisplay\fP li
+.IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
-.IP \fIdata\fP li
+.IP \fIdata\fP 1i
 Specifies the location of the data.
-.IP \fIimage_return\fP li
+.IP \fIimage_return\fP 1i
 Returns the image which is created.
-.IP \fIshapeimage_return\fP li
+.IP \fIshapeimage_return\fP 1i
 Returns the shape mask image which is created if the color None is used.
-.IP \fIattributes\fP li
+.IP \fIattributes\fP 1i
 Specifies the location of a structure to get and store information (or NULL).
-.IP \fIshapeimage\fP li
+.IP \fIshapeimage\fP 1i
 Specifies the shape mask image which is created if any.
 
 .SH DESCRIPTION
 
 .SS XpmCreateImageFromData
-.PP
 To create an XImage from an XPM data, use
 .BR XpmCreateImageFromData ().
 .PP
@@ -76,15 +75,15 @@ exactly works as
 .BR XpmReadFileToImage (__libmansuffix__)
 does and returns the same way.
 It just reads data instead of a file.
-Here again, it is the caller’s responsibility to free the returned images,
-the colors and possibly the data returned into the XpmAttributes structure.
+Here again, it is the caller’s responsibility to free
+the returned images, the colors,
+and possibly the data returned into the XpmAttributes structure.
 
 .SS XpmCreateImageFromBuffer
-.PP
 To create an XImage from an XPM buffer, use
 .BR XpmCreateImageFromBuffer ().
 The
-.BR XpmCreateImageFromBuffer()
+.BR XpmCreateImageFromBuffer ()
 function works the same way as
 .BR XpmReadFileToImage (__libmansuffix__),
 it just parses the buffer instead of the file.
@@ -93,7 +92,6 @@ Be aware that the feature provided on some systems by
 to deal with compressed files is not available here.
 
 .SS XpmCreateImageFromXpmImage
-.PP
 To create an XImage from an XpmImage, use
 .BR XpmCreateImageFromXpmImage ().
 From the given XpmImage and XpmAttributes if not NULL,
