@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.71 2025/11/23 13:18:55 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.72 2026/03/07 12:22:06 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -119,8 +119,8 @@ realinstall: install-headers
 .if defined(HEADERS_SUBDIRS)
 .for d in ${HEADERS_SUBDIRS}
 install-headers-subdirs::
-	@echo installing ${HEADERS_${d:S/\//_/}} in ${INCSDIR}/${d}
-	@cd ${_SRCDIR}; for i in ${HEADERS_${d:S/\//_/}}; do \
+	@echo installing ${HEADERS_${d:S/\//_/g}} in ${INCSDIR}/${d}
+	@cd ${_SRCDIR}; for i in ${HEADERS_${d:S/\//_/g}}; do \
 	    cmp -s $$i ${DESTDIR}${INCSDIR}/$d/$$i || \
 		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/${d}; \
 	done
