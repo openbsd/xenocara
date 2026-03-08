@@ -1,9 +1,9 @@
 /* zconf.h -- configuration of the zlib compression library
- * Copyright (C) 1995-2016 Jean-loup Gailly, Mark Adler
+ * Copyright (C) 1995-2024 Jean-loup Gailly, Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: ftzconf.h,v 1.4 2025/03/09 15:12:55 matthieu Exp $ */
+/* @(#) $Id: ftzconf.h,v 1.5 2026/03/08 15:03:38 matthieu Exp $ */
 
 #ifndef ZCONF_H
 #define ZCONF_H
@@ -297,14 +297,6 @@
 #    define OF(args)  args
 #  else
 #    define OF(args)  ()
-#  endif
-#endif
-
-#ifndef Z_ARG /* function prototypes for stdarg */
-#  if defined(STDC) || defined(Z_HAVE_STDARG_H)
-#    define Z_ARG(args)  args
-#  else
-#    define Z_ARG(args)  ()
 #  endif
 #endif
 
