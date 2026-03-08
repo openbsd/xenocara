@@ -1,3 +1,158 @@
+commit 4638c91a1d95dc3d5e2cfc68a69a0a09f83e8c5c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 7 15:58:15 2026 -0800
+
+    xcalc 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 20f35e8d9be3ebb7fb5a0bc6bd8cfbf5ad125656
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eeea96a44987a7d6644482ed8b5e2c7fed11d1b7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 18 16:59:52 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    troff:xcalc.1:401: warning: macro '.' not defined
+    troff:xcalc.1:401: warning: tab character in unquoted macro argument
+    
+    mandoc: xcalc.1:401:3: ERROR: skipping end of block that is not open: ..
+    mandoc: xcalc.1:42:13: WARNING: cannot parse date, using it verbatim: TH xcalc 1.1.2
+    mandoc: xcalc.1:59:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xcalc.1:65:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xcalc.1:56:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xcalc.1:78:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xcalc.1:408:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xcalc.1:358:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xcalc.1:425:2: WARNING: skipping paragraph macro: br after sp
+    mandoc: xcalc.1:426:29: WARNING: tab in filled text
+    mandoc: xcalc.1:428:29: WARNING: tab in filled text
+    mandoc: xcalc.1:432:30: WARNING: tab in filled text
+    mandoc: xcalc.1:434:30: WARNING: tab in filled text
+    mandoc: xcalc.1:438:30: WARNING: tab in filled text
+    mandoc: xcalc.1:440:30: WARNING: tab in filled text
+    mandoc: xcalc.1:469:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xcalc.1:482:2: STYLE: fill mode already enabled, skipping: fi
+    mandoc: xcalc.1:489:2: WARNING: skipping paragraph macro: br after sp
+    mandoc: xcalc.1:493:2: STYLE: fill mode already enabled, skipping: fi
+    mandoc: xcalc.1:499:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcalc/-/merge_requests/18>
+
+commit fff2dc0a41c6bf3618ec45b2cdc79df0c201d413
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 30 10:15:24 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcalc/-/merge_requests/17>
+
+commit 4007fcc6ef48d8c6aed6421a7b8107afc4333c6b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 2 13:58:35 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcalc/-/merge_requests/16>
+
+commit f7017f020749b0cb7787785f56193fa80ba95429
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 8 15:50:32 2024 -0800
+
+    Add cast to quiet -Wshorten-64-to-32 warning
+    
+    Clears clang 13 warning of:
+    math.c:433:29: warning: implicit conversion loses integer precision:
+     'unsigned long' to 'int' [-Wshorten-64-to-32]
+        exponent=strlen(dispstr)-1;  /* where the '-' goes */
+                ~~~~~~~~~~~~~~~~^~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcalc/-/merge_requests/15>
+
+commit 25ed62879ef69a35eeeaef1ebb06ff3a057e77c6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 8 15:42:13 2024 -0800
+
+    Add unused attributes to unused parameters of callback functions
+    
+    Clears 204 clang warnings of the form:
+    xcalc.c:358:31: warning: unused parameter 'w' [-Wunused-parameter]
+    static Boolean convert(Widget w, Atom *selection, Atom *target, Atom *type,
+                                  ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcalc/-/merge_requests/15>
+
+commit 2e019663b00ce409bb31d97ec99bff95232d0381
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 8 15:32:37 2024 -0800
+
+    Add noreturn attribute to Syntax() prototype
+    
+    Clears clang warning of:
+    xcalc.c:330:1: warning: function 'Syntax' could be declared with
+     attribute 'noreturn' [-Wmissing-noreturn]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcalc/-/merge_requests/15>
+
+commit dee16e7a2b42c51fb490b42f8bdce61afffa5201
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 11 12:11:18 2024 -0800
+
+    actions.c: handle 61 -Wextra-semi-stmt warnings from clang
+    
+    Wrap XCALC_PRE_OP macro definition in do {...} while (0) to
+    clear up warnings from clang 13 of the form:
+    
+    actions.c:161:23: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+        XCALC_PRE_OP(kADD);
+                          ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcalc/-/merge_requests/14>
+
+commit 6f3abc4e478b9d91c6c3ad41925353bb744e5d2f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 2 18:33:22 2024 -0700
+
+    negf: Fix -Wformat-truncation warning
+    
+    math.c: In function ‘negf’:
+    math.c:474:36: warning: ‘snprintf’ output may be truncated before the last
+     format character [-Wformat-truncation=]
+      474 |     snprintf(tmp, sizeof(tmp), "-%s", dispstr);
+          |                                    ^
+    math.c:474:5: note: ‘snprintf’ output between 2 and 33 bytes into a
+     destination of size 32
+      474 |     snprintf(tmp, sizeof(tmp), "-%s", dispstr);
+          |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xcalc/-/merge_requests/13>
+
 commit 62bfb33c545c6afd0cd5ee050168ce1fd461a956
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu May 4 16:54:24 2023 -0700
@@ -56,7 +211,7 @@ Date:   Sat Jan 28 11:25:46 2023 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 846249c8bb9f113573c7c6504ea45ae673f4652b
-Author: Michael Bäuerle  <michael.baeuerle@stz-e.de>
+Author: Michael Bäuerle <michael.baeuerle@stz-e.de>
 Date:   Wed Jan 25 16:00:51 2023 +0100
 
     Key color highlighting still incorrect
@@ -226,7 +381,7 @@ Date:   Sun Feb 17 13:50:58 2019 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 85c9feb6e10cea1ef017d702151b14717c40b9d5
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sun Jul 7 22:50:30 2013 +0200
 
     Reduce scope of i (cppcheck --verbose --enable=all)
@@ -236,7 +391,7 @@ Date:   Sun Jul 7 22:50:30 2013 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit aa3d39389bfc752486a83933574d0365c74d4e29
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sun Jul 7 22:50:29 2013 +0200
 
     Reduce scope of cell (cppcheck --verbose --enable=all)
@@ -451,7 +606,7 @@ Date:   Sat Jul 6 20:45:40 2013 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 3e6d23bb9d57ae3d19e9eb47ced654669fca4d7c
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sun Jul 7 02:02:46 2013 +0200
 
     Use the new M_E symbol from math.h
@@ -464,7 +619,7 @@ Date:   Sun Jul 7 02:02:46 2013 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit f3b065f03a7b68310b489d5d97b11985ef36e977
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sun Jul 7 02:02:38 2013 +0200
 
     Use the new M_PI symbol from math.h
@@ -477,7 +632,7 @@ Date:   Sun Jul 7 02:02:38 2013 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit b9a89876666a42ad8692e8384a5a826456e6ae56
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sat Jul 6 15:39:07 2013 +0200
 
     Drop CRAY support
@@ -966,7 +1121,7 @@ Date:   Sun Jul 17 20:11:02 2005 +0000
     fix rules to work with non-GNU make and outside of $srcdir
 
 commit 392f5dd1907a5110c89b308ef51122b39b23dde5
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 29 23:12:07 2005 +0000
 
     Build system for Xcalc
