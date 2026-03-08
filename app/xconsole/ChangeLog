@@ -1,3 +1,118 @@
+commit 7be3bb410ecc996ec6d76ced622439ac3334da62
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 28 10:24:08 2024 -0700
+
+    xconsole 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba41ed406510d2c88ba6bc97be16dc24c9621426
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:11:48 2024 -0800
+
+    unifdef _AIX
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba6892385cc20505bd20e807d37597e699571948
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:10:24 2024 -0800
+
+    Remove ifdefs for non-Solaris SysV systems
+    
+    Also removes USE_OSM which was only defined for these systems
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5b1208eb8c2f21a07518a6757408faf30c98dfe2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:07:29 2024 -0800
+
+    unifdef SCO325
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 58c7c229abd0ee9cbf64feec7c01e97ff7db8e3c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:06:13 2024 -0800
+
+    unifdef __UNIXWARE__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 27e5b6bfc66cd25f4106a8933647db7c49e97505
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:05:25 2024 -0800
+
+    unifdef hpux
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fb0222f988a54fa16a91b8028e5bf0204cc422c7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 13:04:55 2024 -0800
+
+    unifdef __hpux
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f3b3a43af011b2e98e6d4de54bce3b0e19e40a06
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 18 14:37:03 2023 -0800
+
+    Allow scrolling in text area with mouse wheel
+    
+    Previously translations for buttons 4 & 5 were only set for the
+    scrollbar, so required the mouse to be over the scrollbar to use
+    the mouse wheel.  This enables the translations when the mouse is
+    over the text area as well.
+    
+    Fixes: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=201994
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d2a382f55e646cb3ffedb47629911681006321b1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 5 10:04:09 2023 -0800
+
+    man page: resync SYNOPSIS and DESCRIPTION sections
+    
+    Add missing options to both sections
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2f5f53c0d9c7114231de026f772cdfc877d61e49
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 5 09:48:05 2023 -0800
+
+    Add -help option and usage message when unknown options are given
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 851c85cba5ec8c0e59fba3aebed7c91e5711431b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 5 09:36:55 2023 -0800
+
+    Fix -version handling to not require opening a display first
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c19461e94f457173b06efa634d9eb540271ea6ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 28 12:21:08 2023 -0800
+
+    Add -version option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9b8e87a0f7bbe5ae2772f2c8acc66e25880e80bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 20 12:32:48 2022 -0800
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 025697278897648e33be6b5d662fbeda2a14871f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 10 15:07:08 2022 -0700
@@ -796,7 +911,7 @@ Date:   Sun Jul 17 21:11:32 2005 +0000
     fix rules to work with non-GNU make.
 
 commit 6fa7b824f077a0c04eb678c8736cda077232a084
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu Jul 7 23:08:22 2005 +0000
 
     - Build system for xconsole

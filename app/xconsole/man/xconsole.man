@@ -27,9 +27,14 @@
 .SH NAME
 xconsole \- monitor system console messages with X
 .SH SYNOPSIS
+.nf
 .ta 8n
-\fBxconsole\fP [-\fItoolkitoption\fP ...] [-file \fIfile-name\fP]
-[-notify] [-stripNonprint] [-daemon] [-verbose] [-exitOnFail]
+\fBxconsole\fP [-\fItoolkitoption\fP ...] [\fB-file\fP \fIfile-name\fP]
+         [\fB-notify\fP|\fB-nonotify\fP] [\fB-daemon\fP] [\fB-verbose\fP]
+         [\fB-exitOnFail\fP] [\fB-stripNonprint\fP] [\fB-saveLines\fP \fIcount\fP]
+\fBxconsole -help\fP
+\fBxconsole -version\fP
+.fi
 .SH DESCRIPTION
 The
 .I xconsole
@@ -63,6 +68,12 @@ When set, this option directs
 .I xconsole
 to exit when it is unable to redirect the console output.
 .TP 8
+.B \-stripNonprint
+When set, this option directs
+.I xconsole
+to not include any non-printable characters in the current locale in
+the displayed output.
+.TP 8
 .B \-saveLines \fIcount\fP
 When set,
 .I xconsole
@@ -72,6 +83,12 @@ lines of message history instead of growing the text buffer without bound
 (a
 .I count
 of zero \- the default \- is treated as placing no limit on the history).
+.TP 8
+.B \-help
+This option indicates that \fIxconsole\fP should print a usage message and exit.
+.TP 8
+.B \-version
+This option indicates that \fIxconsole\fP should print its version and exit.
 .SH X DEFAULTS
 This program uses the
 .I Athena Text

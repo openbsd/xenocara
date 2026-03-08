@@ -77,6 +77,8 @@ extern char *_XawTextGetSTRING(TextWidget ctx, XawTextPosition left,
 # endif
 #endif
 
+#define XCONSOLE_MAX_LINE_LENGTH 1024
+
 #ifdef USE_PRIVSEP
 #include <err.h>
 #include <pwd.h>
@@ -88,6 +90,7 @@ static long TextLength(Widget w);
 static void TextReplace(Widget w, int start, int end, XawTextBlock *block);
 static void TextAppend(Widget w, char *s, int len);
 static void TextInsert(Widget w, char *s, int len);
+static Bool ExceededLineLength(Widget w);
 static Bool ExceededMaxLines(Widget w);
 static void ScrollLine(Widget w);
 
@@ -163,15 +166,8 @@ static XrmOptionDescRec options[] = {
 # endif
 #endif
 
-#if defined(_AIX)
-#  define USE_PTS
-#endif
-
 #if !defined (USE_FILE) || defined (linux)
 # include <sys/ioctl.h>
-# ifdef hpux
-#  include <termios.h>
-# endif
 # if defined (SVR4) || defined (USE_PTS)
 #  include <termios.h>
 #  ifndef HAVE_OPENPTY
@@ -187,39 +183,21 @@ static int  tty_fd, pty_fd;
 # endif
 #endif
 
-#if (defined(SVR4) && !defined(sun)) || (defined(SYSV) && defined(i386))
-#define USE_OSM
-#include <signal.h>
-#endif
-
 #ifdef USE_PTY
 static int get_pty(int *pty, int *tty);
 #endif
 
-#ifdef USE_OSM
-static FILE *osm_pipe(void);
-static int child_pid;
-#endif
-
 /* Copied from xterm/ptyx.h */
 #ifndef PTYCHAR1
-#ifdef __hpux
-#define PTYCHAR1        "zyxwvutsrqp"
-#else   /* !__hpux */
 #define PTYCHAR1        "pqrstuvwxyzPQRSTUVWXYZ"
-#endif  /* !__hpux */
 #endif  /* !PTYCHAR1 */
 
 #ifndef PTYCHAR2
-#ifdef __hpux
-#define PTYCHAR2        "fedcba9876543210"
-#else   /* !__hpux */
 #ifdef __FreeBSD__
 #define PTYCHAR2        "0123456789abcdefghijklmnopqrstuv"
 #else /* !__FreeBSD__ */
 #define PTYCHAR2        "0123456789abcdef"
 #endif /* !__FreeBSD__ */
-#endif  /* !__hpux */
 #endif  /* !PTYCHAR2 */
 
 static void
@@ -272,11 +250,6 @@ OpenConsole(void)
 		}
 #endif /* USE_PTY */
 	    }
-#ifdef USE_OSM
-	    /* Don't have to be owner of /dev/console when using /dev/osm. */
-	    if (!input)
-		input = osm_pipe();
-#endif
 	    if (input && app_resources.verbose)
 	    {
 		char	*hostname;
@@ -339,38 +312,12 @@ CloseConsole (void)
 #endif
 }
 
-#ifdef USE_OSM
-static void
-KillChild(int sig)
-{
-    if (child_pid > 0)
-	kill(child_pid, SIGTERM);
-    _exit(0);
-}
-#endif
-
 /*ARGSUSED*/
 static void _X_NORETURN
 Quit(Widget widget, XEvent *event, String *params, Cardinal *num_params)
 {
-#ifdef USE_OSM
-    if (child_pid > 0)
-	kill(child_pid, SIGTERM);
-#endif
     exit (0);
 }
-
-#ifdef USE_OSM
-static int (*ioerror)(Display *);
-
-static int
-IOError(Display *dpy)
-{
-    if (child_pid > 0)
-	kill(child_pid, SIGTERM);
-    return (*ioerror)(dpy);
-}
-#endif
 
 static void
 Notify(void)
@@ -620,6 +567,20 @@ InsertSelection(Widget w, XtPointer client_data, Atom *selection, Atom *type,
     OpenConsole ();
 }
 
+static void _X_NORETURN
+usage(int exitval)
+{
+    const char *usage_message =
+    "usage: xconsole [-toolkitoption  ...] [-file file-name] [-notify|-nonotify]\n"
+    "                [-stripNonprint] [-daemon] [-verbose] [-exitOnFail]\n"
+    "                [-saveLines count]\n"
+    "       xconsole -help\n"
+    "       xconsole -version\n";
+
+    fputs(usage_message, stderr);
+    exit(exitval);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -630,8 +591,34 @@ main(int argc, char *argv[])
 #endif
 
     XtSetLanguageProc(NULL,NULL,NULL);
+
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    usage(0);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     top = XtInitialize ("xconsole", "XConsole", options, XtNumber (options),
 			&argc, argv);
+    if (argc != 1) {
+        fputs("Unknown argument(s):", stderr);
+        for (int n = 1; n < argc; n++) {
+            fprintf(stderr, " %s", argv[n]);
+        }
+        fputs("\n\n", stderr);
+        usage(1);
+    }
+
     XtGetApplicationResources (top, (XtPointer)&app_resources, resources,
 			       XtNumber (resources), NULL, 0);
 
@@ -690,9 +677,6 @@ main(int argc, char *argv[])
 		       ConvertSelection, LoseSelection, NULL);
 	OpenConsole ();
     }
-#ifdef USE_OSM
-    ioerror = XSetIOErrorHandler(IOError);
-#endif
 
 #ifdef USE_PRIVSEP
     if (pledge("stdio rpath sendfd recvfd", NULL) == -1)
@@ -750,6 +734,13 @@ TextAppend(Widget w, char *s, int len)
 	TextReplace (w, last, last, &block);
     if (current == last)
 	XawTextSetInsertionPoint (w, last + block.length);
+    if (ExceededLineLength(w)) {
+        block.ptr = "\n";
+        block.firstPos = 0;
+        block.length = 1;
+        block.format = FMT8BIT;
+        TextReplace(w, last, last, &block);
+    }
     if (ExceededMaxLines(w))
 	ScrollLine(w);
 }
@@ -770,6 +761,21 @@ TextInsert(Widget w, char *s, int len)
 	XawTextSetInsertionPoint (w, len);
     if (ExceededMaxLines(w))
 	ScrollLine(w);
+}
+
+static Bool
+ExceededLineLength(Widget w)
+{
+    XawTextPosition last_end_of_line;
+    long length = TextLength(w);
+    
+    last_end_of_line = XawTextSourceScan (XawTextGetSource(w),
+                                          (XawTextPosition)length,
+                                          XawstEOL, XawsdLeft,
+                                          1, TRUE);
+    if (length - last_end_of_line > XCONSOLE_MAX_LINE_LENGTH)
+        return True;
+    return False;
 }
 
 static Bool
@@ -845,11 +851,7 @@ get_pty(int *pty, int *tty)
        static char ttydev[64], ptydev[64];
 
 #if defined (SVR4) || defined (USE_PTS)
-#if defined (_AIX)
-	if ((*pty = open ("/dev/ptc", O_RDWR)) < 0)
-#else
 	if ((*pty = open ("/dev/ptmx", O_RDWR)) < 0)
-#endif
 	    return 1;
 	grantpt(*pty);
 	unlockpt(*pty);
@@ -907,80 +909,3 @@ get_pty(int *pty, int *tty)
 #endif /* HAVE_OPENPTY */
 }
 #endif
-
-#ifdef USE_OSM
-/*
- * On SYSV386 there is a special device, /dev/osm, where system messages
- * are sent.  Problem is that we can't perform a select(2) on this device.
- * So this routine creates a streams-pty where one end reads the device and
- * sends the output to xconsole.
- */
-
-#ifdef SCO325
-#define	OSM_DEVICE	"/dev/error"
-#else
-#ifdef __UNIXWARE__
-#define OSM_DEVICE	"/dev/osm2"
-#define NO_READAHEAD
-#else
-#define	OSM_DEVICE	"/dev/osm"
-#endif
-#endif
-
-static FILE *
-osm_pipe(void)
-{
-    int tty;
-    char ttydev[64];
-
-    if (access(OSM_DEVICE, R_OK) < 0)
-	return NULL;
-#if defined (_AIX)
-    if ((tty = open("/dev/ptc", O_RDWR)) < 0)
-#else
-    if ((tty = open("/dev/ptmx", O_RDWR)) < 0)
-#endif
-	return NULL;
-
-    grantpt(tty);
-    unlockpt(tty);
-    strcpy(ttydev, (char *)ptsname(tty));
-
-    if ((child_pid = fork()) == 0)
-    {
-	int pty, osm, nbytes, skip;
-	char cbuf[128];
-
-	skip = 0;
-#ifndef NO_READAHEAD
-	osm = open(OSM_DEVICE, O_RDONLY);
-	if (osm >= 0)
-	{
-	    while ((nbytes = read(osm, cbuf, sizeof(cbuf))) > 0)
-		skip += nbytes;
-	    close(osm);
-	}
-#endif
-	pty = open(ttydev, O_RDWR);
-	if (pty < 0)
-	    exit(1);
-	osm = open(OSM_DEVICE, O_RDONLY);
-	if (osm < 0)
-	    exit(1);
-	for (nbytes = 0; skip > 0 && nbytes >= 0; skip -= nbytes)
-	{
-	    nbytes = skip;
-	    if (nbytes > sizeof(cbuf))
-		nbytes = sizeof(cbuf);
-	    nbytes = read(osm, cbuf, nbytes);
-	}
-	while ((nbytes = read(osm, cbuf, sizeof(cbuf))) >= 0)
-	    write(pty, cbuf, nbytes);
-	exit(0);
-    }
-    signal(SIGHUP, KillChild);
-    signal(SIGINT, KillChild);
-    signal(SIGTERM, KillChild);
-    return fdopen(tty, "r");
-}
-#endif  /* USE_OSM */

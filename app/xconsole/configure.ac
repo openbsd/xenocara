@@ -24,8 +24,8 @@ dnl Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xconsole],
-	[1.0.8],
-	[https://gitlab.freedesktop.org/xorg/app/xconsole/issues],
+	[1.1.0],
+	[https://gitlab.freedesktop.org/xorg/app/xconsole/-/issues],
 	[xconsole])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -51,6 +51,10 @@ AC_ARG_WITH(appdefaultdir,
 	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
 
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
+
+# Checks for library functions.
 AC_SEARCH_LIBS(openpty, [util])
 AC_CHECK_FUNC(openpty, [HAVE_OPENPTY="yes"])
 if test "x$HAVE_OPENPTY" = "xyes" ; then
