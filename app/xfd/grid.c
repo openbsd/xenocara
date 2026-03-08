@@ -334,8 +334,8 @@ GetPrevNextStates(Widget w, Bool *prevvalidp, Bool *nextvalidp,
 		  Bool *prev16validp, Bool *next16validp)
 {
     FontGridWidget fgw = (FontGridWidget) w;
-    long minn = (long) GridFirstChar (w);
-    long maxn = (long) GridLastChar (w);
+    long minn = GridFirstChar (w);
+    long maxn = GridLastChar (w);
 
     *prev16validp = (fgw->fontgrid.start_char - 0xf00 > minn);
     *prevvalidp = (fgw->fontgrid.start_char > minn);
@@ -394,7 +394,7 @@ static XtConvertArgRec xftColorConvertArgs[] = {
 		if (toVal->size < sizeof(type)) {		\
 		    toVal->size = sizeof(type);			\
 		    XtDisplayStringConversionWarning(dpy, 	\
-			(char*) fromVal->addr, tstr);		\
+			fromVal->addr, tstr);			\
 		    return False;				\
 		}						\
 		*(type*)(toVal->addr) = (value);		\
@@ -461,7 +461,7 @@ XmuCvtStringToXftColor(Display *dpy,
     screen = *((Screen **) args[0].addr);
     colormap = *((Colormap *) args[1].addr);
 
-    spec = (char *) fromVal->addr;
+    spec = fromVal->addr;
     if (strcasecmp (spec, XtDefaultForeground) == 0)
     {
 	renderColor.red = 0;
@@ -533,7 +533,7 @@ XmuCvtStringToXftFont(Display *dpy,
     }
 
     screen = *((Screen **) args[0].addr);
-    name = (char *) fromVal->addr;
+    name = fromVal->addr;
 
     font = NULL;
     if (name)
@@ -542,7 +542,7 @@ XmuCvtStringToXftFont(Display *dpy,
 				XScreenNumberOfScreen (screen),
 				name);
 	if (!font)
-	    XtDisplayStringConversionWarning(dpy, (char *) fromVal->addr, XtRXftFont);
+	    XtDisplayStringConversionWarning(dpy, fromVal->addr, XtRXftFont);
     }
     donestr (XftFont *, font, XtRXftFont);
 }

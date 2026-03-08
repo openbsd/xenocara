@@ -1,0 +1,11 @@
+option(
+  'appdefaultdir',
+  type: 'string',
+  description: 'directory for app-defaults files (default is autodetected)',
+)
+option(
+  'xkb',
+  type: 'feature',
+  value : 'enabled',
+  description: 'Use XKB to sound bells (default is enabled)',
+)

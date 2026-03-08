@@ -70,7 +70,7 @@ static XrmOptionDescRec xfd_options[] = {
 {"-columns",	"*grid.cellColumns", XrmoptionSepArg,	(caddr_t) NULL },
 };
 
-static void usage(void) _X_NORETURN _X_COLD;
+static void usage(int exitval) _X_NORETURN _X_COLD;
 static void SelectChar(Widget w, XtPointer closure, XtPointer data);
 static void do_quit(Widget w, XEvent *event, String *params,
 		    Cardinal *num_params) _X_NORETURN;
@@ -134,7 +134,7 @@ static XtResource Resources[] = {
 #undef Offset
 
 static void
-usage(void)
+usage(int exitval)
 {
     fprintf (stderr, gettext("usage:  %s [-options ...] "), ProgramName);
     fprintf (stderr, "-fn ");
@@ -161,7 +161,7 @@ usage(void)
     fprintf (stderr, gettext("number           number of rows in grid\n"));
     fprintf (stderr, "    -columns ");
     fprintf (stderr, gettext("number        number of columns in grid\n"));
-    exit (1);
+    exit (exitval);
 }
 
 
@@ -190,10 +190,35 @@ main(int argc, char *argv[])
 
     ProgramName = argv[0];
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp (argn, "-help") == 0) {
+	    usage (0);
+	}
+	if (strcmp (argn, "-version") == 0) {
+	    puts (PACKAGE_STRING);
+	    exit (0);
+	}
+    }
+
     toplevel = XtAppInitialize (&xtcontext, "Xfd",
 				xfd_options, XtNumber(xfd_options),
 				&argc, argv, NULL, NULL, 0);
 
+    if (argc != 1) {
+	fputs(gettext("Unknown argument(s):"), stderr);
+	for (int n = 1; n < argc; n++) {
+	    fprintf(stderr, " %s", argv[n]);
+	}
+	fputs("\n\n", stderr);
+	usage (1);
+    }
+    
 #ifdef USE_GETTEXT
     {
 	const char *domaindir;
@@ -214,7 +239,6 @@ main(int argc, char *argv[])
     Resources[3].default_addr = gettext(DEF_START_FORMAT);
     Resources[4].default_addr = gettext(DEF_NOCHAR_FORMAT);
 
-    if (argc != 1) usage ();
     XtAppAddActions (xtcontext, xfd_actions, XtNumber (xfd_actions));
     XtOverrideTranslations
         (toplevel, XtParseTranslationTable ("<Message>WM_PROTOCOLS: Quit()"));

@@ -62,4 +62,5 @@ xfd.po: $(xfd_SOURCES:%=$(srcdir)/%)
 CLEANFILES = xfd.po
 endif
 
-EXTRA_DIST = README.md
+EXTRA_DIST = README.md meson.build meson.options
+EXTRA_DIST += po/meson.build po/LINGUAS po/POTFILES

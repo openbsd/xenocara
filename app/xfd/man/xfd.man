@@ -23,7 +23,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.TH XFD 1 __xorgversion__
+.TH XFD 1 2023-02-11 __xorgversion__
 .SH NAME
 xfd \- display all the characters in an X font
 .SH SYNOPSIS
@@ -33,7 +33,7 @@ xfd \- display all the characters in an X font
 .B xfd
 [\-options ...] \fB\-fa\fP \fIfontname\fP
 .SH DESCRIPTION
-The \fIxfd\fP utility creates a window containing the name of the font being
+The \fBxfd\fP utility creates a window containing the name of the font being
 displayed, a row of command buttons, several lines of text for displaying
 character metrics, and a grid containing one glyph per cell.  The
 characters are shown in increasing order from left to right, top to
@@ -59,19 +59,18 @@ be centered in their respective cells.
 .PP
 All the characters in the font may not fit in the window at once.
 To see the next page of glyphs, press the \fINext\fP button at the top
-of the window.  To see the previous page, press \fIPrev\fP.  To exit \fIxfd\fP,
+of the window.  To see the previous page, press \fIPrev\fP.  To exit \fBxfd\fP,
 press \fIQuit\fP.
 .PP
 Individual character metrics (index, width, bearings, ascent and descent) can
 be displayed at the top of the window by clicking on the desired character.
 .PP
 The font name displayed at the top of the window is the full name of the
-font, as determined by the server.  See \fIxlsfonts\fP and \fIfc-list\fP
+font, as determined by the server.  See \fBxlsfonts\fP(1) and \fBfc-list\fP(1)
 for ways to generate lists of fonts, as well as more detailed summaries of
 their metrics and properties.
 .SH "OPTIONS"
-.PP
-.I xfd
+.B xfd
 accepts all of the standard toolkit command line options along with
 the additional options listed below:
 .TP 8
@@ -115,15 +114,21 @@ the FontGrid \fBcellRows\fP resource.
 This option specifies the number of columns in the grid.
 This can also be set with
 the FontGrid \fBcellColumns\fP resource.
+.TP 8
+.B \-help
+This option indicates that \fBxfd\fP should print a usage message and exit.
+.TP 8
+.B \-version
+This option indicates that \fBxfd\fP should print version info and exit.
 .SH WIDGETS
 In order to specify resources, it is useful to know the
-widgets which compose \fIxfd\fR.  In the notation below, indentation
+widgets which compose \fBxfd\fR.  In the notation below, indentation
 indicates hierarchical structure.  The widget class name is given first,
 followed by the widget instance name.
 The application class name is Xfd.
 .sp
 .nf
-.\" default T 0.8i tab stops will work here; 
+.\" default T 0.8i tab stops will work here;
 .\" avoids a warning during XML conversion.
 Xfd  xfd
 	Paned  pane
@@ -150,7 +155,7 @@ The instance names of the application specific resources
 are given below.  Capitalize the first letter of the resource
 instance name to get the corresponding class name.
 These resources are unlikely to be interesting unless you are localizing
-xfd for a different language.
+\fBxfd\fP for a different language.
 .TP 8
 .B selectFormat
 Specifies a printf-style format string used to display information
@@ -189,12 +194,15 @@ character does not exist.  The default is "no such character
 0x%02x%02x (%u,%u) (%#o,%#o)".  The arguments that will come after the
 format string are the same as for the \fBselectFormat\fP resource.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xlsfonts(__appmansuffix__), xrdb(__appmansuffix__), xfontsel(__appmansuffix__), fc-list(__appmansuffix__),
-fonts.conf(__filemansuffix__),
+.BR X (__miscmansuffix__),
+.BR xlsfonts (__appmansuffix__),
+.BR xrdb (__appmansuffix__),
+.BR xfontsel (__appmansuffix__),
+.BR fc-list (__appmansuffix__),
+.BR fonts.conf (__filemansuffix__),
 .I "X Logical Font Description Conventions"
 .SH "BUGS"
 The program should skip over pages full of non-existent characters.
 .SH AUTHOR
 Jim Fulton, MIT X Consortium; previous program of the same name by
 Mark Lillibridge, MIT Project Athena.
-
