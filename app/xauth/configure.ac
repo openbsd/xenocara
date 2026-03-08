@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.70])
 AC_INIT([xauth],
-	[1.1.4],
+	[1.1.5],
 	[https://gitlab.freedesktop.org/xorg/app/xauth/-/issues],
 	[xauth])
 AC_CONFIG_SRCDIR([xauth.c])

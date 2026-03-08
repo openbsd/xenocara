@@ -1,3 +1,71 @@
+commit 6fe9365f11181a043f151f2e67f36015c278791d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 31 11:58:21 2025 -0800
+
+    xauth 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1cb1d8e0284870a03970a0a45d1c8cfe7ec6a696
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 18 16:31:05 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    mandoc: xauth.1:26:13: WARNING: cannot parse date, using it verbatim: TH xauth 1.1.4
+    mandoc: xauth.1:33:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xauth.1:225:2: WARNING: skipping paragraph macro: sp after PP
+    mandoc: xauth.1:216:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xauth.1:254:2: WARNING: skipping paragraph macro: PP after SH
+    an.tmac:xauth.1:96: style: blank line in input
+    an.tmac:xauth.1:104: style: blank line in input
+    an.tmac:xauth.1:114: style: blank line in input
+    an.tmac:xauth.1:122: style: blank line in input
+    an.tmac:xauth.1:130: style: blank line in input
+    an.tmac:xauth.1:135: style: blank line in input
+    an.tmac:xauth.1:142: style: blank line in input
+    an.tmac:xauth.1:166: style: blank line in input
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/28>
+
+commit 0d43570ad3ca169464daf4304151c9b8d7ab05b8
+Author: Michael Gilbert <michael.s.gilbert@gmail.com>
+Date:   Fri Jul 22 14:57:37 2011 -0400
+
+    xauth: needs cookie handling warnings in man page [Debian bug #635109]
+    
+    Reported-by: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=635109
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/27>
+
+commit 23735afd04ab561914aa3d5465532be0a6975fef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 30 09:07:57 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/26>
+
+commit 9e238deb87c07ecda45ad86ff1e4a49125839446
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 23 13:14:50 2025 -0700
+
+    Add --help and --version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/26>
+
+commit eb8b2ef585dc837558cc3f02f85cb88d2a6de5db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 23 11:25:50 2025 -0700
+
+    Report unknown argument that caused error before printing usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xauth/-/merge_requests/26>
+
 commit f71ca21cf1ab840e9664b7c3e99c229bd977a6a4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 8 16:44:09 2025 -0800

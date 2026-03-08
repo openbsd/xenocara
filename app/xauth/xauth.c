@@ -58,7 +58,7 @@ static const char *defsource = "(stdin)";
  */
 _X_NORETURN
 static void
-usage(void)
+usage(int exitstatus)
 {
     static const char *prefixmsg[] = {
 "",
@@ -69,7 +69,7 @@ usage(void)
 "    -i                             ignore locks on authority file",
 "    -b                             break locks on authority file",
 "    -n                             do not resolve host names in authority file",
-"    -V                             show version number of xauth",
+"    -V, --version                  show version number of xauth",
 "",
 "and commands have the following syntax:",
 "",
@@ -90,7 +90,7 @@ NULL };
     for (const char **msg = suffixmsg; *msg; msg++) {
 	fprintf (stderr, "%s\n", *msg);
     }
-    exit (1);
+    exit (exitstatus);
 }
 
 
@@ -114,7 +114,7 @@ main(int argc, const char *argv[])
 	    for (const char *flag = (arg + 1); *flag; flag++) {
 	        switch (*flag) {
 		  case 'f':		/* -f authfilename */
-		    if (++i >= argc) usage ();
+		    if (++i >= argc) usage (EXIT_FAILURE);
 		    authfilename = argv[i];
 		    continue;
 		  case 'v':		/* -v */
@@ -135,8 +135,19 @@ main(int argc, const char *argv[])
 		  case 'V':		/* -V */
 		    puts(PACKAGE_VERSION);
 	   	    exit(0);
+		  case '-':		/* --help | --version */
+		    if (strcmp(arg, "--help") == 0) {
+			usage (EXIT_SUCCESS);
+		    }
+		    else if (strcmp(arg, "--version") == 0) {
+			puts(PACKAGE_STRING);
+			exit(EXIT_SUCCESS);
+		    }
+		    /* fallthrough */
 		  default:
-		    usage ();
+		    fprintf(stderr, "%s: unrecognized option '-%s'\n",
+			    ProgramName, flag);
+		    usage (EXIT_FAILURE);
 	        }
 	    }
 	} else {

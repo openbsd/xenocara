@@ -23,62 +23,62 @@
 .\" from The Open Group.
 .\"
 .\"
-.TH XAUTH 1 __xorgversion__
+.TH XAUTH 1 2025-04-13 __xorgversion__
 .SH NAME
 xauth \- X authority file utility
 .SH SYNOPSIS
 .B xauth
 [ \fB\-f\fP \fIauthfile\fP ] [ \fB\-vqibn\fP ] [ \fIcommand arg ...\fP ]
 .SH DESCRIPTION
-.PP
-The \fIxauth\fP program is used to edit and display the authorization
+The \fBxauth\fP program is used to edit and display the authorization
 information used in connecting to the X server.  This program is usually
 used to extract authorization records from one machine and merge them in on
 another (as is the case when using remote logins or granting access to
 other users).  Commands (described below) may be entered interactively,
-on the \fIxauth\fP command line, or in scripts.  Note that this program
+on the \fBxauth\fP command line, or in scripts.  Note that this program
 does \fBnot\fP contact the X server except when the generate command is used.
-Normally \fIxauth\fP is not used to create the authority file entry in
-the first place; the program that starts the X server (often \fIxdm\fP
-or \fIstartx\fP) does that.
+Normally \fBxauth\fP is not used to create the authority file entry in
+the first place; the program that starts the X server (often \fBxdm\fP
+or \fBstartx\fP) does that.
 .SH OPTIONS
-The following options may be used with \fIxauth\fP.  They may be given
-individually (e.g., \fI\-q \-i\|\fP) or may combined (e.g., \fI\-qi\|\fP).
+The following options may be used with \fBxauth\fP.  They may be given
+individually (e.g., \fB\-q \-i\|\fP) or may combined (e.g., \fB\-qi\|\fP).
 .TP 8
 .B "\-f \fIauthfile\fP"
-This option specifies the name of the authority file to use.  By default,
-\fIxauth\fP will use the file specified by the XAUTHORITY environment variable
-or \fI\.Xauthority\fP in the user's home directory.
+This option specifies the name of the authority file to use.
+By default, \fBxauth\fP will use the file specified by the
+\fBXAUTHORITY\fP environment variable
+or \fB\.Xauthority\fP in the user's home directory.
 .TP 8
 .B \-q
-This option indicates that \fIxauth\fP should operate quietly and not print
-unsolicited status messages.  This is the default if an \fIxauth\fP command
+This option indicates that \fBxauth\fP should operate quietly and not print
+unsolicited status messages.  This is the default if an \fBxauth\fP command
 is given on the command line or if the standard output is not directed to a
 terminal.
 .TP 8
 .B \-v
-This option indicates that \fIxauth\fP should operate verbosely and print
+This option indicates that \fBxauth\fP should operate verbosely and print
 status messages indicating the results of various operations (e.g., how many
-records have been read in or written out).  This is the default if \fIxauth\fP
+records have been read in or written out).  This is the default if \fBxauth\fP
 is reading commands from its standard input and its standard output is
 directed to a terminal.
 .TP 8
 .B \-i
-This option indicates that \fIxauth\fP should ignore any authority file
-locks.  Normally, \fIxauth\fP will refuse to read or edit any authority files
-that have been locked by other programs (usually \fIxdm\fP or another
-\fIxauth\fP).
+This option indicates that \fBxauth\fP should ignore any authority file
+locks.  Normally, \fBxauth\fP will refuse to read or edit any authority files
+that have been locked by other programs (usually \fBxdm\fP or another
+\fBxauth\fP).
 .TP 8
 .B \-b
-This option indicates that \fIxauth\fP should attempt to break any authority
+This option indicates that \fBxauth\fP should attempt to break any authority
 file locks before proceeding.  Use this option only to clean up stale locks.
 .TP 8
 .B \-n
-This option indicates that \fIxauth\fP should not attempt to resolve any
+This option indicates that \fBxauth\fP should not attempt to resolve any
 hostnames, but should simply always print the host address as stored in
 the authority file.
 .TP 8
-.B \-V
+.BR \-V ", " \--version
 This option shows the version number of the xauth executable.
 .SH COMMANDS
 The following commands may be used to manipulate authority files:
@@ -91,12 +91,16 @@ one octet.  The first digit of each pair gives the most significant 4 bits
 of the octet, and the second digit of the pair gives the least significant 4
 bits.  For example, a 32 character hexkey would represent a 128-bit value.
 A protocol name consisting of just a
-single period is treated as an abbreviation for \fIMIT-MAGIC-COOKIE-1\fP.
-
+single period is treated as an abbreviation for \fBMIT-MAGIC-COOKIE-1\fP.
+.IP "" 8
+WARNING: This usage is considered insecure since the secret magic cookie
+will be displayed in command histories and for example the output of \fBps\fP.
+One should use the "merge" command (as described below) instead.
+Pay attention to its warning as well.
 .TP 8
 .B "generate \fIdisplayname protocolname\fP \fR[\fPtrusted|untrusted\fR]\fP"
 .B \fR[\fPtimeout \fIseconds\fP\fR]\fP  \fR[\fPgroup \fIgroup-id\fP\fR]\fP \fR[\fBdata \fIhexdata\fR]
-
+.IP "" 8
 This command is similar to add.  The main difference is that instead
 of requiring the user to supply the key data, it connects to the
 server specified in \fIdisplayname\fP and uses the SECURITY extension
@@ -105,8 +109,8 @@ the server cannot be contacted or if it does not support the SECURITY
 extension, the command fails.  Otherwise, an authorization entry for
 the indicated display using the given protocol is added to the
 authorization file.  A protocol name consisting of just a single
-period is treated as an abbreviation for \fIMIT-MAGIC-COOKIE-1\fP.
-
+period is treated as an abbreviation for \fBMIT-MAGIC-COOKIE-1\fP.
+.IP "" 8
 If the \fBtrusted\fP option is used, clients that connect using this
 authorization will have full run of the display, as usual.  If
 \fBuntrusted\fP is used, clients that connect using this authorization
@@ -114,7 +118,7 @@ will be considered untrusted and prevented from stealing or tampering
 with data belonging to trusted clients.  See the SECURITY extension
 specification for full details on the restrictions imposed on
 untrusted clients.  The default is \fBuntrusted\fP.
-
+.IP "" 8
 The \fBtimeout\fP option specifies how long in seconds this
 authorization will be valid.  If the authorization remains unused (no
 clients are connected with it) for longer than this time period, the
@@ -122,62 +126,66 @@ server purges the authorization, and future attempts to connect using
 it will fail.  Note that the purging done by the server does \fBnot\fP
 delete the authorization entry from the authorization file.  The
 default timeout is 60 seconds.
-
+.IP "" 8
 The \fBgroup\fP option specifies the application group that clients
 connecting with this authorization should belong to.  See the
 application group extension specification for more details.  The
 default is to not belong to an application group.
-
+.IP "" 8
 The \fBdata\fP option specifies data that the server should use to
 generate the authorization.  Note that this is \fBnot\fP the same data
 that gets written to the authorization file.  The interpretation of
 this data depends on the authorization protocol.  The \fIhexdata\fP is
 in the same format as the \fIhexkey\fP described in the add command.
 The default is to send no data.
-
 .TP 8
 .RB [ n ] "extract \fIfilename displayname..."
 Authorization entries for each of the specified displays are written to the
-indicated file.  If the \fInextract\fP command is used, the entries are written
+indicated file.  If the \fBnextract\fP command is used, the entries are written
 in a numeric format suitable for non-binary transmission (such as secure
 electronic mail).  The extracted entries can be read back in using the
-\fImerge\fP and \fInmerge\fP commands.  If the filename consists of
+\fBmerge\fP and \fBnmerge\fP commands.  If the filename consists of
 just a single dash, the entries will be written to the standard output.
 .TP 8
 .RB [ n ] "list \fR[\fIdisplayname\fP...]"
 Authorization entries for each of the specified displays (or all if no
-displays are named) are printed on the standard output.  If the \fInlist\fP
+displays are named) are printed on the standard output.  If the \fBnlist\fP
 command is used, entries will be shown in the numeric format used by
-the \fInextract\fP command; otherwise, they are shown in a textual format.
+the \fBnextract\fP command; otherwise, they are shown in a textual format.
 Key data is always displayed in the hexadecimal format given in the
-description of the \fIadd\fP command.
+description of the \fBadd\fP command.
 .TP 8
 .RB [ n ] "merge \fR[\fIfilename\fP...]"
 Authorization entries are read from the specified files and are merged into
 the authorization database, superseding any matching existing entries. If
-the \fInmerge\fP command is used, the numeric format given in the description
-of the \fIextract\fP command is used.  If a filename consists of just a single
+the \fBnmerge\fP command is used, the numeric format given in the description
+of the \fBextract\fP command is used.  If a filename consists of just a single
 dash, the standard input will be read if it hasn't been read before.
+.IP "" 8
+WARNING: Be careful with the single dash version as depending on the
+command chain (for example a combination using \fBsudo\fP),
+the secret key could be exposed to prying eyes in command histories
+and for example in the output of \fBps\fP.
 .TP 8
 .B "remove \fIdisplayname\fR..."
 Authorization entries matching the specified displays are removed from the
 authority file.
 .TP 8
 .B "source \fIfilename"
-The specified file is treated as a script containing \fIxauth\fP commands
+The specified file is treated as a script containing \fBxauth\fP commands
 to execute.  Blank lines and lines beginning with a sharp sign (#) are
 ignored.  A single dash may be used to indicate the standard input, if it
 hasn't already been read.
 .TP 8
 .B "info"
 Information describing the authorization file, whether or not any changes
-have been made, and from where \fIxauth\fP commands are being read
+have been made, and from where \fBxauth\fP commands are being read
 is printed on the standard output.
 .TP 8
 .B "exit"
 If any modifications have been made, the authority file is written out (if
 allowed), and the program exits.  An end of file is treated as an implicit
-\fIexit\fP command.
+\fBexit\fP command.
 .TP 8
 .B "quit"
 The program exits, ignoring any modifications.  This may also be accomplished
@@ -193,18 +201,17 @@ commands if no string is given) is printed on the standard output.
 .B "?"
 A short list of the valid commands is printed on the standard output.
 .SH "DISPLAY NAMES"
-Display names for the \fIadd\fP, \fI[n]extract\fP, \fI[n]list\fP,
-\fI[n]merge\fP, and \fIremove\fP commands use the same format as the
-DISPLAY environment variable and the common \fI\-display\fP command line
+Display names for the \fBadd\fP, \fB[n]extract\fP, \fB[n]list\fP,
+\fB[n]merge\fP, and \fBremove\fP commands use the same format as the
+\fBDISPLAY\fP environment variable and the common \fB\-display\fP command line
 argument.  Display-specific information (such as the screen number)
 is unnecessary and will be ignored.
 Same-machine connections (such as local-host sockets,
-shared memory, and the Internet Protocol hostname \fIlocalhost\fP) are
+shared memory, and the Internet Protocol hostname \fBlocalhost\fP) are
 referred to as \fIhostname\fP/unix:\fIdisplaynumber\fP so that
 local entries for different machines may be stored in one authority file.
 .SH EXAMPLE
-.PP
-The most common use for \fIxauth\fP is to extract the entry for the
+The most common use for \fBxauth\fP is to extract the entry for the
 current display, copy it to another machine, and merge it into the
 user's authority file on the remote machine:
 .sp
@@ -212,18 +219,17 @@ user's authority file on the remote machine:
         %  xauth extract \- $DISPLAY | ssh otherhost xauth merge \-
 .fi
 .PP
-.sp
 The following command contacts the server :0 to create an
-authorization using the MIT-MAGIC-COOKIE-1 protocol.  Clients that
+authorization using the \fBMIT-MAGIC-COOKIE-1\fP protocol.  Clients that
 connect with this authorization will be untrusted.
 .nf
 	%  xauth generate :0 .
 .fi
 .SH ENVIRONMENT
-This \fIxauth\fP program uses the following environment variables:
+This \fBxauth\fP program uses the following environment variables:
 .TP 8
 .B XAUTHORITY
-to get the name of the authority file to use if the \fI\-f\fP option isn't
+to get the name of the authority file to use if the \fB\-f\fP option isn't
 used.
 .TP 8
 .B HOME
@@ -233,14 +239,17 @@ to get the user's home directory if XAUTHORITY isn't defined.
 .I $HOME/.Xauthority
 default authority file if XAUTHORITY isn't defined.
 .SH "SEE ALSO"
-X(__miscmansuffix__), Xsecurity(__miscmansuffix__), xhost(__appmansuffix__),
-Xserver(__appmansuffix__), xdm(__appmansuffix__), startx(__appmansuffix__),
-Xau(__libmansuffix__).
+.BR X (__miscmansuffix__),
+.BR Xsecurity (__miscmansuffix__),
+.BR xhost (__appmansuffix__),
+.BR Xserver (__appmansuffix__),
+.BR xdm (__appmansuffix__),
+.BR startx (__appmansuffix__),
+.BR Xau (__libmansuffix__).
 .SH BUGS
-.PP
 Users that have insecure networks should take care to use encrypted
 file transfer mechanisms to copy authorization entries between machines.
-Similarly, the \fIMIT-MAGIC-COOKIE-1\fP protocol is not very useful in
+Similarly, the \fBMIT-MAGIC-COOKIE-1\fP protocol is not very useful in
 insecure environments.  Sites that are interested in additional security
 may need to use encrypted authorization mechanisms such as Kerberos.
 .PP
