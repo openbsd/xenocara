@@ -279,6 +279,11 @@
 *locale: true
 *utf8:	 true
 
+! Normally Meta keys are represented by enabling the high bit.
+! This breaks in UTF-8 mode, since the high bit is used in multibyte characters.
+! xterm converts these codepoints into their UTF-8 equivalent.
+*metaSendsEscape: true
+
 ! Normalization by default violates the principle of least surprise
 ! and also breaks cut and paste of filenames, so disable it.
 *precompose: false

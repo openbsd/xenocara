@@ -9558,6 +9558,13 @@ more convenient but also safer because
 .B xterm
 honours fewer terminal escape codes in UTF-8 mode.
 .TP 8
+.B metaSendsEscape: true
+Always use escape sequence to handle meta key combinations.
+Since
+.B utf8
+is set to true, the default of using the high bit isn't usable, and will
+result in latin-1 interpretation of the combination.
+.TP 8
 .B modifyFunctionKeys: 0
 Traditional function keys behaviour.
 .TP 8
