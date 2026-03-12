@@ -27,6 +27,7 @@
 #ifndef AMDGPU_GLAMOR_H
 #define AMDGPU_GLAMOR_H
 
+#include <xorg-server.h>
 #include "xf86xv.h"
 
 #ifdef USE_GLAMOR

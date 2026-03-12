@@ -1,0 +1,4 @@
+option('udev', type: 'feature', description: 'Enable libudev support')
+option('glamor', type: 'feature', description: 'Enable glamor acceleration')
+option('moduledir', type: 'string', value: 'xorg/modules', description: 'Xorg module directory')
+option('configdir', type: 'string', value: 'share/X11/xorg.conf.d', description: 'Xorg.conf.d directory')

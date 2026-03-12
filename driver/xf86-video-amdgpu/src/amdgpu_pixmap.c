@@ -26,6 +26,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include <xf86.h>
 #include "amdgpu_pixmap.h"
 #include "amdgpu_bo_helper.h"

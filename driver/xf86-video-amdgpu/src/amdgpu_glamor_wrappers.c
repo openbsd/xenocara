@@ -33,7 +33,6 @@
 #endif
 
 #ifdef USE_GLAMOR
-
 #include "amdgpu_drv.h"
 #include "amdgpu_glamor.h"
 #include "amdgpu_pixmap.h"

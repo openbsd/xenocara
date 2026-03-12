@@ -40,6 +40,7 @@
 #include <stdlib.h>		/* For abs() */
 #include <unistd.h>		/* For usleep() */
 #include <sys/time.h>		/* For gettimeofday() */
+#include <xorg-server.h>
 
 #include "config.h"
 
@@ -355,11 +356,7 @@ Bool amdgpu_dri3_screen_init(ScreenPtr screen);
 Bool amdgpu_window_has_variable_refresh(WindowPtr win);
 Bool amdgpu_scanout_do_update(xf86CrtcPtr xf86_crtc, int scanout_id,
 			      PixmapPtr src_pix, BoxRec extents);
-void AMDGPUWindowExposures_oneshot(WindowPtr pWin, RegionPtr pRegion
-#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,16,99,901,0)
-				   , RegionPtr pBSRegion
-#endif
-				   );
+void AMDGPUWindowExposures_oneshot(WindowPtr pWin, RegionPtr pRegion);
 
 /* amdgpu_present.c */
 void amdgpu_present_set_screen_vrr(ScrnInfoPtr scrn, Bool vrr_enabled);

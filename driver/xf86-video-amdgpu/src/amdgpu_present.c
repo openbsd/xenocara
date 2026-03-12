@@ -279,9 +279,10 @@ amdgpu_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
 	}
 
 	/* Only DC supports advanced color management features, so we can use
-	 * drmmode_cm_enabled as a proxy for "Is DC enabled?"
+	 * drmmode_cm_prop_supported with gamma_lut to check if the hw
+	 * is capable of color management.
 	 */
-	dc_enabled = drmmode_cm_enabled(&info->drmmode);
+	dc_enabled = drmmode_cm_prop_supported(&info->drmmode, CM_GAMMA_LUT);
 
 	if (info->dri2.pKernelDRMVersion->version_minor < (dc_enabled ? 31 : 34)) {
 		/* The kernel driver doesn't handle flipping between BOs with

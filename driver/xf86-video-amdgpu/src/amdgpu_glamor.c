@@ -29,7 +29,7 @@
 #endif
 
 #ifdef USE_GLAMOR
-
+#include <xorg-server.h>
 #include <xf86.h>
 
 #include "amdgpu_bo_helper.h"
@@ -87,15 +87,6 @@ Bool amdgpu_glamor_pre_init(ScrnInfoPtr scrn)
 			   scrn->depth);
 		return FALSE;
 	}
-
-#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,15,0,0,0)
-	if (!xf86LoaderCheckSymbol("glamor_egl_init")) {
-		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-			   "glamor requires Load \"glamoregl\" in "
-			   "Section \"Module\", disabling.\n");
-		return FALSE;
-	}
-#endif
 
 	/* Load glamor module */
 	if ((glamor_module = xf86LoadSubModule(scrn, GLAMOR_EGL_MODULE_NAME))) {
@@ -366,7 +357,9 @@ amdgpu_glamor_share_pixmap_backing(PixmapPtr pixmap, ScreenPtr secondary,
 
 	tiling_info = amdgpu_pixmap_get_tiling_info(pixmap);
 
-	if (info->family >= AMDGPU_FAMILY_AI)
+	if (info->family >= AMDGPU_FAMILY_GC_12_0_0)
+		is_linear = AMDGPU_TILING_GET(tiling_info, GFX12_SWIZZLE_MODE) == 0;
+	else if (info->family >= AMDGPU_FAMILY_AI)
 		is_linear = AMDGPU_TILING_GET(tiling_info, SWIZZLE_MODE) == 0;
 	else
 		is_linear = AMDGPU_TILING_GET(tiling_info, ARRAY_MODE) == 1;

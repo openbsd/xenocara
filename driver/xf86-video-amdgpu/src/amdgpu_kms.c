@@ -30,6 +30,7 @@
 
 #include <errno.h>
 #include <sys/ioctl.h>
+#include <xorg-server.h>
 /* Driver data structures */
 #include "amdgpu_drv.h"
 #include "amdgpu_bo_helper.h"
@@ -75,20 +76,20 @@ static int (*saved_delete_property) (ClientPtr client);
 static Bool amdgpu_setup_kernel_mem(ScreenPtr pScreen);
 
 const OptionInfoRec AMDGPUOptions_KMS[] = {
-	{OPTION_ACCEL, "Accel", OPTV_BOOLEAN, {0}, FALSE},
-	{OPTION_SW_CURSOR, "SWcursor", OPTV_BOOLEAN, {0}, FALSE},
-	{OPTION_PAGE_FLIP, "EnablePageFlip", OPTV_BOOLEAN, {0}, FALSE},
-	{OPTION_SUBPIXEL_ORDER, "SubPixelOrder", OPTV_ANYSTR, {0}, FALSE},
-	{OPTION_ZAPHOD_HEADS, "ZaphodHeads", OPTV_STRING, {0}, FALSE},
-	{OPTION_ACCEL_METHOD, "AccelMethod", OPTV_STRING, {0}, FALSE},
-	{OPTION_DRI3, "DRI3", OPTV_BOOLEAN, {0}, FALSE},
-	{OPTION_DRI, "DRI", OPTV_INTEGER, {0}, FALSE},
-	{OPTION_SHADOW_PRIMARY, "ShadowPrimary", OPTV_BOOLEAN, {0}, FALSE},
-	{OPTION_TEAR_FREE, "TearFree", OPTV_BOOLEAN, {0}, FALSE},
-	{OPTION_DELETE_DP12, "DeleteUnusedDP12Displays", OPTV_BOOLEAN, {0}, FALSE},
-	{OPTION_VARIABLE_REFRESH, "VariableRefresh", OPTV_BOOLEAN, {0}, FALSE },
-	{OPTION_ASYNC_FLIP_SECONDARIES, "AsyncFlipSecondaries", OPTV_BOOLEAN, {0}, FALSE},
-	{-1, NULL, OPTV_NONE, {0}, FALSE}
+	{OPTION_ACCEL, "Accel", OPTV_BOOLEAN, .value = {0}, FALSE},
+	{OPTION_SW_CURSOR, "SWcursor", OPTV_BOOLEAN, .value = {0}, FALSE},
+	{OPTION_PAGE_FLIP, "EnablePageFlip", OPTV_BOOLEAN, .value = {0}, FALSE},
+	{OPTION_SUBPIXEL_ORDER, "SubPixelOrder", OPTV_ANYSTR, .value = {0}, FALSE},
+	{OPTION_ZAPHOD_HEADS, "ZaphodHeads", OPTV_STRING, .value = {0}, FALSE},
+	{OPTION_ACCEL_METHOD, "AccelMethod", OPTV_STRING, .value = {0}, FALSE},
+	{OPTION_DRI3, "DRI3", OPTV_BOOLEAN, .value = {0}, FALSE},
+	{OPTION_DRI, "DRI", OPTV_INTEGER, .value = {0}, FALSE},
+	{OPTION_SHADOW_PRIMARY, "ShadowPrimary", OPTV_BOOLEAN, .value = {0}, FALSE},
+	{OPTION_TEAR_FREE, "TearFree", OPTV_BOOLEAN, .value = {0}, FALSE},
+	{OPTION_DELETE_DP12, "DeleteUnusedDP12Displays", OPTV_BOOLEAN, .value = {0}, FALSE},
+	{OPTION_VARIABLE_REFRESH, "VariableRefresh", OPTV_BOOLEAN, .value = {0}, FALSE },
+	{OPTION_ASYNC_FLIP_SECONDARIES, "AsyncFlipSecondaries", OPTV_BOOLEAN, .value = {0}, FALSE},
+	{-1, NULL, OPTV_NONE, .value = {0}, FALSE}
 };
 
 const OptionInfoRec *AMDGPUOptionsWeak(void)
@@ -245,7 +246,7 @@ static Bool AMDGPUGetRec(ScrnInfoPtr pScrn)
 	if (pScrn->driverPrivate)
 		return TRUE;
 
-	pScrn->driverPrivate = xnfcalloc(sizeof(AMDGPUInfoRec), 1);
+	pScrn->driverPrivate = XNFcallocarray(sizeof(AMDGPUInfoRec), 1);
 	return TRUE;
 }
 
@@ -481,7 +482,7 @@ amdgpu_scanout_extents_intersect(xf86CrtcPtr xf86_crtc, BoxPtr extents)
 }
 
 static RegionPtr
-transform_region(RegionPtr region, struct pict_f_transform *transform,
+transform_region(RegionPtr region, struct pixman_f_transform *transform,
 		 int w, int h)
 {
 	BoxPtr boxes = RegionRects(region);
@@ -603,14 +604,12 @@ dirty_region(PixmapDirtyUpdatePtr dirty)
 	RegionPtr damageregion = DamageRegion(dirty->damage);
 	RegionPtr dstregion;
 
-#ifdef HAS_DIRTYTRACKING_ROTATION
 	if (dirty->rotation != RR_Rotate_0) {
 		dstregion = transform_region(damageregion,
 					     &dirty->f_inverse,
 					     dirty->secondary_dst->drawable.width,
 					     dirty->secondary_dst->drawable.height);
 	} else
-#endif
 	{
 		RegionRec pixregion;
 
@@ -636,11 +635,7 @@ redisplay_dirty(PixmapDirtyUpdatePtr dirty, RegionPtr region)
 	if (dirty->secondary_dst->primary_pixmap)
 		DamageRegionAppend(&dirty->secondary_dst->drawable, region);
 
-#ifdef HAS_DIRTYTRACKING_ROTATION
 	PixmapSyncDirtyHelper(dirty);
-#else
-	PixmapSyncDirtyHelper(dirty, region);
-#endif
 
 	amdgpu_glamor_flush(src_scrn);
 	if (dirty->secondary_dst->primary_pixmap)
@@ -1523,11 +1518,7 @@ static void amdgpu_determine_cursor_size(int fd, AMDGPUInfoPtr info)
 }
 
 /* When the root window is mapped, set the initial modes */
-void AMDGPUWindowExposures_oneshot(WindowPtr pWin, RegionPtr pRegion
-#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,16,99,901,0)
-				   , RegionPtr pBSRegion
-#endif
-				   )
+void AMDGPUWindowExposures_oneshot(WindowPtr pWin, RegionPtr pRegion)
 {
 	ScreenPtr pScreen = pWin->drawable.pScreen;
 	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
@@ -1537,11 +1528,7 @@ void AMDGPUWindowExposures_oneshot(WindowPtr pWin, RegionPtr pRegion
 		ErrorF("%s called for non-root window %p\n", __func__, pWin);
 
 	pScreen->WindowExposures = info->WindowExposures;
-#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,16,99,901,0)
-	pScreen->WindowExposures(pWin, pRegion, pBSRegion);
-#else
 	pScreen->WindowExposures(pWin, pRegion);
-#endif
 
 	amdgpu_glamor_finish(pScrn);
 	drmmode_set_desired_modes(pScrn, &info->drmmode, TRUE);
@@ -1656,6 +1643,10 @@ Bool AMDGPUPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 		if (!pScrn->is_gpu) {
 			from = xf86GetOptValBool(info->Options, OPTION_VARIABLE_REFRESH,
 						 &info->vrr_support) ? X_CONFIG : X_DEFAULT;
+
+			if (info->vrr_support && !info->tear_free)
+				xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+					   "Enabling VariableRefresh while TearFree is disabled can cause instability!\n");
 
 			xf86DrvMsg(pScrn->scrnIndex, from, "VariableRefresh: %sabled\n",
 				   info->vrr_support ? "en" : "dis");
@@ -2438,7 +2429,7 @@ static Bool amdgpu_setup_kernel_mem(ScreenPtr pScreen)
 
 	if (!info->front_buffer) {
 		int pitch;
-		int hint = AMDGPU_CREATE_PIXMAP_SCANOUT;
+		int hint = AMDGPU_CREATE_PIXMAP_SCANOUT | AMDGPU_CREATE_PIXMAP_FRONT;
 
 		if (info->shadow_primary)
 			hint |= AMDGPU_CREATE_PIXMAP_LINEAR | AMDGPU_CREATE_PIXMAP_GTT;

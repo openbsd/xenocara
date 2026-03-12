@@ -1,0 +1,37 @@
+#pragma once
+
+#define HAVE_BYTESWAP_H 0
+
+#define HAVE_DRI3_H 1
+
+#define HAVE_FBGLYPHS 1
+
+#define HAVE_GBM_BO_USE_FRONT_RENDERING 0
+
+#define HAVE_GBM_BO_USE_LINEAR 0
+
+#define HAVE_GLAMOR_FINISH 1
+
+#define HAVE_GLAMOR_H 1
+
+#define HAVE_MISYNCSHM_H 1
+
+#define HAVE_PRESENT_H 1
+
+#define HAVE_REGIONDUPLICATE 1
+
+#define HAVE_XEXTPROTO_71 1
+
+#define HAVE_XF86_CURSOR_RESET_CURSOR 1
+
+#define PACKAGE_NAME xf86-video-amdgpu
+
+#define PACKAGE_VERSION 25.0.0
+
+#define PACKAGE_VERSION_MAJOR 25
+
+#define PACKAGE_VERSION_MINOR 0
+
+#define PACKAGE_VERSION_PATCHLEVEL 0
+
+#define USE_GLAMOR 1

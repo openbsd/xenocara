@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <xorg-server.h>
 
 #include "amdgpu_drv.h"
 #include "amdgpu_glamor.h"
