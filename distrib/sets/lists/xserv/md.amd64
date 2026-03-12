@@ -14,7 +14,6 @@
 ./usr/X11R6/lib/modules/dri/radeonsi_dri.so
 ./usr/X11R6/lib/modules/dri/radeonsi_drv_video.so
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
-./usr/X11R6/lib/modules/drivers/amdgpu_drv.la
 ./usr/X11R6/lib/modules/drivers/amdgpu_drv.so
 ./usr/X11R6/lib/modules/drivers/apm_drv.la
 ./usr/X11R6/lib/modules/drivers/apm_drv.so
