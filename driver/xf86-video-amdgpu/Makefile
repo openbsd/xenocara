@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2026/03/12 04:31:28 jsg Exp $
+# $OpenBSD: Makefile,v 1.2 2026/03/12 05:10:55 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	amdgpu_drv
@@ -40,7 +40,7 @@ LDADD+=	-L${X11BASE}/lib -ldrm -ldrm_amdgpu -lgbm
 all:	${LIB}.so
 
 ${LIB}.so: ${SOBJS} ${DPADD}
-	${CC} -shared -Wl,-soname,lib${LIB}.so ${PICFLAG} -o ${.TARGET} \
+	${CC} -shared ${PICFLAG} -o ${.TARGET} \
 		`echo ${SOBJS} | tr ' ' '\n' | sort -R` ${LDADD}
 
 CLEANFILES+= ${LIB}.so amdgpu.4
