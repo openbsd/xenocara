@@ -1,21 +1,21 @@
 
-# $OpenBSD: 3RDPARTY,v 1.460 2026/03/08 16:21:48 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.461 2026/03/26 21:57:44 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.14.2
-Current Vers:	2.14.2
+Current Vers:	2.14.3
 Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
 Version:	406
-Current Vers:	406
+Current Vers:	407
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		25.0.7
-Current Vers:	26.0.0
+Current Vers:	26.0.3
 Maintainer:	Brian Paul
 Archive Site:	https://archive.mesa3d.org/
 
@@ -84,8 +84,8 @@ Maintainer:	Ingo Buerk
 Archive Site:	https://github.com/Airblader/xcb-util-xrm
 
 Package:	libpng
-Version:	1.6.55 (synced with ports)
-Current Vers:	1.6.55
+Version:	1.6.56 (synced with ports)
+Current Vers:	1.6.56
 Comment:	Statically bundled into libfreetype, not installed
 Maintainer:	Cosmin Truta
 Archive Site:	https://downloads.sourceforge.net/sourceforge/libpng/
