@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.14 2025/07/01 12:00:58 jsg Exp $
+#	$OpenBSD: Makefile,v 1.15 2026/03/30 05:32:02 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -38,6 +38,11 @@ LDADD+=	-Wl,--end-group \
 	-lpthread
 
 NOPROFILE=
+
+# don't install libgbm.a
+install:
+	${INSTALL} ${INSTALL_COPY} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
+	    ${FULLSHLIBNAME} ${DESTDIR}${LIBDIR}
 
 obj: _xenocara_obj
 
