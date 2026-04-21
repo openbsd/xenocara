@@ -210,6 +210,9 @@ xpmNextString(xpmData *data)
 	    while ((c = *data->cptr++) && c != data->Bos && c != '\0')
 		if (data->Bcmt && c == data->Bcmt[0])
 		    ParseComment(data);
+
+	    if (c == '\0')
+		return XpmFileInvalid;
 	} else if (data->Bcmt) {	/* XPM2 natural */
 	    while (((c = *data->cptr++) == data->Bcmt[0]) && c != '\0')
 		ParseComment(data);

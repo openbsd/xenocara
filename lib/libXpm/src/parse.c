@@ -216,7 +216,9 @@ xpmParseColors(
 
     if (!data->format) {		/* XPM 2 or 3 */
 	for (a = 0, color = colorTable; a < ncolors; a++, color++) {
-	    xpmNextString(data);	/* skip the line */
+	    ErrorStatus = xpmNextString(data);         /* skip the line */
+	    if (ErrorStatus != XpmSuccess)
+		goto error;
 
 	    /*
 	     * read pixel value
