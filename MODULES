@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.556 2026/04/14 14:27:33 matthieu Exp $
+# $OpenBSD: MODULES,v 1.557 2026/04/21 15:03:11 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -7,13 +7,13 @@ app/appres		1.0.7
 app/bdftopcf		1.1.2
 app/beforelight		1.0.6
 app/bitmap		1.1.2
-app/editres		1.0.9
+app/editres		1.1.0		needs-update
 app/fonttosfnt		1.2.5		needs-update
-app/iceauth		1.0.10
-app/ico			1.0.6
-app/listres		1.0.6
-app/mkcomposecache	1.2.2		needs-import
-app/mkfontscale		1.2.3
+app/iceauth		1.0.11		needs-update
+app/ico			1.0.7		needs-update
+app/listres		1.0.7		needs-update
+app/mkcomposecache	1.2.3		needs-import
+app/mkfontscale		1.2.4		needs-update
 app/oclock		1.0.6
 app/rgb			1.1.1		needs-update remove?
 app/sessreg		1.1.4
@@ -24,13 +24,13 @@ app/viewres		1.0.8
 app/x11perf		1.7.0
 app/xauth		1.1.5
 app/xbacklight		1.2.4
-app/xbiff		1.0.5
+app/xbiff		1.0.6		needs-update
 app/xcalc		1.1.3		needs-update
 app/xclipboard		1.1.5
 app/xclock		1.1.1
 app/xcmsdb		1.0.7
 app/xcompmgr		1.1.10
-app/xconsole		1.1.0
+app/xconsole		1.1.1		needs-update
 app/xdpyinfo		1.4.0
 app/xdriinfo		1.0.8
 app/xedit		1.2.4
@@ -163,7 +163,7 @@ lib/libXft			2.3.9
 lib/libXi			1.8.2
 lib/libXinerama			1.1.6
 lib/libXmu			1.3.1
-lib/libXpm			3.5.18
+lib/libXpm			3.5.19		needs-update
 lib/libXpresent			1.0.2
 lib/libXrandr			1.5.5
 lib/libXrender			0.9.12
