@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.72 2026/03/07 12:22:06 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.73 2026/05/08 09:02:11 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -150,11 +150,8 @@ autoreconf:
 	find ${_SRCDIR} \( -name 'config.sub' -o -name 'config.guess' \
 		-o -name 'install-sh' \) -exec chmod 0644 {} +
 
-.if !target(beforeconfigure)
-beforeconfigure:
-.endif
 .if !target(config.status)
-config.status: beforeconfigure
+config.status: $(LOCAL_AC_CACHE)
 	${CONFIGURE_ENV} PATH=$(XENOCARA_PATH) \
 		exec sh ${_SRCDIR}/configure --prefix=${X11BASE} \
 		--sysconfdir=/etc \
@@ -214,6 +211,9 @@ cleandir: clean
 		echo "rm config.status"; \
 		rm -f config.status; \
 	fi
+.ifdef LOCAL_AC_CACHE
+	-@rm -f $(LOCAL_AC_CACHE)
+.endif
 .endif
 
 #
