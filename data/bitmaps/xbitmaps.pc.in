@@ -4,6 +4,7 @@ includedir=@includedir@
 
 Name: X bitmaps
 Description: Bitmaps that are shared between X applications
+URL: https://gitlab.freedesktop.org/xorg/data/bitmaps
 Version: @PACKAGE_VERSION@
 Cflags: -I${includedir}
 Libs:

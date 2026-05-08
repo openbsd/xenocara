@@ -1,3 +1,59 @@
+commit 433634f36f791c2779af974ab444c4b521b4a4d8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 25 12:53:25 2026 -0700
+
+    xbitmaps 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0f7d3d0cf66fb6e9b89a86834f1f00a8e7a41815
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 7 17:01:25 2026 -0800
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/data/bitmaps/-/merge_requests/7>
+
+commit 77a8111d1204fd30a4e2ccf57afa4808031a9ce6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/data/bitmaps/-/merge_requests/7>
+
+commit 35307f27a4554f47534fe235be12128157888a7b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 9 15:28:11 2025 -0700
+
+    xbitmaps.pc: Add URL
+    
+    https://github.com/pkgconf/pkgconf/blob/master/man/pc.5 says it's
+    a mandatory field in *.pc files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/data/bitmaps/-/merge_requests/6>
+
+commit f11467df3c9e54469fb629762dc3bc35baa563aa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 18 11:52:04 2023 -0800
+
+    Add a meson build system
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit aed8d7ced841f9c5af757bf24e5488828d5c77e6
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Feb 23 09:04:47 2023 -0800
@@ -368,7 +424,7 @@ Date:   Fri Jul 29 21:22:39 2005 +0000
     - Update modular Xorg version
 
 commit e064819df8ea9f09c925772056aa441cd36d7aab
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 15 16:43:19 2005 +0000
 
     Build system for bitmaps
