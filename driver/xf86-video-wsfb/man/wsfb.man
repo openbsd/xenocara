@@ -1,4 +1,4 @@
-.\" $OpenBSD: wsfb.man,v 1.5 2020/06/14 07:10:44 matthieu Exp $
+.\" $OpenBSD: wsfb.man,v 1.6 2026/05/08 15:29:45 matthieu Exp $
 .\"
 .\" Copyright (c) 2001,2002 Matthieu Herrb
 .\" All rights reserved.
@@ -29,7 +29,7 @@
 .\"
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
-.TH WSFB __drivermansuffix__ __vendorversion__
+.TH WSFB __drivermansuffix__ 2012-01-01 __vendorversion__
 .SH NAME
 wsfb \- video driver for wsdisplay framebuffer device
 .SH SYNOPSIS
@@ -42,27 +42,31 @@ wsfb \- video driver for wsdisplay framebuffer device
 .fi
 .SH DESCRIPTION
 .B wsfb
-is an __xservername__ driver for OpenBSD and NetBSD
+is an
+.BR __xservername__ (__appmansuffix__)
+driver for OpenBSD and NetBSD
 wsdisplay framebuffer devices.
 This is a non-accelerated driver. 
 The following framebuffer depths are supported: 1, 8, 16 and 24, given
 that the wsdisplay device underneath supports them.
-.br
+.PP
 A StaticGray monochrome visual is provided for depth 1,
-all visual types are supported for depth 8 and a TrueColor visual is
-supported for the other depths.
+all visual types are supported for depth 8,
+and a TrueColor visual is supported for the other depths.
 Multi-head configurations are supported.
 .SH SUPPORTED HARDWARE
 The
 .B wsfb
-driver supports all hardware where a wsdisplay(__drivermansuffix__)
+driver supports all hardware where a
+.BR wsdisplay(__drivermansuffix__)
 framebuffer driver is available on OpenBSD and NetBSD.
 .SH CONFIGURATION DETAILS
-Please refer to __xconfigfile__(__filemansuffix__) for general configuration
-details.
+Please refer to
+.BR __xconfigfile__(__filemansuffix__)
+for general configuration details specific to this driver.
 This section only covers configuration details specific to this driver.
 .PP
-For this driver it is not required to specify modes in the 
+For this driver it is not required to specify modes in the
 .B Screen
 section of the configuration file.
 The
@@ -71,7 +75,7 @@ driver picks up the currently used video mode from the framebuffer
 driver and uses it.
 Video modes specifications in the configuration file are ignored.
 .PP
-The following driver options are supported in the 
+The following driver options are supported in the
 .B Device
 section:
 .TP
@@ -82,19 +86,26 @@ Default for NetBSD: \fI/dev/ttyE0\fP.
 .TP
 .BI "Option \*qShadowFB\*q \*q" boolean \*q
 Enable or disable use of the shadow framebuffer layer.
-See shadowfb(__drivermansuffix__) for further information.
+See
+.BR shadowfb(__drivermansuffix__)
+for further information.
 Default: on for depths were it is supported, off otherwise.
 .br
 ShadowFB is currently not supported on monochrome displays.
 .TP
 .BI "Option \*qRotate\*q \*q" string \*q
-Enable rotation of the display. The supported values are "CW" (clockwise,
-90 degrees), "UD" (upside down, 180 degrees) and "CCW" (counter clockwise,
-270 degrees).
+Enable rotation of the display.
+The supported values are "CW" (clockwise, 90 degrees),
+"UD" (upside down, 180 degrees) and "CCW" (counter clockwise, 270 degrees).
 Implies use of the shadow framebuffer layer.
 Default: off.
 .SH "SEE ALSO"
-__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1),
-X(__miscmansuffix__), wsdisplay(__drivermansuffix__)
+.BR __xservername__ (__appmansuffix__),
+.BR __xconfigfile__ (__filemansuffix__),
+.BR xorgconfig (__appmansuffix__),
+.BR Xserver (__appmansuffix__),
+.BR X (__miscmansuffix__),
+.BR wsdisplay (__drivermansuffix__)
 .SH AUTHORS
-Authors include: Matthieu Herrb, Gerd Knorr, Michel Dänzer, Geert Uytterhoeven
+Authors include:
+Matthieu Herrb, Gerd Knorr, Michel DÃ¤nzer, Geert Uytterhoeven

@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.45 2023/08/04 23:49:45 aoyama Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.46 2026/05/08 15:29:45 matthieu Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -65,11 +65,6 @@
 
 /* For visuals */
 #include "fb.h"
-
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
-#include "xf86Resources.h"
-#include "xf86RAC.h"
-#endif
 
 #ifdef XvExtension
 #include "xf86xv.h"
@@ -158,14 +153,12 @@ static int pix24bpp = 0;
 #define WSFB_DRIVER_NAME	"wsfb"
 
 _X_EXPORT DriverRec WSFB = {
-	WSFB_VERSION,
-	(char *)WSFB_DRIVER_NAME,
-	WsfbIdentify,
-	WsfbProbe,
-	WsfbAvailableOptions,
-	NULL,
-	0,
-	WsfbDriverFunc
+	.driverVersion = WSFB_VERSION,
+	.driverName  = (char *)WSFB_DRIVER_NAME,
+	.Identify = WsfbIdentify,
+	.Probe = WsfbProbe,
+	.AvailableOptions = WsfbAvailableOptions,
+	.driverFunc = WsfbDriverFunc
 };
 
 /* Supported "chipsets" */
@@ -207,17 +200,11 @@ static pointer
 WsfbSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 {
 	static Bool setupDone = FALSE;
-	struct utsname name;
 
-	/* Check that we're being loaded on a OpenBSD or NetBSD system. */
-	if (uname(&name) == -1 || (strcmp(name.sysname, "OpenBSD") != 0 &&
-			strcmp(name.sysname, "NetBSD") != 0)) {
-		if (errmaj)
-			*errmaj = LDR_BADOS;
-		if (errmin)
-			*errmin = 0;
-		return NULL;
-	}
+#if !defined(__OpenBSD__) && !defined(__NetBSD__)
+	return NULL;
+#endif
+	
 	if (!setupDone) {
 		setupDone = TRUE;
 		xf86AddDriver(&WSFB, module, HaveDriverFuncs);
@@ -265,7 +252,7 @@ WsfbGetRec(ScrnInfoPtr pScrn)
 	if (pScrn->driverPrivate != NULL)
 		return TRUE;
 
-	pScrn->driverPrivate = xnfcalloc(sizeof(WsfbRec), 1);
+	pScrn->driverPrivate = XNFcallocarray(sizeof(WsfbRec), 1);
 	return TRUE;
 }
 
@@ -404,7 +391,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	WsfbPtr fPtr;
 	int defaultDepth, depths, flags24;
 	const char *dev;
-	char *s;
+	const char *s;
 	Gamma zeros = {0.0, 0.0, 0.0};
 	DisplayModePtr mode;
 
@@ -420,11 +407,6 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	fPtr = WSFBPTR(pScrn);
 
 	fPtr->pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
-
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
-	pScrn->racMemFlags = RAC_FB | RAC_COLORMAP | RAC_CURSOR | RAC_VIEWPORT;
-	pScrn->racIoFlags = pScrn->racMemFlags;
-#endif
 
 	dev = xf86FindOptionValue(fPtr->pEnt->device->options, "device");
 	fPtr->fd = wsfb_open(dev);
@@ -711,7 +693,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 		if (xf86ReturnOptValBool(fPtr->Options,
 					 OPTION_SHADOW_FB, FALSE)) {
 			xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-				   "Shadow FB option ignored on depth < 8");
+				   "Shadow FB option ignored on depth < 8\n");
 		}
 
 	/* Rotation */
@@ -743,7 +725,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 			}
 		} else {
 			xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-			    "Option \"Rotate\" ignored on depth < 8");
+			    "Option \"Rotate\" ignored on depth < 8\n");
 		}
 	}
 
@@ -800,19 +782,19 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 static void
 wsfbUpdateRotatePacked(ScreenPtr pScreen, shadowBufPtr pBuf)
 {
-    shadowUpdateRotatePacked(pScreen, pBuf);
+	shadowUpdateRotatePacked(pScreen, pBuf);
 }
 
 static void
 wsfbUpdatePacked(ScreenPtr pScreen, shadowBufPtr pBuf)
 {
-    shadowUpdatePacked(pScreen, pBuf);
+	shadowUpdatePacked(pScreen, pBuf);
 }
 
 static void
 wsfbUpdateAfb8(ScreenPtr pScreen, shadowBufPtr pBuf)
 {
-    shadowUpdateAfb8(pScreen, pBuf);
+	shadowUpdateAfb8(pScreen, pBuf);
 }
 
 static Bool
@@ -1004,7 +986,7 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 		break;
 	default:
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-			   "Unsupported bpp: %d", pScrn->bitsPerPixel);
+			   "Unsupported bpp: %d\n", pScrn->bitsPerPixel);
 		return FALSE;
 	} /* case */
 
@@ -1032,7 +1014,7 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 	if (pScrn->bitsPerPixel >= 8) {
 		if (!fbPictureInit(pScreen, NULL, 0))
 			xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-				   "RENDER extension initialisation failed.");
+				   "RENDER extension initialisation failed.\n");
 	}
 	if (fPtr->shadowFB && !WsfbShadowInit(pScreen)) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -1048,7 +1030,7 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 		    "disabling DGA\n");
 #endif
 	if (fPtr->rotate) {
-#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,19,99,1,0)
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 24
 		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		    "Enabling Driver Rotation, " "disabling RandR\n");
 		xf86DisableRandR();
@@ -1175,39 +1157,38 @@ WsfbWindowAfb(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
 static void
 WsfbPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 {
-    SCRN_INFO_PTR(arg);
-    WsfbPtr fPtr = WSFBPTR(pScrn);
-    int newX, newY;
+	SCRN_INFO_PTR(arg);
+	WsfbPtr fPtr = WSFBPTR(pScrn);
+	int newX, newY;
+	
+	switch (fPtr->rotate) {
+	case WSFB_ROTATE_CW:
+		/* 90 degrees CW rotation. */
+		newX = pScrn->pScreen->height - y - 1;
+		newY = x;
+		break;
+		
+	case WSFB_ROTATE_CCW:
+		/* 90 degrees CCW rotation. */
+		newX = y;
+		newY = pScrn->pScreen->width - x - 1;
+		break;
+		
+	case WSFB_ROTATE_UD:
+		/* 180 degrees UD rotation. */
+		newX = pScrn->pScreen->width - x - 1;
+		newY = pScrn->pScreen->height - y - 1;
+		break;
+		
+	default:
+		/* No rotation. */
+		newX = x;
+		newY = y;
+		break;
+	}
 
-    switch (fPtr->rotate)
-    {
-    case WSFB_ROTATE_CW:
-	/* 90 degrees CW rotation. */
-	newX = pScrn->pScreen->height - y - 1;
-	newY = x;
-	break;
-
-    case WSFB_ROTATE_CCW:
-	/* 90 degrees CCW rotation. */
-	newX = y;
-	newY = pScrn->pScreen->width - x - 1;
-	break;
-
-    case WSFB_ROTATE_UD:
-	/* 180 degrees UD rotation. */
-	newX = pScrn->pScreen->width - x - 1;
-	newY = pScrn->pScreen->height - y - 1;
-	break;
-
-    default:
-	/* No rotation. */
-	newX = x;
-	newY = y;
-	break;
-    }
-
-    /* Pass adjusted pointer coordinates to wrapped PointerMoved function. */
-    (*fPtr->PointerMoved)(arg, newX, newY);
+	/* Pass adjusted pointer coordinates to wrapped PointerMoved function. */
+	(*fPtr->PointerMoved)(arg, newX, newY);
 }
 
 static Bool
@@ -1292,7 +1273,7 @@ WsfbLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 	} else {
 		/*
 		 * Change all colors in 2 ioctls
-		 * and limit the data to be transfered.
+		 * and limit the data to be transferred.
 		 */
 		for (i = 0; i < numColors; i++) {
 			if (indices[i] < indexMin)
