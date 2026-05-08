@@ -1,222 +1,222 @@
 .\"
-.TH XDGA 3 __vendorversion__
+.TH XDGA 3 2011-05-17 __vendorversion__
 .SH NAME
 XDGA \- Client library for the XFree86-DGA extension.
 .SH SYNOPSIS
 .B #include <X11/extensions/xf86dga.h>
-.HP
+.PP
 Bool
 .BR XDGAQueryExtension (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int *" eventBase ,
+.RI "    int *" eventBase ,
 .br
-.RI "int *" errorBase )
-.HP
+.RI "    int *" errorBase );
+.PP
 Bool
 .BR XDGAQueryVersion (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int *" majorVersion ,
+.RI "    int *" majorVersion ,
 .br
-.RI "int *" minorVersion )
-.HP
+.RI "    int *" minorVersion );
+.PP
 XDGAMode
 .RB * XDGAQueryModes (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen ,
+.RI "    int " screen ,
 .br
-.RI "int *" num )
-.HP
+.RI "    int *" num );
+.PP
 XDGADevice
 .RB * XDGASetMode (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen ,
+.RI "    int " screen ,
 .br
-.RI "int " mode )
-.HP
+.RI "    int " mode );
+.PP
 Bool
 .BR XDGAOpenFramebuffer (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen )
-.HP
+.RI "    int " screen );
+.PP
 void
 .BR XDGACloseFramebuffer (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen )
-.HP
+.RI "    int " screen );
+.PP
 void
 .BR XDGASetViewport (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen ,
+.RI "    int " screen ,
 .br
-.RI "int " x ,
+.RI "    int " x ,
 .br
-.RI "int " y ,
+.RI "    int " y ,
 .br
-.RI "int " flags )
-.HP
+.RI "    int " flags );
+.PP
 void
 .BR XDGAInstallColormap (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen ,
+.RI "    int " screen ,
 .br
-.RI "Colormap " cmap )
-.HP
+.RI "    Colormap " cmap );
+.PP
 Colormap
 .BR XDGACreateColormap (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen ,
+.RI "    int " screen ,
 .br
-.RI "XDGADevice *" device ,
+.RI "    XDGADevice *" device ,
 .br
-.RI "int " alloc )
-.HP
+.RI "    int " alloc );
+.PP
 void
 .BR XDGASelectInput (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen ,
+.RI "    int " screen ,
 .br
-.RI "long " event_mask )
-.HP
+.RI "    long " event_mask );
+.PP
 void
 .BR XDGAFillRectangle (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen ,
+.RI "    int " screen ,
 .br
-.RI "int " x ,
+.RI "    int " x ,
 .br
-.RI "int " y ,
+.RI "    int " y ,
 .br
-.RI "unsigned int " width ,
+.RI "    unsigned int " width ,
 .br
-.RI "unsigned int " height ,
+.RI "    unsigned int " height ,
 .br
-.RI "unsigned long " color )
-.HP
+.RI "    unsigned long " color );
+.PP
 void
 .BR XDGACopyArea (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen ,
+.RI "    int " screen ,
 .br
-.RI "int " srcx ,
+.RI "    int " srcx ,
 .br
-.RI "int " srcy ,
+.RI "    int " srcy ,
 .br
-.RI "unsigned int " width ,
+.RI "    unsigned int " width ,
 .br
-.RI "unsigned int " height ,
+.RI "    unsigned int " height ,
 .br
-.RI "int " dstx ,
+.RI "    int " dstx ,
 .br
-.RI "int " dsty )
-.HP
+.RI "    int " dsty );
+.PP
 void
 .BR XDGACopyTransparentArea (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen ,
+.RI "    int " screen ,
 .br
-.RI "int " srcx ,
+.RI "    int " srcx ,
 .br
-.RI "int " srcy ,
+.RI "    int " srcy ,
 .br
-.RI "unsigned int " width ,
+.RI "    unsigned int " width ,
 .br
-.RI "unsigned int " height ,
+.RI "    unsigned int " height ,
 .br
-.RI "int " dstx ,
+.RI "    int " dstx ,
 .br
-.RI "int " dsty ,
+.RI "    int " dsty ,
 .br
-.RI "unsigned long " key )
-.HP
+.RI "    unsigned long " key );
+.PP
 int
 .BR XDGAGetViewportStatus (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen )
-.HP
+.RI "    int " screen );
+.PP
 void
 .BR XDGASync (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen )
-.HP
+.RI "    int " screen );
+.PP
 Bool
 .BR XDGASetClientVersion (
 .br
-.RI "Display *" dpy )
-.HP
+.RI "    Display *" dpy );
+.PP
 void
 .BR XDGAChangePixmapMode (
 .br
-.RI "Display *" dpy ,
+.RI "    Display *" dpy ,
 .br
-.RI "int " screen ,
+.RI "    int " screen ,
 .br
-.RI "int *" x ,
+.RI "    int *" x ,
 .br
-.RI "int *" y ,
+.RI "    int *" y ,
 .br
-.RI "int " mode )
-.HP
+.RI "    int " mode );
+.PP
 void
 .BR XDGAKeyEventToXKeyEvent (
 .br
-.RI "XDGAKeyEvent *" dk ,
+.RI "    XDGAKeyEvent *" dk ,
 .br
-.RI "XKeyEvent *" xk )
-
+.RI "    XKeyEvent *" xk );
 .SH DESCRIPTION
 The
 .B XFree86-DGA
 extension is an X server extension for allowing client programs direct
-access to the video frame buffer.  This is a brief description of the
-programming interface for version 2.0 of the
+access to the video frame buffer.
+This is a brief description of the programming interface for version 2.0 of the
 .B XFree86-DGA
 extension.
 .PP
 .B XFree86-DGA
 is not intended as a direct rendering API, but rather, as a mechanism
 to "get the X Server out of the way" so that some other direct rendering
-API can have full access to the hardware.  With this in mind, DGA does
-provide clients some direct access to the hardware without requiring a
-separate rendering API, but this access is limited to direct linear
-framebuffer access.
+API can have full access to the hardware.
+With this in mind, DGA does provide clients some direct access to the hardware
+without requiring a separate rendering API, but this access is limited to
+direct linear framebuffer access.
 .PP
 Most of the reasons for the
 .B XFree86-DGA
-extension's existence are now better served in other ways.  Further
-development of this extension is not expected, and it may be deprecated
-in a future release.  The features that continue to be useful will either
-be provided through other existing mechanisms, or through an extension
-that address those needs more specifically.
+extension's existence are now better served in other ways.
+Further development of this extension is not expected,
+and it may be deprecated in a future release.
+The features that continue to be useful will either
+be provided through other existing mechanisms,
+or through an extension that address those needs more specifically.
 .PP
 .B XFree86-DGA
 is initialized by passing a number corresponding to a valid
@@ -234,8 +234,10 @@ returns a pointer to an array of
 .IR XDGAMode s
 which are valid for the given screen.
 .I num
-is the number of elements in the array.  The returned array can be freed
-with XFree(3).  The
+is the number of elements in the array.
+The returned array can be freed with
+.BR XFree (3).
+The
 .I XDGAMode
 structure is as follows:
 .PP
@@ -274,10 +276,13 @@ typedef struct {
 .I num
 A unique identifying number
 .RI ( num
-> 0) for the mode.  This is the number referenced when initializing the mode.
+> 0) for the mode.
+This is the number referenced when initializing the mode.
 .TP 8
 .I name
-The name of the corresponding modeline as given in the __xconfigfile__ file.
+The name of the corresponding modeline as given in the
+.BR xorg.conf (5)
+file.
 .TP 8
 .I verticalRefresh
 The vertical refresh rate for the modeline (in Hz).
@@ -287,12 +292,12 @@ Any of the following may be OR'd together:
 .RS 8
 .TP 4
 .B XDGAConcurrentAccess
-Indicates that concurrent client/server access to the framebuffer is
-possible.  If this flag is not set it is very important to call
+Indicates that concurrent client/server access to the framebuffer is possible.
+If this flag is not set it is very important to call
 .BR XDGASync ()
 before directly accessing the framebuffer if a call to
 .BR XDGAFillRectangle (),
-.BR XDGACopyArea ()
+.BR XDGACopyArea (),
 or
 .BR XDGACopyTransparentArea ()
 or any Xlib rendering function has been made prior to such accesses.
@@ -331,9 +336,9 @@ This rectangle is always justified to the upper left-hand corner.
 .I pixmapWidth
 .TP 8
 .I pixmapHeight
-The width and height of the framebuffer area accessible by Xlib.  This
-rectangle is always justified to the upper left-hand corner.  These
-fields are only valid if the
+The width and height of the framebuffer area accessible by Xlib.
+This rectangle is always justified to the upper left-hand corner.
+These fields are only valid if the
 .B XDGAPixmap
 flag is set in the
 .I flags
@@ -358,7 +363,8 @@ The number of bits taken up by each pixel.
 .I greenMask
 .TP 8
 .I blueMask
-The RGB masks.  These do not apply to color-indexed modes.
+The RGB masks.
+These do not apply to color-indexed modes.
 .TP 8
 .I visualClass
 .BR TrueColor ,
@@ -412,7 +418,10 @@ set to zero.
 .BR XDGASetMode ()
 returns a pointer to an
 .I XDGADevice
-if successful.  The XDGADevice can be freed with XFree(3).  The
+if successful.
+The XDGADevice can be freed with
+.BR XFree (3).
+The
 .I XDGADevice
 structure is as follows:
 .PP
@@ -434,8 +443,8 @@ structure, identical to the information returned by
 .TP 8
 .I data
 If direct framebuffer access is desired and possible, this field will
-contain a pointer to the mapped framebuffer memory.  Generally, this
-field will be zero unless a call to
+contain a pointer to the mapped framebuffer memory.
+Generally, this field will be zero unless a call to
 .BR XDGAOpenFramebuffer ()
 is made prior to initialization of the mode.
 .TP 8
@@ -445,8 +454,8 @@ If the mode supports Xlib rendering as indicated by
 in the
 .I flags
 field, this will contain a Pixmap handle suitable for passing as the
-drawable argument to Xlib functions.  This field will be zero if Xlib
-rendering is not supported.
+drawable argument to Xlib functions.
+This field will be zero if Xlib rendering is not supported.
 .PP
 .BR XDGAQueryExtension ()
 checks for the presence of the extension and returns the event and error bases.
@@ -457,8 +466,8 @@ returns the
 major and minor version numbers.
 .PP
 .BR XDGAOpenFramebuffer ()
-maps the framebuffer memory.  The client needs sufficient privileges to be
-able to do this.
+maps the framebuffer memory.
+The client needs sufficient privileges to be able to do this.
 .BR XDGAOpenFramebuffer ()
 should be called prior to initializing a DGA mode if direct framebuffer
 access is desired for that mode.
@@ -471,7 +480,8 @@ should be called prior to client exit to unmap the memory.
 .PP
 .BR XDGAChangePixmapMode ()
 can be used to change between two pixmap sizes in cases where a Pixmap is
-available for Xlib rendering.  The following values for the
+available for Xlib rendering.
+The following values for the
 .I mode
 parameter are available:
 .RS 8
@@ -483,7 +493,8 @@ and
 .I  pixmapHeight
 fields in the
 .I XDGAMode
-structure.  The
+structure.
+The
 .I x
 and
 .I y
@@ -496,13 +507,13 @@ and
 .I viewportHeight
 fields in the
 .I XDGAMode
-structure.  In this mode, the
+structure.
+In this mode, the
 .I x
 and
 .I y
 values specify where in the framebuffer this pixmap rectangle is located.
-It may be placed anywhere within the Xlib renderable region described
-by the
+It may be placed anywhere within the Xlib renderable region described by the
 .I pixmapWidth
 and
 .I pixmapHeight
@@ -514,14 +525,15 @@ and
 .I y
 values returned are the resultant location of the pixmap and may be
 different from the requested x,y location due to platform specific
-alignment constraints.  All Xlib rendering is clipped to this pixmap
-rectangle.
+alignment constraints.
+All Xlib rendering is clipped to this pixmap rectangle.
 .RE
 .PP
 .BR XDGASetViewport ()
 sets the upper left-hand corner of the rectangle of framebuffer that is
-to be displayed on the screen.  Not all locations may be supported by
-the hardware and requested locations will be adjusted according to the
+to be displayed on the screen.
+Not all locations may be supported by the hardware and
+requested locations will be adjusted according to the
 .I xViewportStep
 and
 .I yViewportStep
@@ -533,9 +545,8 @@ can be
 .B XDGAFlipRetrace
 or
 .B XDGAFlipImmediate
-to adjust the viewport location at the next vertical retrace or
-immediately.  Values other than the supported values advertised in the
-mode's
+to adjust the viewport location at the next vertical retrace or immediately.
+Values other than the supported values advertised in the mode's
 .I viewportFlags
 field will result in hardware-specific default behavior.
 .B XDGAFlipImmediate
@@ -552,39 +563,46 @@ requests will be ignored.
 .BR XDGAGetViewportStatus ()
 keeps track of the
 .BR XDGASetViewport ()
-requests still pending.  The return value of the function will have
-consecutive bits set (LSB justified), each bit representing a pending
-viewport change.  For example:
+requests still pending.
+The return value of the function will have consecutive bits set (LSB justified),
+each bit representing a pending viewport change.
+For example:
 .PP
 .nf
-     while(XDGAGetViewportStatus(dpy, screen));
+     while (XDGAGetViewportStatus(dpy, screen));
 .fi
 .PP
 waits for all pending viewport changes to finish.
 .PP
 .nf
-     while(0x2 & XDGAGetViewportStatus(dpy, screen));
+     while (0x2 & XDGAGetViewportStatus(dpy, screen));
 .fi
 .PP
 waits until all but the last viewport changes have completed.
 .PP
 .BR XDGACreateColormap ()
-is similar to the Xlib function XCreateColormap(3) except that it takes
-an
+is similar to the Xlib function
+.BR XCreateColormap (3)
+except that it takes an
 .I XDGADevice
-as an argument instead of a Window and Visual.  Though XCreateColormap(3)
+as an argument instead of a Window and Visual.
+Though
+.BR XCreateColormap (3)
 may create usable colormaps in some cases,
 .BR XDGACreateColormap ()
 is the preferred method for creating colormaps in DGA since there may
 not be an advertised visual compatible with the DGA device.
 .PP
 .BR XDGAInstallColormap ()
-must be used to install colormaps in DGA mode.  XInstallColormap(3) will
-not work.
+must be used to install colormaps in DGA mode.
+.BR XInstallColormap (3)
+will not work.
 .PP
 .BR XDGASelectInput ()
-enables DGA's own event mechanism.  This function is similar to
-XSelectInput(3), and all Xlib Key, Button and Motion masks are supported.
+enables DGA's own event mechanism.
+This function is similar to
+.BR XSelectInput (3),
+and all Xlib Key, Button and Motion masks are supported.
 The following DGA events are defined:
 .PP
 .nf
@@ -635,28 +653,31 @@ is a helper function to translate
 .IR XDGAKeyEvent s
 into
 .IR XKeyEvent s
-suitable for use with XLookupKeysym(3).
+suitable for use with
+.BR XLookupKeysym (3).
 .PP
 .BR XDGAFillRectangle (),
 .BR XDGACopyArea (),
 and
 .BR XDGACopyTransparentArea ()
-are included with some reservation since DGA is not intended as a
-rendering API.  These are merely convenience routines and are optionally
-supported.  The associated flags will be set in the
+are included with some reservation since DGA is not intended as a rendering API.
+These are merely convenience routines and are optionally supported.
+The associated flags will be set in the
 .IR XDGAMode 's
 .I flags
-field if these functions are supported.  These functions will be no-ops
-otherwise. they do not provide direct access to the hardware, but are
+field if these functions are supported.
+These functions will be no-ops otherwise.
+They do not provide direct access to the hardware, but are
 simply context-less operations performed by the server.
 .PP
 .BR XDGASync ()
-blocks until all server rendering to the framebuffer completes.  If Xlib
-or the 3 rendering functions above are used,
+blocks until all server rendering to the framebuffer completes.
+If Xlib or the 3 rendering functions above are used,
 .BR XDGASync ()
 must be called before the client directly accesses the framebuffer as
 the server rendering is asynchronous with the client and may have not
-completed.  This is especially important if the
+completed.
+This is especially important if the
 .B XDGAConcurrentAccess
 flag is not set in the
 .IR XDGAMode 's
@@ -664,9 +685,10 @@ flag is not set in the
 field since concurrent access by the server and client may result in a
 system lockup.
 .SH SEE ALSO
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__)
+.BR Xorg (1),
+.BR xorg.conf (5)
 .SH AUTHORS
 .B XFree86-DGA
-version 2 was written by Mark Vojkovich.  Version 1 was written by Jon
-Tombs, Harm Hanemaayer, Mark Vojkovich.
-
+Version 2 was written by Mark Vojkovich.
+.br
+Version 1 was written by Jon Tombs, Harm Hanemaayer, Mark Vojkovich.

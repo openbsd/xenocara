@@ -1,12 +1,13 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-libdir=@libdir@
 includedir=@includedir@
+libdir=@libdir@
 
 Name: Xxf86dga
 Description: XFree86 Direct Graphics Access Extension Library
+URL: https://gitlab.freedesktop.org/xorg/lib/libxxf86dga/
 Version: @VERSION@
 Requires: xf86dgaproto
-Requires.private: x11 xext
-Cflags: -I${includedir}
+Requires.private: x11 >=  1.6, xext
 Libs: -L${libdir} -lXxf86dga
+Cflags: -I${includedir}
