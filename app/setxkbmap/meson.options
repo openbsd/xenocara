@@ -1,0 +1,5 @@
+option(
+  'xkb-config-root',
+  type: 'string',
+  description: 'The XKB config root [default=xkeyboard-config install path]',
+)

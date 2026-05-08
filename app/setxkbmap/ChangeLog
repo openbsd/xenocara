@@ -1,3 +1,85 @@
+commit 66d92298f83dd3406303fd2b376d70f5cb1b704d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 28 16:35:44 2026 -0700
+
+    setxkbmap 1.3.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f6757c7482553e390e054b3674daec80719f07eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 24 16:32:38 2026 -0800
+
+    Man page: update history from XFree86 4.3 to 3.2
+    
+    setxkbmap references appear as far back as 3.2 in the XFree86 Changelog.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/setxkbmap/-/merge_requests/13>
+
+commit 67443deb584cd489c31e04e1c6ba6ee17af11bfe
+Author: Alexander Ziaee <ziaee@FreeBSD.org>
+Date:   Tue May 6 15:28:01 2025 -0400
+
+    manual page: Rewrite in semantic markup
+    
+    Rewrite the reference manual in BSD-style mdoc(7) semantic markup,
+    providing greatly enhanced search on all supported manual compilers.
+    Massage usage for consistency.
+    
+    Signed-off-by: Alexander Ziaee <ziaee@google.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/setxkbmap/-/merge_requests/8>
+
+commit c7772933d6bf1a0d4ce5eaf13c645d53561841c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/setxkbmap/-/merge_requests/12>
+
+commit 8fe146750e70e83908c76f057492d9d9bf059287
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 27 10:19:38 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/setxkbmap/-/merge_requests/11>
+
+commit 7a13fb1bb6924d381c2c22600809153662f82cc3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 24 13:22:15 2025 +1000
+
+    CI: add workflow rules
+    
+    See https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/438
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/setxkbmap/-/merge_requests/10>
+
+commit e260ddf617b3ebabcb5c090e86672b9bc7d9465b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 26 18:06:50 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/setxkbmap/-/merge_requests/9>
+
 commit 094d979324efca8bbb2ad3756ee947c2d2b41a79
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon May 15 11:55:03 2023 +1000

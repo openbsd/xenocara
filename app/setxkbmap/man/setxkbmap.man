@@ -1,156 +1,185 @@
-.\"
-.TH SETXKBMAP __appmansuffix__ __xorgversion__
-.SH NAME
-setxkbmap
-\- set the keyboard using the X Keyboard Extension
-.SH SYNOPSIS
-.B setxkbmap [
-.I args
-.B ] [
-.I layout
-.B [
-.I variant
-.B [
-.I option  ...
-.B ] ] ]
-.SH DESCRIPTION
+.Dd March 29, 2025
+.Dt SETXKBMAP 1
+.Os
+.Sh NAME
+.Nm setxkbmap
+.Nd set keymaps and layouts via the X Keyboard Extension
+.Sh SYNOPSIS
+.Nm
+.Op Ar options
+.Op Ar layout Op Ar variant Op Ar option Ar ...
+.Sh DESCRIPTION
 The
-.B setxkbmap
-command maps the keyboard to use the layout determined by the options
-specified on the command line.
-.P
-An XKB keymap is constructed from a number of components which are compiled
-only as needed.  The source for all of the components can be found in
-.IR __xkbconfigroot__ .
-.SH OPTIONS
-.TP 8
-.B \-compat \fIname\fP
-Specifies the name of the compatibility map component used to construct
-a keyboard layout.
-.TP 8
-.B \-config \fIfile\fP
-Specifies the name of an XKB configuration file which describes the
-keyboard to be used.
-.TP 8
-.B \-device \fIdevice\fP
-Specifies the numeric device id of the input device to be updated with
-the new keyboard layout. If not specified, the core keyboard device of
-the X server is updated.
-.TP 8
-.B \-display \fIdisplay\fP
-Specifies the display to be updated with the new keyboard layout.
-.TP 8
-.B \-geometry \fIname\fP
-Specifies the name of the geometry component used to construct
-a keyboard layout.
-.TP 8
-.B \-help
-Prints a message describing the valid input to \fIsetxkbmap\fP.
-.TP 8
-.B \-I \fIdirectory\fP
-Adds a directory to the list of directories to be used to search for
-specified layout or rules files.
-.TP 8
-.B \-keycodes \fIname\fP
-Specifies the name of the keycodes component used to construct
-a keyboard layout.
-.TP 8
-.B \-keymap \fIname\fP
-Specifies the name of the keymap description used to construct
-a keyboard layout.
-.TP 8
-.B \-layout \fIname\fP
-Specifies the name of the layout used to determine the components which
-make up the keyboard description. The \fI-layout\fP option may only be used
-once. Multiple layouts can be specified as a comma-separated list.
-.TP 8
-.B \-model \fIname\fP
-Specifies the name of the keyboard model used to determine the components
-which make up the keyboard description.  Only one model may be specified
-on the command line.
-.TP 8
-.B \-option \fIname\fP
-Specifies the name of an option to determine the components which make up
-the keyboard description;  multiple options may be specified, one per
-\fI-option\fP flag. Note that
-.B setxkbmap
-adds options specified in the command line to the options that were set
-before (as saved in root window properties). If you want to replace all
-previously specified options, use the \fI-option\fP flag with an empty
-argument first.
-.TP 8
-.B \-print
-With this option \fBsetxkbmap\fP just prints component names in a format
-acceptable by \fBxkbcomp\fP (an XKB keymap compiler) and exits. The option
-can be used for tests instead of a verbose option and in cases when one needs
-to run both the \fBsetxkbmap\fP and the \fBxkbcomp\fP in chain (see below).
-.TP 8
-.B \-query
-With this option \fBsetxkbmap\fP just prints the current rules, model,
-layout, variant, and options, then exits.
-.TP 8
-.B \-rules \fIfile\fP
-Specifies the name of the rules file used to resolve the requested layout
-and model to a set of component names.
-.TP 8
-.B \-symbols \fIname\fP
-Specifies the name of the symbols component used to construct
-a keyboard layout.
-.TP 8
-.B \-synch
+.Nm
+utility maps the keyboard to use the specified layout in an
+.Xr X 7
+session.
+For a table of available layouts and options, see
+.Xr xkeyboard-config 7 .
+.Pp
+The options are as follows:
+.Bl -tag -width indent
+.It Fl ? , Fl help
+Print a message describing the valid input to
+.Nm .
+.It Fl compat Ar name
+Specify the name of the compatibility map component
+used to construct a keyboard layout.
+.It Fl config Ar file
+Specify the name of an XKB configuration file
+which describes the keyboard to be used.
+.It Fl device Ar deviceid
+Specify the numeric device id of the input device
+to be updated with the new keyboard layout.
+If not specified, the core keyboard device of the
+.Xr Xorg 1
+server is updated.
+.It Fl display Ar display
+Specify the display to be updated with the new keyboard layout.
+.It Fl geometry Ar name
+Specify the name of the geometry component
+used to construct a keyboard layout.
+.It Fl I Ar directory
+Add a directory to the list of directories to be used
+to search for the specified layout or rules files.
+.It Fl keycodes Ar name
+Specify the name of the keycodes component
+used to construct a keyboard layout.
+.It Fl keymap Ar name
+Specify the name of the keymap description
+used to construct a keyboard layout.
+.It Fl layout Ar name
+Specify the name of the layout used to determine
+the components which make up the keyboard description.
+The
+.Fl layout
+option may only be used once.
+Multiple layouts can be specified as a comma-separated list.
+.It Fl model Ar name
+Specify the name of the keyboard model used to determine
+the components which make up the keyboard description.
+Only one model may be specified on the command line.
+.It Fl option Ar name
+Specify the name of an option to determine the components
+which make up the keyboard description;
+multiple options may be specified, one per
+.Fl option
+flag.
+Note that
+.Nm
+adds options specified in the command line
+to the options that were set before
+.Pq as saved in root window properties .
+If you want to replace all previously specified options,
+use the
+.Fl option
+flag with an empty argument first.
+.It Fl print
+Print component names in a format acceptable by the
+.Xr xkbcomp 1
+keymap compiler and exit.
+The option can be used for tests instead of a verbose option
+and in cases when one needs to run both the
+.Nm
+and
+.Xr xkbcomp 1
+utilities in chain
+.Pq see below .
+.It Fl query
+Print the current rules, model, layout, variant, and options,
+then exit.
+.It Fl rules Ar file
+Specify the name of the rules file used to resolve the requested
+layout and model to a set of component names.
+.It Fl symbols Ar name
+Specify the name of the symbols component
+used to construct a keyboard layout.
+.It Fl synch
 Force synchronization for X requests.
-.TP 8
-.B \-types \fIname\fP
-Specifies the name of the types component used to construct
-a keyboard layout.
-.TP 8
-.B \-variant \fIname\fP
-Specifies which variant of the keyboard layout should be used to determine
-the components which make up the keyboard description. The \fI-variant\fP
-option may only be used once. Multiple variants can be specified as a
-comma-separated list and will be matched with the layouts specified with
-\fI-layout\fP.
-.TP 8
-.B \-verbose|\-v [\fIlevel\fP]
-Specifies level of verbosity in output messages.  Valid levels range from
-0 (least verbose) to 10 (most verbose).  The default verbosity level is 5.
-If no level is specified, each \fI-v\fP or \fI-verbose\fP flag raises the
-level by 1.
-.TP 8
-.B \-version
-Prints the program's version number.
-.SH USING WITH xkbcomp
-If you have an Xserver and a client shell running on different computers and
-some XKB configuration files on those machines are different, you can get
-problems specifying a keyboard map by model, layout, and options names.
-This is because \fBsetxkbmap\fP converts its arguments to names of XKB
-configuration files according to files that are on the client-side computer,
-then sends these file names to the server where \fBxkbcomp\fP has to
-compose a complete keyboard map using files which the server has.
-Thus if the sets of files differ in some way, the names that
-\fBsetxkbmap\fP generates can be unacceptable on the server side.  You can
-solve this problem by running the \fBxkbcomp\fP on the client side too.
-With the \fI-print\fP option \fBsetxkbmap\fP just prints the file names
-in an appropriate format to its stdout and this output can be piped
-directly to the \fBxkbcomp\fP input.  For example, the command
-
-\fBsetxkbmap us -print | xkbcomp - $DISPLAY\fP
-
-makes both steps run on the same (client) machine and loads a keyboard map into
-the server.
-
-.SH "XWAYLAND"
-Xwayland is an X server that uses a Wayland Compositor as backend.
-Xwayland acts as translation layer between the X protocol and the Wayland
-protocol but does not manage the keymaps - these are handled by the Wayland
-Compositor.
-.PP
-Changing the keymap with \fBsetxkbmap\fP is not supported by Xwayland.
-In most instances, using \fBsetxkbmap\fP on Xwayland is indicative of a
-bug in a shell script and \fBsetxkbmap\fP will print a warning. Use the Wayland
-Compositor's native XKB configuration methods instead.
-
-.SH SEE ALSO
-xkbcomp(__appmansuffix__), xkeyboard-config(__miscmansuffix__)
-.SH FILES
-.I __xkbconfigroot__
+.It Fl types Ar name
+Specify the name of the types component
+used to construct a keyboard layout.
+.It Fl variant Ar name
+Specify which variant of the keyboard layout should be used to
+determine the components which make up the keyboard description.
+The
+.Fl variant
+option may only be used once.
+Multiple variants can be specified as a comma-separated list
+and will be matched with the layouts specified with
+.Fl layout .
+.It Fl v Ns Oo Sy erbose Oc Op Ar level
+Specify level of verbosity in output messages.
+Valid levels range from 0
+.Pq least verbose
+to 10
+.Pq most verbose .
+Default: 5.
+If no level is specified, each
+.Fl v
+or
+.Fl verbose
+flag raises the level by 1.
+.It Fl version
+Print the utility's version number and exit.
+.El
+.Sh IMPLEMENTATION NOTES
+An XKB keymap is constructed from a number of components
+which are compiled only as needed by converting the arguments to
+the names of XKB configuration files in
+.Pa __xkbconfigroot__
+on the
+.Xr X 7
+client.
+Those filenames are then passed to the
+.Xr Xorg 1
+server, unless printed to
+.Xr stdout 4 ,
+with
+.Fl print .
+.Sh FILES
+.Bl -tag -width __xkbconfigroot__
+.It Pa __xkbconfigroot__
+source for all XKB components
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+Rebind the Caps Lock key as an additional Left Control:
+.Pp
+.Dl setxkbmap -option ctrl:nocaps
+.Pp
+Set the layout to US, composing the keymap on the client for situations
+where XKB component files may differ between the
+.Xr Xserver 1
+and client:
+.Pp
+.Dl setxkbmap us -print | xkbcomp - $DISPLAY
+.Pp
+Reset XKB options:
+.Pp
+.Dl setxkbmap -option
+.Sh DIAGNOSTICS
+.Bl -diag
+.It Cannot open display \&"default display\&"
+The shell environment is not aware of a currently running
+.Xr X 7
+session.
+Start
+.Xr X 7
+before using this utility, or set the
+.Ev DISPLAY
+environment variable.
+.It Running setxkbmap against an Xwayland server
+This utility will not run in an
+.Xr Xwayland 1
+session.
+Use the Wayland Compositor's native XKB configuration method instead.
+.El
+.Sh SEE ALSO
+.Xr xkbcomp 1 ,
+.Xr X 7 ,
+.Xr xkeyboard-config 7
+.Sh HISTORY
+.Nm
+first appeared in XFree86 3.2.

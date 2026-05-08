@@ -52,4 +52,4 @@ lint:
 	$(LINT) $(ALL_LINT_FLAGS) $(setxkbmap_SOURCES)
 endif LINT
 
-EXTRA_DIST = README.md
+EXTRA_DIST = README.md meson.build meson.options
