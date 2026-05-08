@@ -170,14 +170,14 @@ No text conversions are performed;
 the client is responsible for supplying appropriately encoded strings.
 Note that you can rebind a KeySym that may not exist.
 .SH "SEE ALSO"
-XButtonEvent(__libmansuffix__),
-XMapEvent(__libmansuffix__),
-XStringToKeysym(__libmansuffix__),
-XkbLookupKeySym(__libmansuffix__),
-XkbRefreshKeyboardMapping(__libmansuffix__),
-XmbLookupString(__libmansuffix__),
-XwcLookupString(__libmansuffix__),
-Xutf8LookupString(__libmansuffix__),
-Compose(__filemansuffix__)
+.BR XButtonEvent (__libmansuffix__),
+.BR XMapEvent (__libmansuffix__),
+.BR XStringToKeysym (__libmansuffix__),
+.BR XkbLookupKeySym (__libmansuffix__),
+.BR XkbRefreshKeyboardMapping (__libmansuffix__),
+.BR XmbLookupString (__libmansuffix__),
+.BR XwcLookupString (__libmansuffix__),
+.BR Xutf8LookupString (__libmansuffix__),
+.BR Compose (__filemansuffix__)
 .br
 \fI\*(xL\fP

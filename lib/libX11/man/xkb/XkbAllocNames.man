@@ -47,20 +47,20 @@ total number of radio group names needed
 total number of key aliases needed
 .SH DESCRIPTION
 .LP
-Most applications do not need to directly allocate symbolic names structures. Do 
-not allocate a names structure directly using 
-.I malloc 
-or 
-.I Xmalloc 
-if your application changes the number of key aliases or radio groups or 
-constructs a symbolic names structure without loading the necessary components 
-from the X server. Instead use 
+Most applications do not need to directly allocate symbolic names structures. Do
+not allocate a names structure directly using
+.I malloc
+or
+.I Xmalloc
+if your application changes the number of key aliases or radio groups or
+constructs a symbolic names structure without loading the necessary components
+from the X server. Instead use
 .I XkbAllocNames.
 
-.I XkbAllocNames 
-can return BadAlloc, BadMatch, and BadValue errors. The 
-.I which 
-parameter is the bitwise inclusive OR of the valid names mask bits defined in 
+.I XkbAllocNames
+can return BadAlloc, BadMatch, and BadValue errors. The
+.I which
+parameter is the bitwise inclusive OR of the valid names mask bits defined in
 Table 1.
 
 .TS
@@ -94,12 +94,12 @@ XkbComponentNamesMask	(0x3f)	Xkb->names	keycodes,
 XkbAllNamesMask	(0x3fff)	Xkb->names	all name components
 .TE
 
-Do not free symbolic names structures directly using 
-.I free 
-or 
-.I XFree. 
-Use 
-.I XkbFreeNames 
+Do not free symbolic names structures directly using
+.I free
+or
+.I XFree.
+Use
+.I XkbFreeNames
 instead.
 .SH DIAGNOSTICS
 .TP 15
@@ -107,7 +107,7 @@ instead.
 Unable to allocate storage
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid
 .TP 15
 .B BadValue

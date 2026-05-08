@@ -378,7 +378,7 @@ alternatives can generate this error.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XFree(__libmansuffix__),
-XInternAtom(__libmansuffix__)
+.BR XFree (__libmansuffix__),
+.BR XInternAtom (__libmansuffix__)
 .br
 \fI\*(xL\fP

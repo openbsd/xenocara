@@ -329,16 +329,10 @@ libX11_la_SOURCES = \
 # ========================= Extra stuff ============================
 #
 
-if OS2
-libX11_la_SOURCES+=os2Stubs.c
-endif OS2
-
 x11datadir = @X11_DATADIR@
 x11data_DATA = XErrorDB
 
-EXTRA_DIST = \
-	$(x11data_DATA) \
-	os2Stubs.c
+EXTRA_DIST = $(x11data_DATA)
 
 libX11_xcb_la_SOURCES = x11_xcb.c Xxcbint.h
 libX11_xcb_la_LDFLAGS = -version-number 1:0:0 -no-undefined

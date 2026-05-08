@@ -125,7 +125,7 @@ is called before the next call to
 .BR XNextEvent .
 
 .SH "SEE ALSO"
-XNextEvent(__libmansuffix__),
+.BR XNextEvent (__libmansuffix__),
 .br
 \fI\*(xL\fP
 

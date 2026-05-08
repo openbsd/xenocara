@@ -1061,7 +1061,7 @@ freeConversion(
 	/*  ...  */
 	Xfree(ctconv->convlist);
 	ctconv->convlist = NULL;
-	
+
 	Xfree(ctconv);
 	codeset->ctconv = NULL;
     }

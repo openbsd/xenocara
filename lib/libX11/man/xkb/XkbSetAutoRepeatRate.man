@@ -21,7 +21,7 @@
 .\"
 .TH XkbSetAutoRepeatRate __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbSetAutoRepeatRate \- Sets the attributes of the RepeatKeys control for a 
+XkbSetAutoRepeatRate \- Sets the attributes of the RepeatKeys control for a
 keyboard device
 .SH SYNOPSIS
 .HP
@@ -47,50 +47,50 @@ initial delay, ms
 delay between repeats, ms
 .SH DESCRIPTION
 .LP
-The core protocol allows only control over whether or not the entire keyboard or 
-individual keys should auto-repeat when held down. RepeatKeys is a boolean 
-control that extends this capability by adding control over the delay until a 
-key begins to repeat and the rate at which it repeats. RepeatKeys is coupled 
-with the core auto-repeat control: when RepeatKeys is enabled or disabled, the 
+The core protocol allows only control over whether or not the entire keyboard or
+individual keys should auto-repeat when held down. RepeatKeys is a boolean
+control that extends this capability by adding control over the delay until a
+key begins to repeat and the rate at which it repeats. RepeatKeys is coupled
+with the core auto-repeat control: when RepeatKeys is enabled or disabled, the
 core auto-repeat is enabled or disabled and vice versa.
 
-Auto-repeating keys are controlled by two attributes. The first, 
-.I timeout, 
-is the delay after the initial press of an auto-repeating key and the first 
-generated repeat event. The second, 
-.I interval, 
-is the delay between all subsequent generated repeat events. As with all boolean 
-controls, configuring the attributes that determine how the control operates 
+Auto-repeating keys are controlled by two attributes. The first,
+.I timeout,
+is the delay after the initial press of an auto-repeating key and the first
+generated repeat event. The second,
+.I interval,
+is the delay between all subsequent generated repeat events. As with all boolean
+controls, configuring the attributes that determine how the control operates
 does not automatically enable the control as a whole.
 
-.I XkbSetAutoRepeatRate 
-sends a request to the X server to configure the AutoRepeat control attributes 
-to the values specified in 
-.I timeout 
-and 
+.I XkbSetAutoRepeatRate
+sends a request to the X server to configure the AutoRepeat control attributes
+to the values specified in
+.I timeout
+and
 .I interval.
- 
-.I XkbSetAutoRepeatRate 
-does not wait for a reply; it normally returns True. Specifying a zero value for 
-either 
-.I timeout 
-or 
-.I interval 
-causes the server to generate a BadValue protocol error. If a compatible version 
-of the Xkb extension is not available in the server, 
-.I XkbSetAutoRepeatRate 
+
+.I XkbSetAutoRepeatRate
+does not wait for a reply; it normally returns True. Specifying a zero value for
+either
+.I timeout
+or
+.I interval
+causes the server to generate a BadValue protocol error. If a compatible version
+of the Xkb extension is not available in the server,
+.I XkbSetAutoRepeatRate
 returns False.
 .SH "RETURN VALUES"
 .TP 15
 True
-The 
-.I XkbSetAutoRepeatRate 
+The
+.I XkbSetAutoRepeatRate
 function returns True normally.
 .TP 15
 False
-The 
-.I XkbSetAutoRepeatRate 
-function returns False if a compatible version of the Xkb extension is not 
+The
+.I XkbSetAutoRepeatRate
+function returns False if a compatible version of the Xkb extension is not
 available in the server.
 .SH DIAGNOSTICS
 .TP 15

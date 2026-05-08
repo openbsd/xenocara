@@ -40,42 +40,42 @@ geometry in which sections should be freed
 first section to be freed
 .TP
 .I count
-number of sections to be freed 
+number of sections to be freed
 .TP
 .I free_all
 True => all sections are freed
 .SH DESCRIPTION
 .LP
-Xkb provides a number of functions to allocate and free subcomponents of a 
-keyboard geometry. Use these functions to create or modify keyboard geometries. 
-Note that these functions merely allocate space for the new element(s), and it 
-is up to you to fill in the values explicitly in your code. These allocation 
-functions increase 
-.I sz_* 
-but never touch 
-.I num_* 
-(unless there is an allocation failure, in which case they reset both 
-.I sz_* 
-and 
-.I num_* 
-to zero). These functions return Success if they succeed, BadAlloc if they are 
+Xkb provides a number of functions to allocate and free subcomponents of a
+keyboard geometry. Use these functions to create or modify keyboard geometries.
+Note that these functions merely allocate space for the new element(s), and it
+is up to you to fill in the values explicitly in your code. These allocation
+functions increase
+.I sz_*
+but never touch
+.I num_*
+(unless there is an allocation failure, in which case they reset both
+.I sz_*
+and
+.I num_*
+to zero). These functions return Success if they succeed, BadAlloc if they are
 not able to allocate space, or BadValue if a parameter is not as expected.
 
-If 
-.I free_all 
-is True, all sections are freed regardless of the value of 
-.I first 
-and 
-.I count. 
-Otherwise, the number of sections specified by 
-.I count 
-are freed, beginning with the section specified by 
-.I first 
+If
+.I free_all
+is True, all sections are freed regardless of the value of
+.I first
+and
+.I count.
+Otherwise, the number of sections specified by
+.I count
+are freed, beginning with the section specified by
+.I first
 in the specified geometry.
 .SH "RETURN VALUES"
 .TP 15
 Success
-The XkbFreeGeomSections function returns Success when there are no allocation 
+The XkbFreeGeomSections function returns Success when there are no allocation
 or argument errors.
 .SH DIAGNOSTICS
 .TP 15

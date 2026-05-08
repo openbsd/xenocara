@@ -22,7 +22,7 @@
 .\"
 .TH XkbFreeClientMap __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbFreeClientMap \- Free memory used by the client map member of an XkbDescRec 
+XkbFreeClientMap \- Free memory used by the client map member of an XkbDescRec
 structure
 .SH SYNOPSIS
 .HP
@@ -41,32 +41,32 @@ keyboard description containing client map to free
 mask identifying components of map to free
 .TP
 .I free_all
-True => free all client components and map itself 
+True => free all client components and map itself
 .SH DESCRIPTION
 .LP
-.I XkbFreeClientMap 
-frees the components of client map specified by 
-.I which 
-in the XkbDescRec structure specified by the 
-.I xkb 
+.I XkbFreeClientMap
+frees the components of client map specified by
+.I which
+in the XkbDescRec structure specified by the
+.I xkb
 parameter and sets the corresponding structure component values to NULL. The
-.I which 
+.I which
 parameter specifies a combination of the client map masks shown in Table 1.
 
-If 
-.I free_all 
-is True, 
-.I which 
-is ignored; 
-.I XkbFreeClientMap 
-frees every non-NULL structure component in the client map, frees the 
-XkbClientMapRec 
-structure referenced by the 
-.I map 
-member of the 
-.I xkb 
-parameter, and sets the 
-.I map 
+If
+.I free_all
+is True,
+.I which
+is ignored;
+.I XkbFreeClientMap
+frees every non-NULL structure component in the client map, frees the
+XkbClientMapRec
+structure referenced by the
+.I map
+member of the
+.I xkb
+parameter, and sets the
+.I map
 member to NULL.
 
 .TS
@@ -78,42 +78,42 @@ _
 Mask	Effect
 _
 XkbKeyTypesMask	T{
-The type_count field specifies the number of entries to preallocate for the 
-types field of the client map. If the type_count field is less than 
+The type_count field specifies the number of entries to preallocate for the
+types field of the client map. If the type_count field is less than
 XkbNumRequiredTypes returns BadValue.
 T}
 .sp
 XkbKeySymsMask	T{
-The min_key_code and max_key_code fields of the xkb parameter are used to 
-allocate the syms and key_sym_map fields of the client map. The fields are 
-allocated to contain the maximum number of entries necessary for max_key_code - 
+The min_key_code and max_key_code fields of the xkb parameter are used to
+allocate the syms and key_sym_map fields of the client map. The fields are
+allocated to contain the maximum number of entries necessary for max_key_code -
 min_key_code + 1 keys.
 T}
 .sp
 XkbModifierMapMask	T{
-The min_key_code and max_key_code fields of the xkb parameter are used to 
-allocate the modmap field of the client map. The field is allocated to contain 
-the maximum number of entries necessary for max_key_code - min_key_code + 1 
+The min_key_code and max_key_code fields of the xkb parameter are used to
+allocate the modmap field of the client map. The field is allocated to contain
+the maximum number of entries necessary for max_key_code - min_key_code + 1
 keys.
 T}
 .TE
 
-NOTE: The 
-.I min_key_code 
-and 
-.I max_key_code 
-fields of the 
-.I xkb 
-parameter must be legal values if the XkbKeySymsMask or XkbModifierMapMask masks 
-are set in the 
-.I which 
-parameter. If they are not valid, 
-.I XkbAllocClientMap 
-returns BadValue. 
+NOTE: The
+.I min_key_code
+and
+.I max_key_code
+fields of the
+.I xkb
+parameter must be legal values if the XkbKeySymsMask or XkbModifierMapMask masks
+are set in the
+.I which
+parameter. If they are not valid,
+.I XkbAllocClientMap
+returns BadValue.
 .SH STRUCTURES
 .LP
-The complete description of an Xkb keyboard is given by an XkbDescRec. The 
-component 
+The complete description of an Xkb keyboard is given by an XkbDescRec. The
+component
 structures in the XkbDescRec represent the major Xkb components.
 
 .nf
@@ -133,27 +133,27 @@ typedef struct {
 } XkbDescRec, *XkbDescPtr;
 
 .fi
-The 
-.I display 
-field points to an X display structure. The 
-.I flags field is private to the library: modifying 
-.I flags 
-may yield unpredictable results. The 
-.I device_spec 
-field specifies the device identifier of the keyboard input device, or 
-XkbUseCoreKeyboard, which specifies the core keyboard device. The 
+The
+.I display
+field points to an X display structure. The
+.I flags field is private to the library: modifying
+.I flags
+may yield unpredictable results. The
+.I device_spec
+field specifies the device identifier of the keyboard input device, or
+XkbUseCoreKeyboard, which specifies the core keyboard device. The
 .I min_key_code
-and 
-.I max_key_code 
-fields specify the least and greatest keycode that can be returned by the 
-keyboard. 
+and
+.I max_key_code
+fields specify the least and greatest keycode that can be returned by the
+keyboard.
 
-Each structure component has a corresponding mask bit that is used in function 
-calls to 
-indicate that the structure should be manipulated in some manner, such as 
-allocating it 
-or freeing it. These masks and their relationships to the fields in the 
-XkbDescRec are 
+Each structure component has a corresponding mask bit that is used in function
+calls to
+indicate that the structure should be manipulated in some manner, such as
+allocating it
+or freeing it. These masks and their relationships to the fields in the
+XkbDescRec are
 shown in Table 2.
 
 .TS
@@ -174,13 +174,13 @@ XkbGeometryMask	geom	(1L<<6)
 XkbAllComponentsMask	All Fields	(0x7f)
 .TE
 
-The 
-.I map 
-field of the complete Xkb keyboard description is a pointer to the Xkb client 
-map, which is 
+The
+.I map
+field of the complete Xkb keyboard description is a pointer to the Xkb client
+map, which is
 of type XkbClientMapRec:
 .nf
- 
+
    typedef struct {                   /\&* Client Map */
       unsigned char     size_types;   /\&* # occupied entries in types */
       unsigned char     num_types;    /\&* # entries in types */

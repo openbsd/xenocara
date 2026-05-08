@@ -206,8 +206,8 @@ by the argument's type is accepted.
 Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
-XDrawArc(__libmansuffix__),
-XDrawPoint(__libmansuffix__),
-XDrawRectangle(__libmansuffix__)
+.BR XDrawArc (__libmansuffix__),
+.BR XDrawPoint (__libmansuffix__),
+.BR XDrawRectangle (__libmansuffix__)
 .br
 \fI\*(xL\fP

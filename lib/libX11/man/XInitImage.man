@@ -216,6 +216,6 @@ function deallocates the memory associated with the
 .B XImage
 structure.
 .SH "SEE ALSO"
-XPutImage(__libmansuffix__)
+.BR XPutImage (__libmansuffix__)
 .br
 \fI\*(xL\fP

@@ -46,39 +46,39 @@ number of key aliases to be freed
 True => all key aliases are freed
 .SH DESCRIPTION
 .LP
-Xkb provides a number of functions to allocate and free subcomponents of a 
-keyboard geometry. Use these functions to create or modify keyboard geometries. 
-Note that these functions merely allocate space for the new element(s), and it 
-is up to you to fill in the values explicitly in your code. These allocation 
-functions increase 
-.I sz_* 
-but never touch 
-.I num_* 
-(unless there is an allocation failure, in which case they reset both 
-.I sz_* 
-and 
-.I num_* 
-to zero). These functions return Success if they succeed, BadAlloc if they are 
+Xkb provides a number of functions to allocate and free subcomponents of a
+keyboard geometry. Use these functions to create or modify keyboard geometries.
+Note that these functions merely allocate space for the new element(s), and it
+is up to you to fill in the values explicitly in your code. These allocation
+functions increase
+.I sz_*
+but never touch
+.I num_*
+(unless there is an allocation failure, in which case they reset both
+.I sz_*
+and
+.I num_*
+to zero). These functions return Success if they succeed, BadAlloc if they are
 not able to allocate space, or BadValue if a parameter is not as expected.
 
-If 
-.I free_all 
-is True, all aliases in the top level of the specified geometry 
-.I geom 
-are freed regardless of the value of 
-.I first 
-or 
-.I count. 
-Otherwise, 
-.I count 
-aliases in 
-.I geom 
-are freed beginning with the one specified by 
+If
+.I free_all
+is True, all aliases in the top level of the specified geometry
+.I geom
+are freed regardless of the value of
+.I first
+or
+.I count.
+Otherwise,
+.I count
+aliases in
+.I geom
+are freed beginning with the one specified by
 .I first.
 .SH "RETURN VALUES"
 .TP 15
 Success
-The XkbFreeGeomKeyAliases function returns Success if there are no allocation 
+The XkbFreeGeomKeyAliases function returns Success if there are no allocation
 errors.
 .SH DIAGNOSTICS
 .TP 15

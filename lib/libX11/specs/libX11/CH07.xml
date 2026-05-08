@@ -43,7 +43,7 @@ The contents of a GC are private to Xlib.
 <para>
 <!-- .LP -->
 Xlib implements a write-back cache for all elements of a GC that are not
-resource IDs to allow Xlib to implement the transparent coalescing of changes 
+resource IDs to allow Xlib to implement the transparent coalescing of changes
 to GCs.
 For example,
 a call to
@@ -51,11 +51,11 @@ a call to
 of a GC followed by a call to
 <xref linkend='XSetLineAttributes' xrefstyle='select: title'/>
 results in only a single-change GC protocol request to the server.
-GCs are neither expected nor encouraged to be shared between client 
+GCs are neither expected nor encouraged to be shared between client
 applications, so this write-back caching should present no problems.
 Applications cannot share GCs without external synchronization.
 Therefore,
-sharing GCs between applications is highly discouraged. 
+sharing GCs between applications is highly discouraged.
 </para>
 <para>
 <!-- .LP -->
@@ -260,14 +260,14 @@ to be useful in a window.
 <indexterm significance="preferred"><primary>Source</primary></indexterm>
 <indexterm significance="preferred"><primary>Destination</primary></indexterm>
 The function attributes of a GC are used when you update a section of
-a drawable (the destination) with bits from somewhere else (the source).  
+a drawable (the destination) with bits from somewhere else (the source).
 The function in a GC defines how the new destination bits are to be
 computed from the source bits and the old destination bits.
 <symbol>GXcopy</symbol>
 is typically the most useful because it will work on a color display,
 but special applications may use other functions,
 particularly in concert with particular planes of a color display.
-The 16 GC functions, defined in 
+The 16 GC functions, defined in
 <filename class="headerfile">&lt;X11/X.h&gt;</filename>,
 <indexterm type="file"><primary><filename class="headerfile">X11/X.h</filename></primary></indexterm>
 <indexterm><primary>Files</primary><secondary><filename class="headerfile">&lt;X11/X.h&gt;</filename></secondary></indexterm>
@@ -391,9 +391,9 @@ significant bits in the plane mask.
 </para>
 <para>
 <!-- .LP -->
-In graphics operations, given a source and destination pixel, 
+In graphics operations, given a source and destination pixel,
 the result is computed bitwise on corresponding bits of the pixels.
-That is, a Boolean operation is performed in each bit plane.  
+That is, a Boolean operation is performed in each bit plane.
 The plane_mask restricts the operation to a subset of planes.
 A macro constant
 <symbol>AllPlanes</symbol>
@@ -442,7 +442,7 @@ If the center of the pixel is exactly on the bounding box,
 it is part of the line if and only if the interior is immediately to its right
 (x increasing direction).
 Pixels with centers on a horizontal edge are a special case and are part of
-the line if and only if the interior or the boundary is immediately below 
+the line if and only if the interior or the boundary is immediately below
 (y increasing direction) and the interior or the boundary is immediately
 to the right (x increasing direction).
 </para>
@@ -450,21 +450,21 @@ to the right (x increasing direction).
 <!-- .LP -->
 Thin lines (zero line-width) are one-pixel-wide lines drawn using an
 unspecified, device-dependent algorithm.
-There are only two constraints on this algorithm. 
+There are only two constraints on this algorithm.
 </para>
 <itemizedlist>
   <listitem>
     <para>
 If a line is drawn unclipped from [x1,y1] to [x2,y2] and
 if another line is drawn unclipped from [x1+dx,y1+dy] to [x2+dx,y2+dy],
-a point [x,y] is touched by drawing the first line 
+a point [x,y] is touched by drawing the first line
 if and only if the point [x+dx,y+dy] is touched by drawing the second line.
     </para>
   </listitem>
   <listitem>
     <para>
 The effective set of points comprising a line cannot be affected by clipping.
-That is, a point is touched in a clipped line if and only if the point 
+That is, a point is touched in a clipped line if and only if the point
 lies inside the clipping region and the point would be touched
 by the line when drawn unclipped.
     </para>
@@ -472,10 +472,10 @@ by the line when drawn unclipped.
 </itemizedlist>
 <para>
 <!-- .LP -->
-A wide line drawn from [x1,y1] to [x2,y2] always draws the same pixels 
-as a wide line drawn from [x2,y2] to [x1,y1], not counting cap-style 
+A wide line drawn from [x1,y1] to [x2,y2] always draws the same pixels
+as a wide line drawn from [x2,y2] to [x1,y1], not counting cap-style
 and join-style.
-It is recommended that this property be true for thin lines, 
+It is recommended that this property be true for thin lines,
 but this is not required.
 A line-width of zero may differ from a line-width of one in which pixels are
 drawn.
@@ -485,7 +485,7 @@ wide lines.
 </para>
 <para>
 <!-- .LP -->
-In general, 
+In general,
 drawing a thin line will be faster than drawing a wide line of width one.
 However, because of their different drawing algorithms,
 thin lines may not mix well aesthetically with wide lines.
@@ -521,7 +521,7 @@ style used where even and odd dashes meet.
     <listitem>
       <para>
 Only the even dashes are drawn,
-and cap-style applies to 
+and cap-style applies to
 all internal ends of the individual dashes,
 except
 <symbol>CapNotLast</symbol>
@@ -562,7 +562,7 @@ with no projection beyond.
       <para>
 The line has a circular arc with the diameter equal to the line-width,
 centered on the endpoint.
-(This is equivalent to 
+(This is equivalent to
 <symbol>CapButt</symbol>
 for line-width of zero).
       </para>
@@ -623,8 +623,8 @@ endpoint styles with the triangular notch filled.
 
 <para>
 <!-- .LP -->
-For a line with coincident endpoints (x1=x2, y1=y2), 
-when the cap-style is applied to both endpoints, 
+For a line with coincident endpoints (x1=x2, y1=y2),
+when the cap-style is applied to both endpoints,
 the semantics depends on the line-width and the cap-style:
 </para>
 
@@ -682,8 +682,8 @@ the semantics depends on the line-width and the cap-style:
 
 <para>
 <!-- .LP -->
-For a line with coincident endpoints (x1=x2, y1=y2), 
-when the join-style is applied at one or both endpoints, 
+For a line with coincident endpoints (x1=x2, y1=y2),
+when the join-style is applied at one or both endpoints,
 the effect is as if the line was removed from the overall path.
 However, if the total path consists of or is reduced to a single point joined
 with itself, the effect is the same as when the cap-style is applied at both
@@ -705,12 +705,12 @@ or a
 <errorname>BadMatch</errorname>
 error results.
 The stipple pixmap must have depth one and must have the same root as the
-GC, or a 
+GC, or a
 <errorname>BadMatch</errorname>
-error results.  
+error results.
 For stipple operations where the fill-style is
 <symbol>FillStippled</symbol>
-but not 
+but not
 <symbol>FillOpaqueStippled</symbol>,
 the stipple pattern is tiled in a
 single plane and acts as an additional clip mask to be ANDed with the clip-mask.
@@ -721,7 +721,7 @@ any size pixmap can be used for tiling or stippling.
 <para>
 <!-- .LP -->
 The fill-style defines the contents of the source for line, text, and
-fill requests.  
+fill requests.
 For all text and fill requests (for example,
 <xref linkend='XDrawText' xrefstyle='select: title'/>,
 <xref linkend='XDrawText16' xrefstyle='select: title'/>,
@@ -729,17 +729,17 @@ For all text and fill requests (for example,
 <xref linkend='XFillPolygon' xrefstyle='select: title'/>,
 and
 <xref linkend='XFillArc' xrefstyle='select: title'/>);
-for line requests 
-with line-style 
+for line requests
+with line-style
 <symbol>LineSolid</symbol>
 (for example,
 <xref linkend='XDrawLine' xrefstyle='select: title'/>,
 <xref linkend='XDrawSegments' xrefstyle='select: title'/>,
 <xref linkend='XDrawRectangle' xrefstyle='select: title'/>,
 <xref linkend='XDrawArc' xrefstyle='select: title'/>);
-and for the even dashes for line requests with line-style 
+and for the even dashes for line requests with line-style
 <symbol>LineOnOffDash</symbol>
-or 
+or
 <symbol>LineDoubleDash</symbol>,
 the following apply:
 </para>
@@ -818,7 +818,7 @@ the results are undefined.
 <para>
 <!-- .LP -->
 For optimum performance,
-you should draw as much as possible with the same GC 
+you should draw as much as possible with the same GC
 (without changing its components).
 The costs of changing GC components relative to using different GCs
 depend on the display hardware and the server implementation.
@@ -829,10 +829,10 @@ of GCs.
 <para>
 <!-- .LP -->
 The dashes value is actually a simplified form of the
-more general patterns that can be set with 
+more general patterns that can be set with
 <xref linkend='XSetDashes' xrefstyle='select: title'/>.
 Specifying a
-value of N is equivalent to specifying the two-element list [N, N] in 
+value of N is equivalent to specifying the two-element list [N, N] in
 <xref linkend='XSetDashes' xrefstyle='select: title'/>.
 The value must be nonzero,
 or a
@@ -841,7 +841,7 @@ error results.
 </para>
 <para>
 <!-- .LP -->
-The clip-mask restricts writes to the destination drawable.  
+The clip-mask restricts writes to the destination drawable.
 If the clip-mask is set to a pixmap,
 it must have depth one and have the same root as the GC,
 or a
@@ -855,8 +855,8 @@ The clip-mask also can be set by calling the
 or
 <xref linkend='XSetRegion' xrefstyle='select: title'/>
 functions.
-Only pixels where the clip-mask has a bit set to 1 are drawn.  
-Pixels are not drawn outside the area covered by the clip-mask 
+Only pixels where the clip-mask has a bit set to 1 are drawn.
+Pixels are not drawn outside the area covered by the clip-mask
 or where the clip-mask has a bit set to 0.
 The clip-mask affects all graphics requests.
 The clip-mask does not clip sources.
@@ -869,18 +869,18 @@ You can set the subwindow-mode to
 <symbol>ClipByChildren</symbol>
 or
 <symbol>IncludeInferiors</symbol>.
-For 
+For
 <symbol>ClipByChildren</symbol>,
 both source and destination windows are
-additionally clipped by all viewable 
+additionally clipped by all viewable
 <symbol>InputOutput</symbol>
-children.  
-For 
+children.
+For
 <symbol>IncludeInferiors</symbol>,
-neither source nor destination window is clipped by inferiors. 
+neither source nor destination window is clipped by inferiors.
 This will result in including subwindow contents in the source
 and drawing through subwindow boundaries of the destination.
-The use of 
+The use of
 <symbol>IncludeInferiors</symbol>
 on a window of one depth with mapped
 inferiors of differing depth is not illegal, but the semantics are
@@ -889,9 +889,9 @@ undefined by the core protocol.
 <para>
 <!-- .LP -->
 The fill-rule defines what pixels are inside (drawn) for
-paths given in 
+paths given in
 <xref linkend='XFillPolygon' xrefstyle='select: title'/>
-requests and can be set to 
+requests and can be set to
 <symbol>EvenOddRule</symbol>
 or
 <symbol>WindingRule</symbol>.
@@ -899,8 +899,8 @@ For
 <symbol>EvenOddRule</symbol>,
 a point is inside if
 an infinite ray with the point as origin crosses the path an odd number
-of times.  
-For 
+of times.
+For
 <symbol>WindingRule</symbol>,
 a point is inside if an infinite ray with the
 point as origin crosses an unequal number of clockwise and
@@ -915,24 +915,24 @@ coincident with a segment.
 </para>
 <para>
 <!-- .LP -->
-For both 
+For both
 <symbol>EvenOddRule</symbol>
 and
 <symbol>WindingRule</symbol>,
-a point is infinitely small, 
-and the path is an infinitely thin line.  
+a point is infinitely small,
+and the path is an infinitely thin line.
 A pixel is inside if the center point of the pixel is inside
-and the center point is not on the boundary.  
+and the center point is not on the boundary.
 If the center point is on the boundary,
 the pixel is inside if and only if the polygon interior is immediately to
-its right (x increasing direction).  
-Pixels with centers on a horizontal edge are a special case 
-and are inside if and only if the polygon interior is immediately below 
+its right (x increasing direction).
+Pixels with centers on a horizontal edge are a special case
+and are inside if and only if the polygon interior is immediately below
 (y increasing direction).
 </para>
 <para>
 <!-- .LP -->
-The arc-mode controls filling in the 
+The arc-mode controls filling in the
 <xref linkend='XFillArcs' xrefstyle='select: title'/>
 function and can be set to
 <symbol>ArcPieSlice</symbol>
@@ -947,19 +947,19 @@ the arcs are chord filled.
 </para>
 <para>
 <!-- .LP -->
-The graphics-exposure flag controls 
+The graphics-exposure flag controls
 <symbol>GraphicsExpose</symbol>
 event generation
-for 
+for
 <xref linkend='XCopyArea' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XCopyPlane' xrefstyle='select: title'/>
 requests (and any similar requests defined by extensions).
 </para>
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To create a new GC that is usable on a given screen with a 
+To create a new GC that is usable on a given screen with a
 depth of drawable, use
 <xref linkend='XCreateGC' xrefstyle='select: title'/>.
 </para>
@@ -993,7 +993,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -1204,13 +1204,13 @@ The
 function changes the components specified by valuemask for
 the specified GC.
 The values argument contains the values to be set.
-The values and restrictions are the same as for 
+The values and restrictions are the same as for
 <xref linkend='XCreateGC' xrefstyle='select: title'/>.
-Changing the clip-mask overrides any previous 
+Changing the clip-mask overrides any previous
 <xref linkend='XSetClipRectangles' xrefstyle='select: title'/>
-request on the context. 
+request on the context.
 Changing the dash-offset or dash-list
-overrides any previous 
+overrides any previous
 <xref linkend='XSetDashes' xrefstyle='select: title'/>
 request on the context.
 The order in which components are verified and altered is server dependent.
@@ -1329,7 +1329,7 @@ sets the requested components in values_return and returns a nonzero status.
 Otherwise, it returns a zero status.
 Note that the clip-mask and dash-list (represented by the
 <symbol>GCClipMask</symbol>
-and 
+and
 <symbol>GCDashList</symbol>
 bits, respectively, in the valuemask)
 cannot be requested.
@@ -1396,9 +1396,9 @@ error.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To obtain the 
+To obtain the
 <type>GContext</type>
-resource ID for a given GC, use 
+resource ID for a given GC, use
 <xref linkend='XGContextFromGC' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XGContextFromGC</primary></indexterm>
@@ -2017,7 +2017,7 @@ Specifies the GC.
     <listitem>
       <para>
 Specifies the phase of the pattern for the dashed line-style you want to set
-for the specified GC. 
+for the specified GC.
       </para>
     </listitem>
   </varlistentry>
@@ -2028,7 +2028,7 @@ for the specified GC.
     <listitem>
       <para>
 Specifies the dash-list for the dashed line-style
-you want to set for the specified GC. 
+you want to set for the specified GC.
       </para>
     </listitem>
   </varlistentry>
@@ -2038,7 +2038,7 @@ you want to set for the specified GC.
     </term>
     <listitem>
       <para>
-Specifies the number of elements in dash_list. 
+Specifies the number of elements in dash_list.
     </para>
   </listitem>
   </varlistentry>
@@ -2053,8 +2053,8 @@ in the specified GC.
 There must be at least one element in the specified dash_list,
 or a
 <errorname>BadValue</errorname>
-error results. 
-The initial and alternating elements (second, fourth, and so on) 
+error results.
+The initial and alternating elements (second, fourth, and so on)
 of the dash_list are the even dashes, and
 the others are the odd dashes.
 Each element specifies a dash length in pixels.
@@ -2210,7 +2210,7 @@ Specifies the GC.
     <listitem>
       <para>
 Specifies the fill-rule you want to set for the specified GC.
-You can pass 
+You can pass
 <symbol>EvenOddRule</symbol>
 or
 <symbol>WindingRule</symbol>.
@@ -2241,7 +2241,7 @@ Some displays have hardware support for tiling or
 stippling with patterns of specific sizes.
 Tiling and stippling operations that restrict themselves to those specific
 sizes run much faster than such operations with arbitrary size patterns.
-Xlib provides functions that you can use to determine the best size, 
+Xlib provides functions that you can use to determine the best size,
 tile, or stipple for the display
 as well as to set the tile or stipple shape and the tile or stipple origin.
 </para>
@@ -2284,10 +2284,10 @@ Specifies the connection to the X server.
     <listitem>
       <para>
 Specifies the class that you are interested in.
-You can pass 
+You can pass
 <symbol>TileShape</symbol>,
 <symbol>CursorShape</symbol>,
-or 
+or
 <symbol>StippleShape</symbol>.
       </para>
     </listitem>
@@ -2340,7 +2340,7 @@ Specify the width and height.
     </term>
     <listitem>
       <para>
-Return the width and height of the object best supported 
+Return the width and height of the object best supported
 by the display hardware.
     </para>
   </listitem>
@@ -2352,29 +2352,29 @@ by the display hardware.
 The
 <xref linkend='XQueryBestSize' xrefstyle='select: title'/>
 function returns the best or closest size to the specified size.
-For 
+For
 <symbol>CursorShape</symbol>,
 this is the largest size that can be fully displayed on the screen specified by
 which_screen.
-For 
+For
 <symbol>TileShape</symbol>,
 this is the size that can be tiled fastest.
-For 
+For
 <symbol>StippleShape</symbol>,
 this is the size that can be stippled fastest.
-For 
+For
 <symbol>CursorShape</symbol>,
 the drawable indicates the desired screen.
-For 
+For
 <symbol>TileShape</symbol>
-and 
+and
 <symbol>StippleShape</symbol>,
 the drawable indicates the screen and possibly the window class and depth.
-An 
+An
 <symbol>InputOnly</symbol>
-window cannot be used as the drawable for 
+window cannot be used as the drawable for
 <symbol>TileShape</symbol>
-or 
+or
 <symbol>StippleShape</symbol>,
 or a
 <errorname>BadMatch</errorname>
@@ -2386,7 +2386,7 @@ error results.
 can generate
 <errorname>BadDrawable</errorname>,
 <errorname>BadMatch</errorname>,
-and 
+and
 <errorname>BadValue</errorname>
 errors.
 </para>
@@ -2469,7 +2469,7 @@ Specify the width and height.
     </term>
     <listitem>
       <para>
-Return the width and height of the object best supported 
+Return the width and height of the object best supported
 by the display hardware.
     </para>
   </listitem>
@@ -2483,9 +2483,9 @@ The
 function returns the best or closest size, that is, the size that can be
 tiled fastest on the screen specified by which_screen.
 The drawable indicates the screen and possibly the window class and depth.
-If an 
+If an
 <symbol>InputOnly</symbol>
-window is used as the drawable, a 
+window is used as the drawable, a
 <errorname>BadMatch</errorname>
 error results.
 </para>
@@ -2577,7 +2577,7 @@ Specify the width and height.
     </term>
     <listitem>
       <para>
-Return the width and height of the object best supported 
+Return the width and height of the object best supported
 by the display hardware.
     </para>
   </listitem>
@@ -2650,7 +2650,7 @@ Specifies the GC.
     </term>
     <listitem>
       <para>
-Specifies the fill tile you want to set for the specified GC. 
+Specifies the fill tile you want to set for the specified GC.
     </para>
   </listitem>
   </varlistentry>
@@ -2807,7 +2807,7 @@ Specify the x and y coordinates of the tile and stipple origin.
 <!-- .LP -->
 <!-- .eM -->
 When graphics requests call for tiling or stippling,
-the parent's origin will be interpreted relative to whatever destination 
+the parent's origin will be interpreted relative to whatever destination
 drawable is specified in the graphics request.
 </para>
 <para>
@@ -2880,7 +2880,7 @@ Specifies the font.
 can generate
 <errorname>BadAlloc</errorname>,
 <errorname>BadFont</errorname>,
-and 
+and
 <errorname>BadGC</errorname>
 errors.
 </para>
@@ -2892,7 +2892,7 @@ errors.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-Xlib provides functions that you can use to set the clip-origin 
+Xlib provides functions that you can use to set the clip-origin
 and the clip-mask or set the clip-mask to a list of rectangles.
 </para>
 <para>
@@ -2959,7 +2959,7 @@ Specify the x and y coordinates of the clip-mask origin.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The clip-mask origin is interpreted relative to the origin of whatever 
+The clip-mask origin is interpreted relative to the origin of whatever
 destination drawable is specified in the graphics request.
 </para>
 <para>
@@ -3118,7 +3118,7 @@ Specifies an array of rectangles that define the clip-mask.
     </term>
     <listitem>
       <para>
-Specifies the number of rectangles. 
+Specifies the number of rectangles.
       </para>
     </listitem>
   </varlistentry>
@@ -3144,16 +3144,16 @@ or
 <!-- .eM -->
 The
 <xref linkend='XSetClipRectangles' xrefstyle='select: title'/>
-function changes the clip-mask in the specified GC 
+function changes the clip-mask in the specified GC
 to the specified list of rectangles and sets the clip origin.
 The output is clipped to remain contained within the
 rectangles.
 The clip-origin is interpreted relative to the origin of
-whatever destination drawable is specified in a graphics request.  
-The rectangle coordinates are interpreted relative to the clip-origin.  
+whatever destination drawable is specified in a graphics request.
+The rectangle coordinates are interpreted relative to the clip-origin.
 The rectangles should be nonintersecting, or the graphics results will be
 undefined.
-Note that the list of rectangles can be empty, 
+Note that the list of rectangles can be empty,
 which effectively disables output.
 This is the opposite of passing
 <symbol>None</symbol>
@@ -3166,9 +3166,9 @@ and
 <para>
 <!-- .LP -->
 If known by the client, ordering relations on the rectangles can be
-specified with the ordering argument. 
+specified with the ordering argument.
 This may provide faster operation
-by the server. 
+by the server.
 If an incorrect ordering is specified, the X server may generate a
 <errorname>BadMatch</errorname>
 error, but it is not required to do so.
@@ -3179,13 +3179,13 @@ means the rectangles are in arbitrary order.
 <symbol>YSorted</symbol>
 means that the rectangles are nondecreasing in their Y origin.
 <symbol>YXSorted</symbol>
-additionally constrains 
+additionally constrains
 <symbol>YSorted</symbol>
 order in that all
 rectangles with an equal Y origin are nondecreasing in their X
-origin.  
+origin.
 <symbol>YXBanded</symbol>
-additionally constrains 
+additionally constrains
 <symbol>YXSorted</symbol>
 by requiring that,
 for every possible Y scanline, all rectangles that include that

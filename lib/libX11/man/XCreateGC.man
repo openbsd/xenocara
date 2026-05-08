@@ -1034,21 +1034,21 @@ by the argument's type is accepted.
 Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
-AllPlanes(__libmansuffix__),
-XCopyArea(__libmansuffix__),
-XCreateRegion(__libmansuffix__),
-XDrawArc(__libmansuffix__),
-XDrawLine(__libmansuffix__),
-XDrawRectangle(__libmansuffix__),
-XDrawText(__libmansuffix__),
-XFillRectangle(__libmansuffix__),
-XQueryBestSize(__libmansuffix__),
-XSetArcMode(__libmansuffix__),
-XSetClipOrigin(__libmansuffix__),
-XSetFillStyle(__libmansuffix__),
-XSetFont(__libmansuffix__),
-XSetLineAttributes(__libmansuffix__),
-XSetState(__libmansuffix__),
-XSetTile(__libmansuffix__)
+.BR AllPlanes (__libmansuffix__),
+.BR XCopyArea (__libmansuffix__),
+.BR XCreateRegion (__libmansuffix__),
+.BR XDrawArc (__libmansuffix__),
+.BR XDrawLine (__libmansuffix__),
+.BR XDrawRectangle (__libmansuffix__),
+.BR XDrawText (__libmansuffix__),
+.BR XFillRectangle (__libmansuffix__),
+.BR XQueryBestSize (__libmansuffix__),
+.BR XSetArcMode (__libmansuffix__),
+.BR XSetClipOrigin (__libmansuffix__),
+.BR XSetFillStyle (__libmansuffix__),
+.BR XSetFont (__libmansuffix__),
+.BR XSetLineAttributes (__libmansuffix__),
+.BR XSetState (__libmansuffix__),
+.BR XSetTile (__libmansuffix__)
 .br
 \fI\*(xL\fP

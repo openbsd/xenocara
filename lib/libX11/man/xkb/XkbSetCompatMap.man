@@ -44,34 +44,34 @@ mask of compat map components to set
 source for compat map components
 .TP
 .I  update_actions
-True => apply to server's keyboard map 
+True => apply to server's keyboard map
 .SH DESCRIPTION
-To modify the server's compatibility map, first modify a local copy of the Xkb 
-compatibility map, then call 
-.I XkbSetCompatMap. 
+To modify the server's compatibility map, first modify a local copy of the Xkb
+compatibility map, then call
+.I XkbSetCompatMap.
 You may allocate a new compatibility map for this purpose using
-.I XkbAllocCompatMap. 
-You may also use a compatibility map from another server, although you need to 
-adjust the 
-.I device_spec 
-field in the XkbDescRec accordingly. Note that symbol interpretations in a 
+.I XkbAllocCompatMap.
+You may also use a compatibility map from another server, although you need to
+adjust the
+.I device_spec
+field in the XkbDescRec accordingly. Note that symbol interpretations in a
 compatibility map (
-.IR sym_interpret  , 
-the vector of XkbSymInterpretRec structures) are also allocated using this same 
+.IR sym_interpret  ,
+the vector of XkbSymInterpretRec structures) are also allocated using this same
 function.
-.I XkbSetCompatMap 
-copies compatibility map information from the keyboard description in 
-.I xkb 
-to the server specified in 
-.I display's 
-compatibility map for the device specified by the 
-.I device_spec 
-field of 
-.IR xkb . 
-Unless you have specifically modified this field, it is the default keyboard 
-device. 
-.I which 
-specifies the compatibility map components to be set, and is an inclusive OR of 
+.I XkbSetCompatMap
+copies compatibility map information from the keyboard description in
+.I xkb
+to the server specified in
+.I display's
+compatibility map for the device specified by the
+.I device_spec
+field of
+.IR xkb .
+Unless you have specifically modified this field, it is the default keyboard
+device.
+.I which
+specifies the compatibility map components to be set, and is an inclusive OR of
 the bits shown in Table 1.
 
 .TS
@@ -87,41 +87,41 @@ XkbGroupCompatMask	(1<<1)	Group maps
 XkbAllCompatMask	(0x3)	All compatibility map components
 .TE
 
-After updating its compatibility map for the specified device, if 
-.I update_actions 
-is True, the server applies the new compatibility map to its entire keyboard for 
-the device to generate a new set of key semantics, compatibility state, and a 
-new core keyboard map. If 
-.I update_actions 
-is False, the new compatibility map is not used to generate any modifications to 
-the current device semantics, state, or core keyboard map. One reason for not 
-applying the compatibility map immediately would be if one server was being 
-configured to match another on a piecemeal basis; the map should not be applied 
+After updating its compatibility map for the specified device, if
+.I update_actions
+is True, the server applies the new compatibility map to its entire keyboard for
+the device to generate a new set of key semantics, compatibility state, and a
+new core keyboard map. If
+.I update_actions
+is False, the new compatibility map is not used to generate any modifications to
+the current device semantics, state, or core keyboard map. One reason for not
+applying the compatibility map immediately would be if one server was being
+configured to match another on a piecemeal basis; the map should not be applied
 until everything is updated. To force an update at a later time, use
-.I XkbSetCompatMap 
-specifying 
-.I which 
-as zero and 
-.I update_actions 
-as True. 
-.I XkbSetCompatMap 
-returns True if successful and False if unsuccessful. The server may report 
-problems it encounters when processing the request subsequently via protocol 
+.I XkbSetCompatMap
+specifying
+.I which
+as zero and
+.I update_actions
+as True.
+.I XkbSetCompatMap
+returns True if successful and False if unsuccessful. The server may report
+problems it encounters when processing the request subsequently via protocol
 errors.
 .SH "RETURN VALUES"
 .TP 15
 True
-The 
-.I XkbSetCompatMap 
+The
+.I XkbSetCompatMap
 function returns True if successful.
 .TP 15
 False
-The 
-.I XkbSetCompatMap 
+The
+.I XkbSetCompatMap
 function returns False if unsuccessful.
 .SH STRUCTURES
-The complete description of an Xkb keyboard is given by an XkbDescRec. The 
-component 
+The complete description of an Xkb keyboard is given by an XkbDescRec. The
+component
 structures in the XkbDescRec represent the major Xkb components.
 
 .nf
@@ -142,25 +142,25 @@ typedef struct {
 
 .fi
 
-The 
-.I display 
-field points to an X display structure. The 
-.I flags 
-field is private to the library: modifying 
-.I flags 
-may yield unpredictable results. The 
-.I device_spec 
-field specifies the device identifier of the keyboard input device, or 
-XkbUseCoreKeyboard, which specifies the core keyboard device. The 
+The
+.I display
+field points to an X display structure. The
+.I flags
+field is private to the library: modifying
+.I flags
+may yield unpredictable results. The
+.I device_spec
+field specifies the device identifier of the keyboard input device, or
+XkbUseCoreKeyboard, which specifies the core keyboard device. The
 .I min_key_code
-and 
-.I max_key_code 
-fields specify the least and greatest keycode that can be returned by the 
-keyboard. 
+and
+.I max_key_code
+fields specify the least and greatest keycode that can be returned by the
+keyboard.
 
-Each structure component has a corresponding mask bit that is used in function 
-calls to indicate that the structure should be manipulated in some manner, such as 
-allocating it or freeing it. These masks and their relationships to the fields in the 
+Each structure component has a corresponding mask bit that is used in function
+calls to indicate that the structure should be manipulated in some manner, such as
+allocating it or freeing it. These masks and their relationships to the fields in the
 XkbDescRec are shown in Table 2.
 
 .TS
@@ -183,7 +183,7 @@ XkbAllComponentsMask	All Fields	(0x7f)
 
 The XkbSymInterpretRec structure specifies a symbol interpretation:
 .EX
- 
+
     typedef struct {
         KeySym        sym;         /\&* keysym of interest or NULL */
         unsigned char flags;       /\&* XkbSI_AutoRepeat, XkbSI_LockingKey */
@@ -192,7 +192,7 @@ The XkbSymInterpretRec structure specifies a symbol interpretation:
         unsigned char virtual_mod; /\&* 1 modifier to add to key virtual mod map */
         XkbAnyAction  act;         /\&* action to bind to symbol position on key */
     } XkbSymInterpretRec,*XkbSymInterpretPtr;
-.EN    
+.EN
 
 .SH "SEE ALSO"
 .BR XkbAllocCompatMap (__libmansuffix__)

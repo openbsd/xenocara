@@ -21,7 +21,7 @@
 .\"
 .TH XkbGetNamedIndicator __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetNamedIndicator \- Look up the indicator map and other information for an 
+XkbGetNamedIndicator \- Look up the indicator map and other information for an
 indicator by name
 .SH SYNOPSIS
 .HP
@@ -48,7 +48,7 @@ indicator by name
 .SH ARGUMENTS
 .TP
 .I dpy
-connection to the X server 
+connection to the X server
 .TP
 .I dev_spec
 keyboard device ID, or XkbUseCoreKbd
@@ -69,41 +69,41 @@ backfilled with the index of the retrieved indicator
 backfilled with the current state of the retrieved indicator
 .TP
 .I map_rtrn
-backfilled with the mapping for the retrieved indicator 
+backfilled with the mapping for the retrieved indicator
 .TP
 .I real_rtrn
 backfilled with True if the named indicator is real (physical)
 .SH DESCRIPTION
 .LP
-Xkb also allows applications to refer to indicators by name. Use 
-.I XkbGetNames 
-to get the indicator names. Using names eliminates the need for hard-coding 
-bitmask values for particular keyboards. For example, instead of using 
-vendor-specific constants such as WSKBLed_ScrollLock mask on Digital 
+Xkb also allows applications to refer to indicators by name. Use
+.I XkbGetNames
+to get the indicator names. Using names eliminates the need for hard-coding
+bitmask values for particular keyboards. For example, instead of using
+vendor-specific constants such as WSKBLed_ScrollLock mask on Digital
 workstations or XLED_SCROLL_LOCK on Sun workstations, you can instead use
 .I XkbGetNamedDeviceIndicator
-to look up information on the indicator named "Scroll Lock." 
+to look up information on the indicator named "Scroll Lock."
 
-If the device specified by 
-.I device_spec 
-has an indicator named 
+If the device specified by
+.I device_spec
+has an indicator named
 .IR name ", " XkbGetNamedDeviceIndicator
-returns True and populates the rest of the parameters with information about the 
-indicator. Otherwise, 
+returns True and populates the rest of the parameters with information about the
+indicator. Otherwise,
 .I XkbGetNamedDeviceIndicator
 returns False.
 
-The 
-.I ndx_rtrn 
-field returns the zero-based index of the named indicator. This index is the bit 
-position to use in any function call that requires a mask of indicator bits, as 
-well as the indicator's index into the XkbIndicatorRec array of indicator maps. 
-.I state_rtrn 
-returns the current state of the named indicator (True = on, False = off). 
-.I map_rtrn 
-returns the indicator map for the named indicator. In addition, if the indicator 
-is mapped to a physical LED, the 
-.I real_rtrn 
+The
+.I ndx_rtrn
+field returns the zero-based index of the named indicator. This index is the bit
+position to use in any function call that requires a mask of indicator bits, as
+well as the indicator's index into the XkbIndicatorRec array of indicator maps.
+.I state_rtrn
+returns the current state of the named indicator (True = on, False = off).
+.I map_rtrn
+returns the indicator map for the named indicator. In addition, if the indicator
+is mapped to a physical LED, the
+.I real_rtrn
 parameter is set to True.
 
 Each of the "
@@ -134,19 +134,19 @@ It returns the return value from
 .SH "RETURN VALUES"
 .TP 15
 True
-The 
+The
 .IR XkbGetNamedIndicator " and " XkbGetNamedDeviceIndicator
 functions return True if the device specified by
-.I device_spec 
-has an indicator named 
+.I device_spec
+has an indicator named
 .IR name .
 .TP 15
 False
-The 
+The
 .IR XkbGetNamedIndicator " and " XkbGetNamedDeviceIndicator
 functions return False if the device specified by
-.I device_spec 
-does not have an indicator named 
+.I device_spec
+does not have an indicator named
 .IR name .
 .SH "SEE ALSO"
 .BR XkbGetNames (__libmansuffix__)

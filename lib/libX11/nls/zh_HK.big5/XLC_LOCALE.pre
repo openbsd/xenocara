@@ -1,11 +1,11 @@
-XCOMM 
+XCOMM
 XCOMM  (c) 1996, X11R6 L10N for Taiwan and Big5 Encoding Project
-XCOMM 
+XCOMM
 XCOMM  modified for X11R6.3 by Hung-Chi Chu <hcchu@r350.ee.ntu.edu.tw> 1998/01/10
-XCOMM 
+XCOMM
 XCOMM 	XLC_FONTSET category
 XCOMM
-XCOMM 
+XCOMM
 XLC_FONTSET
 XCOMM        fs0 class (7 bit ASCII)
 fs0     {
@@ -29,9 +29,9 @@ fs1     {
 }
 END XLC_FONTSET
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_XLOCALE category
-XCOMM 
+XCOMM
 XLC_XLOCALE
 
 encoding_name		zh_HK.Big5

@@ -38,29 +38,29 @@ geometry for which properties should be allocated
 number of new properties required
 .SH DESCRIPTION
 .LP
-Xkb provides a number of functions to allocate and free subcomponents of a 
-keyboard geometry. Use these functions to create or modify keyboard geometries. 
-Note that these functions merely allocate space for the new element(s), and it 
-is up to you to fill in the values explicitly in your code. These allocation 
-functions increase 
-.I sz_* 
-but never touch 
-.I num_* 
-(unless there is an allocation failure, in which case they reset both 
-.I sz_* 
-and 
-.I num_* 
-to zero). These functions return Success if they succeed, BadAlloc if they are 
+Xkb provides a number of functions to allocate and free subcomponents of a
+keyboard geometry. Use these functions to create or modify keyboard geometries.
+Note that these functions merely allocate space for the new element(s), and it
+is up to you to fill in the values explicitly in your code. These allocation
+functions increase
+.I sz_*
+but never touch
+.I num_*
+(unless there is an allocation failure, in which case they reset both
+.I sz_*
+and
+.I num_*
+to zero). These functions return Success if they succeed, BadAlloc if they are
 not able to allocate space, or BadValue if a parameter is not as expected.
 
-.I XkbAllocGeomProps 
-allocates space for 
-.I num_needed 
-properties and adds them to the specified geometry 
-.I geom. 
-No initialization of the properties is done. A geometry property associates an 
-arbitrary string with an equally arbitrary name. Geometry properties can be used 
-to provide hints to programs that display images of keyboards, but they are not 
+.I XkbAllocGeomProps
+allocates space for
+.I num_needed
+properties and adds them to the specified geometry
+.I geom.
+No initialization of the properties is done. A geometry property associates an
+arbitrary string with an equally arbitrary name. Geometry properties can be used
+to provide hints to programs that display images of keyboards, but they are not
 interpreted by Xkb. No other geometry structures refer to geometry properties.
 .SH DIAGNOSTICS
 .TP 15

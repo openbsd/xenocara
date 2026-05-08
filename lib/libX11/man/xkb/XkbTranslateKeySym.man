@@ -21,7 +21,7 @@
 .\"
 .TH XkbTranslateKeySym __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbTranslateKeySym \- Find the string and symbol associated with a keysym for a 
+XkbTranslateKeySym \- Find the string and symbol associated with a keysym for a
 given keyboard state
 .SH SYNOPSIS
 .HP
@@ -43,10 +43,10 @@ connection to X server
 symbol to be translated; result of translation
 .TP
 .I mods
-modifiers to apply to sym_inout 
+modifiers to apply to sym_inout
 .TP
 .I buf
-buffer into which returned string is written 
+buffer into which returned string is written
 .TP
 .I nbytes
 size of buffer in bytes
@@ -55,23 +55,23 @@ size of buffer in bytes
 number of bytes overflow
 .SH DESCRIPTION
 .LP
-.I XkbTranslateKeySym 
-applies the transformations specified in 
-.I mods 
-to the symbol specified by 
-.I sym_inout. 
-It returns in 
-.I buf 
-the string, if any, associated with the keysym for the current locale. If the 
-transformations in 
-.I mods 
-changes the keysym, 
-.I sym_inout 
-is updated accordingly. If the string returned is larger than 
+.I XkbTranslateKeySym
+applies the transformations specified in
+.I mods
+to the symbol specified by
+.I sym_inout.
+It returns in
+.I buf
+the string, if any, associated with the keysym for the current locale. If the
+transformations in
+.I mods
+changes the keysym,
+.I sym_inout
+is updated accordingly. If the string returned is larger than
 .I nbytes,
-a count of bytes that does not fit into the buffer is returned in 
-.I extra_rtrn. XkbTranslateKeySym 
-returns the number of bytes it placed into 
+a count of bytes that does not fit into the buffer is returned in
+.I extra_rtrn. XkbTranslateKeySym
+returns the number of bytes it placed into
 .I buf.
 .SH "RETURN VALUES"
 .TP 15

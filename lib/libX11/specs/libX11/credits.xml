@@ -8,11 +8,11 @@ The design and implementation of the first 10 versions of X
 were primarily the work of three individuals: Robert Scheifler of the
 MIT Laboratory for Computer Science and Jim Gettys of Digital
 Equipment Corporation and Ron Newman of MIT, both at MIT
-Project Athena. 
-X version 11, however, is the result of the efforts of 
+Project Athena.
+X version 11, however, is the result of the efforts of
 dozens of individuals at almost as many locations and organizations.
-At the risk of offending some of the players by exclusion, 
-we would like to acknowledge some of the people who deserve special credit 
+At the risk of offending some of the players by exclusion,
+we would like to acknowledge some of the people who deserve special credit
 and recognition for their work on Xlib.
 Our apologies to anyone inadvertently overlooked.
 </para>
@@ -24,25 +24,25 @@ who contributed substantially to the
 design and implementation of the Version 11 Xlib interface.
 </para>
 <para>
-Our thanks also goes to Ralph Swick (Project Athena and Digital) who kept 
+Our thanks also goes to Ralph Swick (Project Athena and Digital) who kept
 it all together for us during the early releases.
 He handled literally thousands of requests from people everywhere
 and saved the sanity of at least one of us.
 His calm good cheer was a foundation on which we could build.
 </para>
 <para>
-Our thanks also goes to Todd Brunhoff (Tektronix) who was ``loaned'' 
-to Project Athena at exactly the right moment to provide very capable 
+Our thanks also goes to Todd Brunhoff (Tektronix) who was ``loaned''
+to Project Athena at exactly the right moment to provide very capable
 and much-needed assistance during the alpha and beta releases.
 He was responsible for the successful integration of sources
 from multiple sites;
 we would not have had a release without him.
 </para>
 <para>
-Our thanks also goes to Al Mento and Al Wojtas of Digital's ULTRIX 
+Our thanks also goes to Al Mento and Al Wojtas of Digital's ULTRIX
 Documentation Group.
 With good humor and cheer,
-they took a rough draft and made it an infinitely better and more useful 
+they took a rough draft and made it an infinitely better and more useful
 document.
 The work they have done will help many everywhere.
 We also would like to thank Hal Murray (Digital SRC) and
@@ -50,13 +50,13 @@ Peter George (Digital VMS) who contributed much
 by proofreading the early drafts of this document.
 </para>
 <para>
-Our thanks also goes to Jeff Dike (Digital UEG), Tom Benson, 
-Jackie Granfield, and Vince Orgovan (Digital VMS) who helped with the 
+Our thanks also goes to Jeff Dike (Digital UEG), Tom Benson,
+Jackie Granfield, and Vince Orgovan (Digital VMS) who helped with the
 library utilities implementation;
 to Hania Gajewska (Digital UEG-WSL) who,
 along with Ellis Cohen (CMU and Siemens),
 was instrumental in the semantic design of the window manager properties;
-and to Dave Rosenthal (Sun Microsystems) who also contributed to the protocol 
+and to Dave Rosenthal (Sun Microsystems) who also contributed to the protocol
 and provided the sample generic color frame buffer device-dependent code.
 </para>
 <para>
@@ -65,24 +65,24 @@ as well.
 It is significant
 that the bug reports (and many fixes) during alpha and beta test came almost
 exclusively from just a few of the alpha testers, mostly hardware vendors
-working on product implementations of X.  
+working on product implementations of X.
 The continued public
-contribution of vendors and universities is certainly to the benefit 
+contribution of vendors and universities is certainly to the benefit
 of the entire X community.
 </para>
 <para>
 Our special thanks must go to Sam Fuller, Vice-President of Corporate
-Research at Digital, who has remained committed to the widest public 
+Research at Digital, who has remained committed to the widest public
 availability of X and who made it possible to greatly supplement MIT's
 resources with the Digital staff in order to make version 11 a reality.
 Many of the people mentioned here are part of the Western
 Software Laboratory (Digital UEG-WSL) of the ULTRIX Engineering group
-and work for Smokey Wallace, who has been vital to the project's success. 
-Others not mentioned here worked on the toolkit and are acknowledged 
+and work for Smokey Wallace, who has been vital to the project's success.
+Others not mentioned here worked on the toolkit and are acknowledged
 in the X Toolkit documentation.
 </para>
 <para>
-Of course, 
+Of course,
 we must particularly thank Paul Asente, formerly of Stanford University
 and now of Digital UEG-WSL, who wrote W, the predecessor to X,
 and Brian Reid, formerly of Stanford University and now of Digital WRL,
@@ -137,8 +137,8 @@ Shoji Sugiyama (IBM), and Eiji Tosa (IBM).
 We are deeply indebted to Tatsuya Kato (NTT),
 Hiroshi Kuribayashi (OMRON), Seiji Kuwari (OMRON), Muneiyoshi Suzuki (NTT),
 and Li Yuhong (OMRON) for producing one of the first complete
-sample implementation of the internationalization facilities, and 
-Hiromu Inukai (Nihon Sun), Takashi Fujiwara (Fujitsu), Hideki Hiura (Sun), 
+sample implementation of the internationalization facilities, and
+Hiromu Inukai (Nihon Sun), Takashi Fujiwara (Fujitsu), Hideki Hiura (Sun),
 Yasuhiro Kawai (Oki Technosystems Laboratory), Kazunori Nishihara (Fuji Xerox),
 Masaki Takeuchi (Sony), Katsuhisa Yano (Toshiba),
 Makoto Wakamatsu (Sony Corporation) for producing the another complete
@@ -147,7 +147,7 @@ sample implementation of the internationalization facilities.
 <para>
 The principal authors (design and implementation) of the Xcms color
 management facilities are Al Tabayoyon (Tektronix)
-and Chuck Adams (Tektronix).  
+and Chuck Adams (Tektronix).
 Joann Taylor (Tektronix), Bob Toole (Tektronix),
 and Keith Packard (MIT X Consortium) also
 contributed significantly to the design.  Others who contributed are:
@@ -186,19 +186,19 @@ Makoto Wakamatsu (Sony), Masaki Wakao (IBM), Katsuhisa Yano(Toshiba) and
 Jinsoo Yoon (KAIST).
 </para>
 <para>
-The principal producers of the sample implementation of the 
-internationalization facilities are: 
+The principal producers of the sample implementation of the
+internationalization facilities are:
 Jeffrey Bloomfield (Fujitsu OSSI), Takashi Fujiwara (Fujitsu),
-Hideki Hiura (SunSoft), Yoshio Horiuchi (IBM), 
-Makoto Inada (Digital), Hiromu Inukai (Nihon SunSoft), 
-Song JaeKyung (KAIST), Riki Kawaguchi (Fujitsu), 
-Franky Ling (Digital), Hiroyuki Miyamoto (Digital), 
-Hidetoshi Tajima (HP), Toshimitsu Terazono (Fujitsu), 
-Makoto Wakamatsu (Sony), Masaki Wakao (IBM), 
+Hideki Hiura (SunSoft), Yoshio Horiuchi (IBM),
+Makoto Inada (Digital), Hiromu Inukai (Nihon SunSoft),
+Song JaeKyung (KAIST), Riki Kawaguchi (Fujitsu),
+Franky Ling (Digital), Hiroyuki Miyamoto (Digital),
+Hidetoshi Tajima (HP), Toshimitsu Terazono (Fujitsu),
+Makoto Wakamatsu (Sony), Masaki Wakao (IBM),
 Shigeru Yamada (Fujitsu OSSI) and Katsuhisa Yano (Toshiba).
 </para>
 <para>
-The coordinators of the integration, testing, and release of this 
+The coordinators of the integration, testing, and release of this
 implementation of the internationalization facilities are
 Nobuyuki Tanaka (Sony) and Makoto Wakamatsu (Sony).
 </para>
@@ -207,8 +207,8 @@ Others who have contributed to the architectural design or
 testing of the sample implementation of the
 internationalization facilities are:
 Hector Chan (Digital), Michael Kung (IBM), Joseph Kwok (Digital),
-Hiroyuki Machida (Sony), Nelson Ng (SunSoft), Frank Rojas (IBM), 
-Yoshiyuki Segawa (Fujitsu OSSI), Makiko Shimamura (Fujitsu), 
+Hiroyuki Machida (Sony), Nelson Ng (SunSoft), Frank Rojas (IBM),
+Yoshiyuki Segawa (Fujitsu OSSI), Makiko Shimamura (Fujitsu),
 Shoji Sugiyama (IBM), Lining Sun (SGI), Masaki Takeuchi (Sony),
 Jinsoo Yoon (KAIST) and Akiyasu Zen (HP).
 </para>

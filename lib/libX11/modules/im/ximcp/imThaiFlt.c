@@ -81,7 +81,7 @@ SOFTWARE.
 
 /* character classification table */
 #define TACTIS_CHARS 256
-static 
+static
 char const tactis_chtype[TACTIS_CHARS] = {
     CTRL, CTRL, CTRL, CTRL, CTRL, CTRL, CTRL, CTRL,  /*  0 -  7 */
     CTRL, CTRL, CTRL, CTRL, CTRL, CTRL, CTRL, CTRL,  /*  8 - 15 */
@@ -127,7 +127,7 @@ char const tactis_chtype[TACTIS_CHARS] = {
 
 #define CH_CLASSES      17  /* 17 classes of chars */
 
-static 
+static
 char const write_rules_lookup[CH_CLASSES][CH_CLASSES] = {
         /* Table 0: writing/outputting rules */
         /* row: leading char,  column: following char */
@@ -151,7 +151,7 @@ char const write_rules_lookup[CH_CLASSES][CH_CLASSES] = {
   ,{XC, NC, NC, NC, NC, NC, NC, NC, NC, NC, CP, NC, CP, NC, NC, NC, NC}/*AV3*/
 };
 
-static 
+static
 char const wtt_isc1_lookup[CH_CLASSES][CH_CLASSES] = {
       /* Table 1: WTT default input sequence check rules */
       /* row: leading char,  column: following char */
@@ -175,7 +175,7 @@ char const wtt_isc1_lookup[CH_CLASSES][CH_CLASSES] = {
   ,{XC, AC, AC, AC, AC, AC, AC, RJ, RJ, RJ, CP, RJ, CP, RJ, RJ, RJ, RJ}/*AV3*/
 };
 
-static 
+static
 char const wtt_isc2_lookup[CH_CLASSES][CH_CLASSES] = {
       /* Table 2: WTT strict input sequence check rules */
       /* row: leading char,  column: following char */
@@ -199,7 +199,7 @@ char const wtt_isc2_lookup[CH_CLASSES][CH_CLASSES] = {
   ,{XC, AC, AC, AC, RJ, RJ, AC, RJ, RJ, RJ, CP, RJ, CP, RJ, RJ, RJ, RJ}/*AV3*/
 };
 
-static 
+static
 char const thaicat_isc_lookup[CH_CLASSES][CH_CLASSES] = {
       /* Table 3: Thaicat input sequence check rules */
       /* row: leading char,  column: following char */
@@ -1018,7 +1018,7 @@ ComputeMaskFromKeytrans(
 #define FIRST_COMPOSE_KEY_STATE 1
 #define SECOND_COMPOSE_KEY_STATE 2
 
-static 
+static
 KeySym HexIMNormalKey(
     XicThaiPart *thai_part,
     KeySym symbol,
@@ -1034,7 +1034,7 @@ KeySym HexIMNormalKey(
 }
 
 
-static 
+static
 KeySym HexIMFirstComposeKey(
     XicThaiPart *thai_part,
     KeySym symbol,
@@ -1057,7 +1057,7 @@ KeySym HexIMFirstComposeKey(
     return NoSymbol;
 }
 
-static 
+static
 KeySym HexIMSecondComposeKey(
     XicThaiPart *thai_part,
     KeySym symbol,
@@ -1092,7 +1092,7 @@ KeySym HexIMSecondComposeKey(
  * The current implementation of this routine returns ISO Latin Keysyms.
  */
 
-static 
+static
 KeySym HexIMComposeSequence(KeySym ks1, KeySym ks2)
 {
 int	hi_digit;
@@ -1129,7 +1129,7 @@ int	tactis_code;
  *	2) whether cancelling key event should be processed or ignored
  */
 
-static 
+static
 int IsCancelComposeKey(
     KeySym *symbol,
     XKeyEvent *event)
@@ -1161,7 +1161,7 @@ int IsCancelComposeKey(
  *	set specified keyboard LED on or off
  */
 
-static 
+static
 void SetLed(
     Display *dpy,
     int num,

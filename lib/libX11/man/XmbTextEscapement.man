@@ -95,6 +95,6 @@ Its presence is
 indicated by the macro
 .BR X_HAVE_UTF8_STRING .
 .SH "SEE ALSO"
-XmbTextExtents(__libmansuffix__),
-XmbTextPerCharExtents(__libmansuffix__)
+.BR XmbTextExtents (__libmansuffix__),
+.BR XmbTextPerCharExtents (__libmansuffix__)
 \fI\*(xL\fP

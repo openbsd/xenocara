@@ -200,7 +200,7 @@ Set_Error :
 
     Xfree(ic->private.local.ic_resources);
      ic->private.local.ic_resources = NULL;
-     
+
     Xfree(ic);
     return((XIC)NULL);
 }

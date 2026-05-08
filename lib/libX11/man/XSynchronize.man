@@ -80,6 +80,6 @@ The specified procedure is called with only a display pointer.
 .B XSetAfterFunction
 returns the previous after function.
 .SH "SEE ALSO"
-XSetErrorHandler(__libmansuffix__)
+.BR XSetErrorHandler (__libmansuffix__)
 .br
 \fI\*(xL\fP

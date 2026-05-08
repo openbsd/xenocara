@@ -90,8 +90,8 @@ appending a given character to a string may change
 the string's extent by an amount other than that character's
 individual extent.
 .SH "SEE ALSO"
-XCreateFontSet(__libmansuffix__),
-XExtentsOfFontSet(__libmansuffix__),
-XFontsOfFontSet(__libmansuffix__)
+.BR XCreateFontSet (__libmansuffix__),
+.BR XExtentsOfFontSet (__libmansuffix__),
+.BR XFontsOfFontSet (__libmansuffix__)
 .br
 \fI\*(xL\fP

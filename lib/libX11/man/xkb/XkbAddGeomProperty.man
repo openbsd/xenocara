@@ -21,7 +21,7 @@
 .\"
 .TH XkbAddGeomProperty __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbAddGeomProperty \- Add one property to an existing keyboard geometry 
+XkbAddGeomProperty \- Add one property to an existing keyboard geometry
 description
 .SH SYNOPSIS
 .HP
@@ -43,34 +43,34 @@ name of the new property
 value for the new property
 .SH DESCRIPTION
 .LP
-Xkb provides functions to add a single new element to the top-level keyboard 
-geometry. In each case the 
-.I num_ * 
-fields of the corresponding structure is incremented by 1. These functions do 
-not change 
-.I sz_* 
-unless there is no more room in the array. Some of these functions fill in the 
-values of the element's structure from the arguments. For other functions, you 
+Xkb provides functions to add a single new element to the top-level keyboard
+geometry. In each case the
+.I num_ *
+fields of the corresponding structure is incremented by 1. These functions do
+not change
+.I sz_*
+unless there is no more room in the array. Some of these functions fill in the
+values of the element's structure from the arguments. For other functions, you
 must explicitly write code to fill the structure's elements.
 
-The top-level geometry description includes a list of 
-.I geometry properties. 
-A geometry property associates an arbitrary string with an equally arbitrary 
-name. Programs that display images of keyboards can use geometry properties as 
-hints, but they are not interpreted by Xkb. No other geometry structures refer 
+The top-level geometry description includes a list of
+.I geometry properties.
+A geometry property associates an arbitrary string with an equally arbitrary
+name. Programs that display images of keyboards can use geometry properties as
+hints, but they are not interpreted by Xkb. No other geometry structures refer
 to geometry properties.
 
-.I XkbAddGeomProperty 
-adds one property with the specified 
-.I name 
-and 
-.I value 
-to the keyboard geometry specified by 
-.I geom. XkbAddGeomProperty 
-returns NULL if any of the parameters is empty or if it was not able to allocate 
-space for the property. To allocate space for an arbitrary number of properties, 
-use the 
-.I XkbAllocGeomProps 
+.I XkbAddGeomProperty
+adds one property with the specified
+.I name
+and
+.I value
+to the keyboard geometry specified by
+.I geom. XkbAddGeomProperty
+returns NULL if any of the parameters is empty or if it was not able to allocate
+space for the property. To allocate space for an arbitrary number of properties,
+use the
+.I XkbAllocGeomProps
 function.
 .SH STRUCTURES
 .LP

@@ -135,13 +135,13 @@ to match in some other way required by the request.
 .B BadPixmap
 A value for a Pixmap argument does not name a defined Pixmap.
 .SH "SEE ALSO"
-XCreateGC(__libmansuffix__),
-XQueryBestSize(__libmansuffix__),
-XSetArcMode(__libmansuffix__),
-XSetClipOrigin(__libmansuffix__),
-XSetFillStyle(__libmansuffix__),
-XSetFont(__libmansuffix__),
-XSetLineAttributes(__libmansuffix__),
-XSetState(__libmansuffix__)
+.BR XCreateGC (__libmansuffix__),
+.BR XQueryBestSize (__libmansuffix__),
+.BR XSetArcMode (__libmansuffix__),
+.BR XSetClipOrigin (__libmansuffix__),
+.BR XSetFillStyle (__libmansuffix__),
+.BR XSetFont (__libmansuffix__),
+.BR XSetLineAttributes (__libmansuffix__),
+.BR XSetState (__libmansuffix__)
 .br
 \fI\*(xL\fP

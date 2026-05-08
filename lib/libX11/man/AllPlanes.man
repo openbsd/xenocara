@@ -277,9 +277,9 @@ The
 .B VendorRelease
 macro returns a number related to a vendor's release of the X server.
 .SH "SEE ALSO"
-BlackPixelOfScreen(__libmansuffix__),
-ImageByteOrder(__libmansuffix__),
-IsCursorKey(__libmansuffix__),
-XOpenDisplay(__libmansuffix__)
+.BR BlackPixelOfScreen (__libmansuffix__),
+.BR ImageByteOrder (__libmansuffix__),
+.BR IsCursorKey (__libmansuffix__),
+.BR XOpenDisplay (__libmansuffix__)
 .br
 \fI\*(xL\fP

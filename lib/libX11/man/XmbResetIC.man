@@ -110,9 +110,9 @@ Its presence is
 indicated by the macro
 .BR X_HAVE_UTF8_STRING .
 .SH "SEE ALSO"
-XCreateIC(__libmansuffix__),
-XOpenIM(__libmansuffix__),
-XSetICFocus(__libmansuffix__),
-XSetICValues(__libmansuffix__)
+.BR XCreateIC (__libmansuffix__),
+.BR XOpenIM (__libmansuffix__),
+.BR XSetICFocus (__libmansuffix__),
+.BR XSetICValues (__libmansuffix__)
 .br
 \fI\*(xL\fP

@@ -2228,7 +2228,7 @@ iconv_mbstowcs(XlcConv conv, XPointer *from, int *from_left,
             /* null ? */
             src++;
             src_left--;
-            if (dst) 
+            if (dst)
                 *dst++ = L'\0';
             dst_left--;
         }
@@ -2265,20 +2265,20 @@ iconv_wcstombs(XlcConv conv, XPointer *from, int *from_left,
     int dst_left = *to_left;
     int length, unconv_num = 0;
 
-    while (src_left > 0 && dst_left >= MB_CUR_MAX) { 
+    while (src_left > 0 && dst_left >= MB_CUR_MAX) {
 	length = wctomb(dst, *src);		/* XXX */
 
         if (length > 0) {
 	    src++;
 	    src_left--;
-	    if (dst) 
+	    if (dst)
 		dst += length;
 	    dst_left -= length;
 	} else if (length < 0) {
 	    src++;
 	    src_left--;
 	    unconv_num++;
-	} 
+	}
     }
 
     *from = (XPointer) src;

@@ -22,7 +22,7 @@
 .\"
 .TH XkbFreeComponentList __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbFreeComponentList \- Free the structure returned by 
+XkbFreeComponentList \- Free the structure returned by
 .I XkbListComponents
 .SH SYNOPSIS
 .HP
@@ -36,9 +36,9 @@ XkbFreeComponentList \- Free the structure returned by
 pointer to XkbComponentListRec to free
 .SH DESCRIPTION
 .LP
-When you are done using the structure returned by 
-.I XkbListComponents, 
-free it using 
+When you are done using the structure returned by
+.I XkbListComponents,
+free it using
 .I XkbFreeComponentList.
 .SH "SEE ALSO"
 .BR XkbListComponents (__libmansuffix__)

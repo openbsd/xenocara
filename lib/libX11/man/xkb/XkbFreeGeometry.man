@@ -36,33 +36,33 @@ XkbFreeGeometry \- Free an entire geometry
 geometry to be freed
 .TP
 .I which
-mask of geometry components to be freed 
+mask of geometry components to be freed
 .TP
 .I free_all
 True => the entire geometry is freed
 .SH DESCRIPTION
 .LP
-Xkb provides a number of functions to allocate and free subcomponents of a 
-keyboard geometry. Use these functions to create or modify keyboard geometries. 
-Note that these functions merely allocate space for the new element(s), and it 
-is up to you to fill in the values explicitly in your code. These allocation 
-functions increase 
-.I sz_* 
-but never touch 
-.I num_* 
-(unless there is an allocation failure, in which case they reset both 
-.I sz_* 
-and 
-.I num_* 
-to zero). These functions return Success if they succeed, BadAlloc if they are 
+Xkb provides a number of functions to allocate and free subcomponents of a
+keyboard geometry. Use these functions to create or modify keyboard geometries.
+Note that these functions merely allocate space for the new element(s), and it
+is up to you to fill in the values explicitly in your code. These allocation
+functions increase
+.I sz_*
+but never touch
+.I num_*
+(unless there is an allocation failure, in which case they reset both
+.I sz_*
+and
+.I num_*
+to zero). These functions return Success if they succeed, BadAlloc if they are
 not able to allocate space, or BadValue if a parameter is not as expected.
 
-The values of 
-.I which 
-and 
-.I free_all 
+The values of
+.I which
+and
+.I free_all
 determine how much of the specified geometry is freed. The valid values for
-.I which 
+.I which
 are:
 
 .nf
@@ -73,14 +73,14 @@ are:
     #define   XkbGeomDoodadsMask         (1<<4)
     #define   XkbGeomKeyAliasesMask      (1<<5)
     #define   XkbGeomAllMask             (0x3f)
-    
-.fi    
-If 
-.I free_all 
-is True, the entire geometry is freed regardless of the value of 
-.I which. 
-Otherwise, the portions of the geometry specified by 
-.I which 
+
+.fi
+If
+.I free_all
+is True, the entire geometry is freed regardless of the value of
+.I which.
+Otherwise, the portions of the geometry specified by
+.I which
 are freed.
 .SH DIAGNOSTICS
 .TP 15

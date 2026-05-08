@@ -101,7 +101,7 @@ A value for a Cursor argument does not name a defined Cursor.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XCreateFontCursor(__libmansuffix__),
-XRecolorCursor(__libmansuffix__)
+.BR XCreateFontCursor (__libmansuffix__),
+.BR XRecolorCursor (__libmansuffix__)
 .br
 \fI\*(xL\fP

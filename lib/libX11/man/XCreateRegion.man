@@ -79,7 +79,7 @@ The
 .B XDestroyRegion
 function deallocates the storage associated with a specified region.
 .SH "SEE ALSO"
-XEmptyRegion(__libmansuffix__),
-XIntersectRegion(__libmansuffix__)
+.BR XEmptyRegion (__libmansuffix__),
+.BR XIntersectRegion (__libmansuffix__)
 .br
 \fI\*(xL\fP

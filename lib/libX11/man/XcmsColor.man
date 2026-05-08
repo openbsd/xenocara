@@ -162,8 +162,8 @@ The
 structure contains a union of substructures,
 each supporting color specification encoding for a particular color space.
 .SH "SEE ALSO"
-XcmsAllocColor(__libmansuffix__),
-XcmsStoreColor(__libmansuffix__),
-XcmsConvertColors(__libmansuffix__),
+.BR XcmsAllocColor (__libmansuffix__),
+.BR XcmsStoreColor (__libmansuffix__),
+.BR XcmsConvertColors (__libmansuffix__),
 .LP
 \fI\*(xL\fP

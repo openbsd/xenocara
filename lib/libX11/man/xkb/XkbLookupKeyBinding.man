@@ -54,29 +54,29 @@ size of buffer in bytes
 backfilled with number bytes overflow
 .SH DESCRIPTION
 .LP
-.I XkbLookupKeyBinding 
-is the equivalent of the core 
-.I XLookupString 
+.I XkbLookupKeyBinding
+is the equivalent of the core
+.I XLookupString
 function.
 
-.I XRebindKeysym 
-binds an ASCII string to a specified keysym, so that the string and keysym are 
-returned when the key is pressed and a specified list of modifiers are also 
-being held down. 
-.I XkbLookupKeyBinding 
-returns in 
-.I buf 
-the string associated with the keysym 
-.I sym 
-and modifier state 
-.I state. buf 
-is NULL terminated unless there's an overflow. If the string returned is larger 
-than 
-.I nbytes, 
-a count of bytes that does not fit into the buffer is returned in 
-.I extra_rtrn. 
-.I XkbTranslateKeySym 
-returns the number of bytes that it placed into 
+.I XRebindKeysym
+binds an ASCII string to a specified keysym, so that the string and keysym are
+returned when the key is pressed and a specified list of modifiers are also
+being held down.
+.I XkbLookupKeyBinding
+returns in
+.I buf
+the string associated with the keysym
+.I sym
+and modifier state
+.I state. buf
+is NULL terminated unless there's an overflow. If the string returned is larger
+than
+.I nbytes,
+a count of bytes that does not fit into the buffer is returned in
+.I extra_rtrn.
+.I XkbTranslateKeySym
+returns the number of bytes that it placed into
 .I buf.
 .SH "SEE ALSO"
 .BR XkbTranslateKeySym (__libmansuffix__),

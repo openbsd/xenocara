@@ -255,7 +255,7 @@ An
 .B InputOnly
 window is used as a Drawable.
 .SH "SEE ALSO"
-XCreatePixmap(__libmansuffix__),
-XPutImage(__libmansuffix__)
+.BR XCreatePixmap (__libmansuffix__),
+.BR XPutImage (__libmansuffix__)
 .br
 \fI\*(xL\fP

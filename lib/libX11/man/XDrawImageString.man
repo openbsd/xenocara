@@ -157,9 +157,9 @@ these functions split the string into chunks up to 255 characters.
 After sending each chunk,
 these functions query the server to determine the actual text extent.
 .SH "SEE ALSO"
-XDrawString(__libmansuffix__),
-XDrawText(__libmansuffix__),
-XLoadFont(__libmansuffix__),
-XTextExtents(__libmansuffix__)
+.BR XDrawString (__libmansuffix__),
+.BR XDrawText (__libmansuffix__),
+.BR XLoadFont (__libmansuffix__),
+.BR XTextExtents (__libmansuffix__)
 .br
 \fI\*(xL\fP

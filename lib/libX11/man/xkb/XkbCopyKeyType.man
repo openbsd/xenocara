@@ -38,43 +38,43 @@ pointer to XkbKeyTypeRec to be copied
 pointer to XkbKeyTypeRec to be changed
 .SH DESCRIPTION
 .LP
-.I XkbCopyKeyType 
-copies the key type specified by 
-.I from 
-to the key type specified by 
-.I into. 
-Both must point to legal XkbKeyTypeRec structures. Xkb assumes 
-.I from 
-and 
-.I into 
-point to different places. As a result, overlaps can be fatal. 
-.I XkbCopyKeyType 
-frees any existing 
-.I map, preserve, 
-and 
-.I level_names 
-in 
-.I into 
-prior to copying. If any allocation errors occur while copying 
-.I from 
-to 
-.I into, XkbCopyKeyType 
-returns BadAlloc. Otherwise, 
-.I XkbCopyKeyType 
-copies 
-.I from 
-to 
-.I into 
-and returns Success. 
+.I XkbCopyKeyType
+copies the key type specified by
+.I from
+to the key type specified by
+.I into.
+Both must point to legal XkbKeyTypeRec structures. Xkb assumes
+.I from
+and
+.I into
+point to different places. As a result, overlaps can be fatal.
+.I XkbCopyKeyType
+frees any existing
+.I map, preserve,
+and
+.I level_names
+in
+.I into
+prior to copying. If any allocation errors occur while copying
+.I from
+to
+.I into, XkbCopyKeyType
+returns BadAlloc. Otherwise,
+.I XkbCopyKeyType
+copies
+.I from
+to
+.I into
+and returns Success.
 .SH STRUCTURES
 .LP
-Key types are used to determine the shift level of a key given the current state of the 
+Key types are used to determine the shift level of a key given the current state of the
 keyboard. The set of all possible key types for the Xkb keyboard description are held in the
-.I types 
-field of the client map, whose total size is stored in 
-.I size_types, 
-and whose total number of valid entries is stored in 
-.I num_types. 
+.I types
+field of the client map, whose total size is stored in
+.I size_types,
+and whose total number of valid entries is stored in
+.I num_types.
 Key types are defined using the following structure:
 .nf
 

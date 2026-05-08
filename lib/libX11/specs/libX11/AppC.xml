@@ -5,19 +5,19 @@
 <title>Extensions</title>
 <para>
 <!-- .XE -->
-Because X can evolve by extensions to the core protocol, 
+Because X can evolve by extensions to the core protocol,
 it is important that extensions not be perceived as second-class citizens.
-At some point, 
-your favorite extensions may be adopted as additional parts of the 
+At some point,
+your favorite extensions may be adopted as additional parts of the
 X Standard.
 </para>
 <para>
 <!-- .LP -->
-Therefore, there should be little to distinguish the use of an extension from 
+Therefore, there should be little to distinguish the use of an extension from
 that of the core protocol.
-To avoid having to initialize extensions explicitly in application programs, 
+To avoid having to initialize extensions explicitly in application programs,
 it is also important that extensions perform lazy evaluations,
-automatically initializing themselves when called for the first time.  
+automatically initializing themselves when called for the first time.
 </para>
 <para>
 <!-- .LP -->
@@ -41,7 +41,7 @@ The symbols and macros used for writing stubs to Xlib are listed in
 <sect1 id="Basic_Protocol_Support_Routines">
 <title>Basic Protocol Support Routines</title>
 <para>
-The basic protocol requests for extensions are 
+The basic protocol requests for extensions are
 <xref linkend='XQueryExtension' xrefstyle='select: title'/>
 and
 <xref linkend='XListExtensions' xrefstyle='select: title'/>.
@@ -97,7 +97,7 @@ and
 <!-- .eM -->
 The
 <xref linkend='XQueryExtension' xrefstyle='select: title'/>
-function determines if the named extension is present.  
+function determines if the named extension is present.
 If the extension is not present,
 <xref linkend='XQueryExtension' xrefstyle='select: title'/>
 returns
@@ -110,18 +110,18 @@ returns the major opcode for the extension to major_opcode_return;
 otherwise,
 it returns zero.
 Any minor opcode and the request formats are specific to the
-extension.  
-If the extension involves additional event types, 
+extension.
+If the extension involves additional event types,
 <xref linkend='XQueryExtension' xrefstyle='select: title'/>
 returns the base event type code to first_event_return;
-otherwise, 
-it returns zero.  
-The format of the events is specific to the extension.  
-If the extension involves additional error codes, 
+otherwise,
+it returns zero.
+The format of the events is specific to the extension.
+If the extension involves additional error codes,
 <xref linkend='XQueryExtension' xrefstyle='select: title'/>
 returns the base error code to first_error_return;
-otherwise, 
-it returns zero.  
+otherwise,
+it returns zero.
 The format of additional data in the errors is specific to the extension.
 </para>
 <para>
@@ -129,7 +129,7 @@ The format of additional data in the errors is specific to the extension.
 If the extension name is not in the Host Portable Character Encoding
 the result is implementation-dependent.
 Uppercase and lowercase matter;
-the strings ``thing'', ``Thing'', and ``thinG'' 
+the strings ``thing'', ``Thing'', and ``thinG''
 are all considered different names.
 </para>
 <indexterm significance="preferred"><primary>XListExtensions</primary></indexterm>
@@ -200,7 +200,7 @@ Specifies the list of extension names.
 <!-- .eM -->
 The
 <xref linkend='XFreeExtensionList' xrefstyle='select: title'/>
-function frees the memory allocated by 
+function frees the memory allocated by
 <xref linkend='XListExtensions' xrefstyle='select: title'/>.
 </para>
 </sect1>
@@ -208,8 +208,8 @@ function frees the memory allocated by
 <title>Hooking into Xlib</title>
 <para>
 <!-- .LP -->
-These functions allow you to hook into the library.  
-They are not normally used by application programmers but are used 
+These functions allow you to hook into the library.
+They are not normally used by application programmers but are used
 by people who need to extend the core X protocol and
 the X library interface.
 The functions, which generate protocol requests for X, are typically
@@ -217,24 +217,24 @@ called stubs.
 </para>
 <para>
 <!-- .LP -->
-In extensions, stubs first should check to see if they have initialized 
+In extensions, stubs first should check to see if they have initialized
 themselves on a connection.
-If they have not, they then should call 
+If they have not, they then should call
 <xref linkend='XInitExtension' xrefstyle='select: title'/>
 to attempt to initialize themselves on the connection.
 </para>
 <para>
 <!-- .LP -->
 If the extension needs to be informed of GC/font allocation or
-deallocation or if the extension defines new event types, 
-the functions described here allow the extension to be 
+deallocation or if the extension defines new event types,
+the functions described here allow the extension to be
 called when these events occur.
 </para>
 <para>
 <!-- .LP -->
 The
 <structname>XExtCodes</structname>
-structure returns the information from 
+structure returns the information from
 <xref linkend='XInitExtension' xrefstyle='select: title'/>
 and is defined in
 <filename class="headerfile">&lt;X11/Xlib.h&gt;</filename>:
@@ -293,9 +293,9 @@ Specifies the extension name.
 <!-- .eM -->
 The
 <xref linkend='XInitExtension' xrefstyle='select: title'/>
-function determines if the named extension exists. 
-Then, it allocates storage for maintaining the 
-information about the extension on the connection, 
+function determines if the named extension exists.
+Then, it allocates storage for maintaining the
+information about the extension on the connection,
 chains this onto the extension list for the connection,
 and returns the information the stub implementor will need to access
 the extension.
@@ -308,15 +308,15 @@ returns NULL.
 If the extension name is not in the Host Portable Character Encoding,
 the result is implementation-dependent.
 Uppercase and lowercase matter;
-the strings ``thing'', ``Thing'', and ``thinG'' 
+the strings ``thing'', ``Thing'', and ``thinG''
 are all considered different names.
 </para>
 <para>
 <!-- .LP -->
-The extension number in the 
+The extension number in the
 <structname>XExtCodes</structname>
 structure is
-needed in the other calls that follow.  
+needed in the other calls that follow.
 This extension number is unique only to a single connection.
 </para>
 <!-- .LP -->
@@ -418,15 +418,15 @@ The
 <xref linkend='XESetCloseDisplay' xrefstyle='select: title'/>
 function defines a procedure to be called whenever
 <function>XCloseDisplay</function>
-is called.  
+is called.
 It returns any previously defined procedure, usually NULL.
 </para>
 <para>
 <!-- .LP -->
-When 
+When
 <function>XCloseDisplay</function>
-is called, 
-your procedure is called 
+is called,
+your procedure is called
 with these arguments:
 <funcsynopsis>
 <funcprototype>
@@ -485,12 +485,12 @@ Specifies the procedure to call when a GC is closed.
 The
 <xref linkend='XESetCreateGC' xrefstyle='select: title'/>
 function defines a procedure to be called whenever
-a new GC is created.  
+a new GC is created.
 It returns any previously defined procedure, usually NULL.
 </para>
 <para>
 <!-- .LP -->
-When a GC is created, 
+When a GC is created,
 your procedure is called with these arguments:
 <!-- .LP -->
 <!-- .sM -->
@@ -552,12 +552,12 @@ Specifies the procedure to call when GC components are copied.
 The
 <xref linkend='XESetCopyGC' xrefstyle='select: title'/>
 function defines a procedure to be called whenever
-a GC is copied.  
+a GC is copied.
 It returns any previously defined procedure, usually NULL.
 </para>
 <para>
 <!-- .LP -->
-When a GC is copied, 
+When a GC is copied,
 your procedure is called with these arguments:
 <funcsynopsis>
 <funcprototype>
@@ -614,12 +614,12 @@ Specifies the procedure to call when a GC is freed.
 The
 <xref linkend='XESetFreeGC' xrefstyle='select: title'/>
 function defines a procedure to be called whenever
-a GC is freed.  
+a GC is freed.
 It returns any previously defined procedure, usually NULL.
 </para>
 <para>
 <!-- .LP -->
-When a GC is freed, 
+When a GC is freed,
 your procedure is called with these arguments:
 <!-- .LP -->
 <!-- .sM -->
@@ -689,16 +689,16 @@ function defines a procedure to be called whenever
 <xref linkend='XLoadQueryFont' xrefstyle='select: title'/>
 and
 <xref linkend='XQueryFont' xrefstyle='select: title'/>
-are called.  
+are called.
 It returns any previously defined procedure, usually NULL.
 </para>
 <para>
 <!-- .LP -->
-When 
+When
 <xref linkend='XLoadQueryFont' xrefstyle='select: title'/>
 or
 <xref linkend='XQueryFont' xrefstyle='select: title'/>
-is called, 
+is called,
 your procedure is called with these arguments:
 <!-- .LP -->
 <!-- .sM -->
@@ -766,12 +766,12 @@ The
 <xref linkend='XESetFreeFont' xrefstyle='select: title'/>
 function defines a procedure to be called whenever
 <xref linkend='XFreeFont' xrefstyle='select: title'/>
-is called.  
+is called.
 It returns any previously defined procedure, usually NULL.
 </para>
 <para>
 <!-- .LP -->
-When 
+When
 <xref linkend='XFreeFont' xrefstyle='select: title'/>
 is called, your procedure is called with these arguments:
 <!-- .LP -->
@@ -791,12 +791,12 @@ is called, your procedure is called with these arguments:
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The 
+The
 <xref linkend='XESetWireToEvent' xrefstyle='select: title'/>
 and
 <xref linkend='XESetEventToWire' xrefstyle='select: title'/>
 functions allow you to define new events to the library.
-An 
+An
 <structname>XEvent</structname>
 structure always has a type code (type
 <type>int</type>)
@@ -877,9 +877,9 @@ Specifies the procedure to call when converting an event.
 The
 <xref linkend='XESetWireToEvent' xrefstyle='select: title'/>
 function defines a procedure to be called when an event
-needs to be converted from wire format 
+needs to be converted from wire format
 (<structname>xEvent</structname>)
-to host format 
+to host format
 (<structname>XEvent</structname>).
 The event number defines which protocol event number to install a
 conversion procedure for.
@@ -888,7 +888,7 @@ returns any previously defined procedure.
 <!-- .NT -->
 You can replace a core event conversion function with one
 of your own, although this is not encouraged.
-It would, however, allow you to intercept a core event 
+It would, however, allow you to intercept a core event
 and modify it before being placed in the queue or otherwise examined.
 <!-- .NE -->
 When Xlib needs to convert an event from wire format to host
@@ -911,19 +911,19 @@ format, your procedure is called with these arguments:
 Your procedure must return status to indicate if the conversion succeeded.
 The re argument is a pointer to where the host format event should be stored,
 and the event argument is the 32-byte wire event structure.
-In the 
+In the
 <structname>XEvent</structname>
-structure you are creating, 
+structure you are creating,
 you must fill in the five required members of the event structure.
-You should fill in the type member with the type specified for the 
+You should fill in the type member with the type specified for the
 <structname>xEvent</structname>
 structure.
-You should copy all other members from the 
+You should copy all other members from the
 <structname>xEvent</structname>
 structure (wire format) to the
 <structname>XEvent</structname>
 structure (host format).
-Your conversion procedure should return 
+Your conversion procedure should return
 <symbol>True</symbol>
 if the event should be placed in the queue or
 <symbol>False</symbol>
@@ -1031,7 +1031,7 @@ needs to be converted from host format
 (<structname>XEvent</structname>)
 to wire format
 (<structname>xEvent</structname>)
-form.  
+form.
 The event number defines which protocol event number to install a
 conversion procedure for.
 <xref linkend='XESetEventToWire' xrefstyle='select: title'/>
@@ -1039,11 +1039,11 @@ returns any previously defined procedure.
 It returns zero if the conversion fails or nonzero otherwise.
 <!-- .NT -->
 You can replace a core event conversion function with one
-of your own, although this is not encouraged.  
-It would, however, allow you to intercept a core event 
+of your own, although this is not encouraged.
+It would, however, allow you to intercept a core event
 and modify it before being sent to another client.
 <!-- .NE -->
-When Xlib needs to convert an event from host format to wire format, 
+When Xlib needs to convert an event from host format to wire format,
 your procedure is called with these arguments:
 <!-- .LP -->
 <!-- .sM -->
@@ -1061,12 +1061,12 @@ your procedure is called with these arguments:
 <!-- .LP -->
 <!-- .eM -->
 The re argument is a pointer to the host format event,
-and the event argument is a pointer to where the 32-byte wire event 
+and the event argument is a pointer to where the 32-byte wire event
 structure should be stored.
-You should fill in the type with the type from the 
+You should fill in the type with the type from the
 <structname>XEvent</structname>
 structure.
-All other members then should be copied from the host format to the 
+All other members then should be copied from the host format to the
 <structname>xEvent</structname>
 structure.
 </para>
@@ -1219,7 +1219,7 @@ case, and are typically programmed to be synchronous).
 </para>
 <para>
 <!-- .LP -->
-When Xlib detects a protocol error in 
+When Xlib detects a protocol error in
 <xref linkend='_XReply' xrefstyle='select: title'/>,
 it calls your procedure with these arguments:
 <!-- .LP -->
@@ -1240,19 +1240,19 @@ it calls your procedure with these arguments:
 <!-- .eM -->
 The err argument is a pointer to the 32-byte wire format error.
 The codes argument is a pointer to the extension codes structure.
-The ret_code argument is the return code you may want 
+The ret_code argument is the return code you may want
 <xref linkend='_XReply' xrefstyle='select: title'/>
 returned to.
 </para>
 <para>
 <!-- .LP -->
-If your procedure returns a zero value, 
-the error is not suppressed, and 
+If your procedure returns a zero value,
+the error is not suppressed, and
 the client's error handler is called.
 (For further information,
 see <link linkend="Using_the_Default_Error_Handlers">section 11.8.2</link>.)
-If your procedure returns nonzero, 
-the error is suppressed, and 
+If your procedure returns nonzero,
+the error is suppressed, and
 <xref linkend='_XReply' xrefstyle='select: title'/>
 returns the value of ret_code.
 </para>
@@ -1302,7 +1302,7 @@ Specifies the procedure to call to obtain an error string.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The 
+The
 <xref linkend='XGetErrorText' xrefstyle='select: title'/>
 function returns a string to the user for an error.
 <xref linkend='XESetErrorString' xrefstyle='select: title'/>
@@ -1515,7 +1515,7 @@ Specifies the procedure to call when a buffer is flushed.
 The
 <function>XESetBeforeFlush</function>
 function defines a procedure to be called when data is about to be
-sent to the server.  When data is about to be sent, your procedure is  
+sent to the server.  When data is about to be sent, your procedure is
 called one or more times with these arguments:
 <!-- .LP -->
 <!-- .sM -->
@@ -1551,16 +1551,16 @@ These structures are
 <type>Screen</type>,
 <structname>ScreenFormat</structname>,
 <type>Display</type>,
-and 
+and
 <structname>XFontStruct</structname>.
-Because the list pointer is always the first member in the structure, 
+Because the list pointer is always the first member in the structure,
 a single set of procedures can be used to manipulate the data
 on these lists.
 </para>
 <para>
 <!-- .LP -->
 The following structure is used in the functions in this section
-and is defined in 
+and is defined in
 <filename class="headerfile">&lt;X11/Xlib.h&gt;</filename>
 </para>
 <para>
@@ -1581,11 +1581,11 @@ typedef struct _XExtData {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-When any of the data structures listed above are freed, 
-the list is walked, and the structure's free procedure (if any) is called. 
-If free is NULL, 
+When any of the data structures listed above are freed,
+the list is walked, and the structure's free procedure (if any) is called.
+If free is NULL,
 then the library frees both the data pointed to by the private_data member
-and the structure itself. 
+and the structure itself.
 </para>
 <para>
 <!-- .LP -->
@@ -1631,7 +1631,7 @@ The
 <xref linkend='XEHeadOfExtensionList' xrefstyle='select: title'/>
 function returns a pointer to the list of extension structures attached
 to the specified object.
-In concert with 
+In concert with
 <xref linkend='XAddToExtensionList' xrefstyle='select: title'/>,
 <xref linkend='XEHeadOfExtensionList' xrefstyle='select: title'/>
 allows an extension to attach arbitrary data to any of the structures
@@ -1725,9 +1725,9 @@ There is no way to find additional structures.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <xref linkend='XAllocID' xrefstyle='select: title'/>
-macro, which allocates and returns a resource ID, is defined in 
+macro, which allocates and returns a resource ID, is defined in
 <filename class="headerfile">&lt;X11/Xlib.h&gt;</filename>.
 </para>
 <indexterm significance="preferred"><primary>XAllocID</primary></indexterm>
@@ -1754,14 +1754,14 @@ Specifies the connection to the X server.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-This macro is a call through the 
+This macro is a call through the
 <type>Display</type>
 structure to an internal resource ID allocator.
 It returns a resource ID that you can use when creating new resources.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <xref linkend='XAllocIDs' xrefstyle='select: title'/>
 macro allocates and returns an array of resource ID.
 </para>
@@ -1811,7 +1811,7 @@ Specifies the number of resource IDs requested.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-This macro is a call through the 
+This macro is a call through the
 <type>Display</type>
 structure to an internal resource ID allocator.
 It returns resource IDs to the array supplied by the caller.
@@ -1835,7 +1835,7 @@ in its GC.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <xref linkend='FlushGC' xrefstyle='select: title'/>
 macro checks the dirty bits in the library's GC structure and calls
 <xref linkend='_XFlushGCCache' xrefstyle='select: title'/>
@@ -1887,7 +1887,7 @@ forcing a protocol request, the resource might be destroyed before being
 set into the GC.
 You can use the
 <xref linkend='_XFlushGCCache' xrefstyle='select: title'/>
-procedure 
+procedure
 to force the cache to be flushed.
 The
 <xref linkend='_XFlushGCCache' xrefstyle='select: title'/>
@@ -1934,20 +1934,20 @@ Specifies the GC.
 <para>
 <!-- .LP -->
 If you extend X to add more poly graphics primitives, you may be able to
-take advantage of facilities in the library to allow back-to-back 
+take advantage of facilities in the library to allow back-to-back
 single calls to be transformed into poly requests.
 This may dramatically improve performance of programs that are not
-written using poly requests. 
-A pointer to an 
+written using poly requests.
+A pointer to an
 <structname>xReq</structname>,
-called last_req in the display structure, is the last request being processed.  
+called last_req in the display structure, is the last request being processed.
 By checking that the last request
 type, drawable, gc, and other options are the same as the new one
 and that there is enough space left in the buffer, you may be able
 to just extend the previous graphics request by extending the length
-field of the request and appending the data to the buffer.  
-This can improve performance by five times or more in naive programs.  
-For example, here is the source for the 
+field of the request and appending the data to the buffer.
+This can improve performance by five times or more in naive programs.
+For example, here is the source for the
 <xref linkend='XDrawPoint' xrefstyle='select: title'/>
 stub.
 (Writing extension stubs is discussed in the next section.)
@@ -2003,13 +2003,13 @@ XDrawPoint(dpy, d, gc, x, y)
 <para>
 <!-- .LP -->
 <!-- .eM -->
-To keep clients from generating very long requests that may monopolize the 
+To keep clients from generating very long requests that may monopolize the
 server,
 there is a symbol defined in
 <filename class="headerfile">&lt;X11/Xlibint.h&gt;</filename>
 of EPERBATCH on the number of requests batched.
 Most of the performance benefit occurs in the first few merged requests.
-Note that 
+Note that
 <xref linkend='FlushGC' xrefstyle='select: title'/>
 is called <emphasis remap='I'>before</emphasis> picking up the value of last_req,
 because it may modify this field.
@@ -2034,33 +2034,33 @@ see <olink targetdoc='x11protocol' targetptr='Maximum-request-length'
 <title>Requests, Replies, and Xproto.h</title>
 <para>
 <!-- .LP -->
-The 
+The
 <filename class="headerfile">&lt;X11/Xproto.h&gt;</filename>
 file contains three sets of definitions that
-are of interest to the stub implementor:  
+are of interest to the stub implementor:
 request names, request structures, and reply structures.
 </para>
 <para>
 <!-- .LP -->
-You need to generate a file equivalent to 
+You need to generate a file equivalent to
 <filename class="headerfile">&lt;X11/Xproto.h&gt;</filename>
 for your extension and need to include it in your stub procedure.
-Each stub procedure also must include 
+Each stub procedure also must include
 <filename class="headerfile">&lt;X11/Xlibint.h&gt;</filename>.
 </para>
 <para>
 <!-- .LP -->
 The identifiers are deliberately chosen in such a way that, if the
 request is called X_DoSomething, then its request structure is
-xDoSomethingReq, and its reply is xDoSomethingReply.  
-The GetReq family of macros, defined in 
+xDoSomethingReq, and its reply is xDoSomethingReply.
+The GetReq family of macros, defined in
 <filename class="headerfile">&lt;X11/Xlibint.h&gt;</filename>,
 takes advantage of this naming scheme.
 </para>
 <para>
 <!-- .LP -->
-For each X request, 
-there is a definition in 
+For each X request,
+there is a definition in
 <filename class="headerfile">&lt;X11/Xproto.h&gt;</filename>
 that looks similar to this:
 </para>
@@ -2070,8 +2070,8 @@ that looks similar to this:
 <programlisting>
 #define X_DoSomething   42
 </programlisting>
-In your extension header file, 
-this will be a minor opcode, 
+In your extension header file,
+this will be a minor opcode,
 instead of a major opcode.
 </para>
 </sect2>
@@ -2080,18 +2080,18 @@ instead of a major opcode.
 <para>
 <!-- .LP -->
 Every request contains an 8-bit major opcode and a 16-bit length field
-expressed in units of 4 bytes.  
+expressed in units of 4 bytes.
 Every request consists of 4 bytes of header
 (containing the major opcode, the length field, and a data byte) followed by
-zero or more additional bytes of data. 
+zero or more additional bytes of data.
 The length field defines the total length of the request, including the header.
-The length field in a request must equal the minimum length required to contain 
-the request. 
-If the specified length is smaller or larger than the required length, 
-the server should generate a 
+The length field in a request must equal the minimum length required to contain
+the request.
+If the specified length is smaller or larger than the required length,
+the server should generate a
 <errorname>BadLength</errorname>
 error.
-Unused bytes in a request are not required to be zero.  
+Unused bytes in a request are not required to be zero.
 Extensions should be designed in such a way that long protocol requests
 can be split up into smaller requests,
 if it is possible to exceed the maximum request size of the server.
@@ -2101,9 +2101,9 @@ The protocol guarantees the maximum request size to be no smaller than
 <para>
 <!-- .LP -->
 Major opcodes 128 through 255 are reserved for extensions.
-Extensions are intended to contain multiple requests, 
-so extension requests typically have an additional minor opcode encoded 
-in the second data byte in the request header, 
+Extensions are intended to contain multiple requests,
+so extension requests typically have an additional minor opcode encoded
+in the second data byte in the request header,
 but the placement and interpretation of this minor opcode as well as all
 other fields in extension requests are not defined by the core protocol.
 Every request is implicitly assigned a sequence number (starting with one)
@@ -2135,13 +2135,13 @@ typedef struct _DoSomethingReq {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-If a core protocol request has a single 32-bit argument, 
+If a core protocol request has a single 32-bit argument,
 you need not declare a request structure in your extension header file.
 Instead, such requests use the
 <structname>xResourceReq</structname>
 structure in
 <filename class="headerfile">&lt;X11/Xproto.h&gt;</filename>.
-This structure is used for any request whose single argument is a 
+This structure is used for any request whose single argument is a
 <type>Window</type>,
 <type>Pixmap</type>,
 <type>Drawable</type>,
@@ -2172,24 +2172,24 @@ typedef struct _ResourceReq {
 <!-- .LP -->
 <!-- .eM -->
 If convenient,
-you can do something similar in your extension header file. 
+you can do something similar in your extension header file.
 </para>
 <para>
 <!-- .LP -->
-In both of these structures, 
-the reqType field identifies the type of the request (for example, 
-X_MapWindow or X_CreatePixmap).  
+In both of these structures,
+the reqType field identifies the type of the request (for example,
+X_MapWindow or X_CreatePixmap).
 The length field tells how long the request is
-in units of 4-byte longwords. 
+in units of 4-byte longwords.
 This length includes both the request structure itself and any
 variable-length data, such as strings or lists, that follow the
-request structure.  
-Request structures come in different sizes, 
+request structure.
+Request structures come in different sizes,
 but all requests are padded to be multiples of four bytes long.
 </para>
 <para>
 <!-- .LP -->
-A few protocol requests take no arguments at all. 
+A few protocol requests take no arguments at all.
 Instead, they use the
 <structname>xReq</structname>
 structure in
@@ -2198,7 +2198,7 @@ which contains only a reqType and a length (and a pad byte).
 </para>
 <para>
 <!-- .LP  -->
-If the protocol request requires a reply, 
+If the protocol request requires a reply,
 then
 <filename class="headerfile">&lt;X11/Xproto.h&gt;</filename>
 also contains a reply structure typedef:
@@ -2224,12 +2224,12 @@ typedef struct _DoSomethingReply {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-Most of these reply structures are 32 bytes long. 
-If there are not that many reply values, 
+Most of these reply structures are 32 bytes long.
+If there are not that many reply values,
 then they contain a sufficient number of pad fields
-to bring them up to 32 bytes.  
-The length field is the total number of bytes in the request minus 32, 
-divided by 4.  
+to bring them up to 32 bytes.
+The length field is the total number of bytes in the request minus 32,
+divided by 4.
 This length will be nonzero only if:
 </para>
 <itemizedlist>
@@ -2247,7 +2247,7 @@ The reply structure is longer than 32 bytes.
 </itemizedlist>
 <para>
 <!-- .LP -->
-Only 
+Only
 <systemitem>GetWindowAttributesl</systemitem>,
 <systemitem>QueryFont</systemitem>,
 <systemitem>QueryKeymap</systemitem>,
@@ -2257,10 +2257,10 @@ have reply structures longer than 32 bytes in the core protocol.
 </para>
 <para>
 <!-- .LP -->
-A few protocol requests return replies that contain no data.  
+A few protocol requests return replies that contain no data.
 <filename class="headerfile">&lt;X11/Xproto.h&gt;</filename>
 does not define reply structures for these.
-Instead, they use the 
+Instead, they use the
 <structname>xGenericReply</structname>
 structure, which contains only a type, length,
 and sequence number (and sufficient padding to make it 32 bytes long).
@@ -2285,7 +2285,7 @@ XDoSomething (arguments, ... )
 register XDoSomethingReq *req;
 ...
 </programlisting>
-If the protocol request has a reply, 
+If the protocol request has a reply,
 then the variable declarations should include the reply structure for the request.
 The following is an example:
 </para>
@@ -2307,7 +2307,7 @@ each stub will need to lock its critical section.
 Generally, this section is the point from just before the appropriate GetReq
 call until all arguments to the call have been stored into the buffer.
 The precise instructions needed for this locking depend upon the machine
-architecture. 
+architecture.
 Two calls, which are generally implemented as macros, have been provided.
 <indexterm significance="preferred"><primary>LockDisplay</primary></indexterm>
 <!-- .sM -->
@@ -2347,30 +2347,30 @@ Specifies the connection to the X server.
 <title>Sending the Protocol Request and Arguments</title>
 <para>
 <!-- .LP -->
-After the variable declarations, 
-a stub procedure should call one of four macros defined in 
+After the variable declarations,
+a stub procedure should call one of four macros defined in
 <filename class="headerfile">&lt;X11/Xlibint.h&gt;</filename>:
 <function>GetReq</function>,
 <function>GetReqExtra</function>,
 <function>GetResReq</function>,
-or 
+or
 <function>GetEmptyReq</function>.
 All of these macros take, as their first argument,
-the name of the protocol request as declared in 
+the name of the protocol request as declared in
 <filename class="headerfile">&lt;X11/Xproto.h&gt;</filename>
-except with X_ removed.   
-Each one declares a 
+except with X_ removed.
+Each one declares a
 <type>Display</type>
 structure pointer,
 called dpy, and a pointer to a request structure, called req,
 which is of the appropriate type.
-The macro then appends the request structure to the output buffer, 
+The macro then appends the request structure to the output buffer,
 fills in its type and length field, and sets req to point to it.
 </para>
 <para>
 <!-- .LP -->
 If the protocol request has no arguments (for instance, X_GrabServer),
-then use 
+then use
 <function>GetEmptyReq</function>.
 </para>
 <para>
@@ -2385,9 +2385,9 @@ If the protocol request has a single 32-bit argument (such as a
 <type>Drawable</type>,
 <type>Atom</type>,
 and so on),
-then use 
+then use
 <function>GetResReq</function>.
-The second argument to the macro is the 32-bit object.  
+The second argument to the macro is the 32-bit object.
 <symbol>X_MapWindow</symbol>
 is a good example.
 </para>
@@ -2397,17 +2397,17 @@ is a good example.
 <programlisting>
 GetResReq (DoSomething, rid, req);
 </programlisting>
-The rid argument is the 
+The rid argument is the
 <type>Pixmap</type>,
 <type>Window</type>,
 or other resource ID.
 </para>
 <para>
 <!-- .LP -->
-If the protocol request takes any other argument list, 
-then call 
+If the protocol request takes any other argument list,
+then call
 <function>GetReq</function>.
-After the 
+After the
 <function>GetReq</function>,
 you need to set all the other fields in the request structure,
 usually from arguments to the stub procedure.
@@ -2422,15 +2422,15 @@ req-&gt;arg1 = arg1;
 req-&gt;arg2 = arg2;
 ...
 </programlisting>
-A few stub procedures (such as 
+A few stub procedures (such as
 <xref linkend='XCreateGC' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XCreatePixmap' xrefstyle='select: title'/>)
 return a resource ID to the caller but pass a resource ID as an argument
-to the protocol request.   
-Such procedures use the macro 
+to the protocol request.
+Such procedures use the macro
 <xref linkend='XAllocID' xrefstyle='select: title'/>
-to allocate a resource ID from the range of IDs 
+to allocate a resource ID from the range of IDs
 that were assigned to this client when it opened the connection.
 </para>
 <para>
@@ -2442,21 +2442,21 @@ rid = req-&gt;rid = XAllocID();
 return (rid);
 </programlisting>
 Finally, some stub procedures transmit a fixed amount of variable-length
-data after the request.  
+data after the request.
 Typically, these procedures (such as
 <xref linkend='XMoveWindow' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XSetBackground' xrefstyle='select: title'/>)
-are special cases of more general functions like 
+are special cases of more general functions like
 <xref linkend='XMoveResizeWindow' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XChangeGC' xrefstyle='select: title'/>.
-These procedures use 
+These procedures use
 <function>GetReqExtra</function>,
-which is the same as 
+which is the same as
 <function>GetReq</function>
 except that it takes an additional argument (the number of
-extra bytes to allocate in the output buffer after the request structure).  
+extra bytes to allocate in the output buffer after the request structure).
 This number should always be a multiple of four. Note that it is possible
 for req to be set to NULL as a defensive measure if the requested length
 exceeds the Xlib's buffer size (normally 16K).
@@ -2467,20 +2467,20 @@ exceeds the Xlib's buffer size (normally 16K).
 <para>
 <!-- .LP -->
 Some protocol requests take additional variable-length data that
-follow the 
+follow the
 <type>xDoSomethingReq</type>
-structure.    
-The format of this data varies from request to request. 
-Some requests require a sequence of 8-bit bytes, 
-others a sequence of 16-bit or 32-bit entities, 
+structure.
+The format of this data varies from request to request.
+Some requests require a sequence of 8-bit bytes,
+others a sequence of 16-bit or 32-bit entities,
 and still others a sequence of structures.
 </para>
 <para>
 <!-- .LP -->
 It is necessary to add the length of any variable-length data to the
-length field of the request structure.  
-That length field is in units of 32-bit longwords.  
-If the data is a string or other sequence of 8-bit bytes, 
+length field of the request structure.
+That length field is in units of 32-bit longwords.
+If the data is a string or other sequence of 8-bit bytes,
 then you must round the length up and shift it before adding:
 </para>
 <para>
@@ -2489,21 +2489,21 @@ then you must round the length up and shift it before adding:
 <programlisting>
 req-&gt;length += (nbytes+3)&gt;&gt;2;
 </programlisting>
-To transmit variable-length data, use the 
+To transmit variable-length data, use the
 <xref linkend='Data' xrefstyle='select: title'/>
 macros.
-If the data fits into the output buffer, 
-then this macro copies it to the buffer.  
+If the data fits into the output buffer,
+then this macro copies it to the buffer.
 If it does not fit, however,
-the 
+the
 <xref linkend='Data' xrefstyle='select: title'/>
-macro calls 
+macro calls
 <function>_XSend</function>,
 which transmits first the contents of the buffer and then your data.
-The 
+The
 <xref linkend='Data' xrefstyle='select: title'/>
-macros take three arguments:  
-the display, a pointer to the beginning of the data, 
+macros take three arguments:
+the display, a pointer to the beginning of the data,
 and the number of bytes to be sent.
 <!-- .sM -->
 <funcsynopsis id='Data'>
@@ -2537,23 +2537,23 @@ and
 <function>Data32</function>
 are macros that may use their last argument
 more than once, so that argument should be a variable rather than
-an expression such as ``nitems*sizeof(item)''.  
-You should do that kind of computation in a separate statement before calling 
+an expression such as ``nitems*sizeof(item)''.
+You should do that kind of computation in a separate statement before calling
 them.
 Use the appropriate macro when sending byte, short, or long data.
 </para>
 <para>
 <!-- .LP -->
-If the protocol request requires a reply, 
-then call the procedure 
+If the protocol request requires a reply,
+then call the procedure
 <function>_XSend</function>
-instead of the 
+instead of the
 <xref linkend='Data' xrefstyle='select: title'/>
-macro.  
+macro.
 <function>_XSend</function>
-takes the same arguments, but because it sends your data immediately instead of 
+takes the same arguments, but because it sends your data immediately instead of
 copying it into the output buffer (which would later be flushed
-anyway by the following call on 
+anyway by the following call on
 <xref linkend='_XReply' xrefstyle='select: title'/>),
 it is faster.
 </para>
@@ -2562,15 +2562,15 @@ it is faster.
 <title>Replies</title>
 <para>
 <!-- .LP -->
-If the protocol request has a reply, 
-then call 
+If the protocol request has a reply,
+then call
 <xref linkend='_XReply' xrefstyle='select: title'/>
-after you have finished dealing with 
-all the fixed-length and variable-length arguments.  
+after you have finished dealing with
+all the fixed-length and variable-length arguments.
 <xref linkend='_XReply' xrefstyle='select: title'/>
-flushes the output buffer and waits for an 
+flushes the output buffer and waits for an
 <structname>xReply</structname>
-packet to arrive.  
+packet to arrive.
 If any events arrive in the meantime,
 <xref linkend='_XReply' xrefstyle='select: title'/>
 places them in the queue for later use.
@@ -2636,7 +2636,7 @@ should be discarded.
 The
 <xref linkend='_XReply' xrefstyle='select: title'/>
 function waits for a reply packet and copies its contents into the
-specified rep.  
+specified rep.
 <xref linkend='_XReply' xrefstyle='select: title'/>
 handles error and event packets that occur before the reply is received.
 <xref linkend='_XReply' xrefstyle='select: title'/>
@@ -2645,21 +2645,21 @@ takes four arguments:
 <itemizedlist>
   <listitem>
     <para>
-A 
+A
 <type>Display</type>
 * structure
     </para>
   </listitem>
   <listitem>
     <para>
-A pointer to a reply structure (which must be cast to an 
+A pointer to a reply structure (which must be cast to an
 <structname>xReply</structname>
 *)
     </para>
   </listitem>
   <listitem>
     <para>
-The number of additional 32-bit words (beyond 
+The number of additional 32-bit words (beyond
 <function>sizeof( xReply</function>)
 = 32 bytes)
 in the reply structure
@@ -2676,42 +2676,42 @@ beyond those it was told to read
 </itemizedlist>
 <para>
 <!-- .LP -->
-Because most reply structures are 32 bytes long, 
-the third argument is usually 0.  
-The only core protocol exceptions are the replies to 
+Because most reply structures are 32 bytes long,
+the third argument is usually 0.
+The only core protocol exceptions are the replies to
 <systemitem>GetWindowAttributesl</systemitem>,
 <systemitem>QueryFont</systemitem>,
 <systemitem>QueryKeymap</systemitem>,
-and 
+and
 <systemitem>GetKeyboardControl</systemitem>,
 which have longer replies.
 </para>
 <para>
 <!-- .LP -->
-The last argument should be 
+The last argument should be
 <symbol>False</symbol>
 if the reply structure is followed
-by additional variable-length data (such as a list or string).  
-It should be 
+by additional variable-length data (such as a list or string).
+It should be
 <symbol>True</symbol>
 if there is not any variable-length data.
 <!-- .NT -->
 This last argument is provided for upward-compatibility reasons
 to allow a client to communicate properly with a hypothetical later
 version of the server that sends more data than the client expected.
-For example, some later version of 
+For example, some later version of
 <systemitem>GetWindowAttributesl</systemitem>
 might use a
-larger, but compatible, 
+larger, but compatible,
 <structname>xGetWindowAttributesReply</structname>
 that contains additional attribute data at the end.
 <!-- .NE -->
 <xref linkend='_XReply' xrefstyle='select: title'/>
-returns 
+returns
 <symbol>True</symbol>
-if it received a reply successfully or 
+if it received a reply successfully or
 <symbol>False</symbol>
-if it received any sort of error. 
+if it received any sort of error.
 </para>
 <para>
 <!-- .LP -->
@@ -2732,10 +2732,10 @@ SyncHandle();
 return (rep.ret4);
 }
 </programlisting>
-If there is variable-length data after the reply, 
-change the 
+If there is variable-length data after the reply,
+change the
 <symbol>True</symbol>
-to 
+to
 <symbol>False</symbol>,
 and use the appropriate
 <xref linkend='_XRead' xrefstyle='select: title'/>
@@ -3005,7 +3005,7 @@ reads and discards up to three additional pad bytes.
 </para>
 <para>
 <!-- .LP -->
-Each protocol request is a little different. 
+Each protocol request is a little different.
 For further information,
 see the Xlib sources for examples.
 </para>
@@ -3014,10 +3014,10 @@ see the Xlib sources for examples.
 <title>Synchronous Calling</title>
 <para>
 <!-- .LP -->
-Each procedure should have a call, just before returning to the user, 
+Each procedure should have a call, just before returning to the user,
 to a macro called
 <systemitem>SyncHandle</systemitem>.
-If synchronous mode is enabled (see 
+If synchronous mode is enabled (see
 <function>XSynchronize</function>),
 the request is sent immediately.
 The library, however, waits until any error the procedure could generate
@@ -3028,7 +3028,7 @@ at the server has been handled.
 <title>Allocating and Deallocating Memory</title>
 <para>
 <!-- .LP -->
-To support the possible reentry of these procedures, 
+To support the possible reentry of these procedures,
 you must observe several conventions when allocating and deallocating memory,
 most often done when returning data to the user from the window
 system of a size the caller could not know in advance
@@ -3045,10 +3045,10 @@ C library functions.
 </para>
 <para>
 <!-- .LP -->
-If you need a single scratch buffer inside a critical section 
+If you need a single scratch buffer inside a critical section
 (for example, to pack and unpack data to and from the wire protocol),
 the general memory allocators may be too expensive to use
-(particularly in output functions, which are performance critical).  
+(particularly in output functions, which are performance critical).
 The following function returns a scratch buffer for use within a
 critical section:
 </para>
@@ -3225,8 +3225,8 @@ avoided completely if at all possible.
 </para>
 <para>
 <!-- .LP -->
-This code may run on machines with 16-bit ints.  
-So, if any integer argument, variable, or return value either can take 
+This code may run on machines with 16-bit ints.
+So, if any integer argument, variable, or return value either can take
 only nonnegative values or is declared as a
 <type>CARD16</type>
 in the protocol, be sure to declare it as
@@ -3238,10 +3238,10 @@ and not as
 </para>
 <para>
 <!-- .LP -->
-Similarly, 
+Similarly,
 if any integer argument or return value is declared
 <type>CARD32</type>
-in the protocol, 
+in the protocol,
 declare it as an
 <type>unsigned</type>
 <type>long</type>
@@ -3273,9 +3273,9 @@ protocol as CARD32 or INT32 but have to be converted to arrays of 64-bit
 <type>long</type> when passed to or from client applications.
 </para>
 <para>
-The 
+The
 <function>PackData</function>
-macro is a half-hearted attempt to deal with the possibility of 32 bit shorts. 
+macro is a half-hearted attempt to deal with the possibility of 32 bit shorts.
 However, much more work is needed to make this work properly.
 </para>
 </sect2>
@@ -3285,18 +3285,18 @@ However, much more work is needed to make this work properly.
 <!-- .LP -->
 The remaining problem a writer of an extension stub procedure faces that
 the core protocol does not face is to map from the call to the proper
-major and minor opcodes.  
-While there are a number of strategies, 
+major and minor opcodes.
+While there are a number of strategies,
 the simplest and fastest is outlined below.
 </para>
 <itemizedlist>
   <listitem>
     <para>
 Declare an array of pointers, _NFILE long (this is normally found
-in 
+in
 <filename class="headerfile">&lt;stdio.h&gt;</filename>
 and is the number of file descriptors supported on the system)
-of type 
+of type
 <structname>XExtCodes</structname>.
 Make sure these are all initialized to NULL.
     </para>
@@ -3305,17 +3305,17 @@ Make sure these are all initialized to NULL.
     <para>
 When your stub is entered, your initialization test is just to use
 the display pointer passed in to access the file descriptor and an index
-into the array.  
+into the array.
 If the entry is NULL, then this is the first time you
-are entering the procedure for this display.  
+are entering the procedure for this display.
 Call your initialization procedure and pass to it the display pointer.
     </para>
   </listitem>
   <listitem>
     <para>
-Once in your initialization procedure, call 
+Once in your initialization procedure, call
 <xref linkend='XInitExtension' xrefstyle='select: title'/>;
-if it succeeds, store the pointer returned into this array.  
+if it succeeds, store the pointer returned into this array.
 Make sure to establish a close display handler to allow you to zero the entry.
 Do whatever other initialization your extension requires.
 (For example, install event handlers and so on.)
@@ -3327,9 +3327,9 @@ be found in your array of pointers.
   </listitem>
   <listitem>
     <para>
-After returning from your initialization procedure, 
-the stub can now continue normally, because it has its major opcode safely 
-in its hand in the 
+After returning from your initialization procedure,
+the stub can now continue normally, because it has its major opcode safely
+in its hand in the
 <structname>XExtCodes</structname>
 structure.
 <!-- .bp -->

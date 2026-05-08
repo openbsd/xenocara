@@ -128,6 +128,6 @@ errors.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XChangeSaveSet(__libmansuffix__)
+.BR XChangeSaveSet (__libmansuffix__)
 .br
 \fI\*(xL\fP

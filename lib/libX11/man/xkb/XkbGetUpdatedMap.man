@@ -22,7 +22,7 @@
 .\"
 .TH XkbGetUpdatedMap __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetUpdatedMap \-  Update the client or server map information in an existing 
+XkbGetUpdatedMap \-  Update the client or server map information in an existing
 keyboard description
 .SH SYNOPSIS
 .HP
@@ -44,18 +44,18 @@ mask selecting subcomponents to populate
 keyboard description to be updated
 .SH DESCRIPTION
 .LP
-The 
-.I which 
-parameter is a bitwise inclusive OR of the masks in Table 1. If the needed 
-components of the 
-.I xkb 
-structure are not already allocated, 
-.I XkbGetUpdatedMap 
-allocates them. 
-.I XkbGetUpdatedMap 
-fetches the requested information for the device specified in the XkbDescRec 
-passed in the 
-.I xkb 
+The
+.I which
+parameter is a bitwise inclusive OR of the masks in Table 1. If the needed
+components of the
+.I xkb
+structure are not already allocated,
+.I XkbGetUpdatedMap
+allocates them.
+.I XkbGetUpdatedMap
+fetches the requested information for the device specified in the XkbDescRec
+passed in the
+.I xkb
 parameter.
 
 .TS
@@ -154,27 +154,27 @@ XkbGetVirtualModMap
 T}
 .TE
 
-.I XkbGetUpdatedMap 
-is synchronous; it queries the server for the desired information, waits for a 
-reply, and then returns. If successful, 
-.I XkbGetUpdatedMap 
-returns Success. If unsuccessful, 
-.I XkbGetUpdatedMap 
-returns one of the following: BadAlloc (unable to allocate a component in the 
-XkbDescRec structure), BadValue (some mask bits in 
-.I which 
-are undefined), BadImplementation (a compatible version of the Xkb extension is 
+.I XkbGetUpdatedMap
+is synchronous; it queries the server for the desired information, waits for a
+reply, and then returns. If successful,
+.I XkbGetUpdatedMap
+returns Success. If unsuccessful,
+.I XkbGetUpdatedMap
+returns one of the following: BadAlloc (unable to allocate a component in the
+XkbDescRec structure), BadValue (some mask bits in
+.I which
+are undefined), BadImplementation (a compatible version of the Xkb extension is
 not available in the server or the reply from the server was invalid).
 .SH "RETURN VALUES"
 .TP 15
 Success
-The 
-.I XkbGetUpdatedMap 
+The
+.I XkbGetUpdatedMap
 function returns Success if a reply is received to the server query for the desired information.
 .SH STRUCTURES
 .LP
-The complete description of an Xkb keyboard is given by an XkbDescRec. The 
-component 
+The complete description of an Xkb keyboard is given by an XkbDescRec. The
+component
 structures in the XkbDescRec represent the major Xkb components.
 
 .nf
@@ -194,28 +194,28 @@ typedef struct {
 } XkbDescRec, *XkbDescPtr;
 
 .fi
-The 
-.I display 
-field points to an X display structure. The 
-.I flags 
-field is private to the library: modifying 
-.I flags 
-may yield unpredictable results. The 
-.I device_spec 
-field specifies the device identifier of the keyboard input device, or 
-XkbUseCoreKeyboard, which specifies the core keyboard device. The 
+The
+.I display
+field points to an X display structure. The
+.I flags
+field is private to the library: modifying
+.I flags
+may yield unpredictable results. The
+.I device_spec
+field specifies the device identifier of the keyboard input device, or
+XkbUseCoreKeyboard, which specifies the core keyboard device. The
 .I min_key_code
-and 
-.I max_key_code 
-fields specify the least and greatest keycode that can be returned by the 
-keyboard. 
+and
+.I max_key_code
+fields specify the least and greatest keycode that can be returned by the
+keyboard.
 
-Each structure component has a corresponding mask bit that is used in function 
-calls to 
-indicate that the structure should be manipulated in some manner, such as 
-allocating it 
-or freeing it. These masks and their relationships to the fields in the 
-XkbDescRec are 
+Each structure component has a corresponding mask bit that is used in function
+calls to
+indicate that the structure should be manipulated in some manner, such as
+allocating it
+or freeing it. These masks and their relationships to the fields in the
+XkbDescRec are
 shown in Table 2.
 .bp
 .TS

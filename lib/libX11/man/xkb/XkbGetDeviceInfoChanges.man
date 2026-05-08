@@ -22,8 +22,8 @@
 .\"
 .TH XkbGetDeviceInfoChanges __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetDeviceInfoChanges \- Query the changes that have occurred in the button 
-actions or indicator names and indicator maps associated with an input extension 
+XkbGetDeviceInfoChanges \- Query the changes that have occurred in the button
+actions or indicator names and indicator maps associated with an input extension
 device
 .SH SYNOPSIS
 .HP
@@ -45,18 +45,18 @@ structure to update with results
 contains notes of changes that have occurred
 .SH DESCRIPTION
 .LP
-The 
-.I changes->changed 
-field indicates which attributes of the device specified in 
-.I changes->device 
-have changed. The parameters describing the changes are contained in the other 
-fields of 
-.I changes. XkbGetDeviceInfoChanges 
-uses that information to call 
-.I XkbGetDeviceInfo 
-to obtain the current status of those attributes that have changed. It then 
-updates the local description of the device in 
-.I device_info 
+The
+.I changes->changed
+field indicates which attributes of the device specified in
+.I changes->device
+have changed. The parameters describing the changes are contained in the other
+fields of
+.I changes. XkbGetDeviceInfoChanges
+uses that information to call
+.I XkbGetDeviceInfo
+to obtain the current status of those attributes that have changed. It then
+updates the local description of the device in
+.I device_info
 with the new information.
 .SH "SEE ALSO"
 .BR XkbGetDeviceInfo (__libmansuffix__)

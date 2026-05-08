@@ -39,16 +39,16 @@ action in which to set screenXXX
 value to set in screenXXX
 .SH DESCRIPTION
 .LP
-Actions associated with the XkbSwitchScreen action structure change the active 
+Actions associated with the XkbSwitchScreen action structure change the active
 screen on a multiscreen display.
 
-The 
-.I type 
-field of the XkbSwitchScreenAction structure should always be 
+The
+.I type
+field of the XkbSwitchScreenAction structure should always be
 XkbSA_SwitchScreen.
 
-The 
-.I flags 
+The
+.I flags
 field is composed of the bitwise inclusive OR of the masks shown in Table 1.
 
 .TS
@@ -60,23 +60,23 @@ _
 Flag	Meaning
 _
 XkbSA_SwitchAbsolute	T{
-If set, the screenXXX field represents the index of the new screen. Otherwise, 
+If set, the screenXXX field represents the index of the new screen. Otherwise,
 it represents an offset from the current screen to the new screen.
 T}
 XkbSA_SwitchApplication	T{
-If not set, the action should switch to another screen on the same server. 
-Otherwise, it should switch to another X server or application that shares the 
+If not set, the action should switch to another screen on the same server.
+Otherwise, it should switch to another X server or application that shares the
 same physical display.
 T}
 .TE
 
-The 
-.I screenXXX 
-field is a signed character value that represents either the relative or 
-absolute screen index, depending on the state of the XkbSA_SwitchAbsolute bit in 
-the 
-.I flags 
-field. Xkb provides the following macros to convert between the integer and 
+The
+.I screenXXX
+field is a signed character value that represents either the relative or
+absolute screen index, depending on the state of the XkbSA_SwitchAbsolute bit in
+the
+.I flags
+field. Xkb provides the following macros to convert between the integer and
 signed character value for screen numbers in XkbSwitchScreenAction structures.
 .SH STRUCTURES
 .LP
@@ -91,7 +91,7 @@ signed character value for screen numbers in XkbSwitchScreenAction structures.
 .fi
 .SH NOTES
 .LP
-This action is optional. Servers are free to ignore the action or any of its 
-flags if they do not support the requested behavior. If the action is ignored, 
-it behaves like XkbSA_NoAction. Otherwise, key press and key release events do 
-not generate an event. 
+This action is optional. Servers are free to ignore the action or any of its
+flags if they do not support the requested behavior. If the action is ignored,
+it behaves like XkbSA_NoAction. Otherwise, key press and key release events do
+not generate an event.

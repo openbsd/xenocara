@@ -66,9 +66,9 @@ would rather deal with it later.
 There is no limit to the number of times in succession that you can call
 .BR XPutBackEvent .
 .SH "SEE ALSO"
-XAnyEvent(__libmansuffix__),
-XIfEvent(__libmansuffix__),
-XNextEvent(__libmansuffix__),
-XSendEvent(__libmansuffix__)
+.BR XAnyEvent (__libmansuffix__),
+.BR XIfEvent (__libmansuffix__),
+.BR XNextEvent (__libmansuffix__),
+.BR XSendEvent (__libmansuffix__)
 .br
 \fI\*(xL\fP

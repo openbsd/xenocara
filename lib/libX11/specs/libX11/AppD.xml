@@ -4,7 +4,7 @@
 <appendix id="compatibility_functions">
 <title>Compatibility Functions</title>
 <para>
-The X Version 11 and X Version 10 functions discussed in this appendix 
+The X Version 11 and X Version 10 functions discussed in this appendix
 are obsolete, have been superseded by newer X Version 11 functions,
 and are maintained for compatibility reasons only.
 </para>
@@ -15,19 +15,19 @@ You can use the X Version 11 compatibility functions to:
 <itemizedlist>
   <listitem>
     <para>
-Set standard properties 
+Set standard properties
     </para>
   </listitem>
   <listitem>
     <para>
-Set and get window sizing hints 
+Set and get window sizing hints
     </para>
   </listitem>
   <listitem>
     <para>
 Set and get an
 <structname>XStandardColormap</structname>
-structure 
+structure
     </para>
   </listitem>
   <listitem>
@@ -50,8 +50,8 @@ use
 <xref linkend='XSetStandardProperties' xrefstyle='select: title'/>.
 This function has been superseded by
 <xref linkend='XSetWMProperties' xrefstyle='select: title'/>
-and sets all or portions of the 
-<property>WM_NAME</property>, <property>WM_ICON_NAME</property>, <property>WM_HINTS</property>, <property>WM_COMMAND</property>, 
+and sets all or portions of the
+<property>WM_NAME</property>, <property>WM_ICON_NAME</property>, <property>WM_HINTS</property>, <property>WM_COMMAND</property>,
 and <property>WM_NORMAL_HINTS</property> properties.
 </para>
 <indexterm significance="preferred"><primary>XSetStandardProperties</primary></indexterm>
@@ -163,8 +163,8 @@ The
 function provides a means by which simple applications set the
 most essential properties with a single call.
 <xref linkend='XSetStandardProperties' xrefstyle='select: title'/>
-should be used to give a window manager some information about 
-your program's preferences. 
+should be used to give a window manager some information about
+your program's preferences.
 It should not be used by applications that need
 to communicate more information than is possible with
 <xref linkend='XSetStandardProperties' xrefstyle='select: title'/>.
@@ -256,20 +256,20 @@ Applications use
 <xref linkend='XSetNormalHints' xrefstyle='select: title'/>
 to inform the window manager of the size
 or position desirable for that window.
-In addition, 
+In addition,
 an application that wants to move or resize itself should call
 <xref linkend='XSetNormalHints' xrefstyle='select: title'/>
 and specify its new desired location and size
-as well as making direct Xlib calls to move or resize.  
+as well as making direct Xlib calls to move or resize.
 This is because window managers may ignore redirected
 configure requests, but they pay attention to property changes.
 </para>
 <para>
 <!-- .LP -->
-To set size hints, 
+To set size hints,
 an application not only must assign values to the appropriate members
-in the hints structure but also must set the flags member of the structure 
-to indicate which information is present and where it came from.  
+in the hints structure but also must set the flags member of the structure
+to indicate which information is present and where it came from.
 A call to
 <xref linkend='XSetNormalHints' xrefstyle='select: title'/>
 is meaningless, unless the flags member is set to indicate which members of
@@ -665,7 +665,7 @@ or zero otherwise.
 <xref linkend='XGetSizeHints' xrefstyle='select: title'/>
 can generate
 <errorname>BadAtom</errorname>
-and 
+and
 <errorname>BadWindow</errorname>
 errors.
 </para>
@@ -673,7 +673,7 @@ errors.
 <sect2 id="Getting_and_Setting_an_XStandardColormap_Structure">
 <title>Getting and Setting an XStandardColormap Structure</title>
 <para>
-To get the 
+To get the
 <structname>XStandardColormap</structname>
 structure associated with one of the described atoms, use
 <xref linkend='XGetStandardColormap' xrefstyle='select: title'/>.
@@ -849,7 +849,7 @@ errors.
 <sect2 id="Parsing_Window_Geometry">
 <title>Parsing Window Geometry</title>
 <para>
-To parse window geometry given a user-specified position 
+To parse window geometry given a user-specified position
 and a default position, use
 <xref linkend='XGeometry' xrefstyle='select: title'/>.
 This function has been superseded by
@@ -1032,9 +1032,9 @@ a window using a geometry specification as specified by
 <xref linkend='XParseGeometry' xrefstyle='select: title'/>
 and the additional information about the window.
 Given a fully qualified default geometry specification and
-an incomplete geometry specification, 
+an incomplete geometry specification,
 <xref linkend='XParseGeometry' xrefstyle='select: title'/>
-returns a bitmask value as defined above in the 
+returns a bitmask value as defined above in the
 <xref linkend='XParseGeometry' xrefstyle='select: title'/>
 call,
 by using the position argument.
@@ -1055,7 +1055,7 @@ geometry specifications.
 <para>
 The
 <xref linkend='XGetDefault' xrefstyle='select: title'/>
-function provides a primitive interface to the resource manager facilities 
+function provides a primitive interface to the resource manager facilities
 discussed in <link linkend='Resource_Manager_Functions'>chapter 15</link>.
 It is only useful in very simple applications.
 </para>
@@ -1089,7 +1089,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the program name for the Xlib defaults (usually argv[0] 
+Specifies the program name for the Xlib defaults (usually argv[0]
 of the main program).
       </para>
     </listitem>
@@ -1125,11 +1125,11 @@ are owned by Xlib and should not be modified or freed by the client.
 </para>
 <para>
 <!-- .LP -->
-If a database has been set with 
+If a database has been set with
 <xref linkend='XrmSetDatabase' xrefstyle='select: title'/>,
 that database is used for the lookup.
 Otherwise, a database is created
-and is set in the display (as if by calling 
+and is set in the display (as if by calling
 <xref linkend='XrmSetDatabase' xrefstyle='select: title'/>).
 The database is created in the current locale.
 To create a database,
@@ -1179,11 +1179,11 @@ Associate user data with a value
 <para>
 <!-- .LP -->
 Xlib provides functions that you can use to draw or fill
-arbitrary polygons or curves.  
-These functions are provided mainly for compatibility with X Version 10 
-and have no server support.  
-That is, they call other Xlib functions, not the server directly.  
-Thus, if you just have straight lines to draw, using 
+arbitrary polygons or curves.
+These functions are provided mainly for compatibility with X Version 10
+and have no server support.
+That is, they call other Xlib functions, not the server directly.
+Thus, if you just have straight lines to draw, using
 <xref linkend='XDrawLines' xrefstyle='select: title'/>
 <indexterm><primary>XDrawLines</primary></indexterm>
 or
@@ -1193,8 +1193,8 @@ is much faster.
 </para>
 <para>
 <!-- .LP -->
-The functions discussed here provide all the functionality of the 
-X Version 10 functions 
+The functions discussed here provide all the functionality of the
+X Version 10 functions
 <xref linkend='XDraw' xrefstyle='select: title'/>,
 <indexterm ><primary>X10 compatibility</primary><secondary>XDraw</secondary></indexterm>
 <xref linkend='XDrawFilled' xrefstyle='select: title'/>,
@@ -1206,35 +1206,35 @@ X Version 10 functions
 and
 <function>XDrawTiled</function>.
 <indexterm><primary>X10 compatibility</primary><secondary>XDrawTiled</secondary></indexterm>
-They are as compatible as possible given X Version 11's new line-drawing 
-functions.  
+They are as compatible as possible given X Version 11's new line-drawing
+functions.
 One thing to note, however, is that
 <function>VertexDrawLastPoint</function>
-is no longer supported. 
-Also, the error status returned is the opposite of what it was under 
-X Version 10 (this is the X Version 11 standard error status).  
+is no longer supported.
+Also, the error status returned is the opposite of what it was under
+X Version 10 (this is the X Version 11 standard error status).
 <function>XAppendVertex</function>
-and 
+and
 <function>XClearVertexFlag</function>
 from X Version 10 also are not supported.
 </para>
 <para>
 <!-- .LP -->
 Just how the graphics context you use is set up actually
-determines whether you get dashes or not, and so on.  
+determines whether you get dashes or not, and so on.
 Lines are properly joined if they connect and include
-the closing of a closed figure  (see 
+the closing of a closed figure  (see
 <xref linkend='XDrawLines' xrefstyle='select: title'/>).
 The functions discussed here fail (return zero) only if they run out of memory
-or are passed a 
+or are passed a
 <structname>Vertex</structname>
-list that has a 
+list that has a
 <structname>Vertex</structname>
-with 
+with
 <symbol>VertexStartClosed</symbol>
-set that is not followed by a 
+set that is not followed by a
 <structname>Vertex</structname>
-with 
+with
 <symbol>VertexEndClosed</symbol>
 set.
 </para>
@@ -1246,7 +1246,7 @@ To achieve the effects of the X Version 10
 <indexterm ><primary>X10 compatibility</primary><secondary>XDraw</secondary></indexterm>
 <function>XDrawDashed</function>,
 <indexterm><primary>X10 compatibility</primary><secondary>XDrawDashed</secondary></indexterm>
-and 
+and
 <function>XDrawPatterned</function>,
 <indexterm ><primary>X10 compatibility</primary><secondary>XDrawPatterned</secondary></indexterm>
 use
@@ -1285,7 +1285,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -1325,7 +1325,7 @@ Specifies how many vertices are in vlist.
 <!-- .eM -->
 The
 <xref linkend='XDraw' xrefstyle='select: title'/>
-function draws an arbitrary polygon or curve.  
+function draws an arbitrary polygon or curve.
 The figure drawn is defined by the specified list of vertices (vlist).
 The points are connected by lines as specified in the flags in the
 vertex structure.
@@ -1345,17 +1345,17 @@ typedef struct _Vertex {
 	unsigned short flags;
 } Vertex;
 </synopsis>
-The x and y members are the coordinates of the vertex 
-that are relative to either the upper left inside corner of the drawable 
-(if 
+The x and y members are the coordinates of the vertex
+that are relative to either the upper left inside corner of the drawable
+(if
 <symbol>VertexRelative</symbol>
-is zero) or the previous vertex (if 
+is zero) or the previous vertex (if
 <symbol>VertexRelative</symbol>
 is one).
 </para>
 <para>
 <!-- .LP -->
-The flags, as defined in 
+The flags, as defined in
 <filename class="headerfile">&lt;X11/X10.h&gt;</filename>,
 <indexterm type="file"><primary><filename class="headerfile">X11/X10.h</filename></primary></indexterm>
 <indexterm><primary>Files</primary><secondary><filename class="headerfile">&lt;X11/X10.h&gt;</filename></secondary></indexterm>
@@ -1379,10 +1379,10 @@ VertexEndClosed    0x0010     /* else not */
 <itemizedlist>
   <listitem>
     <para>
-If 
+If
 <symbol>VertexRelative</symbol>
-is not set,  
-the coordinates are absolute (that is, relative to the drawable's origin).  
+is not set,
+the coordinates are absolute (that is, relative to the drawable's origin).
 The first vertex must be an absolute vertex.
     </para>
   </listitem>
@@ -1390,50 +1390,50 @@ The first vertex must be an absolute vertex.
     <para>
 If
 <symbol>VertexDontDraw</symbol>
-is one, 
-no line or curve is drawn from the previous vertex to this one.  
-This is analogous to picking up the pen and moving to another place 
+is one,
+no line or curve is drawn from the previous vertex to this one.
+This is analogous to picking up the pen and moving to another place
 before drawing another line.
     </para>
   </listitem>
   <listitem>
     <para>
-If 
+If
 <symbol>VertexCurved</symbol>
-is one, 
+is one,
 a spline algorithm is used to draw a smooth curve from the previous vertex
-through this one to the next vertex.  
-Otherwise, a straight line is drawn from the previous vertex to this one.  
-It makes sense to set 
+through this one to the next vertex.
+Otherwise, a straight line is drawn from the previous vertex to this one.
+It makes sense to set
 <symbol>VertexCurved</symbol>
 to one only if a previous and next vertex are both defined
-(either explicitly in the array or through the definition of a closed 
+(either explicitly in the array or through the definition of a closed
 curve).
     </para>
   </listitem>
   <listitem>
     <para>
-It is permissible for 
+It is permissible for
 <symbol>VertexDontDraw</symbol>
-bits and 
+bits and
 <symbol>VertexCurved</symbol>
-bits both to be one. 
+bits both to be one.
 This is useful if you want to define the previous point for the smooth curve
 but do not want an actual curve drawing to start until this point.
     </para>
   </listitem>
   <listitem>
     <para>
-If 
+If
 <symbol>VertexStartClosed</symbol>
-is one, 
-then this point marks the beginning of a closed curve.  
-This vertex must be followed later in the array by another vertex 
+is one,
+then this point marks the beginning of a closed curve.
+This vertex must be followed later in the array by another vertex
 whose effective coordinates are identical
 and that has a
 <symbol>VertexEndClosed</symbol>
 bit of one.
-The points in between form a cycle to determine predecessor 
+The points in between form a cycle to determine predecessor
 and successor vertices for the spline algorithm.
     </para>
   </listitem>
@@ -1445,7 +1445,7 @@ This function uses these GC components:
 function, plane-mask, line-width, line-style, cap-style, join-style,
 fill-style, subwindow-mode, clip-x-origin, clip-y-origin, and
 clip-mask.
-It also uses these GC mode-dependent components: 
+It also uses these GC mode-dependent components:
 foreground, background, tile, stipple,
 tile-stipple-x-origin, tile-stipple-y-origin, dash-offset, and dash-list.
 </para>
@@ -1455,7 +1455,7 @@ tile-stipple-x-origin, tile-stipple-y-origin, dash-offset, and dash-list.
 To achieve the effects of the X Version 10
 <function>XDrawTiled</function>
 <indexterm><primary>X10 compatibility</primary><secondary>XDrawTiled</secondary></indexterm>
-and 
+and
 <xref linkend='XDrawFilled' xrefstyle='select: title'/>,
 <indexterm><primary>X10 compatibility</primary><secondary>XDrawFilled</secondary></indexterm>
 use
@@ -1492,7 +1492,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -1541,9 +1541,9 @@ This function uses these GC components:
 function, plane-mask, line-width, line-style, cap-style, join-style,
 fill-style, subwindow-mode, clip-x-origin, clip-y-origin, and
 clip-mask.
-It also uses these GC mode-dependent components: 
+It also uses these GC mode-dependent components:
 foreground, background, tile, stipple,
-tile-stipple-x-origin, tile-stipple-y-origin, 
+tile-stipple-x-origin, tile-stipple-y-origin,
 dash-offset, dash-list, fill-style, and fill-rule.
 </para>
 </sect2>
@@ -1554,7 +1554,7 @@ dash-offset, dash-list, fill-style, and fill-rule.
 These functions have been superseded by the context management functions
 (see <link linkend="Using_the_Context_Manager">section 16.10</link>).
 It is often necessary to associate arbitrary information with resource IDs.
-Xlib provides the 
+Xlib provides the
 <function>XAssocTable</function>
 functions that you can use to make such an association.
 <indexterm><primary>Hash Lookup</primary></indexterm>
@@ -1562,7 +1562,7 @@ functions that you can use to make such an association.
 <indexterm><primary>Resource IDs</primary></indexterm>
 Application programs often need to be able to easily refer to
 their own data structures when an event arrives.
-The 
+The
 <function>XAssocTable</function>
 system provides users of the X library with a method
 for associating their own data structures with X resources
@@ -1573,12 +1573,12 @@ and so on).
 </para>
 <para>
 <!-- .LP -->
-An 
+An
 <function>XAssocTable</function>
-can be used to type X resources.  
+can be used to type X resources.
 For example, the user
 may want to have three or four types of windows,
-each with different properties. 
+each with different properties.
 This can be accomplished by associating each X window ID
 with a pointer to a window property data structure  defined  by  the
 user.
@@ -1601,7 +1601,7 @@ All  XIDs  are  relative  to  the  specified display.
 Because  of  the  hashing  scheme  used  by  the  association mechanism,
 the following rules for determining the size of a
 <function>XAssocTable</function>
-should be followed.  
+should be followed.
 Associations will be  made  and  looked  up  more
 efficiently  if  the  table  size  (number  of  buckets in the hashing
 system) is a power of two and if there are not more than 8 XIDs  per
@@ -1615,7 +1615,7 @@ bucket.
 <!-- .sp -->
 To return a pointer to a new
 <function>XAssocTable</function>,
-use 
+use
 <xref linkend='XCreateAssocTable' xrefstyle='select: title'/>.
 <indexterm significance="preferred"><primary>XCreateAssocTable</primary></indexterm>
 <!-- .sM -->
@@ -1644,7 +1644,7 @@ Specifies the number of buckets in the hash system of
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The size argument specifies the number of buckets in the 
+The size argument specifies the number of buckets in the
 hash system of
 <function>XAssocTable</function>.
 For  reasons  of  efficiency  the number of buckets
@@ -1653,15 +1653,15 @@ Some size  suggestions  might  be:  use  32 buckets  per  100  objects,
 and a reasonable maximum number of objects per buckets is 8.
 If  an  error  allocating  memory  for  the
 <function>XAssocTable</function>
-occurs, 
-a NULL pointer is returned. 
+occurs,
+a NULL pointer is returned.
 </para>
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To create an entry in a given 
+To create an entry in a given
 <function>XAssocTable</function>,
-use 
+use
 <xref linkend='XMakeAssoc' xrefstyle='select: title'/>.
 <indexterm significance="preferred"><primary>XMakeAssoc</primary></indexterm>
 <!-- .sM -->
@@ -1693,7 +1693,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the assoc table. 
+Specifies the assoc table.
       </para>
     </listitem>
   </varlistentry>
@@ -1723,20 +1723,20 @@ Specifies the data to be associated with the X resource ID.
 <!-- .eM -->
 The
 <xref linkend='XMakeAssoc' xrefstyle='select: title'/>
-function inserts data into an 
+function inserts data into an
 <function>XAssocTable</function>
 keyed on an XID.
 Data is inserted into the table only once.
 Redundant inserts are ignored.
-The queue in each association bucket is sorted from the lowest XID to 
+The queue in each association bucket is sorted from the lowest XID to
 the highest XID.
 </para>
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To obtain data from a given 
+To obtain data from a given
 <function>XAssocTable</function>,
-use 
+use
 <xref linkend='XLookUpAssoc' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XLookUpAssoc</primary></indexterm>
@@ -1767,7 +1767,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the assoc table. 
+Specifies the assoc table.
       </para>
     </listitem>
   </varlistentry>
@@ -1787,9 +1787,9 @@ Specifies the X resource ID.
 <!-- .eM -->
 The
 <xref linkend='XLookUpAssoc' xrefstyle='select: title'/>
-function retrieves the data stored in an 
+function retrieves the data stored in an
 <function>XAssocTable</function>
-by its XID.  
+by its XID.
 If  an appropriately  matching XID can be found in the table,
 <xref linkend='XLookUpAssoc' xrefstyle='select: title'/>
 returns the data associated with it.
@@ -1799,9 +1799,9 @@ it returns NULL.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To delete an entry from a given 
+To delete an entry from a given
 <function>XAssocTable</function>,
-use 
+use
 <xref linkend='XDeleteAssoc' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XDeleteAssoc</primary></indexterm>
@@ -1832,7 +1832,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the assoc table. 
+Specifies the assoc table.
       </para>
     </listitem>
   </varlistentry>
@@ -1852,7 +1852,7 @@ Specifies the X resource ID.
 <!-- .eM -->
 The
 <xref linkend='XDeleteAssoc' xrefstyle='select: title'/>
-function deletes an association in an 
+function deletes an association in an
 <function>XAssocTable</function>
 keyed on its XID.
 Redundant deletes (and deletes of nonexistent XIDs) are ignored.
@@ -1862,9 +1862,9 @@ Deleting associations in no way impairs the performance of an
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To free the memory associated with a given 
+To free the memory associated with a given
 <function>XAssocTable</function>,
-use 
+use
 <xref linkend='XDestroyAssocTable' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XDestroyAssocTable</primary></indexterm>
@@ -1883,7 +1883,7 @@ use
     </term>
     <listitem>
       <para>
-Specifies the assoc table. 
+Specifies the assoc table.
     </para>
   </listitem>
   </varlistentry>

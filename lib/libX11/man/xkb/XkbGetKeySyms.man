@@ -21,7 +21,7 @@
 .\"
 .TH XkbGetKeySyms __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetKeySyms \- Obtain the symbols for a subset of the keys in a keyboard 
+XkbGetKeySyms \- Obtain the symbols for a subset of the keys in a keyboard
 description
 .SH SYNOPSIS
 .HP
@@ -41,52 +41,52 @@ connection to X server
 keycode of first key to get
 .TP
 .I num
-number of keycodes for which syms desired 
+number of keycodes for which syms desired
 .TP
 .I xkb
 Xkb description to be updated
 .SH DESCRIPTION
 .LP
-.I XkbGetKeySyms 
-sends a request to the server to obtain the set of keysyms bound to 
-.I num 
-keys starting with the key whose keycode is 
-.I first. 
-It waits for a reply and returns the keysyms in the 
-.I map.syms 
-field of 
-.I xkb. 
-If successful, 
-.I XkbGetKeySyms 
-returns Success. The 
-.I xkb 
+.I XkbGetKeySyms
+sends a request to the server to obtain the set of keysyms bound to
+.I num
+keys starting with the key whose keycode is
+.I first.
+It waits for a reply and returns the keysyms in the
+.I map.syms
+field of
+.I xkb.
+If successful,
+.I XkbGetKeySyms
+returns Success. The
+.I xkb
 parameter must be a pointer to a valid Xkb keyboard description.
 
-If the client 
-.I map 
-in the xkb parameter has not been allocated, 
-.I XkbGetKeySyms 
-allocates and initializes it before obtaining the symbols. 
+If the client
+.I map
+in the xkb parameter has not been allocated,
+.I XkbGetKeySyms
+allocates and initializes it before obtaining the symbols.
 
-If a compatible version of Xkb is not available in the server or the Xkb 
-extension has not been properly initialized, 
-.I XkbGetKeySyms 
-returns BadAccess. If 
-.I num 
-is less than 1 or greater than XkbMaxKeyCount, 
-.I XkbGetKeySyms 
-returns BadValue. If any allocation errors occur, 
-.I XkbGetKeySyms 
+If a compatible version of Xkb is not available in the server or the Xkb
+extension has not been properly initialized,
+.I XkbGetKeySyms
+returns BadAccess. If
+.I num
+is less than 1 or greater than XkbMaxKeyCount,
+.I XkbGetKeySyms
+returns BadValue. If any allocation errors occur,
+.I XkbGetKeySyms
 returns BadAlloc.
 .SH "RETURN VALUES"
 .TP 15
 Success
-The 
-.I XkbGetKeySyms 
-function returns Success if it gets a reply to a request to the server to obtain the set of keysyms bound to 
-.I num 
-keys starting with the key whose keycode is 
-.I first. 
+The
+.I XkbGetKeySyms
+function returns Success if it gets a reply to a request to the server to obtain the set of keysyms bound to
+.I num
+keys starting with the key whose keycode is
+.I first.
 .SH DIAGNOSTICS
 .TP 15
 .B BadAccess

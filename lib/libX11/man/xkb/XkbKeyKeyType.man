@@ -44,14 +44,14 @@ group index
 .SH DESCRIPTION
 .LP
 .I XkbKeyKeyType
-returns a pointer to the key type in the 
-.I types 
-vector of the client map in 
-.I xkb 
-corresponding to the given 
-.I keycode 
-and 
-.I group 
+returns a pointer to the key type in the
+.I types
+vector of the client map in
+.I xkb
+corresponding to the given
+.I keycode
+and
+.I group
 index.
 .SH STRUCTURES
 .LP

@@ -28,11 +28,11 @@ and in server properties.
 <para>
 <!-- .LP -->
 The resource manager is a database manager with a twist.
-In most database systems, 
+In most database systems,
 you perform a query using an imprecise specification,
 and you get back a set of records.
 The resource manager, however, allows you to specify a large
-set of values with an imprecise specification, to query the database 
+set of values with an imprecise specification, to query the database
 with a precise specification, and to get back only a single value.
 This should be used by applications that need to know what the
 user prefers for colors, fonts, and other resources.
@@ -42,9 +42,9 @@ although the resource manager can be and is used in other ways.
 </para>
 <para>
 <!-- .LP -->
-For example, 
-a user of your application may want to specify 
-that all windows should have a blue background 
+For example,
+a user of your application may want to specify
+that all windows should have a blue background
 but that all mail-reading windows should have a red background.
 With well-engineered and coordinated applications,
 a user can define this information using only two lines of specifications.
@@ -75,24 +75,24 @@ and the first letter of name components is in lowercase.
 Each name and class finally has an attribute
 (for example, "foreground" or "font").
 If each window is properly assigned a name and class,
-it is easy for the user to specify attributes of any portion 
+it is easy for the user to specify attributes of any portion
 of the application.
 </para>
 <para>
 <!-- .LP -->
-At the top level, 
+At the top level,
 the application might consist of a paned window (that is, a window divided
 into several sections) named "toc".
 One pane of the paned window is a button box window named "buttons"
-and is filled with command buttons. 
+and is filled with command buttons.
 One of these command buttons is used to incorporate
 new mail and has the name "incorporate".
 This window has a fully qualified name, "xmh.toc.buttons.incorporate",
 and a fully qualified class, "Xmh.Paned.Box.Command".
-Its fully qualified name is the name of its parent, "xmh.toc.buttons", 
+Its fully qualified name is the name of its parent, "xmh.toc.buttons",
 followed by its name, "incorporate".
-Its class is the class of its parent, "Xmh.Paned.Box", 
-followed by its particular class, "Command".  
+Its class is the class of its parent, "Xmh.Paned.Box",
+followed by its particular class, "Command".
 The fully qualified name of a resource is
 the attribute's name appended to the object's fully qualified
 name, and the fully qualified class is its class appended to the object's
@@ -100,7 +100,7 @@ class.
 </para>
 <para>
 <!-- .LP -->
-The incorporate button might need the following resources: 
+The incorporate button might need the following resources:
 Title string,
 Font,
 Foreground color for its inactive state,
@@ -337,12 +337,12 @@ Most uses of the resource manager involve defining names,
 classes, and representation types as string constants.
 However, always referring to strings in the resource manager can be slow,
 because it is so heavily used in some toolkits.
-To solve this problem, 
+To solve this problem,
 a shorthand for a string is used in place of the string
 in many of the resource manager functions.
 Simple comparisons can be performed rather than string comparisons.
 The shorthand name for a string is called a quark and is the
-type 
+type
 <type>XrmQuark</type>.
 On some occasions,
 you may want to allocate a quark that has no string equivalent.
@@ -471,7 +471,7 @@ all future calls will return the same value (identical address).
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To convert a quark to a string, use 
+To convert a quark to a string, use
 <xref linkend='XrmQuarkToString' xrefstyle='select: title'/>.
 </para>
 
@@ -555,7 +555,7 @@ Specifies the string for which a quark list is to be allocated.
     <listitem>
       <para>
 Returns the list of quarks.
-The caller must allocate sufficient space for the quarks list before calling 
+The caller must allocate sufficient space for the quarks list before calling
 <xref linkend='XrmStringToQuarkList' xrefstyle='select: title'/>.
     </para>
   </listitem>
@@ -569,7 +569,7 @@ The
 <xref linkend='XrmStringToQuarkList' xrefstyle='select: title'/>
 function converts the null-terminated string (generally a fully qualified name)
 to a list of quarks.
-Note that the string must be in the valid ResourceName format 
+Note that the string must be in the valid ResourceName format
 (see <link linkend="Resource_File_Syntax">section 15.1</link>).
 If the string is not in the Host Portable Character Encoding,
 the conversion is implementation-dependent.
@@ -630,7 +630,7 @@ Specifies the string for which a quark list is to be allocated.
     <listitem>
       <para>
 Returns the binding list.
-The caller must allocate sufficient space for the binding list before calling 
+The caller must allocate sufficient space for the binding list before calling
 <xref linkend='XrmStringToBindingQuarkList' xrefstyle='select: title'/>.
       </para>
     </listitem>
@@ -642,7 +642,7 @@ The caller must allocate sufficient space for the binding list before calling
     <listitem>
       <para>
 Returns the list of quarks.
-The caller must allocate sufficient space for the quarks list before calling 
+The caller must allocate sufficient space for the quarks list before calling
 <xref linkend='XrmStringToBindingQuarkList' xrefstyle='select: title'/>.
     </para>
   </listitem>
@@ -651,11 +651,11 @@ The caller must allocate sufficient space for the quarks list before calling
 <para>
 <!-- .LP -->
 <!-- .eM -->
-Component names in the list are separated by a period or 
+Component names in the list are separated by a period or
 an asterisk character.
 The string must be in the format of a valid ResourceName
 (see <link linkend="Resource_File_Syntax">section 15.1</link>).
-If the string does not start with a period or an asterisk, 
+If the string does not start with a period or an asterisk,
 a tight binding is assumed.
 For example, the string ``*a.b*c'' becomes:
 </para>
@@ -684,9 +684,9 @@ Each database value is stored in an
 structure.
 This structure consists of a size, an address, and a representation type.
 The size is specified in bytes.
-The representation type is a way for you to store data tagged by some 
+The representation type is a way for you to store data tagged by some
 application-defined type (for example, the strings ``font'' or ``color'').
-It has nothing to do with the C data type or with its class. 
+It has nothing to do with the C data type or with its class.
 The
 <type>XrmValue</type>
 structure is defined as:
@@ -759,7 +759,7 @@ The specified file should contain a sequence of entries in valid ResourceLine
 format (see <link linkend="Resource_File_Syntax">section 15.1</link>);
 the database that results from reading a file
 with incorrect syntax is implementation-dependent.
-The file is parsed in the current locale, 
+The file is parsed in the current locale,
 and the database is created in the current locale.
 If it cannot open the specified file,
 <xref linkend='XrmGetFileDatabase' xrefstyle='select: title'/>
@@ -855,7 +855,7 @@ function returns the RESOURCE_MANAGER property from the server's root
 window of screen zero, which was returned when the connection was opened using
 <xref linkend='XOpenDisplay' xrefstyle='select: title'/>.
 The property is converted from type STRING to the current locale.
-The conversion is identical to that produced by 
+The conversion is identical to that produced by
 <xref linkend='XmbTextPropertyToTextList' xrefstyle='select: title'/>
 for a single element STRING property.
 The returned string is owned by Xlib and should not be freed by the client.
@@ -898,7 +898,7 @@ The
 function returns the SCREEN_RESOURCES property from the root window of the
 specified screen.
 The property is converted from type STRING to the current locale.
-The conversion is identical to that produced by 
+The conversion is identical to that produced by
 <xref linkend='XmbTextPropertyToTextList' xrefstyle='select: title'/>
 for a single element STRING property.
 The property value must be in a format that is acceptable to
@@ -950,7 +950,7 @@ format (see <link linkend="Resource_File_Syntax">section 15.1</link>)
 terminated by a null character;
 the database that results from using a string
 with incorrect syntax is implementation-dependent.
-The string is parsed in the current locale, 
+The string is parsed in the current locale,
 and the database is created in the current locale.
 </para>
 <para>
@@ -1150,7 +1150,7 @@ Specifies the resource database file name.
     </term>
     <listitem>
       <para>
-Specifies the resource database into which the source 
+Specifies the resource database into which the source
 database is to be merged.
       </para>
     </listitem>
@@ -1224,7 +1224,7 @@ Specifies the resource database that is to be merged into the target database.
     </term>
     <listitem>
       <para>
-Specifies the resource database into which the source 
+Specifies the resource database into which the source
 database is to be merged.
       </para>
     </listitem>
@@ -1294,7 +1294,7 @@ Specifies the resource database that is to be merged into the target database.
     </term>
     <listitem>
       <para>
-Specifies the resource database into which the source 
+Specifies the resource database into which the source
 database is to be merged.
     </para>
   </listitem>
@@ -1457,14 +1457,14 @@ Returns the value in the database.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The 
+The
 <xref linkend='XrmGetResource' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XrmQGetResource' xrefstyle='select: title'/>
 functions retrieve a resource from the specified database.
 Both take a fully qualified name/class pair, a destination
 resource representation, and the address of a value
-(size/address pair).  
+(size/address pair).
 The value and returned type point into database memory;
 therefore, you must not modify the data.
 </para>
@@ -1473,18 +1473,18 @@ therefore, you must not modify the data.
 The database only frees or overwrites entries on
 <xref linkend='XrmPutResource' xrefstyle='select: title'/>,
 <xref linkend='XrmQPutResource' xrefstyle='select: title'/>,
-or 
+or
 <xref linkend='XrmMergeDatabases' xrefstyle='select: title'/>.
 A client that is not storing new values into the database or
-is not merging the database should be safe using the address passed 
+is not merging the database should be safe using the address passed
 back at any time until it exits.
 If a resource was found, both
 <xref linkend='XrmGetResource' xrefstyle='select: title'/>
 and
 <xref linkend='XrmQGetResource' xrefstyle='select: title'/>
-return 
+return
 <symbol>True</symbol>;
-otherwise, they return 
+otherwise, they return
 <symbol>False</symbol>.
 </para>
 <para>
@@ -1493,9 +1493,9 @@ otherwise, they return
 Most applications and toolkits do not make random probes
 into a resource database to fetch resources.
 The X toolkit access pattern for a resource database is quite stylized.
-A series of from 1 to 20 probes is made with only the 
+A series of from 1 to 20 probes is made with only the
 last name/class differing in each probe.
-The 
+The
 <xref linkend='XrmGetResource' xrefstyle='select: title'/>
 function is at worst a
 2<superscript><emphasis remap='I'>n</emphasis></superscript> algorithm,
@@ -1560,7 +1560,7 @@ Specifies a list of resource classes.
     <listitem>
       <para>
 Returns a search list for further use.
-The caller must allocate sufficient space for the list before calling 
+The caller must allocate sufficient space for the list before calling
 <function>XrmQGetSearchList</function>.
       </para>
     </listitem>
@@ -1584,12 +1584,12 @@ The
 function takes a list of names and classes
 and returns a list of database levels where a match might occur.
 The returned list is in best-to-worst order and
-uses the same algorithm as 
+uses the same algorithm as
 <xref linkend='XrmGetResource' xrefstyle='select: title'/>
 for determining precedence.
 If list_return was large enough for the search list,
 <function>XrmQGetSearchList</function>
-returns 
+returns
 <symbol>True</symbol>;
 otherwise, it returns
 <symbol>False</symbol>.
@@ -1597,7 +1597,7 @@ otherwise, it returns
 <para>
 <!-- .LP -->
 The size of the search list that the caller must allocate is
-dependent upon the number of levels and wildcards in the resource specifiers 
+dependent upon the number of levels and wildcards in the resource specifiers
 that are stored in the database.
 The worst case length is
 3<superscript><emphasis remap='I'>n</emphasis></superscript>,
@@ -1606,10 +1606,10 @@ components in names or classes.
 </para>
 <para>
 <!-- .LP -->
-When using 
+When using
 <function>XrmQGetSearchList</function>
 followed by multiple probes for resources with a common name and class prefix,
-only the common prefix should be specified in the name and class list to 
+only the common prefix should be specified in the name and class list to
 <function>XrmQGetSearchList</function>.
 </para>
 <para>
@@ -1689,11 +1689,11 @@ Returns the value in the database.
 <!-- .eM -->
 The
 <xref linkend='XrmQGetSearchResource' xrefstyle='select: title'/>
-function searches the specified database levels for the resource 
+function searches the specified database levels for the resource
 that is fully identified by the specified name and class.
 The search stops with the first match.
 <xref linkend='XrmQGetSearchResource' xrefstyle='select: title'/>
-returns 
+returns
 <symbol>True</symbol>
 if the resource was found;
 otherwise, it returns
@@ -1701,14 +1701,14 @@ otherwise, it returns
 </para>
 <para>
 <!-- .LP -->
-A call to 
+A call to
 <function>XrmQGetSearchList</function>
-with a name and class list containing all but the last component 
-of a resource name followed by a call to 
+with a name and class list containing all but the last component
+of a resource name followed by a call to
 <xref linkend='XrmQGetSearchResource' xrefstyle='select: title'/>
-with the last component name and class returns the same database entry as 
+with the last component name and class returns the same database entry as
 <xref linkend='XrmGetResource' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XrmQGetResource' xrefstyle='select: title'/>
 with the fully qualified name and class.
 </para>
@@ -2275,7 +2275,7 @@ typedef enum {
 <!-- .eM -->
 Note that
 <constant>XrmoptionSkipArg</constant>
-is equivalent to 
+is equivalent to
 <constant>XrmoptionSkipNArgs</constant>
 with the
 <structname>XrmOptionDescRec</structname>.<structfield>value</structfield>
@@ -2295,7 +2295,7 @@ typedef struct {
      char *option;     /* Option specification string in argv              */
      char *specifier;     /* Binding and resource name (sans application name)    */
      XrmOptionKind argKind;     /* Which style of option it is         */
-     XPointer value;     /* Value to provide if XrmoptionNoArg or 
+     XPointer value;     /* Value to provide if XrmoptionNoArg or
           \ \ \ XrmoptionSkipNArgs   */
 } XrmOptionDescRec, *XrmOptionDescList;
 </literallayout>
@@ -2405,8 +2405,8 @@ Recognized options in the table are removed from argv,
 and entries are added to the specified resource database
 in the order they occur in argv.
 The table entries contain information on the option string,
-the option name, the style of option, 
-and a value to provide if the option kind is 
+the option name, the style of option,
+and a value to provide if the option kind is
 <constant>XrmoptionNoArg</constant>.
 The option names are compared byte-for-byte to arguments in argv,
 independent of any locale.
@@ -2467,18 +2467,18 @@ static XrmOptionDescRec opTable[] = {
 <!-- .LP -->
 In this table, if the -background (or -bg) option is used to set
 background colors, the stored resource specifier matches all
-resources of attribute background.  
-If the -borderwidth option is used, 
+resources of attribute background.
+If the -borderwidth option is used,
 the stored resource specifier applies only to border width
 attributes of class TopLevelShell (that is, outer-most windows, including
-pop-up windows).  
+pop-up windows).
 If the -title option is used to set a window name,
 only the topmost application windows receive the resource.
 </para>
 <para>
 <!-- .LP -->
 When parsing the command line,
-any unique unambiguous abbreviation for an option name in the table is 
+any unique unambiguous abbreviation for an option name in the table is
 considered a match for the option.
 Note that uppercase and lowercase matter.
 <!-- .bp -->

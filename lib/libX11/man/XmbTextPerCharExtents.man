@@ -160,6 +160,6 @@ Its presence is
 indicated by the macro
 .BR X_HAVE_UTF8_STRING .
 .SH "SEE ALSO"
-XmbTextEscapement(__libmansuffix__),
-XmbTextExtents(__libmansuffix__)
+.BR XmbTextEscapement (__libmansuffix__),
+.BR XmbTextExtents (__libmansuffix__)
 \fI\*(xL\fP

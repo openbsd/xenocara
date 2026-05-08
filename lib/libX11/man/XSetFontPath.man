@@ -114,7 +114,7 @@ by the argument's type is accepted.
 Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
-XListFont(__libmansuffix__),
-XLoadFonts(__libmansuffix__)
+.BR XListFont (__libmansuffix__),
+.BR XLoadFonts (__libmansuffix__)
 .br
 \fI\*(xL\fP

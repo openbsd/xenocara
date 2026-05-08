@@ -152,9 +152,9 @@ is not in the Host Portable Character Encoding,
 the result is implementation-dependent.
 Note that comment lines are not stored.
 .SH "SEE ALSO"
-XrmGetResource(__libmansuffix__),
-XrmInitialize(__libmansuffix__),
-XrmMergeDatabases(__libmansuffix__),
-XrmUniqueQuark(__libmansuffix__)
+.BR XrmGetResource (__libmansuffix__),
+.BR XrmInitialize (__libmansuffix__),
+.BR XrmMergeDatabases (__libmansuffix__),
+.BR XrmUniqueQuark (__libmansuffix__)
 .br
 \fI\*(xL\fP

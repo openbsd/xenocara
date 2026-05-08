@@ -22,8 +22,8 @@
 .\"
 .TH XkbSetMap __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbSetMap \- Send a complete new set of values for entire components to the 
-server. 
+XkbSetMap \- Send a complete new set of values for entire components to the
+server.
 .SH SYNOPSIS
 .HP
 .B Bool XkbSetMap
@@ -44,45 +44,45 @@ mask selecting subcomponents to update
 description from which new values are taken
 .SH DESCRIPTION
 .LP
-There are two ways to make changes to map components: either change a local copy 
-of the keyboard map and call 
-.I XkbSetMap 
-to send the modified map to the server, or, to reduce network traffic, use an 
-XkbMapChangesRec structure and call 
+There are two ways to make changes to map components: either change a local copy
+of the keyboard map and call
+.I XkbSetMap
+to send the modified map to the server, or, to reduce network traffic, use an
+XkbMapChangesRec structure and call
 .I XkbChangeMap.
 
-Use 
-.I XkbSetMap 
-to send a complete new set of values for entire components (for example, all 
-symbols, all actions, and so on) to the server. The 
-.I which 
-parameter specifies the components to be sent to the server, and is a bitwise 
-inclusive OR of the masks listed in Table 1. The 
-.I xkb 
-parameter is a pointer to an XkbDescRec structure and contains the information 
-to be copied to the server. For each bit set in the 
-.I which 
-parameter, 
-.I XkbSetMap 
-takes the corresponding structure values from the 
-.I xkb 
-parameter and sends it to the server specified by 
-.IR dpy . 
+Use
+.I XkbSetMap
+to send a complete new set of values for entire components (for example, all
+symbols, all actions, and so on) to the server. The
+.I which
+parameter specifies the components to be sent to the server, and is a bitwise
+inclusive OR of the masks listed in Table 1. The
+.I xkb
+parameter is a pointer to an XkbDescRec structure and contains the information
+to be copied to the server. For each bit set in the
+.I which
+parameter,
+.I XkbSetMap
+takes the corresponding structure values from the
+.I xkb
+parameter and sends it to the server specified by
+.IR dpy .
 
-If any components specified by 
-.I which 
-are not present in the 
-.I xkb 
-parameter, 
-.I XkbSetMap 
-returns False. Otherwise, it sends the update request to the server and returns 
-True. 
-.I XkbSetMap 
+If any components specified by
+.I which
+are not present in the
+.I xkb
+parameter,
+.I XkbSetMap
+returns False. Otherwise, it sends the update request to the server and returns
+True.
+.I XkbSetMap
 can generate BadAlloc, BadLength, and BadValue protocol errors.
 
-Key types, symbol maps, and actions are all interrelated; changes in one require 
-changes in the others. Xkb provides functions to make it easier to edit these 
-components and handle the interdependencies. Table 1 
+Key types, symbol maps, and actions are all interrelated; changes in one require
+changes in the others. Xkb provides functions to make it easier to edit these
+components and handle the interdependencies. Table 1
 lists these helper functions and provides a pointer to where they are defined.
 
 .TS
@@ -94,7 +94,7 @@ lw(2i) l l lw(1i) lw(3i).
 Table 1 Xkb Mapping Component Masks
 and Convenience Functions
 _
-Mask	Value	Map	Fields	Convenience	
+Mask	Value	Map	Fields	Convenience
 				Functions
 _
 T{
@@ -181,24 +181,24 @@ XkbGetVirtualModMap
 T}
 .TE
 
-The 
-.I changed 
-field identifies the map components that have changed in an XkbDescRec structure 
-and may contain any of the 
-bits in Table 1, which are also shown in Table 2. Every 1 bit in 
-.I changed 
-also identifies which other fields in the XkbMapChangesRec structure contain 
-valid values, as indicated in 
-Table 2. The 
-.I min_key_code 
-and 
-.I max_key_code 
-fields are for reference only; they are ignored on any requests sent to the 
-server and are always updated 
-by the server whenever it returns the data for an XkbMapChangesRec.  
+The
+.I changed
+field identifies the map components that have changed in an XkbDescRec structure
+and may contain any of the
+bits in Table 1, which are also shown in Table 2. Every 1 bit in
+.I changed
+also identifies which other fields in the XkbMapChangesRec structure contain
+valid values, as indicated in
+Table 2. The
+.I min_key_code
+and
+.I max_key_code
+fields are for reference only; they are ignored on any requests sent to the
+server and are always updated
+by the server whenever it returns the data for an XkbMapChangesRec.
 .bp
 .TS
-c s s 
+c s s
 l l l
 l l l
 l l l
@@ -241,25 +241,25 @@ XkbVirtualModMapMask	first_vmodmap_key,	server->vmodmap[first_vmodmap_key] ..
 .SH "RETURN VALUES"
 .TP 15
 True
-The 
-.I XkbSetMap 
-function returns True all components specified by 
-.I which 
-are present in the 
-.I xkb 
+The
+.I XkbSetMap
+function returns True all components specified by
+.I which
+are present in the
+.I xkb
 parameter.
 .TP 15
 False
-The 
-.I XkbSetMap 
-function returns False if any component specified by 
-.I which 
-is not present in the 
-.I xkb 
+The
+.I XkbSetMap
+function returns False if any component specified by
+.I which
+is not present in the
+.I xkb
 parameter.
 .SH STRUCTURES
-Use the XkbMapChangesRec structure to identify and track partial modifications 
-to the mapping components 
+Use the XkbMapChangesRec structure to identify and track partial modifications
+to the mapping components
 and to reduce the amount of traffic between the server and clients.
 .nf
 
@@ -287,8 +287,8 @@ typedef struct _XkbMapChanges {
 
 .fi
 
-The complete description of an Xkb keyboard is given by an XkbDescRec. The 
-component 
+The complete description of an Xkb keyboard is given by an XkbDescRec. The
+component
 structures in the XkbDescRec represent the major Xkb components.
 
 .nf
@@ -308,24 +308,24 @@ typedef struct {
 } XkbDescRec, *XkbDescPtr;
 
 .fi
-The 
-.I display 
-field points to an X display structure. The 
-.I flags field is private to the library: modifying 
-.I flags 
-may yield unpredictable results. The 
-.I device_spec 
-field specifies the device identifier of the keyboard input device, or 
-XkbUseCoreKeyboard, which specifies the core keyboard device. The 
+The
+.I display
+field points to an X display structure. The
+.I flags field is private to the library: modifying
+.I flags
+may yield unpredictable results. The
+.I device_spec
+field specifies the device identifier of the keyboard input device, or
+XkbUseCoreKeyboard, which specifies the core keyboard device. The
 .I min_key_code
-and 
-.I max_key_code 
-fields specify the least and greatest keycode that can be returned by the 
-keyboard. 
+and
+.I max_key_code
+fields specify the least and greatest keycode that can be returned by the
+keyboard.
 
-Each structure component has a corresponding mask bit that is used in function 
-calls to indicate that the structure should be manipulated in some manner, such as 
-allocating it or freeing it. These masks and their relationships to the fields in the 
+Each structure component has a corresponding mask bit that is used in function
+calls to indicate that the structure should be manipulated in some manner, such as
+allocating it or freeing it. These masks and their relationships to the fields in the
 XkbDescRec are shown in Table 3.
 .bp
 .TS
@@ -351,7 +351,7 @@ XkbAllComponentsMask	All Fields	(0x7f)
 Unable to allocate storage
 .TP 15
 .B BadLength
-The length of a request is shorter or longer than that required to minimally 
+The length of a request is shorter or longer than that required to minimally
 contain the arguments
 .TP 15
 .B BadValue

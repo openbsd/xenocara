@@ -22,7 +22,7 @@
 .\"
 .TH XkbModActionVMods __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbModActionVMods \- Returns the vmods1 and vmods2 fields of act converted to the vmods format of an 
+XkbModActionVMods \- Returns the vmods1 and vmods2 fields of act converted to the vmods format of an
 Xkb modifier description
 .SH SYNOPSIS
 .HP
@@ -36,13 +36,13 @@ Xkb modifier description
 action from which to extract virtual mods
 .SH DESCRIPTION
 .LP
-.I XkbModActionVMods 
-returns the 
-.I vmods1 
-and 
-.I vmods2 
-fields of 
-.I act 
-converted to the 
-.I vmods 
+.I XkbModActionVMods
+returns the
+.I vmods1
+and
+.I vmods2
+fields of
+.I act
+converted to the
+.I vmods
 format of an Xkb modifier description.

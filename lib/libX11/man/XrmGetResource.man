@@ -225,9 +225,9 @@ entries that match using the character \*(lq?\*(rq.
 An entry preceded by a tight binding takes precedence over entries
 preceded by a loose binding.
 .SH "SEE ALSO"
-XrmInitialize(__libmansuffix__),
-XrmMergeDatabases(__libmansuffix__),
-XrmPutResource(__libmansuffix__),
-XrmUniqueQuark(__libmansuffix__)
+.BR XrmInitialize (__libmansuffix__),
+.BR XrmMergeDatabases (__libmansuffix__),
+.BR XrmPutResource (__libmansuffix__),
+.BR XrmUniqueQuark (__libmansuffix__)
 .br
 \fI\*(xL\fP

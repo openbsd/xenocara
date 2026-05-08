@@ -21,11 +21,11 @@
 .\"
 .TH XkbKeySymEntry __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbKeySymEntry \-  Returns the keysym corresponding to shift level 
-.I shift 
-and group 
-.I grp 
-from the two-dimensional array of keysyms for the key corresponding to 
+XkbKeySymEntry \-  Returns the keysym corresponding to shift level
+.I shift
+and group
+.I grp
+from the two-dimensional array of keysyms for the key corresponding to
 .I keycode
 .SH SYNOPSIS
 .HP
@@ -42,7 +42,7 @@ from the two-dimensional array of keysyms for the key corresponding to
 Xkb description of interest
 .TP
 .I keycode
-keycode of interest 
+keycode of interest
 .TP
 .I shift
 shift level of interest
@@ -51,29 +51,29 @@ shift level of interest
 group of interest
 .SH DESCRIPTION
 .LP
-The key width and number of groups associated with a key are used to form a 
-small two-dimensional array of KeySyms for a key. This array may be different 
-sizes for different keys. The array for a single key is stored as a linear list, 
-in row-major order. The arrays for all of the keys are stored in the 
-.I syms 
-field of the client map. There is one row for each group associated with a key 
-and one column for each level. The index corresponding to a given group and 
+The key width and number of groups associated with a key are used to form a
+small two-dimensional array of KeySyms for a key. This array may be different
+sizes for different keys. The array for a single key is stored as a linear list,
+in row-major order. The arrays for all of the keys are stored in the
+.I syms
+field of the client map. There is one row for each group associated with a key
+and one column for each level. The index corresponding to a given group and
 shift level is computed as:
 .nf
 
      idx = group_index * key_width + shift_level
-     
+
 .fi
-The 
-.I offset 
-field of the 
-.I key_sym_map 
+The
+.I offset
+field of the
+.I key_sym_map
 entry for a key is used to access the beginning of the array.
 
-.I XkbKeySymEntry 
-returns the keysym corresponding to shift level 
-.I shift 
-and group 
-.I grp 
-from the two-dimensional array of keysyms for the key corresponding to 
+.I XkbKeySymEntry
+returns the keysym corresponding to shift level
+.I shift
+and group
+.I grp
+from the two-dimensional array of keysyms for the key corresponding to
 .I keycode.

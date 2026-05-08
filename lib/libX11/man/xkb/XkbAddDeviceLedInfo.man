@@ -43,44 +43,44 @@ input extension class for LED device of interest
 input extension ID for LED device of interest
 .SH DESCRIPTION
 .LP
-.I XkbAddDeviceLedInfo 
-first checks to see whether an entry matching 
-.I led_class 
-and 
-.I led_id 
-already exists in the 
-.I device_info->leds 
-array. If it finds a matching entry, it returns a pointer to that entry. Otherwise, it checks to be sure 
+.I XkbAddDeviceLedInfo
+first checks to see whether an entry matching
+.I led_class
+and
+.I led_id
+already exists in the
+.I device_info->leds
+array. If it finds a matching entry, it returns a pointer to that entry. Otherwise, it checks to be sure
 there is at least one empty entry in
-.I device_info->leds 
+.I device_info->leds
 and extends it if there is not enough room. It then increments
-.I device_info->num_leds 
-and fills in the next available entry in 
-.I device_info->leds 
-with 
-.I led_class 
-and 
+.I device_info->num_leds
+and fills in the next available entry in
+.I device_info->leds
+with
+.I led_class
+and
 .I led_id.
 
-If successful, 
-.I XkbAddDeviceLedInfo 
-returns a pointer to the XkbDeviceLedInfoRec structure that was initialized. If unable to allocate 
-sufficient storage, or if 
-.I device_info 
-points to an invalid XkbDeviceInfoRec structure, or if 
-.I led_class 
-or 
-.I led_id 
-are inappropriate, 
-.I XkbAddDeviceLedInfo 
+If successful,
+.I XkbAddDeviceLedInfo
+returns a pointer to the XkbDeviceLedInfoRec structure that was initialized. If unable to allocate
+sufficient storage, or if
+.I device_info
+points to an invalid XkbDeviceInfoRec structure, or if
+.I led_class
+or
+.I led_id
+are inappropriate,
+.I XkbAddDeviceLedInfo
 returns NULL.
 
-To allocate additional space for button actions in an XkbDeviceInfoRec structure, use 
+To allocate additional space for button actions in an XkbDeviceInfoRec structure, use
 .I XkbResizeDeviceButtonActions.
 
 .SH STRUCTURES
 .LP
-Information about X Input Extension devices is transferred between a client program and the Xkb 
+Information about X Input Extension devices is transferred between a client program and the Xkb
 extension in an XkbDeviceInfoRec structure:
 .nf
 
@@ -99,7 +99,7 @@ extension in an XkbDeviceInfoRec structure:
         unsigned short       dflt_led_fb;   /\&* input extension ID of default indicator feedback */
         XkbDeviceLedInfoPtr  leds;          /\&* LED descriptions */
     } XkbDeviceInfoRec, *XkbDeviceInfoPtr;
-    
+
 
     typedef struct {
         unsigned short      led_class;        /\&* class for this LED device*/
@@ -112,6 +112,6 @@ extension in an XkbDeviceInfoRec structure:
         XkbIndicatorMapRec  maps;             /\&* indicator maps for each LED */
     } XkbDeviceLedInfoRec, *XkbDeviceLedInfoPtr;
 
-.fi    
+.fi
 .SH "SEE ALSO"
 .BR XkbResizeDeviceButtonActions (__libmansuffix__)

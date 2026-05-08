@@ -293,7 +293,7 @@ A value for a Drawable argument does not name a defined Window or Pixmap.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XQueryPointer(__libmansuffix__),
-XQueryTree(__libmansuffix__)
+.BR XQueryPointer (__libmansuffix__),
+.BR XQueryTree (__libmansuffix__)
 .br
 \fI\*(xL\fP

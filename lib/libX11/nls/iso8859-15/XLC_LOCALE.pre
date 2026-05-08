@@ -4,14 +4,14 @@ XCOMM  then this file will be renamed iso8859-15.
 XCOMM  This file is provided as preliminary support for the Latin-9
 XCOMM  (a.k.a. Latin-0) character set so that Europeans who want
 XCOMM  the Euro currency character can do so.
-XCOMM 
-XCOMM 
+XCOMM
+XCOMM
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_FONTSET category
-XCOMM 
+XCOMM
 XLC_FONTSET
-XCOMM 	fs0 class 
+XCOMM 	fs0 class
 fs0	{
 	charset	{
 		name		ISO8859-1:GL
@@ -22,7 +22,7 @@ fs0	{
 		vertical_rotate	all
 	}
 }
-XCOMM 	fs1 class 
+XCOMM 	fs1 class
 fs1	{
 	charset	{
 		name		ISO8859-15:GR
@@ -33,9 +33,9 @@ fs1	{
 }
 END XLC_FONTSET
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_XLOCALE category
-XCOMM 
+XCOMM
 XLC_XLOCALE
 
 encoding_name		ISO8859-15

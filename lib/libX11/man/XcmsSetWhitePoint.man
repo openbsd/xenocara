@@ -92,10 +92,10 @@ function first sets the white point adjustment procedure and client data
 in the specified CCC with the newly specified procedure and client data
 and then returns the old procedure.
 .SH "SEE ALSO"
-DisplayOfCCC(__libmansuffix__),
-XcmsCCCOfColormap(__libmansuffix__),
-XcmsConvertColors(__libmansuffix__),
-XcmsCreateCCC(__libmansuffix__),
-XcmsDefaultCCC(__libmansuffix__)
+.BR DisplayOfCCC (__libmansuffix__),
+.BR XcmsCCCOfColormap (__libmansuffix__),
+.BR XcmsConvertColors (__libmansuffix__),
+.BR XcmsCreateCCC (__libmansuffix__),
+.BR XcmsDefaultCCC (__libmansuffix__)
 .br
 \fI\*(xL\fP

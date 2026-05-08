@@ -149,8 +149,8 @@ can generate a
 .B BadGC
 error.
 .SH "SEE ALSO"
-AllPlanes(__libmansuffix__),
-XFlush(__libmansuffix__),
-XSetCloseDownMode(__libmansuffix__)
+.BR AllPlanes (__libmansuffix__),
+.BR XFlush (__libmansuffix__),
+.BR XSetCloseDownMode (__libmansuffix__)
 .br
 \fI\*(xL\fP

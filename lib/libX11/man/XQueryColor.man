@@ -244,8 +244,8 @@ by the argument's type is accepted.
 Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
-XAllocColor(__libmansuffix__),
-XCreateColormap(__libmansuffix__),
-XStoreColors(__libmansuffix__)
+.BR XAllocColor (__libmansuffix__),
+.BR XCreateColormap (__libmansuffix__),
+.BR XStoreColors (__libmansuffix__)
 .br
 \fI\*(xL\fP

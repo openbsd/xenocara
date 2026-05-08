@@ -216,8 +216,8 @@ by the argument's type is accepted.
 Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
-XDefineCursor(__libmansuffix__),
-XLoadFont(__libmansuffix__),
-XRecolorCursor(__libmansuffix__)
+.BR XDefineCursor (__libmansuffix__),
+.BR XLoadFont (__libmansuffix__),
+.BR XRecolorCursor (__libmansuffix__)
 .br
 \fI\*(xL\fP

@@ -34,31 +34,31 @@ XkbAddGeomKey \- Add one key at the end of an existing row of keys
 row to be updated
 .SH DESCRIPTION
 .LP
-Xkb provides functions to add a single new element to the top-level keyboard geometry. In each case 
-the 
-.I num_ * 
-fields of the corresponding structure is incremented by 1. These functions do not change 
-.I sz_* 
-unless there is no more room in the array. Some of these functions fill in the values of the 
-element's structure from the arguments. For other functions, you must explicitly write code to fill 
+Xkb provides functions to add a single new element to the top-level keyboard geometry. In each case
+the
+.I num_ *
+fields of the corresponding structure is incremented by 1. These functions do not change
+.I sz_*
+unless there is no more room in the array. Some of these functions fill in the values of the
+element's structure from the arguments. For other functions, you must explicitly write code to fill
 the structure's elements.
 
-The top-level geometry description includes a list of 
-.I geometry properties. 
-A geometry property associates an arbitrary string with an equally arbitrary name. Programs that 
-display images of keyboards can use geometry properties as hints, but they are not interpreted by 
+The top-level geometry description includes a list of
+.I geometry properties.
+A geometry property associates an arbitrary string with an equally arbitrary name. Programs that
+display images of keyboards can use geometry properties as hints, but they are not interpreted by
 Xkb. No other geometry structures refer to geometry properties.
 
-Keys are grouped into rows. 
-.I XkbAddGeomKey 
-adds one key to the end of the specified 
-.I row. 
-The key is allocated and zeroed. 
-.I XkbAddGeomKey 
-returns NULL if 
-.I row 
-is empty or if it was not able to allocate space for the key. To allocate space for an arbitrary 
-number of keys to a row, use 
+Keys are grouped into rows.
+.I XkbAddGeomKey
+adds one key to the end of the specified
+.I row.
+The key is allocated and zeroed.
+.I XkbAddGeomKey
+returns NULL if
+.I row
+is empty or if it was not able to allocate space for the key. To allocate space for an arbitrary
+number of keys to a row, use
 .I XkbAllocGeomKeys.
 .SH STRUCTURES
 .LP
@@ -70,7 +70,7 @@ number of keys to a row, use
         unsigned char   shape_ndx;        /\&* index of shape for key */
         unsigned char   color_ndx;        /\&* index of color for key body */
     } XkbKeyRec, *XkbKeyPtr;
-    
+
 .fi
 .SH "SEE ALSO"
 .BR XkbAllocGeomKeys (__libmansuffix__)

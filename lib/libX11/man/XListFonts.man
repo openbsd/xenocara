@@ -166,7 +166,7 @@ If other threads make X requests on the same
 .BR Display ,
 then this function's behavior is undefined.
 .SH "SEE ALSO"
-XLoadFont(__libmansuffix__),
-XSetFontPath(__libmansuffix__)
+.BR XLoadFont (__libmansuffix__),
+.BR XSetFontPath (__libmansuffix__)
 .br
 \fI\*(xL\fP

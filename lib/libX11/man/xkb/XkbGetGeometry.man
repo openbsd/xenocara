@@ -21,7 +21,7 @@
 .\"
 .TH XkbGetGeometry __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetGeometry \- Loads a keyboard geometry if you already have the keyboard 
+XkbGetGeometry \- Loads a keyboard geometry if you already have the keyboard
 description
 .SH SYNOPSIS
 .HP
@@ -36,20 +36,20 @@ description
 connection to the X server
 .TP
 .I xkb
-keyboard description that contains the ID for the keyboard and into which the 
+keyboard description that contains the ID for the keyboard and into which the
 geometry should be loaded
 .SH DESCRIPTION
 .LP
 You can load a keyboard geometry as part of the keyboard description returned by
-.I XkbGetKeyboard. 
-However, if a keyboard description has been previously loaded, you can instead 
-obtain the geometry by calling the 
-.I XkbGetGeometry. 
-In this case, the geometry returned is the one associated with the keyboard 
+.I XkbGetKeyboard.
+However, if a keyboard description has been previously loaded, you can instead
+obtain the geometry by calling the
+.I XkbGetGeometry.
+In this case, the geometry returned is the one associated with the keyboard
 whose device ID is contained in the keyboard description.
 
-.I XkbGetGeometry 
-can return BadValue, BadImplementation, BadName, BadAlloc, or BadLength errors 
+.I XkbGetGeometry
+can return BadValue, BadImplementation, BadName, BadAlloc, or BadLength errors
 or Success if it succeeds.
 .SH DIAGNOSTICS
 .TP 15
@@ -60,7 +60,7 @@ Unable to allocate storage
 Invalid reply from server
 .TP 15
 .B BadLength
-The length of a request is shorter or longer than that required to minimally 
+The length of a request is shorter or longer than that required to minimally
 contain the arguments
 .TP 15
 .B BadName

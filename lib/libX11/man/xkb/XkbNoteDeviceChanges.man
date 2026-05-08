@@ -43,52 +43,52 @@ event indicating state changes
 mask indicating changes to note
 .SH DESCRIPTION
 .LP
-The 
-.I wanted 
-field specifies the changes that should be noted in 
-.I old, 
+The
+.I wanted
+field specifies the changes that should be noted in
+.I old,
 and is composed of the bitwise inclusive OR of one or more of the masks from Table 1. The
-.I reason 
-field of the event in 
-.I new 
-indicates the types of changes the event is reporting. 
-.I XkbNoteDeviceChanges 
-updates the XkbDeviceChangesRec specified by 
-.I old 
-with the changes that are both specified in 
-.I wanted 
-and contained in 
+.I reason
+field of the event in
+.I new
+indicates the types of changes the event is reporting.
+.I XkbNoteDeviceChanges
+updates the XkbDeviceChangesRec specified by
+.I old
+with the changes that are both specified in
+.I wanted
+and contained in
 .I new->reason.
 
 .nf
-                         Table 1 XkbDeviceInfoRec Mask Bits                        
+                         Table 1 XkbDeviceInfoRec Mask Bits
 ____________________________________________________________________________________
 Name                         XkbDeviceInfoRec Value     Capability If Set
-                             Fields Effected            
+                             Fields Effected
 ____________________________________________________________________________________
 XkbXI_KeyboardsMask                           (1L <<0) Clients can use all
                                                        Xkb requests and events
-                                                       with KeyClass devices 
+                                                       with KeyClass devices
                                                        supported by the input
                                                        device extension.
 
-XkbXI_ButtonActionsMask       num_btns        (1L <<1) Clients can assign key 
-                              btn_acts                 actions to buttons 
+XkbXI_ButtonActionsMask       num_btns        (1L <<1) Clients can assign key
+                              btn_acts                 actions to buttons
                                                        non-KeyClass input
                                                        extension devices.
-                           
+
 XkbXI_IndicatorNamesMask      leds->names     (1L <<2) Clients can assign
                                                        names to indicators on
                                                        non-KeyClass input
                                                        extension devices.
-                                                             
+
 XkbXI_IndicatorMapsMask       leds->maps      (1L <<3) Clients can assign
                                                        indicator maps to
-                                                       indicators on 
+                                                       indicators on
                                                        non-KeyClass input
                                                        extension devices.
 
-XkbXI_IndicatorStateMask      leds->state     (1L <<4) Clients can request 
+XkbXI_IndicatorStateMask      leds->state     (1L <<4) Clients can request
                                                        the status of indicators
                                                        on non-KeyClass input
                                                        extension devices.
@@ -101,7 +101,7 @@ XkbXI_UnsupportedFeaturesMask unsupported     (1L <<15)
 
 XkbXI_AllDeviceFeaturesMask   Those selected  (0x1e)   XkbXI_IndicatorsMask |
                               by Value Column          XkbSI_ButtonActionsMask
-                              masks 
+                              masks
 
 XkbXI_AllFeaturesMask         Those selected  (0x1f)   XkbSI_AllDeviceFeaturesMask |
                               by Value Column          XkbSI_KeyboardsMask
@@ -112,14 +112,14 @@ XkbXI_AllDetailsMask          Those selected  (0x801f) XkbXI_AllFeaturesMask |
                               masks
 .fi
 
-To update a local copy of the state and configuration of an X input extension device with the changes 
+To update a local copy of the state and configuration of an X input extension device with the changes
 previously noted in an XkbDeviceChangesRec structure, use
 .I XkbGetDeviceInfoChanges.
 .SH STRUCTURES
 .LP
-Changes to an Xkb extension device may be tracked by listening to XkbDeviceExtensionNotify events and 
-accumulating the changes in an XkbDeviceChangesRec structure. The changes noted in the structure may 
-then be used in subsequent operations to update either a server configuration or a local copy of an 
+Changes to an Xkb extension device may be tracked by listening to XkbDeviceExtensionNotify events and
+accumulating the changes in an XkbDeviceChangesRec structure. The changes noted in the structure may
+then be used in subsequent operations to update either a server configuration or a local copy of an
 Xkb extension device configuration. The changes structure is defined as follows:
 .nf
 

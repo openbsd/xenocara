@@ -219,7 +219,6 @@ The
 .BR XSetWindow Attributes
 structure contains:
 .LP
-.LP
 /\&* Window attribute value mask bits */
 .TS
 lw(.5i) lw(2.5i) lw(.8i).
@@ -386,12 +385,12 @@ alternatives can generate this error.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XChangeWindowAttributes(__libmansuffix__),
-XConfigureWindow(__libmansuffix__),
-XDefineCursor(__libmansuffix__),
-XDestroyWindow(__libmansuffix__),
-XMapWindow(__libmansuffix__),
-XRaiseWindow(__libmansuffix__),
-XUnmapWindow(__libmansuffix__)
+.BR XChangeWindowAttributes (__libmansuffix__),
+.BR XConfigureWindow (__libmansuffix__),
+.BR XDefineCursor (__libmansuffix__),
+.BR XDestroyWindow (__libmansuffix__),
+.BR XMapWindow (__libmansuffix__),
+.BR XRaiseWindow (__libmansuffix__),
+.BR XUnmapWindow (__libmansuffix__)
 .br
 \fI\*(xL\fP

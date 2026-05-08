@@ -22,7 +22,7 @@
 .\"
 .TH XkbSARedirectSetVModsMask __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbSARedirectSetVModsMask \- Sets the vmods_mask0 and vmods_mask1 fields of act 
+XkbSARedirectSetVModsMask \- Sets the vmods_mask0 and vmods_mask1 fields of act
 from vm
 .SH SYNOPSIS
 .HP
@@ -40,66 +40,66 @@ action in which to set vmods
 new value for virtual modifier mask
 .SH DESCRIPTION
 .LP
-Actions associated with the XkbRedirectKeyAction structure generate KeyPress and 
-KeyRelease events 
+Actions associated with the XkbRedirectKeyAction structure generate KeyPress and
+KeyRelease events
 containing a keycode different from the key that was pressed or released.
 
-The 
-.I type 
+The
+.I type
 field for the XkbRedirectKeyAction structure should always be XkbSA_RedirectKey.
-Key presses cause a KeyPress event for the key specified by the 
-.I new_key 
-field instead of the actual key. The state reported in this event reports the 
-current effective 
-modifiers changed as follows: any real modifiers selected by the 
-.I mods_mask 
-field are set to corresponding values from the 
-.I mods 
+Key presses cause a KeyPress event for the key specified by the
+.I new_key
+field instead of the actual key. The state reported in this event reports the
+current effective
+modifiers changed as follows: any real modifiers selected by the
+.I mods_mask
+field are set to corresponding values from the
+.I mods
 field. Any real modifiers bound to the virtual modifiers specified by the
-.I vmods_mask0 
-and 
-.I vmods_mask1 
+.I vmods_mask0
+and
+.I vmods_mask1
 fields are either set or cleared, depending on the corresponding values in the
-.I vmods0 
-and 
-.I vmods1 
-fields. If the real and virtual modifier definitions specify conflicting values 
-for a single modifier, 
+.I vmods0
+and
+.I vmods1
+fields. If the real and virtual modifier definitions specify conflicting values
+for a single modifier,
 the real modifier definition has priority.
 
-Key releases cause a KeyRelease event for the key specified by the 
-.I new_key 
-field instead of the actual key. The state for this event consists of the 
-effective keyboard modifiers 
+Key releases cause a KeyRelease event for the key specified by the
+.I new_key
+field instead of the actual key. The state for this event consists of the
+effective keyboard modifiers
 at the time of the release, changed as described previously.
 
-The XkbSA_RedirectKey action normally redirects to another key on the same 
-device as the key that 
-caused the event, unless that device does not belong to the input extension 
-KeyClass, in which case 
-this action causes an event on the core keyboard device. (The input extension 
-categorizes devices by 
-breaking them into classes. Keyboards, and other input devices with keys, are 
-classified as KeyClass 
+The XkbSA_RedirectKey action normally redirects to another key on the same
+device as the key that
+caused the event, unless that device does not belong to the input extension
+KeyClass, in which case
+this action causes an event on the core keyboard device. (The input extension
+categorizes devices by
+breaking them into classes. Keyboards, and other input devices with keys, are
+classified as KeyClass
 devices by the input extension.)
 
-The 
-.I vmods_mask0 
-and 
-.I vmods_mask1 
-fields actually represent one 
-.I vmods_mask 
+The
+.I vmods_mask0
+and
+.I vmods_mask1
+fields actually represent one
+.I vmods_mask
 value. Xkb provides macros to convert between the two formats.
 
-.I XkbSARedirectSetVModsMask 
-sets the 
-.I vmods_mask0 
-and 
-.I vmods_mask1 
-fields of 
-.I act 
-from 
-.I vm. 
+.I XkbSARedirectSetVModsMask
+sets the
+.I vmods_mask0
+and
+.I vmods_mask1
+fields of
+.I act
+from
+.I vm.
 .SH STRUCTURES
 .LP
 .nf
@@ -114,5 +114,5 @@ from
         unsigned char   vmods0;      /\&* first half of mask of virtual mods to take values from */
         unsigned char   vmods1;      /\&* other half of mask of virtual mods to take values from */
     } XkbRedirectKeyAction;
-    
+
 .fi

@@ -290,9 +290,11 @@ wire_to_event(Display *dpy, XEvent *re, xEvent *event)
             mev->num_modmap_keys = mn->nModMapKeys;
             mev->first_vmodmap_key = mn->firstVModMapKey;
             mev->num_vmodmap_keys = mn->nVModMapKeys;
-            XkbNoteMapChanges(&xkbi->changes, mev, XKB_XLIB_MAP_MASK);
-            if (xkbi->changes.changed)
-                xkbi->flags |= XkbMapPending;
+            if (xkbi->desc && xkbi->desc->device_spec == mn->deviceID) {
+                XkbNoteMapChanges(&xkbi->changes, mev, XKB_XLIB_MAP_MASK);
+                if (xkbi->changes.changed)
+                    xkbi->flags |= XkbMapPending;
+            }
             return True;
         }
         else if (mn->nKeySyms > 0) {
@@ -306,9 +308,11 @@ wire_to_event(Display *dpy, XEvent *re, xEvent *event)
             ev->first_keycode = mn->firstKeySym;
             ev->request = MappingKeyboard;
             ev->count = mn->nKeySyms;
-            _XkbNoteCoreMapChanges(&xkbi->changes, ev, XKB_XLIB_MAP_MASK);
-            if (xkbi->changes.changed)
-                xkbi->flags |= XkbMapPending;
+            if (xkbi->desc && xkbi->desc->device_spec == mn->deviceID) {
+                _XkbNoteCoreMapChanges(&xkbi->changes, ev, XKB_XLIB_MAP_MASK);
+                if (xkbi->changes.changed)
+                    xkbi->flags |= XkbMapPending;
+            }
             return True;
         }
     }

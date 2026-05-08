@@ -133,7 +133,7 @@ request on it.
 <!-- .LP -->
 The X server performs normal exposure processing on formerly obscured
 windows.
-The X server might not generate 
+The X server might not generate
 <symbol>Expose</symbol>
 events for regions from the initial
 <systemitem>UnmapWindow</systemitem>
@@ -197,14 +197,14 @@ For further information about close-connection processing,
 see <link linkend='Using_X_Server_Connection_Close_Operations'>section 2.6</link>.
 To allow an application's window to survive when a window manager that
 has reparented a window fails,
-Xlib provides the save-set functions that you can 
+Xlib provides the save-set functions that you can
 use to control the longevity of subwindows
 that are normally destroyed when the parent is destroyed.
 For example, a window manager that wants to add decoration
 to a window by adding a frame might reparent an application's
-window. 
+window.
 When the frame is destroyed,
-the application's window should not be destroyed 
+the application's window should not be destroyed
 but be returned to its previous place in the window hierarchy.
 </para>
 <para>
@@ -271,7 +271,7 @@ or
 <!-- .eM -->
 Depending on the specified mode,
 <xref linkend='XChangeSaveSet' xrefstyle='select: title'/>
-either inserts or deletes the specified window from the client's save-set. 
+either inserts or deletes the specified window from the client's save-set.
 The specified window must have been created by some other client,
 or a
 <errorname>BadMatch</errorname>
@@ -415,7 +415,7 @@ The X server maintains a list of installed colormaps.
 Windows using these colormaps are guaranteed to display with
 correct colors; windows using other colormaps may or may not display
 with correct colors.
-Xlib provides functions that you can use to install a colormap, 
+Xlib provides functions that you can use to install a colormap,
 uninstall a colormap, and obtain a list of installed colormaps.
 </para>
 <para>
@@ -430,7 +430,7 @@ The required list is maintained as follows.
 When a colormap is specified to
 <xref linkend='XInstallColormap' xrefstyle='select: title'/>,
 it is added to the head of the list;
-the list is truncated at the tail, if necessary, to keep its length to 
+the list is truncated at the tail, if necessary, to keep its length to
 at most M.
 When a colormap is specified to
 <xref linkend='XUninstallColormap' xrefstyle='select: title'/>
@@ -496,11 +496,11 @@ or
 </para>
 <para>
 <!-- .LP -->
-If the specified colormap is not already an installed colormap, 
+If the specified colormap is not already an installed colormap,
 the X server generates a
 <symbol>ColormapNotify</symbol>
 event on each window that has that colormap.
-In addition, for every other colormap that is installed as 
+In addition, for every other colormap that is installed as
 a result of a call to
 <xref linkend='XInstallColormap' xrefstyle='select: title'/>,
 the X server generates a
@@ -560,19 +560,19 @@ The
 function removes the specified colormap from the required
 list for its screen.
 As a result,
-the specified colormap might be uninstalled, 
+the specified colormap might be uninstalled,
 and the X server might implicitly install or uninstall additional colormaps.
 Which colormaps get installed or uninstalled is server dependent
 except that the required list must remain installed.
 </para>
 <para>
 <!-- .LP -->
-If the specified colormap becomes uninstalled, 
+If the specified colormap becomes uninstalled,
 the X server generates a
 <symbol>ColormapNotify</symbol>
 event on each window that has that colormap.
-In addition, for every other colormap that is installed or uninstalled as a 
-result of a call to 
+In addition, for every other colormap that is installed or uninstalled as a
+result of a call to
 <xref linkend='XUninstallColormap' xrefstyle='select: title'/>,
 the X server generates a
 <symbol>ColormapNotify</symbol>
@@ -639,7 +639,7 @@ Returns the number of currently installed colormaps.
 <!-- .eM -->
 The
 <xref linkend='XListInstalledColormaps' xrefstyle='select: title'/>
-function returns a list of the currently installed colormaps for the screen 
+function returns a list of the currently installed colormaps for the screen
 of the specified window.
 The order of the colormaps in the list is not significant
 and is no explicit indication of the required list.
@@ -725,7 +725,7 @@ The
 function defines the directory search path for font lookup.
 There is only one search path per X server, not one per client.
 The encoding and interpretation of the strings are implementation-dependent,
-but typically they specify directories or font servers to be searched 
+but typically they specify directories or font servers to be searched
 in the order listed.
 An X server is permitted to cache font information internally;
 for example, it might cache an entire font from a file and not
@@ -733,7 +733,7 @@ check on subsequent opens of that font to see if the underlying
 font file has changed.
 However,
 when the font path is changed,
-the X server is guaranteed to flush all cached information about fonts 
+the X server is guaranteed to flush all cached information about fonts
 for which there currently are no explicit resource IDs allocated.
 The meaning of an error from this request is implementation-dependent.
 </para>
@@ -884,7 +884,7 @@ Specifies the connection to the X server.
 <!-- .eM -->
 The
 <xref linkend='XGrabServer' xrefstyle='select: title'/>
-function disables processing of requests and close downs on all other 
+function disables processing of requests and close downs on all other
 connections than the one this request arrived on.
 You should not grab the X server any more than is absolutely necessary.
 </para>
@@ -979,13 +979,13 @@ forces a close down of the client
 that created the resource
 if a valid resource is specified.
 If the client has already terminated in
-either 
+either
 <symbol>RetainPermanent</symbol>
-or 
+or
 <symbol>RetainTemporary</symbol>
 mode, all of the client's
 resources are destroyed.
-If 
+If
 <symbol>AllTemporary</symbol>
 is specified, the resources of all clients that have terminated in
 <symbol>RetainTemporary</symbol>
@@ -994,8 +994,8 @@ This permits implementation of window manager facilities that aid debugging.
 A client can set its close-down mode to
 <symbol>RetainTemporary</symbol>.
 If the client then crashes,
-its windows would not be destroyed. 
-The programmer can then inspect the application's window tree 
+its windows would not be destroyed.
+The programmer can then inspect the application's window tree
 and use the window manager to destroy the zombie windows.
 </para>
 <para>
@@ -1013,7 +1013,7 @@ error.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-Xlib provides functions that you can use to set or reset the mode 
+Xlib provides functions that you can use to set or reset the mode
 of the screen saver, to force or activate the screen saver,
 or to obtain the current screen saver values.
 </para>
@@ -1101,33 +1101,33 @@ or
 <para>
 <!-- .LP -->
 <!-- .eM -->
-Timeout and interval are specified in seconds. 
-A timeout of 0 disables the screen saver 
+Timeout and interval are specified in seconds.
+A timeout of 0 disables the screen saver
 (but an activated screen saver is not deactivated),
 and a timeout of &minus;1 restores the default.
 Other negative values generate a
 <errorname>BadValue</errorname>
 error.
-If the timeout value is nonzero, 
+If the timeout value is nonzero,
 <xref linkend='XSetScreenSaver' xrefstyle='select: title'/>
 enables the screen saver.
 An interval of 0 disables the random-pattern motion.
-If no input from devices (keyboard, mouse, and so on) is generated 
+If no input from devices (keyboard, mouse, and so on) is generated
 for the specified number of timeout seconds once the screen saver is enabled,
 the screen saver is activated.
 </para>
 <para>
 <!-- .LP -->
-For each screen, 
-if blanking is preferred and the hardware supports video blanking, 
-the screen simply goes blank.  
-Otherwise, if either exposures are allowed or the screen can be regenerated 
-without sending 
+For each screen,
+if blanking is preferred and the hardware supports video blanking,
+the screen simply goes blank.
+Otherwise, if either exposures are allowed or the screen can be regenerated
+without sending
 <symbol>Expose</symbol>
-events to clients, 
-the screen is tiled with the root window background tile randomly 
+events to clients,
+the screen is tiled with the root window background tile randomly
 re-origined each interval seconds.
-Otherwise, the screens' state do not change, 
+Otherwise, the screens' state do not change,
 and the screen saver is not activated.
 The screen saver is deactivated,
 and all screen states are restored at the next
@@ -1198,18 +1198,18 @@ or
 <para>
 <!-- .LP -->
 <!-- .eM -->
-If the specified mode is 
+If the specified mode is
 <symbol>ScreenSaverActive</symbol>
 and the screen saver currently is deactivated,
 <xref linkend='XForceScreenSaver' xrefstyle='select: title'/>
 activates the screen saver even if the screen saver had been disabled
 with a timeout of zero.
-If the specified mode is 
+If the specified mode is
 <symbol>ScreenSaverReset</symbol>
 and the screen saver currently is enabled,
 <xref linkend='XForceScreenSaver' xrefstyle='select: title'/>
 deactivates the screen saver if it was activated,
-and the activation timer is reset to its initial state 
+and the activation timer is reset to its initial state
 (as if device input had been received).
 </para>
 <para>
@@ -1420,7 +1420,7 @@ DECnet nodes must terminate in :: to distinguish them from Internet hosts.
 </itemizedlist>
 <para>
 <!-- .LP -->
-If a host is not in the access control list when the access control 
+If a host is not in the access control list when the access control
 mechanism is enabled and if the host attempts to establish a connection,
 the server refuses the connection.
 To change the access list,
@@ -1445,7 +1445,7 @@ see <olink targetdoc='x11protocol' targetptr='Connection_Setup'
 <!-- .LP -->
 Xlib provides functions that you can use to add, get, or remove hosts
 from the access control list.
-All the host access control functions use the 
+All the host access control functions use the
 <structname>XHostAddress</structname>
 structure, which contains:
 </para>
@@ -1466,7 +1466,7 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The family member specifies which protocol address family to use 
+The family member specifies which protocol address family to use
 (for example, <acronym>TCP</acronym>/<acronym>IP</acronym> or DECnet) and can be
 <symbol>FamilyInternet</symbol>,
 <symbol>FamilyInternet6</symbol>,
@@ -1486,7 +1486,7 @@ family should be FamilyInternet6 and the length should be 16 bytes.
 </para>
 <para>
 <!-- .LP -->
-For the DECnet family, 
+For the DECnet family,
 the server performs no automatic swapping on the address bytes.
 A Phase IV address is 2 bytes long.
 The first byte contains the least significant 8 bits of the node number.
@@ -1496,8 +1496,8 @@ and the area in the most significant 6 bits of the byte.
 </para>
 <para>
 <!-- .LP -->
-For the ServerInterpreted family, the length is ignored and the address 
-member is a pointer to a 
+For the ServerInterpreted family, the length is ignored and the address
+member is a pointer to a
 <structname>XServerInterpretedAddress</structname>
 structure, which contains:
 </para>
@@ -1703,12 +1703,12 @@ Returns the state of the access control.
 <!-- .eM -->
 The
 <xref linkend='XListHosts' xrefstyle='select: title'/>
-function returns the current access control list as well as whether the use 
+function returns the current access control list as well as whether the use
 of the list at connection setup was enabled or disabled.
 <xref linkend='XListHosts' xrefstyle='select: title'/>
 allows a program to find out what machines can make connections.
 It also returns a pointer to a list of host structures that
-were allocated by the function. 
+were allocated by the function.
 When no longer needed,
 this memory should be freed by calling
 <xref linkend='XFree' xrefstyle='select: title'/>.
@@ -1756,7 +1756,7 @@ Specifies the host that is to be removed.
 <!-- .eM -->
 The
 <xref linkend='XRemoveHost' xrefstyle='select: title'/>
-function removes the specified host from the access control list 
+function removes the specified host from the access control list
 for that display.
 The server must be on the same host as the client process, or a
 <errorname>BadAccess</errorname>
@@ -1828,12 +1828,12 @@ Specifies the number of hosts.
 <!-- .eM -->
 The
 <xref linkend='XRemoveHosts' xrefstyle='select: title'/>
-function removes each specified host from the access control list for that 
-display.  
+function removes each specified host from the access control list for that
+display.
 The X server must be on the same host as the client process, or a
 <errorname>BadAccess</errorname>
 error results.
-If you remove your machine from the access list, 
+If you remove your machine from the access list,
 you can no longer connect to that server,
 and this operation cannot be reversed unless you reset the server.
 </para>
@@ -1854,7 +1854,7 @@ errors.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-Xlib provides functions that you can use to enable, disable, 
+Xlib provides functions that you can use to enable, disable,
 or change access control.
 </para>
 <para>
@@ -1911,7 +1911,7 @@ or
 <!-- .eM -->
 The
 <xref linkend='XSetAccessControl' xrefstyle='select: title'/>
-function either enables or disables the use of the access control list 
+function either enables or disables the use of the access control list
 at each connection setup.
 </para>
 <para>

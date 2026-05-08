@@ -21,7 +21,7 @@
 .\"
 .TH XkbGetIndicatorMap __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetIndicatorMap \- Gets the map for one or more indicators, using a mask to 
+XkbGetIndicatorMap \- Gets the map for one or more indicators, using a mask to
 specify the indicators
 .SH SYNOPSIS
 .HP
@@ -43,32 +43,32 @@ mask of indicators for which maps should be returned
 keyboard description to be updated
 .SH DESCRIPTION
 .LP
-Xkb allows applications to obtain information about indicators using two 
-different methods. The first method, which is similar to the core X 
-implementation, uses a mask to specify the indicators. The second method, which 
-is more suitable for applications concerned with interoperability, uses 
-indicator names. The correspondence between the indicator name and the bit 
+Xkb allows applications to obtain information about indicators using two
+different methods. The first method, which is similar to the core X
+implementation, uses a mask to specify the indicators. The second method, which
+is more suitable for applications concerned with interoperability, uses
+indicator names. The correspondence between the indicator name and the bit
 position in masks is as follows: one of the parameters returned from
-.I XkbGetNamedIndicators 
-is an index that is the bit position to use in any function call that requires a 
-mask of indicator bits, as well as the indicator's index into the 
+.I XkbGetNamedIndicators
+is an index that is the bit position to use in any function call that requires a
+mask of indicator bits, as well as the indicator's index into the
 XkbIndicatorRec array of indicator maps.
 
 
-.I XkbGetIndicatorMap 
-obtains the maps from the server for only those indicators specified by the 
-.I which 
-mask and copies the values into the keyboard description specified by 
-.I desc. 
-If the 
-.I indicators 
-field of the 
-.I desc 
-parameter is NULL, 
-.I XkbGetIndicatorMap 
+.I XkbGetIndicatorMap
+obtains the maps from the server for only those indicators specified by the
+.I which
+mask and copies the values into the keyboard description specified by
+.I desc.
+If the
+.I indicators
+field of the
+.I desc
+parameter is NULL,
+.I XkbGetIndicatorMap
 allocates and initializes it.
 
-To free the indicator maps, use 
+To free the indicator maps, use
 .I XkbFreeIndicatorMaps.
 .SH DIAGNOSTICS
 .TP 15
@@ -76,7 +76,7 @@ To free the indicator maps, use
 Unable to allocate storage
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid
 .TP 15
 .B BadImplementation

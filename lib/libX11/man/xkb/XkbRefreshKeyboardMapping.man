@@ -21,7 +21,7 @@
 .\"
 .TH XkbRefreshKeyboardMapping __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbRefreshKeyboardMapping \- Update the keyboard description that is internal to the X 
+XkbRefreshKeyboardMapping \- Update the keyboard description that is internal to the X
 library
 .SH SYNOPSIS
 .HP
@@ -35,31 +35,31 @@ library
 event initiating remapping
 .SH DESCRIPTION
 .LP
-.I XkbRefreshKeyboardMapping 
-is the Xkb equivalent of the core 
-.I XRefreshKeyboardMapping 
-function. It requests that the X server send the current key mapping information to 
-this client. A client usually invokes 
-.I XkbRefreshKeyboardMapping 
-after receiving an XkbMapNotify event. 
-.I XkbRefreshKeyboardMapping 
+.I XkbRefreshKeyboardMapping
+is the Xkb equivalent of the core
+.I XRefreshKeyboardMapping
+function. It requests that the X server send the current key mapping information to
+this client. A client usually invokes
+.I XkbRefreshKeyboardMapping
+after receiving an XkbMapNotify event.
+.I XkbRefreshKeyboardMapping
 returns Success if it succeeds and BadMatch if the event is not an Xkb event.
 
-The XkbMapNotify event can be generated when some client calls 
-.I XkbSetMap, XkbChangeMap, XkbGetKeyboardByName, 
-or any of the standard X library functions that change the keyboard mapping or modifier 
+The XkbMapNotify event can be generated when some client calls
+.I XkbSetMap, XkbChangeMap, XkbGetKeyboardByName,
+or any of the standard X library functions that change the keyboard mapping or modifier
 mapping.
 .SH "RETURN VALUES"
 .TP 15
 Success
-The 
-.I XkbRefreshKeyboardMapping 
-function returns Success when the request that the X server send the current key mapping information to 
+The
+.I XkbRefreshKeyboardMapping
+function returns Success when the request that the X server send the current key mapping information to
 this client is successful.
 .SH DIAGNOSTICS
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has correct 
+A compatible version of Xkb was not available in the server or an argument has correct
 type and range, but is otherwise invalid
 .SH "SEE ALSO"
 .BR XkbChangeMap (__libmansuffix__),

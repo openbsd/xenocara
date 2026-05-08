@@ -87,18 +87,18 @@ otherwise, it returns a zero status.
 \s-1WM_CLIENT_MACHINE\s+1
 The string name of the machine on which the client application is running.
 .SH "SEE ALSO"
-XAllocClassHint(__libmansuffix__),
-XAllocIconSize(__libmansuffix__),
-XAllocSizeHints(__libmansuffix__),
-XAllocWMHints(__libmansuffix__),
-XSetCommand(__libmansuffix__),
-XSetTransientForHint(__libmansuffix__),
-XSetTextProperty(__libmansuffix__),
-XSetWMColormapWindows(__libmansuffix__),
-XSetWMIconName(__libmansuffix__),
-XSetWMName(__libmansuffix__),
-XSetWMProperties(__libmansuffix__),
-XSetWMProtocols(__libmansuffix__),
-XStringListToTextProperty(__libmansuffix__)
+.BR XAllocClassHint (__libmansuffix__),
+.BR XAllocIconSize (__libmansuffix__),
+.BR XAllocSizeHints (__libmansuffix__),
+.BR XAllocWMHints (__libmansuffix__),
+.BR XSetCommand (__libmansuffix__),
+.BR XSetTransientForHint (__libmansuffix__),
+.BR XSetTextProperty (__libmansuffix__),
+.BR XSetWMColormapWindows (__libmansuffix__),
+.BR XSetWMIconName (__libmansuffix__),
+.BR XSetWMName (__libmansuffix__),
+.BR XSetWMProperties (__libmansuffix__),
+.BR XSetWMProtocols (__libmansuffix__),
+.BR XStringListToTextProperty (__libmansuffix__)
 .br
 \fI\*(xL\fP

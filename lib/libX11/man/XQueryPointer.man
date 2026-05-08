@@ -118,7 +118,7 @@ error.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XGetWindowAttributes(__libmansuffix__),
-XQueryTree(__libmansuffix__)
+.BR XGetWindowAttributes (__libmansuffix__),
+.BR XQueryTree (__libmansuffix__)
 .br
 \fI\*(xL\fP

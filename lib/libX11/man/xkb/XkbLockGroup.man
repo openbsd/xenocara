@@ -34,7 +34,7 @@ XkbLockGroup \-  Locks the keysym group
 .SH ARGUMENTS
 .TP
 .I display
-connection to the X server 
+connection to the X server
 .TP
 .I device_spec
 device ID, or XkbUseCoreKbd
@@ -43,10 +43,10 @@ device ID, or XkbUseCoreKbd
 index of the keysym group to lock
 .SH DESCRIPTION
 .LP
-.I XkbLockGroup 
-sends a request to the server to lock the specified 
-.I group 
-and does not wait for a reply. It returns True if the request was sent and 
+.I XkbLockGroup
+sends a request to the server to lock the specified
+.I group
+and does not wait for a reply. It returns True if the request was sent and
 False otherwise.
 
 Reference the keysym group indices with these symbolic constants:
@@ -67,15 +67,15 @@ XkbGroup4Index	3
 .SH "RETURN VALUES"
 .TP 15
 True
-The 
+The
 .I XkbLockGroup
-function returns True when a request was sent to the server to lock the 
-specified 
+function returns True when a request was sent to the server to lock the
+specified
 .I group
 and does not wait for a reply.
 .TP 15
 False
-The 
+The
 .I XkbLockGroup
 function returns False if the request was not sent.
 

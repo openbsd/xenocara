@@ -21,7 +21,7 @@
 .\"
 .TH XkbAddSymInterpret __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbAddSymInterpret \- Add a symbol interpretation to the list of symbol 
+XkbAddSymInterpret \- Add a symbol interpretation to the list of symbol
 interpretations in an XkbCompatRec
 .SH SYNOPSIS
 .HP
@@ -35,7 +35,7 @@ interpretations in an XkbCompatRec
 .SH ARGUMENTS
 .TP
 .I xkb
-keyboard description to be updated 
+keyboard description to be updated
 .TP
 .I si
 symbol interpretation to be added
@@ -44,22 +44,22 @@ symbol interpretation to be added
 True=>apply compatibility map to keys
 .TP
 .I changes
-changes are put here 
+changes are put here
 .SH DESCRIPTION
 .LP
-.I XkbAddSymInterpret 
-adds 
-.I si 
-to the list of symbol interpretations in 
-.I xkb. 
-If 
-.I updateMap 
-is True, it (re)applies the compatibility map to all of the keys on the 
-keyboard. If 
-.I changes 
+.I XkbAddSymInterpret
+adds
+.I si
+to the list of symbol interpretations in
+.I xkb.
+If
+.I updateMap
+is True, it (re)applies the compatibility map to all of the keys on the
+keyboard. If
+.I changes
 is non-NULL, it reports the parts of the keyboard that were affected (unless
-.I updateMap 
-is True, not much changes). 
-.I XkbAddSymInterpret 
-returns a pointer to the actual new symbol interpretation in the list or NULL if 
+.I updateMap
+is True, not much changes).
+.I XkbAddSymInterpret
+returns a pointer to the actual new symbol interpretation in the list or NULL if
 it failed.

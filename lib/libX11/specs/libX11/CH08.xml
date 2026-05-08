@@ -27,10 +27,10 @@ Note that this reduces the total number of requests sent to the server.
 <para>
 <!-- .LP -->
 Xlib provides functions that you can use to clear an area or the entire window.
-Because pixmaps do not have defined backgrounds, 
+Because pixmaps do not have defined backgrounds,
 they cannot be filled by using the functions described in this section.
 Instead, to accomplish an analogous operation on a pixmap,
-you should use 
+you should use
 <xref linkend='XFillRectangle' xrefstyle='select: title'/>,
 which sets the pixmap to a known value.
 </para>
@@ -147,16 +147,16 @@ If width is zero, it
 is replaced with the current width of the window minus x.
 If height is
 zero, it is replaced with the current height of the window minus y.
-If the window has a defined background tile, 
+If the window has a defined background tile,
 the rectangle clipped by any children is filled with this tile.
 If the window has
-background 
+background
 <symbol>None</symbol>,
-the contents of the window are not changed.  
+the contents of the window are not changed.
 In either
-case, if exposures is 
+case, if exposures is
 <symbol>True</symbol>,
-one or more 
+one or more
 <symbol>Expose</symbol>
 events are generated for regions of the rectangle that are either visible or are
 being retained in a backing store.
@@ -224,21 +224,21 @@ The
 function clears the entire area in the specified window and is
 equivalent to
 <xref linkend='XClearArea' xrefstyle='select: title'/>
-(display, w, 0, 0, 0, 0, 
+(display, w, 0, 0, 0, 0,
 <symbol>False</symbol>).
 If the window has a defined background tile, the rectangle is tiled with a
-plane-mask of all ones and 
+plane-mask of all ones and
 <symbol>GXcopy</symbol>
 function.
 If the window has
-background 
+background
 <symbol>None</symbol>,
-the contents of the window are not changed.  
+the contents of the window are not changed.
 If you specify a window whose class is
 <symbol>InputOnly</symbol>,
 a
 <errorname>BadMatch</errorname>
-error results. 
+error results.
 </para>
 <para>
 <!-- .LP -->
@@ -314,7 +314,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specify the source and destination rectangles to be combined. 
+Specify the source and destination rectangles to be combined.
       </para>
     </listitem>
   </varlistentry>
@@ -345,7 +345,7 @@ Specifies the GC.
     </term>
     <listitem>
       <para>
-Specify the x and y coordinates, 
+Specify the x and y coordinates,
 which are relative to the origin of the source rectangle
 and specify its upper-left corner.
       </para>
@@ -401,7 +401,7 @@ destination rectangle and specify its upper-left corner.
 <!-- .eM -->
 The
 <xref linkend='XCopyArea' xrefstyle='select: title'/>
-function combines the specified rectangle of src with the specified rectangle 
+function combines the specified rectangle of src with the specified rectangle
 of dest.
 The drawables must have the same root and depth,
 or a
@@ -411,13 +411,13 @@ error results.
 <para>
 <!-- .LP -->
 If regions of the source rectangle are obscured and have not been
-retained in backing store 
-or if regions outside the boundaries of the source drawable are specified, 
-those regions are not copied. 
-Instead, the 
+retained in backing store
+or if regions outside the boundaries of the source drawable are specified,
+those regions are not copied.
+Instead, the
 following occurs on all corresponding destination regions that are either
-visible or are retained in backing store.  
-If the destination is a window with a background other than 
+visible or are retained in backing store.
+If the destination is a window with a background other than
 <symbol>None</symbol>,
 corresponding regions
 of the destination are tiled with that background
@@ -425,12 +425,12 @@ of the destination are tiled with that background
 <symbol>GXcopy</symbol>
 function).
 Regardless of tiling or whether the destination is a window or a pixmap,
-if graphics-exposures is 
+if graphics-exposures is
 <symbol>True</symbol>,
 then
 <symbol>GraphicsExpose</symbol>
 events for all corresponding destination regions are generated.
-If graphics-exposures is 
+If graphics-exposures is
 <symbol>True</symbol>
 but no
 <symbol>GraphicsExpose</symbol>
@@ -443,7 +443,7 @@ in new GCs.
 </para>
 <para>
 <!-- .LP -->
-This function uses these GC components: function, plane-mask, 
+This function uses these GC components: function, plane-mask,
 subwindow-mode, graphics-exposures, clip-x-origin,
 clip-y-origin, and clip-mask.
 </para>
@@ -512,7 +512,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specify the source and destination rectangles to be combined. 
+Specify the source and destination rectangles to be combined.
       </para>
     </listitem>
   </varlistentry>
@@ -543,7 +543,7 @@ Specifies the GC.
     </term>
     <listitem>
       <para>
-Specify the x and y coordinates, 
+Specify the x and y coordinates,
 which are relative to the origin of the source rectangle
 and specify its upper-left corner.
       </para>
@@ -623,17 +623,17 @@ error results.
 </para>
 <para>
 <!-- .LP -->
-Effectively, 
+Effectively,
 <xref linkend='XCopyPlane' xrefstyle='select: title'/>
 forms a pixmap of the same depth as the rectangle of dest and with a
-size specified by the source region. 
+size specified by the source region.
 It uses the foreground/background pixels in the GC (foreground
 everywhere the bit plane in src contains a bit set to 1,
 background everywhere the bit plane in src contains a bit set to 0)
-and the equivalent of a 
+and the equivalent of a
 <systemitem>CopyArea</systemitem>
 protocol request is performed with all the same exposure semantics.
-This can also be thought of as using the specified region of the source 
+This can also be thought of as using the specified region of the source
 bit plane as a stipple with a fill-style of
 <symbol>FillOpaqueStippled</symbol>
 for filling a rectangular area of the destination.
@@ -651,7 +651,7 @@ can generate
 <errorname>BadDrawable</errorname>,
 <errorname>BadGC</errorname>,
 <errorname>BadMatch</errorname>,
-and 
+and
 <errorname>BadValue</errorname>
 errors.
 </para>
@@ -802,7 +802,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -876,7 +876,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -916,7 +916,7 @@ Specifies the number of points in the array.
     </term>
     <listitem>
       <para>
-Specifies the coordinate mode. 
+Specifies the coordinate mode.
 You can pass
 <symbol>CoordModeOrigin</symbol>
 or
@@ -931,7 +931,7 @@ or
 The
 <xref linkend='XDrawPoint' xrefstyle='select: title'/>
 function uses the foreground pixel and function components of the
-GC to draw a single point into the specified drawable; 
+GC to draw a single point into the specified drawable;
 <xref linkend='XDrawPoints' xrefstyle='select: title'/>
 draws multiple points this way.
 <symbol>CoordModeOrigin</symbol>
@@ -953,7 +953,7 @@ foreground, subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.
 can generate
 <errorname>BadDrawable</errorname>,
 <errorname>BadGC</errorname>,
-and 
+and
 <errorname>BadMatch</errorname>
 errors.
 <xref linkend='XDrawPoints' xrefstyle='select: title'/>
@@ -1018,7 +1018,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -1114,7 +1114,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -1154,7 +1154,7 @@ Specifies the number of points in the array.
     </term>
     <listitem>
       <para>
-Specifies the coordinate mode. 
+Specifies the coordinate mode.
 You can pass
 <symbol>CoordModeOrigin</symbol>
 or
@@ -1201,7 +1201,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -1244,30 +1244,30 @@ The
 function uses the components of the specified GC to
 draw a line between the specified set of points (x1, y1) and (x2, y2).
 It does not perform joining at coincident endpoints.
-For any given line, 
+For any given line,
 <xref linkend='XDrawLine' xrefstyle='select: title'/>
 does not draw a pixel more than once.
-If lines intersect, the intersecting pixels are drawn multiple times.  
+If lines intersect, the intersecting pixels are drawn multiple times.
 </para>
 <para>
 <!-- .LP -->
 The
 <xref linkend='XDrawLines' xrefstyle='select: title'/>
-function uses the components of the specified GC to draw 
-npoints-1 lines between each pair of points (point[i], point[i+1]) 
+function uses the components of the specified GC to draw
+npoints-1 lines between each pair of points (point[i], point[i+1])
 in the array of
 <structname>XPoint</structname>
 structures.
 It draws the lines in the order listed in the array.
 The lines join correctly at all intermediate points, and if the first and last
 points coincide, the first and last lines also join correctly.
-For any given line, 
+For any given line,
 <xref linkend='XDrawLines' xrefstyle='select: title'/>
 does not draw a pixel more than once.
-If thin (zero line-width) lines intersect, 
+If thin (zero line-width) lines intersect,
 the intersecting pixels are drawn multiple times.
 If wide lines intersect, the intersecting pixels are drawn only once, as though
-the entire 
+the entire
 <systemitem>PolyLine</systemitem>
 protocol request were a single, filled shape.
 <symbol>CoordModeOrigin</symbol>
@@ -1280,18 +1280,18 @@ treats all coordinates after the first as relative to the previous point.
 <!-- .LP -->
 The
 <xref linkend='XDrawSegments' xrefstyle='select: title'/>
-function draws multiple, unconnected lines. 
-For each segment, 
+function draws multiple, unconnected lines.
+For each segment,
 <xref linkend='XDrawSegments' xrefstyle='select: title'/>
 draws a
 line between (x1, y1) and (x2, y2).
 It draws the lines in the order listed in the array of
 <structname>XSegment</structname>
 structures and does not perform joining at coincident endpoints.
-For any given line, 
+For any given line,
 <xref linkend='XDrawSegments' xrefstyle='select: title'/>
-does not draw a pixel more than once.  
-If lines intersect, the intersecting pixels are drawn multiple times.  
+does not draw a pixel more than once.
+If lines intersect, the intersecting pixels are drawn multiple times.
 </para>
 <para>
 <!-- .LP -->
@@ -1303,7 +1303,7 @@ The
 <xref linkend='XDrawLines' xrefstyle='select: title'/>
 function also uses the join-style GC component.
 All three functions also use these GC mode-dependent components:
-foreground, background, tile, stipple, tile-stipple-x-origin, 
+foreground, background, tile, stipple, tile-stipple-x-origin,
 tile-stipple-y-origin, dash-offset, and dash-list.
 </para>
 <para>
@@ -1373,7 +1373,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -1470,7 +1470,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -1513,7 +1513,7 @@ The
 and
 <xref linkend='XDrawRectangles' xrefstyle='select: title'/>
 functions draw the outlines of the specified rectangle or rectangles as
-if a five-point 
+if a five-point
 <systemitem>PolyLine</systemitem>
 protocol request were specified for each rectangle:
 </para>
@@ -1526,7 +1526,7 @@ protocol request were specified for each rectangle:
 </itemizedlist>
 <para>
 <!-- .LP  -->
-For the specified rectangle or rectangles, 
+For the specified rectangle or rectangles,
 these functions do not draw a pixel more than once.
 <xref linkend='XDrawRectangles' xrefstyle='select: title'/>
 draws the rectangles in the order listed in the array.
@@ -1535,12 +1535,12 @@ the intersecting pixels are drawn multiple times.
 </para>
 <para>
 <!-- .LP -->
-Both functions use these GC components: 
+Both functions use these GC components:
 function, plane-mask, line-width,
-line-style, cap-style, join-style, fill-style, 
+line-style, cap-style, join-style, fill-style,
 subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.
-They also use these GC mode-dependent components: 
-foreground, background, tile, stipple, tile-stipple-x-origin, 
+They also use these GC mode-dependent components:
+foreground, background, tile, stipple, tile-stipple-x-origin,
 tile-stipple-y-origin, dash-offset, and dash-list.
 </para>
 <para>
@@ -1608,7 +1608,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -1726,7 +1726,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -1768,35 +1768,35 @@ Specifies the number of arcs in the array.
 delim %%
 <!-- .EN -->
 <xref linkend='XDrawArc' xrefstyle='select: title'/>
-draws a single circular or elliptical arc, and 
+draws a single circular or elliptical arc, and
 <xref linkend='XDrawArcs' xrefstyle='select: title'/>
 draws multiple circular or elliptical arcs.
-Each arc is specified by a rectangle and two angles.  
+Each arc is specified by a rectangle and two angles.
 The center of the circle or ellipse is the center of the
 rectangle, and the major and minor axes are specified by the width and height.
-Positive angles indicate counterclockwise motion, 
-and negative angles indicate clockwise motion.  
-If the magnitude of angle2 is greater than 360 degrees, 
+Positive angles indicate counterclockwise motion,
+and negative angles indicate clockwise motion.
+If the magnitude of angle2 is greater than 360 degrees,
 <xref linkend='XDrawArc' xrefstyle='select: title'/>
-or 
+or
 <xref linkend='XDrawArcs' xrefstyle='select: title'/>
 truncates it to 360 degrees.
 </para>
 <para>
 <!-- .LP -->
-For an arc specified as %[ ~x, ~y, ~width , ~height, ~angle1, ~angle2 ]%, 
-the origin of the major and minor axes is at 
-% [ x +^ {width over 2} , ~y +^ {height over 2}  ]%, 
-and the infinitely thin path describing the entire circle or ellipse 
-intersects the horizontal axis at % [ x, ~y +^ {height over 2}  ]% and 
+For an arc specified as %[ ~x, ~y, ~width , ~height, ~angle1, ~angle2 ]%,
+the origin of the major and minor axes is at
+% [ x +^ {width over 2} , ~y +^ {height over 2}  ]%,
+and the infinitely thin path describing the entire circle or ellipse
+intersects the horizontal axis at % [ x, ~y +^ {height over 2}  ]% and
 % [ x +^ width , ~y +^ { height over 2 }] %
-and intersects the vertical axis at % [ x +^ { width over 2 } , ~y ]% and 
+and intersects the vertical axis at % [ x +^ { width over 2 } , ~y ]% and
 % [ x +^ { width over 2 }, ~y +^ height ]%.
 These coordinates can be fractional
 and so are not truncated to discrete coordinates.
-The path should be defined by the ideal mathematical path.  
-For a wide line with line-width lw, 
-the bounding outlines for filling are given        
+The path should be defined by the ideal mathematical path.
+For a wide line with line-width lw,
+the bounding outlines for filling are given
 by the two infinitely thin paths consisting of all points whose perpendicular
 distance from the path of the circle/ellipse is equal to lw/2
 (which may be a fractional value).
@@ -1839,18 +1839,18 @@ and adjust is:
 </para>
 <para>
 <!-- .LP -->
-For any given arc, 
-<xref linkend='XDrawArc' xrefstyle='select: title'/>
-and
-<xref linkend='XDrawArcs' xrefstyle='select: title'/>
-do not draw a pixel more than once.  
-If two arcs join correctly and if the line-width is greater than zero 
-and the arcs intersect, 
+For any given arc,
 <xref linkend='XDrawArc' xrefstyle='select: title'/>
 and
 <xref linkend='XDrawArcs' xrefstyle='select: title'/>
 do not draw a pixel more than once.
-Otherwise, 
+If two arcs join correctly and if the line-width is greater than zero
+and the arcs intersect,
+<xref linkend='XDrawArc' xrefstyle='select: title'/>
+and
+<xref linkend='XDrawArcs' xrefstyle='select: title'/>
+do not draw a pixel more than once.
+Otherwise,
 the intersecting pixels of intersecting arcs are drawn multiple times.
 Specifying an arc with one endpoint and a clockwise extent draws the same pixels
 as specifying the other endpoint and an equivalent counterclockwise extent,
@@ -1858,9 +1858,9 @@ except as it affects joins.
 </para>
 <para>
 <!-- .LP -->
-If the last point in one arc coincides with the first point in the following 
-arc, the two arcs will join correctly.  
-If the first point in the first arc coincides with the last point in the last 
+If the last point in one arc coincides with the first point in the following
+arc, the two arcs will join correctly.
+If the first point in the first arc coincides with the last point in the last
 arc, the two arcs will join correctly.
 By specifying one axis to be zero, a horizontal or vertical line can be
 drawn.
@@ -1869,11 +1869,11 @@ aspect ratio.
 </para>
 <para>
 <!-- .LP -->
-Both functions use these GC components: 
-function, plane-mask, line-width, line-style, cap-style, join-style, 
+Both functions use these GC components:
+function, plane-mask, line-width, line-style, cap-style, join-style,
 fill-style, subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.
-They also use these GC mode-dependent components: 
-foreground, background, tile, stipple, tile-stipple-x-origin, 
+They also use these GC mode-dependent components:
+foreground, background, tile, stipple, tile-stipple-x-origin,
 tile-stipple-y-origin, dash-offset, and dash-list.
 </para>
 <para>
@@ -1966,7 +1966,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -2062,7 +2062,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -2105,7 +2105,7 @@ The
 and
 <xref linkend='XFillRectangles' xrefstyle='select: title'/>
 functions fill the specified rectangle or rectangles
-as if a four-point 
+as if a four-point
 <systemitem>FillPolygon</systemitem>
 protocol request were specified for each rectangle:
 </para>
@@ -2123,22 +2123,22 @@ width and height dimensions, and GC you specify.
 <para>
 <!-- .LP -->
 <xref linkend='XFillRectangles' xrefstyle='select: title'/>
-fills the rectangles in the order listed in the array.  
+fills the rectangles in the order listed in the array.
 For any given rectangle,
 <xref linkend='XFillRectangle' xrefstyle='select: title'/>
 and
 <xref linkend='XFillRectangles' xrefstyle='select: title'/>
-do not draw a pixel more than once.  
+do not draw a pixel more than once.
 If rectangles intersect, the intersecting pixels are
 drawn multiple times.
 </para>
 <para>
 <!-- .LP -->
-Both functions use these GC components: 
-function, plane-mask, fill-style, subwindow-mode, 
+Both functions use these GC components:
+function, plane-mask, fill-style, subwindow-mode,
 clip-x-origin, clip-y-origin, and clip-mask.
-They also use these GC mode-dependent components: 
-foreground, background, tile, stipple, tile-stipple-x-origin, 
+They also use these GC mode-dependent components:
+foreground, background, tile, stipple, tile-stipple-x-origin,
 and tile-stipple-y-origin.
 </para>
 <para>
@@ -2199,7 +2199,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -2240,10 +2240,10 @@ Specifies the number of points in the array.
     <listitem>
       <para>
 Specifies a shape that helps the server to improve performance.
-You can pass 
+You can pass
 <symbol>Complex</symbol>,
 <symbol>Convex</symbol>,
-or 
+or
 <symbol>Nonconvex</symbol>.
       </para>
     </listitem>
@@ -2254,7 +2254,7 @@ or
     </term>
     <listitem>
       <para>
-Specifies the coordinate mode. 
+Specifies the coordinate mode.
 You can pass
 <symbol>CoordModeOrigin</symbol>
 or
@@ -2281,15 +2281,15 @@ treats all coordinates after the first as relative to the previous point.
 </para>
 <para>
 <!-- .LP -->
-Depending on the specified shape, the following occurs: 
+Depending on the specified shape, the following occurs:
 </para>
 <itemizedlist>
   <listitem>
     <para>
 If shape is
 <symbol>Complex</symbol>,
-the path may self-intersect. 
-Note that contiguous coincident points in the path are not treated 
+the path may self-intersect.
+Note that contiguous coincident points in the path are not treated
 as self-intersection.
     </para>
   </listitem>
@@ -2300,12 +2300,12 @@ If shape is
 for every pair of points inside the polygon,
 the line segment connecting them does not intersect the path.
 If known by the client,
-specifying 
+specifying
 <symbol>Convex</symbol>
-can improve performance.  
+can improve performance.
 If you specify
 <symbol>Convex</symbol>
-for a path that is not convex, 
+for a path that is not convex,
 the graphics results are undefined.
     </para>
   </listitem>
@@ -2314,13 +2314,13 @@ the graphics results are undefined.
 If shape is
 <symbol>Nonconvex</symbol>,
 the path does not self-intersect, but the shape is not
-wholly convex. 
-If known by the client, 
-specifying 
+wholly convex.
+If known by the client,
+specifying
 <symbol>Nonconvex</symbol>
 instead of
 <symbol>Complex</symbol>
-may improve performance.  
+may improve performance.
 If you specify
 <symbol>Nonconvex</symbol>
 for a self-intersecting path, the graphics results are undefined.
@@ -2329,16 +2329,16 @@ for a self-intersecting path, the graphics results are undefined.
 </itemizedlist>
 <para>
 <!-- .LP -->
-The fill-rule of the GC controls the filling behavior of 
+The fill-rule of the GC controls the filling behavior of
 self-intersecting polygons.
 </para>
 <para>
 <!-- .LP -->
-This function uses these GC components: 
-function, plane-mask, fill-style, fill-rule, subwindow-mode, clip-x-origin, 
+This function uses these GC components:
+function, plane-mask, fill-style, fill-rule, subwindow-mode, clip-x-origin,
 clip-y-origin, and clip-mask.
-It also uses these GC mode-dependent components: 
-foreground, background, tile, stipple, tile-stipple-x-origin, 
+It also uses these GC mode-dependent components:
+foreground, background, tile, stipple, tile-stipple-x-origin,
 and tile-stipple-y-origin.
 </para>
 <para>
@@ -2400,7 +2400,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -2518,7 +2518,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -2556,37 +2556,37 @@ Specifies the number of arcs in the array.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-For each arc, 
+For each arc,
 <xref linkend='XFillArc' xrefstyle='select: title'/>
 or
 <xref linkend='XFillArcs' xrefstyle='select: title'/>
 fills the region closed by the infinitely thin path
-described by the specified arc and, depending on the 
-arc-mode specified in the GC, one or two line segments. 
-For 
+described by the specified arc and, depending on the
+arc-mode specified in the GC, one or two line segments.
+For
 <symbol>ArcChord</symbol>,
-the single line segment joining the endpoints of the arc is used.  
-For 
+the single line segment joining the endpoints of the arc is used.
+For
 <symbol>ArcPieSlice</symbol>,
 the two line segments joining the endpoints of the arc with the center
-point are used.  
+point are used.
 <xref linkend='XFillArcs' xrefstyle='select: title'/>
-fills the arcs in the order listed in the array.  
-For any given arc,  
+fills the arcs in the order listed in the array.
+For any given arc,
 <xref linkend='XFillArc' xrefstyle='select: title'/>
 and
 <xref linkend='XFillArcs' xrefstyle='select: title'/>
-do not draw a pixel more than once.  
-If regions intersect, 
+do not draw a pixel more than once.
+If regions intersect,
 the intersecting pixels are drawn multiple times.
 </para>
 <para>
 <!-- .LP -->
-Both functions use these GC components: 
-function, plane-mask, fill-style, arc-mode, subwindow-mode, clip-x-origin, 
+Both functions use these GC components:
+function, plane-mask, fill-style, arc-mode, subwindow-mode, clip-x-origin,
 clip-y-origin, and clip-mask.
-They also use these GC mode-dependent components: 
-foreground, background, tile, stipple, tile-stipple-x-origin, 
+They also use these GC mode-dependent components:
+foreground, background, tile, stipple, tile-stipple-x-origin,
 and tile-stipple-y-origin.
 </para>
 <para>
@@ -2611,8 +2611,8 @@ errors.
 <para>
 <!-- .LP -->
 <indexterm><primary>Font</primary></indexterm>
-A font is a graphical description of a set of characters that are used to 
-increase efficiency whenever a set of small, similar sized patterns are 
+A font is a graphical description of a set of characters that are used to
+increase efficiency whenever a set of small, similar sized patterns are
 repeatedly used.
 </para>
 <para>
@@ -2652,7 +2652,7 @@ The X server loads fonts whenever a program requests a new font.
 The server can cache fonts for quick lookup.
 Fonts are global across all screens in a server.
 Several levels are possible when dealing with fonts.
-Most applications simply use 
+Most applications simply use
 <xref linkend='XLoadQueryFont' xrefstyle='select: title'/>
 to load a font and query the font metrics.
 </para>
@@ -2764,7 +2764,7 @@ specified in the structure defines a range of characters.
 </para>
 <para>
 <!-- .LP -->
-The bounding box of a character is defined by the 
+The bounding box of a character is defined by the
 <structname>XCharStruct</structname>
 of that character.
 When characters are absent from a font,
@@ -2776,25 +2776,25 @@ min and max bounds are used.
 </para>
 <para>
 <!-- .LP -->
-The members of the 
+The members of the
 <structname>XFontStruct</structname>
 have the following semantics:
 </para>
 <itemizedlist>
   <listitem>
     <para>
-The direction member can be either 
+The direction member can be either
 <symbol>FontLeftToRight</symbol>
-or 
+or
 <symbol>FontRightToLeft</symbol>.
-It is just a hint as to whether most 
+It is just a hint as to whether most
 <structname>XCharStruct</structname>
-elements 
-have a positive 
+elements
+have a positive
 (<symbol>FontLeftToRight</symbol>)
-or a negative 
+or a negative
 (<symbol>FontRightToLeft</symbol>)
-character width 
+character width
 metric.
 The core protocol defines no support for vertical text.
     </para>
@@ -2810,7 +2810,7 @@ index of the last element.
   <listitem>
     <para>
 If either min_byte1 or max_byte1 are nonzero, both
-min_char_or_byte2 and max_char_or_byte2 are less than 256, 
+min_char_or_byte2 and max_char_or_byte2 are less than 256,
 and the 2-byte character index values corresponding to the
 per_char array element N (counting from 0) are:
     </para>
@@ -2840,7 +2840,7 @@ where:
   </listitem>
   <listitem>
     <para>
-If the per_char pointer is NULL, 
+If the per_char pointer is NULL,
 all glyphs between the first and last character indexes
 inclusive have the same information,
 as given by both min_bounds and max_bounds.
@@ -2848,7 +2848,7 @@ as given by both min_bounds and max_bounds.
   </listitem>
   <listitem>
     <para>
-If all_chars_exist is 
+If all_chars_exist is
 <symbol>True</symbol>,
 all characters in the per_char array have nonzero bounding boxes.
     </para>
@@ -2856,19 +2856,19 @@ all characters in the per_char array have nonzero bounding boxes.
   <listitem>
     <para>
 The default_char member specifies the character that will be used when an
-undefined or nonexistent character is printed.  
+undefined or nonexistent character is printed.
 The default_char is a 16-bit character (not a 2-byte character).
-For a font using 2-byte matrix format, 
+For a font using 2-byte matrix format,
 the default_char has byte1 in the most-significant byte
 and byte2 in the least significant byte.
-If the default_char itself specifies an undefined or nonexistent character, 
+If the default_char itself specifies an undefined or nonexistent character,
 no printing is performed for an undefined or nonexistent character.
     </para>
   </listitem>
   <listitem>
     <para>
 The min_bounds and max_bounds members contain the most extreme values of
-each individual 
+each individual
 <structname>XCharStruct</structname>
 component over all elements of this array
 (and ignore nonexistent characters).
@@ -2914,7 +2914,7 @@ Specific characters may extend beyond this.
   <listitem>
     <para>
 If the baseline is at Y-coordinate y,
-the logical extent of the font is inclusive between the Y-coordinate 
+the logical extent of the font is inclusive between the Y-coordinate
 values (y - font.ascent) and (y + font.descent - 1).
 Typically,
 the minimum interline spacing between rows of text is given
@@ -2925,9 +2925,9 @@ by ascent + descent.
 <para>
 <!-- .LP -->
 For a character origin at [x,y],
-the bounding box of a character (that is, 
+the bounding box of a character (that is,
 the smallest rectangle that encloses the character's shape)
-described in terms of 
+described in terms of
 <structname>XCharStruct</structname>
 components is a rectangle with its upper-left corner at:
 </para>
@@ -2981,12 +2981,12 @@ The width member defines the logical width of the character.
 </para>
 <para>
 <!-- .LP -->
-Note that the baseline (the y position of the character origin) 
-is logically viewed as being the scanline just below nondescending characters. 
+Note that the baseline (the y position of the character origin)
+is logically viewed as being the scanline just below nondescending characters.
 When descent is zero,
 only pixels with Y-coordinates less than y are drawn,
 and the origin is logically viewed as being coincident with the left edge of
-a nonkerned character. 
+a nonkerned character.
 When lbearing is zero,
 no pixels with X-coordinate less than x are drawn.
 Any of the
@@ -2997,7 +2997,7 @@ the next character will be placed to the left of the current origin.
 </para>
 <para>
 <!-- .LP -->
-The X protocol does not define the interpretation of the attributes member 
+The X protocol does not define the interpretation of the attributes member
 in the
 <structname>XCharStruct</structname>
 structure.
@@ -3009,7 +3009,7 @@ set to zero.
 <!-- .LP -->
 A font is not guaranteed to have any properties.
 The interpretation of the property value (for example, long or unsigned long)
-must be derived from <emphasis remap='I'>a priori</emphasis> knowledge of the property. 
+must be derived from <emphasis remap='I'>a priori</emphasis> knowledge of the property.
 A basic set of font properties is specified in the X Consortium standard
 <olink targetdoc='xlfd' targetptr='xlfd'><citetitle>X Logical Font Description Conventions</citetitle></olink>.
 </para>
@@ -3025,7 +3025,7 @@ unload fonts, and free font information.
 <indexterm><primary>Fonts</primary><secondary>getting information</secondary></indexterm>
 <indexterm><primary>Fonts</primary><secondary>unloading</secondary></indexterm>
 <indexterm><primary>Fonts</primary><secondary>freeing font information</secondary></indexterm>
-A few font functions use a 
+A few font functions use a
 <type>GContext</type>
 resource ID or a font ID interchangeably.
 </para>
@@ -3079,21 +3079,21 @@ the result is implementation-dependent.
 Use of uppercase or lowercase does not matter.
 When the characters ``?'' and ``*'' are used in a font name, a
 pattern match is performed and any matching font is used.
-In the pattern, 
-the ``?'' character will match any single character, 
+In the pattern,
+the ``?'' character will match any single character,
 and the ``*'' character will match any number of characters.
-A structured format for font names is specified in the X Consortium standard 
+A structured format for font names is specified in the X Consortium standard
 <olink targetdoc='xlfd' targetptr='xlfd'><citetitle>X Logical Font Description Conventions</citetitle></olink>.
-If 
+If
 <xref linkend='XLoadFont' xrefstyle='select: title'/>
-was unsuccessful at loading the specified font, 
-a 
+was unsuccessful at loading the specified font,
+a
 <errorname>BadName</errorname>
 error results.
-Fonts are not associated with a particular screen 
+Fonts are not associated with a particular screen
 and can be stored as a component
 of any GC.
-When the font is no longer needed, call 
+When the font is no longer needed, call
 <xref linkend='XUnloadFont' xrefstyle='select: title'/>.
 </para>
 <para>
@@ -3138,7 +3138,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the font ID or the 
+Specifies the font ID or the
 <type>GContext</type>
 ID.
     </para>
@@ -3154,9 +3154,9 @@ function returns a pointer to the
 <structname>XFontStruct</structname>
 structure, which contains information associated with the font.
 You can query a font or the font stored in a GC.
-The font ID stored in the 
+The font ID stored in the
 <structname>XFontStruct</structname>
-structure will be the 
+structure will be the
 <type>GContext</type>
 ID, and you need to be careful when using this ID in other functions
 (see
@@ -3282,7 +3282,7 @@ Specifies the storage associated with the font.
 <!-- .eM  -->
 The
 <xref linkend='XFreeFont' xrefstyle='select: title'/>
-function deletes the association between the font resource ID and the specified 
+function deletes the association between the font resource ID and the specified
 font and frees the
 <structname>XFontStruct</structname>
 structure.
@@ -3351,11 +3351,11 @@ Returns the value of the font property.
 Given the atom for that property,
 the
 <xref linkend='XGetFontProperty' xrefstyle='select: title'/>
-function returns the value of the specified font property. 
+function returns the value of the specified font property.
 <xref linkend='XGetFontProperty' xrefstyle='select: title'/>
-also returns 
+also returns
 <symbol>False</symbol>
-if the property was not defined or 
+if the property was not defined or
 <symbol>True</symbol>
 if it was defined.
 A set of predefined atoms exists for font properties,
@@ -3471,7 +3471,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the null-terminated pattern string that can contain wildcard 
+Specifies the null-terminated pattern string that can contain wildcard
 characters.
       </para>
     </listitem>
@@ -3502,7 +3502,7 @@ Returns the actual number of font names.
 <!-- .eM -->
 The
 <xref linkend='XListFonts' xrefstyle='select: title'/>
-function returns an array of available font names 
+function returns an array of available font names
 (as controlled by the font search path; see
 <xref linkend='XSetFontPath' xrefstyle='select: title'/>)
 that match the string you passed to the pattern argument.
@@ -3596,7 +3596,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the null-terminated pattern string that can contain wildcard 
+Specifies the null-terminated pattern string that can contain wildcard
 characters.
       </para>
     </listitem>
@@ -3743,7 +3743,7 @@ to close the font.
 <para>
 <!-- .LP -->
 Xlib provides functions that you can use to compute the width,
-the logical extents, 
+the logical extents,
 and the server information about 8-bit and 2-byte text strings.
 <indexterm><primary>XTextWidth</primary></indexterm>
 <indexterm><primary>XTextWidth16</primary></indexterm>
@@ -3887,7 +3887,7 @@ To compute the bounding box of an 8-bit character string in a given font, use
     </term>
     <listitem>
       <para>
-Specifies the 
+Specifies the
 <structname>XFontStruct</structname>
 structure.
       </para>
@@ -3988,7 +3988,7 @@ To compute the bounding box of a 2-byte character string in a given font, use
     </term>
     <listitem>
       <para>
-Specifies the 
+Specifies the
 <structname>XFontStruct</structname>
 structure.
       </para>
@@ -4067,7 +4067,7 @@ The
 <xref linkend='XTextExtents' xrefstyle='select: title'/>
 and
 <xref linkend='XTextExtents16' xrefstyle='select: title'/>
-functions 
+functions
 perform the size computation locally and, thereby,
 avoid the round-trip overhead of
 <xref linkend='XQueryTextExtents' xrefstyle='select: title'/>
@@ -4085,7 +4085,7 @@ The descent member is set to the maximum of the descent metrics.
 The width member is set to the sum of the character-width metrics of all
 characters in the string.
 For each character in the string,
-let W be the sum of the character-width metrics of all characters preceding 
+let W be the sum of the character-width metrics of all characters preceding
 it in the string.
 Let L be the left-side-bearing metric of the character plus W.
 Let R be the right-side-bearing metric of the character plus W.
@@ -4095,9 +4095,9 @@ The rbearing member is set to the maximum R.
 <para>
 <!-- .LP -->
 For fonts defined with linear indexing rather than 2-byte matrix indexing,
-each 
+each
 <structname>XChar2b</structname>
-structure is interpreted as a 16-bit number with byte1 as the 
+structure is interpreted as a 16-bit number with byte1 as the
 most significant byte.
 If the font has no defined default character,
 undefined characters in the string are taken to have all zero metrics.
@@ -4110,8 +4110,8 @@ undefined characters in the string are taken to have all zero metrics.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-To query the server for the bounding box of an 8-bit character string in a 
-given font, use 
+To query the server for the bounding box of an 8-bit character string in a
+given font, use
 <xref linkend='XQueryTextExtents' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XQueryTextExtents</primary></indexterm>
@@ -4147,7 +4147,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies either the font ID or the 
+Specifies either the font ID or the
 <type>GContext</type>
 ID that contains the font.
       </para>
@@ -4260,7 +4260,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies either the font ID or the 
+Specifies either the font ID or the
 <type>GContext</type>
 ID that contains the font.
       </para>
@@ -4345,7 +4345,7 @@ specified GC.
 These functions query the X server and, therefore, suffer the round-trip
 overhead that is avoided by
 <xref linkend='XTextExtents' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XTextExtents16' xrefstyle='select: title'/>.
 Both functions return a
 <structname>XCharStruct</structname>
@@ -4353,10 +4353,10 @@ structure, whose members are set to the values as follows.
 </para>
 <para>
 <!-- .LP -->
-The ascent member is set to the maximum of the ascent metrics 
+The ascent member is set to the maximum of the ascent metrics
 of all characters in the string.
 The descent member is set to the maximum of the descent metrics.
-The width member is set to the sum of the character-width metrics 
+The width member is set to the sum of the character-width metrics
 of all characters in the string.
 For each character in the string,
 let W be the sum of the character-width metrics of all characters preceding
@@ -4369,9 +4369,9 @@ The rbearing member is set to the maximum R.
 <para>
 <!-- .LP -->
 For fonts defined with linear indexing rather than 2-byte matrix indexing,
-each 
+each
 <structname>XChar2b</structname>
-structure is interpreted as a 16-bit number with byte1 as the 
+structure is interpreted as a 16-bit number with byte1 as the
 most significant byte.
 If the font has no defined default character,
 undefined characters in the string are taken to have all zero metrics.
@@ -4407,7 +4407,7 @@ This section discusses how to draw:
 <itemizedlist>
   <listitem>
     <para>
-Complex text 
+Complex text
     </para>
   </listitem>
   <listitem>
@@ -4533,7 +4533,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -4629,7 +4629,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -4699,12 +4699,12 @@ Both functions allow complex spacing and font shifts between counted strings.
 <para>
 <!-- .LP -->
 Each text item is processed in turn.
-A font member other than 
+A font member other than
 <symbol>None</symbol>
 in an item causes the font to be stored in the GC
-and used for subsequent text.  
+and used for subsequent text.
 A text element delta specifies an additional change
-in the position along the x axis before the string is drawn. 
+in the position along the x axis before the string is drawn.
 The delta is always added to the character origin
 and is not dependent on any characteristics of the font.
 Each character image, as defined by the font in the GC, is treated as an
@@ -4717,18 +4717,18 @@ error, the previous text items may have been drawn.
 <para>
 <!-- .LP -->
 For fonts defined with linear indexing rather than 2-byte matrix indexing,
-each 
+each
 <structname>XChar2b</structname>
-structure is interpreted as a 16-bit number with byte1 as the 
+structure is interpreted as a 16-bit number with byte1 as the
 most significant byte.
 </para>
 <para>
 <!-- .LP -->
 Both functions use these GC components:
-function, plane-mask, fill-style, font, subwindow-mode, 
+function, plane-mask, fill-style, font, subwindow-mode,
 clip-x-origin, clip-y-origin, and clip-mask.
-They also use these GC mode-dependent components: 
-foreground, background, tile, stipple, tile-stipple-x-origin, 
+They also use these GC mode-dependent components:
+foreground, background, tile, stipple, tile-stipple-x-origin,
 and tile-stipple-y-origin.
 </para>
 <para>
@@ -4789,7 +4789,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -4885,7 +4885,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -4955,11 +4955,11 @@ each byte is used as a byte2 with a byte1 of zero.
 </para>
 <para>
 <!-- .LP -->
-Both functions use these GC components: 
-function, plane-mask, fill-style, font, subwindow-mode, clip-x-origin, 
+Both functions use these GC components:
+function, plane-mask, fill-style, font, subwindow-mode, clip-x-origin,
 clip-y-origin, and clip-mask.
-They also use these GC mode-dependent components: 
-foreground, background, tile, stipple, tile-stipple-x-origin, 
+They also use these GC mode-dependent components:
+foreground, background, tile, stipple, tile-stipple-x-origin,
 and tile-stipple-y-origin.
 </para>
 <para>
@@ -5029,7 +5029,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -5125,7 +5125,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -5190,7 +5190,7 @@ The
 function is similar to
 <xref linkend='XDrawImageString' xrefstyle='select: title'/>
 except that it uses 2-byte or 16-bit characters.
-Both functions also use both the foreground and background pixels 
+Both functions also use both the foreground and background pixels
 of the GC in the destination.
 </para>
 <para>
@@ -5229,11 +5229,11 @@ font-ascent + font-descent
 <para>
 <!-- .LP -->
 The overall-width, font-ascent, and font-descent
-are as would be returned by 
+are as would be returned by
 <xref linkend='XQueryTextExtents' xrefstyle='select: title'/>
 using gc and string.
-The function and fill-style defined in the GC are ignored for these functions. 
-The effective function is 
+The function and fill-style defined in the GC are ignored for these functions.
+The effective function is
 <symbol>GXcopy</symbol>,
 and the effective fill-style is
 <symbol>FillSolid</symbol>.
@@ -5247,8 +5247,8 @@ each byte is used as a byte2 with a byte1 of zero.
 </para>
 <para>
 <!-- .LP -->
-Both functions use these GC components: 
-plane-mask, foreground, background, font, subwindow-mode, clip-x-origin, 
+Both functions use these GC components:
+plane-mask, foreground, background, font, subwindow-mode, clip-x-origin,
 clip-y-origin, and clip-mask.
 </para>
 <para>
@@ -5275,14 +5275,14 @@ errors.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-Xlib provides functions that you can use to transfer images between a client 
+Xlib provides functions that you can use to transfer images between a client
 and the server.
-Because the server may require diverse data formats, 
-Xlib provides an image object that fully describes the data in memory 
-and that provides for basic operations on that data.  
-You should reference the data 
+Because the server may require diverse data formats,
+Xlib provides an image object that fully describes the data in memory
+and that provides for basic operations on that data.
+You should reference the data
 through the image object rather than referencing the data directly.
-However, some implementations of the Xlib library may efficiently deal with 
+However, some implementations of the Xlib library may efficiently deal with
 frequently used data formats by replacing
 functions in the procedure vector with special case functions.
 Supported operations include destroying the image, getting a pixel,
@@ -5291,8 +5291,8 @@ to an image (see <link linkend="Manipulating_Images">section 16.8</link>).
 </para>
 <para>
 <!-- .LP -->
-All the image manipulation functions discussed in this section make use of 
-the 
+All the image manipulation functions discussed in this section make use of
+the
 <structname>XImage</structname>
 structure,
 which describes an image as it exists in the client's memory.
@@ -5431,7 +5431,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -5451,7 +5451,7 @@ Specifies the GC.
     </term>
     <listitem>
       <para>
-Specifies the image you want combined with the rectangle. 
+Specifies the image you want combined with the rectangle.
       </para>
     </listitem>
   </varlistentry>
@@ -5462,7 +5462,7 @@ Specifies the image you want combined with the rectangle.
     <listitem>
       <para>
 Specifies the offset in X from the left edge of the image defined
-by the 
+by the
 <structname>XImage</structname>
 structure.
       </para>
@@ -5475,7 +5475,7 @@ structure.
     <listitem>
       <para>
 Specifies the offset in Y from the top edge of the image defined
-by the 
+by the
 <structname>XImage</structname>
 structure.
       </para>
@@ -5533,9 +5533,9 @@ The
 <xref linkend='XPutImage' xrefstyle='select: title'/>
 function
 combines an image with a rectangle of the specified drawable.
-The section of the image defined by the src_x, src_y, width, and height 
+The section of the image defined by the src_x, src_y, width, and height
 arguments is drawn on the specified part of the drawable.
-If 
+If
 <symbol>XYBitmap</symbol>
 format is used, the depth of the image must be one,
 or a
@@ -5543,9 +5543,9 @@ or a
 error results.
 The foreground pixel in the GC defines the source for the one bits in the image,
 and the background pixel defines the source for the zero bits.
-For 
+For
 <symbol>XYPixmap</symbol>
-and 
+and
 <symbol>ZPixmap</symbol>,
 the depth of the image must match the depth of the drawable,
 or a
@@ -5562,8 +5562,8 @@ conversions.
 </para>
 <para>
 <!-- .LP -->
-This function uses these GC components: 
-function, plane-mask, subwindow-mode, clip-x-origin, clip-y-origin, 
+This function uses these GC components:
+function, plane-mask, subwindow-mode, clip-x-origin, clip-y-origin,
 and clip-mask.
 It also uses these GC mode-dependent components:
 foreground and background.
@@ -5620,7 +5620,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -5688,7 +5688,7 @@ Specifies the plane mask.
 Specifies the format for the image.
 You can pass
 <symbol>XYPixmap</symbol>
-or 
+or
 <symbol>ZPixmap</symbol>.
     </para>
   </listitem>
@@ -5704,16 +5704,16 @@ function returns a pointer to an
 structure.
 This structure provides you with the contents of the specified rectangle of
 the drawable in the format you specify.
-If the format argument is 
+If the format argument is
 <symbol>XYPixmap</symbol>,
 the image contains only the bit planes you passed to the plane_mask argument.
 If the plane_mask argument only requests a subset of the planes of the
 display, the depth of the returned image will be the number of planes
 requested.
-If the format argument is 
+If the format argument is
 <symbol>ZPixmap</symbol>,
 <xref linkend='XGetImage' xrefstyle='select: title'/>
-returns as zero the bits in all planes not 
+returns as zero the bits in all planes not
 specified in the plane_mask argument.
 The function performs no range checking on the values in plane_mask and ignores
 extraneous bits.
@@ -5725,19 +5725,19 @@ returns the depth of the image to the depth member of the
 <structname>XImage</structname>
 structure.
 The depth of the image is as specified when the drawable was created,
-except when getting a subset of the planes in 
+except when getting a subset of the planes in
 <symbol>XYPixmap</symbol>
 format, when the depth is given by the number of bits set to 1 in plane_mask.
 </para>
 <para>
 <!-- .LP -->
-If the drawable is a pixmap, 
-the given rectangle must be wholly contained within the pixmap, 
+If the drawable is a pixmap,
+the given rectangle must be wholly contained within the pixmap,
 or a
 <errorname>BadMatch</errorname>
 error results.
-If the drawable is a window, 
-the window must be viewable, 
+If the drawable is a window,
+the window must be viewable,
 and it must be the case that if there were no inferiors or overlapping windows,
 the specified rectangle of the window would be fully visible on the screen
 and wholly contained within the outside edges of the window,
@@ -5748,7 +5748,7 @@ Note that the borders of the window can be included and read with
 this request.
 If the window has backing-store, the backing-store contents are
 returned for regions of the window that are obscured by noninferior
-windows. 
+windows.
 If the window does not have backing-store,
 the returned contents of such obscured regions are undefined.
 The returned contents of visible regions of inferiors
@@ -5811,7 +5811,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -5879,7 +5879,7 @@ Specifies the plane mask.
 Specifies the format for the image.
 You can pass
 <symbol>XYPixmap</symbol>
-or 
+or
 <symbol>ZPixmap</symbol>.
       </para>
     </listitem>
@@ -5921,17 +5921,17 @@ the subimage is placed in the destination image.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The 
+The
 <xref linkend='XGetSubImage' xrefstyle='select: title'/>
-function updates dest_image with the specified subimage in the same manner as 
+function updates dest_image with the specified subimage in the same manner as
 <xref linkend='XGetImage' xrefstyle='select: title'/>.
-If the format argument is 
+If the format argument is
 <symbol>XYPixmap</symbol>,
 the image contains only the bit planes you passed to the plane_mask argument.
-If the format argument is 
+If the format argument is
 <symbol>ZPixmap</symbol>,
 <xref linkend='XGetSubImage' xrefstyle='select: title'/>
-returns as zero the bits in all planes not 
+returns as zero the bits in all planes not
 specified in the plane_mask argument.
 The function performs no range checking on the values in plane_mask and ignores
 extraneous bits.
@@ -5953,18 +5953,18 @@ the given rectangle must be wholly contained within the pixmap,
 or a
 <errorname>BadMatch</errorname>
 error results.
-If the drawable is a window, 
-the window must be viewable, 
+If the drawable is a window,
+the window must be viewable,
 and it must be the case that if there were no inferiors or overlapping windows,
 the specified rectangle of the window would be fully visible on the screen
 and wholly contained within the outside edges of the window,
 or a
 <errorname>BadMatch</errorname>
 error results.
-If the window has backing-store, 
-then the backing-store contents are returned for regions of the window 
-that are obscured by noninferior windows. 
-If the window does not have backing-store, 
+If the window has backing-store,
+then the backing-store contents are returned for regions of the window
+that are obscured by noninferior windows.
+If the window does not have backing-store,
 the returned contents of such obscured regions are undefined.
 The returned contents of visible regions of inferiors
 of a different depth than the specified window's depth are also undefined.

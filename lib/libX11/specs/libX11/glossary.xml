@@ -8,15 +8,15 @@
 <indexterm significance="preferred"><primary>Access control list</primary></indexterm>
   <glossdef>
     <para>
-X maintains a list of hosts from which client programs can be run.  
-By default, 
+X maintains a list of hosts from which client programs can be run.
+By default,
 only programs on the local host and hosts specified in an initial list read
 by the server can use the display.
-This access control list can be changed by clients on the local host.  
+This access control list can be changed by clients on the local host.
 Some server implementations can also implement other authorization mechanisms
 in addition to or in place of this mechanism.
-The action of this mechanism can be conditional based on the authorization 
-protocol name and data received by the server at connection setup. 
+The action of this mechanism can be conditional based on the authorization
+protocol name and data received by the server at connection setup.
     </para>
   </glossdef>
 </glossentry>
@@ -25,7 +25,7 @@ protocol name and data received by the server at connection setup.
 <indexterm significance="preferred"><primary>Active grab</primary></indexterm>
   <glossdef>
     <para>
-A grab is active when the pointer or keyboard is actually owned by the 
+A grab is active when the pointer or keyboard is actually owned by the
 single grabbing client.
     </para>
   </glossdef>
@@ -57,7 +57,7 @@ Atoms are used to identify properties, types, and selections.
 An
 <symbol>InputOutput</symbol>
 window can have a background, which is defined as a pixmap.
-When regions of the window have their contents lost 
+When regions of the window have their contents lost
 or invalidated,
 the server automatically tiles those regions with the background.
     </para>
@@ -68,7 +68,7 @@ the server automatically tiles those regions with the background.
 <indexterm significance="preferred"><primary>Backing store</primary></indexterm>
   <glossdef>
     <para>
-When a server maintains the contents of a window, 
+When a server maintains the contents of a window,
 the pixels saved off-screen are known as a backing store.
     </para>
   </glossdef>
@@ -78,24 +78,24 @@ the pixels saved off-screen are known as a backing store.
 <indexterm significance="preferred"><primary>Base font name</primary></indexterm>
   <glossdef>
     <para>
-A font name used to select a family of fonts whose members may be encoded 
+A font name used to select a family of fonts whose members may be encoded
 in various charsets.
 The
 <structfield>CharSetRegistry</structfield>
-and 
+and
 <structfield>CharSetEncoding</structfield>
 fields of an <acronym>XLFD</acronym> name identify the charset of the font.
-A base font name may be a full <acronym>XLFD</acronym> name, with all fourteen '-' delimiters, 
+A base font name may be a full <acronym>XLFD</acronym> name, with all fourteen '-' delimiters,
 or an abbreviated <acronym>XLFD</acronym> name containing only the first 12 fields of an <acronym>XLFD</acronym> name,
-up to but not including 
+up to but not including
 <structfield>CharSetRegistry</structfield>,
 with or without the thirteenth '-', or a non-<acronym>XLFD</acronym> name.
 Any <acronym>XLFD</acronym> fields may contain wild cards.
 </para>
     <para>
-When creating an 
+When creating an
 <type>XFontSet</type>,
-Xlib accepts from the client a list of one or more base font names 
+Xlib accepts from the client a list of one or more base font names
 which select one or more font families.
 They are combined with charset names obtained from the encoding of the locale
 to load the fonts required to render text.
@@ -107,9 +107,9 @@ to load the fonts required to render text.
 <indexterm significance="preferred"><primary>Bit</primary><secondary>gravity</secondary></indexterm>
   <glossdef>
     <para>
-When a window is resized, 
-the contents of the window are not necessarily discarded.  
-It is possible to request that the server relocate the previous contents 
+When a window is resized,
+the contents of the window are not necessarily discarded.
+It is possible to request that the server relocate the previous contents
 to some region of the window (though no guarantees are made).
 This attraction of window contents for some location of
 a window is known as bit gravity.
@@ -155,7 +155,7 @@ Exposure events are never generated for border regions.
   <glossdef>
     <para>
 Buttons on the pointer can be passively grabbed by a client.
-When the button is pressed, 
+When the button is pressed,
 the pointer is then actively grabbed by the client.
     </para>
   </glossdef>
@@ -165,11 +165,11 @@ the pointer is then actively grabbed by the client.
 <indexterm significance="preferred"><primary>Byte</primary><secondary>order</secondary></indexterm>
   <glossdef>
     <para>
-For image (pixmap/bitmap) data, 
+For image (pixmap/bitmap) data,
 the server defines the byte order,
 and clients with different native byte ordering must swap bytes as
-necessary.  
-For all other parts of the protocol, 
+necessary.
+For all other parts of the protocol,
 the client defines the byte order,
 and the server swaps bytes as necessary.
     </para>
@@ -182,7 +182,7 @@ and the server swaps bytes as necessary.
     <para>
 A member of a set of elements used for the organization,
 control, or representation of text (ISO2022, as adapted by XPG3).
-Note that in ISO2022 terms, a character is not bound to a coded value 
+Note that in ISO2022 terms, a character is not bound to a coded value
 until it is identified as part of a coded character set.
     </para>
   </glossdef>
@@ -213,7 +213,7 @@ A collection of characters.
 <indexterm significance="preferred"><primary>Charset</primary></indexterm>
   <glossdef>
     <para>
-An encoding with a uniform, state-independent mapping from characters 
+An encoding with a uniform, state-independent mapping from characters
 to codepoints.
 A coded character set.
 </para>
@@ -264,12 +264,12 @@ windows for further information about valid window types.
     <para>
 An application program connects to the window system server by some
 interprocess communication (<acronym>IPC</acronym>) path, such as a <acronym>TCP</acronym> connection or a
-shared memory buffer.  
-This program is referred to as a client of the window system server.  
-More precisely, 
-the client is the <acronym>IPC</acronym> path itself. 
+shared memory buffer.
+This program is referred to as a client of the window system server.
+More precisely,
+the client is the <acronym>IPC</acronym> path itself.
 A program with multiple paths open to the server is viewed as
-multiple clients by the protocol.  
+multiple clients by the protocol.
 Resource lifetimes are controlled by
 connection lifetimes, not by program lifetimes.
     </para>
@@ -280,9 +280,9 @@ connection lifetimes, not by program lifetimes.
 <indexterm significance="preferred"><primary>Clipping region</primary></indexterm>
   <glossdef>
     <para>
-In a graphics context, 
+In a graphics context,
 a bitmap or list of rectangles can be specified
-to restrict output to a particular region of the window.  
+to restrict output to a particular region of the window.
 The image defined by the bitmap or rectangles is called a clipping region.
     </para>
   </glossdef>
@@ -301,8 +301,8 @@ A character bound to a codepoint.
 <indexterm significance="preferred"><primary>Coded character set</primary></indexterm>
   <glossdef>
     <para>
-A set of unambiguous rules that establishes a character set 
-and the one-to-one relationship between each character of the set 
+A set of unambiguous rules that establishes a character set
+and the one-to-one relationship between each character of the set
 and its bit representation.
 (ISO2022, as adapted by XPG3)
 A definition of a one-to-one mapping of a set of characters to a set of
@@ -328,7 +328,7 @@ A colormap consists of a set of entries defining color values.
 The colormap associated with a window is used to display the contents of
 the window; each pixel value indexes the colormap to produce an <acronym>RGB</acronym> value
 that drives the guns of a monitor.
-Depending on hardware limitations, 
+Depending on hardware limitations,
 one or more colormaps can be installed at one time so
 that windows associated with those maps display with true colors.
     </para>
@@ -352,8 +352,8 @@ connection to the server over which requests and events are sent.
     <para>
 A window contains the pointer if the window is viewable and the
 hotspot of the cursor is within a visible region of the window or a
-visible region of one of its inferiors.  
-The border of the window is included as part of the window for containment.  
+visible region of one of its inferiors.
+The border of the window is included as part of the window for containment.
 The pointer is in a window if the window contains the pointer
 but no inferior contains the pointer.
     </para>
@@ -364,11 +364,11 @@ but no inferior contains the pointer.
 <indexterm significance="preferred"><primary>Coordinate system</primary></indexterm>
   <glossdef>
     <para>
-The coordinate system has X horizontal and Y vertical, 
-with the origin [0, 0] at the upper left.  
+The coordinate system has X horizontal and Y vertical,
+with the origin [0, 0] at the upper left.
 Coordinates are integral and coincide with pixel centers.
-Each window and pixmap has its own coordinate system.  
-For a window, 
+Each window and pixmap has its own coordinate system.
+For a window,
 the origin is inside the border at the inside upper-left corner.
     </para>
   </glossdef>
@@ -378,9 +378,9 @@ the origin is inside the border at the inside upper-left corner.
 <indexterm significance="preferred"><primary>Cursor</primary></indexterm>
   <glossdef>
     <para>
-A cursor is the visible shape of the pointer on a screen.  
-It consists of a hotspot, a source bitmap, a shape bitmap, 
-and a pair of colors.  
+A cursor is the visible shape of the pointer on a screen.
+It consists of a hotspot, a source bitmap, a shape bitmap,
+and a pair of colors.
 The cursor defined for a window controls the visible
 appearance when the pointer is in that window.
     </para>
@@ -404,9 +404,9 @@ used in conjunction with graphics output.
     <para>
 Keyboards, mice, tablets, track-balls, button boxes, and so on are all
 collectively known as input devices.
-Pointers can have one or more buttons 
+Pointers can have one or more buttons
 (the most common number is three).
-The core protocol only deals with two devices: the keyboard 
+The core protocol only deals with two devices: the keyboard
 and the pointer.
     </para>
   </glossdef>
@@ -419,10 +419,10 @@ and the pointer.
 <symbol>DirectColor</symbol>
 is a class of colormap in which a pixel value is decomposed into three
 separate subfields for indexing.
-The first subfield indexes an array to produce red intensity values. 
+The first subfield indexes an array to produce red intensity values.
 The second subfield indexes a second array to produce blue intensity values.
 The third subfield indexes a third array to produce green intensity values.
-The <acronym>RGB</acronym> (red, green, and blue) values in the colormap entry can be 
+The <acronym>RGB</acronym> (red, green, and blue) values in the colormap entry can be
 changed dynamically.
     </para>
   </glossdef>
@@ -447,10 +447,10 @@ particular connection.
 <indexterm significance="preferred"><primary>Drawable</primary></indexterm>
   <glossdef>
     <para>
-Both windows and pixmaps can be used as sources and destinations 
-in graphics operations.  
+Both windows and pixmaps can be used as sources and destinations
+in graphics operations.
 These windows and pixmaps are collectively known as drawables.
-However, an 
+However, an
 <symbol>InputOnly</symbol>
 window cannot be used as a source or destination in a
 graphics operation.
@@ -462,12 +462,12 @@ graphics operation.
 <indexterm significance="preferred"><primary>Encoding</primary></indexterm>
   <glossdef>
     <para>
-A set of unambiguous rules that establishes a character set 
+A set of unambiguous rules that establishes a character set
 and a relationship between the characters and their representations.
 The character set does not have to be fixed to a finite pre-defined set of
 characters.
 The representations do not have to be of uniform length.
-Examples are an ISO2022 graphic set, a state-independent 
+Examples are an ISO2022 graphic set, a state-independent
 or state-dependent combination of graphic sets, possibly including control
 sets, and the X Compound Text encoding.
 </para>
@@ -481,7 +481,7 @@ components of an <acronym>XLFD</acronym>
 name; the name of a charset of the locale for which a font could not be
 found; or an atom which identifies the encoding of a text property or
 which names an encoding for a text selection target type.
-Encoding names should be composed of characters from the X Portable 
+Encoding names should be composed of characters from the X Portable
 Character Set.
     </para>
   </glossdef>
@@ -504,11 +504,11 @@ character (that is, the one following the given string) to be drawn.
     <para>
 Clients are informed of information asynchronously by means of events.
 These events can be either asynchronously generated from devices or
-generated as side effects of client requests.  
-Events are grouped into types. 
+generated as side effects of client requests.
+Events are grouped into types.
 The server never sends an event to a client unless the
 client has specifically asked to be informed of that type of event.
-However, clients can force events to be sent to other clients.  
+However, clients can force events to be sent to other clients.
 Events are typically reported relative to a window.
     </para>
   </glossdef>
@@ -518,8 +518,8 @@ Events are typically reported relative to a window.
 <indexterm significance="preferred"><primary>Event</primary><secondary>mask</secondary></indexterm>
   <glossdef>
     <para>
-Events are requested relative to a window.  
-The set of event types a client requests relative to a window is described 
+Events are requested relative to a window.
+The set of event types a client requests relative to a window is described
 by using an event mask.
     </para>
   </glossdef>
@@ -553,8 +553,8 @@ the source of a device-related event.
 There are certain race conditions possible when demultiplexing device
 events to clients (in particular, deciding where pointer and keyboard
 events should be sent when in the middle of window management
-operations).  
-The event synchronization mechanism allows synchronous processing of 
+operations).
+The event synchronization mechanism allows synchronous processing of
 device events.
     </para>
   </glossdef>
@@ -565,7 +565,7 @@ device events.
   <glossdef>
     <para>
 Servers do not guarantee to preserve the contents of windows when
-windows are obscured or reconfigured.  
+windows are obscured or reconfigured.
 Exposure events are sent to clients to inform them when contents of regions
 of windows have been lost.
     </para>
@@ -576,7 +576,7 @@ of windows have been lost.
 <indexterm significance="preferred"><primary>Extension</primary></indexterm>
   <glossdef>
     <para>
-Named extensions to the core protocol can be defined to extend the system.  
+Named extensions to the core protocol can be defined to extend the system.
 Extensions to output requests, resources, and event types are all possible
 and expected.
     </para>
@@ -587,10 +587,10 @@ and expected.
 <indexterm significance="preferred"><primary>Font</primary></indexterm>
   <glossdef>
     <para>
-A font is an array of glyphs (typically characters).  
-The protocol does no translation or interpretation of character sets.  
-The client simply indicates values used to index the glyph array.  
-A font contains additional metric information to determine interglyph 
+A font is an array of glyphs (typically characters).
+The protocol does no translation or interpretation of character sets.
+The client simply indicates values used to index the glyph array.
+A font contains additional metric information to determine interglyph
 and interline spacing.
     </para>
   </glossdef>
@@ -640,7 +640,7 @@ not bound to a codepoint.
 <indexterm significance="preferred"><primary>Glyph image</primary></indexterm>
   <glossdef>
     <para>
-An image of a glyph, as obtained from a glyph representation displayed 
+An image of a glyph, as obtained from a glyph representation displayed
 on a presentation surface.
 (ISO/IEC/DIS 9541-1)
     </para>
@@ -651,9 +651,9 @@ on a presentation surface.
 <indexterm significance="preferred"><primary>Grab</primary></indexterm>
   <glossdef>
     <para>
-Keyboard keys, the keyboard, pointer buttons, the pointer, 
-and the server can be grabbed for exclusive use by a client.  
-In general, 
+Keyboard keys, the keyboard, pointer buttons, the pointer,
+and the server can be grabbed for exclusive use by a client.
+In general,
 these facilities are not intended to be used by normal applications
 but are intended for various input and window managers to implement various
 styles of user interfaces.
@@ -670,7 +670,7 @@ context (<acronym>GC</acronym>), such as foreground pixel, background
 pixel, line width, clipping region, and so on.
 A graphics context can only
 be used with drawables that have the same root and the same depth as
-the graphics context. 
+the graphics context.
     </para>
   </glossdef>
 </glossentry>
@@ -692,9 +692,9 @@ See <glossterm linkend="glossary:Bit_gravity">Bit gravity</glossterm> and
   <glossdef>
     <para>
 <symbol>GrayScale</symbol>
-can be viewed as a degenerate case of 
+can be viewed as a degenerate case of
 <glossterm linkend="glossary:PseudoColor"><symbol>PseudoColor</symbol></glossterm>,
-in which the red, green, and blue values in any given colormap entry 
+in which the red, green, and blue values in any given colormap entry
 are equal and thus, produce shades of gray.
 The gray values can be changed dynamically.
     </para>
@@ -730,7 +730,7 @@ cursor corresponding to the coordinates reported for the pointer.
   <glossdef>
     <para>
 An identifier is a unique value associated with a resource
-that clients use to name that resource.  
+that clients use to name that resource.
 The identifier can be used over any connection to name the resource.
     </para>
   </glossdef>
@@ -752,7 +752,7 @@ the children, the children's children, and so on.
     <para>
 The input focus is usually a window defining the scope for processing
 of keyboard input.
-If a generated keyboard event usually would be reported to this window 
+If a generated keyboard event usually would be reported to this window
 or one of its inferiors,
 the event is reported as usual.
 Otherwise, the event is reported with respect to the focus window.
@@ -767,7 +767,7 @@ of whatever screen the pointer is on at each keyboard event.
 <indexterm significance="preferred"><primary>Input</primary><secondary>manager</secondary></indexterm>
   <glossdef>
     <para>
-Control over keyboard input is typically provided by an input manager 
+Control over keyboard input is typically provided by an input manager
 client, which usually is part of a window manager.
     </para>
   </glossdef>
@@ -779,12 +779,12 @@ client, which usually is part of a window manager.
     <para>
 An
 <symbol>InputOnly</symbol>
-window is a window that cannot be used for graphics requests.  
+window is a window that cannot be used for graphics requests.
 <symbol>InputOnly</symbol>
 windows are invisible and are used to control such things as cursors,
 input event generation, and grabbing.
 <symbol>InputOnly</symbol>
-windows cannot have 
+windows cannot have
 <symbol>InputOutput</symbol>
 windows as inferiors.
     </para>
@@ -799,9 +799,9 @@ An
 <symbol>InputOutput</symbol>
 window is the normal kind of window that is used for both input and output.
 <symbol>InputOutput</symbol>
-windows can have both 
+windows can have both
 <symbol>InputOutput</symbol>
-and 
+and
 <symbol>InputOnly</symbol>
 windows as inferiors.
     </para>
@@ -814,7 +814,7 @@ windows as inferiors.
     <para>
 The process of making software adaptable to the requirements
 of different native languages, local customs, and character string encodings.
-Making a computer program adaptable to different locales 
+Making a computer program adaptable to different locales
 without program source modifications or recompilation.
     </para>
   </glossdef>
@@ -824,7 +824,7 @@ without program source modifications or recompilation.
 <indexterm significance="preferred"><primary>ISO2022</primary></indexterm>
   <glossdef>
     <para>
-ISO standard for code extension techniques for 7-bit and 8-bit coded 
+ISO standard for code extension techniques for 7-bit and 8-bit coded
 character sets.
     </para>
   </glossdef>
@@ -834,8 +834,8 @@ character sets.
 <indexterm significance="preferred"><primary>Key</primary><secondary>grabbing</secondary></indexterm>
   <glossdef>
     <para>
-Keys on the keyboard can be passively grabbed by a client.  
-When the key is pressed, 
+Keys on the keyboard can be passively grabbed by a client.
+When the key is pressed,
 the keyboard is then actively grabbed by the client.
     </para>
   </glossdef>
@@ -920,7 +920,7 @@ Encoding and decoding for inter-client text communication
 <indexterm significance="preferred"><primary>Locale name</primary></indexterm>
   <glossdef>
     <para>
-The identifier used to select the desired locale for the host C library 
+The identifier used to select the desired locale for the host C library
 and X library functions.
 On ANSI C library compliant systems,
 the locale argument to the
@@ -934,8 +934,8 @@ function.
 <indexterm significance="preferred"><primary>Localization</primary></indexterm>
   <glossdef>
     <para>
-The process of establishing information within a computer system specific 
-to the operation of particular native languages, local customs 
+The process of establishing information within a computer system specific
+to the operation of particular native languages, local customs
 and coded character sets.
 (XPG3)
     </para>
@@ -966,7 +966,7 @@ ShiftLock, and similar keys are called modifier keys.
 <indexterm significance="preferred"><primary>Monochrome</primary></indexterm>
   <glossdef>
     <para>
-Monochrome is a special case of 
+Monochrome is a special case of
 <glossterm linkend="glossary:StaticGray"><symbol>StaticGray</symbol></glossterm>
 in which there are only two colormap entries.
     </para>
@@ -993,9 +993,9 @@ imply only that the strings <emphasis remap='I'>may</emphasis> contain multibyte
     <para>
 A window is obscured if some other window obscures it.
 A window can be partially obscured and so still have visible regions.
-Window A obscures window B if both are viewable 
+Window A obscures window B if both are viewable
 <symbol>InputOutput</symbol>
-windows, if A is higher in the global stacking order, 
+windows, if A is higher in the global stacking order,
 and if the rectangle defined by the outside
 edges of A intersects the rectangle defined by the outside edges of B.
 Note the distinction between obscures and occludes.
@@ -1009,10 +1009,10 @@ Also note that window borders are included in the calculation.
   <glossdef>
     <para>
 A window is occluded if some other window occludes it.
-Window A occludes window B if both are mapped, 
-if A is higher in the global stacking order, 
-and if the rectangle defined by the outside edges of A intersects the rectangle defined 
-by the outside edges of B.  
+Window A occludes window B if both are mapped,
+if A is higher in the global stacking order,
+and if the rectangle defined by the outside edges of A intersects the rectangle defined
+by the outside edges of B.
 Note the distinction between occludes and obscures.
 Also note that window borders are included in the calculation
 and that
@@ -1027,7 +1027,7 @@ windows never obscure other windows but can occlude other windows.
   <glossdef>
     <para>
 Some padding bytes are inserted in the data stream to maintain
-alignment of the protocol requests on natural boundaries.  
+alignment of the protocol requests on natural boundaries.
 This increases ease of portability to some machine architectures.
     </para>
   </glossdef>
@@ -1046,7 +1046,7 @@ If C is a child of P, then P is the parent of C.
 <indexterm significance="preferred"><primary>Passive grab</primary></indexterm>
   <glossdef>
     <para>
-Grabbing a key or button is a passive grab.  
+Grabbing a key or button is a passive grab.
 The grab activates when the key or button is actually pressed.
     </para>
   </glossdef>
@@ -1058,8 +1058,8 @@ The grab activates when the key or button is actually pressed.
     <para>
 A pixel is an N-bit value,
 where N is the number of bit planes used in a particular window or pixmap
-(that is, is the depth of the window or pixmap).  
-A pixel in a window indexes a colormap to derive an actual color to be 
+(that is, is the depth of the window or pixmap).
+A pixel in a window indexes a colormap to derive an actual color to be
 displayed.
     </para>
   </glossdef>
@@ -1069,10 +1069,10 @@ displayed.
 <indexterm significance="preferred"><primary>Pixmap</primary></indexterm>
   <glossdef>
     <para>
-A pixmap is a three-dimensional array of bits.  
-A pixmap is normally thought of as a two-dimensional array of pixels, 
+A pixmap is a three-dimensional array of bits.
+A pixmap is normally thought of as a two-dimensional array of pixels,
 where each pixel can be a value from 0 to 2<superscript>N</superscript>-1,
-and where N is the depth (z axis) of the pixmap.  
+and where N is the depth (z axis) of the pixmap.
 A pixmap can also be thought of as a stack of N bitmaps.
 A pixmap can only be used on the screen that it was created in.
     </para>
@@ -1094,7 +1094,7 @@ bitmap is called a plane or bit plane.
   <glossdef>
     <para>
 Graphics operations can be restricted to only affect a subset of bit
-planes of a destination.  
+planes of a destination.
 A plane mask is a bit mask describing which planes are to be modified.
 The plane mask is stored in a graphics context.
     </para>
@@ -1115,8 +1115,8 @@ and tracked on the screens.
 <indexterm significance="preferred"><primary>Pointer</primary><secondary>grabbing</secondary></indexterm>
   <glossdef>
     <para>
-A client can actively grab control of the pointer. 
-Then button and motion events will be sent to that client 
+A client can actively grab control of the pointer.
+Then button and motion events will be sent to that client
 rather than the client the events would normally have been sent to.
     </para>
   </glossdef>
@@ -1127,7 +1127,7 @@ rather than the client the events would normally have been sent to.
   <glossdef>
     <para>
 A pointing device is typically a mouse, tablet, or some other
-device with effective dimensional motion.  
+device with effective dimensional motion.
 The core protocol defines only one visible cursor,
 which tracks whatever pointing device is attached as the pointer.
     </para>
@@ -1164,9 +1164,9 @@ a..z A..Z 0..9 ._-
   <glossdef>
     <para>
 Windows can have associated properties that consist of a name, a type,
-a data format, and some data. 
-The protocol places no interpretation on properties. 
-They are intended as a general-purpose naming mechanism for clients.  
+a data format, and some data.
+The protocol places no interpretation on properties.
+They are intended as a general-purpose naming mechanism for clients.
 For example, clients might use properties to share information such as resize
 hints, program names, and icon formats with a window manager.
     </para>
@@ -1218,8 +1218,8 @@ a single pixel would be drawn.
   <glossdef>
     <para>
 Window managers (or client programs) may enforce window layout
-policy in various ways.  
-When a client attempts to change the size or position of a window, 
+policy in various ways.
+When a client attempts to change the size or position of a window,
 the operation may be redirected to a specified client
 rather than the operation actually being performed.
     </para>
@@ -1230,9 +1230,9 @@ rather than the operation actually being performed.
 <indexterm significance="preferred"><primary>Reply</primary></indexterm>
   <glossdef>
     <para>
-Information requested by a client program using the X protocol 
+Information requested by a client program using the X protocol
 is sent back to the client with a reply.
-Both events and replies are multiplexed on the same connection.  
+Both events and replies are multiplexed on the same connection.
 Most requests do not generate replies,
 but some requests generate multiple replies.
     </para>
@@ -1254,9 +1254,9 @@ It is a single block of data sent over a connection.
   <glossdef>
     <para>
 Windows, pixmaps, cursors, fonts, graphics contexts, and colormaps are
-known as resources.  
-They all have unique identifiers associated with them for naming purposes.  
-The lifetime of a resource usually is bounded by the lifetime of the 
+known as resources.
+They all have unique identifiers associated with them for naming purposes.
+The lifetime of a resource usually is bounded by the lifetime of the
 connection over which the resource was created.
     </para>
   </glossdef>
@@ -1279,8 +1279,8 @@ The X server scales these values to match the display hardware.
 <indexterm significance="preferred"><primary>Root</primary></indexterm>
   <glossdef>
     <para>
-The root of a pixmap or graphics context is the same as the root 
-of whatever drawable was used when the pixmap or GC was created.  
+The root of a pixmap or graphics context is the same as the root
+of whatever drawable was used when the pixmap or GC was created.
 The root of a window is the root window under which the window was created.
     </para>
   </glossdef>
@@ -1291,7 +1291,7 @@ The root of a window is the root window under which the window was created.
   <glossdef>
     <para>
 Each screen has a root window covering it.
-The root window cannot be reconfigured or unmapped, 
+The root window cannot be reconfigured or unmapped,
 but otherwise it acts as a full-fledged window.
 A root window has no parent.
     </para>
@@ -1304,7 +1304,7 @@ A root window has no parent.
     <para>
 The save set of a client is a list of other clients' windows that,
 if they are inferiors of one of the client's windows at connection
-close, should not be destroyed and that should be remapped 
+close, should not be destroyed and that should be remapped
 if currently unmapped.
 Save sets are typically used by window managers to avoid
 lost windows if the manager should terminate abnormally.
@@ -1339,14 +1339,14 @@ increasing the y coordinate.
 <indexterm><primary>Display</primary><secondary>structure</secondary></indexterm>
   <glossdef>
     <para>
-A server can provide several independent screens, 
-which typically have physically independent monitors.  
-This would be the expected configuration when there is only a single keyboard 
+A server can provide several independent screens,
+which typically have physically independent monitors.
+This would be the expected configuration when there is only a single keyboard
 and pointer shared among the screens.
-A 
+A
 <type>Screen</type>
 structure contains the information about that screen
-and is linked to the 
+and is linked to the
 <type>Display</type>
 structure.
     </para>
@@ -1361,8 +1361,8 @@ A selection can be thought of as an indirect property with dynamic
 type.
 That is, rather than having the property stored in the X server,
 it is maintained by some client (the owner).
-A selection is global and is thought of as belonging to the user 
-and being maintained by clients, 
+A selection is global and is thought of as belonging to the user
+and being maintained by clients,
 rather than being private to a particular window subhierarchy
 or a particular set of clients.
 When a client asks for the contents of
@@ -1375,7 +1375,7 @@ Z format.
 </para>
     <para>
 The target type can also be used to control the class of
-contents transmitted; for example, 
+contents transmitted; for example,
 asking for the ``looks'' (fonts, line
 spacing, indentation, and so forth) of a paragraph selection, rather than the
 text of the paragraph.
@@ -1390,10 +1390,10 @@ The protocol does not constrain the semantics.
 <indexterm significance="preferred"><primary>Server</primary></indexterm>
   <glossdef>
     <para>
-The server, which is also referred to as the X server, 
-provides the basic windowing mechanism.  
-It handles <acronym>IPC</acronym> connections from clients, 
-multiplexes graphics requests onto the screens, 
+The server, which is also referred to as the X server,
+provides the basic windowing mechanism.
+It handles <acronym>IPC</acronym> connections from clients,
+multiplexes graphics requests onto the screens,
 and demultiplexes input back to the appropriate clients.
     </para>
   </glossdef>
@@ -1403,7 +1403,7 @@ and demultiplexes input back to the appropriate clients.
 <indexterm significance="preferred"><primary>Server</primary><secondary>grabbing</secondary></indexterm>
   <glossdef>
     <para>
-The server can be grabbed by a single client for exclusive use.  
+The server can be grabbed by a single client for exclusive use.
 This prevents processing of any requests from other client connections until
 the grab is completed.
 This is typically only a transient state for such things as rubber-banding,
@@ -1416,7 +1416,7 @@ pop-up menus, or executing requests indivisibly.
 <indexterm significance="preferred"><primary>Shift sequence</primary></indexterm>
   <glossdef>
     <para>
-ISO2022 defines control characters and escape sequences 
+ISO2022 defines control characters and escape sequences
 which temporarily (single shift) or permanently (locking shift) cause a
 different character set to be in effect (``invoking'' a character set).
     </para>
@@ -1437,8 +1437,8 @@ Children of the same parent window are known as sibling windows.
   <glossdef>
     <para>
 Sibling windows, similar to sheets of paper on a desk,
-can stack on top of each other.  
-Windows above both obscure and occlude lower windows.  
+can stack on top of each other.
+Windows above both obscure and occlude lower windows.
 The relationship between sibling windows is known as the stacking order.
     </para>
   </glossdef>
@@ -1450,8 +1450,8 @@ The relationship between sibling windows is known as the stacking order.
     <para>
 An encoding in which an invocation of a charset can apply to multiple
 characters in sequence.
-A state-dependent encoding begins in an ``initial state'' 
-and enters other ``shift states'' when specific ``shift sequences'' 
+A state-dependent encoding begins in an ``initial state''
+and enters other ``shift states'' when specific ``shift sequences''
 are encountered in the byte sequence.
 In ISO2022 terms,
 this means use of locking shifts, not single shifts.
@@ -1476,7 +1476,7 @@ this means use of at most single shifts, not locking shifts.
   <glossdef>
     <para>
 <symbol>StaticColor</symbol>
-can be viewed as a degenerate case of 
+can be viewed as a degenerate case of
 <glossterm linkend="glossary:PseudoColor"><symbol>PseudoColor</symbol></glossterm>
 in which the <acronym>RGB</acronym> values are predefined and read-only.
     </para>
@@ -1488,7 +1488,7 @@ in which the <acronym>RGB</acronym> values are predefined and read-only.
   <glossdef>
     <para>
 <symbol>StaticGray</symbol>
-can be viewed as a degenerate case of 
+can be viewed as a degenerate case of
 <glossterm linkend="glossary:GrayScale"><symbol>GrayScale</symbol></glossterm>
 in which the gray values are predefined and read-only.
 The values are typically linear or near-linear increasing ramps.
@@ -1548,7 +1548,7 @@ are pairwise equivalent to decimal values 246 to 254 inclusive
 <indexterm significance="preferred"><primary>Tile</primary></indexterm>
   <glossdef>
     <para>
-A pixmap can be replicated in two dimensions to tile a region.  
+A pixmap can be replicated in two dimensions to tile a region.
 The pixmap itself is also known as a tile.
     </para>
   </glossdef>
@@ -1558,16 +1558,16 @@ The pixmap itself is also known as a tile.
 <indexterm significance="preferred"><primary>Timestamp</primary></indexterm>
   <glossdef>
     <para>
-A timestamp is a time value expressed in milliseconds. 
+A timestamp is a time value expressed in milliseconds.
 It is typically the time since the last server reset.
 Timestamp values wrap around (after about 49.7 days).
-The server, given its current time is represented by timestamp T, 
-always interprets timestamps from clients by treating half 
-of the timestamp space as being earlier in time than T 
+The server, given its current time is represented by timestamp T,
+always interprets timestamps from clients by treating half
+of the timestamp space as being earlier in time than T
 and half of the timestamp space as being later in time than T.
-One timestamp value, represented by the constant 
+One timestamp value, represented by the constant
 <symbol>CurrentTime</symbol>,
-is never generated by the server. 
+is never generated by the server.
 This value is reserved for use in requests to represent the current server time.
     </para>
   </glossdef>
@@ -1578,7 +1578,7 @@ This value is reserved for use in requests to represent the current server time.
   <glossdef>
     <para>
 <symbol>TrueColor</symbol>
-can be viewed as a degenerate case of 
+can be viewed as a degenerate case of
 <glossterm linkend="glossary:DirectColor"><symbol>DirectColor</symbol></glossterm>
 in which the subfields in the pixel value directly encode the corresponding <acronym>RGB</acronym>
 values.
@@ -1592,9 +1592,9 @@ The values are typically linear or near-linear increasing ramps.
 <indexterm significance="preferred"><primary>Type</primary></indexterm>
   <glossdef>
     <para>
-A type is an arbitrary atom used to identify the interpretation of property 
-data.  
-Types are completely uninterpreted by the server. 
+A type is an arbitrary atom used to identify the interpretation of property
+data.
+Types are completely uninterpreted by the server.
 They are solely for the benefit of clients.
 X predefines type atoms for many frequently used types,
 and clients also can define new types.
@@ -1606,11 +1606,11 @@ and clients also can define new types.
 <indexterm significance="preferred"><primary>Viewable</primary></indexterm>
   <glossdef>
     <para>
-A window is viewable if it and all of its ancestors are mapped.  
+A window is viewable if it and all of its ancestors are mapped.
 This does not imply that any portion of the window is actually visible.
 Graphics requests can be performed on a window when it is not
 viewable, but output will not be retained unless the server is maintaining
-backing store. 
+backing store.
     </para>
   </glossdef>
 </glossentry>
@@ -1643,10 +1643,10 @@ returns true.
 <indexterm significance="preferred"><primary>Window</primary><secondary>gravity</secondary></indexterm>
   <glossdef>
     <para>
-When windows are resized, 
-subwindows may be repositioned automatically relative to some position in the 
+When windows are resized,
+subwindows may be repositioned automatically relative to some position in the
 window.
-This attraction of a subwindow to some part of its parent is known 
+This attraction of a subwindow to some part of its parent is known
 as window gravity.
     </para>
   </glossdef>

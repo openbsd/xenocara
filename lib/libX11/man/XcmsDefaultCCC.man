@@ -66,10 +66,10 @@ Its initial gamut compression and white point
 adjustment procedures as well as the associated client data are implementation
 specific.
 .SH "SEE ALSO"
-DisplayOfCCC(__libmansuffix__),
-XcmsCCCOfColormap(__libmansuffix__),
-XcmsConvertColors(__libmansuffix__),
-XcmsCreateCCC(__libmansuffix__),
-XcmsSetWhitePoint(__libmansuffix__)
+.BR DisplayOfCCC (__libmansuffix__),
+.BR XcmsCCCOfColormap (__libmansuffix__),
+.BR XcmsConvertColors (__libmansuffix__),
+.BR XcmsCreateCCC (__libmansuffix__),
+.BR XcmsSetWhitePoint (__libmansuffix__)
 .br
 \fI\*(xL\fP

@@ -143,9 +143,9 @@ A value for a Colormap argument does not name a defined Colormap.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XChangeWindowAttributes(__libmansuffix__),
-XCreateColormap(__libmansuffix__),
-XCreateWindow(__libmansuffix__),
-XFree(__libmansuffix__)
+.BR XChangeWindowAttributes (__libmansuffix__),
+.BR XCreateColormap (__libmansuffix__),
+.BR XCreateWindow (__libmansuffix__),
+.BR XFree (__libmansuffix__)
 .br
 \fI\*(xL\fP

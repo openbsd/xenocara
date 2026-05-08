@@ -82,9 +82,9 @@ does not affect the focus window value;
 the client may still receive
 events from the input method that are directed to the focus window.
 .SH "SEE ALSO"
-XCreateIC(__libmansuffix__),
-XOpenIM(__libmansuffix__),
-XSetICValues(__libmansuffix__),
-XmbResetIC(__libmansuffix__)
+.BR XCreateIC (__libmansuffix__),
+.BR XOpenIM (__libmansuffix__),
+.BR XSetICValues (__libmansuffix__),
+.BR XmbResetIC (__libmansuffix__)
 .br
 \fI\*(xL\fP

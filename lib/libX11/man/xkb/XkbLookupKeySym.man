@@ -50,21 +50,21 @@ backfilled with consumed modifiers
 backfilled with symbol associated with key + state
 .SH DESCRIPTION
 .LP
-.I XkbLookupKeySym 
-is the equivalent of the core 
-.I XLookupKeySym 
-function. For the core keyboard, given a keycode 
-.I key 
-and an Xkb state 
-.I state, XkbLookupKeySym 
-returns the symbol associated with the key in 
-.I sym_rtrn 
-and the list of modifiers that should still be applied in 
-.I mods_rtrn. 
-The 
-.I state 
-parameter is the state from a KeyPress or KeyRelease event. 
-.I XkbLookupKeySym 
+.I XkbLookupKeySym
+is the equivalent of the core
+.I XLookupKeySym
+function. For the core keyboard, given a keycode
+.I key
+and an Xkb state
+.I state, XkbLookupKeySym
+returns the symbol associated with the key in
+.I sym_rtrn
+and the list of modifiers that should still be applied in
+.I mods_rtrn.
+The
+.I state
+parameter is the state from a KeyPress or KeyRelease event.
+.I XkbLookupKeySym
 returns True if it succeeds.
 .SH "SEE ALSO"
 .BR XLookupKeySym (__libmansuffix__)

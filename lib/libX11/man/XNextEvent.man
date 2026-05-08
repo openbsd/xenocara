@@ -205,9 +205,9 @@ returns
 .BR False ,
 and the output buffer will have been flushed.
 .SH "SEE ALSO"
-XAnyEvent(__libmansuffix__),
-XIfEvent(__libmansuffix__),
-XPutBackEvent(__libmansuffix__),
-XSendEvent(__libmansuffix__)
+.BR XAnyEvent (__libmansuffix__),
+.BR XIfEvent (__libmansuffix__),
+.BR XPutBackEvent (__libmansuffix__),
+.BR XSendEvent (__libmansuffix__)
 .br
 \fI\*(xL\fP

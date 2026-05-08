@@ -185,10 +185,10 @@ if the drawing functions implement implicit text directionality;
 otherwise, it returns
 .BR False .
 .SH "SEE ALSO"
-XCreateFontSet(__libmansuffix__),
-XCreateOM(__libmansuffix__),
-XCreateOC(__libmansuffix__),
-XExtentsOfFontSet(__libmansuffix__),
-XFontSetExtents(__libmansuffix__)
+.BR XCreateFontSet (__libmansuffix__),
+.BR XCreateOM (__libmansuffix__),
+.BR XCreateOC (__libmansuffix__),
+.BR XExtentsOfFontSet (__libmansuffix__),
+.BR XFontSetExtents (__libmansuffix__)
 .br
 \fI\*(xL\fP

@@ -38,29 +38,29 @@ section for which rows should be allocated
 number of new rows required
 .SH DESCRIPTION
 .LP
-Xkb provides a number of functions to allocate and free subcomponents of a 
-keyboard geometry. Use these functions to create or modify keyboard geometries. 
-Note that these functions merely allocate space for the new element(s), and it 
-is up to you to fill in the values explicitly in your code. These allocation 
-functions increase 
-.I sz_* 
-but never touch 
-.I num_* 
-(unless there is an allocation failure, in which case they reset both 
-.I sz_* 
-and 
-.I num_* 
-to zero). These functions return Success if they succeed, BadAlloc if they are 
+Xkb provides a number of functions to allocate and free subcomponents of a
+keyboard geometry. Use these functions to create or modify keyboard geometries.
+Note that these functions merely allocate space for the new element(s), and it
+is up to you to fill in the values explicitly in your code. These allocation
+functions increase
+.I sz_*
+but never touch
+.I num_*
+(unless there is an allocation failure, in which case they reset both
+.I sz_*
+and
+.I num_*
+to zero). These functions return Success if they succeed, BadAlloc if they are
 not able to allocate space, or BadValue if a parameter is not as expected.
 
-.I XkbAllocGeomOverlayRows 
-allocates 
-.I num_needed 
-rows and adds them to the 
-.I overlay. 
+.I XkbAllocGeomOverlayRows
+allocates
+.I num_needed
+rows and adds them to the
+.I overlay.
 No initialization of the rows is done.
 
-To free rows in an overlay, use 
+To free rows in an overlay, use
 .I XkbFreeGeomOverlayRows.
 .SH DIAGNOSTICS
 .TP 15

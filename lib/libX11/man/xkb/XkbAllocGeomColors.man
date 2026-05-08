@@ -38,28 +38,28 @@ geometry for which colors should be allocated
 number of new colors required
 .SH DESCRIPTION
 .LP
-Xkb provides a number of functions to allocate and free subcomponents of a 
-keyboard geometry. Use these functions to create or modify keyboard geometries. 
-Note that these functions merely allocate space for the new element(s), and it 
-is up to you to fill in the values explicitly in your code. These allocation 
-functions increase 
-.I sz_* 
-but never touch 
-.I num_* 
-(unless there is an allocation failure, in which case they reset both 
-.I sz_* 
-and 
-.I num_* 
-to zero). These functions return Success if they succeed, BadAlloc if they are 
+Xkb provides a number of functions to allocate and free subcomponents of a
+keyboard geometry. Use these functions to create or modify keyboard geometries.
+Note that these functions merely allocate space for the new element(s), and it
+is up to you to fill in the values explicitly in your code. These allocation
+functions increase
+.I sz_*
+but never touch
+.I num_*
+(unless there is an allocation failure, in which case they reset both
+.I sz_*
+and
+.I num_*
+to zero). These functions return Success if they succeed, BadAlloc if they are
 not able to allocate space, or BadValue if a parameter is not as expected.
 
-.I XkbAllocGeomColors 
-allocates space for 
-.I num_needed 
-colors and adds them to the specified geometry 
-.I geom. 
-A color name is a string whose interpretation is not specified by Xkb. All other 
-geometry data structures refer to colors using their indices in this global list 
+.I XkbAllocGeomColors
+allocates space for
+.I num_needed
+colors and adds them to the specified geometry
+.I geom.
+A color name is a string whose interpretation is not specified by Xkb. All other
+geometry data structures refer to colors using their indices in this global list
 or pointers to colors in this list.
 .SH DIAGNOSTICS
 .TP 15

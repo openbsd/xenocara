@@ -165,8 +165,8 @@ by the argument's type is accepted.
 Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
-XcmsAllocColor(__libmansuffix__),
-XcmsStoreColor(__libmansuffix__),
-XQueryColor(__libmansuffix__)
+.BR XcmsAllocColor (__libmansuffix__),
+.BR XcmsStoreColor (__libmansuffix__),
+.BR XQueryColor (__libmansuffix__)
 .br
 \fI\*(xL\fP

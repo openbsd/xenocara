@@ -22,7 +22,7 @@
 .\"
 .TH XkbSetDeviceInfo __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbSetDeviceInfo \- Modify some or all of the characteristics of an X Input 
+XkbSetDeviceInfo \- Modify some or all of the characteristics of an X Input
 Extension device
 .SH SYNOPSIS
 .HP
@@ -44,55 +44,55 @@ mask indicating characteristics to modify
 structure defining the device and modifications
 .SH DESCRIPTION
 .LP
-To change characteristics of an X Input Extension device in the server, first 
+To change characteristics of an X Input Extension device in the server, first
 modify a local copy of the device structure and then use either
-.I XkbSetDeviceInfo, 
+.I XkbSetDeviceInfo,
 or, to save network traffic, use an XkbDeviceChangesRec structure and call
-.I XkbChangeDeviceInfo 
+.I XkbChangeDeviceInfo
 to download the changes to the server.
 
-.I XkbSetDeviceInfo 
-sends a request to the server to modify the characteristics of the device 
+.I XkbSetDeviceInfo
+sends a request to the server to modify the characteristics of the device
 specified in the
-.I device_info 
-structure. The particular characteristics modified are identified by the bits 
-set in 
-.I which 
-and take their values from the relevant fields in 
-device_info (see Table 1). XkbSetDeviceInfo returns True if the request was 
-successfully sent to the server. If the X server implementation does not allow 
-interaction between the X input extension and the Xkb Extension, the function 
+.I device_info
+structure. The particular characteristics modified are identified by the bits
+set in
+.I which
+and take their values from the relevant fields in
+device_info (see Table 1). XkbSetDeviceInfo returns True if the request was
+successfully sent to the server. If the X server implementation does not allow
+interaction between the X input extension and the Xkb Extension, the function
 does nothing and returns False.
 .bp
 .nf
                          Table 1 XkbDeviceInfoRec Mask Bits
 ____________________________________________________________________________________
 Name                         XkbDeviceInfoRec Value     Capability If Set
-                             Fields Effected            
+                             Fields Effected
 ____________________________________________________________________________________
 XkbXI_KeyboardsMask                           (1L <<0) Clients can use all
                                                        Xkb requests and events
-                                                       with KeyClass devices 
+                                                       with KeyClass devices
                                                        supported by the input
                                                        device extension.
 
-XkbXI_ButtonActionsMask       num_btns        (1L <<1) Clients can assign key 
-                              btn_acts                 actions to buttons 
+XkbXI_ButtonActionsMask       num_btns        (1L <<1) Clients can assign key
+                              btn_acts                 actions to buttons
                                                        non-KeyClass input
                                                        extension devices.
-                           
+
 XkbXI_IndicatorNamesMask      leds->names     (1L <<2) Clients can assign
                                                        names to indicators on
                                                        non-KeyClass input
                                                        extension devices.
-                                                             
+
 XkbXI_IndicatorMapsMask       leds->maps      (1L <<3) Clients can assign
                                                        indicator maps to
-                                                       indicators on 
+                                                       indicators on
                                                        non-KeyClass input
                                                        extension devices.
 
-XkbXI_IndicatorStateMask      leds->state     (1L <<4) Clients can request 
+XkbXI_IndicatorStateMask      leds->state     (1L <<4) Clients can request
                                                        the status of indicators
                                                        on non-KeyClass input
                                                        extension devices.
@@ -105,7 +105,7 @@ XkbXI_UnsupportedFeaturesMask unsupported     (1L <<15)
 
 XkbXI_AllDeviceFeaturesMask   Those selected  (0x1e)   XkbXI_IndicatorsMask |
                               by Value Column          XkbSI_ButtonActionsMask
-                              masks 
+                              masks
 
 XkbXI_AllFeaturesMask         Those selected  (0x1f)   XkbSI_AllDeviceFeaturesMask |
                               by Value Column          XkbSI_KeyboardsMask
@@ -116,84 +116,84 @@ XkbXI_AllDetailsMask          Those selected  (0x801f) XkbXI_AllFeaturesMask |
                               masks
 .fi
 
-The 
-.I which 
-parameter specifies which aspects of the device should be changed and is a 
-bitmask composed of an inclusive OR or one or more of the following bits: 
-XkbXI_ButtonActionsMask, XkbXI_IndicatorNamesMask, XkbXI_IndicatorMapsMask. If 
-the features requested to be manipulated in 
-.I which 
-are valid for the device, but the server does not support assignment of one or 
+The
+.I which
+parameter specifies which aspects of the device should be changed and is a
+bitmask composed of an inclusive OR or one or more of the following bits:
+XkbXI_ButtonActionsMask, XkbXI_IndicatorNamesMask, XkbXI_IndicatorMapsMask. If
+the features requested to be manipulated in
+.I which
+are valid for the device, but the server does not support assignment of one or
 more of them, that particular portion of the request is ignored.
- 
-If the device specified in 
-.I device_info->device_spec 
-does not contain buttons and a request affecting buttons is made, or the device 
-does not contain indicators and a request affecting indicators is made, a 
+
+If the device specified in
+.I device_info->device_spec
+does not contain buttons and a request affecting buttons is made, or the device
+does not contain indicators and a request affecting indicators is made, a
 BadMatch protocol error results.
 
-If the XkbXI_ButtonActionsMask bit is set in the 
-.I supported 
-mask returned by 
-.I XkbGetDeviceInfo, 
-the Xkb extension allows applications to assign key actions to buttons on input 
-extension devices other than the core keyboard device. If the 
-XkbXI_ButtonActionsMask is set in 
-.I which, 
-the actions for all buttons specified in 
-.I device_info 
-are set to the XkbActions specified in 
-.I device_info->btn_acts. 
+If the XkbXI_ButtonActionsMask bit is set in the
+.I supported
+mask returned by
+.I XkbGetDeviceInfo,
+the Xkb extension allows applications to assign key actions to buttons on input
+extension devices other than the core keyboard device. If the
+XkbXI_ButtonActionsMask is set in
+.I which,
+the actions for all buttons specified in
+.I device_info
+are set to the XkbActions specified in
+.I device_info->btn_acts.
 If the number of buttons requested to be updated is not valid for the device,
-.I XkbSetDeviceInfo 
+.I XkbSetDeviceInfo
 returns False and a BadValue protocol error results.
 
-If the XkbXI_IndicatorMaps and / or XkbXI_IndicatorNamesMask bit is set in the 
-.I supported 
-mask returned by 
-.I XkbGetDeviceInfo, 
-the Xkb extension allows applications to assign maps and / or names to the 
-indicators of nonkeyboard extension devices. If supported, maps and / or names 
-can be assigned to all extension device indicators, whether they are part of a 
+If the XkbXI_IndicatorMaps and / or XkbXI_IndicatorNamesMask bit is set in the
+.I supported
+mask returned by
+.I XkbGetDeviceInfo,
+the Xkb extension allows applications to assign maps and / or names to the
+indicators of nonkeyboard extension devices. If supported, maps and / or names
+can be assigned to all extension device indicators, whether they are part of a
 keyboard feedback or part of an indicator feedback.
- 
-If the XkbXI_IndicatorMapsMask and / or XkbXI_IndicatorNamesMask flag is set in 
-.I which, 
-the indicator maps and / or names for all 
-.I device_info->num_leds 
-indicator devices specified in 
-.I device_info->leds 
-are set to the maps and / or names specified in 
-.I device_info->leds. device_info->leds->led_class 
-and 
-.I led_id 
-specify the input extension class and device ID for each indicator device to 
-modify; if they have invalid values, a BadValue protocol error results and 
-.I XkbSetDeviceInfo 
-returns False. If they have legal values but do not specify a keyboard or 
-indicator class feedback for the device in question, a BadMatch error results. 
+
+If the XkbXI_IndicatorMapsMask and / or XkbXI_IndicatorNamesMask flag is set in
+.I which,
+the indicator maps and / or names for all
+.I device_info->num_leds
+indicator devices specified in
+.I device_info->leds
+are set to the maps and / or names specified in
+.I device_info->leds. device_info->leds->led_class
+and
+.I led_id
+specify the input extension class and device ID for each indicator device to
+modify; if they have invalid values, a BadValue protocol error results and
+.I XkbSetDeviceInfo
+returns False. If they have legal values but do not specify a keyboard or
+indicator class feedback for the device in question, a BadMatch error results.
 If any of the values in
-.I device_info->leds->names 
+.I device_info->leds->names
 are not a valid Atom or None, a BadAtom protocol error results.
 .SH "RETURN VALUES"
 .TP 15
 True
-The 
-.I XkbSetDeviceInfo 
+The
+.I XkbSetDeviceInfo
 function returns True if the request was successfully sent to the server.
 .TP 15
 False
-The 
-.I XkbSetDeviceInfo 
-function returns False if the X server implementation does not allow interaction 
+The
+.I XkbSetDeviceInfo
+function returns False if the X server implementation does not allow interaction
 between the X input extension and the Xkb Extension.
 .SH STRUCTURES
 .LP
-Changes to an Xkb extension device may be tracked by listening to 
-XkbDeviceExtensionNotify events and accumulating the changes in an 
-XkbDeviceChangesRec structure. The changes noted in the structure may then be 
-used in subsequent operations to update either a server configuration or a local 
-copy of an Xkb extension device configuration. The changes structure is defined 
+Changes to an Xkb extension device may be tracked by listening to
+XkbDeviceExtensionNotify events and accumulating the changes in an
+XkbDeviceChangesRec structure. The changes noted in the structure may then be
+used in subsequent operations to update either a server configuration or a local
+copy of an Xkb extension device configuration. The changes structure is defined
 as follows:
 .nf
 
@@ -211,7 +211,7 @@ typedef struct _XkbDeviceChanges {
 A name is neither a valid Atom or None
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid
 .TP 15
 .B BadValue

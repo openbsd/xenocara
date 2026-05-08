@@ -43,14 +43,14 @@ mask of compatibility map components to allocate
 number of symbol interpretations to allocate
 .SH DESCRIPTION
 .LP
-.I xkb 
-specifies the keyboard description for which compatibility maps are to be allocated. The compatibility map is the 
-.I compat 
+.I xkb
+specifies the keyboard description for which compatibility maps are to be allocated. The compatibility map is the
+.I compat
 field in this structure.
 
-.I which 
-specifies the compatibility map components to be allocated (see XkbGetCompatMap). 
-.I which 
+.I which
+specifies the compatibility map components to be allocated (see XkbGetCompatMap).
+.I which
 is an inclusive OR of the bits shown in Table 1.
 
 .TS
@@ -65,13 +65,13 @@ XkbGroupCompatMask	(1<<1)	Group maps
 XkbAllCompatMask	(0x3)	All compatibility map components
 .TE
 
-.I num_si 
+.I num_si
 specifies the total number of entries to allocate in the symbol interpretation vector
 .I (xkb.compat.sym_interpret).
 
-.I XkbAllocCompatMap 
-returns Success if successful, BadMatch if 
-.I xkb 
+.I XkbAllocCompatMap
+returns Success if successful, BadMatch if
+.I xkb
 is NULL, or BadAlloc if errors are encountered when attempting to allocate storage.
 .SH STRUCTURES
 .LP
@@ -85,7 +85,7 @@ is NULL, or BadAlloc if errors are encountered when attempting to allocate stora
         unsigned char     virtual_mod;  /\&* 1 modifier to add to key virtual mod map */
         XkbAnyAction      act;          /\&* action to bind to symbol position on key */
     } XkbSymInterpretRec,*XkbSymInterpretPtr;
-    
+
 .fi
 .SH DIAGNOSTICS
 .TP 15
@@ -98,11 +98,11 @@ A compatible version of Xkb was not available in the server or an argument has c
 .BR XkbGetCompatMap (__libmansuffix__)
 .SH NOTES
 .LP
-Note that symbol interpretations in a compatibility map (the 
-.I sym_interpret 
+Note that symbol interpretations in a compatibility map (the
+.I sym_interpret
 vector of XkbSymInterpretRec structures) are also allocated using this same function. To ensure that there is sufficient space in the symbol interpretation vector for entries to be added, use
-.I XkbAllocCompatMap 
-specifying 
-.I which 
-as XkbSymInterpretMask and the number of free symbol interpretations needed in 
+.I XkbAllocCompatMap
+specifying
+.I which
+as XkbSymInterpretMask and the number of free symbol interpretations needed in
 .I num_si.

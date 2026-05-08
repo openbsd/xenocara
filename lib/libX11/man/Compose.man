@@ -118,17 +118,17 @@ Keysyms are specified without the \fBXK_\fP prefix.
 Strings may be direct text encoded in the locale for which the compose file is
 to be used, or an escaped octal or hexadecimal character code.
 Octal codes
-are specified as \fB\*q\\123\*q\fP and hexadecimal codes as
-\fB\*q\\x3a\*q\fP.
+are specified as \fB\*q\e123\*q\fP and hexadecimal codes as
+\fB\*q\ex3a\*q\fP.
 It is not necessary to specify in the right part of a rule a locale encoded
 string in addition to the keysym name.
 If the string is omitted, Xlib
 figures it out from the keysym according to the current locale.
 I.e., if a rule looks like:
 .RS
-\fB<dead_grave> <A> : \*q\\300\*q Agrave\fP
+\fB<dead_grave> <A> : \*q\e300\*q Agrave\fP
 .RE
-the result of the composition is always the letter with the "\\300"
+the result of the composition is always the letter with the "\e300"
 code.
 But if the rule is:
 .RS

@@ -238,8 +238,8 @@ window is used as a Drawable.
 Some argument or pair of arguments has the correct type and range but fails
 to match in some other way required by the request.
 .SH "SEE ALSO"
-XDrawLine(__libmansuffix__),
-XDrawPoint(__libmansuffix__),
-XDrawRectangle(__libmansuffix__)
+.BR XDrawLine (__libmansuffix__),
+.BR XDrawPoint (__libmansuffix__),
+.BR XDrawRectangle (__libmansuffix__)
 .br
 \fI\*(xL\fP

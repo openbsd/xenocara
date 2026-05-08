@@ -72,8 +72,8 @@ with the associated
 .BR XFontSet .
 Until freed, its contents will not be modified by Xlib.
 .SH "SEE ALSO"
-XCreateFontSet(__libmansuffix__),
-XFontsOfFontSet(__libmansuffix__),
-XFontSetExtents(__libmansuffix__)
+.BR XCreateFontSet (__libmansuffix__),
+.BR XFontsOfFontSet (__libmansuffix__),
+.BR XFontSetExtents (__libmansuffix__)
 .br
 \fI\*(xL\fP

@@ -57,7 +57,7 @@ Clients may not
 call \fIXSetEventQueueOwner\fP at any other time, as this will potentially
 lose responses.
 .SH "SEE ALSO"
-XOpenDisplay(__libmansuffix__),
-XGetXCBConnection(__libmansuffix__),
+.BR XOpenDisplay (__libmansuffix__),
+.BR XGetXCBConnection (__libmansuffix__),
 .br
 \fIXlib \- C Language X Interface\fP

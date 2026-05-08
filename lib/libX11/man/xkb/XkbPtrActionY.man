@@ -22,7 +22,7 @@
 .\"
 .TH XkbPtrActionY __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbPtrActionY \- Returns the high_YYY and low_YYY fields of act converted to a 
+XkbPtrActionY \- Returns the high_YYY and low_YYY fields of act converted to a
 signed int
 .SH SYNOPSIS
 .HP
@@ -36,24 +36,24 @@ signed int
 action from which to extract Y
 .SH DESCRIPTION
 .LP
-Actions associated with the XkbPtrAction structure move the pointer when keys 
+Actions associated with the XkbPtrAction structure move the pointer when keys
 are pressed and released.
 
-If the MouseKeys control is not enabled, KeyPress and KeyRelease events are 
+If the MouseKeys control is not enabled, KeyPress and KeyRelease events are
 treated as though the action is XkbSA_NoAction.
 
-If the MouseKeys control is enabled, a server action of type XkbSA_MovePtr 
-instructs the server to generate core pointer MotionNotify events rather than 
-the usual KeyPress event, and the corresponding KeyRelease event disables any 
-mouse keys timers that were created as a result of handling the XkbSA_MovePtr 
+If the MouseKeys control is enabled, a server action of type XkbSA_MovePtr
+instructs the server to generate core pointer MotionNotify events rather than
+the usual KeyPress event, and the corresponding KeyRelease event disables any
+mouse keys timers that were created as a result of handling the XkbSA_MovePtr
 action.
 
-The 
-.I type 
+The
+.I type
 field of the XkbPtrAction structure is always XkbSA_MovePtr.
 
-The 
-.I flags 
+The
+.I flags
 field is a bitwise inclusive OR of the masks shown in Table 1.
 
 .TS
@@ -65,28 +65,28 @@ _
 Action Type	Meaning
 _
 XkbSA_NoAcceleration	T{
-If not set, and the MouseKeysAccel control is enabled, the KeyPress initiates a 
+If not set, and the MouseKeysAccel control is enabled, the KeyPress initiates a
 mouse keys timer for this key; every time the timer expires, the cursor moves.
 T}
 XkbSA_MoveAbsoluteX	T{
-If set, the X portion of the structure specifies the new pointer X coordinate. 
-Otherwise, the X portion is added to the current pointer X coordinate to 
+If set, the X portion of the structure specifies the new pointer X coordinate.
+Otherwise, the X portion is added to the current pointer X coordinate to
 determine the new pointer X coordinate.
 T}
 XkbSA_MoveAbsoluteY	T{
-If set, the Y portion of the structure specifies the new pointer Y coordinate. 
-Otherwise, the Y portion is added to the current pointer Y coordinate to 
+If set, the Y portion of the structure specifies the new pointer Y coordinate.
+Otherwise, the Y portion is added to the current pointer Y coordinate to
 determine the new pointer Y coordinate.
 T}
 .TE
 
 Each of the X and Y coordinates of the XkbPtrAction structure is composed of
-two signed 16-bit values, that is, the X coordinate is composed of 
-.I high_XXX 
-and 
-.I low_XXX, 
-and similarly for the Y coordinate. Xkb provides the following macros, to 
-convert between a signed integer and two signed 16-bit values in XkbPtrAction 
+two signed 16-bit values, that is, the X coordinate is composed of
+.I high_XXX
+and
+.I low_XXX,
+and similarly for the Y coordinate. Xkb provides the following macros, to
+convert between a signed integer and two signed 16-bit values in XkbPtrAction
 structures.
 .SH STRUCTURES
 .LP
@@ -101,4 +101,4 @@ structures.
         unsigned char    low_YYY;      /\&* y coordinate, low bits */
     } XkbPtrAction;
 
-.fi    
+.fi

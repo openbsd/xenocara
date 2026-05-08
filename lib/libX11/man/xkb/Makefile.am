@@ -190,7 +190,7 @@ libman_PRE = \
 	XkbTranslateKeyCode.man                 \
 	XkbTranslateKeySym.man                  \
 	XkbUpdateMapFromCore.man                \
-	XkbVirtualModsToReal.man                
+	XkbVirtualModsToReal.man
 
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
 

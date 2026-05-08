@@ -96,8 +96,8 @@ Functions in this chapter manipulate the representation of color on the
 screen.
 For each possible value that a pixel can take in a window,
 there is a color cell in the colormap.
-For example, 
-if a window is 4 bits deep, pixel values 0 through 15 are defined. 
+For example,
+if a window is 4 bits deep, pixel values 0 through 15 are defined.
 A colormap is a collection of color cells.
 A color cell consists of a triple of red, green, and blue (<acronym>RGB</acronym>) values.
 The hardware imposes limits on the number of significant
@@ -105,7 +105,7 @@ bits in these values.
 As each pixel is read out of display memory, the pixel
 is looked up in a colormap.
 The <acronym>RGB</acronym> value of the cell determines what color is displayed on the screen.
-On a grayscale display with a black-and-white monitor, 
+On a grayscale display with a black-and-white monitor,
 the values are combined to determine the brightness on the screen.
 </para>
 <para>
@@ -113,8 +113,8 @@ the values are combined to determine the brightness on the screen.
 Typically, an application allocates color cells or sets of color cells
 to obtain the desired colors.
 The client can allocate read-only cells.
-In which case, 
-the pixel values for these colors can be shared among multiple applications, 
+In which case,
+the pixel values for these colors can be shared among multiple applications,
 and the <acronym>RGB</acronym> value of the cell cannot be changed.
 If the client allocates read/write cells,
 they are exclusively owned by the client,
@@ -147,7 +147,7 @@ and
 Colormaps are local to a particular screen.
 Screens always have a default colormap,
 and programs typically allocate cells out of this colormap.
-Generally, you should not write applications that monopolize 
+Generally, you should not write applications that monopolize
 color resources.
 Although some hardware supports multiple colormaps installed at one time,
 many of the hardware displays
@@ -156,21 +156,21 @@ are written to encourage sharing of colormap entries between applications.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <function>DefaultColormap</function>
 macro returns the default colormap.
-The 
+The
 <function>DefaultVisual</function>
 macro
 returns the default visual type for the specified screen.
 <indexterm><primary>Color map</primary></indexterm>
-Possible visual types are 
+Possible visual types are
 <symbol>StaticGray</symbol>,
 <symbol>GrayScale</symbol>,
 <symbol>StaticColor</symbol>,
 <symbol>PseudoColor</symbol>,
 <symbol>TrueColor</symbol>,
-or 
+or
 <symbol>DirectColor</symbol>
 (see <link linkend="Visual_Types">section 3.1</link>).
 </para>
@@ -195,7 +195,7 @@ structure, which contains:
 typedef struct {
 	unsigned long pixel;	/* pixel value */
 	unsigned short red, green, blue;	/* rgb values */
-	char flags;	/* DoRed, DoGreen, DoBlue */	
+	char flags;	/* DoRed, DoGreen, DoBlue */
 	char pad;
 } XColor;
 </literallayout>
@@ -207,15 +207,15 @@ The red, green, and blue values are always in the range 0 to 65535
 inclusive, independent of the number of bits actually used in the
 display hardware.
 The server scales these values down to the range used by the hardware.
-Black is represented by (0,0,0), 
+Black is represented by (0,0,0),
 and white is represented by (65535,65535,65535).
 <indexterm><primary>Color</primary></indexterm>
 In some functions,
-the flags member controls which of the red, green, and blue members is used 
+the flags member controls which of the red, green, and blue members is used
 and can be the inclusive OR of zero or more of
 <symbol>DoRed</symbol>,
 <symbol>DoGreen</symbol>,
-and 
+and
 <symbol>DoBlue</symbol>.
 </para>
 <para>
@@ -231,7 +231,7 @@ Like the
 structure, the
 <structname>XcmsColor</structname>
 structure contains pixel
-and color specification information (the spec member in the 
+and color specification information (the spec member in the
 <structname>XcmsColor</structname>
 structure).
 <indexterm significance="preferred"><primary>XcmsColor</primary></indexterm>
@@ -264,7 +264,7 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-Because the color specification can be encoded for the various color spaces, 
+Because the color specification can be encoded for the various color spaces,
 encoding for the spec member is identified by the format member,
 which is of type
 <type>XcmsColorFormat</type>.
@@ -300,7 +300,7 @@ time the program is executed.
 If references to such a color space must be made outside the client
 (for example, storing a color specification in a file),
 then reference should be made by color space string prefix
-(see 
+(see
 <xref linkend='XcmsFormatOfPrefix' xrefstyle='select: title'/>
 and
 <xref linkend='XcmsPrefixOfFormat' xrefstyle='select: title'/>).
@@ -462,9 +462,9 @@ Red, green, and blue values appropriate for the specified output device.
 <structname>XcmsRGB</structname>
 values are of type unsigned short,
 scaled from 0 to 65535 inclusive,
-and are interchangeable with the red, green, and blue values in an 
+and are interchangeable with the red, green, and blue values in an
 <structname>XColor</structname>
-structure. 
+structure.
     </para>
   </listitem>
 </itemizedlist>
@@ -473,7 +473,7 @@ structure.
 It is important to note that <acronym>RGB</acronym> Intensity values are not gamma corrected
 values.
 In contrast,
-<acronym>RGB</acronym> Device values generated as a result of converting color specifications 
+<acronym>RGB</acronym> Device values generated as a result of converting color specifications
 are always gamma corrected, and
 <acronym>RGB</acronym> Device values acquired as a result of querying a colormap
 or passed in by the client are assumed by Xlib to be gamma corrected.
@@ -592,7 +592,7 @@ rgb:<emphasis remap='I'>&lt;red&gt;/&lt;green&gt;/&lt;blue&gt;</emphasis>
 </para>
 <para>
 <!-- .LP -->
-Note that <emphasis remap='I'>h</emphasis> indicates the value scaled in 4 bits, 
+Note that <emphasis remap='I'>h</emphasis> indicates the value scaled in 4 bits,
 <emphasis remap='I'>hh</emphasis> the value scaled in 8 bits,
 <emphasis remap='I'>hhh</emphasis> the value scaled in 12 bits,
 and <emphasis remap='I'>hhhh</emphasis> the value scaled in 16 bits, respectively.
@@ -600,7 +600,7 @@ and <emphasis remap='I'>hhhh</emphasis> the value scaled in 16 bits, respectivel
 <para>
 <!-- .LP -->
 Typical examples are the strings ``rgb:ea/75/52'' and ``rgb:ccc/320/320'',
-but mixed numbers of hexadecimal digit strings 
+but mixed numbers of hexadecimal digit strings
 (``rgb:ff/a5/0'' and ``rgb:ccc/32/0'')
 are also allowed.
 </para>
@@ -627,7 +627,7 @@ a numeric specification, in one of the following formats:
 <para>
 <!-- .LP -->
 The R, G, and B represent single hexadecimal digits.
-When fewer than 16 bits each are specified, 
+When fewer than 16 bits each are specified,
 they represent the most significant bits of the value
 (unlike the ``rgb:'' syntax, in which values are scaled).
 For example, the string ``#3a7'' is the same as ``#3000a0007000''.
@@ -657,7 +657,7 @@ Note that red, green, and blue are floating-point values
 between 0.0 and 1.0, inclusive.
 The input format for these values is an optional sign,
 a string of numbers possibly containing a decimal point,
-and an optional exponent field containing an E or e 
+and an optional exponent field containing an E or e
 followed by a possibly signed integer string.
 </para>
 </sect2>
@@ -748,7 +748,7 @@ associated with color specifications (that is, the Client White Point).
 The client can specify the gamut handling callbacks and client data
 as well as the Client White Point.
 Xlib does not preclude the X client from performing other
-forms of gamut handling (for example, gamut expansion); 
+forms of gamut handling (for example, gamut expansion);
 however, Xlib does not provide direct support for gamut handling
 other than white adjustment and gamut compression.
 </para>
@@ -772,7 +772,7 @@ so the default CCC attributes can be modified to affect new CCCs.
 <!-- .LP -->
 Xcms functions in which gamut mapping can occur return
 <type>Status</type>
-and have specific status values defined for them, 
+and have specific status values defined for them,
 as follows:
 </para>
 <itemizedlist>
@@ -852,7 +852,7 @@ Specifies the window on whose screen you want to create a colormap.
     <listitem>
       <para>
 Specifies a visual type supported on the screen.
-If the visual type is not one supported by the screen, 
+If the visual type is not one supported by the screen,
 a
 <errorname>BadMatch</errorname>
 error results.
@@ -866,9 +866,9 @@ error results.
     <listitem>
       <para>
 Specifies the colormap entries to be allocated.
-You can pass 
+You can pass
 <symbol>AllocNone</symbol>
-or 
+or
 <symbol>AllocAll</symbol>.
     </para>
   </listitem>
@@ -880,14 +880,14 @@ or
 <!-- .eM -->
 The
 <xref linkend='XCreateColormap' xrefstyle='select: title'/>
-function creates a colormap of the specified visual type for the screen 
-on which the specified window resides and returns the colormap ID 
+function creates a colormap of the specified visual type for the screen
+on which the specified window resides and returns the colormap ID
 associated with it.
 Note that the specified window is only used to determine the screen.
 </para>
 <para>
 <!-- .LP -->
-The initial values of the colormap entries are undefined for the 
+The initial values of the colormap entries are undefined for the
 visual classes
 <symbol>GrayScale</symbol>,
 <symbol>PseudoColor</symbol>,
@@ -936,7 +936,7 @@ For
 <symbol>DirectColor</symbol>,
 the effect is as if an
 <xref linkend='XAllocColorPlanes' xrefstyle='select: title'/>
-call returned a pixel value of zero and red_mask, green_mask, 
+call returned a pixel value of zero and red_mask, green_mask,
 and blue_mask values containing the same bits as the corresponding
 masks in the specified visual.
 However, in all cases,
@@ -1001,13 +1001,13 @@ The
 function creates a colormap of the same visual type and for the same screen
 as the specified colormap and returns the new colormap ID.
 It also moves all of the client's existing allocation from the specified
-colormap to the new colormap with their color values intact 
-and their read-only or writable characteristics intact and frees those entries 
+colormap to the new colormap with their color values intact
+and their read-only or writable characteristics intact and frees those entries
 in the specified colormap.
 Color values in other entries in the new colormap are undefined.
 If the specified colormap was created by the client with alloc set to
 <symbol>AllocAll</symbol>,
-the new colormap is also created with 
+the new colormap is also created with
 <symbol>AllocAll</symbol>,
 all color values for all entries are copied from the specified colormap,
 and then all entries in the specified colormap are freed.
@@ -1034,7 +1034,7 @@ errors.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To destroy a colormap, use 
+To destroy a colormap, use
 <xref linkend='XFreeColormap' xrefstyle='select: title'/>.
 <indexterm significance="preferred"><primary>XFreeColormap</primary></indexterm>
 </para>
@@ -1075,7 +1075,7 @@ Specifies the colormap that you want to destroy.
 <!-- .eM -->
 The
 <xref linkend='XFreeColormap' xrefstyle='select: title'/>
-function deletes the association between the colormap resource ID 
+function deletes the association between the colormap resource ID
 and the colormap and frees the colormap storage.
 However, this function has no effect on the default colormap for a screen.
 If the specified colormap is an installed map for a screen,
@@ -1155,7 +1155,7 @@ Specifies the colormap.
     </term>
     <listitem>
       <para>
-Specifies the color name string (for example, red) whose color 
+Specifies the color name string (for example, red) whose color
 definition structure you want returned.
       </para>
     </listitem>
@@ -1190,9 +1190,9 @@ The
 function looks up the string name of a color with respect to the screen
 associated with the specified colormap.
 It returns both the exact color values and
-the closest values provided by the screen 
+the closest values provided by the screen
 with respect to the visual type of the specified colormap.
-If the color name is not in the Host Portable Character Encoding, 
+If the color name is not in the Host Portable Character Encoding,
 the result is implementation-dependent.
 Use of uppercase or lowercase does not matter.
 <xref linkend='XLookupColor' xrefstyle='select: title'/>
@@ -1282,7 +1282,7 @@ The
 function looks up the string name of a color with respect to the screen
 associated with the specified colormap.
 It returns the exact color value.
-If the color name is not in the Host Portable Character Encoding, 
+If the color name is not in the Host Portable Character Encoding,
 the result is implementation-dependent.
 Use of uppercase or lowercase does not matter.
 <xref linkend='XParseColor' xrefstyle='select: title'/>
@@ -1387,7 +1387,7 @@ color specification.
 If the format is
 <symbol>XcmsUndefinedFormat</symbol>
 and the color string contains a color name,
-the specification is returned in the format used 
+the specification is returned in the format used
 to store the color in the database.
     </para>
   </listitem>
@@ -1402,10 +1402,10 @@ The
 function looks up the string name of a color with respect to the screen
 associated with the specified colormap.
 It returns both the exact color values and
-the closest values provided by the screen 
+the closest values provided by the screen
 with respect to the visual type of the specified colormap.
 The values are returned in the format specified by result_format.
-If the color name is not in the Host Portable Character Encoding, 
+If the color name is not in the Host Portable Character Encoding,
 the result is implementation-dependent.
 Use of uppercase or lowercase does not matter.
 <xref linkend='XcmsLookupColor' xrefstyle='select: title'/>
@@ -1417,7 +1417,7 @@ if the name is resolved; otherwise, it returns
 <symbol>XcmsFailure</symbol>.
 If
 <symbol>XcmsSuccessWithCompression</symbol>
-is returned, the color specification returned in 
+is returned, the color specification returned in
 color_screen_return is the result of gamut compression.
 </para>
 </sect1>
@@ -1429,7 +1429,7 @@ color_screen_return is the result of gamut compression.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-There are two ways of allocating color cells: 
+There are two ways of allocating color cells:
 explicitly as read-only entries, one pixel value at a time,
 or read/write,
 where you can allocate a number of color cells and planes simultaneously.
@@ -1589,7 +1589,7 @@ Specifies the colormap.
     </term>
     <listitem>
       <para>
-Specifies the color to allocate and returns the pixel and color 
+Specifies the color to allocate and returns the pixel and color
 that is actually used in the colormap.
       </para>
     </listitem>
@@ -1615,7 +1615,7 @@ function is similar to
 except the color can be specified in any format.
 The
 <xref linkend='XcmsAllocColor' xrefstyle='select: title'/>
-function ultimately calls 
+function ultimately calls
 <xref linkend='XAllocColor' xrefstyle='select: title'/>
 to allocate a read-only color cell (colormap entry) with the specified color.
 <xref linkend='XcmsAllocColor' xrefstyle='select: title'/>
@@ -1626,14 +1626,14 @@ to an <acronym>RGB</acronym> value and then passes this to
 returns the pixel value of the color cell and the color specification
 actually allocated.
 This returned color specification is the result of converting the <acronym>RGB</acronym> value
-returned by 
+returned by
 <xref linkend='XAllocColor' xrefstyle='select: title'/>
 into the format specified with the result_format argument.
-If there is no interest in a returned color specification, 
+If there is no interest in a returned color specification,
 unnecessary computation can be bypassed if result_format is set to
 <symbol>XcmsRGBFormat</symbol>.
 The corresponding colormap cell is read-only.
-If this routine returns 
+If this routine returns
 <symbol>XcmsFailure</symbol>,
 the color_in_out color specification is left unchanged.
 </para>
@@ -1695,7 +1695,7 @@ Specifies the colormap.
     </term>
     <listitem>
       <para>
-Specifies the color name string (for example, red) whose color 
+Specifies the color name string (for example, red) whose color
 definition structure you want returned.
       </para>
     </listitem>
@@ -1733,7 +1733,7 @@ It returns both the exact database definition and
 the closest color supported by the screen.
 The allocated color cell is read-only.
 The pixel value is returned in screen_def_return.
-If the color name is not in the Host Portable Character Encoding, 
+If the color name is not in the Host Portable Character Encoding,
 the result is implementation-dependent.
 Use of uppercase or lowercase does not matter.
 If screen_def_return and exact_def_return
@@ -1748,7 +1748,7 @@ otherwise, it returns zero.
 <xref linkend='XAllocNamedColor' xrefstyle='select: title'/>
 can generate a
 <errorname>BadColor</errorname>
-error. 
+error.
 </para>
 <para>
 <!-- .LP -->
@@ -1813,7 +1813,7 @@ returned.
     </term>
     <listitem>
       <para>
-Returns the pixel value of the color cell and color specification 
+Returns the pixel value of the color cell and color specification
 that actually is stored for that cell.
       </para>
     </listitem>
@@ -1846,7 +1846,7 @@ color specification.
 If the format is
 <symbol>XcmsUndefinedFormat</symbol>
 and the color string contains a color name,
-the specification is returned in the format used 
+the specification is returned in the format used
 to store the color in the database.
     </para>
   </listitem>
@@ -1872,7 +1872,7 @@ structure (see
 converted
 to an <acronym>RGB</acronym> value, and finally passed to
 <xref linkend='XAllocColor' xrefstyle='select: title'/>.
-If the color name is not in the Host Portable Character Encoding, 
+If the color name is not in the Host Portable Character Encoding,
 the result is implementation-dependent.
 Use of uppercase or lowercase does not matter.
 </para>
@@ -1973,8 +1973,8 @@ Returns an array of plane masks.
     </term>
     <listitem>
       <para>
-Specifies the number of plane masks that are to be returned in the plane masks 
-array. 
+Specifies the number of plane masks that are to be returned in the plane masks
+array.
       </para>
     </listitem>
   </varlistentry>
@@ -1984,7 +1984,7 @@ array.
     </term>
     <listitem>
       <para>
-Returns an array of pixel values. 
+Returns an array of pixel values.
       </para>
     </listitem>
   </varlistentry>
@@ -1994,8 +1994,8 @@ Returns an array of pixel values.
     </term>
     <listitem>
       <para>
-Specifies the number of pixel values that are to be returned in the 
-pixels_return array. 
+Specifies the number of pixel values that are to be returned in the
+pixels_return array.
     </para>
   </listitem>
   </varlistentry>
@@ -2011,7 +2011,7 @@ The number of colors must be positive and the number of planes nonnegative,
 or a
 <errorname>BadValue</errorname>
 error results.
-If ncolors and nplanes are requested, 
+If ncolors and nplanes are requested,
 then ncolors pixels
 and nplane plane masks are returned.
 No mask will have any bits set to 1 in common with
@@ -2021,23 +2021,23 @@ ncolors &times; 2<superscript><emphasis>nplanes</emphasis></superscript>
 distinct pixels can be produced.
 All of these are
 allocated writable by the request.
-For 
+For
 <symbol>GrayScale</symbol>
-or 
+or
 <symbol>PseudoColor</symbol>,
-each mask has exactly one bit set to 1. 
-For 
+each mask has exactly one bit set to 1.
+For
 <symbol>DirectColor</symbol>,
 each has exactly three bits set to 1.
-If contig is 
+If contig is
 <symbol>True</symbol>
 and if all masks are ORed
-together, a single contiguous set of bits set to 1 will be formed for 
+together, a single contiguous set of bits set to 1 will be formed for
 <symbol>GrayScale</symbol>
-or 
+or
 <symbol>PseudoColor</symbol>
 and three contiguous sets of bits set to 1 (one within each
-pixel subfield) for 
+pixel subfield) for
 <symbol>DirectColor</symbol>.
 The <acronym>RGB</acronym> values of the allocated
 entries are undefined.
@@ -2120,7 +2120,7 @@ Specifies a Boolean value that indicates whether the planes must be contiguous.
     </term>
     <listitem>
       <para>
-Returns an array of pixel values. 
+Returns an array of pixel values.
 <xref linkend='XAllocColorPlanes' xrefstyle='select: title'/>
 returns the pixel values in this array.
       </para>
@@ -2132,8 +2132,8 @@ returns the pixel values in this array.
     </term>
     <listitem>
       <para>
-Specifies the number of pixel values that are to be returned in the 
-pixels_return array. 
+Specifies the number of pixel values that are to be returned in the
+pixels_return array.
       </para>
     </listitem>
   </varlistentry>
@@ -2168,7 +2168,7 @@ pixels_return array.
 <!-- .br -->
 <!-- .ns -->
 Specify the number of red, green, and blue planes.
-The value you pass must be nonnegative. 
+The value you pass must be nonnegative.
       </para>
     </listitem>
   </varlistentry>
@@ -2209,26 +2209,26 @@ Return bit masks for the red, green, and blue planes.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The specified ncolors must be positive; 
+The specified ncolors must be positive;
 and nreds, ngreens, and nblues must be nonnegative,
 or a
 <errorname>BadValue</errorname>
 error results.
-If ncolors colors, nreds reds, ngreens greens, and nblues blues are requested, 
-ncolors pixels are returned; and the masks have nreds, ngreens, and 
+If ncolors colors, nreds reds, ngreens greens, and nblues blues are requested,
+ncolors pixels are returned; and the masks have nreds, ngreens, and
 nblues bits set to 1, respectively.
-If contig is 
+If contig is
 <symbol>True</symbol>,
 each mask will have
 a contiguous set of bits set to 1.
 No mask will have any bits set to 1 in common with
 any other mask or with any of the pixels.
-For 
+For
 <symbol>DirectColor</symbol>,
 each mask
 will lie within the corresponding pixel subfield.
 By ORing together
-subsets of masks with each pixel value, 
+subsets of masks with each pixel value,
 ncolors &times; 2<superscript><emphasis>(nreds+ngreens+nblues)</emphasis></superscript>
 distinct pixel values can be produced.
 All of these are allocated by the request.
@@ -2240,15 +2240,15 @@ ncolors &times; 2<superscript><emphasis>ngreens</emphasis></superscript>
 independent green entries, and
 ncolors &times; 2<superscript><emphasis>nblues</emphasis></superscript>
 independent blue entries.
-This is true even for 
+This is true even for
 <symbol>PseudoColor</symbol>.
 When the colormap entry of a pixel
-value is changed (using 
+value is changed (using
 <xref linkend='XStoreColors' xrefstyle='select: title'/>,
 <xref linkend='XStoreColor' xrefstyle='select: title'/>,
-or 
+or
 <xref linkend='XStoreNamedColor' xrefstyle='select: title'/>),
-the pixel is decomposed according to the masks, 
+the pixel is decomposed according to the masks,
 and the corresponding independent entries are updated.
 <xref linkend='XAllocColorPlanes' xrefstyle='select: title'/>
 returns nonzero if it succeeded or zero if it failed.
@@ -2321,7 +2321,7 @@ colormap.
     </term>
     <listitem>
       <para>
-Specifies the number of pixels. 
+Specifies the number of pixels.
       </para>
     </listitem>
   </varlistentry>
@@ -2345,11 +2345,11 @@ The
 function frees the cells represented by pixels whose values are in the
 pixels array.
 The planes argument should not have any bits set to 1 in common with any of the
-pixels. 
+pixels.
 The set of all pixels is produced by ORing together subsets of
 the planes argument with the pixels.
 The request frees all of these pixels that
-were allocated by the client (using 
+were allocated by the client (using
 <indexterm><primary>XAllocColor</primary></indexterm>
 <indexterm><primary>XAllocNamedColor</primary></indexterm>
 <indexterm><primary>XAllocColorCells</primary></indexterm>
@@ -2357,10 +2357,10 @@ were allocated by the client (using
 <xref linkend='XAllocColor' xrefstyle='select: title'/>,
 <xref linkend='XAllocNamedColor' xrefstyle='select: title'/>,
 <xref linkend='XAllocColorCells' xrefstyle='select: title'/>,
-and 
+and
 <xref linkend='XAllocColorPlanes' xrefstyle='select: title'/>).
 Note that freeing an
-individual pixel obtained from 
+individual pixel obtained from
 <xref linkend='XAllocColorPlanes' xrefstyle='select: title'/>
 may not actually allow
 it to be reused until all of its related pixels are also freed.
@@ -2372,8 +2372,8 @@ it must free the entry that many times before the entry is actually freed.
 <para>
 <!-- .LP -->
 All specified pixels that are allocated by the client in the colormap are
-freed, even if one or more pixels produce an error. 
-If a specified pixel is not a valid index into the colormap, a 
+freed, even if one or more pixels produce an error.
+If a specified pixel is not a valid index into the colormap, a
 <errorname>BadValue</errorname>
 error results.
 If a specified pixel is not allocated by the
@@ -2384,8 +2384,8 @@ to
 <xref linkend='XCreateColormap' xrefstyle='select: title'/>),
 a
 <errorname>BadAccess</errorname>
-error results. 
-If more than one pixel is in error, 
+error results.
+If more than one pixel is in error,
 the one that gets reported is arbitrary.
 </para>
 <para>
@@ -2483,7 +2483,7 @@ and/or
 in the flags member of the
 <structname>XColor</structname>
 structure.
-If the colormap is an installed map for its screen, 
+If the colormap is an installed map for its screen,
 the changes are visible immediately.
 </para>
 <para>
@@ -2553,7 +2553,7 @@ Specifies an array of color definition structures to be stored.
     <listitem>
       <para>
 <!-- .\"Specifies the number of color definition structures.  -->
-Specifies the number of 
+Specifies the number of
 <structname>XColor</structname>
 structures in the color definition array.
     </para>
@@ -2570,7 +2570,7 @@ function changes the colormap entries of the pixel values
 specified in the pixel members of the
 <structname>XColor</structname>
 structures.
-You specify which color components are to be changed by setting 
+You specify which color components are to be changed by setting
 <symbol>DoRed</symbol>,
 <symbol>DoGreen</symbol>,
 and/or
@@ -2581,7 +2581,7 @@ structures.
 If the colormap is an installed map for its screen, the
 changes are visible immediately.
 <xref linkend='XStoreColors' xrefstyle='select: title'/>
-changes the specified pixels if they are allocated writable in the colormap 
+changes the specified pixels if they are allocated writable in the colormap
 by any client, even if one or more pixels generates an error.
 If a specified pixel is not a valid index into the colormap, a
 <errorname>BadValue</errorname>
@@ -2589,7 +2589,7 @@ error results.
 If a specified pixel either is unallocated or is allocated read-only, a
 <errorname>BadAccess</errorname>
 error results.
-If more than one pixel is in error, 
+If more than one pixel is in error,
 the one that gets reported is arbitrary.
 </para>
 <para>
@@ -2666,7 +2666,7 @@ function converts the color specified in the
 structure into <acronym>RGB</acronym> values.
 It then uses this <acronym>RGB</acronym> specification in an
 <structname>XColor</structname>
-structure, whose three flags 
+structure, whose three flags
 (<symbol>DoRed</symbol>,
 <symbol>DoGreen</symbol>,
 and
@@ -2684,16 +2684,16 @@ error results.
 If the color cell is unallocated or is allocated read-only, a
 <errorname>BadAccess</errorname>
 error results.
-If the colormap is an installed map for its screen, 
+If the colormap is an installed map for its screen,
 the changes are visible immediately.
 </para>
 <para>
 <!-- .LP -->
-Note that 
+Note that
 <xref linkend='XStoreColor' xrefstyle='select: title'/>
 has no return value; therefore, an
 <symbol>XcmsSuccess</symbol>
-return value from this function indicates that the conversion 
+return value from this function indicates that the conversion
 to <acronym>RGB</acronym> succeeded and the call to
 <xref linkend='XStoreColor' xrefstyle='select: title'/>
 was made.
@@ -2774,7 +2774,7 @@ Values specified in the array remain unchanged upon return.
     </term>
     <listitem>
       <para>
-Specifies the number of 
+Specifies the number of
 <structname>XcmsColor</structname>
 structures in the color-specification array.
       </para>
@@ -2808,7 +2808,7 @@ function converts the colors specified in the array of
 <structname>XcmsColor</structname>
 structures into <acronym>RGB</acronym> values and then uses these <acronym>RGB</acronym> specifications in
 <structname>XColor</structname>
-structures, whose three flags 
+structures, whose three flags
 (<symbol>DoRed</symbol>,
 <symbol>DoGreen</symbol>,
 and
@@ -2828,16 +2828,16 @@ If a color cell is unallocated or is allocated read-only, a
 error results.
 If more than one pixel is in error,
 the one that gets reported is arbitrary.
-If the colormap is an installed map for its screen, 
+If the colormap is an installed map for its screen,
 the changes are visible immediately.
 </para>
 <para>
 <!-- .LP -->
-Note that 
+Note that
 <xref linkend='XStoreColors' xrefstyle='select: title'/>
 has no return value; therefore, an
 <symbol>XcmsSuccess</symbol>
-return value from this function indicates that conversions 
+return value from this function indicates that conversions
 to <acronym>RGB</acronym> succeeded and the call to
 <xref linkend='XStoreColors' xrefstyle='select: title'/>
 was made.
@@ -2905,7 +2905,7 @@ Specifies the colormap.
     </term>
     <listitem>
       <para>
-Specifies the color name string (for example, red). 
+Specifies the color name string (for example, red).
       </para>
     </listitem>
   </varlistentry>
@@ -2915,7 +2915,7 @@ Specifies the color name string (for example, red).
     </term>
     <listitem>
       <para>
-Specifies the entry in the colormap. 
+Specifies the entry in the colormap.
       </para>
     </listitem>
   </varlistentry>
@@ -2939,15 +2939,15 @@ The
 function looks up the named color with respect to the screen associated with
 the colormap and stores the result in the specified colormap.
 The pixel argument determines the entry in the colormap.
-The flags argument determines which of the red, green, and blue components 
-are set. 
+The flags argument determines which of the red, green, and blue components
+are set.
 You can set this member to the
-bitwise inclusive OR of the bits 
+bitwise inclusive OR of the bits
 <symbol>DoRed</symbol>,
 <symbol>DoGreen</symbol>,
-and 
+and
 <symbol>DoBlue</symbol>.
-If the color name is not in the Host Portable Character Encoding, 
+If the color name is not in the Host Portable Character Encoding,
 the result is implementation-dependent.
 Use of uppercase or lowercase does not matter.
 If the specified pixel is not a valid index into the colormap, a
@@ -2964,7 +2964,7 @@ can generate
 <errorname>BadAccess</errorname>,
 <errorname>BadColor</errorname>,
 <errorname>BadName</errorname>,
-and 
+and
 <errorname>BadValue</errorname>
 errors.
 </para>
@@ -3120,7 +3120,7 @@ specified in the structure.
     <listitem>
       <para>
 <!-- .\"Specifies the number of color definition structures.  -->
-Specifies the number of 
+Specifies the number of
 <structname>XColor</structname>
 structures in the color definition array.
     </para>
@@ -3301,7 +3301,7 @@ The color specifications for the color cells are returned in these structures.
     </term>
     <listitem>
       <para>
-Specifies the number of 
+Specifies the number of
 <structname>XcmsColor</structname>
 structures in the color-specification array.
       </para>
@@ -3446,11 +3446,11 @@ Specifies the colormap.
 The
 <xref linkend='XcmsCCCOfColormap' xrefstyle='select: title'/>
 function returns the CCC associated with the specified colormap.
-Once obtained, 
+Once obtained,
 the CCC attributes can be queried or modified.
 Unless the CCC associated with the specified colormap is changed with
 <xref linkend='XcmsSetCCCOfColormap' xrefstyle='select: title'/>,
-this CCC is used when the specified colormap is used as an argument 
+this CCC is used when the specified colormap is used as an argument
 to color functions.
 <!-- .sp -->
 </para>
@@ -3837,7 +3837,7 @@ Specifies the new Client White Point.
 The
 <xref linkend='XcmsSetWhitePoint' xrefstyle='select: title'/>
 function changes the Client White Point in the specified CCC.
-Note that the pixel member is ignored 
+Note that the pixel member is ignored
 and that the color specification is left unchanged upon return.
 The format for the new white point must be
 <symbol>XcmsCIEXYZFormat</symbol>,
@@ -3896,11 +3896,11 @@ Specifies the CCC.
     </term>
     <listitem>
       <para>
-Specifies the gamut compression procedure that is to be applied 
+Specifies the gamut compression procedure that is to be applied
 when a color lies outside the screen's color gamut.
 If NULL is specified and a function using this CCC must convert
 a color specification to a device-dependent format and encounters a color
-that lies outside the screen's color gamut, 
+that lies outside the screen's color gamut,
 that function will return
 <symbol>XcmsFailure</symbol>.
       </para>
@@ -3923,7 +3923,7 @@ Specifies client data for gamut compression procedure or NULL.
 <!-- .eM -->
 The
 <xref linkend='XcmsSetCompressionProc' xrefstyle='select: title'/>
-function first sets the gamut compression procedure and client data 
+function first sets the gamut compression procedure and client data
 in the specified CCC with the newly specified procedure and client data
 and then returns the old procedure.
 <!-- .sp -->
@@ -3985,7 +3985,7 @@ Specifies client data for white point adjustment procedure or NULL.
 <!-- .eM -->
 The
 <xref linkend='XcmsSetWhiteAdjustProc' xrefstyle='select: title'/>
-function first sets the white point adjustment procedure and client data 
+function first sets the white point adjustment procedure and client data
 in the specified CCC with the newly specified procedure and client data
 and then returns the old procedure.
 </para>
@@ -4066,7 +4066,7 @@ Specifies the visual type.
     <listitem>
       <para>
 Specifies the Client White Point.
-If NULL is specified, 
+If NULL is specified,
 the Client White Point is to be assumed to be the same as the
 Screen White Point.
 Note that the pixel member is ignored.
@@ -4079,11 +4079,11 @@ Note that the pixel member is ignored.
     </term>
     <listitem>
       <para>
-Specifies the gamut compression procedure that is to be applied 
+Specifies the gamut compression procedure that is to be applied
 when a color lies outside the screen's color gamut.
 If NULL is specified and a function using this CCC must convert
 a color specification to a device-dependent format and encounters a color
-that lies outside the screen's color gamut, 
+that lies outside the screen's color gamut,
 that function will return
 <symbol>XcmsFailure</symbol>.
       </para>
@@ -4230,7 +4230,7 @@ Pixel members are ignored and remain unchanged upon return.
     </term>
     <listitem>
       <para>
-Specifies the number of 
+Specifies the number of
 <structname>XcmsColor</structname>
 structures in the color-specification array.
       </para>
@@ -4371,7 +4371,7 @@ Pixel members should be ignored and must remain unchanged upon return.
     </term>
     <listitem>
       <para>
-Specifies the number of 
+Specifies the number of
 <structname>XcmsColor</structname>
 structures in the color-specification array.
       </para>
@@ -4385,7 +4385,7 @@ structures in the color-specification array.
       <para>
 Specifies the index into the array of
 <structname>XcmsColor</structname>
-structures for the encountered color specification that lies outside the 
+structures for the encountered color specification that lies outside the
 screen's color gamut.
 Valid values are 0 (for the first element) to ncolors - 1.
       </para>
@@ -4435,7 +4435,7 @@ they must be in their initial device-dependent format upon return.
   <listitem>
     <para>
 When called, the element in the color specification array specified
-by the index argument contains the color specification outside the 
+by the index argument contains the color specification outside the
 screen's color gamut encountered by the calling routine.
 In addition, this color specification can be assumed to be in
 <structname>XcmsCIEXYZ</structname>.
@@ -4445,12 +4445,12 @@ Upon return, this color specification must be in
   </listitem>
   <listitem>
     <para>
-When called, elements from index to ncolors - 1 
+When called, elements from index to ncolors - 1
 in the color specification array may or may not fall within the
 screen's color gamut.
 In addition, these color specifications can be assumed to be in
 <structname>XcmsCIEXYZ</structname>.
-If any modifications are made to these color specifications, 
+If any modifications are made to these color specifications,
 they must be in
 <structname>XcmsCIEXYZ</structname>
 upon return.
@@ -4467,7 +4467,7 @@ is the Screen White Point.
   <listitem>
     <para>
 If the gamut compression procedure uses a device-independent color space not
-initially accessible for use in the color management system, use 
+initially accessible for use in the color management system, use
 <xref linkend='XcmsAddColorSpace' xrefstyle='select: title'/>
 to ensure that it is added.
     </para>
@@ -4511,10 +4511,10 @@ The gamut compression callback procedures provided by Xlib are as follows:
   </listitem>
   <listitem>
     <para>
-This brings the encountered out-of-gamut color specification into the 
-screen's color gamut by reducing or increasing <acronym>CIE</acronym> metric lightness (L*) 
+This brings the encountered out-of-gamut color specification into the
+screen's color gamut by reducing or increasing <acronym>CIE</acronym> metric lightness (L*)
 in the <acronym>CIE</acronym> L*a*b* color space until the color is within the gamut.
-If the Psychometric Chroma of the color specification 
+If the Psychometric Chroma of the color specification
 is beyond maximum for the Psychometric Hue Angle,
 then while maintaining the same Psychometric Hue Angle,
 the color will be clipped to the <acronym>CIE</acronym> L*a*b* coordinates of maximum
@@ -4531,7 +4531,7 @@ No client data is necessary.
   </listitem>
   <listitem>
     <para>
-This brings the encountered out-of-gamut color specification into the 
+This brings the encountered out-of-gamut color specification into the
 screen's color gamut by reducing Psychometric Chroma,
 while maintaining Psychometric Hue Angle,
 until the color is within the gamut.
@@ -4560,7 +4560,7 @@ No client data is necessary.
   </listitem>
   <listitem>
     <para>
-This brings the encountered out-of-gamut color specification into the 
+This brings the encountered out-of-gamut color specification into the
 screen's color gamut by reducing or increasing <acronym>CIE</acronym> metric lightness (L*)
 in the <acronym>CIE</acronym> L*u*v* color space until the color is within the gamut.
 If the Psychometric Chroma of the color specification
@@ -4730,7 +4730,7 @@ Pixel members should be ignored and must remain unchanged upon return.
     </term>
     <listitem>
       <para>
-Specifies the number of 
+Specifies the number of
 <structname>XcmsColor</structname>
 structures in the color-specification array.
       </para>
@@ -4778,7 +4778,7 @@ White point adjustment procedures provided by Xlib are as follows:
 This uses the <acronym>CIE</acronym> L*a*b* color space for adjusting the chromatic character
 of colors to compensate for the chromatic differences between the source
 and destination white points.
-This procedure simply converts the color specifications to 
+This procedure simply converts the color specifications to
 <structname>XcmsCIELab</structname>
 using the source white point and then converts to the target specification
 format using the destination's white point.
@@ -4795,7 +4795,7 @@ No client data is necessary.
 This uses the <acronym>CIE</acronym> L*u*v* color space for adjusting the chromatic character
 of colors to compensate for the chromatic differences between the source
 and destination white points.
-This procedure simply converts the color specifications to 
+This procedure simply converts the color specifications to
 <structname>XcmsCIELuv</structname>
 using the source white point and then converts to the target specification
 format using the destination's white point.
@@ -4826,13 +4826,13 @@ No client data is necessary.
 <!-- .LP -->
 From an implementation point of view,
 these white point adjustment procedures convert the color specifications
-to a device-independent but white-point-dependent color space 
+to a device-independent but white-point-dependent color space
 (for example, <acronym>CIE</acronym> L*u*v*, <acronym>CIE</acronym> L*a*b*, TekHVC) using one white point
-and then converting those specifications to the target color space 
+and then converting those specifications to the target color space
 using another white point.
 In other words,
-the specification goes in the color space with one white point 
-but comes out with another white point, 
+the specification goes in the color space with one white point
+but comes out with another white point,
 resulting in a chromatic shift based on the chromatic displacement
 between the initial white point and target white point.
 The <acronym>CIE</acronym> color spaces that are assumed to be white-point-independent
@@ -4845,12 +4845,12 @@ to ensure that it is added.
 </para>
 <para>
 <!-- .LP -->
-As an example, 
+As an example,
 if the CCC specifies a white point adjustment procedure
 and if the Client White Point and Screen White Point differ, the
 <xref linkend='XcmsAllocColor' xrefstyle='select: title'/>
 function will use the white point adjustment
-procedure twice: 
+procedure twice:
 </para>
 <itemizedlist>
   <listitem>
@@ -4874,7 +4874,7 @@ and the adjustment procedure is
 <function>XcmsCIELuvWhiteShiftColors</function>.
 During conversion to
 <structname>XcmsRGB</structname>,
-the call to 
+the call to
 <xref linkend='XcmsAllocColor' xrefstyle='select: title'/>
 results in the following series of color specification conversions:
 <!-- .\" Do these need to be font coded? -->
@@ -4882,7 +4882,7 @@ results in the following series of color specification conversions:
 <itemizedlist>
   <listitem>
     <para>
-From 
+From
 <structname>XcmsCIEuvY</structname>
 to
 <structname>XcmsCIELuv</structname>
@@ -4891,7 +4891,7 @@ using the Client White Point
   </listitem>
   <listitem>
     <para>
-From 
+From
 <structname>XcmsCIELuv</structname>
 to
 <structname>XcmsCIEuvY</structname>
@@ -4909,15 +4909,15 @@ to
   </listitem>
   <listitem>
     <para>
-From 
+From
 <structname>XcmsCIEXYZ</structname>
-to 
+to
 <structname>XcmsRGBi</structname>
     </para>
   </listitem>
   <listitem>
     <para>
-From 
+From
 <structname>XcmsRGBi</structname>
 to
 <structname>XcmsRGB</structname>
@@ -4931,7 +4931,7 @@ The resulting <acronym>RGB</acronym> specification is passed to
 and the <acronym>RGB</acronym>
 specification returned by
 <xref linkend='XAllocColor' xrefstyle='select: title'/>
-is converted back to 
+is converted back to
 <structname>XcmsCIEuvY</structname>
 by reversing the color conversion sequence.
 </para>
@@ -4945,11 +4945,11 @@ by reversing the color conversion sequence.
 <para>
 <!-- .LP -->
 This section describes the gamut querying functions that Xlib provides.
-These functions allow the client to query the boundary 
-of the screen's color gamut in terms of the <acronym>CIE</acronym> L*a*b*, <acronym>CIE</acronym> L*u*v*, 
+These functions allow the client to query the boundary
+of the screen's color gamut in terms of the <acronym>CIE</acronym> L*a*b*, <acronym>CIE</acronym> L*u*v*,
 and TekHVC color spaces.
 <indexterm><primary>Gamut querying</primary></indexterm>
-Functions are also provided that allow you to query 
+Functions are also provided that allow you to query
 the color specification of:
 </para>
 <itemizedlist>
@@ -4981,7 +4981,7 @@ Black (zero-intensity red, green, and blue)
 </itemizedlist>
 <para>
 <!-- .LP -->
-The white point associated with color specifications passed to 
+The white point associated with color specifications passed to
 and returned from these gamut querying
 functions is assumed to be the Screen White Point.
 <indexterm><primary>Screen White Point</primary></indexterm>
@@ -5002,10 +5002,10 @@ Xcms<emphasis remap='I'>&lt;color_space&gt;</emphasis>QueryMin<emphasis remap='I
 </para>
 <para>
 <!-- .LP -->
-The &lt;dimensions&gt; consists of a letter or letters 
-that identify the dimensions of the color space 
+The &lt;dimensions&gt; consists of a letter or letters
+that identify the dimensions of the color space
 that are not fixed.
-For example, 
+For example,
 <xref linkend='XcmsTekHVCQueryMaxC' xrefstyle='select: title'/>
 is given a fixed Hue and Value for which maximum Chroma is found.
 </para>
@@ -5016,7 +5016,7 @@ is given a fixed Hue and Value for which maximum Chroma is found.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-To obtain the color specification for black 
+To obtain the color specification for black
 (zero-intensity red, green, and blue), use
 <xref linkend='XcmsQueryBlack' xrefstyle='select: title'/>.
 </para>
@@ -5081,7 +5081,7 @@ for zero-intensity red, green, and blue.
 </para>
 <para>
 <!-- .LP -->
-To obtain the color specification for blue 
+To obtain the color specification for blue
 (full-intensity blue while red and green are zero), use
 <xref linkend='XcmsQueryBlue' xrefstyle='select: title'/>.
 </para>
@@ -5514,10 +5514,10 @@ The value returned in the pixel member is undefined.
 The
 <xref linkend='XcmsCIELabQueryMaxL' xrefstyle='select: title'/>
 function, given a hue angle and chroma,
-finds the point in <acronym>CIE</acronym> L*a*b* color space of maximum 
+finds the point in <acronym>CIE</acronym> L*a*b* color space of maximum
 lightness (L*) displayable by the screen.
 It returns this point in <acronym>CIE</acronym> L*a*b* coordinates.
-An 
+An
 <symbol>XcmsFailure</symbol>
 return value usually indicates that the given chroma
 is beyond maximum for the given hue angle.
@@ -5672,7 +5672,7 @@ The
 function, given a hue angle and chroma,
 finds the point of minimum lightness (L*) displayable by the screen.
 It returns this point in <acronym>CIE</acronym> L*a*b* coordinates.
-An 
+An
 <symbol>XcmsFailure</symbol>
 return value usually indicates that the given chroma
 is beyond maximum for the given hue angle.
@@ -5856,10 +5856,10 @@ The value returned in the pixel member is undefined.
 The
 <xref linkend='XcmsCIELuvQueryMaxL' xrefstyle='select: title'/>
 function, given a hue angle and chroma,
-finds the point in <acronym>CIE</acronym> L*u*v* color space of maximum 
+finds the point in <acronym>CIE</acronym> L*u*v* color space of maximum
 lightness (L*) displayable by the screen.
 It returns this point in <acronym>CIE</acronym> L*u*v* coordinates.
-An 
+An
 <symbol>XcmsFailure</symbol>
 return value usually indicates that the given chroma
 is beyond maximum for the given hue angle.
@@ -6014,7 +6014,7 @@ The
 function, given a hue angle and chroma,
 finds the point of minimum lightness (L*) displayable by the screen.
 It returns this point in <acronym>CIE</acronym> L*u*v* coordinates.
-An 
+An
 <symbol>XcmsFailure</symbol>
 return value usually indicates that the given chroma
 is beyond maximum for the given hue angle.
@@ -6476,13 +6476,13 @@ function.
 <!-- .LP -->
 The <acronym>CIE</acronym> XYZ color space serves as the hub for all
 conversions between device-independent and device-dependent color spaces.
-Therefore, the knowledge to convert an 
+Therefore, the knowledge to convert an
 <structname>XcmsColor</structname>
 structure to and from <acronym>CIE</acronym> XYZ format is associated with each color space.
 For example, conversion from <acronym>CIE</acronym> L*u*v* to <acronym>RGB</acronym> requires the knowledge
 to convert from <acronym>CIE</acronym> L*u*v* to <acronym>CIE</acronym> XYZ and from <acronym>CIE</acronym> XYZ to <acronym>RGB</acronym>.
 This knowledge is stored as an array of functions that,
-when applied in series, will convert the 
+when applied in series, will convert the
 <structname>XcmsColor</structname>
 structure to or from <acronym>CIE</acronym> XYZ format.
 This color specification conversion mechanism facilitates
@@ -6493,8 +6493,8 @@ the addition of color spaces.
 Of course, when converting between only device-independent color spaces
 or only device-dependent color spaces,
 shortcuts are taken whenever possible.
-For example, conversion from TekHVC to <acronym>CIE</acronym> L*u*v* is performed 
-by intermediate conversion to <acronym>CIE</acronym> u*v*Y and then to <acronym>CIE</acronym> L*u*v*, 
+For example, conversion from TekHVC to <acronym>CIE</acronym> L*u*v* is performed
+by intermediate conversion to <acronym>CIE</acronym> u*v*Y and then to <acronym>CIE</acronym> L*u*v*,
 thus bypassing conversion between <acronym>CIE</acronym> u*v*Y and <acronym>CIE</acronym> XYZ.
 </para>
 </sect2>
@@ -6541,8 +6541,8 @@ structure) accessible by the color management system.
 Because format values for unregistered color spaces are assigned at run time,
 they should be treated as private to the client.
 If references to an unregistered color space must be made
-outside the client (for example, storing color specifications 
-in a file using the unregistered color space), 
+outside the client (for example, storing color specifications
+in a file using the unregistered color space),
 then reference should be made by color space prefix
 (see
 <xref linkend='XcmsFormatOfPrefix' xrefstyle='select: title'/>
@@ -6551,16 +6551,16 @@ and
 </para>
 <para>
 <!-- .LP -->
-If the 
+If the
 <structname>XcmsColorSpace</structname>
-structure is already accessible in the color management system, 
+structure is already accessible in the color management system,
 <xref linkend='XcmsAddColorSpace' xrefstyle='select: title'/>
-returns 
+returns
 <symbol>XcmsSuccess</symbol>.
 </para>
 <para>
 <!-- .LP -->
-Note that added 
+Note that added
 <structname>XcmsColorSpace</structname>s
 must be retained for reference by Xlib.
 </para>
@@ -6608,7 +6608,7 @@ function returns the format for the specified color space prefix
 The prefix is case-insensitive.
 If the color space is not accessible in the color management system,
 <xref linkend='XcmsFormatOfPrefix' xrefstyle='select: title'/>
-returns 
+returns
 <symbol>XcmsUndefinedFormat</symbol>.
 </para>
 <para>
@@ -6658,7 +6658,7 @@ The returned string must be treated as read-only.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-Color space specific information necessary 
+Color space specific information necessary
 for color space conversion and color string parsing is stored in an
 <structname>XcmsColorSpace</structname>
 structure.
@@ -6672,7 +6672,7 @@ function.
 </para>
 <para>
 <!-- .LP -->
-If a new 
+If a new
 <structname>XcmsColorSpace</structname>
 structure specifies a color space not registered with the X Consortium,
 they should be treated as private to the client
@@ -6708,15 +6708,15 @@ typedef struct _XcmsColorSpace {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The prefix member specifies the prefix that indicates a color string 
+The prefix member specifies the prefix that indicates a color string
 is in this color space's string format.
 For example, the strings ``ciexyz'' or ``CIEXYZ'' for <acronym>CIE</acronym> XYZ,
 and ``rgb'' or ``<acronym>RGB</acronym>'' for <acronym>RGB</acronym>.
 The prefix is case insensitive.
 The format member specifies the color specification format.
 Formats for unregistered color spaces are assigned at run time.
-The parseString member contains a pointer to the function 
-that can parse a color string into an 
+The parseString member contains a pointer to the function
+that can parse a color string into an
 <structname>XcmsColor</structname>
 structure.
 This function returns an integer (int): nonzero if it succeeded
@@ -6724,14 +6724,14 @@ and zero otherwise.
 The to_CIEXYZ and from_CIEXYZ members contain pointers,
 each to a NULL terminated list of function pointers.
 When the list of functions is executed in series,
-it will convert the color specified in an 
+it will convert the color specified in an
 <structname>XcmsColor</structname>
 structure from/to the current color space format to/from the <acronym>CIE</acronym> XYZ format.
 Each function returns an integer (int): nonzero if it succeeded
 and zero otherwise.
 The white point to be associated with the colors is specified
 explicitly, even though white points can be found in the CCC.
-The inverse_flag member, if nonzero, specifies that for each function listed 
+The inverse_flag member, if nonzero, specifies that for each function listed
 in to_CIEXYZ,
 its inverse function can be found in from_CIEXYZ such that:
 </para>
@@ -6864,7 +6864,7 @@ Pixel members should be ignored and must remain unchanged upon return.
     </term>
     <listitem>
       <para>
-Specifies the number of 
+Specifies the number of
 <structname>XcmsColor</structname>
 structures in the color-specification array.
     </para>
@@ -6921,7 +6921,7 @@ Pixel members should be ignored and must remain unchanged upon return.
     </term>
     <listitem>
       <para>
-Specifies the number of 
+Specifies the number of
 <structname>XcmsColor</structname>
 structures in the color-specification array.
       </para>
@@ -7055,7 +7055,7 @@ and <acronym>CIE</acronym> XYZ may differ for different classes of output device
 Therefore, the notion of a Color Characterization Function Set
 has been developed.
 A function set consists of device-dependent color spaces
-and the functions that convert color specifications 
+and the functions that convert color specifications
 between these device-dependent color spaces and the <acronym>CIE</acronym> XYZ color space
 appropriate for a particular class of output devices.
 The function set also contains a function that reads
@@ -7072,7 +7072,7 @@ The LINEAR_RGB function set is provided by Xlib
 and will support most color monitors.
 Function sets may require data that differs
 from those needed for the LINEAR_RGB function set.
-In that case, 
+In that case,
 its corresponding data may be stored on different root window properties.
 </para>
 </sect2>
@@ -7114,7 +7114,7 @@ Specifies the function set to add.
 The
 <xref linkend='XcmsAddFunctionSet' xrefstyle='select: title'/>
 function adds a function set to the color management system.
-If the function set uses device-dependent 
+If the function set uses device-dependent
 <structname>XcmsColorSpace</structname>
 structures not accessible in the color management system,
 <xref linkend='XcmsAddFunctionSet' xrefstyle='select: title'/>
@@ -7129,7 +7129,7 @@ If references to an unregistered color space must be made outside the
 client (for example, storing color specifications in a file
 using the unregistered color space),
 then reference should be made by color space prefix
-(see 
+(see
 <xref linkend='XcmsFormatOfPrefix' xrefstyle='select: title'/>
 and
 <xref linkend='XcmsPrefixOfFormat' xrefstyle='select: title'/>).
@@ -7138,9 +7138,9 @@ and
 <!-- .LP -->
 Additional function sets should be added before any calls to other
 Xlib routines are made.
-If not, the 
+If not, the
 <structname>XcmsPerScrnInfo</structname>
-member of a previously created 
+member of a previously created
 <structname>XcmsCCC</structname>
 does not have the opportunity to initialize
 with the added function set.
@@ -7154,11 +7154,11 @@ with the added function set.
 <para>
 <!-- .LP -->
 The creation of additional function sets should be
-required only when an output device does not conform to existing 
+required only when an output device does not conform to existing
 function sets or when additional device-dependent color spaces are necessary.
 A function set consists primarily of a collection of device-dependent
 <structname>XcmsColorSpace</structname>
-structures and a means to read and store a 
+structures and a means to read and store a
 screen's color characterization data.
 This data is stored in an
 <structname>XcmsFunctionSet</structname>
@@ -7169,18 +7169,18 @@ is usually made accessible to the client program for use with
 </para>
 <para>
 <!-- .LP -->
-If a function set uses new device-dependent 
+If a function set uses new device-dependent
 <structname>XcmsColorSpace</structname>
 structures,
 they will be transparently processed into the color management system.
-Function sets can share an 
+Function sets can share an
 <structname>XcmsColorSpace</structname>
 structure for a device-dependent color space.
-In addition, multiple 
+In addition, multiple
 <structname>XcmsColorSpace</structname>
 structures are allowed for a device-dependent color space;
 however, a function set can reference only one of them.
-These 
+These
 <structname>XcmsColorSpace</structname>
 structures will differ in the functions to convert to and from <acronym>CIE</acronym> XYZ,
 thus tailored for the specific function set.
@@ -7202,12 +7202,12 @@ typedef struct _XcmsFunctionSet {
 <!-- .LP -->
 <!-- .eM -->
 The DDColorSpaces member is a pointer to a NULL terminated list
-of pointers to 
+of pointers to
 <structname>XcmsColorSpace</structname>
 structures for the device-dependent color spaces that are supported
 by the function set.
 The screenInitProc member is set to the callback procedure (see the following
-interface specification) that initializes the 
+interface specification) that initializes the
 <structname>XcmsPerScrnInfo</structname>
 structure for a particular screen.
 </para>
@@ -7255,7 +7255,7 @@ Specifies the appropriate screen number on the host server.
     </term>
     <listitem>
       <para>
-Specifies the 
+Specifies the
 <structname>XcmsPerScrnInfo</structname>
 structure, which contains the per screen information.
     </para>
@@ -7270,22 +7270,22 @@ The screen initialization callback in the
 <structname>XcmsFunctionSet</structname>
 structure fetches the color characterization data (device profile) for
 the specified screen,
-typically off properties on the 
+typically off properties on the
 screen's root window.
 It then initializes the specified
 <structname>XcmsPerScrnInfo</structname>
 structure.
 <indexterm><primary>Device profile</primary></indexterm>
 <indexterm><primary>Color Characterization Data</primary></indexterm>
-If successful, the procedure fills in the 
+If successful, the procedure fills in the
 <structname>XcmsPerScrnInfo</structname>
 structure as follows:
 </para>
 <itemizedlist>
   <listitem>
     <para>
-It sets the screenData member to the address 
-of the created device profile data structure 
+It sets the screenData member to the address
+of the created device profile data structure
 (contents known only by the function set).
     </para>
   </listitem>
@@ -7303,7 +7303,7 @@ structure.
   </listitem>
   <listitem>
     <para>
-It then sets the state member to 
+It then sets the state member to
 <symbol>XcmsInitSuccess</symbol>
 and finally returns
 <symbol>XcmsSuccess</symbol>.
@@ -7312,7 +7312,7 @@ and finally returns
 </itemizedlist>
 <para>
 <!-- .LP -->
-If unsuccessful, the procedure sets the state member to 
+If unsuccessful, the procedure sets the state member to
 <symbol>XcmsInitFailure</symbol>
 and returns
 <symbol>XcmsFailure</symbol>.

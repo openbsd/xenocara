@@ -69,7 +69,7 @@ and
 .B XTextWidth16
 functions return the width of the specified 8-bit or 2-byte character strings.
 .SH "SEE ALSO"
-XLoadFont(__libmansuffix__),
-XTextExtents(__libmansuffix__)
+.BR XLoadFont (__libmansuffix__),
+.BR XTextExtents (__libmansuffix__)
 .br
 \fI\*(xL\fP

@@ -43,22 +43,22 @@ mask of names components to be freed
 True => XkbNamesRec structure itself should be freed
 .SH DESCRIPTION
 .LP
-Do not free symbolic names structures directly using 
-.I free 
-or 
-.I XFree. 
-Use 
-.I XkbFreeNames 
+Do not free symbolic names structures directly using
+.I free
+or
+.I XFree.
+Use
+.I XkbFreeNames
 instead.
 
-The 
-.I which 
-parameter is the bitwise inclusive OR of the valid names mask bits defined in 
+The
+.I which
+parameter is the bitwise inclusive OR of the valid names mask bits defined in
 Table 1.
 
-Xkb provides several functions that work with symbolic names. Each of these 
-functions uses a mask to specify individual fields of the structures described 
-above. These masks and their relationships to the fields in a keyboard 
+Xkb provides several functions that work with symbolic names. Each of these
+functions uses a mask to specify individual fields of the structures described
+above. These masks and their relationships to the fields in a keyboard
 description are shown in Table 1.
 
 .TS

@@ -152,9 +152,9 @@ Note that the predicate procedure is called with the
 display locked, and thus is not allowed to call any function
 that would take the display lock again.
 .SH "SEE ALSO"
-XAnyEvent(__libmansuffix__),
-XNextEvent(__libmansuffix__),
-XPutBackEvent(__libmansuffix__)
-XSendEvent(__libmansuffix__)
+.BR XAnyEvent (__libmansuffix__),
+.BR XNextEvent (__libmansuffix__),
+.BR XPutBackEvent (__libmansuffix__)
+.BR XSendEvent (__libmansuffix__)
 .br
 \fI\*(xL\fP

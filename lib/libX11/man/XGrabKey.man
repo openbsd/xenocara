@@ -197,9 +197,9 @@ alternatives can generate this error.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XAllowEvents(__libmansuffix__),
-XGrabButton(__libmansuffix__),
-XGrabKeyboard(__libmansuffix__),
-XGrabPointer(__libmansuffix__)
+.BR XAllowEvents (__libmansuffix__),
+.BR XGrabButton (__libmansuffix__),
+.BR XGrabKeyboard (__libmansuffix__),
+.BR XGrabPointer (__libmansuffix__)
 .br
 \fI\*(xL\fP

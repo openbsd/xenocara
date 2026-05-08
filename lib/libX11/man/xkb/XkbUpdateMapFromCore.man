@@ -22,7 +22,7 @@
 .\"
 .TH XkbUpdateMapFromCore __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbUpdateMapFromCore \-  Update a local Xkb keyboard map to reflect the mapping 
+XkbUpdateMapFromCore \-  Update a local Xkb keyboard map to reflect the mapping
 expressed by a core format mapping
 .SH SYNOPSIS
 .HP
@@ -56,55 +56,55 @@ symbols in core protocol keymap
 backfilled with changes made to Xkb
 .SH DESCRIPTION
 .LP
-Xkb provides several functions that make it easier to apply the compatibility 
-map to configure a client-side Xkb keyboard mapping, given a core protocol 
-representation of part or all of a keyboard mapping. Obtain a core protocol 
+Xkb provides several functions that make it easier to apply the compatibility
+map to configure a client-side Xkb keyboard mapping, given a core protocol
+representation of part or all of a keyboard mapping. Obtain a core protocol
 representation of a keyboard mapping from an actual server (by using
-.I XGetKeyboardMapping, 
+.I XGetKeyboardMapping,
 for example), a data file, or some other source.
 
-.I XkbUpdateMapFromCore 
-interprets input argument information representing a keyboard map in core format 
-to update the Xkb keyboard description passed in 
-.I xkb. 
-Only a portion of the Xkb map is updated - the portion corresponding to keys 
-with keycodes in the range 
-.I first_key 
-through 
-.I first_key + num_keys - 1. 
-If 
-.I XkbUpdateMapFromCore 
-is being called in response to a MappingNotify event, 
-.I first_key 
-and 
-.I num_keys 
-are reported in the MappingNotify event. 
-.I core_keysyms 
-contains the keysyms corresponding to the keycode range being updated, in core 
-keyboard description order. 
-.I map_width 
-is the number of keysyms per key in 
-.I core_keysyms. 
-Thus, the first 
-.I map_width 
-entries in 
-.I core_keysyms 
-are for the key with keycode 
-.I first_key, 
-the next 
-.I map_width 
-entries are for key 
-.I first_key + 1, 
+.I XkbUpdateMapFromCore
+interprets input argument information representing a keyboard map in core format
+to update the Xkb keyboard description passed in
+.I xkb.
+Only a portion of the Xkb map is updated - the portion corresponding to keys
+with keycodes in the range
+.I first_key
+through
+.I first_key + num_keys - 1.
+If
+.I XkbUpdateMapFromCore
+is being called in response to a MappingNotify event,
+.I first_key
+and
+.I num_keys
+are reported in the MappingNotify event.
+.I core_keysyms
+contains the keysyms corresponding to the keycode range being updated, in core
+keyboard description order.
+.I map_width
+is the number of keysyms per key in
+.I core_keysyms.
+Thus, the first
+.I map_width
+entries in
+.I core_keysyms
+are for the key with keycode
+.I first_key,
+the next
+.I map_width
+entries are for key
+.I first_key + 1,
 and so on.
 
-In addition to modifying the Xkb keyboard mapping in 
-.I xkb, XkbUpdateMapFromCore 
-backfills the changes structure whose address is passed in 
-.I changes 
-to indicate the modifications that were made. You may then use 
-.I changes 
-in subsequent calls such as 
-.I XkbSetMap, 
+In addition to modifying the Xkb keyboard mapping in
+.I xkb, XkbUpdateMapFromCore
+backfills the changes structure whose address is passed in
+.I changes
+to indicate the modifications that were made. You may then use
+.I changes
+in subsequent calls such as
+.I XkbSetMap,
 to propagate the local modifications to a server.
 .SH "SEE ALSO"
 .BR XkbSetMap (__libmansuffix__)

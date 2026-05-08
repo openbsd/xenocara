@@ -21,8 +21,8 @@
 .\"
 .TH XkbFreeIndicatorMaps __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbFreeIndicatorMaps \- Frees memory used by the 
-.I indicators 
+XkbFreeIndicatorMaps \- Frees memory used by the
+.I indicators
 member of an XkbDescRec structure
 .SH SYNOPSIS
 .HP
@@ -36,15 +36,15 @@ member of an XkbDescRec structure
 keyboard description structure
 .SH DESCRIPTION
 .LP
-If the 
-.I indicators 
-member of the keyboard description record pointed to by 
-.I xkb 
-is not NULL, 
-.I XkbFreeIndicatorMaps 
-frees the memory associated with the 
-.I indicators 
-member of 
+If the
+.I indicators
+member of the keyboard description record pointed to by
+.I xkb
+is not NULL,
+.I XkbFreeIndicatorMaps
+frees the memory associated with the
+.I indicators
+member of
 .I xkb.
 
 If xkb is NULL, no operation is performed.

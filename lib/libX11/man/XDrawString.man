@@ -117,8 +117,8 @@ window is used as a Drawable.
 Some argument or pair of arguments has the correct type and range but fails
 to match in some other way required by the request.
 .SH "SEE ALSO"
-XDrawImageString(__libmansuffix__),
-XDrawText(__libmansuffix__),
-XLoadFont(__libmansuffix__)
+.BR XDrawImageString (__libmansuffix__),
+.BR XDrawText (__libmansuffix__),
+.BR XLoadFont (__libmansuffix__)
 .br
 \fI\*(xL\fP

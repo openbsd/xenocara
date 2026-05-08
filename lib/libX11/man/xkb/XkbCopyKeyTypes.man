@@ -42,55 +42,55 @@ pointer to array of XkbKeyTypeRecs to change
 number of types to copy
 .SH DESCRIPTION
 .LP
-.I XkbCopyKeyTypes 
-copies 
-.I num_types 
-XkbKeyTypeRec structures from the array specified by 
-.I from 
-into the array specified by 
-.I into. 
-It is intended for copying between, rather than within, keyboard descriptions, 
-so it 
-doesn't check for overlaps. The same rules that apply to the 
-.I from 
-and 
-.I into 
-parameters in 
-.I XkbCopyKeyType 
-apply to each entry of the 
-.I from 
-and 
-.I into 
-arrays of 
-.I XkbCopyKeyTypes. 
-If any allocation errors occur while copying 
-.I from 
-to 
-.I into, XkbCopyKeyTypes 
-returns BadAlloc. Otherwise, 
-.I XkbCopyKeyTypes 
-copies 
-.I from 
-to 
-.I into 
+.I XkbCopyKeyTypes
+copies
+.I num_types
+XkbKeyTypeRec structures from the array specified by
+.I from
+into the array specified by
+.I into.
+It is intended for copying between, rather than within, keyboard descriptions,
+so it
+doesn't check for overlaps. The same rules that apply to the
+.I from
+and
+.I into
+parameters in
+.I XkbCopyKeyType
+apply to each entry of the
+.I from
+and
+.I into
+arrays of
+.I XkbCopyKeyTypes.
+If any allocation errors occur while copying
+.I from
+to
+.I into, XkbCopyKeyTypes
+returns BadAlloc. Otherwise,
+.I XkbCopyKeyTypes
+copies
+.I from
+to
+.I into
 and returns Success.
 .SH "RETURN VALUES"
 .TP 15
 Success
-The XkbCopyKeyTypes function returns Success when there are no allocation 
+The XkbCopyKeyTypes function returns Success when there are no allocation
 errors.
 .SH STRUCTURES
 .LP
-Key types are used to determine the shift level of a key given the current state 
-of the 
-keyboard. The set of all possible key types for the Xkb keyboard description are 
-held in 
+Key types are used to determine the shift level of a key given the current state
+of the
+keyboard. The set of all possible key types for the Xkb keyboard description are
+held in
 the
-.I types 
-field of the client map, whose total size is stored in 
-.I size_types, 
-and whose total number of valid entries is stored in 
-.I num_types. 
+.I types
+field of the client map, whose total size is stored in
+.I size_types,
+and whose total number of valid entries is stored in
+.I num_types.
 Key types are defined using the following structure:
 .nf
 

@@ -45,35 +45,35 @@ number of first button to update, 0 relative
 number of buttons to update
 .SH DESCRIPTION
 .LP
-.I XkbSetDeviceButtonActions 
-assigns actions to the buttons of the device specified in 
-.I device_info->device_spec. 
-Actions are assigned to 
-.I num_buttons 
-buttons beginning with 
-.I first_button 
-and are taken from the actions specified in 
+.I XkbSetDeviceButtonActions
+assigns actions to the buttons of the device specified in
+.I device_info->device_spec.
+Actions are assigned to
+.I num_buttons
+buttons beginning with
+.I first_button
+and are taken from the actions specified in
 .I device_info->btn_acts.
 
 If the server does not support assignment of Xkb actions to extension device buttons,
-.I XkbSetDeviceButtonActions 
-has no effect and returns False. If the device has no buttons or if 
-.I first_button 
-or 
-.I num_buttons 
-specify buttons outside of the valid range as determined by 
-.I device_info->num_btns, 
-the function has no effect and returns False. Otherwise, 
-.I XkbSetDeviceButtonActions 
-sends a request to the server to change the actions for the specified buttons and returns 
+.I XkbSetDeviceButtonActions
+has no effect and returns False. If the device has no buttons or if
+.I first_button
+or
+.I num_buttons
+specify buttons outside of the valid range as determined by
+.I device_info->num_btns,
+the function has no effect and returns False. Otherwise,
+.I XkbSetDeviceButtonActions
+sends a request to the server to change the actions for the specified buttons and returns
 True.
 
-If the actual request sent to the server involved illegal button numbers, a BadValue protocol 
-error is generated. If an invalid device identifier is specified in 
-.I device_info->device_spec, 
+If the actual request sent to the server involved illegal button numbers, a BadValue protocol
+error is generated. If an invalid device identifier is specified in
+.I device_info->device_spec,
 a BadKeyboard protocol error results. If the actual device specified in
-.I device_info->device_spec 
-does not contain buttons and a request affecting buttons is made, a BadMatch protocol error is 
+.I device_info->device_spec
+does not contain buttons and a request affecting buttons is made, a BadMatch protocol error is
 generated.
 .SH DIAGNOSTICS
 .TP 15
@@ -81,7 +81,7 @@ generated.
 The device specified was not a valid core or input extension device
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has correct type 
+A compatible version of Xkb was not available in the server or an argument has correct type
 and range, but is otherwise invalid
 .TP 15
 .B BadValue

@@ -43,9 +43,9 @@ mask of compatibility map components to free
 True => free XkbCompatMap structure itself
 .SH DESCRIPTION
 .LP
-.I which 
-specifies the compatibility map components to be freed (see XkbGetCompatMap). 
-.I which 
+.I which
+specifies the compatibility map components to be freed (see XkbGetCompatMap).
+.I which
 is an inclusive OR of the bits shown in Table 1.
 
 .TS
@@ -60,15 +60,15 @@ XkbGroupCompatMask	(1<<1)	Group maps
 XkbAllCompatMask	(0x3)	All compatibility map components
 .TE
 
-.I free_map 
-indicates whether the XkbCompatMap structure itself should be freed. If 
-.I free_map 
-is True, 
-.I which 
-is ignored, all non-NULL compatibility map components are freed, and the 
-.I compat 
-field in the XkbDescRec referenced by 
-.I xkb 
+.I free_map
+indicates whether the XkbCompatMap structure itself should be freed. If
+.I free_map
+is True,
+.I which
+is ignored, all non-NULL compatibility map components are freed, and the
+.I compat
+field in the XkbDescRec referenced by
+.I xkb
 is set to NULL.
 .SH STRUCTURES
 .LP
@@ -80,10 +80,10 @@ is set to NULL.
         unsigned short        num_si;                   /\&* # structures used in sym_interpret */
         unsigned short        size_si;                  /\&* # structures allocated in sym_interpret */
     } XkbCompatMapRec, *XkbCompatMapPtr;
-    
+
 .fi
 
-The complete description of an Xkb keyboard is given by an XkbDescRec. The component 
+The complete description of an Xkb keyboard is given by an XkbDescRec. The component
 structures in the XkbDescRec represent the major Xkb components outlined in Figure 1.1.
 
 .nf
@@ -103,22 +103,22 @@ typedef struct {
 } XkbDescRec, *XkbDescPtr;
 
 .fi
-The 
-.I display 
-field points to an X display structure. The 
-.I flags field is private to the library: modifying 
-.I flags 
-may yield unpredictable results. The 
-.I device_spec 
-field specifies the device identifier of the keyboard input device, or 
-XkbUseCoreKeyboard, which specifies the core keyboard device. The 
+The
+.I display
+field points to an X display structure. The
+.I flags field is private to the library: modifying
+.I flags
+may yield unpredictable results. The
+.I device_spec
+field specifies the device identifier of the keyboard input device, or
+XkbUseCoreKeyboard, which specifies the core keyboard device. The
 .I min_key_code
-and 
-.I max_key_code 
-fields specify the least and greatest keycode that can be returned by the keyboard. 
-The other fields specify structure components of the keyboard description and are 
-described in detail in other sections of this document. Table 2 identifies the 
-subsequent sections of this document that discuss the individual components of the 
+and
+.I max_key_code
+fields specify the least and greatest keycode that can be returned by the keyboard.
+The other fields specify structure components of the keyboard description and are
+described in detail in other sections of this document. Table 2 identifies the
+subsequent sections of this document that discuss the individual components of the
 XkbDescRec.
 
 .TS
@@ -138,9 +138,9 @@ compat	Chapter 17
 geom	Chapter 13
 .TE
 
-Each structure component has a corresponding mask bit that is used in function calls to 
-indicate that the structure should be manipulated in some manner, such as allocating it 
-or freeing it. These masks and their relationships to the fields in the XkbDescRec are 
+Each structure component has a corresponding mask bit that is used in function calls to
+indicate that the structure should be manipulated in some manner, such as allocating it
+or freeing it. These masks and their relationships to the fields in the XkbDescRec are
 shown in Table 3.
 
 .TS
@@ -150,7 +150,7 @@ l l l.
 Table 3 Mask Bits for XkbDescRec
 _
 Mask Bit	XkbDescRec Field	Value
-_	
+_
 XkbControlsMask	ctrls	(1L<<0)
 XkbServerMapMask	server	(1L<<1)
 XkbIClientMapMask	map	(1L<<2)

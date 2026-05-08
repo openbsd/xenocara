@@ -274,8 +274,8 @@ list, and
 .BR XFontSetExtents ,
 if any, are freed.
 .SH "SEE ALSO"
-XExtentsofFontSet(__libmansuffix__),
-XFontsOfFontSet(__libmansuffix__),
-XFontSetExtents(__libmansuffix__)
+.BR XExtentsofFontSet (__libmansuffix__),
+.BR XFontsOfFontSet (__libmansuffix__),
+.BR XFontSetExtents (__libmansuffix__)
 .br
 \fI\*(xL\fP

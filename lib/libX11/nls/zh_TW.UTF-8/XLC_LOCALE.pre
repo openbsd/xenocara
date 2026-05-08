@@ -1,9 +1,9 @@
 XCOMM  XLocale Database Sample for zh_TW.UTF-8
-XCOMM 
+XCOMM
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_FONTSET category
-XCOMM 
+XCOMM
 XLC_FONTSET
 
 on_demand_loading	True
@@ -52,9 +52,9 @@ fs3	{
 }
 END XLC_FONTSET
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_XLOCALE category
-XCOMM 
+XCOMM
 XLC_XLOCALE
 
 encoding_name		UTF-8
@@ -74,7 +74,7 @@ cs1     {
         length          1
         ct_encoding     ISO8859-1:GR
 }
- 
+
 XCOMM	cs2 class
 cs2	{
 	side		none

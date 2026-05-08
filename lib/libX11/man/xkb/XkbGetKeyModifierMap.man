@@ -21,7 +21,7 @@
 .\"
 .TH XkbGetKeyModifierMap __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetKeyModifierMap \- Update the modifier map for one or more of the keys in a 
+XkbGetKeyModifierMap \- Update the modifier map for one or more of the keys in a
 keyboard description
 .SH SYNOPSIS
 .HP
@@ -47,42 +47,42 @@ number of keys for which information is desired
 keyboard description to update
 .SH DESCRIPTION
 .LP
-The 
-.I modmap 
-entry of the client map is an array, indexed by keycode, specifying the real 
-modifiers bound to a key. Each entry is a mask composed of a bitwise inclusive 
-OR of the legal real modifiers: ShiftMask, LockMask, ControlMask, Mod1Mask, 
-Mod2Mask, Mod3Mask, Mod4Mask, and Mod5Mask. If a bit is set in a 
-.I modmap 
+The
+.I modmap
+entry of the client map is an array, indexed by keycode, specifying the real
+modifiers bound to a key. Each entry is a mask composed of a bitwise inclusive
+OR of the legal real modifiers: ShiftMask, LockMask, ControlMask, Mod1Mask,
+Mod2Mask, Mod3Mask, Mod4Mask, and Mod5Mask. If a bit is set in a
+.I modmap
 entry, the corresponding key is bound to that modifier.
 
-Pressing or releasing the key bound to a modifier changes the modifier set and 
-unset state. The particular manner in which the modifier set and unset state 
+Pressing or releasing the key bound to a modifier changes the modifier set and
+unset state. The particular manner in which the modifier set and unset state
 changes is determined by the behavior and actions assigned to the key.
 
-.I XkbGetKeyModifierMap 
-sends a request to the server for the modifier mappings for 
-.I num 
-keys starting with the key whose keycode is 
-.I first. 
-It waits for a reply and places the results in the 
-.I xkb->map->modmap 
-array. If successful, 
-.I XkbGetKeyModifier 
+.I XkbGetKeyModifierMap
+sends a request to the server for the modifier mappings for
+.I num
+keys starting with the key whose keycode is
+.I first.
+It waits for a reply and places the results in the
+.I xkb->map->modmap
+array. If successful,
+.I XkbGetKeyModifier
 returns Success.
- 
-If the map component of the 
-.I xkb 
-parameter has not been allocated, 
-.I XkbGetKeyModifierMap 
-allocates and initializes it. 
 
-If a compatible version of Xkb is not available in the server or the Xkb 
-extension has not been properly initialized, 
-.I XkbGetKeySyms 
-returns BadAccess. If any allocation errors occur while obtaining the modifier 
-map, 
-.I XkbGetKeyModifierMap 
+If the map component of the
+.I xkb
+parameter has not been allocated,
+.I XkbGetKeyModifierMap
+allocates and initializes it.
+
+If a compatible version of Xkb is not available in the server or the Xkb
+extension has not been properly initialized,
+.I XkbGetKeySyms
+returns BadAccess. If any allocation errors occur while obtaining the modifier
+map,
+.I XkbGetKeyModifierMap
 returns BadAlloc.
 .SH DIAGNOSTICS
 .TP 15

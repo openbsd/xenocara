@@ -1,5 +1,5 @@
 XCOMM  XLocale Database Sample for zh_TW
-XCOMM 
+XCOMM
 XCOMM Note: In lib/X11/lcCT.c, charset names for CNS11643 coded character
 XCOMM sets are defined as CNS11643.1986-1 and -2.  In the ECMA Registry,
 XCOMM CNS coded character sets 1-7 are registered as CNS 11643-1992.
@@ -10,9 +10,9 @@ XCOMM X11R6 organization of fsN/csN as it is and only changed "CNS11643-*"
 XCOMM to "CNS11643.1986-*".
 XCOMM	1995-10-24	T. Numata (numa@rp.open.cs.fujitsu.co.jp)
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_FONTSET category
-XCOMM 
+XCOMM
 XLC_FONTSET
 XCOMM 	fs0 class (7 bit ASCII)
 fs0	{
@@ -42,7 +42,7 @@ fs2	{
 		primary	CNS11643.1986-2:GL
 	}
 }
-XCOMM 	fs3 class 
+XCOMM 	fs3 class
 fs3	{
 	charset	{
 		name	CNS11643.1986-14:GL
@@ -51,7 +51,7 @@ fs3	{
 		primary	CNS11643.1986-14:GL
 	}
 }
-XCOMM 	fs4 class 
+XCOMM 	fs4 class
 fs4	{
 	charset	{
 		name	CNS11643.1986-15:GL
@@ -60,7 +60,7 @@ fs4	{
 		primary	CNS11643.1986-15:GL
 	}
 }
-XCOMM 	fs5 class 
+XCOMM 	fs5 class
 fs5	{
 	charset	{
 		name	CNS11643.1986-16:GL
@@ -71,9 +71,9 @@ fs5	{
 }
 END XLC_FONTSET
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_XLOCALE category
-XCOMM 
+XCOMM
 XLC_XLOCALE
 
 encoding_name		zh_TW.euc

@@ -501,7 +501,7 @@ XkbSetNames(Display *dpy,
         BufAlloc(char *, tmp, XkbPaddedSize(nLvlTypes));
         type = &xkb->map->types[firstLvlType];
         for (i = 0; i < nLvlTypes; i++, type++) {
-            *tmp++ = type->num_levels;
+            *tmp++ = (type->level_names == NULL) ? 0 : type->num_levels;
         }
         type = &xkb->map->types[firstLvlType];
         for (i = 0; i < nLvlTypes; i++, type++) {

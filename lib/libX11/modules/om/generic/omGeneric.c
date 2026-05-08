@@ -1640,7 +1640,7 @@ close_om(
 	for (count = gen->data_num; count-- > 0; data++) {
 		Xfree(data->charset_list);
 		data->charset_list = NULL;
-	
+
 	    /* free font_data for om */
 		free_fontdataOM(data->font_data,data->font_data_count);
 		Xfree(data->font_data);

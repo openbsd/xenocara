@@ -1,10 +1,10 @@
 XCOMM
-XCOMM  XLocale Database Sample for ja_JP.euc 
-XCOMM 
+XCOMM  XLocale Database Sample for ja_JP.euc
+XCOMM
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_FONTSET category
-XCOMM 
+XCOMM
 XLC_FONTSET
 XCOMM 	fs0 class (7 bit ASCII)
 fs0	{
@@ -51,9 +51,9 @@ XCOMM 	}
 XCOMM }
 END XLC_FONTSET
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_XLOCALE category
-XCOMM 
+XCOMM
 XLC_XLOCALE
 
 encoding_name		ja.euc

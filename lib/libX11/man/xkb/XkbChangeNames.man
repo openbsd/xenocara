@@ -43,36 +43,36 @@ mask of names or map components to be updated
 keyboard description to be updated
 .SH DESCRIPTION
 .LP
-.I XkbChangeNames 
-provides a more flexible method for changing symbolic names than 
-.I XkbSetNames 
-and requires the use of an XkbNameChangesRec structure. 
+.I XkbChangeNames
+provides a more flexible method for changing symbolic names than
+.I XkbSetNames
+and requires the use of an XkbNameChangesRec structure.
 
-.I XkbChangeNames 
-copies any names specified by 
-.I changes 
-from the keyboard description, 
-.I xkb, 
-to the X server specified by 
-.I dpy. XkbChangeNames 
-aborts and returns False if any illegal type names or type shift level names are 
+.I XkbChangeNames
+copies any names specified by
+.I changes
+from the keyboard description,
+.I xkb,
+to the X server specified by
+.I dpy. XkbChangeNames
+aborts and returns False if any illegal type names or type shift level names are
 specified by changes.
 
-To change the symbolic names in the server, first modify a local copy of the 
-keyboard description and then use either 
-.I XkbSetNames, 
+To change the symbolic names in the server, first modify a local copy of the
+keyboard description and then use either
+.I XkbSetNames,
 or, to save network traffic, use a XkbNameChangesRec structure and call
-.I XkbChangeNames 
-to download the changes to the server. 
-.I XkbSetNames 
-and 
-.I XkbChangeNames 
-can generate BadAlloc, BadAtom, BadLength, BadMatch, and BadImplementation 
+.I XkbChangeNames
+to download the changes to the server.
+.I XkbSetNames
+and
+.I XkbChangeNames
+can generate BadAlloc, BadAtom, BadLength, BadMatch, and BadImplementation
 errors.
 .SH STRUCTURES
 .LP
-The XkbNameChangesRec allows applications to identify small modifications to the 
-symbolic names and 
+The XkbNameChangesRec allows applications to identify small modifications to the
+symbolic names and
 effectively reduces the amount of traffic sent to the server:
 .nf
 
@@ -90,20 +90,20 @@ effectively reduces the amount of traffic sent to the server:
         unsigned long  changed_indicators; /\&* mask of indicators for which names were changed */
         unsigned char  changed_groups;     /\&* mask of groups for which names were changed */
     } XkbNameChangesRec, *XkbNameChangesPtr
-    
-.fi    
-The 
-.I changed 
-field specifies the name components that have changed and is the bitwise 
-inclusive OR of the valid names 
-mask bits defined in Table 1. The rest of the fields in the structure specify 
-the ranges that have changed 
+
+.fi
+The
+.I changed
+field specifies the name components that have changed and is the bitwise
+inclusive OR of the valid names
+mask bits defined in Table 1. The rest of the fields in the structure specify
+the ranges that have changed
 for the various kinds of symbolic names, as shown in Table 2.
 
-Xkb provides several functions that work with symbolic names. Each of these 
-functions uses a mask to 
-specify individual fields of the structures described above. These masks and 
-their relationships to the 
+Xkb provides several functions that work with symbolic names. Each of these
+functions uses a mask to
+specify individual fields of the structures described above. These masks and
+their relationships to the
 fields in a keyboard description are shown in Table 1.
 
 .TS
@@ -168,11 +168,11 @@ A name is neither a valid Atom or None
 Invalid reply from server
 .TP 15
 .B BadLength
-The length of a request is shorter or longer than that required to minimally 
+The length of a request is shorter or longer than that required to minimally
 contain the arguments
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid
 .SH "SEE ALSO"
 .BR XkbSetNames (__libmansuffix__)

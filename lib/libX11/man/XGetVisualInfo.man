@@ -112,7 +112,6 @@ The
 .B XVisualInfo
 structure contains:
 .LP
-.LP
 /\&* Visual information mask bits */
 .TS
 lw(10) lw(2.5i) lw(.8i).
@@ -211,6 +210,6 @@ typedef struct {
 } XVisualInfo;
 .EE
 .SH "SEE ALSO"
-XFree(__libmansuffix__)
+.BR XFree (__libmansuffix__)
 .br
 \fI\*(xL\fP

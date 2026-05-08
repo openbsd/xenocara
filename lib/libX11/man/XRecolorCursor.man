@@ -128,8 +128,8 @@ A value for a Cursor argument does not name a defined Cursor.
 .B BadDrawable
 A value for a Drawable argument does not name a defined Window or Pixmap.
 .SH "SEE ALSO"
-XCreateColormap(__libmansuffix__),
-XCreateFontCursor(__libmansuffix__),
-XDefineCursor(__libmansuffix__)
+.BR XCreateColormap (__libmansuffix__),
+.BR XCreateFontCursor (__libmansuffix__),
+.BR XDefineCursor (__libmansuffix__)
 .br
 \fI\*(xL\fP

@@ -21,7 +21,7 @@
 .\"
 .TH XkbGetKeyActions __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetKeyActions \- Update the actions (the key_acts array) for a subset of the 
+XkbGetKeyActions \- Update the actions (the key_acts array) for a subset of the
 keys in a keyboard description
 .SH SYNOPSIS
 .HP
@@ -47,39 +47,39 @@ number of keys desired
 pointer to keyboard description where result is stored
 .SH DESCRIPTION
 .LP
-.I XkbGetKeyActions 
-sends a request to the server to obtain the actions for 
-.I num 
-keys on the keyboard starting with key 
-.I first. 
-It waits for a reply and returns the actions in the 
-.I server->key_acts 
-field of 
-.I xkb. 
-If successful, 
-.I XkbGetKeyActions 
-returns Success. The 
-.I xkb 
+.I XkbGetKeyActions
+sends a request to the server to obtain the actions for
+.I num
+keys on the keyboard starting with key
+.I first.
+It waits for a reply and returns the actions in the
+.I server->key_acts
+field of
+.I xkb.
+If successful,
+.I XkbGetKeyActions
+returns Success. The
+.I xkb
 parameter must be a pointer to a valid Xkb keyboard description.
 
-If the 
-.I server 
-map, in the 
-.I xkb 
-parameter, has not been allocated, 
-.I XkbGetKeyActions 
+If the
+.I server
+map, in the
+.I xkb
+parameter, has not been allocated,
+.I XkbGetKeyActions
 allocates and initializes it before obtaining the actions.
 
-If the server does not have a compatible version of Xkb, or the Xkb extension 
-has not been properly initialized, 
-.I XkbGetKeyActions 
-returns BadAccess. If 
-.I num 
-is less than 1 or greater than XkbMaxKeyCount, 
-.I XkbGetKeyActions 
-returns BadValue. If any allocation errors occur, 
-.I XkbGetKeyActions 
-returns BadAlloc. 
+If the server does not have a compatible version of Xkb, or the Xkb extension
+has not been properly initialized,
+.I XkbGetKeyActions
+returns BadAccess. If
+.I num
+is less than 1 or greater than XkbMaxKeyCount,
+.I XkbGetKeyActions
+returns BadValue. If any allocation errors occur,
+.I XkbGetKeyActions
+returns BadAlloc.
 .SH DIAGNOSTICS
 .TP 15
 .B BadAccess

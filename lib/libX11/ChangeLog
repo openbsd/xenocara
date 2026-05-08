@@ -1,3 +1,251 @@
+commit 6c75545a1deb51f5903992c52af6bc35cc9bc103
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 7 13:38:13 2026 -0800
+
+    libX11 1.8.13
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c29b310531d47f910f48a1cb76a78a5264f7c1f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/297>
+
+commit 1e511b0cb775085cdc83d2837eb9b49567bf5516
+Author: Julian Orth <ju.orth@gmail.com>
+Date:   Fri Oct 24 20:15:37 2025 +0200
+
+    Ignore XkbMapNotify events that don't belong to the core keyboard
+    
+    Such events can contain values that are incompatible with the core
+    keyboard map.
+    
+    Fixes a potentially fatal error when such values are later used in a
+    XkbGetMap request.
+    
+    Signed-off-by: Julian Orth <ju.orth@gmail.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/293>
+
+commit 369c6a806554429798b531cbf4267d8c8fcf6ed1
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Tue Oct 14 22:53:06 2025 +0200
+
+    xkb: Fix key type level names
+    
+    Fixed invalid level names count for key types without level names.
+    
+    Signed-off-by: Pierre Le Marre <dev@wismill.eu>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/292>
+
+commit ff409a48f9a0d43115b7565b5803cc65151f1dda
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Tue Oct 14 10:26:17 2025 +0200
+
+    xkb: Fix default key types
+    
+    Before this commit, using xkbcomp to compile a keymap that omits the key
+    type `ALPHABETIC` leads to either a wrong serialization (`-xkb` output)
+    or a server error such as:
+    
+        X Error of failed request:  BadValue (integer parameter out of range for operation)
+          Major opcode of failed request:  135 (XKEYBOARD)
+          Minor opcode of failed request:  9 (XkbSetMap)
+          Value in failed request:  0x8010202
+          Serial number of failed request:  55
+          Current serial number in output stream:  60
+    
+    Indeed, there is an error in the default key maps: the second field of
+    `XkbKTMapEntryRec` if a level index, not a modifier mask. While it worked
+    *by chance* for `ShiftMask` (e.g. the `TWO_LEVEL` type), it does not work
+    for `LockMask` (e.g. the `ALPHABETIC` type).
+    
+    Fixed by using the correct level indices.
+    
+    It probably went unnoticed for so long because xkbcomp and libxkbcommon
+    < 1.12 always use all the key types, while libxkbcommon ≥ 1.12 does not
+    serialize unused key types. The latter case may result in a keymap that
+    omits `ALPHABETIC`, e.g. with keyboard layouts with 4+ levels which use
+    alternative key types such as `FOUR_LEVEL_ALPHABETIC`.
+    
+    Signed-off-by: Pierre Le Marre <dev@wismill.eu>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/292>
+
+commit 76a930ca995e44be3b3b454a2d1b8844377527dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 23 16:58:13 2025 -0700
+
+    AUTHORS: update credits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/291>
+
+commit 7b9a1dba6fa3767f515c7b3ec1fb203dab9db4b0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 23 16:44:06 2025 -0700
+
+    Drop vestiges of OS/2 support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/291>
+
+commit 06516f8c51eb62683cbcf0540c6001759786eb52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 23 15:14:34 2025 -0700
+
+    xkb: fix include of config.h and drop unused DEBUG check
+    
+    I can find nowhere in the source history where there was DEBUG code
+    that needed to include <stdio.h>, but the include of config.h should
+    never have been inside the DEBUG ifdef.
+    
+    Resolves warnings from gcc 15 in 32-bit builds on Solaris of:
+    ../../src/config.h:306:9: warning: "_FILE_OFFSET_BITS" redefined
+    
+    Fixes: 7eee605e ("Conditionally include config.h in Xlib source")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/290>
+
+commit 503e5aa44ae2beca60202fba5e7cd027bce0337c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 1 13:05:34 2025 -0700
+
+    xcb_io: fix build with configure --disable-xthreads
+    
+    Closes: #232
+    Fixes: da97120f ("xcb: Clarify the XInitThreads error message")
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/289>
+
+commit 622de26180b295eddd39bd4be1528f2358885095
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Aug 22 20:44:32 2022 -0700
+
+    Avoid memory leak in XKeysymToString
+    
+    Instead of calling malloc each time this function is invoked, use
+    the Quark database to ensure the return value lasts forever while not
+    leaking memory.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Peter Harris <pharris2@rocketsoftware.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/282>
+
+commit 8b77c86a061df01069c94f8e16713a7345c99b9c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 2 18:38:26 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/287>
+
+commit e003f52661679e95b51ff24e317af6178fe2a73c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 13 10:57:31 2025 -0700
+
+    man pages: Use .BR markup for references to other man pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/286>
+
+commit d71dbf816b710f95b5e16a421d8d70c8207b2082
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 13 10:16:33 2025 -0700
+
+    XSetErrorHandler.man: .BR expects at least 2 arguments, got 1
+    
+    Fix warning from `groff -rCHECKSTYLE=10`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/286>
+
+commit 0bddfd82d0e11f520ac5776dfc0b56a95bd47130
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 13 10:09:14 2025 -0700
+
+    Compose.man: \\ should be \e in troff markup
+    
+    Fixes warnings from `mandoc -T lint`:
+    mandoc: Compose.5:121:27: WARNING: undefined escape, printing literally: \\
+    mandoc: Compose.5:122:10: WARNING: undefined escape, printing literally: \\
+    mandoc: Compose.5:129:29: WARNING: undefined escape, printing literally: \\
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/286>
+
+commit eb400f6fda059f5fc9d03e97a233175935e06090
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 13 10:04:44 2025 -0700
+
+    man pages: remove extraneous paragraph macros
+    
+    Fixes warnings from `mandoc -T lint`:
+    
+    mandoc: XChangeKeyboardControl.3:156:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: XcmsAllocColor.3:147:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: XcmsStoreColor.3:183:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: XConfigureWindow.3:236:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: XCreateWindow.3:221:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: XGetVisualInfo.3:114:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: XOpenIM.3:73:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: XQueryExtension.3:44:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/286>
+
+commit 8848085323124d64dfa0f80e0b274ac3e1ceec05
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 13 09:47:54 2025 -0700
+
+    man pages: remove whitespace at end of lines in xkb man pages
+    
+    Clears 6571 complaints from `mandoc -T lint` of the form:
+    mandoc: man/xkb/XkbActionCtrls.3:107:4: STYLE: whitespace at end of input line
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/286>
+
+commit 8a32fad341512c8ff2e771a14a3dc78bf9e6a49f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 28 14:34:31 2025 -0700
+
+    gitlab CI: ensure docs can be generated too
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/285>
+
+commit 7f8305c779ac6948d7261764f5ffb8ae9aa975b1
+Author: Weng Xuetian <wengxt@gmail.com>
+Date:   Fri Apr 18 02:22:06 2025 -0700
+
+    imDefIc: Clear fabricated state on unfocus.
+    
+    When unsetting focus, the event filter is removed. This means a pending
+    fabricated event may not yet be sent to filter.
+    
+    All the fabricated event state should be cleared and the pending sync
+    reply sent back as if the state is unfabricated.
+    
+    Fix #235
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/283>
+
 commit 59917d28a3c41ad22d6fc52e323cafe2cdd596d5
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 8 15:23:04 2025 -0800

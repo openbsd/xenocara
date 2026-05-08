@@ -442,7 +442,6 @@ _XimProcEvent(
     ev->xany.serial |= serial << 16;
     ev->xany.send_event = False;
     ev->xany.display = d;
-    _XimFabricateSerial((Xim)ic->core.im, &ev->xkey);
     return;
 }
 
@@ -459,6 +458,16 @@ _XimForwardEventRecv(
     _XimProcEvent(d, ic, &ev, &buf_s[1]);
 
     (void)_XimRespSyncReply(ic, buf_s[0]);
+
+    /* If no event filter is registered, the event will not be sent back
+     * to filter for _XimUnfabricateSerial, so simply bypass it.
+     */
+    if (ic->private.proto.registed_filter_event
+	& (KEYPRESS_MASK | KEYRELEASE_MASK)) {
+	_XimFabricateSerial((Xim)ic->core.im, &ev.xkey);
+    } else {
+	_XimPendingFilter(ic);
+    }
 
     XPutBackEvent(d, &ev);
 

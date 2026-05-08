@@ -21,8 +21,8 @@
 .\"
 .TH XkbSetNamedIndicator __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbSetNamedIndicator \- Names an indicator if it is not already named; toggles 
-the state of the indicator; sets the indicator to a specified state and sets the 
+XkbSetNamedIndicator \- Names an indicator if it is not already named; toggles
+the state of the indicator; sets the indicator to a specified state and sets the
 indicator map for the indicator
 .SH SYNOPSIS
 .HP
@@ -76,19 +76,19 @@ whether a new indicator with the specified name should be created when necessary
 new map for the indicator
 .SH DESCRIPTION
 .LP
-If a compatible version of the Xkb extension is not available in the server, 
+If a compatible version of the Xkb extension is not available in the server,
 .I XkbSetNamedDeviceIndicator
-returns False. Otherwise, it sends a request to the X server to change the 
-indicator specified by 
-.I name 
+returns False. Otherwise, it sends a request to the X server to change the
+indicator specified by
+.I name
 and returns True.
- 
-If 
-.I change_state 
-is True, 
+
+If
+.I change_state
+is True,
 .I XkbSetNamedDeviceIndicator
-tells the server to change the state of the named indicator to the value 
-specified by 
+tells the server to change the state of the named indicator to the value
+specified by
 .IR state .
 If
 .I change_state
@@ -96,23 +96,23 @@ is False, then
 .I state
 is not used.
 
-If an indicator with the name specified by 
-.I name 
-does not already exist, the 
-.I create_new 
-parameter tells the server whether it should create a new named indicator. If 
-.I create_new 
-is True, the server finds the first indicator that doesn't have a name and gives 
-it the name specified by 
+If an indicator with the name specified by
+.I name
+does not already exist, the
+.I create_new
+parameter tells the server whether it should create a new named indicator. If
+.I create_new
+is True, the server finds the first indicator that doesn't have a name and gives
+it the name specified by
 .IR name .
-If the optional parameter, 
+If the optional parameter,
 .IR map ,
 is not NULL,
 .I XkbSetNamedDeviceIndicator
-tells the server to change the indicator's map to the values specified in 
+tells the server to change the indicator's map to the values specified in
 .IR map .
 
-In addition, it can also generate XkbIndicatorStateNotify, 
+In addition, it can also generate XkbIndicatorStateNotify,
 XkbIndicatorMapNotify, and XkbNamesNotify events.
 .LP
 .I XkbSetNamedIndicator
@@ -135,12 +135,12 @@ It returns the return value from
 .SH "RETURN VALUES"
 .TP 15
 True
-The 
+The
 .IR XkbSetNamedIndicator " and " XkbSetNamedDeviceIndicator
 functions return True if a compatible version of the Xkb extension is available in the server.
 .TP 15
 False
-The 
+The
 .IR XkbSetNamedIndicator " and " XkbSetNamedDeviceIndicator
 functions return False if a compatible version of the Xkb extension is not available in the server.
 .SH DIAGNOSTICS

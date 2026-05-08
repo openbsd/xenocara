@@ -22,7 +22,7 @@
 .\"
 .TH XkbGetDeviceButtonActions __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetDeviceButtonActions \- Query the button actions associated with an X Input 
+XkbGetDeviceButtonActions \- Query the button actions associated with an X Input
 Extension device
 .SH SYNOPSIS
 .HP
@@ -52,49 +52,49 @@ number of first button for which info is desired
 number of buttons for which info is desired
 .SH DESCRIPTION
 .LP
-.I XkbGetDeviceButtonActions 
-queries the server for the desired button information for the device indicated 
-by the 
-.I device_spec 
-field of 
-.I device_info 
-and waits for a reply. If successful, 
-.I XkbGetDeviceButtonActions 
-backfills the button actions 
-.I (btn_acts 
-field of 
-.I device_info) 
-for only the requested buttons, updates the 
-.I name, type, supported, 
-and 
-.I unsupported 
+.I XkbGetDeviceButtonActions
+queries the server for the desired button information for the device indicated
+by the
+.I device_spec
+field of
+.I device_info
+and waits for a reply. If successful,
+.I XkbGetDeviceButtonActions
+backfills the button actions
+.I (btn_acts
+field of
+.I device_info)
+for only the requested buttons, updates the
+.I name, type, supported,
+and
+.I unsupported
 fields, and returns Success.
 
-.I all_buttons, first_button 
-and 
-.I num_buttons 
+.I all_buttons, first_button
+and
+.I num_buttons
 specify the device buttons for which actions should be returned. Setting
-.I all_buttons 
-to True requests actions for all device buttons; if 
-.I all_buttons 
-is False, 
-.I first_button 
-and 
-.I num_buttons 
+.I all_buttons
+to True requests actions for all device buttons; if
+.I all_buttons
+is False,
+.I first_button
+and
+.I num_buttons
 specify a range of buttons for which actions are requested.
 
-If a compatible version of Xkb is not available in the server or the Xkb 
-extension has not been properly initialized, 
-.I XkbGetDeviceButtonActions 
-returns BadAccess. If allocation errors occur, a BadAlloc status is returned. If 
-the specified device 
-.I (device_info->device_spec) 
-is invalid, a BadKeyboard status is returned. If the device has no buttons, a 
-BadMatch status is returned. If 
-.I first_button 
-and 
-.I num_buttons 
-specify illegal buttons, a BadValue status is returned. 
+If a compatible version of Xkb is not available in the server or the Xkb
+extension has not been properly initialized,
+.I XkbGetDeviceButtonActions
+returns BadAccess. If allocation errors occur, a BadAlloc status is returned. If
+the specified device
+.I (device_info->device_spec)
+is invalid, a BadKeyboard status is returned. If the device has no buttons, a
+BadMatch status is returned. If
+.I first_button
+and
+.I num_buttons
+specify illegal buttons, a BadValue status is returned.
 .SH DIAGNOSTICS
 .TP 15
 .B BadAccess
@@ -107,7 +107,7 @@ Unable to allocate storage
 The device specified was not a valid core or input extension device
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid
 .TP 15
 .B BadValue

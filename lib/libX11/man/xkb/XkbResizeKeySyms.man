@@ -43,56 +43,56 @@ keycode for key to modify
 new number of keysyms required for key
 .SH DESCRIPTION
 .LP
-.I XkbResizeKeySyms 
-reserves the space needed for 
-.I needed 
-keysyms and returns a pointer to the beginning of the new array that holds the 
-keysyms. It adjusts the 
-.I offset 
-field of the 
-.I key_sym_map 
-entry for the key if necessary and can also change the 
-.I syms, num_syms, 
-and 
-.I size_syms 
-fields of 
-.I xkb->map 
-if it is necessary to reallocate the 
-.I syms 
-array. 
-.I XkbResizeKeySyms 
+.I XkbResizeKeySyms
+reserves the space needed for
+.I needed
+keysyms and returns a pointer to the beginning of the new array that holds the
+keysyms. It adjusts the
+.I offset
+field of the
+.I key_sym_map
+entry for the key if necessary and can also change the
+.I syms, num_syms,
+and
+.I size_syms
+fields of
+.I xkb->map
+if it is necessary to reallocate the
+.I syms
+array.
+.I XkbResizeKeySyms
 does not modify either the width or number of groups associated with the key.
 
-If 
-.I needed 
-is greater than the current number of keysyms for the key, 
-.I XkbResizeKeySyms 
+If
+.I needed
+is greater than the current number of keysyms for the key,
+.I XkbResizeKeySyms
 initializes all new keysyms in the array to NoSymbol.
 
-Because the number of symbols needed by a key is normally computed as width * 
-number of groups, and 
-.I XkbResizeKeySyms 
-does not modify either the width or number of groups for the key, a discrepancy 
-exists upon return from 
-.I XkbResizeKeySyms 
-between the space allocated for the keysyms and the number required. The unused 
-entries in the list of symbols returned by 
-.I XkbResizeKeySyms 
-are not preserved across future calls to any of the map editing functions, so 
-you must update the key symbol mapping (which updates the width and number of 
+Because the number of symbols needed by a key is normally computed as width *
+number of groups, and
+.I XkbResizeKeySyms
+does not modify either the width or number of groups for the key, a discrepancy
+exists upon return from
+.I XkbResizeKeySyms
+between the space allocated for the keysyms and the number required. The unused
+entries in the list of symbols returned by
+.I XkbResizeKeySyms
+are not preserved across future calls to any of the map editing functions, so
+you must update the key symbol mapping (which updates the width and number of
 groups for the key) before calling another allocator function. A call to
-.I XkbChangeTypesOfKey 
+.I XkbChangeTypesOfKey
 will update the mapping.
 
-If any allocation errors occur while resizing the number of symbols bound to the 
-key, 
-.I XkbResizeKeySyms 
+If any allocation errors occur while resizing the number of symbols bound to the
+key,
+.I XkbResizeKeySyms
 returns NULL.
 .SH "SEE ALSO"
 .BR XkbChangeTypesOfKey (__libmansuffix__),
 .BR XkbResizeKeyActions (__libmansuffix__)
 .SH NOTES
 .LP
-A change to the number of symbols bound to a key should be accompanied by a 
-change in the number of actions bound to a key. Refer to XkbResizeKeyActions for 
+A change to the number of symbols bound to a key should be accompanied by a
+change in the number of actions bound to a key. Refer to XkbResizeKeyActions for
 more information on changing the number of actions bound to a key.

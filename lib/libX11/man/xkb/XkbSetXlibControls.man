@@ -37,27 +37,27 @@ XkbSetXlibControls \- Changes the state of the Library Controls
 connection to X server
 .TP
 .I bits_to_change
-selects controls to be modified 
+selects controls to be modified
 .TP
 .I values_for_bits
 turns selected controls on (1) or off (0)
 .SH DESCRIPTION
 .LP
-.I XkbSetXlibControls 
-modifies the state of the controls selected by 
-.I bits_to_change; 
-only the controls selected by 
-.I bits_to_change 
-are modified. If the bit corresponding to a control is on in 
-.I bits_to_change 
-and also on in 
-.I values_for_bits, 
+.I XkbSetXlibControls
+modifies the state of the controls selected by
+.I bits_to_change;
+only the controls selected by
+.I bits_to_change
+are modified. If the bit corresponding to a control is on in
+.I bits_to_change
+and also on in
+.I values_for_bits,
 the control is enabled. If the bit corresponding to a control is on in
-.I bits_to_change 
-but off in 
-.I values_for_bits, 
-the control is disabled. 
-.I bits_to_change 
+.I bits_to_change
+but off in
+.I values_for_bits,
+the control is disabled.
+.I bits_to_change
 should be an inclusive OR of bits from Table 1.
 
 .TS

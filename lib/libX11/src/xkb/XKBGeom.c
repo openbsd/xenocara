@@ -24,11 +24,8 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ********************************************************/
 
-#ifdef DEBUG
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
-#include <stdio.h>
 #endif
 
 #define NEED_MAP_READERS

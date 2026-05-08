@@ -122,7 +122,7 @@ _XimOffKeysCheck(
     return False;
 }
 
-static void
+void
 _XimPendingFilter(
     Xic	 	 ic)
 {
@@ -363,8 +363,18 @@ void
 _XimUnregisterFilter(
     Xic		 ic)
 {
+    Xim		 im = (Xim)ic->core.im;
     _XimUnregisterKeyPressFilter(ic);
     _XimUnregisterKeyReleaseFilter(ic);
+    /* It is possible that the event from IM is received after unregister
+     * the filter.
+     * Reset any existing fabricated state since we will not be able to
+     * clear the fabricated state for those event in filter.
+     */
+    im->private.proto.fabricated_serial = 0;
+    im->private.proto.fabricated_time = 0;
+    UNMARK_FABRICATED(im);
+    _XimPendingFilter(ic);
     return;
 }
 

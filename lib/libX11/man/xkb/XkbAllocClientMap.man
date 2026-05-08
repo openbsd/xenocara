@@ -22,7 +22,7 @@
 .\"
 .TH XkbAllocClientMap __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbAllocClientMap \- Allocate and initialize an empty client map description 
+XkbAllocClientMap \- Allocate and initialize an empty client map description
 record
 .SH SYNOPSIS
 .HP
@@ -41,44 +41,44 @@ keyboard description in which to allocate client map
 mask selecting map components to allocate
 .TP
 .I type_count
-value of num_types field in map to be allocated 
+value of num_types field in map to be allocated
 .SH DESCRIPTION
 .LP
-Calling 
-.I XkbGetMap 
-should be sufficient for most applications to get client and server maps. As a 
-result, most applications do not need to directly allocate client and server 
+Calling
+.I XkbGetMap
+should be sufficient for most applications to get client and server maps. As a
+result, most applications do not need to directly allocate client and server
 maps.
 
-If you change the number of key types or construct map components without 
-loading the necessary components from the X server, do not allocate any map 
-components directly using 
-.I malloc 
-or 
-.I Xmalloc. 
-Instead, use the Xkb allocators, 
-.I XkbAllocClientMap, 
-and 
+If you change the number of key types or construct map components without
+loading the necessary components from the X server, do not allocate any map
+components directly using
+.I malloc
+or
+.I Xmalloc.
+Instead, use the Xkb allocators,
+.I XkbAllocClientMap,
+and
 .I XkbAllocServerMap.
 
-Similarly, use the Xkb destructors, 
-.I XkbFreeClientMap, 
-and 
-.I XkbFreeServerMap 
-instead of 
-.I free 
-or 
+Similarly, use the Xkb destructors,
+.I XkbFreeClientMap,
+and
+.I XkbFreeServerMap
+instead of
+.I free
+or
 .I Xfree.
 
-.I XkbAllocClientMap 
-allocates and initializes an empty client map in the 
-.I map 
-field of the keyboard description specified by 
-.I xkb. 
-The 
-.I which 
-parameter specifies the particular components of the client map structure to 
-allocate and is a mask composed by a bitwise inclusive OR of one or more of the 
+.I XkbAllocClientMap
+allocates and initializes an empty client map in the
+.I map
+field of the keyboard description specified by
+.I xkb.
+The
+.I which
+parameter specifies the particular components of the client map structure to
+allocate and is a mask composed by a bitwise inclusive OR of one or more of the
 masks shown in Table 1.
 .bp
 .TS
@@ -90,60 +90,60 @@ _
 Mask	Effect
 _
 XkbKeyTypesMask	T{
-The type_count field specifies the number of entries to preallocate for the 
-types field of the client map. If the type_count field is less than 
+The type_count field specifies the number of entries to preallocate for the
+types field of the client map. If the type_count field is less than
 XkbNumRequiredTypes returns BadValue.
 T}
 .sp
 XkbKeySymsMask	T{
-The min_key_code and max_key_code fields of the xkb parameter are used to 
-allocate the syms and key_sym_map fields of the client map. The fields are 
-allocated to contain the maximum number of entries necessary for max_key_code - 
+The min_key_code and max_key_code fields of the xkb parameter are used to
+allocate the syms and key_sym_map fields of the client map. The fields are
+allocated to contain the maximum number of entries necessary for max_key_code -
 min_key_code + 1 keys.
 T}
 .sp
 XkbModifierMapMask	T{
-The min_key_code and max_key_code fields of the xkb parameter are used to 
-allocate the modmap field of the client map. The field is allocated to contain 
-the maximum number of entries necessary for max_key_code - min_key_code + 1 
+The min_key_code and max_key_code fields of the xkb parameter are used to
+allocate the modmap field of the client map. The field is allocated to contain
+the maximum number of entries necessary for max_key_code - min_key_code + 1
 keys.
 T}
 .TE
 
-NOTE: The 
-.I min_key_code 
-and 
-.I max_key_code 
-fields of the 
-.I xkb 
-parameter must be legal values if the XkbKeySymsMask or XkbModifierMapMask masks 
-are set in the 
-.I which 
-parameter. If they are not valid, 
-.I XkbAllocClientMap 
-returns BadValue. 
+NOTE: The
+.I min_key_code
+and
+.I max_key_code
+fields of the
+.I xkb
+parameter must be legal values if the XkbKeySymsMask or XkbModifierMapMask masks
+are set in the
+.I which
+parameter. If they are not valid,
+.I XkbAllocClientMap
+returns BadValue.
 
-If the client map of the keyboard description is not NULL, and any fields are 
-already allocated in the client map, 
-.I XkbAllocClientMap 
-does not overwrite the existing values; it simply ignores that part of the 
-request. The only exception is the 
-.I types 
-array. If 
-.I type_count 
-is greater than the current 
-.I num_types 
-field of the client map, 
-.I XkbAllocClientMap 
-resizes the 
-.I types 
-array and resets the 
-.I num_types 
+If the client map of the keyboard description is not NULL, and any fields are
+already allocated in the client map,
+.I XkbAllocClientMap
+does not overwrite the existing values; it simply ignores that part of the
+request. The only exception is the
+.I types
+array. If
+.I type_count
+is greater than the current
+.I num_types
+field of the client map,
+.I XkbAllocClientMap
+resizes the
+.I types
+array and resets the
+.I num_types
 field accordingly.
 
-If 
-.I XkbAllocClientMap 
-is successful, it returns Success. Otherwise, it can return either BadMatch, 
+If
+.I XkbAllocClientMap
+is successful, it returns Success. Otherwise, it can return either BadMatch,
 BadAlloc, or BadValue errors.
 .SH DIAGNOSTICS
 .TP 15
@@ -151,7 +151,7 @@ BadAlloc, or BadValue errors.
 Unable to allocate storage
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid
 .TP 15
 .B BadValue

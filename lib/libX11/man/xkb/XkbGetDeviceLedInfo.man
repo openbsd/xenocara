@@ -22,7 +22,7 @@
 .\"
 .TH XkbGetDeviceLedInfo __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetDeviceLedInfo \- Query the indicator names, maps, and state associated 
+XkbGetDeviceLedInfo \- Query the indicator names, maps, and state associated
 with an LED feedback of an input extension device
 .SH SYNOPSIS
 .HP
@@ -52,91 +52,91 @@ LED feedback ID assigned by input extension
 mask indicating desired information
 .SH DESCRIPTION
 .LP
-.I XkbGetDeviceLedInfo 
+.I XkbGetDeviceLedInfo
 queries the server for the desired LED information for the feedback specified by
-.I led_class 
-and 
-.I led_id 
-for the X input extension device indicated by 
-.I device_spec->device_info 
-and waits for a reply. If successful, 
-.I XkbGetDeviceLedInfo 
-backfills the relevant fields of 
-.I device_info 
-as determined by 
-.I which 
-with the results and returns Success. Valid values for 
-.I which 
-are the inclusive OR of any of XkbXI_IndicatorNamesMask, 
+.I led_class
+and
+.I led_id
+for the X input extension device indicated by
+.I device_spec->device_info
+and waits for a reply. If successful,
+.I XkbGetDeviceLedInfo
+backfills the relevant fields of
+.I device_info
+as determined by
+.I which
+with the results and returns Success. Valid values for
+.I which
+are the inclusive OR of any of XkbXI_IndicatorNamesMask,
 XkbXI_IndicatorMapsMask, and XkbXI_IndicatorStateMask.
 
-The fields of 
-.I device_info 
-that are filled in when this request succeeds are 
-.I name, type, supported, 
-and 
-.I unsupported, 
-and portions of the 
-.I leds 
-structure corresponding to 
-.I led_class 
-and 
-.I led_id 
-as indicated by the bits set in 
-.I which. 
-The 
-.I device_info->leds 
-vector is allocated if necessary and 
-.I sz_leds 
-and 
-.I num_leds 
-filled in. The 
-.I led_class, led_id 
-and 
-.I phys_indicators 
-fields of the 
-.I device_info->leds 
-entry corresponding to 
-.I led_class 
-and 
-.I led_id 
-are always filled in. 
+The fields of
+.I device_info
+that are filled in when this request succeeds are
+.I name, type, supported,
+and
+.I unsupported,
+and portions of the
+.I leds
+structure corresponding to
+.I led_class
+and
+.I led_id
+as indicated by the bits set in
+.I which.
+The
+.I device_info->leds
+vector is allocated if necessary and
+.I sz_leds
+and
+.I num_leds
+filled in. The
+.I led_class, led_id
+and
+.I phys_indicators
+fields of the
+.I device_info->leds
+entry corresponding to
+.I led_class
+and
+.I led_id
+are always filled in.
 
-If 
-.I which 
-contains XkbXI_IndicatorNamesMask, the 
-.I names_present 
-and 
-.I names 
-fields of the 
-.I device_info->leds 
-structure corresponding to 
-.I led_class 
-and 
-.I led_id 
-are updated, if 
-.I which 
-contains XkbXI_IndicatorStateMask, the corresponding 
-.I state 
-field is updated, and if 
-.I which 
-contains XkbXI_IndicatorMapsMask, the 
-.I maps_present 
-and 
-.I maps 
+If
+.I which
+contains XkbXI_IndicatorNamesMask, the
+.I names_present
+and
+.I names
+fields of the
+.I device_info->leds
+structure corresponding to
+.I led_class
+and
+.I led_id
+are updated, if
+.I which
+contains XkbXI_IndicatorStateMask, the corresponding
+.I state
+field is updated, and if
+.I which
+contains XkbXI_IndicatorMapsMask, the
+.I maps_present
+and
+.I maps
 fields are updated.
 
-If a compatible version of Xkb is not available in the server or the Xkb 
-extension has not been properly initialized, 
-.I XkbGetDeviceLedInfo 
-returns BadAccess. If allocation errors occur, a BadAlloc status is returned. If 
-the device has no indicators, a BadMatch error is returned. If 
-.I ledClass 
-or 
-.I ledID 
-have illegal values, a BadValue error is returned. If they have legal values but 
-do not specify a feedback that contains LEDs and is associated with the 
-specified device, a BadMatch error is returned. 
+If a compatible version of Xkb is not available in the server or the Xkb
+extension has not been properly initialized,
+.I XkbGetDeviceLedInfo
+returns BadAccess. If allocation errors occur, a BadAlloc status is returned. If
+the device has no indicators, a BadMatch error is returned. If
+.I ledClass
+or
+.I ledID
+have illegal values, a BadValue error is returned. If they have legal values but
+do not specify a feedback that contains LEDs and is associated with the
+specified device, a BadMatch error is returned.
 .SH DIAGNOSTICS
 .TP 15
 .B BadAccess
@@ -146,7 +146,7 @@ The Xkb extension has not been properly initialized
 Unable to allocate storage
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid
 .TP 15
 .B BadValue

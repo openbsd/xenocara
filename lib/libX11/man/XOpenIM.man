@@ -70,7 +70,6 @@ Bool XRegisterIMInstantiateCallback\^(\^Display *\fIdisplay\fP\^, XrmDatabase
 Bool XUnregisterIMInstantiateCallback\^(\^Display *\fIdisplay\fP\^,
 XrmDatabase \fIdb\fP\^, char *\fIres_name\fP\^, char *\fIres_class\fP\^,
 XIDProc \fIcallback\fP\^, XPointer \fIclient_data\fP\^);
-.LP
 .SH ARGUMENTS
 .IP \fIcallback\fP 1i
 Specifies a pointer to the input method instantiate callback.
@@ -202,9 +201,9 @@ The function returns
 if it succeeds; otherwise, it returns
 .BR False .
 .SH "SEE ALSO"
-XCreateIC(__libmansuffix__),
-XSetICFocus(__libmansuffix__),
-XSetICValues(__libmansuffix__),
-XmbResetIC(__libmansuffix__)
+.BR XCreateIC (__libmansuffix__),
+.BR XSetICFocus (__libmansuffix__),
+.BR XSetICValues (__libmansuffix__),
+.BR XmbResetIC (__libmansuffix__)
 .br
 \fI\*(xL\fP

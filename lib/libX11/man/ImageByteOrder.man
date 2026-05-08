@@ -140,9 +140,9 @@ typedef struct {
 } XPixmapFormatValues;
 .EE
 .SH "SEE ALSO"
-AllPlanes(__libmansuffix__),
-BlackPixelOfScreen(__libmansuffix__),
-IsCursorKey(__libmansuffix__),
-XFree(__libmansuffix__)
+.BR AllPlanes (__libmansuffix__),
+.BR BlackPixelOfScreen (__libmansuffix__),
+.BR IsCursorKey (__libmansuffix__),
+.BR XFree (__libmansuffix__)
 .br
 \fI\*(xL\fP

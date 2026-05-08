@@ -31,6 +31,18 @@ For patch submission instructions, see:
 
   https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 
+## Release 1.8.13
+
+ * Ignore XkbMapNotify events that don't belong to the core keyboard (!293)
+ * xkb: Fix invalid level names count for key types without level names (!292)
+ * xkb: Fix default key types (!292)
+ * Drop vestiges of OS/2 support (!291)
+ * xkb: fix include of config.h and drop unused DEBUG check (!290)
+ * xcb_io: fix build with configure --disable-xthreads (#232, !289)
+ * Improve man page formatting (!286)
+ * imDefIc: Clear fabricated state on unfocus. (!283)
+ * Avoid memory leak in XKeysymToString (!282)
+
 ## Release 1.8.12
 
  * x11.pc: Add URL field (!280)

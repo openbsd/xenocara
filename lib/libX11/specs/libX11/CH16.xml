@@ -73,7 +73,7 @@ Use the context manager
 <para>
 <!-- .LP -->
 As a group,
-the functions discussed in this chapter provide the functionality that 
+the functions discussed in this chapter provide the functionality that
 is frequently needed and that spans toolkits.
 Many of these functions do not generate actual protocol requests to the server.
 </para>
@@ -116,7 +116,7 @@ To obtain a KeySym for the KeyCode of an event, use
     </term>
     <listitem>
       <para>
-Specifies the 
+Specifies the
 <symbol>KeyPress</symbol>
 or
 <symbol>KeyRelease</symbol>
@@ -403,7 +403,7 @@ Standard KeySym names are obtained from
 by removing the XK_ prefix from each name.
 KeySyms that are not part of the Xlib standard also may be obtained
 with this function.
-The set of KeySyms that are available in this manner 
+The set of KeySyms that are available in this manner
 and the mechanisms by which Xlib obtains them is implementation-dependent.
 </para>
 <para>
@@ -458,7 +458,7 @@ returns a NULL.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-You may want to test if a KeySym is, for example, 
+You may want to test if a KeySym is, for example,
 on the keypad or on one of the function keys.
 You can use KeySym macros to perform the following tests.
 </para>
@@ -507,7 +507,7 @@ Specifies the KeySym that is to be tested.
 <!-- .LP -->
 <!-- .eM -->
 <indexterm significance="preferred"><primary>IsFunctionKey</primary></indexterm>
-Returns 
+Returns
 <symbol>True</symbol>
 if the specified KeySym is a function key.
 </para>
@@ -586,7 +586,7 @@ Specifies the KeySym that is to be tested.
 <!-- .LP -->
 <!-- .eM -->
 <indexterm significance="preferred"><primary>IsMiscFunctionKey</primary></indexterm>
-Returns 
+Returns
 <symbol>True</symbol>
 if the specified KeySym is a miscellaneous function key.
 </para>
@@ -612,7 +612,7 @@ Specifies the KeySym that is to be tested.
 <!-- .LP -->
 <!-- .eM -->
 <indexterm significance="preferred"><primary>IsModifierKey</primary></indexterm>
-Returns 
+Returns
 <symbol>True</symbol>
 if the specified KeySym is a modifier key.
 </para>
@@ -636,7 +636,7 @@ Specifies the KeySym that is to be tested.
 <!-- .LP -->
 <!-- .eM -->
 <indexterm significance="preferred"><primary>IsPFKey</primary></indexterm>
-Returns 
+Returns
 <symbol>True</symbol>
 if the specified KeySym is a PF key.
 </para>
@@ -730,7 +730,7 @@ Returns the KeySym computed from the event if this argument is not NULL.
     </term>
     <listitem>
       <para>
-Specifies or returns the 
+Specifies or returns the
 <structname>XComposeStatus</structname>
 structure or NULL.
     </para>
@@ -848,7 +848,7 @@ Specifies the number of modifiers in the modifier list.
     </term>
     <listitem>
       <para>
-Specifies the string that is copied and will be returned by 
+Specifies the string that is copied and will be returned by
 <xref linkend='XLookupString' xrefstyle='select: title'/>.
       </para>
     </listitem>
@@ -1004,7 +1004,7 @@ Specifically, this function lets you parse strings of the form:
 <!-- .LP -->
 <!-- .\" Start marker code here -->
 <literallayout class="monospaced">
-[=][&lt;<emphasis remap='I'>width</emphasis>&gt;{xX}&lt;<emphasis remap='I'>height</emphasis>&gt;][{+-}&lt;<emphasis remap='I'>xoffset</emphasis>&gt;{+-}&lt;<emphasis remap='I'>yoffset</emphasis>&gt;] 
+[=][&lt;<emphasis remap='I'>width</emphasis>&gt;{xX}&lt;<emphasis remap='I'>height</emphasis>&gt;][{+-}&lt;<emphasis remap='I'>xoffset</emphasis>&gt;{+-}&lt;<emphasis remap='I'>yoffset</emphasis>&gt;]
 </literallayout>
 <!-- .\" End marker code here -->
 </para>
@@ -1022,8 +1022,8 @@ the result is implementation-dependent.
 The
 <xref linkend='XParseGeometry' xrefstyle='select: title'/>
 function returns a bitmask that indicates which of the four values (width,
-height, xoffset, and yoffset) were actually found in the string 
-and whether the x and y values are negative. 
+height, xoffset, and yoffset) were actually found in the string
+and whether the x and y values are negative.
 By convention, &minus;0 is not equal to +0, because the user needs to
 be able to say ``position the window relative to the right or bottom edge.''
 For each value found, the corresponding argument is updated.
@@ -1036,19 +1036,19 @@ The bits are represented by
 <symbol>XNegative</symbol>,
 or
 <symbol>YNegative</symbol>
-and are defined in 
+and are defined in
 <filename class="headerfile">&lt;X11/Xutil.h&gt;</filename>.
 <indexterm type="file"><primary><filename class="headerfile">X11/Xutil.h</filename></primary></indexterm>
 <indexterm><primary>Files</primary><secondary><filename class="headerfile">&lt;X11/Xutil.h&gt;</filename></secondary></indexterm>
 <indexterm><primary>Headers</primary><secondary><filename class="headerfile">&lt;X11/Xutil.h&gt;</filename></secondary></indexterm>
-They will be set whenever one of the values is defined 
+They will be set whenever one of the values is defined
 or one of the signs is set.
 </para>
 <para>
 <!-- .LP -->
-If the function returns either the 
+If the function returns either the
 <symbol>XValue</symbol>
-or 
+or
 <symbol>YValue</symbol>
 flag,
 you should place the window at the requested position.
@@ -1195,12 +1195,12 @@ Returns the window gravity.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The 
+The
 <xref linkend='XWMGeometry' xrefstyle='select: title'/>
-function combines any geometry information (given in the format used by 
+function combines any geometry information (given in the format used by
 <xref linkend='XParseGeometry' xrefstyle='select: title'/>)
-specified by the user and by the calling program with size hints 
-(usually the ones to be stored in <property>WM_NORMAL_HINTS</property>) and returns the position, 
+specified by the user and by the calling program with size hints
+(usually the ones to be stored in <property>WM_NORMAL_HINTS</property>) and returns the position,
 size, and gravity
 (<symbol>NorthWestGravity</symbol>,
 <symbol>NorthEastGravity</symbol>,
@@ -1208,26 +1208,26 @@ size, and gravity
 or
 <symbol>SouthWestGravity</symbol>)
 that describe the window.
-If the base size is not set in the 
+If the base size is not set in the
 <structname>XSizeHints</structname>
-structure, 
+structure,
 the minimum size is used if set.
 Otherwise, a base size of zero is assumed.
-If no minimum size is set in the hints structure, 
+If no minimum size is set in the hints structure,
 the base size is used.
-A mask (in the form returned by 
+A mask (in the form returned by
 <xref linkend='XParseGeometry' xrefstyle='select: title'/>)
-that describes which values came from the user specification 
+that describes which values came from the user specification
 and whether or not the position coordinates are relative
 to the right and bottom edges is returned.
-Note that these coordinates will have already been accounted for 
+Note that these coordinates will have already been accounted for
 in the x_return and y_return values.
 </para>
 <para>
 <!-- .LP -->
-Note that invalid geometry specifications can cause a width or height 
+Note that invalid geometry specifications can cause a width or height
 of zero to be returned.
-The caller may pass the address of the hints win_gravity field 
+The caller may pass the address of the hints win_gravity field
 as gravity_return to update the hints directly.
 </para>
 </sect1>
@@ -1240,9 +1240,9 @@ as gravity_return to update the hints directly.
 <para>
 Regions are arbitrary sets of pixel locations.
 Xlib provides functions for manipulating regions.
-The opaque type 
+The opaque type
 <structname>Region</structname>
-is defined in 
+is defined in
 <filename class="headerfile">&lt;X11/Xutil.h&gt;</filename>.
 <indexterm type="file"><primary><filename class="headerfile">X11/Xutil.h</filename></primary></indexterm>
 <indexterm><primary>Files</primary><secondary><filename class="headerfile">&lt;X11/Xutil.h&gt;</filename></secondary></indexterm>
@@ -1332,7 +1332,7 @@ Specifies an array of points.
     </term>
     <listitem>
       <para>
-Specifies the number of points in the polygon. 
+Specifies the number of points in the polygon.
       </para>
     </listitem>
   </varlistentry>
@@ -1343,7 +1343,7 @@ Specifies the number of points in the polygon.
     <listitem>
       <para>
 Specifies the fill-rule you want to set for the specified GC.
-You can pass 
+You can pass
 <symbol>EvenOddRule</symbol>
 or
 <symbol>WindingRule</symbol>.
@@ -1461,7 +1461,7 @@ Specifies the region.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-To move a region by a specified amount, use 
+To move a region by a specified amount, use
 <xref linkend='XOffsetRegion' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XOffsetRegion</primary></indexterm>
@@ -1564,7 +1564,7 @@ which define the amount you want to shrink the specified region.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-Positive values shrink the size of the region, 
+Positive values shrink the size of the region,
 and negative values expand the region.
 </para>
 </sect2>
@@ -1837,7 +1837,7 @@ function subtracts srb from sra and stores the results in dr_return.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To calculate the difference between the union and intersection 
+To calculate the difference between the union and intersection
 of two regions, use
 <xref linkend='XXorRegion' xrefstyle='select: title'/>.
 </para>
@@ -2038,7 +2038,7 @@ Specify the x and y coordinates, which define the point.
 <!-- .eM -->
 The
 <xref linkend='XPointInRegion' xrefstyle='select: title'/>
-function returns 
+function returns
 <symbol>True</symbol>
 if the point (x, y) is contained in the region r.
 </para>
@@ -2159,7 +2159,7 @@ and can be accessed as a ring or as explicit buffers (numbered 0 through 7).
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To store data in cut buffer 0, use 
+To store data in cut buffer 0, use
 <xref linkend='XStoreBytes' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XStoreBytes</primary></indexterm>
@@ -2298,7 +2298,7 @@ error.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To return data from cut buffer 0, use 
+To return data from cut buffer 0, use
 <xref linkend='XFetchBytes' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XFetchBytes</primary></indexterm>
@@ -2350,7 +2350,7 @@ The client must free this storage when finished with it by calling
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To return data from a specified cut buffer, use 
+To return data from a specified cut buffer, use
 <xref linkend='XFetchBuffer' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XFetchBuffer</primary></indexterm>
@@ -2401,14 +2401,14 @@ Specifies the buffer from which you want the stored data returned.
 <!-- .eM -->
 The
 <xref linkend='XFetchBuffer' xrefstyle='select: title'/>
-function returns zero to the nbytes_return argument 
+function returns zero to the nbytes_return argument
 if there is no data in the buffer or if an invalid
 buffer is specified.
 </para>
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To rotate the cut buffers, use 
+To rotate the cut buffers, use
 <xref linkend='XRotateBuffers' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XRotateBuffers</primary></indexterm>
@@ -2449,7 +2449,7 @@ Specifies how much to rotate the cut buffers.
 The
 <xref linkend='XRotateBuffers' xrefstyle='select: title'/>
 function rotates the cut
-buffers, such that buffer 0 becomes buffer n, 
+buffers, such that buffer 0 becomes buffer n,
 buffer 1 becomes n + 1 mod 8, and so on.
 This cut buffer numbering is global to the display.
 Note that
@@ -2467,7 +2467,7 @@ errors if any of the eight buffers have not been created.
 <para>
 <!-- .LP -->
 A single display can support multiple screens.
-Each screen can have several different visual types supported 
+Each screen can have several different visual types supported
 at different depths.
 You can use the functions described in this section to determine
 which visual to use for your application.
@@ -2591,7 +2591,7 @@ Returns the number of matching visual structures.
 <!-- .eM -->
 The
 <xref linkend='XGetVisualInfo' xrefstyle='select: title'/>
-function returns a list of visual structures that have attributes 
+function returns a list of visual structures that have attributes
 equal to the attributes specified by vinfo_template.
 If no visual structures match the template using the specified vinfo_mask,
 <xref linkend='XGetVisualInfo' xrefstyle='select: title'/>
@@ -2696,9 +2696,9 @@ returns zero.
 <para>
 <!-- .LP -->
 Xlib provides several functions that perform basic operations on images.
-All operations on images are defined using an 
+All operations on images are defined using an
 <structname>XImage</structname>
-structure, 
+structure,
 as defined in
 <filename class="headerfile">&lt;X11/Xlib.h&gt;</filename>.
 <indexterm type="file"><primary><filename class="headerfile">X11/Xlib.h</filename></primary></indexterm>
@@ -2718,32 +2718,32 @@ Rather, they are here to provide minimal functions on screen format
 images.
 The basic operations for getting and putting images are
 <xref linkend='XGetImage' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XPutImage' xrefstyle='select: title'/>.
 </para>
 <para>
 <!-- .LP -->
-Note that no functions have been defined, as yet, to read and write images 
+Note that no functions have been defined, as yet, to read and write images
 to and from disk files.
 </para>
 <para>
 <!-- .LP -->
 The
 <structname>XImage</structname>
-structure describes an image as it exists in the client's memory.  
-The user can request that some of the members such as height, width, 
+structure describes an image as it exists in the client's memory.
+The user can request that some of the members such as height, width,
 and xoffset be changed when the image is sent to the server.
 Note that bytes_per_line in concert with offset can be used to
 extract a subset of the image.
 Other members (for example, byte order, bitmap_unit, and so forth)
-are characteristics of both the image and the server.  
+are characteristics of both the image and the server.
 If these members
-differ between the image and the server, 
+differ between the image and the server,
 <xref linkend='XPutImage' xrefstyle='select: title'/>
 makes the appropriate conversions.
 The first byte of the first line of
 plane n must be located at the address (data + (n * height * bytes_per_line)).
-For a description of the 
+For a description of the
 <structname>XImage</structname>
 structure,
 see <link linkend="Transferring_Images_between_Client_and_Server">section 8.7</link>.
@@ -2751,7 +2751,7 @@ see <link linkend="Transferring_Images_between_Client_and_Server">section 8.7</l
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To allocate an 
+To allocate an
 <structname>XImage</structname>
 structure and initialize it with image format values from a display, use
 <xref linkend='XCreateImage' xrefstyle='select: title'/>.
@@ -2817,7 +2817,7 @@ Specifies the format for the image.
 You can pass
 <symbol>XYBitmap</symbol>,
 <symbol>XYPixmap</symbol>,
-or 
+or
 <symbol>ZPixmap</symbol>.
       </para>
     </listitem>
@@ -2869,8 +2869,8 @@ Specifies the height of the image, in pixels.
     <listitem>
       <para>
 Specifies the quantum of a scanline (8, 16, or 32).
-In other words, the start of one scanline is separated in client memory from 
-the start of the next scanline by an integer multiple of this many bits.  
+In other words, the start of one scanline is separated in client memory from
+the start of the next scanline by an integer multiple of this many bits.
       </para>
     </listitem>
   </varlistentry>
@@ -2881,7 +2881,7 @@ the start of the next scanline by an integer multiple of this many bits.
     <listitem>
       <para>
 Specifies the number of bytes in the client image between
-the start of one scanline and the start of the next.  
+the start of one scanline and the start of the next.
     </para>
   </listitem>
   </varlistentry>
@@ -2896,15 +2896,15 @@ function allocates the memory needed for an
 structure for the
 specified display but does not allocate space for the image itself.
 Rather, it initializes the structure byte-order, bit-order, and bitmap-unit
-values from the display and returns a pointer to the 
+values from the display and returns a pointer to the
 <structname>XImage</structname>
 structure.
 The red, green, and blue mask values are defined for Z format images only
-and are derived from the 
+and are derived from the
 <structname>Visual</structname>
 structure passed in.
 Other values also are passed in.
-The offset permits the rapid displaying of the image without requiring each 
+The offset permits the rapid displaying of the image without requiring each
 scanline to be shifted into position.
 If you pass a zero value in bytes_per_line,
 Xlib assumes that the scanlines are contiguous
@@ -2917,9 +2917,9 @@ Note that when the image is created using
 <xref linkend='XGetImage' xrefstyle='select: title'/>,
 or
 <xref linkend='XSubImage' xrefstyle='select: title'/>,
-the destroy procedure that the 
+the destroy procedure that the
 <xref linkend='XDestroyImage' xrefstyle='select: title'/>
-function calls frees both the image structure 
+function calls frees both the image structure
 and the data pointed to by the image structure.
 </para>
 <para>
@@ -3242,10 +3242,10 @@ structure.
 Note that when the image is created using
 <xref linkend='XCreateImage' xrefstyle='select: title'/>,
 <xref linkend='XGetImage' xrefstyle='select: title'/>,
-or 
+or
 <xref linkend='XSubImage' xrefstyle='select: title'/>,
 the destroy procedure that this macro calls
-frees both the image structure and the data pointed to by the image structure. 
+frees both the image structure and the data pointed to by the image structure.
 </para>
 </sect1>
 <sect1 id="Manipulating_Bitmaps">
@@ -3256,7 +3256,7 @@ frees both the image structure and the data pointed to by the image structure.
 <para>
 <!-- .LP -->
 Xlib provides functions that you can use to read a bitmap from a file,
-save a bitmap to a file, or create a bitmap. 
+save a bitmap to a file, or create a bitmap.
 This section describes those functions that transfer bitmaps to and
 from the client's file system, thus allowing their reuse in a later
 connection (for example, from an entirely different client or to a
@@ -3402,20 +3402,20 @@ The
 <xref linkend='XReadBitmapFile' xrefstyle='select: title'/>
 function reads in a file containing a bitmap.
 The file is parsed in the encoding of the current locale.
-The ability to read other than the standard format 
+The ability to read other than the standard format
 is implementation-dependent.
-If the file cannot be opened, 
+If the file cannot be opened,
 <xref linkend='XReadBitmapFile' xrefstyle='select: title'/>
-returns 
+returns
 <returnvalue>BitmapOpenFailed</returnvalue>.
-If the file can be opened but does not contain valid bitmap data, 
-it returns 
+If the file can be opened but does not contain valid bitmap data,
+it returns
 <returnvalue>BitmapFileInvalid</returnvalue>.
 If insufficient working storage is allocated,
 it returns
 <returnvalue>BitmapNoMemory</returnvalue>.
 If the file is readable and valid,
-it returns 
+it returns
 <returnvalue>BitmapSuccess</returnvalue>.
 </para>
 <para>
@@ -3423,10 +3423,10 @@ it returns
 <xref linkend='XReadBitmapFile' xrefstyle='select: title'/>
 returns the bitmap's height and width, as read
 from the file, to width_return and height_return.
-It then creates a pixmap of the appropriate size, 
+It then creates a pixmap of the appropriate size,
 reads the bitmap data from the file into the pixmap,
-and assigns the pixmap to the caller's variable bitmap.  
-The caller must free the bitmap using 
+and assigns the pixmap to the caller's variable bitmap.
+The caller must free the bitmap using
 <xref linkend='XFreePixmap' xrefstyle='select: title'/>
 when finished.
 If <emphasis remap='I'>name</emphasis>_x_hot and <emphasis remap='I'>name</emphasis>_y_hot exist,
@@ -3649,8 +3649,8 @@ function writes a bitmap out to a file in the X Version 11 format.
 The name used in the output file is derived from the file name
 by deleting the directory prefix.
 The file is written in the encoding of the current locale.
-If the file cannot be opened for writing, 
-it returns 
+If the file cannot be opened for writing,
+it returns
 <returnvalue>BitmapOpenFailed</returnvalue>.
 If insufficient memory is allocated,
 <xref linkend='XWriteBitmapFile' xrefstyle='select: title'/>
@@ -3805,7 +3805,7 @@ errors.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To include a bitmap written out by 
+To include a bitmap written out by
 <xref linkend='XWriteBitmapFile' xrefstyle='select: title'/>
 <indexterm><primary>XWriteBitmapFile</primary></indexterm>
 in a program directly, as opposed to reading it in every time at run time, use
@@ -3927,18 +3927,18 @@ errors.
 <para>
 <!-- .LP -->
 The context manager provides a way of associating data with an X resource ID
-(mostly typically a window) in your program.  
+(mostly typically a window) in your program.
 Note that this is local to your program;
 the data is not stored in the server on a property list.
 Any amount of data in any number of pieces can be associated with a
 resource ID,
-and each piece of data has a type associated with it.  
+and each piece of data has a type associated with it.
 The context manager requires knowledge of the resource ID
 and type to store or retrieve data.
 </para>
 <para>
 <!-- .LP -->
-Essentially, the context manager can be viewed as a two-dimensional, 
+Essentially, the context manager can be viewed as a two-dimensional,
 sparse array:  one dimension is subscripted by the X resource ID
 and the other by a context type field.
 Each entry in the array contains a pointer to the data.
@@ -4152,7 +4152,7 @@ Specifies the context type to which the data belongs.
 <!-- .eM -->
 The
 <xref linkend='XDeleteContext' xrefstyle='select: title'/>
-function deletes the entry for the given resource ID 
+function deletes the entry for the given resource ID
 and type from the data structure.
 This function returns the same error codes that
 <xref linkend='XFindContext' xrefstyle='select: title'/>

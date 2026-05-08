@@ -102,8 +102,8 @@ The
 function returns the color specification in the specified target format
 for full-intensity red, green, and blue.
 .SH "SEE ALSO"
-XcmsCIELabQueryMaxC(__libmansuffix__),
-XcmsCIELuvQueryMaxC(__libmansuffix__),
-XcmsTekHVCQueryMaxC(__libmansuffix__)
+.BR XcmsCIELabQueryMaxC (__libmansuffix__),
+.BR XcmsCIELuvQueryMaxC (__libmansuffix__),
+.BR XcmsTekHVCQueryMaxC (__libmansuffix__)
 .br
 \fI\*(xL\fP

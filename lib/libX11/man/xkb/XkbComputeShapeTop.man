@@ -38,30 +38,30 @@ shape to be examined
 backfilled with the bounding box for the shape
 .SH DESCRIPTION
 .LP
-Xkb provides a number of convenience functions to help use a keyboard geometry. 
-These include functions to return the bounding box of a shape's top surface and 
+Xkb provides a number of convenience functions to help use a keyboard geometry.
+These include functions to return the bounding box of a shape's top surface and
 to update the bounding box of a shape row or section.
 
-A shape is made up of a number of outlines. Each outline is a polygon made up of 
-a number of points. The bounding box of a shape is a rectangle that contains all 
-the outlines of that shape. 
+A shape is made up of a number of outlines. Each outline is a polygon made up of
+a number of points. The bounding box of a shape is a rectangle that contains all
+the outlines of that shape.
 
-.I XkbComputeShapeTop 
+.I XkbComputeShapeTop
 returns a BoundsRec that contains two x and y coordinates. These coordinates
-describe the corners of a rectangle that contains the outline that describes the 
-top surface of the shape. The top surface is defined to be the approximating 
-outline if the 
-.I approx 
-field of 
-.I shape 
-is not NULL. If 
-.I approx 
-is NULL, the top surface is defined as the last outline in the 
-.I shape's 
-array of outlines. 
-.I XkbComputeShapeTop 
-returns False if 
-.I shape 
+describe the corners of a rectangle that contains the outline that describes the
+top surface of the shape. The top surface is defined to be the approximating
+outline if the
+.I approx
+field of
+.I shape
+is not NULL. If
+.I approx
+is NULL, the top surface is defined as the last outline in the
+.I shape's
+array of outlines.
+.I XkbComputeShapeTop
+returns False if
+.I shape
 is NULL or if there are no outlines for the shape; otherwise, it returns True.
 .SH STRUCTURES
 .LP

@@ -22,7 +22,7 @@
 .\"
 .TH XkbGetCompatMap __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetCompatMap \- Fetch any combination of the current compatibility map 
+XkbGetCompatMap \- Fetch any combination of the current compatibility map
 components from the server
 .SH SYNOPSIS
 .HP
@@ -44,26 +44,26 @@ mask of compatibility map components to fetch
 keyboard description where results placed
 .SH DESCRIPTION
 .LP
-When another client modifies the compatibility map, you are notified if you have 
-selected for XkbCompatMapNotify events. 
-.I XkbGetCompatMap 
-is particularly useful when you receive an event of this type, as it allows you 
-to update your program's version of the compatibility map to match the modified 
-version now in the server. If your program is dealing with multiple servers and 
-needs to configure them all in a similar manner, the updated compatibility map 
-may be used to reconfigure other servers. 
+When another client modifies the compatibility map, you are notified if you have
+selected for XkbCompatMapNotify events.
+.I XkbGetCompatMap
+is particularly useful when you receive an event of this type, as it allows you
+to update your program's version of the compatibility map to match the modified
+version now in the server. If your program is dealing with multiple servers and
+needs to configure them all in a similar manner, the updated compatibility map
+may be used to reconfigure other servers.
 
-.I XkbGetCompatMap 
-fetches the components of the compatibility map specified in 
-.I which 
-from the server specified by 
-.I display 
-and places them in the 
-.I compat 
-structure of the keyboard description 
-.I xkb. 
-Valid values for 
-.I which 
+.I XkbGetCompatMap
+fetches the components of the compatibility map specified in
+.I which
+from the server specified by
+.I display
+and places them in the
+.I compat
+structure of the keyboard description
+.I xkb.
+Valid values for
+.I which
 are an inclusive OR of the values shown in Table 1.
 
 .TS
@@ -79,29 +79,29 @@ XkbGroupCompatMask	(1<<1)	Group maps
 XkbAllCompatMask	(0x3)	All compatibility map components
 .TE
 
-If no compatibility map structure is allocated in 
-.I xkb 
-upon entry, 
-.I XkbGetCompatMap 
-allocates one. If one already exists, its contents are overwritten with the 
+If no compatibility map structure is allocated in
+.I xkb
+upon entry,
+.I XkbGetCompatMap
+allocates one. If one already exists, its contents are overwritten with the
 returned results.
 
-.I XkbGetCompatMap 
+.I XkbGetCompatMap
 fetches compatibility map information for the device specified by the
-.I device_spec 
-field of 
-.I xkb. 
-Unless you have specifically modified this field, it is the default keyboard 
-device. 
-.I XkbGetCompatMap 
-returns Success if successful, BadAlloc if it is unable to obtain necessary 
-storage for either the return values or work space, BadMatch if the 
-.I dpy 
-field of the 
-.I xkb 
-argument is non-NULL and does not match the 
-.I display 
-argument, and BadLength under certain conditions caused by server or Xkb 
+.I device_spec
+field of
+.I xkb.
+Unless you have specifically modified this field, it is the default keyboard
+device.
+.I XkbGetCompatMap
+returns Success if successful, BadAlloc if it is unable to obtain necessary
+storage for either the return values or work space, BadMatch if the
+.I dpy
+field of the
+.I xkb
+argument is non-NULL and does not match the
+.I display
+argument, and BadLength under certain conditions caused by server or Xkb
 implementation errors.
 .SH DIAGNOSTICS
 .TP 15
@@ -112,5 +112,5 @@ Unable to allocate storage
 The length of a request is shorter or longer than that required to minimally contain the arguments
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid

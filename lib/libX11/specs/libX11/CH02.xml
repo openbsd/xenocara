@@ -81,8 +81,8 @@ To open a connection to the X server that controls a display, use
       <para>
 Specifies the hardware display name, which determines the display
 and communications domain to be used.
-On a <acronym>POSIX</acronym>-conformant system, if the display_name is NULL, 
-it defaults to the value of the DISPLAY environment variable. 
+On a <acronym>POSIX</acronym>-conformant system, if the display_name is NULL,
+it defaults to the value of the DISPLAY environment variable.
 <indexterm><primary>Environment</primary><secondary>DISPLAY</secondary></indexterm>
     </para>
   </listitem>
@@ -112,9 +112,9 @@ the display name or DISPLAY environment variable can be a string in the format:
     </term>
     <listitem>
       <para>
-Specifies a protocol family or an alias for a protocol family.  Supported 
-protocol families are implementation dependent.  The protocol entry is 
-optional.  If protocol is not specified, the / separating protocol and 
+Specifies a protocol family or an alias for a protocol family.  Supported
+protocol families are implementation dependent.  The protocol entry is
+optional.  If protocol is not specified, the / separating protocol and
 hostname must also not be specified.
       </para>
     </listitem>
@@ -154,9 +154,9 @@ Multiple displays are usually numbered starting with zero.
 Specifies the screen to be used on that server.
 Multiple screens can be controlled by a single X server.
 The screen_number sets an internal variable that can be accessed by
-using the 
+using the
 <function>DefaultScreen</function>
-macro or the 
+macro or the
 <xref linkend='XDefaultScreen' xrefstyle='select: title'/>
 function if you are using languages other than C
 (see <link linkend='Display_Macros'>section 2.2.1</link>).
@@ -167,7 +167,7 @@ function if you are using languages other than C
 <para>
 <!-- .LP -->
 <!-- .eM -->
-For example, the following would specify screen 1 of display 0 on the 
+For example, the following would specify screen 1 of display 0 on the
 machine named ``dual-headed'':
 </para>
 <para>
@@ -180,7 +180,7 @@ dual-headed:0.1
 <!-- .LP -->
 The
 <xref linkend='XOpenDisplay' xrefstyle='select: title'/>
-function returns a 
+function returns a
 <type>Display</type>
 structure that serves as the
 connection to the X server and that contains all the information
@@ -212,24 +212,24 @@ mechanisms.
 <para>
 <!-- .LP -->
 <indexterm><primary>Display</primary></indexterm>
-If successful, 
+If successful,
 <xref linkend='XOpenDisplay' xrefstyle='select: title'/>
-returns a pointer to a 
+returns a pointer to a
 <type>Display</type>
 structure,
-which is defined in 
+which is defined in
 <filename class="headerfile">&lt;X11/Xlib.h&gt;</filename>.
 <indexterm type="file"><primary><filename class="headerfile">X11/Xlib.h</filename></primary></indexterm>
 <indexterm><primary>Files</primary><secondary><filename class="headerfile">&lt;X11/Xlib.h&gt;</filename></secondary></indexterm>
 <indexterm><primary>Headers</primary><secondary><filename class="headerfile">&lt;X11/Xlib.h&gt;</filename></secondary></indexterm>
-If 
+If
 <xref linkend='XOpenDisplay' xrefstyle='select: title'/>
 does not succeed, it returns NULL.
 After a successful call to
 <xref linkend='XOpenDisplay' xrefstyle='select: title'/>,
 all of the screens in the display can be used by the client.
-The screen number specified in the display_name argument is returned 
-by the 
+The screen number specified in the display_name argument is returned
+by the
 <function>DefaultScreen</function>
 macro (or the
 <xref linkend='XDefaultScreen' xrefstyle='select: title'/>
@@ -239,7 +239,7 @@ You can access elements of the
 and
 <type>Screen</type>
 structures only by using the information macros or functions.
-For information about using macros and functions to obtain information from 
+For information about using macros and functions to obtain information from
 the
 <type>Display</type>
 structure,
@@ -258,11 +258,11 @@ X servers may implement various types of access control mechanisms
 <!-- .XE -->
 <para>
 <!-- .LP -->
-The Xlib library provides a number of useful macros 
-and corresponding functions that return data from the 
+The Xlib library provides a number of useful macros
+and corresponding functions that return data from the
 <type>Display</type>
 structure.
-The macros are used for C programming, 
+The macros are used for C programming,
 and their corresponding function equivalents are for other language bindings.
 This section discusses the:
 </para>
@@ -286,11 +286,11 @@ Screen information macros
 <para>
 <!-- .LP -->
 <indexterm ><primary>Display</primary><secondary>data structure</secondary></indexterm>
-All other members of the 
+All other members of the
 <type>Display</type>
-structure (that is, those for which no macros are defined) are private to Xlib 
+structure (that is, those for which no macros are defined) are private to Xlib
 and must not be used.
-Applications must never directly modify or inspect these private members of the 
+Applications must never directly modify or inspect these private members of the
 <type>Display</type>
 structure.
 <!-- .NT Note -->
@@ -303,7 +303,7 @@ The
 and
 <xref linkend='XDisplayHeightMM' xrefstyle='select: title'/>
 functions in the next sections are misnamed.
-These functions really should be named Screen<emphasis remap='I'>whatever</emphasis> 
+These functions really should be named Screen<emphasis remap='I'>whatever</emphasis>
 and XScreen<emphasis remap='I'>whatever</emphasis>, not Display<emphasis remap='I'>whatever</emphasis> or XDisplay<emphasis remap='I'>whatever</emphasis>.
 Our apologies for the resulting confusion.
 <!-- .NE -->
@@ -351,14 +351,14 @@ a procedure.
 <indexterm significance="preferred"><primary>XBlackPixel</primary></indexterm>
 <indexterm significance="preferred"><primary>WhitePixel</primary></indexterm>
 <indexterm significance="preferred"><primary>XWhitePixel</primary></indexterm>
-Both 
+Both
 <function>BlackPixel</function>
-and 
+and
 <function>WhitePixel</function>
 can be used in implementing a monochrome application.
 These pixel values are for permanently allocated entries in the default
 colormap.
-The actual <acronym>RGB</acronym> (red, green, and blue) values are settable on some screens 
+The actual <acronym>RGB</acronym> (red, green, and blue) values are settable on some screens
 and, in any case, may not actually be black or white.
 The names are intended to convey the expected relative intensity of the colors.
 <!-- .sM -->
@@ -450,7 +450,7 @@ Specifies the appropriate screen number on the host server.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-Both return the white pixel value for the specified screen. 
+Both return the white pixel value for the specified screen.
 </para>
 <para>
 <!-- .LP -->
@@ -648,7 +648,7 @@ Returns the number of depths.
 <!-- .eM -->
 The
 <function>XListDepths</function>
-function returns the array of depths 
+function returns the array of depths
 that are available on the specified screen.
 If the specified screen_number is valid and sufficient memory for the array
 can be allocated,
@@ -705,7 +705,7 @@ Specifies the appropriate screen number on the host server.
 <!-- .eM -->
 <indexterm significance="preferred"><primary>DefaultGC</primary></indexterm>
 <indexterm significance="preferred"><primary>XDefaultGC</primary></indexterm>
-Both return the default graphics context for the root window of the 
+Both return the default graphics context for the root window of the
 specified screen.
 This GC is created for the convenience of simple applications
 and contains the default GC components with the foreground and
@@ -873,10 +873,10 @@ Specifies the connection to the X server.
 <!-- .eM -->
 <indexterm significance="preferred"><primary>DefaultScreen</primary></indexterm>
 <indexterm significance="preferred"><primary>XDefaultScreen</primary></indexterm>
-Both return the default screen number referenced by the 
+Both return the default screen number referenced by the
 <xref linkend='XOpenDisplay' xrefstyle='select: title'/>
-function. 
-This macro or function should be used to retrieve the screen number 
+function.
+This macro or function should be used to retrieve the screen number
 in applications that will use only a single screen.
 </para>
 <para>
@@ -1065,16 +1065,16 @@ Specifies the connection to the X server.
 <!-- .eM -->
 <indexterm significance="preferred"><primary>DisplayString</primary></indexterm>
 <indexterm significance="preferred"><primary>XDisplayString</primary></indexterm>
-Both return the string that was passed to 
+Both return the string that was passed to
 <xref linkend='XOpenDisplay' xrefstyle='select: title'/>
-when the current display was opened. 
+when the current display was opened.
 On <acronym>POSIX</acronym>-conformant systems,
 if the passed string was NULL, these return the value of
 the DISPLAY environment variable when the current display was opened.
 <indexterm><primary><acronym>POSIX</acronym> System Call</primary><secondary>fork</secondary></indexterm>
-These are useful to applications that invoke the 
+These are useful to applications that invoke the
 <function>fork</function>
-system call and want to open a new connection to the same display from the 
+system call and want to open a new connection to the same display from the
 child process as well as for printing error messages.
 </para>
 <para>
@@ -1174,7 +1174,7 @@ as necessary for the following functions:
 <xref linkend='XDrawSegments' xrefstyle='select: title'/>,
 <xref linkend='XFillArcs' xrefstyle='select: title'/>,
 <xref linkend='XFillRectangles' xrefstyle='select: title'/>,
-and 
+and
 <xref linkend='XPutImage' xrefstyle='select: title'/>.
 </para>
 <para>
@@ -1291,7 +1291,7 @@ Specifies the connection to the X server.
 <!-- .eM -->
 <indexterm significance="preferred"><primary>ProtocolVersion</primary></indexterm>
 <indexterm significance="preferred"><primary>XProtocolVersion</primary></indexterm>
-Both return the major version number (11) of the X protocol associated with 
+Both return the major version number (11) of the X protocol associated with
 the connected display.
 </para>
 <para>
@@ -1669,12 +1669,12 @@ Specifies the connection to the X server.
 <!-- .eM -->
 <indexterm significance="preferred"><primary>ImageByteOrder</primary></indexterm>
 <indexterm significance="preferred"><primary>XImageByteOrder</primary></indexterm>
-Both specify the required byte order for images for each scanline unit in 
-XY format (bitmap) or for each pixel value in 
+Both specify the required byte order for images for each scanline unit in
+XY format (bitmap) or for each pixel value in
 Z format.
 The macro or function can return either
 <symbol>LSBFirst</symbol>
-or 
+or
 <symbol>MSBFirst</symbol>.
 </para>
 <para>
@@ -1753,9 +1753,9 @@ Specifies the connection to the X server.
 Within each bitmap unit, the left-most bit in the bitmap as displayed
 on the screen is either the least significant or most significant bit in the
 unit.
-This macro or function can return 
+This macro or function can return
 <symbol>LSBFirst</symbol>
-or 
+or
 <symbol>MSBFirst</symbol>.
 </para>
 <para>
@@ -2032,7 +2032,7 @@ structure.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2071,7 +2071,7 @@ Both return the black pixel value of the specified screen.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2110,7 +2110,7 @@ Both return the white pixel value of the specified screen.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2122,7 +2122,7 @@ structure.
 <!-- .eM -->
 <indexterm significance="preferred"><primary>CellsOfScreen</primary></indexterm>
 <indexterm significance="preferred"><primary>XCellsOfScreen</primary></indexterm>
-Both return the number of colormap cells in the default colormap 
+Both return the number of colormap cells in the default colormap
 of the specified screen.
 </para>
 <para>
@@ -2150,7 +2150,7 @@ of the specified screen.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2189,7 +2189,7 @@ Both return the default colormap of the specified screen.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2228,7 +2228,7 @@ Both return the depth of the root window.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2269,7 +2269,7 @@ The GC must never be freed.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2310,7 +2310,7 @@ see <link linkend="Visual_Types">section 3.1</link>.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2324,7 +2324,7 @@ structure.
 <indexterm significance="preferred"><primary>XDoesBackingStore</primary></indexterm>
 Both return a value indicating whether the screen supports backing
 stores.
-The value returned can be one of 
+The value returned can be one of
 <symbol>WhenMapped</symbol>,
 <symbol>NotUseful</symbol>,
 or
@@ -2356,7 +2356,7 @@ or
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2403,7 +2403,7 @@ the screen does not support save unders
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2443,7 +2443,7 @@ Both return the display of the specified screen.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2482,7 +2482,7 @@ function returns the screen index number of the specified screen.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2522,7 +2522,7 @@ at connection setup time.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2561,7 +2561,7 @@ Both return the width of the specified screen in pixels.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2600,7 +2600,7 @@ Both return the height of the specified screen in pixels.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2639,7 +2639,7 @@ Both return the width of the specified screen in millimeters.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2678,7 +2678,7 @@ Both return the height of the specified screen in millimeters.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2690,7 +2690,7 @@ structure.
 <!-- .eM -->
 <indexterm significance="preferred"><primary>MaxCmapsOfScreen</primary></indexterm>
 <indexterm significance="preferred"><primary>XMaxCmapsOfScreen</primary></indexterm>
-Both return the maximum number of installed colormaps supported 
+Both return the maximum number of installed colormaps supported
 by the specified screen
 (see <link linkend="Managing_Installed_Colormaps">section 9.3</link>).
 </para>
@@ -2719,7 +2719,7 @@ by the specified screen
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2731,7 +2731,7 @@ structure.
 <!-- .eM -->
 <indexterm significance="preferred"><primary>MinCmapsOfScreen</primary></indexterm>
 <indexterm significance="preferred"><primary>XMinCmapsOfScreen</primary></indexterm>
-Both return the minimum number of installed colormaps supported 
+Both return the minimum number of installed colormaps supported
 by the specified screen
 (see <link linkend="Managing_Installed_Colormaps">section 9.3</link>).
 </para>
@@ -2760,7 +2760,7 @@ by the specified screen
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2799,7 +2799,7 @@ Both return the depth of the root window.
     </term>
     <listitem>
       <para>
-Specifies the appropriate 
+Specifies the appropriate
 <type>Screen</type>
 structure.
     </para>
@@ -2822,7 +2822,7 @@ Both return the root window of the specified screen.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-To execute a 
+To execute a
 <systemitem>NoOperation</systemitem>
 protocol request, use
 <xref linkend='XNoOp' xrefstyle='select: title'/>.
@@ -2849,7 +2849,7 @@ protocol request, use
 <!-- .eM -->
 The
 <xref linkend='XNoOp' xrefstyle='select: title'/>
-function sends a 
+function sends a
 <systemitem>NoOperation</systemitem>
 protocol request to the X server,
 thereby exercising the connection.
@@ -2952,7 +2952,7 @@ or other resources that the client has created
 on this display, unless the close-down mode of the client has been changed
 (see
 <xref linkend='XSetCloseDownMode' xrefstyle='select: title'/>).
-Therefore, these windows, resource IDs, and other resources should never be 
+Therefore, these windows, resource IDs, and other resources should never be
 referenced again or an error will be generated.
 Before exiting, you should call
 <function>XCloseDisplay</function>
@@ -3007,7 +3007,7 @@ Specifies the connection to the X server.
     <listitem>
       <para>
 Specifies the client close-down mode.
-You can pass 
+You can pass
 <symbol>DestroyAll</symbol>,
 <symbol>RetainPermanent</symbol>,
 or
@@ -3057,7 +3057,7 @@ automatic operations:
   <listitem>
     <para>
 It disowns all selections owned by the client
-(see 
+(see
 <xref linkend='XSetSelectionOwner' xrefstyle='select: title'/>).
     </para>
   </listitem>
@@ -3067,7 +3067,7 @@ It performs an
 <xref linkend='XUngrabPointer' xrefstyle='select: title'/>
 and
 <xref linkend='XUngrabKeyboard' xrefstyle='select: title'/>
-if the client has actively grabbed the pointer 
+if the client has actively grabbed the pointer
 or the keyboard.
     </para>
   </listitem>
@@ -3080,19 +3080,19 @@ if the client has grabbed the server.
   </listitem>
   <listitem>
     <para>
-It releases all passive grabs made by the client.  
+It releases all passive grabs made by the client.
     </para>
   </listitem>
   <listitem>
     <para>
-It marks all resources (including colormap entries) allocated 
-by the client either as permanent or temporary, 
-depending on whether the close-down mode is 
+It marks all resources (including colormap entries) allocated
+by the client either as permanent or temporary,
+depending on whether the close-down mode is
 <symbol>RetainPermanent</symbol>
 or
 <symbol>RetainTemporary</symbol>.
 However, this does not prevent other client applications from explicitly
-destroying the resources (see 
+destroying the resources (see
 <xref linkend='XSetCloseDownMode' xrefstyle='select: title'/>).
     </para>
   </listitem>
@@ -3122,7 +3122,7 @@ window.
 It performs a
 <systemitem>MapWindow</systemitem>
 request on the save-set window if the save-set window is unmapped.
-The X server does this even if the save-set window was not an inferior of 
+The X server does this even if the save-set window was not an inferior of
 a window created by the client.
     </para>
   </listitem>
@@ -3134,12 +3134,12 @@ It destroys all windows created by the client.
   <listitem>
     <para>
 It performs the appropriate free request on each nonwindow resource created by
-the client in the server (for example, 
+the client in the server (for example,
 <type>Font</type>,
 <type>Pixmap</type>,
 <type>Cursor</type>,
 <type>Colormap</type>,
-and 
+and
 <type>GContext</type>).
     </para>
   </listitem>
@@ -3157,15 +3157,15 @@ connections.
 When the last connection to the X server closes as a result of a connection
 closing with the close_mode of
 <symbol>DestroyAll</symbol>,
-the X server does the following: 
+the X server does the following:
 </para>
 <itemizedlist>
   <listitem>
     <para>
 It resets its state as if it had just been
-started.  
+started.
 The X server begins by destroying all lingering resources from
-clients that have terminated in 
+clients that have terminated in
 <symbol>RetainPermanent</symbol>
 or
 <symbol>RetainTemporary</symbol>
@@ -3185,8 +3185,8 @@ It deletes all properties on all root windows
   </listitem>
   <listitem>
     <para>
-It resets all device maps and attributes 
-(for example, key click, bell volume, and acceleration) 
+It resets all device maps and attributes
+(for example, key click, bell volume, and acceleration)
 as well as the access control list.
     </para>
   </listitem>

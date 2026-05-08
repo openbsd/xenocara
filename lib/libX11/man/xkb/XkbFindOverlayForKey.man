@@ -21,7 +21,7 @@
 .\"
 .TH XkbFindOverlayForKey __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbFindOverlayForKey \- Find the alternate name by using the primary name for a 
+XkbFindOverlayForKey \- Find the alternate name by using the primary name for a
 key that is part of an overlay
 .SH SYNOPSIS
 .HP
@@ -43,10 +43,10 @@ section to be searched for matching keys
 primary name of the key to be considered
 .SH DESCRIPTION
 .LP
-Keys that can generate multiple keycodes may be associated with multiple names. 
+Keys that can generate multiple keycodes may be associated with multiple names.
 Such keys have a primary name and an alternate name.
 
-.I XkbFindOverlayForKey 
-uses the primary name of the key, 
+.I XkbFindOverlayForKey
+uses the primary name of the key,
 .I under,
 to look up the alternate name, which it returns.

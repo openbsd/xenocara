@@ -327,4 +327,7 @@ _XimIsFabricatedSerial(
     Xim                  im,
     XKeyEvent           *event);
 
+_X_HIDDEN void
+_XimPendingFilter(
+    Xic                  ic);
 #endif /* _XIMINTP_H */

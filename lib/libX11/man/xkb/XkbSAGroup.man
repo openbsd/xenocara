@@ -33,16 +33,16 @@ XkbSAGroup \- Returns the group_XXX field of act converted to a signed int
 action from which to extract group
 .SH DESCRIPTION
 .LP
-.I XkbSAGroup 
-returns the 
-.I group_XXX 
-field of 
-.I act 
-converted to a signed int. 
+.I XkbSAGroup
+returns the
+.I group_XXX
+field of
+.I act
+converted to a signed int.
 .SH STRUCTURE
 .LP
-Actions associated with the XkbGroupAction structure change the current group 
-state when keys are 
+Actions associated with the XkbGroupAction structure change the current group
+state when keys are
 pressed and released:
 .nf
 .ft CW

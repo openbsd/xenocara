@@ -3,9 +3,9 @@ XCOMM
 XCOMM
 XCOMM Modified from original th_TH.TACTIS
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_FONTSET category
-XCOMM 
+XCOMM
 XLC_FONTSET
 XCOMM	fs0 class
 fs0	{
@@ -23,16 +23,16 @@ fs1	{
 	charset		ISO8859-1:GL
 	font            ISO8859-1:GL
 }
-XCOMM 	fs1 class (Thai) 
+XCOMM 	fs1 class (Thai)
 fs2	{
 	charset         ISO8859-11:GR
 	font            ISO8859-11:GR
 }
 END XLC_FONTSET
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_XLOCALE category
-XCOMM 
+XCOMM
 XLC_XLOCALE
 
 encoding_name           UTF-8

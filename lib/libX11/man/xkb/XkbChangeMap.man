@@ -22,8 +22,8 @@
 .\"
 .TH XkbChangeMap __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbChangeMap \- Update only partial components of a keyboard description, modify 
-the appropriate fields in the server and map components of a local copy of the 
+XkbChangeMap \- Update only partial components of a keyboard description, modify
+the appropriate fields in the server and map components of a local copy of the
 keyboard description
 .SH SYNOPSIS
 .HP
@@ -45,49 +45,49 @@ description from which new values are taken
 identifies component parts to update
 .SH DESCRIPTION
 .LP
-To update only partial components of a keyboard description, modify the 
-appropriate fields in the server and map components of a local copy of the 
-keyboard description, then call 
-.I XkbChangeMap 
+To update only partial components of a keyboard description, modify the
+appropriate fields in the server and map components of a local copy of the
+keyboard description, then call
+.I XkbChangeMap
 with an XkbMapChangesRec structure indicating which components have changed.
 
-.I XkbChangeMap 
-copies any components specified by the 
-.I changes 
-structure from the keyboard description, 
-.I xkb, 
-to the X server specified by 
+.I XkbChangeMap
+copies any components specified by the
+.I changes
+structure from the keyboard description,
+.I xkb,
+to the X server specified by
 .I dpy.
 
-If any components specified by 
-.I changes 
-are not present in the 
-.I xkb 
-parameter, 
-.I XkbChangeMap 
-returns False. Otherwise, it sends a request to the server and returns True. 
+If any components specified by
+.I changes
+are not present in the
+.I xkb
+parameter,
+.I XkbChangeMap
+returns False. Otherwise, it sends a request to the server and returns True.
 
-.I XkbChangeMap 
-can generate BadAlloc, BadLength, and BadValue protocol errors. 
+.I XkbChangeMap
+can generate BadAlloc, BadLength, and BadValue protocol errors.
 .SH "RETURN VALUES"
 .TP 15
 True
-The XkbChangeMap function returns True if the components specified by 
-.I changes 
-are present in the 
-.I xkb 
+The XkbChangeMap function returns True if the components specified by
+.I changes
+are present in the
+.I xkb
 parameter.
 .TP 15
 False
-The XkbChangeMap function returns False if the components specified by 
-.I changes 
-are not present in the 
-.I xkb 
+The XkbChangeMap function returns False if the components specified by
+.I changes
+are not present in the
+.I xkb
 parameter.
 .SH STRUCTURES
 .LP
-Use the XkbMapChangesRec structure to identify and track partial modifications 
-to the mapping components and to reduce the amount of traffic between the server 
+Use the XkbMapChangesRec structure to identify and track partial modifications
+to the mapping components and to reduce the amount of traffic between the server
 and clients.
 .nf
 
@@ -120,7 +120,7 @@ typedef struct _XkbMapChanges {
 Unable to allocate storage
 .TP 15
 .B BadLength
-The length of a request is shorter or longer than that required to minimally 
+The length of a request is shorter or longer than that required to minimally
 contain the arguments
 .TP 15
 .B BadValue

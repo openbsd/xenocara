@@ -37,13 +37,13 @@ action from which to set group
 group index to set in group_XXX
 .SH DESCRIPTION
 .LP
-.I XkbSASetGroup 
-sets the 
-.I group_XXX 
-field of 
-.I act 
-from the group index 
-.I grp. 
+.I XkbSASetGroup
+sets the
+.I group_XXX
+field of
+.I act
+from the group index
+.I grp.
 .SH STRUCTURE
 .LP
 Actions associated with the XkbGroupAction structure change the

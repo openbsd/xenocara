@@ -190,7 +190,7 @@ A value for a Font or GContext argument does not name a defined Font.
 .B BadGC
 A value for a GContext argument does not name a defined GContext.
 .SH "SEE ALSO"
-XLoadFont(__libmansuffix__),
-XTextWidth(__libmansuffix__)
+.BR XLoadFont (__libmansuffix__),
+.BR XTextWidth (__libmansuffix__)
 .br
 \fI\*(xL\fP

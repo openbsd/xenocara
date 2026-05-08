@@ -22,7 +22,7 @@
 .\"
 .TH XkbSetModActionVMods __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbSetModActionVMods \- Sets the vmods1 and vmods2 fields of act using the vmods 
+XkbSetModActionVMods \- Sets the vmods1 and vmods2 fields of act using the vmods
 format of an Xkb modifier description
 .SH SYNOPSIS
 .HP
@@ -40,18 +40,18 @@ action in which to set vmods
 virtual mods to set
 .SH DESCRIPTION
 .LP
-.I XkbSetModActionVMods 
-sets the 
-.I vmods1 
-and 
-.I vmods2 
-fields of 
-.I act 
-using the 
-.I vmods 
-format of an Xkb modifier description. 
+.I XkbSetModActionVMods
+sets the
+.I vmods1
+and
+.I vmods2
+fields of
+.I act
+using the
+.I vmods
+format of an Xkb modifier description.
 .SH NOTES
 .LP
-Despite the fact that the first parameter of these two macros is of type 
-XkbAction, these macros may be used only with Actions of type XkbModAction and 
+Despite the fact that the first parameter of these two macros is of type
+XkbAction, these macros may be used only with Actions of type XkbModAction and
 XkbISOAction.

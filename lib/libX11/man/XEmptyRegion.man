@@ -109,7 +109,7 @@ and
 .B RectanglePart
 if the rectangle is partially in the specified region.
 .SH "SEE ALSO"
-XCreateRegion(__libmansuffix__),
-XIntersectRegion(__libmansuffix__)
+.BR XCreateRegion (__libmansuffix__),
+.BR XIntersectRegion (__libmansuffix__)
 .br
 \fI\*(xL\fP

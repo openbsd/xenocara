@@ -369,6 +369,8 @@ XkbRefreshKeyboardMapping(register XkbMapNotifyEvent * event)
         XkbMapChangesRec changes;
         Status rtrn;
 
+        if (!xkbi->desc || xkbi->desc->device_spec != event->device)
+            return Success;
         if (xkbi->flags & XkbMapPending)
             changes = xkbi->changes;
         else

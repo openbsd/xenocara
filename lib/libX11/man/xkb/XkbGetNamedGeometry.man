@@ -22,7 +22,7 @@
 .\"
 .TH XkbGetNamedGeometry __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetNamedGeometry \- Loads a keyboard geometry description from this database 
+XkbGetNamedGeometry \- Loads a keyboard geometry description from this database
 by name
 .SH SYNOPSIS
 .HP
@@ -42,18 +42,18 @@ keyboard description into which the geometry should be loaded
 name of the geometry to be loaded
 .SH DESCRIPTION
 .LP
-It is also possible to load a keyboard geometry by name. The X server maintains 
-a database 
+It is also possible to load a keyboard geometry by name. The X server maintains
+a database
 of keyboard components (see below).
 
-.I XkbGetNamedGeometry 
+.I XkbGetNamedGeometry
 can return BadName if the name cannot be found.
 
-The X server maintains a database of keyboard components, identified by 
-component type. 
-The database contains all the information necessary to build a complete keyboard 
-description for a particular device, as well as to assemble partial 
-descriptions. Table 1 identifies the component types and the type of information 
+The X server maintains a database of keyboard components, identified by
+component type.
+The database contains all the information necessary to build a complete keyboard
+description for a particular device, as well as to assemble partial
+descriptions. Table 1 identifies the component types and the type of information
 they contain.
 
 .TS
@@ -68,7 +68,7 @@ Type
 _
 Keymap	T{
 Complete keyboard description
-.br 
+.br
 Normally assembled using a complete component from each of the other types
 T}
 .sp
@@ -117,39 +117,39 @@ Description of indicators physically present
 T}
 .TE
 
-While a keymap is a database entry for a complete keyboard description, and 
-therefore 
-logically different from the individual component database entries, the rules 
-for 
-processing keymap entries are identical to those for the individual components. 
-In the 
-discussion that follows, the term component is used to refer to either 
-individual 
+While a keymap is a database entry for a complete keyboard description, and
+therefore
+logically different from the individual component database entries, the rules
+for
+processing keymap entries are identical to those for the individual components.
+In the
+discussion that follows, the term component is used to refer to either
+individual
 components or a keymap.
 
-There may be multiple entries for each of the component types. An entry may be 
+There may be multiple entries for each of the component types. An entry may be
 either
-.I complete 
-or 
-.I partial. 
-Partial entries describe only a piece of the corresponding keyboard component 
-and are 
-designed to be combined with other entries of the same type to form a complete 
+.I complete
+or
+.I partial.
+Partial entries describe only a piece of the corresponding keyboard component
+and are
+designed to be combined with other entries of the same type to form a complete
 entry.
 
-For example, a partial symbols map might describe the differences between a 
-common ASCII 
-keyboard and some national layout. Such a partial map is not useful on its own 
-because it 
-does not include those symbols that are the same on both the ASCII and national 
-layouts 
-(such as function keys). On the other hand, this partial map can be used to 
-configure 
-.I any 
+For example, a partial symbols map might describe the differences between a
+common ASCII
+keyboard and some national layout. Such a partial map is not useful on its own
+because it
+does not include those symbols that are the same on both the ASCII and national
+layouts
+(such as function keys). On the other hand, this partial map can be used to
+configure
+.I any
 ASCII keyboard to use a national layout.
 
-When a keyboard description is built, the components are processed in the order 
-in which 
+When a keyboard description is built, the components are processed in the order
+in which
 they appear in Table 1; later definitions override earlier ones.
 .SH DIAGNOSTICS
 .TP 15

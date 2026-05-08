@@ -43,11 +43,11 @@ mask of names or map components to be updated
 keyboard description to be updated
 .SH DESCRIPTION
 .LP
-.I XkbGetNames 
-retrieves symbolic names for the components of the keyboard extension from the X server. The 
-.I which 
-parameter specifies the name components to be updated in the 
-.I xkb 
+.I XkbGetNames
+retrieves symbolic names for the components of the keyboard extension from the X server. The
+.I which
+parameter specifies the name components to be updated in the
+.I xkb
 parameter, and is the bitwise inclusive OR of the valid names mask bits defined in Table 1.
 
 
@@ -82,39 +82,39 @@ XkbComponentNamesMask	(0x3f)	Xkb->names	keycodes,
 XkbAllNamesMask	(0x3fff)	Xkb->names	all name components
 .TE
 
-If the 
-.I names 
-field of the keyboard description 
-.I xkb 
-is NULL, 
-.I XkbGetNames 
-allocates and initializes the 
-.I names 
+If the
+.I names
+field of the keyboard description
+.I xkb
+is NULL,
+.I XkbGetNames
+allocates and initializes the
+.I names
 component of the keyboard description before obtaining the values specified by
-.I which. 
-If the 
-.I names field of 
-.I xkb 
-is not NULL, 
-.I XkbGetNames 
-obtains the values specified by 
-.I which 
-and copies them into the keyboard description 
+.I which.
+If the
+.I names field of
+.I xkb
+is not NULL,
+.I XkbGetNames
+obtains the values specified by
+.I which
+and copies them into the keyboard description
 .I Xkb.
 
-If the 
-.I map 
-component of the 
-.I xkb 
-parameter is NULL, 
-.I XkbGetNames 
-does not retrieve type or shift level names, even if XkbKeyTypeNamesMask or XkbKTLevelNamesMask are set in 
+If the
+.I map
+component of the
+.I xkb
+parameter is NULL,
+.I XkbGetNames
+does not retrieve type or shift level names, even if XkbKeyTypeNamesMask or XkbKTLevelNamesMask are set in
 .I which.
 
-.I XkbGetNames 
+.I XkbGetNames
 can return Success, or BadAlloc, BadLength, BadMatch, and BadImplementation errors.
 
-To free symbolic names, use 
+To free symbolic names, use
 .I XkbFreeNames.
 .SH DIAGNOSTICS
 .TP 15
@@ -128,7 +128,7 @@ Invalid reply from server
 The length of a request is shorter or longer than that required to minimally contain the arguments
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has correct type and range, but 
+A compatible version of Xkb was not available in the server or an argument has correct type and range, but
 is otherwise invalid
 .SH "SEE ALSO"
 .BR XkbFreeNames (__libmansuffix__)

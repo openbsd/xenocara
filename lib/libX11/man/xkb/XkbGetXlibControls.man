@@ -35,10 +35,10 @@ XkbGetXlibControls \- Determines the current state of the Library Controls
 connection to X server
 .SH DESCRIPTION
 .LP
-.I XkbGetXlibControls 
-returns the current state of the Library Controls as a bit mask that is an 
-inclusive OR of the control masks from Table 1 for the controls that are 
-enabled. For the optional compose processing controls, the fact that a control 
+.I XkbGetXlibControls
+returns the current state of the Library Controls as a bit mask that is an
+inclusive OR of the control masks from Table 1 for the controls that are
+enabled. For the optional compose processing controls, the fact that a control
 is enabled does not imply that it is actually implemented.
 
 .TS

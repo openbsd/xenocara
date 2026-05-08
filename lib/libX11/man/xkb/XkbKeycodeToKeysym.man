@@ -21,7 +21,7 @@
 .\"
 .TH XkbKeycodeToKeysym __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbKeycodeToKeysym \- Finds the keysym bound to a particular key at a specified 
+XkbKeycodeToKeysym \- Finds the keysym bound to a particular key at a specified
 group and shift level
 .SH SYNOPSIS
 .HP
@@ -35,26 +35,26 @@ group and shift level
 .SH ARGUMENTS
 .TP
 .I dpy
-connection to X server 
+connection to X server
 .TP
 .I kc
-key of interest 
+key of interest
 .TP
 .I group
-group of interest 
+group of interest
 .TP
 .I level
-shift level of interest 
+shift level of interest
 .SH DESCRIPTION
 .LP
-.I XkbKeycodeToKeysym 
-returns the keysym bound to a particular group and shift level for a particular 
-key on the core keyboard. If 
-.I kc 
-is not a legal keycode for the core keyboard, or if 
-.I group 
-or 
-.I level 
-are out of range for the specified key, 
-.I XkbKeycodeToKeysym 
+.I XkbKeycodeToKeysym
+returns the keysym bound to a particular group and shift level for a particular
+key on the core keyboard. If
+.I kc
+is not a legal keycode for the core keyboard, or if
+.I group
+or
+.I level
+are out of range for the specified key,
+.I XkbKeycodeToKeysym
 returns NoSymbol.

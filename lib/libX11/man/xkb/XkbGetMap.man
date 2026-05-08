@@ -22,8 +22,8 @@
 .\"
 .TH XkbGetMap __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetMap \- Allocate an XkbDescRec structure and populate it with the server's 
-keyboard 
+XkbGetMap \- Allocate an XkbDescRec structure and populate it with the server's
+keyboard
 client map and server map
 .SH SYNOPSIS
 .HP
@@ -45,74 +45,74 @@ mask selecting subcomponents to populate
 device_id, or XkbUseCoreKbd
 .SH DESCRIPTION
 .LP
-Xkb provides two functions to obtain the keyboard mapping components from the 
-server. The 
-first function, 
-.I XkbGetMap, 
-allocates an XkbDescRec structure, retrieves mapping components from the server, 
-and 
-stores them in the XkbDescRec structure it just allocated. The second function, 
-.I XkbGetUpdatedMap, 
-retrieves mapping components from the server and stores them in an XkbDescRec 
-structure 
+Xkb provides two functions to obtain the keyboard mapping components from the
+server. The
+first function,
+.I XkbGetMap,
+allocates an XkbDescRec structure, retrieves mapping components from the server,
+and
+stores them in the XkbDescRec structure it just allocated. The second function,
+.I XkbGetUpdatedMap,
+retrieves mapping components from the server and stores them in an XkbDescRec
+structure
 that has previously been allocated.
 
-To allocate an XkbDescRec structure and populate it with the server's keyboard 
-client map 
-and server map, use 
-.I XkbGetMap. XkbGetMap 
-is similar to 
+To allocate an XkbDescRec structure and populate it with the server's keyboard
+client map
+and server map, use
+.I XkbGetMap. XkbGetMap
+is similar to
 .I XkbGetKeyboard,
-but is used only for obtaining the address of an XkbDescRec structure that is 
-populated 
-with keyboard mapping components. It allows finer control over which 
-substructures of the 
+but is used only for obtaining the address of an XkbDescRec structure that is
+populated
+with keyboard mapping components. It allows finer control over which
+substructures of the
 keyboard mapping components are to be populated.
-.I XkbGetKeyboard 
-always returns fully populated components, while 
-.I XkbGetMap 
+.I XkbGetKeyboard
+always returns fully populated components, while
+.I XkbGetMap
 can be instructed to return a partially populated component.
 
-The 
-.I which mask is a bitwise inclusive OR of the masks defined in Table 14.1. Only 
-those 
-portions of the keyboard server map and the keyboard client maps that are 
-specified in 
-.I which 
-are allocated and populated. 
+The
+.I which mask is a bitwise inclusive OR of the masks defined in Table 14.1. Only
+those
+portions of the keyboard server map and the keyboard client maps that are
+specified in
+.I which
+are allocated and populated.
 
 In addition to allocating and obtaining the server map and the client map,
-.I XkbGetMap 
-also sets the 
-.I device_spec, 
-the 
-.I min_key_code, 
-and 
-.I max_key_code 
-fields of the keyboard description. 
+.I XkbGetMap
+also sets the
+.I device_spec,
+the
+.I min_key_code,
+and
+.I max_key_code
+fields of the keyboard description.
 
-.I XkbGetMap 
-is synchronous; it queries the server for the desired information, waits for a 
-reply, and 
-then returns. If successful, 
-.I XkbGetMap 
+.I XkbGetMap
+is synchronous; it queries the server for the desired information, waits for a
+reply, and
+then returns. If successful,
+.I XkbGetMap
 returns a pointer to the XkbDescRec structure it allocated. If unsuccessful,
-.I XkbGetMap 
-returns NULL. When unsuccessful, one of the following protocol errors is also 
-generated: 
-BadAlloc (unable to allocate the XkbDescRec structure), BadValue (some mask bits 
-in 
-.I which 
-are undefined), or BadImplementation (a compatible version of the Xkb extension 
-is not 
+.I XkbGetMap
+returns NULL. When unsuccessful, one of the following protocol errors is also
+generated:
+BadAlloc (unable to allocate the XkbDescRec structure), BadValue (some mask bits
+in
+.I which
+are undefined), or BadImplementation (a compatible version of the Xkb extension
+is not
 available in the server). To free the returned data, use
 .I XkbFreeKeyboard.
 
-Xkb also provides convenience functions to get partial component definitions 
-from the 
-server. These functions are specified in the "convenience functions" column in 
-Table 
-1. Refer to the sections listed in the table for more information on these 
+Xkb also provides convenience functions to get partial component definitions
+from the
+server. These functions are specified in the "convenience functions" column in
+Table
+1. Refer to the sections listed in the table for more information on these
 functions.
 
 .TS
@@ -214,29 +214,29 @@ T}
 .nf
 .bp
 Xkb defines combinations of these masks for convenience:
-   
+
    #define XkbResizableInfoMask   (XkbKeyTypesMask)
    #define XkbAllClientInfoMask   (XkbKeyTypesMask | XkbKeySymsMask |
                                    XkbModifierMapMask)
    #define XkbAllServerInfoMask   (XkbExplicitComponentsMask |
-                                   XkbKeyActionsMask | 
+                                   XkbKeyActionsMask |
                                    XkbKeyBehaviorsMask |
-                                   XkbVirtualModsMask | 
+                                   XkbVirtualModsMask |
                                    XkbVirtualModMapMask)
-   #define XkbAllMapComponentsMask XkbAllClientInfoMask | 
+   #define XkbAllMapComponentsMask XkbAllClientInfoMask |
                                    XkbAllServerInfoMask)
-      
-.fi      
-Key types, symbol maps, and actions are all interrelated: changes in one require 
-changes 
-in the others. The convenience functions make it easier to edit these components 
-and 
-handle the interdependencies. 
+
+.fi
+Key types, symbol maps, and actions are all interrelated: changes in one require
+changes
+in the others. The convenience functions make it easier to edit these components
+and
+handle the interdependencies.
 
 .SH STRUCTURES
 .LP
-The complete description of an Xkb keyboard is given by an XkbDescRec. The 
-component 
+The complete description of an Xkb keyboard is given by an XkbDescRec. The
+component
 structures in the XkbDescRec represent the major Xkb components.
 
 .nf
@@ -256,27 +256,27 @@ typedef struct {
 } XkbDescRec, *XkbDescPtr;
 
 .fi
-The 
-.I display 
-field points to an X display structure. The 
-.I flags field is private to the library: modifying 
-.I flags 
-may yield unpredictable results. The 
-.I device_spec 
-field specifies the device identifier of the keyboard input device, or 
-XkbUseCoreKeyboard, which specifies the core keyboard device. The 
+The
+.I display
+field points to an X display structure. The
+.I flags field is private to the library: modifying
+.I flags
+may yield unpredictable results. The
+.I device_spec
+field specifies the device identifier of the keyboard input device, or
+XkbUseCoreKeyboard, which specifies the core keyboard device. The
 .I min_key_code
-and 
-.I max_key_code 
-fields specify the least and greatest keycode that can be returned by the 
-keyboard. 
+and
+.I max_key_code
+fields specify the least and greatest keycode that can be returned by the
+keyboard.
 
-Each structure component has a corresponding mask bit that is used in function 
-calls to 
-indicate that the structure should be manipulated in some manner, such as 
-allocating it 
-or freeing it. These masks and their relationships to the fields in the 
-XkbDescRec are 
+Each structure component has a corresponding mask bit that is used in function
+calls to
+indicate that the structure should be manipulated in some manner, such as
+allocating it
+or freeing it. These masks and their relationships to the fields in the
+XkbDescRec are
 shown in Table 2.
 
 .TS

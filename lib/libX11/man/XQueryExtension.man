@@ -41,7 +41,6 @@ Returns the number of extensions listed.
 .IP \fIlist\fP 1i
 Specifies the list of extension names.
 .SH DESCRIPTION
-.LP
 The \fIXQueryExtension\fP function determines if the named extension is
 present.
 If the extension is not present, \fIXQueryExtension\fP returns

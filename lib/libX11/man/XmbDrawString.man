@@ -104,10 +104,10 @@ Its presence is
 indicated by the macro
 .BR X_HAVE_UTF8_STRING .
 .SH "SEE ALSO"
-XDrawImageString(__libmansuffix__),
-XDrawString(__libmansuffix__),
-XDrawText(__libmansuffix__),
-XmbDrawImageString(__libmansuffix__),
-XmbDrawText(__libmansuffix__)
+.BR XDrawImageString (__libmansuffix__),
+.BR XDrawString (__libmansuffix__),
+.BR XDrawText (__libmansuffix__),
+.BR XmbDrawImageString (__libmansuffix__),
+.BR XmbDrawText (__libmansuffix__)
 .br
 \fI\*(xL\fP

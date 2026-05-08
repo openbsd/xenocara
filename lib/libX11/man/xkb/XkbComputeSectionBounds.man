@@ -38,13 +38,13 @@ geometry that contains the section
 section to be examined and updated
 .SH DESCRIPTION
 .LP
- If you add or delete a row to or from a section, or if you change the geometry 
-of any of the rows in that section, you may need to update the bounding box for 
-that section. 
- 
-.I XkbComputeSectionBounds 
-examines all the rows of the 
-.I section 
+ If you add or delete a row to or from a section, or if you change the geometry
+of any of the rows in that section, you may need to update the bounding box for
+that section.
+
+.I XkbComputeSectionBounds
+examines all the rows of the
+.I section
 and updates the bounding box of that section so that it contains all rows.
-.I XkbComputeSectionBounds 
+.I XkbComputeSectionBounds
 returns False if any of the arguments is NULL; otherwise, it returns True.

@@ -120,15 +120,13 @@ char *XKeysymToString(KeySym ks)
     }
     if (ks >= 0x01000100 && ks <= 0x0110ffff) {
         KeySym val = ks & 0xffffff;
-        char *s;
+        char s[10];
         int i;
+        XrmQuark q;
         if (val & 0xff0000)
             i = 10;
         else
             i = 6;
-        s = Xmalloc(i);
-        if (s == NULL)
-            return s;
         i--;
         s[i--] = '\0';
         for (; i; i--){
@@ -140,7 +138,9 @@ char *XKeysymToString(KeySym ks)
                 s[i] = 'A'+ val1 - 10;
         }
         s[i] = 'U';
-        return s;
+        q = XrmStringToQuark(s);
+        if (q != NULLQUARK)
+            return XrmQuarkToString(q);
     }
     return ((char *) NULL);
 }

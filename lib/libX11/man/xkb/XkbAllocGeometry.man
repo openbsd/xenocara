@@ -39,37 +39,37 @@ keyboard description for which geometry is to be allocated
 initial sizes for all geometry components
 .SH DESCRIPTION
 .LP
-Xkb provides a number of functions to allocate and free subcomponents of a 
-keyboard geometry. Use these functions to create or modify keyboard geometries. 
-Note that these functions merely allocate space for the new element(s), and it 
-is up to you to fill in the values explicitly in your code. These allocation 
-functions increase 
-.I sz_* 
-but never touch 
-.I num_* 
-(unless there is an allocation failure, in which case they reset both 
-.I sz_* 
-and 
-.I num_* 
-to zero). These functions return Success if they succeed, BadAlloc if they are 
+Xkb provides a number of functions to allocate and free subcomponents of a
+keyboard geometry. Use these functions to create or modify keyboard geometries.
+Note that these functions merely allocate space for the new element(s), and it
+is up to you to fill in the values explicitly in your code. These allocation
+functions increase
+.I sz_*
+but never touch
+.I num_*
+(unless there is an allocation failure, in which case they reset both
+.I sz_*
+and
+.I num_*
+to zero). These functions return Success if they succeed, BadAlloc if they are
 not able to allocate space, or BadValue if a parameter is not as expected.
 
-.I XkbAllocGeometry 
-allocates a keyboard geometry and adds it to the keyboard description specified 
-by 
-.I xkb. 
-The keyboard description should be obtained via the 
-.I XkbGetKeyboard 
-or 
-.I XkbAllocKeyboard 
-functions. The 
-.I sizes 
-parameter specifies the number of elements to be reserved for the subcomponents 
-of the keyboard geometry and can be zero or more. These subcomponents include 
-the 
-.I properties, colors, shapes, sections, and doodads. 
+.I XkbAllocGeometry
+allocates a keyboard geometry and adds it to the keyboard description specified
+by
+.I xkb.
+The keyboard description should be obtained via the
+.I XkbGetKeyboard
+or
+.I XkbAllocKeyboard
+functions. The
+.I sizes
+parameter specifies the number of elements to be reserved for the subcomponents
+of the keyboard geometry and can be zero or more. These subcomponents include
+the
+.I properties, colors, shapes, sections, and doodads.
 
-To free an entire geometry, use 
+To free an entire geometry, use
 .I XkbFreeGeometry.
 .SH DIAGNOSTICS
 .TP 15

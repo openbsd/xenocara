@@ -243,11 +243,11 @@ alternatives can generate this error.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XChangeWindowAttributes(__libmansuffix__),
-XConfigureWindow(__libmansuffix__),
-XCreateWindow(__libmansuffix__),
-XDestroyWindow(__libmansuffix__),
-XMapWindow(__libmansuffix__),
-XUnmapWindow(__libmansuffix__)
+.BR XChangeWindowAttributes (__libmansuffix__),
+.BR XConfigureWindow (__libmansuffix__),
+.BR XCreateWindow (__libmansuffix__),
+.BR XDestroyWindow (__libmansuffix__),
+.BR XMapWindow (__libmansuffix__),
+.BR XUnmapWindow (__libmansuffix__)
 .br
 \fI\*(xL\fP

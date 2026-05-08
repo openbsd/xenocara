@@ -32,32 +32,32 @@ XkbAddGeomRow \- Add a row to a section
 .SH ARGUMENTS
 .TP
 .I section
-section to be updated 
+section to be updated
 .TP
 .I sz_keys
 number of keys to be reserved
 .SH DESCRIPTION
 .LP
-Xkb provides functions to add a single new element to the top-level keyboard geometry. In each case the 
-.I num_ * 
-fields of the corresponding structure is incremented by 1. These functions do not change 
-.I sz_* 
+Xkb provides functions to add a single new element to the top-level keyboard geometry. In each case the
+.I num_ *
+fields of the corresponding structure is incremented by 1. These functions do not change
+.I sz_*
 unless there is no more room in the array. Some of these functions fill in the values of the element's structure from the arguments. For other functions, you must explicitly write code to fill the structure's elements.
 
-The top-level geometry description includes a list of 
-.I geometry properties. 
+The top-level geometry description includes a list of
+.I geometry properties.
 A geometry property associates an arbitrary string with an equally arbitrary name. Programs that display images of keyboards can use geometry properties as hints, but they are not interpreted by Xkb. No other geometry structures refer to geometry properties.
 
-One of the components of a keyboard geometry section is one or more rows of keys. 
-.I XkbAddGeomRow 
-adds one row to the specified 
-.I section. 
+One of the components of a keyboard geometry section is one or more rows of keys.
+.I XkbAddGeomRow
+adds one row to the specified
+.I section.
 The newly created row contains space for the number of keys specified in
-.I sz_keys. 
-They are allocated and zeroed, but otherwise uninitialized. 
-.I XkbAddGeomRow 
-returns NULL if any of the parameters is empty or if it was not able to allocate space for the row. To allocate space for an arbitrary number of rows to a section, use the 
-.I XkbAllocGeomRows 
+.I sz_keys.
+They are allocated and zeroed, but otherwise uninitialized.
+.I XkbAddGeomRow
+returns NULL if any of the parameters is empty or if it was not able to allocate space for the row. To allocate space for an arbitrary number of rows to a section, use the
+.I XkbAllocGeomRows
 function.
 .SH STRUCTURES
 .LP
@@ -70,7 +70,7 @@ typedef struct _XkbRow {
         int             vertical;
         XkbKeyPtr       keys;
         XkbBoundsRec    bounds;
-} XkbRowRec, *XkbRowPtr;         
+} XkbRowRec, *XkbRowPtr;
 .fi
 .SH "SEE ALSO"
 .BR XkbAllocGeomRows (__libmansuffix__)

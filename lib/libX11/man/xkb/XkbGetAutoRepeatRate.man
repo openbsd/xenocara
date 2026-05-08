@@ -21,7 +21,7 @@
 .\"
 .TH XkbGetAutoRepeatRate __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetAutoRepeatRate \- Gets the current attributes of the RepeatKeys control 
+XkbGetAutoRepeatRate \- Gets the current attributes of the RepeatKeys control
 for a keyboard device
 .SH SYNOPSIS
 .HP
@@ -47,38 +47,38 @@ backfilled with initial repeat delay, ms
 backfilled with subsequent repeat delay, ms
 .SH DESCRIPTION
 .LP
-The core protocol allows only control over whether or not the entire keyboard or 
-individual keys should auto-repeat when held down. RepeatKeys is a boolean 
-control that extends this capability by adding control over the delay until a 
-key begins to repeat and the rate at which it repeats. RepeatKeys is coupled 
-with the core auto-repeat control: when RepeatKeys is enabled or disabled, the 
+The core protocol allows only control over whether or not the entire keyboard or
+individual keys should auto-repeat when held down. RepeatKeys is a boolean
+control that extends this capability by adding control over the delay until a
+key begins to repeat and the rate at which it repeats. RepeatKeys is coupled
+with the core auto-repeat control: when RepeatKeys is enabled or disabled, the
 core auto-repeat is enabled or disabled and vice versa.
 
-Auto-repeating keys are controlled by two attributes. The first, 
-.I timeout, 
-is the delay after the initial press of an auto-repeating key and the first 
-generated repeat event. The second, 
-.I interval, 
-is the delay between all subsequent generated repeat events. As with all boolean 
-controls, configuring the attributes that determine how the control operates 
+Auto-repeating keys are controlled by two attributes. The first,
+.I timeout,
+is the delay after the initial press of an auto-repeating key and the first
+generated repeat event. The second,
+.I interval,
+is the delay between all subsequent generated repeat events. As with all boolean
+controls, configuring the attributes that determine how the control operates
 does not automatically enable the control as a whole.
 
-.I XkbGetAutoRepeatRate 
-queries the server for the current values of the RepeatControls control 
-attributes, backfills 
-.I timeout_rtrn 
-and 
-.I interval_rtrn 
-with them, and returns True. If a compatible version of the Xkb extension is not 
-available in the server 
-.I XkbGetAutoRepeatRate 
+.I XkbGetAutoRepeatRate
+queries the server for the current values of the RepeatControls control
+attributes, backfills
+.I timeout_rtrn
+and
+.I interval_rtrn
+with them, and returns True. If a compatible version of the Xkb extension is not
+available in the server
+.I XkbGetAutoRepeatRate
 returns False.
 .SH "RETURN VALUES"
 .TP 15
 True
-The XkbGetAutoRepeatRate function returns True if a compatible version of the 
+The XkbGetAutoRepeatRate function returns True if a compatible version of the
 Xkb extension is available in the server.
 .TP 15
 False
-The XkbGetAutoRepeatRate function returns False if a compatible version of the 
+The XkbGetAutoRepeatRate function returns False if a compatible version of the
 Xkb extension is not available in the server.

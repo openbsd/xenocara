@@ -39,30 +39,30 @@ structure in which to allocate button actions
 new total number of button actions needed
 .SH DESCRIPTION
 .LP
-.I XkbResizeDeviceButtonActions 
+.I XkbResizeDeviceButtonActions
 reallocates space, if necessary, to make sure there is room for a total of
-.I new_total 
-button actions in the 
-.I device_info 
+.I new_total
+button actions in the
+.I device_info
 structure. Any new entries allocated are zeroed. If successful,
-.I XkbResizeDeviceButtonActions 
-returns Success. If 
-.I new_total 
-is zero, all button actions are deleted, 
-.I device_info->num_btns 
-is set to zero, and 
-.I device_info->btn_acts 
-is set to NULL. If 
-.I device_info 
-is invalid or 
-.I new_total 
-is greater than 255, BadValue is returned. If a memory allocation failure occurs, a BadAlloc is returned. 
+.I XkbResizeDeviceButtonActions
+returns Success. If
+.I new_total
+is zero, all button actions are deleted,
+.I device_info->num_btns
+is set to zero, and
+.I device_info->btn_acts
+is set to NULL. If
+.I device_info
+is invalid or
+.I new_total
+is greater than 255, BadValue is returned. If a memory allocation failure occurs, a BadAlloc is returned.
 
-To free an XkbDeviceInfoRec structure, use 
+To free an XkbDeviceInfoRec structure, use
 .I XkbFreeDeviceInfo.
 .SH STRUCTURES
 .LP
-Information about X Input Extension devices is transferred between a client program and the Xkb 
+Information about X Input Extension devices is transferred between a client program and the Xkb
 extension in an XkbDeviceInfoRec structure:
 .nf
 

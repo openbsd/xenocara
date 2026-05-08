@@ -22,7 +22,7 @@
 .\"
 .TH XkbKeyTypesForCoreSymbols __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbKeyTypesForCoreSymbols \- Determine the Xkb key types appropriate for the 
+XkbKeyTypesForCoreSymbols \- Determine the Xkb key types appropriate for the
 symbols bound to a key in a core keyboard mapping
 .SH SYNOPSIS
 .HP
@@ -56,23 +56,23 @@ backfilled with the canonical types bound to groups one and two for the key
 backfilled with symbols bound to the key in the Xkb mapping
 .SH DESCRIPTION
 .LP
-.I XkbKeyTypesForCoreSymbols 
-expands the symbols in 
-.I core_syms 
-and types in 
+.I XkbKeyTypesForCoreSymbols
+expands the symbols in
+.I core_syms
+and types in
 .I types_inout,
-then chooses canonical key types (canonical key types are 
-defined The Canonical Key Types) for groups 1 and 2 using the rules specified by 
+then chooses canonical key types (canonical key types are
+defined The Canonical Key Types) for groups 1 and 2 using the rules specified by
 the Xkb protocol and places them in xkb_syms_rtrn, which will be non-NULL.
 
 .B The Canonical Key Types
 
-Xkb allows up to XkbMaxKeyTypes (255) key types to be defined, but requires at 
-least XkbNumRequiredTypes (4) predefined types to be in a key map. These 
-predefined key types are referred to as the canonical key types and describe the 
-types of keys available on most keyboards. The definitions for the canonical key 
-types are held in the first XkbNumRequiredTypes entries of the 
-.I types 
+Xkb allows up to XkbMaxKeyTypes (255) key types to be defined, but requires at
+least XkbNumRequiredTypes (4) predefined types to be in a key map. These
+predefined key types are referred to as the canonical key types and describe the
+types of keys available on most keyboards. The definitions for the canonical key
+types are held in the first XkbNumRequiredTypes entries of the
+.I types
 field of the client map and are indexed using the following constants:
 .nf
 
@@ -80,14 +80,14 @@ field of the client map and are indexed using the following constants:
     XkbTwoLevelIndex
     XkbAlphabeticIndex
     XkbKeypadIndex
-    
+
 .fi
-    
+
 ONE_LEVEL
 
-The ONE_LEVEL key type describes groups that have only one symbol. The default 
-ONE_LEVEL key type has no map entries and does not pay attention to any 
-modifiers. A symbolic representation of this key type could look like the 
+The ONE_LEVEL key type describes groups that have only one symbol. The default
+ONE_LEVEL key type has no map entries and does not pay attention to any
+modifiers. A symbolic representation of this key type could look like the
 following:
 .nf
 
@@ -96,17 +96,17 @@ following:
          map[None]= Level1;
          level_name[Level1]= "Any";
     };
-    
-.fi    
-The description of the ONE_LEVEL key type is stored in the 
+
+.fi
+The description of the ONE_LEVEL key type is stored in the
 types[XkbOneLevelIndex] entry of the client key map.
 
 TWO_LEVEL
 
-The TWO_LEVEL key type describes groups that consist of two symbols but are 
-neither alphabetic nor numeric keypad keys. The default TWO_LEVEL type uses only 
-the Shift modifier. It returns shift level two if Shift is set, and level one if 
-it is not. A symbolic representation of this key type could look like the 
+The TWO_LEVEL key type describes groups that consist of two symbols but are
+neither alphabetic nor numeric keypad keys. The default TWO_LEVEL type uses only
+the Shift modifier. It returns shift level two if Shift is set, and level one if
+it is not. A symbolic representation of this key type could look like the
 following:
 .nf
 
@@ -116,17 +116,17 @@ following:
         level_name[Level1]= "Base";
         level_name[Level2]= "Shift";
     };
-    
+
 .fi
-    
-The description of the TWO_LEVEL key type is stored in the 
+
+The description of the TWO_LEVEL key type is stored in the
 types[XkbTwoLevelIndex] entry of the client key map.
 
 ALPHABETIC
 
-The ALPHABETIC key type describes groups consisting of two symbols: the 
-lowercase form of a symbol followed by the uppercase form of the same symbol. 
-The default ALPHABETIC type implements locale-sensitive "Shift cancels CapsLock" 
+The ALPHABETIC key type describes groups consisting of two symbols: the
+lowercase form of a symbol followed by the uppercase form of the same symbol.
+The default ALPHABETIC type implements locale-sensitive "Shift cancels CapsLock"
 behavior using both the Shift and Lock modifiers as follows:
 
 .IP \(bu 5
@@ -134,9 +134,9 @@ If Shift and Lock are both set, the default ALPHABETIC type yields level one.
 .IP \(bu 5
 If Shift alone is set, it yields level two.
 .IP \(bu 5
-If Lock alone is set, it yields level one, but preserves the Lock modifier so 
-Xlib notices and applies the appropriate capitalization rules. The Xlib 
-functions are locale-sensitive and apply different capitalization rules for 
+If Lock alone is set, it yields level one, but preserves the Lock modifier so
+Xlib notices and applies the appropriate capitalization rules. The Xlib
+functions are locale-sensitive and apply different capitalization rules for
 different locales.
 .IP \(bu 5
 If neither Shift nor Lock is set, it yields level one.
@@ -151,17 +151,17 @@ A symbolic representation of this key type could look like the following:
         level_name[Level1]= "Base";
         level_name[Level2]= "Caps";
     };
-    
-.fi    
-The description of the ALPHABETIC key type is stored in the 
+
+.fi
+The description of the ALPHABETIC key type is stored in the
 types[XkbAlphabeticIndex] entry of the client key map.
 
 KEYPAD
 
-The KEYPAD key type describes groups that consist of two symbols, at least one 
-of which is a numeric keypad symbol. The numeric keypad symbol is assumed to 
-reside at level two. The default KEYPAD key type implements "Shift cancels 
-NumLock" behavior using the Shift modifier and the real modifier bound to the 
+The KEYPAD key type describes groups that consist of two symbols, at least one
+of which is a numeric keypad symbol. The numeric keypad symbol is assumed to
+reside at level two. The default KEYPAD key type implements "Shift cancels
+NumLock" behavior using the Shift modifier and the real modifier bound to the
 virtual modifier named "NumLock," known as the NumLock modifier, as follows:
 
 .IP \(bu 5
@@ -185,44 +185,44 @@ A symbolic representation of this key type could look like the following:
         level_name[Level1]= "Base";
         level_name[Level2]= "Caps";
     };
-    
-.fi    
-The description of the KEYPAD key type is stored in the types[XkbKeypadIndex] 
+
+.fi
+The description of the KEYPAD key type is stored in the types[XkbKeypadIndex]
 entry of the client key map.
 
-A core keymap is a two-dimensional array of keysyms. It has 
-.I map_width 
-columns and 
-.I max_key_code 
-rows. 
-.I XkbKeyTypesForCoreSymbols 
-takes a single row from a core keymap, determines the number of groups 
-associated with it, the type of each group, and the symbols bound to each group. 
-The return value is the number of groups, 
-.I types_inout 
-has the types for each group, and 
-.I xkb_syms_rtrn 
-has the symbols in Xkb order (that is, groups are contiguous, regardless of 
+A core keymap is a two-dimensional array of keysyms. It has
+.I map_width
+columns and
+.I max_key_code
+rows.
+.I XkbKeyTypesForCoreSymbols
+takes a single row from a core keymap, determines the number of groups
+associated with it, the type of each group, and the symbols bound to each group.
+The return value is the number of groups,
+.I types_inout
+has the types for each group, and
+.I xkb_syms_rtrn
+has the symbols in Xkb order (that is, groups are contiguous, regardless of
 size).
 
-.I protected 
-contains the explicitly protected key types. There is one  explicit override 
-control associated with each of the four possible groups for each Xkb key, 
-ExplicitKeyType1 through ExplicitKeyType4; 
-.I protected 
-is an inclusive OR of these controls. 
-.I map_width 
+.I protected
+contains the explicitly protected key types. There is one  explicit override
+control associated with each of the four possible groups for each Xkb key,
+ExplicitKeyType1 through ExplicitKeyType4;
+.I protected
+is an inclusive OR of these controls.
+.I map_width
 is the width of the core keymap and is not dependent on any Xkb definitions.
-.I types_inout 
-is an array of four type indices. On input, 
-.I types_inout 
-contains the indices of any types already assigned to the key, in case they are 
+.I types_inout
+is an array of four type indices. On input,
+.I types_inout
+contains the indices of any types already assigned to the key, in case they are
 explicitly protected from change.
 
-Upon return, 
-.I types_inout 
-contains any automatically selected (that is, canonical) types plus any 
-protected types. Canonical types are assigned to all four groups if there are 
-enough symbols to do so. The four entries in 
-.I types_inout 
-correspond to the four groups for the key in question. 
+Upon return,
+.I types_inout
+contains any automatically selected (that is, canonical) types plus any
+protected types. Canonical types are assigned to all four groups if there are
+enough symbols to do so. The four entries in
+.I types_inout
+correspond to the four groups for the key in question.

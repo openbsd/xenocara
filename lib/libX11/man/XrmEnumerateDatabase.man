@@ -134,8 +134,8 @@ If Xlib has been initialized for threads, the procedure is called with
 the database locked and the result of a call by the procedure to any
 Xlib function using the same database is not defined.
 .SH "SEE ALSO"
-XrmGetResource(__libmansuffix__),
-XrmInitialize(__libmansuffix__),
-XrmPutResource(__libmansuffix__)
+.BR XrmGetResource (__libmansuffix__),
+.BR XrmInitialize (__libmansuffix__),
+.BR XrmPutResource (__libmansuffix__)
 .br
 \fI\*(xL\fP

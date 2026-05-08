@@ -21,7 +21,7 @@
 .\"
 .TH XkbKeysymToModifiers __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbKeysymToModifiers \- Finds the set of modifiers bound to a particular keysym 
+XkbKeysymToModifiers \- Finds the set of modifiers bound to a particular keysym
 on the core keyboard
 .SH SYNOPSIS
 .HP
@@ -39,14 +39,14 @@ connection to X server
 keysym of interest
 .SH DESCRIPTION
 .LP
-.I XkbKeysymToModifiers 
-finds the set of modifiers currently bound to the keysym 
-.I ks 
-on the core keyboard. The value returned is the mask of modifiers bound to the 
-keysym 
-.I ks. 
-If no modifiers are bound to the keysym, 
-.I XkbKeysymToModifiers 
-returns zero; otherwise, it returns the inclusive OR of zero or more of the 
-following: ShiftMask, ControlMask, LockMask, Mod1Mask, Mod2Mask, Mod3Mask, 
+.I XkbKeysymToModifiers
+finds the set of modifiers currently bound to the keysym
+.I ks
+on the core keyboard. The value returned is the mask of modifiers bound to the
+keysym
+.I ks.
+If no modifiers are bound to the keysym,
+.I XkbKeysymToModifiers
+returns zero; otherwise, it returns the inclusive OR of zero or more of the
+following: ShiftMask, ControlMask, LockMask, Mod1Mask, Mod2Mask, Mod3Mask,
 Mod4Mask, and Mod5Mask.

@@ -31,21 +31,21 @@ XkbAllocKeyboard \-  Creates a keyboard description from scratch
 .SH DESCRIPTION
 .LP
 Applications seldom need to directly allocate a keyboard description; calling
-.I XkbGetKeyboard 
-usually suffices. In the event you need to create a keyboard description from 
-scratch, however, use 
-.I XkbAllocKeyboard 
-rather than directly calling 
+.I XkbGetKeyboard
+usually suffices. In the event you need to create a keyboard description from
+scratch, however, use
+.I XkbAllocKeyboard
+rather than directly calling
 .I malloc.
 
-If 
-.I XkbAllocKeyboard 
-fails to allocate the keyboard description, it returns NULL. 
-Otherwise, it returns a pointer to an empty keyboard description structure. The 
-.I device_spec 
-field will have been initialized to XkbUseCoreKbd. You may then 
-either fill in the structure components or use Xkb functions to obtain values 
-for the structure components from a keyboard device. 
+If
+.I XkbAllocKeyboard
+fails to allocate the keyboard description, it returns NULL.
+Otherwise, it returns a pointer to an empty keyboard description structure. The
+.I device_spec
+field will have been initialized to XkbUseCoreKbd. You may then
+either fill in the structure components or use Xkb functions to obtain values
+for the structure components from a keyboard device.
 .SH "SEE ALSO"
 .BR malloc (3F),
 .BR XkbUseCoreKbd (__libmansuffix__),

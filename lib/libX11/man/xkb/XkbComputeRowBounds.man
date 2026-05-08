@@ -42,9 +42,9 @@ section that contains the row
 row to be examined and updated
 .SH DESCRIPTION
 .LP
-.I XkbComputeRowBounds 
-checks the bounds of all keys in the 
-.I row 
-and updates the bounding box of the row if necessary. 
-.I XkbComputeRowBounds 
+.I XkbComputeRowBounds
+checks the bounds of all keys in the
+.I row
+and updates the bounding box of the row if necessary.
+.I XkbComputeRowBounds
 returns False if any of the arguments is NULL; otherwise, it returns True.

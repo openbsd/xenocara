@@ -43,20 +43,20 @@ event from which changes are to be copied
 types of names for which changes are to be noted
 .SH DESCRIPTION
 .LP
-When your application receives a XkbNamesNotify event, you can note the changed 
-names in a changes structure using 
+When your application receives a XkbNamesNotify event, you can note the changed
+names in a changes structure using
 .I XkbNoteNameChanges.
 
-The 
-.I wanted 
-parameter is the bitwise inclusive OR of the valid names mask bits shown in 
-Table 1. 
-.I XkbNoteNameChanges 
-copies any changes that are reported in 
-.I new 
-and specified in 
-.I wanted 
-into the changes record specified by 
+The
+.I wanted
+parameter is the bitwise inclusive OR of the valid names mask bits shown in
+Table 1.
+.I XkbNoteNameChanges
+copies any changes that are reported in
+.I new
+and specified in
+.I wanted
+into the changes record specified by
 .I old.
 
 .TS

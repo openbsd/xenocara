@@ -81,13 +81,13 @@ A value for a Font or GContext argument does not name a defined Font.
 .B BadGC
 A value for a GContext argument does not name a defined GContext.
 .SH "SEE ALSO"
-XCreateGC(__libmansuffix__),
-XQueryBestSize(__libmansuffix__),
-XSetArcMode(__libmansuffix__),
-XSetClipOrigin(__libmansuffix__),
-XSetFillStyle(__libmansuffix__),
-XSetLineAttributes(__libmansuffix__),
-XSetState(__libmansuffix__),
-XSetTile(__libmansuffix__)
+.BR XCreateGC (__libmansuffix__),
+.BR XQueryBestSize (__libmansuffix__),
+.BR XSetArcMode (__libmansuffix__),
+.BR XSetClipOrigin (__libmansuffix__),
+.BR XSetFillStyle (__libmansuffix__),
+.BR XSetLineAttributes (__libmansuffix__),
+.BR XSetState (__libmansuffix__),
+.BR XSetTile (__libmansuffix__)
 .br
 \fI\*(xL\fP

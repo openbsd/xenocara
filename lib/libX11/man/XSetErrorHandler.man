@@ -143,7 +143,7 @@ This is assumed to be a fatal condition,
 and the called routine should normally not return.
 If the I/O error handler does return,
 the client process exits by default, this behavior may be altered with the
-.BR XSetIOErrorExitHandler
+.B XSetIOErrorExitHandler
 function.
 .LP
 Note that the previous error handler is returned.
@@ -181,7 +181,7 @@ is used for the message argument.
 If no string is found in the error database,
 the default_string is returned to the buffer argument.
 .SH "SEE ALSO"
-XOpenDisplay(__libmansuffix__),
-XSynchronize(__libmansuffix__)
+.BR XOpenDisplay (__libmansuffix__),
+.BR XSynchronize (__libmansuffix__)
 .br
 \fI\*(xL\fP

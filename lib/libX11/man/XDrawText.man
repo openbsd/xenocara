@@ -184,8 +184,8 @@ An
 .B InputOnly
 window is used as a Drawable.
 .SH "SEE ALSO"
-XDrawImageString(__libmansuffix__),
-XDrawString(__libmansuffix__),
-XLoadFont(__libmansuffix__)
+.BR XDrawImageString (__libmansuffix__),
+.BR XDrawString (__libmansuffix__),
+.BR XLoadFont (__libmansuffix__)
 .br
 \fI\*(xL\fP

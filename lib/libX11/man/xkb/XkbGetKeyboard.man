@@ -22,7 +22,7 @@
 .\"
 .TH XkbGetKeyboard __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetKeyboard \-   Retrieves one or more components of a keyboard device 
+XkbGetKeyboard \-   Retrieves one or more components of a keyboard device
 description
 .SH SYNOPSIS
 .HP
@@ -35,7 +35,7 @@ description
 .SH ARGUMENTS
 .TP
 .I display
-connection to the X server 
+connection to the X server
 .TP
 .I device_spec
 device ID, or XkbUseCoreKbd
@@ -48,14 +48,14 @@ determines events to be selected / deselected
 .SH DESCRIPTION
 .LP
 .B XkbGetKeyboard
-allocates and returns a pointer to a keyboard description. It queries the server for those 
-components specified in the 
-.I which 
-parameter for device 
-.I device_spec 
-and copies the results to the XkbDescRec it allocated. The remaining fields in the keyboard 
-description are set to NULL. The valid masks for 
-.I which 
+allocates and returns a pointer to a keyboard description. It queries the server for those
+components specified in the
+.I which
+parameter for device
+.I device_spec
+and copies the results to the XkbDescRec it allocated. The remaining fields in the keyboard
+description are set to NULL. The valid masks for
+.I which
 are those listed in Table 1.
 
 .TS
@@ -81,9 +81,9 @@ is used to read the current description for one or more components of a keyboard
 .BR XkbGetKeyboardByName (__libmansuffix__)
 as follows:
 
-.I XkbGetKeyboardByName(dpy, device_spec, 
-NULL, 
-.I which, which, 
+.I XkbGetKeyboardByName(dpy, device_spec,
+NULL,
+.I which, which,
 False).
 .LP
 If successful,

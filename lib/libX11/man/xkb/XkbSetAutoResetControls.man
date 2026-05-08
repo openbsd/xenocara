@@ -21,7 +21,7 @@
 .\"
 .TH XkbSetAutoResetControls __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbSetAutoResetControls \- Changes the current values of the AutoReset control 
+XkbSetAutoResetControls \- Changes the current values of the AutoReset control
 attributes
 .SH SYNOPSIS
 .HP
@@ -41,29 +41,29 @@ connection to X server
 controls for which to change auto-reset values
 .TP
 .I auto_ctrls
-controls from changes that should auto reset 
+controls from changes that should auto reset
 .TP
 .I auto_values
 1 bit => auto-reset on
 .SH DESCRIPTION
 .LP
-.I XkbSetAutoResetControls 
-changes the auto-reset status and associated auto-reset values for the controls 
-selected by 
-.I changes. 
-For any control selected by 
-.I changes, 
-if the corresponding bit is set in 
-.I auto_ctrls, 
-the control is configured to auto-reset when the client exits. If the 
-corresponding bit in 
-.I auto_values 
-is on, the control is turned on when the client exits; if zero, the control is 
-turned off when the client exits. For any control selected by 
-.I changes, 
-if the corresponding bit is not set in 
-.I auto_ctrls, 
-the control is configured to not reset when the client exits. 
+.I XkbSetAutoResetControls
+changes the auto-reset status and associated auto-reset values for the controls
+selected by
+.I changes.
+For any control selected by
+.I changes,
+if the corresponding bit is set in
+.I auto_ctrls,
+the control is configured to auto-reset when the client exits. If the
+corresponding bit in
+.I auto_values
+is on, the control is turned on when the client exits; if zero, the control is
+turned off when the client exits. For any control selected by
+.I changes,
+if the corresponding bit is not set in
+.I auto_ctrls,
+the control is configured to not reset when the client exits.
 
 For example:
 
@@ -71,30 +71,30 @@ For example:
 To leave the auto-reset controls for StickyKeys the way they are:
 
 	ok = XkbSetAutoResetControls(dpy, 0, 0, 0);
-	
-To change the auto-reset controls so that StickyKeys are unaffected when the 
+
+To change the auto-reset controls so that StickyKeys are unaffected when the
 client exits:
 
 	ok = XkbSetAutoResetControls(dpy, XkbStickyKeysMask, 0, 0);
-	
-To change the auto-reset controls so that StickyKeys are turned off when the 
+
+To change the auto-reset controls so that StickyKeys are turned off when the
 client exits:
 
 	ok = XkbSetAutoResetControls(dpy, XkbStickyKeysMask, XkbStickyKeysMask, 0);
-	
-To change the auto-reset controls so that StickyKeys are turned on when the 
+
+To change the auto-reset controls so that StickyKeys are turned on when the
 client exits:
 
-	ok = XkbSetAutoResetControls(dpy, XkbStickyKeysMask, XkbStickyKeysMask, 
+	ok = XkbSetAutoResetControls(dpy, XkbStickyKeysMask, XkbStickyKeysMask,
 XkbStickyKeysMask);
 
 .fi
-.I XkbSetAutoResetControls 
-backfills 
-.I auto_ctrls 
-and 
-.I auto_values 
-with the auto-reset controls for this particular client. Note that all of the 
-bits are valid in the returned values, not just the ones selected in the 
-.I changes 
+.I XkbSetAutoResetControls
+backfills
+.I auto_ctrls
+and
+.I auto_values
+with the auto-reset controls for this particular client. Note that all of the
+bits are valid in the returned values, not just the ones selected in the
+.I changes
 mask.

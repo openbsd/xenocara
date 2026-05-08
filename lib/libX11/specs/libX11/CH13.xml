@@ -83,7 +83,7 @@ mechanisms for announcing the locale in addition to
 </para>
 <para>
 <!-- .LP -->
-On implementations that do not conform to the ANSI C library, 
+On implementations that do not conform to the ANSI C library,
 the locale announcement method is Xlib implementation-dependent.
 </para>
 <para>
@@ -109,16 +109,16 @@ To determine if the current locale is supported by X, use
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The 
+The
 <function>XSupportsLocale</function>
-function returns 
+function returns
 <symbol>True</symbol>
 if Xlib functions are capable of operating under the current locale.
-If it returns 
+If it returns
 <symbol>False</symbol>,
-Xlib locale-dependent functions for which the 
+Xlib locale-dependent functions for which the
 <symbol>XLocaleNotSupported</symbol>
-return status is defined will return 
+return status is defined will return
 <symbol>XLocaleNotSupported</symbol>.
 Other Xlib locale-dependent routines will operate in the ``C'' locale.
 </para>
@@ -127,12 +127,12 @@ Other Xlib locale-dependent routines will operate in the ``C'' locale.
 The client is responsible for selecting its locale and X modifiers.
 Clients should provide a means for the user to override the clients'
 locale selection at client invocation.
-Most single-display X clients operate in a single locale 
+Most single-display X clients operate in a single locale
 for both X and the host processing environment.
-They will configure the locale by calling three functions: 
+They will configure the locale by calling three functions:
 the host locale configuration function,
 <function>XSupportsLocale</function>,
-and 
+and
 <xref linkend='XSetLocaleModifiers' xrefstyle='select: title'/>.
 </para>
 <para>
@@ -179,7 +179,7 @@ function sets the X modifiers for the current locale setting.
 The modifier_list argument is a null-terminated string of the form
 ``{@<emphasis remap='I'>category</emphasis>=<emphasis remap='I'>value</emphasis>}'', that is,
 having zero or more concatenated ``@<emphasis remap='I'>category</emphasis>=<emphasis remap='I'>value</emphasis>''
-entries, where <emphasis remap='I'>category</emphasis> is a category name 
+entries, where <emphasis remap='I'>category</emphasis> is a category name
 and <emphasis remap='I'>value</emphasis> is the (possibly empty) setting for that category.
 The values are encoded in the current locale.
 Category names are restricted to the <acronym>POSIX</acronym> Portable Filename Character Set.
@@ -451,7 +451,7 @@ the following table describes the locale (and modifiers) dependency:
 
 <para>
 <!-- .LP -->
-Clients may assume that a locale-encoded text string returned 
+Clients may assume that a locale-encoded text string returned
 by an X function can be passed to a C library routine, or vice versa,
 if the locale is the same at the two calls.
 </para>
@@ -465,16 +465,16 @@ is state-dependent.
 <!-- .LP -->
 All Xlib functions behave as if they do not change the current locale
 or X modifier setting.
-(This means that if they do change locale or call 
+(This means that if they do change locale or call
 <xref linkend='XSetLocaleModifiers' xrefstyle='select: title'/>
 with a non-NULL argument, they must save and restore the current state on
 entry and exit.)
 Also, Xlib functions on implementations that conform to the ANSI C library do
-not alter the global state associated with the ANSI C functions 
+not alter the global state associated with the ANSI C functions
 <function>mblen</function>,
 <function>mbtowc</function>,
 <function>wctomb</function>,
-and 
+and
 <function>strtok</function>.
 </para>
 </sect1>
@@ -487,19 +487,19 @@ and
 <!-- .LP -->
 Various functions in this chapter have arguments that conform
 to the ANSI C variable argument list calling convention.
-Each function denoted with an argument of the form ``...'' takes 
+Each function denoted with an argument of the form ``...'' takes
 a variable-length list of name and value pairs,
-where each name is a string and each value is of type 
+where each name is a string and each value is of type
 <type>XPointer</type>.
-A name argument that is NULL identifies the end of the list. 
+A name argument that is NULL identifies the end of the list.
 </para>
 <para>
 <!-- .LP -->
 A variable-length argument list may contain a nested list.
-If the name 
+If the name
 <symbol>XNVaNestedList</symbol>
 is specified in place of an argument name,
-then the following value is interpreted as an 
+then the following value is interpreted as an
 <type>XVaNestedList</type>
 value that specifies a list of values logically inserted into the
 original list at the point of declaration.
@@ -675,16 +675,16 @@ the output method for clients.
 <para>
 <!-- .LP -->
 The abstraction used to communicate with an output method
-is an opaque data structure represented by the 
+is an opaque data structure represented by the
 <type>XOM</type>
 data type.
 The abstraction for representing the state of a particular output thread
 is called an <emphasis remap='I'>output context</emphasis>.
-The Xlib representation of an output context is an 
+The Xlib representation of an output context is an
 <type>XOC</type>,
-which is compatible with 
+which is compatible with
 <type>XFontSet</type>
-in terms of its functional interface, but is 
+in terms of its functional interface, but is
 a broader, more generalized abstraction.
 </para>
 </sect2>
@@ -772,7 +772,7 @@ is identified on the basis of the current locale and modifiers.
 <xref linkend='XOpenOM' xrefstyle='select: title'/>
 will identify a default output method corresponding to the
 current locale.
-That default can be modified using 
+That default can be modified using
 <xref linkend='XSetLocaleModifiers' xrefstyle='select: title'/>
 to set the output method modifier.
 </para>
@@ -787,8 +787,8 @@ no database is passed to the output method.
 </para>
 <para>
 <!-- .LP -->
-The res_name and res_class arguments specify the resource name 
-and class of the application. 
+The res_name and res_class arguments specify the resource name
+and class of the application.
 They are intended to be used as prefixes by the output method
 when looking up resources that are common to all output contexts
 that may be created for this output method.
@@ -847,7 +847,7 @@ function closes the specified output method.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To set output method attributes, use 
+To set output method attributes, use
 <xref linkend='XSetOMValues' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XSetOMValues</primary></indexterm>
@@ -900,7 +900,7 @@ No standard arguments are currently defined by Xlib.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To query an output method, use 
+To query an output method, use
 <xref linkend='XGetOMValues' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XGetOMValues</primary></indexterm>
@@ -1133,9 +1133,9 @@ charset names.
 <!-- .LP -->
 The required charset list is owned by Xlib and should not be modified or
 freed by the client.
-It will be freed by a call to 
+It will be freed by a call to
 <xref linkend='XCloseOM' xrefstyle='select: title'/>
-with the associated 
+with the associated
 <type>XOM</type>.
 Until freed, its contents will not be modified by Xlib.
 </para>
@@ -1177,7 +1177,7 @@ typedef struct {
 
 typedef enum {
      XOMOrientation_LTR_TTB,
-     XOMOrientation_RTL_TTB,     
+     XOMOrientation_RTL_TTB,
      XOMOrientation_TTB_LTR,
      XOMOrientation_TTB_RTL,
      XOMOrientation_Context
@@ -1528,7 +1528,7 @@ values.
 <!-- .eM -->
 The
 <xref linkend='XSetOCValues' xrefstyle='select: title'/>
-function returns NULL if no error occurred; 
+function returns NULL if no error occurred;
 otherwise,
 it returns the name of the first argument that could not be set.
 An argument might not be set for any of the following reasons:
@@ -1836,7 +1836,7 @@ may be able to remap a required charset.
 <!-- .LP -->
 The missing charset list is owned by Xlib and should not be modified or
 freed by the client.
-It will be freed by a call to 
+It will be freed by a call to
 <xref linkend='XDestroyOC' xrefstyle='select: title'/>
 with the associated
 <type>XOC</type>.
@@ -1904,19 +1904,19 @@ The value of the argument is of type
 <type>XOrientation</type>.
 When
 <symbol>XNOrientation</symbol>
-is queried, the value specifies the current orientation.  
+is queried, the value specifies the current orientation.
 When
 <symbol>XNOrientation</symbol>
 is set, a value is used to set the current orientation.
 </para>
 <para>
 <!-- .LP -->
-When 
+When
 <constant>XOMOrientation_Context</constant>
-is set, the text orientation of the 
+is set, the text orientation of the
 text is determined according to an implementation-defined method
 (for example, ISO 6429 control sequences), and the initial text orientation for
-locale-dependent Xlib functions is assumed to 
+locale-dependent Xlib functions is assumed to
 be
 <constant>XOMOrientation_LTR_TTB</constant>.
 </para>
@@ -1924,8 +1924,8 @@ be
 <!-- .LP -->
 The
 <symbol>XNOrientation</symbol>
-value does not change the prime drawing direction 
-for Xlib drawing functions.  
+value does not change the prime drawing direction
+for Xlib drawing functions.
 </para>
 </sect3>
 <sect3 id="Resource_Name_and_Class">
@@ -1980,7 +1980,7 @@ Until freed, the string contents will not be modified by Xlib.
 <!-- .LP -->
 The
 <symbol>XNFontInfo</symbol>
-argument specifies a list of one or more 
+argument specifies a list of one or more
 <structname>XFontStruct</structname>
 structures
 and font names for the fonts used for drawing by the given output context.
@@ -2017,32 +2017,32 @@ structures and font names is returned to num_font.
 <!-- .LP -->
 Because it is not guaranteed that a given character will be imaged using a
 single font glyph,
-there is no provision for mapping a character or default string 
-to the font properties, font ID, or direction hint for the font 
+there is no provision for mapping a character or default string
+to the font properties, font ID, or direction hint for the font
 for the character.
-The client may access the 
+The client may access the
 <structname>XFontStruct</structname>
 list to obtain these values for all the fonts currently in use.
 </para>
 <para>
 <!-- .LP -->
 Xlib does not guarantee that fonts are loaded from the server
-at the creation of an 
+at the creation of an
 <type>XOC</type>.
-Xlib may choose to cache font data, loading it only as needed to draw text 
+Xlib may choose to cache font data, loading it only as needed to draw text
 or compute text dimensions.
-Therefore, existence of the per_char metrics in the 
+Therefore, existence of the per_char metrics in the
 <structname>XFontStruct</structname>
 structures in the
 <structname>XFontStructSet</structname>
 is undefined.
-Also, note that all properties in the 
+Also, note that all properties in the
 <structname>XFontStruct</structname>
 structures are in the STRING encoding.
 </para>
 <para>
 <!-- .LP -->
-The client must not free the 
+The client must not free the
 <structname>XOMFontInfo</structname>
 struct itself; it will be freed when the
 <type>XOC</type>
@@ -2065,16 +2065,16 @@ or not.  Because the
 function not only destroys the output context but also closes the implicit
 output method associated with it,
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
-should be used with any output context created by 
+should be used with any output context created by
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>.
 However, it is possible that a client does not know how the output context
 was created.
 Before a client destroys the output context,
 it can query whether
 <symbol>XNOMAutomatic</symbol>
-is set to determine whether 
+is set to determine whether
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
-or 
+or
 <xref linkend='XDestroyOC' xrefstyle='select: title'/>
 should be used to destroy the output context.
 </para>
@@ -2089,7 +2089,7 @@ should be used to destroy the output context.
 <!-- .LP -->
 Xlib international text drawing is done using a set of one or more fonts,
 as needed for the locale of the text.
-Fonts are loaded according to a list of base font names 
+Fonts are loaded according to a list of base font names
 supplied by the client and the charsets required by the locale.
 The
 <type>XFontSet</type>
@@ -2100,7 +2100,7 @@ and is equivalent to the type
 <para>
 <!-- .LP -->
 <!-- .sp -->
-The 
+The
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
 function is a convenience function for creating an output context using
 only default values.  The returned
@@ -2186,10 +2186,10 @@ Returns the string drawn for missing charsets.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The 
+The
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
 function creates a font set for the specified display.
-The font set is bound to the current locale when 
+The font set is bound to the current locale when
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
 is called.
 The font set may be used in subsequent calls to obtain font
@@ -2201,7 +2201,7 @@ The base_font_name_list argument is a list of base font names
 that Xlib uses to load the fonts needed for the locale.
 The base font names are a comma-separated list.
 The string is null-terminated
-and is assumed to be in the Host Portable Character Encoding; 
+and is assumed to be in the Host Portable Character Encoding;
 otherwise, the result is implementation-dependent.
 White space immediately on either side of a separating comma is ignored.
 </para>
@@ -2230,22 +2230,22 @@ function will return this <acronym>XLFD</acronym> name instead of the client-sup
 <para>
 <!-- .LP -->
 Xlib uses the following algorithm to select the fonts
-that will be used to display text with the 
+that will be used to display text with the
 <type>XFontSet</type>.
 </para>
 <para>
 <!-- .LP -->
 For each font charset required by the locale,
-the base font name list is searched for the first appearance of one 
+the base font name list is searched for the first appearance of one
 of the following cases that names a set of fonts that exist at the server:
 </para>
 <itemizedlist>
   <listitem>
     <para>
 The first <acronym>XLFD</acronym>-conforming base font name that specifies the required
-charset or a superset of the required charset in its 
+charset or a superset of the required charset in its
 <structfield>CharSetRegistry</structfield>
-and 
+and
 <structfield>CharSetEncoding</structfield>
 fields.
 The implementation may use a base font name whose specified charset
@@ -2258,10 +2258,10 @@ an ISO8859-1 font for an ASCII charset.
 The first set of one or more <acronym>XLFD</acronym>-conforming base font names
 that specify one or more charsets that can be remapped to support the
 required charset.
-The Xlib implementation may recognize various mappings 
+The Xlib implementation may recognize various mappings
 from a required charset to one or more other charsets
 and use the fonts for those charsets.
-For example, JIS Roman is ASCII with tilde and backslash replaced 
+For example, JIS Roman is ASCII with tilde and backslash replaced
 by yen and overbar;
 Xlib may load an ISO8859-1 font to support this character set
 if a JIS Roman font is not available.
@@ -2271,7 +2271,7 @@ if a JIS Roman font is not available.
     <para>
 The first <acronym>XLFD</acronym>-conforming font name or the first non-<acronym>XLFD</acronym> font name
 for which an <acronym>XLFD</acronym> font name can be obtained, combined with the
-required charset (replacing the 
+required charset (replacing the
 <structfield>CharSetRegistry</structfield>
 and
 <structfield>CharSetEncoding</structfield>
@@ -2347,9 +2347,9 @@ For example:
 </para>
 <para>
 <!-- .LP -->
-If 
+If
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
-is unable to create the font set, 
+is unable to create the font set,
 either because there is insufficient memory or because the current locale
 is not supported,
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
@@ -2378,12 +2378,12 @@ may be able to remap a required charset.
 <!-- .LP -->
 If no font exists for any of the required charsets
 or if the locale definition in Xlib requires that a font exist
-for a particular charset and a font is not found for that charset, 
+for a particular charset and a font is not found for that charset,
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
 returns NULL.
-Otherwise, 
+Otherwise,
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
-returns a valid 
+returns a valid
 <type>XFontSet</type>
 to font_set.
 </para>
@@ -2396,15 +2396,15 @@ drawable.
 If def_string_return is non-NULL,
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
 returns a pointer to a string that represents the glyphs
-that are drawn with this 
+that are drawn with this
 <type>XFontSet</type>
 when the charsets of the available fonts do not include all font glyphs
 required to draw a codepoint.
-The string does not necessarily consist of valid characters 
+The string does not necessarily consist of valid characters
 in the current locale and is not necessarily drawn with
 the fonts loaded for the font set,
 but the client can draw and measure the default glyphs
-by including this string in a string being drawn or measured with the 
+by including this string in a string being drawn or measured with the
 <type>XFontSet</type>.
 </para>
 <para>
@@ -2413,9 +2413,9 @@ If the string returned to def_string_return is the empty string (""),
 no glyphs are drawn, and the escapement is zero.
 The returned string is null-terminated.
 It is owned by Xlib and should not be modified or freed by the client.
-It will be freed by a call to 
+It will be freed by a call to
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
-with the associated 
+with the associated
 <type>XFontSet</type>.
 Until freed, its contents will not be modified by Xlib.
 </para>
@@ -2427,23 +2427,23 @@ operation in the case that some fonts did not exist.
 </para>
 <para>
 <!-- .LP -->
-The returned 
+The returned
 <type>XFontSet</type>
-and missing charset list should be freed with 
+and missing charset list should be freed with
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
 and
 <xref linkend='XFreeStringList' xrefstyle='select: title'/>,
 respectively.
-The client-supplied base_font_name_list may be freed 
-by the client after calling 
+The client-supplied base_font_name_list may be freed
+by the client after calling
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>.
 </para>
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To obtain a list of 
+To obtain a list of
 <structname>XFontStruct</structname>
-structures and full font names given an 
+structures and full font names given an
 <type>XFontSet</type>,
 use
 <xref linkend='XFontsOfFontSet' xrefstyle='select: title'/>.
@@ -2496,7 +2496,7 @@ Returns the list of font names.
 <!-- .eM -->
 The
 <xref linkend='XFontsOfFontSet' xrefstyle='select: title'/>
-function returns a list of one or more 
+function returns a list of one or more
 <structname>XFontStruct</structname>s
 and font names for the fonts used by the Xmb and Xwc layers
 for the given font set.
@@ -2514,34 +2514,34 @@ structures and font names is returned as the value of the function.
 <!-- .LP -->
 Because it is not guaranteed that a given character will be imaged using a
 single font glyph,
-there is no provision for mapping a character or default string 
-to the font properties, font ID, or direction hint for the font 
+there is no provision for mapping a character or default string
+to the font properties, font ID, or direction hint for the font
 for the character.
-The client may access the 
+The client may access the
 <structname>XFontStruct</structname>
 list to obtain these values for all the fonts currently in use.
 </para>
 <para>
 <!-- .LP -->
 Xlib does not guarantee that fonts are loaded from the server
-at the creation of an 
+at the creation of an
 <type>XFontSet</type>.
-Xlib may choose to cache font data, loading it only as needed to draw text 
+Xlib may choose to cache font data, loading it only as needed to draw text
 or compute text dimensions.
-Therefore, existence of the per_char metrics in the 
+Therefore, existence of the per_char metrics in the
 <structname>XFontStruct</structname>
 structures in the
 <structname>XFontStructSet</structname>
 is undefined.
-Also, note that all properties in the 
+Also, note that all properties in the
 <structname>XFontStruct</structname>
 structures are in the STRING encoding.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <structname>XFontStruct</structname>
-and font name lists are owned by Xlib 
+and font name lists are owned by Xlib
 and should not be modified or freed by the client.
 They will be freed by a call to
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
@@ -2584,7 +2584,7 @@ Specifies the font set.
 The
 <xref linkend='XBaseFontNameListOfFontSet' xrefstyle='select: title'/>
 function returns the original base font name list supplied
-by the client when the 
+by the client when the
 <type>XFontSet</type>
 was created.
 A null-terminated string containing a list of
@@ -2594,7 +2594,7 @@ White space may appear immediately on either side of separating commas.
 </para>
 <para>
 <!-- .LP -->
-If 
+If
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
 obtained an <acronym>XLFD</acronym> name from the font properties for the font specified
 by a non-<acronym>XLFD</acronym> base name, the
@@ -2605,16 +2605,16 @@ function will return the <acronym>XLFD</acronym> name instead of the non-<acrony
 <!-- .LP -->
 The base font name list is owned by Xlib and should not be modified or
 freed by the client.
-It will be freed by a call to 
+It will be freed by a call to
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
-with the associated 
+with the associated
 <type>XFontSet</type>.
 Until freed, its contents will not be modified by Xlib.
 </para>
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To obtain the locale name given an 
+To obtain the locale name given an
 <type>XFontSet</type>,
 use
 <xref linkend='XLocaleOfFontSet' xrefstyle='select: title'/>.
@@ -2656,18 +2656,18 @@ The returned locale name string is owned by Xlib
 and should not be modified or freed by the client.
 It may be freed by a call to
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
-with the associated 
+with the associated
 <type>XFontSet</type>.
 Until freed, it will not be modified by Xlib.
 </para>
 <para>
 <!-- .LP -->
 <!-- .sp -->
-The 
+The
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
 function is a convenience function for freeing an output context.
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
-also frees its associated 
+also frees its associated
 <type>XOM</type>
 if the output context was created by
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>.
@@ -2710,9 +2710,9 @@ Specifies the font set.
 The
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
 function frees the specified font set.
-The associated base font name list, font name list, 
+The associated base font name list, font name list,
 <structname>XFontStruct</structname>
-list, and 
+list, and
 <structname>XFontSetExtents</structname>,
 if any, are freed.
 </para>
@@ -2724,18 +2724,18 @@ if any, are freed.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-Metrics for the internationalized text drawing functions 
-are defined in terms of a primary draw direction, 
+Metrics for the internationalized text drawing functions
+are defined in terms of a primary draw direction,
 which is the default direction in which the character origin advances
 for each succeeding character in the string.
 The Xlib interface is currently defined to support only a left-to-right
 primary draw direction.
-The drawing origin is the position passed to the drawing function 
+The drawing origin is the position passed to the drawing function
 when the text is drawn.
 The baseline is a line drawn through the drawing origin parallel
 to the primary draw direction.
-Character ink is the pixels painted in the foreground color 
-and does not include interline or intercharacter spacing 
+Character ink is the pixels painted in the foreground color
+and does not include interline or intercharacter spacing
 or image text background pixels.
 </para>
 <para>
@@ -2760,14 +2760,14 @@ or
 The drawing functions are allowed to implement context-dependent
 rendering, where the glyphs drawn for a string are not simply a
 concatenation of the glyphs that represent each individual character.
-A string of two characters drawn with 
+A string of two characters drawn with
 <xref linkend='XmbDrawString' xrefstyle='select: title'/>
-may render differently than if the two characters 
+may render differently than if the two characters
 were drawn with separate calls to
 <xref linkend='XmbDrawString' xrefstyle='select: title'/>.
-If the client appends or inserts a character 
+If the client appends or inserts a character
 in a previously drawn string,
-the client may need to redraw some adjacent characters 
+the client may need to redraw some adjacent characters
 to obtain proper rendering.
 </para>
 <para>
@@ -2897,7 +2897,7 @@ in a text stream.
 <para>
 <!-- .LP -->
 The maximum character extents for the fonts that are used by the text
-drawing layers can be accessed by the 
+drawing layers can be accessed by the
 <structname>XFontSetExtents</structname>
 structure:
 <indexterm significance="preferred"><primary>XFontSetExtents</primary></indexterm>
@@ -2915,9 +2915,9 @@ typedef struct {
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <structname>XRectangle</structname>
-structures used to return font set metrics are the usual Xlib screen-oriented 
+structures used to return font set metrics are the usual Xlib screen-oriented
 rectangles
 with x, y giving the upper left corner, and width and height always positive.
 </para>
@@ -2926,7 +2926,7 @@ with x, y giving the upper left corner, and width and height always positive.
 The max_ink_extent member gives the maximum extent, over all drawable characters, of
 the rectangles that bound the character glyph image drawn in the
 foreground color, relative to a constant origin.
-See 
+See
 <xref linkend='XmbTextExtents' xrefstyle='select: title'/>
 and
 <function>XwcTextExtents</function>
@@ -2935,19 +2935,19 @@ for detailed semantics.
 <para>
 <!-- .LP -->
 The max_logical_extent member gives the maximum extent,
-over all drawable characters, of the rectangles 
+over all drawable characters, of the rectangles
 that specify minimum spacing to other graphical features,
 relative to a constant origin.
 Other graphical features drawn by the client, for example,
 a border surrounding the text, should not intersect this rectangle.
-The max_logical_extent member should be used to compute minimum 
+The max_logical_extent member should be used to compute minimum
 interline spacing and the minimum area that must be allowed
 in a text field to draw a given number of arbitrary characters.
 </para>
 <para>
 <!-- .LP -->
 Due to context-dependent rendering,
-appending a given character to a string may change 
+appending a given character to a string may change
 the string's extent by an amount other than that character's
 individual extent.
 </para>
@@ -2999,13 +2999,13 @@ for the given font set.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <structname>XFontSetExtents</structname>
 structure is owned by Xlib and should not be modified
 or freed by the client.
-It will be freed by a call to 
+It will be freed by a call to
 <xref linkend='XFreeFontSet' xrefstyle='select: title'/>
-with the associated 
+with the associated
 <type>XFontSet</type>.
 Until freed, its contents will not be modified by Xlib.
 </para>
@@ -3015,7 +3015,7 @@ Until freed, its contents will not be modified by Xlib.
 To obtain the escapement in pixels of the specified text as a value,
 use
 <xref linkend='XmbTextEscapement' xrefstyle='select: title'/>
-or 
+or
 <xref linkend='XwcTextEscapement' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XmbTextEscapement</primary></indexterm>
@@ -3208,7 +3208,7 @@ functions set the components of the specified overall_ink_return and
 overall_logical_return
 arguments to the overall bounding box of the string's image
 and a logical bounding box for spacing purposes, respectively.
-They return the value returned by 
+They return the value returned by
 <xref linkend='XmbTextEscapement' xrefstyle='select: title'/>
 or
 <xref linkend='XwcTextEscapement' xrefstyle='select: title'/>.
@@ -3238,11 +3238,11 @@ should not intersect this rectangle.
 </para>
 <para>
 <!-- .LP -->
-When the 
+When the
 <type>XFontSet</type>
 has missing charsets,
-metrics for each unavailable character are taken 
-from the default string returned by 
+metrics for each unavailable character are taken
+from the default string returned by
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
 so that the metrics represent the text as it will actually be drawn.
 The behavior for an invalid codepoint is undefined.
@@ -3250,10 +3250,10 @@ The behavior for an invalid codepoint is undefined.
 <para>
 <!-- .LP -->
 To determine the effective drawing origin for a character in a drawn string,
-the client should call 
+the client should call
 <xref linkend='XmbTextPerCharExtents' xrefstyle='select: title'/>
 on the entire string, then on the character,
-and subtract the x values of the returned 
+and subtract the x values of the returned
 rectangles for the character.
 This is useful to redraw portions of a line of text
 or to justify words, but for context-dependent rendering,
@@ -3416,7 +3416,7 @@ functions return the text dimensions of each character of the specified text,
 using the fonts loaded for the specified font set.
 Each successive element of ink_array_return and logical_array_return
 is set to the successive character's drawn metrics,
-relative to the drawing origin of the string and one 
+relative to the drawing origin of the string and one
 rectangle
 for each character in the supplied text string.
 The number of elements of ink_array_return and logical_array_return
@@ -3424,9 +3424,9 @@ that have been set is returned to num_chars_return.
 </para>
 <para>
 <!-- .LP -->
-Each element of ink_array_return is set to the bounding box 
+Each element of ink_array_return is set to the bounding box
 of the corresponding character's drawn foreground color.
-Each element of logical_array_return is set to the bounding box 
+Each element of logical_array_return is set to the bounding box
 that provides minimum spacing to other graphical features
 for the corresponding character.
 Other graphical features should not intersect any of the
@@ -3434,22 +3434,22 @@ logical_array_return rectangles.
 </para>
 <para>
 <!-- .LP -->
-Note that an 
+Note that an
 <structname>XRectangle</structname>
 represents the effective drawing dimensions of the character,
 regardless of the number of font glyphs that are used to draw
 the character or the direction in which the character is drawn.
 If multiple characters map to a single character glyph,
-the dimensions of all the 
+the dimensions of all the
 <structname>XRectangle</structname>s
 of those characters are the same.
 </para>
 <para>
 <!-- .LP -->
-When the 
+When the
 <type>XFontSet</type>
 has missing charsets, metrics for each unavailable
-character are taken from the default string returned by 
+character are taken from the default string returned by
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>
 so that the metrics represent the text as it will actually be drawn.
 The behavior for an invalid codepoint is undefined.
@@ -3465,12 +3465,12 @@ Otherwise, the functions return a nonzero value.
 <!-- .LP -->
 If the overall_ink_return or overall_logical_return argument is non-NULL,
 <xref linkend='XmbTextPerCharExtents' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XwcTextPerCharExtents' xrefstyle='select: title'/>
 return the maximum extent of the string's metrics to overall_ink_return
-or overall_logical_return, as returned by 
+or overall_logical_return, as returned by
 <xref linkend='XmbTextExtents' xrefstyle='select: title'/>
-or 
+or
 <function>XwcTextExtents</function>.
 </para>
 </sect2>
@@ -3494,7 +3494,7 @@ instead of treating the bytes of the string as direct font indexes.
 See <link linkend="Drawing_Text">section 8.6</link> for details
 of the use of Graphics Contexts (GCs)
 and possible protocol errors.
-If a 
+If a
 <errorname>BadFont</errorname>
 error is generated,
 characters prior to the offending character may have been drawn.
@@ -3597,7 +3597,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -3659,7 +3659,7 @@ Specifies the number of text items in the array.
 <!-- .eM -->
 The
 <xref linkend='XmbDrawText' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XwcDrawText' xrefstyle='select: title'/>
 functions allow complex spacing and font set shifts between text strings.
 Each text item is processed in turn, with the origin of a text
@@ -3667,7 +3667,7 @@ element advanced in the primary draw direction by the escapement of the
 previous text item.
 A text item delta specifies an additional escapement of the text item
 drawing origin in the primary draw direction.
-A font_set member other than 
+A font_set member other than
 <symbol>None</symbol>
 in an item causes the font set to be used for this and subsequent text items
 in the text_items list.
@@ -3685,14 +3685,14 @@ Clients may compute the drawing metrics by passing each text segment to
 <xref linkend='XmbTextExtents' xrefstyle='select: title'/>
 and
 <function>XwcTextExtents</function>
-or 
+or
 <xref linkend='XmbTextPerCharExtents' xrefstyle='select: title'/>
 and
 <xref linkend='XwcTextPerCharExtents' xrefstyle='select: title'/>.
-When the 
+When the
 <type>XFontSet</type>
-has missing charsets, each unavailable character is drawn 
-with the default string returned by 
+has missing charsets, each unavailable character is drawn
+with the default string returned by
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>.
 The behavior for an invalid codepoint is undefined.
 </para>
@@ -3752,7 +3752,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -3837,10 +3837,10 @@ The
 and
 <xref linkend='XwcDrawString' xrefstyle='select: title'/>
 functions draw the specified text with the foreground pixel.
-When the 
+When the
 <type>XFontSet</type>
-has missing charsets, each unavailable character is drawn 
-with the default string returned by 
+has missing charsets, each unavailable character is drawn
+with the default string returned by
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>.
 The behavior for an invalid codepoint is undefined.
 </para>
@@ -3900,7 +3900,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the drawable. 
+Specifies the drawable.
       </para>
     </listitem>
   </varlistentry>
@@ -3988,17 +3988,17 @@ functions fill a destination rectangle with the background pixel defined
 in the GC and then paint the text with the foreground pixel.
 The filled rectangle is the rectangle returned to overall_logical_return by
 <xref linkend='XmbTextExtents' xrefstyle='select: title'/>
-or 
+or
 <function>XwcTextExtents</function>
-for the same text and 
+for the same text and
 <type>XFontSet</type>.
 </para>
 <para>
 <!-- .LP -->
-When the 
+When the
 <type>XFontSet</type>
-has missing charsets, each unavailable character is drawn 
-with the default string returned by 
+has missing charsets, each unavailable character is drawn
+with the default string returned by
 <xref linkend='XCreateFontSet' xrefstyle='select: title'/>.
 The behavior for an invalid codepoint is undefined.
 </para>
@@ -4086,12 +4086,12 @@ a user usually has a keyboard on which there exist key symbols corresponding
 to the alphabet.
 Sometimes, a few characters of an alphabetic language are missing
 on the keyboard.
-Many computer users who speak a Latin-alphabet-based language 
+Many computer users who speak a Latin-alphabet-based language
 only have an English-based keyboard.
 They need to hit a combination of keystrokes
 to enter a character that does not exist directly on the keyboard.
 A number of algorithms have been developed for entering such characters.
-These are known as European input methods, compose input methods, 
+These are known as European input methods, compose input methods,
 or dead-key input methods.
 </para>
 <para>
@@ -4110,7 +4110,7 @@ Each set consists of 48 characters.
 Korean also has a phonetic symbol set, called Hangul.
 Each of the 24 basic phonetic symbols (14 consonants and 10 vowels)
 represents a specific sound.
-A syllable is composed of two or three parts: 
+A syllable is composed of two or three parts:
 the initial consonants, the vowels, and the optional last consonants.
 With Hangul,
 syllables can be treated as the basic units on which text processing is done.
@@ -4134,7 +4134,7 @@ ideographic writing system.
 In an ideographic system, rather than taking a small set of
 symbols and combining them in different ways to create words,
 each word consists of one unique symbol (or, occasionally, several symbols).
-The number of symbols can be very large: 
+The number of symbols can be very large:
 approximately 50,000 have been identified in Hanzi,
 the Chinese ideographic system.
 </para>
@@ -4185,7 +4185,7 @@ and then follows the same basic method as that described for Japanese.
 <!-- .LP -->
 Probably because there are well-accepted phonetic writing systems
 for Japanese and Korean,
-computer input methods in these countries for entering ideographs 
+computer input methods in these countries for entering ideographs
 are fairly standard.
 Keyboard keys have both English characters and phonetic symbols
 engraved on them, and the user can switch between the two sets.
@@ -4197,8 +4197,8 @@ While there is a phonetic system called Pinyin promoted by authorities,
 there is no consensus for entering Chinese text.
 Some vendors use a phonetic decomposition (Pinyin or another),
 others use ideographic decomposition of Chinese words,
-with various implementations and keyboard layouts. 
-There are about 16 known methods, none of which is a clear standard. 
+with various implementations and keyboard layouts.
+There are about 16 known methods, none of which is a clear standard.
 </para>
 <para>
 <!-- .LP -->
@@ -4208,9 +4208,9 @@ and Simplified Chinese.
 Several years ago,
 the People's Republic of China launched a campaign to simplify
 some ideographic characters and eliminate redundancies altogether.
-Under the plan, 
+Under the plan,
 characters would be streamlined every five years.
-Characters have been revised several times now, 
+Characters have been revised several times now,
 resulting in the smaller, simpler set that makes up Simplified Chinese.
 </para>
 <sect3 id="Input_Method_Architecture">
@@ -4222,13 +4222,13 @@ resulting in the smaller, simpler set that makes up Simplified Chinese.
 <!-- .LP -->
 As shown in the previous section,
 there are many different input methods in use today,
-each varying with language, culture, and history. 
+each varying with language, culture, and history.
 A common feature of many input methods is that the user may type
 multiple keystrokes to compose a single character (or set
 of characters).
 The process of composing characters from keystrokes is called
 <emphasis remap='I'>preediting</emphasis>.
-It may require complex algorithms and large dictionaries 
+It may require complex algorithms and large dictionaries
 involving substantial computer resources.
 </para>
 <para>
@@ -4251,8 +4251,8 @@ The status area may consist of text data and bitmaps or some combination.
   <listitem>
     <para>
 The <emphasis remap='I'>preedit</emphasis> area displays the
-intermediate text for those languages that are composing prior to 
-the client handling the data.   
+intermediate text for those languages that are composing prior to
+the client handling the data.
     </para>
   </listitem>
   <listitem>
@@ -4296,7 +4296,7 @@ Often, this type of window is placed at the bottom of the application window.
   <listitem>
     <para>
 <emphasis remap='I'>Root-window</emphasis> preediting refers to input methods that use a preedit
-window that is the child of 
+window that is the child of
 <function>RootWindow</function>.
     </para>
   </listitem>
@@ -4306,7 +4306,7 @@ window that is the child of
 It would require a lot of computing resources if portable applications
 had to include input methods for all the languages in the world.
 To avoid this,
-a goal of the Xlib design is to allow an application 
+a goal of the Xlib design is to allow an application
 to communicate with an input method placed in a separate process.
 Such a process is called an <emphasis remap='I'>input server</emphasis>.
 The server to which the application should connect is dependent on
@@ -4358,7 +4358,7 @@ and a filtering mechanism for noncharacter keystrokes
 A back-end architecture sometimes implies more communication overhead
 and more process switching.
 If all three processes (X server, input server, client)
-are running on a single workstation, 
+are running on a single workstation,
 there are two process switches for each keystroke in a back-end
 architecture,
 but there is only one in a front-end architecture.
@@ -4366,15 +4366,15 @@ but there is only one in a front-end architecture.
 <para>
 <!-- .LP -->
 The abstraction used by a client to communicate with an input method
-is an opaque data structure represented by the 
+is an opaque data structure represented by the
 <type>XIM</type>
 data type.
-This data structure is returned by the 
+This data structure is returned by the
 <xref linkend='XOpenIM' xrefstyle='select: title'/>
 function, which opens an input method on a given display.
 Subsequent operations on this data structure encapsulate all communication
 between client and input method.
-There is no need for an X client to use any networking library 
+There is no need for an X client to use any networking library
 or natural language package to use an input method.
 </para>
 <para>
@@ -4400,7 +4400,7 @@ each window with multiple text entry areas,
 and the user possibly switching among them at any time.
 The abstraction for representing the state of a particular input thread
 is called an <emphasis remap='I'>input context</emphasis>.
-The Xlib representation of an input context is an 
+The Xlib representation of an input context is an
 <type>XIC</type>.
 </para>
 <para>
@@ -4419,15 +4419,15 @@ abstraction defined for graphics output.
 One input context belongs to exactly one input method.
 Different input contexts may be associated with the same input method,
 possibly with the same client window.
-An 
+An
 <type>XIC</type>
 is created with the
 <xref linkend='XCreateIC' xrefstyle='select: title'/>
-function, providing an 
+function, providing an
 <type>XIM</type>
 argument and affiliating the input context to the input method
-for its lifetime. 
-When an input method is closed with 
+for its lifetime.
+When an input method is closed with
 <xref linkend='XCloseIM' xrefstyle='select: title'/>,
 all of its affiliated input contexts should not be used any more
 (and should preferably be destroyed before closing the input method).
@@ -4448,7 +4448,7 @@ in that context.
   <listitem>
     <para>
 A single context is created for a top-level window in the application.
-If such a window contains several text entry areas, 
+If such a window contains several text entry areas,
 each time the user moves to another text entry area,
 the client has to indicate changes in the context.
     </para>
@@ -4471,16 +4471,16 @@ according to the needs of their application.
 To obtain characters from an input method,
 a client must call the function
 <xref linkend='XmbLookupString' xrefstyle='select: title'/>
-or 
+or
 <xref linkend='XwcLookupString' xrefstyle='select: title'/>
 with an input context created from that input method.
 Both a locale and display are bound to an input method when it is opened,
 and an input context inherits this locale and display.
-Any strings returned by 
+Any strings returned by
 <xref linkend='XmbLookupString' xrefstyle='select: title'/>
 or
 <xref linkend='XwcLookupString' xrefstyle='select: title'/>
-will be encoded in that locale. 
+will be encoded in that locale.
 </para>
 </sect3>
 <sect3 id="Focus_Management">
@@ -4502,7 +4502,7 @@ there will be an associated input context.
 When the application focus moves to a text entry area,
 the application must set the input context focus to the
 input context associated with that area.
-The input context focus is set by calling 
+The input context focus is set by calling
 <xref linkend='XSetICFocus' xrefstyle='select: title'/>
 with the appropriate input context.
 </para>
@@ -4515,7 +4515,7 @@ by calling
 As an optimization, if
 <xref linkend='XSetICFocus' xrefstyle='select: title'/>
 is called successively on two different input contexts,
-setting the focus on the second 
+setting the focus on the second
 will automatically unset the focus on the first.
 </para>
 <para>
@@ -4541,7 +4541,7 @@ input context whenever the focus window changes
 <!-- .XE -->
 <para>
 <!-- .LP -->
-In most input method architectures 
+In most input method architectures
 (on-the-spot being the notable exception),
 the input method will perform the display of its own data.
 To provide better visual locality,
@@ -4584,20 +4584,20 @@ and it must accept the size it is given.
 <!-- .LP -->
 Before a client provides geometry management for an input method,
 it must determine if geometry management is needed.
-The input method indicates the need for geometry management 
-by setting 
+The input method indicates the need for geometry management
+by setting
 <symbol>XIMPreeditArea</symbol>
-or 
+or
 <symbol>XIMStatusArea</symbol>
-in its 
+in its
 <structname>XIMStyles</structname>
-value returned by 
+value returned by
 <xref linkend='XGetIMValues' xrefstyle='select: title'/>.
 When a client has decided that it will provide geometry management
-for an input method, 
+for an input method,
 it indicates that decision by setting the
 <symbol>XNInputStyle</symbol>
-value in the 
+value in the
 <type>XIC</type>.
 </para>
 <para>
@@ -4620,7 +4620,7 @@ Otherwise, it will set one of the values.
   </listitem>
   <listitem>
     <para>
-The client will get the <acronym>XIC</acronym> value 
+The client will get the <acronym>XIC</acronym> value
 <symbol>XNAreaNeeded</symbol>.
 The input method will return its suggested size in this value.
 The input method should pay attention to any constraints suggested
@@ -4631,7 +4631,7 @@ by the client.
     <para>
 The client sets the <acronym>XIC</acronym> value
 <symbol>XNArea</symbol>
-to inform the input method of the geometry of its window.  
+to inform the input method of the geometry of its window.
 The client should try to honor the geometry requested by the input method.
 The input method must accept this geometry.
     </para>
@@ -4641,11 +4641,11 @@ The input method must accept this geometry.
 <!-- .LP -->
 Clients doing geometry management must be aware that setting other
 <acronym>XIC</acronym> values may affect the geometry desired by an input method.
-For example, 
+For example,
 <symbol>XNFontSet</symbol>
 and
 <symbol>XNLineSpace</symbol>
-may change the geometry desired by the input method.  
+may change the geometry desired by the input method.
 </para>
 <para>
 <!-- .LP -->
@@ -4709,7 +4709,7 @@ to translations such as those the X Toolkit Intrinsics library provides.
 </itemizedlist>
 <para>
 <!-- .LP -->
-Clients are expected to get the <acronym>XIC</acronym> value 
+Clients are expected to get the <acronym>XIC</acronym> value
 <symbol>XNFilterEvents</symbol>
 and augment the event mask for the client window with that event mask.
 This mask may be zero.
@@ -4725,7 +4725,7 @@ This mask may be zero.
 When an on-the-spot input method is implemented,
 only the client can insert or delete preedit data in place
 and possibly scroll existing text.
-This means that the echo of the keystrokes has to be achieved 
+This means that the echo of the keystrokes has to be achieved
 by the client itself, tightly coupled with the input method logic.
 </para>
 <para>
@@ -4791,7 +4791,7 @@ scrolling of a long preedit string within a short preedit display area.
 As highlighted before, the input method architecture provides
 preediting, which supports a type of preprocessor input composition.
 In this case, composition consists of interpreting a sequence
-of key events and returning a committed string via 
+of key events and returning a committed string via
 <xref linkend='XmbLookupString' xrefstyle='select: title'/>
 or
 <xref linkend='XwcLookupString' xrefstyle='select: title'/>.
@@ -4801,15 +4801,15 @@ This provides the basics for input methods.
 <!-- .LP -->
 In addition to preediting based on key events, a general framework
 is provided to give a client that desires it more advanced preediting based
-on the text within the client.  This framework is called 
-<emphasis remap='I'>string conversion</emphasis> and is provided using <acronym>XIC</acronym> values. 
+on the text within the client.  This framework is called
+<emphasis remap='I'>string conversion</emphasis> and is provided using <acronym>XIC</acronym> values.
 The fundamental concept of string conversion
 is to allow the input method to manipulate the client's
 text independent of any user preediting operation.
 </para>
 <para>
 <!-- .LP -->
-The need for string conversion is based on 
+The need for string conversion is based on
 language needs and input method capabilities.
 The following are some examples of string conversion:
 </para>
@@ -4818,40 +4818,40 @@ The following are some examples of string conversion:
     <para>
 Transliteration conversion provides language-specific conversions
 within the input method.
-In the case of Korean input, users wish to convert a Hangul string 
+In the case of Korean input, users wish to convert a Hangul string
 into a Hanja string while in preediting, after preediting,
 or in other situations (for example, on a selected string).
 The conversion is triggered when the user
 presses a Hangul-to-Hanja key sequence (which may be input method specific).
 Sometimes the user may want to invoke the conversion after finishing
-preediting or on a user-selected string.  
-Thus, the string to be converted is in an application buffer, not in 
+preediting or on a user-selected string.
+Thus, the string to be converted is in an application buffer, not in
 the preedit area of the input method.  The string conversion services
-allow the client to request this transliteration conversion from the 
+allow the client to request this transliteration conversion from the
 input method.
-There are many other transliteration conversions defined for 
+There are many other transliteration conversions defined for
 various languages, for example, Kana-to-Kanji conversion in Japanese.
 <!-- .sp -->
 The key to remember is that transliteration conversions are triggered
-at the request of the user and returned to the client 
+at the request of the user and returned to the client
 immediately without affecting the preedit area of the input method.
     </para>
   </listitem>
   <listitem>
     <para>
-Reconversion of a previously committed string or 
-a selected string is supported by many input methods as a 
+Reconversion of a previously committed string or
+a selected string is supported by many input methods as a
 convenience to the user.
 For example, a user tends to mistype the commit key while
 preediting.  In that case, some input methods provide a special
-key sequence to request a ``reconvert'' operation on the 
+key sequence to request a ``reconvert'' operation on the
 committed string, similar to the undo facility provided by most
 text editors.
-Another example is where the user is proofreading a document 
+Another example is where the user is proofreading a document
 that has some misconversions from preediting and wants to correct
 the misconverted text.  Such reconversion is again triggered
 by the user invoking some special action, but reconversions should
-not affect the state of the preedit area.  
+not affect the state of the preedit area.
     </para>
   </listitem>
   <listitem>
@@ -4859,18 +4859,18 @@ not affect the state of the preedit area.
 Context-sensitive conversion is required for some languages
 and input methods that need to retrieve text that surrounds the
 current spot location (cursor position) of the client's buffer.
-Such text is needed when the preediting operation depends on 
+Such text is needed when the preediting operation depends on
 some surrounding characters (usually preceding the spot location).
-For example, 
+For example,
 in Thai language input, certain character sequences may be invalid and
 the input method may want to check whether characters constitute a
 valid word.  Input methods that do such context-dependent
 checking need to retrieve the characters surrounding the current
 cursor position to obtain complete words.
 <!-- .sp -->
-Unlike other conversions, this conversion is not explicitly 
+Unlike other conversions, this conversion is not explicitly
 requested by the user.
-Input methods that provide such context-sensitive conversion 
+Input methods that provide such context-sensitive conversion
 continuously need to request context from the client, and any change
 in the context of the spot location may affect such conversions.
 The client's context would be needed if the user moves the cursor
@@ -4881,7 +4881,7 @@ should take notice of when the client calls
 <xref linkend='XmbResetIC' xrefstyle='select: title'/>
 or
 <xref linkend='XwcResetIC' xrefstyle='select: title'/>,
-which is usually an indication of a context change.  
+which is usually an indication of a context change.
     </para>
   </listitem>
 </itemizedlist>
@@ -4899,9 +4899,9 @@ functions.
 </para>
 <para>
 <!-- .LP -->
-String conversion support is dependent on the availability of the 
+String conversion support is dependent on the availability of the
 <symbol>XNStringConversion</symbol>
-or 
+or
 <symbol>XNStringConversionCallback</symbol>
 <acronym>XIC</acronym> values.
 Because the input method may not support string conversions,
@@ -4915,15 +4915,15 @@ IM value.
 <para>
 <!-- .LP -->
 The difference between these two values is whether the
-conversion is invoked by the client or the input method.  
-The 
+conversion is invoked by the client or the input method.
+The
 <symbol>XNStringConversion</symbol>
-<acronym>XIC</acronym> value is used by clients to request 
+<acronym>XIC</acronym> value is used by clients to request
 a string conversion from the input method.  The client
-is responsible for determining which events are used 
+is responsible for determining which events are used
 to trigger the string conversion and whether the string to be
 converted should be copied or deleted.  The type of conversion
-is determined by the input method; the client can only 
+is determined by the input method; the client can only
 pass the string to be converted.  The client is guaranteed that
 no
 <symbol>XNStringConversionCallback</symbol>
@@ -4941,7 +4941,7 @@ it is the input method's responsibility to determine which
 events are used to trigger the string conversion.
 When such events occur, the input method issues a call to the
 client-supplied procedure to retrieve the string to be converted.  The client's
-callback procedure is notified whether to copy or delete the string and 
+callback procedure is notified whether to copy or delete the string and
 is provided with hints as to the amount of text needed.
 The
 <structname>XIMStringConversionCallbackStruct</structname>
@@ -4949,14 +4949,14 @@ specifies which text should be passed back to the input method.
 </para>
 <para>
 <!-- .LP -->
-Finally, the input method may call the client's 
+Finally, the input method may call the client's
 <symbol>XNStringConversionCallback</symbol>
 procedure multiple times if the string returned from the callback is
 not sufficient to perform a successful conversion.   The arguments
 to the client's procedure allow the input method to define a
-position (in character units) relative to the client's cursor position 
+position (in character units) relative to the client's cursor position
 and the size of the text needed.  By varying the position and size of
-the desired text in subsequent callbacks, the input method can retrieve 
+the desired text in subsequent callbacks, the input method can retrieve
 additional text.
 </para>
 <para>
@@ -4976,7 +4976,7 @@ an input method
 (<xref linkend='XOpenIM' xrefstyle='select: title'/>)
 and freeing an input method
 (<xref linkend='XCloseIM' xrefstyle='select: title'/>).
-However, input methods may 
+However, input methods may
 require complex communication with input method servers (IM servers),
 for example:
 </para>
@@ -4987,14 +4987,14 @@ for example:
 If the X server, IM server, and X clients are started asynchronously,
 some clients may attempt to connect to the IM server before it is
 fully operational, and fail.
-Therefore, some mechanism is needed to allow clients to detect when an IM 
+Therefore, some mechanism is needed to allow clients to detect when an IM
 server has started.
     </para>
   </listitem>
 </itemizedlist>
 <para>
 <!-- .LP -->
-It is up to clients to decide what should be done when an IM server is 
+It is up to clients to decide what should be done when an IM server is
 not available (for example, wait, or use some other IM server).
 </para>
 <para>
@@ -5003,14 +5003,14 @@ not available (for example, wait, or use some other IM server).
 <itemizedlist>
   <listitem>
     <para>
-Some input methods may allow the underlying IM server to be switched. 
+Some input methods may allow the underlying IM server to be switched.
 Such customization may be desired without restarting the entire client.
     </para>
   </listitem>
 </itemizedlist>
 <para>
 <!-- .LP -->
-To support management of input methods in these cases, the following 
+To support management of input methods in these cases, the following
 functions are provided:
 </para>
 <informaltable frame='none'>
@@ -5033,12 +5033,12 @@ functions are provided:
       <entry><xref linkend='XSetIMValues' xrefstyle='select: title'/>, <xref linkend='XSetICValues' xrefstyle='select: title'/></entry>
       <entry>These functions use the <acronym>XIM</acronym> and <acronym>XIC</acronym> values,
       <symbol>XNDestroyCallback</symbol>,
-      to allow a client 
+      to allow a client
       to register a callback procedure to be called when Xlib detects that
-      an IM server that was associated with an opened 
+      an IM server that was associated with an opened
       input method is no longer available.
-      In addition, this function can be used to switch IM servers for those input 
-      methods that support such functionality.  The IM value for switching IM 
+      In addition, this function can be used to switch IM servers for those input
+      methods that support such functionality.  The IM value for switching IM
       servers is implementation-dependent; see the description below about
       switching IM servers.</entry>
     </row>
@@ -5058,7 +5058,7 @@ side-effects:
 <itemizedlist>
   <listitem>
     <para>
-The input method will ensure that any new IM server supports any of the 
+The input method will ensure that any new IM server supports any of the
 input styles being used by input contexts already associated with the
 input method.
 However, the list of supported input styles may be different.
@@ -5090,8 +5090,8 @@ Some clients need to guarantee which keys can be used to escape from the
 input method, regardless of the input method state;
 for example, the client-specific Help key or the keys to move the
 input focus.
-The HotKey mechanism allows clients 
-to specify a set of keys for this purpose.  However, the input 
+The HotKey mechanism allows clients
+to specify a set of keys for this purpose.  However, the input
 method might not allow clients to specify hot keys.
 Therefore, clients have to query support of hot keys by checking the
 supported <acronym>XIC</acronym> values list by calling
@@ -5099,8 +5099,8 @@ supported <acronym>XIC</acronym> values list by calling
 with the
 <symbol>XNQueryICValuesList</symbol>
 IM value.
-When the hot keys specified conflict with the key bindings of the 
-input method, hot keys take precedence over the key bindings of the input 
+When the hot keys specified conflict with the key bindings of the
+input method, hot keys take precedence over the key bindings of the input
 method.
 </para>
 <para>
@@ -5132,19 +5132,19 @@ an application needs to register a callback by calling
 <xref linkend='XSetICValues' xrefstyle='select: title'/>
 with the
 <symbol>XNPreeditStateNotifyCallback</symbol>
-<acronym>XIC</acronym> value. 
-In order to change the preedit state programmatically, an application 
-needs to call 
+<acronym>XIC</acronym> value.
+In order to change the preedit state programmatically, an application
+needs to call
 <xref linkend='XSetICValues' xrefstyle='select: title'/>
 with
 <symbol>XNPreeditState</symbol>.
 </para>
 <para>
 <!-- .LP -->
-Availability of the preedit state is input method dependent.  The input 
+Availability of the preedit state is input method dependent.  The input
 method may not provide the ability to set the state or to
-retrieve the state programmatically.  Therefore, clients have to 
-query availability of preedit state operations by checking the 
+retrieve the state programmatically.  Therefore, clients have to
+query availability of preedit state operations by checking the
 supported <acronym>XIC</acronym> values list by calling
 <xref linkend='XGetIMValues' xrefstyle='select: title'/>
 with the
@@ -5222,7 +5222,7 @@ Specifies the full class name of the application.
 <!-- .eM -->
 The
 <xref linkend='XOpenIM' xrefstyle='select: title'/>
-function opens an input method, 
+function opens an input method,
 matching the current locale and modifiers specification.
 Current locale and modifiers are bound to the input method at opening time.
 The locale associated with an input method cannot be changed dynamically.
@@ -5236,11 +5236,11 @@ will be encoded in the locale current at the time the input method is opened.
 <para>
 <!-- .LP -->
 The specific input method to which this call will be routed
-is identified on the basis of the current locale. 
+is identified on the basis of the current locale.
 <xref linkend='XOpenIM' xrefstyle='select: title'/>
 will identify a default input method corresponding to the
 current locale.
-That default can be modified using 
+That default can be modified using
 <xref linkend='XSetLocaleModifiers' xrefstyle='select: title'/>
 for the input method modifier.
 </para>
@@ -5255,8 +5255,8 @@ no database is passed to the input method.
 </para>
 <para>
 <!-- .LP -->
-The res_name and res_class arguments specify the resource name 
-and class of the application. 
+The res_name and res_class arguments specify the resource name
+and class of the application.
 They are intended to be used as prefixes by the input method
 when looking up resources that are common to all input contexts
 that may be created for this input method.
@@ -5368,7 +5368,7 @@ correctly.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To query an input method, use 
+To query an input method, use
 <xref linkend='XGetIMValues' xrefstyle='select: title'/>.
 </para>
 <indexterm significance="preferred"><primary>XGetIMValues</primary></indexterm>
@@ -5588,9 +5588,9 @@ locale and modifiers.
 </para>
 <para>
 <!-- .LP -->
-The function returns 
+The function returns
 <symbol>True</symbol>
- if it succeeds; otherwise, it returns 
+ if it succeeds; otherwise, it returns
 <symbol>False</symbol>.
 </para>
 <para>
@@ -5731,7 +5731,7 @@ function removes an input method instantiation callback previously
 registered.
 The function returns
 <symbol>True</symbol>
-if it succeeds; otherwise, it returns 
+if it succeeds; otherwise, it returns
 <symbol>False</symbol>.
 </para>
 </sect2>
@@ -5745,7 +5745,7 @@ if it succeeds; otherwise, it returns
 The following table describes how <acronym>XIM</acronym> values are interpreted
 by an input method.
 The first column lists the <acronym>XIM</acronym> values.
-The second column indicates how each of the <acronym>XIM</acronym> values 
+The second column indicates how each of the <acronym>XIM</acronym> values
 are treated by that input style.
 </para>
 <para>
@@ -5850,7 +5850,7 @@ is obsolete and its use is not recommended
 <!-- .XE -->
 <para>
 <!-- .LP -->
-A client should always query the input method to determine which input 
+A client should always query the input method to determine which input
 styles are supported.
 The client should then find an input style it is capable of supporting.
 </para>
@@ -5866,7 +5866,7 @@ The argument value must be a pointer to a location
 where the returned value will be stored.
 The returned value is a pointer to a structure of type
 <structname>XIMStyles</structname>.
-Clients are responsible for freeing the 
+Clients are responsible for freeing the
 <structname>XIMStyles</structname>
 structure.
 To do so, use
@@ -5918,7 +5918,7 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-An 
+An
 <structname>XIMStyles</structname>
 structure contains the number of input styles supported
 in its count_styles field.
@@ -5955,7 +5955,7 @@ by the input method for preedit information.
       <entry>If chosen,
       the input method would require the client to provide some area values
       for it to do its preediting.
-      Refer to <acronym>XIC</acronym> values 
+      Refer to <acronym>XIC</acronym> values
       <symbol>XNArea</symbol>
       and
       <symbol>XNAreaNeeded</symbol>.</entry>
@@ -5963,8 +5963,8 @@ by the input method for preedit information.
     <row>
       <entry><symbol>XIMPreeditPosition</symbol></entry>
       <entry>If chosen,
-      the input method would require the client to provide positional values. 
-      Refer to <acronym>XIC</acronym> values 
+      the input method would require the client to provide positional values.
+      Refer to <acronym>XIC</acronym> values
       <symbol>XNSpotLocation</symbol>
       and
       <symbol>XNFocusWindow</symbol>.</entry>
@@ -5973,7 +5973,7 @@ by the input method for preedit information.
       <entry><symbol>XIMPreeditCallbacks</symbol></entry>
       <entry>If chosen,
       the input method would require the client to define the set of preedit callbacks.
-      Refer to <acronym>XIC</acronym> values 
+      Refer to <acronym>XIC</acronym> values
       <symbol>XNPreeditStartCallback</symbol>,
       <symbol>XNPreeditDoneCallback</symbol>,
       <symbol>XNPreeditDrawCallback</symbol>,
@@ -6075,12 +6075,12 @@ set as resources.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-The 
+The
 <symbol>XNDestroyCallback</symbol>
 argument is a pointer to a structure of type
 <structname>XIMCallback</structname>.
 <symbol>XNDestroyCallback</symbol>
-is triggered when an input method stops its service for any reason. 
+is triggered when an input method stops its service for any reason.
 After the callback is invoked, the input method is closed and the
 associated input context(s) are destroyed by Xlib.
 Therefore, the client should not call
@@ -6162,7 +6162,7 @@ The argument value must be a pointer to a location where the returned
 value will be stored.  The returned value is a pointer to a structure
 of type
 <structname>XIMValuesList</structname>.
-Clients are responsible for freeing the 
+Clients are responsible for freeing the
 <structname>XIMValuesList</structname>
 structure.
 To do so, use
@@ -6195,9 +6195,9 @@ typedef struct {
 <!-- .XE -->
 <para>
 <!-- .LP -->
-The 
+The
 <symbol>XNVisiblePosition</symbol>
-argument indicates whether the visible position masks of 
+argument indicates whether the visible position masks of
 <type>XIMFeedback</type>
 in
 <structname>XIMText</structname>
@@ -6223,9 +6223,9 @@ Because this <acronym>XIM</acronym> value is optional, a client should call
 with argument
 <symbol>XNQueryIMValuesList</symbol>
 before using this argument.
-If the 
+If the
 <symbol>XNVisiblePosition</symbol>
-does not exist in the IM values list returned from 
+does not exist in the IM values list returned from
 <symbol>XNQueryIMValuesList</symbol>,
 the visible position masks of
 <type>XIMFeedback</type>
@@ -6263,7 +6263,7 @@ before it was published.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <symbol>XNR6PreeditCallback</symbol>
 argument indicates whether the behavior of preedit callbacks regarding
 <structname>XIMPreeditDrawCallbackStruct</structname>
@@ -6453,7 +6453,7 @@ destroys the specified input context.
 <!-- .sp -->
 To communicate to and synchronize with input method
 for any changes in keyboard focus from the client side,
-use 
+use
 <xref linkend='XSetICFocus' xrefstyle='select: title'/>
 and
 <xref linkend='XUnsetICFocus' xrefstyle='select: title'/>.
@@ -6532,7 +6532,7 @@ Complete feedback specification is a matter of user interface policy.
 Calling
 <xref linkend='XUnsetICFocus' xrefstyle='select: title'/>
 does not affect the focus window value;
-the client may still receive 
+the client may still receive
 events from the input method that are directed to the focus window.
 </para>
 <para>
@@ -6591,7 +6591,7 @@ the current input context state is preserved.
 In both cases, any input pending on that context is deleted.
 The input method is required to clear the preedit area, if any,
 and update the status accordingly.
-Calling 
+Calling
 <xref linkend='XmbResetIC' xrefstyle='select: title'/>
 or
 <xref linkend='XwcResetIC' xrefstyle='select: title'/>
@@ -6604,8 +6604,8 @@ The return value of
 is its current preedit string as a multibyte string.
 If there is any preedit text drawn or visible to the user,
 then these procedures must return a non-NULL string.
-If there is no visible preedit text, 
-then it is input method implementation-dependent 
+If there is no visible preedit text,
+then it is input method implementation-dependent
 whether these procedures return a non-NULL string or NULL.
 </para>
 <para>
@@ -6701,7 +6701,7 @@ values.
 <!-- .eM -->
 The
 <xref linkend='XSetICValues' xrefstyle='select: title'/>
-function returns NULL if no error occurred; 
+function returns NULL if no error occurred;
 otherwise,
 it returns the name of the first argument that could not be set.
 An argument might not be set for any of the following reasons:
@@ -6829,7 +6829,7 @@ applies to each element of the nested list.
 <para>
 <!-- .LP -->
 The following tables describe how <acronym>XIC</acronym> values are interpreted
-by an input method depending on the input style chosen by the 
+by an input method depending on the input style chosen by the
 user.
 </para>
 <para>
@@ -6839,7 +6839,7 @@ The second column indicates which values are involved in affecting,
 negotiating, and setting the geometry of the input method windows.
 The subentries under the third column indicate the different
 input styles that are supported.
-Each of these columns indicates how each of the <acronym>XIC</acronym> values 
+Each of these columns indicates how each of the <acronym>XIC</acronym> values
 are treated by that input style.
 </para>
 <para>
@@ -6864,14 +6864,14 @@ The following keys apply to these tables.
     </row>
     <row>
       <entry>D</entry>
-      <entry>This value may be set using 
+      <entry>This value may be set using
       <xref linkend='XCreateIC' xrefstyle='select: title'/>.>
       If it is not set,>
       a default is provided.</entry>
     </row>
     <row>
       <entry>G</entry>
-      <entry>This value may be read using 
+      <entry>This value may be read using
       <xref linkend='XGetICValues' xrefstyle='select: title'/>.</entry>
     </row>
     <row>
@@ -6883,7 +6883,7 @@ The following keys apply to these tables.
     </row>
     <row>
       <entry>GR</entry>
-      <entry>This value will be the response of the input method when any 
+      <entry>This value will be the response of the input method when any
       GN value is changed.</entry>
     </row>
     <row>
@@ -7396,7 +7396,7 @@ and the client window will not be changed.
 <!-- .LP -->
 If the client window is not a valid window ID on the display
 attached to the input method,
-a 
+a
 <errorname>BadWindow</errorname>
 error can be generated when this value is used by the input method.
 </para>
@@ -7412,7 +7412,7 @@ error can be generated when this value is used by the input method.
 The
 <symbol>XNFocusWindow</symbol>
 argument specifies the focus window.
-The primary purpose of the 
+The primary purpose of the
 <symbol>XNFocusWindow</symbol>
 is to identify the window that will receive the key event when input
 is composed.
@@ -7437,17 +7437,17 @@ Modify its properties
   </listitem>
   <listitem>
     <para>
-Grab the keyboard within that window  
+Grab the keyboard within that window
     </para>
   </listitem>
 </itemizedlist>
 <para>
 <!-- .LP -->
-The associated value must be of type 
+The associated value must be of type
 <type>Window</type>.
-If the focus window is not a valid window ID on the display 
+If the focus window is not a valid window ID on the display
 attached to the input method,
-a 
+a
 <errorname>BadWindow</errorname>
 error can be generated when this value is used by the input method.
 </para>
@@ -7471,7 +7471,7 @@ The
 and
 <symbol>XNResourceClass</symbol>
 arguments are strings that specify the full name and class
-used by the client to obtain resources for the client window. 
+used by the client to obtain resources for the client window.
 These values should be used as prefixes for name and class
 when looking up resources that may vary according to the input context.
 If these values are not set,
@@ -7491,21 +7491,21 @@ set as resources.
 <para>
 <!-- .LP -->
 <indexterm significance="preferred"><primary>XNGeometryCallback</primary></indexterm>
-The 
+The
 <symbol>XNGeometryCallback</symbol>
-argument is a structure of type 
+argument is a structure of type
 <structname>XIMCallback</structname>
 (see <link linkend="Preedit_and_Status_Callbacks">section 13.5.6.13.12</link>).
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <symbol>XNGeometryCallback</symbol>
 argument specifies the geometry callback that a client can set.
-This callback is not required for correct operation of either 
+This callback is not required for correct operation of either
 an input method or a client.
 It can be set for a client whose user interface policy permits
-an input method to request the dynamic change of that input 
+an input method to request the dynamic change of that input
 method's window.
 An input method that does dynamic change will need to filter any
 events that it uses to initiate the change.
@@ -7519,11 +7519,11 @@ events that it uses to initiate the change.
 <para>
 <!-- .LP -->
 <indexterm significance="preferred"><primary>XNFilterEvents</primary></indexterm>
-The 
+The
 <symbol>XNFilterEvents</symbol>
 argument returns the event mask that an input method needs
 to have selected for.
-The client is expected to augment its own event mask 
+The client is expected to augment its own event mask
 for the client window with this one.
 </para>
 <para>
@@ -7533,7 +7533,7 @@ and is never changed.
 </para>
 <para>
 <!-- .LP -->
-The type of this argument is 
+The type of this argument is
 <type>unsigned</type>
 <type>long</type>.
 Setting this value will cause an error.
@@ -7546,16 +7546,16 @@ Setting this value will cause an error.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-The 
+The
 <symbol>XNDestroyCallback</symbol>
 argument is a pointer to a structure of type
 <structname>XIMCallback</structname>
 (see <link linkend="Preedit_and_Status_Callbacks">section 13.5.6.13.12</link>).
 This callback is triggered when the input method
 stops its service for any reason; for example, when a connection to an IM
-server is broken.  After the destroy callback is called, 
+server is broken.  After the destroy callback is called,
 the input context is destroyed and the input method is closed.
-Therefore, the client should not call 
+Therefore, the client should not call
 <xref linkend='XDestroyIC' xrefstyle='select: title'/>
 and
 <xref linkend='XCloseIM' xrefstyle='select: title'/>.
@@ -7732,7 +7732,7 @@ state of the <acronym>XIC</acronym>.
 <!-- .LP -->
 If
 <symbol>XIMPreserveState</symbol>
-is set, then 
+is set, then
 <xref linkend='XmbResetIC' xrefstyle='select: title'/>
 and
 <xref linkend='XwcResetIC' xrefstyle='select: title'/>
@@ -7919,10 +7919,10 @@ The
 <symbol>XNPreeditAttributes</symbol>
 and
 <symbol>XNStatusAttributes</symbol>
-arguments specify to an input method the attributes to be used for the 
+arguments specify to an input method the attributes to be used for the
 preedit and status areas,
 if any.
-Those attributes are passed to 
+Those attributes are passed to
 <xref linkend='XSetICValues' xrefstyle='select: title'/>
 or
 <xref linkend='XGetICValues' xrefstyle='select: title'/>
@@ -7947,7 +7947,7 @@ argument is dependent on the input method style that has been set.
 </para>
 <para>
 <!-- .LP -->
-If the input method style is 
+If the input method style is
 <symbol>XIMPreeditPosition</symbol>,
 <symbol>XNArea</symbol>
 specifies the clipping region within which preediting will take place.
@@ -7959,7 +7959,7 @@ the results are undefined.
 </para>
 <para>
 <!-- .LP -->
-If 
+If
 <symbol>XNArea</symbol>
 is not specified, is set to NULL, or is invalid,
 the input method will default the clipping region
@@ -7970,9 +7970,9 @@ the results are undefined.
 </para>
 <para>
 <!-- .LP -->
-If the input style is 
+If the input style is
 <symbol>XIMPreeditArea</symbol>
-or 
+or
 <symbol>XIMStatusArea</symbol>,
 <symbol>XNArea</symbol>
 specifies the geometry provided by the client to the input method.
@@ -7983,9 +7983,9 @@ with dimensions that fit the
 <symbol>XNArea</symbol>.
 The coordinates are relative to the client window.
 If the client window has not been set yet,
-the input method should save these values 
+the input method should save these values
 and apply them when the client window is set.
-If 
+If
 <symbol>XNArea</symbol>
 is not specified, is set to NULL, or is invalid,
 the results are undefined.
@@ -8003,11 +8003,11 @@ When set, the
 <symbol>XNAreaNeeded</symbol>
 argument specifies the geometry suggested by the client for this area
 (preedit or status).
-The value associated with the argument must be a pointer to a 
-structure of type 
+The value associated with the argument must be a pointer to a
+structure of type
 <structname>XRectangle</structname>.
 Note that the x, y values are not used
-and that nonzero values for width or height are the constraints 
+and that nonzero values for width or height are the constraints
 that the client wishes the input method to respect.
 </para>
 <para>
@@ -8019,12 +8019,12 @@ for the area.
 </para>
 <para>
 <!-- .LP -->
-This argument is only valid if the input style is 
+This argument is only valid if the input style is
 <symbol>XIMPreeditArea</symbol>
-or 
+or
 <symbol>XIMStatusArea</symbol>.
 It is used for geometry negotiation between the client and the input method
-and has no other effect on the input method 
+and has no other effect on the input method
 (see <link linkend="Geometry_Management">section 13.5.1.5</link>).
 </para>
 </sect4>
@@ -8039,11 +8039,11 @@ and has no other effect on the input method
 The
 <symbol>XNSpotLocation</symbol>
 argument specifies to the input method the coordinates of the spot
-to be used by an input method executing with 
+to be used by an input method executing with
 <symbol>XNInputStyle</symbol>
-set to 
+set to
 <symbol>XIMPreeditPosition</symbol>.
-When specified to any input method other than 
+When specified to any input method other than
 <symbol>XIMPreeditPosition</symbol>,
 this <acronym>XIC</acronym> value is ignored.  Some Xlib implementations
 will allow this to be set when
@@ -8086,7 +8086,7 @@ The
 argument is used to specify a colormap ID.
 The argument value is of type
 <type>Colormap</type>.
-An invalid argument may generate a 
+An invalid argument may generate a
 <errorname>BadColor</errorname>
 error when it is used by the input method.
 </para>
@@ -8097,7 +8097,7 @@ The
 <symbol>XNStdColormap</symbol>
 argument is used to indicate the name of the standard colormap
 in which the input method should allocate colors.
-The argument value is an 
+The argument value is an
 <type>Atom</type>
 that should be a valid atom for calling
 <xref linkend='XGetRGBColormaps' xrefstyle='select: title'/>.
@@ -8147,7 +8147,7 @@ The
 <symbol>XNBackgroundPixmap</symbol>
 argument specifies a background pixmap to be used as the background of the
 window.
-The value must be of type 
+The value must be of type
 <type>Pixmap</type>.
 An invalid argument may generate a
 <errorname>BadPixmap</errorname>
@@ -8211,7 +8211,7 @@ The
 <symbol>XNCursor</symbol>
 argument specifies to the input method what cursor is to be used
 in the specified window.
-This argument is of type 
+This argument is of type
 <type>Cursor</type>.
 </para>
 <para>
@@ -8489,7 +8489,7 @@ typedef struct {
 <!-- .LP -->
 <!-- .eM -->
 Each callback has some particular semantics and will carry the data
-that expresses the environment necessary to the client 
+that expresses the environment necessary to the client
 into a specific data structure.
 This paragraph only describes the arguments to be used to set
 the callback.
@@ -8523,7 +8523,7 @@ Callbacks are mostly provided so that clients (or text editing
 packages) can implement on-the-spot preediting in their own window.
 In that case,
 the input method needs to communicate and synchronize with the client.
-The input method needs to communicate changes in the preedit window 
+The input method needs to communicate changes in the preedit window
 when it is under control of the client.
 Those callbacks allow the client to initialize the preedit area,
 display a new preedit string,
@@ -8602,7 +8602,7 @@ and specific data structure associated with the different reasons.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-The geometry callback is triggered by the input method 
+The geometry callback is triggered by the input method
 to indicate that it wants the client to negotiate geometry.
 The generic prototype is as follows:
 </para>
@@ -8662,7 +8662,7 @@ The callback is called with a NULL call_data argument.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-The destroy callback is triggered by the input method 
+The destroy callback is triggered by the input method
 when it stops service for any reason.
 After the callback is invoked, the input context will be freed by Xlib.
 The generic prototype is as follows:
@@ -8723,7 +8723,7 @@ The callback is called with a NULL call_data argument.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-The string conversion callback is triggered by the input method 
+The string conversion callback is triggered by the input method
 to request the client to return the string to be converted.  The
 returned string may be either a multibyte or wide character string,
 with an encoding matching the locale bound to the input context.
@@ -8783,13 +8783,13 @@ The text member is an
 structure (see <link linkend='String_Conversion'>section 13.5.6.9</link>)
 to be filled in by the client
 and describes the text to be sent to the input method.
-The data pointed to by the 
+The data pointed to by the
 string and feedback elements of the
 <structname>XIMStringConversionText</structname>
 structure will be freed using
 <xref linkend='XFree' xrefstyle='select: title'/>
 by the input method
-after the callback returns.  So the client should not point to 
+after the callback returns.  So the client should not point to
 internal buffers that are critical to the client.
 Similarly, because the feedback element is currently reserved for future
 use, the client should set feedback to NULL to prevent the library from
@@ -8797,7 +8797,7 @@ freeing memory at some random location due to an uninitialized pointer.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <structname>XIMStringConversionCallbackStruct</structname>
 structure is defined as follows:
 </para>
@@ -8809,7 +8809,7 @@ structure is defined as follows:
 <!-- .LP -->
 <literallayout class="monospaced">
 typedef struct _XIMStringConversionCallbackStruct {
-     XIMStringConversionPosition position;          
+     XIMStringConversionPosition position;
      XIMCaretDirection direction;
      short factor;
      XIMStringConversionOperation operation;
@@ -8838,28 +8838,28 @@ relative to the client's cursor position in the client's buffer.
 <para>
 <!-- .LP -->
 The ending position of the text buffer is determined by
-the direction and factor members.  Specifically, it is the character position 
+the direction and factor members.  Specifically, it is the character position
 relative to the starting point as defined by the
 <structname>XIMCaretDirection</structname>.
-The factor member of 
+The factor member of
 <structname>XIMStringConversionCallbackStruct</structname>
 specifies the number of
 <structname>XIMCaretDirection</structname>
 positions to be applied.  For example, if the direction specifies
 <constant>XIMLineEnd</constant>
-and factor is 1, then all characters from the starting position to 
+and factor is 1, then all characters from the starting position to
 the end of the current display line are returned.  If the direction
 specifies
 <constant>XIMForwardChar</constant>
 or
 <constant>XIMBackwardChar</constant>,
-then the factor specifies a relative position, indicated in characters, 
+then the factor specifies a relative position, indicated in characters,
 from the starting position.
 </para>
 <para>
 <!-- .LP -->
 <type>XIMStringConversionOperation</type>
-specifies whether the string to be converted should be 
+specifies whether the string to be converted should be
 deleted (substitution) or copied (retrieval) from the client's
 buffer.  When the
 <type>XIMStringConversionOperation</type>
@@ -8873,7 +8873,7 @@ is
 the client must not delete the string to be converted from its buffer.
 The substitute operation is typically used for reconversion and
 transliteration conversion,
-while the retrieval operation is typically used for context-sensitive 
+while the retrieval operation is typically used for context-sensitive
 conversion.
 </para>
 </sect3>
@@ -8942,7 +8942,7 @@ the callback is called with a NULL call_data argument.
 <xref linkend='PreeditStartCallback' xrefstyle='select: title'/>
 will return the maximum size of the preedit string.
 A positive number indicates the maximum number of bytes allowed
-in the preedit string, 
+in the preedit string,
 and a value of -1 indicates there is no limit.
 </para>
 <indexterm significance="preferred"><primary>PreeditDoneCallback</primary></indexterm>
@@ -9000,7 +9000,7 @@ The client can release the data allocated by
 <!-- .LP -->
 <xref linkend='PreeditStartCallback' xrefstyle='select: title'/>
 should initialize appropriate data needed for
-displaying preedit information and for handling further 
+displaying preedit information and for handling further
 <xref linkend='PreeditDrawCallback' xrefstyle='select: title'/>
 calls.
 Once
@@ -9021,7 +9021,7 @@ This callback is triggered to draw and insert, delete or replace,
 preedit text in the preedit region.
 The preedit text may include unconverted input text such as Japanese Kana,
 converted text such as Japanese Kanji characters, or characters of both kinds.
-That string is either a multibyte or wide character string, 
+That string is either a multibyte or wide character string,
 whose encoding matches the locale bound to the input context.
 The callback prototype
 is as follows:
@@ -9072,7 +9072,7 @@ Specifies the preedit drawing information.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The callback is passed an 
+The callback is passed an
 <structname>XIMPreeditDrawCallbackStruct</structname>
 structure in the call_data argument.
 The text member of this structure contains the text to be drawn.
@@ -9081,7 +9081,7 @@ the caret should be moved to the specified location.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <structname>XIMPreeditDrawCallbackStruct</structname>
 structure is defined as follows:
 </para>
@@ -9111,9 +9111,9 @@ as follows:
 <itemizedlist>
   <listitem>
     <para>
-To indicate text deletion, 
+To indicate text deletion,
 the call_data member specifies a NULL text field.
-The text to be deleted is then the current text in the buffer 
+The text to be deleted is then the current text in the buffer
 from position chg_first (starting at zero) on a character length
 of chg_length.
     </para>
@@ -9202,11 +9202,11 @@ the first and second character.
 typedef struct _XIMText {
      unsigned short length;
      XIMFeedback * feedback;
-     Bool encoding_is_wchar; 
+     Bool encoding_is_wchar;
      union {
           char * multi_byte;
           wchar_t * wide_char;
-     } string; 
+     } string;
 } XIMText;
 </literallayout>
 </para>
@@ -9223,7 +9223,7 @@ The length member is the text length in characters.
   </listitem>
   <listitem>
     <para>
-The encoding_is_wchar member is a value that indicates 
+The encoding_is_wchar member is a value that indicates
 if the text string is encoded in wide character or multibyte format.
 The text string may be passed either as multibyte or as wide character;
 the input method controls in which form data is passed.
@@ -9255,33 +9255,33 @@ Rendering of the text to be drawn is specified either in generic ways
 (for example, primary, secondary) or in specific ways (reverse, underline).
 When generic indications are given,
 the client is free to choose the rendering style.
-It is necessary, however, that primary and secondary be mapped 
+It is necessary, however, that primary and secondary be mapped
 to two distinct rendering styles.
 </para>
 <para>
 <!-- .LP -->
-If an input method wants to control display of the preedit string, an 
+If an input method wants to control display of the preedit string, an
 input method can indicate the visibility hints using feedbacks in
 a specific way.
-The 
+The
 <symbol>XIMVisibleToForward</symbol>,
 <symbol>XIMVisibleToBackword</symbol>,
 and
 <symbol>XIMVisibleToCenter</symbol>
 masks are exclusively used for these visibility hints.
-The 
+The
 <symbol>XIMVisibleToForward</symbol>
 mask
 indicates that the preedit text is preferably displayed in the
 primary draw direction from the
 caret position in the preedit area forward.
-The 
+The
 <symbol>XIMVisibleToBackword</symbol>
 mask
 indicates that the preedit text is preferably displayed from
 the caret position in the preedit area backward, relative to the primary
 draw direction.
-The 
+The
 <symbol>XIMVisibleToCenter</symbol>
 mask
 indicates that the preedit text is preferably displayed with
@@ -9291,7 +9291,7 @@ the caret position in the preedit area centered.
 <!-- .LP -->
 The insertion point of the preedit string could exist outside of
 the visible area when visibility hints are used.
-Only one of the 
+Only one of the
 masks
 is valid for the entire preedit string, and only one character
 can hold one of these feedbacks for a given input context at one time.
@@ -9316,13 +9316,13 @@ character of the string, and the length of the array is thus length.
 <para>
 <!-- .LP -->
 If an input method wants to indicate that it is only updating the feedback of
-the preedit text without changing the content of it, 
+the preedit text without changing the content of it,
 the
 <structname>XIMText</structname>
 structure will contain a NULL value for the string field,
 the number of characters affected (relative to chg_first)
 will be in the length field,
-and the feedback field will point to an array of 
+and the feedback field will point to an array of
 <type>XIMFeedback</type>.
 </para>
 <para>
@@ -9407,8 +9407,8 @@ to agree with the values in the Consortium's X11R5 and X11R6 implementations.
 <para>
 <!-- .LP -->
 An input method may have its own navigation keys to allow the user
-to move the text insertion point in the preedit area 
-(for example, to move backward or forward). 
+to move the text insertion point in the preedit area
+(for example, to move backward or forward).
 Consequently, input method needs to indicate to the client that it
 should move the text insertion point.
 It then calls the PreeditCaretCallback.
@@ -9461,12 +9461,12 @@ Specifies the preedit caret information.
 <!-- .eM -->
 The input method will trigger PreeditCaretCallback
 to move the text insertion point during preedit.
-The call_data argument contains a pointer to an 
+The call_data argument contains a pointer to an
 <structname>XIMPreeditCaretCallbackStruct</structname>
 structure,
 which indicates where the caret should be moved.
 The callback must move the insertion point to its new location
-and return, in field position, the new offset value from the initial position.  
+and return, in field position, the new offset value from the initial position.
 </para>
 <para>
 <!-- .LP -->
@@ -9503,7 +9503,7 @@ structure is defined as follows:
 <!-- .TA .5i 2.5i -->
 <!-- .ta .5i 2.5i -->
 typedef enum {
-     XIMIsInvisible,     /* Disable caret feedback */ 
+     XIMIsInvisible,     /* Disable caret feedback */
      XIMIsPrimary,     /* <acronym>UI</acronym> defined caret feedback */
      XIMIsSecondary,     /* <acronym>UI</acronym> defined caret feedback */
 } XIMCaretStyle;
@@ -9528,7 +9528,7 @@ typedef enum {
      XIMForwardWord, XIMBackwardWord,
      XIMCaretUp, XIMCaretDown,
      XIMNextLine, XIMPreviousLine,
-     XIMLineStart, XIMLineEnd, 
+     XIMLineStart, XIMLineEnd,
      XIMAbsolutePosition,
      XIMDontChange,
  } XIMCaretDirection;
@@ -9627,7 +9627,7 @@ callbacks:  StatusStartCallback, StatusDoneCallback, and StatusDrawCallback.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-When the input context is created or gains focus, 
+When the input context is created or gains focus,
 the input method calls the StatusStartCallback callback.
 </para>
 <indexterm significance="preferred"><primary>StatusStartCallback</primary></indexterm>
@@ -9677,7 +9677,7 @@ Not used for this callback and always passed as NULL.
 <!-- .LP -->
 <!-- .eM -->
 The callback should initialize appropriate data for displaying status
-and for responding to StatusDrawCallback calls.  
+and for responding to StatusDrawCallback calls.
 Once StatusStartCallback is called,
 it will not be called again before StatusDoneCallback has been called.
 </para>
@@ -9733,7 +9733,7 @@ Not used for this callback and always passed as NULL.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The callback may release any data allocated on 
+The callback may release any data allocated on
 <function>StatusStart</function>.
 </para>
 <para>
@@ -9854,9 +9854,9 @@ Xlib provides the ability for an input method
 to register a filter internal to Xlib.
 This filter is called by a client (or toolkit) by calling
 <xref linkend='XFilterEvent' xrefstyle='select: title'/>
-after calling 
+after calling
 <xref linkend='XNextEvent' xrefstyle='select: title'/>.
-Any client that uses the 
+Any client that uses the
 <type>XIM</type>
 interface should call
 <xref linkend='XFilterEvent' xrefstyle='select: title'/>
@@ -9870,7 +9870,7 @@ of event filters with respect to other event-handling mechanisms
 <!-- .LP -->
 Clients may not know how many filters there are, if any,
 and what they do.
-They may only know if an event has been filtered on return of 
+They may only know if an event has been filtered on return of
 <xref linkend='XFilterEvent' xrefstyle='select: title'/>.
 Clients should discard filtered events.
 <!-- .sp -->
@@ -10106,13 +10106,13 @@ begins in the initial state of the encoding of the locale
 <!-- .NT -->
 <note><para>
 To insure proper input processing,
-it is essential that the client pass only 
+it is essential that the client pass only
 <symbol>KeyPress</symbol>
 events to
 <xref linkend='XmbLookupString' xrefstyle='select: title'/>
 and
 <xref linkend='XwcLookupString' xrefstyle='select: title'/>.
-Their behavior when a client passes a 
+Their behavior when a client passes a
 <symbol>KeyRelease</symbol>
 event is undefined.
 </para></note>
@@ -10122,7 +10122,7 @@ event is undefined.
 <!-- .LP -->
 Clients should check the status_return argument before
 using the other returned values.
-These two functions both return a value to status_return 
+These two functions both return a value to status_return
 that indicates what has been returned in the other arguments.
 The possible values returned are:
 </para>
@@ -10148,7 +10148,7 @@ The possible values returned are:
     <row>
       <entry><symbol>XLookupNone</symbol></entry>
       <entry>No consistent input has been composed so far.
-      The contents of buffer_return and keysym_return are not modified, 
+      The contents of buffer_return and keysym_return are not modified,
       and the function returns zero.</entry>
     </row>
     <row>
@@ -10227,14 +10227,14 @@ or raise an exception or error of some sort.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-A 
+A
 <symbol>KeyPress</symbol>
 event with a KeyCode of zero is used exclusively as a
 signal that an input method has composed input that can be returned by
 <xref linkend='XmbLookupString' xrefstyle='select: title'/>
 or
 <xref linkend='XwcLookupString' xrefstyle='select: title'/>.
-No other use is made of a 
+No other use is made of a
 <symbol>KeyPress</symbol>
 event with KeyCode of zero.
 </para>
@@ -10258,7 +10258,7 @@ onto a client's event queue
   </listitem>
   <listitem>
     <para>
-A 
+A
 <symbol>KeyPress</symbol>
 event whose KeyCode value is modified by an input method filter
     </para>

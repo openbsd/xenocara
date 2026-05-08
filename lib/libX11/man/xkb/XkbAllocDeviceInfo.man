@@ -43,26 +43,26 @@ number of button actions to allocate space for
 number of LED feedbacks to allocate space for
 .SH DESCRIPTION
 .LP
-.I XkbAllocDeviceInfo 
-allocates space for an XkbDeviceInfoRec structure and initializes that structure's 
-.I device_spec 
-field with the device ID specified by 
-.I device_spec. 
-If 
-.I n_buttons 
-is nonzero, 
-.I n_buttons 
-XkbActions are linked into the XkbDeviceInfoRec structure and initialized to zero. If 
-.I sz_leds 
-is nonzero, 
-.I sz_leds 
-XkbDeviceLedInfoRec structures are also allocated and linked into the XkbDeviceInfoRec structure. If 
-you request XkbDeviceLedInfoRec structures be allocated using this request, you must initialize them 
+.I XkbAllocDeviceInfo
+allocates space for an XkbDeviceInfoRec structure and initializes that structure's
+.I device_spec
+field with the device ID specified by
+.I device_spec.
+If
+.I n_buttons
+is nonzero,
+.I n_buttons
+XkbActions are linked into the XkbDeviceInfoRec structure and initialized to zero. If
+.I sz_leds
+is nonzero,
+.I sz_leds
+XkbDeviceLedInfoRec structures are also allocated and linked into the XkbDeviceInfoRec structure. If
+you request XkbDeviceLedInfoRec structures be allocated using this request, you must initialize them
 explicitly, by using
 .BR XkbAddDeviceLedInfo (__libmansuffix__).
 .SH STRUCTURES
 .LP
-Information about X Input Extension devices is transferred between a client program and the Xkb 
+Information about X Input Extension devices is transferred between a client program and the Xkb
 extension in an XkbDeviceInfoRec structure:
 .nf
 
@@ -81,7 +81,7 @@ extension in an XkbDeviceInfoRec structure:
         unsigned short       dflt_led_fb;   /\&* input extension ID of default indicator feedback */
         XkbDeviceLedInfoPtr  leds;          /\&* LED descriptions */
     } XkbDeviceInfoRec, *XkbDeviceInfoPtr;
-    
+
 
     typedef struct {
         unsigned short      led_class;        /\&* class for this LED device*/
@@ -93,6 +93,6 @@ extension in an XkbDeviceInfoRec structure:
         Atom                names[XkbNumIndicators];   /\&* names for LEDs */
         XkbIndicatorMapRec  maps;             /\&* indicator maps for each LED */
     } XkbDeviceLedInfoRec, *XkbDeviceLedInfoPtr;
-.fi    
+.fi
 .SH "SEE ALSO"
 .BR XkbAddDeviceLedInfo (__libmansuffix__)

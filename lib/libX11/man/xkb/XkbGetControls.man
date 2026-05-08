@@ -43,37 +43,37 @@ mask of controls requested
 keyboard description for controls information
 .SH DESCRIPTION
 .LP
-.I XkbGetControls 
-queries the server for the requested control information, waits for a reply, and 
-then copies the server's values for the requested information into the 
-.I ctrls 
-structure of the 
-.I xkb 
-argument. Only those components specified by the 
-.I which 
-parameter are copied. Valid values for 
-.I which 
+.I XkbGetControls
+queries the server for the requested control information, waits for a reply, and
+then copies the server's values for the requested information into the
+.I ctrls
+structure of the
+.I xkb
+argument. Only those components specified by the
+.I which
+parameter are copied. Valid values for
+.I which
 are any combination of the masks listed in Table 1 that have "ok" in the
-.I which 
+.I which
 column.
 
-Table 1 shows the actual values for the individual mask bits used to select 
-controls for 
-modification and to enable and disable the control. Note that the same mask bit 
-is used to 
-specify general modifications to the parameters used to configure the control 
-(which), and to 
-enable and disable the control (enabled_ctrls). The anomalies in Table 1 (no 
-"ok" in column) 
-are for controls that have no configurable attributes; and for controls that are 
-not boolean 
+Table 1 shows the actual values for the individual mask bits used to select
+controls for
+modification and to enable and disable the control. Note that the same mask bit
+is used to
+specify general modifications to the parameters used to configure the control
+(which), and to
+enable and disable the control (enabled_ctrls). The anomalies in Table 1 (no
+"ok" in column)
+are for controls that have no configurable attributes; and for controls that are
+not boolean
 controls and therefore cannot be enabled or disabled.
 
 .TS
 c s s s
 l l l l
 l l l l
-l l l l. 
+l l l l.
 Table 1 Controls Mask Bits
 _
 Mask Bit	which or	enabled	Value
@@ -97,54 +97,54 @@ XkbInternalModsMask	ok		(1L<<28)
 XkbIgnoreLockModsMask	ok		(1L<<29)
 XkbPerKeyRepeatMask	ok		(1L<<30)
 XkbControlsEnabledMask	ok		(1L<<31)
-XkbAccessXOptionsMask	ok	ok	(XkbStickyKeysMask | 
+XkbAccessXOptionsMask	ok	ok	(XkbStickyKeysMask |
 			XkbAccessXFeedbackMask)
-XkbAllBooleanCtrlsMask		ok	(0x00001FFF) 
+XkbAllBooleanCtrlsMask		ok	(0x00001FFF)
 XkbAllControlsMask	ok		(0xF8001FFF)
 .TE
 
 
-If 
-.I xkb->ctrls 
-is NULL, 
-.I XkbGetControls 
-allocates and initializes it before obtaining the values specified by 
-.I which. 
-If 
-.I xkb->ctrls 
-is not NULL, 
-.I XkbGetControls 
-modifies only those portions of 
-.I xkb->ctrls 
-corresponding to the values specified by 
+If
+.I xkb->ctrls
+is NULL,
+.I XkbGetControls
+allocates and initializes it before obtaining the values specified by
+.I which.
+If
+.I xkb->ctrls
+is not NULL,
+.I XkbGetControls
+modifies only those portions of
+.I xkb->ctrls
+corresponding to the values specified by
 .I which.
 
-.I XkbGetControls 
-returns Success if successful; otherwise, it returns BadAlloc if it cannot 
-obtain sufficient storage, BadMatch if 
-.I xkb 
-is NULL or 
-.I which 
+.I XkbGetControls
+returns Success if successful; otherwise, it returns BadAlloc if it cannot
+obtain sufficient storage, BadMatch if
+.I xkb
+is NULL or
+.I which
 is empty, or BadImplementation.
 
-To free the 
-.I ctrls 
-member of a keyboard description, use 
+To free the
+.I ctrls
+member of a keyboard description, use
 .I XkbFreeControls.
 
-The 
-.I num_groups 
-field in the 
-.I ctrls 
-structure is always filled in by 
-.I XkbGetControls, 
-regardless of which bits are selected by 
+The
+.I num_groups
+field in the
+.I ctrls
+structure is always filled in by
+.I XkbGetControls,
+regardless of which bits are selected by
 .I which.
 .SH "RETURN VALUES"
 .TP 15
 Success
-The 
-.I XkbGetControls 
+The
+.I XkbGetControls
 function returns Success if successful.
 .SH DIAGNOSTICS
 .TP 15
@@ -155,7 +155,7 @@ Unable to allocate storage
 Invalid reply from server
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid
 
 .SH "SEE ALSO"

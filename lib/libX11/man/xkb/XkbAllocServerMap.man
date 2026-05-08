@@ -43,14 +43,14 @@ mask selecting map components to allocate
 value of num_acts field in map to be allocated
 .SH DESCRIPTION
 .LP
-.I XkbAllocServerMap 
-allocates and initializes an empty server map in the 
-.I server 
-field of the keyboard description specified by 
-.I xkb. 
-The 
-.I which 
-parameter specifies the particular components of the server map structure to allocate, as specified in Table 1. 
+.I XkbAllocServerMap
+allocates and initializes an empty server map in the
+.I server
+field of the keyboard description specified by
+.I xkb.
+The
+.I which
+parameter specifies the particular components of the server map structure to allocate, as specified in Table 1.
 
 .TS
 c s
@@ -79,24 +79,24 @@ T}
 
 .TE
 
-If the server map of the keyboard description is not NULL and any fields are already allocated in the server map, 
-.I XkbAllocServerMap 
-does not overwrite the existing values. The only exception is with the 
-.I acts 
-array. If the 
-.I count_acts 
-parameter is greater than the current 
-.I num_acts 
-field of the server map, 
-.I XkbAllocServerMap 
-resizes the 
-.I acts 
-array and resets the 
-.I num_acts 
+If the server map of the keyboard description is not NULL and any fields are already allocated in the server map,
+.I XkbAllocServerMap
+does not overwrite the existing values. The only exception is with the
+.I acts
+array. If the
+.I count_acts
+parameter is greater than the current
+.I num_acts
+field of the server map,
+.I XkbAllocServerMap
+resizes the
+.I acts
+array and resets the
+.I num_acts
 field accordingly.
 
-If 
-.I XkbAllocServerMap 
+If
+.I XkbAllocServerMap
 is successful, it returns Success. Otherwise, it can return either BadMatch or BadAlloc errors.
 .SH DIAGNOSTICS
 .TP 15
@@ -110,12 +110,12 @@ A compatible version of Xkb was not available in the server or an argument has c
 An argument is out of range
 .SH NOTES
 .LP
-The 
-.I min_key_code 
-and 
-.I max_key_code 
-fields of the 
-.I xkb 
-parameter must be legal values. If they are not valid, 
-.I XkbAllocServerMap 
-returns BadValue. 
+The
+.I min_key_code
+and
+.I max_key_code
+fields of the
+.I xkb
+parameter must be legal values. If they are not valid,
+.I XkbAllocServerMap
+returns BadValue.

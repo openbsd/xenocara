@@ -1,8 +1,8 @@
-XCOMM 
+XCOMM
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_FONTSET category
-XCOMM 
+XCOMM
 XLC_FONTSET
 
 on_demand_loading	True
@@ -87,9 +87,9 @@ fs6 {
 
 END XLC_FONTSET
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_XLOCALE category
-XCOMM 
+XCOMM
 XLC_XLOCALE
 
 encoding_name		UTF-8
@@ -125,14 +125,14 @@ cs3     {
         ct_encoding     KSC5601.1987-0:GL; KSC5601.1987-0:GR;                        KSC5601.1987-1:GL; KSC5601.1987-1:GR
 
 }
- 
+
 XCOMM	cs4 class
 cs4     {
         side            GR
         length          2
         ct_encoding     GB2312.1980-0:GL; GB2312.1980-0:GR
 }
- 
+
 XCOMM	cs5 class
 cs5	{
 	side		GR

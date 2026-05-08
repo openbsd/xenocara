@@ -1,11 +1,11 @@
 XCOMM  XLocale Database Sample for iso8859-9e.
-XCOMM 
+XCOMM
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_FONTSET category
-XCOMM 
+XCOMM
 XLC_FONTSET
-XCOMM 	fs0 class 
+XCOMM 	fs0 class
 fs0	{
 	charset	{
 		name		ISO8859-1:GL
@@ -16,7 +16,7 @@ fs0	{
 		vertical_rotate	all
 	}
 }
-XCOMM 	fs1 class 
+XCOMM 	fs1 class
 fs1	{
 	charset	{
 		name		ISO8859-9E:GR
@@ -39,9 +39,9 @@ csd0	{
 }
 END XLC_CHARSET_DEFINE
 
-XCOMM 
+XCOMM
 XCOMM 	XLC_XLOCALE category
-XCOMM 
+XCOMM
 XLC_XLOCALE
 
 encoding_name		ISO8859-9E

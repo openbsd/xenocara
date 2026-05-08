@@ -85,6 +85,6 @@ returns
 .BR True ,
 the client should ungrab the keyboard.
 .SH "SEE ALSO"
-XNextEvent(__libmansuffix__)
+.BR XNextEvent (__libmansuffix__)
 .br
 \fI\*(xL\fP

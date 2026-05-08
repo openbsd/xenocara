@@ -21,7 +21,7 @@
 .\"
 .TH XkbAddGeomColor __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbAddGeomColor \-  Add one color name to an existing keyboard geometry 
+XkbAddGeomColor \-  Add one color name to an existing keyboard geometry
 description
 .SH SYNOPSIS
 .HP
@@ -43,43 +43,43 @@ color to be added
 color to be added
 .SH DESCRIPTION
 .LP
-Xkb provides functions to add a single new element to the top-level keyboard 
-geometry. In each case the 
-.I num_ * 
-fields of the corresponding structure is incremented by 1. These functions do 
-not change 
-.I sz_* 
-unless there is no more room in the array. Some of these functions fill in the 
-values of the element's structure from the arguments. For other functions, you 
+Xkb provides functions to add a single new element to the top-level keyboard
+geometry. In each case the
+.I num_ *
+fields of the corresponding structure is incremented by 1. These functions do
+not change
+.I sz_*
+unless there is no more room in the array. Some of these functions fill in the
+values of the element's structure from the arguments. For other functions, you
 must explicitly write code to fill the structure's elements.
 
-The top-level geometry description includes a list of 
-.I geometry properties. 
-A geometry property associates an arbitrary string with an equally arbitrary 
-name. Programs that display images of keyboards can use geometry properties as 
-hints, but they are not interpreted by Xkb. No other geometry structures refer 
+The top-level geometry description includes a list of
+.I geometry properties.
+A geometry property associates an arbitrary string with an equally arbitrary
+name. Programs that display images of keyboards can use geometry properties as
+hints, but they are not interpreted by Xkb. No other geometry structures refer
 to geometry properties.
 
-.I XkbAddGeomColor 
-adds the specified color 
-.I name 
-and 
-.I pixel 
-to the specified geometry 
-.I geom. 
-The top-level geometry description includes a list of up to MaxColors (32) 
-.I color names. 
-A color 
-.I name 
+.I XkbAddGeomColor
+adds the specified color
+.I name
+and
+.I pixel
+to the specified geometry
+.I geom.
+The top-level geometry description includes a list of up to MaxColors (32)
+.I color names.
+A color
+.I name
 is a string whose interpretation is not specified by Xkb and neither is the
-.I pixel 
-value's interpretation. All other geometry data structures refer to colors using 
+.I pixel
+value's interpretation. All other geometry data structures refer to colors using
 their indices in this global list or pointers to colors in this list.
-.I XkbAddGeomColor 
-returns NULL if any of the parameters is empty or if it was not able to allocate 
-space for the color. To allocate space for an arbitrary number of colors to a 
-geometry, use the 
-.I XkbAllocGeomColors 
+.I XkbAddGeomColor
+returns NULL if any of the parameters is empty or if it was not able to allocate
+space for the color. To allocate space for an arbitrary number of colors to a
+geometry, use the
+.I XkbAllocGeomColors
 function.
 .SH STRUCTURES
 .LP
@@ -89,7 +89,7 @@ function.
         unsigned int    pixel;      /\&* color */
         char *          spec;       /\&* color name */
     } XkbColorRec,*XkbColorPtr;
-    
+
 .fi
 .SH "SEE ALSO"
 .BR XkbAllocGeomColors (__libmansuffix__)

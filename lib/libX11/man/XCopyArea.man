@@ -207,6 +207,6 @@ by the argument's type is accepted.
 Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
-XClearArea(__libmansuffix__)
+.BR XClearArea (__libmansuffix__)
 .br
 \fIXlib \- C Language X Interface\fP

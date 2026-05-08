@@ -176,7 +176,7 @@ by the argument's type is accepted.
 Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
-XFree(__libmansuffix__),
-XGetWindowProperty(__libmansuffix__)
+.BR XFree (__libmansuffix__),
+.BR XGetWindowProperty (__libmansuffix__)
 .br
 \fI\*(xL\fP

@@ -34,7 +34,7 @@ XkbFreeGeomKeys \-  Free geometry keys
 .SH ARGUMENTS
 .TP
 .I row
-row in which keys should be freed 
+row in which keys should be freed
 .TP
 .I first
 first key to be freed
@@ -46,13 +46,13 @@ number of keys to be freed
 True => all keys are freed
 .SH DESCRIPTION
 .LP
-If 
-.I free_all 
-is True, all keys are freed regardless of the value of 
-.I first 
-or 
-.I count. 
-Otherwise, 
-.I count 
-keys are freed beginning with the one specified by 
+If
+.I free_all
+is True, all keys are freed regardless of the value of
+.I first
+or
+.I count.
+Otherwise,
+.I count
+keys are freed beginning with the one specified by
 .I first.

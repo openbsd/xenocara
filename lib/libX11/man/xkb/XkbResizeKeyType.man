@@ -51,79 +51,79 @@ True => list of preserved modifiers is necessary
 new max # of levels for type
 .SH DESCRIPTION
 .LP
-.I XkbResizeKeyType 
-changes the type specified by 
-.I xkb->map->types[type_ndx], 
-and reallocates the symbols and actions bound to all keys that use the type, if 
-necessary. 
-.I XkbResizeKeyType 
-updates only the local copy of the types in 
-.I xkb; 
-to update the server's copy for the physical device, use 
-.I XkbSetMap 
-or 
-.I XkbChangeMap 
-after calling 
+.I XkbResizeKeyType
+changes the type specified by
+.I xkb->map->types[type_ndx],
+and reallocates the symbols and actions bound to all keys that use the type, if
+necessary.
+.I XkbResizeKeyType
+updates only the local copy of the types in
+.I xkb;
+to update the server's copy for the physical device, use
+.I XkbSetMap
+or
+.I XkbChangeMap
+after calling
 .I XkbResizeKeyType.
 
-The 
-.I map_count 
-parameter specifies the total number of map entries needed for the type, and can 
-be zero or greater. If 
-.I map_count 
-is zero, 
-.I XkbResizeKeyType 
-frees the existing 
-.I map 
-and 
-.I preserve 
+The
+.I map_count
+parameter specifies the total number of map entries needed for the type, and can
+be zero or greater. If
+.I map_count
+is zero,
+.I XkbResizeKeyType
+frees the existing
+.I map
+and
+.I preserve
 entries for the type if they exist and sets them to NULL.
 
-The 
-.I want_preserve 
-parameter specifies whether a 
-.I preserve 
-list for the key should be created. If 
-.I want_preserve 
-is True, the 
-.I preserve 
-list with 
-.I map_count 
+The
+.I want_preserve
+parameter specifies whether a
+.I preserve
+list for the key should be created. If
+.I want_preserve
+is True, the
+.I preserve
+list with
+.I map_count
 entries is allocated or reallocated if it already exists. Otherwise, if
-.I want_preserve 
-is False, the 
-.I preserve 
+.I want_preserve
+is False, the
+.I preserve
 field is freed if necessary and set to NULL.
 
-The 
-.I new_num_lvls 
-parameter specifies the new maximum number of shift levels for the type and is 
-used to calculate and resize the symbols and actions bound to all keys that use 
+The
+.I new_num_lvls
+parameter specifies the new maximum number of shift levels for the type and is
+used to calculate and resize the symbols and actions bound to all keys that use
 the type.
 
-If 
-.I type_ndx 
-does not specify a legal type, 
-.I new_num_lvls 
-is less than 1, or the 
-.I map_count 
-is less than zero, 
-.I XkbResizeKeyType 
-returns BadValue. If 
-.I XkbResizeKeyType 
-encounters any problems with allocation, it returns BadAlloc. Otherwise, it 
+If
+.I type_ndx
+does not specify a legal type,
+.I new_num_lvls
+is less than 1, or the
+.I map_count
+is less than zero,
+.I XkbResizeKeyType
+returns BadValue. If
+.I XkbResizeKeyType
+encounters any problems with allocation, it returns BadAlloc. Otherwise, it
 returns Success.
 .SH "RETURN VALUES"
 .TP 15
 Success
-The 
-.I XkbResizeKeyType 
-function returns Success if 
-.I type_ndx 
-specifies a legal type,   
-.I new_num_lvls 
-is greater than zero and 
-.I map_count 
+The
+.I XkbResizeKeyType
+function returns Success if
+.I type_ndx
+specifies a legal type,
+.I new_num_lvls
+is greater than zero and
+.I map_count
 is positive.
 .SH DIAGNOSTICS
 .TP 15

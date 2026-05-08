@@ -68,11 +68,11 @@ explicitly (see
 and
 <xref linkend='XGrabKeyboard' xrefstyle='select: title'/>).
 <indexterm><primary>Passive grab</primary></indexterm>
-A passive grab occurs when clients grab a particular keyboard key 
+A passive grab occurs when clients grab a particular keyboard key
 or pointer button in a window,
 and the grab will activate when the key or button is actually pressed.
 Passive grabs are convenient for implementing reliable pop-up menus.
-For example, you can guarantee that the pop-up is mapped 
+For example, you can guarantee that the pop-up is mapped
 before the up pointer button event occurs by
 grabbing a button requesting synchronous behavior.
 The down event will trigger the grab and freeze further
@@ -101,17 +101,17 @@ application may be slow reacting to an event.
 You often need some way to specify that your
 request should not occur if another application has in the meanwhile
 taken control of the keyboard, pointer, or selection.
-By providing the timestamp from the event in the request, 
+By providing the timestamp from the event in the request,
 you can arrange that the operation not take effect
 if someone else has performed an operation in the meanwhile.
 </para>
 <para>
 <!-- .LP -->
-A timestamp is a time value, expressed in milliseconds. 
+A timestamp is a time value, expressed in milliseconds.
 It typically is the time since the last server reset.
 Timestamp values wrap around (after about 49.7 days).
-The server, given its current time is represented by timestamp T, 
-always interprets timestamps from clients by treating half of the timestamp 
+The server, given its current time is represented by timestamp T,
+always interprets timestamps from clients by treating half of the timestamp
 space as being later in time than T.
 One timestamp value, named
 <symbol>CurrentTime</symbol>,
@@ -202,8 +202,8 @@ Specifies the grab window.
     </term>
     <listitem>
       <para>
-Specifies a Boolean value that indicates whether the pointer 
-events are to be reported as usual or reported with respect to the grab window 
+Specifies a Boolean value that indicates whether the pointer
+events are to be reported as usual or reported with respect to the grab window
 if selected by the event mask.
       </para>
     </listitem>
@@ -226,7 +226,7 @@ The mask is the bitwise inclusive OR of the valid pointer event mask bits.
     <listitem>
       <para>
 Specifies further processing of pointer events.
-You can pass 
+You can pass
 <symbol>GrabModeSync</symbol>
 or
 <symbol>GrabModeAsync</symbol>.
@@ -240,7 +240,7 @@ or
     <listitem>
       <para>
 Specifies further processing of keyboard events.
-You can pass 
+You can pass
 <symbol>GrabModeSync</symbol>
 or
 <symbol>GrabModeAsync</symbol>.
@@ -293,33 +293,33 @@ if the grab was successful.
 Further pointer events are reported only to the grabbing client.
 <xref linkend='XGrabPointer' xrefstyle='select: title'/>
 overrides any active pointer grab by this client.
-If owner_events is 
+If owner_events is
 <symbol>False</symbol>,
 all generated pointer events
 are reported with respect to grab_window and are reported only if
 selected by event_mask.
-If owner_events is 
+If owner_events is
 <symbol>True</symbol>
 and if a generated
-pointer event would normally be reported to this client, 
-it is reported as usual. 
+pointer event would normally be reported to this client,
+it is reported as usual.
 Otherwise, the event is reported with respect to the
 grab_window and is reported only if selected by event_mask.
 For either value of owner_events, unreported events are discarded.
 </para>
 <para>
 <!-- .LP -->
-If the pointer_mode is 
+If the pointer_mode is
 <symbol>GrabModeAsync</symbol>,
 pointer event processing continues as usual.
-If the pointer is currently frozen by this client, 
+If the pointer is currently frozen by this client,
 the processing of events for the pointer is resumed.
-If the pointer_mode is 
+If the pointer_mode is
 <symbol>GrabModeSync</symbol>,
 the state of the pointer, as seen by
 client applications,
 appears to freeze, and the X server generates no further pointer events
-until the grabbing client calls 
+until the grabbing client calls
 <xref linkend='XAllowEvents' xrefstyle='select: title'/>
 or until the pointer grab is released.
 Actual pointer changes are not lost while the pointer is frozen;
@@ -327,15 +327,15 @@ they are simply queued in the server for later processing.
 </para>
 <para>
 <!-- .LP -->
-If the keyboard_mode is 
+If the keyboard_mode is
 <symbol>GrabModeAsync</symbol>,
 keyboard event processing is unaffected by activation of the grab.
-If the keyboard_mode is 
+If the keyboard_mode is
 <symbol>GrabModeSync</symbol>,
 the state of the keyboard, as seen by
 client applications,
 appears to freeze, and the X server generates no further keyboard events
-until the grabbing client calls 
+until the grabbing client calls
 <xref linkend='XAllowEvents' xrefstyle='select: title'/>
 or until the pointer grab is released.
 Actual keyboard changes are not lost while the pointer is frozen;
@@ -344,8 +344,8 @@ they are simply queued in the server for later processing.
 <para>
 <!-- .LP -->
 If a cursor is specified, it is displayed regardless of what
-window the pointer is in.  
-If 
+window the pointer is in.
+If
 <symbol>None</symbol>
 is specified,
 the normal cursor for that window is displayed
@@ -357,11 +357,11 @@ otherwise, the cursor for grab_window is displayed.
 If a confine_to window is specified,
 the pointer is restricted to stay contained in that window.
 The confine_to window need have no relationship to the grab_window.
-If the pointer is not initially in the confine_to window, 
-it is warped automatically to the closest edge 
-just before the grab activates and enter/leave events are generated as usual. 
-If the confine_to window is subsequently reconfigured, 
-the pointer is warped automatically, as necessary, 
+If the pointer is not initially in the confine_to window,
+it is warped automatically to the closest edge
+just before the grab activates and enter/leave events are generated as usual.
+If the confine_to window is subsequently reconfigured,
+the pointer is warped automatically, as necessary,
 to keep it contained in the window.
 </para>
 <para>
@@ -371,10 +371,10 @@ if applications take a long time to respond or if there are long network
 delays.
 Consider a situation where you have two applications, both
 of which normally grab the pointer when clicked on.
-If both applications specify the timestamp from the event, 
+If both applications specify the timestamp from the event,
 the second application may wake up faster and successfully grab the pointer
-before the first application. 
-The first application then will get an indication that the other application 
+before the first application.
+The first application then will get an indication that the other application
 grabbed the pointer before its request was processed.
 </para>
 <para>
@@ -400,7 +400,7 @@ it fails and returns
 If the pointer is frozen by an active grab of another client,
 it fails and returns
 <symbol>GrabFrozen</symbol>.
-If the specified time is earlier than the last-pointer-grab time or later 
+If the specified time is earlier than the last-pointer-grab time or later
 than the current X server time, it fails and returns
 <symbol>GrabInvalidTime</symbol>.
 Otherwise, the last-pointer-grab time is set to the specified time
@@ -473,14 +473,14 @@ or from a normal button press.
 does not release the pointer if the specified
 time is earlier than the last-pointer-grab time or is later than the
 current X server time.
-It also generates 
+It also generates
 <symbol>EnterNotify</symbol>
-and 
+and
 <symbol>LeaveNotify</symbol>
 events.
-The X server performs an 
+The X server performs an
 <systemitem>UngrabPointer</systemitem>
-request automatically if the event window or confine_to window 
+request automatically if the event window or confine_to window
 for an active pointer grab becomes not viewable
 or if window reconfiguration causes the confine_to window to lie completely
 outside the boundaries of the root window.
@@ -649,8 +649,8 @@ Specifies the grab window.
     </term>
     <listitem>
       <para>
-Specifies a Boolean value that indicates whether the pointer 
-events are to be reported as usual or reported with respect to the grab window 
+Specifies a Boolean value that indicates whether the pointer
+events are to be reported as usual or reported with respect to the grab window
 if selected by the event mask.
       </para>
     </listitem>
@@ -673,7 +673,7 @@ The mask is the bitwise inclusive OR of the valid pointer event mask bits.
     <listitem>
       <para>
 Specifies further processing of pointer events.
-You can pass 
+You can pass
 <symbol>GrabModeSync</symbol>
 or
 <symbol>GrabModeAsync</symbol>.
@@ -687,7 +687,7 @@ or
     <listitem>
       <para>
 Specifies further processing of keyboard events.
-You can pass 
+You can pass
 <symbol>GrabModeSync</symbol>
 or
 <symbol>GrabModeAsync</symbol>.
@@ -775,13 +775,13 @@ may lag the physical state if device event processing is frozen.
 <!-- .LP -->
 This request overrides all previous grabs by the same client on the same
 button/key combinations on the same window.
-A modifiers of 
+A modifiers of
 <symbol>AnyModifier</symbol>
 is equivalent to issuing the grab request for all
-possible modifier combinations (including the combination of no modifiers).  
-It is not required that all modifiers specified have currently assigned 
+possible modifier combinations (including the combination of no modifiers).
+It is not required that all modifiers specified have currently assigned
 KeyCodes.
-A button of 
+A button of
 <symbol>AnyButton</symbol>
 is equivalent to
 issuing the request for all possible buttons.
@@ -795,9 +795,9 @@ If some other client has already issued an
 with the same button/key combination on the same window, a
 <errorname>BadAccess</errorname>
 error results.
-When using 
+When using
 <symbol>AnyModifier</symbol>
-or 
+or
 <symbol>AnyButton</symbol>,
 the request fails completely,
 and a
@@ -889,13 +889,13 @@ The
 <xref linkend='XUngrabButton' xrefstyle='select: title'/>
 function releases the passive button/key combination on the specified window if
 it was grabbed by this client.
-A modifiers of 
+A modifiers of
 <symbol>AnyModifier</symbol>
 is
-equivalent to issuing 
-the ungrab request for all possible modifier combinations, including 
+equivalent to issuing
+the ungrab request for all possible modifier combinations, including
 the combination of no modifiers.
-A button of 
+A button of
 <symbol>AnyButton</symbol>
 is equivalent to issuing the
 request for all possible buttons.
@@ -986,7 +986,7 @@ Specifies the grab window.
     </term>
     <listitem>
       <para>
-Specifies a Boolean value that indicates whether the keyboard events 
+Specifies a Boolean value that indicates whether the keyboard events
 are to be reported as usual.
       </para>
     </listitem>
@@ -998,7 +998,7 @@ are to be reported as usual.
     <listitem>
       <para>
 Specifies further processing of pointer events.
-You can pass 
+You can pass
 <symbol>GrabModeSync</symbol>
 or
 <symbol>GrabModeAsync</symbol>.
@@ -1012,7 +1012,7 @@ or
     <listitem>
       <para>
 Specifies further processing of keyboard events.
-You can pass 
+You can pass
 <symbol>GrabModeSync</symbol>
 or
 <symbol>GrabModeAsync</symbol>.
@@ -1046,55 +1046,55 @@ Further key events are reported only to the
 grabbing client.
 <xref linkend='XGrabKeyboard' xrefstyle='select: title'/>
 overrides any active keyboard grab by this client.
-If owner_events is 
+If owner_events is
 <symbol>False</symbol>,
 all generated key events are reported with
-respect to grab_window.  
-If owner_events is 
+respect to grab_window.
+If owner_events is
 <symbol>True</symbol>
 and if a generated
 key event would normally be reported to this client, it is reported
 normally; otherwise, the event is reported with respect to the
-grab_window.  
-Both 
+grab_window.
+Both
 <symbol>KeyPress</symbol>
-and 
+and
 <symbol>KeyRelease</symbol>
 events are always reported,
 independent of any event selection made by the client.
 </para>
 <para>
 <!-- .LP -->
-If the keyboard_mode argument is 
+If the keyboard_mode argument is
 <symbol>GrabModeAsync</symbol>,
 keyboard event processing continues
-as usual. 
-If the keyboard is currently frozen by this client, 
+as usual.
+If the keyboard is currently frozen by this client,
 then processing of keyboard events is resumed.
 If the keyboard_mode  argument is
 <symbol>GrabModeSync</symbol>,
 the state of the keyboard (as seen by client applications) appears to freeze,
 and the X server generates no further keyboard events until the
-grabbing client issues a releasing 
+grabbing client issues a releasing
 <xref linkend='XAllowEvents' xrefstyle='select: title'/>
 call or until the keyboard grab is released.
-Actual keyboard changes are not lost while the keyboard is frozen; 
+Actual keyboard changes are not lost while the keyboard is frozen;
 they are simply queued in the server for later processing.
 </para>
 <para>
 <!-- .LP -->
-If pointer_mode is 
+If pointer_mode is
 <symbol>GrabModeAsync</symbol>,
 pointer event processing is unaffected
-by activation of the grab.  
-If pointer_mode is 
+by activation of the grab.
+If pointer_mode is
 <symbol>GrabModeSync</symbol>,
-the state of the pointer (as seen by client applications) appears to freeze, 
-and the X server generates no further pointer events 
-until the grabbing client issues a releasing 
+the state of the pointer (as seen by client applications) appears to freeze,
+and the X server generates no further pointer events
+until the grabbing client issues a releasing
 <xref linkend='XAllowEvents' xrefstyle='select: title'/>
 call or until the keyboard grab is released.
-Actual pointer changes are not lost while the pointer is frozen; 
+Actual pointer changes are not lost while the pointer is frozen;
 they are simply queued in the server for later processing.
 </para>
 <para>
@@ -1109,7 +1109,7 @@ it fails and returns
 If the keyboard is frozen by an active grab of another client,
 it fails and returns
 <symbol>GrabFrozen</symbol>.
-If the specified time is earlier than the last-keyboard-grab time 
+If the specified time is earlier than the last-keyboard-grab time
 or later than the current X server time,
 it fails and returns
 <symbol>GrabInvalidTime</symbol>.
@@ -1122,7 +1122,7 @@ is replaced by the current X server time).
 <xref linkend='XGrabKeyboard' xrefstyle='select: title'/>
 can generate
 <errorname>BadValue</errorname>
-and 
+and
 <errorname>BadWindow</errorname>
 errors.
 </para>
@@ -1185,10 +1185,10 @@ if the specified time is earlier than
 the last-keyboard-grab time or is later than the current X server time.
 It also generates
 <symbol>FocusIn</symbol>
-and 
+and
 <symbol>FocusOut</symbol>
 events.
-The X server automatically performs an 
+The X server automatically performs an
 <systemitem>UngrabKeyboard</systemitem>
 request if the event window for an
 active keyboard grab becomes not viewable.
@@ -1266,7 +1266,7 @@ Specifies the grab window.
     </term>
     <listitem>
       <para>
-Specifies a Boolean value that indicates whether the keyboard events 
+Specifies a Boolean value that indicates whether the keyboard events
 are to be reported as usual.
       </para>
     </listitem>
@@ -1278,7 +1278,7 @@ are to be reported as usual.
     <listitem>
       <para>
 Specifies further processing of pointer events.
-You can pass 
+You can pass
 <symbol>GrabModeSync</symbol>
 or
 <symbol>GrabModeAsync</symbol>.
@@ -1292,7 +1292,7 @@ or
     <listitem>
       <para>
 Specifies further processing of keyboard events.
-You can pass 
+You can pass
 <symbol>GrabModeSync</symbol>
 or
 <symbol>GrabModeAsync</symbol>.
@@ -1340,7 +1340,7 @@ on any ancestor of grab_window.
 </itemizedlist>
 <para>
 <!-- .LP -->
-The interpretation of the remaining arguments is as for 
+The interpretation of the remaining arguments is as for
 <xref linkend='XGrabKeyboard' xrefstyle='select: title'/>.
 The active grab is terminated automatically when the logical state of the
 keyboard has the specified key released
@@ -1353,39 +1353,39 @@ may lag the physical state if device event processing is frozen.
 </para>
 <para>
 <!-- .LP -->
-A modifiers argument of 
+A modifiers argument of
 <symbol>AnyModifier</symbol>
 is equivalent to issuing the request for all
 possible modifier combinations (including the combination of no
-modifiers).  
+modifiers).
 It is not required that all modifiers specified have
 currently assigned KeyCodes.
-A keycode argument of 
+A keycode argument of
 <symbol>AnyKey</symbol>
 is equivalent to issuing
 the request for all possible KeyCodes.
 Otherwise, the specified keycode must be in
 the range specified by min_keycode and max_keycode in the connection
-setup, 
+setup,
 or a
 <errorname>BadValue</errorname>
 error results.
 </para>
 <para>
 <!-- .LP -->
-If some other client has issued a 
+If some other client has issued a
 <xref linkend='XGrabKey' xrefstyle='select: title'/>
-with the same key combination on the same window, a 
+with the same key combination on the same window, a
 <errorname>BadAccess</errorname>
 error results.
 When using
 <symbol>AnyModifier</symbol>
-or 
+or
 <symbol>AnyKey</symbol>,
 the request fails completely,
 and a
 <errorname>BadAccess</errorname>
-error results (no grabs are established) 
+error results (no grabs are established)
 if there is a conflicting grab for any combination.
 </para>
 <para>
@@ -1536,7 +1536,7 @@ Specifies the connection to the X server.
     <listitem>
       <para>
 Specifies the event mode.
-You can pass 
+You can pass
 <symbol>AsyncPointer</symbol>,
 <symbol>SyncPointer</symbol>,
 <symbol>AsyncKeyboard</symbol>,
@@ -1567,7 +1567,7 @@ You can pass either a timestamp or
 <!-- .eM -->
 The
 <xref linkend='XAllowEvents' xrefstyle='select: title'/>
-function releases some queued events if the client has caused a device 
+function releases some queued events if the client has caused a device
 to freeze.
 It has no effect if the specified time is earlier than the last-grab
 time of the most recent active grab for the client or if the specified time
@@ -1616,10 +1616,10 @@ Depending on the event_mode argument, the following occurs:
       <xref linkend='XAllowEvents' xrefstyle='select: title'/>
       with mode
       <symbol>SyncPointer</symbol>
-      but not from an 
+      but not from an
       <xref linkend='XGrabPointer' xrefstyle='select: title'/>),
       the pointer grab is released and that event is completely reprocessed.
-      This time, however, the function ignores any passive grabs at or above 
+      This time, however, the function ignores any passive grabs at or above
       (toward the root of) the grab_window of the grab just released.
       The request has no effect if the pointer is not grabbed by the client
       or if the pointer is not frozen as the result of an event.</entry>
@@ -1661,7 +1661,7 @@ Depending on the event_mode argument, the following occurs:
       <xref linkend='XAllowEvents' xrefstyle='select: title'/>
       with mode
       <symbol>SyncKeyboard</symbol>
-      but not from an 
+      but not from an
       <xref linkend='XGrabKeyboard' xrefstyle='select: title'/>),
       the keyboard grab is released and that event is completely reprocessed.
       This time, however, the function ignores any passive grabs at or above
@@ -1677,22 +1677,22 @@ Depending on the event_mode argument, the following occurs:
       <symbol>ButtonPress</symbol>,
       <symbol>ButtonRelease</symbol>,
       <symbol>KeyPress</symbol>,
-      or 
+      or
       <symbol>KeyRelease</symbol>
-      event is reported to the client for a grabbed device 
-      (button event for the pointer, key event for the keyboard), 
-      at which time the devices again appear to freeze.  
+      event is reported to the client for a grabbed device
+      (button event for the pointer, key event for the keyboard),
+      at which time the devices again appear to freeze.
       However, if the reported event causes the grab to be released,
       then the devices do not freeze (but if the other device is still
       grabbed, then a subsequent event for it will still cause both devices
-      to freeze).  
+      to freeze).
       <symbol>SyncBoth</symbol>
       has no effect unless both pointer and keyboard
       are frozen by the client.
       If the pointer or keyboard is frozen twice
-      by the client on behalf of two separate grabs, 
+      by the client on behalf of two separate grabs,
       <symbol>SyncBoth</symbol>
-      thaws for both (but a subsequent freeze for 
+      thaws for both (but a subsequent freeze for
       <symbol>SyncBoth</symbol>
       will only freeze each device once).</entry>
     </row>
@@ -1715,23 +1715,23 @@ Depending on the event_mode argument, the following occurs:
 <!-- .LP -->
 <symbol>AsyncPointer</symbol>,
 <symbol>SyncPointer</symbol>,
-and 
+and
 <symbol>ReplayPointer</symbol>
 have no effect on the
 processing of keyboard events.
 <symbol>AsyncKeyboard</symbol>,
 <symbol>SyncKeyboard</symbol>,
-and 
+and
 <symbol>ReplayKeyboard</symbol>
 have no effect on the
 processing of pointer events.
-It is possible for both a pointer grab and a keyboard grab (by the same 
+It is possible for both a pointer grab and a keyboard grab (by the same
 or different clients) to be active simultaneously.
 If a device is frozen on behalf of either grab,
 no event processing is performed for the device.
 It is possible for a single device to be frozen because of both grabs.
 In this case,
-the freeze must be released on behalf of both grabs before events can 
+the freeze must be released on behalf of both grabs before events can
 again be processed.
 If a device is frozen twice by a single client,
 then a single
@@ -1891,7 +1891,7 @@ If dest_w is a window,
 moves the pointer to the offsets (dest_x, dest_y) relative to the origin of
 dest_w.
 However, if src_w is a window,
-the move only takes place if the window src_w contains the pointer 
+the move only takes place if the window src_w contains the pointer
 and if the specified rectangle of src_w contains the pointer.
 </para>
 <para>
@@ -1904,7 +1904,7 @@ it is replaced with the current width of src_w minus src_x.
 </para>
 <para>
 <!-- .LP -->
-There is seldom any reason for calling this function. 
+There is seldom any reason for calling this function.
 The pointer should normally be left to the user.
 If you do use this function, however, it generates events just as if the user
 had instantaneously moved the pointer from one position to another.
@@ -1912,7 +1912,7 @@ Note that you cannot use
 <xref linkend='XWarpPointer' xrefstyle='select: title'/>
 to move the pointer outside the confine_to window of an active pointer grab.
 An attempt to do so will only move the pointer as far as the closest edge of the
-confine_to window. 
+confine_to window.
 </para>
 <para>
 <!-- .LP -->
@@ -1985,10 +1985,10 @@ or
       <para>
 Specifies where the input focus reverts to if the window becomes not
 viewable.
-You can pass 
+You can pass
 <symbol>RevertToParent</symbol>,
 <symbol>RevertToPointerRoot</symbol>,
-or 
+or
 <symbol>RevertToNone</symbol>.
       </para>
     </listitem>
@@ -2020,14 +2020,14 @@ is replaced by the current X server time).
 <xref linkend='XSetInputFocus' xrefstyle='select: title'/>
 causes the X server to generate
 <symbol>FocusIn</symbol>
-and 
+and
 <symbol>FocusOut</symbol>
 events.
 </para>
 <para>
 <!-- .LP -->
 Depending on the focus argument,
-the following occurs: 
+the following occurs:
 </para>
 <itemizedlist>
   <listitem>
@@ -2040,10 +2040,10 @@ and the revert_to argument is ignored.
   </listitem>
   <listitem>
     <para>
-If focus is a window, 
+If focus is a window,
 it becomes the keyboard's focus window.
 If a generated keyboard event would normally be reported to this window
-or one of its inferiors, the event is reported as usual. 
+or one of its inferiors, the event is reported as usual.
 Otherwise, the event is reported relative to the focus window.
     </para>
   </listitem>
@@ -2051,30 +2051,30 @@ Otherwise, the event is reported relative to the focus window.
     <para>
 If focus is
 <symbol>PointerRoot</symbol>,
-the focus window is dynamically taken to be the root window of whatever screen 
-the pointer is on at each keyboard event.  
+the focus window is dynamically taken to be the root window of whatever screen
+the pointer is on at each keyboard event.
 In this case, the revert_to argument is ignored.
     </para>
   </listitem>
 </itemizedlist>
 <para>
 <!-- .LP -->
-The specified focus window must be viewable at the time 
+The specified focus window must be viewable at the time
 <xref linkend='XSetInputFocus' xrefstyle='select: title'/>
 is called,
 or a
 <errorname>BadMatch</errorname>
 error results.
-If the focus window later becomes not viewable, 
+If the focus window later becomes not viewable,
 the X server
-evaluates the revert_to argument to determine the new focus window as follows: 
+evaluates the revert_to argument to determine the new focus window as follows:
 </para>
 <itemizedlist>
   <listitem>
     <para>
 If revert_to is
 <symbol>RevertToParent</symbol>,
-the focus reverts to the parent (or the closest viewable ancestor), 
+the focus reverts to the parent (or the closest viewable ancestor),
 and the new revert_to value is taken to be
 <symbol>RevertToNone</symbol>.
     </para>
@@ -2083,7 +2083,7 @@ and the new revert_to value is taken to be
     <para>
 If revert_to is
 <symbol>RevertToPointerRoot</symbol>
-or 
+or
 <symbol>RevertToNone</symbol>,
 the focus reverts to
 <symbol>PointerRoot</symbol>
@@ -2145,7 +2145,7 @@ Specifies the connection to the X server.
       <para>
 Returns the focus window,
 <symbol>PointerRoot</symbol>,
-or 
+or
 <symbol>None</symbol>.
       </para>
     </listitem>
@@ -2159,7 +2159,7 @@ or
 Returns the current focus state
 (<symbol>RevertToParent</symbol>,
 <symbol>RevertToPointerRoot</symbol>,
-or 
+or
 <symbol>RevertToNone</symbol>).
     </para>
   </listitem>
@@ -2182,8 +2182,8 @@ function returns the focus window and the current focus state.
 <!-- .LP -->
 Xlib provides functions that you can use to
 change the keyboard control, obtain a list of the auto-repeat keys,
-turn keyboard auto-repeat on or off, ring the bell, 
-set or obtain the pointer button or keyboard mapping, 
+turn keyboard auto-repeat on or off, ring the bell,
+set or obtain the pointer button or keyboard mapping,
 and obtain a bit vector for the keyboard.
 </para>
 <para>
@@ -2192,7 +2192,7 @@ and obtain a bit vector for the keyboard.
 <indexterm><primary>Keyboard</primary><secondary>keyclick volume</secondary></indexterm>
 <indexterm><primary>Keyboard</primary><secondary>bit vector</secondary></indexterm>
 <indexterm><primary>Mouse</primary><secondary>programming</secondary></indexterm>
-This section discusses 
+This section discusses
 the user-preference options of bell, key click,
 pointer behavior, and so on.
 The default values for many of these options are server dependent.
@@ -2241,8 +2241,8 @@ int auto_repeat_mode;        /* AutoRepeatModeOff, AutoRepeatModeOn,
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The key_click_percent member sets the volume for key clicks between 0 (off) 
-and 100 (loud) inclusive, if possible.  
+The key_click_percent member sets the volume for key clicks between 0 (off)
+and 100 (loud) inclusive, if possible.
 A setting of -1 restores the default.
 Other negative values generate a
 <errorname>BadValue</errorname>
@@ -2251,7 +2251,7 @@ error.
 <para>
 <!-- .LP -->
 The bell_percent sets the base volume for the bell between 0 (off) and 100
-(loud) inclusive, if possible.  
+(loud) inclusive, if possible.
 A setting of -1 restores the default.
 Other negative values generate a
 <errorname>BadValue</errorname>
@@ -2262,7 +2262,7 @@ Other negative values generate a
 <errorname>BadValue</errorname>
 error.
 The bell_duration member sets the duration of the
-bell specified in milliseconds, if possible.  
+bell specified in milliseconds, if possible.
 A setting of -1 restores the default.
 Other negative values generate a
 <errorname>BadValue</errorname>
@@ -2271,22 +2271,22 @@ error.
 <para>
 <!-- .LP -->
 If both the led_mode and led members are specified,
-the state of that <acronym>LED</acronym> is changed, if possible.  
+the state of that <acronym>LED</acronym> is changed, if possible.
 The led_mode member can be set to
 <symbol>LedModeOn</symbol>
 or
 <symbol>LedModeOff</symbol>.
 If only led_mode is specified, the state of
-all LEDs are changed, if possible.  
-At most 32 LEDs numbered from one are supported. 
+all LEDs are changed, if possible.
+At most 32 LEDs numbered from one are supported.
 No standard interpretation of LEDs is defined.
 If led is specified without led_mode, a
 <errorname>BadMatch</errorname>
-error results. 
+error results.
 </para>
 <para>
 <!-- .LP -->
-If both the auto_repeat_mode and key members are specified, 
+If both the auto_repeat_mode and key members are specified,
 the auto_repeat_mode of that key is changed (according to
 <symbol>AutoRepeatModeOn</symbol>,
 <symbol>AutoRepeatModeOff</symbol>,
@@ -2463,7 +2463,7 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-For the LEDs, 
+For the LEDs,
 the least significant bit of led_mask corresponds to <acronym>LED</acronym> one,
 and each bit set to 1 in led_mask indicates an <acronym>LED</acronym> that is lit.
 The global_auto_repeat member can be set to
@@ -2471,9 +2471,9 @@ The global_auto_repeat member can be set to
 or
 <symbol>AutoRepeatModeOff</symbol>.
 The auto_repeats member is a bit vector.
-Each bit set to 1 indicates that auto-repeat is enabled 
+Each bit set to 1 indicates that auto-repeat is enabled
 for the corresponding key.
-The vector is represented as 32 bytes.  
+The vector is represented as 32 bytes.
 Byte N (from 0) contains the bits for keys 8N to 8N + 7
 with the least significant bit in the byte representing key 8N.
 </para>
@@ -2579,7 +2579,7 @@ Specifies the connection to the X server.
     <listitem>
       <para>
 Specifies the volume for the bell,
-which can range from -100 to 100 inclusive. 
+which can range from -100 to 100 inclusive.
     </para>
   </listitem>
   </varlistentry>
@@ -2673,11 +2673,11 @@ Each bit represents one key of the keyboard.
 <!-- .eM -->
 The
 <xref linkend='XQueryKeymap' xrefstyle='select: title'/>
-function returns a bit vector for the logical state of the keyboard, 
-where each bit set to 1 indicates that the corresponding key is currently 
+function returns a bit vector for the logical state of the keyboard,
+where each bit set to 1 indicates that the corresponding key is currently
 pressed down.
 The vector is represented as 32 bytes.
-Byte N (from 0) contains the bits for keys 8N to 8N + 7 
+Byte N (from 0) contains the bits for keys 8N to 8N + 7
 with the least significant bit in the byte representing key 8N.
 </para>
 <para>
@@ -2833,7 +2833,7 @@ Pointer buttons are numbered starting from one.
 returns the number of physical buttons actually on the pointer.
 The nominal mapping for a pointer is map[i]=i+1.
 The nmap argument specifies the length of the array where the pointer
-mapping is returned, and only the first nmap elements are returned 
+mapping is returned, and only the first nmap elements are returned
 in map_return.
 </para>
 <para>
@@ -2873,7 +2873,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies a Boolean value that controls whether the values for 
+Specifies a Boolean value that controls whether the values for
 the accel_numerator or accel_denominator are used.
       </para>
     </listitem>
@@ -2884,7 +2884,7 @@ the accel_numerator or accel_denominator are used.
     </term>
     <listitem>
       <para>
-Specifies a Boolean value that controls whether the value for the 
+Specifies a Boolean value that controls whether the value for the
 threshold is used.
       </para>
     </listitem>
@@ -2927,15 +2927,15 @@ The
 <xref linkend='XChangePointerControl' xrefstyle='select: title'/>
 function defines how the pointing device moves.
 The acceleration, expressed as a fraction, is a
-multiplier for movement. 
+multiplier for movement.
 For example,
 specifying 3/1 means the pointer moves three times as fast as normal.
-The fraction may be rounded arbitrarily by the X server.  
+The fraction may be rounded arbitrarily by the X server.
 Acceleration
 only takes effect if the pointer moves more than threshold pixels at
 once and only applies to the amount beyond the value in the threshold argument.
 Setting a value to -1 restores the default.
-The values of the do_accel and do_threshold arguments must be 
+The values of the do_accel and do_threshold arguments must be
 <symbol>True</symbol>
 for the pointer values to be set,
 or the parameters are unchanged.
@@ -3027,24 +3027,24 @@ and acceleration threshold.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-A KeyCode represents a physical (or logical) key.  
-KeyCodes lie in the inclusive range [8,255].  
+A KeyCode represents a physical (or logical) key.
+KeyCodes lie in the inclusive range [8,255].
 A KeyCode value carries no intrinsic information,
-although server implementors may attempt to encode geometry 
+although server implementors may attempt to encode geometry
 (for example, matrix) information in some fashion so that it can
 be interpreted in a server-dependent fashion.
 The mapping between keys and KeyCodes cannot be changed.
 </para>
 <para>
 <!-- .LP -->
-A KeySym is an encoding of a symbol on the cap of a key.  
-The set of defined KeySyms includes the ISO Latin character sets (1-4), 
+A KeySym is an encoding of a symbol on the cap of a key.
+The set of defined KeySyms includes the ISO Latin character sets (1-4),
 Katakana, Arabic, Cyrillic, Greek, Technical,
 Special, Publishing, APL, Hebrew, Thai, Korean
 and a miscellany of keys found
-on keyboards (Return, Help, Tab, and so on).  
+on keyboards (Return, Help, Tab, and so on).
 To the extent possible, these sets are derived from international
-standards. 
+standards.
 In areas where no standards exist,
 some of these sets are derived from Digital Equipment Corporation standards.
 The list of defined symbols can be found in
@@ -3057,7 +3057,7 @@ limits on the number of defined symbols.
 If you must use KeySyms not
 in the Latin 1-4, Greek, and miscellaneous classes,
 you may have to define a symbol for those sets.
-Most applications usually only include 
+Most applications usually only include
 <filename class="headerfile">&lt;X11/keysym.h&gt;</filename>,
 <indexterm type="file"><primary><filename class="headerfile">X11/keysym.h</filename></primary></indexterm>
 <indexterm><primary>Files</primary><secondary><filename class="headerfile">&lt;X11/keysym.h&gt;</filename></secondary></indexterm>
@@ -3070,9 +3070,9 @@ A list of KeySyms is associated with each KeyCode.
 The list is intended to convey the set of symbols on the corresponding key.
 If the list (ignoring trailing
 <symbol>NoSymbol</symbol>
-entries) is 
+entries) is
 a single KeySym ``<emphasis remap='I'>K</emphasis>'',
-then the list is treated as if it were the list 
+then the list is treated as if it were the list
 ``<emphasis remap='I'>K</emphasis> NoSymbol <emphasis remap='I'>K</emphasis> NoSymbol''.
 If the list (ignoring trailing
 <symbol>NoSymbol</symbol>
@@ -3095,13 +3095,13 @@ Group 2 contains the third and fourth KeySyms.
 Within each group,
 if the second element of the group is
 <symbol>NoSymbol</symbol>,
-then the group should be treated as if the second element were 
+then the group should be treated as if the second element were
 the same as the first element,
-except when the first element is an alphabetic KeySym ``<emphasis remap='I'>K</emphasis>'' 
+except when the first element is an alphabetic KeySym ``<emphasis remap='I'>K</emphasis>''
 for which both lowercase and uppercase forms are defined.
 In that case,
-the group should be treated as if the first element were 
-the lowercase form of ``<emphasis remap='I'>K</emphasis>'' and the second element were 
+the group should be treated as if the first element were
+the lowercase form of ``<emphasis remap='I'>K</emphasis>'' and the second element were
 the uppercase form of ``<emphasis remap='I'>K</emphasis>''.
 </para>
 <para>
@@ -3112,7 +3112,7 @@ event make use of only the Group 1 and Group 2 KeySyms;
 no interpretation of other KeySyms in the list is given.
 Which group to use is determined by the modifier state.
 Switching between groups is controlled by the KeySym named MODE SWITCH,
-by attaching that KeySym to some KeyCode and attaching 
+by attaching that KeySym to some KeyCode and attaching
 that KeyCode to any one of the modifiers
 <symbol>Mod1</symbol>
 through
@@ -3221,7 +3221,7 @@ as ShiftLock, or both.  In this case, the second KeySym is used.
 <para>
 <!-- .LP -->
 No spatial geometry of the symbols on the key is defined by
-their order in the KeySym list, 
+their order in the KeySym list,
 although a geometry might be defined on a
 server-specific basis.
 The X server does not use the mapping between KeyCodes and KeySyms.
@@ -3354,13 +3354,13 @@ The
 <xref linkend='XGetKeyboardMapping' xrefstyle='select: title'/>
 function returns the symbols for the specified number of KeyCodes
 starting with first_keycode.
-The value specified in first_keycode must be greater than 
+The value specified in first_keycode must be greater than
 or equal to min_keycode as returned by
 <xref linkend='XDisplayKeycodes' xrefstyle='select: title'/>,
 or a
 <errorname>BadValue</errorname>
 error results.
-In addition, the following expression must be less than or equal 
+In addition, the following expression must be less than or equal
 to max_keycode as returned by
 <xref linkend='XDisplayKeycodes' xrefstyle='select: title'/>:
 </para>
@@ -3372,9 +3372,9 @@ first_keycode + keycode_count - 1
 </para>
 <para>
 <!-- .LP -->
-If this is not the case, a 
+If this is not the case, a
 <errorname>BadValue</errorname>
-error results. 
+error results.
 The number of elements in the KeySyms list is:
 </para>
 <para>
@@ -3386,20 +3386,20 @@ keycode_count * keysyms_per_keycode_return
 <para>
 <!-- .LP -->
 KeySym number N, counting from zero, for KeyCode K has the following index
-in the list, counting from zero: 
+in the list, counting from zero:
 <literallayout class="monospaced">
 (K - first_code) * keysyms_per_code_return + N
 </literallayout>
 </para>
 <para>
 <!-- .LP -->
-The X server arbitrarily chooses the keysyms_per_keycode_return value 
-to be large enough to report all requested symbols. 
-A special KeySym value of 
+The X server arbitrarily chooses the keysyms_per_keycode_return value
+to be large enough to report all requested symbols.
+A special KeySym value of
 <symbol>NoSymbol</symbol>
 is used to fill in unused elements for
 individual KeyCodes.
-To free the storage returned by 
+To free the storage returned by
 <xref linkend='XGetKeyboardMapping' xrefstyle='select: title'/>,
 use
 <xref linkend='XFree' xrefstyle='select: title'/>.
@@ -3489,7 +3489,7 @@ The
 <xref linkend='XChangeKeyboardMapping' xrefstyle='select: title'/>
 function defines the symbols for the specified number of KeyCodes
 starting with first_keycode.
-The symbols for KeyCodes outside this range remain unchanged.  
+The symbols for KeyCodes outside this range remain unchanged.
 The number of elements in keysyms must be:
 </para>
 <para>
@@ -3500,13 +3500,13 @@ num_codes * keysyms_per_keycode
 </para>
 <para>
 <!-- .LP -->
-The specified first_keycode must be greater than or equal to min_keycode 
+The specified first_keycode must be greater than or equal to min_keycode
 returned by
 <xref linkend='XDisplayKeycodes' xrefstyle='select: title'/>,
-or a 
+or a
 <errorname>BadValue</errorname>
 error results.
-In addition, the following expression must be less than or equal to 
+In addition, the following expression must be less than or equal to
 max_keycode as returned by
 <xref linkend='XDisplayKeycodes' xrefstyle='select: title'/>,
 or a
@@ -3522,7 +3522,7 @@ first_keycode + num_codes - 1
 <para>
 <!-- .LP -->
 KeySym number N, counting from zero, for KeyCode K has the following index
-in keysyms, counting from zero: 
+in keysyms, counting from zero:
 </para>
 <para>
 <!-- .LP -->
@@ -3533,23 +3533,23 @@ in keysyms, counting from zero:
 <para>
 <!-- .LP -->
 The specified keysyms_per_keycode can be chosen arbitrarily by the client
-to be large enough to hold all desired symbols. 
-A special KeySym value of 
+to be large enough to hold all desired symbols.
+A special KeySym value of
 <symbol>NoSymbol</symbol>
-should be used to fill in unused elements 
-for individual KeyCodes.  
-It is legal for 
+should be used to fill in unused elements
+for individual KeyCodes.
+It is legal for
 <symbol>NoSymbol</symbol>
 to appear in nontrailing positions
 of the effective list for a KeyCode.
 <xref linkend='XChangeKeyboardMapping' xrefstyle='select: title'/>
-generates a 
+generates a
 <symbol>MappingNotify</symbol>
 event.
 </para>
 <para>
 <!-- .LP -->
-There is no requirement that the X server interpret this mapping. 
+There is no requirement that the X server interpret this mapping.
 It is merely stored for reading and writing by clients.
 </para>
 <para>
@@ -3563,7 +3563,7 @@ errors.
 </para>
 <para>
 <!-- .LP -->
-The next six functions make use of the 
+The next six functions make use of the
 <structname>XModifierKeymap</structname>
 data structure, which contains:
 </para>
@@ -3622,7 +3622,7 @@ structure for later use.
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To add a new entry to an 
+To add a new entry to an
 <structname>XModifierKeymap</structname>
 structure, use
 <xref linkend='XInsertModifiermapEntry' xrefstyle='select: title'/>.
@@ -3645,7 +3645,7 @@ structure, use
     </term>
     <listitem>
       <para>
-Specifies the 
+Specifies the
 <structname>XModifierKeymap</structname>
 structure.
       </para>
@@ -3657,7 +3657,7 @@ structure.
     </term>
     <listitem>
       <para>
-Specifies the KeyCode. 
+Specifies the KeyCode.
       </para>
     </listitem>
   </varlistentry>
@@ -3685,7 +3685,7 @@ structure (expanded as needed).
 <para>
 <!-- .LP -->
 <!-- .sp -->
-To delete an entry from an 
+To delete an entry from an
 <structname>XModifierKeymap</structname>
 structure, use
 <xref linkend='XDeleteModifiermapEntry' xrefstyle='select: title'/>.
@@ -3708,7 +3708,7 @@ structure, use
     </term>
     <listitem>
       <para>
-Specifies the 
+Specifies the
 <structname>XModifierKeymap</structname>
 structure.
       </para>
@@ -3720,7 +3720,7 @@ structure.
     </term>
     <listitem>
       <para>
-Specifies the KeyCode. 
+Specifies the KeyCode.
       </para>
     </listitem>
   </varlistentry>
@@ -3769,7 +3769,7 @@ structure, use
     </term>
     <listitem>
       <para>
-Specifies the 
+Specifies the
 <structname>XModifierKeymap</structname>
 structure.
     </para>
@@ -3818,7 +3818,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the 
+Specifies the
 <structname>XModifierKeymap</structname>
 structure.
     </para>
@@ -3830,7 +3830,7 @@ structure.
 <!-- .eM -->
 The
 <xref linkend='XSetModifierMapping' xrefstyle='select: title'/>
-function specifies the KeyCodes of the keys (if any) that are to be used 
+function specifies the KeyCodes of the keys (if any) that are to be used
 as modifiers.
 If it succeeds,
 the X server generates a
@@ -3848,10 +3848,10 @@ error results.
 </para>
 <para>
 <!-- .LP -->
-The modifiermap member of the 
+The modifiermap member of the
 <structname>XModifierKeymap</structname>
-structure contains 8 sets of max_keypermod KeyCodes, 
-one for each modifier in the order 
+structure contains 8 sets of max_keypermod KeyCodes,
+one for each modifier in the order
 <symbol>Shift</symbol>,
 <symbol>Lock</symbol>,
 <symbol>Control</symbol>,
@@ -3859,32 +3859,32 @@ one for each modifier in the order
 <symbol>Mod2</symbol>,
 <symbol>Mod3</symbol>,
 <symbol>Mod4</symbol>,
-and 
+and
 <symbol>Mod5</symbol>.
-Only nonzero KeyCodes have meaning in each set, 
+Only nonzero KeyCodes have meaning in each set,
 and zero KeyCodes are ignored.
-In addition, all of the nonzero KeyCodes must be in the range specified by 
-min_keycode and max_keycode in the 
+In addition, all of the nonzero KeyCodes must be in the range specified by
+min_keycode and max_keycode in the
 <type>Display</type>
 structure,
-or a 
+or a
 <errorname>BadValue</errorname>
 error results.
 </para>
 <para>
 <!-- .LP -->
-An X server can impose restrictions on how modifiers can be changed, 
+An X server can impose restrictions on how modifiers can be changed,
 for example,
 if certain keys do not generate up transitions in hardware,
 if auto-repeat cannot be disabled on certain keys,
-or if multiple modifier keys are not supported.  
-If some such restriction is violated, 
+or if multiple modifier keys are not supported.
+If some such restriction is violated,
 the status reply is
 <symbol>MappingFailed</symbol>,
 and none of the modifiers are changed.
 If the new KeyCodes specified for a modifier differ from those
 currently defined and any (current or new) keys for that modifier are
-in the logically down state, 
+in the logically down state,
 <xref linkend='XSetModifierMapping' xrefstyle='select: title'/>
 returns
 <symbol>MappingBusy</symbol>,
@@ -3895,7 +3895,7 @@ and none of the modifiers is changed.
 <xref linkend='XSetModifierMapping' xrefstyle='select: title'/>
 can generate
 <errorname>BadAlloc</errorname>
-and 
+and
 <errorname>BadValue</errorname>
 errors.
 </para>
@@ -3936,7 +3936,7 @@ function returns a pointer to a newly created
 structure that contains the keys being used as modifiers.
 The structure should be freed after use by calling
 <xref linkend='XFreeModifiermap' xrefstyle='select: title'/>.
-If only zero values appear in the set for any modifier, 
+If only zero values appear in the set for any modifier,
 that modifier is disabled.
 <!-- .bp -->
 

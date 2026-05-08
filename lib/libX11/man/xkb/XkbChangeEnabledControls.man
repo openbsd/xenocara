@@ -44,27 +44,27 @@ keyboard device to modify
 1 bit -> controls to enable / disable
 .TP
 .I values
-1 bit => enable, 0 bit => disable 
+1 bit => enable, 0 bit => disable
 .SH DESCRIPTION
 .LP
-The EnabledControls control is a bit mask where each bit that is turned on means the 
-corresponding control is enabled, and when turned off, disabled. It corresponds to the 
-.I enabled_ctrls 
-field of an XkbControlsRec structure (see STRUCTURES). The bits describing which controls are 
+The EnabledControls control is a bit mask where each bit that is turned on means the
+corresponding control is enabled, and when turned off, disabled. It corresponds to the
+.I enabled_ctrls
+field of an XkbControlsRec structure (see STRUCTURES). The bits describing which controls are
 turned on or off are defined in Table 1.
 
-Table 1 shows the actual values for the individual mask bits used to select controls for 
-modification and to enable and disable the control. Note that the same mask bit is used to 
-specify general modifications to the parameters used to configure the control (which), and to 
-enable and disable the control (enabled_ctrls). The anomalies in the table (no "ok" in column) 
-are for controls that have no configurable attributes; and for controls that are not boolean 
+Table 1 shows the actual values for the individual mask bits used to select controls for
+modification and to enable and disable the control. Note that the same mask bit is used to
+specify general modifications to the parameters used to configure the control (which), and to
+enable and disable the control (enabled_ctrls). The anomalies in the table (no "ok" in column)
+are for controls that have no configurable attributes; and for controls that are not boolean
 controls and therefore cannot be enabled or disabled.
 .bp
 .TS
 c s s s
 l l l l
 l l l l
-l l l l. 
+l l l l.
 Table 1 Controls Mask Bits
 _
 Mask Bit	which or	enabled	Value
@@ -88,38 +88,38 @@ XkbInternalModsMask	ok		(1L<<28)
 XkbIgnoreLockModsMask	ok		(1L<<29)
 XkbPerKeyRepeatMask	ok		(1L<<30)
 XkbControlsEnabledMask	ok		(1L<<31)
-XkbAccessXOptionsMask	ok	ok	(XkbStickyKeysMask | 
+XkbAccessXOptionsMask	ok	ok	(XkbStickyKeysMask |
 			XkbAccessXFeedbackMask)
-XkbAllBooleanCtrlsMask		ok	(0x00001FFF) 
+XkbAllBooleanCtrlsMask		ok	(0x00001FFF)
 XkbAllControlsMask	ok		(0xF8001FFF)
 .TE
 
-The 
-.I mask 
-parameter specifies the boolean controls to be enabled or disabled, and the 
-.I values 
-mask specifies the new state for those controls. Valid values for both of these 
-masks are composed of a bitwise inclusive OR of bits taken from the set of mask 
-bits in Table 1, using only those masks with "ok" in the 
-.I enabled_ctrls 
+The
+.I mask
+parameter specifies the boolean controls to be enabled or disabled, and the
+.I values
+mask specifies the new state for those controls. Valid values for both of these
+masks are composed of a bitwise inclusive OR of bits taken from the set of mask
+bits in Table 1, using only those masks with "ok" in the
+.I enabled_ctrls
 column.
 
-If the X server does not support a compatible version of Xkb or the Xkb 
-extension has not been properly initialized, 
-.I XkbChangeEnabledControls 
+If the X server does not support a compatible version of Xkb or the Xkb
+extension has not been properly initialized,
+.I XkbChangeEnabledControls
 returns False; otherwise, it sends the request to the X server and returns True.
 
-Note that the EnabledControls control only enables and disables controls; it 
-does not configure them. Some controls, such as the AudibleBell control, have no 
-configuration attributes and are therefore manipulated solely by enabling and 
-disabling them. Others, however, have additional attributes to configure their 
-behavior. For example, the RepeatControl control uses 
-.I repeat_delay 
-and 
-.I repeat_interval 
-fields to describe the timing behavior of keys that repeat. The RepeatControl 
-behavior is turned on or off depending on the value of the XkbRepeatKeysMask 
-bit, but you must use other means, as described in this chapter, to configure 
+Note that the EnabledControls control only enables and disables controls; it
+does not configure them. Some controls, such as the AudibleBell control, have no
+configuration attributes and are therefore manipulated solely by enabling and
+disabling them. Others, however, have additional attributes to configure their
+behavior. For example, the RepeatControl control uses
+.I repeat_delay
+and
+.I repeat_interval
+fields to describe the timing behavior of keys that repeat. The RepeatControl
+behavior is turned on or off depending on the value of the XkbRepeatKeysMask
+bit, but you must use other means, as described in this chapter, to configure
 its behavior in detail.
 .SH "RETURN VALUES"
 .TP 15
@@ -135,8 +135,8 @@ The XkbControlsRec structure is defined as follows:
 
     #define XkbMaxLegalKeyCode     255
     #define XkbPerKeyBitArraySize  ((XkbMaxLegalKeyCode+1)/8)
-    
-    
+
+
     typedef struct {
         unsigned char   mk_dflt_btn;      /\&* default button for keyboard driven mouse */
         unsigned char   num_groups;       /\&* number of keyboard groups */

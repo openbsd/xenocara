@@ -21,7 +21,7 @@
 .\"
 .TH XkbGetState __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetState \-  Obtains the keyboard state 
+XkbGetState \-  Obtains the keyboard state
 .SH SYNOPSIS
 .HP
 .B Status XkbGetState
@@ -33,7 +33,7 @@ XkbGetState \-  Obtains the keyboard state
 .SH ARGUMENTS
 .TP
 .I display
-connection to the X server 
+connection to the X server
 .TP
 .I device_spec
 device ID, or XkbUseCoreKbd
@@ -42,14 +42,14 @@ device ID, or XkbUseCoreKbd
 backfilled with Xkb state
 .SH DESCRIPTION
 .LP
-The 
-.I XkbGetState 
-function queries the server for the current keyboard state, waits 
-for a reply, and then backfills 
-.I state_return 
+The
+.I XkbGetState
+function queries the server for the current keyboard state, waits
+for a reply, and then backfills
+.I state_return
 with the results.
 
-All group values are expressed as group indices in the range [0..3]. Modifiers 
-and the compatibility modifier state values are expressed as the bitwise union 
-of the core X11 modifier masks. The pointer button state is reported as in the 
+All group values are expressed as group indices in the range [0..3]. Modifiers
+and the compatibility modifier state values are expressed as the bitwise union
+of the core X11 modifier masks. The pointer button state is reported as in the
 core X11 protocol.

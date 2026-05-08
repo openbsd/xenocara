@@ -38,32 +38,32 @@ shape to be updated
 number of points to be reserved
 .SH DESCRIPTION
 .LP
-Xkb provides functions to add a single new element to the top-level keyboard 
-geometry. In each case the 
-.I num_ * 
-fields of the corresponding structure is incremented by 1. These functions do 
-not change 
-.I sz_* 
-unless there is no more room in the array. Some of these functions fill in the 
-values of the element's structure from the arguments. For other functions, you 
+Xkb provides functions to add a single new element to the top-level keyboard
+geometry. In each case the
+.I num_ *
+fields of the corresponding structure is incremented by 1. These functions do
+not change
+.I sz_*
+unless there is no more room in the array. Some of these functions fill in the
+values of the element's structure from the arguments. For other functions, you
 must explicitly write code to fill the structure's elements.
 
-The top-level geometry description includes a list of 
-.I geometry properties. 
-A geometry property associates an arbitrary string with an equally arbitrary 
-name. Programs that display images of keyboards can use geometry properties as 
-hints, but they are not interpreted by Xkb. No other geometry structures refer 
+The top-level geometry description includes a list of
+.I geometry properties.
+A geometry property associates an arbitrary string with an equally arbitrary
+name. Programs that display images of keyboards can use geometry properties as
+hints, but they are not interpreted by Xkb. No other geometry structures refer
 to geometry properties.
 
-An outline consists of an arbitrary number of points. 
-.I XkbAddGeomOutline 
-adds an outline to the specified 
-.I shape 
-by reserving 
-.I sz_points 
-points for it. The new outline is allocated and zeroed. 
-.I XkbAddGeomOutline 
-returns NULL if any of the parameters is empty or if it was not able to allocate 
+An outline consists of an arbitrary number of points.
+.I XkbAddGeomOutline
+adds an outline to the specified
+.I shape
+by reserving
+.I sz_points
+points for it. The new outline is allocated and zeroed.
+.I XkbAddGeomOutline
+returns NULL if any of the parameters is empty or if it was not able to allocate
 space. To allocate space for an arbitrary number of outlines to a shape, use
 .I XkbAllocGeomOutlines.
 .SH STRUCTURES
@@ -76,7 +76,7 @@ space. To allocate space for an arbitrary number of outlines to a shape, use
         unsigned short    corner_radius;   /\&* draw corners as circles with this radius */
         XkbPointPtr       points;          /\&* array of points defining the outline */
     } XkbOutlineRec, *XkbOutlinePtr;
-    
+
 .fi
 .SH "SEE ALSO"
 .BR XkbAllocGeomOutlines (__libmansuffix__)

@@ -22,7 +22,7 @@
 .\"
 .TH XkbChangeControls __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbChangeControls \- Provides a flexible method for updating the controls in a 
+XkbChangeControls \- Provides a flexible method for updating the controls in a
 server to match those in the changed keyboard description
 .SH SYNOPSIS
 .HP
@@ -43,41 +43,41 @@ keyboard description with changed xkb->ctrls
 .I changes
 which parts of xkb->ctrls have changed
 .SH DESCRIPTION
-The XkbControlsChangesRec structure allows applications to track modifications 
-to an XkbControlsRec structure and thereby reduce the amount of traffic sent 
-to the server. The same XkbControlsChangesRec structure may be used in several 
-successive modifications to the same XkbControlsRec structure, then subsequently 
-used to cause all of the changes, and only the changes, to be propagated to the server. 
+The XkbControlsChangesRec structure allows applications to track modifications
+to an XkbControlsRec structure and thereby reduce the amount of traffic sent
+to the server. The same XkbControlsChangesRec structure may be used in several
+successive modifications to the same XkbControlsRec structure, then subsequently
+used to cause all of the changes, and only the changes, to be propagated to the server.
 
-The 
-.I changed_ctrls 
-field is a mask specifying which logical sets of data in the controls structure 
-have been modified. In this context, modified means 
-.IR set , 
-that is, if a value is set to the same value it previously contained, it has 
-still been modified, and is noted as changed. Valid values for 
-.I changed_ctrls 
-are any combination of the masks listed in Table 1 that have "ok" in the 
-.I changed_ctrls 
-column. Setting a bit implies the corresponding data fields from the "Relevant 
-XkbControlsRec Data Fields" column in Table 1 have been modified. The 
-.I enabled_ctrls_changes 
-field specifies which bits in the 
-.I enabled_ctrls 
-field have changed. If the number of keyboard groups has changed, the 
-.I num_groups_changed 
+The
+.I changed_ctrls
+field is a mask specifying which logical sets of data in the controls structure
+have been modified. In this context, modified means
+.IR set ,
+that is, if a value is set to the same value it previously contained, it has
+still been modified, and is noted as changed. Valid values for
+.I changed_ctrls
+are any combination of the masks listed in Table 1 that have "ok" in the
+.I changed_ctrls
+column. Setting a bit implies the corresponding data fields from the "Relevant
+XkbControlsRec Data Fields" column in Table 1 have been modified. The
+.I enabled_ctrls_changes
+field specifies which bits in the
+.I enabled_ctrls
+field have changed. If the number of keyboard groups has changed, the
+.I num_groups_changed
 field is set to True.
 
-Table 1 shows the actual values for the individual mask bits used to select 
-controls for 
-modification and to enable and disable the control. Note that the same mask bit 
-is used to 
-specify general modifications to the parameters used to configure the control 
-(which), and to 
-enable and disable the control (enabled_ctrls). The anomalies in the table (no 
-"ok" in column) 
-are for controls that have no configurable attributes; and for controls that are 
-not boolean 
+Table 1 shows the actual values for the individual mask bits used to select
+controls for
+modification and to enable and disable the control. Note that the same mask bit
+is used to
+specify general modifications to the parameters used to configure the control
+(which), and to
+enable and disable the control (enabled_ctrls). The anomalies in the table (no
+"ok" in column)
+are for controls that have no configurable attributes; and for controls that are
+not boolean
 controls and therefore cannot be enabled or disabled.
 
 .TS
@@ -89,9 +89,9 @@ l l l l l
 lw(1.5i) lw(1.5i) l lw(1.5i) l.
 Table 1 Xkb Controls
 _
-Control	Control			
-	Selection	Relevant		
-	Mask (which	XkbControlsRec	Boolean Control	
+Control	Control
+	Selection	Relevant
+	Mask (which	XkbControlsRec	Boolean Control
 	parameter)	DataFields	enabled_ctrls bit	Section
 _
 T{
@@ -241,19 +241,19 @@ Xkb\%Sticky\%Keys\%Mask
 T}	10.6.8
 .TE
 
-Table 2 shows the actual values for the individual mask bits used to select 
-controls for modification and to enable and disable the control. Note that 
+Table 2 shows the actual values for the individual mask bits used to select
+controls for modification and to enable and disable the control. Note that
 the same mask bit is used to specify general modifications to the parameters
- used to configure the control (which), and to enable and disable the control 
-(enabled_ctrls). The anomalies in the table (no "ok" in column) 
-are for controls that have no configurable attributes; and for controls that are 
+ used to configure the control (which), and to enable and disable the control
+(enabled_ctrls). The anomalies in the table (no "ok" in column)
+are for controls that have no configurable attributes; and for controls that are
 not boolean controls and therefore cannot be enabled or disabled.
 
 .TS
 c s s s
 l l l l
 l l l l
-l l l l. 
+l l l l.
 Table 2 Controls Mask Bits
 _
 Mask Bit	which or		Value
@@ -278,24 +278,24 @@ XkbInternalModsMask	ok		(1L<<28)
 XkbIgnoreLockModsMask	ok		(1L<<29)
 XkbPerKeyRepeatMask	ok		(1L<<30)
 XkbControlsEnabledMask	ok		(1L<<31)
-XkbAccessXOptionsMask	ok	ok	(XkbStickyKeysMask | 
+XkbAccessXOptionsMask	ok	ok	(XkbStickyKeysMask |
 			XkbAccessXFeedbackMask)
-XkbAllBooleanCtrlsMask		ok	(0x00001FFF) 
+XkbAllBooleanCtrlsMask		ok	(0x00001FFF)
 XkbAllControlsMask	ok		(0xF8001FFF)
 .TE
 
-If you have an Xkb description with controls that have been modified and an 
-XkbControlsChangesRec that describes the changes that have been made, the 
-.I XkbChangeControls 
-function provides a flexible method for updating the controls in a server to 
+If you have an Xkb description with controls that have been modified and an
+XkbControlsChangesRec that describes the changes that have been made, the
+.I XkbChangeControls
+function provides a flexible method for updating the controls in a server to
 match those in the changed keyboard description.
 
-.I XkbChangeControls 
-copies any controls fields specified by 
-.I changes 
-from the keyboard description controls structure, 
-.IR xkb->ctrls , 
-to the server specified by 
+.I XkbChangeControls
+copies any controls fields specified by
+.I changes
+from the keyboard description controls structure,
+.IR xkb->ctrls ,
+to the server specified by
 .IR dpy .
 .SH STRUCTURES
 The XkbControlsChangesRec structure is defined as follows:
@@ -309,12 +309,12 @@ typedef struct _XkbControlsChanges {
 
 .fi
 .SH "SEE ALSO"
-XkbChangeControls(__libmansuffix__),
-XkbChangeDeviceInfo(__libmansuffix__),
-XkbChangeEnabledControls(__libmansuffix__),
-XkbChangeMap(__libmansuffix__),
-XkbChangeNames(__libmansuffix__),
-XkbChangeTypesOfKey(__libmansuffix__)
+.BR XkbChangeControls (__libmansuffix__),
+.BR XkbChangeDeviceInfo (__libmansuffix__),
+.BR XkbChangeEnabledControls (__libmansuffix__),
+.BR XkbChangeMap (__libmansuffix__),
+.BR XkbChangeNames (__libmansuffix__),
+.BR XkbChangeTypesOfKey (__libmansuffix__)
 
 
 

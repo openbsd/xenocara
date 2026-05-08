@@ -22,7 +22,7 @@
 .\"
 .TH XkbKeyNumGroups __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbKeyNumGroups \- Returns the number of groups of symbols bound to the key 
+XkbKeyNumGroups \- Returns the number of groups of symbols bound to the key
 corresponding to keycode
 .SH SYNOPSIS
 .HP
@@ -40,49 +40,49 @@ Xkb description of interest
 keycode of interest
 .SH DESCRIPTION
 .LP
-The 
-.I group_info 
-field of an XkbSymMapRec is an encoded value containing the number of groups of 
-symbols bound to the 
-key as well as the specification of the treatment of out-of-range groups. It is 
-legal for a key to 
-have zero groups, in which case it also has zero symbols and all events from 
-that key yield NoSymbol. 
-To obtain the number of groups of symbols bound to the key, use 
-.I XkbKeyNumGroups. 
-To change the number of groups bound to a key, use 
-.I XkbChangeTypesOfKey. 
+The
+.I group_info
+field of an XkbSymMapRec is an encoded value containing the number of groups of
+symbols bound to the
+key as well as the specification of the treatment of out-of-range groups. It is
+legal for a key to
+have zero groups, in which case it also has zero symbols and all events from
+that key yield NoSymbol.
+To obtain the number of groups of symbols bound to the key, use
+.I XkbKeyNumGroups.
+To change the number of groups bound to a key, use
+.I XkbChangeTypesOfKey.
 To obtain a mask that determines the treatment of out-of-range groups, use
-.I XkbKeyGroupInfo 
-and 
+.I XkbKeyGroupInfo
+and
 .I XkbOutOfRangeGroupInfo.
 
-The keyboard controls contain a 
-.I groups_wrap 
-field specifying the handling of illegal groups on a global basis. That is, when 
-the user performs an 
-action causing the effective group to go out of the legal range, the 
-.I groups_wrap 
-field specifies how to normalize the effective keyboard group to a group that is 
-legal for the 
-keyboard as a whole, but there is no guarantee that the normalized group will be 
-within the range of 
-legal groups for any individual key. The per-key 
-.I group_info 
-field specifies how a key treats a legal effective group if the key does not 
-have a type specified for 
-the group of concern. For example, the Enter key usually has just one group 
-defined. If the user 
-performs an action causing the global keyboard group to change to Group2, the 
-.I group_info 
+The keyboard controls contain a
+.I groups_wrap
+field specifying the handling of illegal groups on a global basis. That is, when
+the user performs an
+action causing the effective group to go out of the legal range, the
+.I groups_wrap
+field specifies how to normalize the effective keyboard group to a group that is
+legal for the
+keyboard as a whole, but there is no guarantee that the normalized group will be
+within the range of
+legal groups for any individual key. The per-key
+.I group_info
+field specifies how a key treats a legal effective group if the key does not
+have a type specified for
+the group of concern. For example, the Enter key usually has just one group
+defined. If the user
+performs an action causing the global keyboard group to change to Group2, the
+.I group_info
 field for the Enter key describes how to handle this situation.
 
-Out-of-range groups for individual keys are mapped to a legal group using the 
-same options as are used 
-for the overall keyboard group. The particular type of mapping used is 
-controlled by the bits set in 
-the 
-.I group_info 
+Out-of-range groups for individual keys are mapped to a legal group using the
+same options as are used
+for the overall keyboard group. The particular type of mapping used is
+controlled by the bits set in
+the
+.I group_info
 flag, as shown in Table 1.
 .bp
 .TS
@@ -99,52 +99,52 @@ none of the above	XkbWrapIntoRange
 .TE
 .LP
 .\"--- Chapter 10
-The Xkb extension is composed of two parts: a server extension, and a 
-client-side X library extension. 
-This chapter discusses functions used to modify controls effecting the behavior 
-of the server portion 
-of the Xkb extension. X Library Controls discusses functions used to modify 
-controls that affect only 
-the behavior of the client portion of the extension; those controls are known as 
+The Xkb extension is composed of two parts: a server extension, and a
+client-side X library extension.
+This chapter discusses functions used to modify controls effecting the behavior
+of the server portion
+of the Xkb extension. X Library Controls discusses functions used to modify
+controls that affect only
+the behavior of the client portion of the extension; those controls are known as
 Library Controls.
 
-Xkb contains control features that affect the entire keyboard, known as global 
-keyboard controls. Some 
-of the controls may be selectively enabled and disabled; these controls are 
-known as the 
-.I Boolean Controls. 
-Boolean Controls can be turned on or off under program control and can also be 
-automatically set to an 
-on or off condition when a client program exits. The remaining controls, known 
-as the 
-.I Non-Boolean Controls, 
-are always active. The XkbControlsRec structure describes the current state of 
-most of the global 
-controls and the attributes effecting the behavior of each of these Xkb 
-features. This chapter 
+Xkb contains control features that affect the entire keyboard, known as global
+keyboard controls. Some
+of the controls may be selectively enabled and disabled; these controls are
+known as the
+.I Boolean Controls.
+Boolean Controls can be turned on or off under program control and can also be
+automatically set to an
+on or off condition when a client program exits. The remaining controls, known
+as the
+.I Non-Boolean Controls,
+are always active. The XkbControlsRec structure describes the current state of
+most of the global
+controls and the attributes effecting the behavior of each of these Xkb
+features. This chapter
 describes the Xkb controls and how to manipulate them.
 
-There are two possible components for each of the Boolean Controls: attributes 
-describing how the 
-control should work, and a state describing whether the behavior as a whole is 
-enabled or disabled. 
-The attributes and state for most of these controls are held in the 
+There are two possible components for each of the Boolean Controls: attributes
+describing how the
+control should work, and a state describing whether the behavior as a whole is
+enabled or disabled.
+The attributes and state for most of these controls are held in the
 XkbControlsRec structure.
 
-You can manipulate the Xkb controls individually, via convenience functions, or 
-as a whole. To treat 
-them as a group, modify an XkbControlsRec structure to describe all of the 
-changes to be made, and 
-then pass that structure and appropriate flags to an Xkb library function, or 
-use a 
-XkbControlsChangesRec to reduce network traffic. When using a convenience 
-function to manipulate one 
+You can manipulate the Xkb controls individually, via convenience functions, or
+as a whole. To treat
+them as a group, modify an XkbControlsRec structure to describe all of the
+changes to be made, and
+then pass that structure and appropriate flags to an Xkb library function, or
+use a
+XkbControlsChangesRec to reduce network traffic. When using a convenience
+function to manipulate one
 control individually, you do not use an XkbControlsRec structure directly.
 
 The Xkb controls are grouped as shown in Table 2.
 .ad l
 .TS
-c s s 
+c s s
 l l l
 lw(2i) l l.
 Table 2 Xkb Keyboard Controls
@@ -197,8 +197,8 @@ _
 .ad n
 
 .LP
-The individual categories and controls are described first, together with 
-functions for manipulating 
+The individual categories and controls are described first, together with
+functions for manipulating
 them.
 .SH STRUCTURES
 .LP
@@ -207,7 +207,7 @@ The KeySymMapRec structure is defined as follows:
 
     #define XkbNumKbdGroups             4
     #define XkbMaxKbdGroup              (XkbNumKbdGroups-1)
-    
+
     typedef struct {                    /\&* map to keysyms for a single keycode */
         unsigned char       kt_index[XkbNumKbdGroups];  /\&* key type index for each group */
         unsigned char       group_info; /\&* # of groups and out of range group handling */
@@ -222,8 +222,8 @@ The XkbControlsRec structure is defined as follows:
 
     #define XkbMaxLegalKeyCode     255
     #define XkbPerKeyBitArraySize  ((XkbMaxLegalKeyCode+1)/8)
-    
-    
+
+
     typedef struct {
         unsigned char   mk_dflt_btn;      /\&* default button for keyboard driven mouse */
         unsigned char   num_groups;       /\&* number of keyboard groups */
@@ -255,7 +255,7 @@ The XkbControlsRec structure is defined as follows:
 
     #define XkbMaxLegalKeyCode     255
     #define XkbPerKeyBitArraySize  ((XkbMaxLegalKeyCode+1)/8)
-    
+
     typedef struct {
         unsigned char   mk_dflt_btn;      /\&* default button for keyboard driven mouse */
         unsigned char   num_groups;       /\&* number of keyboard groups */

@@ -47,37 +47,37 @@ number of keys for which behaviors are desired
 Xkb description to contain the result
 .SH DESCRIPTION
 .LP
-.I XkbGetKeyBehaviors 
-sends a request to the server to obtain the behaviors for 
-.I num 
-keys on the keyboard starting with the key whose keycode is 
-.I first. 
-It waits for a reply and returns the behaviors in the 
-.I server->behaviors 
-field of 
-.I xkb. 
-If successful, 
-.I XkbGetKeyBehaviors 
+.I XkbGetKeyBehaviors
+sends a request to the server to obtain the behaviors for
+.I num
+keys on the keyboard starting with the key whose keycode is
+.I first.
+It waits for a reply and returns the behaviors in the
+.I server->behaviors
+field of
+.I xkb.
+If successful,
+.I XkbGetKeyBehaviors
 returns Success.
 
-If the 
-.I server 
-map in the 
-.I xkb 
-parameter has not been allocated, 
-.I XkbGetKeyBehaviors 
+If the
+.I server
+map in the
+.I xkb
+parameter has not been allocated,
+.I XkbGetKeyBehaviors
 allocates and initializes it before obtaining the actions.
 
-If the server does not have a compatible version of Xkb, or the Xkb extension has not been 
-properly initialized, 
-.I XkbGetKeyBehaviors 
-returns BadAccess. If 
-.I num 
-is less than 1 or greater than XkbMaxKeyCount, 
-.I XkbGetKeyBehaviors 
-returns BadValue. If any allocation errors occur, 
-.I XkbGetKeyBehaviors 
-returns BadAlloc. 
+If the server does not have a compatible version of Xkb, or the Xkb extension has not been
+properly initialized,
+.I XkbGetKeyBehaviors
+returns BadAccess. If
+.I num
+is less than 1 or greater than XkbMaxKeyCount,
+.I XkbGetKeyBehaviors
+returns BadValue. If any allocation errors occur,
+.I XkbGetKeyBehaviors
+returns BadAlloc.
 .SH DIAGNOSTICS
 .TP 15
 .B BadAccess

@@ -42,36 +42,36 @@ name of the overlay
 number of rows to reserve in the overlay
 .SH DESCRIPTION
 .LP
-Xkb provides functions to add a single new element to the top-level keyboard 
-geometry. In each case the 
-.I num_ * 
-fields of the corresponding structure is incremented by 1. These functions do 
-not change 
-.I sz_* 
-unless there is no more room in the array. Some of these functions fill in the 
-values of the element's structure from the arguments. For other functions, you 
+Xkb provides functions to add a single new element to the top-level keyboard
+geometry. In each case the
+.I num_ *
+fields of the corresponding structure is incremented by 1. These functions do
+not change
+.I sz_*
+unless there is no more room in the array. Some of these functions fill in the
+values of the element's structure from the arguments. For other functions, you
 must explicitly write code to fill the structure's elements.
 
-The top-level geometry description includes a list of 
-.I geometry properties. 
-A geometry property associates an arbitrary string with an equally arbitrary 
-name. Programs that display images of keyboards can use geometry properties as 
-hints, but they are not interpreted by Xkb. No other geometry structures refer 
+The top-level geometry description includes a list of
+.I geometry properties.
+A geometry property associates an arbitrary string with an equally arbitrary
+name. Programs that display images of keyboards can use geometry properties as
+hints, but they are not interpreted by Xkb. No other geometry structures refer
 to geometry properties.
 
-.I XkbAddGeomOverlay 
-adds an overlay with the specified name to the specified 
-.I section. 
-The new overlay is created with space allocated for 
-.I sz_rows 
-rows. If an overlay with name 
-.I name 
+.I XkbAddGeomOverlay
+adds an overlay with the specified name to the specified
+.I section.
+The new overlay is created with space allocated for
+.I sz_rows
+rows. If an overlay with name
+.I name
 already exists in the section, a pointer to the existing overlay is returned.
-.I XkbAddGeomOverlay 
-returns NULL if any of the parameters is empty or if it was not able to allocate 
-space for the overlay. To allocate space for an arbitrary number of overlays to 
-a section, use the 
-.I XkbAllocGeomOverlay 
+.I XkbAddGeomOverlay
+returns NULL if any of the parameters is empty or if it was not able to allocate
+space for the overlay. To allocate space for an arbitrary number of overlays to
+a section, use the
+.I XkbAllocGeomOverlay
 function.
 .SH STRUCTURES
 .LP
@@ -85,7 +85,7 @@ function.
         XkbOverlayRowPtr      rows;            /\&* array of rows in the overlay */
         XkbBoundsPtr          bounds;          /\&* bounding box for the overlay */
     } XkbOverlayRec,*XkbOverlayPtr;
-    
+
 .fi
 .SH "SEE ALSO"
 .BR XkbAllocGeomOverlay (__libmansuffix__)

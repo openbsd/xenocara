@@ -511,7 +511,7 @@ _XimDefaultResName(
     Xim			  im = (Xim)ic->core.im;
     char		**out;
     char		 *string;
-    
+
     if(im->core.res_name == (char *)NULL) {
 	return True;
     }
@@ -519,12 +519,12 @@ _XimDefaultResName(
    string=strdup(im->core.res_name);
    if ( string == NULL)
 	return False;
-    
+
     out = (char **)((char *)top + info->offset);
 
     Xfree(*out);  /* free old im->core.res_name */
     *out =string;
-    
+
     return True;
 }
 
@@ -547,12 +547,12 @@ _XimDefaultResClass(
     string=strdup(im->core.res_class);
     if (string == NULL)
       return False;
-    
+
     out = (char **)((char *)top + info->offset);
-  
+
     Xfree(*out);  /* free old im->core.res_class */
     *out = string;
-    
+
     return True;
 }
 
@@ -836,7 +836,7 @@ _XimEncodeString(
     }
 
     out = (char **)((char *)top + info->offset);
-    
+
     Xfree(*out);
     *out = string;
     return True;

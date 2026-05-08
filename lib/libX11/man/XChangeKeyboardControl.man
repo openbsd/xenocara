@@ -154,7 +154,6 @@ The
 .B XKeyboardControl
 structure contains:
 .LP
-.LP
 /\&* Mask bits for ChangeKeyboardControl */
 .TS
 lw(.5i) lw(2.5i) lw(.8i).
@@ -344,11 +343,11 @@ by the argument's type is accepted.
 Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
-XChangeKeyboardMapping(__libmansuffix__),
-XkbChangeEnabledControls(__libmansuffix__),
-XkbBell(__libmansuffix__),
-XkbDeviceBell(__libmansuffix__),
-XkbGetMap(__libmansuffix__),
-XSetPointerMapping(__libmansuffix__)
+.BR XChangeKeyboardMapping (__libmansuffix__),
+.BR XkbChangeEnabledControls (__libmansuffix__),
+.BR XkbBell (__libmansuffix__),
+.BR XkbDeviceBell (__libmansuffix__),
+.BR XkbGetMap (__libmansuffix__),
+.BR XSetPointerMapping (__libmansuffix__)
 .br
 \fI\*(xL\fP

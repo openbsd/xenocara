@@ -81,8 +81,8 @@ The
 .B XClipBox
 function returns the smallest rectangle enclosing the specified region.
 .SH "SEE ALSO"
-XCreateGC(__libmansuffix__),
-XDrawPoint(__libmansuffix__),
-XDrawRectangle(__libmansuffix__)
+.BR XCreateGC (__libmansuffix__),
+.BR XDrawPoint (__libmansuffix__),
+.BR XDrawRectangle (__libmansuffix__)
 .br
 \fI\*(xL\fP

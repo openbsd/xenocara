@@ -128,6 +128,6 @@ alternatives can generate this error.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XReparentWindow(__libmansuffix__)
+.BR XReparentWindow (__libmansuffix__)
 .br
 \fI\*(xL\fP

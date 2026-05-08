@@ -21,7 +21,7 @@
 .\"
 .TH XkbOpenDisplay __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbOpenDisplay \-  Checks for a compatible version of the Xkb extension in both 
+XkbOpenDisplay \-  Checks for a compatible version of the Xkb extension in both
 the library and the server, and initializes the extension for use.
 .SH SYNOPSIS
 .HP
@@ -37,7 +37,7 @@ the library and the server, and initializes the extension for use.
 .SH ARGUMENTS
 .TP
 .I display_name
-hardware display name, which determines the display and communications domain to 
+hardware display name, which determines the display and communications domain to
 be used
 .TP
 .I event_rtrn
@@ -50,60 +50,60 @@ backfilled with the extension base error code
 compile time lib major version in, server major version out
 .TP
 .I minor_in_out
-compile time lib min version in, server minor version out 
+compile time lib min version in, server minor version out
 .TP
 .I reason_rtrn
-backfilled with a status code 
+backfilled with a status code
 .SH DESCRIPTION
 .LP
-As a convenience, you can use the function 
-.I XkbOpenDisplay 
-to perform these three 
-tasks at once: open a connection to an X server, check for a compatible version 
-of the Xkb extension in both the library and the server, and initialize the 
+As a convenience, you can use the function
+.I XkbOpenDisplay
+to perform these three
+tasks at once: open a connection to an X server, check for a compatible version
+of the Xkb extension in both the library and the server, and initialize the
 extension for use.
 
-.I XkbOpenDisplay 
-is a convenience function that opens an X display connection and 
-initializes the X keyboard extension. In all cases, upon return 
-.I reason_rtrn 
-contains a status value indicating success or the type of failure. If 
-.I major_in_out 
-and 
-.I minor_in_out 
-are not NULL, 
-.I XkbOpenDisplay 
-first calls 
-.I XkbLibraryVersion 
-to determine whether the client library is compatible, passing 
-it the values pointed to by 
-.I major_in_out and 
-.I minor_in_out. If the library is 
-incompatible, 
-.I XkbOpenDisplay backfills 
-.I major_in_out 
-and 
-.I minor_in_out 
-with the 
-major and minor extension versions of the library being used and returns NULL. 
-If the library is compatible, 
-.I XkbOpenDisplay 
-next calls 
-.I XOpenDisplay 
-with the 
-.I display_name. 
-If this fails, the function returns NULL. If successful, 
-.I XkbOpenDisplay 
-calls 
-.I XkbQueryExtension 
-and backfills the major and minor Xkb 
-server extension version numbers in 
-.I major_in_out and 
-.I minor_in_out. If the server 
-extension version is not compatible with the library extension version or if the 
-server extension is not present, 
-.I XkbOpenDisplay 
-closes the display and returns 
+.I XkbOpenDisplay
+is a convenience function that opens an X display connection and
+initializes the X keyboard extension. In all cases, upon return
+.I reason_rtrn
+contains a status value indicating success or the type of failure. If
+.I major_in_out
+and
+.I minor_in_out
+are not NULL,
+.I XkbOpenDisplay
+first calls
+.I XkbLibraryVersion
+to determine whether the client library is compatible, passing
+it the values pointed to by
+.I major_in_out and
+.I minor_in_out. If the library is
+incompatible,
+.I XkbOpenDisplay backfills
+.I major_in_out
+and
+.I minor_in_out
+with the
+major and minor extension versions of the library being used and returns NULL.
+If the library is compatible,
+.I XkbOpenDisplay
+next calls
+.I XOpenDisplay
+with the
+.I display_name.
+If this fails, the function returns NULL. If successful,
+.I XkbOpenDisplay
+calls
+.I XkbQueryExtension
+and backfills the major and minor Xkb
+server extension version numbers in
+.I major_in_out and
+.I minor_in_out. If the server
+extension version is not compatible with the library extension version or if the
+server extension is not present,
+.I XkbOpenDisplay
+closes the display and returns
 NULL. When successful, the function returns the display connection.
 
 The possible values for reason_rtrn are:
@@ -113,7 +113,7 @@ XkbOD_BadLibraryVersion indicates XkbLibraryVersion returned False.
 .IP \(bu 5
 XkbOD_ConnectionRefused indicates the display could not be opened.
 .IP \(bu 5
-XkbOD_BadServerVersion indicates the library and the server have incompatible 
+XkbOD_BadServerVersion indicates the library and the server have incompatible
 extension versions.
 .IP \(bu 5
 XkbOD_NonXkbServer indicates the extension is not present in the X server.
@@ -122,23 +122,23 @@ XkbOD_Success indicates that the function succeeded.
 .SH "RETURN VALUES"
 .TP 15
 NULL
-The 
-.I XkbOpenDisplay 
+The
+.I XkbOpenDisplay
 function returns NULL if the library is incompatible.
 .sp
 .in 20
-The 
-.I XkbOpenDisplay 
-function returns NULL if the call to 
-.I XOpenDisplay 
-with the 
+The
+.I XkbOpenDisplay
+function returns NULL if the call to
+.I XOpenDisplay
+with the
 .I display_name
 fails.
 .sp
 .in 20
-The 
-.I XkbOpenDisplay 
-function returns NULL and closes the display if the server extension version is not 
+The
+.I XkbOpenDisplay
+function returns NULL and closes the display if the server extension version is not
 compatible with the library extension version or if the server extension is not present.
 .SH DIAGNOSTICS
 .TP 15

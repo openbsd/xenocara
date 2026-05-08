@@ -225,8 +225,8 @@ the octal value specified by the sequence.
 Finally, the two-character sequence \*(lq\^\\\\\*(rq is recognized
 and replaced with a single backslash.
 .SH "SEE ALSO"
-XrmGetResource(__libmansuffix__),
-XrmInitialize(__libmansuffix__),
-XrmPutResource(__libmansuffix__)
+.BR XrmGetResource (__libmansuffix__),
+.BR XrmInitialize (__libmansuffix__),
+.BR XrmPutResource (__libmansuffix__)
 .br
 \fI\*(xL\fP

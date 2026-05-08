@@ -21,9 +21,9 @@
 .\"
 .TH XkbAllocIndicatorMaps __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbAllocIndicatorMaps \- Allocates, directly, the 
-.I indicators 
-member of the keyboard description record 
+XkbAllocIndicatorMaps \- Allocates, directly, the
+.I indicators
+member of the keyboard description record
 .SH SYNOPSIS
 .HP
 .B Status XkbAllocIndicatorMaps
@@ -36,29 +36,29 @@ member of the keyboard description record
 keyboard description structure
 .SH DESCRIPTION
 .LP
-The 
-.I xkb 
-parameter must point to a valid keyboard description. If it doesn't, 
-.I XkbAllocIndicatorMaps 
-returns a BadMatch error. Otherwise, 
-.I XkbAllocIndicatorMaps 
-allocates and initializes the 
-.I indicators 
-member of the keyboard description record and returns Success. If 
-.I XkbAllocIndicatorMaps 
+The
+.I xkb
+parameter must point to a valid keyboard description. If it doesn't,
+.I XkbAllocIndicatorMaps
+returns a BadMatch error. Otherwise,
+.I XkbAllocIndicatorMaps
+allocates and initializes the
+.I indicators
+member of the keyboard description record and returns Success. If
+.I XkbAllocIndicatorMaps
 was unable to allocate the indicators record, it reports a BadAlloc error.
 .SH RETURN VALUES"
 .TP 15
 Success
-The 
-.I XkbAllocIndicatorMaps 
-function returns Success if it is successful in allocating and initializing the 
-.I indicators 
+The
+.I XkbAllocIndicatorMaps
+function returns Success if it is successful in allocating and initializing the
+.I indicators
 member of the keyboard description record.
 .SH DIAGNOSTICS
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid
 .TP 15
 .B BadAlloc

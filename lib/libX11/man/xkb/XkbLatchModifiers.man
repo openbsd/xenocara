@@ -22,7 +22,7 @@
 .\"
 .TH XkbLatchModifiers __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbLatchModifiers \-  Latches and unlatches any of the eight real keyboard 
+XkbLatchModifiers \-  Latches and unlatches any of the eight real keyboard
 modifiers
 .SH SYNOPSIS
 .HP
@@ -36,7 +36,7 @@ modifiers
 .SH ARGUMENTS
 .TP
 .I display
-connection to the X server 
+connection to the X server
 .TP
 .I device_spec
 device ID, or XkbUseCoreKbd
@@ -48,27 +48,27 @@ mask of real modifiers whose lock state is to change
 1 => lock, 0 => unlock; only for modifiers selected by affect
 .SH DESCRIPTION
 .LP
-.I XkbLatchModifiers 
-sends a request to the server to latch the real modifiers 
-selected by both 
-.I affect 
-and 
-.I values 
-and to unlatch the real modifiers selected by 
+.I XkbLatchModifiers
+sends a request to the server to latch the real modifiers
+selected by both
 .I affect
-, but not selected by 
-.I values. 
+and
+.I values
+and to unlatch the real modifiers selected by
+.I affect
+, but not selected by
+.I values.
 
-.I XkbLatchModifiers 
-does not wait for a reply from the server. It returns True if 
+.I XkbLatchModifiers
+does not wait for a reply from the server. It returns True if
 the request was sent, and False otherwise.
 
-The functions in this section that change the use of modifiers use a mask in the 
-parameter affect. It is a bitwise inclusive OR of the legal modifier masks: 
+The functions in this section that change the use of modifiers use a mask in the
+parameter affect. It is a bitwise inclusive OR of the legal modifier masks:
 
 .TS
-c 
-l 
+c
+l
 l.
 Table 1 Real Modifier Masks
 _
@@ -86,19 +86,19 @@ Mod5Mask
 .SH "RETURN VALUES"
 .TP 15
 True
-The 
-.I XkbLatchModifiers 
-function returns True if a request was sent to the server to latch the real modifiers selected by both 
-.I affect 
-and 
-.I values 
-and to unlatch the real modifiers selected by 
+The
+.I XkbLatchModifiers
+function returns True if a request was sent to the server to latch the real modifiers selected by both
 .I affect
-, but not selected by 
-.I values. 
+and
+.I values
+and to unlatch the real modifiers selected by
+.I affect
+, but not selected by
+.I values.
 .TP 15
 False
-The 
-.I XkbLatchModifiers 
+The
+.I XkbLatchModifiers
 function returns False if the request was not sent.
 

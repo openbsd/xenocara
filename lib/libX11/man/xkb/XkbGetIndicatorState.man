@@ -42,37 +42,37 @@ device ID, or XkbUseCoreKbd
 backfilled with a mask of the indicator state
 .SH DESCRIPTION
 .LP
-Xkb allows applications to obtain information about indicators using two 
-different methods. The first method, which is similar to the core X 
-implementation, uses a mask to specify the indicators. The second method, which 
-is more suitable for applications concerned with interoperability, uses 
-indicator names. The correspondence between the indicator name and the bit 
+Xkb allows applications to obtain information about indicators using two
+different methods. The first method, which is similar to the core X
+implementation, uses a mask to specify the indicators. The second method, which
+is more suitable for applications concerned with interoperability, uses
+indicator names. The correspondence between the indicator name and the bit
 position in masks is as follows: one of the parameters returned from
-.I XkbGetNamedIndicators 
-is an index that is the bit position to use in any function call that requires a 
-mask of indicator bits, as well as the indicator's index into the 
+.I XkbGetNamedIndicators
+is an index that is the bit position to use in any function call that requires a
+mask of indicator bits, as well as the indicator's index into the
 XkbIndicatorRec array of indicator maps.
 
-.I XkbGetIndicatorState 
-queries the 
-.I display 
-for the state of the indicators on the device specified by the 
-.I device_spec. 
-For each indicator that is "turned on" on the device, the associated bit is set 
-in 
-.I state_return. 
+.I XkbGetIndicatorState
+queries the
+.I display
+for the state of the indicators on the device specified by the
+.I device_spec.
+For each indicator that is "turned on" on the device, the associated bit is set
+in
+.I state_return.
 If a compatible version of the Xkb extension is not available in the server,
 .I XkbGetIndicatorState
-returns a BadMatch error. Otherwise, it sends the request to the X server, 
-places the state of the indicators into 
-.I state_return, 
-and returns Success. Thus the value reported by 
-.I XkbGetIndicatorState 
+returns a BadMatch error. Otherwise, it sends the request to the X server,
+places the state of the indicators into
+.I state_return,
+and returns Success. Thus the value reported by
+.I XkbGetIndicatorState
 is identical to the value reported by the core protocol.
 .SH DIAGNOSTICS
 .TP 15
 .B BadMatch
-A compatible version of Xkb was not available in the server or an argument has 
+A compatible version of Xkb was not available in the server or an argument has
 correct type and range, but is otherwise invalid
 .SH "SEE ALSO"
 .BR XkbGetNamedIndicators (__libmansuffix__)

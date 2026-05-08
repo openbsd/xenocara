@@ -22,7 +22,7 @@
 .\"
 .TH XkbChangeDeviceInfo __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbChangeDeviceInfo \- Update the server's description of a device with the changes noted in an 
+XkbChangeDeviceInfo \- Update the server's description of a device with the changes noted in an
 XkbDeviceChangesRec
 .SH SYNOPSIS
 .HP
@@ -44,21 +44,21 @@ local copy of device state and configuration
 note specifying changes in device_info
 .SH DESCRIPTION
 .LP
-.I XkbChangeDeviceInfo 
-updates the server's description of the device specified in 
-.I device_info->device_spec 
-with the changes specified in 
-.I changes 
-and contained in 
-.I device_info. 
-The update is made by an 
-.I XkbSetDeviceInfo 
+.I XkbChangeDeviceInfo
+updates the server's description of the device specified in
+.I device_info->device_spec
+with the changes specified in
+.I changes
+and contained in
+.I device_info.
+The update is made by an
+.I XkbSetDeviceInfo
 request.
 .SH STRUCTURES
 .LP
-Changes to an Xkb extension device may be tracked by listening to XkbDeviceExtensionNotify events 
-and accumulating the changes in an XkbDeviceChangesRec structure. The changes noted in the 
-structure may then be used in subsequent operations to update either a server configuration or a 
+Changes to an Xkb extension device may be tracked by listening to XkbDeviceExtensionNotify events
+and accumulating the changes in an XkbDeviceChangesRec structure. The changes noted in the
+structure may then be used in subsequent operations to update either a server configuration or a
 local copy of an Xkb extension device configuration. The changes structure is defined as follows:
 .nf
 

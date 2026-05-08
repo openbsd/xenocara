@@ -40,12 +40,12 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define	mapSize(m)	(sizeof(m)/sizeof(XkbKTMapEntryRec))
 static XkbKTMapEntryRec map2Level[] = {
-    { True, ShiftMask, {1, ShiftMask, 0} }
+    { True, 1, {ShiftMask, ShiftMask, 0} }
 };
 
 static XkbKTMapEntryRec mapAlpha[] = {
-    { True, ShiftMask, {1, ShiftMask, 0} },
-    { True, LockMask, {0, LockMask, 0} }
+    { True, 1, {ShiftMask, ShiftMask, 0} },
+    { True, 1, { LockMask,  LockMask, 0} }
 };
 
 static XkbModsRec preAlpha[] = {
@@ -55,8 +55,8 @@ static XkbModsRec preAlpha[] = {
 
 #define	NL_VMOD_MASK	0
 static XkbKTMapEntryRec mapKeypad[] = {
-    { True, ShiftMask, { 1, ShiftMask,            0 } },
-    { False,        0, { 1,         0, NL_VMOD_MASK } }
+    { True,  1, { ShiftMask, ShiftMask,            0 } },
+    { False, 1, {         0,         0, NL_VMOD_MASK } }
 };
 
 static XkbKeyTypeRec canonicalTypes[XkbNumRequiredTypes] = {
@@ -118,17 +118,9 @@ XkbInitCanonicalKeyTypes(XkbDescPtr xkb, unsigned which, int keypadVMod)
         type = &to[XkbKeypadIndex];
         if ((keypadVMod >= 0) && (keypadVMod < XkbNumVirtualMods) &&
             (rtrn == Success)) {
+            /* Replace the NL_VMOD_MASK placeholder */
             type->mods.vmods = (1 << keypadVMod);
-            type->map[0].active = True;
-            type->map[0].mods.mask = ShiftMask;
-            type->map[0].mods.real_mods = ShiftMask;
-            type->map[0].mods.vmods = 0;
-            type->map[0].level = 1;
-            type->map[1].active = False;
-            type->map[1].mods.mask = 0;
-            type->map[1].mods.real_mods = 0;
             type->map[1].mods.vmods = (1 << keypadVMod);
-            type->map[1].level = 1;
         }
     }
     return Success;

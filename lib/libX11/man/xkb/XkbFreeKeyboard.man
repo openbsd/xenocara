@@ -21,7 +21,7 @@
 .\"
 .TH XkbFreeKeyboard __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbFreeKeyboard \-  Destroys either an entire XkbDescRec or just some of its 
+XkbFreeKeyboard \-  Destroys either an entire XkbDescRec or just some of its
 members
 .SH SYNOPSIS
 .HP
@@ -34,30 +34,30 @@ members
 .SH ARGUMENTS
 .TP
 .I xkb
-keyboard description with components to free 
+keyboard description with components to free
 .TP
 .I which
 mask selecting components to free
 .TP
 .I free_all
-True => free all components and 
+True => free all components and
 .I xkb
 .SH DESCRIPTION
 .LP
-.I XkbFreeKeyboard 
-frees the components of 
-.I xkb 
-specified by 
-.I which 
-and sets the corresponding values to NULL. If 
+.I XkbFreeKeyboard
+frees the components of
+.I xkb
+specified by
+.I which
+and sets the corresponding values to NULL. If
 .I
-free_all 
-is True, 
-.I XkbFreeKeyboard 
-frees every non-NULL component of 
-.I xkb 
-and then frees the 
-.I xkb 
+free_all
+is True,
+.I XkbFreeKeyboard
+frees every non-NULL component of
+.I xkb
+and then frees the
+.I xkb
 structure itself.
 
 If kbd is NULL, no operation is performed.

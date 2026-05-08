@@ -12,7 +12,7 @@
 <!-- .LP -->
 Pixmaps can only be used on the screen on which they were created.
 Pixmaps are off-screen resources that are used for various operations,
-such as defining cursors as tiling patterns 
+such as defining cursors as tiling patterns
 or as the source for certain raster operations.
 Most graphics requests can operate either on a window or on a pixmap.
 A bitmap is a single bit-plane pixmap.
@@ -53,7 +53,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies which screen the pixmap is created on. 
+Specifies which screen the pixmap is created on.
       </para>
     </listitem>
   </varlistentry>
@@ -96,11 +96,11 @@ The
 <xref linkend='XCreatePixmap' xrefstyle='select: title'/>
 function creates a pixmap of the width, height, and depth you specified
 and returns a pixmap ID that identifies it.
-It is valid to pass an 
+It is valid to pass an
 <symbol>InputOnly</symbol>
 window to the drawable argument.
 The width and height arguments must be nonzero,
-or a 
+or a
 <errorname>BadValue</errorname>
 error results.
 The depth argument must be one of the depths supported by the screen
@@ -192,15 +192,15 @@ error.
 <para>
 <!-- .LP -->
 Each window can have a different cursor defined for it.
-Whenever the pointer is in a visible window, 
+Whenever the pointer is in a visible window,
 it is set to the cursor defined for that window.
-If no cursor was defined for that window, 
+If no cursor was defined for that window,
 the cursor is the one defined for the parent window.
 </para>
 <para>
 <!-- .LP -->
-From X's perspective, 
-a cursor consists of a cursor source, mask, colors, and a hotspot. 
+From X's perspective,
+a cursor consists of a cursor source, mask, colors, and a hotspot.
 The mask pixmap determines the shape of the cursor and must be a depth
 of one.
 The source pixmap must have a depth of one,
@@ -208,7 +208,7 @@ and the colors determine the colors of the source.
 The hotspot defines the point on the cursor that is reported
 when a pointer event occurs.
 There may be limitations imposed by the hardware on
-cursors as to size and whether a mask is implemented. 
+cursors as to size and whether a mask is implemented.
 <indexterm><primary>XQueryBestCursor</primary></indexterm>
 <xref linkend='XQueryBestCursor' xrefstyle='select: title'/>
 can be used to find out what sizes are possible.
@@ -357,7 +357,7 @@ Specifies the character glyph for the source.
     </term>
     <listitem>
       <para>
-Specifies the glyph character for the mask. 
+Specifies the glyph character for the mask.
       </para>
     </listitem>
   </varlistentry>
@@ -367,7 +367,7 @@ Specifies the glyph character for the mask.
     </term>
     <listitem>
       <para>
-Specifies the <acronym>RGB</acronym> values for the foreground of the source. 
+Specifies the <acronym>RGB</acronym> values for the foreground of the source.
       </para>
     </listitem>
   </varlistentry>
@@ -389,33 +389,33 @@ The
 <xref linkend='XCreateGlyphCursor' xrefstyle='select: title'/>
 function is similar to
 <xref linkend='XCreatePixmapCursor' xrefstyle='select: title'/>
-except that the source and mask bitmaps are obtained from the specified 
+except that the source and mask bitmaps are obtained from the specified
 font glyphs.
-The source_char must be a defined glyph in source_font, 
+The source_char must be a defined glyph in source_font,
 or a
 <errorname>BadValue</errorname>
 error results.
-If mask_font is given, 
+If mask_font is given,
 mask_char must be a defined glyph in mask_font,
 or a
 <errorname>BadValue</errorname>
 error results.
 The mask_font and character are optional.
 The origins of the source_char and mask_char (if defined) glyphs are
-positioned coincidently and define the hotspot. 
-The source_char and mask_char need not have the same bounding box metrics, 
+positioned coincidently and define the hotspot.
+The source_char and mask_char need not have the same bounding box metrics,
 and there is no restriction on the placement of the hotspot relative to the bounding
-boxes. 
+boxes.
 If no mask_char is given, all pixels of the source are displayed.
 You can free the fonts immediately by calling
 <xref linkend='XFreeFont' xrefstyle='select: title'/>
-if no further explicit references to them are to be made. 
+if no further explicit references to them are to be made.
 </para>
 <para>
 <!-- .LP -->
-For 2-byte matrix fonts, 
+For 2-byte matrix fonts,
 the 16-bit value should be formed with the byte1
-member in the most significant byte and the byte2 member in the 
+member in the most significant byte and the byte2 member in the
 least significant byte.
 </para>
 <para>
@@ -489,7 +489,7 @@ Specifies the cursor's source bits to be displayed or
     </term>
     <listitem>
       <para>
-Specifies the <acronym>RGB</acronym> values for the foreground of the source. 
+Specifies the <acronym>RGB</acronym> values for the foreground of the source.
       </para>
     </listitem>
   </varlistentry>
@@ -541,15 +541,15 @@ or
 screen.
 The foreground color is used for the pixels set to 1 in the
 source, and the background color is used for the pixels set to 0.
-Both source and mask, if specified, must have depth one (or a 
+Both source and mask, if specified, must have depth one (or a
 <errorname>BadMatch</errorname>
 error results) but can have any root.
 The mask argument defines the shape of the cursor.
 The pixels set to 1 in the mask define which source pixels are displayed,
 and the pixels set to 0 define which pixels are ignored.
-If no mask is given, 
+If no mask is given,
 all pixels of the source are displayed.
-The mask, if present, must be the same size as the pixmap defined by the 
+The mask, if present, must be the same size as the pixmap defined by the
 source argument, or a
 <errorname>BadMatch</errorname>
 error results.
@@ -657,7 +657,7 @@ information for.
     </term>
     <listitem>
       <para>
-Return the best width and height that is closest to the specified width 
+Return the best width and height that is closest to the specified width
 and height.
     </para>
   </listitem>
@@ -718,7 +718,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the cursor. 
+Specifies the cursor.
       </para>
     </listitem>
   </varlistentry>
@@ -728,7 +728,7 @@ Specifies the cursor.
     </term>
     <listitem>
       <para>
-Specifies the <acronym>RGB</acronym> values for the foreground of the source. 
+Specifies the <acronym>RGB</acronym> values for the foreground of the source.
       </para>
     </listitem>
   </varlistentry>
@@ -795,7 +795,7 @@ Specifies the connection to the X server.
     </term>
     <listitem>
       <para>
-Specifies the cursor. 
+Specifies the cursor.
     </para>
   </listitem>
   </varlistentry>
@@ -805,7 +805,7 @@ Specifies the cursor.
 <!-- .eM  -->
 The
 <xref linkend='XFreeCursor' xrefstyle='select: title'/>
-function deletes the association between the cursor resource ID 
+function deletes the association between the cursor resource ID
 and the specified cursor.
 The cursor storage is freed when no other resource references it.
 The specified cursor ID should not be referred to again.

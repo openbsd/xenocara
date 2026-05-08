@@ -34,7 +34,7 @@ XkbLatchGroup \-  Latches the keysym group
 .SH ARGUMENTS
 .TP
 .I display
-connection to the X server 
+connection to the X server
 .TP
 .I device_spec
 device ID, or XkbUseCoreKbd
@@ -44,11 +44,11 @@ index of the keysym group to latch
 .SH DESCRIPTION
 .LP
 
-.I XkbLatchGroup 
-sends a request to the server to latch the specified 
+.I XkbLatchGroup
+sends a request to the server to latch the specified
 .I group
-and 
-does not wait for a reply. It returns True if the request was sent and False 
+and
+does not wait for a reply. It returns True if the request was sent and False
 otherwise.
 
 Reference the keysym group indices with these symbolic constants:
@@ -69,14 +69,14 @@ XkbGroup4Index	3
 .SH "RETURN VALUES"
 .TP 15
 True
-The 
-.I XkbLatchGroup 
-function returns True if a request was sent to the server to latch the specified 
+The
+.I XkbLatchGroup
+function returns True if a request was sent to the server to latch the specified
 .I group.
 .TP 15
 False
-The 
-.I XkbLatchGroup 
+The
+.I XkbLatchGroup
 function returns False if the request was not sent.
 
 

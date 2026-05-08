@@ -260,10 +260,10 @@ alternatives can generate this error.
 .B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XAllocColor(__libmansuffix__),
-XChangeWindowAttributes(__libmansuffix__),
-XCreateWindow(__libmansuffix__),
-XQueryColor(__libmansuffix__),
-XStoreColors(__libmansuffix__)
+.BR XAllocColor (__libmansuffix__),
+.BR XChangeWindowAttributes (__libmansuffix__),
+.BR XCreateWindow (__libmansuffix__),
+.BR XQueryColor (__libmansuffix__),
+.BR XStoreColors (__libmansuffix__)
 .br
 \fI\*(xL\fP

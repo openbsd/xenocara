@@ -34,10 +34,10 @@ XkbFreeGeomColors \- Free geometry colors
 .SH ARGUMENTS
 .TP
 .I geom
-geometry in which colors should be freed 
+geometry in which colors should be freed
 .TP
 .I first
-first color to be freed 
+first color to be freed
 .TP
 .I count
 number of colors to be freed
@@ -46,30 +46,30 @@ number of colors to be freed
 True => all colors are freed
 .SH DESCRIPTION
 .LP
-Xkb provides a number of functions to allocate and free subcomponents of a 
-keyboard geometry. Use these functions to create or modify keyboard geometries. 
-Note that these functions merely allocate space for the new element(s), and it 
-is up to you to fill in the values explicitly in your code. These allocation 
-functions increase 
-.I sz_* 
-but never touch 
-.I num_* 
-(unless there is an allocation failure, in which case they reset both 
-.I sz_* 
-and 
-.I num_* 
-to zero). These functions return Success if they succeed, BadAlloc if they are 
+Xkb provides a number of functions to allocate and free subcomponents of a
+keyboard geometry. Use these functions to create or modify keyboard geometries.
+Note that these functions merely allocate space for the new element(s), and it
+is up to you to fill in the values explicitly in your code. These allocation
+functions increase
+.I sz_*
+but never touch
+.I num_*
+(unless there is an allocation failure, in which case they reset both
+.I sz_*
+and
+.I num_*
+to zero). These functions return Success if they succeed, BadAlloc if they are
 not able to allocate space, or BadValue if a parameter is not as expected.
 
-If 
-.I free_all 
-is True, all colors are freed regardless of the value of 
+If
+.I free_all
+is True, all colors are freed regardless of the value of
 .I first
-or 
-.I count. 
-Otherwise, 
-.I count 
-colors are freed beginning with the one specified by 
+or
+.I count.
+Otherwise,
+.I count
+colors are freed beginning with the one specified by
 .I first.
 .SH DIAGNOSTICS
 .TP 15

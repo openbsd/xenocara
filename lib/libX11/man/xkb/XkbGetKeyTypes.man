@@ -22,7 +22,7 @@
 .\"
 .TH XkbGetKeyTypes __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetKeyTypes \- Obtain the list of available key types in the server's 
+XkbGetKeyTypes \- Obtain the list of available key types in the server's
 keyboard mapping
 .SH SYNOPSIS
 .HP
@@ -48,26 +48,26 @@ number of key types to be returned
 keyboard description containing client map to update
 .SH DESCRIPTION
 .LP
-.I XkbGetKeyTypes 
-queries the server for the desired types, waits for a reply, and returns the 
-desired types in the 
-.I xkb->map->types. 
+.I XkbGetKeyTypes
+queries the server for the desired types, waits for a reply, and returns the
+desired types in the
+.I xkb->map->types.
 If successful, it returns Success.
 
-.I XkbGetKeyTypes 
-returns BadAccess if the Xkb extension has not been properly initialized and 
-BadValue if the combination of 
-.I first 
-and 
-.I num 
+.I XkbGetKeyTypes
+returns BadAccess if the Xkb extension has not been properly initialized and
+BadValue if the combination of
+.I first
+and
+.I num
 results in numbers out of valid range.
 
-.B NOTE: 
-.I XkbGetKeyTypes 
-is used to obtain descriptions of the key types themselves, not the key types 
-bound to individual keys. To obtain the key types bound to an individual key, 
-refer to the 
-.I key_sym_map 
+.B NOTE:
+.I XkbGetKeyTypes
+is used to obtain descriptions of the key types themselves, not the key types
+bound to individual keys. To obtain the key types bound to an individual key,
+refer to the
+.I key_sym_map
 field of the client map.
 .SH DIAGNOSTICS
 .TP 15

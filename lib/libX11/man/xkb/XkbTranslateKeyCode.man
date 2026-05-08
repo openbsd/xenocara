@@ -50,22 +50,22 @@ backfilled with consumed modifiers
 keysym resulting from translation
 .SH DESCRIPTION
 .LP
-.I mods_rtrn 
-is backfilled with the modifiers consumed by the translation process. 
-.I mods 
-is a bitwise inclusive OR of the legal modifier masks: ShiftMask, LockMask, 
-ControlMask, Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask.The 
+.I mods_rtrn
+is backfilled with the modifiers consumed by the translation process.
+.I mods
+is a bitwise inclusive OR of the legal modifier masks: ShiftMask, LockMask,
+ControlMask, Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask.The
 AlwaysConsumeShiftAndLock library control (see below), if enabled, causes
-.I XkbTranslateKeyCode 
-to consume shift and lock. 
-.I XkbTranslateKeyCode 
-returns True if the translation resulted in a keysym, and False if it resulted 
+.I XkbTranslateKeyCode
+to consume shift and lock.
+.I XkbTranslateKeyCode
+returns True if the translation resulted in a keysym, and False if it resulted
 in NoSymbol.
 
-The AlwaysConsumeShiftAndLock control, if enabled, forces 
-.I XLookupString 
-to consume the Shift and Lock modifiers when processing all keys, even if the 
-definition for the key type does not specify these modifiers. The 
-AlwaysConsumeShiftAndLock control is unset by default. 
+The AlwaysConsumeShiftAndLock control, if enabled, forces
+.I XLookupString
+to consume the Shift and Lock modifiers when processing all keys, even if the
+definition for the key type does not specify these modifiers. The
+AlwaysConsumeShiftAndLock control is unset by default.
 .SH "SEE ALSO"
 .BR XLookupString (__libmansuffix__)

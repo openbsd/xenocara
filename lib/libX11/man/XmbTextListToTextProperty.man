@@ -361,7 +361,7 @@ typedef enum {
 } XICCEncodingStyle;
 .EE
 .SH "SEE ALSO"
-XSetTextProperty(__libmansuffix__),
-XStringListToTextProperty(__libmansuffix__)
+.BR XSetTextProperty (__libmansuffix__),
+.BR XStringListToTextProperty (__libmansuffix__)
 .br
 \fI\*(xL\fP
