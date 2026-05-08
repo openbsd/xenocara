@@ -366,7 +366,7 @@ SUBDIRS = src man
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xxf86vm.pc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-EXTRA_DIST = README.md
+EXTRA_DIST = README.md meson.build meson.options
 all: all-recursive
 
 .SUFFIXES:

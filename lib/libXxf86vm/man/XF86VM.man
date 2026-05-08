@@ -1,108 +1,117 @@
 .\"
 .\" Copyright (c) 1996  Joe Moss, The XFree86 Project
 .\"
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
 .de EX
 .RS
 .nf
 .sp 1
-.ft CW
+.if t \{\
+.  ie \\n(.g .ft CR
+.  el .ft CW
+.\}
 ..
 .de EE
 .ft
 .sp 1
 .fi
+.if t .ft R
 .RE
 ..
-.TH XF86VIDMODE __libmansuffix__ __vendorversion__
+.TH XF86VIDMODE __libmansuffix__ 2013-07-05 __vendorversion__
 .SH NAME
-XF86VidModeQueryExtension, XF86VidModeQueryVersion, XF86VidModeSetClientVersion, XF86VidModeGetModeLine, XF86VidModeGetAllModeLines, XF86VidModeAddModeLine, XF86VidModeDeleteModeLine, XF86VidModeModModeLine, XF86VidModeValidateModeLine, XF86VidModeSwitchMode, XF86VidModeSwitchToMode, XF86VidModeLockModeSwitch, XF86VidModeGetMonitor, XF86VidModeGetViewPort, XF86VidModeSetViewPort, XF86VidModeGetDotClocks, XF86VidModeGetGamma, XF86VidModeSetGamma, XF86VidModeGetGammaRamp, XF86VidModeSetGammaRamp, XF86VidModeGetGammaRampSize, XF86VidModeGetPermissions \- Extension library for the XFree86-VidMode X extension
+XF86VidModeQueryExtension, XF86VidModeQueryVersion,
+XF86VidModeSetClientVersion, XF86VidModeGetModeLine,
+XF86VidModeGetAllModeLines, XF86VidModeAddModeLine,
+XF86VidModeDeleteModeLine, XF86VidModeModModeLine,
+XF86VidModeValidateModeLine, XF86VidModeSwitchMode,
+XF86VidModeSwitchToMode, XF86VidModeLockModeSwitch, XF86VidModeGetMonitor,
+XF86VidModeGetViewPort, XF86VidModeSetViewPort, XF86VidModeGetDotClocks,
+XF86VidModeGetGamma, XF86VidModeSetGamma, XF86VidModeGetGammaRamp,
+XF86VidModeSetGammaRamp, XF86VidModeGetGammaRampSize,
+XF86VidModeGetPermissions \- Extension library for the XFree86-VidMode X
+extension
 .SH SYNOPSIS
 .nf
-
 \&#include <X11/extensions/xf86vmode.h>
-
+.sp
 Bool XF86VidModeQueryExtension(
     Display *\fIdisplay\fP\^,
     int *\fIevent_base_return\fP\^,
     int *\fIerror_base_return\fP\^);
-
+.sp
 Bool XF86VidModeQueryVersion(
     Display *\fIdisplay\fP\^,
     int *\fImajor_version_return\fP\^,
     int *\fIminor_version_return\fP\^);
-
+.sp
 Bool XF86VidModeSetClientVersion(
     Display *\fIdisplay\fP\^);
-
+.sp
 Bool XF86VidModeGetModeLine(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int *\fIdotclock_return\fP\^,
     XF86VidModeModeLine *\fImodeline\fP\^);
-
+.sp
 Bool XF86VidModeGetAllModeLines(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int *\fImodecount_return\fP\^,
     XF86VidModeModeInfo ***\fImodesinfo\fP\^);
-
+.sp
 Bool XF86VidModeAddModeLine(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeModeInfo *\fImodeline\fP\,
     XF86VidModeModeInfo *\fIaftermode\fP\^);
-
+.sp
 Bool XF86VidModeDeleteModeLine(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeModeInfo *\fImodeline\fP\^);
-
+.sp
 Bool XF86VidModeModModeLine(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeModeLine *\fImodeline\fP\^);
-
+.sp
 Status XF86VidModeValidateModeLine(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeModeLine *\fImodeline\fP\^);
-
+.sp
 Bool XF86VidModeSwitchMode(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int \fIzoom\fP\^);
-
+.sp
 Bool XF86VidModeSwitchToMode(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeModeInfo *\fImodeline\fP\^);
-
+.sp
 Bool XF86VidModeLockModeSwitch(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int \fIlock\fP\^);
-
+.sp
 Bool XF86VidModeGetMonitor(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeMonitor *\fImonitor\fP\^);
-
+.sp
 Bool XF86VidModeGetViewPort(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int *\fIx_return\fP\^,
     int *\fIy_return\fP\^);
-
+.sp
 Bool XF86VidModeSetViewPort(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int \fIx\fP\^,
     int \fIy\fP\^);
-
+.sp
 XF86VidModeGetDotClocks(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
@@ -110,17 +119,17 @@ XF86VidModeGetDotClocks(
     int *\fInumber of clocks return\fP\^,
     int *\fImax dot clock return\fP\^,
     int **\fIclocks return\fP\^);
-
+.sp
 XF86VidModeGetGamma(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeGamma *\fIGamma\fP\^);
-
+.sp
 XF86VidModeSetGamma(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeGamma *\fIGamma\fP\^);
-
+.sp
 XF86VidModeGetGammaRamp(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
@@ -128,7 +137,7 @@ XF86VidModeGetGammaRamp(
     unsigned short *\fIred array\fP\^,
     unsigned short *\fIgreen array\fP\^,
     unsigned short *\fIblue array\fP\^);
-
+.sp
 XF86VidModeSetGammaRamp(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
@@ -136,7 +145,7 @@ XF86VidModeSetGammaRamp(
     unsigned short *\fIred array\fP\^,
     unsigned short *\fIgreen array\fP\^,
     unsigned short *\fIblue array\fP\^);
-
+.sp
 XF86VidModeGetGammaRampSize(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
@@ -198,7 +207,7 @@ typedef struct {
     int privsize;                       /\(** Size of private */
     INT32       *private;               /\(** Server privates */
 } XF86VidModeModeLine;
-
+.sp
 typedef struct {
     unsigned int        dotclock;       /\(** Pixel clock */
     unsigned short      hdisplay;       /\(** Number of display pixels horizontally */
@@ -226,12 +235,12 @@ typedef struct {
     unsigned char nvsync;              /\(** Number of vert sync ranges */
     XF86VidModeSyncRange* vsync;       /\(** Vertical sync ranges */
 } XF86VidModeMonitor;
-
+.sp
 typedef struct {
     float       hi;     /\(** Top of range */
     float       lo;     /\(** Bottom of range */
 } XF86VidModeSyncRange;
-
+.sp
 typedef struct {
     int type;                   /\(** of event */
     unsigned long serial;       /\(** # of last request processed by server */
@@ -243,7 +252,7 @@ typedef struct {
     Bool forced;                /\(** extents of new region */
     Time time;                  /\(** event timestamp */
 } XF86VidModeNotifyEvent;
-
+.sp
 typedef struct {
     float red;                  /\(** Red Gamma value */
     float green;                /\(** Green Gamma value */
@@ -252,175 +261,185 @@ typedef struct {
 .EE
 .SH DESCRIPTION
 These functions provide an interface to the server extension
-\fIXFree86-VidModeExtension\fP
+.B XFree86-VidModeExtension
 which allows the video modes to be
 queried and adjusted dynamically and mode switching to be controlled.
-Applications that use these functions must be linked with
-.ZN -lXxf86vm
-.SS "MODELINE FUNCTIONS"
+Applications that use these functions must be linked with the
+.B \-lXxf86vm
+flag.
+.SS MODELINE FUNCTIONS
 The
-.ZN XF86VidModeGetModeLine
-function is used to query the settings for the currently selected
-video mode.  The calling program should pass a pointer to a
-.ZN XF86VidModeModeLine
-structure that it has already allocated.  The function fills in
-the fields of the structure.
+.B XF86VidModeGetModeLine
+function is used to query the settings for the currently selected video mode.
+The calling program should pass a pointer to a
+.B XF86VidModeModeLine
+structure that it has already allocated.
+The function fills in the fields of the structure.
 .PP
 If there are any server private values (currently only applicable to
 the S3 server) the function will allocate storage for them.
 Therefore, if the
-.ZN privsize
+.I privsize
 field is non-zero, the calling program should call
-.ZN Xfree(private)
+.B Xfree(private)
 to free the storage.
 .PP
-.ZN XF86VidModeGetAllModeLines
+.B XF86VidModeGetAllModeLines
 returns the settings for all video modes.
 The calling program supplies the address of a pointer which will be
 set by the function to point to an array of
-.ZN XF86VidModeModeInfo
-structures.  The memory occupied by the array is dynamically allocated
-by the
-.ZN XF86VidModeGetAllModeLines
+.B XF86VidModeModeInfo
+structures.
+The memory occupied by the array is dynamically allocated by the
+.B XF86VidModeGetAllModeLines
 function and should be freed by the caller.
 The first element of the array corresponds to the current video mode.
 .PP
 The
-.ZN XF86VidModeModModeLine
+.B XF86VidModeModModeLine
 function can be used to change the settings of the current video mode
-provided the requested settings are valid (e.g. they don't exceed the
+provided the requested settings are valid (e.g., they don't exceed the
 capabilities of the monitor).
 .PP
 To add a mode to the list of available modes, the
-.ZN XF86VidModeAddModeLine
+.B XF86VidModeAddModeLine
 function can be used.
 Assuming the settings are valid, the video mode will be added after
 the existing mode which matches the timings specified by the
-.ZN aftermode
+.I aftermode
 parameter.
 To be considered a match, all of the fields of the given
-.ZN XF86VidModeModeInfo
+.B XF86VidModeModeInfo
 structure must match, except the
-.ZN privsize
+.I privsize
 and
-.ZN private
+.I private
 fields.
 If the
-.ZN aftermode
+.I aftermode
 parameter is zero, the mode will be added
 after the current mode.
 .PP
 Modes can be deleted with the
-.ZN XF86VidModeDeleteModeLine
-function.  The specified mode must match an existing mode.
+.B XF86VidModeDeleteModeLine
+function.
+The specified mode must match an existing mode.
 To be considered a match, all of the fields of the given
-.ZN XF86VidModeModeInfo
+.B XF86VidModeModeInfo
 structure must match, except the
-.ZN privsize
+.I privsize
 and
-.ZN private
+.I private
 fields.
 If the mode to be deleted is the current mode, a mode switch
-to the next mode will occur first.  The last remaining mode can not
-be deleted.
+to the next mode will occur first.
+The last remaining mode can not be deleted.
 .PP
 The validity of a mode can be checked with the
-.ZN XF86VidModeValidateModeLine
+.B XF86VidModeValidateModeLine
 function.
-If the specified mode can be used by the server (i.e. meets all the
+If the specified mode can be used by the server (i.e., meets all the
 constraints placed upon a mode by the combination of the server, card,
 and monitor) the function returns
-.ZN MODE_OK ,
+.BR MODE_OK ,
 otherwise it returns a value indicating the reason why the mode is
-invalid (as defined in \fIxf86.h\fP)
-.SS "MODE SWITCH FUNCTIONS"
+invalid (as defined in \fIxf86vmode.h\fP).
+.SS MODE SWITCH FUNCTIONS
 When the function
-.ZN XF86VidModeSwitchMode
+.B XF86VidModeSwitchMode
 is called, the server will change the video mode to next (or previous)
-video mode. The
-.ZN XF86VidModeSwitchToMode
+video mode.
+The
+.B XF86VidModeSwitchToMode
 function can be used to switch directly to the specified mode.
 Matching is as specified in the description of the
-.ZN XF86VidModeAddModeLine
+.B XF86VidModeAddModeLine
 function above.
 The
-.ZN XF86VidModeLockModeSwitch
+.B XF86VidModeLockModeSwitch
 function can be used to allow or disallow mode switching whether
 the request to switch modes comes from a call to the
-.ZN XF86VidModeSwitchMode
+.B XF86VidModeSwitchMode
 or
-.ZN XF86VidModeSwitchToMode
+.B XF86VidModeSwitchToMode
 functions or from one of the mode switch key sequences.
 .PP
-.RB Note:
+.BR Note :
 Because of the asynchronous nature of the X protocol, a call to
-.ZN XFlush
+.B XFlush
 is needed if the application wants to see the mode change immediately.
-To be informed of the execution status of the request, a
-custom error handler should be installed using
-.ZN XSetErrorHandler
+To be informed of the execution status of the request,
+a custom error handler should be installed using
+.B XSetErrorHandler
 before calling the mode switching function.
-.SS "MONITOR FUNCTIONS"
+.SS MONITOR FUNCTIONS
 Information known to the server about the monitor is returned by the
-.ZN XF86VidModeGetMonitor
-function.  The
-.ZN hsync
+.B XF86VidModeGetMonitor
+function.
+The
+.I hsync
 and
-.ZN vsync
+.I vsync
 fields each point to an array of
-.ZN XF86VidModeSyncRange
-structures.  The arrays contain
-.ZN nhsync
+.B XF86VidModeSyncRange
+structures.
+The arrays contain
+.I nhsync
 and
-.ZN nvsync
+.I nvsync
 elements, respectively.
 The
-.ZN hi
+.I hi
 and
-.ZN low
-values will be equal if a discreate value was given in the
-.ZN XF86Config
+.I low
+values will be equal if a discrete value was given in the
+.BR xorg.conf (5)
 file.
 .PP
 The
-.ZN vendor ,
-.ZN model ,
-.ZN hsync ,
+.IR vendor ,
+.IR model ,
+.IR hsync ,
 and
-.ZN vsync
+.I vsync
 fields point to dynamically allocated storage that should be freed
 by the caller.
-.SS "VIEWPORT FUNCTIONS"
+.SS VIEWPORT FUNCTIONS
 The
-.ZN XF86VidModeGetViewPort
+.B XF86VidModeGetViewPort
 and
-.ZN XF86VidModeSetViewPort
+.B XF86VidModeSetViewPort
 functions can be used to, respectively, query and change the location
 of the upper left corner of the viewport into the virtual screen.
-.SS "OTHER FUNCTIONS"
+.SS OTHER FUNCTIONS
 The
-.ZN XF86VidModeQueryVersion
+.B XF86VidModeQueryVersion
 function can be used to determine the version of the extension
 built into the server.
 .PP
 The function
-.ZN XF86VidModeQueryExtension
+.B XF86VidModeQueryExtension
 returns the lowest numbered error and event values
 assigned to the extension.
 .SH BUGS
 The
-XF86VidModeSetClientVersion,
-XF86VidModeGetDotClocks,
-XF86VidModeGetGamma,
-XF86VidModeSetGamma,
-XF86VidModeSetGammaRamp,
-XF86VidModeGetGammaRamp,
-XF86VidModeGetGammaRampSize,
+.BR XF86VidModeSetClientVersion ,
+.BR XF86VidModeGetDotClocks ,
+.BR XF86VidModeGetGamma ,
+.BR XF86VidModeSetGamma ,
+.BR XF86VidModeSetGammaRamp ,
+.BR XF86VidModeGetGammaRamp ,
+.BR XF86VidModeGetGammaRampSize ,
 and
-XF86VidModeGetPermissions
-functions need to be documented.  In the meantime, check the source
-code for information about how to use them.
+.B XF86VidModeGetPermissions
+functions need to be documented.
+In the meantime, check the source code for information about how to use them.
 .SH SEE ALSO
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), XFlush(__libmansuffix__), XSetErrorHandler(__libmansuffix__), xvidtune(__appmansuffix__)
+.BR Xorg (1),
+.BR xvidtune (1),
+.BR XFlush (__libmansuffix__),
+.BR XSetErrorHandler (__libmansuffix__),
+.BR xorg.conf (5),
+.BR X (7)
 .SH AUTHORS
 Kaleb Keithley, Jon Tombs, David Dawes, and Joe Moss
