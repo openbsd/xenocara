@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([font-alias], [1.0.5],
+AC_INIT([font-alias], [1.0.6],
         [https://gitlab.freedesktop.org/xorg/font/alias/-/issues],
         [font-alias])
 AM_INIT_AUTOMAKE([foreign dist-xz])

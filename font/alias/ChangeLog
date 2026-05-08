@@ -1,3 +1,36 @@
+commit ebeee85f070dc12197ad98d1c849786f8e3be124
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 7 17:20:58 2026 -0800
+
+    font-alias 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 55ceddb52f9e08a277ba634b2b0a03a9be31fb46
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 184c43dd059f785537c8a48a4a7972c488ac1215
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 19 09:45:41 2023 -0800
+
+    Add a meson build system
+    
+    Includes CI checks comparing installed files based on those from xorgproto
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 05282e1160350c2340d51ac991704f7e390f8420
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Feb 27 15:20:00 2023 -0800

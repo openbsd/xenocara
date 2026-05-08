@@ -1,0 +1,3 @@
+# option for setting the installation path
+option('fontrootdir', type: 'string',
+       description: 'Path to root directory for font files')
