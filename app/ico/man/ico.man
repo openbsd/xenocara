@@ -1,35 +1,33 @@
-.TH ICO 1 __xorgversion__
+.TH ICO 1 2025-03-22 __xorgversion__
 .SH NAME
 ico \- animate an icosahedron or other polyhedron
 .SH SYNOPSIS
-.B ico
-[-display display] [-geometry geometry]
-[-r] [-d pattern] [-i] [-dbl] [-faces] [-noedges]
-[-sleep n] [-obj object] [-colors color-list]
+.nf
+\fBico\fR [\fB\-display\fR \fIdisplay\fR] [\fB\-geometry\fR \fIgeometry\fR] [\fB\-r\fR] [\fB\-d\fR \fIpattern\fR]
+    [\fB\-i\fR] [\fB\-dbl\fR] [\fB\-faces\fR] [\fB\-noedges\fR] [\fB\-sleep\fR \fIn\fR] [\fB\-obj\fR \fIobject\fR]
+    [\fB\-colors\fR \fIcolor\-list\fR]
+.fi
 .LP
 .B ico
--objhelp
-.LP
-.B ico
--version
+\fB\-help\fR | \fB\-objhelp\fR | \fB\-version\fR
 .SH DESCRIPTION
-.I Ico
+.B Ico
 displays a wire-frame rotating polyhedron, with hidden lines removed,
 or a solid-fill polyhedron with hidden faces removed.
 There are a number of different polyhedra available;
 adding a new polyhedron to the program is quite simple.
 .SH OPTIONS
 .TP
-.B -r
+.B \-r
 Display on the root window instead of creating a new window.
 .TP
-.B -d pattern
+.B \-d \fIpattern\fP
 Specify a bit pattern for drawing dashed lines for wire frames.
 .TP
-.B -i
+.B \-i
 Use inverted colors for wire frames.
 .TP
-.B -dbl
+.B \-dbl
 Use double buffering on the display.
 This works for either wire frame or solid fill drawings.
 For solid fill drawings, using this switch results in substantially
@@ -39,41 +37,42 @@ Since some colors are typically allocated by other programs,
 most eight-bit-plane displays will probably be limited to eight colors
 when using double buffering.
 .TP
-.B -faces
+.B \-faces
 Draw filled faces instead of wire frames.
 .TP
-.B -noedges
+.B \-noedges
 Don't draw the wire frames.
-Typically used only when -faces is used.
+Typically used only when \fB\-faces\fP is used.
 .TP
-.B -sleep \fIn\fP
-Sleep n seconds between each move of the object (the default value is 0.01,
-ie 10ms).
+.B \-sleep \fIn\fP
+Sleep \fIn\fP seconds between each move of the object
+(the default value is 0.01, ie 10ms).
 .TP
-.B -obj \fIobject\fP
+.B \-obj \fIobject\fP
 Specify what object to draw.
 If no object is specified, an icosahedron is drawn.
 .TP
-.B -objhelp
-Print out a list of the available objects, along with information
-about each object.
-.TP
-.B -colors \fIcolor color ...\fP
+.B \-colors \fIcolor color ...\fP
 Specify what colors should be used to draw the filled faces of the object.
 If less colors than faces are given, the colors are reused.
 .TP
-.B -version
+.B \-help
+Print program usage information and exit.
+.TP
+.B \-objhelp
+Print out a list of the available objects, along with information
+about each object, and then exit.
+.TP
+.B \-version
 Print program version information and exit.
 .SH PROGRAM TERMINATION
-.LP
 Pressing "q" will close a window. If compiled with threads support, the
 program will stop only when all threads terminate. You can also close an
 animation window using the ICCCM \fIdelete\fP message (depending on your
 window manager, you will have a decoration button or menu to send such
 message).
 .SH ADDING POLYHEDRA
-.LP
-If you have the source to ico, it is very easy to add more polyhedra.
+If you have the source to \fBico\fP, it is very easy to add more polyhedra.
 Each polyhedron is defined in an include file by the name of objXXX.h,
 where XXX is something related to the name of the polyhedron.
 The format of the include file is defined in the file polyinfo.h.
@@ -86,11 +85,11 @@ This will recreate the file allobjs.h, which lists all of the objXXX.h
 files.
 Doing a 'make' after this will rebuild ico with the new object information.
 .SH "SEE ALSO"
-X(__miscmansuffix__)
+.BR X (__miscmansuffix__)
 .SH BUGS
-.LP
 Pyramids and tetrahedrons with filled faces do not display correctly.
 .LP
-A separate color cell is allocated for each name in the -colors list, even
-when the same name may be specified twice.  Color allocation fails in
-TrueColor displays and option \fI-faces\fP does not work well.
+A separate color cell is allocated for each name in the \fB\-colors\fP list,
+even when the same name may be specified twice.
+Color allocation fails in TrueColor displays and
+option \fB\-faces\fP does not work well.

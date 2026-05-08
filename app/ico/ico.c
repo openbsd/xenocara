@@ -28,13 +28,13 @@ Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -154,7 +154,7 @@ struct closure {
     Point3D xv[2][MAXNV];
     int xv_buffer;
     double wo2, ho2;
-#ifdef MULTITHREAD           
+#ifdef MULTITHREAD
     int thread_num;
 #endif
 };
@@ -191,11 +191,11 @@ static const char *help_message =
 "    -bg color               background color\n"
 "    -colors color ...       codes to use on sides\n"
 "    -p#                     use # (1 through 8) primary colors\n"
-#ifdef MULTIBUFFER           
+#ifdef MULTIBUFFER
 "    -dbl                    use double buffering extension (if present)\n"
-#else                        
+#else
 "    -dbl                    use double buffering (software only)\n"
-#endif                       
+#endif
 "    -softdbl                use software double buffering\n"
 "    -noedges                don't draw wire frame edges\n"
 "    -faces                  draw faces\n"
@@ -207,7 +207,7 @@ static const char *help_message =
 "    -sleep number           seconds to sleep in between draws\n"
 "    -obj objname            type of polyhedral object to draw\n"
 "    -objhelp                list polyhedral objects available\n"
-#ifdef MULTITHREAD           
+#ifdef MULTITHREAD
 "    -threads number         number of windows, each its own thread\n"
 #endif
 "    -version                print program version\n"
@@ -842,7 +842,7 @@ do_ico_window(void *ptr)
 	Bool do_it = True;
 	char buf[20];
 	struct closure *closure = ptr;
-#ifdef MULTITHREAD           
+#ifdef MULTITHREAD
 	int len;
 #endif
 
@@ -862,7 +862,7 @@ do_ico_window(void *ptr)
 	    if (XAllocNamedColor (dpy, closure->cmap, background_colorname,
 				  &cdef, &igndef))
 	      bg = cdef.pixel;
-	    else 
+	    else
 	      icoFatal("background: no such color \"%s\"",background_colorname);
 	}
 	if (numcolors && (!dofaces || numcolors == 1)) {
@@ -870,7 +870,7 @@ do_ico_window(void *ptr)
 
 	    if (XAllocNamedColor (dpy, closure->cmap, colornames[0], &cdef, &igndef))
 	      fg = cdef.pixel;
-	    else 
+	    else
 	      icoFatal("face: no such color \"%s\"", colornames[0]);
 	}
 
@@ -892,7 +892,7 @@ do_ico_window(void *ptr)
 		closure->winW = closure->winH = (multibufext&&dblbuf ? 300 : 600);
 		winX = (DisplayWidth(dpy, DefaultScreen(dpy)) - closure->winW) >> 1;
 		winY = (DisplayHeight(dpy, DefaultScreen(dpy)) - closure->winH) >> 1;
-		if (geom) 
+		if (geom)
 			XParseGeometry(geom, &winX, &winY,
 				       (unsigned int *)&closure->winW,
 				       (unsigned int *)&closure->winH);
@@ -904,19 +904,19 @@ do_ico_window(void *ptr)
 		xswa.border_pixel = fg;
 
 		closure->draw_window = XCreateWindow(dpy,
-		    DefaultRootWindow(dpy), 
-		    winX, winY, closure->winW, closure->winH, 0, 
-		    DefaultDepth(dpy, DefaultScreen(dpy)), 
+		    DefaultRootWindow(dpy),
+		    winX, winY, closure->winW, closure->winH, 0,
+		    DefaultDepth(dpy, DefaultScreen(dpy)),
 		    InputOutput, DefaultVisual(dpy, DefaultScreen(dpy)),
 		    CWEventMask | CWBackPixel | CWBorderPixel, &xswa);
-#ifdef MULTITHREAD           
+#ifdef MULTITHREAD
 		len = sprintf(buf, "Ico: thread %d", closure->thread_num);
 		XChangeProperty(dpy, closure->draw_window,
-				XA_WM_NAME, XA_STRING, 8, 
+				XA_WM_NAME, XA_STRING, 8,
 				PropModeReplace, (unsigned char *)buf, len);
 #else
 		XChangeProperty(dpy, closure->draw_window,
-				XA_WM_NAME, XA_STRING, 8, 
+				XA_WM_NAME, XA_STRING, 8,
 				PropModeReplace, (unsigned char *)"Ico", 3);
 #endif
 		(void) XSetWMProtocols (dpy, closure->draw_window,
@@ -940,7 +940,7 @@ do_ico_window(void *ptr)
 		closure->winH = xwa.height;
 	}
 
-	if (ico_geom) 
+	if (ico_geom)
 	  XParseGeometry (ico_geom, &icoX, &icoY,
 			  (unsigned int *)&icoW,
 			  (unsigned int *)&icoH);
@@ -970,7 +970,7 @@ do_ico_window(void *ptr)
 			   DefaultGC(dpy, DefaultScreen(dpy)),
 			   0, 0, closure->winW, closure->winH, 0, 0);
 		closure->win = closure->multibuffers[1];
-	    } else 
+	    } else
 	      icoFatal ("unable to obtain 2 buffers");
 	}
 #endif /* MULTIBUFFER */
@@ -1275,15 +1275,22 @@ int main(int argc, const char **argv)
 			polyobj = findpoly(*++argv); argc--;
 		} else if (!strcmp(*argv, "-dsync"))
 			dsync = 1;
-		else if (!strncmp(*argv, "-sync",  5)) 
+		else if (!strncmp(*argv, "-sync",  5))
 			xsync = 1;
 		else if (!strcmp(*argv, "-objhelp")) {
 			giveObjHelp();
 			exit(1);
 		}
-		else if (strcmp(*argv, "-version") == 0) {
+		else if (strcmp(*argv, "-version") == 0 ||
+                         strcmp(*argv, "--version") == 0) {
 			puts(PACKAGE_STRING);
 			exit(0);
+		}
+		else if (strcmp(*argv, "-help") == 0 ||
+                         strcmp(*argv, "--help") == 0) {
+			fprintf (stdout, "usage:  %s [options]\n\n%s",
+			         ProgramName, help_message);
+			exit (0);
 		}
 		else {	/* unknown arg */
 			fprintf (stderr, "%s: unrecognized argument %s\n\n",

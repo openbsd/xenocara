@@ -1,3 +1,92 @@
+commit a087b16ab5b6fa2db21ba785247ff2e3d21d7da7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 18 14:54:54 2026 -0700
+
+    ico 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7439467739e6ac159d83d935e02434c02bba163a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 14 10:49:38 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/ico/-/merge_requests/9>
+
+commit 57f6aab4b6d232e60c629426eaf6dee10ac46517
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/ico/-/merge_requests/9>
+
+commit 56e476b9e5705f46e7b3c6a9be761cd32474d903
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 3 15:15:22 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/ico/-/merge_requests/8>
+
+commit ee8e015b5e2581d49b1305f5b41369454bdc25c9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 26 14:37:48 2025 -0700
+
+    man pages: fix warnings from `mandoc -T lint`
+    
+    mandoc: man/ico.1:1:11: WARNING: cannot parse date, using it verbatim: TH ico 1.0.6
+    mandoc: man/ico.1:68:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: man/ico.1:75:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: man/ico.1:91:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/ico/-/merge_requests/7>
+
+commit 25b1195d40ad77dd4fdc7a5692c81f8dd3e329f3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 29 15:38:19 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/ico/-/merge_requests/6>
+
+commit 713f06d0d262fb8d9157740b506df0bb38278557
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 22 14:51:22 2025 -0700
+
+    Accept -help & --help without printing an unknown option error message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/ico/-/merge_requests/6>
+
+commit 3ea0e0d66d423dac459f4ad5ab14c9ed08a07644
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3737d77a549d94043e0fbdb5f30562973da66fa8
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Aug 30 17:13:18 2022 -0700
@@ -671,7 +760,7 @@ Date:   Wed Jul 20 19:31:48 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 9e0555e9d980217dd20d1f7385ff47514675629c
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 15:00:13 2005 +0000
 
     Check in build system for ico
