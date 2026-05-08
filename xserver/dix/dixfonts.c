@@ -639,9 +639,8 @@ doListFontsAndAliases(ClientPtr client, LFclosurePtr c)
                 }
                 if (err == FontNameAlias) {
                     free(resolved);
-                    resolved = malloc(resolvedlen + 1);
-                    if (resolved)
-                        memmove(resolved, tmpname, resolvedlen + 1);
+                    resolved = XNFalloc(resolvedlen + 1);
+                    memcpy(resolved, tmpname, resolvedlen + 1);
                 }
             }
 

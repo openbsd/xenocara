@@ -223,6 +223,9 @@ glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
     else
         pixmap = fbCreatePixmap(screen, 0, 0, depth, usage);
 
+    if (!pixmap)
+        return NullPixmap;
+
     pixmap_priv = glamor_get_pixmap_private(pixmap);
 
     pixmap_priv->is_cbcr = (GLAMOR_CREATE_FORMAT_CBCR & usage) == GLAMOR_CREATE_FORMAT_CBCR;
@@ -871,23 +874,25 @@ glamor_init(ScreenPtr screen, unsigned int flags)
     glamor_priv->saved_procs.bitmap_to_region = screen->BitmapToRegion;
     screen->BitmapToRegion = glamor_bitmap_to_region;
 
-    glamor_priv->saved_procs.composite = ps->Composite;
-    ps->Composite = glamor_composite;
+    if (ps) {
+        glamor_priv->saved_procs.composite = ps->Composite;
+        ps->Composite = glamor_composite;
 
-    glamor_priv->saved_procs.trapezoids = ps->Trapezoids;
-    ps->Trapezoids = glamor_trapezoids;
+        glamor_priv->saved_procs.trapezoids = ps->Trapezoids;
+        ps->Trapezoids = glamor_trapezoids;
 
-    glamor_priv->saved_procs.triangles = ps->Triangles;
-    ps->Triangles = glamor_triangles;
+        glamor_priv->saved_procs.triangles = ps->Triangles;
+        ps->Triangles = glamor_triangles;
 
-    glamor_priv->saved_procs.addtraps = ps->AddTraps;
-    ps->AddTraps = glamor_add_traps;
+        glamor_priv->saved_procs.addtraps = ps->AddTraps;
+        ps->AddTraps = glamor_add_traps;
 
-    glamor_priv->saved_procs.composite_rects = ps->CompositeRects;
-    ps->CompositeRects = glamor_composite_rectangles;
+        glamor_priv->saved_procs.composite_rects = ps->CompositeRects;
+        ps->CompositeRects = glamor_composite_rectangles;
 
-    glamor_priv->saved_procs.glyphs = ps->Glyphs;
-    ps->Glyphs = glamor_composite_glyphs;
+        glamor_priv->saved_procs.glyphs = ps->Glyphs;
+        ps->Glyphs = glamor_composite_glyphs;
+    }
 
     glamor_init_vbo(screen);
 
@@ -953,11 +958,13 @@ glamor_close_screen(ScreenPtr screen)
     screen->BitmapToRegion = glamor_priv->saved_procs.bitmap_to_region;
     screen->BlockHandler = glamor_priv->saved_procs.block_handler;
 
-    ps->Composite = glamor_priv->saved_procs.composite;
-    ps->Trapezoids = glamor_priv->saved_procs.trapezoids;
-    ps->Triangles = glamor_priv->saved_procs.triangles;
-    ps->CompositeRects = glamor_priv->saved_procs.composite_rects;
-    ps->Glyphs = glamor_priv->saved_procs.glyphs;
+    if (ps) {
+        ps->Composite = glamor_priv->saved_procs.composite;
+        ps->Trapezoids = glamor_priv->saved_procs.trapezoids;
+        ps->Triangles = glamor_priv->saved_procs.triangles;
+        ps->CompositeRects = glamor_priv->saved_procs.composite_rects;
+        ps->Glyphs = glamor_priv->saved_procs.glyphs;
+    }
 
     screen_pixmap = screen->GetScreenPixmap(screen);
     glamor_pixmap_destroy_fbo(screen_pixmap);

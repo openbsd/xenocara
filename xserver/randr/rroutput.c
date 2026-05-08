@@ -374,6 +374,8 @@ RROutputDestroyResource(void *value, XID pid)
 {
     RROutputPtr output = (RROutputPtr) value;
     ScreenPtr pScreen = output->pScreen;
+    ScreenPtr primary;
+    rrScrPrivPtr primarysp;
     int m;
 
     if (pScreen) {
@@ -393,6 +395,15 @@ RROutputDestroyResource(void *value, XID pid)
 
         if (pScrPriv->primaryOutput == output)
             pScrPriv->primaryOutput = NULL;
+
+        if (pScreen->isGPU) {
+            primary = pScreen->current_primary;
+            if (primary) {
+                primarysp = rrGetScrPriv(primary);
+                if (primarysp->primaryOutput == output)
+                    primarysp->primaryOutput = NULL;
+            }
+        }
 
         for (i = 0; i < pScrPriv->numOutputs; i++) {
             if (pScrPriv->outputs[i] == output) {

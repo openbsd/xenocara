@@ -605,7 +605,7 @@ SUBDIRS = \
 @XORG_TRUE@pkgconfigdir = $(libdir)/pkgconfig
 @XORG_TRUE@pkgconfig_DATA = xorg-server.pc
 EXTRA_DIST = xorg-server.pc.in xorg-server.m4 autogen.sh README.md \
-	meson_options.txt include/xorg-config.h.meson.in \
+	SECURITY.md meson_options.txt include/xorg-config.h.meson.in \
 	include/xwin-config.h.meson.in hw/xfree86/loader/symbol-test.c \
 	composite/meson.build config/meson.build damageext/meson.build \
 	dbe/meson.build dix/meson.build doc/dtrace/meson.build \

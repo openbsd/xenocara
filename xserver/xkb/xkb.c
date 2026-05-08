@@ -4009,7 +4009,8 @@ XkbSendNames(ClientPtr client, XkbDescPtr xkb, xkbGetNamesReply * rep)
             register CARD32 *atm;
 
             for (i = 0; i < rep->nTypes; i++, type++) {
-                *desc++ = type->num_levels;
+                /* Either no name or all of them, even empty ones */
+                *desc++ = (type->level_names) ? type->num_levels : 0;
             }
             desc += XkbPaddedSize(rep->nTypes) - rep->nTypes;
 

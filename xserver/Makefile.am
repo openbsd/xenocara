@@ -72,7 +72,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xorg-server.pc
 endif
 
-EXTRA_DIST = xorg-server.pc.in xorg-server.m4 autogen.sh README.md
+EXTRA_DIST = xorg-server.pc.in xorg-server.m4 autogen.sh README.md SECURITY.md
 
 DISTCHECK_CONFIGURE_FLAGS=\
 	--with-xkb-path=$(XKB_BASE_DIRECTORY) \
