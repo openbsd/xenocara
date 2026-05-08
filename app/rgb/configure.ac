@@ -1,4 +1,4 @@
-dnl Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
+dnl Copyright (c) 2005, Oracle and/or its affiliates.
 dnl
 dnl Permission is hereby granted, free of charge, to any person obtaining a
 dnl copy of this software and associated documentation files (the "Software"),
@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([rgb], [1.1.0],
+AC_INIT([rgb], [1.1.1],
 	[https://gitlab.freedesktop.org/xorg/app/rgb/-/issues], [rgb])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])

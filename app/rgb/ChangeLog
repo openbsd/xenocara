@@ -1,3 +1,76 @@
+commit f4fdceb8edc4d706e26fb6340d1c9dee8cbec78e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 31 11:40:47 2025 -0800
+
+    rgb 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 205369bca73f8bfe1476741f19ab9564ea538469
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 3 15:46:51 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/rgb/-/merge_requests/9>
+
+commit 25244bc57b19254bea270d2ede8c3f41bc1357e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 26 13:58:53 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/rgb/-/merge_requests/8>
+
+commit 44219adec2779db6909181da31c54fe278ee614a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 22 15:51:35 2025 -0700
+
+    Add --help and --version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/rgb/-/merge_requests/7>
+
+commit 0d2caecebf0e2a10994c22960921f366dd98d19a
+Author: Christian Persch <chpe@src.gnome.org>
+Date:   Mon Jul 10 22:24:40 2023 +0200
+
+    rgb: Make color entries uniform
+    
+    While the format for most entries was "R G B\t\tName\n", some lines
+    had a HT between G and B instead of space, or an extra space after B.
+    That makes parsing the file harder; this commit makes all lines have
+    the common format.
+
+commit 8846b2b168f321223645e19e433319fa34635a31
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 18 10:17:30 2023 -0700
+
+    showrgb.man: Use bold instead of italic for program name
+    
+    Closes: #2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fb06ee0b71ec15d63b6ee4797f954187ec014a37
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 08:55:21 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 06cf6fa78bfec2ea4c9dc061900079f2cc9c9dd1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 29 10:31:35 2022 -0700
@@ -639,7 +712,7 @@ Date:   Thu Jul 28 15:57:12 2005 +0000
     Fix distcheck for remaining apps
 
 commit 794993251c8700061f84246f87ec3c060f2ffb37
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 27 19:40:28 2005 +0000
 
     Check for xproto
@@ -666,7 +739,7 @@ Date:   Thu Jul 21 04:20:35 2005 +0000
         site.h & rgb.h from Xserver/includes)
 
 commit 7a676fdf168ed250baef3b99393f3dccbda91a7e
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 29 18:20:16 2005 +0000
 
     Add build system for rgb symlink.sh: Link pmconfig.cpp, link various text

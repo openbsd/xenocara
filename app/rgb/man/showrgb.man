@@ -22,7 +22,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.TH SHOWRGB 1 __xorgversion__
+.TH SHOWRGB 1 2008-06-04 __xorgversion__
 .SH NAME
 showrgb \- display an rgb color-name database
 .SH SYNOPSIS
@@ -32,14 +32,14 @@ showrgb \- display an rgb color-name database
 ]
 .SH DESCRIPTION
 The
-.I showrgb
+.B showrgb
 program reads an rgb color-name database from a __RGB_DB_TYPE__ file
-and converts it back to source form, printing the
-result to standard output.  The default
-database is the one that X was built with, and may be overridden on
-the command line.  Specify the database name without
+and converts it back to source form, printing the result to standard output.
+The default database is the one that X was built with,
+and may be overridden on the command line.
+Specify the database name without
 the \fI.txt\fP, \fI.pag\fP or \fI.dir\fP suffix.
 .SH FILES
 .TP 20
-.I __RGB_DB__
+.B __RGB_DB__
 default database.

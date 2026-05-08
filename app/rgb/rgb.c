@@ -75,6 +75,18 @@ main(int argc, char **argv)
 
     ProgramName = argv[0];
 
+    /* Only looks at first argument for options, since only one is accepted */
+    if ((argc > 1) && (argv[1][0] == '-')) {
+	if (strcmp(argv[1], "--help") == 0) {
+	    fprintf(stdout, "usage: %s [dbname]\n", ProgramName);
+	    exit(0);
+	}
+	if (strcmp(argv[1], "--version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     if (argc == 2)
 	dbname = argv[1];
     else
@@ -90,7 +102,7 @@ main(int argc, char **argv)
     snprintf (name, sizeof(name), "%s.dir", dbname);
     fd = open (name, O_WRONLY|O_CREAT, 0666);
     if (fd < 0) {
-	fprintf (stderr, 
+	fprintf (stderr,
 		 "%s:  unable to create dbm file \"%s\" (error %d, %s)\n",
 		 ProgramName, name, errno, strerror(errno));
 	exit (1);
@@ -100,7 +112,7 @@ main(int argc, char **argv)
     snprintf (name, sizeof(name), "%s.pag", dbname);
     fd = open (name, O_WRONLY|O_CREAT, 0666);
     if (fd < 0) {
-	fprintf (stderr, 
+	fprintf (stderr,
 		 "%s:  unable to create dbm file \"%s\" (error %d, %s)\n",
 		 ProgramName, name, errno, strerror(errno));
 	exit (1);

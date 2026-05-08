@@ -1,13 +1,13 @@
 This directory contains several alternative rgb databases:
 
-    old-rgb.txt			the version that was shipped in previous 
+    old-rgb.txt			the version that was shipped in previous
 				releases; this was originally "tuned" for
 				the Digital VT240 series terminals.
 
     raveling.txt		lots of new colors, tuned by Paul Raveling
 				at ISI for the HP monitor; see below.
 
-    thomas.txt			a version of the older database that was 
+    thomas.txt			a version of the older database that was
 				tuned by John Thomas at Tektronix to match
 				a box of Crayola crayons; see below.
 

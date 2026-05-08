@@ -57,6 +57,19 @@ main (int argc, char *argv[])
     const char *dbname = RGB_DB;
 
     ProgramName = argv[0];
+
+    /* Only looks at first argument for options, since only one is accepted */
+    if ((argc > 1) && (argv[1][0] == '-')) {
+	if (strcmp(argv[1], "--help") == 0) {
+	    fprintf(stdout, "usage: %s [dbname]\n", ProgramName);
+	    exit(0);
+	}
+	if (strcmp(argv[1], "--version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     if (argc == 2)
 	dbname = argv[1];
 

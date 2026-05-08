@@ -1,4 +1,4 @@
-.\" Copyright (c) 1994, 2008, Oracle and/or its affiliates. All rights reserved.
+.\" Copyright (c) 1994, 2008, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -19,7 +19,7 @@
 .\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 .\" DEALINGS IN THE SOFTWARE.
 .\"
-.TH rgb __appmansuffix__ __xorgversion__
+.TH rgb 1 2008-06-05 __xorgversion__
 .IX "rgb" "" "\f3rgb\fP(1) \(em build colorname database" ""
 .IX "color" "build" "color" "building the colorname database \(em \f3rgb\fP(1)" ""
 .SH NAME
@@ -50,29 +50,32 @@ is a description of the color.
 .B rgb
 then builds a color name database in
 .B __RGB_DB_TYPE__
-format.  The color name database provides a mapping between ASCII color
-names and RGB color values.  It is useful for increasing the
-portability of color programs.  The input source for the database is
-in \fI__RGB_DB__.txt\fP.  \fIrgb.txt\fP
+format.
+The color name database provides a mapping between ASCII color names
+and RGB color values.
+It is useful for increasing the portability of color programs.
+The input source for the database is in
+.BR __RGB_DB__.txt .
+.B rgb.txt
 is compiled into the __RGB_DB_TYPE__ files
 .IR "__RGB_DB_FILES__" .
 When the server first starts up, it consults the contents of these
-files to build an internal representation of their contents.  This
-internal representation is consulted to map color names to color
-values.
+files to build an internal representation of their contents.
+This internal representation is consulted to map color names to color values.
 .PP
 .B rgb
-uses the default color name database of \fI__RGB_DB__.txt\fP.
+uses the default color name database of
+.BR __RGB_DB__.txt .
 .SH OPTIONS
 .IP "\fIdbname" 1i
 Color name database.
 .SH EXAMPLES
-example% rgb rgb < __RGB_DB__.txt
+example% \fBrgb rgb < __RGB_DB__.txt\fP
 .PP
-example% cat __RGB_DB__.txt
+example% \fBcat __RGB_DB__.txt\fP
 .SH FILES
 .PD 0
-.TP 30
+.TP
 .B __RGB_DB__.txt
 color name database source.
 Maps color names to RGB color values.
@@ -81,5 +84,5 @@ Maps color names to RGB color values.
 __RGB_DB_TYPE__ files containing color name to RGB mapping.
 .PD
 .SH SEE ALSO
-.BR cat (__appmansuffix__),
-.BR __RGB_DB_TYPE__ (__libmansuffix__)
+.BR cat (1),
+.BR __RGB_DB_TYPE__ (3)
