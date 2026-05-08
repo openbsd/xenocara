@@ -106,7 +106,7 @@ readFile(char *filename, FontPtr font)
     const char *family_name, *encoding_name, *file_format;
     FontMapPtr mapping = NULL;
     FontMapReversePtr reverse = NULL;
-    
+
 
     rc = FT_Ensure_Inited();
     if(rc != 0)
@@ -189,7 +189,7 @@ readFile(char *filename, FontPtr font)
         if(strcmp(face->style_name, "Regular") == 0)
             full_name = sprintf_alloc("%s", family_name);
         else
-            full_name = sprintf_alloc("%s %s", 
+            full_name = sprintf_alloc("%s %s",
                                       family_name, face->style_name);
 
         /* The unique name doesn't actually need to be globally
@@ -198,16 +198,16 @@ readFile(char *filename, FontPtr font)
         if(face->num_fixed_sizes <= 0)
             unique_name = sprintf_alloc("%s "XVENDORNAMESHORT" bitmap",
                                         full_name);
-        else if(face->available_sizes[0].width == 
+        else if(face->available_sizes[0].width ==
                 face->available_sizes[0].height)
             unique_name = sprintf_alloc("%s "XVENDORNAMESHORT
 					   " bitmap size %d",
-                                           full_name, 
+                                           full_name,
                                            face->available_sizes[0].height);
         else
             unique_name = sprintf_alloc("%s "XVENDORNAMESHORT
                                         " bitmap size %dx%d",
-                                        full_name, 
+                                        full_name,
                                         face->available_sizes[0].width,
                                         face->available_sizes[0].height);
 
@@ -313,7 +313,7 @@ readFile(char *filename, FontPtr font)
     for(int i = 0; i < face->num_fixed_sizes; i++) {
         if(verbose_flag)
             fprintf(stderr, "size %d: %dx%d\n",
-                    i, 
+                    i,
                     (int)((face->available_sizes[i].x_ppem + 32) >> 6),
                     (int)((face->available_sizes[i].y_ppem + 32) >> 6));
 
@@ -325,7 +325,7 @@ readFile(char *filename, FontPtr font)
             return -1;
         }
 
-        strike = makeStrike(font, 
+        strike = makeStrike(font,
                             (face->available_sizes[i].x_ppem + 32) >> 6,
                             (face->available_sizes[i].y_ppem + 32) >> 6);
         if(strike == NULL) {
@@ -356,7 +356,7 @@ readFile(char *filename, FontPtr font)
                                 FT_Pos_DOWN(face->glyph->metrics.horiBearingY),
                                 face->glyph->bitmap.width,
                                 face->glyph->bitmap.rows,
-                                face->glyph->bitmap.pitch, 
+                                face->glyph->bitmap.pitch,
                                 face->glyph->bitmap.buffer,
                                 crop_flag);
 
@@ -381,7 +381,7 @@ readFile(char *filename, FontPtr font)
                 found = 1;
             } else {
                 if(i == 0) {
-                    fprintf(stderr, 
+                    fprintf(stderr,
                             "Warning: no bitmap for the undefined glyph.\n");
                     found = 1;
                 }

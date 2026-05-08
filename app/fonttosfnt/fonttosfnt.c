@@ -35,12 +35,15 @@ int crop_flag = 1;
 int bit_aligned_flag = 1;
 
 static void
-usage(void)
+usage(FILE *out)
 {
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, 
-            "fonttosfnt [ -v ] [ -c ] [ -b ] [ -r ] [ -g n ] [ -m n ] -o font.otb "
-            "[ -- ] [ font ] ...\n");
+    static const char *usage =
+        "Usage:\n"
+        "  fonttosfnt [ -v ] [ -c ] [ -b ] [ -r ] [ -g n ] [ -m n ] -o font.otb \n"
+        "      [ -- ] [ font ] ...\n"
+        "  fonttosfnt --help|--version\n";
+
+    fputs(usage, out);
 }
 
 int
@@ -77,29 +80,39 @@ main(int argc, char **argv)
             i++;
         } else if(strcmp(argv[i], "-g") == 0) {
             if(argc <= i + 1) {
-                usage();
+                fprintf(stderr, "Missing argument to %s\n", argv[i]);
+                usage(stderr);
                 exit(1);
             }
             glyph_flag = atoi(argv[i + 1]);
             i += 2;
         } else if(strcmp(argv[i], "-m") == 0) {
             if(argc <= i + 1) {
-                usage();
+                fprintf(stderr, "Missing argument to %s\n", argv[i]);
+                usage(stderr);
                 exit(1);
             }
             metrics_flag = atoi(argv[i + 1]);
             i += 2;
+        } else if(strcmp(argv[i], "--help") == 0) {
+            usage(stdout);
+            exit(0);
+        } else if(strcmp(argv[i], "--version") == 0) {
+            puts(PACKAGE_STRING);
+            exit(0);
         } else if(strcmp(argv[i], "--") == 0) {
             i++;
             break;
         } else {
-            usage();
+            fprintf(stderr, "Unknown argument: %s\n", argv[i]);
+            usage(stderr);
             exit(1);
         }
     }
 
     if(output == NULL) {
-        usage();
+        fputs("Missing required -o option\n", stderr);
+        usage(stderr);
         exit(1);
     }
 

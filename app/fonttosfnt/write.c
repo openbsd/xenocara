@@ -30,7 +30,8 @@ THE SOFTWARE.
 #include <stdlib.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#include "X11/Xos.h"
+#include <X11/Xfuncproto.h>
+#include <X11/Xos.h>
 
 #include "fonttosfnt.h"
 
@@ -65,9 +66,20 @@ static CmapPtr current_cmap = NULL;
 static int numglyphs, nummetrics;
 static int write_error_occurred, read_error_occurred;
 
+#ifndef __has_attribute
+# define __has_attribute(x) 0  /* Compatibility with older compilers. */
+#endif
+
+#if __has_attribute(const)
+# define CONST_FUNC __attribute__((__const__))
+#else
+# define CONST_FUNC
+#endif
+
+
 /* floor(log2(x)) */
-static int
-log2_floor(int x) 
+static int CONST_FUNC
+log2_floor(int x)
 {
     int i, j;
 
@@ -84,11 +96,11 @@ log2_floor(int x)
 }
 
 /* 2 ** floor(log2(x)) */
-static int
+static int CONST_FUNC
 two_log2_floor(int x)
 {
     int j;
-    
+
     if(x <= 0)
         abort();
 
@@ -312,7 +324,7 @@ fontMetrics(FontPtr font)
 	    * font->metrics.size / font->pxMetrics.size;
 }
 
-int 
+int
 writeFile(char *filename, FontPtr font)
 {
     int rc;
@@ -380,11 +392,11 @@ writeFile(char *filename, FontPtr font)
     tables[i] = makeName("head"); table_writers[i] = writehead; i++;
     tables[i] = makeName("hhea"); table_writers[i] = writehhea; i++;
     if(nummetrics >= 1) {
-        tables[i] = makeName("hmtx"); 
+        tables[i] = makeName("hmtx");
         table_writers[i] = writehmtx; i++;
     }
     if(numglyphs >= 1) {
-        tables[i] = makeName("loca"); 
+        tables[i] = makeName("loca");
         table_writers[i] = writeloca; i++;
     }
     tables[i] = makeName("maxp"); table_writers[i] = writemaxp; i++;
@@ -533,8 +545,8 @@ fixupChecksum(FILE *out, int full_length, int head_position)
     return 0;
 }
 
-    
-static int 
+
+static int
 writehead(FILE* out, FontPtr font)
 {
     int time_hi = 0;
@@ -603,7 +615,7 @@ outputRaster(FILE *out, char *raster, int width, int height, int stride,
     return len;
 }
 
-static int 
+static int
 writeEBDT(FILE* out, FontPtr font)
 {
     StrikePtr strike;
@@ -634,8 +646,8 @@ writeEBDT(FILE* out, FontPtr font)
                     writeBYTE(out, bitmap->advanceWidth);
                     offset += 5;
                 }
-                offset += outputRaster(out, 
-                                       bitmap->raster, 
+                offset += outputRaster(out,
+                                       bitmap->raster,
                                        bitmap->width, bitmap->height,
                                        bitmap->stride,
                                        bit_aligned_flag);
@@ -650,7 +662,7 @@ writeEBDT(FILE* out, FontPtr font)
     return 0;
 }
 
-static int 
+static int
 writeEBLC(FILE* out, FontPtr font)
 {
     int numstrikes, eblc_start, num, den;
@@ -666,7 +678,7 @@ writeEBLC(FILE* out, FontPtr font)
     }
 
     eblc_start = ftell(out);
-    
+
     writeULONG(out, 0x00020000); /* version */
     writeULONG(out, numstrikes); /* numSizes */
 
@@ -724,7 +736,7 @@ writeEBLC(FILE* out, FontPtr font)
             perror("Couldn't seek");
             return -1;
         }
-        writeULONG(out, strike->indexSubTableLocation - eblc_start); 
+        writeULONG(out, strike->indexSubTableLocation - eblc_start);
                                               /* indexSubTableArrayOffset */
         writeULONG(out, endoffset - strike->indexSubTableLocation);
                                               /* indexTablesSize */
@@ -793,12 +805,12 @@ writeEBLC(FILE* out, FontPtr font)
             writeULONG(out, data_location);
             if(table->constantMetrics) {
                 int size;
-                BitmapPtr bitmap = 
-                    strikeBitmapIndex(strike, current_cmap, 
+                BitmapPtr bitmap =
+                    strikeBitmapIndex(strike, current_cmap,
                                       table->firstGlyphIndex);
 
-                size = 
-                    strikeBitmapIndex(strike, current_cmap, 
+                size =
+                    strikeBitmapIndex(strike, current_cmap,
                                       table->firstGlyphIndex + 1)->location -
                     bitmap->location;
                 writeULONG(out, size); /* imageSize */
@@ -814,7 +826,7 @@ writeEBLC(FILE* out, FontPtr font)
             } else {
                 for(int i = table->firstGlyphIndex;
                     i <= table->lastGlyphIndex; i++) {
-                    int offset = 
+                    int offset =
                         strikeBitmapIndex(strike, current_cmap, i)->location -
                         data_location;
                     if(short_offsets)
@@ -843,7 +855,7 @@ writeEBLC(FILE* out, FontPtr font)
     return 0;
 }
 
-static int 
+static int
 writecmap(FILE* out, FontPtr font)
 {
     int rc, cmap_start, cmap_end;
@@ -876,7 +888,7 @@ writecmap(FILE* out, FontPtr font)
     writeUSHORT(out, segcount * 2); /* segCountX2 */
     writeUSHORT(out, 2 * two_log2_floor(segcount)); /* searchRange */
     writeUSHORT(out, log2_floor(segcount));   /* entrySelector */
-    writeUSHORT(out, 2 * (segcount - two_log2_floor(segcount)));   
+    writeUSHORT(out, 2 * (segcount - two_log2_floor(segcount)));
                                 /* rangeShift */
 
     cmap = current_cmap;
@@ -928,7 +940,7 @@ writecmap(FILE* out, FontPtr font)
     return 0;
 }
 
-static int 
+static int
 writeglyf(FILE* out, FontPtr font)
 {
     return 0;
@@ -962,7 +974,7 @@ writehhea(FILE* out, FontPtr font)
     return 0;
 }
 
-static int 
+static int
 writehmtx(FILE* out, FontPtr font)
 {
     for(int i = 0; i <= numglyphs; i++) {
@@ -986,7 +998,7 @@ writehmtx(FILE* out, FontPtr font)
     return 0;
 }
 
-static int 
+static int
 writeloca(FILE* out, FontPtr font)
 {
     /* All glyphs undefined -- loca table is empty, so offset 0 */
@@ -997,7 +1009,7 @@ writeloca(FILE* out, FontPtr font)
     return 0;
 }
 
-static int 
+static int
 writemaxp(FILE* out, FontPtr font)
 {
     writeLONG(out, 0x00010000); /* version */
@@ -1018,7 +1030,7 @@ writemaxp(FILE* out, FontPtr font)
     return 0;
 }
 
-static int 
+static int
 writename(FILE* out, FontPtr font)
 {
     int offset;
@@ -1041,7 +1053,7 @@ writename(FILE* out, FontPtr font)
     return 0;
 }
 
-static int 
+static int
 writepost(FILE* out, FontPtr font)
 {
     int previous_width, fixed_pitch;
@@ -1061,7 +1073,7 @@ writepost(FILE* out, FontPtr font)
         }
         previous_width = width;
     }
-    
+
     writeULONG(out, 0x00030000); /* FormatType */
     writeULONG(out, font->italicAngle); /* italicAngle */
     writeSHORT(out, FONT_UNITS(font->metrics.underlinePosition));
@@ -1074,7 +1086,7 @@ writepost(FILE* out, FontPtr font)
     return 0;
 }
 
-static int 
+static int
 writeOS2(FILE* out, FontPtr font)
 {
     int i;
@@ -1138,12 +1150,12 @@ writeOS2(FILE* out, FontPtr font)
     return 0;
 }
 
-static int 
+static int
 writePCLT(FILE* out, FontPtr font)
 {
-    char name[16] = "X11 font        ";
-    char filename[6] = "X11R00";
-    unsigned char charComplement[8] = 
+    _X_NONSTRING char name[16] = "X11 font        ";
+    _X_NONSTRING char filename[6] = "X11R00";
+    unsigned char charComplement[8] =
         {0xFF, 0xFF, 0xFF, 0xFF, 0x0B, 0xFF, 0xFF, 0xFE};
     int style, w, strokeWeight, widthType;
 

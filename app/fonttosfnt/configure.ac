@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT(fonttosfnt, [1.2.4],
+AC_INIT(fonttosfnt, [1.2.5],
         [https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/issues],
         [fonttosfnt])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -48,7 +48,7 @@ AC_CHECK_DECLS([va_copy], [], [], [
 AM_CONDITIONAL(NEED_SETENV, [test x$have_setenv = xno])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(FONTTOSFNT, xproto freetype2 fontenc)
+PKG_CHECK_MODULES(FONTTOSFNT, [xproto >= 7.0.33 freetype2 fontenc])
 
 
 AC_CONFIG_FILES([

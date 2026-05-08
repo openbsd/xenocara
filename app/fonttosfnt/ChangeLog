@@ -1,3 +1,98 @@
+commit cd011dd4eb0c7cb1f030281bac207447e75cb056
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 31 10:08:42 2025 -0800
+
+    fonttosfnt 1.2.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7dfd14a4c6621d3d7f692a26df82b08336d50cd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 3 13:52:27 2025 -0700
+
+    write.c: Handle two -Wsuggest-attribute=pure instances
+    
+    Reported by gcc 15.1:
+    
+    write.c: In function ‘log2_floor’:
+    write.c:71:1: warning: function might be candidate for attribute ‘pure’
+     if it is known to return normally [-Wsuggest-attribute=pure]
+       71 | log2_floor(int x)
+          | ^~~~~~~~~~
+    write.c: In function ‘two_log2_floor’:
+    write.c:89:1: warning: function might be candidate for attribute ‘pure’
+     if it is known to return normally [-Wsuggest-attribute=pure]
+       89 | two_log2_floor(int x)
+          | ^~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/merge_requests/26>
+
+commit 5f139fae67d7b18b9fcf565769a831cdf2bcfaf9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 3 13:43:10 2025 -0700
+
+    writePCLT: Quiet 2 -Wunterminated-string-initialization warnings
+    
+    Reported by gcc 15.1:
+    
+    write.c: In function ‘writePCLT’:
+    write.c:1144:21: warning: initializer-string for array of ‘char’
+     truncates NUL terminator but destination lacks ‘nonstring’ attribute
+     (17 chars into 16 available) [-Wunterminated-string-initialization]
+     1144 |     char name[16] = "X11 font        ";
+          |                     ^~~~~~~~~~~~~~~~~~
+    write.c:1145:24: warning: initializer-string for array of ‘char’
+     truncates NUL terminator but destination lacks ‘nonstring’ attribute
+     (7 chars into 6 available) [-Wunterminated-string-initialization]
+     1145 |     char filename[6] = "X11R00";
+          |                        ^~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/merge_requests/26>
+
+commit f2700cb8e72e8bdf13559fdad8c4e92bfa13af26
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 3 13:28:57 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/merge_requests/26>
+
+commit aee8ee02b19d99489ff28e95c4fac2e069e16e37
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Date:   Fri Mar 7 20:48:44 2025 +0000
+
+    fonttosfnt.1: Some editorial changes for this man page [Debian bug #1099774]
+    
+    Originally from https://bugs.debian.org/1099774
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/merge_requests/25>
+
+commit 70808d3bc33e589f93df1238fd3c00c3e75a7d80
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 22 13:31:59 2025 -0700
+
+    Add --help and --version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/merge_requests/24>
+
+commit a99bd1d07ef344291c7097a37e7e64b6a92ec35e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 22 13:13:57 2025 -0700
+
+    Report argument that caused error before printing usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/fonttosfnt/-/merge_requests/24>
+
 commit 6b29ee45a794e459d53643ee72a82442cd30d4e8
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 12 10:28:05 2024 -0700

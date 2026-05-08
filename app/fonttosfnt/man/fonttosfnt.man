@@ -12,66 +12,103 @@ fonttosfnt \- Wrap a bitmap font in a sfnt (OpenType) wrapper
 [
 .B \-\-
 ] [
-.IR font
+.I font
 ] ...
+.PP
+.B fonttosfnt
+.BR --help | --version
 .SH DESCRIPTION
-Wrap a bitmap font or a set of bitmap fonts in a sfnt (TrueType or
-OpenType) wrapper.
-If no font is specified, a BDF font is read from standard input (stdin).
+Wrap a bitmap font
+or a set of bitmap fonts in a sfnt
+(TrueType or OpenType)
+wrapper.
+If no font is specified,
+a BDF font is read from standard input (stdin).
 .SH OPTIONS
 .TP
 .B \-v
 Be verbose.
 .TP
 .B \-c
-Do not crop glyphs.  This usually increases file size, but may
-sometimes yield a modest decrease in file size for small character
-cell fonts (terminal fonts).
+Do not crop glyphs.
+This usually increases file size,
+but may sometimes yield a modest decrease in file size for small
+character cell fonts
+(terminal fonts).
 .TP
 .B \-b
-Write byte-aligned glyph data.  By default, unaligned data is written,
+Write byte-aligned glyph data.
+By default,
+unaligned data is written,
 which yields a smaller file size.
 .TP
 .B \-r
-Do not reencode fonts.  By default, fonts are reencoded to Unicode
-whenever possible.
+Do not reencode fonts.
+By default,
+fonts are reencoded to Unicode whenever possible.
 .TP
 .BI \-g " n"
-Set the type of scalable glyphs that we write.  If
+Set the type of scalable glyphs that we write.
+If
 .I n
-is 0, no scalable glyphs are written; this is legal but confuses
-most current software.  If
+is 0,
+no scalable glyphs are written;
+this is valid but confuses most current software.
+If
 .I n
-is 1, a single scalable glyph (the undefined glyph) is written; this
-is recommended, but triggers a bug in current versions of
+is 1,
+a single scalable glyph
+(the undefined glyph)
+is written;
+this is recommended,
+but triggers a bug in current versions of
 .BR FreeType .
 If
 .I n
-is 2 (the default), a sufficiently high number of blank glyphs are
-written, which works with
+is 2
+(the default),
+a sufficiently high number of blank glyphs are written,
+which works with
 .B FreeType
 but increases file size.
 .TP
 .BI \-m " n"
-Set the type of scalable metrics that we write.  If
-.I n
-is 0, no scalable metrics are written, which may or may not be legal.
+Set the type of scalable metrics that we write.
 If
 .I n
-is 1, full metrics for a single glyph are written, and only left
-sidebearing values are written for the other glyphs.  If
+is 0,
+no scalable metrics are written,
+which may or may not be valid.
+If
 .I n
-is 2, scalable metrics for all glyphs are written, which increases
-file size and is not recommended.  The default is 1.
+is 1,
+full metrics for a single glyph are written,
+and only left sidebearing values are written for the other glyphs.
+If
+.I n
+is 2,
+scalable metrics for all glyphs are written,
+which increases file size
+and is not recommended.
+The default is 1.
 .TP
 .B \-\-
 End of options.
+.TP
+.B \-\-help
+Prints a usage message and exits.
+.TP
+.B \-\-version
+Prints version info and exits.
 .SH BUGS
-Some of the font-level values, notably sub- and superscript positions,
+Some of the font-level values,
+notably sub- and superscript positions,
 are dummy values.
 .SH SEE ALSO
-X(__miscmansuffix__), Xserver(__appmansuffix__), Xft(__libmansuffix__).
-.I Fonts in X11.
+.BR X (__miscmansuffix__),
+.BR Xserver (__appmansuffix__),
+.BR Xft (__libmansuffix__).
+.IR "Fonts in X11" .
 .SH AUTHOR
 The version of
 .B Fonttosfnt

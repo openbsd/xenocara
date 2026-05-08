@@ -127,7 +127,7 @@ makeBitmap(StrikePtr strike, int code,
     int dx, dy, new_width, new_height;
 
     bitmap = malloc(sizeof(BitmapRec));
-    if(bitmap == NULL) 
+    if(bitmap == NULL)
         return NULL;
 
     *bitmap = (BitmapRec) {
@@ -260,7 +260,7 @@ makeIndexSubTables(StrikePtr strike, CmapPtr cmap)
     last = NULL;
 
     /* Assuming that we're writing bit-aligned data, small metrics
-       and short offsets, a constant metrics segment saves 5 bytes 
+       and short offsets, a constant metrics segment saves 5 bytes
        per glyph in the EBDT table, and 2 bytes per glyph in the EBLC
        table.  On the other hand, the overhead for a supplementary
        type 2 indexSubTable is 8 bytes for the indexSubTableArray
@@ -295,9 +295,9 @@ makeIndexSubTables(StrikePtr strike, CmapPtr cmap)
                 BitmapPtr b3 = strikeBitmapIndex(strike, cmap, index + n + 3);
                 BitmapPtr b4 = strikeBitmapIndex(strike, cmap, index + n + 4);
                 if(b1 && b2 && b3 && b4 &&
-                   SAME_METRICS(bitmap, b1) && 
-                   SAME_METRICS(bitmap, b2) && 
-                   SAME_METRICS(bitmap, b3) && 
+                   SAME_METRICS(bitmap, b1) &&
+                   SAME_METRICS(bitmap, b2) &&
+                   SAME_METRICS(bitmap, b3) &&
                    SAME_METRICS(bitmap, b4)) {
                     break;
                 }
@@ -363,7 +363,7 @@ makeCmap(FontPtr font)
             continue;
         }
         i = 1;
-        while(code + i < FONT_CODES && 
+        while(code + i < FONT_CODES &&
               fontIndex(font, code + i) == index + i) {
             i++;
         }
@@ -456,16 +456,16 @@ glyphMetrics(FontPtr font, int code,
         BitmapPtr bitmap = STRIKE_BITMAP(strike, code);
         if(bitmap) {
             if(width_return)
-                *width_return = 
+                *width_return =
                     (((float)bitmap->advanceWidth) / strike->sizeX) *
                     TWO_SIXTEENTH;
             if(x_min_return)
                 *x_min_return =
-                    ((float)bitmap->horiBearingX / strike->sizeX) * 
+                    ((float)bitmap->horiBearingX / strike->sizeX) *
                     TWO_SIXTEENTH;
             if(y_min_return)
                 *y_min_return =
-                    (((float)bitmap->horiBearingY - bitmap->height) 
+                    (((float)bitmap->horiBearingY - bitmap->height)
                      / strike->sizeY) * TWO_SIXTEENTH;
             if(x_max_return)
                 *x_max_return =
