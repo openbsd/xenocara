@@ -1,3 +1,317 @@
+commit 2c7789785981ad1fce3858c726615b49293f7de0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Dec 2 10:25:19 2025 +1000
+
+    xkbcomp 1.5.0
+
+commit da836764573298c53c625c6c237ab5211b2d3adf
+Author: Ran Benita <ran234@gmail.com>
+Date:   Sat Mar 10 23:10:47 2018 +0200
+
+    xkbcomp: fix stack overflow when evaluating boolean negation
+    
+    The expression evaluator would go into an infinite recursion when
+    evaluating something like this as a boolean: `!True`. Instead of
+    recursing to just `True` and negating, it recursed to `!True` itself
+    again.
+    
+    Bug inherited from xkbcomp.
+    
+    Caught with the afl fuzzer.
+    
+    CVE-2018-15853
+    
+    Identical to libxkbcommon commit 1f9d1248c07cda8aaff762429c0dce146de8632a
+    https://github.com/xkbcommon/libxkbcommon/commit/1f9d1248c07cda8aaff762429c0dce146de8632a
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/38>
+
+commit 895e080b237e346a43a31edf9dee6143c2abf230
+Author: Daniel Stone <daniels@collabora.com>
+Date:   Mon Oct 30 11:21:55 2017 +0000
+
+    Fail expression lookup on invalid atoms
+    
+    If we fail atom lookup, then we should not claim that we successfully
+    looked up the expression.
+    
+    CVE-2018-15859
+    
+    Identical to libxkbcommon commit bb4909d2d8fa6b08155e449986a478101e2b2634
+    https://github.com/xkbcommon/libxkbcommon/commit/bb4909d2d8fa6b08155e449986a478101e2b2634
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/38>
+
+commit c342635409cd687da0eda323ef4f165b11565052
+Author: Daniel Stone <daniels@collabora.com>
+Date:   Mon Jun 26 17:21:45 2017 +0100
+
+    xkbcomp: Don't falsely promise from ExprResolveLhs
+    
+    Every user of ExprReturnLhs goes on to unconditionally dereference the
+    field return, which can be NULL if xkb_intern_atom fails. Return false
+    if this is the case, so we fail safely.
+    
+    Testcase: splice geometry data into interp
+    
+    CVE-2018-15861
+    
+    Identical to libxkbcommon commit 38e1766bc6e20108948aec8a0b222a4bad0254e9
+    https://github.com/xkbcommon/libxkbcommon/commit/38e1766bc6e20108948aec8a0b222a4bad0254e9
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/38>
+
+commit fa10dbc2ca8bcb45bcecb433520de755e628ca91
+Author: Daniel Stone <daniels@collabora.com>
+Date:   Mon Jun 26 17:12:29 2017 +0100
+
+    xkbcomp: Don't crash on no-op modmask expressions
+    
+    If we have an expression of the form 'l1' in an interp section, we
+    unconditionally try to dereference its args, even if it has none.
+    
+    CVE-2018-15863
+    
+    Identical to libxkbcommon commit 96df3106d49438e442510c59acad306e94f3db4d
+    https://github.com/xkbcommon/libxkbcommon/commit/96df3106d49438e442510c59acad306e94f3db4d
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/38>
+
+commit ccea045e41f1a7e02b640d8a205d08ed4e1cadf4
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Thu Jan 30 16:46:35 2025 +0100
+
+    parser: Parse but discard multiple actions per level
+    
+    Follow-up of commit e119cbec7e750ffc4d4bd08b577db2c697035a30, in order
+    to support parsing this extension of XKB supported by libxkbcommon, but
+    ignoring its value (replaced by `NoAction()`).
+    
+    Signed-off-by: Pierre Le Marre <dev@wismill.eu>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/29>
+
+commit 7310026360dc7dc21c6ba0a9b0f0d76040205b8e
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Thu Jan 30 16:11:30 2025 +0100
+
+    parser: Refactor multiple keysyms per level and add warning
+    
+    The feature was added in commit e119cbec7e750ffc4d4bd08b577db2c697035a30.
+    but it previously issued no warning.
+    
+    - Refactored to always issue a warning.
+    - Fixed a memory leak because the discarded keysym list was not freed.
+    - Added a comment to explain that this is an extension to XKB that
+      cannot work with X11, due to its intrinsic limitations.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/37>
+
+commit 915983c113cb0d187d64ae5ea02228ba66bb6ba3
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Thu Nov 13 07:59:22 2025 +0100
+
+    parser: Fix multiple keysyms per level parsing
+    
+    The feature was added in commit e119cbec7e750ffc4d4bd08b577db2c697035a30.
+    However, it made the parser accept the following symbols list: `[{{a}}]`.
+    This is invalid because nested keysym lists are not allowed.
+    
+    Fixed by refactoring the parser so that it triggers a syntax error.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/37>
+
+commit e6989e2dacbac43efe08911f9460ee139f7e1999
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Thu Nov 13 07:53:08 2025 +0100
+
+    parser: Fix whitespaces
+    
+    - Trim trailing whitespaces.
+    - Fix indentation: indent parser entries with tabs and C code with
+      spaces. It’s not a great solution to mix both styles, but this is
+      the historical style adopted in this file and this commit only
+      make it consistent in all lines.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/37>
+
+commit 8c45ef536490c9f0c7b451295c4f9b07ea949bc1
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Mon Nov 3 15:47:09 2025 +0100
+
+    Fix various undefined behaviors
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/35>
+
+commit eaae98a40747d830275d6bd2a5fadeea7e3ab280
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Thu Nov 13 07:13:31 2025 +0100
+
+    build: Fix meson linking order
+    
+    Make meson link with the same order as the autotools build.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/36>
+
+commit d03a4ab1c0b24f6581411622ccf729ceb329aeb8
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Mon Feb 10 12:19:09 2025 +0100
+
+    Compare autotools and meson builds
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/28>
+
+commit b3ba248d8511b4b259ecb83358a4e9f76c1c6799
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Wed Jan 29 20:32:04 2025 +0100
+
+    Add support for meson build
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/28>
+
+commit e19c5e6d6ea0f6063053422d57ea7c96ae49108a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 23 17:35:26 2025 -0700
+
+    Make sure config.h is included before any system headers
+    
+    Resolves warnings in 32-bit builds on Solaris using gcc 15:
+    
+    In file included from xkbcomp.h:35,
+                     from compat.c:28:
+    config.h:177:9: warning: ‘_FILE_OFFSET_BITS’ redefined
+      177 | #define _FILE_OFFSET_BITS 64
+          |         ^~~~~~~~~~~~~~~~~
+    In file included from /usr/include/sys/types.h:11,
+                     from /usr/X11R7/include/X11/Xos.h:42,
+                     from compat.c:27:
+    /usr/gcc/15/lib/gcc/x86_64-pc-solaris2.11/15.1.0/include-fixed/sys/feature_tests.h:243:9: note: this is the location of the previous definition
+      243 | #define _FILE_OFFSET_BITS       32
+          |         ^~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/34>
+
+commit 7f80f2d077996bfc65e58c552a270cf6f97c1c1a
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Wed Aug 13 11:47:26 2025 +0200
+
+    symbols: Fix NULL pointer dereference in MergeKeyGroups
+    
+    It may trigger with the following keymap symbols:
+    
+        key <> { [a, A] }; key <> { [NoAction()] };
+    
+    or:
+    
+        key <> { [NoAction()] }; augment key <> { [a, A] };
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/33>
+
+commit 6ec3b544d6f2c32339062db3933c87c82ac2d2b2
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Tue Jul 1 20:24:54 2025 +0200
+
+    types: Fix typo in warning
+    
+    Signed-off-by: Pierre Le Marre <dev@wismill.eu>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/32>
+
+commit 8e73169bf69f1dd301dbc2bdee68870b3379d949
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 11:39:49 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xkbcomp.1:2:15: WARNING: cannot parse date, using it verbatim: TH xkbcomp 1.4.7
+    mandoc: xkbcomp.1:9:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/31>
+
+commit 38724ab9f0f013a7d684e5a410f72618603e29cc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 31 18:46:41 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/30>
+
+commit cd51404ec62a9d9f4480fc176bcd8c6231ab5900
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 31 18:31:52 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/30>
+
+commit 9cb80be3bd01bab4eba6a8aea7767c36b2284845
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Thu Jan 9 16:32:06 2025 +0100
+
+    types: Fix warning for multiple map occurrences
+    
+    `AddMapEntry` may emit a warning even if told to not report. This is
+    problematic when it is called by `CopyDefToKeyType`, as `AddMapEntry`
+    is used there for adding default `map` entries corresponding to each
+    `preserve` entry, only if relevant. These default entries should not
+    trigger a warning (report = False) if conflicting with an existing entry
+    and simply be ignored. However with the current code a warning may be
+    erroneously emitted if one set the warning level >=9, leaving the user
+    puzzled with a conflicting map entry found nowhere in the source files.
+    
+    Signed-off-by: Pierre Le Marre <dev@wismill.eu>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/27>
+
+commit 374d8a12e9866ce3e2c0157c208b052abe701366
+Author: Pierre Le Marre <dev@wismill.eu>
+Date:   Fri Dec 27 00:47:23 2024 +0100
+
+    Symbols: Fix out-of-bounds actions in MergeKeyGroups
+    
+    Signed-off-by: Pierre Le Marre <dev@wismill.eu>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/26>
+
+commit a9c3d35a1f74de1681aeb7cdd66dce7bf186c666
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 9 11:28:24 2024 -0800
+
+    Use _stricmp()/_strnicmp() instead of strcasecmp()/strncasecmp() on Windows
+    
+    Fixes: 0b4873c ("Assume target platforms have strcasecmp, strncasecmp, & strdup now")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/25>
+
+commit 3f354d20f5bc0276e27faa7fb5f6356319aa32c3
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sat May 4 13:36:07 2024 +0200
+
+    Symbols: resize the syms array when removing NoSymbol
+    
+    On OpenBSD, with malloc_conf=S, the recallocarray() code detects a
+    size mismatch in ResizeKeyGroup when numLevels[group] doesn't match
+    the allocated size of syms[group].
+    
+    Should fix https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/issues/25
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/24>
+
+commit 0b4873ce55e3afe2e1716ef4a21cd94a7ae96e64
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 16:03:11 2024 -0700
+
+    Assume target platforms have strcasecmp, strncasecmp, & strdup now
+    
+    All have been required since Unix98/SUSv2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/merge_requests/23>
+
 commit e26102f28f08e5432b1ad44bbaef7f32aff199f6
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Feb 3 14:23:58 2024 -0800

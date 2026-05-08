@@ -206,6 +206,7 @@ STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XKBCOMP_CFLAGS = @XKBCOMP_CFLAGS@
+XKBCOMP_EXTRA_DEPS = @XKBCOMP_EXTRA_DEPS@
 XKBCOMP_LIBS = @XKBCOMP_LIBS@
 XKBCONFIGROOT = @XKBCONFIGROOT@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
@@ -266,7 +267,7 @@ top_srcdir = @top_srcdir@
 appmandir = $(APP_MAN_DIR)
 appman_PRE = xkbcomp.man
 appman_DATA = $(appman_PRE:man=$(APP_MAN_SUFFIX))
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) meson.build
 CLEANFILES = $(appman_DATA)
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 all: all-am
@@ -481,7 +482,7 @@ uninstall-am: uninstall-appmanDATA
 
 
 .man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) -e 's|@\([a-z]*\)@|__\1__|' $(MAN_SUBSTS) < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

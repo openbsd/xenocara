@@ -24,6 +24,10 @@
 
  ********************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #define	DEBUG_VAR debugFlags
 #include <stdio.h>
 #include "xkbcomp.h"

@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.70])
-AC_INIT([xkbcomp], [1.4.7],
+AC_INIT([xkbcomp], [1.5.0],
         [https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/issues], [xkbcomp])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -50,10 +50,12 @@ if test ! -f "$srcdir/xkbparse.c"; then
    fi
 fi
 
-AC_CHECK_FUNCS([asprintf reallocarray recallocarray strdup strcasecmp])
+AC_CHECK_FUNCS([asprintf reallocarray recallocarray])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XKBCOMP, [x11 xkbfile xproto >= 7.0.17])
+XKBCOMP_EXTRA_DEPS='x11 xkbfile'
+AC_SUBST(XKBCOMP_EXTRA_DEPS)
+PKG_CHECK_MODULES(XKBCOMP, [$XKBCOMP_EXTRA_DEPS xproto >= 7.0.17])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_SYS_LARGEFILE

@@ -121,8 +121,9 @@ NextIndicatorName(KeyNamesInfo * info)
     if (ii)
     {
         InitIndicatorNameInfo(ii, info);
-        info->leds = (IndicatorNameInfo *) AddCommonInfo(&info->leds->defs,
-                                                         (CommonInfo *) ii);
+        info->leds = (IndicatorNameInfo *)
+            AddCommonInfo((info->leds ? &info->leds->defs : NULL),
+                          (CommonInfo *) ii);
     }
     return ii;
 }

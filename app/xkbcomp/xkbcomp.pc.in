@@ -7,4 +7,6 @@ xkbconfigdir=@XKBCONFIGROOT@
 
 Name: xkbcomp
 Description: XKB keymap compiler
+URL: https://gitlab.freedesktop.org/xorg/app/xkbcomp/
 Version: @PACKAGE_VERSION@
+Requires.private: @XKBCOMP_EXTRA_DEPS@

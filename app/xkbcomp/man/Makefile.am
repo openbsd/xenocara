@@ -3,7 +3,7 @@ appmandir = $(APP_MAN_DIR)
 appman_PRE = xkbcomp.man
 appman_DATA = $(appman_PRE:man=$(APP_MAN_SUFFIX))
 
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = $(appman_PRE) meson.build
 CLEANFILES = $(appman_DATA)
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
@@ -11,4 +11,4 @@ SUFFIXES = .$(APP_MAN_SUFFIX) .man
 MAN_SUBSTS += -e 's|__xkbconfigroot__|$(XKBCONFIGROOT)|'
 
 .man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) -e 's|@\([a-z]*\)@|__\1__|' $(MAN_SUBSTS) < $< > $@

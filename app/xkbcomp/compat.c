@@ -24,6 +24,10 @@
 
  ********************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <X11/Xos.h>
 #include "xkbcomp.h"
 #include "tokens.h"
@@ -145,9 +149,13 @@ ClearCompatInfo(CompatInfo * info, XkbDescPtr xkb)
     }
     ClearIndicatorMapInfo(xkb->dpy, &info->ledDflt);
     info->nInterps = 0;
-    info->interps = (SymInterpInfo *) ClearCommonInfo(&info->interps->defs);
+    if (info->interps) {
+        info->interps = (SymInterpInfo *) ClearCommonInfo(&info->interps->defs);
+    }
     bzero(&info->groupCompat[0], XkbNumKbdGroups * sizeof(GroupCompatInfo));
-    info->leds = (LEDInfo *) ClearCommonInfo(&info->leds->defs);
+    if (info->leds) {
+        info->leds = (LEDInfo *) ClearCommonInfo(&info->leds->defs);
+    }
     /* 3/30/94 (ef) -- XXX! Should free action info here */
     ClearVModInfo(&info->vmods, xkb);
     return;
@@ -161,9 +169,9 @@ NextInterp(CompatInfo * info)
     si = calloc(1, sizeof(SymInterpInfo));
     if (si)
     {
-        info->interps =
-            (SymInterpInfo *) AddCommonInfo(&info->interps->defs,
-                                            (CommonInfo *) si);
+        info->interps = (SymInterpInfo *)
+            AddCommonInfo((info->interps ? &info->interps->defs : NULL),
+                          (CommonInfo *) si);
         info->nInterps++;
     }
     return si;

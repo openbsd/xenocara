@@ -137,11 +137,12 @@ unsigned int parseDebug;
 %type <ival>	Number Integer Float SignedNumber
 %type <uval>	XkbCompositeType FileType MergeMode OptMergeMode
 %type <uval>	DoodadType Flag Flags OptFlags
-%type <str>	KeyName MapName OptMapName KeySym
+%type <str>	KeyName MapName OptMapName KeySym KeySyms
 %type <sval>	FieldSpec Ident Element String
 %type <any>	DeclList Decl
-%type <expr>	OptExprList ExprList Expr Term Lhs Terminal ArrayInit KeySyms
-%type <expr>	OptKeySymList KeySymList Action ActionList Coord CoordList
+%type <expr>	OptExprList ExprList Expr Term Lhs Terminal ArrayInit
+%type <expr>	OptKeySymList StrictKeySymList KeySymList
+%type <expr>    Action Actions StrictActionList ActionList Coord CoordList
 %type <var>	VarDecl VarDeclList SymbolsBody SymbolsVarDecl
 %type <vmod>	VModDecl VModDefList VModDef
 %type <interp>	InterpretDecl InterpretMatch
@@ -309,13 +310,13 @@ Decl		:	OptMergeMode VarDecl
 		|	MergeMode STRING
 			{
 			    if ($1==MergeAltForm) {
-				yyerror("cannot use 'alternate' to include other maps");
-				$$= &IncludeCreate(scanBuf,MergeDefault)->common;
+			        yyerror("cannot use 'alternate' to include other maps");
+			        $$= &IncludeCreate(scanBuf,MergeDefault)->common;
 			    }
 			    else {
-				$$= &IncludeCreate(scanBuf,$1)->common;
+			        $$= &IncludeCreate(scanBuf,$1)->common;
 			    }
-                        }
+			}
 		;
 
 VarDecl		:	Lhs EQUALS Expr SEMI
@@ -327,12 +328,12 @@ VarDecl		:	Lhs EQUALS Expr SEMI
 		;
 
 KeyNameDecl	:	KeyName EQUALS Expr SEMI
-                        {
+			{
 			    KeycodeDef *def;
 
 			    def= KeycodeCreate($1,$3);
 			    if ($1)
-				free($1);
+			        free($1);
 			    $$= def;
 			}
 		;
@@ -341,8 +342,8 @@ KeyAliasDecl	:	ALIAS KeyName EQUALS KeyName SEMI
 			{
 			    KeyAliasDef	*def;
 			    def= KeyAliasCreate($2,$4);
-			    if ($2)	free($2);	
-			    if ($4)	free($4);	
+			    if ($2)	free($2);
+			    if ($4)	free($4);
 			    $$= def;
 			}
 		;
@@ -372,9 +373,9 @@ InterpretDecl	:	INTERPRET InterpretMatch OBRACE
 			}
 		;
 
-InterpretMatch	:	KeySym PLUS Expr	
+InterpretMatch	:	KeySym PLUS Expr
 			{ $$= InterpCreate($1, $3); }
-		|	KeySym			
+		|	KeySym
 			{ $$= InterpCreate($1, NULL); }
 		;
 
@@ -502,7 +503,7 @@ OverlayDecl	:	OVERLAY String OBRACE OverlayKeyList CBRACE SEMI
 OverlayKeyList	:	OverlayKeyList COMMA OverlayKey
 			{
 			    $$= (OverlayKeyDef *)
-				AppendStmt(&$1->common,&$3->common);
+			        AppendStmt(&$1->common,&$3->common);
 			}
 		|	OverlayKey
 			{ $$= $1; }
@@ -556,7 +557,7 @@ FieldSpec	:	Ident			{ $$= $1; }
 		|	Element			{ $$= $1; }
 		;
 
-Element		:	ACTION_TOK		
+Element		:	ACTION_TOK
 			{ $$= XkbInternAtom(NULL,"action",False); }
 		|	INTERPRET
 			{ $$= XkbInternAtom(NULL,"interpret",False); }
@@ -570,11 +571,11 @@ Element		:	ACTION_TOK
 			{$$=XkbInternAtom(NULL,"modifier_map",False);}
 		|	INDICATOR
 			{ $$= XkbInternAtom(NULL,"indicator",False); }
-		|	SHAPE	
+		|	SHAPE
 			{ $$= XkbInternAtom(NULL,"shape",False); }
-		|	ROW	
+		|	ROW
 			{ $$= XkbInternAtom(NULL,"row",False); }
-		|	SECTION	
+		|	SECTION
 			{ $$= XkbInternAtom(NULL,"section",False); }
 		|	TEXT
 			{ $$= XkbInternAtom(NULL,"text",False); }
@@ -591,7 +592,7 @@ MergeMode	:	INCLUDE			{ $$= MergeDefault; }
 		|	ALTERNATE		{ $$= MergeAltForm; }
 		;
 
-OptExprList	:	ExprList			{ $$= $1; }
+OptExprList	:	ExprList		{ $$= $1; }
 		|				{ $$= NULL; }
 		;
 
@@ -624,18 +625,32 @@ Term		:	MINUS Term
 		|	INVERT Term
 			{ $$= ExprCreateUnary(OpInvert,$2->type,$2); }
 		|	Lhs
-			{ $$= $1;  }
+			{ $$= $1; }
 		|	FieldSpec OPAREN OptExprList CPAREN %prec OPAREN
 			{ $$= ActionCreate($1,$3); }
+		|	Actions
+			{ $$= $1; }
 		|	Terminal
-			{ $$= $1;  }
+			{ $$= $1; }
 		|	OPAREN Expr CPAREN
-			{ $$= $2;  }
+			{ $$= $2; }
 		;
 
-ActionList	:	ActionList COMMA Action
+/* Disallow multi-actions per level */
+StrictActionList :	StrictActionList COMMA Action
 			{ $$= (ExprDef *)AppendStmt(&$1->common,&$3->common); }
 		|	Action
+			{ $$= $1; }
+		;
+
+/* Parse multi-actions per level, but discard them */
+ActionList	:	ActionList COMMA Action
+			{ $$= (ExprDef *)AppendStmt(&$1->common,&$3->common); }
+		|	ActionList COMMA Actions
+			{ $$= (ExprDef *)AppendStmt(&$1->common,&$3->common); }
+		|	Action
+			{ $$= $1; }
+		|	Actions
 			{ $$= $1; }
 		;
 
@@ -643,20 +658,38 @@ Action		:	FieldSpec OPAREN OptExprList CPAREN
 			{ $$= ActionCreate($1,$3); }
 		;
 
+/* Multiple actions per level is an extension to XKB from libxkbcommon and is
+ * not supported by X11 due to the protocol’s limitations. However, xkbcomp is
+ * also used by Xwayland, which should support a libxkbcommon-compatible keymap
+ * format (see wl_keyboard::keymap_format::xkb_v1). So parse the actions list to
+ * validate the syntax but then discard it and print a warning. */
+Actions		:	OBRACE StrictActionList CBRACE
+			{
+			    yyerror("Multiple actions per level is not "
+			            "supported; list replaced by NoAction()");
+			    // TODO: properly free actions list
+			    free($2);
+			    $$= ActionCreate(
+			        XkbInternAtom(NULL, "NoAction", False),
+			        NULL
+			    );
+			}
+		;
+
 Lhs		:	FieldSpec
 			{
 			    ExprDef *expr;
-                            expr= ExprCreate(ExprIdent,TypeUnknown);
-                            expr->value.str= $1;
-                            $$= expr;
+			    expr= ExprCreate(ExprIdent,TypeUnknown);
+			    expr->value.str= $1;
+			    $$= expr;
 			}
 		|	FieldSpec DOT FieldSpec
-                        {
-                            ExprDef *expr;
-                            expr= ExprCreate(ExprFieldRef,TypeUnknown);
-                            expr->value.field.element= $1;
-                            expr->value.field.field= $3;
-                            $$= expr;
+			{
+			    ExprDef *expr;
+			    expr= ExprCreate(ExprFieldRef,TypeUnknown);
+			    expr->value.field.element= $1;
+			    expr->value.field.field= $3;
+			    $$= expr;
 			}
 		|	FieldSpec OBRACKET Expr CBRACKET
 			{
@@ -681,16 +714,16 @@ Lhs		:	FieldSpec
 Terminal	:	String
 			{
 			    ExprDef *expr;
-                            expr= ExprCreate(ExprValue,TypeString);
-                            expr->value.str= $1;
-                            $$= expr;
+			    expr= ExprCreate(ExprValue,TypeString);
+			    expr->value.str= $1;
+			    $$= expr;
 			}
 		|	Integer
 			{
 			    ExprDef *expr;
-                            expr= ExprCreate(ExprValue,TypeInt);
-                            expr->value.ival= $1;
-                            $$= expr;
+			    expr= ExprCreate(ExprValue,TypeInt);
+			    expr->value.ival= $1;
+			    $$= expr;
 			}
 		|	Float
 			{
@@ -714,31 +747,50 @@ OptKeySymList	:	KeySymList			{ $$= $1; }
 		|					{ $$= NULL; }
 		;
 
+/* Disallow multi-keysyms per level */
+StrictKeySymList :	StrictKeySymList COMMA KeySym
+			{ $$= AppendKeysymList($1,$3); }
+		|	KeySym
+			{ $$= CreateKeysymList($1); }
+		;
+
+/* Parse multi-keysyms per level, but discard them */
 KeySymList	:	KeySymList COMMA KeySym
 			{ $$= AppendKeysymList($1,$3); }
-                |       KeySymList COMMA KeySyms
-                        { $$= AppendKeysymList($1,strdup("NoSymbol")); }
+		|	KeySymList COMMA KeySyms
+			{ $$= AppendKeysymList($1,$3); }
 		|	KeySym
 			{ $$= CreateKeysymList($1); }
 		|	KeySyms
-			{ $$= CreateKeysymList(strdup("NoSymbol")); }
+			{ $$= CreateKeysymList($1); }
 		;
 
-KeySym		:	IDENT           { $$= strdup(scanBuf); }
-		|	SECTION         { $$= strdup("section"); }
-		|	Integer		
+KeySym		:	IDENT		{ $$= strdup(scanBuf); }
+		|	SECTION		{ $$= strdup("section"); }
+		|	Integer
 			{
 			    if ($1<10)	{ $$= malloc(2); $$[0]= '0' + $1; $$[1]= '\0'; }
 			    else	{ $$= malloc(19); snprintf($$, 19, "0x%x", $1); }
 			}
 		;
 
-KeySyms         :       OBRACE KeySymList CBRACE
-                        { $$= $2; }
-                ;
+/* Multiple keysyms per level is an extension to XKB from libxkbcommon and is
+ * not supported by X11 due to the protocol’s limitations. However, xkbcomp is
+ * also used by Xwayland, which should support a libxkbcommon-compatible keymap
+ * format (see wl_keyboard::keymap_format::xkb_v1). So parse the keysym list to
+ * validate the syntax but then discard it and print a warning. */
+KeySyms		:	OBRACE StrictKeySymList CBRACE
+			{
+			    yyerror("Multiple keysyms per level is not "
+			            "supported; list replaced by NoSymbol");
+			    free($2->value.list.syms);
+			    free($2);
+			    $$= strdup("NoSymbol");
+			}
+		;
 
-SignedNumber	:	MINUS Number    { $$= -$2; }
-		|	Number              { $$= $1; }
+SignedNumber	:	MINUS Number	{ $$= -$2; }
+		|	Number		{ $$= $1; }
 		;
 
 Number		:	FLOAT		{ $$= scanInt; }

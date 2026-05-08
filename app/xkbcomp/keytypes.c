@@ -224,8 +224,9 @@ NextKeyType(KeyTypesInfo * info)
     {
         type->defs.fileID = info->fileID;
         type->dpy = info->dpy;
-        info->types = (KeyTypeInfo *) AddCommonInfo(&info->types->defs,
-                                                    (CommonInfo *) type);
+        info->types = (KeyTypeInfo *)
+            AddCommonInfo((info->types ? &info->types->defs : NULL),
+                          (CommonInfo *) type);
         info->nTypes++;
     }
     return type;
@@ -569,8 +570,9 @@ AddPreserve(XkbDescPtr xkb,
     }
     *old = *new;
     old->matchingMapIndex = -1;
-    type->preserve =
-        (PreserveInfo *) AddCommonInfo(&type->preserve->defs, &old->defs);
+    type->preserve = (PreserveInfo *)
+        AddCommonInfo((type->preserve ? &type->preserve->defs : NULL),
+                      &old->defs);
     return True;
 }
 
@@ -609,7 +611,7 @@ AddMapEntry(XkbDescPtr xkb,
                   MapEntryTxt(type, xkb, new), TypeTxt(type));
             ACTION("Using %d, ignoring %d\n", use, ignore);
         }
-        else if (warningLevel > 9)
+        else if (report && warningLevel > 9)
         {
             WARN("Multiple occurrences of map[%s]= %d in %s\n",
                   MapEntryTxt(type, xkb, new), new->level + 1, TypeTxt(type));
@@ -685,7 +687,7 @@ SetMapEntry(KeyTypeInfo *type, XkbDescPtr xkb,
     if ((rtrn.ival < 1) || (rtrn.ival > XkbMaxShiftLevel + 1))
     {
         ERROR("Shift level %d out of range (1..%d) in key type %s\n",
-               XkbMaxShiftLevel + 1, rtrn.ival, TypeTxt(type));
+               rtrn.ival, XkbMaxShiftLevel + 1, TypeTxt(type));
         ACTION("Ignoring illegal definition of map[%s]\n",
                 MapEntryTxt(type, xkb, &entry));
         return False;

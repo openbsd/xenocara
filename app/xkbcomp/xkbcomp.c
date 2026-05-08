@@ -244,12 +244,14 @@ parseArgs(int argc, char *argv[])
                 return False;
         }
         else if ((strcmp(argv[i], "-?") == 0)
-                 || (strcmp(argv[i], "-help") == 0))
+                 || (strcmp(argv[i], "-help") == 0)
+                 || (strcmp(argv[i], "--help") == 0))
         {
             Usage(argc, argv);
             exit(0);
         }
-        else if (strcmp(argv[i], "-version") == 0)
+        else if ((strcmp(argv[i], "-version") == 0) ||
+                 (strcmp(argv[i], "--version") == 0))
         {
             printf("xkbcomp %s\n", PACKAGE_VERSION);
             exit(0);

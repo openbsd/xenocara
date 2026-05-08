@@ -119,13 +119,13 @@ CONFIG_CLEAN_FILES = xkbcomp.pc
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgconfigdir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_xkbcomp_OBJECTS = action.$(OBJEXT) alias.$(OBJEXT) compat.$(OBJEXT) \
-	expr.$(OBJEXT) geometry.$(OBJEXT) indicators.$(OBJEXT) \
-	keycodes.$(OBJEXT) keymap.$(OBJEXT) keytypes.$(OBJEXT) \
-	listing.$(OBJEXT) misc.$(OBJEXT) parseutils.$(OBJEXT) \
-	symbols.$(OBJEXT) utils.$(OBJEXT) vmod.$(OBJEXT) \
-	xkbcomp.$(OBJEXT) xkbparse.$(OBJEXT) xkbpath.$(OBJEXT) \
-	xkbscan.$(OBJEXT)
+am_xkbcomp_OBJECTS = xkbparse.$(OBJEXT) action.$(OBJEXT) \
+	alias.$(OBJEXT) compat.$(OBJEXT) expr.$(OBJEXT) \
+	geometry.$(OBJEXT) indicators.$(OBJEXT) keycodes.$(OBJEXT) \
+	keymap.$(OBJEXT) keytypes.$(OBJEXT) listing.$(OBJEXT) \
+	misc.$(OBJEXT) parseutils.$(OBJEXT) symbols.$(OBJEXT) \
+	utils.$(OBJEXT) vmod.$(OBJEXT) xkbcomp.$(OBJEXT) \
+	xkbpath.$(OBJEXT) xkbscan.$(OBJEXT)
 xkbcomp_OBJECTS = $(am_xkbcomp_OBJECTS)
 am__DEPENDENCIES_1 =
 xkbcomp_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -347,6 +347,7 @@ STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XKBCOMP_CFLAGS = @XKBCOMP_CFLAGS@
+XKBCOMP_EXTRA_DEPS = @XKBCOMP_EXTRA_DEPS@
 XKBCOMP_LIBS = @XKBCOMP_LIBS@
 XKBCONFIGROOT = @XKBCONFIGROOT@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
@@ -408,7 +409,10 @@ SUBDIRS = man
 AM_CPPFLAGS = -DDFLT_XKB_CONFIG_ROOT='"$(XKBCONFIGROOT)"'
 AM_CFLAGS = $(XKBCOMP_CFLAGS) $(CWARNFLAGS)
 xkbcomp_LDADD = $(XKBCOMP_LIBS)
+
+# NOTE: xkbparse.y is put first in order to follow meson’s order
 xkbcomp_SOURCES = \
+        xkbparse.y \
         action.c \
         action.h \
         alias.c \
@@ -437,7 +441,6 @@ xkbcomp_SOURCES = \
         vmod.h \
         xkbcomp.c \
         xkbcomp.h \
-        xkbparse.y \
         xkbpath.c \
         xkbpath.h \
         xkbscan.c
@@ -445,6 +448,7 @@ xkbcomp_SOURCES = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xkbcomp.pc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
+EXTRA_DIST = README meson.build meson.options
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

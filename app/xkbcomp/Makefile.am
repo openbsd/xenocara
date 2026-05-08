@@ -26,7 +26,9 @@ AM_CPPFLAGS = -DDFLT_XKB_CONFIG_ROOT='"$(XKBCONFIGROOT)"'
 AM_CFLAGS = $(XKBCOMP_CFLAGS) $(CWARNFLAGS)
 xkbcomp_LDADD = $(XKBCOMP_LIBS)
 
+# NOTE: xkbparse.y is put first in order to follow meson’s order
 xkbcomp_SOURCES = \
+        xkbparse.y \
         action.c \
         action.h \
         alias.c \
@@ -55,7 +57,6 @@ xkbcomp_SOURCES = \
         vmod.h \
         xkbcomp.c \
         xkbcomp.h \
-        xkbparse.y \
         xkbpath.c \
         xkbpath.h \
         xkbscan.c
@@ -74,3 +75,5 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+EXTRA_DIST = README meson.build meson.options

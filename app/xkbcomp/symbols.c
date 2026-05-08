@@ -400,8 +400,10 @@ MergeKeyGroups(SymbolsInfo * info,
         if (resultActs != NULL)
         {
             XkbAction *fromAct, *toAct;
-            fromAct = (from->acts[group] ? &from->acts[group][i] : NULL);
-            toAct = (into->acts[group] ? &into->acts[group][i] : NULL);
+            fromAct = ((from->acts[group] && i < from->numLevels[group])
+                    ? &from->acts[group][i] : NULL);
+            toAct = ((into->acts[group] && i < into->numLevels[group])
+                  ? &into->acts[group][i] : NULL);
             if (((fromAct == NULL) || (fromAct->type == XkbSA_NoAction))
                 && (toAct != NULL))
             {
@@ -411,6 +413,17 @@ MergeKeyGroups(SymbolsInfo * info,
                      && (fromAct != NULL))
             {
                 resultActs[i] = *fromAct;
+            }
+            else if (toAct == NULL && fromAct == NULL)
+            {
+                /*
+                 * May happen with e.g.:
+                 *
+                 *     key <> { [a, A] }; key <> { [NoAction()] };
+                 * or:
+                 *     key <> { [NoAction()] }; augment key <> { [a, A] };
+                 */
+                resultActs[i].type = XkbSA_NoAction;
             }
             else
             {
@@ -684,8 +697,9 @@ AddModMapEntry(SymbolsInfo * info, ModMapEntry * new)
         return False;
     }
     *mm = *new;
-    mm->defs.next = &info->modMap->defs;
-    info->modMap = mm;
+    info->modMap = (ModMapEntry *)
+        AddCommonInfo((info->modMap ? &info->modMap->defs : NULL),
+                      &mm->defs);
     return True;
 }
 
@@ -959,6 +973,7 @@ AddSymbolsToKey(KeyInfo *key, XkbDescPtr xkb, const char *field,
     {
         key->syms[ndx] = recallocarray(key->syms[ndx], key->numLevels[ndx],
                                        key->numLevels[ndx]-1, sizeof(KeySym));
+        /* XXX resize keys->acts too ? */
         key->numLevels[ndx]--;
     }
     return True;
