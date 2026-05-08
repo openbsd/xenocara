@@ -1,0 +1,5 @@
+option(
+  'mailbox-directory',
+  type: 'string',
+  description: 'directory to check for system mailboxes',
+)

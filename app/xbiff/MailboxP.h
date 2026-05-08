@@ -1,4 +1,3 @@
-/* $XConsortium: MailboxP.h,v 1.22 94/04/17 20:43:27 rws Exp $ */
 /*
 
 Copyright (c) 1988  X Consortium
@@ -28,12 +27,13 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xbiff/MailboxP.h,v 1.1 2000/02/13 03:56:12 dawes Exp $ */
 
 #ifndef _XawMailboxP_h
 #define _XawMailboxP_h
 
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 #include "Mailbox.h"
 #include <X11/Xaw/SimpleP.h>
 
@@ -44,8 +44,6 @@ from the X Consortium.
 #ifndef MAILBOX_DIRECTORY
 # ifdef _PATH_MAILDIR
 #  define MAILBOX_DIRECTORY _PATH_MAILDIR
-# elif defined(SYSV)
-#  define MAILBOX_DIRECTORY "/usr/mail"
 # elif defined(SVR4)
 #  define MAILBOX_DIRECTORY "/var/mail"
 # elif defined(__linux__)

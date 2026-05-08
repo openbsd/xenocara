@@ -1,3 +1,118 @@
+commit 5b7fd66abc81d3ced74eebd2c5f57c1a5ff935f6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 18 15:31:22 2026 -0700
+
+    xbiff 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ce75b41f3fcf4acfa25aceaf66e21b95df781b6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 24 18:02:22 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbiff/-/merge_requests/12>
+
+commit e6a5e20e5cf431d299121492724914ec442e2a06
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 24 17:13:21 2026 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbiff/-/merge_requests/12>
+
+commit 99dd5279ee0826b7688d1d9ada2315a79f6510ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbiff/-/merge_requests/12>
+
+commit c14c3e53519aa586132f313cf6f83c9895664207
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 18 16:46:51 2025 -0700
+
+    Remove old RCS/CVS tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbiff/-/merge_requests/11>
+
+commit e1725aaf063dfcf56313ed306fd0231694247714
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 18 16:37:35 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xbiff.1:30:13: WARNING: cannot parse date, using it verbatim: TH xbiff 1.0.5
+    mandoc: xbiff.1:125:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xbiff.1:221:2: WARNING: skipping paragraph macro: PP empty
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbiff/-/merge_requests/11>
+
+commit 16fc9810399b5b2c6367e090694de8e206b8a816
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 30 09:49:55 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbiff/-/merge_requests/10>
+
+commit 4793ea1b1069ef5761dc86e0af33a63cfb44fc4d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 8 13:49:12 2024 -0800
+
+    Add unused attribute to unused callback arguments
+    
+    Clears up 20 warnings from clang of the form:
+    Mailbox.c:240:32: warning: unused parameter 'request' [-Wunused-parameter]
+    static void Initialize (Widget request, Widget new,
+                                   ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbiff/-/merge_requests/9>
+
+commit 7b6a1a092b26a9c79857aba2bd40f38e1617eff7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 8 13:41:39 2024 -0800
+
+    Add noreturn attribute to CloseDown prototype
+    
+    Clears clang warning of:
+    Mailbox.c:550:1: warning: function 'CloseDown' could be declared with
+     attribute 'noreturn' [-Wmissing-noreturn]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xbiff/-/merge_requests/9>
+
+commit d19f0464e900b30f9a6a3482498711c45afaed14
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 14:19:21 2024 -0800
+
+    unifdef SYSV
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 4ce1a96d300a9d63a2306331000878d6f8c34a3e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jan 20 12:25:47 2024 -0800

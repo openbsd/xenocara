@@ -1,4 +1,3 @@
-/* $XConsortium: Mailbox.c,v 1.64 94/04/17 20:43:26 rws Exp $ */
 /*
 
 Copyright (c) 1988  X Consortium
@@ -28,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xbiff/Mailbox.c,v 1.4 2001/08/01 00:45:02 tsi Exp $ */
 
 /*
  * Author:  Jim Fulton, MIT X Consortium
@@ -48,6 +46,7 @@ from the X Consortium.
 #include <X11/StringDefs.h>		/* for useful atom names */
 #include <X11/cursorfont.h>		/* for cursor constants */
 #include <X11/Xosdefs.h>		/* for X_NOT_POSIX def */
+#include <X11/Xfuncproto.h>		/* for _X_{NORETURN,UNUSED} defs */
 #include <stdlib.h>
 #ifdef WIN32
 #include <X11/Xw32defs.h>
@@ -71,12 +70,6 @@ from the X Consortium.
 typedef int		waitType;
 # define INTWAITTYPE
 #else /* ! X_NOT_POSIX */
-#ifdef SYSV
-# define waitCode(w)	(((w) >> 8) & 0x7f)
-# define waitSig(w)	((w) & 0xff)
-typedef int		waitType;
-# define INTWAITTYPE
-#else
 #ifdef WIN32
 #include <process.h>
 # define INTWAITTYPE
@@ -89,7 +82,6 @@ typedef int		waitType;
 # define waitSig(w)	((w).w_T.w_Termsig)
 typedef union wait	waitType;
 #endif /* WIN32 else */
-#endif /* SYSV else */
 #endif /* ! X_NOT_POSIX else */
 
 #include <X11/bitmaps/mailfull>		/* for flag up (mail present) bits */
@@ -102,19 +94,19 @@ typedef union wait	waitType;
 
 /*
  * The default user interface is to have the mailbox turn itself off whenever
- * the user presses a button in it.  Expert users might want to make this 
+ * the user presses a button in it.  Expert users might want to make this
  * happen on EnterWindow.  It might be nice to provide support for some sort of
  * exit callback so that you can do things like press q to quit.
  */
 
-static char defaultTranslations[] = 
+static char defaultTranslations[] =
   "<ButtonPress>:  unset()";
 
 static void Set (Widget gw, XEvent *event, String *params, Cardinal *nparams);
 static void Check(Widget gw, XEvent *event, String *params, Cardinal *nparams);
 static void Unset(Widget gw, XEvent *event, String *params, Cardinal *nparams);
 
-static XtActionsRec actionsList[] = { 
+static XtActionsRec actionsList[] = {
     { "check",	Check },
     { "unset",	Unset },
     { "set",	Set },
@@ -130,7 +122,7 @@ static Dimension defDim = 48;
 static Pixmap nopix = None;
 
 static XtResource resources[] = {
-    { XtNwidth, XtCWidth, XtRDimension, sizeof (Dimension), 
+    { XtNwidth, XtCWidth, XtRDimension, sizeof (Dimension),
 	goffset (width), XtRDimension, (XtPointer)&defDim },
     { XtNheight, XtCHeight, XtRDimension, sizeof (Dimension),
 	goffset (height), XtRDimension, (XtPointer)&defDim },
@@ -164,7 +156,7 @@ static XtResource resources[] = {
 #undef goffset
 
 static void GetMailFile(MailboxWidget w);
-static void CloseDown (MailboxWidget w, int status);
+_X_NORETURN static void CloseDown (MailboxWidget w, int status);
 
 static void check_mailbox(MailboxWidget w, Boolean force_redraw, Boolean reset);
 static void redraw_mailbox (MailboxWidget w);
@@ -243,8 +235,8 @@ static GC get_mailbox_gc (MailboxWidget w)
 
 
 /* ARGSUSED */
-static void Initialize (Widget request, Widget new,
-			ArgList args, Cardinal *num_args)
+static void Initialize (_X_UNUSED Widget request, Widget new,
+			_X_UNUSED ArgList args, _X_UNUSED Cardinal *num_args)
 {
     MailboxWidget w = (MailboxWidget) new;
     int shape_event_base, shape_error_base;
@@ -277,7 +269,8 @@ static void Initialize (Widget request, Widget new,
  */
 
 /* ARGSUSED */
-static void Set (Widget gw, XEvent *event, String *params, Cardinal *nparams)
+static void Set (Widget gw, _X_UNUSED XEvent *event,
+                 _X_UNUSED String *params, _X_UNUSED Cardinal *nparams)
 {
     MailboxWidget w = (MailboxWidget) gw;
 
@@ -292,7 +285,8 @@ static void Set (Widget gw, XEvent *event, String *params, Cardinal *nparams)
  */
 
 /* ARGSUSED */
-static void Unset (Widget gw, XEvent *event, String *params, Cardinal *nparams)
+static void Unset (Widget gw, _X_UNUSED XEvent *event,
+                   _X_UNUSED String *params, _X_UNUSED Cardinal *nparams)
 {
     MailboxWidget w = (MailboxWidget) gw;
 
@@ -305,7 +299,8 @@ static void Unset (Widget gw, XEvent *event, String *params, Cardinal *nparams)
  */
 
 /* ARGSUSED */
-static void Check (Widget gw, XEvent *event, String *params, Cardinal *nparams)
+static void Check (Widget gw, _X_UNUSED XEvent *event,
+                   _X_UNUSED String *params, _X_UNUSED Cardinal *nparams)
 {
     MailboxWidget w = (MailboxWidget) gw;
 
@@ -314,7 +309,7 @@ static void Check (Widget gw, XEvent *event, String *params, Cardinal *nparams)
 
 
 /* ARGSUSED */
-static void clock_tic (XtPointer client_data, XtIntervalId *id)
+static void clock_tic (XtPointer client_data, _X_UNUSED XtIntervalId *id)
 {
     MailboxWidget w = (MailboxWidget) client_data;
 
@@ -351,7 +346,7 @@ static Pixmap make_pixmap (Display *dpy, MailboxWidget w, Pixmap bitmap,
 	fore = w->mailbox.foreground_pixel;
 	back = w->core.background_pixel;
     }
-    return XmuCreatePixmapFromBitmap (dpy, w->core.window, bitmap, 
+    return XmuCreatePixmapFromBitmap (dpy, w->core.window, bitmap,
 				      width, height, depth, fore, back);
 }
 
@@ -373,7 +368,7 @@ static void Realize (Widget gw, XtValueMask *valuemaskp,
      * build up the pixmaps that we'll put into the image
      */
     if (w->mailbox.full.bitmap == None) {
-	w->mailbox.full.bitmap = 
+	w->mailbox.full.bitmap =
 	  XCreateBitmapFromData (dpy, w->core.window, (char *) mailfull_bits,
 				 mailfull_width, mailfull_height);
     }
@@ -391,11 +386,11 @@ static void Realize (Widget gw, XtValueMask *valuemaskp,
 					  depth, w->mailbox.flipit,
 					  &w->mailbox.full.width,
 					  &w->mailbox.full.height);
-			 
+
     if (w->mailbox.empty.mask == None && w->mailbox.full.mask == None)
       w->mailbox.shapeit = False;
 
-    w->mailbox.interval_id = 
+    w->mailbox.interval_id =
 	XtAppAddTimeOut (XtWidgetToApplicationContext((Widget) w),
 			 w->mailbox.update * 1000, clock_tic, (XtPointer) w);
 
@@ -427,7 +422,8 @@ static void Destroy (Widget gw)
 }
 
 
-static void Redisplay (Widget gw, XEvent *event, Region region)
+static void Redisplay (Widget gw,
+                       _X_UNUSED XEvent *event, _X_UNUSED Region region)
 {
     MailboxWidget w = (MailboxWidget) gw;
 
@@ -477,7 +473,7 @@ static void check_mailbox (MailboxWidget w, Boolean force_redraw, Boolean reset)
      * Now check for changes.  If reset is set then we want to pretent that
      * there is no mail.  If the mailbox is empty then we want to turn off
      * the flag.  Otherwise if the mailbox has changed size then we want to
-     * put the flag up, unless the mailbox has been read since the last 
+     * put the flag up, unless the mailbox has been read since the last
      * write.
      *
      * The cases are:
@@ -506,10 +502,10 @@ static void check_mailbox (MailboxWidget w, Boolean force_redraw, Boolean reset)
 	}
     } else if (mailboxsize != w->mailbox.last_size) {  /* different size */
 	if (!w->mailbox.once_only || !w->mailbox.flag_up)
-	    beep(w); 
+	    beep(w);
 	if (!w->mailbox.flag_up)
 	    force_redraw = w->mailbox.flag_up = TRUE;
-    } 
+    }
 
     w->mailbox.last_size = mailboxsize;
     if (force_redraw) redraw_mailbox (w);
@@ -564,15 +560,16 @@ static void CloseDown (MailboxWidget w, int status)
 
 
 /* ARGSUSED */
-static Boolean SetValues (Widget gcurrent, Widget grequest, Widget gnew,
-			  ArgList args, Cardinal *num_args)
+static Boolean SetValues (Widget gcurrent, _X_UNUSED Widget grequest,
+                          Widget gnew,
+			  _X_UNUSED ArgList args, _X_UNUSED Cardinal *num_args)
 {
     MailboxWidget current = (MailboxWidget) gcurrent;
     MailboxWidget new = (MailboxWidget) gnew;
     Boolean redisplay = FALSE;
 
     if (current->mailbox.update != new->mailbox.update) {
-	if (current->mailbox.interval_id) 
+	if (current->mailbox.interval_id)
 	  XtRemoveTimeOut (current->mailbox.interval_id);
 	new->mailbox.interval_id =
 	    XtAppAddTimeOut (XtWidgetToApplicationContext(gnew),

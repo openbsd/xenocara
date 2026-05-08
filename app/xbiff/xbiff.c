@@ -1,4 +1,3 @@
-/* $XConsortium: xbiff.c,v 1.19 94/04/17 20:43:28 rws Exp $ */
 /*
 
 Copyright (c) 1988  X Consortium
@@ -28,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xbiff/xbiff.c,v 1.3tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -37,6 +35,7 @@ from the X Consortium.
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/Xatom.h>
+#include <X11/Xfuncproto.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include "Mailbox.h"
@@ -53,7 +52,8 @@ static XrmOptionDescRec options[] = {
 
 static Atom wm_delete_window;
 
-static void quit (Widget w, XEvent *event, String *params, Cardinal *num_params)
+static void quit (Widget w, XEvent *event,
+                  _X_UNUSED String *params, _X_UNUSED Cardinal *num_params)
 {
     if (event->type == ClientMessage &&
         ((Atom) event->xclient.data.l[0]) != wm_delete_window) {
