@@ -1,3 +1,49 @@
+commit 780d1f6f192a331de7b298a96e23ebc44d2a884b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 7 17:32:14 2026 -0800
+
+    libfontenc 1.1.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 32e92154b791cd3ebc8f2ba54b997f0916494686
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dcdbcce903ee49200040c0da092b45253c20c6df
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 16 11:11:09 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libfontenc/-/merge_requests/15>
+
+commit 77b46c4689dab624129b0d08404c50ef5d1a94bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 5 18:26:32 2025 -0800
+
+    configure: Use pkg-config to handle zlib dependency if possible
+    
+    Preserves fallback for systems like darwin without zlib.pc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libfontenc/-/merge_requests/14>
+
 commit 92a85fda2acb4e14ec0b2f6d8fe3eaf2b687218c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 2 10:25:05 2024 -0800
