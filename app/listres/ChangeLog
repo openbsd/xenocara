@@ -1,3 +1,60 @@
+commit 3d2d3a77ea8fb503ee184e3466fa5cd7745d823d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 18 15:03:12 2026 -0700
+
+    listres 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dd215742f08e5a9d9aa2def2484247a59f9bda0b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 14 12:00:10 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/listres/-/merge_requests/8>
+
+commit 999fa1ec360156ea2702c97001b7fc08f780eac2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/listres/-/merge_requests/8>
+
+commit 9b3df1445ef46bc1c790dbc6f3a73597f7ba11d9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 26 14:46:02 2025 -0700
+
+    man pages: fix warnings from `mandoc -T lint`
+    
+    mandoc: man/listres.1:30:15: WARNING: cannot parse date, using it verbatim: TH listres 1.0.6
+    mandoc: man/listres.1:37:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/listres/-/merge_requests/7>
+
+commit 3031b8c5ec2de1413853dace3885b0d154b966b2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 29 16:04:09 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/listres/-/merge_requests/6>
+
 commit be836dd49be49040f0420893393c1b864fc79611
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 3 09:51:43 2024 -0800
