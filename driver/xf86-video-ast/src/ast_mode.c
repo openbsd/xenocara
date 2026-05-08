@@ -197,53 +197,53 @@ static VBIOS_ENHTABLE_STRUCT  Res1360x768Table[] = {
 };
 
 static VBIOS_ENHTABLE_STRUCT  Res1600x900Table[] = {
+    {1760, 1600, 48, 32, 926,  900, 3, 5, VCLK97_75,	/* 60Hz CVT RB */
+      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo | AST2500PreCatchCRT), 60, 2, 0x3A },
     {2112, 1600, 88,168, 934,  900, 3, 5, VCLK118_25,	/* 60Hz CVT */
       (SyncPN | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 60, 1, 0x3A },
-    {1760, 1600, 48, 32, 926,  900, 3, 5, VCLK97_75,	/* 60Hz CVT RB */
-      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 60, 2, 0x3A },
-    {1760, 1600, 48, 32, 926,  900, 3, 5, VCLK97_75,	/* end */
-      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 0xFF, 2, 0x3A },
+    {2112, 1600, 88,168, 934,  900, 3, 5, VCLK118_25,	/* end */
+      (SyncPN | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 0xFF, 1, 0x3A },
 };
 
 static VBIOS_ENHTABLE_STRUCT  Res1920x1080Table[] = {
     {2200, 1920, 88, 44, 1125, 1080, 4, 5, VCLK148_5,	/* HDTV 60Hz */
-      (SyncPP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 60, 1, 0x38 },
+      (SyncPP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo | AST2500PreCatchCRT), 60, 1, 0x38 },
     {2200, 1920, 88, 44, 1125, 1080, 4, 5, VCLK148_5,	/* end */
-      (SyncPP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 0xFF, 1, 0x38 },
+      (SyncPP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo | AST2500PreCatchCRT), 0xFF, 1, 0x38 },
 };
 
 /* 16:10 */
 static VBIOS_ENHTABLE_STRUCT  Res1280x800Table[] = {
+    {1440, 1280, 48, 32,  823,  800, 3, 6, VCLK71,		/* 60Hz CVT RB */
+      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo | AST2500PreCatchCRT), 60, 2, 0x35 },
     {1680, 1280, 72,128,  831,  800, 3, 6, VCLK83_5,	/* 60Hz CVT */
       (SyncPN | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 60, 1, 0x35 },
-    {1440, 1280, 48, 32,  823,  800, 3, 6, VCLK71,		/* 60Hz CVT RB */
-      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 60, 2, 35 },
-    {1440, 1280, 48, 32,  823,  800, 3, 6, VCLK71,		/* 60Hz CVT RB */
-      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 0xFF, 2, 35 },
+    {1680, 1280, 72,128,  831,  800, 3, 6, VCLK83_5,	/* end */
+      (SyncPN | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 0xFF, 1, 0x35 },
 };
 
 static VBIOS_ENHTABLE_STRUCT  Res1440x900Table[] = {
+    {1600, 1440, 48, 32,  926,  900, 3, 6, VCLK88_75,	/* 60Hz CVT RB */
+      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo | AST2500PreCatchCRT), 60, 2, 0x36 },
     {1904, 1440, 80,152,  934,  900, 3, 6, VCLK106_5,	/* 60Hz CVT */
       (SyncPN | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 60, 1, 0x36 },
-    {1600, 1440, 48, 32,  926,  900, 3, 6, VCLK88_75,	/* 60Hz CVT RB */
-      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 60, 2, 0x36 },
-    {1600, 1440, 48, 32,  926,  900, 3, 6, VCLK88_75,	/* 60Hz CVT RB */
-      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 0xFF, 2, 0x36 },
+    {1904, 1440, 80,152,  934,  900, 3, 6, VCLK106_5,	/* end */
+      (SyncPN | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 0xFF, 1, 0x36 },
 };
 
 static VBIOS_ENHTABLE_STRUCT  Res1680x1050Table[] = {
+    {1840, 1680, 48, 32, 1080, 1050, 3, 6, VCLK119,		/* 60Hz CVT RB */
+      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo | AST2500PreCatchCRT), 60, 2, 0x37 },
     {2240, 1680,104,176, 1089, 1050, 3, 6, VCLK146_25,	/* 60Hz CVT */
       (SyncPN | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 60, 1, 0x37 },
-    {1840, 1680, 48, 32, 1080, 1050, 3, 6, VCLK119,		/* 60Hz CVT RB */
-      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 60, 2, 0x37 },
-    {1840, 1680, 48, 32, 1080, 1050, 3, 6, VCLK119,		/* 60Hz CVT RB */
-      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 0xFF, 2, 0x37 },
+    {2240, 1680,104,176, 1089, 1050, 3, 6, VCLK146_25,	/* end */
+      (SyncPN | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 0xFF, 1, 0x37 },
 };
 
 static VBIOS_ENHTABLE_STRUCT  Res1920x1200Table[] = {
-    {2080, 1920, 48, 32, 1235, 1200, 3, 6, VCLK154,	/* 60Hz */
-      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 60, 1, 0x34 },
-    {2080, 1920, 48, 32, 1235, 1200, 3, 6, VCLK154,	/* 60Hz */
+    {2080, 1920, 48, 32, 1235, 1200, 3, 6, VCLK154,		/* 60Hz CVT RB */
+      (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo | AST2500PreCatchCRT), 60, 1, 0x34 },
+    {2080, 1920, 48, 32, 1235, 1200, 3, 6, VCLK154,		/* end */
       (SyncNP | Charx8Dot | LineCompareOff | WideScreenMode | NewModeInfo), 0xFF, 1, 0x34 },
 };
 
@@ -307,6 +307,67 @@ static VBIOS_DCLK_INFO DCLKTable_AST2100 [] = {
     {0x3b, 0x2c, 0x81},					/* 1A: VCLK118_25	*/
 };
 
+static VBIOS_DCLK_INFO DCLKTable_AST2500 [] = {
+    {0x40, 0x38, 0x73},					/* 00: VCLK25_175	*/
+    {0x3A, 0x38, 0x43},					/* 01: VCLK28_322	*/
+    {0x3E, 0x70, 0x73},					/* 02: VCLK31_5         */
+    {0x35, 0x70, 0x43},					/* 03: VCLK36		*/
+    {0x31, 0x28, 0x73},					/* 04: VCLK40		*/
+    {0x41, 0x68, 0x73},					/* 05: VCLK49_5		*/
+    {0x31, 0x68, 0x53},					/* 06: VCLK50		*/
+    {0x4A, 0x68, 0x73},					/* 07: VCLK56_25	*/
+    {0x40, 0x68, 0x53},					/* 08: VCLK65		*/
+    {0x31, 0x60, 0x73},					/* 09: VCLK75		*/
+    {0x3A, 0x28, 0x43},					/* 0A: VCLK78_75	*/
+    {0x3E, 0x60, 0x73},					/* 0B: VCLK94_5		*/
+    {0x35, 0x60, 0x63},					/* 0C: VCLK108		*/
+    {0x3D, 0x40, 0x63},					/* 0D: VCLK135		*/
+    {0x4E, 0x60, 0x63},					/* 0E: VCLK157_5	*/
+    {0x35, 0x60, 0x53},					/* 0F: VCLK162		*/
+    {0x4C, 0x60, 0x63},				    /* 10: VCLK154      	*/
+    {0x4F, 0x48, 0x53},					/* 11: VCLK83.5         */
+    {0x46, 0x60, 0x73},					/* 12: VCLK106.5        */
+    {0x3C, 0x20, 0x63},					/* 13: VCLK146.25       */
+    {0x3D, 0x20, 0x63},					/* 14: VCLK148.5        */
+    {0x46, 0x68, 0x53},					/* 15: VCLK71           */
+    {0x49, 0x68, 0x43},					/* 16: VCLK88.75        */
+    {0x4e, 0x60, 0x73},					/* 17: VCLK119          */
+    {0x38, 0x60, 0x73},				    /* 18: VCLK85_5         */
+    {0x38, 0x20, 0x73},					/* 19: VCLK97_75 */
+    {0x4e, 0x60, 0x73},					/* 1A: VCLK118_25 */
+};
+
+static VBIOS_DCLK_INFO DCLKTable_AST2500A1 [] = {
+    {0x2C, 0xE7, 0x03},					/* 00: VCLK25_175	*/
+    {0x95, 0x62, 0x03},					/* 01: VCLK28_322	*/
+    {0x67, 0x63, 0x01},					/* 02: VCLK31_5         */
+    {0x76, 0x63, 0x01},					/* 03: VCLK36		*/
+    {0xEE, 0x67, 0x01},					/* 04: VCLK40		*/
+    {0x82, 0x62, 0x01},					/* 05: VCLK49_5		*/
+    {0xC6, 0x64, 0x01},					/* 06: VCLK50		*/
+    {0x94, 0x62, 0x01},					/* 07: VCLK56_25	*/
+    {0x80, 0x64, 0x00},					/* 08: VCLK65		*/
+    {0x7B, 0x63, 0x00},					/* 09: VCLK75		*/
+    {0x67, 0x62, 0x00},					/* 0A: VCLK78_75	*/
+    {0x7C, 0x62, 0x00},					/* 0B: VCLK94_5		*/
+    {0x8E, 0x62, 0x00},					/* 0C: VCLK108		*/
+    {0x85, 0x24, 0x00},					/* 0D: VCLK135		*/
+    {0x67, 0x22, 0x00},					/* 0E: VCLK157_5	*/
+    {0x6A, 0x22, 0x00},					/* 0F: VCLK162		*/
+    {0x4d, 0x4c, 0x80},				        /* 10: VCLK154      	*/
+    {0x68, 0x6f, 0x80},					/* 11: VCLK83.5         */
+    {0x28, 0x49, 0x80},					/* 12: VCLK106.5        */
+    {0x37, 0x49, 0x80},					/* 13: VCLK146.25       */
+    {0x1f, 0x45, 0x80},					/* 14: VCLK148.5        */
+    {0x47, 0x6c, 0x80},					/* 15: VCLK71           */
+    {0x25, 0x65, 0x80},					/* 16: VCLK88.75        */
+    {0x58, 0x01, 0x42},					/* 17: VCLK119          */
+    {0x32, 0x67, 0x80},				        /* 18: VCLK85_5         */
+    {0x6a, 0x6d, 0x80},					/* 19: VCLK97_75 */
+    {0x44, 0x20, 0x43},					/* 1A: VCLK118_25 */
+};
+
+#if 0
 static VBIOS_DAC_INFO DAC_TEXT[] = {
  { 0x00, 0x00, 0x00 },  { 0x00, 0x00, 0x2a },  { 0x00, 0x2a, 0x00 },  { 0x00, 0x2a, 0x2a },
  { 0x2a, 0x00, 0x00 },  { 0x2a, 0x00, 0x2a },  { 0x2a, 0x2a, 0x00 },  { 0x2a, 0x2a, 0x2a },
@@ -344,6 +405,7 @@ static VBIOS_DAC_INFO DAC_EGA[] = {
  { 0x15, 0x15, 0x15 },  { 0x15, 0x15, 0x3f },  { 0x15, 0x3f, 0x15 },  { 0x15, 0x3f, 0x3f },
  { 0x3f, 0x15, 0x15 },  { 0x3f, 0x15, 0x3f },  { 0x3f, 0x3f, 0x15 },  { 0x3f, 0x3f, 0x3f },
 };
+#endif
 
 static VBIOS_DAC_INFO DAC_VGA[] = {
  { 0x00, 0x00, 0x00 },  { 0x00, 0x00, 0x2a },  { 0x00, 0x2a, 0x00 },  { 0x00, 0x2a, 0x2a },
@@ -465,6 +527,9 @@ ASTSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         vSetSyncReg(pScrn, mode, &vgamodeinfo);
         bSetDACReg(pScrn, mode, &vgamodeinfo);
 
+        /* clear video buffer to avoid display noise */
+        memset(pAST->FBVirtualAddr, 0x00, pAST->VideoModeInfo.ScreenPitch*pAST->VideoModeInfo.ScreenHeight);
+
         vAST1000DisplayOn(pScrn);
     }
 
@@ -495,6 +560,8 @@ static Bool bGetAST1000VGAModeInfo(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIO
     ASTRecPtr pAST;
     ULONG ulModeID, ulColorIndex, ulRefreshRate, ulRefreshRateIndex = 0;
     ULONG ulHBorder, ulVBorder;
+    Bool check_sync;
+    PVBIOS_ENHTABLE_STRUCT loop, best = NULL;
 
     pAST = ASTPTR(pScrn);
 
@@ -560,27 +627,34 @@ static Bool bGetAST1000VGAModeInfo(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIO
     }
 
     /* Get Proper Mode Index */
-    if (pVGAModeInfo->pEnhTableEntry->Flags & WideScreenMode)
-    {
-        /* parsing for wide screen reduced blank mode */
-        if ((mode->Flags & V_NVSYNC) && (mode->Flags & V_PHSYNC))	/* CVT RB */
-            pVGAModeInfo->pEnhTableEntry++;
-    }
-    else
-    {
-        ulRefreshRate = (mode->Clock * 1000) / (mode->HTotal * mode->VTotal);
-
-        while (pVGAModeInfo->pEnhTableEntry->ulRefreshRate < ulRefreshRate)
-        {
- 	        pVGAModeInfo->pEnhTableEntry++;
-	        if ((pVGAModeInfo->pEnhTableEntry->ulRefreshRate > ulRefreshRate) ||
-	           (pVGAModeInfo->pEnhTableEntry->ulRefreshRate == 0xFF))
-	        {
-	            pVGAModeInfo->pEnhTableEntry--;
-	            break;
-	        }
-        }
-    }
+    ulRefreshRate = (mode->Clock * 1000) / (mode->HTotal * mode->VTotal) + 1;
+    loop = pVGAModeInfo->pEnhTableEntry;
+    check_sync = loop->Flags & WideScreenMode;
+    do {
+	while (loop->ulRefreshRate != 0xff) {
+		if ((check_sync) &&
+		    (((mode->Flags & V_NVSYNC)  &&
+		      (loop->Flags & PVSync))  ||
+		     ((mode->Flags & V_PVSYNC)  &&
+		      (loop->Flags & NVSync))  ||
+		     ((mode->Flags & V_NHSYNC)  &&
+		      (loop->Flags & PHSync))  ||
+		     ((mode->Flags & V_PHSYNC)  &&
+		      (loop->Flags & NHSync)))) {
+			loop++;
+			continue;
+		}
+	if (loop->ulRefreshRate <= ulRefreshRate
+		    && (!best || loop->ulRefreshRate > best->ulRefreshRate))
+			best = loop;
+			loop++;
+	}
+	if (best || !check_sync)
+		break;
+	check_sync = 0;
+    } while (1);
+    if (best)
+	pVGAModeInfo->pEnhTableEntry = best;
 
     /* Update mode CRTC info */
     ulHBorder = (pVGAModeInfo->pEnhTableEntry->Flags & HBorder) ? 8:0;
@@ -696,11 +770,15 @@ static void
 vSetCRTCReg(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_INFO pVGAModeInfo)
 {
     ASTRecPtr pAST;
-    USHORT usTemp;
+    USHORT usTemp, ulPreCache = 0;
     UCHAR jReg05, jReg07, jReg09, jRegAC, jRegAD, jRegAE;
 
     pAST = ASTPTR(pScrn);
     jReg05 = jReg07 = jReg09 = jRegAC = jRegAD = jRegAE = 0;
+
+    /* init value */
+    if ((pAST->jChipType == AST2500) && (pVGAModeInfo->pEnhTableEntry->Flags & AST2500PreCatchCRT))
+    	ulPreCache = 40;
 
     /* unlock CRTC */
     SetIndexRegMask(CRTC_PORT,0x11, 0x7F, 0x00);
@@ -719,10 +797,10 @@ vSetCRTCReg(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_INFO pVGAModeInf
     if (usTemp & 0x20) jReg05 |= 0x80;			/* HBE D[5] */
     if (usTemp & 0x40) jRegAD |= 0x01;			/* HBE D[6] */
     SetIndexRegMask(CRTC_PORT,0x03, 0xE0, (UCHAR) (usTemp & 0x1F));
-    usTemp = (mode->CrtcHSyncStart >> 3 ) - 1;
+    usTemp = ((mode->CrtcHSyncStart - ulPreCache) >> 3 ) - 1;
     if (usTemp & 0x100) jRegAC |= 0x40;			/* HRS D[5] */
     SetIndexRegMask(CRTC_PORT,0x04, 0x00, (UCHAR) (usTemp));
-    usTemp = ((mode->CrtcHSyncEnd >> 3 ) - 1) & 0x3F;
+    usTemp = (((mode->CrtcHSyncEnd - ulPreCache) >> 3 ) - 1) & 0x3F;
     if (usTemp & 0x20) jRegAD |= 0x04;			/* HRE D[5] */
     SetIndexRegMask(CRTC_PORT,0x05, 0x60, (UCHAR) ((usTemp & 0x1F) | jReg05));
 
@@ -762,6 +840,15 @@ vSetCRTCReg(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_INFO pVGAModeInf
     SetIndexRegMask(CRTC_PORT,0x09, 0xDF, (UCHAR) jReg09);
     SetIndexRegMask(CRTC_PORT,0xAE, 0x00, (UCHAR) (jRegAE | 0x80));	/* disable line compare */
 
+    if ((pAST->jChipType == AST2500) && (pVGAModeInfo->pEnhTableEntry->Flags & AST2500PreCatchCRT))
+    {
+    	SetIndexRegMask(CRTC_PORT,0xB6, 0x3F, 0x80);
+	}
+	else
+	{
+    	SetIndexRegMask(CRTC_PORT,0xB6, 0x3F, 0x00);
+	}
+
     /* lock CRTC */
     SetIndexRegMask(CRTC_PORT,0x11, 0x7F, 0x80);
 
@@ -790,14 +877,25 @@ static void vSetDCLKReg(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_INFO
     pAST = ASTPTR(pScrn);
 
     pEnhModePtr = pVGAModeInfo->pEnhTableEntry;
-    if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST1100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2150) || (pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
+    if ((pAST->jChipType == AST2500) && (PCI_DEV_REVISION(pAST->PciInfo) > 0x40))
+        pDCLKPtr = &DCLKTable_AST2500A1[pEnhModePtr->DCLKIndex];
+    else if ((pAST->jChipType == AST2500) && (PCI_DEV_REVISION(pAST->PciInfo) == 0x40))
+        pDCLKPtr = &DCLKTable_AST2500[pEnhModePtr->DCLKIndex];
+    else if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST1100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2150) || (pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
         pDCLKPtr = &DCLKTable_AST2100[pEnhModePtr->DCLKIndex];
     else
         pDCLKPtr = &DCLKTable[pEnhModePtr->DCLKIndex];
 
     SetIndexRegMask(CRTC_PORT,0xC0, 0x00,  pDCLKPtr->Param1);
     SetIndexRegMask(CRTC_PORT,0xC1, 0x00,  pDCLKPtr->Param2);
-    SetIndexRegMask(CRTC_PORT,0xBB, 0x0F, (pDCLKPtr->Param3 & 0x80) | ((pDCLKPtr->Param3 & 0x03) << 4) );
+    if ((pAST->jChipType == AST2500) && (PCI_DEV_REVISION(pAST->PciInfo) == 0x40))
+    {
+        SetIndexRegMask(CRTC_PORT,0xBB, 0x0F, (pDCLKPtr->Param3 & 0xF0));
+    }
+    else
+    {
+        SetIndexRegMask(CRTC_PORT,0xBB, 0x0F, (pDCLKPtr->Param3 & 0xC0) | ((pDCLKPtr->Param3 & 0x03) << 4) );
+    }
 
 }
 
@@ -842,7 +940,7 @@ static void vSetExtReg(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_INFO 
 #endif
 
     /* Set Threshold */
-    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
+    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500))
     {
         SetIndexReg(CRTC_PORT,0xA7, 0x78);
         SetIndexReg(CRTC_PORT,0xA6, 0x60);
@@ -870,9 +968,10 @@ static void vSetSyncReg(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_INFO
     pEnhModePtr = pVGAModeInfo->pEnhTableEntry;
 
     jReg  = GetReg(MISC_PORT_READ);
-    jReg |= (UCHAR) (pEnhModePtr->Flags & SyncNN);
+    jReg &= ~0xC0;
+	if (pEnhModePtr->Flags & NVSync) jReg |= 0x80;
+	if (pEnhModePtr->Flags & NHSync) jReg |= 0x40;
     SetReg(MISC_PORT_WRITE,jReg);
-
 }
 
 static Bool bSetDACReg(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_INFO pVGAModeInfo)

@@ -146,7 +146,7 @@
 
 #define WriteAST1180SOC(addr, data)	\
 {	\
-        ULONG temp;	\
+        ULONG temp _X_UNUSED;	\
         *(ULONG *) (pAST->MMIOVirtualAddr + 0xF004) = (addr) & 0xFFFF0000;	\
         *(ULONG *) (pAST->MMIOVirtualAddr + 0xF000) = 0x1;	\
         *(ULONG *) (pAST->MMIOVirtualAddr + 0x10000 + ((addr) & 0x0000FFFF)) = (data);	\

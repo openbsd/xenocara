@@ -72,6 +72,7 @@ typedef enum _CHIP_ID {
     AST2150,
     AST2300,
     AST2400,
+    AST2500,
     AST1180
 } CHIP_ID;
 

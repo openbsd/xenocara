@@ -440,7 +440,7 @@ ASTFireCursor(ScrnInfoPtr pScrn)
 {
     ASTRecPtr  pAST = ASTPTR(pScrn);
 
-    SetIndexRegMask(CRTC_PORT, 0xCB, 0xFF, 0x00);	/* dummp write to fire HWC */
+    SetIndexRegMask(CRTC_PORT, 0xCB, 0xFF, 0x00);	/* dummy write to fire HWC */
 
 }
 

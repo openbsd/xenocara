@@ -66,21 +66,26 @@
 #define HalfDCLK                0x00000002
 #define DoubleScanMode          0x00000004
 #define LineCompareOff          0x00000008
-#define SyncPP                  0x00000000
-#define SyncPN                  0x00000040
-#define SyncNP                  0x00000080
-#define SyncNN                  0x000000C0
 #define HBorder                 0x00000020
 #define VBorder                 0x00000010
-#define WideScreenMode		    0x00000100
-#define NewModeInfo		        0x00000200
+#define WideScreenMode		0x00000100
+#define NewModeInfo		0x00000200
+#define NHSync			0x00000400
+#define PHSync			0x00000800
+#define NVSync			0x00001000
+#define PVSync			0x00002000
+#define	SyncPP			(PVSync | PHSync)
+#define	SyncPN			(PVSync | NHSync)
+#define	SyncNP			(NVSync | PHSync)
+#define	SyncNN			(NVSync | NHSync)
+#define AST2500PreCatchCRT		0x00004000
 
 /* DAC Definition */
 #define DAC_NUM_TEXT		64
 #define DAC_NUM_EGA		64
 #define DAC_NUM_VGA		256
 
-/* Data Structure decalration for internal use */
+/* Data Structure declaration for internal use */
 typedef struct {
 
     UCHAR MISC;

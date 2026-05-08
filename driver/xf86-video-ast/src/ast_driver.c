@@ -387,7 +387,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    MessageType from;
    int maxPitch, maxHeight;
 
-   /* Suport one adapter only now */
+   /* Support one adapter only now */
    if (pScrn->numEntities != 1)
        return FALSE;
 
@@ -623,6 +623,18 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
        /* Enable VGA MMIO Access */
        vASTEnableVGAMMIO(pScrn);
 
+       /* Get Chip Type */
+       if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x40)
+           pAST->jChipType = AST2500;
+       else if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x30)
+           pAST->jChipType = AST2400;
+       else if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x20)
+           pAST->jChipType = AST2300;
+       else if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x10)
+           ASTGetChipType(pScrn);
+       else
+           pAST->jChipType = AST2000;
+
        /* Init VGA Adapter */
        if (!xf86IsPrimaryPci(pAST->PciInfo))
        {
@@ -631,16 +643,6 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
 
        vASTOpenKey(pScrn);
        bASTRegInit(pScrn);
-
-       /* Get Chip Type */
-       if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x30)
-           pAST->jChipType = AST2400;
-       else if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x20)
-           pAST->jChipType = AST2300;
-       else if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x10)
-           ASTGetChipType(pScrn);
-       else
-           pAST->jChipType = AST2000;
 
        /* Get Options from Scratch */
        ASTGetScratchOptions(pScrn);
@@ -685,7 +687,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    clockRanges->doubleScanAllowed = FALSE;
 
    /* Add for AST2100, ycchen@061807 */
-   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST1180))
+   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500) || (pAST->jChipType == AST1180))
    {
        maxPitch  = 1920;
        maxHeight = 1200;
@@ -703,7 +705,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
 			 pScrn->display->virtualX, pScrn->display->virtualY,
 			 pAST->FbMapSize, LOOKUP_BEST_REFRESH);
 
-   /* fixed some monitors can't get propery validate modes using estimated ratio modes */
+   /* fixed some monitors can't get properly validated modes using estimated ratio modes */
    if (i < 2)		/* validate modes are too few */
    {
        i = xf86ValidateModes(pScrn, pScrn->monitor->Modes,
@@ -735,7 +737,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
 
    xf86SetDpi(pScrn, 0, 0);
 
-   /* Accelaration Check */
+   /* Acceleration Check */
    pAST->noAccel = TRUE;
    pAST->pCMDQPtr = NULL;
    pAST->CMDQInfo.ulCMDQSize 		= 0;
@@ -1001,7 +1003,7 @@ ASTScreenInit(SCREEN_INIT_ARGS_DECL)
    xf86DPMSInit(pScreen, ASTDisplayPowerManagementSet, 0);
 
 #ifdef AstVideo
-   if ( (pAST->jChipType == AST1180) || (pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) )
+   if ( (pAST->jChipType == AST1180) || (pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500) )
    {
        xf86DrvMsg(pScrn->scrnIndex, X_INFO,"AST Initial Video()\n");
        ASTInitVideo(pScreen);
@@ -1195,7 +1197,7 @@ ASTValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
       if ( (mode->CrtcHDisplay == 1600) && (mode->CrtcVDisplay == 900) )
           return MODE_OK;
 
-      if ( (pAST->jChipType == AST2100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST1180) )
+      if ( (pAST->jChipType == AST2100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500) || (pAST->jChipType == AST1180) )
       {
           if ( (mode->CrtcHDisplay == 1920) && (mode->CrtcVDisplay == 1080) )
               return MODE_OK;

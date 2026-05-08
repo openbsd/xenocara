@@ -1,3 +1,225 @@
+commit 7b8c415f4204a4b8820aefe18083b21e9f363c13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 16:13:56 2022 -0800
+
+    xf86-video-ast 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4bcb8260871c339dc6c618d108cfbe2908bda7af
+Author: Elyes HAOUAS <ehaouas@noos.fr>
+Date:   Wed Nov 16 11:35:32 2022 +0000
+
+    Res1280x800Table: Fix a typo on hexa value.
+    
+    Replace "... AST2500PreCatchCRT), 60, 2, 35 }"
+    with "... AST2500PreCatchCRT), 60, 2, 0x35 }"
+
+commit 0e0fd56d9f3f9e4a9d4dfde18f01c5578113559c
+Author: Daniel O'Connor <darius@dons.net.au>
+Date:   Fri Sep 18 00:00:28 2020 +0930
+
+    Do not hang if P2A is disabled, using sensible defaults instead.
+    
+    Based on Linux DRM https://patchwork.kernel.org/patch/9578793/
+
+commit 773f703d92714edb80458693bf9bf42fc0b77db4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 10:50:11 2022 -0700
+
+    ast_vgatool: Fix indentation in ASTGetScratchOptions()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 19cf45e2a4699c950d08cc7aa3e4ccfe76e276d6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 10:42:37 2022 -0700
+
+    ast_vgatool: Fix -Wold-style-declaration warning
+    
+    ast_vgatool.c:3400:1: warning: ‘static’ is not at beginning of declaration [-Wold-style-declaration]
+     void static vGetDefaultSettings(ScrnInfoPtr pScrn)
+     ^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 065ed43c44b50231fa2ac9d406727d5149cac27f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 10:39:08 2022 -0700
+
+    ast_mode: Eliminate unused DAC_TEXT & DAC_EGA arrays
+    
+    At top level:
+    ast_mode.c:389:23: warning: ‘DAC_EGA’ defined but not used [-Wunused-variable]
+     static VBIOS_DAC_INFO DAC_EGA[] = {
+                           ^~~~~~~
+    ast_mode.c:370:23: warning: ‘DAC_TEXT’ defined but not used [-Wunused-variable]
+     static VBIOS_DAC_INFO DAC_TEXT[] = {
+                           ^~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f9dcbd53e7c63918b4798d961b56d28e55c9787f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 10:25:25 2022 -0700
+
+    WriteAST1180SOC: Add _X_UNUSED attribute to temp variable
+    
+    Clears 67 out of 84 warnings of the form:
+    
+    In file included from ast_cursor.c:53:0:
+    ast_cursor.c: In function ‘ASTLoadCursorImage’:
+    ast_vgatool.h:149:15: warning: variable ‘temp’ set but not used [-Wunused-but-set-variable]
+             ULONG temp; \
+                   ^
+    ast_cursor.c:293:9: note: in expansion of macro ‘WriteAST1180SOC’
+             WriteAST1180SOC(AST1180_GFX_BASE+AST1180_HWC1_PATTERNADDR, ulPatternAddr);
+             ^~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8026dbf57d657a2ff1d6bd6037082c11682f49bb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7916e2a65c53075434b4242dcafd800a5910a7e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 17 15:25:47 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b90cfb94d68f156767d0eec818c9a2aab487422e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 17 15:25:05 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0b9cdc95944ba99c9ccd839b68e402915a68be60
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 17 15:19:50 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 72e3f2e3e88655066d9687e309ca95c5b7d5e0ce
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 13:06:17 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a87ba3607d75a0b8f38ea9a91262427cd706ed86
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 12:14:44 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1dba6ba5a792e0052ff21c2781dbff74dc33e621
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit df8a9c009c6a351fbd3e461aa269140db9f48807
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1eaafc834ad56b503536b4a913d8c3078b5c756e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit d6253bc1242ece1054c449745bd3425ccbecf8fc
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9dc95d058b1efe10c91018c91415e273d7f5d225
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 11:19:23 2017 +1000
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 39e80895acb4b818ecc15af51a68178562ebb41d
+Author: Y.C. Chen <yc_chen@aspeedtech.com>
+Date:   Wed Aug 19 09:21:05 2015 +0800
+
+    Bump Version to 1.1.5
+
+commit 74281c4ce201ff04a6672c703d09ed28286f1801
+Author: Y.C. Chen <yc_chen@aspeedtech.com>
+Date:   Fri Aug 14 15:30:00 2015 +0800
+
+    Support AST2500
+
+commit 9918d6f69ac51d9d27b074e3e490783acda68dca
+Author: Y.C. Chen <yc_chen@aspeedtech.com>
+Date:   Fri Aug 14 10:11:23 2015 +0800
+
+    Fixed Failed to Init when ASPEED Graphics is Secondary
+
+commit e545ab905ea120014558d6f1733d87ffde5d5d71
+Author: Y.C. Chen <yc_chen@aspeedtech.com>
+Date:   Thu Aug 13 15:54:15 2015 +0800
+
+    Fixed Transient Noise While System Resume from Hibernate
+
+commit 77e7ac37c6031551f7ad355dc94c4176df4956aa
+Author: Y.C. Chen <yc_chen@aspeedtech.com>
+Date:   Thu Aug 13 15:21:57 2015 +0800
+
+    use same search mode criteria with ast drm driver
+
+commit 4f404aa29eea5707cfdfe3dc2c762bd46063dfec
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Aug 18 05:35:48 2014 +0800
+
+    Use proper type.
+    
+    Two other places in this file already use uint32_t when passing
+    it to PCI_READ_LONG.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
 commit d531cac475980908ea52309846221a974b8e7efd
 Author: Y.C. Chen <yc_chen@aspeedtech.com>
 Date:   Fri Aug 8 16:51:07 2014 +0800
@@ -630,22 +852,22 @@ commit 174def8f18f74094066884f422979d59d5ca2d39
 Author: Y.C. Chen <yc_chen@aspeedtech.com>
 Date:   Thu Jun 24 08:35:06 2010 +0800
 
-    	modified:   autogen.sh
+            modified:   autogen.sh
 
 commit 9e8d8489922d8b647b28de06045e8fddf0ffc62f
 Author: Y.C. Chen <yc_chen@aspeedtech.com>
 Date:   Tue Jun 22 15:17:27 2010 +0800
 
-    	modified:   autogen.sh
-    	modified:   configure.ac
-    	modified:   src/ast.h
-    	modified:   src/ast_2dtool.c
-    	modified:   src/ast_2dtool.h
-    	modified:   src/ast_accel.c
-    	modified:   src/ast_driver.c
-    	modified:   src/ast_mode.c
-    	modified:   src/ast_mode.h
-    	modified:   src/ast_vgatool.c
+            modified:   autogen.sh
+            modified:   configure.ac
+            modified:   src/ast.h
+            modified:   src/ast_2dtool.c
+            modified:   src/ast_2dtool.h
+            modified:   src/ast_accel.c
+            modified:   src/ast_driver.c
+            modified:   src/ast_mode.c
+            modified:   src/ast_mode.h
+            modified:   src/ast_vgatool.c
 
 commit 59995d0619afca6e88c1be08e01bfb60903c5099
 Author: Gaetan Nadon <memsize@videotron.ca>
@@ -883,16 +1105,16 @@ commit 486380cd85cdd2532300905ee588be48480ce1dc
 Author: root <root@localhost.localdomain>
 Date:   Fri Aug 24 21:13:39 2007 +0800
 
-    	modified:   ChangeLog
-    	modified:   configure.ac
-    	modified:   src/ast.h
-    	modified:   src/ast_2dtool.h
-    	modified:   src/ast_accel.c
-    	modified:   src/ast_cursor.c
-    	modified:   src/ast_driver.c
-    	modified:   src/ast_mode.c
-    	modified:   src/ast_mode.h
-    	modified:   src/ast_vgatool.c
+            modified:   ChangeLog
+            modified:   configure.ac
+            modified:   src/ast.h
+            modified:   src/ast_2dtool.h
+            modified:   src/ast_accel.c
+            modified:   src/ast_cursor.c
+            modified:   src/ast_driver.c
+            modified:   src/ast_mode.c
+            modified:   src/ast_mode.h
+            modified:   src/ast_vgatool.c
 
 commit 8bbdddf6025e1421e91ce12c509840822b395fb6
 Author: James Cloos <cloos@jhcloos.com>

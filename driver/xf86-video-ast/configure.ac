@@ -23,16 +23,15 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ast],
-        [1.0.1],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [1.1.6],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-video-ast/-/issues],
         [xf86-video-ast])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(.)
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -60,7 +59,7 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Obtain compiler/linker options for the driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901 xproto fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901 xproto >= 7.0.22 fontsproto $REQUIRED_MODULES])
 
 # Checks for libraries.
 SAVE_CPPFLAGS="$CPPFLAGS"

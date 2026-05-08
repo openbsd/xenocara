@@ -432,11 +432,27 @@ ASTGetDRAMInfo(ScrnInfoPtr pScrn)
     *(ULONG *) (pAST->MMIOVirtualAddr + 0xF004) = 0x1e6e0000;
     *(ULONG *) (pAST->MMIOVirtualAddr + 0xF000) = 0x1;
 
-    *(ULONG *) (pAST->MMIOVirtualAddr + 0x10000) = 0xFC600309;
-    do {
-       ;
-    } while (*(volatile ULONG *) (pAST->MMIOVirtualAddr + 0x10000) != 0x01);
+    /* Based on the Linux DRM driver we might not be able to access this
+     * If we can't just use some sane defaults.
+     *
+     * See drm/drivers/gpu/drm/ast/ast_main.c line 295.
+     */
 
+    *(ULONG *) (pAST->MMIOVirtualAddr + 0x10000) = 0xFC600309;
+    for (ulData = 10000; ulData > 0; ulData--)
+	if (*(volatile ULONG *) (pAST->MMIOVirtualAddr + 0x10000) == 0x01)
+	    break;
+
+    if (ulData == 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Unable to read DRAM information, using defaults\n");
+	pAST->ulDRAMBusWidth = 16;
+	pAST->jDRAMType = DRAMTYPE_1Gx16;
+	if (pAST->jChipType == AST2500)
+	    pAST->ulMCLK = 800;
+	else
+	    pAST->ulMCLK = 396;
+	return;
+    }
     ulData = *(volatile ULONG *) (pAST->MMIOVirtualAddr + 0x10004);
 
     /* Get BusWidth */
@@ -446,7 +462,7 @@ ASTGetDRAMInfo(ScrnInfoPtr pScrn)
        pAST->ulDRAMBusWidth = 32;
 
     /* Get DRAM Type */
-    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
+    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500))
     {
         switch (ulData & 0x03)
         {
@@ -576,7 +592,7 @@ ASTGetMaxDCLK(ScrnInfoPtr pScrn)
    /* Modify DARM utilization to 60% for AST1100/2100 16bits DRAM, ycchen@032508 */
    if ( ((pAST->jChipType == AST2100) || (pAST->jChipType == AST1100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2150)) && (ulDRAMBusWidth == 16) )
        DRAMEfficiency = 600;
-   else if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
+   else if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500))
        DRAMEfficiency = 400;
    ulDRAMBandwidth = ulMCLK * ulDRAMBusWidth * 2 / 8;
    ActualDRAMBandwidth = ulDRAMBandwidth * DRAMEfficiency / 1000;
@@ -605,7 +621,7 @@ ASTGetMaxDCLK(ScrnInfoPtr pScrn)
    }
 
    /* Add for AST2100, ycchen@061807 */
-   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST1180) )
+   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500) || (pAST->jChipType == AST1180) )
    {
        if (ulDCLK > 200) ulDCLK = 200;
    }
@@ -670,24 +686,24 @@ ASTGetScratchOptions(ScrnInfoPtr pScrn)
    if (jReg & 0x80)
        pAST->jTxChipType = Tx_Sil164;
    /* Get 3rd Tx Info from BMC Scratch */
-   if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
+   if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500))
    {
        GetIndexRegMask(CRTC_PORT, 0xD1, 0x0E, jReg);
-	   switch (jReg)
-	   {
-	   case 0x04:
-	       pAST->jTxChipType = Tx_Sil164;
-	       break;
+       switch (jReg)
+       {
+       case 0x04:
+           pAST->jTxChipType = Tx_Sil164;
+           break;
        case 0x08:
-	        pAST->pDP501FWBufferVirtualAddress = (UCHAR*) calloc(1, 32*1024);
-	        if	(pAST->pDP501FWBufferVirtualAddress)
-	        {
-                if (BackupM68KFW(pScrn, pAST->pDP501FWBufferVirtualAddress, 32*1024) == FALSE)
-		        {
-                    free(pAST->pDP501FWBufferVirtualAddress);
-                    pAST->pDP501FWBufferVirtualAddress = NULL;
-		        }
-            } /* Backup DP501 FW */
+           pAST->pDP501FWBufferVirtualAddress = (UCHAR*) calloc(1, 32*1024);
+           if	(pAST->pDP501FWBufferVirtualAddress)
+           {
+               if (BackupM68KFW(pScrn, pAST->pDP501FWBufferVirtualAddress, 32*1024) == FALSE)
+               {
+                   free(pAST->pDP501FWBufferVirtualAddress);
+                   pAST->pDP501FWBufferVirtualAddress = NULL;
+               }
+           } /* Backup DP501 FW */
        case 0x0c:
            pAST->jTxChipType = Tx_DP501;
            break;
@@ -1117,7 +1133,7 @@ static void vSetDefExtReg(ScrnInfoPtr pScrn)
     }
 
     /* Set Ext. Reg */
-    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
+    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500))
     {
        if (PCI_DEV_REVISION(pAST->PciInfo) > 0x20)
            pjExtRegInfo = ExtRegInfo_AST2300;
@@ -1145,10 +1161,26 @@ static void vSetDefExtReg(ScrnInfoPtr pScrn)
 
     /* Enable RAMDAC for A1, ycchen@113005 */
     jReg = 0x04;
-    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
+    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2400))
         jReg |= 0x20;
     SetIndexRegMask(CRTC_PORT,0xB6, 0xFF, jReg);
 
+}
+
+static void vSetDefVCLK(ScrnInfoPtr pScrn)
+{
+    ASTRecPtr pAST = ASTPTR(pScrn);
+
+    if ((pAST->jChipType == AST2500) && (PCI_DEV_REVISION(pAST->PciInfo) == 0x40))
+    {
+        SetIndexRegMask(CRTC_PORT, 0xbc, 0x00, 0x40);
+        SetIndexRegMask(CRTC_PORT, 0xbd, 0x00, 0x38);
+        SetIndexRegMask(CRTC_PORT, 0xbe, 0x00, 0x3a);
+        SetIndexRegMask(CRTC_PORT, 0xbf, 0x00, 0x38);
+        SetIndexRegMask(CRTC_PORT, 0xcf, 0x00, 0x70);
+        SetIndexRegMask(CRTC_PORT, 0xb5, 0x00, 0xa8);
+        SetIndexRegMask(CRTC_PORT, 0xbb, 0x00, 0x43);
+    }
 }
 
 /*
@@ -2908,12 +2940,485 @@ static void vInitAST2300DRAMReg(ScrnInfoPtr pScrn)
 
 } /* vInitAST2300DRAMReg */
 
-void static vGetDefaultSettings(ScrnInfoPtr pScrn)
+/*
+ * AST2500 DRAM settings modules
+ */
+#define REGTBL_NUM           17
+#define REGIDX_010           0
+#define REGIDX_014           1
+#define REGIDX_018           2
+#define REGIDX_020           3
+#define REGIDX_024           4
+#define REGIDX_02C           5
+#define REGIDX_030           6
+#define REGIDX_214           7
+#define REGIDX_2E0           8
+#define REGIDX_2E4           9
+#define REGIDX_2E8           10
+#define REGIDX_2EC           11
+#define REGIDX_2F0           12
+#define REGIDX_2F4           13
+#define REGIDX_2F8           14
+#define REGIDX_RFC           15
+#define REGIDX_PLL           16
+
+ULONG ddr3_1600_timing_table[REGTBL_NUM] = {
+0x64604D38,                  /* 0x010 */
+0x29690599,                  /* 0x014 */
+0x00000300,                  /* 0x018 */
+0x00000000,                  /* 0x020 */
+0x00000000,                  /* 0x024 */
+0x02181E70,                  /* 0x02C */
+0x00000040,                  /* 0x030 */
+0x00000024,                  /* 0x214 */
+0x02001300,                  /* 0x2E0 */
+0x0E0000A0,                  /* 0x2E4 */
+0x000E001B,                  /* 0x2E8 */
+0x35B8C105,                  /* 0x2EC */
+0x08090408,                  /* 0x2F0 */
+0x9B000800,                  /* 0x2F4 */
+0x0E400A00,                  /* 0x2F8 */
+0x9971452F,                  /* tRFC  */
+0x000071C1};                 /* PLL   */
+
+ULONG ddr4_1600_timing_table[REGTBL_NUM] = {
+0x63604E37,                  /* 0x010 */
+0xE97AFA99,                  /* 0x014 */
+0x00019000,                  /* 0x018 */
+0x08000000,                  /* 0x020 */
+0x00000400,                  /* 0x024 */
+0x00000410,                  /* 0x02C */
+0x00000101,                  /* 0x030 */
+0x00000024,                  /* 0x214 */
+0x03002900,                  /* 0x2E0 */
+0x0E0000A0,                  /* 0x2E4 */
+0x000E001C,                  /* 0x2E8 */
+0x35B8C106,                  /* 0x2EC */
+0x08080607,                  /* 0x2F0 */
+0x9B000900,                  /* 0x2F4 */
+0x0E400A00,                  /* 0x2F8 */
+0x99714545,                  /* tRFC  */
+0x000071C1};                 /* PLL   */
+
+static int MMCTestBurst_AST2500(ScrnInfoPtr pScrn, ULONG datagen)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+  ULONG data, timecnt;
+
+  MOutdwm(mmiobase, 0x1E6E0070, 0x00000000);
+  MOutdwm(mmiobase, 0x1E6E0070, 0x000000C1 | (datagen << 3));
+  timecnt = 0;
+  do{
+    data = MIndwm(mmiobase, 0x1E6E0070) & 0x3000;
+    if(data & 0x2000){
+      return(0);
+    }
+    if(++timecnt > TIMEOUT){
+      MOutdwm(mmiobase, 0x1E6E0070, 0x00000000);
+      return(0);
+    }
+  }while(!data);
+  MOutdwm(mmiobase, 0x1E6E0070, 0x00000000);
+  return(1);
+}
+
+static int MMCTestSingle_AST2500(ScrnInfoPtr pScrn, ULONG datagen)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+  ULONG data, timecnt;
+
+  MOutdwm(mmiobase, 0x1E6E0070, 0x00000000);
+  MOutdwm(mmiobase, 0x1E6E0070, 0x00000085 | (datagen << 3));
+  timecnt = 0;
+  do{
+    data = MIndwm(mmiobase, 0x1E6E0070) & 0x3000;
+    if(data & 0x2000){
+      return(0);
+    }
+    if(++timecnt > TIMEOUT){
+      MOutdwm(mmiobase, 0x1E6E0070, 0x00000000);
+      return(0);
+    }
+  }while(!data);
+  MOutdwm(mmiobase, 0x1E6E0070, 0x00000000);
+  return(1);
+}
+
+static ULONG CBRTest_AST2500(ScrnInfoPtr pScrn)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+
+  MOutdwm(mmiobase, 0x1E6E0074, 0x0000FFFF);
+  MOutdwm(mmiobase, 0x1E6E007C, 0xFF00FF00);
+  if(!MMCTestBurst_AST2500(pScrn, 0)) return(0);
+  if(!MMCTestSingle_AST2500(pScrn, 0)) return(0);
+  return(1);
+}
+
+static void DDR_Init_Common(ScrnInfoPtr pScrn)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+
+  MOutdwm(mmiobase, 0x1E6E0034,0x00020080);
+  MOutdwm(mmiobase, 0x1E6E0008,0x2003000F);
+  MOutdwm(mmiobase, 0x1E6E0038,0x00000FFF);
+  MOutdwm(mmiobase, 0x1E6E0040,0x88448844);
+  MOutdwm(mmiobase, 0x1E6E0044,0x24422288);
+  MOutdwm(mmiobase, 0x1E6E0048,0x22222222);
+  MOutdwm(mmiobase, 0x1E6E004C,0x22222222);
+  MOutdwm(mmiobase, 0x1E6E0050,0x80000000);
+  MOutdwm(mmiobase, 0x1E6E0208,0x00000000);
+  MOutdwm(mmiobase, 0x1E6E0218,0x00000000);
+  MOutdwm(mmiobase, 0x1E6E0220,0x00000000);
+  MOutdwm(mmiobase, 0x1E6E0228,0x00000000);
+  MOutdwm(mmiobase, 0x1E6E0230,0x00000000);
+  MOutdwm(mmiobase, 0x1E6E02A8,0x00000000);
+  MOutdwm(mmiobase, 0x1E6E02B0,0x00000000);
+  MOutdwm(mmiobase, 0x1E6E0240,0x86000000);
+  MOutdwm(mmiobase, 0x1E6E0244,0x00008600);
+  MOutdwm(mmiobase, 0x1E6E0248,0x80000000);
+  MOutdwm(mmiobase, 0x1E6E024C,0x80808080);
+}
+
+static void Do_DDRPHY_Init(ScrnInfoPtr pScrn)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+  ULONG data, pass, timecnt;
+
+  pass = 0;
+  MOutdwm(mmiobase, 0x1E6E0060,0x00000005);
+  while(!pass){
+    for(timecnt = 0;timecnt < TIMEOUT;timecnt++){
+      data = MIndwm(mmiobase, 0x1E6E0060) & 0x1;
+      if(!data){
+        break;
+      }
+    }
+    if(timecnt != TIMEOUT){
+      data = MIndwm(mmiobase, 0x1E6E0300) & 0x000A0000;
+      if(!data){
+        pass = 1;
+      }
+    }
+    if(!pass){
+      MOutdwm(mmiobase, 0x1E6E0060,0x00000000);
+      usleep(10); /* delay 10 us */
+      MOutdwm(mmiobase, 0x1E6E0060,0x00000005);
+    }
+  }
+
+  MOutdwm(mmiobase, 0x1E6E0060,0x00000006);
+}
+
+/******************************************************************************
+ Check DRAM Size
+ 1Gb : 0x80000000 ~ 0x87FFFFFF
+ 2Gb : 0x80000000 ~ 0x8FFFFFFF
+ 4Gb : 0x80000000 ~ 0x9FFFFFFF
+ 8Gb : 0x80000000 ~ 0xBFFFFFFF
+ *****************************************************************************/
+static void Check_DRAM_Size(ScrnInfoPtr pScrn, ULONG tRFC)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+  ULONG reg_04, reg_14;
+
+  reg_04 = MIndwm(mmiobase, 0x1E6E0004) & 0xfffffffc;
+  reg_14 = MIndwm(mmiobase, 0x1E6E0014) & 0xffffff00;
+
+  MOutdwm(mmiobase, 0xA0100000, 0x41424344);
+  MOutdwm(mmiobase, 0x90100000, 0x35363738);
+  MOutdwm(mmiobase, 0x88100000, 0x292A2B2C);
+  MOutdwm(mmiobase, 0x80100000, 0x1D1E1F10);
+
+  /* Check 8Gbit */
+  if(MIndwm(mmiobase, 0xA0100000) == 0x41424344){
+    reg_04 |= 0x03;
+    reg_14 |= (tRFC >> 24) & 0xFF;
+  /* Check 4Gbit */
+  }else if(MIndwm(mmiobase, 0x90100000) == 0x35363738){
+    reg_04 |= 0x02;
+    reg_14 |= (tRFC >> 16) & 0xFF;
+  /* Check 2Gbit */
+  }else if(MIndwm(mmiobase, 0x88100000) == 0x292A2B2C){
+    reg_04 |= 0x01;
+    reg_14 |= (tRFC >> 8) & 0xFF;
+  }else{
+    reg_14 |= tRFC & 0xFF;
+  }
+  MOutdwm(mmiobase, 0x1E6E0004, reg_04);
+  MOutdwm(mmiobase, 0x1E6E0014, reg_14);
+}
+
+static void Enable_Cache(ScrnInfoPtr pScrn)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+  ULONG reg_04, data;
+
+  reg_04 = MIndwm(mmiobase, 0x1E6E0004);
+  MOutdwm(mmiobase, 0x1E6E0004, reg_04 | 0x1000);
+
+  do{
+    data = MIndwm(mmiobase, 0x1E6E0004);
+  }while(!(data & 0x80000));
+  MOutdwm(mmiobase, 0x1E6E0004, reg_04 | 0x400);
+}
+
+static void Set_MPLL(ScrnInfoPtr pScrn)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+  ULONG addr, data, param;
+
+  /* Reset MMC */
+  MOutdwm(mmiobase, 0x1E6E0000,0xFC600309);
+  MOutdwm(mmiobase, 0x1E6E0034,0x00020080);
+  for(addr = 0x1e6e0004;addr < 0x1e6e0090;){
+    MOutdwm(mmiobase, addr, 0x0);
+    addr += 4;
+  }
+  MOutdwm(mmiobase, 0x1E6E0034,0x00020000);
+
+  MOutdwm(mmiobase, 0x1E6E2000, 0x1688A8A8);
+  data = MIndwm(mmiobase, 0x1E6E2070) & 0x00800000;
+  if(data){                  /* CLKIN = 25MHz */
+    param = 0x930023E0;
+  }else{					 /* CLKIN = 24MHz */
+    param = 0x93002400;
+  }
+  MOutdwm(mmiobase, 0x1E6E2020, param);
+  usleep(100);
+}
+
+static void DDR3_Init_AST2500(ScrnInfoPtr pScrn, ULONG *ddr_table)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+
+  MOutdwm(mmiobase, 0x1E6E0004,0x00000303);
+  MOutdwm(mmiobase, 0x1E6E0010,ddr_table[REGIDX_010]);
+  MOutdwm(mmiobase, 0x1E6E0014,ddr_table[REGIDX_014]);
+  MOutdwm(mmiobase, 0x1E6E0018,ddr_table[REGIDX_018]);
+  MOutdwm(mmiobase, 0x1E6E0020,ddr_table[REGIDX_020]);          /* MODEREG4/6 */
+  MOutdwm(mmiobase, 0x1E6E0024,ddr_table[REGIDX_024]);          /* MODEREG5 */
+  MOutdwm(mmiobase, 0x1E6E002C,ddr_table[REGIDX_02C] | 0x100);  /* MODEREG0/2 */
+  MOutdwm(mmiobase, 0x1E6E0030,ddr_table[REGIDX_030]);          /* MODEREG1/3 */
+
+  /* DDR PHY Setting */
+  MOutdwm(mmiobase, 0x1E6E0200,0x02492AAE);
+  MOutdwm(mmiobase, 0x1E6E0204,0x00001001);
+  MOutdwm(mmiobase, 0x1E6E020C,0x55E00B0B);
+  MOutdwm(mmiobase, 0x1E6E0210,0x20000000);
+  MOutdwm(mmiobase, 0x1E6E0214,ddr_table[REGIDX_214]);
+  MOutdwm(mmiobase, 0x1E6E02E0,ddr_table[REGIDX_2E0]);
+  MOutdwm(mmiobase, 0x1E6E02E4,ddr_table[REGIDX_2E4]);
+  MOutdwm(mmiobase, 0x1E6E02E8,ddr_table[REGIDX_2E8]);
+  MOutdwm(mmiobase, 0x1E6E02EC,ddr_table[REGIDX_2EC]);
+  MOutdwm(mmiobase, 0x1E6E02F0,ddr_table[REGIDX_2F0]);
+  MOutdwm(mmiobase, 0x1E6E02F4,ddr_table[REGIDX_2F4]);
+  MOutdwm(mmiobase, 0x1E6E02F8,ddr_table[REGIDX_2F8]);
+  MOutdwm(mmiobase, 0x1E6E0290,0x00100008);
+  MOutdwm(mmiobase, 0x1E6E02C0,0x00000006);
+
+  /* Controller Setting */
+  MOutdwm(mmiobase, 0x1E6E0034,0x00020091);
+
+  /* Wait DDR PHY init done */
+  Do_DDRPHY_Init(pScrn);
+
+  MOutdwm(mmiobase, 0x1E6E0120,ddr_table[REGIDX_PLL]);
+  MOutdwm(mmiobase, 0x1E6E000C,0x42AA5C81);
+  MOutdwm(mmiobase, 0x1E6E0034,0x0001AF93);
+
+  Check_DRAM_Size(pScrn, ddr_table[REGIDX_RFC]);
+  Enable_Cache(pScrn);
+  MOutdwm(mmiobase, 0x1E6E001C,0x00000008);
+  MOutdwm(mmiobase, 0x1E6E0038,0xFFFFFF00);
+}
+
+static void DDR4_Init_AST2500(ScrnInfoPtr pScrn, ULONG *ddr_table)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+  ULONG data, data2, pass;
+  ULONG ddr_vref, phy_vref;
+  ULONG min_ddr_vref, min_phy_vref;
+  ULONG max_ddr_vref, max_phy_vref;
+
+  MOutdwm(mmiobase, 0x1E6E0004,0x00000313);
+  MOutdwm(mmiobase, 0x1E6E0010,ddr_table[REGIDX_010]);
+  MOutdwm(mmiobase, 0x1E6E0014,ddr_table[REGIDX_014]);
+  MOutdwm(mmiobase, 0x1E6E0018,ddr_table[REGIDX_018]);
+  MOutdwm(mmiobase, 0x1E6E0020,ddr_table[REGIDX_020]);          /* MODEREG4/6 */
+  MOutdwm(mmiobase, 0x1E6E0024,ddr_table[REGIDX_024]);          /* MODEREG5 */
+  MOutdwm(mmiobase, 0x1E6E002C,ddr_table[REGIDX_02C] | 0x100);  /* MODEREG0/2 */
+  MOutdwm(mmiobase, 0x1E6E0030,ddr_table[REGIDX_030]);          /* MODEREG1/3 */
+
+  /* DDR PHY Setting */
+  MOutdwm(mmiobase, 0x1E6E0200,0x42492AAE);
+  MOutdwm(mmiobase, 0x1E6E0204,0x09002000);
+  MOutdwm(mmiobase, 0x1E6E020C,0x55E00B0B);
+  MOutdwm(mmiobase, 0x1E6E0210,0x20000000);
+  MOutdwm(mmiobase, 0x1E6E0214,ddr_table[REGIDX_214]);
+  MOutdwm(mmiobase, 0x1E6E02E0,ddr_table[REGIDX_2E0]);
+  MOutdwm(mmiobase, 0x1E6E02E4,ddr_table[REGIDX_2E4]);
+  MOutdwm(mmiobase, 0x1E6E02E8,ddr_table[REGIDX_2E8]);
+  MOutdwm(mmiobase, 0x1E6E02EC,ddr_table[REGIDX_2EC]);
+  MOutdwm(mmiobase, 0x1E6E02F0,ddr_table[REGIDX_2F0]);
+  MOutdwm(mmiobase, 0x1E6E02F4,ddr_table[REGIDX_2F4]);
+  MOutdwm(mmiobase, 0x1E6E02F8,ddr_table[REGIDX_2F8]);
+  MOutdwm(mmiobase, 0x1E6E0290,0x00100008);
+  MOutdwm(mmiobase, 0x1E6E02C4,0x3C183C3C);
+  MOutdwm(mmiobase, 0x1E6E02C8,0x00631E0E);
+
+  /* Controller Setting */
+  MOutdwm(mmiobase, 0x1E6E0034,0x0001A991);
+
+  /* Train PHY Vref first */
+  min_phy_vref = max_phy_vref = 0x0;
+  pass = 0;
+  MOutdwm(mmiobase, 0x1E6E02C0,0x00001C06);
+  for(phy_vref = 0x40;phy_vref < 0x80;phy_vref++){
+    MOutdwm(mmiobase, 0x1E6E000C,0x00000000);
+    MOutdwm(mmiobase, 0x1E6E0060,0x00000000);
+    MOutdwm(mmiobase, 0x1E6E02CC,phy_vref | (phy_vref << 8));
+    /* Fire DFI Init */
+    Do_DDRPHY_Init(pScrn);
+    MOutdwm(mmiobase, 0x1E6E000C,0x00005C01);
+    if(CBRTest_AST2500(pScrn)){
+      pass++;
+      data = MIndwm(mmiobase, 0x1E6E03D0);
+      data2 = data >> 8;
+      data  = data & 0xff;
+      if(data > data2){
+        data = data2;
+      }
+
+      if(max_phy_vref < data){
+        max_phy_vref = data;
+        min_phy_vref = phy_vref;
+      }
+    }else if(pass > 0){
+      break;
+    }
+  }
+  MOutdwm(mmiobase, 0x1E6E02CC,min_phy_vref | (min_phy_vref << 8));
+
+  /* Train DDR Vref next */
+  min_ddr_vref = 0xFF;
+  max_ddr_vref = 0x0;
+  pass = 0;
+  for(ddr_vref = 0x00;ddr_vref < 0x40;ddr_vref++){
+    MOutdwm(mmiobase, 0x1E6E000C,0x00000000);
+    MOutdwm(mmiobase, 0x1E6E0060,0x00000000);
+    MOutdwm(mmiobase, 0x1E6E02C0,0x00000006 | (ddr_vref << 8));
+    /* Fire DFI Init */
+    Do_DDRPHY_Init(pScrn);
+    MOutdwm(mmiobase, 0x1E6E000C,0x00005C01);
+    if(CBRTest_AST2500(pScrn)){
+      pass++;
+      if(min_ddr_vref > ddr_vref){
+        min_ddr_vref = ddr_vref;
+      }
+      if(max_ddr_vref < ddr_vref){
+        max_ddr_vref = ddr_vref;
+      }
+    }else if(pass != 0){
+      break;
+    }
+  }
+  MOutdwm(mmiobase, 0x1E6E000C,0x00000000);
+  MOutdwm(mmiobase, 0x1E6E0060,0x00000000);
+  ddr_vref = (min_ddr_vref + max_ddr_vref + 1) >> 1;
+  MOutdwm(mmiobase, 0x1E6E02C0,0x00000006 | (ddr_vref << 8));
+
+  /* Wait DDR PHY init done */
+  Do_DDRPHY_Init(pScrn);
+
+  MOutdwm(mmiobase, 0x1E6E0120,ddr_table[REGIDX_PLL]);
+  MOutdwm(mmiobase, 0x1E6E000C,0x42AA5C81);
+  MOutdwm(mmiobase, 0x1E6E0034,0x0001AF93);
+
+  Check_DRAM_Size(pScrn, ddr_table[REGIDX_RFC]);
+  Enable_Cache(pScrn);
+  MOutdwm(mmiobase, 0x1E6E001C,0x00000008);
+  MOutdwm(mmiobase, 0x1E6E0038,0xFFFFFF00);
+}
+
+static int DRAM_Init_AST2500(ScrnInfoPtr pScrn)
+{
+  ASTRecPtr pAST = ASTPTR(pScrn);
+  UCHAR *mmiobase = pAST->MMIOVirtualAddr;
+  ULONG data;
+
+  Set_MPLL(pScrn);
+  DDR_Init_Common(pScrn);
+  data = MIndwm(mmiobase, 0x1E6E2070);
+  if(data & 0x01000000){
+    DDR4_Init_AST2500(pScrn, ddr4_1600_timing_table);
+  }else{
+    DDR3_Init_AST2500(pScrn, ddr3_1600_timing_table);
+  }
+  MOutdwm(mmiobase, 0x1E6E2040, MIndwm(mmiobase, 0x1E6E2040) | 0x41);
+  /* Patch code */
+  data = MIndwm(mmiobase, 0x1E6E200C) & 0xF9FFFFFF;
+  MOutdwm(mmiobase, 0x1E6E200C, data | 0x10000000);
+  return(1);
+}
+
+static void vInitAST2500DRAMReg(ScrnInfoPtr pScrn)
+{
+    ASTRecPtr pAST = ASTPTR(pScrn);
+    ULONG ulTemp;
+    UCHAR jReg;
+
+    GetIndexRegMask(CRTC_PORT, 0xD0, 0xFF, jReg);
+
+    if ((jReg & 0x80) == 0)			/* VGA only */
+    {
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0xF004) = 0x1e6e0000;
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0xF000) = 0x1;
+
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0x12000) = 0x1688A8A8;
+        do {
+           ;
+        } while (*(volatile ULONG *) (pAST->MMIOVirtualAddr + 0x12000) != 0x01);
+
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0x10000) = 0xFC600309;
+        do {
+          ;
+        } while (*(volatile ULONG *) (pAST->MMIOVirtualAddr + 0x10000) != 0x01);
+
+    	/* Slow down CPU/AHB CLK in VGA only mode */
+        ulTemp  = *(ULONG *) (pAST->MMIOVirtualAddr + 0x12008);
+        ulTemp |= 0x73;
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0x12008) = ulTemp;
+
+		DRAM_Init_AST2500(pScrn);
+
+        ulTemp  = MIndwm(pAST->MMIOVirtualAddr, 0x1E6E2040);
+        MOutdwm(pAST->MMIOVirtualAddr, 0x1E6E2040, ulTemp | 0x40);
+    }
+
+    /* wait ready */
+    do {
+        GetIndexRegMask(CRTC_PORT, 0xD0, 0xFF, jReg);
+    } while ((jReg & 0x40) == 0);
+
+} /* vInitAST2500DRAMReg */
+
+static void vGetDefaultSettings(ScrnInfoPtr pScrn)
 {
     ASTRecPtr pAST = ASTPTR(pScrn);
     ULONG ulData;
 
-    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
+    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500))
     {
         *(ULONG *) (pAST->MMIOVirtualAddr + 0xF004) = 0x1e6e0000;
         *(ULONG *) (pAST->MMIOVirtualAddr + 0xF000) = 0x1;
@@ -3020,7 +3525,7 @@ static void vInit3rdTX(ScrnInfoPtr pScrn)
     UCHAR jReg;
 
     /* Only support on AST2300/2400 */
-    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
+    if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400) || (pAST->jChipType == AST2500))
     {
         GetIndexRegMask(CRTC_PORT, 0xD1, 0xFF, jReg);      /* D[1]: DVO Enable */
         switch (jReg & 0x0E)	/* D[11:9] */
@@ -3069,12 +3574,15 @@ Bool ASTInitVGA(ScrnInfoPtr pScrn, ULONG Flags)
        vEnableVGA(pScrn);
 
        vASTOpenKey(pScrn);
+       vSetDefVCLK(pScrn);
        vSetDefExtReg(pScrn);
 
        if (Flags == 0)
            vGetDefaultSettings(pScrn);
 
-       if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
+       if (pAST->jChipType == AST2500)
+           vInitAST2500DRAMReg(pScrn);
+       else if ((pAST->jChipType == AST2300) || (pAST->jChipType == AST2400))
            vInitAST2300DRAMReg(pScrn);
        else
            vInitDRAMReg(pScrn);
@@ -3444,7 +3952,7 @@ void ASTGetAST1180DRAMInfo(ScrnInfoPtr pScrn)
 void vASTEnableVGAMMIO(ScrnInfoPtr pScrn)
 {
     ASTRecPtr pAST = ASTPTR(pScrn);
-    ULONG ulData;
+    uint32_t ulData;
     UCHAR jReg;
 
     jReg = inb(pAST->RelocateIO + 0x43);
