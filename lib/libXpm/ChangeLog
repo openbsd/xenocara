@@ -1,3 +1,78 @@
+commit 9a05472d7ebcdf6deaa970515f3ddba2b0fc265e
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Tue Apr 21 10:13:57 2026 +0200
+
+    libXpm 3.5.19
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/31>
+
+commit 5448e1bd7252780b16db869c2253d24e0fe0ae18
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Tue Feb 17 11:59:56 2026 +0100
+
+    Fix CVE-2026-4367: Out-of-bounds read in xpmNextWord()
+    
+    xpmNextWord() checks for the terminator character to detect the end of
+    the file, but a very small malformed XPM file may cause the function to
+    read past the end of the buffer, causing out-of-bound reads:
+    
+      == Invalid read of size 1
+      ==    at 0x48AD3A4: xpmParseColors (parse.c:239)
+      ==    by 0x48AF9D8: xpmParseData (parse.c:783)
+      ==    by 0x48B1C18: XpmCreateXpmImageFromBuffer (CrIFrBuf.c:101)
+      ==    by 0x4005A6: main ()
+      ==  Address 0x4c413bf is 0 bytes after a block of size 15 alloc'd
+      ==    at 0x4841B26: malloc (vg_replace_malloc.c:447)
+      ==    by 0x48B2809: XpmReadFileToBuffer (RdFToBuf.c:96)
+      ==    by 0x400554: main ()
+      ==
+      == Invalid read of size 1
+      ==    at 0x48AC8D5: xpmNextWord.constprop.0 (data.c:262)
+      ==    by 0x48AD492: xpmParseColors (parse.c:266)
+      ==    by 0x48AF9D8: xpmParseData (parse.c:783)
+      ==    by 0x48B1C18: XpmCreateXpmImageFromBuffer (CrIFrBuf.c:101)
+      ==    by 0x4005A6: main ()
+      ==  Address 0x4c413c0 is 1 bytes after a block of size 15 alloc'd
+      ==    at 0x4841B26: malloc (vg_replace_malloc.c:447)
+      ==    by 0x48B2809: XpmReadFileToBuffer (RdFToBuf.c:96)
+      ==    by 0x400554: main ()
+      ==
+      == Invalid read of size 1
+      ==    at 0x48AC965: xpmNextWord.constprop.0 (data.c:265)
+      ==    by 0x48AD492: xpmParseColors (parse.c:266)
+      ==    by 0x48AF9D8: xpmParseData (parse.c:783)
+      ==    by 0x48B1C18: XpmCreateXpmImageFromBuffer (CrIFrBuf.c:101)
+      ==    by 0x4005A6: main ()
+      ==  Address 0x4c413c0 is 1 bytes after a block of size 15 alloc'd
+      ==    at 0x4841B26: malloc (vg_replace_malloc.c:447)
+      ==    by 0x48B2809: XpmReadFileToBuffer (RdFToBuf.c:96)
+      ==    by 0x400554: main ()
+    
+    The problem actually comes from xpmNextString() and xpmParseColors():
+    
+    1) xpmNextString() checks for the NULL terminator when looking for the
+       end of the string (Eos) but not when looking for the beginning of the
+       next string (Bos).
+    
+    2) xpmParseColors() does not check the return value from xpmNextString()
+       and continues even when xpmNextString() raised an invalid XPM file.
+    
+    To avoid the issue, fix xpmNextString() to check for the NULL string
+    terminator when looking for the beginning of the next string and fix
+    xpmParseColors() to stop when xpmNextString() reported an invalid XPM
+    error.
+    
+    CVE-2026-4367
+    
+    This vulnerability was discovered by:
+    Naoki Wakamatsu
+    
+    v2: Fix the XPM 1 code path the same.
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/31>
+
 commit 5b7e903025a8e162a3ee97c64304b1c55211094e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jan 25 16:05:09 2026 -0800
@@ -1995,9 +2070,6 @@ Date:   Tue Sep 21 17:57:35 2004 +0000
     Added new libs to the bindist control files.
     Removed inclusion of unnecessary kernel header on Linux. This may fail in
         an -ansi environment.
-
-Notes:
-    Fixes CVE-2004-0687 (integer overflows) and CVE-2004-0688 (stack overflows)
 
 commit 2773a7214e282f6f673483f5233b880505947c3f
 Author: Egbert Eich <eich@suse.de>
