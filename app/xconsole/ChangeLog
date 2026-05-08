@@ -1,3 +1,60 @@
+commit 8acd95daf42d291eb12cfbdc206d175b36ea5079
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 18 15:40:36 2026 -0700
+
+    xconsole 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bce009694c51477d9bc2aff3d19292e668d5354c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 5 10:22:19 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xconsole/-/merge_requests/12>
+
+commit 5ab6e6053a821cca8554a7f187c1f9c990bceb4b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xconsole/-/merge_requests/12>
+
+commit ed489fb42da1d5b02eba7ffa52f75386f9751a41
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 19 17:26:26 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xconsole.1:26:16: WARNING: cannot parse date, using it verbatim: TH xconsole 1.1.0
+    mandoc: xconsole.1:118:2: WARNING: skipping paragraph macro: PP empty
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xconsole/-/merge_requests/11>
+
+commit 43185464a24203187af671a418ba19a593adbded
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 30 11:01:55 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xconsole/-/merge_requests/10>
+
 commit 7be3bb410ecc996ec6d76ced622439ac3334da62
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 28 10:24:08 2024 -0700

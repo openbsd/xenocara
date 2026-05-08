@@ -24,7 +24,7 @@ dnl Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xconsole],
-	[1.1.0],
+	[1.1.1],
 	[https://gitlab.freedesktop.org/xorg/app/xconsole/-/issues],
 	[xconsole])
 AC_CONFIG_SRCDIR([Makefile.am])
