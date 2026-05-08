@@ -1,3 +1,95 @@
+commit 423509ce79f25860070b5b222ae3a74d340c6deb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 25 17:02:27 2026 -0800
+
+    libvMC 1.0.15
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ead4dfd601e4aa9485a17acb1c9bef11b6538995
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a819142dc8b8efd29aa90e5cfbcd8cd892e51033
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 9 15:30:20 2025 -0800
+
+    gitlab CI: Use diffoscope to compare autoconf & meson installs
+    
+    Allows comparing compiled binaries as well as other files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxvmc/-/merge_requests/15>
+
+commit 0f11139cc0f8038308c5f96b2ca23a808f83376c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 9 15:24:01 2025 -0800
+
+    meson: prepend prefix to sysconfdir if it doesn't start with /
+    
+    Before this, XVMC_CONFIGDIR was being set to "etc/X11" if the
+    prefix wasn't /usr and -Dsysconfdir wasn't passed to meson
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxvmc/-/merge_requests/15>
+
+commit 3fd79799581bf5cc097a60fb97166194d715acdb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 9 14:43:52 2025 -0800
+
+    meson: set MALLOC_0_RETURNS_NULL to match autoconf
+    
+    Also adds -DHAVE_CONFIG_H to c_args for libXvMCW so it takes effect there
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxvmc/-/merge_requests/15>
+
+commit 68cd8619eb599f6ef3f64d883bb80ed6193c867b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 9 14:26:09 2025 -0800
+
+    meson: raise minimum required meson version from 0.58 to 0.62
+    
+    Fixes warning from current meson releases:
+    
+    WARNING: Project specifies a minimum meson_version '>= 0.58' but uses
+     features which were added in newer versions:
+     * 0.62.0: {'dep 'dl' custom lookup'}
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxvmc/-/merge_requests/15>
+
+commit 476c360f5bf92ffe620c6c05d94728669e1f50a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 9 13:53:29 2025 -0800
+
+    meson: Move protos from Requires.private to Requires in generated .pc files
+    
+    Matches what autoconf did, and ensures necessary -I flags make it into
+    the CFLAGS for consumers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxvmc/-/merge_requests/15>
+
+commit d8269970dffb9b27c1c79eea7233e33fd99e1932
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 17 15:31:15 2024 -0800
+
+    unifdef Lynx
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f43e6cb2ae6ba22e0b882da435d50346634a8d09
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Feb 4 14:38:14 2024 -0800

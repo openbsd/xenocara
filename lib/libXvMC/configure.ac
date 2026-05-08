@@ -21,7 +21,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXvMC], [1.0.14],
+AC_INIT([libXvMC], [1.0.15],
 	[https://gitlab.freedesktop.org/xorg/lib/libxvmc/-/issues], [libXvMC])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])

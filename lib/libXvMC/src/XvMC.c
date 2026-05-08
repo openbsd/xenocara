@@ -4,13 +4,8 @@
 #include <stdio.h>
 #include "XvMClibint.h"
 #ifdef HAVE_SHMAT
-#ifndef Lynx
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#else
-#include <ipc.h>
-#include <shm.h>
-#endif /* Lynx */
 #endif /* HAVE_SHMAT */
 #include <unistd.h>
 #include <sys/time.h>

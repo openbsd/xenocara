@@ -4,8 +4,8 @@
 project(
   'libXvMC',
   'c',
-  version : '1.0.14',
-  meson_version : '>= 0.58',
+  version : '1.0.15',
+  meson_version : '>= 0.62',
   default_options : ['default_library=both'],
 )
 
@@ -26,6 +26,7 @@ deps = [
 ]
 
 conf = configuration_data()
+conf.set('MALLOC_0_RETURNS_NULL', 1)
 
 if cc.has_function('shmat')
   conf.set('HAVE_SHMAT', true)
@@ -66,6 +67,7 @@ pkg.generate(
   libXvMC,
   filebase : 'xvmc',
   description : 'The XvMC Library',
+  requires : [ 'videoproto', 'xextproto' ],
   version : meson.project_version(),
 )
 
@@ -76,12 +78,15 @@ ext_libXvMC = declare_dependency(
 
 meson.override_dependency('xvmc', ext_libXvMC)
 
+sysconfdir = join_paths(get_option('prefix'), get_option('sysconfdir'))
+
 libXvMCW = library(
   'XvMCW',
   'wrapper/XvMCWrapper.c',
   include_directories : inc,
   c_args : [
-    '-DXVMC_CONFIGDIR=@0@/X11'.format(get_option('sysconfdir')),
+    '-DHAVE_CONFIG_H',
+    '-DXVMC_CONFIGDIR=@0@/X11'.format(sysconfdir),
     '-DXVMC_SOVERSION=".1.0"',
     '-DXV_SOVERSION=".1.0"',
   ],
@@ -101,6 +106,7 @@ pkg.generate(
   name : 'XvMCWrapper',
   filebase : 'xvmc-wrapper',
   description : 'XvMC wrapper library',
+  requires : [ 'videoproto', 'xextproto' ],
   version : meson.project_version(),
 )
 
