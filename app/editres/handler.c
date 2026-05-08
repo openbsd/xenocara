@@ -521,8 +521,7 @@ ResourceListCallback(Widget list, XtPointer node_ptr, XtPointer junk)
     SetResourceString(list, node_ptr, junk);
 
     /* get the resource value from the application */
-    if (global_effective_protocol_version >=
-	PROTOCOL_VERSION_ONE_POINT_ONE && do_get_values) {
+    if (global_effective_protocol_version >= 5 && do_get_values) {
       ObtainResource(node_ptr);
       do_get_values = False;
     }

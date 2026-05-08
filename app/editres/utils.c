@@ -157,7 +157,7 @@ AddString(char ** str, const char *add)
  */
 
 WNode *
-FindNode(WNode *top_node, unsigned long *ids, Cardinal number)
+FindNode(WNode *top_node, CARD64 *ids, Cardinal number)
 {
     Cardinal i, j;
     WNode *node;
@@ -804,14 +804,13 @@ void
 InsertWidgetFromNode(ProtocolStream *stream, WNode *node)
 {
     WNode *temp;
-    unsigned long * widget_list;
+    CARD64 *widget_list;
     register int i, num_widgets;
 
     for (temp = node, i = 0; temp != NULL; temp = temp->parent, i++) {}
 
     num_widgets = i;
-    widget_list = (unsigned long *)
-	          XtMalloc(sizeof(unsigned long) * num_widgets);
+    widget_list = (CARD64 *)XtMalloc(sizeof(CARD64) * num_widgets);
 
     /*
      * Put the widgets into the list.
@@ -823,7 +822,7 @@ InsertWidgetFromNode(ProtocolStream *stream, WNode *node)
 
     _XEditResPut16(stream, num_widgets);	/* insert number of widgets. */
     for (i = 0; i < num_widgets; i++) 	/* insert Widgets themselves. */
-	_XEditResPut32(stream, widget_list[i]);
+	_XEditResPut64(stream, widget_list[i]);
 
     XtFree((char *)widget_list);
 }
@@ -855,20 +854,14 @@ GetFailureMessage(ProtocolStream *stream)
 char *
 ProtocolFailure(ProtocolStream *stream)
 {
-    char buf[BUFSIZ];
+    char buf[128];
     unsigned char version;
-    const char* old_version_string;
 
     if (!_XEditResGet8(stream, &version))
 	return(XtNewString(res_labels[35]));
 
-    switch ((int)version) {
-    case PROTOCOL_VERSION_ONE_POINT_ZERO: old_version_string = "1.0"; break;
-    default: old_version_string = "1.0";
-    }
-
     snprintf(buf, sizeof(buf), res_labels[36],
-             CURRENT_PROTOCOL_VERSION_STRING, old_version_string);
+             CURRENT_PROTOCOL_VERSION, version);
     return(XtNewString(buf));
 }
 

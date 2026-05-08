@@ -29,6 +29,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xmu/EditresP.h>
 #include <X11/Xresource.h>
 #include <X11/Xfuncproto.h>
+#include <X11/Xmd.h>
 
 #define DEBUG
 
@@ -38,13 +39,11 @@ in this Software without prior written authorization from The Open Group.
 #  define CLIENT_TIME_OUT 5000	/* wait five seconds for the client. */
 #endif /* DEBUG */
 
-#define PROTOCOL_VERSION_ONE_POINT_ONE  5 /* version 1.1 */
-#define ONE_POINT_ONE_STRING "1.1"
-#define PROTOCOL_VERSION_ONE_POINT_ZERO 4 /* version 1.0 */
-#define ONE_POINT_ZERO_STRING "1.0" ONE_POINT_ONE_STRING
-
-#define CURRENT_PROTOCOL_VERSION PROTOCOL_VERSION_ONE_POINT_ONE
-#define CURRENT_PROTOCOL_VERSION_STRING ONE_POINT_ONE_STRING
+/**
+ * Current version of the editres protocol. Must be kept in sync with
+ * libXmu.
+ */
+#define CURRENT_PROTOCOL_VERSION 6
 
 #define FLASH_TIME  1000	/* Default flash time in microseconds */
 #define NUM_FLASHES 3		/* Default number of flashes. */
@@ -223,7 +222,7 @@ typedef struct _WidgetTreeInfo {
     WidgetInfo widgets;
     char * name;
     char * class;
-    unsigned long window;
+    CARD64 window;
 } WidgetTreeInfo;
 
 typedef struct _SendWidgetTreeEvent {
@@ -373,7 +372,7 @@ extern TreeInfo * CreateTree ( Event * event );
 extern void DisplayChild ( Event * event );
 extern void DumpTreeToFile ( Widget w, XtPointer junk, XtPointer garbage );
 extern void ExecuteOverAllNodes ( WNode * top_node, void (*func)(WNode *, XtPointer), XtPointer data );
-extern WNode * FindNode ( WNode *top_node, unsigned long * ids, Cardinal number );
+extern WNode * FindNode ( WNode *top_node, CARD64 *ids, Cardinal number );
 extern void FindWidget ( Widget w, XtPointer client_data, XtPointer call_data );
 extern WNode * FindWidgetFromWindow ( TreeInfo * tree_info, Window win );
 extern void FlashActiveWidgets ( Widget w, XtPointer junk, XtPointer garbage );

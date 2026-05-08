@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([editres], [1.0.9],
+AC_INIT([editres], [1.1.1],
         [https://gitlab.freedesktop.org/xorg/app/editres/-/issues], [editres])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -48,7 +48,7 @@ if test x$use_xkb != xno ; then
 fi
 
 # Obtain compiler/linker options from dependencies
-PKG_CHECK_MODULES(EDITRES, [xaw7 x11 xt >= 1.0.99.1 xmu xproto >= 7.0.17 ${XKBMODULE}])
+PKG_CHECK_MODULES(EDITRES, [xaw7 x11 xt >= 1.0.99.1 xmu >= 1.3.0 xproto >= 7.0.17 ${XKBMODULE}])
 
 PKG_CHECK_MODULES(APPDEFS, xt)
 xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`

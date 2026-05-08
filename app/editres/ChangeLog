@@ -1,3 +1,105 @@
+commit 8af1faea726e4d960fd1c945574fadd0c8bde2e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 26 09:47:47 2026 -0700
+
+    editres 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3aadb8e1f31c6436bb99f121fe0e6709facc6545
+Author: Adam Sampson <ats@offog.org>
+Date:   Sun Apr 19 03:04:10 2026 +0100
+
+    utils: fix the ids argument type for FindNode
+    
+    "Bump the proto to v6" changed the type of this argument to CARD64 * in
+    the prototype, but didn't update it in the function definition, which
+    causes a type error on 32-bit platforms.
+    
+    Signed-off-by: Adam Sampson <ats@offog.org>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/editres/-/merge_requests/11>
+
+commit f9adfdd58e2d405d273bfd65840f2264d8aed16c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 18 14:24:57 2026 -0700
+
+    editres 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2dc9a3e28f0ad591b97edc743b4cb6e4ecc22304
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 8 15:52:55 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/editres/-/merge_requests/9>
+
+commit 9d50619a86a01f217328a120a5473db5720d4ab7
+Author: Tim Hentenaar <tim@hentenaar.com>
+Date:   Sun Jan 25 06:02:54 2026 -0500
+
+    gitlab-ci: Drop the ci-fairy check-mr job
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/editres/-/merge_requests/7>
+
+commit 3c7dd560793437f5413d6da6d333e1cf4a5ab6cb
+Author: Tim Hentenaar <tim@hentenaar.com>
+Date:   Sat Jan 24 19:12:00 2026 -0500
+
+    configure.ac: Bump required libxmu version to >= 1.3.0
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/editres/-/merge_requests/7>
+
+commit 1ad2fdb6d2c1e44ac5b28266970dc8f3889d5a69
+Author: Tim Hentenaar <tim@hentenaar.com>
+Date:   Fri Jul 11 10:50:30 2025 -0400
+
+    Bump the proto to v6, Widget / Window values are 64-bits
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/editres/-/merge_requests/7>
+
+commit 036fe3307bad567e38dead3964e043314b8a3840
+Author: Tim Hentenaar <tim@hentenaar.com>
+Date:   Fri Jul 11 10:27:55 2025 -0400
+
+    comm: Avoid an endless loop on protocol mismatch
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/editres/-/merge_requests/7>
+
+commit 18cd58b7fe3b3de39ba4e65fe37796f53684f586
+Author: Tim Hentenaar <tim@hentenaar.com>
+Date:   Fri Jul 11 10:02:03 2025 -0400
+
+    utils: Format the protocol verison number proper to avoid confusion
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/editres/-/merge_requests/7>
+
+commit 7dcd7b6325464459a859c67f1eb269dcdafa1192
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 26 12:36:34 2025 -0700
+
+    man pages: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    mandoc: man1/editres.1:426:2: WARNING: skipping paragraph macro: PP empty
+    an.tmac:man1/editres.1:440: style: .BR expects at least 2 arguments, got 1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/editres/-/merge_requests/6>
+
+commit 3e495f5f34bd6c7e3a87618452859eb59440996d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 29 15:15:08 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/editres/-/merge_requests/5>
+
 commit 6013f24444d576ad263004c45edd52b4e8cec632
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 3 09:37:16 2024 -0800

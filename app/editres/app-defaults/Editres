@@ -89,7 +89,7 @@ Editres.Geometry:			500x568
 *label33: Internal Error: Unknown activate type.
 *label34: Only one Resource Box can be active at a time.
 *label35: Unable to unpack protocol request.
-*label36: This version of editres uses protocol version %s,\nbut the client speaks version %s.
+*label36: This version of editres uses protocol version %d,\nbut the client speaks version %d.
 
 ! Xt Messages
 

@@ -411,11 +411,6 @@ GetClientValue(Widget w, XtPointer data, Atom *selection, Atom *type,
 
     switch ((int) error_code) {
     case PartialSuccess:
-/*****
-        if (global_client.command == LocalSendWidgetTree &&
-	    global_effective_protocol_version < CURRENT_PROTOCOL_VERSION)
-	  ++global_effective_protocol_version;
-*****/
 	if ((event = BuildEvent(stream)) != NULL) {
 	    error_str = DispatchEvent(event);
 	    FreeEvent(event);
@@ -430,7 +425,8 @@ GetClientValue(Widget w, XtPointer data, Atom *selection, Atom *type,
 	break;
     case ProtocolMismatch:
 	error_str = ProtocolFailure(stream);
-	--global_effective_protocol_version;
+	if (!--global_effective_protocol_version)
+	    break;
         /* normally protocol version is reset to current during a SendWidgetTree
          * request, however, after a protocol failure this is skipped once for
          * a retry.
@@ -567,7 +563,7 @@ BuildEvent(ProtocolStream *stream)
 		if (!(_XEditResGetWidgetInfo(stream, &(info->widgets)) &&
 		      _XEditResGetString8(stream, &(info->name)) &&
 		      _XEditResGetString8(stream, &(info->class)) &&
-		      _XEditResGet32(stream, &(info->window))))
+		      _XEditResGet64(stream, &(info->window))))
 		{
 		    goto done;
 		}
