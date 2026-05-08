@@ -1,4 +1,4 @@
-.TH bdftruncate __appmansuffix__ __vendorversion__
+.TH BDFTRUNCATE __appmansuffix__ 2025-04-27 __vendorversion__
 .SH NAME
 bdftruncate \- generate truncated BDF font from ISO 10646-1-encoded BDF font
 .SH SYNOPSIS
@@ -8,6 +8,13 @@ bdftruncate \- generate truncated BDF font from ISO 10646-1-encoded BDF font
 .I source.bdf
 .B >
 .I destination.bdf
+.sp
+.B bdftruncate
+[
+.B \-\-help
+|
+.B \-\-version
+]
 .SH DESCRIPTION
 .B bdftruncate
 allows one to generate from an ISO10646-1 encoded BDF font other ISO10646-1
@@ -15,6 +22,13 @@ BDF fonts in which all characters above a threshold code value are stored
 unencoded.  This is often desirable because the Xlib API and X11 protocol
 data structures used for representing font metric information are extremely
 inefficient when handling sparsely populated fonts.
+.SH OPTIONS
+.TP 12
+.B \-\-help
+prints usage message and exits.
+.TP 12
+.B \-\-version
+prints version information and exits.
 .SH EXAMPLE
 The command
 .RS

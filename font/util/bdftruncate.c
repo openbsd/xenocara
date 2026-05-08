@@ -34,6 +34,8 @@
  * a threshold code value are stored unencoded.
  */
 
+#include "config.h"
+
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -41,15 +43,25 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if (defined(__GNUC__) && ((__GNUC__ * 100 + __GNUC_MINOR__) >= 205))	\
-        || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
+#ifndef __has_attribute
+# define __has_attribute(x) 0  /* Compatibility with older compilers. */
+#endif
+#ifndef __has_c_attribute
+# define __has_c_attribute(x) 0  /* Compatibility with pre-C23 compilers. */
+#endif
+
+#if __has_c_attribute(noreturn)
+# define ATTR_NORETURN [[noreturn]]
+#elif __has_attribute(noreturn) \
+    || (defined(__GNUC__) && ((__GNUC__ * 100 + __GNUC_MINOR__) >= 205)) \
+    || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
 # define ATTR_NORETURN __attribute((noreturn))
 #else
 # define ATTR_NORETURN
-#endif /* GNUC  */
+#endif
 
 static int iswide(unsigned int);
-static void usage(void) ATTR_NORETURN;
+ATTR_NORETURN static void usage(int);
 static int parse_threshold(const char *str, unsigned long *threshold);
 
 static int
@@ -132,7 +144,7 @@ main(int argc, char **argv)
 	--argc;
 	++argv;
 	if (argc == 0)
-		usage();
+		usage(EXIT_FAILURE);
 
 	if (strcmp(*argv, "-w") == 0 || strcmp(*argv, "+w") == 0) {
 		if (**argv == '-')
@@ -142,12 +154,19 @@ main(int argc, char **argv)
 		--argc;
 		++argv;
 	}
+	else if (strcmp(*argv, "--help") == 0) {
+		usage(EXIT_SUCCESS);
+	}
+	else if (strcmp(*argv, "--version") == 0) {
+		puts(PACKAGE_STRING);
+		exit(EXIT_SUCCESS);
+	}
 
 	if (argc != 1 || (opt_plus_w && opt_minus_w))
-		usage();
+		usage(EXIT_FAILURE);
 	if (parse_threshold(*argv, &threshold)) {
 		fprintf(stderr, "Illegal threshold %s\n", *argv);
-		usage();
+		usage(EXIT_FAILURE);
 	}
 
 	if (opt_minus_w)
@@ -211,10 +230,11 @@ iswide(unsigned int ucs)
 }
 
 static void
-usage(void)
+usage(int exitstatus)
 {
 	fprintf(stderr,
 	    "Usage: bdftruncate [+w|-w] threshold <source.bdf >destination.bdf\n"
+            "   or: bdftruncate [--help|--version]\n"
 	    "\n"
 	    "Example:\n"
 	    "\n"
@@ -224,5 +244,5 @@ usage(void)
 	    ">= 0x3200 will only be stored unencoded (i.e., ENCODING -1).\n"
 	    "Option -w removes East Asian Wide and East Asian FullWidth characters\n"
 	    "(default if threshold <= 0x3200), and option +w keeps them.\n");
-	exit(EXIT_FAILURE);
+	exit(exitstatus);
 }

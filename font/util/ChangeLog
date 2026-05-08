@@ -1,3 +1,74 @@
+commit 5c92c11482e017fa7210a71b6f44e40042816209
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 25 13:23:17 2026 -0700
+
+    font-util 1.4.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c9651195b228dfa8cdeac0611fba85a3a216e137
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7af30077fc459e7fe3415ffa803583d7465a8a99
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 31 10:40:46 2025 -0700
+
+    ucs2any: Use reallocarray if available to protect against integer overflow
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/font/util/-/merge_requests/10>
+
+commit ecbf1fa15e14a9ccf339b86198b03f31db838382
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 2 13:15:18 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/font/util/-/merge_requests/9>
+
+commit d6ccf6d55728465e363b6dc89fd0759456bd35b2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 27 15:27:52 2025 -0700
+
+    Update ATTR_NORETURN for C23
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/font/util/-/merge_requests/8>
+
+commit 57933bd2388a05af1fe68385ba7709a4c295b81a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 27 15:18:22 2025 -0700
+
+    Add --help and --version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/font/util/-/merge_requests/8>
+
+commit 5f94278b521f956579fbd52393a3dc1aa27bf310
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 27 14:41:11 2025 -0700
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    While files opened by these utilities should never have a size >= 2gb,
+    they may have inode numbers or dates outside the 32-bit range.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/font/util/-/merge_requests/8>
+
 commit b5ca142f81a6f14eddb23be050291d1c25514777
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Sep 8 14:03:50 2023 +1000

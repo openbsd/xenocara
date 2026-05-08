@@ -1,4 +1,4 @@
-.TH ucs2any __appmansuffix__ __vendorversion__
+.TH UCS2ANY __appmansuffix__ 2025-04-27 __vendorversion__
 .SH NAME
 ucs2any \- generate BDF fonts containing subsets of ISO 10646-1 codepoints
 .SH SYNOPSIS
@@ -6,7 +6,7 @@ ucs2any \- generate BDF fonts containing subsets of ISO 10646-1 codepoints
 [
 .B +d
 |
-.B -d
+.B \-d
 ]
 .I source-name
 {
@@ -14,21 +14,34 @@ ucs2any \- generate BDF fonts containing subsets of ISO 10646-1 codepoints
 .I registry-encoding
 }
 \&.\|.\|.
+.sp
+.B ucs2any
+[
+.B \-\-help
+|
+.B \-\-version
+]
 .SH DESCRIPTION
 .B ucs2any
 allows one to generate from an ISO 10646-1 encoded BDF font other BDF fonts
-in any possible encoding.  This way, one can derive from a single
-ISO 10646-1 master font a whole set of 8-bit fonts in all ISO 8859 and
-various other encodings.
+in any possible encoding.
+This way, one can derive from a single ISO 10646-1 master font
+a whole set of 8-bit fonts in all ISO 8859 and various other encodings.
 .SH OPTIONS
 .TP
 .B +d
-puts DEC VT100 graphics characters in the C0 range (default for upright,
-character-cell fonts).
+puts DEC VT100 graphics characters in the C0 range
+(default for upright, character-cell fonts).
 .TP
 .B \-d
-omits DEC VT100 graphics characters from the C0 range (default for all
-font types except upright, character-cell fonts).
+omits DEC VT100 graphics characters from the C0 range
+(default for all font types except upright, character-cell fonts).
+.TP
+.B \-\-help
+prints usage message and exits.
+.TP
+.B \-\-version
+prints version information and exits.
 .SH OPERANDS
 .TP
 .I source-name
@@ -53,12 +66,12 @@ operand pairs may be specified.
 .SH EXAMPLE
 The command
 .RS
-ucs2any 6x13.bdf 8859-1.TXT iso8859-1 8859-2.TXT iso8859-2
+ucs2any 6x13.bdf 8859\-1.TXT iso8859\-1 8859\-2.TXT iso8859\-2
 .RE
 will generate the files
-.I 6x13-iso8859-1.bdf
+.I 6x13\-iso8859\-1.bdf
 and
-.IR 6x13-iso8859-2.bdf .
+.IR 6x13\-iso8859\-2.bdf .
 .SH FUTURE DIRECTIONS
 Hopefully a future release will have a facility similar to
 .B ucs2any

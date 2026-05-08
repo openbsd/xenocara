@@ -5,7 +5,7 @@ datarootdir=@datarootdir@
 datadir=@datadir@
 fontrootdir=@fontrootdir@
 mapdir=@MAPDIR@
- 
+
 Name: FontUtil
 Description: Font utilities dirs
 Version: @PACKAGE_VERSION@
