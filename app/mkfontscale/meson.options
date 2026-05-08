@@ -1,0 +1,6 @@
+option(
+  'bzip2',
+  type: 'boolean',
+  description: 'Support bzip2 compressed bitmap fonts (default is false)',
+  value: false
+)

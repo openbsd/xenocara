@@ -1,6 +1,5 @@
-.\" $XFree86: xc/programs/mkfontscale/mkfontscale.man,v 1.4 2003/06/20 15:49:52 eich Exp $
 .\"
-.TH MKFONTSCALE __appmansuffix__ __vendorversion__
+.TH MKFONTSCALE __appmansuffix__ __xorgversion__
 .SH NAME
 mkfontscale \- create an index of scalable font files for X
 .SH SYNOPSIS
@@ -46,10 +45,10 @@ mkfontscale \- create an index of scalable font files for X
 ] \|.\|.\|.
 .SH DESCRIPTION
 For each directory argument,
-.I mkfontscale
-reads all of the scalable font files in the directory.  For every font
-file found, an X11 font name (XLFD) is generated, and is written
-together with the file name to a file
+.B mkfontscale
+reads all of the scalable font files in the directory.
+For every font file found, an X11 font name (XLFD) is generated,
+and is written together with the file name to a file
 .B fonts.scale
 in the directory.
 
@@ -134,20 +133,29 @@ is useful when generating encoding directories only.
 disable (\fI-u\fP) or enable (\fI-U\fP) indexing of ISO 10646:1 font
 encodings (default: enabled).
 .TP
-.B \-v
+.B \-v, \--version
 print program version and exit.
+.TP
+.B \--help
+print program usage and exit.
 .TP
 .B \-\-
 end of options.
 .SH SEE ALSO
-X(__miscmansuffix__), Xserver(__appmansuffix__), mkfontdir(__appmansuffix__), ttmkfdir(__appmansuffix__), xfs(__appmansuffix__), xset(__appmansuffix__)
+.BR X (__miscmansuffix__),
+.BR Xserver (__appmansuffix__),
+.BR mkfontdir (__appmansuffix__),
+.BR xfs (__appmansuffix__),
+.BR xset (__appmansuffix__)
 .SH NOTES
 The format of the
 .BR fonts.scale ,
 .B fonts.dir
 and
 .B encodings.dir
-files is documented in the mkfontdir(__appmansuffix__) manual page.
+files is documented in the
+.BR mkfontdir (__appmansuffix__)
+manual page.
 
 .B Mkfontscale
 will overwrite any

@@ -1,3 +1,69 @@
+commit d01cb89de429b4ed124399008dcec5e6de8e83af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 18 15:22:37 2026 -0700
+
+    mkfontscale 1.2.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 445449c961f78ca319d4d5fc935ff88be898c3a9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 4 09:46:46 2026 -0700
+
+    mkfontscale.man: drop ttmkfdir from See Also list
+    
+    Few distros still include the ttmkfdir package since most have switched to
+    mkfontscale instead.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/mkfontscale/-/merge_requests/13>
+
+commit d84ec0885a39b341b9340d5d74528fd55d3911e9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 15 12:29:57 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/mkfontscale/-/merge_requests/12>
+
+commit 8ab23896bfe6a95021f9388d44d663044a18514f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/mkfontscale/-/merge_requests/12>
+
+commit 9c9c8834dc4ce17d0e878a28d36ff5e736bddb9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 22 15:28:12 2025 -0700
+
+    Add --help and --version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/mkfontscale/-/merge_requests/11>
+
+commit b9c84d00d98724200f63d1786a49b2465a2c7f54
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 22 15:21:10 2025 -0700
+
+    Report unknown argument before printing usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/mkfontscale/-/merge_requests/11>
+
 commit bcfa27aeef3a9eb720e6b48e3fb8a4c2813fef52
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 3 10:06:37 2024 -0800

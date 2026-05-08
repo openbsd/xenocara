@@ -121,21 +121,21 @@ static char *exclusionSuffix;
 static char *ProgramName;
 
 static void _X_NORETURN _X_COLD
-usage(void)
+usage(int exitstatus)
 {
     fprintf(stderr, "Usage:\n"
             "mkfontscale [ -b ] [ -s ] [ -o filename ] [-x suffix ]\n"
             "            [ -a encoding ] [ -f fuzz ] [ -l ]\n"
             "            [ -e directory ] [ -p prefix ] [ -n ] [ -r ] \n"
             "            [-u] [-U] [-v] [ directory ]...\n");
-    exit(1);
+    exit(exitstatus);
 }
 
 static void _X_NORETURN _X_COLD
 missing_arg(const char *option)
 {
     fprintf(stderr, "%s: %s requires an argument\n", ProgramName, option);
-    usage();
+    usage(1);
 }
 
 int
@@ -182,7 +182,7 @@ main(int argc, char **argv)
     while (argn < argc) {
         if (argv[argn][0] == '\0' || argv[argn][0] != '-')
             break;
-        if (argv[argn][1] == '-') {
+        if ((argv[argn][1] == '-') && (argv[argn][2] == '\0')) {
             argn++;
             break;
         }
@@ -207,7 +207,7 @@ main(int argc, char **argv)
             if (strlen(argv[argn + 1]) > NPREFIX - 1) {
                 fprintf(stderr, "%s: argument to -p cannot be longer than "
                         "%d characters\n", ProgramName, NPREFIX - 1);
-                usage();
+                usage(1);
             }
             free(encodingPrefix);
             encodingPrefix = strdup(argv[argn + 1]);
@@ -266,12 +266,17 @@ main(int argc, char **argv)
             bigEncodingFuzz = strtof(argv[argn + 1], NULL) / 100.0f;
             argn += 2;
         }
-        else if (strcmp(argv[argn], "-v") == 0) {
-            printf("%s\n", PACKAGE_STRING);
+        else if ((strcmp(argv[argn], "-v") == 0) ||
+                 (strcmp(argv[argn], "--version") == 0)) {
+            puts(PACKAGE_STRING);
             exit(0);
         }
+        else if (strcmp(argv[argn], "--help") == 0) {
+            usage(0);
+        }
         else {
-            usage();
+            fprintf(stderr, "%s: Unknown argument: %s\n\n", argv[0], argv[argn]);
+            usage(1);
         }
     }
 

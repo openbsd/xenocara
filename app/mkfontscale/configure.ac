@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([mkfontscale], [1.2.3],
+AC_INIT([mkfontscale], [1.2.4],
         [https://gitlab.freedesktop.org/xorg/app/mkfontscale/-/issues],
         [mkfontscale])
 AC_CONFIG_SRCDIR([Makefile.am])
