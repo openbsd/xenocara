@@ -1,3 +1,124 @@
+commit e86afcc2d1bf1e3aa92fd1f73f21384c4d77c3de
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 5 11:08:08 2025 -0800
+
+    xf86-video-ast 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 426c80e9be7e69981ae50015f9a6f908f8768ecd
+Author: Semenov Herman <GermanAizek@yandex.ru>
+Date:   Sun Oct 6 19:09:16 2024 +0300
+
+    Fixed disabled RAMDAC for A1 reg
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-video-ast/-/merge_requests/12>
+
+commit db56de34bdf70f1904dba50d98774aaa950a2ca5
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Thu May 23 19:34:03 2024 +0200
+
+    drop compat with ancient xservers
+    
+    We're relying on 1.18 now, so drop compat with older ones.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-video-ast/-/merge_requests/11>
+
+commit 309e8bf6ca1620eee14fb0b3c7a17fca325e548c
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Wed May 22 21:00:06 2024 +0200
+
+    drop obsolete check for REGION_NULL
+    
+    Our minimal version is known to have it, so no check needed anymore.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-video-ast/-/merge_requests/11>
+
+commit 9f932c7d5e79751082edec101e090732b2ea7fcd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 12 15:55:00 2024 -0700
+
+    Raise minimum supported Xserver version to 1.18 (ABI_VIDEODRV_VERSION 20.0)
+    
+    Already effectively required by use of XNFcallocarray() introduced in
+    xorg/xserver@b96dc999 - xserver-1.18.0, released in Nov. 2015.
+    
+    Allows dropping remnants of code for XAA and pre-pciaccess X servers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-video-ast/-/merge_requests/9>
+
+commit 4b72faa32244112049d05c925637cae0ac9aac82
+Author: Enrico Weigelt, metux IT consult <info@metux.net>
+Date:   Wed May 8 14:32:06 2024 +0200
+
+    use XNFcallocarray() instead of xnfcalloc macro
+    
+    xnfcalloc is just an alias for XNFcallocarray() that doesn't seem to serve
+    any practical purpose, so it can go away once all drivers stopped using it.
+    
+    Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/driver/xf86-video-ast/-/merge_requests/8>
+
+commit 55a72385a443d7107aa378651c4a5631fe837da6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 5 18:56:25 2024 -0800
+
+    Handle a -Wformat warning
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2352780cd7a19bc9562b33676d2598e522e37def
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 5 18:53:48 2024 -0800
+
+    Handle 2 -Wdeclaration-after-statement warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 70582d8282ce8ff4a604ac337a047da3e3cf6230
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 5 18:47:48 2024 -0800
+
+    Handle 12 -Wmissing-prototypes warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 338ec0a2170ea3e631cd0e7a997e4fcc28b0f646
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 5 18:45:12 2024 -0800
+
+    Add X.Org's standard C warning flags to AM_CFLAGS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3262c6e82f3697ba9191c99000dd3a1303f42c70
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 5 18:42:31 2024 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    configure.ac:44: warning: The macro 'AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:44: You should run autoupdate.
+    aclocal.m4:3515: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:44: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6558ea686df764fe21e76eaf3a6c8bd398800283
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 1 11:17:31 2023 -0700
+
+    gitlab CI: ensure libtool is installed in build container
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 7b8c415f4204a4b8820aefe18083b21e9f363c13
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Dec 8 16:13:56 2022 -0800

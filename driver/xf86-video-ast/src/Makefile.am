@@ -23,7 +23,7 @@
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = @XORG_CFLAGS@
+AM_CFLAGS = $(BASE_CFLAGS) $(XORG_CFLAGS)
 
 ast_drv_la_LTLIBRARIES = ast_drv.la
 ast_drv_la_LDFLAGS = -module -avoid-version
@@ -43,5 +43,4 @@ ast_drv_la_SOURCES =	\
 	ast_tool.c 	\
 	ast_vgatool.c 	\
 	ast_vgatool.h   \
-	ast_dp501fw.h	\
-        compat-api.h
+	ast_dp501fw.h

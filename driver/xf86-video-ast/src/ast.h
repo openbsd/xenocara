@@ -34,13 +34,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef HAVE_XAA_H
-#include "xaa.h"
-#endif
-
 #include "ast_pcirename.h"
-
-#include "compat-api.h"
 
 #ifdef	Support_ShadowFB
 #include "shadow.h"
@@ -231,9 +225,6 @@ typedef struct _ASTRec {
     OptionInfoPtr 	Options;
     DisplayModePtr  ModePtr;
     FBLinearPtr 	pCMDQPtr;
-#ifdef HAVE_XAA_H
-    XAAInfoRecPtr	AccelInfoPtr;
-#endif
     xf86CursorInfoPtr   HWCInfoPtr;
     FBLinearPtr 	pHWCPtr;
 
@@ -266,11 +257,7 @@ typedef struct _ASTRec {
     unsigned long	FbMapSize;
     unsigned long	MMIOMapSize;
 
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
-    IOADDRESS		RelocateIO;
-#else
     int			RelocateIO;
-#endif
 
     VIDEOMODE 		VideoModeInfo;
     ASTRegRec       SavedReg;
@@ -351,9 +338,6 @@ void ASTDisableHWC(ScrnInfoPtr pScrn);
 Bool ASTSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
 
 /* ast_accel.c */
-#ifdef HAVE_XAA_H
-Bool ASTAccelInit(ScreenPtr pScreen);
-#endif
 void ASTDisplayVideo(ScrnInfoPtr pScrn, ASTPortPrivPtr pPriv, RegionPtr clipBoxes, int id);
 
 /* ast_tool.c */

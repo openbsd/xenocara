@@ -25,10 +25,6 @@
 #endif
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
-#include "xf86Resources.h"
-#include "xf86RAC.h"
-#endif
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "vgaHW.h"
@@ -45,12 +41,6 @@
 /* framebuffer offscreen manager */
 #include "xf86fbman.h"
 
-/* include xaa includes */
-#ifdef HAVE_XAA_H
-#include "xaa.h"
-#include "xaarop.h"
-#endif
-
 /* H/W cursor support */
 #include "xf86Cursor.h"
 
@@ -65,19 +55,19 @@ static void ASTIdentify(int flags);
 const OptionInfoRec *ASTAvailableOptions(int chipid, int busid);
 static Bool ASTProbe(DriverPtr drv, int flags);
 static Bool ASTPreInit(ScrnInfoPtr pScrn, int flags);
-static Bool ASTScreenInit(SCREEN_INIT_ARGS_DECL);
-Bool ASTSwitchMode(SWITCH_MODE_ARGS_DECL);
-void ASTAdjustFrame(ADJUST_FRAME_ARGS_DECL);
-static Bool ASTEnterVT(VT_FUNC_ARGS_DECL);
-static void ASTLeaveVT(VT_FUNC_ARGS_DECL);
-static void ASTFreeScreen(FREE_SCREEN_ARGS_DECL);
-static ModeStatus ASTValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags);
+static Bool ASTScreenInit(ScreenPtr pScreen, int argc, char **argv);
+Bool ASTSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
+void ASTAdjustFrame(ScrnInfoPtr pScrn, int x, int y);
+static Bool ASTEnterVT(ScrnInfoPtr pScrn);
+static void ASTLeaveVT(ScrnInfoPtr pScrn);
+static void ASTFreeScreen(ScrnInfoPtr pScrn);
+static ModeStatus ASTValidMode(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool verbose, int flags);
 
 /* Internally used functions */
 static Bool ASTGetRec(ScrnInfoPtr pScrn);
 static void ASTFreeRec(ScrnInfoPtr pScrn);
 static Bool ASTSaveScreen(ScreenPtr pScreen, Bool unblack);
-static Bool ASTCloseScreen(CLOSE_SCREEN_ARGS_DECL);
+static Bool ASTCloseScreen(ScreenPtr pScreen);
 static void ASTSave(ScrnInfoPtr pScrn);
 static void ASTRestore(ScrnInfoPtr pScrn);
 static void ASTProbeDDC(ScrnInfoPtr pScrn, int index);
@@ -90,11 +80,7 @@ static Bool ASTModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static void ASTInitVideo(ScreenPtr pScreen);
 static int  ASTPutImage( ScrnInfoPtr,
         short, short, short, short, short, short, short, short,
-        int, unsigned char*, short, short, Bool, RegionPtr, pointer
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 1
-		          , DrawablePtr pDraw
-#endif
-			 );
+        int, unsigned char*, short, short, Bool, RegionPtr, pointer, DrawablePtr);
 #endif
 
 /*
@@ -281,11 +267,7 @@ ASTProbe(DriverPtr drv, int flags)
                                pPci->device_id, pPci->bus, pPci->domain, pPci->dev, pPci->func);
                     xf86DrvMsg(0, X_ERROR,
                                "ast: This driver cannot operate until it has been unloaded.\n");
-                    xf86UnclaimPciSlot(pPci
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 13
-				       , devSections[0]
-#endif
-				       );
+                    xf86UnclaimPciSlot(pPci, devSections[0]);
                     free(devSections);
                     return FALSE;
                 }
@@ -541,19 +523,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
 	      (pScrn->chipset != NULL) ? pScrn->chipset : "Unknown ast");
 
 
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
-    /* "Patch" the PIOOffset inside vgaHW in order to force
-     * the vgaHW module to use our relocated i/o ports.
-     */
-    VGAHWPTR(pScrn)->PIOOffset =
-	pScrn->domainIOBase + PCI_REGION_BASE(pAST->PciInfo, 2, REGION_IO) - 0x380;
-
-    pAST->RelocateIO = pScrn->domainIOBase +
-	    PCI_REGION_BASE(pAST->PciInfo, 2, REGION_IO);
-#else
-    pAST->RelocateIO = (PCI_REGION_BASE(pAST->PciInfo, 2, REGION_IO));
-
-#endif
+   pAST->RelocateIO = (PCI_REGION_BASE(pAST->PciInfo, 2, REGION_IO));
 
 
    if (pAST->pEnt->device->MemBase != 0) {
@@ -678,7 +648,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    pScrn->monitor->DDC = ASTDoDDC(pScrn, pAST->pEnt->index);
 
    /* Mode Valid */
-   clockRanges = xnfcalloc(sizeof(ClockRange), 1);
+   clockRanges = XNFcallocarray(sizeof(ClockRange), 1);
    clockRanges->next = NULL;
    clockRanges->minClock = 9500;
    clockRanges->maxClock = ASTGetMaxDCLK(pScrn) * 1000;
@@ -745,35 +715,6 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    pAST->CMDQInfo.pjWritePort       = pAST->MMIOVirtualAddr+ 0x8048;
    pAST->CMDQInfo.pjReadPort        = pAST->MMIOVirtualAddr+ 0x804C;
    pAST->CMDQInfo.pjEngStatePort    = pAST->MMIOVirtualAddr+ 0x804C;
-#ifdef HAVE_XAA_H
-   pAST->AccelInfoPtr = NULL;
-#ifdef	Accel_2D
-   if (!xf86ReturnOptValBool(pAST->Options, OPTION_NOACCEL, FALSE))
-   {
-       if (xf86LoadSubModule(pScrn, "xaa")) {
-
-           pAST->noAccel = FALSE;
-           pAST->MMIO2D  = TRUE;
-#ifndef	MMIO_2D
-           if (!xf86ReturnOptValBool(pAST->Options, OPTION_MMIO2D, FALSE)) {
-	       pAST->CMDQInfo.ulCMDQSize = DEFAULT_CMDQ_SIZE;
-	       pAST->MMIO2D = FALSE;
-           }
-#endif
-
-           pAST->ENGCaps = ENG_CAP_ALL;
-           if (!xf86GetOptValInteger(pAST->Options, OPTION_ENG_CAPS, &pAST->ENGCaps)) {
-	       xf86DrvMsg(pScrn->scrnIndex, X_INFO, "No ENG Capability options found\n");
-           }
-
-           pAST->DBGSelect = 0;
-           if (!xf86GetOptValInteger(pAST->Options, OPTION_DBG_SELECT, &pAST->DBGSelect)) {
-	       xf86DrvMsg(pScrn->scrnIndex, X_INFO, "No DBG Seleclt options found\n");
-           }
-       }
-   }
-#endif
-#endif /* HAVE_XAA_H */
 
    /* HW Cursor Check */
    pAST->noHWC = TRUE;
@@ -821,7 +762,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
 
 
 static Bool
-ASTScreenInit(SCREEN_INIT_ARGS_DECL)
+ASTScreenInit(ScreenPtr pScreen, int argc, char **argv)
 {
    ScrnInfoPtr pScrn;
    ASTRecPtr pAST;
@@ -861,9 +802,11 @@ ASTScreenInit(SCREEN_INIT_ARGS_DECL)
    }
 
 #if	!(defined(__sparc__)) && !(defined(__mips__))
-   vgaHWPtr hwp;
-   hwp = VGAHWPTR(pScrn);
-   vgaHWSetMmioFuncs(hwp, pAST->MMIOVirtualAddr, 0);
+   {
+       vgaHWPtr hwp;
+       hwp = VGAHWPTR(pScrn);
+       vgaHWSetMmioFuncs(hwp, pAST->MMIOVirtualAddr, 0);
+   }
 #endif
 
    vFillASTModeInfo (pScrn);
@@ -875,7 +818,7 @@ ASTScreenInit(SCREEN_INIT_ARGS_DECL)
    }
 
    ASTSaveScreen(pScreen, FALSE);
-   ASTAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
+   ASTAdjustFrame(pScrn, pScrn->frameX0, pScrn->frameY0);
 
    miClearVisualTypes();
 
@@ -962,19 +905,6 @@ ASTScreenInit(SCREEN_INIT_ARGS_DECL)
 #endif
 
    xf86SetBlackWhitePixels(pScreen);
-
-#ifdef HAVE_XAA_H
-#ifdef Accel_2D
-   if (!pAST->noAccel)
-   {
-       if (!ASTAccelInit(pScreen)) {
-           xf86DrvMsg(pScrn->scrnIndex, X_ERROR,"Hardware acceleration initialization failed\n");
-           pAST->noAccel = TRUE;
-       }
-   }
-#endif /* end of Accel_2D */
-#endif
-
    xf86SetBackingStore(pScreen);
    xf86SetSilkenMouse(pScreen);
 
@@ -1023,9 +953,8 @@ ASTScreenInit(SCREEN_INIT_ARGS_DECL)
 
 
 Bool
-ASTSwitchMode(SWITCH_MODE_ARGS_DECL)
+ASTSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
 {
-   SCRN_INFO_PTR(arg);
    ASTRecPtr pAST = ASTPTR(pScrn);
 
    /* VideoMode validate */
@@ -1063,9 +992,8 @@ ASTSwitchMode(SWITCH_MODE_ARGS_DECL)
 }
 
 void
-ASTAdjustFrame(ADJUST_FRAME_ARGS_DECL)
+ASTAdjustFrame(ScrnInfoPtr pScrn, int x, int y)
 {
-   SCRN_INFO_PTR(arg);
    ASTRecPtr   pAST  = ASTPTR(pScrn);
    ULONG base;
 
@@ -1078,9 +1006,8 @@ ASTAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 
 /* enter into X Server */
 static Bool
-ASTEnterVT(VT_FUNC_ARGS_DECL)
+ASTEnterVT(ScrnInfoPtr pScrn)
 {
-   SCRN_INFO_PTR(arg);
    ASTRecPtr pAST = ASTPTR(pScrn);
 
    /* Fixed suspend can't resume issue */
@@ -1098,7 +1025,7 @@ ASTEnterVT(VT_FUNC_ARGS_DECL)
 
    if (!ASTModeInit(pScrn, pScrn->currentMode))
       return FALSE;
-   ASTAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
+   ASTAdjustFrame(pScrn, pScrn->frameX0, pScrn->frameY0);
 
    return TRUE;
 
@@ -1106,10 +1033,8 @@ ASTEnterVT(VT_FUNC_ARGS_DECL)
 
 /* leave X server */
 static void
-ASTLeaveVT(VT_FUNC_ARGS_DECL)
+ASTLeaveVT(ScrnInfoPtr pScrn)
 {
-
-   SCRN_INFO_PTR(arg);
    ASTRecPtr pAST = ASTPTR(pScrn);
 #if	!(defined(__sparc__)) && !(defined(__mips__))
    vgaHWPtr hwp = VGAHWPTR(pScrn);
@@ -1143,9 +1068,8 @@ ASTLeaveVT(VT_FUNC_ARGS_DECL)
 }
 
 static void
-ASTFreeScreen(FREE_SCREEN_ARGS_DECL)
+ASTFreeScreen(ScrnInfoPtr pScrn)
 {
-   SCRN_INFO_PTR(arg);
    ASTFreeRec(pScrn);
 #if	!(defined(__sparc__)) && !(defined(__mips__))
    if (xf86LoaderCheckSymbol("vgaHWFreeHWRec"))
@@ -1154,9 +1078,8 @@ ASTFreeScreen(FREE_SCREEN_ARGS_DECL)
 }
 
 static ModeStatus
-ASTValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
+ASTValidMode(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool verbose, int flags)
 {
-   SCRN_INFO_PTR(arg);
    ASTRecPtr   pAST  = ASTPTR(pScrn);
    ModeStatus Flags = MODE_NOMODE;
    UCHAR jReg;
@@ -1251,7 +1174,7 @@ ASTGetRec(ScrnInfoPtr pScrn)
    if (pScrn->driverPrivate)
       return TRUE;
 
-   pScrn->driverPrivate = xnfcalloc(sizeof(ASTRec), 1);
+   pScrn->driverPrivate = XNFcallocarray(sizeof(ASTRec), 1);
    return TRUE;
 }
 
@@ -1289,7 +1212,7 @@ ASTSaveScreen(ScreenPtr pScreen, Bool unblack)
 }
 
 static Bool
-ASTCloseScreen(CLOSE_SCREEN_ARGS_DECL)
+ASTCloseScreen(ScreenPtr pScreen)
 {
    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    ASTRecPtr pAST = ASTPTR(pScrn);
@@ -1330,12 +1253,6 @@ ASTCloseScreen(CLOSE_SCREEN_ARGS_DECL)
    vgaHWUnmapMem(pScrn);
 #endif
 
-#ifdef HAVE_XAA_H
-   if(pAST->AccelInfoPtr) {
-       XAADestroyInfoRec(pAST->AccelInfoPtr);
-       pAST->AccelInfoPtr = NULL;
-   }
-#endif
    if(pAST->HWCInfoPtr) {
        xf86DestroyCursorInfoRec(pAST->HWCInfoPtr);
        pAST->HWCInfoPtr = NULL;
@@ -1351,7 +1268,7 @@ ASTCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 
    pScrn->vtSema = FALSE;
    pScreen->CloseScreen = pAST->CloseScreen;
-   return (*pScreen->CloseScreen) (CLOSE_SCREEN_ARGS);
+   return (*pScreen->CloseScreen) (pScreen);
 }
 
 static void
@@ -1795,11 +1712,13 @@ ASTModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     if (!ASTSetMode(pScrn, mode))
       return FALSE;
 #else
-    vgaHWPtr hwp;
+    {
+        vgaHWPtr hwp;
 
-    hwp = VGAHWPTR(pScrn);
+        hwp = VGAHWPTR(pScrn);
 
-    vgaHWUnlock(hwp);
+        vgaHWUnlock(hwp);
+    }
 
     if (!vgaHWInit(pScrn, mode))
       return FALSE;
@@ -2103,11 +2022,7 @@ static int ASTPutImage(ScrnInfoPtr pScrn,
                           int id, unsigned char* buf,
                           short width, short height,
                           Bool sync,
-                          RegionPtr clipBoxes, pointer data
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 1
-		          , DrawablePtr pDraw
-#endif
-)
+                          RegionPtr clipBoxes, pointer data, DrawablePtr pDraw)
 {
     ASTPtr pAST = ASTPTR(pScrn);
     ASTPortPrivPtr pPriv = (ASTPortPrivPtr)data;
@@ -2322,11 +2237,7 @@ static XF86VideoAdaptorPtr ASTSetupImageVideo(ScreenPtr pScreen)
     pPriv->hue          = 0;
 
     /* gotta uninit this someplace */
-#if defined(REGION_NULL)
     REGION_NULL(pScreen, &pPriv->clip);
-#else
-    REGION_INIT(pScreen, &pPriv->clip, NullBox, 0);
-#endif
 
 	pAST->adaptor = adapt;
 
