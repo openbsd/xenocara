@@ -63,7 +63,8 @@ usage (int exitcode)
 "    -q                             turn off extra messages\n"
 "    -i                             ignore locks on authority file\n"
 "    -b                             break locks on authority file\n"
-"    -V                             print version and exit\n"
+"    -u, --help                     print usage and exit\n"
+"    -V, --version                  print version and exit\n"
 "\n"
 "and commands have the following syntax:\n";
     static const char suffixmsg[] = 
@@ -107,7 +108,7 @@ main (int argc, char *argv[])
 		    authfilename = argv[i];
 		    continue;
 		  case 'V':		/* -V */
-		    printf("%s\n", PACKAGE_STRING);
+		    puts(PACKAGE_STRING);
 		    exit(0);
 		  case 'v':		/* -v */
 		    verbose = 1;
@@ -123,8 +124,17 @@ main (int argc, char *argv[])
 		    continue;
 		  case 'u':		/* -u */
 		    usage (0);
+		  case '-':		/* --help | --version */
+		    if (strcmp(flag, "-help") == 0) {
+			usage (0);
+		    }
+		    else if (strcmp(flag, "-version") == 0) {
+			puts(PACKAGE_STRING);
+			exit(0);
+		    }
+		    /* fallthrough */
 		  default:
-		    fprintf(stderr, "%s: unrecognized option '%s'\n",
+		    fprintf(stderr, "%s: unrecognized option '-%s'\n",
 			    ProgramName, flag);
 		    usage (1);
 		}

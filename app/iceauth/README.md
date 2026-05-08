@@ -1,6 +1,7 @@
-The iceauth program is used to edit and display the authorization
-information used in connecting with ICE.   It operates very much
-like the xauth program for X11 connection authentication records.
+The iceauth program is used to edit and display the authorization information
+used in connecting with ICE (the X11 Inter-Client Exchange protocol).
+It operates very much like the xauth program for X11 connection authentication
+records.
 
 All questions regarding this software should be directed at the
 Xorg mailing list:
