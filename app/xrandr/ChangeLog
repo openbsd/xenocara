@@ -1,3 +1,206 @@
+commit 0a9c71cc8a44798ad2ce9a4d27aa33470bff5da3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 25 12:24:57 2026 -0700
+
+    xrandr 1.5.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7cf67cb96d40b21d3b679770e0ca5b76b28dcf81
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 30 11:25:36 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/21>
+
+commit d29cb4958c4cdef8d6939fc4e892572ea8ae95e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 30 10:45:00 2026 -0700
+
+    COPYING: Add missing copyright notices from source files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/21>
+
+commit 6aed36ec118fec663b9f2105c92825a5dbc2dc05
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/21>
+
+commit 12d3d35d4cbb7dd497a17d4835c451ad4aee964c
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun Mar 29 15:58:15 2026 -0700
+
+    set_gamma_info: fix heap-buffer-overflow with empty gamma ramps
+    
+    Commit 71ab944 ("set_gamma_info: remove unnecessary round-trip to
+    server") consolidated XRRGetCrtcGammaSize() + XRRGetCrtcGamma() into
+    just XRRGetCrtcGamma(), but dropped the early return when size == 0.
+    
+    When the server returns an empty gamma ramp (size 0), XRRAllocGamma(0)
+    allocates only sizeof(XRRCrtcGamma) with no array data, and the red/
+    green/blue pointers point past the end of the allocation. The code then
+    proceeds to access best_array[0] and best_array[last_best] (where
+    last_best is forced to at least 1), causing a heap-buffer-overflow
+    detected by AddressSanitizer.
+    
+    Check for size < 2 rather than just size == 0 because the gamma
+    computation algorithm requires at least 2 entries — it reads both
+    best_array[middle] and best_array[last_best] where last_best >= 1.
+    
+    Regressed-in:71ab94418ead8f59c6124e8b3e53f8df7340f095
+    Fixes: https://github.com/XQuartz/XQuartz/issues/462
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 5ea32007758bac1db51841c782a921096155cde4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 9 17:29:39 2025 -0700
+
+    Add more checks for malloc()/calloc() failure
+    
+    Handles 12 warnings from gcc 15.1 -fanalyzer:
+    
+    In function ‘set_name_string’,
+        inlined from ‘set_name’ at xrandr.c:672:2:
+    xrandr.c:624:9: warning: dereference of NULL ‘name’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+    
+    In function ‘set_name_xid’,
+        inlined from ‘set_name’ at xrandr.c:668:2:
+    xrandr.c:631:9: warning: dereference of NULL ‘name’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+    
+    In function ‘set_name_index’,
+        inlined from ‘set_name’ at xrandr.c:670:2:
+    xrandr.c:638:9: warning: dereference of NULL ‘name’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+    
+    xrandr.c: In function ‘get_monitors.part.0’:
+    xrandr.c:2644:17: warning: dereference of possibly-NULL ‘monitors’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+    
+    xrandr.c: In function ‘main’:
+    xrandr.c:3011:24: warning: dereference of possibly-NULL ‘prop’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+    xrandr.c:3182:21: warning: dereference of possibly-NULL ‘m’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+    xrandr.c:3195:23: warning: dereference of possibly-NULL ‘m’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+    xrandr.c:3209:23: warning: dereference of possibly-NULL ‘m’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+    xrandr.c:3223:23: warning: dereference of possibly-NULL ‘m’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+    xrandr.c:3282:28: warning: dereference of possibly-NULL ‘m’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+    xrandr.c:3285:21: warning: dereference of possibly-NULL ‘m’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+    xrandr.c:3319:21: warning: dereference of possibly-NULL ‘m’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/19>
+
+commit 6fc8985ff30a8d54e13b445c0d66ca6b08190476
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 9 16:50:50 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/19>
+
+commit 12ed42b3fa0e59bc41ca4eeb40d9a5675f3f82e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 11:06:21 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xrandr.1:24:81: STYLE: input text line longer than 80 bytes: xrandr - adjust size...
+    mandoc: xrandr.1:22:14: WARNING: cannot parse date, using it verbatim: TH xrandr 1.5.3
+    mandoc: xrandr.1:385:2: WARNING: skipping paragraph macro: PP empty
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/18>
+
+commit f655af4ed98b11b66f2d49d273ad0d989fec6e5b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 15 19:27:02 2025 -0700
+
+    xrandr man page NAME line doesn't give functionality [Debian bug #941422]
+    
+    Reported-by: Dan Jacobson <jidanni@jidanni.org> in https://bugs.debian.org/941422
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/17>
+
+commit fccd24631f75a74a6d5116c4779b2f4fdc7f305e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 15 19:22:02 2025 -0700
+
+    Additional man page formatting fixes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/17>
+
+commit 33d45ad1863bf3f9e7d92777172753deb2a947e6
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Date:   Sun Jun 2 19:34:04 2024 +0000
+
+    xrandr.1: some editorial changes for this man page [Debian bug #1072490]
+    
+    Originally from https://bugs.debian.org/1072490
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/17>
+
+commit 272e723967ff787a846eb56bff90fd93c025bb7d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 6 16:41:48 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/16>
+
+commit a93442f59183ab1c0bc6a7b6c8cdf5bac4788c92
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Mon Sep 30 11:09:33 2024 +0200
+
+    xrandr: Warn when running with Xwayland
+    
+    RandR is only emulated and read-only with Xwayland running rootless.
+    
+    Check the presence of the XWAYLAND extension on the display and warn
+    when running on Xwayland.
+    
+    This is heavily inspired by Peter's Hutterer's similar change in xinput.
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    See-also: https://gitlab.freedesktop.org/xorg/app/xinput/-/merge_requests/1
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrandr/-/merge_requests/13>
+
 commit 0591ca56f9628d1a1a691160d79d9afb0f225c4d
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Thu Nov 7 13:02:28 2024 -0500

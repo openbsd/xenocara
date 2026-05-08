@@ -19,168 +19,177 @@
 .\" TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 .\" PERFORMANCE OF THIS SOFTWARE.
 .\"
-.TH XRANDR __appmansuffix__ __vendorversion__
+.TH XRANDR __appmansuffix__ 2025-04-15 __vendorversion__
 .SH NAME
-xrandr \- primitive command line interface to RandR extension
+xrandr - adjust size, orientation, reflection of a screen
+(using RandR extension)
 .SH SYNOPSIS
-.B "xrandr"
-[\-\-help]  [\-\-display \fIdisplay\fP]
-[\-q] [\-v]
-[\-\-verbose]
-[\-\-dryrun]
-[\-\-screen \fIsnum\fP]
-[\-\-q1]
-[\-\-q12]
-[\-\-current]
-[\-\-noprimary]
-[\-\-panning \fIwidth\fPx\fIheight\fP[+\fIx\fP+\fIy\fP[/\fItrack_width\fPx\fItrack_height\fP+\fItrack_x\fP+\fItrack_y\fP[/\fIborder_left\fP/\fIborder_top\fP/\fIborder_right\fP/\fIborder_bottom\fP]]]]
-[\-\-scale \fIx\fP[x\fIy\fP]]
-[\-\-scale-from \fIw\fPx\fIh\fP]
-[\-\-transform \fIa\fP,\fIb\fP,\fIc\fP,\fId\fP,\fIe\fP,\fIf\fP,\fIg\fP,\fIh\fP,\fIi\fP]
-[\-\-primary]
-[\-\-prop]
-[\-\-fb \fIwidth\fPx\fIheight\fP]
-[\-\-fbmm \fIwidth\fPx\fIheight\fP]
-[\-\-dpi \fIdpi\fP]
-[\-\-dpi \fIfrom-output\fP]
-[\-\-newmode \fIname\fP \fImode\fP]
-[\-\-rmmode \fIname\fP]
-[\-\-addmode \fIoutput\fP \fIname\fP]
-[\-\-delmode \fIoutput\fP \fIname\fP]
-[\-\-output \fIoutput\fP]
-[\-\-auto]
-[\-\-mode \fImode\fP]
-[\-\-preferred]
-[\-\-pos \fIx\fPx\fIy\fP]
-[\-\-rate \fIrate\fP]
-[\-\-reflect \fIreflection\fP]
-[\-\-rotate \fIorientation\fP]
-[\-\-left\-of \fIoutput\fP\]
-[\-\-right\-of \fIoutput\fP\]
-[\-\-above \fIoutput\fP\]
-[\-\-below \fIoutput\fP\]
-[\-\-same-as \fIoutput\fP\]
-[\-\-set \fIproperty\fP \fIvalue\fP]
-[\-\-off]
-[\-\-crtc \fIcrtc\fP]
-[\-\-gamma \fIred\fP[:\fIgreen\fP:\fIblue\fP]]
-[\-\-brightness \fIbrightness\fP]
-[\-o \fIorientation\fP]
-[\-s \fIsize\fP]
-[\-r \fIrate\fP]
-[\-x] [\-y]
-[\-\-listproviders]
-[\-\-setprovideroutputsource \fIprovider\fP \fIsource\fP]
-[\-\-setprovideroffloadsink \fIprovider\fP \fIsink\fP]
-[\-\-listmonitors]
-[\-\-listactivemonitors]
-[\-\-setmonitor \fIname\fP \fIgeometry\fP \fIoutputs\fP]
-[\-\-delmonitor \fIname\fP]
+.nf
+\fBxrandr\fP \
+[\fB\-\-help\fP] \
+[\fB\-\-display\fP \fIdisplay\fP] \
+[\fB\-q\fP] [\fB\-v\fP] \
+[\fB\-\-verbose\fP] \
+[\fB\-\-dryrun\fP]
+       [\fB\-\-screen\fP \fIsnum\fP] \
+[\fB\-\-q1\fP] \
+[\fB\-\-q12\fP] \
+[\fB\-\-current\fP] \
+[\fB\-\-noprimary\fP]
+       [\fB\-\-panning\fP \fIwidth\fPx\fIheight\fP[+\fIx\fP+\fIy\fP\:\
+[/\fItrack_width\fPx\fItrack_height\fP+\fItrack_x\fP+\fItrack_y\fP\:\
+[/\fIborder_left\fP/\fIborder_top\fP/\fIborder_right\fP/\fIborder_bottom\fP]]]]
+       [\fB\-\-scale\fP \fIx\fP[x\fIy\fP]] \
+[\fB\-\-scale\-from\fP \fIw\fPx\fIh\fP] \
+[\fB\-\-transform\fP \fIa\fP,\fIb\fP,\fIc\fP,\fId\fP,\fIe\fP,\fIf\fP,\fIg\fP,\fIh\fP,\fIi\fP]
+       [\fB\-\-primary\fP] \
+[\fB\-\-prop\fP] \
+[\fB\-\-fb\fP \fIwidth\fPx\fIheight\fP] \
+[\fB\-\-fbmm\fP \fIwidth\fPx\fIheight\fP]
+       [\fB\-\-dpi\fP \fIdpi\fP] \
+[\fB\-\-dpi\fP \fIfrom-output\fP]
+       [\fB\-\-newmode\fP \fIname\fP \fImode\fP] \
+[\fB\-\-rmmode\fP \fIname\fP] \
+[\fB\-\-addmode\fP \fIoutput\fP \fIname\fP]
+       [\fB\-\-delmode\fP \fIoutput\fP \fIname\fP] \
+[\fB\-\-output\fP \fIoutput\fP] \
+[\fB\-\-auto\fP] \
+[\fB\-\-mode\fP \fImode\fP]
+       [\fB\-\-preferred\fP] \
+[\fB\-\-pos\fP \fIx\fPx\fIy\fP] \
+[\fB\-\-rate\fP \fIrate\fP]
+       [\fB\-\-reflect\fP \fIreflection\fP] \
+[\fB\-\-rotate\fP \fIorientation\fP]
+       [\fB\-\-left\-of\fP \fIoutput\fP] \
+[\fB\-\-right\-of\fP \fIoutput\fP]
+       [\fB\-\-above\fP \fIoutput\fP] \
+[\fB\-\-below\fP \fIoutput\fP] \
+[\fB\-\-same-as\fP \fIoutput\fP]
+       [\fB\-\-set\fP \fIproperty\fP \fIvalue\fP] \
+[\fB\-\-off\fP] \
+[\fB\-\-crtc\fP \fIcrtc\fP]
+       [\fB\-\-gamma\fP \fIred\fP[:\fIgreen\fP:\fIblue\fP]] \
+[\fB\-\-brightness\fP \fIbrightness\fP]
+       [\fB\-o\fP \fIorientation\fP] \
+[\fB\-s\fP \fIsize\fP] \
+[\fB\-r\fP \fIrate\fP] \
+[\fB\-x\fP] [\fB\-y\fP]
+       [\fB\-\-listproviders\fP] \
+[\fB\-\-setprovideroutputsource\fP \fIprovider\fP \fIsource\fP]
+       [\fB\-\-setprovideroffloadsink\fP \fIprovider\fP \fIsink\fP]
+       [\fB\-\-listmonitors\fP] \
+[\fB\-\-listactivemonitors\fP]
+       [\fB\-\-setmonitor\fP \fIname\fP \fIgeometry\fP \fIoutputs\fP] \
+[\fB\-\-delmonitor\fP \fIname\fP]
 .SH DESCRIPTION
-.I Xrandr
-is used to set the size, orientation and/or reflection of the outputs for a
-screen. It can also set the screen size.
-
+.B Xrandr
+is used to set the size, orientation, and/or reflection of the outputs for a
+screen.
+It can also set the size of the overall screen.
+.PP
 If invoked without any option, it will dump the state of the outputs,
-showing the existing modes for each of them, with a '+' after the preferred
-modes and a '*' after the current mode.
-
-There are a few global options. Other options modify the last output that is
-specified in earlier parameters in the command line. Multiple outputs may
-be modified at the same time by passing multiple \-\-output options followed
+showing the existing modes for each of them, with a \&'+' after the preferred
+modes and a \&'*' after the current mode.
+.PP
+There are a few global options.
+Other options modify the last output that is
+specified in earlier parameters in the command line.
+Multiple outputs may be modified at the same time by passing
+multiple \fB\-\-output\fP options followed
 immediately by their corresponding modifying options.
-.IP \-\-help
+.IP \fB\-\-help\fP
 Print out a summary of the usage and exit.
-.IP "\-v, \-\-version"
+.IP "\fB\-v\fP, \fB\-\-version"
 Print out the RandR version reported by the X server and exit.
-.IP \-\-verbose
-Causes xrandr to be more verbose. When used with \-q (or without other
-options), xrandr will display more information about the server state. Please
-note that the gamma and brightness information are only approximations of the
-complete color profile stored in the server. When
-used along with options that reconfigure the system, progress will be
-reported while executing the configuration changes.
-.IP "\-q, \-\-query"
+.IP \fB\-\-verbose\fP
+Causes xrandr to be more verbose. When used with \fB\-q\fP (or without other
+options), xrandr will display more information about the server state.
+Please note that the gamma and brightness information are only
+approximations of the complete color profile stored in the server.
+When used along with options that reconfigure the system,
+progress will be reported while executing the configuration changes.
+.IP "\fB\-q\fP, \fB\-\-query"
 When this option is present, or when no configuration changes are requested,
 xrandr will display the current state of the system.
-.IP "\-\-dryrun"
+.IP "\fB\-\-dryrun\fP"
 Performs all the actions specified except that no changes are made.
-.IP "\-\-nograb"
-Apply the modifications without grabbing the screen. It avoids to block other
-applications during the update but it might also cause some applications that
+.IP "\fB\-\-nograb\fP"
+Apply the modifications without grabbing the screen.
+It avoids blocking other applications during the update
+but it might also cause some applications that
 detect screen resize to receive old values.
-.IP "\-d, \-\-display \fIname\fP"
-This option selects the X display to use. Note this refers to the X
-screen abstraction, not the monitor (or output).
-.IP "\-\-screen \fIsnum\fP"
-This option selects which screen to manipulate. Note this refers to the X
-screen abstraction, not the monitor (or output).
-.IP \-\-q1
-Forces the usage of the RandR version 1.1 protocol, even if a higher version
-is available.
-.IP \-\-q12
+.IP "\fB\-d\fP, \fB\-\-display\fP \fIname\fP"
+This option selects the X display to use.
+Note this refers to the X screen abstraction, not the monitor (or output).
+.IP "\fB\-\-screen\fP \fIsnum\fP"
+This option selects which screen to manipulate.
+Note this refers to the X screen abstraction, not the monitor (or output).
+.IP \fB\-\-q1\fP
+Forces the usage of the RandR version 1.1 protocol,
+even if a higher version is available.
+.IP \fB\-\-q12\fP
 Forces the usage of the RandR version 1.2 protocol, even if the display does
 not report it as supported or a higher version is available.
-.PP
 .SH "RandR version 1.5 options"
-.PP
 Options for RandR 1.5 are used as a superset of the options for RandR 1.4.
-.PP
-.IP \-\-listmonitors
+.IP \fB\-\-listmonitors\fP
 Report information about all defined monitors.
-.IP \-\-listactivemonitors
+.IP \fB\-\-listactivemonitors\fP
 Report information about currently active monitors.
-.IP "\-\-setmonitor \fIname\fP \fIgeometry\fP \fIoutputs\fP"} {none|\fIoutput\fP,\fIoutput\fP,...}\n"
+.IP "\fB\-\-setmonitor\fP \fIname\fP \fIgeometry\fP \fIoutput-list\fP"
 Define a new monitor with the given geometry and associated to the given outputs.
-The output list is either the keyword \fBnone\fP or a comma-separated list of outputs.
-The geometry is either the keyword \fBauto\fP, in which case the monitor
-will automatically track the geometry of the associated outputs, or a manual specification
-in the form
+The \fIoutput-list\fP is either the keyword \fBnone\fP
+or a comma-separated list of outputs.
+The \fIgeometry\fP is either the keyword \fBauto\fP, in which case the monitor
+will automatically track the geometry of the associated outputs,
+or a manual specification in the form
 \fIw\fP/\fImmw\fPx\fIh\fP/\fImmh\fP+\fIx\fP+\fIy\fP
-where w, h, x, y are in pixels and mmw, mmh are the physical dimensions of the monitor.
-.IP "\-\-delmonitor \fIname\fP"
+where
+.IR w ", " h ", " x ", " y
+are in pixels and
+.IR mmw ", " mmh
+are the physical dimensions of the monitor.
+.IP "\fB\-\-delmonitor\fP \fIname\fP"
 Delete the given user-defined monitor.
-.PP
 .SH "RandR version 1.4 options"
-.PP
 Options for RandR 1.4 are used as a superset of the options for RandR 1.3.
-.IP \-\-listproviders
+.IP \fB\-\-listproviders\fP
 Report information about the providers available.
-.IP "\-\-setprovideroutputsource \fIprovider\fP \fIsource\fP"
+.IP "\fB\-\-setprovideroutputsource\fP \fIprovider\fP \fIsource\fP"
 Set \fIsource\fP as the source of display output images for \fIprovider\fP.
 This is only possible if \fIsource\fP and \fIprovider\fP have the \fBSource
 Output\fR and \fBSink Output\fR capabilities, respectively.
 If \fIsource\fP is \fB0x0\fP, then \fIprovider\fP is disconnected from its
 current output source.
-.IP "\-\-setprovideroffloadsink \fIprovider\fP \fIsink\fP"
+.IP "\fB\-\-setprovideroffloadsink\fP \fIprovider\fP \fIsink\fP"
 Set \fIprovider\fP as a render offload device for \fIsink\fP.
-This is only possible if \fIprovider\fP and \fIsink\fP have the \fBSource
-Offload\fR and \fBSink Offload\fR capabilities, respectively.
+This is only possible if \fIprovider\fP and \fIsink\fP have the
+\fBSource Offload\fR and \fBSink Offload\fR capabilities, respectively.
 If \fIsink\fP is \fB0x0\fP, then \fIprovider\fP is disconnected from its current
 render offload sink.
-.PP
 .SH "RandR version 1.3 options"
-.PP
 Options for RandR 1.3 are used as a superset of the options for RandR 1.2.
-.PP
-.IP \-\-current
+.IP \fB\-\-current\fP
 Return the current screen configuration, without polling for hardware changes.
-.IP \-\-noprimary
+.IP \fB\-\-noprimary\fP
 Don't define a primary output.
 .PP
 .B "Per-output options"
-.IP "\-\-panning \fIwidth\fPx\fIheight\fP[+\fIx\fP+\fIy\fP[/\fItrack_width\fPx\fItrack_height\fP+\fItrack_x\fP+\fItrack_y\fP[/\fIborder_left\fP/\fIborder_top\fP/\fIborder_right\fP/\fIborder_bottom\fP]]]"
-This option sets the panning parameters.  As soon as panning is
-enabled, the CRTC position can change with every pointer move.
-The first four parameters specify the total panning area, the next four the
-pointer tracking area (which defaults to the same area). The last four
-parameters specify the border and default to 0. A width or height set to zero
-disables panning on the according axis. You typically have to set the screen
-size with \fI--fb\fP simultaneously.
-.IP "\-\-transform \fIa\fP,\fIb\fP,\fIc\fP,\fId\fP,\fIe\fP,\fIf\fP,\fIg\fP,\fIh\fP,\fIi\fP"
+.IP "\fB\-\-panning\fP \fIwidth\fPx\fIheight\fP[+\fIx\fP+\fIy\fP\:\
+[/\fItrack_width\fPx\fItrack_height\fP+\fItrack_x\fP+\fItrack_y\fP\:\
+[/\fIborder_left\fP/\fIborder_top\fP/\fIborder_right\fP/\fIborder_bottom\fP]]]"
+This option sets the panning parameters.
+As soon as panning is enabled,
+the CRTC position can change with every pointer move.
+The first four parameters specify the total panning area,
+the next four the pointer tracking area (which defaults to the same area).
+The last four parameters specify the border and default to 0.
+A width or height set to zero disables panning on the according axis.
+You typically have to set the screen size with \fB\-\-fb\fP simultaneously.
+.IP "\fB\-\-transform\fP \fIa\fP,\fIb\fP,\fIc\fP,\fId\fP,\fIe\fP,\fIf\fP,\fIg\fP,\fIh\fP,\fIi\fP"
 Specifies a transformation matrix to apply on the output.
-A bilinear filter is selected automatically unless the \-\-filter parameter is
-also specified.
+A bilinear filter is selected automatically
+unless the \fB\-\-filter\fP parameter is also specified.
 The mathematical form corresponds to:
 .RS
 .RS
@@ -190,17 +199,18 @@ d e f
 .br
 g h i
 .RE
-The transformation is based on homogeneous coordinates. The matrix multiplied
-by the coordinate vector of a pixel of the output gives the transformed
-coordinate vector of a pixel in the graphic buffer.  More precisely, the vector
-.RI "(x y)"
+The transformation is based on homogeneous coordinates.
+The matrix multiplied by the coordinate vector of a pixel of the output
+gives the transformed coordinate vector of a pixel in the graphic buffer.
+More precisely, the vector
+.RI ( "x y" )
 of the output pixel is extended to 3 values
-.RI "(x y w),"
-with 1 as the w coordinate and multiplied against the matrix. The final device
-coordinates of the pixel are then calculated with the so-called homogenic
-division by the transformed w coordinate.  In other words, the device
-coordinates
-.RI "(x' y')"
+.RI ( "x y w" ),
+with 1 as the w coordinate and multiplied against the matrix.
+The final device coordinates of the pixel are then calculated with the
+so-called homogenic division by the transformed w coordinate.
+In other words, the device coordinates
+.RI ( "x' y'" )
 of the transformed pixel are:
 .RS
 x' = (ax + by + c) / w'   and
@@ -209,198 +219,254 @@ y' = (dx + ey + f) / w'   ,
 .br
 with  w' = (gx + hy + i)  .
 .RE
-Typically, \fIa\fP and
-\fIe\fP corresponds to the scaling on the X and Y axes, \fIc\fP and \fIf\fP
-corresponds to the translation on those axes, and \fIg\fP, \fIh\fP, and \fIi\fP
-are respectively 0, 0 and 1. The matrix can also be used to express more
-complex transformations such as keystone correction, or rotation.  For a
-rotation of an angle T, this formula can be used:
+Typically, \fIa\fP and \fIe\fP corresponds to the scaling on the X and Y axes,
+\fIc\fP and \fIf\fP corresponds to the translation on those axes,
+and \fIg\fP, \fIh\fP, and \fIi\fP are respectively 0, 0 and 1.
+The matrix can also be used to express more complex transformations
+such as keystone correction, or rotation.
+For a rotation of an angle T, this formula can be used:
 .RS
-cos T  -sin T   0
+cos T  \-sin T   0
 .br
 sin T   cos T   0
 .br
  0       0      1
 .RE
-As a special argument, instead of
-passing a matrix, one can pass the string \fInone\fP, in which case the default
+As a special argument, instead of passing a matrix,
+one can pass the string \fBnone\fP, in which case the default
 values are used (a unit matrix without filter).
 .RE
-.IP "\-\-filter \fIfiltermode\fP"
+.IP "\fB\-\-filter\fP \fIfiltermode\fP"
 Chooses the scaling filter method to be applied when the screen is scaled or
 transformed.
-Can be either 'bilinear' or 'nearest'.
-.IP "\-\-scale \fIx\fP[x\fIy\fP]"
+Can be either \&'bilinear' or \&'nearest'.
+.IP "\fB\-\-scale\fP \fIx\fP[x\fIy\fP]"
 Changes the dimensions of the output picture.
-If the \fIy\fP value is omitted, the \fIx\fP value will be used for both dimensions.
+If the \fIy\fP value is omitted,
+the \fIx\fP value will be used for both dimensions.
 Values larger than 1 lead to a compressed screen (screen dimension bigger
 than the dimension of the output mode), and values less than 1 lead to
 a zoom in on the output.
-This option is actually a shortcut version of the \fI\-\-transform\fP option.
-.IP "\-\-scale-from \fIw\fPx\fIh\fP"
+This option is actually a shortcut version of the \fB\-\-transform\fP option.
+.IP "\fB\-\-scale\-from\fP \fIw\fPx\fIh\fP"
 Specifies the size in pixels of the area of the framebuffer to be displayed on
 this output.
-This option is actually a shortcut version of the \fI\-\-transform\fP option.
-.IP \-\-primary
+This option is actually a shortcut version of the \fB\-\-transform\fP option.
+.IP \fB\-\-primary\fP
 Set the output as primary.
 It will be sorted first in Xinerama and RANDR geometry requests.
-.PP
 .SH "RandR version 1.2 options"
 These options are only available for X server supporting RandR version 1.2
 or newer.
-.IP "\-\-prop, \-\-properties"
+.IP "\fB\-\-prop\fP, \fB\-\-properties\fP"
 This option causes xrandr to display the contents of properties for each
-output. \-\-verbose also enables \-\-prop.
-.IP "\-\-fb \fIwidth\fPx\fIheight\fP"
-Reconfigures the screen to the specified size. All configured monitors must
-fit within this size. When this option is not provided, xrandr computes the
-smallest screen size that will hold the set of configured outputs; this
-option provides a way to override that behaviour.
-.IP "\-\-fbmm \fIwidth\fPx\fIheight\fP"
+output.
+\fB\-\-verbose\fP also enables \fB\-\-prop\fP.
+.IP "\fB\-\-fb\fP \fIwidth\fPx\fIheight\fP"
+Reconfigures the screen to the specified size.
+All configured monitors must fit within this size.
+When this option is not provided, xrandr computes the
+smallest screen size that will hold the set of configured outputs;
+this option provides a way to override that behaviour.
+.IP "\fB\-\-fbmm\fP \fIwidth\fPx\fIheight\fP"
 Sets the value reported as physical size of the X screen as a whole
-(union of all configured monitors). In configurations with multiple
-monitors with different DPIs, the value has no physical meaning, but
-it may be used by some legacy clients which do not support RandR
-version 1.2 to compute a reference font scaling. Normally,
+(union of all configured monitors).
+In configurations with multiple monitors with different DPIs,
+the value has no physical meaning,
+but it may be used by some legacy clients which do not support RandR
+version 1.2 to compute a reference font scaling.
+Normally,
 xrandr resets the reported physical size values to keep the DPI constant.
-This overrides that computation. Default DPI value is 96.
-.IP "\-\-dpi \fIdpi\fP"
-.IP "\-\-dpi \fIfrom-output\fP"
+This overrides that computation.
+Default DPI value is 96.
+.IP "\fB\-\-dpi\fP \fIdpi\fP"
+.IP "\fB\-\-dpi\fP \fIfrom-output\fP"
 This also sets the value reported as physical size of the X screen as a whole
-(union of all configured monitors). In configurations with multiple
-monitors with different DPIs, the value has no physical meaning, but
-it may be used by some legacy clients which do not support RandR
-version 1.2 to compute a reference font scaling. This option uses either
-the specified DPI value, or the DPI of the given output, to compute an appropriate
-physical size using whatever pixel size will be set. Typical values are
-the default (96 DPI), the DPI of the only monitor in single-monitor
-configurations, or the DPI of the primary monitor in multi-monitor
-configurations.
-.IP "\-\-newmode \fIname\fP \fImode\fP"
+(union of all configured monitors).
+In configurations with multiple monitors with different DPIs,
+the value has no physical meaning,
+but it may be used by some legacy clients which do not support RandR
+version 1.2 to compute a reference font scaling.
+This option uses either the specified DPI value,
+or the DPI of the given output,
+to compute an appropriate physical size using whatever pixel size will be set.
+Typical values are the default (96 DPI),
+the DPI of the only monitor in single-monitor configurations,
+or the DPI of the primary monitor in multi-monitor configurations.
+.IP "\fB\-\-newmode\fP \fIname\fP \fImode\fP"
 New modelines can be added to the server and then associated with outputs.
-This option does the former. The \fImode\fP is specified using the ModeLine
-syntax for xorg.conf: clock hdisp hsyncstart hsyncend htotal vdisp vsyncstart
-vsyncend vtotal \fIflags\fP. \fIflags\fP can be zero or more of +HSync,
--HSync, +VSync, -VSync, Interlace, DoubleScan, CSync, +CSync, -CSync. Several
-tools permit to compute the usual modeline from a height, width, and refresh
-rate, for instance you can use \fBcvt\fR.
-.IP "\-\-rmmode \fIname\fP"
+This option does the former.
+The \fImode\fP is specified using the ModeLine syntax for xorg.conf:
+\fIclock hdisp hsyncstart hsyncend htotal vdisp vsyncstart
+vsyncend vtotal flags\fP.
+\fIflags\fP can be zero or more of
+.BR +HSync ", " -HSync ", " +VSync ", " -VSync ", "
+.BR Interlace ", " DoubleScan ", " CSync ", " +CSync ", " -CSync .
+Several tools compute the usual modeline from a height, width,
+and refresh rate, for instance you can use
+.BR cvt (1).
+.IP "\fB\-\-rmmode\fP \fIname\fP"
 This removes a mode from the server if it is otherwise unused.
-.IP "\-\-addmode \fIoutput\fP \fIname\fP"
+.IP "\fB\-\-addmode\fP \fIoutput\fP \fIname\fP"
 Add a mode to the set of valid modes for an output.
-.IP "\-\-delmode \fIoutput\fP \fIname\fP"
+.IP "\fB\-\-delmode\fP \fIoutput\fP \fIname\fP"
 Remove a mode from the set of valid modes for an output.
 .PP
 .B "Per-output options"
-.IP "\-\-output \fIoutput\fP"
+.IP "\fB\-\-output\fP \fIoutput\fP"
 Selects an output to reconfigure. Use either the name of the output or the
 XID.
-.IP \-\-auto
-For connected but disabled outputs, this will enable them using their
-first preferred mode (or, something close to 96dpi if they have no preferred
-mode). For disconnected but enabled outputs, this will disable them.
-.IP "\-\-mode \fImode\fP"
-This selects a mode. Use either the name or the XID for \fImode\fP
-.IP "\-\-preferred"
-This selects the same mode as \-\-auto, but it doesn't automatically enable or
-disable the output.
-.IP "\-\-pos \fIx\fPx\fIy\fP"
-Position the output within the screen using pixel coordinates. In case reflection
-or rotation is applied, the translation is applied after the effects.
-.IP "\-\-rate \fIrate\fP"
-This marks a preference for refresh rates close to the specified value, when
-multiple modes have the same name, this will select the one with the nearest
-refresh rate.
-.IP "\-\-reflect \fIreflection\fP"
-Reflection can be one of 'normal' 'x', 'y' or 'xy'. This causes the output
-contents to be reflected across the specified axes.
-.IP "\-\-rotate \fIrotation\fP"
-Rotation can be one of 'normal', 'left', 'right' or 'inverted'. This causes
-the output contents to be rotated in the specified direction. 'right' specifies
-a clockwise rotation of the picture and 'left' specifies a counter-clockwise
-rotation.
-.IP "\-\-left\-of, \-\-right\-of, \-\-above, \-\-below, \-\-same-as \fIanother-output\fP"
+.IP \fB\-\-auto\fP
+For connected but disabled outputs,
+this will enable them using their first preferred mode
+(or something close to 96\~dpi if they have no preferred mode).
+For disconnected but enabled outputs, this will disable them.
+.IP "\fB\-\-mode\fP \fImode\fP"
+This selects a mode.
+Use either the name or the XID for \fImode\fP.
+.IP "\fB\-\-preferred\fP"
+This selects the same mode as \fB\-\-auto\fP,
+but it doesn't automatically enable or disable the output.
+.IP "\fB\-\-pos\fP \fIx\fPx\fIy\fP"
+Position the output within the screen using pixel coordinates.
+In case reflection or rotation is applied,
+the translation is applied after the effects.
+.IP "\fB\-\-rate\fP \fIrate\fP"
+This marks a preference for refresh rates close to the specified value.
+When multiple modes have the same name,
+this will select the one with the nearest refresh rate.
+.IP "\fB\-\-reflect\fP \fIreflection\fP"
+Reflection can be one of
+.BR normal ", " x ", " y ", or " xy .
+This causes the output contents to be reflected across the specified axes.
+.IP "\fB\-\-rotate\fP \fIrotation\fP"
+Rotation can be one of
+.BR normal ", " left ", " right ", or " inverted .
+This causes the output contents to be rotated in the specified direction.
+\fBright\fP specifies a clockwise rotation of the picture and
+\fBleft\fP specifies a counter-clockwise rotation.
+.IP "\fB\-\-left\-of\fP, \fB\-\-right\-of\fP, \fB\-\-above\fP, \
+\fB\-\-below\fP, \fB\-\-same-as\fP \fIanother-output\fP"
 Use one of these options to position the output relative to the position of
-another output. This allows convenient tiling of outputs within the screen.
-The position is always computed relative to the new position of the other
-output, so it is not valid to say \-\-output a \-\-left\-of b \-\-output
-b \-\-left\-of a.
-.IP "\-\-set \fIproperty\fP \fIvalue\fP"
-Sets an output property. Integer properties may be specified as a valid
-(see \-\-prop) comma-separated list of decimal or hexadecimal (with a leading 0x) values.
-Atom properties may be set to any of the valid atoms (see \-\-prop).
+another output.
+This allows convenient tiling of outputs within the screen.
+The position is always computed relative to the new position of the other output,
+so it is not valid to say
+\fB\-\-output a \-\-left\-of b \-\-output b \-\-left\-of a\fP.
+.IP "\fB\-\-set\fP \fIproperty\fP \fIvalue\fP"
+Sets an output property.
+Integer properties may be specified as a valid (see \fB\-\-prop\fP)
+comma-separated list of decimal or hexadecimal (with a leading 0x) values.
+Atom properties may be set to any of the valid atoms (see \fB\-\-prop\fP).
 String properties may be set to any value.
-.IP "\-\-off"
+.IP "\fB\-\-off\fP"
 Disables the output.
-.IP "\-\-crtc \fIcrtc\fP"
+.IP "\fB\-\-crtc\fP \fIcrtc\fP"
 Uses the specified crtc (either as an index in the list of CRTCs or XID).
 In normal usage, this option is not required as xrandr tries to make
-sensible choices about which crtc to use with each output. When that fails
-for some reason, this option can override the normal selection.
-.IP "\-\-gamma \fIred\fP[:\fIgreen\fP:\fIblue\fP]"
+sensible choices about which crtc to use with each output.
+When that fails for some reason, this option can override the normal selection.
+.IP "\fB\-\-gamma\fP \fIred\fP[:\fIgreen\fP:\fIblue\fP]"
 Set the specified floating point values as gamma correction on the crtc
 currently attached to this output.
 If green and blue are not specified, the red value will be used
 for all three components.
-Note that you cannot get two different values
-for cloned outputs (i.e.: which share the same crtc) and that switching an output to another crtc doesn't change
+Note that you cannot get two different values for cloned outputs
+(i.e., outputs which share the same crtc)
+and that switching an output to another crtc doesn't change
 the crtc gamma corrections at all.
-.IP "\-\-brightness \fIbrightness\fP"
+.IP "\fB\-\-brightness\fP \fIbrightness\fP"
 Multiply the gamma values on the crtc currently attached to the output to
-specified floating value. Useful for overly bright or overly dim outputs.
-However, this is a software only modification, if your hardware has support to
-actually change the brightness, you will probably prefer to use \fBxbacklight\fR.
-.PP
+specified floating value.
+Useful for overly bright or overly dim outputs.
+However, this is a software only modification,
+if your hardware has support to actually change the brightness,
+you will probably prefer to use
+.BR xbacklight (1).
 .SH "RandR version 1.1 options"
 These options are available for X servers supporting RandR version 1.1 or
-older. They are still valid for newer X servers, but they don't interact
+older.
+They are still valid for newer X servers, but they don't interact
 sensibly with version 1.2 options on the same command line.
-.IP "\-s, \-\-size \fIsize-index\fP or \-\-size \fIwidth\fPx\fIheight\fP"
+.IP "\fB\-s\fP, \fB\-\-size\fP \fIsize-index\fP or \fB\-\-size\fP \fIwidth\fPx\fIheight\fP"
 This sets the screen size, either matching by size or using the index into
 the list of available sizes.
-.IP "\-r, \-\-rate, \-\-refresh \fIrate\fP"
+.IP "\fB\-r\fP, \fB\-\-rate\fP, \fB\-\-refresh\fP \fIrate\fP"
 This sets the refresh rate closest to the specified value.
-.IP "\-o, \-\-orientation \fIrotation\fP"
+.IP "\fB\-o\fP, \fB\-\-orientation\fP \fIrotation\fP"
 This specifies the orientation of the screen,
-and can be one of normal, inverted, left or right.
-.IP \-x
+and can be one of
+.BR normal ", " inverted ", " left ",  or " right .
+.IP \fB\-x\fP
 Reflect across the X axis.
-.IP \-y
+.IP \fB\-y\fP
 Reflect across the Y axis.
 .SH EXAMPLES
-Sets an output called LVDS to its preferred mode, and on its right put an
-output called VGA to preferred mode of a screen which has been physically rotated clockwise:
+Sets an output called LVDS to its preferred mode,
+and on its right put an output called VGA to set to the preferred mode
+of a screen which has been physically rotated clockwise:
 .RS
-xrandr --output LVDS --auto --rotate normal --pos 0x0 --output VGA --auto --rotate left --right-of LVDS
+.nf
+xrandr \-\-output LVDS \-\-auto \-\-rotate normal \-\-pos 0x0 \\
+       \-\-output VGA \-\-auto \-\-rotate left \-\-right\-of LVDS
+.fi
 .RE
 .PP
 Forces to use a 1024x768 mode on an output called VGA:
 .RS
-xrandr --newmode "1024x768" 63.50  1024 1072 1176 1328  768 771 775 798 -hsync +vsync
+.nf
+xrandr \-\-newmode "1024x768" \\
+       63.50  1024 1072 1176 1328  768 771 775 798 \-hsync +vsync
+.fi
 .br
-xrandr --addmode VGA 1024x768
+xrandr \-\-addmode VGA 1024x768
 .br
-xrandr --output VGA --mode 1024x768
+xrandr \-\-output VGA \-\-mode 1024x768
 .RE
 .PP
-Enables panning on a 1600x768 desktop while displaying 1024x768 mode on an output called VGA:
+Enables panning on a 1600x768 desktop while displaying 1024x768 mode on an
+output called VGA:
 .RS
-xrandr --fb 1600x768 --output VGA --mode 1024x768 --panning 1600x0
+.nf
+xrandr \-\-fb 1600x768 \-\-output VGA \-\-mode 1024x768 \\
+       \-\-panning 1600x0
+.fi
 .RE
 .PP
-Have one small 1280x800 LVDS screen showing a small version of a huge 3200x2000 desktop, and have a
-big VGA screen display the surrounding of the mouse at normal size.
+Have one small 1280x800 LVDS screen showing a small version of
+a huge 3200x2000 desktop,
+and have a big VGA screen display the surrounding of the mouse at normal size.
 .RS
-xrandr --fb 3200x2000 --output LVDS --scale 2.5x2.5 --output VGA --pos 0x0 --panning 3200x2000+0+0/3200x2000+0+0/64/64/64/64
+.nf
+xrandr \-\-fb 3200x2000 \-\-output LVDS \-\-scale 2.5x2.5 \\
+       \-\-output VGA \-\-pos 0x0 \\
+           \-\-panning 3200x2000+0+0/3200x2000+0+0/64/64/64/64
+.fi
 .RE
 .PP
 Displays the VGA output in trapezoid shape so that it is keystone corrected
 when the projector is slightly above the screen:
 .RS
-xrandr --fb 1024x768 --output VGA --transform 1.24,0.16,-124,0,1.24,0,0,0.000316,1
+.nf
+xrandr \-\-fb 1024x768 \-\-output VGA \\
+       \-\-transform 1.24,0.16,\-124,0,1.24,0,0,0.000316,1
+.fi
 .RE
+.SH "XWAYLAND"
+.BR Xwayland (1)
+is an X server that uses a Wayland Compositor as backend.
+\fBXwayland\fP acts as translation layer between the X protocol and the Wayland
+protocol but does not have direct access to the hardware.
+With \fBXwayland\fP rootless (the default with most Wayland compositors),
+RandR is emulated and only available read-only to report the current status
+and configuration of the outputs as exposed to X11 clients.
+As a result, it is not possible to change the configuration of the outputs
+using \fBxrandr\fP on a Wayland environment with \fBXwayland\fP running rootless.
 .SH "SEE ALSO"
-Xrandr(__libmansuffix__), cvt(__appmansuffix__), xkeystone(__appmansuffix__), xbacklight(__appmansuffix__)
+.BR Xrandr (__libmansuffix__),
+.BR cvt (__appmansuffix__),
+.BR xkeystone (__appmansuffix__),
+.BR xbacklight (__appmansuffix__)
 .SH AUTHORS
 Keith Packard,
 Open Source Technology Center, Intel Corporation.

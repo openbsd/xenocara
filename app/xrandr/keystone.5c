@@ -143,7 +143,7 @@ extend namespace Nichrome {
 	    Widget::configure (&quad, geometry);
 	    quad.callback (&quad);
 	}
-	
+
 	protected void init (&quad_t quad,
 			     &nichrome_t nichrome,
 			     void (&quad_t) callback) {
@@ -348,7 +348,7 @@ rescale (m_t m, real limit)
 	for (int i = 0; i < 3; i++)
 	    m[j,i] *= scale;
     return m;
-    
+
 }
 
 string
@@ -495,14 +495,14 @@ output_t[*] get_outputs () {
                 int     geom = 2;
                 if (words[geom] == "primary")
                     geom++;
-		if (File::sscanf (words[geom], "%dx%d+%d+%d", 
-                                  &(int width), &(int height), 
+		if (File::sscanf (words[geom], "%dx%d+%d+%d",
+                                  &(int width), &(int height),
                                   &(int x), &(int y)) == 4)
                 {
                     outputs[dim(outputs)] = (output_t) {
                         name = words[0],
-                        geometry = { 
-                            x = x, y = y, width = width, height = height 
+                        geometry = {
+                            x = x, y = y, width = width, height = height
                         }
                     };
                 }
@@ -523,7 +523,7 @@ void main ()
 	File::fprintf (stderr, "%s: No enabled outputs\n", argv[0]);
 	exit (1);
     }
-    
+
     if (dim (argv) > 1) {
 	int i;
 	for (i = 0; i < dim (outputs); i++)
@@ -539,19 +539,19 @@ void main ()
     }
     else
 	target_output = outputs[0];
-	
+
     real target_width = target_output.geometry.width;
     real target_height = target_output.geometry.height;
-    
+
     real screen_width = 0;
     real screen_height = 0;
 
     for (int i = 0; i < dim (outputs); i++)
     {
-	screen_width = max (screen_width, 
+	screen_width = max (screen_width,
 			    outputs[i].geometry.x +
 			    outputs[i].geometry.width);
-	screen_height = max (screen_height, 
+	screen_height = max (screen_height,
 			    outputs[i].geometry.y +
 			    outputs[i].geometry.height);
     }
@@ -602,7 +602,7 @@ void main ()
     }
 
     &button_t	doit = Button::new (&nichrome, "doit", doit_func);
-    
+
     void show_func (&widget_t widget, bool state)
     {
 	if (m_available)
@@ -619,7 +619,7 @@ void main ()
             max_error(m_r, m_f);
 	}
     }
-    
+
     &button_t	show = Button::new (&nichrome, "show", show_func);
     &button_t	quit = Button::new (&nichrome, "quit",
 				     void func (&widget_t w, bool state) {
