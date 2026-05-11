@@ -97,7 +97,11 @@ LLVMModuleRef ac_create_module(LLVMTargetMachineRef tm, LLVMContextRef ctx)
    TargetMachine *TM = reinterpret_cast<TargetMachine *>(tm);
    LLVMModuleRef module = LLVMModuleCreateWithNameInContext("mesa-shader", ctx);
 
+#if LLVM_VERSION_MAJOR >= 21
+   unwrap(module)->setTargetTriple(TM->getTargetTriple());
+#else
    unwrap(module)->setTargetTriple(TM->getTargetTriple().getTriple());
+#endif
    unwrap(module)->setDataLayout(TM->createDataLayout());
    return module;
 }
