@@ -582,7 +582,7 @@ WriteXKMSymbols(FILE *file, XkbFileInfo *result, XkmInfo *info)
         else
             wireMap.modifier_map = 0;
         wireMap.flags = 0;
-        bzero((char *) typeName, XkbNumKbdGroups * sizeof(char *));
+        memset(typeName, 0, XkbNumKbdGroups * sizeof(char *));
         if (xkb->server) {
             if (xkb->server->explicit[i] & XkbExplicitKeyTypesMask) {
                 register int g;
@@ -724,8 +724,8 @@ WriteXKMIndicators(FILE *file, XkbFileInfo *result, XkmInfo *info)
     dpy = xkb->dpy;
     size += xkmPutCARD8(file, info->num_leds);
     size += xkmPutPadding(file, 3);
-    size += xkmPutCARD32(file, xkb->indicators->phys_indicators);
     if (xkb->indicators != NULL) {
+        size += xkmPutCARD32(file, xkb->indicators->phys_indicators);
         for (i = 0; i < XkbNumIndicators; i++) {
             XkbIndicatorMapPtr map = &xkb->indicators->maps[i];
 
@@ -754,6 +754,9 @@ WriteXKMIndicators(FILE *file, XkbFileInfo *result, XkmInfo *info)
                 size += tmp * SIZEOF(xkmIndicatorMapDesc);
             }
         }
+    }
+    else {
+        size += xkmPutCARD32(file, 0);
     }
     return size;
 }
@@ -906,7 +909,7 @@ WriteXKMGeomDoodad(FILE *file, XkbFileInfo *result, XkbDoodadPtr doodad)
 
     xkb = result->xkb;
     dpy = xkb->dpy;
-    bzero((char *) &doodadWire, sizeof(doodadWire));
+    memset(&doodadWire, 0, sizeof(doodadWire));
     doodadWire.any.type = doodad->any.type;
     doodadWire.any.priority = doodad->any.priority;
     doodadWire.any.top = doodad->any.top;
@@ -966,9 +969,9 @@ WriteXKMGeomOverlay(FILE *file, XkbFileInfo *result, XkbOverlayPtr ol)
 
     xkb = result->xkb;
     dpy = xkb->dpy;
-    bzero((char *) &olWire, sizeof(olWire));
-    bzero((char *) &rowWire, sizeof(rowWire));
-    bzero((char *) &keyWire, sizeof(keyWire));
+    memset(&olWire, 0, sizeof(olWire));
+    memset(&rowWire, 0, sizeof(rowWire));
+    memset(&keyWire, 0, sizeof(keyWire));
     size += xkmPutCountedAtomString(dpy, file, ol->name);
     olWire.num_rows = ol->num_rows;
     tmp = fwrite(&olWire, SIZEOF(xkmOverlayDesc), 1, file);
@@ -1110,7 +1113,7 @@ WriteXKMGeometry(FILE *file, XkbFileInfo *result)
             XkbOutlinePtr ol;
             xkmOutlineDesc olWire;
 
-            bzero((char *) &shapeWire, sizeof(xkmShapeDesc));
+            memset(&shapeWire, 0, sizeof(xkmShapeDesc));
             size += xkmPutCountedAtomString(dpy, file, shape->name);
             shapeWire.num_outlines = shape->num_outlines;
             if (shape->primary != NULL)
@@ -1169,10 +1172,9 @@ WriteXKMGeometry(FILE *file, XkbFileInfo *result)
 
 /***====================================================================***/
 
-/*ARGSUSED*/
 static int
 GetXKMKeyNamesTOC(XkbFileInfo *result, XkmInfo *info,
-                  int max_toc, xkmSectionInfo *toc_rtrn)
+                  _X_UNUSED int max_toc, xkmSectionInfo *toc_rtrn)
 {
     int num_toc;
     int total_size;
@@ -1185,10 +1187,9 @@ GetXKMKeyNamesTOC(XkbFileInfo *result, XkmInfo *info,
     return num_toc;
 }
 
-/*ARGSUSED*/
 static int
 GetXKMTypesTOC(XkbFileInfo *result, XkmInfo *info,
-               int max_toc, xkmSectionInfo *toc_rtrn)
+               _X_UNUSED int max_toc, xkmSectionInfo *toc_rtrn)
 {
     int num_toc;
     int total_size;
@@ -1201,10 +1202,9 @@ GetXKMTypesTOC(XkbFileInfo *result, XkmInfo *info,
     return num_toc;
 }
 
-/*ARGSUSED*/
 static int
 GetXKMCompatMapTOC(XkbFileInfo *result, XkmInfo *info,
-                   int max_toc, xkmSectionInfo *toc_rtrn)
+                   _X_UNUSED int max_toc, xkmSectionInfo *toc_rtrn)
 {
     int num_toc;
     int total_size;
@@ -1219,10 +1219,9 @@ GetXKMCompatMapTOC(XkbFileInfo *result, XkmInfo *info,
     return num_toc;
 }
 
-/*ARGSUSED*/
 static int
 GetXKMSemanticsTOC(XkbFileInfo *result, XkmInfo *info,
-                   int max_toc, xkmSectionInfo *toc_rtrn)
+                   _X_UNUSED int max_toc, xkmSectionInfo *toc_rtrn)
 {
     int num_toc;
     int total_size;
@@ -1239,10 +1238,9 @@ GetXKMSemanticsTOC(XkbFileInfo *result, XkmInfo *info,
     return num_toc;
 }
 
-/*ARGSUSED*/
 static int
 GetXKMLayoutTOC(XkbFileInfo *result, XkmInfo *info,
-                int max_toc, xkmSectionInfo *toc_rtrn)
+                _X_UNUSED int max_toc, xkmSectionInfo *toc_rtrn)
 {
     int num_toc;
     int total_size;
@@ -1263,10 +1261,9 @@ GetXKMLayoutTOC(XkbFileInfo *result, XkmInfo *info,
     return num_toc;
 }
 
-/*ARGSUSED*/
 static int
 GetXKMKeymapTOC(XkbFileInfo *result, XkmInfo *info,
-                int max_toc, xkmSectionInfo *toc_rtrn)
+                _X_UNUSED int max_toc, xkmSectionInfo *toc_rtrn)
 {
     int num_toc;
     int total_size;
@@ -1289,10 +1286,9 @@ GetXKMKeymapTOC(XkbFileInfo *result, XkmInfo *info,
     return num_toc;
 }
 
-/*ARGSUSED*/
 static int
-GetXKMGeometryTOC(XkbFileInfo *result, XkmInfo *info,
-                  int max_toc, xkmSectionInfo *toc_rtrn)
+GetXKMGeometryTOC(XkbFileInfo *result, _X_UNUSED XkmInfo *info,
+                  _X_UNUSED int max_toc, xkmSectionInfo *toc_rtrn)
 {
     int num_toc;
     int total_size;
@@ -1400,7 +1396,7 @@ XkbWriteXKMFile(FILE *out, XkbFileInfo *result)
     }
     xkb = result->xkb;
 
-    bzero((char *) &info, sizeof(XkmInfo));
+    memset(&info, 0, sizeof(XkmInfo));
     size_toc = (*getTOC) (result, &info, MAX_TOC, toc);
     if (size_toc < 1) {
         _XkbLibError(_XkbErrEmptyFile, "XkbWriteXKMFile", 0);

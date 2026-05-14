@@ -522,7 +522,7 @@ WriteCHdrIndicators(FILE *file, Display *dpy, XkbDescPtr xkb)
 }
 
 static Bool
-WriteCHdrGeomProps(FILE *file, XkbDescPtr xkb, XkbGeometryPtr geom)
+WriteCHdrGeomProps(FILE *file, _X_UNUSED XkbDescPtr xkb, XkbGeometryPtr geom)
 {
     if (geom->num_properties > 0) {
         register int i;
@@ -541,7 +541,7 @@ WriteCHdrGeomProps(FILE *file, XkbDescPtr xkb, XkbGeometryPtr geom)
 }
 
 static Bool
-WriteCHdrGeomColors(FILE *file, XkbDescPtr xkb, XkbGeometryPtr geom)
+WriteCHdrGeomColors(FILE *file, _X_UNUSED XkbDescPtr xkb, XkbGeometryPtr geom)
 {
     if (geom->num_colors > 0) {
         register int i;
@@ -589,7 +589,7 @@ WriteCHdrGeomOutlines(FILE *file, int nOL, XkbOutlinePtr ol, int shapeNdx)
 }
 
 static Bool
-WriteCHdrGeomShapes(FILE *file, XkbDescPtr xkb, XkbGeometryPtr geom)
+WriteCHdrGeomShapes(FILE *file, _X_UNUSED XkbDescPtr xkb, XkbGeometryPtr geom)
 {
     register int s;
     register XkbShapePtr shape;
@@ -785,7 +785,7 @@ WriteCHdrGeomOverlays(FILE *            file,
 
 static Bool
 WriteCHdrGeomRows(FILE *        file,
-                  XkbDescPtr    xkb,
+                  _X_UNUSED XkbDescPtr    xkb,
                   XkbSectionPtr section,
                   int           section_num)
 {
@@ -886,7 +886,7 @@ WriteCHdrGeomSections(FILE *file, XkbDescPtr xkb, XkbGeometryPtr geom)
 }
 
 static Bool
-WriteCHdrGeomAliases(FILE *file, XkbDescPtr xkb, XkbGeometryPtr geom)
+WriteCHdrGeomAliases(FILE *file, _X_UNUSED XkbDescPtr xkb, XkbGeometryPtr geom)
 {
     if (geom->num_key_aliases > 0) {
         register int i;
@@ -1069,7 +1069,7 @@ XkbWriteCFile(FILE *out, char *name, XkbFileInfo *result)
     else {
         char *tmp, *hdrdef;
 
-        tmp = (char *) strrchr(name, '/');
+        tmp = strrchr(name, '/');
         if (tmp == NULL)
             tmp = name;
         else

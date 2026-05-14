@@ -17,10 +17,12 @@ libxkbfile_sources = [
 
 deps = [
     dependency('kbproto'),
-    dependency('x11')
+    dependency('x11'),
+    dependency('xproto', version: '>= 7.0.22')
 ]
 
 includes = include_directories(
+    '..',
     '../include/',
     '../include/X11/extensions/'
 )

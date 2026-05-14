@@ -157,6 +157,9 @@ typedef struct _XkbConfigRtrn {
 } XkbConfigRtrnRec;
 
 typedef struct _XkbConfigField {
+#ifdef _XkbCF_Field_Const
+    const
+#endif
 	char *		field;
 	unsigned char	field_id;
 } XkbConfigFieldRec;

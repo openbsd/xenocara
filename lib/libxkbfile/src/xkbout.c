@@ -726,12 +726,11 @@ WriteXKBDoodad(FILE *           file,
     return True;
 }
 
-/*ARGSUSED*/
 static Bool
 WriteXKBOverlay(FILE *          file,
                 Display *       dpy,
                 unsigned        indent,
-                XkbGeometryPtr  geom,
+                _X_UNUSED XkbGeometryPtr  geom,
                 XkbOverlayPtr   ol)
 {
     register char *i_str;
@@ -981,12 +980,11 @@ XkbWriteXKBGeometry(FILE *              file,
     return True;
 }
 
-/*ARGSUSED*/
 Bool
 XkbWriteXKBSemantics(FILE * 		file,
                      XkbFileInfo * 	result,
-                     Bool 		topLevel,
-                     Bool 		showImplicit,
+                     _X_UNUSED Bool 	topLevel,
+                     _X_UNUSED Bool 	showImplicit,
                      XkbFileAddOnFunc	addOn,
                      void *		priv)
 {
@@ -999,11 +997,10 @@ XkbWriteXKBSemantics(FILE * 		file,
     return ok;
 }
 
-/*ARGSUSED*/
 Bool
 XkbWriteXKBLayout(FILE *                file,
                   XkbFileInfo *         result,
-                  Bool                  topLevel,
+                  _X_UNUSED Bool        topLevel,
                   Bool                  showImplicit,
                   XkbFileAddOnFunc      addOn,
                   void *                priv)
@@ -1025,11 +1022,10 @@ XkbWriteXKBLayout(FILE *                file,
     return ok;
 }
 
-/*ARGSUSED*/
 Bool
 XkbWriteXKBKeymap(FILE *                file,
                   XkbFileInfo *         result,
-                  Bool                  topLevel,
+                  _X_UNUSED Bool        topLevel,
                   Bool                  showImplicit,
                   XkbFileAddOnFunc      addOn,
                   void *                priv)

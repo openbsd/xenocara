@@ -60,7 +60,8 @@ _XkbKSCheckCase(KeySym ks)
             rtrn |= _XkbKSUpper;
         }
         if (((ks >= XK_a) && (ks <= XK_z)) ||
-            ((ks >= XK_agrave) && (ks <= XK_ydiaeresis))) {
+            ((ks >= XK_ssharp) && (ks <= XK_ydiaeresis) &&
+             (ks != XK_division))) {
             rtrn |= _XkbKSLower;
         }
         break;
@@ -69,7 +70,8 @@ _XkbKSCheckCase(KeySym ks)
             ((ks >= XK_Racute) && (ks <= XK_Tcedilla))) {
             rtrn |= _XkbKSUpper;
         }
-        if (((ks >= XK_aogonek) && (ks <= XK_zabovedot) && (ks != XK_caron)) ||
+        if (((ks >= XK_aogonek) && (ks <= XK_zabovedot) && (ks != XK_ogonek) &&
+             (ks != XK_caron) && (ks != XK_doubleacute)) ||
             ((ks >= XK_racute) && (ks <= XK_tcedilla))) {
             rtrn |= _XkbKSLower;
         }
@@ -89,29 +91,37 @@ _XkbKSCheckCase(KeySym ks)
             (ks == XK_ENG) || ((ks >= XK_Amacron) && (ks <= XK_Umacron))) {
             rtrn |= _XkbKSUpper;
         }
-        if (((ks >= XK_rcedilla) && (ks <= XK_tslash)) ||
+        if ((ks == XK_kra) ||
+            ((ks >= XK_rcedilla) && (ks <= XK_tslash)) ||
             (ks == XK_eng) || ((ks >= XK_amacron) && (ks <= XK_umacron))) {
             rtrn |= _XkbKSLower;
         }
         break;
     case 18:                   /* latin 8 */
-        if ((ks == XK_Babovedot) ||
-            ((ks >= XK_Dabovedot) && (ks <= XK_Wacute)) ||
-            ((ks >= XK_Ygrave) && (ks <= XK_Fabovedot)) ||
+        if ((ks == XK_Wcircumflex) ||
+            (ks == XK_Ycircumflex) ||
+            (ks == XK_Babovedot) ||
+            (ks == XK_Dabovedot) ||
+            (ks == XK_Fabovedot) ||
             (ks == XK_Mabovedot) ||
             (ks == XK_Pabovedot) ||
             (ks == XK_Sabovedot) ||
-            (ks == XK_Wdiaeresis) ||
-            ((ks >= XK_Wcircumflex) && (ks <= XK_Ycircumflex))) {
+            (ks == XK_Tabovedot) ||
+            (ks == XK_Wgrave) ||
+            (ks == XK_Wacute) || (ks == XK_Wdiaeresis) || (ks == XK_Ygrave)) {
             rtrn |= _XkbKSUpper;
         }
-        if ((ks == XK_babovedot) ||
+        if ((ks == XK_wcircumflex) ||
+            (ks == XK_ycircumflex) ||
+            (ks == XK_babovedot) ||
             (ks == XK_dabovedot) ||
             (ks == XK_fabovedot) ||
             (ks == XK_mabovedot) ||
-            ((ks >= XK_wgrave) && (ks <= XK_wacute)) ||
-            (ks == XK_ygrave) ||
-            ((ks >= XK_wdiaeresis) && (ks <= XK_ycircumflex))) {
+            (ks == XK_pabovedot) ||
+            (ks == XK_sabovedot) ||
+            (ks == XK_tabovedot) ||
+            (ks == XK_wgrave) ||
+            (ks == XK_wacute) || (ks == XK_wdiaeresis) || (ks == XK_ygrave)) {
             rtrn |= _XkbKSLower;
         }
         break;
@@ -211,13 +221,12 @@ XkbWriteSectionFromName(FILE *file, const char *sectionName, const char *name)
 #define	NEED_DESC(n) ((!n)||((n)[0]=='+')||((n)[0]=='|')||(strchr((n),'%')))
 #define	COMPLETE(n)  ((n)&&(!NEED_DESC(n)))
 
-/* ARGSUSED */
 static void
 _AddIncl(FILE *         file,
-         XkbFileInfo *  result,
-         Bool           topLevel,
-         Bool           showImplicit,
-         int            index,
+         _X_UNUSED XkbFileInfo *  result,
+         _X_UNUSED Bool           topLevel,
+         _X_UNUSED Bool           showImplicit,
+         _X_UNUSED int            index,
          void *         priv)
 {
     if ((priv) && (strcmp((char *) priv, "%") != 0))
@@ -240,7 +249,7 @@ XkbWriteXKBKeymapForNames(FILE *                file,
     unsigned wantNames, wantConfig, wantDflts;
     XkbFileInfo finfo;
 
-    bzero(&finfo, sizeof(XkbFileInfo));
+    memset(&finfo, 0, sizeof(XkbFileInfo));
 
     complete = 0;
     if ((name = names->keymap) == NULL)
@@ -424,9 +433,8 @@ XkbWriteXKBKeymapForNames(FILE *                file,
 
 /***====================================================================***/
 
-/*ARGSUSED*/
 Status
-XkbMergeFile(XkbDescPtr xkb, XkbFileInfo finfo)
+XkbMergeFile(_X_UNUSED XkbDescPtr xkb, _X_UNUSED XkbFileInfo finfo)
 {
     return BadImplementation;
 }
@@ -683,19 +691,3 @@ XkbNameMatchesPattern(char *name, char *ptrn)
     /* if we get here, the pattern is exhausted (-:just like me:-) */
     return (name[0] == '\0');
 }
-
-#ifndef HAVE_STRCASECMP
-_X_HIDDEN int
-_XkbStrCaseCmp(char *str1, char *str2)
-{
-    const u_char *us1 = (const u_char *) str1, *us2 = (const u_char *) str2;
-
-    while (tolower(*us1) == tolower(*us2)) {
-        if (*us1++ == '\0')
-            return (0);
-        us2++;
-    }
-
-    return (tolower(*us1) - tolower(*us2));
-}
-#endif

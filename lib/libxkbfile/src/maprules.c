@@ -106,12 +106,11 @@ InputLineAddChar(InputLine *line, int ch)
 {
     if (line->num_line >= line->sz_line) {
         if (line->line == line->buf) {
-            line->line = (char *) _XkbAlloc(line->sz_line * 2);
+            line->line = _XkbAlloc(line->sz_line * 2);
             memcpy(line->line, line->buf, line->sz_line);
         }
         else {
-            line->line =
-                (char *) _XkbRealloc((char *) line->line, line->sz_line * 2);
+            line->line = _XkbRealloc(line->line, line->sz_line * 2);
         }
         line->sz_line *= 2;
     }
@@ -300,7 +299,7 @@ SetUpRemap(InputLine *line, RemapSpec *remap)
     l_ndx_present = v_ndx_present = present = 0;
     str = &line->line[1];
     len = remap->number;
-    bzero((char *) remap, sizeof(RemapSpec));
+    memset(remap, 0, sizeof(RemapSpec));
     remap->number = len;
     while ((tok = _XStrtok(str, " ", strtok_buf)) != NULL) {
 #ifdef DEBUG
@@ -465,7 +464,7 @@ CheckLine(InputLine *    line,
         PR_DEBUG("Illegal line of data ignored\n");
         return False;
     }
-    bzero((char *) &tmp, sizeof(FileSpec));
+    memset(&tmp, 0, sizeof(FileSpec));
     str = line->line;
     for (nread = 0; (tok = _XStrtok(str, " ", strtok_buf)) != NULL; nread++) {
         str = NULL;
@@ -528,7 +527,7 @@ _Concat(char *str1, char *str2)
     if ((!str1) || (!str2))
         return str1;
     len = strlen(str1) + strlen(str2) + 1;
-    str1 = _XkbTypedRealloc(str1, len, char);
+    str1 = _XkbTypedReallocF(str1, len, char);
     if (str1)
         strcat(str1, str2);
     return str1;
@@ -551,7 +550,7 @@ static Bool
 MakeMultiDefs(XkbRF_MultiDefsPtr mdefs, XkbRF_VarDefsPtr defs)
 {
 
-    bzero((char *) mdefs, sizeof(XkbRF_MultiDefsRec));
+    memset(mdefs, 0, sizeof(XkbRF_MultiDefsRec));
     mdefs->model = defs->model;
     mdefs->options = _XkbDupString(defs->options);
     if (mdefs->options)
@@ -918,7 +917,7 @@ XkbRF_GetComponents(XkbRF_RulesPtr       rules,
 
     MakeMultiDefs(&mdefs, defs);
 
-    bzero((char *) names, sizeof(XkbComponentNamesRec));
+    memset(names, 0, sizeof(XkbComponentNamesRec));
     XkbRF_ClearPartialMatches(rules);
     XkbRF_CheckApplyRules(rules, &mdefs, names, XkbRF_Normal);
     XkbRF_ApplyPartialMatches(rules, names);
@@ -955,8 +954,8 @@ XkbRF_AddRule(XkbRF_RulesPtr rules)
     }
     else if (rules->num_rules >= rules->sz_rules) {
         rules->sz_rules *= 2;
-        rules->rules = _XkbTypedRealloc(rules->rules, rules->sz_rules,
-                                        XkbRF_RuleRec);
+        rules->rules = _XkbTypedReallocF(rules->rules, rules->sz_rules,
+                                         XkbRF_RuleRec);
     }
     if (!rules->rules) {
         rules->sz_rules = rules->num_rules = 0;
@@ -965,7 +964,7 @@ XkbRF_AddRule(XkbRF_RulesPtr rules)
 #endif
         return NULL;
     }
-    bzero((char *) &rules->rules[rules->num_rules], sizeof(XkbRF_RuleRec));
+    memset(&rules->rules[rules->num_rules], 0, sizeof(XkbRF_RuleRec));
     return &rules->rules[rules->num_rules++];
 }
 
@@ -979,15 +978,15 @@ XkbRF_AddGroup(XkbRF_RulesPtr rules)
     }
     else if (rules->num_groups >= rules->sz_groups) {
         rules->sz_groups *= 2;
-        rules->groups = _XkbTypedRealloc(rules->groups, rules->sz_groups,
-                                         XkbRF_GroupRec);
+        rules->groups = _XkbTypedReallocF(rules->groups, rules->sz_groups,
+                                          XkbRF_GroupRec);
     }
     if (!rules->groups) {
         rules->sz_groups = rules->num_groups = 0;
         return NULL;
     }
 
-    bzero((char *) &rules->groups[rules->num_groups], sizeof(XkbRF_GroupRec));
+    memset(&rules->groups[rules->num_groups], 0, sizeof(XkbRF_GroupRec));
     return &rules->groups[rules->num_groups++];
 }
 
@@ -1001,21 +1000,21 @@ XkbRF_LoadRules(FILE *file, XkbRF_RulesPtr rules)
 
     if (!(rules && file))
         return False;
-    bzero((char *) &remap, sizeof(RemapSpec));
-    bzero((char *) &tgroup, sizeof(XkbRF_GroupRec));
+    memset(&remap, 0, sizeof(RemapSpec));
+    memset(&tgroup, 0, sizeof(XkbRF_GroupRec));
     InitInputLine(&line);
     while (GetInputLine(file, &line, True)) {
         if (CheckLine(&line, &remap, &trule, &tgroup)) {
             if (tgroup.number) {
                 if ((group = XkbRF_AddGroup(rules)) != NULL) {
                     *group = tgroup;
-                    bzero((char *) &tgroup, sizeof(XkbRF_GroupRec));
+                    memset(&tgroup, 0, sizeof(XkbRF_GroupRec));
                 }
             }
             else {
                 if ((rule = XkbRF_AddRule(rules)) != NULL) {
                     *rule = trule;
-                    bzero((char *) &trule, sizeof(XkbRF_RuleRec));
+                    memset(&trule, 0, sizeof(XkbRF_RuleRec));
                 }
             }
         }
@@ -1035,9 +1034,8 @@ XkbRF_LoadRulesByName(char *base, char *locale, XkbRF_RulesPtr rules)
     if ((!base) || (!rules))
         return False;
     if (locale) {
-        if (strlen(base) + strlen(locale) + 2 > PATH_MAX)
+        if (snprintf(buf, sizeof(buf), "%s-%s", base, locale) >= (int) sizeof(buf))
             return False;
-        snprintf(buf, sizeof(buf), "%s-%s", base, locale);
     }
     else {
         if (strlen(base) + 1 > PATH_MAX)
@@ -1077,7 +1075,7 @@ XkbRF_AddVarDesc(XkbRF_DescribeVarsPtr vars)
     else if (vars->num_desc >= vars->sz_desc) {
         vars->sz_desc *= 2;
         vars->desc =
-            _XkbTypedRealloc(vars->desc, vars->sz_desc, XkbRF_VarDescRec);
+            _XkbTypedReallocF(vars->desc, vars->sz_desc, XkbRF_VarDescRec);
     }
     if (!vars->desc) {
         vars->sz_desc = vars->num_desc = 0;
@@ -1114,20 +1112,22 @@ XkbRF_AddVarToDescribe(XkbRF_RulesPtr rules, char *name)
     else if (rules->num_extra >= rules->sz_extra) {
         rules->sz_extra *= 2;
         rules->extra_names =
-            _XkbTypedRealloc(rules->extra_names, rules->sz_extra, char *);
+            _XkbTypedReallocF(rules->extra_names, rules->sz_extra, char *);
         rules->extra =
-            _XkbTypedRealloc(rules->extra, rules->sz_extra,
-                             XkbRF_DescribeVarsRec);
+            _XkbTypedReallocF(rules->extra, rules->sz_extra,
+                              XkbRF_DescribeVarsRec);
     }
     if ((!rules->extra_names) || (!rules->extra)) {
         PR_DEBUG("allocation error in extra parts\n");
         rules->sz_extra = rules->num_extra = 0;
+        free(rules->extra_names);
         rules->extra_names = NULL;
+        free(rules->extra);
         rules->extra = NULL;
         return NULL;
     }
     rules->extra_names[rules->num_extra] = _XkbDupString(name);
-    bzero(&rules->extra[rules->num_extra], sizeof(XkbRF_DescribeVarsRec));
+    memset(&rules->extra[rules->num_extra], 0, sizeof(XkbRF_DescribeVarsRec));
     return &rules->extra[rules->num_extra++];
 }
 
@@ -1139,7 +1139,7 @@ XkbRF_LoadDescriptions(FILE *file, XkbRF_RulesPtr rules)
     char *tok;
     int len, headingtype, extra_ndx = 0;
 
-    bzero((char *) &tmp, sizeof(XkbRF_VarDescRec));
+    memset(&tmp, 0, sizeof(XkbRF_VarDescRec));
     headingtype = HEAD_NONE;
     InitInputLine(&line);
     for (; GetInputLine(file, &line, False); line.num_line = 0) {
@@ -1240,19 +1240,18 @@ XkbRF_LoadDescriptionsByName(char *base, char *locale, XkbRF_RulesPtr rules)
     if ((!base) || (!rules))
         return False;
     if (locale) {
-        if (strlen(base) + strlen(locale) + 6 > PATH_MAX)
+        if (snprintf(buf, sizeof(buf), "%s-%s.lst", base, locale) >= (int) sizeof(buf))
             return False;
-        snprintf(buf, sizeof(buf), "%s-%s.lst", base, locale);
     }
     else {
-        if (strlen(base) + 5 > PATH_MAX)
+        if (snprintf(buf, sizeof(buf), "%s.lst", base) >= (int) sizeof(buf))
             return False;
-        snprintf(buf, sizeof(buf), "%s.lst", base);
     }
 
     file = fopen(buf, "r" FOPEN_CLOEXEC);
     if ((!file) && (locale)) {  /* fallback if locale was specified */
-        snprintf(buf, sizeof(buf), "%s.lst", base);
+        if (snprintf(buf, sizeof(buf), "%s.lst", base) >= (int) sizeof(buf))
+            return False;
 
         file = fopen(buf, "r" FOPEN_CLOEXEC);
     }
@@ -1376,7 +1375,7 @@ XkbRF_Free(XkbRF_RulesPtr rules, Bool freeRules)
                 _XkbFree(rule->geometry);
             if (rule->keymap)
                 _XkbFree(rule->keymap);
-            bzero((char *) rule, sizeof(XkbRF_RuleRec));
+            memset(rule, 0, sizeof(XkbRF_RuleRec));
         }
         _XkbFree(rules->rules);
         rules->num_rules = rules->sz_rules = 0;
@@ -1417,12 +1416,12 @@ XkbRF_GetNamesProp(Display * dpy, char **rf_rtrn, XkbRF_VarDefsPtr vd_rtrn)
                               0L, _XKB_RF_NAMES_PROP_MAXLEN, False,
                               XA_STRING, &actual_type,
                               &fmt, &nitems, &bytes_after,
-                              (unsigned char **) &data);
+                              &data);
     if (rtrn != Success)
         return False;
     if (rf_rtrn)
         *rf_rtrn = NULL;
-    (void) bzero((char *) vd_rtrn, sizeof(XkbRF_VarDefsRec));
+    (void) memset(vd_rtrn, 0, sizeof(XkbRF_VarDefsRec));
     if ((bytes_after > 0) || (actual_type != XA_STRING) || (fmt != 8)) {
         if (data)
             XFree(data);
@@ -1458,7 +1457,10 @@ XkbRF_GetNamesProp(Display * dpy, char **rf_rtrn, XkbRF_VarDefsPtr vd_rtrn)
             vd_rtrn->options = _XkbDupString(out);
         out += strlen(out) + 1;
     }
-
+    /*
+     * For now extra_options and extra_rules are not used
+     * update XkbRF_FreeVarDefs if that changes
+     */
     XFree(data);
     return True;
 }
@@ -1528,3 +1530,26 @@ XkbRF_SetNamesProp(Display *dpy, char *rules_file, XkbRF_VarDefsPtr var_defs)
     return True;
 }
 
+void
+XkbRF_FreeVarDefs(XkbRF_VarDefsPtr var_defs, Bool freeVarDefs)
+{
+    if (!var_defs)
+        return;
+
+    _XkbFree(var_defs->model);
+    var_defs->model = NULL;
+    _XkbFree(var_defs->layout);
+    var_defs->layout = NULL;
+    _XkbFree(var_defs->variant);
+    var_defs->variant = NULL;
+    _XkbFree(var_defs->options);
+    var_defs->options = NULL;
+
+    _XkbFree(var_defs->extra_names);
+    var_defs->extra_names = NULL;
+    _XkbFree(var_defs->extra_values);
+    var_defs->extra_values = NULL;
+
+    if(freeVarDefs)
+        _XkbFree(var_defs);
+}

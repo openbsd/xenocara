@@ -29,15 +29,26 @@
 
 /***====================================================================***/
 
+/**
+ * @brief xkb rules definitions
+ *
+ * The structure is used to query xkb rules definitions used to construct
+ * keyboard mapping. Those defs could be either set by the xorg.conf (with
+ * XkbModel, XkbLayout, XkbVariant and XkbOptions) or by client utility
+ * like setxkbmap.
+ *
+ * @see XkbRF_GetNamesProp, XkbRF_SetNamesProp, XkbRF_FreeVarDefs,
+ *      man setxkbmap
+ */
 typedef struct _XkbRF_VarDefs {
-	char *			model;
-	char *			layout;
-	char *			variant;
-	char *			options;
-	unsigned short		sz_extra;
-	unsigned short		num_extra;
-	char *			extra_names;
-	char **			extra_values;
+	char *			model;     /**< keyboard model e.g. "pc104" */
+	char *			layout;    /**< layout list e.g. "us,ru" */
+	char *			variant;   /**< layout variants list e.g. "dvorak," */
+	char *			options;   /**< xkb options e.g "grp:toggle,misc:typo" */
+	unsigned short		sz_extra;  /**< unused */
+	unsigned short		num_extra; /**< unused */
+	char *			extra_names;  /**< unused */
+	char **			extra_values; /**< unused */
 } XkbRF_VarDefsRec,*XkbRF_VarDefsPtr;
 
 typedef struct _XkbRF_VarDesc {
@@ -175,22 +186,70 @@ extern void XkbRF_Free(
 
 /***====================================================================***/
 
+/** Name of the atom of the root window used to store/query xkb rules */
 #define	_XKB_RF_NAMES_PROP_ATOM		"_XKB_RULES_NAMES"
 #define	_XKB_RF_NAMES_PROP_MAXLEN	1024
 
-
+/**
+ * @brief Queries X server's xkb rules
+ * @param[in]  dpy - X Display
+ * @param[out] rules_file_rtrn
+ *   if not NULL returns a pointer to the name of xkb rule file used by the
+ *   X server (usually located in /usr/share/X11/xkb/rules/). The string
+ *   shall be explicitly freed by the caller using free().
+ * @param[out] var_defs_rtrn
+ *   a pointer to a @struct XkbRF_VarDefsRec where a data queried from the
+ *   server will be stored. Some data in the structure will be dynamically
+ *   allocated and shall be later explicitly freed by the caller using
+ *   XkbRF_FreeVarDefs().
+ * @return @c True on success, @c False on failure
+ *
+ * Queries X server's xkb rules using the "_XKB_RULES_NAMES" atom of the
+ * root window. As of 2024 (and been like that for a long time) this is not
+ * officially documented in the form of an extension to X11 protocol, but
+ * it's provided by the reference xorg implementation and used by several
+ * utilities like setxkbmap.
+ */
 extern Bool XkbRF_GetNamesProp(
-   Display *		/* dpy */,
-   char **		/* rules_file_rtrn */,
-   XkbRF_VarDefsPtr	/* var_defs_rtrn */
+   Display *        /* dpy */,
+   char **          /* rules_file_rtrn */,
+   XkbRF_VarDefsPtr /* var_defs_rtrn */
 );
 
+/**
+ * @brief Sets the X server's xkb rules property
+ * @param[in] dpy        - X Display
+ * @param[in] rules_file - a rules file used to compile xkb key mapping
+ * @param[in] var_defs   - list of xkb rules
+ * @return @c True on success, @c False on failure
+ *
+ * Sets X server's xkb rules property stored in the "_XKB_RULES_NAMES" atom
+ * of root window.
+ *
+ * @note Setting this property doesn't change the layout configuration.
+ *   It's only used to tell other clients which rules were used to compile
+ *   the current layout configuration. In order to actually construct and
+ *   set configuration based on rules @see XkbRF_GetComponents() and
+ *   XkbGetKeyboardByName() (from Xkblib)
+ */
 extern Bool XkbRF_SetNamesProp(
-   Display *		/* dpy */,
-   char *		/* rules_file */,
-   XkbRF_VarDefsPtr	/* var_defs */
+   Display *        /* dpy */,
+   char *           /* rules_file */,
+   XkbRF_VarDefsPtr /* var_defs */
 );
 
+/**
+ * @brief Destroy @struct XkbRF_VarDefsRec
+ * @param[in] var_defs    - a XkbRF_VarDefsRec to clean up
+ * @param[in] freeVarDefs - if @c True also free the @p var_defs itself
+ *
+ * Frees the memory associated with the @p var_defs. If @p free_var_defs is
+ * @c True also frees the @p var_defs pointer itself.
+ */
+extern void XkbRF_FreeVarDefs(
+   XkbRF_VarDefsPtr /* var_defs */,
+   Bool             /* freeVarDefs */
+);
 
 _XFUNCPROTOEND
 

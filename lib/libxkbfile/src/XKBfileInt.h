@@ -27,8 +27,15 @@
 
  ********************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <X11/Xfuncproto.h>
+
 #include "XKBfile.h"
 #include <string.h>
+#include <strings.h>
 
 #ifdef DEBUG
 #define	_XkbLibError(c,l,d) \
@@ -43,11 +50,14 @@
 #define	_XkbAlloc(s)		malloc((s))
 #define	_XkbCalloc(n,s)		calloc((n),(s))
 #define	_XkbRealloc(o,s)	realloc((o),(s))
+#define	_XkbReallocF(o,s)	reallocf((o),(s))
 #define	_XkbTypedAlloc(t)	((t *)malloc(sizeof(t)))
 #define	_XkbTypedCalloc(n,t)	((t *)calloc((n),sizeof(t)))
 #define	_XkbTypedRealloc(o,n,t) \
 	((o)?(t *)realloc((o),(n)*sizeof(t)):_XkbTypedCalloc(n,t))
-#define	_XkbClearElems(a,f,l,t)	bzero(&(a)[f],((l)-(f)+1)*sizeof(t))
+#define	_XkbTypedReallocF(o,n,t) \
+	((o)?(t *)reallocf((o),(n)*sizeof(t)):_XkbTypedCalloc(n,t))
+#define	_XkbClearElems(a,f,l,t)	memset(&(a)[f], 0, ((l)-(f)+1)*sizeof(t))
 #define	_XkbFree(p)		free(p)
 
 #ifndef PATH_MAX
@@ -61,6 +71,20 @@
 
 _XFUNCPROTOBEGIN
 
+#ifndef HAVE_REALLOCF
+/* realloc variant that frees old pointer on failure */
+static inline void *
+reallocf(void *old, size_t size)
+{
+    void *new = realloc(old, size);
+
+    if (_X_UNLIKELY(new == NULL))
+        free(old);
+
+    return new;
+}
+#endif
+
 static inline char *
 _XkbDupString(const char *s)
 {
@@ -68,13 +92,7 @@ _XkbDupString(const char *s)
 }
 
 #define _XkbStrCaseEqual(s1,s2)	(_XkbStrCaseCmp(s1,s2)==0)
-
-#ifndef HAVE_STRCASECMP
-extern int _XkbStrCaseCmp(char *s1, char *s2);
-#else
 #define _XkbStrCaseCmp strcasecmp
-#include <strings.h>
-#endif
 
 _XFUNCPROTOEND
 #endif                          /* _XKBFILEINT_H_ */

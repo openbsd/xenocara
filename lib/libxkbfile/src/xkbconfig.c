@@ -30,6 +30,9 @@
 #include <config.h>
 #endif
 
+/* Tell XKBConfig.h to define the field in  _XkbConfigField as const char * */
+#define  _XkbCF_Field_Const
+
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -326,9 +329,9 @@ XkbCFAddModByName(XkbConfigRtrnPtr rtrn, int what, char *name, Bool merge,
 {
     if (rtrn->num_unbound_mods >= rtrn->sz_unbound_mods) {
         rtrn->sz_unbound_mods += 5;
-        rtrn->unbound_mods = _XkbTypedRealloc(rtrn->unbound_mods,
-                                              rtrn->sz_unbound_mods,
-                                              XkbConfigUnboundModRec);
+        rtrn->unbound_mods = _XkbTypedReallocF(rtrn->unbound_mods,
+                                               rtrn->sz_unbound_mods,
+                                               XkbConfigUnboundModRec);
         if (rtrn->unbound_mods == NULL) {
             rtrn->error = XkbCF_BadAlloc;
             return NULL;
@@ -442,12 +445,11 @@ XkbCFApplyMods(XkbConfigRtrnPtr rtrn, int what, XkbConfigModInfoPtr info)
     return True;
 }
 
-/*ARGSUSED*/
 static Bool
 DefaultParser(FILE *             file,
-              XkbConfigFieldsPtr fields,
+              _X_UNUSED XkbConfigFieldsPtr fields,
               XkbConfigFieldPtr  field,
-              XkbDescPtr         xkb,
+              _X_UNUSED XkbDescPtr         xkb,
               XkbConfigRtrnPtr   rtrn)
 {
     int tok;
@@ -1039,9 +1041,8 @@ DefaultApplyControls(XkbConfigRtrnPtr rtrn, XkbDescPtr xkb)
     return True;
 }
 
-/*ARGSUSED*/
 static Bool
-DefaultFinish(XkbConfigFieldsPtr fields, XkbDescPtr xkb,
+DefaultFinish(_X_UNUSED XkbConfigFieldsPtr fields, XkbDescPtr xkb,
               XkbConfigRtrnPtr rtrn, int what)
 {
     if ((what == XkbCF_Destroy) || (what == XkbCF_CleanUp))
@@ -1230,10 +1231,10 @@ XkbCFFreeRtrn(XkbConfigRtrnPtr rtrn, XkbConfigFieldsPtr fields, XkbDescPtr xkb)
     }
     for (tmp = rtrn->priv; tmp != NULL; tmp = next) {
         next = tmp->next;
-        bzero((char *) tmp, sizeof(XkbConfigRtrnPrivRec));
+        memset(tmp, 0, sizeof(XkbConfigRtrnPrivRec));
         _XkbFree(tmp);
     }
-    bzero((char *) rtrn, sizeof(XkbConfigRtrnRec));
+    memset(rtrn, 0, sizeof(XkbConfigRtrnRec));
     return;
 }
 
@@ -1250,7 +1251,7 @@ XkbCFParse(FILE *file, XkbConfigFieldsPtr fields,
     for (tok = 0, tmp = fields; tmp != NULL; tmp = tmp->next, tok++) {
         fields->cfg_id = tok;
     }
-    bzero((char *) rtrn, sizeof(XkbConfigRtrnRec));
+    memset(rtrn, 0, sizeof(XkbConfigRtrnRec));
     rtrn->line = 1;
     rtrn->click_volume = -1;
     rtrn->bell_volume = -1;
@@ -1293,7 +1294,6 @@ XkbCFParse(FILE *file, XkbConfigFieldsPtr fields,
     return False;
 }
 
-/*ARGSUSED*/
 void
 XkbCFReportError(FILE *file, char *name, int error, int line)
 {
