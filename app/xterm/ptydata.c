@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.167 2025/12/19 01:42:24 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.172 2026/04/07 22:11:47 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -66,7 +66,7 @@
  * The number of bytes converted will be nonzero iff there is data.
  */
 Bool
-decodeUtf8(TScreen *screen, PtyData *data)
+decodeUtf8(const TScreen *screen, PtyData *data)
 {
     size_t i;
     size_t length = (size_t) (data->last - data->next);
@@ -302,7 +302,7 @@ readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData *data)
 #endif
 	data->last += size;
 #ifdef ALLOWLOGGING
-	TScreenOf(term)->logstart = VTbuffer->next;
+	TScreenOf(xw)->logstart = VTbuffer->next;
 #endif
     }
 
@@ -316,7 +316,7 @@ readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData *data)
  */
 #if OPT_WIDE_CHARS
 IChar
-nextPtyData(TScreen *screen, PtyData *data)
+nextPtyData(const TScreen *screen, PtyData *data)
 {
     IChar result;
     if (screen->utf8_inparse) {
@@ -337,14 +337,23 @@ nextPtyData(TScreen *screen, PtyData *data)
  * Called when UTF-8 mode has been turned on/off.
  */
 void
-switchPtyData(TScreen *screen, int flag)
+switchPtyData(XtermWidget xw, int flag)
 {
+    TScreen *screen = TScreenOf(xw);
     if (screen->utf8_mode != flag) {
 	screen->utf8_mode = flag;
 	screen->utf8_inparse = (Boolean) (flag != 0);
-	XTermWcInit(screen->utf8_mode, term->misc.emoji_width);
+	XTermWcInit(screen->utf8_mode,
+		    xw->misc.emoji_width,
+		    xw->misc.pua_width);
 
 	TRACE(("turning UTF-8 mode %s\n", BtoS(flag)));
+	if (flag) {
+	    saveCharsets(screen, screen->ansi_save_gsets);
+	    resetCharsets(screen);
+	} else {
+	    restoreCharsets(screen, screen->ansi_save_gsets);
+	}
 	update_font_utf8_mode();
     }
 }
@@ -602,7 +611,7 @@ isValidUTF8(Char *lp)
  * Write data back to the PTY
  */
 void
-writePtyData(int f, IChar *d, size_t len)
+writePtyData(int f, const IChar *d, size_t len)
 {
     size_t n = (len << 1);
 
@@ -654,6 +663,25 @@ Panic(const char *s, int a)
 }
 
 #if OPT_WIDE_CHARS
+void
+saveCharsets(TScreen *screen, DECNRCM_codes * target)
+{
+    (void) screen;
+    (void) target;
+}
+
+void
+restoreCharsets(TScreen *screen, const DECNRCM_codes * target)
+{
+    (void) screen;
+    (void) target;
+}
+
+void
+resetCharsets(TScreen *screen)
+{
+    (void) screen;
+}
 
 #ifdef ALLOWLOGGING
 void

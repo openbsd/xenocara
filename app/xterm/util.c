@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.968 2025/12/21 22:07:19 tom Exp $ */
+/* $XTermId: util.c,v 1.977 2026/04/29 22:21:00 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -79,6 +79,22 @@
 #endif /* HAVE_X11_EXTENSIONS_XINERAMA_H */
 
 #include <graphics.h>
+
+#define IsAllowedNonChar(name) ((name) < 0)
+#define AllowNonChar(name) do { \
+		if (IsAllowedNonChar(name)) { \
+			TRACE(("%s@%d: AllowNonChar\n", __FILE__, __LINE__)); \
+			(name) = 1; \
+		} \
+	    } while(0)
+
+#define IsAllowedCtlChar(name) ((name) == 0)
+#define AllowCtlChar(name) do { \
+		if (IsAllowedCtlChar(name)) { \
+			TRACE(("%s@%d: AllowCtlChar\n", __FILE__, __LINE__)); \
+			(name) = 1; \
+		} \
+	    } while(0)
 
 #define IncrementSavedLines(amount) \
 	    if (screen->savedlines < screen->savelines) { \
@@ -353,7 +369,7 @@ AddToRefresh(XtermWidget xw)
 static Bool
 AddToVisible(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     Bool result = False;
 
     if (INX2ROW(screen, screen->cur_row) <= LastRowNumber(screen)) {
@@ -370,16 +386,19 @@ AddToVisible(XtermWidget xw)
  * If the selection is not entirely contained within the margins and not
  * entirely outside the margins, clear it.
  */
-static void
+void
 adjustHiliteOnFwdScroll(XtermWidget xw, int amount, Bool all_lines)
 {
     TScreen *screen = TScreenOf(xw);
-    int lo_row = (all_lines
+    int hi_row = (all_lines
 		  ? (screen->bot_marg - screen->savelines)
 		  : screen->top_marg);
-    int hi_row = screen->bot_marg;
+    int lo_row = screen->bot_marg;
     int left = ScrnLeftMargin(xw);
     int right = ScrnRightMargin(xw);
+
+    if (hi_row < 0)
+	hi_row = 0;
 
     TRACE2(("adjustSelection FWD %s by %d (%s)\n",
 	    screen->whichBuf ? "alternate" : "normal",
@@ -391,47 +410,59 @@ adjustHiliteOnFwdScroll(XtermWidget xw, int amount, Bool all_lines)
 	    screen->endH.row,
 	    screen->endH.col));
     TRACE2(("  margins %d..%d\n", screen->top_marg, screen->bot_marg));
-    TRACE2(("  limits  %d..%d\n", lo_row, hi_row));
+    TRACE2(("  limits  %d..%d\n", hi_row, lo_row));
 
     if ((left > 0 || right < screen->max_col) &&
-	((screen->startH.row >= lo_row &&
-	  screen->startH.row - amount <= hi_row) ||
-	 (screen->endH.row >= lo_row &&
-	  screen->endH.row - amount <= hi_row))) {
+	((screen->startH.row >= hi_row &&
+	  screen->startH.row - amount <= lo_row) ||
+	 (screen->endH.row >= hi_row &&
+	  screen->endH.row - amount <= lo_row))) {
 	/*
 	 * This could be improved slightly by excluding the special case where
 	 * the selection is on a single line outside left/right margins.
 	 */
 	TRACE2(("deselect because selection overlaps with scrolled partial-line\n"));
 	ScrnDisownSelection(xw);
-    } else if (screen->startH.row >= lo_row
-	       && screen->startH.row - amount < lo_row) {
-	/* truncate the selection because its start would move out of region */
-	if (lo_row + amount <= screen->endH.row) {
-	    TRACE2(("truncate selection by changing start %d.%d to %d.%d\n",
-		    screen->startH.row,
-		    screen->startH.col,
-		    lo_row + amount,
-		    0));
-	    screen->startH.row = lo_row + amount;
-	    screen->startH.col = 0;
-	} else {
-	    TRACE2(("deselect because %d.%d .. %d.%d shifted %d is outside margins %d..%d\n",
-		    screen->startH.row,
-		    screen->startH.col,
-		    screen->endH.row,
-		    screen->endH.col,
-		    -amount,
-		    lo_row,
-		    hi_row));
-	    ScrnDisownSelection(xw);
+    } else {
+	if (screen->startH.row >= hi_row
+	    && screen->startH.row - amount < hi_row) {
+	    /* truncate the selection because its start would move out of region */
+	    if (hi_row + amount <= screen->endH.row) {
+		TRACE2(("truncate selection by changing start %d.%d to %d.%d\n",
+			screen->startH.row,
+			screen->startH.col,
+			hi_row + amount,
+			0));
+		screen->startH.row = hi_row + amount;
+		screen->startH.col = 0;
+	    } else {
+		TRACE2(("deselect because %d.%d .. %d.%d shifted %d is outside margins %d..%d\n",
+			screen->startH.row,
+			screen->startH.col,
+			screen->endH.row,
+			screen->endH.col,
+			-amount,
+			hi_row,
+			lo_row));
+		ScrnDisownSelection(xw);
+	    }
 	}
-    } else if (screen->startH.row <= hi_row && screen->endH.row > hi_row) {
-	TRACE2(("deselect because selection straddles top-margin\n"));
-	ScrnDisownSelection(xw);
-    } else if (screen->startH.row < lo_row && screen->endH.row > lo_row) {
-	TRACE2(("deselect because selection straddles bottom-margin\n"));
-	ScrnDisownSelection(xw);
+	if (screen->startH.row <= lo_row && screen->endH.row > lo_row) {
+	    int base = lo_row + 1;
+	    int trim = screen->endH.row + 1 - base;
+	    TRACE2(("truncate because selection straddles bottom-margin\n"));
+	    screen->endH.row = lo_row;
+	    screen->endH.col = MaxCols(screen);
+	    ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
+	}
+	if (screen->startH.row < hi_row && screen->endH.row > hi_row) {
+	    int base = screen->startH.row;
+	    int trim = hi_row - base;
+	    TRACE2(("truncate because selection straddles top-margin\n"));
+	    screen->startH.row = hi_row;
+	    screen->startH.col = 0;
+	    ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
+	}
     }
 
     TRACE2(("  after highlite %d.%d .. %d.%d\n",
@@ -445,12 +476,12 @@ adjustHiliteOnFwdScroll(XtermWidget xw, int amount, Bool all_lines)
  * This is the same as adjustHiliteOnFwdScroll(), but reversed.  In this case,
  * only the visible lines are affected.
  */
-static void
+void
 adjustHiliteOnBakScroll(XtermWidget xw, int amount)
 {
     TScreen *screen = TScreenOf(xw);
-    int lo_row = screen->top_marg;
-    int hi_row = screen->bot_marg;
+    int hi_row = screen->top_marg;
+    int lo_row = screen->bot_marg;
 
     TRACE2(("adjustSelection BAK %s by %d (%s)\n",
 	    screen->whichBuf ? "alternate" : "normal",
@@ -462,32 +493,41 @@ adjustHiliteOnBakScroll(XtermWidget xw, int amount)
 	    screen->endH.row,
 	    screen->endH.col));
     TRACE2(("  margins %d..%d\n", screen->top_marg, screen->bot_marg));
+    TRACE2(("  limits  %d..%d\n", hi_row, lo_row));
 
-    if (screen->endH.row >= hi_row
-	&& screen->endH.row + amount > hi_row) {
-	/* truncate the selection because its start would move out of region */
-	if (hi_row - amount >= screen->startH.row) {
-	    TRACE2(("truncate selection by changing start %d.%d to %d.%d\n",
+    if (screen->endH.row >= lo_row
+	&& screen->endH.row + amount > lo_row) {
+	/* truncate the selection because it extends out of scrolled region */
+	if (lo_row - amount >= screen->startH.row) {
+	    int trim = screen->endH.row - lo_row;
+	    TRACE2(("truncate selection by %d rows, result %d.%d .. %d.%d\n",
+		    trim,
 		    screen->startH.row,
 		    screen->startH.col,
-		    hi_row - amount,
+		    lo_row - amount,
 		    0));
-	    screen->endH.row = hi_row - amount;
+	    screen->endH.row = lo_row;
 	    screen->endH.col = 0;
+	    ScrnRefresh(xw, lo_row + 1, 0, trim, MaxCols(screen), True);
 	} else {
-	    TRACE2(("deselect because %d.%d .. %d.%d shifted %d is outside margins %d..%d\n",
+	    TRACE2(("deselect because %d.%d .. %d.%d row %d shifted by %d is outside margins %d..%d\n",
 		    screen->startH.row,
 		    screen->startH.col,
 		    screen->endH.row,
 		    screen->endH.col,
-		    amount,
-		    lo_row,
-		    hi_row));
+		    screen->cur_row, amount,
+		    hi_row,
+		    lo_row));
 	    ScrnDisownSelection(xw);
 	}
-    } else if (screen->endH.row >= lo_row && screen->startH.row < lo_row) {
-	ScrnDisownSelection(xw);
-    } else if (screen->endH.row > hi_row && screen->startH.row > hi_row) {
+    } else if (screen->endH.row >= hi_row && screen->startH.row < hi_row) {
+	int base = screen->startH.row;
+	int trim = hi_row - base;
+	TRACE2(("truncate because selection straddles top-margin\n"));
+	screen->startH.row = hi_row;
+	ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
+    } else if (screen->endH.row > lo_row && screen->startH.row > lo_row) {
+	TRACE2(("deselect because selection straddles bottom-margin\n"));
 	ScrnDisownSelection(xw);
     }
 
@@ -787,7 +827,7 @@ xtermScrollLR(XtermWidget xw, int amount, Bool toLeft)
 void
 xtermColIndex(XtermWidget xw, Bool toLeft)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (toLeft) {
 	if (ScrnIsColInMargins(screen, screen->cur_col)) {
@@ -1020,7 +1060,7 @@ showZIconBeep(XtermWidget xw, const char *name)
 	if (!newname) {
 	    xtermWarning("malloc failed in showZIconBeep\n");
 	} else {
-	    char *marker = strstr(format, "%s");
+	    const char *marker = strstr(format, "%s");
 	    char *result = newname;
 	    if (marker != NULL) {
 		size_t skip = (size_t) (marker - format);
@@ -1051,7 +1091,7 @@ resetZIconBeep(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     if (screen->zIconBeep_flagged) {
-	char *icon_name = getIconName();
+	const char *icon_name = getIconName();
 	screen->zIconBeep_flagged = False;
 	if (icon_name != NULL) {
 	    char *buf = malloc(strlen(icon_name) + 1);
@@ -1192,16 +1232,18 @@ WriteText(XtermWidget xw, Cardinal offset, Cardinal length)
 	params.on_wide     = 0;
 
 	sizes = calloc(length, 1);
-	for (i = 0; i < length; ++i) {
-	    SelectSize(ld, screen->cur_col + (int) i, str[i], sizes[i]);
-	}
+	if (sizes != NULL) {
+	    for (i = 0; i < length; ++i) {
+		SelectSize(ld, screen->cur_col + (int) i, str[i], sizes[i]);
+	    }
 
-	drawXtermText(&params,
-		      currentGC,
-		      LineCursorX(screen, ld, screen->cur_col),
-		      CursorY(screen, screen->cur_row),
-		      str, sizes, length);
-	free(sizes);
+	    drawXtermText(&params,
+			  currentGC,
+			  LineCursorX(screen, ld, screen->cur_col),
+			  CursorY(screen, screen->cur_row),
+			  str, sizes, length);
+	    free(sizes);
+	}
 
 	resetXtermGC(xw, attr_flags, False);
     }
@@ -1588,7 +1630,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 static void
 ClearAbove(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (screen->protected_mode != OFF_PROTECT) {
 	int row;
@@ -1637,7 +1679,7 @@ ClearAbove(XtermWidget xw)
 static void
 ClearBelow(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     ClearRight(xw, -1);
 
@@ -1765,7 +1807,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 int
 ClearInLine(XtermWidget xw, int row, int col, unsigned len)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int flags = 0;
 
     /*
@@ -1862,7 +1904,7 @@ ClearLeft(XtermWidget xw)
 void
 ClearLine(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     unsigned len = (unsigned) MaxCols(screen);
 
     assert(screen->max_col >= 0);
@@ -2069,8 +2111,8 @@ do_extra_scroll(XtermWidget xw, Bool trimmed)
 	    for (row = 0; row < screen->max_row; ++row) {
 		Boolean hasData = row_has_data(screen, row);
 		if (hasData || hadData) {
-		    LineData *dst = addScrollback(screen);
-		    LineData *src = getLineData(screen, row);
+		    const LineData *src = getLineData(screen, row);
+		    LineData *dst = addScrollbackForLine(screen, src);
 		    copyLineData(dst, src);
 		    IncrementSavedLines(1);
 		}
@@ -2391,7 +2433,7 @@ void
 xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
 {
     TScreen *screen = TScreenOf(xw);
-    VTwin *vwin = WhichVWin(screen);
+    const VTwin *vwin = WhichVWin(screen);
     Drawable draw = VDrawable(screen);
     GC gc;
 
@@ -2699,7 +2741,7 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 void
 xtermClear(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     TRACE(("xtermClear\n"));
     xtermClear2(xw, 0, 0, FullWidth(screen), FullHeight(screen));
@@ -2708,7 +2750,7 @@ xtermClear(XtermWidget xw)
 void
 xtermRepaint(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     TRACE(("xtermRepaint\n"));
     xtermClear(xw);
@@ -3680,8 +3722,8 @@ fixupItalics(XTermDraw * params,
 {
     TScreen *screen = TScreenOf(params->xw);
     VTwin *cgsWin = WhichVWin(screen);
-    XFontStruct *realFp = curFont->fs;
-    XFontStruct *thisFp = getCgsFont(params->xw, cgsWin, gc)->fs;
+    const XFontStruct *realFp = curFont->fs;
+    const XFontStruct *thisFp = getCgsFont(params->xw, cgsWin, gc)->fs;
     int need_clipping = 0;
     int need_filling = 0;
 
@@ -3825,7 +3867,7 @@ static int
 xtermPartString16(TScreen *screen, unsigned flags, GC gc, int x, int y, int length)
 {
     if (length > 0) {
-	IChar *mapped = BfBuf(IChar);
+	const IChar *mapped = BfBuf(IChar);
 	XChar2b *buffer2 = BfBuf(XChar2b);
 	Char *buffer1 = BfBuf(Char);
 	int n;
@@ -3924,6 +3966,7 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
 				 x, y - FontAscent(screen), 1, False);
 		x += FontWidth(screen);
 	    } else {
+		AllowNonChar(ch_width);
 		x = xtermDrawMissing(screen, flags, gc, x, y, ch_width, fullwidth);
 	    }
 	    dst = 0;
@@ -3965,7 +4008,7 @@ xtermPartString(TScreen *screen, unsigned flags, GC gc, int x, int y, int length
 static void
 xtermDrawString(TScreen *screen, unsigned flags, GC gc, int x, int y, int length)
 {
-    IChar *mapped = BfBuf(IChar);
+    const IChar *mapped = BfBuf(IChar);
     Char *buffer1 = BfBuf(Char);
 
     int dst;
@@ -4053,7 +4096,7 @@ drawXtermText(const XTermDraw * params,
 	    if ((!IsIcon(screen) && screen->font_doublesize)
 		&& (gc2 = xterm_DoubleGC(&recur, gc, &inx)) != NULL) {
 	    /* draw actual double-sized characters */
-	    XFontStruct *fs = getDoubleFont(screen, inx)->fs;
+	    const XFontStruct *fs = getDoubleFont(screen, inx)->fs;
 	    XRectangle rect, *rp = &rect;
 	    Cardinal nr = 1;
 	    Cardinal nlen;
@@ -4241,7 +4284,13 @@ drawXtermText(const XTermDraw * params,
 		XftFont *tempFont = NULL;
 #define CURR_TEMP (tempFont ? tempFont : XftFp(currData))
 
-		if (xtermIsInternalCs(ch) || ch == 0) {
+		if ((ch != HIDDEN_CHAR)
+		    && IsAllowedCtlChar(ch_width)
+		    && !mk_is_combining(ch)) {
+		    TRACE(("%s@%d: AllowCtlChar\n", __FILE__, __LINE__));
+		    ch_width = 1;
+		    missing = True;
+		} else if (xtermIsInternalCs(ch) || ch == 0) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
 		     * in cells 0-31.  Assume this (we cannot inspect the
@@ -4549,6 +4598,7 @@ drawXtermText(const XTermDraw * params,
 		continue;
 	    }
 	    ch_width = SelectedSize(size[last]);
+	    AllowCtlChar(ch_width);
 	    isMissing =
 		IsXtermMissingChar(screen, ch,
 				   ((recur.on_wide || ch_width > 1)
@@ -4591,10 +4641,15 @@ drawXtermText(const XTermDraw * params,
 				      (unsigned) (last - first));
 		}
 #if OPT_WIDE_CHARS
-		if (ch_width <= 0 && ch < 32)
+		if (ch_width <= 0 && ch < 32) {
 		    ch_width = 1;	/* special case for line-drawing */
-		else if (ch_width < 0)
+		} else if (ch_width < 0) {
 		    ch_width = 1;	/* special case for combining char */
+		} else if (ch_width == 0
+			   && ch > 255
+			   && !mk_is_combining((wchar_t) ch)) {
+		    ch_width = 1;
+		}
 		if (ch > 255 && (part = ucs2dec(screen, ch)) < 32) {
 		    xtermDrawBoxChar(&recur, part, gc, x, y, 1, False);
 		} else if (!ucs_workaround(&recur, ch, gc, x, y)) {
@@ -4739,6 +4794,7 @@ drawXtermText(const XTermDraw * params,
 
 	    if (ch != HIDDEN_CHAR) {
 		int ch_width = SelectedSize(size[src]);
+		AllowCtlChar(ch_width);
 		if (!needWide
 		    && !IsIcon(screen)
 		    && ((recur.on_wide || ch_width > 1)
@@ -5330,7 +5386,7 @@ jhash1(const unsigned char *key, size_t len)
 static unsigned
 computeFaint(XtermWidget xw, unsigned value, unsigned compare)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     if (screen->faint_relative) {
 	value = (unsigned) ((value + compare) / 2);
     } else {
@@ -5989,7 +6045,8 @@ parse_xinerama_screen(Display *display, const char *str, struct Xinerama_geometr
 int
 XParseXineramaGeometry(Display *display, char *parsestring, struct Xinerama_geometry *ret)
 {
-    char *at, buf[128];
+    const char *at;
+    char buf[128];
 
     ret->scr_x = 0;
     ret->scr_y = 0;

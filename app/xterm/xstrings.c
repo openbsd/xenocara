@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.81 2024/12/01 20:27:00 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.83 2026/04/07 23:00:16 tom Exp $ */
 
 /*
- * Copyright 2000-2023,2024 by Thomas E. Dickey
+ * Copyright 2000-2024,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -40,7 +40,7 @@
 #include <xstrings.h>
 
 static void
-alloc_pw(struct passwd *target, struct passwd *source)
+alloc_pw(struct passwd *target, const struct passwd *source)
 {
     *target = *source;
     /* we care only about these strings */
@@ -230,7 +230,7 @@ x_getlogin(uid_t uid, struct passwd *in_out)
 Boolean
 x_getpwnam(const char *name, struct passwd *result)
 {
-    struct passwd *ptr = getpwnam(name);
+    const struct passwd *ptr = getpwnam(name);
     Boolean code;
 
     if (ptr != NULL && OkPasswd(ptr)) {
@@ -250,7 +250,7 @@ x_getpwnam(const char *name, struct passwd *result)
 Boolean
 x_getpwuid(uid_t uid, struct passwd *result)
 {
-    struct passwd *ptr = getpwuid((uid_t) uid);
+    const struct passwd *ptr = getpwuid((uid_t) uid);
     Boolean code;
 
     if (ptr != NULL && OkPasswd(ptr)) {
@@ -451,7 +451,7 @@ x_strdup(const char *s)
  * or NULL if there are none.
  */
 char *
-x_strindex(char *s1, const char *s2)
+x_strindex(const char *s1, const char *s2)
 {
     char *s3;
     size_t s2len = strlen(s2);

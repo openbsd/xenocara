@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.97 2025/08/24 17:56:01 tom Exp $ */
+/* $XTermId: cursor.c,v 1.101 2026/04/07 23:08:05 tom Exp $ */
 
 /*
- * Copyright 2002-2024,2025 by Thomas E. Dickey
+ * Copyright 2002-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -71,6 +71,10 @@ CursorSet(TScreen *screen, int row, int col, unsigned flags)
     int use_col = col;
     int max_col = screen->max_col;
     int max_row = screen->max_row;
+
+#if OPT_RESIZE_ADJUST
+    screen->saved_cur_col = -1;
+#endif
 
     if (flags & ORIGIN) {
 	use_col += screen->lft_marg;
@@ -187,6 +191,14 @@ CursorBack(XtermWidget xw, int n)
     }
     set_cur_row(screen, row);
     set_cur_col(screen, col);
+#if OPT_RESIZE_ADJUST
+    if (screen->resize_cursor_adjust) {
+	if (screen->saved_cur_col >= 0)
+	    screen->saved_cur_col += col - before;
+    } else {
+	screen->saved_cur_col = -1;
+    }
+#endif
     do_xevents(xw);
 
     ResetWrap(screen);
@@ -200,7 +212,10 @@ CursorForward(XtermWidget xw, int n)
 {
     TScreen *screen = TScreenOf(xw);
 #if OPT_DEC_CHRSET
-    LineData *ld = getLineData(screen, screen->cur_row);
+    const LineData *ld = getLineData(screen, screen->cur_row);
+#endif
+#if OPT_RESIZE_ADJUST
+    int before = screen->cur_col;
 #endif
     int next = screen->cur_col + n;
     int max;
@@ -217,6 +232,14 @@ CursorForward(XtermWidget xw, int n)
 	next = max;
 
     set_cur_col(screen, next);
+#if OPT_RESIZE_ADJUST
+    if (screen->resize_cursor_adjust) {
+	if (screen->saved_cur_col >= 0)
+	    screen->saved_cur_col += next - before;
+    } else {
+	screen->saved_cur_col = -1;
+    }
+#endif
     ResetWrap(screen);
 }
 
@@ -234,7 +257,7 @@ CursorDown(TScreen *screen, int n)
 	   screen->max_row : screen->bot_marg);
     if (next > max)
 	next = max;
-    assert (next <= screen->max_row);
+    assert(next <= screen->max_row);
 
     set_cur_row(screen, next);
     ResetWrap(screen);
@@ -281,6 +304,8 @@ xtermIndex(XtermWidget xw, int amount)
 	CursorDown(screen, amount);
     } else {
 	int j;
+	if (ScrnHaveSelection(screen))
+	    adjustHiliteOnBakScroll(xw, amount);
 	CursorDown(screen, j = screen->bot_marg - screen->cur_row);
 	xtermScroll(xw, amount - j);
     }
@@ -305,6 +330,8 @@ RevIndex(XtermWidget xw, int amount)
 	    && !ScrnIsColInMargins(screen, screen->cur_col))) {
 	CursorUp(screen, amount);
     } else {
+	if (ScrnHaveSelection(screen))
+	    adjustHiliteOnFwdScroll(xw, amount, False);
 	RevScroll(xw, amount - (screen->cur_row - screen->top_marg));
 	CursorUp(screen, screen->cur_row - screen->top_marg);
     }
@@ -320,6 +347,10 @@ CarriageReturn(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     int left = ScrnLeftMargin(xw);
     int col;
+
+#if OPT_RESIZE_ADJUST
+    screen->saved_cur_col = -1;
+#endif
 
     if (xw->flags & ORIGIN) {
 	col = left;
@@ -433,7 +464,7 @@ CursorSave(XtermWidget xw)
  * Restore Cursor and Attributes
  */
 static void
-CursorRestoreFlags(XtermWidget xw, SavedCursor * sc, IFlags our_flags)
+CursorRestoreFlags(XtermWidget xw, const SavedCursor * sc, IFlags our_flags)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -474,7 +505,7 @@ CursorRestoreFlags(XtermWidget xw, SavedCursor * sc, IFlags our_flags)
  * Use this entrypoint for the status-line.
  */
 void
-CursorRestore2(XtermWidget xw, SavedCursor * sc)
+CursorRestore2(XtermWidget xw, const SavedCursor * sc)
 {
     CursorRestoreFlags(xw, sc, ALL_FLAGS);
 }
@@ -520,7 +551,7 @@ CursorPrevLine(XtermWidget xw, int count)
 int
 CursorCol(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int result = screen->cur_col;
     if (xw->flags & ORIGIN) {
 	result -= ScrnLeftMargin(xw);
@@ -532,7 +563,7 @@ CursorCol(XtermWidget xw)
 int
 CursorRow(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int result = screen->cur_row;
     if (xw->flags & ORIGIN) {
 	result -= screen->top_marg;

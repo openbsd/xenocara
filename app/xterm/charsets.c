@@ -1,7 +1,7 @@
-/* $XTermId: charsets.c,v 1.130 2025/02/05 23:11:49 tom Exp $ */
+/* $XTermId: charsets.c,v 1.131 2026/04/07 22:23:12 tom Exp $ */
 
 /*
- * Copyright 1998-2024,2025 by Thomas E. Dickey
+ * Copyright 1998-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -326,7 +326,7 @@ Cardinal
 xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 {
     IChar *buf = xw->work.write_text;
-    IChar *ptr = buf + length;
+    const IChar *ptr = buf + length;
     IChar *s;
     TScreen *screen = TScreenOf(xw);
     Cardinal count = 0;

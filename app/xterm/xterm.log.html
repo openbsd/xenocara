@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2024,2025 by Thomas E. Dickey                              *
+ * Copyright 1997-2025,2026 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2753 2025/12/21 23:49:39 tom Exp $
+  $XTermId: xterm.log.html,v 1.2778 2026/05/01 23:27:57 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -50,7 +50,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2024,2025 by <a href=
+  <p>Copyright &copy; 1997-2025,2026 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
 
   <hr>
@@ -70,6 +70,14 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_410">Patch #410 - 2026/05/01</a></li>
+
+    <li><a href="#xterm_409">Patch #409 - 2026/04/13</a></li>
+
+    <li><a href="#xterm_408">Patch #408 - 2026/04/12</a></li>
+
+    <li><a href="#xterm_407">Patch #407 - 2026/02/16</a></li>
+
     <li><a href="#xterm_406">Patch #406 - 2025/12/21</a></li>
 
     <li><a href="#xterm_405">Patch #405 - 2025/12/14</a></li>
@@ -1090,10 +1098,86 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_410" id="xterm_410">Patch #410 -
+  2026/05/01</a></h1>
+
+  <ul>
+    <li>amend one of the fixes for Debian #738794 in <a href=
+    "#xterm_407">patch #407</a>, which caused combining characters
+    to be outlined (report by "Martin").</li>
+
+    <li>clarify in <tt>ctlseqs.ms</tt> which modes listed for
+    DECSET are readonly (prompted by discussion with Thomas
+    Wolff).</li>
+  </ul>
+
+  <h1><a name="xterm_409" id="xterm_409">Patch #409 -
+  2026/04/13</a></h1>
+
+  <ul>
+    <li>correct one of the special cases added for Debian #1123877
+    in <a href="#xterm_408">patch #408</a> (report by H Merijn
+    Brand).</li>
+
+    <li>update version for <em>Extended Window Manager Hints</em>
+    (EWMH), in manpage.</li>
+  </ul>
+
+  <h1><a name="xterm_408" id="xterm_408">Patch #408 -
+  2026/04/12</a></h1>
+
+  <ul>
+    <li>fix some gcc, cppcheck, clang and coverity warnings.</li>
+
+    <li>fix a regression in <a href="#xterm_404">patch #404</a>
+    which prevented key-press/release events from working with
+    selection-related actions (report by Julio Bacel).</li>
+
+    <li>improve feature which retains selection/highlighting when
+    screen is scrolled (Debian #1128961, cf Debian #291787).</li>
+
+    <li>fill in a few more special cases for Debian #1123877.</li>
+  </ul>
+
+  <h1><a name="xterm_407" id="xterm_407">Patch #407 -
+  2026/02/16</a></h1>
+
+  <ul>
+    <li>add private modes 1020 to 1023 for reporting whether xterm
+    uses UTF-8, whether CJK-width is set, whether Emoji-width is
+    set, and whether private-width is set.</li>
+
+    <li>add resource <tt>privateWidth</tt> to control whether PUA
+    (private use area) codes are neutral width or
+    single-width.</li>
+
+    <li>improve fix for Debian #738794, to show boxes for codes
+    which are neither combining characters or valid Unicode
+    characters (Debian #1123877).</li>
+
+    <li>improve switching to/from UTF-8 mode by saving, restoring
+    and resetting the G0-G3 array (Debian #1124802).</li>
+
+    <li>use <tt>ST</tt> consistently in terminfo rather than legacy
+    <tt>BEL</tt></li>
+
+    <li>minor updates to configure script and terminfo</li>
+
+    <li>add option <tt>--enable-resize-adjust</tt> for saving and
+    repainting parts of the window which are lost when the user
+    resizes the window (integrated patch by Kirill A
+    Korinsky).</li>
+  </ul>
+
   <h1><a name="xterm_406" id="xterm_406">Patch #406 -
   2025/12/21</a></h1>
 
   <ul>
+    <li>add configure option <tt>--enable-resize-adjust</tt>, to
+    provide support for cursor-adjustment and repainting of saved
+    data when resizing the window (patch by Kirill A
+    Korinsky).</li>
+
     <li>add option <tt>-emoji_width</tt> and resource
     <tt>emojiWidth</tt> to allow enabling/disabling VS15/VS16
     feature introduced in <a href="#xterm_404">patch #404</a>

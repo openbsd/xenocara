@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.408 2025/10/08 08:17:07 tom Exp $
+dnl $XTermId: configure.in,v 1.413 2026/02/16 13:15:35 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2024,2025 by Thomas E. Dickey
+dnl Copyright 1997-2025,2026 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -36,7 +36,7 @@ dnl
 AC_PREREQ(2.52.20210509)
 AC_INIT
 AC_CONFIG_SRCDIR([charproc.c])
-AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
+AC_CONFIG_HEADERS([xtermcfg.h:xtermcfg.hin])
 CF_CHECK_CACHE
 
 ###	checks for alternative programs
@@ -60,6 +60,7 @@ CF_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_PROGRAM
 CF_PROG_LINT
+CF_MAKE_PHONY
 
 ###	checks for compiler characteristics
 CF_XOPEN_SOURCE(700)
@@ -1138,6 +1139,16 @@ CF_ARG_DISABLE(rectangles,
 AC_MSG_RESULT($enable_rectangles)
 if test "$enable_rectangles" = no ; then
 	AC_DEFINE(OPT_DEC_RECTOPS,0,[Define to 0 to disable VT420 rectangle support])
+fi
+
+AC_MSG_CHECKING(if you want resize/cursor-adjust feature)
+CF_ARG_DISABLE(resize-adjust,
+	[  --disable-resize-adjust disable resize/cursor-adjust feature],
+	[enable_resize_adjust=no],
+	[enable_resize_adjust=yes])
+AC_MSG_RESULT($enable_resize_adjust)
+if test "$enable_resize_adjust" = yes ; then
+	AC_DEFINE(OPT_RESIZE_ADJUST,1,[Define to 1 to enable resize/cursor-adjust feature])
 fi
 
 AC_MSG_CHECKING(if you want -ziconbeep option)

@@ -1,11 +1,11 @@
-# $XTermId: termcap,v 1.88 2017/12/25 21:24:41 tom Exp $
+# $XTermId: termcap,v 1.89 2026/02/12 09:17:36 tom Exp $
 #
 # These are termcap entries that correspond to xterm's terminfo file.
 # The file is formatted using ncurses' "tic -CNx", but is not mechanically
 # derived from the terminfo.
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2016,2017 by Thomas E. Dickey
+# Copyright 1996-2017,2026 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -116,25 +116,25 @@ vc|xterm-color|generic "ANSI" color xterm:\
 # These aliases are for compatibility with the terminfo; termcap cannot provide
 # the extra features such as color initialization, but termcap applications
 # still want the names.
-x1|xterm-16color|xterm alias:\
+x1|xterm-16color|xterm 16-color alias:\
 	:tc=xterm-new:
 
-x2|xterm-88color|xterm alias:\
+x2|xterm-88color|xterm 88-color alias:\
 	:Co#88:pa#7744:tc=xterm-256color:
 
-x3|xterm-256color|xterm alias:\
+x3|xterm-256color|xterm 256-color alias:\
 	:Co#256:pa#65536:\
 	:AB=\E[48;5;%dm:AF=\E[38;5;%dm:tc=xterm-new:
 
 # Termcap cannot do direct-colors, but users may expect this name.
-x4|xterm-direct|xterm alias:\
+x4|xterm-direct|xterm direct-color alias:\
 	:tc=xterm-256color:
 
-xi|xterm-nrc|xterm alias:\
+xi|xterm-nrc|xterm NRC-alias:\
 	:tc=xterm:
-xr|xterm-rep|xterm alias:\
+xr|xterm-rep|xterm REP-alias:\
 	:tc=xterm:
-xx|xterm-xmc|xterm alias:\
+xx|xterm-xmc|xterm XMC-alias:\
 	:sg#1:tc=xterm:
 #
 # An 8-bit description is doable with termcap, but there are probably no

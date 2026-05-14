@@ -1,7 +1,7 @@
-/* $XTermId: html.c,v 1.24 2024/12/01 20:27:00 tom Exp $ */
+/* $XTermId: html.c,v 1.25 2026/04/07 22:23:47 tom Exp $ */
 
 /*
- * Copyright 2018-2021,2024	Thomas E. Dickey
+ * Copyright 2018-2024,2026	Thomas E. Dickey
  * Copyright 2015,2018		Jens Schweikhardt
  *
  * All Rights Reserved
@@ -89,7 +89,7 @@ dumpHtmlHeader(XtermWidget xw, FILE *fp)
 static void
 writeStyle(XtermWidget xw, FILE *fp)
 {
-    TScreen *s = TScreenOf(xw);
+    const TScreen *s = TScreenOf(xw);
 
     fputs("  <style type='text/css'>\n", fp);
     fputs("  body, pre { margin: 0 }\n", fp);
@@ -113,7 +113,7 @@ writeStyle(XtermWidget xw, FILE *fp)
 static void
 dumpHtmlScreen(XtermWidget xw, FILE *fp)
 {
-    TScreen *s = TScreenOf(xw);
+    const TScreen *s = TScreenOf(xw);
     int row;
 
     for (row = s->top_marg; row <= s->bot_marg; ++row) {

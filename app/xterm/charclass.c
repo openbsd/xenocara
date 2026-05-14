@@ -1,7 +1,7 @@
-/* $XTermId: charclass.c,v 1.50 2023/04/01 00:11:47 tom Exp $ */
+/* $XTermId: charclass.c,v 1.51 2026/04/07 21:07:21 tom Exp $ */
 
 /*
- * Copyright 2002-2022,2023 by Thomas E. Dickey
+ * Copyright 2002-2023,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -72,11 +72,12 @@
 #define OPT_REPORT_CCLASS 1
 #endif /* TEST_DRIVER */
 
-static struct classentry {
+typedef struct {
     int cclass;
     int first;
     int last;
-} *classtab;
+} CLASSTAB;
+static CLASSTAB *classtab;
 
 #ifdef TEST_DRIVER
 static int opt_all;
@@ -92,7 +93,7 @@ init_classtab(void)
 
     TRACE(("init_classtab " TRACE_L "\n"));
 
-    classtab = TypeMallocN(struct classentry, (unsigned) size);
+    classtab = TypeMallocN(CLASSTAB, (unsigned) size);
     if (!classtab)
 	abort();
     classtab[0].cclass = size;
@@ -234,11 +235,13 @@ SetCharacterClassRange(int low, int high, int value)
 
     /* make sure we have at least one free entry left at table end */
     if (classtab[0].last > classtab[0].cclass - 2) {
-	classtab[0].cclass += 5 + classtab[0].cclass / 4;
-	classtab = TypeRealloc(struct classentry,
-			         (unsigned) classtab[0].cclass, classtab);
-	if (!classtab)
+	unsigned need = (unsigned) (classtab[0].cclass + 5 +
+				    classtab[0].cclass / 4);
+	CLASSTAB *ptr = TypeRealloc(CLASSTAB, need, classtab);
+	if (!ptr)
 	    abort();
+	classtab = ptr;
+	classtab[0].cclass = (int) need;
     }
 
     /* simply append new interval to end of interval array */

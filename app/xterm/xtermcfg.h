@@ -1,7 +1,7 @@
 /* $XTermId: xtermcfg.hin,v 1.237 2025/08/31 21:55:14 tom Exp $ */
 
 /*
- * Copyright 1997-2024,2025 by Thomas E. Dickey
+ * Copyright 1997-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -189,6 +189,7 @@
 /* #undef OPT_READLINE */		/* CF_ARG_ENABLE(readline-mouse) */
 /* #undef OPT_REGIS_GRAPHICS */	/* CF_ARG_ENABLE(regis-graphics) */
 /* #undef OPT_SAME_NAME */		/* CF_ARG_DISABLE(samename) */
+#define OPT_RESIZE_ADJUST 1	/* CF_ARG_ENABLE(resize-adjust) */
 /* #undef OPT_SCO_FUNC_KEYS */	/* CF_ARG_ENABLE(sco-fkeys) */
 #define OPT_SCREEN_DUMPS 0		/* CF_ARG_ENABLE(screen-dumps) */
 /* #undef OPT_SELECTION_OPS */	/* CF_ARG_DISABLE(selection-ops) */

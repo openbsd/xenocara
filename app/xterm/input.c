@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.388 2025/06/23 19:53:25 tom Exp $ */
+/* $XTermId: input.c,v 1.390 2026/04/07 22:53:42 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -159,10 +159,10 @@ const char kypd_apl[] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuv
 static
 const char curfinal[] = "HDACB  FE";
 
-static int decfuncvalue(KEY_DATA *);
-static void sunfuncvalue(ANSI *, KEY_DATA *);
-static void hpfuncvalue(ANSI *, KEY_DATA *);
-static void scofuncvalue(ANSI *, KEY_DATA *);
+static int decfuncvalue(const KEY_DATA *);
+static void sunfuncvalue(ANSI *, const KEY_DATA *);
+static void hpfuncvalue(ANSI *, const KEY_DATA *);
+static void scofuncvalue(ANSI *, const KEY_DATA *);
 
 static void
 AdjustAfterInput(XtermWidget xw)
@@ -269,13 +269,13 @@ IsEditFunctionKey(XtermWidget xw, KeySym keysym)
  * make a control character.
  */
 static Bool
-IsControlInput(KEY_DATA * kd)
+IsControlInput(const KEY_DATA * kd)
 {
     return ((kd->keysym) >= 0x40 && (kd->keysym) <= 0x7f);
 }
 
 static Bool
-IsControlOutput(KEY_DATA * kd)
+IsControlOutput(const KEY_DATA * kd)
 {
     return IS_CTRL(kd->keysym);
 }
@@ -400,7 +400,7 @@ TypeOfKeysym(XtermWidget xw, KEY_DATA * key_data)
 static Bool
 allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 {
-    TKeyboard *keyboard = &(xw->keyboard);
+    const TKeyboard *keyboard = &(xw->keyboard);
     int is_legacy = (keyboard->type == keyboardIsLegacy);
     Bool result = False;
 
@@ -523,7 +523,7 @@ xtermStateToParam(XtermWidget xw, unsigned state)
 #if OPT_MOD_FKEYS
 #if OPT_NUM_LOCK
 static unsigned
-filterAltMeta(unsigned result, unsigned mask, Bool enable, KEY_DATA * kd)
+filterAltMeta(unsigned result, unsigned mask, Bool enable, const KEY_DATA * kd)
 {
     if ((result & mask) != 0) {
 	/*
@@ -991,7 +991,7 @@ Input(XtermWidget xw,
       XKeyEvent *event,
       Bool eightbit)
 {
-    Char *string;
+    const Char *string;
 
     TKeyboard *keyboard = &(xw->keyboard);
     TScreen *screen = TScreenOf(xw);
@@ -1602,7 +1602,7 @@ StringInput(XtermWidget xw, const Char *string, size_t nbytes)
 
 /* These definitions are DEC-style (e.g., vt320) */
 static int
-decfuncvalue(KEY_DATA * kd)
+decfuncvalue(const KEY_DATA * kd)
 {
     int result;
 
@@ -1661,7 +1661,7 @@ decfuncvalue(KEY_DATA * kd)
 }
 
 static void
-hpfuncvalue(ANSI *reply, KEY_DATA * kd)
+hpfuncvalue(ANSI *reply, const KEY_DATA * kd)
 {
 #if OPT_HP_FUNC_KEYS
     int result;
@@ -1718,7 +1718,7 @@ hpfuncvalue(ANSI *reply, KEY_DATA * kd)
 }
 
 static void
-scofuncvalue(ANSI *reply, KEY_DATA * kd)
+scofuncvalue(ANSI *reply, const KEY_DATA * kd)
 {
 #if OPT_SCO_FUNC_KEYS
     int result;
@@ -1808,7 +1808,7 @@ scofuncvalue(ANSI *reply, KEY_DATA * kd)
 }
 
 static void
-sunfuncvalue(ANSI *reply, KEY_DATA * kd)
+sunfuncvalue(ANSI *reply, const KEY_DATA * kd)
 {
 #if OPT_SUN_FUNC_KEYS
     ParmType result;
@@ -2068,7 +2068,7 @@ TranslationsUseKeyword(Widget w, char **cache, const char *keyword, Bool onlyIns
 	}
 
 	if (*cache != NULL) {
-	    char *p = *cache;
+	    const char *p = *cache;
 	    int state = 0;
 	    int now = ' ';
 

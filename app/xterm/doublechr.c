@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.110 2024/12/01 19:38:29 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.111 2026/04/07 23:20:20 tom Exp $ */
 
 /*
- * Copyright 1997-2022,2024 by Thomas E. Dickey
+ * Copyright 1997-2024,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -150,14 +150,13 @@ xterm_ResetDouble(XtermWidget xw)
 #if OPT_DEC_CHRSET
     TScreen *screen = TScreenOf(xw);
     Boolean changed = False;
-    unsigned code;
     int row;
 
     for (row = 0; row < screen->max_row; ++row) {
 	LineData *ld;
 
 	if ((ld = getLineData(screen, ROW2INX(screen, row))) != NULL) {
-	    code = GetLineDblCS(ld);
+	    unsigned code = GetLineDblCS(ld);
 	    if (code != CSET_SWL) {
 		SetLineDblCS(ld, CSET_SWL);
 		changed = True;

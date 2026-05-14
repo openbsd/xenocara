@@ -1,7 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.257 2025/11/16 20:11:01 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.259 2026/04/07 22:57:51 tom Exp $ */
 
 /*
- * Copyright 2001-2024,2025 by Thomas E. Dickey
+ * Copyright 2001-2025,2026 by Thomas E. Dickey
  * Copyright 1988  X Consortium
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -405,7 +405,7 @@ static void
 Tekparse(TekWidget tw)
 {
     TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(tw->vt);
+    const TScreen *screen = TScreenOf(tw->vt);
     int x, y;
     IChar ch;
     int nextstate;
@@ -771,7 +771,7 @@ static IChar
 Tinput(TekWidget tw)
 {
     TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(tw->vt);
+    const TScreen *screen = TScreenOf(tw->vt);
     TekLink *tek;
 
     if (Tpushback > Tpushb)
@@ -1270,8 +1270,8 @@ TekEnq(TekWidget tw,
        int x,
        int y)
 {
-    TScreen *screen = TScreenOf(tw->vt);
-    TekScreen *tekscr = TekScreenOf(tw);
+    const TScreen *screen = TScreenOf(tw->vt);
+    const TekScreen *tekscr = TekScreenOf(tw);
     Char cplot[7];
     int len = 5;
     int adj = (status != 0) ? 0 : 1;
@@ -1739,12 +1739,13 @@ TekSetFontSize(TekWidget tw, Bool fromMenu, int newitem)
 	TekScreen *tekscr = TekScreenOf(tw);
 	int oldsize = tekscr->cur.fontsize;
 	int newsize = MI2FS(newitem);
-	Font fid;
 
 	TRACE(("TekSetFontSize(%d) size %d ->%d\n", newitem, oldsize, newsize));
 	if (newsize < 0 || newsize >= TEKNUMFONTS) {
 	    Bell(tw->vt, XkbBI_MinorError, 0);
 	} else if (oldsize != newsize) {
+	    Font fid;
+
 	    if (!Ttoggled)
 		TCursorToggle(tw, TOGGLE);
 	    set_tekfont_menu_item(oldsize, False);
@@ -1908,7 +1909,7 @@ TCursorToggle(TekWidget tw, int toggle)		/* TOGGLE or CLEAR */
     y = (int) ScaledY(tw, tekscr->cur_Y) - tw->tek.tobaseline[c];
 
     if (toggle == TOGGLE) {
-	TScreen *screen = TScreenOf(xw);
+	const TScreen *screen = TScreenOf(xw);
 	if (screen->select || screen->always_highlight)
 	    XFillRectangle(XtDisplay(tw), TWindow(tekscr),
 			   tekscr->TcursorGC, x, y,
@@ -1965,7 +1966,7 @@ TekCopy(TekWidget tw)
 {
 #ifdef ALLOWLOGGING
     if (tw != NULL) {
-	TekScreen *tekscr = TekScreenOf(tw);
+	const TekScreen *tekscr = TekScreenOf(tw);
 	TScreen *screen = TScreenOf(tw->vt);
 
 	TekLink *Tp;
@@ -2014,7 +2015,7 @@ HandleGINInput(Widget w,
     TekWidget tw = getTekWidget(w);
 
     if (tw != NULL) {
-	TekScreen *tekscr = TekScreenOf(tw);
+	const TekScreen *tekscr = TekScreenOf(tw);
 
 	if (tekscr->TekGIN && *nparamsp == 1) {
 	    int c = param_list[0][0];

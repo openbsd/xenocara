@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1162 2025/12/19 01:15:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1165 2026/02/16 18:30:52 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -757,6 +757,10 @@ typedef enum {
 #define OPT_REPORT_ICONS   1 /* provide "-report-icons" option */
 #endif
 
+#ifndef OPT_RESIZE_ADJUST
+#define OPT_RESIZE_ADJUST 0 /* provide "-rca" option */
+#endif
+
 #ifndef OPT_SAME_NAME
 #define OPT_SAME_NAME   1 /* suppress redundant updates of title, icon, etc. */
 #endif
@@ -1245,6 +1249,12 @@ typedef enum {
     ,srm_RXVT_SCROLL_TTY_OUTPUT = 1010
     ,srm_RXVT_SCROLL_TTY_KEYPRESS = 1011
     ,srm_FAST_SCROLL = 1014
+#if OPT_WIDE_CHARS
+    ,srm_UTF8_ENCODING = 1020
+    ,srm_WIDTH_EASTASIAN = 1021
+    ,srm_WIDTH_EMOJI = 1022
+    ,srm_WIDTH_PRIVATE = 1023
+#endif
     ,srm_EIGHT_BIT_META = 1034
 #if OPT_NUM_LOCK
     ,srm_REAL_NUMLOCK = 1035
@@ -1728,6 +1738,14 @@ typedef enum {
 
 /***====================================================================***/
 
+#if OPT_RESIZE_ADJUST
+#define if_OPT_RESIZE_ADJUST(stmt) if (resource.reportColors) stmt
+#else
+#define if_OPT_RESIZE_ADJUST(stmt) /* nothing */
+#endif
+
+/***====================================================================***/
+
 #define CONTROL(a) ((a) & 037)
 
 #ifndef XTERM_ERASE
@@ -1961,7 +1979,10 @@ typedef IChar CharData;
  * This is the xterm line-data/scrollback structure.
  */
 typedef struct {
-	Dimension lineSize;	/* number of columns in this row */
+	Dimension lineSize;	/* display width (current terminal width) */
+#if OPT_RESIZE_ADJUST
+	Dimension maxLineSize;	/* storage width (max of all widths seen) */
+#endif
 	RowData	 bufHead;	/* flag for wrapped lines */
 #if OPT_WIDE_CHARS
 	Char	 combSize;	/* number of items in combData[] */
@@ -2960,6 +2981,11 @@ typedef struct {
 	Boolean		graphics_rotated_print_mode;
 #endif
 
+#if OPT_RESIZE_ADJUST
+	int		saved_cur_col;	/* cursor col before resize clamp (-1 if none) */
+	Boolean		resize_cursor_adjust; /* adjust saved cursor on movement */
+#endif
+
 #define StatusLineRows	1		/* number of rows in status-line */
 
 #if OPT_STATUS_LINE
@@ -3005,6 +3031,9 @@ typedef struct {
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;
 	DECNRCM_codes	vt52_save_gsets[NUM_GSETS2];
+#endif
+#if OPT_WIDE_CHARS
+	DECNRCM_codes	ansi_save_gsets[NUM_GSETS2];
 #endif
 	/* Testing */
 #if EXP_XMC_GLITCH
@@ -3399,6 +3428,7 @@ typedef struct _Misc {
     int mk_samplepass;
 #if OPT_EMOJI_WIDTH
     Boolean emoji_width;	/* true for Emoji VS15/VS16 wcwidth() */
+    Boolean pua_width;		/* true if PUA codes are always single-width */
 #endif
 #else
 #undef  OPT_SYS_WCWIDTH

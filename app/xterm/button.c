@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.680 2025/12/04 09:22:53 tom Exp $ */
+/* $XTermId: button.c,v 1.683 2026/04/07 10:54:25 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4455,8 +4455,10 @@ ReHiliteText(XtermWidget xw,
     CELL first = *firstp;
     CELL last = *lastp;
 
-    TRACE(("ReHiliteText from %d.%d to %d.%d\n",
-	   first.row, first.col, last.row, last.col));
+    TRACE(("ReHiliteText from %d.%d to %d.%d (selection %d.%d .. %d.%d)\n",
+	   first.row, first.col, last.row, last.col,
+	   screen->startH.row, screen->startH.col,
+	   screen->endH.row, screen->endH.col));
 
     if (first.row < 0)
 	first.row = first.col = 0;
@@ -4486,10 +4488,10 @@ ReHiliteText(XtermWidget xw,
 #endif
     if (!isSameRow(&first, &last)) {	/* do multiple rows */
 	int i;
-	if ((i = screen->max_col - first.col + 1) > 0) {	/* first row */
+	if ((i = MaxCols(screen) - first.col) > 0) {	/* first row */
 	    ScrnRefresh(xw, first.row, first.col, 1, i, True);
 	}
-	if ((i = last.row - first.row - 1) > 0) {	/* middle rows */
+	if ((i = last.row - first.row) > 0) {	/* middle rows */
 	    ScrnRefresh(xw, first.row + 1, 0, i, MaxCols(screen), True);
 	}
 	if (last.col > 0 && last.row <= screen->max_row) {	/* last row */
@@ -5185,6 +5187,9 @@ ResetSelectionState(TScreen *screen)
     screen->selection_count = 0;
     screen->startH = zeroCELL;
     screen->endH = zeroCELL;
+    TRACE(("ResetSelectionState %d.%d %d.%d\n",
+	   screen->startH.row, screen->startH.col,
+	   screen->endH.row, screen->endH.col));
 }
 
 void
@@ -5783,7 +5788,7 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
 
     TRACE(("getDataFromScreen %s\n", method));
 
-    if (!ValidMouseEvent(xw, event))
+    if (!ValidMouseEvent(xw, event) && !IsKeyEvent(event))
 	return result;
 
     memset(scp, 0, sizeof(*scp));
@@ -6133,6 +6138,13 @@ executeCommand(pid_t pid, char **argv)
     if (argv != NULL && argv[0] != NULL) {
 	char *child_cwd = ProcGetCWD(pid);
 
+#if OPT_TRACE
+	int n;
+	TRACE(("executeCommand:\n"));
+	for (n = 0; argv[n] != NULL; ++n) {
+	    TRACE(("   argv[%d] = %s\n", n, argv[n]));
+	}
+#endif
 	if (fork() == 0) {
 	    if (child_cwd) {
 		IGNORE_RC(chdir(child_cwd));	/* We don't care if this fails */

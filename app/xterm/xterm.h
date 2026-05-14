@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.981 2025/12/21 22:08:07 tom Exp $ */
+/* $XTermId: xterm.h,v 1.987 2026/04/07 23:08:26 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -639,6 +639,7 @@ extern char **environ;
 #define XtNprinterFormFeed	"printerFormFeed"
 #define XtNprinterNewLine	"printerNewLine"
 #define XtNprivateColorRegisters "privateColorRegisters"
+#define XtNprivateWidth		"privateWidth"
 #define XtNptyHandshake		"ptyHandshake"
 #define XtNptyInitialErase	"ptyInitialErase"
 #define XtNptySttySize		"ptySttySize"
@@ -652,6 +653,7 @@ extern char **environ;
 #define XtNreportIcons		"reportIcons"
 #define XtNreportXRes		"reportXRes"
 #define XtNresizeByPixel	"resizeByPixel"
+#define XtNresizeCursorAdjust	"resizeCursorAdjust"
 #define XtNresizeGravity	"resizeGravity"
 #define XtNretryInputMethod	"retryInputMethod"
 #define XtNreverseWrap		"reverseWrap"
@@ -906,6 +908,7 @@ extern char **environ;
 #define XtCPrinterFormFeed	"PrinterFormFeed"
 #define XtCPrinterNewLine	"PrinterNewLine"
 #define XtCPrivateColorRegisters "PrivateColorRegisters"
+#define XtCPrivateWidth		"PrivateWidth"
 #define XtCPtyHandshake		"PtyHandshake"
 #define XtCPtyInitialErase	"PtyInitialErase"
 #define XtCPtySttySize		"PtySttySize"
@@ -919,6 +922,7 @@ extern char **environ;
 #define XtCReportIcons		"ReportIcons"
 #define XtCReportXRes		"ReportXRes"
 #define XtCResizeByPixel	"ResizeByPixel"
+#define XtCResizeCursorAdjust	"ResizeCursorAdjust"
 #define XtCResizeGravity	"ResizeGravity"
 #define XtCRetryInputMethod	"RetryInputMethod"
 #define XtCReverseWrap		"ReverseWrap"
@@ -1122,9 +1126,9 @@ extern void report_char_class(XtermWidget);
 
 #define VS16_FILLER	' '	/* FIXME: should be HIDDEN_CHAR */
 
-#define XTermWcInit(utf8,emoji) \
+#define XTermWcInit(utf8,emoji,private) \
 	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \
-			| WcPrivateFullwidth \
+			| ((private) ? WcPrivateFullwidth : WcUnknown) \
 			| ((emoji) ? WcEmojiFullwidth : WcUnknown))
 
 #define SelectedSize(n) (((n) >= 1 && (n) <= 2) ? (n) : 0)
@@ -1149,7 +1153,7 @@ extern void report_char_class(XtermWidget);
 
 #else
 
-#define XTermWcInit(utf8,emoji) \
+#define XTermWcInit(utf8,emoji,private) \
 	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \
 			| WcPrivateFullwidth)
 
@@ -1167,7 +1171,7 @@ extern GC getCgsGC(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/);
 extern Pixel getCgsBack(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern Pixel getCgsFore(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern XTermFonts * getCgsFont(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
-extern void clrCgsFonts(XtermWidget /*xw*/, VTwin * /*cgsWin*/, XTermFonts * /*font*/);
+extern void clrCgsFonts(XtermWidget /*xw*/, VTwin * /*cgsWin*/, const XTermFonts * /*font*/);
 extern void copyCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
 extern void redoCgs(XtermWidget /*xw*/, Pixel /*fg*/, Pixel /*bg*/, CgsEnum /*cgsId*/);
 extern void setCgsBack(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*bg*/);
@@ -1213,7 +1217,7 @@ extern void unparseputc (XtermWidget /* xw */, int /* c */);
 extern void unparseputc1 (XtermWidget /* xw */, int /* c */);
 extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
 extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
-extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
+extern void unparseseq (XtermWidget /* xw */, const ANSI * /* ap */);
 extern void v_write (int /* f */, const Char * /* d */, size_t /* len */);
 extern void xtermAddInput (Widget /* w */);
 extern void xtermDecodeSCS (XtermWidget /* xw */, int /* which */, int /* sgroup */, int /* prefix */, int /* suffix */);
@@ -1223,7 +1227,7 @@ extern void ToggleCursorBlink(XtermWidget /* xw */);
 #endif
 
 #if OPT_BLINK_TEXT
-extern Bool LineHasBlinking(TScreen * /* screen */, CLineData * /* ld */);
+extern Bool LineHasBlinking(const TScreen * /* screen */, CLineData * /* ld */);
 #endif
 
 #if OPT_INPUT_METHOD
@@ -1260,7 +1264,7 @@ extern void CursorDown (TScreen * /* screen */, int /* n */);
 extern void CursorForward (XtermWidget /* xw */, int /* n */);
 extern void CursorNextLine (XtermWidget /* xw */, int /* count */);
 extern void CursorPrevLine (XtermWidget /* xw */, int /* count */);
-extern void CursorRestore2 (XtermWidget /* xw */, SavedCursor * /* sc */);
+extern void CursorRestore2 (XtermWidget /* xw */, const SavedCursor * /* sc */);
 extern void CursorRestore (XtermWidget /* xw */);
 extern void CursorSave2 (XtermWidget /* xw */, SavedCursor * /* sc */);
 extern void CursorSave (XtermWidget /* xw */);
@@ -1320,8 +1324,8 @@ extern void copyLineData(LineData * /* dst */, CLineData * /* src */);
 extern void initLineData(XtermWidget /* xw */);
 
 extern CellData *newCellData(XtermWidget /* xw */, Cardinal /* count */);
-extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, CLineData * /* ld */, XTermRect * /* limits */, int /* column */);
-extern void restoreCellData(TScreen * /* screen */, const CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, XTermRect * /* limits */, int /* column */);
+extern void saveCellData(const TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, CLineData * /* ld */, XTermRect * /* limits */, int /* column */);
+extern void restoreCellData(const TScreen * /* screen */, const CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, XTermRect * /* limits */, int /* column */);
 
 /* main.c */
 #define ENVP_ARG /**/
@@ -1580,7 +1584,7 @@ extern void xtermDumpSvg (XtermWidget /* xw */);
 /* ptydata.c */
 #define PtySelect fd_set
 
-extern Bool decodeUtf8 (TScreen * /* screen */, PtyData * /* data */);
+extern Bool decodeUtf8 (const TScreen * /* screen */, PtyData * /* data */);
 extern int readPtyData (XtermWidget /* xw */, PtySelect * /* select_mask */, PtyData * /* data */);
 extern void fillPtyData (XtermWidget /* xw */, PtyData * /* data */, const char * /* value */, size_t /* length */);
 extern void initPtyData (PtyData ** /* data */);
@@ -1594,10 +1598,10 @@ extern void noleaks_ptydata ( void );
 extern Boolean isValidUTF8 (Char * /* lp */);
 extern Char *convertToUTF8 (Char * /* lp */, unsigned /* c */);
 extern Char *convertFromUTF8 (Char * /* lp */, unsigned * /* cp */);
-extern IChar nextPtyData (TScreen * /* screen */, PtyData * /* data */);
+extern IChar nextPtyData (const TScreen * /* screen */, PtyData * /* data */);
 extern PtyData * fakePtyData (PtyData * /* result */, Char * /* next */, Char * /* last */);
-extern void switchPtyData (TScreen * /* screen */, int /* f */);
-extern void writePtyData (int /* f */, IChar * /* d */, size_t /* len */);
+extern void switchPtyData (XtermWidget /* xw */, int /* f */);
+extern void writePtyData (int /* f */, const IChar * /* d */, size_t /* len */);
 
 #define morePtyData(screen, data) \
 	(((data)->last > (data)->next) \
@@ -1739,6 +1743,12 @@ extern LineData *getScrollback (TScreen * /* screen */, int /* row */);
 extern LineData *addScrollback (TScreen * /* screen */);
 extern void deleteScrollback (TScreen * /* screen */);
 
+#if OPT_RESIZE_ADJUST
+extern LineData *addScrollbackForLine (TScreen * /* screen */, CLineData * /* src */);
+#else
+#define addScrollbackForLine(screen,src) addScrollback(screen)
+#endif
+
 /* scrollbar.c */
 extern void DoResizeScreen (XtermWidget /* xw */);
 extern void HandleScrollBack           PROTO_XT_ACTIONS_ARGS;
@@ -1782,6 +1792,8 @@ extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
 extern int drawXtermText (const XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, const Char * /* size */, Cardinal /* len */);
 extern int extendedBoolean (const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
+extern void adjustHiliteOnBakScroll(XtermWidget /* xw */, int /* amount */);
+extern void adjustHiliteOnFwdScroll(XtermWidget /* xw */, int /* amount */, Bool /* all_lines */);
 extern void ChangeColors (XtermWidget /* xw */, ScrnColors * /* pNew */);
 extern void ClearLine (XtermWidget /* xw */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);

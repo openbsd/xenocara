@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.h,v 1.31 2024/12/01 20:27:00 tom Exp $ */
+/* $XTermId: xstrings.h,v 1.32 2026/04/07 22:23:47 tom Exp $ */
 
 /*
- * Copyright 2000-2016,2024 by Thomas E. Dickey
+ * Copyright 2000-2024,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -51,7 +51,7 @@ extern char *x_encode_hex(const char * /* source */);
 extern char *x_getenv(const char * /* name */);
 extern char *x_getlogin(uid_t /* uid */, struct passwd * /* in_out */);
 extern char *x_strdup(const char * /* s */);
-extern char *x_strindex(char * /* s1 */, const char * /* s2 */);
+extern char *x_strindex(const char * /* s1 */, const char * /* s2 */);
 extern char *x_strtrim(const char * /* s */);
 extern char *x_strrtrim(const char * /* s */);
 extern char x_toupper(int /* ch */);

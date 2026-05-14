@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.68 2025/11/30 18:43:34 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.70 2026/04/07 23:05:27 tom Exp $ */
 
 /*
- * Copyright 2007-2024,2025 by Thomas E. Dickey
+ * Copyright 2007-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -53,6 +53,7 @@
 #endif
 
 #define NO_STRING (char *)(-1)
+#define NO_CSTRING (const char *)(-1)
 
 #if OPT_TCAP_QUERY || OPT_TCAP_FKEYS
 
@@ -262,14 +263,14 @@ loadTermcapStrings(TScreen *screen)
 
 	    for (have = 0; have < want; ++have) {
 		char name[80];
-		char *fkey;
+		const char *fkey;
 
 #if USE_TERMINFO
 		fkey = tigetstr(strcpy(name, table[have].ti));
 #else
 		fkey = tgetstr(strcpy(name, table[have].tc), &area);
 #endif
-		if (fkey != NULL && fkey != NO_STRING) {
+		if (fkey != NULL && fkey != NO_CSTRING) {
 		    screen->tcap_fkeys[have] = x_strdup(fkey);
 		} else {
 		    screen->tcap_fkeys[have] = NO_STRING;
@@ -294,16 +295,16 @@ keyIsDistinct(XtermWidget xw, int which)
 #if OPT_TCAP_FKEYS
 	if (table[which].param == SHIFT) {
 	    TScreen *screen = TScreenOf(xw);
-	    Cardinal k;
 
 	    if (loadTermcapStrings(screen)
 		&& screen->tcap_fkeys[which] != NO_STRING) {
+		Cardinal k;
 
 		for (k = 0; k < XtNumber(table); k++) {
 
 		    if (table[k].code == table[which].code
 			&& table[k].param == 0) {
-			char *fkey;
+			const char *fkey;
 
 			if ((fkey = screen->tcap_fkeys[k]) != NO_STRING
 			    && !strcmp(fkey, screen->tcap_fkeys[which])) {

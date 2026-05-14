@@ -1,7 +1,7 @@
-/* $XTermId: scrollback.c,v 1.24 2024/12/01 20:27:00 tom Exp $ */
+/* $XTermId: scrollback.c,v 1.25 2026/01/22 00:53:17 tom Exp $ */
 
 /*
- * Copyright 2009-2022,2024 by Thomas E. Dickey
+ * Copyright 2009-2024,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -59,19 +59,18 @@ getScrollback(TScreen *screen, int row)
 }
 
 /*
- * Allocate a new row in the scrollback FIFO, returning a pointer to it.
+ * Allocate a new row in the scrollback FIFO with specified width.
  */
-LineData *
-addScrollback(TScreen *screen)
+static LineData *
+addScrollbackWithSize(TScreen *screen, unsigned ncols)
 {
     ScrnBuf where = NULL;
-    unsigned ncols = (unsigned) MaxCols(screen);
 
     if (screen->saveBuf_index != NULL && screen->savelines != 0) {
 	unsigned which;
 	Char *block;
 
-	TRACE(("addScrollback %lu\n", screen->saved_fifo));
+	TRACE(("addScrollback %lu (ncols=%u)\n", screen->saved_fifo, ncols));
 
 	/* first, see which index we'll use */
 	which = (unsigned) (screen->saved_fifo % screen->savelines);
@@ -107,6 +106,36 @@ addScrollback(TScreen *screen)
     }
     return (LineData *) where;
 }
+
+/*
+ * Allocate a new row in the scrollback FIFO, returning a pointer to it.
+ */
+LineData *
+addScrollback(TScreen *screen)
+{
+    return addScrollbackWithSize(screen, (unsigned) MaxCols(screen));
+}
+
+#if OPT_RESIZE_ADJUST
+/*
+ * Allocate a scrollback row sized to preserve the source line's data.
+ * Uses max of current width, source's lineSize, and source's maxLineSize.
+ */
+LineData *
+addScrollbackForLine(TScreen *screen, CLineData *src)
+{
+    unsigned ncols = (unsigned) MaxCols(screen);
+    if (src != NULL) {
+	if (src->maxLineSize > ncols) {
+	    ncols = src->maxLineSize;
+	}
+	if (src->lineSize > ncols) {
+	    ncols = src->lineSize;
+	}
+    }
+    return addScrollbackWithSize(screen, ncols);
+}
+#endif /* OPT_RESIZE_ADJUST */
 
 void
 deleteScrollback(TScreen *screen)

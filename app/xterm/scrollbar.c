@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.216 2024/12/01 20:27:00 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.217 2026/04/07 22:23:47 tom Exp $ */
 
 /*
- * Copyright 2000-2023,2024 by Thomas E. Dickey
+ * Copyright 2000-2024,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -540,7 +540,7 @@ ScrollBarOff(XtermWidget xw)
 void
 ToggleScrollBar(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (IsIcon(screen)) {
 	Bell(xw, XkbBI_MinorError, 0);
@@ -566,8 +566,8 @@ ScrollTextTo(
     XtermWidget xw = getXtermWidget(scrollbarWidget);
 
     if (xw != NULL) {
-	float *topPercent = (float *) call_data;
-	TScreen *screen = TScreenOf(xw);
+	const float *topPercent = (float *) call_data;
+	const TScreen *screen = TScreenOf(xw);
 	int thumbTop;		/* relative to first saved line */
 	int newTopLine;
 

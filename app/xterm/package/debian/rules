@@ -59,6 +59,7 @@ configure_flags = \
 	--with-app-class=$(PKG_CLASS) \
 	--without-xterm-symlink \
 	--disable-imake \
+	--enable-backarrow-is-erase \
 	--enable-dabbrev \
 	--enable-dec-locator \
 	--enable-exec-xterm \

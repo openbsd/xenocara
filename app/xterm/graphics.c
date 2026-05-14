@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.139 2025/09/07 22:38:41 tom Exp $ */
+/* $XTermId: graphics.c,v 1.141 2026/04/07 23:17:57 tom Exp $ */
 
 /*
- * Copyright 2013-2024,2025 by Thomas E. Dickey
+ * Copyright 2013-2025,2026 by Thomas E. Dickey
  * Copyright 2013-2022,2023 by Ross Combs
  *
  *                         All Rights Reserved
@@ -672,7 +672,7 @@ get_color_register_count(TScreen const *screen)
 }
 
 static void
-init_graphic(TScreen *screen,
+init_graphic(const TScreen *screen,
 	     Graphic *graphic,
 	     unsigned type,
 	     int charrow,
@@ -763,7 +763,7 @@ init_graphic(TScreen *screen,
 Graphic *
 get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     const int bufferid = screen->whichBuf;
     Graphic *graphic = NULL;
     unsigned ii;
@@ -1375,7 +1375,6 @@ AllocGraphicsBuffer(TScreen *screen,
 		    int ncols,
 		    int nrows)
 {
-    int xx, yy;
     int const refresh_w = ncols * FontWidth(screen);
     int const refresh_h = nrows * FontHeight(screen);
     ColorRegister *buffer;
@@ -1390,7 +1389,11 @@ AllocGraphicsBuffer(TScreen *screen,
 	    memset(buffer, 0xff,
 		   sizeof(ColorRegister) * (size_t) (refresh_h * refresh_w));
 	} else {
+	    int yy;
+
 	    for (yy = 0; yy < refresh_h; yy++) {
+		int xx;
+
 		for (xx = 0; xx < refresh_w; xx++) {
 		    buffer[yy * refresh_w + xx] = null_color;
 		}
@@ -1512,7 +1515,7 @@ FindGraphicHoles(int refresh_x,
 		 int refresh_y,
 		 int refresh_w,
 		 ColorRegister *buffer,
-		 ClipLimits * limits,
+		 const ClipLimits * limits,
 		 unsigned *result)
 {
     const int y_min = limits->y_min - refresh_y;

@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.1128 2025/12/18 08:53:12 tom Exp $ */
+/* $XTermId: misc.c,v 1.1131 2026/04/07 23:33:31 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4997,7 +4997,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		TRACE(("reply DECSTGLT:%s\n", cp));
 		sprintf(reply, "%d%s",
 			3,	/* ANSI SGR color */
-			cp);
+			cp2);
 	    } else if (screen->terminal_id == 525
 		       && !strcmp((cp2 = skip_params(cp)), ",|")) {	/* DECAC */
 		ival = parse_int_param(&cp);
@@ -5251,7 +5251,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    const char *tmp;
 		    char *name = x_decode_hex(cp, &parsed);
 		    char *value;
-		    char *result;
+		    char *result = NULL;
 		    if (cp == parsed || name == NULL) {
 			free(name);
 			break;	/* no data found, error */
@@ -5281,13 +5281,11 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			unparseputc1(xw, '=');
 			result = x_encode_hex(value);
 			unparseputs(xw, result);
-		    } else {
-			result = NULL;
+			free(value);
+			free(result);
 		    }
 
 		    free(name);
-		    free(value);
-		    free(result);
 
 		    cp = parsed;
 		    if (*parsed == ';') {
@@ -5832,6 +5830,21 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    if (screen->vtXX_level >= 5)
 		result = mdAlwaysReset;
 	    break;
+#if OPT_WIDE_CHARS
+	    /* xterm, to report how the character encoding is done */
+	case srm_UTF8_ENCODING:
+	    result = MdBool(screen->utf8_mode);
+	    break;
+	case srm_WIDTH_EASTASIAN:
+	    result = MdBool(xw->misc.cjk_width);
+	    break;
+	case srm_WIDTH_EMOJI:
+	    result = MdBool(xw->misc.emoji_width);
+	    break;
+	case srm_WIDTH_PRIVATE:
+	    result = MdBool(xw->misc.pua_width);
+	    break;
+#endif
 	default:
 	    TRACE(("DATA_ERROR: requested report for unknown private mode %d\n",
 		   params[0]));
@@ -7182,6 +7195,8 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 	    ;
 	}
 	opt_array = TypeCallocN(OptionHelp, opt_count + 1);
+	if (opt_array == NULL)
+	    return options;
 	for (j = 0; j < opt_count; j++)
 	    opt_array[j] = options[j];
 	qsort(opt_array, opt_count, sizeof(OptionHelp), cmp_options);

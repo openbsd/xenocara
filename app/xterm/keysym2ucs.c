@@ -1,8 +1,8 @@
-/* $XTermId: keysym2ucs.c,v 1.25 2025/03/30 15:49:40 tom Exp $
+/* $XTermId: keysym2ucs.c,v 1.27 2026/04/07 23:22:36 tom Exp $
  * ----------------------------------------------------------------------------
  * this file is part of xterm
  *
- * Copyright 2007-2018,2025 by Thomas E. Dickey
+ * Copyright 2007-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1658,8 +1658,6 @@ long
 keysym2ucs(KeySym keysym)
 {
     long result = -1;		/* no matching Unicode value found */
-    int min = 0;
-    int max = sizeof(keysymtab) / sizeof(struct codepair) - 1;
 
     if ((keysym >= 0x0020 && keysym <= 0x007e) ||
 	(keysym >= 0x00a0 && keysym <= 0x00ff)) {
@@ -1671,6 +1669,8 @@ keysym2ucs(KeySym keysym)
     } else if (keysym >= 0x08b0 && keysym <= 0x08b7) {
 	result = (long) keysym - 0x8b1 + 0xeeee;
     } else {
+	int min = 0;
+	int max = sizeof(keysymtab) / sizeof(struct codepair) - 1;
 	/* binary search in table */
 	while (max >= min) {
 	    int mid = (min + max) / 2;

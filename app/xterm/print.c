@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.182 2025/11/19 00:59:06 tom Exp $ */
+/* $XTermId: print.c,v 1.184 2026/04/07 23:12:06 tom Exp $ */
 
 /*
- * Copyright 1997-2024,2025 by Thomas E. Dickey
+ * Copyright 1997-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -60,9 +60,9 @@ static void charToPrinter(XtermWidget /* xw */ ,
 static void printLine(XtermWidget /* xw */ ,
 		      int /* row */ ,
 		      unsigned /* chr */ ,
-		      PrinterFlags * /* p */ );
+		      const PrinterFlags * /* p */ );
 static void send_CharSet(XtermWidget /* xw */ ,
-			 LineData * /* ld */ );
+			 const LineData * /* ld */ );
 static void send_SGR(XtermWidget /* xw */ ,
 		     unsigned /* attr */ ,
 		     unsigned /* fg */ ,
@@ -104,7 +104,7 @@ closePrinter(XtermWidget xw)
 static void
 printCursorLine(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     TRACE(("printCursorLine\n"));
     printLine(xw, screen->cur_row, '\n', getPrinterFlags(xw, NULL, NULL));
@@ -116,7 +116,7 @@ printCursorLine(XtermWidget xw)
  * characters that xterm would allow as a selection (which may include blanks).
  */
 static void
-printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags *p)
+printLine(XtermWidget xw, int row, unsigned chr, const PrinterFlags *p)
 {
     TScreen *screen = TScreenOf(xw);
     int inx = ROW2INX(screen, row);
@@ -249,7 +249,7 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags *p)
 #define PrintNewLine() (unsigned) (((top < bot) || p->printer_newline) ? '\n' : '\0')
 
 static void
-printLines(XtermWidget xw, int top, int bot, PrinterFlags *p)
+printLines(XtermWidget xw, int top, int bot, const PrinterFlags *p)
 {
     TRACE(("printLines, rows %d..%d\n", top, bot));
     while (top <= bot) {
@@ -298,11 +298,11 @@ xtermPrintEverything(XtermWidget xw, PrinterFlags *p)
 {
     TScreen *screen = TScreenOf(xw);
     Boolean was_open = SPS.isOpen;
-    int save_which = screen->whichBuf;
 
     DEBUG_MSG("xtermPrintEverything\n");
 
     if (p->print_everything) {
+	int save_which = screen->whichBuf;
 	int done_which = 0;
 
 	if (p->print_everything & 8) {
@@ -343,7 +343,7 @@ xtermPrintEverything(XtermWidget xw, PrinterFlags *p)
 }
 
 static void
-send_CharSet(XtermWidget xw, LineData *ld)
+send_CharSet(XtermWidget xw, const LineData *ld)
 {
 #if OPT_DEC_CHRSET
     const char *msg = NULL;
@@ -616,7 +616,7 @@ xtermAutoPrint(XtermWidget xw, unsigned chr)
 int
 xtermPrinterControl(XtermWidget xw, int chr)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     /* *INDENT-OFF* */
     static const struct {
 	const Char seq[5];

@@ -1,7 +1,7 @@
-/* $XTermId: cachedGCs.c,v 1.86 2025/04/03 23:51:05 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.88 2026/04/07 21:16:36 tom Exp $ */
 
 /*
- * Copyright 2007-2024,2025 by Thomas E. Dickey
+ * Copyright 2007-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -241,7 +241,7 @@ allocCache(void **cache_pointer)
 #define ALLOC_CACHE(p) ((*(p) == NULL) ? allocCache(p) : *(p))
 
 static int
-dataIndex(CgsCache * me)
+dataIndex(const CgsCache * me)
 {
     return ITEM();
 }
@@ -287,7 +287,7 @@ myDisplay(XtermWidget xw)
 }
 
 static Drawable
-myDrawable(XtermWidget xw, VTwin *cgsWin)
+myDrawable(XtermWidget xw, const VTwin *cgsWin)
 {
     Drawable drawable = 0;
 
@@ -299,7 +299,7 @@ myDrawable(XtermWidget xw, VTwin *cgsWin)
 }
 
 static GC
-newCache(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, CgsCache * me)
+newCache(XtermWidget xw, const VTwin *cgsWin, CgsEnum cgsId, CgsCache * me)
 {
     XGCValues xgcv;
     XtGCMask mask;
@@ -522,7 +522,7 @@ setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
  * Keep the GC's so we can simply change them rather than creating new ones.
  */
 void
-clrCgsFonts(XtermWidget xw, VTwin *cgsWin, XTermFonts * font)
+clrCgsFonts(XtermWidget xw, VTwin *cgsWin, const XTermFonts * font)
 {
     if (HaveFont(font)) {
 	int j;
@@ -656,7 +656,7 @@ getCgsId(XtermWidget xw, VTwin *cgsWin, GC gc)
     CgsEnum result = gcNorm;
 
     for_each_gc(n) {
-	CgsCache *me;
+	const CgsCache *me;
 
 	if ((me = myCache(xw, cgsWin, (CgsEnum) n)) != NULL) {
 	    if (THIS(gc) == gc) {

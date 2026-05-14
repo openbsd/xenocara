@@ -1,9 +1,9 @@
-/* $XTermId: wcwidth.c,v 1.95 2025/12/21 22:45:03 tom Exp $ */
+/* $XTermId: wcwidth.c,v 1.96 2026/02/16 11:51:06 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.c,v 1.9 2006/06/19 00:36:52 dickey Exp $ */
 
 /*
- * Copyright 2002-2024,2025 by Thomas E. Dickey
+ * Copyright 2002-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -890,6 +890,24 @@ mk_wcwidth_cjk(wchar_t ucs)
 	result = 2;
     } else {
 	result = mk_wcwidth(ucs);
+    }
+    return result;
+}
+
+/*
+ * Provide a separate check for combining characters to distinguish from
+ * "printable" codes which are missing from Unicode.
+ */
+int
+mk_is_combining(wchar_t ucs)
+{
+    int result;
+    unsigned long cmp = (unsigned long) ucs;
+
+    if (Lookup(cmp, combining)) {
+	result = 1;
+    } else {
+	result = 0;
     }
     return result;
 }

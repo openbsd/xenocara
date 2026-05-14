@@ -1,7 +1,7 @@
-/* $XTermId: svg.c,v 1.24 2024/12/01 20:27:00 tom Exp $ */
+/* $XTermId: svg.c,v 1.25 2026/04/07 22:23:47 tom Exp $ */
 
 /*
- * Copyright 2017-2023,2024	Thomas E. Dickey
+ * Copyright 2017-2024,2026	Thomas E. Dickey
  * Copyright 2015-2016,2017	Jens Schweikhardt
  *
  * All Rights Reserved
@@ -76,7 +76,7 @@ xtermDumpSvg(XtermWidget xw)
 static void
 dumpSvgHeader(XtermWidget xw, FILE *fp)
 {
-    TScreen *s = TScreenOf(xw);
+    const TScreen *s = TScreenOf(xw);
 
     rows = s->bot_marg - s->top_marg + 1;
     cols = MaxCols(s);
@@ -101,7 +101,7 @@ dumpSvgHeader(XtermWidget xw, FILE *fp)
 static void
 dumpSvgScreen(XtermWidget xw, FILE *fp)
 {
-    TScreen *s = TScreenOf(xw);
+    const TScreen *s = TScreenOf(xw);
     int row;
 
     fprintf(fp, "  <rect x='0' y='0' width='%u' height='%u' fill='%s'/>\n",

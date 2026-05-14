@@ -1,10 +1,10 @@
-# $XTermId: terminfo,v 1.210 2025/05/16 08:24:47 tom Exp $
+# $XTermId: terminfo,v 1.216 2026/02/12 22:20:25 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2024,2025 by Thomas E. Dickey
+# Copyright 1996-2025,2026 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -146,6 +146,7 @@ xterm-new|modern xterm terminal emulator,
 	use=bracketed+paste,
 	use=report+version,
 	use=xterm+focus,
+	use=xterm+3keys,
 
 # Left/right margins are supported in xterm since patch #279 (2012/05/10)
 vt420+lrmm|VT420 left/right margins,
@@ -423,10 +424,10 @@ xterm+pcfkeys|fragment for PC-style keys,
 #
 # Cs and Ce set and reset the cursor colour.
 xterm+tmux|advanced xterm features used in tmux,
-	Cr=\E]112\007,
-	Cs=\E]12;%p1%s\007,
+	Cr=\E]112\E\\,
+	Cs=\E]12;%p1%s\E\\,
 	Ms=\E]52;%p1%s;%p2%s
-	   \007,
+	   \E\\,
 	Se=\E[2\sq,
 	Ss=\E[%p1%d\sq,
 #
@@ -933,7 +934,7 @@ xterm+pcc0|fragment with modifyCursorKeys:0,
 	kUP7=\EO7A,
 
 # The home/end keys on the editing keypad are also treated as cursor keys.
-xterm+pce3|fragment with modifyCursorKeys:3,
+xterm+pce3|editing fragment with modifyCursorKeys:3,
 	kDC=\E[>3;2~,
 	kEND=\E[>1;2F,
 	kHOM=\E[>1;2H,
@@ -972,7 +973,7 @@ xterm+pce3|fragment with modifyCursorKeys:3,
 	kPRV7=\E[>5;7~,
 	use=xterm+pce0,
 
-xterm+pce2|fragment with modifyCursorKeys:2,
+xterm+pce2|editing fragment with modifyCursorKeys:2,
 	kDC=\E[3;2~,
 	kEND=\E[1;2F,
 	kHOM=\E[1;2H,
@@ -1011,7 +1012,7 @@ xterm+pce2|fragment with modifyCursorKeys:2,
 	kPRV7=\E[5;7~,
 	use=xterm+pce0,
 
-xterm+pce1|fragment with modifyCursorKeys:1,
+xterm+pce1|editing fragment with modifyCursorKeys:1,
 	kDC=\E[3;2~,
 	kEND=\E[2F,
 	kHOM=\E[2H,
@@ -1050,7 +1051,7 @@ xterm+pce1|fragment with modifyCursorKeys:1,
 	kPRV7=\E[5;7~,
 	use=xterm+pce0,
 
-xterm+pce0|fragment with modifyCursorKeys:0,
+xterm+pce0|editing fragment with modifyCursorKeys:0,
 	kDC=\E[3;2~,
 	kEND=\EO2F,
 	kHOM=\EO2H,
@@ -1909,6 +1910,18 @@ xterm+keypad|xterm emulating VT100/VT220 numeric keypad,
 	kpZRO=\EOp,
 	use=vt220+keypad,
 
+# 2026-01-31 ncurses
+xterm+3keys|X11 3-keys,
+	kPause=\E[26;2~,
+	kPrint=\E[25~,
+	kPrint2=\E[25;2~,
+	kPrint3=\E[25;3~,
+	kPrint4=\E[25;4~,
+	kPrint5=\E[25;5~,
+	kPrint6=\E[25;6~,
+	kPrint7=\E[25;7~,
+	kScroll=\E[28;2~,
+
 # from development after ncurses 5.2:
 # A better adaptation to modern keyboards such as the PC's, which have a dozen
 # function keys and the keypad 2,4,6,8 keys are labeled with arrows keys, is to
@@ -2161,8 +2174,8 @@ xterm-16color|xterm with 16 colors,
 # has the drawback that some of the xterm-alikes which use that building block
 # require a different approach to rs1 -TD
 xterm+osc104|reset color palette,
-	oc=\E]104\007,
-	rs1=\Ec\E]104\007,
+	oc=\E]104\E\\,
+	rs1=\Ec\E]104\E\\,
 
 # "indexed color" is mentioned without definition in ISO 8613-6 (ITU T.416).
 #
@@ -2185,7 +2198,7 @@ xterm+256color|original xterm 256-color feature,
 		%p2%{255}%*%{1000}%/%2.2X/
 		%p3%{255}%*%{1000}%/%2.2X/
 		%p4%{255}%*%{1000}%/%2.2X\E\\,
-	oc=\E]104\007,
+	oc=\E]104\E\\,
 	setab=\E[
 		%?
 			%p1%{8}%<
@@ -2263,7 +2276,7 @@ xterm-88color|xterm with 88 colors,
 # for a different reason: to make it readily usable for applications which
 # print text but also use RGB colors, it uses a color map for the usual ANSI
 # colors (0-7) and RGB colors for the remaining range of the color value.
-xterm+direct|xterm with direct-color indexing,
+xterm+direct|xterm fragment with direct-color indexing,
 	RGB,
 	colors#0x1000000,
 	pairs#0x10000,
@@ -2707,7 +2720,7 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	use=ansi+sgrbold,
 	use=xterm+alt1049,
 
-xterm-xfree86|xterm terminal emulator (XFree86 4.4 Window System),
+xterm-xfree86|xterm terminal emulator (XFree86),
 	use=xterm-xf86-v44,
 #
 # Compatible with the R6 xterm, with the following changes:

@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.108 2025/01/07 21:31:10 tom Exp $ */
+/* $XTermId: linedata.c,v 1.110 2026/04/07 22:11:47 tom Exp $ */
 
 /*
- * Copyright 2009-2024,2025 by Thomas E. Dickey
+ * Copyright 2009-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -65,11 +65,25 @@ getLineData(TScreen *screen, int row)
  * Copy line's data, e.g., from one screen buffer to another, given the preset
  * pointers for the destination.
  *
+ * Experimental:
+ * Uses maxLineSize to determine actual storage capacity for preserving data
+ * beyond display width during resize operations.
+ *
  * TODO: optionally prune unused combining character data from the result.
  */
 void
 copyLineData(LineData *dst, CLineData *src)
 {
+#if OPT_RESIZE_ADJUST
+    Dimension srcDataSize;
+    Dimension dstStorage;
+    Dimension col;
+    Dimension limit;
+#if OPT_WIDE_CHARS
+    Char comb;
+#endif
+#endif /* OPT_RESIZE_ADJUST */
+
     if (dst == NULL || src == NULL || dst == src)
 	return;
 
@@ -79,6 +93,54 @@ copyLineData(LineData *dst, CLineData *src)
     dst->combSize = src->combSize;
 #endif
 
+#if OPT_RESIZE_ADJUST
+    /*
+     * Copy based on maxLineSize to preserve data during resize operations.
+     * When growing back after shrinking, source may have lineSize < maxLineSize
+     * but the data in columns up to maxLineSize should be recovered.
+     */
+    srcDataSize = src->lineSize;
+    if (src->maxLineSize > srcDataSize) {
+	srcDataSize = src->maxLineSize;
+    }
+    dstStorage = dst->lineSize;
+    if (dst->maxLineSize > dstStorage) {
+	dstStorage = dst->maxLineSize;
+    }
+    limit = (dstStorage < srcDataSize) ? dstStorage : srcDataSize;
+
+    for (col = 0; col < limit; ++col) {
+	dst->attribs[col] = src->attribs[col];
+#if OPT_ISO_COLORS
+	dst->color[col] = src->color[col];
+#endif
+	dst->charData[col] = src->charData[col];
+#if OPT_DEC_RECTOPS
+	dst->charSeen[col] = src->charSeen[col];
+	dst->charSets[col] = src->charSets[col];
+#endif
+#if OPT_WIDE_CHARS
+	for (comb = 0; comb < dst->combSize; ++comb) {
+	    dst->combData[comb][col] = src->combData[comb][col];
+	}
+#endif
+    }
+    for (col = limit; col < dstStorage; ++col) {
+	dst->attribs[col] = 0;
+#if OPT_ISO_COLORS
+	dst->color[col] = initCColor;
+#endif
+	dst->charData[col] = 0;
+#if OPT_DEC_RECTOPS
+	dst->charSeen[col] = 0;
+	dst->charSets[col] = 0;
+#endif
+#if OPT_WIDE_CHARS
+	for (comb = 0; comb < dst->combSize; ++comb) {
+	    dst->combData[comb][col] = 0;
+	}
+#endif
+#else
     /*
      * Usually we're copying the same-sized line; a memcpy is faster than
      * several loops.
@@ -140,6 +202,7 @@ copyLineData(LineData *dst, CLineData *src)
 	    }
 #endif
 	}
+#endif /* OPT_RESIZE_ADJUST */
     }
 }
 
@@ -234,7 +297,7 @@ newCellData(XtermWidget xw, Cardinal count)
 }
 
 void
-saveCellData(TScreen *screen,
+saveCellData(const TScreen *screen,
 	     CellData *data,
 	     Cardinal cell,
 	     CLineData *ld,
@@ -279,7 +342,7 @@ saveCellData(TScreen *screen,
 }
 
 void
-restoreCellData(TScreen *screen,
+restoreCellData(const TScreen *screen,
 		const CellData *data,
 		Cardinal cell,
 		LineData *ld,

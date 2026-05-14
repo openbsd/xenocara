@@ -1,9 +1,9 @@
-/* $XTermId: wcwidth.h,v 1.19 2025/12/19 01:37:00 tom Exp $ */
+/* $XTermId: wcwidth.h,v 1.20 2026/02/16 11:48:24 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.h,v 1.5 2005/05/03 00:38:25 dickey Exp $ */
 
 /*
- * Copyright 2000-2017,2025 by Thomas E. Dickey
+ * Copyright 2000-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -48,6 +48,7 @@ extern int mk_wcwidth_init(int mode);
 extern int mk_wcwidth(wchar_t ucs);
 extern int mk_wcwidth_cjk(wchar_t ucs);
 
+extern int mk_is_combining(wchar_t ucs);
 extern int mk_is_emoji(wchar_t ucs);
 
 #endif /* included_wcwidth_h */

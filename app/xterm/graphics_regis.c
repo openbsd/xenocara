@@ -1,7 +1,7 @@
-/* $XTermId: graphics_regis.c,v 1.157 2025/04/03 09:53:05 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.159 2026/04/07 23:17:04 tom Exp $ */
 
 /*
- * Copyright 2014-2024,2025 by Thomas E. Dickey
+ * Copyright 2014-2025,2026 by Thomas E. Dickey
  * Copyright 2014-2022,2023 by Ross Combs
  *
  *                         All Rights Reserved
@@ -1090,7 +1090,8 @@ plotCubicBezierSeg(int x0, int y0,
     double yc = -fabs(y0 + y1 - y2 - y3);
     double ya = yc - 4 * sy * (y1 - y2);
     double yb = sy * (y0 - y1 - y2 + y3);
-    double ab, ac, bc, cb, xx, xy, yy, dx, dy, ex, *pxy;
+    double ab, ac, bc, cb, xx, xy, yy, dx, dy, ex;
+    const double *pxy;
     double EP = 0.01;
     /* check for curve restrains */
     /* slope P0-P1 == P2-P3    and  (P0-P3 == P1-P2      or   no slope change) */
@@ -2260,7 +2261,6 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
     const Char *glyph;
     unsigned w, h;
     unsigned xx, yy;
-    unsigned byte, bit;
 
     assert(context);
     assert(pixels);
@@ -2288,8 +2288,8 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
 
     for (yy = 0U; yy < h; yy++) {
 	for (xx = 0U; xx < w; xx++) {
-	    byte = yy * GLYPH_WIDTH_BYTES(w) + (xx >> 3U);
-	    bit = xx & 7U;
+	    unsigned byte = yy * GLYPH_WIDTH_BYTES(w) + (xx >> 3U);
+	    unsigned bit = xx & 7U;
 	    pixels[yy * w + xx] = (Char) (((unsigned) glyph[byte]
 					   >> (7U - bit)) & 1U);
 	}
@@ -2450,11 +2450,7 @@ draw_character(RegisGraphicsContext *context, int ch,
     const unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
     unsigned w, h;
     unsigned xscale, yscale;
-    unsigned fx, fy;
     unsigned px, py;
-    int sx;
-    int rx, ry;
-    int ox, oy;
     unsigned pad_left, pad_right;
     unsigned pad_top, pad_bottom;
     Char pixels[MAX_GLYPH_PIXELS];
@@ -2486,12 +2482,16 @@ draw_character(RegisGraphicsContext *context, int ch,
 
     for (py = 0U; py < ymaxd; py++) {
 	for (px = 0U; px < xmaxd; px++) {
+	    int sx;
+	    int rx, ry;
+	    int ox, oy;
+
 	    if (py < pad_top || px < pad_left ||
 		py >= ymaxd - pad_bottom || px >= xmaxd - pad_right) {
 		value = 0U;
 	    } else {
-		fx = ((px - pad_left) * xscale) >> SCALE_FIXED_POINT;
-		fy = ((py - pad_top) * yscale) >> SCALE_FIXED_POINT;
+		unsigned fx = ((px - pad_left) * xscale) >> SCALE_FIXED_POINT;
+		unsigned fy = ((py - pad_top) * yscale) >> SCALE_FIXED_POINT;
 		if (fx < w && fy < h) {
 		    value = (unsigned) pixels[fy * w + fx];
 		} else {

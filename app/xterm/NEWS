@@ -1,10 +1,10 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #406 - 2025/12/21
+                            Patch #410 - 2026/05/01
 
-     * add   option   -emoji_width   and   resource  emojiWidth  to  allow
-       enabling/disabling  VS15/VS16  feature  introduced  in  patch  #404
-       (Debian #1123509). Also, work around display issues by changing the
-       filler character for VS16.
+     * amend  one  of  the  fixes  for Debian #738794 in patch #407, which
+       caused combining characters to be outlined (report by "Martin").
+     * clarify  in  ctlseqs.ms  which modes listed for DECSET are readonly
+       (prompted by discussion with Thomas Wolff).
 

@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.42 2025/09/21 00:03:37 tom Exp $
+-- $XTermId: THANKS,v 1.43 2026/02/16 12:25:30 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -143,6 +143,7 @@ Kevin Buhr
 Kevin Ryde
 Kevin Schoedel
 Khem Raj
+Kirill A Korinsky
 Kiyokazu Suto
 Larry Hynes
 Larry Riedel

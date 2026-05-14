@@ -1,7 +1,7 @@
 .\"#! troff -ms $1		-*- Nroff -*-
-.\" $XTermId: ctlseqs.ms,v 1.741 2025/06/22 20:29:42 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.746 2026/04/19 12:55:13 tom Exp $
 .\" ---------------------------------------------------------------------------
-.\" Copyright 1996-2024,2025 by Thomas E. Dickey
+.\" Copyright 1996-2025,2026 by Thomas E. Dickey
 .\" Copyright 1991, 1994 X Consortium
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
@@ -40,8 +40,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #401
-.ds RF 2025/06/22
+.ds LF Patch #410
+.ds RF 2026/04/19
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -342,7 +342,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2025)
+invisible-island.net (2006-2026)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -1190,7 +1190,7 @@ may be used to restore the palette from the stack without popping.
 .iP
 .IP \\*(Cs\\*#\\*R
 Report the current entry on the palette stack, and the number of
-palettes stored on the stack, using the same form as XTPOPCOLOR
+palettes stored on the stack, using the same form as XTPOPCOLORS
 (default = 0)
 (XTREPORTCOLORS), \fI\*(xt\fP.
 .
@@ -1516,8 +1516,8 @@ See the section \fBMouse Tracking\fP.
 This is the X10 \fI\*(xt\fP mouse protocol.
   \*(Ps = \*1\*0 \(-> Show toolbar (rxvt).
   \*(Ps = \*1\*2 \(-> Start blinking cursor (AT&T 610).
-  \*(Ps = \*1\*3 \(-> Start blinking cursor (set only via resource or menu).
-  \*(Ps = \*1\*4 \(-> Enable XOR of blinking cursor control sequence and menu.
+  \*(Ps = \*1\*3 \(-> Start blinking cursor (read-only, set only via resource or menu).
+  \*(Ps = \*1\*4 \(-> Enable XOR of blinking cursor control sequence and menu (read-only, set via resource).
   \*(Ps = \*1\*8 \(-> Print Form Feed (DECPFF), VT220.
   \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX), VT220.
   \*(Ps = \*2\*5 \(-> Show cursor (DECTCEM), VT220.
@@ -1566,6 +1566,10 @@ This sets the \fB\%scrollKey\fP resource to \*(``true\*(''.
   \*(Ps = \*1\*0\*1\*4 \(-> Enable \fB\%fastScroll\fP resource, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
   \*(Ps = \*1\*0\*1\*6 \(-> Enable SGR Mouse PixelMode, \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*0 \(-> \fB\%utf8\fP resource (read-only), \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*1 \(-> \fB\%cjkWidth\fP resource (read-only), \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*2 \(-> \fB\%emojiWidth\fP resource (read-only), \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*3 \(-> \fB\%privateWidth\fP resource (read-only), \fI\*(xt\fP.
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret \*(``meta\*('' key, \fI\*(xt\fP.
 This sets the eighth bit of keyboard input
 (and enables the \fB\%eightBitInput\fP resource).
@@ -2157,12 +2161,26 @@ For VT300 and up, reply DECRPM is
 .br
   \*(Cs\*?\*(Ps\*s\*;\*(Pm\*s\*$\*y
 .br
-where \*(Ps is the mode number as in DECSET/DECSET,
+where \*(Ps is the mode number as in DECSET/DECRST,
 \*(Pm is the mode value as in the ANSI DECRQM.
-.br
-Two private modes are read-only (i.e., \*1\*3 and \*1\*4),
+.IP
+A few private modes are read-only,
 provided only for reporting their values using this control sequence.
-They correspond to the resources \fB\%cursorBlink\fP and \fB\%cursorBlinkXOR\fP.
+.RS
+.bP
+\*1\*3 and \*1\*4 correspond
+to the resources
+\fB\%cursorBlink\fP and
+\fB\%cursorBlinkXOR\fP.
+.bP
+\*1\*0\*2\*0 to \*1\*0\*2\*3 correspond
+to the resources
+\fB\%utf8\fP,
+\fB\%cjkWidth\fP,
+\fB\%emojiWidth\fP, and
+\fB\%privateWidth\fP
+respectively.
+.RE
 .
 .IP \\*(Cs\\*#\\*p
 .br

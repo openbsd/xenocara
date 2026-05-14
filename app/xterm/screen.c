@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.665 2025/12/12 01:19:35 tom Exp $ */
+/* $XTermId: screen.c,v 1.666 2026/01/22 00:53:17 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -223,8 +223,11 @@ setupLineData(TScreen *screen,
     for (i = 0; i < nrow; i++, offset += jump) {
 	ptr = LineDataAddr(base, offset);
 
-	ptr->lineSize = (Dimension) ncol;
 	ptr->bufHead = 0;
+	ptr->lineSize = (Dimension) ncol;
+#if OPT_RESIZE_ADJUST
+	ptr->maxLineSize = (Dimension) ncol;
+#endif
 #if OPT_DEC_CHRSET
 	SetLineDblCS(ptr, 0);
 #endif
@@ -394,6 +397,7 @@ allocScrnBuf(XtermWidget xw, unsigned nrow, unsigned ncol, Char **addr)
 
 /*
  * Copy line-data from the visible (edit) buffer to the save-lines buffer.
+ * Uses addScrollbackForLine to preserve data beyond current display width.
  */
 static void
 saveEditBufLines(TScreen *screen, unsigned n)
@@ -403,10 +407,8 @@ saveEditBufLines(TScreen *screen, unsigned n)
     TRACE(("...copying %d lines from editBuf to saveBuf\n", n));
 
     for (j = 0; j < n; ++j) {
-
-	LineData *dst = addScrollback(screen);
-
 	LineData *src = getLineData(screen, (int) j);
+	LineData *dst = addScrollbackForLine(screen, src);
 	copyLineData(dst, src);
     }
 }
@@ -457,13 +459,42 @@ Reallocate(XtermWidget xw,
     Char *oldBufData;
     int move_down = 0, move_up = 0;
 
+#if OPT_RESIZE_ADJUST
+    unsigned oldcol = (unsigned) MaxCols(screen);
+    unsigned allocCol;
+#else
+#define allocCol ncol
+#endif
+
     if (sbuf == NULL || *sbuf == NULL) {
 	return 0;
     }
 
     oldBufData = *sbufaddr;
+    oldBufHead = *sbuf;
 
+#if OPT_RESIZE_ADJUST
+    /*
+     * Allocate at max of old and new width to preserve data when shrinking.
+     * This allows data to be restored when growing back.
+     * Must also consider maxLineSize from source lines, which may be larger
+     * than current MaxCols if the terminal was previously even wider.
+     */
+    allocCol = (ncol > oldcol) ? ncol : oldcol;
+    {
+	LineData *firstLine = (LineData *) scrnHeadAddr(screen, oldBufHead, 0);
+	if (firstLine != NULL && firstLine->maxLineSize > allocCol) {
+	    allocCol = firstLine->maxLineSize;
+	}
+    }
+
+    TRACE(("Reallocate %dx%d -> %dx%d (alloc %d)\n",
+	   oldrow, oldcol,
+	   nrow, ncol,
+	   allocCol));
+#else
     TRACE(("Reallocate %dx%d -> %dx%d\n", oldrow, MaxCols(screen), nrow, ncol));
+#endif /* OPT_RESIZE_ADJUST */
 
     /*
      * realloc sbuf, the pointers to all the lines.
@@ -494,15 +525,14 @@ Reallocate(XtermWidget xw,
 	    }
 	}
     }
-    oldBufHead = *sbuf;
     *sbuf = allocScrnHead(screen, (unsigned) nrow);
     newBufHead = *sbuf;
 
     /*
      * Create the new buffer space and copy old buffer contents there, line by
-     * line.
+     * line. Allocate at allocCol (max of old/new) to preserve data.
      */
-    newBufData = allocScrnData(screen, nrow, ncol, True);
+    newBufData = allocScrnData(screen, nrow, allocCol, True);
     *sbufaddr = newBufData;
 
     minrows = (oldrow < nrow) ? oldrow : nrow;
@@ -513,8 +543,22 @@ Reallocate(XtermWidget xw,
 	}
     }
 
-    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol, True);
+    setupLineData(screen, newBufHead, *sbufaddr, nrow, allocCol, True);
     extractScrnData(screen, newBufHead, oldBufHead, minrows, 0);
+
+#if OPT_RESIZE_ADJUST
+    /*
+     * After setup and copy, set lineSize to actual display width.
+     * maxLineSize stays at allocCol to track storage capacity.
+     */
+    if (ncol != allocCol) {
+	unsigned j;
+	for (j = 0; j < nrow; j++) {
+	    LineData *ld = (LineData *) scrnHeadAddr(screen, newBufHead, j);
+	    ld->lineSize = (Dimension) ncol;
+	}
+    }
+#endif
 
     /* Now free the old data */
     free(oldBufData);
@@ -523,6 +567,7 @@ Reallocate(XtermWidget xw,
     TRACE(("...Reallocate %dx%d ->%p\n", nrow, ncol, (void *) newBufHead));
     return move_down ? move_down : -move_up;	/* convert to rows */
 }
+#undef allocCol
 
 #if OPT_WIDE_CHARS
 /*
@@ -1052,6 +1097,9 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 #if OPT_ISO_COLORS
     unsigned j;
 #endif
+#if OPT_RESIZE_ADJUST
+    unsigned clearSize;
+#endif
 
     TRACE(("ScrnClearLines(%s:where %d, n %d, size %d)\n",
 	   (sb == screen->saveBuf_index) ? "save" : "edit",
@@ -1067,38 +1115,43 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
     base = screen->save_ptr;
     for (i = 0; i < n; ++i) {
 	work = (LineData *) base;
+#if OPT_RESIZE_ADJUST
+	clearSize = (work->maxLineSize > size) ? work->maxLineSize : size;
+#else
+#define clearSize size
+#endif
 	work->bufHead = 0;
 #if OPT_DEC_CHRSET
 	SetLineDblCS(work, 0);
 #endif
 
-	memset(work->charData, 0, size * sizeof(CharData));
+	memset(work->charData, 0, clearSize * sizeof(CharData));
 	if (TERM_COLOR_FLAGS(xw)) {
-	    FillIAttr(work->attribs, flags, (size_t) size);
+	    FillIAttr(work->attribs, flags, (size_t) clearSize);
 #if OPT_ISO_COLORS
 	    {
 		CellColor p = xtermColorPair(xw);
-		for (j = 0; j < size; ++j) {
+		for (j = 0; j < clearSize; ++j) {
 		    work->color[j] = p;
 		}
 	    }
 #endif
 	} else {
-	    FillIAttr(work->attribs, 0, (size_t) size);
+	    FillIAttr(work->attribs, 0, (size_t) clearSize);
 #if OPT_ISO_COLORS
-	    memset(work->color, 0, size * sizeof(work->color[0]));
+	    memset(work->color, 0, clearSize * sizeof(work->color[0]));
 #endif
 	}
 	if_OPT_DEC_RECTOPS({
-	    memset(work->charSeen, 0, size * sizeof(Char));
-	    memset(work->charSets, 0, size * sizeof(work->charSets[0]));
+	    memset(work->charSeen, 0, clearSize * sizeof(Char));
+	    memset(work->charSets, 0, clearSize * sizeof(work->charSets[0]));
 	});
 #if OPT_WIDE_CHARS
 	if (screen->wide_chars) {
 	    size_t off;
 
 	    for (off = 0; off < work->combSize; ++off) {
-		memset(work->combData[off], 0, size * sizeof(CharData));
+		memset(work->combData[off], 0, clearSize * sizeof(CharData));
 	    }
 	}
 #endif
@@ -1112,6 +1165,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 				      screen->max_col + 1,
 				      (int) n);
 }
+#undef clearSize
 
 /*
  * We're always ensured of having a visible buffer, but may not have saved
@@ -2026,13 +2080,19 @@ ClearBufRows(XtermWidget xw,
     for (row = first; row <= last; row++) {
 	LineData *ld = getLineData(screen, row);
 	if (ld != NULL) {
+#if OPT_RESIZE_ADJUST
+	    unsigned clearLen = (ld->maxLineSize > len) ? ld->maxLineSize : len;
+#else
+#define clearLen len
+#endif
+
 	    if_OPT_DEC_CHRSET({
 		/* clearing the whole row resets the doublesize characters */
 		SetLineDblCS(ld, CSET_SWL);
 	    });
 	    LineClrWrapped(ld);
 	    ShowWrapMarks(xw, row, ld);
-	    ClearCells(xw, 0, len, row, 0);
+	    ClearCells(xw, 0, clearLen, row, 0);
 	}
     }
 }
@@ -2083,6 +2143,9 @@ allocLineData(TScreen *screen, LineData *source)
 #endif
     if ((result = calloc((size_t) 1, size)) != NULL) {
 	result->lineSize = ncol;
+#if OPT_RESIZE_ADJUST
+	result->maxLineSize = ncol;
+#endif
 	ALLOC_IT(attribs);
 #if OPT_ISO_COLORS
 	ALLOC_IT(color);
@@ -2133,6 +2196,10 @@ ScreenResize(XtermWidget xw,
     const int border = 2 * screen->border;
     int move_down_by = 0;
     Boolean forced = False;
+
+#if OPT_RESIZE_ADJUST
+    int old_max_col = screen->max_col;
+#endif
 
 #if OPT_STATUS_LINE
     LineData *savedStatus = NULL;
@@ -2365,8 +2432,21 @@ ScreenResize(XtermWidget xw,
 
 	if (screen->cur_row > screen->max_row)
 	    set_cur_row(screen, screen->max_row);
+#if OPT_RESIZE_ADJUST
+	if (screen->cur_col > screen->max_col) {
+	    if (screen->max_col < old_max_col && screen->saved_cur_col < 0)
+		screen->saved_cur_col = screen->cur_col;
+	    set_cur_col(screen, screen->max_col);
+	} else if (screen->saved_cur_col >= 0 && screen->max_col > old_max_col) {
+	    if (screen->saved_cur_col <= screen->max_col) {
+		set_cur_col(screen, screen->saved_cur_col);
+		screen->saved_cur_col = -1;
+	    }
+	}
+#else
 	if (screen->cur_col > screen->max_col)
 	    set_cur_col(screen, screen->max_col);
+#endif
 
 	screen->fullVwin.height = height - border;
 	screen->fullVwin.width = width - border - screen->fullVwin.sb_info.width;

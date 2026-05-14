@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2025)
-               updated for XTerm Patch #401 (2025/06/22)
+                    invisible-island.net (2006-2026)
+               updated for XTerm Patch #410 (2026/04/19)
 
 
 
@@ -657,7 +657,7 @@ CSI Pm # Q
 
 CSI # R   Report the current entry on the palette stack, and the number
           of palettes stored on the stack, using the same form as
-          XTPOPCOLOR (default = 0) (XTREPORTCOLORS), xterm.
+          XTPOPCOLORS (default = 0) (XTREPORTCOLORS), xterm.
 
 CSI Ps S  Scroll up Ps lines (default = 1) (SU), VT420, ECMA-48.
 
@@ -929,10 +929,10 @@ CSI ? Pm h
           section Mouse Tracking.  This is the X10 xterm mouse protocol.
             Ps = 1 0  -> Show toolbar (rxvt).
             Ps = 1 2  -> Start blinking cursor (AT&T 610).
-            Ps = 1 3  -> Start blinking cursor (set only via resource or
-          menu).
+            Ps = 1 3  -> Start blinking cursor (read-only, set only via
+          resource or menu).
             Ps = 1 4  -> Enable XOR of blinking cursor control sequence
-          and menu.
+          and menu (read-only, set via resource).
             Ps = 1 8  -> Print Form Feed (DECPFF), VT220.
             Ps = 1 9  -> Set print extent to full screen (DECPEX),
           VT220.
@@ -988,6 +988,10 @@ CSI ? Pm h
             Ps = 1 0 1 4  -> Enable fastScroll resource, xterm.
             Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 1 6  -> Enable SGR Mouse PixelMode, xterm.
+            Ps = 1 0 2 0  -> utf8 resource (read-only), xterm.
+            Ps = 1 0 2 1  -> cjkWidth resource (read-only), xterm.
+            Ps = 1 0 2 2  -> emojiWidth resource (read-only), xterm.
+            Ps = 1 0 2 3  -> privateWidth resource (read-only), xterm.
             Ps = 1 0 3 4  -> Interpret "meta" key, xterm.  This sets the
           eighth bit of keyboard input (and enables the eightBitInput
           resource).
@@ -1290,7 +1294,6 @@ CSI Pm m  Character Attributes (SGR).
 
             Can I set a color by its number?
 
-
           These ISO-8613-6 controls (marked in ECMA-48 5th edition as
           "reserved for future standardization") are supported by xterm:
             Ps = 3 8 : 2 : Pi : Pr : Pg : Pb -> Set foreground color
@@ -1511,12 +1514,14 @@ CSI ? Ps $ p
           Request DEC private mode (DECRQM).  For VT300 and up, reply
           DECRPM is
             CSI ? Ps ; Pm $ y
-          where Ps is the mode number as in DECSET/DECSET, Pm is the
+          where Ps is the mode number as in DECSET/DECRST, Pm is the
           mode value as in the ANSI DECRQM.
-          Two private modes are read-only (i.e., 1 3  and 1 4 ),
-          provided only for reporting their values using this control
-          sequence.  They correspond to the resources cursorBlink and
-          cursorBlinkXOR.
+          A few private modes are read-only, provided only for reporting
+          their values using this control sequence.
+          o   1 3  and 1 4  correspond to the resources cursorBlink and
+              cursorBlinkXOR.
+          o   1 0 2 0  to 1 0 2 3  correspond to the resources utf8,
+              cjkWidth, emojiWidth, and privateWidth respectively.
 CSI # p
 CSI Pm # p
           Push video attributes onto stack (XTPUSHSGR), xterm.  This is
@@ -2093,7 +2098,6 @@ OSC Ps ; Pt ST
                highlightTextColor     | highlight foreground color
                -----------------------+-----------------------------
 
-
           The Tektronix colors are initially set from the VT100 colors,
           but after that can be set independently using these control
           sequences.
@@ -2313,7 +2317,6 @@ have "real" alt and meta keys.  Here is an example:
      clear mod3
      add mod3 = Meta_L
 
-
 The metaSendsEscape resource (and altSendsEscape if altIsNotMeta is set)
 can be used to control the way the Meta modifier applies to ordinary
 keys unless the modifyOtherKeys resource is set:
@@ -2345,7 +2348,6 @@ This assumes altIsNotMeta is set:
        Alt-x      | ON             | ON              | ESC  x
        Alt+Meta-x | ON             | ON              | ESC  x
        -----------+----------------+-----------------+------------
-
 
 When modifyOtherKeys is set, ordinary keys may be sent as escape
 sequences:
@@ -2481,7 +2483,6 @@ also controlled by the DECCKM escape sequence:
                     End      | CSI F    | SS3 F
                     ---------+----------+-------------
 
-
 The application keypad transmits the following escape sequences
 depending on the mode specified via the DECKPNM and DECKPAM escape
 sequences.  Use the NumLock key to override the application mode.
@@ -2535,7 +2536,6 @@ purpose keys:
                        F11      | CSI 2 3 ~
                        F12      | CSI 2 4 ~
                        ---------+-----------------
-
 
 Note that F1 through F4 are prefixed with SS3 , while the other keys are
 prefixed with CSI .  Older versions of xterm implement different escape
@@ -2648,7 +2648,6 @@ keypad:
             = (equal)    | =        | SS3 X       | no
             -------------+----------+-------------+----------
 
-
 The VT100/VT220 keypad did not have all of those keys.  They were
 implemented in xterm in X11R1 (1987), defining a mapping of all X11 keys
 which might be provided on a keypad.  For instance, a Sun4/II type-4
@@ -2675,7 +2674,6 @@ the PC keyboard.  It is not affected by DECCKM or DECKPNM/DECKPAM:
                    PageDown | CSI 6 ~  | CSI 6 ~
                    ---------+----------+-------------
 
-
 The VT220 provides 8 additional function keys.  With a Sun/PC keyboard,
 access these keys by Control/F1 for F13, etc.
 
@@ -2690,8 +2688,6 @@ access these keys by Control/F1 for F13, etc.
                        F19      | CSI 3 3 ~
                        F20      | CSI 3 4 ~
                        ---------+-----------------
-
-
 
 VT52-Style Function Keys
 
@@ -2736,8 +2732,6 @@ The keypad is similar:
             9            | 9        | ESC ? y     | yes
             = (equal)    | =        | ESC ? X     | no
             -------------+----------+-------------+----------
-
-
 
 Sun-Style Function Keys
 
@@ -2792,8 +2786,6 @@ These mappings are used for the DEC (VT220) and other keyboards:
      Begin         | -          | CSI 2 1 8 z  | -        | CSI E
      --------------+------------+--------------+----------+----------
 
-
-
 The Alternate Screen Buffer
 
 XTerm maintains two screen buffers.  The Normal Screen Buffer allows you
@@ -2832,8 +2824,6 @@ followed by the pasted text, followed by
 For background and discussion, see the FAQ:
 
   XTerm - bracketed-paste
-
-
 
 Readline Modes
 
@@ -3802,7 +3792,7 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
 
     The  SCOSC/SCORC pair is considered a private mode because the final
     characters (s  and u ) fall in the range from "`" to "~" (octal 0140
-    to  octal 0176).  Other private control sequences can be constructed
+    to octal 0176).  Other private control sequences can be  constructed
     by using octets 074 to 077 (characters "<", "=", ">", or "?") at the
     beginning  of  the  parameter  string.   The  XTSAVE  and  XTRESTORE
     controls use "?") in this manner.
@@ -3828,8 +3818,8 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
     use.
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground  and  background  colors  8-15, but does not specify what
-    those colors are.  That is implied by the description's  mention  of
+    foreground and background colors 8-15, but  does  not  specify  what
+    those  colors  are.  That is implied by the description's mention of
     HFT:
 
         The aixterm command provides a standard terminal type for
