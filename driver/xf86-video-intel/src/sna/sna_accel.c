@@ -112,7 +112,7 @@
 #define MAKE_COW_OWNER(ptr) ((void*)((uintptr_t)(ptr) | 1))
 #define COW(ptr) (void *)((uintptr_t)(ptr) & ~1)
 
-#if XFONT2_CLIENT_FUNCS_VERSION >= 1
+#if XFONT2_CLIENT_FUNCS_VERSION >= 1 && 0
 #define AllocateFontPrivateIndex() xfont2_allocate_font_private_index()
 #define FontSetPrivate(font, idx, data) xfont2_font_set_private(font, idx, data)
 #endif
@@ -17265,7 +17265,11 @@ static void sna_accel_post_damage(struct sna *sna)
 		if (RegionNil(damage))
 			continue;
 
+#ifdef HAS_DIRTYTRACKING_DRAWABLE_SRC
+		get_drawable_pixmap(dirty->src);
+#else
 		src = dirty->src;
+#endif
 		dst = dirty->secondary_dst->primary_pixmap;
 
 		region.extents.x1 = dirty->x;
@@ -17503,10 +17507,15 @@ migrate_dirty_tracking(PixmapPtr old_front, PixmapPtr new_front)
 	PixmapDirtyUpdatePtr dirty, safe;
 
 	xorg_list_for_each_entry_safe(dirty, safe, &screen->pixmap_dirty_list, ent) {
+#ifdef HAS_DIRTYTRACKING_DRAWABLE_SRC
+		assert(dirty->src == &old_front->drawable);
+		if (dirty->src != &old_front->drawable)
+			continue;
+#else
 		assert(dirty->src == old_front);
 		if (dirty->src != old_front)
 			continue;
-
+#endif
 		DamageUnregister(&dirty->src->drawable, dirty->damage);
 		DamageDestroy(dirty->damage);
 
@@ -17520,7 +17529,11 @@ migrate_dirty_tracking(PixmapPtr old_front, PixmapPtr new_front)
 		}
 
 		DamageRegister(&new_front->drawable, dirty->damage);
+#ifdef HAS_DIRTYTRACKING_DRAWABLE_SRC
+		dirty->src = &new_front->drawable;
+#else
 		dirty->src = new_front;
+#endif
 	}
 #endif
 }
@@ -17950,12 +17963,14 @@ set_tv:
 
 	sna->kgem.scanout_busy = false;
 
-	if (FAULT_INJECTION && (rand() % FAULT_INJECTION) == 0) {
+#if FAULT_INJECTION > 0
+	if ((rand() % FAULT_INJECTION) == 0) {
 		DBG(("%s hardware acceleration\n",
 		     sna->kgem.wedged ? "Re-enabling" : "Disabling"));
 		kgem_submit(&sna->kgem);
 		sna->kgem.wedged = !sna->kgem.wedged;
 	}
+#endif
 }
 
 void sna_accel_free(struct sna *sna)
