@@ -1,6 +1,6 @@
 dnl XCB_UTIL_M4_WITH_INCLUDE_PATH requires Autoconf >= 2.62
 AC_PREREQ(2.62)
-AC_INIT([xcb-util-xrm],1.0,[xcb@lists.freedesktop.org])
+AC_INIT([xcb-util-xrm],1.3,[xcb@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -16,6 +16,7 @@ XCB_UTIL_M4_WITH_INCLUDE_PATH
 XCB_UTIL_COMMON([1.4], [1.6])
 
 PKG_CHECK_MODULES(XCB_AUX, xcb-aux)
+PKG_CHECK_MODULES(XLIB, x11)
 
 AC_OUTPUT([Makefile
 	xcb-xrm.pc

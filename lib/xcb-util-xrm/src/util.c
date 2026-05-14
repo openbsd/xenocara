@@ -74,7 +74,10 @@ char *resolve_path(const char *path, const char *_base) {
     if (base == NULL)
         return NULL;
 
-    asprintf(&result, "%s/%s", base, path);
+    if (asprintf(&result, "%s/%s", base, path) < 0) {
+        FREE(base);
+        return NULL;
+    }
     FREE(base);
 
     return result;

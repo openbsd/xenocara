@@ -1,0 +1,4 @@
+First: 1
+! Provoke an endless chain of self-inclusion
+#include "loop.xresources"
+Second: 2

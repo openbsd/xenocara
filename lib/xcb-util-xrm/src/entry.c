@@ -121,6 +121,7 @@ int xcb_xrm_entry_parse(const char *_str, xcb_xrm_entry_t **_entry, bool resourc
     xcb_xrm_component_t *last;
     char *value;
     char *value_walk;
+    xcb_xrm_binding_type_t binding_type;
 
     xcb_xrm_entry_parser_state_t state = {
         .chunk = CS_INITIAL,
@@ -166,8 +167,19 @@ int xcb_xrm_entry_parse(const char *_str, xcb_xrm_entry_t **_entry, bool resourc
                     goto done_error;
                 }
 
+                /* Subsequent bindings must be collapsed into a loose binding if at
+                 * least one was a loose binding and a tight binding otherwise. */
+                binding_type = (*walk == '*') ? BT_LOOSE : BT_TIGHT;
+                while (*(walk + 1) == '.' || *(walk + 1) == '*') {
+                    walk++;
+
+                    if (*walk == '*') {
+                        binding_type = BT_LOOSE;
+                    }
+                }
+
                 xcb_xrm_finalize_component(entry, &state);
-                state.current_binding_type = (*walk == '.') ? BT_TIGHT : BT_LOOSE;
+                state.current_binding_type = binding_type;
                 break;
             case '?':
                 state.chunk = MAX(state.chunk, CS_COMPONENTS);
@@ -255,7 +267,7 @@ process_normally:
         }
     }
 
-    if (state.chunk == CS_VALUE) {
+    if (state.chunk == CS_PRE_VALUE_WHITESPACE || state.chunk == CS_VALUE) {
         *value_walk = '\0';
         entry->value = strdup(value);
         if (entry->value == NULL)
