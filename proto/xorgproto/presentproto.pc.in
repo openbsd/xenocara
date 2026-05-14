@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: PresentProto
 Description: Present extension headers
 Version: 1.4

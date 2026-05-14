@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: DRI3Proto
 Description: DRI3 extension headers
 Version: 1.4

@@ -78,13 +78,16 @@ in this Software without prior written authorization from The Open Group.
 
 /* http://clang.llvm.org/docs/LanguageExtensions.html#has-attribute */
 #ifndef __has_attribute
-# define __has_attribute(x) 0  /* Compatibility with non-clang compilers. */
+# define __has_attribute(x) 0  /* Compatibility with older compilers. */
 #endif
 #ifndef __has_feature
-# define __has_feature(x) 0    /* Compatibility with non-clang compilers. */
+# define __has_feature(x) 0    /* Compatibility with older compilers. */
 #endif
 #ifndef __has_extension
-# define __has_extension(x) 0  /* Compatibility with non-clang compilers. */
+# define __has_extension(x) 0  /* Compatibility with older compilers. */
+#endif
+#ifndef __has_c_attribute
+# define __has_c_attribute(x) 0  /* Compatibility with pre-C23 compilers. */
 #endif
 
 /* Added in X11R6.9, so available in any version of modular xproto */
@@ -211,6 +214,18 @@ in this Software without prior written authorization from The Open Group.
 # define _X_NONSTRING __attribute__((nonstring))
 #else
 # define _X_NONSTRING
+#endif
+
+/* Mark a fallthrough in a switch statement as intentional
+   Handles C23 compilers, as well as gcc >= 7 and clang >= 12
+   For older compilers/linters, pair with a fallthrough comment. */
+/* requires xproto >= 7.0.34 */
+#if __has_c_attribute(fallthrough)
+#define _X_FALLTHROUGH [[fallthrough]]
+#elif  __has_attribute(fallthrough)
+#define _X_FALLTHROUGH __attribute__((fallthrough))
+#else
+#define _X_FALLTHROUGH (void)0
 #endif
 
 #endif /* _XFUNCPROTO_H_ */

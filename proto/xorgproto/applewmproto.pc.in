@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: AppleWMProto
 Description: AppleWM extension headers
 Version: 1.4.2

@@ -2,7 +2,7 @@
 			Protocol Version 1.1
 			 Document Revision 1
 			     2007-01-08
-			     
+
 			    Keith Packard
 			  keithp@keithp.com
 
@@ -24,7 +24,7 @@ As usual, the author had significant input from many people, in particular:
 
  +	Havoc Pennington who designed and implemented a Damage extension
  	last year which was then lost to the mists of time.
-			    
+
  +	Bill Haneman whose work on accessibility in the Gnome environment
  	is legendary.
 
@@ -98,7 +98,7 @@ Damage
 6. Types
 
 	DAMAGE		32-bit value (top three bits guaranteed to be zero)
-	
+
 	DamageReportLevel		{ DamageReportRawRectangles,
 					  DamageReportDeltaRectangles,
 					  DamageReportBoundingBox,
@@ -179,7 +179,7 @@ DamageCreate
 		damage:				DAMAGE
 		drawable:			Drawable
 		level:				DamageReportLevel
-		
+
 	Creates a damage object to monitor changes to Drawable
 
 DamageDestroy
@@ -199,9 +199,9 @@ DamageSubtract
 
 		1)	if parts is not None, parts = damage
 		2)	damage = <empty>
-		
+
 	    Otherwise:
-	
+
 		1)	tmp = damage INTERSECT repair
 		2)	damage = damage - tmp
 		3)	if parts is not None, parts = tmp

@@ -108,6 +108,7 @@
 #define XF86XK_ApplicationRight      0x1008ff51  /* switch to application, right*/
 #define XF86XK_Book                  0x1008ff52  /* Launch bookreader           */
 #define XF86XK_CD                    0x1008ff53  /* Launch CD/DVD player        */
+#define XF86XK_MediaSelectCD         0x1008ff53  /* Alias for XF86XK_CD         */
 #define XF86XK_Calculater            0x1008ff54  /* Launch Calculater           */
 #define XF86XK_Clear                 0x1008ff55  /* Clear window, screen        */
 #define XF86XK_Close                 0x1008ff56  /* Close window                */
@@ -237,27 +238,49 @@
 /*
  * Reserved range for evdev symbols: 0x10081000-0x10081FFF
  *
- * Key syms within this range must match the Linux kernel
- * input-event-codes.h file in the format:
- *     XF86XK_CamelCaseKernelName	_EVDEVK(kernel value)
+ * Key symbols within this range are intended for a 1:1 mapping to the
+ * Linux kernel input-event-codes.h file:
+ * - Keysym value: `_EVDEVK(kernel value)`
+ * - Keysym name: it must be prefixed by `XF86XK_`. The recommended *default*
+ *   name uses the following pattern: `XF86XK_CamelCaseKernelName`. CamelCasing
+ *   is done with a human control as last authority, e.g. see VOD instead of Vod
+ *   for the Video on Demand key. In case that the kernel key name is too
+ *   ambiguous, it is recommended to create a more explicit name with the
+ *   following guidelines:
+ *   1. Names should be mnemonic.
+ *   2. Names should avoid acronyms, unless sufficiently common and documented
+ *      in a comment.
+ *   3. Names should identify a function.
+ *   4. Keysyms share a common namespace, so keys with a generic name should
+ *      denote a generic function, otherwise it should be renamed to add context.
+ *      E.g. `KEY_OK` has the associated keysym `XF86XK_OK`, while `KEY_TITLE`
+ *      (used to open a menu to select a chapter of a media) is associated to
+ *      the keysym `XF86XK_MediaTitleMenu` to avoid ambiguity.
+ *   5. Keysyms should support designing *portable* applications, therefore
+ *      their names should be self-explaining to facilitate finding them and
+ *      to avoid misuse.
+ *   6. The “HID usage tables for USB” can be used if there is an unambiguous
+ *      mapping. See:
+ *      - Reference document: https://usb.org/document-library/hid-usage-tables-16
+ *      - Mapping in the Linux source file: `drivers/hid/hid-input.c` as of 2025-07
+ *
  * For example, the kernel
- *   #define KEY_MACRO_RECORD_START	0x2b0
+ *     #define KEY_MACRO_RECORD_START	0x2b0
  * effectively ends up as:
- *   #define XF86XK_MacroRecordStart	0x100812b0
+ *     #define XF86XK_MacroRecordStart	0x100812b0
  *
  * For historical reasons, some keysyms within the reserved range will be
  * missing, most notably all "normal" keys that are mapped through default
  * XKB layouts (e.g. KEY_Q).
  *
- * CamelCasing is done with a human control as last authority, e.g. see VOD
- * instead of Vod for the Video on Demand key.
- *
  * The format for #defines is strict:
  *
- * #define XF86XK_FOO<tab...>_EVDEVK(0xABC)<tab><tab> |* kver KEY_FOO *|
+ *     #define XF86XK_Foo<spaces…>_EVDEVK(0xABC)<spaces…> |* kver KEY_FOO *|
+ *     #define XF86XK_Foo<spaces…>_EVDEVK(0xABC)<spaces…> |* Alias for XF86XK_Bar *|
+ *     #define XF86XK_Foo<spaces…>_EVDEVK(0xABC)<spaces…> |* Deprecated alias for XF86XK_Bar *|
  *
  * Where
- * - alignment by tabs
+ * - alignment by spaces
  * - the _EVDEVK macro must be used
  * - the hex code must be in uppercase hex
  * - the kernel version (kver) is in the form v5.10
@@ -272,10 +295,71 @@
  */
 #define _EVDEVK(_v) (0x10081000 + _v)
 /* Use: XF86XK_Eject                    _EVDEVK(0x0a2)             KEY_EJECTCLOSECD */
+/* Use: XF86XK_AudioNext                _EVDEVK(0x0a3)             KEY_NEXTSONG */
+#define XF86XK_MediaPlayPause           _EVDEVK(0x0a4)  /*         KEY_PLAYPAUSE */
+/* Use: XF86XK_AudioPrev                _EVDEVK(0x0a5)             KEY_PREVIOUSSONG */
+/* NOTE: Currently no use case for CD-specific keysyms */
+/* Use: XF86XK_AudioStop                _EVDEVK(0x0a6)             KEY_STOPCD */
+/* Use: XF86XK_AudioRecord              _EVDEVK(0x0a7)             KEY_RECORD */
+/* Use: XF86XK_AudioRewind              _EVDEVK(0x0a8)             KEY_REWIND */
+/* Use: XF86XK_Phone                    _EVDEVK(0x0a9)             KEY_PHONE */
+/* TODO: unclear function               _EVDEVK(0x0aa)             KEY_ISO */
+/* TODO: unclear function               _EVDEVK(0x0ab)             KEY_CONFIG */
+/* Use: XF86XK_HomePage                 _EVDEVK(0x0ac)             KEY_HOMEPAGE */
+/* Use: XF86XK_Refresh                  _EVDEVK(0x0ad)             KEY_REFRESH */
+#define XF86XK_Exit                     _EVDEVK(0x0ae)  /*         KEY_EXIT */
+/* TODO: unclear function               _EVDEVK(0x0af)             KEY_MOVE */
+/* TODO: unclear function               _EVDEVK(0x0b0)             KEY_EDIT */
+/* Use: XF86XK_ScrollUp                 _EVDEVK(0x0b1)             KEY_SCROLLUP */
+/* Use: XF86XK_ScrollDown               _EVDEVK(0x0b2)             KEY_SCROLLDOWN */
+/* NOTE: Unless there are special actions bound to the keys KEY_KPLEFTPAREN and
+ * KEY_KPRIGHTPAREN, there is no reason to introduce keypad-specific keysyms */
+/* Use: XK_parenleft                    _EVDEVK(0x0b3)             KEY_KPLEFTPAREN */
+/* Use: XK_parenright                   _EVDEVK(0x0b4)             KEY_KPRIGHTPAREN */
 /* Use: XF86XK_New                      _EVDEVK(0x0b5)     v2.6.14 KEY_NEW */
 /* Use: XK_Redo                         _EVDEVK(0x0b6)     v2.6.14 KEY_REDO */
-/* KEY_DASHBOARD has been mapped to LaunchB in xkeyboard-config since 2011 */
+/* Use: XK_F13                          _EVDEVK(0x0b7)             KEY_F13 */
+/* Use: XK_F14                          _EVDEVK(0x0b8)             KEY_F14 */
+/* Use: XK_F15                          _EVDEVK(0x0b9)             KEY_F15 */
+/* Use: XK_F16                          _EVDEVK(0x0ba)             KEY_F16 */
+/* Use: XK_F17                          _EVDEVK(0x0bb)             KEY_F17 */
+/* Use: XK_F18                          _EVDEVK(0x0bc)             KEY_F18 */
+/* Use: XK_F19                          _EVDEVK(0x0bd)             KEY_F19 */
+/* Use: XK_F20                          _EVDEVK(0x0be)             KEY_F20 */
+/* Use: XK_F21                          _EVDEVK(0x0bf)             KEY_F21 */
+/* Use: XK_F22                          _EVDEVK(0x0c0)             KEY_F22 */
+/* Use: XK_F23                          _EVDEVK(0x0c1)             KEY_F23 */
+/* Use: XK_F24                          _EVDEVK(0x0c2)             KEY_F24 */
+/* NOTE: Currently no use case for CD-specific keysyms */
+/* Use: XF86XK_AudioPlay                _EVDEVK(0x0c8)             KEY_PLAYCD */
+/* Use: XF86XK_AudioPause               _EVDEVK(0x0c9)             KEY_PAUSECD */
+/* Use: XF86XK_Launch3                  _EVDEVK(0x0ca)             KEY_PROG3 */
+/* Use: XF86XK_Launch4                  _EVDEVK(0x0cb)             KEY_PROG4 */
+/* NOTE: KEY_DASHBOARD has been mapped to LaunchB in xkeyboard-config since 2011 */
 /* Use: XF86XK_LaunchB                  _EVDEVK(0x0cc)     v2.6.28 KEY_DASHBOARD */
+/* Use: XF86XK_Suspend                  _EVDEVK(0x0cd)             KEY_SUSPEND */
+/* Use: XF86XK_Close                    _EVDEVK(0x0ce)             KEY_CLOSE */
+/* Use: XF86XK_AudioPlay                _EVDEVK(0x0cf)             KEY_PLAY */
+/* Use: XF86XK_AudioForward             _EVDEVK(0x0d0)             KEY_FASTFORWARD */
+#define XF86XK_AudioBassBoost           _EVDEVK(0x0d1)  /*         KEY_BASSBOOST */
+/* Use: XK_Print                        _EVDEVK(0x0d2)             KEY_PRINT */
+/* NOTE: The following keys seem specific to some HP keyboards such as SK-2565 USB */
+/* TODO: unclear HP-specific function?  _EVDEVK(0x0d3)             KEY_HP */
+/* Use: XF86XK_WebCam                   _EVDEVK(0x0d4)             KEY_CAMERA */
+/* TODO: unclear HP-specific function?  _EVDEVK(0x0d5)             KEY_SOUND */
+/* TODO: unclear HP-specific function?  _EVDEVK(0x0d6)             KEY_QUESTION */
+/* Use: XF86XK_Mail                     _EVDEVK(0x0d7)             KEY_EMAIL */
+/* Use: XF86XK_Messenger                _EVDEVK(0x0d8)             KEY_CHAT */
+/* Use: XF86XK_Search                   _EVDEVK(0x0d9)             KEY_SEARCH */
+/* TODO: unclear HP-specific function?  _EVDEVK(0x0da)             KEY_CONNECT */
+/* Use: XF86XK_Finance                  _EVDEVK(0x0db)             KEY_FINANCE */
+#define XF86XK_Sport                    _EVDEVK(0x0dc)  /*         KEY_SPORT */
+/* Use: XF86XK_Shop                     _EVDEVK(0x0dd)             KEY_SHOP */
+/* TODO: unclear function               _EVDEVK(0x0de)             KEY_ALTERASE */
+/* Use: XK_Cancel                       _EVDEVK(0x0df)             KEY_CANCEL */
+/* Use: XF86XK_MonBrightnessDown        _EVDEVK(0x0e0)             KEY_BRIGHTNESSDOWN */
+/* Use: XF86XK_MonBrightnessUp          _EVDEVK(0x0e1)             KEY_BRIGHTNESSUP */
+/* Use: XF86XK_AudioMedia               _EVDEVK(0x0e2)             KEY_MEDIA */
 /* Use: XF86XK_Display                  _EVDEVK(0x0e3)     v2.6.12 KEY_SWITCHVIDEOMODE */
 /* Use: XF86XK_KbdLightOnOff            _EVDEVK(0x0e4)     v2.6.12 KEY_KBDILLUMTOGGLE */
 /* Use: XF86XK_KbdBrightnessDown        _EVDEVK(0x0e5)     v2.6.12 KEY_KBDILLUMDOWN */
@@ -289,26 +373,81 @@
 /* Use: XF86XK_Bluetooth                _EVDEVK(0x0ed)     v2.6.19 KEY_BLUETOOTH */
 /* Use: XF86XK_WLAN                     _EVDEVK(0x0ee)     v2.6.19 KEY_WLAN */
 /* Use: XF86XK_UWB                      _EVDEVK(0x0ef)     v2.6.24 KEY_UWB */
+/* Use: NoSymbol                        _EVDEVK(0x0f0)             KEY_UNKNOWN */
 /* Use: XF86XK_Next_VMode               _EVDEVK(0x0f1)     v2.6.23 KEY_VIDEO_NEXT */
 /* Use: XF86XK_Prev_VMode               _EVDEVK(0x0f2)     v2.6.23 KEY_VIDEO_PREV */
 /* Use: XF86XK_MonBrightnessCycle       _EVDEVK(0x0f3)     v2.6.23 KEY_BRIGHTNESS_CYCLE */
-#define XF86XK_BrightnessAuto           _EVDEVK(0x0f4)  /* v3.16   KEY_BRIGHTNESS_AUTO */
+#define XF86XK_BrightnessAuto           _EVDEVK(0x0f4)  /* Deprecated alias for XF86XK_MonBrightnessAuto */
+#define XF86XK_MonBrightnessAuto        _EVDEVK(0x0f4)  /* v3.16   KEY_BRIGHTNESS_AUTO */
 #define XF86XK_DisplayOff               _EVDEVK(0x0f5)  /* v2.6.23 KEY_DISPLAY_OFF */
 /* Use: XF86XK_WWAN                     _EVDEVK(0x0f6)     v3.13   KEY_WWAN */
 /* Use: XF86XK_RFKill                   _EVDEVK(0x0f7)     v2.6.33 KEY_RFKILL */
 /* Use: XF86XK_AudioMicMute             _EVDEVK(0x0f8)     v3.1    KEY_MICMUTE */
-#define XF86XK_Info                     _EVDEVK(0x166)  /*         KEY_INFO */
-/* Use: XF86XK_CycleAngle               _EVDEVK(0x173)             KEY_ANGLE */
+#define XF86XK_OK                       _EVDEVK(0x160)  /* v2.5.26 KEY_OK */
+/* Use: XF86XK_Select                   _EVDEVK(0x161)     v2.5.26 KEY_SELECT */
+#define XF86XK_GoTo                     _EVDEVK(0x162)  /* v2.5.26 KEY_GOTO */
+/* Use: XF86XK_Clear                    _EVDEVK(0x163)     v2.5.26 KEY_CLEAR */
+/* TODO: Unclear function               _EVDEVK(0x164)     v2.5.26 KEY_POWER2 */
+/* Use: XF86XK_Option                   _EVDEVK(0x165)     v2.5.26 KEY_OPTION */
+#define XF86XK_Info                     _EVDEVK(0x166)  /* v2.5.26 KEY_INFO */
+/* Use: XF86XK_Time                     _EVDEVK(0x167)     v2.5.26 KEY_TIME */
+#define XF86XK_VendorLogo               _EVDEVK(0x168)  /* v2.5.26 KEY_VENDOR */
+/* TODO: unclear function               _EVDEVK(0x169)     v2.5.26 KEY_ARCHIVE */
+#define XF86XK_MediaSelectProgramGuide  _EVDEVK(0x16a)  /* v2.5.26 KEY_PROGRAM */
+/* Use: XF86XK_NextFavorite             _EVDEVK(0x16b)     v2.5.26 KEY_CHANNEL */
+/* Use: XF86XK_Favorites                _EVDEVK(0x16c)     v2.5.26 KEY_FAVORITES */
+/* Use: XF86XK_MediaSelectProgramGuide  _EVDEVK(0x16d)     v2.5.26 KEY_EPG */
+#define XF86XK_MediaSelectHome          _EVDEVK(0x16e)  /* v2.5.26 KEY_PVR */
+/* TODO: Multimedia Home Platform       _EVDEVK(0x16f)     v2.5.26 KEY_MHP */
+#define XF86XK_MediaLanguageMenu        _EVDEVK(0x170)  /* v2.5.26 KEY_LANGUAGE */
+#define XF86XK_MediaTitleMenu           _EVDEVK(0x171)  /* v2.5.26 KEY_TITLE */
+/* Use: XF86XK_Subtitle                 _EVDEVK(0x172)     v2.5.26 KEY_SUBTITLE */
+/* Use: XF86XK_CycleAngle               _EVDEVK(0x173)     v2.5.26 KEY_ANGLE */
 /* Use: XF86XK_FullScreen               _EVDEVK(0x174)     v5.1    KEY_FULL_SCREEN */
+#define XF86XK_AudioChannelMode         _EVDEVK(0x175)  /* v2.5.26 KEY_MODE */
+/* Use: XF86XK_Keyboard                 _EVDEVK(0x176)     v2.5.26 KEY_KEYBOARD */
 #define XF86XK_AspectRatio              _EVDEVK(0x177)  /* v5.1    KEY_ASPECT_RATIO */
-#define XF86XK_DVD                      _EVDEVK(0x185)  /*         KEY_DVD */
-#define XF86XK_Audio                    _EVDEVK(0x188)  /*         KEY_AUDIO */
-/* Use: XF86XK_Video                    _EVDEVK(0x189)             KEY_VIDEO */
-/* Use: XF86XK_Calendar                 _EVDEVK(0x18d)             KEY_CALENDAR */
-#define XF86XK_ChannelUp                _EVDEVK(0x192)  /*         KEY_CHANNELUP */
-#define XF86XK_ChannelDown              _EVDEVK(0x193)  /*         KEY_CHANNELDOWN */
-/* Use: XF86XK_AudioRandomPlay          _EVDEVK(0x19a)             KEY_SHUFFLE */
-#define XF86XK_Break                    _EVDEVK(0x19b)  /*         KEY_BREAK */
+#define XF86XK_MediaSelectPC            _EVDEVK(0x178)  /* v2.5.26 KEY_PC */
+#define XF86XK_MediaSelectTV            _EVDEVK(0x179)  /* v2.5.26 KEY_TV */
+#define XF86XK_MediaSelectCable         _EVDEVK(0x17a)  /* v2.5.26 KEY_TV2 */
+#define XF86XK_MediaSelectVCR           _EVDEVK(0x17b)  /* v2.5.26 KEY_VCR */
+#define XF86XK_MediaSelectVCRPlus       _EVDEVK(0x17c)  /* v2.5.26 KEY_VCR2 */
+#define XF86XK_MediaSelectSatellite     _EVDEVK(0x17d)  /* v2.5.26 KEY_SAT */
+/* TODO: unclear media selector         _EVDEVK(0x17e)     v2.5.26 KEY_SAT2 */
+/* Use: XF86XK_MediaSelectCD            _EVDEVK(0x17f)     v2.5.26 KEY_CD */
+#define XF86XK_MediaSelectTape          _EVDEVK(0x180)  /* v2.5.26 KEY_TAPE */
+#define XF86XK_MediaSelectRadio         _EVDEVK(0x181)  /* v2.5.26 KEY_RADIO */
+#define XF86XK_MediaSelectTuner         _EVDEVK(0x182)  /* v2.5.26 KEY_TUNER */
+#define XF86XK_MediaPlayer              _EVDEVK(0x183)  /* v2.5.26 KEY_PLAYER */
+#define XF86XK_MediaSelectTeletext      _EVDEVK(0x184)  /* v2.5.26 KEY_TEXT */
+#define XF86XK_DVD                      _EVDEVK(0x185)  /* v2.5.26 KEY_DVD */
+#define XF86XK_MediaSelectDVD           _EVDEVK(0x185)  /* Alias for XF86XK_DVD */
+#define XF86XK_MediaSelectAuxiliary     _EVDEVK(0x186)  /* v2.5.26 KEY_AUX */
+/* TODO: unclear media selector         _EVDEVK(0x187)     v2.5.26 KEY_MP3 */
+#define XF86XK_Audio                    _EVDEVK(0x188)  /* v2.5.26 KEY_AUDIO */
+/* Use: XF86XK_Video                    _EVDEVK(0x189)     v2.5.26 KEY_VIDEO */
+/* TODO: unclear function               _EVDEVK(0x18a)     v2.5.26 KEY_DIRECTORY */
+/* TODO: unclear function               _EVDEVK(0x18b)     v2.5.26 KEY_LIST */
+/* Use: XF86XK_Memo                     _EVDEVK(0x18c)     v2.5.26 KEY_MEMO */
+/* Use: XF86XK_Calendar                 _EVDEVK(0x18d)     v2.5.26 KEY_CALENDAR */
+/* Use: XF86XK_Red                      _EVDEVK(0x18e)     v2.5.26 KEY_RED */
+/* Use: XF86XK_Green                    _EVDEVK(0x18f)     v2.5.26 KEY_GREEN */
+/* Use: XF86XK_Yellow                   _EVDEVK(0x190)     v2.5.26 KEY_YELLOW */
+/* Use: XF86XK_Blue                     _EVDEVK(0x191)     v2.5.26 KEY_BLUE */
+#define XF86XK_ChannelUp                _EVDEVK(0x192)  /* v2.5.26 KEY_CHANNELUP */
+#define XF86XK_ChannelDown              _EVDEVK(0x193)  /* v2.5.26 KEY_CHANNELDOWN */
+/* TODO: unclear function               _EVDEVK(0x194)     v2.5.26 KEY_FIRST */
+/* TODO: unclear function               _EVDEVK(0x195)     v2.5.26 KEY_LAST */
+/* TODO: unclear function               _EVDEVK(0x196)     v2.5.26 KEY_AB */
+/* TODO: unclear function               _EVDEVK(0x197)     v2.5.26 KEY_NEXT */
+/* TODO: unclear function               _EVDEVK(0x198)     v2.5.26 KEY_RESTART */
+#define XF86XK_MediaPlaySlow            _EVDEVK(0x199)  /* v2.5.26 KEY_SLOW */
+/* Use: XF86XK_AudioRandomPlay          _EVDEVK(0x19a)     v2.5.26 KEY_SHUFFLE */
+#define XF86XK_Break                    _EVDEVK(0x19b)  /* v2.5.26 KEY_BREAK */
+/* TODO: unclear function               _EVDEVK(0x19c)     v2.5.26 KEY_PREVIOUS */
+#define XF86XK_NumberEntryMode          _EVDEVK(0x19d)  /* v2.5.26 KEY_DIGITS */
+/* TODO: unclear function               _EVDEVK(0x19e)     v2.5.26 KEY_TEEN */
+/* TODO: unclear function (Twenties?)   _EVDEVK(0x19f)     v2.5.26 KEY_TWEN */
 #define XF86XK_VideoPhone               _EVDEVK(0x1a0)  /* v2.6.20 KEY_VIDEOPHONE */
 /* Use: XF86XK_Game                     _EVDEVK(0x1a1)     v2.6.20 KEY_GAMES */
 /* Use: XF86XK_ZoomIn                   _EVDEVK(0x1a2)     v2.6.20 KEY_ZOOMIN */
@@ -339,8 +478,33 @@
 #define XF86XK_NotificationCenter       _EVDEVK(0x1bc)  /* v5.10   KEY_NOTIFICATION_CENTER */
 #define XF86XK_PickupPhone              _EVDEVK(0x1bd)  /* v5.10   KEY_PICKUP_PHONE */
 #define XF86XK_HangupPhone              _EVDEVK(0x1be)  /* v5.10   KEY_HANGUP_PHONE */
+#define XF86XK_LinkPhone                _EVDEVK(0x1bf)  /* v6.14   KEY_LINK_PHONE */
+/* NOTE: The following seem to be legacy terminal keys. Ignored due to lack of use cases */
+/* TODO: XF86XK_DeleteToEndOfLine?      _EVDEVK(0x1c0)             KEY_DEL_EOL */
+/* TODO: XF86XK_DeleteToEndOfScreen?    _EVDEVK(0x1c1)             KEY_DEL_EOS */
+/* TODO: XF86XK_InsertLine?             _EVDEVK(0x1c2)             KEY_INS_LINE */
+/* TODO: XF86XK_DeleteLine?             _EVDEVK(0x1c3)             KEY_DEL_LINE */
 #define XF86XK_Fn                       _EVDEVK(0x1d0)  /*         KEY_FN */
 #define XF86XK_Fn_Esc                   _EVDEVK(0x1d1)  /*         KEY_FN_ESC */
+#define XF86XK_Fn_F1                    _EVDEVK(0x1d2)  /*         KEY_FN_F1 */
+#define XF86XK_Fn_F2                    _EVDEVK(0x1d3)  /*         KEY_FN_F2 */
+#define XF86XK_Fn_F3                    _EVDEVK(0x1d4)  /*         KEY_FN_F3 */
+#define XF86XK_Fn_F4                    _EVDEVK(0x1d5)  /*         KEY_FN_F4 */
+#define XF86XK_Fn_F5                    _EVDEVK(0x1d6)  /*         KEY_FN_F5 */
+#define XF86XK_Fn_F6                    _EVDEVK(0x1d7)  /*         KEY_FN_F6 */
+#define XF86XK_Fn_F7                    _EVDEVK(0x1d8)  /*         KEY_FN_F7 */
+#define XF86XK_Fn_F8                    _EVDEVK(0x1d9)  /*         KEY_FN_F8 */
+#define XF86XK_Fn_F9                    _EVDEVK(0x1da)  /*         KEY_FN_F9 */
+#define XF86XK_Fn_F10                   _EVDEVK(0x1db)  /*         KEY_FN_F10 */
+#define XF86XK_Fn_F11                   _EVDEVK(0x1dc)  /*         KEY_FN_F11 */
+#define XF86XK_Fn_F12                   _EVDEVK(0x1dd)  /*         KEY_FN_F12 */
+#define XF86XK_Fn_1                     _EVDEVK(0x1de)  /*         KEY_FN_1 */
+#define XF86XK_Fn_2                     _EVDEVK(0x1df)  /*         KEY_FN_2 */
+#define XF86XK_Fn_D                     _EVDEVK(0x1e0)  /*         KEY_FN_D */
+#define XF86XK_Fn_E                     _EVDEVK(0x1e1)  /*         KEY_FN_E */
+#define XF86XK_Fn_F                     _EVDEVK(0x1e2)  /*         KEY_FN_F */
+#define XF86XK_Fn_S                     _EVDEVK(0x1e3)  /*         KEY_FN_S */
+#define XF86XK_Fn_B                     _EVDEVK(0x1e4)  /*         KEY_FN_B */
 #define XF86XK_FnRightShift             _EVDEVK(0x1e5)  /* v5.10   KEY_FN_RIGHT_SHIFT */
 /* Use: XK_braille_dot_1                _EVDEVK(0x1f1)     v2.6.17 KEY_BRL_DOT1 */
 /* Use: XK_braille_dot_2                _EVDEVK(0x1f2)     v2.6.17 KEY_BRL_DOT2 */
@@ -385,6 +549,7 @@
 #define XF86XK_LightsToggle             _EVDEVK(0x21e)  /* v3.10   KEY_LIGHTS_TOGGLE */
 #define XF86XK_ALSToggle                _EVDEVK(0x230)  /* v3.13   KEY_ALS_TOGGLE */
 /* Use: XF86XK_RotationLockToggle       _EVDEVK(0x231)     v4.16   KEY_ROTATE_LOCK_TOGGLE */
+#define XF86XK_RefreshRateToggle        _EVDEVK(0x232)  /* v6.9    KEY_REFRESH_RATE_TOGGLE */
 #define XF86XK_Buttonconfig             _EVDEVK(0x240)  /* v3.16   KEY_BUTTONCONFIG */
 #define XF86XK_Taskmanager              _EVDEVK(0x241)  /* v3.16   KEY_TASKMANAGER */
 #define XF86XK_Journal                  _EVDEVK(0x242)  /* v3.16   KEY_JOURNAL */
@@ -399,6 +564,8 @@
 #define XF86XK_CameraAccessEnable       _EVDEVK(0x24b)  /* v6.2    KEY_CAMERA_ACCESS_ENABLE */
 #define XF86XK_CameraAccessDisable      _EVDEVK(0x24c)  /* v6.2    KEY_CAMERA_ACCESS_DISABLE */
 #define XF86XK_CameraAccessToggle       _EVDEVK(0x24d)  /* v6.2    KEY_CAMERA_ACCESS_TOGGLE */
+#define XF86XK_Accessibility            _EVDEVK(0x24e)  /* v6.10   KEY_ACCESSIBILITY */
+#define XF86XK_DoNotDisturb             _EVDEVK(0x24f)  /* v6.10   KEY_DO_NOT_DISTURB */
 #define XF86XK_BrightnessMin            _EVDEVK(0x250)  /* v3.16   KEY_BRIGHTNESS_MIN */
 #define XF86XK_BrightnessMax            _EVDEVK(0x251)  /* v3.16   KEY_BRIGHTNESS_MAX */
 #define XF86XK_KbdInputAssistPrev       _EVDEVK(0x260)  /* v3.18   KEY_KBDINPUTASSIST_PREV */
@@ -484,4 +651,5 @@
 #define XF86XK_KbdLcdMenu3              _EVDEVK(0x2ba)  /* v5.5    KEY_KBD_LCD_MENU3 */
 #define XF86XK_KbdLcdMenu4              _EVDEVK(0x2bb)  /* v5.5    KEY_KBD_LCD_MENU4 */
 #define XF86XK_KbdLcdMenu5              _EVDEVK(0x2bc)  /* v5.5    KEY_KBD_LCD_MENU5 */
+#define XF86XK_PerformanceMode          _EVDEVK(0x2bd)  /* v6.17   KEY_PERFORMANCE */
 #undef _EVDEVK

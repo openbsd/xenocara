@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: RandrProto
 Description: Randr extension headers
 Version: 1.6.0

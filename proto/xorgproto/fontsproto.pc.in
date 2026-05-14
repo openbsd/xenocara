@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: FontsProto
 Description: Fonts extension headers
 Version: 2.1.3

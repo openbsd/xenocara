@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: ScrnSaverProto
 Description: ScrnSaver extension headers
 Version: 1.2.3

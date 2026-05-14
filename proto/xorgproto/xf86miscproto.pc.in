@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: XF86MiscProto
 Description: XF86Misc extension headers
 Version: 0.9.3

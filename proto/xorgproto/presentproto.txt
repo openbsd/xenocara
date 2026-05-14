@@ -1,7 +1,7 @@
 			The Present Extension
 			     Version 1.4
 			      2023-06-13
-      
+
 			    Keith Packard
 			  keithp@keithp.com
 			  Intel Corporation
@@ -26,7 +26,7 @@ Owen Taylor <otaylor@redhat.com>
 James Jones <jajones@nvidia.com>
 Louis-Francis Ratté-Boulianne <lfrb@collabora.com>
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 2. Data Types
 
@@ -85,14 +85,14 @@ PRESENTEVENTTYPE { ...
 PRESENTEVENTMASK { ...
 		   PresentSubredirectNotifyMask }
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 3. Errors
 
 EventID
 	A value for an EventID argument does not name a defined EventID
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 5. Events
 
@@ -109,7 +109,7 @@ IdleNotify events inform clients when pixmaps are available for re-use.
 RedirectNotify events inform clients about other clients PresentPixmap
 requests.
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 6. Extension Initialization
 
@@ -135,7 +135,7 @@ The name of this extension is "Present"
 	Backwards compatible changes include addition of new
 	requests.
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 7. Extension Requests
 
@@ -187,7 +187,7 @@ The name of this extension is "Present"
 	and update-area are relative to the pixmap.
 
 	PresentPixmap will block until 'wait-fence' is triggered.
-	
+
 	When the X server has finished using 'pixmap' for this
 	operation, it will send a PresentIdleNotify event and arrange
 	for any 'idle-fence' to be triggered. This may be at any time
@@ -211,10 +211,10 @@ The name of this extension is "Present"
 	the presentation will occur at (or after) the 'target-msc'
 	field. Otherwise, the presentation will occur after the next
 	field where msc % 'divisor' == 'remainder'.
-	
+
 	If 'target-crtc' is None, then the X server will choose a
 	suitable CRTC for synchronization.
-	
+
 	If 'options' contains PresentOptionAsync, and the 'target-msc'
 	is less than or equal to the current msc for 'window', then
 	the operation will be performed as soon as possible, not
@@ -287,7 +287,7 @@ The name of this extension is "Present"
 	the event will be delivered at (or after) the 'target-msc'
 	field. Otherwise, the event delivery will occur after the next
 	field where msc % 'divisor' == 'remainder'.
-	
+
 	If 'window' is destroyed before the event is delivered, then
 	the event delivery will not be completed.
 
@@ -398,13 +398,15 @@ The name of this extension is "Present"
 	client. The fence need not be submitted at the time the
 	PresentPixmapSynced request is issued.
 
-	Once the 'release-point' on the release timeline has been signaled, the
-	client may assume that no further GPU or CPU access to the Pixmap by
-	the server will occur as part of the originating PresentPixmapSynced
-	request.  Note that this is a stronger guarantee than what is provided
-	by the 'idle-fence' argument of the PresentPixmap request or the
-	delivery of a PresentIdleNotify event, as those do not necessarily
-	imply that the Pixmap is idle on the GPU.
+	A PresentIdleNotify event will not be sent to the client when the
+	server has finished accessing the Pixmap. Instead, the 'release-point'
+	on the release timeline will be signaled. Afterwards, the client may
+	assume that no further GPU or CPU access to the Pixmap by the server
+	will occur as part of the originating PresentPixmapSynced request.
+	Note that this is a stronger guarantee than what is provided by the
+	'idle-fence' argument of the PresentPixmap request or the delivery of a
+	PresentIdleNotify event, as those do not necessarily imply that the
+	Pixmap is idle on the GPU.
 
 	The server may wait for the acquire point and signal the release point
 	itself, as will typically happen if the request is executed by copying
@@ -458,7 +460,7 @@ The name of this extension is "Present"
 	a time can select for PresentRedirect on a window. An attempt
 	to violate this restriction results in an Access error.
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 8. Extension Events
 
@@ -487,7 +489,7 @@ The name of this extension is "Present"
 	it. PresentConfigureNotify events are XGE events and so do not
 	have a unique event type.
 
-	'x' and 'y' are the parent-relative location of 'window'. 
+	'x' and 'y' are the parent-relative location of 'window'.
 
 ┌───
     PresentCompleteNotify
@@ -746,7 +748,7 @@ A.2 Protocol Requests
 	4	0			reply length
 	4	CARD32			major version
         4	CARD32			minor version
-	16				unused	
+	16				unused
 └───
 
 ┌───

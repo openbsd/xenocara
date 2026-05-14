@@ -1,7 +1,7 @@
 			  The DRI2 Extension
 			      Version 2.0
 			      2008-09-04
-      
+
 			  Kristian Høgsberg
 			    krh@redhat.com
 			     Red Hat, Inc
@@ -268,7 +268,7 @@ The name of this extension is "DRI2".
 	ISSUE: We could add the list of supported attachments and the
 	supported DRI2CopyRegion values here (just the bitmask of all
 	supported values).
-	
+
 ┌───
     DRI2Authenticate
 	window: WINDOW
@@ -289,7 +289,7 @@ The name of this extension is "DRI2".
     DRI2GetBuffers
 	drawable: DRAWABLE
 	attachments: LISTofDRI2ATTACHMENTS
-      ▶	
+      ▶
 	width, height: CARD32
 	buffers: LISTofDRI2BUFFER
 └───
@@ -313,7 +313,7 @@ The name of this extension is "DRI2".
 	region: REGION
 	source: DRI2ATTACHMENT
 	destination: DRI2ATTACHMENT
-      ▶	
+      ▶
 └───
 	Errors: Window, Value
 
@@ -650,7 +650,7 @@ A.2 Protocol Requests
 	4	0			reply length
 	4	CARD32			major version
         4	CARD32			minor version
-	16				unused	
+	16				unused
 └───
 
 ┌───
@@ -687,7 +687,7 @@ A.2 Protocol Requests
 	2	CARD16			sequence number
 	4	0			reply length
 	4	CARD32			authenticated
-	20				unused	
+	20				unused
 └───
 
 ┌───
@@ -698,7 +698,7 @@ A.2 Protocol Requests
 	4	DRAWABLE		drawable
 	4	n			number of attachments
 	4n	LISTofDRI2ATTACHMENTS	attachments
-      ▶	
+      ▶
 	1	1			Reply
         1				unused
 	2	CARD16			sequence number
@@ -706,7 +706,7 @@ A.2 Protocol Requests
 	4	CARD32			width of drawable
 	4	CARD32			height of drawable
 	4	CARD32			buffer count
-	12				unused	
+	12				unused
 	5n	LISTofDRI2BUFFER	buffers
 └───
 
@@ -719,12 +719,12 @@ A.2 Protocol Requests
 	4	REGION			region
 	4	DRI2ATTACHMENT		source
 	4	DRI2ATTACHMENT		destination
-      ▶	
+      ▶
 	1	1			Reply
         1				unused
 	2	CARD16			sequence number
 	4	0			reply length
-	24				unused	
+	24				unused
 └───
 
 ┌───
@@ -743,7 +743,7 @@ A.2 Protocol Requests
 	4	CARD32			width of drawable
 	4	CARD32			height of drawable
 	4	CARD32			buffer count
-	12				unused	
+	12				unused
 	5n	LISTofDRI2BUFFER	buffers
 └───
 
@@ -759,7 +759,7 @@ A.2 Protocol Requests
 	4	CARD32			divisor_lo
 	4	CARD32			remainder_hi
 	4	CARD32			remainder_lo
-      ▶	
+      ▶
 	1	1			Reply
         1				unused
 	2	CARD16			sequence number

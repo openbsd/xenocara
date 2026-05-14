@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: DMXProto
 Description: DMX extension headers
 Version: 2.3.1

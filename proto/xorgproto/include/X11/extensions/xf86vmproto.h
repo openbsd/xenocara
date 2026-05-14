@@ -165,7 +165,7 @@ typedef struct {
     CARD16	vsyncstart;
     CARD16	vsyncend;
     CARD16	vtotal;
-    CARD16	pad1;
+    CARD32	pad1;
     CARD32	flags;
     CARD32	reserved1;
     CARD32	reserved2;

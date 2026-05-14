@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: XF86RushProto
 Description: XF86Rush extension headers
 Version: 1.1.2

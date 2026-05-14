@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: XCMiscProto
 Description: XCMisc extension headers
 Version: 1.2.2

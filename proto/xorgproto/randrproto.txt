@@ -137,7 +137,7 @@ be dynamically configured to provide support for:
  1) Output slaving: plug in a USB device, but have its output rendered
  using the main GPU. On some dual-GPU laptops, the second GPU isn't
  connected to the LVDS panel, so we need to use the first GPU as an output
- slave for the second GPU. 
+ slave for the second GPU.
 
  2) offload - For dual-GPU laptops, allow direct rendered applications to be run
  on the second GPU and display on the first GPU.

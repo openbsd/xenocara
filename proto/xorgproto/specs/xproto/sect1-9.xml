@@ -95,11 +95,11 @@ the request.
 If the specified length is smaller or larger than the required length,
 an error is generated.
 Unused bytes in a request are not required to be zero.
-Major opcodes 128 through 255 are reserved for 
+Major opcodes 128 through 255 are reserved for
 <firstterm id="extension">extensions</firstterm>.
 <indexterm zone="extension"><primary>Extension</primary></indexterm>
 Extensions are intended to contain multiple requests,
-so extension requests typically have an additional 
+so extension requests typically have an additional
 <firstterm id="minor_opcode">minor opcode</firstterm> encoded
 in the second data byte in the request header.
 <indexterm zone="minor_opcode" significance="preferred"><primary>Opcode</primary><secondary>minor</secondary></indexterm>

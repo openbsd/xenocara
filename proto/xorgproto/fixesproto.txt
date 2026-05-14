@@ -23,7 +23,7 @@ developers, in particular,
 
  +	Bill Haneman for the design for cursor image tracking.
 
- +	Havoc Pennington 
+ +	Havoc Pennington
 
  +	Fredrik Höglund for cursor names
 
@@ -217,7 +217,7 @@ GetCursorImage
 	pixel followed by 8 bits each of red, green and finally 8 bits of
 	blue in the least significant 8 bits.  The color components are
 	pre-multiplied with the alpha component.
-	
+
 ************* XFIXES VERSION 2 OR BETTER ***********
 
 8. Region Objects
@@ -232,7 +232,7 @@ extension, the X Damage Extension.
 
 	Region:				XID
 	WINDOW_REGION_KIND:		{ Bounding, Clip }
-	
+
 8.2 Errors
 
 	Region				The specified region is invalid
@@ -316,7 +316,7 @@ CopyRegion
 		source:				Region
 		destination:			Region
 
-	This replaces the contents of destination with the contents of 
+	This replaces the contents of destination with the contents of
 	source.
 
 UnionRegion
@@ -326,23 +326,23 @@ SubtractRegion
 		source1:			Region
 		source2:			Region
 		destination:			Region
-	
+
 	Combines source1 and source2, placing the result in destination.
 	Destination may be the same as either source1 or source2.
 
 	Errors: Region, Value
-	
+
 InvertRegion
 
 		source:				Region
 		bounds:				RECTANGLE
 		destination:			Region
-	
+
 	The source region is subtracted from the region specified by
 	bounds.  The result is placed in destination, replacing its contents.
 
 	Errors: Region
-	
+
 TranslateRegion
 
 		region:				Region
@@ -429,7 +429,7 @@ CursorNotify
 		cursor-serial:		CARD32
 		timestamp:		Timestamp
 		name:			Atom or None
-	
+
 	In Version 2 of the XFIXES protocol, this event adds the atom
 	of any name associated with the current cursor (else None).
 
@@ -638,7 +638,7 @@ DestroyPointerBarrier
 
 	Destroys the named barrier.
 
-	Errors: Barrier 
+	Errors: Barrier
 
 ************* XFIXES VERSION 6 OR BETTER ***********
 

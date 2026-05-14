@@ -1,6 +1,6 @@
 prefix=@prefix@
 includedir=@includedir@
- 
+
 Name: XF86DRIProto
 Description: XF86DRI extension headers
 Version: 2.1.1

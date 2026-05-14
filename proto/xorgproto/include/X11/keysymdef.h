@@ -121,19 +121,19 @@ SOFTWARE.
  *   4. If none of the previous rules apply, an alias is *implicitly*
  *      deprecated if there is at least one previous name for the
  *      corresponding keysym that is *not* explicitly deprecated.
- * 
+ *
  *      Examples:
- * 
+ *
  *        // SingleCandidate is the canonical name
  *        #define XK_SingleCandidate        0xff3c
  *        // Hangul_SingleCandidate is deprecated because it is an alias
  *        // and it does not start with "non-deprecated alias"
  *        #define XK_Hangul_SingleCandidate 0xff3c // Single candidate
- * 
+ *
  *        // guillemotleft is the canonical name, but it is deprecated
- *        #define XK_guillemotleft  0x00ab // deprecated alias for guillemetleft (misspelling) 
+ *        #define XK_guillemotleft  0x00ab // deprecated alias for guillemetleft (misspelling)
  *        // guillemetleft is not deprecated, because the keysym has no endorsed name before it.
- *        #define XK_guillemetleft  0x00ab // U+00AB LEFT-POINTING DOUBLE ANGLE QUOTATION MARK 
+ *        #define XK_guillemetleft  0x00ab // U+00AB LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
  *        // The following hypothetical name is deprecated because guillemetleft come before.
  *        #define XK_guillemetleft2 0x00ab
  *

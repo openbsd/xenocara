@@ -190,8 +190,8 @@ operations other than QueryVersion.
 		errors: Window, Access, Match
 
 	The hierarchy starting at 'window' is directed to off-screen
-	storage. 'update' specifies whether the contents are mirrored to 
-	the parent window automatically or not. Only one client may specify 
+	storage. 'update' specifies whether the contents are mirrored to
+	the parent window automatically or not. Only one client may specify
 	an update type of Manual, another attempt will result in an
 	Access error. When all clients enabling redirection terminate,
 	the redirection will automatically be disabled.
@@ -281,17 +281,17 @@ operations other than QueryVersion.
 
 	        overlayWin:			Window
 
-    This request returns the XID of the Composite Overlay Window for 
-    the screen specified by the argument 'window'. This request 
-    indicates that the client wishes to use the Composite Overlay 
-    Window of this screen. If this Composite Overlay Window has not 
+    This request returns the XID of the Composite Overlay Window for
+    the screen specified by the argument 'window'. This request
+    indicates that the client wishes to use the Composite Overlay
+    Window of this screen. If this Composite Overlay Window has not
     yet been mapped, it is mapped by this request.
 
-    The Composite Overlay Window for a particular screen will be 
-    unmapped when all clients who have invoked this request have 
+    The Composite Overlay Window for a particular screen will be
+    unmapped when all clients who have invoked this request have
     also invoked CompositeReleaseOverlayWindow for that screen. Also,
-    CompositeReleaseOverlayWindow for a screen will be implicitly 
-    called when a client using the Composite Overlay Window on that 
+    CompositeReleaseOverlayWindow for a screen will be implicitly
+    called when a client using the Composite Overlay Window on that
     screen terminates its X11 connection.
 
 
@@ -299,7 +299,7 @@ operations other than QueryVersion.
 
 		window:				Window
 
-    This request specifies that the client is no longer using the 
-    Composite Overlay Window on the screen specified by the 
-    argument 'window'. A screen's Composite Overlay Window is 
+    This request specifies that the client is no longer using the
+    Composite Overlay Window on the screen specified by the
+    argument 'window'. A screen's Composite Overlay Window is
     unmapped when there are no longer any clients using it.

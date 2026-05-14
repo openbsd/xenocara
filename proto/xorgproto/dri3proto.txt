@@ -36,7 +36,7 @@ Arthur Huillet <arthur.huillet@free.fr>
 Louis-Francis Ratté-Boulianne <lfrb@collabora.com>
 Austin Shafer <ashafer@nvidia.com>
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 2. Data Types
 
@@ -44,25 +44,25 @@ The DRI3 extension uses the RandR extension Provider data type to
 select among multiple GPUs on a single screen and the Sync extension
 fence object to provide graphics object synchronization.
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 4. Errors
 
 DRI3 defines no errors.
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 5. Events
 
 DRI3 defines no events.
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 6. Protocol Types
 
 SYNCOBJ { XID }
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 7. Extension Initialization
 
@@ -89,7 +89,7 @@ The name of this extension is "DRI3"
 	requests.
 
 
-			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
+			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
 8. Extension Requests
 
@@ -560,7 +560,7 @@ A.2 Protocol Requests
 	4	0			reply length
 	4	CARD32			major version
         4	CARD32			minor version
-	16				unused	
+	16				unused
 └───
 
 
@@ -571,7 +571,7 @@ A.2 Protocol Requests
 	2	4			length
 	4	DRAWABLE		drawable
 	4	PROVIDER		provider
-      ▶	
+      ▶
 	1	1			Reply
         1	1			nfd
 	2	CARD16			sequence number
@@ -604,7 +604,7 @@ A.2 Protocol Requests
 	1	3			DRI3 opcode
 	2	2			length
 	4	Pixmap			pixmap
-      ▶	
+      ▶
 	1	1			Reply
         1	1			nfd
 	2	CARD16			sequence number
@@ -640,7 +640,7 @@ A.2 Protocol Requests
 	2	3			length
 	4	Drawable		drawable
 	4	Fence			fence
-      ▶	
+      ▶
 	1	1			Reply
         1	1			nfd
 	2	CARD16			sequence number
