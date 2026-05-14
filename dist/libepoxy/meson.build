@@ -1,4 +1,4 @@
-project('libepoxy', 'c', version: '1.5.9',
+project('libepoxy', 'c', version: '1.5.10',
         default_options: [
           'buildtype=debugoptimized',
           'c_std=gnu99',
@@ -95,6 +95,7 @@ if cc.get_id() == 'msvc'
     '-we4053', # an expression of type void was used as an operand
     '-we4071', # no function prototype given
     '-we4819', # the file contains a character that cannot be represented in the current code page
+    '/utf-8', # Set the input and exec encoding to utf-8, like is the default with GCC
   ]
 elif cc.get_id() == 'gcc' or cc.get_id() == 'clang'
   test_cflags = [
@@ -165,9 +166,11 @@ endif
 dl_dep = cc.find_library('dl', required: false)
 gl_dep = dependency('gl', required: false)
 egl_dep = dependency('egl', required: false)
+elg_headers_dep = egl_dep.partial_dependency(compile_args: true, includes: true)
 
 # Optional dependencies for tests
 x11_dep = dependency('x11', required: false)
+x11_headers_dep = x11_dep.partial_dependency(compile_args: true, includes: true)
 
 # GLES v2 and v1 may have pkg-config files, courtesy of downstream
 # packagers; let's check those first, and fall back to find_library()
