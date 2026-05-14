@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.48 2025/09/17 15:19:09 robert Exp $
+# $OpenBSD: Makefile,v 1.49 2026/05/14 13:22:31 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -32,8 +32,7 @@ XCB_LIBS= \
 	xcb-util-renderutil \
 	xcb-util-cursor \
 	xcb-util-keysyms \
-	xcb-util-wm \
-	xcb-util-xrm
+	xcb-util-wm
 
 # libpng needs to be built first as freetype depends on it
 SUBDIR= libpng freetype fontconfig libxtrans libXau libXdmcp \
@@ -44,7 +43,7 @@ SUBDIR= libpng freetype fontconfig libxtrans libXau libXdmcp \
 	libXi libXinerama libxkbfile \
 	libXrandr libXpresent libXRes libXScrnSaver \
 	libXtst libXv libXvMC libXxf86dga libXxf86vm \
-	libpciaccess libxcvt pixman
+	libpciaccess libxcvt pixman xcb-util-xrm
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
 SUBDIR+= libxshmfence
