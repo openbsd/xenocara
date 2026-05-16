@@ -613,6 +613,7 @@ static const struct pci_system_methods openbsd_pci_methods = {
 	.fill_capabilities = pci_fill_capabilities_generic,
 
 	.boot_vga = pci_device_openbsd_boot_vga,
+	.boot_display = NULL,
 
 	.open_legacy_io = pci_device_openbsd_open_legacy_io,
 

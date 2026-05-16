@@ -22,7 +22,7 @@ host = host_machine.system()
 _pci_access_host_files = []
 if host == 'linux'
   _pci_access_host_files += ['linux_sysfs.c', 'linux_devmem.c', 'common_vgaarb.c']
-elif host == 'freebsd'
+elif ['freebsd', 'dragonfly'].contains(host)
   _pci_access_host_files += ['freebsd_pci.c', 'common_vgaarb_stub.c']
 elif host == 'netbsd'
   _pci_access_host_files += ['netbsd_pci.c', 'common_vgaarb_stub.c']

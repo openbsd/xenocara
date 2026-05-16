@@ -35,3 +35,9 @@ option(
   type : 'feature',
   description : 'Enable zlib support to read gzip compressed pci.ids.',
 )
+option(
+  'install-scanpci',
+  type : 'boolean',
+  value : false,
+  description : 'Install scanpci program and man page',
+)

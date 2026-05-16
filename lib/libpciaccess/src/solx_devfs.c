@@ -1047,6 +1047,7 @@ static const struct pci_system_methods solx_devfs_methods = {
 
     .fill_capabilities = pci_fill_capabilities_generic,
     .boot_vga = pci_device_solx_devfs_boot_vga,
+    .boot_display = NULL,
 
     .open_legacy_io = pci_device_solx_devfs_open_legacy_io,
     .read32 = pci_device_solx_devfs_read32,

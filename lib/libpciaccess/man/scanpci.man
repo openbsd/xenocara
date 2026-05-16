@@ -22,23 +22,21 @@
 .\" dealings in this Software without prior written authorization from the
 .\" XFree86 Project.
 .\"
-.TH SCANPCI 1 __xorgversion__
+.TH SCANPCI 1 2008-10-17 __xorgversion__
 .SH NAME
 scanpci - scan/probe PCI buses
 .SH SYNOPSIS
 .B scanpci
 .RB [ \-v ]
 .SH DESCRIPTION
-.I Scanpci
+.B Scanpci
 is a utility that can be used to scan PCI buses and report information
 about the configuration space settings for each PCI device.
 On most platforms,
-.I scanpci
+.B scanpci
 can only be run by the root user.
 .SH OPTIONS
 .TP 8
 .B \-v
-Print the configuration space information for each device in a verbose
-format.  Without this option, only a brief description is printed for
-each device.
-
+Print the configuration space information for each device in a verbose format.
+Without this option, only a brief description is printed for each device.

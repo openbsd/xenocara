@@ -22,4 +22,5 @@ scanpci = executable(
   'scanpci',
   'scanpci.c',
   dependencies : [dep_pciaccess],
+  install : get_option('install-scanpci'),
 )

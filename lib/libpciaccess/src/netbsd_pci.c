@@ -881,6 +881,7 @@ static const struct pci_system_methods netbsd_pci_methods = {
 #else
 	.boot_vga = NULL,
 #endif
+	.boot_display = NULL,
 	.open_legacy_io = pci_device_netbsd_open_legacy_io,
 	.read32 = pci_device_netbsd_read32,
 	.read16 = pci_device_netbsd_read16,

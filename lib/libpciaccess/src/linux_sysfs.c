@@ -772,19 +772,20 @@ static void pci_device_linux_sysfs_disable(struct pci_device *dev)
 	return pci_device_linux_sysfs_set_enable(dev, 0);
 }
 
-static int pci_device_linux_sysfs_boot_vga(struct pci_device *dev)
+static int pci_device_linux_sysfs_file(struct pci_device *dev, const char *fname)
 {
     char name[256];
     char reply[3];
     int fd, bytes_read;
     int ret = 0;
 
-    snprintf( name, 255, "%s/%04x:%02x:%02x.%1u/boot_vga",
+    snprintf( name, 255, "%s/%04x:%02x:%02x.%1u/%s",
 	      SYS_BUS_PCI,
 	      dev->domain,
 	      dev->bus,
 	      dev->dev,
-	      dev->func );
+	      dev->func,
+	      fname );
 
     fd = open( name, O_RDONLY | O_CLOEXEC);
     if (fd == -1)
@@ -798,6 +799,23 @@ static int pci_device_linux_sysfs_boot_vga(struct pci_device *dev)
 out:
     close(fd);
     return ret;
+}
+
+static int pci_device_linux_sysfs_boot_vga(struct pci_device *dev)
+{
+	return pci_device_linux_sysfs_file(dev, "boot_vga");
+}
+
+static int pci_device_linux_sysfs_boot_display(struct pci_device *dev)
+{
+	char card[256];
+
+	for (int i = 0; i < 3; i++) {
+		snprintf(card, 255, "drm/card%d/boot_display", i);
+		if (pci_device_linux_sysfs_file(dev, card))
+			return 1;
+	}
+	return 0;
 }
 
 static int pci_device_linux_sysfs_has_kernel_driver(struct pci_device *dev)
@@ -1054,6 +1072,7 @@ static const struct pci_system_methods linux_sysfs_methods = {
     .enable = pci_device_linux_sysfs_enable,
     .disable = pci_device_linux_sysfs_disable,
     .boot_vga = pci_device_linux_sysfs_boot_vga,
+    .boot_display = pci_device_linux_sysfs_boot_display,
     .has_kernel_driver = pci_device_linux_sysfs_has_kernel_driver,
 
     .open_device_io = pci_device_linux_sysfs_open_device_io,

@@ -39,6 +39,7 @@
 #include "pciaccess_private.h"
 
 _pci_hidden struct pci_system * pci_sys;
+static int pci_sys_refcnt = 0;
 
 /**
  * Initialize the PCI subsystem for access.
@@ -54,6 +55,11 @@ int
 pci_system_init( void )
 {
     int err = ENOSYS;
+
+    if ( pci_sys_refcnt > 0 ) {
+          pci_sys_refcnt++;
+          return 0;
+    }
 
 #ifdef __linux__
     err = pci_system_linux_sysfs_create();
@@ -72,6 +78,10 @@ pci_system_init( void )
 #else
 # error "Unsupported OS"
 #endif
+
+    if ( pci_sys != NULL ) {
+	pci_sys_refcnt = 1;
+    }
 
     return err;
 }
@@ -97,6 +107,11 @@ pci_system_cleanup( void )
 
 
     if ( pci_sys == NULL ) {
+	return;
+    }
+
+    if ( pci_sys_refcnt > 1 ) {
+	pci_sys_refcnt--;
 	return;
     }
 
@@ -130,4 +145,5 @@ pci_system_cleanup( void )
 
     free( pci_sys );
     pci_sys = NULL;
+    pci_sys_refcnt = 0;
 }

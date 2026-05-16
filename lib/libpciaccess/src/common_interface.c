@@ -145,6 +145,21 @@ pci_device_is_boot_vga( struct pci_device * dev )
 }
 
 /**
+ * Probe a PCI (Display) device to determine if its the boot display device
+ *
+ * \param dev    Device whose display status to query
+ * \return
+ * Zero if not the boot display, 1 if the boot display.
+ */
+int
+pci_device_is_boot_display( struct pci_device * dev )
+{
+	if (!pci_sys->methods->boot_display)
+		return 0;
+	return pci_sys->methods->boot_display( dev );
+}
+
+/**
  * Probe a PCI device to determine if a kernel driver is attached.
  *
  * \param dev Device to query

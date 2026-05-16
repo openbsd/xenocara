@@ -60,9 +60,9 @@
 #include <inttypes.h>
 
 #if (__GNUC__ >= 3) || (__SUNPRO_C >= 0x5130)
-#define __deprecated __attribute__((deprecated))
+#define PCIACCESS_DEPRECATED __attribute__((deprecated))
 #else
-#define __deprecated
+#define PCIACCESS_DEPRECATED
 #endif
 
 typedef uint64_t pciaddr_t;
@@ -80,12 +80,14 @@ int pci_device_has_kernel_driver(struct pci_device *dev);
 
 int pci_device_is_boot_vga(struct pci_device *dev);
 
+int pci_device_is_boot_display(struct pci_device *dev);
+
 int pci_device_read_rom(struct pci_device *dev, void *buffer);
 
-int  __deprecated pci_device_map_region(struct pci_device *dev,
+int PCIACCESS_DEPRECATED pci_device_map_region(struct pci_device *dev,
     unsigned region, int write_enable);
 
-int __deprecated pci_device_unmap_region(struct pci_device *dev,
+int PCIACCESS_DEPRECATED pci_device_unmap_region(struct pci_device *dev,
     unsigned region);
 
 int pci_device_map_range(struct pci_device *dev, pciaddr_t base,
@@ -94,10 +96,10 @@ int pci_device_map_range(struct pci_device *dev, pciaddr_t base,
 int pci_device_unmap_range(struct pci_device *dev, void *memory,
     pciaddr_t size);
 
-int __deprecated pci_device_map_memory_range(struct pci_device *dev,
+int PCIACCESS_DEPRECATED pci_device_map_memory_range(struct pci_device *dev,
     pciaddr_t base, pciaddr_t size, int write_enable, void **addr);
 
-int __deprecated pci_device_unmap_memory_range(struct pci_device *dev,
+int PCIACCESS_DEPRECATED pci_device_unmap_memory_range(struct pci_device *dev,
     void *memory, pciaddr_t size);
 
 int pci_device_probe(struct pci_device *dev);

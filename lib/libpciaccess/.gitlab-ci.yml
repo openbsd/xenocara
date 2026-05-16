@@ -50,21 +50,6 @@ check-commits:
     reports:
       junit: results.xml
 
-#
-# Verify that the merge request has the allow-collaboration checkbox ticked
-#
-check-merge-request:
-  extends:
-    - .fdo.ci-fairy
-  stage: deploy
-  script:
-    - ci-fairy check-merge-request --require-allow-collaboration --junit-xml=results.xml
-  artifacts:
-    when: on_failure
-    reports:
-      junit: results.xml
-  allow_failure: true
-
 
 #
 # Build a container with the given tag and the packages pre-installed.
@@ -88,10 +73,15 @@ meson:
   stage: build
   parallel:
     matrix:
-      - MESON_OPTIONS: ['-Dzlib=disabled', '-Dzlib=enabled']
+      - MESON_OPTIONS: ['-Dzlib=disabled', '-Dzlib=enabled', '-Dinstall-scanpci=true']
   script:
     - mkdir -p ../_inst
     - meson setup builddir --prefix="$PWD/../_inst" -Dwarning_level=3 -Ddefault_library=both $MESON_OPTIONS
     - meson configure builddir
     - ninja -C builddir test
     - ninja -C builddir install
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'push'

@@ -573,6 +573,7 @@ static const struct pci_system_methods freebsd_pci_methods = {
     .fill_capabilities = pci_fill_capabilities_generic,
     .enable = NULL,
     .boot_vga = NULL,
+    .boot_display = NULL,
     .has_kernel_driver = pci_device_freebsd_has_kernel_driver,
 
     .open_device_io = pci_device_freebsd_open_io,

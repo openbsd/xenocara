@@ -23,10 +23,9 @@ custom_target(
   input : 'scanpci.man',
   output : 'scanpci.1',
   command : [
-    find_program('sed'), '-e', 's/__xorgversion__/X Version 11/', '@INPUT@',
+    find_program('sed'), '-e', 's/__xorgversion__/"libpciaccess @0@" "X Version 11"/'.format(meson.project_version()), '@INPUT@',
   ],
   capture : true,
-  install : false,
+  install : get_option('install-scanpci'),
   install_dir : join_paths(get_option('prefix'), get_option('mandir'), 'man1'),
 )
-

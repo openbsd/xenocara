@@ -47,6 +47,7 @@ parse_string_to_decodes_rsrc(char *input, int *vga_count, struct pci_slot_match 
 {
     char *tok;
     char *input_sp = NULL, *count_sp, *pci_sp;
+    unsigned long ul;
     char tmp[32];
 
     tok = strtok_r(input,",",&input_sp);
@@ -63,9 +64,11 @@ parse_string_to_decodes_rsrc(char *input, int *vga_count, struct pci_slot_match 
     if (!tok)
         goto fail;
 
-    *vga_count = strtoul(tok, NULL, 10);
-    if (*vga_count == LONG_MAX)
+    errno = 0;
+    ul = strtoul(tok, NULL, 10);
+    if ((ul >= INT_MAX) || (errno != 0))
         goto fail;
+    *vga_count = (int) ul;
 
 #ifdef DEBUG
     fprintf(stderr,"vga count is %d\n", *vga_count);
@@ -238,6 +241,8 @@ pci_device_vgaarb_set_target(struct pci_device *dev)
 
     len = snprintf(buf, BUFSIZE, "target PCI:%04x:%02x:%02x.%x",
                    dev->domain, dev->bus, dev->dev, dev->func);
+    if (len < 0 || len >= BUFSIZE)
+        return -1;
 
     ret = vgaarb_write(pci_sys->vgaarb_fd, buf, len);
     if (ret)
@@ -268,6 +273,9 @@ pci_device_vgaarb_decodes(int new_vgaarb_rsrc)
         return 0;
 
     len = snprintf(buf, BUFSIZE, "decodes %s", rsrc_to_str(new_vgaarb_rsrc));
+    if (len < 0 || len >= BUFSIZE)
+        return -1;
+
     ret = vgaarb_write(pci_sys->vgaarb_fd, buf, len);
     if (ret == 0)
         dev->vgaarb_rsrc = new_vgaarb_rsrc;
@@ -297,6 +305,8 @@ pci_device_vgaarb_lock(void)
         return 0;
 
     len = snprintf(buf, BUFSIZE, "lock %s", rsrc_to_str(dev->vgaarb_rsrc));
+    if (len < 0 || len >= BUFSIZE)
+        return -1;
 
     return vgaarb_write(pci_sys->vgaarb_fd, buf, len);
 }
@@ -315,6 +325,8 @@ pci_device_vgaarb_trylock(void)
         return 0;
 
     len = snprintf(buf, BUFSIZE, "trylock %s", rsrc_to_str(dev->vgaarb_rsrc));
+    if (len < 0 || len >= BUFSIZE)
+        return -1;
 
     return vgaarb_write(pci_sys->vgaarb_fd, buf, len);
 }
@@ -333,6 +345,8 @@ pci_device_vgaarb_unlock(void)
         return 0;
 
     len = snprintf(buf, BUFSIZE, "unlock %s", rsrc_to_str(dev->vgaarb_rsrc));
+    if (len < 0 || len >= BUFSIZE)
+        return -1;
 
     return vgaarb_write(pci_sys->vgaarb_fd, buf, len);
 }
