@@ -112,7 +112,7 @@
 #define MAKE_COW_OWNER(ptr) ((void*)((uintptr_t)(ptr) | 1))
 #define COW(ptr) (void *)((uintptr_t)(ptr) & ~1)
 
-#if XFONT2_CLIENT_FUNCS_VERSION >= 1 && 0
+#if XFONT2_CLIENT_FUNCS_VERSION >= 1
 #define AllocateFontPrivateIndex() xfont2_allocate_font_private_index()
 #define FontSetPrivate(font, idx, data) xfont2_font_set_private(font, idx, data)
 #endif
