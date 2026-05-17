@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.49 2026/05/14 13:22:31 matthieu Exp $
+# $OpenBSD: Makefile,v 1.50 2026/05/17 17:59:22 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -53,7 +53,7 @@ SUBDIR+= libxshmfence
 SUBDIR+= libdrm
 SUBDIR+= libva
 SUBDIR+= mesa
-SUBDIR+= libGLU libGLw
+SUBDIR+= libGLU
 SUBDIR+= libepoxy
 .endif
 
