@@ -38,9 +38,7 @@ ext_libdrm_exynos = declare_dependency(
   include_directories : [inc_drm, include_directories('.')],
 )
 
-if meson.version().version_compare('>= 0.54.0')
-  meson.override_dependency('libdrm_exynos', ext_libdrm_exynos)
-endif
+meson.override_dependency('libdrm_exynos', ext_libdrm_exynos)
 
 pkg.generate(
   libdrm_exynos,

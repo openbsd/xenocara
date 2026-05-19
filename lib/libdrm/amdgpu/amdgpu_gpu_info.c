@@ -137,6 +137,24 @@ drm_public int amdgpu_query_firmware_version(amdgpu_device_handle dev,
 	return 0;
 }
 
+drm_public int amdgpu_query_uq_fw_area_info(amdgpu_device_handle dev,
+					     unsigned type,
+					     unsigned ip_instance,
+					     struct drm_amdgpu_info_uq_fw_areas *info)
+{
+	struct drm_amdgpu_info request;
+
+	memset(&request, 0, sizeof(request));
+	request.return_pointer = (uintptr_t)info;
+	request.return_size = sizeof(*info);
+	request.query = AMDGPU_INFO_UQ_FW_AREAS;
+	request.query_hw_ip.type = type;
+	request.query_hw_ip.ip_instance = ip_instance;
+
+	return drmCommandWrite(dev->fd, DRM_AMDGPU_INFO, &request,
+			       sizeof(struct drm_amdgpu_info));
+}
+
 drm_private int amdgpu_query_gpu_info_init(amdgpu_device_handle dev)
 {
 	int r, i;

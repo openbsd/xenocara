@@ -34,7 +34,8 @@ struct bo;
 struct bo *bo_create(int fd, unsigned int format,
 		   unsigned int width, unsigned int height,
 		   unsigned int handles[4], unsigned int pitches[4],
-		   unsigned int offsets[4], enum util_fill_pattern pattern);
+		   unsigned int offsets[4], enum util_fill_pattern pattern,
+		   unsigned long seed);
 void bo_destroy(struct bo *bo);
 void bo_dump(struct bo *bo, const char *filename);
 

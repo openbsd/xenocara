@@ -32,4 +32,5 @@ cc_library_static {
     shared_libs: ["libdrm"],
     header_libs: ["libdrm_test_headers"],
     export_header_lib_headers: ["libdrm_test_headers"],
+    vendor_available: true,
 }

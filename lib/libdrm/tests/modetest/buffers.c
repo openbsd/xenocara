@@ -114,11 +114,13 @@ struct bo *
 bo_create(int fd, unsigned int format,
 	  unsigned int width, unsigned int height,
 	  unsigned int handles[4], unsigned int pitches[4],
-	  unsigned int offsets[4], enum util_fill_pattern pattern)
+	  unsigned int offsets[4], enum util_fill_pattern pattern,
+	  unsigned long seed)
 {
-	unsigned int virtual_height;
+	unsigned int virtual_height, xsub, ysub;
 	struct bo *bo;
 	unsigned int bpp;
+	bool is_planar;
 	void *planes[3] = { 0, };
 	void *virtual;
 	int ret;
@@ -145,6 +147,10 @@ bo_create(int fd, unsigned int format,
 	case DRM_FORMAT_NV42:
 	case DRM_FORMAT_YUV420:
 	case DRM_FORMAT_YVU420:
+	case DRM_FORMAT_YUV422:
+	case DRM_FORMAT_YVU422:
+	case DRM_FORMAT_YUV444:
+	case DRM_FORMAT_YVU444:
 		bpp = 8;
 		break;
 
@@ -223,25 +229,41 @@ bo_create(int fd, unsigned int format,
 	case DRM_FORMAT_NV15:
 	case DRM_FORMAT_YUV420:
 	case DRM_FORMAT_YVU420:
-		virtual_height = height * 3 / 2;
+		is_planar = true;
+		xsub = 2;
+		ysub = 2;
 		break;
 
 	case DRM_FORMAT_NV16:
 	case DRM_FORMAT_NV61:
 	case DRM_FORMAT_NV20:
-		virtual_height = height * 2;
+	case DRM_FORMAT_YUV422:
+	case DRM_FORMAT_YVU422:
+		is_planar = true;
+		xsub = 2;
+		ysub = 1;
 		break;
 
 	case DRM_FORMAT_NV24:
 	case DRM_FORMAT_NV42:
 	case DRM_FORMAT_NV30:
-		virtual_height = height * 3;
+	case DRM_FORMAT_YUV444:
+	case DRM_FORMAT_YVU444:
+		is_planar = true;
+		xsub = 1;
+		ysub = 1;
 		break;
 
 	default:
-		virtual_height = height;
+		is_planar = false;
+		xsub = 1;
+		ysub = 1;
 		break;
 	}
+
+	virtual_height = height;
+	if (is_planar)
+		virtual_height += height * 2 / xsub / ysub;
 
 	bo = bo_create_dumb(fd, width, virtual_height, bpp);
 	if (!bo)
@@ -275,25 +297,14 @@ bo_create(int fd, unsigned int format,
 	case DRM_FORMAT_NV16:
 	case DRM_FORMAT_NV61:
 	case DRM_FORMAT_NV15:
-	case DRM_FORMAT_NV20:
-		offsets[0] = 0;
-		handles[0] = bo->handle;
-		pitches[0] = bo->pitch;
-		pitches[1] = pitches[0];
-		offsets[1] = pitches[0] * height;
-		handles[1] = bo->handle;
-
-		planes[0] = virtual;
-		planes[1] = virtual + offsets[1];
-		break;
-
 	case DRM_FORMAT_NV24:
 	case DRM_FORMAT_NV42:
+	case DRM_FORMAT_NV20:
 	case DRM_FORMAT_NV30:
 		offsets[0] = 0;
 		handles[0] = bo->handle;
 		pitches[0] = bo->pitch;
-		pitches[1] = pitches[0] * 2;
+		pitches[1] = pitches[0] * 2 / xsub;
 		offsets[1] = pitches[0] * height;
 		handles[1] = bo->handle;
 
@@ -303,14 +314,18 @@ bo_create(int fd, unsigned int format,
 
 	case DRM_FORMAT_YUV420:
 	case DRM_FORMAT_YVU420:
+	case DRM_FORMAT_YUV422:
+	case DRM_FORMAT_YVU422:
+	case DRM_FORMAT_YUV444:
+	case DRM_FORMAT_YVU444:
 		offsets[0] = 0;
 		handles[0] = bo->handle;
 		pitches[0] = bo->pitch;
-		pitches[1] = pitches[0] / 2;
+		pitches[1] = pitches[0] / xsub;
 		offsets[1] = pitches[0] * height;
 		handles[1] = bo->handle;
 		pitches[2] = pitches[1];
-		offsets[2] = offsets[1] + pitches[1] * height / 2;
+		offsets[2] = offsets[1] + pitches[1] * height / ysub;
 		handles[2] = bo->handle;
 
 		planes[0] = virtual;
@@ -372,7 +387,7 @@ bo_create(int fd, unsigned int format,
 		break;
 	}
 
-	util_fill_pattern(format, pattern, planes, width, height, pitches[0]);
+	util_fill_pattern(format, pattern, planes, width, height, pitches[0], seed);
 	bo_unmap(bo);
 
 	return bo;

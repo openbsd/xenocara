@@ -33,7 +33,7 @@ Reporting Bugs
 ==============
 
 Bugs in this function should be reported to
-https://gitlab.freedesktop.org/mesa/drm/-/issues
+https://gitlab.freedesktop.org/mesa/libdrm/-/issues
 
 See Also
 ========

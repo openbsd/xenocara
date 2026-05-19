@@ -42,6 +42,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "xf86drm.h"
 #include "xf86drmMode.h"
@@ -96,59 +98,42 @@ const char *util_lookup_connector_status_name(unsigned int status)
 				     ARRAY_SIZE(connector_status_names));
 }
 
-static const char * const modules[] = {
-	"i915",
-	"amdgpu",
-	"radeon",
-	"nouveau",
-	"vmwgfx",
-	"omapdrm",
-	"exynos",
-	"tilcdc",
-	"msm",
-	"sti",
-	"tegra",
-	"imx-drm",
-	"rockchip",
-	"atmel-hlcdc",
-	"fsl-dcu-drm",
-	"vc4",
-	"virtio_gpu",
-	"mediatek",
-	"meson",
-	"pl111",
-	"stm",
-	"sun4i-drm",
-	"armada-drm",
-	"komeda",
-	"imx-dcss",
-	"mxsfb-drm",
-	"simpledrm",
-	"imx-lcdif",
-	"vkms",
-	"tidss",
-};
-
 int util_open(const char *device, const char *module)
 {
-	int fd;
+	int fd = -1;
+	drmVersionPtr version;
 
-	if (module) {
+	if (module || device) {
 		fd = drmOpen(module, device);
 		if (fd < 0) {
-			fprintf(stderr, "failed to open device '%s': %s\n",
-				module, strerror(errno));
+			fprintf(stderr, "failed to open device '%s' with busid '%s': %s\n",
+				module, device, strerror(errno));
 			return -errno;
 		}
 	} else {
 		unsigned int i;
+		drmDevicePtr devices[64];
+		int num_devices = drmGetDevices2(0, devices, ARRAY_SIZE(devices));
+		if (num_devices < 0) {
+			fprintf(stderr, "drmGetDevices2() failed with %s\n", strerror(num_devices));
+			return num_devices;
+		}
 
-		for (i = 0; i < ARRAY_SIZE(modules); i++) {
-			printf("trying to open device '%s'...", modules[i]);
+		for (i = 0; i < num_devices; i++) {
+			drmDevicePtr device = devices[i];
+			// Select only primary nodes
+			if ((device->available_nodes & 1 << DRM_NODE_PRIMARY) == 0)
+				continue;
 
-			fd = drmOpen(modules[i], device);
+			printf("trying to open device '%s'... ", device->nodes[DRM_NODE_PRIMARY]);
+			fd = open(device->nodes[DRM_NODE_PRIMARY], O_RDWR | O_CLOEXEC);
+
 			if (fd < 0) {
 				printf("failed\n");
+			} else if (!drmIsKMS(fd)) {
+				printf("is not a KMS device\n");
+				close(fd);
+				fd = -1;
 			} else {
 				printf("done\n");
 				break;
@@ -160,6 +145,16 @@ int util_open(const char *device, const char *module)
 			return -ENODEV;
 		}
 	}
+
+	version = drmGetVersion(fd);
+	printf("opened device `%s` on driver `%s` (version %d.%d.%d at %s)\n",
+	       version->desc,
+	       version->name,
+	       version->version_major,
+	       version->version_minor,
+	       version->version_patchlevel,
+	       version->date);
+	drmFreeVersion(version);
 
 	return fd;
 }

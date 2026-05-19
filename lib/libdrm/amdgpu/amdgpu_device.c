@@ -144,6 +144,39 @@ static void amdgpu_device_reference(struct amdgpu_device **dst,
 	*dst = src;
 }
 
+static int amdgpu_query_gfx_level_major(amdgpu_device_handle dev,
+					uint8_t *gfx_ip_version_major)
+{
+	struct drm_amdgpu_info_hw_ip ip_info;
+	uint32_t gfx_ip_count = 0;
+	int r;
+
+	*gfx_ip_version_major = 0;
+
+	r = amdgpu_query_hw_ip_count(dev, AMDGPU_HW_IP_GFX, &gfx_ip_count);
+	if (r)
+		return r;
+
+	/* No graphics support. */
+	if (gfx_ip_count == 0)
+		return 0;
+
+	memset(&ip_info, 0, sizeof(ip_info));
+
+	r = amdgpu_query_hw_ip_info(dev, AMDGPU_HW_IP_GFX, 0, &ip_info);
+	if (r)
+		return r;
+
+	/* GFX6-8 don't set ip_discovery_version. */
+	if (dev->minor_version >= 48 && ip_info.ip_discovery_version) {
+		*gfx_ip_version_major = (ip_info.ip_discovery_version >> 16) & 0xff;
+	} else {
+		*gfx_ip_version_major = ip_info.hw_ip_version_major;
+	}
+
+	return r;
+}
+
 static int _amdgpu_device_initialize(int fd,
 				     uint32_t *major_version,
 				     uint32_t *minor_version,
@@ -151,11 +184,13 @@ static int _amdgpu_device_initialize(int fd,
 				     bool deduplicate_device)
 {
 	struct amdgpu_device *dev = NULL;
+	uint8_t gfx_ip_version_major = 0;
 	drmVersionPtr version;
 	int r;
 	int flag_auth = 0;
 	int flag_authexist=0;
 	uint32_t accel_working = 0;
+	uint32_t va_mgr_flags = 0;
 
 	*device_handle = NULL;
 
@@ -244,12 +279,25 @@ static int _amdgpu_device_initialize(int fd,
 		goto cleanup;
 	}
 
-	amdgpu_va_manager_init(&dev->va_mgr,
-			       dev->dev_info.virtual_address_offset,
-			       dev->dev_info.virtual_address_max,
-			       dev->dev_info.high_va_offset,
-			       dev->dev_info.high_va_max,
-			       dev->dev_info.virtual_address_alignment);
+	r = amdgpu_query_gfx_level_major(dev, &gfx_ip_version_major);
+	if (!r) {
+		/* Split the HIGH addr space for GFX6-GFX12, except GFX9 to
+		 * implement a workaround for SMEM loads with NULL PRT pages.
+		 * This is silently ignored if querying the GFX level failed.
+		 */
+		if (gfx_ip_version_major >= 6 && gfx_ip_version_major <= 12 &&
+		    gfx_ip_version_major != 9) {
+			va_mgr_flags |= AMDGPU_VA_MGR_RESERVE_HALF_VA_FOR_PRT;
+		}
+	}
+
+	amdgpu_va_manager_init2(&dev->va_mgr,
+				dev->dev_info.virtual_address_offset,
+				dev->dev_info.virtual_address_max,
+				dev->dev_info.high_va_offset,
+				dev->dev_info.high_va_max,
+				dev->dev_info.virtual_address_alignment,
+				va_mgr_flags);
 
 	amdgpu_parse_asic_ids(dev);
 
@@ -321,6 +369,9 @@ drm_public int amdgpu_query_sw_info(amdgpu_device_handle dev,
 			*val32 = (dev->va_mgr.vamgr_high_32.va_max - 1) >> 32;
 		else
 			*val32 = (dev->va_mgr.vamgr_32.va_max - 1) >> 32;
+		return 0;
+	case amdgpu_sw_info_address_prt_wa_control_bit:
+		*val32 = dev->va_mgr.address_prt_wa_control_bit;
 		return 0;
 	}
 	return -EINVAL;

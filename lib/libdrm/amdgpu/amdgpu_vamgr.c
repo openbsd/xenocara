@@ -323,11 +323,24 @@ drm_public amdgpu_va_manager_handle amdgpu_va_manager_alloc(void)
 }
 
 drm_public void amdgpu_va_manager_init(struct amdgpu_va_manager *va_mgr,
+				       uint64_t low_va_offset, uint64_t low_va_max,
+				       uint64_t high_va_offset, uint64_t high_va_max,
+				       uint32_t virtual_address_alignment)
+{
+	amdgpu_va_manager_init2(va_mgr, low_va_offset, low_va_max,
+				high_va_offset, high_va_max,
+				virtual_address_alignment, 0);
+}
+
+drm_public void amdgpu_va_manager_init2(struct amdgpu_va_manager *va_mgr,
 					uint64_t low_va_offset, uint64_t low_va_max,
 					uint64_t high_va_offset, uint64_t high_va_max,
-					uint32_t virtual_address_alignment)
+					uint32_t virtual_address_alignment,
+					uint32_t flags)
 {
 	uint64_t start, max;
+
+	va_mgr->address_prt_wa_control_bit = ~0;
 
 	start = low_va_offset;
 	max = MIN2(low_va_max, 0x100000000ULL);
@@ -335,7 +348,17 @@ drm_public void amdgpu_va_manager_init(struct amdgpu_va_manager *va_mgr,
 			  virtual_address_alignment);
 
 	start = max;
-	max = MAX2(low_va_max, 0x100000000ULL);
+	if ((flags & AMDGPU_VA_MGR_RESERVE_HALF_VA_FOR_PRT) && !high_va_max) {
+		/* Reserve the half VA range for PRT by splitting it in two
+		 * equal halves where one bit controls whether it's the LOW or
+		 * HIGH half.
+		 */
+		va_mgr->address_prt_wa_control_bit = util_last_bit64(low_va_offset ^ low_va_max) - 1;
+		max = low_va_max ^ (1ull << va_mgr->address_prt_wa_control_bit);
+	} else {
+		max = MAX2(low_va_max, 0x100000000ULL);
+	}
+
 	amdgpu_vamgr_init(&va_mgr->vamgr_low, start, max,
 			  virtual_address_alignment);
 
@@ -345,7 +368,17 @@ drm_public void amdgpu_va_manager_init(struct amdgpu_va_manager *va_mgr,
 			  virtual_address_alignment);
 
 	start = max;
-	max = MAX2(high_va_max, (start & ~0xffffffffULL) + 0x100000000ULL);
+	if ((flags & AMDGPU_VA_MGR_RESERVE_HALF_VA_FOR_PRT) && high_va_max) {
+		/* Reserve the half VA range for PRT by splitting it in two
+		 * equal halves where one bit controls whether it's the LOW or
+		 * HIGH half.
+		 */
+		va_mgr->address_prt_wa_control_bit = util_last_bit64(high_va_offset ^ high_va_max) - 1;
+		max = high_va_max ^ (1ull << va_mgr->address_prt_wa_control_bit);
+	} else {
+		max = MAX2(high_va_max, (start & ~0xffffffffULL) + 0x100000000ULL);
+	}
+
 	amdgpu_vamgr_init(&va_mgr->vamgr_high, start, max,
 			  virtual_address_alignment);
 }
@@ -356,4 +389,18 @@ drm_public void amdgpu_va_manager_deinit(struct amdgpu_va_manager *va_mgr)
 	amdgpu_vamgr_deinit(&va_mgr->vamgr_low);
 	amdgpu_vamgr_deinit(&va_mgr->vamgr_high_32);
 	amdgpu_vamgr_deinit(&va_mgr->vamgr_high);
+}
+
+drm_public int amdgpu_va_manager_query_sw_info(struct amdgpu_va_manager *va_mgr,
+					       enum amdgpu_va_manager_sw_info info,
+					       void *value)
+{
+	uint32_t *val32 = (uint32_t*)value;
+
+	switch (info) {
+	case amdgpu_va_manager_sw_info_address_prt_wa_control_bit:
+		*val32 = va_mgr->address_prt_wa_control_bit;
+		return 0;
+	}
+	return -EINVAL;
 }

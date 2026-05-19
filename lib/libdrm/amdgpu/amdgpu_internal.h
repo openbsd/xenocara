@@ -72,6 +72,11 @@ struct amdgpu_va_manager {
 	struct amdgpu_bo_va_mgr vamgr_high;
 	/** The VA manager for the 32bit high address space */
 	struct amdgpu_bo_va_mgr vamgr_high_32;
+
+	/** The bit to control whether it's the "LOW" or "HIGH" halves, when
+	 *  half of the address space is reserved for PRT to implement a SW
+	 *  workaround. */
+	unsigned address_prt_wa_control_bit;
 };
 
 struct amdgpu_device {

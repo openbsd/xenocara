@@ -41,10 +41,6 @@
 #include "omap_drm.h"
 #include "omap_drmif.h"
 
-#define __round_mask(x, y) ((__typeof__(x))((y)-1))
-#define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
-#define PAGE_SIZE 4096
-
 static pthread_mutex_t table_lock = PTHREAD_MUTEX_INITIALIZER;
 static void * dev_table;
 
@@ -206,12 +202,6 @@ static struct omap_bo * omap_bo_new_impl(struct omap_device *dev,
 	pthread_mutex_lock(&table_lock);
 	bo = bo_from_handle(dev, req.handle);
 	pthread_mutex_unlock(&table_lock);
-
-	if (flags & OMAP_BO_TILED) {
-		bo->size = round_up(size.tiled.width, PAGE_SIZE) * size.tiled.height;
-	} else {
-		bo->size = size.bytes;
-	}
 
 	return bo;
 
@@ -432,7 +422,7 @@ drm_public uint32_t omap_bo_size(struct omap_bo *bo)
 drm_public void *omap_bo_map(struct omap_bo *bo)
 {
 	if (!bo->map) {
-		if (!bo->offset) {
+		if (!bo->size || !bo->offset) {
 			get_buffer_info(bo);
 		}
 

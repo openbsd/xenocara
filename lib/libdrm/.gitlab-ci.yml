@@ -12,18 +12,18 @@
 # main repository, it's recommended to remove the image from the source
 # repository's container registry, so that the image from the main
 # repository's registry will be used there as well.
-.templates_sha: &template_sha b61a03cabbf308e81289f7aaaf0b5a80a34ffb99 # see https://docs.gitlab.com/ee/ci/yaml/#includefile
+.templates_sha: &template_sha c6aeb16f86e32525fa630fb99c66c4f3e62fc3cb # see https://docs.gitlab.com/ee/ci/yaml/#includefile
 
 include:
   - project: 'freedesktop/ci-templates'
     ref: *template_sha
     file:
-    - '/templates/debian.yml'
-    - '/templates/freebsd.yml'
-    - '/templates/ci-fairy.yml'
+      - '/templates/debian.yml'
+      - '/templates/freebsd.yml'
+      - '/templates/ci-fairy.yml'
 
 variables:
-  FDO_UPSTREAM_REPO: mesa/drm
+  FDO_UPSTREAM_REPO: mesa/libdrm
   FDO_REPO_SUFFIX: "$BUILD_OS/$BUILD_ARCH"
 
 stages:
@@ -39,11 +39,11 @@ stages:
 .os-debian:
   variables:
     BUILD_OS: debian
-    FDO_DISTRIBUTION_VERSION: bookworm
+    FDO_DISTRIBUTION_VERSION: trixie-slim
     FDO_DISTRIBUTION_PACKAGES: 'build-essential docbook-xsl libatomic-ops-dev libcairo2-dev libcunit1-dev libpciaccess-dev meson ninja-build pkg-config python3 python3-pip python3-wheel python3-setuptools python3-docutils valgrind'
     # bump this tag every time you change something which requires rebuilding the
     # base image
-    FDO_DISTRIBUTION_TAG: "2024-06-25.0"
+    FDO_DISTRIBUTION_TAG: "2026-04-27.0"
 
 .debian-x86_64:
   extends:
@@ -62,15 +62,16 @@ stages:
     - .os-debian
   variables:
     BUILD_ARCH: "armv7"
+    FDO_DISTRIBUTION_PLATFORM: linux/arm/v7
 
 .os-freebsd:
   variables:
     BUILD_OS: freebsd
-    FDO_DISTRIBUTION_VERSION: "14.1"
-    FDO_DISTRIBUTION_PACKAGES: 'meson ninja pkgconf libpciaccess py39-docutils cairo'
+    FDO_DISTRIBUTION_VERSION: "14.2"
+    FDO_DISTRIBUTION_PACKAGES: 'meson ninja pkgconf libpciaccess textproc/py-docutils cairo'
     # bump this tag every time you change something which requires rebuilding the
     # base image
-    FDO_DISTRIBUTION_TAG: "2026-26-25.0"
+    FDO_DISTRIBUTION_TAG: "2025-05-22.0"
 
 .freebsd-x86_64:
   extends:

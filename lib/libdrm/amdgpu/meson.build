@@ -27,6 +27,7 @@ libdrm_amdgpu = library(
     files(
       'amdgpu_asic_id.c', 'amdgpu_bo.c', 'amdgpu_cs.c', 'amdgpu_device.c',
       'amdgpu_gpu_info.c', 'amdgpu_vamgr.c', 'amdgpu_vm.c', 'handle_table.c',
+      'amdgpu_userq.c',
     ),
     config_file,
   ],
@@ -55,9 +56,7 @@ ext_libdrm_amdgpu = declare_dependency(
   include_directories : [inc_drm, include_directories('.')],
 )
 
-if meson.version().version_compare('>= 0.54.0')
-  meson.override_dependency('libdrm_amdgpu', ext_libdrm_amdgpu)
-endif
+meson.override_dependency('libdrm_amdgpu', ext_libdrm_amdgpu)
 
 test(
   'amdgpu-symbols-check',

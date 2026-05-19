@@ -51,9 +51,7 @@ ext_libdrm_etnaviv = declare_dependency(
   include_directories : [inc_drm, include_directories('.')],
 )
 
-if meson.version().version_compare('>= 0.54.0')
-  meson.override_dependency('libdrm_etnaviv', ext_libdrm_etnaviv)
-endif
+meson.override_dependency('libdrm_etnaviv', ext_libdrm_etnaviv)
 
 test(
   'etnaviv-symbols-check',

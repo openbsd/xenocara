@@ -42,7 +42,10 @@ extern "C" {
 #endif
 
 struct drm_amdgpu_info_hw_ip;
+struct drm_amdgpu_info_uq_fw_areas;
 struct drm_amdgpu_bo_list_entry;
+struct drm_amdgpu_userq_signal;
+struct drm_amdgpu_userq_wait;
 
 /*--------------------------------------------------------------------------*/
 /* --------------------------- Defines ------------------------------------ */
@@ -102,6 +105,19 @@ enum amdgpu_gpu_va_range
 
 enum amdgpu_sw_info {
 	amdgpu_sw_info_address32_hi = 0,
+	/** Query the PRT control bit when the half VA range is reserved for
+	 * PRT when the device is initialized. This depends on the GFX version.
+	 * A return value of ~0 should be ignored.
+	 */
+	amdgpu_sw_info_address_prt_wa_control_bit = 1,
+};
+
+enum amdgpu_va_manager_sw_info {
+	/** Query the PRT control bit when the half VA range is reserved for
+	 * PRT with AMDGPU_VA_MGR_RESERVE_HALF_VA_FOR_PRT. The default value of
+	 * ~0 shouldn't be considered a valid value.
+	 */
+	amdgpu_va_manager_sw_info_address_prt_wa_control_bit = 0,
 };
 
 /*--------------------------------------------------------------------------*/
@@ -1173,6 +1189,26 @@ int amdgpu_query_hw_ip_info(amdgpu_device_handle dev, unsigned type,
 			    struct drm_amdgpu_info_hw_ip *info);
 
 /**
+ * Query FW area related information.
+ *
+ * The return size is query-specific and depends on the "type" parameter.
+ * No more than "size" bytes is returned.
+ *
+ * \param	dev		- \c [in] Device handle. See #amdgpu_device_initialize()
+ * \param	type		- \c [in] AMDGPU_HW_IP_*
+ * \param	ip_instance	- \c [in] HW IP index.
+ * \param	info		- \c [out] The pointer to return value
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX error code
+ *
+*/
+int amdgpu_query_uq_fw_area_info(amdgpu_device_handle dev,
+				  unsigned type,
+				  unsigned ip_instance,
+				  struct drm_amdgpu_info_uq_fw_areas *info);
+
+/**
  * Query heap information
  *
  * This query allows UMD to query potentially available memory resources and
@@ -1444,6 +1480,14 @@ void amdgpu_va_manager_init(amdgpu_va_manager_handle va_mgr,
 			    uint64_t high_va_offset, uint64_t high_va_max,
 			    uint32_t virtual_address_alignment);
 
+#define AMDGPU_VA_MGR_RESERVE_HALF_VA_FOR_PRT 0x1
+
+void amdgpu_va_manager_init2(struct amdgpu_va_manager *va_mgr,
+			     uint64_t low_va_offset, uint64_t low_va_max,
+			     uint64_t high_va_offset, uint64_t high_va_max,
+			     uint32_t virtual_address_alignment,
+			     uint32_t flags);
+
 void amdgpu_va_manager_deinit(amdgpu_va_manager_handle va_mgr);
 
 /**
@@ -1460,6 +1504,21 @@ int amdgpu_va_range_alloc2(amdgpu_va_manager_handle va_mgr,
 			   uint64_t *va_base_allocated,
 			   amdgpu_va_handle *va_range_handle,
 			   uint64_t flags);
+
+/**
+ * Query VA manager information.
+ *
+ * \param   va_mgr  - \c [in] VA manager
+ * \param   info    - \c [in] amdgpu_va_manager_sw_info_*
+ * \param   value   - \c [out] Pointer to the return value.
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX error code
+ *
+*/
+int amdgpu_va_manager_query_sw_info(struct amdgpu_va_manager *va_mgr,
+				    enum amdgpu_va_manager_sw_info info,
+				    void *value);
 
 /**
  *  VA mapping/unmapping for the buffer object
@@ -1510,6 +1569,42 @@ int amdgpu_bo_va_op_raw(amdgpu_device_handle dev,
 			uint64_t addr,
 			uint64_t flags,
 			uint32_t ops);
+
+/**
+ *  VA mapping/unmapping of buffer object for usermode queue.
+ *
+ * This is not a simple drop-in extension for amdgpu_bo_va_op; instead, all
+ * parameters are treated "raw2", i.e. size is not automatically aligned, and
+ * all flags must be specified explicitly.
+ *
+ * \param  dev				- \c [in] device handle
+ * \param  bo				- \c [in] BO handle (may be NULL)
+ * \param  offset			- \c [in] Start offset to map
+ * \param  size				- \c [in] Size to map
+ * \param  addr				- \c [in] Start virtual address.
+ * \param  flags			- \c [in] Supported flags for mapping/unmapping
+ * \param  ops				- \c [in] AMDGPU_VA_OP_MAP or AMDGPU_VA_OP_UNMAP
+ * \param  vm_timeline_syncobj_out	- \c [out] syncobj handle for PT update fence
+ * \param  vm_timeline_point		- \c [in] input timeline point
+ * \param  input_fence_syncobj_handles	- \c [in] Array of syncobj handles for bo unmap,
+ * 						  clear and replace
+ * \param  num_syncobj_handles		- \c [in] Number of syncobj handles
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+int amdgpu_bo_va_op_raw2(amdgpu_device_handle dev,
+			 amdgpu_bo_handle bo,
+			 uint64_t offset,
+			 uint64_t size,
+			 uint64_t addr,
+			 uint64_t flags,
+			 uint32_t ops,
+			 uint32_t vm_timeline_syncobj_out,
+			 uint64_t vm_timeline_point,
+			 uint64_t input_fence_syncobj_array_in,
+			 uint32_t num_syncobj_handles_in);
 
 /**
  *  create semaphore
@@ -1941,6 +2036,65 @@ int amdgpu_vm_reserve_vmid(amdgpu_device_handle dev, uint32_t flags);
  * \return  0 on success otherwise POSIX Error code
 */
 int amdgpu_vm_unreserve_vmid(amdgpu_device_handle dev, uint32_t flags);
+
+/**
+ * Create USERQUEUE
+ * \param   dev			- \c [in] device handle
+ * \param   ip_type		- \c [in] ip type
+ * \param   doorbell_handle	- \c [in] doorbell handle
+ * \param   doorbell_offset	- \c [in] doorbell index
+ * \param   mqd_in		- \c [in] MQD data
+ * \param   queue_va		- \c [in] Virtual address of queue
+ * \param   queue_size		- \c [in] userqueue size
+ * \param   wptr_va		- \c [in] Virtual address of wptr
+ * \param   rptr_va		- \c [in] Virtual address of rptr
+ * \param   queue_id		- \c [out] queue id
+ *
+ * \return  0 on success otherwise POSIX Error code
+ */
+
+int amdgpu_create_userqueue(amdgpu_device_handle dev,
+			    uint32_t ip_type,
+			    uint32_t doorbell_handle,
+			    uint32_t doorbell_offset,
+			    uint64_t queue_va,
+			    uint64_t queue_size,
+			    uint64_t wptr_va,
+			    uint64_t rptr_va,
+			    void *mqd_in,
+			    uint32_t flags,
+			    uint32_t *queue_id);
+
+/**
+ * Free USERQUEUE
+ * \param   dev		- \c [in] device handle
+ * \param   queue_id	- \c [in]  queue id
+ *
+ * \return  0 on success otherwise POSIX Error code
+ */
+int amdgpu_free_userqueue(amdgpu_device_handle dev, uint32_t queue_id);
+
+/**
+ * Signal USERQUEUE
+ * \param   dev               - \c [in] device handle
+ * \param   signal_data       - \c [in] pointer to struct drm_amdgpu_userq_signal
+ *                                      to be filled by the caller
+ *
+ * \return  0 on success otherwise POSIX Error code
+ */
+int amdgpu_userq_signal(amdgpu_device_handle dev,
+		        struct drm_amdgpu_userq_signal *signal_data);
+
+/**
+ * Wait USERQUEUE
+ * \param   dev               - \c [in]     device handle
+ * \param   wait_data         - \c [in/out] pointer to struct drm_amdgpu_userq_wait
+ *                                          to be filled by the caller
+ *
+ * \return  0 on success otherwise POSIX Error code
+ */
+int amdgpu_userq_wait(amdgpu_device_handle dev,
+		      struct drm_amdgpu_userq_wait *wait_data);
 
 #ifdef __cplusplus
 }

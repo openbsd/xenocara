@@ -34,7 +34,7 @@ towrite = sys.argv[2]
 
 fm_re = {
     'intel': r'^#define I915_FORMAT_MOD_(\w+)',
-    'others': r'^#define DRM_FORMAT_MOD_((?:ARM|SAMSUNG|QCOM|VIVANTE|NVIDIA|BROADCOM|ALLWINNER)\w+)\s',
+    'others': r'^#define DRM_FORMAT_MOD_((?:ARM|APPLE|SAMSUNG|QCOM|VIVANTE|NVIDIA|BROADCOM|ALLWINNER)\w+)\s',
     'vendors': r'^#define DRM_FORMAT_MOD_VENDOR_(\w+)'
 }
 

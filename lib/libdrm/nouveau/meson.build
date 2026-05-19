@@ -36,9 +36,7 @@ ext_libdrm_nouveau = declare_dependency(
   include_directories : [inc_drm, include_directories('.')],
 )
 
-if meson.version().version_compare('>= 0.54.0')
-  meson.override_dependency('libdrm_nouveau', ext_libdrm_nouveau)
-endif
+meson.override_dependency('libdrm_nouveau', ext_libdrm_nouveau)
 
 install_headers('nouveau.h', subdir : 'libdrm/nouveau')
 install_headers(

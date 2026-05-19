@@ -70,6 +70,7 @@
 
 static enum util_fill_pattern primary_fill = UTIL_PATTERN_SMPTE;
 static enum util_fill_pattern secondary_fill = UTIL_PATTERN_TILES;
+static unsigned long pattern_seed = 0;
 static drmModeModeInfo user_mode;
 
 struct crtc {
@@ -1199,7 +1200,7 @@ bo_fb_create(int fd, unsigned int fourcc, const uint32_t w, const uint32_t h,
 	struct bo *bo;
 	unsigned int fb_id;
 
-	bo = bo_create(fd, fourcc, w, h, handles, pitches, offsets, pat);
+	bo = bo_create(fd, fourcc, w, h, handles, pitches, offsets, pat, pattern_seed);
 
 	if (bo == NULL)
 		return -1;
@@ -1857,7 +1858,7 @@ static void set_cursors(struct device *dev, struct pipe_arg *pipes, unsigned int
 	 * translucent alpha
 	 */
 	bo = bo_create(dev->fd, DRM_FORMAT_ARGB8888, cw, ch, handles, pitches,
-		       offsets, UTIL_PATTERN_PLAIN);
+		       offsets, UTIL_PATTERN_PLAIN, pattern_seed);
 	if (bo == NULL)
 		return;
 
@@ -1973,7 +1974,8 @@ static int parse_connector(struct pipe_arg *pipe, const char *arg)
 	unsigned int len;
 	unsigned int i;
 	const char *p;
-	char *endp;
+	const char *endp;
+	char *endp_tok;
 
 	pipe->vrefresh = 0;
 	pipe->crtc_id = (uint32_t)-1;
@@ -2011,7 +2013,8 @@ static int parse_connector(struct pipe_arg *pipe, const char *arg)
 		return -1;
 	if (*endp == '@') {
 		arg = endp + 1;
-		pipe->crtc_id = strtoul(arg, &endp, 10);
+		pipe->crtc_id = strtoul(arg, &endp_tok, 10);
+		endp = endp_tok;
 	}
 	if (*endp != ':')
 		return -1;
@@ -2027,8 +2030,8 @@ static int parse_connector(struct pipe_arg *pipe, const char *arg)
 	pipe->mode_str[len] = '\0';
 
 	if (*p == '-') {
-		pipe->vrefresh = strtof(p + 1, &endp);
-		p = endp;
+		pipe->vrefresh = strtof(p + 1, &endp_tok);
+		p = endp_tok;
 	}
 
 	if (*p == '@') {
@@ -2126,6 +2129,16 @@ static void parse_fill_patterns(char *arg)
 	secondary_fill = util_pattern_enum(fill);
 }
 
+static void parse_seed(const char *arg)
+{
+	unsigned long seed;
+	char *rest;
+
+	seed = strtoul(arg, &rest, 10);
+	if (arg != rest)
+		pattern_seed = seed;
+}
+
 static void usage(char *name)
 {
 	fprintf(stderr, "usage: %s [-acDdefMoPpsCvrw]\n", name);
@@ -2149,6 +2162,7 @@ static void usage(char *name)
 	fprintf(stderr, "\t-w <obj_id>:<prop_name>:<value>\tset property, see 'property'\n");
 	fprintf(stderr, "\t-a \tuse atomic API\n");
 	fprintf(stderr, "\t-F pattern1,pattern2\tspecify fill patterns\n");
+	fprintf(stderr, "\t-S <random seed>\tspecify seed of noise patterns\n");
 	fprintf(stderr, "\t-o <desired file path> \t Dump writeback output buffer to file\n");
 
 	fprintf(stderr, "\n Generic options:\n\n");
@@ -2179,7 +2193,7 @@ static void usage(char *name)
 	exit(0);
 }
 
-static char optstr[] = "acdD:efF:M:P:ps:Cvrw:o:";
+static char optstr[] = "acdD:efF:M:P:ps:Cvrw:o:S:";
 
 int main(int argc, char **argv)
 {
@@ -2275,6 +2289,9 @@ int main(int argc, char **argv)
 				usage(argv[0]);
 
 			count++;
+			break;
+		case 'S':
+			parse_seed(optarg);
 			break;
 		case 'C':
 			test_cursor = 1;
