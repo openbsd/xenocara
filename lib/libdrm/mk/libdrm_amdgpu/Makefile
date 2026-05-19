@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2025/06/06 09:04:09 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2026/05/19 08:28:31 jsg Exp $
 
 LIB=	drm_amdgpu
 
@@ -7,6 +7,7 @@ SRCS=	amdgpu_asic_id.c \
 	amdgpu_cs.c \
 	amdgpu_device.c \
 	amdgpu_gpu_info.c \
+	amdgpu_userq.c \
 	amdgpu_vamgr.c \
 	amdgpu_vm.c \
 	handle_table.c

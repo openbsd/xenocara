@@ -42,6 +42,7 @@
 #include <stddef.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <libgen.h>
 #include <limits.h>
 #include <signal.h>
 #include <time.h>
@@ -205,18 +206,6 @@ static const struct drmFormatVendorModifierInfo arm_mode_value_table[] = {
     { AFBC_FORMAT_MOD_USM,          "USM" },
 };
 
-static bool is_x_t_amd_gfx9_tile(uint64_t tile)
-{
-    switch (tile) {
-    case AMD_FMT_MOD_TILE_GFX9_64K_S_X:
-    case AMD_FMT_MOD_TILE_GFX9_64K_D_X:
-    case AMD_FMT_MOD_TILE_GFX9_64K_R_X:
-           return true;
-    }
-
-    return false;
-}
-
 static bool
 drmGetAfbcFormatModifierNameFromArm(uint64_t modifier, FILE *fp)
 {
@@ -363,167 +352,169 @@ drmGetFormatModifierNameFromNvidia(uint64_t modifier)
      * testing against TEGRA_TILE */
     if ((modifier & 0x10) == 0x10) {
         char *mod_nvidia;
-        asprintf(&mod_nvidia, "BLOCK_LINEAR_2D,HEIGHT=%"PRIu64",KIND=%"PRIu64","
+        if (asprintf(&mod_nvidia, "BLOCK_LINEAR_2D,HEIGHT=%"PRIu64",KIND=%"PRIu64","
                  "GEN=%"PRIu64",SECTOR=%"PRIu64",COMPRESSION=%"PRIu64"", height,
-                 kind, gen, sector, compression);
+                 kind, gen, sector, compression) < 0)
+            mod_nvidia = NULL;
         return mod_nvidia;
     }
 
     return  NULL;
 }
 
-static void
-drmGetFormatModifierNameFromAmdDcc(uint64_t modifier, FILE *fp)
-{
-    uint64_t dcc_max_compressed_block =
-                AMD_FMT_MOD_GET(DCC_MAX_COMPRESSED_BLOCK, modifier);
-    uint64_t dcc_retile = AMD_FMT_MOD_GET(DCC_RETILE, modifier);
-
-    const char *dcc_max_compressed_block_str = NULL;
-
-    fprintf(fp, ",DCC");
-
-    if (dcc_retile)
-        fprintf(fp, ",DCC_RETILE");
-
-    if (!dcc_retile && AMD_FMT_MOD_GET(DCC_PIPE_ALIGN, modifier))
-        fprintf(fp, ",DCC_PIPE_ALIGN");
-
-    if (AMD_FMT_MOD_GET(DCC_INDEPENDENT_64B, modifier))
-        fprintf(fp, ",DCC_INDEPENDENT_64B");
-
-    if (AMD_FMT_MOD_GET(DCC_INDEPENDENT_128B, modifier))
-        fprintf(fp, ",DCC_INDEPENDENT_128B");
-
-    switch (dcc_max_compressed_block) {
-    case AMD_FMT_MOD_DCC_BLOCK_64B:
-        dcc_max_compressed_block_str = "64B";
-        break;
-    case AMD_FMT_MOD_DCC_BLOCK_128B:
-        dcc_max_compressed_block_str = "128B";
-        break;
-    case AMD_FMT_MOD_DCC_BLOCK_256B:
-        dcc_max_compressed_block_str = "256B";
-        break;
-    }
-
-    if (dcc_max_compressed_block_str)
-        fprintf(fp, ",DCC_MAX_COMPRESSED_BLOCK=%s",
-                dcc_max_compressed_block_str);
-
-    if (AMD_FMT_MOD_GET(DCC_CONSTANT_ENCODE, modifier))
-        fprintf(fp, ",DCC_CONSTANT_ENCODE");
-}
-
-static void
-drmGetFormatModifierNameFromAmdTile(uint64_t modifier, FILE *fp)
-{
-    uint64_t pipe_xor_bits, bank_xor_bits, packers, rb;
-    uint64_t pipe, pipe_align, dcc, dcc_retile, tile_version;
-
-    pipe_align = AMD_FMT_MOD_GET(DCC_PIPE_ALIGN, modifier);
-    pipe_xor_bits = AMD_FMT_MOD_GET(PIPE_XOR_BITS, modifier);
-    dcc = AMD_FMT_MOD_GET(DCC, modifier);
-    dcc_retile = AMD_FMT_MOD_GET(DCC_RETILE, modifier);
-    tile_version = AMD_FMT_MOD_GET(TILE_VERSION, modifier);
-
-    fprintf(fp, ",PIPE_XOR_BITS=%"PRIu64, pipe_xor_bits);
-
-    if (tile_version == AMD_FMT_MOD_TILE_VER_GFX9) {
-        bank_xor_bits = AMD_FMT_MOD_GET(BANK_XOR_BITS, modifier);
-        fprintf(fp, ",BANK_XOR_BITS=%"PRIu64, bank_xor_bits);
-    }
-
-    if (tile_version == AMD_FMT_MOD_TILE_VER_GFX10_RBPLUS) {
-        packers = AMD_FMT_MOD_GET(PACKERS, modifier);
-        fprintf(fp, ",PACKERS=%"PRIu64, packers);
-    }
-
-    if (dcc && tile_version == AMD_FMT_MOD_TILE_VER_GFX9) {
-        rb = AMD_FMT_MOD_GET(RB, modifier);
-        fprintf(fp, ",RB=%"PRIu64, rb);
-    }
-
-    if (dcc && tile_version == AMD_FMT_MOD_TILE_VER_GFX9 &&
-        (dcc_retile || pipe_align)) {
-        pipe = AMD_FMT_MOD_GET(PIPE, modifier);
-        fprintf(fp, ",PIPE_%"PRIu64, pipe);
-    }
-}
-
 static char *
 drmGetFormatModifierNameFromAmd(uint64_t modifier)
 {
-    uint64_t tile, tile_version, dcc;
+    static const char *gfx9_gfx11_tile_strings[32] = {
+        "LINEAR",
+        "256B_S",
+        "256B_D",
+        "256B_R",
+        "4KB_Z",
+        "4KB_S",
+        "4KB_D",
+        "4KB_R",
+        "64KB_Z",
+        "64KB_S",
+        "64KB_D",
+        "64KB_R",
+        "INVALID12",
+        "INVALID13",
+        "INVALID14",
+        "INVALID15",
+        "64KB_Z_T",
+        "64KB_S_T",
+        "64KB_D_T",
+        "64KB_R_T",
+        "4KB_Z_X",
+        "4KB_S_X",
+        "4KB_D_X",
+        "4KB_R_X",
+        "64KB_Z_X",
+        "64KB_S_X",
+        "64KB_D_X",
+        "64KB_R_X",
+        "256KB_Z_X",
+        "256KB_S_X",
+        "256KB_D_X",
+        "256KB_R_X",
+    };
+    static const char *gfx12_tile_strings[32] = {
+        "LINEAR",
+        "256B_2D",
+        "4KB_2D",
+        "64KB_2D",
+        "256KB_2D",
+        "4KB_3D",
+        "64KB_3D",
+        "256KB_3D",
+        /* other values are unused */
+    };
+    uint64_t tile_version = AMD_FMT_MOD_GET(TILE_VERSION, modifier);
     FILE *fp;
     char *mod_amd = NULL;
     size_t size = 0;
-
-    const char *str_tile = NULL;
-    const char *str_tile_version = NULL;
-
-    tile = AMD_FMT_MOD_GET(TILE, modifier);
-    tile_version = AMD_FMT_MOD_GET(TILE_VERSION, modifier);
-    dcc = AMD_FMT_MOD_GET(DCC, modifier);
 
     fp = open_memstream(&mod_amd, &size);
     if (!fp)
         return NULL;
 
-    /* add tile  */
     switch (tile_version) {
     case AMD_FMT_MOD_TILE_VER_GFX9:
-        str_tile_version = "GFX9";
+        fprintf(fp, "GFX9");
         break;
     case AMD_FMT_MOD_TILE_VER_GFX10:
-        str_tile_version = "GFX10";
+        fprintf(fp, "GFX10");
         break;
     case AMD_FMT_MOD_TILE_VER_GFX10_RBPLUS:
-        str_tile_version = "GFX10_RBPLUS";
+        fprintf(fp, "GFX10_RBPLUS");
         break;
     case AMD_FMT_MOD_TILE_VER_GFX11:
-        str_tile_version = "GFX11";
+        fprintf(fp, "GFX11");
         break;
-    }
-
-    if (str_tile_version) {
-        fprintf(fp, "%s", str_tile_version);
-    } else {
+    case AMD_FMT_MOD_TILE_VER_GFX12:
+        fprintf(fp, "GFX12");
+        break;
+    default:
         fclose(fp);
         free(mod_amd);
         return NULL;
     }
 
-    /* add tile str */
-    switch (tile) {
-    case AMD_FMT_MOD_TILE_GFX9_64K_S:
-        str_tile = "GFX9_64K_S";
-        break;
-    case AMD_FMT_MOD_TILE_GFX9_64K_D:
-        str_tile = "GFX9_64K_D";
-        break;
-    case AMD_FMT_MOD_TILE_GFX9_64K_S_X:
-        str_tile = "GFX9_64K_S_X";
-        break;
-    case AMD_FMT_MOD_TILE_GFX9_64K_D_X:
-        str_tile = "GFX9_64K_D_X";
-        break;
-    case AMD_FMT_MOD_TILE_GFX9_64K_R_X:
-        str_tile = "GFX9_64K_R_X";
-        break;
-    case AMD_FMT_MOD_TILE_GFX11_256K_R_X:
-        str_tile = "GFX11_256K_R_X";
-        break;
+    if (tile_version >= AMD_FMT_MOD_TILE_VER_GFX12) {
+        unsigned tile = AMD_FMT_MOD_GET(TILE, modifier);
+
+        fprintf(fp, ",%s", gfx12_tile_strings[tile]);
+
+        if (AMD_FMT_MOD_GET(DCC, modifier)) {
+            fprintf(fp, ",DCC,DCC_MAX_COMPRESSED_BLOCK=%uB",
+                    64 << AMD_FMT_MOD_GET(DCC_MAX_COMPRESSED_BLOCK, modifier));
+
+            /* Other DCC fields are unused by GFX12. */
+        }
+    } else {
+        unsigned tile = AMD_FMT_MOD_GET(TILE, modifier);
+
+        fprintf(fp, ",%s", gfx9_gfx11_tile_strings[tile]);
+
+        /* All *_T and *_X modes are affected by chip-specific fields. */
+        if (tile >= 16) {
+            fprintf(fp, ",PIPE_XOR_BITS=%u",
+                    (unsigned)AMD_FMT_MOD_GET(PIPE_XOR_BITS, modifier));
+
+            switch (tile_version) {
+            case AMD_FMT_MOD_TILE_VER_GFX9:
+                fprintf(fp, ",BANK_XOR_BITS=%u",
+                        (unsigned)AMD_FMT_MOD_GET(BANK_XOR_BITS, modifier));
+                break;
+
+            case AMD_FMT_MOD_TILE_VER_GFX10:
+                /* Nothing else for GFX10. */
+                break;
+
+            case AMD_FMT_MOD_TILE_VER_GFX10_RBPLUS:
+            case AMD_FMT_MOD_TILE_VER_GFX11:
+                /* This also determines the DCC layout, but DCC is only legal
+                 * with tile=27 and tile=31 (*_R_X modes).
+                 */
+                fprintf(fp, ",PACKERS=%u",
+                        (unsigned)AMD_FMT_MOD_GET(PACKERS, modifier));
+                break;
+            }
+        }
+
+        if (AMD_FMT_MOD_GET(DCC, modifier)) {
+            if (tile_version == AMD_FMT_MOD_TILE_VER_GFX9 &&
+                (AMD_FMT_MOD_GET(DCC_PIPE_ALIGN, modifier) ||
+                 AMD_FMT_MOD_GET(DCC_RETILE, modifier))) {
+                /* These two only determine the layout of
+                 * the non-displayable DCC plane.
+                 */
+                fprintf(fp, ",RB=%u",
+                        (unsigned)AMD_FMT_MOD_GET(RB, modifier));
+                fprintf(fp, ",PIPE=%u",
+                        (unsigned)AMD_FMT_MOD_GET(PIPE, modifier));
+            }
+
+            fprintf(fp, ",DCC,DCC_MAX_COMPRESSED_BLOCK=%uB",
+                    64 << AMD_FMT_MOD_GET(DCC_MAX_COMPRESSED_BLOCK, modifier));
+
+            if (AMD_FMT_MOD_GET(DCC_INDEPENDENT_64B, modifier))
+                fprintf(fp, ",DCC_INDEPENDENT_64B");
+
+            if (AMD_FMT_MOD_GET(DCC_INDEPENDENT_128B, modifier))
+                fprintf(fp, ",DCC_INDEPENDENT_128B");
+
+            if (AMD_FMT_MOD_GET(DCC_CONSTANT_ENCODE, modifier))
+                fprintf(fp, ",DCC_CONSTANT_ENCODE");
+
+            if (AMD_FMT_MOD_GET(DCC_PIPE_ALIGN, modifier))
+                fprintf(fp, ",DCC_PIPE_ALIGN");
+
+            if (AMD_FMT_MOD_GET(DCC_RETILE, modifier))
+                fprintf(fp, ",DCC_RETILE");
+        }
     }
-
-    if (str_tile)
-        fprintf(fp, ",%s", str_tile);
-
-    if (dcc)
-        drmGetFormatModifierNameFromAmdDcc(modifier, fp);
-
-    if (tile_version >= AMD_FMT_MOD_TILE_VER_GFX9 && is_x_t_amd_gfx9_tile(tile))
-        drmGetFormatModifierNameFromAmdTile(modifier, fp);
 
     fclose(fp);
     return mod_amd;
@@ -556,7 +547,8 @@ drmGetFormatModifierNameFromAmlogic(uint64_t modifier)
     else
         opts_str = "0";
 
-    asprintf(&mod_amlogic, "FBC,LAYOUT=%s,OPTIONS=%s", layout_str, opts_str);
+    if (asprintf(&mod_amlogic, "FBC,LAYOUT=%s,OPTIONS=%s", layout_str, opts_str) < 0)
+        mod_amlogic = NULL;
     return mod_amlogic;
 }
 
@@ -620,7 +612,8 @@ drmGetFormatModifierNameFromVivante(uint64_t modifier)
 	break;
     }
 
-    asprintf(&mod_vivante, "%s%s%s", color_tiling, tile_status, compression);
+    if (asprintf(&mod_vivante, "%s%s%s", color_tiling, tile_status, compression) < 0)
+        mod_vivante = NULL;
     return mod_vivante;
 }
 
@@ -1016,6 +1009,11 @@ static int drmOpenMinor(int minor, int create, int type)
  *
  * \return 1 if the DRM driver is loaded, 0 otherwise.
  *
+ * \deprecated
+ * This function doesn't work when a device goes away (as is often the case
+ * with simpledrm). drmGetDevices2 should be used instead to enumerate DRM
+ * devices.
+ *
  * \internal
  * Determine the presence of the kernel driver by attempting to open the 0
  * minor and get version information.  For backward compatibility with older
@@ -1381,11 +1379,11 @@ static void drmCopyVersion(drmVersionPtr d, const drm_version_t *s)
     d->version_minor      = s->version_minor;
     d->version_patchlevel = s->version_patchlevel;
     d->name_len           = s->name_len;
-    d->name               = strdup(s->name);
+    d->name               = s->name ? strdup(s->name) : NULL;
     d->date_len           = s->date_len;
-    d->date               = strdup(s->date);
+    d->date               = s->date ? strdup(s->date) : NULL;
     d->desc_len           = s->desc_len;
-    d->desc               = strdup(s->desc);
+    d->desc               = s->desc ? strdup(s->desc) : NULL;
 }
 
 
@@ -3629,6 +3627,7 @@ static int get_subsystem_type(const char *device_path)
         { "/spi", DRM_BUS_PLATFORM },
         { "/host1x", DRM_BUS_HOST1X },
         { "/virtio", DRM_BUS_VIRTIO },
+        { "/faux", DRM_BUS_FAUX },
     };
 
     strncpy(path, device_path, PATH_MAX);
@@ -3831,6 +3830,9 @@ drm_public int drmDevicesEqual(drmDevicePtr a, drmDevicePtr b)
 
     case DRM_BUS_HOST1X:
         return memcmp(a->businfo.host1x, b->businfo.host1x, sizeof(drmHost1xBusInfo)) == 0;
+
+    case DRM_BUS_FAUX:
+        return memcmp(a->businfo.faux, b->businfo.faux, sizeof(drmFauxBusInfo)) == 0;
 
     default:
         break;
@@ -4494,6 +4496,62 @@ free_device:
     return ret;
 }
 
+static int drmParseFauxBusInfo(int maj, int min, char *fullname)
+{
+#ifdef __linux__
+    char path[PATH_MAX + 1] = "";
+    char real_path[PATH_MAX + 1] = "";
+    char *name;
+
+    snprintf(path, sizeof(path), "/sys/dev/char/%d:%d/device", maj, min);
+
+    if (!realpath(path, real_path))
+        return -errno;
+
+    name = basename(real_path);
+    if (!name)
+        return -ENOENT;
+
+    strncpy(fullname, name, DRM_FAUX_DEVICE_NAME_LEN - 1);
+    fullname[DRM_FAUX_DEVICE_NAME_LEN - 1] = '\0';
+
+    return 0;
+#else
+#warning "Missing implementation of drmParseFauxBusInfo"
+    return -EINVAL;
+#endif
+}
+
+static int drmProcessFauxDevice(drmDevicePtr *device,
+                                const char *node, int node_type,
+                                int maj, int min, bool fetch_deviceinfo,
+                                uint32_t flags)
+{
+    drmDevicePtr dev;
+    char *ptr;
+    int ret;
+
+    dev = drmDeviceAlloc(node_type, node, sizeof(drmFauxBusInfo), 0, &ptr);
+    if (!dev)
+        return -ENOMEM;
+
+    dev->bustype = DRM_BUS_FAUX;
+
+    dev->businfo.faux = (drmFauxBusInfoPtr)ptr;
+
+    ret = drmParseFauxBusInfo(maj, min, dev->businfo.faux->name);
+    if (ret < 0)
+        goto free_device;
+
+    *device = dev;
+
+    return 0;
+
+free_device:
+    free(dev);
+    return ret;
+}
+
 static int
 process_device(drmDevicePtr *device, const char *d_name,
                int req_subsystem_type,
@@ -4546,6 +4604,9 @@ process_device(drmDevicePtr *device, const char *d_name,
     case DRM_BUS_HOST1X:
         return drmProcessHost1xDevice(device, node, node_type, maj, min,
                                       fetch_deviceinfo, flags);
+    case DRM_BUS_FAUX:
+        return drmProcessFauxDevice(device, node, node_type, maj, min,
+                                    fetch_deviceinfo, flags);
     default:
         return -1;
    }

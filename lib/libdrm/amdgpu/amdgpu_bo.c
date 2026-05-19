@@ -74,6 +74,9 @@ drm_public int amdgpu_bo_alloc(amdgpu_device_handle dev,
 	union drm_amdgpu_gem_create args;
 	int r;
 
+	if (!alloc_buffer || !buf_handle)
+		return -EINVAL;
+
 	memset(&args, 0, sizeof(args));
 	args.in.bo_size = alloc_buffer->alloc_size;
 	args.in.alignment = alloc_buffer->phys_alignment;
@@ -105,6 +108,9 @@ drm_public int amdgpu_bo_set_metadata(amdgpu_bo_handle bo,
 {
 	struct drm_amdgpu_gem_metadata args = {};
 
+	if (!info)
+		return -EINVAL;
+
 	args.handle = bo->handle;
 	args.op = AMDGPU_GEM_METADATA_OP_SET_METADATA;
 	args.data.flags = info->flags;
@@ -132,7 +138,7 @@ drm_public int amdgpu_bo_query_info(amdgpu_bo_handle bo,
 	int r;
 
 	/* Validate the BO passed in */
-	if (!bo->handle)
+	if (!bo->handle || !info)
 		return -EINVAL;
 
 	/* Query metadata. */
@@ -642,7 +648,7 @@ drm_public int amdgpu_bo_list_create(amdgpu_device_handle dev,
 	unsigned i;
 	int r;
 
-	if (!number_of_resources)
+	if (!number_of_resources || !resources)
 		return -EINVAL;
 
 	/* overflow check for multiplication */
@@ -784,6 +790,42 @@ drm_public int amdgpu_bo_va_op_raw(amdgpu_device_handle dev,
 	va.va_address = addr;
 	va.offset_in_bo = offset;
 	va.map_size = size;
+
+	r = drmCommandWriteRead(dev->fd, DRM_AMDGPU_GEM_VA, &va, sizeof(va));
+
+	return r;
+}
+
+drm_public int amdgpu_bo_va_op_raw2(amdgpu_device_handle dev,
+				    amdgpu_bo_handle bo,
+				    uint64_t offset,
+				    uint64_t size,
+				    uint64_t addr,
+				    uint64_t flags,
+				    uint32_t ops,
+				    uint32_t vm_timeline_syncobj_out,
+				    uint64_t vm_timeline_point,
+				    uint64_t input_fence_syncobj_handles,
+				    uint32_t num_syncobj_handles)
+{
+	struct drm_amdgpu_gem_va va;
+	int r;
+
+	if (ops != AMDGPU_VA_OP_MAP && ops != AMDGPU_VA_OP_UNMAP &&
+	    ops != AMDGPU_VA_OP_REPLACE && ops != AMDGPU_VA_OP_CLEAR)
+		return -EINVAL;
+
+	memset(&va, 0, sizeof(va));
+	va.handle = bo ? bo->handle : 0;
+	va.operation = ops;
+	va.flags = flags;
+	va.va_address = addr;
+	va.offset_in_bo = offset;
+	va.map_size = size;
+	va.vm_timeline_syncobj_out = vm_timeline_syncobj_out;
+	va.vm_timeline_point = vm_timeline_point;
+	va.input_fence_syncobj_handles = input_fence_syncobj_handles;
+	va.num_syncobj_handles = num_syncobj_handles;
 
 	r = drmCommandWriteRead(dev->fd, DRM_AMDGPU_GEM_VA, &va, sizeof(va));
 

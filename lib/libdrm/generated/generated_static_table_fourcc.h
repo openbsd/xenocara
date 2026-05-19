@@ -18,6 +18,8 @@ static const struct drmFormatModifierInfo drm_format_modifier_table[] = {
     { DRM_MODIFIER_INTEL(4_TILED_MTL_RC_CCS, 4_TILED_MTL_RC_CCS) },
     { DRM_MODIFIER_INTEL(4_TILED_MTL_MC_CCS, 4_TILED_MTL_MC_CCS) },
     { DRM_MODIFIER_INTEL(4_TILED_MTL_RC_CCS_CC, 4_TILED_MTL_RC_CCS_CC) },
+    { DRM_MODIFIER_INTEL(4_TILED_LNL_CCS, 4_TILED_LNL_CCS) },
+    { DRM_MODIFIER_INTEL(4_TILED_BMG_CCS, 4_TILED_BMG_CCS) },
     { DRM_MODIFIER(SAMSUNG, 64_32_TILE, 64_32_TILE) },
     { DRM_MODIFIER(SAMSUNG, 16_16_TILE, 16_16_TILE) },
     { DRM_MODIFIER(QCOM, COMPRESSED, COMPRESSED) },
@@ -42,6 +44,8 @@ static const struct drmFormatModifierInfo drm_format_modifier_table[] = {
     { DRM_MODIFIER(BROADCOM, UIF, UIF) },
     { DRM_MODIFIER(ARM, 16X16_BLOCK_U_INTERLEAVED, 16X16_BLOCK_U_INTERLEAVED) },
     { DRM_MODIFIER(ALLWINNER, TILED, TILED) },
+    { DRM_MODIFIER(APPLE, GPU_TILED, GPU_TILED) },
+    { DRM_MODIFIER(APPLE, GPU_TILED_COMPRESSED, GPU_TILED_COMPRESSED) },
 };
 static const struct drmFormatModifierVendorInfo drm_format_modifier_vendor_table[] = {
     { DRM_FORMAT_MOD_VENDOR_NONE, "NONE" },
@@ -55,4 +59,6 @@ static const struct drmFormatModifierVendorInfo drm_format_modifier_vendor_table
     { DRM_FORMAT_MOD_VENDOR_ARM, "ARM" },
     { DRM_FORMAT_MOD_VENDOR_ALLWINNER, "ALLWINNER" },
     { DRM_FORMAT_MOD_VENDOR_AMLOGIC, "AMLOGIC" },
+    { DRM_FORMAT_MOD_VENDOR_MTK, "MTK" },
+    { DRM_FORMAT_MOD_VENDOR_APPLE, "APPLE" },
 };
