@@ -62,8 +62,7 @@ typedef struct _OFclosure {
  * hold resolved alias targets returned by the font library.
  * ZDI-CAN-30136
  */
-#define XLFDMAXFONTNAMELEN     1024
-
+#define XLFDMAXFONTNAMELEN	1024
 typedef struct _LFWIstate {
     char pattern[XLFDMAXFONTNAMELEN];
     int patlen;

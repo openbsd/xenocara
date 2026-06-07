@@ -1863,6 +1863,11 @@ CheckKeyActions(ClientPtr client,
     if (req->nKeyActs % 4)
         wire += 4 - (req->nKeyActs % 4);
     *wireRtrn = (CARD8 *) (((XkbAnyAction *) wire) + nActs);
+    if (nActs > 0 &&
+        !_XkbCheckRequestBounds(client, req, wire, *wireRtrn)) {
+        *nActsRtrn = _XkbErrCode2(0x25, nActs);
+        return 0;
+    }
     *nActsRtrn = nActs;
     return 1;
 }
@@ -5364,6 +5369,8 @@ _CheckSetOverlay(char **wire_inout, xkbSetGeometryReq *req,
     }
     CHK_ATOM_ONLY(olWire->name);
     ol = XkbAddGeomOverlay(section, olWire->name, olWire->nRows);
+    if (!ol)
+        return BadAlloc;
     rWire = (xkbOverlayRowWireDesc *) &olWire[1];
     for (r = 0; r < olWire->nRows; r++) {
         register int k;
@@ -5373,12 +5380,14 @@ _CheckSetOverlay(char **wire_inout, xkbSetGeometryReq *req,
         if (!_XkbCheckRequestBounds(client, req, rWire, rWire + 1))
             return BadLength;
 
-        if (rWire->rowUnder > section->num_rows) {
+        if (rWire->rowUnder >= section->num_rows) {
             client->errorValue = _XkbErrCode4(0x20, r, section->num_rows,
                                               rWire->rowUnder);
             return BadMatch;
         }
         row = XkbAddGeomOverlayRow(ol, rWire->rowUnder, rWire->nKeys);
+        if (!row)
+            return BadAlloc;
         kWire = (xkbOverlayKeyWireDesc *) &rWire[1];
         for (k = 0; k < rWire->nKeys; k++, kWire++) {
             if (!_XkbCheckRequestBounds(client, req, kWire, kWire + 1))
@@ -5568,10 +5577,22 @@ _CheckSetShapes(XkbGeometryPtr geom,
                 ol->num_points = olWire->nPoints;
                 olWire = (xkbOutlineWireDesc *)ptWire;
             }
-            if (shapeWire->primaryNdx != XkbNoShape)
+            if (shapeWire->primaryNdx != XkbNoShape) {
+                if (shapeWire->primaryNdx >= shapeWire->nOutlines) {
+                    client->errorValue = _XkbErrCode3(0x08, shapeWire->primaryNdx,
+                                                      shapeWire->nOutlines);
+                    return BadValue;
+                }
                 shape->primary = &shape->outlines[shapeWire->primaryNdx];
-            if (shapeWire->approxNdx != XkbNoShape)
+            }
+            if (shapeWire->approxNdx != XkbNoShape) {
+                if (shapeWire->approxNdx >= shapeWire->nOutlines) {
+                    client->errorValue = _XkbErrCode3(0x08, shapeWire->approxNdx,
+                                                      shapeWire->nOutlines);
+                    return BadValue;
+                }
                 shape->approx = &shape->outlines[shapeWire->approxNdx];
+            }
             shapeWire = (xkbShapeWireDesc *) olWire;
         }
         wire = (char *) shapeWire;
@@ -5621,12 +5642,12 @@ _CheckSetGeom(XkbGeometryPtr geom, xkbSetGeometryReq * req, ClientPtr client)
         client->errorValue = _XkbErrCode3(0x01, 2, req->nColors);
         return BadValue;
     }
-    if (req->baseColorNdx > req->nColors) {
+    if (req->baseColorNdx >= req->nColors) {
         client->errorValue =
             _XkbErrCode3(0x03, req->nColors, req->baseColorNdx);
         return BadMatch;
     }
-    if (req->labelColorNdx > req->nColors) {
+    if (req->labelColorNdx >= req->nColors) {
         client->errorValue =
             _XkbErrCode3(0x03, req->nColors, req->labelColorNdx);
         return BadMatch;
