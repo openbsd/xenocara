@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2021/11/30 08:52:59 robert Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2026/07/05 21:25:48 naddy Exp $
 
-CONFIGURE_ARGS+= --with-cpp='/usr/libexec/cpp -traditional'
+CONFIGURE_ARGS+= --with-cpp='/usr/bin/cpp -traditional'
 
 .include <bsd.xorg.mk>
