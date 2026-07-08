@@ -531,25 +531,74 @@ pcfReadFont(FontPtr pFont, FontFilePtr file,
 	int         old,
 	            new;
 	xCharInfo  *metric;
+	int         srcPad = PCF_GLYPH_PAD(format);
 
-	sizepadbitmaps = bitmapSizes[PCF_SIZE_TO_INDEX(glyph)];
-	padbitmaps = malloc(sizepadbitmaps);
+	/* Compute the actual required size from per-glyph metrics instead
+	 * of trusting the file's bitmapSizes[] value, which may be smaller
+	 * than the actual data written by RepadBitmap. */
+	sizepadbitmaps = 0;
+	for (i = 0; i < nbitmaps; i++) {
+	    int w, h, glyphBytes;
+	    metric = &metrics[i].metrics;
+	    w = metric->rightSideBearing - metric->leftSideBearing;
+	    h = metric->ascent + metric->descent;
+	    glyphBytes = BYTES_PER_ROW(w, glyph) * h;
+	    if (glyphBytes < 0 || (glyphBytes > 0 && sizepadbitmaps > INT_MAX - glyphBytes)) {
+		pcfError("pcfReadFont(): bitmap size overflow\n");
+		goto Bail;
+	    }
+	    sizepadbitmaps += glyphBytes;
+	}
+	padbitmaps = malloc(sizepadbitmaps ? sizepadbitmaps : 1);
 	if (!padbitmaps) {
           pcfError("pcfReadFont(): Couldn't allocate padbitmaps (%d)\n", sizepadbitmaps);
 	    goto Bail;
 	}
 	new = 0;
 	for (i = 0; i < nbitmaps; i++) {
+	    int srcGlyphBytes;
+
 	    old = offsets[i];
 	    metric = &metrics[i].metrics;
+
+	    /* Validate source offset and source glyph size against the
+	     * source bitmap buffer to prevent out-of-bounds reads. */
+	    srcGlyphBytes = BYTES_PER_ROW(
+		metric->rightSideBearing - metric->leftSideBearing,
+		srcPad) * (metric->ascent + metric->descent);
+	    if (old < 0 || old > sizebitmaps ||
+		srcGlyphBytes < 0 || srcGlyphBytes > sizebitmaps - old) {
+		pcfError("pcfReadFont(): bitmap offset/size out of bounds\n");
+		free(padbitmaps);
+		goto Bail;
+	    }
+
 	    offsets[i] = new;
 	    new += RepadBitmap(bitmaps + old, padbitmaps + new,
-			       PCF_GLYPH_PAD(format), glyph,
+			       srcPad, glyph,
 			  metric->rightSideBearing - metric->leftSideBearing,
 			       metric->ascent + metric->descent);
 	}
 	free(bitmaps);
 	bitmaps = padbitmaps;
+    } else {
+	/* Validate offsets and full glyph extents against bitmap buffer */
+	for (i = 0; i < nbitmaps; i++) {
+	    int glyphBytes;
+	    xCharInfo *metric = &metrics[i].metrics;
+
+	    glyphBytes = BYTES_PER_ROW(
+		metric->rightSideBearing - metric->leftSideBearing,
+		glyph) * (metric->ascent + metric->descent);
+	    if (offsets[i] >= (CARD32)sizebitmaps ||
+		glyphBytes < 0 ||
+		glyphBytes > sizebitmaps - (int)offsets[i]) {
+		pcfError("pcfReadFont(): bitmap offset/size out of bounds "
+			 "(offset %u, size %d, total %d)\n",
+			 offsets[i], glyphBytes, sizebitmaps);
+		goto Bail;
+	    }
+	}
     }
     for (i = 0; i < nbitmaps; i++)
 	metrics[i].bits = bitmaps + offsets[i];
@@ -624,6 +673,10 @@ pcfReadFont(FontPtr pFont, FontFilePtr file,
 	if (IS_EOF(file)) goto Bail;
 	if (encodingOffset == 0xFFFF) {
 	    pFont->info.allExist = FALSE;
+	} else if (encodingOffset >= nmetrics) {
+	    pcfError("pcfReadFont(): encoding offset %d out of range (nmetrics=%d)\n",
+		     encodingOffset, nmetrics);
+	    goto Bail;
 	} else {
             if(!encoding[SEGMENT_MAJOR(i)]) {
                 encoding[SEGMENT_MAJOR(i)]=
