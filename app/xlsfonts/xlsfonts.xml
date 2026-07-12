@@ -49,7 +49,7 @@ manual volume numbers.
 
       <arg><option>-o</option></arg>
 
-      <arg><option>-fn <replaceable>pattern</replaceable></option></arg>     
+      <arg><option>-fn <replaceable>pattern</replaceable></option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -111,7 +111,7 @@ manual volume numbers.
           </para>
         </listitem>
       </varlistentry>
-      
+
       <varlistentry>
         <term><option>-lll</option>
         </term>
@@ -241,7 +241,7 @@ manual volume numbers.
 	  </para>
 	</listitem>
       </varlistentry>
-      
+
     </variablelist>
   </refsect1>
 
@@ -249,7 +249,7 @@ manual volume numbers.
     <title>BUGS</title>
 
     <para>
-      Doing ``xlsfonts -l'' can tie up your server for a very long time. 
+      Doing ``xlsfonts -l'' can tie up your server for a very long time.
       This is really a bug  with  single-threaded
       non-preemptable servers, not with this program.
     </para>

@@ -1,3 +1,115 @@
+commit 975aaa7ea65065e935561d07836c953ae218cbb7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 7 15:30:54 2026 -0700
+
+    xlsfonts 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6822e8b3d167d3a9edb4689fa5b37d809e7c9c2d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 3 15:11:32 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsfonts/-/merge_requests/13>
+
+commit 8a8eaa69bef1a8b39fc87768baaf79d7330f5a74
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsfonts/-/merge_requests/13>
+
+commit 4e9fccbd53759067ce0130818124b979a18f1574
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 9 13:44:12 2025 -0700
+
+    IgnoreError: tell the compiler the arguments are intentionally unused
+    
+    Clears warnings from gcc 15.1:
+    
+    xlsfonts.c: In function ‘IgnoreError’:
+    xlsfonts.c:476:23: warning: unused parameter ‘disp’ [-Wunused-parameter]
+      476 | IgnoreError(Display * disp, XErrorEvent *event)
+          |             ~~~~~~~~~~^~~~
+    xlsfonts.c:476:42: warning: unused parameter ‘event’ [-Wunused-parameter]
+      476 | IgnoreError(Display * disp, XErrorEvent *event)
+          |                             ~~~~~~~~~~~~~^~~~~
+    xlsfonts.c: In function ‘ComputeFontType’:
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsfonts/-/merge_requests/12>
+
+commit 1c66c9cf729020a64303a352af6aec59625f4713
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 9 13:37:50 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsfonts/-/merge_requests/12>
+
+commit 60a0b7fa6f467783b81e61aa546c856480774f96
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 09:51:41 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    mandoc: xlsfonts.1:2:5: STYLE: lower case character in document title: TH xlsfonts
+    mandoc: xlsfonts.1:2:16: WARNING: cannot parse date, using it verbatim: TH xlsfonts 1.0.8
+    an.tmac:xlsfonts.1:98: style: blank line in input
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsfonts/-/merge_requests/11>
+
+commit cb4c93dbd0a5963f5450fc3bf18c9a5e0f46d567
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 14:47:12 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsfonts/-/merge_requests/10>
+
+commit e387dfb8601616c8d03fac2fd88e1ea8a9582de2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 14:34:16 2025 -0700
+
+    Add --help and --version options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsfonts/-/merge_requests/10>
+
+commit 18e98f63fd991cf0181a91e73970c93ea8e716a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 29 11:38:02 2024 -0800
+
+    Simplify qsort() comparision function to just call strcmp()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsfonts/-/merge_requests/9>
+
 commit d20bea4979d6aedc088d2c6a1e31874017562372
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 1 16:52:51 2024 -0800

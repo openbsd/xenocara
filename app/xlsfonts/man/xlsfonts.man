@@ -1,18 +1,22 @@
 .\" -*- coding: us-ascii -*-
-.TH xlsfonts __appmansuffix__ __xorgversion__
+.TH XLSFONTS __appmansuffix__ 2022-09-10 __xorgversion__
 .SH NAME
 xlsfonts \- list fonts available to X server
 .SH SYNOPSIS
 .ad l
-\fBxlsfonts\fR
-[\fB\-display \fBhost:dpy\fR\fR] [\fB\-l\fR] [\fB\-ll\fR] [\fB\-lll\fR] [\fB\-m\fR] [\fB\-C\fR] [\fB\-1\fR] [\fB\-w \fBwidth\fR\fR] [\fB\-n \fBcolumns\fR\fR] [\fB\-u\fR] [\fB\-o\fR] [\fB\-fn \fBpattern\fR\fR] [\fB\-v\fR]
+.nf
+\fBxlsfonts\fR [\fB\-display\fR \fIhost:dpy\fR] [\fB\-l\fR] [\fB\-ll\fR] [\fB\-lll\fR] [\fB\-m\fR] [\fB\-C\fR] [\fB\-1\fR]
+    [\fB\-w\fR \fIwidth\fR] [\fB\-n\fR \fIcolumns\fR] [\fB\-u\fR] [\fB\-o\fR] [\fB\-fn\fR \fIpattern\fR] [\fB\-v\fR]
+.fi
 .SH DESCRIPTION
-xlsfonts lists the fonts available on an X server that match the given pattern.
+.B xlsfonts
+lists the fonts available on an X server that match the given pattern.
 The wildcard character "*" may be used to match any sequence of characters
 (including none), and "?" to match any single character.
 If no pattern is given, "*" is assumed.
 .PP
-The "*" and "?" characters must be quoted to prevent them from being expanded by the shell.
+The "*" and "?" characters must be quoted to prevent them
+from being expanded by the shell.
 .SH OPTIONS
 .TP
 \fB\-display \fIhost:dpy\fB\fR
@@ -22,8 +26,7 @@ This option specifies the X server to contact.
 Same as \fB\-display \fIhost:dpy\fB\fR.
 .TP
 \fB\-l\fR
-Lists some attributes of the font on one line in addition
-to its name.
+Lists some attributes of the font on one line in addition to its name.
 .TP
 \fB\-ll\fR
 Lists font properties in addition to \fB\-l\fR output.
@@ -43,45 +46,48 @@ This is the same as \fB\-n 0\fR.
 This option indicates that listings should use a single column.
 This is the same as \fB\-n 1\fR.
 .TP
-\fB\-w \fIwidth\fB\fR
+\fB\-w \fIwidth\fR
 This option specifies the width in characters that should be
 used in figuring out how many columns to print.
 The default is 79.
 .TP
-\fB\-n \fIcolumns\fB\fR
-This option specifies the number of columns to use in
-displaying the output. By default, it will attempt to
-fit as many columns of font names into the number of
-character specified by \fB\-w\fR width.
+\fB\-n \fIcolumns\fR
+This option specifies the number of columns to use in displaying the output.
+By default, it will attempt to fit as many columns of font names as possible
+into the number of characters specified by \fB\-w\fR \fIwidth\fR.
 .TP
 \fB\-u\fR
 This option indicates that the output should be left unsorted.
 .TP
 \fB\-o\fR
-This option indicates that xlsfonts should do an OpenFont
-(and QueryFont, if appropriate) rather than a ListFonts.
-This is useful if ListFonts or ListFontsWithInfo fail to
-list a known font (as is the case with some scaled font
-systems).
+This option indicates that \fBxlsfonts\fR should do an \fBOpenFont\fR
+(and \fBQueryFont\fR, if appropriate) rather than a \fBListFonts\fR.
+This is useful if \fBListFonts\fR or \fBListFontsWithInfo\fR fail to
+list a known font (as is the case with some scaled font systems).
 .TP
-\fB\-fn \fIpattern\fB\fR
+\fB\-fn \fIpattern\fR
 This option specifies the font name pattern to match.
 .TP
 .B -v
 This option indicates that xlsfonts should print out the program version
 and exit.
 .SH "SEE ALSO"
-\fBX\fR(__miscmansuffix__), \fBXserver\fR(__appmansuffix__), \fBxset\fR(__appmansuffix__), \fBxfd\fR(__appmansuffix__), X Logical Font Description Conventions
+.BR X (__miscmansuffix__),
+.BR Xserver (__appmansuffix__),
+.BR xset (__appmansuffix__),
+.BR xfd (__appmansuffix__),
+.BR xfontsel (__appmansuffix__),
+.I X Logical Font Description Conventions
 .SH ENVIRONMENT
 .TP
-\fBDISPLAY\fR
-\fBDISPLAY\fR must be set to get the default host and display to use.
+.B DISPLAY
+The default host and display to use if neither \fB\-d\fR or \fB\-display\fR
+are specified.
 .SH BUGS
 Doing ``xlsfonts -l'' can tie up your X server for a very long time.
-This is really a bug with single-threaded
-non-preemptable servers, not with this program.
+This is really a bug with single-threaded non-preemptable servers,
+not with this program.
 .SH AUTHOR
-
 Mark Lillibridge
 .PP
 Jim Fulton
@@ -89,4 +95,3 @@ Jim Fulton
 Phil Karlton
 .PP
 Roland Mainz
-

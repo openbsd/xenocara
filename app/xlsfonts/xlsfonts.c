@@ -28,6 +28,7 @@ in this Software without prior written authorization from The Open Group.
 # include "config.h"
 #endif
 
+#include <X11/Xfuncproto.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
@@ -84,7 +85,7 @@ static void print_character_metrics(register XFontStruct *info);
 static void do_query_font(Display *dpy, const char *name);
 
 void
-usage(const char *errmsg)
+usage(const char *errmsg, int exitstatus)
 {
     if (errmsg != NULL)
         fprintf(stderr, "%s: %s\n\n", program_name, errmsg);
@@ -104,7 +105,7 @@ usage(const char *errmsg)
             "    -v                       print program version\n"
             "\n");
     Close_Display();
-    exit(EXIT_FAILURE);
+    exit(exitstatus);
 }
 
 int
@@ -114,14 +115,32 @@ main(int argc, char **argv)
 
     INIT_NAME;
 
+    /* Handle args that don't require opening a display */
+    for (int a = 1; a < argc; a++) {
+        const char *argn = argv[a];
+        /* accept single or double dash for -help & -version */
+        if (argn[0] == '-' && argn[1] == '-') {
+            argn++;
+        }
+        if (strcmp(argn, "-help") == 0) {
+            usage(NULL, EXIT_SUCCESS);
+        }
+        if ((strcmp(argn, "-version") == 0) ||
+            (strcmp(argv[a], "-v") == 0)) {
+            puts(PACKAGE_STRING);
+            exit(EXIT_SUCCESS);
+        }
+    }
+
     /* Handle command line arguments, open display */
     Setup_Display_And_Screen(&argc, argv);
 
     for (argv++, argc--; argc; argv++, argc--) {
         if (argv[0][0] == '-') {
             if (argcnt > 0)
-                usage("options may not be specified after font names");
-            for (i = 1; argv[0][i]; i++)
+                usage("options may not be specified after font names",
+                      EXIT_FAILURE);
+            for (i = 1; argv[0][i]; i++) {
                 switch (argv[0][i]) {
                 case 'l':
                     long_list++;
@@ -139,23 +158,23 @@ main(int argc, char **argv)
                     if (argv[0][i + 1] != 'n') {
                         fprintf(stderr, "%s: unrecognized argument %s\n\n",
                                 program_name, argv[0]);
-                        usage(NULL);
+                        usage(NULL, EXIT_FAILURE);
                     }
                     if (--argc <= 0)
-                        usage("-fn requires an argument");
+                        usage("-fn requires an argument", EXIT_FAILURE);
                     argcnt++;
                     argv++;
                     get_list(argv[0]);
                     goto next;
                 case 'w':
                     if (--argc <= 0)
-                        usage("-w requires an argument");
+                        usage("-w requires an argument", EXIT_FAILURE);
                     argv++;
                     max_output_line_width = atoi(argv[0]);
                     goto next;
                 case 'n':
                     if (--argc <= 0)
-                        usage("-n requires an argument");
+                        usage("-n requires an argument", EXIT_FAILURE);
                     argv++;
                     columns = atoi(argv[0]);
                     goto next;
@@ -171,13 +190,14 @@ main(int argc, char **argv)
                 default:
                     fprintf(stderr, "%s: unrecognized argument -%c\n\n",
                             program_name, argv[0][i]);
-                    usage(NULL);
+                    usage(NULL, EXIT_FAILURE);
                     break;
                 }
+            }
             if (i == 1) {
                 fprintf(stderr, "%s: unrecognized argument %s\n\n",
                         program_name, argv[0]);
-                usage(NULL);
+                usage(NULL, EXIT_FAILURE);
             }
         }
         else {
@@ -273,9 +293,7 @@ compare(const void *arg1, const void *arg2)
     const char *p1 = f1->name;
     const char *p2 = f2->name;
 
-    while (*p1 && *p2 && *p1 == *p2)
-        p1++, p2++;
-    return (*p1 - *p2);
+    return strcmp(p1, p2);
 }
 
 static void
@@ -456,7 +474,7 @@ copy_number(char **pp1, char **pp2, int n1, int n2)
 
 /* ARGSUSED */
 static int
-IgnoreError(Display * disp, XErrorEvent *event)
+IgnoreError(_X_UNUSED Display *disp, _X_UNUSED XErrorEvent *event)
 {
     return 0;
 }
