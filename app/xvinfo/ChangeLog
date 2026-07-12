@@ -1,3 +1,76 @@
+commit 87503b084c7a281bab9bd501227145cac1506d25
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 11 17:40:39 2026 -0700
+
+    xvinfo 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5e82d175ad068e28161f1d08f14aa8637b4d989
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 3 16:21:51 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xvinfo/-/merge_requests/6>
+
+commit 3be29dd8249e2266963b0719d272670a67c9b465
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xvinfo/-/merge_requests/6>
+
+commit 9eb79cbe55af83d8186d95d57114959c2ff2e4df
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 13:08:56 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    mandoc: xvinfo.1:1:5: STYLE: lower case character in document title: TH xvinfo
+    mandoc: xvinfo.1:1:14: WARNING: cannot parse date, using it verbatim: TH xvinfo 1.1.5
+    mandoc: xvinfo.1:11:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xvinfo.1:16:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xvinfo.1:30:2: WARNING: skipping paragraph macro: PP empty
+    
+    an.tmac:xvinfo.1:34: style: blank line in input
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xvinfo/-/merge_requests/5>
+
+commit aa843bceb41508c15c33ab9482b92aa47be0e2ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 14:34:28 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xvinfo/-/merge_requests/4>
+
+commit 0560cbbd8d35857e8a65e3f1b6f142c725e3e438
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 14:26:44 2025 -0700
+
+    Add -help option
+    
+    Also uses more standard exit() status codes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xvinfo/-/merge_requests/4>
+
 commit 55e8dbb999ccad9378adf9410fc9c299f259a998
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Dec 3 16:29:33 2022 -0800
@@ -237,7 +310,7 @@ Date:   Sun Jul 7 10:47:47 2013 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit af9ea390e95320e683c761cbd61eaf1c0dbaefed
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sun Jul 7 03:15:39 2013 +0200
 
     Use real program name for help message
@@ -531,7 +604,7 @@ Date:   Thu May 24 18:05:52 2007 -0700
     Debian bug #350313 <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=350313>
 
 commit 29190804b219bf3e6289426a832b32ad2f4c53a4
-Author: Michel Dänzer  <michel@tungstengraphics.com>
+Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Mon Jan 15 17:14:56 2007 +0100
 
     Fix FourCC name output on big endian platforms.
@@ -539,13 +612,13 @@ Date:   Mon Jan 15 17:14:56 2007 +0100
     Fixes https://bugs.freedesktop.org/show_bug.cgi?id=9665 .
 
 commit 69758559c5ddb85bbf6501ea8e58c0896c7c1f11
-Author: Michel Dänzer  <michel@tungstengraphics.com>
+Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Mon Jan 15 17:13:51 2007 +0100
 
     Make git ignore object files and Emacs style backup files.
 
 commit f4363bef8760521d07a2b90d81dd85d19192bcf2
-Author: Michel Dänzer  <michel@tungstengraphics.com>
+Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Mon Jan 15 17:12:57 2007 +0100
 
     Rename .cvsignore to .gitignore.
@@ -647,7 +720,7 @@ Date:   Wed Jul 20 19:32:05 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit d5c7c5891a774190d3a1fbf1727bfb8238be0f23
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:09:10 2005 +0000
 
     xtrap.pc.in: s/Xfixes/XTrap/ xi.pc.in: s/Xt/Xi/ Xv/src/Makefile.am: remove

@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xvinfo], [1.1.5],
+AC_INIT([xvinfo], [1.1.6],
         [https://gitlab.freedesktop.org/xorg/app/xvinfo/-/issues], [xvinfo])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])

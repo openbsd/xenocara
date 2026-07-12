@@ -13,11 +13,12 @@
 static char *progname;
 
 static void _X_NORETURN _X_COLD
-PrintUsage(void)
+PrintUsage(int exitstatus)
 {
-    fprintf(stderr, "Usage: %s [-display host:dpy] [-short] [-version]\n",
+    fprintf(stderr,
+            "Usage: %s [-display host:dpy] [-help] [-short] [-version]\n",
             progname);
-    exit(0);
+    exit(exitstatus);
 }
 
 int
@@ -32,28 +33,36 @@ main(int argc, char *argv[])
     progname = argv[0];
 
     if ((argc > 4))
-        PrintUsage();
+        PrintUsage(EXIT_FAILURE);
 
     if (argc != 1) {
         for (int i = 1; i < argc; i++) {
-            if (!strcmp(argv[i], "-display")) {
+            const char *arg = argv[i];
+
+            /* accept '--arg' options as aliases to '-arg' form */
+            if (arg[0] == '-' && arg[1] == '-' && arg[2] != '\0')
+                arg++;
+
+            if (!strcmp(arg, "-display")) {
                 if (++i >= argc) {
                     fprintf (stderr, "%s: missing argument to -display\n",
                              progname);
-                    PrintUsage();
+                    PrintUsage(EXIT_FAILURE);
                 }
                 disname = argv[i];
             }
-            else if (!strcmp(argv[i], "-short"))
+            else if (!strcmp(arg, "-help"))
+                PrintUsage(EXIT_SUCCESS);
+            else if (!strcmp(arg, "-short"))
                 shortmode = 1;
-            else if (!strcmp(argv[i], "-version")) {
-                printf("%s\n", PACKAGE_STRING);
-                exit(0);
+            else if (!strcmp(arg, "-version")) {
+                puts(PACKAGE_STRING);
+                exit(EXIT_SUCCESS);
             }
             else {
                 fprintf (stderr, "%s: unrecognized argument '%s'\n",
                          progname, argv[i]);
-                PrintUsage();
+                PrintUsage(EXIT_FAILURE);
             }
         }
     }
@@ -61,13 +70,13 @@ main(int argc, char *argv[])
     if (!(dpy = XOpenDisplay(disname))) {
         fprintf(stderr, "%s:  Unable to open display %s\n", progname,
                 (disname != NULL) ? disname : XDisplayName(NULL));
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     if (Success != XvQueryExtension(dpy, &ver, &rev, &reqB, &eventB, &errorB)) {
         fprintf(stderr, "%s: No X-Video Extension on %s\n", progname,
                 (disname != NULL) ? disname : XDisplayName(NULL));
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     else {
         fprintf(stdout, "X-Video Extension version %i.%i\n", ver, rev);
@@ -84,7 +93,7 @@ main(int argc, char *argv[])
                                        &ainfo)) {
             fprintf(stderr, "%s:  Failed to query adaptors on display %s\n",
                     progname, (disname != NULL) ? disname : XDisplayName(NULL));
-            exit(-1);
+            exit(EXIT_FAILURE);
         }
 
         if (!nadaptors) {
@@ -191,7 +200,7 @@ main(int argc, char *argv[])
                         "%s:  Failed to query encodings on display %s\n",
                         progname,
                         (disname != NULL) ? disname : XDisplayName(NULL));
-                exit(-1);
+                exit(EXIT_FAILURE);
             }
 
             if (encodings && nencode) {

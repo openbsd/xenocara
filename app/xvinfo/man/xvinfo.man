@@ -1,33 +1,39 @@
-.TH xvinfo __appmansuffix__ __vendorversion__
+.TH XVINFO __appmansuffix__ 2025-04-12 __vendorversion__
 .SH NAME
 xvinfo - Print out X-Video extension adaptor information
 .SH SYNOPSIS
 .B "xvinfo"
-[-display \fIdisplayname\fP]
-.SH DESCRIPTION
+[\fB\-display\fP \fIdisplayname\fP] [\fB\-short\fP]
 .PP
+.B "xvinfo"
+\fB\-help\fP | \fB\-version\fP
+.SH DESCRIPTION
 .B xvinfo
 prints out the capabilities of any video adaptors associated
-with the display that are accessible through the X-Video extension.
+with the display that are accessible through the X\-Video extension.
 .SH OPTIONS
-.PP
 .TP 8
-.B "-display \fIdisplay\fP"
+.B "\-display \fIdisplay\fP"
 This argument allows you to specify the server to query; see \fIX(__miscmansuffix__)\fP.
 .TP 8
-.B "-short"
+.B "\-short"
 Output less details, to reduce the amount of text.
 .TP 8
-.B "-version"
+.B "\-help"
+Output program usage, then exit.
+.TP 8
+.B "\-version"
 Output program version, then exit.
 .SH ENVIRONMENT
-.PP
 .TP 8
 .B DISPLAY
 This variable may be used to specify the server to query.
-
 .SH SEE ALSO
-X(__miscmansuffix__), xdpyinfo(__appmansuffix__), xwininfo(__appmansuffix__),
-xdriinfo(__appmansuffix__), glxinfo(__appmansuffix__), xprop(__appmansuffix__)
+.BR X (__miscmansuffix__),
+.BR xdpyinfo (__appmansuffix__),
+.BR xwininfo (__appmansuffix__),
+.BR xdriinfo (__appmansuffix__),
+.BR glxinfo (__appmansuffix__),
+.BR xprop (__appmansuffix__)
 .SH AUTHORS
 Mark Vojkovich
