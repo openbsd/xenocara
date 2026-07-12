@@ -47,7 +47,7 @@ SOFTWARE.
 
 ******************************************************************/
 /*
- * Copyright (c) 2004, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2004, Oracle and/or its affiliates.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -88,6 +88,7 @@ SOFTWARE.
 #include <X11/Xos.h>
 #include <X11/Xaw/XawInit.h>
 #include <math.h>
+#include <wchar.h>
 #if !defined(NO_I18N) && defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
 #include <iconv.h>
 #include <langinfo.h>
@@ -111,14 +112,15 @@ SOFTWARE.
 #ifndef NO_I18N
 #include <stdlib.h>             /* for getenv() */
 #include <locale.h>
+#if defined(HAVE_XLOCALE_H)
+#include <xlocale.h>
+#endif
 extern Boolean no_locale;       /* if True, use old (unlocalized) behaviour */
 #endif
 
 /* Private Definitions */
 
 #define VERTICES_IN_HANDS	6       /* to draw triangle */
-#define PI			3.14159265358979
-#define TWOPI			(2. * PI)
 
 #define MINOR_TICK_FRACT	95
 #define SECOND_HAND_FRACT	90
@@ -130,6 +132,8 @@ extern Boolean no_locale;       /* if True, use old (unlocalized) behaviour */
 
 #define ANALOG_SIZE_DEFAULT	164
 
+#define LINE_WIDTH  0.01
+
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 /* #define abs(a) ((a) < 0 ? -(a) : (a)) */
@@ -138,6 +142,65 @@ extern Boolean no_locale;       /* if True, use old (unlocalized) behaviour */
 
 #define offset(field) XtOffsetOf(ClockRec, clock.field)
 #define goffset(field) XtOffsetOf(WidgetRec, core.field)
+
+#ifdef XRENDER
+#define x1 (LINE_WIDTH / 2.0)
+#define x2 LINE_WIDTH
+#define x3 (SECOND_WIDTH_FRACT / 100.0)
+#define x4 (HAND_WIDTH_FRACT / 100.0)
+#define y1 (MINUTE_HAND_FRACT / 100.0)
+#define y2 ((SECOND_HAND_FRACT + MINUTE_HAND_FRACT) / 200.0)
+#define y3 (SECOND_HAND_FRACT / 100.0)
+#define y4 (MINOR_TICK_FRACT / 100.0)
+static XftShape default_hour_shape = {3, (XPointDouble[]) {
+    { x4, -x4 }, { 0, HOUR_HAND_FRACT / 100.0 }, { -x4, -x4 } } };
+static XftShape default_min_shape  = {3, (XPointDouble[]) {
+    { x4, -x4 }, { 0, y1 }, { -x4, -x4 } } };
+static XftShape default_sec_shape = {12, (XPointDouble[]) {
+    /*
+     * Order of triangles when drawing the hand.
+     *
+     *           1,2 _ 2
+     *              | |
+     *            4 | | 3
+     *             /   \
+     *            /     \
+     *          4<       >3
+     *            \     /
+     *             \   /
+     *            4 | | 3
+     *              | |
+     *              | |
+     *              |_|
+     *             1   1,2
+     */
+    {  x2, -x2 }, { -x2,  y4 }, {  x2,  y4 },
+    {  x2, -x2 }, { -x2,  y4 }, { -x2, -x2 },
+    {  x2,  y1 }, {  x3,  y2 }, {  x2,  y3 },
+    { -x2,  y1 }, { -x3,  y2 }, { -x2,  y3 },
+} };
+static XftShape default_major_shape = {6, (XPointDouble[]) {
+    { x1, y3 }, { -x1, 1 }, { x1, 1 },
+    { x1, y3 }, { -x1, 1 }, { -x1, y3 },
+} };
+static XftShape default_minor_shape = {6, (XPointDouble[]) {
+    { x1, y4 }, { -x1, 1 }, { x1, 1 },
+    { x1, y4 }, { -x1, 1 }, { -x1, y4 },
+} };
+static XftShape default_am_shape = {0, NULL };
+static XftShape default_pm_shape = {0, NULL };
+static XftShape default_fixed_shape = {0, NULL };
+#undef x1
+#undef x2
+#undef x3
+#undef x4
+#undef y1
+#undef y2
+#undef y3
+#undef y4
+static XftZOrder default_z_order =
+    { {'T', 't', '1', '2', '3', 'a', 'p', 'h', 'm', 's', '\0'} };
+#endif
 
 static XtResource resources[] = {
     {XtNwidth, XtCWidth, XtRDimension, sizeof(Dimension),
@@ -158,6 +221,8 @@ static XtResource resources[] = {
      offset(utime), XtRImmediate, (XtPointer) FALSE},
     {XtNanalog, XtCBoolean, XtRBoolean, sizeof(Boolean),
      offset(analog), XtRImmediate, (XtPointer) TRUE},
+    {XtNanalog24, XtCBoolean, XtRBoolean, sizeof(Boolean),
+     offset(analog24), XtRImmediate, (XtPointer) FALSE},
     {XtNtwentyfour, XtCBoolean, XtRBoolean, sizeof(Boolean),
      offset(twentyfour), XtRImmediate, (XtPointer) TRUE},
     {XtNbrief, XtCBoolean, XtRBoolean, sizeof(Boolean),
@@ -195,6 +260,42 @@ static XtResource resources[] = {
      offset(major_color), XtRString, XtDefaultForeground},
     {XtNminorColor, XtCForeground, XtRXftColor, sizeof(XftColor),
      offset(minor_color), XtRString, XtDefaultForeground},
+    {XtNamColor, XtCForeground, XtRXftColor, sizeof(XftColor),
+     offset(am_color), XtRString, XtDefaultForeground},
+    {XtNpmColor, XtCForeground, XtRXftColor, sizeof(XftColor),
+     offset(pm_color), XtRString, XtDefaultForeground},
+    {XtNfixed1Color, XtCForeground, XtRXftColor, sizeof(XftColor),
+     offset(fixed_1_color), XtRString, XtDefaultForeground},
+    {XtNfixed2Color, XtCForeground, XtRXftColor, sizeof(XftColor),
+     offset(fixed_2_color), XtRString, XtDefaultForeground},
+    {XtNfixed3Color, XtCForeground, XtRXftColor, sizeof(XftColor),
+     offset(fixed_3_color), XtRString, XtDefaultForeground},
+    {XtNhourShape, XtCString, XtRXftShape, sizeof(XftShape),
+     offset(hour_shape), XtRXftShape, (XtPointer) &default_hour_shape},
+    {XtNminuteShape, XtCString, XtRXftShape, sizeof(XftShape),
+     offset(min_shape), XtRXftShape, (XtPointer) &default_min_shape},
+    {XtNsecondShape, XtCString, XtRXftShape, sizeof(XftShape),
+     offset(sec_shape), XtRXftShape, (XtPointer) &default_sec_shape},
+    {XtNmajorShape, XtCString, XtRXftShape, sizeof(XftShape),
+     offset(major_shape), XtRXftShape, (XtPointer) &default_major_shape},
+    {XtNminorShape, XtCString, XtRXftShape, sizeof(XftShape),
+     offset(minor_shape), XtRXftShape, (XtPointer) &default_minor_shape},
+    {XtNamShape, XtCString, XtRXftShape, sizeof(XftShape),
+     offset(am_shape), XtRXftShape, (XtPointer) &default_am_shape},
+    {XtNpmShape, XtCString, XtRXftShape, sizeof(XftShape),
+     offset(pm_shape), XtRXftShape, (XtPointer) &default_pm_shape},
+    {XtNfixed1Shape, XtCString, XtRXftShape, sizeof(XftShape),
+     offset(fixed_1_shape), XtRXftShape, (XtPointer) &default_fixed_shape},
+    {XtNfixed2Shape, XtCString, XtRXftShape, sizeof(XftShape),
+     offset(fixed_2_shape), XtRXftShape, (XtPointer) &default_fixed_shape},
+    {XtNfixed3Shape, XtCString, XtRXftShape, sizeof(XftShape),
+     offset(fixed_3_shape), XtRXftShape, (XtPointer) &default_fixed_shape},
+    {XtNrotateAmpm, XtCBoolean, XtRBoolean, sizeof(Boolean),
+     offset(rotate_ampm), XtRImmediate, (XtPointer) FALSE},
+    {XtNzOrder, XtCString, XtRXftZOrder, sizeof(XftZOrder),
+     offset(z_order), XtRXftZOrder, (XtPointer) &default_z_order},
+    {XtNproportional, XtCBoolean, XtRBoolean, sizeof(Boolean),
+     offset(proportional), XtRImmediate, (XtPointer) FALSE},
     {XtNface, XtCFace, XtRXftFont, sizeof(XftFont *),
      offset(face), XtRString, ""},
 #endif
@@ -212,7 +313,7 @@ static void Destroy(Widget gw);
 static void Resize(Widget gw);
 static void Redisplay(Widget gw, XEvent * event, Region region);
 static void clock_tic(XtPointer client_data, XtIntervalId * id);
-static void erase_hands(ClockWidget w, struct tm *tm);
+static void erase_hands(ClockWidget w, const struct tm *tm);
 static void ClockAngle(double tick_units, double *sinp, double *cosp);
 static void DrawLine(ClockWidget w, Dimension blank_length,
                      Dimension length, int tick_units);
@@ -321,7 +422,7 @@ static XtConvertArgRec xftColorConvertArgs[] = {
 };
 
 #define	donestr(type, value, tstr) \
-	{							\
+	do {							\
 	    if (toVal->addr != NULL) {				\
 		if (toVal->size < sizeof(type)) {		\
 		    toVal->size = sizeof(type);			\
@@ -338,7 +439,7 @@ static XtConvertArgRec xftColorConvertArgs[] = {
 	    }							\
 	    toVal->size = sizeof(type);				\
 	    return True;					\
-	}
+	} while (0)
 
 static void
 XmuFreeXftColor(XtAppContext app, XrmValuePtr toVal, XtPointer closure,
@@ -441,7 +542,7 @@ XmuCvtStringToXftFont(Display * dpy,
                       XrmValue * fromVal, XrmValue * toVal,
                       XtPointer * converter_data)
 {
-    char *name;
+    const char *name;
     XftFont *font;
     Screen *screen;
 
@@ -470,6 +571,189 @@ static XtConvertArgRec xftFontConvertArgs[] = {
      sizeof(Screen *)},
 };
 
+static void
+XmuFreeXftShape(XtAppContext app, XrmValuePtr toVal, XtPointer closure,
+                XrmValuePtr args, Cardinal * num_args)
+{
+    (void)app; (void)closure; (void)args; (void)num_args;
+    free(((XftShape*)(toVal->addr))->points);
+}
+
+static void
+XmuFreeXftZOrder(XtAppContext app, XrmValuePtr toVal, XtPointer closure,
+                 XrmValuePtr args, Cardinal * num_args)
+{
+    /* no heap allocations, so nothing to free */
+    (void)app; (void)toVal; (void)closure; (void)args; (void)num_args;
+}
+
+/* Parse a series of triangle coordinates on the form "(X1,Y1) (X2,Y2) (X3,Y3)",
+ * while ignoring spaces. A point can also be an integer N, taken as the
+ * zero-based index of a previous point, relative the start if positive or
+ * relative the current point if negative. Coordinate transforms are supported
+ * anywhere outside parentheses.
+ */
+static Boolean
+XmuCvtStringToXftShape(Display * dpy,
+                       XrmValue * args, Cardinal * num_args,
+                       XrmValue * fromVal, XrmValue * toVal,
+                       XtPointer * converter_data)
+{
+
+#define XmuCvtStringToXftShape_Assert(condition, msg) \
+    if(!(condition)) { errmsg = msg; break; }
+
+    char *p = (char *)fromVal->addr;
+    XftShape shape;
+    int points_allocated = 0;
+    int count = 0;
+#ifndef NO_I18N
+    locale_t c_loc = newlocale(LC_NUMERIC_MASK, "C", NULL);
+    locale_t old_loc = uselocale(c_loc);
+#endif
+    double t1 = .01, t2 = 0, t3 = 0, t4 = 0, t5 = .01, t6 = 0;
+    const char* errmsg = NULL;
+    shape.points = NULL;
+    while (True) {
+        int consumed, idx;
+        double x, y, effX, effY;
+        while (*p == 0x20) p++;
+        if (*p == 0) {
+            XmuCvtStringToXftShape_Assert(count % 3 == 0,
+                "Number of points must be divisible by three");
+            shape.npoints = count;
+#ifndef NO_I18N
+            uselocale(old_loc);
+            freelocale(c_loc);
+#endif
+            donestr(XftShape, shape, XtRXftShape);
+        }
+        XmuCvtStringToXftShape_Assert(count <= 3 * 40000, "Too many triangles");
+        if (points_allocated <= count) {
+            void* new_mem;
+            points_allocated++;
+            new_mem = realloc(shape.points,
+                              sizeof(XPointDouble) * points_allocated);
+            XmuCvtStringToXftShape_Assert(new_mem != NULL,
+                "Out of memory in XmuCvtStringToXftShape");
+            shape.points = new_mem;
+        }
+        if (sscanf(p, "%d%n", &idx, &consumed) == 1) {
+            XmuCvtStringToXftShape_Assert(idx < count, "Index too great");
+            XmuCvtStringToXftShape_Assert(0 <= idx + count, "Index too low");
+            if (idx < 0) idx += count;
+            shape.points[count] = shape.points[idx];
+            p += consumed;
+            count++;
+            continue;
+        }
+        if (*p == 'r' || *p == 'h' || *p == 'w' || *p == 'x' || *p == 'y') {
+            double param;
+            XmuCvtStringToXftShape_Assert(sscanf(p + 1, "%lf%n", &param,
+                                                 &consumed) == 1,
+                                          "Expected tranform parameter");
+            switch (*p) {
+            case 'r': {
+                double s, c, oldt1 = t1, oldt2 = t2, oldt4 = t4, oldt5 = t5;
+                ClockAngle(param * 10.0, &s, &c);
+                t1 = oldt1 * c - oldt2 * s; t2 = oldt1 * s + oldt2 * c;
+                t4 = oldt4 * c - oldt5 * s; t5 = oldt4 * s + oldt5 * c;
+                break;
+            }
+            case 'h': t2 *= param; t5 *= param; break;
+            case 'w': t1 *= param; t4 *= param; break;
+            case 'x': t3 += param * t1; t6 += param * t4; break;
+            case 'y': t3 += param * t2; t6 += param * t5; break;
+            }
+            p += consumed + 1;
+            continue;
+        }
+        XmuCvtStringToXftShape_Assert(*p == '(',
+                                      "Expected opening parenthesis, integer"
+                                      " index or coordinate transformation");
+        p++;
+        XmuCvtStringToXftShape_Assert(sscanf(p, "%lf%n", &x, &consumed) == 1,
+                                      "Expected floating point X value");
+        p += consumed;
+        while (*p == 0x20) p++;
+        XmuCvtStringToXftShape_Assert(*p == ',', "Expected comma character");
+        p++;
+        while (*p == 0x20) p++;
+        XmuCvtStringToXftShape_Assert(sscanf(p, "%lf%n", &y, &consumed) == 1,
+                                      "Expected floating point Y value");
+        p += consumed;
+        while (*p == 0x20) p++;
+        XmuCvtStringToXftShape_Assert(*p == ')',
+            "Expected closing parenthesis");
+        p++;
+        effX = x*t1 + y*t2 + t3;
+        effY = x*t4 + y*t5 + t6;
+        XmuCvtStringToXftShape_Assert((effX * effX + effY * effY) <= 100.0,
+            "Triangle points must be within 1000.0 units of the origin");
+        shape.points[count].x = effX;
+        shape.points[count].y = effY;
+        count++;
+    }
+    if (errmsg) {
+        char msgout[1000];
+        ptrdiff_t errpos = p - fromVal->addr;
+        int written = snprintf(msgout, 1000,
+                               "Error in shape at position %d: %s.", errpos + 1,
+                               errmsg);
+        if (strlen(fromVal->addr) < 160) {
+          snprintf(msgout + written, 1000 - written, "\n%s\n%*s^",
+                   fromVal->addr, (int) errpos, "");
+        }
+        XtAppWarningMsg(XtDisplayToApplicationContext(dpy),
+                        "cvtStringToXftShape", "wrongParameters", "XtToolkitError",
+                        msgout, (String *) NULL, (Cardinal *) 0);
+        if (shape.points) free(shape.points);
+#ifndef NO_I18N
+        uselocale(old_loc);
+        freelocale(c_loc);
+#endif
+        return False;
+    }
+    XtAppErrorMsg(XtDisplayToApplicationContext(dpy), "cvtStringToXftShape",
+                  "unreachable", "XtToolkitError",
+                  "Internal error in XmuCvtStringToXftShape", (String *) NULL,
+                  (Cardinal *) NULL);
+#undef XmuCvtStringToXftShape_Assert
+}
+
+static Boolean
+XmuCvtStringToXftZOrder(Display * dpy,
+                        XrmValue * args, Cardinal * num_args,
+                        XrmValue * fromVal, XrmValue * toVal,
+                        XtPointer * converter_data)
+{
+    const char* errmsg = NULL;
+    char *p = (char *)fromVal->addr;
+    int len = strlen(p);
+    XftZOrder z_order;
+    if(len == 0) errmsg = "ZOrder string must not be empty";
+    for (int i = 0; i < len; i++) {
+        if(p[i] != 'T' && p[i] != 't' && p[i] != '1' && p[i] != '2' &&
+           p[i] != '3' && p[i] != 'a' && p[i] != 'p' && p[i] != 'h' &&
+           p[i] != 'm' && p[i] != 's')
+            errmsg = "ZOrder string must only contain characters"
+                " T, t, f, a, p, h, m, s";
+        for (int j = i + 1; j < len; j++)
+            if(p[i] == p[j])
+                errmsg = "ZOrder string must not contain duplicate characters";
+    }
+    if(errmsg) {
+        XtAppWarningMsg(XtDisplayToApplicationContext(dpy),
+                        "cvtStringToXftZOrder", "wrongParameters",
+                        "XtToolkitError", errmsg, (String *) NULL,
+                        (Cardinal *) 0);
+        return False;
+    }
+    for (int i = 0; i < CLOCK_ELEMENTS + 1; i++)
+        z_order.elements[i] = i < len ? p[i] : 0;
+    donestr(XftZOrder, z_order, XtRXftZOrder);
+}
+
 #endif
 
 static void
@@ -496,6 +780,14 @@ ClassInitialize(void)
                        XmuCvtStringToXftFont,
                        xftFontConvertArgs, XtNumber(xftFontConvertArgs),
                        XtCacheByDisplay, XmuFreeXftFont);
+    XtSetTypeConverter(XtRString, XtRXftShape,
+                       XmuCvtStringToXftShape,
+                       NULL, 0,
+                       XtCacheNone, XmuFreeXftShape);
+    XtSetTypeConverter(XtRString, XtRXftZOrder,
+                       XmuCvtStringToXftZOrder,
+                       NULL, 0,
+                       XtCacheNone, XmuFreeXftZOrder);
 #endif
 }
 
@@ -571,6 +863,9 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal * num_args)
     else
         valuemask &= ~GCFont;   /* use server default font */
 
+    if (w->clock.analog24)
+      w->clock.analog = True;
+
     min_width = min_height = ANALOG_SIZE_DEFAULT;
     if (!w->clock.analog) {
         char *str;
@@ -582,7 +877,7 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal * num_args)
         w->clock.utf8 = False;
 
         if (!no_locale) {
-            char *time_locale = setlocale(LC_CTYPE, NULL);
+            const char *time_locale = setlocale(LC_CTYPE, NULL);
 
             if (strstr(time_locale, "UTF-8") || strstr(time_locale, "utf8")) {
                 w->clock.utf8 = True;
@@ -717,10 +1012,10 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal * num_args)
     myXGCV.foreground = w->clock.Hdpixel;
     w->clock.HandGC = XtGetGC((Widget) w, valuemask, &myXGCV);
 
-    /* make invalid update's use a default */
-    /*if (w->clock.update <= 0) w->clock.update = 60; */
-    w->clock.show_second_hand =
-        (abs((int) w->clock.update) <= SECOND_HAND_TIME);
+    /* make invalid updates use a default */
+    if (w->clock.update < 0.001)
+        w->clock.update = 60;
+    w->clock.show_second_hand = (w->clock.update <= SECOND_HAND_TIME);
     w->clock.numseg = 0;
     w->clock.interval_id = 0;
     memset(&w->clock.otm, '\0', sizeof(w->clock.otm));
@@ -746,7 +1041,7 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal * num_args)
 
 #ifdef XRENDER
 static void
-RenderPrepare(ClockWidget w, XftColor * color)
+RenderPrepare(ClockWidget w, const XftColor *color)
 {
     if (!w->clock.draw) {
         Drawable d = XtWindow(w);
@@ -859,7 +1154,7 @@ RenderTextBounds(ClockWidget w, char *str, int off, int len,
 }
 
 static void
-RenderUpdateRectBounds(XRectangle * damage, XRectangle * bounds)
+RenderUpdateRectBounds(const XRectangle *damage, XRectangle *bounds)
 {
     int x1 = bounds->x;
     int y1 = bounds->y;
@@ -898,7 +1193,7 @@ RenderUpdateRectBounds(XRectangle * damage, XRectangle * bounds)
 }
 
 static Boolean
-RenderRectIn(XRectangle * rect, XRectangle * bounds)
+RenderRectIn(const XRectangle *rect, const XRectangle *bounds)
 {
     int x1 = bounds->x;
     int y1 = bounds->y;
@@ -912,25 +1207,21 @@ RenderRectIn(XRectangle * rect, XRectangle * bounds)
     return r_x1 < x2 && x1 < r_x2 && r_y1 < y2 && y1 < r_y2;
 }
 
-#define LINE_WIDTH  0.01
 #include <math.h>
 
-#define XCoord(x,w) ((x) * (w)->clock.x_scale + (w)->clock.x_off)
-#define YCoord(y,w) ((y) * (w)->clock.y_scale + (w)->clock.y_off)
-
 static void
-RenderUpdateBounds(XPointDouble * points, int npoints, XRectangle * bounds)
+RenderUpdateBounds(const XftShape *sh, XRectangle *bounds)
 {
     int x1 = bounds->x;
     int y1 = bounds->y;
     int x2 = bounds->x + bounds->width;
     int y2 = bounds->y + bounds->height;
 
-    while (npoints--) {
-        int r_x1 = points[0].x;
-        int r_y1 = points[0].y;
-        int r_x2 = points[0].x + 1;
-        int r_y2 = points[0].y + 1;
+    for (int i = 0; i < sh->npoints; i++) {
+        int r_x1 = sh->points[i].x;
+        int r_y1 = sh->points[i].y;
+        int r_x2 = sh->points[i].x + 1;
+        int r_y2 = sh->points[i].y + 1;
 
         if (x1 == x2)
             x2 = x1 = r_x1;
@@ -944,29 +1235,11 @@ RenderUpdateBounds(XPointDouble * points, int npoints, XRectangle * bounds)
             x2 = r_x2;
         if (r_y2 > y2)
             y2 = r_y2;
-        points++;
     }
     bounds->x = x1;
     bounds->y = y1;
     bounds->width = x2 - x1;
     bounds->height = y2 - y1;
-}
-
-static Boolean
-RenderCheckBounds(XPointDouble * points, int npoints, XRectangle * bounds)
-{
-    int x1 = bounds->x;
-    int y1 = bounds->y;
-    int x2 = bounds->x + bounds->width;
-    int y2 = bounds->y + bounds->height;
-
-    while (npoints--) {
-        if (x1 <= points->x && points->x <= x2 &&
-            y1 <= points->y && points->y <= y2)
-            return True;
-        points++;
-    }
-    return False;
 }
 
 static void
@@ -990,155 +1263,123 @@ RenderResetBounds(XRectangle * bounds)
     bounds->height = 0;
 }
 
-static void
-RenderLine(ClockWidget w, XDouble x1, XDouble y1, XDouble x2, XDouble y2,
-           XftColor * color, Boolean draw)
+static Boolean
+RenderCheckBounds(const XftShape *sh, const XRectangle *bounds)
 {
-    XPointDouble poly[4];
-    XDouble dx = (x2 - x1);
-    XDouble dy = (y2 - y1);
-    XDouble len = sqrt(dx * dx + dy * dy);
-    XDouble ldx = (LINE_WIDTH / 2.0) * dy / len;
-    XDouble ldy = (LINE_WIDTH / 2.0) * dx / len;
+    XRectangle sh_r;
+    RenderResetBounds(&sh_r);
+    RenderUpdateBounds(sh, &sh_r);
+    return RenderRectIn(&sh_r, bounds);
+}
 
-    poly[0].x = XCoord(x1 + ldx, w);
-    poly[0].y = YCoord(y1 - ldy, w);
+static void
+RenderShape(ClockWidget w, double tick_units, XftShape* sh,
+            const XftColor *color, Boolean draw)
+{
+    double s, c;
+    XftShape shr = *sh;
+    XPointDouble shr_points[shr.npoints];
+    ClockAngle(tick_units, &s, &c);
+    shr.points = shr_points;
 
-    poly[1].x = XCoord(x2 + ldx, w);
-    poly[1].y = YCoord(y2 - ldy, w);
-
-    poly[2].x = XCoord(x2 - ldx, w);
-    poly[2].y = YCoord(y2 + ldy, w);
-
-    poly[3].x = XCoord(x1 - ldx, w);
-    poly[3].y = YCoord(y1 + ldy, w);
-
-    RenderUpdateBounds(poly, 4, &w->clock.damage);
-    if (draw) {
-        if (RenderCheckBounds(poly, 4, &w->clock.damage)) {
-            RenderPrepare(w, color);
-            XRenderCompositeDoublePoly(XtDisplay(w),
-                                       PictOpOver,
-                                       w->clock.fill_picture,
-                                       w->clock.picture,
-                                       w->clock.mask_format,
-                                       0, 0, 0, 0, poly, 4, EvenOddRule);
-        }
+    for (int i = 0; i < sh->npoints; i++) {
+        double x = sh->points[i].x, y = sh->points[i].y;
+        shr.points[i].x = (x*c + y*s) * w->clock.x_scale + w->clock.x_off;
+        shr.points[i].y = (x*s - y*c) * w->clock.y_scale + w->clock.y_off;
     }
-    else
-        RenderUpdateBounds(poly, 4, &w->clock.damage);
-}
-
-static void
-RenderRotate(ClockWidget w, XPointDouble * out, double x, double y, double s,
-             double c)
-{
-    out->x = XCoord(x * c - y * s, w);
-    out->y = YCoord(y * c + x * s, w);
-}
-
-static void
-RenderHand(ClockWidget w, double tick_units, double size, XftColor * color,
-           Boolean draw)
-{
-    double c, s;
-    XPointDouble poly[3];
-    double outer_x;
-    double inner_y;
-
-    ClockAngle(tick_units, &c, &s);
-    s = -s;
-
-    /* compute raw positions */
-    outer_x = size / 100.0;
-    inner_y = HAND_WIDTH_FRACT / 100.0;
-
-    /* rotate them into position */
-    RenderRotate(w, &poly[0], outer_x, 0.0, s, c);
-    RenderRotate(w, &poly[1], -inner_y, inner_y, s, c);
-    RenderRotate(w, &poly[2], -inner_y, -inner_y, s, c);
 
     if (draw) {
-        if (RenderCheckBounds(poly, 3, &w->clock.damage)) {
+        if (RenderCheckBounds(&shr, &w->clock.damage)) {
+            int ntris = shr.npoints / 3;
+            XTriangle tris[ntris];
             RenderPrepare(w, color);
-            XRenderCompositeDoublePoly(XtDisplay(w),
-                                       PictOpOver,
-                                       w->clock.fill_picture,
-                                       w->clock.picture,
-                                       w->clock.mask_format,
-                                       0, 0, 0, 0, poly, 3, EvenOddRule);
+            for (int i = 0; i < ntris; i++) {
+                tris[i].p1.x = XDoubleToFixed(shr.points[3*i].x);
+                tris[i].p1.y = XDoubleToFixed(shr.points[3*i].y);
+                tris[i].p2.x = XDoubleToFixed(shr.points[3*i+1].x);
+                tris[i].p2.y = XDoubleToFixed(shr.points[3*i+1].y);
+                tris[i].p3.x = XDoubleToFixed(shr.points[3*i+2].x);
+                tris[i].p3.y = XDoubleToFixed(shr.points[3*i+2].y);
+            }
+            XRenderCompositeTriangles(XtDisplay(w),
+                                      PictOpOver,
+                                      w->clock.fill_picture,
+                                      w->clock.picture,
+                                      w->clock.mask_format,
+                                      0, 0,
+                                      tris, ntris);
         }
+    } else {
+        RenderUpdateBounds(&shr, &w->clock.damage);
     }
-    RenderUpdateBounds(poly, 3, &w->clock.damage);
 }
 
 static void
-RenderHands(ClockWidget w, struct tm *tm, struct timeval *tv, Boolean draw)
+RenderClock(ClockWidget w, const struct tm *tm, const struct timeval *tv,
+            Boolean draw, Boolean includeFace)
 {
-    double sec = tm->tm_sec + tv->tv_usec / 1000000.0;
-
-    RenderHand(w, tm->tm_hour * 300 + tm->tm_min * 5 + sec / 12.0, HOUR_HAND_FRACT,
-               &w->clock.hour_color, draw);
-    RenderHand(w, tm->tm_min * 60 + sec, MINUTE_HAND_FRACT,
-               &w->clock.min_color, draw);
-}
-
-static void
-RenderSec(ClockWidget w, struct tm *tm, struct timeval *tv, Boolean draw)
-{
-    double c, s;
-    XPointDouble poly[10];
-    double inner_x, middle_x, outer_x, far_x;
-    double middle_y;
-    double line_y;
-    double sec;
-
+    double sec, hour_hand_angle;
     sec = tm->tm_sec;
-
     if (w->clock.update < 1.0)
         sec += tv->tv_usec / 1000000.0;
+    hour_hand_angle = tm->tm_hour * 300 + tm->tm_min * 5 + sec / 12.0;
+    if (w->clock.analog24)
+        hour_hand_angle /= 2.0;
 
-    ClockAngle((int) (sec * 60.0), &c, &s);
-
-    s = -s;
-
-    /*
-     * Compute raw positions
-     */
-    line_y = LINE_WIDTH;
-    inner_x = (MINUTE_HAND_FRACT / 100.0);
-    middle_x = ((SECOND_HAND_FRACT + MINUTE_HAND_FRACT) / 200.0);
-    outer_x = (SECOND_HAND_FRACT / 100.0);
-    far_x = (MINOR_TICK_FRACT / 100.0);
-    middle_y = (SECOND_WIDTH_FRACT / 100.0);
-
-    /*
-     * Rotate them into position
-     */
-    RenderRotate(w, &poly[0], -line_y, line_y, s, c);
-    RenderRotate(w, &poly[1], inner_x, line_y, s, c);
-    RenderRotate(w, &poly[2], middle_x, middle_y, s, c);
-    RenderRotate(w, &poly[3], outer_x, line_y, s, c);
-    RenderRotate(w, &poly[4], far_x, line_y, s, c);
-    RenderRotate(w, &poly[5], far_x, -line_y, s, c);
-    RenderRotate(w, &poly[6], outer_x, -line_y, s, c);
-    RenderRotate(w, &poly[7], middle_x, -middle_y, s, c);
-    RenderRotate(w, &poly[8], inner_x, -line_y, s, c);
-    RenderRotate(w, &poly[9], -line_y, -line_y, s, c);
-
-    if (draw) {
-        if (RenderCheckBounds(poly, 10, &w->clock.damage)) {
-            RenderPrepare(w, &w->clock.sec_color);
-            XRenderCompositeDoublePoly(XtDisplay(w),
-                                       PictOpOver,
-                                       w->clock.fill_picture,
-                                       w->clock.picture,
-                                       w->clock.mask_format,
-                                       0, 0, 0, 0, poly, 10, EvenOddRule);
+    for (int zidx = 0; zidx < CLOCK_ELEMENTS; zidx++) {
+        switch (w->clock.z_order.elements[zidx]) {
+        case 'T': // render major ticks
+            if (includeFace)
+                for (int i = 0; i < (w->clock.analog24 ? 24 : 12); i++)
+                    RenderShape(w, i * (w->clock.analog24 ? 150 : 300),
+                                &w->clock.major_shape,
+                                &w->clock.major_color, draw);
+            break;
+        case 't': // render minor ticks
+            if (includeFace)
+                for (int i = 0; i < 60; i++)
+                    if (i % 5 != 0)
+                        RenderShape(w, i * 60, &w->clock.minor_shape,
+                                    &w->clock.minor_color, draw);
+            break;
+        case '1': // render fixed 1
+            if (includeFace)
+                RenderShape(w, 0, &w->clock.fixed_1_shape,
+                            &w->clock.fixed_1_color, draw);
+            break;
+        case '2': // render fixed 2
+            if (includeFace)
+                RenderShape(w, 0, &w->clock.fixed_2_shape,
+                            &w->clock.fixed_2_color, draw);
+            break;
+        case '3': // render fixed 3
+            if (includeFace)
+                RenderShape(w, 0, &w->clock.fixed_3_shape,
+                            &w->clock.fixed_3_color, draw);
+            break;
+        case 'a': // render AM marker
+            if (tm->tm_hour < 12)
+                RenderShape(w, w->clock.rotate_ampm ? hour_hand_angle : 0,
+                            &w->clock.am_shape, &w->clock.am_color, draw);
+            break;
+        case 'p': // render PM marker
+            if (tm->tm_hour >= 12)
+                RenderShape(w, w->clock.rotate_ampm ? hour_hand_angle : 0,
+                            &w->clock.pm_shape, &w->clock.pm_color, draw);
+            break;
+        case 'h': // render hour hand
+            RenderShape(w, hour_hand_angle, &w->clock.hour_shape,
+                        &w->clock.hour_color, draw);
+            break;
+        case 'm': // render minute hand
+            RenderShape(w, tm->tm_min * 60 + sec, &w->clock.min_shape,
+                        &w->clock.min_color, draw);
+            break;
+        case 's': // render second hand
+            if (w->clock.show_second_hand == TRUE)
+                RenderShape(w, sec * 60, &w->clock.sec_shape,
+                            &w->clock.sec_color, draw);
         }
-    }
-    else {
-        RenderUpdateBounds(poly, 10, &w->clock.damage);
     }
 }
 
@@ -1214,6 +1455,9 @@ Resize(Widget gw)
 #ifdef XRENDER
     w->clock.x_scale = 0.45 * w->core.width;
     w->clock.y_scale = 0.45 * w->core.height;
+    if (w->clock.proportional)
+        w->clock.x_scale = w->clock.y_scale =
+            min(w->clock.x_scale, w->clock.y_scale);
     w->clock.x_off = 0.5 * w->core.width;
     w->clock.y_off = 0.5 * w->core.height;
     if (w->clock.pixmap) {
@@ -1267,14 +1511,14 @@ Redisplay(Widget gw, XEvent * event, Region region)
 
 /* Seconds since midnight */
 static unsigned long
-time_seconds(struct tm *tm)
+time_seconds(const struct tm *tm)
 {
     return HOUR_SECS(tm->tm_hour) + MIN_SECS(tm->tm_min) + tm->tm_sec;
 }
 
 /* Milliseconds since midnight */
 static unsigned long
-time_millis(struct tm *tm, struct timeval *tv)
+time_millis(const struct tm *tm, const struct timeval *tv)
 {
     return time_seconds(tm) * 1000 + USEC_MILLIS(tv->tv_usec);
 }
@@ -1401,7 +1645,7 @@ round_time(float _update, struct tm *tm, struct timeval *tv)
  */
 
 static unsigned long
-waittime(float _update, struct timeval *tv, struct tm *tm)
+waittime(float _update, const struct timeval *tv, const struct tm *tm)
 {
     unsigned long update_millis = (unsigned long) (_update * 1000 + 0.5);
     unsigned long millis = time_millis(tm, tv);
@@ -1415,6 +1659,26 @@ waittime(float _update, struct timeval *tv, struct tm *tm)
 
     result = next_millis - millis;
     return result;
+}
+
+// Return the number of bytes in the first code point in the string, or 0 if it
+// cannot be determined.
+static int firstchar_len(char* str, int len) {
+  mbstate_t st = {0};
+  int clen = mbrlen(str, len, &st);
+  if (clen == -1 || clen == -2) return 0;
+  return clen;
+}
+
+// Return the number of bytes in the last code point in the string, or 0 if it
+// cannot be determined.
+static int lastchar_len(char* str, int len) {
+  for (int i = len - 1; i >= 0; i--) {
+    mbstate_t st = {0};
+    int clen = mbrlen(&str[i], len - i, &st);
+    if (clen > 0 && i + clen == len) return clen;
+  }
+  return 0;
 }
 
 /* ARGSUSED */
@@ -1470,9 +1734,13 @@ clock_tic(XtPointer client_data, XtIntervalId * id)
         if (len && time_ptr[len - 1] == '\n')
             time_ptr[--len] = '\0';
         prev_len = strlen(w->clock.prev_time_string);
-        for (i = 0; ((i < len) && (i < prev_len) &&
-                     (w->clock.prev_time_string[i] == time_ptr[i])); i++);
-
+        for (i = 0; (i < len) && (i < prev_len); ) {
+          int clen = firstchar_len(&time_ptr[i], len - i);
+          if (clen == 0 || i + clen > prev_len ||
+              memcmp(&w->clock.prev_time_string[i],
+                     &time_ptr[i], clen) != 0) break;
+          i += clen;
+        }
 #ifdef XRENDER
         if (w->clock.render) {
             XRectangle old_tail, new_tail, head;
@@ -1489,10 +1757,13 @@ clock_tic(XtPointer client_data, XtIntervalId * id)
             RenderUpdateRectBounds(&new_tail, &w->clock.damage);
 
             while (i) {
+                int clen;
                 RenderTextBounds(w, time_ptr, 0, i, &head, NULL, NULL);
                 if (!RenderRectIn(&head, &w->clock.damage))
                     break;
-                i--;
+                clen = lastchar_len(time_ptr, i);
+                if (clen) i -= clen;
+                else i = 0;
             }
             RenderTextBounds(w, time_ptr, i, len, &new_tail, &x, &y);
             RenderClip(w);
@@ -1530,7 +1801,7 @@ clock_tic(XtPointer client_data, XtIntervalId * id)
 #ifndef NO_I18N
         if (!no_locale) {
             if (0 < len) {
-                XFontSetExtents *fse = XExtentsOfFontSet(w->clock.fontSet);
+                const XFontSetExtents *fse = XExtentsOfFontSet(w->clock.fontSet);
 
                 XmbDrawImageString(dpy, win, w->clock.fontSet, w->clock.myGC,
                                    (2 + w->clock.padding +
@@ -1582,12 +1853,6 @@ clock_tic(XtPointer client_data, XtIntervalId * id)
          * for the reader.
          */
 
-        /*
-         * 12 hour clock.
-         */
-        if (tm.tm_hour >= 12)
-            tm.tm_hour -= 12;
-
 #ifdef XRENDER
         if (w->clock.render && w->clock.can_polygon) {
             w->clock.mask_format = XRenderFindStandardFormat(XtDisplay(w),
@@ -1601,21 +1866,12 @@ clock_tic(XtPointer client_data, XtIntervalId * id)
                 tm.tm_hour != w->clock.otm.tm_hour ||
                 tm.tm_sec != w->clock.otm.tm_sec ||
 		tv.tv_usec != w->clock.otv.tv_usec) {
-                RenderHands(w, &w->clock.otm, &w->clock.otv, False);
-                RenderHands(w, &tm, &tv, False);
-            }
-            if (w->clock.show_second_hand &&
-                (tm.tm_sec != w->clock.otm.tm_sec ||
-                 tv.tv_usec != w->clock.otv.tv_usec)) {
-                RenderSec(w, &w->clock.otm, &w->clock.otv, False);
-                RenderSec(w, &tm, &tv, False);
+                RenderClock(w, &w->clock.otm, &w->clock.otv, False, False);
+                RenderClock(w, &tm, &tv, False, False);
             }
             if (w->clock.damage.width && w->clock.damage.height) {
                 RenderClip(w);
-                DrawClockFace(w);
-                RenderHands(w, &tm, &tv, True);
-                if (w->clock.show_second_hand == TRUE)
-                    RenderSec(w, &tm, &tv, True);
+                RenderClock(w, &tm, &tv, True, True);
             }
             w->clock.otm = tm;
             w->clock.otv = tv;
@@ -1634,9 +1890,9 @@ clock_tic(XtPointer client_data, XtIntervalId * id)
             w->clock.segbuffptr = w->clock.segbuff;
             w->clock.numseg = 0;
             /*
-             * Calculate the hour hand, fill it in with its
+             * Calculate the minute hand, fill it in with its
              * color and then outline it.  Next, do the same
-             * with the minute hand.  This is a cheap hidden
+             * with the hour hand.  This is a cheap hidden
              * line algorithm.
              */
             DrawHand(w,
@@ -1651,9 +1907,12 @@ clock_tic(XtPointer client_data, XtIntervalId * id)
                        win, w->clock.HighGC,
                        w->clock.segbuff, VERTICES_IN_HANDS, CoordModeOrigin);
             w->clock.hour = w->clock.segbuffptr;
+            int hour_hand_angle = tm.tm_hour * 300 + tm.tm_min * 5;
+            if (w->clock.analog24)
+                hour_hand_angle /= 2;
             DrawHand(w,
                      w->clock.hour_hand_length, w->clock.hand_width,
-                     tm.tm_hour * 300 + tm.tm_min * 5);
+                     hour_hand_angle);
             if (w->clock.Hdpixel != w->core.background_pixel) {
                 XFillPolygon(dpy,
                              win, w->clock.HandGC,
@@ -1689,7 +1948,7 @@ clock_tic(XtPointer client_data, XtIntervalId * id)
 }
 
 static void
-erase_hands(ClockWidget w, struct tm *tm)
+erase_hands(ClockWidget w, const struct tm *tm)
 {
     /*
      * Erase old hands.
@@ -1899,6 +2158,11 @@ DrawSecond(ClockWidget w, Dimension length, Dimension width,
     SetSeg(w, w->clock.centerX + clock_round(offset * sinangle), w->clock.centerY - clock_round(offset * cosangle),     /* 2-----3 */
            w->clock.centerX + clock_round(ms + wc),
            w->clock.centerY - clock_round(mc - ws));
+    if (w->clock.numseg + 1 >= SEG_BUFF_SIZE)
+        XtErrorMsg("bug", "tooManySegments",
+                   "XtToolkitError",
+                   "SEG_BUFF_SIZE is too small",
+                   (String *) NULL, (Cardinal *) NULL);
     w->clock.segbuffptr->x = x;
     w->clock.segbuffptr++->y = y;
     w->clock.numseg++;
@@ -1907,6 +2171,11 @@ DrawSecond(ClockWidget w, Dimension length, Dimension width,
 static void
 SetSeg(ClockWidget w, int x1, int y1, int x2, int y2)
 {
+    if (w->clock.numseg + 2 >= SEG_BUFF_SIZE)
+        XtErrorMsg("bug", "tooManySegments",
+                   "XtToolkitError",
+                   "SEG_BUFF_SIZE is too small",
+                   (String *) NULL, (Cardinal *) NULL);
     w->clock.segbuffptr->x = x1;
     w->clock.segbuffptr++->y = y1;
     w->clock.segbuffptr->x = x2;
@@ -1915,8 +2184,7 @@ SetSeg(ClockWidget w, int x1, int y1, int x2, int y2)
 }
 
 /*
- *  Draw the clock face (every fifth tick-mark is longer
- *  than the others).
+ *  Draw the clock face.
  */
 static void
 DrawClockFace(ClockWidget w)
@@ -1927,40 +2195,12 @@ DrawClockFace(ClockWidget w)
 
     w->clock.segbuffptr = w->clock.segbuff;
     w->clock.numseg = 0;
-    for (i = 0; i < 60; i++) {
-#ifdef XRENDER
-        if (w->clock.render && w->clock.can_polygon) {
-            double s, c;
-            XDouble x1, y1, x2, y2;
-            XftColor *color;
-
-            ClockAngle(i * 60, &s, &c);
-            x1 = c;
-            y1 = s;
-            if (i % 5) {
-                x2 = c * (MINOR_TICK_FRACT / 100.0);
-                y2 = s * (MINOR_TICK_FRACT / 100.0);
-                color = &w->clock.minor_color;
-            }
-            else {
-                x2 = c * (SECOND_HAND_FRACT / 100.0);
-                y2 = s * (SECOND_HAND_FRACT / 100.0);
-                color = &w->clock.major_color;
-            }
-            RenderLine(w, x1, y1, x2, y2, color, True);
-        }
-        else
-#endif
-        {
-            DrawLine(w, ((i % 5) == 0 ?
-                         w->clock.second_hand_length :
-                         (w->clock.radius - delta)), w->clock.radius, i * 60);
-        }
-    }
-#ifdef XRENDER
-    if (w->clock.render && w->clock.can_polygon)
-        return;
-#endif
+    for (i = 0; i < (w->clock.analog24 ? 24 : 12); i++)
+        DrawLine(w, w->clock.second_hand_length, w->clock.radius,
+                 i * (w->clock.analog24 ? 150 : 300));
+    for (i = 0; i < 60; i++)
+        if ((i % 5) != 0)
+            DrawLine(w, w->clock.radius - delta, w->clock.radius, i * 60);
     /*
      * Go ahead and draw it.
      */
@@ -1980,7 +2220,7 @@ clock_round(double x)
 
 #ifdef XRENDER
 static Boolean
-sameColor(XftColor * old, XftColor * new)
+sameColor(const XftColor *old, const XftColor *new)
 {
     if (old->color.red != new->color.red)
         return False;
@@ -1990,6 +2230,28 @@ sameColor(XftColor * old, XftColor * new)
         return False;
     if (old->color.alpha != new->color.alpha)
         return False;
+    return True;
+}
+static Boolean
+sameShape(const XftShape *old, const XftShape *new)
+{
+    if (old->npoints != new->npoints)
+        return False;
+    for (int i = 0; i < old->npoints; i++) {
+        if (old->points[i].x != new->points[i].x)
+            return False;
+        if (old->points[i].y != new->points[i].y)
+            return False;
+    }
+    return True;
+}
+static Boolean
+sameZOrder(const XftZOrder *old, const XftZOrder *new)
+{
+    for (int i = 0; i < CLOCK_ELEMENTS + 1; i++) {
+        if (old->elements[i] != new->elements[i])
+            return False;
+    }
     return True;
 }
 #endif
@@ -2026,7 +2288,13 @@ SetValues(Widget gcurrent, Widget grequest, Widget gnew,
     if (new->clock.padding != current->clock.padding)
         redisplay = TRUE;
 
+    if (new->clock.analog24)
+        new->clock.analog = TRUE;
+
     if (new->clock.analog != current->clock.analog)
+        redisplay = TRUE;
+
+    if (new->clock.analog24 != current->clock.analog24)
         redisplay = TRUE;
 
     if (new->clock.font != current->clock.font)
@@ -2084,9 +2352,31 @@ SetValues(Widget gcurrent, Widget grequest, Widget gnew,
         !sameColor(&new->clock.min_color, &current->clock.min_color) ||
         !sameColor(&new->clock.sec_color, &current->clock.sec_color) ||
         !sameColor(&new->clock.major_color, &current->clock.major_color) ||
-        !sameColor(&new->clock.minor_color, &current->clock.minor_color))
+        !sameColor(&new->clock.minor_color, &current->clock.minor_color) ||
+        !sameColor(&new->clock.am_color, &current->clock.am_color) ||
+        !sameColor(&new->clock.pm_color, &current->clock.pm_color) ||
+        !sameColor(&new->clock.fixed_1_color, &current->clock.fixed_1_color) ||
+        !sameColor(&new->clock.fixed_2_color, &current->clock.fixed_2_color) ||
+        !sameColor(&new->clock.fixed_3_color, &current->clock.fixed_3_color))
+        redisplay = True;
+    if (!sameShape(&new->clock.hour_shape, &current->clock.hour_shape) ||
+        !sameShape(&new->clock.min_shape, &current->clock.min_shape) ||
+        !sameShape(&new->clock.sec_shape, &current->clock.sec_shape) ||
+        !sameShape(&new->clock.major_shape, &current->clock.major_shape) ||
+        !sameShape(&new->clock.minor_shape, &current->clock.minor_shape) ||
+        !sameShape(&new->clock.am_shape, &current->clock.am_shape) ||
+        !sameShape(&new->clock.pm_shape, &current->clock.pm_shape) ||
+        !sameShape(&new->clock.fixed_1_shape, &current->clock.fixed_1_shape) ||
+        !sameShape(&new->clock.fixed_2_shape, &current->clock.fixed_2_shape) ||
+        !sameShape(&new->clock.fixed_3_shape, &current->clock.fixed_3_shape))
+        redisplay = True;
+    if (new->clock.rotate_ampm != current->clock.rotate_ampm)
+        redisplay = True;
+    if (!sameZOrder(&new->clock.z_order, &current->clock.z_order))
         redisplay = True;
     if (new->clock.sharp != current->clock.sharp)
+        redisplay = True;
+    if (new->clock.proportional != current->clock.proportional)
         redisplay = True;
     if (new->clock.render != current->clock.render)
         redisplay = True;

@@ -45,7 +45,9 @@ dist_appdefault_DATA = \
 EXTRA_DIST = \
 	README.md \
 	clmask.bit \
-	clock.bit
+	clock.bit \
+	meson.build \
+	meson.options
 
 CLEANFILES = $(APPDEFAULTFILES)
 MAINTAINERCLEANFILES = ChangeLog INSTALL

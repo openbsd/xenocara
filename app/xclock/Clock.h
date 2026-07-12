@@ -68,6 +68,7 @@ SOFTWARE.
  ----		     -----		-------		-------------
  twentyfour	     Boolean		Boolean		True
  analog		     Boolean		Boolean		True
+ analog24	     Boolean		Boolean		False
  background	     Background		Pixel		white
  backingStore	     BackingStore	BackingStore	default
  border		     BorderColor	Pixel		Black
@@ -95,11 +96,14 @@ SOFTWARE.
 #define XtNhand "hands"
 
 
-		/* Boolean: 24-hour if TRUE */
+		/* Boolean: 24-hour if TRUE and digital */
 #define XtNtwentyfour "twentyfour"
 
 		/* Boolean: digital if FALSE */
 #define XtNanalog "analog"
+
+		/* Boolean: analog 24-hour if TRUE */
+#define XtNanalog24 "analog24"
 
 		/* Boolean: only hour/minute if TRUE */
 #define XtNbrief  "brief"
@@ -129,14 +133,44 @@ SOFTWARE.
 #define XtNsecondColor "secondColor"
 #define XtNmajorColor "majorColor"
 #define XtNminorColor "minorColor"
+#define XtNamColor "amColor"
+#define XtNpmColor "pmColor"
+#define XtNfixed1Color "fixed1Color"
+#define XtNfixed2Color "fixed2Color"
+#define XtNfixed3Color "fixed3Color"
+
+		/* XftShape: shapes for various clock elements */
+#define XtNhourShape "hourShape"
+#define XtNminuteShape "minuteShape"
+#define XtNsecondShape "secondShape"
+#define XtNmajorShape "majorShape"
+#define XtNminorShape "minorShape"
+#define XtNamShape "amShape"
+#define XtNpmShape "pmShape"
+#define XtNfixed1Shape "fixed1Shape"
+#define XtNfixed2Shape "fixed2Shape"
+#define XtNfixed3Shape "fixed3Shape"
+
+		/* rotateAmpm: Make the AM and PM markers rotate at the same
+		   speed as the hour hand */
+#define XtNrotateAmpm "rotateAmpm"
+
+		/* zOrder: The order in which elements are drawn */
+#define XtNzOrder "zOrder"
+
+		/* proportional: Make a proportional clock even if the window is
+		   not square */
+#define XtNproportional "proportional"
 
 #define XtRXftColor "XftColor"
+#define XtRXftShape "XftShape"
+#define XtRXftZOrder "XftZOrder"
 
 #define XtNface "face"
 #define XtCFace "Face"
 #define XtRXftFont "XftFont"
 
-		/* Boolean: use sharp rendering for Render polygons */
+		/* Boolean: use sharp rendering for Render shapes */
 #define XtNsharp "sharp"
 #define XtCSharp "Sharp"
 

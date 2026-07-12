@@ -78,6 +78,7 @@ static XrmOptionDescRec options[] = {
 {"-d",		"*clock.analog",	XrmoptionNoArg,		"FALSE"},
 {"-digital",	"*clock.analog",	XrmoptionNoArg,		"FALSE"},
 {"-analog",	"*clock.analog",	XrmoptionNoArg,		"TRUE"},
+{"-analog24",	"*clock.analog24",	XrmoptionNoArg,		"TRUE"},
 {"-twelve",	"*clock.twentyfour",	XrmoptionNoArg,		"FALSE"},
 {"-twentyfour",	"*clock.twentyfour",	XrmoptionNoArg,		"TRUE"},
 {"-brief",	"*clock.brief",		XrmoptionNoArg,		"TRUE"},
@@ -88,6 +89,7 @@ static XrmOptionDescRec options[] = {
 {"-render",	"*clock.render",	XrmoptionNoArg,		"TRUE"},
 {"-norender",	"*clock.render",	XrmoptionNoArg,		"FALSE"},
 {"-sharp",	"*clock.sharp",		XrmoptionNoArg,		"TRUE"},
+{"-proportional","*clock.proportional",	XrmoptionNoArg,		"TRUE"},
 #endif
 };
 
@@ -104,10 +106,11 @@ static Atom wm_delete_window;
  * Report the syntax for calling xclock.
  */
 static void _X_NORETURN
-Syntax(const char *call)
+Syntax(const char *call, int exitstatus)
 {
     fprintf (stderr, "Usage: %s %s", call,
-	    "[-analog] [-bw <pixels>] [-digital] [-brief]\n"
+	    "[-analog] [-analog24] [-bw <pixels>]\n"
+            "       [-digital] [-brief]\n"
 	    "       [-utime] [-strftime <fmt-str>]\n"
 	    "       [-fg <color>] [-bg <color>] [-hd <color>]\n"
 	    "       [-hl <color>] [-bd <color>]\n"
@@ -115,9 +118,11 @@ Syntax(const char *call)
 	    "       [-rv] [-update <seconds>] [-display displayname]\n"
 #ifdef XRENDER
 	    "       [-[no]render] [-face <face name>] [-sharp]\n"
+	    "       [-proportional]\n"
 #endif
-	    "       [-geometry geom] [-twelve] [-twentyfour]\n\n");
-    exit(1);
+	    "       [-geometry geom] [-twelve] [-twentyfour]\n"
+            "       [-help | -version]\n");
+    exit(exitstatus);
 }
 
 static void _X_NORETURN
@@ -164,7 +169,7 @@ main(int argc, char *argv[])
     XtAppContext app_con;
 
 #ifndef NO_I18N
-    char *locale_name = setlocale(LC_ALL,"");
+    const char *locale_name = setlocale(LC_ALL, "");
     XtSetLanguageProc ( NULL, NULL, NULL );
 
     if(!locale_name || 0 == strcmp(locale_name,"C")) {
@@ -175,10 +180,33 @@ main(int argc, char *argv[])
     }
 #endif
 
+    /* Handle args that don't require opening a display */
+    for (int a = 1; a < argc; a++) {
+	const char *argn = argv[a];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    Syntax(argv[0], EXIT_SUCCESS);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(EXIT_SUCCESS);
+	}
+    }
+
     toplevel = XtOpenApplication(&app_con, "XClock",
 				 options, XtNumber(options), &argc, argv, NULL,
 				 sessionShellWidgetClass, NULL, ZERO);
-    if (argc != 1) Syntax(argv[0]);
+    if (argc > 1) {
+	fputs("Unrecognized argument(s):", stderr);
+	for (int a = 1; a < argc; a++) {
+	    fprintf(stderr, " %s", argv[a]);
+	}
+	fputs("\n\n", stderr);
+	Syntax(argv[0], EXIT_FAILURE);
+    }
     XtAddCallback(toplevel, XtNdieCallback, die, NULL);
     XtAddCallback(toplevel, XtNsaveCallback, save, NULL);
     XtAppAddActions (app_con, xclock_actions, XtNumber(xclock_actions));

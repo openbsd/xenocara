@@ -62,7 +62,7 @@ SOFTWARE.
 #include <X11/extensions/Xrender.h>
 #endif
 
-#define SEG_BUFF_SIZE		128
+#define SEG_BUFF_SIZE		256
 #ifdef NO_I18N
 #define ASCII_TIME_BUFLEN	32	/* big enough for 26 plus slop */
 #define STRFTIME_BUFF_SIZE      100     /* buffer for "strftime" option */
@@ -71,6 +71,16 @@ SOFTWARE.
 #endif
 
 
+#ifdef XRENDER
+typedef struct {
+  int npoints;
+  XPointDouble* points;
+} XftShape;
+#define CLOCK_ELEMENTS 10
+typedef struct {
+  char elements[CLOCK_ELEMENTS + 1];
+} XftZOrder;
+#endif
 
 /* New fields for the clock widget instance record */
 typedef struct {
@@ -91,6 +101,7 @@ typedef struct {
 	 Boolean chime;
 	 Boolean beeped;
 	 Boolean analog;
+	 Boolean analog24;
 	 Boolean brief;
 	 Boolean twentyfour;
 	 Boolean utime;
@@ -123,6 +134,24 @@ typedef struct {
 	 XftColor	sec_color;
 	 XftColor	major_color;
 	 XftColor	minor_color;
+	 XftColor	am_color;
+	 XftColor	pm_color;
+	 XftColor	fixed_1_color;
+	 XftColor	fixed_2_color;
+	 XftColor	fixed_3_color;
+	 XftShape	hour_shape;
+	 XftShape	min_shape;
+	 XftShape	sec_shape;
+	 XftShape	major_shape;
+	 XftShape	minor_shape;
+	 XftShape	am_shape;
+	 XftShape	pm_shape;
+	 XftShape	fixed_1_shape;
+	 XftShape	fixed_2_shape;
+	 XftShape	fixed_3_shape;
+	 Boolean	rotate_ampm;
+	 XftZOrder	z_order;
+	 Boolean	proportional;
 	 XftFont	*face;
 	 XRenderPictFormat  *mask_format;
 

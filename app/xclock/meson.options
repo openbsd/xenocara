@@ -1,0 +1,17 @@
+option(
+  'appdefaultdir',
+  type: 'string',
+  description: 'directory for app-defaults files (default is autodetected)',
+)
+option(
+  'xft',
+  type: 'feature',
+  value : 'enabled',
+  description: 'Use Xft2 and Xrender for rendering (default is enabled)',
+)
+option(
+  'xkb',
+  type: 'feature',
+  value : 'enabled',
+  description: 'Use XKB to sound bells (default is enabled)',
+)
