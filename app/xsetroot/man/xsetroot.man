@@ -22,102 +22,112 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.TH XSETROOT 1 __xorgversion__
+.TH XSETROOT 1 2025-04-12 __xorgversion__
 .SH NAME
 xsetroot \- root window parameter setting utility for X
 .SH SYNOPSIS
-.B xsetroot
-[-help]
-[-version]
-[-def]
-[-display \fIdisplay\fP]
-[-cursor \fIcursorfile maskfile\fP]
-[-cursor_name \fIcursorfontname\fP]
-[-xcf \fIcursorfile\fP \fIcursorsize\fP]
-[-bitmap \fIfilename\fP
-| -mod \fIx y\fP
-| -gray
-| -grey
-| -solid \fIcolor\fP]
-[-bg \fIcolor\fP]
-[-fg \fIcolor\fP]
-[-rv]
-[-name \fIstring\fP]
-[-d \fIdisplay\fP]
+.nf
+\fBxsetroot\fP \fB\-help\fP | \fB\-version\fP
+\fBxsetroot\fP [\fB\-display\fP \fIdisplay\fP | \fB\-d\fP \fIdisplay\fP] \
+[\fB\-def\fP | \fB\-default\fP]
+         [\fB\-cursor\fP \fIcursorfile maskfile\fP | \
+\fB\-cursor_name\fP \fIcursorfontname\fP
+          \fB\-xcf\fP \fIcursorfile\fP \fIcursorsize\fP]
+         [\fB\-bitmap\fP \fIfilename\fP \
+| \fB\-mod\fP \fIx y\fP \
+| \fB\-gray\fP \
+| \fB\-grey\fP \
+| \fB\-solid\fP \fIcolor\fP]
+         [\fB\-bg\fP \fIcolor\fP] \
+[\fB\-fg\fP \fIcolor\fP] \
+[\fB\-rv\fP] \
+[\fB\-name\fP \fIstring\fP] \
+
+.fi
 .SH DESCRIPTION
 The
-.I xsetroot
+.B xsetroot
 program
 allows you to tailor the appearance of the background ("root")
-window on a workstation display running X.  Normally, you experiment with
-.I xsetroot
+window on a workstation display running X.
+Normally, you experiment with
+.B xsetroot
 until you find a personalized look that you like, then put the
-.I xsetroot
+.B xsetroot
 command that produces it into your X startup file.
+Note that some desktop environments or window managers display their
+own full screen background window that covers the root window entirely,
+which may prevent you from seeing any changes made with this utility.
+.PP
 If no options are specified, or if
-.I -def
+.B \-def
 is specified, the window is reset to its default state.  The
-.I -def
+.B \-def
 option can be specified along with other options and only the non-specified
 characteristics will be reset to the default state.
 .PP
-Only one of the background color/tiling changing options
-(-solid, -gray, -grey, -bitmap, and -mod) may be specified at a time.
+Only one of the background color/pattern changing options
+(\fB\-solid\fP, \fB\-gray\fP, \fB\-grey\fP, \fB\-bitmap\fP, and \fB\-mod\fP)
+may be specified at a time.
 .SH OPTIONS
-.PP
 The various options are as follows:
-.IP "\fB-help\fP"
+.IP "\fB\-help\fP"
 Print a usage message and exit.
-.IP "\fB-version\fP"
+.IP "\fB\-version\fP"
 Print a version message and exit.
-.IP "\fB-def, -default\fP"
-Reset unspecified attributes to the default values.  (Restores the background
-to the familiar gray mesh and the cursor to the hollow x shape.)
-.IP "\fB-cursor\fP \fIcursorfile\fP \fImaskfile\fP"
+.IP "\fB\-def, \-default\fP"
+Reset unspecified attributes to the default values.
+(Restores the background to the familiar gray mesh
+and the cursor to the hollow x shape.)
+.IP "\fB\-cursor\fP \fIcursorfile\fP \fImaskfile\fP"
 This lets you change the pointer cursor to whatever
 you want when the pointer cursor is outside of any window.
 Cursor and mask files are bitmaps (little pictures), and can be made with the
-.I bitmap(__appmansuffix__)
+.BR bitmap (__appmansuffix__)
 program.  You probably want the mask file to be all black until you
 get used to the way masks work.
-.IP "\fB-cursor_name\fP \fIcursorfontname\fP"
+.IP "\fB\-cursor_name\fP \fIcursorfontname\fP"
 This lets you change the pointer cursor to one of the standard
-cursors from the cursor font.  Refer to appendix B of the X protocol for
-the names (except that the XC_ prefix is elided for this option).
-.IP "\fB-xcf\fP \fIcursorfile\fP \fIcursorsize\fP"
+cursors from the cursor font.
+Refer to appendix B of the X protocol for the names
+(except that the XC_ prefix is elided for this option).
+.IP "\fB\-xcf\fP \fIcursorfile\fP \fIcursorsize\fP"
 This lets you change the pointer cursor to one loaded from an Xcursor file
 as defined by libXcursor, at the specified size.
-.IP "\fB-bitmap\fP \fIfilename\fP"
-Use the bitmap specified in the file to set the window pattern.  You can
-make your own bitmap files (little pictures) using the
-.I bitmap(__appmansuffix__)
-program.  The entire background will be made up of repeated "tiles" of
-the bitmap.
-.IP "\fB-mod\fP \fIx\fP \fIy\fP"
+.IP "\fB\-bitmap\fP \fIfilename\fP"
+Use the bitmap specified in the file to set the window pattern.
+You can make your own bitmap files (little pictures) using the
+.BR bitmap (__appmansuffix__)
+program.
+The entire background will be made up of repeated "tiles" of the bitmap.
+.IP "\fB\-mod\fP \fIx\fP \fIy\fP"
 This is used if you want a plaid-like grid pattern on your screen.
-x and y are integers ranging from 1 to 16.  Try the different combinations.
+\fIx\fP and \fIy\fP are integers ranging from 1 to 16.
+Try the different combinations.
 Zero and negative numbers are taken as 1.
-.IP "\fB-gray, -grey\fP"
-Make the entire background gray (Easier on the eyes).
-.IP "\fB-bg, -background\fP \fIcolor\fP"
-Use ``color'' as the background color.
-.IP "\fB-fg, -foreground\fP \fIcolor\fP"
-Use ``color'' as the foreground color.  Foreground and background colors
-are meaningful only in combination with -cursor, -bitmap, or -mod.
-.IP "\fB-rv, -reverse\fP"
-This exchanges the foreground and background colors.  Normally the foreground
-color is black and the background color is white.
-.IP "\fB-solid\fP \fIcolor\fP"
-This sets the background of the root window to the specified color.  This
-option is only useful on color servers.
-.IP "\fB-name\fP \fIstring\fP"
-Set the name of the root window to ``string''.  There is no default value.
-Usually a name is assigned to a window so that the
-window manager can use a text representation when the window is iconified.
-This option is unused since you can't iconify the background.
-.IP "\fB-d, -display\fP \fIdisplay\fP"
-Specifies the server to connect to; see \fIX(__miscmansuffix__)\fP.
+.IP "\fB\-gray, \-grey\fP"
+Make the entire background gray (easier on the eyes).
+.IP "\fB\-bg, \-background\fP \fIcolor\fP"
+Use \fIcolor\fP as the background color.
+.IP "\fB\-fg, \-foreground\fP \fIcolor\fP"
+Use \fIcolor\fP as the foreground color.
+Foreground and background colors are meaningful only in combination with
+\fB\-cursor\fP, \fB\-bitmap\fP, or \fB\-mod\fP.
+.IP "\fB\-rv, \-reverse\fP"
+This exchanges the foreground and background colors.
+Normally the foreground color is black and the background color is white.
+.IP "\fB\-solid\fP \fIcolor\fP"
+This sets the background of the root window to the specified color.
+This option is only useful on color servers.
+.IP "\fB\-name\fP \fIstring\fP"
+Set the name of the root window to \fIstring\fP.  There is no default value.
+.IP "\fB\-d, \-display\fP \fIdisplay\fP"
+Specifies the server to connect to; see
+.BR X (__miscmansuffix__).
 .SH "SEE ALSO"
-X(__miscmansuffix__), xset(__appmansuffix__), xrdb(__appmansuffix__), Xcursor(__libmansuffix__)
+.BR X (__miscmansuffix__),
+.BR xset (__appmansuffix__),
+.BR xrdb (__appmansuffix__),
+.BR Xcursor (__libmansuffix__)
 .SH AUTHOR
 Mark Lillibridge, MIT Project Athena

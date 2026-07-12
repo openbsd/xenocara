@@ -24,8 +24,8 @@ in this Software without prior written authorization from The Open Group.
  */
 
 /*
- * xsetroot.c 	MIT Project Athena, X Window System root window 
- *		parameter setting utility.  This program will set 
+ * xsetroot.c 	MIT Project Athena, X Window System root window
+ *		parameter setting utility.  This program will set
  *		various parameters of the X root window.
  *
  *  Author:	Mark Lillibridge, MIT Project Athena
@@ -60,7 +60,7 @@ static int unsave_past = 0;
 static Pixmap save_pixmap = (Pixmap)None;
 
 static void FixupState(void);
-static void SetBackgroundToBitmap(Pixmap bitmap, 
+static void SetBackgroundToBitmap(Pixmap bitmap,
 				  unsigned int width, unsigned int height);
 static Cursor CreateCursorFromFiles(char *cursor_file, char *mask_file);
 static Cursor CreateCursorFromName(char *name);
@@ -70,7 +70,7 @@ static unsigned long NameToPixel(char *name, unsigned long pixel);
 static Pixmap ReadBitmapFile(char *filename, unsigned int *width, unsigned int *height, int *x_hot, int *y_hot);
 
 static void _X_NORETURN _X_COLD
-usage(const char *errmsg)
+usage(const char *errmsg, int exitstatus)
 {
     if (errmsg != NULL)
 	fprintf (stderr, "%s: %s\n\n", program_name, errmsg);
@@ -93,13 +93,13 @@ usage(const char *errmsg)
             "  -name <string>                  Set the name of the root window\n"
             "  -d,   -display <display>        Specifies the server to connect to\n"
             );
-    exit(1);
+    exit(exitstatus);
     /*NOTREACHED*/
 }
 
 
 int
-main(int argc, char *argv[]) 
+main(int argc, char *argv[])
 {
     int excl = 0;
     int nonexcl = 0;
@@ -124,49 +124,54 @@ main(int argc, char *argv[])
 
     for (int i = 1; i < argc; i++) {
 	if (!strcmp ("-display", argv[i]) || !strcmp ("-d", argv[i])) {
-	    if (++i>=argc) usage ("-display requires an argument");
+	    if (++i>=argc)
+		usage ("-display requires an argument", EXIT_FAILURE);
 	    display_name = argv[i];
 	    continue;
 	}
-	if (!strcmp("-help", argv[i])) {
-	    usage(NULL);
+	if (!strcmp("-help", argv[i]) || !strcmp("--help", argv[i])) {
+	    usage(NULL, EXIT_SUCCESS);
 	}
-	if (!strcmp("-version", argv[i])) {
-            printf("%s\n", PACKAGE_STRING);
-            exit(0);
+	if (!strcmp("-version", argv[i]) || !strcmp("--version", argv[i])) {
+            puts(PACKAGE_STRING);
+            exit(EXIT_SUCCESS);
 	}
 	if (!strcmp("-def", argv[i]) || !strcmp("-default", argv[i])) {
 	    restore_defaults = 1;
 	    continue;
 	}
 	if (!strcmp("-name", argv[i])) {
-	    if (++i>=argc) usage("-name requires an argument");
+	    if (++i>=argc)
+		usage("-name requires an argument", EXIT_FAILURE);
 	    name = argv[i];
 	    nonexcl++;
 	    continue;
 	}
 	if (!strcmp("-cursor", argv[i])) {
 	    if (++i>=argc)
-		usage("missing cursorfile & maskfile arguments for -cursor");
+		usage("missing cursorfile & maskfile arguments for -cursor",
+		      EXIT_FAILURE);
 	    cursor_file = argv[i];
 	    if (++i>=argc)
-		usage("missing maskfile argument for -cursor");
+		usage("missing maskfile argument for -cursor", EXIT_FAILURE);
 	    cursor_mask = argv[i];
 	    nonexcl++;
 	    continue;
 	}
 	if (!strcmp("-cursor_name", argv[i])) {
-	    if (++i>=argc) usage("-cursor_name requires an argument");
+	    if (++i>=argc)
+		usage("-cursor_name requires an argument", EXIT_FAILURE);
 	    cursor_name = argv[i];
 	    nonexcl++;
 	    continue;
 	}
 	if (!strcmp("-xcf", argv[i])) {
 	    if (++i>=argc)
-		usage("missing cursorfile & cursorsize arguments for -xcf");
+		usage("missing cursorfile & cursorsize arguments for -xcf",
+		      EXIT_FAILURE);
 	    xcf = argv[i];
 	    if (++i>=argc)
-		usage("missing cursorsize argument for -xcf");
+		usage("missing cursorsize argument for -xcf", EXIT_FAILURE);
 	    xcf_size = atoi(argv[i]);
 	    if (xcf_size <= 0)
 		xcf_size = 32;
@@ -174,17 +179,20 @@ main(int argc, char *argv[])
 	    continue;
 	}
 	if (!strcmp("-fg",argv[i]) || !strcmp("-foreground",argv[i])) {
-	    if (++i>=argc) usage("-foreground requires an argument");
+	    if (++i>=argc)
+		usage("-foreground requires an argument", EXIT_FAILURE);
 	    fore_color = argv[i];
 	    continue;
 	}
 	if (!strcmp("-bg",argv[i]) || !strcmp("-background",argv[i])) {
-	    if (++i>=argc) usage("-background requires an argument");
+	    if (++i>=argc)
+		usage("-background requires an argument", EXIT_FAILURE);
 	    back_color = argv[i];
 	    continue;
 	}
 	if (!strcmp("-solid", argv[i])) {
-	    if (++i>=argc) usage("-solid requires an argument");
+	    if (++i>=argc)
+		usage("-solid requires an argument", EXIT_FAILURE);
 	    solid_color = argv[i];
 	    excl++;
 	    continue;
@@ -195,16 +203,19 @@ main(int argc, char *argv[])
 	    continue;
 	}
 	if (!strcmp("-bitmap", argv[i])) {
-	    if (++i>=argc) usage("-bitmap requires an argument");
+	    if (++i>=argc)
+		usage("-bitmap requires an argument", EXIT_FAILURE);
 	    bitmap_file = argv[i];
 	    excl++;
 	    continue;
 	}
 	if (!strcmp("-mod", argv[i])) {
-	    if (++i>=argc) usage("missing x & y arguments for -mod");
+	    if (++i>=argc)
+		usage("missing x & y arguments for -mod", EXIT_FAILURE);
 	    mod_x = atoi(argv[i]);
 	    if (mod_x <= 0) mod_x = 1;
-	    if (++i>=argc) usage("missing y argument for -mod");
+	    if (++i>=argc)
+		usage("missing y argument for -mod", EXIT_FAILURE);
 	    mod_y = atoi(argv[i]);
 	    if (mod_y <= 0) mod_y = 1;
 	    excl++;
@@ -216,14 +227,14 @@ main(int argc, char *argv[])
 	}
 	fprintf(stderr, "%s: unrecognized argument '%s'\n",
 		program_name, argv[i]);
-	usage(NULL);
-    } 
+	usage(NULL, EXIT_FAILURE);
+    }
 
     /* Check for multiple use of exclusive options */
     if (excl > 1) {
 	fprintf(stderr, "%s: choose only one of {solid, gray, bitmap, mod}\n",
 		program_name);
-	usage(NULL);
+	usage(NULL, EXIT_FAILURE);
     }
 
     dpy = XOpenDisplay(display_name);
@@ -234,18 +245,18 @@ main(int argc, char *argv[])
     }
     screen = DefaultScreen(dpy);
     root = RootWindow(dpy, screen);
-  
+
     /* If there are no arguments then restore defaults. */
     if (!excl && !nonexcl)
 	restore_defaults = 1;
-  
+
     /* Handle a cursor file */
     if (cursor_file) {
 	cursor = CreateCursorFromFiles(cursor_file, cursor_mask);
 	XDefineCursor(dpy, root, cursor);
 	XFreeCursor(dpy, cursor);
     }
-  
+
     if (cursor_name) {
 	cursor = CreateCursorFromName (cursor_name);
 	if (cursor)
@@ -273,7 +284,7 @@ main(int argc, char *argv[])
 				       gray_width, gray_height);
 	SetBackgroundToBitmap(bitmap, gray_width, gray_height);
     }
-  
+
     /* Handle -solid option */
     if (solid_color) {
 	XSetWindowBackground(dpy, root, NameToPixel(solid_color,
@@ -281,23 +292,23 @@ main(int argc, char *argv[])
 	XClearWindow(dpy, root);
 	unsave_past = 1;
     }
-  
+
     /* Handle -bitmap option */
     if (bitmap_file) {
 	bitmap = ReadBitmapFile(bitmap_file, &ww, &hh, (int *)NULL, (int *)NULL);
 	SetBackgroundToBitmap(bitmap, ww, hh);
     }
-  
+
     /* Handle set background to a modula pattern */
     if (mod_x) {
 	bitmap = MakeModulaBitmap(mod_x, mod_y);
 	SetBackgroundToBitmap(bitmap, 16, 16);
     }
-  
+
     /* Handle set name */
     if (name)
 	XStoreName(dpy, root, name);
-  
+
     /* Handle restore defaults */
     if (restore_defaults) {
 	if (!cursor_file)
@@ -308,10 +319,10 @@ main(int argc, char *argv[])
 	    unsave_past = 1;
 	}
     }
-  
+
     FixupState();
     XCloseDisplay(dpy);
-    exit (0);
+    exit(EXIT_SUCCESS);
 }
 
 
@@ -329,7 +340,7 @@ FixupState(void)
     if (!unsave_past && !save_colors)
 	return;
     prop = XInternAtom(dpy, "_XSETROOT_ID", False);
-    if (unsave_past) {    
+    if (unsave_past) {
 	if (XGetWindowProperty(dpy, root, prop, 0L, 1L, True, AnyPropertyType,
 		       &type, &format, &length, &after, &data) != Success)
 	    fprintf(stderr,
@@ -352,7 +363,7 @@ FixupState(void)
 }
 
 /*
- * SetBackgroundToBitmap: Set the root window background to a caller supplied 
+ * SetBackgroundToBitmap: Set the root window background to a caller supplied
  *                        bitmap.
  */
 static void
@@ -412,10 +423,10 @@ CreateCursorFromFiles(char *cursor_file, char *mask_file)
     mask_bitmap = ReadBitmapFile(mask_file, &ww, &hh, (int *)NULL, (int *)NULL);
 
     if (width != ww || height != hh) {
-	fprintf(stderr, 
-"%s: dimensions of cursor bitmap and cursor mask bitmap are different\n", 
+	fprintf(stderr,
+"%s: dimensions of cursor bitmap and cursor mask bitmap are different\n",
 		program_name);
-	exit(1);
+	exit(EXIT_FAILURE);
 	/*NOTREACHED*/
     }
 
@@ -426,7 +437,7 @@ CreateCursorFromFiles(char *cursor_file, char *mask_file)
     if ((x_hot < 0) || ((unsigned int)x_hot >= width) ||
 	(y_hot < 0) || ((unsigned int)y_hot >= height)) {
 	fprintf(stderr, "%s: hotspot is outside cursor bounds\n", program_name);
-	exit(1);
+	exit(EXIT_FAILURE);
 	/*NOTREACHED*/
     }
 
@@ -465,7 +476,7 @@ CreateCursorFromName(char *name)
 /*
  * MakeModulaBitmap: Returns a modula bitmap based on an x & y mod.
  */
-static Pixmap 
+static Pixmap
 MakeModulaBitmap(int mod_x, int mod_y)
 {
     long pattern_line = 0;
@@ -492,24 +503,24 @@ MakeModulaBitmap(int mod_x, int mod_y)
 /*
  * NameToXColor: Convert the name of a color to its Xcolor value.
  */
-static XColor 
+static XColor
 NameToXColor(char *name, unsigned long pixel)
 {
     XColor c;
-    
+
     if (!name || !*name) {
 	c.pixel = pixel;
 	XQueryColor(dpy, DefaultColormap(dpy, screen), &c);
     } else if (!XParseColor(dpy, DefaultColormap(dpy, screen), name, &c)) {
 	fprintf(stderr, "%s: unknown color or bad color format: %s\n",
 			program_name, name);
-	exit(1);
+	exit(EXIT_FAILURE);
 	/*NOTREACHED*/
     }
     return(c);
 }
 
-static unsigned long 
+static unsigned long
 NameToPixel(char *name, unsigned long pixel)
 {
     XColor ecolor;
@@ -518,13 +529,13 @@ NameToPixel(char *name, unsigned long pixel)
 	return pixel;
     if (!XParseColor(dpy,DefaultColormap(dpy,screen),name,&ecolor)) {
 	fprintf(stderr,"%s:  unknown color \"%s\"\n",program_name,name);
-	exit(1);
+	exit(EXIT_FAILURE);
 	/*NOTREACHED*/
     }
     if (!XAllocColor(dpy, DefaultColormap(dpy, screen),&ecolor)) {
 	fprintf(stderr, "%s:  unable to allocate color for \"%s\"\n",
 		program_name, name);
-	exit(1);
+	exit(EXIT_FAILURE);
 	/*NOTREACHED*/
     }
     if ((ecolor.pixel != BlackPixel(dpy, screen)) &&
@@ -534,8 +545,8 @@ NameToPixel(char *name, unsigned long pixel)
     return(ecolor.pixel);
 }
 
-static Pixmap 
-ReadBitmapFile(char *filename, unsigned int *width, unsigned int *height, 
+static Pixmap
+ReadBitmapFile(char *filename, unsigned int *width, unsigned int *height,
 	       int *x_hot, int *y_hot)
 {
     Pixmap bitmap;
@@ -553,6 +564,6 @@ ReadBitmapFile(char *filename, unsigned int *width, unsigned int *height,
     else
 	fprintf(stderr, "%s: insufficient memory for bitmap: %s",
 			program_name, filename);
-    exit(1);
+    exit(EXIT_FAILURE);
     /*NOTREACHED*/
 }

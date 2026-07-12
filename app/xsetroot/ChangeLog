@@ -1,3 +1,94 @@
+commit ea3de0ef94ca885f7104c9db34efe7e150e28269
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 10 10:14:36 2026 -0700
+
+    xsetroot 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dd456fd93e33d0483d8e7ebcc26dc42346a443be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 10 14:31:41 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xsetroot/-/merge_requests/6>
+
+commit de0a46bf98bf1c174dde6686ebdce84e13aafaf5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 10 13:16:05 2026 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xsetroot/-/merge_requests/6>
+
+commit 47b66691b5563b58ae38909baeab3d4ed188728b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xsetroot/-/merge_requests/6>
+
+commit 8f935c417ec798451131baf5190b0721d90a8218
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 12:40:49 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xsetroot.1:25:16: WARNING: cannot parse date, using it verbatim: TH xsetroot 1.1.3
+    mandoc: xsetroot.1:73:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xsetroot/-/merge_requests/5>
+
+commit 547c0f4ba726c33c4a42dab99eed1656e4a94510
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 12:43:24 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xsetroot/-/merge_requests/4>
+
+commit 5bf391c728ca482c47240915752dea28d0a49a10
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 12:24:20 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xsetroot/-/merge_requests/4>
+
+commit 58b3750228fca3400380f026dab53107f02a4362
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 12:15:59 2025 -0700
+
+    -help should exit(0) not (1)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xsetroot/-/merge_requests/4>
+
 commit 435d35409768de7cbc2c47a6322192dd4b480545
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 28 18:43:32 2022 -0700
@@ -169,7 +260,7 @@ Date:   Tue Jun 3 23:04:08 2014 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 6ce1479493af8ade3ce7e41276e0e64c878461e2
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sun Jul 7 23:23:52 2013 +0200
 
     Improve manpage and -help option.
@@ -576,13 +667,13 @@ Date:   Wed Jul 20 19:32:04 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 0cc65bf4e9e0522422a9bd5824dc21dd05bf0368
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 15 16:49:26 2005 +0000
 
     Add dependency on xbitmaps
 
 commit 2f3ed0d66595b15a2893098d0c0b05a568fb01e7
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:09:06 2005 +0000
 
     xtrap.pc.in: s/Xfixes/XTrap/ xi.pc.in: s/Xt/Xi/ Xv/src/Makefile.am: remove
