@@ -1,3 +1,147 @@
+commit 31e37ca76353efde2116b66c375d25ba60165e36
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 18 18:51:58 2026 -0700
+
+    xev 1.2.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd3a07b924b6da4b9c27e697b95b22a7bed1b18a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 18 18:25:50 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xev/-/merge_requests/15>
+
+commit 79f0cc47caf9c3fd1161a9bc11b0380d0e4d9f4a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xev/-/merge_requests/15>
+
+commit 61c956d8265e9607c48791a325c6eebd86c31366
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 31 09:23:19 2025 -0700
+
+    Clear -Wunused-parameter warnings
+    
+    Reported by gcc 15.1:
+    
+    xev.c: In function ‘ignore_errors’:
+    xev.c:99:24: warning: unused parameter ‘display’ [-Wunused-parameter]
+       99 | ignore_errors(Display *display, XErrorEvent *ev)
+          |               ~~~~~~~~~^~~~~~~
+    xev.c:99:46: warning: unused parameter ‘ev’ [-Wunused-parameter]
+       99 | ignore_errors(Display *display, XErrorEvent *ev)
+          |                                 ~~~~~~~~~~~~~^~
+    
+    xev.c: In function ‘set_sizehints’:
+    xev.c:1075:48: warning: unused parameter ‘defx’ [-Wunused-parameter]
+     1075 |               int defwidth, int defheight, int defx, int defy, char *geom)
+          |                                            ~~~~^~~~
+    xev.c:1075:58: warning: unused parameter ‘defy’ [-Wunused-parameter]
+     1075 |               int defwidth, int defheight, int defx, int defy, char *geom)
+          |                                                      ~~~~^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xev/-/merge_requests/14>
+
+commit 0513c8e462904a42a67eadb4c875ecff1f78447c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 31 09:10:55 2025 -0700
+
+    Add missing indentation to second line of CreateNotify output
+    
+    Closes: #1
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xev/-/merge_requests/13>
+
+commit 5d90d0e926cc9bf27c5944f8804ce0ec038947b0
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Jul 18 17:25:29 2025 +0200
+
+    randr: Protect against XErrors getting output info
+    
+    Xwayland can create and destroy RR outputs as required.
+    
+    When Xwayland destroys an RR output, xev would receive a RRNotify event
+    and try to get the output info.
+    
+    As the output is already destroyed, that will cause an XError which
+    kills xev:
+    
+     | RRNotify event, serial 42, synthetic NO, window 0xc00001,
+     | X Error of failed request:  BadRROutput (invalid Output parameter)
+     |   Major opcode of failed request:  140 (RANDR)
+     |   Minor opcode of failed request:  9 (RRGetOutputInfo)
+     |   Serial number of failed request:  45
+     |   Current serial number in output stream:  45
+    
+    Protect against potential XError when calling XRRGetOutputInfo() to
+    avoid the issue.
+    
+    v2: XSync before setting the error handler, to catch pending errors
+        (Alan Coopersmith <alan.coopersmith@oracle.com>)
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    See-also: https://gitlab.freedesktop.org/xorg/xserver/-/issues/1833
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xev/-/merge_requests/12>
+
+commit e2c157e759a260e5595a259369005849643ead1f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 20 17:36:46 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xev.1:64:81: STYLE: input text line longer than 80 bytes: Available event mask...
+    mandoc: xev.1:1:11: WARNING: cannot parse date, using it verbatim: TH xev 1.2.6
+    mandoc: xev.1:12:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xev/-/merge_requests/11>
+
+commit eae9d09e5a011012d477430669206c2e232523ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 24 19:03:31 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xev/-/merge_requests/10>
+
+commit 8b9e87a3058952bb0f871f42530f5fc05f5d49e1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 24 18:52:41 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xev/-/merge_requests/10>
+
+commit c69f783f077bc4ba68cd513b682629ca42a25628
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 24 18:49:41 2025 -0700
+
+    Add -help option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xev/-/merge_requests/10>
+
 commit 22a6e7416e126ba4860a62128254d96ad2c1fa84
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 3 13:56:28 2024 -0800

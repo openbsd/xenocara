@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xev], [1.2.6],
+AC_INIT([xev], [1.2.7],
         [https://gitlab.freedesktop.org/xorg/app/xev/-/issues], [xev])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -38,7 +38,7 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XEV, [xrandr >= 1.2 x11 xproto >= 7.0.17])
+PKG_CHECK_MODULES(XEV, [xrandr >= 1.2 x11 xproto >= 7.0.22])
 
 AC_CONFIG_FILES([
 	Makefile

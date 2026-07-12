@@ -1,16 +1,15 @@
-.TH XEV 1 __xorgversion__
+.TH XEV 1 2025-03-24 __xorgversion__
 .SH NAME
 xev - print contents of X events
 .SH SYNOPSIS
-.B "xev"
-[\-display \fIdisplayname\fP] [\-geometry \fIgeom\fP]
-[\-bw \fIpixels\fP] [\-bs \fI{NotUseful,WhenMapped,Always}\fP]
-[\-id \fIwindowid\fP] [\-root] [\-s] [\-name \fIstring\fP] [\-rv]
-[\-version]
-[\-event \fIevent_mask\fP [\-event \fIevent_mask\fP ...]]
+.nf
+\fBxev\fP [\fB\-display\fP \fIdisplayname\fP] [\fB\-geometry\fP \fIgeom\fP] [\fB\-bw\fP \fIpixels\fP]
+    [\fB\-bs\fP \fBNotUseful\fP|\fBWhenMapped\fP|\fBAlways\fP] [\fB\-id\fP \fIwindowid\fP] [\fB\-root\fP] [\fB\-s\fP]
+    [\fB\-name\fP \fIstring\fP] [\fB\-rv\fP] [\fB\-event\fP \fIevent_mask\fP [\fB\-event\fP \fIevent_mask\fP ...]]
+    [\fB\-help\fP|\fB\-version\fP]
+.fi
 .SH DESCRIPTION
-.PP
-\fIXev\fP creates a window and then asks the X server to send it
+\fBXev\fP creates a window and then asks the X server to send it
 \fIevents\fP whenever anything happens to the window (such as it being
 moved, resized, typed in, clicked in, etc.).  You can also attach it to an
 existing window.  It is useful for seeing what causes events to occur and to
@@ -28,10 +27,10 @@ to be created.
 .B \-bw \fIpixels\fP
 This option specifies the border width for the window.
 .TP 8
-.B \-bs \fI{NotUseful,WhenMapped,Always}\fP
+.B \-bs \fBNotUseful\fP|\fBWhenMapped\fP|\fBAlways\fP
 This option specifies what kind of backing store to give the window.
-The default is NotUseful. Backing store refers to the the pixels saved
-off-screen when the X server maintains the contents of a window; NotUseful
+The default is \fBNotUseful\fP. Backing store refers to the the pixels saved
+off-screen when the X server maintains the contents of a window; \fBNotUseful\fP
 means that the xev process will redraw its contents itself, as necessary.
 .TP 8
 .B \-id \fIwindowid\fP
@@ -61,13 +60,20 @@ The
 .B \-event
 option can be specified multiple times to select multiple types of events.
 When not specified, all events are selected.
-Available event masks: keyboard mouse expose visibility structure substructure
-focus property colormap owner_grab_button randr button
+Available event masks:
+\fBkeyboard mouse expose visibility structure substructure
+focus property colormap owner_grab_button randr button\fP
+.TP 8
+.B \-help
+This option prints the program usage and exits
 .TP 8
 .B \-version
 This option prints the program version and exits.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xwininfo(__appmansuffix__), xdpyinfo(__appmansuffix__), Xlib Programmers Manual, X Protocol
-Specification
+.BR X (__miscmansuffix__),
+.BR xwininfo (__appmansuffix__),
+.BR xdpyinfo (__appmansuffix__),
+.IR "Xlib Programmers Manual" ,
+.I "X Protocol Specification"
 .SH AUTHOR
 Jim Fulton, MIT X Consortium

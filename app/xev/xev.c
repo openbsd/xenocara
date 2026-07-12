@@ -93,7 +93,20 @@ enum OutputFlags {
     NewLine        = 4,
 };
 
-static void usage(const char *errmsg) _X_NORETURN;
+static void usage(const char *errmsg, int exitstatus) _X_NORETURN;
+
+static int
+ignore_errors(_X_UNUSED Display *display, _X_UNUSED XErrorEvent *ev)
+{
+    return 0;
+}
+
+static XErrorHandler
+set_error_handler(Display *display, XErrorHandler handler)
+{
+    XSync(display, False);
+    return XSetErrorHandler(handler);
+}
 
 static void
 output_new_line(void)
@@ -517,7 +530,7 @@ do_CreateNotify(XEvent *eventp)
     output(Indent | NewLine,
            "parent 0x%lx, window 0x%lx, (%d,%d), width %d, height %d",
            e->parent, e->window, e->x, e->y, e->width, e->height);
-    output(NewLine, "border_width %d, override %s",
+    output(Indent | NewLine, "border_width %d, override %s",
            e->border_width, e->override_redirect ? Yes : No);
 }
 
@@ -936,8 +949,9 @@ do_RRNotify_OutputChange(XEvent *eventp, XRRScreenResources *screen_resources)
 
     if (screen_resources) {
         int i;
-
+        XErrorHandler handler = set_error_handler(dpy, ignore_errors);
         output_info = XRRGetOutputInfo(dpy, screen_resources, e->output);
+        set_error_handler(dpy, handler);
         for (i = 0; i < screen_resources->nmode; i++)
             if (screen_resources->modes[i].id == e->mode) {
                 mode_info = &screen_resources->modes[i];
@@ -1010,8 +1024,11 @@ do_RRNotify_OutputProperty(XEvent *eventp,
     XRROutputInfo *output_info = NULL;
     char *property = XGetAtomName(dpy, e->property);
 
-    if (screen_resources)
+    if (screen_resources) {
+        XErrorHandler handler = set_error_handler(dpy, ignore_errors);
         output_info = XRRGetOutputInfo(dpy, screen_resources, e->output);
+        set_error_handler(dpy, handler);
+    }
     output(Indent | NewLine, "subtype XRROutputPropertyChangeNotifyEvent");
     if (output_info)
         output(Indent, "output %s, ", output_info->name);
@@ -1055,7 +1072,8 @@ do_RRNotify(XEvent *eventp)
 
 static void
 set_sizehints(XSizeHints *hintp, int min_width, int min_height,
-              int defwidth, int defheight, int defx, int defy, char *geom)
+              int defwidth, int defheight,
+              _X_UNUSED int defx, _X_UNUSED int defy, char *geom)
 {
     int geom_result;
 
@@ -1105,7 +1123,7 @@ set_sizehints(XSizeHints *hintp, int min_width, int min_height,
 }
 
 static void
-usage(const char *errmsg)
+usage(const char *errmsg, int exitstatus)
 {
     const char *msg =
 "    -display displayname                X server to contact\n"
@@ -1124,6 +1142,7 @@ usage(const char *errmsg)
 "           This option can be specified multiple times to select multiple\n"
 "           event masks.\n"
 "    -1                                  display only a single line per event\n"
+"    -help                               print usage and exit\n"
 "    -version                            print version and exit\n"
 "\n";
 
@@ -1134,7 +1153,7 @@ usage(const char *errmsg)
     fprintf(stderr, "where options include:\n");
     fputs(msg, stderr);
 
-    exit(1);
+    exit(exitstatus);
 }
 
 static int
@@ -1150,7 +1169,7 @@ parse_backing_store(const char *s)
         return (Always);
 
     fprintf(stderr, "%s: unrecognized argument '%s' for -bs\n", ProgramName, s);
-    usage(NULL);
+    usage(NULL, EXIT_FAILURE);
 }
 
 static Bool
@@ -1261,24 +1280,24 @@ main(int argc, char **argv)
             switch (arg[1]) {
             case 'd':          /* -display host:dpy */
                 if (++i >= argc)
-                    usage("-display requires an argument");
+                    usage("-display requires an argument", EXIT_FAILURE);
                 displayname = argv[i];
                 continue;
             case 'g':          /* -geometry geom */
                 if (++i >= argc)
-                    usage("-geometry requires an argument");
+                    usage("-geometry requires an argument", EXIT_FAILURE);
                 geom = argv[i];
                 continue;
             case 'b':
                 switch (arg[2]) {
                 case 'w':      /* -bw pixels */
                     if (++i >= argc)
-                        usage("-bw requires an argument");
+                        usage("-bw requires an argument", EXIT_FAILURE);
                     borderwidth = atoi(argv[i]);
                     continue;
                 case 's':      /* -bs type */
                     if (++i >= argc)
-                        usage("-bs requires an argument");
+                        usage("-bs requires an argument", EXIT_FAILURE);
                     attr.backing_store = parse_backing_store(argv[i]);
                     mask |= CWBackingStore;
                     continue;
@@ -1287,7 +1306,7 @@ main(int argc, char **argv)
                 }
             case 'i':          /* -id */
                 if (++i >= argc)
-                    usage("-id requires an argument");
+                    usage("-id requires an argument", EXIT_FAILURE);
                 sscanf(argv[i], "0x%lx", &w);
                 if (!w)
                     sscanf(argv[i], "%lu", &w);
@@ -1295,12 +1314,12 @@ main(int argc, char **argv)
                     fprintf(stderr,
                             "%s: unable to parse argument '%s' for -id\n",
                             ProgramName, argv[i]);
-                    usage(NULL);
+                    usage(NULL, EXIT_FAILURE);
                 }
                 continue;
             case 'n':          /* -name */
                 if (++i >= argc)
-                    usage("-name requires an argument");
+                    usage("-name requires an argument", EXIT_FAILURE);
                 name = argv[i];
                 continue;
             case 'r':
@@ -1321,9 +1340,9 @@ main(int argc, char **argv)
                 continue;
             case 'e':          /* -event */
                 if (++i >= argc)
-                    usage("-event requires an argument");
+                    usage("-event requires an argument", EXIT_FAILURE);
                 if (!parse_event_mask(argv[i], event_masks))
-                    usage(NULL);
+                    usage(NULL, EXIT_FAILURE);
                 event_mask_specified = True;
                 continue;
             case '1':
@@ -1331,7 +1350,21 @@ main(int argc, char **argv)
                 continue;
             case 'v':
                 puts(PACKAGE_STRING);
-                exit(0);
+                exit(EXIT_SUCCESS);
+            case 'h':
+                if (strcmp(arg, "-help") == 0)
+                    usage(NULL, EXIT_SUCCESS);
+                else
+                    goto unrecognized;
+            case '-':
+                if (strcmp(arg, "--help") == 0)
+                    usage(NULL, EXIT_SUCCESS);
+                else if (strcmp(arg, "--version") == 0) {
+                    puts(PACKAGE_STRING);
+                    exit(EXIT_SUCCESS);
+                }
+                else
+                    goto unrecognized;
             default:
                 goto unrecognized;
             }                   /* end switch on - */
@@ -1340,7 +1373,7 @@ main(int argc, char **argv)
  unrecognized:
             fprintf(stderr, "%s: unrecognized argument '%s'\n",
                     ProgramName, arg);
-            usage(NULL);
+            usage(NULL, EXIT_FAILURE);
         }
     }                           /* end for over argc */
 
