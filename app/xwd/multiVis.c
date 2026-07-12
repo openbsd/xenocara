@@ -154,6 +154,11 @@ QueryColorMap(Display *disp, Colormap src_cmap, Visual *src_vis,
     ncolors = (unsigned) src_vis->map_entries;
     *src_colors = colors = calloc(ncolors, sizeof(XColor));
 
+    if (colors == NULL) {
+        perror("xwd");
+        exit(1);
+    }
+
     if (src_vis->class != TrueColor && src_vis->class != DirectColor) {
         for (unsigned int i = 0; i < ncolors; i++) {
             colors[i].pixel = i;
@@ -340,7 +345,7 @@ ReadRegionsInList(Display *disp, Visual *fakeVis, int depth, int format,
                   XRectangle bbox,    /* bounding box of grabbed area */
                   list_ptr regions)   /* list of regions to read from */
 {
-    int datalen;
+    unsigned int datamul;
 
     XImage *reg_image, *ximage;
     int bytes_per_line;
@@ -349,11 +354,14 @@ ReadRegionsInList(Display *disp, Visual *fakeVis, int depth, int format,
                           8, 0);
     bytes_per_line = ximage->bytes_per_line;
 
-    datalen = height * bytes_per_line;
+    datamul = height;
     if (format != ZPixmap)
-        datalen *= depth;
-    ximage->data = malloc(datalen);
-    memset(ximage->data, 0, datalen);
+        datamul *= depth;
+    ximage->data = calloc(datamul, bytes_per_line);
+    if (ximage->data == NULL) {
+        perror("xwd");
+        exit(1);
+    }
 
     ximage->bits_per_pixel = depth; /** Valid only if format is ZPixmap ***/
 
@@ -1060,6 +1068,8 @@ GetXVisualInfo(   /* Which X server (aka "display"). */
     *numImageVisuals = 0;
     nImageVisualsAlloced = 1;
     pIVis = *pImageVisuals = malloc(sizeof(XVisualInfo *));
+    if (pIVis == NULL)
+        return (1);
     while (--nVisuals >= 0) {
         int nOVisuals = *numOverlayVisuals;
         OverlayInfo *pOVis = *pOverlayVisuals;

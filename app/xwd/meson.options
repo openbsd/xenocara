@@ -1,0 +1,6 @@
+option(
+  'xkb',
+  type: 'feature',
+  value : 'enabled',
+  description: 'Use XKB to sound bells (default is enabled)',
+)

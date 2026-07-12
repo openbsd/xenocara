@@ -1,3 +1,92 @@
+commit f702eb03b6a5553f3da3a5db636234f5b38ec464
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 11 17:53:07 2026 -0700
+
+    xwd 1.0.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ba79a7a49daca895439bcf166095542ea7db107
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 17 14:06:20 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwd/-/merge_requests/8>
+
+commit 10cad26f344239b7d0c1663503b0e4deae6d7869
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 17 12:39:19 2026 -0700
+
+    Check for malloc failures
+    
+    Clears 6 -Wanalyzer-possible-null-dereference warnings from gcc 15.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwd/-/merge_requests/8>
+
+commit 3d31cff54b318f60fb59b3ba7fcbee18e68602e9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwd/-/merge_requests/8>
+
+commit 0ea6b315b72696af2540b0cd02b6b386af61ba39
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 13:17:46 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xwd.1:76:81: STYLE: input text line longer than 80 bytes: It selects \[lq]XY\[...
+    mandoc: xwd.1:25:11: WARNING: cannot parse date, using it verbatim: TH xwd 1.0.9
+    mandoc: xwd.1:35:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xwd.1:46:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:50:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:55:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:59:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:66:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:72:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:77:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:81:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:86:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:92:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:98:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:104:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:110:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:119:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:124:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:131:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwd.1:136:2: WARNING: skipping paragraph macro: PP empty
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwd/-/merge_requests/7>
+
+commit 46b33f96f3f1943c0d6a70f0966e97250dcbee15
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 14:52:12 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwd/-/merge_requests/6>
+
 commit a6663cdafe97e3e7a1c60d03fc576dfe62b20d88
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jun 3 10:23:24 2023 -0700
@@ -181,7 +270,7 @@ Date:   Sat Mar 9 21:46:46 2019 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit bab5bb9bbcb7e7424ec3276f6d74ca1a7dfa863f
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sun Jul 7 03:03:59 2013 +0200
 
     Ensure consistency between the manpage and the output of the -help option
@@ -423,7 +512,7 @@ Date:   Tue Dec 13 15:53:02 2011 -0800
     Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
 commit 7d88d8ab44b17247753f7225a1d8133d55d8423e
-Author: Pär Lidberg  <par.lidberg@elekta.com>
+Author: Pär Lidberg <par.lidberg@elekta.com>
 Date:   Mon Oct 3 00:24:06 2011 -0700
 
     Fix LP64 bug
@@ -831,7 +920,7 @@ Date:   Wed Jul 20 19:32:05 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 504daf4567c93ac5ec425ab122cd88f29089ea7d
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 8 20:59:16 2005 +0000
 
     Add build system for xwd

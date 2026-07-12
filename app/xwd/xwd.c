@@ -248,6 +248,10 @@ Get24bitDirectColors(XColor **colors)
     XColor *tcol;
 
     *colors = tcol = malloc(sizeof(XColor) * ncolors);
+    if (tcol == NULL) {
+        perror("xwd");
+        exit(1);
+    }
 
     for (i = 0; i < ncolors; i++) {
         tcol[i].pixel = i << 16 | i << 8 | i;
