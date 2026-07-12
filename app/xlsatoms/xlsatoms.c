@@ -38,7 +38,7 @@ in this Software without prior written authorization from The Open Group.
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
 
-#define ATOMS_PER_BATCH 100 /* This number can be tuned 
+#define ATOMS_PER_BATCH 100 /* This number can be tuned
 				higher for fewer round-trips
 				lower for less bandwidth wasted */
 
@@ -62,7 +62,7 @@ __attribute__((__cold__))
 #if __has_attribute(noreturn)
 __attribute__((noreturn))
 #endif
-usage(const char *errmsg)
+usage(const char *errmsg, int exitstatus)
 {
     if (errmsg != NULL)
 	fprintf (stderr, "%s: %s\n\n", ProgramName, errmsg);
@@ -73,9 +73,10 @@ usage(const char *errmsg)
 	     "    -format string          printf-style format to use\n"
 	     "    -range [num]-[num]      atom values to list\n"
 	     "    -name string            name of single atom to print\n"
+	     "    -help                   print program usage\n"
 	     "    -version                print program version\n"
 	);
-    exit (1);
+    exit (exitstatus);
 }
 
 int
@@ -95,38 +96,57 @@ main(int argc, char *argv[])
 	    if (arg[0] == '-') {
 		switch (arg[1]) {
 		  case 'd':			/* -display dpy */
-		    if (++i >= argc) usage ("-display requires an argument");
+		    if (++i >= argc)
+			usage ("-display requires an argument", EXIT_FAILURE);
 		    if (!doit) displayname = argv[i];
 		    continue;
 		  case 'f':			/* -format string */
-		    if (++i >= argc) usage ("-format requires an argument");
+		    if (++i >= argc)
+			usage ("-format requires an argument", EXIT_FAILURE);
 		    if (doit) format = argv[i];
 		    continue;
 		  case 'r':			/* -range num-[num] */
-		    if (++i >= argc) usage ("-range requires an argument");
+		    if (++i >= argc)
+			usage ("-range requires an argument", EXIT_FAILURE);
 		    if (doit) {
 			do_range (c, format, argv[i]);
 			didit = 1;
 		    }
 		    continue;
 		  case 'n':			/* -name string */
-		    if (++i >= argc) usage ("-name requires an argument");
+		    if (++i >= argc)
+			usage ("-name requires an argument", EXIT_FAILURE);
 		    if (doit) {
 			do_name (c, format, argv[i]);
 			didit = 1;
 		    }
 		    continue;
+		  case 'h':
+		    if (strcmp(arg, "-help") == 0) {
+			usage (NULL, EXIT_SUCCESS);
+		    }
+		    goto unknown;
 		  case 'v':
 		    if (strcmp(arg, "-version") == 0) {
 			puts(PACKAGE_STRING);
-			exit(0);
+			exit(EXIT_SUCCESS);
 		    }
-		    /* else FALLTHROUGH to unrecognized arg case below */
+		    goto unknown;
+		  case '-':
+		    if (strcmp(arg, "--help") == 0) {
+			usage (NULL, EXIT_SUCCESS);
+		    }
+		    else if (strcmp(arg, "--version") == 0) {
+			puts(PACKAGE_STRING);
+			exit(EXIT_SUCCESS);
+		    }
+		    goto unknown;
 		}
 	    }
+	  unknown:
 	    fprintf (stderr, "%s: unrecognized argument %s\n\n",
 		     ProgramName, arg);
-	    usage (NULL);
+	    usage (NULL, EXIT_FAILURE);
 	}
 	if (!doit) {
 	    DisplayString = displayname;
@@ -138,7 +158,7 @@ main(int argc, char *argv[])
 	    if (!c || xcb_connection_has_error(c)) {
 		fprintf (stderr, "%s:  unable to open display \"%s\"\n",
 			 ProgramName, DisplayString);
-		exit (1);
+		exit (EXIT_FAILURE);
 	    }
 	} else
 	    if (!didit)		/* no options, default is list all */
@@ -146,13 +166,13 @@ main(int argc, char *argv[])
     }
 
     xcb_disconnect(c);
-    exit (0);
+    exit (EXIT_SUCCESS);
 }
 
 static void
 do_name(xcb_connection_t *c, const char *format, char *name)
 {
-    xcb_intern_atom_reply_t *a = xcb_intern_atom_reply(c, 
+    xcb_intern_atom_reply_t *a = xcb_intern_atom_reply(c,
 	xcb_intern_atom_unchecked(c, 1, strlen(name), name), NULL);
 
     if (a && a->atom != XCB_NONE) {
@@ -186,7 +206,7 @@ strtoatom(char *s, xcb_atom_t *atom)
     return 0;
 }
 
-static int 
+static int
 parse_range(char *range, xcb_atom_t *lowp, xcb_atom_t *highp)
 {
     char *dash;
@@ -229,7 +249,7 @@ parse_range(char *range, xcb_atom_t *lowp, xcb_atom_t *highp)
     return mask;
 invalid:
     fprintf(stderr, "%s:  invalid range: %s\n", ProgramName, range);
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 static void

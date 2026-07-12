@@ -22,20 +22,20 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.TH XLSATOMS 1 __xorgversion__
+.TH XLSATOMS 1 2025-04-05 __xorgversion__
 .SH NAME
 xlsatoms - list interned atoms defined on server
 .SH SYNOPSIS
 .B xlsatoms
-[-options ...]
+[\fIoptions\fP ...]
 .SH DESCRIPTION
-.I Xlsatoms
-lists the interned atoms.  By default, all atoms starting from 1 (the lowest
-atom value defined by the protocol) are listed until unknown atom is found.
-If an explicit range is given, \fIxlsatoms\fP will try all atoms in the range,
+.B Xlsatoms
+lists the interned atoms.
+By default, all atoms starting from 1 (the lowest
+atom value defined by the protocol) are listed until an unknown atom is found.
+If an explicit range is given, \fBxlsatoms\fP will try all atoms in the range,
 regardless of whether or not any are undefined.
 .SH "OPTIONS"
-.PP
 .TP 8
 .B \-display \fIdpy\fP
 This option specifies the X server to which to connect.
@@ -43,23 +43,29 @@ This option specifies the X server to which to connect.
 .B \-format \fIstring\fP
 This option specifies a \fIprintf\fP-style string used to list each atom
 \fI<value,name>\fP pair, printed in that order (\fIvalue\fP is an \fIunsigned
-long\fP and \fIname\fP is a \fIchar *\fP).  \fIXlsatoms\fP will supply a
-newline at the end of each line.  The default is \fI%lu\\t%s\fP.
+long\fP and \fIname\fP is a \fIchar *\fP).
+\fBXlsatoms\fP will supply a newline at the end of each line.
+The default is \fI%lu\\t%s\fP.
 .TP 8
 .B \-range \fI[low]-[high]\fP
-This option specifies the range of atom values to check.  If \fIlow\fP is not
-given, a value of 1 assumed.  If \fIhigh\fP is not given, \fIxlsatoms\fP will
-stop at the first undefined atom at or above \fIlow\fP.
+This option specifies the range of atom values to check.
+If \fIlow\fP is not given, a value of 1 assumed.
+If \fIhigh\fP is not given,
+\fBxlsatoms\fP will stop at the first undefined atom at or above \fIlow\fP.
 .TP 8
 .B \-name \fIstring\fP
-This option specifies the name of an atom to list.  If the atom does not
-exist, a message will be printed on the standard error.
+This option specifies the name of an atom to list.
+If the atom does not exist, a message will be printed on the standard error.
 .TP 8
-.B "-version"
+.B \-help
+Print out the program usage and exit.
+.TP 8
+.B \-version
 Print out the program version and exit.
-.PP
 .SH "SEE ALSO"
-X(__miscmansuffix__), Xserver(__appmansuffix__), xprop(__appmansuffix__)
+.BR X (__miscmansuffix__),
+.BR Xserver (__appmansuffix__),
+.BR xprop (__appmansuffix__)
 .SH ENVIRONMENT
 .TP 8
 .B DISPLAY

@@ -1,3 +1,93 @@
+commit 95f8cc5656d8920ab00414e3b454ff0f0b4ee735
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 7 15:01:23 2026 -0700
+
+    xlsatoms 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e46176640968942ca109cb27f7b53716261ebb01
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 3 18:52:54 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsatoms/-/merge_requests/7>
+
+commit 6ca4c0825fc03606e6ced6db526abf818f5a3380
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 3 18:32:48 2026 -0700
+
+    COPYING: Add missing Open Text copyright notice to file
+    
+    Fixes: 3e7bbf0 ("Convert xlsatoms to XCB")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsatoms/-/merge_requests/7>
+
+commit 248cfb83073b57b4b1db0a74e0836148f7a23227
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsatoms/-/merge_requests/7>
+
+commit ffc5e435177838ec3d522b1abad431f8f519ff03
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 5 17:31:59 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsatoms/-/merge_requests/6>
+
+commit 575ed85fc7f716266609674e3995c5237a4c6aaa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 09:17:19 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xlsatoms.1:25:16: WARNING: cannot parse date, using it verbatim: TH xlsatoms 1.1.4
+    mandoc: xlsatoms.1:39:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xlsatoms.1:66:2: WARNING: skipping paragraph macro: PP empty
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsatoms/-/merge_requests/5>
+
+commit fb89089f92b5611a88ff9f129d2a8264b15806d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 14:02:01 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsatoms/-/merge_requests/4>
+
+commit 9659a5bf1183fc25e1af59c3e66fbaa1631f4b5d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 13:51:03 2025 -0700
+
+    add -help option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsatoms/-/merge_requests/4>
+
 commit 28439223c8bafa32dc64504134e0a5fd8d2d16a3
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Nov 13 09:29:10 2022 -0800
@@ -644,7 +734,7 @@ Date:   Wed Jul 20 19:32:01 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 0dd5d7bf6f87df04b4d83ba5cc9356c6eed71088
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:10 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,
