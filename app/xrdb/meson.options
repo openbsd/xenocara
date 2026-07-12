@@ -1,0 +1,5 @@
+option(
+  'cpp',
+  type: 'string',
+  description: 'comma-separated list of paths to cpp command for xrdb to use at runtime',
+)

@@ -1,3 +1,96 @@
+commit aaf6f3df9377a44081af49a7fb2ae14aa3a18e60
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 9 14:32:47 2026 -0700
+
+    xrdb 1.2.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aae4365610d2f3bdd04d30fe303bb936b015ddc4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 12 18:02:14 2026 -0700
+
+    Git rid of -Wstringop-truncation warnings
+    
+    Use memcmp() instead of strncmp() so gcc doesn't think we're treating
+    our length-tracked buffer as a zero-terminated string and complain we're
+    failing to copy the terminating zero all the time.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrdb/-/merge_requests/10>
+
+commit b252f0fb867c3223b807c95e6637b0fe8dfa29d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 11 20:04:17 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrdb/-/merge_requests/9>
+
+commit 2f4ec193d907d6054c9d538f8f85d5b9775e9478
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrdb/-/merge_requests/9>
+
+commit 20fc79a257ecaba0df3af8485dbf64fd73003a73
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 11:25:39 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xrdb.1:197:81: STYLE: input text line longer than 80 bytes: The resources which ...
+    mandoc: xrdb.1:26:12: WARNING: cannot parse date, using it verbatim: TH xrdb 1.2.2
+    mandoc: xrdb.1:169:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xrdb.1:344:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrdb/-/merge_requests/8>
+
+commit 80fb1a3dfdd1ddb9574882111ba029055b76a1af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 6 17:41:40 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrdb/-/merge_requests/7>
+
+commit 51cfbcc53d97c00bb825825ca6245a8f74a8cdc0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 6 17:09:06 2025 -0700
+
+    Make -help exit with 0 instead of 1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrdb/-/merge_requests/7>
+
+commit 33f9c04a1f538c9a4f8e4dccf6076f1fed37c396
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 6 17:05:10 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrdb/-/merge_requests/7>
+
 commit ff688ceacaddb8e2f345caadfe33e408d97782a0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jun 3 10:40:03 2023 -0700
@@ -1052,7 +1145,7 @@ Date:   Sat Jul 2 01:17:35 2005 +0000
         (replaces per-OS hardcoding of CppCmd in Imake config files)
 
 commit 14ca3186594492b2733b9cc7e071ecfc039fb428
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:27:45 2005 +0000
 
     Build systems for xrdb, xrandr, xrefresh
