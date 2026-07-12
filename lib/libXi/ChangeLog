@@ -1,3 +1,79 @@
+commit f00f7e9140b4707775331950dd67851e55058c40
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon May 18 10:12:04 2026 +1000
+
+    libXi 1.8.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0700edcb4165692f1dd68ed5b06dd645eef9133f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 27 09:15:33 2026 +1000
+
+    Skip unknown preceeding events to DeviceValuator
+    
+    If we receive a DeviceValuator events, we check the preceding 'save'
+    event to figure out where to append the valuator data to. This check was
+    missing the fallthrough case, if none of the saved types matched our
+    expectation we continued anyway, returning the 'save' event to the
+    caller.
+    
+    There are two event sequences where this matters, if the DeviceValuator
+    follows an event that shouldn't be followed by a valuator event. In that
+    case we enqueued 'save' again though we should've already enqueued that
+    once anyway.
+    The second case is where the very first event is a DeviceValuator event
+    which now passes a zero save event. That is likely to cause a segfault
+    lateron.
+    
+    Fix this by ignoring the bogus event.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/20>
+
+commit c4cbdcf747ebac89520903458e8242b0b35ada1d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Apr 21 15:36:49 2026 +1000
+
+    Discard Valuator/Key/ButtonStateNotify without the preceeding events
+    
+    DeviceKeyStateNotify, DeviceButtonStateNotify, and DeviceValuator are
+    follow-on wire events that carry overflow data from a preceding event.
+    DeviceKey/ButtonStateNotify carry keys/buttons 33-255 from a preceding
+    DeviceStateNotify, while DeviceValuator carries axis data from a
+    preceding DeviceKeyPress, DeviceMotionNotify, etc. The wire-to-event
+    handler (XInputWireToEvent) accumulates these multi-event sequences in
+    a persistent 'save' buffer: the primary event populates it, then the
+    follow-on events append to it.
+    
+    Because the 'save' event is used as the buffer it is not
+    zero-initialized for those follow-on events. If the first events we
+    receive is such a follow-on event, then we operate on uninitialized
+    data, causing infinte loops (anyclass->length ==0) or OOB read (garbge
+    anyclass->length). In the fallthrough case (class not found) we had a
+    memcpy to an arbitrary location.
+    
+    Fix this by adding a helper function that now checks for zero length,
+    save->type and that we actually find the expected class.
+    
+    Reported-by: Joshua J. Drake <josh.drake@ioactive.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/20>
+
+commit 3103b5849d89335fd57b08b91ad634216ed96073
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 25 15:31:53 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/19>
+
 commit 3c2d5aedd7708c75710b39268631762de904c304
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Sep 5 11:15:04 2024 +1000

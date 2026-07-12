@@ -382,7 +382,7 @@ _XiCheckExtInit(
     }
 
     if (info->data == NULL) {
-	info->data = (XPointer) Xmalloc(sizeof(XInputData));
+	info->data = (XPointer) Xcalloc(1, sizeof(XInputData));
 	if (!info->data) {
 	    UnlockDisplay(dpy);
 	    return (-1);
@@ -462,6 +462,26 @@ _XiGetDevicePresenceNotifyEvent(Display * dpy)
     XExtDisplayInfo *info = XInput_find_display(dpy);
 
     return info->codes->first_event + XI_DevicePresenceNotify;
+}
+
+static XInputClass *
+find_class(XInputClass *classes, size_t num_classes, int which)
+{
+    XInputClass *current = classes;
+    size_t i;
+
+    for (i = 0; i < num_classes; i++) {
+        if (current->length == 0)
+            return NULL;
+        if (current->class == which)
+            break;
+        current = (XInputClass *)((char *)current +
+                                   current->length);
+    }
+    if (i >= num_classes)
+        return NULL;
+
+    return current;
 }
 
 /***********************************************************************
@@ -700,12 +720,15 @@ XInputWireToEvent(
                     } else if (save_type == XI_DeviceStateNotify) {
                         int j;
                         XDeviceStateNotifyEvent *sev = (XDeviceStateNotifyEvent *) save;
-                        XInputClass *any = (XInputClass *) & sev->data[0];
+                        XInputClass *any;
                         XValuatorStatus *v;
 
-                        for (i = 0; i < sev->num_classes; i++)
-                            if (any->class != ValuatorClass)
-                                any = (XInputClass *) ((char *)any + any->length);
+                        any = find_class((XInputClass *) & sev->data[0],
+                                         sev->num_classes,
+                                         ValuatorClass);
+                        if (!any)
+                            return (DONT_ENQUEUE);
+
                         v = (XValuatorStatus *) any;
                         i = v->num_valuators;
                         j = xev->num_valuators;
@@ -721,6 +744,8 @@ XInputWireToEvent(
                         }
                         v->num_valuators += j;
 
+                    } else {
+                        return (DONT_ENQUEUE);
                     }
                     *re = *save;
                     return (ENQUEUE_EVENT);
@@ -801,19 +826,19 @@ XInputWireToEvent(
                 break;
             case XI_DeviceKeystateNotify:
                 {
-                    int i;
                     XInputClass *anyclass;
                     register XKeyStatus *kv;
                     deviceKeyStateNotify *ksev = (deviceKeyStateNotify *) event;
                     XDeviceStateNotifyEvent *kstev = (XDeviceStateNotifyEvent *) save;
 
-                    anyclass = (XInputClass *) & kstev->data[0];
-                    for (i = 0; i < kstev->num_classes; i++)
-                        if (anyclass->class == KeyClass)
-                            break;
-                        else
-                            anyclass = (XInputClass *) ((char *)anyclass +
-                                    anyclass->length);
+                    if (save->type != info->codes->first_event + XI_DeviceStateNotify)
+                        return (DONT_ENQUEUE);
+
+                    anyclass = find_class((XInputClass *) & kstev->data[0],
+                                          kstev->num_classes,
+                                          KeyClass);
+                    if (!anyclass)
+                        return (DONT_ENQUEUE);
 
                     kv = (XKeyStatus *) anyclass;
                     kv->num_keys = 256;
@@ -828,19 +853,19 @@ XInputWireToEvent(
                 break;
             case XI_DeviceButtonstateNotify:
                 {
-                    int i;
                     XInputClass *anyclass;
                     register XButtonStatus *bv;
                     deviceButtonStateNotify *bsev = (deviceButtonStateNotify *) event;
                     XDeviceStateNotifyEvent *bstev = (XDeviceStateNotifyEvent *) save;
 
-                    anyclass = (XInputClass *) & bstev->data[0];
-                    for (i = 0; i < bstev->num_classes; i++)
-                        if (anyclass->class == ButtonClass)
-                            break;
-                        else
-                            anyclass = (XInputClass *) ((char *)anyclass +
-                                    anyclass->length);
+                    if (save->type != info->codes->first_event + XI_DeviceStateNotify)
+                        return (DONT_ENQUEUE);
+
+                    anyclass = find_class((XInputClass *) & bstev->data[0],
+                                          bstev->num_classes,
+                                          ButtonClass);
+                    if (!anyclass)
+                        return (DONT_ENQUEUE);
 
                     bv = (XButtonStatus *) anyclass;
                     bv->num_buttons = 256;
