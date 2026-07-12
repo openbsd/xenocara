@@ -8,8 +8,8 @@
    *
    * THE INFORMATION IN THIS SOFTWARE IS SUBJECT TO CHANGE WITHOUT NOTICE AND
    * SHOULD NOT BE CONSTRUED AS A COMMITMENT BY DIGITAL EQUIPMENT CORPORATION.
-   * DIGITAL MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS SOFTWARE 
-   * FOR ANY PURPOSE.  IT IS SUPPLIED "AS IS" WITHOUT EXPRESS OR IMPLIED 
+   * DIGITAL MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS SOFTWARE
+   * FOR ANY PURPOSE.  IT IS SUPPLIED "AS IS" WITHOUT EXPRESS OR IMPLIED
    * WARRANTY.
    *
    * IF THE SOFTWARE IS MODIFIED IN A MANNER CREATING DERIVATIVE COPYRIGHT
@@ -21,7 +21,7 @@
    * that the above copyright notice appear in all copies and that both that
    * copyright notice and this permission notice appear in supporting
    * documentation, and that the name of Digital Equipment Corporation not be
-   * used in advertising or publicity pertaining to distribution of the 
+   * used in advertising or publicity pertaining to distribution of the
    * software without specific, written prior permission.
   \*/
 
@@ -123,34 +123,3 @@ uInternalError(const char *s, ...)
     va_end(ap);
     return;
 }
-
-/***====================================================================***/
-
-#ifndef HAVE_STRCASECMP
-int
-uStrCaseCmp(const char *str1, const char *str2)
-{
-    char buf1[512], buf2[512];
-    char c, *s;
-
-    register int n;
-
-    for (n = 0, s = buf1; (c = *str1++); n++) {
-        if (isupper(c))
-            c = tolower(c);
-        if (n > 510)
-            break;
-        *s++ = c;
-    }
-    *s = '\0';
-    for (n = 0, s = buf2; (c = *str2++); n++) {
-        if (isupper(c))
-            c = tolower(c);
-        if (n > 510)
-            break;
-        *s++ = c;
-    }
-    *s = '\0';
-    return (strcmp(buf1, buf2));
-}
-#endif

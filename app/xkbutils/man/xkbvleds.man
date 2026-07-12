@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008, Oracle and/or its affiliates.
+.\" Copyright (c) 2008, 2025, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -18,66 +18,53 @@
 .\" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 .\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 .\" DEALINGS IN THE SOFTWARE.
-.TH xkbvleds __appmansuffix__ __xorgversion__
+.TH XKBVLEDS __appmansuffix__ 2024-05-31 __xorgversion__
 .SH NAME
-xkbvleds \- XKB extension user utility
+xkbvleds \- display X Keyboard Extension LED state in a window
 .SH SYNOPSIS
-.B xkbvleds
-[\-indpy <name>]
-[\-watch <leds>]
-[[\-+]automatic]
-[[\-+]explicit]
-[[\-+]name]
-[[\-+]real]
-[[\-+]virtual]
-[\-intersection]
-[\-union]
+.nf
+\fBxkbvleds\fP [\fB\-indpy\fP \fIname\fP] [\fB\-watch\fP \fIleds\fP] \
+[\fB\-intersection\fP] [\fB\-union\fP]
+    [\fB+automatic\fP|\fB\-automatic\fP] [\fB+explicit\fP|\fB\-explicit\fP] \
+[\fB+name\fP|\fB\-name\fP]
+    [\fB+real\fP|\fB\-real\fP] [\fB+virtual\fP|\fB\-virtual\fP]
+.fi
 .SH DESCRIPTION
 This program is used to display the state of LEDs on an XKB keyboard.
 It reports the changes in the fundamental components of the XKB state
-which includes the effective compatibility state. The default set of LEDs
-is \-union +name +automatic +real.
+which includes the effective compatibility state.
+The default set of LEDs is \fB\-union +name +automatic +real\fP.
 .SH OPTIONS
-.PP
 .TP 8
-.B \-indpy <name>
+.B \-indpy \fIname\fP
 Mask of LEDs to watch
 .TP 8
-.B \-watch <leds>
+.B \-watch \fIleds\fP
 turn on synchronization
-.PP
 .TP 8
-.B \[-+]automatic
+.BR \-automatic " | " +automatic
 (Don't) watch automatic LEDs
-.PP
 .TP 8
-.B \[-+]explicit
+.BR \-explicit " | " +explicit
 (Don't) watch explicit LEDs
-.PP
 .TP 8
-.B \[-+]name
+.BR \-name " | " +name
 (Don't) watch named LEDs
-.PP
 .TP 8
-.B \[-+]real
+.BR \-real " | " +real
 (Don't) watch real LEDs
-.PP
 .TP 8
-.B \[-+]virtual
+.BR \-virtual " | " +virtual
 (Don't) watch virtual LEDs
-.PP
 .TP 8
 .B \-intersection
 Watch only LEDs in all desired sets
-.PP
 .TP 8
 .B \-union
 Watch LEDs in any desired sets
-.PP
 .TP 8
 .B \-help
 print list of options and exit
-.PP
 .TP 8
 .B \-version
 print program version and exit

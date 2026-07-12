@@ -6,19 +6,19 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -59,7 +59,7 @@ static Bool useUnion = True;
 /***====================================================================***/
 
 static void
-usage(char *program)
+usage(const char *program)
 {
     uInformation("Usage: %s <options>\n", program);
     uInformation("Legal options include the usual X toolkit options plus:\n"
@@ -115,11 +115,13 @@ parseArgs(int argc, char *argv[])
         else if (uStrCaseEqual(argv[i], "-intersection")) {
             useUnion = False;
         }
-        else if (uStrCaseEqual(argv[i], "-help")) {
+        else if (uStrCaseEqual(argv[i], "-help") ||
+                 (strcmp(argv[i], "--help") == 0)) {
             usage(argv[0]);
             exit(0);
         }
-        else if (uStrCaseEqual(argv[i], "-version")) {
+        else if (uStrCaseEqual(argv[i], "-version") ||
+                 (strcmp(argv[i], "--version") == 0)) {
             printf("xkbvleds (%s) %s\n", PACKAGE_NAME, PACKAGE_VERSION);
             exit(0);
         }
@@ -139,7 +141,11 @@ parseArgs(int argc, char *argv[])
                 which = &wantReal;
             else if (uStrCaseEqual(&argv[i][1], "virtual"))
                 which = &wantVirtual;
-            if (which != NULL) {
+            if (which == NULL) {
+                fprintf(stderr, "Unrecognized argument: %s\n", argv[i]);
+                return 0;
+            }
+            else {
                 if (*which != DONT_CARE) {
                     uWarning("Multiple settings for [+-]%s\n", &argv[i][1]);
                     uAction("Using %c%s, ignoring %c%s\n",

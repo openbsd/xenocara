@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008, Oracle and/or its affiliates.
+.\" Copyright (c) 2008, 2025, Oracle and/or its affiliates.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the "Software"),
@@ -18,19 +18,23 @@
 .\" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 .\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 .\" DEALINGS IN THE SOFTWARE.
-.TH xkbwatch __appmansuffix__ __xorgversion__
+.TH XKBWATCH __appmansuffix__ 2025-04-05 __xorgversion__
 .SH NAME
-xkbwatch - XKB extension user utility
+xkbwatch \- report state changes using the X Keyboard Extension
 .SH DESCRIPTION
 This program reports changes in the fundamental components of the XKB keyboard
 state plus the effective compatibility state.
 .SH OPTIONS
-.I Xkbwatch
+.B Xkbwatch
 accepts all of the standard X Toolkit command line options along with the
 additional options listed below:
 .TP 8
+.B \-help
+This option indicates that the program usage should be printed,
+after which the program exits.
+.TP 8
 .B \-version
-This option indicates that the program version should be printed, after
-which the program exits.
+This option indicates that the program version should be printed,
+after which the program exits.
 .SH "SEE ALSO"
-X(__miscmansuffix__)
+.BR X (__miscmansuffix__)

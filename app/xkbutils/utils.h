@@ -10,8 +10,8 @@
    *
    * THE INFORMATION IN THIS SOFTWARE IS SUBJECT TO CHANGE WITHOUT NOTICE AND
    * SHOULD NOT BE CONSTRUED AS A COMMITMENT BY DIGITAL EQUIPMENT CORPORATION.
-   * DIGITAL MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS SOFTWARE 
-   * FOR ANY PURPOSE.  IT IS SUPPLIED "AS IS" WITHOUT EXPRESS OR IMPLIED 
+   * DIGITAL MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS SOFTWARE
+   * FOR ANY PURPOSE.  IT IS SUPPLIED "AS IS" WITHOUT EXPRESS OR IMPLIED
    * WARRANTY.
    *
    * IF THE SOFTWARE IS MODIFIED IN A MANNER CREATING DERIVATIVE COPYRIGHT
@@ -23,7 +23,7 @@
    * that the above copyright notice appear in all copies and that both that
    * copyright notice and this permission notice appear in supporting
    * documentation, and that the name of Digital Equipment Corporation not be
-   * used in advertising or publicity pertaining to distribution of the 
+   * used in advertising or publicity pertaining to distribution of the
    * software without specific, written prior permission.
   \*/
 
@@ -39,6 +39,7 @@
 #include	<X11/Xfuncs.h>
 #include 	<stdarg.h>
 #include	<stddef.h>
+#include	<strings.h>
 
 _XFUNCPROTOBEGIN
 
@@ -64,13 +65,12 @@ extern void uInternalError(const char *s, ...) _X_ATTRIBUTE_PRINTF(1,2);
 
 /***====================================================================***/
 
-#define	uStrCaseEqual(s1,s2)	(uStrCaseCmp(s1,s2)==0)
-#ifdef HAVE_STRCASECMP
-#define	uStrCaseCmp(s1,s2)	(strcasecmp(s1,s2))
-#else
-extern int uStrCaseCmp(const char *   /* s1 */,
-                       const char *   /* s2 */);
+#if defined(_MSC_VER)
+#define strcasecmp _stricmp
 #endif
+
+#define	uStrCaseEqual(s1,s2)	(uStrCaseCmp(s1,s2)==0)
+#define	uStrCaseCmp(s1,s2)	(strcasecmp(s1,s2))
 
 /***====================================================================***/
 

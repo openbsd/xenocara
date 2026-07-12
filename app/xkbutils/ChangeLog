@@ -1,3 +1,157 @@
+commit a8504b3ba1631b40ad76e06a5fd23c6ac374a555
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 7 14:47:56 2026 -0700
+
+    xkbutils 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 085ad894ca9c2c8b9bc1602ef0e6625568c76a82
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 24 10:33:22 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/15>
+
+commit 6008e74db8de729d6754d5bbb97b31eb4b8a3587
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/15>
+
+commit b1c372fe74f884c1aeddfbcb9a48aa0ba0a7f241
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 5 17:27:47 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/14>
+
+commit 9c32a8b402002baa3c9c38eb59455f74bf987959
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 11:29:42 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xkbbell.1:21:5: STYLE: lower case character in document title: TH xkbbell
+    mandoc: xkbbell.1:21:16: WARNING: cannot parse date, using it verbatim: TH xkbutils 1.0.6
+    mandoc: xkbbell.1:33:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xkbbell.1:40:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xkbbell.1:44:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xkbbell.1:48:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xkbbell.1:52:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xkbbell.1:56:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xkbbell.1:60:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xkbbell.1:64:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xkbbell.1:68:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xkbbell.1:72:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xkbvleds.1:21:5: STYLE: lower case character in document title: TH xkbvleds
+    mandoc: xkbvleds.1:21:16: WARNING: cannot parse date, using it verbatim: TH xkbutils 1.0.6
+    mandoc: xkbwatch.1:21:5: STYLE: lower case character in document title: TH xkbwatch
+    mandoc: xkbwatch.1:21:16: WARNING: cannot parse date, using it verbatim: TH xkbutils 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/13>
+
+commit b563231a8a1a6183c3c7e89d0017cd1c5d126045
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Date:   Sun Jun 2 16:25:48 2024 +0000
+
+    xkbvleds.man: Fix WARNING: skipping paragraph macro: PP empty
+    
+    Originally from https://bugs.debian.org/1072483
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/12>
+
+commit 297a0e67b3549505d8198abdc697025c61834807
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 11:52:51 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/11>
+
+commit 11d75b03878acab2860ec9529062b908204cdd97
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 11:33:21 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/11>
+
+commit 8663ddb716905d135fa3a3cf2938162bb61885db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 11:22:42 2025 -0700
+
+    xkbwatch: add -help option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/11>
+
+commit 5cb10b18bd972a69dcd974424cce7039763e5378
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 11:17:45 2025 -0700
+
+    xkbbell, xkbvleds, xkbwatch: Print usage message for unknown arguments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/11>
+
+commit 590e658a57f08e1c30aba465503a6b0e1c728ed9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 9 11:41:36 2024 -0800
+
+    Use _stricmp() instead of strcasecmp() on Windows
+    
+    Fixes: f1559ac ("Assume target platforms have strcasecmp now")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/10>
+
+commit 37ad89cd37b2ebbb6a5b390a524cbee6e35fcaca
+Author: Alexander Ziaee <concussious@runbox.com>
+Date:   Fri May 31 00:44:30 2024 +0000
+
+    documentation: improve utility descriptions
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/9>
+
+commit f1559aca5e9720f0a253ffbfbf1aaa55807c2494
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 22 11:34:30 2024 -0700
+
+    Assume target platforms have strcasecmp now
+    
+    It has been required since Unix98/SUSv2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbutils/-/merge_requests/7>
+
 commit 29396321dad13c4edddc8d3a8de2baf07b0e0c8d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Feb 3 12:36:36 2024 -0800
