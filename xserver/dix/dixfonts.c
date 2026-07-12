@@ -556,7 +556,7 @@ doListFontsAndAliases(ClientPtr client, LFclosurePtr c)
     int err = Successful;
     FontNamesPtr names = NULL;
     char *name, *resolved = NULL;
-    int namelen, resolvedlen;
+    int namelen, resolvedlen = 0;
     int nnames;
     int stringLens;
     int i;
@@ -848,8 +848,8 @@ doListFontsWithInfo(ClientPtr client, LFWIclosurePtr c)
 {
     FontPathElementPtr fpe;
     int err = Successful;
-    char *name;
-    int namelen;
+    char *name = NULL;
+    int namelen = 0;
     int numFonts;
     FontInfoRec fontInfo, *pFontInfo;
     xListFontsWithInfoReply *reply;
@@ -912,6 +912,10 @@ doListFontsWithInfo(ClientPtr client, LFWIclosurePtr c)
              * is BadFontName, indicating the alias resolution
              * is complete.
              */
+            if (!name) {
+                err = BadFontName;
+                goto ContBadFontName;
+            }
             if (c->haveSaved) {
                 char *tmpname;
                 int tmpnamelen;
