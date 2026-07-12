@@ -27,13 +27,13 @@ Copyright 1987, 1988 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -46,7 +46,7 @@ SOFTWARE.
 ******************************************************************/
 
 /*
- * Kitchen sink version, useful for clearing small areas and flashing the 
+ * Kitchen sink version, useful for clearing small areas and flashing the
  * screen.
  */
 
@@ -61,8 +61,10 @@ SOFTWARE.
 #include <X11/Xutil.h>
 #include <stdlib.h>
 
-#ifndef HAVE_STRCASECMP
-# include <ctype.h>
+#if defined(_MSC_VER)
+#define strcasecmp _stricmp
+#else
+#include <strings.h>
 #endif
 
 static Window win;
@@ -110,7 +112,7 @@ unknown_arg(const char *arg)
  * for error, no, yes.
  */
 
-static int 
+static int
 parse_boolean_option(char *option)
 {
     static const struct _booltable {
@@ -122,20 +124,8 @@ parse_boolean_option(char *option)
         { NULL, -1 }};
     register const struct _booltable *t;
 
-#ifndef HAVE_STRCASECMP
-    register char *cp;
-
-    for (cp = option; *cp; cp++) {
-        if (isascii (*cp) && isupper (*cp)) *cp = tolower (*cp);
-    }
-#endif
-
     for (t = booltable; t->name; t++) {
-#ifdef HAVE_STRCASECMP
         if (strcasecmp (option, t->name) == 0) return (t->value);
-#else
-        if (strcmp (option, t->name) == 0) return (t->value);
-#endif
     }
     return (-1);
 }
@@ -146,7 +136,7 @@ parse_boolean_option(char *option)
  * whether or not the given string is an abbreviation of the arg.
  */
 
-static Bool 
+static Bool
 isabbreviation(const char *arg, char *s, size_t minslen)
 {
     size_t arglen;
@@ -238,17 +228,19 @@ main(int argc, char *argv[])
 		delay = ((unsigned long)atol(argv[i])) * 1000000L;
 		continue;
 	    }
-	    else if (isabbreviation ("-version", arg, 1)) {
+	    else if (isabbreviation ("-version", arg, 1) ||
+		     !strcmp("--version", arg)) {
 		puts(PACKAGE_STRING);
 		exit(EXIT_SUCCESS);
-            }
-	    else if (isabbreviation ("-help", arg, 1)) {
+	    }
+	    else if (isabbreviation ("-help", arg, 1) ||
+		     !strcmp("--help", arg)) {
 		Syntax(EXIT_SUCCESS);
-	    } else 
+	    } else
 		unknown_arg (arg);
 	} else if (arg[0] == '=')			/* obsolete */
 	    geom = arg;
-	else 
+	else
 	    unknown_arg (arg);
     }
 
@@ -287,24 +279,24 @@ main(int argc, char *argv[])
     screen = DefaultScreen (dpy);
     display_width = DisplayWidth (dpy, screen);
     display_height = DisplayHeight (dpy, screen);
-    x = y = 0; 
+    x = y = 0;
     width = display_width;
     height = display_height;
 
     if (DisplayCells (dpy, screen) <= 2 && action == doSolid) {
 	if (strcmp (solidcolor, "black") == 0)
 	    action = doBlack;
-	else if (strcmp (solidcolor, "white") == 0) 
+	else if (strcmp (solidcolor, "white") == 0)
 	    action = doWhite;
 	else {
-	    fprintf (stderr, 
+	    fprintf (stderr,
 	    	     "%s:  can't use colors on a monochrome display.\n",
 		     ProgramName);
 	    action = doNone;
 	}
     }
 
-    if (geom) 
+    if (geom)
         geom_result = XParseGeometry (geom, &x, &y,
 				      (unsigned int *)&width,
 				      (unsigned int *)&height);
@@ -313,7 +305,7 @@ main(int argc, char *argv[])
 
     /*
      * For parsing geometry, we want to have the following
-     *     
+     *
      *     =                (0,0) for (display_width,display_height)
      *     =WxH+X+Y         (X,Y) for (W,H)
      *     =WxH-X-Y         (display_width-W-X,display_height-H-Y) for (W,H)
@@ -321,7 +313,7 @@ main(int argc, char *argv[])
      *     =WxH             (0,0) for (W,H)
      *     =-X-Y            (0,0) for (display_width-X,display_height-Y)
      *
-     * If we let any missing values be taken from (0,0) for 
+     * If we let any missing values be taken from (0,0) for
      * (display_width,display_height) we just have to deal with the
      * negative offsets.
      */
@@ -333,7 +325,7 @@ main(int argc, char *argv[])
 	    width = display_width + x;
 	    x = 0;
 	}
-    } 
+    }
     if (geom_result & YNegative) {
 	if (geom_result & HeightValue) {
 	    y = display_height - height + y;
@@ -385,7 +377,7 @@ main(int argc, char *argv[])
 	    0, DefaultDepth(dpy, screen), InputOutput, &visual, mask, &xswa);
 
     /*
-     * at some point, we really ought to go walk the tree and turn off 
+     * at some point, we really ought to go walk the tree and turn off
      * backing store;  or do a ClearArea generating exposures on all windows
      */
     XMapWindow (dpy, win);

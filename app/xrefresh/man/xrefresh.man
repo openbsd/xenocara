@@ -22,83 +22,79 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.TH XREFRESH 1 __xorgversion__
+.TH XREFRESH 1 2025-05-31 __xorgversion__
 .SH NAME
 xrefresh - refresh all or part of an X screen
 .SH SYNOPSIS
 .B "xrefresh"
 [-option ...]
 .SH DESCRIPTION
-.PP
-.I Xrefresh
+.B Xrefresh
 is a simple X program that causes all or part of your screen to be repainted.
 This is useful when system messages have messed up your screen.
-.I Xrefresh
+.B Xrefresh
 maps a window on top of the desired area of the screen and then immediately
-unmaps it,
-causing refresh events to be sent to all applications.  By default,
-a window with no background is used, causing all applications to repaint
-``smoothly.''
+unmaps it, causing refresh events to be sent to all applications.
+By default, a window with no background is used,
+causing all applications to repaint \(lqsmoothly.\(rq
 However, the various options can be used to indicate that a solid background
 (of any color) or the root window background should be used instead.
 .SH ARGUMENTS
-.PP
 .TP 10
 .B \-white
-Use a white background.  The screen just appears to flash quickly, and then
-repaint.
-.PP
+Use a white background.
+The screen just appears to flash quickly, and then repaint.
 .TP 10
 .B \-black
-Use a black background.  This can be somewhat disorienting as everything goes
-black for a moment.
-.PP
+Use a black background.
+This can be somewhat disorienting as everything goes black for a moment.
 .TP 10
 .B \-solid \fIcolor\fP
 Use a solid background of the specified color.  Try green.
-.PP
 .TP 10
 .B \-root
 Use the root window background.
-.PP
 .TP 10
 .B \-none
 This is the default.  All of the windows simply repaint.
-.PP
 .TP 10
 .B \-geometry \fIWxH+X+Y\fP
-Specifies the portion of the screen to be repainted; see \fIX(__miscmansuffix__)\fP.
-.PP
+Specifies the portion of the screen to be repainted; see
+.BR X (__miscmansuffix__).
 .TP 10
 .B \-display \fIdisplay\fP
-This  argument  allows  you  to  specify the server and screen to
-refresh; see \fIX(__miscmansuffix__)\fP.
-.PP
+This argument allows you to specify the server and screen to refresh; see
+.BR X (__miscmansuffix__).
+.TP 10
+.B \-delay \fIms\fP
+Wait for \fIms\fP milliseconds between mapping and unmapping the window.
+This can be useful for screens with slow response times, such as e-ink displays.
+The default is 0 ms.
+.TP 10
+.B \-help
+This argument prints the program options and exits.
 .TP 10
 .B \-version
 This argument prints the program version and exits.
 .SH X DEFAULTS
 The
-.I xrefresh
+.B xrefresh
 program uses the routine
-.I XGetDefault(__libmansuffix__)
+.BR XGetDefault (__libmansuffix__)
 to read defaults, so its resource names are all capitalized.
-.PP
 .TP 8
 .B Black\fP, \fBWhite\fP, \fBSolid\fP, \fBNone\fP, \fBRoot\fP
 Determines what sort of window background to use.
-.PP
 .TP 8
 .B Geometry
 Determines the area to refresh.  Not very useful.
 .SH ENVIRONMENT
-.PP
 .TP 8
-DISPLAY - To get default host and display number.
+.B DISPLAY
+To get default host and display number.
 .SH SEE ALSO
-X(__miscmansuffix__)
+.BR X (__miscmansuffix__)
 .SH BUGS
-.PP
 It should have just one default type for the background.
 .SH AUTHORS
 Jim Gettys, Digital Equipment Corp., MIT Project Athena

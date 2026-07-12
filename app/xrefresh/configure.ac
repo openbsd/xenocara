@@ -1,6 +1,6 @@
 
 dnl  Copyright 2005 Red Hat, Inc.
-dnl 
+dnl
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
 dnl  documentation for any purpose is hereby granted without fee, provided that
 dnl  the above copyright notice appear in all copies and that both that
@@ -10,7 +10,7 @@ dnl  advertising or publicity pertaining to distribution of the software without
 dnl  specific, written prior permission.  Red Hat makes no
 dnl  representations about the suitability of this software for any purpose.  It
 dnl  is provided "as is" without express or implied warranty.
-dnl 
+dnl
 dnl  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 dnl  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 dnl  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xrefresh], [1.1.0],
+AC_INIT([xrefresh], [1.1.1],
         [https://gitlab.freedesktop.org/xorg/app/xrefresh/-/issues], [xrefresh])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -37,8 +37,6 @@ m4_ifndef([XORG_MACROS_VERSION],
 	  [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
-
-AC_CHECK_FUNCS([strcasecmp])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XREFRESH, [x11 xproto >= 7.0.25])

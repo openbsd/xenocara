@@ -1,3 +1,133 @@
+commit f82cf4ba4c1e183130efe09888b2bf421e2c2bab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 9 16:24:13 2026 -0700
+
+    xrefresh 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3da1cfee09fc1596bc4f6a1bf872cd43289f452b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 9 15:40:18 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrefresh/-/merge_requests/12>
+
+commit 852baba7ae13139dc05e1d778a283e158a9d66dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 9 15:30:35 2026 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrefresh/-/merge_requests/12>
+
+commit d7879b5a769efb0e485b488dd2a1f03df5b7c7d4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrefresh/-/merge_requests/12>
+
+commit 9a4e1a41d83d5a593fbeabd314a8637e7007f793
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 11:40:58 2025 -0700
+
+    man page: add -delay & -help options
+    
+    We missed adding these to the man page when they were added to the code.
+    
+    Fixes: 1a82993 ("Add -help option")
+    Fixes: 1b141ab ("Adding in a '-delay ms' parameter to optionally prolong refreshx")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrefresh/-/merge_requests/11>
+
+commit 42d7a4e23e1fed70a2340946f47f8cb543a13938
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 11:32:31 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xrefresh.1:25:16: WARNING: cannot parse date, using it verbatim: TH xrefresh 1.1.0
+    mandoc: xrefresh.1:32:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xrefresh.1:44:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:49:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:54:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:58:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:62:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:66:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:71:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:76:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:86:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:90:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:95:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xrefresh.1:102:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrefresh/-/merge_requests/11>
+
+commit 333cf8faee28371d8c60f43567e3fc1147bf0ed6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 6 17:57:29 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrefresh/-/merge_requests/10>
+
+commit 0673d7285f41e70bb1fdab4ade2d6523b5cca5dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 6 17:49:19 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrefresh/-/merge_requests/10>
+
+commit 5a26655d6763b44e19e76e38226465071d9f7abf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 11 11:09:28 2024 -0800
+
+    Use _stricmp() instead of strcasecmp() on Windows
+    
+    v2: Exclude include of <strings.h> as well
+    
+    Fixes: 5cc99a7 ("Assume target platforms have strcasecmp now")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrefresh/-/merge_requests/9>
+
+commit 5cc99a71a78acca9cc4c5e7cbeec3e54721a1e26
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 22 12:21:20 2024 -0700
+
+    Assume target platforms have strcasecmp now
+    
+    It has been required since Unix98/SUSv2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xrefresh/-/merge_requests/8>
+
 commit e4d55bdc6ca6f9e4b7ff07d253acd04d0a9ec1f1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 3 15:15:14 2024 -0800
